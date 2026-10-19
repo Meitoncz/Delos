@@ -1,3 +1,19 @@
+# Vibetemis
+
+Fork [Artemis Android](https://github.com/ClassicOldSong/moonlight-android) pro [Vibepollo](https://github.com/Nonary/Vibepollo), aktualizovaný o novinky z [Moonlight Android](https://github.com/moonlight-stream/moonlight-android). Cílem je moderní GUI ovladatelné na Android handheldech.
+
+> 🚧 Ve vývoji. Kód je zatím totožný s Artemis 20.2.6.
+
+- [Analýza Artemis vs. Moonlight](docs/ANALYSIS.md)
+- [Roadmapa](docs/ROADMAP.md)
+- [Příprava na Linuxu](docs/LINUX_SETUP.md)
+
+Licence: GPLv3 (stejně jako Moonlight a Artemis).
+
+---
+
+*Původní README Artemis:*
+
 # Artemis Android
 
 Previously named Moonlight Noir
