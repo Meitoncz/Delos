@@ -1,20 +1,20 @@
-# Roadmapa Vibetemis
+# Roadmapa Delos
 
-Vibetemis = fork **Artemis** pro **Vibepollo**. Priorita: nejdřív dostat do Artemis všechno nové z Moonlightu, až potom vlastní GUI a funkce.
+Delos (dříve Vibetemis) = fork **Artemis** pro **Vibepollo**. Priorita: nejdřív dostat do Artemis všechno nové z Moonlightu, až potom vlastní GUI a funkce.
 
-Detaily a čísla: [ANALYSIS.md](ANALYSIS.md). Příprava prostředí: [LINUX_SETUP.md](LINUX_SETUP.md).
+Detaily a čísla: [ANALYSIS.md](ANALYSIS.md). Příprava prostředí: [WINDOWS_SETUP.md](WINDOWS_SETUP.md).
 
 ## Fáze 0 – Identita forku
 
-- [ ] Změnit `applicationId` / `applicationIdSuffix` (dnes `com.limelight` + `.noir`), např. na `com.vibetemis`, aby se aplikace nebila s Artemis/Moonlight.
-- [ ] Název aplikace „Vibetemis“ (`strings.xml`, launcher), vlastní ikona.
+- [ ] Změnit `applicationId` / `applicationIdSuffix` (dnes `com.limelight` + `.noir`), např. na `com.delos`, aby se aplikace nebila s Artemis/Moonlight.
+- [ ] Název aplikace „Delos“ (`strings.xml`, launcher), vlastní ikona.
 - [ ] Vlastní `versionName` / `versionCode` schéma.
 - [ ] README: odkaz na Artemis, Moonlight, Vibepollo; zachovat GPLv3 a autory.
 - [ ] GitHub Actions: build debug/release APK při každém pushi.
 
 ## Fáze 1 – moonlight-common-c
 
-- [ ] Forknout `ClassicOldSong/moonlight-common-c` → `Vibetemis-common-c` (nebo podobně).
+- [ ] Forknout `ClassicOldSong/moonlight-common-c` → `Delos-common-c` (nebo podobně).
 - [ ] Merge `moonlight-stream/moonlight-common-c` master (zkušebně bez konfliktů).
 - [ ] Přepnout `.gitmodules` na nový fork, aktualizovat pin submodulu.
 - [ ] Ověřit Apollo/Vibepollo funkce (server cmd, empty payload).

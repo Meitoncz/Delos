@@ -1,14 +1,15 @@
-# Vibetemis – kontext pro Claude Code
+# Delos – kontext pro Claude Code
 
-Android klient pro streamování her z **Vibepollo** (fork Apollo/Sunshine). Fork **Artemis** (`ClassicOldSong/moonlight-android`, větev `moonlight-noir`), který je forkem **Moonlight Android**.
+Android klient pro streamování her z **Vibepollo** (fork Apollo/Sunshine). Fork **Artemis** (`ClassicOldSong/moonlight-android`, větev `moonlight-noir`), který je forkem **Moonlight Android**. Projekt se dřív jmenoval **Vibetemis**.
 
 - Uživatel **není programátor**. Vysvětluj česky a srozumitelně, navrhuj kroky a před velkými nebo nevratnými zásahy (force push, mazání větví, release) se ptej.
-- Plán práce: `docs/ROADMAP.md` (odškrtávej hotové body). Analýza rozdílů: `docs/ANALYSIS.md`. Prostředí: `docs/LINUX_SETUP.md`.
+- Vývoj probíhá na **Windows** (stejný stroj jako Vibepollo). Příkazy piš pro PowerShell, build přes `gradlew.bat`.
+- Plán práce: `docs/ROADMAP.md` (odškrtávej hotové body). Analýza rozdílů: `docs/ANALYSIS.md`. Prostředí: `docs/WINDOWS_SETUP.md`.
 - Priorita: **nejdřív aktualizace z Moonlightu** (common-c → toolchain → merge `moonlight/master` → OpenSSL/opus), **až potom GUI** a vlastní funkce.
 
 ## Remotes
 
-- `origin` – `Meitoncz/Vibetemis` (private)
+- `origin` – `Meitoncz/Delos` (private)
 - `artemis` – `ClassicOldSong/moonlight-android` (`moonlight-noir`)
 - `moonlight` – `moonlight-stream/moonlight-android` (`master`)
 
