@@ -50,8 +50,9 @@ public class StartupTest {
 
     @Test
     public void testApplicationStartup() {
-        // Test ArtemisApplication creation and initialization
-        ArtemisApplication app = new ArtemisApplication();
+        // Test DelosApplication creation and initialization
+        // Use the application Robolectric created from the manifest (it has a base context)
+        DelosApplication app = ApplicationProvider.getApplicationContext();
         app.onCreate();
 
         // Verify ProfilesManager was initialized

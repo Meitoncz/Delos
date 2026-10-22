@@ -47,7 +47,7 @@ public class SimpleStartupTest {
     @Test
     public void testApplicationCreation() {
         // Test basic application creation
-        ArtemisApplication app = new ArtemisApplication();
+        DelosApplication app = new DelosApplication();
         assertNotNull("Application should be created", app);
     }
 
@@ -56,7 +56,8 @@ public class SimpleStartupTest {
         // Test application onCreate which initializes ProfilesManager
         // After the fix, this should no longer crash
         try {
-            ArtemisApplication app = new ArtemisApplication();
+            // Use the application Robolectric created from the manifest (it has a base context)
+            DelosApplication app = ApplicationProvider.getApplicationContext();
             app.onCreate();
 
             // Should now work without crashing

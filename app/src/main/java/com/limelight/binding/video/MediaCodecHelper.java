@@ -1185,9 +1185,9 @@ public class MediaCodecHelper {
             // Prefer IDR when possible
             safeSet(videoFormat, "vendor.qti-ext-dec-picture-type.enable", 0); //ignored in logs
             // Generic AOSP scheduling hints
-            try { videoFormat.setInteger(android.media.MediaFormat.KEY_OPERATING_RATE, (int)Short.MAX_VALUE); } catch (Throwable ignored) {}
+            try { videoFormat.setInteger(android.media.MediaFormat.KEY_OPERATING_RATE, (int)Short.MAX_VALUE); } catch (Throwable t) { LimeLog.info("KEY_OPERATING_RATE not supported: " + t); }
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                try { videoFormat.setInteger(android.media.MediaFormat.KEY_PRIORITY, 0); } catch (Throwable ignored) {}
+                try { videoFormat.setInteger(android.media.MediaFormat.KEY_PRIORITY, 0); } catch (Throwable t) { LimeLog.info("KEY_PRIORITY not supported: " + t); }
             }
         }
     }

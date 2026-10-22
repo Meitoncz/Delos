@@ -5,11 +5,11 @@ import android.content.Context;
 
 public class KeyBoardAnalogStickButtonFree extends keyAnalogStickFree {
 
-    private final int MIN_CIRCLE_R = 10000;  //当摇杆移动的非常小时，不产生操作，摇杆范围-32765<x,y<32765
-    private final float EIGHTH_PI = 0.4142f;  // y=tan(π/8)x 分界线
-    private final float EIGHTH_THREE_PI = 2.4142f;  //  y=tan(3π/8)x 分界线
-    private final float NEGATIVE_EIGHTH_PI = -0.4142f; // y=tan(-π/8)x 分界线
-    private final float NEGATIVE_EIGHTH_THREE_PI = -2.4142f; // y=tan(-3π/8)x 分界线
+    private final int MIN_CIRCLE_R = 10000;  // Ignore very small stick movements; stick range is -32765<x,y<32765
+    private final float EIGHTH_PI = 0.4142f;  // y=tan(π/8)x boundary
+    private final float EIGHTH_THREE_PI = 2.4142f;  //  y=tan(3π/8)x boundary
+    private final float NEGATIVE_EIGHTH_PI = -0.4142f; // y=tan(-π/8)x boundary
+    private final float NEGATIVE_EIGHTH_THREE_PI = -2.4142f; // y=tan(-3π/8)x boundary
 //    private byte sendFlag = 0;
     private final int[] stickIndex = new int[4];
     private final boolean[] stickBool = new boolean[4];

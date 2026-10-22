@@ -117,18 +117,18 @@ public class PreferenceConfiguration {
 
     private static final String CHECKBOX_SHOW_OVERLAY_ZOOM_TOGGLE_BUTTON = "checkbox_show_overlay_zoom_toggle_button";
 
-    //竖屏模式
+    // Portrait mode
     private static final String CHECKBOX_AUTO_ORIENTATION = "checkbox_auto_orientation";
-    //屏幕特殊按键
+    // On-screen special keys
     private static final String CHECKBOX_ENABLE_KEYBOARD = "checkbox_enable_keyboard";
 
-    //屏幕特殊按键 震动
+    // On-screen special keys: vibration
     private static final String CHECKBOX_ENABLE_KEYBOARD_VIBRATE = "checkbox_vibrate_keyboard";
 
-    //自动摇杆
+    // Automatic stick
     private static final String CHECKBOX_CHECKBOX_ENABLE_ANALOG_STICK_NEW = "checkbox_enable_analog_stick_new";
 
-    //触控屏幕灵敏度
+    // Touchscreen sensitivity
     private static final String SEEKBAR_TOUCH_SENSITIVITY = "seekbar_touch_sensitivity_opacity_x";
     private static final String SEEKBAR_TRACKPAD_SENSITIVITY_X = "seekbar_trackpad_sensitivity_x";
     private static final String SEEKBAR_TRACKPAD_SENSITIVITY_Y = "seekbar_trackpad_sensitivity_y";
@@ -266,7 +266,7 @@ public class PreferenceConfiguration {
     public boolean enablePip;
 
     public boolean enablePerfOverlay;
-    //简化版性能信息
+    // Lite performance overlay
     public boolean enablePerfOverlayLite;
 
     public boolean enablePerfOverlayLiteDialog;
@@ -282,50 +282,50 @@ public class PreferenceConfiguration {
     public boolean autoInvertVideoResolution;
     public int resolutionScaleFactor;
     public boolean resumeWithoutConfirm;
-    //竖屏模式
+    // Portrait mode
     public boolean autoOrientation;
-    //虚拟屏幕键盘按键
+    // Virtual on-screen keyboard keys
     public boolean enableKeyboard;
-    //修复JoyCon十字键
+    // Fix Joy-Con D-pad
     public boolean enableJoyConFix;
 
-    //自由摇杆啊
+    // Free analog stick
     public boolean enableNewAnalogStick;
 
     public boolean enableFullExDisplay;
 
-    //串流画面顶部居中显示
+    // Show the stream at the top center of the screen
     public boolean alignDisplayTopCenter;
 
-    //触控屏幕灵敏度
+    // Touchscreen sensitivity
     public int touchSensitivityX;
     public int touchSensitivityY;
-    //超出边界自动回中心点
+    // Re-center automatically when leaving the bounds
     public boolean touchSensitivityRotationAuto;
 
-    //触控灵敏度调节范围
+    // Touch sensitivity range
     public boolean touchSensitivityGlobal;
 
-    //多点触控灵敏度调节
+    // Multi-touch sensitivity
     public boolean enableTouchSensitivity;
 
-    //触控板模式灵敏度
+    // Trackpad mode sensitivity
     public int touchPadSensitivity;
 
     public int touchPadYSensitity;
 
-    //多点触控模式
+    // Multi-touch mode
     public boolean enableMultiTouchScreen;
 
-    //物理光标捕获
+    // Physical cursor capture
     public boolean enableMouseLocalCursor;
 
     public boolean enableMultiTouchGestures;
 
-    //禁用内置的特殊指令
+    // Disable built-in special commands
     public boolean disableDefaultExtraKeys;
 
-    //强制使用设备自身的震动马达
+    // Force the device vibration motor
     public boolean enableDeviceRumble;
 
     // Enable forwarding of commitText from soft keyboard
@@ -335,10 +335,10 @@ public class PreferenceConfiguration {
 
     public boolean enableKeyboardSquare;
 
-    //官方虚拟按钮风格
+    // Official virtual button style
     public boolean enableOnScreenStyleOfficial;
 
-    //自由摇杆背景透明度
+    // Free analog stick background opacity
     public int enableNewAnalogStickOpacity;
 
     public int trackpadSensitivityX;
@@ -928,9 +928,9 @@ private static int getFramePacingValue(Context context) {
         config.enableKeyboard = prefs.getBoolean(CHECKBOX_ENABLE_KEYBOARD,false);
 
         config.enableKeyboardVibrate = prefs.getBoolean(CHECKBOX_ENABLE_KEYBOARD_VIBRATE,false);
-        //兼容joycon手柄
+        // Joy-Con compatibility
         config.enableJoyConFix = prefs.getBoolean("checkbox_joycon_fix",false);
-        //全键盘透明度
+        // Full keyboard opacity
         config.oscKeyboardOpacity = prefs.getInt("seekbar_keyboard_axi_opacity",DEFAULT_OPACITY);
 
         config.enableOnScreenStyleOfficial = prefs.getBoolean("checkbox_onscreen_style_official",false);

@@ -265,7 +265,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     public static final String EXTRA_SERVER_COMMANDS = "ServerCommands";
     public static final String EXTRA_DISPLAY_ID = "DisplayID";
 
-    public static final String CLIPBOARD_IDENTIFIER = "ArtemisStreaming";
+    public static final String CLIPBOARD_IDENTIFIER = "DelosStreaming";
 
     private String appUUID;
     private String host;
@@ -444,7 +444,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             }
         }
 
-        //光标是否显示
+        // Whether the local cursor is shown
         cursorVisible = prefConfig.enableMouseLocalCursor;
 
         // Listen for non-touch events on the game surface
@@ -457,7 +457,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
         rootView = streamContainer.getParent();
 
-        //串流画面 顶部居中显示
+        // Show the stream at the top center of the screen
         if(prefConfig.alignDisplayTopCenter){
             FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) streamContainer.getLayoutParams();
             params.gravity = Gravity.CENTER_HORIZONTAL|Gravity.TOP;
@@ -671,13 +671,13 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                     f.setAccessible(true);
                     Object v = f.get(prefConfig);
                     if (v instanceof Boolean) forceTight = (Boolean) v;
-                } catch (Throwable ignored) {}
+                } catch (Throwable t) { LimeLog.warning("Failed to read forceTightThresholds: " + t); }
             }
-            try { decoderRenderer.setForceTightThresholds(forceTight); } catch (Throwable ignored) {}
+            try { decoderRenderer.setForceTightThresholds(forceTight); } catch (Throwable t) { LimeLog.warning("setForceTightThresholds failed: " + t); }
             if (forceTight) {
                 LimeLog.info("ForceTightThresholds enabled: using vsync-based thresholds on all devices");
             }
-        } catch (Throwable ignored) {}
+        } catch (Throwable t) { LimeLog.warning("Failed to apply tight thresholds: " + t); }
 
 // --- latency profile selection ---
         try {
@@ -694,7 +694,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                 prefConfig.framePacing = PreferenceConfiguration.FRAME_PACING_BALANCED;
                 LimeLog.info("Balanced: preferLowerDelays=false, timeout=2000us, pacing=BALANCED");
             }
-        } catch (Throwable ignored) {}
+        } catch (Throwable t) { LimeLog.warning("Failed to apply latency profile: " + t); }
 
 // Don't stream HDR if the decoder can't support it
         if (willStreamHdr && !decoderRenderer.isHevcMain10Hdr10Supported() && !decoderRenderer.isAv1Main10Supported()) {
@@ -836,7 +836,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             }
         }
 
-        //特殊按键屏幕布局
+        // On-screen special keys layout
         if(prefConfig.enableKeyboard){
             initKeyboardController();
         }
@@ -882,16 +882,16 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         //fixed size + pacing without back-pressure on MTK
         try {
             View root = findViewById(android.R.id.content);
-            // Niente getIdentifier: troviamo la prima SurfaceView nel layout
+            // No getIdentifier(): find the first SurfaceView in the layout
             SurfaceView streamSurfaceView = findFirstSurfaceViewFrom(root);
 
             if (streamSurfaceView != null) {
                 // Avoid resizes/glitches that break the compositor
                 int vw = (prefConfig != null && prefConfig.width > 0) ? prefConfig.width : displayWidth;
                 int vh = (prefConfig != null && prefConfig.height > 0) ? prefConfig.height : displayHeight;
-                try { streamSurfaceView.getHolder().setFixedSize(vw, vh); } catch (Throwable ignored) {}
-                try { streamSurfaceView.setZOrderOnTop(false); } catch (Throwable ignored) {}
-                try { streamSurfaceView.setZOrderMediaOverlay(false); } catch (Throwable ignored) {}
+                try { streamSurfaceView.getHolder().setFixedSize(vw, vh); } catch (Throwable t) { LimeLog.warning("SurfaceView setFixedSize failed: " + t); }
+                try { streamSurfaceView.setZOrderOnTop(false); } catch (Throwable t) { LimeLog.warning("SurfaceView setZOrderOnTop failed: " + t); }
+                try { streamSurfaceView.setZOrderMediaOverlay(false); } catch (Throwable t) { LimeLog.warning("SurfaceView setZOrderMediaOverlay failed: " + t); }
 
                 // 2) setFrameRate via reflection (compat < 30)
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
@@ -902,7 +902,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                         } else {
                             displayHz = currentDisplay.getRefreshRate();
                         }
-                    } catch (Throwable ignored) {}
+                    } catch (Throwable t) { LimeLog.warning("Failed to read display refresh rate: " + t); }
 
                     float targetFps = (prefConfig != null && prefConfig.fps > 0) ? prefConfig.fps : displayHz;
 
@@ -920,10 +920,10 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                     try {
                         java.lang.reflect.Method m = SurfaceView.class.getMethod("setFrameRate", float.class, int.class);
                         m.invoke(streamSurfaceView, Math.min(targetFps, displayHz), compat);
-                    } catch (Throwable ignored) {}
+                    } catch (Throwable t) { LimeLog.info("SurfaceView.setFrameRate not applied: " + t); }
                 }
             }
-        } catch (Throwable ignored) {}
+        } catch (Throwable t) { LimeLog.warning("Stream surface setup failed: " + t); }
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -1102,7 +1102,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         keyBoardLayoutController.show();
     }
 
-    //显示隐藏虚拟特殊按键
+    // Show/hide the virtual special keys
     public void toggleKeyboardController(){
         if (keyBoardController==null) {
             initKeyboardController();
@@ -1123,7 +1123,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         keyBoardLayoutController.toggleVisibility();
     }
 
-    //显示隐藏虚拟手柄控制器
+    // Show/hide the virtual gamepad controller
     public void toggleVirtualController(){
         if (virtualController==null) {
             initVirtualController();
@@ -2457,16 +2457,16 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         }
     }
 
-    //灵敏度保存到集合 适配多个手指
+    // Per-pointer sensitivity state, so multiple fingers are supported
     private Map<String,SensitivityBean> sensitivityMap=new HashMap<>();
 
-    //修改移动的触控灵敏度（通过修改移动的距离实现） 默认使用右半边屏幕的时候开启
+    // Adjust touch sensitivity by scaling the movement distance; by default only on the right half of the screen
     private float[] getStreamViewRelativeSensitivityXY(MotionEvent event,float normalizedX,float normalizedY,int pointerIndex){
         float[] normalized=new float[2];
         normalized[0]=normalizedX;
         normalized[1]=normalizedY;
 
-        //如果不是全局模式 并且 坐标 不在右边 则返回
+        // Not in global mode and the touch is not on the right half: leave it unchanged
         if(!prefConfig.touchSensitivityGlobal&&normalizedX<getResources().getDisplayMetrics().widthPixels/2){
             return normalized;
         }
@@ -2478,7 +2478,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             if(bean.getLastAbsoluteX() !=-1){
                 float dx=normalizedX- bean.getLastAbsoluteX();
                 float dy=normalizedY- bean.getLastAbsoluteY();
-                dx*=0.01f*prefConfig.touchSensitivityX;//灵敏度
+                dx*=0.01f*prefConfig.touchSensitivityX;// sensitivity
                 dy*=0.01f*prefConfig.touchSensitivityY;
                 normalizedX= bean.getLastRelativelyX() +dx;
                 normalizedY= bean.getLastRelativelyY() +dy;
@@ -2497,7 +2497,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             bean.setLastRelativelyY(normalizedY);
             sensitivityMap.put(String.valueOf(event.getPointerId(pointerIndex)),bean);
         }
-        //抬起的时候，恢复初始化状态
+        // On pointer up, reset to the initial state
         if (event.getActionMasked() == MotionEvent.ACTION_UP||event.getActionMasked() == MotionEvent.ACTION_POINTER_UP) {
             sensitivityMap.remove(String.valueOf(event.getPointerId(pointerIndex)));
         }
@@ -2510,7 +2510,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     private float[] getStreamViewRelativeNormalizedXY(View view, MotionEvent event, int pointerIndex) {
         float normalizedX = event.getX(pointerIndex);
         float normalizedY = event.getY(pointerIndex);
-        //开启自定义修改触控灵敏度 并且 数值不为100
+        // Custom touch sensitivity enabled and not 100%
         if(prefConfig.enableTouchSensitivity&&(prefConfig.touchSensitivityX !=100||prefConfig.touchSensitivityY!=100)){
             float[] normalized=getStreamViewRelativeSensitivityXY(event,normalizedX,normalizedY,pointerIndex);
             normalizedX=normalized[0];
@@ -4148,7 +4148,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                 .show();
     }
 
-    //本地鼠标光标切换
+    // Toggle the local mouse cursor
     private void toggleMouseLocalCursor(){
         if (!grabbedInput) {
             inputCaptureProvider.enableCapture();
@@ -4218,7 +4218,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         }
     }
 
-    //切换触控灵敏度开关
+    // Toggle custom touch sensitivity
     public void switchTouchSensitivity(){
         prefConfig.enableTouchSensitivity = !prefConfig.enableTouchSensitivity;
     }
@@ -4281,7 +4281,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     }
 
 
-    // 设置surfaceView的圆角 setSurfaceviewCorner(UiHelper.dpToPx(this,24));
+    // Rounded SurfaceView corners: setSurfaceviewCorner(UiHelper.dpToPx(this,24));
     private void setSurfaceviewCorner(final float radius) {
 
         streamContainer.setOutlineProvider(new ViewOutlineProvider() {

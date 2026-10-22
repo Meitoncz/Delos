@@ -59,7 +59,7 @@ public class XboxOneController extends AbstractXboxController {
             new InitPacket(0x24c6, 0x541a, RUMBLE_INIT2),
             new InitPacket(0x24c6, 0x542a, RUMBLE_INIT2),
             new InitPacket(0x24c6, 0x543a, RUMBLE_INIT2),
-            new InitPacket(0x3537, 0x1012, ONE_S_INIT),//小鸡影舞者
+            new InitPacket(0x3537, 0x1012, ONE_S_INIT), // GameSir Kaleid
 
     };
 

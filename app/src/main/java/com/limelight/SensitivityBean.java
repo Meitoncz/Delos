@@ -6,11 +6,11 @@ package com.limelight;
  * Time: 23:35
  */
 public class SensitivityBean {
-   //真实的坐标
+   // Real coordinates
    private float lastAbsoluteX =-1;
    private float lastAbsoluteY =-1;
 
-   //调整灵敏度后的坐标
+   // Coordinates after applying the sensitivity
    private float lastRelativelyX =-1;
    private float lastRelativelyY =-1;
 

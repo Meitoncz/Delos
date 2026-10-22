@@ -391,7 +391,7 @@ public class KeyBoardControllerConfigurationLoader {
             JSONArray rockerList = jsonObject1.getJSONArray("rocker");
             JSONArray mouseList = jsonObject1.getJSONArray("mouse");
 
-            //十字键
+            // D-pad
             for (int i = 0; i < dpadList.length(); i++) {
                 JSONObject obj = dpadList.getJSONObject(i);
                 String code = obj.optString("elementId");
@@ -405,7 +405,7 @@ public class KeyBoardControllerConfigurationLoader {
                         (int) (w * 2.5), (int) (w * 2.5)
                 );
             }
-            //摇杆
+            // Stick
             for (int i = 0; i < rockerList.length(); i++) {
                 JSONObject obj = rockerList.getJSONObject(i);
                 String code = obj.optString("elementId");
@@ -431,7 +431,7 @@ public class KeyBoardControllerConfigurationLoader {
                 }
             }
 
-            //鼠标按键
+            // Mouse button
             for (int i = 0; i < mouseList.length(); i++) {
                 JSONObject obj = mouseList.getJSONObject(i);
                 obj.put("type", 1);
@@ -442,7 +442,7 @@ public class KeyBoardControllerConfigurationLoader {
 
             int i;
 
-            //普通按键
+            // Regular key
             for (i = 0; i < keystrokeList.length(); i++) {
                 JSONObject obj = keystrokeList.getJSONObject(i);
 

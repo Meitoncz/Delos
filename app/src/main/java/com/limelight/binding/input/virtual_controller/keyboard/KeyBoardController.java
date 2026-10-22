@@ -368,7 +368,7 @@ public class KeyBoardController {
         if (Game.instance == null || !Game.instance.connected) {
             return;
         }
-        //1-鼠标 0-按键 2-摇杆 3-十字键
+        // 1 = mouse, 0 = key, 2 = stick, 3 = D-pad
         if (keyEvent.getSource() == 1) {
             Game.instance.mouseButtonEvent(keyEvent.getKeyCode(), KeyEvent.ACTION_DOWN == keyEvent.getAction());
         } else {

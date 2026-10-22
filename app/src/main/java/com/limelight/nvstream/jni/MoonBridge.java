@@ -217,7 +217,7 @@ public class MoonBridge {
         }
     }
 
-    //todo 不显示画面
+    // TODO: no picture is shown
     public static int bridgeDrSubmitDecodeUnit(byte[] decodeUnitData, int decodeUnitLength, int decodeUnitType,
                                                int frameNumber, int frameType, char frameHostProcessingLatency,
                                                long receiveTimeUs, long enqueueTimeUs) {
@@ -257,7 +257,7 @@ public class MoonBridge {
         }
     }
 
-    //静音 todo
+    // TODO: mute
     public static void bridgeArPlaySample(short[] pcmData) {
         if (audioRenderer != null) {
             audioRenderer.playDecodedAudio(pcmData);

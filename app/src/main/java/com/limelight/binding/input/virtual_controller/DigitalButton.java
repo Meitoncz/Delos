@@ -158,10 +158,10 @@ public class DigitalButton extends VirtualControllerElement {
         rect.right = getWidth() - rect.left;
         rect.bottom = getHeight() - rect.top;
 
-        //皮肤选择 官方皮肤
+        // Skin selection: official skin
         if(PreferenceConfiguration.readPreferences(getContext()).enableOnScreenStyleOfficial){
             paint.setStyle(Paint.Style.STROKE);
-            //方形
+            // Square
             if(PreferenceConfiguration.readPreferences(getContext()).enableKeyboardSquare){
                 canvas.drawRect(rect,paint);
             }else{
@@ -173,7 +173,7 @@ public class DigitalButton extends VirtualControllerElement {
             return;
         }
         int oscOpacity=PreferenceConfiguration.readPreferences(getContext()).oscOpacity;
-        //虚拟手柄皮肤
+        // Virtual gamepad skin
         if (icon != -1) {
             Drawable d = getResources().getDrawable(isPressed()?iconPress:icon);
             d.setBounds(5, 5, getWidth() - 5, getHeight() - 5);

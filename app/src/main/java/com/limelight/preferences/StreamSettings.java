@@ -59,6 +59,7 @@ import com.limelight.utils.UiHelper;
 import org.json.JSONObject;
 import java.io.File;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -874,8 +875,8 @@ public class StreamSettings extends AppCompatActivity {
                             return false;
                         }
                         
-                        // Format to max 3 decimal places
-                        String formattedValue = String.format("%.3f", refreshRate);
+                        // Format to max 3 decimal places; always use "." so the value can be parsed back in any locale
+                        String formattedValue = String.format(Locale.US, "%.3f", refreshRate);
                         // Remove trailing zeros
                         formattedValue = formattedValue.replaceAll("0+$", "").replaceAll("\\.$", "");
 
@@ -944,8 +945,8 @@ public class StreamSettings extends AppCompatActivity {
                     Iterator it = object.keys();
                     prefEditor.clear();
                     while (it.hasNext()) {
-                        String key = (String) it.next();// 获得key
-                        String value = object.getString(key);// 获得value
+                        String key = (String) it.next();// key
+                        String value = object.getString(key);// value
                         prefEditor.putString(key, value);
                     }
                     prefEditor.apply();
@@ -1001,11 +1002,11 @@ public class StreamSettings extends AppCompatActivity {
             return file1;
         }
 
-        //获取所有设置项配置文件
+        // Get all settings files
         private File getAllJsonData(File file){
             SharedPreferences pref = getPrefs();
             Map<String,?> map = pref.getAll();
-            //获取适配电脑的数据库信息
+            // Get the computer database info
 //            List<ComputerDetails> map= new ComputerDatabaseManager(context).getAllComputers();
             File file1= new File(file,"allJSON.json");
             String jsonStr=new Gson().toJson(map);

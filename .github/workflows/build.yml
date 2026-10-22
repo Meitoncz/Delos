@@ -33,6 +33,9 @@ jobs:
         # AGP downloads the NDK version pinned in app/build.gradle automatically
         run: ./gradlew --no-daemon assembleNonRoot_gameDebug
 
+      - name: Run unit tests
+        run: ./gradlew --no-daemon testNonRoot_gameDebugUnitTest
+
       - name: Upload APKs
         uses: actions/upload-artifact@v7
         with:

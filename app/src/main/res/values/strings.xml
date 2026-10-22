@@ -42,7 +42,7 @@
     <string name="nettest_text_waiting">Delos is testing your network connection to determine if any required ports are blocked.\n\nThis may take a few seconds…</string>
     <string name="nettest_title_done">Network Test Complete</string>
     <string name="nettest_text_success">Your network does not appear to be blocking Delos. If you still have trouble connecting, check your PC\'s firewall settings.\n\nIf you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your PC and run the included Internet Streaming Tester to check your PC\'s Internet connection.</string>
-    <string name="nettest_text_inconclusive">The network test could not be performed because none of Delos\'s connection testing servers were reachable. Check your Internet connection or try again later.</string>
+    <string name="nettest_text_inconclusive">The network test could not be performed because none of the Delos connection testing servers were reachable. Check your Internet connection or try again later.</string>
     <string name="nettest_text_failure">Your device\'s current network connection seems to be blocking Delos. Streaming over the Internet may not work while connected to this network.\n\nThe following network ports were blocked:\n</string>
     <string name="nettest_text_blocked">Your device\'s current network connection is blocking Delos. Streaming over the Internet may not work while connected to this network.</string>
 
@@ -225,7 +225,7 @@
     <string name="title_checkbox_xb1_driver">Xbox 360/One/NintendoPro USB gamepad driver</string>
     <string name="summary_checkbox_xb1_driver">Enables a built-in USB driver for devices without native Xbox/Nintendo Pro controller support</string>
     <string name="title_checkbox_usb_bind_all">Override native Xbox gamepad support</string>
-    <string name="summary_checkbox_usb_bind_all">Use Delos\'s USB driver for all supported gamepads, even if native Xbox/Nintendo Pro controller support is present</string>
+    <string name="summary_checkbox_usb_bind_all">Use the Delos USB driver for all supported gamepads, even if native Xbox/Nintendo Pro controller support is present</string>
     <string name="title_checkbox_mouse_emulation">Mouse emulation via gamepad</string>
     <string name="summary_checkbox_mouse_emulation">Long-press the Start button to toggle between gamepad and mouse mode</string>
     <string name="title_checkbox_remember_mouse_mode">Remember mouse mode</string>
@@ -313,7 +313,7 @@
     <string name="title_troubleshooting">Troubleshooting guide</string>
     <string name="summary_troubleshooting">View tips for diagnosing and fixing common streaming issues</string>
     <string name="title_privacy_policy">Privacy policy</string>
-    <string name="summary_privacy_policy">View Delos\'s privacy policy</string>
+    <string name="summary_privacy_policy">View the Delos privacy policy</string>
     <string name="title_special_key_help">Custom Keys help</string>
     <string name="summary_special_key_help">Instructions about how to setup custom special keys</string>
 
@@ -321,7 +321,7 @@
     <string name="toast_controller_type_changed">Gamepad type may be changed due to motion sensor emulation</string>
 
     <!-- Permission justification -->
-    <string name="local_network_rationale">Moonlight requires local network permissions to communicate with nearby hosts</string>
+    <string name="local_network_rationale">Delos requires local network permissions to communicate with nearby hosts</string>
 
     <!-- Array strings -->
     <string name="resolution_360p">360p</string>
@@ -501,7 +501,7 @@
     <string name="title_touchpad_sensitivity_y">Touchpad Sensitivity Y Axis</string>
     <string name="summary_touchpad_sensitivity_y">For mouse touchpad mode and virtual special button touchpad control;\nBoth share a sensitivity value, but the sensitivity performance may be different.\nDoes anyone use both together?</string>
     <string name="title_device_rumble">Force vibration on device</string>
-    <string name="summary_device_rumble">If you are not satisfied with the vibration of the connected gamepad, you can enable this option.\nInvalid for forced use of Delos\'s built-in USB driver</string>
+    <string name="summary_device_rumble">If you are not satisfied with the vibration of the connected gamepad, you can enable this option.\nInvalid for forced use of the built-in Delos USB driver</string>
     <string name="title_clear_default_special_button">Disable default Special Keys</string>
     <string name="summary_clear_default_special_button">If you feel the built-in commands in the Back Menu are useless, you can disable them and use your imported ones.</string>
     <string name="title_trackpad_sensitivity_x">Trackpad Sensitivity X</string>

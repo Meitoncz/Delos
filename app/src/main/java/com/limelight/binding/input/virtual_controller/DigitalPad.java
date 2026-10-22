@@ -52,7 +52,7 @@ public class DigitalPad extends VirtualControllerElement {
         paint.setTextSize(getPercent(getCorrectWidth(), 20));
         paint.setTextAlign(Paint.Align.CENTER);
         paint.setStrokeWidth(getDefaultStrokeWidth());
-        //虚拟手柄皮肤 yuzu
+        // Virtual gamepad skin (yuzu)
         if(!PreferenceConfiguration.readPreferences(getContext()).enableOnScreenStyleOfficial) {
             int oscOpacity=PreferenceConfiguration.readPreferences(getContext()).oscOpacity;
 
@@ -141,7 +141,7 @@ public class DigitalPad extends VirtualControllerElement {
 
             return;
         }
-        //官方皮肤
+        // Official skin
         if (direction == DIGITAL_PAD_DIRECTION_NO_DIRECTION) {
             // draw no direction rect
             paint.setStyle(Paint.Style.STROKE);

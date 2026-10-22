@@ -5,7 +5,7 @@ import android.widget.Toast;
 
 import com.limelight.profiles.ProfilesManager;
 
-public class ArtemisApplication extends Application {
+public class DelosApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();

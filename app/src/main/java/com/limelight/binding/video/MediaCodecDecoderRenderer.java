@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -76,7 +77,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
             try {
                 // Fallback to immediate if timestamped release fails for any reason
                 videoDecoder.releaseOutputBuffer(bufferIndex, true);
-            } catch (Throwable ignored) {}
+            } catch (Throwable ignored) { /* nothing else we can do for this frame */ }
         }
     }
     private int getOutputDequeueTimeoutUs(){ return preferLowerDelays ? Math.max(250, preferLowerDelaysTimeoutUs) : preferLowerDelaysTimeoutUs; }
@@ -583,7 +584,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
 
         videoDecoder.configure(format, renderTarget, null, 0);
 
-        try { applySurfaceFrameRate(renderTarget, targetFps); } catch (Throwable ignored) {}
+        try { applySurfaceFrameRate(renderTarget, targetFps); } catch (Throwable t) { LimeLog.warning("applySurfaceFrameRate failed: " + t); }
 
         try {
             MediaCodecInfo __info = (android.os.Build.VERSION.SDK_INT >= 21) ? videoDecoder.getCodecInfo() : null;
@@ -727,7 +728,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
             MediaFormat mediaFormat = createBaseMediaFormat(mimeType);
             // This will try low latency options until we find one that works (or we give up).
             boolean newFormat = MediaCodecHelper.setDecoderLowLatencyOptions(mediaFormat, selectedDecoderInfo, prefs.enableUltraLowLatency, tryNumber);
-            //todo 色彩格式
+            // TODO: color format
 //            MediaCodecInfo.CodecCapabilities codecCapabilities = selectedDecoderInfo.getCapabilitiesForType(mimeType);
 //            int[] colorFormats=codecCapabilities.colorFormats;
 //            for (int colorFormat : colorFormats) {
@@ -1134,7 +1135,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                         android.view.Display d = ((android.view.WindowManager) context.getSystemService(android.content.Context.WINDOW_SERVICE)).getDefaultDisplay();
                         if (d != null) displayHz = d.getRefreshRate();
                     }
-                } catch (Throwable ignored) {}
+                } catch (Throwable t) { LimeLog.warning("Failed to read display refresh rate: " + t); }
                 if (displayHz <= 0f) displayHz = 60f;
                 vsyncPeriodNs = (long) (1_000_000_000L / displayHz);
 
@@ -1154,7 +1155,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                     if (decName != null) {
                         isC2Decoder = decName.toLowerCase(java.util.Locale.US).startsWith("c2.");
                     }
-                } catch (Throwable ignored) {}
+                } catch (Throwable t) { LimeLog.warning("Failed to read decoder name: " + t); }
 
                 // Aggressive/adaptive state
                 final double EWMA_ALPHA = 0.25;
@@ -1186,7 +1187,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                             // Drain non-blocking; keep only the newest buffer
                             while (__idx >= 0) {
                                 if (__last >= 0) {
-                                    try { videoDecoder.releaseOutputBuffer(__last, false); } catch (Throwable ignored) {}
+                                    try { videoDecoder.releaseOutputBuffer(__last, false); } catch (Throwable ignored) { /* best effort while dropping a stale frame */ }
                                 }
                                 __last = __idx;
                                 __lastPtsUs = __tmpInfo.presentationTimeUs;
@@ -1203,12 +1204,12 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                                 if (__lastPtsUs >= 0) {
                                     long __d2pNs = __nowNs - (__lastPtsUs * 1000L);
                                     ewmaDecodeToPresentNs += EWMA_ALPHA * (__d2pNs - ewmaDecodeToPresentNs);
-                                    try { updateDecodeLatencyStats(__lastPtsUs); } catch (Throwable ignored) {}
+                                    try { updateDecodeLatencyStats(__lastPtsUs); } catch (Throwable ignored) { /* per-frame stats are best effort */ }
                                 }
 
                                 continue; // handled this iteration
                             }
-                        } catch (Throwable ignored) {}
+                        } catch (Throwable ignored) { /* per-frame path, best effort */ }
                     }
                     /* /LATEST_ONLY_LOW_LATENCY */
 
@@ -1227,7 +1228,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                         }
 
                         if (outIndex >= 0) {
-                            // --- flags per gestire le statistiche in modo robusto ---
+                            // --- flags to keep the statistics consistent ---
                             boolean statsUpdated = false;
                             boolean frameDropped = false;
 
@@ -1236,7 +1237,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
 
                             numFramesOut++;
 
-                            // aggiorna inter-arrival
+                            // update inter-arrival time
                             if (lastDecoderPtsUs != 0L) {
                                 long interUs = presentationTimeUs - lastDecoderPtsUs;
                                 if (interUs > 0) {
@@ -1296,7 +1297,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                                         lastPresentNs = nowNs;
                                         recentDrops = Math.max(0, recentDrops - 1);
 
-                                        // [STATS] update subito dopo il present
+                                        // [STATS] update right after presenting
                                         updateDecodeLatencyStats(presentationTimeUs);
                                         statsUpdated = true;
 
@@ -1311,7 +1312,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                                             }
                                         }
 
-                                        // [STATS] anche su pre-Lollipop, dopo presentazione
+                                        // [STATS] update after presenting (fallback path)
                                         updateDecodeLatencyStats(presentationTimeUs);
                                         statsUpdated = true;
                                     }
@@ -1356,7 +1357,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                                             frameDropped = true;
                                             lastDropNs = nowNs;
                                             recentDrops = Math.min(10, recentDrops + 1);
-                                            continue; // niente stats sui frame droppati
+                                            continue; // no stats for dropped frames
                                         }
 
                                         if (preferLowerDelays) {
@@ -1370,7 +1371,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                                         if (!isLate) lateStreak = 0;
                                         recentDrops = Math.max(0, recentDrops - 1);
 
-                                        // [STATS] update subito dopo il present
+                                        // [STATS] update right after presenting
                                         updateDecodeLatencyStats(presentationTimeUs);
                                         statsUpdated = true;
 
@@ -1385,7 +1386,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                                             }
                                         }
 
-                                        // [STATS] anche su pre-Lollipop, dopo presentazione
+                                        // [STATS] update after presenting (fallback path)
                                         updateDecodeLatencyStats(presentationTimeUs);
                                         statsUpdated = true;
                                     }
@@ -1413,7 +1414,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
 
                                 // Add this buffer
                                 outputBufferQueue.add(lastIndex);
-                                // NB: in BALANCED non presentiamo qui; lasciamo il fallback stats sotto
+                                // NB: BALANCED mode does not present here; the fallback stats update below handles it
                             }
 
                             // --- Fallback stats update ---
@@ -1449,15 +1450,15 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                         LimeLog.warning("Decoder watchdog: no output >1.2s, flushing codec to recover...");
                         try {
                             videoDecoder.flush();
-                        } catch (Throwable ignored) {}
+                        } catch (Throwable t) { LimeLog.warning("Watchdog flush failed: " + t); }
                         try {
                             android.os.Bundle __poke = new android.os.Bundle();
                             __poke.putInt("priority", 0);
                             videoDecoder.setParameters(__poke);
-                        } catch (Throwable ignored) {}
+                        } catch (Throwable t) { LimeLog.warning("Watchdog setParameters failed: " + t); }
                         lastOutputNs = __nowNs;
                     }
-                } catch (Throwable ignored) {}
+                } catch (Throwable t) { LimeLog.warning("Decoder watchdog failed: " + t); }
             }
         };
         rendererThread.setName("Video - Renderer (MediaCodec)");
@@ -1643,7 +1644,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                     timestampUs, codecFlags);
 
             // Track enqueue time for this PTS
-            try { enqueueNsByPtsUs.put(timestampUs, System.nanoTime()); } catch (Throwable ignored) {}
+            try { enqueueNsByPtsUs.put(timestampUs, System.nanoTime()); } catch (Throwable ignored) { /* per-frame stats are best effort */ }
 
             // We need a new buffer now
             nextInputBufferIndex = -1;
@@ -1763,8 +1764,6 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                         }
                         lastNetDataNum=netData;
                     }
-//                    sb.append("分辨率：");
-//                    sb.append(initialWidth + "x" + initialHeight);
                     sb.append(context.getString(R.string.perf_overlay_lite_network_decoding_delay) + ": ");
                     sb.append(context.getString(R.string.perf_overlay_lite_net,(int)(rttInfo >> 32)));
                     sb.append(" / ");
@@ -1772,7 +1771,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                     sb.append("\t");
                     sb.append(context.getString(R.string.perf_overlay_lite_packet_loss) + ": ");
                     sb.append(context.getString(R.string.perf_overlay_lite_netdrops,(float)lastTwo.framesLost / lastTwo.totalFrames * 100));
-                    sb.append("\t FPS：");
+                    sb.append("\t FPS: ");
                     sb.append(context.getString(R.string.perf_overlay_lite_fps, fps.totalFps));
                 }else{
                     // If GPU renders the frames, the render FPS is the actual drawn and visible fps for the user
@@ -2339,7 +2338,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
 
     private boolean isMTKDecoderName(String name) {
         if (name == null) return false;
-        String n = name.toLowerCase();
+        String n = name.toLowerCase(Locale.ROOT);
         return n.startsWith("c2.mtk") || n.startsWith("omx.mtk");
     }
 

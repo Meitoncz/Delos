@@ -39,6 +39,8 @@ Severity: **High** = crash or security issue users can hit, **Medium** = real bu
 | Q2 | Code quality: `Game.instance` static singleton (46 uses), 24 empty `catch` blocks, 85 lines of Chinese + some Italian comments, messy decoder pacing code | Low | L | 4 |
 | Q3 | 439 lint warnings, almost all in Artemis files | Low | M | 4 |
 | B1 | Branding leftovers (`ArtemisApplication`, log tags, "Moonlight" in Moonlight translations) | Low | S | 4 |
+| C5 | Custom refresh rate is saved with the locale's decimal separator (e.g. "59,94" in Czech/German) and cannot be parsed back | Medium | S | 4a |
+| T1 | Unit tests no longer compiled since compileSdk 37 (Robolectric 4.16); CI does not run them | Low | S | 4a |
 
 No finding can crash the app on the Odin today. **No known vulnerabilities** in any dependency, the network/pairing/crypto code is unchanged from Moonlight, and smart clipboard sync is opt-in (default off).
 
@@ -157,4 +159,8 @@ Each batch in its own branch, built and tested on the Odin before merging.
 - **Batch 1 – quick wins, low risk (done):** removed SBS 3D (D1) and the performance logging feature (S4), dropped unused dependencies (D2), silenced the Vietnamese lint false positive (C1), narrowed FileProvider to `export_settings/` (S3), removed dead code (X1), no R8 for debug builds (X2), ARM-only ABIs, Gson 2.14.0 and AndroidX Annotation 1.11.0. Debug APK: 44.2 MB → 19.4 MB.
 - **Batch 2 – security:** confirmation dialog for external `art://launch` links (S1); accessibility service only forwards keys while the stream (or external display controller) has focus, config trimmed to key filtering (S2).
 - **Batch 3 – platform (done):** minSdk 29 and the `root` flavor no longer built (C2; `src/root` and the evdev native code stay untouched for upstream merges), `OnBackPressedCallback` in `StreamSettings` and `ExternalDisplayControlActivity` (C3), insets in `DebugInfoActivity` (C4), no deprecated APIs left in Artemis-only files (Q1; new `utils/DeviceVibrator` helper; deliberate `@SuppressWarnings` only where no replacement exists), AppCompat 1.8.0 and Material 1.14.0. javac deprecation warnings: 195 → 160 (the rest is shared Moonlight code).
-- **Batch 4 – code quality / refactoring:** English comments, logging instead of empty catches, decoder pacing cleanup, reduce `Game.instance`, extract Artemis features from `Game.java`, selected lint warnings, branding leftovers (B1).
+- **Batch 4 – code quality / refactoring**, split into steps:
+  - **4a – mechanical cleanup (done):** all Chinese/Italian comments translated (Q2); empty `catch` blocks in Artemis code log a warning, per-frame ones are documented as best effort; branding (B1): `DelosApplication`, `Profiles:` log tag, `.art` header, clipboard marker, "Moonlight" → "Delos" in ~20 translations where it means the app (the "Moonlight Internet Hosting Tool" stays), the name "Delos" is never inflected; refresh rate formatting fixed (C5); unit tests fixed (T1: Robolectric 4.17, outdated tests updated – 51/51 pass) and now run in CI.
+  - **4b – decoder pacing cleanup** without behavior changes (incl. replacing reflection on `prefConfig.forceTightThresholds` and the `SurfaceView.setFrameRate` reflection that never resolves).
+  - **4c – `Game.java`**: extract Artemis features, reduce `Game.instance`.
+  - **4d – fewer in-app confirmation dialogs.**

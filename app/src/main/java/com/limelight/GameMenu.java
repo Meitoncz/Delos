@@ -35,9 +35,9 @@ public class GameMenu implements Game.GameMenuCallbacks {
     public static final long KEY_UP_DELAY = 25;
     private static final long TEST_GAME_FOCUS_DELAY = 10;
 
-    public static final String PREF_NAME = "specialPrefs"; // SharedPreferences的名称
+    public static final String PREF_NAME = "specialPrefs"; // SharedPreferences name
 
-    public static final String KEY_NAME = "special_key"; // 要保存的键名称
+    public static final String KEY_NAME = "special_key"; // Key of the stored value
 
     public static class MenuOption {
         private final String label;

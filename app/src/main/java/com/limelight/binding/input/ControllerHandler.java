@@ -1443,11 +1443,11 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
         }
 
 
-        //fix joycon-left 十字键
+        // Fix Joy-Con (L) D-pad
         if(prefConfig.enableJoyConFix&&context.vendorId == 0x057e && context.productId == 0x2006){
             switch (event.getScanCode())
             {
-                case 546://十字键
+                case 546:// D-pad
                     return KeyEvent.KEYCODE_DPAD_LEFT;
                 case 547:
                     return KeyEvent.KEYCODE_DPAD_RIGHT;
@@ -1455,7 +1455,7 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
                     return KeyEvent.KEYCODE_DPAD_UP;
                 case 545:
                     return KeyEvent.KEYCODE_DPAD_DOWN;
-                case 309://截图键
+                case 309:// Capture button
                     return KeyEvent.KEYCODE_BUTTON_MODE;
                 case 310:
                     return KeyEvent.KEYCODE_BUTTON_L1;
@@ -1467,11 +1467,11 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
                     return KeyEvent.KEYCODE_BUTTON_THUMBL;
             }
         }
-        //fix JoyCon-right xy互换
+        // Fix Joy-Con (R): swap X and Y
         if(prefConfig.enableJoyConFix&&context.vendorId == 0x057e && context.productId == 0x2007){
             switch (event.getScanCode())
             {
-                case 307://XY相反
+                case 307:// X/Y swapped
                     return KeyEvent.KEYCODE_BUTTON_Y;
                 case 308:
                     return KeyEvent.KEYCODE_BUTTON_X;
@@ -2504,7 +2504,7 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
             if ((context.inputMap & ControllerPacket.PLAY_FLAG) != 0 &&
                     context.startUpTime - context.startDownTime > ControllerHandler.START_DOWN_TIME_MOUSE_MODE_MS) {
                 if (prefConfig.enableBackMenu && context.backMenuPending){
-                    //todo 展示快捷菜单
+                    // TODO: show the quick menu
                     context.backMenuPending = false;
                     gestures.showGameMenu(context);
                 } else if (prefConfig.mouseEmulation) {
