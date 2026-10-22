@@ -26,5 +26,5 @@ When merging Moonlight, do each phase in its own branch (`update/common-c`, `upd
 
 ## Devices
 
-- Main test device: **AYN Odin 2 Portal Max** (Android 13, 1920×1080 landscape), wireless ADB – find it with `adb mdns services`
-- Emulator AVD `Odin2_Portal_Max` (same resolution, Android 16 image) – use the `x86_64` APK
+- Test device: **AYN Odin 2 Portal Max** (Android 13, 1920×1080 landscape), wireless ADB – find it with `adb mdns services`, install the `arm64-v8a` APK
+- The emulator is not used for testing – the Odin is enough

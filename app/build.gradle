@@ -1,11 +1,11 @@
 apply plugin: 'com.android.application'
 
 android {
-    ndkVersion "27.0.12077973"
+    ndkVersion = "29.0.14206865"
 
-    compileSdk = 36
+    compileSdk = 37
 
-    namespace 'com.limelight'
+    namespace = 'com.limelight'
 
     defaultConfig {
         minSdk 21
@@ -27,6 +27,7 @@ android {
 
     buildFeatures {
         buildConfig = true
+        resValues = true
     }
 
     productFlavors {
@@ -68,14 +69,15 @@ android {
     }
 
     compileOptions {
-        encoding "UTF-8"
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        encoding = "UTF-8"
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+        coreLibraryDesugaringEnabled = true
     }
 
     lint {
         disable 'MissingTranslation'
-        lintConfig file('lint.xml')
+        lintConfig = file('lint.xml')
     }
 
     bundle {
@@ -106,7 +108,7 @@ android {
             resValue "string", "app_label_game", "Delos Debug (Game)"
 
             minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         release {
             // To whomever is releasing/using an APK in release mode with
@@ -147,7 +149,7 @@ android {
             resValue "string", "app_label_game", "Delos (Game)"
 
             minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 
@@ -159,7 +161,7 @@ android {
 
     splits {
         abi {
-            enable true
+            enable = true
             reset()
             include "x86", "x86_64", "armeabi-v7a", "arm64-v8a"
         }
@@ -189,6 +191,7 @@ dependencies {
     implementation 'com.google.ai.edge.litert:litert:1.4.0'
     implementation 'com.google.ai.edge.litert:litert-gpu:1.4.0'
     implementation 'org.opencv:opencv:4.12.0'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
 
     // Unit test dependencies
     testImplementation 'junit:junit:4.13.2'
