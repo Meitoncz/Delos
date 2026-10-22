@@ -9,7 +9,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.Reader;
 
 /**
@@ -59,25 +58,6 @@ public class FileUriUtils {
             }
         }
         return result.toString();
-    }
-
-    public static boolean openUriForWrite(Context context, Uri uri, String content) {
-        if (uri == null) {
-            return false;
-        }
-
-        try {
-            //从uri构造输出流
-            OutputStream outputStream = context.getContentResolver().openOutputStream(uri);
-            //写入文件
-            outputStream.write(content.getBytes());
-            outputStream.flush();
-            outputStream.close();
-            return true;
-        } catch (Exception e) {
-            e.getLocalizedMessage();
-        }
-        return false;
     }
 
     public static boolean writerFileString(File file, String content) {

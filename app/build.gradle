@@ -108,9 +108,6 @@ android {
             resValue "string", "app_label", "Delos Debug"
             resValue "string", "app_label_root", "Delos Debug (Root)"
             resValue "string", "app_label_game", "Delos Debug (Game)"
-
-            minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         release {
             // To whomever is releasing/using an APK in release mode with
@@ -165,7 +162,7 @@ android {
         abi {
             enable = true
             reset()
-            include "x86", "x86_64", "armeabi-v7a", "arm64-v8a"
+            include "armeabi-v7a", "arm64-v8a"
         }
     }
 
@@ -181,18 +178,13 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:5.5.0'
     implementation 'org.jmdns:jmdns:3.6.3'
     implementation 'com.github.cgutman:ShieldControllerExtensions:1.0.1'
-    implementation 'com.google.code.gson:gson:2.13.1'
-    implementation 'androidx.annotation:annotation:1.9.1'
+    implementation 'com.google.code.gson:gson:2.14.0'
+    implementation 'androidx.annotation:annotation:1.11.0'
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'androidx.appcompat:appcompat:1.7.1'
     implementation 'androidx.preference:preference:1.2.1'
     implementation 'androidx.recyclerview:recyclerview:1.4.0'
     implementation 'com.google.android.material:material:1.13.0'
-    implementation 'com.github.ByteHamster:SearchPreference:v2.5.1'
-    implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
-    implementation 'com.google.ai.edge.litert:litert:1.4.0'
-    implementation 'com.google.ai.edge.litert:litert-gpu:1.4.0'
-    implementation 'org.opencv:opencv:4.12.0'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
 
     // Unit test dependencies

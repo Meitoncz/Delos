@@ -9,20 +9,11 @@ gh auth login
 
 **JDK 21** is needed separately: Android Studio bundles Java 25, which the current Gradle 8.13 cannot run on (addressed in Phase 2). Set the user environment variable `JAVA_HOME` to `C:\Program Files\Eclipse Adoptium\jdk-21...`.
 
-In Android Studio → **SDK Manager** (or `sdkmanager.bat` from `cmdline-tools`) install: **Android SDK Platform 36**, **NDK (Side by side)** in the version from `app/build.gradle` (`ndkVersion`), **Platform-Tools**, **Emulator** and a system image (e.g. `system-images;android-36;google_apis;x86_64`). The project uses `ndk-build`, CMake is not needed.
+In Android Studio → **SDK Manager** (or `sdkmanager.bat` from `cmdline-tools`) install: **Android SDK Platform** matching `compileSdk` in `app/build.gradle`, **NDK (Side by side)** in the version from `ndkVersion`, and **Platform-Tools**. The project uses `ndk-build`, CMake is not needed.
 
 Claude Code: https://claude.com/claude-code. Run `claude` in the repo directory (or open `Delos.code-workspace` in VS Code). Project context lives in `CLAUDE.md`.
 
-### Emulator
-
-Requires the Windows feature **Windows Hypervisor Platform** (as administrator, then reboot):
-
-```powershell
-dism /online /enable-feature /featurename:HypervisorPlatform /all
-emulator -accel-check   # should print "WHPX ... is installed and usable"
-```
-
-The virtual device `Odin2_Portal_Max` (1920×1080 landscape, 320 dpi, 4 GB RAM) is started with `emulator -avd Odin2_Portal_Max`. Install the `x86_64` APK into the emulator and the `arm64-v8a` APK onto the handheld.
+Delos is built for ARM only (`arm64-v8a`, `armeabi-v7a`) and tested on a real handheld; the emulator is not used.
 
 ## 2. Clone
 

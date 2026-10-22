@@ -65,6 +65,10 @@ The Artemis vs. Moonlight comparison only covers code both share. This phase loo
 
 - [x] Audit report (`docs/AUDIT.md`): dependencies, lint, deprecated APIs, dead code, security, targeted code review.
 - [x] Decision: remove SBS 3D (MiDaS / LiteRT / OpenCV, ~29 MB) – niche feature, Delos targets handhelds.
+- [x] Batch 1 – cleanup: SBS 3D and performance logging removed, unused dependencies and dead code removed, FileProvider narrowed, ARM-only builds, debug builds without R8 (APK 44.2 → 19.4 MB).
+- [ ] Batch 2 – security (`art://` confirmation, accessibility service).
+- [ ] Batch 3 – platform (minSdk 29, deprecated APIs, insets, back handling).
+- [ ] Batch 4 – code quality / refactoring.
 
 - [ ] **Dependency audit** of Artemis-only libraries – current version, maintenance status, known vulnerabilities, APK size impact, alternatives:
   - LiteRT + LiteRT GPU and OpenCV (SBS 3D / MiDaS – large native libraries),

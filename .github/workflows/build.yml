@@ -39,5 +39,5 @@ jobs:
           name: delos-debug-${{ github.sha }}
           path: |
             app/build/outputs/apk/nonRoot_game/debug/*arm64-v8a*.apk
-            app/build/outputs/apk/nonRoot_game/debug/*x86_64*.apk
+            app/build/outputs/apk/nonRoot_game/debug/*armeabi-v7a*.apk
           retention-days: 14

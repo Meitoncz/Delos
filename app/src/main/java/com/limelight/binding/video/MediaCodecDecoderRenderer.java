@@ -19,7 +19,6 @@ import com.limelight.R;
 import com.limelight.nvstream.av.video.VideoDecoderRenderer;
 import com.limelight.nvstream.jni.MoonBridge;
 import com.limelight.preferences.PreferenceConfiguration;
-import com.limelight.utils.Stereo3DRenderer;
 import com.limelight.utils.TrafficStatsHelper;
 
 import android.annotation.SuppressLint;
@@ -175,9 +174,6 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     private int lastFrameNumber;
     private int refreshRate;
     private PreferenceConfiguration prefs;
-
-    private float minDecodeTime = Float.MAX_VALUE;
-    private String minDecodeTimeFullLog = "";
 
     private long lastNetDataNum;
     private LinkedBlockingQueue<Integer> outputBufferQueue = new LinkedBlockingQueue<>();
@@ -1733,7 +1729,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
 
         // Flip stats windows roughly every second
         if (SystemClock.uptimeMillis() >= activeWindowVideoStats.measurementStartTimestamp + 1000) {
-            if (prefs.enablePerfOverlay || prefs.enablePerfLogging) {
+            if (prefs.enablePerfOverlay) {
                 VideoStats lastTwo = new VideoStats();
                 lastTwo.add(lastWindowVideoStats);
                 lastTwo.add(activeWindowVideoStats);
@@ -1778,36 +1774,9 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                     sb.append(context.getString(R.string.perf_overlay_lite_netdrops,(float)lastTwo.framesLost / lastTwo.totalFrames * 100));
                     sb.append("\t FPS：");
                     sb.append(context.getString(R.string.perf_overlay_lite_fps, fps.totalFps));
-                    if(Stereo3DRenderer.isActive) {
-                        sb.append(" ");
-                        sb.append(context.getString(R.string.perf_overlay_ai_fps));
-                        sb.append(" ");
-                        sb.append(Stereo3DRenderer.threeDFps);
-                        sb.append(" ");
-                        sb.append(context.getString(R.string.perf_overlay_ai_delegate));
-                        sb.append(" ");
-                        sb.append(Stereo3DRenderer.renderer);
-                        sb.append(" ");
-                        sb.append(context.getString(R.string.perf_overlay_drawdelay, Stereo3DRenderer.drawDelay));
-                    }
                 }else{
-                    if(Stereo3DRenderer.isActive) {
-                        sb.append(context.getString(R.string.perf_overlay_streamdetails, initialWidth + "x" + initialHeight, fps.totalFps));
-                        sb.append('\n');
-                        sb.append(" ");
-                        sb.append(context.getString(R.string.perf_overlay_ai_fps));
-                        sb.append(" ");
-                        sb.append(Stereo3DRenderer.threeDFps);
-                        sb.append(" ");
-                        sb.append(context.getString(R.string.perf_overlay_ai_delegate));
-                        sb.append(" ");
-                        sb.append(Stereo3DRenderer.renderer);
-                        sb.append(" ");
-                        sb.append(context.getString(R.string.perf_overlay_drawdelay, Stereo3DRenderer.drawDelay));
-                    } else {
-                        // If GPU renders the frames, the render FPS is the actual drawn and visible fps for the user
-                        sb.append(context.getString(R.string.perf_overlay_streamdetails, initialWidth + "x" + initialHeight, fps.totalFps));
-                    }
+                    // If GPU renders the frames, the render FPS is the actual drawn and visible fps for the user
+                    sb.append(context.getString(R.string.perf_overlay_streamdetails, initialWidth + "x" + initialHeight, fps.totalFps));
                     sb.append('\n');
                     sb.append(context.getString(R.string.perf_overlay_decoder, decoder)).append('\n');
                     sb.append(context.getString(R.string.perf_overlay_incomingfps, fps.receivedFps)).append('\n');
@@ -1837,16 +1806,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                     }
                     sb.append(context.getString(R.string.perf_overlay_dectime, decodeTimeMs));
                 }
-                String fullLog = sb.toString();
-                if(prefs.enablePerfOverlay) {
-                    perfListener.onPerfUpdate(fullLog);
-                }
-                // Best latency is only met at requested highest fps, rest can be ignored
-                Boolean targetFpsMatched = ((int) fps.totalFps == (int) prefs.fps);
-                if(minDecodeTime > decodeTimeMs && targetFpsMatched) {
-                    minDecodeTime = decodeTimeMs;
-                    minDecodeTimeFullLog = fullLog;
-                }
+                perfListener.onPerfUpdate(sb.toString());
             }
             globalVideoStats.add(activeWindowVideoStats);
             lastWindowVideoStats.copy(activeWindowVideoStats);
@@ -2207,19 +2167,6 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
             return 0;
         }
         return (int)(globalVideoStats.decoderTimeMs / globalVideoStats.totalFramesReceived);
-    }
-
-    public Boolean performanceWasTracked() {
-        return minDecodeTime < Float.MAX_VALUE;
-    }
-
-    @SuppressLint("DefaultLocale")
-    public String getMinDecoderLatency() {
-        return String.format("%1$.2f", minDecodeTime);
-    }
-
-    public String getMinDecoderLatencyFullLog() {
-        return minDecodeTimeFullLog;
     }
 
     static class DecoderHungException extends RuntimeException {

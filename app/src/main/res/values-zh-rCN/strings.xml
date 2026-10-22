@@ -116,7 +116,6 @@
     <string name="perf_overlay_netdrops">网络丢失帧： %1$.2f%%</string>
     <string name="perf_overlay_dectime">平均解码时间： %1$.2f ms</string>
     <!-- AppList activity -->
-    <string name="toast_no_logs">还没有统计过性能数据</string>
     <string name="applist_connect_msg"> 正在连接电脑…… </string>
     <string name="applist_menu_resume"> 恢复串流 </string>
     <string name="applist_menu_start_vdisplay"> 在虚拟显示器中启动 </string>
@@ -337,7 +336,6 @@
     <string name="summary_checkbox_gamepad_motion_sensors">使支持的主机能够在模拟具有运动传感器的游戏手柄时请求运动传感器数据。如果在游戏中未使用运动传感器，禁用可能会略微降低电源和网络使用量。</string>
     <string name="videoformat_av1always">首选 AV1（实验性）</string>
     <string name="videoformat_h264always">首选 H.264</string>
-    <string name="title_performance_link">性能统计表</string>
     <string name="toast_controller_type_changed">游戏手柄类型可能会因运动传感器模拟而改变</string>
     <string name="title_special_key_help">自定义按键说明</string>
     <string name="summary_special_key_help">关于如何自定义特殊按键的介绍</string>
@@ -411,8 +409,6 @@
     <string name="summary_checkbox_onscreen_style_official">如果你还是喜欢官方旧版虚拟手柄按键风格可以勾选此选项。\n按键形状可以为方形，如果你勾选了底部虚拟按键【普通按钮为方形按钮】</string>
     <string name="title_checkbox_enable_perf_overlay_lite">开启Lite精简模式</string>
     <string name="summary_checkbox_enable_perf_overlay_lite">展示简化版性能信息：网速/延迟/解码/丢包率/FPS</string>
-    <string name="title_checkbox_enable_perf_logging">启用性能数据统计</string>
-    <string name="summary_checkbox_enable_perf_logging">存储性能记录（仅本地）</string>
     <string name="title_checkbox_enable_perf_overlay_lite_dialog">Lite精简模式点击弹出快捷选项</string>
     <string name="summary_checkbox_enable_perf_overlay_lite_dialog">代替返回键逻辑，弹出游戏快捷菜单。</string>
     <string name="title_virtual_trackpad_settings">虚拟触摸板设置</string>
@@ -467,7 +463,6 @@
     <string name="summary_clear_default_special_button">如果你感觉返回菜单内置的指令对你没什么用的话，可以禁用，只使用自己导入的。</string>
     <string name="title_import_special_button">导入自定义按键</string>
     <string name="summary_import_special_button">在返回菜单及特殊按键中可用。\n注意：导入会覆盖当前配置，请注意备份。</string>
-    <string name="title_share_performance_logs_button">分享性能统计信息</string>
     <string name="title_software_update">软件更新</string>
     <string name="title_follow_update">订阅更新</string>
     <string name="summary_follow_update">使用 Obtainium 订阅 Delos 的更新</string>
@@ -606,19 +601,7 @@
     <string name="permission_launch_app">启动APP</string>
     <string name="permission_sync_clipboard">同步剪贴板</string>
 
-    <string name="searchpreference_search">搜索…</string>
-    <string name="searchpreference_clear">清除</string>
-    <string name="searchpreference_history_entry">历史条目</string>
-    <string name="searchpreference_more">更多</string>
-    <string name="searchpreference_clear_history">清除历史</string>
-    <string name="searchpreference_no_results">无结果</string>
     <string name="game_menu_toggle_mouse_on">启用手柄鼠标模拟</string>
-    <string name="summary_performance_link">查看其他设备的性能数据</string>
-    <string name="email_chooser_title">发送性能统计...</string>
-    <string name="toast_no_email_clients">找不到电子邮件客户端</string>
-    <string name="email_subject">Artemistics - 性能统计</string>
-    <string name="summary_share_performance_logs">与朋友或社区分享你的性能统计数据</string>
-    <string name="email_prefix_message">"\n        请按原样将此邮件发送至 artemistics.logs@gmail.com 以帮助社区。\n\n        您分享的性能数据将会帮助改进和扩充以下地址的统计数据：\n\n        https://tinyurl.com/artemis-performance\n\n\n    "</string>
 
     <!-- Keyboard -->
     <string name="keyboard_clear_all">清除全部</string>
@@ -695,22 +678,8 @@
     <string name="summary_checkbox_forceTightThresholds">更紧凑的 VSync 阈值以降低延迟；可能增加丢帧。</string>
 
     <!-- Added/translated missing strings -->
-    <string name="perf_overlay_drawdelay">延迟：%1$.2f ms</string>
     <string name="game_menu_select_steam_mode">选择串流模式</string>
     <string name="perf_overlay_drawn_fps">GPU 帧率：</string>
-    <string name="perf_overlay_ai_fps">3D 帧率：</string>
-    <string name="perf_overlay_ai_delegate">AI 后端：</string>
-    <string name="title_render_mode">渲染模式</string>
-    <string name="title_render_mode_convergence_title">3D 会聚</string>
-    <string name="title_render_mode_convergence_description">参考值：50 - 平衡 / 0：屏幕前 / 100：屏幕后</string>
-    <string name="title_render_mode_balance_shift_title">3D 视觉平衡</string>
-    <string name="title_render_mode_balance_shift_description">参考值：50 - 双眼各分担 50% 的深度效果；0：左眼（100% 凸出）- 右眼（100% 不变）；100：左眼不变 - 右眼凸出。将数值设为 0 或 100 可获得更清晰的成像，因为中总有一侧像素保持未偏移。</string>
-    <string name="title_render_mode_strength_title">3D 效果强度</string>
-    <string name="title_render_mode_strength_description">参考值 50。数值越高效果越强，但可能更累眼且不自然；数值越低更护眼，体验更柔和。</string>
-    <string name="summary_render_mode">2D（默认） 或 SBS 3D。3D 会将画面宽度加倍并使用 AI 自动 2D 转 3D。</string>
-    <string name="render_mode_2d">2D</string>
-    <string name="render_mode_3d_sbs">AI SBS 3D</string>
-    <string name="render_mode_3d_sbs_movie">AI SBS 3D 电影模式（同步）</string>
 
     <string name="title_checkbox_full_screen">启用全屏</string>
     <string name="summary_checkbox_full_screen">使用沉浸模式隐藏系统状态栏</string>

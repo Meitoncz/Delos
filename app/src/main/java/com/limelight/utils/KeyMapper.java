@@ -1068,9 +1068,4 @@ public class KeyMapper {
         return -1; // Return -1 for out-of-range or unmapped keys
     }
 
-    public static void setKeyMapping(int linuxKeyCode, int windowsKeyCode) {
-        if (linuxKeyCode >= 0 && linuxKeyCode < KEY_CNT) {
-            linuxToWindowsKeyMap[linuxKeyCode] = windowsKeyCode;
-        }
-    }
 }

@@ -47,7 +47,6 @@ import com.limelight.utils.Dialog;
 import com.limelight.utils.ExternalDisplayControlActivity;
 import com.limelight.utils.MouseModeOption;
 import com.limelight.utils.PanZoomHandler;
-import com.limelight.utils.PerformanceDataTracker;
 import com.limelight.utils.ServerHelper;
 import com.limelight.utils.ShortcutHelper;
 import com.limelight.utils.SpinnerDialog;
@@ -124,10 +123,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -400,7 +397,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
                 && onExternelDisplay
-                && prefConfig.renderMode == 0 // For 3D we want to maintain configured resolution
         ) {
             Display.Mode currentMode = currentDisplay.getMode();
             displayWidth = currentMode.getPhysicalWidth();
@@ -415,10 +411,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             currentOrientation = Configuration.ORIENTATION_LANDSCAPE;
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE);
         } else {
-            if (prefConfig.renderMode != 0) {
-                prefConfig.videoScaleMode = PreferenceConfiguration.ScaleMode.STRETCH;
-            }
-
             if (prefConfig.autoOrientation) {
                 currentOrientation = getResources().getConfiguration().orientation;
             } else {
@@ -1751,7 +1743,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
         // Destroy the capture provider
         inputCaptureProvider.destroy();
-        streamContainer.onDestroy();
     }
 
     @Override
@@ -1844,33 +1835,10 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                         .putInt("LastNotifiedCrashCount", 0)
                         .apply();
             }
-            if(prefConfig.enablePerfLogging && decoderRenderer.performanceWasTracked()) {
-                new PerformanceDataTracker().savePerformanceStatistics(
-                        getBaseContext(),
-                        Build.MODEL,
-                        Build.VERSION.SDK_INT + "",
-                        BuildConfig.VERSION_NAME,
-                        selectedVideoFormat,
-                        decoderRenderer.getMinDecoderLatency(),
-                        decoderRenderer.getMinDecoderLatencyFullLog(),
-                        String.valueOf((prefConfig.bitrate / 1000)),
-                        displayWidth + "x" + displayHeight,
-                        prefConfig.fps + " hz",
-                        decoderRenderer.getAverageDecoderLatency() + " ms",
-                        PreferenceConfiguration.getSelectedFramePacingName(getBaseContext()),
-                        formatCurrentTime(System.currentTimeMillis())
-                );
-            }
 
         }
 
         finish();
-    }
-
-    public static String formatCurrentTime(long currentTimeMillis) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-        Date date = new Date(currentTimeMillis);
-        return dateFormat.format(date);
     }
 
     private void setInputGrabState(boolean grab) {

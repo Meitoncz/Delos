@@ -63,13 +63,6 @@ public class LayoutSnappingHelper {
         return overlapEnd - overlapStart > Math.min(edge1End - edge1Start, edge2End - edge2Start) * 0.5;
     }
 
-    private static int adjustSpacing(int distance) {
-        if (distance > SPACING_MIN && distance < SPACING_THRESHOLD) {
-            return SPACING_MIN;
-        }
-        return distance;
-    }
-
     public static SnapResult calculateSnappedPosition(View movingView, View[] otherViews, int proposedX, int proposedY) {
         int snappedX = proposedX;
         int snappedY = proposedY;

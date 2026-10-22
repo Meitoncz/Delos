@@ -146,7 +146,7 @@ Related: `Game.java` hides the system bars with deprecated `SYSTEM_UI_FLAG_*` fl
 ## 7. Decisions (October 22, 2026)
 
 1. **minSdk 29 (Android 10).** Fixes C2, makes pre-Android-10 compatibility branches dead code and drops the `root` flavor (Android ≤ 7.1 only).
-2. **Performance logs (S4):** no sending anywhere from the app. The button writes a log file on the device (Downloads) and opens the system share sheet without any preset recipient – the user decides whether and where to send it.
+2. **Performance logs (S4):** removed completely (logging, "Share performance logs", link to the Artemis community statistics). The in-game performance overlay stays. A better, local-only implementation can be built from scratch later if needed.
 3. **ABIs: ARM only** (`arm64-v8a`, `armeabi-v7a`). No `x86`/`x86_64` builds. The prebuilt x86 native libraries from Moonlight stay in the tree to keep upstream merges conflict-free.
 4. **`art://` links (S1):** keep, with a confirmation dialog before adding/pairing a host and before launching an app.
 
@@ -154,7 +154,7 @@ Related: `Game.java` hides the system bars with deprecated `SYSTEM_UI_FLAG_*` fl
 
 Each batch in its own branch, built and tested on the Odin before merging.
 
-- **Batch 1 – quick wins, low risk:** remove SBS 3D (D1), drop unused dependencies (D2), silence the Vietnamese lint false positive (C1), narrow FileProvider paths (S3), local performance log + share sheet (S4), remove dead code (X1), no minify for debug (X2), ARM-only ABIs, update Artemis-only libraries.
+- **Batch 1 – quick wins, low risk (done):** removed SBS 3D (D1) and the performance logging feature (S4), dropped unused dependencies (D2), silenced the Vietnamese lint false positive (C1), narrowed FileProvider to `export_settings/` (S3), removed dead code (X1), no R8 for debug builds (X2), ARM-only ABIs, Gson 2.14.0 and AndroidX Annotation 1.11.0. Debug APK: 44.2 MB → 19.4 MB.
 - **Batch 2 – security:** confirmation dialogs for `art://` (S1), accessibility service focus check and trimmed config (S2).
-- **Batch 3 – platform:** minSdk 29 + drop `root` flavor (C2), back handling (C3), insets in `DebugInfoActivity` (C4), deprecated APIs in Artemis-only files (Q1).
+- **Batch 3 – platform:** minSdk 29 + drop `root` flavor (C2), back handling (C3), insets in `DebugInfoActivity` (C4), deprecated APIs in Artemis-only files (Q1), AppCompat 1.8.0 and Material 1.14.0 (both require minSdk 23).
 - **Batch 4 – code quality / refactoring:** English comments, logging instead of empty catches, decoder pacing cleanup, reduce `Game.instance`, extract Artemis features from `Game.java`, selected lint warnings, branding leftovers (B1).

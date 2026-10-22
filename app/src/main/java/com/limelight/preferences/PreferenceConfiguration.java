@@ -70,7 +70,6 @@ public class PreferenceConfiguration {
     private static final String ENABLE_HDR_PREF_STRING = "checkbox_enable_hdr";
     private static final String ENABLE_PIP_PREF_STRING = "checkbox_enable_pip";
     private static final String ENABLE_PERF_OVERLAY_STRING = "checkbox_enable_perf_overlay";
-    private static final String ENABLE_PERF_LOGGING = "checkbox_enable_perf_logging";
     private static final String BIND_ALL_USB_STRING = "checkbox_usb_bind_all";
     private static final String MOUSE_EMULATION_STRING = "checkbox_mouse_emulation";
     private static final String REMEMBER_MOUSE_MODE_PREF_STRING = "checkbox_remember_mouse_mode";
@@ -166,7 +165,6 @@ public class PreferenceConfiguration {
     private static final boolean DEFAULT_ENABLE_PIP = false;
     private static final boolean DEFAULT_ENABLE_PERF_OVERLAY = false;
     private static final boolean DEFAULT_PERF_OVERLAY_BOTTOM = false;
-    private static final boolean DEFAULT_ENABLE_PERF_LOGGING = false;
     private static final boolean DEFAULT_BIND_ALL_USB = false;
     private static final boolean DEFAULT_MOUSE_EMULATION = true;
     private static final boolean DEFAULT_REMEMBER_MOUSE_MODE = false;
@@ -249,7 +247,6 @@ public class PreferenceConfiguration {
     public boolean enforceDisplayMode, useVirtualDisplay, enableSops, playHostAudio, disableWarnings, fullScreen;
     public ScaleMode videoScaleMode;
     public String language;
-    public int renderMode;
     public boolean smallIconMode, multiController, usbDriver, flipFaceButtons;
     public boolean onscreenController;
     public boolean hideOSCWhenHasGamepad;
@@ -268,12 +265,7 @@ public class PreferenceConfiguration {
     public boolean enableHdr;
     public boolean enablePip;
 
-    public float parallax_depth;
-
-    public float convergence_ratio;
-    public float balance_shift;
     public boolean enablePerfOverlay;
-    public boolean enablePerfLogging;
     //简化版性能信息
     public boolean enablePerfOverlayLite;
 
@@ -388,10 +380,6 @@ public class PreferenceConfiguration {
     private static final String CHECKBOX_REMEMBER_ZOOM_PAN = "checkbox_remember_zoom_pan";
     private static final String NUMBER_ZOOM_SCALE = "number_zoom_scale";
 
-    private static final String PARALLAX_DEPTH = "parallax_depth";
-
-    private static final String CONVERGENCE_RATIO = "convergence_ratio";
-    private static final String BALANCE_SHIFT = "balance_shift";
     private static final String NUMBER_PAN_OFFSET_X = "number_pan_offset_x";
     private static final String NUMBER_PAN_OFFSET_Y = "number_pan_offset_y";
 
@@ -624,11 +612,6 @@ public class PreferenceConfiguration {
             // Should never get here
             return ScaleMode.FIT;
         }
-    }
-
-    public static String getSelectedFramePacingName(Context context) {
-        SharedPreferences prefs = ProfilesManager.getInstance().getOverlayingSharedPreferences(context);
-        return prefs.getString(FRAME_PACING_PREF_STRING, DEFAULT_FRAME_PACING);
     }
 
     
@@ -890,10 +873,6 @@ private static int getFramePacingValue(Context context) {
         config.usbDriver = prefs.getBoolean(USB_DRIVER_PREF_SRING, DEFAULT_USB_DRIVER);
         config.fullScreen = prefs.getBoolean(FULL_SCREEN_PREF_STRING, DEFAULT_FULL_SCREEN);
 
-        String renderMode = prefs.getString("render_mode_list", "0");
-        int renderModeInt = Integer.parseInt(renderMode);
-        config.renderMode = renderModeInt;
-
         // Read mouse mode and set touch settings accordingly
         String mouseMode = prefs.getString("mouse_mode_list", "0");
         int mouseModeInt = Integer.parseInt(mouseMode);
@@ -924,7 +903,6 @@ private static int getFramePacingValue(Context context) {
         config.enableHdr = prefs.getBoolean(ENABLE_HDR_PREF_STRING, DEFAULT_ENABLE_HDR) && !isShieldAtvFirmwareWithBrokenHdr();
         config.enablePip = prefs.getBoolean(ENABLE_PIP_PREF_STRING, DEFAULT_ENABLE_PIP);
         config.enablePerfOverlay = prefs.getBoolean(ENABLE_PERF_OVERLAY_STRING, DEFAULT_ENABLE_PERF_OVERLAY);
-        config.enablePerfLogging = prefs.getBoolean(ENABLE_PERF_LOGGING, DEFAULT_ENABLE_PERF_LOGGING);
         config.enablePerfOverlayLite = prefs.getBoolean("checkbox_enable_perf_overlay_lite",DEFAULT_ENABLE_PERF_OVERLAY);
         config.enablePerfOverlayBottom = prefs.getBoolean("checkbox_enable_perf_overlay_bottom",DEFAULT_PERF_OVERLAY_BOTTOM);
         config.bindAllUsb = prefs.getBoolean(BIND_ALL_USB_STRING, DEFAULT_BIND_ALL_USB);
@@ -1036,9 +1014,6 @@ private static int getFramePacingValue(Context context) {
         config.panOffsetX = prefs.getFloat(NUMBER_PAN_OFFSET_X, DEFAULT_PAN_OFFSET);
         config.panOffsetY = prefs.getFloat(NUMBER_PAN_OFFSET_Y, DEFAULT_PAN_OFFSET);
 
-        config.parallax_depth = prefs.getInt(PARALLAX_DEPTH, 50) / 100f;
-        config.convergence_ratio = prefs.getInt(CONVERGENCE_RATIO, 50) / 100f;
-        config.balance_shift = prefs.getInt(BALANCE_SHIFT, 50) / 100f;
 
         return config;
     }
