@@ -1,18 +1,23 @@
 # Delos
 
-Fork [Artemis Android](https://github.com/ClassicOldSong/moonlight-android) pro [Vibepollo](https://github.com/Nonary/Vibepollo), aktualizovaný o novinky z [Moonlight Android](https://github.com/moonlight-stream/moonlight-android). Cílem je moderní GUI ovladatelné na Android handheldech.
+An Android game streaming client for [Vibepollo](https://github.com/Nonary/Vibepollo) (also works with [Apollo](https://github.com/ClassicOldSong/Apollo) and [Sunshine](https://github.com/LizardByte/Sunshine)).
 
-> 🚧 Ve vývoji. Kód je zatím totožný s Artemis 20.2.6.
+Delos is a fork of [Artemis Android](https://github.com/ClassicOldSong/moonlight-android) by ClassicOldSong, which is itself a fork of [Moonlight Android](https://github.com/moonlight-stream/moonlight-android). The goal is to bring in the latest Moonlight improvements and build a modern, console-like UI that is fully usable with a gamepad on Android handhelds.
 
-- [Analýza Artemis vs. Moonlight](docs/ANALYSIS.md)
-- [Roadmapa](docs/ROADMAP.md)
-- [Příprava na Windows](docs/WINDOWS_SETUP.md)
+> đźš§ Work in progress. Version 0.1.0 is based on Artemis 20.2.6 with Delos branding.
 
-Licence: GPLv3 (stejně jako Moonlight a Artemis).
+- Application ID: `io.github.meitoncz.delos` (debug builds: `io.github.meitoncz.delos.debug`), so Delos installs alongside Artemis and Moonlight.
+- Debug APKs are built by GitHub Actions on every push (see the *Build* workflow artifacts).
+
+Project docs: [analysis](docs/ANALYSIS.md), [roadmap](docs/ROADMAP.md), [Windows setup](docs/WINDOWS_SETUP.md).
+
+## License and credits
+
+Delos is licensed under the GPLv3, same as Moonlight and Artemis. All credit for the streaming core goes to the Moonlight authors (listed below) and to ClassicOldSong for Artemis.
 
 ---
 
-*Původní README Artemis:*
+*Original Artemis README:*
 
 # Artemis Android
 
@@ -85,8 +90,8 @@ The main repo had stayed silent for 5 months, with nobody actually responding to
 
 ## Building
 * Install Android Studio and the Android NDK
-* Run ‘git submodule update --init --recursive’ from within moonlight-android/
-* In moonlight-android/, create a file called ‘local.properties’. Add an ‘ndk.dir=’ property to the local.properties file and set it equal to your NDK directory.
+* Run â€git submodule update --init --recursiveâ€™ from within moonlight-android/
+* In moonlight-android/, create a file called â€local.propertiesâ€™. Add an â€ndk.dir=â€™ property to the local.properties file and set it equal to your NDK directory.
 * Build the APK using Android Studio or gradle
 
 ## Authors

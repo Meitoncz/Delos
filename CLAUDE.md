@@ -1,11 +1,13 @@
-# Delos – kontext pro Claude Code
+# Delos – context for Claude Code
 
-Android klient pro streamování her z **Vibepollo** (fork Apollo/Sunshine). Fork **Artemis** (`ClassicOldSong/moonlight-android`, větev `moonlight-noir`), který je forkem **Moonlight Android**. Projekt se dřív jmenoval **Vibetemis**.
+Android client for streaming games from **Vibepollo** (a fork of Apollo/Sunshine). A fork of **Artemis** (`ClassicOldSong/moonlight-android`, branch `moonlight-noir`), which is itself a fork of **Moonlight Android**. The project was formerly called **Vibetemis**.
 
-- Uživatel **není programátor**. Vysvětluj česky a srozumitelně, navrhuj kroky a před velkými nebo nevratnými zásahy (force push, mazání větví, release) se ptej.
-- Vývoj probíhá na **Windows** (stejný stroj jako Vibepollo). Příkazy piš pro PowerShell, build přes `gradlew.bat`.
-- Plán práce: `docs/ROADMAP.md` (odškrtávej hotové body). Analýza rozdílů: `docs/ANALYSIS.md`. Prostředí: `docs/WINDOWS_SETUP.md`.
-- Priorita: **nejdřív aktualizace z Moonlightu** (common-c → toolchain → merge `moonlight/master` → OpenSSL/opus), **až potom GUI** a vlastní funkce.
+- The user is **not a programmer**. Talk to them **in Czech**, explain clearly, propose steps and ask before big or irreversible actions (force push, deleting branches, releases).
+- Code, comments, commit messages, PR descriptions and all repo documentation are **in English**.
+- **Never commit or push without the user's explicit approval** – ask first.
+- Development happens on **Windows** (same machine as Vibepollo). Write commands for PowerShell, build with `gradlew.bat`.
+- Work plan: `docs/ROADMAP.md` (tick off finished items). Diff analysis: `docs/ANALYSIS.md`. Environment: `docs/WINDOWS_SETUP.md`.
+- Priority: **Moonlight updates first** (common-c → toolchain → merge `moonlight/master` → OpenSSL/opus), **UI and custom features after that**.
 
 ## Remotes
 
@@ -13,10 +15,16 @@ Android klient pro streamování her z **Vibepollo** (fork Apollo/Sunshine). For
 - `artemis` – `ClassicOldSong/moonlight-android` (`moonlight-noir`)
 - `moonlight` – `moonlight-stream/moonlight-android` (`master`)
 
-Při merge Moonlightu dělej každou fázi ve vlastní větvi (`update/common-c`, `update/toolchain`, `update/moonlight-12.2`) a do `main` merguj až po úspěšném buildu.
+When merging Moonlight, do each phase in its own branch (`update/common-c`, `update/toolchain`, `update/moonlight-12.2`) and merge into `main` only after a successful build.
 
-## Struktura
+## Structure
 
-- `app/src/main/java/com/limelight/` – Java kód; `Game.java` = streamovací aktivita, `binding/input/` = vstupy, `binding/video/` = dekodér
-- `app/src/main/jni/moonlight-core/` – nativní kód; submodul `moonlight-common-c` (fork ClassicOldSong kvůli Apollo funkcím); předkompilované OpenSSL a opus
-- Build: Gradle, `app/build.gradle`, NDK přes `Android.mk`
+- `app/src/main/java/com/limelight/` – Java code; `Game.java` = streaming activity, `binding/input/` = input, `binding/video/` = decoder
+- `app/src/main/jni/moonlight-core/` – native code; submodule `moonlight-common-c` (ClassicOldSong's fork for Apollo features); prebuilt OpenSSL and opus
+- Build: Gradle, `app/build.gradle`, NDK via `Android.mk`
+- App identity: `applicationId` `io.github.meitoncz.delos` (debug `.debug`); the Java package stays `com.limelight` to keep upstream merges small
+
+## Devices
+
+- Main test device: **AYN Odin 2 Portal Max** (Android 13, 1920×1080 landscape), wireless ADB – find it with `adb mdns services`
+- Emulator AVD `Odin2_Portal_Max` (same resolution, Android 16 image) – use the `x86_64` APK
