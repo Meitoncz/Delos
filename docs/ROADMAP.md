@@ -61,6 +61,11 @@ Details and numbers: [ANALYSIS.md](ANALYSIS.md). Environment setup: [WINDOWS_SET
 
 The Artemis vs. Moonlight comparison only covers code both share. This phase looks at what Artemis added on its own (~555 commits): its extra libraries, outdated APIs and overall code quality.
 
+**Audit done – findings, decisions and the fix plan (batches 1–4) are in [AUDIT.md](AUDIT.md).** The checklist below tracks the fixes.
+
+- [x] Audit report (`docs/AUDIT.md`): dependencies, lint, deprecated APIs, dead code, security, targeted code review.
+- [x] Decision: remove SBS 3D (MiDaS / LiteRT / OpenCV, ~29 MB) – niche feature, Delos targets handhelds.
+
 - [ ] **Dependency audit** of Artemis-only libraries – current version, maintenance status, known vulnerabilities, APK size impact, alternatives:
   - LiteRT + LiteRT GPU and OpenCV (SBS 3D / MiDaS – large native libraries),
   - MPAndroidChart (performance overlay charts; unmaintained upstream),
