@@ -69,6 +69,7 @@ The Artemis vs. Moonlight comparison only covers code both share. This phase loo
 - [ ] Batch 2 – security (`art://` confirmation, accessibility service).
 - [ ] Batch 3 – platform (minSdk 29, deprecated APIs, insets, back handling).
 - [ ] Batch 4 – code quality / refactoring.
+- [ ] Fewer confirmation dialogs (product rule: one-click flows): e.g. "resume session?" and "quit?" prompts, quit-app confirmation. Keep only prompts that protect against data loss (delete profile, clear keyboard layout) or pairing with an unknown PC.
 
 - [ ] **Dependency audit** of Artemis-only libraries – current version, maintenance status, known vulnerabilities, APK size impact, alternatives:
   - LiteRT + LiteRT GPU and OpenCV (SBS 3D / MiDaS – large native libraries),

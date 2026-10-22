@@ -26,7 +26,7 @@ Severity: **High** = crash or security issue users can hit, **Medium** = real bu
 | D1 | SBS 3D feature = ~29 MB of the 44 MB APK (66 %) | Medium (size) | M | 1 – **decided: remove** |
 | D2 | Unused dependencies MPAndroidChart and SearchPreference | Low | S | 1 |
 | C1 | Lint `StringFormatInvalid` in Vietnamese (`120% sẽ`) – false positive, the summary is never formatted | Low | S | 1 |
-| S1 | `art://` deep link pairs with a host / launches a game on the PC without confirmation, triggerable from any web page | Medium | S | 2 |
+| S1 | `art://launch` deep link starts a game on the PC without confirmation, triggerable from any web page (needs the host's random UUID) | Low–Medium | S | 2 |
 | S2 | Accessibility service forwards **system-wide** key events to the PC while a stream is connected, even when Delos is not focused; over-broad permissions | Medium | S | 2 |
 | C2 | `doStart` needs Android 8 but minSdk is 21 → crash on Android 5–7 | Medium | S | 3 (minSdk decision) |
 | S3 | FileProvider exposes the root of every storage area | Low | S | 1 |
@@ -82,10 +82,10 @@ Recommendation: update Artemis-only libraries in batch 1; leave shared ones to t
 ## 2. Security
 
 **S1 – `art://` deep link without confirmation (Medium).** `AddComputerManually` is exported with a `BROWSABLE` intent filter for the `art` scheme (Apollo/Vibepollo QR/link pairing):
-- `art://<host>:<port>?pin=…&passphrase=…` adds the host and immediately starts pairing,
-- `art://launch?host_uuid=…&app_uuid=…` launches an app on a paired PC via `ShortcutTrampoline`.
+- `art://<host>:<port>?pin=…&passphrase=…` adds the host and pairs – this path already asks for confirmation ("Do you really want to pair with …?"),
+- `art://launch?host_uuid=…&app_uuid=…` launches an app on a paired PC via `ShortcutTrampoline` – **without confirmation**.
 
-Any web page (or app) can trigger both without user interaction. Fix: show a confirmation dialog with the host / app name before adding, pairing or launching. Keeps the Vibepollo feature.
+Any web page (or app) can open the launch link. It only works with the `host_uuid` of an already paired PC (a random UUID that only the host's web UI and paired clients know; unknown hosts are rejected by `ShortcutTrampoline`), which limits the risk. Fix (batch 2): a confirmation dialog with the app and host name, **only for links coming from outside Delos**. Launching games inside Delos and from frontends such as ES-DE (`.art` files, a different `ShortcutTrampoline` path) stays one-click.
 
 **S2 – keyboard accessibility service (Medium).** `KeyboardAccessibilityService.onKeyEvent()` consumes and forwards every key event to the PC whenever `Game.instance.connected` is true – including while Delos is in the background or in picture-in-picture, so typing in another app would go to the PC. The XML config also requests `canRetrieveWindowContent`, `flagRetrieveInteractiveWindows` and many event types it never uses. Fix: forward only while the stream window has focus; trim the config to key-event filtering. On Android 16.1+ the native keyboard capture from Moonlight makes the service unnecessary.
 
@@ -148,13 +148,13 @@ Related: `Game.java` hides the system bars with deprecated `SYSTEM_UI_FLAG_*` fl
 1. **minSdk 29 (Android 10).** Fixes C2, makes pre-Android-10 compatibility branches dead code and drops the `root` flavor (Android ≤ 7.1 only).
 2. **Performance logs (S4):** removed completely (logging, "Share performance logs", link to the Artemis community statistics). The in-game performance overlay stays. A better, local-only implementation can be built from scratch later if needed.
 3. **ABIs: ARM only** (`arm64-v8a`, `armeabi-v7a`). No `x86`/`x86_64` builds. The prebuilt x86 native libraries from Moonlight stay in the tree to keep upstream merges conflict-free.
-4. **`art://` links (S1):** keep, with a confirmation dialog before adding/pairing a host and before launching an app.
+4. **`art://` links (S1):** keep, with a confirmation dialog for launch links coming from outside the app (pairing links already ask). General rule: no confirmation dialogs in normal in-app flows; security prompts for external input are fine.
 
 ## 8. Fix plan
 
 Each batch in its own branch, built and tested on the Odin before merging.
 
 - **Batch 1 – quick wins, low risk (done):** removed SBS 3D (D1) and the performance logging feature (S4), dropped unused dependencies (D2), silenced the Vietnamese lint false positive (C1), narrowed FileProvider to `export_settings/` (S3), removed dead code (X1), no R8 for debug builds (X2), ARM-only ABIs, Gson 2.14.0 and AndroidX Annotation 1.11.0. Debug APK: 44.2 MB → 19.4 MB.
-- **Batch 2 – security:** confirmation dialogs for `art://` (S1), accessibility service focus check and trimmed config (S2).
+- **Batch 2 – security:** confirmation dialog for external `art://launch` links (S1); accessibility service only forwards keys while the stream (or external display controller) has focus, config trimmed to key filtering (S2).
 - **Batch 3 – platform:** minSdk 29 + drop `root` flavor (C2), back handling (C3), insets in `DebugInfoActivity` (C4), deprecated APIs in Artemis-only files (Q1), AppCompat 1.8.0 and Material 1.14.0 (both require minSdk 23).
 - **Batch 4 – code quality / refactoring:** English comments, logging instead of empty catches, decoder pacing cleanup, reduce `Game.instance`, extract Artemis features from `Game.java`, selected lint warnings, branding leftovers (B1).
