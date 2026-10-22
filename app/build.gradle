@@ -8,7 +8,8 @@ android {
     namespace = 'com.limelight'
 
     defaultConfig {
-        minSdk 21
+        // Delos targets Android handhelds, which all run Android 10+
+        minSdk 29
         targetSdk 36
 
         // Delos versioning: semantic version, versionCode derived as MMmmpp
@@ -31,26 +32,8 @@ android {
     }
 
     productFlavors {
-        root {
-            // Android O has native mouse capture, so don't show the rooted
-            // version to devices running O on the Play Store.
-            maxSdk 25
-
-            externalNativeBuild {
-                ndkBuild {
-                    arguments "PRODUCT_FLAVOR=root"
-                }
-            }
-
-            resValue "string",
-                    "obtainium_app_url",
-                    "data:text/html;base64,PGgxPlJvb3QgYnVpbGQgaXMgbm90IGF2YWlsYWJsZTwvaDE+"
-
-            applicationId "io.github.meitoncz.delos.root"
-            dimension "root"
-            buildConfigField "boolean", "ROOT_BUILD", "true"
-        }
-
+        // The upstream "root" flavor (Android 7.1 and older) is not built for Delos (minSdk 29);
+        // its sources in src/root are kept untouched to keep Moonlight merges simple.
         nonRoot_game {
             externalNativeBuild {
                 ndkBuild {
@@ -181,10 +164,10 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.14.0'
     implementation 'androidx.annotation:annotation:1.11.0'
     implementation 'androidx.cardview:cardview:1.0.0'
-    implementation 'androidx.appcompat:appcompat:1.7.1'
+    implementation 'androidx.appcompat:appcompat:1.8.0'
     implementation 'androidx.preference:preference:1.2.1'
     implementation 'androidx.recyclerview:recyclerview:1.4.0'
-    implementation 'com.google.android.material:material:1.13.0'
+    implementation 'com.google.android.material:material:1.14.0'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
 
     // Unit test dependencies

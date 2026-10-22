@@ -12,6 +12,7 @@ import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
 import android.view.MotionEvent;
+import androidx.core.content.ContextCompat;
 
 import com.limelight.LimeLog;
 import com.limelight.preferences.PreferenceConfiguration;
@@ -164,7 +165,7 @@ public class KeyBoardTouchPadButton extends keyBoardVirtualControllerElement {
         canvas.drawRect(rect, paint);
 
         if (icon != -1) {
-            Drawable d = getResources().getDrawable(icon);
+            Drawable d = ContextCompat.getDrawable(getContext(), icon);
             d.setBounds(5, 5, getWidth() - 5, getHeight() - 5);
             d.draw(canvas);
         } else {

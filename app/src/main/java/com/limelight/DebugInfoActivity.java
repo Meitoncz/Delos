@@ -5,7 +5,6 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.hardware.Sensor;
-import android.media.AudioAttributes;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.VibrationEffect;
@@ -23,6 +22,8 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.limelight.utils.DeviceUtils;
+import com.limelight.utils.DeviceVibrator;
+import com.limelight.utils.UiHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,13 +42,14 @@ public class DebugInfoActivity extends AppCompatActivity implements View.OnClick
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_axitest);
+        UiHelper.notifyNewRootView(this);
 
         tx_gamepad_info = findViewById(R.id.tx_game_pad_info);
         TextView tx_content = findViewById(R.id.tx_content);
         bt_vibrator = findViewById(R.id.bt_vibrator);
         bt_vibrator_value = findViewById(R.id.bt_vibrator_value);
 
-        vibrator = (Vibrator) this.getSystemService(VIBRATOR_SERVICE);
+        vibrator = DeviceVibrator.get(this);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         String kernelVersion = System.getProperty("os.version");
@@ -58,7 +60,7 @@ public class DebugInfoActivity extends AppCompatActivity implements View.OnClick
         sb.append("\n" + getString(R.string.debug_info_brand_model) + DeviceUtils.getManufacturer() + "\t-\t" + DeviceUtils.getModel());
         tx_content.setText(sb.toString());
 
-        boolean hasVibrator = ((Vibrator) getSystemService(Context.VIBRATOR_SERVICE)).hasVibrator();
+        boolean hasVibrator = vibrator != null && vibrator.hasVibrator();
         String content = hasVibrator ? getString(R.string.debug_info_has_vibration_motor) : getString(R.string.debug_info_no_vibration_motor);
         bt_vibrator.setText(getString(R.string.debug_info_test_device_vibration, content));
 
@@ -93,7 +95,7 @@ public class DebugInfoActivity extends AppCompatActivity implements View.OnClick
                     dialog.dismiss();
                     switch (which) {
                         case 0:
-                            vibrator.vibrate(1000);
+                            DeviceVibrator.vibrateOnce(vibrator, 1000);
                             break;
                         case 1:
                             rumble(vibrator);
@@ -118,7 +120,7 @@ public class DebugInfoActivity extends AppCompatActivity implements View.OnClick
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     dialog.dismiss();
-                    if (ids.get(which).getVibrator().hasVibrator()) {
+                    if (DeviceVibrator.get(ids.get(which)).hasVibrator()) {
                         String[] titles = new String[]{getString(R.string.debug_info_simple_vibration), getString(R.string.debug_info_continuous_hd_vibration)};
                         new AlertDialog.Builder(DebugInfoActivity.this).setItems(titles, new DialogInterface.OnClickListener() {
                             @Override
@@ -126,11 +128,11 @@ public class DebugInfoActivity extends AppCompatActivity implements View.OnClick
                                 dialog.dismiss();
                                 switch (which2) {
                                     case 0:
-                                        ids.get(which).getVibrator().vibrate(1000);
+                                        DeviceVibrator.vibrateOnce(DeviceVibrator.get(ids.get(which)), 1000);
                                         break;
                                     case 1:
                                         cancleRumble();
-                                        vibratorOnline = ids.get(which).getVibrator();
+                                        vibratorOnline = DeviceVibrator.get(ids.get(which));
                                         rumble(vibratorOnline);
                                         break;
                                 }
@@ -180,17 +182,7 @@ public class DebugInfoActivity extends AppCompatActivity implements View.OnClick
     }
 
     private void rumble(Vibrator vibrator) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibrator.vibrate(VibrationEffect.createWaveform(new long[]{1000}, new int[]{simulatedAmplitude}, 0));
-        } else {
-            long pwmPeriod = 20;
-            long onTime = (long) ((simulatedAmplitude / 255.0) * pwmPeriod);
-            long offTime = pwmPeriod - onTime;
-            AudioAttributes audioAttributes = new AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_GAME)
-                    .build();
-            vibrator.vibrate(new long[]{0, onTime, offTime}, 0, audioAttributes);
-        }
+        vibrator.vibrate(VibrationEffect.createWaveform(new long[]{1000}, new int[]{simulatedAmplitude}, 0));
     }
 
     @Override
@@ -239,7 +231,7 @@ public class DebugInfoActivity extends AppCompatActivity implements View.OnClick
                     sb.append(getString(R.string.debug_info_vid_pid) + dev.getVendorId() + "_" + dev.getProductId()
                             + "\t    [" + String.format("%04x", dev.getVendorId()) + "_" + String.format("%04x", dev.getProductId()) + "]");
                     sb.append("\n");
-                    sb.append(getString(R.string.debug_info_vibration) + (dev.getVibrator().hasVibrator() ? getString(R.string.debug_info_supported) : getString(R.string.debug_info_not_supported)));
+                    sb.append(getString(R.string.debug_info_vibration) + (DeviceVibrator.get(dev).hasVibrator() ? getString(R.string.debug_info_supported) : getString(R.string.debug_info_not_supported)));
                     sb.append("\n");
                     sb.append(getString(R.string.debug_info_details) + "\n");
                     sb.append(dev.toString());

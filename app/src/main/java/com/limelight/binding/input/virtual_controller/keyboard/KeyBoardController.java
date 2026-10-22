@@ -23,6 +23,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.Toast;
+import com.limelight.utils.DeviceVibrator;
 
 import com.limelight.Game;
 import com.limelight.GameMenu;
@@ -83,7 +84,7 @@ public class KeyBoardController {
         this.context = context;
         this.handler = new Handler(Looper.getMainLooper());
 
-        this.vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+        this.vibrator = DeviceVibrator.get(context);
 
         // Configure button
         buttonConfigure = new Button(context);
@@ -97,7 +98,7 @@ public class KeyBoardController {
             public boolean onLongClick(View v) {
                 Toast.makeText(context, context.getString(R.string.keyboard_configure_movable), Toast.LENGTH_SHORT).show();
                 buttonConfigure.setTag("movable");
-                vibrator.vibrate(100); // Give haptic feedback
+                DeviceVibrator.vibrateOnce(vibrator, 100); // Give haptic feedback
                 return true;
             }
         });

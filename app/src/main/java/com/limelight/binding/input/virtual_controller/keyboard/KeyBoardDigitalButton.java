@@ -11,6 +11,7 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.view.MotionEvent;
+import androidx.core.content.ContextCompat;
 
 import com.limelight.binding.input.virtual_controller.VirtualController;
 import com.limelight.binding.input.virtual_controller.VirtualControllerElement;
@@ -172,7 +173,7 @@ public class KeyBoardDigitalButton extends keyBoardVirtualControllerElement {
         }
 
         if (icon != -1) {
-            Drawable d = getResources().getDrawable(icon);
+            Drawable d = ContextCompat.getDrawable(getContext(), icon);
             d.setBounds(5, 5, getWidth() - 5, getHeight() - 5);
             d.draw(canvas);
         } else {

@@ -16,6 +16,7 @@ import android.os.Handler;
 import android.os.Vibrator;
 
 import androidx.annotation.NonNull;
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.DialogFragment;
@@ -89,6 +90,14 @@ public class StreamSettings extends AppCompatActivity {
 //        setTheme(R.style.AppTheme);
         super.onCreate(savedInstanceState);
 
+        // Works with predictive back (enableOnBackInvokedCallback) on Android 13+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                handleBack();
+            }
+        });
+
         previousPrefs = PreferenceConfiguration.readPreferences(this);
 
         UiHelper.setLocale(this);
@@ -134,25 +143,17 @@ public class StreamSettings extends AppCompatActivity {
         }
     }
 
-    @Override
-    // NOTE: This will NOT be called on Android 13+ with android:enableOnBackInvokedCallback="true"
-    public void onBackPressed() {
+    private void handleBack() {
         finish();
 
-        // Language changes are handled via configuration changes in Android 13+,
-        // so manual activity relaunching is no longer required.
-        PreferenceConfiguration newPrefs = PreferenceConfiguration.readPreferences(this);
-        if (!newPrefs.language.equals(previousPrefs.language)) {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                // Restart the PC view to apply UI changes
+        // Android 13+ applies language changes through configuration changes;
+        // older versions need the PC view restarted to pick up the new language.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            PreferenceConfiguration newPrefs = PreferenceConfiguration.readPreferences(this);
+            if (!newPrefs.language.equals(previousPrefs.language)) {
                 Intent intent = new Intent(this, PcView.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent, null);
-            } else {
-                if (newPrefs.language == PreferenceConfiguration.DEFAULT_LANGUAGE) {
-                    Toast.makeText(this, "Language has been reset to default, please restart the app!", Toast.LENGTH_LONG).show();
-                    System.exit(0);
-                }
             }
         }
     }

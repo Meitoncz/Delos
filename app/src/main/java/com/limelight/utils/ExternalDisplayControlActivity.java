@@ -33,9 +33,11 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
+import androidx.core.content.IntentCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -114,11 +116,18 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                handleBack(this);
+            }
+        });
+
         instance = this;
         prefConfig = PreferenceConfiguration.readPreferences(this);
 
         if (!isGameInstanceAvailable()) {
-            Intent gameIntent = getIntent().getParcelableExtra(EXTRA_LAUNCH_INTENT);
+            Intent gameIntent = IntentCompat.getParcelableExtra(getIntent(), EXTRA_LAUNCH_INTENT, Intent.class);
             if (gameIntent == null) {
                 finish();
             } else {
@@ -285,14 +294,17 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
         }
     }
 
-    @Override
-    public void onBackPressed() {
+    @SuppressWarnings("deprecation") // Game handles back itself via onBackPressed()
+    private void handleBack(OnBackPressedCallback callback) {
         if (Game.instance != null && Game.instance.isKeyboardLayoutVisible()) {
             toggleFullKeyboard();
-        } else if (gameMenu != null && !gameMenu.isMenuOpen() && Game.instance != null)
+        } else if (gameMenu != null && !gameMenu.isMenuOpen() && Game.instance != null) {
             Game.instance.onBackPressed();
-        else {
-            super.onBackPressed();
+        } else {
+            // Default behavior: let the system finish this activity
+            callback.setEnabled(false);
+            getOnBackPressedDispatcher().onBackPressed();
+            callback.setEnabled(true);
         }
     }
 
@@ -330,6 +342,7 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
     }
 
     @Override
+    @SuppressWarnings("deprecation") // KeyEvent.ACTION_MULTIPLE is still delivered by some IMEs
     public boolean onKey(View view, int keyCode, KeyEvent keyEvent) {
         if (Game.instance != null) {
             if (keyEvent.getDeviceId() >= 0) {
@@ -445,6 +458,7 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
     /**
      * Toggles the visibility of the on-screen software keyboard.
      */
+    @SuppressWarnings("deprecation") // No direct replacement for toggling the soft keyboard
     private void _toggleKeyboard() {
         LimeLog.info("Toggling keyboard overlay on ExternalDisplayControlActivity");
         InputMethodManager inputManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
