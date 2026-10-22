@@ -195,6 +195,13 @@
 
     <string name="category_gamepad_settings">Paramètres manette</string>
     <string name="title_checkbox_multi_controller">Détection automatique de la présence de la manette</string>
+    <string name="title_checkbox_stretch_video">Étirer la vidéo en plein écran</string>
+    <string name="title_checkbox_disable_warnings">Désactiver les messages d\'avertissement</string>
+    <string name="title_checkbox_enable_pip">Activer le mode observateur</string>
+    <string name="summary_checkbox_enable_pip">Permet de visualiser le stream (sans le contrôler) tout en utilisant une autre appli</string>
+    <string name="category_input_settings">Paramètres d\'entrée</string>
+    <string name="title_checkbox_touchscreen_trackpad">Utiliser l\'écran tactile comme trackpad</string>
+    <string name="summary_checkbox_touchscreen_trackpad">Si activé, l\'écran tactile agit comme un trackpad. Si désactivé, l\'écran tactile contrôle directement le curseur de la souris.</string>
     <string name="summary_checkbox_multi_controller">Décocher cette option force une manette à toujours être présente</string>
     <string name="title_checkbox_vibrate_fallback">Émuler les vibrations de la manette avec l\'appareil</string>
     <string name="summary_checkbox_vibrate_fallback">Fait vibrer votre appareil pour émuler les vibrations de la manette si elle ne le supporte pas</string>
@@ -221,9 +228,6 @@
     <string name="title_checkbox_force_device_motion">Toujours utiliser les capteurs de mouvement de l\'appareil</string>
     <string name="summary_checkbox_force_device_motion">Force l\'utilisation des capteurs de mouvement intégrés de l\'appareil même lorsque la manette signale que les capteurs de mouvement sont pris en charge.</string>
 
-    <string name="category_input_settings">Paramètres d\'entrée</string>
-    <string name="title_checkbox_touchscreen_trackpad">Utiliser l\'écran tactile comme trackpad</string>
-    <string name="summary_checkbox_touchscreen_trackpad">Si activé, l\'écran tactile agit comme un trackpad. Si désactivé, l\'écran tactile contrôle directement le curseur de la souris.</string>
     <string name="title_checkbox_absolute_mouse_mode">Mode souris pour bureau à distance</string>
     <string name="summary_checkbox_absolute_mouse_mode">Cela peut rendre l\'accélération de la souris plus naturelle pour l\'utilisation du bureau à distance, mais il est incompatible avec de nombreux jeux.</string>
     <string name="title_checkbox_mouse_nav_buttons">Activer les boutons de navigation arrière et avant de la souris</string>
@@ -251,8 +255,6 @@
     <string name="suffix_osc_opacity">%</string>
 
     <string name="category_ui_settings">Paramètres de l\'interface utilisateur</string>
-    <string name="title_checkbox_enable_pip">Activer le mode observateur Picture-in-Picture</string>
-    <string name="summary_checkbox_enable_pip">Permet de visualiser le flux (sans le contrôler) tout en utilisant une autre application</string>
     <string name="title_language_list">Langue</string>
     <string name="summary_language_list">Langue à utiliser pour Delos</string>
     <string name="title_checkbox_small_icon_mode">Utiliser des petites icônes</string>
@@ -269,7 +271,6 @@
     <string name="summary_unlock_fps">Le streaming à 90 ou 120 FPS peut réduire la latence sur les appareils haut de gamme, mais peut entraîner un décalage ou une instabilité sur les appareils qui ne le supportent pas</string>
     <string name="title_checkbox_reduce_refresh_rate">Autoriser la réduction du taux de rafraîchissement</string>
     <string name="summary_checkbox_reduce_refresh_rate">Des taux de rafraîchissement d\'affichage plus bas peuvent économiser de l\'énergie au détriment d\'une latence vidéo plus importante</string>
-    <string name="title_checkbox_disable_warnings">Désactiver les messages d\'avertissement</string>
     <string name="summary_checkbox_disable_warnings">Désactive les messages d\'avertissement sur la connexion pendant le stream</string>
     <string name="title_disable_frame_drop">Ne jamais perdre d\'images</string>
     <string name="summary_disable_frame_drop">Peut réduire les micro-saccades sur certains appareils, mais peut augmenter la latence</string>
@@ -589,4 +590,5 @@
     <string name="title_checkbox_remember_zoom_pan">Mémoriser le zoom et le panoramique</string>
     <string name="summary_checkbox_remember_zoom_pan">Enregistre la position de zoom et de panoramique entre les sessions.</string>
     <string name="title_edit_profile">Modifier le profil</string>
+    <string name="error_code_prefix">Code d\'erreur :</string>
 </resources>

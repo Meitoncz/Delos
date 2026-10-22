@@ -252,4 +252,5 @@
     <string name="fps_suffix_fps">FPS</string>
     <string name="title_enable_commit_text">Ativar envio de texto concluído (gesto/voz)</string>
     <string name="summary_enable_commit_text">Encaminha textos com vários caracteres de teclados virtuais (digitação por gestos, sugestões, ditado por voz). Pode causar problemas em jogos que dependem de entrada tecla por tecla.</string>
+    <string name="pcview_menu_eol">Fim do serviço NVIDIA GameStream</string>
 </resources>
