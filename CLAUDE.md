@@ -20,7 +20,7 @@ When merging Moonlight, do each phase in its own branch (`update/common-c`, `upd
 ## Structure
 
 - `app/src/main/java/com/limelight/` – Java code; `Game.java` = streaming activity, `binding/input/` = input, `binding/video/` = decoder
-- `app/src/main/jni/moonlight-core/` – native code; submodule `moonlight-common-c` (ClassicOldSong's fork for Apollo features); prebuilt OpenSSL and opus
+- `app/src/main/jni/moonlight-core/` – native code; prebuilt OpenSSL and opus; submodule `moonlight-common-c` → `Meitoncz/Delos-common-c` (public fork of ClassicOldSong's Apollo fork, merged with upstream; inside the submodule `origin` = Delos-common-c, `artemis` = ClassicOldSong, `upstream` = moonlight-stream). Changes to it are pushed to the fork first, then the pin is updated here.
 - Build: Gradle, `app/build.gradle`, NDK via `Android.mk`
 - App identity: `applicationId` `io.github.meitoncz.delos` (debug `.debug`); the Java package stays `com.limelight` to keep upstream merges small
 

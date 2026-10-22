@@ -16,10 +16,12 @@ Details and numbers: [ANALYSIS.md](ANALYSIS.md). Environment setup: [WINDOWS_SET
 
 ## Phase 1 – moonlight-common-c
 
-- [ ] Fork `ClassicOldSong/moonlight-common-c` → `Delos-common-c` (or similar).
-- [ ] Merge `moonlight-stream/moonlight-common-c` master (trial merge had no conflicts).
-- [ ] Point `.gitmodules` to the new fork, update the submodule pin.
-- [ ] Verify Apollo/Vibepollo features (server commands, empty payload).
+- [x] Fork `ClassicOldSong/moonlight-common-c` → [`Meitoncz/Delos-common-c`](https://github.com/Meitoncz/Delos-common-c) (public; forks of public repos cannot be private).
+- [x] Merge upstream `moonlight-common-c` at `874ac954` – the exact pin used by Moonlight 12.2 (upstream master was 11 commits ahead). No conflicts; Apollo packet table verified.
+- [x] Port the API changes: `nanors` replaces `reedsolomon` in `Android.mk`; frame times are now microseconds (`callbacks.c`, `MoonBridge`, `MediaCodecDecoderRenderer` timestamp normalization as in Moonlight).
+- [x] Point `.gitmodules` to the new fork, update the submodule pin.
+- [x] Stream test on the Odin against Vibepollo (Returnal) – OK.
+- [ ] Verify Apollo/Vibepollo extras (server commands, clipboard, virtual display) – in Phase 4 testing.
 
 ## Phase 2 – Toolchain (separately, before the Moonlight merge)
 

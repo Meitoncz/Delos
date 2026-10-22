@@ -39,11 +39,10 @@ git fetch moonlight
 
 ## 3. local.properties
 
-Backslashes and colons in paths must be escaped:
+Backslashes and colons in paths must be escaped. Do not set `ndk.dir` (deprecated) – the NDK is picked by `ndkVersion` in `app/build.gradle`:
 
 ```properties
 sdk.dir=C\:\\Users\\<user>\\AppData\\Local\\Android\\Sdk
-ndk.dir=C\:\\Users\\<user>\\AppData\\Local\\Android\\Sdk\\ndk\\<version>
 ```
 
 ## 4. Build
