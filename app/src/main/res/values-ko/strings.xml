@@ -190,7 +190,7 @@
     <string name="title_enable_perf_overlay">스트리밍 중 성능 정보 표시</string>
     <string name="summary_enable_perf_overlay">스트리밍하는 동안 실시간 스트림 성능 정보 표시</string>
     <string name="summary_enable_hdr">게임 및 PC의 GPU가 HDR을 지원하는 경우 HDR을 활성화합니다. HDR에는 HEVC Main 10 인코딩을 지원하는 GPU가 필요합니다.</string>
-    <string name="title_enable_hdr">HDR활성화 (실험용)</string>
+    <string name="title_enable_hdr">HDR활성화</string>
     <string name="summary_disable_frame_drop">일부 장치에서 미세한 끊김 현상을 줄일 수 있지만 지연 시간이 늘어날 수 있습니다</string>
     <string name="title_disable_frame_drop">프레임드랍 최적화</string>
     <string name="summary_unlock_fps">90 또는 120FPS로 스트리밍하면 지연 시간이 줄어들 수 있지만 이를 지원할 수 없는 장치에서는 지연 또는 불안정 할 수 있습니다</string>
@@ -261,7 +261,7 @@
 \n
 \nHDR 모드를 비활성화하거나 스트리밍 해상도를 변경하거나 호스트 PC의 디스플레이 해상도를 변경해 보십시오.</string>
     <string name="summary_full_range">밝기범위를 \"전체(0~255)\"로 설정합니다. 장치의 디스플레이가 \"제한(16~235)\" 범위로 출력하는 경우 밝기가 제대로 표현되지 않습니다.</string>
-    <string name="title_full_range">전체 범위 비디오 활성화 (실험용)</string>
+    <string name="title_full_range">전체 범위 비디오 활성화</string>
     <string name="title_checkbox_gamepad_motion_sensors">컨트롤러 모션 센서 사용 허용</string>
     <string name="summary_checkbox_gamepad_motion_sensors">모션 센서가 있는 컨트롤러를 에뮬레이션할 때 지원되는 호스트가 모션 센서 데이터를 요청할 수 있습니다. 비활성화하면 게임에서 동작 센서를 사용하지 않는 경우 전원 및 네트워크 사용량이 약간 줄어들 수 있습니다.</string>
     <string name="summary_checkbox_gamepad_touchpad_as_mouse">터치패드로 컨트롤러를 에뮬레이션하는 경우에도 호스트 마우스를 제어하기 위해 컨트롤러 터치패드 입력을 강제합니다.</string>
@@ -272,7 +272,7 @@
     <string name="title_native_fps_dialog">네이티브 FPS 주의사항</string>
     <string name="category_gamepad_settings">컨트롤러 설정</string>
     <string name="title_checkbox_gamepad_touchpad_as_mouse">항상 터치패드로 마우스 제어</string>
-    <string name="videoformat_av1always">AV1 선호 (실험용)</string>
+    <string name="videoformat_av1always">AV1 선호</string>
     <string name="videoformat_h264always">H.264 선호</string>
     <string name="toast_controller_type_changed">모션 센서 에뮬레이션으로 인해 컨트롤러 유형이 변경될 수 있습니다</string>
     <string name="summary_checkbox_gamepad_motion_fallback">연결된 컨트롤러 또는 기기의 Android 버전에서 컨트롤러 센서가 지원되지 않는 경우 장치에 내장된 모션 센서를 사용합니다.

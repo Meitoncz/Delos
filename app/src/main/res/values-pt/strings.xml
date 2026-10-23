@@ -114,7 +114,7 @@
     <string name="summary_checkbox_disable_warnings">Desativa as mensagens de aviso de conexão no ecrã durante a transmissão</string>
     <string name="summary_disable_frame_drop">Talvez reduza o micro-stuttering em alguns aparelhos, mas pode aumentar a latência</string>
     <string name="summary_video_format">HEVC reduz os requisitos de largura de banda de vídeo, mas requer um aparelho mais atual</string>
-    <string name="title_enable_hdr">Ativar HDR (Experimental)</string>
+    <string name="title_enable_hdr">Ativar HDR</string>
     <string name="summary_full_range">Isso causará perda de detalhes em áreas claras e escuras se o seu aparelho não exibir corretamente todo o conteúdo de vídeo em cores.</string>
     <string name="title_disable_frame_drop">Nunca dropar quadros</string>
     <string name="summary_enable_perf_overlay">Exibe informações de performance em tempo real durante a transmissão</string>
@@ -225,7 +225,7 @@
     <string name="error_manager_not_running">O serviço ComputerManager não está em execução. Aguarde alguns segundos ou reinicie a app..</string>
     <string name="error_unknown_host">Falha ao encontrar o host</string>
     <string name="title_setup_guide">Guia de configuração</string>
-    <string name="title_full_range">Forçar vídeo de gama completa de cores (Experimental)</string>
+    <string name="title_full_range">Forçar vídeo de gama completa de cores</string>
     <string name="conn_establishing_title">Estabelecendo Conexão</string>
     <string name="conn_establishing_msg">Iniciando a conexão</string>
     <string name="addpc_fail">Não foi possível conectar ao computador especificado. Certifique-se de que as portas necessárias sejam permitidas pelo firewall.</string>

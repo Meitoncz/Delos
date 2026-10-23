@@ -217,7 +217,7 @@
     <string name="summary_checkbox_disable_warnings">Desativa as mensagens de aviso de conexão na tela durante a transmissão</string>
     <string name="title_disable_frame_drop">Nunca dropar quadros</string>
     <string name="summary_disable_frame_drop">Talvez reduza o micro-stuttering em alguns dispositivos, mas pode aumentar a latência</string>
-    <string name="title_enable_hdr">Habilitar HDR (Experimental)</string>
+    <string name="title_enable_hdr">Habilitar HDR</string>
     <string name="title_enable_post_stream_toast">Mostrar aviso de latência após terminar a transmissão</string>
     <string name="summary_enable_perf_overlay">Exibe informações de performance em tempo real durante a transmissão</string>
     <string name="title_enable_perf_overlay">Mostrar status de performance durante a transmissão</string>
@@ -238,7 +238,7 @@
     <string name="resolution_prefix_native_portrait">(Retrato)</string>
     <string name="title_checkbox_enable_audiofx">Habilitar sistema de suporte à equalização</string>
     <string name="summary_checkbox_enable_audiofx">Permitir que efeitos de audio funcionem durante o streaming, pode acrescentar latência de audio</string>
-    <string name="title_full_range">Forçar vídeo de gama completa de cores (Experimental)</string>
+    <string name="title_full_range">Forçar vídeo de gama completa de cores</string>
     <string name="frame_conversion_error">O PC host relatou um erro fatal de codificação de vídeo.
 \n
 \nTente desativar o modo HDR, alterar a resolução de streaming ou alterar a resolução do PC host.</string>

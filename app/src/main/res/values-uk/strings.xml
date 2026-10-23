@@ -132,7 +132,7 @@
     <string name="toast_reset_osc_success">Екранні елементи керування повернуті до положень за замовчуванням</string>
     <string name="title_disable_frame_drop">Ніколи не пропускати кадри</string>
     <string name="summary_disable_frame_drop">Може зменшити мікрозависання на деяких пристроях але, також збільшити затримку</string>
-    <string name="title_enable_hdr">Увімкнути HDR (Експериментально)</string>
+    <string name="title_enable_hdr">Увімкнути HDR</string>
     <string name="summary_enable_hdr">Транслювати в HDR, якщо це підтримується грою та графічним процесором ПК. Для HDR потрібен графічний процесор із підтримкою кодування HEVC Main 10.</string>
     <string name="title_checkbox_vibrate_osc">Увімкнути вібрацію</string>
     <string name="title_fps_list">Частота кадрів</string>
@@ -255,14 +255,14 @@
     <string name="frame_conversion_error">Головний комп\'ютер повідомив про фатальну помилку кодування відео.
 \n
 \nСпробуйте вимкнути режим HDR, змінити роздільну здатність потокового відео або змінити роздільну здатність дисплея головного комп\'ютера.</string>
-    <string name="title_full_range">Сила повного спектру відео (експериментальна)</string>
+    <string name="title_full_range">Сила повного спектру відео</string>
     <string name="summary_full_range">Це може призвести до втрати деталей у світлих і темних областях, якщо пристрій не відображає належним чином весь діапазон відеоконтенту.</string>
     <string name="pair_pairing_help">Якщо на вашому комп’ютері встановлений Sunshine, перейдіть до веб-інтерфейсу користувача Sunshine, щоб ввести PIN-код.</string>
     <string name="error_code_prefix">Код помилки:</string>
     <string name="title_seekbar_vibrate_fallback_strength">Налаштування інтенсивності вібро</string>
     <string name="summary_seekbar_vibrate_fallback_strength">Посилюйте або зменшуйте інтенсивність вібрації пристрою</string>
     <string name="title_checkbox_gamepad_motion_fallback">Емуляція підтримки датчика руху геймпада</string>
-    <string name="videoformat_av1always">Використовувати AV1 (експериментальний)</string>
+    <string name="videoformat_av1always">Використовувати AV1</string>
     <string name="videoformat_h264always">Використовувати H.264</string>
     <string name="fps_suffix_fps">FPS</string>
     <string name="title_native_fps_dialog">Попередження рідного FPS</string>

@@ -296,9 +296,9 @@
     <string name="summary_disable_frame_drop">May reduce micro-stuttering on some devices, but can increase latency</string>
     <string name="title_video_format">Change codec settings</string>
     <string name="summary_video_format">Newer codecs can lower video bandwidth requirements if your device supports them. Codec selections may be ignored if not supported by the host software or GPU.</string>
-    <string name="title_enable_hdr">Enable HDR (Experimental)</string>
-    <string name="summary_enable_hdr">Stream HDR when the game and PC GPU support it. HDR requires a GPU with HEVC Main 10 encoding support.</string>
-    <string name="title_full_range">Force full range video (Experimental)</string>
+    <string name="title_enable_hdr">Enable HDR</string>
+    <string name="summary_enable_hdr">Stream HDR when the game and PC GPU support it. HDR requires a GPU with HEVC Main 10 encoding support. How HDR looks depends on the display of this device.</string>
+    <string name="title_full_range">Force full range video</string>
     <string name="summary_full_range">This will cause loss of detail in light and dark areas if your device doesn\'t properly display full range video content.</string>
     <string name="title_prevent_packet_loss">Prevent Packet Loss</string>
     <string name="summary_prevent_packet_loss">For devices that have packet loss for unknown reasons, you can try to enable this option.</string>
@@ -341,7 +341,7 @@
     <string name="audioconf_71surround">7.1 Surround Sound</string>
 
     <string name="videoformat_auto">Automatic (Recommended)</string>
-    <string name="videoformat_av1always">Prefer AV1 (Experimental)</string>
+    <string name="videoformat_av1always">Prefer AV1</string>
     <string name="videoformat_hevcalways">Prefer HEVC</string>
     <string name="videoformat_h264always">Prefer H.264</string>
 
@@ -524,8 +524,8 @@
     <string name="summary_back_as_guide">Send Guide(PS/HOME) button press when Back button is pressed on controllers.</string>
     <string name="title_checkbox_ignore_synth_events">Ignore synthetic events</string>
     <string name="summary_ignore_synth_events">Ignore synthetic events sent by the Android system. This may resolve issues where mouse clicks trigger other unexpected keys on certain devices.\nEnabling this option will cause the system\'s soft keyboard to stop working.</string>
-    <string name="title_smart_clipboard_sync">Smart Clipboard Sync (Experimental)</string>
-    <string name="summary_smart_clipboard_sync">Automatically upload clipboard content to server when the stream starts/resumes, download clipboard from server when losing focus(requires Apollo)</string>
+    <string name="title_smart_clipboard_sync">Smart Clipboard Sync</string>
+    <string name="summary_smart_clipboard_sync">Automatically upload clipboard content to server when the stream starts/resumes, download clipboard from server when losing focus (requires Vibepollo or Apollo)</string>
     <string name="title_smart_clipboard_sync_toast">Clipboard Sync Toast</string>
     <string name="summary_smart_clipboard_sync_toast">Show toast for clipboard sync result</string>
     <string name="title_hide_clipboard_content">Hide clipboard content</string>

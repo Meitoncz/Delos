@@ -209,7 +209,7 @@
     <string name="summary_enable_post_stream_toast">Показване на информация относно забавянето след като поточното предаване приключи</string>
     <string name="toast_controller_type_changed">Видът на контролера може да бъде променен, поради симулирането на сензори за движение</string>
     <string name="title_disable_frame_drop">Никога да не се пропускат кадри</string>
-    <string name="title_full_range">Принудително ползване на видео с пълен диапазон (експериментално)</string>
+    <string name="title_full_range">Принудително ползване на видео с пълен диапазон</string>
     <string name="summary_troubleshooting">Вижте съвети за анализиране и отстраняване на чести проблеми с поточното предаване</string>
     <string name="analogscroll_right">Десен аналогов стик</string>
     <string name="title_native_res_dialog">Предупреждение относно локалната резолюция</string>
@@ -224,7 +224,7 @@
     <string name="title_checkbox_disable_warnings">Изключване на предупредителните съобщения</string>
     <string name="summary_checkbox_disable_warnings">Изключване на екранните предупредителни съобщения за връзката по време на излъчването</string>
     <string name="title_video_format">Промяна на настройките на кодиране</string>
-    <string name="title_enable_hdr">Включване на HDR (експериментално)</string>
+    <string name="title_enable_hdr">Включване на HDR</string>
     <string name="title_enable_perf_overlay">Показване на статистика за производителността</string>
     <string name="title_enable_post_stream_toast">Показване на съобщение относно забавянето след излъчването</string>
     <string name="summary_setup_guide">Вижте инструкции как да настроите компютъра си за поточно предаване на игри</string>
@@ -240,7 +240,7 @@
     <string name="fps_60">60 кадъра/сек</string>
     <string name="fps_90">90 кадъра/сек</string>
     <string name="fps_120">120 кадъра/сек</string>
-    <string name="videoformat_av1always">Предпочитане на AV1 (експериментално)</string>
+    <string name="videoformat_av1always">Предпочитане на AV1</string>
     <string name="analogscroll_none">Никой (и двата стика местят курсора)</string>
     <string name="analogscroll_left">Ляв аналогов стик</string>
     <string name="title_checkbox_gamepad_touchpad_as_mouse">Винаги да се управлява мишката чрез сензорния панел</string>

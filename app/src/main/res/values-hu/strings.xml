@@ -5,7 +5,7 @@
     <string name="summary_enable_perf_overlay">Valós idejű stream teljesítmény adatok mutatása streamelés közben</string>
     <string name="title_enable_perf_overlay">Teljesítménystatisztikák megjelenítése streamelés közben</string>
     <string name="summary_enable_hdr">HDR streamelés, ha a játék és a számítógép GPU-ja támogatja. A HDR-hez HEVC Main 10 kódolási támogatással rendelkező GPU szükséges.</string>
-    <string name="title_enable_hdr">HDR engedélyezése (Kísérleti)</string>
+    <string name="title_enable_hdr">HDR engedélyezése</string>
     <string name="summary_video_format">Az újabb kodekek csökkenthetik a videó sávszélességigényét, ha a készülék támogatja őket. A codec-kiválasztások figyelmen kívül hagyhatók, ha a gazdaszoftver vagy a GPU nem támogatja őket.</string>
     <string name="title_video_format">Kodekbeállítások módosítása</string>
     <string name="summary_disable_frame_drop">Csökkentheti a mikroakadozást egyes eszközökön, de növelheti a késleltetést</string>
@@ -200,7 +200,7 @@
     <string name="pacing_smoothness">Simább videó előnyben részesítése (jelentősen növelheti a késleltetést)</string>
     <string name="fps_120">120 FPS</string>
     <string name="category_help">Súgó</string>
-    <string name="videoformat_av1always">AV1 előnyben részesítése (Kísérleti)</string>
+    <string name="videoformat_av1always">AV1 előnyben részesítése</string>
     <string name="audioconf_71surround">7.1 Térhatású hangzás</string>
     <string name="pcview_menu_eol">NVIDIA GameStream szolgáltatás vége</string>
     <string name="title_checkbox_gamepad_motion_sensors">Gamepad mozgásérzékelők használatának engedélyezése</string>
@@ -228,7 +228,7 @@
     <string name="fps_30">30 FPS</string>
     <string name="summary_troubleshooting">Tippek a gyakori streamelési problémák diagnosztizálásához és javításához</string>
     <string name="title_checkbox_absolute_mouse_mode">Távoli asztali egér mód</string>
-    <string name="title_full_range">Teljes színtartomány kényszerítése (Kísérleti)</string>
+    <string name="title_full_range">Teljes színtartomány kényszerítése</string>
     <string name="summary_checkbox_reduce_refresh_rate">Az alacsonyabb kijelzőfrissítési frekvencia energiát takaríthat meg további videókésleltetés árán</string>
     <string name="resolution_prefix_native_portrait">(Portré)</string>
     <string name="summary_checkbox_absolute_mouse_mode">Ez természetesebbé teheti az egérgyorsítást távoli asztalhoz, viszont sok játékkal nem kompatibilis.</string>

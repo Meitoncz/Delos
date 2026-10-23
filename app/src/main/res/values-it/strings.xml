@@ -136,7 +136,7 @@
     <string name="summary_disable_frame_drop">Potrebbe ridurre il micro-stuttering su alcuni dispositivi, ma può aumentare la latenza</string>
     <string name="title_video_format">Modifica impostazioni del codec</string>
     <string name="summary_video_format">I nuovi codec possono ridurre i requisiti di larghezza di banda video se il tuo dispositivo li supporta. La scelta del codec può essere ignorata se non è supportato dal software dell\'host o dalla GPU.</string>
-    <string name="title_enable_hdr">Abilita HDR (sperimentale)</string>
+    <string name="title_enable_hdr">Abilita HDR</string>
     <string name="summary_enable_hdr">Utilizza l\'HDR quando il gioco e la scheda video del PC lo supportano. L\'HDR richiede una scheda video col supporto dell\'encoding HEVC Main 10.</string>
     <string name="suffix_osc_opacity">%</string>
     <string name="pcview_menu_header_online">Online</string>
@@ -262,9 +262,9 @@
     <string name="summary_checkbox_enable_audiofx">Consente agli effetti audio di funzionare durante lo streaming, ma può aumentare la latenza audio</string>
     <string name="title_checkbox_reduce_refresh_rate">Consenti riduzione della frequenza di aggiornamento</string>
     <string name="summary_full_range">Ciò causerà la perdita di dettagli in aree chiare e scure se il dispositivo non visualizza correttamente i contenuti video a gamma completa.</string>
-    <string name="title_full_range">Forza video full range (sperimentale)</string>
+    <string name="title_full_range">Forza video full range</string>
     <string name="title_native_fps_dialog">Avviso FPS nativi</string>
-    <string name="videoformat_av1always">Preferisci AV1 (Sperimentale)</string>
+    <string name="videoformat_av1always">Preferisci AV1</string>
     <string name="pcview_menu_eol">Terminazione del servizio NVIDIA GameStream</string>
     <string name="title_checkbox_gamepad_motion_sensors">Permetti l\'uso dei sensori giroscopici del gamepad</string>
     <string name="summary_checkbox_gamepad_touchpad_as_mouse">Forza l\'input del touchpad del gamepad a controllare il mouse dell\'host, anche quando si sta emulando un gamepad col touchpad.</string>

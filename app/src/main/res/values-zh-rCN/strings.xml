@@ -220,7 +220,7 @@
     <string name="summary_disable_frame_drop"> 可能会减少在一些设备上的卡顿，但会增加延迟 </string>
     <string name="title_video_format">更改编解码器设置</string>
     <string name="summary_video_format">如果您的设备支持较新的编解码器，则可以降低视频带宽要求。如果主机软件或显卡不支持编解码器选择，则可能会忽略编解码器选择。</string>
-    <string name="title_enable_hdr">启用 HDR (实验性)</string>
+    <string name="title_enable_hdr">启用 HDR</string>
     <string name="summary_enable_hdr">当游戏和显卡支持时以HDR模式串流。 HDR需要显卡支持 HEVC Main 10 编码。</string>
     <string name="title_enable_perf_overlay"> 启用性能信息 </string>
     <string name="summary_enable_perf_overlay"> 在串流中显示实时性能信息 </string>
@@ -321,7 +321,7 @@
 \n
 \n尝试禁用 HDR 模式、更改流分辨率或更改主机 PC 的显示分辨率。</string>
     <string name="summary_full_range">如果你的设备无法正确显示全范围视频内容，这会导致明暗区域的细节丢失。</string>
-    <string name="title_full_range">强制完全动态范围视频 (实验性)</string>
+    <string name="title_full_range">强制完全动态范围视频</string>
     <string name="title_prevent_packet_loss">防止丢包</string>
     <string name="summary_prevent_packet_loss">对于不明原因丢包的设备，可以尝试开启此选项。</string>
     <string name="pair_pairing_help">如果你的主机运行的是 Sunshine，请前往Sunshine的网页界面输入PIN码。</string>
@@ -334,7 +334,7 @@
     <string name="summary_checkbox_gamepad_touchpad_as_mouse">强制使用手柄触摸板来控制主机鼠标，即使在使用触摸板模拟游戏板时也是如此。</string>
     <string name="title_checkbox_gamepad_motion_sensors">允许使用手柄的运动传感器</string>
     <string name="summary_checkbox_gamepad_motion_sensors">使支持的主机能够在模拟具有运动传感器的游戏手柄时请求运动传感器数据。如果在游戏中未使用运动传感器，禁用可能会略微降低电源和网络使用量。</string>
-    <string name="videoformat_av1always">首选 AV1（实验性）</string>
+    <string name="videoformat_av1always">首选 AV1</string>
     <string name="videoformat_h264always">首选 H.264</string>
     <string name="toast_controller_type_changed">游戏手柄类型可能会因运动传感器模拟而改变</string>
     <string name="title_special_key_help">自定义按键说明</string>
@@ -494,7 +494,7 @@
     <string name="summary_back_as_guide">按下手柄上的返回键时发送导航(PS/HOME)键</string>
     <string name="title_checkbox_ignore_synth_events">忽略合成事件</string>
     <string name="summary_ignore_synth_events">忽略 Android 系统发送的合成事件。可能可以解决某些设备上的鼠标点击触发其他非预期按键的问题。\n启用此选项会导致系统软键盘不工作。</string>
-    <string name="title_smart_clipboard_sync">智能剪贴板同步（实验性）</string>
+    <string name="title_smart_clipboard_sync">智能剪贴板同步</string>
     <string name="summary_smart_clipboard_sync">在开始/恢复串流时自动同步本地剪贴板至服务端，在客户端失去焦点时自动同步服务端剪贴板至本地（需要Apollo）</string>
     <string name="title_smart_clipboard_sync_toast">剪贴板同步通知</string>
     <string name="summary_smart_clipboard_sync_toast">以 Toast 形式展示剪贴板同步结果</string>

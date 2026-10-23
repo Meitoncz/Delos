@@ -160,7 +160,7 @@
     <string name="toast_reset_osc_success">Экранные элементы управления возвращены к положениям по умолчанию</string>
     <string name="title_disable_frame_drop">Никогда не пропускать кадры</string>
     <string name="summary_disable_frame_drop">Может уменьшить микрозависания на некоторых устройствах, но также увеличить задержку</string>
-    <string name="title_enable_hdr">Включить HDR (Экспериментально)</string>
+    <string name="title_enable_hdr">Включить HDR</string>
     <string name="summary_enable_hdr">Потоковая передача с HDR, когда игра и графический процессор ПК поддерживают эту функцию. Для HDR требуется графический процессор с поддержкой кодирования HEVC Main 10.</string>
     <string name="title_enable_post_stream_toast">Показывать отчёт о задержке после трансляции</string>
     <string name="summary_enable_post_stream_toast">Отобразить сообщение с информацией о задержке после окончания трансляции</string>
@@ -280,10 +280,10 @@
     <string name="category_gamepad_settings">Настройки геймпада</string>
     <string name="title_seekbar_vibrate_fallback_strength">Отрегулируйте интенсивность эмулируемой вибрации</string>
     <string name="suffix_seekbar_vibrate_fallback_strength">%</string>
-    <string name="title_full_range">Принудительное полнодиапазонное видео (Экспериментальное)</string>
+    <string name="title_full_range">Принудительное полнодиапазонное видео</string>
     <string name="summary_full_range">Это приведет к потере детализации в светлых и темных областях, если ваше устройство не отображает видеоконтент в полном диапазоне должным образом.</string>
     <string name="toast_controller_type_changed">Тип геймпада может быть изменен из-за эмуляции датчика движения</string>
-    <string name="videoformat_av1always">Предпочитать AV1 (Экспериментальный)</string>
+    <string name="videoformat_av1always">Предпочитать AV1</string>
     <string name="pan_zoom_mode_disabled">Режим прокрутки/масш. выключен</string>
     <string name="title_analog_scrolling">Использовать аналоговый джойстик для прокрутки</string>
     <string name="analogscroll_right">Правый аналоговый джойстик</string>
@@ -471,7 +471,7 @@
     <string name="summary_back_as_guide">Отправлять Guide (PS/HOME) при нажатии Back на контроллерах</string>
     <string name="title_checkbox_ignore_synth_events">Игнорировать синтетические события</string>
     <string name="summary_ignore_synth_events">Игнорировать синтетические события, отправляемые системой Android. Это может решить проблему, когда щелчки мыши вызывают другие неожиданные клавиши на некоторых устройствах.\nВключение этой опции приведёт к тому, что экранная клавиатура системы перестанет работать.</string>
-    <string name="title_smart_clipboard_sync">Умная синхронизация буфера (экспериментально)</string>
+    <string name="title_smart_clipboard_sync">Умная синхронизация буфера</string>
     <string name="summary_smart_clipboard_sync">Автоматически загружать буфер на сервер при старте/возобновлении и скачивать при потере фокуса (требуется Apollo)</string>
     <string name="title_smart_clipboard_sync_toast">Уведомление о синхронизации буфера</string>
     <string name="summary_smart_clipboard_sync_toast">Показать уведомление о результате синхронизации буфера</string>

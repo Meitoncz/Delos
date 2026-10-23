@@ -218,8 +218,8 @@
     <string name="title_disable_frame_drop">Asla kare hızlarını düşürme</string>
     <string name="title_video_format">Çözücü ayarlarını değiştir</string>
     <string name="summary_video_format">Daha yeni çözücü bileşenleri, cihazınız destekliyorsa video bant genişliği gereksinimlerini azaltabilir. Ana yazılım veya GPU tarafından desteklenmiyorsa çözücü seçimleri göz ardı edilebilir.</string>
-    <string name="title_enable_hdr">HDR etkinleştir (Deneysel)</string>
-    <string name="title_full_range">Tam aralıklı videoyu zorla (Deneysel)</string>
+    <string name="title_enable_hdr">HDR etkinleştir</string>
+    <string name="title_full_range">Tam aralıklı videoyu zorla</string>
     <string name="summary_full_range">Cihazınız tam kapsamlı video içeriğini düzgün şekilde görüntülemiyorsa, bu durum aydınlık ve karanlık alanlarda ayrıntı kaybına neden olacaktır.</string>
     <string name="title_setup_guide">Kurulum rehberi</string>
     <string name="title_enable_post_stream_toast">Akıştan sonra gecikme mesajını göster</string>
@@ -246,7 +246,7 @@
     <string name="summary_frame_pacing">Video gecikmesinin ve akıcılığının nasıl dengeleneceğini belirtin</string>
     <string name="pacing_latency">Düşük gecikmeyi tercih et</string>
     <string name="pacing_balanced">Dengeli</string>
-    <string name="videoformat_av1always">AV1 tercih et (Deneysel)</string>
+    <string name="videoformat_av1always">AV1 tercih et</string>
     <string name="videoformat_hevcalways">HEVC tercih et</string>
     <string name="videoformat_h264always">H.264 tercih et</string>
     <string name="pacing_balanced_alt">FPS limiti ile dengeli</string>

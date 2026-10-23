@@ -193,7 +193,7 @@
     <string name="summary_disable_frame_drop">Kann das Mikro-Ruckeln auf einigen Geräten reduzieren, allerdings erhöht dies gleichzeitig die Latenz</string>
     <string name="title_video_format">Codec-Einstellungen ändern</string>
     <string name="summary_video_format">Neuere Codecs können die Anforderungen an die Videobandbreite senken, wenn diese vom Gerät unterstützt werden. Codec-Auswahl kann ignoriert werden, sollte diese von der Host-Software oder GPU nicht unterstützt werden.</string>
-    <string name="title_enable_hdr">HDR aktivieren (experimentell)</string>
+    <string name="title_enable_hdr">HDR aktivieren</string>
     <string name="summary_enable_hdr">Streame HDR, wenn das Spiel und die PC-GPU dies unterstützen. HDR erfordert eine GPU mit HEVC Main 10-Codierungsunterstützung.</string>
     <string name="title_enable_perf_overlay">Performance Overlay aktivieren</string>
     <string name="summary_enable_perf_overlay">Leistungsmerkmale während des Streamens in Echtzeit einblenden</string>
@@ -260,7 +260,7 @@
 \n
 \nVersuchen Sie, den HDR-Modus zu deaktivieren, die Streaming-Auflösung zu ändern oder die Bildschirmauflösung des Host-PCs zu ändern.</string>
     <string name="title_native_fps_dialog">Native FPS Warnung</string>
-    <string name="videoformat_av1always">Immer AV1 verwenden (Experimentell)</string>
+    <string name="videoformat_av1always">Immer AV1 verwenden</string>
     <string name="title_checkbox_gamepad_motion_sensors">Erlaube Benutzen von Gamepad Bewegungssensoren</string>
     <string name="videoformat_h264always">Immer H.264 verwenden</string>
     <string name="fps_suffix_fps">FPS</string>
@@ -280,7 +280,7 @@
     <string name="summary_checkbox_gamepad_touchpad_as_mouse">Erzwingt die Steuerung der Host Maus durch das Gamepad-Touchpad, selbst wenn ein Gamepad mit Touchpad emuliert wird.</string>
     <string name="summary_checkbox_gamepad_motion_sensors">Ermöglicht unterstützten Hosts, Bewegungssensordaten anzufordern, wenn ein Gamepad mit Bewegungssensoren emuliert wird. Das Deaktivieren kann die Strom- und Netzwerknutzung leicht reduzieren, wenn im Spiel keine Bewegungssensoren verwendet werden.</string>
     <string name="title_checkbox_gamepad_motion_fallback">Emuliere die Unterstützung von Gamepad-Bewegungssensoren</string>
-    <string name="title_full_range">Full Range Video erzwingen (Experimentell)</string>
+    <string name="title_full_range">Full Range Video erzwingen</string>
     <string name="toast_controller_type_changed">Der Gamepad-Typ kann sich aufgrund der Bewegungssensor-Emulation ändern</string>
     <string name="summary_full_range">Dies führt zu Detailverlusten in hellen und dunklen Bereichen, wenn Ihr Gerät Full Range Video Inhalte nicht richtig anzeigt.</string>
     <string name="summary_checkbox_gamepad_motion_fallback">Verwendet die integrierten Bewegungssensoren Ihres Geräts, wenn Gamepad-Sensoren von Ihrem angeschlossenen Gamepad oder Ihrer Android-Version nicht unterstützt werden.

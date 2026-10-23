@@ -167,7 +167,7 @@
     <string name="title_checkbox_enable_pip">Scherm-in-Scherm toeschouwermodus inschakelen</string>
     <string name="title_disable_frame_drop">Frames nooit overslaan</string>
     <string name="summary_disable_frame_drop">Kan micro-stotteren op sommige toestellen verminderen, maar kan vertraging verhogen</string>
-    <string name="title_enable_hdr">HDR Inschakelen (Experimenteel)</string>
+    <string name="title_enable_hdr">HDR Inschakelen</string>
     <string name="summary_enable_hdr">Stream HDR wanneer het spel en PC-GPU dit ondersteunen. HDR vereist een GPU met HEVC Main 10-coderingsondersteuning.</string>
     <string name="title_enable_perf_overlay">Prestatiestatistieken tonen tijdens het streamen</string>
     <string name="title_details">Details</string>
@@ -225,7 +225,7 @@
     <string name="fps_90">90 FPS</string>
     <string name="fps_120">120 FPS</string>
     <string name="videoformat_auto">Automatisch (Aanbevolen)</string>
-    <string name="videoformat_av1always">Geef de voorkeur aan AV1 (Experimenteel)</string>
+    <string name="videoformat_av1always">Geef de voorkeur aan AV1</string>
     <string name="videoformat_h264always">Voorkeur geven aan H.264</string>
     <string name="pacing_balanced">Gebalanceerd</string>
     <string name="resolution_480p">480p</string>
@@ -263,7 +263,7 @@
     <string name="summary_checkbox_absolute_mouse_mode">Dit kan ervoor zorgen dat de muisacceleratie natuurlijker werkt bij gebruik van een extern bureaublad, maar het is niet compatibel met veel spellen.</string>
     <string name="title_checkbox_reduce_refresh_rate">Sta verlaging van de vernieuwingsfrequentie toe</string>
     <string name="summary_checkbox_reduce_refresh_rate">Lagere vernieuwingsfrequenties van het scherm kunnen energie besparen, maar dit kan wel wat extra videovertraging opleveren</string>
-    <string name="title_full_range">Video met volledig bereik forceren (Experimenteel)</string>
+    <string name="title_full_range">Video met volledig bereik forceren</string>
     <string name="summary_full_range">Dit leidt tot verlies van details in lichte en donkere gebieden als uw apparaat het volledige bereik van de video-inhoud niet goed weergeeft.</string>
     <string name="summary_setup_guide">Bekijk instructies over hoe u uw gaming-PC instelt voor streaming</string>
     <string name="summary_troubleshooting">Bekijk tips voor het diagnosticeren en oplossen van veelvoorkomende streamingproblemen</string>

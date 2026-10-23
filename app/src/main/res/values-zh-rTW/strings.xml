@@ -293,9 +293,9 @@
 	<string name="summary_disable_frame_drop">可減少部分裝置的微卡頓，但可能增加延遲</string>
 	<string name="title_video_format">變更編碼器設定</string>
 	<string name="summary_video_format">若裝置支援，較新的編碼器可降低影片頻寬需求。若主機軟體或 GPU 不支援，編碼器選擇可能被忽略。</string>
-	<string name="title_enable_hdr">啟用 HDR（實驗性）</string>
+	<string name="title_enable_hdr">啟用 HDR</string>
 	<string name="summary_enable_hdr">當遊戲與電腦 GPU 支援時，串流 HDR。HDR 需要支援 HEVC Main 10 編碼的 GPU。</string>
-	<string name="title_full_range">強制全範圍影像（實驗性）</string>
+	<string name="title_full_range">強制全範圍影像</string>
 	<string name="summary_full_range">若您的裝置無法正確顯示全範圍影像內容，將導致明暗區域細節流失。</string>
 	<string name="title_prevent_packet_loss">防止封包遺失</string>
 	<string name="summary_prevent_packet_loss">若裝置因不明原因出現封包遺失，可嘗試啟用此選項。</string>
@@ -335,7 +335,7 @@
 	<string name="audioconf_71surround">7.1 環繞音效</string>
 
 	<string name="videoformat_auto">自動（建議）</string>
-	<string name="videoformat_av1always">優先使用 AV1（實驗性）</string>
+	<string name="videoformat_av1always">優先使用 AV1</string>
 	<string name="videoformat_hevcalways">優先使用 HEVC</string>
 	<string name="videoformat_h264always">優先使用 H.264</string>
 
@@ -557,7 +557,7 @@
 	<string name="title_checkbox_ignore_synth_events">忽略合成事件</string>
 	<string name="summary_ignore_synth_events">忽略 Android 系統發送的合成事件。可解決部分裝置上滑鼠點擊觸發其他意外按鍵的問題。\n啟用後，系統軟體鍵盤將無法使用。</string>
 
-	<string name="title_smart_clipboard_sync">智慧剪貼簿同步（實驗性）</string>
+	<string name="title_smart_clipboard_sync">智慧剪貼簿同步</string>
 	<string name="summary_smart_clipboard_sync">串流開始/恢復時自動上傳剪貼簿內容至伺服器；失去焦點時自伺服器下載（需搭配 Apollo）。</string>
 	<string name="title_smart_clipboard_sync_toast">剪貼簿同步提示</string>
 	<string name="summary_smart_clipboard_sync_toast">顯示剪貼簿同步結果的提示訊息</string>
