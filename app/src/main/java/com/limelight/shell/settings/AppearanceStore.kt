@@ -38,6 +38,8 @@ data class Appearance(
     val materialYou: Boolean = false,
     val palette: Palette = Palette.DELOS,
     val clock: ClockFormat = ClockFormat.SYSTEM,
+    /** The animated background takes on the main color of the focused game's background image (palettes only). */
+    val matchGameColors: Boolean = true,
     val background: BackgroundKind = BackgroundKind.AURORA,
     val homeLayout: HomeLayout = HomeLayout.GRID,
     val heroBackground: Boolean = true,
@@ -83,6 +85,7 @@ class AppearanceStore(context: Context, private val settings: () -> SharedPrefer
             materialYou = prefs.getBoolean(KEY_MATERIAL_YOU, defaults.materialYou),
             palette = enumOr(prefs.getString(KEY_PALETTE, null), defaults.palette),
             clock = enumOr(prefs.getString(KEY_CLOCK, null), defaults.clock),
+            matchGameColors = prefs.getBoolean(KEY_MATCH_GAME, defaults.matchGameColors),
             background = enumOr(prefs.getString(KEY_BACKGROUND, null), defaults.background),
             homeLayout = enumOr(prefs.getString(KEY_HOME_LAYOUT, null), defaults.homeLayout),
             heroBackground = prefs.getBoolean(KEY_HERO, defaults.heroBackground),
@@ -101,6 +104,7 @@ class AppearanceStore(context: Context, private val settings: () -> SharedPrefer
             .putBoolean(KEY_MATERIAL_YOU, a.materialYou)
             .putString(KEY_PALETTE, a.palette.name)
             .putString(KEY_CLOCK, a.clock.name)
+            .putBoolean(KEY_MATCH_GAME, a.matchGameColors)
             .putString(KEY_BACKGROUND, a.background.name)
             .putString(KEY_HOME_LAYOUT, a.homeLayout.name)
             .putBoolean(KEY_HERO, a.heroBackground)
@@ -121,6 +125,7 @@ class AppearanceStore(context: Context, private val settings: () -> SharedPrefer
         const val KEY_MATERIAL_YOU = "ui_material_you"
         const val KEY_PALETTE = "ui_palette"
         const val KEY_CLOCK = "ui_clock"
+        const val KEY_MATCH_GAME = "ui_match_game_colors"
         const val KEY_BACKGROUND = "ui_background"
         const val KEY_HOME_LAYOUT = "ui_home_layout"
         const val KEY_HERO = "ui_hero_background"

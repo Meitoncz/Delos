@@ -90,7 +90,8 @@ fun Backdrop(appearance: Appearance, colors: DelosColors, hero: GameArt?, modifi
                 })
             }
         }
-        AnimatedBackground(appearance, colors, tintHue = if (heroOn) hero.hue else null, heroActive = heroOn)
+        // The animated background takes on the main color of the game's background image (with the setting on)
+        AnimatedBackground(appearance, colors, tintHue = if (heroOn && appearance.matchGameColors) HeroBitmaps.hue(hero.id) else null, heroActive = heroOn)
         Box(Modifier.fillMaxSize().drawBehind { drawVignette(colors.scrim) })
     }
 }

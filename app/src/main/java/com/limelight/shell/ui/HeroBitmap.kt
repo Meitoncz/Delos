@@ -7,6 +7,7 @@ import android.graphics.ColorMatrixColorFilter
 import android.graphics.Matrix
 import android.graphics.Paint
 import android.util.LruCache
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
@@ -29,7 +30,13 @@ object HeroBitmaps {
     private val cache = LruCache<String, ImageBitmap>(24)
     private val latest = LruCache<String, ImageBitmap>(24)
 
+    /** The dominant hue of each game's background (null: grey), observed by the animated background. */
+    private val hues = mutableStateMapOf<String, Float?>()
+
     fun cached(key: String, blurPx: Int): ImageBitmap? = cache.get("$key/$blurPx")
+
+    /** The dominant hue of [key]'s background once it has been rendered; null while unknown or grey. */
+    fun hue(key: String): Float? = hues[key]
 
     /** The background rendered last for [key] (whatever the blur), e.g. for the launch scene. */
     fun latest(key: String): ImageBitmap? = latest.get(key)
@@ -53,6 +60,10 @@ object HeroBitmaps {
 
         val pixels = IntArray(WIDTH * HEIGHT)
         out.getPixels(pixels, 0, WIDTH, 0, 0, WIDTH, HEIGHT)
+        if (key !in hues) {
+            val hue = dominantHue(pixels)
+            android.os.Handler(android.os.Looper.getMainLooper()).post { hues[key] = hue }
+        }
         // CSS blur(σ) in stage pixels → σ at this scale; three box blurs approximate a Gaussian
         val radius = (blurPx * SCALE).roundToInt()
         if (radius > 0) repeat(3) {
@@ -65,6 +76,27 @@ object HeroBitmaps {
             cache.put("$key/$blurPx", it)
             latest.put(key, it)
         }
+    }
+
+    /**
+     * The image's main color as a hue: every pixel votes with its hue, weighted by how colorful and
+     * bright it is, so grey and dark areas hardly count. Null when the image is (nearly) grey.
+     */
+    private fun dominantHue(pixels: IntArray): Float? {
+        val hsv = FloatArray(3)
+        var x = 0.0
+        var y = 0.0
+        var weight = 0.0
+        for (i in pixels.indices step 3) {
+            android.graphics.Color.colorToHSV(pixels[i], hsv)
+            val w = (hsv[1] * hsv[1] * hsv[2]).toDouble()
+            val angle = Math.toRadians(hsv[0].toDouble())
+            x += kotlin.math.cos(angle) * w
+            y += kotlin.math.sin(angle) * w
+            weight += w
+        }
+        if (weight < pixels.size / 3 * .02) return null
+        return ((Math.toDegrees(kotlin.math.atan2(y, x)) + 360.0) % 360.0).toFloat()
     }
 
     /** Opaque in the top-right corner, gone in the bottom-left one (gradient stops .3 → .95). */
