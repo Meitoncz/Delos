@@ -662,41 +662,19 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                 glPrefs.glRenderer,
                 this);
 
-// --- Force tight thresholds (prefConfig.forceTightThresholds) ---
-        try {
-            boolean forceTight = false;
-            if (prefConfig != null) {
-                try {
-                    java.lang.reflect.Field f = prefConfig.getClass().getDeclaredField("forceTightThresholds");
-                    f.setAccessible(true);
-                    Object v = f.get(prefConfig);
-                    if (v instanceof Boolean) forceTight = (Boolean) v;
-                } catch (Throwable t) { LimeLog.warning("Failed to read forceTightThresholds: " + t); }
-            }
-            try { decoderRenderer.setForceTightThresholds(forceTight); } catch (Throwable t) { LimeLog.warning("setForceTightThresholds failed: " + t); }
-            if (forceTight) {
-                LimeLog.info("ForceTightThresholds enabled: using vsync-based thresholds on all devices");
-            }
-        } catch (Throwable t) { LimeLog.warning("Failed to apply tight thresholds: " + t); }
+        // LFR (low latency frame balance) is a variant of Balanced frame pacing that presents
+        // queued frames at the next vsync and polls the decoder more often
+        decoderRenderer.setPreferLowerDelays(prefConfig.preferLowerDelays);
+        if (prefConfig.preferLowerDelays) {
+            decoderRenderer.setPreferLowerDelaysTimeoutUs(500);
+            prefConfig.framePacing = PreferenceConfiguration.FRAME_PACING_BALANCED;
+        } else {
+            decoderRenderer.setPreferLowerDelaysTimeoutUs(2000);
+        }
+        LimeLog.info("Frame pacing: " + prefConfig.framePacing + ", LFR: " + prefConfig.preferLowerDelays);
 
-// --- latency profile selection ---
-        try {
-            if (prefConfig != null && prefConfig.preferLowerDelays) {
-                // Intermediate: more responsive than Balanced but not 0 µs
-                decoderRenderer.setPreferLowerDelays(true);
-                decoderRenderer.setPreferLowerDelaysTimeoutUs(500);  // 0.5 ms
-                prefConfig.framePacing = PreferenceConfiguration.FRAME_PACING_BALANCED;
-                LimeLog.info("PreferLowerDelays: preferLowerDelays=true, timeout=500us, pacing=BALANCED");
-            } else {
-                // Balanced default
-                decoderRenderer.setPreferLowerDelays(false);
-                decoderRenderer.setPreferLowerDelaysTimeoutUs(2000); // 2 ms
-                prefConfig.framePacing = PreferenceConfiguration.FRAME_PACING_BALANCED;
-                LimeLog.info("Balanced: preferLowerDelays=false, timeout=2000us, pacing=BALANCED");
-            }
-        } catch (Throwable t) { LimeLog.warning("Failed to apply latency profile: " + t); }
 
-// Don't stream HDR if the decoder can't support it
+        // Don't stream HDR if the decoder can't support it
         if (willStreamHdr && !decoderRenderer.isHevcMain10Hdr10Supported() && !decoderRenderer.isAv1Main10Supported()) {
             willStreamHdr = false;
             Toast.makeText(this, "Decoder does not support HDR10 profile", Toast.LENGTH_LONG).show();
@@ -879,7 +857,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         overlayToggleButton = findViewById(R.id.overlayToggleZoomButton);
         setupOverlayToggleButton();
 
-        //fixed size + pacing without back-pressure on MTK
+        // Fixed stream surface size and z-order (the frame rate is set on the Surface by the decoder)
         try {
             View root = findViewById(android.R.id.content);
             // No getIdentifier(): find the first SurfaceView in the layout
@@ -892,36 +870,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                 try { streamSurfaceView.getHolder().setFixedSize(vw, vh); } catch (Throwable t) { LimeLog.warning("SurfaceView setFixedSize failed: " + t); }
                 try { streamSurfaceView.setZOrderOnTop(false); } catch (Throwable t) { LimeLog.warning("SurfaceView setZOrderOnTop failed: " + t); }
                 try { streamSurfaceView.setZOrderMediaOverlay(false); } catch (Throwable t) { LimeLog.warning("SurfaceView setZOrderMediaOverlay failed: " + t); }
-
-                // 2) setFrameRate via reflection (compat < 30)
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-                    float displayHz = 60f;
-                    try {
-                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                            displayHz = currentDisplay.getMode().getRefreshRate();
-                        } else {
-                            displayHz = currentDisplay.getRefreshRate();
-                        }
-                    } catch (Throwable t) { LimeLog.warning("Failed to read display refresh rate: " + t); }
-
-                    float targetFps = (prefConfig != null && prefConfig.fps > 0) ? prefConfig.fps : displayHz;
-
-                    boolean isMTKDevice;
-                    try {
-                        String sum = (android.os.Build.MANUFACTURER + " " + android.os.Build.HARDWARE + " " + android.os.Build.BOARD)
-                                .toLowerCase(java.util.Locale.US);
-                        isMTKDevice = sum.contains("mtk") || sum.contains("mediatek");
-                    } catch (Throwable t) { isMTKDevice = false; }
-
-                    int compat = isMTKDevice
-                            ? Surface.FRAME_RATE_COMPATIBILITY_DEFAULT
-                            : Surface.FRAME_RATE_COMPATIBILITY_FIXED_SOURCE;
-
-                    try {
-                        java.lang.reflect.Method m = SurfaceView.class.getMethod("setFrameRate", float.class, int.class);
-                        m.invoke(streamSurfaceView, Math.min(targetFps, displayHz), compat);
-                    } catch (Throwable t) { LimeLog.info("SurfaceView.setFrameRate not applied: " + t); }
-                }
             }
         } catch (Throwable t) { LimeLog.warning("Stream surface setup failed: " + t); }
     }

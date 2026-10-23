@@ -68,7 +68,8 @@ The Artemis vs. Moonlight comparison only covers code both share. This phase loo
 - [x] Batch 1 – cleanup: SBS 3D and performance logging removed, unused dependencies and dead code removed, FileProvider narrowed, ARM-only builds, debug builds without R8 (APK 44.2 → 19.4 MB).
 - [x] Batch 2 – security: confirmation for external `art://launch` links, keyboard accessibility service only while the stream has focus.
 - [x] Batch 3 – platform: minSdk 29 (Android 10), root flavor dropped, no deprecated APIs in Artemis-only code, predictive-back friendly back handling, AppCompat 1.8 / Material 1.14.
-- [ ] Batch 4 – code quality / refactoring.
+- [ ] Batch 4 – code quality / refactoring. Done: 4a (cleanup, branding, tests), 4b (decoder frame pacing). Open: 4c (`Game.java`), 4d (dialogs).
+- [ ] Review every setting labeled "(Experimental)" – why it is experimental, and drop the label where there is no reason left (most are years old and well tested). Currently: Enable HDR, Force full range video, Prefer AV1, frame pacing Warp Drive / Warp 2, Smart Clipboard Sync, Ultra Low Latency, LFR. (Tight Vsync was removed in step 4b – it never did anything.) Check upstream (Moonlight/Artemis) history and known issues for each; update all translations.
 - [ ] Fewer confirmation dialogs (product rule: one-click flows): e.g. "resume session?" and "quit?" prompts, quit-app confirmation. Keep only prompts that protect against data loss (delete profile, clear keyboard layout) or pairing with an unknown PC.
 
 - [ ] **Dependency audit** of Artemis-only libraries – current version, maintenance status, known vulnerabilities, APK size impact, alternatives:
