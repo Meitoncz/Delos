@@ -319,7 +319,8 @@ fun Shell(
         Box(Modifier.fillMaxSize()) {
             // The blur source re-records the whole screen every frame, so it is only active while an overlay
             // is shown (and while it fades out)
-            Box(Modifier.fillMaxSize().then(if (blurSource) Modifier.hazeSource(haze) else Modifier)) {
+            // On in the very frame an overlay appears (its blur would otherwise start empty and clipped)
+            Box(Modifier.fillMaxSize().then(if (blurSource || shell.layer != null || shell.portal != null) Modifier.hazeSource(haze) else Modifier)) {
                 Backdrop(appearance, colors, hero = if (shell.screen == Screen.Home) shell.hero else null)
                 AnimatedContent(
                     shell.screen,
@@ -392,7 +393,7 @@ fun Shell(
                 shell.closeLayer()
             }
             val context = shell.layer as? Layer.Context
-            ContextMenuLayer(context?.menu, context?.anchor, haze) { shell.closeLayer() }
+            ContextMenuLayer(context?.menu, context?.anchor, context?.below == true, haze) { shell.closeLayer() }
             SideMenuLayer(
                 shell.layer == Layer.Side,
                 haze,

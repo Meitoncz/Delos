@@ -66,7 +66,7 @@ fun StartScreen(profiles: Profiles, store: ProfileStore, pcs: List<Pc>, startup:
     val first = remember { FocusRequester() }
     InitialFocus(first, focusPc?.uuid)
     Box(Modifier.fillMaxSize()) {
-        profiles.current?.let { ProfileChip(profiles, store, Modifier.align(Alignment.TopStart).padding(start = 72.px, top = 18.px)) }
+        profiles.current?.let { ProfileChip(profiles, store, Modifier.align(Alignment.TopCenter).padding(top = 44.px)) }
         CenterColumn(gap = 48f) {
             val name = profiles.current?.name
             Heading(

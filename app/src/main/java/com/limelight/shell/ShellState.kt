@@ -75,7 +75,7 @@ data class ContextMenu(val title: String, val items: List<MenuItem>)
 /** Overlays above the current screen. */
 sealed interface Layer {
     /** [anchor]: bounds of the element the menu belongs to, in root pixels. */
-    data class Context(val menu: ContextMenu, val anchor: Rect?) : Layer
+    data class Context(val menu: ContextMenu, val anchor: Rect?, val below: Boolean = false) : Layer
     data object Side : Layer
     data class Dialog(val dialog: DialogSpec) : Layer
 }

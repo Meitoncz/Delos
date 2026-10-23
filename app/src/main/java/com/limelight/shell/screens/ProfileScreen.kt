@@ -132,7 +132,7 @@ fun profilesMenu(shell: ShellState, profiles: Profiles, store: ProfileStore, fro
 /** Opens [profilesMenu] at the focused element. */
 fun openProfilesMenu(shell: ShellState, tracker: FocusTracker, feedback: Feedback, profiles: Profiles, store: ProfileStore, from: Screen) {
     feedback.play(Cue.OPEN)
-    shell.openLayer(Layer.Context(profilesMenu(shell, profiles, store, from), tracker.bounds()), tracker)
+    shell.openLayer(Layer.Context(profilesMenu(shell, profiles, store, from), tracker.bounds(), below = true), tracker)
 }
 
 private fun renameProfile(shell: ShellState, tracker: FocusTracker, store: ProfileStore, feedback: Feedback, id: String, name: String) {

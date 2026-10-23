@@ -51,6 +51,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
@@ -106,42 +107,62 @@ private fun Modifier.focusTrap(active: Boolean): Modifier {
 
 /**
  * The context menu (right menu button / Start), placed at the focused element like in the prototype:
- * slightly inside its top-left corner, kept on screen.
+ * slightly inside its top-left corner, kept on screen. With [below] it opens centered under the
+ * element instead (a menu that belongs to a button, like the start screen's profile).
  */
 @Composable
-fun ContextMenuLayer(menu: ContextMenu?, anchor: Rect?, haze: HazeState, onDismiss: () -> Unit) {
+fun ContextMenuLayer(menu: ContextMenu?, anchor: Rect?, below: Boolean, haze: HazeState, onDismiss: () -> Unit) {
     val colors = LocalDelosColors.current
     val stage = LocalStage.current
     val density = LocalDensity.current.density
     // Keep the last menu while animating out
     var shown by remember { mutableStateOf(menu) }
     var shownAnchor by remember { mutableStateOf(anchor) }
+    var shownBelow by remember { mutableStateOf(below) }
     if (menu != null) {
         shown = menu
         shownAnchor = anchor
+        shownBelow = below
     }
+    val origin = if (shownBelow) TransformOrigin(.5f, 0f) else TransformOrigin(0f, 0f)
     Box(Modifier.fillMaxSize()) {
         AnimatedVisibility(
             menu != null,
-            enter = fadeIn(tween(300)) + scaleIn(tween(450, easing = EaseOut), initialScale = .9f, transformOrigin = TransformOrigin(0f, 0f)),
-            exit = fadeOut(tween(300)) + scaleOut(tween(450, easing = EaseOut), targetScale = .9f, transformOrigin = TransformOrigin(0f, 0f)),
+            enter = fadeIn(tween(300)) + scaleIn(tween(450, easing = EaseOut), initialScale = .9f, transformOrigin = origin),
+            exit = fadeOut(tween(300)) + scaleOut(tween(450, easing = EaseOut), targetScale = .9f, transformOrigin = origin),
         ) {
             val m = shown ?: return@AnimatedVisibility
             val k = stage.dpPerPx * density
             val a = shownAnchor
+            val centered = shownBelow && a != null
             var x = 760f
             var y = 300f
             if (a != null) {
-                x = a.left / k + minOf(60f, a.width / k / 2f)
-                y = a.top / k + minOf(80f, a.height / k / 2f)
+                if (centered) {
+                    x = a.center.x / k
+                    y = a.bottom / k + 18f
+                } else {
+                    x = a.left / k + minOf(60f, a.width / k / 2f)
+                    y = a.top / k + minOf(80f, a.height / k / 2f)
+                }
             }
-            x = x.coerceIn(40f, 1920f - 420f)
-            y = y.coerceIn(110f, (1080f - 120f - 72f * m.items.size).coerceAtLeast(110f))
+            if (!centered) x = x.coerceIn(40f, 1920f - 420f)
+            y = y.coerceIn(if (centered) 40f else 110f, (1080f - 120f - 72f * m.items.size).coerceAtLeast(110f))
             val first = remember { FocusRequester() }
             InitialFocus(first)
             Column(
                 Modifier
-                    .offset(x.px, y.px)
+                    .then(
+                        if (!centered) Modifier.offset(x.px, y.px)
+                        // Centered on x once its width is known, kept 40 stage pixels from the screen edges
+                        else Modifier.layout { measurable, constraints ->
+                            val placeable = measurable.measure(constraints.copy(minWidth = 0, minHeight = 0))
+                            layout(constraints.maxWidth, placeable.height) {
+                                val left = (x * k - placeable.width / 2f).coerceIn(40f * k, constraints.maxWidth - placeable.width - 40f * k)
+                                placeable.place(left.toInt(), (y * k).toInt())
+                            }
+                        }
+                    )
                     .focusTrap(menu != null)
                     // As wide as the longest item (the items fill that width), at least 380
                     .width(IntrinsicSize.Max)

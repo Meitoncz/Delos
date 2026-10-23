@@ -221,7 +221,7 @@ fun CircleItem(
             if (meta != null) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.px)) {
                     if (metaDot != null) Box(Modifier.size(12.px).clip(CircleShape).background(metaDot))
-                    BasicText(meta, style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 20.tpx), maxLines = 1)
+                    BasicText(meta, style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 20.tpx, textAlign = TextAlign.Center), maxLines = 2)
                 }
             }
         }
