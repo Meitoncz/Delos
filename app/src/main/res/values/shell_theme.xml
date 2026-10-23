@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- New native UI (Phase 6): a dark window behind Compose, so starting it never flashes white.
+         Transparent system bars come from enableEdgeToEdge() in ShellActivity. -->
+    <style name="Theme.Delos.Shell" parent="android:Theme.DeviceDefault.NoActionBar">
+        <item name="android:windowBackground">@color/shell_window_background</item>
+    </style>
+    <color name="shell_window_background">#FF05080F</color>
+</resources>

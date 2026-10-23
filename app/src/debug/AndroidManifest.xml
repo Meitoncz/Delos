@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug builds only: the new native UI (Phase 6) as a second launcher entry next to the classic UI.
+     It moves to the main manifest and replaces PcView as the launcher in step 6.9 (docs/UI_PLAN.md). -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <!-- Own task affinity: otherwise the launcher would just bring an open classic UI task to front -->
+        <activity
+            android:name="com.limelight.shell.ShellActivity"
+            android:exported="true"
+            android:label="@string/shell_label"
+            android:taskAffinity="io.github.meitoncz.delos.next"
+            android:theme="@style/Theme.Delos.Shell"
+            android:resizeableActivity="true"
+            android:enableOnBackInvokedCallback="true"
+            android:configChanges="mcc|mnc|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize|layoutDirection">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>

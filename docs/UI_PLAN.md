@@ -39,13 +39,19 @@ Goal: rebuild the Delos "shell" (everything except the stream itself) natively s
 Each step ends with a build, a test on the Odin and a commit (after approval), like in the previous phases. Each step is done in its own branch and merged into `main` after CI passes.
 
 ### 6.0 Preparation
-- [ ] Read the Odin's key codes for the two top menu buttons, L1/R1, sticks and the D-pad (`adb shell getevent -l`, the user presses the buttons).
-- [ ] Final library versions; licence check for the bundled fonts.
+- [x] Read the Odin's key codes (`adb shell getevent -l`). The built-in controller reports itself as "Xbox Wireless Controller" (vendor `0x2020`, product `0x0112`):
+  - left top menu button = `BUTTON_SELECT` → side menu;
+  - right top menu button = `BUTTON_START` → context menu;
+  - L1 / R1 = `BUTTON_L1` / `BUTTON_R1`.
+
+  System `HOME`, `BACK` and `APP_SWITCH` come as separate codes and are left to the system.
+- [x] Library versions: Kotlin 2.4.21 (AGP 9.4 itself only brings 2.2.10), Compose BOM 2026.09.00, activity-compose 1.13.0, lifecycle 2.11.0, coroutines 1.11.0.
+- [x] Licences of the bundled fonts: Unbounded and Figtree – SIL Open Font License 1.1; Material Symbols – Apache 2.0. Both allow bundling in the APK.
 
 ### 6.1 Build setup
-- [ ] Enable Kotlin and Compose in `app/build.gradle`: compose compiler plugin, `buildFeatures.compose`, BOM, `activity-compose`, `lifecycle-viewmodel-compose`, coroutines.
-- [ ] Empty `ShellActivity` (Compose, fullscreen, immersive) as a second launcher entry in debug builds.
-- [ ] CI still green; APK size check.
+- [x] Enable Kotlin and Compose in `app/build.gradle`: compose compiler plugin, `buildFeatures.compose`, BOM, `activity-compose`, `lifecycle-viewmodel-compose`, coroutines.
+- [x] Empty `ShellActivity` (`com.limelight.shell`, Compose, fullscreen, immersive) as a second launcher entry "Delos Next" in debug builds (`src/debug/AndroidManifest.xml`, own task affinity).
+- [x] CI still green; APK size check: debug arm64 34.7 → 51.5 MB (debug builds are not shrunk). Release is unchanged at 13.6 MB because the new UI is not declared there yet and R8 removes it; the real release impact is measured in step 6.9.
 
 ### 6.2 Design system and frame
 - [ ] Theme tokens: dark/light, Material You from the system palette, seed colors.

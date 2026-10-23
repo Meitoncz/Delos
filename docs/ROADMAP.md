@@ -107,8 +107,8 @@ Principle: keep the streaming part (`Game.java`, overlays, virtual controls), re
 
 - [x] Design prototype in the browser first (HTML, 1920×1080 landscape): vision in [GUI.md](GUI.md), interactive prototype in [prototype/delos-gui.html](prototype/delos-gui.html) (open it in a browser; keyboard or gamepad).
 - [ ] Implement the prototype natively in Kotlin + Jetpack Compose – **detailed plan, technology and open questions: [UI_PLAN.md](UI_PLAN.md)**. Steps:
-  - [ ] 6.0 Preparation (Odin key codes, library versions, font licences)
-  - [ ] 6.1 Build setup (Kotlin + Compose, empty fullscreen shell as a second debug launcher entry)
+  - [x] 6.0 Preparation (Odin key codes, library versions, font licences)
+  - [x] 6.1 Build setup (Kotlin + Compose, empty fullscreen shell as a second debug launcher entry)
   - [ ] 6.2 Design system (colors incl. Material You, fonts, icons, focus effects, animated backgrounds, blur, sounds, haptics)
   - [ ] 6.3 Shell (own status bar and hint bar, gamepad input layer, navigation, context and side menus, interface scale)
   - [ ] 6.4 Home (grid and row layouts, logo + hero background, covers, game context menu)

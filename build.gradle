@@ -6,6 +6,10 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:9.4.0'
+        // Kotlin for the new Compose UI (Phase 6): AGP 9 has Kotlin built in, this pins a newer version.
+        // The Compose compiler plugin must always have the same version as Kotlin.
+        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.21'
+        classpath 'org.jetbrains.kotlin:compose-compiler-gradle-plugin:2.4.21'
     }
 }
 
