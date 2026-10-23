@@ -127,6 +127,13 @@ Built on the branch `ui/review-fixes`; the user tests them on the Odin before th
 - [ ] Material You uses only the system's wallpaper colors; with it off a color palette can be chosen (Delos, Lagoon, Dusk, Ember, Moss, Iris and the new Rose, Sunset, Mint, Gold).
 - [ ] Deleting a profile (profile screen; asks once, since its settings are lost).
 - [ ] Review fixes after 6.7: the stream window reads the profile's appearance without side effects; the welcome replayed from the settings returns there with B.
+- [ ] Start screen: the profile at the top center; menus open without a clipped frame (blur source on in the same frame, full-screen animation layer); the profile icon is always the generic user icon.
+- [ ] The animated background takes the main color of the game's background image (cover now, SteamGridDB hero from 6.8), as the setting "Match the game's colors" (palettes only).
+- [ ] Stream menu "More" as a Delos page (send keys, clipboard, server commands, zoom, mouse mode, on-screen controls…); toggles keep the menu open and show On / Off.
+- [ ] Removed for good: the Artemis back menu switch, floating menu button, Back as Meta / Guide and the overlay opening the menu.
+- [ ] The start screen's pulse around the focused game on the home screen.
+- [ ] The performance statistics overlay in the Delos style (the user: the current one looks like a debug view).
+- [ ] The user decides which items the stream menu keeps.
 
 ### 6.8 SteamGridDB
 - [ ] API key entry (the user's own key), stored locally.
