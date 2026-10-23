@@ -33,6 +33,19 @@ import com.limelight.shell.ui.px
 import com.limelight.shell.ui.tpx
 import java.util.Locale
 
+/** Where the statistics panel sits (Settings → Display → Statistics position); kept with the profile. */
+enum class StatsPosition(val label: String, val top: Boolean, val start: Boolean) {
+    TOP_LEFT("Top left", true, true), TOP_RIGHT("Top right", true, false),
+    BOTTOM_LEFT("Bottom left", false, true), BOTTOM_RIGHT("Bottom right", false, false);
+
+    companion object {
+        const val KEY = "ui_stats_position"
+
+        fun read(prefs: android.content.SharedPreferences): StatsPosition =
+            entries.firstOrNull { it.name == prefs.getString(KEY, null) } ?: TOP_LEFT
+    }
+}
+
 /** The stream's numbers for the Delos statistics panel, filled by the decoder about once a second. */
 class StreamStats(
     val width: Int,
@@ -49,7 +62,7 @@ class StreamStats(
 
 /**
  * The statistics panel of streams started from the new UI (the prototype's `.perf`): a dark glass box
- * at the top right with the picture (resolution, FPS, codec) and the delays (network, decoding, the PC,
+ * in a corner (top left unless chosen otherwise) with the picture (resolution, FPS, codec) and the delays (network, decoding, the PC,
  * lost frames). It lives in the stream's performance overlay container, so showing and hiding it with
  * the overlay setting or the stream menu's Performance works as before.
  */
@@ -66,14 +79,24 @@ class StreamStatsPanel private constructor(private val view: ComposeView) {
         fun attach(activity: Activity, container: ViewGroup): StreamStatsPanel {
             val view = ComposeView(activity)
             val panel = StreamStatsPanel(view)
-            val appearance = AppearanceStore(activity) { ProfileStore.currentSettings(activity) }.appearance.value
+            val settings = ProfileStore.currentSettings(activity)
+            val appearance = AppearanceStore(activity) { settings }.appearance.value
+            val position = StatsPosition.read(settings)
+            // The overlay container sits at the top of the stream; at the bottom for the bottom corners
+            (container.layoutParams as? android.widget.FrameLayout.LayoutParams)?.let {
+                it.gravity = if (position.top) android.view.Gravity.TOP else android.view.Gravity.BOTTOM
+                container.layoutParams = it
+            }
             val metrics = activity.resources.displayMetrics
             // Stage pixels of the 1920 × 1080 prototype, like the rest of the new UI
             val dpPerPx = minOf(metrics.widthPixels / 1920f, metrics.heightPixels / 1080f) / metrics.density
             view.setContent {
                 CompositionLocalProvider(LocalStage provides StageMetrics(dpPerPx, appearance.uiScale / 100f)) {
                     val s = panel.stats.value ?: return@CompositionLocalProvider
-                    Box(Modifier.fillMaxWidth().padding(top = 32.px, end = 40.px), contentAlignment = Alignment.TopEnd) {
+                    Box(
+                        Modifier.fillMaxWidth().padding(horizontal = 40.px, vertical = 32.px),
+                        contentAlignment = if (position.start) Alignment.TopStart else Alignment.TopEnd,
+                    ) {
                         Column(
                             Modifier.clip(RoundedCornerShape(18.px)).background(Color.Black.copy(alpha = .55f)).padding(horizontal = 20.px, vertical = 14.px),
                             verticalArrangement = Arrangement.spacedBy(2.px),

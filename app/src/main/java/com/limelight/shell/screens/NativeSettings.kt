@@ -7,6 +7,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.limelight.BuildConfig
 import com.limelight.shell.LocalShell
 import com.limelight.shell.Screen
+import com.limelight.shell.StatsPosition
 import com.limelight.shell.data.Pc
 import com.limelight.shell.settings.Appearance
 import com.limelight.shell.settings.SettingsTab
@@ -75,6 +76,10 @@ internal fun nativeSettings(
         settings.edit().putBoolean(StreamMenuSettings.KEY_SWIPE, on).apply()
     }, "A swipe up from the bottom edge of the screen opens the stream menu too. Touches that start right at that edge do not reach the game.",
         tab = SettingsTab.CONTROLS, section = "Stream menu")
+    val statsPosition = StatsPosition.read(settings)
+    row("ui_stats_position", Symbols.MONITORING, "Statistics position", RowValue.Choice(statsPosition.label, { dir ->
+        settings.edit().putString(StatsPosition.KEY, statsPosition.step(dir).name).apply()
+    }), "The corner of the statistics panel while streaming (Performance in the stream menu).", tab = SettingsTab.DISPLAY, section = "Statistics")
     val choices = listOf<Pc?>(null) + pcs.filter { it.paired }.sortedBy { it.name.lowercase() }
     val index = choices.indexOfFirst { it?.uuid == startup.defaultPc }.coerceAtLeast(0)
     row("ui_default_pc", Symbols.STAR, "Default device", RowValue.Choice(choices[index]?.name ?: "None", { dir ->
