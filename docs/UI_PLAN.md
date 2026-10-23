@@ -64,10 +64,13 @@ Each step ends with a build, a test on the Odin and a commit (after approval), l
 - Temporary test screen `shell/demo/DesignDemo.kt` (replaced by the real shell in 6.3).
 
 ### 6.3 Shell
-- [ ] Fullscreen on every screen (`WindowInsetsController`). Own **status bar** (brand, connected PC pill, top nav, Wi-Fi, battery, clock) and **hint bar**.
-- [ ] Input layer: gamepad mapping (A/B/X/Y, L1/R1, both menu buttons), stick with key repeat, one-press directional navigation everywhere (Compose 2D focus search, tuned where needed).
-- [ ] Navigation stack and screen transitions; side menu sliding in from the left (left menu button, View/Select) and context menu (right menu button, Start); toasts.
-- [ ] Interface scale (100–130 %, default 115 %) applied to the status bar, hint bar and text.
+- [x] Fullscreen on every screen (`WindowInsetsController`). Own **status bar** (brand, PC pill, top nav with tooltips, Wi-Fi, battery and clock from the system: `shell/system/DeviceStatus.kt`, clock follows the system 12/24 h setting) and **hint bar** with button glyphs (`ui/Bars.kt`).
+- [x] Input layer: A / Enter / D-pad center activate, B = back (system fallback), Select = side menu, Start or X = context menu, L1 / R1 forwarded to the current screen (`GlobalKeys.kt`, handled in the activity before the focus dispatch). One-press directional navigation via the Compose 2D focus search; left/right adjust choice and slider rows.
+- [x] Screens with the prototype's transition (fade + slight zoom), side menu sliding in from the left, context menu at the focused element, blurred scrim, toasts (`Shell.kt`, `ShellState.kt`, `ui/Layers.kt`). Layers trap the focus and return it to where it was when they close.
+- [x] Interface scale (100–130 %, default 115 %): the status and hint bars are zoomed as a whole, text elsewhere grows.
+- [x] Settings rows (toggle, choice, slider, action, info) as a shared component (`ui/Rows.kt`); scrolling lists fade at the edges and keep the focused row clear of the fades.
+- Previews until the real screens exist: home with placeholder games, settings with the Appearance category, placeholder profile and devices screens.
+- [ ] The analog stick moving the focus like the D-pad needs a check on the device (Android synthesizes D-pad keys from the stick).
 
 ### 6.4 Home
 - [ ] Data: `ComputerManagerService` bound through a Kotlin repository (`StateFlow` of PCs and the app list of the active PC, cached list first like `AppView`).

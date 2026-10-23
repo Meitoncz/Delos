@@ -11,6 +11,7 @@ import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -19,14 +20,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.onClick
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.RoundRect
@@ -44,9 +41,17 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.DpOffset
-import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.zIndex
+import com.limelight.shell.ContextMenu
+import com.limelight.shell.LocalFocusTracker
 
 /** saturate(.86) brightness(.92): unfocused covers are slightly muted (Android 12+). */
 private val idleEffect by lazy {
@@ -60,9 +65,22 @@ private val idleEffect by lazy {
 }
 
 /**
- * The focus language of the prototype (`.f`, `.tile.is-focus`, `.sweep`): a spring scale, a two-tone
- * ring (a gap in the background color, then the accent), an accent glow and optionally a sweep of light.
- * Makes the element focusable (always, also in touch mode); A, Enter, D-pad center and taps activate it.
+ * The focus ring: an accent band of [width] stage pixels, [gap] pixels outside the element (the gap
+ * is filled with the background color). Tiles use 5 / 5, list rows 3 / 0.
+ */
+@Immutable
+data class FocusRing(val width: Float = 5f, val gap: Float = 5f)
+
+/** The accent glow under a focused element: CSS box-shadow 0 [offsetY] [blur] [spread], stage pixels. */
+@Immutable
+data class FocusGlow(val offsetY: Float = 30f, val blur: Float = 80f, val spread: Float = -18f)
+
+/**
+ * The focus language of the prototype (`.f`, `.tile.is-focus`, `.row.is-focus`, `.sweep`): a spring
+ * scale, a ring, an accent glow and optionally a sweep of light. Makes the element focusable (always,
+ * also in touch mode); A, Enter, D-pad center and taps activate it. The focused element registers with
+ * the [com.limelight.shell.FocusTracker], with its [contextMenu] and whether it is [adjustable] with
+ * left/right.
  *
  * Sizes are in stage pixels (see [px]).
  */
@@ -70,16 +88,19 @@ fun Modifier.focusEffects(
     onClick: () -> Unit,
     corner: Float,
     focusScale: Float = 1.055f,
-    ring: Boolean = true,
-    glow: Boolean = true,
+    ring: FocusRing? = FocusRing(),
+    glow: FocusGlow? = FocusGlow(),
     sweep: Boolean = false,
     dimWhenIdle: Boolean = false,
     clickCue: Cue? = Cue.SELECT,
+    contextMenu: ContextMenu? = null,
+    adjustable: Boolean = false,
     onFocusChange: ((Boolean) -> Unit)? = null,
 ): Modifier = composed {
     val colors = LocalDelosColors.current
     val stage = LocalStage.current
     val feedback = LocalFeedback.current
+    val tracker = LocalFocusTracker.current
     var focused by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(if (focused) focusScale else 1f, tween(380, easing = EaseSpring), label = "focusScale")
     val ringAlpha by animateFloatAsState(if (focused) 1f else 0f, tween(380, easing = EaseOut), label = "focusRing")
@@ -92,15 +113,18 @@ fun Modifier.focusEffects(
     }
     val interaction = remember { MutableInteractionSource() }
     val requester = remember { FocusRequester() }
+    val position = remember { arrayOfNulls<LayoutCoordinates>(1) }
     val activate = {
         clickCue?.let(feedback::play)
         onClick()
     }
     val shape = RoundedCornerShape(corner.px)
-    val glowShadow = Shadow(
-        radius = 80.px, spread = (-18).px, offset = DpOffset(0.px, 30.px),
-        color = colors.glow.copy(alpha = colors.glow.alpha * ringAlpha),
-    )
+    val glowShadow = glow?.let {
+        Shadow(
+            radius = it.blur.px, spread = it.spread.px, offset = DpOffset(0.px, it.offsetY.px),
+            color = colors.glow.copy(alpha = colors.glow.alpha * ringAlpha),
+        )
+    }
 
     this
         // The focused element is drawn above its neighbours, so its ring and scale are never covered
@@ -110,21 +134,29 @@ fun Modifier.focusEffects(
             scaleY = scale
             renderEffect = if (dimWhenIdle && !focused) idleEffect else null
         }
-        .then(if (glow && ringAlpha > 0f) Modifier.dropShadow(shape, glowShadow) else Modifier)
+        .then(if (glowShadow != null && ringAlpha > 0f) Modifier.dropShadow(shape, glowShadow) else Modifier)
         .drawWithContent {
             drawContent()
             val r = min(stagePx(corner, stage), size.minDimension / 2f)
             if (sweep && focused) drawSweep(sweepPos.value, r)
-            if (ring && ringAlpha > 0f) {
-                val band = stagePx(5f, stage)
-                drawRing(colors.accent.copy(alpha = ringAlpha), r, band * 1.5f, band)
-                drawRing(colors.bg.copy(alpha = ringAlpha), r, band * .5f, band)
+            if (ring != null && ringAlpha > 0f) {
+                val width = stagePx(ring.width, stage)
+                val gap = stagePx(ring.gap, stage)
+                drawRing(colors.accent.copy(alpha = ringAlpha), r, gap + width / 2f, width)
+                if (gap > 0f) drawRing(colors.bg.copy(alpha = ringAlpha), r, gap / 2f, gap)
             }
+        }
+        .onGloballyPositioned {
+            position[0] = it
+            if (focused) tracker.moved(requester, it)
         }
         .onFocusChanged {
             if (it.isFocused != focused) {
                 focused = it.isFocused
-                if (focused) feedback.focusMoved()
+                if (focused) {
+                    feedback.focusMoved()
+                    tracker.focused(requester, position[0], contextMenu, adjustable)
+                }
                 onFocusChange?.invoke(focused)
             }
         }

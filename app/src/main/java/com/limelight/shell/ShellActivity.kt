@@ -1,6 +1,7 @@
 package com.limelight.shell
 
 import android.os.Bundle
+import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -16,7 +17,6 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.limelight.shell.demo.DesignDemo
 import com.limelight.shell.settings.AppearanceStore
 import com.limelight.shell.ui.Feedback
 import com.limelight.shell.ui.LocalDelosColors
@@ -36,6 +36,7 @@ import com.limelight.shell.ui.systemAccentHue
 class ShellActivity : ComponentActivity() {
     private lateinit var feedback: Feedback
     private lateinit var appearance: AppearanceStore
+    private val keys = GlobalKeys()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -43,9 +44,11 @@ class ShellActivity : ComponentActivity() {
         hideSystemBars()
         feedback = Feedback(this)
         appearance = AppearanceStore(this)
-        setContent { ShellRoot(appearance, feedback) }
+        setContent { ShellRoot(appearance, feedback, keys) }
         feedback.view = window.decorView
     }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean = keys.dispatch(event) || super.dispatchKeyEvent(event)
 
     override fun onDestroy() {
         feedback.release()
@@ -68,7 +71,7 @@ class ShellActivity : ComponentActivity() {
 }
 
 @Composable
-private fun ShellRoot(store: AppearanceStore, feedback: Feedback) {
+private fun ShellRoot(store: AppearanceStore, feedback: Feedback, keys: GlobalKeys) {
     val appearance by store.appearance.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val systemHue = remember { systemAccentHue(context) }
@@ -85,7 +88,7 @@ private fun ShellRoot(store: AppearanceStore, feedback: Feedback) {
     }
     CompositionLocalProvider(LocalDelosColors provides colors, LocalFeedback provides feedback) {
         Stage(textScale = appearance.uiScale / 100f) {
-            DesignDemo(appearance, store::update)
+            Shell(appearance, store::update, keys)
         }
     }
 }
