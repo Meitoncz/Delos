@@ -108,7 +108,7 @@ fun Shell(
     val colors = LocalDelosColors.current
     val feedback = LocalFeedback.current
     // The first launch starts with the logo and a new profile; every later one with the start screen
-    val shell = remember { ShellState(if (profileStore.profiles.value.all.isEmpty()) Screen.Boot else Screen.Start) }
+    val shell = remember { ShellState(if (profileStore.profiles.value.all.isEmpty()) Screen.Boot() else Screen.Start) }
     val tracker = remember { FocusTracker() }
     val haze = rememberHazeState()
     var blurSource by remember { mutableStateOf(false) }
@@ -336,8 +336,8 @@ fun Shell(
                         Screen.Profile -> ProfileScreen(profiles, profileStore)
                         Screen.Devices -> DevicesScreen(pcs, pc?.uuid)
                         Screen.Start -> StartScreen(profiles, profileStore, pcs, startup)
-                        Screen.Boot -> BootScreen(
-                            onBegin = { shell.navigate(Screen.CreateProfile(editing = false, back = Screen.Boot)) },
+                        is Screen.Boot -> BootScreen(
+                            onBegin = { shell.navigate(Screen.CreateProfile(editing = false, back = screen)) },
                             // PCs paired in the classic UI already: a default profile, then straight into home
                             onSkip = pcs.filter { it.paired }.let { paired ->
                                 if (paired.isEmpty()) null else {
@@ -359,7 +359,7 @@ fun Shell(
                                 // The first launch goes on to pairing, unless PCs are paired already
                                 shell.navigate(
                                     when {
-                                        screen.back != Screen.Boot -> screen.back ?: Screen.Start
+                                        screen.back !is Screen.Boot -> screen.back ?: Screen.Start
                                         pcs.none { it.paired } -> Screen.PairPc(back = Screen.Start)
                                         else -> Screen.Start
                                     }
@@ -508,7 +508,7 @@ private fun hints(shell: ShellState, adjustable: Boolean): List<Hint> {
             Screen.Settings -> adjust + listOf(Hint(Glyph.L1, "Previous tab"), Hint(Glyph.R1, "Next tab"), Hint(Glyph.Y, "Search"), Hint(Glyph.A, "Change"), Hint(Glyph.B, "Back"))
             Screen.SettingsSearch -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"))
             Screen.Start -> listOf(Hint(Glyph.A, "Connect"), Hint(Glyph.MENU_LEFT, "Menu"), Hint(Glyph.MENU_RIGHT, "Options"))
-            Screen.Boot -> listOf(Hint(Glyph.A, "Select"))
+            is Screen.Boot -> listOfNotNull(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back").takeIf { screen.back != null })
             is Screen.CreateProfile -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"))
             is Screen.PairPc -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"), Hint(Glyph.MENU_RIGHT, "Options"))
             is Screen.Pin -> listOf(Hint(Glyph.B, "Cancel"))

@@ -147,12 +147,23 @@ class ProfileStore(context: Context) {
         state.value = profiles
     }
 
-    private companion object {
-        const val KEY_PROFILES = "ui_profiles"
-        const val KEY_CURRENT = "ui_profile"
+    companion object {
+        private const val KEY_PROFILES = "ui_profiles"
+        private const val KEY_CURRENT = "ui_profile"
 
         /** The classic AppView's hidden games (per PC uuid), taken over by the first profile. */
-        const val CLASSIC_HIDDEN_APPS = "HiddenApps"
+        private const val CLASSIC_HIDDEN_APPS = "HiddenApps"
+
+        /**
+         * The current profile's settings, only read: for the stream window, which must not parse the
+         * settings catalog or activate stream profiles while a game is starting (that is the shell's job).
+         */
+        fun currentSettings(context: Context): SharedPreferences {
+            val app = context.applicationContext
+            val prefs = PreferenceManager.getDefaultSharedPreferences(app)
+            val id = prefs.getString(KEY_CURRENT, null) ?: return prefs
+            return app.getSharedPreferences("ui_profile_$id", Context.MODE_PRIVATE)
+        }
     }
 }
 

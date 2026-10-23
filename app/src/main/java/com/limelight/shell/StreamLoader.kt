@@ -130,7 +130,7 @@ class StreamLoader private constructor(private val activity: ComponentActivity, 
             val view = ComposeView(activity)
             val loader = StreamLoader(activity, view, pcName)
             // The colors and scale of the profile that started the stream
-            val appearance = AppearanceStore(activity, ProfileStore(activity)::settings).appearance.value
+            val appearance = AppearanceStore(activity) { ProfileStore.currentSettings(activity) }.appearance.value
             val colors = delosColors(appearance, systemAccentHue(activity))
             view.setContent {
                 CompositionLocalProvider(LocalDelosColors provides colors) {

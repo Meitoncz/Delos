@@ -49,8 +49,8 @@ sealed interface Screen {
     /** The start screen on every launch: the PCs to connect to, the profile in the corner. */
     data object Start : Screen
 
-    /** First launch: the logo and "Get started". */
-    data object Boot : Screen
+    /** First launch: the logo and "Get started" (also replayed from the settings, then B returns there). */
+    data class Boot(override val back: Screen? = null) : Screen
 
     /** Creating a profile, or choosing another avatar for the current one ([editing]). */
     data class CreateProfile(val editing: Boolean, override val back: Screen?) : Screen
