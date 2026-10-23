@@ -1,0 +1,254 @@
+package com.limelight.shell.data
+
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
+import android.os.IBinder
+import androidx.compose.runtime.Immutable
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.preference.PreferenceManager
+import com.limelight.LimeLog
+import com.limelight.computers.ComputerManagerListener
+import com.limelight.computers.ComputerManagerService
+import com.limelight.nvstream.http.ComputerDetails
+import com.limelight.nvstream.http.NvApp
+import com.limelight.nvstream.http.NvHTTP
+import com.limelight.nvstream.http.PairingManager
+import com.limelight.utils.CacheHelper
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import java.io.StringReader
+
+/** A PC as the UI sees it: an immutable snapshot of the service's (mutable) [ComputerDetails]. */
+@Immutable
+data class Pc(
+    val uuid: String,
+    val name: String,
+    val online: Boolean,
+    val paired: Boolean,
+    val runningGameId: Int,
+    /** The live object of the service, for streaming, box art and server requests. */
+    val details: ComputerDetails,
+)
+
+/** An app or game of the active PC. */
+@Immutable
+data class App(val id: Int, val name: String, val hdr: Boolean, val running: Boolean, val nvApp: NvApp)
+
+/** What the home screen shows. */
+sealed interface Library {
+    data object Loading : Library
+    data object NoPc : Library
+    data class Offline(val pc: Pc) : Library
+    data class Ready(val pc: Pc, val apps: List<App>, val hidden: Set<Int>, val lastPlayed: Int) : Library {
+        val hiddenCount: Int get() = hidden.size
+    }
+}
+
+/**
+ * Connects the new UI to [ComputerManagerService] (the same service the classic UI uses): PCs, their
+ * state and the app list of the active PC. Polls only while the shell is started, like PcView/AppView.
+ * Hidden apps share the classic UI's "HiddenApps" preferences.
+ */
+class PcRepository(context: Context) : DefaultLifecycleObserver {
+    private val app = context.applicationContext
+    private val prefs = PreferenceManager.getDefaultSharedPreferences(app)
+    private val hiddenPrefs = app.getSharedPreferences(HIDDEN_APPS_PREFS, Context.MODE_PRIVATE)
+
+    private val pcMap = LinkedHashMap<String, Pc>()
+    private val _pcs = MutableStateFlow<List<Pc>>(emptyList())
+    val pcs: StateFlow<List<Pc>> = _pcs.asStateFlow()
+
+    private val _library = MutableStateFlow<Library>(Library.Loading)
+    val library: StateFlow<Library> = _library.asStateFlow()
+
+    private val _showHidden = MutableStateFlow(false)
+    val showHidden: StateFlow<Boolean> = _showHidden.asStateFlow()
+
+    @Volatile
+    var binder: ComputerManagerService.ComputerManagerBinder? = null
+        private set
+    private var started = false
+    private var poller: ComputerManagerService.ApplistPoller? = null
+    private var pollerPc: String? = null
+    private var rawApps: String? = null
+    private var parsedApps: List<NvApp> = emptyList()
+
+    /** Set once the service has reported every known PC at least once. */
+    private var everyPcReported = false
+
+    private val connection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName, service: IBinder) {
+            val b = service as ComputerManagerService.ComputerManagerBinder
+            Thread {
+                b.waitForReady()
+                binder = b
+                synchronized(this@PcRepository) { if (started) startPolling() }
+            }.start()
+        }
+
+        override fun onServiceDisconnected(name: ComponentName) {
+            binder = null
+        }
+    }
+
+    fun bind() {
+        app.bindService(Intent(app, ComputerManagerService::class.java), connection, Context.BIND_AUTO_CREATE)
+    }
+
+    fun unbind() {
+        stopPolling()
+        app.unbindService(connection)
+    }
+
+    override fun onStart(owner: LifecycleOwner) = synchronized(this) {
+        started = true
+        if (binder != null) startPolling()
+    }
+
+    override fun onStop(owner: LifecycleOwner) = synchronized(this) {
+        started = false
+        stopPolling()
+    }
+
+    /** The PC the home screen shows: the last chosen one, else the first paired one (online preferred). */
+    private fun activePc(): Pc? {
+        val paired = pcMap.values.filter { it.paired }
+        val chosen = prefs.getString(KEY_ACTIVE_PC, null)
+        return paired.firstOrNull { it.uuid == chosen } ?: paired.firstOrNull { it.online } ?: paired.firstOrNull()
+    }
+
+    fun selectPc(uuid: String) {
+        prefs.edit().putString(KEY_ACTIVE_PC, uuid).apply()
+        update()
+    }
+
+    fun setShowHidden(show: Boolean) {
+        _showHidden.value = show
+        update()
+    }
+
+    fun hiddenIds(pcUuid: String): Set<Int> =
+        hiddenPrefs.getStringSet(pcUuid, emptySet())!!.mapNotNull { it.toIntOrNull() }.toSet()
+
+    fun setHidden(pcUuid: String, appId: Int, hidden: Boolean) {
+        val ids = hiddenIds(pcUuid).toMutableSet()
+        if (hidden) ids += appId else ids -= appId
+        hiddenPrefs.edit().putStringSet(pcUuid, ids.map(Int::toString).toSet()).apply()
+        update()
+    }
+
+    private fun startPolling() {
+        val b = binder ?: return
+        b.startPolling(object : ComputerManagerListener {
+            override fun notifyComputerUpdated(details: ComputerDetails) = onComputerUpdated(details)
+        })
+        // The service reports every known PC right away; if there are none, there is nothing to wait for
+        Thread {
+            Thread.sleep(1500)
+            synchronized(this) {
+                everyPcReported = true
+                update()
+            }
+        }.start()
+    }
+
+    private fun stopPolling() {
+        poller?.stop()
+        poller = null
+        pollerPc = null
+        binder?.stopPolling()
+    }
+
+    private fun onComputerUpdated(details: ComputerDetails) = synchronized(this) {
+        val uuid = details.uuid ?: return@synchronized
+        pcMap[uuid] = Pc(
+            uuid = uuid,
+            name = details.name ?: "PC",
+            online = details.state == ComputerDetails.State.ONLINE,
+            paired = details.pairState == PairingManager.PairState.PAIRED,
+            runningGameId = details.runningGameId,
+            details = details,
+        )
+        _pcs.value = pcMap.values.toList()
+        if (uuid == activePc()?.uuid && details.rawAppList != null && details.rawAppList != rawApps) {
+            parse(details.rawAppList)
+        }
+        update()
+    }
+
+    private fun parse(raw: String) {
+        try {
+            parsedApps = NvHTTP.getAppListByReader(StringReader(raw))
+            rawApps = raw
+        } catch (e: Exception) {
+            LimeLog.warning("New UI: unreadable app list: $e")
+        }
+    }
+
+    /** Recomputes [library] and keeps the app list poller on the active PC. */
+    private fun update() = synchronized(this) {
+        val pc = activePc()
+        if (pc?.uuid != pollerPc) {
+            poller?.stop()
+            poller = null
+            rawApps = null
+            parsedApps = emptyList()
+            pollerPc = pc?.uuid
+            if (pc != null) {
+                // The service's own ComputerDetails object, so the poller sees state changes
+                val live = binder?.getComputer(pc.uuid) ?: pc.details
+                loadCachedApps(pc.uuid)
+                if (started) poller = binder?.createAppListPoller(live)?.also { it.start() }
+            }
+        }
+        _library.value = when {
+            pc == null -> if (everyPcReported) Library.NoPc else Library.Loading
+            !pc.online && rawApps == null -> Library.Offline(pc)
+            rawApps == null -> Library.Loading
+            else -> {
+                val hidden = hiddenIds(pc.uuid)
+                val visible = parsedApps.filter { _showHidden.value || it.appId !in hidden }
+                Library.Ready(
+                    pc,
+                    order(visible.map { App(it.appId, it.appName, it.isHdrSupported, it.appId == pc.runningGameId && pc.runningGameId != 0, it) }, pc.uuid),
+                    hidden.filter { id -> parsedApps.any { it.appId == id } }.toSet(),
+                    lastPlayed(pc.uuid),
+                )
+            }
+        }
+    }
+
+    /** The running game first, then the last played one; otherwise the PC's order. */
+    private fun order(apps: List<App>, pcUuid: String): List<App> {
+        val last = prefs.getInt(lastPlayedKey(pcUuid), -1)
+        val first = apps.firstOrNull { it.running } ?: apps.firstOrNull { it.id == last } ?: return apps
+        return listOf(first) + (apps - first)
+    }
+
+    fun lastPlayed(pcUuid: String): Int = prefs.getInt(lastPlayedKey(pcUuid), -1)
+
+    fun setLastPlayed(pcUuid: String, appId: Int) {
+        prefs.edit().putInt(lastPlayedKey(pcUuid), appId).apply()
+        update()
+    }
+
+    private fun loadCachedApps(uuid: String) {
+        try {
+            parse(CacheHelper.readInputStreamToString(CacheHelper.openCacheFileForInput(app.cacheDir, "applist", uuid)))
+        } catch (_: Exception) {
+            // No cached list yet: wait for the poller
+        }
+    }
+
+    private fun lastPlayedKey(uuid: String) = "ui_last_app_$uuid"
+
+    private companion object {
+        /** Shared with the classic AppView. */
+        const val HIDDEN_APPS_PREFS = "HiddenApps"
+        const val KEY_ACTIVE_PC = "ui_active_pc"
+    }
+}

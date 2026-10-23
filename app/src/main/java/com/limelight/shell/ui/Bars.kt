@@ -60,13 +60,13 @@ data class NavButton(val icon: String, val label: String, val current: Boolean, 
  * in the middle and Wi-Fi, battery and clock on the right.
  */
 @Composable
-fun StatusBar(nav: List<NavButton>?, pcName: String?, wifi: WifiStatus, battery: BatteryStatus?, clock: String, modifier: Modifier = Modifier) {
+fun StatusBar(nav: List<NavButton>?, pcName: String?, pcOnline: Boolean, wifi: WifiStatus, battery: BatteryStatus?, clock: String, modifier: Modifier = Modifier) {
     val colors = LocalDelosColors.current
     Box(modifier.fillMaxWidth().height(104.px).padding(horizontal = 72.px)) {
         Row(Modifier.align(Alignment.CenterStart), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(18.px)) {
             LogoMark()
             BasicText("DELOS", style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx, letterSpacing = .14.em))
-            if (pcName != null) PcPill(pcName)
+            if (pcName != null) PcPill(pcName, pcOnline)
         }
         if (nav != null) TopNav(nav, Modifier.align(Alignment.Center))
         Row(Modifier.align(Alignment.CenterEnd), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(22.px)) {
@@ -119,15 +119,16 @@ fun LogoMark(size: Float = 40f) {
     })
 }
 
+/** The connected PC next to the brand; the dot is green while the PC is online. */
 @Composable
-private fun PcPill(name: String) {
+private fun PcPill(name: String, online: Boolean) {
     val colors = LocalDelosColors.current
     Row(
         Modifier.clip(CircleShape).background(colors.surface).border(1.px, colors.line, CircleShape).padding(horizontal = 18.px, vertical = 8.px),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.px),
     ) {
-        Box(Modifier.size(10.px).clip(CircleShape).background(ONLINE))
+        Box(Modifier.size(10.px).clip(CircleShape).background(if (online) ONLINE else colors.text3))
         BasicText(name, style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 20.tpx))
     }
 }

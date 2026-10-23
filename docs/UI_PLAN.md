@@ -25,7 +25,7 @@ Goal: rebuild the Delos "shell" (everything except the stream itself) natively s
 | Language | Kotlin (built into AGP 9) | Kotlin version and the Compose compiler plugin (`org.jetbrains.kotlin.plugin.compose`) pinned together; latest stable when step 6.1 starts (2.4.x today). |
 | UI | Jetpack Compose via the Compose BOM | Latest stable BOM at step 6.1 (2026.09.00 = Compose 1.12 today). Only `foundation` / `ui` / `animation`: **no Material components**, Delos has its own design system. |
 | Navigation | Own small back stack + `AnimatedContent` | Console-style transitions (scale/fade, portal, dive) need full control; predictive back via `BackHandler`. No navigation library. |
-| Images | Coil 3 | Custom fetcher for server box art (`NvHTTP.getBoxArt` with the pinned certificate) and plain HTTPS for SteamGridDB; memory + disk cache. |
+| Images | Own small loader (`shell/data/BoxArt.kt`) | Server box art via `NvHTTP.getBoxArt` with the pinned certificate, into the classic UI's disk cache, plus a memory cache. Decided in 6.4 instead of Coil: no extra library for one image source; revisited for SteamGridDB in 6.8. |
 | Backdrop blur | Haze, or own `RenderEffect` blur | For overlays that blur what is behind them (portal, launch loader, side menu). Android 12+; on Android 10–11 a dimmed translucent layer instead. Chosen in step 6.2 after a quick test on the Odin. |
 | Animated backgrounds | Compose `Canvas` (`DrawScope`) | Aurora, Tide, Silk and Contour ported from the prototype's `drawBg()` 1:1 (same math), plus Still. AGSL shaders only if the Canvas version is not smooth at 120 Hz. |
 | Fonts | Unbounded (display), Figtree (body), bundled | Both OFL. |
@@ -73,11 +73,18 @@ Each step ends with a build, a test on the Odin and a commit (after approval), l
 - [ ] The analog stick moving the focus like the D-pad needs a check on the device (Android synthesizes D-pad keys from the stick).
 
 ### 6.4 Home
-- [ ] Data: `ComputerManagerService` bound through a Kotlin repository (`StateFlow` of PCs and the app list of the active PC, cached list first like `AppView`).
-- [ ] Grid layout (wide first tile, vertical scroll, top/bottom fades) and Row layout (one horizontal row, focused tile anchored left, edge fades). Fast scroll animation (200 ms).
-- [ ] Focused game: logo, eyebrow and chips on top; hero background crossfade with configurable blur and opacity.
-- [ ] Covers: server box art for now (SteamGridDB comes in 6.8), with a generated placeholder while loading.
-- [ ] Context menu for a game (start, start with/without virtual display, hide, details).
+- [x] Data: `ComputerManagerService` bound through `shell/data/PcRepository.kt` (`StateFlow`s of PCs and of the active PC's library, cached app list first like `AppView`, polling only while the shell is started). Active PC = last chosen, else the first paired one (online preferred). Hidden apps share the classic UI's `HiddenApps` preferences.
+- [x] Grid layout (5 columns, wide first tile, the focused row anchored under the info, top/bottom fades) and Row layout (one horizontal row, focused tile anchored left, edge fades), both with the prototype's fast scroll (200 ms ease-out). Lazy lists, so large libraries stay smooth.
+- [x] Focused game: eyebrow, title and chips on top; the game background follows the focus with a short delay (no flicker while scrolling) and crossfades.
+- [x] Covers: the PC's box art through the classic UI's disk cache (`shell/data/BoxArt.kt`, no extra image library needed; SteamGridDB comes in 6.8), procedural placeholder art while loading or when there is none. The running game comes first, then the last played one.
+- [x] Context menu for a game: start (wired up in 6.5), hide / show again; the side menu can show hidden games.
+- [x] Loading, no PC, PC offline and empty library states.
+- [x] Game background over the whole screen, fading out diagonally from the top-right to the bottom-left corner (owner's choice).
+- [x] Performance, measured on the Odin with `dumpsys gfxinfo` (framestats): scrolling runs at 120 fps with about 1 % late frames. What it took:
+  - the game background is rendered once per game and blur into a small bitmap off the main thread (`ui/HeroBitmap.kt`), instead of blurring a full-screen layer every frame (that alone cost ~15 ms per frame while scrolling);
+  - the animated background redraws at most ~60 times a second (it moves slowly), Contour lines are drawn as one batched line call per level with butt caps (stroking hundreds of path pieces per frame was slow; round caps showed dots at the joints);
+  - the Haze blur source is only active while an overlay is visible;
+  - focus animations are read only while drawing (no recomposition per animation frame), tile parameters are stable so a focus move recomposes just the two affected tiles, the idle cover dimming is an image color filter instead of a layer effect.
 
 ### 6.5 Launching a game
 - [ ] Circular loader with the cover, blurred home behind it, then the "dive" transition into `Game`.

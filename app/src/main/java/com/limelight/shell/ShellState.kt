@@ -11,6 +11,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.boundsInRoot
+import com.limelight.shell.ui.GameArt
 
 /** Top-level screens of the shell. [main] screens show the top navigation. */
 enum class Screen(val main: Boolean) { HOME(true), SETTINGS(true), PROFILE(true), DEVICES(true) }
@@ -70,11 +71,20 @@ class ShellState {
     var toast by mutableStateOf<Toast?>(null)
         private set
 
-    /** Id of the focused game on the home screen (also drives the game background). */
+    /** Key ("pc uuid/app id") of the focused game on the home screen. */
     var homeGame by mutableStateOf<String?>(null)
+
+    /** The game background behind the home screen (the focused game's art). */
+    var hero by mutableStateOf<GameArt?>(null)
 
     /** L1 / R1 handler of the current screen (settings tabs), -1 / +1. */
     var onShoulder: ((Int) -> Unit)? = null
+
+    /**
+     * Puts the focus back into the current screen when the element that had it is gone (e.g. the home
+     * layout changed while a menu was open). Set by the screen; returns whether it worked.
+     */
+    var restoreScreenFocus: (() -> Boolean)? = null
     private var toastCounter by mutableIntStateOf(0)
 
     /** Focus to return to when the current layer closes. */

@@ -1,22 +1,51 @@
 package com.limelight.shell.screens
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.BringIntoViewSpec
+import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
+import androidx.compose.foundation.gestures.ScrollableState
+import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,99 +53,277 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.em
 import com.limelight.shell.ContextMenu
 import com.limelight.shell.LocalShell
 import com.limelight.shell.MenuItem
+import com.limelight.shell.data.App
+import com.limelight.shell.data.Library
+import com.limelight.shell.data.LocalBoxArt
+import com.limelight.shell.data.Pc
+import com.limelight.shell.data.PcRepository
+import com.limelight.shell.data.rememberBoxArt
+import com.limelight.shell.settings.Appearance
+import com.limelight.shell.settings.HomeLayout
 import com.limelight.shell.ui.Figtree
 import com.limelight.shell.ui.GameArt
-import com.limelight.shell.ui.InitialFocus
+import com.limelight.shell.ui.IdleCoverFilter
 import com.limelight.shell.ui.LocalDelosColors
+import com.limelight.shell.ui.LocalFeedback
+import com.limelight.shell.ui.LocalStage
 import com.limelight.shell.ui.PlaceholderArt
 import com.limelight.shell.ui.Symbol
 import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.Unbounded
+import com.limelight.shell.ui.fadeMask
 import com.limelight.shell.ui.focusEffects
 import com.limelight.shell.ui.hsl
 import com.limelight.shell.ui.px
 import com.limelight.shell.ui.tpx
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
-/** A game on the home screen. Placeholder data until the library is loaded from the PC (step 6.4). */
-@Immutable
-data class HomeGame(val art: GameArt, val title: String, val played: String, val tags: List<String>, val wide: Boolean = false, val sub: String? = null)
+/** Hues and icon of an app's placeholder art, derived from its name. */
+fun appArt(pc: Pc, app: App, image: androidx.compose.ui.graphics.ImageBitmap? = null): GameArt {
+    val hue = ((app.name.hashCode() and 0x7fffffff) % 360).toFloat()
+    val icon = if (app.name.equals("Desktop", ignoreCase = true)) Symbols.DESKTOP_WINDOWS else Symbols.SPORTS_ESPORTS
+    return GameArt("${pc.uuid}/${app.id}", hue, (hue + 35f) % 360f, icon, image)
+}
 
-val PREVIEW_GAMES = listOf(
-    HomeGame(GameArt("returnal", 176f, 150f, Symbols.PUBLIC), "Returnal", "Played yesterday", listOf("HDR", "AV1"), wide = true, sub = "Continue · Biome 3"),
-    HomeGame(GameArt("animalwell", 300f, 330f, Symbols.EGG), "ANIMAL WELL", "Played 3 days ago", listOf("Controller")),
-    HomeGame(GameArt("gris", 348f, 18f, Symbols.WATER_DROP), "GRIS", "Played last week", listOf("Controller")),
-    HomeGame(GameArt("deathsdoor", 212f, 250f, Symbols.DOOR_FRONT), "Death's Door", "Played last week", listOf("Controller")),
-    HomeGame(GameArt("davediver", 196f, 170f, Symbols.SCUBA_DIVING), "DAVE THE DIVER", "Played 2 weeks ago", listOf("Controller")),
-)
+fun homeKey(pc: Pc, app: App) = "${pc.uuid}/${app.id}"
 
-fun previewGame(id: String?): HomeGame = PREVIEW_GAMES.firstOrNull { it.art.id == id } ?: PREVIEW_GAMES[0]
+/** Lazy containers must not scroll on their own when the focus moves: the home screen anchors the focused tile itself. */
+@OptIn(ExperimentalFoundationApi::class)
+private object NoAutoScroll : BringIntoViewSpec {
+    override fun calculateScrollDistance(offset: Float, size: Float, containerSize: Float) = 0f
+}
+
+/** The prototype's library scroll: easeOutCubic over 200 ms. */
+private val FastScroll = tween<Float>(200, easing = CubicBezierEasing(.33f, 1f, .68f, 1f))
 
 /**
- * Home screen preview of step 6.3 (shell): game info and one row of covers with the focus effects and
- * context menus. The real library, grid and row layouts come in step 6.4.
+ * The home screen (step 6.4): the games of the active PC with their covers, the focused game's info and
+ * background, in the grid or row layout (Settings → Appearance → Home layout).
  */
 @Composable
-fun HomeScreen() {
+fun HomeScreen(library: Library, appearance: Appearance, repo: PcRepository) {
     val shell = LocalShell.current
-    val focused = previewGame(shell.homeGame)
-    val requesters = remember { PREVIEW_GAMES.associate { it.art.id to FocusRequester() } }
-    InitialFocus(requesters.getValue(focused.art.id))
-    Column(Modifier.fillMaxSize().padding(start = 150.px, top = 116.px)) {
-        GameInfo(focused)
-        Row(
-            Modifier.padding(top = 74.px).wrapContentWidth(Alignment.Start, unbounded = true),
-            horizontalArrangement = Arrangement.spacedBy(28.px),
-        ) {
-            PREVIEW_GAMES.forEachIndexed { i, game ->
-                Tile(game, badge = i == 0, modifier = Modifier.focusRequester(requesters.getValue(game.art.id))) { shell.homeGame = game.art.id }
+    val hasGames = library is Library.Ready && library.apps.isNotEmpty()
+    // Without games there is no game background
+    LaunchedEffect(hasGames) { if (!hasGames) shell.hero = null }
+    when (library) {
+        Library.Loading -> HomeMessage(Symbols.REFRESH, "Looking for your PCs…", null)
+        Library.NoPc -> HomeMessage(Symbols.DEVICES, "No PC paired yet", "For now, pair a PC in the classic Delos app.\nPairing in the new UI comes in step 6.6.")
+        is Library.Offline -> HomeMessage(Symbols.POWER, "${library.pc.name} is offline", "Start the PC, or wake it from the classic Delos app.\nWaking it from here comes in step 6.6.")
+        is Library.Ready -> if (hasGames) {
+            GameLibrary(library, appearance, repo)
+        } else {
+            HomeMessage(Symbols.SPORTS_ESPORTS, "No games on ${library.pc.name}", "Add apps in Vibepollo's web UI, they show up here automatically.")
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun GameLibrary(library: Library.Ready, appearance: Appearance, repo: PcRepository) {
+    val shell = LocalShell.current
+    val feedback = LocalFeedback.current
+    val stage = LocalStage.current
+    val boxArt = LocalBoxArt.current
+    val pc = library.pc
+    val apps = library.apps
+    val row = appearance.homeLayout == HomeLayout.ROW
+    val uiScale = appearance.uiScale / 100f
+
+    val focusedIndex = apps.indexOfFirst { homeKey(pc, it) == shell.homeGame }.takeIf { it >= 0 } ?: 0
+    val focused = apps[focusedIndex]
+    val image by rememberBoxArt(boxArt, pc, focused)
+    // The game background follows the focus with a short delay, so it does not flicker while scrolling fast
+    LaunchedEffect(homeKey(pc, focused), image) {
+        delay(140)
+        shell.hero = appArt(pc, focused, image)
+    }
+
+    val requesters = remember(pc.uuid) { HashMap<Int, FocusRequester>() }
+    fun requester(app: App) = requesters.getOrPut(app.id) { FocusRequester() }
+    val gridState = rememberLazyGridState()
+    val rowState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
+    val windowInfo = LocalWindowInfo.current
+
+    // Initial focus when the library appears or the layout changes: jump to the focused game, focus it silently.
+    // Not keyed on the focused game: moving the focus is animated by anchor() alone.
+    LaunchedEffect(pc.uuid, row) {
+        if (shell.homeGame != homeKey(pc, focused)) shell.homeGame = homeKey(pc, focused)
+        if (row) rowState.scrollToItem(focusedIndex) else gridState.scrollToItem(focusedIndex)
+        snapshotFlow { windowInfo.isWindowFocused }.first { it }
+        if (shell.layer == null) {
+            feedback.silenceNextFocus()
+            runCatching { requester(focused).requestFocus() }
+        }
+    }
+
+    // The focused game disappeared (e.g. hidden): its neighbour takes the focus
+    val gone = shell.homeGame != null && apps.none { homeKey(pc, it) == shell.homeGame }
+    var lastIndex by remember { mutableIntStateOf(focusedIndex) }
+    SideEffect { if (!gone) lastIndex = focusedIndex }
+    LaunchedEffect(gone, apps) {
+        if (!gone) return@LaunchedEffect
+        val next = apps[lastIndex.coerceAtMost(apps.lastIndex)]
+        shell.homeGame = homeKey(pc, next)
+        withFrameNanos { }
+        if (shell.layer == null) {
+            feedback.silenceNextFocus()
+            runCatching { requester(next).requestFocus() }
+        }
+    }
+
+    // If the element that had the focus before a menu opened is gone, the focused game takes it back
+    val currentFocused by rememberUpdatedState(focused)
+    DisposableEffect(shell) {
+        shell.restoreScreenFocus = { runCatching { requester(currentFocused).requestFocus() }.getOrDefault(false) }
+        onDispose { shell.restoreScreenFocus = null }
+    }
+
+    // Tile callbacks are remembered, so moving the focus recomposes only the two tiles whose focus changed
+    val reducedMotion by rememberUpdatedState(appearance.reducedMotion)
+    val onTileFocused: (Int, App) -> Unit = remember(pc.uuid, row, scope) {
+        { index, app ->
+            shell.homeGame = homeKey(pc, app)
+            // Keep the focused tile at the anchor: the grid row at the top, the row tile at the left edge
+            scope.launch {
+                if (row) {
+                    val info = rowState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == index }
+                    if (info == null) rowState.scrollToItem(index) else scroll(rowState, info.offset.toFloat(), reducedMotion)
+                } else {
+                    val info = gridState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == index }
+                    if (info == null) gridState.scrollToItem(index) else scroll(gridState, info.offset.y.toFloat(), reducedMotion)
+                }
+            }
+        }
+    }
+    val onStart: (App) -> Unit = remember { { _ -> shell.showToast("Streaming comes in step 6.5", Symbols.INFO) } }
+    val onHide: (App, Boolean) -> Unit = remember(pc.uuid) {
+        { app, hide ->
+            repo.setHidden(pc.uuid, app.id, hide)
+            if (hide) shell.showToast("${app.name} is hidden · the side menu shows hidden games", Symbols.VISIBILITY_OFF)
+        }
+    }
+
+    val tile: @Composable (Int, App) -> Unit = { index, app ->
+        GameTile(
+            pc, app, index = index,
+            badge = when {
+                app.running -> TileBadge.RUNNING
+                index == 0 && library.lastPlayed == app.id -> TileBadge.LAST_PLAYED
+                else -> null
+            },
+            hidden = app.id in library.hidden,
+            requester = requester(app),
+            onFocused = onTileFocused, onStart = onStart, onHide = onHide,
+        )
+    }
+
+    Box(Modifier.fillMaxSize()) {
+        GameInfo(pc, focused, index = focusedIndex, lastPlayed = library.lastPlayed, Modifier.padding(start = 150.px, top = if (row) 210.px else 116.px))
+        CompositionLocalProvider(LocalBringIntoViewSpec provides NoAutoScroll) {
+            if (row) {
+                LazyRow(
+                    state = rowState,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = (430f - (uiScale - 1f) * 92f).px, bottom = 20.px)
+                        .fadeMask(stage, vertical = false, startClear = 0f, startSolid = 120f, endSolid = 260f, endClear = 20f),
+                    // The right padding lets even the last tile scroll to the left anchor
+                    contentPadding = PaddingValues(start = 150.px, end = 1470.px, top = 90.px, bottom = 90.px),
+                    horizontalArrangement = Arrangement.spacedBy(28.px),
+                ) {
+                    itemsIndexed(apps, key = { _, app -> app.id }) { i, app -> tile(i, app) }
+                }
+            } else {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(5),
+                    state = gridState,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = 292.px)
+                        // The top fade starts below the info chips; the bottom fade runs under the hint bar
+                        .fadeMask(stage, vertical = true, startClear = 34f, startSolid = 90f, endSolid = 230f, endClear = 10f),
+                    contentPadding = PaddingValues(start = 154.px, end = 154.px, top = 98.px, bottom = 260.px),
+                    horizontalArrangement = Arrangement.spacedBy(28.px),
+                    verticalArrangement = Arrangement.spacedBy(28.px),
+                ) {
+                    itemsIndexed(apps, key = { _, app -> app.id }, span = { i, _ -> GridItemSpan(if (i == 0) 3 else 1) }) { i, app -> tile(i, app) }
+                }
             }
         }
     }
 }
 
+private suspend fun scroll(state: ScrollableState, delta: Float, reducedMotion: Boolean) {
+    if (kotlin.math.abs(delta) < 1f) return
+    if (reducedMotion) state.scrollBy(delta) else state.animateScrollBy(delta, FastScroll)
+}
+
+/** The badge on a cover's top-left corner. */
+enum class TileBadge(val icon: String, val label: String) {
+    RUNNING(Symbols.PLAY_ARROW, "Running"),
+    LAST_PLAYED(Symbols.HISTORY, "Last played"),
+}
+
+private fun gameMenu(app: App, hidden: Boolean, onStart: (App) -> Unit, onHide: (App, Boolean) -> Unit) = ContextMenu(
+    app.name,
+    listOf(
+        MenuItem(Symbols.PLAY_ARROW, if (app.running) "Resume" else "Start game") { onStart(app) },
+        if (hidden) MenuItem(Symbols.VISIBILITY, "Show game") { onHide(app, false) }
+        else MenuItem(Symbols.VISIBILITY_OFF, "Hide game") { onHide(app, true) },
+    ),
+)
+
 @Composable
-private fun GameInfo(game: HomeGame) {
+private fun GameInfo(pc: Pc, app: App, index: Int, lastPlayed: Int, modifier: Modifier) {
     val colors = LocalDelosColors.current
-    BasicText(
-        if (game == PREVIEW_GAMES[0]) "CONTINUE PLAYING" else "LIBRARY",
-        style = TextStyle(color = colors.accent, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx, letterSpacing = .14.em),
-    )
-    Row(Modifier.height(132.px).padding(top = 2.px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(26.px)) {
-        Symbol(game.art.icon, 104.tpx, hsl(game.art.hue2, 85f, 66f), filled = true, filledWeight = 500, opticalSize = 48f)
-        val size = when {
-            game.title.length > 22 -> 56
-            game.title.length > 13 -> 68
-            else -> 84
-        }
+    val art = appArt(pc, app)
+    Column(modifier) {
         BasicText(
-            game.title,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            style = TextStyle(
-                brush = Brush.verticalGradient(.25f to colors.text, 1f to hsl(game.art.hue2, 70f, 58f)),
-                fontFamily = Unbounded, fontWeight = FontWeight.Bold, fontSize = size.tpx, letterSpacing = (-.01).em,
-            ),
+            when {
+                app.running -> "NOW RUNNING"
+                index == 0 && lastPlayed == app.id -> "CONTINUE PLAYING"
+                art.icon == Symbols.DESKTOP_WINDOWS -> "REMOTE DESKTOP"
+                else -> "LIBRARY"
+            },
+            style = TextStyle(color = colors.accent, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx, letterSpacing = .14.em),
         )
-    }
-    Row(Modifier.padding(top = 10.px), horizontalArrangement = Arrangement.spacedBy(12.px)) {
-        Chip(Symbols.SCHEDULE, game.played)
-        game.tags.forEach { tag ->
-            Chip(
-                when (tag) {
-                    "HDR" -> Symbols.HDR_ON
-                    "AV1" -> Symbols.HIGH_QUALITY
-                    "Co-op" -> Symbols.GROUP
-                    else -> Symbols.SPORTS_ESPORTS
-                },
-                tag,
+        Row(Modifier.height(132.px).padding(top = 2.px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(26.px)) {
+            Symbol(art.icon, 104.tpx, hsl(art.hue2, 85f, 66f), filled = true, filledWeight = 500, opticalSize = 48f)
+            val size = when {
+                app.name.length > 22 -> 56
+                app.name.length > 13 -> 68
+                else -> 84
+            }
+            BasicText(
+                app.name,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = TextStyle(
+                    brush = Brush.verticalGradient(.25f to colors.text, 1f to hsl(art.hue2, 70f, 58f)),
+                    fontFamily = Unbounded, fontWeight = FontWeight.Bold, fontSize = size.tpx, letterSpacing = (-.01).em,
+                ),
+                modifier = Modifier.padding(end = 150.px),
             )
+        }
+        Row(Modifier.padding(top = 10.px), horizontalArrangement = Arrangement.spacedBy(12.px)) {
+            if (app.running) Chip(Symbols.PLAY_ARROW, "Running on ${pc.name}") else Chip(Symbols.COMPUTER, pc.name)
+            if (app.hdr) Chip(Symbols.HDR_ON, "HDR")
+            if (art.icon == Symbols.DESKTOP_WINDOWS && pc.details.vDisplaySupported) Chip(Symbols.SCREEN_SHARE, "Virtual display")
         }
     }
 }
@@ -138,45 +345,62 @@ private fun Chip(icon: String, label: String) {
     }
 }
 
+/** A game cover: the PC's box art, or procedural placeholder art with the title until it is loaded. */
 @Composable
-private fun Tile(game: HomeGame, badge: Boolean, modifier: Modifier = Modifier, onFocused: () -> Unit) {
+private fun GameTile(
+    pc: Pc,
+    app: App,
+    index: Int,
+    badge: TileBadge?,
+    hidden: Boolean,
+    requester: FocusRequester,
+    onFocused: (Int, App) -> Unit,
+    onStart: (App) -> Unit,
+    onHide: (App, Boolean) -> Unit,
+) {
     val colors = LocalDelosColors.current
-    val shell = LocalShell.current
-    val shape = RoundedCornerShape(26.px)
-    val soon = { what: String -> shell.showToast("$what comes in a later step", Symbols.INFO) }
-    val menu = ContextMenu(
-        game.title,
-        listOf(
-            MenuItem(Symbols.PLAY_ARROW, "Start game") { soon("Streaming") },
-            MenuItem(Symbols.DOWNLOAD, "Download covers") { soon("SteamGridDB") },
-            MenuItem(Symbols.STAR, "Add to favorites") { soon("Favorites") },
-            MenuItem(Symbols.VISIBILITY_OFF, "Hide game") { soon("Hiding games") },
-            MenuItem(Symbols.INFO, "Game details") { soon("Game details") },
-        ),
-    )
+    val boxArt = LocalBoxArt.current
+    val image by rememberBoxArt(boxArt, pc, app)
+    val art = appArt(pc, app)
+    val wide = index == 0
+    val menu = remember(app, hidden) { gameMenu(app, hidden, onStart, onHide) }
+    var focused by remember { mutableStateOf(false) }
     Box(
-        modifier
+        Modifier
+            .focusRequester(requester)
             .focusEffects(
-                onClick = { soon("Streaming") }, corner = 26f, sweep = true, dimWhenIdle = true, contextMenu = menu,
-                onFocusChange = { if (it) onFocused() },
+                onClick = { onStart(app) }, corner = 26f, sweep = true, contextMenu = menu,
+                origin = if (wide) TransformOrigin(1f, .5f) else TransformOrigin.Center,
+                onFocusChange = {
+                    focused = it
+                    if (it) onFocused(index, app)
+                },
             )
-            .size(if (game.wide) 963.px else 300.px, 450.px)
-            .clip(shape)
+            .size(if (wide) 956.px else 300.px, 450.px)
+            .clip(RoundedCornerShape(26.px))
             .background(colors.surface2),
     ) {
-        PlaceholderArt(
-            game.art.hue, game.art.hue2, game.art.icon,
-            modifier = Modifier.fillMaxSize(),
-            glyphSize = if (game.wide) 420f else 320f,
-            glyphRight = if (game.wide) 40f else -36f,
-            glyphTop = if (game.wide) .04f else .24f,
-            title = game.title,
-            titleSize = if (game.wide) 72f else 34f,
-            titleInset = if (game.wide) 44f else 26f,
-            titleBottom = if (game.wide) 40f else 26f,
-            subtitle = if (game.wide) game.sub else null,
-        )
-        if (badge) {
+        Crossfade(image, animationSpec = tween(400), label = "cover") { img ->
+            if (img != null) {
+                Image(
+                    img, contentDescription = app.name, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(),
+                    colorFilter = if (focused) null else IdleCoverFilter,
+                )
+            } else {
+                PlaceholderArt(
+                    art.hue, art.hue2, art.icon,
+                    modifier = Modifier.fillMaxSize(),
+                    glyphSize = if (wide) 420f else 320f,
+                    glyphRight = if (wide) 40f else -36f,
+                    glyphTop = if (wide) .04f else .24f,
+                    title = app.name,
+                    titleSize = if (wide) 72f else 34f,
+                    titleInset = if (wide) 44f else 26f,
+                    titleBottom = if (wide) 40f else 26f,
+                )
+            }
+        }
+        if (badge != null) {
             Row(
                 Modifier
                     .padding(18.px)
@@ -186,8 +410,23 @@ private fun Tile(game: HomeGame, badge: Boolean, modifier: Modifier = Modifier, 
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.px),
             ) {
-                Symbol(Symbols.HISTORY, 22.tpx, Color.White)
-                BasicText("Last played", style = TextStyle(color = Color.White, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 18.tpx))
+                Symbol(badge.icon, 22.tpx, Color.White, filled = true)
+                BasicText(badge.label, style = TextStyle(color = Color.White, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 18.tpx))
+            }
+        }
+    }
+}
+
+/** A centered message for the empty, loading and offline states. */
+@Composable
+private fun HomeMessage(icon: String, title: String, text: String?) {
+    val colors = LocalDelosColors.current
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(22.px)) {
+            Symbol(icon, 110.tpx, colors.accent, filled = true, opticalSize = 48f)
+            BasicText(title, style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 52.tpx))
+            if (text != null) {
+                BasicText(text, style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 26.tpx, lineHeight = 1.45.em, textAlign = TextAlign.Center))
             }
         }
     }

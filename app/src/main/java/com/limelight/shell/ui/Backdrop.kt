@@ -9,6 +9,7 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,7 +18,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
@@ -25,35 +27,45 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathFillType
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.drawscope.rotateRad
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import com.limelight.shell.settings.Appearance
 import com.limelight.shell.settings.BackgroundKind
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlin.math.cos
 import kotlin.math.hypot
 import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.sin
 
-/** Art of a game: two hues and an icon for the procedural placeholders (SteamGridDB images come in step 6.8). */
+/**
+ * Art of a game: two hues and an icon for the procedural placeholder, and the [image] for the game
+ * background once it is loaded (the PC's cover for now; SteamGridDB hero images come in step 6.8).
+ */
 @Immutable
-data class GameArt(val id: String, val hue: Float, val hue2: Float, val icon: String)
+data class GameArt(val id: String, val hue: Float, val hue2: Float, val icon: String, val image: ImageBitmap? = null)
 
 /**
  * The layered background of every screen, as in the prototype (#stage, #heroBg, canvas#bg, #vignette):
@@ -99,17 +111,49 @@ private fun DrawScope.drawVignette(scrim: Color) {
 /** The blurred game background (prototype `.hero`: inset -90px, blur, saturate 1.15). */
 @Composable
 private fun HeroArt(art: GameArt, blurPx: Int) {
+    val image = art.image
+    if (image != null && blurPx > 0) {
+        // Pre-rendered once per game and blur (see HeroBitmaps): the screen only scales a small bitmap up
+        val hero by produceState(HeroBitmaps.cached(art.id, blurPx), art.id, image, blurPx) {
+            value = HeroBitmaps.cached(art.id, blurPx) ?: withContext(Dispatchers.Default) { HeroBitmaps.render(art.id, image, blurPx) }
+        }
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            hero?.let {
+                Image(
+                    it, contentDescription = null, contentScale = ContentScale.FillBounds, filterQuality = FilterQuality.Low,
+                    modifier = Modifier.requiredSize(2100.px, 1260.px),
+                )
+            }
+        }
+        return
+    }
+    // A sharp image (blur 0) or the placeholder art: drawn live, the placeholder without blur
     val stage = LocalStage.current
     val density = LocalDensity.current.density
-    val effect = remember(blurPx, stage, density) { heroEffect(blurPx * stage.dpPerPx * density) }
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        PlaceholderArt(
-            art.hue, art.hue2, art.icon,
-            glyphSize = 1050f, glyphRight = 84f, glyphTop = -.14f, glyphAlpha = .14f,
-            modifier = Modifier
-                .requiredSize(2100.px, 1260.px)
-                .graphicsLayer { renderEffect = effect },
-        )
+    val effect = remember(blurPx, stage, density, image != null) { if (image != null) heroEffect(blurPx * stage.dpPerPx * density) else null }
+    // Over the whole screen, fading out diagonally from the top-right corner to the bottom-left one
+    Box(
+        Modifier
+            .fillMaxSize()
+            .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+            .drawWithContent {
+                drawContent()
+                drawRect(
+                    Brush.linearGradient(
+                        0f to Color.Black, .3f to Color.Black, .95f to Color.Transparent,
+                        start = Offset(size.width, 0f), end = Offset(0f, size.height),
+                    ),
+                    blendMode = BlendMode.DstIn,
+                )
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        val layer = Modifier.requiredSize(2100.px, 1260.px).graphicsLayer { renderEffect = effect }
+        if (image != null) {
+            Image(image, contentDescription = null, contentScale = ContentScale.Crop, modifier = layer)
+        } else {
+            PlaceholderArt(art.hue, art.hue2, art.icon, glyphSize = 1050f, glyphRight = 84f, glyphTop = -.14f, glyphAlpha = .14f, modifier = layer)
+        }
     }
 }
 
@@ -122,12 +166,19 @@ private fun heroEffect(sigmaPx: Float): androidx.compose.ui.graphics.RenderEffec
     return RenderEffect.createChainEffect(RenderEffect.createBlurEffect(radius, radius, Shader.TileMode.CLAMP), saturate).asComposeRenderEffect()
 }
 
-/** Time and smoothed values of the animated background, advanced once per frame. */
+/**
+ * Time and smoothed values of the animated background, advanced every frame. [tick] triggers a redraw
+ * at most ~60 times a second: the background moves slowly, so on 120 Hz screens drawing every other
+ * frame halves its cost without a visible difference (scrolling and focus still run at full rate).
+ */
 private class BackgroundClock {
-    var t by mutableFloatStateOf(0f)
-    var tint by mutableFloatStateOf(Float.NaN)
-    var baseAlpha by mutableFloatStateOf(Float.NaN)
+    var t = 0f
+    var tint = Float.NaN
+    var baseAlpha = Float.NaN
+    var tick by mutableIntStateOf(0)
 }
+
+private const val MIN_REDRAW_NANOS = 15_000_000L
 
 /** Per-frame smoothing factor k (the prototype's per-frame lerps at 60 fps) converted to elapsed time. */
 private fun smoothing(k: Float, dt: Float) = 1f - (1f - k).pow(dt * 60f)
@@ -140,6 +191,7 @@ private fun AnimatedBackground(appearance: Appearance, colors: DelosColors, tint
     val baseTarget by rememberUpdatedState(if (heroActive) .12f else 1f)
     LaunchedEffect(Unit) {
         var last = 0L
+        var lastDrawn = 0L
         while (true) {
             withFrameNanos { now ->
                 val dt = if (last == 0L) 0f else min((now - last) / 1e9f, .1f)
@@ -150,6 +202,10 @@ private fun AnimatedBackground(appearance: Appearance, colors: DelosColors, tint
                     clock.tint = if (clock.tint.isNaN()) target else lerpHue(clock.tint, target, smoothing(.04f, dt))
                 }
                 clock.baseAlpha = if (clock.baseAlpha.isNaN()) baseTarget else clock.baseAlpha + (baseTarget - clock.baseAlpha) * smoothing(.05f, dt)
+                if (now - lastDrawn >= MIN_REDRAW_NANOS) {
+                    lastDrawn = now
+                    clock.tick++
+                }
             }
         }
     }
@@ -161,6 +217,8 @@ private fun AnimatedBackground(appearance: Appearance, colors: DelosColors, tint
             blendMode = if (dark) BlendMode.Screen else BlendMode.SrcOver
         }
     ) {
+        @Suppress("UNUSED_VARIABLE")
+        val redraw = clock.tick // subscribes the drawing to the throttled clock
         // Without Material You the effects follow the color of the focused game
         val tint = if (!colors.materialYou && tintHue != null && !clock.tint.isNaN()) clock.tint else colors.accent2Hue
         val p = BgParams(clock.t, dark, colors.materialYou, tint, colors.baseHue, colors.accentHue, colors.accent2Hue)
@@ -194,8 +252,14 @@ private class BackgroundPaths {
     val silk = List(4) { Path().apply { fillType = PathFillType.EvenOdd } }
     val sheen = List(4) { Path() }
     val silkBottom = FloatArray(SILK_POINTS * 2)
-    val contour = List(CONTOUR_LEVELS) { Path() }
     val field = FloatArray(CONTOUR_NX * CONTOUR_NY)
+
+    /** Line segments of one contour level: at most two per cell, four floats each. */
+    val contourLines = FloatArray((CONTOUR_NX - 1) * (CONTOUR_NY - 1) * 8)
+    val contourPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+        style = android.graphics.Paint.Style.STROKE
+        strokeCap = android.graphics.Paint.Cap.BUTT
+    }
 }
 
 private fun DrawScope.drawAurora(p: BgParams) {
@@ -303,10 +367,12 @@ private fun DrawScope.drawContour(p: BgParams, paths: BackgroundPaths) {
     val r1 = if (p.my) p.acc else p.tint
     val s = CONTOUR_STEP
     val pts = FloatArray(8)
+    val lines = paths.contourLines
+    val paint = paths.contourPaint.apply { blendMode = if (p.dark) android.graphics.BlendMode.PLUS else android.graphics.BlendMode.SRC_OVER }
     for (k in 0 until CONTOUR_LEVELS) {
         val level = -2.8f + k * .35f
         val major = k % 4 == 0
-        val path = paths.contour[k].apply { rewind() }
+        var count = 0
         for (j in 0 until CONTOUR_NY - 1) for (i in 0 until CONTOUR_NX - 1) {
             val a = f[j * CONTOUR_NX + i]
             val b = f[j * CONTOUR_NX + i + 1]
@@ -320,15 +386,15 @@ private fun DrawScope.drawContour(p: BgParams, paths: BackgroundPaths) {
             if ((b > level) != (d > level)) { pts[n++] = x + s; pts[n++] = y + s * (level - b) / (d - b) }
             if ((e > level) != (d > level)) { pts[n++] = x + s * (level - e) / (d - e); pts[n++] = y + s }
             if ((a > level) != (e > level)) { pts[n++] = x; pts[n++] = y + s * (level - a) / (e - a) }
-            if (n >= 4) { path.moveTo(pts[0], pts[1]); path.lineTo(pts[2], pts[3]) }
-            if (n == 8) { path.moveTo(pts[4], pts[5]); path.lineTo(pts[6], pts[7]) }
+            // Every crossing pair is one segment (two segments in a saddle cell)
+            for (q in 0 until (n / 4) * 4) lines[count++] = pts[q]
         }
         val h = lerpHue(r0, r1, k / 16f)
-        drawPath(
-            path,
-            hsl(h, 80f, if (p.dark) 68f else 40f, (if (major) .46f else .16f) + k / 16f * (if (p.dark) .18f else .14f)),
-            style = Stroke(if (major) 1.7f else 1f, cap = StrokeCap.Round, join = StrokeJoin.Round),
-            blendMode = blend,
-        )
+        paint.color = hsl(h, 80f, if (p.dark) 68f else 40f, (if (major) .46f else .16f) + k / 16f * (if (p.dark) .18f else .14f)).toArgb()
+        paint.strokeWidth = if (major) 1.7f else 1f
+        // One batched line draw per level: stroking a path of hundreds of pieces every frame is what made
+        // the home screen miss frames. Butt caps: neighbouring segments share their end points exactly, so
+        // nothing overlaps (round caps would add up to bright dots at every joint)
+        drawIntoCanvas { it.nativeCanvas.drawLines(lines, 0, count, paint) }
     }
 }

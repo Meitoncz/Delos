@@ -1,9 +1,5 @@
 package com.limelight.shell.ui
 
-import android.graphics.ColorMatrix
-import android.graphics.ColorMatrixColorFilter
-import android.graphics.RenderEffect
-import android.os.Build
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -30,12 +26,13 @@ import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.asComposeRenderEffect
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -48,21 +45,21 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.zIndex
 import com.limelight.shell.ContextMenu
 import com.limelight.shell.LocalFocusTracker
 
-/** saturate(.86) brightness(.92): unfocused covers are slightly muted (Android 12+). */
-private val idleEffect by lazy {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) null
-    else RenderEffect.createColorFilterEffect(
-        ColorMatrixColorFilter(ColorMatrix().apply {
-            setSaturation(.86f)
-            postConcat(ColorMatrix().apply { setScale(.92f, .92f, .92f, 1f) })
-        })
-    ).asComposeRenderEffect()
-}
+/**
+ * saturate(.86) brightness(.92): unfocused covers are slightly muted. Applied as the image's color
+ * filter (cheap, drawn with the image) rather than as a layer effect on the whole tile.
+ */
+val IdleCoverFilter: ColorFilter = ColorFilter.colorMatrix(
+    ColorMatrix().apply {
+        setToSaturation(.86f)
+        timesAssign(ColorMatrix(floatArrayOf(.92f, 0f, 0f, 0f, 0f, 0f, .92f, 0f, 0f, 0f, 0f, 0f, .92f, 0f, 0f, 0f, 0f, 0f, 1f, 0f)))
+    }
+)
 
 /**
  * The focus ring: an accent band of [width] stage pixels, [gap] pixels outside the element (the gap
@@ -91,7 +88,8 @@ fun Modifier.focusEffects(
     ring: FocusRing? = FocusRing(),
     glow: FocusGlow? = FocusGlow(),
     sweep: Boolean = false,
-    dimWhenIdle: Boolean = false,
+    /** Where the scale grows from: the wide first cover grows to the left, so it never covers its neighbour. */
+    origin: TransformOrigin = TransformOrigin.Center,
     clickCue: Cue? = Cue.SELECT,
     contextMenu: ContextMenu? = null,
     adjustable: Boolean = false,
@@ -119,22 +117,28 @@ fun Modifier.focusEffects(
         onClick()
     }
     val shape = RoundedCornerShape(corner.px)
-    val glowShadow = glow?.let {
-        Shadow(
-            radius = it.blur.px, spread = it.spread.px, offset = DpOffset(0.px, it.offsetY.px),
-            color = colors.glow.copy(alpha = colors.glow.alpha * ringAlpha),
-        )
-    }
+    val k = stage.dpPerPx * LocalDensity.current.density
 
+    // The animated values (scale, glow and ring alpha) are only read while drawing, never while composing:
+    // a focus change would otherwise rebuild both affected elements on every frame of the animation
     this
         // The focused element is drawn above its neighbours, so its ring and scale are never covered
-        .zIndex(if (focused || scale > 1f) 1f else 0f)
+        .zIndex(if (focused) 1f else 0f)
         .graphicsLayer {
             scaleX = scale
             scaleY = scale
-            renderEffect = if (dimWhenIdle && !focused) idleEffect else null
+            transformOrigin = origin
         }
-        .then(if (glowShadow != null && ringAlpha > 0f) Modifier.dropShadow(shape, glowShadow) else Modifier)
+        .then(
+            if (glow == null) Modifier
+            else Modifier.dropShadow(shape) {
+                radius = glow.blur * k
+                spread = glow.spread * k
+                offset = Offset(0f, glow.offsetY * k)
+                color = colors.glow
+                alpha = ringAlpha
+            }
+        )
         .drawWithContent {
             drawContent()
             val r = min(stagePx(corner, stage), size.minDimension / 2f)

@@ -17,6 +17,9 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.limelight.shell.data.BoxArtCache
+import com.limelight.shell.data.LocalBoxArt
+import com.limelight.shell.data.PcRepository
 import com.limelight.shell.settings.AppearanceStore
 import com.limelight.shell.ui.Feedback
 import com.limelight.shell.ui.LocalDelosColors
@@ -36,6 +39,8 @@ import com.limelight.shell.ui.systemAccentHue
 class ShellActivity : ComponentActivity() {
     private lateinit var feedback: Feedback
     private lateinit var appearance: AppearanceStore
+    private lateinit var repo: PcRepository
+    private lateinit var boxArt: BoxArtCache
     private val keys = GlobalKeys()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,13 +49,18 @@ class ShellActivity : ComponentActivity() {
         hideSystemBars()
         feedback = Feedback(this)
         appearance = AppearanceStore(this)
-        setContent { ShellRoot(appearance, feedback, keys) }
+        repo = PcRepository(this)
+        lifecycle.addObserver(repo)
+        repo.bind()
+        boxArt = BoxArtCache(this) { repo.binder?.uniqueId }
+        setContent { ShellRoot(appearance, feedback, keys, repo, boxArt) }
         feedback.view = window.decorView
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean = keys.dispatch(event) || super.dispatchKeyEvent(event)
 
     override fun onDestroy() {
+        repo.unbind()
         feedback.release()
         super.onDestroy()
     }
@@ -71,7 +81,7 @@ class ShellActivity : ComponentActivity() {
 }
 
 @Composable
-private fun ShellRoot(store: AppearanceStore, feedback: Feedback, keys: GlobalKeys) {
+private fun ShellRoot(store: AppearanceStore, feedback: Feedback, keys: GlobalKeys, repo: PcRepository, boxArt: BoxArtCache) {
     val appearance by store.appearance.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val systemHue = remember { systemAccentHue(context) }
@@ -86,9 +96,9 @@ private fun ShellRoot(store: AppearanceStore, feedback: Feedback, keys: GlobalKe
         feedback.soundsEnabled = appearance.sounds
         feedback.hapticsEnabled = appearance.haptics
     }
-    CompositionLocalProvider(LocalDelosColors provides colors, LocalFeedback provides feedback) {
+    CompositionLocalProvider(LocalDelosColors provides colors, LocalFeedback provides feedback, LocalBoxArt provides boxArt) {
         Stage(textScale = appearance.uiScale / 100f) {
-            Shell(appearance, store::update, keys)
+            Shell(appearance, store::update, keys, repo)
         }
     }
 }

@@ -62,13 +62,25 @@ fun DrawScope.stagePx(value: Float, stage: StageMetrics): Float = value * stage.
  * prototype's mask-image on scrolling lists.
  */
 fun Modifier.fadeEdges(stage: StageMetrics, top: Float, bottom: Float): Modifier =
+    fadeMask(stage, vertical = true, startClear = 0f, startSolid = top, endSolid = bottom, endClear = 0f)
+
+/**
+ * A CSS-like mask-image gradient along one axis, distances in stage pixels from each edge: transparent
+ * up to [startClear], opaque from [startSolid] until [endSolid] before the end, transparent again from
+ * [endClear] before the end.
+ */
+fun Modifier.fadeMask(stage: StageMetrics, vertical: Boolean, startClear: Float, startSolid: Float, endSolid: Float, endClear: Float): Modifier =
     graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
         .drawWithContent {
             drawContent()
-            val t = stagePx(top, stage) / size.height
-            val b = stagePx(bottom, stage) / size.height
+            val length = if (vertical) size.height else size.width
+            fun at(px: Float) = (stagePx(px, stage) / length).coerceIn(0f, 1f)
+            val stops = arrayOf(
+                0f to Color.Transparent, at(startClear) to Color.Transparent, at(startSolid) to Color.Black,
+                (1f - at(endSolid)) to Color.Black, (1f - at(endClear)) to Color.Transparent, 1f to Color.Transparent,
+            )
             drawRect(
-                Brush.verticalGradient(0f to Color.Transparent, t to Color.Black, (1f - b) to Color.Black, 1f to Color.Transparent),
+                if (vertical) Brush.verticalGradient(*stops) else Brush.horizontalGradient(*stops),
                 blendMode = BlendMode.DstIn,
             )
         }

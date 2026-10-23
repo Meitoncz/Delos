@@ -17,17 +17,21 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import com.limelight.shell.screens.AppearanceRows
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.limelight.shell.data.Library
+import com.limelight.shell.data.PcRepository
 import com.limelight.shell.screens.HomeScreen
-import com.limelight.shell.screens.PREVIEW_GAMES
 import com.limelight.shell.screens.PlaceholderScreen
 import com.limelight.shell.screens.SettingsScreen
-import com.limelight.shell.screens.previewGame
 import com.limelight.shell.screens.step
 import com.limelight.shell.settings.Appearance
 import com.limelight.shell.system.rememberBatteryStatus
@@ -63,16 +67,32 @@ import dev.chrisbanes.haze.rememberHazeState
  * side menu (left menu button), context menus (right menu button / Start / X) and toasts.
  */
 @Composable
-fun Shell(appearance: Appearance, update: ((Appearance) -> Appearance) -> Unit, keys: GlobalKeys) {
+fun Shell(appearance: Appearance, update: ((Appearance) -> Appearance) -> Unit, keys: GlobalKeys, repo: PcRepository) {
     val colors = LocalDelosColors.current
     val feedback = LocalFeedback.current
     val shell = remember { ShellState() }
     val tracker = remember { FocusTracker() }
     val haze = rememberHazeState()
+    var blurSource by remember { mutableStateOf(false) }
+    LaunchedEffect(shell.layer) {
+        if (shell.layer != null) {
+            blurSource = true
+        } else {
+            delay(600)
+            blurSource = false
+        }
+    }
     val wifi by rememberWifiStatus()
     val battery by rememberBatteryStatus()
     val clock by rememberClock()
+    val library by repo.library.collectAsStateWithLifecycle()
+    val showHidden by repo.showHidden.collectAsStateWithLifecycle()
     val uiScale = appearance.uiScale / 100f
+    val pc = when (val l = library) {
+        is Library.Ready -> l.pc
+        is Library.Offline -> l.pc
+        else -> null
+    }
 
     fun toggleSide() {
         if (shell.layer == Layer.Side) {
@@ -127,10 +147,11 @@ fun Shell(appearance: Appearance, update: ((Appearance) -> Appearance) -> Unit, 
 
     // When a layer has closed, the focus returns to where it was (silently, like the prototype)
     LaunchedEffect(shell.layer) {
-        if (shell.layer == null) shell.takeReturnFocus()?.let {
-            feedback.silenceNextFocus()
-            runCatching { it.requestFocus() }
-        }
+        if (shell.layer != null) return@LaunchedEffect
+        val previous = shell.takeReturnFocus() ?: return@LaunchedEffect
+        feedback.silenceNextFocus()
+        val restored = runCatching { previous.requestFocus() }.getOrDefault(false)
+        if (!restored) runCatching { shell.restoreScreenFocus?.invoke() }
     }
 
     val nav = listOf(
@@ -141,8 +162,10 @@ fun Shell(appearance: Appearance, update: ((Appearance) -> Appearance) -> Unit, 
 
     CompositionLocalProvider(LocalShell provides shell, LocalFocusTracker provides tracker) {
         Box(Modifier.fillMaxSize()) {
-            Box(Modifier.fillMaxSize().hazeSource(haze)) {
-                Backdrop(appearance, colors, hero = if (shell.screen == Screen.HOME) previewGame(shell.homeGame).art else null)
+            // The blur source re-records the whole screen every frame, so it is only active while an overlay
+            // is shown (and while it fades out)
+            Box(Modifier.fillMaxSize().then(if (blurSource) Modifier.hazeSource(haze) else Modifier)) {
+                Backdrop(appearance, colors, hero = if (shell.screen == Screen.HOME) shell.hero else null)
                 AnimatedContent(
                     shell.screen,
                     transitionSpec = {
@@ -153,14 +176,14 @@ fun Shell(appearance: Appearance, update: ((Appearance) -> Appearance) -> Unit, 
                     label = "screen",
                 ) { screen ->
                     when (screen) {
-                        Screen.HOME -> HomeScreen()
+                        Screen.HOME -> HomeScreen(library, appearance, repo)
                         Screen.SETTINGS -> SettingsScreen(appearance, update)
                         Screen.PROFILE -> PlaceholderScreen(Symbols.ACCOUNT_CIRCLE, "Profile", "Profiles and avatars come in step 6.6.") { shell.navigate(Screen.HOME) }
                         Screen.DEVICES -> PlaceholderScreen(Symbols.DEVICES, "Devices", "Your PCs, pairing and renaming come in step 6.6.") { shell.navigate(Screen.HOME) }
                     }
                 }
                 ZoomedBar(uiScale) {
-                    StatusBar(nav.takeIf { shell.screen.main }, pcName = null, wifi = wifi, battery = battery, clock = clock)
+                    StatusBar(nav.takeIf { shell.screen.main }, pcName = pc?.name, pcOnline = pc?.online == true, wifi = wifi, battery = battery, clock = clock)
                 }
             }
 
@@ -181,15 +204,27 @@ fun Shell(appearance: Appearance, update: ((Appearance) -> Appearance) -> Unit, 
                             }
                         },
                         name = "Player",
-                        status = "Not connected",
+                        status = when {
+                            pc == null -> "Not connected"
+                            pc.online -> "Connected to ${pc.name}"
+                            else -> "${pc.name} is offline"
+                        },
                     )
                 },
             ) { first ->
                 SideMenuRows(appearance, update, Modifier.focusRequester(first)) { shell.navigate(Screen.SETTINGS) }
+                val hiddenCount = (library as? Library.Ready)?.hiddenCount ?: 0
+                if (hiddenCount > 0 || showHidden) {
+                    SettingRow(
+                        Symbols.VISIBILITY, "Show hidden games", RowValue.Toggle(showHidden) { repo.setShowHidden(it) },
+                        description = "$hiddenCount hidden on ${pc?.name ?: "this PC"}", compact = true,
+                    )
+                }
             }
 
+            val note = (library as? Library.Ready)?.takeIf { shell.screen == Screen.HOME && shell.layer == null }?.let { "${it.apps.size} apps on ${it.pc.name}" }
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
-                ZoomedBar(uiScale) { HintBar(hints(shell, tracker.adjustable), note = if (shell.screen == Screen.HOME && shell.layer == null) "${PREVIEW_GAMES.size} games · preview" else null) }
+                ZoomedBar(uiScale) { HintBar(hints(shell, tracker.adjustable), note = note) }
             }
             ToastHost(shell.toast) { shell.hideToast(it) }
         }
