@@ -135,6 +135,7 @@ Built on the branch `ui/review-fixes`; the user tried them all on the Odin (2026
 - [x] Recording custom stream menu buttons (Settings → Controls → Stream menu buttons), tried on the Odin.
 - [ ] The performance statistics overlay in the Delos style (the user: the current one looks like a debug view).
 - [ ] The user decides which items the stream menu keeps.
+- [ ] Leaving the stream (Disconnect / Quit game) with the prototype's effect: the portal back into home ("Back to Delos" / "Closing <game>", focus on the game) instead of Android's default slide from the side. The stream is its own task, so the system ignores custom animations; likely: no window animation when the stream ends, and the shell plays the portal when it resumes.
 
 ### 6.8 SteamGridDB
 - [ ] API key entry (the user's own key), stored locally.
