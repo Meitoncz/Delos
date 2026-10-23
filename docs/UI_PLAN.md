@@ -119,6 +119,15 @@ Each step ends with a build, a test on the Odin and a commit (after approval), l
 - [x] The user started a stream on the Odin and confirmed that the changed resolution was applied (2026-10-23).
 - [x] Y opens search and appears in the hint bar. Verified on the Odin together with controller search/jump, single feedback per tab switch and complete section headings on upward focus navigation.
 
+### 6.7b Additions requested on 2026-10-23
+Built on the branch `ui/review-fixes`; the user tests them on the Odin before the branch is merged.
+- [ ] The Delos stream menu (`shell/StreamMenu.kt`, the prototype's quick menu): Resume, Keyboard, Performance, More (the classic Artemis quick menu), Disconnect, Quit game. Opens with L3 + R3, or with buttons recorded in Settings → Controls → Stream menu (e.g. the Odin's rear buttons), or with a swipe up from the bottom edge (can be turned off); every way the classic menu opened leads here too. Start + Back + L1 + R1 no longer ends the stream.
+- [ ] Clock: System, 12-hour or 24-hour.
+- [ ] Battery in the style of iOS: light outline, green charge (red at 20 % and below), percentage beside it, a bolt and a pulsing green while charging.
+- [ ] Material You uses only the system's wallpaper colors; with it off a color palette can be chosen (Delos, Lagoon, Dusk, Ember, Moss, Iris and the new Rose, Sunset, Mint, Gold).
+- [ ] Deleting a profile (profile screen; asks once, since its settings are lost).
+- [ ] Review fixes after 6.7: the stream window reads the profile's appearance without side effects; the welcome replayed from the settings returns there with B.
+
 ### 6.8 SteamGridDB
 - [ ] API key entry (the user's own key), stored locally.
 - [ ] Match games by name (search API), with a manual override per game.
