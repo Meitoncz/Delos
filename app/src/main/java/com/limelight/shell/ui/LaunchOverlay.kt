@@ -115,6 +115,9 @@ fun LaunchScene(card: LaunchCard, stage: String?, progress: () -> Float, opening
                         radius = hole, center = center, blendMode = BlendMode.DstOut,
                     )
                 }
+                // The cover on top of the opening: it fades out into the stream instead of being cut away with it
+                val k = metrics.dpPerPx * density
+                drawCover(card, Offset(size.width / 2f, size.height / 2f), COVER_RADIUS * k, alpha = (1f - opening() / .35f).coerceIn(0f, 1f))
             },
     ) {
         Canvas(Modifier.fillMaxSize()) {
@@ -135,9 +138,8 @@ fun LaunchScene(card: LaunchCard, stage: String?, progress: () -> Float, opening
             val ring = ringRadius(o, k, size)
             val fade = (1f - ((o - .35f) / .65f).coerceIn(0f, 1f)).let { it * it }
             val time = clock?.invoke()
-            // Behind the cover, so the pulses come out from under it
+            // The cover is drawn above all of this (after the opening is cut)
             if (time != null) drawPulses(center, k, ring / (RING_RADIUS * k), fade, time, colors)
-            drawCover(card, center, COVER_RADIUS * k, alpha = (1f - o / .35f).coerceIn(0f, 1f))
             drawCircle(colors.line.copy(alpha = colors.line.alpha * fade), radius = ring, center = center, style = Stroke(10f * k))
             val sweep = 360f * progress()
             val box = Size(ring * 2f, ring * 2f)
