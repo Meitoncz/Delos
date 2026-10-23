@@ -25,6 +25,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -103,6 +104,7 @@ fun Shell(
     profileStore: ProfileStore,
     startupStore: StartupStore,
     setup: PcSetup,
+    links: MutableStateFlow<ShellLink?>,
 ) {
     val colors = LocalDelosColors.current
     val feedback = LocalFeedback.current
@@ -134,6 +136,45 @@ fun Shell(
         val default = start.defaultPc
         if (shell.screen == Screen.Start && start.skipStart && default != null) {
             repo.awaitPc(default, 4_000) { it.paired }?.let { devices.connect(it) }
+        }
+    }
+
+    // Links and shortcuts, once there is a profile (the first launch keeps them until then). Links can
+    // come from any web page or app, so pairing and starting a game ask first (a security prompt)
+    val link by links.collectAsStateWithLifecycle()
+    LaunchedEffect(link, profiles.all.isEmpty()) {
+        val l = link ?: return@LaunchedEffect
+        if (profiles.all.isEmpty()) return@LaunchedEffect
+        links.value = null
+        when (l) {
+            is ShellLink.Pair -> {
+                feedback.play(Cue.OPEN)
+                val who = l.name?.let { "$it (${l.address})" } ?: l.address
+                shell.openLayer(
+                    Layer.Dialog(
+                        DialogSpec("Pair with $who?", "A link asks Delos to pair with this PC. Continue only if you opened it yourself.", emptyList(), "Pair") {
+                            devices.addAndPair(l.address, l.otp, Screen.Start)
+                            true
+                        }
+                    ),
+                    tracker,
+                )
+            }
+            is ShellLink.Launch -> {
+                feedback.play(Cue.OPEN)
+                val game = l.appName?.takeIf { it.isNotEmpty() } ?: "a game"
+                val host = l.hostName?.takeIf { it.isNotEmpty() } ?: "a PC"
+                shell.openLayer(
+                    Layer.Dialog(
+                        DialogSpec("Start $game?", "A link asks Delos to start $game on $host. Continue only if you opened it yourself.", emptyList(), "Start") {
+                            activity?.startActivity(l.intent)
+                            true
+                        }
+                    ),
+                    tracker,
+                )
+            }
+            is ShellLink.OpenPc -> repo.awaitPc(l.uuid, 4_000) { it.paired }?.let { devices.connect(it) }
         }
     }
 

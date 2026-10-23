@@ -1,5 +1,6 @@
 package com.limelight.shell
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
 import androidx.activity.ComponentActivity
@@ -32,6 +33,7 @@ import com.limelight.shell.ui.Stage
 import com.limelight.shell.ui.animateDelosColors
 import com.limelight.shell.ui.delosColors
 import com.limelight.shell.ui.systemAccentHue
+import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
  * Entry point of the new native Delos UI (Phase 6, see docs/UI_PLAN.md).
@@ -46,6 +48,9 @@ class ShellActivity : ComponentActivity() {
     private lateinit var repo: PcRepository
     private lateinit var boxArt: BoxArtCache
     private val keys = GlobalKeys()
+
+    /** A link or shortcut the shell still has to handle (from the intent that started or reached it). */
+    private val links = MutableStateFlow<ShellLink?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -67,8 +72,15 @@ class ShellActivity : ComponentActivity() {
         boxArt = BoxArtCache(this) { repo.binder?.uniqueId }
         val launcher = GameLauncher(this, repo)
         val setup = PcSetup(this, repo)
-        setContent { ShellRoot(appearance, feedback, keys, repo, boxArt, launcher, profiles, startup, setup) }
+        if (savedInstanceState == null) links.value = ShellLink.from(this, intent)
+        setContent { ShellRoot(appearance, feedback, keys, repo, boxArt, launcher, profiles, startup, setup, links) }
         feedback.view = window.decorView
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        ShellLink.from(this, intent)?.let { links.value = it }
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean = keys.dispatch(event) || super.dispatchKeyEvent(event)
@@ -105,6 +117,7 @@ private fun ShellRoot(
     profiles: ProfileStore,
     startup: StartupStore,
     setup: PcSetup,
+    links: MutableStateFlow<ShellLink?>,
 ) {
     val appearance by store.appearance.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -122,7 +135,7 @@ private fun ShellRoot(
     }
     CompositionLocalProvider(LocalDelosColors provides colors, LocalFeedback provides feedback, LocalBoxArt provides boxArt) {
         Stage(textScale = appearance.uiScale / 100f) {
-            Shell(appearance, store::update, keys, repo, launcher, profiles, startup, setup)
+            Shell(appearance, store::update, keys, repo, launcher, profiles, startup, setup, links)
         }
     }
 }

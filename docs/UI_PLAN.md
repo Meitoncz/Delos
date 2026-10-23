@@ -98,12 +98,13 @@ Each step ends with a build, a test on the Odin and a commit (after approval), l
 - [ ] Investigate: when a game (not the desktop) is started, wait until it has loaded on the PC before connecting, so the stream does not open on the desktop with Steam still starting the game.
 
 ### 6.6 First launch, PCs and pairing
-- [ ] Profile creation (name + avatar in circles).
-- [ ] Start screen on every launch (GUI.md): the remote devices in circles, the current profile in the top-left corner (switch or create one); settings "Default device to connect to automatically" and "Skip the start screen".
-- [ ] PC list in circles from discovery, add a PC manually, wake-on-LAN.
-- [ ] Pairing screen with the PIN (and OTP pairing for Vibepollo), then the portal animation into home.
-- [ ] Devices screen: client-side rename, wake, unpair, remove.
-- [ ] `art://` links, pinned shortcuts and `ShortcutTrampoline` open the new shell.
+- [x] First launch (`screens/FirstRunScreens.kt`): the logo with "Get started" (and "Skip to home" when PCs are paired already), then creating a profile: avatar in circles + name (`data/Profiles.kt`).
+- [x] Profiles keep all their own settings (open question 1): appearance, start settings, hidden games, last played game, the PC home shows and names given to PCs, each in its own preferences file; a new profile starts with a copy of the current one's. Profile screen: change avatar, rename, switch, add.
+- [x] Start screen on every launch (`screens/DeviceScreens.kt`): the paired PCs in circles (the default one marked), the current profile in the top-left corner (switch or create one); settings "Default device" and "Skip the start screen".
+- [x] PC list in circles from discovery, add a PC by address, search again (`screens/PairScreens.kt`, `data/PcSetup.kt`). Choosing an offline PC sends Wake-on-LAN and the portal waits until it is online (B cancels).
+- [x] Pairing screen with the PIN, or a one-time code from Vibepollo (OTP), then the portal into home (`ui/PortalOverlay.kt`).
+- [x] Devices screen: connect, client-side rename, wake, unpair, remove, pair a new PC.
+- [x] The new shell handles `art://` pairing and launch links (with a security prompt) and PC shortcuts (`ShellLink.kt`). The system still sends them to the classic UI until 6.9.
 
 ### 6.7 Settings
 - [ ] Settings screen with icon tabs (L1/R1), rows (toggle, choice, slider, action) and a description panel. Each row writes the same keys as today's `preferences.xml` (126 keys, 13 categories), so `PreferenceConfiguration` and the stream keep working unchanged.
@@ -114,7 +115,7 @@ Each step ends with a build, a test on the Odin and a commit (after approval), l
   - resetting on-screen controls and the keyboard layout.
 - [ ] Quick search across all settings (type or pick a letter with the controller, jump straight to the row).
 - [ ] New Delos settings: Appearance (theme, Material You, colors, background, home layout, game background blur/opacity, interface scale, animations) and Covers (SteamGridDB).
-- [ ] Settings profiles (Artemis feature) in the new UI – see open questions.
+- [ ] Stream settings per user profile: each profile gets its own Artemis settings profile, switched together with it (open question 1).
 
 ### 6.8 SteamGridDB
 - [ ] API key entry (the user's own key), stored locally.
@@ -124,6 +125,7 @@ Each step ends with a build, a test on the Odin and a commit (after approval), l
 
 ### 6.9 Switch-over and cleanup
 - [ ] The new shell becomes the only launcher activity (phone, TV/leanback categories kept).
+- [ ] Links and shortcuts go to the new shell: the `art://` intent filter moves from `AddComputerManually` to `ShellActivity`, and `ShortcutTrampoline` falls back to the shell (with `AppView.UUID_EXTRA`) instead of `PcView` / `AppView`. The shell already handles them (`ShellLink.kt`).
 - [ ] Remove the old UI once nothing depends on it:
   - `PcView`, `AppView`, the grid adapters, `AdapterFragment`, the old layouts and unused resources;
   - `StreamSettings` and the custom preference classes;
@@ -132,6 +134,7 @@ Each step ends with a build, a test on the Odin and a commit (after approval), l
 
 ### 6.10 Polish and testing
 - [ ] Side-by-side comparison with the prototype on the Odin, screen by screen.
+- [ ] Check with the user on the Odin what could not be tried in 6.6 yet: PIN pairing after unpairing, OTP pairing, adding a PC by address, waking an offline PC from the start screen, removing a PC, "Skip the start screen".
 - [ ] Smooth at the Odin's refresh rate; memory use with many covers.
 - [ ] Touch, Android 10–12 fallbacks (no blur), Android 15+ edge-to-edge (other devices / later).
 
@@ -139,9 +142,8 @@ Later (Phase 6 backlog, after the switch): restyle the in-stream quick menu (`Ga
 
 ## Open questions
 
-1. **Profiles.** The prototype has a *user profile* (name + avatar). Artemis has *settings profiles* (sets of stream settings). Options:
-   - keep both;
-   - attach a settings profile to the user profile.
-   To be decided in step 6.7.
+1. **Profiles.** Decided (2026-10-23): a user profile keeps **all** of its settings.
+   - Since 6.6 each profile has its own appearance, start settings, hidden games, last played game and names given to PCs; a new profile starts with a copy of the current one's.
+   - In 6.7 the stream settings follow: each user profile gets its own Artemis *settings profile*, switched together with it.
 2. **Languages.** The new UI starts in English. Translations come later, reusing the existing ones where possible.
 3. **SteamGridDB ↔ Vibepollo sync** (see GUI.md).

@@ -113,7 +113,7 @@ Principle: keep the streaming part (`Game.java`, overlays, virtual controls), re
   - [x] 6.3 Shell (own status bar and hint bar, gamepad input layer, navigation, context and side menus, interface scale)
   - [x] 6.4 Home (grid and row layouts, logo + hero background, covers, game context menu)
   - [x] 6.5 Launching a game (loader, dive into the stream, resume/quit without dialogs)
-  - [ ] 6.6 First launch, PCs and pairing (profile, PC circles, PIN/OTP pairing, portal, devices screen, links and shortcuts)
+  - [x] 6.6 First launch, PCs and pairing (profile, PC circles, PIN/OTP pairing, portal, devices screen, links and shortcuts)
   - [ ] 6.7 Settings (all 126 existing settings on the same keys, search, Appearance, Covers, settings profiles)
   - [ ] 6.8 SteamGridDB (API key, matching, 4 images per game, bulk download)
   - [ ] 6.9 Switch-over and cleanup (new shell is the only launcher, old UI and unused dependencies removed)

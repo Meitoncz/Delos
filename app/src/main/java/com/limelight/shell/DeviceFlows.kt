@@ -32,6 +32,9 @@ interface DeviceActions {
     /** Asks for an address, adds that PC and pairs it. */
     fun addByAddress(from: Screen)
 
+    /** Adds the PC at [address] and pairs it, with [otp] if given (else a PIN); a paired one opens right away. */
+    fun addAndPair(address: String, otp: Otp?, from: Screen)
+
     /** Called by the PIN screen once [pcUuid] is paired: on into home. */
     fun paired(pcUuid: String)
 
@@ -159,23 +162,27 @@ class ShellDeviceActions(
                 "Add PC",
             ) { (address) ->
                 if (address.isBlank()) return@DialogSpec error("Enter an address")
-                scope.launch {
-                    shell.showToast("Looking for $address…", Symbols.SEARCH)
-                    setup.add(address).fold(
-                        onSuccess = { uuid ->
-                            val pc = repo.awaitPc(uuid, 5_000) { true }
-                            when {
-                                pc == null -> error("$address answered, but could not be added")
-                                pc.paired -> connect(pc)
-                                else -> pair(pc, from)
-                            }
-                        },
-                        onFailure = { error(it.message ?: "No PC answered at $address") },
-                    )
-                }
+                addAndPair(address.trim(), null, from)
                 true
             }
         )
+    }
+
+    override fun addAndPair(address: String, otp: Otp?, from: Screen) {
+        scope.launch {
+            shell.showToast("Looking for $address…", Symbols.SEARCH)
+            setup.add(address).fold(
+                onSuccess = { uuid ->
+                    val pc = repo.awaitPc(uuid, 5_000) { true }
+                    when {
+                        pc == null -> error("$address answered, but could not be added")
+                        pc.paired -> connect(pc)
+                        else -> shell.navigate(Screen.Pin(pc.uuid, pc.name, otp, from))
+                    }
+                },
+                onFailure = { error(it.message ?: "No PC answered at $address") },
+            )
+        }
     }
 
     override fun paired(pcUuid: String) {
