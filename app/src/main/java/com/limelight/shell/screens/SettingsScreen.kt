@@ -56,6 +56,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -119,6 +120,7 @@ fun SettingsScreen(
 ) {
     val shell = LocalShell.current
     val feedback = LocalFeedback.current
+    val focusManager = LocalFocusManager.current
     val colors = LocalDelosColors.current
     val activity = LocalActivity.current
     val stream = remember(profiles) { StreamSettingsStore(profiles.catalog, profiles::settings) }
@@ -206,6 +208,9 @@ fun SettingsScreen(
     }
     DisposableEffect(shell, tab) {
         val handler: (Int) -> Unit = { dir ->
+            // Release the old row before replacing its list. Otherwise Compose restores focus to
+            // the first tab while the new row is being composed, announcing an extra focus move.
+            focusManager.clearFocus(force = true)
             shell.settingsFocus = null
             shell.settingsTab = tab.step(dir)
             feedback.play(Cue.MOVE)
@@ -222,6 +227,7 @@ fun SettingsScreen(
             SettingsTab.entries.forEach { next ->
                 SettingsTabButton(next, tab == next, Modifier.padding(horizontal = 5.px)) {
                     if (next != tab) {
+                        focusManager.clearFocus(force = true)
                         shell.settingsFocus = null
                         shell.settingsTab = next
                     } else rowRequesters[target]?.let {
@@ -235,17 +241,19 @@ fun SettingsScreen(
         Row(Modifier.fillMaxSize().padding(start = 150.px, end = 150.px, top = 312.px, bottom = (96f + (appearance.uiScale / 100f - 1f) * 92f).px),
             horizontalArrangement = Arrangement.spacedBy(56.px)) {
             CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
-                LazyColumn(state = scroll, modifier = Modifier.weight(1f).fadeEdges(stage, top = 14f, bottom = 90f),
-                    contentPadding = PaddingValues(start = 18.px, end = 18.px, top = 14.px, bottom = 140.px),
-                    verticalArrangement = Arrangement.spacedBy(10.px)) {
-                    var previous = ""
-                    rows.forEach { row ->
-                        if (row.section != previous) {
-                            item("section-${row.section}") { SectionHeading(row.section) }
-                            previous = row.section
-                        }
-                        item(row.key) {
-                            SettingsItemRow(row, Modifier.focusRequester(rowRequesters.getValue(row.key))) { focusedKey = row.key }
+                key(tab) {
+                    LazyColumn(state = scroll, modifier = Modifier.weight(1f).fadeEdges(stage, top = 14f, bottom = 90f),
+                        contentPadding = PaddingValues(start = 18.px, end = 18.px, top = 14.px, bottom = 140.px),
+                        verticalArrangement = Arrangement.spacedBy(10.px)) {
+                        var previous = ""
+                        rows.forEach { row ->
+                            if (row.section != previous) {
+                                item("section-${row.section}") { SectionHeading(row.section) }
+                                previous = row.section
+                            }
+                            item(row.key) {
+                                SettingsItemRow(row, Modifier.focusRequester(rowRequesters.getValue(row.key))) { focusedKey = row.key }
+                            }
                         }
                     }
                 }

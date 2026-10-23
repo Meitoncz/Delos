@@ -21,7 +21,8 @@ Approved on 2026-10-23. Categories that cover several subjects are split by sett
 
 L1/R1 switch tabs. Left/right adjust a choice or slider; A toggles, cycles or opens an editor/action.
 Sliders also support tapping and dragging, and commit a drag when the finger is released.
-Assigning focus after a tab switch is silent, so the switch has one sound/haptic response. The list
+The old row releases focus before its list is replaced, and assigning the new focus is silent, so the
+switch has one sound/haptic response and never restores focus through the Stream tab. The list
 reserves space above the focused row for its section heading, including when returning to the top.
 Unavailable dependencies remain visible, dimmed and searchable. Hardware-inapplicable controls are
 hidden, following the classic screen. The description panel can receive focus and scroll with up/down.
@@ -80,3 +81,5 @@ games on the PC themselves.
 controller search/jump, the Y shortcut/hint, single feedback per tab switch and complete headings after
 upward D-pad navigation were checked on the Odin. Local validation passed all 63 unit tests and lint
 (zero errors). The reviewed Experimental labels remain exactly as established in `f4ac11aa`.
+The repeated tab-switch regression was checked over three complete cycles in both directions:
+24 shoulder-button presses produced exactly 24 application vibrations.
