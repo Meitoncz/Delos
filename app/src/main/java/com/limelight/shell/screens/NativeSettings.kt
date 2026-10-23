@@ -41,9 +41,13 @@ internal fun nativeSettings(
         list += SettingsItem(key, tab, section, icon, title, description, value, enabled)
     }
     row("ui_dark", Symbols.DARK_MODE, "Theme", RowValue.Choice(if (a.dark) "Dark" else "Light", { update { it.copy(dark = !it.dark) } }), "Choose a dark or light interface.")
-    row("ui_material_you", Symbols.WALLPAPER, "Material You colors", RowValue.Toggle(a.materialYou) { on -> update { it.copy(materialYou = on) } }, "Takes the color palette from the system wallpaper.")
-    row("ui_seed", Symbols.COLORIZE, "Wallpaper colors", RowValue.Choice(a.seed.label, { dir -> update { it.copy(seed = it.seed.step(dir)) } }, hsl(a.seed.hue ?: systemHue ?: 176f, 70f, 55f)),
-        if (systemHue != null) "System uses the colors of your wallpaper." else "This device has no wallpaper palette; System uses Lagoon.", a.materialYou)
+    row("ui_material_you", Symbols.WALLPAPER, "Material You colors", RowValue.Toggle(a.materialYou) { on -> update { it.copy(materialYou = on) } },
+        if (systemHue != null) "Uses only the colors of your system wallpaper. Turn it off to choose a color palette."
+        else "This device has no wallpaper palette, so Material You uses Lagoon's colors. Turn it off to choose a color palette.")
+    row("ui_palette", Symbols.COLORIZE, "Color palette", RowValue.Choice(a.palette.label, { dir -> update { it.copy(palette = it.palette.step(dir)) } }, hsl(a.palette.accent, 90f, 60f)),
+        if (a.materialYou) "Turn off Material You colors to choose a palette." else "The colors of the whole interface and the animated backgrounds.", !a.materialYou)
+    row("ui_clock", Symbols.SCHEDULE, "Clock", RowValue.Choice(a.clock.label, { dir -> update { it.copy(clock = it.clock.step(dir)) } }),
+        "12- or 24-hour time in the status bar; System follows the Android setting.")
     row("ui_background", Symbols.ANIMATION, "Animated background", RowValue.Choice(a.background.label, { dir -> update { it.copy(background = it.background.step(dir)) } }), "Aurora, Tide, Silk, Contour or a still background.")
     row("ui_home_layout", Symbols.VIEW_CAROUSEL, "Home layout", RowValue.Choice(a.homeLayout.label, { dir -> update { it.copy(homeLayout = it.homeLayout.step(dir)) } }), "Grid scrolls down. Row is one horizontally scrolling row.")
     row("ui_hero_background", Symbols.IMAGE, "Game background", RowValue.Toggle(a.heroBackground) { on -> update { it.copy(heroBackground = on) } }, "Shows the background of the selected game on the home screen.")

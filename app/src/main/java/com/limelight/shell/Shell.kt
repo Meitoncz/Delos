@@ -210,7 +210,7 @@ fun Shell(
     }
     val wifi by rememberWifiStatus()
     val battery by rememberBatteryStatus()
-    val clock by rememberClock()
+    val clock by rememberClock(appearance.clock)
     val library by repo.library.collectAsStateWithLifecycle()
     val showHidden by repo.showHidden.collectAsStateWithLifecycle()
     val uiScale = appearance.uiScale / 100f

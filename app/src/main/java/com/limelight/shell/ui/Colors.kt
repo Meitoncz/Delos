@@ -55,16 +55,18 @@ fun systemAccentHue(context: Context): Float? {
     return hsv[0]
 }
 
-/** Fallback seed when "System" is chosen on a device without a Material You palette (Lagoon). */
-private const val FALLBACK_SEED_HUE = 176f
+/** Material You on a device without a wallpaper palette (Android 11 and older): Lagoon's hue. */
+private const val FALLBACK_SYSTEM_HUE = 176f
 
 fun delosColors(appearance: Appearance, systemHue: Float?): DelosColors {
     val my = appearance.materialYou
-    var base = 222f
-    var acc = 40f
-    var acc2 = 192f
+    val palette = appearance.palette
+    var base = palette.base
+    var acc = palette.accent
+    var acc2 = palette.accent2
     if (my) {
-        val h = appearance.seed.hue ?: systemHue ?: FALLBACK_SEED_HUE
+        // Material You: only the system's (wallpaper) colors
+        val h = systemHue ?: FALLBACK_SYSTEM_HUE
         base = h; acc = h; acc2 = (h + 52f) % 360f
     }
     return if (appearance.dark) {

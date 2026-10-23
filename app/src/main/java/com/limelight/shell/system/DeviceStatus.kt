@@ -11,6 +11,7 @@ import android.net.wifi.WifiManager
 import android.os.BatteryManager
 import android.os.Build
 import android.text.format.DateFormat
+import com.limelight.shell.settings.ClockFormat
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Immutable
@@ -91,13 +92,18 @@ private fun bars(wifi: WifiManager?, rssi: Int): Int {
     }
 }
 
-/** The current time (24 or 12 hour clock like the system), updated on every minute. */
+/** The current time as a 24 or 12 hour clock ([format]; System follows Android), updated on every minute. */
 @Composable
-fun rememberClock(): State<String> {
+fun rememberClock(format: ClockFormat): State<String> {
     val context = LocalContext.current
-    fun now() = DateFormat.format(if (DateFormat.is24HourFormat(context)) "HH:mm" else "h:mm", Date()).toString()
-    val state = remember { mutableStateOf(now()) }
-    LaunchedEffect(context) {
+    val h24 = when (format) {
+        ClockFormat.SYSTEM -> DateFormat.is24HourFormat(context)
+        ClockFormat.H12 -> false
+        ClockFormat.H24 -> true
+    }
+    fun now() = DateFormat.format(if (h24) "HH:mm" else "h:mm", Date()).toString()
+    val state = remember(h24) { mutableStateOf(now()) }
+    LaunchedEffect(context, h24) {
         while (true) {
             state.value = now()
             delay(60_000L - System.currentTimeMillis() % 60_000L)

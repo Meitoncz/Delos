@@ -11,16 +11,33 @@ enum class BackgroundKind(val label: String) { AURORA("Aurora"), TIDE("Tide"), S
 
 enum class HomeLayout(val label: String) { GRID("Grid"), ROW("Row") }
 
-/** Accent seeds for Material You; [hue] null = the system (wallpaper) palette. */
-enum class Seed(val label: String, val hue: Float?) {
-    SYSTEM("System", null), LAGOON("Lagoon", 176f), DUSK("Dusk", 268f), EMBER("Ember", 14f), MOSS("Moss", 96f), IRIS("Iris", 226f)
+/**
+ * Color palettes used while Material You is off (with it on, the system's wallpaper colors are used):
+ * hues of the background, the accent and the second accent. Delos is the prototype's own palette.
+ */
+enum class Palette(val label: String, val base: Float, val accent: Float, val accent2: Float) {
+    DELOS("Delos", 222f, 40f, 192f),
+    LAGOON("Lagoon", 190f, 176f, 228f),
+    DUSK("Dusk", 262f, 268f, 320f),
+    EMBER("Ember", 14f, 14f, 40f),
+    MOSS("Moss", 110f, 96f, 150f),
+    IRIS("Iris", 232f, 226f, 280f),
+    ROSE("Rose", 330f, 340f, 20f),
+    SUNSET("Sunset", 285f, 24f, 330f),
+    MINT("Mint", 165f, 158f, 205f),
+    GOLD("Gold", 35f, 45f, 195f),
 }
+
+/** How the status bar shows the time. */
+enum class ClockFormat(val label: String) { SYSTEM("System"), H12("12-hour"), H24("24-hour") }
 
 /** Settings → Appearance of the new UI (docs/UI_PLAN.md, step 6.2). Defaults follow the prototype. */
 data class Appearance(
     val dark: Boolean,
+    /** The system's wallpaper colors; off, [palette] applies. */
     val materialYou: Boolean = false,
-    val seed: Seed = Seed.SYSTEM,
+    val palette: Palette = Palette.DELOS,
+    val clock: ClockFormat = ClockFormat.SYSTEM,
     val background: BackgroundKind = BackgroundKind.AURORA,
     val homeLayout: HomeLayout = HomeLayout.GRID,
     val heroBackground: Boolean = true,
@@ -64,7 +81,8 @@ class AppearanceStore(context: Context, private val settings: () -> SharedPrefer
         return Appearance(
             dark = prefs.getBoolean(KEY_DARK, defaults.dark),
             materialYou = prefs.getBoolean(KEY_MATERIAL_YOU, defaults.materialYou),
-            seed = enumOr(prefs.getString(KEY_SEED, null), defaults.seed),
+            palette = enumOr(prefs.getString(KEY_PALETTE, null), defaults.palette),
+            clock = enumOr(prefs.getString(KEY_CLOCK, null), defaults.clock),
             background = enumOr(prefs.getString(KEY_BACKGROUND, null), defaults.background),
             homeLayout = enumOr(prefs.getString(KEY_HOME_LAYOUT, null), defaults.homeLayout),
             heroBackground = prefs.getBoolean(KEY_HERO, defaults.heroBackground),
@@ -81,7 +99,8 @@ class AppearanceStore(context: Context, private val settings: () -> SharedPrefer
         prefs.edit()
             .putBoolean(KEY_DARK, a.dark)
             .putBoolean(KEY_MATERIAL_YOU, a.materialYou)
-            .putString(KEY_SEED, a.seed.name)
+            .putString(KEY_PALETTE, a.palette.name)
+            .putString(KEY_CLOCK, a.clock.name)
             .putString(KEY_BACKGROUND, a.background.name)
             .putString(KEY_HOME_LAYOUT, a.homeLayout.name)
             .putBoolean(KEY_HERO, a.heroBackground)
@@ -100,7 +119,8 @@ class AppearanceStore(context: Context, private val settings: () -> SharedPrefer
     private companion object {
         const val KEY_DARK = "ui_dark"
         const val KEY_MATERIAL_YOU = "ui_material_you"
-        const val KEY_SEED = "ui_seed"
+        const val KEY_PALETTE = "ui_palette"
+        const val KEY_CLOCK = "ui_clock"
         const val KEY_BACKGROUND = "ui_background"
         const val KEY_HOME_LAYOUT = "ui_home_layout"
         const val KEY_HERO = "ui_hero_background"

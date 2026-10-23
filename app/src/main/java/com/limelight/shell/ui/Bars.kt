@@ -2,6 +2,14 @@ package com.limelight.shell.ui
 
 import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.Canvas
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -85,8 +93,8 @@ fun StatusBar(
         Row(Modifier.align(Alignment.CenterEnd), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(22.px)) {
             Symbol(wifiIcon(wifi), 30.tpx, colors.text2)
             if (battery != null) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.px)) {
-                    Symbol(batteryIcon(battery), 30.tpx, colors.text2)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.px)) {
+                    BatteryIndicator(battery)
                     BasicText("${(battery.level * 100).roundToInt()}%", style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 22.tpx))
                 }
             }
@@ -103,17 +111,43 @@ private fun wifiIcon(wifi: WifiStatus) = when (wifi.level) {
     else -> Symbols.WIFI
 }
 
-private fun batteryIcon(b: BatteryStatus) = when {
-    b.charging -> Symbols.BATTERY_CHARGING_FULL
-    b.level >= .995f -> Symbols.BATTERY_FULL
-    else -> when ((b.level * 6).roundToInt().coerceIn(0, 6)) {
-        0 -> Symbols.BATTERY_0_BAR
-        1 -> Symbols.BATTERY_1_BAR
-        2 -> Symbols.BATTERY_2_BAR
-        3 -> Symbols.BATTERY_3_BAR
-        4 -> Symbols.BATTERY_4_BAR
-        5 -> Symbols.BATTERY_5_BAR
-        else -> Symbols.BATTERY_6_BAR
+/** Battery at or below this level shows red while not charging (like iOS). */
+private const val LOW_BATTERY = .2f
+
+private val LowRed = androidx.compose.ui.graphics.Color(0xFFFF453A)
+
+/**
+ * The battery in the style of iOS: a light outline with a small cap, filled green to the charge level
+ * (red when low). While charging, a bolt sits inside and the green pulses.
+ */
+@Composable
+private fun BatteryIndicator(battery: BatteryStatus) {
+    val colors = LocalDelosColors.current
+    val stage = LocalStage.current
+    val pulse = if (battery.charging) {
+        val p by rememberInfiniteTransition(label = "charging").animateFloat(
+            .55f, 1f, infiniteRepeatable(tween(900, easing = EaseOut), RepeatMode.Reverse), label = "chargingPulse",
+        )
+        p
+    } else 1f
+    val fill = if (!battery.charging && battery.level <= LOW_BATTERY) LowRed else OnlineGreen
+    Box(Modifier.size(48.px, 24.px), contentAlignment = Alignment.Center) {
+        Canvas(Modifier.fillMaxSize()) {
+            val k = stage.dpPerPx * density
+            val stroke = 2f * k
+            val cap = 3f * k
+            val body = Size(size.width - cap - 1.5f * k, size.height)
+            // The outline and the cap on the right
+            drawRoundRect(colors.text.copy(alpha = .9f), Offset(stroke / 2f, stroke / 2f), Size(body.width - stroke, body.height - stroke), CornerRadius(7f * k), style = Stroke(stroke))
+            drawRoundRect(colors.text.copy(alpha = .6f), Offset(body.width + 1.5f * k, size.height * .32f), Size(cap, size.height * .36f), CornerRadius(1.5f * k))
+            // The charge, inset from the outline
+            val inset = stroke + 2f * k
+            val inner = Size(body.width - inset * 2f, body.height - inset * 2f)
+            drawRoundRect(
+                fill.copy(alpha = pulse), Offset(inset, inset), Size(inner.width * battery.level.coerceIn(.04f, 1f), inner.height), CornerRadius(4f * k),
+            )
+        }
+        if (battery.charging) Symbol(Symbols.BOLT, 20.tpx, colors.text, Modifier.offset(x = (-2).px), filled = true)
     }
 }
 
