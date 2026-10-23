@@ -227,6 +227,8 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     private TextView performanceOverlayLite;
 
     private TextView performanceOverlayBig;
+    // Delos: the statistics panel of streams started from the new UI (replaces the two texts above)
+    private com.limelight.shell.StreamStatsPanel statsPanel;
 
     private MediaCodecDecoderRenderer decoderRenderer;
     private boolean reportedCrash;
@@ -519,6 +521,9 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         performanceOverlayLite = findViewById(R.id.performanceOverlayLite);
 
         performanceOverlayBig = findViewById(R.id.performanceOverlayBig);
+        if (StreamLoader.requested(getIntent())) {
+            statsPanel = com.limelight.shell.StreamStatsPanel.attach(this, (android.view.ViewGroup) performanceOverlayView);
+        }
 
         inputCaptureProvider = InputCaptureManager.getInputCaptureProvider(this, this);
 
@@ -630,7 +635,9 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         // Check if the user has enabled performance stats overlay
         if (prefConfig.enablePerfOverlay) {
             performanceOverlayView.setVisibility(View.VISIBLE);
-            if (prefConfig.enablePerfOverlayLite) {
+            if (statsPanel != null) {
+                // Delos: the statistics panel instead
+            } else if (prefConfig.enablePerfOverlayLite) {
                 performanceOverlayLite.setVisibility(View.VISIBLE);
             } else {
                 performanceOverlayBig.setVisibility(View.VISIBLE);
@@ -3812,6 +3819,13 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     }
 
     @Override
+    public void onPerfStats(com.limelight.shell.StreamStats stats) {
+        if (statsPanel != null) {
+            statsPanel.update(stats);
+        }
+    }
+
+    @Override
     public void onPerfUpdate(final String text) {
         runOnUiThread(new Runnable() {
             @Override
@@ -4077,7 +4091,9 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         prefConfig.enablePerfOverlay = !prefConfig.enablePerfOverlay;
         if (prefConfig.enablePerfOverlay) {
             performanceOverlayView.setVisibility(View.VISIBLE);
-            if(prefConfig.enablePerfOverlayLite){
+            if (statsPanel != null) {
+                // Delos: the statistics panel instead
+            } else if(prefConfig.enablePerfOverlayLite){
                 performanceOverlayLite.setVisibility(View.VISIBLE);
             }else{
                 performanceOverlayBig.setVisibility(View.VISIBLE);

@@ -1585,6 +1585,15 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                     sb.append(context.getString(R.string.perf_overlay_dectime, decodeTimeMs));
                 }
                 perfListener.onPerfUpdate(sb.toString());
+                // Delos: the same numbers for the Delos statistics panel
+                perfListener.onPerfStats(new com.limelight.shell.StreamStats(
+                        initialWidth, initialHeight, fps.totalFps,
+                        (videoFormat & MoonBridge.VIDEO_FORMAT_MASK_AV1) != 0 ? "AV1" : (videoFormat & MoonBridge.VIDEO_FORMAT_MASK_H265) != 0 ? "HEVC" : "H.264",
+                        (videoFormat & MoonBridge.VIDEO_FORMAT_MASK_10BIT) != 0,
+                        lastTwo.totalFrames > 0 ? (float) lastTwo.framesLost / lastTwo.totalFrames * 100 : 0f,
+                        (int) (rttInfo >> 32), decodeTimeMs,
+                        lastTwo.framesWithHostProcessingLatency > 0
+                                ? (float) lastTwo.totalHostProcessingLatency / 10 / lastTwo.framesWithHostProcessingLatency : -1f));
             }
             globalVideoStats.add(activeWindowVideoStats);
             lastWindowVideoStats.copy(activeWindowVideoStats);
