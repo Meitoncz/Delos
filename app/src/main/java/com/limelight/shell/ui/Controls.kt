@@ -197,8 +197,10 @@ fun CircleItem(
                             scaleY = badgeScale
                         },
                 ) {
+                    // Centered on the circle's edge at the top right (45°)
+                    val edge = side / 2f * (1f - 0.70710677f)
                     Box(
-                        Modifier.align(Alignment.TopEnd).offset(x = (-4).px, y = 4.px).size(52.px).clip(CircleShape).background(colors.accent),
+                        Modifier.offset(x = (side - edge - 26f).px, y = (edge - 26f).px).size(52.px).clip(CircleShape).background(colors.accent),
                         contentAlignment = Alignment.Center,
                     ) {
                         Symbol(Symbols.CHECK, 34.tpx, colors.onAccent, filled = true, filledWeight = 600)
