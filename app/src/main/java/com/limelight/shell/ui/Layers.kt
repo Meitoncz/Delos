@@ -124,30 +124,33 @@ fun ContextMenuLayer(menu: ContextMenu?, anchor: Rect?, below: Boolean, haze: Ha
         shownAnchor = anchor
         shownBelow = below
     }
-    val origin = if (shownBelow) TransformOrigin(.5f, 0f) else TransformOrigin(0f, 0f)
+    val k = stage.dpPerPx * density
+    val a = shownAnchor
+    val centered = shownBelow && a != null
+    var x = 760f
+    var y = 300f
+    if (a != null) {
+        if (centered) {
+            x = a.center.x / k
+            y = a.bottom / k + 18f
+        } else {
+            x = a.left / k + minOf(60f, a.width / k / 2f)
+            y = a.top / k + minOf(80f, a.height / k / 2f)
+        }
+    }
+    if (!centered) x = x.coerceIn(40f, 1920f - 420f)
+    y = y.coerceIn(if (centered) 40f else 110f, (1080f - 120f - 72f * (shown?.items?.size ?: 0)).coerceAtLeast(110f))
+    // The animated layer covers the whole screen and grows from the menu's corner (or its top center):
+    // a layer only as big as the menu would cut off the part of the menu that is moved down into place
+    val origin = TransformOrigin(x / 1920f, y / 1080f)
     Box(Modifier.fillMaxSize()) {
         AnimatedVisibility(
             menu != null,
+            modifier = Modifier.fillMaxSize(),
             enter = fadeIn(tween(300)) + scaleIn(tween(450, easing = EaseOut), initialScale = .9f, transformOrigin = origin),
             exit = fadeOut(tween(300)) + scaleOut(tween(450, easing = EaseOut), targetScale = .9f, transformOrigin = origin),
         ) {
             val m = shown ?: return@AnimatedVisibility
-            val k = stage.dpPerPx * density
-            val a = shownAnchor
-            val centered = shownBelow && a != null
-            var x = 760f
-            var y = 300f
-            if (a != null) {
-                if (centered) {
-                    x = a.center.x / k
-                    y = a.bottom / k + 18f
-                } else {
-                    x = a.left / k + minOf(60f, a.width / k / 2f)
-                    y = a.top / k + minOf(80f, a.height / k / 2f)
-                }
-            }
-            if (!centered) x = x.coerceIn(40f, 1920f - 420f)
-            y = y.coerceIn(if (centered) 40f else 110f, (1080f - 120f - 72f * m.items.size).coerceAtLeast(110f))
             val first = remember { FocusRequester() }
             InitialFocus(first)
             Column(
@@ -157,7 +160,7 @@ fun ContextMenuLayer(menu: ContextMenu?, anchor: Rect?, below: Boolean, haze: Ha
                         // Centered on x once its width is known, kept 40 stage pixels from the screen edges
                         else Modifier.layout { measurable, constraints ->
                             val placeable = measurable.measure(constraints.copy(minWidth = 0, minHeight = 0))
-                            layout(constraints.maxWidth, placeable.height) {
+                            layout(constraints.maxWidth, constraints.maxHeight) {
                                 val left = (x * k - placeable.width / 2f).coerceIn(40f * k, constraints.maxWidth - placeable.width - 40f * k)
                                 placeable.place(left.toInt(), (y * k).toInt())
                             }
