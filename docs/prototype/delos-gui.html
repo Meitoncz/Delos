@@ -1,0 +1,1662 @@
+<title>Delos GUI Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Unbounded:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block">
+<style>
+/* Layout: a fixed 1920x1080 handheld screen ("stage") scaled into the viewport; console-like screens live inside it.
+   Identity: Delos, the island of Apollo and Artemis - Aegean night sea + Apollo's sun gold; the portal is a ring of light. */
+:root {
+  --page-bg: #dfe4ec;
+  --page-fg: #1a2433;
+  --frame-shadow: 0 30px 80px -30px rgba(20, 30, 50, .45);
+  --font-display: "Unbounded", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Figtree", "Segoe UI", system-ui, sans-serif;
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+  --s: 1;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --page-bg: #04070d; --page-fg: #d8e2ef; --frame-shadow: 0 30px 90px -20px rgba(0, 0, 0, .8); color-scheme: dark; }
+}
+:root[data-theme="dark"] { --page-bg: #04070d; --page-fg: #d8e2ef; --frame-shadow: 0 30px 90px -20px rgba(0, 0, 0, .8); color-scheme: dark; }
+
+html, body { height: 100%; }
+body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font-family: var(--font-body); }
+#viewport {
+  box-sizing: border-box; height: 100%;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 16px;
+  display: flex; align-items: center; justify-content: center;
+}
+#frame {
+  position: relative; flex: none;
+  width: calc(1920px * var(--s)); height: calc(1080px * var(--s));
+  border-radius: calc(26px * var(--s)); overflow: hidden; box-shadow: var(--frame-shadow);
+}
+
+/* In full screen (on the handheld) the stage fills the display edge to edge */
+:fullscreen #viewport { padding: 0; }
+:fullscreen #frame { border-radius: 0; box-shadow: none; }
+
+/* ---------- Stage (in-app theme tokens are set from JS) ---------- */
+#stage {
+  --bg: #0b1220; --bg-2: #111a2c; --surface: rgba(24, 34, 54, .72); --surface-2: rgba(34, 46, 70, .82); --surface-3: rgba(48, 62, 90, .9);
+  --line: rgba(160, 185, 230, .14); --text: #eef3fb; --text-2: #b9c5d8; --text-3: #8592a8;
+  --accent: #f6b73c; --accent-2: #4fd1e8; --on-accent: #2a1a05; --glow: rgba(246, 183, 60, .45); --scrim: rgba(4, 8, 16, .62);
+  position: absolute; left: 0; top: 0; width: 1920px; height: 1080px;
+  transform: scale(var(--s)); transform-origin: 0 0;
+  background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: calc(24px * var(--ts));
+  overflow: hidden; user-select: none; -webkit-user-select: none;
+  transition: background-color .6s ease, color .6s ease;
+}
+#bg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+/* The animated background sits above the game background and lights it up instead of covering it */
+#stage[data-mode="dark"] #bg { mix-blend-mode: screen; }
+#vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(120% 90% at 50% 40%, transparent 55%, var(--scrim) 100%); }
+
+.ms {
+  font-family: "Material Symbols Rounded"; font-weight: normal; font-style: normal; font-size: calc(34px * var(--ts)); line-height: 1;
+  letter-spacing: normal; text-transform: none; display: inline-block; white-space: nowrap; direction: ltr;
+  font-feature-settings: "liga"; -webkit-font-smoothing: antialiased;
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+  transition: font-variation-settings .35s var(--ease-out), transform .35s var(--ease-out);
+}
+.ms.fill, .is-focus > .ms, .is-focus .ms-f { font-variation-settings: "FILL" 1, "wght" 500, "GRAD" 0, "opsz" 24; }
+
+/* Focus language: lift + spring scale + light ring + a sweep of light */
+.f { position: relative; outline: none; cursor: pointer; transition: transform .38s var(--ease-spring), box-shadow .38s var(--ease-out), background-color .3s ease, color .3s ease, opacity .3s ease; }
+.f.is-focus { z-index: 5; }
+.sweep::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, .28) 48%, transparent 66%);
+  background-size: 260% 100%; background-position: 130% 0;
+}
+.sweep.is-focus::after { opacity: 1; animation: sweep 1.25s var(--ease-out) .08s 1 both; }
+@keyframes sweep { from { background-position: 130% 0; } to { background-position: -40% 0; } }
+
+/* ---------- Status bar (Delos draws its own; system bars are hidden) ---------- */
+#statusbar {
+  position: absolute; left: 0; right: 0; top: 0; height: 104px; padding: 0 72px; z-index: 20;
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+  transition: opacity .5s ease, transform .6s var(--ease-out);
+}
+#statusbar.away { opacity: 0; transform: translateY(-24px); pointer-events: none; }
+/* Interface scale: --ui zooms the status and hint bars as a whole, --ts scales text elsewhere.
+   Inside the zoomed bars and in places sized around their artwork, text keeps its base size. */
+#stage { --ui: 1; --ts: 1; }
+#statusbar, #hints { zoom: var(--ui); --ts: 1; }
+.tile, .tabs, .hero-preview, #launch .loader { --ts: 1; }
+.brand { display: flex; align-items: center; gap: 18px; }
+.logo-mark { position: relative; width: 40px; height: 40px; border-radius: 50%; border: 3px solid var(--accent); box-sizing: border-box; }
+.logo-mark::after { content: ""; position: absolute; width: 11px; height: 11px; border-radius: 50%; background: var(--accent-2); right: -4px; top: 2px; box-shadow: 0 0 14px var(--accent-2); }
+.wordmark { font-family: var(--font-display); font-weight: 600; font-size: calc(26px * var(--ts)); letter-spacing: .14em; }
+.pc-pill { display: inline-flex; align-items: center; gap: 10px; padding: 8px 18px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); font-size: calc(20px * var(--ts)); color: var(--text-2); }
+.pc-pill .dot { width: 10px; height: 10px; border-radius: 50%; background: #3ddc84; box-shadow: 0 0 10px #3ddc84; }
+.topnav { display: flex; gap: 14px; padding: 8px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+.topnav .nav-btn { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; color: var(--text-2); }
+.topnav .nav-btn.is-focus { background: var(--accent); color: var(--on-accent); transform: scale(1.12); box-shadow: 0 10px 30px -8px var(--glow); }
+.topnav .nav-btn .tip { position: absolute; top: 84px; left: 50%; transform: translate(-50%, -6px); white-space: nowrap; font-size: calc(18px * var(--ts)); font-weight: 600; padding: 6px 14px; border-radius: 999px; background: var(--surface-3); color: var(--text); opacity: 0; pointer-events: none; transition: opacity .25s ease, transform .35s var(--ease-out); }
+.topnav .nav-btn.is-focus .tip { opacity: 1; transform: translate(-50%, 0); }
+.topnav .nav-btn.current:not(.is-focus) { color: var(--accent); }
+.brand { grid-column: 1; }
+.topnav { grid-column: 2; }
+.status { grid-column: 3; justify-self: end; display: flex; align-items: center; gap: 22px; color: var(--text-2); font-size: calc(22px * var(--ts)); font-variant-numeric: tabular-nums; }
+.status .grp { display: flex; align-items: center; gap: 8px; }
+.status .ms { font-size: calc(30px * var(--ts)); }
+.status .clock { font-weight: 600; color: var(--text); font-size: calc(24px * var(--ts)); }
+
+/* ---------- Screens ---------- */
+.screen { position: absolute; inset: 0; opacity: 0; transform: scale(1.035); pointer-events: none; transition: opacity .5s ease, transform .7s var(--ease-out); }
+.screen.active { opacity: 1; transform: none; pointer-events: auto; }
+.screen.leave-in { transform: scale(.96); }
+.center-col { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 28px; }
+.h1 { font-family: var(--font-display); font-weight: 600; font-size: 64px; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.sub { font-size: calc(26px * var(--ts)); color: var(--text-2); margin: 0; max-width: 1000px; text-wrap: balance; }
+.btn-row { display: flex; gap: 24px; justify-content: center; }
+.btn {
+  display: inline-flex; align-items: center; gap: 14px; height: 76px; padding: 0 40px; border-radius: 999px;
+  font-family: var(--font-body); font-weight: 600; font-size: calc(26px * var(--ts)); color: var(--text); background: var(--surface); border: 1px solid var(--line);
+}
+.btn.primary { background: var(--accent); color: var(--on-accent); border-color: transparent; }
+.btn.is-focus { transform: scale(1.08); box-shadow: 0 0 0 4px var(--bg), 0 0 0 8px var(--accent), 0 18px 50px -12px var(--glow); }
+
+/* Boot */
+.boot-logo { position: relative; width: 210px; height: 210px; margin-bottom: 8px; }
+.boot-logo .ring { position: absolute; inset: 0; border-radius: 50%; border: 8px solid var(--accent); box-sizing: border-box; box-shadow: 0 0 60px -10px var(--glow), inset 0 0 40px -18px var(--glow); }
+.boot-logo .orbit { position: absolute; inset: -26px; border-radius: 50%; animation: spin 7s linear infinite; }
+.boot-logo .orbit::after { content: ""; position: absolute; width: 28px; height: 28px; border-radius: 50%; background: var(--accent-2); top: 18px; right: 30px; box-shadow: 0 0 30px var(--accent-2); }
+.boot-logo .isle { position: absolute; left: 50%; top: 50%; width: 74px; height: 74px; transform: translate(-50%, -50%); border-radius: 50% 50% 46% 54%; background: radial-gradient(circle at 35% 30%, var(--text), var(--text-2)); opacity: .92; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.boot-word { font-family: var(--font-display); font-size: 132px; font-weight: 600; letter-spacing: .24em; margin: 0 0 0 .24em; line-height: 1; }
+.boot-tag { font-size: calc(28px * var(--ts)); color: var(--text-2); margin: 0; }
+.keys-tip { position: absolute; bottom: 132px; left: 0; right: 0; text-align: center; font-size: calc(20px * var(--ts)); color: var(--text-3); }
+.keys-tip kbd { font-family: var(--font-body); font-size: calc(18px * var(--ts)); padding: 3px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--text-2); }
+
+/* Circle choosers (profiles, PCs, devices) */
+.circles { display: flex; gap: 56px; justify-content: center; align-items: flex-start; }
+.circle-item { display: flex; flex-direction: column; align-items: center; gap: 22px; width: 220px; }
+.circle {
+  width: 176px; height: 176px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--surface-2); border: 1px solid var(--line); color: var(--text);
+}
+.circle .ms { font-size: 76px; }
+.circle-item.big .circle { width: 220px; height: 220px; }
+.circle-item.big .circle .ms { font-size: 96px; }
+.circle.is-focus { transform: scale(1.16); box-shadow: 0 0 0 5px var(--bg), 0 0 0 10px var(--accent), 0 26px 70px -16px var(--glow); }
+.circle-label { font-weight: 600; font-size: calc(26px * var(--ts)); opacity: .55; transform: translateY(-6px); transition: opacity .3s ease, transform .4s var(--ease-out); }
+.circle-meta { font-size: calc(20px * var(--ts)); color: var(--text-3); margin-top: -14px; }
+.circle-item:has(.is-focus) .circle-label, .circle-item.selected .circle-label { opacity: 1; transform: none; }
+.circle-item.selected .circle::before { content: "check"; font-family: "Material Symbols Rounded"; font-size: calc(34px * var(--ts)); position: absolute; right: 4px; top: 4px; width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--on-accent); font-variation-settings: "FILL" 1, "wght" 600; }
+.online-ring::after { content: ""; position: absolute; inset: -16px; border-radius: 50%; border: 2px solid var(--accent-2); opacity: 0; animation: pulse 2.4s ease-out infinite; }
+@keyframes pulse { 0% { transform: scale(.92); opacity: .7; } 100% { transform: scale(1.25); opacity: 0; } }
+.status-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: #3ddc84; margin-right: 8px; box-shadow: 0 0 10px #3ddc84; vertical-align: 1px; }
+
+.field { display: flex; align-items: center; gap: 16px; width: 560px; height: 84px; padding: 0 28px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); box-sizing: border-box; }
+.field .ms { color: var(--text-3); }
+.field input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--text); font: 600 30px var(--font-body); }
+.field.is-focus { transform: scale(1.05); box-shadow: 0 0 0 4px var(--bg), 0 0 0 8px var(--accent); }
+
+/* PIN */
+.pin { display: flex; gap: 26px; }
+.pin span { width: 148px; height: 176px; border-radius: 32px; display: grid; place-items: center; font-family: var(--font-display); font-size: 92px; font-weight: 600; background: var(--surface-2); border: 1px solid var(--line); animation: pinIn .7s var(--ease-spring) both; }
+.pin span:nth-child(2) { animation-delay: .08s; } .pin span:nth-child(3) { animation-delay: .16s; } .pin span:nth-child(4) { animation-delay: .24s; }
+@keyframes pinIn { from { transform: translateY(30px) scale(.8); opacity: 0; } }
+.waiting { display: flex; align-items: center; gap: 16px; font-size: calc(26px * var(--ts)); color: var(--text-2); }
+.spinner { width: 30px; height: 30px; border-radius: 50%; border: 4px solid var(--line); border-top-color: var(--accent); animation: spin .9s linear infinite; }
+.waiting.ok .spinner { display: none; }
+.waiting.ok { color: #3ddc84; }
+
+/* ---------- Game background (SteamGridDB hero) ---------- */
+#heroBg { position: absolute; inset: 0; opacity: 0; pointer-events: none; transition: opacity .8s ease; }
+#heroBg.on { opacity: var(--hero-op, .7); }
+#heroBg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 0%, transparent 42%, var(--bg) 100%), linear-gradient(90deg, var(--bg) 0%, transparent 38%); opacity: .9; }
+.hero { position: absolute; inset: -90px; opacity: 0; transition: opacity .9s ease; filter: blur(var(--hero-blur, 16px)) saturate(1.15); }
+.hero.show { opacity: 1; }
+.hero .art { position: absolute; inset: 0; }
+.hero .art .glyph { font-size: 1050px; right: 4%; top: -14%; color: rgba(255, 255, 255, .14); }
+.hero-preview { position: relative; height: 210px; flex: 0 1 auto; min-height: 110px; border-radius: 22px; overflow: hidden; background: var(--bg); border: 1px solid var(--line); margin-top: 6px; }
+.hero-preview .hero { inset: -40px; opacity: var(--hero-op, .7); }
+.hero-preview .hero .art .glyph { font-size: 300px; }
+.hero-preview .pv-logo { position: absolute; left: 22px; top: 22px; font-family: var(--font-display); font-weight: 700; font-size: calc(30px * var(--ts)); color: var(--text); text-shadow: 0 4px 18px rgba(0, 0, 0, .35); }
+
+/* ---------- Home ---------- */
+.home-info { position: absolute; left: 150px; right: 150px; top: 116px; height: 220px; }
+.home-info .eyebrow { font-size: calc(20px * var(--ts)); font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+.game-logo { display: flex; align-items: center; gap: 26px; height: 132px; margin: 2px 0 10px; transition: opacity .28s ease, transform .5s var(--ease-out); }
+.game-logo.swap { opacity: 0; transform: translateY(14px) scale(.98); }
+.game-logo .lg-ic { font-size: 104px; color: hsl(var(--lh) 85% 66%); filter: drop-shadow(0 8px 26px hsl(var(--lh) 90% 45% / .55)); font-variation-settings: "FILL" 1, "wght" 500, "opsz" 48; }
+.game-logo .lg-tx {
+  font-family: var(--font-display); font-weight: 700; font-size: var(--lfs, 84px); line-height: 1.1; letter-spacing: -.01em; padding-bottom: 6px;
+  background: linear-gradient(180deg, var(--text) 25%, hsl(var(--lh) 70% 58%)); -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 6px 28px rgba(0, 0, 0, .4)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 1480px;
+}
+.chips { display: flex; gap: 12px; flex-wrap: wrap; }
+.chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); font-size: calc(19px * var(--ts)); color: var(--text-2); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.chip .ms { font-size: calc(22px * var(--ts)); }
+/* The library runs under the hint bar and fades out at the edges instead of being cut off */
+.library {
+  position: absolute; left: 0; right: 0; top: 292px; bottom: 0; overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, transparent 34px, #000 90px, #000 calc(100% - 230px), transparent calc(100% - 10px));
+  mask-image: linear-gradient(to bottom, transparent 0, transparent 34px, #000 90px, #000 calc(100% - 230px), transparent calc(100% - 10px));
+}
+/* The top fade starts below the info chips; the focused row sits under it and the previous row peeks into it */
+.library-inner { width: 1620px; margin: 0 auto; padding: 98px 40px 260px; display: flex; flex-wrap: wrap; gap: 28px; }
+/* Row layout: one horizontally scrolling row, placed lower; the focused tile stays near the left edge */
+#scr-home.row-layout .home-info { top: 210px; }
+#scr-home.row-layout .library {
+  top: calc(430px - (var(--ui) - 1) * 92px); bottom: 20px;
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 120px, #000 calc(100% - 260px), transparent calc(100% - 20px));
+  mask-image: linear-gradient(to right, transparent 0, #000 120px, #000 calc(100% - 260px), transparent calc(100% - 20px));
+}
+/* The right padding lets even the last tile scroll to the left anchor */
+#scr-home.row-layout .library-inner { width: max-content; flex-wrap: nowrap; margin: 0; padding: 90px 1470px 90px 150px; }
+.tile { width: 300px; height: 450px; border-radius: 26px; flex: none; transform-origin: center; background: var(--surface-2); }
+.tile.wide { width: 963px; }
+.tile .art { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; }
+.tile.is-focus { transform: scale(1.055); box-shadow: 0 0 0 5px var(--bg), 0 0 0 10px var(--accent), 0 30px 80px -18px var(--glow); }
+.tile:not(.is-focus) { filter: saturate(.86) brightness(.92); }
+.tile.fresh .art { animation: fresh .9s var(--ease-out) both; }
+@keyframes fresh { from { clip-path: inset(0 0 100% 0); filter: brightness(1.8); } to { clip-path: inset(0); } }
+.tile .badge { position: absolute; left: 18px; top: 18px; display: inline-flex; gap: 8px; align-items: center; padding: 6px 14px; border-radius: 999px; background: rgba(5, 10, 20, .55); color: #fff; font-size: calc(18px * var(--ts)); font-weight: 600; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.tile .badge .ms { font-size: calc(22px * var(--ts)); }
+
+/* Procedural placeholder covers (real ones come from SteamGridDB) */
+.art {
+  background:
+    radial-gradient(circle at 74% 22%, hsl(var(--h2) 90% 66% / .95), transparent 42%),
+    radial-gradient(circle at 18% 92%, hsl(var(--h) 85% 48% / .9), transparent 58%),
+    linear-gradient(165deg, hsl(var(--h) 58% 24%), hsl(var(--h2) 50% 10%));
+}
+.art .glyph { position: absolute; right: -36px; top: 24%; font-size: 320px; color: rgba(255, 255, 255, .16); font-variation-settings: "FILL" 1, "wght" 300, "opsz" 48; }
+.tile.wide .art .glyph { font-size: 420px; right: 40px; top: 4%; }
+.art .art-title { position: absolute; left: 26px; right: 26px; bottom: 26px; font-family: var(--font-display); font-weight: 600; font-size: calc(34px * var(--ts)); line-height: 1.05; color: #fff; text-shadow: 0 4px 24px rgba(0, 0, 0, .45); text-wrap: balance; }
+.tile.wide .art .art-title { font-size: 72px; bottom: 40px; left: 44px; }
+.art .art-sub { position: absolute; left: 44px; bottom: 124px; color: rgba(255, 255, 255, .8); font-size: calc(22px * var(--ts)); font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
+
+/* ---------- Settings (PS5-like list + icon tabs) ---------- */
+.set-head { position: absolute; left: 150px; top: 124px; display: flex; align-items: baseline; gap: 24px; }
+.set-head .h1 { font-size: 46px; }
+.tabs { position: absolute; left: 0; right: 0; top: 206px; display: flex; justify-content: center; align-items: center; gap: 12px; }
+.tabs .shoulder { font-weight: 700; font-size: calc(18px * var(--ts)); padding: 6px 12px; border-radius: 10px; border: 1px solid var(--line); color: var(--text-3); margin: 0 10px; }
+.tab { display: inline-flex; align-items: center; gap: 12px; height: 66px; padding: 0 26px; border-radius: 999px; color: var(--text-2); font-weight: 600; font-size: calc(22px * var(--ts)); }
+.tab .ms { font-size: calc(30px * var(--ts)); }
+.tab.current { background: var(--surface-2); color: var(--text); }
+.tab.current .ms { color: var(--accent); font-variation-settings: "FILL" 1, "wght" 500, "GRAD" 0, "opsz" 24; }
+.tab.is-focus { background: var(--accent); color: var(--on-accent); transform: scale(1.08); box-shadow: 0 12px 36px -10px var(--glow); }
+.tab.is-focus .ms { color: var(--on-accent); }
+.set-body { position: absolute; left: 150px; right: 150px; top: 312px; bottom: calc(96px + (var(--ui) - 1) * 92px); display: grid; grid-template-columns: 1fr 520px; gap: 56px; }
+.set-list { position: relative; overflow: hidden; min-width: 0; }
+.set-list-inner { display: flex; flex-direction: column; gap: 10px; padding: 14px 18px 220px; }
+/* With larger text the panel stays inside the body; the game background preview gives up height first */
+.set-panel { align-self: start; max-height: 100%; box-sizing: border-box; overflow: hidden; padding: 44px; border-radius: 34px; background: var(--surface); border: 1px solid var(--line); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); display: flex; flex-direction: column; gap: 18px; }
+.set-panel > :not(.hero-preview) { flex-shrink: 0; }
+.set-panel .big-ic { width: 120px; height: 120px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--on-accent); }
+.set-panel .big-ic .ms { font-size: 64px; font-variation-settings: "FILL" 1, "wght" 500, "opsz" 48; }
+.set-panel h2 { font-family: var(--font-display); font-weight: 600; font-size: calc(36px * var(--ts)); margin: 8px 0 0; }
+.set-panel p { margin: 0; color: var(--text-2); font-size: calc(22px * var(--ts)); line-height: 1.45; }
+.swatches { display: flex; gap: 12px; margin-top: 8px; }
+.swatches i { width: 56px; height: 56px; border-radius: 18px; border: 1px solid var(--line); }
+.row { display: grid; grid-template-columns: 52px 1fr auto; align-items: center; gap: 22px; min-height: 92px; padding: 14px 26px; border-radius: 24px; box-sizing: border-box; }
+.row > .ms { color: var(--text-3); font-size: calc(34px * var(--ts)); }
+.row-label { font-weight: 600; font-size: calc(26px * var(--ts)); }
+.row-desc { font-size: calc(19px * var(--ts)); color: var(--text-3); margin-top: 4px; line-height: 1.35; }
+.row-value { display: flex; align-items: center; gap: 12px; color: var(--text-2); font-size: calc(23px * var(--ts)); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.row.is-focus { background: var(--surface-2); transform: scale(1.02); box-shadow: 0 0 0 3px var(--accent), 0 20px 50px -24px var(--glow); }
+.row.is-focus > .ms { color: var(--accent); }
+.row.disabled { opacity: .45; }
+.switch { position: relative; width: 74px; height: 42px; border-radius: 999px; background: var(--surface-3); border: 1px solid var(--line); transition: background-color .3s ease; }
+.switch i { position: absolute; top: 5px; left: 6px; width: 30px; height: 30px; border-radius: 50%; background: var(--text-2); transition: transform .38s var(--ease-spring), background-color .3s ease; }
+.switch.on { background: var(--accent); }
+.switch.on i { transform: translateX(32px); background: var(--on-accent); }
+.choice .ms { font-size: calc(30px * var(--ts)); opacity: 0; transition: opacity .2s ease; }
+.row.is-focus .choice .ms { opacity: 1; color: var(--accent); }
+.slider { width: 220px; height: 10px; border-radius: 999px; background: var(--surface-3); position: relative; overflow: hidden; }
+.slider b { position: absolute; inset: 0 auto 0 0; background: var(--accent); border-radius: inherit; transition: width .25s var(--ease-out); }
+.progress { width: 220px; height: 10px; border-radius: 999px; background: var(--surface-3); overflow: hidden; }
+.progress b { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--accent-2), var(--accent)); border-radius: inherit; transition: width .3s linear; }
+
+/* ---------- Profile & devices ---------- */
+.profile-hero { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+.avatar-xl { width: 240px; height: 240px; border-radius: 50%; display: grid; place-items: center; color: #fff; box-shadow: 0 30px 80px -24px var(--glow); }
+.avatar-xl .ms { font-size: 120px; font-variation-settings: "FILL" 1, "wght" 500, "opsz" 48; }
+
+/* ---------- Stream ---------- */
+#scr-stream { background: #000; }
+#game { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.perf { position: absolute; right: 40px; top: 32px; padding: 14px 20px; border-radius: 18px; background: rgba(0, 0, 0, .55); color: #e8f0ff; font-size: calc(19px * var(--ts)); line-height: 1.5; font-variant-numeric: tabular-nums; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.perf b { color: #7ee2a8; font-weight: 600; }
+.stream-banner { position: absolute; left: 0; right: 0; bottom: 64px; display: flex; justify-content: center; }
+.stream-banner span { padding: 14px 26px; border-radius: 999px; background: rgba(0, 0, 0, .55); color: #fff; font-size: calc(22px * var(--ts)); display: inline-flex; gap: 12px; align-items: center; animation: fadeAway 5s ease forwards; }
+@keyframes fadeAway { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
+
+/* ---------- Layers (context menu, side menu, quick menu, dialogs) ---------- */
+.layer { position: absolute; z-index: 40; opacity: 0; pointer-events: none; transition: opacity .3s ease, transform .45s var(--ease-out); }
+.layer.open { opacity: 1; pointer-events: auto; }
+#scrim { position: absolute; inset: 0; z-index: 35; background: var(--scrim); opacity: 0; pointer-events: none; transition: opacity .35s ease; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+#scrim.open { opacity: 1; }
+#ctxmenu { min-width: 380px; padding: 12px; border-radius: 30px; background: var(--surface-3); border: 1px solid var(--line); box-shadow: 0 30px 80px -20px rgba(0, 0, 0, .6); transform: scale(.9); transform-origin: top left; backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+#ctxmenu.open { transform: none; }
+.menu-item { display: flex; align-items: center; gap: 18px; height: 72px; padding: 0 24px; border-radius: 20px; font-weight: 600; font-size: calc(24px * var(--ts)); }
+.menu-item .ms { font-size: calc(30px * var(--ts)); color: var(--text-3); }
+.menu-item.is-focus { background: var(--accent); color: var(--on-accent); }
+.menu-item.is-focus .ms { color: var(--on-accent); }
+.menu-title { padding: 14px 24px 10px; font-size: calc(18px * var(--ts)); font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3); }
+#sidemenu { top: 0; right: 0; bottom: 0; width: 620px; padding: 48px 40px; box-sizing: border-box; background: var(--surface-3); border-left: 1px solid var(--line); transform: translateX(60px); display: flex; flex-direction: column; gap: 10px; backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px); }
+#sidemenu.open { transform: none; }
+.side-head { display: flex; align-items: center; gap: 20px; padding: 0 12px 24px; border-bottom: 1px solid var(--line); margin-bottom: 14px; }
+.side-head .av { width: 72px; height: 72px; border-radius: 50%; display: grid; place-items: center; color: #fff; }
+.side-head .av .ms { font-size: calc(40px * var(--ts)); font-variation-settings: "FILL" 1, "wght" 500; }
+.side-head .nm { font-family: var(--font-display); font-weight: 600; font-size: calc(28px * var(--ts)); }
+.side-head .pc { font-size: calc(20px * var(--ts)); color: var(--text-3); }
+#sidemenu .row { min-height: 80px; grid-template-columns: 44px 1fr auto; }
+#quickmenu { left: 0; right: 0; bottom: 0; padding: 40px 0 56px; display: flex; flex-direction: column; align-items: center; gap: 26px; transform: translateY(60px); background: linear-gradient(transparent, rgba(0, 0, 0, .75) 40%); }
+#quickmenu.open { transform: none; }
+#quickmenu .qm-title { color: #fff; font-family: var(--font-display); font-weight: 600; font-size: calc(30px * var(--ts)); }
+#quickmenu .circles { gap: 34px; }
+#quickmenu .circle-item { width: 150px; }
+#quickmenu .circle { width: 112px; height: 112px; background: rgba(30, 40, 60, .85); color: #fff; }
+#quickmenu .circle .ms { font-size: 48px; }
+#quickmenu .circle-label { font-size: calc(20px * var(--ts)); color: #fff; }
+.dialog { left: 50%; top: 50%; width: 760px; padding: 52px; box-sizing: border-box; border-radius: 40px; background: var(--surface-3); border: 1px solid var(--line); transform: translate(-50%, -46%) scale(.96); display: flex; flex-direction: column; gap: 22px; align-items: center; text-align: center; box-shadow: 0 40px 100px -30px rgba(0, 0, 0, .7); }
+.dialog.open { transform: translate(-50%, -50%); }
+.dialog h3 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: calc(38px * var(--ts)); }
+.dialog p { margin: 0; color: var(--text-2); }
+#help { left: 50%; top: 50%; width: 980px; transform: translate(-50%, -46%) scale(.96); }
+#help.open { transform: translate(-50%, -50%); }
+.keymap { display: grid; grid-template-columns: auto 1fr auto 1fr; gap: 14px 22px; align-items: center; text-align: left; font-size: calc(22px * var(--ts)); width: 100%; }
+.keymap kbd { justify-self: start; font-family: var(--font-body); font-weight: 600; font-size: calc(19px * var(--ts)); padding: 6px 14px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); color: var(--text); }
+.keymap span { color: var(--text-2); }
+
+/* ---------- Portal & launch transitions ---------- */
+#portal, #launch { position: absolute; inset: 0; z-index: 60; display: grid; place-items: center; pointer-events: none; opacity: 0; transition: opacity .45s ease; }
+#portal.open, #launch.open { opacity: 1; pointer-events: auto; }
+/* Content behind the portal and the launch loader is blurred; it sharpens again as they fade out */
+#portal {
+  background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--bg) 25%, transparent) 0, color-mix(in srgb, var(--bg) 70%, transparent) 75%);
+  backdrop-filter: blur(22px) saturate(1.15); -webkit-backdrop-filter: blur(22px) saturate(1.15);
+}
+#portal .p-ring { position: absolute; left: 50%; top: 50%; width: 300px; height: 300px; margin: -150px 0 0 -150px; border-radius: 50%; border: 3px solid var(--accent); box-shadow: 0 0 40px -4px var(--glow), inset 0 0 40px -10px var(--glow); opacity: 0; }
+#portal.open .p-ring { animation: ripple 2.2s var(--ease-out) infinite; }
+#portal.open .p-ring:nth-child(2) { animation-delay: .35s; border-color: var(--accent-2); }
+#portal.open .p-ring:nth-child(3) { animation-delay: .7s; }
+#portal.open .p-ring:nth-child(4) { animation-delay: 1.05s; border-color: var(--accent-2); }
+@keyframes ripple { 0% { transform: scale(.35); opacity: 0; } 25% { opacity: 1; } 100% { transform: scale(3.4); opacity: 0; } }
+#portal .core { position: relative; display: flex; flex-direction: column; align-items: center; gap: 30px; transition: transform .8s var(--ease-out), opacity .6s ease; }
+#portal .core .orb { width: 220px; height: 220px; border-radius: 50%; display: grid; place-items: center; background: radial-gradient(circle at 40% 35%, var(--surface-3), var(--bg-2)); border: 2px solid var(--line); box-shadow: 0 0 90px -10px var(--glow); }
+#portal .core .orb .ms { font-size: 100px; color: var(--accent); font-variation-settings: "FILL" 1, "wght" 500, "opsz" 48; }
+#portal .core .lbl { font-family: var(--font-display); font-size: calc(36px * var(--ts)); font-weight: 600; }
+#portal .core .sub2 { color: var(--text-2); font-size: calc(24px * var(--ts)); margin-top: -14px; }
+#portal .flash { position: absolute; left: 50%; top: 50%; width: 200px; height: 200px; margin: -100px 0 0 -100px; border-radius: 50%; background: radial-gradient(circle, var(--accent) 0, var(--accent-2) 45%, transparent 70%); opacity: 0; }
+#portal.burst .flash { animation: burst .9s var(--ease-out) forwards; }
+#portal.burst .core { transform: scale(1.6); opacity: 0; }
+@keyframes burst { 0% { transform: scale(.5); opacity: 1; } 100% { transform: scale(16); opacity: 0; } }
+#launch { background: var(--scrim); backdrop-filter: blur(24px) saturate(1.1); -webkit-backdrop-filter: blur(24px) saturate(1.1); }
+#launch .stack { display: flex; flex-direction: column; align-items: center; gap: 34px; transition: transform .9s cubic-bezier(.7, 0, .84, 0), opacity .7s ease .2s, filter .9s ease; }
+#launch .loader { position: relative; width: 300px; height: 300px; }
+#launch .loader svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+#launch .loader circle { fill: none; stroke-width: 10; stroke-linecap: round; }
+#launch .loader .track { stroke: var(--line); }
+#launch .loader .bar { stroke: var(--accent); stroke-dasharray: 880; stroke-dashoffset: 880; filter: drop-shadow(0 0 12px var(--glow)); }
+#launch.open .loader .bar { animation: load 1.7s var(--ease-out) forwards; }
+@keyframes load { to { stroke-dashoffset: 0; } }
+#launch .loader .cover { position: absolute; inset: 26px; border-radius: 50%; overflow: hidden; }
+#launch .loader .cover .art { position: absolute; inset: 0; }
+#launch .loader .cover .glyph { right: auto; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 150px; color: rgba(255, 255, 255, .85); }
+#launch .loader .cover .art-title, #launch .loader .cover .art-sub { display: none; }
+#launch .lbl { font-family: var(--font-display); font-weight: 600; font-size: calc(38px * var(--ts)); color: #fff; text-align: center; }
+#launch .lbl small { display: block; font-family: var(--font-body); font-weight: 500; font-size: calc(24px * var(--ts)); color: rgba(255, 255, 255, .75); margin-top: 10px; }
+#launch.dive .stack { transform: scale(9); opacity: 0; filter: blur(6px); }
+
+/* ---------- Hints & toast ---------- */
+#hints { position: absolute; left: 0; right: 0; bottom: 0; height: 92px; padding: 0 72px; display: flex; align-items: center; justify-content: flex-end; gap: 34px; z-index: 30; font-size: calc(21px * var(--ts)); color: var(--text-2); transition: opacity .4s ease; }
+#hints.away { opacity: 0; }
+#hints .hint { display: inline-flex; align-items: center; gap: 12px; }
+.glyph-btn { min-width: 38px; height: 38px; padding: 0 8px; box-sizing: border-box; border-radius: 999px; display: inline-grid; place-items: center; font-weight: 700; font-size: calc(19px * var(--ts)); background: var(--text); color: var(--bg); }
+.glyph-btn .ms { font-size: calc(24px * var(--ts)); font-variation-settings: "FILL" 1, "wght" 600; }
+#hints .left { margin-right: auto; color: var(--text-3); }
+#toast { position: absolute; left: 50%; bottom: 120px; z-index: 70; transform: translate(-50%, 20px); opacity: 0; padding: 16px 30px; border-radius: 999px; background: var(--text); color: var(--bg); font-weight: 600; font-size: calc(22px * var(--ts)); display: flex; align-items: center; gap: 12px; transition: opacity .3s ease, transform .45s var(--ease-spring); pointer-events: none; white-space: nowrap; }
+#toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* Reduced motion */
+#stage.reduce *, #stage.reduce *::after, #stage.reduce *::before { animation-duration: .01s !important; animation-iteration-count: 1 !important; transition-duration: .12s !important; }
+@media (prefers-reduced-motion: reduce) {
+  #stage *, #stage *::after, #stage *::before { animation-duration: .01s !important; animation-iteration-count: 1 !important; transition-duration: .12s !important; }
+}
+</style>
+
+<div id="viewport">
+  <div id="frame">
+    <div id="stage" role="application" aria-label="Delos console UI prototype">
+      <div id="heroBg" aria-hidden="true"><div class="hero"></div><div class="hero"></div></div>
+      <canvas id="bg" width="960" height="540"></canvas>
+      <div id="vignette"></div>
+
+      <header id="statusbar">
+        <div class="brand">
+          <span class="logo-mark" aria-hidden="true"></span>
+          <span class="wordmark">DELOS</span>
+          <span class="pc-pill" id="pcPill" hidden><span class="dot"></span><span id="pcPillName">Meiton-PC</span></span>
+        </div>
+        <nav class="topnav" id="topnav" hidden>
+          <div class="nav-btn f" tabindex="-1" data-action="go:settings" data-id="nav-settings"><span class="ms">settings</span><span class="tip">Settings</span></div>
+          <div class="nav-btn f" tabindex="-1" data-action="go:profile" data-id="nav-profile"><span class="ms">account_circle</span><span class="tip">Profile</span></div>
+          <div class="nav-btn f" tabindex="-1" data-action="go:devices" data-id="nav-devices"><span class="ms">devices</span><span class="tip">Devices</span></div>
+        </nav>
+        <div class="status">
+          <span class="grp" id="padStatus" hidden><span class="ms">sports_esports</span></span>
+          <span class="grp"><span class="ms fill">wifi</span></span>
+          <span class="grp"><span class="ms fill" id="batIcon">battery_5_bar</span><span id="batPct">78%</span></span>
+          <span class="clock" id="clock">00:00</span>
+        </div>
+      </header>
+
+      <main>
+        <section class="screen" id="scr-boot">
+          <div class="center-col">
+            <div class="boot-logo" aria-hidden="true"><div class="orbit"></div><div class="ring"></div><div class="isle"></div></div>
+            <h1 class="boot-word">DELOS</h1>
+            <p class="boot-tag">Your PC games, streamed from Vibepollo to your hands</p>
+            <div class="btn-row" style="margin-top: 26px">
+              <div class="btn primary f sweep" tabindex="-1" data-action="begin" data-id="boot-begin"><span class="ms">arrow_forward</span>Get started</div>
+              <div class="btn f" tabindex="-1" data-action="skip" data-id="boot-skip"><span class="ms">fast_forward</span>Skip to home</div>
+            </div>
+          </div>
+          <div class="keys-tip">Keyboard: <kbd>Arrows</kbd> move · <kbd>Enter</kbd> A · <kbd>Esc</kbd> B · <kbd>X</kbd> <kbd>Y</kbd> · <kbd>Q</kbd>/<kbd>E</kbd> L1/R1 · <kbd>Tab</kbd> left menu button · <kbd>M</kbd> right menu button · <kbd>H</kbd> help</div>
+        </section>
+
+        <section class="screen" id="scr-create">
+          <div class="center-col" style="gap: 40px">
+            <div>
+              <h1 class="h1" id="createTitle">Who's playing?</h1>
+              <p class="sub" style="margin: 14px auto 0">Pick an avatar and a name for your profile. Profiles keep their own settings and favorite games.</p>
+            </div>
+            <div class="circles" id="avatarRow"></div>
+            <label class="field f" tabindex="-1" data-action="edit-name" data-id="create-name"><span class="ms">badge</span><input id="nameInput" type="text" maxlength="20" value="Player" aria-label="Profile name" tabindex="-1"></label>
+            <div class="btn primary f sweep" tabindex="-1" data-action="create-done" data-id="create-done"><span class="ms">check</span><span id="createBtnLabel">Create profile</span></div>
+          </div>
+        </section>
+
+        <section class="screen" id="scr-pair">
+          <div class="center-col" style="gap: 48px">
+            <div>
+              <h1 class="h1">Pair a PC</h1>
+              <p class="sub" style="margin: 14px auto 0" id="pairSub">Delos found 1 PC running Vibepollo on your network.</p>
+            </div>
+            <div class="circles">
+              <div class="circle-item big">
+                <div class="circle f online-ring" tabindex="-1" data-action="pair-pc" data-id="pair-meiton"><span class="ms">desktop_windows</span></div>
+                <div class="circle-label" data-pcname>Meiton-PC</div>
+                <div class="circle-meta"><span class="status-dot"></span>Online · Vibepollo</div>
+              </div>
+              <div class="circle-item big">
+                <div class="circle f" tabindex="-1" data-action="toast:Type the PC address – not part of this prototype" data-id="pair-manual"><span class="ms">add</span></div>
+                <div class="circle-label">Enter address</div>
+                <div class="circle-meta">IP or host name</div>
+              </div>
+              <div class="circle-item big">
+                <div class="circle f" tabindex="-1" data-action="rescan" data-id="pair-rescan"><span class="ms">refresh</span></div>
+                <div class="circle-label">Search again</div>
+                <div class="circle-meta">Local network</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen" id="scr-pin">
+          <div class="center-col" style="gap: 44px">
+            <div>
+              <h1 class="h1">Enter this PIN on <span data-pcname>Meiton-PC</span></h1>
+              <p class="sub" style="margin: 14px auto 0">Open the Vibepollo web UI on your PC, go to PIN and type the code.</p>
+            </div>
+            <div class="pin" id="pinDigits"><span>4</span><span>8</span><span>2</span><span>7</span></div>
+            <div class="waiting" id="pinWait"><span class="spinner"></span><span id="pinWaitText">Waiting for Vibepollo…</span></div>
+            <div class="btn f" tabindex="-1" data-action="back" data-id="pin-cancel"><span class="ms">close</span>Cancel</div>
+          </div>
+        </section>
+
+        <section class="screen" id="scr-home">
+          <div class="home-info" id="homeInfo">
+            <div class="eyebrow" id="infoEyebrow">Continue playing</div>
+            <div class="game-logo" id="infoLogo" aria-live="polite"></div>
+            <div class="chips" id="infoChips"></div>
+          </div>
+          <div class="library" data-scroll id="library"><div class="library-inner" id="libraryInner"></div></div>
+        </section>
+
+        <section class="screen" id="scr-settings">
+          <div class="set-head"><h1 class="h1">Settings</h1></div>
+          <div class="tabs" id="tabs"></div>
+          <div class="set-body">
+            <div class="set-list" data-scroll id="setList"><div class="set-list-inner" id="setRows"></div></div>
+            <div class="set-panel" id="setPanel"></div>
+          </div>
+        </section>
+
+        <section class="screen" id="scr-profile">
+          <div class="center-col" style="gap: 54px">
+            <div class="profile-hero">
+              <div class="avatar-xl" id="profileAvatar"><span class="ms">sailing</span></div>
+              <h1 class="h1" id="profileName">Player</h1>
+              <p class="sub">Signed in on this Odin 2 Portal Max · 1 profile</p>
+            </div>
+            <div class="circles">
+              <div class="circle-item"><div class="circle f" tabindex="-1" data-action="edit-avatar" data-id="prof-avatar"><span class="ms">face</span></div><div class="circle-label">Change avatar</div></div>
+              <div class="circle-item"><div class="circle f" tabindex="-1" data-action="rename-profile" data-id="prof-rename"><span class="ms">edit</span></div><div class="circle-label">Rename</div></div>
+              <div class="circle-item"><div class="circle f" tabindex="-1" data-action="toast:Only one profile exists yet" data-id="prof-switch"><span class="ms">switch_account</span></div><div class="circle-label">Switch profile</div></div>
+              <div class="circle-item"><div class="circle f" tabindex="-1" data-action="toast:Adding profiles comes later" data-id="prof-add"><span class="ms">person_add</span></div><div class="circle-label">Add profile</div></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen" id="scr-devices">
+          <div class="center-col" style="gap: 48px">
+            <div>
+              <h1 class="h1">Devices</h1>
+              <p class="sub" style="margin: 14px auto 0">PCs paired with Delos. Names you set here stay on this device only.</p>
+            </div>
+            <div class="circles">
+              <div class="circle-item big selected">
+                <div class="circle f" tabindex="-1" data-action="device-menu" data-ctx="device" data-id="dev-meiton"><span class="ms">desktop_windows</span></div>
+                <div class="circle-label" data-pcname>Meiton-PC</div>
+                <div class="circle-meta"><span class="status-dot"></span>Connected · Vibepollo</div>
+              </div>
+              <div class="circle-item big">
+                <div class="circle f" tabindex="-1" data-action="go:pair" data-id="dev-pair"><span class="ms">add_link</span></div>
+                <div class="circle-label">Pair a new PC</div>
+                <div class="circle-meta">Vibepollo, Apollo or Sunshine</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen" id="scr-stream">
+          <canvas id="game" width="960" height="540"></canvas>
+          <div class="perf" id="perf"></div>
+          <div class="stream-banner" id="streamBanner"></div>
+        </section>
+      </main>
+
+      <div id="scrim"></div>
+      <div class="layer" id="ctxmenu" role="menu"></div>
+      <aside class="layer" id="sidemenu" aria-label="Side menu"></aside>
+      <div class="layer" id="quickmenu" aria-label="Quick menu">
+        <div class="qm-title" id="qmTitle">Returnal</div>
+        <div class="circles">
+          <div class="circle-item"><div class="circle f" tabindex="-1" data-action="qm:resume" data-id="qm-resume"><span class="ms">play_arrow</span></div><div class="circle-label">Resume</div></div>
+          <div class="circle-item"><div class="circle f" tabindex="-1" data-action="qm:keyboard" data-id="qm-keyboard"><span class="ms">keyboard</span></div><div class="circle-label">Keyboard</div></div>
+          <div class="circle-item"><div class="circle f" tabindex="-1" data-action="qm:perf" data-id="qm-perf"><span class="ms">speed</span></div><div class="circle-label">Performance</div></div>
+          <div class="circle-item"><div class="circle f" tabindex="-1" data-action="qm:disconnect" data-id="qm-disconnect"><span class="ms">logout</span></div><div class="circle-label">Disconnect</div></div>
+          <div class="circle-item"><div class="circle f" tabindex="-1" data-action="qm:quit" data-id="qm-quit"><span class="ms">power_settings_new</span></div><div class="circle-label">Quit game</div></div>
+        </div>
+      </div>
+      <div class="layer dialog" id="renameDlg" role="dialog" aria-labelledby="renameTitle">
+        <h3 id="renameTitle">Rename PC</h3>
+        <p id="renameSub">The new name is only used in Delos on this device.</p>
+        <label class="field f" tabindex="-1" data-action="edit-rename" data-id="rename-field"><span class="ms">edit</span><input id="renameInput" type="text" maxlength="24" aria-label="New name" tabindex="-1"></label>
+        <div class="btn-row">
+          <div class="btn primary f" tabindex="-1" data-action="rename-save" data-id="rename-save"><span class="ms">check</span>Save</div>
+          <div class="btn f" tabindex="-1" data-action="back" data-id="rename-cancel">Cancel</div>
+        </div>
+      </div>
+      <div class="layer dialog" id="help" role="dialog" aria-labelledby="helpTitle">
+        <h3 id="helpTitle">Controls</h3>
+        <div class="keymap">
+          <kbd>Arrows / WASD</kbd><span>D-pad or left stick</span>
+          <kbd>Enter / Space</kbd><span>A – select</span>
+          <kbd>Esc / Backspace</kbd><span>B – back</span>
+          <kbd>X</kbd><span>X – options</span>
+          <kbd>Y</kbd><span>Y</span>
+          <kbd>Q / E</kbd><span>L1 / R1 – switch tabs</span>
+          <kbd>Tab</kbd><span>Left menu button – context menu</span>
+          <kbd>M</kbd><span>Right menu button – side menu</span>
+          <kbd>F</kbd><span>Full screen</span>
+        </div>
+        <p>A connected gamepad works too, if the browser allows it (Gamepad API).</p>
+        <div class="btn primary f" tabindex="-1" data-action="back" data-id="help-close">Got it</div>
+      </div>
+
+      <div id="portal" aria-hidden="true">
+        <div class="p-ring"></div><div class="p-ring"></div><div class="p-ring"></div><div class="p-ring"></div>
+        <div class="flash"></div>
+        <div class="core"><div class="orb"><span class="ms" id="portalIcon">desktop_windows</span></div><div class="lbl" id="portalLabel">Connecting to Meiton-PC</div><div class="sub2" id="portalSub">Vibepollo · secure session</div></div>
+      </div>
+      <div id="launch" aria-hidden="true">
+        <div class="stack">
+          <div class="loader">
+            <svg viewBox="0 0 300 300"><circle class="track" cx="150" cy="150" r="140"></circle><circle class="bar" cx="150" cy="150" r="140"></circle></svg>
+            <div class="cover" id="launchCover"></div>
+          </div>
+          <div class="lbl" id="launchLabel">Returnal<small>Starting on Meiton-PC</small></div>
+        </div>
+      </div>
+
+      <footer id="hints"></footer>
+      <div id="toast" role="status"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const stage = $("#stage");
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem("delos." + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem("delos." + k, JSON.stringify(v)); } catch (e) { /* storage blocked */ } }
+  };
+  const systemDark = () => {
+    const t = document.documentElement.getAttribute("data-theme");
+    if (t) return t === "dark";
+    try { return window.matchMedia("(prefers-color-scheme: dark)").matches; } catch (e) { return true; }
+  };
+
+  // ---------- Data ----------
+  const AVATARS = [
+    { icon: "sailing", name: "Sailor", h: 205 }, { icon: "rocket_launch", name: "Voyager", h: 262 },
+    { icon: "sports_esports", name: "Player", h: 330 }, { icon: "pets", name: "Fox", h: 24 },
+    { icon: "bolt", name: "Spark", h: 48 }, { icon: "spa", name: "Calm", h: 150 }
+  ];
+  // "System" takes the real accent color of the device (CSS AccentColor) when the browser exposes it;
+  // the others simulate other wallpapers.
+  const SEEDS = [
+    { name: "System", h: null }, { name: "Lagoon", h: 176 }, { name: "Dusk", h: 268 }, { name: "Ember", h: 14 }, { name: "Moss", h: 96 }, { name: "Iris", h: 226 }
+  ];
+  const systemAccent = (() => {
+    try {
+      const p = document.createElement("div");
+      p.style.color = "AccentColor";
+      if (!p.style.color) return null;
+      document.body.appendChild(p);
+      const c = getComputedStyle(p).color; p.remove();
+      const m = c.match(/[\d.]+/g); if (!m || m.length < 3) return null;
+      const [r, g, b] = m.slice(0, 3).map(n => +n / 255);
+      const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+      if (d < .02) return null;
+      let h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+      h = Math.round(h * 60); if (h < 0) h += 360;
+      const hex = "#" + [r, g, b].map(v => Math.round(v * 255).toString(16).padStart(2, "0")).join("");
+      return { h, hex };
+    } catch (e) { return null; }
+  })();
+  // Browsers don't share the Android Material You palette; this is the seed of the Odin's wallpaper,
+  // read via adb (secure setting theme_customization_overlay_packages → system_palette 057671).
+  const ODIN_PALETTE = { h: 177, hex: "#057671" };
+  const seedHue = (i) => { const sd = SEEDS[i % SEEDS.length]; return sd.h != null ? sd.h : (systemAccent || ODIN_PALETTE).h; };
+  const seedName = (i) => { const sd = SEEDS[i % SEEDS.length]; return sd.h != null ? sd.name : (systemAccent ? "System" : "System · Odin"); };
+  const BACKGROUNDS = ["Aurora", "Tide", "Silk", "Contour", "Still"];
+  const GAMES = [
+    { id: "returnal", title: "Returnal", h: 176, h2: 150, icon: "public", played: "Played yesterday", tags: ["HDR", "AV1"], wide: true, sub: "Continue · Biome 3" },
+    { id: "animalwell", title: "ANIMAL WELL", h: 300, h2: 330, icon: "egg", played: "Played 3 days ago", tags: ["Controller"] },
+    { id: "gris", title: "GRIS", h: 348, h2: 18, icon: "water_drop", played: "Played last week", tags: ["Controller"] },
+    { id: "deathsdoor", title: "Death's Door", h: 212, h2: 250, icon: "door_front", played: "Played last week", tags: ["Controller"] },
+    { id: "davediver", title: "DAVE THE DIVER", h: 196, h2: 170, icon: "scuba_diving", played: "Played 2 weeks ago", tags: ["Controller"] },
+    { id: "cairn", title: "Cairn", h: 26, h2: 200, icon: "landscape", played: "Played this month", tags: ["HDR"] },
+    { id: "carrion", title: "CARRION", h: 352, h2: 6, icon: "coronavirus", played: "Played this month", tags: ["Controller"] },
+    { id: "morta", title: "Children of Morta", h: 18, h2: 44, icon: "swords", played: "Not played yet", tags: ["Co-op"] },
+    { id: "breathedge", title: "Breathedge", h: 228, h2: 282, icon: "rocket_launch", played: "Not played yet", tags: [] },
+    { id: "alba", title: "Alba: A Wildlife Adventure", h: 110, h2: 58, icon: "flutter_dash", played: "Not played yet", tags: [] },
+    { id: "dex", title: "Dex", h: 282, h2: 318, icon: "memory", played: "Not played yet", tags: [] },
+    { id: "hue", title: "Hue", h: 266, h2: 40, icon: "palette", played: "Not played yet", tags: [] },
+    { id: "keepdriving", title: "Keep Driving", h: 38, h2: 14, icon: "directions_car", played: "Not played yet", tags: [] },
+    { id: "foreverago", title: "Forever Ago", h: 44, h2: 296, icon: "hourglass_top", played: "Not played yet", tags: [] },
+    { id: "rapture", title: "Everybody's Gone to the Rapture", h: 46, h2: 92, icon: "church", played: "Not played yet", tags: [] },
+    { id: "dragondinner", title: "Dragon Dinner", h: 12, h2: 34, icon: "restaurant", played: "Not played yet", tags: [] },
+    { id: "desktop", title: "Desktop", h: 222, h2: 196, icon: "desktop_windows", played: "Remote desktop", tags: ["Virtual display"] }
+  ];
+
+  // ---------- State ----------
+  const state = {
+    screen: null, firstRun: true, editingAvatar: false,
+    mode: store.get("mode", systemDark() ? "dark" : "light"),
+    materialYou: store.get("my", false), seed: store.get("seed", 0),
+    bg: (b => BACKGROUNDS.includes(b) ? b : "Aurora")(store.get("bg", "Aurora")), sound: store.get("sound", true), motion: store.get("motion", "Full"),
+    heroBg: store.get("heroBg", true), heroBlur: store.get("heroBlur", 16), heroOpacity: store.get("heroOpacity", 70),
+    homeLayout: store.get("homeLayout", "Grid"), uiScale: store.get("uiScale", 115),
+    profile: { name: "Player", avatar: 0 }, pcName: "Meiton-PC",
+    settingsTab: 0, focusedGame: GAMES[0], currentGame: GAMES[0], perfOverlay: true, renameTarget: "pc",
+    s: { resolution: "1920 × 1080", fps: "120 FPS", bitrate: 150, pacing: "Warp 2", codec: "AV1", hdr: true, lfr: true, ull: true,
+         scale: "Fit", overlayStyle: "Full", virtualDisplay: true, audio: "Stereo", hostAudio: false,
+         rumble: true, emuRumble: true, rumbleStrength: 100, deadzone: 7, flip: false, mouseEmu: true,
+         gridKey: "", coverStyle: "Covers, background and logo", autoCovers: true }
+  };
+
+  // ---------- Theme ----------
+  const theme = { dark: true, base: 222, acc: 40, acc2: 192 };
+  function applyTheme() {
+    const dark = state.mode === "dark";
+    let base = 222, acc = 40, acc2 = 192, my = state.materialYou;
+    if (my) { const h = seedHue(state.seed); base = h; acc = h; acc2 = (h + 52) % 360; }
+    const v = {};
+    if (dark) {
+      const sat = my ? 30 : 38;
+      v["--bg"] = `hsl(${base} ${sat}% 7%)`; v["--bg-2"] = `hsl(${base} ${sat - 4}% 11%)`;
+      v["--surface"] = `hsl(${base} ${sat - 10}% 14% / .72)`; v["--surface-2"] = `hsl(${base} ${sat - 12}% 19% / .84)`; v["--surface-3"] = `hsl(${base} ${sat - 14}% 23% / .94)`;
+      v["--line"] = `hsl(${base} 35% 70% / .14)`; v["--text"] = `hsl(${base} 30% 96%)`; v["--text-2"] = `hsl(${base} 16% 76%)`; v["--text-3"] = `hsl(${base} 12% 58%)`;
+      v["--accent"] = my ? `hsl(${acc} 78% 72%)` : `hsl(${acc} 95% 62%)`; v["--accent-2"] = my ? `hsl(${acc2} 70% 66%)` : `hsl(${acc2} 85% 62%)`;
+      v["--on-accent"] = `hsl(${acc} 55% 12%)`; v["--glow"] = my ? `hsl(${acc} 80% 60% / .42)` : `hsl(${acc} 95% 58% / .45)`; v["--scrim"] = `hsl(${base} 50% 3% / .62)`;
+    } else {
+      const sat = my ? 45 : 40;
+      v["--bg"] = `hsl(${base} ${sat}% 95%)`; v["--bg-2"] = `hsl(${base} ${sat - 6}% 90%)`;
+      v["--surface"] = `hsl(${base} 60% 99% / .74)`; v["--surface-2"] = `hsl(${base} 50% 99% / .9)`; v["--surface-3"] = `hsl(${base} 40% 98% / .97)`;
+      v["--line"] = `hsl(${base} 30% 30% / .13)`; v["--text"] = `hsl(${base} 40% 12%)`; v["--text-2"] = `hsl(${base} 18% 32%)`; v["--text-3"] = `hsl(${base} 12% 46%)`;
+      v["--accent"] = my ? `hsl(${acc} 58% 40%)` : `hsl(${acc - 6} 92% 52%)`; v["--accent-2"] = my ? `hsl(${acc2} 55% 40%)` : `hsl(${acc2} 80% 40%)`;
+      v["--on-accent"] = my ? "#ffffff" : `hsl(${acc} 60% 12%)`; v["--glow"] = `hsl(${acc} 85% 50% / .34)`; v["--scrim"] = `hsl(${base} 30% 20% / .35)`;
+    }
+    for (const k in v) stage.style.setProperty(k, v[k]);
+    stage.dataset.mode = dark ? "dark" : "light";
+    Object.assign(theme, { dark, base, acc, acc2 });
+    stage.classList.toggle("reduce", state.motion === "Reduced");
+  }
+
+  // ---------- Scale the 1920x1080 stage into the viewport ----------
+  function fit() {
+    const vp = $("#viewport"), cs = getComputedStyle(vp);
+    const w = vp.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    const h = vp.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    const s = Math.max(.1, Math.min(w / 1920, h / 1080));
+    document.documentElement.style.setProperty("--s", s.toFixed(4));
+  }
+  window.addEventListener("resize", fit);
+
+  // ---------- Sound ----------
+  let actx = null;
+  function blip(kind) {
+    if (!state.sound) return;
+    try {
+      if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+      if (actx.state === "suspended") actx.resume();
+      const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+      const f = { move: [660, 720], select: [740, 990], back: [520, 380], open: [440, 660], error: [220, 180] }[kind] || [600, 600];
+      o.type = "sine"; o.frequency.setValueAtTime(f[0], t); o.frequency.exponentialRampToValueAtTime(f[1], t + .07);
+      g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(kind === "move" ? .025 : .05, t + .01); g.gain.exponentialRampToValueAtTime(.0001, t + .14);
+      o.connect(g).connect(actx.destination); o.start(t); o.stop(t + .16);
+    } catch (e) { /* audio unavailable */ }
+  }
+
+  // ---------- Toast ----------
+  let toastTimer = 0;
+  function toast(text, icon) {
+    const el = $("#toast");
+    el.innerHTML = (icon ? `<span class="ms fill">${icon}</span>` : "") + escapeHtml(text);
+    el.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove("show"), 2600);
+  }
+  function escapeHtml(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+  // ---------- Covers ----------
+  function artHtml(g, opts) {
+    const wide = opts && opts.wide;
+    return `<div class="art" style="--h:${g.h};--h2:${g.h2}"><span class="ms glyph">${g.icon}</span>` +
+      (wide && g.sub ? `<span class="art-sub">${escapeHtml(g.sub)}</span>` : "") +
+      `<span class="art-title">${escapeHtml(g.title)}</span></div>`;
+  }
+  function renderLibrary() {
+    $("#libraryInner").innerHTML = GAMES.map((g, i) =>
+      `<div class="tile f sweep${g.wide ? " wide" : ""}" tabindex="-1" data-action="launch" data-ctx="game" data-game="${g.id}" data-id="game-${g.id}">` +
+      artHtml(g, { wide: g.wide }) +
+      (i === 0 ? `<span class="badge"><span class="ms">history</span>Last played</span>` : "") + `</div>`).join("");
+  }
+  // Logo + game background (SteamGridDB "logo" and "hero"; procedural placeholders here)
+  function logoHtml(g) {
+    const fs = g.title.length > 22 ? 56 : g.title.length > 13 ? 68 : 84;
+    return `<span class="ms lg-ic" style="--lh:${g.h2}">${g.icon}</span><span class="lg-tx" style="--lh:${g.h2};--lfs:${fs}px">${escapeHtml(g.title)}</span>`;
+  }
+  function heroHtml(g) { return `<div class="art" style="--h:${g.h};--h2:${g.h2}"><span class="ms glyph">${g.icon}</span></div>`; }
+  let heroIdx = 0, heroTimer = 0, heroGame = null, logoTimer = 0;
+  function setHero(g, immediate) {
+    clearTimeout(heroTimer);
+    const run = () => {
+      if (heroGame === g) return;
+      heroGame = g;
+      const hs = $$("#heroBg .hero"), next = hs[heroIdx ^ 1], cur = hs[heroIdx];
+      next.innerHTML = heroHtml(g);
+      void next.offsetWidth;
+      next.classList.add("show"); cur.classList.remove("show");
+      heroIdx ^= 1;
+    };
+    if (immediate) run(); else heroTimer = setTimeout(run, 140);
+  }
+  function applyUiScale() {
+    const k = (state.uiScale / 100).toFixed(2);
+    stage.style.setProperty("--ui", k); stage.style.setProperty("--ts", k);
+  }
+  function applyHomeLayout() {
+    $("#scr-home").classList.toggle("row-layout", state.homeLayout === "Row");
+    const lib = $("#library"); lib.scrollTop = 0; lib.scrollLeft = 0;
+    const g = state.focusedGame && $(`[data-id="game-${state.focusedGame.id}"]`);
+    if (g) setTimeout(() => ensureVisible(g), 50);
+  }
+  function applyHero() {
+    stage.style.setProperty("--hero-blur", state.heroBlur + "px");
+    stage.style.setProperty("--hero-op", (state.heroOpacity / 100).toFixed(2));
+    $("#heroBg").classList.toggle("on", state.heroBg && state.screen === "home");
+  }
+  function updateHomeInfo(g) {
+    if (!g) return;
+    $("#infoEyebrow").textContent = g === GAMES[0] ? "Continue playing" : (g.id === "desktop" ? "Remote desktop" : "Library");
+    const logo = $("#infoLogo");
+    if (logo.dataset.game !== g.id) {
+      logo.dataset.game = g.id;
+      clearTimeout(logoTimer);
+      logo.classList.add("swap");
+      logoTimer = setTimeout(() => { logo.innerHTML = logoHtml(g); logo.classList.remove("swap"); }, 150);
+    }
+    setHero(g);
+    const chips = [`<span class="chip"><span class="ms">schedule</span>${escapeHtml(g.played)}</span>`]
+      .concat(g.tags.map(x => `<span class="chip"><span class="ms">${x === "HDR" ? "hdr_on" : x === "AV1" ? "high_quality" : x === "Co-op" ? "group" : x === "Virtual display" ? "screen_share" : "sports_esports"}</span>${escapeHtml(x)}</span>`));
+    $("#infoChips").innerHTML = chips.join("");
+    bg.tint = g.h;
+  }
+
+  // ---------- Avatars ----------
+  function avatarStyle(a) { return `background: radial-gradient(circle at 35% 30%, hsl(${a.h} 80% 62%), hsl(${a.h + 30} 70% 38%))`; }
+  function renderAvatars() {
+    $("#avatarRow").innerHTML = AVATARS.map((a, i) =>
+      `<div class="circle-item${i === state.profile.avatar ? " selected" : ""}" data-av="${i}"><div class="circle f" tabindex="-1" data-action="pick-avatar:${i}" data-id="av-${i}" style="${avatarStyle(a)};color:#fff"><span class="ms ms-f">${a.icon}</span></div><div class="circle-label">${a.name}</div></div>`).join("");
+  }
+  function renderProfile() {
+    const a = AVATARS[state.profile.avatar];
+    const av = $("#profileAvatar");
+    av.setAttribute("style", avatarStyle(a));
+    av.innerHTML = `<span class="ms">${a.icon}</span>`;
+    $("#profileName").textContent = state.profile.name;
+    const nb = $('[data-id="nav-profile"] .ms'); if (nb) nb.textContent = a.icon;
+  }
+  function setPcName(n) {
+    state.pcName = n;
+    $$("[data-pcname]").forEach(e => e.textContent = n);
+    $("#pcPillName").textContent = n;
+  }
+
+  // ---------- Settings model ----------
+  const S = state.s;
+  const TABS = [
+    { name: "Stream", icon: "cast", desc: "Quality and latency of the video coming from your PC. Delos picks safe defaults; change them when you know your network.", rows: [
+      { id: "resolution", icon: "aspect_ratio", label: "Resolution", desc: "Matches the Odin 2 Portal Max screen", type: "choice", options: ["1280 × 720", "1920 × 1080", "2560 × 1440", "3840 × 2160"] },
+      { id: "fps", icon: "speed", label: "Frame rate", type: "choice", options: ["60 FPS", "90 FPS", "120 FPS"] },
+      { id: "bitrate", icon: "network_check", label: "Bitrate", desc: "Higher looks sharper but needs a stronger Wi-Fi", type: "slider", min: 5, max: 150, step: 5, unit: " Mbps" },
+      { id: "pacing", icon: "timer", label: "Frame pacing", desc: "Warp modes request 2× / 4× the frame rate for fresher frames", type: "choice", options: ["Lowest latency", "Balanced", "Balanced with FPS limit", "Smoothest", "Warp Drive", "Warp 2"] },
+      { id: "codec", icon: "movie", label: "Video codec", type: "choice", options: ["Automatic", "H.264", "HEVC", "AV1"] },
+      { id: "hdr", icon: "hdr_on", label: "HDR", desc: "How HDR looks depends on the display of this device", type: "toggle" },
+      { id: "lfr", icon: "bolt", label: "LFR", desc: "Shows the newest frame at every screen refresh · Experimental", type: "toggle" },
+      { id: "ull", icon: "memory", label: "Ultra low latency", desc: "Decoder low-latency mode for Snapdragon 8 Gen 2 and newer · Experimental", type: "toggle" }
+    ]},
+    { name: "Display", icon: "monitor", desc: "How the stream fills the screen and which information is shown while you play.", rows: [
+      { id: "scale", icon: "fit_screen", label: "Video scale", type: "choice", options: ["Fit", "Fill", "Stretch"] },
+      { id: "perfOverlay", icon: "monitoring", label: "Performance overlay", desc: "Frame rate, latency and decoder statistics", type: "toggle", ref: "state" },
+      { id: "overlayStyle", icon: "view_compact", label: "Overlay style", type: "choice", options: ["Full", "Lite"] },
+      { id: "virtualDisplay", icon: "screen_share", label: "Virtual display", desc: "Vibepollo creates a screen that matches this device", type: "toggle" }
+    ]},
+    { name: "Audio", icon: "graphic_eq", desc: "Sound from the PC and the sounds of the Delos interface.", rows: [
+      { id: "audio", icon: "surround_sound", label: "Audio channels", type: "choice", options: ["Stereo", "5.1 surround", "7.1 surround"] },
+      { id: "hostAudio", icon: "speaker", label: "Also play sound on the PC", type: "toggle" },
+      { id: "sound", icon: "music_note", label: "Interface sounds", desc: "Soft clicks when you move around the menus", type: "toggle", ref: "state" }
+    ]},
+    { name: "Controls", icon: "sports_esports", desc: "Built-in controls of the handheld and connected gamepads.", rows: [
+      { id: "rumble", icon: "vibration", label: "Rumble", type: "toggle" },
+      { id: "emuRumble", icon: "mobile_vibrate", label: "Rumble with the device motor", desc: "For built-in controls without their own rumble", type: "toggle" },
+      { id: "rumbleStrength", icon: "tune", label: "Rumble strength", type: "slider", min: 0, max: 200, step: 10, unit: " %" },
+      { id: "deadzone", icon: "joystick", label: "Stick deadzone", type: "slider", min: 0, max: 20, step: 1, unit: " %" },
+      { id: "flip", icon: "swap_horiz", label: "Swap A/B and X/Y", type: "toggle" },
+      { id: "mouseEmu", icon: "mouse", label: "Mouse with the stick", desc: "Hold Start to switch the stick to a mouse", type: "toggle" }
+    ]},
+    { name: "Appearance", icon: "palette", desc: "Theme, colors and the animated background. Changes apply immediately.", rows: [
+      { id: "mode", icon: "dark_mode", label: "Theme", type: "choice", options: ["dark", "light"], labels: { dark: "Dark", light: "Light" }, ref: "state" },
+      { id: "materialYou", icon: "wallpaper", label: "Material You colors", desc: "Takes the color palette from the system wallpaper", type: "toggle", ref: "state" },
+      { id: "seed", icon: "colorize", label: "Wallpaper colors", descFn: () => systemAccent ? `System = your Android wallpaper color (${systemAccent.hex}); the others simulate other wallpapers` : `System = Material You color of the Odin wallpaper (${ODIN_PALETTE.hex}); the app reads it automatically, the others simulate other wallpapers`, type: "seed", ref: "state" },
+      { id: "bg", icon: "animation", label: "Animated background", type: "choice", options: BACKGROUNDS, ref: "state" },
+      { id: "homeLayout", icon: "view_carousel", label: "Home layout", desc: "Grid scrolls down, Row is one horizontally scrolling row", type: "choice", options: ["Grid", "Row"], ref: "state" },
+      { id: "heroBg", icon: "image", label: "Game background", desc: "Shows the background of the selected game on the home screen", type: "toggle", ref: "state" },
+      { id: "heroBlur", icon: "blur_on", label: "Game background blur", type: "slider", min: 0, max: 40, step: 2, unit: " px", ref: "state" },
+      { id: "heroOpacity", icon: "opacity", label: "Game background opacity", type: "slider", min: 0, max: 100, step: 5, unit: " %", ref: "state" },
+      { id: "uiScale", icon: "format_size", label: "Interface scale", desc: "Text size, status bar and button hints", type: "slider", min: 100, max: 130, step: 5, unit: " %", ref: "state" },
+      { id: "motion", icon: "motion_photos_on", label: "Animations", type: "choice", options: ["Full", "Reduced"], ref: "state" }
+    ]},
+    { name: "Covers", icon: "photo_library", desc: "Images come from SteamGridDB with your own API key: a portrait cover, a wide cover, a large background and a logo for every game.", rows: [
+      { id: "gridKey", icon: "key", label: "SteamGridDB API key", desc: "steamgriddb.com → Preferences → API", type: "text" },
+      { id: "coverStyle", icon: "view_carousel", label: "Images to download", type: "choice", options: ["Covers, background and logo", "Covers only"] },
+      { id: "autoCovers", icon: "autorenew", label: "Download images for new games", type: "toggle" },
+      { id: "fetchCovers", icon: "download", label: "Download images for all games", desc: "17 games on Meiton-PC · 4 images each", type: "progress" },
+      { id: "syncInfo", icon: "sync", label: "Use covers from Vibepollo", desc: "Open question: sync with the covers set on the PC", type: "info", value: "Planned" }
+    ]},
+    { name: "Devices", icon: "computer", desc: "PCs paired with Delos. Renaming only changes the name on this device.", rows: [
+      { id: "renamePc", icon: "edit", label: "Rename", descFn: () => state.pcName, type: "action" },
+      { id: "wakePc", icon: "power", label: "Wake the PC", desc: "Wake-on-LAN", type: "action" },
+      { id: "pairPc", icon: "add_link", label: "Pair a new PC", type: "action" }
+    ]},
+    { name: "About", icon: "info", desc: "Delos is a fork of Artemis and Moonlight, licensed under the GPLv3.", rows: [
+      { id: "version", icon: "deployed_code", label: "Version", type: "info", value: "0.1.0" },
+      { id: "based", icon: "account_tree", label: "Based on", type: "info", value: "Moonlight 12.2 · Artemis 20.2.6" },
+      { id: "replay", icon: "replay", label: "Replay the first launch", desc: "Shows the welcome, profile and pairing steps again", type: "action" }
+    ]}
+  ];
+  function rowValue(r) {
+    const holder = r.ref === "state" ? state : S;
+    return holder[r.id];
+  }
+  function setRowValue(r, v) {
+    const holder = r.ref === "state" ? state : S;
+    holder[r.id] = v;
+    if (["mode", "materialYou", "seed", "motion"].includes(r.id)) { store.set({ mode: "mode", materialYou: "my", seed: "seed", motion: "motion" }[r.id], v); applyTheme(); }
+    if (r.id === "bg") store.set("bg", v);
+    if (r.id === "sound") store.set("sound", v);
+    if (["heroBg", "heroBlur", "heroOpacity"].includes(r.id)) { store.set(r.id, v); applyHero(); }
+    if (r.id === "homeLayout") { store.set("homeLayout", v); applyHomeLayout(); }
+    if (r.id === "uiScale") { store.set("uiScale", v); applyUiScale(); }
+  }
+  function rowHtml(r) {
+    const v = rowValue(r);
+    let val = "";
+    if (r.type === "toggle") val = `<span class="switch${v ? " on" : ""}"><i></i></span>`;
+    else if (r.type === "choice") val = `<span class="choice"><span class="ms">chevron_left</span>${escapeHtml(r.labels ? r.labels[v] : v)}<span class="ms">chevron_right</span></span>`;
+    else if (r.type === "seed") val = `<span class="choice"><span class="ms">chevron_left</span><i style="display:inline-block;width:26px;height:26px;border-radius:50%;margin-right:12px;vertical-align:-5px;background:hsl(${seedHue(state.seed)} 70% 55%)"></i>${escapeHtml(seedName(state.seed))}<span class="ms">chevron_right</span></span>`;
+    else if (r.type === "slider") val = `<span class="slider"><b style="width:${((v - r.min) / (r.max - r.min) * 100).toFixed(1)}%"></b></span><span style="min-width:120px;text-align:right">${v}${r.unit}</span>`;
+    else if (r.type === "text") val = v ? `<span>••••••••${escapeHtml(v.slice(-4))}</span>` : `<span style="color:var(--text-3)">Not set</span><span class="ms">chevron_right</span>`;
+    else if (r.type === "progress") val = `<span class="progress"><b id="coverProg"></b></span><span id="coverProgTxt" style="min-width:90px;text-align:right">Start</span>`;
+    else if (r.type === "info") val = `<span>${escapeHtml(r.value)}</span>`;
+    else val = `<span class="ms">chevron_right</span>`;
+    const disabled = r.id === "seed" && !state.materialYou;
+    const desc = r.descFn ? r.descFn() : r.desc;
+    const focusable = r.type !== "info";
+    return `<div class="row${focusable ? " f" : ""}${disabled ? " disabled" : ""}" tabindex="-1" data-row="${r.id}" data-id="row-${r.id}"${focusable ? ` data-action="row:${r.id}" data-ctx="row"` : ""}${["choice", "slider", "seed"].includes(r.type) ? " data-adjust" : ""}>` +
+      `<span class="ms">${r.icon}</span><div style="min-width:0"><div class="row-label">${escapeHtml(r.label)}</div>${desc ? `<div class="row-desc">${escapeHtml(desc)}</div>` : ""}</div><div class="row-value">${val}</div></div>`;
+  }
+  function findRow(id) {
+    for (const t of TABS) for (const r of t.rows) if (r.id === id) return r;
+    for (const r of SIDE_ROWS) if (r.id === id) return r;
+    return null;
+  }
+  function renderTabs() {
+    $("#tabs").innerHTML = `<span class="shoulder">L1</span>` + TABS.map((t, i) =>
+      `<div class="tab f${i === state.settingsTab ? " current" : ""}" tabindex="-1" data-tab="${i}" data-id="tab-${i}" data-action="tab:${i}"><span class="ms">${t.icon}</span>${t.name}</div>`).join("") + `<span class="shoulder">R1</span>`;
+  }
+  function renderSettings(keepFocusId) {
+    const t = TABS[state.settingsTab];
+    $$("#tabs .tab").forEach((el, i) => el.classList.toggle("current", i === state.settingsTab));
+    $("#setRows").innerHTML = t.rows.map(rowHtml).join("");
+    let extra = "";
+    if (t.name === "Appearance") {
+      const g = state.focusedGame || GAMES[0];
+      extra = `<div class="swatches"><i style="background:var(--bg)"></i><i style="background:var(--surface-2)"></i><i style="background:var(--accent)"></i><i style="background:var(--accent-2)"></i><i style="background:var(--text)"></i></div>` +
+        `<div class="hero-preview">${state.heroBg ? `<div class="hero show">${heroHtml(g)}</div>` : ""}<span class="pv-logo">${escapeHtml(g.title)}</span></div>`;
+    }
+    if (t.name === "Covers") extra = `<div class="swatches">${GAMES.slice(1, 6).map(g => `<i style="height:84px;border-radius:12px;background:linear-gradient(165deg,hsl(${g.h} 58% 34%),hsl(${g.h2} 50% 14%))"></i>`).join("")}</div>`;
+    $("#setPanel").innerHTML = `<div class="big-ic"><span class="ms">${t.icon}</span></div><h2>${t.name}</h2><p>${escapeHtml(t.desc)}</p>${extra}`;
+    if (keepFocusId) { const el = $(`[data-id="${keepFocusId}"]`); if (el) focusEl(el, { silent: true, noScroll: true }); }
+  }
+  function refreshRow(id) {
+    const r = findRow(id); if (!r) return;
+    $$(`[data-row="${id}"]`).forEach(old => {
+      const wasFocus = old.classList.contains("is-focus");
+      const tmp = document.createElement("div"); tmp.innerHTML = rowHtml(r);
+      const el = tmp.firstElementChild; old.replaceWith(el);
+      if (wasFocus) focusEl(el, { silent: true, noScroll: true });
+    });
+    if (id === "materialYou") refreshRow("seed");
+  }
+  function adjustRow(r, dir) {
+    const v = rowValue(r);
+    if (r.type === "choice") {
+      const i = r.options.indexOf(v); setRowValue(r, r.options[(i + dir + r.options.length) % r.options.length]);
+    } else if (r.type === "seed") {
+      if (!state.materialYou) { toast("Turn on Material You colors first", "info"); blip("error"); return; }
+      setRowValue(r, (state.seed + dir + SEEDS.length) % SEEDS.length);
+    } else if (r.type === "slider") {
+      setRowValue(r, Math.min(r.max, Math.max(r.min, v + dir * r.step)));
+    } else return;
+    blip("move"); refreshRow(r.id);
+    if (["mode", "materialYou", "seed"].includes(r.id) && state.screen === "settings" && !layers.length) { renderSettings(focused && focused.dataset.id); }
+  }
+  function activateRow(id) {
+    const r = findRow(id); if (!r) return;
+    if (r.type === "toggle") { setRowValue(r, !rowValue(r)); blip("select"); refreshRow(id); if (state.screen === "settings" && !layers.length && ["materialYou", "heroBg"].includes(id)) renderSettings(focused && focused.dataset.id); return; }
+    if (r.type === "choice" || r.type === "seed" || r.type === "slider") { adjustRow(r, 1); return; }
+    if (r.type === "text") { openRename("gridKey"); return; }
+    if (r.type === "progress") { fetchCovers(); return; }
+    if (id === "renamePc") { openRename("pc"); return; }
+    if (id === "wakePc") { toast(`Magic packet sent to ${state.pcName}`, "power"); blip("select"); return; }
+    if (id === "pairPc") { goScreen("pair"); return; }
+    if (id === "replay") { replayFirstRun(); return; }
+    if (id === "openSettings") { closeAllLayers(); goScreen("settings"); return; }
+    if (id === "fullscreen") { toggleFullscreen(); return; }
+  }
+  function toggleFullscreen() {
+    try {
+      if (document.fullscreenElement) { document.exitFullscreen(); return; }
+      const p = document.documentElement.requestFullscreen({ navigationUI: "hide" });
+      if (p && p.catch) p.catch(() => toast("Full screen is not available here", "fullscreen_exit"));
+    } catch (e) { toast("Full screen is not available here", "fullscreen_exit"); }
+  }
+  document.addEventListener("fullscreenchange", () => setTimeout(fit, 120));
+  // On a handheld, the first tap on the screen switches to full screen (gamepad buttons can't do that).
+  // Browsers only allow it when the finger is lifted (pointerup), not on pointerdown.
+  let autoFull = false;
+  document.addEventListener("pointerup", (ev) => {
+    if (autoFull || ev.pointerType !== "touch" || document.fullscreenElement || !document.fullscreenEnabled) return;
+    autoFull = true;
+    try {
+      const p = document.documentElement.requestFullscreen({ navigationUI: "hide" });
+      if (p && p.catch) p.catch(() => { autoFull = false; });
+    } catch (e) { autoFull = false; }
+  }, true);
+  let coverBusy = false;
+  function fetchCovers() {
+    if (coverBusy) return;
+    if (!S.gridKey) { toast("Add your SteamGridDB API key first", "key"); blip("error"); return; }
+    coverBusy = true; blip("select");
+    let p = 0;
+    const tick = setInterval(() => {
+      p += 6;
+      const bar = $("#coverProg"), txt = $("#coverProgTxt");
+      if (bar) bar.style.width = Math.min(100, p) + "%";
+      if (txt) txt.textContent = Math.min(17, Math.round(p / 100 * 17)) + " / 17";
+      if (p >= 100) {
+        clearInterval(tick); coverBusy = false;
+        if (txt) txt.textContent = "Done";
+        toast(S.coverStyle === "Covers only" ? "Downloaded 34 covers for 17 games" : "Downloaded 68 images for 17 games", "check_circle");
+        $$(".tile").forEach((t, i) => { t.classList.remove("fresh"); void t.offsetWidth; t.style.animationDelay = (i * 40) + "ms"; t.classList.add("fresh"); });
+      }
+    }, 120);
+  }
+
+  // ---------- Side menu ----------
+  const SIDE_ROWS = [
+    { id: "mode", icon: "dark_mode", label: "Theme", type: "choice", options: ["dark", "light"], labels: { dark: "Dark", light: "Light" }, ref: "state" },
+    { id: "materialYou", icon: "wallpaper", label: "Material You", type: "toggle", ref: "state" },
+    { id: "bg", icon: "animation", label: "Background", type: "choice", options: BACKGROUNDS, ref: "state" },
+    { id: "homeLayout", icon: "view_carousel", label: "Home layout", type: "choice", options: ["Grid", "Row"], ref: "state" },
+    { id: "sound", icon: "music_note", label: "Interface sounds", type: "toggle", ref: "state" },
+    { id: "fullscreen", icon: "fullscreen", label: "Full screen", type: "action" },
+    { id: "openSettings", icon: "settings", label: "All settings", type: "action" },
+    { id: "replay", icon: "replay", label: "Replay the first launch", type: "action" }
+  ];
+  function renderSide() {
+    const a = AVATARS[state.profile.avatar];
+    $("#sidemenu").innerHTML = `<div class="side-head"><div class="av" style="${avatarStyle(a)}"><span class="ms">${a.icon}</span></div><div><div class="nm">${escapeHtml(state.profile.name)}</div><div class="pc">${state.screen === "boot" || state.firstRun ? "Not connected" : "Connected to " + escapeHtml(state.pcName)}</div></div></div>` +
+      SIDE_ROWS.map(rowHtml).join("");
+  }
+
+  // ---------- Context menu ----------
+  function ctxItems(el) {
+    const ctx = el && el.dataset.ctx;
+    if (ctx === "game") {
+      const g = GAMES.find(x => x.id === el.dataset.game);
+      return { title: g.title, items: [["play_arrow", "Start game", "ctx:launch"], ["download", "Download covers", "ctx:cover"], ["star", "Add to favorites", "ctx:fav"], ["visibility_off", "Hide game", "ctx:hide"], ["info", "Game details", "ctx:details"]] };
+    }
+    if (ctx === "device") return { title: state.pcName, items: [["edit", "Rename", "ctx:rename"], ["power", "Wake the PC", "ctx:wake"], ["link_off", "Unpair", "ctx:unpair"]] };
+    if (ctx === "row") return { title: "Setting", items: [["restart_alt", "Reset to default", "ctx:reset"], ["help", "What does this do?", "ctx:help"]] };
+    return { title: "Delos", items: [["menu", "Side menu", "ctx:side"], ["keyboard", "Controls help", "ctx:keys"]] };
+  }
+  let ctxSource = null;
+  function openContext() {
+    ctxSource = focused;
+    const m = ctxItems(focused);
+    const menu = $("#ctxmenu");
+    menu.innerHTML = `<div class="menu-title">${escapeHtml(m.title)}</div>` + m.items.map((it, i) =>
+      `<div class="menu-item f" tabindex="-1" data-action="${it[2]}" data-id="ctx-${i}"><span class="ms">${it[0]}</span>${it[1]}</div>`).join("");
+    const s = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--s")) || 1;
+    const sr = stage.getBoundingClientRect();
+    let x = 760, y = 300;
+    if (focused) {
+      const r = focused.getBoundingClientRect();
+      x = (r.left - sr.left) / s + Math.min(60, r.width / s / 2); y = (r.top - sr.top) / s + Math.min(80, r.height / s / 2);
+    }
+    x = Math.max(40, Math.min(1920 - 420, x)); y = Math.max(110, Math.min(1080 - 120 - 72 * m.items.length, y));
+    menu.style.left = x + "px"; menu.style.top = y + "px";
+    openLayer("ctxmenu");
+  }
+  function ctxAction(a) {
+    const el = ctxSource;
+    closeLayer();
+    if (a === "launch" && el) { launchGame(GAMES.find(x => x.id === el.dataset.game)); return; }
+    if (a === "cover") { toast("Cover downloaded from SteamGridDB", "download_done"); if (el) { el.classList.remove("fresh"); void el.offsetWidth; el.classList.add("fresh"); } return; }
+    if (a === "fav") { toast("Added to favorites", "star"); return; }
+    if (a === "hide") { toast("Hidden games: Settings → Library (later)", "visibility_off"); return; }
+    if (a === "details") { toast("Game details come with the real library", "info"); return; }
+    if (a === "rename") { openRename("pc"); return; }
+    if (a === "wake") { toast(`Magic packet sent to ${state.pcName}`, "power"); return; }
+    if (a === "unpair") { toast("Unpairing is disabled in the prototype", "link_off"); return; }
+    if (a === "reset") { toast("Reset to default", "restart_alt"); return; }
+    if (a === "help") { toast("Help texts come with the real settings", "help"); return; }
+    if (a === "side") { openSide(); return; }
+    if (a === "keys") { openLayer("help"); return; }
+  }
+
+  // ---------- Layers ----------
+  const layers = [];
+  const layerFocus = [];
+  function openLayer(id) {
+    const el = $("#" + id);
+    layerFocus.push(focused);
+    layers.push(id);
+    el.classList.add("open");
+    $("#scrim").classList.toggle("open", id !== "quickmenu");
+    blip("open");
+    const first = focusables()[0];
+    if (first) focusEl(first, { silent: true });
+    updateHints();
+  }
+  function closeLayer() {
+    const id = layers.pop(); if (!id) return;
+    $("#" + id).classList.remove("open");
+    if (!layers.length) $("#scrim").classList.remove("open");
+    const prev = layerFocus.pop();
+    if (prev && document.body.contains(prev)) focusEl(prev, { silent: true, noScroll: true });
+    else { const f = focusables()[0]; if (f) focusEl(f, { silent: true }); }
+    blip("back");
+    updateHints();
+  }
+  function closeAllLayers() { while (layers.length) closeLayer(); }
+  function openSide() { renderSide(); openLayer("sidemenu"); }
+  function openRename(target) {
+    state.renameTarget = target;
+    const titles = { pc: ["Rename PC", "The new name is only used in Delos on this device.", state.pcName],
+      profile: ["Rename profile", "Shown on the home screen and in the side menu.", state.profile.name],
+      gridKey: ["SteamGridDB API key", "Paste your key from steamgriddb.com → Preferences → API.", S.gridKey || ""] }[target];
+    $("#renameTitle").textContent = titles[0]; $("#renameSub").textContent = titles[1];
+    const inp = $("#renameInput"); inp.value = titles[2]; inp.type = target === "gridKey" ? "password" : "text";
+    openLayer("renameDlg");
+  }
+  function saveRename() {
+    const v = $("#renameInput").value.trim();
+    const t = state.renameTarget;
+    if (!v && t !== "gridKey") { toast("The name can't be empty", "error"); blip("error"); return; }
+    if (t === "pc") { setPcName(v); toast(`Renamed to ${v}`, "check_circle"); }
+    if (t === "profile") { state.profile.name = v; renderProfile(); toast("Profile renamed", "check_circle"); }
+    if (t === "gridKey") { S.gridKey = v; toast(v ? "API key saved" : "API key removed", "key"); }
+    closeLayer();
+    if (state.screen === "settings") renderSettings(focused && focused.dataset.id);
+  }
+
+  // ---------- Focus & spatial navigation ----------
+  let focused = null;
+  const screenFocus = {};
+  function layerRoot() {
+    if (layers.length) return [$("#" + layers[layers.length - 1])];
+    const roots = [$("#scr-" + state.screen)];
+    if (!$("#topnav").hidden) roots.push($("#topnav"));
+    return roots;
+  }
+  function focusables() {
+    const out = [];
+    for (const r of layerRoot()) out.push(...$$(".f", r).filter(e => !e.closest("[hidden]") && !e.classList.contains("disabled") && e.getClientRects().length));
+    return out;
+  }
+  function focusEl(el, opts) {
+    opts = opts || {};
+    if (!el) return;
+    if (focused && focused !== el) focused.classList.remove("is-focus");
+    focused = el;
+    el.classList.add("is-focus");
+    try { el.focus({ preventScroll: true }); } catch (e) { /* noop */ }
+    const input = el.querySelector("input");
+    if (input) { setTimeout(() => { try { input.focus({ preventScroll: true }); input.setSelectionRange(input.value.length, input.value.length); } catch (e) { /* noop */ } }, 0); }
+    if (!opts.noScroll) ensureVisible(el);
+    if (!opts.silent) blip("move");
+    if (!layers.length && el.dataset.id && !el.closest("#topnav")) screenFocus[state.screen] = el.dataset.id;
+    onFocusChanged(el);
+  }
+  function ensureVisible(el) {
+    const sc = el.closest("[data-scroll]"); if (!sc) return;
+    const s = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--s")) || 1;
+    const er = el.getBoundingClientRect(), cr = sc.getBoundingClientRect();
+    if (sc.id === "library" && state.homeLayout === "Row") {
+      // Horizontal row: keep the focused tile near the left edge (offsets ignore the focus scale)
+      let leftIn = 0;
+      for (let n = el; n && n !== sc; n = n.offsetParent) leftIn += n.offsetLeft;
+      const tx = Math.max(0, leftIn - 150);
+      if (Math.abs(tx - sc.scrollLeft) > 1) scrollFast(sc, "scrollLeft", tx);
+      return;
+    }
+    const topIn = (er.top - cr.top) / s + sc.scrollTop;
+    const h = er.height / s, ch = sc.clientHeight;
+    let target = sc.scrollTop;
+    if (sc.id === "library") target = topIn - 98;
+    else if (topIn - 14 < sc.scrollTop) target = topIn - 14;
+    else if (topIn + h + 14 > sc.scrollTop + ch) target = topIn + h + 14 - ch;
+    target = Math.max(0, target);
+    if (Math.abs(target - sc.scrollTop) < 1) return;
+    if (sc.id === "library") scrollFast(sc, "scrollTop", target);
+    else sc.scrollTo({ top: target, behavior: state.motion === "Reduced" ? "auto" : "smooth" });
+  }
+  // The library uses its own short ease-out tween: native smooth scrolling feels sluggish between covers
+  const scrollTweens = new Map();
+  function scrollFast(sc, prop, target) {
+    cancelAnimationFrame(scrollTweens.get(sc) || 0);
+    if (state.motion === "Reduced") { sc[prop] = target; return; }
+    const from = sc[prop], dist = target - from, t0 = performance.now(), dur = 200;
+    const step = now => {
+      const k = Math.min(1, (now - t0) / dur);
+      sc[prop] = from + dist * (1 - Math.pow(1 - k, 3));
+      if (k < 1) scrollTweens.set(sc, requestAnimationFrame(step));
+    };
+    scrollTweens.set(sc, requestAnimationFrame(step));
+  }
+  function move(dir) {
+    const items = focusables();
+    if (!items.length) return;
+    if (!focused || !items.includes(focused)) { focusEl(items[0]); return; }
+    if (focused.hasAttribute("data-adjust") && (dir === "left" || dir === "right")) {
+      const r = findRow(focused.dataset.row); if (r) { adjustRow(r, dir === "left" ? -1 : 1); return; }
+    }
+    const a = focused.getBoundingClientRect();
+    const acx = (a.left + a.right) / 2, acy = (a.top + a.bottom) / 2;
+    let best = null, bestScore = Infinity;
+    for (const el of items) {
+      if (el === focused) continue;
+      const b = el.getBoundingClientRect();
+      const bcx = (b.left + b.right) / 2, bcy = (b.top + b.bottom) / 2;
+      let main, cross;
+      if (dir === "left") { if (bcx >= acx - 2) continue; main = Math.max(0, a.left - b.right); cross = overlap(a.top, a.bottom, b.top, b.bottom) ? 0 : Math.abs(bcy - acy); }
+      else if (dir === "right") { if (bcx <= acx + 2) continue; main = Math.max(0, b.left - a.right); cross = overlap(a.top, a.bottom, b.top, b.bottom) ? 0 : Math.abs(bcy - acy); }
+      else if (dir === "up") { if (bcy >= acy - 2) continue; main = Math.max(0, a.top - b.bottom); cross = overlap(a.left, a.right, b.left, b.right) ? Math.abs(bcx - acx) * .15 : Math.abs(bcx - acx); }
+      else { if (bcy <= acy + 2) continue; main = Math.max(0, b.top - a.bottom); cross = overlap(a.left, a.right, b.left, b.right) ? Math.abs(bcx - acx) * .15 : Math.abs(bcx - acx); }
+      const score = main + cross * 2.2;
+      if (score < bestScore) { bestScore = score; best = el; }
+    }
+    if (best) focusEl(best);
+    else { focused.animate([{ transform: focused.style.transform || "" }, { transform: "translateX(" + (dir === "left" ? -8 : dir === "right" ? 8 : 0) + "px) translateY(" + (dir === "up" ? -8 : dir === "down" ? 8 : 0) + "px) scale(1.06)" }, { transform: "" }], { duration: 260, easing: "ease-out" }); }
+  }
+  function overlap(a1, a2, b1, b2) { return Math.min(a2, b2) - Math.max(a1, b1) > 4; }
+  function onFocusChanged(el) {
+    if (state.screen === "home" && !layers.length && el.dataset.game) {
+      const g = GAMES.find(x => x.id === el.dataset.game);
+      state.focusedGame = g; updateHomeInfo(g);
+    }
+    if (el.dataset.tab != null && state.screen === "settings") {
+      const i = +el.dataset.tab;
+      if (i !== state.settingsTab) { state.settingsTab = i; renderSettings(); $("#setList").scrollTop = 0; }
+    }
+    updateHints();
+  }
+
+  // ---------- Screens ----------
+  const SCREENS = ["boot", "create", "pair", "pin", "home", "settings", "profile", "devices", "stream"];
+  const MAIN = ["home", "settings", "profile", "devices"];
+  let pinTimer = 0;
+  function goScreen(name, opts) {
+    opts = opts || {};
+    closeAllLayers();
+    clearTimeout(pinTimer);
+    const prev = state.screen;
+    state.screen = name;
+    for (const s of SCREENS) {
+      const el = $("#scr-" + s);
+      const on = s === name;
+      el.classList.toggle("active", on);
+      if (on) el.removeAttribute("inert"); else el.setAttribute("inert", "");
+    }
+    const main = MAIN.includes(name);
+    $("#topnav").hidden = !main;
+    $$("#topnav .nav-btn").forEach(b => b.classList.toggle("current", b.dataset.action === "go:" + name));
+    $("#pcPill").hidden = !main;
+    $("#statusbar").classList.toggle("away", name === "stream");
+    $("#hints").classList.toggle("away", name === "stream");
+    applyHero();
+    if (name === "settings") { renderTabs(); renderSettings(); }
+    if (name === "profile") renderProfile();
+    if (name === "pin") startPin();
+    if (name === "stream") startStream();
+    if (prev === "stream" && name !== "stream") stopStream();
+    if (name === "create") { $("#createTitle").textContent = state.editingAvatar ? "Change avatar" : "Who's playing?"; $("#createBtnLabel").textContent = state.editingAvatar ? "Save" : "Create profile"; $("#nameInput").value = state.profile.name; renderAvatars(); }
+    // Initial focus: remembered element, else the screen's first focusable
+    const remembered = screenFocus[name] && $(`#scr-${name} [data-id="${screenFocus[name]}"]`);
+    const initial = opts.focusId ? $(`[data-id="${opts.focusId}"]`) : remembered || focusablesIn(name)[0];
+    if (focused) focused.classList.remove("is-focus");
+    focused = null;
+    if (initial && name !== "stream") setTimeout(() => focusEl(initial, { silent: true }), 30);
+    updateHints();
+  }
+  function focusablesIn(name) { return $$(".f", $("#scr-" + name)).filter(e => !e.classList.contains("disabled")); }
+  function startPin() {
+    const w = $("#pinWait"); w.classList.remove("ok"); $("#pinWaitText").textContent = "Waiting for Vibepollo…";
+    $$("#pinDigits span").forEach(sp => { sp.style.animation = "none"; void sp.offsetWidth; sp.style.animation = ""; });
+    pinTimer = setTimeout(() => {
+      w.classList.add("ok"); $("#pinWaitText").textContent = "PIN accepted"; blip("select");
+      pinTimer = setTimeout(() => portalTo("home", { icon: "desktop_windows", label: `Connecting to ${state.pcName}`, sub: "Vibepollo · paired" }), 900);
+    }, 3200);
+  }
+  function portalTo(screen, info, cb) {
+    const p = $("#portal");
+    $("#portalIcon").textContent = info.icon; $("#portalLabel").textContent = info.label; $("#portalSub").textContent = info.sub || "";
+    p.classList.remove("burst"); p.classList.add("open");
+    blip("open");
+    setTimeout(() => {
+      p.classList.add("burst"); blip("select");
+      setTimeout(() => {
+        state.firstRun = false;
+        goScreen(screen, info.focusId ? { focusId: info.focusId } : undefined);
+        if (cb) cb();
+        p.classList.remove("open");
+        setTimeout(() => p.classList.remove("burst"), 500);
+      }, 380);
+    }, state.motion === "Reduced" ? 600 : 2100);
+  }
+  function replayFirstRun() {
+    closeAllLayers(); state.firstRun = true; state.editingAvatar = false;
+    for (const k in screenFocus) delete screenFocus[k];
+    goScreen("boot");
+  }
+
+  // ---------- Launch & stream ----------
+  function launchGame(g) {
+    if (!g) return;
+    state.currentGame = g;
+    const L = $("#launch");
+    $("#launchCover").innerHTML = artHtml(g);
+    $("#launchLabel").innerHTML = `${escapeHtml(g.title)}<small>Starting on ${escapeHtml(state.pcName)}</small>`;
+    L.classList.remove("dive");
+    const bar = $("#launch .bar"); bar.style.animation = "none"; void bar.offsetWidth; bar.style.animation = "";
+    L.classList.add("open"); blip("select");
+    const t = state.motion === "Reduced" ? 500 : 1800;
+    setTimeout(() => {
+      L.classList.add("dive");
+      setTimeout(() => { goScreen("stream"); setTimeout(() => { L.classList.remove("open"); L.classList.remove("dive"); }, 150); }, 650);
+    }, t);
+  }
+  let gameRaf = 0, gameT0 = 0;
+  const gameCtx = $("#game").getContext("2d");
+  const motes = Array.from({ length: 140 }, () => ({ x: Math.random(), y: Math.random(), z: Math.random() * .9 + .1 }));
+  function startStream() {
+    const g = state.currentGame;
+    $("#qmTitle").textContent = g.title;
+    $("#streamBanner").innerHTML = `<span><span class="glyph-btn"><span class="ms">menu</span></span>Right menu button for the quick menu</span>`;
+    $("#perf").hidden = !state.perfOverlay;
+    gameT0 = performance.now();
+    cancelAnimationFrame(gameRaf);
+    const draw = (ts) => {
+      const t = (ts - gameT0) / 1000, W = 960, H = 540, c = gameCtx;
+      const grd = c.createLinearGradient(0, 0, 0, H);
+      grd.addColorStop(0, `hsl(${g.h2} 45% 8%)`); grd.addColorStop(.6, `hsl(${g.h} 50% 14%)`); grd.addColorStop(1, `hsl(${g.h} 40% 6%)`);
+      c.fillStyle = grd; c.fillRect(0, 0, W, H);
+      const sx = W * .5 + Math.sin(t * .3) * 90, sy = H * .42;
+      const sun = c.createRadialGradient(sx, sy, 0, sx, sy, 260);
+      sun.addColorStop(0, `hsl(${g.h2} 95% 70% / .9)`); sun.addColorStop(.25, `hsl(${g.h2} 90% 55% / .35)`); sun.addColorStop(1, "transparent");
+      c.fillStyle = sun; c.fillRect(0, 0, W, H);
+      for (const m of motes) {
+        m.y += .0009 / m.z; if (m.y > 1) { m.y = 0; m.x = Math.random(); }
+        const x = (m.x - .5) / m.z * 0.6 * W + W / 2, y = m.y * H;
+        c.fillStyle = `hsl(${g.h} 90% ${60 + m.z * 30}% / ${.25 + (1 - m.z) * .6})`;
+        c.fillRect(x, y, 2.2 / m.z, 2.2 / m.z);
+      }
+      c.fillStyle = `hsl(${g.h} 40% 4% / .9)`;
+      c.beginPath(); c.moveTo(0, H);
+      for (let x = 0; x <= W; x += 24) c.lineTo(x, H * .78 + Math.sin(x * .012 + t * .4) * 18 + Math.sin(x * .031) * 10);
+      c.lineTo(W, H); c.fill();
+      if (state.perfOverlay) {
+        const lat = (3.6 + Math.sin(t * 2.3) * .5 + Math.random() * .3).toFixed(1), dec = (1.7 + Math.random() * .4).toFixed(1);
+        $("#perf").innerHTML = `${escapeHtml(state.s.resolution)} · <b>${state.s.fps.replace(" FPS", "")} FPS</b> · ${escapeHtml(state.s.codec)}${state.s.hdr ? " HDR" : ""}<br>Network ${lat} ms · Decode ${dec} ms · ${state.s.pacing}`;
+      }
+      gameRaf = requestAnimationFrame(draw);
+    };
+    gameRaf = requestAnimationFrame(draw);
+  }
+  function stopStream() { cancelAnimationFrame(gameRaf); }
+  function qmAction(a) {
+    if (a === "resume") { closeLayer(); return; }
+    if (a === "keyboard") { closeLayer(); toast("On-screen keyboard (later)", "keyboard"); return; }
+    if (a === "perf") { state.perfOverlay = !state.perfOverlay; $("#perf").hidden = !state.perfOverlay; toast(state.perfOverlay ? "Performance overlay on" : "Performance overlay off", "speed"); return; }
+    if (a === "disconnect" || a === "quit") {
+      closeLayer();
+      portalTo("home", { icon: "home", label: a === "quit" ? `Closing ${state.currentGame.title}` : "Back to Delos", sub: state.pcName, focusId: "game-" + state.currentGame.id });
+    }
+  }
+
+  // ---------- Actions ----------
+  function activate(el) {
+    if (!el) return;
+    const a = el.dataset.action || "";
+    const [cmd, arg] = a.includes(":") ? [a.slice(0, a.indexOf(":")), a.slice(a.indexOf(":") + 1)] : [a, ""];
+    switch (cmd) {
+      case "begin": blip("select"); goScreen("create"); break;
+      case "skip": blip("select"); state.firstRun = false; portalTo("home", { icon: "desktop_windows", label: `Connecting to ${state.pcName}`, sub: "Vibepollo · paired" }); break;
+      case "pick-avatar": {
+        state.profile.avatar = +arg; blip("select");
+        $$("#avatarRow .circle-item").forEach(ci => ci.classList.toggle("selected", +ci.dataset.av === +arg));
+        const nf = $('[data-id="create-name"]'); if (nf && !state.editingAvatar) focusEl(nf);
+        break;
+      }
+      case "edit-name": { const i = $("#nameInput"); i.focus(); break; }
+      case "create-done": {
+        const n = $("#nameInput").value.trim();
+        if (!n) { toast("Enter a name for your profile", "badge"); blip("error"); return; }
+        state.profile.name = n; renderProfile(); blip("select");
+        if (state.editingAvatar) { state.editingAvatar = false; goScreen("profile"); toast("Profile updated", "check_circle"); }
+        else { toast(`Welcome, ${n}`, "waving_hand"); goScreen("pair"); }
+        break;
+      }
+      case "pair-pc": blip("select"); goScreen("pin"); break;
+      case "rescan": { blip("select"); const s = $("#pairSub"); s.textContent = "Searching the local network…"; setTimeout(() => { s.textContent = "Delos found 1 PC running Vibepollo on your network."; }, 1400); break; }
+      case "launch": launchGame(GAMES.find(x => x.id === el.dataset.game)); break;
+      case "go": blip("select"); goScreen(arg); break;
+      case "tab": { const first = $("#setRows .f"); if (first) focusEl(first); break; }
+      case "row": activateRow(arg); break;
+      case "ctx": ctxAction(arg); break;
+      case "qm": qmAction(arg); break;
+      case "device-menu": openContext(); break;
+      case "edit-avatar": blip("select"); state.editingAvatar = true; goScreen("create"); break;
+      case "rename-profile": openRename("profile"); break;
+      case "edit-rename": { const i = $("#renameInput"); i.focus(); break; }
+      case "rename-save": saveRename(); break;
+      case "back": back(); break;
+      case "toast": toast(arg, "info"); blip("select"); break;
+      default: break;
+    }
+  }
+  function back() {
+    if (layers.length) { closeLayer(); return; }
+    const s = state.screen;
+    blip("back");
+    if (["settings", "profile", "devices"].includes(s)) goScreen("home", { focusId: s === "settings" ? "nav-settings" : s === "profile" ? "nav-profile" : "nav-devices" });
+    else if (s === "pin") goScreen("pair");
+    else if (s === "pair") { if (state.firstRun) goScreen("create"); else goScreen("devices"); }
+    else if (s === "create") { if (state.editingAvatar) { state.editingAvatar = false; goScreen("profile"); } else goScreen("boot"); }
+    else if (s === "home") toast("Right menu button opens the side menu", "menu");
+  }
+  function switchTab(dir) {
+    if (state.screen !== "settings" || layers.length) return;
+    state.settingsTab = (state.settingsTab + dir + TABS.length) % TABS.length;
+    blip("move"); renderSettings(); $("#setList").scrollTop = 0;
+    const first = $("#setRows .f"); if (first) focusEl(first, { silent: true });
+  }
+
+  // ---------- Hints ----------
+  function hint(g, label) { return `<span class="hint"><span class="glyph-btn">${g}</span>${label}</span>`; }
+  const MENU_L = `<span class="ms">more_horiz</span>`, MENU_R = `<span class="ms">menu</span>`;
+  function updateHints() {
+    const h = $("#hints");
+    let left = "", items = [];
+    const top = layers[layers.length - 1];
+    if (top === "ctxmenu") items = [hint("A", "Select"), hint("B", "Close")];
+    else if (top === "sidemenu") items = [hint("A", "Change"), hint("B", "Close")];
+    else if (top === "quickmenu") items = [hint("A", "Select"), hint("B", "Resume")];
+    else if (top === "renameDlg" || top === "help") items = [hint("A", "Confirm"), hint("B", "Cancel")];
+    else {
+      switch (state.screen) {
+        case "boot": items = [hint("A", "Select"), hint("H", "Controls")]; break;
+        case "create": items = [hint("A", "Select"), hint("B", "Back")]; break;
+        case "pair": items = [hint("A", "Pair"), hint("B", "Back")]; break;
+        case "pin": items = [hint("B", "Cancel")]; break;
+        case "home": left = `${GAMES.length} apps on ${escapeHtml(state.pcName)}`; items = [hint("A", "Start"), hint(MENU_L, "Options"), hint(MENU_R, "Menu")]; break;
+        case "settings": items = [hint("L1", "Previous tab"), hint("R1", "Next tab"), hint("A", "Change"), hint("B", "Back")]; break;
+        default: items = [hint("A", "Select"), hint("B", "Back"), hint(MENU_R, "Menu")];
+      }
+    }
+    if (focused && focused.hasAttribute("data-adjust") && !top) items.unshift(`<span class="hint"><span class="glyph-btn"><span class="ms">swap_horiz</span></span>Adjust</span>`);
+    h.innerHTML = (left ? `<span class="hint left">${left}</span>` : "") + items.join("");
+  }
+
+  // ---------- Input: keyboard ----------
+  function inputFocused() { const a = document.activeElement; return a && a.tagName === "INPUT"; }
+  function press(btn) {
+    if (state.screen === "stream" && !layers.length) {
+      if (btn === "menuR" || btn === "menuL") openLayer("quickmenu");
+      return;
+    }
+    switch (btn) {
+      case "up": case "down": case "left": case "right": move(btn); break;
+      case "a": activate(focused); break;
+      case "b": back(); break;
+      case "x": case "menuL": if (layers[layers.length - 1] === "ctxmenu") closeLayer(); else if (!layers.length) openContext(); break;
+      case "y": if (state.screen === "boot") activate($('[data-id="boot-skip"]')); break;
+      case "l1": switchTab(-1); break;
+      case "r1": switchTab(1); break;
+      case "menuR": if (layers[layers.length - 1] === "sidemenu") closeLayer(); else if (!layers.length || layers[layers.length - 1] === "ctxmenu") { closeAllLayers(); openSide(); } break;
+      case "help": if (!layers.includes("help")) openLayer("help"); break;
+      case "fullscreen": toggleFullscreen(); break;
+    }
+  }
+  const KEYS = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right", w: "up", s: "down", a: "left", d: "right",
+    Enter: "a", " ": "a", Escape: "b", Backspace: "b", x: "x", y: "y", q: "l1", e: "r1", PageUp: "l1", PageDown: "r1", Tab: "menuL", m: "menuR", h: "help", "?": "help", f: "fullscreen" };
+  document.addEventListener("keydown", (ev) => {
+    if (actx && actx.state === "suspended") actx.resume();
+    const typing = inputFocused();
+    const k = ev.key.length === 1 ? ev.key.toLowerCase() : ev.key;
+    if (typing) {
+      if (ev.key === "ArrowUp" || ev.key === "ArrowDown" || ev.key === "Tab") { /* navigate away */ }
+      else if (ev.key === "Enter") { ev.preventDefault(); document.activeElement.blur(); if (layers[layers.length - 1] === "renameDlg") saveRename(); else move("down"); return; }
+      else if (ev.key === "Escape") { ev.preventDefault(); document.activeElement.blur(); back(); return; }
+      else return; // let the input handle letters, Backspace, left/right
+    }
+    const btn = KEYS[k];
+    if (!btn) return;
+    ev.preventDefault();
+    if (typing) document.activeElement.blur();
+    press(btn);
+  });
+  stage.addEventListener("click", (ev) => {
+    const el = ev.target.closest(".f");
+    if (!el || !stage.contains(el)) return;
+    if (!focusables().includes(el)) return;
+    if (focused !== el) focusEl(el, { silent: true });
+    activate(el);
+  });
+
+  // ---------- Input: gamepad (if the browser allows it) ----------
+  const padPrev = {}; const repeat = {};
+  function pollPad(ts) {
+    let pads = [];
+    try { pads = navigator.getGamepads ? Array.from(navigator.getGamepads()).filter(Boolean) : []; } catch (e) { pads = []; }
+    const p = pads[0];
+    $("#padStatus").hidden = !p;
+    if (p) {
+      const b = i => !!(p.buttons[i] && p.buttons[i].pressed);
+      const ax = p.axes[0] || 0, ay = p.axes[1] || 0;
+      const dirs = { up: b(12) || ay < -.55, down: b(13) || ay > .55, left: b(14) || ax < -.55, right: b(15) || ax > .55 };
+      for (const d in dirs) {
+        if (dirs[d]) {
+          if (!repeat[d]) { repeat[d] = ts + 340; press(d); }
+          else if (ts > repeat[d]) { repeat[d] = ts + 110; press(d); }
+        } else repeat[d] = 0;
+      }
+      const map = { 0: "a", 1: "b", 2: "x", 3: "y", 4: "l1", 5: "r1", 8: "menuL", 9: "menuR" };
+      for (const i in map) { const now = b(+i); if (now && !padPrev[i]) press(map[i]); padPrev[i] = now; }
+    }
+    requestAnimationFrame(pollPad);
+  }
+  window.addEventListener("gamepadconnected", () => toast("Gamepad connected", "sports_esports"));
+
+  // ---------- Dynamic background ----------
+  const bg = {
+    c: $("#bg").getContext("2d"), t: 0, tint: null, tintCur: null
+  };
+  function hsla(h, s, l, a) { return `hsla(${h},${s}%,${l}%,${a})`; }
+  function lerpHue(a, b, k) { const d = ((b - a + 540) % 360) - 180; return (a + d * k + 360) % 360; }
+  function drawBg(ts) {
+    const c = bg.c, W = 960, H = 540;
+    const speed = state.motion === "Reduced" ? .15 : 1;
+    bg.t += .016 * speed;
+    const t = bg.t, dark = theme.dark;
+    if (bg.tint != null) {
+      if (bg.tintCur == null) bg.tintCur = bg.tint;
+      let d = ((bg.tint - bg.tintCur + 540) % 360) - 180;
+      bg.tintCur = (bg.tintCur + d * .04 + 360) % 360;
+    }
+    // With Material You on, every background color comes from the system palette (no game tint)
+    const my = state.materialYou;
+    const tint = !my && state.screen === "home" && bg.tintCur != null ? bg.tintCur : theme.acc2;
+    // While a game background is shown, the base fades out so the hero image shows through the effects
+    const heroActive = state.heroBg && state.screen === "home" && state.heroOpacity > 0;
+    const baseTarget = heroActive ? .12 : 1;
+    bg.baseA = bg.baseA == null ? baseTarget : bg.baseA + (baseTarget - bg.baseA) * .05;
+    c.globalCompositeOperation = "source-over";
+    c.clearRect(0, 0, W, H);
+    const base = c.createLinearGradient(0, 0, 0, H);
+    base.addColorStop(0, dark ? hsla(theme.base, 40, 8, 1) : hsla(theme.base, 45, 96, 1));
+    base.addColorStop(1, dark ? hsla(theme.base, 38, 5, 1) : hsla(theme.base, 38, 90, 1));
+    c.globalAlpha = bg.baseA; c.fillStyle = base; c.fillRect(0, 0, W, H); c.globalAlpha = 1;
+    const kind = state.bg;
+    if (kind === "Aurora") {
+      c.globalCompositeOperation = dark ? "lighter" : "source-over";
+      const hues = my ? [theme.acc, theme.acc2, theme.base, (theme.acc + 24) % 360] : [tint, theme.acc, theme.base + 30, theme.acc2];
+      hues.forEach((h, i) => {
+        const x = W * (.5 + .38 * Math.sin(t * .11 + i * 1.9)), y = H * (.45 + .32 * Math.cos(t * .09 + i * 1.3)), r = W * (.42 + .08 * Math.sin(t * .2 + i));
+        const g = c.createRadialGradient(x, y, 0, x, y, r);
+        g.addColorStop(0, dark ? hsla(h, 85, 52, .32) : hsla(h, 80, 70, .45)); g.addColorStop(1, hsla(h, 80, 50, 0));
+        c.fillStyle = g; c.fillRect(0, 0, W, H);
+      });
+    } else if (kind === "Tide") {
+      for (let i = 0; i < 6; i++) {
+        const y0 = H * (.5 + i * .085), amp = 14 + i * 4, k = .006 + i * .0015, sp = .35 + i * .12;
+        c.beginPath(); c.moveTo(0, H);
+        for (let x = 0; x <= W; x += 12) c.lineTo(x, y0 + Math.sin(x * k + t * sp + i) * amp + Math.sin(x * k * 2.3 - t * sp * .7) * amp * .35);
+        c.lineTo(W, H); c.closePath();
+        const h = i % 2 ? tint : theme.base + 10;
+        c.fillStyle = dark ? hsla(h, 70, 30 + i * 5, .2 + i * .04) : hsla(h, 70, 70 - i * 4, .22 + i * .05);
+        c.fill();
+      }
+    } else if (kind === "Silk") {
+      // Flowing satin ribbons; a band twists where its width crosses zero
+      c.save();
+      c.translate(W / 2, H / 2); c.rotate(-.21); c.translate(-W / 2, -H / 2);
+      c.globalCompositeOperation = dark ? "lighter" : "source-over";
+      const ribbons = my ? [theme.acc, theme.acc2, theme.base, (theme.acc + 24) % 360] : [tint, theme.acc, theme.acc2, (theme.base + 40) % 360];
+      for (let i = 0; i < 4; i++) {
+        const h = ribbons[i], y0 = H * (.22 + i * .18), ph = i * 1.7, sp = .18 + i * .05;
+        const top = [], bot = [];
+        for (let x = -80; x <= W + 80; x += 16) {
+          const y = y0 + Math.sin(x * .006 + t * sp + ph) * 46 + Math.sin(x * .013 - t * sp * 1.3 + ph * 2) * 18;
+          const w = 64 * Math.sin(x * .0042 + t * .22 + ph) + 10 * Math.sin(x * .02 + t);
+          top.push([x, y - w / 2]); bot.push([x, y + w / 2]);
+        }
+        const a = dark ? .26 : .3, l = dark ? 60 : 62;
+        const g = c.createLinearGradient(0, 0, W, 0);
+        g.addColorStop(0, hsla(h, 85, l, 0)); g.addColorStop(.3, hsla(h, 85, l, a));
+        g.addColorStop(.7, hsla((h + 30) % 360, 85, l + 8, a)); g.addColorStop(1, hsla(h, 85, l, 0));
+        c.beginPath(); c.moveTo(top[0][0], top[0][1]);
+        for (const p of top) c.lineTo(p[0], p[1]);
+        for (let j = bot.length - 1; j >= 0; j--) c.lineTo(bot[j][0], bot[j][1]);
+        c.closePath(); c.fillStyle = g; c.fill("evenodd");
+        // Sheen along one edge of the ribbon
+        c.beginPath(); c.moveTo(top[0][0], top[0][1]);
+        for (const p of top) c.lineTo(p[0], p[1]);
+        c.strokeStyle = hsla((h + 30) % 360, 90, dark ? 80 : 45, dark ? .18 : .22); c.lineWidth = 1.2; c.stroke();
+      }
+      c.restore();
+    } else if (kind === "Contour") {
+      // Topographic contour lines over slowly shifting terrain; every fourth line is stronger, like on a map
+      const S = 20, nx = W / S + 1, ny = Math.ceil(H / S) + 1;
+      const f = bg.field || (bg.field = new Float32Array(nx * ny));
+      for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+        const x = i * S, y = j * S;
+        f[j * nx + i] = Math.sin(x * .0062 + t * .07) + Math.sin(y * .0081 - t * .05 + x * .002) + .7 * Math.sin((x - y) * .0047 + t * .09) +
+          .5 * Math.cos(Math.hypot(x - W * .66, y - H * .5) * .011 - t * .12);
+      }
+      c.globalCompositeOperation = dark ? "lighter" : "source-over";
+      const glow = c.createRadialGradient(W * .66, H * .5, 0, W * .66, H * .5, W * .55);
+      glow.addColorStop(0, hsla(theme.acc, 80, dark ? 50 : 70, dark ? .14 : .2)); glow.addColorStop(1, hsla(theme.acc, 80, 50, 0));
+      c.fillStyle = glow; c.fillRect(0, 0, W, H);
+      const ramp = my ? [theme.acc2, theme.acc] : [theme.acc, tint];
+      c.lineJoin = "round"; c.lineCap = "round";
+      for (let k = 0; k < 17; k++) {
+        const L = -2.8 + k * .35, major = k % 4 === 0;
+        c.beginPath();
+        for (let j = 0; j < ny - 1; j++) for (let i = 0; i < nx - 1; i++) {
+          const a = f[j * nx + i], b = f[j * nx + i + 1], d = f[(j + 1) * nx + i + 1], e = f[(j + 1) * nx + i];
+          const x = i * S, y = j * S, p = [];
+          // Marching squares: where the level crosses a cell edge, interpolate the crossing point
+          if ((a > L) !== (b > L)) p.push(x + S * (L - a) / (b - a), y);
+          if ((b > L) !== (d > L)) p.push(x + S, y + S * (L - b) / (d - b));
+          if ((e > L) !== (d > L)) p.push(x + S * (L - e) / (d - e), y + S);
+          if ((a > L) !== (e > L)) p.push(x, y + S * (L - a) / (e - a));
+          if (p.length >= 4) { c.moveTo(p[0], p[1]); c.lineTo(p[2], p[3]); }
+          if (p.length === 8) { c.moveTo(p[4], p[5]); c.lineTo(p[6], p[7]); }
+        }
+        const h = lerpHue(ramp[0], ramp[1], k / 16);
+        c.strokeStyle = hsla(h, 80, dark ? 68 : 40, (major ? .46 : .16) + k / 16 * (dark ? .18 : .14));
+        c.lineWidth = major ? 1.7 : 1;
+        c.stroke();
+      }
+    }
+    requestAnimationFrame(drawBg);
+  }
+
+  // ---------- Status bar clock & battery ----------
+  function tickClock() {
+    const d = new Date();
+    $("#clock").textContent = String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+  }
+  function setBattery(level, charging) {
+    const pct = Math.round(level * 100);
+    $("#batPct").textContent = pct + "%";
+    $("#batIcon").textContent = charging ? "battery_charging_full" : "battery_" + Math.max(0, Math.min(6, Math.round(level * 6))) + "_bar";
+  }
+  try {
+    if (navigator.getBattery) navigator.getBattery().then(b => { setBattery(b.level, b.charging); b.addEventListener("levelchange", () => setBattery(b.level, b.charging)); b.addEventListener("chargingchange", () => setBattery(b.level, b.charging)); }).catch(() => {});
+  } catch (e) { /* battery API blocked */ }
+
+  // ---------- Boot ----------
+  renderLibrary(); renderAvatars(); renderProfile(); setPcName(state.pcName);
+  applyTheme(); applyHero(); applyUiScale(); applyHomeLayout(); fit(); tickClock(); setInterval(tickClock, 15000);
+  setHero(GAMES[0], true); updateHomeInfo(GAMES[0]);
+  goScreen("boot");
+  requestAnimationFrame(drawBg);
+  requestAnimationFrame(pollPad);
+})();
+</script>

@@ -102,7 +102,10 @@ The Artemis vs. Moonlight comparison only covers code both share. This phase loo
 
 Principle: keep the streaming part (`Game.java`, overlays, virtual controls), rewrite the "shell".
 
-- [ ] Design prototype in the browser first (HTML, 1920×1080 landscape), then implement.
+**Order (decided 2026-10-23): the native UI comes next; new features and smaller changes (including the open Phase 4 items) come after it.**
+
+- [x] Design prototype in the browser first (HTML, 1920×1080 landscape): vision in [GUI.md](GUI.md), interactive prototype in [prototype/delos-gui.html](prototype/delos-gui.html) (open it in a browser; keyboard or gamepad).
+- [ ] Implement the prototype natively.
 - [ ] Kotlin + Jetpack Compose with a **custom console-like design system** (no stock Material look): blur, glow, AGSL shaders, focus animations, UI sounds, haptics. Fallbacks below Android 13.
 - [ ] **Full gamepad / D-pad control**: visible focus, logical order, A/B confirm/back, L1/R1 to switch tabs.
 - [ ] **True fullscreen on every screen** (today only the stream hides the system bars, the menus show them): hide the status and navigation bars via `WindowInsetsController` (swipe from the edge shows them only temporarily) and draw **our own status bar** in the UI – time, device battery, Wi-Fi, later controller battery / connected PC.
