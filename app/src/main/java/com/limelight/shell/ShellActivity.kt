@@ -4,25 +4,27 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.em
-import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.limelight.shell.demo.DesignDemo
+import com.limelight.shell.settings.AppearanceStore
+import com.limelight.shell.ui.Feedback
+import com.limelight.shell.ui.LocalDelosColors
+import com.limelight.shell.ui.LocalFeedback
+import com.limelight.shell.ui.Stage
+import com.limelight.shell.ui.animateDelosColors
+import com.limelight.shell.ui.delosColors
+import com.limelight.shell.ui.systemAccentHue
 
 /**
  * Entry point of the new native Delos UI (Phase 6, see docs/UI_PLAN.md).
@@ -32,11 +34,22 @@ import androidx.core.view.WindowInsetsControllerCompat
  * until the switch-over in step 6.9.
  */
 class ShellActivity : ComponentActivity() {
+    private lateinit var feedback: Feedback
+    private lateinit var appearance: AppearanceStore
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         hideSystemBars()
-        setContent { ShellRoot() }
+        feedback = Feedback(this)
+        appearance = AppearanceStore(this)
+        setContent { ShellRoot(appearance, feedback) }
+        feedback.view = window.decorView
+    }
+
+    override fun onDestroy() {
+        feedback.release()
+        super.onDestroy()
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
@@ -55,25 +68,24 @@ class ShellActivity : ComponentActivity() {
 }
 
 @Composable
-private fun ShellRoot() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Color(0xFF0B1424), Color(0xFF05080F)))),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            BasicText(
-                "DELOS",
-                style = TextStyle(color = Color(0xFFE8EEF7), fontSize = 88.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.24.em)
-            )
-            BasicText(
-                "Native UI · step 6.1",
-                style = TextStyle(color = Color(0xFF8FA3BF), fontSize = 26.sp)
-            )
+private fun ShellRoot(store: AppearanceStore, feedback: Feedback) {
+    val appearance by store.appearance.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val systemHue = remember { systemAccentHue(context) }
+    val colors = animateDelosColors(delosColors(appearance, systemHue))
+    val view = LocalView.current
+    DisposableEffect(view) {
+        // Compose plays the system click on every focus move; Delos has its own UI sounds
+        view.isSoundEffectsEnabled = false
+        onDispose { }
+    }
+    SideEffect {
+        feedback.soundsEnabled = appearance.sounds
+        feedback.hapticsEnabled = appearance.haptics
+    }
+    CompositionLocalProvider(LocalDelosColors provides colors, LocalFeedback provides feedback) {
+        Stage(textScale = appearance.uiScale / 100f) {
+            DesignDemo(appearance, store::update)
         }
     }
 }

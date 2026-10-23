@@ -54,12 +54,14 @@ Each step ends with a build, a test on the Odin and a commit (after approval), l
 - [x] CI still green; APK size check: debug arm64 34.7 → 51.5 MB (debug builds are not shrunk). Release is unchanged at 13.6 MB because the new UI is not declared there yet and R8 removes it; the real release impact is measured in step 6.9.
 
 ### 6.2 Design system and frame
-- [ ] Theme tokens: dark/light, Material You from the system palette, seed colors.
-- [ ] Typography with the bundled fonts, icon font subset, shapes, motion specs (springs, durations from the prototype).
-- [ ] Focus styling (ring, scale, glow, sweep) as reusable modifiers.
-- [ ] Animated backgrounds: Aurora, Tide, Silk, Contour, Still; blended with the game hero image.
-- [ ] Backdrop blur decision (Haze vs. own) and fallback below Android 12.
-- [ ] UI sounds and haptics.
+- [x] Theme tokens: dark/light, Material You from the system palette, seed colors (`shell/ui/Colors.kt`, same formulas as the prototype; settings in `shell/settings/AppearanceStore.kt`, `ui_*` keys).
+- [x] Layout units: a 1920×1080 stage like the prototype (`Stage.kt`: `px` for sizes, `tpx` for text incl. the interface scale).
+- [x] Typography with the bundled fonts, icon font subset (`tools/fonts/subset_fonts.py`, icons listed in `tools/fonts/icons.txt` → `Symbols.kt`), motion curves from the prototype (`Motion.kt`).
+- [x] Focus styling (ring, scale, glow, sweep, muted idle covers) as a reusable modifier (`Focus.kt`). Elements are always focusable, also in touch mode.
+- [x] Animated backgrounds: Aurora, Tide, Silk, Contour, Still, blended with the game background ("hero") as in the prototype (`Backdrop.kt`); time-based, so 120 Hz screens animate at the same speed.
+- [x] Backdrop blur: Haze 2.0.1 (`hazeSource` / `hazeBlur`), dimmed fallback below Android 12.
+- [x] UI sounds (`tools/sounds/make_ui_sounds.py`, identical to the prototype's blips) and haptics; the system click sound is turned off. Devices with only a rumble motor (no resonant frequency reported, e.g. the Odin; on Android 13 and older it cannot be read) get full-strength pulses instead of the system ticks, tuned on the Odin: 50 ms per move, 70 ms per confirmation.
+- Temporary test screen `shell/demo/DesignDemo.kt` (replaced by the real shell in 6.3).
 
 ### 6.3 Shell
 - [ ] Fullscreen on every screen (`WindowInsetsController`). Own **status bar** (brand, connected PC pill, top nav, Wi-Fi, battery, clock) and **hint bar**.
