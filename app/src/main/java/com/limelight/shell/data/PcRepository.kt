@@ -4,11 +4,11 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.content.SharedPreferences
 import android.os.IBinder
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import androidx.preference.PreferenceManager
 import com.limelight.LimeLog
 import com.limelight.computers.ComputerManagerListener
 import com.limelight.computers.ComputerManagerService
@@ -57,12 +57,12 @@ sealed interface Library {
 /**
  * Connects the new UI to [ComputerManagerService] (the same service the classic UI uses): PCs, their
  * state and the app list of the active PC. Polls only while the shell is started, like PcView/AppView.
- * Hidden apps share the classic UI's "HiddenApps" preferences.
+ * What a profile keeps (hidden games, the last played game, names given to PCs, the PC home shows) is
+ * read from the current profile's [settings].
  */
-class PcRepository(context: Context) : DefaultLifecycleObserver {
+class PcRepository(context: Context, private val settings: () -> SharedPreferences) : DefaultLifecycleObserver {
     private val app = context.applicationContext
-    private val prefs = PreferenceManager.getDefaultSharedPreferences(app)
-    private val hiddenPrefs = app.getSharedPreferences(HIDDEN_APPS_PREFS, Context.MODE_PRIVATE)
+    private val prefs: SharedPreferences get() = settings()
 
     private val pcMap = LinkedHashMap<String, Pc>()
     private val _pcs = MutableStateFlow<List<Pc>>(emptyList())
@@ -140,12 +140,12 @@ class PcRepository(context: Context) : DefaultLifecycleObserver {
     }
 
     fun hiddenIds(pcUuid: String): Set<Int> =
-        hiddenPrefs.getStringSet(pcUuid, emptySet())!!.mapNotNull { it.toIntOrNull() }.toSet()
+        prefs.getStringSet(hiddenAppsKey(pcUuid), emptySet())!!.mapNotNull { it.toIntOrNull() }.toSet()
 
     fun setHidden(pcUuid: String, appId: Int, hidden: Boolean) {
         val ids = hiddenIds(pcUuid).toMutableSet()
         if (hidden) ids += appId else ids -= appId
-        hiddenPrefs.edit().putStringSet(pcUuid, ids.map(Int::toString).toSet()).apply()
+        prefs.edit().putStringSet(hiddenAppsKey(pcUuid), ids.map(Int::toString).toSet()).apply()
         update()
     }
 
@@ -317,9 +317,14 @@ class PcRepository(context: Context) : DefaultLifecycleObserver {
 
     private fun customNameKey(uuid: String) = "ui_pc_name_$uuid"
 
+    /** Another profile's settings apply: its names for the PCs, its PC, hidden games and last played game. */
+    fun profileChanged() = synchronized(this) {
+        pcMap.replaceAll { uuid, pc -> snapshot(uuid, pc.details) }
+        _pcs.value = pcMap.values.toList()
+        update()
+    }
+
     private companion object {
-        /** Shared with the classic AppView. */
-        const val HIDDEN_APPS_PREFS = "HiddenApps"
         const val KEY_ACTIVE_PC = "ui_active_pc"
     }
 }

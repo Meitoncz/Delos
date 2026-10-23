@@ -52,14 +52,20 @@ class ShellActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         hideSystemBars()
         feedback = Feedback(this)
-        appearance = AppearanceStore(this)
-        repo = PcRepository(this)
+        // Everything below reads the current profile's settings
+        val profiles = ProfileStore(this)
+        appearance = AppearanceStore(this, profiles::settings)
+        repo = PcRepository(this, profiles::settings)
+        val startup = StartupStore(profiles::settings)
+        profiles.onSettingsChanged {
+            appearance.reload()
+            startup.reload()
+            repo.profileChanged()
+        }
         lifecycle.addObserver(repo)
         repo.bind()
         boxArt = BoxArtCache(this) { repo.binder?.uniqueId }
         val launcher = GameLauncher(this, repo)
-        val profiles = ProfileStore(this)
-        val startup = StartupStore(this)
         val setup = PcSetup(this, repo)
         setContent { ShellRoot(appearance, feedback, keys, repo, boxArt, launcher, profiles, startup, setup) }
         feedback.view = window.decorView

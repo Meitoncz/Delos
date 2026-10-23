@@ -1,6 +1,7 @@
 package com.limelight.shell.data
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.compose.runtime.Immutable
 import androidx.preference.PreferenceManager
 import com.limelight.LimeLog
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.UUID
+import java.util.concurrent.CopyOnWriteArrayList
 
 /** An avatar to choose from (the prototype's `AVATARS`): icon, name and color. */
 @Immutable
@@ -36,17 +38,38 @@ data class Profiles(val all: List<Profile>, val currentId: String?) {
     val current: Profile? get() = all.firstOrNull { it.id == currentId } ?: all.firstOrNull()
 }
 
-/** Stores the profiles as JSON in the default SharedPreferences (`ui_profiles`, `ui_profile`). */
+/**
+ * Stores the profiles as JSON in the default SharedPreferences (`ui_profiles`, `ui_profile`). Every
+ * profile keeps all of its settings in its own preferences file (`ui_profile_<id>`): appearance, how
+ * Delos starts, hidden games, the last played game and the names given to PCs.
+ */
 class ProfileStore(context: Context) {
-    private val prefs = PreferenceManager.getDefaultSharedPreferences(context.applicationContext)
+    private val app = context.applicationContext
+    private val prefs = PreferenceManager.getDefaultSharedPreferences(app)
     private val state = MutableStateFlow(read())
+    private val settingsListeners = CopyOnWriteArrayList<() -> Unit>()
 
     val profiles: StateFlow<Profiles> = state.asStateFlow()
 
-    /** Adds a profile and makes it the current one. */
+    init {
+        // Profiles made before they had their own settings take over the new UI's settings so far
+        state.value.all.forEach { p -> settingsOf(p.id).takeIf { it.all.isEmpty() }?.let { copySettings(into = it, from = null) } }
+    }
+
+    /** The current profile's settings; the default preferences before the first profile exists. */
+    fun settings(): SharedPreferences = state.value.current?.let { settingsOf(it.id) } ?: prefs
+
+    /** [listener] runs whenever other settings apply (another profile, or the first one). */
+    fun onSettingsChanged(listener: () -> Unit) {
+        settingsListeners += listener
+    }
+
+    /** Adds a profile with a copy of the current one's settings and makes it the current one. */
     fun create(name: String, avatar: Int): Profile {
         val profile = Profile(UUID.randomUUID().toString(), name, avatar)
+        copySettings(into = settingsOf(profile.id), from = state.value.current)
         save(Profiles(state.value.all + profile, profile.id))
+        settingsListeners.forEach { it() }
         return profile
     }
 
@@ -55,7 +78,39 @@ class ProfileStore(context: Context) {
     }
 
     fun switchTo(id: String) {
-        if (state.value.all.any { it.id == id }) save(state.value.copy(currentId = id))
+        if (id == state.value.current?.id || state.value.all.none { it.id == id }) return
+        save(state.value.copy(currentId = id))
+        settingsListeners.forEach { it() }
+    }
+
+    private fun settingsOf(id: String): SharedPreferences = app.getSharedPreferences("ui_profile_$id", Context.MODE_PRIVATE)
+
+    /**
+     * Copies the settings of profile [from], or without one: the new UI's settings from before profiles
+     * had their own (`ui_*` in the default preferences) and the classic UI's hidden games.
+     */
+    private fun copySettings(into: SharedPreferences, from: Profile?) {
+        val editor = into.edit().clear()
+        if (from != null) {
+            settingsOf(from.id).all.forEach { (key, value) -> editor.put(key, value) }
+        } else {
+            prefs.all.forEach { (key, value) -> if (key.startsWith("ui_") && key != KEY_PROFILES && key != KEY_CURRENT) editor.put(key, value) }
+            app.getSharedPreferences(CLASSIC_HIDDEN_APPS, Context.MODE_PRIVATE).all.forEach { (pcUuid, ids) ->
+                if (ids is Set<*>) editor.putStringSet(hiddenAppsKey(pcUuid), ids.filterIsInstance<String>().toSet())
+            }
+        }
+        editor.apply()
+    }
+
+    private fun SharedPreferences.Editor.put(key: String, value: Any?) {
+        when (value) {
+            is Boolean -> putBoolean(key, value)
+            is Int -> putInt(key, value)
+            is Long -> putLong(key, value)
+            is Float -> putFloat(key, value)
+            is String -> putString(key, value)
+            is Set<*> -> putStringSet(key, value.filterIsInstance<String>().toSet())
+        }
     }
 
     private fun read(): Profiles {
@@ -82,5 +137,11 @@ class ProfileStore(context: Context) {
     private companion object {
         const val KEY_PROFILES = "ui_profiles"
         const val KEY_CURRENT = "ui_profile"
+
+        /** The classic AppView's hidden games (per PC uuid), taken over by the first profile. */
+        const val CLASSIC_HIDDEN_APPS = "HiddenApps"
     }
 }
+
+/** A profile's hidden games on [pcUuid] (app ids as strings). */
+fun hiddenAppsKey(pcUuid: String) = "ui_hidden_$pcUuid"

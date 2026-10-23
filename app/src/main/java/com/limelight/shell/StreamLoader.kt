@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.ComposeView
 import com.limelight.Game
+import com.limelight.shell.data.ProfileStore
 import com.limelight.shell.settings.AppearanceStore
 import com.limelight.shell.ui.EaseOut
 import com.limelight.shell.ui.GameArt
@@ -128,7 +129,8 @@ class StreamLoader private constructor(private val activity: ComponentActivity, 
             )
             val view = ComposeView(activity)
             val loader = StreamLoader(activity, view, pcName)
-            val appearance = AppearanceStore(activity).appearance.value
+            // The colors and scale of the profile that started the stream
+            val appearance = AppearanceStore(activity, ProfileStore(activity)::settings).appearance.value
             val colors = delosColors(appearance, systemAccentHue(activity))
             view.setContent {
                 CompositionLocalProvider(LocalDelosColors provides colors) {

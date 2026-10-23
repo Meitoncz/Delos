@@ -3,7 +3,6 @@ package com.limelight.shell.settings
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.res.Configuration
-import androidx.preference.PreferenceManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -37,15 +36,20 @@ data class Appearance(
 )
 
 /**
- * Stores [Appearance] in the default SharedPreferences (next to the stream settings) under `ui_*` keys,
- * so the classic UI and the stream are not affected.
+ * Stores [Appearance] under `ui_*` keys in the current profile's [settings] (ProfileStore.settings), so
+ * every profile has its own and the classic UI and the stream are not affected.
  */
-class AppearanceStore(context: Context) {
-    private val prefs: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context.applicationContext)
+class AppearanceStore(context: Context, private val settings: () -> SharedPreferences) {
+    private val prefs: SharedPreferences get() = settings()
     private val systemDark = (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
     private val state = MutableStateFlow(read())
 
     val appearance: StateFlow<Appearance> = state.asStateFlow()
+
+    /** Reads the settings again (after switching profiles). */
+    fun reload() {
+        state.value = read()
+    }
 
     fun update(transform: (Appearance) -> Appearance) {
         val next = transform(state.value)
