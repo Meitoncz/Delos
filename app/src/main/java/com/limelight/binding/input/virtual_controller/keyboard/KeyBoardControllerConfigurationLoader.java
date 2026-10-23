@@ -551,9 +551,12 @@ public class KeyBoardControllerConfigurationLoader {
 
     public static void saveProfile(final KeyBoardController controller,
                                    final Context context) {
-        String name = PreferenceManager.getDefaultSharedPreferences(context).getString(OSC_PREFERENCE, OSC_PREFERENCE_VALUE);
+        // Delos: the keyboard layout follows the active user's stream settings.
+        String name = com.limelight.profiles.ProfilesManager.getInstance()
+                .getOverlayingSharedPreferences(context).getString(OSC_PREFERENCE, OSC_PREFERENCE_VALUE);
 
-        SharedPreferences.Editor prefEditor = context.getSharedPreferences(name, Activity.MODE_PRIVATE).edit();
+        // Delos: editable layouts belong to the active user profile.
+        SharedPreferences.Editor prefEditor = com.limelight.shell.settings.ProfileLayouts.preferences(context, name).edit();
 
         for (keyBoardVirtualControllerElement element : controller.getElements()) {
             String prefKey = "" + element.elementId;
@@ -567,9 +570,12 @@ public class KeyBoardControllerConfigurationLoader {
     }
 
     public static void loadFromPreferences(final KeyBoardController controller, final Context context) {
-        String name = PreferenceManager.getDefaultSharedPreferences(context).getString(OSC_PREFERENCE, OSC_PREFERENCE_VALUE);
+        // Delos: the keyboard layout follows the active user's stream settings.
+        String name = com.limelight.profiles.ProfilesManager.getInstance()
+                .getOverlayingSharedPreferences(context).getString(OSC_PREFERENCE, OSC_PREFERENCE_VALUE);
 
-        SharedPreferences pref = context.getSharedPreferences(name, Activity.MODE_PRIVATE);
+        // Delos: editable layouts belong to the active user profile.
+        SharedPreferences pref = com.limelight.shell.settings.ProfileLayouts.preferences(context, name);
 
         for (keyBoardVirtualControllerElement element : controller.getElements()) {
             String prefKey = "" + element.elementId;

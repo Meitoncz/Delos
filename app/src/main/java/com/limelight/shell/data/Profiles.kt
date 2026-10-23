@@ -6,6 +6,9 @@ import androidx.compose.runtime.Immutable
 import androidx.preference.PreferenceManager
 import com.limelight.LimeLog
 import com.limelight.shell.ui.Symbols
+import com.limelight.shell.settings.SettingsCatalog
+import com.limelight.shell.settings.StreamProfileStore
+import com.limelight.shell.settings.ProfileLayouts
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,7 +30,7 @@ val AVATARS = listOf(
     Avatar(Symbols.SPA, "Calm", 150f),
 )
 
-/** A user profile of the new UI: a name and an avatar (what else it holds is decided in step 6.7). */
+/** A user profile of the new UI: identity and a complete, independent set of preferences. */
 @Immutable
 data class Profile(val id: String, val name: String, val avatar: Int) {
     val look: Avatar get() = AVATARS[avatar.coerceIn(AVATARS.indices)]
@@ -48,12 +51,16 @@ class ProfileStore(context: Context) {
     private val prefs = PreferenceManager.getDefaultSharedPreferences(app)
     private val state = MutableStateFlow(read())
     private val settingsListeners = CopyOnWriteArrayList<() -> Unit>()
+    val catalog = SettingsCatalog(app)
+    val streamProfiles = StreamProfileStore(app, catalog)
 
     val profiles: StateFlow<Profiles> = state.asStateFlow()
 
     init {
         // Profiles made before they had their own settings take over the new UI's settings so far
         state.value.all.forEach { p -> settingsOf(p.id).takeIf { it.all.isEmpty() }?.let { copySettings(into = it, from = null) } }
+        streamProfiles.activate(state.value.current, settings())
+        state.value.current?.let { ProfileLayouts.initialize(app, it.id, settings()) }
     }
 
     /** The current profile's settings; the default preferences before the first profile exists. */
@@ -68,18 +75,24 @@ class ProfileStore(context: Context) {
     fun create(name: String, avatar: Int): Profile {
         val profile = Profile(UUID.randomUUID().toString(), name, avatar)
         copySettings(into = settingsOf(profile.id), from = state.value.current)
+        ProfileLayouts.copy(app, state.value.current?.id, profile.id)
+        settingsOf(profile.id).edit().putBoolean("ui_layouts_initialized", true).apply()
         save(Profiles(state.value.all + profile, profile.id))
+        streamProfiles.activate(profile, settings())
         settingsListeners.forEach { it() }
         return profile
     }
 
     fun update(id: String, transform: (Profile) -> Profile) {
         save(state.value.copy(all = state.value.all.map { if (it.id == id) transform(it) else it }))
+        state.value.all.firstOrNull { it.id == id }?.let(streamProfiles::rename)
     }
 
     fun switchTo(id: String) {
         if (id == state.value.current?.id || state.value.all.none { it.id == id }) return
         save(state.value.copy(currentId = id))
+        streamProfiles.activate(state.value.current, settings())
+        state.value.current?.let { ProfileLayouts.initialize(app, it.id, settings()) }
         settingsListeners.forEach { it() }
     }
 

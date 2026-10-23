@@ -107,15 +107,17 @@ Each step ends with a build, a test on the Odin and a commit (after approval), l
 - [x] The new shell handles `art://` pairing and launch links (with a security prompt) and PC shortcuts (`ShellLink.kt`). The system still sends them to the classic UI until 6.9.
 
 ### 6.7 Settings
-- [ ] Settings screen with icon tabs (L1/R1), rows (toggle, choice, slider, action) and a description panel. Each row writes the same keys as today's `preferences.xml` (126 keys, 13 categories), so `PreferenceConfiguration` and the stream keep working unchanged.
-- [ ] Port the device-dependent logic of `StreamSettings`, category by category:
+- [x] Settings screen with icon tabs (L1/R1), rows (toggle, choice, slider, text, action) and a description panel. Each row writes the same keys as today's `preferences.xml` (116 controls in 13 categories; the earlier total of 126 included ten category keys), so `PreferenceConfiguration` and the stream keep working unchanged. See [SETTINGS.md](SETTINGS.md).
+- [x] Port the device-dependent logic of `StreamSettings`, category by category:
   - resolution and refresh rate lists for the display;
   - codec and HDR capability checks;
   - options hidden on devices that do not support them;
   - resetting on-screen controls and the keyboard layout.
-- [ ] Quick search across all settings (type or pick a letter with the controller, jump straight to the row).
-- [ ] New Delos settings: Appearance (theme, Material You, colors, background, home layout, game background blur/opacity, interface scale, animations) and Covers (SteamGridDB).
-- [ ] Stream settings per user profile: each profile gets its own Artemis settings profile, switched together with it (open question 1).
+- [x] Quick search across all settings (type or pick a letter with the controller, jump straight to the row).
+- [x] New Delos settings: Appearance (theme, Material You, colors, background, home layout, game background blur/opacity, interface scale, animations) and a Covers information tab (SteamGridDB implementation remains 6.8).
+- [x] Stream settings per user profile: each profile gets its own Artemis settings profile, switched together with it (open question 1). New profiles copy stream settings and editable control layouts from the current profile (approved 2026-10-23).
+- [x] The user started a stream on the Odin and confirmed that the changed resolution was applied (2026-10-23).
+- [x] Y opens search and appears in the hint bar. Verified on the Odin together with controller search/jump, single feedback per tab switch and complete section headings on upward focus navigation.
 
 ### 6.8 SteamGridDB
 - [ ] API key entry (the user's own key), stored locally.

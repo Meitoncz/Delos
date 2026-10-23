@@ -11,8 +11,18 @@ class GlobalKeys {
     /** Handles a key-up of one of [KEYS]. */
     var listener: ((keyCode: Int) -> Unit)? = null
 
+    /** Y opens settings search only while the settings screen accepts input. */
+    var canSearch: () -> Boolean = { false }
+    var onSearch: (() -> Unit)? = null
+
     /** Returns whether the event was consumed: both edges are, so no fallback key is synthesized. */
     fun dispatch(event: KeyEvent): Boolean {
+        if (event.keyCode == KeyEvent.KEYCODE_BUTTON_Y) {
+            val search = onSearch ?: return false
+            if (!canSearch()) return false
+            if (event.action == KeyEvent.ACTION_UP && event.repeatCount == 0 && !event.isCanceled) search()
+            return true
+        }
         if (event.keyCode !in KEYS) return false
         val l = listener ?: return false
         if (event.action == KeyEvent.ACTION_UP && event.repeatCount == 0) l(event.keyCode)

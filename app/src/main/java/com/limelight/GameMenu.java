@@ -200,7 +200,8 @@ public class GameMenu implements Game.GameMenuCallbacks {
         }
 
         // Import custom shortcuts
-        SharedPreferences preferences = game.getSharedPreferences(PREF_NAME, Activity.MODE_PRIVATE);
+        // Delos: custom special keys belong to the active user profile.
+        SharedPreferences preferences = com.limelight.shell.settings.ProfileLayouts.preferences(game, PREF_NAME);
         String value = preferences.getString(KEY_NAME,"");
 
         if(!TextUtils.isEmpty(value)){

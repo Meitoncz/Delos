@@ -413,7 +413,8 @@ public class VirtualControllerConfigurationLoader {
 
     public static void saveProfile(final VirtualController controller,
                                    final Context context) {
-        SharedPreferences.Editor prefEditor = context.getSharedPreferences(OSC_PREFERENCE, Activity.MODE_PRIVATE).edit();
+        // Delos: editable layouts belong to the active user profile.
+        SharedPreferences.Editor prefEditor = com.limelight.shell.settings.ProfileLayouts.preferences(context, OSC_PREFERENCE).edit();
 
         for (VirtualControllerElement element : controller.getElements()) {
             String prefKey = ""+element.elementId;
@@ -428,7 +429,8 @@ public class VirtualControllerConfigurationLoader {
     }
 
     public static void loadFromPreferences(final VirtualController controller, final Context context) {
-        SharedPreferences pref = context.getSharedPreferences(OSC_PREFERENCE, Activity.MODE_PRIVATE);
+        // Delos: editable layouts belong to the active user profile.
+        SharedPreferences pref = com.limelight.shell.settings.ProfileLayouts.preferences(context, OSC_PREFERENCE);
 
         for (VirtualControllerElement element : controller.getElements()) {
             String prefKey = ""+element.elementId;

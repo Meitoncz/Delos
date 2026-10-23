@@ -1,6 +1,7 @@
 package com.limelight.shell
 
 import android.content.Intent
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.KeyEvent
 import androidx.activity.ComponentActivity
@@ -47,6 +48,7 @@ class ShellActivity : ComponentActivity() {
     private lateinit var appearance: AppearanceStore
     private lateinit var repo: PcRepository
     private lateinit var boxArt: BoxArtCache
+    private lateinit var profiles: ProfileStore
     private val keys = GlobalKeys()
 
     /** A link or shortcut the shell still has to handle (from the intent that started or reached it). */
@@ -58,7 +60,7 @@ class ShellActivity : ComponentActivity() {
         hideSystemBars()
         feedback = Feedback(this)
         // Everything below reads the current profile's settings
-        val profiles = ProfileStore(this)
+        profiles = ProfileStore(this)
         appearance = AppearanceStore(this, profiles::settings)
         repo = PcRepository(this, profiles::settings)
         val startup = StartupStore(profiles::settings)
@@ -83,12 +85,20 @@ class ShellActivity : ComponentActivity() {
         ShellLink.from(this, intent)?.let { links.value = it }
     }
 
+    // Activity's public key dispatcher must still run after the shell's global controller keys.
+    @SuppressLint("RestrictedApi")
     override fun dispatchKeyEvent(event: KeyEvent): Boolean = keys.dispatch(event) || super.dispatchKeyEvent(event)
 
     override fun onDestroy() {
+        profiles.streamProfiles.close()
         repo.unbind()
         feedback.release()
         super.onDestroy()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        profiles.streamProfiles.resume()
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {

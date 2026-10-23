@@ -33,7 +33,6 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
-import com.limelight.shell.screens.AppearanceRows
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.limelight.shell.data.App
 import com.limelight.shell.data.GameLauncher
@@ -261,6 +260,8 @@ fun Shell(
     }
 
     DisposableEffect(keys) {
+        keys.canSearch = { shell.screen == Screen.Settings && shell.layer == null && shell.portal == null && shell.launch == null }
+        keys.onSearch = { shell.onSettingsSearch?.invoke() }
         keys.listener = listener@{ code ->
             if (shell.launch != null || shell.portal != null) return@listener
             when (code) {
@@ -270,7 +271,11 @@ fun Shell(
                 KeyEvent.KEYCODE_BUTTON_R1 -> if (shell.layer == null) shell.onShoulder?.invoke(1)
             }
         }
-        onDispose { keys.listener = null }
+        onDispose {
+            keys.listener = null
+            keys.onSearch = null
+            keys.canSearch = { false }
+        }
     }
 
     BackHandler(enabled = shell.layer != null || shell.screen.back != null) {
@@ -326,7 +331,8 @@ fun Shell(
                 ) { screen ->
                     when (screen) {
                         Screen.Home -> HomeScreen(library, appearance, repo)
-                        Screen.Settings -> SettingsScreen(appearance, update, startup, startupStore::update, pcs)
+                        Screen.Settings -> SettingsScreen(appearance, update, startup, startupStore::update, pcs, profileStore)
+                        Screen.SettingsSearch -> SettingsScreen(appearance, update, startup, startupStore::update, pcs, profileStore, search = true)
                         Screen.Profile -> ProfileScreen(profiles, profileStore)
                         Screen.Devices -> DevicesScreen(pcs, pc?.uuid)
                         Screen.Start -> StartScreen(profiles, profileStore, pcs, startup)
@@ -499,7 +505,8 @@ private fun hints(shell: ShellState, adjustable: Boolean): List<Hint> {
         is Layer.Dialog -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Cancel"))
         null -> when (val screen = shell.screen) {
             Screen.Home -> listOf(Hint(Glyph.A, "Start"), Hint(Glyph.MENU_LEFT, "Menu"), Hint(Glyph.MENU_RIGHT, "Options"))
-            Screen.Settings -> adjust + listOf(Hint(Glyph.A, "Change"), Hint(Glyph.B, "Back"), Hint(Glyph.MENU_LEFT, "Menu"))
+            Screen.Settings -> adjust + listOf(Hint(Glyph.L1, "Previous tab"), Hint(Glyph.R1, "Next tab"), Hint(Glyph.Y, "Search"), Hint(Glyph.A, "Change"), Hint(Glyph.B, "Back"))
+            Screen.SettingsSearch -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"))
             Screen.Start -> listOf(Hint(Glyph.A, "Connect"), Hint(Glyph.MENU_LEFT, "Menu"), Hint(Glyph.MENU_RIGHT, "Options"))
             Screen.Boot -> listOf(Hint(Glyph.A, "Select"))
             is Screen.CreateProfile -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"))

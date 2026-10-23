@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.text.input.KeyboardType
 import com.limelight.shell.data.App
 import com.limelight.shell.data.Pc
+import com.limelight.shell.settings.SettingsTab
 import com.limelight.shell.ui.GameArt
 
 /** Screens of the shell. [main] screens show the top navigation and the PC; [back] is where B goes (null: the system). */
@@ -29,6 +30,10 @@ sealed interface Screen {
     data object Settings : Screen {
         override val main get() = true
         override val back: Screen get() = Home
+    }
+
+    data object SettingsSearch : Screen {
+        override val back: Screen get() = Settings
     }
 
     data object Profile : Screen {
@@ -176,6 +181,9 @@ class ShellState(initial: Screen) {
 
     /** L1 / R1 handler of the current screen (settings tabs), -1 / +1. */
     var onShoulder: ((Int) -> Unit)? = null
+    var settingsTab by mutableStateOf(SettingsTab.STREAM)
+    var settingsFocus by mutableStateOf<String?>(null)
+    var onSettingsSearch: (() -> Unit)? = null
 
     /**
      * Puts the focus back into the current screen when the element that had it is gone (e.g. the home

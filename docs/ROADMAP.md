@@ -114,7 +114,7 @@ Principle: keep the streaming part (`Game.java`, overlays, virtual controls), re
   - [x] 6.4 Home (grid and row layouts, logo + hero background, covers, game context menu)
   - [x] 6.5 Launching a game (loader, dive into the stream, resume/quit without dialogs)
   - [x] 6.6 First launch, PCs and pairing (profile, PC circles, PIN/OTP pairing, portal, devices screen, links and shortcuts)
-  - [ ] 6.7 Settings (all 126 existing settings on the same keys, search, Appearance, Covers, settings profiles)
+  - [x] 6.7 Settings (all 116 existing controls on the same keys, search and Y shortcut, Appearance, Covers information, settings profiles). Changed resolution confirmed in a real stream; controller navigation and feedback verified on the Odin. See [SETTINGS.md](SETTINGS.md). The previous count of 126 included ten category keys.
   - [ ] 6.8 SteamGridDB (API key, matching, 4 images per game, bulk download)
   - [ ] 6.9 Switch-over and cleanup (new shell is the only launcher, old UI and unused dependencies removed)
   - [ ] 6.10 Polish and testing (side-by-side with the prototype, performance, touch, older Android fallbacks, other handhelds)
