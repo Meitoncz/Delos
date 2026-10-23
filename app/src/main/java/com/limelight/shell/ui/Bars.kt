@@ -61,13 +61,25 @@ data class NavButton(val icon: String, val label: String, val current: Boolean, 
  * in the middle and Wi-Fi, battery and clock on the right.
  */
 @Composable
-fun StatusBar(nav: List<NavButton>?, pcName: String?, pcOnline: Boolean, wifi: WifiStatus, battery: BatteryStatus?, clock: String, modifier: Modifier = Modifier) {
+fun StatusBar(
+    nav: List<NavButton>?,
+    pcName: String?,
+    pcOnline: Boolean,
+    wifi: WifiStatus,
+    battery: BatteryStatus?,
+    clock: String,
+    modifier: Modifier = Modifier,
+    /** False where the screen shows something else in the corner (the start screen's profile). */
+    brand: Boolean = true,
+) {
     val colors = LocalDelosColors.current
     Box(modifier.fillMaxWidth().height(104.px).padding(horizontal = 72.px)) {
-        Row(Modifier.align(Alignment.CenterStart), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(18.px)) {
-            LogoMark()
-            BasicText("DELOS", style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx, letterSpacing = .14.em))
-            if (pcName != null) PcPill(pcName, pcOnline)
+        if (brand) {
+            Row(Modifier.align(Alignment.CenterStart), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(18.px)) {
+                LogoMark()
+                BasicText("DELOS", style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx, letterSpacing = .14.em))
+                if (pcName != null) PcPill(pcName, pcOnline)
+            }
         }
         if (nav != null) TopNav(nav, Modifier.align(Alignment.Center))
         Row(Modifier.align(Alignment.CenterEnd), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(22.px)) {

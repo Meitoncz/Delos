@@ -21,7 +21,10 @@ import com.limelight.shell.data.BoxArtCache
 import com.limelight.shell.data.GameLauncher
 import com.limelight.shell.data.LocalBoxArt
 import com.limelight.shell.data.PcRepository
+import com.limelight.shell.data.PcSetup
+import com.limelight.shell.data.ProfileStore
 import com.limelight.shell.settings.AppearanceStore
+import com.limelight.shell.settings.StartupStore
 import com.limelight.shell.ui.Feedback
 import com.limelight.shell.ui.LocalDelosColors
 import com.limelight.shell.ui.LocalFeedback
@@ -55,7 +58,10 @@ class ShellActivity : ComponentActivity() {
         repo.bind()
         boxArt = BoxArtCache(this) { repo.binder?.uniqueId }
         val launcher = GameLauncher(this, repo)
-        setContent { ShellRoot(appearance, feedback, keys, repo, boxArt, launcher) }
+        val profiles = ProfileStore(this)
+        val startup = StartupStore(this)
+        val setup = PcSetup(this, repo)
+        setContent { ShellRoot(appearance, feedback, keys, repo, boxArt, launcher, profiles, startup, setup) }
         feedback.view = window.decorView
     }
 
@@ -83,7 +89,17 @@ class ShellActivity : ComponentActivity() {
 }
 
 @Composable
-private fun ShellRoot(store: AppearanceStore, feedback: Feedback, keys: GlobalKeys, repo: PcRepository, boxArt: BoxArtCache, launcher: GameLauncher) {
+private fun ShellRoot(
+    store: AppearanceStore,
+    feedback: Feedback,
+    keys: GlobalKeys,
+    repo: PcRepository,
+    boxArt: BoxArtCache,
+    launcher: GameLauncher,
+    profiles: ProfileStore,
+    startup: StartupStore,
+    setup: PcSetup,
+) {
     val appearance by store.appearance.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val systemHue = remember { systemAccentHue(context) }
@@ -100,7 +116,7 @@ private fun ShellRoot(store: AppearanceStore, feedback: Feedback, keys: GlobalKe
     }
     CompositionLocalProvider(LocalDelosColors provides colors, LocalFeedback provides feedback, LocalBoxArt provides boxArt) {
         Stage(textScale = appearance.uiScale / 100f) {
-            Shell(appearance, store::update, keys, repo, launcher)
+            Shell(appearance, store::update, keys, repo, launcher, profiles, startup, setup)
         }
     }
 }

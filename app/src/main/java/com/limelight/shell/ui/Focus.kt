@@ -143,12 +143,7 @@ fun Modifier.focusEffects(
             drawContent()
             val r = min(stagePx(corner, stage), size.minDimension / 2f)
             if (sweep && focused) drawSweep(sweepPos.value, r)
-            if (ring != null && ringAlpha > 0f) {
-                val width = stagePx(ring.width, stage)
-                val gap = stagePx(ring.gap, stage)
-                drawRing(colors.accent.copy(alpha = ringAlpha), r, gap + width / 2f, width)
-                if (gap > 0f) drawRing(colors.bg.copy(alpha = ringAlpha), r, gap / 2f, gap)
-            }
+            if (ring != null && ringAlpha > 0f) drawFocusRing(ring, r, ringAlpha, colors, stage)
         }
         .onGloballyPositioned {
             position[0] = it
@@ -200,6 +195,14 @@ private fun DrawScope.drawRing(color: Color, radius: Float, offset: Float, width
         cornerRadius = CornerRadius(radius + offset),
         style = Stroke(width),
     )
+}
+
+/** The focus ring (`box-shadow: 0 0 0 gap bg, 0 0 0 gap+width accent`) around an element with corner [radius]. */
+fun DrawScope.drawFocusRing(ring: FocusRing, radius: Float, alpha: Float, colors: DelosColors, stage: StageMetrics) {
+    val width = stagePx(ring.width, stage)
+    val gap = stagePx(ring.gap, stage)
+    drawRing(colors.accent.copy(alpha = alpha), radius, gap + width / 2f, width)
+    if (gap > 0f) drawRing(colors.bg.copy(alpha = alpha), radius, gap / 2f, gap)
 }
 
 /**

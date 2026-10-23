@@ -29,6 +29,8 @@ check_circle
 chevron_left
 chevron_right
 close
+delete
+dialpad
 error
 expand_less
 expand_more
@@ -36,6 +38,8 @@ filter_none
 help
 history
 info
+lan
+login
 menu
 more_horiz
 refresh
@@ -61,12 +65,14 @@ link_off
 lock
 logout
 mobile_vibrate
+password
 person_add
 power
 power_settings_new
 sailing
 settings
 switch_account
+waving_hand
 
 # Home and games
 download

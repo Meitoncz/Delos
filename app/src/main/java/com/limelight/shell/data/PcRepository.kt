@@ -20,16 +20,22 @@ import com.limelight.utils.CacheHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 import java.io.StringReader
 
 /** A PC as the UI sees it: an immutable snapshot of the service's (mutable) [ComputerDetails]. */
 @Immutable
 data class Pc(
     val uuid: String,
+    /** The name set in Delos (Devices → Rename), else the PC's own. */
     val name: String,
+    val serverName: String,
     val online: Boolean,
     val paired: Boolean,
     val runningGameId: Int,
+    /** Wake-on-LAN needs the PC's MAC address, known once it has been online. */
+    val canWake: Boolean,
     /** The live object of the service, for streaming, box art and server requests. */
     val details: ComputerDetails,
 )
@@ -72,6 +78,8 @@ class PcRepository(context: Context) : DefaultLifecycleObserver {
     var binder: ComputerManagerService.ComputerManagerBinder? = null
         private set
     private var started = false
+    private var paused = false
+    private val forgotten = HashSet<String>()
     private var poller: ComputerManagerService.ApplistPoller? = null
     private var pollerPc: String? = null
     private var rawApps: String? = null
@@ -86,7 +94,7 @@ class PcRepository(context: Context) : DefaultLifecycleObserver {
             Thread {
                 b.waitForReady()
                 binder = b
-                synchronized(this@PcRepository) { if (started) startPolling() }
+                synchronized(this@PcRepository) { if (started && !paused) startPolling() }
             }.start()
         }
 
@@ -106,7 +114,7 @@ class PcRepository(context: Context) : DefaultLifecycleObserver {
 
     override fun onStart(owner: LifecycleOwner) = synchronized(this) {
         started = true
-        if (binder != null) startPolling()
+        if (binder != null && !paused) startPolling()
     }
 
     override fun onStop(owner: LifecycleOwner) = synchronized(this) {
@@ -165,20 +173,74 @@ class PcRepository(context: Context) : DefaultLifecycleObserver {
 
     private fun onComputerUpdated(details: ComputerDetails) = synchronized(this) {
         val uuid = details.uuid ?: return@synchronized
-        pcMap[uuid] = Pc(
-            uuid = uuid,
-            name = details.name ?: "PC",
-            online = details.state == ComputerDetails.State.ONLINE,
-            paired = details.pairState == PairingManager.PairState.PAIRED,
-            runningGameId = details.runningGameId,
-            details = details,
-        )
+        // A PC removed in the meantime may still report once from its polling thread
+        if (uuid in forgotten) return@synchronized
+        pcMap[uuid] = snapshot(uuid, details)
         _pcs.value = pcMap.values.toList()
         if (uuid == activePc()?.uuid && details.rawAppList != null && details.rawAppList != rawApps) {
             parse(details.rawAppList)
         }
         update()
     }
+
+    private fun snapshot(uuid: String, details: ComputerDetails): Pc {
+        val serverName = details.name ?: "PC"
+        return Pc(
+            uuid = uuid,
+            name = prefs.getString(customNameKey(uuid), null) ?: serverName,
+            serverName = serverName,
+            online = details.state == ComputerDetails.State.ONLINE,
+            paired = details.pairState == PairingManager.PairState.PAIRED,
+            runningGameId = details.runningGameId,
+            canWake = details.macAddress != null,
+            details = details,
+        )
+    }
+
+    /** A name for the PC used only in Delos on this device; null or blank goes back to the PC's own. */
+    fun rename(uuid: String, name: String?) = synchronized(this) {
+        val clean = name?.trim()?.takeIf { it.isNotEmpty() }
+        prefs.edit().apply { if (clean == null) remove(customNameKey(uuid)) else putString(customNameKey(uuid), clean) }.apply()
+        val pc = pcMap[uuid] ?: return@synchronized
+        pcMap[uuid] = snapshot(uuid, pc.details)
+        _pcs.value = pcMap.values.toList()
+        update()
+    }
+
+    /** Drops a PC the service has removed (Devices → Remove). */
+    fun forget(uuid: String) = synchronized(this) {
+        forgotten += uuid
+        pcMap.remove(uuid)
+        prefs.edit().remove(customNameKey(uuid)).apply()
+        if (prefs.getString(KEY_ACTIVE_PC, null) == uuid) prefs.edit().remove(KEY_ACTIVE_PC).apply()
+        _pcs.value = pcMap.values.toList()
+        update()
+    }
+
+    /** A PC that is added again (pairing a removed PC once more) is shown again. */
+    fun remember(uuid: String) = synchronized(this) { forgotten -= uuid }
+
+    /** Stops polling while a PC is paired (like PcView), until [resumePolling]. */
+    fun pausePolling() = synchronized(this) {
+        paused = true
+        stopPolling()
+    }
+
+    fun resumePolling() = synchronized(this) {
+        paused = false
+        if (started && binder != null) startPolling()
+    }
+
+    /** Restarts polling, which also searches the local network again. */
+    fun rescan() = synchronized(this) {
+        if (paused || !started || binder == null) return@synchronized
+        stopPolling()
+        startPolling()
+    }
+
+    /** Waits until [uuid] matches [condition] (online after Wake-on-LAN, paired after pairing); null after [timeoutMs]. */
+    suspend fun awaitPc(uuid: String, timeoutMs: Long, condition: (Pc) -> Boolean): Pc? =
+        withTimeoutOrNull(timeoutMs) { pcs.first { list -> list.any { it.uuid == uuid && condition(it) } }.first { it.uuid == uuid } }
 
     private fun parse(raw: String) {
         try {
@@ -252,6 +314,8 @@ class PcRepository(context: Context) : DefaultLifecycleObserver {
     }
 
     private fun lastPlayedKey(uuid: String) = "ui_last_app_$uuid"
+
+    private fun customNameKey(uuid: String) = "ui_pc_name_$uuid"
 
     private companion object {
         /** Shared with the classic AppView. */

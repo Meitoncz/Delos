@@ -23,7 +23,9 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import com.limelight.shell.data.Pc
 import com.limelight.shell.settings.Appearance
+import com.limelight.shell.settings.Startup
 import com.limelight.shell.ui.Figtree
 import com.limelight.shell.ui.InitialFocus
 import com.limelight.shell.ui.LocalDelosColors
@@ -45,12 +47,18 @@ inline fun <reified E : Enum<E>> E.step(dir: Int): E {
 }
 
 /**
- * Settings preview of step 6.3: the Appearance category only. Tabs, the description panel, search and
- * all stream settings come in step 6.7.
+ * Settings preview of steps 6.3 and 6.6: the Appearance category and how Delos starts. Tabs, the
+ * description panel, search and all stream settings come in step 6.7.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun SettingsScreen(appearance: Appearance, update: ((Appearance) -> Appearance) -> Unit) {
+fun SettingsScreen(
+    appearance: Appearance,
+    update: ((Appearance) -> Appearance) -> Unit,
+    startup: Startup,
+    updateStartup: ((Startup) -> Startup) -> Unit,
+    pcs: List<Pc>,
+) {
     val colors = LocalDelosColors.current
     val uiScale = appearance.uiScale / 100f
     val first = remember { FocusRequester() }
@@ -59,7 +67,7 @@ fun SettingsScreen(appearance: Appearance, update: ((Appearance) -> Appearance) 
         Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(24.px)) {
             BasicText("Settings", style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx))
             BasicText(
-                "Appearance · the other categories come in step 6.7",
+                "Appearance and start · the other categories come in step 6.7",
                 style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 22.tpx),
                 modifier = Modifier.padding(bottom = 8.px),
             )
@@ -82,9 +90,32 @@ fun SettingsScreen(appearance: Appearance, update: ((Appearance) -> Appearance) 
                 verticalArrangement = Arrangement.spacedBy(10.px),
             ) {
                 AppearanceRows(appearance, update, Modifier.focusRequester(first))
+                StartupRows(startup, updateStartup, pcs)
             }
         }
     }
+}
+
+/** How Delos starts (GUI.md, start screen): the default device and skipping the start screen. */
+@Composable
+private fun StartupRows(startup: Startup, update: ((Startup) -> Startup) -> Unit, pcs: List<Pc>) {
+    val choices = listOf<Pc?>(null) + pcs.filter { it.paired }.sortedBy { it.name.lowercase() }
+    val index = choices.indexOfFirst { it?.uuid == startup.defaultPc }.coerceAtLeast(0)
+    SettingRow(
+        Symbols.STAR, "Default device",
+        RowValue.Choice(choices[index]?.name ?: "None", { dir ->
+            val next = choices[((index + dir) % choices.size + choices.size) % choices.size]
+            update { it.copy(defaultPc = next?.uuid, skipStart = next != null && it.skipStart) }
+        }),
+        description = "Marked on the start screen; Delos can connect to it right away",
+        enabled = choices.size > 1,
+    )
+    SettingRow(
+        Symbols.FAST_FORWARD, "Skip the start screen",
+        RowValue.Toggle(startup.skipStart) { on -> update { it.copy(skipStart = on) } },
+        description = "Connects straight to the default device when Delos starts",
+        enabled = startup.defaultPc != null,
+    )
 }
 
 /** The Appearance settings (also used by the side menu in a shorter form). */

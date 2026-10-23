@@ -12,12 +12,53 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.text.input.KeyboardType
 import com.limelight.shell.data.App
 import com.limelight.shell.data.Pc
 import com.limelight.shell.ui.GameArt
 
-/** Top-level screens of the shell. [main] screens show the top navigation. */
-enum class Screen(val main: Boolean) { HOME(true), SETTINGS(true), PROFILE(true), DEVICES(true) }
+/** Screens of the shell. [main] screens show the top navigation and the PC; [back] is where B goes (null: the system). */
+sealed interface Screen {
+    val main: Boolean get() = false
+    val back: Screen? get() = null
+
+    data object Home : Screen {
+        override val main get() = true
+    }
+
+    data object Settings : Screen {
+        override val main get() = true
+        override val back: Screen get() = Home
+    }
+
+    data object Profile : Screen {
+        override val main get() = true
+        override val back: Screen get() = Home
+    }
+
+    data object Devices : Screen {
+        override val main get() = true
+        override val back: Screen get() = Home
+    }
+
+    /** The start screen on every launch: the PCs to connect to, the profile in the corner. */
+    data object Start : Screen
+
+    /** First launch: the logo and "Get started". */
+    data object Boot : Screen
+
+    /** Creating a profile, or choosing another avatar for the current one ([editing]). */
+    data class CreateProfile(val editing: Boolean, override val back: Screen?) : Screen
+
+    /** The PCs to pair: discovered ones, an address to enter, searching again. */
+    data class PairPc(override val back: Screen?) : Screen
+
+    /** Pairing [pcUuid]: the PIN to enter on the PC, or a one-time code from Vibepollo ([otp]). */
+    data class Pin(val pcUuid: String, val pcName: String, val otp: Otp?, override val back: Screen) : Screen
+}
+
+/** A one-time PIN and passphrase created in the Vibepollo web UI. */
+data class Otp(val pin: String, val passphrase: String)
 
 @Immutable
 data class MenuItem(val icon: String, val label: String, val action: () -> Unit)
@@ -31,7 +72,33 @@ sealed interface Layer {
     /** [anchor]: bounds of the element the menu belongs to, in root pixels. */
     data class Context(val menu: ContextMenu, val anchor: Rect?) : Layer
     data object Side : Layer
+    data class Dialog(val dialog: DialogSpec) : Layer
 }
+
+/** A field of a dialog. */
+@Immutable
+data class DialogField(
+    val icon: String,
+    val initial: String = "",
+    val placeholder: String = "",
+    val keyboard: KeyboardType = KeyboardType.Text,
+    val password: Boolean = false,
+    val maxLength: Int = 24,
+)
+
+/** A small dialog (`.dialog`): title, note, fields and a confirm button. [onConfirm] gets the values and returns whether it may close. */
+@Immutable
+data class DialogSpec(
+    val title: String,
+    val note: String,
+    val fields: List<DialogField>,
+    val confirm: String,
+    val onConfirm: (List<String>) -> Boolean,
+)
+
+/** The portal into a PC (`#portal`): pulses around an orb with the PC, then a burst into home. */
+@Immutable
+data class Portal(val id: Int, val icon: String, val label: String, val sub: String, val cancellable: Boolean)
 
 @Immutable
 data class Toast(val text: String, val icon: String?, val id: Int)
@@ -83,8 +150,8 @@ class FocusTracker {
 
 /** Navigation, overlays and toasts of the shell. */
 @Stable
-class ShellState {
-    var screen by mutableStateOf(Screen.HOME)
+class ShellState(initial: Screen) {
+    var screen by mutableStateOf(initial)
         private set
     var layer by mutableStateOf<Layer?>(null)
         private set
@@ -96,6 +163,10 @@ class ShellState {
 
     /** The game background behind the home screen (the focused game's art). */
     var hero by mutableStateOf<GameArt?>(null)
+
+    /** The portal while connecting to a PC; [portalBurst] once it bursts into home. */
+    var portal by mutableStateOf<Portal?>(null)
+    var portalBurst by mutableStateOf(false)
 
     /** A game being started: the launch overlay is shown until the stream has opened (step 6.5). */
     var launch by mutableStateOf<LaunchRequest?>(null)
@@ -122,11 +193,15 @@ class ShellState {
         screen = to
     }
 
-    /** B / Back: closes the layer, then goes back to home. Returns false at the root (the system handles it). */
-    fun back(): Boolean = when {
-        layer != null -> { closeLayer(); true }
-        screen != Screen.HOME -> { screen = Screen.HOME; true }
-        else -> false
+    /** B / Back: closes the layer, then goes to the screen's [Screen.back]. Returns false at the root (the system handles it). */
+    fun back(): Boolean {
+        if (layer != null) {
+            closeLayer()
+            return true
+        }
+        val to = screen.back ?: return false
+        navigate(to)
+        return true
     }
 
     fun openLayer(next: Layer, tracker: FocusTracker) {

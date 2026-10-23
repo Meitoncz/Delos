@@ -2,6 +2,7 @@ package com.limelight.shell.data
 
 import android.app.Activity
 import android.content.Intent
+import com.limelight.Game
 import com.limelight.binding.PlatformBinding
 import com.limelight.nvstream.http.HostHttpResponseException
 import com.limelight.nvstream.http.NvHTTP
@@ -32,8 +33,10 @@ class GameLauncher(private val activity: Activity, private val repo: PcRepositor
         val wantsVirtual = PreferenceConfiguration.readPreferences(activity).useVirtualDisplay
         val virtualReady = details.vDisplaySupported && details.vDisplayDriverReady
         val intent = ServerHelper.createStartIntent(activity, app.nvApp, details, binder, wantsVirtual && virtualReady)
-        // The stream shows the new UI's loader while it connects (not the classic dialog)
+        // The stream shows the new UI's loader while it connects (not the classic dialog), with the PC's
+        // name as set in Delos, like the new UI's half of the launch scene
         intent.putExtra(StreamLoader.EXTRA, true)
+        intent.putExtra(Game.EXTRA_PC_NAME, pc.name)
         return Start(intent, wantsVirtual && !virtualReady)
     }
 

@@ -11,7 +11,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -22,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -29,7 +29,6 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -39,13 +38,23 @@ import com.limelight.shell.data.App
 import com.limelight.shell.data.GameLauncher
 import com.limelight.shell.data.Library
 import com.limelight.shell.data.Pc
+import com.limelight.shell.data.AVATARS
 import com.limelight.shell.data.PcRepository
+import com.limelight.shell.data.PcSetup
+import com.limelight.shell.data.ProfileStore
 import com.limelight.shell.screens.HomeScreen
-import com.limelight.shell.screens.PlaceholderScreen
+import com.limelight.shell.screens.BootScreen
+import com.limelight.shell.screens.CreateProfileScreen
+import com.limelight.shell.screens.DevicesScreen
+import com.limelight.shell.screens.PairPcScreen
+import com.limelight.shell.screens.PinScreen
+import com.limelight.shell.screens.ProfileScreen
+import com.limelight.shell.screens.StartScreen
 import com.limelight.shell.screens.SettingsScreen
 import com.limelight.shell.screens.appArt
 import com.limelight.shell.screens.step
 import com.limelight.shell.settings.Appearance
+import com.limelight.shell.settings.StartupStore
 import com.limelight.shell.system.rememberBatteryStatus
 import com.limelight.shell.system.rememberClock
 import com.limelight.shell.system.rememberWifiStatus
@@ -71,12 +80,12 @@ import com.limelight.shell.ui.SettingRow
 import com.limelight.shell.ui.SideMenuHeader
 import com.limelight.shell.ui.SideMenuLayer
 import com.limelight.shell.ui.StatusBar
-import com.limelight.shell.ui.Symbol
 import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.ToastHost
 import com.limelight.shell.ui.ZoomedBar
-import com.limelight.shell.ui.avatarBrush
-import com.limelight.shell.ui.tpx
+import com.limelight.shell.ui.AvatarBadge
+import com.limelight.shell.ui.DialogLayer
+import com.limelight.shell.ui.PortalOverlay
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 
@@ -85,15 +94,25 @@ import dev.chrisbanes.haze.rememberHazeState
  * side menu (left menu button), context menus (right menu button / Start / X) and toasts.
  */
 @Composable
-fun Shell(appearance: Appearance, update: ((Appearance) -> Appearance) -> Unit, keys: GlobalKeys, repo: PcRepository, launcher: GameLauncher) {
+fun Shell(
+    appearance: Appearance,
+    update: ((Appearance) -> Appearance) -> Unit,
+    keys: GlobalKeys,
+    repo: PcRepository,
+    launcher: GameLauncher,
+    profileStore: ProfileStore,
+    startupStore: StartupStore,
+    setup: PcSetup,
+) {
     val colors = LocalDelosColors.current
     val feedback = LocalFeedback.current
-    val shell = remember { ShellState() }
+    // The first launch starts with the logo and a new profile; every later one with the start screen
+    val shell = remember { ShellState(if (profileStore.profiles.value.all.isEmpty()) Screen.Boot else Screen.Start) }
     val tracker = remember { FocusTracker() }
     val haze = rememberHazeState()
     var blurSource by remember { mutableStateOf(false) }
-    LaunchedEffect(shell.layer != null) {
-        if (shell.layer != null) {
+    LaunchedEffect(shell.layer != null || shell.portal != null) {
+        if (shell.layer != null || shell.portal != null) {
             blurSource = true
         } else {
             delay(600)
@@ -103,6 +122,20 @@ fun Shell(appearance: Appearance, update: ((Appearance) -> Appearance) -> Unit, 
     val scope = rememberCoroutineScope()
     val activity = LocalActivity.current
     val actions = remember(launcher) { ShellGameActions(shell, launcher, feedback, scope) }
+    val reducedMotion by rememberUpdatedState(appearance.reducedMotion)
+    val devices = remember { ShellDeviceActions(shell, tracker, repo, setup, startupStore, feedback, scope) { reducedMotion } }
+    val profiles by profileStore.profiles.collectAsStateWithLifecycle()
+    val startup by startupStore.startup.collectAsStateWithLifecycle()
+    val pcs by repo.pcs.collectAsStateWithLifecycle()
+
+    // "Skip the start screen": straight into the default device
+    LaunchedEffect(Unit) {
+        val start = startupStore.startup.value
+        val default = start.defaultPc
+        if (shell.screen == Screen.Start && start.skipStart && default != null) {
+            repo.awaitPc(default, 4_000) { it.paired }?.let { devices.connect(it) }
+        }
+    }
 
     // Starting a game: the launch scene appears and its ring starts filling, then the stream window takes
     // over the very same scene (StreamLoader), connects and opens the ring into the game
@@ -147,7 +180,11 @@ fun Shell(appearance: Appearance, update: ((Appearance) -> Appearance) -> Unit, 
         else -> null
     }
 
+    // The side menu belongs to the main screens and the start screen, not to the first launch
+    val sideMenu = shell.screen.main || shell.screen == Screen.Start
+
     fun toggleSide() {
+        if (shell.layer != null && shell.layer != Layer.Side) return
         if (shell.layer == Layer.Side) {
             feedback.play(Cue.BACK)
             shell.closeLayer()
@@ -162,7 +199,7 @@ fun Shell(appearance: Appearance, update: ((Appearance) -> Appearance) -> Unit, 
             "Delos",
             listOf(
                 MenuItem(Symbols.MENU, "Side menu") { shell.openLayer(Layer.Side, tracker) },
-                MenuItem(Symbols.SETTINGS, "All settings") { shell.navigate(Screen.SETTINGS) },
+                MenuItem(Symbols.SETTINGS, "All settings") { shell.navigate(Screen.Settings) },
             ),
         )
     }
@@ -174,8 +211,9 @@ fun Shell(appearance: Appearance, update: ((Appearance) -> Appearance) -> Unit, 
                 shell.closeLayer()
             }
             null -> {
+                val menu = tracker.contextMenu ?: defaultMenu.takeIf { sideMenu } ?: return
                 feedback.play(Cue.OPEN)
-                shell.openLayer(Layer.Context(tracker.contextMenu ?: defaultMenu, tracker.bounds()), tracker)
+                shell.openLayer(Layer.Context(menu, tracker.bounds()), tracker)
             }
             else -> Unit
         }
@@ -183,9 +221,9 @@ fun Shell(appearance: Appearance, update: ((Appearance) -> Appearance) -> Unit, 
 
     DisposableEffect(keys) {
         keys.listener = listener@{ code ->
-            if (shell.launch != null) return@listener
+            if (shell.launch != null || shell.portal != null) return@listener
             when (code) {
-                KeyEvent.KEYCODE_BUTTON_SELECT -> toggleSide()
+                KeyEvent.KEYCODE_BUTTON_SELECT -> if (sideMenu) toggleSide()
                 KeyEvent.KEYCODE_BUTTON_START, KeyEvent.KEYCODE_BUTTON_X -> toggleContext()
                 KeyEvent.KEYCODE_BUTTON_L1 -> if (shell.layer == null) shell.onShoulder?.invoke(-1)
                 KeyEvent.KEYCODE_BUTTON_R1 -> if (shell.layer == null) shell.onShoulder?.invoke(1)
@@ -194,10 +232,12 @@ fun Shell(appearance: Appearance, update: ((Appearance) -> Appearance) -> Unit, 
         onDispose { keys.listener = null }
     }
 
-    BackHandler(enabled = shell.layer != null || shell.screen != Screen.HOME) {
+    BackHandler(enabled = shell.layer != null || shell.screen.back != null) {
         feedback.play(Cue.BACK)
         shell.back()
     }
+    // B in the portal only cancels waiting for a PC to wake up; nothing underneath moves meanwhile
+    BackHandler(enabled = shell.portal != null) { devices.cancelPortal() }
     // B during the loader cancels the start (registered last, so it wins while a game is starting)
     BackHandler(enabled = shell.launch != null) {
         if (!shell.diving) {
@@ -219,18 +259,21 @@ fun Shell(appearance: Appearance, update: ((Appearance) -> Appearance) -> Unit, 
         if (!restored) runCatching { shell.restoreScreenFocus?.invoke() }
     }
 
+    val profile = profiles.current
     val nav = listOf(
-        NavButton(Symbols.SETTINGS, "Settings", shell.screen == Screen.SETTINGS) { shell.navigate(Screen.SETTINGS) },
-        NavButton(Symbols.SAILING, "Profile", shell.screen == Screen.PROFILE) { shell.navigate(Screen.PROFILE) },
-        NavButton(Symbols.DEVICES, "Devices", shell.screen == Screen.DEVICES) { shell.navigate(Screen.DEVICES) },
+        NavButton(Symbols.SETTINGS, "Settings", shell.screen == Screen.Settings) { shell.navigate(Screen.Settings) },
+        NavButton(profile?.look?.icon ?: Symbols.ACCOUNT_CIRCLE, "Profile", shell.screen == Screen.Profile) { shell.navigate(Screen.Profile) },
+        NavButton(Symbols.DEVICES, "Devices", shell.screen == Screen.Devices) { shell.navigate(Screen.Devices) },
     )
 
-    CompositionLocalProvider(LocalShell provides shell, LocalFocusTracker provides tracker, LocalGameActions provides actions) {
+    CompositionLocalProvider(
+        LocalShell provides shell, LocalFocusTracker provides tracker, LocalGameActions provides actions, LocalDeviceActions provides devices,
+    ) {
         Box(Modifier.fillMaxSize()) {
             // The blur source re-records the whole screen every frame, so it is only active while an overlay
             // is shown (and while it fades out)
             Box(Modifier.fillMaxSize().then(if (blurSource) Modifier.hazeSource(haze) else Modifier)) {
-                Backdrop(appearance, colors, hero = if (shell.screen == Screen.HOME) shell.hero else null)
+                Backdrop(appearance, colors, hero = if (shell.screen == Screen.Home) shell.hero else null)
                 AnimatedContent(
                     shell.screen,
                     transitionSpec = {
@@ -241,14 +284,58 @@ fun Shell(appearance: Appearance, update: ((Appearance) -> Appearance) -> Unit, 
                     label = "screen",
                 ) { screen ->
                     when (screen) {
-                        Screen.HOME -> HomeScreen(library, appearance, repo)
-                        Screen.SETTINGS -> SettingsScreen(appearance, update)
-                        Screen.PROFILE -> PlaceholderScreen(Symbols.ACCOUNT_CIRCLE, "Profile", "Profiles and avatars come in step 6.6.") { shell.navigate(Screen.HOME) }
-                        Screen.DEVICES -> PlaceholderScreen(Symbols.DEVICES, "Devices", "Your PCs, pairing and renaming come in step 6.6.") { shell.navigate(Screen.HOME) }
+                        Screen.Home -> HomeScreen(library, appearance, repo)
+                        Screen.Settings -> SettingsScreen(appearance, update, startup, startupStore::update, pcs)
+                        Screen.Profile -> ProfileScreen(profiles, profileStore)
+                        Screen.Devices -> DevicesScreen(pcs, pc?.uuid)
+                        Screen.Start -> StartScreen(profiles, profileStore, pcs, startup)
+                        Screen.Boot -> BootScreen(
+                            onBegin = { shell.navigate(Screen.CreateProfile(editing = false, back = Screen.Boot)) },
+                            // PCs paired in the classic UI already: a default profile, then straight into home
+                            onSkip = pcs.filter { it.paired }.let { paired ->
+                                if (paired.isEmpty()) null else {
+                                    {
+                                        profileStore.create("Player", AVATARS.indexOfFirst { it.name == "Player" }.coerceAtLeast(0))
+                                        devices.connect(paired.firstOrNull { it.online } ?: paired.first())
+                                    }
+                                }
+                            },
+                        )
+                        is Screen.CreateProfile -> CreateProfileScreen(screen.editing, profile.takeIf { screen.editing }) { name, avatar ->
+                            if (screen.editing) {
+                                profile?.let { p -> profileStore.update(p.id) { it.copy(name = name, avatar = avatar) } }
+                                shell.showToast("Profile updated", Symbols.CHECK_CIRCLE)
+                                shell.navigate(screen.back ?: Screen.Profile)
+                            } else {
+                                profileStore.create(name, avatar)
+                                shell.showToast("Welcome, $name", Symbols.WAVING_HAND)
+                                // The first launch goes on to pairing, unless PCs are paired already
+                                shell.navigate(
+                                    when {
+                                        screen.back != Screen.Boot -> screen.back ?: Screen.Start
+                                        pcs.none { it.paired } -> Screen.PairPc(back = Screen.Start)
+                                        else -> Screen.Start
+                                    }
+                                )
+                            }
+                        }
+                        is Screen.PairPc -> PairPcScreen(screen, pcs)
+                        is Screen.Pin -> PinScreen(
+                            screen, repo, setup,
+                            onFailed = { message ->
+                                feedback.play(Cue.ERROR)
+                                shell.showToast(message, Symbols.ERROR)
+                                shell.navigate(screen.back)
+                            },
+                            onCancel = { shell.navigate(screen.back) },
+                        )
                     }
                 }
                 ZoomedBar(uiScale) {
-                    StatusBar(nav.takeIf { shell.screen.main }, pcName = pc?.name, pcOnline = pc?.online == true, wifi = wifi, battery = battery, clock = clock)
+                    StatusBar(
+                        nav.takeIf { shell.screen.main }, pcName = pc?.name.takeIf { shell.screen.main }, pcOnline = pc?.online == true,
+                        wifi = wifi, battery = battery, clock = clock, brand = shell.screen != Screen.Start,
+                    )
                 }
             }
 
@@ -263,12 +350,8 @@ fun Shell(appearance: Appearance, update: ((Appearance) -> Appearance) -> Unit, 
                 haze,
                 header = {
                     SideMenuHeader(
-                        avatar = {
-                            Box(Modifier.fillMaxSize().background(avatarBrush(200f)), contentAlignment = Alignment.Center) {
-                                Symbol(Symbols.SAILING, 40.tpx, Color.White, filled = true)
-                            }
-                        },
-                        name = "Player",
+                        avatar = { profile?.let { AvatarBadge(it.look, 72f, 40f) } },
+                        name = profile?.name ?: "Delos",
                         status = when {
                             pc == null -> "Not connected"
                             pc.online -> "Connected to ${pc.name}"
@@ -277,7 +360,7 @@ fun Shell(appearance: Appearance, update: ((Appearance) -> Appearance) -> Unit, 
                     )
                 },
             ) { first ->
-                SideMenuRows(appearance, update, Modifier.focusRequester(first)) { shell.navigate(Screen.SETTINGS) }
+                SideMenuRows(appearance, update, Modifier.focusRequester(first)) { shell.navigate(Screen.Settings) }
                 val hiddenCount = (library as? Library.Ready)?.hiddenCount ?: 0
                 if (hiddenCount > 0 || showHidden) {
                     SettingRow(
@@ -287,7 +370,14 @@ fun Shell(appearance: Appearance, update: ((Appearance) -> Appearance) -> Unit, 
                 }
             }
 
-            val note = (library as? Library.Ready)?.takeIf { shell.screen == Screen.HOME && shell.layer == null }?.let { "${it.apps.size} apps on ${it.pc.name}" }
+            DialogLayer((shell.layer as? Layer.Dialog)?.dialog, haze) {
+                feedback.play(Cue.BACK)
+                shell.closeLayer()
+            }
+
+            PortalOverlay(shell.portal, shell.portalBurst, haze, appearance.reducedMotion)
+
+            val note = (library as? Library.Ready)?.takeIf { shell.screen == Screen.Home && shell.layer == null }?.let { "${it.apps.size} apps on ${it.pc.name}" }
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
                 ZoomedBar(uiScale) { HintBar(hints(shell, tracker.adjustable), note = note) }
             }
@@ -361,13 +451,20 @@ private class ShellGameActions(
 /** Button hints for the current screen and layer (the prototype's updateHints). */
 private fun hints(shell: ShellState, adjustable: Boolean): List<Hint> {
     val adjust = if (adjustable) listOf(Hint(Glyph.ADJUST, "Adjust")) else emptyList()
+    shell.portal?.let { return if (it.cancellable) listOf(Hint(Glyph.B, "Cancel")) else emptyList() }
     return when (shell.layer) {
         is Layer.Context -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Close"))
         Layer.Side -> adjust + listOf(Hint(Glyph.A, "Change"), Hint(Glyph.B, "Close"))
-        null -> when (shell.screen) {
-            Screen.HOME -> listOf(Hint(Glyph.A, "Start"), Hint(Glyph.MENU_LEFT, "Menu"), Hint(Glyph.MENU_RIGHT, "Options"))
-            Screen.SETTINGS -> adjust + listOf(Hint(Glyph.A, "Change"), Hint(Glyph.B, "Back"), Hint(Glyph.MENU_LEFT, "Menu"))
-            else -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"), Hint(Glyph.MENU_LEFT, "Menu"))
+        is Layer.Dialog -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Cancel"))
+        null -> when (val screen = shell.screen) {
+            Screen.Home -> listOf(Hint(Glyph.A, "Start"), Hint(Glyph.MENU_LEFT, "Menu"), Hint(Glyph.MENU_RIGHT, "Options"))
+            Screen.Settings -> adjust + listOf(Hint(Glyph.A, "Change"), Hint(Glyph.B, "Back"), Hint(Glyph.MENU_LEFT, "Menu"))
+            Screen.Start -> listOf(Hint(Glyph.A, "Connect"), Hint(Glyph.MENU_LEFT, "Menu"), Hint(Glyph.MENU_RIGHT, "Options"))
+            Screen.Boot -> listOf(Hint(Glyph.A, "Select"))
+            is Screen.CreateProfile -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"))
+            is Screen.PairPc -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"), Hint(Glyph.MENU_RIGHT, "Options"))
+            is Screen.Pin -> listOf(Hint(Glyph.B, "Cancel"))
+            Screen.Profile, Screen.Devices -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"), Hint(Glyph.MENU_LEFT, "Menu"))
         }
     }
 }
