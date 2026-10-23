@@ -57,6 +57,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.unit.em
 import com.limelight.shell.ContextMenu
 import com.limelight.shell.data.Avatar
@@ -148,45 +149,60 @@ fun CircleItem(
     val stage = LocalStage.current
     var focused by remember { mutableStateOf(false) }
     val lit by animateFloatAsState(if (focused || selected) 1f else 0f, tween(400, easing = EaseOut), label = "circleLabel")
+    // The same scale as focusEffects, for the check badge that is drawn above the focus ring
+    val badgeScale by animateFloatAsState(if (focused) 1.16f else 1f, tween(380, easing = EaseSpring), label = "circleBadge")
     val side = if (big) 220f else 176f
     val pulseTransition = rememberInfiniteTransition(label = "pulse")
     val wave by pulseTransition.animateFloat(0f, 1f, infiniteRepeatable(tween(2400, easing = EaseOut)), label = "pulseWave")
     Column(Modifier.width(220.px), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(22.px)) {
-        Box(
-            modifier
-                .focusEffects(
-                    onClick = onClick, corner = 999f, focusScale = 1.16f, ring = FocusRing(5f, 5f), glow = FocusGlow(26f, 70f, -16f),
-                    contextMenu = contextMenu, onFocusChange = { focused = it },
-                )
-                .size(side.px)
-                .then(
-                    if (!pulse) Modifier
-                    else Modifier.drawBehind {
-                        // inset -16 px, 2 px accent-2 border, scale .92 → 1.25 while fading out
-                        val k = stage.dpPerPx * density
-                        val radius = (size.minDimension / 2f + 16f * k) * (.92f + .33f * wave)
-                        drawCircle(colors.accent2.copy(alpha = .7f * (1f - wave)), radius = radius, style = Stroke(2f * k))
-                    }
-                ),
-        ) {
+        Box {
             Box(
-                Modifier
-                    .fillMaxSize()
-                    .clip(CircleShape)
-                    .then(if (avatarHue != null) Modifier.avatarBackground(avatarHue) else Modifier.background(colors.surface2).border(1.px, colors.line, CircleShape)),
-                contentAlignment = Alignment.Center,
+                modifier
+                    .focusEffects(
+                        onClick = onClick, corner = 999f, focusScale = 1.16f, ring = FocusRing(5f, 5f), glow = FocusGlow(26f, 70f, -16f),
+                        contextMenu = contextMenu, onFocusChange = { focused = it },
+                    )
+                    .size(side.px)
+                    .then(
+                        if (!pulse) Modifier
+                        else Modifier.drawBehind {
+                            // inset -16 px, 2 px accent-2 border, scale .92 → 1.25 while fading out
+                            val k = stage.dpPerPx * density
+                            val radius = (size.minDimension / 2f + 16f * k) * (.92f + .33f * wave)
+                            drawCircle(colors.accent2.copy(alpha = .7f * (1f - wave)), radius = radius, style = Stroke(2f * k))
+                        }
+                    ),
             ) {
-                Symbol(
-                    icon, (if (big) 96f else 76f).tpx, if (avatarHue != null) Color.White else colors.text,
-                    filled = avatarHue != null || focused, opticalSize = 48f,
-                )
-            }
-            if (selected) {
                 Box(
-                    Modifier.align(Alignment.TopEnd).offset(x = (-4).px, y = 4.px).size(52.px).clip(CircleShape).background(colors.accent),
+                    Modifier
+                        .fillMaxSize()
+                        .clip(CircleShape)
+                        .then(if (avatarHue != null) Modifier.avatarBackground(avatarHue) else Modifier.background(colors.surface2).border(1.px, colors.line, CircleShape)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Symbol(Symbols.CHECK, 34.tpx, colors.onAccent, filled = true, filledWeight = 600)
+                    Symbol(
+                        icon, (if (big) 96f else 76f).tpx, if (avatarHue != null) Color.White else colors.text,
+                        filled = avatarHue != null || focused, opticalSize = 48f,
+                    )
+                }
+            }
+            if (selected) {
+                // `.circle::before` is content, so it lies above the focus ring (a box shadow)
+                Box(
+                    Modifier
+                        .matchParentSize()
+                        .zIndex(2f)
+                        .graphicsLayer {
+                            scaleX = badgeScale
+                            scaleY = badgeScale
+                        },
+                ) {
+                    Box(
+                        Modifier.align(Alignment.TopEnd).offset(x = (-4).px, y = 4.px).size(52.px).clip(CircleShape).background(colors.accent),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Symbol(Symbols.CHECK, 34.tpx, colors.onAccent, filled = true, filledWeight = 600)
+                    }
                 }
             }
         }
