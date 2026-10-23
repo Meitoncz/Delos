@@ -120,7 +120,7 @@ Each step ends with a build, a test on the Odin and a commit (after approval), l
 - [x] Y opens search and appears in the hint bar. Verified on the Odin together with controller search/jump, single feedback per tab switch and complete section headings on upward focus navigation.
 
 ### 6.7b Additions requested on 2026-10-23
-Built on the branch `ui/review-fixes`; the user tried them on the Odin (2026-10-24), except recording custom stream menu buttons.
+Built on the branch `ui/review-fixes`; the user tried them all on the Odin (2026-10-24).
 - [x] The Delos stream menu (`shell/StreamMenu.kt`, the prototype's quick menu): Resume, Keyboard, Performance, More (the classic Artemis quick menu), Disconnect, Quit game. Opens with L3 + R3, or with buttons recorded in Settings → Controls → Stream menu (e.g. the Odin's rear buttons), or with a swipe up from the bottom edge (can be turned off); every way the classic menu opened leads here too. Start + Back + L1 + R1 no longer ends the stream.
 - [x] Clock: System, 12-hour or 24-hour.
 - [x] Battery in the style of iOS: light outline, green charge (red at 20 % and below), percentage beside it, a bolt and a pulsing green while charging.
@@ -132,7 +132,7 @@ Built on the branch `ui/review-fixes`; the user tried them on the Odin (2026-10-
 - [x] Stream menu "More" as a Delos page (send keys, clipboard, server commands, zoom, mouse mode, on-screen controls…); toggles keep the menu open and show On / Off.
 - [x] Removed for good: the Artemis back menu switch, floating menu button, Back as Meta / Guide and the overlay opening the menu.
 - [x] The start screen's pulse around the focused game on the home screen.
-- [ ] Recording custom stream menu buttons (Settings → Controls → Stream menu buttons), tried on the Odin.
+- [x] Recording custom stream menu buttons (Settings → Controls → Stream menu buttons), tried on the Odin.
 - [ ] The performance statistics overlay in the Delos style (the user: the current one looks like a debug view).
 - [ ] The user decides which items the stream menu keeps.
 
