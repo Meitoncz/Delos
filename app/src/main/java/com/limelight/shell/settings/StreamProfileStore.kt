@@ -66,6 +66,17 @@ class StreamProfileStore(private val context: Context, val catalog: SettingsCata
         if (current?.id == profile.id) current = profile
     }
 
+    /** Removes the linked Artemis settings profile of a deleted user profile. */
+    fun delete(id: String) {
+        val uuid = runCatching { UUID.fromString(id) }.getOrNull() ?: return
+        if (current?.id == id) {
+            prefs?.unregisterOnSharedPreferenceChangeListener(listener)
+            current = null
+            prefs = null
+        }
+        if (manager.profiles.any { it.uuid == uuid }) manager.delete(uuid)
+    }
+
     private fun project() {
         val profile = current ?: return
         val settings = prefs ?: return

@@ -37,6 +37,14 @@ object ProfileLayouts {
         }
     }
 
+    /** Removes a deleted user's layouts. */
+    fun delete(context: Context, id: String) {
+        names.forEach { name ->
+            storage(context, id, name).edit().clear().commit()
+            context.deleteSharedPreferences("ui_layout_${id}_$name")
+        }
+    }
+
     private fun storage(context: Context, id: String?, name: String) =
         context.getSharedPreferences(if (id == null) name else "ui_layout_${id}_$name", Context.MODE_PRIVATE)
 }

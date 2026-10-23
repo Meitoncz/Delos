@@ -82,8 +82,35 @@ fun ProfileScreen(profiles: Profiles, store: ProfileStore) {
             CircleItem(Symbols.EDIT, "Rename", { renameProfile(shell, tracker, store, feedback, profile.id, profile.name) })
             CircleItem(Symbols.SWITCH_ACCOUNT, "Switch profile", { openProfilesMenu(shell, tracker, feedback, profiles, store, Screen.Profile) })
             CircleItem(Symbols.PERSON_ADD, "Add profile", { shell.navigate(Screen.CreateProfile(editing = false, back = Screen.Profile)) })
+            CircleItem(Symbols.DELETE, "Delete profile", { deleteProfile(shell, tracker, store, feedback, profile.id, profile.name) })
         }
     }
+}
+
+/**
+ * Deletes the current profile after asking once: it loses data (its settings, stream settings and
+ * control layouts), the one case the plan keeps a question for. The next profile takes over; without
+ * one, the first launch starts again.
+ */
+private fun deleteProfile(shell: ShellState, tracker: FocusTracker, store: ProfileStore, feedback: Feedback, id: String, name: String) {
+    feedback.play(Cue.OPEN)
+    shell.openLayer(
+        Layer.Dialog(
+            DialogSpec(
+                "Delete $name?", "Its settings, stream settings and control layouts are removed. This cannot be undone.",
+                emptyList(), "Delete",
+            ) {
+                if (store.delete(id)) {
+                    shell.showToast("$name was deleted", Symbols.DELETE)
+                    shell.navigate(Screen.Start)
+                } else {
+                    shell.navigate(Screen.Boot())
+                }
+                true
+            }
+        ),
+        tracker,
+    )
 }
 
 /** The profiles to switch to (the current one marked), and a new one; [from] is where creating returns to. */

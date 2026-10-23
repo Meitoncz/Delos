@@ -96,6 +96,27 @@ class ProfileStore(context: Context) {
         settingsListeners.forEach { it() }
     }
 
+    /**
+     * Deletes a profile with everything it keeps: its settings, control layouts and linked stream
+     * settings profile. The next profile becomes the current one; returns false when none is left (the
+     * first launch starts again).
+     */
+    fun delete(id: String): Boolean {
+        val wasCurrent = state.value.current?.id == id
+        val rest = state.value.all.filter { it.id != id }
+        save(Profiles(rest, if (wasCurrent) rest.firstOrNull()?.id else state.value.currentId))
+        streamProfiles.delete(id)
+        ProfileLayouts.delete(app, id)
+        settingsOf(id).edit().clear().commit()
+        app.deleteSharedPreferences("ui_profile_$id")
+        if (wasCurrent) {
+            streamProfiles.activate(state.value.current, settings())
+            state.value.current?.let { ProfileLayouts.initialize(app, it.id, settings()) }
+            settingsListeners.forEach { it() }
+        }
+        return rest.isNotEmpty()
+    }
+
     private fun settingsOf(id: String): SharedPreferences = app.getSharedPreferences("ui_profile_$id", Context.MODE_PRIVATE)
 
     /**
