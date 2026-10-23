@@ -119,10 +119,10 @@ fun profilesMenu(shell: ShellState, profiles: Profiles, store: ProfileStore, fro
     return ContextMenu(
         "Profiles",
         profiles.all.map { p ->
-            MenuItem(if (p.id == current) Symbols.CHECK else p.look.icon, p.name) {
+            MenuItem(if (p.id == current) Symbols.CHECK else Symbols.ACCOUNT_CIRCLE, p.name) {
                 if (p.id != current) {
                     store.switchTo(p.id)
-                    shell.showToast("Playing as ${p.name}", p.look.icon)
+                    shell.showToast("Playing as ${p.name}", Symbols.ACCOUNT_CIRCLE)
                 }
             }
         } + MenuItem(Symbols.PERSON_ADD, "New profile") { shell.navigate(Screen.CreateProfile(editing = false, back = from)) },
