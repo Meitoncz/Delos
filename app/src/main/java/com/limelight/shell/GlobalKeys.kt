@@ -15,8 +15,12 @@ class GlobalKeys {
     var canSearch: () -> Boolean = { false }
     var onSearch: (() -> Unit)? = null
 
+    /** While set, every key goes here first (recording the stream menu buttons); true consumes it. */
+    var capture: ((KeyEvent) -> Boolean)? = null
+
     /** Returns whether the event was consumed: both edges are, so no fallback key is synthesized. */
     fun dispatch(event: KeyEvent): Boolean {
+        capture?.let { if (it(event)) return true }
         if (event.keyCode == KeyEvent.KEYCODE_BUTTON_Y) {
             val search = onSearch ?: return false
             if (!canSearch()) return false

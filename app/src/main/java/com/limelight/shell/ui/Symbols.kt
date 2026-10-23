@@ -47,6 +47,7 @@ object Symbols {
     const val SEARCH = "\uEF7A"
     const val SQUARE = "\uEB36"
     const val SWAP_HORIZ = "\uE8D4"
+    const val SWIPE_UP = "\uEB2E"
     const val WARNING = "\uF083"
     const val ACCOUNT_CIRCLE = "\uF20B"
     const val ACCOUNT_TREE = "\uE97A"

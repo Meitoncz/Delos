@@ -185,6 +185,9 @@ class ShellState(initial: Screen) {
     var settingsFocus by mutableStateOf<String?>(null)
     var onSettingsSearch: (() -> Unit)? = null
 
+    /** While set, the next buttons pressed together are recorded (the stream menu shortcut) and passed here. */
+    var buttonCapture by mutableStateOf<((Set<Int>) -> Unit)?>(null)
+
     /**
      * Puts the focus back into the current screen when the element that had it is gone (e.g. the home
      * layout changed while a menu was open). Set by the screen; returns whether it worked.

@@ -48,6 +48,7 @@ restart_alt
 search
 square
 swap_horiz
+swipe_up
 warning
 
 # Top bar, profile and devices

@@ -2875,12 +2875,8 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
             return false;
         }
 
-        // Start+Back+LB+RB is the quit combo
-        if (context.inputMap == (ControllerPacket.BACK_FLAG | ControllerPacket.PLAY_FLAG |
-                                 ControllerPacket.LB_FLAG | ControllerPacket.RB_FLAG)) {
-            // Wait for the combo to lift and then finish the activity
-            context.pendingExit = true;
-        }
+        // Delos: Start+Back+LB+RB no longer quits the stream; the Delos stream menu (L3+R3 by default)
+        // has Disconnect and Quit game.
 
         // Start+LB acts like select for controllers with one button
         if (!context.hasSelect) {

@@ -160,7 +160,7 @@ fun SettingsScreen(
             else if (spec.key == "checkbox_enable_hdr" && capabilities?.brokenHdr == true) "Update the firmware on your NVIDIA SHIELD Android TV to enable HDR."
             else spec.description, row, stream.enabled(spec, capabilities))
     }
-    val all = nativeSettings(appearance, update, startup, updateStartup, pcs) + classic
+    val all = nativeSettings(appearance, update, startup, updateStartup, pcs, profiles.settings()) + classic
     if (search) {
         SettingsSearch(all, appearance.uiScale / 100f)
         return

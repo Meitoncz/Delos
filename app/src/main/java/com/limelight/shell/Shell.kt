@@ -84,6 +84,7 @@ import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.ToastHost
 import com.limelight.shell.ui.ZoomedBar
 import com.limelight.shell.ui.AvatarBadge
+import com.limelight.shell.ui.ButtonCaptureLayer
 import com.limelight.shell.ui.DialogLayer
 import com.limelight.shell.ui.PortalOverlay
 import dev.chrisbanes.haze.hazeSource
@@ -423,6 +424,12 @@ fun Shell(
             }
 
             PortalOverlay(shell.portal, shell.portalBurst, haze, appearance.reducedMotion)
+
+            ButtonCaptureLayer(shell.buttonCapture != null, keys) { buttons ->
+                val save = shell.buttonCapture
+                shell.buttonCapture = null
+                if (buttons != null) save?.invoke(buttons)
+            }
 
             val note = (library as? Library.Ready)?.takeIf { shell.screen == Screen.Home && shell.layer == null }?.let { "${it.apps.size} apps on ${it.pc.name}" }
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {

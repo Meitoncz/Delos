@@ -1,5 +1,6 @@
 package com.limelight.shell.screens
 
+import android.content.SharedPreferences
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
@@ -10,6 +11,7 @@ import com.limelight.shell.data.Pc
 import com.limelight.shell.settings.Appearance
 import com.limelight.shell.settings.SettingsTab
 import com.limelight.shell.settings.Startup
+import com.limelight.shell.settings.StreamMenuSettings
 import com.limelight.shell.ui.RowValue
 import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.hsl
@@ -31,6 +33,8 @@ internal data class SettingsItem(
 internal fun nativeSettings(
     a: Appearance, update: ((Appearance) -> Appearance) -> Unit,
     startup: Startup, updateStartup: ((Startup) -> Startup) -> Unit, pcs: List<Pc>,
+    /** The current profile's settings (the stream menu shortcut is kept there). */
+    settings: SharedPreferences,
 ): List<SettingsItem> {
     val context = LocalContext.current
     val shell = LocalShell.current
@@ -57,6 +61,18 @@ internal fun nativeSettings(
     row("ui_reduced_motion", Symbols.MOTION_PHOTOS_ON, "Animations", RowValue.Choice(if (a.reducedMotion) "Reduced" else "Full", { update { it.copy(reducedMotion = !it.reducedMotion) } }), "Reduce movement in the interface.")
     row("ui_haptics", Symbols.VIBRATION, "Interface haptics", RowValue.Toggle(a.haptics) { on -> update { it.copy(haptics = on) } }, "Vibration when moving and selecting.", tab = SettingsTab.CONTROLS)
     row("ui_sounds", Symbols.MUSIC_NOTE, "Interface sounds", RowValue.Toggle(a.sounds) { on -> update { it.copy(sounds = on) } }, "Soft clicks when you move around the menus.", tab = SettingsTab.AUDIO)
+    val menuButtons = StreamMenuSettings.buttons(settings)
+    row("ui_stream_menu_buttons", Symbols.SPORTS_ESPORTS, "Stream menu buttons", RowValue.Text(StreamMenuSettings.label(menuButtons)) {
+        shell.buttonCapture = { buttons -> StreamMenuSettings.setButtons(settings, buttons) }
+    }, "Press them together while streaming to open the Delos stream menu. Select to record other buttons, e.g. a rear button.",
+        tab = SettingsTab.CONTROLS, section = "Stream menu")
+    row("ui_stream_menu_reset", Symbols.RESTART_ALT, "Use L3 + R3 again", RowValue.Action {
+        StreamMenuSettings.setButtons(settings, StreamMenuSettings.DEFAULT_BUTTONS)
+    }, "Back to pressing both sticks.", menuButtons != StreamMenuSettings.DEFAULT_BUTTONS, SettingsTab.CONTROLS, "Stream menu")
+    row("ui_stream_menu_swipe", Symbols.SWIPE_UP, "Swipe up to open the menu", RowValue.Toggle(StreamMenuSettings.swipe(settings)) { on ->
+        settings.edit().putBoolean(StreamMenuSettings.KEY_SWIPE, on).apply()
+    }, "A swipe up from the bottom edge of the screen opens the stream menu too. Touches that start right at that edge do not reach the game.",
+        tab = SettingsTab.CONTROLS, section = "Stream menu")
     val choices = listOf<Pc?>(null) + pcs.filter { it.paired }.sortedBy { it.name.lowercase() }
     val index = choices.indexOfFirst { it?.uuid == startup.defaultPc }.coerceAtLeast(0)
     row("ui_default_pc", Symbols.STAR, "Default device", RowValue.Choice(choices[index]?.name ?: "None", { dir ->

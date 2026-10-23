@@ -292,6 +292,8 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     }
 
     public GameMenuCallbacks gameMenuCallbacks;
+    // Delos: the stream menu of the new UI
+    private com.limelight.shell.StreamMenu streamMenu;
 
     public boolean isInputOnly = true;
     public boolean allowChangeMouseMode = true;
@@ -858,6 +860,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         });
 
         gameMenuCallbacks = new GameMenu(this);
+        streamMenu = new com.limelight.shell.StreamMenu(this);
 
         floatingMenuButton = findViewById(R.id.floatingMenuButton);
         updateFloatingButtonVisibility(prefConfig.enableBackMenu && prefConfig.enableFloatingButton);
@@ -4210,10 +4213,36 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         dialog.show();
     }
 
+    // Delos: every way into the menu opens the Delos stream menu; its "More" opens the classic one.
+    // The shortcut (L3+R3 or the buttons chosen in Delos) and the swipe up are checked before the stream.
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        if (streamMenu != null && !isOnExternalDisplay() && streamMenu.onKey(event)) {
+            return true;
+        }
+        return super.dispatchKeyEvent(event);
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        if (streamMenu != null && !isOnExternalDisplay() && streamMenu.onTouch(event)) {
+            return true;
+        }
+        return super.dispatchTouchEvent(event);
+    }
+
+    // Delos: "Quit game" in the Delos stream menu is the confirmation (no dialog)
+    public void quitWithoutAsking() {
+        quitOnStop = true;
+        finish();
+    }
+
     @Override
     public void showGameMenu(GameInputDevice device) {
         if(isOnExternalDisplay()) {
             ExternalDisplayControlActivity.toggleGameMenu();
+        } else if (streamMenu != null) {
+            streamMenu.show();
         } else {
             if (gameMenuCallbacks != null) {
                 gameMenuCallbacks.showMenu(device);
@@ -4222,6 +4251,10 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     }
 
     public void hideGameMenu() {
+        // Delos
+        if (streamMenu != null) {
+            streamMenu.hide();
+        }
         if (gameMenuCallbacks != null) {
             gameMenuCallbacks.hideMenu();
         }
