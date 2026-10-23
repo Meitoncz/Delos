@@ -136,7 +136,7 @@ fun SettingsScreen(
     LaunchedEffect(capabilities, profile.currentId, values["checkbox_unlock_fps"]) { capabilities?.let(stream::normalize) }
     val act = settingsActions(profiles, stream)
     val classic = profiles.catalog.all.filter { spec ->
-        spec.key !in (capabilities?.hidden ?: emptySet()) &&
+        spec.key !in RETIRED_KEYS && spec.key !in (capabilities?.hidden ?: emptySet()) &&
             (activity?.packageManager?.hasSystemFeature(android.content.pm.PackageManager.FEATURE_TOUCHSCREEN) != false ||
                 spec.category !in setOf("category_onscreen_controls", "category_special_key_layout"))
     }.map { spec ->
@@ -407,3 +407,19 @@ private fun LetterKey(letter: String, modifier: Modifier, click: () -> Unit) {
         BasicText(letter, style = TextStyle(color = if (focused) colors.accent else colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 28.tpx))
     }
 }
+
+/**
+ * Artemis options the new UI does not show: the Delos stream menu replaces the back menu, the floating
+ * button and opening the menu from the small performance overlay, the Back button keeps its menu role
+ * (not Meta or Guide), and the others only concern the classic UI. Their keys stay for the classic UI
+ * until the switch-over (6.9).
+ */
+private val RETIRED_KEYS = setOf(
+    "checkbox_enable_quit_dialog",
+    "checkbox_enable_floating_button",
+    "checkbox_back_as_meta",
+    "checkbox_back_as_guide",
+    "checkbox_enable_perf_overlay_lite_dialog",
+    "checkbox_resume_without_confirm",
+    "checkbox_small_icon_mode",
+)

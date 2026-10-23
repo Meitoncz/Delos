@@ -146,3 +146,11 @@ scuba_diving
 spa
 swords
 water_drop
+content_paste
+keyboard_alt
+keyboard_command_key
+screen_rotation
+terminal
+touch_app
+upload
+zoom_in

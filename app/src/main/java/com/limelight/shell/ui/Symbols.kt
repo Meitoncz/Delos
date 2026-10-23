@@ -137,4 +137,12 @@ object Symbols {
     const val SPA = "\uEB4C"
     const val SWORDS = "\uF889"
     const val WATER_DROP = "\uE798"
+    const val CONTENT_PASTE = "\uE14F"
+    const val KEYBOARD_ALT = "\uF028"
+    const val KEYBOARD_COMMAND_KEY = "\uEAE7"
+    const val SCREEN_ROTATION = "\uF2D5"
+    const val TERMINAL = "\uEB8E"
+    const val TOUCH_APP = "\uE913"
+    const val UPLOAD = "\uF09B"
+    const val ZOOM_IN = "\uE8FF"
 }

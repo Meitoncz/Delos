@@ -7,6 +7,14 @@ import android.view.MotionEvent
 import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.activity.ComponentDialog
+import com.limelight.binding.input.KeyboardTranslator
+import com.limelight.GameMenu
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.focusable
+import androidx.compose.runtime.key
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -176,14 +184,28 @@ class StreamMenu(private val game: Game) {
         dialog?.dismiss()
     }
 
+    private enum class Page { MAIN, MORE, KEYS, COMMANDS }
+
+    /** Runs [action] once the stream window has the focus again (after the menu closed), like GameMenu. */
+    private fun whenGameFocused(action: () -> Unit) {
+        if (game.isFinishing) return
+        if (!game.hasWindowFocus()) {
+            game.window.decorView.postDelayed({ whenGameFocused(action) }, 50)
+            return
+        }
+        action()
+    }
+
     @Composable
     private fun MenuPanel(title: String, d: ComponentDialog) {
-        val first = remember { FocusRequester() }
-        InitialFocus(first)
+        var page by remember { mutableStateOf(Page.MAIN) }
+        // B on a sub page goes back to the main page; on the main page it resumes (closes the menu)
+        BackHandler(enabled = page != Page.MAIN) { page = Page.MAIN }
         fun close(then: () -> Unit = {}) {
             d.dismiss()
-            then()
+            whenGameFocused(then)
         }
+        val classic = game.gameMenuCallbacks as? GameMenu
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
             // linear-gradient(transparent, rgba(0, 0, 0, .75) 40%)
             Column(
@@ -194,19 +216,94 @@ class StreamMenu(private val game: Game) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(26.px),
             ) {
-                BasicText(title, style = TextStyle(color = Color.White, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 30.tpx, textAlign = TextAlign.Center))
-                Row(horizontalArrangement = Arrangement.spacedBy(34.px)) {
-                    MenuCircle(Symbols.PLAY_ARROW, "Resume", Modifier.focusRequester(first)) { close() }
-                    MenuCircle(Symbols.KEYBOARD, "Keyboard") { close { game.toggleKeyboard() } }
-                    MenuCircle(Symbols.SPEED, "Performance") { close { game.toggleHUD() } }
-                    MenuCircle(Symbols.MORE_HORIZ, "More") { close { game.gameMenuCallbacks?.showMenu(null) } }
-                    MenuCircle(Symbols.LOGOUT, "Disconnect") { close { game.disconnect() } }
-                    MenuCircle(Symbols.POWER_SETTINGS_NEW, "Quit game") { close { game.quitWithoutAsking() } }
+                val heading = when (page) {
+                    Page.MAIN -> title
+                    Page.MORE -> "More"
+                    Page.KEYS -> "Send keys"
+                    Page.COMMANDS -> "Server commands"
+                }
+                BasicText(heading, style = TextStyle(color = Color.White, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 30.tpx, textAlign = TextAlign.Center))
+                key(page) {
+                    val first = remember { FocusRequester() }
+                    InitialFocus(first)
+                    when (page) {
+                        Page.MAIN -> Row(horizontalArrangement = Arrangement.spacedBy(34.px)) {
+                            MenuCircle(Symbols.PLAY_ARROW, "Resume", Modifier.focusRequester(first)) { close() }
+                            MenuCircle(Symbols.KEYBOARD, "Keyboard") { close { game.toggleKeyboard() } }
+                            MenuCircle(Symbols.SPEED, "Performance") { close { game.toggleHUD() } }
+                            MenuCircle(Symbols.MORE_HORIZ, "More") { page = Page.MORE }
+                            MenuCircle(Symbols.LOGOUT, "Disconnect") { close { game.disconnect() } }
+                            MenuCircle(Symbols.POWER_SETTINGS_NEW, "Quit game") { close { game.quitWithoutAsking() } }
+                        }
+                        // Everything the classic Artemis quick menu offered that the main page does not
+                        Page.MORE -> Column(verticalArrangement = Arrangement.spacedBy(26.px), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(34.px)) {
+                                MenuCircle(Symbols.KEYBOARD_COMMAND_KEY, "Send keys", Modifier.focusRequester(first)) { page = Page.KEYS }
+                                MenuCircle(Symbols.UPLOAD, "Send clipboard") { close { game.sendClipboard(true) } }
+                                MenuCircle(Symbols.CONTENT_PASTE, "Get clipboard") { close { game.getClipboard(0) } }
+                                MenuCircle(Symbols.TERMINAL, "Commands") { page = Page.COMMANDS }
+                                MenuCircle(Symbols.MONITORING, "Task manager") {
+                                    close { game.sendKeys(shortArrayOf(KeyboardTranslator.VK_LCONTROL.toShort(), KeyboardTranslator.VK_LSHIFT.toShort(), KeyboardTranslator.VK_ESCAPE.toShort())) }
+                                }
+                                MenuCircle(Symbols.ZOOM_IN, if (game.isZoomModeEnabled) "Zoom off" else "Zoom") { close { game.toggleZoomMode() } }
+                            }
+                            Row(horizontalArrangement = Arrangement.spacedBy(34.px)) {
+                                if (game.allowChangeMouseMode) MenuCircle(Symbols.MOUSE, "Mouse mode") { close { game.selectMouseMode(game) } }
+                                MenuCircle(Symbols.JOYSTICK, "On-screen controls") { close { game.toggleVirtualController() } }
+                                MenuCircle(Symbols.KEYBOARD_ALT, "Full keyboard") { close { game.toggleFullKeyboard() } }
+                                MenuCircle(Symbols.KEYBOARD, "Key layout") { close { game.toggleKeyboardController() } }
+                                MenuCircle(Symbols.TOUCH_APP, "Touch sensitivity") { close { game.switchTouchSensitivity() } }
+                                MenuCircle(Symbols.SCREEN_ROTATION, "Rotate") { close { game.rotateScreen() } }
+                            }
+                        }
+                        Page.KEYS -> PillGrid(classic?.specialKeyOptions().orEmpty().map { it.label }, first) { i ->
+                            val option = classic?.specialKeyOptions()?.getOrNull(i)
+                            d.dismiss()
+                            if (option != null) classic?.run(option)
+                        }
+                        Page.COMMANDS -> {
+                            val commands = game.serverCmds.orEmpty()
+                            if (commands.isEmpty()) {
+                                BasicText(
+                                    "No commands are set up on the PC. Vibepollo can add them in its web UI.",
+                                    style = TextStyle(color = Color.White.copy(alpha = .8f), fontFamily = Figtree, fontSize = 24.tpx, textAlign = TextAlign.Center),
+                                    modifier = Modifier.focusRequester(first).focusable(),
+                                )
+                            } else {
+                                PillGrid(commands, first) { i -> close { game.sendExecServerCmd(i) } }
+                            }
+                        }
+                    }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(28.px), verticalAlignment = Alignment.CenterVertically) {
                     MenuHint(Glyph.A, "Select")
-                    MenuHint(Glyph.B, "Resume")
+                    MenuHint(Glyph.B, if (page == Page.MAIN) "Resume" else "Back")
                 }
+            }
+        }
+    }
+
+    /** Text choices (key combinations, server commands) as pills that wrap to the next line. */
+    @OptIn(ExperimentalLayoutApi::class)
+    @Composable
+    private fun PillGrid(labels: List<String>, first: FocusRequester, onSelect: (Int) -> Unit) {
+        FlowRow(
+            Modifier.widthIn(max = 1500.px),
+            horizontalArrangement = Arrangement.spacedBy(16.px, Alignment.CenterHorizontally),
+            verticalArrangement = Arrangement.spacedBy(16.px),
+        ) {
+            labels.forEachIndexed { i, label ->
+                var focused by remember { mutableStateOf(false) }
+                BasicText(
+                    label,
+                    style = TextStyle(color = Color.White, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 22.tpx),
+                    modifier = (if (i == 0) Modifier.focusRequester(first) else Modifier)
+                        .focusEffects({ onSelect(i) }, corner = 999f, focusScale = 1.06f, ring = FocusRing(4f, 4f), glow = FocusGlow(14f, 40f, -12f), onFocusChange = { focused = it })
+                        .clip(CircleShape)
+                        .background(if (focused) Color(0xFF2E3A52) else Color(0xD91E283C))
+                        .border(1.px, Color.White.copy(alpha = .12f), CircleShape)
+                        .padding(horizontal = 28.px, vertical = 16.px),
+                )
             }
         }
     }

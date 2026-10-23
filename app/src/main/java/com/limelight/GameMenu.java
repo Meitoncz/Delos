@@ -50,6 +50,11 @@ public class GameMenu implements Game.GameMenuCallbacks {
             this.runnable = runnable;
         }
 
+        // Delos: read by the Delos stream menu
+        public String getLabel() {
+            return label;
+        }
+
         public MenuOption(String label, Runnable runnable) {
             this(label, false, runnable);
         }
@@ -93,7 +98,8 @@ public class GameMenu implements Game.GameMenuCallbacks {
         runnable.run();
     }
 
-    private void run(MenuOption option) {
+    // Delos: public for the Delos stream menu
+    public void run(MenuOption option) {
         if (option.runnable == null) {
             return;
         }
@@ -152,7 +158,8 @@ public class GameMenu implements Game.GameMenuCallbacks {
         }
     }
 
-    private void showSpecialKeysMenu() {
+    // Delos: the key combinations are also offered by the Delos stream menu (StreamMenu)
+    public List<MenuOption> specialKeyOptions() {
         List<MenuOption> options = new ArrayList<>();
 
         if(!PreferenceConfiguration.readPreferences(game).disableDefaultExtraKeys){
@@ -238,6 +245,11 @@ public class GameMenu implements Game.GameMenuCallbacks {
                 Toast.makeText(game,getString(R.string.wrong_import_format),Toast.LENGTH_SHORT).show();
             }
         }
+        return options;
+    }
+
+    private void showSpecialKeysMenu() {
+        List<MenuOption> options = specialKeyOptions();
         options.add(new MenuOption(getString(R.string.game_menu_cancel), null));
 
         showMenuDialog(getString(R.string.game_menu_send_keys), options.toArray(new MenuOption[options.size()]));
