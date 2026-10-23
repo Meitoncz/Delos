@@ -89,14 +89,15 @@ The Artemis vs. Moonlight comparison only covers code both share. This phase loo
 - [ ] **Refactoring where needed**: Artemis-only code can be cleaned up freely; code shared with Moonlight (`Game.java`, `ControllerHandler.java`, decoder) only minimally, so future upstream merges stay small.
 - [ ] Build and test on the Odin after every step.
 
-## Phase 5 – Testing and first release
+## Phase 5 – Testing
+
+Releases are not planned as a phase: the first version is published when the project owner decides (the repository is private for now).
 
 - [ ] Streaming against both **Vibepollo** and **Sunshine**.
 - [ ] Virtual display, server commands, clipboard (Vibepollo).
 - [ ] Controllers: Xbox, PlayStation (LED, rumble), 8BitDo, Joy-Con; built-in handheld controls.
 - [ ] Decoders H.264 / HEVC / AV1, HDR.
 - [ ] Android 16 (edge-to-edge, predictive back, keyboard).
-- [ ] Release `v0.1` on GitHub (signed APK, release keystore stored as a GitHub secret + offline backup).
 
 ## Phase 6 – New UI (handheld friendly)
 
@@ -105,15 +106,19 @@ Principle: keep the streaming part (`Game.java`, overlays, virtual controls), re
 **Order (decided 2026-10-23): the native UI comes next; new features and smaller changes (including the open Phase 4 items) come after it.**
 
 - [x] Design prototype in the browser first (HTML, 1920×1080 landscape): vision in [GUI.md](GUI.md), interactive prototype in [prototype/delos-gui.html](prototype/delos-gui.html) (open it in a browser; keyboard or gamepad).
-- [ ] Implement the prototype natively.
-- [ ] Kotlin + Jetpack Compose with a **custom console-like design system** (no stock Material look): blur, glow, AGSL shaders, focus animations, UI sounds, haptics. Fallbacks below Android 13.
-- [ ] **Full gamepad / D-pad control**: visible focus, logical order, A/B confirm/back, L1/R1 to switch tabs.
-- [ ] **True fullscreen on every screen** (today only the stream hides the system bars, the menus show them): hide the status and navigation bars via `WindowInsetsController` (swipe from the edge shows them only temporarily) and draw **our own status bar** in the UI – time, device battery, Wi-Fi, later controller battery / connected PC.
-- [ ] Layout for landscape and small screens (AYN Odin, Retroid, Ayaneo…), large touch targets.
-- [ ] PC list → app/game list with large cards (box art).
-- [ ] New settings: categories, search, profiles visible in one place.
-- [ ] In-game quick menu via a button combination.
-- [ ] Later: game menu, virtual controls editor.
+- [ ] Implement the prototype natively in Kotlin + Jetpack Compose – **detailed plan, technology and open questions: [UI_PLAN.md](UI_PLAN.md)**. Steps:
+  - [ ] 6.0 Preparation (Odin key codes, library versions, font licences)
+  - [ ] 6.1 Build setup (Kotlin + Compose, empty fullscreen shell as a second debug launcher entry)
+  - [ ] 6.2 Design system (colors incl. Material You, fonts, icons, focus effects, animated backgrounds, blur, sounds, haptics)
+  - [ ] 6.3 Shell (own status bar and hint bar, gamepad input layer, navigation, context and side menus, interface scale)
+  - [ ] 6.4 Home (grid and row layouts, logo + hero background, covers, game context menu)
+  - [ ] 6.5 Launching a game (loader, dive into the stream, resume/quit without dialogs)
+  - [ ] 6.6 First launch, PCs and pairing (profile, PC circles, PIN/OTP pairing, portal, devices screen, links and shortcuts)
+  - [ ] 6.7 Settings (all 126 existing settings on the same keys, search, Appearance, Covers, settings profiles)
+  - [ ] 6.8 SteamGridDB (API key, matching, 4 images per game, bulk download)
+  - [ ] 6.9 Switch-over and cleanup (new shell is the only launcher, old UI and unused dependencies removed)
+  - [ ] 6.10 Polish and testing (side-by-side with the prototype, performance, touch, older Android fallbacks, other handhelds)
+- [ ] Later: in-stream quick menu (`GameMenu`) in the new design, virtual controls editor.
 
 ## Phase 7 – Custom features and maintenance
 

@@ -45,5 +45,5 @@ The starting point for the new Delos UI (Phase 6). Written by the project owner;
 ## Controls
 
 - Primary input: **D-pad or left stick + A, B, X, Y**.
-- The **two menu buttons at the top left and top right** of the handheld are used in the UI: one opens a **context menu**, the other a **side menu**.
+- The **two menu buttons at the top left and top right** of the handheld are used in the UI: the **left one (View/Select)** slides the **side menu** in from the left, the **right one (Start)** opens the **context menu** for the focused item.
 - Navigation must be **intuitive and direct**: pressing a direction takes you where you want to go, ideally in **one press** – never left, down, down just to reach something.

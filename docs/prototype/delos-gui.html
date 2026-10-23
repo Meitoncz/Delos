@@ -304,7 +304,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
 .menu-item.is-focus { background: var(--accent); color: var(--on-accent); }
 .menu-item.is-focus .ms { color: var(--on-accent); }
 .menu-title { padding: 14px 24px 10px; font-size: calc(18px * var(--ts)); font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3); }
-#sidemenu { top: 0; right: 0; bottom: 0; width: 620px; padding: 48px 40px; box-sizing: border-box; background: var(--surface-3); border-left: 1px solid var(--line); transform: translateX(60px); display: flex; flex-direction: column; gap: 10px; backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px); }
+#sidemenu { top: 0; left: 0; bottom: 0; width: 620px; padding: 48px 40px; box-sizing: border-box; background: var(--surface-3); border-right: 1px solid var(--line); transform: translateX(-60px); display: flex; flex-direction: column; gap: 10px; backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px); }
 #sidemenu.open { transform: none; }
 .side-head { display: flex; align-items: center; gap: 20px; padding: 0 12px 24px; border-bottom: 1px solid var(--line); margin-bottom: 14px; }
 .side-head .av { width: 72px; height: 72px; border-radius: 50%; display: grid; place-items: center; color: #fff; }
@@ -371,7 +371,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
 #launch.dive .stack { transform: scale(9); opacity: 0; filter: blur(6px); }
 
 /* ---------- Hints & toast ---------- */
-#hints { position: absolute; left: 0; right: 0; bottom: 0; height: 92px; padding: 0 72px; display: flex; align-items: center; justify-content: flex-end; gap: 34px; z-index: 30; font-size: calc(21px * var(--ts)); color: var(--text-2); transition: opacity .4s ease; }
+#hints { position: absolute; left: 0; right: 0; bottom: 0; height: 92px; padding: 0 72px; display: flex; align-items: center; justify-content: flex-end; gap: 34px; z-index: 38; font-size: calc(21px * var(--ts)); color: var(--text-2); transition: opacity .4s ease; }
 #hints.away { opacity: 0; }
 #hints .hint { display: inline-flex; align-items: center; gap: 12px; }
 .glyph-btn { min-width: 38px; height: 38px; padding: 0 8px; box-sizing: border-box; border-radius: 999px; display: inline-grid; place-items: center; font-weight: 700; font-size: calc(19px * var(--ts)); background: var(--text); color: var(--bg); }
@@ -570,8 +570,8 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
           <kbd>X</kbd><span>X – options</span>
           <kbd>Y</kbd><span>Y</span>
           <kbd>Q / E</kbd><span>L1 / R1 – switch tabs</span>
-          <kbd>Tab</kbd><span>Left menu button – context menu</span>
-          <kbd>M</kbd><span>Right menu button – side menu</span>
+          <kbd>Tab</kbd><span>Left menu button – side menu</span>
+          <kbd>M</kbd><span>Right menu button – context menu</span>
           <kbd>F</kbd><span>Full screen</span>
         </div>
         <p>A connected gamepad works too, if the browser allows it (Gamepad API).</p>
@@ -1326,7 +1326,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
   function startStream() {
     const g = state.currentGame;
     $("#qmTitle").textContent = g.title;
-    $("#streamBanner").innerHTML = `<span><span class="glyph-btn"><span class="ms">menu</span></span>Right menu button for the quick menu</span>`;
+    $("#streamBanner").innerHTML = `<span><span class="glyph-btn"><span class="ms">filter_none</span></span>Left menu button for the quick menu</span>`;
     $("#perf").hidden = !state.perfOverlay;
     gameT0 = performance.now();
     cancelAnimationFrame(gameRaf);
@@ -1417,7 +1417,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
     else if (s === "pin") goScreen("pair");
     else if (s === "pair") { if (state.firstRun) goScreen("create"); else goScreen("devices"); }
     else if (s === "create") { if (state.editingAvatar) { state.editingAvatar = false; goScreen("profile"); } else goScreen("boot"); }
-    else if (s === "home") toast("Right menu button opens the side menu", "menu");
+    else if (s === "home") toast("Left menu button opens the side menu", "menu");
   }
   function switchTab(dir) {
     if (state.screen !== "settings" || layers.length) return;
@@ -1428,7 +1428,8 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
 
   // ---------- Hints ----------
   function hint(g, label) { return `<span class="hint"><span class="glyph-btn">${g}</span>${label}</span>`; }
-  const MENU_L = `<span class="ms">more_horiz</span>`, MENU_R = `<span class="ms">menu</span>`;
+  // Glyphs of the physical buttons: left = View (two squares), right = Start (three lines)
+  const MENU_L = `<span class="ms">filter_none</span>`, MENU_R = `<span class="ms">menu</span>`;
   function updateHints() {
     const h = $("#hints");
     let left = "", items = [];
@@ -1443,9 +1444,9 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
         case "create": items = [hint("A", "Select"), hint("B", "Back")]; break;
         case "pair": items = [hint("A", "Pair"), hint("B", "Back")]; break;
         case "pin": items = [hint("B", "Cancel")]; break;
-        case "home": left = `${GAMES.length} apps on ${escapeHtml(state.pcName)}`; items = [hint("A", "Start"), hint(MENU_L, "Options"), hint(MENU_R, "Menu")]; break;
+        case "home": left = `${GAMES.length} apps on ${escapeHtml(state.pcName)}`; items = [hint("A", "Start"), hint(MENU_L, "Menu"), hint(MENU_R, "Options")]; break;
         case "settings": items = [hint("L1", "Previous tab"), hint("R1", "Next tab"), hint("A", "Change"), hint("B", "Back")]; break;
-        default: items = [hint("A", "Select"), hint("B", "Back"), hint(MENU_R, "Menu")];
+        default: items = [hint("A", "Select"), hint("B", "Back"), hint(MENU_L, "Menu")];
       }
     }
     if (focused && focused.hasAttribute("data-adjust") && !top) items.unshift(`<span class="hint"><span class="glyph-btn"><span class="ms">swap_horiz</span></span>Adjust</span>`);
@@ -1463,11 +1464,11 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
       case "up": case "down": case "left": case "right": move(btn); break;
       case "a": activate(focused); break;
       case "b": back(); break;
-      case "x": case "menuL": if (layers[layers.length - 1] === "ctxmenu") closeLayer(); else if (!layers.length) openContext(); break;
+      case "x": case "menuR": if (layers[layers.length - 1] === "ctxmenu") closeLayer(); else if (!layers.length) openContext(); break;
       case "y": if (state.screen === "boot") activate($('[data-id="boot-skip"]')); break;
       case "l1": switchTab(-1); break;
       case "r1": switchTab(1); break;
-      case "menuR": if (layers[layers.length - 1] === "sidemenu") closeLayer(); else if (!layers.length || layers[layers.length - 1] === "ctxmenu") { closeAllLayers(); openSide(); } break;
+      case "menuL": if (layers[layers.length - 1] === "sidemenu") closeLayer(); else if (!layers.length || layers[layers.length - 1] === "ctxmenu") { closeAllLayers(); openSide(); } break;
       case "help": if (!layers.includes("help")) openLayer("help"); break;
       case "fullscreen": toggleFullscreen(); break;
     }
