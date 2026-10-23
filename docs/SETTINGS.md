@@ -21,8 +21,9 @@ Approved on 2026-10-23. Categories that cover several subjects are split by sett
 
 L1/R1 switch tabs. Left/right adjust a choice or slider; A toggles, cycles or opens an editor/action.
 Sliders also support tapping and dragging, and commit a drag when the finger is released.
-The old row releases focus before its list is replaced, and assigning the new focus is silent, so the
-switch has one sound/haptic response and never restores focus through the Stream tab. The list
+Focus is handed to a stable, zero-size target before a tab's lazy list is replaced, then silently to
+the new row. Simply clearing focus allows a scrolled list's focus search to re-enter through Stream.
+The handoff gives the switch one sound/haptic response without an intermediate tab focus. The list
 reserves space above the focused row for its section heading, including when returning to the top.
 Unavailable dependencies remain visible, dimmed and searchable. Hardware-inapplicable controls are
 hidden, following the classic screen. The description panel can receive focus and scroll with up/down.
@@ -83,3 +84,6 @@ upward D-pad navigation were checked on the Odin. Local validation passed all 63
 (zero errors). The reviewed Experimental labels remain exactly as established in `f4ac11aa`.
 The repeated tab-switch regression was checked over three complete cycles in both directions:
 24 shoulder-button presses produced exactly 24 application vibrations.
+The scrolled-list case is checked separately: six rows down in Stream then R1 to Display; six down
+in Display then R1 to Audio; two down in Audio then L1 to Display; four down in Display then L1 to
+Stream. Each switch produced exactly one application vibration.

@@ -5,6 +5,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Arrangement
@@ -56,7 +57,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -120,7 +120,6 @@ fun SettingsScreen(
 ) {
     val shell = LocalShell.current
     val feedback = LocalFeedback.current
-    val focusManager = LocalFocusManager.current
     val colors = LocalDelosColors.current
     val activity = LocalActivity.current
     val stream = remember(profiles) { StreamSettingsStore(profiles.catalog, profiles::settings) }
@@ -167,6 +166,9 @@ fun SettingsScreen(
         return
     }
     val first = remember { FocusRequester() }
+    // This stable, zero-size target holds focus while a scrolled lazy list is replaced. Clearing
+    // focus instead lets Compose's beyond-bounds focus search re-enter through the first tab.
+    val focusTransfer = remember { FocusRequester() }
     val stage = LocalStage.current
     val k = stage.dpPerPx * LocalDensity.current.density
     // Keep the section heading (including its padding and the top fade) above its first row.
@@ -208,9 +210,7 @@ fun SettingsScreen(
     }
     DisposableEffect(shell, tab) {
         val handler: (Int) -> Unit = { dir ->
-            // Release the old row before replacing its list. Otherwise Compose restores focus to
-            // the first tab while the new row is being composed, announcing an extra focus move.
-            focusManager.clearFocus(force = true)
+            focusTransfer.requestFocus()
             shell.settingsFocus = null
             shell.settingsTab = tab.step(dir)
             feedback.play(Cue.MOVE)
@@ -219,6 +219,7 @@ fun SettingsScreen(
         onDispose { if (shell.onShoulder === handler) shell.onShoulder = null }
     }
     Box(Modifier.fillMaxSize()) {
+        Box(Modifier.size(0.px).focusRequester(focusTransfer).focusable())
         BasicText("Settings", style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx),
             modifier = Modifier.offset(150.px, 124.px))
         PillButton("Search", Symbols.SEARCH, { shell.onSettingsSearch?.invoke() }, Modifier.offset(1530.px, 122.px), clickCue = null)
@@ -227,7 +228,7 @@ fun SettingsScreen(
             SettingsTab.entries.forEach { next ->
                 SettingsTabButton(next, tab == next, Modifier.padding(horizontal = 5.px)) {
                     if (next != tab) {
-                        focusManager.clearFocus(force = true)
+                        focusTransfer.requestFocus()
                         shell.settingsFocus = null
                         shell.settingsTab = next
                     } else rowRequesters[target]?.let {
