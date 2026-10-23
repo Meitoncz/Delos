@@ -409,17 +409,10 @@ private fun LetterKey(letter: String, modifier: Modifier, click: () -> Unit) {
 }
 
 /**
- * Artemis options the new UI does not show: the Delos stream menu replaces the back menu, the floating
- * button and opening the menu from the small performance overlay, the Back button keeps its menu role
- * (not Meta or Guide), and the others only concern the classic UI. Their keys stay for the classic UI
- * until the switch-over (6.9).
+ * Options of the classic UI only (its resume dialog and icon size). They go away with it in the
+ * switch-over (6.9).
  */
 private val RETIRED_KEYS = setOf(
-    "checkbox_enable_quit_dialog",
-    "checkbox_enable_floating_button",
-    "checkbox_back_as_meta",
-    "checkbox_back_as_guide",
-    "checkbox_enable_perf_overlay_lite_dialog",
     "checkbox_resume_without_confirm",
     "checkbox_small_icon_mode",
 )

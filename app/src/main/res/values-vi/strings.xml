@@ -414,13 +414,9 @@
     <string name="title_checkbox_enable_perf_overlay_lite">Bật chế độ đơn giản</string>
     <string name="summary_checkbox_enable_perf_overlay_lite">Hiển thị thông tin hiệu suất đơn giản: Tốc độ mạng / Độ trễ / Giải mã / Tỷ lệ mất gói / FPS</string>
 
-    <string name="title_checkbox_enable_perf_overlay_lite_dialog">Nhấp chế độ đơn giản để hiển thị tùy chọn nhanh</string>
-    <string name="summary_checkbox_enable_perf_overlay_lite_dialog">Thay đổi chức năng nút quay lại, hiển thị menu nhanh trong game.</string>
 
     <string name="title_virtual_trackpad_settings">Cài đặt bàn di chuột ảo</string>
 
-    <string name="title_quit_dialog">Menu Quay lại</string>
-    <string name="summary_quit_dialog">Khi bật, nhấn nút quay lại vật lý khi đang stream sẽ hiển thị các tùy chọn liên quan!\nBàn phím ảo, thông tin hiệu suất, chuyển đổi chế độ cảm ứng, gửi phím đặc biệt</string>
 
     <string name="dialog_custom_resolution">Đặt độ phân giải và thoát khỏi trang cài đặt để áp dụng!</string>
     <string name="summary_custom_resolution">Thêm độ phân giải tùy chỉnh, phân tách bằng dấu x, độ phân giải lạ có thể không hoạt động.\nVí dụ: 1920x1080\nNếu là độ phân giải không gốc, có thể sẽ không hiển thị toàn màn hình. Nếu tỷ lệ khung hình giống nhau, bạn có thể chọn kéo giãn để hiển thị toàn màn hình</string>
@@ -510,10 +506,6 @@
     <string name="summary_trackpad_swap_axis">Trên một số thiết bị, tín hiệu đầu vào từ trackpad có thể bị xoay trục. Bật tùy chọn này có thể giúp khắc phục.</string>
     <string name="title_checkbox_force_qwerty">Bắt buộc dùng bố cục QWERTY</string>
     <string name="summary_checkbox_force_qwerty">Bắt buộc sử dụng bố cục bàn phím QWERTY.\nYêu cầu bởi GFE.\nTắt nếu bạn muốn dùng bố cục bàn phím khác.</string>
-    <string name="title_checkbox_back_as_meta">Nút quay lại thành Meta</string>
-    <string name="summary_back_as_meta">Gửi phím Meta (Win) khi nhấn nút vật lý quay lại.</string>
-    <string name="title_back_as_guide">Nút quay lại thành Guide</string>
-    <string name="summary_back_as_guide">Gửi phím Guide (PS/HOME) khi nhấn nút Back trên tay cầm điều khiển.</string>
     <string name="title_checkbox_ignore_synth_events">Bỏ qua sự kiện tổng hợp</string>
     <string name="summary_ignore_synth_events">Bỏ qua các sự kiện tổng hợp do hệ thống Android gửi. Có thể giải quyết vấn đề nhấn chuột gây ra các phím không mong muốn trên một số thiết bị.\nBật tùy chọn này sẽ khiến bàn phím ảo hệ thống không hoạt động.</string>
     <string name="title_smart_clipboard_sync">Đồng bộ clipboard thông minh</string>
@@ -626,7 +618,6 @@
     <string name="category_basic_settings">Cài đặt cơ bản</string>
     <string name="title_checkbox_stretch_video">Kéo giãn video</string>
 
-    <string name="menu_button">Menu</string>
 
     <!-- New Strings -->
     <string name="title_enable_commit_text">Bật nhập commit-text (vuốt/giọng nói)</string>

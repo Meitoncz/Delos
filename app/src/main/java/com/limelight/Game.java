@@ -219,7 +219,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
     private boolean quitOnStop = false;
     private boolean isHidingOverlays;
-    private boolean floatingButtonShown;
     private boolean overlayToggleZoomButtonShown;
     private TextView notificationOverlayView;
     private int requestedNotificationOverlayVisibility = View.GONE;
@@ -298,12 +297,8 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     public boolean isInputOnly = true;
     public boolean allowChangeMouseMode = true;
     private boolean onExternelDisplay = false;
-    private ImageButton floatingMenuButton;
     private ImageButton overlayToggleButton;
-    private float floatingButtonDX, floatingButtonDY;
-    private boolean isButtonMoving = false;
     private static final float CLICK_ACTION_THRESHOLD = 5;
-    private float floatingButtonStartX, floatingButtonStartY;
 
     // Zoom button drag state
     private float zoomButtonDX, zoomButtonDY;
@@ -416,7 +411,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             prefConfig.height = displayHeight;
             prefConfig.fps = currentMode.getRefreshRate();
             prefConfig.videoScaleMode = PreferenceConfiguration.ScaleMode.STRETCH;
-            prefConfig.enableFloatingButton = false;
             prefConfig.showOverlayZoomToggleButton = false;
             prefConfig.enablePip = false;
             currentOrientation = Configuration.ORIENTATION_LANDSCAPE;
@@ -638,9 +632,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             performanceOverlayView.setVisibility(View.VISIBLE);
             if (prefConfig.enablePerfOverlayLite) {
                 performanceOverlayLite.setVisibility(View.VISIBLE);
-                if(prefConfig.enablePerfOverlayLiteDialog){
-                    performanceOverlayLite.setOnClickListener(v -> showGameMenu(null));
-                }
             } else {
                 performanceOverlayBig.setVisibility(View.VISIBLE);
             }
@@ -862,10 +853,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         gameMenuCallbacks = new GameMenu(this);
         streamMenu = new com.limelight.shell.StreamMenu(this);
 
-        floatingMenuButton = findViewById(R.id.floatingMenuButton);
-        updateFloatingButtonVisibility(prefConfig.enableBackMenu && prefConfig.enableFloatingButton);
-        initFloatingButton();
-
         overlayToggleButton = findViewById(R.id.overlayToggleZoomButton);
         setupOverlayToggleButton();
 
@@ -986,59 +973,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         closeExternalDisplayControl();
     }
 
-    @SuppressLint("ClickableViewAccessibility")
-    private void initFloatingButton() {
-        // Touch listener for drag and click
-        if (floatingMenuButton != null) {
-            floatingMenuButton.setOnTouchListener((view, event) -> {
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        floatingButtonStartX = event.getRawX();
-                        floatingButtonStartY = event.getRawY();
-                        floatingButtonDX = view.getX() - event.getRawX();
-                        floatingButtonDY = view.getY() - event.getRawY();
-                        isButtonMoving = false;
-                        return true;
-                    case MotionEvent.ACTION_MOVE:
-                        float newX = event.getRawX() + floatingButtonDX;
-                        float newY = event.getRawY() + floatingButtonDY;
-
-                        // Check if it's a move or just a tap
-                        if (Math.abs(event.getRawX() - floatingButtonStartX) > CLICK_ACTION_THRESHOLD ||
-                                Math.abs(event.getRawY() - floatingButtonStartY) > CLICK_ACTION_THRESHOLD) {
-                            isButtonMoving = true;
-                        }
-
-                        // Ensure the button stays within screen bounds
-                        if (newX < 0) newX = 0;
-                        if (newY < 0) newY = 0;
-
-                        int maxOffsetX = getWindow().getDecorView().getWidth() - view.getWidth();
-                        if (newX > maxOffsetX) {
-                            newX = maxOffsetX;
-                        }
-
-                        int maxOffsetY = getWindow().getDecorView().getHeight() - view.getHeight();
-                        if (newY > maxOffsetY) {
-                            newY = maxOffsetY;
-                        }
-
-                        view.setX(newX);
-                        view.setY(newY);
-                        return true;
-                    case MotionEvent.ACTION_UP:
-                        if (!isButtonMoving) {
-                            // It's a click event, show menu
-                            showGameMenu(null);
-                        }
-                        isButtonMoving = false;
-                        return true;
-                    default:
-                        return false;
-                }
-            });
-        }
-    }
 
     private void initKeyboardController(){
         keyBoardController = new KeyBoardController(conn,(FrameLayout)rootView, this);
@@ -1161,12 +1095,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             if (isInPictureInPictureMode()) {
                 isHidingOverlays = true;
 
-                floatingButtonShown = floatingMenuButton.isShown();
-
-                if (floatingButtonShown) {
-                    floatingMenuButton.setVisibility(View.GONE);
-                }
-
                 overlayToggleZoomButtonShown = overlayToggleButton != null && overlayToggleButton.isShown();
 
                 if (overlayToggleZoomButtonShown) {
@@ -1198,10 +1126,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             }
             else {
                 isHidingOverlays = false;
-
-                if (floatingButtonShown) {
-                    floatingMenuButton.setVisibility(View.VISIBLE);
-                }
 
                 if (overlayToggleZoomButtonShown) {
                     overlayToggleButton.setVisibility(View.VISIBLE);
@@ -2049,22 +1973,18 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             // as UTF-8 text (if it's a printable character).
             short translated = keyboardTranslator.translate(event.getKeyCode(), event.getScanCode(), deviceId);
             if (translated == 0) {
-                if (prefConfig.backAsMeta && event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
-                    translated = 0x5b; // Meta key
-                } else {
-                    // Make sure it has a valid Unicode representation and it's not a dead character
-                    // (which we don't support). If those are true, we can send it as UTF-8 text.
-                    //
-                    // NB: We need to be sure this happens before the getRepeatCount() check because
-                    // UTF-8 events don't auto-repeat on the host side.
-                    int unicodeChar = event.getUnicodeChar();
-                    if ((unicodeChar & KeyCharacterMap.COMBINING_ACCENT) == 0 && (unicodeChar & KeyCharacterMap.COMBINING_ACCENT_MASK) != 0) {
-                        conn.sendUtf8Text(""+(char)unicodeChar);
-                        return true;
-                    }
-
-                    return false;
+                // Make sure it has a valid Unicode representation and it's not a dead character
+                // (which we don't support). If those are true, we can send it as UTF-8 text.
+                //
+                // NB: We need to be sure this happens before the getRepeatCount() check because
+                // UTF-8 events don't auto-repeat on the host side.
+                int unicodeChar = event.getUnicodeChar();
+                if ((unicodeChar & KeyCharacterMap.COMBINING_ACCENT) == 0 && (unicodeChar & KeyCharacterMap.COMBINING_ACCENT_MASK) != 0) {
+                    conn.sendUtf8Text(""+(char)unicodeChar);
+                    return true;
                 }
+
+                return false;
             }
 
             // Eat repeat down events
@@ -2135,14 +2055,10 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
             short translated = keyboardTranslator.translate(event.getKeyCode(), event.getScanCode(), deviceId);
             if (translated == 0) {
-                if (prefConfig.backAsMeta && event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
-                    translated = 0x5b; // Meta key
-                } else {
-                    // If we sent this event as UTF-8 on key down, also report that it was handled
-                    // when we get the key up event for it.
-                    int unicodeChar = event.getUnicodeChar();
-                    return (unicodeChar & KeyCharacterMap.COMBINING_ACCENT) == 0 && (unicodeChar & KeyCharacterMap.COMBINING_ACCENT_MASK) != 0;
-                }
+                // If we sent this event as UTF-8 on key down, also report that it was handled
+                // when we get the key up event for it.
+                int unicodeChar = event.getUnicodeChar();
+                return (unicodeChar & KeyCharacterMap.COMBINING_ACCENT) == 0 && (unicodeChar & KeyCharacterMap.COMBINING_ACCENT_MASK) != 0;
             }
 
             conn.sendKeyboardInput(translated, KeyboardPacket.KEY_UP, getModifierState(event),
@@ -3207,9 +3123,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                             toggleFullKeyboard();
                             return true;
                         } else if (currentEventTime - fiveFingerDownTime < FIVE_FINGER_TAP_THRESHOLD) {
-                            if(prefConfig.enableBackMenu) {
-                                showGameMenu(null);
-                            }
+                            showGameMenu(null);
                             return true;
                         }
                     }
@@ -3272,9 +3186,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             case MotionEvent.ACTION_UP:
                 long currentEventTime = event.getEventTime();
                 if (pointerCount >= 5 && fiveFingerDownTime > 0 && currentEventTime - fiveFingerDownTime < FIVE_FINGER_TAP_THRESHOLD) {
-                    if(prefConfig.enableBackMenu) {
-                        showGameMenu(null);
-                    }
+                    showGameMenu(null);
                     fiveFingerDownTime = 0;
                     break;
                 } else if (pointerCount == 4 && fourFingerDownTime > 0 && currentEventTime - fourFingerDownTime < FOUR_FINGER_TAP_THRESHOLD) {
@@ -3943,11 +3855,8 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
     @Override
     public void onBackPressed() {
-        if(prefConfig.enableBackMenu){
-            showGameMenu(null);
-            return;
-        }
-        super.onBackPressed();
+        // Delos: Back always opens the stream menu
+        showGameMenu(null);
     }
 
     public void sendExecServerCmd(int cmdId) {
@@ -4231,6 +4140,11 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         return super.dispatchTouchEvent(event);
     }
 
+    // Delos: the stream menu shows which of its toggles are on
+    public PreferenceConfiguration getPrefConfig() {
+        return prefConfig;
+    }
+
     // Delos: "Quit game" in the Delos stream menu is the confirmation (no dialog)
     public void quitWithoutAsking() {
         quitOnStop = true;
@@ -4257,16 +4171,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         }
         if (gameMenuCallbacks != null) {
             gameMenuCallbacks.hideMenu();
-        }
-    }
-
-    private void updateFloatingButtonVisibility(boolean show) {
-        floatingMenuButton.setVisibility(show ? View.VISIBLE : View.GONE);
-    }
-
-    public void toggleFloatingButtonVisibility() {
-        if (floatingMenuButton != null) {
-            updateFloatingButtonVisibility(floatingMenuButton.getVisibility() == View.GONE);
         }
     }
 

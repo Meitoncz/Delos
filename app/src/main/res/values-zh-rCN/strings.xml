@@ -353,7 +353,6 @@
     <string name="accessibility_description_text">此功能仅用于外接实体键盘时，某些系统存在特定的键盘快捷键，此情况会影响串流过程中，无法将相关按键指令传输给目标PC。            Delos 不会观察您输入的文本，也不会收集您的密码、信用卡号或任何其他信息。</string>
     <string name="game_menu_toggle_keyboard">弹出软键盘</string>
     <string name="game_menu_toggle_hud">(显示/隐藏)性能信息</string>
-    <string name="game_menu_toggle_floating_button">(显示/隐藏)悬浮按钮</string>
     <string name="game_menu_select_mouse_mode">选择鼠标模式</string>
     <string name="game_menu_enable_zoom_mode">启用平移/缩放</string>
     <string name="game_menu_disable_zoom_mode">禁用平移/缩放</string>
@@ -409,13 +408,7 @@
     <string name="summary_checkbox_onscreen_style_official">如果你还是喜欢官方旧版虚拟手柄按键风格可以勾选此选项。\n按键形状可以为方形，如果你勾选了底部虚拟按键【普通按钮为方形按钮】</string>
     <string name="title_checkbox_enable_perf_overlay_lite">开启Lite精简模式</string>
     <string name="summary_checkbox_enable_perf_overlay_lite">展示简化版性能信息：网速/延迟/解码/丢包率/FPS</string>
-    <string name="title_checkbox_enable_perf_overlay_lite_dialog">Lite精简模式点击弹出快捷选项</string>
-    <string name="summary_checkbox_enable_perf_overlay_lite_dialog">代替返回键逻辑，弹出游戏快捷菜单。</string>
     <string name="title_virtual_trackpad_settings">虚拟触摸板设置</string>
-    <string name="title_quit_dialog">返回菜单</string>
-    <string name="summary_quit_dialog">启用返回菜单</string>
-    <string name="title_floating_button">悬浮按钮</string>
-    <string name="summary_floating_button">启用悬浮按钮</string>
     <string name="dialog_custom_resolution">设置完分辨率后，退出设置页面 重新打开生效！</string>
     <string name="summary_custom_resolution">添加一个自定义分辨率,x号分割,比较奇怪的分辨率可能无法生效。
             \n例如：1920x1080
@@ -488,10 +481,6 @@
     <string name="summary_trackpad_swap_axis">在某些设备上，触摸板输入坐标可能会与当前视图方向不符。开启此选项可能会有用。</string>
     <string name="title_checkbox_force_qwerty">强制使用 QWERTY 布局</string>
     <string name="summary_checkbox_force_qwerty">强制使用 QWERTY 键盘布局。GFE必须使用。\n如果你希望使用其他键盘布局的话，请关闭此选项。</string>
-    <string name="title_checkbox_back_as_meta">使用返回键作为 Meta</string>
-    <string name="summary_back_as_meta">在按下物理返回键时发送 Meta(Win) 键</string>
-    <string name="title_back_as_guide">使用返回键作为导航键</string>
-    <string name="summary_back_as_guide">按下手柄上的返回键时发送导航(PS/HOME)键</string>
     <string name="title_checkbox_ignore_synth_events">忽略合成事件</string>
     <string name="summary_ignore_synth_events">忽略 Android 系统发送的合成事件。可能可以解决某些设备上的鼠标点击触发其他非预期按键的问题。\n启用此选项会导致系统软键盘不工作。</string>
     <string name="title_smart_clipboard_sync">智能剪贴板同步</string>
@@ -509,7 +498,6 @@
     <string name="perf_overlay_lite_bandwidth">带宽</string>
     <string name="perf_overlay_lite_network_decoding_delay">网络/解码延迟</string>
     <string name="perf_overlay_lite_packet_loss">丢包率</string>
-    <string name="menu_button">菜单</string>
     <string name="quick_menu_title">快捷菜单</string>
     <string name="wrong_import_format">自定义导入格式错误，请检查！</string>
     <string name="title_checkbox_gamepad_enable_battery_report">启用手柄电池状态报告</string>

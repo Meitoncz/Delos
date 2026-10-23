@@ -2503,8 +2503,8 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
             // any action.
             if ((context.inputMap & ControllerPacket.PLAY_FLAG) != 0 &&
                     context.startUpTime - context.startDownTime > ControllerHandler.START_DOWN_TIME_MOUSE_MODE_MS) {
-                if (prefConfig.enableBackMenu && context.backMenuPending){
-                    // TODO: show the quick menu
+                // Delos: a quick double Start (held the second time) opens the stream menu
+                if (context.backMenuPending){
                     context.backMenuPending = false;
                     gestures.showGameMenu(context);
                 } else if (prefConfig.mouseEmulation) {
@@ -2514,10 +2514,6 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
             context.inputMap &= ~ControllerPacket.PLAY_FLAG;
             break;
         case KeyEvent.KEYCODE_BACK:
-            if (prefConfig.backAsGuide) {
-                context.inputMap &= ~ControllerPacket.SPECIAL_BUTTON_FLAG;
-                break;
-            }
         case KeyEvent.KEYCODE_BUTTON_SELECT:
             context.inputMap &= ~ControllerPacket.BACK_FLAG;
             break;
@@ -2736,11 +2732,6 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
             context.inputMap |= ControllerPacket.PLAY_FLAG;
             break;
         case KeyEvent.KEYCODE_BACK:
-            if (prefConfig.backAsGuide) {
-                context.hasSelect = true;
-                context.inputMap |= ControllerPacket.SPECIAL_BUTTON_FLAG;
-                break;
-            }
         case KeyEvent.KEYCODE_BUTTON_SELECT:
             context.hasSelect = true;
             context.inputMap |= ControllerPacket.BACK_FLAG;

@@ -31,6 +31,7 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -205,6 +206,14 @@ class StreamMenu(private val game: Game) {
             d.dismiss()
             whenGameFocused(then)
         }
+        // Toggles keep the menu open; reading [changes] redraws their On / Off state after each one
+        var changes by remember { mutableIntStateOf(0) }
+        fun toggle(action: () -> Unit) {
+            action()
+            changes++
+        }
+        val prefs = game.prefConfig
+        @Suppress("UNUSED_EXPRESSION") changes // subscribes to it
         val classic = game.gameMenuCallbacks as? GameMenu
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
             // linear-gradient(transparent, rgba(0, 0, 0, .75) 40%)
@@ -230,7 +239,7 @@ class StreamMenu(private val game: Game) {
                         Page.MAIN -> Row(horizontalArrangement = Arrangement.spacedBy(34.px)) {
                             MenuCircle(Symbols.PLAY_ARROW, "Resume", Modifier.focusRequester(first)) { close() }
                             MenuCircle(Symbols.KEYBOARD, "Keyboard") { close { game.toggleKeyboard() } }
-                            MenuCircle(Symbols.SPEED, "Performance") { close { game.toggleHUD() } }
+                            MenuCircle(Symbols.SPEED, "Performance", on = prefs.enablePerfOverlay) { toggle { game.toggleHUD() } }
                             MenuCircle(Symbols.MORE_HORIZ, "More") { page = Page.MORE }
                             MenuCircle(Symbols.LOGOUT, "Disconnect") { close { game.disconnect() } }
                             MenuCircle(Symbols.POWER_SETTINGS_NEW, "Quit game") { close { game.quitWithoutAsking() } }
@@ -245,14 +254,14 @@ class StreamMenu(private val game: Game) {
                                 MenuCircle(Symbols.MONITORING, "Task manager") {
                                     close { game.sendKeys(shortArrayOf(KeyboardTranslator.VK_LCONTROL.toShort(), KeyboardTranslator.VK_LSHIFT.toShort(), KeyboardTranslator.VK_ESCAPE.toShort())) }
                                 }
-                                MenuCircle(Symbols.ZOOM_IN, if (game.isZoomModeEnabled) "Zoom off" else "Zoom") { close { game.toggleZoomMode() } }
+                                MenuCircle(Symbols.ZOOM_IN, "Zoom", on = game.isZoomModeEnabled) { toggle { game.toggleZoomMode() } }
                             }
                             Row(horizontalArrangement = Arrangement.spacedBy(34.px)) {
                                 if (game.allowChangeMouseMode) MenuCircle(Symbols.MOUSE, "Mouse mode") { close { game.selectMouseMode(game) } }
-                                MenuCircle(Symbols.JOYSTICK, "On-screen controls") { close { game.toggleVirtualController() } }
-                                MenuCircle(Symbols.KEYBOARD_ALT, "Full keyboard") { close { game.toggleFullKeyboard() } }
-                                MenuCircle(Symbols.KEYBOARD, "Key layout") { close { game.toggleKeyboardController() } }
-                                MenuCircle(Symbols.TOUCH_APP, "Touch sensitivity") { close { game.switchTouchSensitivity() } }
+                                MenuCircle(Symbols.JOYSTICK, "On-screen controls", on = prefs.onscreenController) { toggle { game.toggleVirtualController() } }
+                                MenuCircle(Symbols.KEYBOARD_ALT, "Full keyboard") { toggle { game.toggleFullKeyboard() } }
+                                MenuCircle(Symbols.KEYBOARD, "Key layout") { toggle { game.toggleKeyboardController() } }
+                                MenuCircle(Symbols.TOUCH_APP, "Touch sensitivity", on = prefs.enableTouchSensitivity) { toggle { game.switchTouchSensitivity() } }
                                 MenuCircle(Symbols.SCREEN_ROTATION, "Rotate") { close { game.rotateScreen() } }
                             }
                         }
@@ -310,7 +319,9 @@ class StreamMenu(private val game: Game) {
 
     /** `#quickmenu .circle`: 112 px on a dark glass, white icon and label. */
     @Composable
-    private fun MenuCircle(icon: String, label: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    /** [on]: a toggle's state (filled with the accent and "On" under the label), null for actions. */
+    private fun MenuCircle(icon: String, label: String, modifier: Modifier = Modifier, on: Boolean? = null, onClick: () -> Unit) {
+        val colors = LocalDelosColors.current
         var focused by remember { mutableStateOf(false) }
         Column(Modifier.width(150.px), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(18.px)) {
             Box(
@@ -318,13 +329,21 @@ class StreamMenu(private val game: Game) {
                     .focusEffects(onClick, corner = 999f, focusScale = 1.16f, ring = FocusRing(5f, 5f), glow = FocusGlow(20f, 50f, -14f), onFocusChange = { focused = it })
                     .size(112.px)
                     .clip(CircleShape)
-                    .background(Color(0xD91E283C))
+                    .background(if (on == true) colors.accent else Color(0xD91E283C))
                     .border(1.px, Color.White.copy(alpha = .12f), CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
-                Symbol(icon, 48.tpx, Color.White, filled = focused)
+                Symbol(icon, 48.tpx, if (on == true) colors.onAccent else Color.White, filled = focused || on == true)
             }
-            BasicText(label, style = TextStyle(color = Color.White, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx, textAlign = TextAlign.Center))
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.px)) {
+                BasicText(label, style = TextStyle(color = Color.White, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx, textAlign = TextAlign.Center))
+                if (on != null) {
+                    BasicText(
+                        if (on) "On" else "Off",
+                        style = TextStyle(color = if (on) colors.accent else Color.White.copy(alpha = .55f), fontFamily = Figtree, fontWeight = FontWeight.Bold, fontSize = 17.tpx),
+                    )
+                }
+            }
         }
     }
 

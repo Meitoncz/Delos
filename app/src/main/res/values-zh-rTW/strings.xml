@@ -7,7 +7,6 @@
 	<string name="scut_invalid_uuid">提供的電腦無效</string>
 	<string name="scut_invalid_app_id">提供的應用程式無效</string>
 
-	<string name="menu_button">選單</string>
 	<string name="quick_menu_title">快速選單</string>
 	<string name="configuration_mode_move_buttons">移動按鈕模式</string>
 	<string name="configuration_mode_resize_buttons">調整按鈕大小模式</string>
@@ -356,7 +355,6 @@
 	<!-- In Game menu -->
 	<string name="game_menu_toggle_keyboard">顯示軟體鍵盤</string>
 	<string name="game_menu_toggle_hud">切換即時效能資訊</string>
-	<string name="game_menu_toggle_floating_button">切換浮動按鈕</string>
 	<string name="game_menu_select_mouse_mode">選擇滑鼠模式</string>
 	<string name="game_menu_select_steam_mode">選擇串流模式</string>
 	<string name="game_menu_enable_zoom_mode">啟用平移/縮放</string>
@@ -438,19 +436,13 @@
 	<string name="summary_checkbox_enable_perf_overlay_lite">顯示簡化的效能資訊：網路速度 / 延遲 / 解碼 / 封包遺失率 / FPS</string>
 
 
-	<string name="title_checkbox_enable_perf_overlay_lite_dialog">精簡模式點擊彈出快速選項</string>
-	<string name="summary_checkbox_enable_perf_overlay_lite_dialog">取代返回鍵邏輯，改為彈出遊戲快速選單。</string>
 
 	<string name="title_show_overlay_zoom_toggle_button">顯示覆蓋層縮放切換按鈕</string>
 	<string name="summary_show_overlay_zoom_toggle_button">在畫面頂部顯示可拖曳的按鈕，用於切換平移/縮放模式。</string>
 
 	<string name="title_virtual_trackpad_settings">虛擬觸控板設定</string>
 
-	<string name="title_quit_dialog">返回選單</string>
-	<string name="summary_quit_dialog">啟用後，在串流介面按下實體返回鍵會顯示相關選項！\n軟體鍵盤、效能資訊、觸控模式切換、傳送特殊按鍵</string>
 
-	<string name="title_floating_button">浮動按鈕</string>
-	<string name="summary_floating_button">啟用浮動按鈕</string>
 
 	<string name="dialog_custom_resolution">設定解析度並離開設定頁面後生效！</string>
 	<string name="summary_custom_resolution">新增自訂解析度，以 x 分隔；不常見的解析度可能無法運作。\n例如：1920x1080\n若非原生解析度，預設可能不會填滿瀏海區域。若長寬比相同，可手動設定拉伸畫面以全螢幕顯示。</string>
@@ -549,10 +541,6 @@
 	<string name="title_checkbox_force_qwerty">強制使用 QWERTY 佈局</string>
 	<string name="summary_checkbox_force_qwerty">強制使用 QWERTY 鍵盤佈局。\nGFE 需要。\n若要使用其他佈局，請關閉此選項。</string>
 
-	<string name="title_checkbox_back_as_meta">返回鍵作為 Meta</string>
-	<string name="summary_back_as_meta">在按下實體返回鍵時送出 Meta（Win）鍵。</string>
-	<string name="title_back_as_guide">返回鍵作為 Guide</string>
-	<string name="summary_back_as_guide">在手把上按下返回鍵時送出 Guide（PS/HOME）按鍵。</string>
 
 	<string name="title_checkbox_ignore_synth_events">忽略合成事件</string>
 	<string name="summary_ignore_synth_events">忽略 Android 系統發送的合成事件。可解決部分裝置上滑鼠點擊觸發其他意外按鍵的問題。\n啟用後，系統軟體鍵盤將無法使用。</string>

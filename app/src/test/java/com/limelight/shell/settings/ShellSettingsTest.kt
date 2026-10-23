@@ -42,7 +42,8 @@ class ShellSettingsTest {
                 }
             }
         }
-        assertEquals(116, keys.size)
+        // 116 in step 6.7, minus the five Artemis menu options the Delos stream menu replaced
+        assertEquals(111, keys.size)
         assertEquals(keys, catalog.all.map { it.key }.toSet())
         assertEquals(keys.size, catalog.all.size)
         assertTrue(catalog.all.all { it.label.isNotBlank() && it.section.isNotBlank() })
@@ -204,11 +205,12 @@ class ShellSettingsTest {
     @Test fun nestedDependenciesDisableChildrenAndKeepThemSearchable() {
         val prefs = context.getSharedPreferences("test-dependencies", Context.MODE_PRIVATE)
         val stream = StreamSettingsStore(catalog) { prefs }
-        prefs.edit().putBoolean("checkbox_enable_perf_overlay", false).putBoolean("checkbox_enable_perf_overlay_lite", true).commit()
-        assertFalse(stream.enabled(spec("checkbox_enable_perf_overlay_lite_dialog"), null))
-        prefs.edit().putBoolean("checkbox_enable_perf_overlay", true).commit()
-        assertTrue(stream.enabled(spec("checkbox_enable_perf_overlay_lite_dialog"), null))
-        assertTrue(spec("checkbox_enable_perf_overlay_lite_dialog").matches("performance"))
+        // The strength depends on emulated rumble, which depends on rumble itself
+        prefs.edit().putBoolean("checkbox_enable_rumble", false).putBoolean("checkbox_vibrate_fallback", true).commit()
+        assertFalse(stream.enabled(spec("seekbar_vibrate_fallback_strength"), null))
+        prefs.edit().putBoolean("checkbox_enable_rumble", true).commit()
+        assertTrue(stream.enabled(spec("seekbar_vibrate_fallback_strength"), null))
+        assertTrue(spec("seekbar_vibrate_fallback_strength").matches("rumble"))
         stream.close()
     }
 

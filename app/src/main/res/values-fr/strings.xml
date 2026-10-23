@@ -397,11 +397,7 @@
     <string name="summary_checkbox_onscreen_style_official">Si vous aimez toujours l\'ancien style des boutons officiels de la manette virtuelle, vous pouvez sélectionner cette option.\nLes formes des boutons peuvent être carrées si vous avez sélectionné le bouton virtuel inférieur [Les boutons carrés sont des boutons carrés]</string>
     <string name="title_checkbox_enable_perf_overlay_lite">Activer le mode Lite</string>
     <string name="summary_checkbox_enable_perf_overlay_lite">Affiche des informations de performance simplifiées : Vitesse du réseau / Latence / Temps de décodage / Taux de perte de paquets / FPS</string>
-    <string name="title_checkbox_enable_perf_overlay_lite_dialog">Mode Lite cliquer pour afficher les options rapides</string>
-    <string name="summary_checkbox_enable_perf_overlay_lite_dialog">Remplace la logique du bouton retour, affiche le menu rapide du jeu.</string>
     <string name="title_virtual_trackpad_settings">Paramètres du trackpad virtuel</string>
-    <string name="title_quit_dialog">Menu retour</string>
-    <string name="summary_quit_dialog">Lorsqu\'il est activé, cliquer sur le bouton retour physique de l\'interface de streaming affichera les options associées !\nClavier logiciel, informations de performance, basculement du mode tactile, envoi de touches spéciales</string>
     <string name="dialog_custom_resolution">Définissez la résolution et quittez la page des paramètres pour prendre effet !</string>
     <string name="summary_custom_resolution">Ajoutez une résolution personnalisée, séparée par x, les résolutions étranges peuvent ne pas fonctionner.\nPar exemple : 1920x1080\nSi ce n\'est pas une résolution native, elle peut ne pas remplir la zone d\'encoche par défaut. Si l\'aspect ratio est le même, vous pouvez ajuster manuellement les paramètres pour étirer l\'écran afin de remplir tout l\'écran</string>
     <string name="title_custom_resolution">Résolution personnalisée</string>
@@ -471,10 +467,6 @@
     <string name="summary_trackpad_swap_axis">Sur certains appareils, l\'entrée du trackpad peut être tournée sur l\'axe. L\'activation de cette option peut aider.</string>
     <string name="title_checkbox_force_qwerty">Forcer la disposition du clavier QWERTY</string>
     <string name="summary_checkbox_force_qwerty">Forcer l\'utilisation de la disposition du clavier QWERTY.\nRequis par GFE.\nDésactivez si vous souhaitez utiliser une autre disposition de clavier.</string>
-    <string name="title_checkbox_back_as_meta">Bouton retour en tant que Meta</string>
-    <string name="summary_back_as_meta">Envoyer la touche Meta(Win) lors de l\'appui sur le bouton retour physique.</string>
-    <string name="title_back_as_guide">Bouton retour en tant que Guide</string>
-    <string name="summary_back_as_guide">Envoyer l\'appui sur le bouton Guide(PS/HOME) lorsque le bouton Retour est enfoncé sur les manettes.</string>
     <string name="title_checkbox_ignore_synth_events">Ignorer les événements synthétiques</string>
     <string name="summary_ignore_synth_events">Ignore les événements synthétiques envoyés par le système Android. Cela peut résoudre les problèmes où les clics de souris déclenchent d\'autres touches inattendues sur certains appareils.\nL\'activation de cette option empêchera le clavier logiciel du système de fonctionner.</string>
     <string name="title_smart_clipboard_sync">Synchronisation intelligente du presse-papiers</string>

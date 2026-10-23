@@ -411,21 +411,9 @@
             app:iconSpaceReserved="false" />
         <CheckBoxPreference
             android:defaultValue="false"
-            android:key="checkbox_back_as_meta"
-            android:summary="@string/summary_back_as_meta"
-            android:title="@string/title_checkbox_back_as_meta"
-            app:iconSpaceReserved="false" />
-        <CheckBoxPreference
-            android:defaultValue="false"
             android:key="checkbox_right_alt_as_meta"
             android:summary="@string/summary_right_alt_as_meta"
             android:title="@string/title_checkbox_right_alt_as_meta"
-            app:iconSpaceReserved="false" />
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="checkbox_back_as_guide"
-            android:summary="@string/summary_back_as_guide"
-            android:title="@string/title_back_as_guide"
             app:iconSpaceReserved="false" />
         <CheckBoxPreference
             android:defaultValue="false"
@@ -493,19 +481,6 @@
             android:key="checkbox_resume_without_confirm"
             android:summary="@string/summary_checkbox_resume_without_confirm"
             android:title="@string/title_checkbox_resume_without_confirm"
-            app:iconSpaceReserved="false" />
-        <CheckBoxPreference
-            android:defaultValue="true"
-            android:key="checkbox_enable_quit_dialog"
-            android:summary="@string/summary_quit_dialog"
-            android:title="@string/title_quit_dialog"
-            app:iconSpaceReserved="false" />
-        <CheckBoxPreference
-            android:dependency="checkbox_enable_quit_dialog"
-            android:defaultValue="false"
-            android:key="checkbox_enable_floating_button"
-            android:summary="@string/summary_floating_button"
-            android:title="@string/title_floating_button"
             app:iconSpaceReserved="false" />
         <CheckBoxPreference
             android:key="checkbox_full_screen"
@@ -858,13 +833,6 @@
             android:key="checkbox_enable_perf_overlay_lite"
             android:summary="@string/summary_checkbox_enable_perf_overlay_lite"
             android:title="@string/title_checkbox_enable_perf_overlay_lite"
-            app:iconSpaceReserved="false" />
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:dependency="checkbox_enable_perf_overlay_lite"
-            android:key="checkbox_enable_perf_overlay_lite_dialog"
-            android:summary="@string/summary_checkbox_enable_perf_overlay_lite_dialog"
-            android:title="@string/title_checkbox_enable_perf_overlay_lite_dialog"
             app:iconSpaceReserved="false" />
         <CheckBoxPreference
             android:defaultValue="false"

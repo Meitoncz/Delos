@@ -306,7 +306,6 @@
     <string name="message_export_sunshine_launcher_file">Экспорт лаунчера для Sunshine нестабилен и может ломаться. При изменении имени или картинки экспорт придётся делать заново.\nДля стабильности используйте Apollo.</string>
     <string name="title_enable_commit_text">Включить передачу готового текста (свайп/голос)</string>
     <string name="summary_enable_commit_text">Передаёт на ПК многосимвольный текст из экранных клавиатур (жестовый ввод, подсказки, голосовой ввод). Может нарушить работу игр, ожидающих посимвольного ввода.</string>
-    <string name="menu_button">Меню</string>
     <string name="quick_menu_title">Быстрое меню</string>
     <string name="configuration_mode_move_buttons">Режим перемещения кнопок</string>
     <string name="configuration_mode_resize_buttons">Режим изменения размера кнопок</string>
@@ -339,7 +338,6 @@
     <string name="accessibility_description_text">Используется, если системные сочетания физической клавиатуры перехватываются Android. В таких случаях некоторые сочетания не проходят на хост-ПК. Delos не просматривает ваш ввод и не собирает пароли, номера карт или другую личную информацию.</string>
     <string name="game_menu_toggle_keyboard">Показать экранную клавиатуру</string>
     <string name="game_menu_toggle_hud">Вкл./выкл. панель производительности</string>
-    <string name="game_menu_toggle_floating_button">Вкл./выкл. плавающую кнопку</string>
     <string name="game_menu_select_mouse_mode">Выбрать режим мыши</string>
     <string name="game_menu_select_steam_mode">Выбрать режим стрима</string>
     <string name="game_menu_enable_zoom_mode">Включить прокрутку/масш.</string>
@@ -383,15 +381,9 @@
     <string name="summary_checkbox_onscreen_style_official">Выберите этот вариант, если предпочитаете старый стиль виртуального геймпада. Форма кнопок может быть квадратной при выборе нижней виртуальной кнопки [Обычные кнопки - квадратные]</string>
     <string name="title_checkbox_enable_perf_overlay_lite">Включить упрощённый режим</string>
     <string name="summary_checkbox_enable_perf_overlay_lite">Отображать упрощённую информацию: скорость сети / задержка / декодирование / потеря пакетов / FPS</string>
-    <string name="title_checkbox_enable_perf_overlay_lite_dialog">В упрощенном режиме нажмите, чтобы открыть быстрые опции.</string>
-    <string name="summary_checkbox_enable_perf_overlay_lite_dialog">Заменяет логику кнопки Back, открывая быстрое меню игры.</string>
     <string name="title_show_overlay_zoom_toggle_button">Показать кнопку переключения масш. панели</string>
     <string name="summary_show_overlay_zoom_toggle_button">Показывает перетаскиваемую кнопку вверху экрана для переключения прокрутки/масш.</string>
     <string name="title_virtual_trackpad_settings">Настройки виртуального трекпада</string>
-    <string name="title_quit_dialog">Быстрое меню</string>
-    <string name="summary_quit_dialog">При включении нажатие физической кнопки Back в интерфейсе стрима покажет связанные опции!\nЭкранная клавиатура, инфо о производительности, переключение режима ввода, отправка спец-клавиш</string>
-    <string name="title_floating_button">Плавающая кнопка</string>
-    <string name="summary_floating_button">Включить плавающую кнопку</string>
     <string name="dialog_custom_resolution">Установите разрешение и выйдите из настроек для применения!</string>
     <string name="summary_custom_resolution">Добавьте пользовательское разрешение, разделённое знаком X, нестандартные разрешения могут не работать.\nНапример: 1920×1080\nЕсли разрешение не является нативным, оно по умолчанию может не заполнять область выреза. Если соотношение сторон совпадает, вы можете вручную настроить растягивание экрана на полный экран</string>
     <string name="title_custom_resolution">Пользовательское разрешение</string>
@@ -465,10 +457,6 @@
     <string name="summary_trackpad_swap_axis">На некоторых устройствах оси трекпада повернуты включение может помочь.</string>
     <string name="title_checkbox_force_qwerty">Принудительная раскладка QWERTY</string>
     <string name="summary_checkbox_force_qwerty">Принудительно использовать раскладку QWERTY.\nТребуется GFE.\nВыключите, если хотите другую раскладку.</string>
-    <string name="title_checkbox_back_as_meta">Кнопка Back как Meta</string>
-    <string name="summary_back_as_meta">Отправлять Meta(Win) при нажатии физической кнопки Back</string>
-    <string name="title_back_as_guide">Кнопка Back как Guide</string>
-    <string name="summary_back_as_guide">Отправлять Guide (PS/HOME) при нажатии Back на контроллерах</string>
     <string name="title_checkbox_ignore_synth_events">Игнорировать синтетические события</string>
     <string name="summary_ignore_synth_events">Игнорировать синтетические события, отправляемые системой Android. Это может решить проблему, когда щелчки мыши вызывают другие неожиданные клавиши на некоторых устройствах.\nВключение этой опции приведёт к тому, что экранная клавиатура системы перестанет работать.</string>
     <string name="title_smart_clipboard_sync">Умная синхронизация буфера</string>
