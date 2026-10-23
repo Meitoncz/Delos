@@ -18,6 +18,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.limelight.shell.data.BoxArtCache
+import com.limelight.shell.data.GameLauncher
 import com.limelight.shell.data.LocalBoxArt
 import com.limelight.shell.data.PcRepository
 import com.limelight.shell.settings.AppearanceStore
@@ -53,7 +54,8 @@ class ShellActivity : ComponentActivity() {
         lifecycle.addObserver(repo)
         repo.bind()
         boxArt = BoxArtCache(this) { repo.binder?.uniqueId }
-        setContent { ShellRoot(appearance, feedback, keys, repo, boxArt) }
+        val launcher = GameLauncher(this, repo)
+        setContent { ShellRoot(appearance, feedback, keys, repo, boxArt, launcher) }
         feedback.view = window.decorView
     }
 
@@ -81,7 +83,7 @@ class ShellActivity : ComponentActivity() {
 }
 
 @Composable
-private fun ShellRoot(store: AppearanceStore, feedback: Feedback, keys: GlobalKeys, repo: PcRepository, boxArt: BoxArtCache) {
+private fun ShellRoot(store: AppearanceStore, feedback: Feedback, keys: GlobalKeys, repo: PcRepository, boxArt: BoxArtCache, launcher: GameLauncher) {
     val appearance by store.appearance.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val systemHue = remember { systemAccentHue(context) }
@@ -98,7 +100,7 @@ private fun ShellRoot(store: AppearanceStore, feedback: Feedback, keys: GlobalKe
     }
     CompositionLocalProvider(LocalDelosColors provides colors, LocalFeedback provides feedback, LocalBoxArt provides boxArt) {
         Stage(textScale = appearance.uiScale / 100f) {
-            Shell(appearance, store::update, keys, repo)
+            Shell(appearance, store::update, keys, repo, launcher)
         }
     }
 }

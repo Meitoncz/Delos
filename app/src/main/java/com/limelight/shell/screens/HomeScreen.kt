@@ -54,6 +54,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.TextStyle
@@ -62,6 +63,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.em
 import com.limelight.shell.ContextMenu
+import com.limelight.shell.GameActions
+import com.limelight.shell.Layer
+import com.limelight.shell.LocalFocusTracker
+import com.limelight.shell.LocalGameActions
 import com.limelight.shell.LocalShell
 import com.limelight.shell.MenuItem
 import com.limelight.shell.data.App
@@ -72,6 +77,7 @@ import com.limelight.shell.data.PcRepository
 import com.limelight.shell.data.rememberBoxArt
 import com.limelight.shell.settings.Appearance
 import com.limelight.shell.settings.HomeLayout
+import com.limelight.shell.ui.Cue
 import com.limelight.shell.ui.Figtree
 import com.limelight.shell.ui.GameArt
 import com.limelight.shell.ui.IdleCoverFilter
@@ -210,7 +216,7 @@ private fun GameLibrary(library: Library.Ready, appearance: Appearance, repo: Pc
             }
         }
     }
-    val onStart: (App) -> Unit = remember { { _ -> shell.showToast("Streaming comes in step 6.5", Symbols.INFO) } }
+    val running = apps.firstOrNull { it.running }
     val onHide: (App, Boolean) -> Unit = remember(pc.uuid) {
         { app, hide ->
             repo.setHidden(pc.uuid, app.id, hide)
@@ -227,8 +233,9 @@ private fun GameLibrary(library: Library.Ready, appearance: Appearance, repo: Pc
                 else -> null
             },
             hidden = app.id in library.hidden,
+            running = running,
             requester = requester(app),
-            onFocused = onTileFocused, onStart = onStart, onHide = onHide,
+            onFocused = onTileFocused, onHide = onHide,
         )
     }
 
@@ -279,14 +286,32 @@ enum class TileBadge(val icon: String, val label: String) {
     LAST_PLAYED(Symbols.HISTORY, "Last played"),
 }
 
-private fun gameMenu(app: App, hidden: Boolean, onStart: (App) -> Unit, onHide: (App, Boolean) -> Unit) = ContextMenu(
-    app.name,
-    listOf(
-        MenuItem(Symbols.PLAY_ARROW, if (app.running) "Resume" else "Start game") { onStart(app) },
-        if (hidden) MenuItem(Symbols.VISIBILITY, "Show game") { onHide(app, false) }
-        else MenuItem(Symbols.VISIBILITY_OFF, "Hide game") { onHide(app, true) },
-    ),
-)
+/**
+ * The context menu of a game, depending on what runs on the PC: this game (resume / quit), another
+ * game (quit that one and start this one, or go back to it) or nothing (start). No confirmation
+ * dialogs: choosing "Quit" in this menu is the confirmation.
+ */
+private fun gameMenu(pc: Pc, app: App, hidden: Boolean, running: App?, image: ImageBitmap?, actions: GameActions, onHide: (App, Boolean) -> Unit) =
+    ContextMenu(
+        app.name,
+        buildList {
+            when {
+                app.running -> {
+                    add(MenuItem(Symbols.PLAY_ARROW, "Resume") { actions.start(pc, app, image) })
+                    add(MenuItem(Symbols.POWER_SETTINGS_NEW, "Quit game") { actions.quit(pc, app) })
+                }
+                running != null -> {
+                    add(MenuItem(Symbols.SWAP_HORIZ, "Quit ${running.name} and start") { actions.quitAndStart(pc, running, app, image) })
+                    add(MenuItem(Symbols.PLAY_ARROW, "Resume ${running.name}") { actions.start(pc, running, null) })
+                }
+                else -> add(MenuItem(Symbols.PLAY_ARROW, "Start game") { actions.start(pc, app, image) })
+            }
+            add(
+                if (hidden) MenuItem(Symbols.VISIBILITY, "Show game") { onHide(app, false) }
+                else MenuItem(Symbols.VISIBILITY_OFF, "Hide game") { onHide(app, true) }
+            )
+        },
+    )
 
 @Composable
 private fun GameInfo(pc: Pc, app: App, index: Int, lastPlayed: Int, modifier: Modifier) {
@@ -353,23 +378,37 @@ private fun GameTile(
     index: Int,
     badge: TileBadge?,
     hidden: Boolean,
+    running: App?,
     requester: FocusRequester,
     onFocused: (Int, App) -> Unit,
-    onStart: (App) -> Unit,
     onHide: (App, Boolean) -> Unit,
 ) {
     val colors = LocalDelosColors.current
     val boxArt = LocalBoxArt.current
+    val actions = LocalGameActions.current
+    val shell = LocalShell.current
+    val tracker = LocalFocusTracker.current
+    val feedback = LocalFeedback.current
     val image by rememberBoxArt(boxArt, pc, app)
     val art = appArt(pc, app)
     val wide = index == 0
-    val menu = remember(app, hidden) { gameMenu(app, hidden, onStart, onHide) }
+    val menu = remember(app, hidden, running, image) { gameMenu(pc, app, hidden, running, image, actions, onHide) }
     var focused by remember { mutableStateOf(false) }
+    // A starts (or resumes) the game; while another game runs on the PC it offers the choices instead
+    val activate = {
+        if (running != null && running.id != app.id) {
+            feedback.play(Cue.OPEN)
+            shell.openLayer(Layer.Context(menu, tracker.bounds()), tracker)
+        } else {
+            actions.start(pc, app, image)
+        }
+    }
     Box(
         Modifier
             .focusRequester(requester)
             .focusEffects(
-                onClick = { onStart(app) }, corner = 26f, sweep = true, contextMenu = menu,
+                onClick = activate, corner = 26f, sweep = true, contextMenu = menu,
+                clickCue = if (running != null && running.id != app.id) null else Cue.SELECT,
                 origin = if (wide) TransformOrigin(1f, .5f) else TransformOrigin.Center,
                 onFocusChange = {
                     focused = it

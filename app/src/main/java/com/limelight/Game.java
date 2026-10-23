@@ -49,6 +49,8 @@ import com.limelight.utils.MouseModeOption;
 import com.limelight.utils.PanZoomHandler;
 import com.limelight.utils.ServerHelper;
 import com.limelight.utils.ShortcutHelper;
+import com.limelight.shell.StreamLoader;
+import com.limelight.utils.ConnectionProgress;
 import com.limelight.utils.SpinnerDialog;
 import com.limelight.utils.UiHelper;
 
@@ -181,7 +183,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     private int currentOrientation;
 
     public NvConnection conn;
-    private SpinnerDialog spinner;
+    private ConnectionProgress spinner;
     private boolean displayedFailureDialog = false;
     private boolean connecting = false;
     public boolean connected = false;
@@ -376,9 +378,16 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
         clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
 
-        // Start the spinner
-        spinner = SpinnerDialog.displayDialog(this, getResources().getString(R.string.conn_establishing_title),
-                getResources().getString(R.string.conn_establishing_msg), true);
+        // Start the spinner (Delos: a stream started from the new UI keeps showing its loader instead,
+        // with the system bars hidden from the first frame, as in the new UI)
+        if (StreamLoader.requested(getIntent())) {
+            hideSystemUi.run();
+            spinner = StreamLoader.show(this);
+        }
+        else {
+            spinner = SpinnerDialog.displayDialog(this, getResources().getString(R.string.conn_establishing_title),
+                    getResources().getString(R.string.conn_establishing_msg), true);
+        }
 
 
         Display currentDisplay = null;

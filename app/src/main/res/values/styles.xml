@@ -33,6 +33,8 @@
     <!-- Stream activity theme -->
     <style name="StreamTheme" parent="StreamBaseTheme">
         <!-- All customizations that are NOT specific to a particular API-level can go here. -->
+        <!-- Delos: no starting window (a black screen for a moment) when the new UI hands its launch scene over to the stream -->
+        <item name="android:windowDisablePreview">true</item>
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
         <!-- Added for API 34+ where ImageButton requires these color attrs to inflate -->

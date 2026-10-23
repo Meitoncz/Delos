@@ -229,6 +229,13 @@ class PcRepository(context: Context) : DefaultLifecycleObserver {
         return listOf(first) + (apps - first)
     }
 
+    /** Asks the service for a fresh state and app list of the active PC (after a game was started or quit). */
+    fun refresh() {
+        val uuid = pollerPc ?: return
+        binder?.invalidateStateForComputer(uuid)
+        poller?.pollNow()
+    }
+
     fun lastPlayed(pcUuid: String): Int = prefs.getInt(lastPlayedKey(pcUuid), -1)
 
     fun setLastPlayed(pcUuid: String, appId: Int) {

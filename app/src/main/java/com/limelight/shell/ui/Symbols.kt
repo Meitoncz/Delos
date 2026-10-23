@@ -41,6 +41,7 @@ object Symbols {
     const val REPLAY = "\uE042"
     const val RESTART_ALT = "\uF053"
     const val SEARCH = "\uEF7A"
+    const val SQUARE = "\uEB36"
     const val SWAP_HORIZ = "\uE8D4"
     const val WARNING = "\uF083"
     const val ACCOUNT_CIRCLE = "\uF20B"

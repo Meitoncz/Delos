@@ -112,7 +112,7 @@ Principle: keep the streaming part (`Game.java`, overlays, virtual controls), re
   - [x] 6.2 Design system (colors incl. Material You, fonts, icons, focus effects, animated backgrounds, blur, sounds, haptics)
   - [x] 6.3 Shell (own status bar and hint bar, gamepad input layer, navigation, context and side menus, interface scale)
   - [x] 6.4 Home (grid and row layouts, logo + hero background, covers, game context menu)
-  - [ ] 6.5 Launching a game (loader, dive into the stream, resume/quit without dialogs)
+  - [x] 6.5 Launching a game (loader, dive into the stream, resume/quit without dialogs)
   - [ ] 6.6 First launch, PCs and pairing (profile, PC circles, PIN/OTP pairing, portal, devices screen, links and shortcuts)
   - [ ] 6.7 Settings (all 126 existing settings on the same keys, search, Appearance, Covers, settings profiles)
   - [ ] 6.8 SteamGridDB (API key, matching, 4 images per game, bulk download)
@@ -122,7 +122,9 @@ Principle: keep the streaming part (`Game.java`, overlays, virtual controls), re
 
 ## Phase 7 – Custom features and maintenance
 
-- [ ] Custom features (collect ideas here).
+- [ ] Custom features (collect ideas here):
+  - [ ] Advanced Snapdragon upscaler for the streamed video (e.g. Snapdragon Game Super Resolution) with a sharpness setting (GUI.md); needs a shader pass between the decoder and the screen.
+- Long-term ideas, not planned yet: [FUTURE_PLANS.md](FUTURE_PLANS.md).
 - [ ] Regularly (e.g. monthly) merge `moonlight/master` and upstream `common-c`.
 - [ ] Watch the `artemis` remote in case ClassicOldSong resumes development.
 - [ ] Keep changes to `Game.java` and `ControllerHandler.java` minimal so future merges stay small.

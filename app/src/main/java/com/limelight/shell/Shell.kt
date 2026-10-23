@@ -1,7 +1,9 @@
 package com.limelight.shell
 
+import android.app.ActivityOptions
 import android.view.KeyEvent
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -19,19 +21,29 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import com.limelight.shell.screens.AppearanceRows
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.limelight.shell.data.App
+import com.limelight.shell.data.GameLauncher
 import com.limelight.shell.data.Library
+import com.limelight.shell.data.Pc
 import com.limelight.shell.data.PcRepository
 import com.limelight.shell.screens.HomeScreen
 import com.limelight.shell.screens.PlaceholderScreen
 import com.limelight.shell.screens.SettingsScreen
+import com.limelight.shell.screens.appArt
 import com.limelight.shell.screens.step
 import com.limelight.shell.settings.Appearance
 import com.limelight.shell.system.rememberBatteryStatus
@@ -41,9 +53,15 @@ import com.limelight.shell.ui.Backdrop
 import com.limelight.shell.ui.ContextMenuLayer
 import com.limelight.shell.ui.Cue
 import com.limelight.shell.ui.EaseOut
+import com.limelight.shell.ui.Feedback
 import com.limelight.shell.ui.Glyph
 import com.limelight.shell.ui.Hint
 import com.limelight.shell.ui.HintBar
+import com.limelight.shell.ui.HeroBitmaps
+import com.limelight.shell.ui.HANDOFF_PROGRESS
+import com.limelight.shell.ui.LaunchCard
+import com.limelight.shell.ui.LaunchHandoff
+import com.limelight.shell.ui.LaunchOverlay
 import com.limelight.shell.ui.LocalDelosColors
 import com.limelight.shell.ui.LocalFeedback
 import com.limelight.shell.ui.NavButton
@@ -67,19 +85,54 @@ import dev.chrisbanes.haze.rememberHazeState
  * side menu (left menu button), context menus (right menu button / Start / X) and toasts.
  */
 @Composable
-fun Shell(appearance: Appearance, update: ((Appearance) -> Appearance) -> Unit, keys: GlobalKeys, repo: PcRepository) {
+fun Shell(appearance: Appearance, update: ((Appearance) -> Appearance) -> Unit, keys: GlobalKeys, repo: PcRepository, launcher: GameLauncher) {
     val colors = LocalDelosColors.current
     val feedback = LocalFeedback.current
     val shell = remember { ShellState() }
     val tracker = remember { FocusTracker() }
     val haze = rememberHazeState()
     var blurSource by remember { mutableStateOf(false) }
-    LaunchedEffect(shell.layer) {
+    LaunchedEffect(shell.layer != null) {
         if (shell.layer != null) {
             blurSource = true
         } else {
             delay(600)
             blurSource = false
+        }
+    }
+    val scope = rememberCoroutineScope()
+    val activity = LocalActivity.current
+    val actions = remember(launcher) { ShellGameActions(shell, launcher, feedback, scope) }
+
+    // Starting a game: the launch scene appears and its ring starts filling, then the stream window takes
+    // over the very same scene (StreamLoader), connects and opens the ring into the game
+    LaunchedEffect(shell.launch?.id) {
+        val launch = shell.launch ?: return@LaunchedEffect
+        LaunchHandoff.background = launch.background
+        LaunchHandoff.progress = HANDOFF_PROGRESS
+        delay(if (appearance.reducedMotion) 300 else 700)
+        shell.diving = true
+        // Only a game that really opens counts as last played (not one cancelled in the loader)
+        repo.setLastPlayed(launch.pc.uuid, launch.app.id)
+        // The stream (Game, launchMode singleTask) opens in its own task, where the system ignores custom
+        // activity animations and slides the new window in. A scale-up is honoured for new tasks; from the
+        // whole screen it only fades the stream window in over this one (a clip reveal also shifts it up a
+        // little), and that starts with the same scene.
+        val options = activity?.window?.decorView?.let { root ->
+            ActivityOptions.makeScaleUpAnimation(root, 0, 0, root.width, root.height).toBundle()
+        }
+        activity?.startActivity(launch.intent, options)
+    }
+    // Back from the stream: the overlay goes away, the focus stays on the game, the PC's state is refreshed
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        if (shell.launch != null && shell.diving) {
+            shell.launch = null
+            shell.diving = false
+            repo.refresh()
+            tracker.requester?.let {
+                feedback.silenceNextFocus()
+                runCatching { it.requestFocus() }
+            }
         }
     }
     val wifi by rememberWifiStatus()
@@ -129,7 +182,8 @@ fun Shell(appearance: Appearance, update: ((Appearance) -> Appearance) -> Unit, 
     }
 
     DisposableEffect(keys) {
-        keys.listener = { code ->
+        keys.listener = listener@{ code ->
+            if (shell.launch != null) return@listener
             when (code) {
                 KeyEvent.KEYCODE_BUTTON_SELECT -> toggleSide()
                 KeyEvent.KEYCODE_BUTTON_START, KeyEvent.KEYCODE_BUTTON_X -> toggleContext()
@@ -143,6 +197,17 @@ fun Shell(appearance: Appearance, update: ((Appearance) -> Appearance) -> Unit, 
     BackHandler(enabled = shell.layer != null || shell.screen != Screen.HOME) {
         feedback.play(Cue.BACK)
         shell.back()
+    }
+    // B during the loader cancels the start (registered last, so it wins while a game is starting)
+    BackHandler(enabled = shell.launch != null) {
+        if (!shell.diving) {
+            feedback.play(Cue.BACK)
+            shell.launch = null
+            tracker.requester?.let {
+                feedback.silenceNextFocus()
+                runCatching { it.requestFocus() }
+            }
+        }
     }
 
     // When a layer has closed, the focus returns to where it was (silently, like the prototype)
@@ -160,7 +225,7 @@ fun Shell(appearance: Appearance, update: ((Appearance) -> Appearance) -> Unit, 
         NavButton(Symbols.DEVICES, "Devices", shell.screen == Screen.DEVICES) { shell.navigate(Screen.DEVICES) },
     )
 
-    CompositionLocalProvider(LocalShell provides shell, LocalFocusTracker provides tracker) {
+    CompositionLocalProvider(LocalShell provides shell, LocalFocusTracker provides tracker, LocalGameActions provides actions) {
         Box(Modifier.fillMaxSize()) {
             // The blur source re-records the whole screen every frame, so it is only active while an overlay
             // is shown (and while it fades out)
@@ -226,6 +291,11 @@ fun Shell(appearance: Appearance, update: ((Appearance) -> Appearance) -> Unit, 
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
                 ZoomedBar(uiScale) { HintBar(hints(shell, tracker.adjustable), note = note) }
             }
+            val launch = shell.launch
+            LaunchOverlay(
+                launch?.let { LaunchCard(it.id, it.app.name, StreamLoader.greeting(it.pc.name), appArt(it.pc, it.app, it.image), it.background) },
+                appearance.reducedMotion,
+            )
             ToastHost(shell.toast) { shell.hideToast(it) }
         }
     }
@@ -241,6 +311,51 @@ private fun SideMenuRows(appearance: Appearance, update: ((Appearance) -> Appear
     SettingRow(Symbols.MUSIC_NOTE, "Interface sounds", RowValue.Toggle(appearance.sounds) { on -> update { it.copy(sounds = on) } }, compact = true)
     SettingRow(Symbols.VIBRATION, "Haptics", RowValue.Toggle(appearance.haptics) { on -> update { it.copy(haptics = on) } }, compact = true)
     SettingRow(Symbols.SETTINGS, "All settings", RowValue.Action(openSettings), compact = true)
+}
+
+/** The game actions of the shell: start with the launch animation, quit with toasts, no dialogs. */
+private class ShellGameActions(
+    private val shell: ShellState,
+    private val launcher: GameLauncher,
+    private val feedback: Feedback,
+    private val scope: CoroutineScope,
+) : GameActions {
+    private var launches = 0
+
+    override fun start(pc: Pc, app: App, image: ImageBitmap?) {
+        if (shell.launch != null) return
+        val start = launcher.prepare(pc, app)
+        if (start == null) {
+            feedback.play(Cue.ERROR)
+            shell.showToast("${pc.name} cannot be reached", Symbols.WIFI_OFF)
+            return
+        }
+        if (start.virtualDisplayUnavailable) {
+            shell.showToast("The virtual display is not ready on ${pc.name} · streaming the main display", Symbols.MONITOR)
+        }
+        shell.diving = false
+        shell.launch = LaunchRequest(++launches, pc, app, start.intent, image, HeroBitmaps.latest("${pc.uuid}/${app.id}"))
+    }
+
+    override fun quit(pc: Pc, app: App) {
+        scope.launch {
+            shell.showToast("Quitting ${app.name}…", Symbols.POWER_SETTINGS_NEW)
+            report(launcher.quit(pc, app))
+        }
+    }
+
+    override fun quitAndStart(pc: Pc, running: App, app: App, image: ImageBitmap?) {
+        scope.launch {
+            shell.showToast("Quitting ${running.name}…", Symbols.POWER_SETTINGS_NEW)
+            val result = launcher.quit(pc, running)
+            if (result.success) start(pc, app, image) else report(result)
+        }
+    }
+
+    private fun report(result: GameLauncher.QuitResult) {
+        if (!result.success) feedback.play(Cue.ERROR)
+        shell.showToast(result.message, if (result.success) Symbols.CHECK_CIRCLE else Symbols.ERROR)
+    }
 }
 
 /** Button hints for the current screen and layer (the prototype's updateHints). */

@@ -1,6 +1,7 @@
 """Builds the fonts bundled with the Delos UI (Phase 6, docs/UI_PLAN.md).
 
-- Unbounded (display) and Figtree (body), SIL Open Font License 1.1, variable weight axis limited to 400-700.
+- Unbounded (display) and Figtree (body), SIL Open Font License 1.1, variable weight axis limited to 400-700
+  (Figtree 400-800, for the hint bar's button letters).
   Unbounded is subset to Latin (incl. Czech and other extended Latin) and Cyrillic; Android falls
   back to system fonts for other scripts.
 - Material Symbols Rounded, Apache 2.0, variable FILL/GRAD/opsz/wght axes, subset to the icons in
@@ -132,7 +133,7 @@ def main() -> None:
     RES_FONT.mkdir(parents=True, exist_ok=True)
     text = [cp for lo, hi in TEXT_RANGES for cp in range(lo, hi + 1)]
     subset_font(work / "Unbounded.ttf", RES_FONT / "unbounded.ttf", text, keep_layout=True, weights=(400, 700))
-    subset_font(work / "Figtree.ttf", RES_FONT / "figtree.ttf", text, keep_layout=True, weights=(400, 700))
+    subset_font(work / "Figtree.ttf", RES_FONT / "figtree.ttf", text, keep_layout=True, weights=(400, 800))
     subset_font(work / "MaterialSymbolsRounded.ttf", RES_FONT / "material_symbols_rounded.ttf",
                 sorted(set(icons.values())), keep_layout=False)
     write_symbols(icons)

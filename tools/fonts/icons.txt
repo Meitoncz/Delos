@@ -42,6 +42,7 @@ refresh
 replay
 restart_alt
 search
+square
 swap_horiz
 warning
 

@@ -1,5 +1,6 @@
 package com.limelight.shell.ui
 
+import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -139,7 +140,8 @@ private val ONLINE = androidx.compose.ui.graphics.Color(0xFF3DDC84)
 private fun TopNav(buttons: List<NavButton>, modifier: Modifier) {
     val colors = LocalDelosColors.current
     Row(
-        modifier.clip(CircleShape).background(colors.surface).border(1.px, colors.line, CircleShape).padding(8.px),
+        // Not clipped: the focused button's glow and tooltip reach outside the pill
+        modifier.background(colors.surface, CircleShape).border(1.px, colors.line, CircleShape).padding(8.px),
         horizontalArrangement = Arrangement.spacedBy(14.px),
     ) {
         buttons.forEach { NavButtonView(it) }
@@ -172,10 +174,11 @@ private fun NavButtonView(button: NavButton) {
                 filled = focused,
             )
         }
-        // Tooltip under the focused button (`.nav-btn .tip`)
+        // Tooltip under the focused button (`.nav-btn .tip`); it takes the button's size, so a long label
+        // cannot widen the bar, and overflows it centered
         AnimatedVisibility(
             focused,
-            modifier = Modifier.offset(y = 84.px).wrapContentSize(unbounded = true),
+            modifier = Modifier.matchParentSize().wrapContentSize(Alignment.TopCenter, unbounded = true).offset(y = 84.px),
             enter = fadeIn(tween(250)) + slideInVertically(tween(350, easing = EaseOut)) { -it / 4 },
             exit = fadeOut(tween(250)) + slideOutVertically(tween(350, easing = EaseOut)) { -it / 4 },
         ) {
@@ -192,7 +195,8 @@ private fun NavButtonView(button: NavButton) {
 @Immutable
 sealed interface Glyph {
     data class Letter(val text: String) : Glyph
-    data class Icon(val symbol: String) : Glyph
+    /** [scale] evens out icons that look too big or too small next to the others. */
+    data class Icon(val symbol: String, val scale: Float = 1f) : Glyph
 
     companion object {
         val A = Letter("A")
@@ -202,11 +206,14 @@ sealed interface Glyph {
         val L1 = Letter("L1")
         val R1 = Letter("R1")
 
+        /** AYN handhelds (Odin, Thor) have a square and a play icon on their two menu buttons. */
+        private val ayn = Build.MANUFACTURER.equals("AYN", ignoreCase = true)
+
         /** The left top menu button (View / Select). */
-        val MENU_LEFT = Icon(Symbols.FILTER_NONE)
+        val MENU_LEFT = if (ayn) Icon(Symbols.SQUARE, scale = .72f) else Icon(Symbols.FILTER_NONE)
 
         /** The right top menu button (Start). */
-        val MENU_RIGHT = Icon(Symbols.MENU)
+        val MENU_RIGHT = if (ayn) Icon(Symbols.PLAY_ARROW, scale = 1.3f) else Icon(Symbols.MENU)
         val ADJUST = Icon(Symbols.SWAP_HORIZ)
     }
 }
@@ -238,12 +245,16 @@ fun HintBar(hints: List<Hint>, note: String?, modifier: Modifier = Modifier) {
 fun GlyphButton(glyph: Glyph) {
     val colors = LocalDelosColors.current
     Box(
-        Modifier.defaultMinSize(minWidth = 38.px).height(38.px).clip(CircleShape).background(colors.text).padding(horizontal = 8.px),
+        // Icons always sit in a circle; letters (L1…) may widen it into a pill
+        (if (glyph is Glyph.Icon) Modifier.size(38.px) else Modifier.defaultMinSize(minWidth = 38.px).height(38.px))
+            .clip(CircleShape)
+            .background(colors.text)
+            .then(if (glyph is Glyph.Icon) Modifier else Modifier.padding(horizontal = 8.px)),
         contentAlignment = Alignment.Center,
     ) {
         when (glyph) {
-            is Glyph.Letter -> BasicText(glyph.text, style = TextStyle(color = colors.bg, fontFamily = Figtree, fontWeight = FontWeight.Bold, fontSize = 19.tpx))
-            is Glyph.Icon -> Symbol(glyph.symbol, 24.tpx, colors.bg, filled = true, filledWeight = 600)
+            is Glyph.Letter -> BasicText(glyph.text, style = TextStyle(color = colors.bg, fontFamily = Figtree, fontWeight = FontWeight.ExtraBold, fontSize = 21.tpx))
+            is Glyph.Icon -> Symbol(glyph.symbol, (24f * glyph.scale).tpx, colors.bg, filled = true, filledWeight = 600)
         }
     }
 }

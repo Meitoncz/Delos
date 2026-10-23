@@ -19,6 +19,12 @@ The starting point for the new Delos UI (Phase 6). Written by the project owner;
 2. In the same style, the next step automatically shows the **PCs to pair, in circles**.
 3. Logging in to a PC plays the main **"portal" animation** (not the same as the PlayStation Portal one). The same kind of animation is used when connecting to a remote device elsewhere in the UI.
 
+## Start screen (every launch)
+
+- Every time Delos starts, it opens on a **start screen with the remote devices** (in the same circle style as the first launch).
+- The **current / last used profile** is shown in the top-left corner, with a quick way to **switch profiles or create a new one**.
+- Settings: a **"Default device to connect to automatically"** picker and a switch to **skip the start screen** – Delos then connects straight to the default device.
+
 ## Home
 
 - After connecting to a PC, the main layout shows the **apps / games with the correct aspect ratio for SteamGridDB covers** (portrait).
@@ -29,6 +35,8 @@ The starting point for the new Delos UI (Phase 6). Written by the project owner;
 ## Launching a game
 
 - Starting a game shows an **animated circular loader**, then the UI **"dives" into the streamed game**.
+- The dive should be **more spectacular and dynamic**: it should really feel like **passing through the ring into the game** – e.g. being pulled in with a **wind effect** and **chromatic aberration** (probably a custom shader).
+- To investigate: when the user starts a **game** (not the desktop), **wait until the game has actually loaded on the PC** and only then connect with the effect. Today the stream usually opens on the desktop with Steam still starting the game, which breaks the immersion.
 
 ## SteamGridDB
 
@@ -45,5 +53,9 @@ The starting point for the new Delos UI (Phase 6). Written by the project owner;
 ## Controls
 
 - Primary input: **D-pad or left stick + A, B, X, Y**.
-- The **two menu buttons at the top left and top right** of the handheld are used in the UI: the **left one (View/Select)** slides the **side menu** in from the left, the **right one (Start)** opens the **context menu** for the focused item.
+- The **two menu buttons at the top left and top right** of the handheld are used in the UI: the **left one (View/Select)** slides the **side menu** in from the left, the **right one (Start)** opens the **context menu** for the focused item. The hints show the buttons as they look on the device: on AYN handhelds (Odin, Thor) a square (left) and a play arrow (right).
 - Navigation must be **intuitive and direct**: pressing a direction takes you where you want to go, ideally in **one press** – never left, down, down just to reach something.
+
+## Stream
+
+- A setting to use an **advanced Snapdragon upscaler** for the streamed video (e.g. Snapdragon Game Super Resolution), with a **sharpness** setting for it.

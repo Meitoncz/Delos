@@ -68,6 +68,7 @@ Each step ends with a build, a test on the Odin and a commit (after approval), l
 - [x] Input layer: A / Enter / D-pad center activate, B = back (system fallback), Select = side menu, Start or X = context menu, L1 / R1 forwarded to the current screen (`GlobalKeys.kt`, handled in the activity before the focus dispatch). One-press directional navigation via the Compose 2D focus search; left/right adjust choice and slider rows.
 - [x] Screens with the prototype's transition (fade + slight zoom), side menu sliding in from the left, context menu at the focused element, blurred scrim, toasts (`Shell.kt`, `ShellState.kt`, `ui/Layers.kt`). Layers trap the focus and return it to where it was when they close.
 - [x] Interface scale (100–130 %, default 115 %): the status and hint bars are zoomed as a whole, text elsewhere grows.
+- [x] The hint bar shows the menu buttons as printed on the device: a square and a play arrow on AYN handhelds, the View and menu icons elsewhere (icons in a fixed circle, letters in ExtraBold). A top nav tooltip no longer widens the bar.
 - [x] Settings rows (toggle, choice, slider, action, info) as a shared component (`ui/Rows.kt`); scrolling lists fade at the edges and keep the focused row clear of the fades.
 - Previews until the real screens exist: home with placeholder games, settings with the Appearance category, placeholder profile and devices screens.
 - [ ] The analog stick moving the focus like the D-pad needs a check on the device (Android synthesizes D-pad keys from the stick).
@@ -87,12 +88,18 @@ Each step ends with a build, a test on the Odin and a commit (after approval), l
   - focus animations are read only while drawing (no recomposition per animation frame), tile parameters are stable so a focus move recomposes just the two affected tiles, the idle cover dimming is an image color filter instead of a layer effect.
 
 ### 6.5 Launching a game
-- [ ] Circular loader with the cover, blurred home behind it, then the "dive" transition into `Game`.
-- [ ] Running game on the PC: resume or quit directly from the home screen, without "are you sure" dialogs. This covers part of the open Phase 4 item "fewer confirmation dialogs".
-- [ ] Return from the stream back to the focused game.
+- [x] One continuous launch scene (`ui/LaunchOverlay.kt`): the game background, the ring filling around the cover, the title and the connection stage. The new UI fades it in over the home screen, then the stream window (`StreamLoader.kt`, instead of the "Starting RTSP handshake" dialog) takes it over without a visible switch: no starting window, a scale-up window animation that only fades, the system bars hidden from the first frame, the pulses and the moon going on from the same clock.
+- [x] Moonlight's connection stages as playful but accurate lines under the title ("Haggling with the PC over pixels and frame rate"…), each shown at least 0.7 s.
+- [x] The dive: when the stream runs, the cover gives way to it inside the ring and the ring opens past the screen edges, slowly at first, then rushing past. Pulses and the moon of the Delos logo circle the ring and fly past with it.
+- [x] Running game on the PC: resume or quit directly from the home screen, without "are you sure" dialogs. This covers part of the open Phase 4 item "fewer confirmation dialogs".
+- [x] Return from the stream back to the focused game.
+- [x] A more spectacular dive (GUI.md): zoom blur, a light chromatic aberration and wind streaks as an AGSL shader on Android 13+ (`ui/DiveEffect.kt`; older versions just open the ring).
+- [ ] Fine-tune the dive shader and the effects around the ring (more ideas to come).
+- [ ] Investigate: when a game (not the desktop) is started, wait until it has loaded on the PC before connecting, so the stream does not open on the desktop with Steam still starting the game.
 
 ### 6.6 First launch, PCs and pairing
 - [ ] Profile creation (name + avatar in circles).
+- [ ] Start screen on every launch (GUI.md): the remote devices in circles, the current profile in the top-left corner (switch or create one); settings "Default device to connect to automatically" and "Skip the start screen".
 - [ ] PC list in circles from discovery, add a PC manually, wake-on-LAN.
 - [ ] Pairing screen with the PIN (and OTP pairing for Vibepollo), then the portal animation into home.
 - [ ] Devices screen: client-side rename, wake, unpair, remove.

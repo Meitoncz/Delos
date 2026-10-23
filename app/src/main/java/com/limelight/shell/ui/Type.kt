@@ -18,17 +18,15 @@ import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.TextUnit
 import com.limelight.R
 
-private val TEXT_WEIGHTS = listOf(400, 500, 600, 700)
-
-private fun variableFamily(resId: Int) = FontFamily(
-    TEXT_WEIGHTS.map { w -> Font(resId, FontWeight(w), variationSettings = FontVariation.Settings(FontVariation.weight(w))) }
+private fun variableFamily(resId: Int, weights: List<Int>) = FontFamily(
+    weights.map { w -> Font(resId, FontWeight(w), variationSettings = FontVariation.Settings(FontVariation.weight(w))) }
 )
 
 /** Display font (titles, logo, wordmark). */
-val Unbounded = variableFamily(R.font.unbounded)
+val Unbounded = variableFamily(R.font.unbounded, listOf(400, 500, 600, 700))
 
-/** Body font (everything else). */
-val Figtree = variableFamily(R.font.figtree)
+/** Body font (everything else); up to ExtraBold for the hint bar's button letters. */
+val Figtree = variableFamily(R.font.figtree, listOf(400, 500, 600, 700, 800))
 
 private val symbolFamilies = HashMap<Triple<Float, Int, Float>, FontFamily>()
 

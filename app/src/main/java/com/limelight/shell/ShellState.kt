@@ -11,6 +11,9 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.graphics.ImageBitmap
+import com.limelight.shell.data.App
+import com.limelight.shell.data.Pc
 import com.limelight.shell.ui.GameArt
 
 /** Top-level screens of the shell. [main] screens show the top navigation. */
@@ -32,6 +35,23 @@ sealed interface Layer {
 
 @Immutable
 data class Toast(val text: String, val icon: String?, val id: Int)
+
+/** Starting [app] on [pc]; [intent] opens the stream. */
+data class LaunchRequest(val id: Int, val pc: Pc, val app: App, val intent: android.content.Intent, val image: ImageBitmap?, val background: ImageBitmap?)
+
+/** Game actions the screens can trigger (implemented by the shell). */
+interface GameActions {
+    /** Starts or resumes [app] (with the launch animation). */
+    fun start(pc: Pc, app: App, image: ImageBitmap?)
+
+    /** Quits the game running on [pc]. */
+    fun quit(pc: Pc, app: App)
+
+    /** Quits the running game, then starts [app]. */
+    fun quitAndStart(pc: Pc, running: App, app: App, image: ImageBitmap?)
+}
+
+val LocalGameActions = staticCompositionLocalOf<GameActions> { error("GameActions not provided") }
 
 /**
  * Remembers the focused element: its focus requester (to return the focus after a layer closes),
@@ -76,6 +96,12 @@ class ShellState {
 
     /** The game background behind the home screen (the focused game's art). */
     var hero by mutableStateOf<GameArt?>(null)
+
+    /** A game being started: the launch overlay is shown until the stream has opened (step 6.5). */
+    var launch by mutableStateOf<LaunchRequest?>(null)
+
+    /** The stream window has been opened for [launch] (it took over the launch scene). */
+    var diving by mutableStateOf(false)
 
     /** L1 / R1 handler of the current screen (settings tabs), -1 / +1. */
     var onShoulder: ((Int) -> Unit)? = null

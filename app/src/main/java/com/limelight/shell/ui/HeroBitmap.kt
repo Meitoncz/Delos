@@ -27,8 +27,12 @@ object HeroBitmaps {
     private const val SCALE = WIDTH / 2100f
 
     private val cache = LruCache<String, ImageBitmap>(24)
+    private val latest = LruCache<String, ImageBitmap>(24)
 
     fun cached(key: String, blurPx: Int): ImageBitmap? = cache.get("$key/$blurPx")
+
+    /** The background rendered last for [key] (whatever the blur), e.g. for the launch scene. */
+    fun latest(key: String): ImageBitmap? = latest.get(key)
 
     /** Builds the background for [source]; call off the main thread. */
     fun render(key: String, source: ImageBitmap, blurPx: Int): ImageBitmap {
@@ -57,7 +61,10 @@ object HeroBitmaps {
         }
         fadeDiagonally(pixels)
         out.setPixels(pixels, 0, WIDTH, 0, 0, WIDTH, HEIGHT)
-        return out.asImageBitmap().also { cache.put("$key/$blurPx", it) }
+        return out.asImageBitmap().also {
+            cache.put("$key/$blurPx", it)
+            latest.put(key, it)
+        }
     }
 
     /** Opaque in the top-right corner, gone in the bottom-left one (gradient stops .3 → .95). */

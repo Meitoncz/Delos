@@ -8,7 +8,7 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 
-public class SpinnerDialog implements Runnable,OnCancelListener {
+public class SpinnerDialog implements Runnable,OnCancelListener,ConnectionProgress {
     private final String title;
     private final String message;
     private final Activity activity;
