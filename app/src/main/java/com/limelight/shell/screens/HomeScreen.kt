@@ -90,6 +90,7 @@ import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.Unbounded
 import com.limelight.shell.ui.fadeMask
 import com.limelight.shell.ui.focusEffects
+import com.limelight.shell.ui.focusPulse
 import com.limelight.shell.ui.hsl
 import com.limelight.shell.ui.px
 import com.limelight.shell.ui.tpx
@@ -415,6 +416,8 @@ private fun GameTile(
                     if (it) onFocused(index, app)
                 },
             )
+            // The online pulse of the start screen, around the selected game
+            .then(if (focused) Modifier.focusPulse(26f) else Modifier)
             .size(if (wide) 956.px else 300.px, 450.px)
             .clip(RoundedCornerShape(26.px))
             .background(colors.surface2),

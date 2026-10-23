@@ -32,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
@@ -330,4 +331,28 @@ fun TextFieldPill(
             }
         },
     )
+}
+
+/**
+ * The online pulse (`.online-ring`) for a rounded element: an accent-2 outline starts just outside the
+ * focus ring, grows outwards by [reach] stage pixels and fades, every 2.4 s. Put it after focusEffects
+ * (so it scales with the element) and before any clip.
+ */
+fun Modifier.focusPulse(corner: Float, reach: Float = 26f): Modifier = composed {
+    val colors = LocalDelosColors.current
+    val stage = LocalStage.current
+    val wave by rememberInfiniteTransition(label = "focusPulse").animateFloat(0f, 1f, infiniteRepeatable(tween(2400, easing = EaseOut)), label = "focusPulseWave")
+    drawBehind {
+        val k = stage.dpPerPx * density
+        val stroke = 2f * k
+        // From just outside the focus ring (5 px gap + 5 px ring) outwards
+        val offset = (10f + reach * wave) * k + stroke / 2f
+        drawRoundRect(
+            colors.accent2.copy(alpha = .7f * (1f - wave)),
+            topLeft = Offset(-offset, -offset),
+            size = androidx.compose.ui.geometry.Size(size.width + offset * 2f, size.height + offset * 2f),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(corner * k + offset),
+            style = Stroke(stroke),
+        )
+    }
 }
