@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
@@ -156,7 +157,7 @@ fun ContextMenuLayer(menu: ContextMenu?, anchor: Rect?, below: Boolean, haze: Ha
             Column(
                 Modifier
                     .then(
-                        if (!centered) Modifier.offset(x.px, y.px)
+                        if (!centered) Modifier.wrapContentSize(Alignment.TopStart).offset(x.px, y.px)
                         // Centered on x once its width is known, kept 40 stage pixels from the screen edges
                         else Modifier.layout { measurable, constraints ->
                             val placeable = measurable.measure(constraints.copy(minWidth = 0, minHeight = 0))
