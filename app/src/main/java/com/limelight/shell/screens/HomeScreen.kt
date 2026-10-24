@@ -102,7 +102,9 @@ import com.limelight.shell.ui.focusPulse
 import com.limelight.shell.ui.hsl
 import com.limelight.shell.ui.px
 import com.limelight.shell.ui.tpx
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -166,6 +168,11 @@ private fun GameLibrary(library: Library.Ready, appearance: Appearance, repo: Pc
     val coverImage by rememberArtwork(artwork, pc, focused, ArtKind.COVER)
     // The SteamGridDB hero, else the cover (SteamGridDB, then the PC's)
     val image = heroImage ?: coverImage ?: boxImage
+    // The animated background takes its colors from the cover
+    val coverForColors = coverImage ?: boxImage
+    LaunchedEffect(homeKey(pc, focused), coverForColors) {
+        coverForColors?.let { cover -> withContext(Dispatchers.Default) { HeroBitmaps.analyzeCover(homeKey(pc, focused), cover) } }
+    }
     // The game background follows the focus with a short delay, so it does not flicker while scrolling fast
     LaunchedEffect(homeKey(pc, focused), image) {
         delay(140)
@@ -307,8 +314,8 @@ enum class TileBadge(val icon: String, val label: String) {
  */
 private fun gameMenu(
     pc: Pc, app: App, hidden: Boolean, running: App?, image: ImageBitmap?, actions: GameActions, onHide: (App, Boolean) -> Unit,
-    /** Opens the artwork screen; null for apps SteamGridDB is not asked about. */
-    onArtwork: (() -> Unit)?,
+    /** Opens the artwork screen. */
+    onArtwork: () -> Unit,
 ) =
     ContextMenu(
         app.name,
@@ -324,7 +331,7 @@ private fun gameMenu(
                 }
                 else -> add(MenuItem(Symbols.PLAY_ARROW, "Start game") { actions.start(pc, app, image) })
             }
-            if (onArtwork != null) add(MenuItem(Symbols.PHOTO_LIBRARY, "Artwork", onArtwork))
+            add(MenuItem(Symbols.PHOTO_LIBRARY, "Artwork", onArtwork))
             add(
                 if (hidden) MenuItem(Symbols.VISIBILITY, "Show game") { onHide(app, false) }
                 else MenuItem(Symbols.VISIBILITY_OFF, "Hide game") { onHide(app, true) }
@@ -344,7 +351,7 @@ private fun GameInfo(pc: Pc, app: App, index: Int, lastPlayed: Int, modifier: Mo
                 art.icon == Symbols.DESKTOP_WINDOWS -> "REMOTE DESKTOP"
                 else -> "LIBRARY"
             },
-            style = TextStyle(color = colors.accent, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx, letterSpacing = .14.em),
+            style = TextStyle(color = colors.accent3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx, letterSpacing = .14.em),
         )
         val logo by rememberArtwork(LocalArtwork.current, pc, app, ArtKind.LOGO)
         val logoImage = logo
@@ -425,7 +432,7 @@ private fun GameTile(
     // The launch scene shows the portrait cover; the wide first tile its own wide cover
     val image = cover ?: boxImage
     val shown = if (wide) wideCover ?: boxImage else image
-    val onArtwork = { shell.navigate(Screen.Artwork(pc, app)) }.takeIf { artwork.eligible(app) }
+    val onArtwork = { shell.navigate(Screen.Artwork(pc, app)) }
     val menu = remember(app, hidden, running, image) { gameMenu(pc, app, hidden, running, image, actions, onHide, onArtwork) }
     var focused by remember { mutableStateOf(false) }
     // A starts (or resumes) the game; while another game runs on the PC it offers the choices instead

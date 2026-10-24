@@ -7,25 +7,33 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-enum class BackgroundKind(val label: String) { AURORA("Aurora"), TIDE("Tide"), SILK("Silk"), CONTOUR("Contour"), STILL("Still") }
+enum class BackgroundKind(val label: String) {
+    AURORA("Aurora"), TIDE("Tide"), SILK("Silk"), CONTOUR("Contour"),
+    // New ones for the user to choose from (2026-10-24); the shader ones need Android 13
+    NEBULA("Nebula"), MESH("Mesh"), PLASMA("Plasma"), LAVA("Lava"), CAUSTICS("Caustics"),
+    GRID("Grid"), BOKEH("Bokeh"), ORBIT("Orbit"), CONSTELLATION("Constellation"), STARFIELD("Starfield"),
+    STILL("Still"),
+}
 
 enum class HomeLayout(val label: String) { GRID("Grid"), ROW("Row") }
 
 /**
  * Color palettes used while Material You is off (with it on, the system's wallpaper colors are used):
- * hues of the background, the accent and the second accent. Delos is the prototype's own palette.
+ * the background's hue and the three colors, main ([accent]: buttons, focus, selection), secondary
+ * ([accent2]: rings, pulses, gradients) and accent ([accent3]: small highlights and a third light in the
+ * animated backgrounds). Delos is the prototype's own palette.
  */
-enum class Palette(val label: String, val base: Float, val accent: Float, val accent2: Float) {
-    DELOS("Delos", 222f, 40f, 192f),
-    LAGOON("Lagoon", 190f, 176f, 228f),
-    DUSK("Dusk", 262f, 268f, 320f),
-    EMBER("Ember", 14f, 14f, 40f),
-    MOSS("Moss", 110f, 96f, 150f),
-    IRIS("Iris", 232f, 226f, 280f),
-    ROSE("Rose", 330f, 340f, 20f),
-    SUNSET("Sunset", 285f, 24f, 330f),
-    MINT("Mint", 165f, 158f, 205f),
-    GOLD("Gold", 35f, 45f, 195f),
+enum class Palette(val label: String, val base: Float, val accent: Float, val accent2: Float, val accent3: Float) {
+    DELOS("Delos", 222f, 40f, 192f, 300f),
+    LAGOON("Lagoon", 190f, 176f, 228f, 18f),
+    DUSK("Dusk", 262f, 268f, 320f, 200f),
+    EMBER("Ember", 14f, 14f, 40f, 330f),
+    MOSS("Moss", 110f, 96f, 150f, 45f),
+    IRIS("Iris", 232f, 226f, 280f, 180f),
+    ROSE("Rose", 330f, 340f, 20f, 270f),
+    SUNSET("Sunset", 285f, 24f, 330f, 48f),
+    MINT("Mint", 165f, 158f, 205f, 330f),
+    GOLD("Gold", 35f, 45f, 195f, 345f),
 }
 
 /** How the status bar shows the time. */

@@ -148,7 +148,8 @@ fun SettingRow(
         horizontalArrangement = Arrangement.spacedBy(22.px),
     ) {
         Box(Modifier.width(if (compact) 44.px else 52.px), contentAlignment = Alignment.CenterStart) {
-            Symbol(icon, 34.tpx, if (focused) colors.accent else colors.text3, filled = focused)
+            // The palette's accent: full on the focused row, softer on the others
+            Symbol(icon, 34.tpx, if (focused) colors.accent3 else colors.accent3.copy(alpha = .62f), filled = focused)
         }
         Column(Modifier.weight(1f)) {
             BasicText(label, style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx))
@@ -172,7 +173,7 @@ private fun RowValueView(value: RowValue, focused: Boolean) {
         is RowValue.Toggle -> Switch(value.on)
         // The arrows are always shown (muted when not focused), so all values end at the same edge
         is RowValue.Choice -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.px)) {
-            val arrows = if (focused) colors.accent else colors.text3
+            val arrows = if (focused) colors.accent3 else colors.text3
             Symbol(Symbols.CHEVRON_LEFT, 30.tpx, arrows)
             if (value.swatch != null) Box(Modifier.size(26.px).clip(CircleShape).background(value.swatch))
             BasicText(value.label, style = text, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 360.px))
@@ -209,10 +210,10 @@ private fun RowValueView(value: RowValue, focused: Boolean) {
             val label = if (number % value.divisor == 0) (number / value.divisor).toString() else String.format(java.util.Locale.US, "%.1f", number.toDouble() / value.divisor)
             BasicText("$label${value.unit}", style = text.copy(textAlign = TextAlign.End), maxLines = 1, modifier = Modifier.width(160.px))
         }
-        is RowValue.Action -> Symbol(Symbols.CHEVRON_RIGHT, 30.tpx, colors.text2)
+        is RowValue.Action -> Symbol(Symbols.CHEVRON_RIGHT, 30.tpx, if (focused) colors.accent3 else colors.text3)
         is RowValue.Text -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.px)) {
             BasicText(value.text.ifEmpty { "Not set" }, style = text, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 220.px))
-            Symbol(Symbols.CHEVRON_RIGHT, 30.tpx, colors.text2)
+            Symbol(Symbols.CHEVRON_RIGHT, 30.tpx, if (focused) colors.accent3 else colors.text3)
         }
         is RowValue.Info -> BasicText(value.text, style = text)
     }

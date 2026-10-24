@@ -172,6 +172,15 @@ Built on the branch `ui/switch-over` (2026-10-24). Delos is still not released; 
 - [ ] Touch, Android 10–12 fallbacks (no blur), Android 15+ edge-to-edge (other devices / later).
 - [ ] "Check for updates" in Settings → About, in the Delos style, once the repository is public (replaces the removed Software Update / Follow Update links).
 
+### 6.11 Colors and backgrounds (2026-10-24, branch `ui/feedback-colors`)
+- [x] Every palette has three colors: main (buttons, focus, selection), secondary (rings, pulses, gradients) and accent (labels above titles, the setting rows' icons and arrows, the download progress, a third light in the animated backgrounds); Material You takes the wallpaper's tertiary color as the accent. The palette row shows the three colors in the description panel (only there).
+- [x] Ten new animated backgrounds to choose from: Nebula, Mesh, Plasma, Lava, Caustics, Grid, Bokeh, Orbit, Starfield (shaders, Android 13+, Aurora instead below or if one does not compile) and Constellation (canvas). The user picks the ones to keep.
+- [x] "Match the game's colors" takes the focused game's three main colors from its cover (SteamGridDB, else the PC's), with their saturation, in place of the palette's three on every background; the previous game's colors stay until the next one's are known, so nothing flashes. The colors: pixels grouped into color buckets, judged in CAM16 (Material Color Utilities' Hct): near-black, near-white and grey tones left out, weight = share × chroma² summed per 15° of hue, the three strongest hue groups at least 30° apart; one- or two-color covers get close shades. Material You's own quantizer (Wu) merges covers of a few flat colors into one average, so it is not used. Unit tests in `GameColorsTest`.
+- [x] Desktop gets the Artwork option (chosen by hand; never looked up automatically by its name).
+- [ ] The user picks which new backgrounds stay; the others are removed.
+- [ ] Built-in artwork for Desktop and similar apps from the user's PNGs (cover 600 × 900, wide 920 × 430, background 1920 × 1080, logo transparent PNG about 1800 × 400), once the user names the apps.
+- [ ] New on-screen controls graphics: thin modern lines, out of the way but usable (next).
+
 Later (Phase 6 backlog; the user on 2026-10-24: not urgent, for the first "final" version): restyle the classic in-stream quick menu (`GameMenu`) and the virtual controls editor in the new design. The stream menu's items stay as they are. Next after 6.9 the focus is on core features: PyroWave and VRR, PS Remote Play (docs/FUTURE_PLANS.md).
 
 ## Open questions

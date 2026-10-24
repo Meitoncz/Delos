@@ -91,7 +91,15 @@ fun Backdrop(appearance: Appearance, colors: DelosColors, hero: GameArt?, modifi
             }
         }
         // The animated background takes on the main color of the game's background image (with the setting on)
-        AnimatedBackground(appearance, colors, tintHue = if (heroOn && appearance.matchGameColors) HeroBitmaps.hue(hero.id) else null, heroActive = heroOn)
+        val matching = heroOn && appearance.matchGameColors
+        // The game's colors come from its cover (the game background's while the cover's are unknown)
+        val known = matching && (HeroBitmaps.coverKnown(hero.id) || HeroBitmaps.huesKnown(hero.id))
+        val gameHues = if (!matching) null else if (HeroBitmaps.coverKnown(hero.id)) HeroBitmaps.coverHues(hero.id) else HeroBitmaps.hues(hero.id)
+        AnimatedBackground(
+            appearance, colors, gameHues = gameHues,
+            // A game whose colors are not worked out yet keeps the previous game's, so nothing flashes in between
+            gamePending = matching && !known, heroActive = heroOn,
+        )
         Box(Modifier.fillMaxSize().drawBehind { drawVignette(colors.scrim) })
     }
 }
@@ -174,7 +182,10 @@ private fun heroEffect(sigmaPx: Float): androidx.compose.ui.graphics.RenderEffec
  */
 private class BackgroundClock {
     var t = 0f
-    var tint = Float.NaN
+    /** The focused game's three colors as they follow it (main, secondary, accent). */
+    val tints = FloatArray(3) { Float.NaN }
+    /** How saturated each of them is (1: as the palette's). */
+    val sats = FloatArray(3) { 1f }
     var baseAlpha = Float.NaN
     var tick by mutableIntStateOf(0)
 }
@@ -185,10 +196,10 @@ private const val MIN_REDRAW_NANOS = 15_000_000L
 private fun smoothing(k: Float, dt: Float) = 1f - (1f - k).pow(dt * 60f)
 
 @Composable
-private fun AnimatedBackground(appearance: Appearance, colors: DelosColors, tintHue: Float?, heroActive: Boolean) {
+private fun AnimatedBackground(appearance: Appearance, colors: DelosColors, gameHues: GameColors?, gamePending: Boolean, heroActive: Boolean) {
     val clock = remember { BackgroundClock() }
     val speed by rememberUpdatedState(if (appearance.reducedMotion) .15f else 1f)
-    val tintTarget by rememberUpdatedState(tintHue)
+    val tintTarget by rememberUpdatedState(gameHues)
     val baseTarget by rememberUpdatedState(if (heroActive) .12f else 1f)
     LaunchedEffect(Unit) {
         var last = 0L
@@ -200,7 +211,13 @@ private fun AnimatedBackground(appearance: Appearance, colors: DelosColors, tint
                 // The prototype advances t by 0.016 per 60 Hz frame
                 clock.t += dt * .96f * speed
                 tintTarget?.let { target ->
-                    clock.tint = if (clock.tint.isNaN()) target else lerpHue(clock.tint, target, smoothing(.04f, dt))
+                    // All three follow the focused game's colors smoothly
+                    for (i in 0 until 3) {
+                        val goal = target.hues.getOrNull(i) ?: continue
+                        val sat = target.saturations.getOrNull(i) ?: 1f
+                        clock.tints[i] = if (clock.tints[i].isNaN()) goal else lerpHue(clock.tints[i], goal, smoothing(.04f, dt))
+                        clock.sats[i] += (sat - clock.sats[i]) * smoothing(.04f, dt)
+                    }
                 }
                 clock.baseAlpha = if (clock.baseAlpha.isNaN()) baseTarget else clock.baseAlpha + (baseTarget - clock.baseAlpha) * smoothing(.05f, dt)
                 if (now - lastDrawn >= MIN_REDRAW_NANOS) {
@@ -211,6 +228,7 @@ private fun AnimatedBackground(appearance: Appearance, colors: DelosColors, tint
         }
     }
     val paths = remember { BackgroundPaths() }
+    val constellation = remember { ConstellationState() }
     val dark = colors.dark
     Canvas(
         Modifier.fillMaxSize().graphicsLayer {
@@ -220,9 +238,16 @@ private fun AnimatedBackground(appearance: Appearance, colors: DelosColors, tint
     ) {
         @Suppress("UNUSED_VARIABLE")
         val redraw = clock.tick // subscribes the drawing to the throttled clock
-        // Without Material You the effects follow the color of the focused game
-        val tint = if (!colors.materialYou && tintHue != null && !clock.tint.isNaN()) clock.tint else colors.accent2Hue
-        val p = BgParams(clock.t, dark, colors.materialYou, tint, colors.baseHue, colors.accentHue, colors.accent2Hue)
+        // Without Material You the effects take the focused game's three main colors (from its background)
+        // in place of the palette's main, secondary and accent ones, on every background
+        val game = !colors.materialYou && (gameHues != null || gamePending) && clock.tints.none { it.isNaN() }
+        val tint = if (game) clock.tints[1] else colors.accent2Hue
+        val p = BgParams(
+            clock.t, dark, colors.materialYou, tint, colors.baseHue,
+            acc = if (game) clock.tints[0] else colors.accentHue,
+            acc2 = tint, acc3 = if (game) clock.tints[2] else colors.accent3Hue,
+            sat1 = if (game) clock.sats[0] else 1f, sat2 = if (game) clock.sats[1] else 1f, sat3 = if (game) clock.sats[2] else 1f,
+        )
         scale(size.width / W, size.height / H, pivot = Offset.Zero) {
             val base = if (dark) Brush.verticalGradient(0f to hsl(p.base, 40f, 8f), 1f to hsl(p.base, 38f, 5f), endY = H)
             else Brush.verticalGradient(0f to hsl(p.base, 45f, 96f), 1f to hsl(p.base, 38f, 90f), endY = H)
@@ -233,9 +258,27 @@ private fun AnimatedBackground(appearance: Appearance, colors: DelosColors, tint
                 BackgroundKind.SILK -> drawSilk(p, paths)
                 BackgroundKind.CONTOUR -> drawContour(p, paths)
                 BackgroundKind.STILL -> Unit
+                BackgroundKind.CONSTELLATION -> drawConstellation(
+                    constellation, W, H, p.t, listOf(lights(p).first, lights(p).second, lights(p).third), dark,
+                    if (dark) BlendMode.Plus else BlendMode.SrcOver,
+                )
+                else -> {
+                    val (c1, c2, c3) = lights(p)
+                    val drawn = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                        BackgroundShaders.draw(this, appearance.background, W, H, p.t, c1, c2, c3, if (dark) .62f else .5f, if (dark) BlendMode.Plus else BlendMode.SrcOver)
+                    // Before Android 13, or if a shader does not compile on this GPU: Aurora instead
+                    if (!drawn) drawAurora(p)
+                }
             }
         }
     }
+}
+
+/** The three lights of the newer backgrounds: main, secondary (or the focused game's color) and accent. */
+private fun lights(p: BgParams): Triple<Color, Color, Color> {
+    val second = if (p.my) p.acc2 else p.tint
+    return if (p.dark) Triple(hsl(p.acc, 85f * p.sat1, 56f), hsl(second, 85f * p.sat2, 56f), hsl(p.acc3, 85f * p.sat3, 62f))
+    else Triple(hsl(p.acc, 80f * p.sat1, 58f), hsl(second, 80f * p.sat2, 58f), hsl(p.acc3, 80f * p.sat3, 62f))
 }
 
 // The prototype draws on a 960×540 canvas stretched over the stage; the same coordinates are used here
@@ -244,8 +287,18 @@ private const val H = 540f
 
 private class BgParams(
     val t: Float, val dark: Boolean, val my: Boolean, val tint: Float,
-    val base: Float, val acc: Float, val acc2: Float,
-)
+    val base: Float, val acc: Float, val acc2: Float, val acc3: Float,
+    /** How saturated the main, secondary and accent colors are (below 1 for a game's muted colors). */
+    val sat1: Float = 1f, val sat2: Float = 1f, val sat3: Float = 1f,
+) {
+    /** The saturation factor of hue [h] when it is one of the three colors, else 1. */
+    fun s(h: Float): Float = when (h) {
+        acc -> sat1
+        acc2, tint -> sat2
+        acc3 -> sat3
+        else -> 1f
+    }
+}
 
 /** Paths reused between frames. */
 private class BackgroundPaths {
@@ -265,14 +318,15 @@ private class BackgroundPaths {
 
 private fun DrawScope.drawAurora(p: BgParams) {
     val blend = if (p.dark) BlendMode.Plus else BlendMode.SrcOver
-    val hues = if (p.my) floatArrayOf(p.acc, p.acc2, p.base, (p.acc + 24f) % 360f) else floatArrayOf(p.tint, p.acc, p.base + 30f, p.acc2)
+    val hues = if (p.my) floatArrayOf(p.acc, p.acc2, p.base, p.acc3) else floatArrayOf(p.tint, p.acc, p.acc3, p.acc2)
     val t = p.t
     for (i in 0 until 4) {
         val h = hues[i]
         val x = W * (.5f + .38f * sin(t * .11f + i * 1.9f))
         val y = H * (.45f + .32f * cos(t * .09f + i * 1.3f))
         val r = W * (.42f + .08f * sin(t * .2f + i))
-        val inner = if (p.dark) hsl(h, 85f, 52f, .32f) else hsl(h, 80f, 70f, .45f)
+        val sat = p.s(h)
+        val inner = if (p.dark) hsl(h, 85f * sat, 52f, .32f) else hsl(h, 80f * sat, 70f, .45f)
         drawRect(
             Brush.radialGradient(0f to inner, 1f to hsl(h, 80f, 50f, 0f), center = Offset(x, y), radius = r),
             size = Size(W, H), blendMode = blend,
@@ -295,19 +349,21 @@ private fun DrawScope.drawTide(p: BgParams, paths: BackgroundPaths) {
         }
         path.lineTo(W, H)
         path.close()
-        val h = if (i % 2 == 1) p.tint else p.base + 10f
-        drawPath(path, if (p.dark) hsl(h, 70f, 30f + i * 5f, .2f + i * .04f) else hsl(h, 70f, 70f - i * 4f, .22f + i * .05f))
+        val h = when (i % 3) { 1 -> p.tint; 2 -> p.acc3; else -> p.base + 10f }
+        val sat = 70f * p.s(h)
+        drawPath(path, if (p.dark) hsl(h, sat, 30f + i * 5f, .2f + i * .04f) else hsl(h, sat, 70f - i * 4f, .22f + i * .05f))
     }
 }
 
 private fun DrawScope.drawSilk(p: BgParams, paths: BackgroundPaths) {
     // Flowing satin ribbons; a band twists where its width crosses zero
     val blend = if (p.dark) BlendMode.Plus else BlendMode.SrcOver
-    val ribbons = if (p.my) floatArrayOf(p.acc, p.acc2, p.base, (p.acc + 24f) % 360f) else floatArrayOf(p.tint, p.acc, p.acc2, (p.base + 40f) % 360f)
+    val ribbons = if (p.my) floatArrayOf(p.acc, p.acc2, p.base, p.acc3) else floatArrayOf(p.tint, p.acc, p.acc2, p.acc3)
     val t = p.t
     withTransform({ rotateRad(-.21f, pivot = Offset(W / 2f, H / 2f)) }) {
         for (i in 0 until 4) {
             val h = ribbons[i]
+            val sat = p.s(h)
             val y0 = H * (.22f + i * .18f)
             val ph = i * 1.7f
             val sp = .18f + i * .05f
@@ -327,12 +383,12 @@ private fun DrawScope.drawSilk(p: BgParams, paths: BackgroundPaths) {
             val a = if (p.dark) .26f else .3f
             val l = if (p.dark) 60f else 62f
             val brush = Brush.horizontalGradient(
-                0f to hsl(h, 85f, l, 0f), .3f to hsl(h, 85f, l, a), .7f to hsl(h + 30f, 85f, l + 8f, a), 1f to hsl(h, 85f, l, 0f),
+                0f to hsl(h, 85f * sat, l, 0f), .3f to hsl(h, 85f * sat, l, a), .7f to hsl(h + 30f, 85f * sat, l + 8f, a), 1f to hsl(h, 85f * sat, l, 0f),
                 startX = 0f, endX = W,
             )
             drawPath(fill, brush, blendMode = blend)
             // Sheen along one edge of the ribbon
-            drawPath(sheen, hsl(h + 30f, 90f, if (p.dark) 80f else 45f, if (p.dark) .18f else .22f), style = Stroke(1.2f), blendMode = blend)
+            drawPath(sheen, hsl(h + 30f, 90f * sat, if (p.dark) 80f else 45f, if (p.dark) .18f else .22f), style = Stroke(1.2f), blendMode = blend)
         }
     }
 }
@@ -359,7 +415,7 @@ private fun DrawScope.drawContour(p: BgParams, paths: BackgroundPaths) {
     val glowCenter = Offset(W * .66f, H * .5f)
     drawRect(
         Brush.radialGradient(
-            0f to hsl(p.acc, 80f, if (p.dark) 50f else 70f, if (p.dark) .14f else .2f), 1f to hsl(p.acc, 80f, 50f, 0f),
+            0f to hsl(p.acc, 80f * p.sat1, if (p.dark) 50f else 70f, if (p.dark) .14f else .2f), 1f to hsl(p.acc, 80f, 50f, 0f),
             center = glowCenter, radius = W * .55f,
         ),
         size = Size(W, H), blendMode = blend,
@@ -391,7 +447,7 @@ private fun DrawScope.drawContour(p: BgParams, paths: BackgroundPaths) {
             for (q in 0 until (n / 4) * 4) lines[count++] = pts[q]
         }
         val h = lerpHue(r0, r1, k / 16f)
-        paint.color = hsl(h, 80f, if (p.dark) 68f else 40f, (if (major) .46f else .16f) + k / 16f * (if (p.dark) .18f else .14f)).toArgb()
+        paint.color = hsl(h, 80f * (p.s(r0) + p.s(r1)) / 2f, if (p.dark) 68f else 40f, (if (major) .46f else .16f) + k / 16f * (if (p.dark) .18f else .14f)).toArgb()
         paint.strokeWidth = if (major) 1.7f else 1f
         // One batched line draw per level: stroking a path of hundreds of pieces every frame is what made
         // the home screen miss frames. Butt caps: neighbouring segments share their end points exactly, so

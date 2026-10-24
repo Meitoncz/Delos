@@ -146,7 +146,7 @@ fun ArtworkScreen(screen: Screen.Artwork) {
 
     // Never looked up yet: find the game first (and download its best-rated images like the automatic run)
     LaunchedEffect(store.enabled) {
-        if (store.enabled && !store.searched(pc, app)) {
+        if (store.enabled && store.eligible(app) && !store.searched(pc, app)) {
             busy = true
             runCatching { store.fetch(pc, app) }.onFailure { shell.showToast(it.message ?: "SteamGridDB is not reachable", Symbols.ERROR) }
             busy = false
@@ -186,7 +186,7 @@ fun ArtworkScreen(screen: Screen.Artwork) {
         Column(Modifier.offset(150.px, 92.px).width(1620.px)) {
             BasicText(
                 "ARTWORK",
-                style = TextStyle(color = colors.accent, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx, letterSpacing = .14.em),
+                style = TextStyle(color = colors.accent3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx, letterSpacing = .14.em),
             )
             BasicText(
                 app.name, maxLines = 1, overflow = TextOverflow.Ellipsis,
@@ -216,7 +216,8 @@ fun ArtworkScreen(screen: Screen.Artwork) {
                 when (val c = choices) {
                     Choices.Loading -> GridMessage(Symbols.REFRESH, "Looking on SteamGridDB…", null)
                     Choices.NoKey -> GridMessage(Symbols.KEY, "Add your SteamGridDB API key", "Settings → Covers → SteamGridDB API key. It is free on steamgriddb.com (Preferences → API).")
-                    Choices.NoGame -> GridMessage(Symbols.SEARCH, "${app.name} is not on SteamGridDB", "Change game finds it under another name.")
+                    Choices.NoGame -> if (store.eligible(app)) GridMessage(Symbols.SEARCH, "${app.name} is not on SteamGridDB", "Change game finds it under another name.")
+                    else GridMessage(Symbols.SEARCH, "Choose what ${app.name} looks like", "Change game: e.g. Windows, Steam or any game whose artwork you like. ${app.name} is not looked up automatically.")
                     is Choices.Failed -> GridMessage(Symbols.ERROR, "SteamGridDB is not reachable", c.message)
                     is Choices.Ready -> {
                         val chosen = remember(version, tab) { store.chosen(pc, app, tab.kind) }

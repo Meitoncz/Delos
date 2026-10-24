@@ -334,6 +334,17 @@ private fun DescriptionPanel(tab: SettingsTab, focused: SettingsItem?, modifier:
         val rowValue = focused?.value
         if (rowValue is RowValue.Choice || rowValue is RowValue.Text) BasicText(if (rowValue is RowValue.Choice) rowValue.label else (rowValue as RowValue.Text).text,
             style = TextStyle(color = colors.accent, fontFamily = Figtree, fontSize = 22.tpx, lineHeight = 1.3.em))
+        // The palette's three colors, only for the palette row
+        if (focused?.key == "ui_palette") {
+            Row(horizontalArrangement = Arrangement.spacedBy(16.px)) {
+                listOf(colors.accent to "Main", colors.accent2 to "Secondary", colors.accent3 to "Accent").forEach { (color, name) ->
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.px)) {
+                        Box(Modifier.size(width = 120.px, height = 72.px).clip(RoundedCornerShape(18.px)).background(color).border(1.px, colors.line, RoundedCornerShape(18.px)))
+                        BasicText(name, style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 18.tpx))
+                    }
+                }
+            }
+        }
         // A preview of the game background, only for the rows that change it
         if (focused?.key in GAME_BACKGROUND_ROWS) {
             val hero = LocalShell.current.hero

@@ -15,6 +15,12 @@ import kotlin.math.max
 import kotlin.math.roundToInt
 
 /**
+ * A game's three main colors (main, secondary, accent): their hues and how saturated they are
+ * (1 = as vivid as the palette colors, down to .28 for nearly grey ones, up to 1.18 = fully saturated).
+ */
+data class GameColors(val hues: List<Float>, val saturations: List<Float>)
+
+/**
  * The game background, rendered once per game: cropped to the hero area (2100×1260 stage pixels, the
  * prototype's inset -90 px) at a fifth of the size, saturated, blurred and faded out diagonally from the
  * top-right to the bottom-left corner. The screen then only scales one small bitmap up, instead of
@@ -30,8 +36,11 @@ object HeroBitmaps {
     private val cache = LruCache<String, ImageBitmap>(24)
     private val latest = LruCache<String, ImageBitmap>(24)
 
-    /** The dominant hue of each game's background (null: grey), observed by the animated background. */
-    private val hues = mutableStateMapOf<String, Float?>()
+    /**
+     * The three main hues of each game's background, strongest first (null: grey), observed by the
+     * animated background and the title's gradient.
+     */
+    private val hues = mutableStateMapOf<String, GameColors?>()
 
     /** The image each game's hue was taken from: another one (SteamGridDB) takes it again. */
     private val hueSources = HashMap<String, Int>()
@@ -42,7 +51,36 @@ object HeroBitmaps {
     fun cached(key: String, source: ImageBitmap, blurPx: Int): ImageBitmap? = cache.get(cacheKey(key, source, blurPx))
 
     /** The dominant hue of [key]'s background once it has been rendered; null while unknown or grey. */
-    fun hue(key: String): Float? = hues[key]
+    fun hue(key: String): Float? = hues[key]?.hues?.firstOrNull()
+
+    /** The three main hues of [key]'s background (main, secondary, accent) once rendered; null while unknown or grey. */
+    fun hues(key: String): GameColors? = hues[key]
+
+    /** Whether [key]'s colors have been worked out yet (they may be null: a grey image). */
+    fun huesKnown(key: String): Boolean = key in hues
+
+    /** The three main hues of each game's cover, for the animated background (null: grey). */
+    private val coverHues = mutableStateMapOf<String, GameColors?>()
+    private val coverSources = HashMap<String, Int>()
+
+    /** The three main hues of [key]'s cover (main, secondary, accent); null while unknown or grey. */
+    fun coverHues(key: String): GameColors? = coverHues[key]
+
+    fun coverKnown(key: String): Boolean = key in coverHues
+
+    /** Works out the main hues of [key]'s [cover] (once per image); call off the main thread. */
+    fun analyzeCover(key: String, cover: ImageBitmap) {
+        val sourceId = System.identityHashCode(cover)
+        if (synchronized(coverSources) { coverSources.put(key, sourceId) == sourceId }) return
+        val src = cover.asAndroidBitmap()
+        val readable = if (src.config == Bitmap.Config.HARDWARE) src.copy(Bitmap.Config.ARGB_8888, false) else src
+        val small = Bitmap.createScaledBitmap(readable, 120, (120f * src.height / src.width.coerceAtLeast(1)).toInt().coerceIn(1, 360), true)
+        val pixels = IntArray(small.width * small.height)
+        small.getPixels(pixels, 0, small.width, 0, 0, small.width, small.height)
+        // A failure here only costs the game its colors (the palette's stay), never the app
+        val result = runCatching { dominantHues(pixels) }.onFailure { com.limelight.LimeLog.warning("Cover colors $key: $it") }.getOrNull()
+        android.os.Handler(android.os.Looper.getMainLooper()).post { coverHues[key] = result }
+    }
 
     /** The background rendered last for [key] (whatever the blur), e.g. for the launch scene. */
     fun latest(key: String): ImageBitmap? = latest.get(key)
@@ -68,7 +106,7 @@ object HeroBitmaps {
         out.getPixels(pixels, 0, WIDTH, 0, 0, WIDTH, HEIGHT)
         val sourceId = System.identityHashCode(source)
         if (synchronized(hueSources) { hueSources.put(key, sourceId) != sourceId }) {
-            val hue = dominantHue(pixels)
+            val hue = runCatching { dominantHues(pixels) }.getOrNull()
             android.os.Handler(android.os.Looper.getMainLooper()).post { hues[key] = hue }
         }
         // CSS blur(σ) in stage pixels → σ at this scale; three box blurs approximate a Gaussian
@@ -89,22 +127,76 @@ object HeroBitmaps {
      * The image's main color as a hue: every pixel votes with its hue, weighted by how colorful and
      * bright it is, so grey and dark areas hardly count. Null when the image is (nearly) grey.
      */
-    private fun dominantHue(pixels: IntArray): Float? {
-        val hsv = FloatArray(3)
-        var x = 0.0
-        var y = 0.0
-        var weight = 0.0
-        for (i in pixels.indices step 3) {
-            android.graphics.Color.colorToHSV(pixels[i], hsv)
-            val w = (hsv[1] * hsv[1] * hsv[2]).toDouble()
-            val angle = Math.toRadians(hsv[0].toDouble())
-            x += kotlin.math.cos(angle) * w
-            y += kotlin.math.sin(angle) * w
-            weight += w
+    /**
+     * The three main colors of the image. The pixels are grouped into color buckets, judged in Material
+     * You's perceptual CAM16 space (chroma, tone, hue); only colorful ones count, not near-black or near-white tones (a dark background with a hint of red
+     * would otherwise win). Their weight (share of the image × chroma², so a small vivid logo still counts) is summed per 15° of hue, so a color
+     * split into many small clusters still counts as one big color; the three strongest hue groups at
+     * least 30° apart win, each represented by its strongest cluster. Their hues are returned, strongest
+     * first (as HSV hues, which the backgrounds' hsl() takes), with how saturated each one really is, so a
+     * greyish blue stays muted. An image with one or two colors gets close shades of them (±14°); a grey
+     * image null.
+     */
+    @android.annotation.SuppressLint("RestrictedApi")
+    internal fun dominantHues(pixels: IntArray): GameColors? {
+        val opaque = pixels.filter { (it ushr 24) >= 200 }.toIntArray()
+        if (opaque.isEmpty()) return null
+        // Buckets of 16 levels per channel, each one's average color: flat colors stay exactly themselves (the
+        // Wu quantizer merges an image of a few flat colors into one average), photos split finely enough
+        val sums = HashMap<Int, IntArray>()
+        for (c in opaque) {
+            val r = (c shr 16) and 255
+            val g = (c shr 8) and 255
+            val bl = c and 255
+            val sum = sums.getOrPut(((r shr 4) shl 8) or ((g shr 4) shl 4) or (bl shr 4)) { IntArray(4) }
+            sum[0] += r; sum[1] += g; sum[2] += bl; sum[3]++
         }
-        if (weight < pixels.size / 3 * .02) return null
-        return ((Math.toDegrees(kotlin.math.atan2(y, x)) + 360.0) % 360.0).toFloat()
+        val quantized = sums.values.associate { (0xFF shl 24) or ((it[0] / it[3]) shl 16) or ((it[1] / it[3]) shl 8) or (it[2] / it[3]) to it[3] }
+        class Cluster(val argb: Int, val weight: Double, val bin: Int)
+        val clusters = quantized.mapNotNull { (argb, count) ->
+            val hct = com.google.android.material.color.utilities.Hct.fromInt(argb)
+            if (hct.chroma < MIN_CHROMA || hct.tone < 18.0 || hct.tone > 94.0) null
+            // Chroma squared: a small but vivid color (a logo, an accent) counts the way the eye sees it
+            else Cluster(argb, count * hct.chroma * hct.chroma, (hct.hue / 15.0).toInt().coerceIn(0, 23))
+        }
+        if (clusters.isEmpty()) return null
+        fun binDistance(a: Int, b: Int): Int {
+            val d = ((a - b) % 24 + 24) % 24
+            return minOf(d, 24 - d)
+        }
+        val bins = DoubleArray(24)
+        clusters.forEach { bins[it.bin] += it.weight }
+        val groups = DoubleArray(24) { b -> bins[(b + 23) % 24] * .5 + bins[b] + bins[(b + 1) % 24] * .5 }
+        val top = groups.max()
+        val chosen = ArrayList<Cluster>(3)
+        val usedBins = ArrayList<Int>(3)
+        for (b in (0 until 24).sortedByDescending { groups[it] }) {
+            if (chosen.size == 3 || groups[b] < top * .08) break
+            if (usedBins.any { binDistance(it, b) < 2 }) continue
+            val representative = clusters.filter { binDistance(it.bin, b) <= 1 && it !in chosen }.maxByOrNull { it.weight } ?: continue
+            chosen += representative
+            usedBins += b
+        }
+        if (chosen.isEmpty()) return null
+        val hsl = FloatArray(3)
+        val hues = ArrayList<Float>(3)
+        val saturations = ArrayList<Float>(3)
+        chosen.forEach { cluster ->
+            androidx.core.graphics.ColorUtils.colorToHSL(cluster.argb, hsl)
+            hues += hsl[0]
+            // The backgrounds draw at about 85 % saturation: scale them to the color's own, never to grey, and
+            // up to full saturation for really vivid colors (a deep red stays red instead of turning coral)
+            saturations += (hsl[1] / .85f).coerceIn(.28f, 1.18f)
+        }
+        while (hues.size < 3) {
+            hues += (hues[0] + if (hues.size == 1) 14f else 346f) % 360f
+            saturations += saturations[0]
+        }
+        return GameColors(hues, saturations)
     }
+
+    /** The least chroma (CAM16) a color needs to count: below it, it reads as white, black or grey. */
+    private const val MIN_CHROMA = 16.0
 
     /** Opaque in the top-right corner, gone in the bottom-left one (gradient stops .3 → .95). */
     private fun fadeDiagonally(pixels: IntArray) {

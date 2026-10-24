@@ -7,7 +7,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
@@ -198,7 +199,10 @@ class ArtworkStore(context: Context) {
 
     val enabled: Boolean get() = apiKey.isNotEmpty()
 
-    /** Whether SteamGridDB is asked about [app] at all (not the remote desktop). */
+    /**
+     * Whether [app] is looked up by its name automatically: not the remote desktop, whose name would match
+     * some random game (its artwork is chosen by hand on the artwork screen).
+     */
     fun eligible(app: App): Boolean = !app.name.equals("Desktop", ignoreCase = true)
 
     fun cached(pc: Pc, app: App, kind: ArtKind): ImageBitmap? = memory.get(memoryKey(pc, app, kind))
@@ -394,13 +398,17 @@ data class ArtworkProgress(val done: Int, val total: Int)
 
 val LocalArtwork = staticCompositionLocalOf<ArtworkStore> { error("ArtworkStore not provided") }
 
-/** [app]'s SteamGridDB image of [kind], or null; reloads when the store's images change. */
+/**
+ * [app]'s SteamGridDB image of [kind], or null; reloads when the store's images change. The state is
+ * keyed by the app, so a caller that switches apps never sees the previous app's image (produceState
+ * would keep it until the new one is loaded).
+ */
 @Composable
 fun rememberArtwork(store: ArtworkStore, pc: Pc, app: App, kind: ArtKind): State<ImageBitmap?> {
     val version = store.version.intValue
-    return produceState(store.cached(pc, app, kind), pc.uuid, app.id, kind, version) {
-        value = store.load(pc, app, kind)
-    }
+    val state = remember(pc.uuid, app.id, kind) { mutableStateOf(store.cached(pc, app, kind)) }
+    LaunchedEffect(state, version) { state.value = store.load(pc, app, kind) }
+    return state
 }
 
 /** Thumbnails of the choices on the artwork screen, loaded from SteamGridDB and kept in memory. */
@@ -431,5 +439,8 @@ object Thumbnails {
 }
 
 @Composable
-fun rememberThumbnail(store: ArtworkStore, url: String): State<ImageBitmap?> =
-    produceState(Thumbnails.cached(url), url) { value = Thumbnails.load(store.http, url) }
+fun rememberThumbnail(store: ArtworkStore, url: String): State<ImageBitmap?> {
+    val state = remember(url) { mutableStateOf(Thumbnails.cached(url)) }
+    LaunchedEffect(state) { if (state.value == null) state.value = Thumbnails.load(store.http, url) }
+    return state
+}

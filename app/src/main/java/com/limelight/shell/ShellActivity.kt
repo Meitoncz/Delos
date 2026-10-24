@@ -73,6 +73,9 @@ class ShellActivity : ComponentActivity() {
         repo.bind()
         boxArt = BoxArtCache(this) { repo.binder?.uniqueId }
         artwork = ArtworkStore(this)
+        if (com.limelight.BuildConfig.DEBUG && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            com.limelight.shell.ui.BackgroundShaders.verify()
+        }
         val launcher = GameLauncher(this, repo)
         val setup = PcSetup(this, repo)
         if (savedInstanceState == null) links.value = ShellLink.from(this, intent)
