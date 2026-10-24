@@ -88,7 +88,12 @@ fun SettingRow(
     var focused by remember { mutableStateOf(false) }
     val adjust: ((Int) -> Unit)? = when (value) {
         is RowValue.Choice -> value.onStep
-        is RowValue.Slider -> { dir -> value.onChange((value.value + dir * value.step).coerceIn(value.min, value.max)) }
+        // One step left or right, landing on the slider's grid (a stored value between steps snaps to it)
+        is RowValue.Slider -> { dir ->
+            val next = value.value + dir * value.step
+            val snapped = value.min + Math.round((next - value.min).toFloat() / value.step) * value.step
+            value.onChange(snapped.coerceIn(value.min, value.max))
+        }
         else -> null
     }
     val activate: () -> Unit = when (value) {

@@ -44,7 +44,7 @@ data class Appearance(
     val homeLayout: HomeLayout = HomeLayout.GRID,
     val heroBackground: Boolean = true,
     /** Game background blur in stage pixels (0–40). */
-    val heroBlur: Int = 16,
+    val heroBlur: Int = 15,
     /** Game background opacity in percent. */
     val heroOpacity: Int = 70,
     /** Interface scale in percent (100–130). */
