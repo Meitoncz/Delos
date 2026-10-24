@@ -79,7 +79,9 @@ import com.limelight.shell.ui.FocusRing
 import com.limelight.shell.ui.InitialFocus
 import com.limelight.shell.ui.HeroBitmaps
 import com.limelight.shell.ui.PlaceholderArt
+import com.limelight.shell.ui.LocalBackdropHaze
 import com.limelight.shell.ui.LocalDelosColors
+import com.limelight.shell.ui.backdropBlur
 import com.limelight.shell.ui.LocalFeedback
 import com.limelight.shell.ui.LocalStage
 import com.limelight.shell.ui.MarginBringIntoView
@@ -313,7 +315,10 @@ private fun DescriptionPanel(tab: SettingsTab, focused: SettingsItem?, modifier:
             true
         } else false
     }.focusEffects(onClick = {}, corner = 34f, focusScale = 1f, clickCue = null)
-        .clip(shape).background(colors.surface).border(1.px, colors.line, shape).verticalScroll(scroll).padding(44.px),
+        .clip(shape)
+        // The same gentle frosted glass as the focused row
+        .then(LocalBackdropHaze.current?.let { Modifier.backdropBlur(it, 8f, colors.surface) } ?: Modifier.background(colors.surface))
+        .border(1.px, colors.line, shape).verticalScroll(scroll).padding(44.px),
         verticalArrangement = Arrangement.spacedBy(18.px)) {
         Box(Modifier.size(120.px).clip(CircleShape).background(colors.accent), contentAlignment = Alignment.Center) {
             Symbol(focused?.icon ?: tab.icon, 64.tpx, colors.onAccent, filled = true)
