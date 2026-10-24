@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Shortcut strings -->
-    <string name="scut_deleted_pc">PC deleted</string>
     <string name="scut_not_paired">PC not paired</string>
     <string name="scut_pc_not_found">PC not found</string>
     <string name="scut_invalid_uuid">Provided PC is not valid</string>
@@ -21,20 +20,6 @@
     <string name="align_right">Align Right</string>
 
     <!-- PC view menu entries -->
-    <string name="pcview_menu_header_online">Online</string>
-    <string name="pcview_menu_header_offline">Offline</string>
-    <string name="pcview_menu_header_unknown">Refreshing</string>
-    <string name="pcview_menu_app_list">View All Apps</string>
-    <string name="pcview_menu_pair_pc">Legacy Pair</string>
-    <string name="pcview_menu_pair_pc_otp">OTP Pair</string>
-    <string name="pcview_menu_unpair_pc">Unpair</string>
-    <string name="pcview_menu_send_wol">Send Wake-On-LAN request</string>
-    <string name="pcview_menu_delete_pc">Delete PC</string>
-    <string name="pcview_menu_test_network">Test Network Connection</string>
-    <string name="pcview_menu_details">View Details</string>
-    <string name="pcview_menu_eol">NVIDIA GameStream End-of-Service</string>
-    <string name="pcview_menu_open_management_page">Go to Server Config</string>
-    <string name="pcview_error_no_management_url">Cannot open server config page, cannot find server address.</string>
 
     <!-- Network test strings -->
     <string name="nettest_title_waiting">Testing Network Connection</string>
@@ -46,44 +31,14 @@
     <string name="nettest_text_blocked">Your device\'s current network connection is blocking Delos. Streaming over the Internet may not work while connected to this network.</string>
 
     <!-- Pair messages -->
-    <string name="pairing">Pairing…</string>
-    <string name="pair_pc_confirm_title">Pair PC</string>
-    <string name="pair_pc_confirm_message">Do you really want to pair with %s? Please do not pair with any unfamiliar computers.</string>
-    <string name="launch_from_link_title">Start streaming?</string>
-    <string name="launch_from_link_message">A link wants to start %1$s on %2$s. Only continue if you opened this link yourself.</string>
-    <string name="launch_from_link_unknown">(unknown)</string>
     <string name="pair_pc_offline">Computer is offline</string>
-    <string name="pair_pc_ingame">Computer is currently in a game. You must close the game before pairing.</string>
-    <string name="pair_pairing_title">Pairing</string>
-    <string name="pair_pairing_msg">Please enter the following PIN on the target PC:</string>
-    <string name="pair_pairing_help">If your host PC is running Sunshine, navigate to the Sunshine web UI to enter the PIN.</string>
-    <string name="pair_otp_pairing_msg">Pairing, please wait…</string>
-    <string name="pair_otp_pairing_help">OTP pairing is only available with Apollo, enter the PIN you just provided on the web UI manually if you\'re using other host software.</string>
-    <string name="pair_incorrect_pin">Incorrect PIN or Passphrase</string>
-    <string name="pair_fail">Pairing failed</string>
-    <string name="pair_already_in_progress">Pairing already in progress</string>
-    <string name="pair_passphrase_hint">Passphrase</string>
-    <string name="pair_pin_length_msg">Pin must be 4 digits long</string>
-    <string name="pair_passphrase_length_msg">Passphrase must be at least 4 characters long</string>
 
     <!-- WOL messages -->
-    <string name="wol_pc_online">Computer is online</string>
-    <string name="wol_no_mac">Unable to wake PC because there is no stored MAC address</string>
-    <string name="wol_waking_pc">Waking PC…</string>
-    <string name="wol_waking_msg">It may take a few seconds for your PC to wake up.
-	    If it doesn\'t, make sure it\'s configured properly for Wake-On-LAN.
-    </string>
-    <string name="wol_fail">Failed to send Wake-On-LAN packets</string>
 
     <!-- Unpair messages -->
-    <string name="unpairing">Unpairing…</string>
-    <string name="unpair_success">Unpaired successfully</string>
-    <string name="unpair_fail">Failed to unpair</string>
-    <string name="unpair_error">Device was not paired</string>
 
     <!-- Errors -->
     <string name="error_pc_offline">Computer is offline</string>
-    <string name="error_manager_not_running">The ComputerManager service is not running. Please wait a few seconds or restart the app.</string>
     <string name="error_unknown_host">Failed to resolve host</string>
     <string name="error_404">GFE returned an HTTP 404 error. Make sure your PC is running a supported GPU.
 	    Using remote desktop software can also cause this error. Try rebooting your machine or reinstalling GFE.
@@ -93,7 +48,6 @@
     <string name="title_decoding_reset">Video Settings Reset</string>
     <string name="message_decoding_reset">Your device\'s video decoder continues to crash at your selected streaming settings. Your streaming settings have been reset to default.</string>
     <string name="error_usb_prohibited">USB access is prohibited by your device administrator. Check your Knox or MDM settings.</string>
-    <string name="unable_to_pin_shortcut">Your current launcher does not allow for creating pinned shortcuts.</string>
     <string name="video_decoder_init_failed">Video decoder failed to initialize. Your device may not support the selected resolution or frame rate.</string>
     <string name="no_video_received_error">No video received from host.</string>
     <string name="no_frame_received_error">Your network connection isn\'t performing well. Reduce your video bitrate setting or try a faster connection.</string>
@@ -113,13 +67,8 @@
     <string name="error_code_prefix">Error code:</string>
 
     <!-- General strings -->
-    <string name="ip_hint">IP address of host PC</string>
-    <string name="searching_pc">Searching for host PCs on your local network…\n\n
-        Ensure Apollo is running on your host PC.</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
-    <string name="lost_connection">Lost connection to PC</string>
-    <string name="title_details">Details</string>
     <string name="help">Help</string>
     <string name="delete_pc_msg">Are you sure you want to delete this PC?</string>
     <string name="slow_connection_msg">Slow connection to PC\nReduce your bitrate</string>
@@ -138,45 +87,18 @@
 
     <!-- AppList activity -->
     <string name="applist_connect_msg">Connecting to PC…</string>
-    <string name="applist_menu_resume">Resume Session</string>
-    <string name="applist_menu_start_vdisplay">Start in Virtual Display</string>
-    <string name="applist_menu_start_primarydisplay">Start in Primary Display</string>
-    <string name="applist_menu_quit">Quit Session</string>
-    <string name="applist_menu_quit_and_start">Quit Current Game and Start</string>
-    <string name="applist_menu_quit_and_start_vdisplay">Quit Current Game and Start in Virtual Display</string>
-    <string name="applist_menu_quit_and_start_primarydisplay">Quit Current Game and Start in Primary Display</string>
-    <string name="applist_menu_cancel">Cancel</string>
-    <string name="applist_menu_details">View Details</string>
-    <string name="applist_menu_scut">Create Shortcut</string>
-    <string name="applist_menu_export_launcher">Export Launcher File</string>
-    <string name="applist_menu_tv_channel">Add to Channel</string>
-    <string name="applist_menu_hide_app">Hide App</string>
-    <string name="applist_refresh_title">App List</string>
-    <string name="applist_refresh_msg">Refreshing apps…</string>
-    <string name="applist_refresh_error_title">Error</string>
-    <string name="applist_refresh_error_msg">Failed to get app list</string>
     <string name="applist_quit_app">Quitting</string>
     <string name="applist_quit_success">Successfully quit</string>
     <string name="applist_quit_fail">Failed to quit</string>
     <string name="applist_quit_confirmation">Are you sure you want to quit the running app? All unsaved data will be lost.</string>
-    <string name="applist_details_id">App ID:</string>
 
     <!-- Add computer manually activity -->
-    <string name="title_add_pc">Add PC Manually</string>
-    <string name="msg_add_pc">Connecting to the PC…</string>
-    <string name="addpc_fail">Unable to connect to the specified computer. Make sure the required ports are allowed through the firewall.</string>
-    <string name="addpc_success">Successfully added computer</string>
-    <string name="addpc_unknown_host">Unable to resolve PC address. Make sure you didn\'t make a typo in the address.</string>
-    <string name="addpc_enter_ip">You must enter an IP address</string>
-    <string name="addpc_wrong_sitelocal">That address doesn\'t look right. You must use your router\'s public IP address for streaming over the Internet.</string>
 
     <!-- Preferences -->
     <string name="category_general_settings">General Settings</string>
     <string name="category_video_settings">Video Settings</string>
     <string name="title_resolution_list">Video resolution</string>
     <string name="summary_resolution_list">Increase to improve image clarity. Decrease for better performance on lower end devices and slower networks.</string>
-    <string name="title_native_res_dialog">Native Resolution Warning</string>
-    <string name="text_native_res_dialog">Native resolution and/or FPS may not be supported by the streaming server. You will probably need to configure a matching custom display mode for the host PC manually.\n\nIf you choose to create a custom resolution in NVIDIA Control Panel to match your screen settings, please ensure you have read and understood NVIDIA\'s warning regarding possible monitor damage, PC instability, and other potential problems.\n\nWe are not responsible for any problems resulting from creating a custom resolution on your PC.\n\nIt may be that your monitor does not support a necessary display configuration. If so, you may try to set up a virtual monitor. Finally, if your device or host PC does not support streaming at a specific resolution or refresh rate, you\'re out of luck unfortunately.</string>
     <string name="title_fps_list">Video frame rate</string>
     <string name="summary_fps_list">Increase for a smoother video stream. Decrease for better performance on lower end devices.</string>
     <string name="title_seekbar_bitrate">Video bitrate</string>
@@ -186,13 +108,6 @@
     <string name="suffix_seekbar_bitrate_mbps">Mbps</string>
     <string name="title_resolution_scale_factor">Resolution Scale Factor</string>
     <string name="summary_resolution_scale_factor">Server side requested virtual screen resolution will be multiplied by this factor. Streaming resolution are not affected.\ne.g. 120% will make 2000x1000 become 2400x1200.\nSetting a higher scale factor will improve image quality for some games.\nRequires Apollo to take effect.</string>
-    <string name="resolution_prefix_native">Native</string>
-    <string name="resolution_prefix_native_fullscreen">Native Full-Screen</string>
-    <string name="resolution_prefix_native_landscape">(Landscape)</string>
-    <string name="resolution_prefix_native_portrait">(Portrait)</string>
-    <string name="resolution_prefix_custom">Custom</string>
-    <string name="fps_suffix_fps">FPS</string>
-    <string name="title_native_fps_dialog">Native FPS Warning</string>
     <string name="title_checkbox_auto_invert_video_resolution">Auto Invert Resolution</string>
     <string name="summary_checkbox_auto_invert_video_resolution">Automatically invert the width and height of the video stream when in portrait mode.\nFor example: 1920x1080 will become 1080x1920.</string>
     <string name="title_video_scale_mode">Video Scale Mode</string>
@@ -239,8 +154,6 @@
     <string name="title_enable_rumble">Enable Rumble</string>
     <string name="summary_enable_rumble">Enable rumble feedback on supported gamepads.</string>
     <string name="category_input_settings">Input Settings</string>
-    <string name="title_checkbox_touchscreen_trackpad">Use the touchscreen as a trackpad</string>
-    <string name="summary_checkbox_touchscreen_trackpad">If enabled, the touchscreen acts like a trackpad. If disabled, the touchscreen directly controls the mouse cursor.</string>
     <string name="title_checkbox_absolute_mouse_mode">Remote desktop mouse mode</string>
     <string name="summary_checkbox_absolute_mouse_mode">This can make mouse acceleration behave more naturally for remote desktop usage, but it is incompatible with many games.</string>
     <string name="title_checkbox_mouse_nav_buttons">Enable forward/back mouse buttons</string>
@@ -261,8 +174,6 @@
     <string name="summary_reset_osc">Resets all on-screen controls to their default size and position</string>
     <string name="dialog_title_reset_osc">Reset Layout</string>
     <string name="dialog_text_reset_osc">Are you sure you want to delete your saved on-screen controls layout?</string>
-    <string name="toast_reset_osc_success">On-screen controls reset to default</string>
-    <string name="title_osc_opacity">Change opacity of on-screen controls</string>
     <string name="summary_osc_opacity">Make the on-screen controls more/less transparent</string>
     <string name="dialog_title_osc_opacity">Change opacity</string>
     <string name="suffix_osc_opacity">%</string>
@@ -272,8 +183,6 @@
     <string name="summary_checkbox_enable_pip">Allows the stream to be viewed (but not controlled) while multitasking</string>
     <string name="title_language_list">Language</string>
     <string name="summary_language_list">Language to use for Delos</string>
-    <string name="title_checkbox_small_icon_mode">Use small box art</string>
-    <string name="summary_checkbox_small_icon_mode">Smaller box art in the app grid allows more apps to be visible on screen</string>
 
     <string name="category_host_settings">Host Settings</string>
     <string name="title_checkbox_host_audio">Play audio on PC</string>
@@ -286,8 +195,6 @@
     <string name="summary_checkbox_reduce_refresh_rate">Lower display refresh rates can save power at the expense of some additional video latency</string>
     <string name="title_checkbox_disable_warnings">Disable warning messages</string>
     <string name="summary_checkbox_disable_warnings">Disable on-screen connection warning messages while streaming</string>
-    <string name="title_disable_frame_drop">Never drop frames</string>
-    <string name="summary_disable_frame_drop">May reduce micro-stuttering on some devices, but can increase latency</string>
     <string name="title_video_format">Change codec settings</string>
     <string name="summary_video_format">Newer codecs can lower video bandwidth requirements if your device supports them. Codec selections may be ignored if not supported by the host software or GPU.</string>
     <string name="title_enable_hdr">Enable HDR</string>
@@ -299,13 +206,6 @@
     <string name="title_enable_perf_overlay">Show performance stats while streaming</string>
     <string name="summary_enable_perf_overlay">Display real-time stream performance information while streaming</string>
 
-    <string name="category_help">Help</string>
-    <string name="title_setup_guide">Setup guide</string>
-    <string name="summary_setup_guide">View instructions on how to set up your gaming PC for streaming</string>
-    <string name="title_troubleshooting">Troubleshooting guide</string>
-    <string name="summary_troubleshooting">View tips for diagnosing and fixing common streaming issues</string>
-    <string name="title_privacy_policy">Privacy policy</string>
-    <string name="summary_privacy_policy">View the Delos privacy policy</string>
     <string name="title_special_key_help">Custom Keys help</string>
     <string name="summary_special_key_help">Instructions about how to setup custom special keys</string>
 
@@ -313,7 +213,6 @@
     <string name="toast_controller_type_changed">Gamepad type may be changed due to motion sensor emulation</string>
 
     <!-- Permission justification -->
-    <string name="local_network_rationale">Delos requires local network permissions to communicate with nearby hosts</string>
 
     <!-- Array strings -->
     <string name="resolution_360p">360p</string>
@@ -355,7 +254,6 @@
     <string name="game_menu_toggle_keyboard">Show soft keyboard</string>
     <string name="game_menu_toggle_hud">Toggle Performance Overlay</string>
     <string name="game_menu_select_mouse_mode">Select Mouse mode</string>
-    <string name="game_menu_select_steam_mode">Select Stream mode</string>
     <string name="game_menu_enable_zoom_mode">Enable Pan/Zoom</string>
     <string name="game_menu_disable_zoom_mode">Disable Pan/Zoom</string>
     <string name="game_menu_rotate_screen">Rotate Screen</string>
@@ -383,11 +281,9 @@
     <string name="game_menu_send_keys_shift_tab">Shift + Tab (Steam Overlay)</string>
     <string name="game_menu_send_keys_alt_enter">Alt + Enter</string>
     <string name="game_menu_send_keys_win_shift_left">Win + shift + left (Move app between Desktops)</string>
-    <string name="game_menu_send_keys_ctrl_alt_shift_q">Ctrl+Alt+Shift+Q (PC Exit Streaming)</string>
     <string name="game_menu_send_keys_ctrl_alt_shift_f1">Ctrl+Alt+Shift+F1 (Switch Monitor)</string>
     <string name="game_menu_send_keys_ctrl_alt_shift_f12">Ctrl+Alt+Shift+F12 (Switch Monitor)</string>
 
-    <string name="toggle_pan_zoom_mode">Toggle Pan/Zoom Mode</string>
     <string name="pan_zoom_mode_enabled">Pan/Zoom Mode Enabled</string>
     <string name="pan_zoom_mode_disabled">Pan/Zoom Mode Disabled</string>
 
@@ -400,10 +296,7 @@
     <string name="perf_overlay_lite_net">%1$dms</string>
     <string name="perf_overlay_lite_dectime">%1$.2fms</string>
     <string name="perf_overlay_lite_netdrops">%1$.2f%%</string>
-    <string name="perf_overlay_lite_streamdetails">%1$s</string>
     <string name="perf_overlay_lite_fps">%1$.2f</string>
-    <string name="perf_overlay_drawn_fps">GpuFPS:</string>
-    <string name="perf_overlay_lite_decoder">Decoder: %1$s</string>
     <string name="title_import_keyboard_layout">Import keyboard layout</string>
     <string name="title_export_keyboard_layout">Export keyboard layout</string>
     <string name="summary_import_keyboard_layout">This will overwrite the current layout.</string>
@@ -457,9 +350,7 @@
     <string name="summary_free_analog_stick">Virtual gamepad left and right stick center point positions are not fixed, can be freely adjusted within a certain range of movement.</string>
     <string name="summary_free_analog_stick_opacity">By default, only when the stick moves, the background is displayed. If you don\'t like it, you can adjust the opacity effect.</string>
     <string name="title_free_analog_stick_opacity">Free Analog Stick Background Opacity</string>
-    <string name="title_exdisplay_mode">External Display Mode</string>
     <string name="title_fullexdisplay_mode">Fully External Display Mode</string>
-    <string name="summary_exdisplay_mode">Stream display on the monitor, virtual buttons and performance information and other controls on the phone screen.</string>
     <string name="summary_fullexdisplay_mode">Allows full immersive secondary screen mode with automatically matched refresh rate and resolution. Manual settings won\'t apply in this mode. May not work with every device or display.</string>
     <string name="title_top_center_display">Display in Top Center</string>
     <string name="summary_top_center_display">Streaming picture will be aligned to the top of the screen instead of centered when resolution is not native.</string>
@@ -518,8 +409,6 @@
     <string name="summary_checkbox_ultra_low_latency">Works only on Snapdragon 8 Gen 2, 8(s) Gen 3, 8 Elite and MediaTek devices.</string>
     <string name="title_checkbox_use_virtual_display">Use Virtual Display</string>
     <string name="summary_checkbox_use_virtual_display">Use Virtual Display by default.\nVirtual Display can automatically match your client side resolution and frame rate settings, giving you a seamless streaming experience.\nRequires Apollo as host streaming software.</string>
-    <string name="title_checkbox_resume_without_confirm">Quick Resume</string>
-    <string name="summary_checkbox_resume_without_confirm">Do not show resume menu when clicking resume button, resume the app immediately.</string>
     <string name="title_checkbox_enable_sticky_modifier_key_virtual_keyboard">Sticky modifier keys</string>
     <string name="summary_checkbox_enable_sticky_modifier_key_virtual_keyboard">Use sticky modifier keys on virtual full keyboard and custom onscreen keyboard.</string>
     <string name="virtual_keyboard_hide">Hide\nKBD</string>
@@ -530,47 +419,7 @@
     <string name="mouse_mode_disabled">Disabled</string>
     <string name="mouse_mode_absolute_touch_swapped">Absolute touch (left/right click swapped)</string>
     <string name="keyboard_layout_set_1">Profile 1</string>
-    <string name="keyboard_layout_set_2">Profile 2</string>
-    <string name="keyboard_layout_set_3">Profile 3</string>
-    <string name="keyboard_layout_set_4">Profile 4</string>
-    <string name="keyboard_layout_set_5">Profile 5</string>
     <string name="toggle_local_mouse_cursor">Toggle local mouse cursor(physical mouse needed)</string>
-    <string name="debug_info_android_version">Android Version:</string>
-    <string name="debug_info_api_version">API Version:</string>
-    <string name="debug_info_kernel_version">Kernel Version:</string>
-    <string name="debug_info_brand_model">Brand and Model:</string>
-    <string name="debug_info_has_vibration_motor">Has Vibration Motor</string>
-    <string name="debug_info_no_vibration_motor">No Vibration Motor</string>
-    <string name="debug_info_test_device_vibration">Test Device Vibration (%s)</string>
-    <string name="debug_info_vibration_amplitude">Vibration Amplitude (%d)</string>
-    <string name="debug_info_simple_vibration">Simple Vibration for 1 Second</string>
-    <string name="debug_info_continuous_hd_vibration">Continuous HD Vibration</string>
-    <string name="debug_info_please_choose">Please Choose</string>
-    <string name="debug_info_no_gamepad_detected">No gamepad detected, please connect a gamepad, tap refresh, and try again!</string>
-    <string name="debug_info_no_vibrator">No vibrator detected on the gamepad!</string>
-    <string name="debug_info_set_amplitude">Set Amplitude 0-255 (Effective only for HD Vibration)</string>
-    <string name="debug_info_name">Name: </string>
-    <string name="debug_info_sensors">Sensors: </string>
-    <string name="debug_info_no_relevant_driver">None (no relevant driver or gamepad not supported)</string>
-    <string name="debug_info_no_api_below_android12">No corresponding API below Android 12</string>
-    <string name="debug_info_vid_pid">VID_PID: </string>
-    <string name="debug_info_vibration">Vibration: </string>
-    <string name="debug_info_supported">Supported</string>
-    <string name="debug_info_not_supported">Not Supported</string>
-    <string name="debug_info_details">Details: </string>
-    <string name="debug_info_number_of_gamepads">Number of Gamepads: </string>
-    <string name="debug_info_accelerometer">+Accelerometer</string>
-    <string name="debug_info_gyroscope">+Gyroscope</string>
-    <string name="debug_info_stop_vibration">Stop Vibration</string>
-    <string name="debug_info_refresh_gamepad_info">Tap to refresh gamepad info</string>
-    <string name="debug_info_refresh_gamepad_list">Refresh gamepad list</string>
-    <string name="debug_info_test_gamepad_rumble">Test gamepad rumble</string>
-    <string name="pref_enter_value_0_9999">Please enter a value between 0 and 9999.</string>
-    <string name="pref_set_success">Settings saved successfully!</string>
-    <string name="pref_empty_file">Empty file!</string>
-    <string name="pref_import_success">Import success!</string>
-    <string name="pref_error_occurred">An error occurred: </string>
-    <string name="pref_save_keyboard_profile">Save OSK profile</string>
     <string name="game_menu_advanced">Advanced Menu</string>
     <string name="game_dialog_title_quit_confirm">Really want to quit?</string>
     <string name="game_dialog_message_quit_confirm">Please make sure you have no unsaved progress. Quitting the session will terminate your current running application.</string>
@@ -600,7 +449,6 @@
     <string name="error_msg_permission_denied">Permission Denied</string>
     <string name="error_msg_timeout">Connection Timeout</string>
     <string name="permission_launch_app">Launch Apps</string>
-    <string name="permission_sync_clipboard">Sync Clipboard</string>
 
 
     <!-- Keyboard -->
@@ -617,8 +465,6 @@
     <string name="keyboard_key_custom">%s (Custom)</string>
 
     <!-- Compliance -->
-    <string name="category_basic_settings" />
-    <string name="title_checkbox_stretch_video" />
 
     <!-- ShortcutHelper Toast Messages -->
     <string name="export_launcher_computer_details_incomplete">Cannot export: Computer details are incomplete.</string>
@@ -632,42 +478,12 @@
     <string name="unexpected_error_during_file_export">An unexpected error occurred during file export.</string>
 
     <!-- AppView Toast Messages -->
-    <string name="file_export_cancelled">File export cancelled.</string>
-    <string name="app_removed_from_pc">App removed from PC</string>
-    <string name="title_export_sunshine_launcher_file">Export Launcher File for Sunshine</string>
-    <string name="message_export_sunshine_launcher_file">Exporting launcher file for Sunshine is unstable, and may break at any moment. You\'ll need to export again every time if you changed the app name or image.\nUse Apollo for a more stable experience.</string>
 
     <string name="title_enable_commit_text">Enable commit-text input (swipe/voice)</string>
     <string name="summary_enable_commit_text">Forward multi-character text from soft keyboards (gesture typing, predictions, voice dictation). May break games that rely on key-by-key input.</string>
     <string name="title_checkbox_remember_zoom_pan">Remember Zoom&amp;Pan</string>
     <string name="summary_checkbox_remember_zoom_pan">Save changes to zoom and pan position between sessions</string>
-    <string name="title_checkbox_enable_perf_overlay_bottom">Move overlay to bottom</string>
-    <string name="summary_checkbox_enable_perf_overlay_bottom">Useful when Display in Top Center and Lite mode are enabled during non-native resolution streaming.</string>
-    <string name="title_edit_profile">Edit Profile</string>
-    <string name="profile_manager_new_profile">New Profile</string>
-    <string name="profile_manager_profile_not_found">Profile not found</string>
-    <string name="profile_manager_edit_profile">"Edit Profile: "</string>
-    <string name="profile_manager_profile">"Profile "</string>
-    <string name="profile_manager_profile_saved">Profile \'%s\' saved.</string>
-    <string name="profile_manager_edit_profile_name">Edit Profile Name</string>
-    <string name="profile_manager_name_cannot_be_blank">Name cannot be blank</string>
-    <string name="profile_manager_edit_profile_with">Edit Profile: %s</string>
-    <string name="profile_manager_new_profile_with">New Profile: %s</string>
-    <string name="profile_manager_no_profiles_yet">No profiles yet</string>
-    <string name="profile_manager_profiles_description">Profiles allow you to create and save different streaming configurations. Each profile stores its own settings which can be quickly switched between.</string>
-    <string name="profile_manager_tap_create_profile">Tap + to create your first profile</string>s
-    <string name="profile_manager_choose_profile">Choose Profile</string>
-    <string name="profile_manager_deactivated_profile">Deactivated profile</string>
-    <string name="profile_manager_activated_profile">Activated profile \'%s\'</string>
-    <string name="profile_manager_delete_profile">Delete Profile</string>
-    <string name="profile_manager_confirm_profile_deleteion">Are you sure you want to delete \'%s\'?</string>
-    <string name="profile_manager_delete">Delete</string>
-    <string name="profile_manager_profile_deleted">Deleted profile \'%s\'</string>
-    <string name="profile_manager_failed_to_save">Failed to save profile. Please check logcat for details.</string>
     <string name="profile_manager_failed_to_load">Failed to load profiles. Please check logcat for details.</string>
-    <string name="profile_manager_active_profile">Active profile: %s</string>
-    <string name="rename">Rename</string>
-    <string name="save">Save</string>
     <string name="title_low_latency_frame_balance">LFR</string>
     <string name="summary_low_latency_frame_balance">Minimizes delay by dropping queued frames. May not work on every device.</string>
     <string name="category_perf_monitor_settings">Performance Monitor</string>

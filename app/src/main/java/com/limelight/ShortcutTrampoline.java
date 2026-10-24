@@ -48,6 +48,10 @@ public class ShortcutTrampoline extends AppCompatActivity {
     private PreferenceConfiguration prefConfig;
     private String uuidString;
     private NvApp app;
+    // The PC of a shortcut (and of the stream started from it)
+    public final static String NAME_EXTRA = "Name";
+    public final static String UUID_EXTRA = "UUID";
+
     private ArrayList<Intent> intentStack = new ArrayList<>();
 
     private int wakeHostTries = 10;
@@ -181,25 +185,12 @@ public class ShortcutTrampoline extends AppCompatActivity {
                                                 // Close this activity
                                                 finish();
 
-                                                // Add the PC view at the back (and clear the task)
-                                                Intent i;
-                                                i = new Intent(ShortcutTrampoline.this, PcView.class);
-                                                i.setAction(Intent.ACTION_MAIN);
+                                                // Delos: the PC's games in the Delos UI (it connects to the PC from the UUID)
+                                                Intent i = new Intent(getIntent());
+                                                i.setClass(ShortcutTrampoline.this, com.limelight.shell.ShellActivity.class);
                                                 i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                                                 intentStack.add(i);
 
-                                                // Take this intent's data and create an intent to start the app view
-                                                i = new Intent(getIntent());
-                                                i.setClass(ShortcutTrampoline.this, AppView.class);
-                                                intentStack.add(i);
-
-                                                // If a game is running, we'll make the stream the top level activity
-                                                if (details.runningGameId != 0) {
-                                                    intentStack.add(ServerHelper.createStartIntent(ShortcutTrampoline.this,
-                                                            new NvApp(null, null, details.runningGameId, false), details, managerBinder, prefConfig.useVirtualDisplay));
-                                                }
-
-                                                // Now start the activities
                                                 startActivities(intentStack.toArray(new Intent[]{}));
                                             }
                                             
@@ -385,10 +376,10 @@ public class ShortcutTrampoline extends AppCompatActivity {
         {
             // PC arguments, both are optional, but at least one must be provided
             if (hostUUID == null) {
-                hostUUID = getIntent().getStringExtra(AppView.UUID_EXTRA);
+                hostUUID = getIntent().getStringExtra(ShortcutTrampoline.UUID_EXTRA);
             }
             if (hostName == null) {
-                hostName = getIntent().getStringExtra(AppView.NAME_EXTRA);
+                hostName = getIntent().getStringExtra(ShortcutTrampoline.NAME_EXTRA);
             }
 
             // App arguments, all optional, but one must be provided in order to start an app
@@ -428,7 +419,7 @@ public class ShortcutTrampoline extends AppCompatActivity {
         uuidString = hostUUID;
 
         // Set the AppView UUID intent
-        setIntent(new Intent(getIntent()).putExtra(AppView.UUID_EXTRA, uuidString));
+        setIntent(new Intent(getIntent()).putExtra(ShortcutTrampoline.UUID_EXTRA, uuidString));
 
         if (validateAppInput(appUUID, appIDStr, appName)) {
             // If app data came from .art file or was determined by appNameString from extras

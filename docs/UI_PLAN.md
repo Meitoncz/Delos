@@ -155,13 +155,15 @@ Built on the branch `ui/steamgriddb` (`shell/data/SteamGridDb.kt`, `screens/Artw
 - [ ] Open question from GUI.md: syncing the choices with Vibepollo (Vibepollo has no API for it yet; later).
 
 ### 6.9 Switch-over and cleanup
-- [ ] The new shell becomes the only launcher activity (phone, TV/leanback categories kept).
-- [ ] Links and shortcuts go to the new shell: the `art://` intent filter moves from `AddComputerManually` to `ShellActivity`, and `ShortcutTrampoline` falls back to the shell (with `AppView.UUID_EXTRA`) instead of `PcView` / `AppView`. The shell already handles them (`ShellLink.kt`).
-- [ ] Remove the old UI once nothing depends on it:
-  - `PcView`, `AppView`, the grid adapters, `AdapterFragment`, the old layouts and unused resources;
-  - `StreamSettings` and the custom preference classes;
-  - dependencies only the old UI used (preference, cardview, recyclerview, possibly appcompat/material – `Game.java` is checked first).
-- [ ] Strings: new UI strings in English; existing translations reused wherever a setting keeps its string key.
+Built on the branch `ui/switch-over` (2026-10-24). Delos is still not released; releases are the user's decision.
+- [x] The new shell is the only launcher activity (phone, multi-window, TV/leanback and OUYA categories), in every build type; the debug-only "Delos Next" entry is gone.
+- [x] Links and shortcuts go to the new shell: the `art://` intent filter moved from `AddComputerManually` to `ShellActivity`, and PC shortcuts (`ShortcutTrampoline`) open the shell with the PC's UUID. App shortcuts still start the stream directly.
+- [x] Old UI removed: `PcView`, `AppView`, the grid adapters, `AdapterFragment`, `ProfilesActivity` / `EditProfileActivity` (the profile data, `ProfilesManager`, stays: the stream reads it), `StreamSettings`, `AddComputerManually` and the custom preference classes; their layouts, drawables, menus and about 190 strings and other values in every language; their tests. `preferences.xml` stays as the settings catalog of the new UI.
+- [x] Debug info is a Delos screen (Settings → About → Debug info): the device, a vibration test with its strength, the connected controllers (ids, motion sensors, vibration, full details in the panel).
+- [x] The classic-only settings are gone: the resume dialog, small icons and "Move overlay to bottom".
+- [x] Dependencies only the old UI used: CardView and RecyclerView. AppCompat and Material stay (the stream and the help / shortcut activities use them).
+- [x] Kept: `HelpActivity` (help pages from stream errors on devices without a browser), `ShortcutTrampoline`, the TV channel and launcher shortcuts the stream reports.
+- [ ] Strings: new UI strings in English; existing translations reused wherever a setting keeps its string key (with the translations later).
 
 ### 6.10 Polish and testing
 - [ ] Side-by-side comparison with the prototype on the Odin, screen by screen.
@@ -170,7 +172,7 @@ Built on the branch `ui/steamgriddb` (`shell/data/SteamGridDb.kt`, `screens/Artw
 - [ ] Touch, Android 10–12 fallbacks (no blur), Android 15+ edge-to-edge (other devices / later).
 - [ ] "Check for updates" in Settings → About, in the Delos style, once the repository is public (replaces the removed Software Update / Follow Update links).
 
-Later (Phase 6 backlog, after the switch): restyle the in-stream quick menu (`GameMenu`) in the new design, virtual controls editor.
+Later (Phase 6 backlog; the user on 2026-10-24: not urgent, for the first "final" version): restyle the classic in-stream quick menu (`GameMenu`) and the virtual controls editor in the new design. The stream menu's items stay as they are. Next after 6.9 the focus is on core features: PyroWave and VRR, PS Remote Play (docs/FUTURE_PLANS.md).
 
 ## Open questions
 

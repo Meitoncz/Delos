@@ -139,7 +139,7 @@ fun SettingsScreen(
     LaunchedEffect(capabilities, profile.currentId, values["checkbox_unlock_fps"]) { capabilities?.let(stream::normalize) }
     val act = settingsActions(profiles, stream)
     val classic = profiles.catalog.all.filter { spec ->
-        spec.key !in RETIRED_KEYS && spec.key !in (capabilities?.hidden ?: emptySet()) &&
+        spec.key !in (capabilities?.hidden ?: emptySet()) &&
             (activity?.packageManager?.hasSystemFeature(android.content.pm.PackageManager.FEATURE_TOUCHSCREEN) != false ||
                 spec.category !in setOf("category_onscreen_controls", "category_special_key_layout"))
     }.map { spec ->
@@ -412,17 +412,6 @@ private fun LetterKey(letter: String, modifier: Modifier, click: () -> Unit) {
         BasicText(letter, style = TextStyle(color = if (focused) colors.accent else colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 28.tpx))
     }
 }
-
-/**
- * Options of the classic UI only (its resume dialog, icon size and overlay position). They go away with it in the
- * switch-over (6.9).
- */
-private val RETIRED_KEYS = setOf(
-    "checkbox_resume_without_confirm",
-    "checkbox_small_icon_mode",
-    // The statistics panel has its own position (Settings → Display → Statistics position)
-    "checkbox_enable_perf_overlay_bottom",
-)
 
 /** The rows the description panel previews the game background for. */
 private val GAME_BACKGROUND_ROWS = setOf("ui_hero_background", "ui_hero_blur", "ui_hero_opacity")

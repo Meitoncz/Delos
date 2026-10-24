@@ -1,35 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- PC view menu entries -->
-    <string name="pcview_menu_app_list">Alle apps bekijken</string>
-    <string name="pcview_menu_pair_pc">Koppelen met PC</string>
-    <string name="pcview_menu_unpair_pc">Ontkoppelen</string>
-    <string name="pcview_menu_send_wol">Wake-on-LAN-verzoek sturen</string>
-    <string name="pcview_menu_delete_pc">PC verwijderen</string>
     <!-- Pair messages -->
-    <string name="pairing">Koppelen…</string>
     <string name="pair_pc_offline">Computer is onbereikbaar</string>
-    <string name="pair_pc_ingame">De computer is momenteel bezig met een spel. U moet het spel afsluiten voordat u kunt koppelen.</string>
-    <string name="pair_pairing_title">Koppelen</string>
-    <string name="pair_pairing_msg">Voer de volgende pin in op de doel-PC:</string>
-    <string name="pair_incorrect_pin">Ongeldige pin</string>
-    <string name="pair_fail">Koppelen mislukt</string>
     <!-- WOL messages -->
-    <string name="wol_pc_online">Computer is online</string>
-    <string name="wol_no_mac">PC kan niet uit slaapstand worden geactiveerd omdat er geen MAC-adres is vastgelegd</string>
-    <string name="wol_waking_pc">PC uit slaapstand halen…</string>
-    <string name="wol_waking_msg"> Het kan even duren voordat de PC reageert.
-    Als dit niet gebeurt controleer de Wake-On-LAN instellingen.
-  </string>
-    <string name="wol_fail">Wake-On-LAN packets versturen mislukt</string>
     <!-- Unpair messages -->
-    <string name="unpairing">Ontkoppelen…</string>
-    <string name="unpair_success">Ontkoppeling succesvol</string>
-    <string name="unpair_fail">Ontkoppeling mislukt</string>
-    <string name="unpair_error">Apparaat niet gekoppeld</string>
     <!-- Errors -->
     <string name="error_pc_offline">Computer is offline</string>
-    <string name="error_manager_not_running">De ComputerManager service is niet gestart. Wacht een ogenblik of herstart de app.</string>
     <string name="error_unknown_host">Host achterhalen mislukt</string>
     <string name="error_404">GFE geeft een HTTP 404 fout. Kijk na of de PC een ondersteunde GPU heeft.
     Remote desktop software kan soms ook voor deze fout zorgen. Probeer de computer opnieuw op te starten of GFE te herinstalleren.
@@ -44,33 +21,15 @@
     <string name="conn_terminated_title">Verbinding beëindigd</string>
     <string name="conn_terminated_msg">De verbinding is beëindigd.</string>
     <!-- General strings -->
-    <string name="ip_hint">IP-adres van de host-PC</string>
-    <string name="searching_pc">Zoeken naar host-PC\'s in uw lokale netwerk...\n\nZorg ervoor dat Sunshine draait op uw host-PC of dat GameStream is ingeschakeld in de GeForce Experience SHIELD-instellingen.</string>
     <string name="yes">Ja</string>
     <string name="no">Nee</string>
-    <string name="lost_connection">Verbinding met PC verloren</string>
     <!-- AppList activity -->
-    <string name="applist_menu_resume">Sessie hervatten</string>
-    <string name="applist_menu_quit">Sessie afsluiten</string>
-    <string name="applist_menu_quit_and_start">Stop Huidige Spel en Start</string>
-    <string name="applist_menu_cancel">Annuleren</string>
-    <string name="applist_refresh_title">App-lijst</string>
-    <string name="applist_refresh_msg">Apps verversen…</string>
-    <string name="applist_refresh_error_title">Fout</string>
-    <string name="applist_refresh_error_msg">App lijst ophalen mislukt</string>
     <string name="applist_quit_app">Stoppen</string>
     <string name="applist_quit_success">Succesvol afgesloten</string>
     <string name="applist_quit_fail">Stoppen mislukt</string>
     <string name="applist_quit_confirmation">Weet u zeker dat u de actieve app wilt afsluiten? Alle niet-opgeslagen gegevens gaan verloren.</string>
     <!-- Add computer manually activity -->
-    <string name="title_add_pc">Voeg handmatig PC toe</string>
-    <string name="msg_add_pc">Verbinding maken met PC…</string>
-    <string name="addpc_fail">Verbinden mislukt. Controleer of de benodigde poorten openstaan in de firewall.</string>
-    <string name="addpc_success">Computer toevoegen succesvol</string>
-    <string name="addpc_unknown_host">Adres achterhalen is mislukt. Controleer het ingevoerde adres op typfouten.</string>
-    <string name="addpc_enter_ip">IP-adres invoeren is verplicht</string>
     <!-- Preferences -->
-    <string name="category_basic_settings">Basis­instellingen</string>
     <string name="title_resolution_list">Video­resolutie</string>
     <string name="summary_resolution_list">Te hoge instellingen kunnen crashes en haperingen veroorzaken.</string>
     <string name="title_seekbar_bitrate">Video-bitsnelheid</string>
@@ -90,8 +49,6 @@
     <string name="category_ui_settings">Interface­instellingen</string>
     <string name="title_language_list">Taal</string>
     <string name="summary_language_list">Taal te gebruiken in Delos</string>
-    <string name="title_checkbox_small_icon_mode">Gebruik kleine iconen</string>
-    <string name="summary_checkbox_small_icon_mode">Gebruik kleine iconen in kolom onderdelen zodat meer items tegelijk zichtbaar worden</string>
     <string name="category_host_settings">Host-instellingen</string>
     <string name="title_checkbox_host_audio">Speel audio af op PC</string>
     <string name="summary_checkbox_host_audio">Speel audio af op de computer en op dit apparaat</string>
@@ -100,17 +57,11 @@
     <string name="summary_video_format">Nieuwere codecs kunnen de vereiste bandbreedte voor video verlagen als uw apparaat deze ondersteunt. Codec-selecties kunnen worden genegeerd als ze niet worden ondersteund door de host-software of GPU.</string>
     <string name="suffix_osc_opacity">%</string>
     <string name="message_decoding_error">Delos is gecrasht vanwege een incompatibiliteit met de videodecoder van dit apparaat. Probeer de streaminginstellingen aan te passen als de crashes aanhouden.</string>
-    <string name="scut_deleted_pc">PC verwijderd</string>
     <string name="scut_not_paired">PC niet gekoppeld</string>
     <string name="scut_pc_not_found">PC niet gevonden</string>
     <string name="scut_invalid_uuid">Opgegeven PC is niet geldig</string>
     <string name="scut_invalid_app_id">Opgegeven App is niet geldig</string>
     <string name="help_loading_msg">Hulppagina laden…</string>
-    <string name="pcview_menu_header_online">Online</string>
-    <string name="pcview_menu_header_offline">Offline</string>
-    <string name="pcview_menu_header_unknown">Vernieuwen</string>
-    <string name="pcview_menu_test_network">Test netwerkverbinding</string>
-    <string name="pcview_menu_details">Details bekijken</string>
     <string name="nettest_title_waiting">Netwerk­verbinding testen</string>
     <string name="nettest_text_waiting">Delos test uw netwerkverbinding om te bepalen of er vereiste poorten geblokkeerd zijn.\n\nDit kan enkele seconden duren…</string>
     <string name="nettest_title_done">Netwerktest voltooid</string>
@@ -123,12 +74,10 @@
 \nDe volgende netwerkpoorten zijn geblokkeerd:
 \n</string>
     <string name="nettest_text_blocked">De internetverbinding van dit toestel blokkeert Delos. Streamen over het internet werkt mogelijks niet wanneer u verbonden bent met dit netwerk.</string>
-    <string name="pair_already_in_progress">Koppelen al bezig</string>
     <string name="title_decoding_error">Video Decoder Gecrasht</string>
     <string name="title_decoding_reset">Video Instellingen Resetten</string>
     <string name="message_decoding_reset">De videodecoder van uw toestel blijft crashen met uw geselecteerde streamingsinstellingen. De streamingsinstellingen zijn teruggezet naar de standaardinstellingen.</string>
     <string name="error_usb_prohibited">USB-toegang is uitgeschakeld door uw systeemadministrator. Controleer uw Knox of MDM instellingen.</string>
-    <string name="unable_to_pin_shortcut">Uw huidige laucher laat het pinnen van snelkoppelingen niet toe.</string>
     <string name="video_decoder_init_failed">Videodecoder niet gestart. Uw apparaat ondersteund mogelijk de geselecteerde resolutie of frame rate niet.</string>
     <string name="no_video_received_error">Geen video ontvangen van de host.</string>
     <string name="no_frame_received_error">De kwaliteit van uw netwerkverbinding is niet goed. Verlaag de bitrate of gebruik een snellere verbinding.</string>
@@ -137,16 +86,10 @@
 \nVerlaag uw bitrate</string>
     <string name="poor_connection_msg">Slechte verbinding met PC</string>
     <string name="applist_connect_msg">Verbinden met PC…</string>
-    <string name="applist_menu_details">Details bekijken</string>
-    <string name="applist_menu_scut">Snelkoppeling Maken</string>
-    <string name="applist_menu_hide_app">App Verbergen</string>
-    <string name="applist_details_id">App-id:</string>
     <string name="title_fps_list">Video frame rate</string>
     <string name="suffix_seekbar_bitrate_mbps">Mbps</string>
-    <string name="resolution_prefix_native">Oorspronkelijk</string>
     <string name="title_audio_config_list">Surround sound configuratie</string>
     <string name="category_input_settings">Invoer­instellingen</string>
-    <string name="title_checkbox_touchscreen_trackpad">Gebruik het touchscreen als een trackpad</string>
     <string name="summary_osc_opacity">Maak de on-screen besturingselementen minder of meer transparant</string>
     <string name="title_checkbox_mouse_emulation">Muis­emulatie via gamepad</string>
     <string name="summary_checkbox_mouse_emulation">De startknop lang indrukken zal de muis-modus activeren op uw gamepad</string>
@@ -157,28 +100,18 @@
     <string name="summary_only_l3r3">Alle virtuele knoppen verbergen behalve L3 en R3</string>
     <string name="title_reset_osc">Opgeslagen on-screen layout wissen</string>
     <string name="dialog_title_reset_osc">Lay-out resetten</string>
-    <string name="toast_reset_osc_success">On-screen controle-elementen naar fabrieksinstellingen zetten</string>
-    <string name="title_osc_opacity">Transparantie van on-screen besturingselementen aanpassen</string>
     <string name="title_checkbox_enable_pip">Scherm-in-Scherm toeschouwermodus inschakelen</string>
-    <string name="title_disable_frame_drop">Frames nooit overslaan</string>
-    <string name="summary_disable_frame_drop">Kan micro-stotteren op sommige toestellen verminderen, maar kan vertraging verhogen</string>
     <string name="title_enable_hdr">HDR Inschakelen</string>
     <string name="summary_enable_hdr">Stream HDR wanneer het spel en PC-GPU dit ondersteunen. HDR vereist een GPU met HEVC Main 10-coderingsondersteuning.</string>
     <string name="title_enable_perf_overlay">Prestatiestatistieken tonen tijdens het streamen</string>
-    <string name="title_details">Details</string>
     <string name="delete_pc_msg">Bent u zeker dat u deze PC wilt verwijderen\?</string>
-    <string name="resolution_prefix_native_fullscreen">Oorspronkelijk Volledig Scherm</string>
     <string name="help">Hulp</string>
     <string name="perf_overlay_streamdetails">Video stream: %1$s %2$.2f FPS</string>
     <string name="perf_overlay_incomingfps">Binnenkomende frame rate van het netwerk: %1$.2f FPS</string>
     <string name="early_termination_error">Er is iets misgegaan op uw host-PC bij het starten van de stream.\n\nZorg ervoor dat er geen DRM-beveiligde content openstaat op uw host-PC. U kunt ook proberen uw host-PC opnieuw op te starten.</string>
     <string name="perf_overlay_netlatency">Gemiddelde netwerkvertraging: %1$d ms (variantie: %2$d ms)</string>
-    <string name="addpc_wrong_sitelocal">Dat adres lijkt niet te kloppen. U moet het publieke IP-adres van uw router gebruiken om te kunnen streamen over het Internet.</string>
-    <string name="title_native_res_dialog">Oorspronkelijke Resolutie Waarschuwing</string>
-    <string name="text_native_res_dialog">De standaardresolutie en/of FPS worden mogelijk niet ondersteund door de streamingserver. U moet waarschijnlijk handmatig een aangepaste weergavemodus configureren voor de host-PC.\n\nAls u ervoor kiest om een aangepaste resolutie in te stellen in het NVIDIA-configuratiescherm die overeenkomt met uw scherminstellingen, zorg er dan voor dat u de waarschuwing van NVIDIA over mogelijke monitorschade, PC-instabiliteit en andere potentiële problemen hebt gelezen en begrepen.\n\nWij zijn niet verantwoordelijk voor problemen die voortvloeien uit het instellen van een aangepaste resolutie op uw PC.\n\nHet kan zijn dat uw monitor een vereiste weergaveconfiguratie niet ondersteunt. Als dat het geval is kunt u proberen een virtuele monitor in te stellen. Tot slot, als uw apparaat of host-PC streaming met een specifieke resolutie of vernieuwingsfrequentie niet ondersteunt, heeft u helaas pech.</string>
     <string name="summary_fps_list">Verhogen voor een vloeiendere video stream. Verlagen voor betere prestaties op minder krachtige apparaten.</string>
     <string name="summary_audio_config_list">5.1 of 7.1 surround sound inschakelen voor home-cinema systemen</string>
-    <string name="summary_checkbox_touchscreen_trackpad">Wanneer ingeschakeld functioneert het touchscreen als een trackpad. Wanneer uitgeschakeld bedient het touchscreen rechtstreeks de muiscursor.</string>
     <string name="summary_checkbox_usb_bind_all">Gebruik de USB-driver van Delos voor alle ondersteunde gamepads, zelfs als een standaard Xbox controller aanwezig is</string>
     <string name="dialog_text_reset_osc">Bent u zeker dat u uw opgeslagen on-screen controle-elementen wilt verwijderen\?</string>
     <string name="summary_enable_perf_overlay">Real-time prestatie-informatie tonen tijdens het streamen</string>
@@ -198,17 +131,12 @@
     <string name="perf_overlay_renderingfps">Rendering framesnelheid: %1$.2f FPS</string>
     <string name="perf_overlay_netdrops">Frames overgeslagen door uw netwerkverbinding: %1$.2f%%</string>
     <string name="perf_overlay_dectime">Gemiddelde decodeertijd: %1$.2f ms</string>
-    <string name="applist_menu_tv_channel">Toevoegen aan Kanaal</string>
     <!-- Array strings -->
     <string name="videoformat_hevcalways">Gebruik HEVC altijd (mogelijkheid tot crashes)</string>
     <string name="title_enable_commit_text">Commit-tekstinvoer inschakelen (veeg/stem)</string>
     <string name="summary_enable_commit_text">Stuurt meerteksts invoer van softwaretoetsenborden (veegtypen, voorspellingen, spraakdicteren) door naar de pc. Kan problemen geven bij games die per-toetsinvoer vereisen.</string>
-    <string name="pair_pairing_help">Als uw host-PC Sunshine draait, navigeert u naar de Sunshine-webinterface om de PIN in te voeren.</string>
     <string name="error_code_prefix">Fout­code:</string>
-    <string name="resolution_prefix_native_portrait">(portret)</string>
     <string name="suffix_seekbar_vibrate_fallback_strength">%</string>
-    <string name="title_troubleshooting">Handleiding voor probleemoplossing</string>
-    <string name="title_privacy_policy">Privacybeleid</string>
     <string name="resolution_360p">360p</string>
     <string name="resolution_720p">720p</string>
     <string name="resolution_1080p">1080p</string>
@@ -223,11 +151,7 @@
     <string name="pacing_balanced">Gebalanceerd</string>
     <string name="resolution_480p">480p</string>
     <string name="audioconf_stereo">Stereo</string>
-    <string name="title_setup_guide">Installatiehandleiding</string>
-    <string name="category_help">Hulp</string>
     <string name="fps_60">60 FPS</string>
-    <string name="resolution_prefix_native_landscape">(landschap)</string>
-    <string name="fps_suffix_fps">FPS</string>
     <string name="category_gamepad_settings">Gamepad­instellingen</string>
     <string name="title_checkbox_absolute_mouse_mode">Muis­modus voor extern bureau­blad</string>
     <string name="audioconf_71surround">7.1 Surround Sound</string>
@@ -236,10 +160,7 @@
     <string name="analogscroll_right">Rechter analoge stick</string>
     <string name="analogscroll_left">Linker analoge stick</string>
     <string name="audioconf_51surround">5.1 Surround Sound</string>
-    <string name="pcview_menu_eol">NVIDIA GameStream - Beëindiging van service</string>
-    <string name="title_native_fps_dialog">Oorspronkelijke FPS-waarschuwing</string>
     <string name="title_frame_pacing">Video­frame­tempo</string>
-    <string name="summary_privacy_policy">Bekijk het privacybeleid van Delos</string>
     <string name="frame_conversion_error">De host-PC meldde een fatale videocoderingsfout.\n\nProbeer de HDR-modus uit te schakelen, de streamingresolutie te wijzigen of de schermresolutie van uw host-PC te wijzigen.</string>
     <string name="perf_overlay_hostprocessinglatency">Hostverwerkingsvertraging min/max/gemiddeld: %1$.1f/%2$.1f/%3$.1f ms</string>
     <string name="title_checkbox_enable_audiofx">Systeem-equalizerondersteuning inschakelen</string>
@@ -258,8 +179,6 @@
     <string name="summary_checkbox_reduce_refresh_rate">Lagere vernieuwingsfrequenties van het scherm kunnen energie besparen, maar dit kan wel wat extra videovertraging opleveren</string>
     <string name="title_full_range">Video met volledig bereik forceren</string>
     <string name="summary_full_range">Dit leidt tot verlies van details in lichte en donkere gebieden als uw apparaat het volledige bereik van de video-inhoud niet goed weergeeft.</string>
-    <string name="summary_setup_guide">Bekijk instructies over hoe u uw gaming-PC instelt voor streaming</string>
-    <string name="summary_troubleshooting">Bekijk tips voor het diagnosticeren en oplossen van veelvoorkomende streamingproblemen</string>
     <string name="toast_controller_type_changed">Het type gamepad kan worden gewijzigd vanwege de emulatie van bewegingssensoren</string>
     <string name="summary_frame_pacing">Geef aan hoe u de videovertraging en vloeiend beeld wil balanceren</string>
     <string name="pacing_smoothness">Geef de voorkeur aan het meest vloeiende beeld (kan de vertraging aanzienlijk verhogen)</string>

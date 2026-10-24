@@ -39,11 +39,8 @@ import com.limelight.shell.ui.systemAccentHue
 import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
- * Entry point of the new native Delos UI (Phase 6, see docs/UI_PLAN.md).
- *
- * During development it is a second launcher entry in debug builds only ("Delos Next",
- * declared in src/debug/AndroidManifest.xml); the classic UI (PcView) stays the main entry
- * until the switch-over in step 6.9.
+ * Entry point of the Delos UI (Phase 6, see docs/UI_PLAN.md): the launcher activity on phones, TVs and
+ * in multi-window, and the target of art:// links and PC shortcuts.
  */
 class ShellActivity : ComponentActivity() {
     private lateinit var feedback: Feedback

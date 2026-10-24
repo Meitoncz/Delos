@@ -100,7 +100,6 @@ class StreamProfileStore(private val context: Context, val catalog: SettingsCata
             source["list_resolution"] as? String ?: "1280x720", source["list_fps"] as? String ?: "60",
         )
         "seekbar_metered_bitrate_kbps" -> 0
-        "checkbox_small_icon_mode" -> PreferenceConfiguration.getDefaultSmallMode(context)
         "checkbox_gamepad_motion_sensors" -> Build.VERSION.SDK_INT != 31 && (spec.default as? Boolean ?: true)
         else -> spec.default
     }

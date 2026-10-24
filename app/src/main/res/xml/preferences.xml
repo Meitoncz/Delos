@@ -470,12 +470,6 @@
         android:title="@string/category_ui_settings"
         app:initialExpandedChildrenCount="3"
         app:iconSpaceReserved="false">
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="checkbox_resume_without_confirm"
-            android:summary="@string/summary_checkbox_resume_without_confirm"
-            android:title="@string/title_checkbox_resume_without_confirm"
-            app:iconSpaceReserved="false" />
         <com.limelight.preferences.SeekBarPreference
             android:defaultValue="90"
             android:key="seekbar_keyboard_axi_opacity"
@@ -542,11 +536,6 @@
             android:title="@string/title_checkbox_remember_zoom_pan"
             app:iconSpaceReserved="false" />
 
-        <com.limelight.preferences.SmallIconCheckboxPreference
-            android:key="checkbox_small_icon_mode"
-            android:summary="@string/summary_checkbox_small_icon_mode"
-            android:title="@string/title_checkbox_small_icon_mode"
-            app:iconSpaceReserved="false" />
         <CheckBoxPreference
             android:defaultValue="false"
             android:key="checkbox_enable_pip"
@@ -807,13 +796,6 @@
             android:key="checkbox_enable_perf_overlay_lite"
             android:summary="@string/summary_checkbox_enable_perf_overlay_lite"
             android:title="@string/title_checkbox_enable_perf_overlay_lite"
-            app:iconSpaceReserved="false" />
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:dependency="checkbox_enable_perf_overlay"
-            android:key="checkbox_enable_perf_overlay_bottom"
-            android:summary="@string/summary_checkbox_enable_perf_overlay_bottom"
-            android:title="@string/title_checkbox_enable_perf_overlay_bottom"
             app:iconSpaceReserved="false" />
     </PreferenceCategory>
 

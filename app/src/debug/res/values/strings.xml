@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- Launcher label of the new native UI while it is in development (debug builds only) -->
-    <string name="shell_label" translatable="false">Delos Next</string>
-</resources>

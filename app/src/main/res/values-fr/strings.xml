@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Shortcut strings -->
-    <string name="scut_deleted_pc">PC supprimé</string>
     <string name="scut_not_paired">PC non appairé</string>
     <string name="scut_pc_not_found">PC non trouvé</string>
     <string name="scut_invalid_uuid">Le PC fourni n\'est pas valide</string>
@@ -17,20 +16,6 @@
     <string name="align_right">Aligner à droite</string>
 
     <!-- PC view menu entries -->
-    <string name="pcview_menu_header_online">En ligne</string>
-    <string name="pcview_menu_header_offline">Hors ligne</string>
-    <string name="pcview_menu_header_unknown">Actualisation</string>
-    <string name="pcview_menu_app_list">Afficher toutes les applis</string>
-    <string name="pcview_menu_pair_pc">Appairer avec ce PC</string>
-    <string name="pcview_menu_pair_pc_otp">Appairage OTP</string>
-    <string name="pcview_menu_unpair_pc">Désappairer</string>
-    <string name="pcview_menu_send_wol">Envoyer une requête Wake-On-LAN</string>
-    <string name="pcview_menu_delete_pc">Supprimer le PC</string>
-    <string name="pcview_menu_test_network">Tester la connection réseau</string>
-    <string name="pcview_menu_details">Voir les détails</string>
-    <string name="pcview_menu_eol">NVIDIA GameStream : fin de service</string>
-    <string name="pcview_menu_open_management_page">Aller à la configuration du serveur</string>
-    <string name="pcview_error_no_management_url">Impossible d\'ouvrir la page de configuration du serveur, impossible de trouver l\'adresse du serveur.</string>
 
     <!-- Network test strings -->
     <string name="nettest_title_waiting">Test de la connexion réseau</string>
@@ -42,39 +27,14 @@
     <string name="nettest_text_blocked">Votre appareil bloque Delos. Le streaming sur Internet peut ne pas fonctionner lorsque vous êtes connecté à ce réseau.</string>
 
     <!-- Pair messages -->
-    <string name="pairing">Appariement…</string>
-    <string name="pair_pc_confirm_title">Appairer le PC</string>
-    <string name="pair_pc_confirm_message">Voulez-vous vraiment vous appairer avec %s ? Veuillez ne pas vous appairer avec des ordinateurs inconnus.</string>
     <string name="pair_pc_offline">L\'ordinateur est hors ligne</string>
-    <string name="pair_pc_ingame">L\'ordinateur est actuellement dans un jeu. Vous devez fermer le jeu avant l\'appairage.</string>
-    <string name="pair_pairing_title">Appariement</string>
-    <string name="pair_pairing_msg">Veuillez entrer le code PIN suivant sur le PC cible :</string>
-    <string name="pair_pairing_help">Si votre PC hôte utilise Sunshine, accédez à l\'interface web de Sunshine pour saisir le code PIN.</string>
-    <string name="pair_otp_pairing_msg">Appariement, veuillez patienter…</string>
-    <string name="pair_otp_pairing_help">L\'appariement OTP n\'est disponible qu\'avec Apollo, entrez manuellement le code PIN que vous venez de fournir sur l\'interface web si vous utilisez un autre logiciel hôte.</string>
-    <string name="pair_incorrect_pin">Code PIN ou phrase secrète incorrect</string>
-    <string name="pair_fail">Échec de l\'appariement</string>
-    <string name="pair_already_in_progress">Appariement déjà en cours</string>
-    <string name="pair_passphrase_hint">Phrase secrète</string>
-    <string name="pair_pin_length_msg">Le code PIN doit comporter 4 chiffres</string>
-    <string name="pair_passphrase_length_msg">La phrase secrète doit comporter au moins 4 caractères</string>
 
     <!-- WOL messages -->
-    <string name="wol_pc_online">L\'ordinateur est en ligne</string>
-    <string name="wol_no_mac">Impossible de réveiller le PC car il n\'y a pas d\'adresse MAC enregistrée pour ce PC</string>
-    <string name="wol_waking_pc">Réveil PC…</string>
-    <string name="wol_waking_msg">Votre PC peut prendre quelques secondes pour démarrer. S\'il ne démarre toujours pas, assurez-vous qu\'il est correctement configuré pour le Wake-On-LAN.</string>
-    <string name="wol_fail">Échec de l\'envoi des paquets Wake-On-LAN</string>
 
     <!-- Unpair messages -->
-    <string name="unpairing">Désappariage…</string>
-    <string name="unpair_success">Désappairé avec succès</string>
-    <string name="unpair_fail">Échec du désappairage</string>
-    <string name="unpair_error">Le périphérique n\'est appareillé</string>
 
     <!-- Errors -->
     <string name="error_pc_offline">L\'ordinateur est hors ligne</string>
-    <string name="error_manager_not_running">Le service ComputerManager n\'est pas en cours d\'exécution. Veuillez attendre quelques secondes ou redémarrez l\'application.</string>
     <string name="error_unknown_host">Échec de la résolution de l\'hôte</string>
     <string name="error_404">GFE renvoie une erreur HTTP 404. Assurez-vous que votre PC possède un GPU pris en charge. L\'utilisation d\'un logiciel de bureau à distance peut également provoquer cette erreur. Essayez de redémarrer votre machine ou de réinstaller GFE.</string>
     <string name="title_decoding_error">Le décodeur vidéo a planté</string>
@@ -82,7 +42,6 @@
     <string name="title_decoding_reset">Réinitialiser les paramètres vidéo</string>
     <string name="message_decoding_reset">Le décodeur vidéo de votre appareil continue de planter avec les paramètres de streaming sélectionnés. Vos paramètres de streaming ont été réinitialisés à ceux par défaut.</string>
     <string name="error_usb_prohibited">L\'accès USB est interdit par l\'administrateur de votre appareil. Vérifiez vos paramètres Knox ou MDM.</string>
-    <string name="unable_to_pin_shortcut">Votre launcher actuel ne permet pas de créer des raccourcis épinglés.</string>
     <string name="video_decoder_init_failed">Le décodeur vidéo n\'a pas pu démarrer. Vérifiez que votre appareil supporte la résolution ou la fréquence d\'images choisie.</string>
     <string name="no_video_received_error">Aucune vidéo reçue de l\'hôte.</string>
     <string name="no_frame_received_error">Votre connexion réseau ne fonctionne pas bien. Réduisez votre débit ou utilisez une connexion plus rapide.</string>
@@ -101,12 +60,8 @@
     <string name="conn_terminated_msg">La connexion a été interrompue.</string>
 
     <!-- General strings -->
-    <string name="ip_hint">Adresse IP du PC hôte</string>
-    <string name="searching_pc">Recherche de PC hôtes sur votre réseau local…\n\nAssurez-vous que Sunshine est en cours d\'exécution ou que GameStream est activé dans les paramètres GeForce Experience SHIELD.</string>
     <string name="yes">Oui</string>
     <string name="no">Non</string>
-    <string name="lost_connection">Connexion perdue avec le PC</string>
-    <string name="title_details">Détails</string>
     <string name="help">Aide</string>
     <string name="delete_pc_msg">Êtes-vous sûr de vouloir supprimer ce PC ?</string>
     <string name="slow_connection_msg">Connexion lente au PC\nRéduisez votre débit</string>
@@ -122,44 +77,18 @@
 
     <!-- AppList activity -->
     <string name="applist_connect_msg">Connexion au PC…</string>
-    <string name="applist_menu_resume">Reprendre la session</string>
-    <string name="applist_menu_start_vdisplay">Démarrer en affichage virtuel</string>
-    <string name="applist_menu_start_primarydisplay">Démarrer en affichage principal</string>
-    <string name="applist_menu_quit">Quitter la session</string>
-    <string name="applist_menu_quit_and_start">Quitter le jeu actuel et démarrer</string>
-    <string name="applist_menu_quit_and_start_vdisplay">Quitter le jeu actuel et démarrer en affichage virtuel</string>
-    <string name="applist_menu_quit_and_start_primarydisplay">Quitter le jeu actuel et démarrer en affichage principal</string>
-    <string name="applist_menu_cancel">Annuler</string>
-    <string name="applist_menu_details">Voir les détails</string>
-    <string name="applist_menu_scut">Créer un raccourci</string>
-    <string name="applist_menu_tv_channel">Ajouter à la liste de chaînes</string>
-    <string name="applist_menu_hide_app">Cacher l\'application</string>
-    <string name="applist_refresh_title">Liste des applications</string>
-    <string name="applist_refresh_msg">Actualisation des applications…</string>
-    <string name="applist_refresh_error_title">Erreur</string>
-    <string name="applist_refresh_error_msg">Impossible d\'obtenir la liste des applications</string>
     <string name="applist_quit_app">Fermeture de</string>
     <string name="applist_quit_success">Application fermée avec succès</string>
     <string name="applist_quit_fail">Échec de la fermeture</string>
     <string name="applist_quit_confirmation">Voulez-vous vraiment quitter l\'application en cours d\'exécution ? Toutes les données non enregistrées seront perdues.</string>
-    <string name="applist_details_id">ID de l\'appli :</string>
 
     <!-- Add computer manually activity -->
-    <string name="title_add_pc">Ajouter un PC manuellement</string>
-    <string name="msg_add_pc">Connexion au PC…</string>
-    <string name="addpc_fail">Impossible de se connecter à l\'ordinateur spécifié. Assurez-vous que les ports requis sont autorisés via le pare-feu.</string>
-    <string name="addpc_success">Ordinateur ajouté avec succès</string>
-    <string name="addpc_unknown_host">Impossible de résoudre l\'adresse du PC. Assurez-vous que vous n\'avez pas fait de faute de frappe dans l\'adresse.</string>
-    <string name="addpc_enter_ip">Vous devez entrer une adresse IP</string>
-    <string name="addpc_wrong_sitelocal">Cette adresse ne semble pas correcte. Vous devez utiliser l\'adresse IP publique de votre routeur pour le streaming depuis Internet.</string>
 
     <!-- Preferences -->
     <string name="category_general_settings">Paramètres généraux</string>
     <string name="category_video_settings">Paramètres vidéo</string>
     <string name="title_resolution_list">Résolution vidéo</string>
     <string name="summary_resolution_list">Augmentez pour une meilleure clarté de l\'image. Réduisez pour de meilleures performances sur les appareils bas de gamme et les réseaux lents.</string>
-    <string name="title_native_res_dialog">Avertissement sur la résolution native</string>
-    <string name="text_native_res_dialog">La résolution native et/ou le FPS peuvent ne pas être pris en charge par le serveur de streaming. Vous devrez probablement configurer manuellement un mode d\'affichage personnalisé correspondant pour le PC hôte.\n\nSi vous choisissez de créer une résolution personnalisée dans le panneau de configuration NVIDIA pour correspondre aux paramètres de votre écran, assurez-vous d\'avoir lu et compris l\'avertissement de NVIDIA concernant les dommages possibles au moniteur, l\'instabilité du PC et d\'autres problèmes potentiels.\n\nNous ne sommes pas responsables des problèmes résultant de la création d\'une résolution personnalisée sur votre PC.\n\nIl se peut que votre moniteur ne prenne pas en charge la configuration d\'affichage requise. Si c\'est le cas, vous pouvez essayer de configurer un moniteur virtuel. Enfin, si votre appareil ou votre PC hôte ne prend pas en charge le streaming à une résolution ou à un taux de rafraîchissement spécifique, vous ne pourrez pas y faire grand chose malheureusement.</string>
     <string name="title_fps_list">Fréquence d\'images vidéo</string>
     <string name="summary_fps_list">Augmentez pour un flux vidéo plus fluide. Diminuez pour de meilleures performances sur les appareils bas de gamme.</string>
     <string name="title_seekbar_bitrate">Débit vidéo</string>
@@ -169,13 +98,6 @@
     <string name="suffix_seekbar_bitrate_mbps">Mbps</string>
     <string name="title_resolution_scale_factor">Facteur d\'échelle de la résolution</string>
     <string name="summary_resolution_scale_factor">La résolution de l\'écran virtuel demandée côté serveur sera multipliée par ce facteur. Le streaming résolution ne sera pas affecté.\nPar exemple, 120 % transformera 2000x1000 en 2400x1200.\nL\'utilisation d\'un facteur d\'échelle plus élevé améliorera la qualité de l\'image pour certains jeux.\nNécessite Apollo pour prendre effet.</string>
-    <string name="resolution_prefix_native">Native</string>
-    <string name="resolution_prefix_native_fullscreen">Plein-écran natif</string>
-    <string name="resolution_prefix_native_landscape">(Paysage)</string>
-    <string name="resolution_prefix_native_portrait">(Portrait)</string>
-    <string name="resolution_prefix_custom">Personnalisée</string>
-    <string name="fps_suffix_fps">FPS</string>
-    <string name="title_native_fps_dialog">Avertissement sur le FPS natif</string>
     <string name="title_checkbox_auto_invert_video_resolution">Inverser automatiquement la résolution</string>
     <string name="summary_checkbox_auto_invert_video_resolution">Inverse automatiquement la largeur et la hauteur du flux vidéo en mode portrait.\nPar exemple : 1920x1080 deviendra 1080x1920.</string>
     <string name="title_video_scale_mode">Mode d\'échelle vidéo</string>
@@ -192,13 +114,10 @@
 
     <string name="category_gamepad_settings">Paramètres manette</string>
     <string name="title_checkbox_multi_controller">Détection automatique de la présence de la manette</string>
-    <string name="title_checkbox_stretch_video">Étirer la vidéo en plein écran</string>
     <string name="title_checkbox_disable_warnings">Désactiver les messages d\'avertissement</string>
     <string name="title_checkbox_enable_pip">Activer le mode observateur</string>
     <string name="summary_checkbox_enable_pip">Permet de visualiser le stream (sans le contrôler) tout en utilisant une autre appli</string>
     <string name="category_input_settings">Paramètres d\'entrée</string>
-    <string name="title_checkbox_touchscreen_trackpad">Utiliser l\'écran tactile comme trackpad</string>
-    <string name="summary_checkbox_touchscreen_trackpad">Si activé, l\'écran tactile agit comme un trackpad. Si désactivé, l\'écran tactile contrôle directement le curseur de la souris.</string>
     <string name="summary_checkbox_multi_controller">Décocher cette option force une manette à toujours être présente</string>
     <string name="title_checkbox_vibrate_fallback">Émuler les vibrations de la manette avec l\'appareil</string>
     <string name="summary_checkbox_vibrate_fallback">Fait vibrer votre appareil pour émuler les vibrations de la manette si elle ne le supporte pas</string>
@@ -245,8 +164,6 @@
     <string name="summary_reset_osc">Réinitialise la taille et la position par défaut de tous les contrôles à l\'écran</string>
     <string name="dialog_title_reset_osc">Réinitialiser la disposition</string>
     <string name="dialog_text_reset_osc">Êtes-vous sûr de vouloir supprimer votre disposition de commandes à l\'écran ?</string>
-    <string name="toast_reset_osc_success">Les commandes à l\'écran ont été réinitialisées</string>
-    <string name="title_osc_opacity">Modifier l\'opacité des commandes à l\'écran</string>
     <string name="summary_osc_opacity">Rendez les commandes à l\'écran plus ou moins transparentes</string>
     <string name="dialog_title_osc_opacity">Modifier l\'opacité</string>
     <string name="suffix_osc_opacity">%</string>
@@ -254,8 +171,6 @@
     <string name="category_ui_settings">Paramètres de l\'interface utilisateur</string>
     <string name="title_language_list">Langue</string>
     <string name="summary_language_list">Langue à utiliser pour Delos</string>
-    <string name="title_checkbox_small_icon_mode">Utiliser des petites icônes</string>
-    <string name="summary_checkbox_small_icon_mode">Des icônes plus petites permettent d\'afficher plus d\'applications en même temps</string>
 
     <string name="category_host_settings">Paramètres de l\'hôte</string>
     <string name="title_checkbox_host_audio">Lire l\'audio sur le PC</string>
@@ -267,8 +182,6 @@
     <string name="title_checkbox_reduce_refresh_rate">Autoriser la réduction du taux de rafraîchissement</string>
     <string name="summary_checkbox_reduce_refresh_rate">Des taux de rafraîchissement d\'affichage plus bas peuvent économiser de l\'énergie au détriment d\'une latence vidéo plus importante</string>
     <string name="summary_checkbox_disable_warnings">Désactive les messages d\'avertissement sur la connexion pendant le stream</string>
-    <string name="title_disable_frame_drop">Ne jamais perdre d\'images</string>
-    <string name="summary_disable_frame_drop">Peut réduire les micro-saccades sur certains appareils, mais peut augmenter la latence</string>
     <string name="title_video_format">Modifier les paramètres de codec</string>
     <string name="summary_video_format">Les nouveaux codecs peuvent réduire la bande passante vidéo requise si votre appareil les prend en charge. Les codecs sélectionnés peuvent être ignorés si ils ne sont pas pris en charge par le logiciel hôte ou le GPU.</string>
     <string name="title_enable_hdr">Activer le HDR</string>
@@ -278,13 +191,6 @@
     <string name="title_enable_perf_overlay">Afficher les statistiques de performance lors du stream</string>
     <string name="summary_enable_perf_overlay">Affiche des informations sur les performances du stream en temps réel pendant le stream</string>
 
-    <string name="category_help">Aide</string>
-    <string name="title_setup_guide">Guide de configuration</string>
-    <string name="summary_setup_guide">Voir les instructions sur la façon de configurer votre PC de jeu pour le streaming</string>
-    <string name="title_troubleshooting">Guide de dépannage</string>
-    <string name="summary_troubleshooting">Voir des conseils pour diagnostiquer et résoudre les problèmes de streaming courants</string>
-    <string name="title_privacy_policy">Politique de confidentialité</string>
-    <string name="summary_privacy_policy">Voir la politique de confidentialité de Delos</string>
     <string name="title_special_key_help">Aide sur les touches spéciales personnalisées</string>
     <string name="summary_special_key_help">Instructions sur la configuration des touches spéciales personnalisées</string>
 
@@ -354,7 +260,6 @@
     <string name="game_menu_send_keys_shift_tab">Shift + Tab (Overlay Steam)</string>
     <string name="game_menu_send_keys_alt_enter">Alt + Entrée</string>
     <string name="game_menu_send_keys_win_shift_left">Win + Maj + Gauche (Déplacer l\'application entre les bureaux)</string>
-    <string name="game_menu_send_keys_ctrl_alt_shift_q">Ctrl+Alt+Shift+Q (PC Quitter le streaming)</string>
     <string name="game_menu_send_keys_ctrl_alt_shift_f1">Ctrl+Alt+Shift+F1 (Changer de moniteur)</string>
     <string name="game_menu_send_keys_ctrl_alt_shift_f12">Ctrl+Alt+Shift+F12 (Changer de moniteur)</string>
 
@@ -367,9 +272,7 @@
     <string name="perf_overlay_lite_net">%1$dms</string>
     <string name="perf_overlay_lite_dectime">%1$.2fms</string>
     <string name="perf_overlay_lite_netdrops">%1$.2f%%</string>
-    <string name="perf_overlay_lite_streamdetails">%1$s</string>
     <string name="perf_overlay_lite_fps">%1$.2f</string>
-    <string name="perf_overlay_lite_decoder">Décodeur : %1$s</string>
     <string name="title_import_keyboard_layout">Importer la disposition du clavier</string>
     <string name="title_export_keyboard_layout">Exporter la disposition du clavier</string>
     <string name="summary_import_keyboard_layout">Cela écrasera la disposition actuelle.</string>
@@ -421,8 +324,6 @@
     <string name="summary_free_analog_stick">Les points centraux des sticks gauche et droit de la manette virtuelle ne sont pas fixes, ils peuvent être ajustés librement dans une certaine plage de mouvement.</string>
     <string name="summary_free_analog_stick_opacity">Par défaut, seul le fond est affiché lorsque le stick bouge. Si vous n\'aimez pas cela, vous pouvez ajuster l\'effet d\'opacité.</string>
     <string name="title_free_analog_stick_opacity">Opacité du fond du stick analogique libre</string>
-    <string name="title_exdisplay_mode">Mode d\'affichage externe</string>
-    <string name="summary_exdisplay_mode">Affichage du flux sur le moniteur, boutons virtuels et informations de performance et autres contrôles sur l\'écran du téléphone.</string>
     <string name="title_top_center_display">Affichage en haut au centre</string>
     <string name="summary_top_center_display">L\'image de streaming sera alignée en haut de l\'écran au lieu d\'être centrée lorsque la résolution n\'est pas native.</string>
     <string name="title_touch_sensitivity">Sensibilité de l\'écran tactile</string>
@@ -479,8 +380,6 @@
     <string name="summary_checkbox_ultra_low_latency">Efficace uniquement pour SD8Gen2/8(s)Gen3/8Elite.</string>
     <string name="title_checkbox_use_virtual_display">Utiliser l\'affichage virtuel</string>
     <string name="summary_checkbox_use_virtual_display">Utiliser l\'affichage virtuel par défaut.\nL\'affichage virtuel peut correspondre automatiquement à la résolution et au taux de rafraîchissement de votre appareil, offrant une expérience de streaming fluide.\nNécessite Apollo comme logiciel de streaming hôte.</string>
-    <string name="title_checkbox_resume_without_confirm">Reprise rapide</string>
-    <string name="summary_checkbox_resume_without_confirm">Ne pas afficher le menu de reprise lors du clic sur le bouton de reprise, reprendre l\'application immédiatement.</string>
     <string name="title_checkbox_enable_sticky_modifier_key_virtual_keyboard">Touches modificatrices adhésives</string>
     <string name="summary_checkbox_enable_sticky_modifier_key_virtual_keyboard">Utiliser les touches modificatrices adhésives sur le clavier virtuel complet et le clavier personnalisé à l\'écran.</string>
     <string name="virtual_keyboard_hide">Masquer\nCLAVIER</string>
@@ -491,47 +390,7 @@
     <string name="mouse_mode_disabled">Désactivé</string>
     <string name="mouse_mode_absolute_touch_swapped">Toucher absolu (clic gauche/droit inversé)</string>
     <string name="keyboard_layout_set_1">Profil 1</string>
-    <string name="keyboard_layout_set_2">Profil 2</string>
-    <string name="keyboard_layout_set_3">Profil 3</string>
-    <string name="keyboard_layout_set_4">Profil 4</string>
-    <string name="keyboard_layout_set_5">Profil 5</string>
     <string name="toggle_local_mouse_cursor">Basculer le curseur local de la souris (souris physique requise)</string>
-    <string name="debug_info_android_version">Version Android :</string>
-    <string name="debug_info_api_version">Version API :</string>
-    <string name="debug_info_kernel_version">Version du noyau :</string>
-    <string name="debug_info_brand_model">Marque et modèle :</string>
-    <string name="debug_info_has_vibration_motor">A un moteur de vibration</string>
-    <string name="debug_info_no_vibration_motor">Pas de moteur de vibration</string>
-    <string name="debug_info_test_device_vibration">Tester la vibration de l\'appareil (%s)</string>
-    <string name="debug_info_vibration_amplitude">Amplitude de vibration (%d)</string>
-    <string name="debug_info_simple_vibration">Vibration simple pendant 1 seconde</string>
-    <string name="debug_info_continuous_hd_vibration">Vibration HD continue</string>
-    <string name="debug_info_please_choose">Veuillez choisir</string>
-    <string name="debug_info_no_gamepad_detected">Aucune manette détectée, veuillez connecter une manette, appuyer sur actualiser, puis réessayer !</string>
-    <string name="debug_info_no_vibrator">Aucun vibreur détecté sur la manette !</string>
-    <string name="debug_info_set_amplitude">Définir l\'amplitude 0-255 (Efficace uniquement pour la vibration HD)</string>
-    <string name="debug_info_name">Nom : </string>
-    <string name="debug_info_sensors">Capteurs : </string>
-    <string name="debug_info_no_relevant_driver">Aucun (aucun pilote pertinent ou manette non prise en charge)</string>
-    <string name="debug_info_no_api_below_android12">Aucune API correspondante en dessous d\'Android 12</string>
-    <string name="debug_info_vid_pid">VID_PID : </string>
-    <string name="debug_info_vibration">Vibration : </string>
-    <string name="debug_info_supported">Pris en charge</string>
-    <string name="debug_info_not_supported">Non pris en charge</string>
-    <string name="debug_info_details">Détails : </string>
-    <string name="debug_info_number_of_gamepads">Nombre de manettes : </string>
-    <string name="debug_info_accelerometer">+ Accéléromètre</string>
-    <string name="debug_info_gyroscope">+ Gyroscope</string>
-    <string name="debug_info_stop_vibration">Arrêter la vibration</string>
-    <string name="debug_info_refresh_gamepad_info">Appuyer pour actualiser les infos de la manette</string>
-    <string name="debug_info_refresh_gamepad_list">Actualiser la liste des manettes</string>
-    <string name="debug_info_test_gamepad_rumble">Tester la vibration de la manette</string>
-    <string name="pref_enter_value_0_9999">Veuillez entrer une valeur entre 0 et 9999.</string>
-    <string name="pref_set_success">Paramètres sauvegardés avec succès !</string>
-    <string name="pref_empty_file">Fichier vide !</string>
-    <string name="pref_import_success">Importation réussie !</string>
-    <string name="pref_error_occurred">Une erreur s\'est produite : </string>
-    <string name="pref_save_keyboard_profile">Enregistrer le profil OSK</string>
     <string name="game_menu_advanced">Menu avancé</string>
     <string name="game_dialog_title_quit_confirm">Voulez-vous vraiment quitter ?</string>
     <string name="game_dialog_message_quit_confirm">Veuillez vous assurer que vous n\'avez aucune progression non enregistrée. La quittance de la session mettra fin à l\'application en cours d\'exécution.</string>
@@ -558,11 +417,9 @@
     <string name="error_msg_permission_denied">Autorisation refusée</string>
     <string name="error_msg_timeout">Délai de connexion dépassé</string>
     <string name="permission_launch_app">Lancer les applications</string>
-    <string name="permission_sync_clipboard">Synchroniser le presse-papiers</string>
     <string name="title_enable_commit_text">Activer la saisie commit-text (gestes/voix)</string>
     <string name="summary_enable_commit_text">Transfère le texte multi-caractères des claviers virtuels (saisie gestuelle, suggestions, dictée vocale). Peut perturber les jeux qui attendent des frappes une par une.</string>
     <string name="title_checkbox_remember_zoom_pan">Mémoriser le zoom et le panoramique</string>
     <string name="summary_checkbox_remember_zoom_pan">Enregistre la position de zoom et de panoramique entre les sessions.</string>
-    <string name="title_edit_profile">Modifier le profil</string>
     <string name="error_code_prefix">Code d\'erreur :</string>
 </resources>

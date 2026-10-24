@@ -11,7 +11,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import com.limelight.DebugInfoActivity
+import com.limelight.shell.Screen
 import com.limelight.GameMenu
 import com.limelight.binding.input.virtual_controller.VirtualControllerConfigurationLoader
 import com.limelight.shell.DialogField
@@ -110,7 +110,7 @@ internal fun settingsActions(profiles: ProfileStore, stream: StreamSettingsStore
                 exported = JSONObject(ProfileLayouts.preferences(context, name).all).toString(2)
                 runCatching { exportFile.launch("$name.json") }.onFailure { shell.showToast("No file picker available", Symbols.ERROR) }
             }
-            "pref_debug_info" -> context.startActivity(Intent(context, DebugInfoActivity::class.java))
+            "pref_debug_info" -> shell.navigate(Screen.DebugInfo)
             else -> if (spec.url != null) {
                 runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(spec.url))) }
                     .onFailure { shell.showToast("No app can open this link", Symbols.ERROR) }

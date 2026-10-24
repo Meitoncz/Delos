@@ -92,6 +92,7 @@ import com.limelight.shell.data.LocalArtwork
 import com.limelight.shell.data.downloadAll
 import com.limelight.shell.ui.ArtworkProgressBar
 import com.limelight.shell.screens.ArtworkScreen
+import com.limelight.shell.screens.DebugInfoScreen
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 
@@ -398,6 +399,7 @@ fun Shell(
                         }
                         is Screen.PairPc -> PairPcScreen(screen, pcs)
                         is Screen.Artwork -> ArtworkScreen(screen)
+                        Screen.DebugInfo -> DebugInfoScreen()
                         is Screen.Pin -> PinScreen(
                             screen, repo, setup,
                             onFailed = { message ->
@@ -553,6 +555,7 @@ private fun hints(shell: ShellState, adjustable: Boolean): List<Hint> {
             is Screen.CreateProfile -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"))
             is Screen.PairPc -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"), Hint(Glyph.MENU_RIGHT, "Options"))
             is Screen.Pin -> listOf(Hint(Glyph.B, "Cancel"))
+            Screen.DebugInfo -> adjust + listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"))
             is Screen.Artwork -> listOf(Hint(Glyph.L1, "Previous tab"), Hint(Glyph.R1, "Next tab"), Hint(Glyph.A, "Use"), Hint(Glyph.B, "Back"))
             Screen.Profile, Screen.Devices -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"), Hint(Glyph.MENU_LEFT, "Menu"))
         }

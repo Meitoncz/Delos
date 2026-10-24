@@ -6,6 +6,4 @@
         <item name="android:forceDarkAllowed">false</item>
     </style>
 
-    <style name="SettingsTheme" parent="AppTheme">
-    </style>
 </resources>

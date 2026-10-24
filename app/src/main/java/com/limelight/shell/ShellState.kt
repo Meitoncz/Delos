@@ -58,6 +58,11 @@ sealed interface Screen {
     /** The PCs to pair: discovered ones, an address to enter, searching again. */
     data class PairPc(override val back: Screen?) : Screen
 
+    /** Debug info: the device, a vibration test and the connected controllers (Settings → About). */
+    data object DebugInfo : Screen {
+        override val back: Screen get() = Settings
+    }
+
     /** The SteamGridDB artwork of one game, chosen by hand (the game's options → Artwork). */
     data class Artwork(val pc: com.limelight.shell.data.Pc, val app: com.limelight.shell.data.App) : Screen {
         override val back: Screen get() = Home

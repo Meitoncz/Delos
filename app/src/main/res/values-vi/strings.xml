@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Shortcut strings -->
-    <string name="scut_deleted_pc">Đã xóa PC</string>
     <string name="scut_not_paired">Chưa ghép nối PC</string>
     <string name="scut_pc_not_found">Không tìm thấy PC</string>
     <string name="scut_invalid_uuid">PC được cung cấp không hợp lệ</string>
@@ -17,20 +16,6 @@
     <string name="align_right">Căn phải</string>
 
     <!-- PC view menu entries -->
-    <string name="pcview_menu_header_online">Trực tuyến</string>
-    <string name="pcview_menu_header_offline">Ngoại tuyến</string>
-    <string name="pcview_menu_header_unknown">Đang làm mới</string>
-    <string name="pcview_menu_app_list">Xem tất cả ứng dụng</string>
-    <string name="pcview_menu_pair_pc">Ghép nối cũ</string>
-    <string name="pcview_menu_pair_pc_otp">Ghép nối OTP</string>
-    <string name="pcview_menu_unpair_pc">Hủy ghép nối</string>
-    <string name="pcview_menu_send_wol">Gửi yêu cầu Wake-On-LAN</string>
-    <string name="pcview_menu_delete_pc">Xóa PC</string>
-    <string name="pcview_menu_test_network">Kiểm tra kết nối mạng</string>
-    <string name="pcview_menu_details">Xem chi tiết</string>
-    <string name="pcview_menu_eol">NVIDIA GameStream Kết thúc dịch vụ</string>
-    <string name="pcview_menu_open_management_page">Đi đến cấu hình máy chủ</string>
-    <string name="pcview_error_no_management_url">Không thể mở trang cấu hình máy chủ, không thể tìm thấy địa chỉ máy chủ.</string>
 
     <!-- Network test strings -->
     <string name="nettest_title_waiting">Đang kiểm tra kết nối mạng</string>
@@ -42,41 +27,14 @@
     <string name="nettest_text_blocked">Kết nối mạng hiện tại của thiết bị của bạn đang chặn Delos. Phát trực tuyến qua Internet có thể không hoạt động khi kết nối với mạng này.</string>
 
     <!-- Pair messages -->
-    <string name="pairing">Đang ghép nối…</string>
-    <string name="pair_pc_confirm_title">Ghép nối PC</string>
-    <string name="pair_pc_confirm_message">Bạn có thực sự muốn ghép nối với %s không? Vui lòng không ghép nối với bất kỳ máy tính nào không quen thuộc.</string>
     <string name="pair_pc_offline">Máy tính đang ngoại tuyến</string>
-    <string name="pair_pc_ingame">Máy tính hiện đang trong trò chơi. Bạn phải đóng trò chơi trước khi ghép nối.</string>
-    <string name="pair_pairing_title">Đang ghép nối</string>
-    <string name="pair_pairing_msg">Vui lòng nhập mã PIN sau trên PC mục tiêu:</string>
-    <string name="pair_pairing_help">Nếu PC chủ của bạn đang chạy Sunshine, hãy điều hướng đến giao diện web của Sunshine để nhập mã PIN.</string>
-    <string name="pair_otp_pairing_msg">Đang ghép nối, vui lòng đợi…</string>
-    <string name="pair_otp_pairing_help">Ghép nối OTP chỉ khả dụng với Apollo, nhập mã PIN bạn vừa cung cấp trên giao diện web theo cách thủ công nếu bạn đang sử dụng phần mềm máy chủ khác.</string>
-    <string name="pair_incorrect_pin">Mã PIN hoặc mật khẩu không chính xác</string>
-    <string name="pair_fail">Ghép nối thất bại</string>
-    <string name="pair_already_in_progress">Ghép nối đã đang diễn ra</string>
-    <string name="pair_passphrase_hint">Mật khẩu</string>
-    <string name="pair_pin_length_msg">Mã PIN phải dài 4 chữ số</string>
-    <string name="pair_passphrase_length_msg">Mật khẩu phải dài ít nhất 4 ký tự</string>
 
     <!-- WOL messages -->
-    <string name="wol_pc_online">Máy tính đang trực tuyến</string>
-    <string name="wol_no_mac">Không thể đánh thức PC vì không có địa chỉ MAC được lưu trữ</string>
-    <string name="wol_waking_pc">Đang đánh thức PC…</string>
-    <string name="wol_waking_msg">Có thể mất vài giây để PC của bạn thức dậy.
-	    Nếu không, hãy đảm bảo rằng nó được cấu hình đúng cách cho Wake-On-LAN.
-    </string>
-    <string name="wol_fail">Không thể gửi các gói Wake-On-LAN</string>
 
     <!-- Unpair messages -->
-    <string name="unpairing">Đang hủy ghép nối…</string>
-    <string name="unpair_success">Hủy ghép nối thành công</string>
-    <string name="unpair_fail">Hủy ghép nối thất bại</string>
-    <string name="unpair_error">Thiết bị chưa được ghép nối</string>
 
     <!-- Errors -->
     <string name="error_pc_offline">Máy tính đang ngoại tuyến</string>
-    <string name="error_manager_not_running">Dịch vụ ComputerManager không hoạt động. Vui lòng đợi vài giây hoặc khởi động lại ứng dụng.</string>
     <string name="error_unknown_host">Không thể giải quyết máy chủ</string>
     <string name="error_404">GFE trả về lỗi HTTP 404. Đảm bảo PC của bạn đang chạy GPU được hỗ trợ.
 	    Sử dụng phần mềm điều khiển từ xa cũng có thể gây ra lỗi này. Thử khởi động lại máy của bạn hoặc cài đặt lại GFE.
@@ -86,7 +44,6 @@
     <string name="title_decoding_reset">Cài đặt video đã được đặt lại</string>
     <string name="message_decoding_reset">Bộ giải mã video của thiết bị của bạn tiếp tục gặp sự cố ở cài đặt phát trực tuyến đã chọn. Cài đặt phát trực tuyến của bạn đã được đặt lại về mặc định.</string>
     <string name="error_usb_prohibited">Truy cập USB bị cấm bởi quản trị viên thiết bị của bạn. Kiểm tra cài đặt Knox hoặc MDM của bạn.</string>
-    <string name="unable_to_pin_shortcut">Trình khởi chạy hiện tại của bạn không cho phép tạo các phím tắt được ghim.</string>
     <string name="video_decoder_init_failed">Bộ giải mã video không thể khởi tạo. Thiết bị của bạn có thể không hỗ trợ độ phân giải hoặc tốc độ khung hình đã chọn.</string>
     <string name="no_video_received_error">Không nhận được video từ máy chủ.</string>
     <string name="no_frame_received_error">Kết nối mạng của bạn không hoạt động tốt. Giảm cài đặt tốc độ bit video của bạn hoặc thử kết nối nhanh hơn.</string>
@@ -106,13 +63,8 @@
     <string name="error_code_prefix">Mã lỗi:</string>
 
     <!-- General strings -->
-    <string name="ip_hint">Địa chỉ IP của PC máy chủ</string>
-    <string name="searching_pc">Đang tìm kiếm PC máy chủ trên mạng cục bộ của bạn…\n\n
-        Đảm bảo Sunshine đang chạy trên PC máy chủ của bạn hoặc GameStream được bật trong cài đặt SHIELD của GeForce Experience.</string>
     <string name="yes">Có</string>
     <string name="no">Không</string>
-    <string name="lost_connection">Mất kết nối với PC</string>
-    <string name="title_details">Chi tiết</string>
     <string name="help">Trợ giúp</string>
     <string name="delete_pc_msg">Bạn có chắc chắn muốn xóa PC này không?</string>
     <string name="slow_connection_msg">Kết nối chậm với PC\nGiảm tốc độ bit của bạn</string>
@@ -128,44 +80,18 @@
 
     <!-- AppList activity -->
     <string name="applist_connect_msg">Đang kết nối với PC…</string>
-    <string name="applist_menu_resume">Tiếp tục phiên</string>
-    <string name="applist_menu_start_vdisplay">Bắt đầu trong Màn hình ảo</string>
-    <string name="applist_menu_start_primarydisplay">Bắt đầu trong Màn hình chính</string>
-    <string name="applist_menu_quit">Thoát phiên</string>
-    <string name="applist_menu_quit_and_start">Thoát trò chơi hiện tại và bắt đầu</string>
-    <string name="applist_menu_quit_and_start_vdisplay">Thoát trò chơi hiện tại và bắt đầu trong Màn hình ảo</string>
-    <string name="applist_menu_quit_and_start_primarydisplay">Thoát trò chơi hiện tại và bắt đầu trong Màn hình chính</string>
-    <string name="applist_menu_cancel">Hủy</string>
-    <string name="applist_menu_details">Xem chi tiết</string>
-    <string name="applist_menu_scut">Tạo phím tắt</string>
-    <string name="applist_menu_tv_channel">Thêm vào Kênh</string>
-    <string name="applist_menu_hide_app">Ẩn ứng dụng</string>
-    <string name="applist_refresh_title">Danh sách ứng dụng</string>
-    <string name="applist_refresh_msg">Đang làm mới ứng dụng…</string>
-    <string name="applist_refresh_error_title">Lỗi</string>
-    <string name="applist_refresh_error_msg">Không thể lấy danh sách ứng dụng</string>
     <string name="applist_quit_app">Đang thoát</string>
     <string name="applist_quit_success">Thoát thành công</string>
     <string name="applist_quit_fail">Thoát thất bại</string>
     <string name="applist_quit_confirmation">Bạn có chắc chắn muốn thoát ứng dụng đang chạy không? Tất cả dữ liệu chưa lưu sẽ bị mất.</string>
-    <string name="applist_details_id">ID ứng dụng:</string>
 
     <!-- Add computer manually activity -->
-    <string name="title_add_pc">Thêm PC thủ công</string>
-    <string name="msg_add_pc">Đang kết nối với PC…</string>
-    <string name="addpc_fail">Không thể kết nối với máy tính được chỉ định. Đảm bảo rằng các cổng cần thiết được phép thông qua tường lửa.</string>
-    <string name="addpc_success">Thêm máy tính thành công</string>
-    <string name="addpc_unknown_host">Không thể giải quyết địa chỉ PC. Đảm bảo rằng bạn không mắc lỗi chính tả trong địa chỉ.</string>
-    <string name="addpc_enter_ip">Bạn phải nhập địa chỉ IP</string>
-    <string name="addpc_wrong_sitelocal">Địa chỉ đó không đúng. Bạn phải sử dụng địa chỉ IP công cộng của bộ định tuyến của mình để phát trực tuyến qua Internet.</string>
 
     <!-- Preferences -->
     <string name="category_general_settings">Cài đặt chung</string>
     <string name="category_video_settings">Cài đặt video</string>
     <string name="title_resolution_list">Độ phân giải video</string>
     <string name="summary_resolution_list">Tăng để cải thiện độ rõ nét của hình ảnh. Giảm để có hiệu suất tốt hơn trên các thiết bị cấp thấp và mạng chậm hơn.</string>
-    <string name="title_native_res_dialog">Cảnh báo độ phân giải gốc</string>
-    <string name="text_native_res_dialog">Độ phân giải gốc và/hoặc FPS có thể không được máy chủ phát trực tuyến hỗ trợ. Bạn có thể cần cấu hình chế độ hiển thị tùy chỉnh phù hợp cho PC máy chủ theo cách thủ công.\n\nNếu bạn chọn tạo độ phân giải tùy chỉnh trong Bảng điều khiển NVIDIA để phù hợp với cài đặt màn hình của mình, vui lòng đảm bảo rằng bạn đã đọc và hiểu cảnh báo của NVIDIA về khả năng hỏng màn hình, sự không ổn định của PC và các vấn đề tiềm ẩn khác.\n\nChúng tôi không chịu trách nhiệm cho bất kỳ vấn đề nào phát sinh từ việc tạo độ phân giải tùy chỉnh trên PC của bạn.\n\nCó thể màn hình của bạn không hỗ trợ cấu hình hiển thị cần thiết. Nếu vậy, bạn có thể thử thiết lập màn hình ảo. Cuối cùng, nếu thiết bị hoặc PC máy chủ của bạn không hỗ trợ phát trực tuyến ở độ phân giải hoặc tốc độ làm mới cụ thể, bạn không may mắn.</string>
     <string name="title_fps_list">Tốc độ khung hình video</string>
     <string name="summary_fps_list">Tăng để có luồng video mượt mà hơn. Giảm để có hiệu suất tốt hơn trên các thiết bị cấp thấp.</string>
     <string name="title_seekbar_bitrate">Tốc độ bit video</string>
@@ -175,13 +101,6 @@
     <string name="suffix_seekbar_bitrate_mbps">Mbps</string>
     <string name="title_resolution_scale_factor">Hệ số tỷ lệ độ phân giải</string>
     <string name="summary_resolution_scale_factor" formatted="false">Độ phân giải màn hình ảo được yêu cầu phía máy chủ sẽ được nhân với hệ số này. Độ phân giải phát trực tuyến không bị ảnh hưởng.\nVí dụ: 120% sẽ làm cho 2000x1000 trở thành 2400x1200.\nĐặt hệ số tỷ lệ cao hơn sẽ cải thiện chất lượng hình ảnh cho một số trò chơi.\nYêu cầu Apollo để có hiệu lực.</string>
-    <string name="resolution_prefix_native">Gốc</string>
-    <string name="resolution_prefix_native_fullscreen">Gốc Toàn màn hình</string>
-    <string name="resolution_prefix_native_landscape">(Ngang)</string>
-    <string name="resolution_prefix_native_portrait">(Dọc)</string>
-    <string name="resolution_prefix_custom">Tùy chỉnh</string>
-    <string name="fps_suffix_fps">FPS</string>
-    <string name="title_native_fps_dialog">Cảnh báo FPS gốc</string>
     <string name="title_checkbox_auto_invert_video_resolution">Tự động đảo ngược độ phân giải</string>
     <string name="summary_checkbox_auto_invert_video_resolution">Tự động đảo ngược chiều rộng và chiều cao của luồng video khi ở chế độ dọc.\nVí dụ: 1920x1080 sẽ trở thành 1080x1920.</string>
     <string name="title_video_scale_mode">Chế độ tỷ lệ video</string>
@@ -225,8 +144,6 @@
     <string name="summary_checkbox_force_device_motion">Buộc sử dụng cảm biến chuyển động tích hợp của thiết bị ngay cả khi gamepad báo cáo cảm biến chuyển động được hỗ trợ.</string>
 
     <string name="category_input_settings">Cài đặt đầu vào</string>
-    <string name="title_checkbox_touchscreen_trackpad">Sử dụng màn hình cảm ứng như bàn di chuột</string>
-    <string name="summary_checkbox_touchscreen_trackpad">Nếu bật, màn hình cảm ứng hoạt động như bàn di chuột. Nếu tắt, màn hình cảm ứng trực tiếp điều khiển con trỏ chuột.</string>
     <string name="title_checkbox_absolute_mouse_mode">Chế độ chuột máy tính từ xa</string>
     <string name="summary_checkbox_absolute_mouse_mode">Điều này có thể làm cho gia tốc chuột hoạt động tự nhiên hơn cho việc sử dụng máy tính từ xa, nhưng không tương thích với nhiều trò chơi.</string>
     <string name="title_checkbox_mouse_nav_buttons">Bật nút chuột quay lại và tiến</string>
@@ -247,8 +164,6 @@
     <string name="summary_reset_osc">Đặt lại tất cả các điều khiển trên màn hình về kích thước và vị trí mặc định của chúng</string>
     <string name="dialog_title_reset_osc">Đặt lại bố cục</string>
     <string name="dialog_text_reset_osc">Bạn có chắc chắn muốn xóa bố cục điều khiển trên màn hình đã lưu của mình không?</string>
-    <string name="toast_reset_osc_success">Điều khiển trên màn hình đã được đặt lại về mặc định</string>
-    <string name="title_osc_opacity">Thay đổi độ mờ của điều khiển trên màn hình</string>
     <string name="summary_osc_opacity">Làm cho các điều khiển trên màn hình trong suốt hơn/ít hơn</string>
     <string name="dialog_title_osc_opacity">Thay đổi độ mờ</string>
     <string name="suffix_osc_opacity">%</string>
@@ -258,8 +173,6 @@
     <string name="summary_checkbox_enable_pip">Cho phép xem luồng trong khi thực hiện đa nhiệm</string>
     <string name="title_language_list">Ngôn ngữ</string>
     <string name="summary_language_list">Ngôn ngữ sử dụng cho Delos</string>
-    <string name="title_checkbox_small_icon_mode">Chế độ biểu tượng nhỏ</string>
-    <string name="summary_checkbox_small_icon_mode">Hiển thị biểu tượng nhỏ hơn trong lưới ứng dụng để hiển thị nhiều ứng dụng hơn</string>
 
     <string name="category_host_settings">Cài đặt máy chủ</string>
     <string name="title_checkbox_host_audio">Phát âm thanh trên PC</string>
@@ -272,8 +185,6 @@
     <string name="summary_checkbox_reduce_refresh_rate">Tốc độ làm mới màn hình thấp hơn có thể tiết kiệm năng lượng với chi phí tăng thêm một số độ trễ video</string>
     <string name="title_checkbox_disable_warnings">Tắt thông báo cảnh báo</string>
     <string name="summary_checkbox_disable_warnings">Tắt thông báo cảnh báo kết nối trên màn hình trong khi phát trực tuyến</string>
-    <string name="title_disable_frame_drop">Không bao giờ bỏ khung hình</string>
-    <string name="summary_disable_frame_drop">Có thể giảm hiện tượng giật nhẹ trên một số thiết bị, nhưng có thể tăng độ trễ</string>
     <string name="title_video_format">Thay đổi cài đặt codec</string>
     <string name="summary_video_format">Các codec mới hơn có thể giảm yêu cầu băng thông video nếu thiết bị của bạn hỗ trợ chúng. Các lựa chọn codec có thể bị bỏ qua nếu không được phần mềm máy chủ hoặc GPU hỗ trợ.</string>
     <string name="title_enable_hdr">Bật HDR</string>
@@ -283,13 +194,6 @@
     <string name="title_enable_perf_overlay">Hiển thị thống kê hiệu suất trong khi phát trực tuyến</string>
     <string name="summary_enable_perf_overlay">Hiển thị thông tin hiệu suất luồng thời gian thực trong khi phát trực tuyến</string>
 
-    <string name="category_help">Trợ giúp</string>
-    <string name="title_setup_guide">Hướng dẫn thiết lập</string>
-    <string name="summary_setup_guide">Xem hướng dẫn về cách thiết lập PC chơi game của bạn để phát trực tuyến</string>
-    <string name="title_troubleshooting">Hướng dẫn khắc phục sự cố</string>
-    <string name="summary_troubleshooting">Xem các mẹo để chẩn đoán và khắc phục các sự cố phát trực tuyến phổ biến</string>
-    <string name="title_privacy_policy">Chính sách quyền riêng tư</string>
-    <string name="summary_privacy_policy">Xem chính sách quyền riêng tư của Delos</string>
     <string name="title_special_key_help">Trợ giúp phím đặc biệt</string>
     <string name="summary_special_key_help">Hướng dẫn về cách thiết lập các phím đặc biệt tùy chỉnh</string>
 
@@ -363,7 +267,6 @@
     <string name="game_menu_send_keys_shift_tab">Shift + Tab (Steam Overlay)</string>
     <string name="game_menu_send_keys_alt_enter">Alt + Enter</string>
     <string name="game_menu_send_keys_win_shift_left">Win + shift + left (Di chuyển ứng dụng giữa các Màn hình)</string>
-    <string name="game_menu_send_keys_ctrl_alt_shift_q">Ctrl+Alt+Shift+Q (PC Thoát Phát trực tuyến)</string>
     <string name="game_menu_send_keys_ctrl_alt_shift_f1">Ctrl+Alt+Shift+F1 (Chuyển Màn hình)</string>
     <string name="game_menu_send_keys_ctrl_alt_shift_f12">Ctrl+Alt+Shift+F12 (Chuyển Màn hình)</string>
 
@@ -377,9 +280,7 @@
     <string name="perf_overlay_lite_net">%1$dms</string>
     <string name="perf_overlay_lite_dectime">%1$.2fms</string>
     <string name="perf_overlay_lite_netdrops">%1$.2f%%</string>
-    <string name="perf_overlay_lite_streamdetails">%1$s</string>
     <string name="perf_overlay_lite_fps">%1$.2f</string>
-    <string name="perf_overlay_lite_decoder">Bộ giải mã: %1$s</string>
     <string name="title_import_keyboard_layout">Nhập bố cục bàn phím</string>
     <string name="title_export_keyboard_layout">Xuất bố cục bàn phím</string>
     <string name="summary_import_keyboard_layout">Thao tác này sẽ ghi đè bố cục hiện tại.</string>
@@ -454,8 +355,6 @@
     <string name="summary_free_analog_stick_opacity">Mặc định chỉ hiển thị nền khi di chuyển cần gạt. Nếu bạn không thích, có thể điều chỉnh độ mờ.</string>
     <string name="title_free_analog_stick_opacity">Độ mờ nền của joystick tự do</string>
 
-    <string name="title_exdisplay_mode">Chế độ màn hình ngoài</string>
-    <string name="summary_exdisplay_mode">Hiển thị hình ảnh stream trên màn hình ngoài, nút ảo và các điều khiển khác trên điện thoại.</string>
 
     <string name="title_top_center_display">Hiển thị ở giữa trên</string>
     <string name="summary_top_center_display">Khi độ phân giải không phải gốc, hình ảnh stream sẽ căn lên trên thay vì ở giữa.</string>
@@ -518,9 +417,7 @@
     <string name="summary_checkbox_enforce_display_mode">Buộc surface sử dụng chế độ hiển thị tối ưu.\nCần thiết trên một số hệ thống (ví dụ như ColorOS) để thiết lập tốc độ làm tươi/độ phân giải chính xác.\nKhông bật trên ChromeCast 4K vì có thể gây lỗi.</string>
     <string name="title_checkbox_use_virtual_display">Sử dụng màn hình ảo</string>
     <string name="summary_checkbox_use_virtual_display">Sử dụng màn hình ảo mặc định.\nMàn hình ảo có thể tự động khớp với độ phân giải và tốc độ khung hình của phía client, cho trải nghiệm truyền phát mượt mà.\nYêu cầu Apollo là phần mềm truyền phát trên máy chủ.</string>
-    <string name="title_checkbox_resume_without_confirm">Tiếp tục nhanh</string>
 
-        <string name="summary_checkbox_resume_without_confirm">Bỏ qua menu tiếp tục, mở lại ứng dụng ngay khi bấm nút.</string>
     <string name="title_checkbox_enable_sticky_modifier_key_virtual_keyboard">Giữ phím chức năng</string>
     <string name="summary_checkbox_enable_sticky_modifier_key_virtual_keyboard">Tự động giữ phím Shift, Ctrl... trên bàn phím ảo và bàn phím tùy chỉnh.</string>
     <string name="virtual_keyboard_hide">Ẩn\nBàn phím</string>
@@ -531,47 +428,7 @@
     <string name="mouse_mode_disabled">Tắt chuột</string>
     <string name="mouse_mode_absolute_touch_swapped">Chạm theo vị trí (Đổi trái/phải chuột)</string>
     <string name="keyboard_layout_set_1">Cấu hình 1</string>
-    <string name="keyboard_layout_set_2">Cấu hình 2</string>
-    <string name="keyboard_layout_set_3">Cấu hình 3</string>
-    <string name="keyboard_layout_set_4">Cấu hình 4</string>
-    <string name="keyboard_layout_set_5">Cấu hình 5</string>
     <string name="toggle_local_mouse_cursor">Bật/tắt con trỏ chuột trên thiết bị (cần chuột thật)</string>
-    <string name="debug_info_android_version">Phiên bản Android:</string>
-    <string name="debug_info_api_version">Phiên bản API:</string>
-    <string name="debug_info_kernel_version">Phiên bản Kernel:</string>
-    <string name="debug_info_brand_model">Thiết bị:</string>
-    <string name="debug_info_has_vibration_motor">Có rung</string>
-    <string name="debug_info_no_vibration_motor">Không có rung</string>
-    <string name="debug_info_test_device_vibration">Thử rung thiết bị (%s)</string>
-    <string name="debug_info_vibration_amplitude">Mức rung (%d)</string>
-    <string name="debug_info_simple_vibration">Rung đơn giản trong 1 giây</string>
-    <string name="debug_info_continuous_hd_vibration">Rung HD liên tục</string>
-    <string name="debug_info_please_choose">Vui lòng chọn</string>
-    <string name="debug_info_no_gamepad_detected">Không tìm thấy tay cầm, hãy kết nối rồi bấm làm mới.</string>
-    <string name="debug_info_no_vibrator">Tay cầm không có bộ rung!</string>
-    <string name="debug_info_set_amplitude">Chọn độ rung (0–255, chỉ hỗ trợ rung HD)</string>
-    <string name="debug_info_name">Tên: </string>
-    <string name="debug_info_sensors">Cảm biến: </string>
-    <string name="debug_info_no_relevant_driver">Không có (thiếu driver hoặc tay cầm không được hỗ trợ)</string>
-    <string name="debug_info_no_api_below_android12">Chức năng này chỉ hỗ trợ từ Android 12 trở lên</string>
-    <string name="debug_info_vid_pid">VID_PID: </string>
-    <string name="debug_info_vibration">Rung: </string>
-    <string name="debug_info_supported">Được hỗ trợ</string>
-    <string name="debug_info_not_supported">Không hỗ trợ</string>
-    <string name="debug_info_details">Chi tiết: </string>
-    <string name="debug_info_number_of_gamepads">Số tay cầm đã kết nối: </string>
-    <string name="debug_info_accelerometer">+ Cảm biến gia tốc</string>
-    <string name="debug_info_gyroscope">+ Cảm biến con quay</string>
-    <string name="debug_info_stop_vibration">Dừng rung</string>
-    <string name="debug_info_refresh_gamepad_info">Nhấn để cập nhật thông tin tay cầm</string>
-    <string name="debug_info_refresh_gamepad_list">Làm mới danh sách tay cầm</string>
-    <string name="debug_info_test_gamepad_rumble">Thử rung tay cầm</string>
-    <string name="pref_enter_value_0_9999">Vui lòng nhập số từ 0 đến 9999.</string>
-    <string name="pref_set_success">Đã lưu cài đặt!</string>
-    <string name="pref_empty_file">Tệp rỗng!</string>
-    <string name="pref_import_success">Nhập thành công!</string>
-    <string name="pref_error_occurred">Đã xảy ra lỗi: </string>
-    <string name="pref_save_keyboard_profile">Lưu cấu hình bàn phím</string>
     <string name="game_menu_advanced">Tùy chọn nâng cao</string>
     <string name="game_dialog_title_quit_confirm">Bạn có chắc muốn thoát không?</string>
     <string name="game_dialog_message_quit_confirm">Hãy chắc rằng bạn đã lưu tiến trình. Thoát khỏi phiên sẽ đóng ứng dụng đang chạy.</string>
@@ -603,12 +460,9 @@
     <string name="error_msg_permission_denied">Quyền bị từ chối</string>
     <string name="error_msg_timeout">Hết thời gian kết nối</string>
     <string name="permission_launch_app">Khởi chạy ứng dụng</string>
-    <string name="permission_sync_clipboard">Đồng bộ bảng tạm</string>
 
 
     <!-- Compliance -->
-    <string name="category_basic_settings">Cài đặt cơ bản</string>
-    <string name="title_checkbox_stretch_video">Kéo giãn video</string>
 
 
     <!-- New Strings -->

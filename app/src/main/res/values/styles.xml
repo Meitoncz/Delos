@@ -51,12 +51,6 @@
         <item name="colorButtonNormal">@android:color/white</item>
     </style>
 
-    <style name="SettingsTheme" parent="Theme.AppCompat.NoActionBar">
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:colorBackground">@android:color/transparent</item>
-        <item name="android:windowBackground">@android:color/transparent</item>
-    </style>
 
     <style name="ExternalDisplayControllerTheme" parent="AppTheme">
         <item name="android:statusBarColor">@android:color/black</item>
@@ -65,13 +59,5 @@
         <item name="android:windowBackground">@android:color/black</item>
     </style>
 
-    <declare-styleable name="ApertureViewGroup">
-        <attr name="aperture_color1" format="color" />
-        <attr name="aperture_color2" format="color" />
-        <attr name="aperture_border_width" format="dimension" />
-        <attr name="aperture_border_angle" format="dimension" />
-        <attr name="aperture_duration" format="integer" />
-        <attr name="aperture_middle_color" format="color" />
-    </declare-styleable>
 
 </resources>
