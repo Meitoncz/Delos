@@ -131,7 +131,11 @@ fun SettingRow(
                 },
             )
             .clip(shape)
-            .background(if (focused) colors.surface2 else Color.Transparent)
+            // Focused: frosted glass over the animated background
+            .then(
+                LocalBackdropHaze.current?.takeIf { focused }?.let { Modifier.backdropBlur(it, 8f, colors.surface2) }
+                    ?: Modifier.background(if (focused) colors.surface2 else Color.Transparent)
+            )
             .defaultMinSize(minHeight = if (compact) 80.px else 92.px)
             .padding(horizontal = 26.px, vertical = 14.px)
             .alpha(if (enabled) 1f else .45f),

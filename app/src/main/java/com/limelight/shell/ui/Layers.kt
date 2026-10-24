@@ -67,6 +67,12 @@ import dev.chrisbanes.haze.blur.HazeColorEffect
 import dev.chrisbanes.haze.blur.hazeBlur
 import kotlinx.coroutines.delay
 
+/**
+ * The animated background as a blur source, for glass that stays on (the focused settings row, the top
+ * bar); overlays blur the whole screen through their own state instead.
+ */
+val LocalBackdropHaze = androidx.compose.runtime.staticCompositionLocalOf<HazeState?> { null }
+
 /** Blur of the content behind an overlay, with a tint; the tint alone below Android 12. */
 @Composable
 fun Modifier.backdropBlur(haze: HazeState, radius: Float, tint: Color): Modifier {

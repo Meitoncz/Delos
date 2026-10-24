@@ -185,12 +185,20 @@ private val ONLINE = androidx.compose.ui.graphics.Color(0xFF3DDC84)
 @Composable
 private fun TopNav(buttons: List<NavButton>, modifier: Modifier) {
     val colors = LocalDelosColors.current
-    Row(
-        // Not clipped: the focused button's glow and tooltip reach outside the pill
-        modifier.background(colors.surface, CircleShape).border(1.px, colors.line, CircleShape).padding(8.px),
-        horizontalArrangement = Arrangement.spacedBy(14.px),
-    ) {
-        buttons.forEach { NavButtonView(it) }
+    val glass = LocalBackdropHaze.current
+    Box(modifier) {
+        // Frosted glass in its own layer: the pill itself is not clipped, the focused button's glow and
+        // tooltip reach outside it
+        Box(
+            Modifier
+                .matchParentSize()
+                .clip(CircleShape)
+                .then(if (glass != null) Modifier.backdropBlur(glass, 8f, colors.surface) else Modifier.background(colors.surface))
+                .border(1.px, colors.line, CircleShape),
+        )
+        Row(Modifier.padding(8.px), horizontalArrangement = Arrangement.spacedBy(14.px)) {
+            buttons.forEach { NavButtonView(it) }
+        }
     }
 }
 

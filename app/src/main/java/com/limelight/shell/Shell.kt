@@ -71,6 +71,7 @@ import com.limelight.shell.ui.HANDOFF_PROGRESS
 import com.limelight.shell.ui.LaunchCard
 import com.limelight.shell.ui.LaunchHandoff
 import com.limelight.shell.ui.LaunchOverlay
+import com.limelight.shell.ui.LocalBackdropHaze
 import com.limelight.shell.ui.LocalDelosColors
 import com.limelight.shell.ui.LocalFeedback
 import com.limelight.shell.ui.NavButton
@@ -112,6 +113,8 @@ fun Shell(
     val shell = remember { ShellState(if (profileStore.profiles.value.all.isEmpty()) Screen.Boot() else Screen.Start) }
     val tracker = remember { FocusTracker() }
     val haze = rememberHazeState()
+    // Only the animated background, for glass that is always on (the focused row, the top bar)
+    val backdropHaze = rememberHazeState()
     var blurSource by remember { mutableStateOf(false) }
     LaunchedEffect(shell.layer != null || shell.portal != null) {
         if (shell.layer != null || shell.portal != null) {
@@ -315,13 +318,16 @@ fun Shell(
 
     CompositionLocalProvider(
         LocalShell provides shell, LocalFocusTracker provides tracker, LocalGameActions provides actions, LocalDeviceActions provides devices,
+        LocalBackdropHaze provides backdropHaze,
     ) {
         Box(Modifier.fillMaxSize()) {
             // The blur source re-records the whole screen every frame, so it is only active while an overlay
             // is shown (and while it fades out)
             // On in the very frame an overlay appears (its blur would otherwise start empty and clipped)
             Box(Modifier.fillMaxSize().then(if (blurSource || shell.layer != null || shell.portal != null) Modifier.hazeSource(haze) else Modifier)) {
-                Backdrop(appearance, colors, hero = if (shell.screen == Screen.Home) shell.hero else null)
+                Box(Modifier.fillMaxSize().hazeSource(backdropHaze)) {
+                    Backdrop(appearance, colors, hero = if (shell.screen == Screen.Home) shell.hero else null)
+                }
                 AnimatedContent(
                     shell.screen,
                     transitionSpec = {
