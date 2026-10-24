@@ -12,7 +12,8 @@ Details and numbers: [ANALYSIS.md](ANALYSIS.md). Environment setup: [WINDOWS_SET
 - [x] Own `versionName` / `versionCode` scheme: semver starting at `0.1.0`, `versionCode = MMmmpp` (0.1.0 → 100).
 - [x] README: links to Artemis, Moonlight, Vibepollo; keep GPLv3 and authors.
 - [x] GitHub Actions: build a debug APK on every push (`.github/workflows/build.yml`). Signed release builds come in Phase 5.
-- [ ] Later: rewrite `fastlane/` metadata (store listing) and `.github/ISSUE_TEMPLATE` for Delos.
+- [x] Moonlight / Artemis leftovers removed (2026-10-24): `fastlane/` store listing, `.github` issue templates and contributing guide, Wireshark dissectors (`LuaScripts/`), AppVeyor, the Moonlight logo source, the old test guide and an unused Robolectric config. `decoder-errata.txt` moved to `docs/DECODER_ERRATA.txt`.
+- [ ] When Delos goes public: a store listing (`fastlane/`), issue templates and a contributing guide written for Delos.
 
 ## Phase 1 – moonlight-common-c
 
