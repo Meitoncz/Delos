@@ -325,12 +325,8 @@ private fun DescriptionPanel(tab: SettingsTab, focused: SettingsItem?, modifier:
         val rowValue = focused?.value
         if (rowValue is RowValue.Choice || rowValue is RowValue.Text) BasicText(if (rowValue is RowValue.Choice) rowValue.label else (rowValue as RowValue.Text).text,
             style = TextStyle(color = colors.accent, fontFamily = Figtree, fontSize = 22.tpx, lineHeight = 1.3.em))
-        if (tab == SettingsTab.APPEARANCE) {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.px)) {
-                listOf(colors.bg, colors.surface2, colors.accent, colors.accent2, colors.text).forEach { color ->
-                    Box(Modifier.size(56.px).clip(RoundedCornerShape(18.px)).background(color).border(1.px, colors.line, RoundedCornerShape(18.px)))
-                }
-            }
+        // A preview of the game background, only for the rows that change it
+        if (focused?.key in GAME_BACKGROUND_ROWS) {
             val hero = LocalShell.current.hero
             val image by produceState<ImageBitmap?>(null, hero?.id, appearance.heroBlur) {
                 value = hero?.image?.let { source -> withContext(Dispatchers.Default) { HeroBitmaps.render(hero.id, source, appearance.heroBlur) } }
@@ -416,3 +412,6 @@ private val RETIRED_KEYS = setOf(
     "checkbox_resume_without_confirm",
     "checkbox_small_icon_mode",
 )
+
+/** The rows the description panel previews the game background for. */
+private val GAME_BACKGROUND_ROWS = setOf("ui_hero_background", "ui_hero_blur", "ui_hero_opacity")
