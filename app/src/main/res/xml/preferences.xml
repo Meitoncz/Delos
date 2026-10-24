@@ -433,12 +433,6 @@
         android:title="@string/category_host_settings"
         app:iconSpaceReserved="false">
         <CheckBoxPreference
-            android:defaultValue="true"
-            android:key="checkbox_enable_sops"
-            android:summary="@string/summary_checkbox_enable_sops"
-            android:title="@string/title_checkbox_enable_sops"
-            app:iconSpaceReserved="false" />
-        <CheckBoxPreference
             android:defaultValue="false"
             android:key="checkbox_host_audio"
             android:summary="@string/summary_checkbox_host_audio"
@@ -481,12 +475,6 @@
             android:key="checkbox_resume_without_confirm"
             android:summary="@string/summary_checkbox_resume_without_confirm"
             android:title="@string/title_checkbox_resume_without_confirm"
-            app:iconSpaceReserved="false" />
-        <CheckBoxPreference
-            android:key="checkbox_full_screen"
-            android:title="@string/title_checkbox_full_screen"
-            android:summary="@string/summary_checkbox_full_screen"
-            android:defaultValue="true"
             app:iconSpaceReserved="false" />
         <com.limelight.preferences.SeekBarPreference
             android:defaultValue="90"
@@ -547,12 +535,6 @@
             android:title="@string/title_checkbox_disable_warnings"
             app:iconSpaceReserved="false" />
 			
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="checkbox_show_overlay_zoom_toggle_button"
-            android:summary="@string/summary_show_overlay_zoom_toggle_button"
-            android:title="@string/title_show_overlay_zoom_toggle_button"
-            app:iconSpaceReserved="false" />
         <CheckBoxPreference
             android:defaultValue="false"
             android:key="checkbox_remember_zoom_pan"
@@ -730,7 +712,6 @@
             android:summary="@string/summary_export_keyboard_layout"
             android:title="@string/title_export_keyboard_layout"
             app:iconSpaceReserved="false" />
-
     </PreferenceCategory>
 
     <PreferenceCategory
@@ -807,7 +788,6 @@
             app:iconSpaceReserved="false"
             seekbar:min="10"
             seekbar:step="10" />
-
     </PreferenceCategory>
 
     <PreferenceCategory
@@ -910,18 +890,5 @@
             android:title="@string/title_debug_info"
             app:iconSpaceReserved="false" />
 
-        <com.limelight.preferences.WebLauncherPreference
-            url="https://github.com/Meitoncz/Delos/releases"
-            android:key="option_software_release"
-            android:summary="@string/summary_software_update"
-            android:title="@string/title_software_update"
-            app:iconSpaceReserved="false" />
-
-        <com.limelight.preferences.WebLauncherPreference
-            url="@string/obtainium_app_url"
-            android:key="option_follow_update"
-            android:summary="@string/summary_follow_update"
-            android:title="@string/title_follow_update"
-            app:iconSpaceReserved="false" />
     </PreferenceCategory>
 </PreferenceScreen>

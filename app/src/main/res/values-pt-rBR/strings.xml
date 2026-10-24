@@ -192,8 +192,6 @@
     <string name="category_advanced_settings">Configurações Avançadas</string>
     <string name="title_checkbox_host_audio">Reproduzir áudio no PC</string>
     <string name="summary_checkbox_host_audio">Reproduz o áudio do computador e deste dispositivo</string>
-    <string name="title_checkbox_enable_sops">Otimizar configurações de jogo</string>
-    <string name="summary_checkbox_enable_sops">Permitir que o GFE modifique as configurações do jogo para otimizar a transmissão</string>
     <string name="title_language_list">Idioma</string>
     <string name="summary_language_list">Idioma para ser usado no Delos</string>
     <string name="summary_checkbox_enable_pip">Permite que a transmissão seja visualizada (mas não controlada) enquanto usa outros apps</string>

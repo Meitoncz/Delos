@@ -115,8 +115,6 @@
     <string name="title_checkbox_small_icon_mode">Использовать маленькие иконки</string>
     <string name="summary_checkbox_small_icon_mode">Использовать маленькие иконки в сетке для отображения большего числа элементов на экране</string>
     <string name="category_host_settings">Настройки хоста</string>
-    <string name="title_checkbox_enable_sops">Оптимизировать игровые настройки</string>
-    <string name="summary_checkbox_enable_sops">Разрешить GFE изменять настройки игр для оптимальной трансляции</string>
     <string name="title_checkbox_host_audio">Проигрывать звук на ПК</string>
     <string name="summary_checkbox_host_audio">Проигрывать звук на компьютере и текущем устройстве</string>
     <string name="category_advanced_settings">Расширенные настройки</string>
@@ -376,8 +374,6 @@
     <string name="summary_checkbox_onscreen_style_official">Выберите этот вариант, если предпочитаете старый стиль виртуального геймпада. Форма кнопок может быть квадратной при выборе нижней виртуальной кнопки [Обычные кнопки - квадратные]</string>
     <string name="title_checkbox_enable_perf_overlay_lite">Компактный режим</string>
     <string name="summary_checkbox_enable_perf_overlay_lite">Одна строка сверху по центру: FPS, пропускная способность, задержка сети и декодирования, потерянные кадры.</string>
-    <string name="title_show_overlay_zoom_toggle_button">Показать кнопку переключения масш. панели</string>
-    <string name="summary_show_overlay_zoom_toggle_button">Показывает перетаскиваемую кнопку вверху экрана для переключения прокрутки/масш.</string>
     <string name="title_virtual_trackpad_settings">Настройки виртуального трекпада</string>
     <string name="dialog_custom_resolution">Установите разрешение и выйдите из настроек для применения!</string>
     <string name="summary_custom_resolution">Добавьте пользовательское разрешение, разделённое знаком X, нестандартные разрешения могут не работать.\nНапример: 1920×1080\nЕсли разрешение не является нативным, оно по умолчанию может не заполнять область выреза. Если соотношение сторон совпадает, вы можете вручную настроить растягивание экрана на полный экран</string>
@@ -386,9 +382,6 @@
     <string name="summary_auto_orientation">Экран стрима будет соответствовать ориентации устройства при запуске.</string>
     <string name="title_import_special_button">Импорт пользовательских клавиш</string>
     <string name="summary_import_special_button">Доступно в меню Back меню и спец-клавишах.\nВнимание: импорт перезапишет текущую конфигурацию - сделайте резервную копию.</string>
-    <string name="title_software_update">Обновление ПО</string>
-    <string name="title_follow_update">Следить за обновлениями</string>
-    <string name="summary_follow_update">Следите за обновлениями Delos через Obtainium</string>
     <string name="title_special_key_layout">Раскладка спец-клавиш</string>
     <string name="title_show_virtual_key">Показать виртуальные клавиши на экране</string>
     <string name="summary_show_virtual_key">Отобразить слой виртуальных спец-клавиш на тачскрине.\nНепрозрачность клавиш общая с виртуальным геймпадом.</string>
@@ -613,6 +606,4 @@
     <string name="summary_low_latency_frame_balance">Уменьшает задержку за счёт пропуска кадров в очереди</string>
     <string name="category_perf_monitor_settings">Монитор производительности</string>
     <string name="title_low_latency_frame_balance">LFR</string>
-    <string name="title_checkbox_full_screen">Включить полноэкранный режим</string>
-    <string name="summary_checkbox_full_screen">Скрывать системные панели в режиме погружения</string>
 </resources>

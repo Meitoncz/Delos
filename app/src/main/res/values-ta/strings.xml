@@ -192,8 +192,6 @@
     <string name="title_checkbox_small_icon_mode">சிறிய பெட்டி கலையைப் பயன்படுத்தவும்</string>
     <string name="summary_checkbox_small_icon_mode">பயன்பாட்டு கட்டத்தில் உள்ள சிறிய பெட்டி கலை மேலும் பயன்பாடுகள் திரையில் காண அனுமதிக்கிறது</string>
     <string name="category_host_settings">புரவலன் அமைப்புகள்</string>
-    <string name="title_checkbox_enable_sops">விளையாட்டு அமைப்புகளை மேம்படுத்தவும்</string>
-    <string name="summary_checkbox_enable_sops">உகந்த ச்ட்ரீமிங்கிற்கான விளையாட்டு அமைப்புகளை மாற்ற GFE ஐ அனுமதிக்கவும்</string>
     <string name="title_checkbox_host_audio">கணினியில் ஆடியோ இயக்கவும்</string>
     <string name="summary_checkbox_host_audio">கணினி மற்றும் இந்த சாதனத்திலிருந்து ஆடியோவை இயக்கவும்</string>
     <string name="category_advanced_settings">மேம்பட்ட அமைப்புகள்</string>

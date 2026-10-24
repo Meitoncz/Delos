@@ -91,8 +91,6 @@
     <string name="title_checkbox_small_icon_mode">Використовувати маленькі іконки</string>
     <string name="summary_checkbox_small_icon_mode">Використовувати маленькі іконки в сітці застосунків, для відображення більшої кількості елементів на екрані</string>
     <string name="category_host_settings">Налаштування хоста</string>
-    <string name="title_checkbox_enable_sops">Оптимізувати ігрові налаштування</string>
-    <string name="summary_checkbox_enable_sops">Дозволити GFE змінювати налаштування ігор для оптимальної трансляції</string>
     <string name="title_checkbox_host_audio">Програвати звук на пристрої хоста</string>
     <string name="summary_checkbox_host_audio">Програвати звук на пристроях хоста та клієнта</string>
     <string name="category_advanced_settings">Розширені налаштування</string>

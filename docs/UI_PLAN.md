@@ -138,7 +138,7 @@ Built on the branch `ui/review-fixes`; the user tried them all on the Odin (2026
 - [x] Settings audit, first part: no "(Experimental)" / "(Beta)" in titles, device-dependent features say so in their descriptions; the post-stream latency message removed with its code; "Move overlay to bottom" hidden in the new settings (Statistics position replaces it).
 - [x] Statistics with everything the classic overlay shows (decoder, incoming / rendering FPS, network latency and variance, PC processing min / average / max, decoding, bandwidth, lost frames); Compact mode (the former Lite mode) is one line at the top center; the stream menu's Performance is now Overlay and cycles On → Compact → Off.
 - [x] The stream menu shortcut closes the menu too; "Use L3 + R3 again" removed. The 12-hour clock shows AM / PM.
-- [ ] Settings audit, the rest awaits the user: Enable Full Screen, Optimize game settings, the overlay zoom button, the update links.
+- [x] Settings audit, second part: removed Enable Full Screen (always immersive), Optimize game settings (GFE only, now always off), the overlay zoom button (Zoom stays in the stream menu's More) and the Software Update / Follow Update links (the repository is private).
 - [ ] The user decides which items the stream menu keeps.
 - [ ] Leaving the stream (Disconnect / Quit game) with the prototype's effect: the portal back into home ("Back to Delos" / "Closing <game>", focus on the game) instead of Android's default slide from the side. The stream is its own task, so the system ignores custom animations; likely: no window animation when the stream ends, and the shell plays the portal when it resumes.
 
@@ -162,6 +162,7 @@ Built on the branch `ui/review-fixes`; the user tried them all on the Odin (2026
 - [ ] Check with the user on the Odin what could not be tried in 6.6 yet: PIN pairing after unpairing, OTP pairing, adding a PC by address, waking an offline PC from the start screen, removing a PC, "Skip the start screen".
 - [ ] Smooth at the Odin's refresh rate; memory use with many covers.
 - [ ] Touch, Android 10–12 fallbacks (no blur), Android 15+ edge-to-edge (other devices / later).
+- [ ] "Check for updates" in Settings → About, in the Delos style, once the repository is public (replaces the removed Software Update / Follow Update links).
 
 Later (Phase 6 backlog, after the switch): restyle the in-stream quick menu (`GameMenu`) in the new design, virtual controls editor.
 

@@ -181,7 +181,6 @@
     <string name="dialog_title_reset_osc">Reset rozložení</string>
     <string name="dialog_text_reset_osc">Jste si jisti, že chcete smazat vaše uložené rozložení ovladače\?</string>
     <string name="title_checkbox_enable_pip">Povolit sledovací rezim obraz-v-obraze</string>
-    <string name="summary_checkbox_enable_sops">Povolit GFE měnit herní nastavení pro optimální streamování</string>
     <string name="title_checkbox_host_audio">Přehrávat zvuk na PC</string>
     <string name="summary_checkbox_host_audio">Přehraje zvuk z počítače a tohoto zařízení</string>
     <string name="summary_unlock_fps">Streamování v 90 nebo 120 FPS může snížit zpoždění na dražších zařízeních, ale může způsobit zasekávání nebo nestabilitu na zařízeních, které je nepodporují</string>
@@ -231,7 +230,6 @@
     <string name="title_checkbox_small_icon_mode">Použít malý box art</string>
     <string name="summary_checkbox_small_icon_mode">Díky menšímu box artu v seznamu aplikací uvidíte na obrazovce více aplikací naráz</string>
     <string name="category_host_settings">Nastavení hostitele</string>
-    <string name="title_checkbox_enable_sops">Optimalizovat herní nastavení</string>
     <string name="summary_disable_frame_drop">Může na některých zařízeních snížit mikrozádrhy, ale může zvýšit zpoždění</string>
     <string name="title_video_format">Změnit nastavení HEVC</string>
     <string name="summary_video_format">HEVC sníží datový přenos, ale vyžaduje novější zařízení</string>

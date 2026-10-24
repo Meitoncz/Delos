@@ -43,8 +43,9 @@ class ShellSettingsTest {
             }
         }
         // 116 in step 6.7, minus the five Artemis menu options the Delos stream menu replaced
-        // and the post-stream latency message
-        assertEquals(110, keys.size)
+        // and the post-stream latency message; in the settings audit full screen, game optimization, the
+        // overlay zoom button and the two update links
+        assertEquals(105, keys.size)
         assertEquals(keys, catalog.all.map { it.key }.toSet())
         assertEquals(keys.size, catalog.all.size)
         assertTrue(catalog.all.all { it.label.isNotBlank() && it.section.isNotBlank() })

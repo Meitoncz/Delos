@@ -276,8 +276,6 @@
     <string name="summary_checkbox_small_icon_mode">Smaller box art in the app grid allows more apps to be visible on screen</string>
 
     <string name="category_host_settings">Host Settings</string>
-    <string name="title_checkbox_enable_sops">Optimize game settings</string>
-    <string name="summary_checkbox_enable_sops">Allow GFE to modify game settings for optimal streaming</string>
     <string name="title_checkbox_host_audio">Play audio on PC</string>
     <string name="summary_checkbox_host_audio">Play audio from the computer and this device</string>
 
@@ -426,8 +424,6 @@
     <string name="summary_checkbox_onscreen_style_official">If you still like the old style of official virtual gamepad buttons, you can select this option.\nButton shapes can be square if you selected the bottom virtual button [Normal buttons are square buttons]</string>
     <string name="title_checkbox_enable_perf_overlay_lite">Compact mode</string>
     <string name="summary_checkbox_enable_perf_overlay_lite">One line at the top center: FPS, bandwidth, network and decoding delay, lost frames. The Overlay button in the stream menu switches between full, compact and off.</string>
-    <string name="title_show_overlay_zoom_toggle_button">Show overlay zoom toggle button</string>
-    <string name="summary_show_overlay_zoom_toggle_button">Displays a draggable button at the top of the screen to toggle pan/zoom mode.</string>
     <string name="title_virtual_trackpad_settings">Virtual Trackpad Settings</string>
     <string name="dialog_custom_resolution">Set the resolution and exit the settings page to take effect!</string>
     <string name="summary_custom_resolution">Add a custom resolution, separated by x, strange resolutions may not work.\nFor example: 1920x1080\nIf it is a non-native resolution, it may not fill the notch area by default. If the aspect ratio is the same, you can manually set to stretch the screen to fill the full screen</string>
@@ -436,10 +432,6 @@
     <string name="summary_auto_orientation">The streaming screen will be displayed according to the device\'s orientation when the stream begins.</string>
     <string name="title_import_special_button">Import Custom Keys</string>
     <string name="summary_import_special_button">Available in Back Menu and special keys.\nNote: Importing will overwrite current configuration, please backup accordingly.</string>
-    <string name="title_software_update">Software Update</string>
-    <string name="summary_software_update">Delos by Meitoncz, based on Artemis by ClassicOldSong - Visit GitHub Releases to get the latest version</string>
-    <string name="title_follow_update">Follow Update</string>
-    <string name="summary_follow_update">Follow updates of Delos with Obtainium</string>
     <string name="title_special_key_layout">Special Key Layout</string>
     <string name="title_show_virtual_key">Display virtual keys on screen</string>
     <string name="summary_show_virtual_key">Display a layer of virtual special keys on the touchscreen.\nKey opacity is shared with the virtual gamepad above.</string>
@@ -680,6 +672,4 @@
     <string name="summary_low_latency_frame_balance">Minimizes delay by dropping queued frames. May not work on every device.</string>
     <string name="category_perf_monitor_settings">Performance Monitor</string>
 
-    <string name="title_checkbox_full_screen">Enable Full Screen</string>
-    <string name="summary_checkbox_full_screen">Hide system bars with immersive mode</string>
 </resources>

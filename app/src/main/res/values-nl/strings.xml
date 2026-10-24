@@ -93,8 +93,6 @@
     <string name="title_checkbox_small_icon_mode">Gebruik kleine iconen</string>
     <string name="summary_checkbox_small_icon_mode">Gebruik kleine iconen in kolom onderdelen zodat meer items tegelijk zichtbaar worden</string>
     <string name="category_host_settings">Host-instellingen</string>
-    <string name="title_checkbox_enable_sops">Optimaliseer spel instellingen</string>
-    <string name="summary_checkbox_enable_sops">Sta GFE toe om spel instellingen te veranderen voor een optimale stream</string>
     <string name="title_checkbox_host_audio">Speel audio af op PC</string>
     <string name="summary_checkbox_host_audio">Speel audio af op de computer en op dit apparaat</string>
     <string name="category_advanced_settings">Geavanceerde instellingen</string>

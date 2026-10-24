@@ -156,8 +156,6 @@
     <string name="title_checkbox_small_icon_mode">Folosește iconițe mici</string>
     <string name="summary_checkbox_small_icon_mode">Iconițele folosite în grile vor fi mici pentru a încăpea mai multe odata</string>
     <string name="category_host_settings">Setările PC-ului gazdă</string>
-    <string name="title_checkbox_enable_sops">Optimizarea setărilor de joc</string>
-    <string name="summary_checkbox_enable_sops">Permite GFE să modifice setările jocurilor pentru experiența optimă</string>
     <string name="title_checkbox_host_audio">Redă audio si pe PC</string>
     <string name="summary_checkbox_host_audio">Sunetul se va auzi atat pe acest dispozitiv cât și pe PC</string>
     <string name="category_advanced_settings">Setări avansate</string>

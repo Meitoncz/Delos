@@ -51,7 +51,6 @@ public class PreferenceConfiguration {
     private static final String RESOLUTION_SCALE_FACTOR_PREF_STRING = "seekbar_resolution_scale_factor";
     private static final String RESUME_WITHOUT_CONFIRM_PREF_STRING = "checkbox_resume_without_confirm";
     private static final String VIDEO_SCALE_MODE_PREF_STRING = "list_video_scale_mode";
-    private static final String SOPS_PREF_STRING = "checkbox_enable_sops";
     private static final String DISABLE_TOASTS_PREF_STRING = "checkbox_disable_warnings";
     private static final String HOST_AUDIO_PREF_STRING = "checkbox_host_audio";
     private static final String DEADZONE_PREF_STRING = "seekbar_deadzone";
@@ -91,7 +90,6 @@ public class PreferenceConfiguration {
     private static final String GAMEPAD_MOTION_SENSORS_PREF_STRING = "checkbox_gamepad_motion_sensors";
     private static final String GAMEPAD_MOTION_FALLBACK_PREF_STRING = "checkbox_gamepad_motion_fallback";
     private static final String FORCE_MOTION_SENSORS_FALLBACK_PREF_STRING = "checkbox_force_device_motion";
-    private static final String FULL_SCREEN_PREF_STRING = "checkbox_full_screen";
 
     private static final String ENABLE_RUMBLE_PREF_STRING = "checkbox_enable_rumble";
     private static final String PREVENT_PACKET_LOSS_PREF_STRING = "checkbox_prevent_packet_loss";
@@ -108,7 +106,6 @@ public class PreferenceConfiguration {
 
     private static final String CHECKBOX_ENABLE_STICKY_MODIFIER_KEY_VIRTUAL_KEYBOARD = "checkbox_enable_sticky_modifier_key_virtual_keyboard";
 
-    private static final String CHECKBOX_SHOW_OVERLAY_ZOOM_TOGGLE_BUTTON = "checkbox_show_overlay_zoom_toggle_button";
 
     // Portrait mode
     private static final String CHECKBOX_AUTO_ORIENTATION = "checkbox_auto_orientation";
@@ -140,7 +137,6 @@ public class PreferenceConfiguration {
     private static final boolean DEFAULT_AUTO_INVERT_VIDEO_RESOLUTION = true;
     private static final int DEFAULT_RESOLUTION_SCALE_FACTOR = 100;
     private static final boolean DEFAULT_RESUME_WITHOUT_CONFIRM = false;
-    private static final boolean DEFAULT_SOPS = true;
     private static final boolean DEFAULT_DISABLE_TOASTS = false;
     private static final boolean DEFAULT_HOST_AUDIO = false;
     private static final int DEFAULT_DEADZONE = 5;
@@ -196,12 +192,10 @@ public class PreferenceConfiguration {
     private static final boolean DEFAULT_TRACKPAD_SWAP_AXIS = false;
     private static final boolean DEFAULT_ENABLE_COMMIT_TEXT = false;
     private static final String DEFAULT_ONSCREEN_KEYBOARD_ALIGN_MODE = "center";
-    private static final boolean DEFAULT_SHOW_OVERLAY_TOGGLE_BUTTON = false;
 
     private static final boolean DEFAULT_REMEMBER_ZOOM_PAN = false;
     private static final float DEFAULT_ZOOM_SCALE = 1.0f;
     private static final float DEFAULT_PAN_OFFSET = 0.0f;
-    private static final boolean DEFAULT_FULL_SCREEN = true;
 
     public static final int FRAME_PACING_MIN_LATENCY = 0;
     public static final int FRAME_PACING_BALANCED = 1;
@@ -232,7 +226,7 @@ public class PreferenceConfiguration {
     public boolean onscreenKeyboardAutoFitDisabled;
     public int onscreenKeyboardWidth;
     public String onscreenKeyboardAlignMode;
-    public boolean enforceDisplayMode, useVirtualDisplay, enableSops, playHostAudio, disableWarnings, fullScreen;
+    public boolean enforceDisplayMode, useVirtualDisplay, playHostAudio, disableWarnings;
     public ScaleMode videoScaleMode;
     public String language;
     public boolean smallIconMode, multiController, usbDriver, flipFaceButtons;
@@ -257,7 +251,6 @@ public class PreferenceConfiguration {
 
     public boolean enablePerfOverlayBottom;
 
-    public boolean showOverlayZoomToggleButton;
 
     //Invert video width/height
     public boolean autoInvertVideoResolution;
@@ -847,12 +840,10 @@ private static int getFramePacingValue(Context context) {
         config.enforceDisplayMode = prefs.getBoolean(ENFORCE_DISPLAY_MODE_PREF_STRING, DEFAULT_ENFORCE_DISPLAY_MODE);
         config.useVirtualDisplay = prefs.getBoolean(USE_VIRTUAL_DISPLAY_PREF_STRING, DEFAULT_USE_VIRTUAL_DISPLAY);
         config.enableUltraLowLatency = prefs.getBoolean(ENABLE_ULTRA_LOW_LATENCY_PREF_STRING, DEFAULT_ENABLE_ULTRA_LOW_LATENCY);
-        config.enableSops = prefs.getBoolean(SOPS_PREF_STRING, DEFAULT_SOPS);
         config.playHostAudio = prefs.getBoolean(HOST_AUDIO_PREF_STRING, DEFAULT_HOST_AUDIO);
         config.smallIconMode = prefs.getBoolean(SMALL_ICONS_PREF_STRING, getDefaultSmallMode(context));
         config.multiController = prefs.getBoolean(MULTI_CONTROLLER_PREF_STRING, DEFAULT_MULTI_CONTROLLER);
         config.usbDriver = prefs.getBoolean(USB_DRIVER_PREF_SRING, DEFAULT_USB_DRIVER);
-        config.fullScreen = prefs.getBoolean(FULL_SCREEN_PREF_STRING, DEFAULT_FULL_SCREEN);
 
         // Read mouse mode and set touch settings accordingly
         String mouseMode = prefs.getString("mouse_mode_list", "0");
@@ -896,7 +887,6 @@ private static int getFramePacingValue(Context context) {
         config.vibrateFallbackToDeviceStrength = prefs.getInt(VIBRATE_FALLBACK_STRENGTH_PREF_STRING, DEFAULT_VIBRATE_FALLBACK_STRENGTH);
         config.flipFaceButtons = prefs.getBoolean(FLIP_FACE_BUTTONS_PREF_STRING, DEFAULT_FLIP_FACE_BUTTONS);
 //        config.touchscreenTrackpad = prefs.getBoolean(TOUCHSCREEN_TRACKPAD_PREF_STRING, DEFAULT_TOUCHSCREEN_TRACKPAD);
-        config.showOverlayZoomToggleButton = prefs.getBoolean(CHECKBOX_SHOW_OVERLAY_ZOOM_TOGGLE_BUTTON, DEFAULT_SHOW_OVERLAY_TOGGLE_BUTTON);
         config.autoOrientation = prefs.getBoolean(CHECKBOX_AUTO_ORIENTATION,false);
         config.autoInvertVideoResolution = prefs.getBoolean(AUTO_INVERT_VIDEO_RESOLUTION_PREF_STRING, DEFAULT_AUTO_INVERT_VIDEO_RESOLUTION);
         config.resolutionScaleFactor = prefs.getInt(RESOLUTION_SCALE_FACTOR_PREF_STRING, DEFAULT_RESOLUTION_SCALE_FACTOR);

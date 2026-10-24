@@ -188,8 +188,6 @@
     <string name="title_checkbox_small_icon_mode">Използване на малки обложки</string>
     <string name="summary_checkbox_small_icon_mode">По-малките обложки в списъка с приложения позволяват да се виждат повече приложения едновременно на екрана</string>
     <string name="category_host_settings">Настройки на отдалечения компютър</string>
-    <string name="title_checkbox_enable_sops">Оптимизиране на игралните настройки</string>
-    <string name="summary_checkbox_enable_sops">Позволява на GFE да променя игралните настройки за по-добро поточно предаване</string>
     <string name="summary_checkbox_host_audio">Възпроизвеждане на звука едновременно и на компютъра, и на това устройство</string>
     <string name="category_advanced_settings">Разширени настройки</string>
     <string name="title_unlock_fps">Отключване на всички възможни кадрови честоти</string>

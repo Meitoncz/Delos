@@ -89,8 +89,7 @@ public class OverlayPreferencesTest {
         ProfilesManager pm = ProfilesManager.getInstance();
         pm.load(ctx);
 
-        String json = "{\"checkbox_show_overlay_zoom_toggle_button\":true," +
-                "\"checkbox_remember_zoom_pan\":true," +
+        String json = "{\"checkbox_remember_zoom_pan\":true," +
                 "\"number_zoom_scale\":1.5," +
                 "\"number_pan_offset_x\":0.25," +
                 "\"number_pan_offset_y\":0.25}";
@@ -102,14 +101,12 @@ public class OverlayPreferencesTest {
         pm.setActive(profile.getUuid());
 
         SharedPreferences sp = pm.getOverlayingSharedPreferences(ctx);
-        assertTrue(sp.getBoolean("checkbox_show_overlay_zoom_toggle_button", false));
         assertTrue(sp.getBoolean("checkbox_remember_zoom_pan", false));
         assertEquals(1.5f, sp.getFloat("number_zoom_scale", -1f), 0.0001f);
         assertEquals(0.25f, sp.getFloat("number_pan_offset_x", -1f), 0.0001f);
         assertEquals(0.25f, sp.getFloat("number_pan_offset_y", -1f), 0.0001f);
 
         PreferenceConfiguration cfg = PreferenceConfiguration.readPreferences(ctx);
-        assertTrue(cfg.showOverlayZoomToggleButton);
         assertTrue(cfg.rememberZoomPan);
         assertEquals(1.5f, cfg.zoomScale, 0.0001f);
         assertEquals(0.25f, cfg.panOffsetX, 0.0001f);
@@ -120,7 +117,6 @@ public class OverlayPreferencesTest {
         pm2.load(ctx);
 
         PreferenceConfiguration cfg2 = PreferenceConfiguration.readPreferences(ctx);
-        assertTrue(cfg2.showOverlayZoomToggleButton);
         assertTrue(cfg2.rememberZoomPan);
         assertEquals(1.5f, cfg2.zoomScale, 0.0001f);
         assertEquals(0.25f, cfg2.panOffsetX, 0.0001f);

@@ -139,7 +139,6 @@ class SettingsCatalog(context: Context) {
 
         fun tabFor(category: String, key: String): SettingsTab = when {
             key == "checkbox_host_audio" || category == "category_audio_settings" -> SettingsTab.AUDIO
-            key == "checkbox_enable_sops" -> SettingsTab.STREAM
             key == "checkbox_enable_hdr" || key == "checkbox_use_virtual_display" -> SettingsTab.DISPLAY
             category == "category_video_settings" -> if (key in setOf(
                     "checkbox_auto_orientation", "checkbox_auto_invert_video_resolution", "checkbox_enable_view_top_center",

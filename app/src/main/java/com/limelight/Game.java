@@ -219,7 +219,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
     private boolean quitOnStop = false;
     private boolean isHidingOverlays;
-    private boolean overlayToggleZoomButtonShown;
     private TextView notificationOverlayView;
     private int requestedNotificationOverlayVisibility = View.GONE;
     private View performanceOverlayView;
@@ -299,13 +298,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     public boolean isInputOnly = true;
     public boolean allowChangeMouseMode = true;
     private boolean onExternelDisplay = false;
-    private ImageButton overlayToggleButton;
-    private static final float CLICK_ACTION_THRESHOLD = 5;
-
-    // Zoom button drag state
-    private float zoomButtonDX, zoomButtonDY;
-    private boolean isZoomButtonMoving = false;
-    private float zoomButtonStartX, zoomButtonStartY;
 
     // Queue for batching commitText payloads
     private static final int UTF8_CHUNK_SIZE = 512;
@@ -352,17 +344,15 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         prefConfig = PreferenceConfiguration.readPreferences(this);
         tombstonePrefs = Game.this.getSharedPreferences("DecoderTombstone", 0);
 
-        if (prefConfig.fullScreen) {
-            // Full-screen
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        // Delos: always full screen (immersive), the option is gone
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
-            // If we're going to use immersive mode, we want to have
-            // the entire screen
-            getWindow().getDecorView().setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
-                            View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION |
-                            View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
-        }
+        // If we're going to use immersive mode, we want to have
+        // the entire screen
+        getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
+                        View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION |
+                        View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);
 
@@ -413,7 +403,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             prefConfig.height = displayHeight;
             prefConfig.fps = currentMode.getRefreshRate();
             prefConfig.videoScaleMode = PreferenceConfiguration.ScaleMode.STRETCH;
-            prefConfig.showOverlayZoomToggleButton = false;
             prefConfig.enablePip = false;
             currentOrientation = Configuration.ORIENTATION_LANDSCAPE;
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE);
@@ -768,7 +757,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                 .setApp(app)
                 .setEnableUltraLowLatency(prefConfig.enableUltraLowLatency)
                 .setBitrate(isMetered ? prefConfig.meteredBitrate: prefConfig.bitrate)
-                .setEnableSops(prefConfig.enableSops)
+                .setEnableSops(false) // Delos: GFE only, Vibepollo / Apollo / Sunshine ignore it
                 .enableLocalAudioPlayback(prefConfig.playHostAudio)
                 .setMaxPacketSize(1392)
                 .setRemoteConfiguration(StreamConfiguration.STREAM_CFG_AUTO) // NvConnection will perform LAN and VPN detection
@@ -861,9 +850,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         gameMenuCallbacks = new GameMenu(this);
         streamMenu = new com.limelight.shell.StreamMenu(this);
 
-        overlayToggleButton = findViewById(R.id.overlayToggleZoomButton);
-        setupOverlayToggleButton();
-
         // Fixed stream surface size and z-order (the frame rate is set on the Surface by the decoder)
         try {
             View root = findViewById(android.R.id.content);
@@ -879,80 +865,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                 try { streamSurfaceView.setZOrderMediaOverlay(false); } catch (Throwable t) { LimeLog.warning("SurfaceView setZOrderMediaOverlay failed: " + t); }
             }
         } catch (Throwable t) { LimeLog.warning("Stream surface setup failed: " + t); }
-    }
-
-    @SuppressLint("ClickableViewAccessibility")
-    private void setupOverlayToggleButton() {
-        if (overlayToggleButton != null) {
-            if (prefConfig.showOverlayZoomToggleButton) {
-                overlayToggleButton.setVisibility(View.VISIBLE);
-
-                // Set initial appearance based on current state
-                updateZoomButtonAppearance();
-
-                // Touch listener for drag and click
-                overlayToggleButton.setOnTouchListener((view, event) -> {
-                    switch (event.getAction()) {
-                        case MotionEvent.ACTION_DOWN:
-                            zoomButtonStartX = event.getRawX();
-                            zoomButtonStartY = event.getRawY();
-                            zoomButtonDX = view.getX() - event.getRawX();
-                            zoomButtonDY = view.getY() - event.getRawY();
-                            isZoomButtonMoving = false;
-                            return true;
-                        case MotionEvent.ACTION_MOVE:
-                            float newX = event.getRawX() + zoomButtonDX;
-                            float newY = event.getRawY() + zoomButtonDY;
-
-                            // Check if it's a move or just a tap
-                            if (Math.abs(event.getRawX() - zoomButtonStartX) > CLICK_ACTION_THRESHOLD ||
-                                    Math.abs(event.getRawY() - zoomButtonStartY) > CLICK_ACTION_THRESHOLD) {
-                                isZoomButtonMoving = true;
-                            }
-
-                            // Ensure the button stays within screen bounds
-                            if (newX < 0) newX = 0;
-                            if (newY < 0) newY = 0;
-
-                            int maxOffsetX = getWindow().getDecorView().getWidth() - view.getWidth();
-                            if (newX > maxOffsetX) {
-                                newX = maxOffsetX;
-                            }
-
-                            int maxOffsetY = getWindow().getDecorView().getHeight() - view.getHeight();
-                            if (newY > maxOffsetY) {
-                                newY = maxOffsetY;
-                            }
-
-                            view.setX(newX);
-                            view.setY(newY);
-                            return true;
-                        case MotionEvent.ACTION_UP:
-                            if (!isZoomButtonMoving) {
-                                // It's a click event, toggle zoom mode
-                                toggleZoomMode();
-                                updateZoomButtonAppearance();
-                            }
-                            isZoomButtonMoving = false;
-                            return true;
-                        default:
-                            return false;
-                    }
-                });
-            } else {
-                overlayToggleButton.setVisibility(View.GONE);
-            }
-        }
-    }
-
-    private void updateZoomButtonAppearance() {
-        if (overlayToggleButton != null) {
-            // Change background based on pan/zoom mode state
-            overlayToggleButton.setBackgroundResource(isPanZoomMode ?
-                    R.drawable.floating_menu_button_active : R.drawable.floating_menu_button);
-            // No need for alpha changes since the color indicates the state
-            overlayToggleButton.setAlpha(1.0f);
-        }
     }
 
     private void listenForExternalDisplayRemoval() {
@@ -1103,12 +1015,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             if (isInPictureInPictureMode()) {
                 isHidingOverlays = true;
 
-                overlayToggleZoomButtonShown = overlayToggleButton != null && overlayToggleButton.isShown();
-
-                if (overlayToggleZoomButtonShown) {
-                    overlayToggleButton.setVisibility(View.GONE);
-                }
-
                 if (virtualController != null) {
                     virtualController.hide();
                 }
@@ -1134,10 +1040,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             }
             else {
                 isHidingOverlays = false;
-
-                if (overlayToggleZoomButtonShown) {
-                    overlayToggleButton.setVisibility(View.VISIBLE);
-                }
 
                 // Restore overlays to previous state when leaving PiP
 
@@ -1547,7 +1449,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
             // In multi-window mode on N+, we need to drop our layout flags or we'll
             // be drawing underneath the system UI.
-            if (!prefConfig.fullScreen || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isInMultiWindowMode())) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isInMultiWindowMode()) {
                 Game.this.getWindow().getDecorView().setSystemUiVisibility(
                         View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
             }
@@ -3534,9 +3436,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                 // Sync local clipboard to host
                 handleFocusChange(true);
 
-                // Ensure overlay toggle button visibility is properly set
-                setupOverlayToggleButton();
-
                 hideSystemUi(1000);
 
                 if (prefConfig.preventPacketLoss) {
@@ -3846,7 +3745,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         } else {
             Toast.makeText(this, getString(R.string.pan_zoom_mode_disabled), Toast.LENGTH_SHORT).show();
         }
-        updateZoomButtonAppearance();
 
         if (ExternalDisplayControlActivity.instance != null) {
             ExternalDisplayControlActivity.instance.toggleZoomMode(false);
@@ -4039,7 +3937,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
         // Always exit zoom mode if mouse mode has changed
         isPanZoomMode = false;
-        updateZoomButtonAppearance();
     }
 
     public void toggleHUD() {

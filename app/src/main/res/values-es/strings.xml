@@ -96,8 +96,6 @@
     <string name="title_checkbox_small_icon_mode">Usar iconos pequeños</string>
     <string name="summary_checkbox_small_icon_mode">Usar iconos pequeños en las entradas de cuadrículas para permitir más entradas en la pantalla</string>
     <string name="category_host_settings">Configuración de servidor</string>
-    <string name="title_checkbox_enable_sops">Optimizar configuración del juego</string>
-    <string name="summary_checkbox_enable_sops">Permitir que GFE modifique la configuración del juego para una transmisión óptima</string>
     <string name="title_checkbox_host_audio">Reproducir audio en PC</string>
     <string name="summary_checkbox_host_audio">Reproducir audio en el ordenador y en este dispositivo</string>
     <string name="category_advanced_settings">Configuración avanzada</string>
@@ -282,8 +280,6 @@
     <string name="suffix_seekbar_vibrate_fallback_strength">%</string>
     <string name="title_enable_commit_text">Activar entrada de texto commit (gestos/voz)</string>
     <string name="summary_enable_commit_text">Envía texto de varias letras desde teclados en pantalla (escritura gestual, predicciones, dictado por voz). Puede afectar a juegos que dependen de pulsaciones individuales.</string>
-    <string name="title_show_overlay_zoom_toggle_button">Mostrar botón de alternar zoom de superposición</string>
-    <string name="summary_show_overlay_zoom_toggle_button">Muestra un botón desplazable en la parte superior de la pantalla para activar o desactivar el modo de desplazamiento/zoom.</string>
     <string name="title_checkbox_remember_zoom_pan">Recordar zoom y desplazamiento</string>
     <string name="summary_checkbox_remember_zoom_pan">Guarda la posición de zoom y desplazamiento entre sesiones.</string>
     <string name="title_edit_profile">Editar perfil</string>

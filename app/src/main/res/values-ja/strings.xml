@@ -92,8 +92,6 @@
     <string name="title_checkbox_small_icon_mode">小さなアイコン</string>
     <string name="summary_checkbox_small_icon_mode">グリッドで小さなアイコンを使用します</string>
     <string name="category_host_settings">ホスト</string>
-    <string name="title_checkbox_enable_sops">ゲーム設定の最適化</string>
-    <string name="summary_checkbox_enable_sops">GFEがゲームの設定を最適化します</string>
     <string name="title_checkbox_host_audio">コンピュータで音声を再生</string>
     <string name="summary_checkbox_host_audio">音声をコンピュータとこのデバイスの両方で再生します</string>
     <string name="category_advanced_settings">高度な設定</string>

@@ -177,8 +177,6 @@
     <string name="title_checkbox_small_icon_mode">Verwende kleine Cover</string>
     <string name="summary_checkbox_small_icon_mode">Verwende kleine Cover in der Rasteransicht, um mehr gleichzeitig anzeigen zu können</string>
     <string name="category_host_settings">Host Einstellungen</string>
-    <string name="title_checkbox_enable_sops">Spieleinstellungen optimieren</string>
-    <string name="summary_checkbox_enable_sops">GFE erlauben, die Spieleinstellungen für ein optimales Streaming zu ändern</string>
     <string name="title_checkbox_host_audio">Audio auf dem Host wiedergeben</string>
     <string name="summary_checkbox_host_audio">Audio auf dem Host und auf diesem Gerät wiedergeben</string>
     <string name="category_advanced_settings">Erweiterte Einstellungen</string>
@@ -287,8 +285,6 @@
     <string name="toggle_pan_zoom_mode">Schwenk-/Zoom-Modus umschalten</string>
     <string name="profile_manager_profiles_description">Profile ermöglichen es Ihnen, verschiedene Streaming-Konfigurationen zu erstellen und zu speichern. Jedes Profil speichert seine eigenen Einstellungen, zwischen denen schnell gewechselt werden kann.</string>
 
-    <string name="title_show_overlay_zoom_toggle_button">Taste zum Umschalten des Zoom-Overlays anzeigen</string>
-    <string name="summary_show_overlay_zoom_toggle_button">Zeigt eine verschiebbare Taste oben auf dem Bildschirm an, um den Schwenk-/Zoom-Modus umzuschalten.</string>
     <string name="title_checkbox_remember_zoom_pan">Zoom &amp; Pan merken</string>
     <string name="summary_checkbox_remember_zoom_pan">Speichert Zoom- und Schwenkposition zwischen Sitzungen.</string>
 

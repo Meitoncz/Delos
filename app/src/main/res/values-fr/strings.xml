@@ -258,8 +258,6 @@
     <string name="summary_checkbox_small_icon_mode">Des icônes plus petites permettent d\'afficher plus d\'applications en même temps</string>
 
     <string name="category_host_settings">Paramètres de l\'hôte</string>
-    <string name="title_checkbox_enable_sops">Optimiser les paramètres du jeu</string>
-    <string name="summary_checkbox_enable_sops">Autoriser GFE à modifier les paramètres du jeu pour un streaming optimal</string>
     <string name="title_checkbox_host_audio">Lire l\'audio sur le PC</string>
     <string name="summary_checkbox_host_audio">Lire l\'audio sur l\'ordinateur et sur cet appareil</string>
 
@@ -400,9 +398,6 @@
     <string name="summary_auto_orientation">L\'écran de streaming sera affiché selon l\'orientation de l\'appareil lorsque le streaming commence.</string>
     <string name="title_import_special_button">Importer des touches spéciales personnalisées</string>
     <string name="summary_import_special_button">Disponible dans le menu Retour et les touches spéciales.\nRemarque : l\'importation écrasera la configuration actuelle, veuillez sauvegarder en conséquence.</string>
-    <string name="title_software_update">Mise à jour du logiciel</string>
-    <string name="title_follow_update">Suivre les mises à jour</string>
-    <string name="summary_follow_update">Suivre les mises à jour de Delos avec Obtainium</string>
     <string name="title_special_key_layout">Disposition des touches spéciales</string>
     <string name="title_show_virtual_key">Afficher les touches virtuelles à l\'écran</string>
     <string name="summary_show_virtual_key">Affiche une couche de touches spéciales virtuelles sur l\'écran tactile.\nL\'opacité des touches est partagée avec la manette virtuelle ci-dessus.</string>
@@ -566,8 +561,6 @@
     <string name="permission_sync_clipboard">Synchroniser le presse-papiers</string>
     <string name="title_enable_commit_text">Activer la saisie commit-text (gestes/voix)</string>
     <string name="summary_enable_commit_text">Transfère le texte multi-caractères des claviers virtuels (saisie gestuelle, suggestions, dictée vocale). Peut perturber les jeux qui attendent des frappes une par une.</string>
-    <string name="title_show_overlay_zoom_toggle_button">Afficher le bouton de bascule du zoom de superposition</string>
-    <string name="summary_show_overlay_zoom_toggle_button">Affiche un bouton déplaçable en haut de l\'écran pour activer/désactiver le mode panoramique/zoom.</string>
     <string name="title_checkbox_remember_zoom_pan">Mémoriser le zoom et le panoramique</string>
     <string name="summary_checkbox_remember_zoom_pan">Enregistre la position de zoom et de panoramique entre les sessions.</string>
     <string name="title_edit_profile">Modifier le profil</string>

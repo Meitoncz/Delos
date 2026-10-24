@@ -273,8 +273,6 @@
 	<string name="summary_checkbox_small_icon_mode">在應用程式格狀檢視中使用較小封面圖，可在同一畫面顯示更多應用程式</string>
 
 	<string name="category_host_settings">主機設定</string>
-	<string name="title_checkbox_enable_sops">最佳化遊戲設定</string>
-	<string name="summary_checkbox_enable_sops">允許 GFE 調整遊戲設定以達到最佳串流效果</string>
 	<string name="title_checkbox_host_audio">在電腦播放音訊</string>
 	<string name="summary_checkbox_host_audio">在電腦與此裝置同時播放音訊</string>
 
@@ -432,8 +430,6 @@
 
 
 
-	<string name="title_show_overlay_zoom_toggle_button">顯示覆蓋層縮放切換按鈕</string>
-	<string name="summary_show_overlay_zoom_toggle_button">在畫面頂部顯示可拖曳的按鈕，用於切換平移/縮放模式。</string>
 
 	<string name="title_virtual_trackpad_settings">虛擬觸控板設定</string>
 
@@ -450,10 +446,7 @@
 	<string name="summary_import_special_button">可於返回選單與特殊按鍵中使用。\n注意：匯入會覆寫目前設定，請先備份。</string>
 
 
-	<string name="title_software_update">軟體更新</string>
 
-	<string name="title_follow_update">追蹤更新</string>
-	<string name="summary_follow_update">使用 Obtainium 追蹤 Delos 更新</string>
 
 	<string name="title_special_key_layout">特殊按鍵佈局</string>
 	<string name="title_show_virtual_key">在螢幕上顯示虛擬按鍵</string>
@@ -734,6 +727,4 @@
 	<string name="summary_low_latency_frame_balance">透過丟棄緩衝幀以最小化延遲。</string>
 	<string name="category_perf_monitor_settings">效能監視器</string>
 
-	<string name="title_checkbox_full_screen">啟用全螢幕</string>
-	<string name="summary_checkbox_full_screen">以沉浸模式隱藏系統列</string>
 </resources>

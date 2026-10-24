@@ -203,7 +203,6 @@
     <string name="title_checkbox_enable_pip">Resim İçinde Resim gözlemci modunu etkinleştir</string>
     <string name="summary_checkbox_enable_pip">Çoklu görev sırasında akışın görüntülenmesine (ancak kontrol edilmemesine) olanak tanır</string>
     <string name="summary_osc_opacity">Ekrandaki kontrolleri daha fazla/daha az saydam hale getirin</string>
-    <string name="summary_checkbox_enable_sops">En iyi akış için GFE oyun ayarlarını değiştirmesine izin ver</string>
     <string name="category_advanced_settings">Gelişmiş Ayarlar</string>
     <string name="title_unlock_fps">Mümkün olan tüm kare hızlarının kilidini aç</string>
     <string name="title_checkbox_small_icon_mode">Küçük kutu resmi kullan</string>
@@ -252,7 +251,6 @@
     <string name="analogscroll_left">Sol analog çubuk</string>
     <string name="analogscroll_right">Sağ analog çubuk</string>
     <string name="summary_checkbox_host_audio">Sesleri bilgisayardan ve bu cihazdan oynat</string>
-    <string name="title_checkbox_enable_sops">Oyun ayarlarını iyileştir</string>
     <string name="title_checkbox_disable_warnings">Uyarı mesajlarını devre dışı bırak</string>
     <string name="resolution_prefix_native_landscape">(Manzara)</string>
     <string name="resolution_prefix_native_portrait">(Portre)</string>

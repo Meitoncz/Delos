@@ -97,8 +97,6 @@
     <string name="summary_language_list">Język używany w Delos</string>
     <string name="category_host_settings">Ustawienia hosta</string>
     <string name="summary_checkbox_small_icon_mode">Mniejsze ramki w siatce aplikacji pozwalają na wyświetlanie większej liczby aplikacji na ekranie</string>
-    <string name="title_checkbox_enable_sops">Optymalizacja ustawień gry</string>
-    <string name="summary_checkbox_enable_sops">Zezwalanie GFE na modyfikowanie ustawień gry w celu optymalnego streamowania</string>
     <string name="title_checkbox_host_audio">Odtwarzanie dźwięku na komputerze</string>
     <string name="summary_checkbox_host_audio">Odtwarzanie dźwięku z komputera i tego urządzenia</string>
     <string name="category_advanced_settings">Ustawienia zaawansowane</string>

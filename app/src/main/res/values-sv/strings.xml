@@ -146,8 +146,6 @@
     <string name="title_checkbox_small_icon_mode">Använd liten omslagskonst</string>
     <string name="summary_checkbox_small_icon_mode">Mindre lådor i appgallret gör att fler appar syns på skärmen</string>
     <string name="category_host_settings">Värdinställningar</string>
-    <string name="title_checkbox_enable_sops">Optimera spelinställningarna</string>
-    <string name="summary_checkbox_enable_sops">Tillåt GFE att ändra spelinställningar för optimal strömning</string>
     <string name="title_checkbox_host_audio">Spela upp ljud på datorn</string>
     <string name="summary_checkbox_host_audio">Spela upp ljud från datorn och den här enheten</string>
     <string name="category_advanced_settings">Utvecklade inställningar</string>
