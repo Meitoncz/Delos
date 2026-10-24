@@ -394,48 +394,51 @@ fun Shell(
                 }
             }
 
-            Scrim(shell.layer != null, haze) {
-                feedback.play(Cue.BACK)
-                shell.closeLayer()
-            }
-            val context = shell.layer as? Layer.Context
-            ContextMenuLayer(context?.menu, context?.anchor, context?.below == true, haze) { shell.closeLayer() }
-            SideMenuLayer(
-                shell.layer == Layer.Side,
-                haze,
-                header = {
-                    SideMenuHeader(
-                        avatar = { profile?.let { AvatarBadge(it.look, 72f, 40f) } },
-                        name = profile?.name ?: "Delos",
-                        status = when {
-                            pc == null -> "Not connected"
-                            pc.online -> "Connected to ${pc.name}"
-                            else -> "${pc.name} is offline"
-                        },
-                    )
-                },
-            ) { first ->
-                SideMenuRows(appearance, update, Modifier.focusRequester(first)) { shell.navigate(Screen.Settings) }
-                val hiddenCount = (library as? Library.Ready)?.hiddenCount ?: 0
-                if (hiddenCount > 0 || showHidden) {
-                    SettingRow(
-                        Symbols.VISIBILITY, "Show hidden games", RowValue.Toggle(showHidden) { repo.setShowHidden(it) },
-                        description = "$hiddenCount hidden on ${pc?.name ?: "this PC"}", compact = true,
-                    )
+            // Overlays sit on their own glass: controls in them must not blur the background through it
+            CompositionLocalProvider(LocalBackdropHaze provides null) {
+                Scrim(shell.layer != null, haze) {
+                    feedback.play(Cue.BACK)
+                    shell.closeLayer()
                 }
-            }
+                val context = shell.layer as? Layer.Context
+                ContextMenuLayer(context?.menu, context?.anchor, context?.below == true, haze) { shell.closeLayer() }
+                SideMenuLayer(
+                    shell.layer == Layer.Side,
+                    haze,
+                    header = {
+                        SideMenuHeader(
+                            avatar = { profile?.let { AvatarBadge(it.look, 72f, 40f) } },
+                            name = profile?.name ?: "Delos",
+                            status = when {
+                                pc == null -> "Not connected"
+                                pc.online -> "Connected to ${pc.name}"
+                                else -> "${pc.name} is offline"
+                            },
+                        )
+                    },
+                ) { first ->
+                    SideMenuRows(appearance, update, Modifier.focusRequester(first)) { shell.navigate(Screen.Settings) }
+                    val hiddenCount = (library as? Library.Ready)?.hiddenCount ?: 0
+                    if (hiddenCount > 0 || showHidden) {
+                        SettingRow(
+                            Symbols.VISIBILITY, "Show hidden games", RowValue.Toggle(showHidden) { repo.setShowHidden(it) },
+                            description = "$hiddenCount hidden on ${pc?.name ?: "this PC"}", compact = true,
+                        )
+                    }
+                }
 
-            DialogLayer((shell.layer as? Layer.Dialog)?.dialog, haze) {
-                feedback.play(Cue.BACK)
-                shell.closeLayer()
-            }
+                DialogLayer((shell.layer as? Layer.Dialog)?.dialog, haze) {
+                    feedback.play(Cue.BACK)
+                    shell.closeLayer()
+                }
 
-            PortalOverlay(shell.portal, shell.portalBurst, haze, appearance.reducedMotion)
+                PortalOverlay(shell.portal, shell.portalBurst, haze, appearance.reducedMotion)
 
-            ButtonCaptureLayer(shell.buttonCapture != null, keys) { buttons ->
-                val save = shell.buttonCapture
-                shell.buttonCapture = null
-                if (buttons != null) save?.invoke(buttons)
+                ButtonCaptureLayer(shell.buttonCapture != null, keys) { buttons ->
+                    val save = shell.buttonCapture
+                    shell.buttonCapture = null
+                    if (buttons != null) save?.invoke(buttons)
+                }
             }
 
             val note = (library as? Library.Ready)?.takeIf { shell.screen == Screen.Home && shell.layer == null }?.let { "${it.apps.size} apps on ${it.pc.name}" }

@@ -90,6 +90,7 @@ import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.Unbounded
 import com.limelight.shell.ui.fadeMask
 import com.limelight.shell.ui.focusEffects
+import com.limelight.shell.ui.glass
 import com.limelight.shell.ui.focusPulse
 import com.limelight.shell.ui.hsl
 import com.limelight.shell.ui.px
@@ -360,7 +361,7 @@ private fun Chip(icon: String, label: String) {
     Row(
         Modifier
             .clip(CircleShape)
-            .background(colors.surface)
+            .glass(colors.surface)
             .border(1.px, colors.line, CircleShape)
             .padding(horizontal = 16.px, vertical = 6.px),
         verticalAlignment = Alignment.CenterVertically,

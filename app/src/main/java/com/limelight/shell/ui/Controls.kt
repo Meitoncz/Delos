@@ -103,8 +103,7 @@ fun PillButton(label: String, icon: String?, onClick: () -> Unit, modifier: Modi
                 sweep = primary, clickCue = clickCue, onFocusChange = { focused = it },
             )
             .clip(CircleShape)
-            .background(if (primary) colors.accent else colors.surface)
-            .then(if (primary) Modifier else Modifier.border(1.px, colors.line, CircleShape))
+            .then(if (primary) Modifier.background(colors.accent) else Modifier.glass(colors.surface).border(1.px, colors.line, CircleShape))
             .height(76.px)
             .padding(horizontal = 40.px),
         verticalAlignment = Alignment.CenterVertically,
@@ -178,7 +177,7 @@ fun CircleItem(
                     Modifier
                         .fillMaxSize()
                         .clip(CircleShape)
-                        .then(if (avatarHue != null) Modifier.avatarBackground(avatarHue) else Modifier.background(colors.surface2).border(1.px, colors.line, CircleShape)),
+                        .then(if (avatarHue != null) Modifier.avatarBackground(avatarHue) else Modifier.glass(colors.surface2).border(1.px, colors.line, CircleShape)),
                     contentAlignment = Alignment.Center,
                 ) {
                     Symbol(
@@ -315,7 +314,7 @@ fun TextFieldPill(
                     .width(width.px)
                     .height(84.px)
                     .clip(CircleShape)
-                    .background(colors.surface2)
+                    .glass(colors.surface2)
                     .border(1.px, colors.line, CircleShape)
                     .padding(horizontal = 28.px),
                 verticalAlignment = Alignment.CenterVertically,

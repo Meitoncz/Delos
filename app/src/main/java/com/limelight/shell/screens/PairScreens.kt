@@ -54,6 +54,7 @@ import com.limelight.shell.ui.PillButton
 import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.Unbounded
 import com.limelight.shell.ui.px
+import com.limelight.shell.ui.glass
 import com.limelight.shell.ui.tpx
 import kotlinx.coroutines.delay
 
@@ -198,7 +199,7 @@ private fun PinDigits(pin: String) {
                     }
                     .size(148.px, 176.px)
                     .clip(shape)
-                    .background(colors.surface2)
+                    .glass(colors.surface2)
                     .border(1.px, colors.line, shape),
                 contentAlignment = Alignment.Center,
             ) {

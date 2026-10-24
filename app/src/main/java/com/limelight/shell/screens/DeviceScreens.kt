@@ -50,6 +50,7 @@ import com.limelight.shell.ui.OnlineGreen
 import com.limelight.shell.ui.Symbol
 import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.focusEffects
+import com.limelight.shell.ui.glass
 import com.limelight.shell.ui.px
 import com.limelight.shell.ui.tpx
 
@@ -127,7 +128,7 @@ private fun ProfileChip(profiles: Profiles, store: ProfileStore, modifier: Modif
                 clickCue = null, contextMenu = menu, onFocusChange = { focused = it },
             )
             .clip(CircleShape)
-            .background(colors.surface)
+            .glass(colors.surface)
             .border(1.px, colors.line, CircleShape)
             .height(68.px)
             .padding(start = 6.px, end = 26.px),

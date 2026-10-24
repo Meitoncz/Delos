@@ -171,7 +171,7 @@ fun LogoMark(size: Float = 40f) {
 private fun PcPill(name: String, online: Boolean) {
     val colors = LocalDelosColors.current
     Row(
-        Modifier.clip(CircleShape).background(colors.surface).border(1.px, colors.line, CircleShape).padding(horizontal = 18.px, vertical = 8.px),
+        Modifier.clip(CircleShape).glass(colors.surface).border(1.px, colors.line, CircleShape).padding(horizontal = 18.px, vertical = 8.px),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.px),
     ) {
@@ -239,7 +239,7 @@ private fun NavButtonView(button: NavButton) {
             BasicText(
                 button.label,
                 style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 18.tpx),
-                modifier = Modifier.clip(CircleShape).background(colors.surface3).padding(horizontal = 14.px, vertical = 6.px),
+                modifier = Modifier.clip(CircleShape).glass(colors.surface3).padding(horizontal = 14.px, vertical = 6.px),
             )
         }
     }

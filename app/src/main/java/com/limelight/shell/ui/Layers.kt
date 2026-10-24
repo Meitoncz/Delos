@@ -88,6 +88,14 @@ fun Modifier.backdropBlur(haze: HazeState, radius: Float, tint: Color): Modifier
     )
 }
 
+/**
+ * Frosted glass over the animated background with [tint], like the top bar and the focused settings row;
+ * just [tint] inside overlays, which turn the background source off ([LocalBackdropHaze] is null there).
+ */
+@Composable
+fun Modifier.glass(tint: Color): Modifier =
+    LocalBackdropHaze.current?.let { backdropBlur(it, 8f, tint) } ?: background(tint)
+
 /** Dims and slightly blurs the screen under a menu (`#scrim`); a tap outside closes the menu. */
 @Composable
 fun Scrim(visible: Boolean, haze: HazeState, onDismiss: () -> Unit) {
