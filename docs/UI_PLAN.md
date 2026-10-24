@@ -179,7 +179,8 @@ Built on the branch `ui/switch-over` (2026-10-24). Delos is still not released; 
 - [x] Desktop gets the Artwork option (chosen by hand; never looked up automatically by its name).
 - [x] The user picked the backgrounds: Nebula, Plasma, Lava, Caustics, Bokeh and Orbit stay; Mesh, Grid, Constellation and Starfield are gone. Tide now fills the lower two thirds; Contour is a shader on Android 13+, so its lines are smooth curves (the canvas version below).
 - [x] Status bar: while charging, a ring pulses out from the battery like the one around the focused cover; Wi-Fi and the battery percentage in the clock's color.
-- [x] Row layout: the row stops at its end with the last cover as far from the right edge as the first game is from the left one (both focused; computed from the cover sizes and the focus scale); left on the first game and right on the last one glide round to the other end.
+- [x] Row layout: the row stops at its end with the last cover as far from the right edge as the first game is from the left one (both focused; computed from the cover sizes and the focus scale); left on the first game and right on the last one go round to the other end: a far one fades out for a moment and jumps 12 covers short, the rest glides in 0.36 s at full speed into a spring that overshoots the end and settles back.
+- [x] The library is ordered by when each game was last played (per PC and profile), the running game first, never played ones after them in the PC's order.
 - [ ] Responsive layouts for other screen shapes (the stage is 1920 × 1080 and only scales); with the 6.10 device checks.
 - [ ] Built-in artwork for Desktop and similar apps from the user's PNGs (cover 600 × 900, wide 920 × 430, background 1920 × 1080, logo transparent PNG about 1800 × 400), once the user names the apps.
 - [ ] New on-screen controls graphics: thin modern lines, out of the way but usable (next).

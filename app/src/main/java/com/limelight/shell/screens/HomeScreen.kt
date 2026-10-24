@@ -1,5 +1,8 @@
 package com.limelight.shell.screens
 
+import androidx.compose.animation.core.spring
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.animation.core.Animatable
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -274,11 +277,19 @@ private fun GameLibrary(library: Library.Ready, appearance: Appearance, repo: Pc
                 // At the end the row stops with the last cover at the right edge, so the right fade goes away there
                 val endFade by animateFloatAsState(if (rowState.canScrollForward) 1f else 0f, tween(300), label = "rowEndFade")
                 val density = LocalDensity.current.density
+                // Faded out for a moment while a long wrap jumps close to the other end
+                val rowAlpha = remember { Animatable(1f) }
+                // The spring at the end of a wrap: the row overshoots the end a little and settles back
+                val rowBounce = remember { Animatable(0f) }
                 LazyRow(
                     state = rowState,
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(top = (430f - (uiScale - 1f) * 92f).px, bottom = 20.px)
+                        .graphicsLayer {
+                            alpha = rowAlpha.value
+                            translationX = rowBounce.value
+                        }
                         .fadeMask(stage, vertical = false, startClear = 0f, startSolid = 120f, endSolid = 20f + 240f * endFade, endClear = 20f * endFade)
                         // Left on the first game goes round to the last one, right on the last one back to the first
                         .onPreviewKeyEvent { event ->
@@ -290,11 +301,35 @@ private fun GameLibrary(library: Library.Ready, appearance: Appearance, repo: Pc
                                 else -> return@onPreviewKeyEvent false
                             }
                             scope.launch {
-                                // Glide there (the row stops at its ends by itself), then move the focus
                                 val k = stage.dpPerPx * density
-                                val now = rowItemStart(rowState.firstVisibleItemIndex) * k + rowState.firstVisibleItemScrollOffset
-                                val delta = rowItemStart(target) * k - now
-                                if (reducedMotion) rowState.scrollBy(delta) else rowState.animateScrollBy(delta, tween(520, easing = CubicBezierEasing(.33f, 1f, .68f, 1f)))
+                                fun now() = rowItemStart(rowState.firstVisibleItemIndex) * k + rowState.firstVisibleItemScrollOffset
+                                // Far away: fade out, jump a few covers short of the other end and fade in again, so the
+                                // glide does not have to load every cover on the way
+                                if (!reducedMotion && kotlin.math.abs(target - rowState.firstVisibleItemIndex) > WRAP_GLIDE_ITEMS) {
+                                    rowAlpha.animateTo(0f, tween(110))
+                                    rowState.scrollToItem(if (target == 0) WRAP_GLIDE_ITEMS else (target - WRAP_GLIDE_ITEMS).coerceAtLeast(0))
+                                    launch { rowAlpha.animateTo(1f, tween(260)) }
+                                }
+                                // Glide there without slowing down (the row stops at its ends by itself), overshoot the end on
+                                // a spring and settle back, then move the focus
+                                // Toward the end the row stops before the target reaches the left: aim exactly at that end, so
+                                // the glide does not run on for nothing
+                                val end = (150f + rowItemStart(apps.lastIndex) + (if (apps.size == 1) ROW_WIDE else ROW_TILE) + ROW_END_PADDING) * k -
+                                    rowState.layoutInfo.viewportSize.width
+                                val delta = minOf(rowItemStart(target) * k, end.coerceAtLeast(0f)) - now()
+                                if (reducedMotion) rowState.scrollBy(delta) else {
+                                    rowState.animateScrollBy(delta, tween(360, easing = CubicBezierEasing(.45f, .05f, .8f, .65f)))
+                                    rowAlpha.snapTo(1f)
+                                    // Arriving at the last cover the content moves left, at the first one right
+                                    val speed = (kotlin.math.abs(delta) * 1.75f / .36f).coerceAtMost(4200f * k)
+                                    launch {
+                                        rowBounce.animateTo(
+                                            0f, spring(dampingRatio = .36f, stiffness = 340f),
+                                            initialVelocity = if (target == 0) speed else -speed,
+                                        )
+                                    }
+                                }
+                                rowAlpha.snapTo(1f)
                                 withFrameNanos { }
                                 runCatching { requester(apps[target]).requestFocus() }
                             }
@@ -334,6 +369,9 @@ private const val ROW_GAP = 28f
 
 /** Where item [index] starts in the row, from the start of its content (stage pixels). */
 private fun rowItemStart(index: Int): Float = if (index == 0) 0f else ROW_WIDE + ROW_GAP + (index - 1) * (ROW_TILE + ROW_GAP)
+
+/** A wrap round the row glides over the last this many covers (the rest is a quick jump). */
+private const val WRAP_GLIDE_ITEMS = 12
 
 /** How much a cover grows when focused (focusEffects' default). */
 private const val TILE_FOCUS_SCALE = 1.055f

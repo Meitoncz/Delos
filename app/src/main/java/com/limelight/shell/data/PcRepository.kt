@@ -284,11 +284,32 @@ class PcRepository(context: Context, private val settings: () -> SharedPreferenc
         }
     }
 
-    /** The running game first, then the last played one; otherwise the PC's order. */
+    /**
+     * The running game first, then every game played on this PC from the most recent one, then the ones
+     * never played in the PC's order.
+     */
     private fun order(apps: List<App>, pcUuid: String): List<App> {
-        val last = prefs.getInt(lastPlayedKey(pcUuid), -1)
-        val first = apps.firstOrNull { it.running } ?: apps.firstOrNull { it.id == last } ?: return apps
-        return listOf(first) + (apps - first)
+        val played = playedTimes(pcUuid)
+        val recent = apps.filter { it.id in played }.sortedByDescending { played.getValue(it.id) }
+        val ordered = recent + apps.filter { it.id !in played }
+        val running = ordered.firstOrNull { it.running } ?: return ordered
+        return listOf(running) + (ordered - running)
+    }
+
+    /**
+     * When each game on [pcUuid] was last started (app id → time), kept with the profile as
+     * "id:time,id:time"; the single last played game of earlier versions counts as the most recent one.
+     */
+    private fun playedTimes(pcUuid: String): Map<Int, Long> {
+        val stored = prefs.getString(playedKey(pcUuid), null)
+        if (stored == null) {
+            val last = prefs.getInt(lastPlayedKey(pcUuid), -1)
+            return if (last >= 0) mapOf(last to 1L) else emptyMap()
+        }
+        return stored.split(',').mapNotNull { entry ->
+            val (id, time) = entry.split(':').takeIf { it.size == 2 } ?: return@mapNotNull null
+            (id.toIntOrNull() ?: return@mapNotNull null) to (time.toLongOrNull() ?: return@mapNotNull null)
+        }.toMap()
     }
 
     /** Asks the service for a fresh state and app list of the active PC (after a game was started or quit). */
@@ -301,7 +322,11 @@ class PcRepository(context: Context, private val settings: () -> SharedPreferenc
     fun lastPlayed(pcUuid: String): Int = prefs.getInt(lastPlayedKey(pcUuid), -1)
 
     fun setLastPlayed(pcUuid: String, appId: Int) {
-        prefs.edit().putInt(lastPlayedKey(pcUuid), appId).apply()
+        val played = playedTimes(pcUuid) + (appId to System.currentTimeMillis())
+        prefs.edit()
+            .putInt(lastPlayedKey(pcUuid), appId)
+            .putString(playedKey(pcUuid), played.entries.joinToString(",") { "${it.key}:${it.value}" })
+            .apply()
         update()
     }
 
@@ -314,6 +339,8 @@ class PcRepository(context: Context, private val settings: () -> SharedPreferenc
     }
 
     private fun lastPlayedKey(uuid: String) = "ui_last_app_$uuid"
+
+    private fun playedKey(uuid: String) = "ui_played_apps_$uuid"
 
     private fun customNameKey(uuid: String) = "ui_pc_name_$uuid"
 
