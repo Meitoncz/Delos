@@ -1,5 +1,12 @@
 package com.limelight.shell.screens
 
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.tween
@@ -264,14 +271,38 @@ private fun GameLibrary(library: Library.Ready, appearance: Appearance, repo: Pc
         GameInfo(pc, focused, index = focusedIndex, lastPlayed = library.lastPlayed, Modifier.padding(start = 150.px, top = if (row) 210.px else 116.px))
         CompositionLocalProvider(LocalBringIntoViewSpec provides NoAutoScroll) {
             if (row) {
+                // At the end the row stops with the last cover at the right edge, so the right fade goes away there
+                val endFade by animateFloatAsState(if (rowState.canScrollForward) 1f else 0f, tween(300), label = "rowEndFade")
+                val density = LocalDensity.current.density
                 LazyRow(
                     state = rowState,
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(top = (430f - (uiScale - 1f) * 92f).px, bottom = 20.px)
-                        .fadeMask(stage, vertical = false, startClear = 0f, startSolid = 120f, endSolid = 260f, endClear = 20f),
-                    // The right padding lets even the last tile scroll to the left anchor
-                    contentPadding = PaddingValues(start = 150.px, end = 1470.px, top = 90.px, bottom = 90.px),
+                        .fadeMask(stage, vertical = false, startClear = 0f, startSolid = 120f, endSolid = 20f + 240f * endFade, endClear = 20f * endFade)
+                        // Left on the first game goes round to the last one, right on the last one back to the first
+                        .onPreviewKeyEvent { event ->
+                            if (event.type != KeyEventType.KeyDown || apps.size < 2) return@onPreviewKeyEvent false
+                            val index = apps.indexOfFirst { homeKey(pc, it) == shell.homeGame }
+                            val target = when {
+                                event.key == Key.DirectionLeft && index == 0 -> apps.lastIndex
+                                event.key == Key.DirectionRight && index == apps.lastIndex -> 0
+                                else -> return@onPreviewKeyEvent false
+                            }
+                            scope.launch {
+                                // Glide there (the row stops at its ends by itself), then move the focus
+                                val k = stage.dpPerPx * density
+                                val now = rowItemStart(rowState.firstVisibleItemIndex) * k + rowState.firstVisibleItemScrollOffset
+                                val delta = rowItemStart(target) * k - now
+                                if (reducedMotion) rowState.scrollBy(delta) else rowState.animateScrollBy(delta, tween(520, easing = CubicBezierEasing(.33f, 1f, .68f, 1f)))
+                                withFrameNanos { }
+                                runCatching { requester(apps[target]).requestFocus() }
+                            }
+                            true
+                        },
+                    // At the end the last cover (focused) is as far from the right edge as the first game (focused) is
+                    // from the left one
+                    contentPadding = PaddingValues(start = 150.px, end = ROW_END_PADDING.px, top = 90.px, bottom = 90.px),
                     horizontalArrangement = Arrangement.spacedBy(28.px),
                 ) {
                     itemsIndexed(apps, key = { _, app -> app.id }) { i, app -> tile(i, app) }
@@ -295,6 +326,25 @@ private fun GameLibrary(library: Library.Ready, appearance: Appearance, repo: Pc
         }
     }
 }
+
+/** Row layout: the wide first cover, the others and the gap between them, in stage pixels. */
+private const val ROW_WIDE = 956f
+private const val ROW_TILE = 300f
+private const val ROW_GAP = 28f
+
+/** Where item [index] starts in the row, from the start of its content (stage pixels). */
+private fun rowItemStart(index: Int): Float = if (index == 0) 0f else ROW_WIDE + ROW_GAP + (index - 1) * (ROW_TILE + ROW_GAP)
+
+/** How much a cover grows when focused (focusEffects' default). */
+private const val TILE_FOCUS_SCALE = 1.055f
+
+/**
+ * The right margin at the end of the row, mirroring the start: the focused wide first cover grows only to
+ * the left (so it never covers its neighbour), which brings its left edge closer to the screen's edge,
+ * while the other covers grow evenly. So the last cover, focused, is as far from the right edge as the
+ * first game, focused, is from the left one (about 97 px).
+ */
+private const val ROW_END_PADDING = 150f - ROW_WIDE * (TILE_FOCUS_SCALE - 1f) + ROW_TILE * (TILE_FOCUS_SCALE - 1f) / 2f
 
 private suspend fun scroll(state: ScrollableState, delta: Float, reducedMotion: Boolean) {
     if (kotlin.math.abs(delta) < 1f) return
