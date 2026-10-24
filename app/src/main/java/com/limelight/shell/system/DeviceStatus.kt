@@ -21,7 +21,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.delay
+import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Locale
 import kotlin.math.roundToInt
 
 /** Battery of the handheld: [level] 0–1. */
@@ -92,7 +94,10 @@ private fun bars(wifi: WifiManager?, rssi: Int): Int {
     }
 }
 
-/** The current time as a 24 or 12 hour clock ([format]; System follows Android), updated on every minute. */
+/**
+ * The current time as a 24 or 12 hour clock with AM / PM ([format]; System follows Android), updated on
+ * every minute.
+ */
 @Composable
 fun rememberClock(format: ClockFormat): State<String> {
     val context = LocalContext.current
@@ -101,7 +106,8 @@ fun rememberClock(format: ClockFormat): State<String> {
         ClockFormat.H12 -> false
         ClockFormat.H24 -> true
     }
-    fun now() = DateFormat.format(if (h24) "HH:mm" else "h:mm", Date()).toString()
+    // AM / PM in English like the rest of the interface, whatever the device language
+    fun now() = SimpleDateFormat(if (h24) "HH:mm" else "h:mm a", Locale.US).format(Date())
     val state = remember(h24) { mutableStateOf(now()) }
     LaunchedEffect(context, h24) {
         while (true) {
