@@ -1,6 +1,7 @@
 package com.limelight.shell.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -39,6 +40,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import com.limelight.shell.Portal
+import com.limelight.shell.StreamExit
 import dev.chrisbanes.haze.HazeState
 
 /** The pulses of the portal (`#portal .p-ring`): four rings 0.35 s apart, every 2.2 s. */
@@ -46,22 +48,32 @@ private const val RIPPLE_PERIOD = 2.2f
 private const val RIPPLE_GAP = .35f
 
 /**
- * The portal into a PC (`#portal`): the screen behind blurs, rings ripple out from an orb with the PC's
- * icon, its name and state below. When [burst] it flashes open and the orb flies at the viewer. It holds
- * the focus while shown, so nothing underneath reacts; only B (cancel) passes through.
+ * The portal into a PC (`#portal`): the screen behind blurs ([haze]; without one, over the stream, it is
+ * dimmed instead), rings ripple out from an orb with the PC's icon, its name and state below. When [burst]
+ * it flashes open and the orb flies at the viewer. It holds the focus while shown, so nothing underneath
+ * reacts; only B (cancel) passes through.
  */
 @Composable
-fun PortalOverlay(portal: Portal?, burst: Boolean, haze: HazeState, reducedMotion: Boolean) {
+fun PortalOverlay(portal: Portal?, burst: Boolean, haze: HazeState?, reducedMotion: Boolean) {
     val colors = LocalDelosColors.current
     val stage = LocalStage.current
     val last = remember { arrayOfNulls<Portal>(1) }
     if (portal != null) last[0] = portal
-    AnimatedVisibility(portal != null, enter = fadeIn(tween(300)), exit = fadeOut(tween(300))) {
+    // An arriving burst is there at once: the window it comes in with fades in already
+    AnimatedVisibility(portal != null, enter = if (portal?.arriving == true) EnterTransition.None else fadeIn(tween(300)), exit = fadeOut(tween(300))) {
         val p = last[0] ?: return@AnimatedVisibility
         val start = remember(p.id) { System.nanoTime() }
         val clock = rememberLaunchClock(start)
         val flash = remember(p.id) { Animatable(0f) }
-        LaunchedEffect(burst) { if (burst) flash.animateTo(1f, tween(900, easing = EaseOut)) else flash.snapTo(0f) }
+        LaunchedEffect(burst) {
+            if (!burst) flash.snapTo(0f)
+            else if (p.arriving) {
+                // Goes on from where the burst over the stream left off
+                val from = StreamExit.BURST_MS / 900f
+                flash.snapTo(from)
+                flash.animateTo(1f, tween((900 * (1f - from)).toInt(), easing = EaseOut))
+            } else flash.animateTo(1f, tween(900, easing = EaseOut))
+        }
         // .core: scale(1.6) and fade out over .8 / .6 s when it bursts
         val coreScale by animateFloatAsState(if (burst) 1.6f else 1f, tween(800, easing = EaseOut), label = "portalCore")
         val coreAlpha by animateFloatAsState(if (burst) 0f else 1f, tween(600), label = "portalCoreAlpha")
@@ -70,7 +82,7 @@ fun PortalOverlay(portal: Portal?, burst: Boolean, haze: HazeState, reducedMotio
         Box(
             Modifier
                 .fillMaxSize()
-                .backdropBlur(haze, 22f, Color.Transparent)
+                .then(if (haze != null) Modifier.backdropBlur(haze, 22f, Color.Transparent) else Modifier.background(colors.bg.copy(alpha = .45f)))
                 .drawBehind {
                     // radial-gradient(bg 25 % at the center → bg 70 % at 75 %)
                     drawRect(

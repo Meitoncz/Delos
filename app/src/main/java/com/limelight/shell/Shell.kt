@@ -200,8 +200,19 @@ fun Shell(
         }
         activity?.startActivity(launch.intent, options)
     }
-    // Back from the stream: the overlay goes away, the focus stays on the game, the PC's state is refreshed
+    // Back from the stream: the overlay goes away, the focus stays on the game, the PC's state is refreshed.
+    // Left through the stream menu, the portal's burst that began over the stream ends here.
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        StreamExit.take()?.let { exit ->
+            scope.launch {
+                shell.portalBurst = true
+                shell.portal = Portal(-1, Symbols.HOME, exit.label, exit.sub, cancellable = false, arriving = true)
+                delay(500)
+                shell.portal = null
+                delay(400)
+                shell.portalBurst = false
+            }
+        }
         if (shell.launch != null && shell.diving) {
             shell.launch = null
             shell.diving = false

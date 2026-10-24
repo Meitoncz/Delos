@@ -4008,6 +4008,9 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     // The shortcut (L3+R3 or the buttons chosen in Delos) and the swipe up are checked before the stream.
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
+        if (inputBlocked) {
+            return true;
+        }
         if (streamMenu != null && !isOnExternalDisplay() && streamMenu.onKey(event)) {
             return true;
         }
@@ -4016,10 +4019,25 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent event) {
+        if (inputBlocked) {
+            return true;
+        }
         if (streamMenu != null && !isOnExternalDisplay() && streamMenu.onTouch(event)) {
             return true;
         }
         return super.dispatchTouchEvent(event);
+    }
+
+    @Override
+    public boolean dispatchGenericMotionEvent(MotionEvent event) {
+        return inputBlocked || super.dispatchGenericMotionEvent(event);
+    }
+
+    // Delos: while the portal back into the new UI plays, the game gets no more input
+    private boolean inputBlocked = false;
+
+    public void blockInput() {
+        inputBlocked = true;
     }
 
     // Delos: the stream menu shows which of its toggles are on

@@ -101,9 +101,12 @@ data class DialogSpec(
     val onConfirm: (List<String>) -> Boolean,
 )
 
-/** The portal into a PC (`#portal`): pulses around an orb with the PC, then a burst into home. */
+/**
+ * The portal into a PC (`#portal`): pulses around an orb with the PC, then a burst into home. [arriving]:
+ * the end of a burst that began over the stream (StreamExit), shown at once and without the orb.
+ */
 @Immutable
-data class Portal(val id: Int, val icon: String, val label: String, val sub: String, val cancellable: Boolean)
+data class Portal(val id: Int, val icon: String, val label: String, val sub: String, val cancellable: Boolean, val arriving: Boolean = false)
 
 @Immutable
 data class Toast(val text: String, val icon: String?, val id: Int)

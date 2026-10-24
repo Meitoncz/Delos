@@ -192,6 +192,17 @@ class StreamMenu(private val game: Game) {
 
     private enum class Page { MAIN, MORE, KEYS, COMMANDS }
 
+    /** Disconnect or Quit game: back into the new UI through the portal when the stream came from there. */
+    private fun leave(quit: Boolean) {
+        val end = if (quit) Runnable { game.quitWithoutAsking() } else Runnable { game.disconnect() }
+        if (!StreamExit.applies(game)) {
+            end.run()
+            return
+        }
+        game.blockInput()
+        StreamExit.play(game, quit, end)
+    }
+
     /** Runs [action] once the stream window has the focus again (after the menu closed), like GameMenu. */
     private fun whenGameFocused(action: () -> Unit) {
         if (game.isFinishing) return
@@ -248,8 +259,8 @@ class StreamMenu(private val game: Game) {
                                 toggle { game.toggleHUD() }
                             }
                             MenuCircle(Symbols.MORE_HORIZ, "More") { page = Page.MORE }
-                            MenuCircle(Symbols.LOGOUT, "Disconnect") { close { game.disconnect() } }
-                            MenuCircle(Symbols.POWER_SETTINGS_NEW, "Quit game") { close { game.quitWithoutAsking() } }
+                            MenuCircle(Symbols.LOGOUT, "Disconnect") { close { leave(quit = false) } }
+                            MenuCircle(Symbols.POWER_SETTINGS_NEW, "Quit game") { close { leave(quit = true) } }
                         }
                         // Everything the classic Artemis quick menu offered that the main page does not
                         Page.MORE -> Column(verticalArrangement = Arrangement.spacedBy(26.px), horizontalAlignment = Alignment.CenterHorizontally) {
