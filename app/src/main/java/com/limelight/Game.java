@@ -3952,6 +3952,11 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             }
             statsPanel.setCompact(prefConfig.enablePerfOverlayLite);
             performanceOverlayView.setVisibility(prefConfig.enablePerfOverlay ? View.VISIBLE : View.GONE);
+            // Kept for the next streams: the new UI passes the profile's settings on to them
+            com.limelight.shell.data.ProfileStore.Companion.currentSettings(this).edit()
+                    .putBoolean("checkbox_enable_perf_overlay", prefConfig.enablePerfOverlay)
+                    .putBoolean("checkbox_enable_perf_overlay_lite", prefConfig.enablePerfOverlayLite)
+                    .apply();
             return;
         }
         prefConfig.enablePerfOverlay = !prefConfig.enablePerfOverlay;
@@ -4038,6 +4043,11 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
     public void blockInput() {
         inputBlocked = true;
+    }
+
+    // Delos: the stream's picture, which the portal back into the new UI zooms into a little
+    public View getStreamSurface() {
+        return streamContainer != null ? streamContainer.getSurfaceView() : null;
     }
 
     // Delos: the stream menu shows which of its toggles are on

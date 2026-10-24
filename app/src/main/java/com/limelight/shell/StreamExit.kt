@@ -1,8 +1,15 @@
 package com.limelight.shell
 
+import android.animation.ValueAnimator
 import android.app.ActivityOptions
 import android.content.Intent
+import android.graphics.Color as AndroidColor
+import android.graphics.drawable.ColorDrawable
+import android.os.Build
 import android.view.ViewGroup
+import android.view.WindowManager
+import android.view.animation.PathInterpolator
+import androidx.activity.ComponentDialog
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
@@ -17,11 +24,15 @@ import com.limelight.shell.ui.Stage
 import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.delosColors
 import com.limelight.shell.ui.systemAccentHue
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 
 /**
  * Leaving a stream started from the new UI (Disconnect / Quit game in the stream menu), with the
  * prototype's portal back into home: the portal opens over the stream ("Closing <game>" or "Back to
- * Delos", the PC below) and bursts after the same 2.1 s as the portal into a PC. Then the new UI comes to
+ * Delos", the PC below) in a window of its own, so the system can blur the stream behind it (the stream's
+ * picture is a surface no view can blur; without cross-window blur it is dimmed), and bursts after the same 2.1 s as the portal into a PC. Then the new UI comes to
  * the front with a fade the system honours between tasks (finishing the stream would slide it out),
  * the stream ends behind it, and the new UI finishes the burst with the focus still on the game.
  */
@@ -50,18 +61,56 @@ object StreamExit {
         val shown = mutableStateOf<Portal?>(null)
         val burst = mutableStateOf(false)
         val feedback = Feedback(game)
-        val view = ComposeView(game).apply {
+        val blur = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && game.getSystemService(WindowManager::class.java).isCrossWindowBlurEnabled
+        val dialog = ComponentDialog(game, android.R.style.Theme_Translucent_NoTitleBar_Fullscreen)
+        dialog.setCancelable(false)
+        val view = ComposeView(dialog.context).apply {
             setContent {
                 CompositionLocalProvider(LocalDelosColors provides colors) {
-                    // No blur source: the stream's picture cannot be blurred, the portal dims it instead
-                    Stage(textScale = appearance.uiScale / 100f) { PortalOverlay(shown.value, burst.value, null, appearance.reducedMotion) }
+                    Stage(textScale = appearance.uiScale / 100f) { PortalOverlay(shown.value, burst.value, null, appearance.reducedMotion, dim = !blur) }
                 }
             }
         }
-        game.addContentView(view, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+        dialog.setContentView(view)
+        dialog.window?.apply {
+            setBackgroundDrawable(ColorDrawable(AndroidColor.TRANSPARENT))
+            setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+            addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_FULLSCREEN)
+            attributes = attributes.apply {
+                layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+                windowAnimations = 0
+                dimAmount = 0f
+            }
+            clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+            if (blur) addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
+        }
+        dialog.show()
+        dialog.window?.let { w ->
+            WindowCompat.getInsetsController(w, w.decorView).apply {
+                systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                hide(WindowInsetsCompat.Type.systemBars())
+            }
+            if (blur && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                // Stronger than the portal's backdrop blur in the new UI (22 stage px): the stream is busier.
+                // Eases in with the portal's .45 s fade.
+                val metrics = game.resources.displayMetrics
+                val radius = 50f * minOf(metrics.widthPixels / 1920f, metrics.heightPixels / 1080f)
+                ValueAnimator.ofFloat(0f, radius).apply {
+                    duration = 450
+                    addUpdateListener { a -> w.attributes = w.attributes.apply { blurBehindRadius = (a.animatedValue as Float).toInt() } }
+                    start()
+                }
+            }
+        }
         feedback.view = view
         shown.value = portal
         feedback.play(Cue.OPEN)
+        // The stream behind zooms in a little, fast at first and then easing out
+        if (!appearance.reducedMotion) game.streamSurface?.let { s ->
+            s.pivotX = s.width / 2f
+            s.pivotY = s.height / 2f
+            s.animate().scaleX(s.scaleX * ZOOM).scaleY(s.scaleY * ZOOM).setDuration(2400).setInterpolator(PathInterpolator(.16f, 1f, .3f, 1f)).start()
+        }
         view.postDelayed({
             burst.value = true
             feedback.play(Cue.SELECT)
@@ -75,10 +124,15 @@ object StreamExit {
                 game.startActivity(home, ActivityOptions.makeScaleUpAnimation(root, 0, 0, root.width, root.height).toBundle())
                 end.run()
                 feedback.release()
+                // Gone with the stream window anyway; closed once the new UI has faded in over it
+                view.postDelayed({ runCatching { dialog.dismiss() } }, 600)
             }, BURST_MS)
         }, if (appearance.reducedMotion) 600L else 2100L)
     }
 
     /** How long the burst plays over the stream before the new UI takes over (the prototype's 380 ms). */
     const val BURST_MS = 380L
+
+    /** How far the stream behind the portal zooms in. */
+    private const val ZOOM = 1.12f
 }

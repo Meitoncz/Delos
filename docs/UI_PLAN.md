@@ -140,7 +140,8 @@ Built on the branch `ui/review-fixes`; the user tried them all on the Odin (2026
 - [x] The stream menu shortcut closes the menu too; "Use L3 + R3 again" removed. The 12-hour clock shows AM / PM.
 - [x] Settings audit, second part: removed Enable Full Screen (always immersive), Optimize game settings (GFE only, now always off), the overlay zoom button (Zoom stays in the stream menu's More) and the Software Update / Follow Update links (the repository is private).
 - [ ] The user decides which items the stream menu keeps.
-- [x] Leaving the stream (Disconnect / Quit game) with the prototype's effect (`shell/StreamExit.kt`, branch `ui/stream-exit`, tried on the Odin): the portal opens over the stream ("Back to Delos" / "Closing <game>", the PC below; the stream is dimmed, it cannot be blurred) and bursts after 2.1 s; the new UI then comes to the front with a scale-up fade instead of Android's slide, finishes the burst and keeps the focus on the game. The game gets no input meanwhile.
+- [x] Leaving the stream (Disconnect / Quit game) with the prototype's effect (`shell/StreamExit.kt`, branch `ui/stream-exit`, tried on the Odin): the portal opens over the stream ("Back to Delos" / "Closing <game>", the PC below; in a window of its own, so the system blurs the stream behind it at 50 px; the stream zooms in by 12 % with an ease-out) and bursts after 2.1 s; the new UI then comes to the front with a scale-up fade instead of Android's slide, finishes the burst and keeps the focus on the game. The game gets no input meanwhile.
+- [x] The stream menu's Overlay choice (On / Compact / Off) is kept in the profile for the next streams.
 - [ ] The other ways a stream ends (connection lost, the game closed on the PC, errors) still slide back; give them the portal too.
 
 ### 6.8 SteamGridDB

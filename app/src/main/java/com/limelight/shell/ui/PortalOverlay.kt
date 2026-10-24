@@ -48,13 +48,13 @@ private const val RIPPLE_PERIOD = 2.2f
 private const val RIPPLE_GAP = .35f
 
 /**
- * The portal into a PC (`#portal`): the screen behind blurs ([haze]; without one, over the stream, it is
- * dimmed instead), rings ripple out from an orb with the PC's icon, its name and state below. When [burst]
+ * The portal into a PC (`#portal`): the screen behind blurs ([haze]; over the stream the system blurs it
+ * instead, or it is only dimmed where that is not available: [dim]), rings ripple out from an orb with the PC's icon, its name and state below. When [burst]
  * it flashes open and the orb flies at the viewer. It holds the focus while shown, so nothing underneath
  * reacts; only B (cancel) passes through.
  */
 @Composable
-fun PortalOverlay(portal: Portal?, burst: Boolean, haze: HazeState?, reducedMotion: Boolean) {
+fun PortalOverlay(portal: Portal?, burst: Boolean, haze: HazeState?, reducedMotion: Boolean, dim: Boolean = false) {
     val colors = LocalDelosColors.current
     val stage = LocalStage.current
     val last = remember { arrayOfNulls<Portal>(1) }
@@ -82,7 +82,8 @@ fun PortalOverlay(portal: Portal?, burst: Boolean, haze: HazeState?, reducedMoti
         Box(
             Modifier
                 .fillMaxSize()
-                .then(if (haze != null) Modifier.backdropBlur(haze, 22f, Color.Transparent) else Modifier.background(colors.bg.copy(alpha = .45f)))
+                .then(if (haze != null) Modifier.backdropBlur(haze, 22f, Color.Transparent) else Modifier)
+                .then(if (dim) Modifier.background(colors.bg.copy(alpha = .45f)) else Modifier)
                 .drawBehind {
                     // radial-gradient(bg 25 % at the center → bg 70 % at 75 %)
                     drawRect(
