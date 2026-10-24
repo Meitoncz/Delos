@@ -6,8 +6,6 @@
     <string name="pacing_balanced_alt">Балансирано с ограничение на кадрите/сек</string>
     <string name="pacing_smoothness">Предпочитане на най-плавното видео (може значително да увеличи забавянето)</string>
     <string name="conn_metered">Внимание: Вашата активна мрежова връзка се измерва!</string>
-    <string name="conn_client_latency_hw">Забавяне на хардуерния декодер:</string>
-    <string name="conn_hardware_latency">Средно забавяне на хардуерно декодиране:</string>
     <string name="ip_hint">IP адрес на отдалечения компютър</string>
     <string name="pcview_menu_send_wol">Изпращане на заявка Wake-On-LAN</string>
     <string name="pcview_menu_delete_pc">Изтриване на компютъра</string>
@@ -25,7 +23,6 @@
     <string name="error_pc_offline">Компютърът е извън линия</string>
     <string name="title_decoding_error">Срив на видео декодера</string>
     <string name="no_frame_received_error">Мрежовата връзка не работи добре. Намалете настройката за побитова скорост на видеото или опитайте с по-бърза връзка.</string>
-    <string name="conn_client_latency">Средно забавяне при декодиране на кадър:</string>
     <string name="conn_starting">Стартиране</string>
     <string name="conn_terminated_title">Връзката е прекратена</string>
     <string name="yes">Да</string>
@@ -206,7 +203,6 @@
     <string name="summary_enable_hdr">Ползване на HDR, когато играта и графичният процесор на отдалечения компютър го поддържат. HDR изисква графичен процесор, който поддържа кодиране от типа HEVC Main 10.</string>
     <string name="title_analog_scrolling">Използване на аналогов стик за превъртане</string>
     <string name="summary_full_range">Това може да предизвика влошено качество в много светлите и тъмни области, ако устройството не може да възпроизвежда правилно видео с пълен диапазон.</string>
-    <string name="summary_enable_post_stream_toast">Показване на информация относно забавянето след като поточното предаване приключи</string>
     <string name="toast_controller_type_changed">Видът на контролера може да бъде променен, поради симулирането на сензори за движение</string>
     <string name="title_disable_frame_drop">Никога да не се пропускат кадри</string>
     <string name="title_full_range">Принудително ползване на видео с пълен диапазон</string>
@@ -226,7 +222,6 @@
     <string name="title_video_format">Промяна на настройките на кодиране</string>
     <string name="title_enable_hdr">Включване на HDR</string>
     <string name="title_enable_perf_overlay">Показване на статистика за производителността</string>
-    <string name="title_enable_post_stream_toast">Показване на съобщение относно забавянето след излъчването</string>
     <string name="summary_setup_guide">Вижте инструкции как да настроите компютъра си за поточно предаване на игри</string>
     <string name="title_troubleshooting">Ръководство за отстраняване на проблеми</string>
     <string name="title_privacy_policy">Политика за поверителност</string>

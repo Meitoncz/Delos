@@ -94,6 +94,7 @@ import com.limelight.shell.ui.TextFieldPill
 import com.limelight.shell.ui.Unbounded
 import com.limelight.shell.ui.fadeEdges
 import com.limelight.shell.ui.focusEffects
+import com.limelight.shell.ui.glass
 import com.limelight.shell.ui.px
 import com.limelight.shell.ui.tpx
 import java.util.Locale
@@ -290,7 +291,8 @@ private fun SettingsTabButton(tab: SettingsTab, selected: Boolean, modifier: Mod
     val colors = LocalDelosColors.current
     var focused by remember { mutableStateOf(false) }
     Row(modifier.focusEffects(onClick, corner = 999f, focusScale = 1.08f, ring = FocusRing(0f, 0f), glow = FocusGlow(12f, 36f, -10f), onFocusChange = { focused = it })
-        .clip(CircleShape).background(if (focused) colors.accent else if (selected) colors.surface2 else androidx.compose.ui.graphics.Color.Transparent)
+        .clip(CircleShape)
+        .then(if (focused) Modifier.background(colors.accent) else if (selected) Modifier.glass(colors.surface2) else Modifier)
         .height(66.px).padding(horizontal = 22.px),
         horizontalArrangement = Arrangement.spacedBy(12.px), verticalAlignment = Alignment.CenterVertically) {
         Symbol(tab.icon, 30.tpx, if (focused) colors.onAccent else if (selected) colors.accent else colors.text2, filled = focused || selected)
@@ -410,12 +412,14 @@ private fun LetterKey(letter: String, modifier: Modifier, click: () -> Unit) {
 }
 
 /**
- * Options of the classic UI only (its resume dialog and icon size). They go away with it in the
+ * Options of the classic UI only (its resume dialog, icon size and overlay position). They go away with it in the
  * switch-over (6.9).
  */
 private val RETIRED_KEYS = setOf(
     "checkbox_resume_without_confirm",
     "checkbox_small_icon_mode",
+    // The statistics panel has its own position (Settings → Display → Statistics position)
+    "checkbox_enable_perf_overlay_bottom",
 )
 
 /** The rows the description panel previews the game background for. */

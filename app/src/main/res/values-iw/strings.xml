@@ -47,7 +47,6 @@
     <string name="title_decoding_error">מפענח וידיאו קרס</string>
     <string name="unable_to_pin_shortcut">האפליקציה אינה מרשה יצירת קיצורי דרך נעוצים.</string>
     <string name="no_video_received_error">לא התקבל אות וידיאו מהמארח.</string>
-    <string name="conn_client_latency">מהירות פיענוח פריים ממוצעת:</string>
     <string name="conn_error_title">שגיאת חיבור</string>
     <string name="conn_terminated_msg">החיבור הופסק</string>
     <string name="ip_hint">כתובת IP של המחשב המארח</string>
@@ -104,7 +103,6 @@
     <string name="conn_terminated_title">החיבור הופסק</string>
     <string name="lost_connection">נאבד החיבור למחשב</string>
     <string name="delete_pc_msg">אתה בטוח שאתה רוצה להסיר מחשב זה\?</string>
-    <string name="conn_client_latency_hw">מהירות פענוח חומרתי:</string>
     <string name="conn_error_msg">נכשל להפעיל</string>
     <string name="searching_pc">מחפש מחשבים ברשת המקומית שלך...
 \n
@@ -140,7 +138,6 @@
     <string name="summary_seekbar_bitrate">הגבר לשיפור איכות התמונה. הנמך בכדי לשפר ביצועים על גבי חיבור רשת איטי.</string>
     <string name="summary_audio_config_list">הפעל קול היקפי בהגדרת 5.1 או 7.1 עבור מערכות קולנוע ביתי</string>
     <string name="summary_checkbox_enable_audiofx">אפשר לאפקטי סאונד לפעול בזמן הזרמה, יגרום להשהיית אודיו</string>
-    <string name="conn_hardware_latency">זמן פענוח ממוצע:</string>
     <string name="summary_fps_list">הגבר להזרמת וידיאו חלקה יותר. הנמך לביצועים ויציבות במכשירים חלשים.</string>
     <string name="title_seekbar_bitrate">וידיאו ביטרייט</string>
     <string name="suffix_seekbar_bitrate_mbps">מגהביט</string>

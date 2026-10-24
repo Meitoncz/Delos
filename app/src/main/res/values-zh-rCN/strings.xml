@@ -12,7 +12,7 @@
     <string name="title_checkbox_stretch_video">拉伸视频以适应屏幕</string>
 
     <!-- New/Fully External Display Mode -->
-    <string name="title_fullexdisplay_mode">完全外接显示器模式（Beta）</string>
+    <string name="title_fullexdisplay_mode">完全外接显示器模式</string>
     <string name="summary_fullexdisplay_mode">允许全沉浸式副屏模式，自动匹配刷新率和分辨率。此模式下手动设置无效。</string>
 
     <!-- On-screen Keyboard Autofit -->
@@ -89,9 +89,6 @@
     <string name="conn_establishing_title"> 建立连接中 </string>
     <string name="conn_establishing_msg"> 启动连接中 </string>
     <string name="conn_metered"> 警告：你正在使用移动网络连接！ </string>
-    <string name="conn_client_latency"> 平均每帧解码延迟：</string>
-    <string name="conn_client_latency_hw"> 硬件解码器延迟：</string>
-    <string name="conn_hardware_latency"> 硬件解码器平均延迟：</string>
     <string name="conn_starting">启动中</string>
     <string name="conn_error_title"> 连接错误 </string>
     <string name="conn_error_msg"> 启动失败 </string>
@@ -224,8 +221,6 @@
     <string name="summary_enable_hdr">当游戏和显卡支持时以HDR模式串流。 HDR需要显卡支持 HEVC Main 10 编码。</string>
     <string name="title_enable_perf_overlay"> 启用性能信息 </string>
     <string name="summary_enable_perf_overlay"> 在串流中显示实时性能信息 </string>
-    <string name="title_enable_post_stream_toast">串流完毕显示延迟信息</string>
-    <string name="summary_enable_post_stream_toast">串流结束后显示延迟信息</string>
     <string name="title_osc_opacity">更改屏幕按钮透明度</string>
     <string name="dialog_title_osc_opacity">透明度</string>
     <string name="suffix_osc_opacity">%</string>
@@ -302,8 +297,8 @@
     <string name="title_troubleshooting">解决方案向导</string>
     <string name="summary_troubleshooting">查看有关诊断和修复常见流传输问题的提示</string>
     <string name="summary_frame_pacing">指定如何平衡视频延迟和流畅度</string>
-    <string name="pacing_warp">曲率推进（实验性）</string>
-    <string name="pacing_warp2">前进2（实验性）</string>
+    <string name="pacing_warp">曲率推进</string>
+    <string name="pacing_warp2">前进2</string>
     <string name="pacing_latency">优先最低延迟</string>
     <string name="pacing_balanced">平衡</string>
     <string name="pacing_balanced_alt">有FPS限制的平衡</string>
@@ -406,8 +401,8 @@
     <string name="summary_checkbox_multi_touch_gestures">开启后，可在多点触控时使用三指唤出键盘、四指唤出全键盘、五指唤出快捷菜单。</string>
     <string name="title_checkbox_onscreen_style_official">官方虚拟手柄皮肤</string>
     <string name="summary_checkbox_onscreen_style_official">如果你还是喜欢官方旧版虚拟手柄按键风格可以勾选此选项。\n按键形状可以为方形，如果你勾选了底部虚拟按键【普通按钮为方形按钮】</string>
-    <string name="title_checkbox_enable_perf_overlay_lite">开启Lite精简模式</string>
-    <string name="summary_checkbox_enable_perf_overlay_lite">展示简化版性能信息：网速/延迟/解码/丢包率/FPS</string>
+    <string name="title_checkbox_enable_perf_overlay_lite">紧凑模式</string>
+    <string name="summary_checkbox_enable_perf_overlay_lite">在顶部中间显示一行：FPS、带宽、网络与解码延迟、丢帧。</string>
     <string name="title_virtual_trackpad_settings">虚拟触摸板设置</string>
     <string name="dialog_custom_resolution">设置完分辨率后，退出设置页面 重新打开生效！</string>
     <string name="summary_custom_resolution">添加一个自定义分辨率,x号分割,比较奇怪的分辨率可能无法生效。
@@ -430,7 +425,7 @@
     <string name="summary_free_analog_stick">虚拟手柄 左右摇杆中心点位置不固定，可自由调整在一定区域内移动。</string>
     <string name="summary_free_analog_stick_opacity">默认只有摇杆移动的时候，有背景显示，如何不喜欢可调节透明度效果。</string>
     <string name="title_free_analog_stick_opacity">自由摇杆背景透明度</string>
-    <string name="title_exdisplay_mode">外接显示器模式（Beta）</string>
+    <string name="title_exdisplay_mode">外接显示器模式</string>
     <string name="summary_exdisplay_mode">串流画面显示在显示器，虚拟按键及性能信息等控件在手机屏幕。</string>
     <string name="title_top_center_display">画面顶部居中显示</string>
     <string name="summary_top_center_display">非原生分辨率时，画面将与顶部对齐而非居中显示。</string>
@@ -504,7 +499,7 @@
     <string name="summary_checkbox_gamepad_enable_battery_report">在可用时汇报手柄电池状态。\n如果在使用触摸屏/触摸板/手写笔/鼠标时偶尔有卡顿现象发生，关闭此选项可能会有用。</string>
     <string name="title_checkbox_enforce_display_mode">强制设置显示模式</string>
     <string name="summary_checkbox_enforce_display_mode">强制使用最佳显示模式。\n在某些系统(如ColorOS等)上必须启用才能正确设置刷新率/分辨率。\n请勿在ChromeCast 4K上启用此选项，可能会导致bug。</string>
-    <string name="title_checkbox_ultra_low_latency">超低延迟（实验性）</string>
+    <string name="title_checkbox_ultra_low_latency">超低延迟</string>
     <string name="summary_checkbox_ultra_low_latency">仅对高通8Gen2/8(s)Gen3/8Elite有效。</string>
     <string name="title_checkbox_use_virtual_display">使用虚拟显示器</string>
     <string name="summary_checkbox_use_virtual_display">默认使用虚拟显示器。\n虚拟显示器可以自动匹配设备端的分辨率与刷新率设置，提供无缝的串流体验。\n需要使用 Apollo 作为服务端串流软件。</string>
@@ -658,7 +653,7 @@
     <string name="category_perf_monitor_settings">性能监视器</string>
 
     <!-- Low-latency frame balance (LFR) -->
-    <string name="title_low_latency_frame_balance">低延迟队列（实验性）</string>
+    <string name="title_low_latency_frame_balance">低延迟队列</string>
     <string name="summary_low_latency_frame_balance">通过丢弃缓冲帧以最小化延迟。</string>
 
     <!-- Tight Vsync -->

@@ -48,9 +48,6 @@
     <string name="conn_establishing_title">Создание соединения</string>
     <string name="conn_establishing_msg">Подключение</string>
     <string name="conn_metered">Внимание: Происходит измерение Вашего сетевого соединения!</string>
-    <string name="conn_client_latency">Средняя задержка декодирования кадра: </string>
-    <string name="conn_client_latency_hw">Задержка аппаратного декодирования:</string>
-    <string name="conn_hardware_latency">Средняя задержка аппаратного декодирования:</string>
     <string name="conn_starting">Запуск</string>
     <string name="conn_error_title">Ошибка соединения</string>
     <string name="conn_error_msg">Запуск не удался</string>
@@ -162,8 +159,6 @@
     <string name="summary_disable_frame_drop">Может уменьшить микрозависания на некоторых устройствах, но также увеличить задержку</string>
     <string name="title_enable_hdr">Включить HDR</string>
     <string name="summary_enable_hdr">Потоковая передача с HDR, когда игра и графический процессор ПК поддерживают эту функцию. Для HDR требуется графический процессор с поддержкой кодирования HEVC Main 10.</string>
-    <string name="title_enable_post_stream_toast">Показывать отчёт о задержке после трансляции</string>
-    <string name="summary_enable_post_stream_toast">Отобразить сообщение с информацией о задержке после окончания трансляции</string>
     <string name="summary_hide_osc_when_has_gamepad">Скрывать экранные кнопки при подключённом физическом контроллере</string>
     <string name="title_checkbox_vibrate_osc">Включить вибрацию</string>
     <string name="title_fps_list">Частота кадров</string>
@@ -238,7 +233,7 @@
     <string name="audioconf_71surround">7.1 Объёмный звук</string>
     <string name="videoformat_auto">Автоматически (Рекомендовано)</string>
     <string name="videoformat_hevcalways">Предпочитать HEVC</string>
-    <string name="pacing_warp2">Warp 2 (экспериментально)</string>
+    <string name="pacing_warp2">Warp 2</string>
     <string name="pacing_latency">Предпочтительна наименьшая задержка</string>
     <string name="pacing_balanced">Сбалансированно</string>
     <string name="pacing_smoothness">Предпочтительно наиболее плавное видео (может значительно увеличить задержку)</string>
@@ -333,7 +328,7 @@
     <string name="title_show_guide_button">Показать кнопку Guide</string>
     <string name="title_special_key_help">Помощь по пользовательским клавишам</string>
     <string name="summary_special_key_help">Инструкция по настройке пользовательских спец-клавиш</string>
-    <string name="pacing_warp">Warp Drive (экспериментально)</string>
+    <string name="pacing_warp">Warp Drive</string>
     <string name="keyboard_service_label">Физическая клавиатура Delos</string>
     <string name="accessibility_description_text">Используется, если системные сочетания физической клавиатуры перехватываются Android. В таких случаях некоторые сочетания не проходят на хост-ПК. Delos не просматривает ваш ввод и не собирает пароли, номера карт или другую личную информацию.</string>
     <string name="game_menu_toggle_keyboard">Показать экранную клавиатуру</string>
@@ -379,8 +374,8 @@
     <string name="summary_checkbox_multi_touch_gestures">Включить жест с 3 пальцами для клавиатуры, 4 пальцами для полной клавиатуры, 5 пальцами для быстрого меню при использовании режима мультитач.</string>
     <string name="title_checkbox_onscreen_style_official">Официальная тема виртуального геймпада</string>
     <string name="summary_checkbox_onscreen_style_official">Выберите этот вариант, если предпочитаете старый стиль виртуального геймпада. Форма кнопок может быть квадратной при выборе нижней виртуальной кнопки [Обычные кнопки - квадратные]</string>
-    <string name="title_checkbox_enable_perf_overlay_lite">Включить упрощённый режим</string>
-    <string name="summary_checkbox_enable_perf_overlay_lite">Отображать упрощённую информацию: скорость сети / задержка / декодирование / потеря пакетов / FPS</string>
+    <string name="title_checkbox_enable_perf_overlay_lite">Компактный режим</string>
+    <string name="summary_checkbox_enable_perf_overlay_lite">Одна строка сверху по центру: FPS, пропускная способность, задержка сети и декодирования, потерянные кадры.</string>
     <string name="title_show_overlay_zoom_toggle_button">Показать кнопку переключения масш. панели</string>
     <string name="summary_show_overlay_zoom_toggle_button">Показывает перетаскиваемую кнопку вверху экрана для переключения прокрутки/масш.</string>
     <string name="title_virtual_trackpad_settings">Настройки виртуального трекпада</string>
@@ -419,8 +414,8 @@
     <string name="summary_free_analog_stick">Центры левого и правого стика не фиксированы можно свободно корректировать в пределах допустимого хода</string>
     <string name="summary_free_analog_stick_opacity">По умолчанию фон отображается только при движении стика. Если вам это не нравится можно изменить прозрачность</string>
     <string name="title_free_analog_stick_opacity">Непрозрачность фона свободного стика</string>
-    <string name="title_exdisplay_mode">Режим внешнего дисплея (бета)</string>
-    <string name="title_fullexdisplay_mode">Полный режим внешнего дисплея (бета)</string>
+    <string name="title_exdisplay_mode">Режим внешнего дисплея</string>
+    <string name="title_fullexdisplay_mode">Полный режим внешнего дисплея</string>
     <string name="summary_exdisplay_mode">Картинка на мониторе, виртуальные кнопки и статистика на экране телефона.</string>
     <string name="summary_fullexdisplay_mode">Полноценный второй экран с автоматическим подбором частоты и разрешения. Ручные настройки не применяются.</string>
     <string name="title_top_center_display">Отображать вверху по центру</string>
@@ -474,7 +469,7 @@
     <string name="summary_checkbox_gamepad_enable_battery_report">Отправлять информацию о заряде батареи геймпада, если это возможно.\nОтключение может помочь при редких фризах ввода (тач/трекпад/стилус/мышь).</string>
     <string name="title_checkbox_enforce_display_mode">Принудительный режим дисплея</string>
     <string name="summary_checkbox_enforce_display_mode">Принудительно использовать оптимальный режим отображения.\nТребуется в некоторых системах (например, ColorOS) для корректной установки частоты/разрешения.\nНе включайте на ChromeCast 4K может вызвать ошибки.</string>
-    <string name="title_checkbox_ultra_low_latency">Сверхнизкая задержка (экспериментально)</string>
+    <string name="title_checkbox_ultra_low_latency">Сверхнизкая задержка</string>
     <string name="summary_checkbox_ultra_low_latency">Эффективно только на SD8Gen2 / 8(s)Gen3 / 8Elite</string>
     <string name="title_checkbox_use_virtual_display">Использовать виртуальный дисплей</string>
     <string name="summary_checkbox_use_virtual_display">Использовать виртуальный дисплей по умолчанию.\nВиртуальный дисплей автоматически подбирает клиентское разрешение и частоту, обеспечивая плавный стрим.\nТребует Apollo на хосте.</string>
@@ -617,7 +612,7 @@
     <string name="perf_overlay_lite_dectime">%1$.2fмс</string>
     <string name="summary_low_latency_frame_balance">Уменьшает задержку за счёт пропуска кадров в очереди</string>
     <string name="category_perf_monitor_settings">Монитор производительности</string>
-    <string name="title_low_latency_frame_balance">LFR (эксперементально)</string>
+    <string name="title_low_latency_frame_balance">LFR</string>
     <string name="title_checkbox_full_screen">Включить полноэкранный режим</string>
     <string name="summary_checkbox_full_screen">Скрывать системные панели в режиме погружения</string>
 </resources>

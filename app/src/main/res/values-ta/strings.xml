@@ -8,8 +8,6 @@
     <string name="summary_checkbox_multi_controller">இந்த விருப்பத்தைத் தேர்வுசெய்வது ஒரு கேம்பேட் எப்போதும் இருக்கும்படி கட்டாயப்படுத்துகிறது</string>
     <string name="title_enable_perf_overlay">ச்ட்ரீமிங் செய்யும் போது செயல்திறன் புள்ளிவிவரங்களைக் காட்டு</string>
     <string name="summary_enable_perf_overlay">ச்ட்ரீமிங் செய்யும் போது நிகழ்நேர ச்ட்ரீம் செயல்திறன் தகவலைக் காண்பி</string>
-    <string name="title_enable_post_stream_toast">ச்ட்ரீமிங்கிற்குப் பிறகு நேரந்தவறுகை செய்தியைக் காட்டு</string>
-    <string name="summary_enable_post_stream_toast">ச்ட்ரீம் முடிந்ததும் ஒரு தாமத செய்தி செய்தியைக் காண்பி</string>
     <string name="nettest_title_done">பிணைய சோதனை முடிந்தது</string>
     <string name="scut_deleted_pc">பிசி நீக்கப்பட்டது</string>
     <string name="scut_not_paired">பிசி சோடியாக இல்லை</string>
@@ -71,9 +69,6 @@
     <string name="conn_establishing_title">இணைப்பை நிறுவுதல்</string>
     <string name="conn_establishing_msg">இணைப்பு தொடக்க</string>
     <string name="conn_metered">எச்சரிக்கை: உங்கள் செயலில் உள்ள பிணைய இணைப்பு அளவிடப்படுகிறது!</string>
-    <string name="conn_client_latency">சராசரி பிரேம் டிகோடிங் தாமதம்:</string>
-    <string name="conn_client_latency_hw">வன்பொருள் டிகோடர் தாமதம்:</string>
-    <string name="conn_hardware_latency">சராசரி வன்பொருள் டிகோடிங் தாமதம்:</string>
     <string name="conn_starting">தொடங்குகிறது</string>
     <string name="conn_error_title">இணைப்பு பிழை</string>
     <string name="conn_error_msg">தொடங்கத் தவறிவிட்டது</string>

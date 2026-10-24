@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="summary_enable_post_stream_toast">Késleltetési információs üzenet megjelenítése a stream végén</string>
-    <string name="title_enable_post_stream_toast">A késleltetési üzenet megjelenítése streamelés után</string>
     <string name="summary_enable_perf_overlay">Valós idejű stream teljesítmény adatok mutatása streamelés közben</string>
     <string name="title_enable_perf_overlay">Teljesítménystatisztikák megjelenítése streamelés közben</string>
     <string name="summary_enable_hdr">HDR streamelés, ha a játék és a számítógép GPU-ja támogatja. A HDR-hez HEVC Main 10 kódolási támogatással rendelkező GPU szükséges.</string>
@@ -121,8 +119,6 @@
     <string name="conn_terminated_msg">A kapcsolat megszakadt.</string>
     <string name="conn_terminated_title">A kapcsolat megszűnt</string>
     <string name="conn_error_msg">Nem sikerült elindítani</string>
-    <string name="conn_client_latency_hw">hardveres dekóder késleltetés:</string>
-    <string name="conn_client_latency">Átlagos képkocka-dekódolási késleltetés:</string>
     <string name="conn_metered">Figyelem: Az aktív hálózati kapcsolatod emelt díjas!</string>
     <string name="conn_establishing_msg">Kapcsolódás</string>
     <string name="conn_establishing_title">Kapcsolat létesítése</string>
@@ -140,7 +136,6 @@
     <string name="error_404">A GFE HTTP 404 hibát adott vissza. Győződj meg arról, hogy a számítógépen támogatott GPU fut. A távoli asztali szoftver használata szintén ezt a hibát okozhatja. Próbáld újraindítani a gépet, vagy telepítsd újra a GFE-t.</string>
     <string name="conn_error_title">Csatlakozási hiba</string>
     <string name="conn_starting">Indítás</string>
-    <string name="conn_hardware_latency">Átlagos hardveres dekódolási késleltetés:</string>
     <string name="error_unknown_host">Nem sikerült feloldani a gazdagépet</string>
     <string name="error_manager_not_running">A ComputerManager szolgáltatás nem fut. Várj néhány másodpercet, vagy indítsd újra az alkalmazást.</string>
     <string name="error_pc_offline">A számítógép nem elérhető</string>

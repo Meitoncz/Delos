@@ -17,9 +17,6 @@
 \n
 \nForsikre deg om at GameStream er påslått i GeForce Experience SHEILD-innstillingene.</string>
     <string name="conn_starting">Starter</string>
-    <string name="conn_hardware_latency">Gjennomsnittlig latens for maskinvarerammedekoding:</string>
-    <string name="conn_client_latency_hw">maskinvaredekoderlatens:</string>
-    <string name="conn_client_latency">Gjennomsnittlig latens for bilderammedekoding:</string>
     <string name="check_ports_msg">Sjekk om din brannmur og portvideresendingsreglene for port(ene):</string>
     <string name="early_termination_error">Noe gikk galt på din verts-PC under oppstart av strømmen.
 \n
@@ -164,8 +161,6 @@
     <string name="addpc_wrong_sitelocal">Den adressen ser ikke riktig ut. Du må bruke den offentlige IP-adressen for ruteren din for strømming over Internett.</string>
     <string name="addpc_unknown_host">Kunne ikke utlede adresse tilhørende PC. Forsikre deg om at du ikke har skrevet den inn feil.</string>
     <string name="addpc_fail">Kunne ikke koble til angitt datamaskin. Forsikre deg om at påkrevde porter er tillatt gjennom brannmuren.</string>
-    <string name="summary_enable_post_stream_toast">Vis en informasjonsmelding om latens etter at strømmen sluttføres</string>
-    <string name="title_enable_post_stream_toast">Vis latensmelding etter strømming</string>
     <string name="title_enable_hdr">Skru på HDR</string>
     <string name="summary_video_format">HEVC senker båndbreddekravene, men krever en nyere enhet</string>
     <string name="summary_disable_frame_drop">Kan redusere mikro-hakking på noen enheter, men kan øke latens</string>

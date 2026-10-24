@@ -116,9 +116,7 @@
     <string name="summary_enable_hdr">Przesyłaj strumieniowo HDR, gdy gra i procesor graficzny komputera obsługują tę funkcję. HDR wymaga GPU z obsługą kodowania HEVC Main 10.</string>
     <string name="title_full_range">Wymuś pełny zakres wideo</string>
     <string name="summary_enable_perf_overlay">Wyświetlanie informacji o wydajności strumienia w czasie rzeczywistym podczas strumieniowania</string>
-    <string name="title_enable_post_stream_toast">Wyświetlanie komunikatu o opóźnieniu po przesyłaniu strumieniowym</string>
     <string name="summary_full_range">Spowoduje to utratę szczegółów w jasnych i ciemnych obszarach, jeśli urządzenie nie wyświetla prawidłowo treści wideo w pełnym zakresie.</string>
-    <string name="summary_enable_post_stream_toast">Wyświetlanie komunikatu informującego o opóźnieniu po zakończeniu strumienia</string>
     <string name="title_setup_guide">Instrukcja konfiguracji</string>
     <string name="title_privacy_policy">Polityka prywatności</string>
     <string name="summary_privacy_policy">Zobacz politykę prywatności Delos</string>
@@ -190,10 +188,7 @@
     <string name="unpairing">Rozparowywanie…</string>
     <string name="unpair_success">Rozparowano z powodzeniem</string>
     <string name="unable_to_pin_shortcut">Obecny program uruchamiający nie pozwala na tworzenie przypiętych skrótów.</string>
-    <string name="conn_client_latency">Średnie opóźnienie dekodowania ramki:</string>
-    <string name="conn_client_latency_hw">opóźnienie dekodera sprzętowego:</string>
     <string name="conn_metered">Ostrzeżenie: Aktywne połączenie sieciowe jest taryfowe!</string>
-    <string name="conn_hardware_latency">Średnie opóźnienie dekodowania sprzętowego:</string>
     <string name="conn_starting">Uruchamianie</string>
     <string name="conn_error_title">Błąd połączenia</string>
     <string name="lost_connection">Utrata połączenia z komputerem</string>

@@ -50,8 +50,6 @@
 \n
 \nSe o problema persistir, tente reinstalar os drivers da GPU e o GeForce Experience.</string>
     <string name="conn_metered">Aviso: A sua conexão de rede atual é limitada!</string>
-    <string name="conn_client_latency">Latência média de decodificação de quadros:</string>
-    <string name="conn_client_latency_hw">latência do decodificador de hardware:</string>
     <string name="conn_error_msg">Falha ao iniciar</string>
     <string name="conn_terminated_title">Conexão Encerrada</string>
     <string name="conn_terminated_msg">A conexão foi encerrada</string>
@@ -118,7 +116,6 @@
     <string name="summary_full_range">Isso causará perda de detalhes em áreas claras e escuras se o seu aparelho não exibir corretamente todo o conteúdo de vídeo em cores.</string>
     <string name="title_disable_frame_drop">Nunca dropar quadros</string>
     <string name="summary_enable_perf_overlay">Exibe informações de performance em tempo real durante a transmissão</string>
-    <string name="title_enable_post_stream_toast">Mostrar aviso de latência após terminar a transmissão</string>
     <string name="title_troubleshooting">Guia de solução de problemas</string>
     <string name="summary_troubleshooting">Veja dicas para diagnosticar e corrigir problemas comuns de streaming</string>
     <string name="resolution_360p">360p</string>
@@ -143,7 +140,6 @@
     <string name="no_video_received_error">Nenhum vídeo recebido do host.</string>
     <string name="no_frame_received_error">A sua conexão de rede não está funcionando bem. Reduza a configuração da taxa de bits do vídeo ou tente uma conexão mais rápida.</string>
     <string name="check_ports_msg">Verifique o firewall e permita a(s) seguinte(s) para porta(s):</string>
-    <string name="conn_hardware_latency">Latência média de decodificação de hardware:</string>
     <string name="conn_starting">Iniciando</string>
     <string name="conn_error_title">Erro de Conexão</string>
     <string name="yes">Sim</string>
@@ -233,7 +229,6 @@
     <string name="suffix_seekbar_deadzone">%</string>
     <string name="title_checkbox_xb1_driver">Driver de gamepad USB Xbox 360/One</string>
     <string name="title_checkbox_enable_sops">Otimizar configurações de jogo</string>
-    <string name="summary_enable_post_stream_toast">Exibe uma mensagem com informações de latência após o término da transmissão</string>
     <string name="category_help">Ajuda</string>
     <string name="summary_setup_guide">Veja instruções sobre como configurar o seu PC para streaming</string>
     <string name="resolution_1440p">1440p</string>

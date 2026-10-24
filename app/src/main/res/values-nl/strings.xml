@@ -38,9 +38,6 @@
     <string name="conn_establishing_title">Verbinding maken</string>
     <string name="conn_establishing_msg">Verbinding starten</string>
     <string name="conn_metered">Waarschuwing: Actieve internet verbinding bevat een datalimiet!</string>
-    <string name="conn_client_latency">Gemiddelde frame decoding reactietijd:</string>
-    <string name="conn_client_latency_hw">hardware decoder reactietijd:</string>
-    <string name="conn_hardware_latency">Gemiddelde hardware decoding reactietijd:</string>
     <string name="conn_starting">Starten</string>
     <string name="conn_error_title">Verbindingsprobleem</string>
     <string name="conn_error_msg">Starten mislukt</string>
@@ -198,8 +195,6 @@
     <string name="summary_unlock_fps">Streamen op 90 of 120 FPS kan vertraging op high-end apparaten verminderen, maar het kan lag of instabiliteit veroorzaken op toestellen die het niet ondersteunen</string>
     <string name="summary_checkbox_enable_pip">Laat toe de stream te bekijken (maar niet bedienen) bij het multitasken</string>
     <string name="title_checkbox_flip_face_buttons">Face-knoppen omdraaien</string>
-    <string name="title_enable_post_stream_toast">Vertragingsbericht tonen na het streamen</string>
-    <string name="summary_enable_post_stream_toast">Toon een informatiebericht van de vertraging na de stream beëindigd is</string>
     <string name="help_loading_title">Hulpwijzer</string>
     <string name="perf_overlay_decoder">Decoder: %1$s</string>
     <string name="perf_overlay_renderingfps">Rendering framesnelheid: %1$.2f FPS</string>

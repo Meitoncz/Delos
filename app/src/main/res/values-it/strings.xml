@@ -50,9 +50,6 @@
     <string name="conn_establishing_title">Connessione in corso</string>
     <string name="conn_establishing_msg">Avvio connessione</string>
     <string name="conn_metered">Attenzione: la rete attiva prevede costi aggiuntivi in base all\'utilizzo!</string>
-    <string name="conn_client_latency">Latenza decodifica fotogrammi media:</string>
-    <string name="conn_client_latency_hw">latenza decodificatore hardware:</string>
-    <string name="conn_hardware_latency">Latenza decodificatore hardware media:</string>
     <string name="conn_starting">Avvio in corso</string>
     <string name="conn_error_title">Errore connessione</string>
     <string name="conn_error_msg">Avvio fallito</string>
@@ -223,13 +220,11 @@
     <string name="video_decoder_init_failed">Il decoder video non è riuscito ad inizializzarsi. Il tuo dispositivo potrebbe non supportare la risoluzione o il frame rate selezionati.</string>
     <string name="check_ports_msg">Controlla il tuo firewall e le regole di inoltro delle seguenti porte:</string>
     <string name="title_enable_perf_overlay">Mostra le statistiche delle performance durante la trasmissione</string>
-    <string name="title_enable_post_stream_toast">Mostra un messaggio sulla latenza dopo la trasmissione</string>
     <string name="no_frame_received_error">La tua connessione di rete non sta funzionando bene. Riduci il bitrate video o prova ad usare una connessione più veloce.</string>
     <string name="early_termination_error">Qualcosa è andato storto sul PC sorgente mentre la trasmissione veniva avviata.
 \n
 \nAssicurati di non avere nessun contenuto protetto da DRM aperto sul PC sorgente. Puoi anche provare a spengere e riaccendere il PC sorgente.</string>
     <string name="summary_unlock_fps">Trasmettere a 90 o 120 FPS potrebbe ridurre il ritardo su dispositivi di fascia alta, ma può provocare ritardi i instabilità sui dispositivi che non lo supportano</string>
-    <string name="summary_enable_post_stream_toast">Molstra un messaggio con informazioni sulla latenza dopo che la trasmissione è conclusa</string>
     <string name="text_native_res_dialog">Le impostazioni di risoluzione nativa e/o di FPS possono non essere supportate dal server per lo streaming. Dovrai aggiungerle manualmente all\'interno delle impostazioni del PC o del server.
 \n
 \nSe scegli di create una risoluzione personalizzata nel Pannello di Controllo NVIDIA per copiare la risoluzione dello schermo, assicurati di aver letto e capito il messaggio di attenzione di NVIDIA a proposito dei possibili danni al monitor, all\'instabilità del PC e altri potenziali problemi.

@@ -98,9 +98,6 @@
     <string name="conn_establishing_title">Đang thiết lập kết nối</string>
     <string name="conn_establishing_msg">Đang bắt đầu kết nối</string>
     <string name="conn_metered">Cảnh báo: Kết nối mạng hiện tại của bạn bị đo lường!</string>
-    <string name="conn_client_latency">Độ trễ giải mã khung hình trung bình:</string>
-    <string name="conn_client_latency_hw">độ trễ bộ giải mã phần cứng:</string>
-    <string name="conn_hardware_latency">Độ trễ giải mã phần cứng trung bình:</string>
     <string name="conn_starting">Đang bắt đầu</string>
     <string name="conn_error_title">Lỗi kết nối</string>
     <string name="conn_error_msg">Không thể bắt đầu</string>
@@ -287,8 +284,6 @@
     <string name="summary_full_range">Điều này sẽ gây mất chi tiết trong các vùng sáng và tối nếu thiết bị của bạn không hiển thị đúng nội dung video toàn dải.</string>
     <string name="title_enable_perf_overlay">Hiển thị thống kê hiệu suất trong khi phát trực tuyến</string>
     <string name="summary_enable_perf_overlay">Hiển thị thông tin hiệu suất luồng thời gian thực trong khi phát trực tuyến</string>
-    <string name="title_enable_post_stream_toast">Hiển thị thông báo độ trễ sau khi phát trực tuyến</string>
-    <string name="summary_enable_post_stream_toast">Hiển thị thông báo thông tin độ trễ sau khi luồng kết thúc</string>
 
     <string name="category_help">Trợ giúp</string>
     <string name="title_setup_guide">Hướng dẫn thiết lập</string>
@@ -327,8 +322,8 @@
 
     <string name="title_frame_pacing">Định thời khung hình video</string>
     <string name="summary_frame_pacing">Chỉ định cách cân bằng độ trễ video và độ mượt</string>
-    <string name="pacing_warp">Warp Drive (Thử nghiệm)</string>
-    <string name="pacing_warp2">Warp 2 (Thử nghiệm)</string>
+    <string name="pacing_warp">Warp Drive</string>
+    <string name="pacing_warp2">Warp 2</string>
     <string name="pacing_latency">Ưu tiên độ trễ thấp nhất</string>
     <string name="pacing_balanced">Cân bằng</string>
     <string name="pacing_balanced_alt">Cân bằng với giới hạn FPS</string>
@@ -411,8 +406,8 @@
     <string name="title_checkbox_onscreen_style_official">Giao diện tay cầm ảo chính thức</string>
     <string name="summary_checkbox_onscreen_style_official">Nếu bạn vẫn thích kiểu giao diện tay cầm ảo cũ, bạn có thể chọn tùy chọn này.\nNút có thể là hình vuông nếu bạn chọn nút ảo phía dưới [Nút bình thường là nút vuông]</string>
 
-    <string name="title_checkbox_enable_perf_overlay_lite">Bật chế độ đơn giản</string>
-    <string name="summary_checkbox_enable_perf_overlay_lite">Hiển thị thông tin hiệu suất đơn giản: Tốc độ mạng / Độ trễ / Giải mã / Tỷ lệ mất gói / FPS</string>
+    <string name="title_checkbox_enable_perf_overlay_lite">Chế độ thu gọn</string>
+    <string name="summary_checkbox_enable_perf_overlay_lite">Một dòng ở giữa phía trên: FPS, băng thông, độ trễ mạng và giải mã, khung hình bị mất.</string>
 
 
     <string name="title_virtual_trackpad_settings">Cài đặt bàn di chuột ảo</string>
@@ -462,7 +457,7 @@
     <string name="summary_free_analog_stick_opacity">Mặc định chỉ hiển thị nền khi di chuyển cần gạt. Nếu bạn không thích, có thể điều chỉnh độ mờ.</string>
     <string name="title_free_analog_stick_opacity">Độ mờ nền của joystick tự do</string>
 
-    <string name="title_exdisplay_mode">Chế độ màn hình ngoài (Beta)</string>
+    <string name="title_exdisplay_mode">Chế độ màn hình ngoài</string>
     <string name="summary_exdisplay_mode">Hiển thị hình ảnh stream trên màn hình ngoài, nút ảo và các điều khiển khác trên điện thoại.</string>
 
     <string name="title_top_center_display">Hiển thị ở giữa trên</string>

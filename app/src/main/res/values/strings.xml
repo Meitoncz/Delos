@@ -105,9 +105,6 @@
     <string name="conn_establishing_title">Establishing Connection</string>
     <string name="conn_establishing_msg">Starting connection</string>
     <string name="conn_metered">Warning: Your active network connection is metered!</string>
-    <string name="conn_client_latency">Average frame decoding latency:</string>
-    <string name="conn_client_latency_hw">hardware decoder latency:</string>
-    <string name="conn_hardware_latency">Average hardware decoding latency:</string>
     <string name="conn_starting">Starting</string>
     <string name="conn_error_title">Connection Error</string>
     <string name="conn_error_msg">Failed to start</string>
@@ -303,8 +300,6 @@
     <string name="summary_prevent_packet_loss">For devices that have packet loss for unknown reasons, you can try to enable this option.</string>
     <string name="title_enable_perf_overlay">Show performance stats while streaming</string>
     <string name="summary_enable_perf_overlay">Display real-time stream performance information while streaming</string>
-    <string name="title_enable_post_stream_toast">Show latency message after streaming</string>
-    <string name="summary_enable_post_stream_toast">Display a latency information message after the stream ends</string>
 
     <string name="category_help">Help</string>
     <string name="title_setup_guide">Setup guide</string>
@@ -345,9 +340,9 @@
     <string name="videoformat_h264always">Prefer H.264</string>
 
     <string name="title_frame_pacing">Video frame pacing</string>
-    <string name="summary_frame_pacing">Specify how to balance video latency and smoothness</string>
-    <string name="pacing_warp">Warp Drive (Experimental)</string>
-    <string name="pacing_warp2">Warp 2 (Experimental)</string>
+    <string name="summary_frame_pacing">Specify how to balance video latency and smoothness. Warp Drive and Warp 2 may not work on every device.</string>
+    <string name="pacing_warp">Warp Drive</string>
+    <string name="pacing_warp2">Warp 2</string>
     <string name="pacing_latency">Prefer lowest latency</string>
     <string name="pacing_balanced">Balanced</string>
     <string name="pacing_balanced_alt">Balanced with FPS limit</string>
@@ -429,8 +424,8 @@
     <string name="summary_checkbox_multi_touch_gestures">Enable 3 finger tap for keyboard, 4 finger tap for full keyboard, 5 finger tap for quick menu when using multi-touch mode.</string>
     <string name="title_checkbox_onscreen_style_official">Official Virtual Gamepad Skin</string>
     <string name="summary_checkbox_onscreen_style_official">If you still like the old style of official virtual gamepad buttons, you can select this option.\nButton shapes can be square if you selected the bottom virtual button [Normal buttons are square buttons]</string>
-    <string name="title_checkbox_enable_perf_overlay_lite">Enable Lite mode</string>
-    <string name="summary_checkbox_enable_perf_overlay_lite">Display simplified performance information: Network Speed / Latency / Decode / Packet Loss Rate / FPS</string>
+    <string name="title_checkbox_enable_perf_overlay_lite">Compact mode</string>
+    <string name="summary_checkbox_enable_perf_overlay_lite">One line at the top center: FPS, bandwidth, network and decoding delay, lost frames. The Overlay button in the stream menu switches between full, compact and off.</string>
     <string name="title_show_overlay_zoom_toggle_button">Show overlay zoom toggle button</string>
     <string name="summary_show_overlay_zoom_toggle_button">Displays a draggable button at the top of the screen to toggle pan/zoom mode.</string>
     <string name="title_virtual_trackpad_settings">Virtual Trackpad Settings</string>
@@ -470,10 +465,10 @@
     <string name="summary_free_analog_stick">Virtual gamepad left and right stick center point positions are not fixed, can be freely adjusted within a certain range of movement.</string>
     <string name="summary_free_analog_stick_opacity">By default, only when the stick moves, the background is displayed. If you don\'t like it, you can adjust the opacity effect.</string>
     <string name="title_free_analog_stick_opacity">Free Analog Stick Background Opacity</string>
-    <string name="title_exdisplay_mode">External Display Mode (Beta)</string>
-    <string name="title_fullexdisplay_mode">Fully External Display Mode (Beta)</string>
+    <string name="title_exdisplay_mode">External Display Mode</string>
+    <string name="title_fullexdisplay_mode">Fully External Display Mode</string>
     <string name="summary_exdisplay_mode">Stream display on the monitor, virtual buttons and performance information and other controls on the phone screen.</string>
-    <string name="summary_fullexdisplay_mode">Allows full immersive secondary screen mode with automatically matched refresh rate and resolution. Manual settings won\'t apply in this mode.</string>
+    <string name="summary_fullexdisplay_mode">Allows full immersive secondary screen mode with automatically matched refresh rate and resolution. Manual settings won\'t apply in this mode. May not work with every device or display.</string>
     <string name="title_top_center_display">Display in Top Center</string>
     <string name="summary_top_center_display">Streaming picture will be aligned to the top of the screen instead of centered when resolution is not native.</string>
     <string name="title_touch_sensitivity">Touch Screen Sensitivity</string>
@@ -527,8 +522,8 @@
     <string name="summary_checkbox_gamepad_enable_battery_report">Report gamepad battery status when possible.\nDisable this option might help if you experience stutter with touch screen/touch pad/stylus/mouse input occasionally.</string>
     <string name="title_checkbox_enforce_display_mode">Enforce Display Mode</string>
     <string name="summary_checkbox_enforce_display_mode">Force surface to use the optimal display mode.\nRequired by some systems (such as ColorOS) to set refresh rate/resolution properly.\nDo not enable on ChromeCast 4K as it might lead to bugs.</string>
-    <string name="title_checkbox_ultra_low_latency">Ultra Low Latency (experimental)</string>
-    <string name="summary_checkbox_ultra_low_latency">Only effective for SD8Gen2/8(s)Gen3/8Elite and MTK devices.</string>
+    <string name="title_checkbox_ultra_low_latency">Ultra Low Latency</string>
+    <string name="summary_checkbox_ultra_low_latency">Works only on Snapdragon 8 Gen 2, 8(s) Gen 3, 8 Elite and MediaTek devices.</string>
     <string name="title_checkbox_use_virtual_display">Use Virtual Display</string>
     <string name="summary_checkbox_use_virtual_display">Use Virtual Display by default.\nVirtual Display can automatically match your client side resolution and frame rate settings, giving you a seamless streaming experience.\nRequires Apollo as host streaming software.</string>
     <string name="title_checkbox_resume_without_confirm">Quick Resume</string>
@@ -681,8 +676,8 @@
     <string name="profile_manager_active_profile">Active profile: %s</string>
     <string name="rename">Rename</string>
     <string name="save">Save</string>
-    <string name="title_low_latency_frame_balance">LFR (Experimental)</string>
-    <string name="summary_low_latency_frame_balance">Minimizes delay by dropping queued frames.</string>
+    <string name="title_low_latency_frame_balance">LFR</string>
+    <string name="summary_low_latency_frame_balance">Minimizes delay by dropping queued frames. May not work on every device.</string>
     <string name="category_perf_monitor_settings">Performance Monitor</string>
 
     <string name="title_checkbox_full_screen">Enable Full Screen</string>

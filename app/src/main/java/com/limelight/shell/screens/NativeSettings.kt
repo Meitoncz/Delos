@@ -67,11 +67,8 @@ internal fun nativeSettings(
     val menuButtons = StreamMenuSettings.buttons(settings)
     row("ui_stream_menu_buttons", Symbols.SPORTS_ESPORTS, "Stream menu buttons", RowValue.Text(StreamMenuSettings.label(menuButtons)) {
         shell.buttonCapture = { buttons -> StreamMenuSettings.setButtons(settings, buttons) }
-    }, "Press them together while streaming to open the Delos stream menu. Select to record other buttons, e.g. a rear button.",
+    }, "Press them together while streaming to open the Delos stream menu, and again to close it. Select to record other buttons, e.g. a rear button.",
         tab = SettingsTab.CONTROLS, section = "Stream menu")
-    row("ui_stream_menu_reset", Symbols.RESTART_ALT, "Use L3 + R3 again", RowValue.Action {
-        StreamMenuSettings.setButtons(settings, StreamMenuSettings.DEFAULT_BUTTONS)
-    }, "Back to pressing both sticks.", menuButtons != StreamMenuSettings.DEFAULT_BUTTONS, SettingsTab.CONTROLS, "Stream menu")
     row("ui_stream_menu_swipe", Symbols.SWIPE_UP, "Swipe up to open the menu", RowValue.Toggle(StreamMenuSettings.swipe(settings)) { on ->
         settings.edit().putBoolean(StreamMenuSettings.KEY_SWIPE, on).apply()
     }, "A swipe up from the bottom edge of the screen opens the stream menu too. Touches that start right at that edge do not reach the game.",
@@ -79,7 +76,7 @@ internal fun nativeSettings(
     val statsPosition = StatsPosition.read(settings)
     row("ui_stats_position", Symbols.MONITORING, "Statistics position", RowValue.Choice(statsPosition.label, { dir ->
         settings.edit().putString(StatsPosition.KEY, statsPosition.step(dir).name).apply()
-    }), "The corner of the statistics panel while streaming (Performance in the stream menu).", tab = SettingsTab.DISPLAY, section = "Statistics")
+    }), "The corner of the statistics panel while streaming (Overlay in the stream menu). Compact mode is always at the top center.", tab = SettingsTab.DISPLAY, section = "Statistics")
     val choices = listOf<Pc?>(null) + pcs.filter { it.paired }.sortedBy { it.name.lowercase() }
     val index = choices.indexOfFirst { it?.uuid == startup.defaultPc }.coerceAtLeast(0)
     row("ui_default_pc", Symbols.STAR, "Default device", RowValue.Choice(choices[index]?.name ?: "None", { dir ->

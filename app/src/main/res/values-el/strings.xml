@@ -58,9 +58,6 @@
     <string name="conn_establishing_title">Δημιουργία σύνδεσης</string>
     <string name="conn_establishing_msg">Έναρξη σύνδεσης</string>
     <string name="conn_metered">Προειδοποίηση: Η ενεργή σύνδεσή σας στο δίκτυο έχει όριο δεδομένων!</string>
-    <string name="conn_client_latency">Μέσος χρόνος αποκωδικοποίησης πλαισίων:</string>
-    <string name="conn_client_latency_hw">Λανθάνων χρόνος αποκωδικοποιητή υλικού:</string>
-    <string name="conn_hardware_latency">Μέση καθυστέρηση αποκωδικοποίησης υλικού:</string>
     <string name="conn_starting">Εκκίνηση</string>
     <string name="conn_terminated_msg">Η σύνδεση τερματίστηκε</string>
     <string name="ip_hint">Διεύθυνση IP του υπολογιστή GeForce</string>
@@ -131,7 +128,6 @@
     <string name="title_enable_hdr">Ενεργοποίηση HDR</string>
     <string name="summary_enable_hdr">Μεταδώστε HDR όταν το παιχνίδι και η GPU του υπολογιστή το υποστηρίζουν. Το HDR απαιτεί GPU της σειράς GTX 1000 ή νεότερη.</string>
     <string name="summary_enable_perf_overlay">Εμφάνιση πληροφοριών απόδοσης ροής σε πραγματικό χρόνο κατά τη ροή</string>
-    <string name="summary_enable_post_stream_toast">Εμφάνιση ενός μηνύματος πληροφοριών καθυστέρησης μετά το τέλος της ροής</string>
     <string name="scut_deleted_pc">Ο υπολογιστής διαγράφηκε</string>
     <string name="scut_pc_not_found">Ο υπολογιστής δεν βρέθηκε</string>
     <string name="early_termination_error">Κάτι πήγε στραβά στον κεντρικό υπολογιστή σας κατά την εκκίνηση της ροής.
@@ -203,7 +199,6 @@
     <string name="category_advanced_settings">Προηγμένες ρυθμίσεις</string>
     <string name="summary_unlock_fps">Η ροή στα 90 ή 120 FPS μπορεί να μειώσει τον λανθάνοντα χρόνο σε συσκευές υψηλών προδιαγραφών, αλλά μπορεί να προκαλέσει καθυστέρηση ή αστάθεια σε συσκευές που δεν μπορούν να την υποστηρίξουν</string>
     <string name="title_video_format">Αλλαγή ρυθμίσεων HEVC</string>
-    <string name="title_enable_post_stream_toast">Εμφάνιση μηνύματος λανθάνοντος χρόνου μετά τη ροή</string>
     <string name="summary_video_format">Το HEVC μειώνει τις απαιτήσεις εύρους ζώνης βίντεο, αλλά απαιτεί μια νεότερη συσκευή</string>
     <string name="error_code_prefix">Κωδικός σφάλματος:</string>
     <string name="frame_conversion_error">Ο υπολογιστής φιλοξενίας ανέφερε ένα σφάλμα κωδικοποίησης βίντεο.

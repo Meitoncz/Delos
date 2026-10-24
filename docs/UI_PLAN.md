@@ -121,7 +121,7 @@ Each step ends with a build, a test on the Odin and a commit (after approval), l
 
 ### 6.7b Additions requested on 2026-10-23
 Built on the branch `ui/review-fixes`; the user tried them all on the Odin (2026-10-24).
-- [x] The Delos stream menu (`shell/StreamMenu.kt`, the prototype's quick menu): Resume, Keyboard, Performance, More (the classic Artemis quick menu), Disconnect, Quit game. Opens with L3 + R3, or with buttons recorded in Settings → Controls → Stream menu (e.g. the Odin's rear buttons), or with a swipe up from the bottom edge (can be turned off); every way the classic menu opened leads here too. Start + Back + L1 + R1 no longer ends the stream.
+- [x] The Delos stream menu (`shell/StreamMenu.kt`, the prototype's quick menu): Resume, Keyboard, Performance (later Overlay), More (the classic Artemis quick menu), Disconnect, Quit game. Opens with L3 + R3, or with buttons recorded in Settings → Controls → Stream menu (e.g. the Odin's rear buttons), or with a swipe up from the bottom edge (can be turned off); every way the classic menu opened leads here too. Start + Back + L1 + R1 no longer ends the stream.
 - [x] Clock: System, 12-hour or 24-hour.
 - [x] Battery in the style of iOS: light outline, green charge (red at 20 % and below), percentage beside it, a bolt and a pulsing green while charging.
 - [x] Material You uses only the system's wallpaper colors; with it off a color palette can be chosen (Delos, Lagoon, Dusk, Ember, Moss, Iris and the new Rose, Sunset, Mint, Gold).
@@ -134,6 +134,11 @@ Built on the branch `ui/review-fixes`; the user tried them all on the Odin (2026
 - [x] The start screen's pulse around the focused game on the home screen.
 - [x] Recording custom stream menu buttons (Settings → Controls → Stream menu buttons), tried on the Odin.
 - [x] The performance statistics overlay in the Delos style (the user: the current one looks like a debug view). Built on `ui/stream-stats`: the prototype's panel, top left by default, the corner can be chosen in Settings → Display → Statistics position.
+- [x] Small fixes (2026-10-24, branch `ui/small-fixes`): the game background preview only for its own settings rows; frosted glass (backdrop blur) for the focused settings row, the top bar, the description panel and every control right over the animated background (circles, pills, settings tabs, text and PIN fields, top bar labels), not inside overlays; game background blur in 5 px steps.
+- [x] Settings audit, first part: no "(Experimental)" / "(Beta)" in titles, device-dependent features say so in their descriptions; the post-stream latency message removed with its code; "Move overlay to bottom" hidden in the new settings (Statistics position replaces it).
+- [x] Statistics with everything the classic overlay shows (decoder, incoming / rendering FPS, network latency and variance, PC processing min / average / max, decoding, bandwidth, lost frames); Compact mode (the former Lite mode) is one line at the top center; the stream menu's Performance is now Overlay and cycles On → Compact → Off.
+- [x] The stream menu shortcut closes the menu too; "Use L3 + R3 again" removed. The 12-hour clock shows AM / PM.
+- [ ] Settings audit, the rest awaits the user: Enable Full Screen, Optimize game settings, the overlay zoom button, the update links.
 - [ ] The user decides which items the stream menu keeps.
 - [ ] Leaving the stream (Disconnect / Quit game) with the prototype's effect: the portal back into home ("Back to Delos" / "Closing <game>", focus on the game) instead of Android's default slide from the side. The stream is its own task, so the system ignores custom animations; likely: no window animation when the stream ends, and the shell plays the portal when it resumes.
 

@@ -34,9 +34,6 @@
     <string name="conn_establishing_title">Створення з\'єднання</string>
     <string name="conn_establishing_msg">Підключення</string>
     <string name="conn_metered">Увага: Ваше мережеве з\'єднання вимірюється оператором!</string>
-    <string name="conn_client_latency">Середня затримка розцифрування кадру:</string>
-    <string name="conn_client_latency_hw">затримка апаратного розцифрування:</string>
-    <string name="conn_hardware_latency">Середня затримка апаратного розцифрування:</string>
     <string name="conn_starting">Запуск</string>
     <string name="conn_error_title">Помилка з\'єднання</string>
     <string name="conn_error_msg">Запуск не вдався</string>
@@ -173,8 +170,6 @@
     <string name="summary_osc_opacity">Зробити екранні елементи керування більш/менш прозорими</string>
     <string name="dialog_title_osc_opacity">Зміна прозорості</string>
     <string name="suffix_osc_opacity">%</string>
-    <string name="title_enable_post_stream_toast">Статистика затримки після трансляції</string>
-    <string name="summary_enable_post_stream_toast">Показувати статистику затримки після закінчення трансляції</string>
     <string name="early_termination_error">Щось пішло не так на вашому головному ПК під час запуску потоку.
 \n
 \nПереконайтеся, що на головному ПК немає відкритого вмісту, захищеного DRM. Ви також можете спробувати перезавантажити головний ПК.</string>

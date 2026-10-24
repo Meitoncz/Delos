@@ -43,9 +43,6 @@
     <string name="conn_establishing_title">연결 시도중</string>
     <string name="conn_establishing_msg">연결 시작</string>
     <string name="conn_metered">경고: 데이터 요금이 부과될 수 있습니다!</string>
-    <string name="conn_client_latency">평균 프레임 디코딩 지연:</string>
-    <string name="conn_client_latency_hw">하드웨어 디코더 지연:</string>
-    <string name="conn_hardware_latency">평균 하드웨어 디코딩 지연:</string>
     <string name="conn_starting">시작 중</string>
     <string name="conn_error_title">연결 오류</string>
     <string name="conn_error_msg">시작 실패</string>
@@ -185,8 +182,6 @@
     <string name="applist_menu_tv_channel">채널 추가하기</string>
     <string name="scut_invalid_uuid">PC를 사용할 수 없음</string>
     <string name="scut_invalid_app_id">앱을 사용할 수 없음</string>
-    <string name="summary_enable_post_stream_toast">스트림 종료 후 지연시간 정보 표시</string>
-    <string name="title_enable_post_stream_toast">스트리밍 후 지연시간 정보 표시</string>
     <string name="title_enable_perf_overlay">스트리밍 중 성능 정보 표시</string>
     <string name="summary_enable_perf_overlay">스트리밍하는 동안 실시간 스트림 성능 정보 표시</string>
     <string name="summary_enable_hdr">게임 및 PC의 GPU가 HDR을 지원하는 경우 HDR을 활성화합니다. HDR에는 HEVC Main 10 인코딩을 지원하는 GPU가 필요합니다.</string>

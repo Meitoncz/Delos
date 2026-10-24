@@ -3,7 +3,6 @@
     <string name="conn_establishing_title">Připojování</string>
     <string name="conn_metered">Varování: Vaše aktivní připojení je měřené!</string>
     <string name="conn_error_msg">Spouštění se nezdařilo</string>
-    <string name="conn_client_latency_hw">zpoždění hardwarového dekodéru:</string>
     <string name="conn_terminated_title">Spojení ukončeno</string>
     <string name="resolution_prefix_native_fullscreen">Nativní celá obrazovka</string>
     <string name="summary_checkbox_enable_audiofx">Umožňuje fungování zvukových efektů během streamování, ale může zvýšit zpoždění zvuku</string>
@@ -61,8 +60,6 @@
     <string name="check_ports_msg">Zkontrolujte svůj firewall a pravidla přesměrování pro tyto porty:</string>
     <string name="conn_terminated_msg">Spojení bylo ukončeno</string>
     <string name="ip_hint">IP adresa GeForce PC</string>
-    <string name="conn_hardware_latency">Průměrné zpoždění hardwarového dekodéru:</string>
-    <string name="conn_client_latency">Průměrné zpoždění při dekódování snímků:</string>
     <string name="perf_overlay_netlatency">Průměrné zpoždění sítě: %1$d ms (odchylka: %2$d ms)</string>
     <string name="perf_overlay_dectime">Průměrný čas pro dekódování: %1$.2f ms</string>
     <string name="applist_connect_msg">Připojování k PC…</string>
@@ -188,8 +185,6 @@
     <string name="title_checkbox_host_audio">Přehrávat zvuk na PC</string>
     <string name="summary_checkbox_host_audio">Přehraje zvuk z počítače a tohoto zařízení</string>
     <string name="summary_unlock_fps">Streamování v 90 nebo 120 FPS může snížit zpoždění na dražších zařízeních, ale může způsobit zasekávání nebo nestabilitu na zařízeních, které je nepodporují</string>
-    <string name="title_enable_post_stream_toast">Zobrazit informace o zpoždění po streamování</string>
-    <string name="summary_enable_post_stream_toast">Zobrazit informace o zpoždění po skončení streamování</string>
     <string name="title_privacy_policy">Zásady ochrany osobních údajů</string>
     <string name="summary_privacy_policy">Zobrazit zásady ochrany osobních údajů aplikace Delos</string>
     <string name="resolution_360p">360p</string>

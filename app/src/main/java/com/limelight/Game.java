@@ -522,7 +522,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
         performanceOverlayBig = findViewById(R.id.performanceOverlayBig);
         if (StreamLoader.requested(getIntent())) {
-            statsPanel = com.limelight.shell.StreamStatsPanel.attach(this, (android.view.ViewGroup) performanceOverlayView);
+            statsPanel = com.limelight.shell.StreamStatsPanel.attach(this, (android.view.ViewGroup) performanceOverlayView, prefConfig.enablePerfOverlayLite);
         }
 
         inputCaptureProvider = InputCaptureManager.getInputCaptureProvider(this, this);
@@ -642,7 +642,8 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             } else {
                 performanceOverlayBig.setVisibility(View.VISIBLE);
             }
-            if (prefConfig.enablePerfOverlayBottom) {
+            // Delos: the statistics panel has its own position
+            if (prefConfig.enablePerfOverlayBottom && statsPanel == null) {
                 //performanceOverlayView.getLayoutParams().layout_gravity = Gravity.BOTTOM;
                 FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) performanceOverlayView.getLayoutParams();
                 params.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
@@ -1670,54 +1671,8 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         }
 
         if (conn != null) {
-            int videoFormat = decoderRenderer.getActiveVideoFormat();
-
             displayedFailureDialog = true;
             stopConnection();
-            String message = null;
-            String selectedVideoFormat = "";
-
-            int averageEndToEndLat = decoderRenderer.getAverageEndToEndLatency();
-            int averageDecoderLat = decoderRenderer.getAverageDecoderLatency();
-
-            if (averageEndToEndLat > 0) {
-                message = getResources().getString(R.string.conn_client_latency) + " " + averageEndToEndLat + " ms";
-                if (averageDecoderLat > 0) {
-                    message += " (" + getResources().getString(R.string.conn_client_latency_hw) + " " + averageDecoderLat + " ms)";
-                }
-            } else if (averageDecoderLat > 0) {
-                message = getResources().getString(R.string.conn_hardware_latency) + " " + averageDecoderLat + " ms";
-            }
-
-            // Add the video codec to the post-stream toast
-            selectedVideoFormat += " [";
-
-            if ((videoFormat & MoonBridge.VIDEO_FORMAT_MASK_H264) != 0) {
-                selectedVideoFormat += "H.264";
-            } else if ((videoFormat & MoonBridge.VIDEO_FORMAT_MASK_H265) != 0) {
-                selectedVideoFormat += "HEVC";
-            } else if ((videoFormat & MoonBridge.VIDEO_FORMAT_MASK_AV1) != 0) {
-                selectedVideoFormat += "AV1";
-            }
-            else {
-                selectedVideoFormat += "UNKNOWN";
-            }
-
-            if ((videoFormat & MoonBridge.VIDEO_FORMAT_MASK_10BIT) != 0) {
-                selectedVideoFormat += " HDR";
-            }
-
-            selectedVideoFormat += "]";
-
-            if (message != null) {
-                message += selectedVideoFormat;
-            }
-
-            if (message != null) {
-                if (prefConfig.enableLatencyToast) {
-                    Toast.makeText(this, message, Toast.LENGTH_LONG).show();
-                }
-            }
 
             // Clear the tombstone count if we terminated normally
             if (!reportedCrash && tombstonePrefs.getInt("CrashCount", 0) != 0) {
@@ -4088,6 +4043,20 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     }
 
     public void toggleHUD() {
+        if (statsPanel != null) {
+            // Delos: the stream menu's Overlay goes round full → compact → off
+            if (!prefConfig.enablePerfOverlay) {
+                prefConfig.enablePerfOverlay = true;
+                prefConfig.enablePerfOverlayLite = false;
+            } else if (!prefConfig.enablePerfOverlayLite) {
+                prefConfig.enablePerfOverlayLite = true;
+            } else {
+                prefConfig.enablePerfOverlay = false;
+            }
+            statsPanel.setCompact(prefConfig.enablePerfOverlayLite);
+            performanceOverlayView.setVisibility(prefConfig.enablePerfOverlay ? View.VISIBLE : View.GONE);
+            return;
+        }
         prefConfig.enablePerfOverlay = !prefConfig.enablePerfOverlay;
         if (prefConfig.enablePerfOverlay) {
             performanceOverlayView.setVisibility(View.VISIBLE);

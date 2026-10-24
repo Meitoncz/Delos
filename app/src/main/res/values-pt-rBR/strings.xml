@@ -4,7 +4,6 @@
     <string name="pacing_balanced">Balanceado</string>
     <string name="pacing_latency">Preferir baixa latência</string>
     <string name="summary_enable_hdr">Transmita HDR quando o jogo e a GPU do PC suportarem. O HDR requer uma GPU da série GTX 1000 ou posterior.</string>
-    <string name="summary_enable_post_stream_toast">Exibe uma mensagem com informações de latência após o término da transmissão</string>
     <string name="summary_unlock_fps">Transmitir a 90 ou 120 FPS pode reduzir a latência em dispositivos de última geração, mas pode causar atraso ou instabilidade em dispositivos que não suportam</string>
     <string name="summary_checkbox_vibrate_osc">Vibra seu dispositivo para emular rumble nos controles de tela</string>
     <string name="pcview_menu_header_offline">Indisponível</string>
@@ -112,9 +111,6 @@
     <string name="title_decoding_error">Decodificador de Vídeo Crashou</string>
     <string name="title_decoding_reset">Resetar Configurações de Vídeo</string>
     <string name="conn_metered">Aviso: Sua conexão de rede atual é limitada!</string>
-    <string name="conn_client_latency">Latência média de decodificação de quadros:</string>
-    <string name="conn_client_latency_hw">latência do decodificador de hardware:</string>
-    <string name="conn_hardware_latency">Latência média de decodificação de hardware:</string>
     <string name="conn_starting">Iniciando</string>
     <string name="conn_error_title">Erro de Conexão</string>
     <string name="perf_overlay_decoder">Decodificador: %1$s</string>
@@ -218,7 +214,6 @@
     <string name="title_disable_frame_drop">Nunca dropar quadros</string>
     <string name="summary_disable_frame_drop">Talvez reduza o micro-stuttering em alguns dispositivos, mas pode aumentar a latência</string>
     <string name="title_enable_hdr">Habilitar HDR</string>
-    <string name="title_enable_post_stream_toast">Mostrar aviso de latência após terminar a transmissão</string>
     <string name="summary_enable_perf_overlay">Exibe informações de performance em tempo real durante a transmissão</string>
     <string name="title_enable_perf_overlay">Mostrar status de performance durante a transmissão</string>
     <string name="category_help">Ajuda</string>

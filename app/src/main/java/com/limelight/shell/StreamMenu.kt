@@ -74,7 +74,7 @@ import com.limelight.shell.ui.tpx
 
 /**
  * The Delos stream menu (the prototype's `#quickmenu`): a panel at the bottom of the stream with the
- * game's name and Resume, Keyboard, Performance, More (the classic Artemis quick menu), Disconnect and
+ * game's name and Resume, Keyboard, Overlay, More (the classic Artemis quick menu), Disconnect and
  * Quit game. It opens with the buttons set in Delos (L3 + R3 by default), a swipe up from the bottom
  * edge (unless turned off) and every way the classic menu opened. It is its own window, so the
  * controller does not reach the game while it is open. Created by Game (a small "Delos:" hook).
@@ -84,7 +84,10 @@ class StreamMenu(private val game: Game) {
     private val swipe = StreamMenuSettings.swipe(game)
     private val held = HashSet<Int>()
 
-    /** The shortcut is complete; the menu opens once its buttons are let go (the game sees them released). */
+    /**
+     * The shortcut is complete; the menu opens (or, when open, closes) once its buttons are let go (the
+     * game sees them released).
+     */
     private var pending = false
     private var edgeGesture = false
     private var edgeStartY = 0f
@@ -92,7 +95,7 @@ class StreamMenu(private val game: Game) {
 
     val isOpen: Boolean get() = dialog?.isShowing == true
 
-    /** Returns whether the stream must not see [event] (the shortcut's final button). */
+    /** Returns whether the stream (or the open menu) must not see [event] (the shortcut's final button). */
     fun onKey(event: KeyEvent): Boolean {
         val code = event.keyCode
         if (code !in buttons) return false
@@ -109,7 +112,7 @@ class StreamMenu(private val game: Game) {
                 held -= code
                 if (pending && held.isEmpty()) {
                     pending = false
-                    show()
+                    if (isOpen) hide() else show()
                     return true
                 }
             }
@@ -165,6 +168,8 @@ class StreamMenu(private val game: Game) {
                 }
             }
         })
+        // While the menu is open the buttons reach its window, not the stream: the shortcut closes it again
+        d.setOnKeyListener { _, _, event -> onKey(event) }
         d.setOnDismissListener {
             feedback.release()
             dialog = null
@@ -239,7 +244,9 @@ class StreamMenu(private val game: Game) {
                         Page.MAIN -> Row(horizontalArrangement = Arrangement.spacedBy(34.px)) {
                             MenuCircle(Symbols.PLAY_ARROW, "Resume", Modifier.focusRequester(first)) { close() }
                             MenuCircle(Symbols.KEYBOARD, "Keyboard") { close { game.toggleKeyboard() } }
-                            MenuCircle(Symbols.SPEED, "Performance", on = prefs.enablePerfOverlay) { toggle { game.toggleHUD() } }
+                            MenuCircle(Symbols.SPEED, "Overlay", on = prefs.enablePerfOverlay, state = if (!prefs.enablePerfOverlay) "Off" else if (prefs.enablePerfOverlayLite) "Compact" else "On") {
+                                toggle { game.toggleHUD() }
+                            }
                             MenuCircle(Symbols.MORE_HORIZ, "More") { page = Page.MORE }
                             MenuCircle(Symbols.LOGOUT, "Disconnect") { close { game.disconnect() } }
                             MenuCircle(Symbols.POWER_SETTINGS_NEW, "Quit game") { close { game.quitWithoutAsking() } }
@@ -319,8 +326,11 @@ class StreamMenu(private val game: Game) {
 
     /** `#quickmenu .circle`: 112 px on a dark glass, white icon and label. */
     @Composable
-    /** [on]: a toggle's state (filled with the accent and "On" under the label), null for actions. */
-    private fun MenuCircle(icon: String, label: String, modifier: Modifier = Modifier, on: Boolean? = null, onClick: () -> Unit) {
+    /**
+     * [on]: a toggle's state (filled with the accent and "On" under the label), null for actions;
+     * [state] replaces "On" / "Off" for toggles with more steps.
+     */
+    private fun MenuCircle(icon: String, label: String, modifier: Modifier = Modifier, on: Boolean? = null, state: String? = null, onClick: () -> Unit) {
         val colors = LocalDelosColors.current
         var focused by remember { mutableStateOf(false) }
         Column(Modifier.width(150.px), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(18.px)) {
@@ -339,7 +349,7 @@ class StreamMenu(private val game: Game) {
                 BasicText(label, style = TextStyle(color = Color.White, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx, textAlign = TextAlign.Center))
                 if (on != null) {
                     BasicText(
-                        if (on) "On" else "Off",
+                        state ?: if (on) "On" else "Off",
                         style = TextStyle(color = if (on) colors.accent else Color.White.copy(alpha = .55f), fontFamily = Figtree, fontWeight = FontWeight.Bold, fontSize = 17.tpx),
                     )
                 }

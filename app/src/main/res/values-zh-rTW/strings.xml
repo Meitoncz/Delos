@@ -102,9 +102,6 @@
 	<string name="conn_establishing_title">正在建立連線</string>
 	<string name="conn_establishing_msg">正在啟動連線</string>
 	<string name="conn_metered">警告：您目前的網路連線為計量網路！</string>
-	<string name="conn_client_latency">平均影格解碼延遲：</string>
-	<string name="conn_client_latency_hw">硬體解碼器延遲：</string>
-	<string name="conn_hardware_latency">平均硬體解碼延遲：</string>
 	<string name="conn_starting">正在啟動</string>
 	<string name="conn_error_title">連線錯誤</string>
 	<string name="conn_error_msg">啟動失敗</string>
@@ -300,8 +297,6 @@
 	<string name="summary_prevent_packet_loss">若裝置因不明原因出現封包遺失，可嘗試啟用此選項。</string>
 	<string name="title_enable_perf_overlay">串流時顯示效能資訊</string>
 	<string name="summary_enable_perf_overlay">串流時顯示即時效能資訊</string>
-	<string name="title_enable_post_stream_toast">串流後顯示延遲訊息</string>
-	<string name="summary_enable_post_stream_toast">串流結束後顯示延遲資訊訊息</string>
 
 	<string name="category_help">說明</string>
 	<string name="title_setup_guide">安裝指南</string>
@@ -340,8 +335,8 @@
 
 	<string name="title_frame_pacing">影片幀律控制</string>
 	<string name="summary_frame_pacing">指定如何在影片延遲與流暢度之間取得平衡</string>
-	<string name="pacing_warp">Warp Drive（實驗性）</string>
-	<string name="pacing_warp2">Warp 2（實驗性）</string>
+	<string name="pacing_warp">Warp Drive</string>
+	<string name="pacing_warp2">Warp 2</string>
 	<string name="pacing_latency">優先最低延遲</string>
 	<string name="pacing_balanced">平衡</string>
 	<string name="pacing_balanced_alt">有限制 FPS 的平衡模式</string>
@@ -432,8 +427,8 @@
 	<string name="title_checkbox_onscreen_style_official">官方虛擬手把外觀</string>
 	<string name="summary_checkbox_onscreen_style_official">若偏好舊版官方虛擬手把按鈕樣式，可選擇此項。\n若選擇底部虛擬按鈕，按鍵外形可為方形【一般按鍵預設為方形】</string>
 
-	<string name="title_checkbox_enable_perf_overlay_lite">啟用精簡模式</string>
-	<string name="summary_checkbox_enable_perf_overlay_lite">顯示簡化的效能資訊：網路速度 / 延遲 / 解碼 / 封包遺失率 / FPS</string>
+	<string name="title_checkbox_enable_perf_overlay_lite">精簡模式</string>
+	<string name="summary_checkbox_enable_perf_overlay_lite">在頂部中間顯示一行：FPS、頻寬、網路與解碼延遲、掉幀。</string>
 
 
 
@@ -492,8 +487,8 @@
 	<string name="summary_free_analog_stick_opacity">預設僅在搖桿移動時顯示背景。若不喜歡，可調整其不透明度效果。</string>
 	<string name="title_free_analog_stick_opacity">自由類比搖桿背景不透明度</string>
 
-	<string name="title_exdisplay_mode">外接顯示模式（Beta）</string>
-	<string name="title_fullexdisplay_mode">全外接顯示模式（Beta）</string>
+	<string name="title_exdisplay_mode">外接顯示模式</string>
+	<string name="title_fullexdisplay_mode">全外接顯示模式</string>
 	<string name="summary_exdisplay_mode">在外接顯示器上顯示串流畫面；虛擬按鍵、效能資訊與其他控制顯示於手機螢幕。</string>
 	<string name="summary_fullexdisplay_mode">允許沉浸式副螢幕模式並自動匹配更新率與解析度。此模式下手動設定不會生效。</string>
 
@@ -564,7 +559,7 @@
 	<string name="title_checkbox_enforce_display_mode">強制顯示模式</string>
 	<string name="summary_checkbox_enforce_display_mode">強制 Surface 使用最佳顯示模式。\n部分系統（如 ColorOS）需要此選項才能正確設定更新率/解析度。\n請勿在 ChromeCast 4K 上啟用，可能導致問題。</string>
 
-	<string name="title_checkbox_ultra_low_latency">超低延遲（實驗性）</string>
+	<string name="title_checkbox_ultra_low_latency">超低延遲</string>
 	<string name="summary_checkbox_ultra_low_latency">僅對 SD8Gen2/8(s)Gen3/8Elite 與 MTK 裝置有效。</string>
 
 
@@ -735,7 +730,7 @@
 	<string name="rename">重新命名</string>
 	<string name="save">儲存</string>
 
-	<string name="title_low_latency_frame_balance">低延遲隊列（實驗性）</string>
+	<string name="title_low_latency_frame_balance">低延遲隊列</string>
 	<string name="summary_low_latency_frame_balance">透過丟棄緩衝幀以最小化延遲。</string>
 	<string name="category_perf_monitor_settings">效能監視器</string>
 

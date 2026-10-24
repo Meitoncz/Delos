@@ -560,12 +560,6 @@
             android:title="@string/title_checkbox_remember_zoom_pan"
             app:iconSpaceReserved="false" />
 
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="checkbox_enable_post_stream_toast"
-            android:summary="@string/summary_enable_post_stream_toast"
-            android:title="@string/title_enable_post_stream_toast"
-            app:iconSpaceReserved="false" />
         <com.limelight.preferences.SmallIconCheckboxPreference
             android:key="checkbox_small_icon_mode"
             android:summary="@string/summary_checkbox_small_icon_mode"

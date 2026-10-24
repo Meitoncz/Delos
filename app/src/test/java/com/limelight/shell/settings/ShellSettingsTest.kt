@@ -43,7 +43,8 @@ class ShellSettingsTest {
             }
         }
         // 116 in step 6.7, minus the five Artemis menu options the Delos stream menu replaced
-        assertEquals(111, keys.size)
+        // and the post-stream latency message
+        assertEquals(110, keys.size)
         assertEquals(keys, catalog.all.map { it.key }.toSet())
         assertEquals(keys.size, catalog.all.size)
         assertTrue(catalog.all.all { it.label.isNotBlank() && it.section.isNotBlank() })
@@ -68,15 +69,11 @@ class ShellSettingsTest {
         assertEquals(SettingsTab.ABOUT, spec("list_languages").tab)
     }
 
-    @Test fun reviewedExperimentalLabelsArePreserved() {
-        listOf("checkbox_enable_hdr", "checkbox_full_range", "checkbox_smart_clipboard_sync").forEach { key ->
-            assertFalse(spec(key).label.contains("experimental", ignoreCase = true))
-        }
-        assertFalse(spec("video_format").choices.first { it.value == "forceav1" }.label.contains("experimental", ignoreCase = true))
-        assertTrue(spec("checkbox_ultra_low_latency").label.contains("experimental", ignoreCase = true))
-        assertTrue(spec("pref_low_latency_frame_balance").label.contains("experimental", ignoreCase = true))
-        assertTrue(spec("frame_pacing").choices.first { it.value == "warp" }.label.contains("experimental", ignoreCase = true))
-        assertTrue(spec("frame_pacing").choices.first { it.value == "warp2" }.label.contains("experimental", ignoreCase = true))
+    @Test fun noExperimentalOrBetaLabels() {
+        // Device-dependent features say so in their descriptions instead
+        val labels = catalog.all.flatMap { spec -> listOf(spec.label) + spec.choices.map { it.label } }
+        assertTrue(labels.none { it.contains("experimental", ignoreCase = true) || it.contains("(beta)", ignoreCase = true) })
+        assertTrue(spec("frame_pacing").description.contains("may not work on every device"))
     }
 
     @Test fun searchShortcutConsumesBothEdgesAndOpensOnceOnReleaseOnlyInSettings() {

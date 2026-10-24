@@ -52,9 +52,6 @@
     <string name="conn_establishing_title">Upprättar fogning</string>
     <string name="conn_establishing_msg">Startar fogning</string>
     <string name="conn_metered">Varning: Din aktiva nätverksfogning är mätbar!</string>
-    <string name="conn_client_latency">Genomsnittlig latenstid för ramavkodning:</string>
-    <string name="conn_client_latency_hw">Latency för hårdvaruavkodare:</string>
-    <string name="conn_hardware_latency">Genomsnittlig latenstid för maskinvaruavkodning:</string>
     <string name="conn_starting">Börjar</string>
     <string name="conn_error_title">Fogningsfel</string>
     <string name="conn_error_msg">Misslyckades att börja</string>
@@ -167,7 +164,6 @@
     <string name="title_full_range">Tvinga video med fullt omfång</string>
     <string name="title_enable_perf_overlay">Visa prestandastatistik under ströming</string>
     <string name="summary_enable_perf_overlay">Visa information om strömningens duglighet i nutid medans du strömmar</string>
-    <string name="summary_enable_post_stream_toast">Visa ett meddelande med information om latens när strömmen avslutas</string>
     <string name="category_help">Hjälp</string>
     <string name="title_setup_guide">Installationsguide</string>
     <string name="title_troubleshooting">Vägledning för felsökning</string>
@@ -241,7 +237,6 @@
     <string name="summary_checkbox_reduce_refresh_rate">Lägre uppdateringsfrekvenser på skärmen kan spara ström på bekostnad av ytterligare videolatens</string>
     <string name="summary_full_range">Detta kan leda till förlust av detalj i ljusa och mörka områden om enheten inte visar videoinnehåll med fullt omfång på rätt sätt.</string>
     <string name="fps_120">120 FPS</string>
-    <string name="title_enable_post_stream_toast">Visa meddelande om latenstid efter strömning</string>
     <string name="summary_setup_guide">Visa instruktioner om hur du utformar din speldator för strömning</string>
     <string name="resolution_1080p">1080p</string>
     <string name="fps_60">60 FPS</string>

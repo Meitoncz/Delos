@@ -127,8 +127,6 @@
     <string name="summary_checkbox_touchscreen_trackpad">Etkinleştirilirse, dokunmatik ekran bir dokunmatik fare gibi davranır. Devre dışı bırakılırsa, dokunmatik ekran doğrudan fare imlecini kontrol eder.</string>
     <string name="conn_establishing_msg">Bağlantı başlatılıyor</string>
     <string name="conn_metered">Uyarı: Aktif ağ bağlantınız ölçülüdür!</string>
-    <string name="conn_client_latency">Ortalama kare kod çözme gecikmesi:</string>
-    <string name="conn_client_latency_hw">donanım kod çözücü gecikmesi:</string>
     <string name="pcview_menu_send_wol">Yerel ağdan uyandırma isteği gönder</string>
     <string name="applist_refresh_msg">Uygulamalar yenileniyor…</string>
     <string name="applist_refresh_error_title">Hata</string>
@@ -149,7 +147,6 @@
     <string name="title_checkbox_absolute_mouse_mode">Uzak masaüstü fare modu</string>
     <string name="error_404">GFE bir HTTP 404 hatası bildirdi. Bilgisayarınızın desteklenen bir GPU çalıştırdığından emin olun. Uzak masaüstü yazılımı kullanmak da bu hataya neden olabilir. Cihazınızı yeniden başlatmayı veya GFE\'yi yeniden yüklemeyi deneyin.</string>
     <string name="message_decoding_error">Delos, bu cihazın video kod çözücüsüyle uyumsuzluk nedeniyle çöktü. Kilitlenmeler devam ederse akış ayarlarını değiştirmeyi deneyin.</string>
-    <string name="conn_hardware_latency">Ortalama donanım kod çözme gecikmesi:</string>
     <string name="title_decoding_reset">Video Ayarlarını Sıfırla</string>
     <string name="searching_pc">Yerel ağınızdaki ana bilgisayarlar aranıyor…
 \n
@@ -222,9 +219,7 @@
     <string name="title_full_range">Tam aralıklı videoyu zorla</string>
     <string name="summary_full_range">Cihazınız tam kapsamlı video içeriğini düzgün şekilde görüntülemiyorsa, bu durum aydınlık ve karanlık alanlarda ayrıntı kaybına neden olacaktır.</string>
     <string name="title_setup_guide">Kurulum rehberi</string>
-    <string name="title_enable_post_stream_toast">Akıştan sonra gecikme mesajını göster</string>
     <string name="category_help">Yardım</string>
-    <string name="summary_enable_post_stream_toast">Akış sona erdikten sonra bir gecikme bilgi mesajı görüntüle</string>
     <string name="summary_setup_guide">Oyun bilgisayarınızı akış için nasıl ayarlayacağınıza ilişkin talimatları görüntüleyin</string>
     <string name="title_troubleshooting">Sorun giderme kılavuzu</string>
     <string name="title_privacy_policy">Gizlilik politikası</string>
