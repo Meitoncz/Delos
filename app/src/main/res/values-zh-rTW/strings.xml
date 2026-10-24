@@ -319,8 +319,6 @@
 	<string name="title_checkbox_multi_touch_gestures">啟用多點觸控手勢</string>
 	<string name="summary_checkbox_multi_touch_gestures">在多點觸控模式下：三指點擊開啟鍵盤、四指點擊開啟全鍵盤、五指點擊開啟快速選單。</string>
 
-	<string name="title_checkbox_onscreen_style_official">官方虛擬手把外觀</string>
-	<string name="summary_checkbox_onscreen_style_official">若偏好舊版官方虛擬手把按鈕樣式，可選擇此項。\n若選擇底部虛擬按鈕，按鍵外形可為方形【一般按鍵預設為方形】</string>
 
 	<string name="title_checkbox_enable_perf_overlay_lite">精簡模式</string>
 	<string name="summary_checkbox_enable_perf_overlay_lite">在頂部中間顯示一行：FPS、頻寬、網路與解碼延遲、掉幀。</string>

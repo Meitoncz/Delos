@@ -83,6 +83,8 @@ public class KeyBoardController {
         this.frame_layout = layout;
         this.context = context;
         this.handler = new Handler(Looper.getMainLooper());
+        // Delos: the profile's main color for pressed keys
+        com.limelight.binding.input.virtual_controller.OscStyle.refresh(context);
 
         this.vibrator = DeviceVibrator.get(context);
 

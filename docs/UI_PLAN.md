@@ -183,7 +183,8 @@ Built on the branch `ui/switch-over` (2026-10-24). Delos is still not released; 
 - [x] The library is ordered by when each game was last played (per PC and profile), the running game first, never played ones after them in the PC's order.
 - [ ] Responsive layouts for other screen shapes (the stage is 1920 × 1080 and only scales); with the 6.10 device checks.
 - [ ] Built-in artwork for Desktop and similar apps from the user's PNGs (cover 600 × 900, wide 920 × 430, background 1920 × 1080, logo transparent PNG about 1800 × 400), once the user names the apps.
-- [ ] New on-screen controls graphics: thin modern lines, out of the way but usable (next).
+- [x] New on-screen controls graphics (`OscStyle`, tried on the emulator and the Odin): thin (1 dp) light outlines over a faint dark glass, Figtree labels in capitals, whatever is pressed filled with the profile's main color (clearly, whatever the controls' opacity); circles for face buttons and L3 / R3, pills for shoulders, triggers, Back / Guide / Start and the trackpad, a D-pad cross with chevrons, sticks with a reach ring and a knob; the keyboard layout's keys in the same look. The classic skin setting and its 29 images are gone. Back, Guide and Start sit in a row centred at the bottom, the trackpad centred above them (L3 / R3 overlapping the D-pad and the right stick is kept on purpose; anyone can move them).
+- [x] Debug info → Preview on-screen controls: the controls without a stream (nothing is sent), with the layout editor.
 
 Later (Phase 6 backlog; the user on 2026-10-24: not urgent, for the first "final" version): restyle the classic in-stream quick menu (`GameMenu`) and the virtual controls editor in the new design. The stream menu's items stay as they are. Next after 6.9 the focus is on core features: PyroWave and VRR, PS Remote Play (docs/FUTURE_PLANS.md).
 

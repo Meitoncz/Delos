@@ -8,6 +8,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.util.DisplayMetrics;
 import android.view.MotionEvent;
@@ -165,6 +166,30 @@ public abstract class VirtualControllerElement extends View {
     protected void actionCancel() {
         currentMode = Mode.Normal;
         invalidate();
+    }
+
+    /** Delos: the element's opacity (the on-screen controls opacity setting), for OscStyle. */
+    protected float elementOpacity() {
+        return Color.alpha(normalColor) / 255f;
+    }
+
+    /** Delos: whether the layout is being edited (moving, resizing, turning buttons on or off). */
+    protected boolean isConfiguring() {
+        VirtualController.ControllerMode mode = virtualController.getControllerMode();
+        return mode == VirtualController.ControllerMode.MoveButtons || mode == VirtualController.ControllerMode.ResizeButtons
+                || mode == VirtualController.ControllerMode.DisableEnableButtons;
+    }
+
+    /** Delos: the frame of an element while the layout is edited, in the editing mode's color. */
+    protected void drawConfigFrame(Canvas canvas) {
+        if (!isConfiguring()) {
+            return;
+        }
+        paint.setColor(getDefaultColor());
+        paint.setStrokeWidth(getDefaultStrokeWidth());
+        paint.setStyle(Paint.Style.STROKE);
+        canvas.drawRect(paint.getStrokeWidth(), paint.getStrokeWidth(),
+                getWidth() - paint.getStrokeWidth(), getHeight() - paint.getStrokeWidth(), paint);
     }
 
     protected int getDefaultColor() {

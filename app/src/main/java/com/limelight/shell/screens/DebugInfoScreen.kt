@@ -60,6 +60,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
 import com.limelight.shell.LocalShell
+import com.limelight.shell.Screen
 import com.limelight.shell.ui.LocalDelosColors
 import com.limelight.shell.ui.LocalFeedback
 import com.limelight.shell.ui.LocalStage
@@ -151,6 +152,8 @@ fun DebugInfoScreen() {
             "Keeps vibrating at the strength below until it is turned off or you leave this screen."))
         add(DebugRow("strength", "Vibration test", Symbols.TUNE, "Strength", RowValue.Slider(strength, 5, 255, 5, "") { strength = it },
             "The strength of continuous vibration, 1–255, for the device and the controllers."))
+        add(DebugRow("osc_preview", "On-screen controls", Symbols.JOYSTICK, "Preview on-screen controls", RowValue.Action { shell.navigate(Screen.OscPreview) },
+            "Your on-screen controls without a stream: try every button, the D-pad and the sticks, nothing is sent. The gear in the corner edits the layout, as in a stream."))
         if (pads.isEmpty()) {
             add(DebugRow("no_pads", "Controllers", Symbols.SPORTS_ESPORTS, "No controller connected", RowValue.Info(""),
                 "Connect a controller and it shows up here at once. The built-in controls of a handheld count as one."))

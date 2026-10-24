@@ -304,7 +304,6 @@ public class PreferenceConfiguration {
     public boolean enableKeyboardSquare;
 
     // Official virtual button style
-    public boolean enableOnScreenStyleOfficial;
 
     // Free analog stick background opacity
     public int enableNewAnalogStickOpacity;
@@ -866,7 +865,6 @@ private static int getFramePacingValue(Context context) {
         // Full keyboard opacity
         config.oscKeyboardOpacity = prefs.getInt("seekbar_keyboard_axi_opacity",DEFAULT_OPACITY);
 
-        config.enableOnScreenStyleOfficial = prefs.getBoolean("checkbox_onscreen_style_official",false);
 
         config.enableNewAnalogStickOpacity = prefs.getInt("seekbar_osc_free_analog_stick_opacity",20);
 

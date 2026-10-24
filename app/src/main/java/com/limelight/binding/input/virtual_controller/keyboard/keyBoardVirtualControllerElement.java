@@ -46,6 +46,11 @@ public abstract class keyBoardVirtualControllerElement extends View {
     private final Paint paint = new Paint();
 
     private int normalColor = 0xF0888888;
+
+    /** Delos: the key's opacity (the on-screen controls opacity setting), for OscStyle. */
+    protected float elementOpacity() {
+        return android.graphics.Color.alpha(normalColor) / 255f;
+    }
     protected int pressedColor = 0xA3DCDCDE;
     private int configMoveColor = 0xF0FF0000;
     private int configResizeColor = 0xF0FF00FF;

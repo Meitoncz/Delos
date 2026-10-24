@@ -289,8 +289,6 @@
     <!-- New Strings -->
     <string name="title_checkbox_mouse_local_cursor">Utiliser le curseur local de la souris</string>
     <string name="summary_checkbox_mouse_local_cursor">Le curseur physique de la souris par défaut sera capturé, cette option peut afficher le curseur du système Android</string>
-    <string name="title_checkbox_onscreen_style_official">Skin officielle de la manette virtuelle</string>
-    <string name="summary_checkbox_onscreen_style_official">Si vous aimez toujours l\'ancien style des boutons officiels de la manette virtuelle, vous pouvez sélectionner cette option.\nLes formes des boutons peuvent être carrées si vous avez sélectionné le bouton virtuel inférieur [Les boutons carrés sont des boutons carrés]</string>
     <string name="title_checkbox_enable_perf_overlay_lite">Mode compact</string>
     <string name="summary_checkbox_enable_perf_overlay_lite">Une ligne en haut au centre : FPS, bande passante, latence réseau et de décodage, images perdues.</string>
     <string name="title_virtual_trackpad_settings">Paramètres du trackpad virtuel</string>

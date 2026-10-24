@@ -93,6 +93,7 @@ import com.limelight.shell.data.downloadAll
 import com.limelight.shell.ui.ArtworkProgressBar
 import com.limelight.shell.screens.ArtworkScreen
 import com.limelight.shell.screens.DebugInfoScreen
+import com.limelight.shell.screens.OscPreviewScreen
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 
@@ -400,6 +401,7 @@ fun Shell(
                         is Screen.PairPc -> PairPcScreen(screen, pcs)
                         is Screen.Artwork -> ArtworkScreen(screen)
                         Screen.DebugInfo -> DebugInfoScreen()
+                        Screen.OscPreview -> OscPreviewScreen()
                         is Screen.Pin -> PinScreen(
                             screen, repo, setup,
                             onFailed = { message ->
@@ -411,7 +413,8 @@ fun Shell(
                         )
                     }
                 }
-                ZoomedBar(uiScale) {
+                // The on-screen controls preview is full screen like a stream
+                if (shell.screen != Screen.OscPreview) ZoomedBar(uiScale) {
                     StatusBar(
                         nav.takeIf { shell.screen.main }, pcName = pc?.name.takeIf { shell.screen.main }, pcOnline = pc?.online == true,
                         wifi = wifi, battery = battery, clock = clock, brand = shell.screen != Screen.Start,
@@ -556,6 +559,8 @@ private fun hints(shell: ShellState, adjustable: Boolean): List<Hint> {
             is Screen.PairPc -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"), Hint(Glyph.MENU_RIGHT, "Options"))
             is Screen.Pin -> listOf(Hint(Glyph.B, "Cancel"))
             Screen.DebugInfo -> adjust + listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"))
+            // Like a stream: nothing over the controls
+            Screen.OscPreview -> emptyList()
             is Screen.Artwork -> listOf(Hint(Glyph.L1, "Previous tab"), Hint(Glyph.R1, "Next tab"), Hint(Glyph.A, "Use"), Hint(Glyph.B, "Back"))
             Screen.Profile, Screen.Devices -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"), Hint(Glyph.MENU_LEFT, "Menu"))
         }

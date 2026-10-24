@@ -63,6 +63,11 @@ sealed interface Screen {
         override val back: Screen get() = Settings
     }
 
+    /** The on-screen controls without a stream, to look at and edit their layout (Debug info). */
+    data object OscPreview : Screen {
+        override val back: Screen get() = DebugInfo
+    }
+
     /** The SteamGridDB artwork of one game, chosen by hand (the game's options → Artwork). */
     data class Artwork(val pc: com.limelight.shell.data.Pc, val app: com.limelight.shell.data.App) : Screen {
         override val back: Screen get() = Home

@@ -4,6 +4,7 @@
 
 package com.limelight.binding.input.virtual_controller.keyboard;
 
+import com.limelight.binding.input.virtual_controller.OscStyle;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -152,34 +153,15 @@ public class KeyBoardDigitalButton extends keyBoardVirtualControllerElement {
         // set transparent background
         canvas.drawColor(Color.TRANSPARENT);
 
-        paint.setTextSize(getPercent(getWidth(), 25));
-        paint.setTextAlign(Paint.Align.CENTER);
-        paint.setStrokeWidth(getDefaultStrokeWidth());
-
         boolean shouldSetPressed = isPressed() || isSticky();
-
-        paint.setColor(shouldSetPressed ? pressedColor : getDefaultColor());
-
-        paint.setStyle(shouldSetPressed ? Paint.Style.FILL_AND_STROKE: Paint.Style.STROKE);
-
-        rect.left = rect.top = paint.getStrokeWidth();
-        rect.right = getWidth() - rect.left;
-        rect.bottom = getHeight() - rect.top;
-
-        if(PreferenceConfiguration.readPreferences(getContext()).enableKeyboardSquare){
-            canvas.drawRect(rect,paint);
-        }else{
-            canvas.drawOval(rect, paint);
-        }
+        // Delos: the on-screen controls' own look; square keys keep rounded corners
+        OscStyle.drawButton(canvas, getWidth(), getHeight(), icon != -1 ? null : text, shouldSetPressed, elementOpacity(),
+                getResources().getDisplayMetrics().density, PreferenceConfiguration.readPreferences(getContext()).enableKeyboardSquare);
 
         if (icon != -1) {
             Drawable d = ContextCompat.getDrawable(getContext(), icon);
             d.setBounds(5, 5, getWidth() - 5, getHeight() - 5);
             d.draw(canvas);
-        } else {
-            paint.setStyle(Paint.Style.FILL_AND_STROKE);
-            paint.setStrokeWidth(getDefaultStrokeWidth()/2);
-            canvas.drawText(text, getPercent(getWidth(), 50), getPercent(getHeight(), 63), paint);
         }
     }
 

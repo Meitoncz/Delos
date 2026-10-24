@@ -250,60 +250,11 @@ public class AnalogStickFree extends VirtualControllerElement {
             canvas.drawText(strStickSide, nWidth / 2, nHeight / 2, paint);
         }
 
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(getDefaultStrokeWidth());
-
-        if (bIsFingerOnScreen) {
-            // set transparent background
-            canvas.drawColor(Color.TRANSPARENT);
-            //canvas.drawCircle(touchX, touchY, 50, paint);
-
-            // draw outer circle
-//            if (!isPressed() || click_state == CLICK_STATE.SINGLE) {
-//                //paint.setColor(getDefaultColor());
-//            } else {
-//                //paint.setColor(pressedColor);
-//            }
-//            //canvas.drawCircle(getWidth() / 2, getHeight() / 2, radius_complete, paint);
-//
-//            //paint.setColor(getDefaultColor());
-//            // draw dead zone
-//            //canvas.drawCircle(getWidth() / 2, getHeight() / 2, radius_dead_zone, paint);
-            // draw stick depending on state
-            switch (stick_state) {
-                case NO_MOVEMENT: {
-                    paint.setColor(Color.MAGENTA);
-                    canvas.drawCircle(getWidth() / 2, getHeight() / 2, radius_analog_stick, paint);
-                    break;
-                }
-
-                case MOVED_IN_DEAD_ZONE:
-                case MOVED_ACTIVE: {
-
-                    paint.setColor(bgCircleColor);
-
-                    paint.setStyle(Paint.Style.FILL_AND_STROKE);
-
-                    canvas.drawCircle(touchStartX, touchStartY, radius_complete, paint);
-
-                    paint.setStyle(Paint.Style.STROKE);
-
-                    paint.setColor(strokeCircleColor);
-
-                    // draw start touch point circle
-                    canvas.drawCircle(touchStartX, touchStartY, radius_dead_zone, paint);
-                    //paint.setColor(Color.RED);
-                    // line from start point to current touch point
-//                    canvas.drawLine(touchStartX, touchStartY, position_stick_x, position_stick_y, paint);
-
-                    //paint.setColor(pressedColor);
-                    canvas.drawCircle(position_stick_x, position_stick_y, radius_analog_stick, paint);
-//                    float distance = (float) Math.sqrt(Math.pow(touchStartY - position_stick_y, 2) + Math.pow(touchStartX - position_stick_x, 2));
-
-//                    canvas.drawCircle(touchStartX, touchStartY, touchMaxDistance, paint);
-                    break;
-                }
-            }
+        // Delos: the on-screen controls' own look, where the finger landed
+        if (bIsFingerOnScreen && stick_state != STICK_STATE.NO_MOVEMENT) {
+            OscStyle.drawStick(canvas, touchStartX, touchStartY, radius_complete, radius_dead_zone,
+                    position_stick_x, position_stick_y, radius_analog_stick, true, false,
+                    Math.max(elementOpacity(), Color.alpha(bgCircleColor) / 255f), getResources().getDisplayMetrics().density);
         }
     }
 

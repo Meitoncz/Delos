@@ -302,8 +302,6 @@
     <string name="title_checkbox_mouse_local_cursor">Sử dụng con trỏ chuột nội bộ</string>
     <string name="summary_checkbox_mouse_local_cursor">Con trỏ chuột vật lý ngoài sẽ bị bắt, tùy chọn này sẽ hiển thị con trỏ chuột của hệ thống Android</string>
 
-    <string name="title_checkbox_onscreen_style_official">Giao diện tay cầm ảo chính thức</string>
-    <string name="summary_checkbox_onscreen_style_official">Nếu bạn vẫn thích kiểu giao diện tay cầm ảo cũ, bạn có thể chọn tùy chọn này.\nNút có thể là hình vuông nếu bạn chọn nút ảo phía dưới [Nút bình thường là nút vuông]</string>
 
     <string name="title_checkbox_enable_perf_overlay_lite">Chế độ thu gọn</string>
     <string name="summary_checkbox_enable_perf_overlay_lite">Một dòng ở giữa phía trên: FPS, băng thông, độ trễ mạng và giải mã, khung hình bị mất.</string>
