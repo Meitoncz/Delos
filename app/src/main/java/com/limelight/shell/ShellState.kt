@@ -58,6 +58,11 @@ sealed interface Screen {
     /** The PCs to pair: discovered ones, an address to enter, searching again. */
     data class PairPc(override val back: Screen?) : Screen
 
+    /** The SteamGridDB artwork of one game, chosen by hand (the game's options → Artwork). */
+    data class Artwork(val pc: com.limelight.shell.data.Pc, val app: com.limelight.shell.data.App) : Screen {
+        override val back: Screen get() = Home
+    }
+
     /** Pairing [pcUuid]: the PIN to enter on the PC, or a one-time code from Vibepollo ([otp]). */
     data class Pin(val pcUuid: String, val pcName: String, val otp: Otp?, override val back: Screen) : Screen
 }
@@ -242,3 +247,6 @@ class ShellState(initial: Screen) {
 
 val LocalShell = staticCompositionLocalOf<ShellState> { error("ShellState not provided") }
 val LocalFocusTracker = staticCompositionLocalOf<FocusTracker> { error("FocusTracker not provided") }
+
+/** The current PC's games, e.g. for the settings that download artwork for all of them. */
+val LocalLibrary = androidx.compose.runtime.compositionLocalOf<com.limelight.shell.data.Library> { com.limelight.shell.data.Library.Loading }

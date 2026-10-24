@@ -177,8 +177,10 @@ class StreamLoader private constructor(private val activity: ComponentActivity, 
             )
         }
 
+        /** The cover the home screen shows: the SteamGridDB one, else the PC's box art. */
         private fun loadCover(activity: ComponentActivity, pcUuid: String, appId: Int): ImageBitmap? = runCatching {
-            val file = CacheHelper.openPath(false, activity.cacheDir, "boxart", pcUuid, "$appId.png")
+            val sgdb = java.io.File(activity.filesDir, "artwork/$pcUuid/$appId/cover")
+            val file = if (sgdb.exists() && sgdb.length() > 0) sgdb else CacheHelper.openPath(false, activity.cacheDir, "boxart", pcUuid, "$appId.png")
             if (file.exists()) BitmapFactory.decodeFile(file.path)?.asImageBitmap() else null
         }.getOrNull()
     }

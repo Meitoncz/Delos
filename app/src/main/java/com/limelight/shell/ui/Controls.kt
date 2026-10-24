@@ -39,6 +39,9 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -87,6 +90,18 @@ fun Heading(title: String, sub: String? = null) {
                 modifier = Modifier.padding(top = 14.px).widthIn(max = 1000.px),
             )
         }
+    }
+}
+
+/** A small spinning ring: something is being downloaded or prepared. */
+@Composable
+fun Spinner(size: Float, modifier: Modifier = Modifier, color: Color = LocalDelosColors.current.accent) {
+    val turn = rememberInfiniteTransition(label = "spinner")
+    val angle by turn.animateFloat(0f, 360f, infiniteRepeatable(tween(900, easing = LinearEasing)), label = "spinnerAngle")
+    androidx.compose.foundation.Canvas(modifier.size(size.px)) {
+        val stroke = this.size.minDimension * .12f
+        drawArc(color.copy(alpha = .25f), 0f, 360f, false, style = Stroke(stroke), topLeft = Offset(stroke / 2, stroke / 2), size = Size(this.size.width - stroke, this.size.height - stroke))
+        drawArc(color, angle, 100f, false, style = Stroke(stroke, cap = StrokeCap.Round), topLeft = Offset(stroke / 2, stroke / 2), size = Size(this.size.width - stroke, this.size.height - stroke))
     }
 }
 

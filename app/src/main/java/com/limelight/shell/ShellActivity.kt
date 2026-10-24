@@ -19,7 +19,9 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.limelight.shell.data.ArtworkStore
 import com.limelight.shell.data.BoxArtCache
+import com.limelight.shell.data.LocalArtwork
 import com.limelight.shell.data.GameLauncher
 import com.limelight.shell.data.LocalBoxArt
 import com.limelight.shell.data.PcRepository
@@ -48,6 +50,7 @@ class ShellActivity : ComponentActivity() {
     private lateinit var appearance: AppearanceStore
     private lateinit var repo: PcRepository
     private lateinit var boxArt: BoxArtCache
+    private lateinit var artwork: ArtworkStore
     private lateinit var profiles: ProfileStore
     private val keys = GlobalKeys()
 
@@ -72,10 +75,11 @@ class ShellActivity : ComponentActivity() {
         lifecycle.addObserver(repo)
         repo.bind()
         boxArt = BoxArtCache(this) { repo.binder?.uniqueId }
+        artwork = ArtworkStore(this)
         val launcher = GameLauncher(this, repo)
         val setup = PcSetup(this, repo)
         if (savedInstanceState == null) links.value = ShellLink.from(this, intent)
-        setContent { ShellRoot(appearance, feedback, keys, repo, boxArt, launcher, profiles, startup, setup, links) }
+        setContent { ShellRoot(appearance, feedback, keys, repo, boxArt, artwork, launcher, profiles, startup, setup, links) }
         feedback.view = window.decorView
     }
 
@@ -123,6 +127,7 @@ private fun ShellRoot(
     keys: GlobalKeys,
     repo: PcRepository,
     boxArt: BoxArtCache,
+    artwork: ArtworkStore,
     launcher: GameLauncher,
     profiles: ProfileStore,
     startup: StartupStore,
@@ -143,7 +148,7 @@ private fun ShellRoot(
         feedback.soundsEnabled = appearance.sounds
         feedback.hapticsEnabled = appearance.haptics
     }
-    CompositionLocalProvider(LocalDelosColors provides colors, LocalFeedback provides feedback, LocalBoxArt provides boxArt) {
+    CompositionLocalProvider(LocalDelosColors provides colors, LocalFeedback provides feedback, LocalBoxArt provides boxArt, LocalArtwork provides artwork) {
         Stage(textScale = appearance.uiScale / 100f) {
             Shell(appearance, store::update, keys, repo, launcher, profiles, startup, setup, links)
         }

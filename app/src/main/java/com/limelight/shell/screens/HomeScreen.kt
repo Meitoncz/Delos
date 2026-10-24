@@ -5,6 +5,7 @@ import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.BringIntoViewSpec
@@ -71,7 +72,13 @@ import com.limelight.shell.LocalShell
 import com.limelight.shell.MenuItem
 import com.limelight.shell.data.App
 import com.limelight.shell.data.Library
+import com.limelight.shell.Screen
+import com.limelight.shell.data.ArtKind
+import com.limelight.shell.ui.Spinner
+import com.limelight.shell.ui.HeroBitmaps
+import com.limelight.shell.data.LocalArtwork
 import com.limelight.shell.data.LocalBoxArt
+import com.limelight.shell.data.rememberArtwork
 import com.limelight.shell.data.Pc
 import com.limelight.shell.data.PcRepository
 import com.limelight.shell.data.rememberBoxArt
@@ -153,7 +160,12 @@ private fun GameLibrary(library: Library.Ready, appearance: Appearance, repo: Pc
 
     val focusedIndex = apps.indexOfFirst { homeKey(pc, it) == shell.homeGame }.takeIf { it >= 0 } ?: 0
     val focused = apps[focusedIndex]
-    val image by rememberBoxArt(boxArt, pc, focused)
+    val artwork = LocalArtwork.current
+    val boxImage by rememberBoxArt(boxArt, pc, focused)
+    val heroImage by rememberArtwork(artwork, pc, focused, ArtKind.HERO)
+    val coverImage by rememberArtwork(artwork, pc, focused, ArtKind.COVER)
+    // The SteamGridDB hero, else the cover (SteamGridDB, then the PC's)
+    val image = heroImage ?: coverImage ?: boxImage
     // The game background follows the focus with a short delay, so it does not flicker while scrolling fast
     LaunchedEffect(homeKey(pc, focused), image) {
         delay(140)
@@ -293,7 +305,11 @@ enum class TileBadge(val icon: String, val label: String) {
  * game (quit that one and start this one, or go back to it) or nothing (start). No confirmation
  * dialogs: choosing "Quit" in this menu is the confirmation.
  */
-private fun gameMenu(pc: Pc, app: App, hidden: Boolean, running: App?, image: ImageBitmap?, actions: GameActions, onHide: (App, Boolean) -> Unit) =
+private fun gameMenu(
+    pc: Pc, app: App, hidden: Boolean, running: App?, image: ImageBitmap?, actions: GameActions, onHide: (App, Boolean) -> Unit,
+    /** Opens the artwork screen; null for apps SteamGridDB is not asked about. */
+    onArtwork: (() -> Unit)?,
+) =
     ContextMenu(
         app.name,
         buildList {
@@ -308,6 +324,7 @@ private fun gameMenu(pc: Pc, app: App, hidden: Boolean, running: App?, image: Im
                 }
                 else -> add(MenuItem(Symbols.PLAY_ARROW, "Start game") { actions.start(pc, app, image) })
             }
+            if (onArtwork != null) add(MenuItem(Symbols.PHOTO_LIBRARY, "Artwork", onArtwork))
             add(
                 if (hidden) MenuItem(Symbols.VISIBILITY, "Show game") { onHide(app, false) }
                 else MenuItem(Symbols.VISIBILITY_OFF, "Hide game") { onHide(app, true) }
@@ -329,8 +346,15 @@ private fun GameInfo(pc: Pc, app: App, index: Int, lastPlayed: Int, modifier: Mo
             },
             style = TextStyle(color = colors.accent, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx, letterSpacing = .14.em),
         )
-        Row(Modifier.height(132.px).padding(top = 2.px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(26.px)) {
-            Symbol(art.icon, 104.tpx, hsl(art.hue2, 85f, 66f), filled = true, filledWeight = 500, opticalSize = 48f)
+        val logo by rememberArtwork(LocalArtwork.current, pc, app, ArtKind.LOGO)
+        val logoImage = logo
+        // The SteamGridDB logo stands in for the icon and the name
+        if (logoImage != null) Box(Modifier.height(132.px).padding(top = 6.px, bottom = 6.px), contentAlignment = Alignment.CenterStart) {
+            Image(
+                logoImage, contentDescription = app.name, contentScale = ContentScale.Fit, alignment = Alignment.CenterStart,
+                modifier = Modifier.height(120.px).widthIn(max = 900.px),
+            )
+        } else Row(Modifier.height(132.px).padding(top = 2.px), verticalAlignment = Alignment.CenterVertically) {
             val size = when {
                 app.name.length > 22 -> 56
                 app.name.length > 13 -> 68
@@ -341,7 +365,8 @@ private fun GameInfo(pc: Pc, app: App, index: Int, lastPlayed: Int, modifier: Mo
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 style = TextStyle(
-                    brush = Brush.verticalGradient(.25f to colors.text, 1f to hsl(art.hue2, 70f, 58f)),
+                    // The color of the game background (its main hue once rendered), else the game's own
+                    brush = Brush.verticalGradient(.25f to colors.text, 1f to hsl(HeroBitmaps.hue(homeKey(pc, app)) ?: art.hue2, 70f, 58f)),
                     fontFamily = Unbounded, fontWeight = FontWeight.Bold, fontSize = size.tpx, letterSpacing = (-.01).em,
                 ),
                 modifier = Modifier.padding(end = 150.px),
@@ -391,10 +416,17 @@ private fun GameTile(
     val shell = LocalShell.current
     val tracker = LocalFocusTracker.current
     val feedback = LocalFeedback.current
-    val image by rememberBoxArt(boxArt, pc, app)
+    val artwork = LocalArtwork.current
+    val boxImage by rememberBoxArt(boxArt, pc, app)
+    val cover by rememberArtwork(artwork, pc, app, ArtKind.COVER)
+    val wideCover by rememberArtwork(artwork, pc, app, ArtKind.WIDE)
     val art = appArt(pc, app)
     val wide = index == 0
-    val menu = remember(app, hidden, running, image) { gameMenu(pc, app, hidden, running, image, actions, onHide) }
+    // The launch scene shows the portrait cover; the wide first tile its own wide cover
+    val image = cover ?: boxImage
+    val shown = if (wide) wideCover ?: boxImage else image
+    val onArtwork = { shell.navigate(Screen.Artwork(pc, app)) }.takeIf { artwork.eligible(app) }
+    val menu = remember(app, hidden, running, image) { gameMenu(pc, app, hidden, running, image, actions, onHide, onArtwork) }
     var focused by remember { mutableStateOf(false) }
     // A starts (or resumes) the game; while another game runs on the PC it offers the choices instead
     val activate = {
@@ -423,7 +455,7 @@ private fun GameTile(
             .clip(RoundedCornerShape(26.px))
             .background(colors.surface2),
     ) {
-        Crossfade(image, animationSpec = tween(400), label = "cover") { img ->
+        Crossfade(shown, animationSpec = tween(400), label = "cover") { img ->
             if (img != null) {
                 Image(
                     img, contentDescription = app.name, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(),
@@ -442,6 +474,12 @@ private fun GameTile(
                     titleBottom = if (wide) 40f else 26f,
                 )
             }
+        }
+        if (artwork.isBusy(pc, app)) {
+            Box(
+                Modifier.align(Alignment.TopEnd).padding(16.px).size(56.px).clip(CircleShape).background(Color(0x8C050A14)),
+                contentAlignment = Alignment.Center,
+            ) { Spinner(32f) }
         }
         if (badge != null) {
             Row(

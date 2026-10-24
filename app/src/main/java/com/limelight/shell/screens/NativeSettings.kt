@@ -5,7 +5,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import com.limelight.BuildConfig
+import com.limelight.shell.DialogField
+import com.limelight.shell.DialogSpec
+import com.limelight.shell.Layer
+import com.limelight.shell.LocalFocusTracker
+import com.limelight.shell.LocalLibrary
 import com.limelight.shell.LocalShell
+import com.limelight.shell.data.Library
+import com.limelight.shell.data.LocalArtwork
+import com.limelight.shell.data.downloadAll
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import com.limelight.shell.Screen
 import com.limelight.shell.StatsPosition
 import com.limelight.shell.data.Pc
@@ -87,8 +97,44 @@ internal fun nativeSettings(
         "Connect straight to the default device when Delos starts.", startup.defaultPc != null, SettingsTab.DEVICES, "Startup")
     row("devices_manage", Symbols.DEVICES, "Manage devices", RowValue.Action { shell.navigate(Screen.Devices) }, "Connect, rename, wake, unpair or remove a PC.", tab = SettingsTab.DEVICES, section = "Paired PCs")
     row("devices_pair", Symbols.ADD_LINK, "Pair a new PC", RowValue.Action { shell.navigate(Screen.PairPc(Screen.Settings)) }, "Find a PC running Vibepollo, Apollo or Sunshine.", tab = SettingsTab.DEVICES, section = "Paired PCs")
-    row("covers_source", Symbols.IMAGE, "Game artwork", RowValue.Info("From your PC"), "Delos currently uses covers provided by your streaming PC.", tab = SettingsTab.COVERS, section = "Artwork")
-    row("covers_steamgriddb", Symbols.PHOTO_LIBRARY, "SteamGridDB", RowValue.Info("Coming soon"), "Portrait covers, wide covers, backgrounds and logos with your own API key.", tab = SettingsTab.COVERS, section = "Artwork")
+    val artwork = LocalArtwork.current
+    val tracker = LocalFocusTracker.current
+    val library = LocalLibrary.current as? Library.Ready
+    val scope = rememberCoroutineScope()
+    row("covers_sgdb_key", Symbols.KEY, "SteamGridDB API key", RowValue.Text(if (artwork.enabled) "Added" else "Not set") {
+        shell.openLayer(Layer.Dialog(DialogSpec(
+            "SteamGridDB API key",
+            "Free on steamgriddb.com: sign in, then Preferences → API. Leave it empty to stop using SteamGridDB.",
+            listOf(DialogField(Symbols.KEY, artwork.apiKey, "API key", password = true, maxLength = 64)), "Save",
+        ) { values ->
+            artwork.apiKey = values.first()
+            shell.showToast(if (artwork.enabled) "API key saved" else "SteamGridDB is off", Symbols.CHECK_CIRCLE)
+            true
+        }), tracker)
+    }, "Your own key: Delos downloads covers, wide covers, backgrounds and logos from SteamGridDB with it. It is kept on this device for every profile.",
+        tab = SettingsTab.COVERS, section = "SteamGridDB")
+    row("covers_sgdb_auto", Symbols.AUTORENEW, "Download automatically", RowValue.Toggle(artwork.automatic) { on -> artwork.automatic = on },
+        "New games get SteamGridDB's best-rated cover, wide cover, background and logo as soon as the PC's library loads.",
+        artwork.enabled, SettingsTab.COVERS, "SteamGridDB")
+    fun downloadAll(refresh: Boolean) {
+        val ready = library ?: return shell.showToast("Connect to a PC first", Symbols.ERROR)
+        scope.launch {
+            shell.showToast("Downloading the artwork of ${ready.pc.name}'s games…", Symbols.DOWNLOAD)
+            var failed = false
+            val found = artwork.downloadAll(ready.pc, ready.apps, refresh) {
+                failed = true
+                shell.showToast(it, Symbols.ERROR)
+            }
+            if (!failed) shell.showToast(if (found == 0 && !refresh) "All games have their artwork already" else "Artwork ready for $found games", Symbols.CHECK_CIRCLE)
+        }
+    }
+    row("covers_sgdb_missing", Symbols.DOWNLOAD, "Download missing artwork", RowValue.Action { downloadAll(refresh = false) },
+        "For the games of ${library?.pc?.name ?: "the current PC"} that have none yet.", artwork.enabled, SettingsTab.COVERS, "SteamGridDB")
+    row("covers_sgdb_refresh", Symbols.REFRESH, "Download all artwork again", RowValue.Action { downloadAll(refresh = true) },
+        "Looks every game up again and takes the best-rated images; the ones you picked yourself stay.", artwork.enabled, SettingsTab.COVERS, "SteamGridDB")
+    row("covers_sgdb_choose", Symbols.PHOTO_LIBRARY, "Choose artwork for one game", RowValue.Info("Game options"),
+        "On the home screen: the right menu button on a game → Artwork. Pick any cover, wide cover, background or logo, or another game.",
+        tab = SettingsTab.COVERS, section = "SteamGridDB")
     row("about_version", Symbols.DEPLOYED_CODE, "Version", RowValue.Info(BuildConfig.VERSION_NAME), "Delos for Android.", tab = SettingsTab.ABOUT, section = "Delos")
     row("about_based", Symbols.ACCOUNT_TREE, "Based on", RowValue.Info("Artemis · Moonlight"), "Open source game streaming, licensed under the GPLv3.", tab = SettingsTab.ABOUT, section = "Delos")
     row("about_welcome", Symbols.REPLAY, "Replay the welcome", RowValue.Action { shell.navigate(Screen.Boot(back = Screen.Settings)) }, "Open the welcome screen again. Existing profiles and paired PCs are kept.", tab = SettingsTab.ABOUT, section = "Delos")

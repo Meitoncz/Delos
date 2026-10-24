@@ -229,7 +229,7 @@ fun SettingsScreen(
         Row(Modifier.offset(y = 206.px).fillMaxWidth().height(66.px), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
             ShoulderLabel("L1")
             SettingsTab.entries.forEach { next ->
-                SettingsTabButton(next, tab == next, Modifier.padding(horizontal = 5.px)) {
+                TabPill(next.icon, next.label, tab == next, Modifier.padding(horizontal = 5.px)) {
                     if (next != tab) {
                         focusTransfer.requestFocus()
                         shell.settingsFocus = null
@@ -279,15 +279,17 @@ private fun SettingsItemRow(item: SettingsItem, modifier: Modifier = Modifier, f
         description = item.description.takeIf { it.length <= 100 && it.isNotEmpty() }, enabled = item.enabled, onFocused = focused)
 }
 
+/** The L1 / R1 hint beside a row of tabs. */
 @Composable
-private fun ShoulderLabel(label: String) {
+internal fun ShoulderLabel(label: String) {
     val colors = LocalDelosColors.current
     BasicText(label, style = TextStyle(color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.Bold, fontSize = 18.tpx),
         modifier = Modifier.padding(horizontal = 10.px).border(1.px, colors.line, RoundedCornerShape(10.px)).padding(horizontal = 12.px, vertical = 6.px))
 }
 
+/** A tab of a row switched with L1 / R1 (the settings categories, the artwork kinds). */
 @Composable
-private fun SettingsTabButton(tab: SettingsTab, selected: Boolean, modifier: Modifier, onClick: () -> Unit) {
+internal fun TabPill(icon: String, label: String, selected: Boolean, modifier: Modifier, onClick: () -> Unit) {
     val colors = LocalDelosColors.current
     var focused by remember { mutableStateOf(false) }
     Row(modifier.focusEffects(onClick, corner = 999f, focusScale = 1.08f, ring = FocusRing(0f, 0f), glow = FocusGlow(12f, 36f, -10f), onFocusChange = { focused = it })
@@ -295,8 +297,8 @@ private fun SettingsTabButton(tab: SettingsTab, selected: Boolean, modifier: Mod
         .then(if (focused) Modifier.background(colors.accent) else if (selected) Modifier.glass(colors.surface2) else Modifier)
         .height(66.px).padding(horizontal = 22.px),
         horizontalArrangement = Arrangement.spacedBy(12.px), verticalAlignment = Alignment.CenterVertically) {
-        Symbol(tab.icon, 30.tpx, if (focused) colors.onAccent else if (selected) colors.accent else colors.text2, filled = focused || selected)
-        BasicText(tab.label, style = TextStyle(color = if (focused) colors.onAccent else if (selected) colors.text else colors.text2,
+        Symbol(icon, 30.tpx, if (focused) colors.onAccent else if (selected) colors.accent else colors.text2, filled = focused || selected)
+        BasicText(label, style = TextStyle(color = if (focused) colors.onAccent else if (selected) colors.text else colors.text2,
             fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 22.tpx))
     }
 }

@@ -88,6 +88,10 @@ import com.limelight.shell.ui.AvatarBadge
 import com.limelight.shell.ui.ButtonCaptureLayer
 import com.limelight.shell.ui.DialogLayer
 import com.limelight.shell.ui.PortalOverlay
+import com.limelight.shell.data.LocalArtwork
+import com.limelight.shell.data.downloadAll
+import com.limelight.shell.ui.ArtworkProgressBar
+import com.limelight.shell.screens.ArtworkScreen
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 
@@ -227,6 +231,13 @@ fun Shell(
     val battery by rememberBatteryStatus()
     val clock by rememberClock(appearance.clock)
     val library by repo.library.collectAsStateWithLifecycle()
+    // SteamGridDB: games never looked up get their best-rated artwork in the background
+    val artwork = LocalArtwork.current
+    LaunchedEffect((library as? Library.Ready)?.let { it.pc.uuid to it.apps.map { a -> a.id } }, artwork.enabled, artwork.automatic) {
+        val ready = library as? Library.Ready ?: return@LaunchedEffect
+        if (!artwork.enabled || !artwork.automatic) return@LaunchedEffect
+        artwork.downloadAll(ready.pc, ready.apps, refresh = false) { shell.showToast(it, Symbols.ERROR) }
+    }
     val showHidden by repo.showHidden.collectAsStateWithLifecycle()
     val uiScale = appearance.uiScale / 100f
     val pc = when (val l = library) {
@@ -329,7 +340,7 @@ fun Shell(
 
     CompositionLocalProvider(
         LocalShell provides shell, LocalFocusTracker provides tracker, LocalGameActions provides actions, LocalDeviceActions provides devices,
-        LocalBackdropHaze provides backdropHaze,
+        LocalBackdropHaze provides backdropHaze, LocalLibrary provides library,
     ) {
         Box(Modifier.fillMaxSize()) {
             // The blur source re-records the whole screen every frame, so it is only active while an overlay
@@ -386,6 +397,7 @@ fun Shell(
                             }
                         }
                         is Screen.PairPc -> PairPcScreen(screen, pcs)
+                        is Screen.Artwork -> ArtworkScreen(screen)
                         is Screen.Pin -> PinScreen(
                             screen, repo, setup,
                             onFailed = { message ->
@@ -452,6 +464,7 @@ fun Shell(
                 }
             }
 
+            ArtworkProgressBar(artwork.progress.value)
             val note = (library as? Library.Ready)?.takeIf { shell.screen == Screen.Home && shell.layer == null }?.let { "${it.apps.size} apps on ${it.pc.name}" }
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
                 ZoomedBar(uiScale) { HintBar(hints(shell, tracker.adjustable), note = note) }
@@ -540,6 +553,7 @@ private fun hints(shell: ShellState, adjustable: Boolean): List<Hint> {
             is Screen.CreateProfile -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"))
             is Screen.PairPc -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"), Hint(Glyph.MENU_RIGHT, "Options"))
             is Screen.Pin -> listOf(Hint(Glyph.B, "Cancel"))
+            is Screen.Artwork -> listOf(Hint(Glyph.L1, "Previous tab"), Hint(Glyph.R1, "Next tab"), Hint(Glyph.A, "Use"), Hint(Glyph.B, "Back"))
             Screen.Profile, Screen.Devices -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"), Hint(Glyph.MENU_LEFT, "Menu"))
         }
     }

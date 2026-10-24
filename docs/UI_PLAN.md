@@ -142,13 +142,17 @@ Built on the branch `ui/review-fixes`; the user tried them all on the Odin (2026
 - [ ] The user decides which items the stream menu keeps.
 - [x] Leaving the stream (Disconnect / Quit game) with the prototype's effect (`shell/StreamExit.kt`, branch `ui/stream-exit`, tried on the Odin): the portal opens over the stream ("Back to Delos" / "Closing <game>", the PC below; in a window of its own, so the system blurs the stream behind it at 50 px; the stream zooms in by 12 % with an ease-out) and bursts after 2.1 s; the new UI then comes to the front with a scale-up fade instead of Android's slide, finishes the burst and keeps the focus on the game. The game gets no input meanwhile.
 - [x] The stream menu's Overlay choice (On / Compact / Off) is kept in the profile for the next streams.
-- [ ] The other ways a stream ends (connection lost, the game closed on the PC, errors) still slide back; give them the portal too.
+- [ ] Later (the user's decision on 2026-10-24: kept as they are for now): the other ways a stream ends (connection lost, the game closed on the PC, errors) still slide back and show the classic messages; give them the portal and Delos-style screens.
 
 ### 6.8 SteamGridDB
-- [ ] API key entry (the user's own key), stored locally.
-- [ ] Match games by name (search API), with a manual override per game.
-- [ ] Download the portrait cover, wide cover, hero and logo for one game or for all games at once; cache them; refresh on demand.
-- [ ] Open question from GUI.md: syncing the choices with Vibepollo.
+Built on the branch `ui/steamgriddb` (`shell/data/SteamGridDb.kt`, `screens/ArtworkScreen.kt`); the user tried it on the Odin (2026-10-24).
+- [x] API key entry (the user's own key, Settings → Covers), kept on the device for every profile.
+- [x] Match games by name (search API); the remote desktop is left out.
+- [x] Download the portrait cover, wide cover, hero and logo, the best-rated of each, for all games at once: automatically for games never looked up (can be turned off), "Download missing artwork" and "Download all artwork again" (hand-picked images stay). Kept in the app's files, not the cache.
+- [x] The artwork screen (a game's options → Artwork): a tab per kind (L1 / R1), "Currently used" with its source, every SteamGridDB image to choose from (or none: the PC's artwork, the name instead of a logo), "Change game" to fix the match, also under another name.
+- [x] Home: the SteamGridDB cover on the tiles, the wide cover on the first one, the hero as the game background, the logo instead of the name; without a logo the name has no icon and its gradient takes the game background's color. The stream's loader uses the SteamGridDB cover.
+- [x] Progress: a spinner on each game being downloaded and a bar with the count above the button hints.
+- [ ] Open question from GUI.md: syncing the choices with Vibepollo (Vibepollo has no API for it yet; later).
 
 ### 6.9 Switch-over and cleanup
 - [ ] The new shell becomes the only launcher activity (phone, TV/leanback categories kept).

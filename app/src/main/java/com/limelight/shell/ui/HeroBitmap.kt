@@ -33,7 +33,13 @@ object HeroBitmaps {
     /** The dominant hue of each game's background (null: grey), observed by the animated background. */
     private val hues = mutableStateMapOf<String, Float?>()
 
-    fun cached(key: String, blurPx: Int): ImageBitmap? = cache.get("$key/$blurPx")
+    /** The image each game's hue was taken from: another one (SteamGridDB) takes it again. */
+    private val hueSources = HashMap<String, Int>()
+
+    /** Renders are kept per image too, so a game's new image (e.g. from SteamGridDB) is rendered again. */
+    private fun cacheKey(key: String, source: ImageBitmap, blurPx: Int) = "$key/${System.identityHashCode(source)}/$blurPx"
+
+    fun cached(key: String, source: ImageBitmap, blurPx: Int): ImageBitmap? = cache.get(cacheKey(key, source, blurPx))
 
     /** The dominant hue of [key]'s background once it has been rendered; null while unknown or grey. */
     fun hue(key: String): Float? = hues[key]
@@ -43,7 +49,7 @@ object HeroBitmaps {
 
     /** Builds the background for [source]; call off the main thread. */
     fun render(key: String, source: ImageBitmap, blurPx: Int): ImageBitmap {
-        cache.get("$key/$blurPx")?.let { return it }
+        cache.get(cacheKey(key, source, blurPx))?.let { return it }
         val src = source.asAndroidBitmap()
         val out = Bitmap.createBitmap(WIDTH, HEIGHT, Bitmap.Config.ARGB_8888)
         // Center crop, like ContentScale.Crop, with saturate(1.15)
@@ -60,7 +66,8 @@ object HeroBitmaps {
 
         val pixels = IntArray(WIDTH * HEIGHT)
         out.getPixels(pixels, 0, WIDTH, 0, 0, WIDTH, HEIGHT)
-        if (key !in hues) {
+        val sourceId = System.identityHashCode(source)
+        if (synchronized(hueSources) { hueSources.put(key, sourceId) != sourceId }) {
             val hue = dominantHue(pixels)
             android.os.Handler(android.os.Looper.getMainLooper()).post { hues[key] = hue }
         }
@@ -73,7 +80,7 @@ object HeroBitmaps {
         fadeDiagonally(pixels)
         out.setPixels(pixels, 0, WIDTH, 0, 0, WIDTH, HEIGHT)
         return out.asImageBitmap().also {
-            cache.put("$key/$blurPx", it)
+            cache.put(cacheKey(key, source, blurPx), it)
             latest.put(key, it)
         }
     }

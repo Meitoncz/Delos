@@ -115,8 +115,8 @@ private fun HeroArt(art: GameArt, blurPx: Int) {
     val image = art.image
     if (image != null && blurPx > 0) {
         // Pre-rendered once per game and blur (see HeroBitmaps): the screen only scales a small bitmap up
-        val hero by produceState(HeroBitmaps.cached(art.id, blurPx), art.id, image, blurPx) {
-            value = HeroBitmaps.cached(art.id, blurPx) ?: withContext(Dispatchers.Default) { HeroBitmaps.render(art.id, image, blurPx) }
+        val hero by produceState(HeroBitmaps.cached(art.id, image, blurPx), art.id, image, blurPx) {
+            value = HeroBitmaps.cached(art.id, image, blurPx) ?: withContext(Dispatchers.Default) { HeroBitmaps.render(art.id, image, blurPx) }
         }
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             hero?.let {
