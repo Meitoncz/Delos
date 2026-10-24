@@ -124,6 +124,8 @@ Principle: keep the streaming part (`Game.java`, overlays, virtual controls), re
 ## Phase 7 – Custom features and maintenance
 
 - [ ] Custom features (collect ideas here):
+  - [ ] **PyroWave** (next, agreed 2026-10-24): the intra-only GPU wavelet codec (Themaister/pyrowave, MIT) that Vibepollo 2.0+ streams. The user's PC (Vibepollo 2.0.1) reports all four modes in `ServerCodecModeSupport` (8-bit, 4:4:4, HDR10, HDR10 4:4:4). Protocol: Nonary/Vibepollo `docs/pyrowave-protocol.md` (bitstream id `186f0393` = the vendored pyrowave commit; `x-nv-vqos[0].bitStreamFormat=3`, record framing, every frame an IDR, partial recovery). Reference Android port on Artemis: joemossjr16/artemis-android-pyrowave (branch `pyrowave`: Vulkan renderer `pyrowave-renderer/`, `PyroWaveDecoderRenderer.java`, common-c branch `pyrowave`). Plan: build `libpyrowave-shared.so` ourselves from upstream at the bitstream commit (no third-party binaries), port the common-c changes to Delos-common-c, port the renderer and the Java glue, PyroWave as a manual codec choice with its bitrate guidance (about 220 Mbps for 1080p60), then test on the Odin (Wi-Fi 7; wired LAN recommended).
+  - [ ] **VRR**: the Odin 2 Portal probably has no VRR display; to be looked into after PyroWave.
   - [ ] Advanced Snapdragon upscaler for the streamed video (e.g. Snapdragon Game Super Resolution) with a sharpness setting (GUI.md); needs a shader pass between the decoder and the screen.
 - Long-term ideas, not planned yet: [FUTURE_PLANS.md](FUTURE_PLANS.md).
 - [ ] Regularly (e.g. monthly) merge `moonlight/master` and upstream `common-c`.
