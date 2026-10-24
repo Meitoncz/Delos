@@ -9,7 +9,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -90,16 +90,21 @@ fun StatusBar(
             }
         }
         if (nav != null) TopNav(nav, Modifier.align(Alignment.Center))
-        Row(Modifier.align(Alignment.CenterEnd), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(22.px)) {
+        // Wi-Fi, the battery with its percentage and the clock, the same gap between them
+        Row(Modifier.align(Alignment.CenterEnd), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(28.px)) {
             // Wi-Fi, battery and clock in the same color
             Symbol(wifiIcon(wifi), 30.tpx, colors.text)
             if (battery != null) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.px)) {
                     BatteryIndicator(battery)
-                    BasicText("${(battery.level * 100).roundToInt()}%", style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 22.tpx))
+                    // Equal-width digits: from 10 to 99 % the bar does not shift when the level changes
+                    BasicText(
+                        "${(battery.level * 100).roundToInt()}%",
+                        style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 22.tpx, fontFeatureSettings = "tnum"),
+                    )
                 }
             }
-            BasicText(clock, style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 24.tpx))
+            BasicText(clock, style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 24.tpx, fontFeatureSettings = "tnum"))
         }
     }
 }
@@ -125,19 +130,16 @@ private val LowRed = androidx.compose.ui.graphics.Color(0xFFFF453A)
 private fun BatteryIndicator(battery: BatteryStatus) {
     val colors = LocalDelosColors.current
     val stage = LocalStage.current
-    val pulse = if (battery.charging) {
+    // While charging, one cycle of 1.8 s: the green fades up and down, and the moment it is at full strength
+    // a ring pulses out from the outline, like the one around the focused cover
+    val phase = if (battery.charging) {
         val p by rememberInfiniteTransition(label = "charging").animateFloat(
-            .55f, 1f, infiniteRepeatable(tween(900, easing = EaseOut), RepeatMode.Reverse), label = "chargingPulse",
+            0f, 1f, infiniteRepeatable(tween(1800, easing = LinearEasing)), label = "chargingPhase",
         )
         p
-    } else 1f
-    // While charging, a ring also pulses out from the outline, like the one around the focused cover
-    val wave = if (battery.charging) {
-        val w by rememberInfiniteTransition(label = "chargingRing").animateFloat(
-            0f, 1f, infiniteRepeatable(tween(2400, easing = EaseOut)), label = "chargingRingWave",
-        )
-        w
     } else 0f
+    val pulse = if (battery.charging) .55f + .45f * EaseOut.transform(if (phase < .5f) phase * 2f else (1f - phase) * 2f) else 1f
+    val wave = EaseOut.transform((phase + .5f) % 1f)
     val fill = if (!battery.charging && battery.level <= LOW_BATTERY) LowRed else OnlineGreen
     Box(Modifier.size(48.px, 24.px), contentAlignment = Alignment.Center) {
         Canvas(Modifier.fillMaxSize()) {
