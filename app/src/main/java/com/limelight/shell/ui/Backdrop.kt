@@ -228,7 +228,6 @@ private fun AnimatedBackground(appearance: Appearance, colors: DelosColors, game
         }
     }
     val paths = remember { BackgroundPaths() }
-    val constellation = remember { ConstellationState() }
     val dark = colors.dark
     Canvas(
         Modifier.fillMaxSize().graphicsLayer {
@@ -258,14 +257,10 @@ private fun AnimatedBackground(appearance: Appearance, colors: DelosColors, game
                 BackgroundKind.SILK -> drawSilk(p, paths)
                 BackgroundKind.CONTOUR -> drawContour(p, paths)
                 BackgroundKind.STILL -> Unit
-                BackgroundKind.CONSTELLATION -> drawConstellation(
-                    constellation, W, H, p.t, listOf(lights(p).first, lights(p).second, lights(p).third), dark,
-                    if (dark) BlendMode.Plus else BlendMode.SrcOver,
-                )
                 else -> {
                     val (c1, c2, c3) = lights(p)
                     val drawn = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                        BackgroundShaders.draw(this, appearance.background, W, H, p.t, c1, c2, c3, if (dark) .62f else .5f, if (dark) BlendMode.Plus else BlendMode.SrcOver)
+                        BackgroundShaders.draw(this, appearance.background, W, H, p.t, c1, c2, c3, if (dark) .62f else .5f, if (dark) BlendMode.Plus else BlendMode.SrcOver, dark)
                     // Before Android 13, or if a shader does not compile on this GPU: Aurora instead
                     if (!drawn) drawAurora(p)
                 }
@@ -337,7 +332,8 @@ private fun DrawScope.drawAurora(p: BgParams) {
 private fun DrawScope.drawTide(p: BgParams, paths: BackgroundPaths) {
     val t = p.t
     for (i in 0 until 6) {
-        val y0 = H * (.5f + i * .085f)
+        // From a third of the height down: the waves fill the lower two thirds
+        val y0 = H * (.34f + i * .11f)
         val amp = 14f + i * 4f
         val k = .006f + i * .0015f
         val sp = .35f + i * .12f
@@ -404,6 +400,21 @@ private const val CONTOUR_LEVELS = 17
 private fun DrawScope.drawContour(p: BgParams, paths: BackgroundPaths) {
     // Topographic contour lines over slowly shifting terrain; every fourth line is stronger, like on a map
     val t = p.t
+    val lineBlend = if (p.dark) BlendMode.Plus else BlendMode.SrcOver
+    val r0 = if (p.my) p.acc2 else p.acc
+    val r1 = if (p.my) p.acc else p.tint
+    // Android 13+: the shader draws the same lines smoothly (see BackgroundShaders); the glow stays here
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        drawRect(
+            Brush.radialGradient(
+                0f to hsl(p.acc, 80f * p.sat1, if (p.dark) 50f else 70f, if (p.dark) .14f else .2f), 1f to hsl(p.acc, 80f, 50f, 0f),
+                center = Offset(W * .66f, H * .5f), radius = W * .55f,
+            ),
+            size = Size(W, H), blendMode = lineBlend,
+        )
+        val l = if (p.dark) 68f else 40f
+        if (BackgroundShaders.draw(this, BackgroundKind.CONTOUR, W, H, t, hsl(r0, 80f * p.s(r0), l), hsl(r1, 80f * p.s(r1), l), Color.Black, 1f, lineBlend, p.dark)) return
+    }
     val f = paths.field
     for (j in 0 until CONTOUR_NY) for (i in 0 until CONTOUR_NX) {
         val x = i * CONTOUR_STEP
@@ -420,8 +431,6 @@ private fun DrawScope.drawContour(p: BgParams, paths: BackgroundPaths) {
         ),
         size = Size(W, H), blendMode = blend,
     )
-    val r0 = if (p.my) p.acc2 else p.acc
-    val r1 = if (p.my) p.acc else p.tint
     val s = CONTOUR_STEP
     val pts = FloatArray(8)
     val lines = paths.contourLines

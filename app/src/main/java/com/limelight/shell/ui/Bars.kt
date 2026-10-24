@@ -91,11 +91,12 @@ fun StatusBar(
         }
         if (nav != null) TopNav(nav, Modifier.align(Alignment.Center))
         Row(Modifier.align(Alignment.CenterEnd), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(22.px)) {
-            Symbol(wifiIcon(wifi), 30.tpx, colors.text2)
+            // Wi-Fi, battery and clock in the same color
+            Symbol(wifiIcon(wifi), 30.tpx, colors.text)
             if (battery != null) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.px)) {
                     BatteryIndicator(battery)
-                    BasicText("${(battery.level * 100).roundToInt()}%", style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 22.tpx))
+                    BasicText("${(battery.level * 100).roundToInt()}%", style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 22.tpx))
                 }
             }
             BasicText(clock, style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 24.tpx))
@@ -130,6 +131,13 @@ private fun BatteryIndicator(battery: BatteryStatus) {
         )
         p
     } else 1f
+    // While charging, a ring also pulses out from the outline, like the one around the focused cover
+    val wave = if (battery.charging) {
+        val w by rememberInfiniteTransition(label = "chargingRing").animateFloat(
+            0f, 1f, infiniteRepeatable(tween(2400, easing = EaseOut)), label = "chargingRingWave",
+        )
+        w
+    } else 0f
     val fill = if (!battery.charging && battery.level <= LOW_BATTERY) LowRed else OnlineGreen
     Box(Modifier.size(48.px, 24.px), contentAlignment = Alignment.Center) {
         Canvas(Modifier.fillMaxSize()) {
@@ -137,6 +145,13 @@ private fun BatteryIndicator(battery: BatteryStatus) {
             val stroke = 2f * k
             val cap = 3f * k
             val body = Size(size.width - cap - 1.5f * k, size.height)
+            if (battery.charging) {
+                val reach = (2f + 10f * wave) * k
+                drawRoundRect(
+                    OnlineGreen.copy(alpha = .7f * (1f - wave)), Offset(stroke / 2f - reach, stroke / 2f - reach),
+                    Size(body.width - stroke + reach * 2f, body.height - stroke + reach * 2f), CornerRadius(7f * k + reach), style = Stroke(1.5f * k),
+                )
+            }
             // The outline and the cap on the right
             drawRoundRect(colors.text.copy(alpha = .9f), Offset(stroke / 2f, stroke / 2f), Size(body.width - stroke, body.height - stroke), CornerRadius(7f * k), style = Stroke(stroke))
             drawRoundRect(colors.text.copy(alpha = .6f), Offset(body.width + 1.5f * k, size.height * .32f), Size(cap, size.height * .36f), CornerRadius(1.5f * k))

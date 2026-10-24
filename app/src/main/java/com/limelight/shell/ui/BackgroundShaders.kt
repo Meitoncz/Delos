@@ -3,19 +3,12 @@ package com.limelight.shell.ui
 import android.graphics.RuntimeShader
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.toArgb
 import com.limelight.shell.settings.BackgroundKind
-import kotlin.math.cos
-import kotlin.math.hypot
-import kotlin.math.sin
 
 /**
  * The animated backgrounds drawn by a shader on the GPU (Android 13+), on the same 960 × 540 canvas as
@@ -28,7 +21,7 @@ internal object BackgroundShaders {
     private val broken = HashSet<BackgroundKind>()
 
     /** Draws [kind]; false if it has no shader or its shader does not compile here (the caller falls back). */
-    fun draw(scope: DrawScope, kind: BackgroundKind, w: Float, h: Float, t: Float, c1: Color, c2: Color, c3: Color, glow: Float, blend: BlendMode): Boolean {
+    fun draw(scope: DrawScope, kind: BackgroundKind, w: Float, h: Float, t: Float, c1: Color, c2: Color, c3: Color, glow: Float, blend: BlendMode, dark: Boolean = true): Boolean {
         val shader = shader(kind) ?: return false
         shader.setFloatUniform("res", w, h)
         shader.setFloatUniform("t", t)
@@ -36,6 +29,7 @@ internal object BackgroundShaders {
         shader.setFloatUniform("c2", c2.red, c2.green, c2.blue)
         shader.setFloatUniform("c3", c3.red, c3.green, c3.blue)
         shader.setFloatUniform("glow", glow)
+        shader.setFloatUniform("dark", if (dark) 1f else 0f)
         scope.drawRect(ShaderBrush(shader), size = Size(w, h), blendMode = blend)
         return true
     }
@@ -65,6 +59,7 @@ uniform float3 c1;
 uniform float3 c2;
 uniform float3 c3;
 uniform float glow;
+uniform float dark;
 
 float hash(float2 p) { return fract(sin(dot(p, float2(127.1, 311.7))) * 43758.5453); }
 float noise(float2 p) {
@@ -88,6 +83,30 @@ half4 emit(float3 col, float a) { a = clamp(a * glow, 0.0, 1.0); return half4(ha
 """
 
     private val SOURCES = mapOf(
+        // Contour: the topographic lines of the canvas version, but worked out for every pixel, so they are
+        // smooth curves with soft edges instead of straight pieces joined every 20 px. c1 → c2 from the lowest
+        // to the highest level; every fourth line is stronger, like on a map.
+        BackgroundKind.CONTOUR to """
+float field(float2 p) {
+    return sin(p.x * 0.0062 + t * 0.07) + sin(p.y * 0.0081 - t * 0.05 + p.x * 0.002) + 0.7 * sin((p.x - p.y) * 0.0047 + t * 0.09)
+        + 0.5 * cos(length(p - float2(res.x * 0.66, res.y * 0.5)) * 0.011 - t * 0.12);
+}
+half4 main(float2 fc) {
+    float f = field(fc);
+    float2 grad = float2(field(fc + float2(1.0, 0.0)) - f, field(fc + float2(0.0, 1.0)) - f);
+    float k = (f + 2.8) / 0.35;
+    float level = floor(k + 0.5);
+    if (level < 0.0 || level > 16.0) return half4(0.0);
+    // Distance to the nearest line in canvas pixels: the field's distance divided by its slope
+    float dist = abs(k - level) * 0.35 / max(length(grad), 0.0001);
+    bool major = mod(level, 4.0) < 0.5;
+    float width = major ? 1.7 : 1.0;
+    float line = 1.0 - smoothstep(width * 0.5 - 0.45, width * 0.5 + 0.45, dist);
+    float u = level / 16.0;
+    float a = ((major ? 0.46 : 0.16) + u * (dark > 0.5 ? 0.18 : 0.14)) * line;
+    float3 col = mix(c1, c2, u);
+    return half4(half3(col * a), half(a));
+}""",
         // Soft clouds of the three colors drifting through each other
         BackgroundKind.NEBULA to """
 half4 main(float2 fc) {
@@ -97,23 +116,6 @@ half4 main(float2 fc) {
     float3 col = mix(c1, c2, smoothstep(0.2, 0.8, q.x));
     col = mix(col, c3, smoothstep(0.45, 0.85, q.y) * 0.8);
     return emit(col, smoothstep(0.3, 0.95, n) * 0.9);
-}""",
-        // A smooth gradient between four slowly wandering color points
-        BackgroundKind.MESH to """
-half4 main(float2 fc) {
-    float2 uv = fc / res.y;
-    float ax = res.x / res.y;
-    float2 p1 = float2(ax * (0.22 + 0.16 * sin(t * 0.13)), 0.3 + 0.2 * cos(t * 0.11));
-    float2 p2 = float2(ax * (0.78 + 0.14 * cos(t * 0.09)), 0.32 + 0.22 * sin(t * 0.12));
-    float2 p3 = float2(ax * (0.5 + 0.25 * sin(t * 0.07 + 2.0)), 0.78 + 0.14 * cos(t * 0.1 + 1.0));
-    float2 p4 = float2(ax * (0.12 + 0.08 * cos(t * 0.08)), 0.85 + 0.08 * sin(t * 0.14));
-    float w1 = 1.0 / (dot(uv - p1, uv - p1) + 0.03);
-    float w2 = 1.0 / (dot(uv - p2, uv - p2) + 0.03);
-    float w3 = 1.0 / (dot(uv - p3, uv - p3) + 0.03);
-    float w4 = 0.6 / (dot(uv - p4, uv - p4) + 0.03);
-    float3 col = (c1 * w1 + c2 * w2 + c3 * w3 + mix(c1, c3, 0.5) * w4) / (w1 + w2 + w3 + w4);
-    float strength = clamp(max(max(w1, w2), max(w3, w4)) * 0.025, 0.25, 0.85);
-    return emit(col, strength);
 }""",
         // Interfering sine waves mixing the three colors
         BackgroundKind.PLASMA to """
@@ -162,38 +164,6 @@ half4 main(float2 fc) {
     float v = clamp(pow(abs(c), 8.0), 0.0, 1.0);
     float3 col = mix(mix(c2, c1, uv.y), c3, v * 0.5);
     return emit(col, v * 0.9 + 0.12 * (1.0 - uv.y));
-}""",
-        // A retro neon grid running to the horizon, under a striped sun
-        BackgroundKind.GRID to """
-half4 main(float2 fc) {
-    float2 uv = fc / res;
-    float hz = 0.6;
-    float a = 0.0;
-    float3 col = c1;
-    if (uv.y > hz) {
-        float y = uv.y - hz;
-        float z = 0.32 / y;
-        float x = (uv.x - 0.5) * z * 2.4;
-        float fx = abs(fract(x) - 0.5);
-        float fz = abs(fract(z * 0.8 - t * 0.35) - 0.5);
-        float fade = smoothstep(0.0, 0.22, y);
-        float lx = 1.0 - smoothstep(0.0, 0.035, fx);
-        float lz = 1.0 - smoothstep(0.0, 0.05, fz);
-        a = max(lx, lz) * fade * 0.8;
-        col = mix(c2, c1, lz);
-    }
-    float horizon = exp(-abs(uv.y - hz) * 22.0);
-    col = mix(col, c3, horizon * 0.6);
-    a = max(a, horizon * 0.55);
-    float2 sp = float2((uv.x - 0.5) * res.x / res.y, uv.y - (hz - 0.17));
-    float sun = 1.0 - smoothstep(0.17, 0.175, length(sp));
-    float stripes = step(0.35, fract((uv.y - hz) * 40.0 + t * 0.2)) + step(uv.y, hz - 0.2);
-    sun *= clamp(stripes, 0.0, 1.0) * step(uv.y, hz);
-    if (sun > 0.0) {
-        col = mix(c3, c1, clamp((uv.y - (hz - 0.34)) / 0.34, 0.0, 1.0));
-        a = max(a, sun * 0.8);
-    }
-    return emit(col, a);
 }""",
         // Out-of-focus lights drifting slowly
         BackgroundKind.BOKEH to """
@@ -244,85 +214,5 @@ half4 main(float2 fc) {
     }
     return emit(col / max(a, 0.0001), a);
 }""",
-        // Stars in three layers, twinkling, over a faint nebula
-        BackgroundKind.STARFIELD to """
-half4 main(float2 fc) {
-    float2 uv = fc / res.y;
-    float n = fbm(uv * 1.6 + float2(t * 0.01, 0.0));
-    float neb = smoothstep(0.5, 0.9, n) * 0.3;
-    float3 col = mix(c1, c2, n) * neb;
-    float a = neb;
-    for (int l = 0; l < 3; l++) {
-        float fl = float(l);
-        float sc = 14.0 + fl * 12.0;
-        float2 p = uv * sc + float2(t * (0.08 + fl * 0.06), t * 0.015);
-        float2 id = floor(p);
-        float2 f = fract(p) - 0.5;
-        float h = hash(id + fl * 13.0);
-        if (h > 0.8) {
-            float2 o = float2(hash(id * 1.7 + 0.3), hash(id * 2.3 + 0.7)) - 0.5;
-            float d = length(f - o * 0.7);
-            float tw = 0.55 + 0.45 * sin(t * (1.0 + h * 3.0) + h * 30.0);
-            float s = (1.0 - smoothstep(0.0, 0.07 - fl * 0.015, d)) * tw * (1.0 - fl * 0.25);
-            float3 cc = h > 0.95 ? c3 : (h > 0.88 ? c2 : mix(float3(1.0), c1, 0.3));
-            col += cc * s;
-            a += s;
-        }
-    }
-    return emit(col / max(a, 0.0001), a);
-}""",
     )
-}
-
-/** Constellation: drifting points linked by thin lines when they come close (drawn on the canvas). */
-internal class ConstellationState {
-    val lines = FloatArray(COUNT * COUNT * 2)
-    val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-        style = android.graphics.Paint.Style.STROKE
-        strokeWidth = 1f
-    }
-    val xs = FloatArray(COUNT)
-    val ys = FloatArray(COUNT)
-
-    companion object {
-        const val COUNT = 46
-    }
-}
-
-internal fun DrawScope.drawConstellation(state: ConstellationState, w: Float, h: Float, t: Float, colors: List<Color>, dark: Boolean, blend: BlendMode) {
-    val n = ConstellationState.COUNT
-    for (i in 0 until n) {
-        val s = i * 12.9898f
-        state.xs[i] = w * (.5f + .48f * sin(t * (.021f + (i % 7) * .004f) + s))
-        state.ys[i] = h * (.5f + .46f * cos(t * (.017f + (i % 5) * .005f) + s * 1.7f))
-    }
-    val reach = 120f
-    val nativeBlend = if (dark) android.graphics.BlendMode.PLUS else android.graphics.BlendMode.SRC_OVER
-    drawIntoCanvas { canvas ->
-        // One batch per color and strength band keeps it to a few draws per frame
-        for ((ci, color) in colors.withIndex()) {
-            for (band in 0 until 3) {
-                var count = 0
-                for (i in 0 until n) {
-                    if (i % colors.size != ci) continue
-                    for (j in i + 1 until n) {
-                        val d = hypot(state.xs[i] - state.xs[j], state.ys[i] - state.ys[j])
-                        if (d >= reach) continue
-                        if (((d / reach) * 3f).toInt().coerceIn(0, 2) != band) continue
-                        state.lines[count++] = state.xs[i]; state.lines[count++] = state.ys[i]
-                        state.lines[count++] = state.xs[j]; state.lines[count++] = state.ys[j]
-                    }
-                }
-                if (count == 0) continue
-                state.paint.blendMode = nativeBlend
-                state.paint.color = color.copy(alpha = (if (dark) .42f else .5f) * (1f - band / 3f)).toArgb()
-                canvas.nativeCanvas.drawLines(state.lines, 0, count, state.paint)
-            }
-        }
-    }
-    for (i in 0 until n) {
-        val c = colors[i % colors.size]
-        val pulse = .6f + .4f * sin(t * (.8f + (i % 4) * .3f) + i)
-        drawCircle(c.copy(alpha = (if (dark) .8f else .7f) * pulse), radius = 1.6f + (i % 3) * .6f, center = Offset(state.xs[i], state.ys[i]), blendMode = blend)
-    }
 }

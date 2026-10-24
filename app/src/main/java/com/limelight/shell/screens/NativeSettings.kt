@@ -65,7 +65,7 @@ internal fun nativeSettings(
         if (a.materialYou) "Turn off Material You colors to use it." else "The animated background takes on the main color of the selected game's background image.", !a.materialYou)
     row("ui_clock", Symbols.SCHEDULE, "Clock", RowValue.Choice(a.clock.label, { dir -> update { it.copy(clock = it.clock.step(dir)) } }),
         "12- or 24-hour time in the status bar; System follows the Android setting.")
-    row("ui_background", Symbols.ANIMATION, "Animated background", RowValue.Choice(a.background.label, { dir -> update { it.copy(background = it.background.step(dir)) } }), "Aurora, Tide, Silk, Contour, the new ones to try (Nebula to Starfield) or a still background.")
+    row("ui_background", Symbols.ANIMATION, "Animated background", RowValue.Choice(a.background.label, { dir -> update { it.copy(background = it.background.step(dir)) } }), "Aurora, Tide, Silk, Contour, Nebula, Plasma, Lava, Caustics, Bokeh, Orbit or a still background.")
     row("ui_home_layout", Symbols.VIEW_CAROUSEL, "Home layout", RowValue.Choice(a.homeLayout.label, { dir -> update { it.copy(homeLayout = it.homeLayout.step(dir)) } }), "Grid scrolls down. Row is one horizontally scrolling row.")
     row("ui_hero_background", Symbols.IMAGE, "Game background", RowValue.Toggle(a.heroBackground) { on -> update { it.copy(heroBackground = on) } }, "Shows the background of the selected game on the home screen.")
     row("ui_hero_blur", Symbols.BLUR_ON, "Game background blur", RowValue.Slider(a.heroBlur, 0, 40, 5, " px") { v -> update { it.copy(heroBlur = v) } }, "Soften the game background behind the library.", a.heroBackground)

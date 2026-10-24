@@ -9,9 +9,8 @@ import kotlinx.coroutines.flow.asStateFlow
 
 enum class BackgroundKind(val label: String) {
     AURORA("Aurora"), TIDE("Tide"), SILK("Silk"), CONTOUR("Contour"),
-    // New ones for the user to choose from (2026-10-24); the shader ones need Android 13
-    NEBULA("Nebula"), MESH("Mesh"), PLASMA("Plasma"), LAVA("Lava"), CAUSTICS("Caustics"),
-    GRID("Grid"), BOKEH("Bokeh"), ORBIT("Orbit"), CONSTELLATION("Constellation"), STARFIELD("Starfield"),
+    // Shaders, Android 13 and later (Aurora below)
+    NEBULA("Nebula"), PLASMA("Plasma"), LAVA("Lava"), CAUSTICS("Caustics"), BOKEH("Bokeh"), ORBIT("Orbit"),
     STILL("Still"),
 }
 
