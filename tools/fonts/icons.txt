@@ -147,6 +147,7 @@ spa
 swords
 water_drop
 content_paste
+brightness_medium
 keyboard_alt
 keyboard_command_key
 screen_rotation

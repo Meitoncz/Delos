@@ -2,6 +2,7 @@ package com.limelight.shell
 
 import android.graphics.Color as AndroidColor
 import android.graphics.drawable.ColorDrawable
+import android.provider.Settings
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.ViewGroup
@@ -62,6 +63,8 @@ import com.limelight.shell.ui.GlyphButton
 import com.limelight.shell.ui.InitialFocus
 import com.limelight.shell.ui.LocalDelosColors
 import com.limelight.shell.ui.LocalFeedback
+import com.limelight.shell.ui.RowValue
+import com.limelight.shell.ui.SettingRow
 import com.limelight.shell.ui.Stage
 import com.limelight.shell.ui.Symbol
 import com.limelight.shell.ui.Symbols
@@ -190,7 +193,25 @@ class StreamMenu(private val game: Game) {
         dialog?.dismiss()
     }
 
-    private enum class Page { MAIN, MORE, KEYS, COMMANDS }
+    private enum class Page { MAIN, MORE, KEYS, COMMANDS, BRIGHTNESS }
+
+    // Delos: the stream's brightness in percent for this stream, -1 = the system's (from Moonlight X's
+    // brightness slider)
+    private var brightness = -1
+
+    private fun brightnessPercent(): Int {
+        if (brightness >= 0) return brightness
+        val system = runCatching { Settings.System.getInt(game.contentResolver, Settings.System.SCREEN_BRIGHTNESS) }.getOrDefault(128)
+        return (system * 100 / 255).coerceIn(5, 100) / 5 * 5
+    }
+
+    /** Sets the stream window's brightness, and the menu's while it is open so the change shows at once. */
+    private fun applyBrightness(percent: Int, menu: ComponentDialog?) {
+        brightness = percent
+        for (window in listOfNotNull(game.window, menu?.window)) {
+            window.attributes = window.attributes.apply { screenBrightness = percent / 100f }
+        }
+    }
 
     /** Disconnect or Quit game: back into the new UI through the portal when the stream came from there. */
     private fun leave(quit: Boolean) {
@@ -246,6 +267,7 @@ class StreamMenu(private val game: Game) {
                     Page.MORE -> "More"
                     Page.KEYS -> "Send keys"
                     Page.COMMANDS -> "Server commands"
+                    Page.BRIGHTNESS -> "Brightness"
                 }
                 BasicText(heading, style = TextStyle(color = Color.White, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 30.tpx, textAlign = TextAlign.Center))
                 key(page) {
@@ -258,6 +280,7 @@ class StreamMenu(private val game: Game) {
                             MenuCircle(Symbols.SPEED, "Overlay", on = prefs.enablePerfOverlay, state = if (!prefs.enablePerfOverlay) "Off" else if (prefs.enablePerfOverlayLite) "Compact" else "On") {
                                 toggle { game.toggleHUD() }
                             }
+                            MenuCircle(Symbols.BRIGHTNESS_MEDIUM, "Brightness", state = "${brightnessPercent()} %") { page = Page.BRIGHTNESS }
                             MenuCircle(Symbols.MORE_HORIZ, "More") { page = Page.MORE }
                             MenuCircle(Symbols.LOGOUT, "Disconnect") { close { leave(quit = false) } }
                             MenuCircle(Symbols.POWER_SETTINGS_NEW, "Quit game") { close { leave(quit = true) } }
@@ -282,6 +305,14 @@ class StreamMenu(private val game: Game) {
                                 MenuCircle(Symbols.TOUCH_APP, "Touch sensitivity", on = prefs.enableTouchSensitivity) { toggle { game.switchTouchSensitivity() } }
                                 MenuCircle(Symbols.SCREEN_ROTATION, "Rotate") { close { game.rotateScreen() } }
                             }
+                        }
+                        Page.BRIGHTNESS -> Box(Modifier.width(900.px)) {
+                            SettingRow(
+                                Symbols.BRIGHTNESS_MEDIUM, "Screen brightness",
+                                RowValue.Slider(brightnessPercent(), 5, 100, 5, " %") { toggle { applyBrightness(it, d) } },
+                                Modifier.focusRequester(first),
+                                description = "For this stream; the system brightness comes back afterwards.",
+                            )
                         }
                         Page.KEYS -> PillGrid(classic?.specialKeyOptions().orEmpty().map { it.label }, first) { i ->
                             val option = classic?.specialKeyOptions()?.getOrNull(i)

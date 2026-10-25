@@ -133,7 +133,7 @@ Principle: keep the streaming part (`Game.java`, overlays, virtual controls), re
     - [ ] Hide the PC cursor: never / while touching / always (Vibepollo; Starwire)
     - [x] 1% low FPS in the statistics (Moonlight V+, Moonlight X Turnip); done 2026-10-25, over the last ~10 s, gaps over 0.5 s ignored. "Total delay" renamed "Total latency"
     - [ ] Keep-alive packets so Wi-Fi stays out of power save during a stream (Artemis "Prevent Packet Loss")
-    - [ ] Brightness slider in the stream menu (Moonlight X)
+    - [x] Brightness slider in the stream menu (Moonlight X); done 2026-10-25, Brightness page in the stream menu, for the stream only
   - [ ] **VRR**: the Odin 2 Portal probably has no VRR display; to be looked into after PyroWave.
   - [ ] Advanced Snapdragon upscaler for the streamed video (e.g. Snapdragon Game Super Resolution) with a sharpness setting (GUI.md); needs a shader pass between the decoder and the screen.
 - Long-term ideas, not planned yet: [FUTURE_PLANS.md](FUTURE_PLANS.md).

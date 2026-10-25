@@ -138,6 +138,7 @@ object Symbols {
     const val SWORDS = "\uF889"
     const val WATER_DROP = "\uE798"
     const val CONTENT_PASTE = "\uE14F"
+    const val BRIGHTNESS_MEDIUM = "\uE1AE"
     const val KEYBOARD_ALT = "\uF028"
     const val KEYBOARD_COMMAND_KEY = "\uEAE7"
     const val SCREEN_ROTATION = "\uF2D5"
