@@ -74,7 +74,9 @@ public final class PyroWaveRenderer {
     public static final int STAT_HOST_LATENCY_TOTAL = 8;
     public static final int STAT_GPU_DECODE_FRAMES = 9;
     public static final int STAT_GPU_DECODE_TOTAL_US = 10;
-    public static final int STAT_COUNT = 11;
+    // 1% low of the presented frames x 100, -100 while too few frames
+    public static final int STAT_ONE_PERCENT_LOW_FPS_X100 = 11;
+    public static final int STAT_COUNT = 12;
 
     public long[] takeStats() {
         long[] stats = new long[STAT_COUNT];

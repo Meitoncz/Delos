@@ -71,6 +71,8 @@ class StreamStats(
     val hostMs: Float,
     /** Data received and sent in KB per second, -1 when the device does not count it. */
     val bandwidthKb: Float,
+    /** The frame rate of the slowest 1% of recent frames, -1 while too few to tell. */
+    val onePercentLowFps: Float = -1f,
 ) {
     /** The delay summed up: network round trip, the PC's processing when it reports it, and decoding. */
     val totalMs: Float get() = networkMs + maxOf(hostMs, 0f) + decodeMs
@@ -136,6 +138,7 @@ class StreamStatsPanel private constructor(
         BasicText(
             buildAnnotatedString {
                 withStyle(SpanStyle(color = FPS_GREEN, fontWeight = FontWeight.SemiBold)) { append("${s.fps.toInt()} FPS") }
+                if (s.onePercentLowFps >= 0f) append("  ·  1% low ${s.onePercentLowFps.toInt()}")
                 if (s.bandwidthKb >= 0f) append("  ·  ${bandwidth(s.bandwidthKb)}")
                 append("  ·  Network ${s.networkMs} ms  ·  Decode ${format(s.decodeMs)} ms  ·  Total ${format(s.totalMs)} ms  ·  Lost ${format(s.lossPercent)} %")
             },
@@ -159,10 +162,11 @@ class StreamStatsPanel private constructor(
                 add("Decoder" to s.decoder)
                 add("Incoming" to "${format(s.incomingFps)} FPS")
                 add("Rendering" to "${format(s.renderingFps)} FPS")
+                if (s.onePercentLowFps >= 0f) add("1% low" to "${format(s.onePercentLowFps)} FPS")
                 add("Network" to "${s.networkMs} ms ± ${s.networkVarianceMs} ms")
                 if (s.hostMs >= 0f) add("PC processing" to "${format(s.hostMs)} ms (${format(s.hostMinMs)}–${format(s.hostMaxMs)})")
                 add("Decoding" to "${format(s.decodeMs, 2)} ms")
-                add("Total delay" to "${format(s.totalMs)} ms")
+                add("Total latency" to "${format(s.totalMs)} ms")
                 if (s.bandwidthKb >= 0f) add("Bandwidth" to bandwidth(s.bandwidthKb))
                 add("Lost frames" to "${format(s.lossPercent, 2)} %")
             }

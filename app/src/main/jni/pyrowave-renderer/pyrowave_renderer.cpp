@@ -2330,6 +2330,29 @@ namespace {
     std::mutex statsLock;
     WindowStats windowStats;
     int lastFrameNumber = 0;
+
+    // The intervals between presented frames for the 1% low (about ten seconds at 120 FPS); longer
+    // gaps are a still picture, not a hitch. Same rules as FrameTimes.java.
+    constexpr size_t FRAME_INTERVALS = 1200;
+    constexpr uint64_t IDLE_GAP_US = 500'000;
+    uint64_t frameIntervals[FRAME_INTERVALS] = {};
+    size_t frameIntervalCount = 0;
+    size_t frameIntervalNext = 0;
+    uint64_t lastPresentUs = 0;
+
+    int64_t onePercentLowFpsX100() {
+        if (frameIntervalCount < 100) {
+            return -100;
+        }
+        std::vector<uint64_t> sorted(frameIntervals, frameIntervals + frameIntervalCount);
+        std::sort(sorted.begin(), sorted.end());
+        const size_t worst = std::max<size_t>(1, frameIntervalCount / 100);
+        uint64_t total = 0;
+        for (size_t i = frameIntervalCount - worst; i < frameIntervalCount; ++i) {
+            total += sorted[i];
+        }
+        return int64_t(1e8 * double(worst) / double(total));
+    }
 }
 
 extern "C" {
@@ -2381,6 +2404,13 @@ int PyroWave_SubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
         w.receivedFrames++;
         if (result == SUBMIT_OK) {
             w.renderedFrames++;
+            const uint64_t now = nowUs();
+            if (lastPresentUs != 0 && now - lastPresentUs < IDLE_GAP_US) {
+                frameIntervals[frameIntervalNext] = now - lastPresentUs;
+                frameIntervalNext = (frameIntervalNext + 1) % FRAME_INTERVALS;
+                frameIntervalCount = std::min(frameIntervalCount + 1, FRAME_INTERVALS);
+            }
+            lastPresentUs = now;
         }
         if (partial) {
             w.partialFrames++;
@@ -2433,6 +2463,9 @@ Java_com_limelight_binding_video_PyroWaveRenderer_nativeCreate(JNIEnv *env, jcla
         std::lock_guard<std::mutex> lock(statsLock);
         windowStats = {};
         lastFrameNumber = 0;
+        frameIntervalCount = 0;
+        frameIntervalNext = 0;
+        lastPresentUs = 0;
     }
     std::lock_guard<std::mutex> lock(activeLock);
     activeRenderer = renderer.get();
@@ -2478,14 +2511,16 @@ Java_com_limelight_binding_video_PyroWaveRenderer_nativeTakeStats(JNIEnv *env, j
         LOGW("No frame from moonlight-common-c for %llu ms", (unsigned long long) ((now - lastFrame) / 1000));
     }
     WindowStats w;
+    int64_t onePercentLow;
     {
         std::lock_guard<std::mutex> lock(statsLock);
         w = windowStats;
         windowStats = {};
+        onePercentLow = onePercentLowFpsX100();
     }
     const jlong values[] = {w.totalFrames, w.receivedFrames, w.renderedFrames, w.lostFrames, w.partialFrames,
                             w.hostLatencyFrames, w.hostLatencyMin, w.hostLatencyMax, jlong(w.hostLatencyTotal),
-                            w.gpuDecodeFrames, jlong(w.gpuDecodeTotalUs)};
+                            w.gpuDecodeFrames, jlong(w.gpuDecodeTotalUs), jlong(onePercentLow)};
     env->SetLongArrayRegion(out, 0, std::min<jsize>(env->GetArrayLength(out), jsize(std::size(values))), values);
 }
 

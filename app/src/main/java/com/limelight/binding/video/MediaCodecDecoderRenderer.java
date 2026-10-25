@@ -131,6 +131,8 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     // Delos: the Vulkan renderer of a PyroWave stream; MediaCodec stays unused while it exists
     private PyroWaveRenderer pyroWave;
     private Thread pyroWaveStatsThread;
+    // Delos: when the drawn frames came, for the 1% low in the statistics (PyroWave keeps its own natively)
+    private final FrameTimes frameTimes = new FrameTimes();
     private volatile boolean stopping;
     private CrashListener crashListener;
     private boolean reportedCrash;
@@ -859,7 +861,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                 hostFrames > 0 ? stats[PyroWaveRenderer.STAT_HOST_LATENCY_MIN] / 10f : -1f,
                 hostFrames > 0 ? stats[PyroWaveRenderer.STAT_HOST_LATENCY_MAX] / 10f : -1f,
                 hostFrames > 0 ? stats[PyroWaveRenderer.STAT_HOST_LATENCY_TOTAL] / 10f / hostFrames : -1f,
-                realtimeNetData));
+                realtimeNetData, stats[PyroWaveRenderer.STAT_ONE_PERCENT_LOW_FPS_X100] / 100f));
     }
 
     // All threads that interact with the MediaCodec instance must call this function regularly!
@@ -1153,6 +1155,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
 
                     lastRenderedFrameTimeNanos = frameTimeNanos;
                     activeWindowVideoStats.totalFramesRendered++;
+                    frameTimes.add(System.nanoTime());
                 } catch (IllegalStateException ignored) {
                     try {
                         // Try to avoid leaking the output buffer by releasing it without rendering
@@ -1253,6 +1256,8 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                                 }
 
                                 activeWindowVideoStats.totalFramesRendered++;
+
+                                frameTimes.add(System.nanoTime());
                             }
                             else {
                                 // For balanced frame pacing case, the Choreographer callback will handle rendering.
@@ -1324,6 +1329,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
 
         videoDecoder.releaseOutputBuffer(newestIndex, System.nanoTime());
         activeWindowVideoStats.totalFramesRendered++;
+        frameTimes.add(System.nanoTime());
         updateDecodeLatencyStats(newestPtsUs);
         return true;
     }
@@ -1706,7 +1712,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                         hostLatency ? (float) lastTwo.minHostProcessingLatency / 10 : -1f,
                         hostLatency ? (float) lastTwo.maxHostProcessingLatency / 10 : -1f,
                         hostLatency ? (float) lastTwo.totalHostProcessingLatency / 10 / lastTwo.framesWithHostProcessingLatency : -1f,
-                        realtimeNetData));
+                        realtimeNetData, frameTimes.onePercentLowFps()));
             }
             globalVideoStats.add(activeWindowVideoStats);
             lastWindowVideoStats.copy(activeWindowVideoStats);

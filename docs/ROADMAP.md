@@ -131,7 +131,7 @@ Principle: keep the streaming part (`Game.java`, overlays, virtual controls), re
     - [ ] Fast V-Sync (Nano Pacer) and async decoding for MediaCodec (from Artemide)
     - [ ] Per-game settings: codec, bitrate, HDR, frame pacing, touch mode (Moonlight X per-app settings)
     - [ ] Hide the PC cursor: never / while touching / always (Vibepollo; Starwire)
-    - [ ] 1% low FPS in the statistics (Moonlight V+, Moonlight X Turnip)
+    - [x] 1% low FPS in the statistics (Moonlight V+, Moonlight X Turnip); done 2026-10-25, over the last ~10 s, gaps over 0.5 s ignored. "Total delay" renamed "Total latency"
     - [ ] Keep-alive packets so Wi-Fi stays out of power save during a stream (Artemis "Prevent Packet Loss")
     - [ ] Brightness slider in the stream menu (Moonlight X)
   - [ ] **VRR**: the Odin 2 Portal probably has no VRR display; to be looked into after PyroWave.
