@@ -8,6 +8,7 @@ import com.limelight.nvstream.http.HostHttpResponseException
 import com.limelight.nvstream.http.NvHTTP
 import com.limelight.preferences.PreferenceConfiguration
 import com.limelight.shell.StreamLoader
+import com.limelight.shell.settings.GameSettingsStore
 import com.limelight.utils.ServerHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -30,9 +31,12 @@ class GameLauncher(private val activity: Activity, private val repo: PcRepositor
         val binder = repo.binder ?: return null
         val details = binder.getComputer(pc.uuid) ?: pc.details
         if (details.activeAddress == null) return null
-        val wantsVirtual = PreferenceConfiguration.readPreferences(activity).useVirtualDisplay
+        val settings = GameSettingsStore(ProfileStore.currentSettings(activity), pc.uuid, app.id)
+        val wantsVirtual = settings.preferences.getBoolean("checkbox_use_virtual_display",
+            PreferenceConfiguration.readPreferences(activity).useVirtualDisplay)
         val virtualReady = details.vDisplaySupported && details.vDisplayDriverReady
         val intent = ServerHelper.createStartIntent(activity, app.nvApp, details, binder, wantsVirtual && virtualReady)
+        GameSettingsStore.attach(intent, settings.snapshot())
         // The stream shows the new UI's loader while it connects (not the classic dialog), with the PC's
         // name as set in Delos, like the new UI's half of the launch scene
         intent.putExtra(StreamLoader.EXTRA, true)

@@ -51,6 +51,7 @@ import com.limelight.shell.screens.PinScreen
 import com.limelight.shell.screens.ProfileScreen
 import com.limelight.shell.screens.StartScreen
 import com.limelight.shell.screens.SettingsScreen
+import com.limelight.shell.screens.GameSettingsScreen
 import com.limelight.shell.screens.appArt
 import com.limelight.shell.screens.step
 import com.limelight.shell.settings.Appearance
@@ -400,6 +401,7 @@ fun Shell(
                         }
                         is Screen.PairPc -> PairPcScreen(screen, pcs)
                         is Screen.Artwork -> ArtworkScreen(screen)
+                        is Screen.GameSettings -> GameSettingsScreen(screen, profileStore, appearance)
                         Screen.DebugInfo -> DebugInfoScreen()
                         Screen.OscPreview -> OscPreviewScreen()
                         is Screen.Pin -> PinScreen(
@@ -562,6 +564,7 @@ private fun hints(shell: ShellState, adjustable: Boolean): List<Hint> {
             // Like a stream: nothing over the controls
             Screen.OscPreview -> emptyList()
             is Screen.Artwork -> listOf(Hint(Glyph.L1, "Previous tab"), Hint(Glyph.R1, "Next tab"), Hint(Glyph.A, "Use"), Hint(Glyph.B, "Back"))
+            is Screen.GameSettings -> adjust + listOf(Hint(Glyph.L1, "Previous tab"), Hint(Glyph.R1, "Next tab"), Hint(Glyph.A, "Change"), Hint(Glyph.MENU_RIGHT, "Options"), Hint(Glyph.B, "Back"))
             Screen.Profile, Screen.Devices -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"), Hint(Glyph.MENU_LEFT, "Menu"))
         }
     }

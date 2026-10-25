@@ -23,7 +23,9 @@ statistics, custom resolution and FPS, Wi-Fi locks, cover colours and a game scr
    Lower latency for HEVC and AV1 through MediaCodec; complements Warp and LFR, which Delos has.
 3. **Per-game settings** (codec, bitrate, HDR, frame pacing, touch mode). Moonlight X's per-app
    settings (MoreOrLessSoftware). Desktop wants different settings from a game, e.g. PyroWave SDR
-   for Desktop and HEVC HDR for a game over weaker Wi-Fi. Delos has per-user profiles, not per game.
+   for Desktop and HEVC HDR for a game over weaker Wi-Fi. Implemented on 2026-10-25 with a focused
+   quality/display scope approved by the user; touch mode remains in the profile. See
+   [PER_GAME_SETTINGS.md](PER_GAME_SETTINGS.md).
 4. **Hide the PC cursor** (never / while touching / always; Vibepollo). New in Starwire. With a
    controller the PC's pointer often sits in the middle of the picture.
 5. **1% low FPS in the statistics**. Idea from Moonlight V+ and Moonlight X Turnip. Shows the

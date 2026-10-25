@@ -200,10 +200,10 @@ public class ProfilesManager {
     public SharedPreferences getOverlayingSharedPreferences(Context context) {
         SharedPreferences base = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context);
         SettingsProfile active = getActive();
-        if (active == null || active.getOptions() == null) {
-            return base;
-        }
-        return new OverlaySharedPreferences(base, active.getOptions());
+        SharedPreferences effective = active == null || active.getOptions() == null
+                ? base : new OverlaySharedPreferences(base, active.getOptions());
+        // Delos: per-game launch values are scoped to this stream Activity, never the active profile.
+        return com.limelight.shell.settings.GameSettingsStore.overlay(context, effective);
     }
 
     /**

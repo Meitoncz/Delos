@@ -68,6 +68,11 @@ sealed interface Screen {
         override val back: Screen get() = DebugInfo
     }
 
+    /** Selected stream/display overrides for one game, within the current user profile. */
+    data class GameSettings(val pc: Pc, val app: App) : Screen {
+        override val back: Screen get() = Home
+    }
+
     /** The SteamGridDB artwork of one game, chosen by hand (the game's options → Artwork). */
     data class Artwork(val pc: com.limelight.shell.data.Pc, val app: com.limelight.shell.data.App) : Screen {
         override val back: Screen get() = Home

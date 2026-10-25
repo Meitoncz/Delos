@@ -129,7 +129,7 @@ Principle: keep the streaming part (`Game.java`, overlays, virtual controls), re
   - [ ] **Ideas from Starwire** (chosen 2026-10-25; details and credits in `docs/IDEAS_FROM_STARWIRE.md`):
     - [ ] Change the bitrate during a stream (Vibepollo; idea from Moonlight V+)
     - [ ] Fast V-Sync (Nano Pacer) and async decoding for MediaCodec (from Artemide)
-    - [ ] Per-game settings: codec, bitrate, HDR, frame pacing, touch mode (Moonlight X per-app settings)
+    - [x] Per-game settings (2026-10-25): Game settings in each game's dashboard context menu, Stream / Display tabs and cover preview. Resolution, FPS, bitrate, codec, frame pacing, HDR and selected display options inherit from the user profile unless overridden for that PC/game. The user approved the focused quality/display scope; touch mode stays in the profile. Tested on the Odin, including per-game resolution in a real stream. Idea: Moonlight X per-app settings. See [PER_GAME_SETTINGS.md](PER_GAME_SETTINGS.md).
     - [ ] Hide the PC cursor: never / while touching / always (Vibepollo; Starwire)
     - [x] 1% low FPS in the statistics (Moonlight V+, Moonlight X Turnip); done 2026-10-25, over the last ~10 s, gaps over 0.5 s ignored. "Total delay" renamed "Total latency"
     - [ ] Keep-alive packets so Wi-Fi stays out of power save during a stream (Artemis "Prevent Packet Loss")

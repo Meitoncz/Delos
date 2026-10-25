@@ -404,6 +404,7 @@ private fun gameMenu(
     pc: Pc, app: App, hidden: Boolean, running: App?, image: ImageBitmap?, actions: GameActions, onHide: (App, Boolean) -> Unit,
     /** Opens the artwork screen. */
     onArtwork: () -> Unit,
+    onSettings: () -> Unit,
 ) =
     ContextMenu(
         app.name,
@@ -420,6 +421,7 @@ private fun gameMenu(
                 else -> add(MenuItem(Symbols.PLAY_ARROW, "Start game") { actions.start(pc, app, image) })
             }
             add(MenuItem(Symbols.PHOTO_LIBRARY, "Artwork", onArtwork))
+            add(MenuItem(Symbols.SETTINGS, "Game settings", onSettings))
             add(
                 if (hidden) MenuItem(Symbols.VISIBILITY, "Show game") { onHide(app, false) }
                 else MenuItem(Symbols.VISIBILITY_OFF, "Hide game") { onHide(app, true) }
@@ -521,7 +523,9 @@ private fun GameTile(
     val image = cover ?: boxImage
     val shown = if (wide) wideCover ?: boxImage else image
     val onArtwork = { shell.navigate(Screen.Artwork(pc, app)) }
-    val menu = remember(app, hidden, running, image) { gameMenu(pc, app, hidden, running, image, actions, onHide, onArtwork) }
+    val menu = remember(pc, app, hidden, running, image) {
+        gameMenu(pc, app, hidden, running, image, actions, onHide, onArtwork) { shell.navigate(Screen.GameSettings(pc, app)) }
+    }
     var focused by remember { mutableStateOf(false) }
     // A starts (or resumes) the game; while another game runs on the PC it offers the choices instead
     val activate = {

@@ -3733,6 +3733,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     }
 
     @Override
+    @SuppressLint("MissingSuperCall") // Delos: consume Back; the superclass would finish the stream.
     public void onBackPressed() {
         // Delos: Back always opens the stream menu
         showGameMenu(null);
