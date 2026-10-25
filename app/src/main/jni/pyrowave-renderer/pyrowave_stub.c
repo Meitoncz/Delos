@@ -9,13 +9,17 @@ Java_com_limelight_binding_video_PyroWaveRenderer_nativeIsAvailable(JNIEnv *env,
 JNIEXPORT jlong JNICALL
 Java_com_limelight_binding_video_PyroWaveRenderer_nativeCreate(JNIEnv *env, jclass clazz, jobject surface, jint width,
                                                                jint height, jint frameRate, jboolean chroma444,
-                                                               jboolean fullRange, jint matrix) {
+                                                               jboolean fullRange, jint matrix, jboolean tenBit) {
     return 0;
 }
 
 JNIEXPORT jint JNICALL
 Java_com_limelight_binding_video_PyroWaveRenderer_nativeGetLastGpuDecodeUs(JNIEnv *env, jclass clazz, jlong handle) {
     return 0;
+}
+
+JNIEXPORT void JNICALL
+Java_com_limelight_binding_video_PyroWaveRenderer_nativeSetHdrMode(JNIEnv *env, jclass clazz, jlong handle, jboolean enabled) {
 }
 
 JNIEXPORT void JNICALL

@@ -36,12 +36,18 @@ Get-ChildItem (Join-Path $Source 'pyrowave') | Where-Object { $exclude -notconta
 Copy-Item (Join-Path $Source 'volk_platform.c') $Target -Force
 Copy-Item (Join-Path $Source 'VENDOR.txt') (Join-Path $Target 'VENDOR-moonlight-qt.txt') -Force
 
+# Delos' own fixes on top (tools/pyrowave/patches, paths from the repository root)
+foreach ($patch in Get-ChildItem (Join-Path $PSScriptRoot 'patches') -Filter '*.patch' | Sort-Object Name) {
+    git -C $Root apply --whitespace=nowarn $patch.FullName
+    if ($LASTEXITCODE -ne 0) { throw "Patch $($patch.Name) no longer applies" }
+}
+
 Set-Content -Encoding utf8 (Join-Path $Target 'VENDOR.txt') @"
 PyroWave for Delos, vendored by tools/pyrowave/vendor.ps1 from Nonary/moonlight-qt
 $Commit (pyrowave/), which is the official Vibepollo client. Do not edit by hand.
 
 See VENDOR-moonlight-qt.txt for the PyroWave, Granite, volk and Vulkan header commits and the patches
-applied to them. The PyroWave bitstream carries no version: the host and Delos must use the same
+applied to them, and tools/pyrowave/patches for Delos' own fixes on top. The PyroWave bitstream carries no version: the host and Delos must use the same
 PyroWave commit (PYROWAVE_BITSTREAM_ID in moonlight-common-c's Limelight.h).
 
 Licenses: PyroWave and Granite MIT (pyrowave/LICENSE, pyrowave/Granite/LICENSE), volk MIT,

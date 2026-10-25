@@ -1,0 +1,26 @@
+diff --git a/app/src/main/jni/pyrowave/pyrowave/Granite/vulkan/query_pool.cpp b/app/src/main/jni/pyrowave/pyrowave/Granite/vulkan/query_pool.cpp
+index 083c6e85..6989bced 100644
+--- a/app/src/main/jni/pyrowave/pyrowave/Granite/vulkan/query_pool.cpp
++++ b/app/src/main/jni/pyrowave/pyrowave/Granite/vulkan/query_pool.cpp
+@@ -358,15 +358,18 @@ void QueryPool::begin()
+ 		if (pool.index == 0)
+ 			continue;
+ 
+-		table.vkGetQueryPoolResults(device->get_device(), pool.pool,
++		// Delos: no VK_QUERY_RESULT_WAIT_BIT. On Adreno a timestamp query now and then never becomes
++		// available, and waiting for it froze the stream for good; the timestamps only feed the
++		// performance log, so an incomplete pool reports zeros instead.
++		const VkResult result = table.vkGetQueryPoolResults(device->get_device(), pool.pool,
+ 		                            0, pool.index,
+ 		                            pool.index * sizeof(uint64_t),
+ 		                            pool.query_results.data(),
+ 		                            sizeof(uint64_t),
+-		                            VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_WAIT_BIT);
++		                            VK_QUERY_RESULT_64_BIT);
+ 
+ 		for (unsigned j = 0; j < pool.index; j++)
+-			pool.cookies[j]->signal_value(pool.query_results[j]);
++			pool.cookies[j]->signal_value(result == VK_SUCCESS ? pool.query_results[j] : 0);
+ 
+ 		if (device->get_device_features().vk12_features.hostQueryReset)
+ 			table.vkResetQueryPool(device->get_device(), pool.pool, 0, pool.index);

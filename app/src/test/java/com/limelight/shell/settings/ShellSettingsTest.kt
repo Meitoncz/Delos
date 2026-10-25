@@ -55,7 +55,8 @@ class ShellSettingsTest {
         assertEquals(SettingKind.CHOICE, spec("list_languages").kind)
         assertEquals(SettingKind.SLIDER, spec("seekbar_bitrate_kbps").kind)
         assertEquals(1000, spec("seekbar_bitrate_kbps").divisor)
-        assertEquals(500, spec("seekbar_bitrate_kbps").min)
+        assertEquals(1000, spec("seekbar_bitrate_kbps").min)
+        assertEquals(1000, spec("seekbar_bitrate_kbps").step)
         assertEquals(1000000, spec("seekbar_bitrate_kbps").max)
     }
 
@@ -175,6 +176,10 @@ class ShellSettingsTest {
         stream.write(spec("video_format"), "pyrowave")
         assertEquals(225000, prefs.getInt("seekbar_bitrate_kbps", -1))
         stream.write(spec("list_fps"), "120")
+        assertEquals(445000, prefs.getInt("seekbar_bitrate_kbps", -1))
+        stream.write(spec("checkbox_enable_hdr"), true)
+        assertEquals(530000, prefs.getInt("seekbar_bitrate_kbps", -1))
+        stream.write(spec("checkbox_enable_hdr"), false)
         assertEquals(445000, prefs.getInt("seekbar_bitrate_kbps", -1))
         stream.write(spec("video_format"), "auto")
         assertEquals(PreferenceConfiguration.getDefaultBitrate("1920x1080", "120"), prefs.getInt("seekbar_bitrate_kbps", -1))

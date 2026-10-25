@@ -98,7 +98,7 @@ class StreamProfileStore(private val context: Context, val catalog: SettingsCata
     private fun defaultValue(spec: SettingSpec, source: Map<String, *>): Any? = when (spec.key) {
         "seekbar_bitrate_kbps" -> PreferenceConfiguration.getDefaultBitrate(
             source["list_resolution"] as? String ?: "1280x720", source["list_fps"] as? String ?: "60",
-            source["video_format"] as? String ?: "auto",
+            source["video_format"] as? String ?: "auto", source["checkbox_enable_hdr"] as? Boolean ?: false,
         )
         "seekbar_metered_bitrate_kbps" -> 0
         "checkbox_gamepad_motion_sensors" -> Build.VERSION.SDK_INT != 31 && (spec.default as? Boolean ?: true)

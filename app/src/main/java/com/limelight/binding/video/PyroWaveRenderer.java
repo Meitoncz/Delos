@@ -40,16 +40,26 @@ public final class PyroWaveRenderer {
         return available;
     }
 
-    /** The renderer for a stream on [surface], or null when it cannot be created. */
+    /**
+     * The renderer for a stream on [surface], or null when it cannot be created. A 10-bit stream shows in
+     * HDR10 whenever the host is in HDR mode (setHdrMode), in SDR otherwise.
+     */
     public static PyroWaveRenderer create(Surface surface, int width, int height, int frameRate,
-                                          boolean chroma444, boolean fullRange, int matrix) {
-        long handle = nativeCreate(surface, width, height, frameRate, chroma444, fullRange, matrix);
+                                          boolean chroma444, boolean fullRange, int matrix, boolean tenBit) {
+        long handle = nativeCreate(surface, width, height, frameRate, chroma444, fullRange, matrix, tenBit);
         return handle != 0 ? new PyroWaveRenderer(handle) : null;
     }
 
     /** The GPU time of the last decoded frame in microseconds, 0 when unknown. */
     public int lastGpuDecodeUs() {
         return handle != 0 ? nativeGetLastGpuDecodeUs(handle) : 0;
+    }
+
+    /** The host switched HDR on or off. */
+    public void setHdrMode(boolean enabled) {
+        if (handle != 0) {
+            nativeSetHdrMode(handle, enabled);
+        }
     }
 
     /** The frame statistics since the last call, in the order of the STAT_* indices. */
@@ -82,7 +92,9 @@ public final class PyroWaveRenderer {
     private static native boolean nativeIsAvailable();
 
     private static native long nativeCreate(Surface surface, int width, int height, int frameRate,
-                                            boolean chroma444, boolean fullRange, int matrix);
+                                            boolean chroma444, boolean fullRange, int matrix, boolean tenBit);
+
+    private static native void nativeSetHdrMode(long handle, boolean enabled);
 
     private static native int nativeGetLastGpuDecodeUs(long handle);
 

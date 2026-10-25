@@ -25,7 +25,8 @@ public class MoonBridge {
     public static final int VIDEO_FORMAT_MASK_H264 = 0x000F;
     public static final int VIDEO_FORMAT_MASK_H265 = 0x0F00;
     public static final int VIDEO_FORMAT_MASK_AV1 = 0xF000;
-    public static final int VIDEO_FORMAT_MASK_10BIT = 0x2200;
+    // Delos: as moonlight-common-c's mask, including PyroWave HDR10
+    public static final int VIDEO_FORMAT_MASK_10BIT = 0xCAA00;
     public static final int VIDEO_FORMAT_MASK_PYROWAVE = 0x0F0000;
     public static final int VIDEO_FORMAT_MASK_YUV444 = 0xACC04;
 

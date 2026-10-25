@@ -2,7 +2,7 @@
 e4693208c9c1abefdd8c1cd44600e613b3fc14fb (pyrowave/), which is the official Vibepollo client. Do not edit by hand.
 
 See VENDOR-moonlight-qt.txt for the PyroWave, Granite, volk and Vulkan header commits and the patches
-applied to them. The PyroWave bitstream carries no version: the host and Delos must use the same
+applied to them, and tools/pyrowave/patches for Delos' own fixes on top. The PyroWave bitstream carries no version: the host and Delos must use the same
 PyroWave commit (PYROWAVE_BITSTREAM_ID in moonlight-common-c's Limelight.h).
 
 Licenses: PyroWave and Granite MIT (pyrowave/LICENSE, pyrowave/Granite/LICENSE), volk MIT,

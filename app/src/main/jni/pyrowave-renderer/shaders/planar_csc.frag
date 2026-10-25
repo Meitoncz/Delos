@@ -1,7 +1,8 @@
 #version 450
-// PyroWave decodes to three planes (Y, Cb, Cr). The host encodes left-cosited 4:2:0 chroma, so shift
-// chroma sampling by a quarter chroma texel to line it up with centre-sampled luma. Range and matrix
-// follow the stream (Delos: push constants).
+// PyroWave decodes to three planes (Y, Cb, Cr). The host averages each 2x2 quad for 4:2:0 chroma
+// (centre siting, as the official client treats it), so chroma samples line up without an offset.
+// Range, matrix and bit depth follow the stream (Delos: push constants). HDR streams are PQ BT.2020
+// and go to an HDR10 swapchain as they are.
 layout(location = 0) in vec2 v_uv;
 layout(location = 0) out vec4 frag;
 
@@ -13,22 +14,20 @@ layout(push_constant) uniform Csc {
     int fullRange;
     // 0 = BT.601, 1 = BT.709, 2 = BT.2020
     int matrix;
+    // R16 planes: normalised like FFmpeg's 16-bit formats (chroma midpoint 0.5, limited range x256)
+    int sixteenBit;
 } csc;
 
 void main() {
-    vec2 cuv = v_uv;
-    float cw = float(textureSize(u_cb, 0).x);
-    if (cw < float(textureSize(u_y, 0).x)) {
-        cuv.x += 0.25 / cw;
-    }
-
+    float unit = csc.sixteenBit != 0 ? 256.0 / 65535.0 : 1.0 / 255.0;
+    float mid = csc.sixteenBit != 0 ? 0.5 : 128.0 / 255.0;
     float y = texture(u_y, v_uv).r;
-    float cb = texture(u_cb, cuv).r - 128.0 / 255.0;
-    float cr = texture(u_cr, cuv).r - 128.0 / 255.0;
+    float cb = texture(u_cb, v_uv).r - mid;
+    float cr = texture(u_cr, v_uv).r - mid;
     if (csc.fullRange == 0) {
-        y = (y - 16.0 / 255.0) * (255.0 / 219.0);
-        cb *= 255.0 / 224.0;
-        cr *= 255.0 / 224.0;
+        y = (y - 16.0 * unit) / (219.0 * unit);
+        cb /= 224.0 * unit;
+        cr /= 224.0 * unit;
     }
 
     // Kr / Kb of the matrix

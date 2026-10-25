@@ -623,15 +623,11 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         }
 
         // Delos: PyroWave when chosen and this device can decode it (Vulkan); the host falls back to the
-        // usual codecs without it. The renderer is 8-bit for now, so a PyroWave stream is SDR.
+        // usual codecs without it. With HDR on it is offered in 10-bit (HDR10).
         boolean offerPyroWave = false;
         if (prefConfig.videoFormat == PreferenceConfiguration.FormatOption.PYROWAVE) {
             if (PyroWaveRenderer.isAvailable()) {
                 offerPyroWave = true;
-                if (willStreamHdr) {
-                    willStreamHdr = false;
-                    Toast.makeText(this, "PyroWave streams in SDR for now", Toast.LENGTH_LONG).show();
-                }
             } else {
                 Toast.makeText(this, "This device cannot decode PyroWave", Toast.LENGTH_LONG).show();
             }
@@ -683,7 +679,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
 
         // Don't stream HDR if the decoder can't support it
-        if (willStreamHdr && !decoderRenderer.isHevcMain10Hdr10Supported() && !decoderRenderer.isAv1Main10Supported()) {
+        if (willStreamHdr && !offerPyroWave && !decoderRenderer.isHevcMain10Hdr10Supported() && !decoderRenderer.isAv1Main10Supported()) {
             willStreamHdr = false;
             Toast.makeText(this, "Decoder does not support HDR10 profile", Toast.LENGTH_LONG).show();
         }
@@ -713,6 +709,9 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         }
         if (offerPyroWave) {
             supportedVideoFormats |= MoonBridge.VIDEO_FORMAT_PYROWAVE;
+            if (willStreamHdr) {
+                supportedVideoFormats |= MoonBridge.VIDEO_FORMAT_PYROWAVE_HDR10;
+            }
         }
 
         int gamepadMask = ControllerHandler.getAttachedControllerMask(this);

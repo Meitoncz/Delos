@@ -775,7 +775,8 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         // Delos: PyroWave frames go from moonlight-common-c straight to the native renderer
         if ((format & MoonBridge.VIDEO_FORMAT_MASK_PYROWAVE) != 0) {
             pyroWave = PyroWaveRenderer.create(renderTarget, width, height, targetFps,
-                    (format & MoonBridge.VIDEO_FORMAT_MASK_YUV444) != 0, prefs.fullRange, getPreferredColorSpace());
+                    (format & MoonBridge.VIDEO_FORMAT_MASK_YUV444) != 0, prefs.fullRange, getPreferredColorSpace(),
+                    (format & MoonBridge.VIDEO_FORMAT_MASK_10BIT) != 0);
             if (pyroWave == null) {
                 LimeLog.severe("Unable to create the PyroWave renderer");
                 return -1;
@@ -805,11 +806,9 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     }
 
     // Delos: PyroWave frames never reach submitDecodeUnit(), so the overlay's numbers come from the
-    // native renderer's statistics, once a second
+    // native renderer's statistics, once a second. It runs without the overlay too: taking the statistics
+    // also logs a stalled video thread.
     private void startPyroWaveStatsThread() {
-        if (!prefs.enablePerfOverlay) {
-            return;
-        }
         pyroWaveStatsThread = new Thread(() -> {
             long windowStart = SystemClock.uptimeMillis();
             while (!stopping) {
@@ -821,7 +820,10 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                 long now = SystemClock.uptimeMillis();
                 float seconds = Math.max(now - windowStart, 1) / 1000f;
                 windowStart = now;
-                reportPyroWaveStats(pyroWave.takeStats(), seconds);
+                long[] stats = pyroWave.takeStats();
+                if (prefs.enablePerfOverlay) {
+                    reportPyroWaveStats(stats, seconds);
+                }
             }
         }, "PyroWave stats");
         pyroWaveStatsThread.start();
@@ -852,7 +854,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
 
         perfListener.onPerfStats(new com.limelight.shell.StreamStats(
                 initialWidth, initialHeight, totalFps, receivedFps, renderedFps,
-                "PyroWave", false, decoder, lossPercent,
+                "PyroWave", (videoFormat & MoonBridge.VIDEO_FORMAT_MASK_10BIT) != 0, decoder, lossPercent,
                 (int) (rttInfo >> 32), (int) rttInfo, decodeTimeMs,
                 hostFrames > 0 ? stats[PyroWaveRenderer.STAT_HOST_LATENCY_MIN] / 10f : -1f,
                 hostFrames > 0 ? stats[PyroWaveRenderer.STAT_HOST_LATENCY_MAX] / 10f : -1f,
@@ -1498,6 +1500,8 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     @Override
     public void setHdrMode(boolean enabled, byte[] hdrMetadata) {
         if (pyroWave != null) {
+            // The renderer reads the host's metadata itself
+            pyroWave.setHdrMode(enabled);
             return;
         }
         // HDR metadata is only supported in Android 7.0 and later, so don't bother

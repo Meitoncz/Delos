@@ -67,6 +67,22 @@ sealed interface RowValue {
 }
 
 /**
+ * How many steps one key repeat moves a slider: one at first, then more the longer the key is held,
+ * up to a fortieth of the slider's range (so the bitrate's 1000 steps cross in about a second of
+ * holding, while a slider of a few steps never jumps).
+ */
+internal fun sliderAcceleration(slider: RowValue.Slider, repeatCount: Int): Int {
+    val steps = (slider.max - slider.min) / slider.step
+    val wanted = when {
+        repeatCount < 8 -> 1
+        repeatCount < 20 -> 5
+        repeatCount < 35 -> 10
+        else -> 50
+    }
+    return wanted.coerceAtMost(maxOf(1, steps / 40))
+}
+
+/**
  * A settings row (`.row`): icon, label with an optional description, and the value. Used by the side
  * menu and the settings screen. Choice and slider rows are adjusted with left/right instead of moving
  * the focus, like in the prototype.
@@ -88,7 +104,8 @@ fun SettingRow(
     var focused by remember { mutableStateOf(false) }
     val adjust: ((Int) -> Unit)? = when (value) {
         is RowValue.Choice -> value.onStep
-        // One step left or right, landing on the slider's grid (a stored value between steps snaps to it)
+        // Steps left or right ([dir] may be several while a key is held), landing on the slider's grid
+        // (a stored value between steps snaps to it)
         is RowValue.Slider -> { dir ->
             val next = value.value + dir * value.step
             val snapped = value.min + Math.round((next - value.min).toFloat() / value.step) * value.step
@@ -117,7 +134,7 @@ fun SettingRow(
                 if (dir == 0 || adjust == null || !enabled) return@onPreviewKeyEvent false
                 if (event.type == KeyEventType.KeyDown) {
                     feedback.play(Cue.MOVE)
-                    adjust(dir)
+                    adjust(dir * if (value is RowValue.Slider) sliderAcceleration(value, event.nativeKeyEvent.repeatCount) else 1)
                 }
                 true
             }

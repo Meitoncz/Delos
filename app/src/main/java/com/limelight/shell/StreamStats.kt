@@ -197,7 +197,13 @@ class StreamStatsPanel private constructor(
 
         private fun format(value: Float, decimals: Int = 1) = String.format(Locale.US, "%.${decimals}f", value)
 
-        private fun bandwidth(kb: Float) = if (kb >= 1000f) "${format(kb / 1024f)} MB/s" else "${kb.toInt()} KB/s"
+        // Bytes like the classic overlay, and bits like bitrate settings (the KB are KiB)
+        private fun bandwidth(kb: Float): String {
+            val megabits = kb * 1024f * 8f / 1_000_000f
+            val bytes = if (kb >= 1000f) "${format(kb / 1024f)} MB/s" else "${kb.toInt()} KB/s"
+            val bits = if (megabits >= 100f) "${megabits.toInt()} Mb/s" else "${format(megabits)} Mb/s"
+            return "$bytes · $bits"
+        }
 
         private val PANEL_TEXT = Color(0xFFE8F0FF)
         private val FPS_GREEN = Color(0xFF7EE2A8)
