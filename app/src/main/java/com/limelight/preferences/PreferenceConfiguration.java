@@ -22,6 +22,8 @@ public class PreferenceConfiguration {
         FORCE_AV1,
         FORCE_HEVC,
         FORCE_H264,
+        // Delos: PyroWave when the host and this device support it, the usual codecs otherwise
+        PYROWAVE,
     };
 
     public enum AnalogStickForScrolling {
@@ -513,11 +515,25 @@ public class PreferenceConfiguration {
         return (int)Math.round(resolutionFactor * frameRateFactor) * 1000;
     }
 
+    // Delos: the bitrate slider's maximum (preferences.xml), high enough for PyroWave at 1080p HDR 120 FPS
+    public static final int MAX_BITRATE_KBPS = 1000000;
+
+    // Delos: PyroWave needs its own, much higher default (PyroWaveBitrate). Its stream is SDR for now.
+    public static int getDefaultBitrate(String resString, String fpsString, String videoFormat) {
+        if ("pyrowave".equals(videoFormat)) {
+            int kbps = PyroWaveBitrate.recommendedKbps(getWidthFromResolutionString(resString),
+                    getHeightFromResolutionString(resString), Math.round(Float.parseFloat(fpsString)), false, false);
+            return Math.min(kbps, MAX_BITRATE_KBPS);
+        }
+        return getDefaultBitrate(resString, fpsString);
+    }
+
     public static int getDefaultBitrate(Context context) {
         SharedPreferences prefs = ProfilesManager.getInstance().getOverlayingSharedPreferences(context);
         return getDefaultBitrate(
                 prefs.getString(RESOLUTION_PREF_STRING, DEFAULT_RESOLUTION),
-                prefs.getString(FPS_PREF_STRING, DEFAULT_FPS));
+                prefs.getString(FPS_PREF_STRING, DEFAULT_FPS),
+                prefs.getString(VIDEO_FORMAT_PREF_STRING, DEFAULT_VIDEO_FORMAT));
     }
 
     private static FormatOption getVideoFormatValue(Context context) {
@@ -535,6 +551,9 @@ public class PreferenceConfiguration {
         }
         else if (str.equals("neverh265")) {
             return FormatOption.FORCE_H264;
+        }
+        else if (str.equals("pyrowave")) {
+            return FormatOption.PYROWAVE;
         }
         else {
             // Should never get here

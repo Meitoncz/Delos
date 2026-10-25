@@ -104,9 +104,18 @@ Java_com_limelight_nvstream_jni_MoonBridge_init(JNIEnv *env, jclass clazz) {
     BridgeClSetControllerLEDMethod = (*env)->GetStaticMethodID(env, clazz, "bridgeClSetControllerLED", "(SBBB)V");
 }
 
+// Delos: PyroWave frames go straight to the native PyroWave renderer (pyrowave-renderer), never through
+// Java; the Java side only creates and destroys it (PyroWaveRenderer)
+static int ActiveVideoFormat;
+#ifdef DELOS_PYROWAVE
+int PyroWave_SubmitDecodeUnit(PDECODE_UNIT decodeUnit);
+#endif
+
 int BridgeDrSetup(int videoFormat, int width, int height, int redrawRate, void* context, int drFlags) {
     JNIEnv* env = GetThreadEnv();
     int err;
+
+    ActiveVideoFormat = videoFormat;
 
     err = (*env)->CallStaticIntMethod(env, GlobalBridgeClass, BridgeDrSetupMethod, videoFormat, width, height, redrawRate);
     if ((*env)->ExceptionCheck(env)) {
@@ -146,6 +155,12 @@ void BridgeDrCleanup(void) {
 int BridgeDrSubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
     JNIEnv* env = GetThreadEnv();
     int ret;
+
+#ifdef DELOS_PYROWAVE
+    if (ActiveVideoFormat & VIDEO_FORMAT_MASK_PYROWAVE) {
+        return PyroWave_SubmitDecodeUnit(decodeUnit);
+    }
+#endif
 
     // Increase the size of our frame data buffer if our frame won't fit
     if ((*env)->GetArrayLength(env, DecodedFrameBuffer) < decodeUnit->fullLength) {

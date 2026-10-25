@@ -41,10 +41,12 @@ class StreamSettingsStore(val catalog: SettingsCatalog, private val settings: ()
     fun write(spec: SettingSpec, value: Any) {
         val prefs = settings()
         val editor = prefs.edit().putSetting(spec.key, value)
-        if (spec.key == "list_resolution" || spec.key == "list_fps") {
+        // Delos: switching to or from PyroWave resets it too, since PyroWave needs several times the bitrate
+        if (spec.key == "list_resolution" || spec.key == "list_fps" || spec.key == "video_format") {
             val resolution = if (spec.key == "list_resolution") value as String else prefs.getString("list_resolution", "1280x720")!!
             val fps = if (spec.key == "list_fps") value as String else prefs.getString("list_fps", "60")!!
-            editor.putInt("seekbar_bitrate_kbps", PreferenceConfiguration.getDefaultBitrate(resolution, fps))
+            val format = if (spec.key == "video_format") value as String else prefs.getString("video_format", "auto")!!
+            editor.putInt("seekbar_bitrate_kbps", PreferenceConfiguration.getDefaultBitrate(resolution, fps, format))
         }
         editor.apply()
     }

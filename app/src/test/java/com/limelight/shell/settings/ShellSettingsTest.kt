@@ -56,7 +56,7 @@ class ShellSettingsTest {
         assertEquals(SettingKind.SLIDER, spec("seekbar_bitrate_kbps").kind)
         assertEquals(1000, spec("seekbar_bitrate_kbps").divisor)
         assertEquals(500, spec("seekbar_bitrate_kbps").min)
-        assertEquals(300000, spec("seekbar_bitrate_kbps").max)
+        assertEquals(1000000, spec("seekbar_bitrate_kbps").max)
     }
 
     @Test fun categoriesAreAssignedToApprovedTabs() {
@@ -168,6 +168,20 @@ class ShellSettingsTest {
         stream.close()
     }
 
+    @Test fun choosingPyroWaveSetsItsMuchHigherBitrateAndLeavingItRestoresTheUsualOne() {
+        val prefs = context.getSharedPreferences("test-settings", Context.MODE_PRIVATE)
+        prefs.edit().clear().putString("list_resolution", "1920x1080").putString("list_fps", "60").commit()
+        val stream = StreamSettingsStore(catalog) { prefs }
+        stream.write(spec("video_format"), "pyrowave")
+        assertEquals(225000, prefs.getInt("seekbar_bitrate_kbps", -1))
+        stream.write(spec("list_fps"), "120")
+        assertEquals(445000, prefs.getInt("seekbar_bitrate_kbps", -1))
+        stream.write(spec("video_format"), "auto")
+        assertEquals(PreferenceConfiguration.getDefaultBitrate("1920x1080", "120"), prefs.getInt("seekbar_bitrate_kbps", -1))
+        assertEquals(PreferenceConfiguration.MAX_BITRATE_KBPS, spec("seekbar_bitrate_kbps").max)
+        stream.close()
+    }
+
     @Test fun editableLayoutsAreCopiedAndResetOnlyForTheCurrentUser() {
         context.getSharedPreferences("OSC", Context.MODE_PRIVATE).edit().putString("button", "original").commit()
         val profiles = ProfileStore(context)
@@ -224,6 +238,7 @@ class ShellSettingsTest {
         assertFalse("120" in caps.choices(spec("list_fps"), values).map { it.value })
         assertTrue("120" in caps.choices(spec("list_fps"), values + ("checkbox_unlock_fps" to true)).map { it.value })
         assertEquals(setOf("auto", "neverh265"), caps.choices(spec("video_format"), values).map { it.value }.toSet())
+        assertTrue("pyrowave" in caps.copy(pyroWave = true).choices(spec("video_format"), values).map { it.value })
     }
 
     private fun spec(key: String) = catalog.all.first { it.key == key }

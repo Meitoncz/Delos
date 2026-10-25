@@ -28,6 +28,7 @@ import com.limelight.binding.video.CrashListener;
 import com.limelight.binding.video.MediaCodecDecoderRenderer;
 import com.limelight.binding.video.MediaCodecHelper;
 import com.limelight.binding.video.PerfOverlayListener;
+import com.limelight.binding.video.PyroWaveRenderer;
 import com.limelight.nvstream.NvConnection;
 import com.limelight.nvstream.NvConnectionListener;
 import com.limelight.nvstream.StreamConfiguration;
@@ -621,6 +622,21 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             }
         }
 
+        // Delos: PyroWave when chosen and this device can decode it (Vulkan); the host falls back to the
+        // usual codecs without it. The renderer is 8-bit for now, so a PyroWave stream is SDR.
+        boolean offerPyroWave = false;
+        if (prefConfig.videoFormat == PreferenceConfiguration.FormatOption.PYROWAVE) {
+            if (PyroWaveRenderer.isAvailable()) {
+                offerPyroWave = true;
+                if (willStreamHdr) {
+                    willStreamHdr = false;
+                    Toast.makeText(this, "PyroWave streams in SDR for now", Toast.LENGTH_LONG).show();
+                }
+            } else {
+                Toast.makeText(this, "This device cannot decode PyroWave", Toast.LENGTH_LONG).show();
+            }
+        }
+
         // Check if the user has enabled performance stats overlay
         if (prefConfig.enablePerfOverlay) {
             performanceOverlayView.setVisibility(View.VISIBLE);
@@ -694,6 +710,9 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             if (willStreamHdr && decoderRenderer.isAv1Main10Supported()) {
                 supportedVideoFormats |= MoonBridge.VIDEO_FORMAT_AV1_MAIN10;
             }
+        }
+        if (offerPyroWave) {
+            supportedVideoFormats |= MoonBridge.VIDEO_FORMAT_PYROWAVE;
         }
 
         int gamepadMask = ControllerHandler.getAttachedControllerMask(this);

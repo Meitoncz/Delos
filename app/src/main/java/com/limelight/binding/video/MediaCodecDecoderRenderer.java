@@ -128,6 +128,9 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     private boolean invertResolution;
     private int videoFormat;
     private Surface renderTarget;
+    // Delos: the Vulkan renderer of a PyroWave stream; MediaCodec stays unused while it exists
+    private PyroWaveRenderer pyroWave;
+    private Thread pyroWaveStatsThread;
     private volatile boolean stopping;
     private CrashListener crashListener;
     private boolean reportedCrash;
@@ -769,7 +772,92 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         this.videoFormat = format;
         this.refreshRate = redrawRate;
 
+        // Delos: PyroWave frames go from moonlight-common-c straight to the native renderer
+        if ((format & MoonBridge.VIDEO_FORMAT_MASK_PYROWAVE) != 0) {
+            pyroWave = PyroWaveRenderer.create(renderTarget, width, height, targetFps,
+                    (format & MoonBridge.VIDEO_FORMAT_MASK_YUV444) != 0, prefs.fullRange, getPreferredColorSpace());
+            if (pyroWave == null) {
+                LimeLog.severe("Unable to create the PyroWave renderer");
+                return -1;
+            }
+            LimeLog.info("PyroWave renderer created");
+            return 0;
+        }
+
         return initializeDecoder(false);
+    }
+
+    public boolean isPyroWave() {
+        return pyroWave != null;
+    }
+
+    // Delos: data received and sent since the last call in KB, -1 when unknown or on the first call
+    private float measureNetDataKb() {
+        float realtimeNetData = -1;
+        if(TrafficStatsHelper.getPackageRxBytes(Process.myUid()) != TrafficStats.UNSUPPORTED){
+            long netData=TrafficStatsHelper.getPackageRxBytes(Process.myUid())+TrafficStatsHelper.getPackageTxBytes(Process.myUid());
+            if(lastNetDataNum!=0){
+                realtimeNetData=(netData-lastNetDataNum)/1024f;
+            }
+            lastNetDataNum=netData;
+        }
+        return realtimeNetData;
+    }
+
+    // Delos: PyroWave frames never reach submitDecodeUnit(), so the overlay's numbers come from the
+    // native renderer's statistics, once a second
+    private void startPyroWaveStatsThread() {
+        if (!prefs.enablePerfOverlay) {
+            return;
+        }
+        pyroWaveStatsThread = new Thread(() -> {
+            long windowStart = SystemClock.uptimeMillis();
+            while (!stopping) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    return;
+                }
+                long now = SystemClock.uptimeMillis();
+                float seconds = Math.max(now - windowStart, 1) / 1000f;
+                windowStart = now;
+                reportPyroWaveStats(pyroWave.takeStats(), seconds);
+            }
+        }, "PyroWave stats");
+        pyroWaveStatsThread.start();
+    }
+
+    private void reportPyroWaveStats(long[] stats, float seconds) {
+        long total = stats[PyroWaveRenderer.STAT_TOTAL_FRAMES];
+        float totalFps = total / seconds;
+        float receivedFps = stats[PyroWaveRenderer.STAT_RECEIVED_FRAMES] / seconds;
+        float renderedFps = stats[PyroWaveRenderer.STAT_RENDERED_FRAMES] / seconds;
+        float lossPercent = total > 0 ? (float) stats[PyroWaveRenderer.STAT_LOST_FRAMES] / total * 100 : 0f;
+        long gpuFrames = stats[PyroWaveRenderer.STAT_GPU_DECODE_FRAMES];
+        float decodeTimeMs = gpuFrames > 0 ? stats[PyroWaveRenderer.STAT_GPU_DECODE_TOTAL_US] / 1000f / gpuFrames : 0f;
+        long hostFrames = stats[PyroWaveRenderer.STAT_HOST_LATENCY_FRAMES];
+        long rttInfo = MoonBridge.getEstimatedRttInfo();
+        float realtimeNetData = measureNetDataKb();
+        String decoder = "PyroWave (Vulkan)";
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(context.getString(R.string.perf_overlay_streamdetails, initialWidth + "x" + initialHeight, totalFps)).append('\n');
+        sb.append(context.getString(R.string.perf_overlay_decoder, decoder)).append('\n');
+        sb.append(context.getString(R.string.perf_overlay_incomingfps, receivedFps)).append('\n');
+        sb.append(context.getString(R.string.perf_overlay_renderingfps, renderedFps)).append('\n');
+        sb.append(context.getString(R.string.perf_overlay_netdrops, lossPercent)).append('\n');
+        sb.append(context.getString(R.string.perf_overlay_netlatency, (int) (rttInfo >> 32), (int) rttInfo)).append('\n');
+        sb.append(context.getString(R.string.perf_overlay_dectime, decodeTimeMs));
+        perfListener.onPerfUpdate(sb.toString());
+
+        perfListener.onPerfStats(new com.limelight.shell.StreamStats(
+                initialWidth, initialHeight, totalFps, receivedFps, renderedFps,
+                "PyroWave", false, decoder, lossPercent,
+                (int) (rttInfo >> 32), (int) rttInfo, decodeTimeMs,
+                hostFrames > 0 ? stats[PyroWaveRenderer.STAT_HOST_LATENCY_MIN] / 10f : -1f,
+                hostFrames > 0 ? stats[PyroWaveRenderer.STAT_HOST_LATENCY_MAX] / 10f : -1f,
+                hostFrames > 0 ? stats[PyroWaveRenderer.STAT_HOST_LATENCY_TOTAL] / 10f / hostFrames : -1f,
+                realtimeNetData));
     }
 
     // All threads that interact with the MediaCodec instance must call this function regularly!
@@ -1312,6 +1400,10 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
 
     @Override
     public void start() {
+        if (pyroWave != null) {
+            startPyroWaveStatsThread();
+            return;
+        }
         startRendererThread();
         startChoreographerThread();
     }
@@ -1324,6 +1416,9 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         // Halt the rendering thread
         if (rendererThread != null) {
             rendererThread.interrupt();
+        }
+        if (pyroWaveStatsThread != null) {
+            pyroWaveStatsThread.interrupt();
         }
 
         // Stop any active codec recovery operations
@@ -1351,6 +1446,17 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     public void stop() {
         // May be called already, but we'll call it now to be safe
         prepareForStop();
+
+        if (pyroWave != null) {
+            if (pyroWaveStatsThread != null) {
+                try {
+                    pyroWaveStatsThread.join();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+            return;
+        }
 
         // Wait for the Choreographer looper to shut down (if we have one)
         if (choreographerHandlerThread != null) {
@@ -1381,11 +1487,19 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
 
     @Override
     public void cleanup() {
+        if (pyroWave != null) {
+            pyroWave.destroy();
+            pyroWave = null;
+            return;
+        }
         videoDecoder.release();
     }
 
     @Override
     public void setHdrMode(boolean enabled, byte[] hdrMetadata) {
+        if (pyroWave != null) {
+            return;
+        }
         // HDR metadata is only supported in Android 7.0 and later, so don't bother
         // restarting the codec on anything earlier than that.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -1529,14 +1643,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                 float decodeTimeMs = (float)lastTwo.decoderTimeMs / lastTwo.totalFramesReceived;
                 long rttInfo = MoonBridge.getEstimatedRttInfo();
                 // Delos: measured once for both overlays, in KB per stats window (about a second); -1 if unknown
-                float realtimeNetData = -1;
-                if(TrafficStatsHelper.getPackageRxBytes(Process.myUid()) != TrafficStats.UNSUPPORTED){
-                    long netData=TrafficStatsHelper.getPackageRxBytes(Process.myUid())+TrafficStatsHelper.getPackageTxBytes(Process.myUid());
-                    if(lastNetDataNum!=0){
-                        realtimeNetData=(netData-lastNetDataNum)/1024f;
-                    }
-                    lastNetDataNum=netData;
-                }
+                float realtimeNetData = measureNetDataKb();
                 StringBuilder sb = new StringBuilder();
                 if(prefs.enablePerfOverlayLite){
                     if(realtimeNetData>=0){

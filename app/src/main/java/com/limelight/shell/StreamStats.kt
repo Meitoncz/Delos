@@ -71,7 +71,10 @@ class StreamStats(
     val hostMs: Float,
     /** Data received and sent in KB per second, -1 when the device does not count it. */
     val bandwidthKb: Float,
-)
+) {
+    /** The delay summed up: network round trip, the PC's processing when it reports it, and decoding. */
+    val totalMs: Float get() = networkMs + maxOf(hostMs, 0f) + decodeMs
+}
 
 /**
  * The statistics panel of streams started from the new UI (the prototype's `.perf`), with everything the
@@ -134,7 +137,7 @@ class StreamStatsPanel private constructor(
             buildAnnotatedString {
                 withStyle(SpanStyle(color = FPS_GREEN, fontWeight = FontWeight.SemiBold)) { append("${s.fps.toInt()} FPS") }
                 if (s.bandwidthKb >= 0f) append("  ·  ${bandwidth(s.bandwidthKb)}")
-                append("  ·  Network ${s.networkMs} ms  ·  Decode ${format(s.decodeMs)} ms  ·  Lost ${format(s.lossPercent)} %")
+                append("  ·  Network ${s.networkMs} ms  ·  Decode ${format(s.decodeMs)} ms  ·  Total ${format(s.totalMs)} ms  ·  Lost ${format(s.lossPercent)} %")
             },
             modifier.padding(horizontal = 24.px, vertical = 8.px),
             style = TextStyle(color = PANEL_TEXT, fontFamily = Figtree, fontSize = 18.tpx, lineHeight = 1.4.em, fontFeatureSettings = "tnum"),
@@ -159,6 +162,7 @@ class StreamStatsPanel private constructor(
                 add("Network" to "${s.networkMs} ms ± ${s.networkVarianceMs} ms")
                 if (s.hostMs >= 0f) add("PC processing" to "${format(s.hostMs)} ms (${format(s.hostMinMs)}–${format(s.hostMaxMs)})")
                 add("Decoding" to "${format(s.decodeMs, 2)} ms")
+                add("Total delay" to "${format(s.totalMs)} ms")
                 if (s.bandwidthKb >= 0f) add("Bandwidth" to bandwidth(s.bandwidthKb))
                 add("Lost frames" to "${format(s.lossPercent, 2)} %")
             }

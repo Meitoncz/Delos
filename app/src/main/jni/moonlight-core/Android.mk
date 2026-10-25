@@ -59,6 +59,18 @@ endif
 LOCAL_LDLIBS := -llog
 
 LOCAL_STATIC_LIBRARIES := libopus libcrypto cpufeatures
+
+# Delos: the PyroWave renderer (Vulkan 1.3, 64-bit ABIs only), fed by callbacks.c; elsewhere a stub that
+# reports PyroWave as unavailable
+ifneq ($(filter arm64-v8a x86_64,$(TARGET_ARCH_ABI)),)
+LOCAL_SRC_FILES += ../pyrowave-renderer/pyrowave_renderer.cpp                    ../pyrowave-renderer/pyrowaveframing.cpp
+LOCAL_CFLAGS += -DDELOS_PYROWAVE
+LOCAL_CPPFLAGS += -std=c++17 -fexceptions -frtti
+LOCAL_STATIC_LIBRARIES += pyrowave
+LOCAL_LDLIBS += -landroid -ldl
+else
+LOCAL_SRC_FILES += ../pyrowave-renderer/pyrowave_stub.c
+endif
 LOCAL_LDFLAGS += -Wl,--exclude-libs,ALL
 
 LOCAL_BRANCH_PROTECTION := standard

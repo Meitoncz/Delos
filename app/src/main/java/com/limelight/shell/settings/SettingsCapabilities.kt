@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.Vibrator
 import android.view.Display
 import com.limelight.binding.video.MediaCodecHelper
+import com.limelight.binding.video.PyroWaveRenderer
 import com.limelight.preferences.GlPreferences
 import com.limelight.preferences.PreferenceConfiguration
 import kotlin.math.max
@@ -24,6 +25,8 @@ data class SettingsCapabilities(
     val hevc: Boolean,
     val av1: Boolean,
     val hidden: Set<String>,
+    // Delos: whether this device can decode PyroWave (PyroWaveRenderer)
+    val pyroWave: Boolean = false,
 ) {
     fun choices(spec: SettingSpec, values: Map<String, *>): List<SettingChoice> = when (spec.key) {
         "list_resolution" -> {
@@ -37,7 +40,9 @@ data class SettingsCapabilities(
             val custom = (values["custom_refresh_rate"] as? String)?.takeIf { it.toFloatOrNull()?.let { f -> f.isFinite() && f > 0 } == true }
             (base + native + listOfNotNull(custom?.let { SettingChoice("Custom ($it FPS)", it) })).distinctBy { it.value }
         }
-        "video_format" -> spec.choices.filter { (it.value != "forceh265" || hevc) && (it.value != "forceav1" || av1) }
+        "video_format" -> spec.choices.filter {
+            (it.value != "forceh265" || hevc) && (it.value != "forceav1" || av1) && (it.value != "pyrowave" || pyroWave)
+        }
         // The classic array repeats a formatted label; make the five stored layouts distinguishable.
         "keyboard_axi_list" -> spec.choices.mapIndexed { i, choice -> choice.copy(label = "Layout ${i + 1}") }
         else -> spec.choices
@@ -91,7 +96,8 @@ data class SettingsCapabilities(
             if (!hdr10 || !main10) hidden += "checkbox_enable_hdr"
             return SettingsCapabilities(native.distinctBy { it.value }, maxWidth,
                 modes.maxOfOrNull { it.refreshRate } ?: display.refreshRate,
-                hdr10 && main10, PreferenceConfiguration.isShieldAtvFirmwareWithBrokenHdr(), hevc != null, av1 != null, hidden)
+                hdr10 && main10, PreferenceConfiguration.isShieldAtvFirmwareWithBrokenHdr(), hevc != null, av1 != null, hidden,
+                PyroWaveRenderer.isAvailable())
         }
 
         private fun addResolution(into: MutableList<SettingChoice>, width: Int, height: Int, prefix: String) {
