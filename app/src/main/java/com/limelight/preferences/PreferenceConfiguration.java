@@ -199,6 +199,7 @@ public class PreferenceConfiguration {
     public static final int FRAME_PACING_BALANCED = 1;
     public static final int FRAME_PACING_CAP_FPS = 2;
     public static final int FRAME_PACING_MAX_SMOOTHNESS = 3;
+    public static final int FRAME_PACING_FAST_VSYNC = 4;
 
     public static final String RES_360P = "640x360";
     public static final String RES_480P = "854x480";
@@ -330,6 +331,13 @@ public class PreferenceConfiguration {
     public boolean touchscreenTrackpad;
     public MoonBridge.AudioConfiguration audioConfiguration;
     public int framePacing;
+    // Delos: opt-in stream-quality controls, stored in the regular profile overlay.
+    public boolean asyncDecode;
+    public boolean sgsrEnabled;
+    public boolean sgsrHighQuality;
+    public boolean sgsrTemporal;
+    public boolean sgsrTemporalQuality;
+    public int sgsrSharpness;
     public boolean absoluteMouseMode;
     public boolean enableAudioFx;
     public boolean reduceRefreshRate;
@@ -587,8 +595,7 @@ public class PreferenceConfiguration {
         // default true: favor lower delay unless user opts out
         return prefs.getBoolean(LOW_LATENCY_FRAME_BALANCE_PREF_STRING, false);
     }
-private static int getFramePacingValue(Context context) {
-        SharedPreferences prefs = ProfilesManager.getInstance().getOverlayingSharedPreferences(context);
+private static int getFramePacingValue(SharedPreferences prefs) {
 
         // Migrate legacy never drop frames option to the new location
         if (prefs.contains(LEGACY_DISABLE_FRAME_DROP_PREF_STRING)) {
@@ -608,6 +615,9 @@ private static int getFramePacingValue(Context context) {
         }
         else if (str.equals("cap-fps")) {
             return FRAME_PACING_CAP_FPS;
+        }
+        else if (str.equals("fast-vsync")) {
+            return FRAME_PACING_FAST_VSYNC;
         }
         else if (str.equals("smoothness")) {
             return FRAME_PACING_MAX_SMOOTHNESS;
@@ -803,7 +813,14 @@ private static int getFramePacingValue(Context context) {
         config.videoScaleMode = getVideoScaleMode(context);
 
         config.videoFormat = getVideoFormatValue(context);
-        config.framePacing = getFramePacingValue(context);
+        config.framePacing = getFramePacingValue(prefs);
+        config.asyncDecode = prefs.getBoolean("checkbox_async_decode", false);
+        config.sgsrEnabled = prefs.getBoolean("checkbox_sgsr", false);
+        config.sgsrHighQuality = "high".equals(prefs.getString("list_sgsr_quality", "standard"));
+        String sgsrMode = prefs.getString("list_sgsr_quality", "standard");
+        config.sgsrTemporal = "temporal".equals(sgsrMode) || "temporal-quality".equals(sgsrMode);
+        config.sgsrTemporalQuality = "temporal-quality".equals(sgsrMode);
+        config.sgsrSharpness = Math.max(0, Math.min(100, prefs.getInt("seekbar_sgsr_sharpness", 50)));
         config.preferLowerDelays = getPreferLowerDelays(context);
 
 

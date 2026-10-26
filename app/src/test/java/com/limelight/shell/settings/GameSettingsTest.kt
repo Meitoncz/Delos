@@ -126,8 +126,58 @@ class GameSettingsTest {
         assertEquals(1280, PreferenceConfiguration.readPreferences(Robolectric.buildActivity(Game::class.java, stream).get()).width)
     }
 
+    @Test fun hdrUpscalerQualityUsesGameSnapshotAndSessionChangesLeaveDefaultsIntact() {
+        val a = game()
+        val store = StreamSettingsStore(profiles.catalog) { a.preferences }
+        store.write(spec("checkbox_enable_hdr"), true)
+        store.write(spec("checkbox_sgsr"), true)
+        store.write(spec("list_sgsr_quality"), "high")
+        store.write(spec("seekbar_sgsr_sharpness"), 75)
+        val intent = Intent(context, Game::class.java)
+        GameSettingsStore.attach(intent, a.snapshot())
+        val activity = Robolectric.buildActivity(Game::class.java, intent).get()
+        val config = PreferenceConfiguration.readPreferences(activity)
+        assertTrue(config.enableHdr)
+        assertTrue(config.sgsrEnabled)
+        assertTrue(config.sgsrHighQuality)
+        assertEquals(75, config.sgsrSharpness)
+        assertEquals(SettingsTab.DISPLAY, spec("list_sgsr_quality").tab)
+        assertEquals(listOf("standard", "high", "temporal", "temporal-quality"), spec("list_sgsr_quality").choices.map { it.value })
+        // Live menu changes only the current decoder's configuration, never stored defaults.
+        config.sgsrHighQuality = false
+        assertTrue(PreferenceConfiguration.readPreferences(activity).sgsrHighQuality)
+        assertFalse(PreferenceConfiguration.readPreferences(context).sgsrHighQuality)
+        assertEquals("standard", game(id = 2).preferences.getString("list_sgsr_quality", "standard"))
+        store.close()
+    }
+
     @Test fun curatedKeysAreRealEditableSettingsAndCannotWriteUnrelatedPreferences() {
         GameSettingsStore.KEYS.forEach { key -> assertTrue(spec(key).kind in setOf(SettingKind.TOGGLE, SettingKind.CHOICE, SettingKind.SLIDER)) }
         assertThrows(IllegalArgumentException::class.java) { game().preferences.edit().putString("ui_profile", "other") }
+    }
+
+    @Test fun temporalVideoModeIsScopedToTheGameAndUnknownModesFallBackToStandard() {
+        game().preferences.edit().putBoolean("checkbox_sgsr",true)
+            .putBoolean("checkbox_enable_hdr",true).putString("list_sgsr_quality","temporal").commit()
+        val intent=Intent(context,Game::class.java)
+        GameSettingsStore.attach(intent,game().snapshot())
+        val config=PreferenceConfiguration.readPreferences(Robolectric.buildActivity(Game::class.java,intent).get())
+        assertTrue(config.sgsrEnabled)
+        assertTrue(config.enableHdr)
+        assertTrue(config.sgsrTemporal)
+        assertFalse(config.sgsrHighQuality)
+        assertFalse(PreferenceConfiguration.readPreferences(context).sgsrTemporal)
+        profiles.settings().edit().putString("list_sgsr_quality","unknown-future-mode").commit()
+        val fallback=PreferenceConfiguration.readPreferences(context)
+        assertFalse(fallback.sgsrTemporal)
+        assertFalse(fallback.sgsrHighQuality)
+    }
+
+    @Test fun temporalQualityModeEnablesTemporalQualityWithoutSpatialHighQuality() {
+        profiles.settings().edit().putString("list_sgsr_quality","temporal-quality").commit()
+        val config=PreferenceConfiguration.readPreferences(context)
+        assertTrue(config.sgsrTemporal)
+        assertTrue(config.sgsrTemporalQuality)
+        assertFalse(config.sgsrHighQuality)
     }
 }

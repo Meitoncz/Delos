@@ -1,0 +1,19 @@
+#version 310 es
+// Copyright (c) 2026 Delos contributors. GPL-3.0-or-later.
+// Conservative whole-frame cut detection. False positives merely reset temporal history.
+precision highp float;
+layout(local_size_x=8,local_size_y=8) in;
+layout(rgba16f,binding=0) writeonly uniform highp image2D result;
+uniform highp sampler2D currentLuma;
+uniform highp sampler2D previousLuma;
+shared float differences[64];
+void main() {
+    uint index=gl_LocalInvocationIndex;
+    vec2 uv=(vec2(gl_LocalInvocationID.xy)+0.5)/8.0;
+    differences[index]=abs(textureLod(currentLuma,uv,3.0).r-textureLod(previousLuma,uv,3.0).r);
+    barrier();
+    if(index==0u) {
+        float sum=0.0;for(int i=0;i<64;i++) sum+=differences[i];
+        imageStore(result,ivec2(0),vec4(sum/64.0>0.12?1.0:0.0,0,0,1));
+    }
+}

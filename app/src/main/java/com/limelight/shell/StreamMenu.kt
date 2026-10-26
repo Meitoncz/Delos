@@ -35,7 +35,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.produceState
+import kotlinx.coroutines.delay
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.FileNotFoundException
+import com.limelight.nvstream.http.HostHttpResponseException
+import com.limelight.shell.ui.PillButton
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -193,7 +202,9 @@ class StreamMenu(private val game: Game) {
         dialog?.dismiss()
     }
 
-    private enum class Page { MAIN, MORE, KEYS, COMMANDS, BRIGHTNESS }
+    private enum class Page { MAIN, MORE, KEYS, COMMANDS, BRIGHTNESS, BITRATE, UPSCALER }
+    private var bitrateBusy by mutableStateOf(false)
+    private var bitrateMessage by mutableStateOf<String?>(null)
 
     // Delos: the stream's brightness in percent for this stream, -1 = the system's (from Moonlight X's
     // brightness slider)
@@ -250,6 +261,9 @@ class StreamMenu(private val game: Game) {
             changes++
         }
         val prefs = game.prefConfig
+        val upscalerStatus by produceState(game.upscalingStatus) {
+            while (true) { value = game.upscalingStatus; delay(250) }
+        }
         @Suppress("UNUSED_EXPRESSION") changes // subscribes to it
         val classic = game.gameMenuCallbacks as? GameMenu
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
@@ -268,6 +282,8 @@ class StreamMenu(private val game: Game) {
                     Page.KEYS -> "Send keys"
                     Page.COMMANDS -> "Server commands"
                     Page.BRIGHTNESS -> "Brightness"
+                    Page.BITRATE -> "Stream bitrate"
+                    Page.UPSCALER -> "Snapdragon Game Super Resolution"
                 }
                 BasicText(heading, style = TextStyle(color = Color.White, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 30.tpx, textAlign = TextAlign.Center))
                 key(page) {
@@ -281,6 +297,8 @@ class StreamMenu(private val game: Game) {
                                 toggle { game.toggleHUD() }
                             }
                             MenuCircle(Symbols.BRIGHTNESS_MEDIUM, "Brightness", state = "${brightnessPercent()} %") { page = Page.BRIGHTNESS }
+                            MenuCircle(Symbols.NETWORK_CHECK, "Bitrate") { page = Page.BITRATE }
+                            MenuCircle(Symbols.ASPECT_RATIO, "Upscaler", on = game.isUpscalingRequested, state = upscalerStatus) { page = Page.UPSCALER }
                             MenuCircle(Symbols.MORE_HORIZ, "More") { page = Page.MORE }
                             MenuCircle(Symbols.LOGOUT, "Disconnect") { close { leave(quit = false) } }
                             MenuCircle(Symbols.POWER_SETTINGS_NEW, "Quit game") { close { leave(quit = true) } }
@@ -313,6 +331,63 @@ class StreamMenu(private val game: Game) {
                                 Modifier.focusRequester(first),
                                 description = "For this stream; the system brightness comes back afterwards.",
                             )
+                        }
+                        Page.BITRATE -> {
+                            var requested by remember { mutableIntStateOf(prefs.bitrate.coerceIn(1000, 1000000)) }
+                            Column(Modifier.width(1000.px), horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(22.px)) {
+                                SettingRow(Symbols.NETWORK_CHECK, "Bitrate",
+                                    RowValue.Slider(requested, 1000, 1000000, 1000, " Mbps", 1000) { requested = it },
+                                    Modifier.focusRequester(first), enabled = !bitrateBusy,
+                                    description = "For this stream only. Apply sends the change without reconnecting.")
+                                PillButton(if (bitrateBusy) "Applying…" else "Apply", Symbols.CHECK, {
+                                    if (!bitrateBusy && game.connected) {
+                                        bitrateBusy = true
+                                        bitrateMessage = null
+                                        game.lifecycleScope.launch {
+                                            try {
+                                                val applied = withContext(Dispatchers.IO) { game.conn.setRuntimeBitrate(requested) }
+                                                if (game.connected && !game.isFinishing) {
+                                                    val limited = applied < requested
+                                                    prefs.bitrate = applied
+                                                    requested = applied
+                                                    bitrateMessage = "Host accepted ${applied / 1000} Mbps" +
+                                                        if (limited) " (limited by the host)" else ""
+                                                }
+                                            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+                                            catch (e: Exception) {
+                                                bitrateMessage = when (e) {
+                                                    is FileNotFoundException -> "The host does not support live bitrate changes, or the stream has ended."
+                                                    is HostHttpResponseException -> if (e.errorCode == 403) "The host did not allow this change." else "The host could not apply the change: ${e.message}"
+                                                    else -> "The bitrate was not confirmed. Check the connection and try again."
+                                                }
+                                            } finally { bitrateBusy = false }
+                                        }
+                                    }
+                                })
+                                BasicText(bitrateMessage ?: "Vibepollo is required. The host may limit the requested bitrate.",
+                                    style = TextStyle(color = Color.White.copy(alpha = .8f), fontFamily = Figtree,
+                                        fontSize = 22.tpx, textAlign = TextAlign.Center))
+                            }
+                        }
+                        Page.UPSCALER -> Column(Modifier.width(1100.px), horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(22.px)) {
+                            val available = !upscalerStatus.startsWith("Unavailable for") && com.limelight.binding.video.SgsrRenderer.isSupported(game)
+                            SettingRow(Symbols.ASPECT_RATIO, "Upscaling", RowValue.Toggle(game.isUpscalingRequested) {
+                                game.setUpscalingEnabled(it)
+                                changes++
+                            }, Modifier.focusRequester(first), enabled = available && upscalerStatus !in listOf("Starting", "Stopping"),
+                                description = "$upscalerStatus · Changes apply to this stream without reconnecting.")
+                            val upscalerMode = if (prefs.sgsrTemporalQuality) 3 else if (prefs.sgsrTemporal) 2 else if (prefs.sgsrHighQuality) 1 else 0
+                            SettingRow(Symbols.TUNE, "Mode", RowValue.Choice(listOf("SGSR 1 Standard", "SGSR 1 High Quality", "SGSR 2 Video", "SGSR 2 Video Quality")[upscalerMode], { direction ->
+                                game.setUpscalingMode((upscalerMode + direction + 4) % 4)
+                                changes++
+                            }), enabled = available,
+                                description = "SGSR 2 Video Quality adds reactive masking and improved color-history clipping. HDR is supported. Changes apply immediately.")
+                            SettingRow(Symbols.TUNE, "Sharpness", RowValue.Slider(prefs.sgsrSharpness, 0, 100, 5, " %") {
+                                game.setUpscalingSharpness(it)
+                                changes++
+                            }, enabled = available, description = "Separate final sharpening after upscaling. 0% disables it and does not change reconstruction quality.")
                         }
                         Page.KEYS -> PillGrid(classic?.specialKeyOptions().orEmpty().map { it.label }, first) { i ->
                             val option = classic?.specialKeyOptions()?.getOrNull(i)

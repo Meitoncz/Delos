@@ -141,7 +141,7 @@ class SettingsCatalog(context: Context) {
             key == "checkbox_host_audio" || category == "category_audio_settings" -> SettingsTab.AUDIO
             key == "checkbox_enable_hdr" || key == "checkbox_use_virtual_display" -> SettingsTab.DISPLAY
             category == "category_video_settings" -> if (key in setOf(
-                    "checkbox_auto_orientation", "checkbox_auto_invert_video_resolution", "checkbox_enable_view_top_center",
+                    "checkbox_sgsr", "list_sgsr_quality", "seekbar_sgsr_sharpness", "checkbox_auto_orientation", "checkbox_auto_invert_video_resolution", "checkbox_enable_view_top_center",
                     "seekbar_resolution_scale_factor", "list_video_scale_mode", "checkbox_enforce_display_mode", "checkbox_enable_fullexdisplay",
                 )) SettingsTab.DISPLAY else SettingsTab.STREAM
             category == "category_advanced_settings" -> if (key in setOf("checkbox_full_range", "checkbox_reduce_refresh_rate")) SettingsTab.DISPLAY else SettingsTab.STREAM

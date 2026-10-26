@@ -1,0 +1,5 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Headless real-device GPU checks. Never packaged in release builds. -->
+    <instrumentation android:name="com.limelight.binding.video.SgsrGpuInstrumentation"
+        android:targetPackage="${applicationId}" android:label="Delos SGSR GPU checks" />
+</manifest>

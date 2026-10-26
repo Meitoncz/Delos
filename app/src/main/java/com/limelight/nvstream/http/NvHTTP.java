@@ -903,6 +903,28 @@ public class NvHTTP {
         }
     }
     
+    /** Delos: Vibepollo's paired HTTPS command changes only this client's active stream. */
+    public int setRuntimeBitrate(int bitrateKbps) throws IOException, XmlPullParserException {
+        if (bitrateKbps < 1000 || bitrateKbps > 1000000) {
+            throw new IllegalArgumentException("Bitrate must be between 1 and 1000 Mbps");
+        }
+        String response = openHttpConnectionToString(httpClientShortConnectTimeout, getHttpsUrl(true),
+                "bitrate", "bitrate=" + bitrateKbps);
+        return parseRuntimeBitrate(response);
+    }
+
+    static int parseRuntimeBitrate(String response) throws IOException, XmlPullParserException {
+        // getXmlString verifies the host's XML status, including errors returned with HTTP 200.
+        String value = getXmlString(response, "bitrate", true);
+        try {
+            int applied = Integer.parseInt(value);
+            if (applied < 1000 || applied > 1000000) throw new NumberFormatException();
+            return applied;
+        } catch (NumberFormatException e) {
+            throw new IOException("The host did not confirm a valid bitrate", e);
+        }
+    }
+
     public boolean quitApp() throws IOException, XmlPullParserException {
         String xmlStr = openHttpConnectionToString(httpClientLongConnectNoReadTimeout, getHttpsUrl(true), "cancel");
         if (getXmlString(xmlStr, "cancel", true).equals("0")) {

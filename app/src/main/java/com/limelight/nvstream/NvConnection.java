@@ -481,6 +481,13 @@ public class NvConnection {
         }).start();
     }
 
+    /** Delos: no control-stream extension is needed for Vibepollo's authenticated bitrate endpoint. */
+    public int setRuntimeBitrate(int bitrateKbps) throws IOException, XmlPullParserException {
+        NvHTTP http = new NvHTTP(context.serverAddress, context.httpsPort, uniqueId,
+                context.serverCert, cryptoProvider);
+        return http.setRuntimeBitrate(bitrateKbps);
+    }
+
     public void sendExecServerCmd(final int cmdId) {
         if (!isMonkey) {
             MoonBridge.sendExecServerCmd(cmdId);

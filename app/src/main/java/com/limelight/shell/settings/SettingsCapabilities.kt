@@ -43,6 +43,7 @@ data class SettingsCapabilities(
         "video_format" -> spec.choices.filter {
             (it.value != "forceh265" || hevc) && (it.value != "forceav1" || av1) && (it.value != "pyrowave" || pyroWave)
         }
+        "frame_pacing" -> if (values["video_format"] == "pyrowave") spec.choices.filter { it.value != "fast-vsync" } else spec.choices
         // The classic array repeats a formatted label; make the five stored layouts distinguishable.
         "keyboard_axi_list" -> spec.choices.mapIndexed { i, choice -> choice.copy(label = "Layout ${i + 1}") }
         else -> spec.choices
@@ -81,6 +82,9 @@ data class SettingsCapabilities(
                 }
             }
             val hidden = mutableSetOf<String>()
+            if (!com.limelight.binding.video.SgsrRenderer.isSupported(activity)) {
+                hidden += setOf("checkbox_sgsr", "list_sgsr_quality", "seekbar_sgsr_sharpness")
+            }
             if (pm.hasSystemFeature("com.nvidia.feature.shield")) hidden += "checkbox_absolute_mouse_mode"
             if (Build.VERSION.SDK_INT < 31) hidden += "checkbox_gamepad_motion_sensors"
             if (!pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_ACCELEROMETER) && !pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_GYROSCOPE)) {

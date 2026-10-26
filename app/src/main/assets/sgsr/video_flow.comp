@@ -1,0 +1,56 @@
+#version 310 es
+// Copyright (c) 2026 Delos contributors. GPL-3.0-or-later.
+// Pyramidal Lucas-Kanade backward flow on an 8-pixel grid. Direction: current -> previous.
+// Original implementation for decoded video; no engine data or future frames required.
+precision highp float;
+precision highp int;
+layout(local_size_x=8,local_size_y=8) in;
+layout(rgba16f,binding=0) writeonly uniform highp image2D flowOutput;
+uniform highp sampler2D currentLuma;
+uniform highp sampler2D previousLuma;
+uniform highp sampler2D coarseFlow;
+uniform int level;
+uniform int coarsest;
+uniform ivec2 levelSize;
+float previous(vec2 position) {
+    return textureLod(previousLuma,(position+0.5)/vec2(levelSize),float(level)).r;
+}
+void main() {
+    ivec2 cell=ivec2(gl_GlobalInvocationID.xy);
+    if(any(greaterThanEqual(cell,imageSize(flowOutput)))) return;
+    ivec2 center=min(cell*8+ivec2(4),levelSize-1);
+    vec2 motion=vec2(0.0);
+    if(coarsest==0) {
+        // Grid centers are at 4,12,..., rather than at uniformly stretched image boundaries.
+        vec2 parentPixel=(vec2(center)+0.5)*0.5-0.5;
+        vec2 gridUv=(parentPixel/8.0)/vec2(textureSize(coarseFlow,0));
+        motion=textureLod(coarseFlow,gridUv,0.0).xy*2.0;
+    }
+    float residual=0.0,quality=0.0;
+    for(int iteration=0;iteration<6;iteration++) {
+        vec3 matrix=vec3(0.0);
+        vec2 rhs=vec2(0.0);
+        residual=0.0;
+        for(int y=-3;y<=3;y+=2) for(int x=-3;x<=3;x+=2) {
+            ivec2 p=clamp(center+ivec2(x,y),ivec2(0),levelSize-1);
+            vec2 q=vec2(p)+motion;
+            float value=previous(q);
+            vec2 gradient=0.5*vec2(previous(q+vec2(1,0))-previous(q-vec2(1,0)),
+                                   previous(q+vec2(0,1))-previous(q-vec2(0,1)));
+            float difference=texelFetch(currentLuma,p,level).r-value;
+            matrix+=vec3(gradient.x*gradient.x,gradient.x*gradient.y,gradient.y*gradient.y);
+            rhs+=gradient*difference;
+            residual+=abs(difference);
+        }
+        float determinant=matrix.x*matrix.z-matrix.y*matrix.y;
+        quality=determinant/max((matrix.x+matrix.z)*(matrix.x+matrix.z),1e-10);
+        if(determinant<1e-8) break;
+        vec2 delta=vec2(matrix.z*rhs.x-matrix.y*rhs.y,matrix.x*rhs.y-matrix.y*rhs.x)/determinant;
+        motion+=delta/max(1.0,length(delta)/2.0);
+        if(dot(delta,delta)<0.0001) break;
+    }
+    residual/=16.0;
+    vec2 position=vec2(center)+motion;
+    float valid=all(greaterThanEqual(position,vec2(0)))&&all(lessThan(position,vec2(levelSize)))?1.0:0.0;
+    imageStore(flowOutput,cell,vec4(motion,residual,valid*smoothstep(0.001,0.025,quality)*exp(-32.0*residual)));
+}

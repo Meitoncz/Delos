@@ -54,9 +54,9 @@ class GameSettingsStore(private val base: SharedPreferences, pc: String, appId: 
     }
 
     companion object {
-        val STREAM_KEYS = listOf("list_resolution", "list_fps", "seekbar_bitrate_kbps", "video_format", "frame_pacing")
+        val STREAM_KEYS = listOf("list_resolution", "list_fps", "seekbar_bitrate_kbps", "video_format", "frame_pacing", "checkbox_async_decode")
         val DISPLAY_KEYS = listOf("checkbox_enable_hdr", "checkbox_full_range", "list_video_scale_mode",
-            "seekbar_resolution_scale_factor", "checkbox_use_virtual_display", "checkbox_enforce_display_mode")
+            "seekbar_resolution_scale_factor", "checkbox_use_virtual_display", "checkbox_enforce_display_mode", "checkbox_sgsr", "list_sgsr_quality", "seekbar_sgsr_sharpness")
         val KEYS = (STREAM_KEYS + DISPLAY_KEYS).toSet()
         private const val EXTRA = "com.limelight.shell.GAME_SETTINGS"
 

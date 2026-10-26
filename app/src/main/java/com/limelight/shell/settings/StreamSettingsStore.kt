@@ -28,6 +28,10 @@ class StreamSettingsStore(val catalog: SettingsCatalog, private val settings: ()
 
     fun enabled(spec: SettingSpec, caps: SettingsCapabilities?): Boolean {
         if (spec.key == "checkbox_enable_hdr" && caps?.brokenHdr == true) return false
+        if (spec.key in setOf("checkbox_sgsr", "list_sgsr_quality", "seekbar_sgsr_sharpness") &&
+            state.value["video_format"] == "pyrowave") return false
+        if (spec.key == "checkbox_async_decode" && state.value["video_format"] == "pyrowave") return false
+        if (spec.key == "pref_low_latency_frame_balance" && state.value["frame_pacing"] == "fast-vsync") return false
         fun dependencyEnabled(key: String?, seen: Set<String>): Boolean {
             if (key == null) return true
             if (key in seen) return false

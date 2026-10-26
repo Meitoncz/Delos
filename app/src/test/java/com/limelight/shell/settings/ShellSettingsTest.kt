@@ -46,7 +46,7 @@ class ShellSettingsTest {
         // and the post-stream latency message; in the settings audit full screen, game optimization, the
         // overlay zoom button and the two update links; in the switch-over (6.9) the classic UI's resume
         // dialog, icon size and overlay position; the classic on-screen controls skin (Delos draws its own)
-        assertEquals(101, keys.size)
+        assertEquals(105, keys.size)
         assertEquals(keys, catalog.all.map { it.key }.toSet())
         assertEquals(keys.size, catalog.all.size)
         assertTrue(catalog.all.all { it.label.isNotBlank() && it.section.isNotBlank() })

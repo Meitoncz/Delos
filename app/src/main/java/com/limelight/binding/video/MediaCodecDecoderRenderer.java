@@ -78,18 +78,20 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
 
     // Update stats using real decode time: enqueue->dequeue, instead of uptime - PTS
     private void updateDecodeLatencyStats(long presentationTimeUs) {
-        int idx = enqueueNsByPtsUs.indexOfKey(presentationTimeUs);
-        if (idx >= 0) {
-            long enqNs = enqueueNsByPtsUs.valueAt(idx);
-            // Also forget older entries: those frames were dropped and will never be presented
-            for (int i = idx; i >= 0; i--) {
-                enqueueNsByPtsUs.removeAt(i);
-            }
-            long decMs = (System.nanoTime() - enqNs) / 1_000_000L;
-            if (decMs >= 0 && decMs < 1000) {
-                activeWindowVideoStats.decoderTimeMs += decMs;
-                if (!USE_FRAME_RENDER_TIME) {
-                    activeWindowVideoStats.totalTimeMs += decMs;
+        synchronized (enqueueNsByPtsUs) {
+            int idx = enqueueNsByPtsUs.indexOfKey(presentationTimeUs);
+            if (idx >= 0) {
+                long enqNs = enqueueNsByPtsUs.valueAt(idx);
+                // Also forget older entries: those frames were dropped and will never be presented
+                for (int i = idx; i >= 0; i--) {
+                    enqueueNsByPtsUs.removeAt(i);
+                }
+                long decMs = (System.nanoTime() - enqNs) / 1_000_000L;
+                if (decMs >= 0 && decMs < 1000) {
+                    activeWindowVideoStats.decoderTimeMs += decMs;
+                    if (!USE_FRAME_RENDER_TIME) {
+                        activeWindowVideoStats.totalTimeMs += decMs;
+                    }
                 }
             }
         }
@@ -118,6 +120,36 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     private Activity activity;
     private MediaCodec videoDecoder;
     private Thread rendererThread;
+    // Delos: the callback adapter is adapted from Starwire/Artemide (GPL-3.0).
+    private final AsyncCodecAdapter asyncCodec = new AsyncCodecAdapter();
+    private boolean useAsyncCodec;
+    private volatile CodecException pendingAsyncError;
+    private final AsyncCodecAdapter.OutputRelease asyncRelease = (codec, index) -> codec.releaseOutputBuffer(index, false);
+    private final AsyncCodecAdapter.Callbacks asyncCallbacks = new AsyncCodecAdapter.Callbacks() {
+        @Override public void onOutputFormatChanged(MediaCodec codec, MediaFormat format) { outputFormat = format; }
+        @Override public void onCodecError(MediaCodec codec, CodecException error) { pendingAsyncError = error; }
+    };
+    private int dequeueInput(int timeoutUs) {
+        return useAsyncCodec ? asyncCodec.dequeueInputIndex(timeoutUs) : videoDecoder.dequeueInputBuffer(timeoutUs);
+    }
+    private int dequeueOutput(BufferInfo info, int timeoutUs) {
+        CodecException error = pendingAsyncError;
+        if (error != null) { pendingAsyncError = null; throw error; }
+        return useAsyncCodec ? asyncCodec.dequeueOutputIndex(videoDecoder, info, timeoutUs, asyncRelease)
+                : videoDecoder.dequeueOutputBuffer(info, timeoutUs);
+    }
+    private void detachAsyncCodec() {
+        if (useAsyncCodec) asyncCodec.detach(videoDecoder, asyncRelease);
+        pendingAsyncError = null;
+    }
+    private final NanoPacer nanoPacer = new NanoPacer();
+    private final NanoPacer.LatestOutput nanoLatest = new NanoPacer.LatestOutput();
+    private final NanoPacer.OutputCallbacks nanoCallbacks = new NanoPacer.OutputCallbacks() {
+        @Override public int nextOutputIndex(BufferInfo info, int timeoutUs) { return dequeueOutput(info, timeoutUs); }
+        @Override public void releaseOutputBuffer(int index, boolean render) { videoDecoder.releaseOutputBuffer(index, render); }
+        @Override public void onDequeued(long ptsUs, long dequeueNs) { }
+    };
+
     private boolean needsSpsBitstreamFixup, isExynos4;
     private boolean adaptivePlayback, directSubmit, fusedIdrFrame;
     private boolean constrainedHighProfile;
@@ -128,6 +160,10 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     private boolean invertResolution;
     private int videoFormat;
     private Surface renderTarget;
+    private volatile SgsrRenderer sgsr;
+    private volatile boolean sgsrFailed;
+    private volatile boolean sgsrRequested;
+    private volatile boolean sgsrHdrActive;
     // Delos: the Vulkan renderer of a PyroWave stream; MediaCodec stays unused while it exists
     private PyroWaveRenderer pyroWave;
     private Thread pyroWaveStatsThread;
@@ -350,6 +386,8 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         this.context = activity;
         this.activity = activity;
         this.prefs = prefs;
+        sgsrRequested = prefs.sgsrEnabled;
+        sgsrHdrActive = prefs.enableHdr;
         this.crashListener = crashListener;
         this.consecutiveCrashCount = consecutiveCrashCount;
         this.glRenderer = glRenderer;
@@ -585,7 +623,29 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
 
         LimeLog.info("Configuring with format: "+format);
 
-        videoDecoder.configure(format, renderTarget, null, 0);
+        useAsyncCodec = prefs.asyncDecode;
+        if (useAsyncCodec) {
+            asyncCodec.setPreferLowerDelays(preferLowerDelays);
+            asyncCodec.attachIfNeeded(videoDecoder, Process.THREAD_PRIORITY_DISPLAY, asyncCallbacks, asyncRelease);
+            useAsyncCodec = asyncCodec.isActive();
+            LimeLog.info("Delos async decode: " + useAsyncCodec);
+        }
+        // Delos: an explicit codec reset changes output locally; the network session stays connected.
+        if ((!sgsrRequested || sgsrFailed) && sgsr != null) { sgsr.close(); sgsr = null; }
+        if (sgsr == null && !sgsrFailed && sgsrRequested) {
+            sgsr = SgsrRenderer.create(context, renderTarget, initialWidth, initialHeight, prefs.sgsrSharpness,
+                    prefs.sgsrTemporalQuality ? 3 : prefs.sgsrTemporal ? 2 : prefs.sgsrHighQuality ? 1 : 0,
+                    (videoFormat & MoonBridge.VIDEO_FORMAT_MASK_10BIT) != 0, sgsrHdrActive, currentHdrMetadata, () -> {
+                sgsrFailed = true;
+                sgsrRequested = false;
+                codecRecoveryType.compareAndSet(CR_RECOVERY_TYPE_NONE, CR_RECOVERY_TYPE_RESET);
+            });
+            if (sgsr == null) { sgsrFailed = true; sgsrRequested = false; }
+        }
+        if (sgsrFailed && sgsr != null) { sgsr.close(); sgsr = null; }
+        videoDecoder.configure(format, sgsr != null ? sgsr.getDecoderSurface() : renderTarget, null, 0);
+        LimeLog.info(sgsr != null ? "Delos video output: SGSR surface" :
+                "Delos video output: direct MediaCodec surface; no Delos sharpening shader");
 
         try { applySurfaceFrameRate(renderTarget, targetFps); } catch (Throwable t) { LimeLog.warning("applySurfaceFrameRate failed: " + t); }
 
@@ -650,6 +710,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
             }
         } finally {
             if (!configured && videoDecoder != null) {
+                detachAsyncCodec();
                 videoDecoder.release();
                 videoDecoder = null;
             }
@@ -794,6 +855,38 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         return pyroWave != null;
     }
 
+    /** Delos: live post-processing controls; a decoder reset requests an IDR, not a reconnect. */
+    public void setUpscalingEnabled(boolean enabled) {
+        if (pyroWave != null || stopping) return;
+        if (enabled == sgsrRequested && !sgsrFailed) return;
+        sgsrRequested = enabled;
+        sgsrFailed = false;
+        prefs.sgsrEnabled = enabled;
+        codecRecoveryAttempts = 0;
+        codecRecoveryType.set(CR_RECOVERY_TYPE_RESET);
+    }
+    public boolean isUpscalingRequested() { return sgsrRequested; }
+    public String getUpscalingStatus() {
+        if (pyroWave != null) return "Unavailable for PyroWave";
+        if (sgsrFailed) return "Unavailable; direct rendering is active";
+        if (sgsrRequested && sgsr == null) return "Starting";
+        if (!sgsrRequested && sgsr != null) return "Stopping";
+        return sgsr != null ? "On" : "Off";
+    }
+    public void setUpscalingSharpness(int value) {
+        prefs.sgsrSharpness = Math.max(0, Math.min(100, value));
+        SgsrRenderer current = sgsr;
+        if (current != null) current.setSharpness(prefs.sgsrSharpness);
+    }
+
+    public void setUpscalingMode(int mode) {
+        prefs.sgsrHighQuality = mode == 1;
+        prefs.sgsrTemporal = mode >= 2;
+        prefs.sgsrTemporalQuality = mode == 3;
+        SgsrRenderer current = sgsr;
+        if (current != null) current.setMode(mode);
+    }
+
     // Delos: data received and sent since the last call in KB, -1 when unknown or on the first call
     private float measureNetDataKb() {
         float realtimeNetData = -1;
@@ -884,6 +977,8 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
 
             // This is the final thread to quiesce, so let's perform the codec recovery now.
             if (codecRecoveryThreadQuiescedFlags == CR_FLAG_ALL) {
+                nanoPacer.reset();
+                if (useAsyncCodec) asyncCodec.quiesceAndRelease(videoDecoder, asyncRelease);
                 // Input and output buffers are invalidated by stop() and reset().
                 nextInputBuffer = null;
                 nextInputBufferIndex = -1;
@@ -894,6 +989,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                     LimeLog.warning("Flushing decoder");
                     try {
                         videoDecoder.flush();
+                        if (useAsyncCodec) { asyncCodec.resumeAfterFlush(); videoDecoder.start(); }
                         codecRecoveryType.set(CR_RECOVERY_TYPE_NONE);
                     } catch (IllegalStateException e) {
                         e.printStackTrace();
@@ -914,6 +1010,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                 if (codecRecoveryType.get() == CR_RECOVERY_TYPE_RESTART) {
                     LimeLog.warning("Trying to restart decoder after CodecException");
                     try {
+                        detachAsyncCodec();
                         videoDecoder.stop();
                         configureAndStartDecoder(configuredFormat);
                         codecRecoveryType.set(CR_RECOVERY_TYPE_NONE);
@@ -937,6 +1034,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                 if (codecRecoveryType.get() == CR_RECOVERY_TYPE_RESET) {
                     LimeLog.warning("Trying to reset decoder after CodecException");
                     try {
+                        detachAsyncCodec();
                         videoDecoder.reset();
                         configureAndStartDecoder(configuredFormat);
                         codecRecoveryType.set(CR_RECOVERY_TYPE_NONE);
@@ -958,6 +1056,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                 // throw away the old decoder and reinitialize a new one from scratch.
                 if (codecRecoveryType.get() == CR_RECOVERY_TYPE_RESET) {
                     LimeLog.warning("Trying to recreate decoder after CodecException");
+                    detachAsyncCodec();
                     videoDecoder.release();
 
                     try {
@@ -1216,11 +1315,12 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                         }
 
                         // Try to output a frame
-                        int outIndex = videoDecoder.dequeueOutputBuffer(info, getOutputDequeueTimeoutUs());
+                        if (useAsyncCodec) asyncCodec.drainNoRenderReleaseQueue(videoDecoder, asyncRelease);
+                        int outIndex = dequeueOutput(info, getOutputDequeueTimeoutUs());
                         if (outIndex == MediaCodec.INFO_TRY_AGAIN_LATER) {
                             // Short backoff before polling again
                             tryAgainStreak++;
-                            outIndex = videoDecoder.dequeueOutputBuffer(info, tryAgainStreak <= 2 ? 250 : 500);
+                            outIndex = dequeueOutput(info, tryAgainStreak <= 2 ? 250 : 500);
                         } else {
                             tryAgainStreak = 0;
                         }
@@ -1234,7 +1334,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                             // Render the latest frame now if frame pacing isn't in balanced mode
                             if (prefs.framePacing != PreferenceConfiguration.FRAME_PACING_BALANCED) {
                                 // Get the last output buffer in the queue
-                                while ((outIndex = videoDecoder.dequeueOutputBuffer(info, 0)) >= 0) {
+                                while ((outIndex = dequeueOutput(info, 0)) >= 0) {
                                     videoDecoder.releaseOutputBuffer(lastIndex, false);
 
                                     numFramesOut++;
@@ -1243,7 +1343,18 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                                     presentationTimeUs = info.presentationTimeUs;
                                 }
 
-                                if (prefs.framePacing == PreferenceConfiguration.FRAME_PACING_MAX_SMOOTHNESS ||
+                                if (prefs.framePacing == PreferenceConfiguration.FRAME_PACING_FAST_VSYNC) {
+                                    nanoPacer.updatePacingMode(true, refreshRate, activity.getWindowManager().getDefaultDisplay().getRefreshRate());
+                                    nanoLatest.index = lastIndex;
+                                    nanoLatest.ptsUs = presentationTimeUs;
+                                    nanoLatest.flags = info.flags;
+                                    nanoLatest.dequeueNs = System.nanoTime();
+                                    numFramesOut += nanoPacer.waitAndDrainLatest(info, nanoLatest, nanoCallbacks);
+                                    lastIndex = nanoLatest.index;
+                                    presentationTimeUs = nanoLatest.ptsUs;
+                                    videoDecoder.releaseOutputBuffer(lastIndex, System.nanoTime());
+                                }
+                                else if (prefs.framePacing == PreferenceConfiguration.FRAME_PACING_MAX_SMOOTHNESS ||
                                         prefs.framePacing == PreferenceConfiguration.FRAME_PACING_CAP_FPS) {
                                     // In max smoothness or cap FPS mode, we want to never drop frames
                                     // Use a PTS that will cause this frame to never be dropped
@@ -1309,7 +1420,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         int newestIndex = -1;
         long newestPtsUs = 0;
         int index;
-        while ((index = videoDecoder.dequeueOutputBuffer(info, 0)) >= 0) {
+        while ((index = dequeueOutput(info, 0)) >= 0) {
             if (newestIndex >= 0) {
                 // A newer frame is ready, so drop the older one
                 videoDecoder.releaseOutputBuffer(newestIndex, false);
@@ -1353,8 +1464,8 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
 
         try {
             // If we don't have an input buffer index yet, fetch one now
-            while (nextInputBufferIndex < 0 && !stopping) {
-                nextInputBufferIndex = videoDecoder.dequeueInputBuffer(10000);
+            while (nextInputBufferIndex < 0 && !stopping && (!useAsyncCodec || codecRecoveryType.get() == CR_RECOVERY_TYPE_NONE)) {
+                nextInputBufferIndex = dequeueInput(10000);
             }
 
             // Get the backing ByteBuffer for the input buffer index
@@ -1500,11 +1611,16 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
             pyroWave = null;
             return;
         }
+        detachAsyncCodec();
         videoDecoder.release();
+        if (sgsr != null) { sgsr.close(); sgsr = null; }
     }
 
     @Override
     public void setHdrMode(boolean enabled, byte[] hdrMetadata) {
+        sgsrHdrActive = enabled;
+        SgsrRenderer currentSgsr = sgsr;
+        if (currentSgsr != null) currentSgsr.setHdrMode(enabled, hdrMetadata);
         if (pyroWave != null) {
             // The renderer reads the host's metadata itself
             pyroWave.setHdrMode(enabled);
@@ -1547,7 +1663,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                     timestampUs, codecFlags);
 
             // Track enqueue time for this PTS
-            try { enqueueNsByPtsUs.put(timestampUs, System.nanoTime()); } catch (Throwable ignored) { /* per-frame stats are best effort */ }
+            try { synchronized (enqueueNsByPtsUs) { enqueueNsByPtsUs.put(timestampUs, System.nanoTime()); } } catch (Throwable ignored) { /* per-frame stats are best effort */ }
 
             // We need a new buffer now
             nextInputBufferIndex = -1;
