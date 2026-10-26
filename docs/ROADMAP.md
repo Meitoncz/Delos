@@ -119,6 +119,7 @@ Principle: keep the streaming part (`Game.java`, overlays, virtual controls), re
   - [x] 6.8 SteamGridDB (API key, matching, 4 images per game, bulk download, the artwork screen)
   - [ ] 6.9 Switch-over and cleanup (new shell is the only launcher, old UI and unused dependencies removed)
   - [ ] 6.10 Polish and testing (side-by-side with the prototype, performance, touch, older Android fallbacks, other handhelds)
+    - [ ] Complete external-display support: launching a stream on a monitor/TV must use the Delos loading screen and in-stream menu instead of the legacy Moonlight UI. The stream must preserve the resolution and FPS selected in Delos rather than silently replacing them with the external display's native mode (observed as 4K on a TV). Verify launch, stream-menu navigation, resolution, FPS, HDR and return-to-shell behavior on both the Odin display and an external display.
 - [ ] Later: in-stream quick menu (`GameMenu`) in the new design, virtual controls editor.
 
 ## Phase 7 – Custom features and maintenance
