@@ -83,9 +83,16 @@ uniform without a decoder restart. Live changes are session-only. The initial de
 Display settings and may be overridden per game. Initialization/runtime failures fall back to direct
 rendering and are exposed in the menu/logs; HDR is not silently converted to an eight-bit SDR path.
 
-Current integration is for the MediaCodec renderer, including HDR; PyroWave's separate renderer is
-not filtered by this stage. The menu explicitly shows that limitation instead of a nonfunctional
-toggle. Supporting SGSR inside the Vulkan PyroWave renderer is separate work.
+MediaCodec and PyroWave both support live SGSR. PyroWave uses its own Vulkan SGSR 2 Video path rather
+than this GLES stage: compute shaders estimate bidirectional flow and reconstruct directly from the
+decoded planes, then present to the swapchain or the existing HDR/P010 bridge. It scales to the real
+display dimensions while preserving aspect ratio. The stream menu reads and changes the native state
+instead of reporting PyroWave as unavailable.
+
+The statistics overlay includes the measured post-decoding processing time for every SGSR variant in
+both renderers and adds it to total latency. MediaCodec uses smoothed wall time around a successful
+SGSR draw; PyroWave uses its Vulkan draw timestamps. This is processing cost, not a claim of complete
+input-to-photon latency.
 
 The two-pass SurfaceTexture/2D approach was also reviewed against linckosz's Moonlight Android
 PR #1567 (`37e7a00ce8cde55b936c9239d8e717336f55da63`); the lifecycle, live controls and P010 HDR output
@@ -133,3 +140,20 @@ The High Quality build passed assembly, all 62 tests and lint (`check-hq-final.l
 on the Odin after confirming ShellActivity was foreground. Later device logs confirm `SGSR quality:
 High Quality` actually rendered on the GPU/P010 path. This confirms shader compilation/selection;
 the user's visual and sustained-performance acceptance is still pending.
+
+### PyroWave SGSR 2 and AV1 recovery, 2026-10-27
+
+PyroWave's Vulkan renderer now runs its video-specific SGSR 2 reconstruction for SDR and HDR/P010.
+The first full-resolution version added about 6.5-6.8 ms of GPU draw work and was visibly too latent.
+Combining neighbourhood reconstruction and YCoCg clipping removed the duplicate nine-sample pass;
+the Odin then measured mostly 3.9-4.9 ms of draw work and sustained about 118-119 fps in the tested
+720p-to-1920x1080 HDR stream. The user confirmed substantially better latency, correct HDR colour and
+working live On/Off. The native status also keeps the menu toggle synchronized.
+
+Adding post-processing timing initially exposed an unrelated lifetime hazard in asynchronous
+MediaCodec input. A decoder recovery could invalidate a retained direct input buffer and the next
+`put()` crashed inside `GetByteArrayRegion`/`memcpy`. Async mode now fetches the callback-owned buffer
+for each frame instead of retaining it across a possible flush/reset. GL timer queries that triggered
+the recovery were removed in favour of safe wall timing. On the corrected build, the user started
+AV1 with SGSR twice; both sessions kept the upscaler available and neither crashed. Device logs also
+confirmed MediaCodec output at 1920x1080 for a 1280x720 source.

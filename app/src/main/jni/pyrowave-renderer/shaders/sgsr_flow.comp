@@ -1,0 +1,28 @@
+#version 450
+// Delos PyroWave SGSR 2 video motion pass. Iterative Lucas-Kanade on an 8-pixel grid;
+// run in both directions so reconstruction can reject inconsistent motion.
+layout(local_size_x = 8, local_size_y = 8) in;
+layout(set = 0, binding = 0) uniform sampler2D u_current;
+layout(set = 0, binding = 1) uniform sampler2D u_previous;
+layout(set = 0, binding = 2, rgba16f) writeonly uniform image2D u_flow;
+layout(push_constant) uniform Params { ivec2 inputSize; ivec2 flowSize; } p;
+float previous(vec2 position) { return textureLod(u_previous,(position+.5)/vec2(p.inputSize),0.0).r; }
+void main() {
+    ivec2 cell=ivec2(gl_GlobalInvocationID.xy); if(any(greaterThanEqual(cell,p.flowSize)))return;
+    ivec2 center=min(cell*8+ivec2(4),p.inputSize-1);vec2 motion=vec2(0);float residual=0.0,quality=0.0;
+    for(int iteration=0;iteration<5;iteration++) {
+        vec3 matrix=vec3(0);vec2 rhs=vec2(0);residual=0.0;
+        for(int y=-3;y<=3;y+=2)for(int x=-3;x<=3;x+=2){
+            ivec2 q0=clamp(center+ivec2(x,y),ivec2(0),p.inputSize-1);vec2 q=vec2(q0)+motion;
+            float value=previous(q);vec2 gradient=.5*vec2(previous(q+vec2(1,0))-previous(q-vec2(1,0)),previous(q+vec2(0,1))-previous(q-vec2(0,1)));
+            float difference=texelFetch(u_current,q0,0).r-value;
+            matrix+=vec3(gradient.x*gradient.x,gradient.x*gradient.y,gradient.y*gradient.y);rhs+=gradient*difference;residual+=abs(difference);
+        }
+        float determinant=matrix.x*matrix.z-matrix.y*matrix.y;quality=determinant/max((matrix.x+matrix.z)*(matrix.x+matrix.z),1e-10);
+        if(determinant<1e-8)break;vec2 delta=vec2(matrix.z*rhs.x-matrix.y*rhs.y,matrix.x*rhs.y-matrix.y*rhs.x)/determinant;
+        motion+=delta/max(1.0,length(delta)/2.0);if(dot(delta,delta)<.0001)break;
+    }
+    residual*=.0625;vec2 position=vec2(center)+motion;
+    float valid=all(greaterThanEqual(position,vec2(0)))&&all(lessThan(position,vec2(p.inputSize)))?1.0:0.0;
+    imageStore(u_flow,cell,vec4(motion,residual,valid*smoothstep(.001,.025,quality)*exp(-32.0*residual)));
+}

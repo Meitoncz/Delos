@@ -837,9 +837,16 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
 
         // Delos: PyroWave frames go from moonlight-common-c straight to the native renderer
         if ((format & MoonBridge.VIDEO_FORMAT_MASK_PYROWAVE) != 0) {
+            android.util.DisplayMetrics metrics = new android.util.DisplayMetrics();
+            android.view.WindowManager windowManager =
+                    (android.view.WindowManager) context.getSystemService(android.content.Context.WINDOW_SERVICE);
+            if (windowManager != null) windowManager.getDefaultDisplay().getRealMetrics(metrics);
+            else metrics.setTo(context.getResources().getDisplayMetrics());
             pyroWave = PyroWaveRenderer.create(renderTarget, width, height, targetFps,
+                    metrics.widthPixels, metrics.heightPixels,
                     (format & MoonBridge.VIDEO_FORMAT_MASK_YUV444) != 0, prefs.fullRange, getPreferredColorSpace(),
-                    (format & MoonBridge.VIDEO_FORMAT_MASK_10BIT) != 0);
+                    (format & MoonBridge.VIDEO_FORMAT_MASK_10BIT) != 0,
+                    prefs.sgsrEnabled && prefs.sgsrTemporal);
             if (pyroWave == null) {
                 LimeLog.severe("Unable to create the PyroWave renderer");
                 return -1;
@@ -857,7 +864,13 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
 
     /** Delos: live post-processing controls; a decoder reset requests an IDR, not a reconnect. */
     public void setUpscalingEnabled(boolean enabled) {
-        if (pyroWave != null || stopping) return;
+        if (stopping) return;
+        if (pyroWave != null) {
+            sgsrRequested = enabled;
+            prefs.sgsrEnabled = enabled;
+            pyroWave.setUpscalingEnabled(enabled && prefs.sgsrTemporal);
+            return;
+        }
         if (enabled == sgsrRequested && !sgsrFailed) return;
         sgsrRequested = enabled;
         sgsrFailed = false;
@@ -867,7 +880,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     }
     public boolean isUpscalingRequested() { return sgsrRequested; }
     public String getUpscalingStatus() {
-        if (pyroWave != null) return "Unavailable for PyroWave";
+        if (pyroWave != null) return pyroWave.isUpscalingEnabled() ? "On" : "Off";
         if (sgsrFailed) return "Unavailable; direct rendering is active";
         if (sgsrRequested && sgsr == null) return "Starting";
         if (!sgsrRequested && sgsr != null) return "Stopping";
@@ -885,6 +898,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         prefs.sgsrTemporalQuality = mode == 3;
         SgsrRenderer current = sgsr;
         if (current != null) current.setMode(mode);
+        if (pyroWave != null) pyroWave.setUpscalingEnabled(prefs.sgsrEnabled && prefs.sgsrTemporal);
     }
 
     // Delos: data received and sent since the last call in KB, -1 when unknown or on the first call
@@ -932,6 +946,8 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         float lossPercent = total > 0 ? (float) stats[PyroWaveRenderer.STAT_LOST_FRAMES] / total * 100 : 0f;
         long gpuFrames = stats[PyroWaveRenderer.STAT_GPU_DECODE_FRAMES];
         float decodeTimeMs = gpuFrames > 0 ? stats[PyroWaveRenderer.STAT_GPU_DECODE_TOTAL_US] / 1000f / gpuFrames : 0f;
+        long drawFrames = stats[PyroWaveRenderer.STAT_GPU_DRAW_FRAMES];
+        float processingTimeMs = drawFrames > 0 ? stats[PyroWaveRenderer.STAT_GPU_DRAW_TOTAL_US] / 1000f / drawFrames : 0f;
         long hostFrames = stats[PyroWaveRenderer.STAT_HOST_LATENCY_FRAMES];
         long rttInfo = MoonBridge.getEstimatedRttInfo();
         float realtimeNetData = measureNetDataKb();
@@ -950,7 +966,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         perfListener.onPerfStats(new com.limelight.shell.StreamStats(
                 initialWidth, initialHeight, totalFps, receivedFps, renderedFps,
                 "PyroWave", (videoFormat & MoonBridge.VIDEO_FORMAT_MASK_10BIT) != 0, decoder, lossPercent,
-                (int) (rttInfo >> 32), (int) rttInfo, decodeTimeMs,
+                (int) (rttInfo >> 32), (int) rttInfo, decodeTimeMs, processingTimeMs,
                 hostFrames > 0 ? stats[PyroWaveRenderer.STAT_HOST_LATENCY_MIN] / 10f : -1f,
                 hostFrames > 0 ? stats[PyroWaveRenderer.STAT_HOST_LATENCY_MAX] / 10f : -1f,
                 hostFrames > 0 ? stats[PyroWaveRenderer.STAT_HOST_LATENCY_TOTAL] / 10f / hostFrames : -1f,
@@ -1698,7 +1714,10 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         // We must propagate the return value here in order to properly handle
         // codec recovery happening in fetchNextInputBuffer(). If we don't, we'll
         // never get an IDR frame to complete the recovery process.
-        return fetchNextInputBuffer();
+        // Async callbacks own the input indices. Do not retain their direct ByteBuffer between
+        // frames: a concurrent flush/reset invalidates its native address and a later put() can
+        // crash in libc before Java has a chance to throw. Fetch it for the next frame instead.
+        return useAsyncCodec || fetchNextInputBuffer();
     }
 
     private void doProfileSpecificSpsPatching(SeqParameterSet sps) {
@@ -1767,6 +1786,8 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                 }
 
                 float decodeTimeMs = (float)lastTwo.decoderTimeMs / lastTwo.totalFramesReceived;
+                SgsrRenderer activeSgsr = sgsr;
+                float processingTimeMs = activeSgsr != null ? activeSgsr.getGpuTimeMs() : 0f;
                 long rttInfo = MoonBridge.getEstimatedRttInfo();
                 // Delos: measured once for both overlays, in KB per stats window (about a second); -1 if unknown
                 float realtimeNetData = measureNetDataKb();
@@ -1824,7 +1845,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                         (videoFormat & MoonBridge.VIDEO_FORMAT_MASK_AV1) != 0 ? "AV1" : (videoFormat & MoonBridge.VIDEO_FORMAT_MASK_H265) != 0 ? "HEVC" : "H.264",
                         (videoFormat & MoonBridge.VIDEO_FORMAT_MASK_10BIT) != 0, decoder,
                         lastTwo.totalFrames > 0 ? (float) lastTwo.framesLost / lastTwo.totalFrames * 100 : 0f,
-                        (int) (rttInfo >> 32), (int) rttInfo, decodeTimeMs,
+                        (int) (rttInfo >> 32), (int) rttInfo, decodeTimeMs, processingTimeMs,
                         hostLatency ? (float) lastTwo.minHostProcessingLatency / 10 : -1f,
                         hostLatency ? (float) lastTwo.maxHostProcessingLatency / 10 : -1f,
                         hostLatency ? (float) lastTwo.totalHostProcessingLatency / 10 / lastTwo.framesWithHostProcessingLatency : -1f,

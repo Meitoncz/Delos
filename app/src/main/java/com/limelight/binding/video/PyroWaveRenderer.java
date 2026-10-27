@@ -45,8 +45,10 @@ public final class PyroWaveRenderer {
      * HDR10 whenever the host is in HDR mode (setHdrMode), in SDR otherwise.
      */
     public static PyroWaveRenderer create(Surface surface, int width, int height, int frameRate,
-                                          boolean chroma444, boolean fullRange, int matrix, boolean tenBit) {
-        long handle = nativeCreate(surface, width, height, frameRate, chroma444, fullRange, matrix, tenBit);
+                                          int outputWidth, int outputHeight, boolean chroma444,
+                                          boolean fullRange, int matrix, boolean tenBit, boolean enableSgsr2) {
+        long handle = nativeCreate(surface, width, height, frameRate, outputWidth, outputHeight, chroma444,
+                fullRange, matrix, tenBit, enableSgsr2);
         return handle != 0 ? new PyroWaveRenderer(handle) : null;
     }
 
@@ -60,6 +62,14 @@ public final class PyroWaveRenderer {
         if (handle != 0) {
             nativeSetHdrMode(handle, enabled);
         }
+    }
+
+    public void setUpscalingEnabled(boolean enabled) {
+        if (handle != 0) nativeSetUpscalingEnabled(handle, enabled);
+    }
+
+    public boolean isUpscalingEnabled() {
+        return handle != 0 && nativeIsUpscalingEnabled(handle);
     }
 
     /** The frame statistics since the last call, in the order of the STAT_* indices. */
@@ -76,7 +86,9 @@ public final class PyroWaveRenderer {
     public static final int STAT_GPU_DECODE_TOTAL_US = 10;
     // 1% low of the presented frames x 100, -100 while too few frames
     public static final int STAT_ONE_PERCENT_LOW_FPS_X100 = 11;
-    public static final int STAT_COUNT = 12;
+    public static final int STAT_GPU_DRAW_FRAMES = 12;
+    public static final int STAT_GPU_DRAW_TOTAL_US = 13;
+    public static final int STAT_COUNT = 14;
 
     public long[] takeStats() {
         long[] stats = new long[STAT_COUNT];
@@ -94,9 +106,12 @@ public final class PyroWaveRenderer {
     private static native boolean nativeIsAvailable();
 
     private static native long nativeCreate(Surface surface, int width, int height, int frameRate,
-                                            boolean chroma444, boolean fullRange, int matrix, boolean tenBit);
+                                            int outputWidth, int outputHeight, boolean chroma444,
+                                            boolean fullRange, int matrix, boolean tenBit, boolean enableSgsr2);
 
     private static native void nativeSetHdrMode(long handle, boolean enabled);
+    private static native void nativeSetUpscalingEnabled(long handle, boolean enabled);
+    private static native boolean nativeIsUpscalingEnabled(long handle);
 
     private static native int nativeGetLastGpuDecodeUs(long handle);
 

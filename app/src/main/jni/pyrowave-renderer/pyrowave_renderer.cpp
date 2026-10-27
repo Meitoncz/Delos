@@ -135,6 +135,7 @@ namespace {
     X(CreateRenderPass) \
     X(DestroyRenderPass) \
     X(CreateGraphicsPipelines) \
+    X(CreateComputePipelines) \
     X(DestroyPipeline) \
     X(CreateFramebuffer) \
     X(DestroyFramebuffer) \
@@ -152,6 +153,7 @@ namespace {
     X(CmdSetViewport) \
     X(CmdSetScissor) \
     X(CmdDraw) \
+    X(CmdDispatch) \
     X(CmdPushConstants) \
     X(CreateFence) \
     X(DestroyFence) \
@@ -483,8 +485,9 @@ namespace {
             destroy();
         }
 
-        bool create(ANativeWindow *nativeWindow, int streamWidth, int streamHeight, int frameRate, bool fullChroma,
-                    bool fullRange, int matrix, bool tenBitStream) {
+        bool create(ANativeWindow *nativeWindow, int streamWidth, int streamHeight, int frameRate,
+                    int targetWidth, int targetHeight, bool fullChroma, bool fullRange, int matrix,
+                    bool tenBitStream, bool enableTemporal) {
             window = nativeWindow;
             // API 28; Delos builds the native code for API 21
             void *android = dlopen("libandroid.so", RTLD_NOW | RTLD_NOLOAD);
@@ -505,11 +508,24 @@ namespace {
             hdrWanted = hdrActive;
             csc = {fullRange ? 1 : 0, hdrActive ? 2 : matrix, tenBit ? 1 : 0};
             frameRateHz = frameRate > 0 ? frameRate : 60;
+            sgsrEnabled.store(enableTemporal);
+            sgsrApplied = enableTemporal;
             width = uint32_t(streamWidth);
             height = uint32_t(streamHeight);
+            sgsrTargetWidth = uint32_t(std::max(targetWidth, streamWidth));
+            sgsrTargetHeight = uint32_t(std::max(targetHeight, streamHeight));
             const bool ok = apiVersionSupported() && createInstanceAndSurface() && createDevice() &&
                    createDecoder() && createPlanes() && createSwapchain() && createPipeline() &&
                    createFrameResources();
+            if (ok && !createSgsrMotion()) {
+                LOGW("PyroWave SGSR 2 initialization failed; direct rendering remains active");
+                destroySgsrMotion();
+                sgsrAvailable = false;
+                sgsrEnabled.store(false);
+                sgsrApplied = false;
+            } else if (ok) {
+                sgsrAvailable = true;
+            }
             if (ok) {
                 applyHdrMetadata();
             }
@@ -520,6 +536,9 @@ namespace {
         void setHdrMode(bool enabled) {
             hdrWanted = tenBit && enabled;
         }
+
+        void setUpscalingEnabled(bool enabled) { sgsrEnabled.store(enabled && sgsrAvailable); }
+        bool isUpscalingEnabled() const { return sgsrAvailable && sgsrEnabled.load(); }
 
         // One frame as moonlight-common-c delivered it: its bytes and, per RTP packet, whether it was lost
         // and whether it starts a record (see pyrowaveframing.h). Same steps as the official client's
@@ -859,6 +878,126 @@ namespace {
                    createPlane(planes[2], chromaWidth, chromaHeight);
         }
 
+        bool createAuxImage(Plane &image, VkFormat format, uint32_t imageWidth, uint32_t imageHeight,
+                            VkImageUsageFlags usage) {
+            image.width = imageWidth; image.height = imageHeight;
+            VkImageCreateInfo info = {VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
+            info.imageType = VK_IMAGE_TYPE_2D; info.format = format;
+            info.extent = {imageWidth, imageHeight, 1}; info.mipLevels = 1; info.arrayLayers = 1;
+            info.samples = VK_SAMPLE_COUNT_1_BIT; info.tiling = VK_IMAGE_TILING_OPTIMAL;
+            info.usage = usage; info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+            if (!check(vk.CreateImage(device, &info, nullptr, &image.image), "SGSR image")) return false;
+            VkMemoryRequirements requirements; vk.GetImageMemoryRequirements(device, image.image, &requirements);
+            VkPhysicalDeviceMemoryProperties memory; vk.GetPhysicalDeviceMemoryProperties(physicalDevice, &memory);
+            uint32_t type = UINT32_MAX;
+            for (uint32_t i=0;i<memory.memoryTypeCount;i++) if ((requirements.memoryTypeBits&(1u<<i)) &&
+                    (memory.memoryTypes[i].propertyFlags&VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)) {type=i;break;}
+            if (type==UINT32_MAX) return false;
+            VkMemoryAllocateInfo allocation={VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO};
+            allocation.allocationSize=requirements.size;allocation.memoryTypeIndex=type;
+            if(!check(vk.AllocateMemory(device,&allocation,nullptr,&image.memory),"SGSR memory")||
+               !check(vk.BindImageMemory(device,image.image,image.memory,0),"SGSR bind")) return false;
+            VkImageViewCreateInfo view={VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
+            view.image=image.image;view.viewType=VK_IMAGE_VIEW_TYPE_2D;view.format=format;
+            view.subresourceRange={VK_IMAGE_ASPECT_COLOR_BIT,0,1,0,1};
+            return check(vk.CreateImageView(device,&view,nullptr,&image.view),"SGSR view");
+        }
+
+        bool createSgsrMotion() {
+            const uint32_t flowWidth=(width+7)/8,flowHeight=(height+7)/8;
+            const float scale=std::min(float(sgsrTargetWidth)/float(width),float(sgsrTargetHeight)/float(height));
+            sgsrOutputWidth=std::max(2u,uint32_t(float(width)*scale))&~1u;
+            sgsrOutputHeight=std::max(2u,uint32_t(float(height)*scale))&~1u;
+            if(!createAuxImage(sgsrPrevious,planeFormat,width,height,VK_IMAGE_USAGE_SAMPLED_BIT|VK_IMAGE_USAGE_TRANSFER_DST_BIT)||
+               !createAuxImage(sgsrFlow[0],VK_FORMAT_R16G16B16A16_SFLOAT,flowWidth,flowHeight,VK_IMAGE_USAGE_STORAGE_BIT)||
+               !createAuxImage(sgsrFlow[1],VK_FORMAT_R16G16B16A16_SFLOAT,flowWidth,flowHeight,VK_IMAGE_USAGE_STORAGE_BIT)||
+               !createAuxImage(sgsrHistory[0],VK_FORMAT_R16G16B16A16_SFLOAT,sgsrOutputWidth,sgsrOutputHeight,VK_IMAGE_USAGE_STORAGE_BIT|VK_IMAGE_USAGE_SAMPLED_BIT)||
+               !createAuxImage(sgsrHistory[1],VK_FORMAT_R16G16B16A16_SFLOAT,sgsrOutputWidth,sgsrOutputHeight,VK_IMAGE_USAGE_STORAGE_BIT|VK_IMAGE_USAGE_SAMPLED_BIT)) return false;
+            VkSamplerCreateInfo samplerInfo={VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO};
+            samplerInfo.magFilter=VK_FILTER_LINEAR;samplerInfo.minFilter=VK_FILTER_LINEAR;
+            samplerInfo.addressModeU=samplerInfo.addressModeV=samplerInfo.addressModeW=VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+            if(!check(vk.CreateSampler(device,&samplerInfo,nullptr,&sgsrSampler),"SGSR sampler"))return false;
+            VkDescriptorSetLayoutBinding bindings[3]={};
+            for(uint32_t i=0;i<2;i++){bindings[i].binding=i;bindings[i].descriptorType=VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                bindings[i].descriptorCount=1;bindings[i].stageFlags=VK_SHADER_STAGE_COMPUTE_BIT;}
+            bindings[2].binding=2;bindings[2].descriptorType=VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;bindings[2].descriptorCount=1;
+            bindings[2].stageFlags=VK_SHADER_STAGE_COMPUTE_BIT;
+            VkDescriptorSetLayoutCreateInfo layout={VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};layout.bindingCount=3;layout.pBindings=bindings;
+            if(!check(vk.CreateDescriptorSetLayout(device,&layout,nullptr,&sgsrFlowLayout),"SGSR layout"))return false;
+            VkPushConstantRange range={VK_SHADER_STAGE_COMPUTE_BIT,0,16};
+            VkPipelineLayoutCreateInfo pipelineLayoutInfo={VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
+            pipelineLayoutInfo.setLayoutCount=1;pipelineLayoutInfo.pSetLayouts=&sgsrFlowLayout;
+            pipelineLayoutInfo.pushConstantRangeCount=1;pipelineLayoutInfo.pPushConstantRanges=&range;
+            if(!check(vk.CreatePipelineLayout(device,&pipelineLayoutInfo,nullptr,&sgsrFlowPipelineLayout),"SGSR pipeline layout"))return false;
+            VkShaderModule module=createShader(sgsr_flow_comp_spv,sizeof(sgsr_flow_comp_spv));if(module==VK_NULL_HANDLE)return false;
+            VkPipelineShaderStageCreateInfo stage={VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO};
+            stage.stage=VK_SHADER_STAGE_COMPUTE_BIT;stage.module=module;stage.pName="main";
+            VkComputePipelineCreateInfo pipelineInfo={VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO};
+            pipelineInfo.stage=stage;pipelineInfo.layout=sgsrFlowPipelineLayout;
+            bool ok=check(vk.CreateComputePipelines(device,VK_NULL_HANDLE,1,&pipelineInfo,nullptr,&sgsrFlowPipeline),"SGSR flow pipeline");
+            vk.DestroyShaderModule(device,module,nullptr);if(!ok)return false;
+            VkDescriptorSetLayoutBinding upscaleBindings[7]={};
+            for(uint32_t i=0;i<6;i++){upscaleBindings[i].binding=i;upscaleBindings[i].descriptorType=VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                upscaleBindings[i].descriptorCount=1;upscaleBindings[i].stageFlags=VK_SHADER_STAGE_COMPUTE_BIT;}
+            upscaleBindings[6].binding=6;upscaleBindings[6].descriptorType=VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+            upscaleBindings[6].descriptorCount=1;upscaleBindings[6].stageFlags=VK_SHADER_STAGE_COMPUTE_BIT;
+            VkDescriptorSetLayoutCreateInfo upscaleLayout={VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
+            upscaleLayout.bindingCount=7;upscaleLayout.pBindings=upscaleBindings;
+            if(!check(vk.CreateDescriptorSetLayout(device,&upscaleLayout,nullptr,&sgsrUpscaleLayout),"SGSR upscale layout"))return false;
+            VkPushConstantRange upscaleRange={VK_SHADER_STAGE_COMPUTE_BIT,0,48};
+            VkPipelineLayoutCreateInfo upscalePipelineLayout={VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
+            upscalePipelineLayout.setLayoutCount=1;upscalePipelineLayout.pSetLayouts=&sgsrUpscaleLayout;
+            upscalePipelineLayout.pushConstantRangeCount=1;upscalePipelineLayout.pPushConstantRanges=&upscaleRange;
+            if(!check(vk.CreatePipelineLayout(device,&upscalePipelineLayout,nullptr,&sgsrUpscalePipelineLayout),"SGSR upscale pipeline layout"))return false;
+            module=createShader(sgsr_upscale_comp_spv,sizeof(sgsr_upscale_comp_spv));if(module==VK_NULL_HANDLE)return false;
+            stage.module=module;pipelineInfo.stage=stage;pipelineInfo.layout=sgsrUpscalePipelineLayout;
+            ok=check(vk.CreateComputePipelines(device,VK_NULL_HANDLE,1,&pipelineInfo,nullptr,&sgsrUpscalePipeline),"SGSR upscale pipeline");
+            vk.DestroyShaderModule(device,module,nullptr);if(!ok)return false;
+            VkDescriptorSetLayoutBinding presentBinding={0,VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,1,VK_SHADER_STAGE_FRAGMENT_BIT,nullptr};
+            VkDescriptorSetLayoutCreateInfo presentLayout={VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
+            presentLayout.bindingCount=1;presentLayout.pBindings=&presentBinding;
+            if(!check(vk.CreateDescriptorSetLayout(device,&presentLayout,nullptr,&sgsrPresentLayout),"SGSR present layout"))return false;
+            VkPipelineLayoutCreateInfo presentPipelineLayout={VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
+            presentPipelineLayout.setLayoutCount=1;presentPipelineLayout.pSetLayouts=&sgsrPresentLayout;
+            if(!check(vk.CreatePipelineLayout(device,&presentPipelineLayout,nullptr,&sgsrPresentPipelineLayout),"SGSR present pipeline layout"))return false;
+            VkDescriptorPoolSize sizes[2]={{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,18},{VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,4}};
+            VkDescriptorPoolCreateInfo pool={VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO};pool.maxSets=6;pool.poolSizeCount=2;pool.pPoolSizes=sizes;
+            if(!check(vk.CreateDescriptorPool(device,&pool,nullptr,&sgsrPool),"SGSR descriptor pool"))return false;
+            VkDescriptorSetLayout layouts[6]={sgsrFlowLayout,sgsrFlowLayout,sgsrUpscaleLayout,sgsrUpscaleLayout,sgsrPresentLayout,sgsrPresentLayout};
+            VkDescriptorSetAllocateInfo allocate={VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};
+            allocate.descriptorPool=sgsrPool;allocate.descriptorSetCount=6;allocate.pSetLayouts=layouts;
+            VkDescriptorSet sets[6]={};if(!check(vk.AllocateDescriptorSets(device,&allocate,sets),"SGSR descriptor sets"))return false;
+            sgsrFlowSets[0]=sets[0];sgsrFlowSets[1]=sets[1];sgsrUpscaleSets[0]=sets[2];sgsrUpscaleSets[1]=sets[3];
+            sgsrPresentSets[0]=sets[4];sgsrPresentSets[1]=sets[5];
+            for(int direction=0;direction<2;direction++){
+                VkDescriptorImageInfo images[3]={{sgsrSampler,direction==0?planes[0].view:sgsrPrevious.view,VK_IMAGE_LAYOUT_GENERAL},
+                    {sgsrSampler,direction==0?sgsrPrevious.view:planes[0].view,VK_IMAGE_LAYOUT_GENERAL},
+                    {VK_NULL_HANDLE,sgsrFlow[direction].view,VK_IMAGE_LAYOUT_GENERAL}};
+                VkWriteDescriptorSet writes[3]={};for(uint32_t i=0;i<3;i++){writes[i].sType=VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                    writes[i].dstSet=sgsrFlowSets[direction];writes[i].dstBinding=i;writes[i].descriptorCount=1;
+                    writes[i].descriptorType=i<2?VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;writes[i].pImageInfo=&images[i];}
+                vk.UpdateDescriptorSets(device,3,writes,0,nullptr);
+            }
+            for(int output=0;output<2;output++){
+                VkDescriptorImageInfo images[7]={{sgsrSampler,planes[0].view,VK_IMAGE_LAYOUT_GENERAL},
+                    {sgsrSampler,planes[1].view,VK_IMAGE_LAYOUT_GENERAL},{sgsrSampler,planes[2].view,VK_IMAGE_LAYOUT_GENERAL},
+                    {sgsrSampler,sgsrHistory[1-output].view,VK_IMAGE_LAYOUT_GENERAL},{sgsrSampler,sgsrFlow[0].view,VK_IMAGE_LAYOUT_GENERAL},
+                    {sgsrSampler,sgsrFlow[1].view,VK_IMAGE_LAYOUT_GENERAL},{VK_NULL_HANDLE,sgsrHistory[output].view,VK_IMAGE_LAYOUT_GENERAL}};
+                VkWriteDescriptorSet writes[7]={};for(uint32_t i=0;i<7;i++){writes[i].sType=VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                    writes[i].dstSet=sgsrUpscaleSets[output];writes[i].dstBinding=i;writes[i].descriptorCount=1;
+                    writes[i].descriptorType=i<6?VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;writes[i].pImageInfo=&images[i];}
+                vk.UpdateDescriptorSets(device,7,writes,0,nullptr);
+                VkDescriptorImageInfo present={sgsrSampler,sgsrHistory[output].view,VK_IMAGE_LAYOUT_GENERAL};
+                VkWriteDescriptorSet write={VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};write.dstSet=sgsrPresentSets[output];write.dstBinding=0;
+                write.descriptorCount=1;write.descriptorType=VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;write.pImageInfo=&present;
+                vk.UpdateDescriptorSets(device,1,&write,0,nullptr);
+            }
+            sgsrPresentPipeline=buildPipeline(renderPass,sgsr_present_frag_spv,sizeof(sgsr_present_frag_spv),sgsrPresentPipelineLayout);
+            if(sgsrPresentPipeline==VK_NULL_HANDLE)return false;
+            LOGI("PyroWave SGSR 2 ready: %ux%u -> %ux%u, flow %ux%u",width,height,sgsrOutputWidth,sgsrOutputHeight,flowWidth,flowHeight);
+            return true;
+        }
+
         bool createSwapchain() {
             VkSurfaceCapabilitiesKHR caps;
             if (!check(vk.GetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &caps), "surface capabilities")) {
@@ -1101,7 +1240,9 @@ namespace {
             if (!yuvCpu) {
                 if (allocateYuvBuffers(AHARDWAREBUFFER_USAGE_GPU_COLOR_OUTPUT | AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE |
                                        AHARDWAREBUFFER_USAGE_COMPOSER_OVERLAY) &&
-                        createPackPass() && yuvGl.create(packBuffer, yuvBuffers, YUV_BUFFERS, int(width), int(height))) {
+                        createPackPass() && yuvGl.create(packBuffer, yuvBuffers, YUV_BUFFERS,
+                            int(sgsrApplied ? sgsrOutputWidth : width),
+                            int(sgsrApplied ? sgsrOutputHeight : height))) {
                     LOGI("P010 HDR output filled on the GPU");
                     return true;
                 }
@@ -1109,6 +1250,10 @@ namespace {
                 yuvGl.destroy();
                 destroyPackPass();
                 releaseYuvBuffers();
+                if (sgsrApplied) {
+                    LOGW("PyroWave SGSR 2 requires the GPU P010 bridge; disabling SGSR 2");
+                    sgsrApplied = false;
+                }
                 yuvCpu = true;
             }
             return allocateYuvBuffers(AHARDWAREBUFFER_USAGE_CPU_WRITE_OFTEN | AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE |
@@ -1118,8 +1263,8 @@ namespace {
 
         bool allocateYuvBuffers(uint64_t usage) {
             AHardwareBuffer_Desc desc = {};
-            desc.width = width;
-            desc.height = height;
+            desc.width = sgsrApplied ? sgsrOutputWidth : width;
+            desc.height = sgsrApplied ? sgsrOutputHeight : height;
             desc.layers = 1;
             desc.format = AHARDWAREBUFFER_FORMAT_YCbCr_P010;
             desc.usage = usage;
@@ -1142,8 +1287,10 @@ namespace {
         // The Vulkan half of the GPU copy: an RGBA16F AHardwareBuffer that OpenGL ES samples
         bool createPackPass() {
             AHardwareBuffer_Desc desc = {};
-            desc.width = width;
-            desc.height = height;
+            const uint32_t outputWidth=sgsrApplied?sgsrOutputWidth:width;
+            const uint32_t outputHeight=sgsrApplied?sgsrOutputHeight:height;
+            desc.width = outputWidth;
+            desc.height = outputHeight;
             desc.layers = 1;
             desc.format = AHARDWAREBUFFER_FORMAT_R16G16B16A16_FLOAT;
             desc.usage = AHARDWAREBUFFER_USAGE_GPU_COLOR_OUTPUT | AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE;
@@ -1168,7 +1315,7 @@ namespace {
             imageInfo.pNext = &external;
             imageInfo.imageType = VK_IMAGE_TYPE_2D;
             imageInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
-            imageInfo.extent = {width, height, 1};
+            imageInfo.extent = {outputWidth, outputHeight, 1};
             imageInfo.mipLevels = 1;
             imageInfo.arrayLayers = 1;
             imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -1192,8 +1339,8 @@ namespace {
                 !check(vk.BindImageMemory(device, packImage.image, packImage.memory, 0), "pack bind")) {
                 return false;
             }
-            packImage.width = width;
-            packImage.height = height;
+            packImage.width = outputWidth;
+            packImage.height = outputHeight;
             VkImageViewCreateInfo viewInfo = {VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
             viewInfo.image = packImage.image;
             viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
@@ -1237,13 +1384,18 @@ namespace {
             fbInfo.renderPass = packRenderPass;
             fbInfo.attachmentCount = 1;
             fbInfo.pAttachments = &packImage.view;
-            fbInfo.width = width;
-            fbInfo.height = height;
+            fbInfo.width = outputWidth;
+            fbInfo.height = outputHeight;
             fbInfo.layers = 1;
             if (!check(vk.CreateFramebuffer(device, &fbInfo, nullptr, &packFramebuffer), "pack framebuffer")) {
                 return false;
             }
-            packPipeline = buildPipeline(packRenderPass, ycc_pack_frag_spv, sizeof(ycc_pack_frag_spv));
+            if (sgsrApplied && sgsrPresentPipelineLayout != VK_NULL_HANDLE) {
+                packPipeline = buildPipeline(packRenderPass, sgsr_pack_frag_spv, sizeof(sgsr_pack_frag_spv),
+                                             sgsrPresentPipelineLayout);
+            } else {
+                packPipeline = buildPipeline(packRenderPass, ycc_pack_frag_spv, sizeof(ycc_pack_frag_spv), pipelineLayout);
+            }
             return packPipeline != VK_NULL_HANDLE;
         }
 
@@ -1439,6 +1591,7 @@ namespace {
             planeBarrier(commandBuffer, decodeWriteStage(), decodeWriteAccess(),
                          VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_TRANSFER_BIT,
                          VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_TRANSFER_READ_BIT, VK_IMAGE_LAYOUT_GENERAL);
+            const int sgsrOutput=recordSgsrMotion(commandBuffer);
             if (yuvCpu) {
                 VkDeviceSize offset = 0;
                 for (auto &plane : planes) {
@@ -1462,15 +1615,19 @@ namespace {
                 VkRenderPassBeginInfo rpBegin = {VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
                 rpBegin.renderPass = packRenderPass;
                 rpBegin.framebuffer = packFramebuffer;
-                rpBegin.renderArea = {{0, 0}, {width, height}};
+                const uint32_t outputWidth=sgsrOutput>=0?sgsrOutputWidth:width;
+                const uint32_t outputHeight=sgsrOutput>=0?sgsrOutputHeight:height;
+                rpBegin.renderArea = {{0, 0}, {outputWidth, outputHeight}};
                 vk.CmdBeginRenderPass(commandBuffer, &rpBegin, VK_SUBPASS_CONTENTS_INLINE);
-                VkViewport viewport = {0.0f, 0.0f, float(width), float(height), 0.0f, 1.0f};
-                VkRect2D scissor = {{0, 0}, {width, height}};
+                VkViewport viewport = {0.0f, 0.0f, float(outputWidth), float(outputHeight), 0.0f, 1.0f};
+                VkRect2D scissor = {{0, 0}, {outputWidth, outputHeight}};
                 vk.CmdSetViewport(commandBuffer, 0, 1, &viewport);
                 vk.CmdSetScissor(commandBuffer, 0, 1, &scissor);
                 vk.CmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, packPipeline);
-                vk.CmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1,
-                                         &descriptorSet, 0, nullptr);
+                const VkPipelineLayout activeLayout=sgsrOutput>=0?sgsrPresentPipelineLayout:pipelineLayout;
+                const VkDescriptorSet activeSet=sgsrOutput>=0?sgsrPresentSets[sgsrOutput]:descriptorSet;
+                vk.CmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, activeLayout, 0, 1,
+                                         &activeSet, 0, nullptr);
                 vk.CmdDraw(commandBuffer, 3, 1, 0, 0);
                 vk.CmdEndRenderPass(commandBuffer);
                 // OpenGL ES reads it next
@@ -1525,7 +1682,8 @@ namespace {
                 const int32_t h = int32_t(float(height) * scale);
                 const int32_t x = (int32_t(swapchainExtent.width) - w) / 2;
                 const int32_t y = (int32_t(swapchainExtent.height) - h) / 2;
-                const ARect source = {0, 0, int32_t(width), int32_t(height)};
+                const ARect source = {0, 0, int32_t(sgsrOutput>=0?sgsrOutputWidth:width),
+                                      int32_t(sgsrOutput>=0?sgsrOutputHeight:height)};
                 const ARect destination = {x, y, x + w, y + h};
                 surfaceApi.setGeometry(transaction, releases->control, source, destination, 0);
                 surfaceApi.setZOrder(transaction, releases->control, 1);
@@ -1551,7 +1709,8 @@ namespace {
         }
 
         // The fixed-function state the planes' passes share; [pass] decides the target format
-        VkPipeline buildPipeline(VkRenderPass pass, const uint32_t *fragCode, size_t fragSize) {
+        VkPipeline buildPipeline(VkRenderPass pass, const uint32_t *fragCode, size_t fragSize,
+                                 VkPipelineLayout layout) {
             VkShaderModule vert = createShader(fullscreen_vert_spv, sizeof(fullscreen_vert_spv));
             VkShaderModule frag = createShader(fragCode, fragSize);
             VkPipeline result = VK_NULL_HANDLE;
@@ -1598,7 +1757,7 @@ namespace {
                 pipelineInfo.pMultisampleState = &multisample;
                 pipelineInfo.pColorBlendState = &blend;
                 pipelineInfo.pDynamicState = &dynamic;
-                pipelineInfo.layout = pipelineLayout;
+                pipelineInfo.layout = layout;
                 pipelineInfo.renderPass = pass;
                 check(vk.CreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &result),
                       "vkCreateGraphicsPipelines");
@@ -1876,6 +2035,64 @@ namespace {
             vk.CmdPipelineBarrier(cmd, srcStage, dstStage, 0, 0, nullptr, 0, nullptr, 3, barriers);
         }
 
+        int recordSgsrMotion(VkCommandBuffer cmd) {
+            if(!sgsrApplied||!sgsrAvailable||sgsrFlowPipeline==VK_NULL_HANDLE)return -1;
+            const uint32_t flowWidth=(width+7)/8,flowHeight=(height+7)/8;
+            if(!sgsrInitialized){
+                VkImageMemoryBarrier init[5]={};Plane *images[5]={&sgsrPrevious,&sgsrFlow[0],&sgsrFlow[1],&sgsrHistory[0],&sgsrHistory[1]};
+                for(int i=0;i<5;i++){init[i].sType=VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;init[i].oldLayout=VK_IMAGE_LAYOUT_UNDEFINED;
+                    init[i].newLayout=VK_IMAGE_LAYOUT_GENERAL;init[i].dstAccessMask=i==0?VK_ACCESS_TRANSFER_WRITE_BIT:VK_ACCESS_SHADER_WRITE_BIT;
+                    init[i].srcQueueFamilyIndex=init[i].dstQueueFamilyIndex=VK_QUEUE_FAMILY_IGNORED;init[i].image=images[i]->image;
+                    init[i].subresourceRange={VK_IMAGE_ASPECT_COLOR_BIT,0,1,0,1};}
+                vk.CmdPipelineBarrier(cmd,VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,VK_PIPELINE_STAGE_TRANSFER_BIT|VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                                      0,0,nullptr,0,nullptr,5,init);
+            }else{
+                struct Params{int32_t input[2],flow[2];}params={{int32_t(width),int32_t(height)},{int32_t(flowWidth),int32_t(flowHeight)}};
+                vk.CmdBindPipeline(cmd,VK_PIPELINE_BIND_POINT_COMPUTE,sgsrFlowPipeline);
+                for(int direction=0;direction<2;direction++){
+                    vk.CmdBindDescriptorSets(cmd,VK_PIPELINE_BIND_POINT_COMPUTE,sgsrFlowPipelineLayout,0,1,&sgsrFlowSets[direction],0,nullptr);
+                    vk.CmdPushConstants(cmd,sgsrFlowPipelineLayout,VK_SHADER_STAGE_COMPUTE_BIT,0,sizeof(params),&params);
+                    vk.CmdDispatch(cmd,(flowWidth+7)/8,(flowHeight+7)/8,1);
+                }
+            }
+            VkImageMemoryBarrier flowReady[2]={};
+            for(int i=0;i<2;i++){flowReady[i].sType=VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;flowReady[i].srcAccessMask=VK_ACCESS_SHADER_WRITE_BIT;
+                flowReady[i].dstAccessMask=VK_ACCESS_SHADER_READ_BIT;flowReady[i].oldLayout=flowReady[i].newLayout=VK_IMAGE_LAYOUT_GENERAL;
+                flowReady[i].srcQueueFamilyIndex=flowReady[i].dstQueueFamilyIndex=VK_QUEUE_FAMILY_IGNORED;flowReady[i].image=sgsrFlow[i].image;
+                flowReady[i].subresourceRange={VK_IMAGE_ASPECT_COLOR_BIT,0,1,0,1};}
+            vk.CmdPipelineBarrier(cmd,VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,0,0,nullptr,0,nullptr,2,flowReady);
+            const int output=sgsrHistoryIndex^1;
+            struct UpscaleParams{int32_t input[2],output[2],flow[2],reset,fullRange,matrix,sixteenBit;} params={
+                {int32_t(width),int32_t(height)},{int32_t(sgsrOutputWidth),int32_t(sgsrOutputHeight)},
+                {int32_t(flowWidth),int32_t(flowHeight)},sgsrInitialized?0:1,csc.fullRange,csc.matrix,csc.sixteenBit};
+            vk.CmdBindPipeline(cmd,VK_PIPELINE_BIND_POINT_COMPUTE,sgsrUpscalePipeline);
+            vk.CmdBindDescriptorSets(cmd,VK_PIPELINE_BIND_POINT_COMPUTE,sgsrUpscalePipelineLayout,0,1,&sgsrUpscaleSets[output],0,nullptr);
+            vk.CmdPushConstants(cmd,sgsrUpscalePipelineLayout,VK_SHADER_STAGE_COMPUTE_BIT,0,sizeof(params),&params);
+            vk.CmdDispatch(cmd,(sgsrOutputWidth+7)/8,(sgsrOutputHeight+7)/8,1);
+            VkImageMemoryBarrier historyReady={VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER};historyReady.srcAccessMask=VK_ACCESS_SHADER_WRITE_BIT;
+            historyReady.dstAccessMask=VK_ACCESS_SHADER_READ_BIT;historyReady.oldLayout=historyReady.newLayout=VK_IMAGE_LAYOUT_GENERAL;
+            historyReady.srcQueueFamilyIndex=historyReady.dstQueueFamilyIndex=VK_QUEUE_FAMILY_IGNORED;historyReady.image=sgsrHistory[output].image;
+            historyReady.subresourceRange={VK_IMAGE_ASPECT_COLOR_BIT,0,1,0,1};
+            vk.CmdPipelineBarrier(cmd,VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0,nullptr,0,nullptr,1,&historyReady);
+            VkImageMemoryBarrier toCopy[2]={};
+            toCopy[0].sType=toCopy[1].sType=VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+            toCopy[0].srcAccessMask=VK_ACCESS_SHADER_READ_BIT;toCopy[0].dstAccessMask=VK_ACCESS_TRANSFER_READ_BIT;
+            toCopy[0].oldLayout=VK_IMAGE_LAYOUT_GENERAL;toCopy[0].newLayout=VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;toCopy[0].image=planes[0].image;
+            toCopy[1].srcAccessMask=sgsrInitialized?VK_ACCESS_SHADER_READ_BIT:0;toCopy[1].dstAccessMask=VK_ACCESS_TRANSFER_WRITE_BIT;
+            toCopy[1].oldLayout=VK_IMAGE_LAYOUT_GENERAL;toCopy[1].newLayout=VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;toCopy[1].image=sgsrPrevious.image;
+            for(auto &barrier:toCopy){barrier.srcQueueFamilyIndex=barrier.dstQueueFamilyIndex=VK_QUEUE_FAMILY_IGNORED;
+                barrier.subresourceRange={VK_IMAGE_ASPECT_COLOR_BIT,0,1,0,1};}
+            vk.CmdPipelineBarrier(cmd,VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT|VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,VK_PIPELINE_STAGE_TRANSFER_BIT,
+                                  0,0,nullptr,0,nullptr,2,toCopy);
+            VkImageCopy copy={};copy.srcSubresource={VK_IMAGE_ASPECT_COLOR_BIT,0,0,1};copy.dstSubresource=copy.srcSubresource;copy.extent={width,height,1};
+            vk.CmdCopyImage(cmd,planes[0].image,VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,sgsrPrevious.image,VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,1,&copy);
+            std::swap(toCopy[0].oldLayout,toCopy[0].newLayout);std::swap(toCopy[1].oldLayout,toCopy[1].newLayout);
+            toCopy[0].srcAccessMask=VK_ACCESS_TRANSFER_READ_BIT;toCopy[0].dstAccessMask=VK_ACCESS_SHADER_READ_BIT;
+            toCopy[1].srcAccessMask=VK_ACCESS_TRANSFER_WRITE_BIT;toCopy[1].dstAccessMask=VK_ACCESS_SHADER_READ_BIT;
+            vk.CmdPipelineBarrier(cmd,VK_PIPELINE_STAGE_TRANSFER_BIT,VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT|VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                                  0,0,nullptr,0,nullptr,2,toCopy);sgsrInitialized=true;sgsrHistoryIndex=output;return output;
+        }
+
         bool present() {
             const uint64_t frameStart = nowUs();
 
@@ -1890,6 +2107,13 @@ namespace {
             enterStage(STAGE_HDR_SWITCH);
             if (hdrWanted != hdrActive && !applyHdrMode()) {
                 return false;
+            }
+            const bool requestedSgsr=sgsrAvailable&&sgsrEnabled.load();
+            if(requestedSgsr!=sgsrApplied){
+                if(yuvOutput)destroyYuvOutput();
+                sgsrApplied=requestedSgsr;
+                sgsrInitialized=false;
+                LOGI("PyroWave SGSR 2 %s",sgsrApplied?"on":"off");
             }
             enterStage(STAGE_DECODE);
 
@@ -1966,6 +2190,7 @@ namespace {
             // decode submitted above.
             planeBarrier(commandBuffer, decodeWriteStage(), decodeWriteAccess(),
                          VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_ACCESS_SHADER_READ_BIT, VK_IMAGE_LAYOUT_GENERAL);
+            const int sgsrOutput=recordSgsrMotion(commandBuffer);
 
             VkClearValue clear = {};
             clear.color = {{0.0f, 0.0f, 0.0f, 1.0f}};
@@ -1989,10 +2214,12 @@ namespace {
             VkRect2D scissor = {{0, 0}, swapchainExtent};
             vk.CmdSetViewport(commandBuffer, 0, 1, &viewport);
             vk.CmdSetScissor(commandBuffer, 0, 1, &scissor);
-            vk.CmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-            vk.CmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1,
-                                     &descriptorSet, 0, nullptr);
-            vk.CmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(CscParams), &csc);
+            const bool useSgsr=sgsrOutput>=0;
+            vk.CmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,useSgsr?sgsrPresentPipeline:pipeline);
+            const VkPipelineLayout activeLayout=useSgsr?sgsrPresentPipelineLayout:pipelineLayout;
+            const VkDescriptorSet activeSet=useSgsr?sgsrPresentSets[sgsrOutput]:descriptorSet;
+            vk.CmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,activeLayout,0,1,&activeSet,0,nullptr);
+            if(!useSgsr)vk.CmdPushConstants(commandBuffer,pipelineLayout,VK_SHADER_STAGE_FRAGMENT_BIT,0,sizeof(CscParams),&csc);
             vk.CmdDraw(commandBuffer, 3, 1, 0, 0);
             vk.CmdEndRenderPass(commandBuffer);
             if (queryPool != VK_NULL_HANDLE) {
@@ -2060,6 +2287,10 @@ namespace {
                 pyroDevice = nullptr;
             }
             if (device != VK_NULL_HANDLE) {
+                // The HDR pack pipeline may use SGSR's descriptor layout, and the SDR SGSR pipeline
+                // uses the main render pass. Tear down the bridge first, then SGSR, then the pass.
+                destroyYuvOutput();
+                destroySgsrMotion();
                 destroySwapchainResources();
                 if (swapchain != VK_NULL_HANDLE) vk.DestroySwapchainKHR(device, swapchain, nullptr);
                 if (acquireSemaphore != VK_NULL_HANDLE) vk.DestroySemaphore(device, acquireSemaphore, nullptr);
@@ -2084,6 +2315,29 @@ namespace {
                 ANativeWindow_release(window);
                 window = nullptr;
             }
+        }
+
+        void destroySgsrMotion() {
+            if(sgsrPresentPipeline!=VK_NULL_HANDLE)vk.DestroyPipeline(device,sgsrPresentPipeline,nullptr);
+            if(sgsrUpscalePipeline!=VK_NULL_HANDLE)vk.DestroyPipeline(device,sgsrUpscalePipeline,nullptr);
+            if(sgsrFlowPipeline!=VK_NULL_HANDLE)vk.DestroyPipeline(device,sgsrFlowPipeline,nullptr);
+            if(sgsrPresentPipelineLayout!=VK_NULL_HANDLE)vk.DestroyPipelineLayout(device,sgsrPresentPipelineLayout,nullptr);
+            if(sgsrPresentLayout!=VK_NULL_HANDLE)vk.DestroyDescriptorSetLayout(device,sgsrPresentLayout,nullptr);
+            if(sgsrUpscalePipelineLayout!=VK_NULL_HANDLE)vk.DestroyPipelineLayout(device,sgsrUpscalePipelineLayout,nullptr);
+            if(sgsrUpscaleLayout!=VK_NULL_HANDLE)vk.DestroyDescriptorSetLayout(device,sgsrUpscaleLayout,nullptr);
+            if(sgsrFlowPipelineLayout!=VK_NULL_HANDLE)vk.DestroyPipelineLayout(device,sgsrFlowPipelineLayout,nullptr);
+            if(sgsrFlowLayout!=VK_NULL_HANDLE)vk.DestroyDescriptorSetLayout(device,sgsrFlowLayout,nullptr);
+            if(sgsrPool!=VK_NULL_HANDLE)vk.DestroyDescriptorPool(device,sgsrPool,nullptr);
+            if(sgsrSampler!=VK_NULL_HANDLE)vk.DestroySampler(device,sgsrSampler,nullptr);
+            for(Plane *image:{&sgsrPrevious,&sgsrFlow[0],&sgsrFlow[1],&sgsrHistory[0],&sgsrHistory[1]}){
+                if(image->view!=VK_NULL_HANDLE)vk.DestroyImageView(device,image->view,nullptr);
+                if(image->image!=VK_NULL_HANDLE)vk.DestroyImage(device,image->image,nullptr);
+                if(image->memory!=VK_NULL_HANDLE)vk.FreeMemory(device,image->memory,nullptr);*image={};
+            }
+            sgsrPresentPipeline=sgsrUpscalePipeline=sgsrFlowPipeline=VK_NULL_HANDLE;
+            sgsrPresentPipelineLayout=sgsrUpscalePipelineLayout=sgsrFlowPipelineLayout=VK_NULL_HANDLE;
+            sgsrPresentLayout=sgsrUpscaleLayout=sgsrFlowLayout=VK_NULL_HANDLE;
+            sgsrPool=VK_NULL_HANDLE;sgsrSampler=VK_NULL_HANDLE;
         }
 
         VulkanLoader vk;
@@ -2158,6 +2412,32 @@ namespace {
         Plane planes[3];
         bool planesInitialized = false;
         bool fragmentPath = false;
+        std::atomic<bool> sgsrEnabled{false};
+        bool sgsrAvailable = false;
+        bool sgsrApplied = false;
+        bool sgsrInitialized = false;
+        uint32_t sgsrTargetWidth = 0;
+        uint32_t sgsrTargetHeight = 0;
+        Plane sgsrPrevious;
+        Plane sgsrFlow[2];
+        Plane sgsrHistory[2];
+        uint32_t sgsrOutputWidth = 0;
+        uint32_t sgsrOutputHeight = 0;
+        int sgsrHistoryIndex = 0;
+        VkSampler sgsrSampler = VK_NULL_HANDLE;
+        VkDescriptorSetLayout sgsrFlowLayout = VK_NULL_HANDLE;
+        VkPipelineLayout sgsrFlowPipelineLayout = VK_NULL_HANDLE;
+        VkDescriptorPool sgsrPool = VK_NULL_HANDLE;
+        VkDescriptorSet sgsrFlowSets[2] = {};
+        VkPipeline sgsrFlowPipeline = VK_NULL_HANDLE;
+        VkDescriptorSetLayout sgsrUpscaleLayout = VK_NULL_HANDLE;
+        VkPipelineLayout sgsrUpscalePipelineLayout = VK_NULL_HANDLE;
+        VkDescriptorSet sgsrUpscaleSets[2] = {};
+        VkPipeline sgsrUpscalePipeline = VK_NULL_HANDLE;
+        VkDescriptorSetLayout sgsrPresentLayout = VK_NULL_HANDLE;
+        VkPipelineLayout sgsrPresentPipelineLayout = VK_NULL_HANDLE;
+        VkDescriptorSet sgsrPresentSets[2] = {};
+        VkPipeline sgsrPresentPipeline = VK_NULL_HANDLE;
         uint64_t lastSizeCheckUs = 0;
 
         VkFormat swapchainFormat = VK_FORMAT_UNDEFINED;
@@ -2197,6 +2477,7 @@ namespace {
     public:
         // GPU decode time of the most recently completed frame, or 0 when unknown.
         uint32_t lastGpuDecodeUs = 0;
+        uint32_t lastGpuDrawUs = 0;
 
     private:
         struct {
@@ -2222,8 +2503,9 @@ namespace {
             }
             const auto toUs = [this](uint64_t delta) { return uint64_t(double(delta) * timestampPeriodNs / 1000.0); };
             lastGpuDecodeUs = uint32_t(toUs(ticks[1] - ticks[0]));
+            lastGpuDrawUs = uint32_t(toUs(ticks[2] - ticks[1]));
             stats.gpuDecodeUs += lastGpuDecodeUs;
-            stats.gpuDrawUs += toUs(ticks[2] - ticks[1]);
+            stats.gpuDrawUs += lastGpuDrawUs;
             stats.gpuSamples++;
         }
 
@@ -2326,6 +2608,8 @@ namespace {
         uint64_t hostLatencyTotal = 0;
         uint32_t gpuDecodeFrames = 0;
         uint64_t gpuDecodeTotalUs = 0;
+        uint32_t gpuDrawFrames = 0;
+        uint64_t gpuDrawTotalUs = 0;
     };
     std::mutex statsLock;
     WindowStats windowStats;
@@ -2382,6 +2666,7 @@ int PyroWave_SubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
     }
     int result = SUBMIT_SKIPPED;
     uint32_t gpuDecodeUs = 0;
+    uint32_t gpuDrawUs = 0;
     {
         enterStage(STAGE_LOCK);
         std::lock_guard<std::mutex> lock(activeLock);
@@ -2389,6 +2674,7 @@ int PyroWave_SubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
             result = activeRenderer->submit(frame.data(), offset, segments, decodeUnit->pyrowaveCriticalPackets);
             // The GPU time of the previous frame, read back while this one was submitted
             gpuDecodeUs = activeRenderer->lastGpuDecodeUs;
+            gpuDrawUs = activeRenderer->lastGpuDrawUs;
         }
         enterStage(STAGE_IDLE);
     }
@@ -2426,6 +2712,10 @@ int PyroWave_SubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
             w.gpuDecodeTotalUs += gpuDecodeUs;
             w.gpuDecodeFrames++;
         }
+        if (gpuDrawUs != 0) {
+            w.gpuDrawTotalUs += gpuDrawUs;
+            w.gpuDrawFrames++;
+        }
     }
     // Every PyroWave frame is independent: never ask the host for a keyframe
     return DR_OK;
@@ -2442,8 +2732,9 @@ Java_com_limelight_binding_video_PyroWaveRenderer_nativeIsAvailable(JNIEnv *, jc
 
 JNIEXPORT jlong JNICALL
 Java_com_limelight_binding_video_PyroWaveRenderer_nativeCreate(JNIEnv *env, jclass, jobject surface, jint width,
-                                                               jint height, jint frameRate, jboolean chroma444,
-                                                               jboolean fullRange, jint matrix, jboolean tenBit) {
+                                                               jint height, jint frameRate, jint outputWidth,
+                                                               jint outputHeight, jboolean chroma444, jboolean fullRange,
+                                                               jint matrix, jboolean tenBit, jboolean enableSgsr2) {
     if (surface == nullptr || width <= 0 || height <= 0 || (!chroma444 && ((width & 1) || (height & 1)))) {
         LOGE("PyroWave needs a surface and positive dimensions, even for 4:2:0 (%dx%d)", width, height);
         return 0;
@@ -2454,7 +2745,8 @@ Java_com_limelight_binding_video_PyroWaveRenderer_nativeCreate(JNIEnv *env, jcla
     }
     installStackSignal();
     auto renderer = std::make_unique<Renderer>();
-    if (!renderer->create(window, width, height, frameRate, chroma444, fullRange, matrix, tenBit)) {
+    if (!renderer->create(window, width, height, frameRate, outputWidth, outputHeight, chroma444, fullRange,
+                          matrix, tenBit, enableSgsr2)) {
         return 0;  // The renderer releases the window.
     }
     LOGI("PyroWave renderer ready for %dx%d %s %s", width, height, chroma444 ? "4:4:4" : "4:2:0",
@@ -2484,6 +2776,19 @@ Java_com_limelight_binding_video_PyroWaveRenderer_nativeSetHdrMode(JNIEnv *, jcl
     if (renderer != nullptr) {
         renderer->setHdrMode(enabled);
     }
+}
+
+JNIEXPORT void JNICALL
+Java_com_limelight_binding_video_PyroWaveRenderer_nativeSetUpscalingEnabled(JNIEnv *, jclass, jlong handle,
+                                                                            jboolean enabled) {
+    auto *renderer=reinterpret_cast<Renderer *>(handle);
+    if(renderer!=nullptr)renderer->setUpscalingEnabled(enabled);
+}
+
+JNIEXPORT jboolean JNICALL
+Java_com_limelight_binding_video_PyroWaveRenderer_nativeIsUpscalingEnabled(JNIEnv *, jclass, jlong handle) {
+    auto *renderer=reinterpret_cast<Renderer *>(handle);
+    return renderer!=nullptr&&renderer->isUpscalingEnabled()?JNI_TRUE:JNI_FALSE;
 }
 
 // Copies the statistics window into [out] (the order of PyroWaveRenderer.Stats) and starts a new one
@@ -2520,7 +2825,8 @@ Java_com_limelight_binding_video_PyroWaveRenderer_nativeTakeStats(JNIEnv *env, j
     }
     const jlong values[] = {w.totalFrames, w.receivedFrames, w.renderedFrames, w.lostFrames, w.partialFrames,
                             w.hostLatencyFrames, w.hostLatencyMin, w.hostLatencyMax, jlong(w.hostLatencyTotal),
-                            w.gpuDecodeFrames, jlong(w.gpuDecodeTotalUs), jlong(onePercentLow)};
+                            w.gpuDecodeFrames, jlong(w.gpuDecodeTotalUs), jlong(onePercentLow),
+                            w.gpuDrawFrames, jlong(w.gpuDrawTotalUs)};
     env->SetLongArrayRegion(out, 0, std::min<jsize>(env->GetArrayLength(out), jsize(std::size(values))), values);
 }
 

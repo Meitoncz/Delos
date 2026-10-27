@@ -41,6 +41,7 @@ public final class SgsrRenderer implements AutoCloseable {
     private volatile float sharpness;
     private volatile int mode;
     private Integer drawnQuality;
+    private volatile float gpuTimeMs;
     private int highQualityProgram;
     private int temporalPresentProgram;
     private SgsrTemporal temporal;
@@ -121,8 +122,9 @@ public final class SgsrRenderer implements AutoCloseable {
         window = tenBit ? EGL14.eglCreatePbufferSurface(display,configs[0],new int[]{EGL14.EGL_WIDTH,1,EGL14.EGL_HEIGHT,1,EGL14.EGL_NONE},0)
                 : EGL14.eglCreateWindowSurface(display, configs[0], output, new int[]{EGL14.EGL_NONE},0);
         require(window != EGL14.EGL_NO_SURFACE && EGL14.eglMakeCurrent(display,window,window,context), "EGL window");
-        require(GLES31.glGetString(GLES31.GL_EXTENSIONS).contains("GL_OES_EGL_image_external_essl3"), "External texture support");
-        if (tenBit) require(GLES31.glGetString(GLES31.GL_EXTENSIONS).contains("GL_EXT_YUV_target"), "P010 output support");
+        String extensions=GLES31.glGetString(GLES31.GL_EXTENSIONS);
+        require(extensions.contains("GL_OES_EGL_image_external_essl3"), "External texture support");
+        if (tenBit) require(extensions.contains("GL_EXT_YUV_target"), "P010 output support");
         EGL14.eglSwapInterval(display,0);
         copyProgram = program(VERTEX,COPY);
         upscaleProgram = createUpscaleProgram(app,"sgsr/sgsr1.frag");
@@ -175,6 +177,7 @@ public final class SgsrRenderer implements AutoCloseable {
 
     private void draw() {
         if (closed.get()) return;
+        final long processingStartNs=System.nanoTime();
         try {
             texture.updateTexImage();
             texture.getTransformMatrix(transform);
@@ -250,6 +253,8 @@ public final class SgsrRenderer implements AutoCloseable {
                 EGLExt.eglPresentationTimeANDROID(display,window,System.nanoTime());
                 require(EGL14.eglSwapBuffers(display,window),"SGSR swap");
             }
+            float elapsedMs=(System.nanoTime()-processingStartNs)/1_000_000f;
+            gpuTimeMs=gpuTimeMs==0f?elapsedMs:gpuTimeMs*.8f+elapsedMs*.2f;
         } catch (RuntimeException e) {
             LimeLog.warning("SGSR stopped; recovering to direct output: " + e);
             if (closed.compareAndSet(false,true)) {
@@ -259,6 +264,9 @@ public final class SgsrRenderer implements AutoCloseable {
             }
         }
     }
+
+    /** Smoothed wall time of the completed SGSR processing path, excluding decode. */
+    public float getGpuTimeMs() { return gpuTimeMs; }
 
     private static int texture(int target) {
         int[] id = new int[1]; GLES31.glGenTextures(1,id,0);

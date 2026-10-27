@@ -65,6 +65,8 @@ class StreamStats(
     val networkMs: Int,
     val networkVarianceMs: Int,
     val decodeMs: Float,
+    /** GPU post-processing after decode (upscaling and final presentation shader). */
+    val processingMs: Float,
     /** The PC's own processing time per frame; all -1 when the PC does not report it. */
     val hostMinMs: Float,
     val hostMaxMs: Float,
@@ -75,7 +77,7 @@ class StreamStats(
     val onePercentLowFps: Float = -1f,
 ) {
     /** The delay summed up: network round trip, the PC's processing when it reports it, and decoding. */
-    val totalMs: Float get() = networkMs + maxOf(hostMs, 0f) + decodeMs
+    val totalMs: Float get() = networkMs + maxOf(hostMs, 0f) + decodeMs + processingMs
 }
 
 /**
@@ -166,6 +168,7 @@ class StreamStatsPanel private constructor(
                 add("Network" to "${s.networkMs} ms ± ${s.networkVarianceMs} ms")
                 if (s.hostMs >= 0f) add("PC processing" to "${format(s.hostMs)} ms (${format(s.hostMinMs)}–${format(s.hostMaxMs)})")
                 add("Decoding" to "${format(s.decodeMs, 2)} ms")
+                if (s.processingMs > 0f) add("Upscaling" to "${format(s.processingMs, 2)} ms")
                 add("Total latency" to "${format(s.totalMs)} ms")
                 if (s.bandwidthKb >= 0f) add("Bandwidth" to bandwidth(s.bandwidthKb))
                 add("Lost frames" to "${format(s.lossPercent, 2)} %")

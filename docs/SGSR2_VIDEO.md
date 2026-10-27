@@ -13,7 +13,7 @@ Stream menu → Upscaler → Mode offers SGSR 1 Standard, SGSR 1 High Quality an
 All remain opt-in, retain live On/Off and independent sharpness, and use the existing HDR/P010 output.
 The mode also participates in global and per-game settings through `list_sgsr_quality=temporal`.
 Live changes only affect the session; changing modes resets temporal history without reconnecting.
-PyroWave is still unavailable here because its separate Vulkan renderer does not feed this GLES stage.
+PyroWave uses a separate Vulkan implementation of SGSR 2 Video; it does not feed this GLES stage.
 
 The user reported SGSR 1 made the overall game look worse even though identical-frame diagnostics
 showed stronger text edges than bilinear. Do not claim SGSR 1 visual acceptance or dismiss this report.
@@ -185,3 +185,17 @@ remaining static logo aliasing is consistent with missing source detail at that 
 The Sharpness control is not a SGSR 2 reconstruction-quality parameter. It controls a separate,
 bounded presentation-only sharpener after reconstruction; 0% bypasses that sharpening and its output
 is never accumulated into temporal history.
+
+## PyroWave Vulkan path
+
+PyroWave estimates bidirectional motion with Vulkan compute shaders on an 8-pixel grid and performs
+temporal reconstruction directly from its decoded YUV planes. SDR presents the reconstructed FP16
+history to the swapchain. HDR converts that same history through the established BT.2020/P010 bridge,
+so colour metadata and the hardware HDR path are retained. Live On/Off switches at a frame boundary,
+resets temporal history and recreates only the size-dependent HDR output when necessary.
+
+The target is the real display size, aspect-fitted from the stream dimensions; the first implementation
+incorrectly inherited a fixed surface size and reconstructed 720p back to 720p. Device logs after the
+fix confirmed `1280x720 -> 1920x1080`. A fused reconstruction/clipping shader reduced draw cost from
+about 6.5-6.8 ms to mostly 3.9-4.9 ms, allowing about 118-119 fps during the tested 120 Hz HDR stream.
+The user accepted the improved latency, HDR colour, live toggle and processing-time statistics.
