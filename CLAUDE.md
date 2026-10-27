@@ -5,7 +5,7 @@ Android client for streaming games from **Vibepollo** (a fork of Apollo/Sunshine
 - The user is **not a programmer**. Talk to them **in Czech**, explain clearly, propose steps and ask before big or irreversible actions (force push, deleting branches, releases).
 - Code, comments, commit messages, PR descriptions and all repo documentation are **in English**.
 - The app name **"Delos" is never translated or inflected** in any language (no case endings, no possessive `'s`); rephrase instead, e.g. "aplikace Delos", "the Delos USB driver".
-- **Planned roadmap steps run end to end without asking at each step** (agreed 2026-10-23): feature branch → build and tests → test on the Odin → commit → push → CI → fast-forward `main` → delete the feature branch, then report. Ask first for anything outside the plan, open design decisions, force pushes, deleting other branches, rewriting history and releases.
+- **Planned roadmap steps run end to end without asking at each step** (agreed 2026-10-23): feature branch → local build, tests and lint → test on the Odin → commit → fast-forward `main` → push with `[skip ci]` → delete the feature branch, then report. Run GitHub Actions **only when the user explicitly requests CI**. Ask first for anything outside the plan, open design decisions, force pushes, deleting other branches, rewriting history and releases.
 - Development happens on **Windows** (same machine as Vibepollo). Write commands for PowerShell, build with `gradlew.bat`.
 - Work plan: `docs/ROADMAP.md` (tick off finished items). Diff analysis: `docs/ANALYSIS.md`. Environment: `docs/WINDOWS_SETUP.md`.
 - Priority: **Moonlight updates first** (common-c → toolchain → merge `moonlight/master` → OpenSSL/opus), **UI and custom features after that**.
