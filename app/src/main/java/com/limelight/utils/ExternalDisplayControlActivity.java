@@ -3,16 +3,10 @@ package com.limelight.utils;
 import static com.limelight.StartExternalDisplayControlReceiver.requestFocusToGameActivity;
 import static com.limelight.utils.ServerHelper.getSecondaryDisplay;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.ActivityOptions;
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.os.Build;
@@ -35,28 +29,23 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.app.NotificationCompat;
 import androidx.core.content.IntentCompat;
-import androidx.core.content.ContextCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.limelight.Game;
-import com.limelight.GameMenu;
 import com.limelight.LimeLog;
 import com.limelight.R;
-import com.limelight.StartExternalDisplayControlReceiver;
 import com.limelight.binding.input.virtual_controller.keyboard.KeyBoardLayoutController;
 import com.limelight.preferences.PreferenceConfiguration;
 import com.limelight.ui.ExternalControllerView;
 
 /**
  * A standalone Activity providing a full-screen touchpad controller for the secondary display.
- * It creates its own UI programmatically and hosts the GameMenu for in-game options.
+ * It creates its own UI programmatically and forwards menu input to the stream on the external display.
  */
-public class ExternalDisplayControlActivity extends AppCompatActivity implements View.OnKeyListener, KeyBoardLayoutController.ViewCallbacks {
+public class ExternalDisplayControlActivity extends AppCompatActivity implements KeyBoardLayoutController.ViewCallbacks {
 
     public static String EXTRA_LAUNCH_INTENT = "launchIntent";
 
@@ -77,12 +66,6 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
     private float originalBrightness = -1f; // -1 = use system default
     private static final int INACTIVITY_TIMEOUT_MS = 10_000;
 
-
-    private static final String NOTIFICATION_CHANNEL_ID = "secondary_screen_active_channel_id";
-    public static final int SECONDARY_SCREEN_NOTIFICATION_ID = 1;
-    private static final int PERMISSION_REQUEST_CODE = 1001;
-
-    private GameMenu gameMenu;
 
     // --- Static Methods for External Control ---
 
@@ -105,8 +88,8 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
     }
 
     public static void toggleGameMenu() {
-        if (instance != null) {
-            instance.showGameMenu();
+        if (Game.instance != null) {
+            Game.instance.showStreamMenu();
         }
     }
 
@@ -133,6 +116,9 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
             } else {
                 Display secondaryDisplay = getSecondaryDisplay(this);
                 if (secondaryDisplay != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    // The shell and loader are one continuous scene. This nested Game task must not
+                    // get Android's default side-slide (custom animations are ignored for this task).
+                    gameIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                     ActivityOptions options = ActivityOptions.makeBasic();
                     options.setLaunchDisplayId(secondaryDisplay.getDisplayId());
                     Toast.makeText(this,
@@ -143,6 +129,7 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
                             Toast.LENGTH_LONG).show();
 
                     startActivity(gameIntent, options.toBundle());
+                    overridePendingTransition(0, 0);
                 } else {
                     LimeLog.warning(getString(R.string.no_external_display));
                     startActivity(gameIntent);
@@ -184,9 +171,7 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
             });
         }
 
-        initializeComponents();
         createProgrammaticUI();
-        checkNotificationPermission();
         initTouchEventHandling();
         setupInactivityTimeoutForBrightness();
         requestFocusToGameActivity(false);
@@ -207,7 +192,7 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
     @Override
     protected void onResume() {
         super.onResume();
-        if (!isGameInstanceAvailable() && gameMenu != null) {
+        if (!isGameInstanceAvailable() && rootLayout != null) {
             finish();
         }
     }
@@ -298,7 +283,9 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
     private void handleBack(OnBackPressedCallback callback) {
         if (Game.instance != null && Game.instance.isKeyboardLayoutVisible()) {
             toggleFullKeyboard();
-        } else if (gameMenu != null && !gameMenu.isMenuOpen() && Game.instance != null) {
+        } else if (Game.instance != null && Game.instance.isStreamMenuOpen()) {
+            Game.instance.hideGameMenu();
+        } else if (Game.instance != null) {
             Game.instance.onBackPressed();
         } else {
             // Default behavior: let the system finish this activity
@@ -317,13 +304,6 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
         return Game.instance != null;
     }
 
-    /**
-     * Initializes core components needed for this controller Activity.
-     */
-    private void initializeComponents() {
-        this.gameMenu = new GameMenu(Game.instance, instance);
-    }
-
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
         if (Game.instance != null) {
@@ -335,65 +315,19 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
     @Override
     public boolean onGenericMotionEvent(MotionEvent event) {
         if (Game.instance != null) {
-            requestFocusToGameActivity(false);
-            return Game.instance.onGenericMotionEvent(event);
+            return Game.instance.handleExternalDisplayMotionEvent(event);
         }
         return false;
     }
 
     @Override
-    @SuppressWarnings("deprecation") // KeyEvent.ACTION_MULTIPLE is still delivered by some IMEs
-    public boolean onKey(View view, int keyCode, KeyEvent keyEvent) {
-        if (Game.instance != null) {
-            if (keyEvent.getDeviceId() >= 0) {
-                requestFocusToGameActivity(false);
-            }
-            switch (keyEvent.getAction()) {
-                case KeyEvent.ACTION_DOWN:
-                    return Game.instance.handleKeyDown(keyEvent);
-                case KeyEvent.ACTION_UP:
-                    return Game.instance.handleKeyUp(keyEvent);
-                case KeyEvent.ACTION_MULTIPLE:
-                    return Game.instance.handleKeyMultiple(keyEvent);
-                default:
-                    return false;
-            }
-        }
-
-        return false;
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        return routeKeyEvent(event) || super.dispatchKeyEvent(event);
     }
 
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (Game.instance != null) {
-            if (event.getDeviceId() >= 0) {
-                requestFocusToGameActivity(false);
-            }
-            return Game.instance.onKeyDown(keyCode, event);
-        }
-        return false;
-    }
-
-    @Override
-    public boolean onKeyUp(int keyCode, KeyEvent event) {
-        if (Game.instance != null) {
-            if (event.getDeviceId() >= 0) {
-                requestFocusToGameActivity(false);
-            }
-            return Game.instance.onKeyUp(keyCode, event);
-        }
-        return false;
-    }
-
-    @Override
-    public boolean onKeyMultiple(int keyCode, int repeatCount, KeyEvent event) {
-        if (Game.instance != null) {
-            if (event.getDeviceId() >= 0) {
-                requestFocusToGameActivity(false);
-            }
-            return Game.instance.onKeyMultiple(keyCode, repeatCount, event);
-        }
-        return false;
+    private boolean routeKeyEvent(KeyEvent event) {
+        if (Game.instance == null) return false;
+        return Game.instance.handleExternalDisplayKeyEvent(event);
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -408,6 +342,7 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
         }
 
         rootLayout.setInputCallbacks(Game.instance);
+        rootLayout.setPreImeKeyHandler(this::routeKeyEvent);
         rootLayout.setCommitTextEnabled(prefConfig.enableCommitText);
 
         setContentView(rootLayout);
@@ -497,11 +432,11 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
         }
     }
 
-    // --- Public methods to interact with the GameMenu instance ---
+    // --- Public methods to interact with the Delos stream menu ---
 
     public void showGameMenu() {
-        if (gameMenu != null) {
-            gameMenu.showMenu(null);
+        if (Game.instance != null) {
+            Game.instance.showStreamMenu();
         }
     }
 
@@ -523,54 +458,6 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
         button.setOnClickListener(listener);
         button.setLayoutParams(new LinearLayout.LayoutParams(dpToPx(56), dpToPx(56)));
         return button;
-    }
-
-    // --- Notification Management ---
-
-    private void checkNotificationPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, PERMISSION_REQUEST_CODE);
-                return;
-            }
-        }
-        showStickyNotification();
-    }
-
-    private void showStickyNotification() {
-        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, getString(R.string.notification_channel_name), NotificationManager.IMPORTANCE_LOW);
-            channel.setShowBadge(false);
-            notificationManager.createNotificationChannel(channel);
-        }
-
-        Intent broadcastIntent = new Intent(this, StartExternalDisplayControlReceiver.class);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, broadcastIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-
-        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
-                .setContentTitle(getString(R.string.notification_title))
-                .setContentText(getString(R.string.notification_text))
-                .setSmallIcon(R.drawable.app_icon)
-                .setContentIntent(pendingIntent)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setOngoing(true);
-
-        Notification notification = notificationBuilder.build();
-
-        notificationManager.notify(SECONDARY_SCREEN_NOTIFICATION_ID, notification);
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == PERMISSION_REQUEST_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                showStickyNotification();
-            } else {
-                Toast.makeText(this, getString(R.string.permission_denied), Toast.LENGTH_SHORT).show();
-            }
-        }
     }
 
     // --- Utility Methods ---

@@ -3,7 +3,6 @@ package com.limelight;
 
 import static com.limelight.StartExternalDisplayControlReceiver.requestFocusToExternalDisplayControl;
 import static com.limelight.binding.input.KeyboardTranslator.getModifier;
-import static com.limelight.utils.ExternalDisplayControlActivity.SECONDARY_SCREEN_NOTIFICATION_ID;
 import static com.limelight.utils.ExternalDisplayControlActivity.closeExternalDisplayControl;
 import static com.limelight.utils.ServerHelper.getActiveDisplay;
 import static com.limelight.utils.ServerHelper.getSecondaryDisplay;
@@ -110,7 +109,6 @@ import android.widget.Toast;
 import android.widget.ImageButton;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.NotificationManagerCompat;
 import androidx.preference.PreferenceManager;
 
 import android.os.Looper;
@@ -333,6 +331,16 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // External-display Game runs as a separate task. Android otherwise applies its default
+        // side-slide even though the Delos loader is a continuation of the shell's launch scene.
+        if (getIntent().getIntExtra(EXTRA_DISPLAY_ID, Display.DEFAULT_DISPLAY) != Display.DEFAULT_DISPLAY) {
+            // Keep the external window on Delos's near-black stage color until the first Compose
+            // loader frame. A transparent stream window otherwise exposes the TV task background.
+            getWindow().setBackgroundDrawableResource(R.color.shell_window_background);
+            getWindow().getAttributes().windowAnimations = 0;
+            overridePendingTransition(0, 0);
+        }
+
         instance = this;
         timerHandler = new Handler(Looper.getMainLooper());
 
@@ -397,13 +405,10 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
                 && onExternelDisplay
         ) {
-            Display.Mode currentMode = currentDisplay.getMode();
-            displayWidth = currentMode.getPhysicalWidth();
-            displayHeight = currentMode.getPhysicalHeight();
-            prefConfig.width = displayWidth;
-            prefConfig.height = displayHeight;
-            prefConfig.fps = currentMode.getRefreshRate();
-            prefConfig.videoScaleMode = PreferenceConfiguration.ScaleMode.STRETCH;
+            // StreamConfiguration and the SurfaceView aspect ratio use these fields. They must stay
+            // at the profile/per-game stream size; the Display object already carries the TV canvas.
+            displayWidth = prefConfig.width;
+            displayHeight = prefConfig.height;
             prefConfig.enablePip = false;
             currentOrientation = Configuration.ORIENTATION_LANDSCAPE;
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE);
@@ -895,6 +900,9 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             @Override
             public void onDisplayRemoved(int displayId) {
                 if (getSecondaryDisplay(getBaseContext()) == null) {
+                    if (streamMenu != null) {
+                        streamMenu.closeForDisplayRemoval();
+                    }
                     handleDisplayRemoved();
                     finish();
                 }
@@ -907,7 +915,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     }
 
     private void handleDisplayRemoved() {
-        NotificationManagerCompat.from(getBaseContext()).cancel(SECONDARY_SCREEN_NOTIFICATION_ID);
         closeExternalDisplayControl();
     }
 
@@ -1516,6 +1523,9 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
     @Override
     protected void onDestroy() {
+        if (streamMenu != null) {
+            streamMenu.closeForDisplayRemoval();
+        }
         super.onDestroy();
 
         instance = null;
@@ -4087,6 +4097,35 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     public String getUpscalingStatus() { return decoderRenderer.getUpscalingStatus(); }
     public void setUpscalingSharpness(int value) { decoderRenderer.setUpscalingSharpness(value); }
 
+    public boolean isStreamMenuOpen() {
+        return streamMenu != null && streamMenu.isOpen();
+    }
+
+    public void showStreamMenu() {
+        if (streamMenu != null) streamMenu.show();
+    }
+
+    /** One input route for the controller Activity, including keys delivered before the IME. */
+    @SuppressWarnings("deprecation") // KeyEvent.ACTION_MULTIPLE remains possible for physical keyboards
+    public boolean handleExternalDisplayKeyEvent(KeyEvent event) {
+        if (streamMenu != null && streamMenu.onExternalKey(event)) return true;
+        switch (event.getAction()) {
+            case KeyEvent.ACTION_DOWN:
+                return handleKeyDown(event);
+            case KeyEvent.ACTION_UP:
+                return handleKeyUp(event);
+            case KeyEvent.ACTION_MULTIPLE:
+                return handleKeyMultiple(event);
+            default:
+                return false;
+        }
+    }
+
+    /** Keeps raw stick input on the normal streaming path unless the external menu owns it. */
+    public boolean handleExternalDisplayMotionEvent(MotionEvent event) {
+        return (streamMenu != null && streamMenu.onExternalMotion(event)) || onGenericMotionEvent(event);
+    }
+
     // Delos: "Quit game" in the Delos stream menu is the confirmation (no dialog)
     public void quitWithoutAsking() {
         quitOnStop = true;
@@ -4095,9 +4134,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
     @Override
     public void showGameMenu(GameInputDevice device) {
-        if(isOnExternalDisplay()) {
-            ExternalDisplayControlActivity.toggleGameMenu();
-        } else if (streamMenu != null) {
+        if (streamMenu != null) {
             streamMenu.show();
         } else {
             if (gameMenuCallbacks != null) {

@@ -33,12 +33,17 @@ public class KeyboardAccessibilityService extends AccessibilityService {
 
         // Some tablets (e.g. Xiaomi Pad) report the Esc key as KEYCODE_BACK with scancode 1
         boolean isEscScanCode = event.getScanCode() == 1;
+        KeyEvent routedEvent = isEscScanCode ? new KeyEvent(event.getAction(), KeyEvent.KEYCODE_ESCAPE) : event;
+        ExternalDisplayControlActivity controller = ExternalDisplayControlActivity.instance;
+        boolean externalDisplayFocused = controller != null && controller.hasWindowFocus();
 
         if (event.getAction() == KeyEvent.ACTION_DOWN) {
-            game.handleKeyDown(isEscScanCode ? new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ESCAPE) : event);
+            if (externalDisplayFocused) game.handleExternalDisplayKeyEvent(routedEvent);
+            else game.handleKeyDown(routedEvent);
             return true;
         } else if (event.getAction() == KeyEvent.ACTION_UP) {
-            game.handleKeyUp(isEscScanCode ? new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ESCAPE) : event);
+            if (externalDisplayFocused) game.handleExternalDisplayKeyEvent(routedEvent);
+            else game.handleKeyUp(routedEvent);
             return true;
         }
 

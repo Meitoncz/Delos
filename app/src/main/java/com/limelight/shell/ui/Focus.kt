@@ -12,6 +12,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
@@ -93,6 +94,7 @@ fun Modifier.focusEffects(
     clickCue: Cue? = Cue.SELECT,
     contextMenu: ContextMenu? = null,
     adjustable: Boolean = false,
+    controllerAdjust: ((direction: Int, repeatCount: Int) -> Unit)? = null,
     onFocusChange: ((Boolean) -> Unit)? = null,
 ): Modifier = composed {
     val colors = LocalDelosColors.current
@@ -116,6 +118,8 @@ fun Modifier.focusEffects(
         clickCue?.let(feedback::play)
         onClick()
     }
+    val currentActivate by rememberUpdatedState(activate)
+    val currentAdjust by rememberUpdatedState(controllerAdjust)
     val shape = RoundedCornerShape(corner.px)
     val k = stage.dpPerPx * LocalDensity.current.density
 
@@ -154,7 +158,16 @@ fun Modifier.focusEffects(
                 focused = it.isFocused
                 if (focused) {
                     feedback.focusMoved()
-                    tracker.focused(requester, position[0], contextMenu, adjustable)
+                    tracker.focused(
+                        requester,
+                        position[0],
+                        contextMenu,
+                        adjustable,
+                        activate = { currentActivate() },
+                        adjust = if (controllerAdjust == null) null else { direction, repeatCount ->
+                            currentAdjust?.invoke(direction, repeatCount)
+                        },
+                    )
                 }
                 onFocusChange?.invoke(focused)
             }

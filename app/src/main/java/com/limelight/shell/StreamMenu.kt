@@ -3,6 +3,7 @@ package com.limelight.shell
 import android.graphics.Color as AndroidColor
 import android.graphics.drawable.ColorDrawable
 import android.provider.Settings
+import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.ViewGroup
@@ -31,11 +32,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.withFrameNanos
 import kotlinx.coroutines.delay
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.lifecycleScope
@@ -49,10 +52,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -83,6 +88,8 @@ import com.limelight.shell.ui.focusEffects
 import com.limelight.shell.ui.px
 import com.limelight.shell.ui.systemAccentHue
 import com.limelight.shell.ui.tpx
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 
 /**
  * The Delos stream menu (the prototype's `#quickmenu`): a panel at the bottom of the stream with the
@@ -104,6 +111,12 @@ class StreamMenu(private val game: Game) {
     private var edgeGesture = false
     private var edgeStartY = 0f
     private var dialog: ComponentDialog? = null
+    private var menuReady = false
+    private val externalActions = MutableSharedFlow<ExternalMenuAction>(
+        extraBufferCapacity = 16,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    )
+    private val analogNavigation = DirectionalRepeater()
 
     val isOpen: Boolean get() = dialog?.isShowing == true
 
@@ -124,12 +137,74 @@ class StreamMenu(private val game: Game) {
                 held -= code
                 if (pending && held.isEmpty()) {
                     pending = false
-                    if (isOpen) hide() else show()
+                    if (!isOpen) show()
+                    else if (menuReady) hide()
                     return true
                 }
             }
         }
         return false
+    }
+
+    /**
+     * Accepts controller input from the activity on the built-in display. Android deliberately sends
+     * untargeted controller input only to the globally focused display, so an external-display menu
+     * cannot receive it through its own window. We forward semantic UI actions instead of injecting
+     * synthetic key events into the TV window.
+     */
+    fun onExternalKey(event: KeyEvent): Boolean {
+        if (onKey(event)) return true
+        if (!isOpen) return false
+
+        val action = when (event.keyCode) {
+            KeyEvent.KEYCODE_DPAD_UP -> ExternalMenuAction.Move(MenuDirection.UP, event.repeatCount)
+            KeyEvent.KEYCODE_DPAD_DOWN -> ExternalMenuAction.Move(MenuDirection.DOWN, event.repeatCount)
+            KeyEvent.KEYCODE_DPAD_LEFT -> ExternalMenuAction.Move(MenuDirection.LEFT, event.repeatCount)
+            KeyEvent.KEYCODE_DPAD_RIGHT -> ExternalMenuAction.Move(MenuDirection.RIGHT, event.repeatCount)
+            KeyEvent.KEYCODE_BUTTON_A, KeyEvent.KEYCODE_DPAD_CENTER,
+            KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_NUMPAD_ENTER -> ExternalMenuAction.Activate
+            KeyEvent.KEYCODE_BUTTON_B, KeyEvent.KEYCODE_BACK -> ExternalMenuAction.Back
+            else -> null
+        }
+
+        if (action != null) {
+            val trigger = when (action) {
+                is ExternalMenuAction.Move -> event.action == KeyEvent.ACTION_DOWN
+                ExternalMenuAction.Activate, ExternalMenuAction.Back ->
+                    event.action == KeyEvent.ACTION_UP && !event.isCanceled
+            }
+            if (trigger) externalActions.tryEmit(action)
+            return true
+        }
+
+        // An open menu owns controller input just like its normal, focused window does on-device.
+        return event.source and (InputDevice.SOURCE_GAMEPAD or InputDevice.SOURCE_JOYSTICK) != 0
+    }
+
+    /** Converts analog movement into focus actions at a controlled repeat rate, without fake keys. */
+    fun onExternalMotion(event: MotionEvent): Boolean {
+        if (!isOpen || event.source and InputDevice.SOURCE_JOYSTICK != InputDevice.SOURCE_JOYSTICK) return false
+        if (event.actionMasked != MotionEvent.ACTION_MOVE) return true
+
+        val horizontal = strongestAxis(event, MotionEvent.AXIS_HAT_X, MotionEvent.AXIS_X)
+        val vertical = strongestAxis(event, MotionEvent.AXIS_HAT_Y, MotionEvent.AXIS_Y)
+        val direction = when {
+            kotlin.math.abs(horizontal) > kotlin.math.abs(vertical) && horizontal <= -ANALOG_THRESHOLD -> MenuDirection.LEFT
+            kotlin.math.abs(horizontal) > kotlin.math.abs(vertical) && horizontal >= ANALOG_THRESHOLD -> MenuDirection.RIGHT
+            vertical <= -ANALOG_THRESHOLD -> MenuDirection.UP
+            vertical >= ANALOG_THRESHOLD -> MenuDirection.DOWN
+            else -> null
+        }
+        if (analogNavigation.shouldMove(direction, event.eventTime)) {
+            externalActions.tryEmit(ExternalMenuAction.Move(direction!!, analogNavigation.repeatCount))
+        }
+        return true
+    }
+
+    private fun strongestAxis(event: MotionEvent, primary: Int, fallback: Int): Float {
+        val primaryValue = event.getAxisValue(primary)
+        val fallbackValue = event.getAxisValue(fallback)
+        return if (kotlin.math.abs(primaryValue) >= kotlin.math.abs(fallbackValue)) primaryValue else fallbackValue
     }
 
     /**
@@ -173,17 +248,25 @@ class StreamMenu(private val game: Game) {
         val appearance = AppearanceStore(game) { ProfileStore.currentSettings(game) }.appearance.value
         val colors = delosColors(appearance, systemAccentHue(game))
         val title = game.intent.getStringExtra(Game.EXTRA_APP_NAME) ?: "Stream"
-        d.setContentView(ComposeView(d.context).apply {
+        menuReady = false
+        val composeView = ComposeView(d.context).apply {
             setContent {
+                LaunchedEffect(Unit) {
+                    withFrameNanos { }
+                    menuReady = true
+                }
                 CompositionLocalProvider(LocalDelosColors provides colors, LocalFeedback provides feedback, LocalFocusTracker provides remember { FocusTracker() }) {
                     Stage(textScale = appearance.uiScale / 100f) { MenuPanel(title, d) }
                 }
             }
-        })
+        }
+        d.setContentView(composeView)
         // While the menu is open the buttons reach its window, not the stream: the shortcut closes it again
         d.setOnKeyListener { _, _, event -> onKey(event) }
         d.setOnDismissListener {
             feedback.release()
+            analogNavigation.reset()
+            menuReady = false
             dialog = null
         }
         dialog = d
@@ -200,6 +283,11 @@ class StreamMenu(private val game: Game) {
 
     fun hide() {
         dialog?.dismiss()
+    }
+
+    /** The external display can disappear without giving its dialog a normal dismiss sequence. */
+    fun closeForDisplayRemoval() {
+        hide()
     }
 
     private enum class Page { MAIN, MORE, KEYS, COMMANDS, BRIGHTNESS, BITRATE, UPSCALER }
@@ -253,6 +341,33 @@ class StreamMenu(private val game: Game) {
         fun close(then: () -> Unit = {}) {
             d.dismiss()
             whenGameFocused(then)
+        }
+        val focusManager = LocalFocusManager.current
+        val focusTracker = LocalFocusTracker.current
+        LaunchedEffect(d) {
+            externalActions.collect { action ->
+                when (action) {
+                    ExternalMenuAction.Activate -> focusTracker.activate()
+                    ExternalMenuAction.Back -> if (page == Page.MAIN) close() else page = Page.MAIN
+                    is ExternalMenuAction.Move -> {
+                        val adjustment = when (action.direction) {
+                            MenuDirection.LEFT -> -1
+                            MenuDirection.RIGHT -> 1
+                            else -> 0
+                        }
+                        if (adjustment == 0 || !focusTracker.adjust(adjustment, action.repeatCount)) {
+                            focusManager.moveFocus(
+                                when (action.direction) {
+                                    MenuDirection.UP -> FocusDirection.Up
+                                    MenuDirection.DOWN -> FocusDirection.Down
+                                    MenuDirection.LEFT -> FocusDirection.Left
+                                    MenuDirection.RIGHT -> FocusDirection.Right
+                                }
+                            )
+                        }
+                    }
+                }
+            }
         }
         // Toggles keep the menu open; reading [changes] redraws their On / Off state after each one
         var changes by remember { mutableIntStateOf(0) }
@@ -486,5 +601,48 @@ class StreamMenu(private val game: Game) {
         /** The bottom strip a swipe has to start in, and how far up it has to go (share of the height). */
         const val EDGE = .06f
         const val DISTANCE = .12f
+        const val ANALOG_THRESHOLD = .55f
+    }
+}
+
+internal enum class MenuDirection { UP, DOWN, LEFT, RIGHT }
+
+private sealed interface ExternalMenuAction {
+    data class Move(val direction: MenuDirection, val repeatCount: Int) : ExternalMenuAction
+    data object Activate : ExternalMenuAction
+    data object Back : ExternalMenuAction
+}
+
+/** Stable edge/repeat policy shared by every analog direction. */
+internal class DirectionalRepeater(
+    private val initialDelayMs: Long = 350,
+    private val repeatIntervalMs: Long = 100,
+) {
+    private var direction: MenuDirection? = null
+    private var nextRepeatAt = 0L
+    var repeatCount = 0
+        private set
+
+    fun shouldMove(next: MenuDirection?, eventTime: Long): Boolean {
+        if (next == null) {
+            reset()
+            return false
+        }
+        if (next != direction) {
+            direction = next
+            repeatCount = 0
+            nextRepeatAt = eventTime + initialDelayMs
+            return true
+        }
+        if (eventTime < nextRepeatAt) return false
+        repeatCount++
+        nextRepeatAt = eventTime + repeatIntervalMs
+        return true
+    }
+
+    fun reset() {
+        direction = null
+        repeatCount = 0
+        nextRepeatAt = 0L
     }
 }

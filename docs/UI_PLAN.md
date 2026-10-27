@@ -166,6 +166,7 @@ Built on the branch `ui/switch-over` (2026-10-24). Delos is still not released; 
 - [ ] Strings: new UI strings in English; existing translations reused wherever a setting keeps its string key (with the translations later).
 
 ### 6.10 Polish and testing
+- [x] External display: Delos loader and stream menu, configured stream resolution/FPS, HDR, controller navigation from the built-in Odin controls, and clean return to the shell. See [EXTERNAL_DISPLAY.md](EXTERNAL_DISPLAY.md).
 - [ ] Side-by-side comparison with the prototype on the Odin, screen by screen.
 - [ ] Check with the user on the Odin what could not be tried in 6.6 yet: PIN pairing after unpairing, OTP pairing, adding a PC by address, waking an offline PC from the start screen, removing a PC, "Skip the start screen".
 - [ ] Smooth at the Odin's refresh rate; memory use with many covers.

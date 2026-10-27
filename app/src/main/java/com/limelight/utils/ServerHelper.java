@@ -89,6 +89,23 @@ public class ServerHelper {
         return display;
     }
 
+    /** Returns the Game intent, unwrapping the external-display controller when present. */
+    public static Intent getStreamIntent(Intent launchIntent) {
+        if (launchIntent == null) {
+            return null;
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Intent nested = launchIntent.getParcelableExtra(
+                    ExternalDisplayControlActivity.EXTRA_LAUNCH_INTENT, Intent.class);
+            return nested != null ? nested : launchIntent;
+        }
+
+        @SuppressWarnings("deprecation")
+        Intent nested = launchIntent.getParcelableExtra(ExternalDisplayControlActivity.EXTRA_LAUNCH_INTENT);
+        return nested != null ? nested : launchIntent;
+    }
+
     public static Intent createStartIntent(Activity parent, NvApp app, ComputerDetails computer,
                                            ComputerManagerService.ComputerManagerBinder managerBinder,
                                            boolean withVDisplay) {

@@ -121,6 +121,10 @@ fun SettingRow(
         is RowValue.Text -> value.onClick
         is RowValue.Info -> ({})
     }
+    val controllerAdjust: ((Int, Int) -> Unit)? = if (adjust == null || !enabled) null else { direction, repeatCount ->
+        feedback.play(Cue.MOVE)
+        adjust(direction * if (value is RowValue.Slider) sliderAcceleration(value, repeatCount) else 1)
+    }
     val shape = RoundedCornerShape(24.px)
     Row(
         modifier
@@ -147,6 +151,7 @@ fun SettingRow(
                 clickCue = if (enabled && value !is RowValue.Info) (if (value is RowValue.Action) Cue.OPEN else Cue.SELECT) else null,
                 contextMenu = contextMenu,
                 adjustable = adjust != null && enabled,
+                controllerAdjust = controllerAdjust,
                 onFocusChange = {
                     focused = it
                     if (it) onFocused?.invoke()

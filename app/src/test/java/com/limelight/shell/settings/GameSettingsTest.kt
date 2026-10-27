@@ -12,7 +12,9 @@ import com.limelight.profiles.ProfilesManager
 import com.limelight.shadows.ShadowGameManager
 import com.limelight.shadows.ShadowMoonBridge
 import com.limelight.shell.data.ProfileStore
+import com.limelight.shell.StreamLoader
 import com.limelight.utils.ExternalDisplayControlActivity
+import com.limelight.utils.ServerHelper
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
@@ -124,6 +126,16 @@ class GameSettingsTest {
         @Suppress("DEPRECATION")
         val stream = outer.getParcelableExtra<Intent>(ExternalDisplayControlActivity.EXTRA_LAUNCH_INTENT)!!
         assertEquals(1280, PreferenceConfiguration.readPreferences(Robolectric.buildActivity(Game::class.java, stream).get()).width)
+
+        val unwrapped = ServerHelper.getStreamIntent(outer)
+        unwrapped.putExtra(StreamLoader.EXTRA, true)
+        unwrapped.putExtra(Game.EXTRA_PC_NAME, "Living room")
+        outer.putExtra(ExternalDisplayControlActivity.EXTRA_LAUNCH_INTENT, unwrapped)
+        @Suppress("DEPRECATION")
+        val configured = outer.getParcelableExtra<Intent>(ExternalDisplayControlActivity.EXTRA_LAUNCH_INTENT)!!
+        assertTrue(StreamLoader.requested(configured))
+        assertEquals("Living room", configured.getStringExtra(Game.EXTRA_PC_NAME))
+        assertSame(configured, ServerHelper.getStreamIntent(configured))
     }
 
     @Test fun hdrUpscalerQualityUsesGameSnapshotAndSessionChangesLeaveDefaultsIntact() {

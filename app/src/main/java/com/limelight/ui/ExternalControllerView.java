@@ -8,6 +8,7 @@ import androidx.annotation.NonNull;
 
 public class ExternalControllerView extends FrameLayout {
     private InputCallbacks inputCallbacks;
+    private PreImeKeyHandler preImeKeyHandler;
 
     // When enabled, we expose an InputConnection so that soft keyboards can send
     // commitText() events (e.g. swipe typing). Default disabled.
@@ -15,6 +16,10 @@ public class ExternalControllerView extends FrameLayout {
 
     public void setInputCallbacks(InputCallbacks callbacks) {
         this.inputCallbacks = callbacks;
+    }
+
+    public void setPreImeKeyHandler(PreImeKeyHandler handler) {
+        this.preImeKeyHandler = handler;
     }
 
     public void setCommitTextEnabled(boolean enabled) {
@@ -32,6 +37,12 @@ public class ExternalControllerView extends FrameLayout {
 
     @Override
     public boolean onKeyPreIme(int keyCode, KeyEvent event) {
+        // The focused IME may consume gamepad buttons before Activity.dispatchKeyEvent(). Give the
+        // external-display input router first refusal while keeping the InputConnection available.
+        if (preImeKeyHandler != null && preImeKeyHandler.handle(event)) {
+            return true;
+        }
+
         // This callbacks allows us to override dumb IME behavior like when
         // Samsung's default keyboard consumes Shift+Space.
         if (inputCallbacks != null) {
@@ -89,5 +100,9 @@ public class ExternalControllerView extends FrameLayout {
         boolean handleKeyDown(KeyEvent event);
         boolean handleCommitText(CharSequence text);
         boolean handleDeleteSurroundingText(int beforeLength, int afterLength);
+    }
+
+    public interface PreImeKeyHandler {
+        boolean handle(KeyEvent event);
     }
 }

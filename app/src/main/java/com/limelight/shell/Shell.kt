@@ -25,6 +25,9 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
+import androidx.compose.runtime.withFrameNanos
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
@@ -139,6 +142,7 @@ fun Shell(
     val profiles by profileStore.profiles.collectAsStateWithLifecycle()
     val startup by startupStore.startup.collectAsStateWithLifecycle()
     val pcs by repo.pcs.collectAsStateWithLifecycle()
+    var contextRefreshRequired by remember { mutableStateOf(false) }
 
     // "Skip the start screen": straight into the default device
     LaunchedEffect(Unit) {
@@ -221,6 +225,7 @@ fun Shell(
             }
         }
         if (shell.launch != null && shell.diving) {
+            contextRefreshRequired = true
             shell.launch = null
             shell.diving = false
             repo.refresh()
@@ -280,9 +285,24 @@ fun Shell(
                 shell.closeLayer()
             }
             null -> {
-                val menu = tracker.contextMenu ?: defaultMenu.takeIf { sideMenu } ?: return
-                feedback.play(Cue.OPEN)
-                shell.openLayer(Layer.Context(menu, tracker.bounds()), tracker)
+                fun openCurrentContext() {
+                    val menu = tracker.contextMenu ?: defaultMenu.takeIf { sideMenu } ?: return
+                    feedback.play(Cue.OPEN)
+                    shell.openLayer(Layer.Context(menu, tracker.bounds()), tracker)
+                }
+                if (contextRefreshRequired) {
+                    contextRefreshRequired = false
+                    scope.launch {
+                        val before = repo.library.value
+                        repo.refresh()
+                        withTimeoutOrNull(1_500) { repo.library.first { it != before } }
+                        // Let HomeScreen publish the refreshed menu into the focus tracker.
+                        withFrameNanos { }
+                        openCurrentContext()
+                    }
+                } else {
+                    openCurrentContext()
+                }
             }
             else -> Unit
         }

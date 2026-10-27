@@ -161,12 +161,23 @@ class FocusTracker {
     var adjustable by mutableStateOf(false)
         private set
     private var coordinates: LayoutCoordinates? = null
+    private var activate: (() -> Unit)? = null
+    private var adjust: ((direction: Int, repeatCount: Int) -> Unit)? = null
 
-    fun focused(requester: FocusRequester, coordinates: LayoutCoordinates?, contextMenu: ContextMenu?, adjustable: Boolean) {
+    fun focused(
+        requester: FocusRequester,
+        coordinates: LayoutCoordinates?,
+        contextMenu: ContextMenu?,
+        adjustable: Boolean,
+        activate: (() -> Unit)? = null,
+        adjust: ((direction: Int, repeatCount: Int) -> Unit)? = null,
+    ) {
         this.requester = requester
         this.coordinates = coordinates
         this.contextMenu = contextMenu
         this.adjustable = adjustable
+        this.activate = activate
+        this.adjust = adjust
     }
 
     fun moved(requester: FocusRequester, coordinates: LayoutCoordinates) {
@@ -174,6 +185,12 @@ class FocusTracker {
     }
 
     fun bounds(): Rect? = coordinates?.takeIf { it.isAttached }?.boundsInRoot()
+
+    /** Performs the focused control's semantic click without manufacturing a key event. */
+    fun activate(): Boolean = activate?.let { it(); true } ?: false
+
+    /** Adjusts the focused slider/choice. False means left/right should move focus instead. */
+    fun adjust(direction: Int, repeatCount: Int): Boolean = adjust?.let { it(direction, repeatCount); true } ?: false
 }
 
 /** Navigation, overlays and toasts of the shell. */
