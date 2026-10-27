@@ -338,6 +338,8 @@ public class PreferenceConfiguration {
     public boolean sgsrTemporal;
     public boolean sgsrTemporalQuality;
     public int sgsrSharpness;
+    /** Session-only live choice for native-resolution SGSR: 1 = 1440p, 2 = 2160p from 1080p. */
+    public int sgsrSupersamplingLevel;
     public boolean absoluteMouseMode;
     public boolean enableAudioFx;
     public boolean reduceRefreshRate;
@@ -821,6 +823,7 @@ private static int getFramePacingValue(SharedPreferences prefs) {
         config.sgsrTemporal = "temporal".equals(sgsrMode) || "temporal-quality".equals(sgsrMode);
         config.sgsrTemporalQuality = "temporal-quality".equals(sgsrMode);
         config.sgsrSharpness = Math.max(0, Math.min(100, prefs.getInt("seekbar_sgsr_sharpness", 50)));
+        config.sgsrSupersamplingLevel = 1;
         config.preferLowerDelays = getPreferLowerDelays(context);
 
 

@@ -4096,6 +4096,9 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     public void setUpscalingMode(int mode) { decoderRenderer.setUpscalingMode(mode); }
     public String getUpscalingStatus() { return decoderRenderer.getUpscalingStatus(); }
     public void setUpscalingSharpness(int value) { decoderRenderer.setUpscalingSharpness(value); }
+    public boolean isSupersamplingMode() { return decoderRenderer.isSupersamplingMode(); }
+    public int getSupersamplingLevel() { return decoderRenderer.getSupersamplingLevel(); }
+    public void setSupersamplingLevel(int level) { decoderRenderer.setSupersamplingLevel(level); }
 
     public boolean isStreamMenuOpen() {
         return streamMenu != null && streamMenu.isOpen();

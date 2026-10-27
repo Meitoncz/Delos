@@ -10,12 +10,15 @@ JNIEXPORT jlong JNICALL
 Java_com_limelight_binding_video_PyroWaveRenderer_nativeCreate(JNIEnv *env, jclass clazz, jobject surface, jint width,
                                                                jint height, jint frameRate, jint outputWidth, jint outputHeight, jboolean chroma444,
                                                                jboolean fullRange, jint matrix, jboolean tenBit,
-                                                               jboolean measureSgsr2) {
+                                                               jboolean measureSgsr2, jint supersamplingLevel) {
     return 0;
 }
 
 JNIEXPORT void JNICALL Java_com_limelight_binding_video_PyroWaveRenderer_nativeSetUpscalingEnabled(JNIEnv *env, jclass clazz, jlong handle, jboolean enabled) {}
 JNIEXPORT jboolean JNICALL Java_com_limelight_binding_video_PyroWaveRenderer_nativeIsUpscalingEnabled(JNIEnv *env, jclass clazz, jlong handle) { return JNI_FALSE; }
+JNIEXPORT void JNICALL Java_com_limelight_binding_video_PyroWaveRenderer_nativeSetSupersamplingLevel(JNIEnv *env, jclass clazz, jlong handle, jint level) {}
+JNIEXPORT jboolean JNICALL Java_com_limelight_binding_video_PyroWaveRenderer_nativeIsSupersampling(JNIEnv *env, jclass clazz, jlong handle) { return JNI_FALSE; }
+JNIEXPORT jstring JNICALL Java_com_limelight_binding_video_PyroWaveRenderer_nativeGetScaleDescription(JNIEnv *env, jclass clazz, jlong handle) { return NULL; }
 
 JNIEXPORT jint JNICALL
 Java_com_limelight_binding_video_PyroWaveRenderer_nativeGetLastGpuDecodeUs(JNIEnv *env, jclass clazz, jlong handle) {

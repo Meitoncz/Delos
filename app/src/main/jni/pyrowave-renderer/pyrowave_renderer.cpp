@@ -487,7 +487,7 @@ namespace {
 
         bool create(ANativeWindow *nativeWindow, int streamWidth, int streamHeight, int frameRate,
                     int targetWidth, int targetHeight, bool fullChroma, bool fullRange, int matrix,
-                    bool tenBitStream, bool enableTemporal) {
+                    bool tenBitStream, bool enableTemporal, int supersamplingLevel) {
             window = nativeWindow;
             // API 28; Delos builds the native code for API 21
             void *android = dlopen("libandroid.so", RTLD_NOW | RTLD_NOLOAD);
@@ -510,6 +510,8 @@ namespace {
             frameRateHz = frameRate > 0 ? frameRate : 60;
             sgsrEnabled.store(enableTemporal);
             sgsrApplied = enableTemporal;
+            sgsrLevel.store(supersamplingLevel >= 2 ? 2 : 1);
+            sgsrAppliedLevel = sgsrLevel.load();
             width = uint32_t(streamWidth);
             height = uint32_t(streamHeight);
             sgsrTargetWidth = uint32_t(std::max(targetWidth, streamWidth));
@@ -539,6 +541,25 @@ namespace {
 
         void setUpscalingEnabled(bool enabled) { sgsrEnabled.store(enabled && sgsrAvailable); }
         bool isUpscalingEnabled() const { return sgsrAvailable && sgsrEnabled.load(); }
+        void setSupersamplingLevel(int level) { sgsrLevel.store(level >= 2 ? 2 : 1); }
+        bool isSupersampling() const {
+            return sgsrAvailable && reportInternalWidth.load() > reportPresentationWidth.load() &&
+                   reportInternalHeight.load() > reportPresentationHeight.load();
+        }
+        std::string scaleDescription() const {
+            if(!isUpscalingEnabled())return {};
+            const uint32_t internalWidth=reportInternalWidth.load();
+            const uint32_t internalHeight=reportInternalHeight.load();
+            const uint32_t presentationWidth=reportPresentationWidth.load();
+            const uint32_t presentationHeight=reportPresentationHeight.load();
+            if(internalWidth==0||presentationWidth==0)return {};
+            char text[128];
+            if(internalWidth>presentationWidth&&internalHeight>presentationHeight)
+                snprintf(text,sizeof(text),"Supersampled to: %u × %u",internalWidth,internalHeight);
+            else
+                snprintf(text,sizeof(text),"Upscaled to: %u × %u",presentationWidth,presentationHeight);
+            return text;
+        }
 
         // One frame as moonlight-common-c delivered it: its bytes and, per RTP packet, whether it was lost
         // and whether it starts a record (see pyrowaveframing.h). Same steps as the official client's
@@ -906,8 +927,26 @@ namespace {
         bool createSgsrMotion() {
             const uint32_t flowWidth=(width+7)/8,flowHeight=(height+7)/8;
             const float scale=std::min(float(sgsrTargetWidth)/float(width),float(sgsrTargetHeight)/float(height));
-            sgsrOutputWidth=std::max(2u,uint32_t(float(width)*scale))&~1u;
-            sgsrOutputHeight=std::max(2u,uint32_t(float(height)*scale))&~1u;
+            sgsrPresentationWidth=std::max(2u,uint32_t(float(width)*scale))&~1u;
+            sgsrPresentationHeight=std::max(2u,uint32_t(float(height)*scale))&~1u;
+            const bool nativeInput=std::abs(int(width)-int(sgsrPresentationWidth))<=2&&
+                                   std::abs(int(height)-int(sgsrPresentationHeight))<=2;
+            const uint32_t numerator=sgsrAppliedLevel>=2?2u:4u;
+            const uint32_t denominator=sgsrAppliedLevel>=2?1u:3u;
+            const uint32_t candidateWidth=(sgsrPresentationWidth*numerator/denominator)&~1u;
+            const uint32_t candidateHeight=(sgsrPresentationHeight*numerator/denominator)&~1u;
+            VkPhysicalDeviceProperties properties={};
+            vk.GetPhysicalDeviceProperties(physicalDevice,&properties);
+            const bool fits=candidateWidth<=properties.limits.maxImageDimension2D&&
+                            candidateHeight<=properties.limits.maxImageDimension2D&&
+                            candidateWidth<=3840&&candidateHeight<=3840&&
+                            uint64_t(candidateWidth)*candidateHeight<=uint64_t(3840)*2160;
+            sgsrOutputWidth=nativeInput&&fits?candidateWidth:sgsrPresentationWidth;
+            sgsrOutputHeight=nativeInput&&fits?candidateHeight:sgsrPresentationHeight;
+            reportInternalWidth.store(sgsrOutputWidth);
+            reportInternalHeight.store(sgsrOutputHeight);
+            reportPresentationWidth.store(sgsrPresentationWidth);
+            reportPresentationHeight.store(sgsrPresentationHeight);
             if(!createAuxImage(sgsrPrevious,planeFormat,width,height,VK_IMAGE_USAGE_SAMPLED_BIT|VK_IMAGE_USAGE_TRANSFER_DST_BIT)||
                !createAuxImage(sgsrFlow[0],VK_FORMAT_R16G16B16A16_SFLOAT,flowWidth,flowHeight,VK_IMAGE_USAGE_STORAGE_BIT)||
                !createAuxImage(sgsrFlow[1],VK_FORMAT_R16G16B16A16_SFLOAT,flowWidth,flowHeight,VK_IMAGE_USAGE_STORAGE_BIT)||
@@ -994,7 +1033,9 @@ namespace {
             }
             sgsrPresentPipeline=buildPipeline(renderPass,sgsr_present_frag_spv,sizeof(sgsr_present_frag_spv),sgsrPresentPipelineLayout);
             if(sgsrPresentPipeline==VK_NULL_HANDLE)return false;
-            LOGI("PyroWave SGSR 2 ready: %ux%u -> %ux%u, flow %ux%u",width,height,sgsrOutputWidth,sgsrOutputHeight,flowWidth,flowHeight);
+            LOGI("PyroWave SGSR 2 ready: %ux%u -> %ux%u -> %ux%u, flow %ux%u%s level %d",
+                 width,height,sgsrOutputWidth,sgsrOutputHeight,sgsrPresentationWidth,sgsrPresentationHeight,
+                 flowWidth,flowHeight,isSupersampling()?" supersampling":"",sgsrAppliedLevel);
             return true;
         }
 
@@ -1241,8 +1282,8 @@ namespace {
                 if (allocateYuvBuffers(AHARDWAREBUFFER_USAGE_GPU_COLOR_OUTPUT | AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE |
                                        AHARDWAREBUFFER_USAGE_COMPOSER_OVERLAY) &&
                         createPackPass() && yuvGl.create(packBuffer, yuvBuffers, YUV_BUFFERS,
-                            int(sgsrApplied ? sgsrOutputWidth : width),
-                            int(sgsrApplied ? sgsrOutputHeight : height))) {
+                            int(sgsrApplied ? sgsrPresentationWidth : width),
+                            int(sgsrApplied ? sgsrPresentationHeight : height))) {
                     LOGI("P010 HDR output filled on the GPU");
                     return true;
                 }
@@ -1263,8 +1304,8 @@ namespace {
 
         bool allocateYuvBuffers(uint64_t usage) {
             AHardwareBuffer_Desc desc = {};
-            desc.width = sgsrApplied ? sgsrOutputWidth : width;
-            desc.height = sgsrApplied ? sgsrOutputHeight : height;
+            desc.width = sgsrApplied ? sgsrPresentationWidth : width;
+            desc.height = sgsrApplied ? sgsrPresentationHeight : height;
             desc.layers = 1;
             desc.format = AHARDWAREBUFFER_FORMAT_YCbCr_P010;
             desc.usage = usage;
@@ -1287,8 +1328,8 @@ namespace {
         // The Vulkan half of the GPU copy: an RGBA16F AHardwareBuffer that OpenGL ES samples
         bool createPackPass() {
             AHardwareBuffer_Desc desc = {};
-            const uint32_t outputWidth=sgsrApplied?sgsrOutputWidth:width;
-            const uint32_t outputHeight=sgsrApplied?sgsrOutputHeight:height;
+            const uint32_t outputWidth=sgsrApplied?sgsrPresentationWidth:width;
+            const uint32_t outputHeight=sgsrApplied?sgsrPresentationHeight:height;
             desc.width = outputWidth;
             desc.height = outputHeight;
             desc.layers = 1;
@@ -1615,8 +1656,8 @@ namespace {
                 VkRenderPassBeginInfo rpBegin = {VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
                 rpBegin.renderPass = packRenderPass;
                 rpBegin.framebuffer = packFramebuffer;
-                const uint32_t outputWidth=sgsrOutput>=0?sgsrOutputWidth:width;
-                const uint32_t outputHeight=sgsrOutput>=0?sgsrOutputHeight:height;
+                const uint32_t outputWidth=sgsrOutput>=0?sgsrPresentationWidth:width;
+                const uint32_t outputHeight=sgsrOutput>=0?sgsrPresentationHeight:height;
                 rpBegin.renderArea = {{0, 0}, {outputWidth, outputHeight}};
                 vk.CmdBeginRenderPass(commandBuffer, &rpBegin, VK_SUBPASS_CONTENTS_INLINE);
                 VkViewport viewport = {0.0f, 0.0f, float(outputWidth), float(outputHeight), 0.0f, 1.0f};
@@ -1682,8 +1723,8 @@ namespace {
                 const int32_t h = int32_t(float(height) * scale);
                 const int32_t x = (int32_t(swapchainExtent.width) - w) / 2;
                 const int32_t y = (int32_t(swapchainExtent.height) - h) / 2;
-                const ARect source = {0, 0, int32_t(sgsrOutput>=0?sgsrOutputWidth:width),
-                                      int32_t(sgsrOutput>=0?sgsrOutputHeight:height)};
+                const ARect source = {0, 0, int32_t(sgsrOutput>=0?sgsrPresentationWidth:width),
+                                      int32_t(sgsrOutput>=0?sgsrPresentationHeight:height)};
                 const ARect destination = {x, y, x + w, y + h};
                 surfaceApi.setGeometry(transaction, releases->control, source, destination, 0);
                 surfaceApi.setZOrder(transaction, releases->control, 1);
@@ -2108,6 +2149,28 @@ namespace {
             if (hdrWanted != hdrActive && !applyHdrMode()) {
                 return false;
             }
+            const int requestedLevel=sgsrLevel.load();
+            if(requestedLevel!=sgsrAppliedLevel){
+                if(yuvOutput)destroyYuvOutput();
+                destroySgsrMotion();
+                sgsrAppliedLevel=requestedLevel;
+                bool recreated=createSgsrMotion();
+                if(!recreated&&requestedLevel!=1){
+                    LOGW("PyroWave supersampling level 2 unavailable; falling back to level 1");
+                    destroySgsrMotion();
+                    sgsrAppliedLevel=1;
+                    sgsrLevel.store(1);
+                    recreated=createSgsrMotion();
+                }
+                if(!recreated){
+                    LOGW("PyroWave SGSR recreation failed; direct rendering remains active");
+                    destroySgsrMotion();
+                    sgsrAvailable=false;
+                    sgsrEnabled.store(false);
+                    sgsrApplied=false;
+                }
+                sgsrInitialized=false;
+            }
             const bool requestedSgsr=sgsrAvailable&&sgsrEnabled.load();
             if(requestedSgsr!=sgsrApplied){
                 if(yuvOutput)destroyYuvOutput();
@@ -2413,8 +2476,10 @@ namespace {
         bool planesInitialized = false;
         bool fragmentPath = false;
         std::atomic<bool> sgsrEnabled{false};
+        std::atomic<int> sgsrLevel{1};
         bool sgsrAvailable = false;
         bool sgsrApplied = false;
+        int sgsrAppliedLevel = 1;
         bool sgsrInitialized = false;
         uint32_t sgsrTargetWidth = 0;
         uint32_t sgsrTargetHeight = 0;
@@ -2423,6 +2488,12 @@ namespace {
         Plane sgsrHistory[2];
         uint32_t sgsrOutputWidth = 0;
         uint32_t sgsrOutputHeight = 0;
+        uint32_t sgsrPresentationWidth = 0;
+        uint32_t sgsrPresentationHeight = 0;
+        std::atomic<uint32_t> reportInternalWidth{0};
+        std::atomic<uint32_t> reportInternalHeight{0};
+        std::atomic<uint32_t> reportPresentationWidth{0};
+        std::atomic<uint32_t> reportPresentationHeight{0};
         int sgsrHistoryIndex = 0;
         VkSampler sgsrSampler = VK_NULL_HANDLE;
         VkDescriptorSetLayout sgsrFlowLayout = VK_NULL_HANDLE;
@@ -2734,7 +2805,8 @@ JNIEXPORT jlong JNICALL
 Java_com_limelight_binding_video_PyroWaveRenderer_nativeCreate(JNIEnv *env, jclass, jobject surface, jint width,
                                                                jint height, jint frameRate, jint outputWidth,
                                                                jint outputHeight, jboolean chroma444, jboolean fullRange,
-                                                               jint matrix, jboolean tenBit, jboolean enableSgsr2) {
+                                                               jint matrix, jboolean tenBit, jboolean enableSgsr2,
+                                                               jint supersamplingLevel) {
     if (surface == nullptr || width <= 0 || height <= 0 || (!chroma444 && ((width & 1) || (height & 1)))) {
         LOGE("PyroWave needs a surface and positive dimensions, even for 4:2:0 (%dx%d)", width, height);
         return 0;
@@ -2746,7 +2818,7 @@ Java_com_limelight_binding_video_PyroWaveRenderer_nativeCreate(JNIEnv *env, jcla
     installStackSignal();
     auto renderer = std::make_unique<Renderer>();
     if (!renderer->create(window, width, height, frameRate, outputWidth, outputHeight, chroma444, fullRange,
-                          matrix, tenBit, enableSgsr2)) {
+                          matrix, tenBit, enableSgsr2, supersamplingLevel)) {
         return 0;  // The renderer releases the window.
     }
     LOGI("PyroWave renderer ready for %dx%d %s %s", width, height, chroma444 ? "4:4:4" : "4:2:0",
@@ -2789,6 +2861,27 @@ JNIEXPORT jboolean JNICALL
 Java_com_limelight_binding_video_PyroWaveRenderer_nativeIsUpscalingEnabled(JNIEnv *, jclass, jlong handle) {
     auto *renderer=reinterpret_cast<Renderer *>(handle);
     return renderer!=nullptr&&renderer->isUpscalingEnabled()?JNI_TRUE:JNI_FALSE;
+}
+
+JNIEXPORT void JNICALL
+Java_com_limelight_binding_video_PyroWaveRenderer_nativeSetSupersamplingLevel(JNIEnv *, jclass, jlong handle,
+                                                                               jint level) {
+    auto *renderer=reinterpret_cast<Renderer *>(handle);
+    if(renderer!=nullptr)renderer->setSupersamplingLevel(level);
+}
+
+JNIEXPORT jboolean JNICALL
+Java_com_limelight_binding_video_PyroWaveRenderer_nativeIsSupersampling(JNIEnv *, jclass, jlong handle) {
+    auto *renderer=reinterpret_cast<Renderer *>(handle);
+    return renderer!=nullptr&&renderer->isSupersampling()?JNI_TRUE:JNI_FALSE;
+}
+
+JNIEXPORT jstring JNICALL
+Java_com_limelight_binding_video_PyroWaveRenderer_nativeGetScaleDescription(JNIEnv *env, jclass, jlong handle) {
+    auto *renderer=reinterpret_cast<Renderer *>(handle);
+    if(renderer==nullptr)return nullptr;
+    const std::string description=renderer->scaleDescription();
+    return description.empty()?nullptr:env->NewStringUTF(description.c_str());
 }
 
 // Copies the statistics window into [out] (the order of PyroWaveRenderer.Stats) and starts a new one

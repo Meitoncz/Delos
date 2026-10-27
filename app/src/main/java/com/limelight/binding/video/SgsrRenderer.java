@@ -40,10 +40,17 @@ public final class SgsrRenderer implements AutoCloseable {
     private final int width, height;
     private volatile float sharpness;
     private volatile int mode;
+    private volatile int supersamplingLevel;
+    private volatile boolean supersampling;
+    private volatile int activeInternalWidth, activeInternalHeight;
+    private volatile int activePresentationWidth, activePresentationHeight;
     private Integer drawnQuality;
     private volatile float gpuTimeMs;
     private int highQualityProgram;
+    private int supersampleUpscaleProgram;
+    private int supersampleHighQualityProgram;
     private int temporalPresentProgram;
+    private int supersamplePresentProgram;
     private SgsrTemporal temporal;
     private Context diagnosticContext;
     private boolean diagnosticsChecked;
@@ -57,6 +64,8 @@ public final class SgsrRenderer implements AutoCloseable {
     private SurfaceTexture texture;
     private Surface decoderSurface;
     private int externalTexture, colorTexture, framebuffer, copyProgram, upscaleProgram;
+    private int supersampleTexture, supersampleFramebuffer, supersampleWidth, supersampleHeight;
+    private int maxTextureSize;
     private final float[] transform = new float[16];
     private final int[] size = new int[1];
     private int outputWidth, outputHeight;
@@ -67,9 +76,11 @@ public final class SgsrRenderer implements AutoCloseable {
     }
 
     public static SgsrRenderer create(Context app, Surface output, int width, int height,
-                                      int sharpness, int mode, boolean tenBit, boolean hdrActive, byte[] hdrMetadata, Runnable failure) {
+                                      int sharpness, int mode, int supersamplingLevel, boolean tenBit,
+                                      boolean hdrActive, byte[] hdrMetadata, Runnable failure) {
         if (!isSupported(app)) return null;
-        SgsrRenderer renderer = new SgsrRenderer(width, height, sharpness, mode, tenBit, hdrActive, hdrMetadata, failure);
+        SgsrRenderer renderer = new SgsrRenderer(width, height, sharpness, mode, supersamplingLevel,
+                tenBit, hdrActive, hdrMetadata, failure);
         FutureTask<Void> initialize = new FutureTask<>(() -> {
             renderer.initialize(app, output);
             return null;
@@ -85,12 +96,14 @@ public final class SgsrRenderer implements AutoCloseable {
         }
     }
 
-    private SgsrRenderer(int width, int height, int sharpness, int mode, boolean tenBit, boolean hdrActive, byte[] metadata, Runnable failure) {
+    private SgsrRenderer(int width, int height, int sharpness, int mode, int supersamplingLevel,
+                         boolean tenBit, boolean hdrActive, byte[] metadata, Runnable failure) {
         this.width = width;
         this.height = height;
         this.sharpness = Math.max(0, Math.min(100, sharpness)) / 100f;
         this.tenBit = tenBit;
         this.mode = mode;
+        this.supersamplingLevel = supersamplingLevel >= 2 ? 2 : 1;
         this.hdrActive = hdrActive;
         this.hdrMetadata = metadata != null ? metadata.clone() : null;
         this.failure = failure;
@@ -101,6 +114,13 @@ public final class SgsrRenderer implements AutoCloseable {
     public Surface getDecoderSurface() { return decoderSurface; }
     public void setSharpness(int value) { sharpness = Math.max(0, Math.min(100, value)) / 100f; }
     public void setMode(int mode) { this.mode = Math.max(0, Math.min(3, mode)); }
+    public void setSupersamplingLevel(int level) { supersamplingLevel = level >= 2 ? 2 : 1; }
+    public boolean isSupersampling() { return supersampling; }
+    public String getScaleDescription() {
+        if (activeInternalWidth <= 0 || activePresentationWidth <= 0) return null;
+        if (supersampling) return "Supersampled to: " + activeInternalWidth + " × " + activeInternalHeight;
+        return "Upscaled to: " + activePresentationWidth + " × " + activePresentationHeight;
+    }
     public void setHdrMode(boolean enabled, byte[] metadata) {
         hdrActive = enabled;
         hdrMetadata = metadata != null ? metadata.clone() : null;
@@ -129,6 +149,13 @@ public final class SgsrRenderer implements AutoCloseable {
         copyProgram = program(VERTEX,COPY);
         upscaleProgram = createUpscaleProgram(app,"sgsr/sgsr1.frag");
         highQualityProgram = createUpscaleProgram(app,"sgsr/sgsr1_high.frag");
+        if (tenBit) {
+            supersampleUpscaleProgram = createUpscaleProgram(app,"sgsr/sgsr1.frag",false);
+            supersampleHighQualityProgram = createUpscaleProgram(app,"sgsr/sgsr1_high.frag",false);
+        }
+        supersamplePresentProgram = createUpscaleProgram(app,"sgsr/supersample_present.frag");
+        GLES31.glGetIntegerv(GLES31.GL_MAX_TEXTURE_SIZE,size,0);
+        maxTextureSize = size[0];
         externalTexture = texture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES);
         colorTexture = texture(GLES31.GL_TEXTURE_2D);
         GLES31.glTexImage2D(GLES31.GL_TEXTURE_2D,0,tenBit ? GLES31.GL_RGBA16F : GLES31.GL_RGBA8,
@@ -219,34 +246,50 @@ public final class SgsrRenderer implements AutoCloseable {
                 if (temporal != null) temporal.reset();
                 LimeLog.info("SGSR quality: " + (quality == 3 ? "SGSR 2 Video Quality" : quality == 2 ? "SGSR 2 Video" : quality == 1 ? "High Quality" : "Standard"));
             }
+            SgsrDimensions.Plan dimensions = SgsrDimensions.plan(width,height,w,h,maxTextureSize,supersamplingLevel);
+            int internalWidth = dimensions.internalWidth;
+            int internalHeight = dimensions.internalHeight;
+            boolean dimensionsChanged = activeInternalWidth != internalWidth || activeInternalHeight != internalHeight ||
+                    activePresentationWidth != w || activePresentationHeight != h;
+            supersampling = dimensions.isSupersampling();
+            activeInternalWidth = internalWidth;
+            activeInternalHeight = internalHeight;
+            activePresentationWidth = w;
+            activePresentationHeight = h;
             int source = colorTexture;
+            int sampledWidth = width;
+            int sampledHeight = height;
             int selectedProgram = quality == 1 ? highQualityProgram : upscaleProgram;
             if (quality >= 2) {
                 try {
-                    if (temporal == null) temporal = new SgsrTemporal(diagnosticContext,width,height,w,h);
+                    if (temporal == null) temporal = new SgsrTemporal(diagnosticContext,width,height,internalWidth,internalHeight);
                     if (temporalPresentProgram == 0)
                         temporalPresentProgram = createUpscaleProgram(diagnosticContext,"sgsr/temporal_present.frag");
-                    source = temporal.render(colorTexture,w,h,texture.getTimestamp(),hdrActive,quality == 3);
+                    source = temporal.render(colorTexture,internalWidth,internalHeight,texture.getTimestamp(),hdrActive,quality == 3);
+                    sampledWidth = internalWidth;
+                    sampledHeight = internalHeight;
                     selectedProgram = temporalPresentProgram;
                 } catch (Exception e) { throw new IllegalStateException("SGSR 2 video",e); }
+            } else if (supersampling) {
+                ensureSupersampleTarget(internalWidth,internalHeight);
+                GLES31.glBindFramebuffer(GLES31.GL_FRAMEBUFFER,supersampleFramebuffer);
+                int reconstructionProgram = tenBit
+                        ? (quality == 1 ? supersampleHighQualityProgram : supersampleUpscaleProgram)
+                        : selectedProgram;
+                drawProgram(reconstructionProgram,colorTexture,internalWidth,internalHeight,width,height,true);
+                source = supersampleTexture;
+                sampledWidth = internalWidth;
+                sampledHeight = internalHeight;
+                selectedProgram = supersamplePresentProgram;
             }
             if (tenBit && nativeAcquireHdr(hdrOutput)<0) return;
-            if (outputWidth!=w || outputHeight!=h) {
+            if (outputWidth!=w || outputHeight!=h || dimensionsChanged) {
                 outputWidth=w; outputHeight=h;
-                LimeLog.info("SGSR output: " + w + "x" + h);
+                LimeLog.info("SGSR output: " + width + "x" + height + " -> " + internalWidth + "x" +
+                        internalHeight + " -> " + w + "x" + h + (supersampling ? " (supersampling)" : ""));
             }
             if (!tenBit) GLES31.glBindFramebuffer(GLES31.GL_FRAMEBUFFER,0);
-            GLES31.glViewport(0,0,w,h);
-            GLES31.glUseProgram(selectedProgram);
-            GLES31.glUniform4f(GLES31.glGetUniformLocation(selectedProgram,"ViewportInfo[0]"),
-                    quality >= 2 ? 1f/w : 1f/width,quality >= 2 ? 1f/h : 1f/height,width,height);
-            GLES31.glUniform1f(GLES31.glGetUniformLocation(selectedProgram,"sgsrStrength"),sharpness);
-            GLES31.glUniform1i(GLES31.glGetUniformLocation(selectedProgram,"sgsrEnabled"),w>=width && h>=height ? 1 : 0);
-            GLES31.glActiveTexture(GLES31.GL_TEXTURE0);
-            GLES31.glBindTexture(GLES31.GL_TEXTURE_2D,source);
-            GLES31.glUniform1i(GLES31.glGetUniformLocation(selectedProgram,"ps0"),0);
-            if (tenBit) GLES31.glUniform1i(GLES31.glGetUniformLocation(selectedProgram,"hdrMode"),hdrActive ? 1 : 0);
-            GLES31.glDrawArrays(GLES31.GL_TRIANGLE_STRIP,0,4);
+            drawProgram(selectedProgram,source,w,h,sampledWidth,sampledHeight,w>=width && h>=height);
             require(GLES31.glGetError()==GLES31.GL_NO_ERROR,"SGSR draw");
             if (tenBit) nativePresentHdr(hdrOutput,hdrActive,hdrMetadata);
             else {
@@ -267,6 +310,41 @@ public final class SgsrRenderer implements AutoCloseable {
 
     /** Smoothed wall time of the completed SGSR processing path, excluding decode. */
     public float getGpuTimeMs() { return gpuTimeMs; }
+
+    private void ensureSupersampleTarget(int width, int height) {
+        if (supersampleTexture != 0 && supersampleWidth == width && supersampleHeight == height) return;
+        if (supersampleTexture == 0) supersampleTexture = texture(GLES31.GL_TEXTURE_2D);
+        if (supersampleFramebuffer == 0) {
+            int[] id = new int[1];
+            GLES31.glGenFramebuffers(1,id,0);
+            supersampleFramebuffer = id[0];
+        }
+        supersampleWidth = width;
+        supersampleHeight = height;
+        GLES31.glBindTexture(GLES31.GL_TEXTURE_2D,supersampleTexture);
+        GLES31.glTexImage2D(GLES31.GL_TEXTURE_2D,0,tenBit ? GLES31.GL_RGBA16F : GLES31.GL_RGBA8,
+                width,height,0,GLES31.GL_RGBA,tenBit ? GLES31.GL_HALF_FLOAT : GLES31.GL_UNSIGNED_BYTE,null);
+        GLES31.glBindFramebuffer(GLES31.GL_FRAMEBUFFER,supersampleFramebuffer);
+        GLES31.glFramebufferTexture2D(GLES31.GL_FRAMEBUFFER,GLES31.GL_COLOR_ATTACHMENT0,
+                GLES31.GL_TEXTURE_2D,supersampleTexture,0);
+        require(GLES31.glCheckFramebufferStatus(GLES31.GL_FRAMEBUFFER)==GLES31.GL_FRAMEBUFFER_COMPLETE,
+                "Supersampling framebuffer");
+    }
+
+    private void drawProgram(int program, int source, int viewportWidth, int viewportHeight,
+                             int sampledWidth, int sampledHeight, boolean reconstructionEnabled) {
+        GLES31.glViewport(0,0,viewportWidth,viewportHeight);
+        GLES31.glUseProgram(program);
+        GLES31.glUniform4f(GLES31.glGetUniformLocation(program,"ViewportInfo[0]"),
+                1f/sampledWidth,1f/sampledHeight,width,height);
+        GLES31.glUniform1f(GLES31.glGetUniformLocation(program,"sgsrStrength"),sharpness);
+        GLES31.glUniform1i(GLES31.glGetUniformLocation(program,"sgsrEnabled"),reconstructionEnabled ? 1 : 0);
+        GLES31.glActiveTexture(GLES31.GL_TEXTURE0);
+        GLES31.glBindTexture(GLES31.GL_TEXTURE_2D,source);
+        GLES31.glUniform1i(GLES31.glGetUniformLocation(program,"ps0"),0);
+        if (tenBit) GLES31.glUniform1i(GLES31.glGetUniformLocation(program,"hdrMode"),hdrActive ? 1 : 0);
+        GLES31.glDrawArrays(GLES31.GL_TRIANGLE_STRIP,0,4);
+    }
 
     private static int texture(int target) {
         int[] id = new int[1]; GLES31.glGenTextures(1,id,0);
@@ -314,10 +392,15 @@ public final class SgsrRenderer implements AutoCloseable {
                 if(copyProgram!=0) GLES31.glDeleteProgram(copyProgram);
                 if(upscaleProgram!=0) GLES31.glDeleteProgram(upscaleProgram);
                 if(highQualityProgram!=0) GLES31.glDeleteProgram(highQualityProgram);
+                if(supersampleUpscaleProgram!=0) GLES31.glDeleteProgram(supersampleUpscaleProgram);
+                if(supersampleHighQualityProgram!=0) GLES31.glDeleteProgram(supersampleHighQualityProgram);
                 if(temporalPresentProgram!=0) GLES31.glDeleteProgram(temporalPresentProgram);
+                if(supersamplePresentProgram!=0) GLES31.glDeleteProgram(supersamplePresentProgram);
                 if(temporal!=null) { temporal.close(); temporal=null; }
                 GLES31.glDeleteTextures(2,new int[]{externalTexture,colorTexture},0);
+                if(supersampleTexture!=0) GLES31.glDeleteTextures(1,new int[]{supersampleTexture},0);
                 GLES31.glDeleteFramebuffers(1,new int[]{framebuffer},0);
+                if(supersampleFramebuffer!=0) GLES31.glDeleteFramebuffers(1,new int[]{supersampleFramebuffer},0);
             }
             EGL14.eglMakeCurrent(display,EGL14.EGL_NO_SURFACE,EGL14.EGL_NO_SURFACE,EGL14.EGL_NO_CONTEXT);
             if(window!=EGL14.EGL_NO_SURFACE) EGL14.eglDestroySurface(display,window);

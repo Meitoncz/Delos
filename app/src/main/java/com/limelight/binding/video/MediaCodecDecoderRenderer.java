@@ -635,6 +635,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         if (sgsr == null && !sgsrFailed && sgsrRequested) {
             sgsr = SgsrRenderer.create(context, renderTarget, initialWidth, initialHeight, prefs.sgsrSharpness,
                     prefs.sgsrTemporalQuality ? 3 : prefs.sgsrTemporal ? 2 : prefs.sgsrHighQuality ? 1 : 0,
+                    prefs.sgsrSupersamplingLevel,
                     (videoFormat & MoonBridge.VIDEO_FORMAT_MASK_10BIT) != 0, sgsrHdrActive, currentHdrMetadata, () -> {
                 sgsrFailed = true;
                 sgsrRequested = false;
@@ -846,7 +847,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                     metrics.widthPixels, metrics.heightPixels,
                     (format & MoonBridge.VIDEO_FORMAT_MASK_YUV444) != 0, prefs.fullRange, getPreferredColorSpace(),
                     (format & MoonBridge.VIDEO_FORMAT_MASK_10BIT) != 0,
-                    prefs.sgsrEnabled && prefs.sgsrTemporal);
+                    prefs.sgsrEnabled && prefs.sgsrTemporal, prefs.sgsrSupersamplingLevel);
             if (pyroWave == null) {
                 LimeLog.severe("Unable to create the PyroWave renderer");
                 return -1;
@@ -899,6 +900,25 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         SgsrRenderer current = sgsr;
         if (current != null) current.setMode(mode);
         if (pyroWave != null) pyroWave.setUpscalingEnabled(prefs.sgsrEnabled && prefs.sgsrTemporal);
+    }
+
+    public void setSupersamplingLevel(int level) {
+        prefs.sgsrSupersamplingLevel = level >= 2 ? 2 : 1;
+        SgsrRenderer current = sgsr;
+        if (current != null) current.setSupersamplingLevel(prefs.sgsrSupersamplingLevel);
+        if (pyroWave != null) pyroWave.setSupersamplingLevel(prefs.sgsrSupersamplingLevel);
+    }
+
+    public int getSupersamplingLevel() { return prefs.sgsrSupersamplingLevel; }
+
+    public boolean isSupersamplingMode() {
+        if (pyroWave != null) return pyroWave.isSupersampling();
+        SgsrRenderer current = sgsr;
+        if (current != null && current.isSupersampling()) return true;
+        if (!(context instanceof com.limelight.Game)) return false;
+        android.view.View view = ((com.limelight.Game) context).getStreamSurface();
+        return view != null && view.getWidth() > 0 && view.getHeight() > 0 &&
+                SgsrDimensions.isNativeInput(initialWidth, initialHeight, view.getWidth(), view.getHeight());
     }
 
     // Delos: data received and sent since the last call in KB, -1 when unknown or on the first call
@@ -965,7 +985,8 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
 
         perfListener.onPerfStats(new com.limelight.shell.StreamStats(
                 initialWidth, initialHeight, totalFps, receivedFps, renderedFps,
-                "PyroWave", (videoFormat & MoonBridge.VIDEO_FORMAT_MASK_10BIT) != 0, decoder, lossPercent,
+                "PyroWave", (videoFormat & MoonBridge.VIDEO_FORMAT_MASK_10BIT) != 0, decoder,
+                pyroWave != null ? pyroWave.getScaleDescription() : null, lossPercent,
                 (int) (rttInfo >> 32), (int) rttInfo, decodeTimeMs, processingTimeMs,
                 hostFrames > 0 ? stats[PyroWaveRenderer.STAT_HOST_LATENCY_MIN] / 10f : -1f,
                 hostFrames > 0 ? stats[PyroWaveRenderer.STAT_HOST_LATENCY_MAX] / 10f : -1f,
@@ -1844,6 +1865,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                         initialWidth, initialHeight, fps.totalFps, fps.receivedFps, fps.renderedFps,
                         (videoFormat & MoonBridge.VIDEO_FORMAT_MASK_AV1) != 0 ? "AV1" : (videoFormat & MoonBridge.VIDEO_FORMAT_MASK_H265) != 0 ? "HEVC" : "H.264",
                         (videoFormat & MoonBridge.VIDEO_FORMAT_MASK_10BIT) != 0, decoder,
+                        sgsr != null ? sgsr.getScaleDescription() : null,
                         lastTwo.totalFrames > 0 ? (float) lastTwo.framesLost / lastTwo.totalFrames * 100 : 0f,
                         (int) (rttInfo >> 32), (int) rttInfo, decodeTimeMs, processingTimeMs,
                         hostLatency ? (float) lastTwo.minHostProcessingLatency / 10 : -1f,

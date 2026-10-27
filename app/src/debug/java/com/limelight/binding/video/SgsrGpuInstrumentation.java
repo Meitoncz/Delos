@@ -29,6 +29,8 @@ public final class SgsrGpuInstrumentation extends Instrumentation {
             ramp(report);
             benchmark(report,854,480,1920,1079);
             benchmark(report,1280,720,1920,1080);
+            benchmark(report,1920,1080,2560,1440);
+            benchmark(report,1920,1080,3840,2160);
             result.putString("stream",report.toString());finish(-1,result);
         } catch(Throwable e) {result.putString("stream",report+"FAIL: "+android.util.Log.getStackTraceString(e));finish(0,result);}
         finally {

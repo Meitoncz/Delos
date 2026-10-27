@@ -379,6 +379,9 @@ class StreamMenu(private val game: Game) {
         val upscalerStatus by produceState(game.upscalingStatus) {
             while (true) { value = game.upscalingStatus; delay(250) }
         }
+        val supersamplingMode by produceState(game.isSupersamplingMode) {
+            while (true) { value = game.isSupersamplingMode; delay(250) }
+        }
         @Suppress("UNUSED_EXPRESSION") changes // subscribes to it
         val classic = game.gameMenuCallbacks as? GameMenu
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
@@ -398,14 +401,14 @@ class StreamMenu(private val game: Game) {
                     Page.COMMANDS -> "Server commands"
                     Page.BRIGHTNESS -> "Brightness"
                     Page.BITRATE -> "Stream bitrate"
-                    Page.UPSCALER -> "Snapdragon Game Super Resolution"
+                    Page.UPSCALER -> if (supersamplingMode) "Supersampling" else "Snapdragon Game Super Resolution"
                 }
                 BasicText(heading, style = TextStyle(color = Color.White, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 30.tpx, textAlign = TextAlign.Center))
                 key(page) {
                     val first = remember { FocusRequester() }
                     InitialFocus(first)
                     when (page) {
-                        Page.MAIN -> Row(horizontalArrangement = Arrangement.spacedBy(34.px)) {
+                        Page.MAIN -> Row(horizontalArrangement = Arrangement.spacedBy(38.px)) {
                             MenuCircle(Symbols.PLAY_ARROW, "Resume", Modifier.focusRequester(first)) { close() }
                             MenuCircle(Symbols.KEYBOARD, "Keyboard") { close { game.toggleKeyboard() } }
                             MenuCircle(Symbols.SPEED, "Overlay", on = prefs.enablePerfOverlay, state = if (!prefs.enablePerfOverlay) "Off" else if (prefs.enablePerfOverlayLite) "Compact" else "On") {
@@ -413,14 +416,15 @@ class StreamMenu(private val game: Game) {
                             }
                             MenuCircle(Symbols.BRIGHTNESS_MEDIUM, "Brightness", state = "${brightnessPercent()} %") { page = Page.BRIGHTNESS }
                             MenuCircle(Symbols.NETWORK_CHECK, "Bitrate") { page = Page.BITRATE }
-                            MenuCircle(Symbols.ASPECT_RATIO, "Upscaler", on = game.isUpscalingRequested, state = upscalerStatus) { page = Page.UPSCALER }
+                            MenuCircle(Symbols.ASPECT_RATIO, if (supersamplingMode) "Supersampling" else "Upscaler",
+                                on = game.isUpscalingRequested, state = upscalerStatus) { page = Page.UPSCALER }
                             MenuCircle(Symbols.MORE_HORIZ, "More") { page = Page.MORE }
                             MenuCircle(Symbols.LOGOUT, "Disconnect") { close { leave(quit = false) } }
                             MenuCircle(Symbols.POWER_SETTINGS_NEW, "Quit game") { close { leave(quit = true) } }
                         }
                         // Everything the classic Artemis quick menu offered that the main page does not
                         Page.MORE -> Column(verticalArrangement = Arrangement.spacedBy(26.px), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Row(horizontalArrangement = Arrangement.spacedBy(34.px)) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(38.px)) {
                                 MenuCircle(Symbols.KEYBOARD_COMMAND_KEY, "Send keys", Modifier.focusRequester(first)) { page = Page.KEYS }
                                 MenuCircle(Symbols.UPLOAD, "Send clipboard") { close { game.sendClipboard(true) } }
                                 MenuCircle(Symbols.CONTENT_PASTE, "Get clipboard") { close { game.getClipboard(0) } }
@@ -430,7 +434,7 @@ class StreamMenu(private val game: Game) {
                                 }
                                 MenuCircle(Symbols.ZOOM_IN, "Zoom", on = game.isZoomModeEnabled) { toggle { game.toggleZoomMode() } }
                             }
-                            Row(horizontalArrangement = Arrangement.spacedBy(34.px)) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(38.px)) {
                                 if (game.allowChangeMouseMode) MenuCircle(Symbols.MOUSE, "Mouse mode") { close { game.selectMouseMode(game) } }
                                 MenuCircle(Symbols.JOYSTICK, "On-screen controls", on = prefs.onscreenController) { toggle { game.toggleVirtualController() } }
                                 MenuCircle(Symbols.KEYBOARD_ALT, "Full keyboard") { toggle { game.toggleFullKeyboard() } }
@@ -488,11 +492,20 @@ class StreamMenu(private val game: Game) {
                         Page.UPSCALER -> Column(Modifier.width(1100.px), horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(22.px)) {
                             val available = !upscalerStatus.startsWith("Unavailable for") && com.limelight.binding.video.SgsrRenderer.isSupported(game)
-                            SettingRow(Symbols.ASPECT_RATIO, "Upscaling", RowValue.Toggle(game.isUpscalingRequested) {
+                            SettingRow(Symbols.ASPECT_RATIO, if (supersamplingMode) "Supersampling" else "Upscaling", RowValue.Toggle(game.isUpscalingRequested) {
                                 game.setUpscalingEnabled(it)
                                 changes++
                             }, Modifier.focusRequester(first), enabled = available && upscalerStatus !in listOf("Starting", "Stopping"),
                                 description = "$upscalerStatus · Changes apply to this stream without reconnecting.")
+                            if (supersamplingMode) {
+                                val level = game.supersamplingLevel.coerceIn(1, 2)
+                                SettingRow(Symbols.HIGH_QUALITY, "Supersampling quality",
+                                    RowValue.Choice(if (level == 1) "1× (1440p)" else "2× (2160p)", { direction ->
+                                        game.setSupersamplingLevel(if (direction < 0) 1 else 2)
+                                        changes++
+                                    }), enabled = available,
+                                    description = "Internal resolution for a native 1080p stream. The result is reduced back to the display resolution.")
+                            }
                             val upscalerMode = if (prefs.sgsrTemporalQuality) 3 else if (prefs.sgsrTemporal) 2 else if (prefs.sgsrHighQuality) 1 else 0
                             SettingRow(Symbols.TUNE, "Mode", RowValue.Choice(listOf("SGSR 1 Standard", "SGSR 1 High Quality", "SGSR 2 Video", "SGSR 2 Video Quality")[upscalerMode], { direction ->
                                 game.setUpscalingMode((upscalerMode + direction + 4) % 4)
@@ -565,7 +578,7 @@ class StreamMenu(private val game: Game) {
     private fun MenuCircle(icon: String, label: String, modifier: Modifier = Modifier, on: Boolean? = null, state: String? = null, onClick: () -> Unit) {
         val colors = LocalDelosColors.current
         var focused by remember { mutableStateOf(false) }
-        Column(Modifier.width(150.px), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(18.px)) {
+        Column(Modifier.width(164.px), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(18.px)) {
             Box(
                 modifier
                     .focusEffects(onClick, corner = 999f, focusScale = 1.16f, ring = FocusRing(5f, 5f), glow = FocusGlow(20f, 50f, -14f), onFocusChange = { focused = it })

@@ -46,9 +46,10 @@ public final class PyroWaveRenderer {
      */
     public static PyroWaveRenderer create(Surface surface, int width, int height, int frameRate,
                                           int outputWidth, int outputHeight, boolean chroma444,
-                                          boolean fullRange, int matrix, boolean tenBit, boolean enableSgsr2) {
+                                          boolean fullRange, int matrix, boolean tenBit, boolean enableSgsr2,
+                                          int supersamplingLevel) {
         long handle = nativeCreate(surface, width, height, frameRate, outputWidth, outputHeight, chroma444,
-                fullRange, matrix, tenBit, enableSgsr2);
+                fullRange, matrix, tenBit, enableSgsr2, supersamplingLevel);
         return handle != 0 ? new PyroWaveRenderer(handle) : null;
     }
 
@@ -70,6 +71,18 @@ public final class PyroWaveRenderer {
 
     public boolean isUpscalingEnabled() {
         return handle != 0 && nativeIsUpscalingEnabled(handle);
+    }
+
+    public void setSupersamplingLevel(int level) {
+        if (handle != 0) nativeSetSupersamplingLevel(handle, level >= 2 ? 2 : 1);
+    }
+
+    public boolean isSupersampling() {
+        return handle != 0 && nativeIsSupersampling(handle);
+    }
+
+    public String getScaleDescription() {
+        return handle != 0 ? nativeGetScaleDescription(handle) : null;
     }
 
     /** The frame statistics since the last call, in the order of the STAT_* indices. */
@@ -107,11 +120,15 @@ public final class PyroWaveRenderer {
 
     private static native long nativeCreate(Surface surface, int width, int height, int frameRate,
                                             int outputWidth, int outputHeight, boolean chroma444,
-                                            boolean fullRange, int matrix, boolean tenBit, boolean enableSgsr2);
+                                            boolean fullRange, int matrix, boolean tenBit, boolean enableSgsr2,
+                                            int supersamplingLevel);
 
     private static native void nativeSetHdrMode(long handle, boolean enabled);
     private static native void nativeSetUpscalingEnabled(long handle, boolean enabled);
     private static native boolean nativeIsUpscalingEnabled(long handle);
+    private static native void nativeSetSupersamplingLevel(long handle, int level);
+    private static native boolean nativeIsSupersampling(long handle);
+    private static native String nativeGetScaleDescription(long handle);
 
     private static native int nativeGetLastGpuDecodeUs(long handle);
 

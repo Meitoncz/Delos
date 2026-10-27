@@ -94,6 +94,28 @@ both renderers and adds it to total latency. MediaCodec uses smoothed wall time 
 SGSR draw; PyroWave uses its Vulkan draw timestamps. This is processing cost, not a claim of complete
 input-to-photon latency.
 
+### Native-resolution supersampling
+
+When the stream already matches the display resolution, SGSR uses supersampling instead of a
+same-resolution reconstruction. The live stream menu calls this mode **Supersampling** and offers two
+session-only levels: `1x` reconstructs 1920x1080 into 2560x1440, while `2x` reconstructs it into
+3840x2160. A separate presentation pass then reduces the internal image to the display resolution.
+The HDR path performs RGB-to-P010 conversion only after that reduction; the internal image remains
+linear RGB and is never converted twice.
+
+The sizing policy tolerates a two-pixel Surface aspect-fit difference, checks the GPU texture limit,
+and caps the internal target at 3840x2160. Native 4K therefore never attempts an unsafe 8K target.
+Changing the level live resets only temporal history and size-dependent SGSR resources, not the
+network stream or decoder. PyroWave recreates those Vulkan resources after its current frame fence and
+falls back from `2x` to `1x` if the larger allocation fails.
+
+The full statistics panel reports the actual active target directly below the source resolution, for
+example `Supersampled to: 2560 x 1440` or `Upscaled to: 1920 x 1080`. It reads the renderer's applied
+dimensions, so a pending change or fallback is not reported as completed. On the Odin's Adreno 740,
+the headless SGSR 2 temporal stage measured about 6.85 ms median / 7.39 ms p95 for 1080p-to-1440p and
+10.23 ms median / 16.76 ms p95 for 1080p-to-4K. The first level is the default; the second is primarily
+suited to 60 FPS streams.
+
 The two-pass SurfaceTexture/2D approach was also reviewed against linckosz's Moonlight Android
 PR #1567 (`37e7a00ce8cde55b936c9239d8e717336f55da63`); the lifecycle, live controls and P010 HDR output
 here are implemented for Delos rather than copying that bridge's synchronous frame wait.

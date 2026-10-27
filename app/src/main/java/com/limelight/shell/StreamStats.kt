@@ -61,6 +61,8 @@ class StreamStats(
     val hdr: Boolean,
     /** The decoder's name on the device. */
     val decoder: String,
+    /** Actual active SGSR target, null while post-processing is off. */
+    val scaleDescription: String?,
     val lossPercent: Float,
     val networkMs: Int,
     val networkVarianceMs: Int,
@@ -160,6 +162,13 @@ class StreamStatsPanel private constructor(
                 },
                 style = TextStyle(color = PANEL_TEXT, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx, fontFeatureSettings = "tnum"),
             )
+            if (s.scaleDescription != null) {
+                BasicText(
+                    s.scaleDescription,
+                    style = TextStyle(color = PANEL_TEXT.copy(alpha = .75f), fontFamily = Figtree,
+                        fontSize = 17.tpx, fontFeatureSettings = "tnum"),
+                )
+            }
             val rows = buildList {
                 add("Decoder" to s.decoder)
                 add("Incoming" to "${format(s.incomingFps)} FPS")
