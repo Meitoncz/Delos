@@ -4,9 +4,10 @@ Delos (formerly Vibetemis) is a fork of **Artemis** for **Vibepollo**. Priority:
 
 Details and numbers: [ANALYSIS.md](ANALYSIS.md). Environment setup: [WINDOWS_SETUP.md](WINDOWS_SETUP.md).
 
-Consolidated remaining work, including deferred ideas, verification and inherited code notes:
-[TODO.md](TODO.md), reconciled on 2026-10-28. Historical unchecked items below may have been
-superseded; use the reconciliation notes rather than treating each as a missing implementation.
+Current code-backed inventory: [TODO.md](TODO.md), audited on 2026-10-28 against `6d0688c2`.
+It separates real implementation remainders from existing features needing verification, optional
+decisions and historical source notes. Older unchecked Phase 4/6 entries below are historical planning
+leads, not additional missing features or an issue-import queue. Review the audited inventory first.
 
 ## Phase 0 – Fork identity
 
@@ -126,7 +127,9 @@ Principle: keep the streaming part (`Game.java`, overlays, virtual controls), re
     - [x] Phosphor icons (2026-10-28): replaced Material Symbols with bundled Regular/Fill subsets in the app and prototype, and assigned action-specific icons to all 105 catalog settings and menus. Build, 80 unit tests, lint and prototype checks pass; ARM64 build installed and accepted on Odin. The user's final adjustment uses Palette for the color-palette selector. See [ICONS.md](ICONS.md).
     - [x] Settings/help audit (2026-10-28): history reconciled, authored help for all 105 catalog settings and 29 native rows, selected-choice explanations, passive autoscroll and edge fades, per-game and live-menu help, corrected PyroWave applicability. Implementation, local checks and user acceptance of the installed Odin build complete. See [SETTINGS_HELP_AUDIT.md](SETTINGS_HELP_AUDIT.md).
     - [x] Complete external-display support (done 2026-10-27): streams on a monitor/TV use the Delos loading screen and in-stream menu, preserve the configured resolution and FPS instead of replacing them with the TV mode, retain HDR, and return cleanly to the shell. The built-in Odin controls operate the TV menu through a semantic cross-display input route, including D-pad, analog navigation, A/B and adjustable rows, without disabling keyboard `commitText`. See [EXTERNAL_DISPLAY.md](EXTERNAL_DISPLAY.md).
-- [ ] Later: in-stream quick menu (`GameMenu`) in the new design, virtual controls editor.
+- [ ] Remaining UI work: the controls editor (A09), abnormal/shortcut stream exits (A11) and the
+  three ordinary confirmations (A12). The normal streaming menu is already implemented; its further
+  design polish is deferred (A17) and requires agreement before changes.
 
 ## Phase 7 – Custom features and maintenance
 

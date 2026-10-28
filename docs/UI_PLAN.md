@@ -133,7 +133,8 @@ Built on the branch `ui/review-fixes`; the user tried them all on the Odin (2026
 - [x] Removed for good: the Artemis back menu switch, floating menu button, Back as Meta / Guide and the overlay opening the menu.
 - [x] The start screen's pulse around the focused game on the home screen.
 - [x] Recording custom stream menu buttons (Settings → Controls → Stream menu buttons), tried on the Odin.
-- [x] The performance statistics overlay in the Delos style (the user: the current one looks like a debug view). Built on `ui/stream-stats`: the prototype's panel, top left by default, the corner can be chosen in Settings → Display → Statistics position.
+- [x] The performance statistics overlay in the Delos style (the user: the current one looks like a debug view).
+ Built on `ui/stream-stats`: the prototype's panel, top left by default, the corner can be chosen in Settings → Display → Statistics position.
 - [x] Small fixes (2026-10-24, branch `ui/small-fixes`): the game background preview only for its own settings rows; frosted glass (backdrop blur) for the focused settings row, the top bar, the description panel and every control right over the animated background (circles, pills, settings tabs, text and PIN fields, top bar labels), not inside overlays; game background blur in 5 px steps.
 - [x] Settings audit, first part: no "(Experimental)" / "(Beta)" in titles, device-dependent features say so in their descriptions; the post-stream latency message removed with its code; "Move overlay to bottom" hidden in the new settings (Statistics position replaces it).
 - [x] Statistics with everything the classic overlay shows (decoder, incoming / rendering FPS, network latency and variance, PC processing min / average / max, decoding, bandwidth, lost frames); Compact mode (the former Lite mode) is one line at the top center; the stream menu's Performance is now Overlay and cycles On → Compact → Off.
@@ -190,7 +191,11 @@ Built on the branch `ui/switch-over` (2026-10-24). Delos is still not released; 
 - [x] New on-screen controls graphics (`OscStyle`, tried on the emulator and the Odin): thin (1 dp) light outlines over a faint dark glass, Figtree labels in capitals, whatever is pressed filled with the profile's main color (clearly, whatever the controls' opacity); circles for face buttons and L3 / R3, pills for shoulders, triggers, Back / Guide / Start and the trackpad, a D-pad cross with chevrons, sticks with a reach ring and a knob; the keyboard layout's keys in the same look. The classic skin setting and its 29 images are gone. Back, Guide and Start sit in a row centred at the bottom, the trackpad centred above them (L3 / R3 overlapping the D-pad and the right stick is kept on purpose; anyone can move them).
 - [x] Debug info → Preview on-screen controls: the controls without a stream (nothing is sent), with the layout editor.
 
-Later (Phase 6 backlog; the user on 2026-10-24: not urgent, for the first "final" version): restyle the classic in-stream quick menu (`GameMenu`) and the virtual controls editor in the new design. The stream menu's items stay as they are. Next after 6.9 the focus is on core features: PyroWave and VRR, PS Remote Play (docs/FUTURE_PLANS.md).
+Current reconciliation (2026-10-28): the normal stream already uses the native `StreamMenu`.
+Do not repeat the old main-menu restyle task. Remaining editor styling is A09; error/shortcut exit
+surfaces are A11 and ordinary confirmations A12. Further streaming-menu visual polish is A17,
+explicitly deferred until its design is agreed with the user. Core future ideas remain in
+[FUTURE_PLANS.md](FUTURE_PLANS.md); they are not automatic implementation approval.
 
 ## Open questions
 

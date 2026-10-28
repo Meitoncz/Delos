@@ -1,8 +1,8 @@
 # Proposed GitHub task workflow
 
-Prepared 2026-10-28. **Proposal only; no issues or project have been created.**
+Prepared 2026-10-28. **Proposal only; no issues, labels or Project board were created by this work.**
 
-## Verified current access
+## Last checked access
 
 - Repository: `Meitoncz/Delos`, private, Issues enabled.
 - `gh repo view` works and `gh issue list --state all` returned no issues.
@@ -35,25 +35,36 @@ Use labels for kinds (`feature`, `bug`, `testing`, `research`, `maintenance`, `i
 `needs-decision`, `deferred` or `conditional` must not look like selected development.
 Priority can be a Project field; no release milestones or dates are implied.
 
-## Proposed migration of the backlog
+## Required audit and review gate before migration
 
-1. Start from the **82 unique IDs** in [TODO.md](TODO.md), retaining each ID in the corresponding
-   issue so the history remains traceable. Do not import older stale checklists as additional work.
-2. Write issue titles/bodies in English, as required for repository content. Each issue should state
-   the current behavior, intended result, boundaries, dependencies and meaningful acceptance checks.
-3. Classify verification items as tests, inherited TODOs as triage/research, and unselected ideas as
-   needing a decision. They are not 82 confirmed missing features or bugs.
-4. Use a parent issue for a larger deliverable where helpful. For example, **PyroWave upscaler parity**
-   groups SGSR 1 Standard/HQ, real SGSR 2 Video Quality, sharpening and truthful controls (A01–A05).
-5. Add issue dependencies for host APIs, external hardware or user assets. Keep the Project private
-   independently of the repository's privacy.
-6. Once imported, use GitHub as the current task-status source. Keep TODO.md as an ID/link index and
-   keep architectural decisions/technical detail in repository documents; avoid two independent
-   checklists drifting apart.
+The user explicitly required a fresh codebase reconciliation before creating any issues.
+The earlier suggestion to import all 82/78 items was withdrawn: those numbers mixed implementation,
+verification, old comments, deferred ideas and completed behavior.
 
-**Migration is not yet authorized/executed.** The user asked whether GitHub could be used and then
-requested documentation and the end of this VS Code session. Review/approve this concrete setup
-when resuming in Herdr before creating the issues or board.
+[TODO.md](TODO.md) now records the code-backed dispositions of every original ID, plus separately
+identified audit findings. It includes evidence paths, concrete remainders and runtime-check limits.
+It is an audit inventory, **not a bulk-import queue**.
+
+1. Present and review the corrected inventory with the user. No migration is authorized merely
+   because the audit is complete. Do not start Project authorization or create issues yet.
+2. **Issue titles and bodies must be in English.** Chat and priority decisions remain Czech.
+3. Create work records only for the selected, reviewed remainders. Preserve old IDs as references;
+   do not open implemented, merged or historical items as missing features.
+4. Separate implementation from verification and approval. Untried hardware does not prove a bug;
+   optional design ideas remain `needs-decision`/`deferred`; host/assets dependencies stay blocked.
+5. Scope partial work narrowly. Per-game defaults already exist (A06 lacks live-save interaction);
+   paddle handling exists (G02 is retired); the normal stream already uses the new menu (A10 is
+   merged into its actual remaining areas). A05 is now only the applied-level allocation-fallback
+   reporting gap, not another four-mode upscaler implementation.
+6. Combine dependent acceptance with its feature where sensible: F17 belongs to B01/B02.
+   Use parents/sub-issues and dependencies only when they reflect genuine deliverables.
+7. Evaluate new findings separately. N01 is runtime-confirmed with an audit-owned fixture; N02
+   is a conditional code-level HDR concern, not a reproduced general failure.
+8. Keep any future Project private independently of repository visibility. After an approved import,
+   use GitHub for current task status and TODO.md as an ID/link index, not a competing checklist.
+
+The earlier A01–A05 PyroWave parity example is no longer an open parent deliverable: A01–A04 are
+implemented and A05 has only the narrow reporting remainder above. No release milestone is implied.
 
 ## Day-to-day operation
 
