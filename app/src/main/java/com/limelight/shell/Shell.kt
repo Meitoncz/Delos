@@ -492,9 +492,9 @@ fun Shell(
             }
 
             ArtworkProgressBar(artwork.progress.value)
-            val note = (library as? Library.Ready)?.takeIf { shell.screen == Screen.Home && shell.layer == null }?.let { "Library · ${it.apps.size} apps on ${it.pc.name}" }
+            val note = (library as? Library.Ready)?.takeIf { shell.screen == Screen.Home && shell.layer == null }?.let { "${it.apps.size} apps on ${it.pc.name}" }
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
-                ZoomedBar(uiScale) { HintBar(hints(shell, tracker.adjustable), note = note) }
+                ZoomedBar(uiScale) { HintBar(hints(shell, tracker.adjustable), note = note, noteLabel = if (note != null) "LIBRARY" else null) }
             }
             val launch = shell.launch
             LaunchOverlay(

@@ -294,14 +294,20 @@ data class Hint(val glyph: Glyph, val label: String)
 
 /** The bottom bar: an optional note on the left, the button hints on the right. */
 @Composable
-fun HintBar(hints: List<Hint>, note: String?, modifier: Modifier = Modifier) {
+fun HintBar(hints: List<Hint>, note: String?, modifier: Modifier = Modifier, noteLabel: String? = null) {
     val colors = LocalDelosColors.current
     Row(
         modifier.fillMaxWidth().height(92.px).padding(horizontal = 72.px),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(34.px),
     ) {
-        if (note != null) BasicText(note, style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 21.tpx))
+        if (note != null) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.px)) {
+            if (noteLabel != null) BasicText(noteLabel, style = TextStyle(color = colors.accent3,
+                fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx, letterSpacing = .14.em),
+                modifier = Modifier.alignByBaseline())
+            BasicText(note, style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 21.tpx),
+                modifier = Modifier.alignByBaseline())
+        }
         Spacer(Modifier.weight(1f))
         hints.forEach { hint ->
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.px)) {

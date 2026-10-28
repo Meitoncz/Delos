@@ -477,16 +477,13 @@ private fun Modifier.gameTitleEntrance(game: String, image: ImageBitmap?, reduce
     val pixelsPerStagePixel = LocalStage.current.dpPerPx * LocalDensity.current.density
     val entrance = remember(game, image, reducedMotion) { Animatable(if (reducedMotion) 1f else 0f) }
     LaunchedEffect(entrance) {
-        entrance.animateTo(1f, tween(1100, easing = CubicBezierEasing(.25f, .1f, .25f, 1f)))
+        entrance.animateTo(1f, tween(800, easing = CubicBezierEasing(.3f, 0f, .2f, 1f)))
     }
     return graphicsLayer {
         val progress = entrance.value
         // Reveal the title before the movement ends, so its slow settling stays visible.
         alpha = (progress * 1.5f).coerceIn(0f, 1f)
         translationX = (1f - progress) * 32f * pixelsPerStagePixel
-        scaleX = 1f + (1f - progress) * .10f
-        scaleY = scaleX
-        transformOrigin = TransformOrigin(0f, .5f)
     }
 }
 
