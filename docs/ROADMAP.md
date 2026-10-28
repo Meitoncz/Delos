@@ -117,8 +117,9 @@ Principle: keep the streaming part (`Game.java`, overlays, virtual controls), re
   - [x] 6.6 First launch, PCs and pairing (profile, PC circles, PIN/OTP pairing, portal, devices screen, links and shortcuts)
   - [x] 6.7 Settings (all 116 existing controls on the same keys, search and Y shortcut, Appearance, Covers information, settings profiles). Changed resolution confirmed in a real stream; controller navigation and feedback verified on the Odin. See [SETTINGS.md](SETTINGS.md). The previous count of 126 included ten category keys.
   - [x] 6.8 SteamGridDB (API key, matching, 4 images per game, bulk download, the artwork screen)
-  - [ ] 6.9 Switch-over and cleanup (new shell is the only launcher, old UI and unused dependencies removed)
+  - [x] 6.9 Switch-over and cleanup (new shell is the only launcher, old UI and unused dependencies removed; completed in `5e589749`)
   - [ ] 6.10 Polish and testing (side-by-side with the prototype, performance, touch, older Android fallbacks, other handhelds)
+    - [x] Settings/help audit (2026-10-28): history reconciled, authored help for all 105 catalog settings and 29 native rows, selected-choice explanations, passive autoscroll and edge fades, per-game and live-menu help, corrected PyroWave applicability. Implementation, local checks and user acceptance of the installed Odin build complete. See [SETTINGS_HELP_AUDIT.md](SETTINGS_HELP_AUDIT.md).
     - [x] Complete external-display support (done 2026-10-27): streams on a monitor/TV use the Delos loading screen and in-stream menu, preserve the configured resolution and FPS instead of replacing them with the TV mode, retain HDR, and return cleanly to the shell. The built-in Odin controls operate the TV menu through a semantic cross-display input route, including D-pad, analog navigation, A/B and adjustable rows, without disabling keyboard `commitText`. See [EXTERNAL_DISPLAY.md](EXTERNAL_DISPLAY.md).
 - [ ] Later: in-stream quick menu (`GameMenu`) in the new design, virtual controls editor.
 

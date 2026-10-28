@@ -1,8 +1,10 @@
 # Native settings (Phase 6.7)
 
 The new shell edits the same keys and value types as `app/src/main/res/xml/preferences.xml`.
-The XML currently contains **116 controls in 13 categories**. The earlier count of 126 included
-ten category keys; category keys are headings, not ten additional options.
+The XML originally contained **116 controls in 13 categories** at step 6.7. After the deliberate
+cleanup and feature additions it contains **105 controls**, plus **29 native shell rows**.
+The earlier count of 126 included ten category keys; category keys are headings, not ten additional
+options.
 
 ## Tabs
 
@@ -10,12 +12,12 @@ Approved on 2026-10-23. Categories that cover several subjects are split by sett
 
 | Tab | Contents |
 | --- | --- |
-| Stream | Resolution, frame rate, bitrate, frame pacing, latency, codec, host optimization and packet loss prevention |
+| Stream | Resolution, frame rate, bitrate, frame pacing, latency, codec, Wi-Fi keep-alive |
 | Display | Scaling, orientation, display modes, virtual display, HDR, color range and performance overlay |
 | Audio | Channels, audio effects, playback on the PC and interface sounds |
 | Controls | Gamepad, mouse, touch, keyboard, clipboard, virtual controls, editable layouts and interface haptics |
 | Appearance | Theme, wallpaper colors, backgrounds, home layout, interface scale, animation and the remaining interface options |
-| Covers | Information about existing PC artwork and upcoming SteamGridDB support; downloads remain step 6.8 |
+| Covers | PC and SteamGridDB artwork, API key, automatic and bulk downloads, per-game artwork selection |
 | Devices | Default PC, skipping the start screen, device management and pairing |
 | About | Version, project information, welcome screen, language, diagnostics and project links |
 
@@ -26,7 +28,9 @@ the new row. Simply clearing focus allows a scrolled list's focus search to re-e
 The handoff gives the switch one sound/haptic response without an intermediate tab focus. The list
 reserves space above the focused row for its section heading, including when returning to the top.
 Unavailable dependencies remain visible, dimmed and searchable. Hardware-inapplicable controls are
-hidden, following the classic screen. The description panel can receive focus and scroll with up/down.
+hidden, following the classic screen. The description panel stays outside controller focus. Long
+help automatically scrolls down and back up, with pauses and fading text edges; manual scrolling is
+disabled. A new selection resets it to the top.
 
 Y opens search from settings; the hint bar also shows this shortcut. Search accepts typed text or
 letters selected with the controller. Results span all tabs and selecting
@@ -55,8 +59,8 @@ preferences, including stream settings; later changes are independent.
 `StreamProfileStore` projects the stream keys into a regular Artemis `SettingsProfile`, using the same
 UUID and a name of `Delos · <user name>`. It activates this profile when the user changes. Consequently
 `PreferenceConfiguration` and the stream still read through the existing `ProfilesManager` overlay.
-The old profile list/editor remains available. Changes it makes to a linked profile are picked up
-when the shell resumes; unrelated Artemis profiles are preserved.
+The classic profile editor activities were removed in step 6.9. The linked profile data remains
+the compatibility layer used by the stream; unrelated Artemis profile data is preserved.
 
 `ProfileLayouts` also gives each user private copies of OSC, the five keyboard layouts and custom
 special keys. New users copy these layouts. Small, commented `Delos:` hooks in the existing layout
@@ -87,3 +91,13 @@ The repeated tab-switch regression was checked over three complete cycles in bot
 The scrolled-list case is checked separately: six rows down in Stream then R1 to Display; six down
 in Display then R1 to Audio; two down in Audio then L1 to Display; four down in Display then L1 to
 Stream. Each switch produced exactly one application vibration.
+
+## Help audit (2026-10-28)
+
+See [SETTINGS_HELP_AUDIT.md](SETTINGS_HELP_AUDIT.md) for the history and coverage audit. Every
+catalog setting and choice has authored help. The right panel explains the currently selected
+choice, interactions, applicability and when changes take effect. Long text scrolls automatically
+between both ends with edge fades; the title stays fixed. The panel does not accept focus or manual
+touch/controller scrolling. The same help is used per game.
+Stream-menu actions and live controls have a right-hand panel too, including the native mouse-mode
+page. Search includes choice descriptions. Preference keys and stored values are unchanged.

@@ -3899,22 +3899,14 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                     MouseModeOption selected = optionArray[which];
                     if (selected.index == -1) {
                         toggleMouseLocalCursor();
-                    } else {
-                        applyMouseMode(selected.index);
-                        if (prefConfig.rememberMouseMode) {
-                            ProfilesManager.getInstance().getOverlayingSharedPreferences(this)
-                                    .edit()
-                                    .putString("mouse_mode_list", String.valueOf(selected.index))
-                                    .apply();
-                        }
-                    }
+                    } else setStreamMouseMode(selected.index);
                 })
                 .create()
                 .show();
     }
 
     // Toggle the local mouse cursor
-    private void toggleMouseLocalCursor(){
+    public void toggleMouseLocalCursor(){
         if (!grabbedInput) {
             inputCaptureProvider.enableCapture();
             grabbedInput = true;
@@ -3927,7 +3919,23 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         }
     }
 
+    private int activeMouseMode;
+
+    public int getActiveMouseMode() { return activeMouseMode; }
+    public boolean isLocalMouseCursorVisible() { return cursorVisible; }
+
+    /** Delos: the native stream menu reuses the same mode and persistence rules as the old chooser. */
+    public void setStreamMouseMode(int mode) {
+        if (mode < 0 || mode > 5 || (isOnExternalDisplay() && mode != 2 && mode != 3 && mode != 4)) return;
+        applyMouseMode(mode);
+        if (prefConfig.rememberMouseMode) {
+            ProfilesManager.getInstance().getOverlayingSharedPreferences(this).edit()
+                    .putString("mouse_mode_list", String.valueOf(mode)).apply();
+        }
+    }
+
     private void applyMouseMode(int mode) {
+        activeMouseMode = mode;
         switch (mode) {
             case 0: // Multi-touch
                 prefConfig.enableMultiTouchScreen = true;

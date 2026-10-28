@@ -7,7 +7,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
-import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,11 +22,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -37,7 +34,6 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -48,11 +44,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onPreviewKeyEvent
-import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -69,10 +60,14 @@ import com.limelight.shell.data.ProfileStore
 import com.limelight.shell.settings.Appearance
 import com.limelight.shell.settings.SettingKind
 import com.limelight.shell.settings.SettingsCapabilities
+import com.limelight.shell.settings.SettingsHelp
+import com.limelight.shell.settings.choiceLabel
+import com.limelight.shell.settings.nextSettingChoice
 import com.limelight.shell.settings.SettingsTab
 import com.limelight.shell.settings.Startup
 import com.limelight.shell.settings.StreamSettingsStore
 import com.limelight.shell.ui.Cue
+import com.limelight.shell.ui.AutoScrollingHelp
 import com.limelight.shell.ui.Figtree
 import com.limelight.shell.ui.FocusGlow
 import com.limelight.shell.ui.FocusRing
@@ -101,7 +96,6 @@ import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 
 /** Cycles an enum by [dir] steps. */
 inline fun <reified E : Enum<E>> E.step(dir: Int): E {
@@ -148,9 +142,8 @@ fun SettingsScreen(
             SettingKind.TOGGLE -> RowValue.Toggle(current as? Boolean ?: false) { stream.write(spec, it) }
             SettingKind.CHOICE -> {
                 val choices = capabilities?.choices(spec, values) ?: spec.choices
-                val index = choices.indexOfFirst { it.value == current }.coerceAtLeast(0)
-                RowValue.Choice(choices.getOrNull(index)?.label ?: current?.toString().orEmpty(), { dir ->
-                    if (choices.isNotEmpty()) stream.write(spec, choices[Math.floorMod(index + dir, choices.size)].value)
+                RowValue.Choice(spec.choiceLabel(current, choices), { dir ->
+                    nextSettingChoice(current, choices, dir)?.let { stream.write(spec, it.value) }
                 })
             }
             SettingKind.SLIDER -> RowValue.Slider((current as? Number)?.toInt() ?: spec.min, spec.min, spec.max, spec.step, spec.unit,
@@ -158,10 +151,12 @@ fun SettingsScreen(
             SettingKind.TEXT -> RowValue.Text(current?.toString().orEmpty()) { act(spec) }
             SettingKind.ACTION -> RowValue.Action { act(spec) }
         }
+        val description = if (spec.key == "checkbox_enable_hdr" && capabilities?.brokenHdr == true)
+            "Update the firmware on your NVIDIA SHIELD Android TV to enable HDR." else spec.description
         SettingsItem(spec.key, spec.tab, spec.section, spec.icon, spec.label,
-            if (spec.key == "list_languages") "Language used by the stream and classic interface. The new interface currently uses English."
-            else if (spec.key == "checkbox_enable_hdr" && capabilities?.brokenHdr == true) "Update the firmware on your NVIDIA SHIELD Android TV to enable HDR."
-            else spec.description, row, stream.enabled(spec, capabilities))
+            description, row, stream.enabled(spec, capabilities),
+            detail = SettingsHelp.details(spec.copy(description = description), values, capabilities?.choices(spec, values) ?: spec.choices),
+            searchTerms = spec.choices.joinToString(" ") { "${it.label} ${SettingsHelp.choice(spec.key, it.value)}" })
     }
     val all = nativeSettings(appearance, update, startup, updateStartup, pcs, profiles.settings()) + classic
     if (search) {
@@ -276,7 +271,7 @@ private fun SectionHeading(label: String) {
 @Composable
 private fun SettingsItemRow(item: SettingsItem, modifier: Modifier = Modifier, focused: () -> Unit = {}) {
     SettingRow(item.icon, item.label, item.value, modifier,
-        description = item.description.takeIf { it.length <= 100 && it.isNotEmpty() }, enabled = item.enabled, onFocused = focused)
+        enabled = item.enabled, onFocused = focused)
 }
 
 /** The L1 / R1 hint beside a row of tabs. */
@@ -307,58 +302,48 @@ internal fun TabPill(icon: String, label: String, selected: Boolean, modifier: M
 private fun DescriptionPanel(tab: SettingsTab, focused: SettingsItem?, modifier: Modifier, appearance: Appearance) {
     val colors = LocalDelosColors.current
     val shape = RoundedCornerShape(34.px)
-    val scroll = rememberScrollState()
-    val scope = rememberCoroutineScope()
-    val k = LocalStage.current.dpPerPx * LocalDensity.current.density
-    LaunchedEffect(focused?.key) { scroll.scrollTo(0) }
-    Column(modifier.onPreviewKeyEvent { event ->
-        val direction = when (event.key) { Key.DirectionDown -> 1; Key.DirectionUp -> -1; else -> 0 }
-        val canScroll = if (direction > 0) scroll.canScrollForward else scroll.canScrollBackward
-        if (direction != 0 && canScroll) {
-            if (event.type == KeyEventType.KeyDown) scope.launch { scroll.animateScrollBy(direction * 130f * k) }
-            true
-        } else false
-    }.focusEffects(onClick = {}, corner = 34f, focusScale = 1f, clickCue = null)
-        .clip(shape)
+    Column(modifier.clip(shape)
         // The same gentle frosted glass as the focused row
         .then(LocalBackdropHaze.current?.let { Modifier.backdropBlur(it, 8f, colors.surface) } ?: Modifier.background(colors.surface))
-        .border(1.px, colors.line, shape).verticalScroll(scroll).padding(44.px),
+        .border(1.px, colors.line, shape).padding(44.px),
         verticalArrangement = Arrangement.spacedBy(18.px)) {
         Box(Modifier.size(120.px).clip(CircleShape).background(colors.accent), contentAlignment = Alignment.Center) {
             Symbol(focused?.icon ?: tab.icon, 64.tpx, colors.onAccent, filled = true)
         }
         BasicText(focused?.label ?: tab.label, style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 30.tpx), modifier = Modifier.padding(top = 8.px))
-        BasicText(focused?.description?.takeIf { it.isNotBlank() } ?: tab.description,
-            style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 22.tpx, lineHeight = 1.45.em))
-        if (focused?.enabled == false) BasicText("Unavailable with the current settings or on this device.", style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 18.tpx))
-        val rowValue = focused?.value
-        if (rowValue is RowValue.Choice || rowValue is RowValue.Text) BasicText(if (rowValue is RowValue.Choice) rowValue.label else (rowValue as RowValue.Text).text,
-            style = TextStyle(color = colors.accent, fontFamily = Figtree, fontSize = 22.tpx, lineHeight = 1.3.em))
-        // The palette's three colors, only for the palette row
-        if (focused?.key == "ui_palette") {
-            Row(horizontalArrangement = Arrangement.spacedBy(16.px)) {
-                listOf(colors.accent to "Main", colors.accent2 to "Secondary", colors.accent3 to "Accent").forEach { (color, name) ->
-                    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.px)) {
-                        Box(Modifier.size(width = 120.px, height = 72.px).clip(RoundedCornerShape(18.px)).background(color).border(1.px, colors.line, RoundedCornerShape(18.px)))
-                        BasicText(name, style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 18.tpx))
+        AutoScrollingHelp(focused?.key to focused?.detail, Modifier.weight(1f)) {
+            BasicText(focused?.detail?.takeIf { it.isNotBlank() } ?: tab.description,
+                style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 22.tpx, lineHeight = 1.45.em))
+            if (focused?.enabled == false) BasicText("Unavailable with the current settings or on this device.", style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 18.tpx))
+            val rowValue = focused?.value
+            if (rowValue is RowValue.Text) BasicText(rowValue.text,
+                style = TextStyle(color = colors.accent, fontFamily = Figtree, fontSize = 22.tpx, lineHeight = 1.3.em))
+            // The palette's three colors, only for the palette row
+            if (focused?.key == "ui_palette") {
+                Row(horizontalArrangement = Arrangement.spacedBy(16.px)) {
+                    listOf(colors.accent to "Main", colors.accent2 to "Secondary", colors.accent3 to "Accent").forEach { (color, name) ->
+                        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.px)) {
+                            Box(Modifier.size(width = 120.px, height = 72.px).clip(RoundedCornerShape(18.px)).background(color).border(1.px, colors.line, RoundedCornerShape(18.px)))
+                            BasicText(name, style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 18.tpx))
+                        }
                     }
                 }
             }
-        }
-        // A preview of the game background, only for the rows that change it
-        if (focused?.key in GAME_BACKGROUND_ROWS) {
-            val hero = LocalShell.current.hero
-            val image by produceState<ImageBitmap?>(null, hero?.id, appearance.heroBlur) {
-                value = hero?.image?.let { source -> withContext(Dispatchers.Default) { HeroBitmaps.render(hero.id, source, appearance.heroBlur) } }
-            }
-            Box(Modifier.fillMaxWidth().height(150.px).clip(RoundedCornerShape(20.px)).background(colors.bg2), contentAlignment = Alignment.Center) {
-                if (appearance.heroBackground && hero != null) {
-                    Box(Modifier.fillMaxSize().graphicsLayer { alpha = appearance.heroOpacity / 100f }) {
-                        if (image != null) Image(image!!, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-                        else PlaceholderArt(hero.hue, hero.hue2, hero.icon, Modifier.fillMaxSize(), glyphSize = 100f)
-                    }
+            // A preview of the game background, only for the rows that change it
+            if (focused?.key in GAME_BACKGROUND_ROWS) {
+                val hero = LocalShell.current.hero
+                val image by produceState<ImageBitmap?>(null, hero?.id, appearance.heroBlur) {
+                    value = hero?.image?.let { source -> withContext(Dispatchers.Default) { HeroBitmaps.render(hero.id, source, appearance.heroBlur) } }
                 }
-                BasicText("Game background", style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx))
+                Box(Modifier.fillMaxWidth().height(150.px).clip(RoundedCornerShape(20.px)).background(colors.bg2), contentAlignment = Alignment.Center) {
+                    if (appearance.heroBackground && hero != null) {
+                        Box(Modifier.fillMaxSize().graphicsLayer { alpha = appearance.heroOpacity / 100f }) {
+                            if (image != null) Image(image!!, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                            else PlaceholderArt(hero.hue, hero.hue2, hero.icon, Modifier.fillMaxSize(), glyphSize = 100f)
+                        }
+                    }
+                    BasicText("Game background", style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx))
+                }
             }
         }
     }
@@ -373,7 +358,7 @@ private fun SettingsSearch(all: List<SettingsItem>, scale: Float) {
     val first = remember { FocusRequester() }
     InitialFocus(first)
     val words = query.trim().lowercase(Locale.ROOT).split(Regex("\\s+"))
-    val results = all.filter { item -> words.all { "${item.label} ${item.description} ${item.section} ${item.tab.label}".lowercase(Locale.ROOT).contains(it) } }
+    val results = all.filter { item -> words.all { "${item.label} ${item.description} ${item.detail} ${item.searchTerms} ${item.section} ${item.tab.label}".lowercase(Locale.ROOT).contains(it) } }
     Column(Modifier.fillMaxSize().padding(start = 150.px, end = 150.px, top = 130.px, bottom = (96f * scale).px)) {
         BasicText("Find a setting", style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx))
         BasicText("Pick letters with the controller, or select the field to type", style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 22.tpx), modifier = Modifier.padding(top = 14.px, bottom = 32.px))

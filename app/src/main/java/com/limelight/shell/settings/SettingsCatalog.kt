@@ -16,7 +16,7 @@ enum class SettingsTab(val label: String, val icon: String, val description: Str
     AUDIO("Audio", Symbols.GRAPHIC_EQ, "Sound from the PC and the sounds of the Delos interface."),
     CONTROLS("Controls", Symbols.SPORTS_ESPORTS, "Gamepads, mouse, touch, keyboard and on-screen controls."),
     APPEARANCE("Appearance", Symbols.PALETTE, "Theme, colors and the animated background. Changes apply immediately."),
-    COVERS("Covers", Symbols.PHOTO_LIBRARY, "Game artwork from your PC. SteamGridDB support comes in the next step."),
+    COVERS("Covers", Symbols.PHOTO_LIBRARY, "Covers, wide covers, backgrounds and logos from your PC or SteamGridDB."),
     DEVICES("Devices", Symbols.COMPUTER, "Paired PCs and what happens when Delos starts."),
     ABOUT("About", Symbols.INFO, "Delos is a fork of Artemis and Moonlight, licensed under the GPLv3."),
 }
@@ -24,6 +24,19 @@ enum class SettingsTab(val label: String, val icon: String, val description: Str
 enum class SettingKind { TOGGLE, CHOICE, SLIDER, TEXT, ACTION }
 
 data class SettingChoice(val label: String, val value: String)
+
+/** Keep an unavailable stored choice visible rather than displaying a different value as selected. */
+fun SettingSpec.choiceLabel(value: Any?, available: List<SettingChoice>): String =
+    available.firstOrNull { it.value == value }?.label
+        ?: "${choices.firstOrNull { it.value == value }?.label ?: value.toString()} (unavailable)"
+
+fun nextSettingChoice(value: Any?, available: List<SettingChoice>, direction: Int): SettingChoice? {
+    if (available.isEmpty()) return null
+    val current = available.indexOfFirst { it.value == value }
+    val next = if (current < 0) { if (direction >= 0) 0 else available.lastIndex }
+        else Math.floorMod(current + direction, available.size)
+    return available[next]
+}
 
 data class SettingSpec(
     val key: String,
@@ -62,7 +75,7 @@ data class SettingSpec(
     }
 
     fun matches(query: String): Boolean = query.trim().lowercase(Locale.ROOT).split(Regex("\\s+"))
-        .all { word -> "$label $description $section ${tab.label} $key".lowercase(Locale.ROOT).contains(word) }
+        .all { word -> "$label $description $section ${tab.label} $key ${choices.joinToString(" ") { "${it.label} ${SettingsHelp.choice(key, it.value)}" }}".lowercase(Locale.ROOT).contains(word) }
 }
 
 /**
@@ -107,7 +120,7 @@ class SettingsCatalog(context: Context) {
             val values = array(attrs, "entryValues")
             val tab = tabFor(category, key)
             rows += SettingSpec(
-                key, text(attrs, "title"), text(attrs, "summary").ifEmpty { text(attrs, "dialogMessage") },
+                key, text(attrs, "title"), SettingsHelp.description(key, text(attrs, "summary").ifEmpty { text(attrs, "dialogMessage") }),
                 category, section, tab, kind, default,
                 values.mapIndexed { i, value -> SettingChoice(labels.getOrElse(i) { value }, value) },
                 attrs.getAttributeIntValue(SEEKBAR, "min", 1), attrs.getAttributeIntValue(ANDROID, "max", 100),

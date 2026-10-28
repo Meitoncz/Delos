@@ -21,6 +21,7 @@ import com.limelight.shell.StatsPosition
 import com.limelight.shell.data.Pc
 import com.limelight.shell.settings.Appearance
 import com.limelight.shell.settings.SettingsTab
+import com.limelight.shell.settings.SettingsHelp
 import com.limelight.shell.settings.Startup
 import com.limelight.shell.settings.StreamMenuSettings
 import com.limelight.shell.ui.RowValue
@@ -37,6 +38,8 @@ internal data class SettingsItem(
     val description: String,
     val value: RowValue,
     val enabled: Boolean = true,
+    val detail: String = description,
+    val searchTerms: String = "",
 )
 
 /** Shell preferences and device actions participate in the same search as stream settings. */
@@ -51,9 +54,11 @@ internal fun nativeSettings(
     val shell = LocalShell.current
     val systemHue = remember { systemAccentHue(context) }
     val list = mutableListOf<SettingsItem>()
-    fun row(key: String, icon: String, title: String, value: RowValue, description: String = "", enabled: Boolean = true,
+    fun row(key: String, icon: String, title: String, value: RowValue, description: String, enabled: Boolean = true,
             tab: SettingsTab = SettingsTab.APPEARANCE, section: String = "Interface") {
-        list += SettingsItem(key, tab, section, icon, title, description, value, enabled)
+        val help = SettingsHelp.description(key, description)
+        list += SettingsItem(key, tab, section, icon, title, help, value, enabled,
+            NativeSettingsHelp.details(key, help, value))
     }
     row("ui_dark", Symbols.DARK_MODE, "Theme", RowValue.Choice(if (a.dark) "Dark" else "Light", { update { it.copy(dark = !it.dark) } }), "Choose a dark or light interface.")
     row("ui_material_you", Symbols.WALLPAPER, "Material You colors", RowValue.Toggle(a.materialYou) { on -> update { it.copy(materialYou = on) } },
@@ -77,16 +82,16 @@ internal fun nativeSettings(
     val menuButtons = StreamMenuSettings.buttons(settings)
     row("ui_stream_menu_buttons", Symbols.SPORTS_ESPORTS, "Stream menu buttons", RowValue.Text(StreamMenuSettings.label(menuButtons)) {
         shell.buttonCapture = { buttons -> StreamMenuSettings.setButtons(settings, buttons) }
-    }, "Press them together while streaming to open the Delos stream menu, and again to close it. Select to record other buttons, e.g. a rear button.",
+    }, "Press them together while streaming to open the Delos stream menu, and again to close it. Select to record other buttons, e.g. a rear button. A changed shortcut applies to the next stream.",
         tab = SettingsTab.CONTROLS, section = "Stream menu")
     row("ui_stream_menu_swipe", Symbols.SWIPE_UP, "Swipe up to open the menu", RowValue.Toggle(StreamMenuSettings.swipe(settings)) { on ->
         settings.edit().putBoolean(StreamMenuSettings.KEY_SWIPE, on).apply()
-    }, "A swipe up from the bottom edge of the screen opens the stream menu too. Touches that start right at that edge do not reach the game.",
+    }, "A swipe up from the bottom edge of the screen opens the stream menu too. Touches that start right at that edge do not reach the game. Changes apply to the next stream.",
         tab = SettingsTab.CONTROLS, section = "Stream menu")
     val statsPosition = StatsPosition.read(settings)
     row("ui_stats_position", Symbols.MONITORING, "Statistics position", RowValue.Choice(statsPosition.label, { dir ->
         settings.edit().putString(StatsPosition.KEY, statsPosition.step(dir).name).apply()
-    }), "The corner of the statistics panel while streaming (Overlay in the stream menu). Compact mode is always at the top center.", tab = SettingsTab.DISPLAY, section = "Statistics")
+    }), "The corner of the statistics panel while streaming (Overlay in the stream menu). Compact mode is always at the top center. Changes apply to the next stream.", tab = SettingsTab.DISPLAY, section = "Statistics")
     val choices = listOf<Pc?>(null) + pcs.filter { it.paired }.sortedBy { it.name.lowercase() }
     val index = choices.indexOfFirst { it?.uuid == startup.defaultPc }.coerceAtLeast(0)
     row("ui_default_pc", Symbols.STAR, "Default device", RowValue.Choice(choices[index]?.name ?: "None", { dir ->

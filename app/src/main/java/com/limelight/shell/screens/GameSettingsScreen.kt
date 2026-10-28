@@ -7,15 +7,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
-import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -24,11 +21,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.type
-import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.TextStyle
@@ -51,7 +43,6 @@ import com.limelight.shell.ui.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.launch
 
 /** A small game-specific version of the settings screen, using the same rows, tabs and focus rules. */
 @OptIn(ExperimentalFoundationApi::class)
@@ -149,10 +140,8 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
                                 SettingKind.TOGGLE -> RowValue.Toggle(current as? Boolean ?: false) { stream.write(spec, it) }
                                 SettingKind.CHOICE -> {
                                     val choices = caps?.choices(spec, values) ?: spec.choices
-                                    val selected = choices.indexOfFirst { it.value == current }
-                                    RowValue.Choice(choices.getOrNull(selected)?.label ?: current.toString(), { dir ->
-                                        if (choices.isNotEmpty()) stream.write(spec,
-                                            choices[Math.floorMod(selected + dir, choices.size)].value)
+                                    RowValue.Choice(spec.choiceLabel(current, choices), { dir ->
+                                        nextSettingChoice(current, choices, dir)?.let { stream.write(spec, it.value) }
                                     })
                                 }
                                 SettingKind.SLIDER -> RowValue.Slider((current as? Number)?.toInt() ?: spec.min,
@@ -177,24 +166,16 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
                     if (image != null) Image(image, screen.app.name, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
                     else PlaceholderArt(art.hue, art.hue2, art.icon, Modifier.fillMaxSize(), glyphSize = 160f)
                 }
-                val descriptionScroll = rememberScrollState()
-                val scope = rememberCoroutineScope()
-                LaunchedEffect(focusedKey) { descriptionScroll.scrollTo(0) }
-                Column(Modifier.weight(1f).fillMaxWidth().onPreviewKeyEvent { event ->
-                    val direction = when (event.key) { Key.DirectionDown -> 1; Key.DirectionUp -> -1; else -> 0 }
-                    val canScroll = if (direction > 0) descriptionScroll.canScrollForward else descriptionScroll.canScrollBackward
-                    if (direction != 0 && canScroll) {
-                        if (event.type == KeyEventType.KeyDown) scope.launch { descriptionScroll.animateScrollBy(direction * 100f * k) }
-                        true
-                    } else false
-                }.focusEffects(onClick = {}, corner = 18f, focusScale = 1f, clickCue = null)
-                    .verticalScroll(descriptionScroll).padding(8.px),
+                val detail = focused?.let { SettingsHelp.details(it, values, caps?.choices(it, values) ?: it.choices) }
+                Column(Modifier.weight(1f).fillMaxWidth().padding(8.px),
                     verticalArrangement = Arrangement.spacedBy(10.px)) {
                     BasicText(focused?.label ?: "Your game, your settings", style = TextStyle(color = colors.text,
                         fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 24.tpx))
-                    BasicText(focused?.description?.takeIf { it.isNotBlank() }
-                        ?: "Only this game uses these changes. Everything else follows your profile.",
-                        style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 20.tpx, lineHeight = 1.35.em))
+                    AutoScrollingHelp(focusedKey to detail, Modifier.weight(1f)) {
+                        BasicText(detail?.takeIf { it.isNotBlank() }
+                            ?: "Only this game uses these changes. Everything else follows your profile.",
+                            style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 20.tpx, lineHeight = 1.35.em))
+                    }
                 }
                 PillButton("Use profile value", Symbols.RESTART_ALT, { focused?.let { reset(it.key) } })
                 BasicText("Saved automatically · applies next stream", style = TextStyle(color = colors.text3,

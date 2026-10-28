@@ -72,6 +72,66 @@ class ShellSettingsTest {
         assertEquals(SettingsTab.ABOUT, spec("list_languages").tab)
     }
 
+    @Test fun everyCatalogSettingAndChoiceHasSpecificHelp() {
+        catalog.all.forEach { spec ->
+            assertTrue("Missing help for ${spec.key}", SettingsHelp.description(spec.key, "").isNotBlank())
+            spec.choices.forEach { choice ->
+                assertTrue("Missing help for ${spec.key}/${choice.value}", SettingsHelp.choice(spec.key, choice.value).isNotBlank())
+            }
+        }
+        listOf("frame_pacing", "video_format").forEach { key ->
+            assertTrue(spec(key).choices.none { it.label.contains("prefer", ignoreCase = true) })
+        }
+        assertTrue(spec("frame_pacing").matches("Warp 2"))
+        assertTrue(SettingsHelp.choice("list_resolution", "2560x1600").contains("2560 × 1600"))
+        assertTrue(SettingsHelp.choice("list_fps", "119.88").contains("119.88"))
+    }
+
+    @Test fun helpFollowsSelectedPacingAndExplainsLfrPrecedence() {
+        val pacing = spec("frame_pacing")
+        val values = mutableMapOf<String, Any>("frame_pacing" to "warp2", "pref_low_latency_frame_balance" to true)
+        val warp = SettingsHelp.details(pacing, values)
+        assertTrue(warp.startsWith("Warp 2\n"))
+        assertTrue(warp.contains("four times"))
+        assertTrue(warp.contains("LFR is enabled"))
+        values["frame_pacing"] = "fast-vsync"
+        val nano = SettingsHelp.details(pacing, values)
+        assertTrue(nano.startsWith("Fast V-Sync"))
+        assertFalse(nano.contains("four times"))
+        assertFalse(nano.contains("LFR is enabled"))
+        assertTrue(nano.contains("takes precedence over LFR"))
+    }
+
+    @Test fun pyroWaveExposesItsNativeUpscalerButNotMediaCodecOnlyControls() {
+        val prefs = context.getSharedPreferences("help_pyrowave", Context.MODE_PRIVATE)
+        prefs.edit().clear().putString("video_format", "pyrowave").putBoolean("checkbox_sgsr", true).commit()
+        val stream = StreamSettingsStore(catalog) { prefs }
+        assertTrue(stream.enabled(spec("checkbox_sgsr"), null))
+        assertTrue(stream.enabled(spec("list_sgsr_quality"), null))
+        listOf("checkbox_async_decode", "checkbox_ultra_low_latency", "pref_low_latency_frame_balance", "seekbar_sgsr_sharpness").forEach {
+            assertFalse("Should not apply to PyroWave: $it", stream.enabled(spec(it), null))
+        }
+        assertTrue(SettingsHelp.details(spec("list_sgsr_quality"), prefs.all).contains("same native reconstruction"))
+        prefs.edit().putBoolean("checkbox_sgsr", false).commit()
+        assertFalse(stream.enabled(spec("list_sgsr_quality"), null))
+        prefs.edit().putString("video_format", "forceav1").putBoolean("checkbox_sgsr", true).commit()
+        assertTrue(stream.enabled(spec("seekbar_sgsr_sharpness"), null))
+        assertTrue(stream.enabled(spec("checkbox_async_decode"), null))
+        stream.close()
+    }
+
+    @Test fun unavailableStoredChoiceIsNotShownAsAnotherMode() {
+        val pacing = spec("frame_pacing")
+        val supported = pacing.choices.filter { it.value != "fast-vsync" }
+        assertEquals("Fast V-Sync (Nano Pacer) (unavailable)", pacing.choiceLabel("fast-vsync", supported))
+        assertEquals(supported.first(), nextSettingChoice("fast-vsync", supported, 1))
+        assertEquals(supported.last(), nextSettingChoice("fast-vsync", supported, -1))
+        assertNull(nextSettingChoice("fast-vsync", emptyList(), 1))
+        val help = SettingsHelp.details(pacing, mapOf("frame_pacing" to "fast-vsync"), supported)
+        assertTrue(help.startsWith("Fast V-Sync"))
+        assertTrue(help.contains("saved choice is unavailable"))
+    }
+
     @Test fun noExperimentalOrBetaLabels() {
         // Device-dependent features say so in their descriptions instead
         val labels = catalog.all.flatMap { spec -> listOf(spec.label) + spec.choices.map { it.label } }
