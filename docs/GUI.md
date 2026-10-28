@@ -11,7 +11,10 @@ The starting point for the new Delos UI (Phase 6). Written by the project owner;
 - Overlays such as the **portal and the game loader blur the content behind them**.
 - Slightly **rounded** design with generous paddings and margins.
 - An **interface scale** setting enlarges text, the status bar and the button hints (the covers keep their size).
-- Heavy use of **icons** from a modern icon font with as many free icons as possible – **not Font Awesome**.
+- Heavy use of **Phosphor icons**, bundled offline under the MIT license: Regular at rest and Fill
+  on focus, with a smooth crossfade. Choose icons by the meaning of each action or setting; identical
+  actions stay consistent across screens. The color-palette selector uses **Palette** for every
+  palette choice. See [ICONS.md](ICONS.md) for the approved implementation and generation workflow.
 
 ## First launch
 

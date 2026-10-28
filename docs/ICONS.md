@@ -5,6 +5,9 @@ The shared `Symbol` component crossfades between the two bundled fonts over 350 
 The fonts use the same code points and advance widths, so the transition does not move labels.
 Colors, icon sizes, controller navigation and actions keep their existing behavior.
 
+Implemented and integrated as **`18a904c7`** on `main` and `origin/main`, including the user's
+Palette adjustment. The completed feature branch was deleted; the push used `[skip ci]`.
+
 ## Sources and generation
 
 - Official source: [phosphor-icons/web v2.1.2](https://github.com/phosphor-icons/web/tree/v2.1.2).
@@ -17,6 +20,8 @@ Colors, icon sizes, controller navigation and actions keep their existing behavi
   and `docs/prototype/phosphor-icons.css`. Commit these along with mapping/generator changes.
 - The prototype reads the Android fonts through relative paths; icon rendering needs no CDN.
   Its `data-icon` names use the generated CSS and the same Regular/Fill crossfade.
+- The Regular subset is 53,928 bytes and Fill is 46,636 bytes (100,564 bytes combined), replacing
+  the 299,768-byte Material Symbols subset. No new runtime library is needed.
 
 Rebuild icons on Windows (Python with `fonttools` installed):
 
@@ -44,11 +49,17 @@ charging bolt comes from the icon font. Controller letters and the Delos logo re
 
 Current checkpoint (2026-10-28): ARM64 build installed on the Odin and accepted by the user.
 The final requested adjustment uses the Palette icon for the color-palette selector in both
-the app and prototype; it applies consistently while cycling through individual palettes.
+the app and prototype; it applies consistently while cycling through individual palettes. The final
+APK containing that adjustment was rebuilt and installed after checking that no stream was active.
 Local build and all 80 unit tests pass. Lint reports zero errors and 387 pre-existing warnings.
 All 105 catalog settings have explicit icon mappings. All 200 semantic mappings resolve to nonempty
 glyphs in both subsets with matching widths. Regeneration is byte-identical. The browser check loads
 the local fonts and verifies generated icons and the Regular/Fill focus states in the real prototype.
+
+Local evidence is kept under ignored `build/phosphor-icons/`: `palette-check.log` is the final
+build/unit/lint run, `browser-result.html` records the prototype check, and `odin-icons.png` captures
+the real-device shell. These checks belong to the implementation; documentation-only updates do
+not require reinstalling the APK or launching a game.
 
 - Build, unit tests and lint for `nonRoot_gameDebug`.
 - Validate all semantic mappings against both fonts, including their code points and metrics.
