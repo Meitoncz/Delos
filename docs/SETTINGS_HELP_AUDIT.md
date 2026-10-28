@@ -97,8 +97,8 @@ The old 116-setting count in the Phase 6.7 document was a historical count, not 
   was foreground. A read-only screenshot confirms the fixed heading, selected pacing help, LFR
   context, faded text edges and absence of the retired manual-help shortcut. No AndroidRuntime
   error appeared in the inspected log.
-- **User visual/controller acceptance is pending**, including the stream menu and native mouse-mode
-  page in a user-started stream. External-display help layout has not been device-tested in this
-  audit. No game was launched and no navigation input was injected by the agent.
-- GitHub Actions were not requested or run. Keep this feature branch until device acceptance, then
-  complete the agreed commit, fast-forward, `[skip ci]` push and branch cleanup workflow.
+- **The user accepted the installed Odin build on 2026-10-28.** This is overall device acceptance,
+  not a separately recorded test of every control. The later external-display help layout still
+  needs a dedicated TV check. No game was launched and no navigation input was injected by the agent.
+- Integrated in `77d4771e` using the agreed commit, fast-forward, `[skip ci]` push and feature-branch
+  cleanup workflow. GitHub Actions were not requested or run.

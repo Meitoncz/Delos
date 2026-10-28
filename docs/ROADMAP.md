@@ -4,6 +4,10 @@ Delos (formerly Vibetemis) is a fork of **Artemis** for **Vibepollo**. Priority:
 
 Details and numbers: [ANALYSIS.md](ANALYSIS.md). Environment setup: [WINDOWS_SETUP.md](WINDOWS_SETUP.md).
 
+Consolidated remaining work, including deferred ideas, verification and inherited code notes:
+[TODO.md](TODO.md), reconciled on 2026-10-28. Historical unchecked items below may have been
+superseded; use the reconciliation notes rather than treating each as a missing implementation.
+
 ## Phase 0 – Fork identity
 
 - [x] Change `applicationId` / `applicationIdSuffix` → `io.github.meitoncz.delos` (debug `.debug`, root flavor `.root`) so the app does not clash with Artemis/Moonlight. The Java package `com.limelight` stays to keep merges easy.
