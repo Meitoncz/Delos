@@ -214,8 +214,8 @@
 \n尝试禁用 HDR 模式、更改流分辨率或更改主机 PC 的显示分辨率。</string>
     <string name="summary_full_range">如果你的设备无法正确显示全范围视频内容，这会导致明暗区域的细节丢失。</string>
     <string name="title_full_range">强制完全动态范围视频</string>
-    <string name="title_prevent_packet_loss">防止丢包</string>
-    <string name="summary_prevent_packet_loss">对于不明原因丢包的设备，可以尝试开启此选项。</string>
+    <string name="title_prevent_packet_loss">Wi-Fi keep-alive</string>
+    <string name="summary_prevent_packet_loss">在串流期间发送小数据包，帮助防止 Wi-Fi 进入省电模式。可能有助于缓解设备上原因不明的丢包。</string>
     <string name="perf_overlay_hostprocessinglatency">主机处理延迟最小值/最大值/平均值: %1$.1f/%2$.1f/%3$.1f ms</string>
     <string name="category_gamepad_settings">手柄设置</string>
     <string name="title_checkbox_gamepad_touchpad_as_mouse">始终使用触摸板控制鼠标</string>

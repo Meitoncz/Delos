@@ -201,8 +201,8 @@
 	<string name="summary_enable_hdr">當遊戲與電腦 GPU 支援時，串流 HDR。HDR 需要支援 HEVC Main 10 編碼的 GPU。</string>
 	<string name="title_full_range">強制全範圍影像</string>
 	<string name="summary_full_range">若您的裝置無法正確顯示全範圍影像內容，將導致明暗區域細節流失。</string>
-	<string name="title_prevent_packet_loss">防止封包遺失</string>
-	<string name="summary_prevent_packet_loss">若裝置因不明原因出現封包遺失，可嘗試啟用此選項。</string>
+	<string name="title_prevent_packet_loss">Wi-Fi keep-alive</string>
+	<string name="summary_prevent_packet_loss">串流期間傳送小型封包，協助防止 Wi-Fi 進入省電模式。可能有助於改善裝置上原因不明的封包遺失。</string>
 	<string name="title_enable_perf_overlay">串流時顯示效能資訊</string>
 	<string name="summary_enable_perf_overlay">串流時顯示即時效能資訊</string>
 

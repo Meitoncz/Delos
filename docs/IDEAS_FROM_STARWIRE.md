@@ -48,8 +48,12 @@ statistics, custom resolution and FPS, Wi-Fi locks, cover colours and a game scr
    system driver for MediaCodec), so the Delos P010 HDR path would fall back to its CPU copy under
    it; Starwire has not tried it with a real Turnip driver yet; it means shipping prebuilt
    libadrenotools libraries (Starwire rebuilds them from source to verify).
-10. **Keep-alive packets during a stream** ("Prevent Packet Loss"). Artemis option, rewritten in
-    Starwire as a small keep-alive packet. Keeps Wi-Fi out of power save; Delos only takes Wi-Fi locks.
+10. **Wi-Fi keep-alive during a stream** (formerly "Prevent Packet Loss" in Delos). Already inherited
+    from Artemis: Delos sends a four-byte control payload approximately every 20 ms when enabled and
+    connected, alongside its Wi-Fi locks. Starwire uses the same interval and payload, with an extra
+    check for a Sunshine-family host and an encrypted control stream. Intended to discourage Wi-Fi
+    power saving; benefit on the Odin has not been measured. Verified against both implementations
+    on 2026-10-28; this is not a missing Delos feature.
 
 ## Low
 
