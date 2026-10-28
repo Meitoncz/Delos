@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory
 import android.util.LruCache
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.LaunchedEffect
@@ -405,9 +406,21 @@ val LocalArtwork = staticCompositionLocalOf<ArtworkStore> { error("ArtworkStore 
  */
 @Composable
 fun rememberArtwork(store: ArtworkStore, pc: Pc, app: App, kind: ArtKind): State<ImageBitmap?> {
+    val result = rememberArtworkResult(store, pc, app, kind)
+    return remember(result) { derivedStateOf { result.value.image } }
+}
+
+/** An unresolved lookup must not be treated as a confirmed missing image. */
+data class ArtworkResult(val image: ImageBitmap?, val resolved: Boolean)
+
+@Composable
+fun rememberArtworkResult(store: ArtworkStore, pc: Pc, app: App, kind: ArtKind): State<ArtworkResult> {
     val version = store.version.intValue
-    val state = remember(pc.uuid, app.id, kind) { mutableStateOf(store.cached(pc, app, kind)) }
-    LaunchedEffect(state, version) { state.value = store.load(pc, app, kind) }
+    val state = remember(store, pc.uuid, app.id, kind) {
+        val cached = store.cached(pc, app, kind)
+        mutableStateOf(ArtworkResult(cached, resolved = cached != null))
+    }
+    LaunchedEffect(state, version) { state.value = ArtworkResult(store.load(pc, app, kind), resolved = true) }
     return state
 }
 

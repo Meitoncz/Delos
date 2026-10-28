@@ -89,6 +89,7 @@ import com.limelight.shell.ui.HeroBitmaps
 import com.limelight.shell.data.LocalArtwork
 import com.limelight.shell.data.LocalBoxArt
 import com.limelight.shell.data.rememberArtwork
+import com.limelight.shell.data.rememberArtworkResult
 import com.limelight.shell.data.Pc
 import com.limelight.shell.data.PcRepository
 import com.limelight.shell.data.rememberBoxArt
@@ -271,7 +272,8 @@ private fun GameLibrary(library: Library.Ready, appearance: Appearance, repo: Pc
     }
 
     Box(Modifier.fillMaxSize()) {
-        GameInfo(pc, focused, index = focusedIndex, lastPlayed = library.lastPlayed, Modifier.padding(start = 150.px, top = if (row) 210.px else 116.px))
+        GameInfo(pc, focused,
+            modifier = Modifier.padding(start = 150.px, top = if (row) 210.px else 116.px), reducedMotion = appearance.reducedMotion)
         CompositionLocalProvider(LocalBringIntoViewSpec provides NoAutoScroll) {
             if (row) {
                 // At the end the row stops with the last cover at the right edge, so the right fade goes away there
@@ -430,28 +432,20 @@ private fun gameMenu(
     )
 
 @Composable
-private fun GameInfo(pc: Pc, app: App, index: Int, lastPlayed: Int, modifier: Modifier) {
+private fun GameInfo(pc: Pc, app: App, modifier: Modifier, reducedMotion: Boolean) {
     val colors = LocalDelosColors.current
     val art = appArt(pc, app)
     Column(modifier) {
-        BasicText(
-            when {
-                app.running -> "NOW RUNNING"
-                index == 0 && lastPlayed == app.id -> "CONTINUE PLAYING"
-                art.icon == Symbols.DESKTOP_WINDOWS -> "REMOTE DESKTOP"
-                else -> "LIBRARY"
-            },
-            style = TextStyle(color = colors.accent3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx, letterSpacing = .14.em),
-        )
-        val logo by rememberArtwork(LocalArtwork.current, pc, app, ArtKind.LOGO)
-        val logoImage = logo
+        val logo by rememberArtworkResult(LocalArtwork.current, pc, app, ArtKind.LOGO)
+        val logoImage = logo.image
         // The SteamGridDB logo stands in for the icon and the name
-        if (logoImage != null) Box(Modifier.height(132.px).padding(top = 6.px, bottom = 6.px), contentAlignment = Alignment.CenterStart) {
+        if (logoImage != null) Box(Modifier.height(200.px).padding(vertical = 10.px), contentAlignment = Alignment.CenterStart) {
             Image(
                 logoImage, contentDescription = app.name, contentScale = ContentScale.Fit, alignment = Alignment.CenterStart,
-                modifier = Modifier.height(120.px).widthIn(max = 900.px),
+                modifier = Modifier.height(180.px).widthIn(max = 900.px)
+                    .gameTitleEntrance(homeKey(pc, app), logoImage, reducedMotion),
             )
-        } else Row(Modifier.height(132.px).padding(top = 2.px), verticalAlignment = Alignment.CenterVertically) {
+        } else if (logo.resolved) Row(Modifier.height(200.px), verticalAlignment = Alignment.CenterVertically) {
             val size = when {
                 app.name.length > 22 -> 56
                 app.name.length > 13 -> 68
@@ -466,14 +460,33 @@ private fun GameInfo(pc: Pc, app: App, index: Int, lastPlayed: Int, modifier: Mo
                     brush = Brush.verticalGradient(.25f to colors.text, 1f to hsl(HeroBitmaps.hue(homeKey(pc, app)) ?: art.hue2, 70f, 58f)),
                     fontFamily = Unbounded, fontWeight = FontWeight.Bold, fontSize = size.tpx, letterSpacing = (-.01).em,
                 ),
-                modifier = Modifier.padding(end = 150.px),
+                modifier = Modifier.padding(end = 150.px).gameTitleEntrance(homeKey(pc, app), null, reducedMotion),
             )
-        }
+        } else Box(Modifier.height(200.px)) // Keep the title space while the logo lookup is pending.
         Row(Modifier.padding(top = 10.px), horizontalArrangement = Arrangement.spacedBy(12.px)) {
             if (app.running) Chip(Symbols.PLAY_ARROW, "Running on ${pc.name}") else Chip(Symbols.COMPUTER, pc.name)
             if (app.hdr) Chip(Symbols.HDR_ON, "HDR")
             if (art.icon == Symbols.DESKTOP_WINDOWS && pc.details.vDisplaySupported) Chip(Symbols.SCREEN_SHARE, "Virtual display")
         }
+    }
+}
+
+/** Both artwork logos and confirmed text fallbacks share the same selection entrance. */
+@Composable
+private fun Modifier.gameTitleEntrance(game: String, image: ImageBitmap?, reducedMotion: Boolean): Modifier {
+    val pixelsPerStagePixel = LocalStage.current.dpPerPx * LocalDensity.current.density
+    val entrance = remember(game, image, reducedMotion) { Animatable(if (reducedMotion) 1f else 0f) }
+    LaunchedEffect(entrance) {
+        entrance.animateTo(1f, tween(1100, easing = CubicBezierEasing(.25f, .1f, .25f, 1f)))
+    }
+    return graphicsLayer {
+        val progress = entrance.value
+        // Reveal the title before the movement ends, so its slow settling stays visible.
+        alpha = (progress * 1.5f).coerceIn(0f, 1f)
+        translationX = (1f - progress) * 32f * pixelsPerStagePixel
+        scaleX = 1f + (1f - progress) * .10f
+        scaleY = scaleX
+        transformOrigin = TransformOrigin(0f, .5f)
     }
 }
 
