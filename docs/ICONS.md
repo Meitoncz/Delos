@@ -45,7 +45,36 @@ closely related settings deliberately share a symbol across screens, including p
 The battery body remains the existing custom drawing with a proportional charge fill; only its
 charging bolt comes from the icon font. Controller letters and the Delos logo remain custom too.
 
-## Verification
+## Alignment correction
+
+The user reported a shared leftward shift after the replacement. The cause was in font subsetting,
+not Compose alignment or prototype CSS: upstream Phosphor glyphs have loose stored `xMin` bounds.
+Saving the subset recalculated tight bounds without adjusting the horizontal side bearing.
+This changed the TrueType origin (`xMin - lsb`) and pulled the artwork left within its 1024-unit advance.
+For example, Plus changed from a centered design to a 128-unit leftward shift.
+
+The generator now explicitly recalculates icon bounds and adjusts each left side bearing to preserve
+the source origin. Advance widths, contours and intentional asymmetry stay unchanged.
+Both Regular and Fill assets are regenerated; the shared Android component and prototype consume
+the same corrected fonts without offsets or per-icon layout patches.
+
+Verification on the physical Odin: the debug `IconFontInstrumentation` rasterized Plus, Gear,
+Desktop and User Circle from both bundled fonts at 24/48/96 px. Every measured horizontal center
+error was 0 px. Its raster proof includes center guides. The actual PC-selection screen was also
+captured and visually checked. Chromium measured matching 96 px advances and 48 px ink centers
+for the same icons in both prototype fonts. All 191 glyph origins per font match the source;
+regeneration is byte-identical and subset sizes remain unchanged.
+
+```powershell
+adb -s <device> shell am instrument -w io.github.meitoncz.delos.debug/com.limelight.shell.ui.IconFontInstrumentation
+```
+
+The ARM64 APK with corrected metrics is installed. Local build, all 80 unit tests and lint pass
+(0 errors, 387 existing warnings). Evidence is under ignored `build/phosphor-icons/`:
+`odin-icon-centering.png` is the real Android raster proof and `odin-shell-centered.png` is the
+actual application screen. No game was launched or controller/menu navigation injected.
+
+## Original replacement verification
 
 Current checkpoint (2026-10-28): ARM64 build installed on the Odin and accepted by the user.
 The final requested adjustment uses the Palette icon for the color-palette selector in both

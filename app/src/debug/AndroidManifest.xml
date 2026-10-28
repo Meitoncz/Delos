@@ -1,7 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Headless real-device GPU checks. Never packaged in release builds. -->
+    <!-- Headless real-device graphics checks. Never packaged in release builds. -->
     <instrumentation android:name="com.limelight.binding.video.SgsrGpuInstrumentation"
         android:targetPackage="${applicationId}" android:label="Delos SGSR GPU checks" />
     <instrumentation android:name="com.limelight.binding.video.PyroWaveGpuInstrumentation"
         android:targetPackage="${applicationId}" android:label="Delos PyroWave Vulkan GPU checks" />
+    <instrumentation android:name="com.limelight.shell.ui.IconFontInstrumentation"
+        android:targetPackage="${applicationId}" android:label="Delos icon centering checks" />
 </manifest>

@@ -87,6 +87,19 @@ def subset_font(src: Path, dst: Path, unicodes: list[int], keep_layout: bool, we
     subsetter = subset.Subsetter(options)
     subsetter.populate(unicodes=unicodes)
     subsetter.subset(font)
+    if not keep_layout:
+        # Phosphor stores loose xMin bounds. Saving tightens them; preserve the original
+        # xMin - lsb origin so rasterizers do not pull the artwork towards the left.
+        glyf = font["glyf"]
+        metrics = font["hmtx"].metrics
+        for name in font.getGlyphOrder():
+            glyph = glyf[name]
+            if glyph.numberOfContours == 0:
+                continue
+            advance, bearing = metrics[name]
+            origin = glyph.xMin - bearing
+            glyph.recalcBounds(glyf)
+            metrics[name] = (advance, glyph.xMin - origin)
     if weights:
         # Only the weight range the UI uses (after subsetting: the instancer does not cope with lazily loaded glyphs)
         font = instancer.instantiateVariableFont(font, {"wght": weights})
