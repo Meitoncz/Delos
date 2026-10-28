@@ -29,7 +29,7 @@ Goal: rebuild the Delos "shell" (everything except the stream itself) natively s
 | Backdrop blur | Haze, or own `RenderEffect` blur | For overlays that blur what is behind them (portal, launch loader, side menu). Android 12+; on Android 10–11 a dimmed translucent layer instead. Chosen in step 6.2 after a quick test on the Odin. |
 | Animated backgrounds | Compose `Canvas` (`DrawScope`) | Aurora, Tide, Silk and Contour ported from the prototype's `drawBg()` 1:1 (same math), plus Still. AGSL shaders only if the Canvas version is not smooth at 120 Hz. |
 | Fonts | Unbounded (display), Figtree (body), bundled | Both OFL. |
-| Icons | Material Symbols Rounded, bundled as a **subset** variable font | Apache 2.0. Subsetting keeps the APK small (the full font is several MB); the filled/outlined focus effect crossfades two font instances. |
+| Icons | Phosphor Regular and Fill 2.1.2, bundled as **subsets** | MIT. Both variants share code points and metrics; focus crossfades from Regular to Fill. The prototype uses the same local fonts. See [ICONS.md](ICONS.md). |
 | Colors | Own tokens; Material You from `android.R.color.system_accent*` / `system_neutral*` | Real wallpaper palette on Android 12+, seed colors as fallback / manual choice. |
 | Sounds, haptics | `SoundPool` with short bundled clips; `View.performHapticFeedback` / `VibratorManager` | Same character as the prototype's blips; both can be turned off. |
 | Network (SteamGridDB) | OkHttp + Gson (already in the project) | No new HTTP stack. |
@@ -46,7 +46,7 @@ Each step ends with a build, a test on the Odin and a commit (after approval), l
 
   System `HOME`, `BACK` and `APP_SWITCH` come as separate codes and are left to the system.
 - [x] Library versions: Kotlin 2.4.21 (AGP 9.4 itself only brings 2.2.10), Compose BOM 2026.09.00, activity-compose 1.13.0, lifecycle 2.11.0, coroutines 1.11.0.
-- [x] Licences of the bundled fonts: Unbounded and Figtree – SIL Open Font License 1.1; Material Symbols – Apache 2.0. Both allow bundling in the APK.
+- [x] Licences of the bundled fonts: Unbounded and Figtree – SIL Open Font License 1.1; Phosphor – MIT. Both allow bundling in the APK. Phosphor replaced Material Symbols on 2026-10-28.
 
 ### 6.1 Build setup
 - [x] Enable Kotlin and Compose in `app/build.gradle`: compose compiler plugin, `buildFeatures.compose`, BOM, `activity-compose`, `lifecycle-viewmodel-compose`, coroutines.

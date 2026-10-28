@@ -413,12 +413,12 @@ private fun gameMenu(
         buildList {
             when {
                 app.running -> {
-                    add(MenuItem(Symbols.PLAY_ARROW, "Resume") { actions.start(pc, app, image) })
+                    add(MenuItem(Symbols.RESUME, "Resume") { actions.start(pc, app, image) })
                     add(MenuItem(Symbols.POWER_SETTINGS_NEW, "Quit game") { actions.quit(pc, app) })
                 }
                 running != null -> {
                     add(MenuItem(Symbols.SWAP_HORIZ, "Quit ${running.name} and start") { actions.quitAndStart(pc, running, app, image) })
-                    add(MenuItem(Symbols.PLAY_ARROW, "Resume ${running.name}") { actions.start(pc, running, null) })
+                    add(MenuItem(Symbols.RESUME, "Resume ${running.name}") { actions.start(pc, running, null) })
                 }
                 else -> add(MenuItem(Symbols.PLAY_ARROW, "Start game") { actions.start(pc, app, image) })
             }
@@ -613,7 +613,7 @@ private fun HomeMessage(icon: String, title: String, text: String?) {
     val colors = LocalDelosColors.current
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(22.px)) {
-            Symbol(icon, 110.tpx, colors.accent, filled = true, opticalSize = 48f)
+            Symbol(icon, 110.tpx, colors.accent, filled = true)
             BasicText(title, style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 52.tpx))
             if (text != null) {
                 BasicText(text, style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 26.tpx, lineHeight = 1.45.em, textAlign = TextAlign.Center))

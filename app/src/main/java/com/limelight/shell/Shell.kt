@@ -510,7 +510,7 @@ fun Shell(
 @Composable
 private fun SideMenuRows(appearance: Appearance, update: ((Appearance) -> Appearance) -> Unit, firstModifier: Modifier, openSettings: () -> Unit) {
     SettingRow(Symbols.DARK_MODE, "Theme", RowValue.Choice(if (appearance.dark) "Dark" else "Light", { update { it.copy(dark = !it.dark) } }), firstModifier, compact = true)
-    SettingRow(Symbols.WALLPAPER, "Material You", RowValue.Toggle(appearance.materialYou) { on -> update { it.copy(materialYou = on) } }, compact = true)
+    SettingRow(Symbols.SYSTEM_COLORS, "Material You", RowValue.Toggle(appearance.materialYou) { on -> update { it.copy(materialYou = on) } }, compact = true)
     SettingRow(Symbols.ANIMATION, "Background", RowValue.Choice(appearance.background.label, { dir -> update { it.copy(background = it.background.step(dir)) } }), compact = true)
     SettingRow(Symbols.VIEW_CAROUSEL, "Home layout", RowValue.Choice(appearance.homeLayout.label, { dir -> update { it.copy(homeLayout = it.homeLayout.step(dir)) } }), compact = true)
     SettingRow(Symbols.MUSIC_NOTE, "Interface sounds", RowValue.Toggle(appearance.sounds) { on -> update { it.copy(sounds = on) } }, compact = true)

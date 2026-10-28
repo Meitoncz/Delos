@@ -133,7 +133,7 @@ fun PillButton(label: String, icon: String?, onClick: () -> Unit, modifier: Modi
 @Composable
 fun AvatarBadge(avatar: Avatar, size: Float, iconSize: Float, modifier: Modifier = Modifier) {
     Box(modifier.size(size.px).clip(CircleShape).avatarBackground(avatar.hue), contentAlignment = Alignment.Center) {
-        Symbol(avatar.icon, iconSize.tpx, Color.White, filled = true, opticalSize = if (iconSize >= 48f) 48f else 24f)
+        Symbol(avatar.icon, iconSize.tpx, Color.White, filled = true)
     }
 }
 
@@ -197,7 +197,7 @@ fun CircleItem(
                 ) {
                     Symbol(
                         icon, (if (big) 96f else 76f).tpx, if (avatarHue != null) Color.White else colors.text,
-                        filled = avatarHue != null || focused, opticalSize = 48f,
+                        filled = avatarHue != null || focused,
                     )
                 }
             }
@@ -218,7 +218,7 @@ fun CircleItem(
                         Modifier.offset(x = (side - edge - 26f).px, y = (edge - 26f).px).size(52.px).clip(CircleShape).background(colors.accent),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Symbol(Symbols.CHECK, 34.tpx, colors.onAccent, filled = true, filledWeight = 600)
+                        Symbol(Symbols.CHECK, 34.tpx, colors.onAccent, filled = true)
                     }
                 }
             }

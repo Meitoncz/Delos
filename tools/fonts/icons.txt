@@ -1,157 +1,217 @@
-# Material Symbols Rounded icons bundled with the Delos UI (one name per line, # starts a comment).
-# Names: https://fonts.google.com/icons?icon.style=Rounded
-# After editing, run tools/fonts/subset_fonts.py to rebuild the font subset and Symbols.kt.
+# Delos semantic name = Phosphor icon name (Regular and Fill, MIT).
+# Source: https://github.com/phosphor-icons/web/tree/v2.1.2
+# Keep semantic names stable; run subset_fonts.py --icons-only after editing.
 
 # Status bar
-battery_0_bar
-battery_1_bar
-battery_2_bar
-battery_3_bar
-battery_4_bar
-battery_5_bar
-battery_6_bar
-battery_alert
-battery_charging_full
-battery_full
-wifi
-wifi_off
-network_wifi_1_bar
-network_wifi_2_bar
-network_wifi_3_bar
-signal_wifi_0_bar
+battery_0_bar = battery-empty
+battery_1_bar = battery-low
+battery_2_bar = battery-low
+battery_3_bar = battery-medium
+battery_4_bar = battery-medium
+battery_5_bar = battery-high
+battery_6_bar = battery-high
+battery_alert = battery-warning
+battery_charging_full = battery-charging
+battery_full = battery-full
+wifi = wifi-high
+wifi_off = wifi-slash
+network_wifi_1_bar = wifi-low
+network_wifi_2_bar = wifi-medium
+network_wifi_3_bar = wifi-high
+signal_wifi_0_bar = wifi-none
 
 # Navigation, menus and hints
-add
-arrow_back
-arrow_forward
-check
-check_circle
-chevron_left
-chevron_right
-close
-delete
-dialpad
-error
-expand_less
-expand_more
-filter_none
-help
-history
-info
-lan
-login
-menu
-more_horiz
-refresh
-replay
-restart_alt
-search
-square
-swap_horiz
-swipe_up
-warning
+add = plus
+arrow_back = arrow-left
+arrow_forward = arrow-right
+check = check
+check_circle = check-circle
+chevron_left = caret-left
+chevron_right = caret-right
+close = x
+delete = trash
+dialpad = numpad
+error = warning-circle
+expand_less = caret-up
+expand_more = caret-down
+filter_none = copy
+help = question
+history = clock-counter-clockwise
+info = info
+lan = network
+login = sign-in
+menu = list
+more_horiz = dots-three
+refresh = arrows-clockwise
+replay = arrow-counter-clockwise
+restart_alt = arrow-clockwise
+search = magnifying-glass
+square = square
+swap_horiz = arrows-left-right
+swipe_up = hand-arrow-up
+warning = warning
 
 # Top bar, profile and devices
-account_circle
-account_tree
-add_link
-badge
-computer
-desktop_windows
-devices
-edit
-face
-key
-link_off
-lock
-logout
-mobile_vibrate
-password
-person_add
-power
-power_settings_new
-sailing
-settings
-switch_account
-waving_hand
+account_circle = user-circle
+account_tree = tree-structure
+add_link = link
+badge = identification-badge
+computer = desktop
+desktop_windows = desktop-tower
+devices = devices
+edit = pencil-simple
+face = smiley
+key = key
+link_off = link-break
+lock = lock-key
+logout = sign-out
+mobile_vibrate = vibrate
+password = password
+person_add = user-plus
+power = power
+power_settings_new = power
+sailing = sailboat
+settings = gear-six
+switch_account = users
+waving_hand = hand-waving
 
 # Home and games
-download
-fast_forward
-group
-hdr_on
-high_quality
-image
-photo_library
-play_arrow
-schedule
-screen_share
-sports_esports
-star
-visibility
-visibility_off
-wallpaper
+download = download-simple
+fast_forward = fast-forward
+group = users-three
+hdr_on = sun
+high_quality = high-definition
+image = image
+photo_library = images
+play_arrow = play
+schedule = clock
+screen_share = monitor-play
+sports_esports = game-controller
+star = star
+visibility = eye
+visibility_off = eye-slash
+wallpaper = panorama
 
 # Settings tabs and rows
-animation
-aspect_ratio
-autorenew
-blur_on
-bolt
-cast
-colorize
-dark_mode
-deployed_code
-fit_screen
-format_size
-fullscreen
-graphic_eq
-home
-joystick
-keyboard
-monitor
-monitoring
-motion_photos_on
-mouse
-movie
-music_note
-network_check
-opacity
-palette
-speaker
-speed
-surround_sound
-sync
-timer
-tune
-vibration
-view_carousel
-view_compact
+animation = sparkle
+aspect_ratio = rectangle
+autorenew = arrows-counter-clockwise
+blur_on = drop-half
+bolt = lightning
+cast = screencast
+colorize = eyedropper
+dark_mode = moon
+deployed_code = cube
+fit_screen = corners-in
+format_size = text-aa
+fullscreen = corners-out
+graphic_eq = waveform
+home = house
+joystick = joystick
+keyboard = keyboard
+monitor = monitor
+monitoring = chart-line
+motion_photos_on = record
+mouse = mouse
+movie = film-slate
+music_note = music-note
+network_check = gauge
+opacity = drop
+palette = palette
+speaker = speaker-high
+speed = speedometer
+surround_sound = speaker-hifi
+sync = arrows-clockwise
+timer = timer
+tune = sliders-horizontal
+vibration = vibrate
+view_carousel = cards-three
+view_compact = squares-four
 
 # Prototype placeholder art (games and avatars)
-church
-coronavirus
-directions_car
-door_front
-egg
-flutter_dash
-hourglass_top
-landscape
-memory
-pets
-public
-restaurant
-rocket_launch
-scuba_diving
-spa
-swords
-water_drop
-content_paste
-brightness_medium
-keyboard_alt
-keyboard_command_key
-screen_rotation
-terminal
-touch_app
-upload
-zoom_in
+church = church
+coronavirus = virus
+directions_car = car
+door_front = door
+egg = egg
+flutter_dash = bird
+hourglass_top = hourglass-high
+landscape = mountains
+memory = cpu
+pets = paw-print
+public = globe
+restaurant = fork-knife
+rocket_launch = rocket-launch
+scuba_diving = goggles
+spa = flower-lotus
+swords = sword
+water_drop = drop
+content_paste = clipboard
+brightness_medium = sun-dim
+keyboard_alt = keyboard
+keyboard_command_key = command
+screen_rotation = device-rotate
+terminal = terminal-window
+touch_app = hand-tap
+upload = upload-simple
+zoom_in = magnifying-glass-plus
+
+# Action-specific icons for settings and menus
+async_decode = queue
+upscaler = frame-corners
+upscaler_mode = stack
+sharpness = magic-wand
+metered_network = cell-signal-full
+custom_resolution = ruler
+custom_refresh = pencil-line
+display_top = align-top
+scale = arrows-out
+scale_mode = resize
+display_mode = scan
+external_display = monitor-arrow-up
+full_range = circle-half
+usb = usb
+gamepad_detect = plugs-connected
+usb_override = plug
+stick_deadzone = target
+analog_scroll = mouse-scroll
+gamepad_buttons = circles-four
+touchpad = hand-pointing
+touch_gestures = hand-swipe-left
+motion_sensors = compass
+motion_fallback = navigation-arrow
+device_motion = device-mobile
+cursor = cursor
+remember = floppy-disk
+drag_drop = hand-grabbing
+hold_duration = hourglass
+axis_x = arrows-horizontal
+axis_y = arrows-vertical
+axis_swap = arrows-down-up
+key_layout = grid-nine
+keyboard_full = textbox
+text_input = chat-text
+synthetic_input = shield-check
+clipboard_sync = clipboard-text
+notifications = notification
+clipboard_privacy = lock-simple
+width = arrows-out-line-horizontal
+height = arrows-out-line-vertical
+alignment = align-center-horizontal
+sticky_keys = push-pin
+picture_in_picture = picture-in-picture
+free_stick = arrows-out-cardinal
+reset = arrow-u-up-left
+import = file-arrow-down
+export = file-arrow-up
+language = translate
+debug = bug
+overlay = chart-bar
+overlay_compact = list-bullets
+task_manager = list-checks
+system_colors = swatches
+match_colors = paint-brush
+stats_position = layout
+wifi_keepalive = heartbeat
+equalizer = equalizer
+resume = play-pause

@@ -61,12 +61,12 @@ internal fun nativeSettings(
             NativeSettingsHelp.details(key, help, value))
     }
     row("ui_dark", Symbols.DARK_MODE, "Theme", RowValue.Choice(if (a.dark) "Dark" else "Light", { update { it.copy(dark = !it.dark) } }), "Choose a dark or light interface.")
-    row("ui_material_you", Symbols.WALLPAPER, "Material You colors", RowValue.Toggle(a.materialYou) { on -> update { it.copy(materialYou = on) } },
+    row("ui_material_you", Symbols.SYSTEM_COLORS, "Material You colors", RowValue.Toggle(a.materialYou) { on -> update { it.copy(materialYou = on) } },
         if (systemHue != null) "Uses only the colors of your system wallpaper. Turn it off to choose a color palette."
         else "This device has no wallpaper palette, so Material You uses Lagoon's colors. Turn it off to choose a color palette.")
-    row("ui_palette", Symbols.COLORIZE, "Color palette", RowValue.Choice(a.palette.label, { dir -> update { it.copy(palette = it.palette.step(dir)) } }, hsl(a.palette.accent, 90f, 60f)),
+    row("ui_palette", Symbols.PALETTE, "Color palette", RowValue.Choice(a.palette.label, { dir -> update { it.copy(palette = it.palette.step(dir)) } }, hsl(a.palette.accent, 90f, 60f)),
         if (a.materialYou) "Turn off Material You colors to choose a palette." else "The colors of the whole interface and the animated backgrounds.", !a.materialYou)
-    row("ui_match_game_colors", Symbols.IMAGE, "Match the game's colors", RowValue.Toggle(a.matchGameColors) { on -> update { it.copy(matchGameColors = on) } },
+    row("ui_match_game_colors", Symbols.MATCH_COLORS, "Match the game's colors", RowValue.Toggle(a.matchGameColors) { on -> update { it.copy(matchGameColors = on) } },
         if (a.materialYou) "Turn off Material You colors to use it." else "The animated background takes on the main color of the selected game's background image.", !a.materialYou)
     row("ui_clock", Symbols.SCHEDULE, "Clock", RowValue.Choice(a.clock.label, { dir -> update { it.copy(clock = it.clock.step(dir)) } }),
         "12- or 24-hour time in the status bar; System follows the Android setting.")
@@ -75,7 +75,7 @@ internal fun nativeSettings(
     row("ui_hero_background", Symbols.IMAGE, "Game background", RowValue.Toggle(a.heroBackground) { on -> update { it.copy(heroBackground = on) } }, "Shows the background of the selected game on the home screen.")
     row("ui_hero_blur", Symbols.BLUR_ON, "Game background blur", RowValue.Slider(a.heroBlur, 0, 40, 5, " px") { v -> update { it.copy(heroBlur = v) } }, "Soften the game background behind the library.", a.heroBackground)
     row("ui_hero_opacity", Symbols.OPACITY, "Game background opacity", RowValue.Slider(a.heroOpacity, 0, 100, 5, " %") { v -> update { it.copy(heroOpacity = v) } }, "How strongly the game artwork shows through the animated background.", a.heroBackground)
-    row("ui_scale", Symbols.FORMAT_SIZE, "Interface scale", RowValue.Slider(a.uiScale, 100, 130, 5, " %") { v -> update { it.copy(uiScale = v) } }, "Text size, status bar and button hints.")
+    row("ui_scale", Symbols.SCALE, "Interface scale", RowValue.Slider(a.uiScale, 100, 130, 5, " %") { v -> update { it.copy(uiScale = v) } }, "Text size, status bar and button hints.")
     row("ui_reduced_motion", Symbols.MOTION_PHOTOS_ON, "Animations", RowValue.Choice(if (a.reducedMotion) "Reduced" else "Full", { update { it.copy(reducedMotion = !it.reducedMotion) } }), "Reduce movement in the interface.")
     row("ui_haptics", Symbols.VIBRATION, "Interface haptics", RowValue.Toggle(a.haptics) { on -> update { it.copy(haptics = on) } }, "Vibration when moving and selecting.", tab = SettingsTab.CONTROLS)
     row("ui_sounds", Symbols.MUSIC_NOTE, "Interface sounds", RowValue.Toggle(a.sounds) { on -> update { it.copy(sounds = on) } }, "Soft clicks when you move around the menus.", tab = SettingsTab.AUDIO)
@@ -89,7 +89,7 @@ internal fun nativeSettings(
     }, "A swipe up from the bottom edge of the screen opens the stream menu too. Touches that start right at that edge do not reach the game. Changes apply to the next stream.",
         tab = SettingsTab.CONTROLS, section = "Stream menu")
     val statsPosition = StatsPosition.read(settings)
-    row("ui_stats_position", Symbols.MONITORING, "Statistics position", RowValue.Choice(statsPosition.label, { dir ->
+    row("ui_stats_position", Symbols.STATS_POSITION, "Statistics position", RowValue.Choice(statsPosition.label, { dir ->
         settings.edit().putString(StatsPosition.KEY, statsPosition.step(dir).name).apply()
     }), "The corner of the statistics panel while streaming (Overlay in the stream menu). Compact mode is always at the top center. Changes apply to the next stream.", tab = SettingsTab.DISPLAY, section = "Statistics")
     val choices = listOf<Pc?>(null) + pcs.filter { it.paired }.sortedBy { it.name.lowercase() }

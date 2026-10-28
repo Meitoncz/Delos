@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Unbounded:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block">
+<link rel="stylesheet" href="phosphor-icons.css">
 <style>
 /* Layout: a fixed 1920x1080 handheld screen ("stage") scaled into the viewport; console-like screens live inside it.
    Identity: Delos, the island of Apollo and Artemis - Aegean night sea + Apollo's sun gold; the portal is a ring of light. */
@@ -58,13 +58,16 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
 #vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(120% 90% at 50% 40%, transparent 55%, var(--scrim) 100%); }
 
 .ms {
-  font-family: "Material Symbols Rounded"; font-weight: normal; font-style: normal; font-size: calc(34px * var(--ts)); line-height: 1;
-  letter-spacing: normal; text-transform: none; display: inline-block; white-space: nowrap; direction: ltr;
-  font-feature-settings: "liga"; -webkit-font-smoothing: antialiased;
-  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
-  transition: font-variation-settings .35s var(--ease-out), transform .35s var(--ease-out);
+  --phosphor-fill: 0;
+  font-weight: normal; font-style: normal; font-size: calc(34px * var(--ts)); line-height: 1;
+  letter-spacing: normal; text-transform: none; display: inline-grid; width: 1em; height: 1em; vertical-align: middle;
+  white-space: nowrap; direction: ltr; -webkit-font-smoothing: antialiased;
+  transition: transform .35s var(--ease-out);
 }
-.ms.fill, .is-focus > .ms, .is-focus .ms-f { font-variation-settings: "FILL" 1, "wght" 500, "GRAD" 0, "opsz" 24; }
+.ms::before, .ms::after { content: var(--phosphor-glyph); grid-area: 1 / 1; transition: opacity .35s var(--ease-out); }
+.ms::before { font-family: "Phosphor Regular"; opacity: calc(1 - var(--phosphor-fill)); }
+.ms::after { font-family: "Phosphor Fill"; opacity: var(--phosphor-fill); }
+.ms.fill, .is-focus > .ms, .is-focus .ms-f { --phosphor-fill: 1; }
 
 /* Focus language: lift + spring scale + light ring + a sweep of light */
 .f { position: relative; outline: none; cursor: pointer; transition: transform .38s var(--ease-spring), box-shadow .38s var(--ease-out), background-color .3s ease, color .3s ease, opacity .3s ease; }
@@ -149,7 +152,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
 .circle-label { font-weight: 600; font-size: calc(26px * var(--ts)); opacity: .55; transform: translateY(-6px); transition: opacity .3s ease, transform .4s var(--ease-out); }
 .circle-meta { font-size: calc(20px * var(--ts)); color: var(--text-3); margin-top: -14px; }
 .circle-item:has(.is-focus) .circle-label, .circle-item.selected .circle-label { opacity: 1; transform: none; }
-.circle-item.selected .circle::before { content: "check"; font-family: "Material Symbols Rounded"; font-size: calc(34px * var(--ts)); position: absolute; right: 4px; top: 4px; width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--on-accent); font-variation-settings: "FILL" 1, "wght" 600; }
+.circle-item.selected .circle::before { content: var(--phosphor-check); font-family: "Phosphor Fill"; font-size: calc(34px * var(--ts)); position: absolute; right: 4px; top: 4px; width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--on-accent); --phosphor-fill: 1; }
 .online-ring::after { content: ""; position: absolute; inset: -16px; border-radius: 50%; border: 2px solid var(--accent-2); opacity: 0; animation: pulse 2.4s ease-out infinite; }
 @keyframes pulse { 0% { transform: scale(.92); opacity: .7; } 100% { transform: scale(1.25); opacity: 0; } }
 .status-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: #3ddc84; margin-right: 8px; box-shadow: 0 0 10px #3ddc84; vertical-align: 1px; }
@@ -187,7 +190,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
 .home-info .eyebrow { font-size: calc(20px * var(--ts)); font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
 .game-logo { display: flex; align-items: center; gap: 26px; height: 132px; margin: 2px 0 10px; transition: opacity .28s ease, transform .5s var(--ease-out); }
 .game-logo.swap { opacity: 0; transform: translateY(14px) scale(.98); }
-.game-logo .lg-ic { font-size: 104px; color: hsl(var(--lh) 85% 66%); filter: drop-shadow(0 8px 26px hsl(var(--lh) 90% 45% / .55)); font-variation-settings: "FILL" 1, "wght" 500, "opsz" 48; }
+.game-logo .lg-ic { font-size: 104px; color: hsl(var(--lh) 85% 66%); filter: drop-shadow(0 8px 26px hsl(var(--lh) 90% 45% / .55)); --phosphor-fill: 1; }
 .game-logo .lg-tx {
   font-family: var(--font-display); font-weight: 700; font-size: var(--lfs, 84px); line-height: 1.1; letter-spacing: -.01em; padding-bottom: 6px;
   background: linear-gradient(180deg, var(--text) 25%, hsl(var(--lh) 70% 58%)); -webkit-background-clip: text; background-clip: text; color: transparent;
@@ -230,7 +233,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
     radial-gradient(circle at 18% 92%, hsl(var(--h) 85% 48% / .9), transparent 58%),
     linear-gradient(165deg, hsl(var(--h) 58% 24%), hsl(var(--h2) 50% 10%));
 }
-.art .glyph { position: absolute; right: -36px; top: 24%; font-size: 320px; color: rgba(255, 255, 255, .16); font-variation-settings: "FILL" 1, "wght" 300, "opsz" 48; }
+.art .glyph { position: absolute; right: -36px; top: 24%; font-size: 320px; color: rgba(255, 255, 255, .16); --phosphor-fill: 1; }
 .tile.wide .art .glyph { font-size: 420px; right: 40px; top: 4%; }
 .art .art-title { position: absolute; left: 26px; right: 26px; bottom: 26px; font-family: var(--font-display); font-weight: 600; font-size: calc(34px * var(--ts)); line-height: 1.05; color: #fff; text-shadow: 0 4px 24px rgba(0, 0, 0, .45); text-wrap: balance; }
 .tile.wide .art .art-title { font-size: 72px; bottom: 40px; left: 44px; }
@@ -244,7 +247,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
 .tab { display: inline-flex; align-items: center; gap: 12px; height: 66px; padding: 0 26px; border-radius: 999px; color: var(--text-2); font-weight: 600; font-size: calc(22px * var(--ts)); }
 .tab .ms { font-size: calc(30px * var(--ts)); }
 .tab.current { background: var(--surface-2); color: var(--text); }
-.tab.current .ms { color: var(--accent); font-variation-settings: "FILL" 1, "wght" 500, "GRAD" 0, "opsz" 24; }
+.tab.current .ms { color: var(--accent); --phosphor-fill: 1; }
 .tab.is-focus { background: var(--accent); color: var(--on-accent); transform: scale(1.08); box-shadow: 0 12px 36px -10px var(--glow); }
 .tab.is-focus .ms { color: var(--on-accent); }
 .set-body { position: absolute; left: 150px; right: 150px; top: 312px; bottom: calc(96px + (var(--ui) - 1) * 92px); display: grid; grid-template-columns: 1fr 520px; gap: 56px; }
@@ -254,7 +257,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
 .set-panel { align-self: start; max-height: 100%; box-sizing: border-box; overflow: hidden; padding: 44px; border-radius: 34px; background: var(--surface); border: 1px solid var(--line); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); display: flex; flex-direction: column; gap: 18px; }
 .set-panel > :not(.hero-preview) { flex-shrink: 0; }
 .set-panel .big-ic { width: 120px; height: 120px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--on-accent); }
-.set-panel .big-ic .ms { font-size: 64px; font-variation-settings: "FILL" 1, "wght" 500, "opsz" 48; }
+.set-panel .big-ic .ms { font-size: 64px; --phosphor-fill: 1; }
 .set-panel h2 { font-family: var(--font-display); font-weight: 600; font-size: calc(36px * var(--ts)); margin: 8px 0 0; }
 .set-panel p { margin: 0; color: var(--text-2); font-size: calc(22px * var(--ts)); line-height: 1.45; }
 .swatches { display: flex; gap: 12px; margin-top: 8px; }
@@ -281,7 +284,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
 /* ---------- Profile & devices ---------- */
 .profile-hero { display: flex; flex-direction: column; align-items: center; gap: 18px; }
 .avatar-xl { width: 240px; height: 240px; border-radius: 50%; display: grid; place-items: center; color: #fff; box-shadow: 0 30px 80px -24px var(--glow); }
-.avatar-xl .ms { font-size: 120px; font-variation-settings: "FILL" 1, "wght" 500, "opsz" 48; }
+.avatar-xl .ms { font-size: 120px; --phosphor-fill: 1; }
 
 /* ---------- Stream ---------- */
 #scr-stream { background: #000; }
@@ -308,7 +311,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
 #sidemenu.open { transform: none; }
 .side-head { display: flex; align-items: center; gap: 20px; padding: 0 12px 24px; border-bottom: 1px solid var(--line); margin-bottom: 14px; }
 .side-head .av { width: 72px; height: 72px; border-radius: 50%; display: grid; place-items: center; color: #fff; }
-.side-head .av .ms { font-size: calc(40px * var(--ts)); font-variation-settings: "FILL" 1, "wght" 500; }
+.side-head .av .ms { font-size: calc(40px * var(--ts)); --phosphor-fill: 1; }
 .side-head .nm { font-family: var(--font-display); font-weight: 600; font-size: calc(28px * var(--ts)); }
 .side-head .pc { font-size: calc(20px * var(--ts)); color: var(--text-3); }
 #sidemenu .row { min-height: 80px; grid-template-columns: 44px 1fr auto; }
@@ -346,7 +349,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
 @keyframes ripple { 0% { transform: scale(.35); opacity: 0; } 25% { opacity: 1; } 100% { transform: scale(3.4); opacity: 0; } }
 #portal .core { position: relative; display: flex; flex-direction: column; align-items: center; gap: 30px; transition: transform .8s var(--ease-out), opacity .6s ease; }
 #portal .core .orb { width: 220px; height: 220px; border-radius: 50%; display: grid; place-items: center; background: radial-gradient(circle at 40% 35%, var(--surface-3), var(--bg-2)); border: 2px solid var(--line); box-shadow: 0 0 90px -10px var(--glow); }
-#portal .core .orb .ms { font-size: 100px; color: var(--accent); font-variation-settings: "FILL" 1, "wght" 500, "opsz" 48; }
+#portal .core .orb .ms { font-size: 100px; color: var(--accent); --phosphor-fill: 1; }
 #portal .core .lbl { font-family: var(--font-display); font-size: calc(36px * var(--ts)); font-weight: 600; }
 #portal .core .sub2 { color: var(--text-2); font-size: calc(24px * var(--ts)); margin-top: -14px; }
 #portal .flash { position: absolute; left: 50%; top: 50%; width: 200px; height: 200px; margin: -100px 0 0 -100px; border-radius: 50%; background: radial-gradient(circle, var(--accent) 0, var(--accent-2) 45%, transparent 70%); opacity: 0; }
@@ -375,7 +378,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
 #hints.away { opacity: 0; }
 #hints .hint { display: inline-flex; align-items: center; gap: 12px; }
 .glyph-btn { min-width: 38px; height: 38px; padding: 0 8px; box-sizing: border-box; border-radius: 999px; display: inline-grid; place-items: center; font-weight: 700; font-size: calc(19px * var(--ts)); background: var(--text); color: var(--bg); }
-.glyph-btn .ms { font-size: calc(24px * var(--ts)); font-variation-settings: "FILL" 1, "wght" 600; }
+.glyph-btn .ms { font-size: calc(24px * var(--ts)); --phosphor-fill: 1; }
 #hints .left { margin-right: auto; color: var(--text-3); }
 #toast { position: absolute; left: 50%; bottom: 120px; z-index: 70; transform: translate(-50%, 20px); opacity: 0; padding: 16px 30px; border-radius: 999px; background: var(--text); color: var(--bg); font-weight: 600; font-size: calc(22px * var(--ts)); display: flex; align-items: center; gap: 12px; transition: opacity .3s ease, transform .45s var(--ease-spring); pointer-events: none; white-space: nowrap; }
 #toast.show { opacity: 1; transform: translate(-50%, 0); }
@@ -401,14 +404,14 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
           <span class="pc-pill" id="pcPill" hidden><span class="dot"></span><span id="pcPillName">Meiton-PC</span></span>
         </div>
         <nav class="topnav" id="topnav" hidden>
-          <div class="nav-btn f" tabindex="-1" data-action="go:settings" data-id="nav-settings"><span class="ms">settings</span><span class="tip">Settings</span></div>
-          <div class="nav-btn f" tabindex="-1" data-action="go:profile" data-id="nav-profile"><span class="ms">account_circle</span><span class="tip">Profile</span></div>
-          <div class="nav-btn f" tabindex="-1" data-action="go:devices" data-id="nav-devices"><span class="ms">devices</span><span class="tip">Devices</span></div>
+          <div class="nav-btn f" tabindex="-1" data-action="go:settings" data-id="nav-settings"><span class="ms" data-icon="settings"></span><span class="tip">Settings</span></div>
+          <div class="nav-btn f" tabindex="-1" data-action="go:profile" data-id="nav-profile"><span class="ms" data-icon="account_circle"></span><span class="tip">Profile</span></div>
+          <div class="nav-btn f" tabindex="-1" data-action="go:devices" data-id="nav-devices"><span class="ms" data-icon="devices"></span><span class="tip">Devices</span></div>
         </nav>
         <div class="status">
-          <span class="grp" id="padStatus" hidden><span class="ms">sports_esports</span></span>
-          <span class="grp"><span class="ms fill">wifi</span></span>
-          <span class="grp"><span class="ms fill" id="batIcon">battery_5_bar</span><span id="batPct">78%</span></span>
+          <span class="grp" id="padStatus" hidden><span class="ms" data-icon="sports_esports"></span></span>
+          <span class="grp"><span class="ms fill" data-icon="wifi"></span></span>
+          <span class="grp"><span class="ms fill" id="batIcon" data-icon="battery_5_bar"></span><span id="batPct">78%</span></span>
           <span class="clock" id="clock">00:00</span>
         </div>
       </header>
@@ -420,8 +423,8 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
             <h1 class="boot-word">DELOS</h1>
             <p class="boot-tag">Your PC games, streamed from Vibepollo to your hands</p>
             <div class="btn-row" style="margin-top: 26px">
-              <div class="btn primary f sweep" tabindex="-1" data-action="begin" data-id="boot-begin"><span class="ms">arrow_forward</span>Get started</div>
-              <div class="btn f" tabindex="-1" data-action="skip" data-id="boot-skip"><span class="ms">fast_forward</span>Skip to home</div>
+              <div class="btn primary f sweep" tabindex="-1" data-action="begin" data-id="boot-begin"><span class="ms" data-icon="arrow_forward"></span>Get started</div>
+              <div class="btn f" tabindex="-1" data-action="skip" data-id="boot-skip"><span class="ms" data-icon="fast_forward"></span>Skip to home</div>
             </div>
           </div>
           <div class="keys-tip">Keyboard: <kbd>Arrows</kbd> move · <kbd>Enter</kbd> A · <kbd>Esc</kbd> B · <kbd>X</kbd> <kbd>Y</kbd> · <kbd>Q</kbd>/<kbd>E</kbd> L1/R1 · <kbd>Tab</kbd> left menu button · <kbd>M</kbd> right menu button · <kbd>H</kbd> help</div>
@@ -434,8 +437,8 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
               <p class="sub" style="margin: 14px auto 0">Pick an avatar and a name for your profile. Profiles keep their own settings and favorite games.</p>
             </div>
             <div class="circles" id="avatarRow"></div>
-            <label class="field f" tabindex="-1" data-action="edit-name" data-id="create-name"><span class="ms">badge</span><input id="nameInput" type="text" maxlength="20" value="Player" aria-label="Profile name" tabindex="-1"></label>
-            <div class="btn primary f sweep" tabindex="-1" data-action="create-done" data-id="create-done"><span class="ms">check</span><span id="createBtnLabel">Create profile</span></div>
+            <label class="field f" tabindex="-1" data-action="edit-name" data-id="create-name"><span class="ms" data-icon="badge"></span><input id="nameInput" type="text" maxlength="20" value="Player" aria-label="Profile name" tabindex="-1"></label>
+            <div class="btn primary f sweep" tabindex="-1" data-action="create-done" data-id="create-done"><span class="ms" data-icon="check"></span><span id="createBtnLabel">Create profile</span></div>
           </div>
         </section>
 
@@ -447,17 +450,17 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
             </div>
             <div class="circles">
               <div class="circle-item big">
-                <div class="circle f online-ring" tabindex="-1" data-action="pair-pc" data-id="pair-meiton"><span class="ms">desktop_windows</span></div>
+                <div class="circle f online-ring" tabindex="-1" data-action="pair-pc" data-id="pair-meiton"><span class="ms" data-icon="desktop_windows"></span></div>
                 <div class="circle-label" data-pcname>Meiton-PC</div>
                 <div class="circle-meta"><span class="status-dot"></span>Online · Vibepollo</div>
               </div>
               <div class="circle-item big">
-                <div class="circle f" tabindex="-1" data-action="toast:Type the PC address – not part of this prototype" data-id="pair-manual"><span class="ms">add</span></div>
+                <div class="circle f" tabindex="-1" data-action="toast:Type the PC address – not part of this prototype" data-id="pair-manual"><span class="ms" data-icon="add"></span></div>
                 <div class="circle-label">Enter address</div>
                 <div class="circle-meta">IP or host name</div>
               </div>
               <div class="circle-item big">
-                <div class="circle f" tabindex="-1" data-action="rescan" data-id="pair-rescan"><span class="ms">refresh</span></div>
+                <div class="circle f" tabindex="-1" data-action="rescan" data-id="pair-rescan"><span class="ms" data-icon="refresh"></span></div>
                 <div class="circle-label">Search again</div>
                 <div class="circle-meta">Local network</div>
               </div>
@@ -473,7 +476,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
             </div>
             <div class="pin" id="pinDigits"><span>4</span><span>8</span><span>2</span><span>7</span></div>
             <div class="waiting" id="pinWait"><span class="spinner"></span><span id="pinWaitText">Waiting for Vibepollo…</span></div>
-            <div class="btn f" tabindex="-1" data-action="back" data-id="pin-cancel"><span class="ms">close</span>Cancel</div>
+            <div class="btn f" tabindex="-1" data-action="back" data-id="pin-cancel"><span class="ms" data-icon="close"></span>Cancel</div>
           </div>
         </section>
 
@@ -498,15 +501,15 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
         <section class="screen" id="scr-profile">
           <div class="center-col" style="gap: 54px">
             <div class="profile-hero">
-              <div class="avatar-xl" id="profileAvatar"><span class="ms">sailing</span></div>
+              <div class="avatar-xl" id="profileAvatar"><span class="ms" data-icon="sailing"></span></div>
               <h1 class="h1" id="profileName">Player</h1>
               <p class="sub">Signed in on this Odin 2 Portal Max · 1 profile</p>
             </div>
             <div class="circles">
-              <div class="circle-item"><div class="circle f" tabindex="-1" data-action="edit-avatar" data-id="prof-avatar"><span class="ms">face</span></div><div class="circle-label">Change avatar</div></div>
-              <div class="circle-item"><div class="circle f" tabindex="-1" data-action="rename-profile" data-id="prof-rename"><span class="ms">edit</span></div><div class="circle-label">Rename</div></div>
-              <div class="circle-item"><div class="circle f" tabindex="-1" data-action="toast:Only one profile exists yet" data-id="prof-switch"><span class="ms">switch_account</span></div><div class="circle-label">Switch profile</div></div>
-              <div class="circle-item"><div class="circle f" tabindex="-1" data-action="toast:Adding profiles comes later" data-id="prof-add"><span class="ms">person_add</span></div><div class="circle-label">Add profile</div></div>
+              <div class="circle-item"><div class="circle f" tabindex="-1" data-action="edit-avatar" data-id="prof-avatar"><span class="ms" data-icon="face"></span></div><div class="circle-label">Change avatar</div></div>
+              <div class="circle-item"><div class="circle f" tabindex="-1" data-action="rename-profile" data-id="prof-rename"><span class="ms" data-icon="edit"></span></div><div class="circle-label">Rename</div></div>
+              <div class="circle-item"><div class="circle f" tabindex="-1" data-action="toast:Only one profile exists yet" data-id="prof-switch"><span class="ms" data-icon="switch_account"></span></div><div class="circle-label">Switch profile</div></div>
+              <div class="circle-item"><div class="circle f" tabindex="-1" data-action="toast:Adding profiles comes later" data-id="prof-add"><span class="ms" data-icon="person_add"></span></div><div class="circle-label">Add profile</div></div>
             </div>
           </div>
         </section>
@@ -519,12 +522,12 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
             </div>
             <div class="circles">
               <div class="circle-item big selected">
-                <div class="circle f" tabindex="-1" data-action="device-menu" data-ctx="device" data-id="dev-meiton"><span class="ms">desktop_windows</span></div>
+                <div class="circle f" tabindex="-1" data-action="device-menu" data-ctx="device" data-id="dev-meiton"><span class="ms" data-icon="desktop_windows"></span></div>
                 <div class="circle-label" data-pcname>Meiton-PC</div>
                 <div class="circle-meta"><span class="status-dot"></span>Connected · Vibepollo</div>
               </div>
               <div class="circle-item big">
-                <div class="circle f" tabindex="-1" data-action="go:pair" data-id="dev-pair"><span class="ms">add_link</span></div>
+                <div class="circle f" tabindex="-1" data-action="go:pair" data-id="dev-pair"><span class="ms" data-icon="add_link"></span></div>
                 <div class="circle-label">Pair a new PC</div>
                 <div class="circle-meta">Vibepollo, Apollo or Sunshine</div>
               </div>
@@ -545,19 +548,19 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
       <div class="layer" id="quickmenu" aria-label="Quick menu">
         <div class="qm-title" id="qmTitle">Returnal</div>
         <div class="circles">
-          <div class="circle-item"><div class="circle f" tabindex="-1" data-action="qm:resume" data-id="qm-resume"><span class="ms">play_arrow</span></div><div class="circle-label">Resume</div></div>
-          <div class="circle-item"><div class="circle f" tabindex="-1" data-action="qm:keyboard" data-id="qm-keyboard"><span class="ms">keyboard</span></div><div class="circle-label">Keyboard</div></div>
-          <div class="circle-item"><div class="circle f" tabindex="-1" data-action="qm:perf" data-id="qm-perf"><span class="ms">speed</span></div><div class="circle-label">Performance</div></div>
-          <div class="circle-item"><div class="circle f" tabindex="-1" data-action="qm:disconnect" data-id="qm-disconnect"><span class="ms">logout</span></div><div class="circle-label">Disconnect</div></div>
-          <div class="circle-item"><div class="circle f" tabindex="-1" data-action="qm:quit" data-id="qm-quit"><span class="ms">power_settings_new</span></div><div class="circle-label">Quit game</div></div>
+          <div class="circle-item"><div class="circle f" tabindex="-1" data-action="qm:resume" data-id="qm-resume"><span class="ms" data-icon="resume"></span></div><div class="circle-label">Resume</div></div>
+          <div class="circle-item"><div class="circle f" tabindex="-1" data-action="qm:keyboard" data-id="qm-keyboard"><span class="ms" data-icon="keyboard"></span></div><div class="circle-label">Keyboard</div></div>
+          <div class="circle-item"><div class="circle f" tabindex="-1" data-action="qm:perf" data-id="qm-perf"><span class="ms" data-icon="overlay"></span></div><div class="circle-label">Performance</div></div>
+          <div class="circle-item"><div class="circle f" tabindex="-1" data-action="qm:disconnect" data-id="qm-disconnect"><span class="ms" data-icon="logout"></span></div><div class="circle-label">Disconnect</div></div>
+          <div class="circle-item"><div class="circle f" tabindex="-1" data-action="qm:quit" data-id="qm-quit"><span class="ms" data-icon="power_settings_new"></span></div><div class="circle-label">Quit game</div></div>
         </div>
       </div>
       <div class="layer dialog" id="renameDlg" role="dialog" aria-labelledby="renameTitle">
         <h3 id="renameTitle">Rename PC</h3>
         <p id="renameSub">The new name is only used in Delos on this device.</p>
-        <label class="field f" tabindex="-1" data-action="edit-rename" data-id="rename-field"><span class="ms">edit</span><input id="renameInput" type="text" maxlength="24" aria-label="New name" tabindex="-1"></label>
+        <label class="field f" tabindex="-1" data-action="edit-rename" data-id="rename-field"><span class="ms" data-icon="edit"></span><input id="renameInput" type="text" maxlength="24" aria-label="New name" tabindex="-1"></label>
         <div class="btn-row">
-          <div class="btn primary f" tabindex="-1" data-action="rename-save" data-id="rename-save"><span class="ms">check</span>Save</div>
+          <div class="btn primary f" tabindex="-1" data-action="rename-save" data-id="rename-save"><span class="ms" data-icon="check"></span>Save</div>
           <div class="btn f" tabindex="-1" data-action="back" data-id="rename-cancel">Cancel</div>
         </div>
       </div>
@@ -581,7 +584,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
       <div id="portal" aria-hidden="true">
         <div class="p-ring"></div><div class="p-ring"></div><div class="p-ring"></div><div class="p-ring"></div>
         <div class="flash"></div>
-        <div class="core"><div class="orb"><span class="ms" id="portalIcon">desktop_windows</span></div><div class="lbl" id="portalLabel">Connecting to Meiton-PC</div><div class="sub2" id="portalSub">Vibepollo · secure session</div></div>
+        <div class="core"><div class="orb"><span class="ms" id="portalIcon" data-icon="desktop_windows"></span></div><div class="lbl" id="portalLabel">Connecting to Meiton-PC</div><div class="sub2" id="portalSub">Vibepollo · secure session</div></div>
       </div>
       <div id="launch" aria-hidden="true">
         <div class="stack">
@@ -742,7 +745,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
   let toastTimer = 0;
   function toast(text, icon) {
     const el = $("#toast");
-    el.innerHTML = (icon ? `<span class="ms fill">${icon}</span>` : "") + escapeHtml(text);
+    el.innerHTML = (icon ? `<span class="ms fill" data-icon="${icon}"></span>` : "") + escapeHtml(text);
     el.classList.add("show");
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => el.classList.remove("show"), 2600);
@@ -752,7 +755,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
   // ---------- Covers ----------
   function artHtml(g, opts) {
     const wide = opts && opts.wide;
-    return `<div class="art" style="--h:${g.h};--h2:${g.h2}"><span class="ms glyph">${g.icon}</span>` +
+    return `<div class="art" style="--h:${g.h};--h2:${g.h2}"><span class="ms glyph" data-icon="${g.icon}"></span>` +
       (wide && g.sub ? `<span class="art-sub">${escapeHtml(g.sub)}</span>` : "") +
       `<span class="art-title">${escapeHtml(g.title)}</span></div>`;
   }
@@ -760,14 +763,14 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
     $("#libraryInner").innerHTML = GAMES.map((g, i) =>
       `<div class="tile f sweep${g.wide ? " wide" : ""}" tabindex="-1" data-action="launch" data-ctx="game" data-game="${g.id}" data-id="game-${g.id}">` +
       artHtml(g, { wide: g.wide }) +
-      (i === 0 ? `<span class="badge"><span class="ms">history</span>Last played</span>` : "") + `</div>`).join("");
+      (i === 0 ? `<span class="badge"><span class="ms" data-icon="history"></span>Last played</span>` : "") + `</div>`).join("");
   }
   // Logo + game background (SteamGridDB "logo" and "hero"; procedural placeholders here)
   function logoHtml(g) {
     const fs = g.title.length > 22 ? 56 : g.title.length > 13 ? 68 : 84;
-    return `<span class="ms lg-ic" style="--lh:${g.h2}">${g.icon}</span><span class="lg-tx" style="--lh:${g.h2};--lfs:${fs}px">${escapeHtml(g.title)}</span>`;
+    return `<span class="ms lg-ic" style="--lh:${g.h2}" data-icon="${g.icon}"></span><span class="lg-tx" style="--lh:${g.h2};--lfs:${fs}px">${escapeHtml(g.title)}</span>`;
   }
-  function heroHtml(g) { return `<div class="art" style="--h:${g.h};--h2:${g.h2}"><span class="ms glyph">${g.icon}</span></div>`; }
+  function heroHtml(g) { return `<div class="art" style="--h:${g.h};--h2:${g.h2}"><span class="ms glyph" data-icon="${g.icon}"></span></div>`; }
   let heroIdx = 0, heroTimer = 0, heroGame = null, logoTimer = 0;
   function setHero(g, immediate) {
     clearTimeout(heroTimer);
@@ -808,8 +811,8 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
       logoTimer = setTimeout(() => { logo.innerHTML = logoHtml(g); logo.classList.remove("swap"); }, 150);
     }
     setHero(g);
-    const chips = [`<span class="chip"><span class="ms">schedule</span>${escapeHtml(g.played)}</span>`]
-      .concat(g.tags.map(x => `<span class="chip"><span class="ms">${x === "HDR" ? "hdr_on" : x === "AV1" ? "high_quality" : x === "Co-op" ? "group" : x === "Virtual display" ? "screen_share" : "sports_esports"}</span>${escapeHtml(x)}</span>`));
+    const chips = [`<span class="chip"><span class="ms" data-icon="schedule"></span>${escapeHtml(g.played)}</span>`]
+      .concat(g.tags.map(x => `<span class="chip"><span class="ms" data-icon="${x === "HDR" ? "hdr_on" : x === "AV1" ? "high_quality" : x === "Co-op" ? "group" : x === "Virtual display" ? "screen_share" : "sports_esports"}"></span>${escapeHtml(x)}</span>`));
     $("#infoChips").innerHTML = chips.join("");
     bg.tint = g.h;
   }
@@ -818,15 +821,15 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
   function avatarStyle(a) { return `background: radial-gradient(circle at 35% 30%, hsl(${a.h} 80% 62%), hsl(${a.h + 30} 70% 38%))`; }
   function renderAvatars() {
     $("#avatarRow").innerHTML = AVATARS.map((a, i) =>
-      `<div class="circle-item${i === state.profile.avatar ? " selected" : ""}" data-av="${i}"><div class="circle f" tabindex="-1" data-action="pick-avatar:${i}" data-id="av-${i}" style="${avatarStyle(a)};color:#fff"><span class="ms ms-f">${a.icon}</span></div><div class="circle-label">${a.name}</div></div>`).join("");
+      `<div class="circle-item${i === state.profile.avatar ? " selected" : ""}" data-av="${i}"><div class="circle f" tabindex="-1" data-action="pick-avatar:${i}" data-id="av-${i}" style="${avatarStyle(a)};color:#fff"><span class="ms ms-f" data-icon="${a.icon}"></span></div><div class="circle-label">${a.name}</div></div>`).join("");
   }
   function renderProfile() {
     const a = AVATARS[state.profile.avatar];
     const av = $("#profileAvatar");
     av.setAttribute("style", avatarStyle(a));
-    av.innerHTML = `<span class="ms">${a.icon}</span>`;
+    av.innerHTML = `<span class="ms" data-icon="${a.icon}"></span>`;
     $("#profileName").textContent = state.profile.name;
-    const nb = $('[data-id="nav-profile"] .ms'); if (nb) nb.textContent = a.icon;
+    const nb = $('[data-id="nav-profile"] .ms'); if (nb) nb.dataset.icon = a.icon;
   }
   function setPcName(n) {
     state.pcName = n;
@@ -869,7 +872,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
     { name: "Appearance", icon: "palette", desc: "Theme, colors and the animated background. Changes apply immediately.", rows: [
       { id: "mode", icon: "dark_mode", label: "Theme", type: "choice", options: ["dark", "light"], labels: { dark: "Dark", light: "Light" }, ref: "state" },
       { id: "materialYou", icon: "wallpaper", label: "Material You colors", desc: "Takes the color palette from the system wallpaper", type: "toggle", ref: "state" },
-      { id: "seed", icon: "colorize", label: "Wallpaper colors", descFn: () => systemAccent ? `System = your Android wallpaper color (${systemAccent.hex}); the others simulate other wallpapers` : `System = Material You color of the Odin wallpaper (${ODIN_PALETTE.hex}); the app reads it automatically, the others simulate other wallpapers`, type: "seed", ref: "state" },
+      { id: "seed", icon: "palette", label: "Wallpaper colors", descFn: () => systemAccent ? `System = your Android wallpaper color (${systemAccent.hex}); the others simulate other wallpapers` : `System = Material You color of the Odin wallpaper (${ODIN_PALETTE.hex}); the app reads it automatically, the others simulate other wallpapers`, type: "seed", ref: "state" },
       { id: "bg", icon: "animation", label: "Animated background", type: "choice", options: BACKGROUNDS, ref: "state" },
       { id: "homeLayout", icon: "view_carousel", label: "Home layout", desc: "Grid scrolls down, Row is one horizontally scrolling row", type: "choice", options: ["Grid", "Row"], ref: "state" },
       { id: "heroBg", icon: "image", label: "Game background", desc: "Shows the background of the selected game on the home screen", type: "toggle", ref: "state" },
@@ -914,18 +917,18 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
     const v = rowValue(r);
     let val = "";
     if (r.type === "toggle") val = `<span class="switch${v ? " on" : ""}"><i></i></span>`;
-    else if (r.type === "choice") val = `<span class="choice"><span class="ms">chevron_left</span>${escapeHtml(r.labels ? r.labels[v] : v)}<span class="ms">chevron_right</span></span>`;
-    else if (r.type === "seed") val = `<span class="choice"><span class="ms">chevron_left</span><i style="display:inline-block;width:26px;height:26px;border-radius:50%;margin-right:12px;vertical-align:-5px;background:hsl(${seedHue(state.seed)} 70% 55%)"></i>${escapeHtml(seedName(state.seed))}<span class="ms">chevron_right</span></span>`;
+    else if (r.type === "choice") val = `<span class="choice"><span class="ms" data-icon="chevron_left"></span>${escapeHtml(r.labels ? r.labels[v] : v)}<span class="ms" data-icon="chevron_right"></span></span>`;
+    else if (r.type === "seed") val = `<span class="choice"><span class="ms" data-icon="chevron_left"></span><i style="display:inline-block;width:26px;height:26px;border-radius:50%;margin-right:12px;vertical-align:-5px;background:hsl(${seedHue(state.seed)} 70% 55%)"></i>${escapeHtml(seedName(state.seed))}<span class="ms" data-icon="chevron_right"></span></span>`;
     else if (r.type === "slider") val = `<span class="slider"><b style="width:${((v - r.min) / (r.max - r.min) * 100).toFixed(1)}%"></b></span><span style="min-width:120px;text-align:right">${v}${r.unit}</span>`;
-    else if (r.type === "text") val = v ? `<span>••••••••${escapeHtml(v.slice(-4))}</span>` : `<span style="color:var(--text-3)">Not set</span><span class="ms">chevron_right</span>`;
+    else if (r.type === "text") val = v ? `<span>••••••••${escapeHtml(v.slice(-4))}</span>` : `<span style="color:var(--text-3)">Not set</span><span class="ms" data-icon="chevron_right"></span>`;
     else if (r.type === "progress") val = `<span class="progress"><b id="coverProg"></b></span><span id="coverProgTxt" style="min-width:90px;text-align:right">Start</span>`;
     else if (r.type === "info") val = `<span>${escapeHtml(r.value)}</span>`;
-    else val = `<span class="ms">chevron_right</span>`;
+    else val = `<span class="ms" data-icon="chevron_right"></span>`;
     const disabled = r.id === "seed" && !state.materialYou;
     const desc = r.descFn ? r.descFn() : r.desc;
     const focusable = r.type !== "info";
     return `<div class="row${focusable ? " f" : ""}${disabled ? " disabled" : ""}" tabindex="-1" data-row="${r.id}" data-id="row-${r.id}"${focusable ? ` data-action="row:${r.id}" data-ctx="row"` : ""}${["choice", "slider", "seed"].includes(r.type) ? " data-adjust" : ""}>` +
-      `<span class="ms">${r.icon}</span><div style="min-width:0"><div class="row-label">${escapeHtml(r.label)}</div>${desc ? `<div class="row-desc">${escapeHtml(desc)}</div>` : ""}</div><div class="row-value">${val}</div></div>`;
+      `<span class="ms" data-icon="${r.icon}"></span><div style="min-width:0"><div class="row-label">${escapeHtml(r.label)}</div>${desc ? `<div class="row-desc">${escapeHtml(desc)}</div>` : ""}</div><div class="row-value">${val}</div></div>`;
   }
   function findRow(id) {
     for (const t of TABS) for (const r of t.rows) if (r.id === id) return r;
@@ -934,7 +937,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
   }
   function renderTabs() {
     $("#tabs").innerHTML = `<span class="shoulder">L1</span>` + TABS.map((t, i) =>
-      `<div class="tab f${i === state.settingsTab ? " current" : ""}" tabindex="-1" data-tab="${i}" data-id="tab-${i}" data-action="tab:${i}"><span class="ms">${t.icon}</span>${t.name}</div>`).join("") + `<span class="shoulder">R1</span>`;
+      `<div class="tab f${i === state.settingsTab ? " current" : ""}" tabindex="-1" data-tab="${i}" data-id="tab-${i}" data-action="tab:${i}"><span class="ms" data-icon="${t.icon}"></span>${t.name}</div>`).join("") + `<span class="shoulder">R1</span>`;
   }
   function renderSettings(keepFocusId) {
     const t = TABS[state.settingsTab];
@@ -947,7 +950,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
         `<div class="hero-preview">${state.heroBg ? `<div class="hero show">${heroHtml(g)}</div>` : ""}<span class="pv-logo">${escapeHtml(g.title)}</span></div>`;
     }
     if (t.name === "Covers") extra = `<div class="swatches">${GAMES.slice(1, 6).map(g => `<i style="height:84px;border-radius:12px;background:linear-gradient(165deg,hsl(${g.h} 58% 34%),hsl(${g.h2} 50% 14%))"></i>`).join("")}</div>`;
-    $("#setPanel").innerHTML = `<div class="big-ic"><span class="ms">${t.icon}</span></div><h2>${t.name}</h2><p>${escapeHtml(t.desc)}</p>${extra}`;
+    $("#setPanel").innerHTML = `<div class="big-ic"><span class="ms" data-icon="${t.icon}"></span></div><h2>${t.name}</h2><p>${escapeHtml(t.desc)}</p>${extra}`;
     if (keepFocusId) { const el = $(`[data-id="${keepFocusId}"]`); if (el) focusEl(el, { silent: true, noScroll: true }); }
   }
   function refreshRow(id) {
@@ -1028,7 +1031,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
   // ---------- Side menu ----------
   const SIDE_ROWS = [
     { id: "mode", icon: "dark_mode", label: "Theme", type: "choice", options: ["dark", "light"], labels: { dark: "Dark", light: "Light" }, ref: "state" },
-    { id: "materialYou", icon: "wallpaper", label: "Material You", type: "toggle", ref: "state" },
+    { id: "materialYou", icon: "system_colors", label: "Material You", type: "toggle", ref: "state" },
     { id: "bg", icon: "animation", label: "Background", type: "choice", options: BACKGROUNDS, ref: "state" },
     { id: "homeLayout", icon: "view_carousel", label: "Home layout", type: "choice", options: ["Grid", "Row"], ref: "state" },
     { id: "sound", icon: "music_note", label: "Interface sounds", type: "toggle", ref: "state" },
@@ -1038,7 +1041,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
   ];
   function renderSide() {
     const a = AVATARS[state.profile.avatar];
-    $("#sidemenu").innerHTML = `<div class="side-head"><div class="av" style="${avatarStyle(a)}"><span class="ms">${a.icon}</span></div><div><div class="nm">${escapeHtml(state.profile.name)}</div><div class="pc">${state.screen === "boot" || state.firstRun ? "Not connected" : "Connected to " + escapeHtml(state.pcName)}</div></div></div>` +
+    $("#sidemenu").innerHTML = `<div class="side-head"><div class="av" style="${avatarStyle(a)}"><span class="ms" data-icon="${a.icon}"></span></div><div><div class="nm">${escapeHtml(state.profile.name)}</div><div class="pc">${state.screen === "boot" || state.firstRun ? "Not connected" : "Connected to " + escapeHtml(state.pcName)}</div></div></div>` +
       SIDE_ROWS.map(rowHtml).join("");
   }
 
@@ -1059,7 +1062,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
     const m = ctxItems(focused);
     const menu = $("#ctxmenu");
     menu.innerHTML = `<div class="menu-title">${escapeHtml(m.title)}</div>` + m.items.map((it, i) =>
-      `<div class="menu-item f" tabindex="-1" data-action="${it[2]}" data-id="ctx-${i}"><span class="ms">${it[0]}</span>${it[1]}</div>`).join("");
+      `<div class="menu-item f" tabindex="-1" data-action="${it[2]}" data-id="ctx-${i}"><span class="ms" data-icon="${it[0]}"></span>${it[1]}</div>`).join("");
     const s = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--s")) || 1;
     const sr = stage.getBoundingClientRect();
     let x = 760, y = 300;
@@ -1284,7 +1287,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
   }
   function portalTo(screen, info, cb) {
     const p = $("#portal");
-    $("#portalIcon").textContent = info.icon; $("#portalLabel").textContent = info.label; $("#portalSub").textContent = info.sub || "";
+    $("#portalIcon").dataset.icon = info.icon; $("#portalLabel").textContent = info.label; $("#portalSub").textContent = info.sub || "";
     p.classList.remove("burst"); p.classList.add("open");
     blip("open");
     setTimeout(() => {
@@ -1326,7 +1329,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
   function startStream() {
     const g = state.currentGame;
     $("#qmTitle").textContent = g.title;
-    $("#streamBanner").innerHTML = `<span><span class="glyph-btn"><span class="ms">filter_none</span></span>Left menu button for the quick menu</span>`;
+    $("#streamBanner").innerHTML = `<span><span class="glyph-btn"><span class="ms" data-icon="filter_none"></span></span>Left menu button for the quick menu</span>`;
     $("#perf").hidden = !state.perfOverlay;
     gameT0 = performance.now();
     cancelAnimationFrame(gameRaf);
@@ -1429,7 +1432,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
   // ---------- Hints ----------
   function hint(g, label) { return `<span class="hint"><span class="glyph-btn">${g}</span>${label}</span>`; }
   // Glyphs of the physical buttons: left = View (two squares), right = Start (three lines)
-  const MENU_L = `<span class="ms">filter_none</span>`, MENU_R = `<span class="ms">menu</span>`;
+  const MENU_L = `<span class="ms" data-icon="filter_none"></span>`, MENU_R = `<span class="ms" data-icon="menu"></span>`;
   function updateHints() {
     const h = $("#hints");
     let left = "", items = [];
@@ -1449,7 +1452,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
         default: items = [hint("A", "Select"), hint("B", "Back"), hint(MENU_L, "Menu")];
       }
     }
-    if (focused && focused.hasAttribute("data-adjust") && !top) items.unshift(`<span class="hint"><span class="glyph-btn"><span class="ms">swap_horiz</span></span>Adjust</span>`);
+    if (focused && focused.hasAttribute("data-adjust") && !top) items.unshift(`<span class="hint"><span class="glyph-btn"><span class="ms" data-icon="swap_horiz"></span></span>Adjust</span>`);
     h.innerHTML = (left ? `<span class="hint left">${left}</span>` : "") + items.join("");
   }
 

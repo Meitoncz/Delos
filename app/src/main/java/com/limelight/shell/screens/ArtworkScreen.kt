@@ -405,7 +405,7 @@ private fun NameAsLogo(name: String) {
 private fun GridMessage(icon: String, title: String, text: String?) {
     val colors = LocalDelosColors.current
     Column(Modifier.fillMaxSize().padding(top = 120.px), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(18.px)) {
-        Symbol(icon, 90.tpx, colors.accent, filled = true, opticalSize = 48f)
+        Symbol(icon, 90.tpx, colors.accent, filled = true)
         BasicText(title, style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 34.tpx, textAlign = TextAlign.Center))
         if (text != null) BasicText(text, style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 22.tpx, textAlign = TextAlign.Center), modifier = Modifier.width(820.px))
     }

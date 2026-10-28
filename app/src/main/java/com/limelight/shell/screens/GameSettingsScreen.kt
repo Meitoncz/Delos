@@ -101,7 +101,7 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
     }
     fun reset(key: String) {
         game.reset(key)
-        shell.showToast("Using the profile value", Symbols.RESTART_ALT)
+        shell.showToast("Using the profile value", Symbols.RESET)
     }
     val cover by rememberArtwork(LocalArtwork.current, screen.pc, screen.app, ArtKind.COVER)
     val box by rememberBoxArt(LocalBoxArt.current, screen.pc, screen.app)
@@ -115,9 +115,9 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
                 style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 22.tpx),
                 modifier = Modifier.padding(top = 12.px))
         }
-        PillButton("Use profile for all", Symbols.RESTART_ALT, {
+        PillButton("Use profile for all", Symbols.RESET, {
             game.resetAll()
-            shell.showToast("This game now follows the profile", Symbols.RESTART_ALT)
+            shell.showToast("This game now follows the profile", Symbols.RESET)
         }, Modifier.align(Alignment.TopEnd).padding(top = 130.px, end = 150.px))
         Row(Modifier.offset(x = 150.px, y = 238.px), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.px)) {
@@ -148,7 +148,7 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
                                     spec.min, spec.max, spec.step, spec.unit, spec.divisor) { stream.write(spec, it) }
                                 else -> RowValue.Info(current?.toString().orEmpty())
                             }
-                            val menu = ContextMenu(spec.label, listOf(MenuItem(Symbols.RESTART_ALT, "Use profile value") { reset(spec.key) }))
+                            val menu = ContextMenu(spec.label, listOf(MenuItem(Symbols.RESET, "Use profile value") { reset(spec.key) }))
                             SettingRow(spec.icon, spec.label, value,
                                 if (index == 0) Modifier.focusRequester(first) else Modifier,
                                 description = if (spec.key in custom) "Custom for this game" else "From profile",
@@ -177,7 +177,7 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
                             style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 20.tpx, lineHeight = 1.35.em))
                     }
                 }
-                PillButton("Use profile value", Symbols.RESTART_ALT, { focused?.let { reset(it.key) } })
+                PillButton("Use profile value", Symbols.RESET, { focused?.let { reset(it.key) } })
                 BasicText("Saved automatically · applies next stream", style = TextStyle(color = colors.text3,
                     fontFamily = Figtree, fontSize = 17.tpx))
             }

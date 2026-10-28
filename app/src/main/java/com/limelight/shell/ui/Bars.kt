@@ -331,7 +331,7 @@ fun GlyphButton(glyph: Glyph) {
     ) {
         when (glyph) {
             is Glyph.Letter -> BasicText(glyph.text, style = TextStyle(color = colors.bg, fontFamily = Figtree, fontWeight = FontWeight.ExtraBold, fontSize = 21.tpx))
-            is Glyph.Icon -> Symbol(glyph.symbol, (24f * glyph.scale).tpx, colors.bg, filled = true, filledWeight = 600)
+            is Glyph.Icon -> Symbol(glyph.symbol, (24f * glyph.scale).tpx, colors.bg, filled = true)
         }
     }
 }

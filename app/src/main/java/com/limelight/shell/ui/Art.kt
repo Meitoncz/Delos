@@ -73,9 +73,6 @@ fun PlaceholderArt(
             size = glyphSize.tpx,
             color = Color.White.copy(alpha = glyphAlpha),
             filled = true,
-            weight = 300,
-            filledWeight = 300,
-            opticalSize = 48f,
             modifier = Modifier.align(Alignment.TopEnd).offset(x = (-glyphRight).px, y = maxHeight * glyphTop),
         )
         if (title != null) {

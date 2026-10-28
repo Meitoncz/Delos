@@ -159,7 +159,7 @@ fun PortalOverlay(portal: Portal?, burst: Boolean, haze: HazeState?, reducedMoti
                         .border(2.px, colors.line, CircleShape),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Symbol(p.icon, 100.tpx, colors.accent, filled = true, opticalSize = 48f)
+                    Symbol(p.icon, 100.tpx, colors.accent, filled = true)
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.px)) {
                     BasicText(p.label, style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 36.tpx, textAlign = TextAlign.Center))

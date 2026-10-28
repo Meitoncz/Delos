@@ -435,14 +435,14 @@ class StreamMenu(private val game: Game) {
                                     Page.MAIN -> FlowRow(maxItemsInEachRow = 5,
                                         horizontalArrangement = Arrangement.spacedBy(38.px, Alignment.CenterHorizontally),
                                         verticalArrangement = Arrangement.spacedBy(26.px)) {
-                                        MenuCircle(Symbols.PLAY_ARROW, "Resume", Modifier.focusRequester(first)) { close() }
+                                        MenuCircle(Symbols.RESUME, "Resume", Modifier.focusRequester(first)) { close() }
                                         MenuCircle(Symbols.KEYBOARD, "Keyboard") { close { game.toggleKeyboard() } }
-                                        MenuCircle(Symbols.SPEED, "Overlay", on = prefs.enablePerfOverlay, state = if (!prefs.enablePerfOverlay) "Off" else if (prefs.enablePerfOverlayLite) "Compact" else "On") {
+                                        MenuCircle(Symbols.OVERLAY, "Overlay", on = prefs.enablePerfOverlay, state = if (!prefs.enablePerfOverlay) "Off" else if (prefs.enablePerfOverlayLite) "Compact" else "On") {
                                             toggle { game.toggleHUD() }
                                         }
                                         MenuCircle(Symbols.BRIGHTNESS_MEDIUM, "Brightness", state = "${brightnessPercent()} %") { page = Page.BRIGHTNESS }
                                         MenuCircle(Symbols.NETWORK_CHECK, "Bitrate") { page = Page.BITRATE }
-                                        MenuCircle(Symbols.ASPECT_RATIO, if (supersamplingMode) "Supersampling" else "Upscaler",
+                                        MenuCircle(Symbols.UPSCALER, if (supersamplingMode) "Supersampling" else "Upscaler",
                                             on = game.isUpscalingRequested, state = upscalerStatus) { page = Page.UPSCALER }
                                         MenuCircle(Symbols.MORE_HORIZ, "More") { page = Page.MORE }
                                         MenuCircle(Symbols.LOGOUT, "Disconnect") { close { leave(quit = false) } }
@@ -453,9 +453,9 @@ class StreamMenu(private val game: Game) {
                                         Row(horizontalArrangement = Arrangement.spacedBy(38.px)) {
                                             MenuCircle(Symbols.KEYBOARD_COMMAND_KEY, "Send keys", Modifier.focusRequester(first)) { page = Page.KEYS }
                                             MenuCircle(Symbols.UPLOAD, "Send clipboard") { close { game.sendClipboard(true) } }
-                                            MenuCircle(Symbols.CONTENT_PASTE, "Get clipboard") { close { game.getClipboard(0) } }
+                                            MenuCircle(Symbols.DOWNLOAD, "Get clipboard") { close { game.getClipboard(0) } }
                                             MenuCircle(Symbols.TERMINAL, "Commands") { page = Page.COMMANDS }
-                                            MenuCircle(Symbols.MONITORING, "Task manager") {
+                                            MenuCircle(Symbols.TASK_MANAGER, "Task manager") {
                                                 close { game.sendKeys(shortArrayOf(KeyboardTranslator.VK_LCONTROL.toShort(), KeyboardTranslator.VK_LSHIFT.toShort(), KeyboardTranslator.VK_ESCAPE.toShort())) }
                                             }
                                             MenuCircle(Symbols.ZOOM_IN, "Zoom", on = game.isZoomModeEnabled) { toggle { game.toggleZoomMode() } }
@@ -463,8 +463,8 @@ class StreamMenu(private val game: Game) {
                                         Row(horizontalArrangement = Arrangement.spacedBy(38.px)) {
                                             if (game.allowChangeMouseMode) MenuCircle(Symbols.MOUSE, "Mouse mode") { page = Page.MOUSE }
                                             MenuCircle(Symbols.JOYSTICK, "On-screen controls", on = prefs.onscreenController) { toggle { game.toggleVirtualController() } }
-                                            MenuCircle(Symbols.KEYBOARD_ALT, "Full keyboard") { toggle { game.toggleFullKeyboard() } }
-                                            MenuCircle(Symbols.KEYBOARD, "Key layout") { toggle { game.toggleKeyboardController() } }
+                                            MenuCircle(Symbols.KEYBOARD_FULL, "Full keyboard") { toggle { game.toggleFullKeyboard() } }
+                                            MenuCircle(Symbols.KEY_LAYOUT, "Key layout") { toggle { game.toggleKeyboardController() } }
                                             MenuCircle(Symbols.TOUCH_APP, "Touch sensitivity", on = prefs.enableTouchSensitivity) { toggle { game.switchTouchSensitivity() } }
                                             MenuCircle(Symbols.SCREEN_ROTATION, "Rotate") { close { game.rotateScreen() } }
                                         }
@@ -518,7 +518,7 @@ class StreamMenu(private val game: Game) {
                                     Page.UPSCALER -> Column(Modifier.width(1100.px), horizontalAlignment = Alignment.CenterHorizontally,
                                         verticalArrangement = Arrangement.spacedBy(22.px)) {
                                         val available = !upscalerStatus.startsWith("Unavailable for") && com.limelight.binding.video.SgsrRenderer.isSupported(game)
-                                        SettingRow(Symbols.ASPECT_RATIO, if (supersamplingMode) "Supersampling" else "Upscaling", RowValue.Toggle(game.isUpscalingRequested) {
+                                        SettingRow(Symbols.UPSCALER, if (supersamplingMode) "Supersampling" else "Upscaling", RowValue.Toggle(game.isUpscalingRequested) {
                                             game.setUpscalingEnabled(it)
                                             changes++
                                         }, Modifier.focusRequester(first), enabled = available && upscalerStatus !in listOf("Starting", "Stopping"),
@@ -533,12 +533,12 @@ class StreamMenu(private val game: Game) {
                                                 onFocused = { helpKey = "Supersampling quality" })
                                         }
                                         val upscalerMode = if (prefs.sgsrTemporalQuality) 3 else if (prefs.sgsrTemporal) 2 else if (prefs.sgsrHighQuality) 1 else 0
-                                        SettingRow(Symbols.TUNE, "Mode", RowValue.Choice(listOf("SGSR 1 Standard", "SGSR 1 High Quality", "SGSR 2 Video", "SGSR 2 Video Quality")[upscalerMode], { direction ->
+                                        SettingRow(Symbols.UPSCALER_MODE, "Mode", RowValue.Choice(listOf("SGSR 1 Standard", "SGSR 1 High Quality", "SGSR 2 Video", "SGSR 2 Video Quality")[upscalerMode], { direction ->
                                             game.setUpscalingMode((upscalerMode + direction + 4) % 4)
                                             changes++
                                         }), enabled = available,
                                             onFocused = { helpKey = "Mode" })
-                                        SettingRow(Symbols.TUNE, "Sharpness", RowValue.Slider(prefs.sgsrSharpness, 0, 100, 5, " %") {
+                                        SettingRow(Symbols.SHARPNESS, "Sharpness", RowValue.Slider(prefs.sgsrSharpness, 0, 100, 5, " %") {
                                             game.setUpscalingSharpness(it)
                                             changes++
                                         }, enabled = available && prefs.videoFormat != com.limelight.preferences.PreferenceConfiguration.FormatOption.PYROWAVE,
@@ -548,10 +548,10 @@ class StreamMenu(private val game: Game) {
                                         val modes = remember { com.limelight.shell.settings.SettingsCatalog(game).all.first { it.key == "mouse_mode_list" }.choices }
                                             .filter { !game.isOnExternalDisplay || it.value in setOf("2", "3", "4") }
                                         val selected = modes.indexOfFirst { it.value == game.activeMouseMode.toString() }.coerceAtLeast(0)
-                                        SettingRow(Symbols.MOUSE, "Touchscreen mode", RowValue.Choice(modes[selected].label, { dir ->
+                                        SettingRow(Symbols.TOUCH_APP, "Touchscreen mode", RowValue.Choice(modes[selected].label, { dir ->
                                             toggle { game.setStreamMouseMode(modes[Math.floorMod(selected + dir, modes.size)].value.toInt()) }
                                         }), Modifier.focusRequester(first), onFocused = { helpKey = "Touchscreen mode" })
-                                        SettingRow(Symbols.MOUSE, "Local mouse cursor", RowValue.Toggle(game.isLocalMouseCursorVisible) {
+                                        SettingRow(Symbols.CURSOR, "Local mouse cursor", RowValue.Toggle(game.isLocalMouseCursorVisible) {
                                             toggle { game.toggleMouseLocalCursor() }
                                         }, onFocused = { helpKey = "Local mouse cursor" })
                                     }
