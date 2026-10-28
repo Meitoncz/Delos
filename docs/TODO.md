@@ -5,6 +5,9 @@ remaining work, not authorization to implement every idea. Sections distinguish 
 conditional features, verification and inherited engineering notes. Duplicate and superseded source
 checkboxes are not additional tasks. The user decides execution order.
 
+Resume context: [2026-10-28 session closeout](SESSION_2026-10-28.md).
+Task-management proposal: [GitHub Issues and Projects](GITHUB_WORKFLOW.md); migration has not started.
+
 ## A. Feature gaps and requested follow-ups
 
 - [ ] **A01 — PyroWave SGSR 1 Standard:** add a native Vulkan spatial reconstruction path, including SDR/HDR, live switching and correct timing statistics. Current selection of SGSR 1 disables PyroWave upscaling.
