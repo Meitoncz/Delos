@@ -218,18 +218,22 @@ class ShellSettingsTest {
         reopened.streamProfiles.close()
     }
 
-    @Test fun changingResolutionOrFpsResetsBitrateLikeClassicSettings() {
+    @Test fun nonPyroWaveQualityChangesPreserveTheUsersBitrate() {
         val prefs = context.getSharedPreferences("test-settings", Context.MODE_PRIVATE)
-        prefs.edit().clear().putString("list_resolution", "1280x720").putString("list_fps", "60").commit()
+        prefs.edit().clear().putString("list_resolution", "1280x720").putString("list_fps", "60")
+            .putInt("seekbar_bitrate_kbps", 34000).commit()
         val stream = StreamSettingsStore(catalog) { prefs }
-        stream.write(spec("list_resolution"), "1920x1080")
-        assertEquals(PreferenceConfiguration.getDefaultBitrate("1920x1080", "60"), prefs.getInt("seekbar_bitrate_kbps", -1))
-        stream.write(spec("list_fps"), "120")
-        assertEquals(PreferenceConfiguration.getDefaultBitrate("1920x1080", "120"), prefs.getInt("seekbar_bitrate_kbps", -1))
+        listOf("auto", "forceav1", "forceh265", "neverh265").forEach { codec ->
+            stream.write(spec("video_format"), codec)
+            stream.write(spec("list_resolution"), "1920x1080")
+            stream.write(spec("list_fps"), "120")
+            stream.write(spec("checkbox_enable_hdr"), true)
+            assertEquals("Bitrate changed for $codec", 34000, prefs.getInt("seekbar_bitrate_kbps", -1))
+        }
         stream.close()
     }
 
-    @Test fun choosingPyroWaveSetsItsMuchHigherBitrateAndLeavingItRestoresTheUsualOne() {
+    @Test fun pyroWaveRecalculatesBitrateButLeavingItPreservesTheCurrentValue() {
         val prefs = context.getSharedPreferences("test-settings", Context.MODE_PRIVATE)
         prefs.edit().clear().putString("list_resolution", "1920x1080").putString("list_fps", "60").commit()
         val stream = StreamSettingsStore(catalog) { prefs }
@@ -241,8 +245,12 @@ class ShellSettingsTest {
         assertEquals(530000, prefs.getInt("seekbar_bitrate_kbps", -1))
         stream.write(spec("checkbox_enable_hdr"), false)
         assertEquals(445000, prefs.getInt("seekbar_bitrate_kbps", -1))
+        stream.write(spec("list_resolution"), "2560x1440")
+        assertEquals(PreferenceConfiguration.getDefaultBitrate("2560x1440", "120", "pyrowave", false),
+            prefs.getInt("seekbar_bitrate_kbps", -1))
+        stream.write(spec("seekbar_bitrate_kbps"), 310000)
         stream.write(spec("video_format"), "auto")
-        assertEquals(PreferenceConfiguration.getDefaultBitrate("1920x1080", "120"), prefs.getInt("seekbar_bitrate_kbps", -1))
+        assertEquals(310000, prefs.getInt("seekbar_bitrate_kbps", -1))
         assertEquals(PreferenceConfiguration.MAX_BITRATE_KBPS, spec("seekbar_bitrate_kbps").max)
         stream.close()
     }

@@ -14,8 +14,10 @@ immediately and shows a toast.
   mode. Hardware rules and dependencies match the existing settings screen.
 - Each row says **From profile** or **Custom for this game**. Unchanged values follow later edits to
   the user profile. Changes are saved immediately and apply when the next stream starts or resumes.
-- Resolution, FPS and codec changes use the existing bitrate recommendation, including PyroWave and
-  its HDR multiplier, and store that bitrate for this game too. It can be adjusted or reset separately.
+- Resolution, FPS and non-PyroWave codec changes preserve the current bitrate. An inherited bitrate
+  keeps following the profile instead of becoming a new game override. Selecting PyroWave, or
+  changing resolution/FPS/HDR while it is selected, writes its recommendation as a game override.
+  Leaving PyroWave preserves the current value too. Bitrate can be adjusted or reset separately.
 - Advanced custom resolution/FPS definitions remain in the profile; their choices are available here.
 - Audio, controls, appearance and other global options continue to come from the user profile.
 

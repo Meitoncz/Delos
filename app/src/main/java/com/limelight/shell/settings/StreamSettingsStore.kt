@@ -45,13 +45,12 @@ class StreamSettingsStore(val catalog: SettingsCatalog, private val settings: ()
     fun write(spec: SettingSpec, value: Any) {
         val prefs = settings()
         val editor = prefs.edit().putSetting(spec.key, value)
-        // Delos: switching to or from PyroWave resets it too, since PyroWave needs several times the bitrate,
-        // and so does HDR, which PyroWave gives 1.2x
-        if (spec.key == "list_resolution" || spec.key == "list_fps" || spec.key == "video_format" ||
-                (spec.key == "checkbox_enable_hdr" && prefs.getString("video_format", "auto") == "pyrowave")) {
+        val format = if (spec.key == "video_format") value as String else prefs.getString("video_format", "auto")!!
+        // Delos: preserve the user's bitrate except when configuring PyroWave's higher bandwidth needs.
+        if (format == "pyrowave" && (spec.key == "list_resolution" || spec.key == "list_fps" ||
+                spec.key == "video_format" || spec.key == "checkbox_enable_hdr")) {
             val resolution = if (spec.key == "list_resolution") value as String else prefs.getString("list_resolution", "1280x720")!!
             val fps = if (spec.key == "list_fps") value as String else prefs.getString("list_fps", "60")!!
-            val format = if (spec.key == "video_format") value as String else prefs.getString("video_format", "auto")!!
             val hdr = if (spec.key == "checkbox_enable_hdr") value as Boolean else prefs.getBoolean("checkbox_enable_hdr", false)
             editor.putInt("seekbar_bitrate_kbps", PreferenceConfiguration.getDefaultBitrate(resolution, fps, format, hdr))
         }

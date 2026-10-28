@@ -44,8 +44,10 @@ one scrolls to and focuses the actual setting, including disabled dependencies.
 - `SettingsCapabilities.kt` contains the display, codec, HDR, sensors, USB, vibration, PiP and
   touchscreen rules ported from `StreamSettings`. Native and custom resolutions/frame rates are
   added to the original choices. Explicitly unavailable codec choices are omitted.
-- `StreamSettingsStore.kt` writes typed preferences. Resolution/FPS changes reset bitrate as in the
-  classic screen. Custom numeric input rejects invalid and non-finite values before writing.
+- `StreamSettingsStore.kt` writes typed preferences. Resolution, FPS and non-PyroWave codec changes
+  preserve bitrate. Selecting PyroWave, or changing resolution/FPS/HDR while it is selected,
+  recalculates its recommended bitrate. Leaving PyroWave preserves the current value too. Custom
+  numeric input rejects invalid and non-finite values before writing.
 - `screens/SettingsScreen.kt`, `NativeSettings.kt` and `SettingsActions.kt` render the design system's
   rows, description panel, tab bar and search, and handle editing, reset, import/export and links.
   Resets run immediately and report a toast. Android's document picker handles file selection.
@@ -101,3 +103,7 @@ between both ends with edge fades; the title stays fixed. The panel does not acc
 touch/controller scrolling. The same help is used per game.
 Stream-menu actions and live controls have a right-hand panel too, including the native mouse-mode
 page. Search includes choice descriptions. Preference keys and stored values are unchanged.
+
+2026-10-28: manual bitrate preservation was accepted by the user on the Odin. Profile and per-game
+regressions pass, including inherited/custom bitrate and PyroWave resolution/FPS/HDR recalculation.
+The local build, all 80 unit tests and lint passed (zero errors, 387 existing warnings).

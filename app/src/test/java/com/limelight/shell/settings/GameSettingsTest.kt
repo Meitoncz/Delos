@@ -43,6 +43,26 @@ class GameSettingsTest {
     private fun game(pc: String = "pc-a", id: Int = 1) = GameSettingsStore(profiles.settings(), pc, id)
     private fun spec(key: String) = profiles.catalog.all.first { it.key == key }
 
+    @Test fun qualityChangesPreserveInheritedAndCustomNonPyroWaveBitrates() {
+        val selected = game()
+        val stream = StreamSettingsStore(profiles.catalog) { selected.preferences }
+        stream.write(spec("list_resolution"), "1280x720")
+        stream.write(spec("list_fps"), "120")
+        stream.write(spec("video_format"), "forceav1")
+        assertFalse(selected.isCustom("seekbar_bitrate_kbps"))
+        assertEquals(20000, selected.preferences.getInt("seekbar_bitrate_kbps", -1))
+        profiles.settings().edit().putInt("seekbar_bitrate_kbps", 37000).commit()
+        assertEquals(37000, selected.preferences.getInt("seekbar_bitrate_kbps", -1))
+        stream.write(spec("seekbar_bitrate_kbps"), 45000)
+        stream.write(spec("list_resolution"), "3840x2160")
+        stream.write(spec("list_fps"), "60")
+        stream.write(spec("video_format"), "forceh265")
+        profiles.settings().edit().putInt("seekbar_bitrate_kbps", 51000).commit()
+        assertEquals(45000, selected.preferences.getInt("seekbar_bitrate_kbps", -1))
+        assertEquals(51000, game(id = 2).preferences.getInt("seekbar_bitrate_kbps", -1))
+        stream.close()
+    }
+
     @Test fun unmodifiedValuesFollowProfileWhileOverridesStayLocalToPcAndGame() {
         val a = game()
         assertTrue(a.overrides().isEmpty())
