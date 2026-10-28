@@ -36,7 +36,7 @@ are written. Unrelated options retain the existing profile behavior. The snapsho
 recreation through its intent, and another game receives its own values at launch.
 
 This is an original implementation of the per-app settings idea credited to MoreOrLessSoftware's
-Moonlight X in [IDEAS_FROM_STARWIRE.md](IDEAS_FROM_STARWIRE.md).
+Moonlight X; see the preserved [feature provenance](../README.md#feature-provenance).
 
 ## Verification
 

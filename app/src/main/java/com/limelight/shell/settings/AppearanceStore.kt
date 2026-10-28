@@ -38,7 +38,7 @@ enum class Palette(val label: String, val base: Float, val accent: Float, val ac
 /** How the status bar shows the time. */
 enum class ClockFormat(val label: String) { SYSTEM("System"), H12("12-hour"), H24("24-hour") }
 
-/** Settings → Appearance of the new UI (docs/UI_PLAN.md, step 6.2). Defaults follow the prototype. */
+/** Settings → Appearance of the native UI (docs/GUI.md). Defaults follow the prototype. */
 data class Appearance(
     val dark: Boolean,
     /** The system's wallpaper colors; off, [palette] applies. */

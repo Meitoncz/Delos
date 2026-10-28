@@ -39,7 +39,7 @@ import com.limelight.shell.ui.systemAccentHue
 import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
- * Entry point of the Delos UI (Phase 6, see docs/UI_PLAN.md): the launcher activity on phones, TVs and
+ * Entry point of the Delos UI (see docs/GUI.md): the launcher activity on phones, TVs and
  * in multi-window, and the target of art:// links and PC shortcuts.
  */
 class ShellActivity : ComponentActivity() {

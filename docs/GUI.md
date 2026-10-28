@@ -2,6 +2,10 @@
 
 The starting point for the new Delos UI (Phase 6). Written by the project owner; layout ideas may borrow from PS5, SteamOS and Switch, **the visual design must be original**.
 
+This is a design/specification document, not a task tracker. The approved
+[HTML prototype](prototype/delos-gui.html) remains the visual reference; all unfinished intentions,
+decisions and verification status live in [GitHub Issues](https://github.com/Meitoncz/Delos/issues).
+
 ## Experience
 
 - The UI is one continuous **experience from the very first launch**, not a set of separate screens.
@@ -38,8 +42,11 @@ The starting point for the new Delos UI (Phase 6). Written by the project owner;
 ## Launching a game
 
 - Starting a game shows an **animated circular loader**, then the UI **"dives" into the streamed game**.
-- The dive should be **more spectacular and dynamic**: it should really feel like **passing through the ring into the game** – e.g. being pulled in with a **wind effect** and **chromatic aberration** (probably a custom shader).
-- To investigate: when the user starts a **game** (not the desktop), **wait until the game has actually loaded on the PC** and only then connect with the effect. Today the stream usually opens on the desktop with Steam still starting the game, which breaks the immersion.
+- The dive uses the existing shader/ring effect. Optional visual refinement requires agreement and
+  is recorded in [#23](https://github.com/Meitoncz/Delos/issues/23), not permission to redesign.
+- Game-window readiness behavior and its proposed host protocol are recorded in
+  [#13](https://github.com/Meitoncz/Delos/issues/13) and [#14](https://github.com/Meitoncz/Delos/issues/14).
+  A visible game window is not a guarantee that gameplay loading has finished.
 
 ## SteamGridDB
 
@@ -47,7 +54,7 @@ The starting point for the new Delos UI (Phase 6). Written by the project owner;
 - For every game Delos downloads **four images**: the **portrait cover**, the **wide cover**, a **large background (hero)** and the **logo**.
 - Must also run **automatically for all games at once**.
 - When a game is focused on the home screen, its **logo is shown in the top area** (the covers sit a bit lower) and the **background changes to the game's hero image** with a fade in/out and a **blur effect**. The game background covers the whole screen and **fades out diagonally from the top-right to the bottom-left corner**. **Blur amount and opacity are configurable.** The hero image **blends with the dynamic background** – the animated effects (aurora, waves, silk, contour lines…) light it up instead of covering it.
-- Open question: can this be synchronized with Vibepollo?
+- Host artwork synchronization decisions are recorded in [#15](https://github.com/Meitoncz/Delos/issues/15).
 
 ## Menus and settings
 
@@ -61,4 +68,51 @@ The starting point for the new Delos UI (Phase 6). Written by the project owner;
 
 ## Stream
 
-- A setting to use an **advanced Snapdragon upscaler** for the streamed video (e.g. Snapdragon Game Super Resolution), with a **sharpness** setting for it.
+- SGSR upscaling and independent sharpening are implemented. Codec-specific behavior and measured
+  results are documented in [STREAM_QUALITY.md](STREAM_QUALITY.md) and [SGSR2_VIDEO.md](SGSR2_VIDEO.md);
+  current quality/performance acceptance is tracked only in [#19](https://github.com/Meitoncz/Delos/issues/19).
+
+## Native shell architecture and design constraints
+
+These preserve implementation/design context from the removed UI plan, not phase checklists.
+
+- `ShellActivity` is the launcher; `ShellLink` handles external links and PC shortcuts. Kotlin and
+  Compose implement the shell. Existing Java/backend behavior is reused rather than rewritten:
+  `ComputerManagerService`, `NvHTTP` / `PairingManager`, `PreferenceConfiguration`, `ProfilesManager`,
+  `ShortcutHelper` and `ServerHelper`. Streams still start through `ServerHelper.createStartIntent()`
+  into `Game`. Keep upstream-shared changes small.
+- Use Compose foundation/ui/animation and the Delos design system, not Material components. The
+  shell owns its small navigation stack, animated transitions and overlay focus. Fonts are bundled
+  Unbounded/Figtree (OFL); Phosphor icon generation/licensing is documented in [ICONS.md](ICONS.md).
+- `Stage` provides the prototype's 1920×1080 design coordinates and interface scale. The reusable
+  focus modifier applies to touch as well as controller elements. `GlobalKeys` handles input before
+  focus dispatch; left/right adjust choice/slider rows. A/Enter/D-pad center activate, B goes back,
+  Select opens the side menu, Start/X opens context actions, L1/R1 go to the screen and Y opens search.
+  System HOME/BACK/APP_SWITCH remain Android functions.
+- The Odin's built-in controller identifies as Xbox Wireless Controller, vendor `0x2020`, product
+  `0x0112`. AYN hints use the square/play-arrow menu glyphs. Rumble-only devices use the established
+  full-strength 50 ms navigation and 70 ms confirmation feedback; sound/haptics remain configurable.
+- Animated backgrounds are time-based. Shader backgrounds require Android 13+ and use the existing
+  fallback on older systems. Overlay blur has a dim/translucent fallback where blur is unavailable.
+  Each palette has main, secondary and accent colors; wallpaper colors use the tertiary accent.
+- Cover-derived palettes reject near-black/white/grey, group hue in 15° buckets, weight share by
+  chroma squared and keep the three selected hue groups at least 30° apart. Preserve this deliberate
+  CAM16/Hct behavior rather than substituting Wu quantization.
+- `PcRepository` binds the computer service and exposes StateFlows. Profile preference files isolate
+  appearance, startup, hidden games, last-played state and PC names. Hidden apps reuse the existing
+  `HiddenApps` preferences. The running game sorts before last-played ordering.
+- Preserve library performance constraints: hero blur uses a small bitmap off the main thread;
+  animated-background invalidation is limited, Contour uses batched lines, Haze is active only for
+  visible overlays, focus animation values are read during drawing and idle-cover dim uses a filter.
+  Row navigation retains edge wrapping and the existing fade/glide behavior.
+- LaunchOverlay and StreamLoader form one scene. AGSL dive effects use the older-device ring
+  fallback. `StreamMenu` provides the configured button combo/edge gesture and On/Compact/Off overlay
+  cycle; `StreamExit` owns the accepted normal exit scene. No ordinary-flow confirmation dialogs;
+  legitimate security prompts for external input remain. Further layout changes need user agreement.
+- SteamGridDB supplies portrait/wide covers, hero and logo; the API key is device-local. Artwork
+  lives in application storage, and hand-picked files survive bulk redownloads. Desktop is manually
+  selected. Dashboard logos use the accepted 800 ms slide/fade with no scale; reduced motion shows
+  them immediately. Keep the reserved title area and the accepted LIBRARY footer styling.
+- Virtual controls use `OscStyle`: thin glass outlines, Figtree capitals, filled pressed state,
+  circular face/stick buttons, shoulder/menu pills and a chevron D-pad. The stick-button overlap is
+  intentional. Debug info provides a preview without starting a stream.

@@ -5,17 +5,19 @@ Android client for streaming games from **Vibepollo** (a fork of Apollo/Sunshine
 - The user is **not a programmer**. Talk to them **in Czech**, explain clearly, propose steps and ask before big or irreversible actions (force push, deleting branches, releases).
 - Code, comments, commit messages, PR descriptions and all repo documentation are **in English**.
 - The app name **"Delos" is never translated or inflected** in any language (no case endings, no possessive `'s`); rephrase instead, e.g. "aplikace Delos", "the Delos USB driver".
-- **Planned roadmap steps run end to end without asking at each step** (agreed 2026-10-23): feature branch → local build, tests and lint → test on the Odin → commit → fast-forward `main` → push with `[skip ci]` → delete the feature branch, then report. Run GitHub Actions **only when the user explicitly requests CI**. Ask first for anything outside the plan, open design decisions, force pushes, deleting other branches, rewriting history and releases.
+- **Agreed work runs end to end without asking at each step** (agreed 2026-10-23): feature branch → local build, tests and lint → test on the Odin → commit → fast-forward `main` → push with `[skip ci]` → delete the feature branch, then report. Run GitHub Actions **only when the user explicitly requests CI**. Ask first for anything outside the plan, open design decisions, force pushes, deleting other branches, rewriting history and releases.
 - Development happens on **Windows** (same machine as Vibepollo). Write commands for PowerShell, build with `gradlew.bat`.
 - **Task tracking:** [GitHub Issues](https://github.com/Meitoncz/Delos/issues) and the
-  [private Delos Project](https://github.com/users/Meitoncz/projects/1) are the source of truth for
-  selected work. `docs/TODO.md` is an ID/link index, not a second live checklist.
+  [private Delos Project](https://github.com/users/Meitoncz/projects/1) are the only task tracker.
+  All unfinished work belongs there, including ideas, research, deferred/conditional plans and
+  recurring maintenance. Do not create or maintain Markdown TODOs, roadmaps or local task indexes.
+  Technical specifications and dated evidence may remain in Markdown, but never duplicate live
+  status or a task queue. Completed/historical work must not become new open issues.
 - Read the latest issue description, comments, Project fields and dependencies before starting.
   Record decisions, exercised checks and the completion commit in English; close only when the
   actual criteria are met. An issue is not automatic approval to implement or redesign.
-- Workflow: `docs/GITHUB_WORKFLOW.md`. High-level phases/history: `docs/ROADMAP.md`. Native UI plan:
-  `docs/UI_PLAN.md`. Vision: `docs/GUI.md`. Unselected ideas: `docs/FUTURE_PLANS.md`. Diff analysis:
-  `docs/ANALYSIS.md`.
+- Workflow: `docs/GITHUB_WORKFLOW.md`. UI specification and preserved architecture: `docs/GUI.md`.
+  Approved visual reference: `docs/prototype/delos-gui.html`. Diff analysis: `docs/ANALYSIS.md`.
 - Environment: `docs/WINDOWS_SETUP.md`.
 - Priority: **Moonlight updates first** (common-c → toolchain → merge `moonlight/master` → OpenSSL/opus), **UI and custom features after that**.
 

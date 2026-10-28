@@ -9,11 +9,32 @@ Delos is a fork of [Artemis Android](https://github.com/ClassicOldSong/moonlight
 - Application ID: `io.github.meitoncz.delos` (debug builds: `io.github.meitoncz.delos.debug`), so Delos installs alongside Artemis and Moonlight.
 - Debug APKs are built by GitHub Actions on every push (see the *Build* workflow artifacts).
 
-Project docs: [analysis](docs/ANALYSIS.md), [roadmap](docs/ROADMAP.md), [Windows setup](docs/WINDOWS_SETUP.md).
+All unfinished work, ideas, investigations and maintenance are tracked in [GitHub Issues](https://github.com/Meitoncz/Delos/issues) and the [private Delos Project](https://github.com/users/Meitoncz/projects/1). Do not maintain separate Markdown task lists. See the [workflow](docs/GITHUB_WORKFLOW.md).
+
+Technical docs: [analysis](docs/ANALYSIS.md), [UI specification](docs/GUI.md), [Windows setup](docs/WINDOWS_SETUP.md).
 
 ## License and credits
 
 Delos is licensed under the GPLv3, same as Moonlight and Artemis. All credit for the streaming core goes to the Moonlight authors (listed below) and to ClassicOldSong for Artemis.
+
+### Feature provenance
+
+Feature ideas were compared with [Starwire](https://github.com/SicarioGaming/Starwire)
+(SicarioGaming, GPL-3.0), including its "Where every feature comes from" table read on 2026-10-25.
+The original projects/authors retain credit. This records inspiration and provenance, not a claim
+that every idea is implemented or that its source code was copied.
+
+| Area / idea | Original source credited by that comparison |
+| --- | --- |
+| Live bitrate and 1% low FPS | Moonlight V+ (qiin2333); Moonlight X Turnip also contributed the 1% low idea |
+| Fast V-Sync / Nano Pacer and asynchronous decoding | Artemide (derflacco) |
+| Per-game settings and brightness control | Moonlight X (MoreOrLessSoftware) |
+| Audio-driven haptics | Moonlight V+; Starwire's own implementation |
+| Capture-monitor switching | Moonlit Artemis (4had45) |
+| Turnip driver-loading idea | Moonlight X Turnip (NoCrypt), libadrenotools (bylaws) |
+| Wi-Fi keep-alive | Artemis (ClassicOldSong) |
+| Automatic clipboard synchronization | Artemis via Artemide |
+| JSON shortcut format | Axixi2233 / Artemis |
 
 ---
 

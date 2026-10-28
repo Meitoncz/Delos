@@ -1,11 +1,15 @@
 # SGSR 2 Video
 
-Implemented on the ongoing `feature/stream-quality` branch on 2026-10-26 after the user requested
+Initially implemented on `feature/stream-quality` on 2026-10-26 after the user requested
 optical-flow research and then explicitly prioritized SGSR 2. The user accepted `SGSR 2 Video
-Quality` as the best of the four modes in a 480p HDR comparison while retaining every mode. A later
-1080p-to-4K display comparison remains useful but is not required for this acceptance.
+Quality` as the best of the four modes in a 480p HDR comparison while retaining every mode.
+Physical-display verification is tracked in [#22](https://github.com/Meitoncz/Delos/issues/22),
+separately from this recorded acceptance.
 This is an adaptation for decoded video, not engine-integrated SGSR 2 with game depth and jitter.
 Background and hardware capability evidence: [VIDEO_OPTICAL_FLOW_RESEARCH.md](VIDEO_OPTICAL_FLOW_RESEARCH.md).
+
+Dated test/acceptance entries below are historical evidence, not a live queue. Current codec,
+quality and sustained-performance verification is tracked in [#19](https://github.com/Meitoncz/Delos/issues/19).
 
 ## Behavior
 

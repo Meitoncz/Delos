@@ -1,71 +1,57 @@
 # GitHub task workflow
 
-Activated 2026-10-28 after the user reviewed the code-backed inventory and explicitly approved migration. The user completed GitHub device authorization for Projects.
+Activated 2026-10-28. After the initial selective import, the user explicitly approved moving **all unfinished intentions** to GitHub and removing Markdown backlogs.
 
-## Source of truth
+## One task tracker
 
-- Repository: [Meitoncz/Delos](https://github.com/Meitoncz/Delos), private, Issues enabled.
-- Selected work and current discussions: [Issues](https://github.com/Meitoncz/Delos/issues).
-- Private planning Project: [Delos](https://github.com/users/Meitoncz/projects/1), linked to this repository. Views: **Board** and **All work**.
-- Original-ID routing: [TODO.md](TODO.md), a link index only. Roadmap, UI plans and technical documents provide context; do not maintain competing live task checklists.
-- Full reconciliation/evidence: [frozen audit cab8c7c4](https://github.com/Meitoncz/Delos/blob/cab8c7c4/docs/TODO.md), source snapshot `6d0688c2`.
+- [Issues](https://github.com/Meitoncz/Delos/issues) and the private [Delos Project](https://github.com/users/Meitoncz/projects/1) are the only source of truth for work, ideas, research, deferred/conditional plans, verification and recurring maintenance.
+- Read current issue descriptions, comments, dependencies and Project fields before starting. Do not rely on stale local notes or silently recreate local tracking when authorization is unavailable.
+- Do not create Markdown TODO files, roadmaps, task indexes or parallel status checklists. Markdown may contain technical specifications, setup guidance, provenance and explicitly dated evidence, not another task queue.
+- Repository and Project must remain private. Titles, descriptions and work updates are English; user discussion is Czech.
+- The approved [prototype](prototype/delos-gui.html) and [GUI specification](GUI.md) remain technical/design references. Creating an issue is not permission to implement, redesign or publish.
 
-Issue titles, bodies and work updates are English. User conversations remain Czech. The Project and repository must stay private unless the user explicitly changes that decision.
-
-## Project fields
+## Field semantics
 
 | Field | Values / use |
 | --- | --- |
 | Status | Backlog; Needs decision; Ready; In progress; Odin testing; Blocked; Done. |
-| Work type | Bug; Feature; Verification; Maintenance. GitHub reserves the custom-field name Type. |
+| Work type | Bug; Feature; Verification; Maintenance; Research; Idea. |
 | Area | Streaming; UI; Controls; Host integration; Platform; Documentation; Upstream. |
-| Priority | P1; P2; P3. Leave unset until priority is actually agreed. |
+| Priority | P1; P2; P3. Leave unset until agreed. |
 
-| Status | Meaning |
-| --- | --- |
-| Backlog | Recorded, not selected for implementation. |
-| Needs decision | Resolve the specified product, visual, protocol or interaction decision first. |
-| Ready | Scope and prerequisites are agreed; available for selection. |
-| In progress | Actively implementing; normally one task at a time. |
-| Odin testing | A locally checked build is ready/installed for the relevant physical-device acceptance. |
-| Blocked | A stated host, asset, device or other prerequisite is unavailable. |
-| Done | Relevant checks, user acceptance where needed, integration and push are complete. |
+Backlog records work without selecting it. Needs decision requires the specified product/design/protocol agreement. Ready means scope/prerequisites are available. In progress is active work, normally one task. Odin testing is relevant physical-device acceptance. Blocked names an unavailable prerequisite. Done means actual criteria, relevant checks/acceptance, integration and push are complete.
 
-Labels identify bugs/features/testing and areas. Keep `needs-decision`, `blocked` and `deferred` aligned with the issue/Project where applicable. A17 is explicitly deferred. Creating an issue is not approval to implement or redesign. No priorities or active implementation were selected by the migration itself.
-
-## Initial import
-
-- 17 selected concrete implementation/blocker records, A17 as a separate deferred design record, and four grouped verification issues: **22 total**. Exact links/IDs are in TODO.md.
-- Implemented, historical and duplicate generic tasks were not imported. Unselected ideas, conditional publication work, optional measurements and recurring maintenance remain candidates in the frozen audit. Create a bounded issue only when the user selects work or a concrete trigger occurs.
-- Partial implementations describe only their actual remainder. Per-game defaults, paddle mappings, four PyroWave upscaler modes, local artwork and existing import/clipboard features must not be reintroduced as missing.
-- Native dependency: [B01 client readiness #13](https://github.com/Meitoncz/Delos/issues/13) is blocked by [B02 Vibepollo readiness #14](https://github.com/Meitoncz/Delos/issues/14). Combined acceptance includes former F17.
-- Verification is grouped into [stream quality #19](https://github.com/Meitoncz/Delos/issues/19), [UI/input #20](https://github.com/Meitoncz/Delos/issues/20), [host integrations #21](https://github.com/Meitoncz/Delos/issues/21), and [platform/display #22](https://github.com/Meitoncz/Delos/issues/22). These are existing-functionality acceptance, not claims that the features are absent.
-- N01 is a confirmed bug; N02 stays a conditional investigation inside #19 until the relevant real host reproduces it. Inherited FIXME comments do not establish a bug.
+Use matching type/area labels. `needs-decision`, `blocked`, `deferred`, `conditional` and `recurring` make approval/prerequisites explicit. Research is not a proven bug; verification does not mean the feature is absent. A recorded idea is not approved development. Conditional publication records do not authorize releases, signing or version work.
 
 ## Daily operation
 
-1. Read the current issue description, all relevant latest comments, Project fields and dependencies before starting. Resolve conflicting/new user instructions in chat and update the issue accordingly. Do not rely only on a stale local note.
-2. The user chooses priorities in Czech. Record agreed scope/decisions in English. Ask before open design decisions; never redesign under the cover of an implementation issue.
-3. Move selected, unblocked work to In progress. New requests queue behind current work unless the user explicitly switches tasks. Brief status questions do not cancel active work.
-4. Follow the existing feature-branch → local build/tests/lint as relevant → physical Odin acceptance where applicable → commit → fast-forward main → push with `[skip ci]` → feature-branch cleanup workflow. Documentation-only work needs no APK rebuild/install or game launch. Never reinstall during a stream, inject device navigation or remotely launch PC games.
-5. For verification, record actual environment, scenarios, observed results and untested cases. A reproduced consumer-visible failure gets a linked bug; unavailable hardware remains unverified, not a fabricated pass or new feature.
-6. Add an issue update with implementation/decision evidence, exercised checks, commit link and remaining limitations. Only close the issue and set Done after its actual completion criteria are met; blockers/unfinished acceptance remain open. Keep GitHub fields/labels consistent instead of copying status back into TODO.md.
-7. Reopen/update the relevant existing issue for revised work rather than creating duplicates. Add newly selected items to the link index if useful. No persistent background watcher is implied: refresh GitHub at the next task interaction.
+1. Refresh the selected issue and comments. Resolve new user instructions and dependencies; record agreed decisions in English. The user chooses priorities in Czech. Ask before open design/product decisions.
+2. New unfinished intentions go directly into an appropriate issue, including deferred ideas. Search first: update an existing record or a grouped acceptance checklist instead of duplicating it. Do not create open issues for already completed/historical work.
+3. Move selected unblocked work to In progress. Queue new requests behind active work unless the user explicitly changes direction. A brief status question does not cancel work.
+4. Follow feature branch → relevant local build/tests/lint → physical Odin acceptance where applicable → commit → fast-forward main → push with `[skip ci]` → completed-branch cleanup. Documentation/comment-only work needs no APK rebuild/install or game launch. Never reinstall during a stream, inject device navigation or remotely launch games.
+5. Record actual test environment, observations and untested cases. File a linked bug for demonstrated failures. Unavailable hardware remains unverified, not a fabricated pass or a new missing feature.
+6. Post the implementation/decision result, exercised checks and completion commit. Close/set Done only after actual criteria are met. Keep blockers, unfinished acceptance and unselected ideas open; keep Project fields and relevant labels consistent. Never copy live status into Markdown.
+7. For recurring records, add dated review results and create bounded linked work for concrete changes. A standing record is not completed by one review unless explicitly retired. No scheduled/background automation is implied.
+8. Refresh GitHub at the next task interaction; no persistent background watcher is running. Preserve related technical documentation when behavior changes, but keep its task state on GitHub.
 
-## Reading and updating with GitHub CLI
+## CLI examples (PowerShell)
 
 ```powershell
-gh issue list --repo Meitoncz/Delos --state open
+gh issue list --repo Meitoncz/Delos --state open --limit 100
 gh issue view 13 --repo Meitoncz/Delos --comments
-gh project item-list 1 --owner Meitoncz --format json
+gh project item-list 1 --owner Meitoncz --limit 100 --format json
 ```
 
-Use the current issue number selected by the user. Comments and task changes require the same repository/account access as this migration; Project fields additionally require Projects authorization. Do not store credentials or device codes in repository files.
+Use the issue number selected for the actual task. CLI access must cover the private repository; Project operations additionally need Projects authorization. Never store credentials/device codes in repository files.
 
-## No implied automation or publication
+## Cutover evidence — historical, not a live issue index
 
-GitHub Actions remain opt-in on explicit request. No Actions, scheduled automation, releases, milestones, version numbers or signing changes were introduced. Issue creation does not trigger the current push/pull-request/manual build workflow; documentation pushes retain `[skip ci]`. Publication-only candidates remain unselected.
+The full migration checkpoint contains 52 issues: the initial 22 plus 30 new records; six remaining conditional/optional checks were folded into existing verification issues. All 77 non-retired audit IDs are represented, including merged aliases. Eight implemented/historical records were excluded. Read GitHub for subsequent counts/status.
 
-## Verification boundary
+The [frozen code audit at cab8c7c4](https://github.com/Meitoncz/Delos/blob/cab8c7c4/docs/TODO.md) retains all 85 source records and evidence for source snapshot `6d0688c2`; it is history, not a local task queue. The Project README explains original-ID aliases. Detailed readiness research and idea constraints were moved into their issues before the planning files were removed. Feature attribution is preserved in the [README](../README.md#feature-provenance); current UI architecture is preserved in GUI.md.
 
-The migration is verified against live GitHub REST/GraphQL records: issue content/labels, Project membership/fields, private visibility, saved view layouts and the native readiness dependency. The managed browser is not signed in, and the authenticated browser relay is unavailable, so a signed-in visual check is not claimed.
+REST/GraphQL readback verifies issue content/labels, Project membership/fields, privacy, saved Board/All work layouts and the native client→host readiness dependency. The managed browser is signed out and the authenticated relay unavailable; a signed-in visual check is not claimed.
+
+## No implied CI or release
+
+GitHub Actions run only on explicit user request. No Actions, schedules, releases, milestones, versions or signing changes are authorized merely by task tracking. Issue creation does not trigger the current push/pull-request/manual build workflow; repository pushes retain `[skip ci]`.

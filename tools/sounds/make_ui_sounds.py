@@ -1,4 +1,4 @@
-"""Generates the UI sounds of the new Delos UI (Phase 6, docs/UI_PLAN.md) into app/src/main/res/raw/.
+"""Generates the Delos UI sounds (see docs/GUI.md) into app/src/main/res/raw/.
 
 Each sound is the prototype's WebAudio blip (docs/prototype/delos-gui.html, blip()): a sine wave
 gliding exponentially from f0 to f1 over 70 ms, with a 10 ms exponential attack and a decay to

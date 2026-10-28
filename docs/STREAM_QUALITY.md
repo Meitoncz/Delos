@@ -1,8 +1,9 @@
 # Live bitrate, MediaCodec pacing and SGSR
 
-Implementation on `feature/stream-quality`, requested 2026-10-26. Device acceptance is pending.
-The three requested items are ROADMAP_MERGED P7-03, P7-04 and P9-02. The user additionally requires
-HDR support and an upscaler toggle/sharpness control directly in the stream menu, usable live.
+Historical implementation and measurement record, requested 2026-10-26. Live bitrate, MediaCodec
+pacing and SGSR behavior are described below; dated acceptance statements are not current task status.
+Current verification and follow-up measurements live in [#19](https://github.com/Meitoncz/Delos/issues/19).
+Feature provenance is preserved in the [README](../README.md#feature-provenance).
 
 ## Runtime bitrate
 
@@ -203,4 +204,4 @@ No game, emulator, streaming connection or injected navigation was used.
 
 These checks establish implementation and GPU correctness, not new visual acceptance or sustained
 game performance. The earlier 118–119 FPS result above is specifically the old SGSR 2 Video path,
-not a benchmark for the new HQ/Quality modes. Those live comparisons remain C03/C04/F11 work.
+not a benchmark for the new HQ/Quality modes. Track current acceptance in [#19](https://github.com/Meitoncz/Delos/issues/19).

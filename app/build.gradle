@@ -171,7 +171,7 @@ dependencies {
     implementation 'com.google.android.material:material:1.14.0'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
 
-    // New native UI (Phase 6, docs/UI_PLAN.md): Compose foundation only, no Material components -
+    // Native shell (docs/GUI.md): Compose foundation only, no Material components -
     // Delos has its own design system
     implementation platform('androidx.compose:compose-bom:2026.09.00')
     implementation 'androidx.compose.foundation:foundation'

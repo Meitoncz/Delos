@@ -2,6 +2,10 @@
 
 Date: October 22, 2026. Codebase: `main` at `a3381ff3` (Artemis 20.2.6 + Moonlight 12.2 merged).
 
+This is a dated audit record, not the current bug list or execution plan. Findings/counts may have
+been resolved or superseded. Current work is in [GitHub Issues](https://github.com/Meitoncz/Delos/issues);
+the later poster-provider boundary finding is [#1](https://github.com/Meitoncz/Delos/issues/1).
+
 ## Scope and method
 
 The Artemis vs. Moonlight analysis ([ANALYSIS.md](ANALYSIS.md)) only covered code both projects share. This audit looks at what Artemis added on its own. After the Phase 3 merge, the Artemis delta is exactly `git diff moonlight/master main`:
@@ -152,9 +156,10 @@ Related: `Game.java` hides the system bars with deprecated `SYSTEM_UI_FLAG_*` fl
 3. **ABIs: ARM only** (`arm64-v8a`, `armeabi-v7a`). No `x86`/`x86_64` builds. The prebuilt x86 native libraries from Moonlight stay in the tree to keep upstream merges conflict-free.
 4. **`art://` links (S1):** keep, with a confirmation dialog for launch links coming from outside the app (pairing links already ask). General rule: no confirmation dialogs in normal in-app flows; security prompts for external input are fine.
 
-## 8. Fix plan
+## 8. Historical remediation batches
 
-Each batch in its own branch, built and tested on the Odin before merging.
+The original batches below preserve historical evidence only. Current refactoring, cleanup and
+confirmation work is tracked on GitHub, not selected or marked complete from this dated list.
 
 - **Batch 1 – quick wins, low risk (done):** removed SBS 3D (D1) and the performance logging feature (S4), dropped unused dependencies (D2), silenced the Vietnamese lint false positive (C1), narrowed FileProvider to `export_settings/` (S3), removed dead code (X1), no R8 for debug builds (X2), ARM-only ABIs, Gson 2.14.0 and AndroidX Annotation 1.11.0. Debug APK: 44.2 MB → 19.4 MB.
 - **Batch 2 – security:** confirmation dialog for external `art://launch` links (S1); accessibility service only forwards keys while the stream (or external display controller) has focus, config trimmed to key filtering (S2).
@@ -162,5 +167,5 @@ Each batch in its own branch, built and tested on the Odin before merging.
 - **Batch 4 – code quality / refactoring**, split into steps:
   - **4a – mechanical cleanup (done):** all Chinese/Italian comments translated (Q2); empty `catch` blocks in Artemis code log a warning, per-frame ones are documented as best effort; branding (B1): `DelosApplication`, `Profiles:` log tag, `.art` header, clipboard marker, "Moonlight" → "Delos" in ~20 translations where it means the app (the "Moonlight Internet Hosting Tool" stays), the name "Delos" is never inflected; refresh rate formatting fixed (C5); unit tests fixed (T1: Robolectric 4.17, outdated tests updated – 51/51 pass) and now run in CI.
   - **4b – decoder pacing (done).** Findings: (1) `Game` overwrote the user's frame pacing with Balanced on every stream start, so Latency / Cap FPS / Smoothness never applied; (2) a "latest only" block at the top of the render loop rendered the newest frame immediately whenever LFR was off, so the effective default was Latency; (3) the Artemis drop logic for non-Balanced modes therefore never ran; (4) "Tight Vsync" was never read and the decoder ignored it; (5) the C2 "watchdog" sat after the render loop, so it only ran once at stream end and flushed the codec; (6) decode-time entries of dropped frames were never removed; (7) frames rendered by the fast path were not counted in the overlay stats; (8) `SurfaceView.setFrameRate` via reflection never resolves (the method only exists on `Surface`, which the decoder already uses). Changes (decided with the user): frame pacing is respected again with **Latency as the default** (same behavior as before); Latency keeps the immediate "newest frame" path; Balanced unchanged, LFR = Balanced variant; Cap FPS / Smoothness use Moonlight's proven logic; Tight Vsync, the dead watchdog, unused adaptive state and the reflection removed; stats entries pruned and all rendered frames counted. Render loop −223 lines.
-  - **4c – `Game.java`**: extract Artemis features, reduce `Game.instance`.
-  - **4d – fewer in-app confirmation dialogs.**
+  - **Historical 4c topic:** current responsibility/ownership work is recorded in [#29](https://github.com/Meitoncz/Delos/issues/29) and [#30](https://github.com/Meitoncz/Delos/issues/30).
+  - **Historical 4d topic:** the code-audited remaining confirmations are recorded in [#8](https://github.com/Meitoncz/Delos/issues/8).

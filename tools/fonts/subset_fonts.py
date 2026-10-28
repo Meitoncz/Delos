@@ -1,4 +1,4 @@
-"""Builds the fonts bundled with the Delos UI (Phase 6, docs/UI_PLAN.md).
+"""Builds the fonts bundled with the Delos UI (see docs/ICONS.md).
 
 - Unbounded (display) and Figtree (body), SIL Open Font License 1.1, variable weight axis limited to 400-700
   (Figtree 400-800, for the hint bar's button letters).
