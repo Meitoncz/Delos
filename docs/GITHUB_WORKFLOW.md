@@ -1,92 +1,71 @@
-# Proposed GitHub task workflow
+# GitHub task workflow
 
-Prepared 2026-10-28. **Proposal only; no issues, labels or Project board were created by this work.**
+Activated 2026-10-28 after the user reviewed the code-backed inventory and explicitly approved migration. The user completed GitHub device authorization for Projects.
 
-## Last checked access
+## Source of truth
 
-- Repository: `Meitoncz/Delos`, private, Issues enabled.
-- `gh repo view` works and `gh issue list --state all` returned no issues.
-- GitHub CLI is installed and can access this repository; an additional plugin is not required for
-  this local CLI workflow.
-- `gh project list --owner Meitoncz` failed because the token lacks `read:project`.
-  Consequently, existing Projects could not be enumerated; do not infer that none exist.
-- Project creation/editing needs appropriate project authorization (the CLI's `project` scope),
-  beyond the repository access already working. No token scopes, account settings or visibility
-  have been changed. Do not start interactive authorization until the user is ready.
+- Repository: [Meitoncz/Delos](https://github.com/Meitoncz/Delos), private, Issues enabled.
+- Selected work and current discussions: [Issues](https://github.com/Meitoncz/Delos/issues).
+- Private planning Project: [Delos](https://github.com/users/Meitoncz/projects/1), linked to this repository. Views: **Board** and **All work**.
+- Original-ID routing: [TODO.md](TODO.md), a link index only. Roadmap, UI plans and technical documents provide context; do not maintain competing live task checklists.
+- Full reconciliation/evidence: [frozen audit cab8c7c4](https://github.com/Meitoncz/Delos/blob/cab8c7c4/docs/TODO.md), source snapshot `6d0688c2`.
 
-## Recommended structure
+Issue titles, bodies and work updates are English. User conversations remain Czech. The Project and repository must stay private unless the user explicitly changes that decision.
 
-Use **Issues for work records** and a **private Project named Delos for the board**. GitHub supports
-parent/sub-issues and dependencies, so larger features can group their implementation steps.
+## Project fields
 
-Suggested status field:
+| Field | Values / use |
+| --- | --- |
+| Status | Backlog; Needs decision; Ready; In progress; Odin testing; Blocked; Done. |
+| Work type | Bug; Feature; Verification; Maintenance. GitHub reserves the custom-field name Type. |
+| Area | Streaming; UI; Controls; Host integration; Platform; Documentation; Upstream. |
+| Priority | P1; P2; P3. Leave unset until priority is actually agreed. |
 
 | Status | Meaning |
 | --- | --- |
-| Backlog | Recorded but not selected next; an idea is not implementation approval. |
-| Ready | Scope is agreed and prerequisites are available. |
-| In progress | Currently being implemented; normally one active task. |
-| Odin testing | A concrete, locally validated build is installed for the user's acceptance. |
-| Blocked | Needs host work, hardware, assets, permission or a product decision. |
+| Backlog | Recorded, not selected for implementation. |
+| Needs decision | Resolve the specified product, visual, protocol or interaction decision first. |
+| Ready | Scope and prerequisites are agreed; available for selection. |
+| In progress | Actively implementing; normally one task at a time. |
+| Odin testing | A locally checked build is ready/installed for the relevant physical-device acceptance. |
+| Blocked | A stated host, asset, device or other prerequisite is unavailable. |
 | Done | Relevant checks, user acceptance where needed, integration and push are complete. |
 
-Use labels for kinds (`feature`, `bug`, `testing`, `research`, `maintenance`, `idea`) and areas
-(`pyrowave`, `ui`, `controls`, `host`, `quality`, `upstream`). Keep approval state separate:
-`needs-decision`, `deferred` or `conditional` must not look like selected development.
-Priority can be a Project field; no release milestones or dates are implied.
+Labels identify bugs/features/testing and areas. Keep `needs-decision`, `blocked` and `deferred` aligned with the issue/Project where applicable. A17 is explicitly deferred. Creating an issue is not approval to implement or redesign. No priorities or active implementation were selected by the migration itself.
 
-## Required audit and review gate before migration
+## Initial import
 
-The user explicitly required a fresh codebase reconciliation before creating any issues.
-The earlier suggestion to import all 82/78 items was withdrawn: those numbers mixed implementation,
-verification, old comments, deferred ideas and completed behavior.
+- 17 selected concrete implementation/blocker records, A17 as a separate deferred design record, and four grouped verification issues: **22 total**. Exact links/IDs are in TODO.md.
+- Implemented, historical and duplicate generic tasks were not imported. Unselected ideas, conditional publication work, optional measurements and recurring maintenance remain candidates in the frozen audit. Create a bounded issue only when the user selects work or a concrete trigger occurs.
+- Partial implementations describe only their actual remainder. Per-game defaults, paddle mappings, four PyroWave upscaler modes, local artwork and existing import/clipboard features must not be reintroduced as missing.
+- Native dependency: [B01 client readiness #13](https://github.com/Meitoncz/Delos/issues/13) is blocked by [B02 Vibepollo readiness #14](https://github.com/Meitoncz/Delos/issues/14). Combined acceptance includes former F17.
+- Verification is grouped into [stream quality #19](https://github.com/Meitoncz/Delos/issues/19), [UI/input #20](https://github.com/Meitoncz/Delos/issues/20), [host integrations #21](https://github.com/Meitoncz/Delos/issues/21), and [platform/display #22](https://github.com/Meitoncz/Delos/issues/22). These are existing-functionality acceptance, not claims that the features are absent.
+- N01 is a confirmed bug; N02 stays a conditional investigation inside #19 until the relevant real host reproduces it. Inherited FIXME comments do not establish a bug.
 
-[TODO.md](TODO.md) now records the code-backed dispositions of every original ID, plus separately
-identified audit findings. It includes evidence paths, concrete remainders and runtime-check limits.
-It is an audit inventory, **not a bulk-import queue**.
+## Daily operation
 
-1. Present and review the corrected inventory with the user. No migration is authorized merely
-   because the audit is complete. Do not start Project authorization or create issues yet.
-2. **Issue titles and bodies must be in English.** Chat and priority decisions remain Czech.
-3. Create work records only for the selected, reviewed remainders. Preserve old IDs as references;
-   do not open implemented, merged or historical items as missing features.
-4. Separate implementation from verification and approval. Untried hardware does not prove a bug;
-   optional design ideas remain `needs-decision`/`deferred`; host/assets dependencies stay blocked.
-5. Scope partial work narrowly. Per-game defaults already exist (A06 lacks live-save interaction);
-   paddle handling exists (G02 is retired); the normal stream already uses the new menu (A10 is
-   merged into its actual remaining areas). A05 is now only the applied-level allocation-fallback
-   reporting gap, not another four-mode upscaler implementation.
-6. Combine dependent acceptance with its feature where sensible: F17 belongs to B01/B02.
-   Use parents/sub-issues and dependencies only when they reflect genuine deliverables.
-7. Evaluate new findings separately. N01 is runtime-confirmed with an audit-owned fixture; N02
-   is a conditional code-level HDR concern, not a reproduced general failure.
-8. Keep any future Project private independently of repository visibility. After an approved import,
-   use GitHub for current task status and TODO.md as an ID/link index, not a competing checklist.
+1. Read the current issue description, all relevant latest comments, Project fields and dependencies before starting. Resolve conflicting/new user instructions in chat and update the issue accordingly. Do not rely only on a stale local note.
+2. The user chooses priorities in Czech. Record agreed scope/decisions in English. Ask before open design decisions; never redesign under the cover of an implementation issue.
+3. Move selected, unblocked work to In progress. New requests queue behind current work unless the user explicitly switches tasks. Brief status questions do not cancel active work.
+4. Follow the existing feature-branch → local build/tests/lint as relevant → physical Odin acceptance where applicable → commit → fast-forward main → push with `[skip ci]` → feature-branch cleanup workflow. Documentation-only work needs no APK rebuild/install or game launch. Never reinstall during a stream, inject device navigation or remotely launch PC games.
+5. For verification, record actual environment, scenarios, observed results and untested cases. A reproduced consumer-visible failure gets a linked bug; unavailable hardware remains unverified, not a fabricated pass or new feature.
+6. Add an issue update with implementation/decision evidence, exercised checks, commit link and remaining limitations. Only close the issue and set Done after its actual completion criteria are met; blockers/unfinished acceptance remain open. Keep GitHub fields/labels consistent instead of copying status back into TODO.md.
+7. Reopen/update the relevant existing issue for revised work rather than creating duplicates. Add newly selected items to the link index if useful. No persistent background watcher is implied: refresh GitHub at the next task interaction.
 
-The earlier A01–A05 PyroWave parity example is no longer an open parent deliverable: A01–A04 are
-implemented and A05 has only the narrow reporting remainder above. No release milestone is implied.
+## Reading and updating with GitHub CLI
 
-## Day-to-day operation
+```powershell
+gh issue list --repo Meitoncz/Delos --state open
+gh issue view 13 --repo Meitoncz/Delos --comments
+gh project item-list 1 --owner Meitoncz --format json
+```
 
-- The user chooses priorities in Czech in chat; the agent updates English issue records.
-- Acknowledge new requests, queue them behind current work and finish that work first unless the
-  user explicitly requests a stop/switch. Brief status requests do not cancel active work.
-- Move one selected issue through implementation, local build/tests/lint and device acceptance.
-  Never reinstall during a stream, inject Odin navigation or launch a PC game remotely.
-- Finish the established feature-branch → fast-forward main → `[skip ci]` push → branch cleanup
-  workflow, attach the commit/checks to the issue, then mark it done. Documentation-only tasks do
-  not require an APK reinstall or a game launch.
-- GitHub Actions remain **opt-in on explicit request**. Do not add Actions or a persistent scheduled
-  automation just to manage the board. The existing build workflow runs on push/pull request/manual
-  dispatch, not on issue creation.
-- Issue creation and updates can already use GitHub CLI. The Project board can be added once the
-  account permissions are deliberately granted; repository visibility must remain private.
+Use the current issue number selected by the user. Comments and task changes require the same repository/account access as this migration; Project fields additionally require Projects authorization. Do not store credentials or device codes in repository files.
 
-## Official references
+## No implied automation or publication
 
-- [GitHub Issues](https://docs.github.com/en/issues/tracking-your-work-with-issues/learning-about-issues/about-issues)
-- [GitHub Projects](https://docs.github.com/en/issues/planning-and-tracking-with-projects/learning-about-projects/about-projects)
-- [Sub-issues](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/adding-sub-issues)
+GitHub Actions remain opt-in on explicit request. No Actions, scheduled automation, releases, milestones, version numbers or signing changes were introduced. Issue creation does not trigger the current push/pull-request/manual build workflow; documentation pushes retain `[skip ci]`. Publication-only candidates remain unselected.
 
-These pages were checked on 2026-10-28. Account permissions above come from the actual local CLI
-responses, not from a documentation assumption.
+## Verification boundary
+
+The migration is verified against live GitHub REST/GraphQL records: issue content/labels, Project membership/fields, private visibility, saved view layouts and the native readiness dependency. The managed browser is not signed in, and the authenticated browser relay is unavailable, so a signed-in visual check is not claimed.

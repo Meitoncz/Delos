@@ -4,10 +4,12 @@ Delos (formerly Vibetemis) is a fork of **Artemis** for **Vibepollo**. Priority:
 
 Details and numbers: [ANALYSIS.md](ANALYSIS.md). Environment setup: [WINDOWS_SETUP.md](WINDOWS_SETUP.md).
 
-Current code-backed inventory: [TODO.md](TODO.md), audited on 2026-10-28 against `6d0688c2`.
-It separates real implementation remainders from existing features needing verification, optional
-decisions and historical source notes. Older unchecked Phase 4/6 entries below are historical planning
-leads, not additional missing features or an issue-import queue. Review the audited inventory first.
+Live selected work: [GitHub Issues](https://github.com/Meitoncz/Delos/issues) and the private
+[Delos Project](https://github.com/users/Meitoncz/projects/1). [TODO.md](TODO.md) maps original audit
+IDs to issues; [GITHUB_WORKFLOW.md](GITHUB_WORKFLOW.md) defines operation. This roadmap preserves
+high-level phases and history, not a second current task checklist. Older unchecked Phase 4/6 entries
+are historical leads, not additional missing features. The complete pre-migration code audit is
+[frozen at cab8c7c4](https://github.com/Meitoncz/Delos/blob/cab8c7c4/docs/TODO.md).
 
 ## Phase 0 – Fork identity
 

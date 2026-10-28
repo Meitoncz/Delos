@@ -7,7 +7,16 @@ Android client for streaming games from **Vibepollo** (a fork of Apollo/Sunshine
 - The app name **"Delos" is never translated or inflected** in any language (no case endings, no possessive `'s`); rephrase instead, e.g. "aplikace Delos", "the Delos USB driver".
 - **Planned roadmap steps run end to end without asking at each step** (agreed 2026-10-23): feature branch → local build, tests and lint → test on the Odin → commit → fast-forward `main` → push with `[skip ci]` → delete the feature branch, then report. Run GitHub Actions **only when the user explicitly requests CI**. Ask first for anything outside the plan, open design decisions, force pushes, deleting other branches, rewriting history and releases.
 - Development happens on **Windows** (same machine as Vibepollo). Write commands for PowerShell, build with `gradlew.bat`.
-- Work plan: `docs/ROADMAP.md` (tick off finished items). Diff analysis: `docs/ANALYSIS.md`. Environment: `docs/WINDOWS_SETUP.md`.
+- **Task tracking:** [GitHub Issues](https://github.com/Meitoncz/Delos/issues) and the
+  [private Delos Project](https://github.com/users/Meitoncz/projects/1) are the source of truth for
+  selected work. `docs/TODO.md` is an ID/link index, not a second live checklist.
+- Read the latest issue description, comments, Project fields and dependencies before starting.
+  Record decisions, exercised checks and the completion commit in English; close only when the
+  actual criteria are met. An issue is not automatic approval to implement or redesign.
+- Workflow: `docs/GITHUB_WORKFLOW.md`. High-level phases/history: `docs/ROADMAP.md`. Native UI plan:
+  `docs/UI_PLAN.md`. Vision: `docs/GUI.md`. Unselected ideas: `docs/FUTURE_PLANS.md`. Diff analysis:
+  `docs/ANALYSIS.md`.
+- Environment: `docs/WINDOWS_SETUP.md`.
 - Priority: **Moonlight updates first** (common-c → toolchain → merge `moonlight/master` → OpenSSL/opus), **UI and custom features after that**.
 
 ## Remotes
