@@ -1,0 +1,108 @@
+#version 450
+#extension GL_GOOGLE_include_directive : require
+// Copyright (c) 2025-2026 Qualcomm Innovation Center, Inc. All rights reserved.
+// SPDX-License-Identifier: BSD-3-Clause
+// SGSR 1 Standard (upstream d926f074) and Unity High Quality (ab685c993ebd),
+// matching assets/sgsr/sgsr1{,_high}.frag with presentation-only user sharpening.
+layout(local_size_x=8,local_size_y=8) in;
+layout(set=0,binding=0) uniform sampler2D u_y;
+layout(set=0,binding=1) uniform sampler2D u_cb;
+layout(set=0,binding=2) uniform sampler2D u_cr;
+layout(set=0,binding=6,rgba16f) writeonly uniform image2D u_output;
+layout(push_constant) uniform Params {
+    ivec2 inputSize;
+    ivec2 outputSize;
+    ivec2 flowSize;
+    int reset;
+    int fullRange;
+    int matrix;
+    int sixteenBit;
+    int mode;
+    int padding;
+} p;
+#include "sgsr_source.glsl"
+float fastLanczos2(float x) {
+    float a=x-4.0,b=x*a-a;
+    return b*a*a;
+}
+float channel(ivec2 q) {
+    vec3 rgb=source(q);
+    return p.mode==2?dot(rgb,vec3(.299,.587,.114)):rgb.g;
+}
+// GLSL textureGather ordering, but after the same planar conversion as the RGB reference.
+vec4 gatherChannel(ivec2 q) {
+    return vec4(channel(q+ivec2(0,1)),channel(q+ivec2(1,1)),
+                channel(q+ivec2(1,0)),channel(q));
+}
+vec2 edgeDirection(vec4 left,vec4 right) {
+    float a=right.x-left.z,b=right.w-left.y;
+    vec2 delta=vec2(a+b,a-b);
+    return delta*inversesqrt(dot(delta,delta)+3.075740e-05);
+}
+vec4 weightY(vec2 d,float c,vec2 dir,float variance) {
+    float distance2=dot(d,d),edge=dot(d,dir.yx);
+    if(p.mode==2) {
+        float c2std=c*c*variance;
+        float w1=fastLanczos2(distance2+edge*edge*(clamp(c2std*-2.8,0.0,1.0)*.7-1.0));
+        float w2=fastLanczos2(sqrt(distance2)*.54+.36-exp(c2std)*.36);
+        return vec4(w1*c,w1,w2*c,w2);
+    }
+    float w=fastLanczos2(distance2+edge*edge*(clamp(c*c*variance,0.0,1.0)*.7-1.0));
+    return vec4(w*c,w,0.0,0.0);
+}
+void main() {
+    ivec2 outPos=ivec2(gl_GlobalInvocationID.xy);
+    if(any(greaterThanEqual(outPos,p.outputSize))) return;
+    vec2 uv=(vec2(outPos)+.5)/vec2(p.outputSize);
+    vec3 color=sourceBilinear(uv);
+    // Do not spatially reconstruct a native-resolution or downscaled image.
+    if(p.mode!=0 && any(greaterThan(p.outputSize,p.inputSize))) {
+        vec2 imgCoord=uv*vec2(p.inputSize)+vec2(-.5,.5);
+        ivec2 origin=ivec2(floor(imgCoord))-ivec2(1);
+        vec2 pl=fract(imgCoord);
+        vec4 left=gatherChannel(origin);
+        float center=p.mode==2?dot(color,vec3(.299,.587,.114)):color.g;
+        float edgeVote=abs(left.z-left.y)+abs(center-left.y)+abs(center-left.z);
+        if(edgeVote>(p.mode==2?4.0:8.0)/255.0) {
+            vec4 right=gatherChannel(origin+ivec2(2,0));
+            vec4 upDown=vec4(gatherChannel(origin+ivec2(1,-1)).wz,
+                             gatherChannel(origin+ivec2(1,1)).yx);
+            float mean=(left.y+left.z+right.x+right.w)*.25;
+            left-=mean;right-=mean;upDown-=mean;center-=mean;
+            float variance;
+            if(p.mode==2) {
+                float sum2=dot(left,left)+dot(right,right)+dot(upDown,upDown);
+                variance=-6.0/max(sum2,1e-8);
+            } else {
+                float sum=dot(abs(left)+abs(right)+abs(upDown),vec4(1));
+                float sumMean=10.14185/max(sum,1e-8);
+                variance=sumMean*sumMean;
+            }
+            vec2 dir=edgeDirection(left,right);
+            vec4 a=weightY(pl+vec2(0,1),upDown.x,dir,variance);
+            a+=weightY(pl+vec2(-1,1),upDown.y,dir,variance);
+            a+=weightY(pl+vec2(-1,-2),upDown.z,dir,variance);
+            a+=weightY(pl+vec2(0,-2),upDown.w,dir,variance);
+            a+=weightY(pl+vec2(1,-1),left.x,dir,variance);
+            a+=weightY(pl+vec2(0,-1),left.y,dir,variance);
+            a+=weightY(pl,left.z,dir,variance);
+            a+=weightY(pl+vec2(1,0),left.w,dir,variance);
+            a+=weightY(pl+vec2(-1,-1),right.x,dir,variance);
+            a+=weightY(pl+vec2(-2,-1),right.y,dir,variance);
+            a+=weightY(pl+vec2(-2,0),right.z,dir,variance);
+            a+=weightY(pl+vec2(-1,0),right.w,dir,variance);
+            float low=min(min(left.y,left.z),min(right.x,right.w));
+            float high=max(max(left.y,left.z),max(right.x,right.w));
+            if(abs(a.y)>1e-8 && (p.mode!=2 || abs(a.w)>1e-8)) {
+                // Intrinsic edge response is fixed; the independent sharpness control is
+                // applied once, after reconstruction, and never enters temporal history.
+                float edgeY=clamp(.5*a.x/a.y,low,high);
+                float delta=edgeY-center;
+                if(p.mode==2) delta=.6*edgeY+.4*clamp(.5*a.z/a.w,low,high)-center;
+                else delta=clamp(delta,-23.0/255.0,23.0/255.0);
+                color=clamp(color+delta,0.0,1.0);
+            }
+        }
+    }
+    imageStore(u_output,outPos,vec4(color,1.0));
+}

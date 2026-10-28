@@ -10,11 +10,11 @@ Task-management proposal: [GitHub Issues and Projects](GITHUB_WORKFLOW.md); migr
 
 ## A. Feature gaps and requested follow-ups
 
-- [ ] **A01 — PyroWave SGSR 1 Standard:** add a native Vulkan spatial reconstruction path, including SDR/HDR, live switching and correct timing statistics. Current selection of SGSR 1 disables PyroWave upscaling.
-- [ ] **A02 — PyroWave SGSR 1 High Quality:** port the distinct higher-quality spatial filter, not just change sharpening strength.
-- [ ] **A03 — PyroWave SGSR 2 Video Quality:** implement the actual quality-specific reconstruction/reactive-mask path. Both SGSR 2 labels currently select the same native SGSR 2 Video implementation.
-- [ ] **A04 — PyroWave sharpness parity:** add the separate final sharpening control supported by MediaCodec, with a true zero/bypass and HDR handling. It currently has no effect on PyroWave and is disabled there.
-- [ ] **A05 — Honest codec-specific controls:** as the missing PyroWave modes are implemented, make available choices, active-state reporting, help and per-game defaults agree with the actual renderer. Until then, unsupported choices must not look like active processing modes.
+- [x] **A01 — PyroWave SGSR 1 Standard:** native Vulkan spatial reconstruction completed, including SDR/HDR, frame-boundary switching and existing GPU processing-time statistics. Verified with real GPU fixtures and the production-renderer lifecycle probe on Odin.
+- [x] **A02 — PyroWave SGSR 1 High Quality:** distinct Qualcomm Unity HQ spatial reconstruction completed, not a sharpening-strength alias. GPU textured-edge output differs from Standard and stays locally bounded.
+- [x] **A03 — PyroWave SGSR 2 Video Quality:** separate reactive Activate pass and weighted-center YCoCg history clipping completed. Real motion fixtures verify distinct regular/Quality output, reset and scene-cut behavior.
+- [x] **A04 — PyroWave sharpness parity:** separate presentation-only sharpening completed for SDR and HDR/P010, with true zero bypass and no sharpening feedback into temporal history.
+- [x] **A05 — Honest codec-specific controls:** all four modes, sharpness, supersampling, help and saved/per-game launch defaults agree with the native implementation. Applied mode/size remain separate from requested settings; unsupported processing reports direct output. Build, 80 unit tests, lint and real Odin GPU/lifecycle checks pass. Live visual/sustained-performance checks remain C03/C04/F11, not claimed complete here.
 - [ ] **A06 — Save live upscaler changes per game:** the user requested this later. Profile/per-game launch defaults already exist; live changes remain session-only. Decide the exact save interaction and whether supersampling level belongs in the saved subset.
 - [ ] **A07 — Hide the PC cursor:** never / while touching / always, using supported Vibepollo host behavior. The Android local-cursor switch already exists and is a different feature.
 - [ ] **A08 — Delos launcher icon:** replace the inherited launcher icon with the custom Delos identity; the in-app ring/wordmark already exists.

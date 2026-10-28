@@ -108,10 +108,11 @@ class ShellSettingsTest {
         val stream = StreamSettingsStore(catalog) { prefs }
         assertTrue(stream.enabled(spec("checkbox_sgsr"), null))
         assertTrue(stream.enabled(spec("list_sgsr_quality"), null))
-        listOf("checkbox_async_decode", "checkbox_ultra_low_latency", "pref_low_latency_frame_balance", "seekbar_sgsr_sharpness").forEach {
+        assertTrue(stream.enabled(spec("seekbar_sgsr_sharpness"), null))
+        listOf("checkbox_async_decode", "checkbox_ultra_low_latency", "pref_low_latency_frame_balance").forEach {
             assertFalse("Should not apply to PyroWave: $it", stream.enabled(spec(it), null))
         }
-        assertTrue(SettingsHelp.details(spec("list_sgsr_quality"), prefs.all).contains("same native reconstruction"))
+        assertTrue(SettingsHelp.details(spec("list_sgsr_quality"), prefs.all).contains("all four modes"))
         prefs.edit().putBoolean("checkbox_sgsr", false).commit()
         assertFalse(stream.enabled(spec("list_sgsr_quality"), null))
         prefs.edit().putString("video_format", "forceav1").putBoolean("checkbox_sgsr", true).commit()

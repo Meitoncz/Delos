@@ -45,11 +45,11 @@ The old 116-setting count in the Phase 6.7 document was a historical count, not 
    virtual displays, preserved stream resolution/FPS on an external display, all supported HDR
    codec paths, current SGSR behavior, custom input, native diagnostics and completed SteamGridDB.
    Host display scaling, network resolution and local supersampling are explicitly distinguished.
-5. **PyroWave SGSR defaults were still disabled in settings.** Removed the obsolete blanket gate
-   for the upscaler switch and mode. Kept MediaCodec async decoding, LFR, Ultra Low Latency and
-   the separate sharpness control disabled for PyroWave. Help states that both SGSR 2 choices use
-   the same native PyroWave reconstruction and SGSR 1 choices leave its upscaling off; there is no
-   unsupported claim of a second native quality implementation.
+5. **PyroWave SGSR defaults were still disabled in settings.** The original audit removed the
+   blanket gate for the switch/mode and documented the native gaps then present. A01–A05 were
+   subsequently completed on 2026-10-28: all four native modes, independent presentation sharpness
+   and supersampling are available, with help and active status matching the renderer.
+   Only MediaCodec-specific async decoding, LFR and Ultra Low Latency remain inapplicable.
 6. **The live menu lacked a right-hand help panel.** Its actions and adjustable rows now update
    one. The main actions wrap into two rows to make room. Mode help tracks live selection;
    supersampling, sharpening, bitrate acceptance, brightness, statistics, clipboard and commands

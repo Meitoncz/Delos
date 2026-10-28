@@ -28,8 +28,8 @@ class StreamSettingsStore(val catalog: SettingsCatalog, private val settings: ()
 
     fun enabled(spec: SettingSpec, caps: SettingsCapabilities?): Boolean {
         if (spec.key == "checkbox_enable_hdr" && caps?.brokenHdr == true) return false
-        // PyroWave now has native SGSR 2 Video, but no separate sharpness pass or MediaCodec options.
-        if (spec.key in setOf("seekbar_sgsr_sharpness", "checkbox_async_decode", "checkbox_ultra_low_latency", "pref_low_latency_frame_balance") &&
+        // PyroWave has its own Vulkan decoder; MediaCodec-only options do not apply.
+        if (spec.key in setOf("checkbox_async_decode", "checkbox_ultra_low_latency", "pref_low_latency_frame_balance") &&
             state.value["video_format"] == "pyrowave") return false
         if (spec.key == "pref_low_latency_frame_balance" && state.value["frame_pacing"] == "fast-vsync") return false
         fun dependencyEnabled(key: String?, seen: Set<String>): Boolean {

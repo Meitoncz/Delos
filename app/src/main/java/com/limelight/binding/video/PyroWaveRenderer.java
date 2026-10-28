@@ -17,6 +17,12 @@ public final class PyroWaveRenderer {
     public static final int MATRIX_BT709 = 1;
     public static final int MATRIX_BT2020 = 2;
 
+    public static final int UPSCALING_OFF = 0;
+    public static final int UPSCALING_SGSR1_STANDARD = 1;
+    public static final int UPSCALING_SGSR1_HIGH = 2;
+    public static final int UPSCALING_SGSR2_VIDEO = 3;
+    public static final int UPSCALING_SGSR2_VIDEO_QUALITY = 4;
+
     private static Boolean available;
 
     private long handle;
@@ -46,10 +52,10 @@ public final class PyroWaveRenderer {
      */
     public static PyroWaveRenderer create(Surface surface, int width, int height, int frameRate,
                                           int outputWidth, int outputHeight, boolean chroma444,
-                                          boolean fullRange, int matrix, boolean tenBit, boolean enableSgsr2,
-                                          int supersamplingLevel) {
+                                          boolean fullRange, int matrix, boolean tenBit, int upscalingMode,
+                                          int supersamplingLevel, float sharpness) {
         long handle = nativeCreate(surface, width, height, frameRate, outputWidth, outputHeight, chroma444,
-                fullRange, matrix, tenBit, enableSgsr2, supersamplingLevel);
+                fullRange, matrix, tenBit, upscalingMode, supersamplingLevel, sharpness);
         return handle != 0 ? new PyroWaveRenderer(handle) : null;
     }
 
@@ -65,12 +71,17 @@ public final class PyroWaveRenderer {
         }
     }
 
-    public void setUpscalingEnabled(boolean enabled) {
-        if (handle != 0) nativeSetUpscalingEnabled(handle, enabled);
+    public void setUpscalingMode(int mode) {
+        if (handle != 0) nativeSetUpscalingMode(handle, mode);
     }
 
-    public boolean isUpscalingEnabled() {
-        return handle != 0 && nativeIsUpscalingEnabled(handle);
+    /** The mode actually applied by the renderer, not the requested setting. */
+    public int getUpscalingMode() {
+        return handle != 0 ? nativeGetUpscalingMode(handle) : UPSCALING_OFF;
+    }
+
+    public void setSharpness(float sharpness) {
+        if (handle != 0) nativeSetSharpness(handle, Math.max(0f, Math.min(1f, sharpness)));
     }
 
     public void setSupersamplingLevel(int level) {
@@ -120,12 +131,13 @@ public final class PyroWaveRenderer {
 
     private static native long nativeCreate(Surface surface, int width, int height, int frameRate,
                                             int outputWidth, int outputHeight, boolean chroma444,
-                                            boolean fullRange, int matrix, boolean tenBit, boolean enableSgsr2,
-                                            int supersamplingLevel);
+                                            boolean fullRange, int matrix, boolean tenBit, int upscalingMode,
+                                            int supersamplingLevel, float sharpness);
 
     private static native void nativeSetHdrMode(long handle, boolean enabled);
-    private static native void nativeSetUpscalingEnabled(long handle, boolean enabled);
-    private static native boolean nativeIsUpscalingEnabled(long handle);
+    private static native void nativeSetUpscalingMode(long handle, int mode);
+    private static native int nativeGetUpscalingMode(long handle);
+    private static native void nativeSetSharpness(long handle, float sharpness);
     private static native void nativeSetSupersamplingLevel(long handle, int level);
     private static native boolean nativeIsSupersampling(long handle);
     private static native String nativeGetScaleDescription(long handle);

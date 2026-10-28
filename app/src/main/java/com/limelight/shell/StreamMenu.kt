@@ -517,7 +517,7 @@ class StreamMenu(private val game: Game) {
                                     }
                                     Page.UPSCALER -> Column(Modifier.width(1100.px), horizontalAlignment = Alignment.CenterHorizontally,
                                         verticalArrangement = Arrangement.spacedBy(22.px)) {
-                                        val available = !upscalerStatus.startsWith("Unavailable for") && com.limelight.binding.video.SgsrRenderer.isSupported(game)
+                                        val available = game.isPyroWave || com.limelight.binding.video.SgsrRenderer.isSupported(game)
                                         SettingRow(Symbols.UPSCALER, if (supersamplingMode) "Supersampling" else "Upscaling", RowValue.Toggle(game.isUpscalingRequested) {
                                             game.setUpscalingEnabled(it)
                                             changes++
@@ -541,7 +541,7 @@ class StreamMenu(private val game: Game) {
                                         SettingRow(Symbols.SHARPNESS, "Sharpness", RowValue.Slider(prefs.sgsrSharpness, 0, 100, 5, " %") {
                                             game.setUpscalingSharpness(it)
                                             changes++
-                                        }, enabled = available && prefs.videoFormat != com.limelight.preferences.PreferenceConfiguration.FormatOption.PYROWAVE,
+                                        }, enabled = available,
                                             onFocused = { helpKey = "Sharpness" })
                                     }
                                     Page.MOUSE -> Column(Modifier.width(1000.px), verticalArrangement = Arrangement.spacedBy(22.px)) {
@@ -581,9 +581,7 @@ class StreamMenu(private val game: Game) {
                         "Touchscreen mode" -> SettingsHelp.choice("mouse_mode_list", game.activeMouseMode.toString()) +
                             "\n\n" + if (prefs.rememberMouseMode) "Changes apply now and are saved for later streams because Remember mouse mode is on."
                             else "Changes apply now and last for this stream because Remember mouse mode is off."
-                        "Mode" -> SettingsHelp.choice("list_sgsr_quality", modeValue) + "\n\n" + StreamMenuHelp.description(helpKey) +
-                            if (prefs.videoFormat == com.limelight.preferences.PreferenceConfiguration.FormatOption.PYROWAVE)
-                                "\n\nPyroWave uses its native SGSR 2 Video for either SGSR 2 choice; SGSR 1 choices leave PyroWave upscaling off." else ""
+                        "Mode" -> SettingsHelp.choice("list_sgsr_quality", modeValue) + "\n\n" + StreamMenuHelp.description(helpKey)
                         "Upscaler", "Upscaling", "Supersampling" -> "$upscalerStatus\n\n${StreamMenuHelp.description(helpKey)}"
                         else -> StreamMenuHelp.description(helpKey)
                     }

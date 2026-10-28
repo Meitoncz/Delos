@@ -4101,6 +4101,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         decoderRenderer.setUpscalingEnabled(enabled);
     }
     public boolean isUpscalingRequested() { return decoderRenderer.isUpscalingRequested(); }
+    public boolean isPyroWave() { return decoderRenderer.isPyroWave(); }
     public void setUpscalingMode(int mode) { decoderRenderer.setUpscalingMode(mode); }
     public String getUpscalingStatus() { return decoderRenderer.getUpscalingStatus(); }
     public void setUpscalingSharpness(int value) { decoderRenderer.setUpscalingSharpness(value); }
@@ -4242,4 +4243,4 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         return null;
     }
 
-}
+}

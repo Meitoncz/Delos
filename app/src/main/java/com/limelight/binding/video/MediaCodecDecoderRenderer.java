@@ -847,7 +847,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                     metrics.widthPixels, metrics.heightPixels,
                     (format & MoonBridge.VIDEO_FORMAT_MASK_YUV444) != 0, prefs.fullRange, getPreferredColorSpace(),
                     (format & MoonBridge.VIDEO_FORMAT_MASK_10BIT) != 0,
-                    prefs.sgsrEnabled && prefs.sgsrTemporal, prefs.sgsrSupersamplingLevel);
+                    getRequestedPyroWaveUpscalingMode(), prefs.sgsrSupersamplingLevel, prefs.sgsrSharpness / 100f);
             if (pyroWave == null) {
                 LimeLog.severe("Unable to create the PyroWave renderer");
                 return -1;
@@ -869,7 +869,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         if (pyroWave != null) {
             sgsrRequested = enabled;
             prefs.sgsrEnabled = enabled;
-            pyroWave.setUpscalingEnabled(enabled && prefs.sgsrTemporal);
+            pyroWave.setUpscalingMode(getRequestedPyroWaveUpscalingMode());
             return;
         }
         if (enabled == sgsrRequested && !sgsrFailed) return;
@@ -881,7 +881,15 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     }
     public boolean isUpscalingRequested() { return sgsrRequested; }
     public String getUpscalingStatus() {
-        if (pyroWave != null) return pyroWave.isUpscalingEnabled() ? "On" : "Off";
+        if (pyroWave != null) {
+            switch (pyroWave.getUpscalingMode()) {
+                case PyroWaveRenderer.UPSCALING_SGSR1_STANDARD: return "On: SGSR 1 Standard";
+                case PyroWaveRenderer.UPSCALING_SGSR1_HIGH: return "On: SGSR 1 High Quality";
+                case PyroWaveRenderer.UPSCALING_SGSR2_VIDEO: return "On: SGSR 2 Video";
+                case PyroWaveRenderer.UPSCALING_SGSR2_VIDEO_QUALITY: return "On: SGSR 2 Video Quality";
+                default: return sgsrRequested ? "Unavailable; direct rendering is active" : "Off";
+            }
+        }
         if (sgsrFailed) return "Unavailable; direct rendering is active";
         if (sgsrRequested && sgsr == null) return "Starting";
         if (!sgsrRequested && sgsr != null) return "Stopping";
@@ -891,6 +899,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         prefs.sgsrSharpness = Math.max(0, Math.min(100, value));
         SgsrRenderer current = sgsr;
         if (current != null) current.setSharpness(prefs.sgsrSharpness);
+        if (pyroWave != null) pyroWave.setSharpness(prefs.sgsrSharpness / 100f);
     }
 
     public void setUpscalingMode(int mode) {
@@ -899,7 +908,15 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         prefs.sgsrTemporalQuality = mode == 3;
         SgsrRenderer current = sgsr;
         if (current != null) current.setMode(mode);
-        if (pyroWave != null) pyroWave.setUpscalingEnabled(prefs.sgsrEnabled && prefs.sgsrTemporal);
+        if (pyroWave != null) pyroWave.setUpscalingMode(getRequestedPyroWaveUpscalingMode());
+    }
+
+    private int getRequestedPyroWaveUpscalingMode() {
+        if (!sgsrRequested) return PyroWaveRenderer.UPSCALING_OFF;
+        return prefs.sgsrTemporalQuality ? PyroWaveRenderer.UPSCALING_SGSR2_VIDEO_QUALITY :
+                prefs.sgsrTemporal ? PyroWaveRenderer.UPSCALING_SGSR2_VIDEO :
+                prefs.sgsrHighQuality ? PyroWaveRenderer.UPSCALING_SGSR1_HIGH :
+                PyroWaveRenderer.UPSCALING_SGSR1_STANDARD;
     }
 
     public void setSupersamplingLevel(int level) {
@@ -2408,4 +2425,4 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         return n.startsWith("c2.mtk") || n.startsWith("omx.mtk");
     }
 
-}
+}

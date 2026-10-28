@@ -77,17 +77,20 @@ when none is available it drops a frame rather than overwriting a held buffer. G
 currently synchronized with `glFinish()` before submitting the buffer; there is no CPU pixel copy.
 This extra GPU synchronization must be measured on the device, not assumed free.
 
-**Stream menu → Upscaler** contains live On/Off and sharpness controls. Toggling requests a local
-decoder reset/IDR to change its output surface, preserving the network session. Sharpness updates the
-uniform without a decoder restart. Live changes are session-only. The initial defaults remain in
-Display settings and may be overridden per game. Initialization/runtime failures fall back to direct
-rendering and are exposed in the menu/logs; HDR is not silently converted to an eight-bit SDR path.
+**Stream menu → Upscaler** contains live On/Off, mode and sharpness controls. MediaCodec toggling
+requests a local decoder reset/IDR to change its output surface, preserving the network session.
+PyroWave applies changes at a frame boundary without resetting its decoder. Sharpness updates
+presentation parameters without restarting either decoder. Live changes are session-only; initial
+defaults remain in Display settings and may be overridden per game. Initialization/runtime failures
+fall back to direct rendering and are exposed in the menu/logs; HDR is not silently converted to SDR.
 
-MediaCodec and PyroWave both support live SGSR. PyroWave uses its own Vulkan SGSR 2 Video path rather
-than this GLES stage: compute shaders estimate bidirectional flow and reconstruct directly from the
-decoded planes, then present to the swapchain or the existing HDR/P010 bridge. It scales to the real
-display dimensions while preserving aspect ratio. The stream menu reads and changes the native state
-instead of reporting PyroWave as unavailable.
+Both renderers implement SGSR 1 Standard, SGSR 1 High Quality, SGSR 2 Video and SGSR 2 Video Quality.
+PyroWave uses native Vulkan shaders rather than the GLES stage. Spatial modes use distinct Qualcomm
+Standard/HQ kernels; temporal Quality adds a separate reactive activation pass and tighter YCoCg
+history clipping. All modes retain FP16 intermediates and use the existing HDR/P010 bridge.
+Independent bounded sharpening runs only during presentation; zero bypasses the sharpening filter,
+and Off disables all SGSR processing. Actual applied native mode/size are reported separately from
+the requested setting. Unsupported GPU-P010 processing reports direct rendering, not a false active mode.
 
 The statistics overlay includes the measured post-decoding processing time for every SGSR variant in
 both renderers and adds it to total latency. MediaCodec uses smoothed wall time around a successful
@@ -96,12 +99,12 @@ input-to-photon latency.
 
 ### Native-resolution supersampling
 
-When the stream already matches the display resolution, SGSR uses supersampling instead of a
+For all four SGSR modes, a stream already matching the display uses supersampling instead of
 same-resolution reconstruction. The live stream menu calls this mode **Supersampling** and offers two
 session-only levels: `1x` reconstructs 1920x1080 into 2560x1440, while `2x` reconstructs it into
-3840x2160. A separate presentation pass then reduces the internal image to the display resolution.
-The HDR path performs RGB-to-P010 conversion only after that reduction; the internal image remains
-linear RGB and is never converted twice.
+3840x2160. A separate presentation pass reduces the internal image to the display resolution.
+The HDR path performs RGB-to-P010 conversion only after that reduction; intermediate RGB remains
+FP16 and PQ-encoded, not linear-light or eight-bit SDR.
 
 The sizing policy tolerates a two-pixel Surface aspect-fit difference, checks the GPU texture limit,
 and caps the internal target at 3840x2160. Native 4K therefore never attempts an unsafe 8K target.
@@ -179,3 +182,25 @@ for each frame instead of retaining it across a possible flush/reset. GL timer q
 the recovery were removed in favour of safe wall timing. On the corrected build, the user started
 AV1 with SGSR twice; both sessions kept the upscaler available and neither crashed. Device logs also
 confirmed MediaCodec output at 1920x1080 for a 1280x720 source.
+
+### PyroWave upscaler parity, 2026-10-28
+
+Completed A01–A05: genuine SGSR 1 Standard/HQ, distinct temporal Quality activation/reconstruction,
+presentation sharpening and matching saved/live controls/help. The native mode replaces the old
+temporal-enabled boolean; requested settings remain separate from the actually applied mode.
+Shaders are generated with `jni/pyrowave-renderer/shaders/build.sh`; no runtime shader compiler
+or network dependency is introduced. GPU draw timestamps include all new post-decoding passes.
+
+The local ARM64/ARMv7 debug build, all 80 unit tests and lint passed (0 errors, 387 warnings).
+The existing Turkish translation quick-fix/report exception remains non-fatal and unchanged.
+The ARM64 APK was installed after checking that no Game activity was running.
+`PyroWaveGpuInstrumentation` passed real Vulkan shader readbacks on the Odin Adreno 740:
+spatial constants/edges, bidirectional motion, Quality activation and distinct reconstruction,
+history resets/scene changes, ten-bit BT.2020 preservation, zero/nonzero presentation sharpening
+and HDR P010 packing. A second probe created the actual renderer, allocated/dispatched each mode
+at both supersampling levels, checked applied state/Off teardown and rebuilt SDR → HDR → SDR.
+No game, emulator, streaming connection or injected navigation was used.
+
+These checks establish implementation and GPU correctness, not new visual acceptance or sustained
+game performance. The earlier 118–119 FPS result above is specifically the old SGSR 2 Video path,
+not a benchmark for the new HQ/Quality modes. Those live comparisons remain C03/C04/F11 work.

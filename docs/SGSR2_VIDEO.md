@@ -9,11 +9,12 @@ Background and hardware capability evidence: [VIDEO_OPTICAL_FLOW_RESEARCH.md](VI
 
 ## Behavior
 
-Stream menu → Upscaler → Mode offers SGSR 1 Standard, SGSR 1 High Quality and **SGSR 2 Video**.
+Stream menu → Upscaler → Mode offers SGSR 1 Standard, SGSR 1 High Quality, **SGSR 2 Video**
+and **SGSR 2 Video Quality**.
 All remain opt-in, retain live On/Off and independent sharpness, and use the existing HDR/P010 output.
 The mode also participates in global and per-game settings through `list_sgsr_quality=temporal`.
 Live changes only affect the session; changing modes resets temporal history without reconnecting.
-PyroWave uses a separate Vulkan implementation of SGSR 2 Video; it does not feed this GLES stage.
+PyroWave uses separate Vulkan implementations of all four modes; it does not feed this GLES stage.
 
 The user reported SGSR 1 made the overall game look worse even though identical-frame diagnostics
 showed stronger text edges than bilinear. Do not claim SGSR 1 visual acceptance or dismiss this report.
@@ -188,11 +189,51 @@ is never accumulated into temporal history.
 
 ## PyroWave Vulkan path
 
-PyroWave estimates bidirectional motion with Vulkan compute shaders on an 8-pixel grid and performs
-temporal reconstruction directly from its decoded YUV planes. SDR presents the reconstructed FP16
-history to the swapchain. HDR converts that same history through the established BT.2020/P010 bridge,
-so colour metadata and the hardware HDR path are retained. Live On/Off switches at a frame boundary,
-resets temporal history and recreates only the size-dependent HDR output when necessary.
+PyroWave implements all four modes directly from decoded Y/Cb/Cr planes:
+
+- **SGSR 1 Standard:** Qualcomm's spatial edge-direction filter.
+- **SGSR 1 High Quality:** the distinct Unity HQ reconstruction with RGB-derived luma,
+  lower edge threshold and a 60/40 blend of two weighted estimates.
+- **SGSR 2 Video:** bidirectional optical flow on an 8-pixel grid and temporal reconstruction.
+- **SGSR 2 Video Quality:** a separate input-resolution Activate pass derives a reactive mask
+  from luma changes, flow confidence, forward/backward consistency and disocclusion; reconstruction
+  additionally clips history in YCoCg around a weighted current-frame center.
+
+Intermediate RGB stays FP16 and in the source's encoded domain, including PQ for HDR.
+Presentation-only bounded sharpening is shared by the SDR swapchain and BT.2020/P010 pack pass.
+Zero sharpness bypasses the filter; sharpened pixels never feed temporal history.
+Off bypasses all reconstruction and sharpening while retaining the saved sharpness setting.
+
+Requested mode and applied mode are separate. Live changes apply after the current frame fence,
+without restarting the network connection or decoder. Switching between spatial, temporal and
+Quality modes recreates only the required resources; spatial modes allocate no motion/history pair.
+Mode and HDR changes reset temporal history. A reset returns fresh reconstruction before reading
+undefined previous-frame images. HDR rebuilds the dependent pack/present pipelines in ownership order.
+Failure or a CPU-only P010 bridge reports direct rendering rather than an unsupported active mode.
+All post-decode passes remain inside the existing GPU draw timestamp interval.
+
+Native-resolution supersampling is available for all four modes at the existing 1x/2x levels and
+size limits, matching the MediaCodec path.
+
+### GPU regression probe
+
+The debug APK includes `PyroWaveGpuInstrumentation`. It dispatches the shipped Vulkan SPIR-V and
+reads back real GPU output without launching a game or opening a streaming connection:
+
+```powershell
+adb -s <device> shell am instrument -w io.github.meitoncz.delos.debug/com.limelight.binding.video.PyroWaveGpuInstrumentation
+```
+
+The Odin Adreno 740 run passed constant preservation, Standard/HQ textured edges and local bounds,
+bidirectional motion, distinct regular/Quality output, activation/reset and scene transitions,
+16-bit BT.2020 values, zero/nonzero sharpening and limited-range P010 packing.
+Standard/HQ maximum pixel difference was 0.0620117; regular/Quality was 0.0114746.
+P010 packing maximum error was 0.000482917. These are synthetic correctness checks, not a claim
+of visual acceptance or sustained 60/120 FPS performance in a game.
+The production-renderer probe additionally checks allocation/dispatch, actual applied modes,
+both supersampling levels, Off teardown and SDR → HDR → SDR pipeline rebuilding.
+
+### Earlier SGSR 2 Video acceptance
 
 The target is the real display size, aspect-fitted from the stream dimensions; the first implementation
 incorrectly inherited a fixed surface size and reconstructed 720p back to 720p. Device logs after the

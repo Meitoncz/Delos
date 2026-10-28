@@ -81,8 +81,9 @@ data class SettingsCapabilities(
                     maxWidth = max(maxWidth, when { widths.contains(3840) -> 3840; widths.contains(1920) -> 1920; else -> 1280 })
                 }
             }
+            val pyroWave = PyroWaveRenderer.isAvailable()
             val hidden = mutableSetOf<String>()
-            if (!com.limelight.binding.video.SgsrRenderer.isSupported(activity)) {
+            if (!com.limelight.binding.video.SgsrRenderer.isSupported(activity) && !pyroWave) {
                 hidden += setOf("checkbox_sgsr", "list_sgsr_quality", "seekbar_sgsr_sharpness")
             }
             if (pm.hasSystemFeature("com.nvidia.feature.shield")) hidden += "checkbox_absolute_mouse_mode"
@@ -101,7 +102,7 @@ data class SettingsCapabilities(
             return SettingsCapabilities(native.distinctBy { it.value }, maxWidth,
                 modes.maxOfOrNull { it.refreshRate } ?: display.refreshRate,
                 hdr10 && main10, PreferenceConfiguration.isShieldAtvFirmwareWithBrokenHdr(), hevc != null, av1 != null, hidden,
-                PyroWaveRenderer.isAvailable())
+                pyroWave)
         }
 
         private fun addResolution(into: MutableList<SettingChoice>, width: Int, height: Int, prefix: String) {
