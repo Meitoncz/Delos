@@ -59,6 +59,41 @@ decisions and verification status live in [GitHub Issues](https://github.com/Mei
 - When a game is focused on the home screen, its **logo is shown in the top area** (the covers sit a bit lower) and the **background changes to the game's hero image** with a fade in/out and a **blur effect**. The game background covers the whole screen and **fades out diagonally from the top-right to the bottom-left corner**. **Blur amount and opacity are configurable.** The hero image **blends with the dynamic background** – the animated effects (aurora, waves, silk, contour lines…) light it up instead of covering it.
 - Host artwork synchronization decisions are recorded in [#15](https://github.com/Meitoncz/Delos/issues/15).
 
+## Game information and library filters
+
+The existing information area under the game title/logo also shows IGDB genres, native HDR/SDR,
+and the HowLongToBeat headline duration. HDR uses a readable rainbow badge; confirmed native-SDR
+games use a neutral SDR chip. Unknown/unmatched/ambiguous evidence has no HDR/SDR badge. The host's
+streaming HDR flag is not native game support. Special K, ReShade, Auto HDR, RTX HDR and enabling
+workarounds do not qualify as native out-of-the-box HDR. File-enabling instructions, conflicting
+claims, and platform/edition limitations remain unknown rather than producing a positive badge.
+
+The left menu filters by genre, native HDR/SDR/unknown, and headline length (<10, 10–30, 30–60,
+60+ hours, or unknown). Filters follow the active profile and combine across categories. Empty
+results retain a controller/touch reset action. Original library order, running-game state,
+artwork and cover layout are preserved.
+
+Game options → Metadata provides IGDB search/match selection, refresh and reset. Automatic matches
+require a unique normalized title; ambiguous editions remain unmatched until selected. IGDB IDs,
+Steam AppIDs and host app IDs are distinct. Metadata matches never overwrite manual SteamGridDB
+artwork matches. Data/matches are cached in application files; missing provider data stays missing.
+Partial provider failures do not become a fresh seven-day success after restarting. Explicit match
+operations belong to the shell, so changing a match can finish even if active filters remove its tile.
+
+Provider calls run off the UI thread and respect their request pacing. IGDB authenticates through
+Twitch client credentials; PCGamingWiki uses bot-password login and Cargo plus Video-template notes.
+The unofficial HLTB client uses its website search/detail data, specifically positive `comp_all`
+with submissions, not `comp_main`, `comp_all_avg`, or an invented average. The chip preserves the
+rendered **HowLongToBeat** headline text, including half-hours; unrounded seconds drive the filters.
+Unavailable/changed provider responses are reported rather than replaced with another provider's
+metric. Cancelled HLTB work stops before further provider requests or publishing a resolved result.
+
+Developer builds read `DELOS_IGDB_CLIENT_ID`, `DELOS_IGDB_CLIENT_SECRET`,
+`DELOS_PCGW_BOT_USERNAME`, and `DELOS_PCGW_BOT_PASSWORD` from ignored `local.properties` or environment
+variables. The user explicitly accepted direct-in-APK credential exposure; there is no backend or
+end-user key entry. Never commit credentials or log tokens/passwords. Provider attribution is visible
+in Settings → About, and the adapted HLTB client's MIT notice is bundled in assets.
+
 ## Menus and settings
 
 - Menus and settings follow a **PS5-like layout**, but the main settings screen also shows the **main categories as icon tabs** that can be switched.

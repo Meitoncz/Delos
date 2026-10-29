@@ -1,6 +1,17 @@
 apply plugin: 'com.android.application'
 apply plugin: 'org.jetbrains.kotlin.plugin.compose'
 
+// Application-owned provider credentials are supplied locally, never committed.
+def metadataProperties = new Properties()
+def metadataLocalFile = rootProject.file('local.properties')
+if (metadataLocalFile.exists()) {
+    metadataLocalFile.withInputStream { metadataProperties.load(it) }
+}
+def metadataCredential = { String name ->
+    def value = System.getenv(name) ?: metadataProperties.getProperty(name, '')
+    '"' + value.replace('\\', '\\\\').replace('"', '\\"').replace('\r', '\\r').replace('\n', '\\n') + '"'
+}
+
 android {
     ndkVersion = "29.0.14206865"
 
@@ -23,6 +34,11 @@ android {
 
         // Generate native debug symbols to allow Google Play to symbolicate our native crashes
         ndk.debugSymbolLevel = 'FULL'
+
+        ['DELOS_IGDB_CLIENT_ID', 'DELOS_IGDB_CLIENT_SECRET',
+         'DELOS_PCGW_BOT_USERNAME', 'DELOS_PCGW_BOT_PASSWORD'].each { name ->
+            buildConfigField 'String', name, metadataCredential(name)
+        }
     }
 
     flavorDimensions.add("root")

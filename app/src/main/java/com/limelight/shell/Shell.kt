@@ -12,6 +12,10 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -45,7 +49,12 @@ import com.limelight.shell.data.AVATARS
 import com.limelight.shell.data.PcRepository
 import com.limelight.shell.data.PcSetup
 import com.limelight.shell.data.ProfileStore
+import com.limelight.shell.data.LocalGameMetadata
+import com.limelight.shell.data.MetadataFilters
+import com.limelight.shell.data.HdrFilter
+import com.limelight.shell.data.LengthFilter
 import com.limelight.shell.screens.HomeScreen
+import com.limelight.shell.screens.openMetadataMenu
 import com.limelight.shell.screens.BootScreen
 import com.limelight.shell.screens.CreateProfileScreen
 import com.limelight.shell.screens.DevicesScreen
@@ -84,6 +93,7 @@ import com.limelight.shell.ui.Scrim
 import com.limelight.shell.ui.SettingRow
 import com.limelight.shell.ui.SideMenuHeader
 import com.limelight.shell.ui.SideMenuLayer
+import com.limelight.shell.ui.px
 import com.limelight.shell.ui.StatusBar
 import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.ToastHost
@@ -239,6 +249,14 @@ fun Shell(
     val battery by rememberBatteryStatus()
     val clock by rememberClock(appearance.clock)
     val library by repo.library.collectAsStateWithLifecycle()
+    val metadata = LocalGameMetadata.current
+    val openMetadata: (Pc, App) -> Unit = remember(scope, shell, tracker, metadata) {
+        { selectedPc, app -> openMetadataMenu(scope, shell, tracker, metadata, selectedPc, app) }
+    }
+    LaunchedEffect(metadata, profiles.current?.id, (library as? Library.Ready)?.let { it.pc.uuid to it.apps.map { app -> app.id to app.name } }) {
+        val ready = library as? Library.Ready ?: return@LaunchedEffect
+        metadata.ensureLibrary(ready.pc, ready.apps)
+    }
     // SteamGridDB: games never looked up get their best-rated artwork in the background
     val artwork = LocalArtwork.current
     LaunchedEffect((library as? Library.Ready)?.let { it.pc.uuid to it.apps.map { a -> a.id } }, artwork.enabled, artwork.automatic) {
@@ -383,7 +401,7 @@ fun Shell(
                     label = "screen",
                 ) { screen ->
                     when (screen) {
-                        Screen.Home -> HomeScreen(library, appearance, repo)
+                        Screen.Home -> HomeScreen(library, appearance, repo, openMetadata)
                         Screen.Settings -> SettingsScreen(appearance, update, startup, startupStore::update, pcs, profileStore)
                         Screen.SettingsSearch -> SettingsScreen(appearance, update, startup, startupStore::update, pcs, profileStore, search = true)
                         Screen.Profile -> ProfileScreen(profiles, profileStore)
@@ -467,13 +485,37 @@ fun Shell(
                         )
                     },
                 ) { first ->
+                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.px)) {
                     SideMenuRows(appearance, update, Modifier.focusRequester(first)) { shell.navigate(Screen.Settings) }
+                    val ready = library as? Library.Ready
+                    if (shell.screen == Screen.Home && ready != null) {
+                        val filters = metadata.filters
+                        val genres = metadata.genres(ready.pc, ready.apps)
+                        val genreIds = listOf<Int?>(null) + genres.map { it.id }
+                        val genreName = genres.firstOrNull { it.id == filters.genreId }?.name ?: if (filters.genreId == null) "All" else "Selected genre"
+                        SettingRow(Symbols.SPORTS_ESPORTS, "Genre", RowValue.Choice(genreName, { direction ->
+                            val index = genreIds.indexOf(filters.genreId).coerceAtLeast(0)
+                            metadata.updateFilters(filters.copy(genreId = genreIds[Math.floorMod(index + direction, genreIds.size)]))
+                        }), compact = true)
+                        val hdrLabels = listOf("All", "Native HDR", "SDR", "Unknown")
+                        SettingRow(Symbols.HDR_ON, "HDR support", RowValue.Choice(hdrLabels[filters.hdr.ordinal], { direction ->
+                            metadata.updateFilters(filters.copy(hdr = HdrFilter.entries[Math.floorMod(filters.hdr.ordinal + direction, HdrFilter.entries.size)]))
+                        }), compact = true)
+                        val lengthLabels = listOf("Any", "<10 h", "10–30 h", "30–60 h", "60+ h", "Unknown")
+                        SettingRow(Symbols.HISTORY, "HLTB duration", RowValue.Choice(lengthLabels[filters.length.ordinal], { direction ->
+                            metadata.updateFilters(filters.copy(length = LengthFilter.entries[Math.floorMod(filters.length.ordinal + direction, LengthFilter.entries.size)]))
+                        }), compact = true)
+                        SettingRow(Symbols.REFRESH, "Reset library filters", RowValue.Action {
+                            metadata.updateFilters(MetadataFilters())
+                        }, enabled = filters.active, compact = true)
+                    }
                     val hiddenCount = (library as? Library.Ready)?.hiddenCount ?: 0
                     if (hiddenCount > 0 || showHidden) {
                         SettingRow(
                             Symbols.VISIBILITY, "Show hidden games", RowValue.Toggle(showHidden) { repo.setShowHidden(it) },
                             description = "$hiddenCount hidden on ${pc?.name ?: "this PC"}", compact = true,
                         )
+                    }
                     }
                 }
 

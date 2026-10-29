@@ -20,6 +20,8 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.limelight.shell.data.ArtworkStore
+import com.limelight.shell.data.GameMetadataStore
+import com.limelight.shell.data.LocalGameMetadata
 import com.limelight.shell.data.BoxArtCache
 import com.limelight.shell.data.LocalArtwork
 import com.limelight.shell.data.GameLauncher
@@ -48,6 +50,7 @@ class ShellActivity : ComponentActivity() {
     private lateinit var repo: PcRepository
     private lateinit var boxArt: BoxArtCache
     private lateinit var artwork: ArtworkStore
+    private lateinit var metadata: GameMetadataStore
     private lateinit var profiles: ProfileStore
     private val keys = GlobalKeys()
 
@@ -63,10 +66,12 @@ class ShellActivity : ComponentActivity() {
         profiles = ProfileStore(this)
         appearance = AppearanceStore(this, profiles::settings)
         repo = PcRepository(this, profiles::settings)
+        metadata = GameMetadataStore(this, profiles::settings)
         val startup = StartupStore(profiles::settings)
         profiles.onSettingsChanged {
             appearance.reload()
             startup.reload()
+            metadata.reloadFilters()
             repo.profileChanged()
         }
         lifecycle.addObserver(repo)
@@ -79,7 +84,7 @@ class ShellActivity : ComponentActivity() {
         val launcher = GameLauncher(this, repo)
         val setup = PcSetup(this, repo)
         if (savedInstanceState == null) links.value = ShellLink.from(this, intent)
-        setContent { ShellRoot(appearance, feedback, keys, repo, boxArt, artwork, launcher, profiles, startup, setup, links) }
+        setContent { ShellRoot(appearance, feedback, keys, repo, boxArt, artwork, metadata, launcher, profiles, startup, setup, links) }
         feedback.view = window.decorView
     }
 
@@ -128,6 +133,7 @@ private fun ShellRoot(
     repo: PcRepository,
     boxArt: BoxArtCache,
     artwork: ArtworkStore,
+    metadata: GameMetadataStore,
     launcher: GameLauncher,
     profiles: ProfileStore,
     startup: StartupStore,
@@ -148,7 +154,7 @@ private fun ShellRoot(
         feedback.soundsEnabled = appearance.sounds
         feedback.hapticsEnabled = appearance.haptics
     }
-    CompositionLocalProvider(LocalDelosColors provides colors, LocalFeedback provides feedback, LocalBoxArt provides boxArt, LocalArtwork provides artwork) {
+    CompositionLocalProvider(LocalDelosColors provides colors, LocalFeedback provides feedback, LocalBoxArt provides boxArt, LocalArtwork provides artwork, LocalGameMetadata provides metadata) {
         Stage(textScale = appearance.uiScale / 100f) {
             Shell(appearance, store::update, keys, repo, launcher, profiles, startup, setup, links)
         }

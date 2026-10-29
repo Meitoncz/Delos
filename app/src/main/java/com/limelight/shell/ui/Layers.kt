@@ -167,7 +167,7 @@ fun ContextMenuLayer(menu: ContextMenu?, anchor: Rect?, below: Boolean, haze: Ha
         ) {
             val m = shown ?: return@AnimatedVisibility
             val first = remember { FocusRequester() }
-            InitialFocus(first)
+            InitialFocus(first, m)
             Column(
                 Modifier
                     .then(

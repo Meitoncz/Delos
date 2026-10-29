@@ -1,5 +1,7 @@
 package com.limelight.shell.screens
 
+import android.content.Intent
+import android.net.Uri
 import android.content.SharedPreferences
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -52,6 +54,10 @@ internal fun nativeSettings(
 ): List<SettingsItem> {
     val context = LocalContext.current
     val shell = LocalShell.current
+    fun providerWebsite(url: String) {
+        runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }
+            .onFailure { shell.showToast("No browser is available", Symbols.ERROR) }
+    }
     val systemHue = remember { systemAccentHue(context) }
     val list = mutableListOf<SettingsItem>()
     fun row(key: String, icon: String, title: String, value: RowValue, description: String, enabled: Boolean = true,
@@ -143,5 +149,14 @@ internal fun nativeSettings(
     row("about_version", Symbols.DEPLOYED_CODE, "Version", RowValue.Info(BuildConfig.VERSION_NAME), "Delos for Android.", tab = SettingsTab.ABOUT, section = "Delos")
     row("about_based", Symbols.ACCOUNT_TREE, "Based on", RowValue.Info("Artemis · Moonlight"), "Open source game streaming, licensed under the GPLv3.", tab = SettingsTab.ABOUT, section = "Delos")
     row("about_welcome", Symbols.REPLAY, "Replay the welcome", RowValue.Action { shell.navigate(Screen.Boot(back = Screen.Settings)) }, "Open the welcome screen again. Existing profiles and paired PCs are kept.", tab = SettingsTab.ABOUT, section = "Delos")
+    row("about_igdb", Symbols.SPORTS_ESPORTS, "Game metadata · IGDB",
+        RowValue.Action { providerWebsite("https://www.igdb.com/") },
+        "Game information and genres provided by IGDB.", tab = SettingsTab.ABOUT, section = "Game data")
+    row("about_pcgw", Symbols.HDR_ON, "Technical data · PCGamingWiki",
+        RowValue.Action { providerWebsite("https://www.pcgamingwiki.com/wiki/PCGamingWiki:Copyrights") },
+        "Native HDR evidence from PCGamingWiki. Data under CC BY-NC-SA 3.0; derived status is interpreted by Delos.", tab = SettingsTab.ABOUT, section = "Game data")
+    row("about_hltb", Symbols.SPORTS_ESPORTS, "Completion times · HowLongToBeat",
+        RowValue.Action { providerWebsite("https://howlongtobeat.com/") },
+        "The HowLongToBeat headline value. Unofficial client adapted from howlongtobeatpy (MIT, © 2018 Michele).", tab = SettingsTab.ABOUT, section = "Game data")
     return list
 }

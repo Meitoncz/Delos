@@ -18,6 +18,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.gestures.BringIntoViewSpec
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.gestures.ScrollableState
@@ -93,6 +95,8 @@ import com.limelight.shell.data.rememberArtworkResult
 import com.limelight.shell.data.Pc
 import com.limelight.shell.data.PcRepository
 import com.limelight.shell.data.rememberBoxArt
+import com.limelight.shell.data.LocalGameMetadata
+import com.limelight.shell.data.NativeHdr
 import com.limelight.shell.settings.Appearance
 import com.limelight.shell.settings.HomeLayout
 import com.limelight.shell.ui.Cue
@@ -142,7 +146,7 @@ private val FastScroll = tween<Float>(200, easing = CubicBezierEasing(.33f, 1f, 
  * background, in the grid or row layout (Settings → Appearance → Home layout).
  */
 @Composable
-fun HomeScreen(library: Library, appearance: Appearance, repo: PcRepository) {
+fun HomeScreen(library: Library, appearance: Appearance, repo: PcRepository, onMetadata: (Pc, App) -> Unit) {
     val shell = LocalShell.current
     val hasGames = library is Library.Ready && library.apps.isNotEmpty()
     // Without games there is no game background
@@ -152,7 +156,9 @@ fun HomeScreen(library: Library, appearance: Appearance, repo: PcRepository) {
         Library.NoPc -> HomeMessage(Symbols.DEVICES, "No PC paired yet", "For now, pair a PC in the classic Delos app.\nPairing in the new UI comes in step 6.6.")
         is Library.Offline -> HomeMessage(Symbols.POWER, "${library.pc.name} is offline", "Start the PC, or wake it from the classic Delos app.\nWaking it from here comes in step 6.6.")
         is Library.Ready -> if (hasGames) {
-            GameLibrary(library, appearance, repo)
+            val metadata = LocalGameMetadata.current
+            val apps = library.apps.filter { metadata.filters.matches(metadata.entry(library.pc, it).data) }
+            if (apps.isEmpty()) FilteredLibraryEmpty() else GameLibrary(library, apps, appearance, repo, onMetadata)
         } else {
             HomeMessage(Symbols.SPORTS_ESPORTS, "No games on ${library.pc.name}", "Add apps in Vibepollo's web UI, they show up here automatically.")
         }
@@ -161,18 +167,19 @@ fun HomeScreen(library: Library, appearance: Appearance, repo: PcRepository) {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun GameLibrary(library: Library.Ready, appearance: Appearance, repo: PcRepository) {
+private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: Appearance, repo: PcRepository, onMetadata: (Pc, App) -> Unit) {
     val shell = LocalShell.current
     val feedback = LocalFeedback.current
     val stage = LocalStage.current
     val boxArt = LocalBoxArt.current
     val pc = library.pc
-    val apps = library.apps
     val row = appearance.homeLayout == HomeLayout.ROW
     val uiScale = appearance.uiScale / 100f
 
     val focusedIndex = apps.indexOfFirst { homeKey(pc, it) == shell.homeGame }.takeIf { it >= 0 } ?: 0
     val focused = apps[focusedIndex]
+    val metadata = LocalGameMetadata.current
+    LaunchedEffect(metadata, pc.uuid, focused.id, focused.name) { metadata.ensure(pc, focused) }
     val artwork = LocalArtwork.current
     val boxImage by rememberBoxArt(boxArt, pc, focused)
     val heroImage by rememberArtwork(artwork, pc, focused, ArtKind.HERO)
@@ -248,7 +255,7 @@ private fun GameLibrary(library: Library.Ready, appearance: Appearance, repo: Pc
             }
         }
     }
-    val running = apps.firstOrNull { it.running }
+    val running = library.apps.firstOrNull { it.running }
     val onHide: (App, Boolean) -> Unit = remember(pc.uuid) {
         { app, hide ->
             repo.setHidden(pc.uuid, app.id, hide)
@@ -268,6 +275,7 @@ private fun GameLibrary(library: Library.Ready, appearance: Appearance, repo: Pc
             running = running,
             requester = requester(app),
             onFocused = onTileFocused, onHide = onHide,
+            onMetadata = onMetadata,
         )
     }
 
@@ -407,6 +415,7 @@ private fun gameMenu(
     /** Opens the artwork screen. */
     onArtwork: () -> Unit,
     onSettings: () -> Unit,
+    onMetadata: () -> Unit,
 ) =
     ContextMenu(
         app.name,
@@ -423,6 +432,7 @@ private fun gameMenu(
                 else -> add(MenuItem(Symbols.PLAY_ARROW, "Start game") { actions.start(pc, app, image) })
             }
             add(MenuItem(Symbols.PHOTO_LIBRARY, "Artwork", onArtwork))
+            add(MenuItem(Symbols.SEARCH, "Metadata", onMetadata))
             add(MenuItem(Symbols.SETTINGS, "Game settings", onSettings))
             add(
                 if (hidden) MenuItem(Symbols.VISIBILITY, "Show game") { onHide(app, false) }
@@ -431,6 +441,7 @@ private fun gameMenu(
         },
     )
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun GameInfo(pc: Pc, app: App, modifier: Modifier, reducedMotion: Boolean) {
     val colors = LocalDelosColors.current
@@ -463,10 +474,19 @@ private fun GameInfo(pc: Pc, app: App, modifier: Modifier, reducedMotion: Boolea
                 modifier = Modifier.padding(end = 150.px).gameTitleEntrance(homeKey(pc, app), null, reducedMotion),
             )
         } else Box(Modifier.height(200.px)) // Keep the title space while the logo lookup is pending.
-        Row(Modifier.padding(top = 10.px), horizontalArrangement = Arrangement.spacedBy(12.px)) {
+        FlowRow(Modifier.padding(top = 10.px).widthIn(max = 1620.px), horizontalArrangement = Arrangement.spacedBy(12.px), verticalArrangement = Arrangement.spacedBy(6.px)) {
             if (app.running) Chip(Symbols.PLAY_ARROW, "Running on ${pc.name}") else Chip(Symbols.COMPUTER, pc.name)
-            if (app.hdr) Chip(Symbols.HDR_ON, "HDR")
+            val metadata = LocalGameMetadata.current.entry(pc, app).data
+            when (metadata?.hdr?.support) {
+                NativeHdr.HDR -> NativeHdrChip()
+                NativeHdr.SDR -> Chip(Symbols.HDR_ON, "SDR")
+                else -> Unit
+            }
+            metadata?.completion?.takeIf { it.seconds > 0 }?.let {
+                Chip(Symbols.HISTORY, "HLTB ${it.headline}")
+            }
             if (art.icon == Symbols.DESKTOP_WINDOWS && pc.details.vDisplaySupported) Chip(Symbols.SCREEN_SHARE, "Virtual display")
+            metadata?.candidate?.genres?.forEach { genre -> if (genre.name.isNotBlank()) Chip(Symbols.SPORTS_ESPORTS, genre.name) }
         }
     }
 }
@@ -516,6 +536,7 @@ private fun GameTile(
     requester: FocusRequester,
     onFocused: (Int, App) -> Unit,
     onHide: (App, Boolean) -> Unit,
+    onMetadata: (Pc, App) -> Unit,
 ) {
     val colors = LocalDelosColors.current
     val boxArt = LocalBoxArt.current
@@ -533,8 +554,12 @@ private fun GameTile(
     val image = cover ?: boxImage
     val shown = if (wide) wideCover ?: boxImage else image
     val onArtwork = { shell.navigate(Screen.Artwork(pc, app)) }
-    val menu = remember(pc, app, hidden, running, image) {
-        gameMenu(pc, app, hidden, running, image, actions, onHide, onArtwork) { shell.navigate(Screen.GameSettings(pc, app)) }
+    val menu = remember(pc, app, hidden, running, image, onMetadata) {
+        gameMenu(
+            pc, app, hidden, running, image, actions, onHide, onArtwork,
+            onSettings = { shell.navigate(Screen.GameSettings(pc, app)) },
+            onMetadata = { onMetadata(pc, app) },
+        )
     }
     var focused by remember { mutableStateOf(false) }
     // A starts (or resumes) the game; while another game runs on the PC it offers the choices instead
