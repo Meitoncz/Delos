@@ -52,6 +52,9 @@ decisions and verification status live in [GitHub Issues](https://github.com/Mei
 
 - **Built-in SteamGridDB integration**: the user enters their own API key and images are downloaded on the client side.
 - For every game Delos downloads **four images**: the **portrait cover**, the **wide cover**, a **large background (hero)** and the **logo**.
+- A committed artwork selection invalidates existing image readers even if leaving the picker
+  cancels its coroutine during the download. Selected hero artwork takes precedence over the
+  SteamGridDB cover and PC fallback; clearing it restores that fallback order.
 - Must also run **automatically for all games at once**.
 - When a game is focused on the home screen, its **logo is shown in the top area** (the covers sit a bit lower) and the **background changes to the game's hero image** with a fade in/out and a **blur effect**. The game background covers the whole screen and **fades out diagonally from the top-right to the bottom-left corner**. **Blur amount and opacity are configurable.** The hero image **blends with the dynamic background** – the animated effects (aurora, waves, silk, contour lines…) light it up instead of covering it.
 - Host artwork synchronization decisions are recorded in [#15](https://github.com/Meitoncz/Delos/issues/15).

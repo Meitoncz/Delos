@@ -291,17 +291,21 @@ class ArtworkStore(context: Context) {
     }
 
     private suspend fun applyNow(pc: Pc, app: App, kind: ArtKind, image: SgdbImage?) {
-        withContext(Dispatchers.IO) {
-            lock(pc, app).withLock {
-                store(pc, app, kind, image, client())
-                val match = readMatch(pc, app) ?: Match(null, null)
-                writeMatch(pc, app, match.copy(
-                    chosen = (match.chosen ?: emptyMap()) + (kind.file to (image?.id ?: NONE)),
-                    picked = (match.picked ?: emptySet()) + kind.file,
-                ))
+        try {
+            withContext(Dispatchers.IO) {
+                lock(pc, app).withLock {
+                    store(pc, app, kind, image, client())
+                    val match = readMatch(pc, app) ?: Match(null, null)
+                    writeMatch(pc, app, match.copy(
+                        chosen = (match.chosen ?: emptyMap()) + (kind.file to (image?.id ?: NONE)),
+                        picked = (match.picked ?: emptySet()) + kind.file,
+                    ))
+                }
             }
+        } finally {
+            // Blocking IO may commit after the picker scope is cancelled.
+            withContext(NonCancellable + Dispatchers.Main) { version.intValue++ }
         }
-        changed()
     }
 
     /** The apps of [apps] that have never been looked up. */
