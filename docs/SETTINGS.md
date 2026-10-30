@@ -47,12 +47,12 @@ one scrolls to and focuses the actual setting, including disabled dependencies.
   added to the original choices. Explicitly unavailable codec choices are omitted.
 - `StreamSettingsStore.kt` writes typed preferences. Resolution, FPS and non-PyroWave codec changes
   preserve bitrate. Selecting PyroWave, or changing resolution/FPS/HDR while it is selected,
-  recalculates its recommended bitrate while remembering the bitrate it replaced for that profile.
-  Further automatic recalculations keep the remembered value. Leaving PyroWave restores it if the
-  current bitrate is still the automatic recommendation; without a remembered value, the new codec's
-  normal resolution/FPS default is used. A hand-edited bitrate is kept, even when it equals the
-  recommendation. Slider/custom-input edits discard the remembered value; restoration consumes it.
-  This internal history is copied/deleted with its user profile and is not a stream option. Custom
+  recalculates its recommended bitrate. Entering PyroWave remembers the previous non-PyroWave
+  bitrate for that profile. Manual edits and automatic quality recalculations while on PyroWave
+  leave that remembered value unchanged: a PyroWave bitrate never carries into another codec.
+  Leaving PyroWave always restores the remembered value, or the new codec/resolution/FPS default
+  when none exists, then consumes the history. Manual edits on a non-PyroWave codec discard stale
+  history. The remembered value is copied/deleted with its profile and is not a stream option. Custom
   numeric input rejects invalid and non-finite values before writing.
 - `screens/SettingsScreen.kt`, `NativeSettings.kt` and `SettingsActions.kt` render the design system's
   rows, description panel, tab bar and search, and handle editing, reset, import/export and links.

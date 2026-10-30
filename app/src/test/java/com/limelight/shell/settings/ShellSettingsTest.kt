@@ -262,40 +262,53 @@ class ShellSettingsTest {
             .putString("list_fps", "60").putInt("seekbar_bitrate_kbps", 225000).commit()
         val stream = StreamSettingsStore(catalog) { prefs }
         stream.write(spec("list_fps"), "120")
+        stream.write(spec("seekbar_bitrate_kbps"), 528000)
         stream.write(spec("video_format"), "forceav1")
         assertEquals(PreferenceConfiguration.getDefaultBitrate("1920x1080", "120", "forceav1", false),
             prefs.getInt("seekbar_bitrate_kbps", -1))
         stream.close()
     }
 
-    @Test fun manualPyroWaveBitrateDiscardsTheRememberedValueAndIsKeptWhenLeaving() {
+    @Test fun editingPyroWaveBitrateRestoresTheOriginalNonPyroWaveValueWhenLeaving() {
         val prefs = context.getSharedPreferences("test-settings", Context.MODE_PRIVATE)
         prefs.edit().clear().putString("video_format", "forceav1").putString("list_resolution", "1920x1080")
-            .putString("list_fps", "60").putInt("seekbar_bitrate_kbps", 200000).commit()
+            .putString("list_fps", "120").putBoolean("checkbox_enable_hdr", true)
+            .putInt("seekbar_bitrate_kbps", 200000).commit()
         val stream = StreamSettingsStore(catalog) { prefs }
         stream.write(spec("video_format"), "pyrowave")
-        stream.write(spec("seekbar_bitrate_kbps"), 333000)
-        assertFalse(prefs.contains(BITRATE_BEFORE_PYROWAVE))
+        assertEquals(530000, prefs.getInt("seekbar_bitrate_kbps", -1))
+        stream.write(spec("seekbar_bitrate_kbps"), 528000)
         stream.write(spec("video_format"), "forceav1")
-        assertEquals(333000, prefs.getInt("seekbar_bitrate_kbps", -1))
-        assertFalse(prefs.contains(PYROWAVE_BITRATE_MANUAL))
+        assertEquals(200000, prefs.getInt("seekbar_bitrate_kbps", -1))
+        assertFalse(prefs.contains(BITRATE_BEFORE_PYROWAVE))
+        stream.write(spec("video_format"), "pyrowave")
+        assertEquals(530000, prefs.getInt("seekbar_bitrate_kbps", -1))
+        stream.write(spec("video_format"), "forceav1")
+        assertEquals(200000, prefs.getInt("seekbar_bitrate_kbps", -1))
         stream.close()
     }
 
-    @Test fun customBitrateEqualToThePyroWaveRecommendationIsStillAManualChoice() {
+    @Test fun manualNonPyroWaveEditsClearStaleHistoryForSliderAndCustomInput() {
         val prefs = context.getSharedPreferences("test-settings", Context.MODE_PRIVATE)
         prefs.edit().clear().putString("video_format", "forceav1").putString("list_resolution", "1920x1080")
-            .putString("list_fps", "60").putInt("seekbar_bitrate_kbps", 200000).commit()
+            .putString("list_fps", "60").putInt("seekbar_bitrate_kbps", 200000)
+            .putInt(BITRATE_BEFORE_PYROWAVE, 110000).commit()
         val stream = StreamSettingsStore(catalog) { prefs }
-        stream.write(spec("video_format"), "pyrowave")
-        assertNull(stream.writeText(spec("edit_diy_bitrate"), "225"))
+        stream.write(spec("seekbar_bitrate_kbps"), 250000)
         assertFalse(prefs.contains(BITRATE_BEFORE_PYROWAVE))
+        stream.write(spec("video_format"), "pyrowave")
         stream.write(spec("video_format"), "forceav1")
-        assertEquals(225000, prefs.getInt("seekbar_bitrate_kbps", -1))
+        assertEquals(250000, prefs.getInt("seekbar_bitrate_kbps", -1))
+        prefs.edit().putInt(BITRATE_BEFORE_PYROWAVE, 110000).commit()
+        assertNull(stream.writeText(spec("edit_diy_bitrate"), "275"))
+        assertFalse(prefs.contains(BITRATE_BEFORE_PYROWAVE))
+        stream.write(spec("video_format"), "pyrowave")
+        stream.write(spec("video_format"), "forceav1")
+        assertEquals(275000, prefs.getInt("seekbar_bitrate_kbps", -1))
         stream.close()
     }
 
-    @Test fun recalculatingAfterAManualPyroWaveEditRemembersThatNewBitrate() {
+    @Test fun recalculatingAfterAPyroWaveEditKeepsTheOriginalNonPyroWaveBitrate() {
         val prefs = context.getSharedPreferences("test-settings", Context.MODE_PRIVATE)
         prefs.edit().clear().putString("video_format", "forceav1").putString("list_resolution", "1920x1080")
             .putString("list_fps", "60").putInt("seekbar_bitrate_kbps", 200000).commit()
@@ -305,7 +318,7 @@ class ShellSettingsTest {
         stream.write(spec("list_fps"), "120")
         assertEquals(445000, prefs.getInt("seekbar_bitrate_kbps", -1))
         stream.write(spec("video_format"), "forceav1")
-        assertEquals(333000, prefs.getInt("seekbar_bitrate_kbps", -1))
+        assertEquals(200000, prefs.getInt("seekbar_bitrate_kbps", -1))
         stream.close()
     }
 
@@ -318,6 +331,7 @@ class ShellSettingsTest {
         stream.write(spec("list_fps"), "60")
         stream.write(spec("seekbar_bitrate_kbps"), 200000)
         stream.write(spec("video_format"), "pyrowave")
+        assertNull(stream.writeText(spec("edit_diy_bitrate"), "528"))
         val second = profiles.create("Two", 1)
         stream.reload()
         stream.write(spec("video_format"), "forceav1")
@@ -330,7 +344,7 @@ class ShellSettingsTest {
         assertEquals(200000, profiles.settings().getInt("seekbar_bitrate_kbps", -1))
         profiles.delete(second.id)
         val removed = context.getSharedPreferences("ui_profile_${second.id}", Context.MODE_PRIVATE)
-        assertTrue(BITRATE_MEMORY_KEYS.none { removed.contains(it) })
+        assertFalse(removed.contains(BITRATE_BEFORE_PYROWAVE))
         assertEquals(200000, profiles.settings().getInt("seekbar_bitrate_kbps", -1))
         stream.close()
         profiles.streamProfiles.close()
