@@ -75,7 +75,8 @@ import com.limelight.shell.data.NONE
 import com.limelight.shell.data.Pc
 import com.limelight.shell.data.SgdbGame
 import com.limelight.shell.data.SgdbImage
-import com.limelight.shell.data.rememberArtwork
+import com.limelight.shell.data.rememberArtworkResult
+import com.limelight.shell.data.BundledArtwork
 import com.limelight.shell.data.rememberBoxArt
 import com.limelight.shell.data.rememberThumbnail
 import com.limelight.shell.ui.Cue
@@ -90,6 +91,7 @@ import com.limelight.shell.ui.PillButton
 import com.limelight.shell.ui.PlaceholderArt
 import com.limelight.shell.ui.Spinner
 import com.limelight.shell.ui.Symbol
+import com.limelight.shell.ui.InitialFocus
 import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.Unbounded
 import com.limelight.shell.ui.fadeEdges
@@ -124,7 +126,7 @@ private sealed interface Choices {
 /**
  * The artwork of one game (the game's options → Artwork): a tab per kind (cover, wide cover, background,
  * logo, switched with L1 / R1), the image used now on the left and every SteamGridDB image to choose from
- * on the right, the first choice being none (the PC's artwork, or the name instead of a logo). "Change
+ * on the right, the first choice being the built-in/PC fallback (or the name instead of a logo). "Change
  * game" fixes a wrong match. Automatic downloads take the best-rated image of each kind.
  */
 @OptIn(ExperimentalFoundationApi::class)
@@ -139,6 +141,10 @@ fun ArtworkScreen(screen: Screen.Artwork) {
     val scope = rememberCoroutineScope()
     val pc = screen.pc
     val app = screen.app
+    if (BundledArtwork.kind(app) != null) {
+        BuiltInArtworkScreen(pc, app)
+        return
+    }
     var tab by remember { mutableStateOf(ArtTab.COVER) }
     val version = store.version.intValue
     val match = remember(version) { store.matched(pc, app) }
@@ -258,19 +264,43 @@ fun ArtworkScreen(screen: Screen.Artwork) {
     }
 }
 
+/** A stale navigation entry may still reach this screen; built-in utility artwork is read-only. */
+@Composable
+private fun BuiltInArtworkScreen(pc: Pc, app: App) {
+    val shell = LocalShell.current
+    val colors = LocalDelosColors.current
+    val first = remember { FocusRequester() }
+    val artwork by rememberArtworkResult(LocalArtwork.current, pc, app, ArtKind.WIDE)
+    InitialFocus(first)
+    Column(
+        Modifier.fillMaxSize().padding(start = 150.px, end = 150.px, top = 92.px, bottom = 110.px),
+        verticalArrangement = Arrangement.spacedBy(24.px),
+    ) {
+        BasicText(app.name, style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx))
+        Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+            val image = artwork.image
+            if (image != null) Image(image, null, Modifier.width(920.px).aspectRatio(920f / 430f).clip(RoundedCornerShape(26.px)), contentScale = ContentScale.Fit)
+            else Spinner(48f)
+        }
+        BasicText("Built-in artwork - this app's artwork cannot be changed",
+            style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 24.tpx))
+        PillButton("Back", Symbols.ARROW_BACK, { shell.back() }, Modifier.focusRequester(first), clickCue = Cue.BACK)
+    }
+}
+
 /** The image used now for [tab]'s kind ("Currently used"), where it comes from and the matched game. */
 @Composable
 private fun CurrentPanel(pc: Pc, app: App, tab: ArtTab, match: SgdbGame?, busy: Boolean, modifier: Modifier, onChangeGame: () -> Unit) {
     val colors = LocalDelosColors.current
     val store = LocalArtwork.current
-    val own by rememberArtwork(store, pc, app, tab.kind)
-    val cover by rememberArtwork(store, pc, app, ArtKind.COVER)
+    val own by rememberArtworkResult(store, pc, app, tab.kind)
+    val cover by rememberArtworkResult(store, pc, app, ArtKind.COVER)
     val boxArt by rememberBoxArt(LocalBoxArt.current, pc, app)
     // What the home screen shows for this kind, in the same order of fallbacks
     val (image, source) = when {
-        own != null -> own to "From SteamGridDB"
+        own.image != null -> own.image to if (own.bundledAsset != null) "Built-in" else "From SteamGridDB"
         tab == ArtTab.LOGO -> null to "The game's name, no logo"
-        tab == ArtTab.HERO && cover != null -> cover to "The SteamGridDB cover"
+        tab == ArtTab.HERO && cover.image != null -> cover.image to if (cover.bundledAsset != null) "Built-in" else "The SteamGridDB cover"
         boxArt != null -> boxArt to "From your PC (Vibepollo)"
         else -> null to "Placeholder art"
     }

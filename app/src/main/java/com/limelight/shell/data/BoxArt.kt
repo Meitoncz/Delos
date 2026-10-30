@@ -85,9 +85,12 @@ val LocalBoxArt = staticCompositionLocalOf<BoxArtCache> { error("BoxArtCache not
  */
 @Composable
 fun rememberBoxArt(cache: BoxArtCache, pc: Pc, app: App): State<ImageBitmap?> {
-    val state = remember(pc.uuid, app.id) { mutableStateOf(cache.cached(pc, app)) }
+    val builtin = BundledArtwork.kind(app) != null
+    val state = remember(pc.uuid, app.id, builtin) {
+        mutableStateOf(if (builtin) null else cache.cached(pc, app))
+    }
     LaunchedEffect(state) {
-        if (state.value == null) state.value = cache.load(pc, app)
+        if (!builtin && state.value == null) state.value = cache.load(pc, app)
     }
     return state
 }

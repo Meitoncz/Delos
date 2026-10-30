@@ -46,7 +46,8 @@ class GameMetadataStoreTest {
     private var now = 1_700_000_000_000L
     private val day = TimeUnit.DAYS.toMillis(1)
 
-    private fun app(id: Int, name: String) = App(id, name, false, false, NvApp())
+    private fun app(id: Int, name: String, uuid: String? = null) =
+        App(id, name, false, false, NvApp().apply { setAppUUID(uuid) })
     private val game = app(1, "Game")
     private val candidate = MetadataCandidate(10, "Game", 2020, listOf(100L), listOf(GameGenre(12, "RPG")), platformIds = listOf(6))
 
@@ -82,6 +83,160 @@ class GameMetadataStoreTest {
         Snapshot.registerGlobalWriteObserver { state ->
             if (state === store.progress) observed.add(store.progress.value)
         }
+
+    private fun builtIns() = listOf(
+        app(10, "Desktop"),
+        app(11, "Remote Input"),
+        app(12, "Remote Monitor"),
+        app(13, "Steam Big Picture"),
+        app(14, " steam bigpicture "),
+        app(15, "Renamed Input", "9A1C5A25-58FE-40E0-B9AA-7D3F00000006"),
+        app(16, "Renamed Monitor", "9a1c5a25-58fe-40e0-b9aa-7d3f00000005"),
+    )
+
+    private fun assertResolvedEmpty(store: GameMetadataStore, app: App) {
+        val entry = store.entry(pc, app)
+        assertTrue(app.name, entry.resolved)
+        assertFalse(app.name, entry.loading)
+        assertNull(app.name, entry.error)
+        assertNull(app.name, entry.data)
+        assertTrue(app.name, store.genres(pc, listOf(app)).isEmpty())
+    }
+
+    private fun assertNoProviderCalls(providers: FakeProviders) {
+        assertEquals(0, providers.searchCalls.get())
+        assertEquals(0, providers.gameCalls.get())
+        assertEquals(0, providers.hdrCalls.get())
+        assertEquals(0, providers.completionCalls.get())
+    }
+
+    private suspend fun exerciseBuiltInGuards(store: GameMetadataStore, builtIn: App) {
+        assertResolvedEmpty(store, builtIn)
+        store.ensure(pc, builtIn)
+        assertResolvedEmpty(store, builtIn)
+        store.ensure(pc, builtIn, force = true)
+        assertResolvedEmpty(store, builtIn)
+        store.select(pc, builtIn, candidate)
+        assertResolvedEmpty(store, builtIn)
+        store.reset(pc, builtIn)
+        assertResolvedEmpty(store, builtIn)
+    }
+
+    @Test fun builtInOperationsNeverFetchWriteCacheOrRegisterProgress() = runBlocking {
+        val providers = FakeProviders()
+        val store = newStore(providers)
+        val builtIns = builtIns()
+        val observed = Collections.synchronizedList(mutableListOf<ArtworkProgress?>())
+        val observer = recordProgress(store, observed)
+        try {
+            store.ensureLibrary(pc, builtIns)
+            builtIns.forEach { exerciseBuiltInGuards(store, it) }
+            assertNoProviderCalls(providers)
+            assertTrue(root.listFiles().orEmpty().isEmpty())
+            assertTrue(observed.isEmpty())
+            assertNull(store.progress.value)
+        } finally {
+            observer.dispose()
+        }
+    }
+
+    @Test fun builtInOperationsLeavePreExistingCacheFilesUntouched() = runBlocking {
+        val builtIns = builtIns()
+        val cached = builtIns.associateWith { builtIn ->
+            """{"schema":4,"data":{"candidate":{"id":10,"name":"Game","genres":[{"id":12,"name":"RPG"}]},"hdr":{"support":"HDR"},"updatedAt":$now}}"""
+                .also { content -> fileOf(builtIn).apply { parentFile!!.mkdirs(); writeText(content) } }
+        }
+        val providers = FakeProviders()
+        val store = newStore(providers)
+        val observed = Collections.synchronizedList(mutableListOf<ArtworkProgress?>())
+        val observer = recordProgress(store, observed)
+        try {
+            store.ensureLibrary(pc, builtIns)
+            builtIns.forEach { exerciseBuiltInGuards(store, it) }
+            for ((builtIn, content) in cached) {
+                assertTrue(fileOf(builtIn).isFile)
+                assertEquals(content, fileOf(builtIn).readText())
+            }
+            assertNoProviderCalls(providers)
+            assertTrue(observed.isEmpty())
+            assertNull(store.progress.value)
+        } finally {
+            observer.dispose()
+        }
+    }
+
+    @Test fun cachedOrdinaryGamesBecomingBuiltInsCannotExposeMetadataButCanRefreshWhenRestored() = runBlocking {
+        val ordinary = listOf(
+            app(20, "Game"),
+            app(21, "Game"),
+            app(22, "Game"),
+        )
+        val renamed = listOf(
+            app(20, " remote monitor "),
+            app(21, "Renamed Input", "9a1c5a25-58fe-40e0-b9aa-7d3f00000006"),
+            app(22, "Renamed Monitor", "9A1C5A25-58FE-40E0-B9AA-7D3F00000005"),
+        )
+        val seeding = newStore(FakeProviders().apply { onSearch = { listOf(candidate) } })
+        ordinary.forEach {
+            seeding.ensure(pc, it)
+            assertEquals(candidate, seeding.entry(pc, it).data?.candidate)
+            assertEquals(NativeHdr.HDR, seeding.entry(pc, it).data?.hdr?.support)
+        }
+        val cached = ordinary.associateWith { fileOf(it).readText() }
+        val providers = FakeProviders().apply {
+            onSearch = { listOf(candidate) }
+            onHdr = { HdrEvidence(NativeHdr.SDR, "Refreshed") }
+        }
+        val restarted = newStore(providers)
+        val observed = Collections.synchronizedList(mutableListOf<ArtworkProgress?>())
+        val observer = recordProgress(restarted, observed)
+        try {
+            // Check both already-loaded ordinary state and disk-only state after a restart.
+            for (store in listOf(seeding, restarted)) {
+                store.ensureLibrary(pc, renamed)
+                renamed.forEach { exerciseBuiltInGuards(store, it) }
+                assertTrue(store.genres(pc, renamed).isEmpty())
+            }
+            assertNoProviderCalls(providers)
+            assertTrue(observed.isEmpty())
+            for ((original, content) in cached) assertEquals(content, fileOf(original).readText())
+            for (original in ordinary) {
+                restarted.ensure(pc, original, force = true)
+                assertEquals(candidate, restarted.entry(pc, original).data?.candidate)
+                assertEquals(NativeHdr.SDR, restarted.entry(pc, original).data?.hdr?.support)
+                assertEquals(listOf(GameGenre(12, "RPG")), restarted.genres(pc, listOf(original)))
+            }
+            assertEquals(ordinary.size, providers.searchCalls.get())
+            assertEquals(ordinary.size, providers.hdrCalls.get())
+            assertEquals(ordinary.size, providers.completionCalls.get())
+            assertNull(restarted.progress.value)
+        } finally {
+            observer.dispose()
+        }
+    }
+
+    @Test fun anEarlierOrdinaryLookupCannotExposeLoadingOrCompletedMetadataThroughABuiltInEntry() = runBlocking {
+        val started = CountDownLatch(1)
+        val release = CountDownLatch(1)
+        val providers = FakeProviders().apply {
+            onSearch = { started.countDown(); release.await(); listOf(candidate) }
+        }
+        val store = newStore(providers)
+        val renamed = app(game.id, "Renamed Input", "9a1c5a25-58fe-40e0-b9aa-7d3f00000006")
+        val job = launch(Dispatchers.Default) { store.ensure(pc, game) }
+        try {
+            assertTrue("ordinary lookup never started", started.await(10, TimeUnit.SECONDS))
+            assertTrue(store.entry(pc, game).loading)
+            assertResolvedEmpty(store, renamed)
+            release.countDown()
+            job.join()
+            assertEquals(candidate, store.entry(pc, game).data?.candidate)
+            assertResolvedEmpty(store, renamed)
+        } finally {
+            release.countDown()
+            job.cancelAndJoin()
+        }
+    }
 
     @Test fun libraryProgressCountsOnlyStaleGamesAndIncludesEveryAttemptThroughCompletion() = runBlocking {
         val stale = listOf(game, app(2, "Another Game"), app(3, "Third Game"))
@@ -486,8 +641,8 @@ class GameMetadataStoreTest {
         assertEquals(7L, data.candidate?.id)
         assertEquals(NativeHdr.UNKNOWN, data.hdr.support)
         assertTrue(data.candidate!!.genres.isEmpty())
-        assertTrue(MetadataFilters(hdr = HdrFilter.UNKNOWN).matches(data))
-        assertFalse(MetadataFilters(hdr = HdrFilter.SDR).matches(data))
+        assertTrue(MetadataFilters(hdr = HdrFilter.UNKNOWN).matches(game, data))
+        assertFalse(MetadataFilters(hdr = HdrFilter.SDR).matches(game, data))
         assertEquals(0, providers.searchCalls.get())
     }
 

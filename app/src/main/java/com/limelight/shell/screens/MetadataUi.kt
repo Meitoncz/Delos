@@ -31,6 +31,7 @@ import com.limelight.shell.LocalShell
 import com.limelight.shell.MenuItem
 import com.limelight.shell.ShellState
 import com.limelight.shell.data.App
+import com.limelight.shell.data.BundledArtwork
 import com.limelight.shell.data.GameMetadataStore
 import com.limelight.shell.data.LocalGameMetadata
 import com.limelight.shell.data.MetadataFilters
@@ -91,6 +92,7 @@ internal fun FilteredLibraryEmpty() {
 }
 
 internal fun openMetadataMenu(scope: CoroutineScope, shell: ShellState, tracker: FocusTracker, store: GameMetadataStore, pc: Pc, app: App) {
+    if (BundledArtwork.kind(app) != null) return
     fun operation(success: String, block: suspend () -> Unit) {
         scope.launch {
             try {

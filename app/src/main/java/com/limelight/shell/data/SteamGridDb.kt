@@ -146,13 +146,13 @@ class SteamGridDbClient(private val key: String, private val http: OkHttpClient)
  * this device. [version] changes whenever images change, so the screens load them again.
  */
 class ArtworkStore(context: Context) {
-    private val app = context.applicationContext
-    private val prefs = PreferenceManager.getDefaultSharedPreferences(app)
-    private val root = File(app.filesDir, "artwork")
+    private val appContext = context.applicationContext
+    private val prefs = PreferenceManager.getDefaultSharedPreferences(appContext)
+    private val root = File(appContext.filesDir, "artwork")
     val http: OkHttpClient = OkHttpClient.Builder().connectTimeout(10, TimeUnit.SECONDS).readTimeout(30, TimeUnit.SECONDS).build()
     private val gson = Gson()
-    private val memory = object : LruCache<String, ImageBitmap>(MEMORY_KIB) {
-        override fun sizeOf(key: String, value: ImageBitmap) = value.width * value.height * 4 / 1024
+    private val memory = object : LruCache<String, ArtworkResult>(MEMORY_KIB) {
+        override fun sizeOf(key: String, value: ArtworkResult): Int = value.image!!.let { it.width * it.height * 4 / 1024 }
     }
     private val network = Semaphore(3)
     private val locks = HashMap<String, Mutex>()
@@ -201,20 +201,42 @@ class ArtworkStore(context: Context) {
     val enabled: Boolean get() = apiKey.isNotEmpty()
 
     /**
-     * Whether [app] is looked up by its name automatically: not the remote desktop, whose name would match
-     * some random game (its artwork is chosen by hand on the artwork screen).
+     * Built-in utilities have fixed offline artwork and are never matched or customized on SteamGridDB.
      */
-    fun eligible(app: App): Boolean = !app.name.equals("Desktop", ignoreCase = true)
+    fun eligible(app: App): Boolean = BundledArtwork.kind(app) == null
 
-    fun cached(pc: Pc, app: App, kind: ArtKind): ImageBitmap? = memory.get(memoryKey(pc, app, kind))
+    fun cached(pc: Pc, app: App, kind: ArtKind): ImageBitmap? = cachedResult(pc, app, kind)?.image
 
-    /** The downloaded image of [kind] for [app], or null. */
-    suspend fun load(pc: Pc, app: App, kind: ArtKind): ImageBitmap? = withContext(Dispatchers.IO) {
+    internal fun cachedResult(pc: Pc, app: App, kind: ArtKind): ArtworkResult? {
+        val builtin = BundledArtwork.kind(app)
+        if (builtin != null) {
+            val asset = builtin.assetPath(kind) ?: return null
+            return memory.get("bundled:$asset")
+        }
+        return memory.get(memoryKey(pc, app, kind))
+    }
+
+    /** Built-ins ignore old local choices; ordinary apps retain their existing local-image precedence. */
+    suspend fun load(pc: Pc, app: App, kind: ArtKind): ImageBitmap? = loadResult(pc, app, kind).image
+
+    internal suspend fun loadResult(pc: Pc, app: App, kind: ArtKind): ArtworkResult = withContext(Dispatchers.IO) {
+        val builtin = BundledArtwork.kind(app)
+        if (builtin != null) {
+            val asset = builtin.assetPath(kind) ?: return@withContext ArtworkResult(null, true)
+            val key = "bundled:$asset"
+            memory.get(key)?.let { return@withContext it }
+            val image = appContext.assets.open(asset).use { input ->
+                checkNotNull(BitmapFactory.decodeStream(input)) { "Invalid bundled artwork: $asset" }.asImageBitmap()
+            }
+            return@withContext ArtworkResult(image, resolved = true, bundledAsset = asset).also { memory.put(key, it) }
+        }
         val key = memoryKey(pc, app, kind)
         memory.get(key)?.let { return@withContext it }
         val file = file(pc, app, kind)
-        if (!file.exists() || file.length() == 0L) return@withContext null
-        decode(file, kind)?.also { memory.put(key, it) }
+        val image = if (file.exists() && file.length() > 0L) decode(file, kind) else null
+        val result = ArtworkResult(image, resolved = true)
+        if (image != null) memory.put(key, result)
+        result
     }
 
     /** The SteamGridDB game [app] is matched with, if any. */
@@ -230,6 +252,7 @@ class ArtworkStore(context: Context) {
 
     /** The images [kind] can be chosen from for [app]'s matched game. */
     suspend fun choices(pc: Pc, app: App, kind: ArtKind): List<SgdbImage> = withContext(Dispatchers.IO) {
+        if (!eligible(app)) return@withContext emptyList()
         val id = readMatch(pc, app)?.id ?: return@withContext emptyList()
         network.withPermit { client().images(id, kind) }
     }
@@ -239,7 +262,10 @@ class ArtworkStore(context: Context) {
      * images already there are kept unless [refresh], which fetches all but the hand-picked ones again.
      * Returns whether a game was found.
      */
-    suspend fun fetch(pc: Pc, app: App, refresh: Boolean = false): Boolean = busy(pc, app) { fetchNow(pc, app, refresh) }
+    suspend fun fetch(pc: Pc, app: App, refresh: Boolean = false): Boolean {
+        if (!eligible(app)) return false
+        return busy(pc, app) { fetchNow(pc, app, refresh) }
+    }
 
     private suspend fun fetchNow(pc: Pc, app: App, refresh: Boolean): Boolean = withContext(Dispatchers.IO) {
         lock(pc, app).withLock {
@@ -273,6 +299,7 @@ class ArtworkStore(context: Context) {
 
     /** Matches [app] with [game] by hand and downloads its best-rated images (hand-picked ones start over). */
     suspend fun setGame(pc: Pc, app: App, game: SgdbGame) {
+        if (!eligible(app)) return
         withContext(Dispatchers.IO) {
             lock(pc, app).withLock { writeMatch(pc, app, Match(game.id, game.name, manual = true)) }
         }
@@ -281,6 +308,7 @@ class ArtworkStore(context: Context) {
 
     /** Uses [image] for [kind] (null: none, so the PC's artwork or the game's name), picked by hand. */
     suspend fun apply(pc: Pc, app: App, kind: ArtKind, image: SgdbImage?) {
+        if (!eligible(app)) return
         val key = memoryKey(pc, app, kind)
         withContext(Dispatchers.Main) { busyKinds[key] = image?.id ?: NONE }
         try {
@@ -404,7 +432,7 @@ data class ArtworkProgress(val done: Int, val total: Int)
 val LocalArtwork = staticCompositionLocalOf<ArtworkStore> { error("ArtworkStore not provided") }
 
 /**
- * [app]'s SteamGridDB image of [kind], or null; reloads when the store's images change. The state is
+ * [app]'s local or bundled artwork, or null; reloads when the store's images change. The state is
  * keyed by the app, so a caller that switches apps never sees the previous app's image (produceState
  * would keep it until the new one is loaded).
  */
@@ -415,16 +443,16 @@ fun rememberArtwork(store: ArtworkStore, pc: Pc, app: App, kind: ArtKind): State
 }
 
 /** An unresolved lookup must not be treated as a confirmed missing image. */
-data class ArtworkResult(val image: ImageBitmap?, val resolved: Boolean)
+data class ArtworkResult(val image: ImageBitmap?, val resolved: Boolean, val bundledAsset: String? = null)
+
 
 @Composable
 fun rememberArtworkResult(store: ArtworkStore, pc: Pc, app: App, kind: ArtKind): State<ArtworkResult> {
     val version = store.version.intValue
-    val state = remember(store, pc.uuid, app.id, kind) {
-        val cached = store.cached(pc, app, kind)
-        mutableStateOf(ArtworkResult(cached, resolved = cached != null))
+    val state = remember(store, pc.uuid, app.id, app.name, BundledArtwork.kind(app), kind) {
+        mutableStateOf(store.cachedResult(pc, app, kind) ?: ArtworkResult(null, false))
     }
-    LaunchedEffect(state, version) { state.value = ArtworkResult(store.load(pc, app, kind), resolved = true) }
+    LaunchedEffect(state, version) { state.value = store.loadResult(pc, app, kind) }
     return state
 }
 

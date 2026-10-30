@@ -97,6 +97,7 @@ import com.limelight.shell.data.PcRepository
 import com.limelight.shell.data.rememberBoxArt
 import com.limelight.shell.data.LocalGameMetadata
 import com.limelight.shell.data.NativeHdr
+import com.limelight.shell.data.BundledArtwork
 import com.limelight.shell.settings.Appearance
 import com.limelight.shell.settings.HomeLayout
 import com.limelight.shell.ui.Cue
@@ -126,7 +127,7 @@ import kotlinx.coroutines.launch
 /** Hues and icon of an app's placeholder art, derived from its name. */
 fun appArt(pc: Pc, app: App, image: androidx.compose.ui.graphics.ImageBitmap? = null): GameArt {
     val hue = ((app.name.hashCode() and 0x7fffffff) % 360).toFloat()
-    val icon = if (app.name.equals("Desktop", ignoreCase = true)) Symbols.DESKTOP_WINDOWS else Symbols.SPORTS_ESPORTS
+    val icon = if (BundledArtwork.kind(app) == BundledArtwork.Kind.DESKTOP) Symbols.DESKTOP_WINDOWS else Symbols.SPORTS_ESPORTS
     return GameArt("${pc.uuid}/${app.id}", hue, (hue + 35f) % 360f, icon, image)
 }
 
@@ -157,7 +158,7 @@ fun HomeScreen(library: Library, appearance: Appearance, repo: PcRepository, onM
         is Library.Offline -> HomeMessage(Symbols.POWER, "${library.pc.name} is offline", "Start the PC, or wake it from the classic Delos app.\nWaking it from here comes in step 6.6.")
         is Library.Ready -> if (hasGames) {
             val metadata = LocalGameMetadata.current
-            val apps = library.apps.filter { metadata.filters.matches(metadata.entry(library.pc, it).data) }
+            val apps = library.apps.filter { metadata.filters.matches(it, metadata.entry(library.pc, it).data) }
             if (apps.isEmpty()) FilteredLibraryEmpty() else GameLibrary(library, apps, appearance, repo, onMetadata)
         } else {
             HomeMessage(Symbols.SPORTS_ESPORTS, "No games on ${library.pc.name}", "Add apps in Vibepollo's web UI, they show up here automatically.")
@@ -184,7 +185,7 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
     val boxImage by rememberBoxArt(boxArt, pc, focused)
     val heroImage by rememberArtwork(artwork, pc, focused, ArtKind.HERO)
     val coverImage by rememberArtwork(artwork, pc, focused, ArtKind.COVER)
-    // The SteamGridDB hero, else the cover (SteamGridDB, then the PC's)
+    // The local/built-in hero, else the cover, then the PC's artwork for ordinary games.
     val image = heroImage ?: coverImage ?: boxImage
     // The animated background takes its colors from the cover
     val coverForColors = coverImage ?: boxImage
@@ -431,8 +432,10 @@ private fun gameMenu(
                 }
                 else -> add(MenuItem(Symbols.PLAY_ARROW, "Start game") { actions.start(pc, app, image) })
             }
-            add(MenuItem(Symbols.PHOTO_LIBRARY, "Artwork", onArtwork))
-            add(MenuItem(Symbols.SEARCH, "Metadata", onMetadata))
+            if (BundledArtwork.kind(app) == null) {
+                add(MenuItem(Symbols.PHOTO_LIBRARY, "Artwork", onArtwork))
+                add(MenuItem(Symbols.SEARCH, "Metadata", onMetadata))
+            }
             add(MenuItem(Symbols.SETTINGS, "Game settings", onSettings))
             add(
                 if (hidden) MenuItem(Symbols.VISIBILITY, "Show game") { onHide(app, false) }

@@ -70,7 +70,8 @@ data class MetadataFilters(
     /** How many of the three criteria narrow the library. */
     val activeCount: Int get() = listOf(genreId != null, hdr != HdrFilter.ANY, length != LengthFilter.ANY).count { it }
 
-    fun matches(metadata: GameMetadata?): Boolean {
+    fun matches(app: App, metadata: GameMetadata?): Boolean {
+        if (BundledArtwork.kind(app) != null) return !active
         if (genreId != null && metadata?.candidate?.genres?.none { it.id == genreId } != false) return false
         val support = metadata?.hdr?.support ?: NativeHdr.UNKNOWN
         if (hdr != HdrFilter.ANY && support.name != hdr.name) return false

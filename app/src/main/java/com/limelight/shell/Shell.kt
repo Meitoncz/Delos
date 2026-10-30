@@ -100,6 +100,7 @@ import com.limelight.shell.ui.DialogLayer
 import com.limelight.shell.ui.PortalOverlay
 import com.limelight.shell.data.LocalArtwork
 import com.limelight.shell.data.downloadAll
+import com.limelight.shell.data.BundledArtwork
 import com.limelight.shell.ui.ArtworkProgressBar
 import com.limelight.shell.screens.ArtworkScreen
 import com.limelight.shell.screens.DebugInfoScreen
@@ -535,7 +536,7 @@ fun Shell(
             ArtworkProgressBar(artworkProgress ?: metadata.progress.value,
                 label = if (artworkProgress != null) "Downloading artwork" else "Downloading metadata")
             val note = (library as? Library.Ready)?.takeIf { shell.screen == Screen.Home && shell.layer == null }?.let { ready ->
-                val shown = if (metadata.filters.active) ready.apps.count { metadata.filters.matches(metadata.entry(ready.pc, it).data) } else ready.apps.size
+                val shown = if (metadata.filters.active) ready.apps.count { metadata.filters.matches(it, metadata.entry(ready.pc, it).data) } else ready.apps.size
                 if (shown == ready.apps.size) "$shown apps on ${ready.pc.name}" else "$shown of ${ready.apps.size} apps on ${ready.pc.name}"
             }
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
@@ -630,7 +631,8 @@ private fun hints(shell: ShellState, adjustable: Boolean, filterHint: String?): 
             Screen.DebugInfo -> adjust + listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"))
             // Like a stream: nothing over the controls
             Screen.OscPreview -> emptyList()
-            is Screen.Artwork -> listOf(Hint(Glyph.L1, "Previous tab"), Hint(Glyph.R1, "Next tab"), Hint(Glyph.A, "Use"), Hint(Glyph.B, "Back"))
+            is Screen.Artwork -> if (BundledArtwork.kind(screen.app) != null) listOf(Hint(Glyph.A, "Back"), Hint(Glyph.B, "Back"))
+                else listOf(Hint(Glyph.L1, "Previous tab"), Hint(Glyph.R1, "Next tab"), Hint(Glyph.A, "Use"), Hint(Glyph.B, "Back"))
             is Screen.GameSettings -> adjust + listOf(Hint(Glyph.L1, "Previous tab"), Hint(Glyph.R1, "Next tab"), Hint(Glyph.A, "Change"), Hint(Glyph.MENU_RIGHT, "Options"), Hint(Glyph.B, "Back"))
             Screen.Profile, Screen.Devices -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"), Hint(Glyph.MENU_LEFT, "Menu"))
         }

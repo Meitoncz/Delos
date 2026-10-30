@@ -52,6 +52,7 @@ class GameMetadataStore internal constructor(
     private val locks = HashMap<String, Mutex>()
     private val network = Semaphore(2)
     private val emptyState = GameMetadataState()
+    private val resolvedEmptyState = GameMetadataState(resolved = true)
     private var filterState by mutableStateOf(readFilters())
 
     /** Games being fetched from providers; cached/backed-off reads never start a batch. */
@@ -74,7 +75,8 @@ class GameMetadataStore internal constructor(
             .apply()
     }
 
-    fun entry(pc: Pc, app: App): GameMetadataState = states[key(pc, app)] ?: emptyState
+    fun entry(pc: Pc, app: App): GameMetadataState =
+        if (BundledArtwork.kind(app) != null) resolvedEmptyState else states[key(pc, app)] ?: emptyState
 
     fun genres(pc: Pc, apps: List<App>): List<GameGenre> = apps.asSequence()
         .flatMap { entry(pc, it).data?.candidate?.genres.orEmpty().asSequence() }
@@ -85,7 +87,7 @@ class GameMetadataStore internal constructor(
      * then refreshes the stale ones with bounded concurrency. A slow provider never hides cached games.
      */
     suspend fun ensureLibrary(pc: Pc, apps: List<App>) {
-        val games = apps.filter { !isDesktop(it) }
+        val games = apps.filter { BundledArtwork.kind(it) == null }
         for (app in games) {
             currentCoroutineContext().ensureActive()
             lock(pc, app).withLock { loadLocked(pc, app) }
@@ -115,12 +117,9 @@ class GameMetadataStore internal constructor(
     }
 
     private suspend fun ensure(pc: Pc, app: App, force: Boolean, batch: ProgressBatch?): Boolean {
+        if (BundledArtwork.kind(app) != null) return false
         lock(pc, app).withLock {
             val key = key(pc, app)
-            if (isDesktop(app)) {
-                publish(key, GameMetadataState(resolved = true))
-                return false
-            }
             val previous = loadLocked(pc, app)
             if (!force && !refreshDue(previous.data, clock())) return false
             if (!providers.credentialsAvailable) {
@@ -162,6 +161,7 @@ class GameMetadataStore internal constructor(
     }
 
     suspend fun select(pc: Pc, app: App, candidate: MetadataCandidate) {
+        if (BundledArtwork.kind(app) != null) return
         lock(pc, app).withLock {
             val key = key(pc, app)
             withProgressBatch(1) { batch ->
@@ -183,6 +183,7 @@ class GameMetadataStore internal constructor(
     }
 
     suspend fun reset(pc: Pc, app: App) {
+        if (BundledArtwork.kind(app) != null) return
         lock(pc, app).withLock {
             withContext(io) { AtomicFile(file(pc, app)).delete() }
             initialized.add(key(pc, app))
@@ -351,7 +352,6 @@ class GameMetadataStore internal constructor(
 
     private fun file(pc: Pc, app: App) = File(File(root, "pc-${Uri.encode(pc.uuid)}"), "${app.id}.json")
     private fun key(pc: Pc, app: App) = "${pc.uuid}/${app.id}"
-    private fun isDesktop(app: App) = app.name.equals("Desktop", ignoreCase = true)
 
     @Synchronized
     private fun lock(pc: Pc, app: App) = locks.getOrPut(key(pc, app)) { Mutex() }

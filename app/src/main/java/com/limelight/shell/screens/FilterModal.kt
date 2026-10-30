@@ -168,7 +168,7 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
     val games = apps.map { metadata.entry(ready.pc, it).data }
     val genres = remember(games) { metadata.genres(ready.pc, apps) }
     val counts = remember(games) { genreCounts(games) }
-    val matching = games.count { filters.matches(it) }
+    val matching = games.indices.count { filters.matches(apps[it], games[it]) }
 
     // One requester per genre chip: the first focus goes to the selected one, a reset back to "All"
     val genreRequesters = remember { HashMap<Int, FocusRequester>() }

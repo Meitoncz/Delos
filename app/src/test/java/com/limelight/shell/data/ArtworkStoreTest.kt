@@ -168,6 +168,59 @@ class ArtworkStoreTest {
         }
     }
 
+    @Test fun builtinsIgnoreOldSelectionsAndCannotChangeOrDeleteTheirFiles() {
+        val names = listOf("Desktop", "Remote Input", "Remote Monitor", "Steam Big Picture")
+        val userImage = jpeg(1920, 620, Color.RED)
+        store.apiKey = ""
+        CompositionDriver().use { driver ->
+            for ((index, name) in names.withIndex()) {
+                val builtin = app.copy(id = app.id + index, name = name)
+                val heroFile = imageFile(builtin, ArtKind.HERO).apply { writeBytes(userImage) }
+                val logoFile = imageFile(builtin, ArtKind.LOGO).apply { writeBytes(userImage) }
+                val matchFile = File(heroFile.parentFile, "match.json")
+                val oldMatch = """{"id":99,"name":"Old choice","manual":true,"chosen":{"hero":7},"picked":["hero"]}"""
+                matchFile.writeText(oldMatch)
+
+                val loaded = driver.await(driver.scope.async { store.loadResult(pc, builtin, ArtKind.HERO) })
+                assertEquals(BundledArtwork.assetPath(builtin, ArtKind.HERO), loaded.bundledAsset)
+                assertEquals(1920, loaded.image!!.width)
+                assertEquals(1080, loaded.image.height)
+                assertFalse("An old custom logo must not replace the name", driver.await(driver.scope.async {
+                    store.loadResult(pc, builtin, ArtKind.LOGO)
+                }).image != null)
+                assertFalse(store.eligible(builtin))
+                assertTrue(store.missing(pc, listOf(builtin)).isEmpty())
+                assertFalse(driver.await(driver.scope.async { store.fetch(pc, builtin, refresh = true) }))
+                assertTrue(driver.await(driver.scope.async { store.choices(pc, builtin, ArtKind.HERO) }).isEmpty())
+                driver.await(driver.scope.async { store.setGame(pc, builtin, SgdbGame(123, "New choice", null)) })
+                driver.await(driver.scope.async { store.apply(pc, builtin, ArtKind.HERO, null) })
+                assertTrue("Old user images stay on disk", heroFile.readBytes().contentEquals(userImage))
+                assertTrue(logoFile.readBytes().contentEquals(userImage))
+                assertEquals(oldMatch, matchFile.readText())
+            }
+        }
+    }
+
+    @Test fun aRenamedFixedUuidUtilityIgnoresAWarmDownloadedImageWithoutAffectingOrdinaryApps() {
+        JpegServer(jpeg(1920, 620, Color.RED)).use { server ->
+            val selection = SgdbImage(77, server.url, server.url, 1920, 620)
+            CompositionDriver().use { driver ->
+                driver.await(driver.scope.async { store.apply(pc, app, ArtKind.HERO, selection) })
+                assertImage(driver.await(driver.scope.async { store.load(pc, app, ArtKind.HERO) }), 1920, 620, Color.RED)
+                val saved = imageFile(app, ArtKind.HERO).readBytes()
+                val renamed = app.copy(name = "My keyboard", nvApp = NvApp("My keyboard",
+                    "9A1C5A25-58FE-40E0-B9AA-7D3F00000006", app.id, false))
+                val builtin = driver.await(driver.scope.async { store.loadResult(pc, renamed, ArtKind.HERO) })
+                assertEquals("artwork/remote-input/hero.jpg", builtin.bundledAsset)
+                assertEquals(1080, builtin.image!!.height)
+                assertEquals("artwork/remote-input/hero.jpg", store.cachedResult(pc, renamed, ArtKind.HERO)?.bundledAsset)
+                assertTrue(imageFile(app, ArtKind.HERO).readBytes().contentEquals(saved))
+                assertImage(driver.await(driver.scope.async { store.load(pc, app, ArtKind.HERO) }), 1920, 620, Color.RED)
+                assertNull(driver.await(driver.scope.async { store.loadResult(pc, app.copy(id = app.id + 50), ArtKind.HERO) }).image)
+            }
+        }
+    }
+
     @Test fun changingTheGameOrKindNeverPublishesThePreviousGamesImage() {
         val other = app.copy(id = app.id + 1, name = "Other game")
         imageFile(app, ArtKind.HERO).writeBytes(jpeg(1920, 620, Color.RED))
