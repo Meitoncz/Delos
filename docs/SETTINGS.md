@@ -50,10 +50,15 @@ one scrolls to and focuses the actual setting, including disabled dependencies.
   recalculates its recommended bitrate. Entering PyroWave remembers the previous non-PyroWave
   bitrate for that profile. Manual edits and automatic quality recalculations while on PyroWave
   leave that remembered value unchanged: a PyroWave bitrate never carries into another codec.
-  Leaving PyroWave always restores the remembered value, or the new codec/resolution/FPS default
-  when none exists, then consumes the history. Manual edits on a non-PyroWave codec discard stale
+  In profile settings, leaving PyroWave always restores that value, or the new codec/resolution/FPS
+  default when no history exists, then consumes the history. Manual edits on another codec clear stale
   history. The remembered value is copied/deleted with its profile and is not a stream option. Custom
   numeric input rejects invalid and non-finite values before writing.
+  Per-game codec/resolution/FPS/HDR changes resulting in PyroWave always write the recommendation,
+  creating an override when necessary.
+  On exit, a remembered game-owned bitrate is restored; without one, the temporary bitrate override
+  is removed so the game resumes inheriting the profile. Inherited values are never captured as
+  game-owned bitrate history.
 - `screens/SettingsScreen.kt`, `NativeSettings.kt` and `SettingsActions.kt` render the design system's
   rows, description panel, tab bar and search, and handle editing, reset, import/export and links.
   Resets run immediately and report a toast. Android's document picker handles file selection.

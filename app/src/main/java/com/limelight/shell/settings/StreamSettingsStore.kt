@@ -51,22 +51,24 @@ class StreamSettingsStore(val catalog: SettingsCatalog, private val settings: ()
         fun resolution() = if (spec.key == "list_resolution") value as String else prefs.getString("list_resolution", "1280x720")!!
         fun fps() = if (spec.key == "list_fps") value as String else prefs.getString("list_fps", "60")!!
         fun hdr() = if (spec.key == "checkbox_enable_hdr") value as Boolean else prefs.getBoolean("checkbox_enable_hdr", false)
-        val hasBitrateOverride = (prefs as? BitrateOverrideState)?.hasBitrateOverride ?: true
+        val gameBitrate = prefs as? BitrateOverrideState
         if (spec.key == "seekbar_bitrate_kbps") {
             editor.bitrateEdited(prefs)
         } else if (format == "pyrowave" && (spec.key == "list_resolution" || spec.key == "list_fps" ||
                 spec.key == "video_format" || spec.key == "checkbox_enable_hdr")) {
-            if (hasBitrateOverride) {
-                // Only entering PyroWave captures the other codec's bitrate; PyroWave edits stay local to it.
-                if (before != "pyrowave" && prefs.contains("seekbar_bitrate_kbps")) {
-                    editor.putInt(BITRATE_BEFORE_PYROWAVE, prefs.getInt("seekbar_bitrate_kbps", -1))
-                }
-                editor.putInt("seekbar_bitrate_kbps", PreferenceConfiguration.getDefaultBitrate(resolution(), fps(), format, hdr()))
+            // Capture only a bitrate owned by this store, never an inherited profile value.
+            if (before != "pyrowave" && prefs.contains("seekbar_bitrate_kbps") &&
+                gameBitrate?.hasBitrateOverride != false) {
+                editor.putInt(BITRATE_BEFORE_PYROWAVE, prefs.getInt("seekbar_bitrate_kbps", -1))
             }
+            editor.putInt("seekbar_bitrate_kbps", PreferenceConfiguration.getDefaultBitrate(resolution(), fps(), format, hdr()))
         } else if (spec.key == "video_format" && before == "pyrowave" && format != "pyrowave") {
-            if (hasBitrateOverride) {
-                editor.putInt("seekbar_bitrate_kbps", prefs.getInt(BITRATE_BEFORE_PYROWAVE,
-                    PreferenceConfiguration.getDefaultBitrate(resolution(), fps(), format, hdr())))
+            when {
+                prefs.contains(BITRATE_BEFORE_PYROWAVE) ->
+                    editor.putInt("seekbar_bitrate_kbps", prefs.getInt(BITRATE_BEFORE_PYROWAVE, -1))
+                gameBitrate != null -> editor.remove("seekbar_bitrate_kbps")
+                else -> editor.putInt("seekbar_bitrate_kbps",
+                    PreferenceConfiguration.getDefaultBitrate(resolution(), fps(), format, hdr()))
             }
             editor.remove(BITRATE_BEFORE_PYROWAVE)
         }

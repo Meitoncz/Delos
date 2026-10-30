@@ -118,7 +118,7 @@ class GameSettingsStore(private val base: SharedPreferences, pc: String, appId: 
     }
 }
 
-/** Automatic codec changes must not turn an inherited game bitrate into an explicit override. */
+/** Identifies an owned game bitrate for capture and restores inheritance when no history exists. */
 internal interface BitrateOverrideState {
     val hasBitrateOverride: Boolean
 }
