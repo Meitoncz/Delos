@@ -94,6 +94,7 @@ fun SettingRow(
     value: RowValue,
     modifier: Modifier = Modifier,
     description: String? = null,
+    descriptionColor: Color? = null,
     enabled: Boolean = true,
     compact: Boolean = false,
     contextMenu: ContextMenu? = null,
@@ -178,7 +179,7 @@ fun SettingRow(
             if (description != null) {
                 BasicText(
                     description,
-                    style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 19.tpx, lineHeight = 1.35.em),
+                    style = TextStyle(color = descriptionColor ?: colors.text3, fontFamily = Figtree, fontSize = 19.tpx, lineHeight = 1.35.em),
                     modifier = Modifier.padding(top = 4.px),
                 )
             }
