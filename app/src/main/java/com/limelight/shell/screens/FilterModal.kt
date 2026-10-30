@@ -128,6 +128,9 @@ private fun hdrFilterIcon(filter: HdrFilter): String? = when (filter) {
     HdrFilter.UNKNOWN -> Symbols.HELP
 }
 
+private enum class FilterModalArea { GENRE, HDR, DURATION, FOOTER }
+private data class FilterModalFocus(val area: FilterModalArea, val choice: Int)
+
 /**
  * The library filter modal (Y on the home screen): a centered glass panel with genre, HDR support and
  * duration chips. Choices apply at once; the focus stays inside while it is open and starts on the selected
@@ -147,14 +150,14 @@ fun FilterModalLayer(visible: Boolean, ready: Library.Ready?, haze: HazeState, r
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         AnimatedVisibility(visible, enter = enter, exit = exit) {
             val library = shown ?: return@AnimatedVisibility
-            FilterPanel(library, open, haze, onClose)
+            FilterPanel(library, open, haze, reducedMotion, onClose)
         }
     }
 }
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable
-private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, onClose: () -> Unit) {
+private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, reducedMotion: Boolean, onClose: () -> Unit) {
     val colors = LocalDelosColors.current
     val stage = LocalStage.current
     val metadata = LocalGameMetadata.current
@@ -163,6 +166,20 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
     val bringIntoView = remember(k) { MarginBringIntoView(before = 56f * k, after = 56f * k) }
     val filters = metadata.filters
     val apps = ready.apps
+    val scroll = rememberScrollState()
+    var focusedChoice by remember { mutableStateOf<FilterModalFocus?>(null) }
+    val maximum = scroll.maxValue
+    LaunchedEffect(focusedChoice, maximum, reducedMotion) {
+        val target = when (focusedChoice?.area) {
+            FilterModalArea.GENRE -> 0
+            FilterModalArea.DURATION, FilterModalArea.FOOTER -> maximum
+            else -> return@LaunchedEffect
+        }
+        if (maximum == Int.MAX_VALUE) return@LaunchedEffect
+        // Let layout and the chip's normal bring-into-view request run before revealing the section edge.
+        withFrameNanos { }
+        if (reducedMotion) scroll.scrollTo(target) else scroll.animateScrollTo(target)
+    }
 
     // Reading the entries here makes the counts follow the metadata as it arrives
     val games = apps.map { metadata.entry(ready.pc, it).data }
@@ -227,8 +244,9 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
             Modifier
                 .weight(1f, fill = false)
                 .fadeEdges(stage, top = 20f, bottom = 40f)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 12.px, vertical = 22.px),
+                .verticalScroll(scroll)
+                // Keep headings and the last chip's focus ring outside the 20/40 px fades at either end.
+                .padding(start = 12.px, end = 12.px, top = 24.px, bottom = 48.px),
             verticalArrangement = Arrangement.spacedBy(34.px),
         ) {
             FilterSection(Symbols.SPORTS_ESPORTS, "Genre") {
@@ -236,12 +254,14 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
                     FilterChip(
                         "All", filters.genreId == null, { metadata.updateFilters(metadata.filters.copy(genreId = null)) },
                         Modifier.focusRequester(genreRequester(null)), count = apps.size,
+                        onFocused = { focusedChoice = FilterModalFocus(FilterModalArea.GENRE, 0) },
                     )
                     genres.forEach { genre ->
                         key(genre.id) {
                             FilterChip(
                                 genre.name, filters.genreId == genre.id, { metadata.updateFilters(metadata.filters.copy(genreId = genre.id)) },
                                 Modifier.focusRequester(genreRequester(genre.id)), count = counts[genre.id] ?: 0,
+                                onFocused = { focusedChoice = FilterModalFocus(FilterModalArea.GENRE, genre.id) },
                             )
                         }
                     }
@@ -254,6 +274,7 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
                         FilterChip(
                             hdrFilterLabel(option), filters.hdr == option, { metadata.updateFilters(metadata.filters.copy(hdr = option)) },
                             icon = hdrFilterIcon(option),
+                            onFocused = { focusedChoice = FilterModalFocus(FilterModalArea.HDR, option.ordinal) },
                         )
                     }
                 }
@@ -264,6 +285,7 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
                     LengthFilter.entries.forEach { option ->
                         FilterChip(
                             lengthFilterLabel(option), filters.length == option, { metadata.updateFilters(metadata.filters.copy(length = option)) },
+                            onFocused = { focusedChoice = FilterModalFocus(FilterModalArea.DURATION, option.ordinal) },
                         )
                     }
                 }
@@ -278,9 +300,14 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
             val active = filters.active
             PillButton(
                 "Reset", Symbols.REFRESH, { if (metadata.filters.active) metadata.updateFilters(MetadataFilters()) },
-                Modifier.alpha(if (active) 1f else .4f).then(if (active) Modifier else Modifier.focusProperties { canFocus = false }),
+                Modifier.onFocusChanged {
+                    if (it.isFocused) focusedChoice = FilterModalFocus(FilterModalArea.FOOTER, 0)
+                }.alpha(if (active) 1f else .4f).then(if (active) Modifier else Modifier.focusProperties { canFocus = false }),
             )
-            PillButton("Done", Symbols.CHECK, onClose, primary = true, clickCue = Cue.BACK)
+            PillButton("Done", Symbols.CHECK, onClose,
+                Modifier.onFocusChanged {
+                    if (it.isFocused) focusedChoice = FilterModalFocus(FilterModalArea.FOOTER, 1)
+                }, primary = true, clickCue = Cue.BACK)
         }
     }
 }
@@ -307,7 +334,7 @@ private fun FilterDivider() {
 
 /** A selectable chip: filled with the accent while chosen, glass otherwise; the focus ring marks the cursor. */
 @Composable
-private fun FilterChip(label: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, icon: String? = null, count: Int? = null) {
+private fun FilterChip(label: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, icon: String? = null, count: Int? = null, onFocused: () -> Unit = {}) {
     val colors = LocalDelosColors.current
     var focused by remember { mutableStateOf(false) }
     val content = if (selected) colors.onAccent else colors.text
@@ -315,7 +342,7 @@ private fun FilterChip(label: String, selected: Boolean, onClick: () -> Unit, mo
         modifier
             .focusEffects(
                 onClick = onClick, corner = 999f, focusScale = 1.05f, ring = FocusRing(3f, 3f), glow = null,
-                onFocusChange = { focused = it },
+                onFocusChange = { focused = it; if (it) onFocused() },
             )
             .clip(CircleShape)
             .then(if (selected) Modifier.background(colors.accent) else Modifier.glass(colors.surface).border(1.px, colors.line, CircleShape))
