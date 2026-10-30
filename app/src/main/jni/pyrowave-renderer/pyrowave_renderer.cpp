@@ -1833,7 +1833,7 @@ namespace {
                 vk.CmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, activeLayout, 0, 1,
                                          &activeSet, 0, nullptr);
                 if (sgsrOutput >= 0) {
-                    const PresentParams params = {sgsrAppliedSharpness, hdrActive ? 1 : 0};
+                    const PresentParams params = {sgsrAppliedSharpness};
                     vk.CmdPushConstants(commandBuffer, activeLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(params), &params);
                 } else {
                     vk.CmdPushConstants(commandBuffer, activeLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(csc), &csc);
