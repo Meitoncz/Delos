@@ -480,7 +480,7 @@ private fun GameInfo(pc: Pc, app: App, modifier: Modifier, reducedMotion: Boolea
             when (hdrBadgeKind(metadata)) {
                 NativeHdr.HDR -> NativeHdrChip()
                 NativeHdr.SDR -> Chip(Symbols.HDR_ON, "SDR")
-                NativeHdr.UNKNOWN -> UnverifiedHdrChip()
+                NativeHdr.UNKNOWN -> Chip(Symbols.HELP, UNVERIFIED_HDR_LABEL)
                 null -> Unit
             }
             metadata?.completion?.takeIf { it.seconds > 0 }?.let {
