@@ -21,6 +21,22 @@ class MetadataFiltersTest {
         assertTrue(MetadataFilters(hdr = HdrFilter.UNKNOWN).matches(null))
     }
 
+    @Test fun unverifiedHdrMatchesUnknownRecordsAndMissingMetadataButNeverConfirmedSupport() {
+        val filter = MetadataFilters(hdr = HdrFilter.UNKNOWN)
+        assertTrue(filter.matches(metadata(NativeHdr.UNKNOWN)))
+        assertTrue(filter.matches(null))
+        assertFalse(filter.matches(metadata(NativeHdr.HDR)))
+        assertFalse(filter.matches(metadata(NativeHdr.SDR)))
+    }
+
+    @Test fun activeCountCountsEachNarrowingCriterionOnce() {
+        assertEquals(0, MetadataFilters().activeCount)
+        assertFalse(MetadataFilters().active)
+        assertEquals(1, MetadataFilters(length = LengthFilter.UNKNOWN).activeCount)
+        assertEquals(3, MetadataFilters(genreId = 5, hdr = HdrFilter.SDR, length = LengthFilter.OVER_60).activeCount)
+        assertTrue(MetadataFilters(genreId = 5).active)
+    }
+
     @Test fun durationRangesHaveUnambiguousBoundariesAndKeepMissingValuesSeparate() {
         val times = listOf(35_999L, 36_000L, 107_999L, 108_000L, 215_999L, 216_000L)
         val expected = mapOf(

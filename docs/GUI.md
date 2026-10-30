@@ -71,10 +71,18 @@ show no badge; previously confirmed HDR/SDR evidence remains visible during a la
 The host's streaming HDR flag is not native game support. Special K, ReShade, Auto HDR and RTX HDR
 do not qualify as native game HDR.
 
-The left menu filters by genre, native HDR/SDR/`HDR/SDR unverified` (unknown), and headline length (<10, 10–30, 30–60,
-60+ hours, or unknown). Filters follow the active profile and combine across categories. Empty
-results retain a controller/touch reset action. Original library order, running-game state,
-artwork and cover layout are preserved.
+**Y** on the home screen opens the **Filter library** modal (Y or B closes it; Done as well). It is a
+centered glass panel with the title, a live result line (`27 of 55 games`, or `All 55 games` without a filter)
+and three sections of chips: **Genre** (`All` plus every genre, each with its number of games), **HDR
+support** (`All`, `Native HDR`, `SDR`, `HDR/SDR unverified`, with the sparkle, sun and question-mark icons of
+the home badges) and **Duration** from HowLongToBeat (Any, <10 h, 10–30 h, 30–60 h, 60+ h, Unknown). The chosen chip is
+filled with the accent; a choice applies at once (no confirmation) and the library behind the modal
+updates with it. D-pad up/down moves between the sections and the buttons, left/right within a row; a
+long genre list scrolls the panel and keeps the focused chip in view. **X** resets (the Reset button is
+disabled while nothing is filtered), and closing returns the focus to the game that was focused. While
+filters are active the home hint reads `Y Filter • N active`. Filters follow the active profile and
+combine across categories. Empty results say to press Y and keep a controller/touch reset action.
+Original library order, running-game state, artwork and cover layout are preserved.
 The `HDR/SDR unverified` filter retains unknown-support matching, including pending/failed records without a
 badge; the display rule above does not change filter membership.
 

@@ -48,8 +48,6 @@ import com.limelight.shell.data.PcSetup
 import com.limelight.shell.data.ProfileStore
 import com.limelight.shell.data.LocalGameMetadata
 import com.limelight.shell.data.MetadataFilters
-import com.limelight.shell.data.HdrFilter
-import com.limelight.shell.data.LengthFilter
 import com.limelight.shell.screens.HomeScreen
 import com.limelight.shell.screens.openMetadataMenu
 import com.limelight.shell.screens.BootScreen
@@ -105,7 +103,8 @@ import com.limelight.shell.ui.ArtworkProgressBar
 import com.limelight.shell.screens.ArtworkScreen
 import com.limelight.shell.screens.DebugInfoScreen
 import com.limelight.shell.screens.OscPreviewScreen
-import com.limelight.shell.screens.UNVERIFIED_HDR_LABEL
+import com.limelight.shell.screens.FilterModalLayer
+import com.limelight.shell.screens.filterHintLabel
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 
@@ -282,6 +281,20 @@ fun Shell(
         }
     }
 
+    fun toggleFilters() {
+        when (shell.layer) {
+            Layer.Filters -> {
+                feedback.play(Cue.BACK)
+                shell.closeLayer()
+            }
+            null -> {
+                feedback.play(Cue.OPEN)
+                shell.openLayer(Layer.Filters, tracker)
+            }
+            else -> Unit
+        }
+    }
+
     val defaultMenu = remember {
         ContextMenu(
             "Delos",
@@ -310,11 +323,24 @@ fun Shell(
     DisposableEffect(keys) {
         keys.canSearch = { shell.screen == Screen.Settings && shell.layer == null && shell.portal == null && shell.launch == null }
         keys.onSearch = { shell.onSettingsSearch?.invoke() }
+        // Y opens the filters over a library with games (and closes them again); nothing else may react to it
+        keys.canFilter = {
+            shell.screen == Screen.Home && shell.portal == null && shell.launch == null && (
+                shell.layer == Layer.Filters || (shell.layer == null && (library as? Library.Ready)?.apps?.isNotEmpty() == true)
+            )
+        }
+        keys.onFilter = { toggleFilters() }
         keys.listener = listener@{ code ->
             if (shell.launch != null || shell.portal != null) return@listener
             when (code) {
                 KeyEvent.KEYCODE_BUTTON_SELECT -> if (sideMenu) toggleSide()
-                KeyEvent.KEYCODE_BUTTON_START, KeyEvent.KEYCODE_BUTTON_X -> toggleContext()
+                KeyEvent.KEYCODE_BUTTON_START -> toggleContext()
+                KeyEvent.KEYCODE_BUTTON_X -> if (shell.layer == Layer.Filters) {
+                    if (metadata.filters.active) {
+                        feedback.play(Cue.SELECT)
+                        metadata.updateFilters(MetadataFilters())
+                    }
+                } else toggleContext()
                 KeyEvent.KEYCODE_BUTTON_L1 -> if (shell.layer == null) shell.onShoulder?.invoke(-1)
                 KeyEvent.KEYCODE_BUTTON_R1 -> if (shell.layer == null) shell.onShoulder?.invoke(1)
             }
@@ -323,6 +349,8 @@ fun Shell(
             keys.listener = null
             keys.onSearch = null
             keys.canSearch = { false }
+            keys.onFilter = null
+            keys.canFilter = { false }
         }
     }
 
@@ -342,6 +370,11 @@ fun Shell(
                 runCatching { it.requestFocus() }
             }
         }
+    }
+
+    // The filter modal belongs to a ready library: a PC that goes offline takes it down with it
+    LaunchedEffect(shell.layer, library is Library.Ready) {
+        if (shell.layer == Layer.Filters && library !is Library.Ready) shell.closeLayer()
     }
 
     // When a layer has closed, the focus returns to where it was (silently, like the prototype)
@@ -468,28 +501,6 @@ fun Shell(
                 ) { first ->
                     Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.px)) {
                     SideMenuRows(appearance, update, Modifier.focusRequester(first)) { shell.navigate(Screen.Settings) }
-                    val ready = library as? Library.Ready
-                    if (shell.screen == Screen.Home && ready != null) {
-                        val filters = metadata.filters
-                        val genres = metadata.genres(ready.pc, ready.apps)
-                        val genreIds = listOf<Int?>(null) + genres.map { it.id }
-                        val genreName = genres.firstOrNull { it.id == filters.genreId }?.name ?: if (filters.genreId == null) "All" else "Selected genre"
-                        SettingRow(Symbols.SPORTS_ESPORTS, "Genre", RowValue.Choice(genreName, { direction ->
-                            val index = genreIds.indexOf(filters.genreId).coerceAtLeast(0)
-                            metadata.updateFilters(filters.copy(genreId = genreIds[Math.floorMod(index + direction, genreIds.size)]))
-                        }), compact = true)
-                        val hdrLabels = listOf("All", "Native HDR", "SDR", UNVERIFIED_HDR_LABEL)
-                        SettingRow(Symbols.HDR_ON, "HDR support", RowValue.Choice(hdrLabels[filters.hdr.ordinal], { direction ->
-                            metadata.updateFilters(filters.copy(hdr = HdrFilter.entries[Math.floorMod(filters.hdr.ordinal + direction, HdrFilter.entries.size)]))
-                        }), compact = true)
-                        val lengthLabels = listOf("Any", "<10 h", "10–30 h", "30–60 h", "60+ h", "Unknown")
-                        SettingRow(Symbols.HISTORY, "HLTB duration", RowValue.Choice(lengthLabels[filters.length.ordinal], { direction ->
-                            metadata.updateFilters(filters.copy(length = LengthFilter.entries[Math.floorMod(filters.length.ordinal + direction, LengthFilter.entries.size)]))
-                        }), compact = true)
-                        SettingRow(Symbols.REFRESH, "Reset library filters", RowValue.Action {
-                            metadata.updateFilters(MetadataFilters())
-                        }, enabled = filters.active, compact = true)
-                    }
                     val hiddenCount = (library as? Library.Ready)?.hiddenCount ?: 0
                     if (hiddenCount > 0 || showHidden) {
                         SettingRow(
@@ -501,6 +512,11 @@ fun Shell(
                 }
 
                 DialogLayer((shell.layer as? Layer.Dialog)?.dialog, haze) {
+                    feedback.play(Cue.BACK)
+                    shell.closeLayer()
+                }
+
+                FilterModalLayer(shell.layer == Layer.Filters, library as? Library.Ready, haze, appearance.reducedMotion) {
                     feedback.play(Cue.BACK)
                     shell.closeLayer()
                 }
@@ -522,7 +538,8 @@ fun Shell(
                 if (shown == ready.apps.size) "$shown apps on ${ready.pc.name}" else "$shown of ${ready.apps.size} apps on ${ready.pc.name}"
             }
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
-                ZoomedBar(uiScale) { HintBar(hints(shell, tracker.adjustable), note = note, noteLabel = if (note != null) "LIBRARY" else null) }
+                val filterHint = (library as? Library.Ready)?.takeIf { it.apps.isNotEmpty() }?.let { filterHintLabel(metadata.filters) }
+                ZoomedBar(uiScale) { HintBar(hints(shell, tracker.adjustable, filterHint), note = note, noteLabel = if (note != null) "LIBRARY" else null) }
             }
             val launch = shell.launch
             LaunchOverlay(
@@ -592,15 +609,16 @@ private class ShellGameActions(
 }
 
 /** Button hints for the current screen and layer (the prototype's updateHints). */
-private fun hints(shell: ShellState, adjustable: Boolean): List<Hint> {
+private fun hints(shell: ShellState, adjustable: Boolean, filterHint: String?): List<Hint> {
     val adjust = if (adjustable) listOf(Hint(Glyph.ADJUST, "Adjust")) else emptyList()
     shell.portal?.let { return if (it.cancellable) listOf(Hint(Glyph.B, "Cancel")) else emptyList() }
     return when (shell.layer) {
         is Layer.Context -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Close"))
         Layer.Side -> adjust + listOf(Hint(Glyph.A, "Change"), Hint(Glyph.B, "Close"))
+        Layer.Filters -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.X, "Reset"), Hint(Glyph.Y, "Close"), Hint(Glyph.B, "Close"))
         is Layer.Dialog -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Cancel"))
         null -> when (val screen = shell.screen) {
-            Screen.Home -> listOf(Hint(Glyph.A, "Start"), Hint(Glyph.MENU_LEFT, "Menu"), Hint(Glyph.MENU_RIGHT, "Options"))
+            Screen.Home -> listOfNotNull(Hint(Glyph.A, "Start"), filterHint?.let { Hint(Glyph.Y, it) }, Hint(Glyph.MENU_LEFT, "Menu"), Hint(Glyph.MENU_RIGHT, "Options"))
             Screen.Settings -> adjust + listOf(Hint(Glyph.L1, "Previous tab"), Hint(Glyph.R1, "Next tab"), Hint(Glyph.Y, "Search"), Hint(Glyph.A, "Change"), Hint(Glyph.B, "Back"))
             Screen.SettingsSearch -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"))
             Screen.Start -> listOf(Hint(Glyph.A, "Connect"), Hint(Glyph.MENU_LEFT, "Menu"), Hint(Glyph.MENU_RIGHT, "Options"))

@@ -97,6 +97,8 @@ sealed interface Layer {
     /** [anchor]: bounds of the element the menu belongs to, in root pixels. */
     data class Context(val menu: ContextMenu, val anchor: Rect?, val below: Boolean = false) : Layer
     data object Side : Layer
+    /** The library filter modal (Y on the home screen). */
+    data object Filters : Layer
     data class Dialog(val dialog: DialogSpec) : Layer
 }
 

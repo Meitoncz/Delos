@@ -81,7 +81,7 @@ internal fun FilteredLibraryEmpty() {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(Modifier.widthIn(max = 900.px), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(22.px)) {
             BasicText("No games match these filters", style = TextStyle(color = colors.text, fontFamily = Figtree, fontSize = 38.tpx))
-            BasicText("Change filters in the left menu, or reset them below.", style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 24.tpx))
+            BasicText("Press Y to change the filters, or reset them below.", style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 24.tpx))
             SettingRow(
                 Symbols.REFRESH, "Reset library filters", RowValue.Action { metadata.updateFilters(MetadataFilters()) },
                 Modifier.focusRequester(first), compact = true,
