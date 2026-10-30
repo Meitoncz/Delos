@@ -73,26 +73,52 @@ The left menu filters by genre, native HDR/SDR/unknown, and headline length (<10
 results retain a controller/touch reset action. Original library order, running-game state,
 artwork and cover layout are preserved.
 
-Game options → Metadata provides IGDB search/match selection, refresh and reset. Automatic matches
-require a unique normalized title; ambiguous editions remain unmatched until selected. IGDB IDs,
-Steam AppIDs and host app IDs are distinct. Metadata matches never overwrite manual SteamGridDB
-artwork matches. Data/matches are cached in application files; missing provider data stays missing.
-Partial provider failures do not become a fresh seven-day success after restarting. Explicit match
-operations belong to the shell, so changing a match can finish even if active filters remove its tile.
+Game options → Metadata provides IGDB search/match selection, refresh and reset. Automatic matching
+compares titles tolerantly (case, punctuation, diacritics, a leading "The", "&"/"and", Roman/Arabic
+sequel numbers, a bracketed note such as "(Steam)" and trailing edition qualifiers such as "Definitive
+Edition", "GOTY" or "Director's Cut"); subtitles and different sequel numbers stay distinct. IGDB
+entries with the same tolerant name are narrowed by the exact name, a year written in the host name,
+a Steam listing, the PC platform, and finally the newest release; if still tied the game stays
+unmatched until the user picks a match. IGDB search is PC-focused: console-only entries are dropped,
+but entries without platform data are kept. IGDB IDs, Steam AppIDs and host app IDs are distinct.
+Metadata matches never overwrite manual SteamGridDB artwork matches. Data/matches are cached in
+application files; missing provider data stays missing, and genres are IGDB genres only (IGDB themes
+share no ID space with genres and are not substituted). A fully answered record is refreshed after
+seven days and an unmatched one after six hours. Each provider's failure time is stored in the
+record: a failing provider is not asked about that game again for 30 minutes, across focus changes
+and restarts, unless the user chooses Refresh. A record stamped in the future is treated as stale.
+Explicit match operations belong to the shell, so changing a match can finish even if active filters
+remove its tile. Refresh/Reset report "No IGDB match found" when the re-match finds nothing.
 
-Provider calls run off the UI thread and respect their request pacing. IGDB authenticates through
-Twitch client credentials; PCGamingWiki uses bot-password login and Cargo plus Video-template notes.
-The unofficial HLTB client uses its website search/detail data, specifically positive `comp_all`
-with submissions, not `comp_main`, `comp_all_avg`, or an invented average. The chip preserves the
+When a library opens, every cached record is loaded and published first (so filters and the genre
+list are complete immediately); stale games are then refreshed with at most two concurrent lookups.
+
+Provider calls run off the UI thread, are paced, and are interrupted when their coroutine is
+cancelled. IGDB authenticates through Twitch client credentials; PCGamingWiki uses bot-password
+login and Cargo plus Video-template notes. Neither credentialed client follows redirects, so a
+307/308 can never replay a secret-carrying POST elsewhere. A refused PCGamingWiki login is latched
+for the process instead of being retried per game. PCGamingWiki notes are reduced to reader text
+(references, templates' named arguments, URLs and link markup removed) before the native-HDR
+heuristics run; one Steam ID or several, and one wiki page or several, only yield a result when the
+pages agree. The unofficial HLTB client uses its website search/detail data, specifically positive
+`comp_all` with submissions, not `comp_main`, `comp_all_avg`, or an invented average. One lookup
+reads at most two search pages and five detail pages, paced, skips a detail page that cannot be
+read, and stops on an HTTP error; a failed search-endpoint discovery is remembered for five minutes
+and the discovered endpoint must itself be a search API. The chip preserves the
 rendered **HowLongToBeat** headline text, including half-hours; unrounded seconds drive the filters.
 Unavailable/changed provider responses are reported rather than replaced with another provider's
-metric. Cancelled HLTB work stops before further provider requests or publishing a resolved result.
+metric. Cancelled work stops before further provider requests or publishing a resolved result.
 
 Developer builds read `DELOS_IGDB_CLIENT_ID`, `DELOS_IGDB_CLIENT_SECRET`,
-`DELOS_PCGW_BOT_USERNAME`, and `DELOS_PCGW_BOT_PASSWORD` from ignored `local.properties` or environment
-variables. The user explicitly accepted direct-in-APK credential exposure; there is no backend or
-end-user key entry. Never commit credentials or log tokens/passwords. Provider attribution is visible
-in Settings → About, and the adapted HLTB client's MIT notice is bundled in assets.
+`DELOS_PCGW_BOT_USERNAME`, and `DELOS_PCGW_BOT_PASSWORD` from environment variables (an empty or blank
+variable is ignored) or ignored `local.properties`. The values are plain `BuildConfig` string constants:
+`-dontobfuscate` is set and R8 does not encrypt strings, so anyone holding such an APK can read them with
+`strings` or apktool. The user explicitly accepted this direct-in-APK exposure; there is no backend or
+end-user key entry. Mitigate by using a minimally privileged PCGamingWiki bot password, rotating both
+credentials on any distribution, and never attaching a credentialed APK to a public artifact (CI builds
+carry no credentials, so the feature is inert there). Never commit credentials or log tokens/passwords.
+Provider attribution is visible in Settings → About, and the adapted HLTB client's MIT notice is bundled
+in assets.
 
 ## Menus and settings
 

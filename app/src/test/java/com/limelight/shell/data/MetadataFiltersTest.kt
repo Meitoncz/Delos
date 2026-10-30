@@ -7,7 +7,7 @@ import org.junit.Test
 
 class MetadataFiltersTest {
     private fun metadata(hdr: NativeHdr = NativeHdr.UNKNOWN, seconds: Long? = null, genre: Int = 1) = GameMetadata(
-        candidate = MetadataCandidate(10, "Game", 2020, 20, listOf(GameGenre(genre, "Genre"))),
+        candidate = MetadataCandidate(10, "Game", 2020, listOf(20L), listOf(GameGenre(genre, "Genre"))),
         hdr = HdrEvidence(hdr),
         completion = seconds?.let { CompletionTime(30, "Game", it, "https://howlongtobeat.com/game/30", "10 Hours") },
     )

@@ -90,8 +90,14 @@ internal fun openMetadataMenu(scope: CoroutineScope, shell: ShellState, tracker:
         scope.launch {
             try {
                 block()
-                val error = store.entry(pc, app).error
-                shell.showToast(error ?: success, if (error == null) Symbols.CHECK_CIRCLE else Symbols.ERROR)
+                val state = store.entry(pc, app)
+                val error = state.error
+                // A finished refresh/reset that found no IGDB match is not a success.
+                if (error == null && state.data?.candidate == null) {
+                    shell.showToast("No IGDB match found. Use Search IGDB / change match.", Symbols.SEARCH)
+                } else {
+                    shell.showToast(error ?: success, if (error == null) Symbols.CHECK_CIRCLE else Symbols.ERROR)
+                }
             } catch (error: CancellationException) {
                 throw error
             } catch (_: Exception) {

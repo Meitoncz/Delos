@@ -8,7 +8,9 @@ if (metadataLocalFile.exists()) {
     metadataLocalFile.withInputStream { metadataProperties.load(it) }
 }
 def metadataCredential = { String name ->
-    def value = System.getenv(name) ?: metadataProperties.getProperty(name, '')
+    // A defined-but-empty environment variable must not hide the value in local.properties.
+    def fromEnvironment = System.getenv(name)
+    def value = fromEnvironment?.trim() ? fromEnvironment : metadataProperties.getProperty(name, '')
     '"' + value.replace('\\', '\\\\').replace('"', '\\"').replace('\r', '\\r').replace('\n', '\\n') + '"'
 }
 
