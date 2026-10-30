@@ -3,6 +3,7 @@
 package com.limelight.binding.video;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.robolectric.Shadows.shadowOf;
 
 import android.media.MediaCodec;
@@ -115,5 +116,37 @@ public class AsyncCodecFlushTest {
 
         before.onInputBufferAvailable(null, 1);
         assertEquals(NONE, adapter.dequeueInputIndex(0));
+    }
+
+    @Test
+    public void inputOverflowKeepsTheQueuedIndicesInOrderAndCountsTheRest() {
+        MediaCodec.Callback codec = adapter.newCallback(callbackThread, null, null);
+
+        int offered = 200;
+        for (int i = 0; i < offered; i++) {
+            codec.onInputBufferAvailable(null, i);
+        }
+
+        int dropped = adapter.getDroppedInputIndices();
+        assertTrue("the queue is bounded", dropped > 0);
+        int queued = 0;
+        while (adapter.dequeueInputIndex(0) == queued) {
+            queued++;
+        }
+        assertEquals("the queued indices come out first to last", offered - dropped, queued);
+    }
+
+    @Test
+    public void outputOverflowCountsEveryDroppedFrame() {
+        MediaCodec.Callback codec = adapter.newCallback(callbackThread, null, null);
+
+        int offered = 200;
+        for (int i = 0; i < offered; i++) {
+            codec.onOutputBufferAvailable(null, i, frame(i * 1000L));
+        }
+
+        int dropped = adapter.getDroppedOutputFrames();
+        assertTrue("the queue is bounded", dropped > 0);
+        assertEquals(offered - dropped, adapter.getOutputQueueSize());
     }
 }

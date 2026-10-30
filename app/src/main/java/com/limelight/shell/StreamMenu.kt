@@ -68,6 +68,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.limelight.Game
+import com.limelight.utils.ExternalDisplayControlActivity
 import com.limelight.shell.data.ProfileStore
 import com.limelight.shell.settings.AppearanceStore
 import com.limelight.shell.settings.StreamMenuSettings
@@ -155,38 +156,19 @@ class StreamMenu(private val game: Game) {
     }
 
     /**
-     * Accepts controller input from the activity on the built-in display. Android deliberately sends
-     * untargeted controller input only to the globally focused display, so an external-display menu
-     * cannot receive it through its own window. We forward semantic UI actions instead of injecting
-     * synthetic key events into the TV window.
+     * Accepts controller and keyboard input from the activity on the built-in display. Android
+     * deliberately sends untargeted controller input only to the globally focused display, so an
+     * external-display menu cannot receive it through its own window. We forward semantic UI actions
+     * instead of injecting synthetic key events into the TV window. While the menu is open it owns
+     * every key event, as its focused window does on-device: nothing reaches the stream.
      */
     fun onExternalKey(event: KeyEvent): Boolean {
         if (onKey(event)) return true
         if (!isOpen) return false
 
-        val action = when (event.keyCode) {
-            KeyEvent.KEYCODE_DPAD_UP -> ExternalMenuAction.Move(MenuDirection.UP, event.repeatCount)
-            KeyEvent.KEYCODE_DPAD_DOWN -> ExternalMenuAction.Move(MenuDirection.DOWN, event.repeatCount)
-            KeyEvent.KEYCODE_DPAD_LEFT -> ExternalMenuAction.Move(MenuDirection.LEFT, event.repeatCount)
-            KeyEvent.KEYCODE_DPAD_RIGHT -> ExternalMenuAction.Move(MenuDirection.RIGHT, event.repeatCount)
-            KeyEvent.KEYCODE_BUTTON_A, KeyEvent.KEYCODE_DPAD_CENTER,
-            KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_NUMPAD_ENTER -> ExternalMenuAction.Activate
-            KeyEvent.KEYCODE_BUTTON_B, KeyEvent.KEYCODE_BACK -> ExternalMenuAction.Back
-            else -> null
-        }
-
-        if (action != null) {
-            val trigger = when (action) {
-                is ExternalMenuAction.Move -> event.action == KeyEvent.ACTION_DOWN
-                ExternalMenuAction.Activate, ExternalMenuAction.Back ->
-                    event.action == KeyEvent.ACTION_UP && !event.isCanceled
-            }
-            if (trigger) externalActions.tryEmit(action)
-            return true
-        }
-
-        // An open menu owns controller input just like its normal, focused window does on-device.
-        return event.source and (InputDevice.SOURCE_GAMEPAD or InputDevice.SOURCE_JOYSTICK) != 0
+        externalMenuKeyAction(event.keyCode, event.action, event.repeatCount, event.isCanceled)
+            ?.let { externalActions.tryEmit(it) }
+        return true
     }
 
     /** Converts analog movement into focus actions at a controlled repeat rate, without fake keys. */
@@ -312,9 +294,17 @@ class StreamMenu(private val game: Game) {
         return (system * 100 / 255).coerceIn(5, 100) / 5 * 5
     }
 
-    /** Sets the stream window's brightness, and the menu's while it is open so the change shows at once. */
+    /**
+     * Sets this device's screen brightness while the stream runs: the stream window's (and the menu's, so
+     * the change shows at once), or the controller Activity's when the stream is on an external display,
+     * whose window brightness the TV ignores.
+     */
     private fun applyBrightness(percent: Int, menu: ComponentDialog?) {
         brightness = percent
+        if (game.isOnExternalDisplay()) {
+            ExternalDisplayControlActivity.setStreamBrightness(percent / 100f)
+            return
+        }
         for (window in listOfNotNull(game.window, menu?.window)) {
             window.attributes = window.attributes.apply { screenBrightness = percent / 100f }
         }
@@ -680,10 +670,33 @@ class StreamMenu(private val game: Game) {
 
 internal enum class MenuDirection { UP, DOWN, LEFT, RIGHT }
 
-private sealed interface ExternalMenuAction {
+internal sealed interface ExternalMenuAction {
     data class Move(val direction: MenuDirection, val repeatCount: Int) : ExternalMenuAction
     data object Activate : ExternalMenuAction
     data object Back : ExternalMenuAction
+}
+
+/**
+ * The menu action a key event triggers, or null when it triggers none: either the key means nothing
+ * to the menu, or this is the wrong phase (moves act on press, Activate and Back on release, and a
+ * cancelled release does nothing).
+ */
+internal fun externalMenuKeyAction(keyCode: Int, keyAction: Int, repeatCount: Int, canceled: Boolean): ExternalMenuAction? {
+    val action = when (keyCode) {
+        KeyEvent.KEYCODE_DPAD_UP -> ExternalMenuAction.Move(MenuDirection.UP, repeatCount)
+        KeyEvent.KEYCODE_DPAD_DOWN -> ExternalMenuAction.Move(MenuDirection.DOWN, repeatCount)
+        KeyEvent.KEYCODE_DPAD_LEFT -> ExternalMenuAction.Move(MenuDirection.LEFT, repeatCount)
+        KeyEvent.KEYCODE_DPAD_RIGHT -> ExternalMenuAction.Move(MenuDirection.RIGHT, repeatCount)
+        KeyEvent.KEYCODE_BUTTON_A, KeyEvent.KEYCODE_DPAD_CENTER,
+        KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_NUMPAD_ENTER -> ExternalMenuAction.Activate
+        KeyEvent.KEYCODE_BUTTON_B, KeyEvent.KEYCODE_BACK, KeyEvent.KEYCODE_ESCAPE -> ExternalMenuAction.Back
+        else -> return null
+    }
+    val trigger = when (action) {
+        is ExternalMenuAction.Move -> keyAction == KeyEvent.ACTION_DOWN
+        ExternalMenuAction.Activate, ExternalMenuAction.Back -> keyAction == KeyEvent.ACTION_UP && !canceled
+    }
+    return if (trigger) action else null
 }
 
 /** Stable edge/repeat policy shared by every analog direction. */

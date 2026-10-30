@@ -51,14 +51,13 @@ public final class NanoPacer {
     public interface OutputCallbacks {
         int nextOutputIndex(MediaCodec.BufferInfo info, int timeoutUs);
         void releaseOutputBuffer(int index, boolean render);
-        void onDequeued(long presentationTimeUs, long dequeueNs);
     }
 
     // Reusable holder to avoid per-frame allocations
     public static final class LatestOutput {
         public int index = -1;
         public long ptsUs = 0L;
-        public int flags = 0;
+        // When the frame left the codec, for decode statistics that must not include the pacing wait
         public long dequeueNs = 0L;
     }
 
@@ -82,17 +81,6 @@ public final class NanoPacer {
     }
 
     // Evaluate pacing state (call every decoded frame)
-    public void updatePacingMode(boolean fastVsyncEnabled, int streamTargetFps, int refreshRate) {
-        float rr = (float) refreshRate;
-
-        // Compensate common truncation cases (e.g., 119 from 119.88, 59 from 59.94).
-        if (refreshRate == 119) rr = 120f;
-        else if (refreshRate == 59) rr = 60f;
-
-        updatePacingMode(fastVsyncEnabled, streamTargetFps, rr);
-    }
-
-
     public void updatePacingMode(boolean fastVsyncEnabled, int streamTargetFps, float refreshRateHz) {
         synchronized (lock) {
             if (!fastVsyncEnabled) {
@@ -248,10 +236,7 @@ public final class NanoPacer {
                 drainedExtra++;
                 latest.index = outIndex;
                 latest.ptsUs = info.presentationTimeUs;
-                latest.flags = info.flags;
                 latest.dequeueNs = dqNs;
-
-                try { cb.onDequeued(latest.ptsUs, dqNs); } catch (Throwable ignored) { }
 
                 gotNew = true;
             }
@@ -322,21 +307,23 @@ public final class NanoPacer {
                 targetNs = nextDeadlineNs;
             }
 
-            // Late re-phase to avoid backlog accumulation
+            // Late: present immediately instead of delaying the frame by another period.
             if ((targetNs - nowNs) <= -framePeriodNs) {
-                targetNs = nowNs + framePeriodNs;
+                targetNs = nowNs;
             }
 
             return targetNs;
         }
     }
+    // Common display rates (and their NTSC-like 1000/1001 variants) that fractional refresh values snap to.
+    private static final float[] COMMON_RATES_HZ = { 24f, 30f, 48f, 50f, 60f, 72f, 90f, 100f, 120f, 144f, 165f, 240f };
+
     private static float snapRefreshRateHz(float rr) {
         // Snap common fractional rates (NTSC-like) and near-integers to reduce long-term mismatch.
         // Keep conservative to avoid mis-snapping VRR-like values.
         final float SNAP_EPS = 0.20f;
 
-        final float[] common = new float[] { 24f, 30f, 48f, 50f, 60f, 72f, 90f, 100f, 120f, 144f, 165f, 240f };
-        for (float c : common) {
+        for (float c : COMMON_RATES_HZ) {
             if (Math.abs(rr - c) <= SNAP_EPS) return c;
 
             final float ntsc = c * (1000f / 1001f); // 59.94, 119.88, ...

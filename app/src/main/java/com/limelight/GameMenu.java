@@ -61,18 +61,11 @@ public class GameMenu implements Game.GameMenuCallbacks {
     }
 
     private final Game game;
-    private final Context dialogScreenContext;
 
     private AlertDialog currentDialog;
 
-    public GameMenu(Game game, Context dialogScreenContext) {
-        this.game = game;
-        this.dialogScreenContext = dialogScreenContext;
-    }
-
     public GameMenu(Game game) {
         this.game = game;
-        this.dialogScreenContext = game;
     }
 
     private String getString(int id) {
@@ -90,7 +83,7 @@ public class GameMenu implements Game.GameMenuCallbacks {
             return;
         }
         // Check if the game window has focus again, if not try again after delay
-        if (!game.hasWindowFocus() && dialogScreenContext instanceof Game) {
+        if (!game.hasWindowFocus()) {
             new Handler(Looper.getMainLooper()).postDelayed(() -> runWithGameFocus(runnable), TEST_GAME_FOCUS_DELAY);
             return;
         }
@@ -114,7 +107,7 @@ public class GameMenu implements Game.GameMenuCallbacks {
     private void showMenuDialog(String title, MenuOption[] options) {
         int themeResId = game.getApplicationInfo().theme;
 
-        Context themedContext = new ContextThemeWrapper(dialogScreenContext, themeResId);
+        Context themedContext = new ContextThemeWrapper(game, themeResId);
         AlertDialog.Builder builder = new AlertDialog.Builder(themedContext);
         builder.setTitle(title);
 
@@ -258,7 +251,7 @@ public class GameMenu implements Game.GameMenuCallbacks {
     private void showAdvancedMenu(GameInputDevice device) {
         List<MenuOption> options = new ArrayList<>();
         if (game.allowChangeMouseMode) {
-            options.add(new MenuOption(getString(R.string.game_menu_select_mouse_mode), true, () -> game.selectMouseMode(dialogScreenContext)));
+            options.add(new MenuOption(getString(R.string.game_menu_select_mouse_mode), true, () -> game.selectMouseMode(game)));
         }
         
         options.add(new MenuOption(getString(R.string.game_menu_toggle_hud), true, game::toggleHUD));
@@ -315,7 +308,7 @@ public class GameMenu implements Game.GameMenuCallbacks {
                     ArrayList<String> serverCmds = game.getServerCmds();
                     if (serverCmds.isEmpty()) {
                         int themeResId = game.getApplicationInfo().theme;
-                        Context themedContext = new ContextThemeWrapper(dialogScreenContext, themeResId);
+                        Context themedContext = new ContextThemeWrapper(game, themeResId);
                         new AlertDialog.Builder(themedContext)
                                 .setTitle(R.string.game_dialog_title_server_cmd_empty)
                                 .setMessage(R.string.game_dialog_message_server_cmd_empty)
@@ -332,10 +325,8 @@ public class GameMenu implements Game.GameMenuCallbacks {
         options.add(new MenuOption(getString(game.isZoomModeEnabled() ? R.string.game_menu_disable_zoom_mode : R.string.game_menu_enable_zoom_mode), true,
                 game::toggleZoomMode));
 
-        if (dialogScreenContext == game) {
-            options.add(new MenuOption(getString(R.string.game_menu_rotate_screen), true,
-                    game::rotateScreen));
-        }
+        options.add(new MenuOption(getString(R.string.game_menu_rotate_screen), true,
+                game::rotateScreen));
 
         options.add(new MenuOption(getString(R.string.game_menu_advanced), true,
                 () -> showAdvancedMenu(device)));

@@ -8,7 +8,6 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.SparseArray;
-import android.util.SparseLongArray;
 
 import com.limelight.LimeLog;
 
@@ -32,7 +31,9 @@ public final class AsyncCodecAdapter {
     }
 
     private static final int INPUT_Q_CAP = 64;
-    private static final int OUTPUT_Q_CAP = 8;
+    // Above the output buffer count of any codec, so the codec's own buffer pool is the backpressure
+    // (as with synchronous decoding) and the queue only fills when the renderer thread stalls.
+    private static final int OUTPUT_Q_CAP = 32;
     private static final int RELEASE_Q_CAP = 32;
 
     // Cap how many releaseOutputBuffer(false) we do per render-loop tick to avoid bursts.
@@ -54,14 +55,6 @@ public final class AsyncCodecAdapter {
     private final SparseArray<MediaCodec.BufferInfo> outInfo =
             new SparseArray<>(16);
 
-    // Output-ready timestamp (ns) per output index, to make decode latency comparable vs sync.
-    // Guarded by synchronized(outInfo) together with outInfo (same index lifecycle).
-    private final SparseLongArray outReadyNs =
-            new SparseLongArray(16);
-
-    // Ready timestamp (ns) for the last index returned by dequeueOutputIndex().
-    private volatile long lastOutputReadyNs = 0L;
-
     // Callback thread drop-policy knob (volatile for cross-thread visibility).
     private volatile boolean preferLowerDelays = false;
 
@@ -79,6 +72,25 @@ public final class AsyncCodecAdapter {
     private boolean acceptingBuffers = true; // guarded by gate
     private int generation; // guarded by gate
     private volatile Handler callbackHandler;
+    private int droppedInputIndices; // guarded by gate
+    private int droppedOutputFrames; // guarded by gate
+
+    // Called with gate held, from the callback thread.
+    private void noteInputOverflow() {
+        droppedInputIndices++;
+        if (droppedInputIndices == 1 || (droppedInputIndices & 63) == 0) {
+            LimeLog.warning("Codec input queue full: " + droppedInputIndices + " input buffer(s) left out until the next flush");
+        }
+    }
+
+    // Called with gate held, from the callback thread.
+    private void noteOutputOverflow() {
+        droppedOutputFrames++;
+        if (droppedOutputFrames == 1 || (droppedOutputFrames & 63) == 0) {
+            LimeLog.warning("Codec output queue full: dropped " + droppedOutputFrames + " decoded frame(s)");
+        }
+    }
+
     // ---- BufferInfo pool (avoid per-frame allocations) ----
     private final ArrayDeque<MediaCodec.BufferInfo> infoPool =
             new ArrayDeque<>(32);
@@ -104,24 +116,17 @@ public final class AsyncCodecAdapter {
         preferLowerDelays = enabled;
     }
 
-    public long getLastOutputReadyNs() {
-        return lastOutputReadyNs;
-    }
-
-    public void resetLastOutputReadyNs() {
-        lastOutputReadyNs = 0L;
-    }
-
-    public HandlerThread getCallbackThread() {
-        return callbackThread;
-    }
-
-    public int getInputQueueSize() {
-        return inputQueue.size();
-    }
-
-    public int getOutputQueueSize() {
+    // Queue depths and drop counts, for tests.
+    int getOutputQueueSize() {
         return outputQueue.size();
+    }
+
+    int getDroppedInputIndices() {
+        synchronized (gate) { return droppedInputIndices; }
+    }
+
+    int getDroppedOutputFrames() {
+        synchronized (gate) { return droppedOutputFrames; }
     }
 
     public boolean isActive() {
@@ -146,24 +151,19 @@ public final class AsyncCodecAdapter {
                                  int timeoutUs,
                                  OutputRelease release) {
         if (codec == null) {
-            lastOutputReadyNs = 0L;
             return -1;
         }
 
         try {
             Integer idx = outputQueue.poll(timeoutUs, TimeUnit.MICROSECONDS);
             if (idx == null) {
-                lastOutputReadyNs = 0L;
                 return -1;
             }
 
             MediaCodec.BufferInfo bi;
-            long readyNs;
 
             synchronized (outInfo) {
                 bi = outInfo.get(idx);
-                readyNs = outReadyNs.get(idx, 0L);
-                outReadyNs.delete(idx);
 
                 if (bi != null && outInfoArg != null) {
                     outInfoArg.set(bi.offset, bi.size, bi.presentationTimeUs, bi.flags);
@@ -175,7 +175,6 @@ public final class AsyncCodecAdapter {
             }
 
             if (bi == null) {
-                lastOutputReadyNs = 0L;
                 try {
                     if (release != null) {
                         release.releaseNoRender(codec, idx);
@@ -186,12 +185,10 @@ public final class AsyncCodecAdapter {
                 return -1;
             }
 
-            lastOutputReadyNs = readyNs;
             recycleInfo(bi);
             return idx;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            lastOutputReadyNs = 0L;
             return -1;
         }
     }
@@ -268,10 +265,7 @@ public final class AsyncCodecAdapter {
 
         synchronized (outInfo) {
             try { outInfo.clear(); } catch (Throwable ignored) { }
-            try { outReadyNs.clear(); } catch (Throwable ignored) { }
         }
-
-        lastOutputReadyNs = 0L;
     }
 
     // Codec recovery's flush: call after flush() and before start(). Callbacks the codec sent
@@ -334,9 +328,7 @@ public final class AsyncCodecAdapter {
         try { releaseQueue.clear(); } catch (Throwable ignored) { }
         synchronized (outInfo) {
             try { outInfo.clear(); } catch (Throwable ignored) { }
-            try { outReadyNs.clear(); } catch (Throwable ignored) { }
         }
-        lastOutputReadyNs = 0L;
 
         try {
             codec.setCallback(callback, cb);
@@ -373,13 +365,12 @@ public final class AsyncCodecAdapter {
                     if (!accepts(callbackGeneration)) {
                         return;
                     }
-                    try {
-                        // Never block the MediaCodec callback thread.
-                        if (!inputQueue.offer(index)) {
-                            inputQueue.poll();
-                            inputQueue.offer(index);
-                        }
-                    } catch (Throwable ignored) { }
+                    // Never block the MediaCodec callback thread. Each index is queued once, so a full
+                    // queue means the codec has more input buffers than the cap: keep the order of
+                    // the queued ones and count the one left out (it returns at the next flush).
+                    if (!inputQueue.offer(index)) {
+                        noteInputOverflow();
+                    }
                 }
             }
 
@@ -420,7 +411,6 @@ public final class AsyncCodecAdapter {
 
         boolean stored = false;
         try {
-            final long readyNs = System.nanoTime();
             synchronized (outInfo) {
                 // Defensive: recycle previous BufferInfo if the same index is reused.
                 final MediaCodec.BufferInfo old = outInfo.get(index);
@@ -429,7 +419,6 @@ public final class AsyncCodecAdapter {
                 }
 
                 outInfo.put(index, copy);
-                outReadyNs.put(index, readyNs);
                 stored = true;
             }
 
@@ -445,9 +434,11 @@ public final class AsyncCodecAdapter {
                 return;
             }
 
-            // Managed profiles: bounded queue with drop-oldest policy.
+            // Managed profiles: bounded queue. The cap sits above any codec's output buffer count,
+            // so a full queue means the renderer stalled; the oldest frame is dropped and counted.
             if (!outputQueue.offer(index)) {
                 final Integer oldIdx = outputQueue.poll();
+                noteOutputOverflow();
                 if (oldIdx != null) {
                     enqueueNoRenderReleaseOrReleaseNow(mc, oldIdx, release);
                 }
@@ -501,9 +492,7 @@ public final class AsyncCodecAdapter {
             try { releaseQueue.clear(); } catch (Throwable ignored) { }
             synchronized (outInfo) {
                 try { outInfo.clear(); } catch (Throwable ignored) { }
-                try { outReadyNs.clear(); } catch (Throwable ignored) { }
             }
-            lastOutputReadyNs = 0L;
             return;
         }
 
@@ -546,10 +535,7 @@ public final class AsyncCodecAdapter {
 
             synchronized (outInfo) {
                 try { outInfo.clear(); } catch (Throwable ignored) { }
-                try { outReadyNs.clear(); } catch (Throwable ignored) { }
             }
-
-            lastOutputReadyNs = 0L;
 
             attachedCodec = null;
             callbackInstalled = false;
@@ -581,7 +567,6 @@ public final class AsyncCodecAdapter {
             synchronized (outInfo) {
                 bi = outInfo.get(index);
                 outInfo.remove(index);
-                outReadyNs.delete(index);
             }
         } catch (Throwable ignored) { }
 
@@ -621,7 +606,6 @@ public final class AsyncCodecAdapter {
             synchronized (outInfo) {
                 bi = outInfo.get(index);
                 outInfo.remove(index);
-                outReadyNs.delete(index);
             }
         } catch (Throwable ignored) { }
 

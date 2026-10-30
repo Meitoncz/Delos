@@ -6,6 +6,12 @@ import java.util.Arrays;
  * Delos: the 1% low frame rate of the frames drawn recently, for the statistics panel. 1% low is the
  * frame rate of the slowest 1% of frames: 1000 over the average of the longest 1% of frame intervals.
  * Idea from Moonlight V+ (qiin2333) and Moonlight X Turnip (NoCrypt), via Starwire.
+ *
+ * <p>Every call site stamps right after the frame was handed to the display with
+ * {@code releaseOutputBuffer}. The intervals therefore measure the cadence at which frames are
+ * submitted for drawing, not the moment the panel shows them (no render callback is used). Under
+ * Fast V-Sync the release is timed to the pacer's target, so the two stay close; frames dropped
+ * before the release are not counted.
  */
 public final class FrameTimes {
     // About ten seconds at 120 FPS

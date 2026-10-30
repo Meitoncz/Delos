@@ -818,8 +818,8 @@ private static int getFramePacingValue(SharedPreferences prefs) {
         config.framePacing = getFramePacingValue(prefs);
         config.asyncDecode = prefs.getBoolean("checkbox_async_decode", false);
         config.sgsrEnabled = prefs.getBoolean("checkbox_sgsr", false);
-        config.sgsrHighQuality = "high".equals(prefs.getString("list_sgsr_quality", "standard"));
         String sgsrMode = prefs.getString("list_sgsr_quality", "standard");
+        config.sgsrHighQuality = "high".equals(sgsrMode);
         config.sgsrTemporal = "temporal".equals(sgsrMode) || "temporal-quality".equals(sgsrMode);
         config.sgsrTemporalQuality = "temporal-quality".equals(sgsrMode);
         config.sgsrSharpness = Math.max(0, Math.min(100, prefs.getInt("seekbar_sgsr_sharpness", 50)));

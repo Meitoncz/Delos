@@ -433,10 +433,6 @@
     <string name="clipboard_sync_unsupported">This server does not support clipboard sync. Please install or upgrade your server to the latest version of Apollo.</string>
     <string name="send_clipboard_failed">Failed to send clipboard: </string>
     <string name="external_display_info">External Display connected with: %1$dx%2$d at %3$.1fHz</string>
-    <string name="notification_channel_name">External Display Control</string>
-    <string name="notification_title">External Display Active</string>
-    <string name="notification_text">Tap to open touchpad controller</string>
-    <string name="permission_denied">Notification permission denied</string>
     <string name="no_external_display">No external display detected</string>
     <string name="no_game_instance">No game instance available</string>
     <string name="get_clipboard_failed">Failed to get clipboard: </string>

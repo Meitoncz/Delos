@@ -1,7 +1,7 @@
 package com.limelight;
 
 
-import static com.limelight.StartExternalDisplayControlReceiver.requestFocusToExternalDisplayControl;
+import static com.limelight.utils.ExternalDisplayFocus.requestFocusToExternalDisplayControl;
 import static com.limelight.binding.input.KeyboardTranslator.getModifier;
 import static com.limelight.utils.ExternalDisplayControlActivity.closeExternalDisplayControl;
 import static com.limelight.utils.ServerHelper.getActiveDisplay;
@@ -890,9 +890,11 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         } catch (Throwable t) { LimeLog.warning("Stream surface setup failed: " + t); }
     }
 
+    private DisplayManager.DisplayListener externalDisplayListener;
+
     private void listenForExternalDisplayRemoval() {
         DisplayManager displayManager = (DisplayManager) getSystemService(Context.DISPLAY_SERVICE);
-        displayManager.registerDisplayListener(new DisplayManager.DisplayListener() {
+        externalDisplayListener = new DisplayManager.DisplayListener() {
             @Override
             public void onDisplayAdded(int displayId) {
             }
@@ -911,7 +913,8 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             @Override
             public void onDisplayChanged(int displayId) {
             }
-        }, null);
+        };
+        displayManager.registerDisplayListener(externalDisplayListener, null);
     }
 
     private void handleDisplayRemoved() {
@@ -1523,6 +1526,10 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
     @Override
     protected void onDestroy() {
+        if (externalDisplayListener != null) {
+            ((DisplayManager) getSystemService(Context.DISPLAY_SERVICE)).unregisterDisplayListener(externalDisplayListener);
+            externalDisplayListener = null;
+        }
         if (streamMenu != null) {
             streamMenu.closeForDisplayRemoval();
         }
@@ -4090,6 +4097,27 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     // Delos: the stream menu shows which of its toggles are on
     public PreferenceConfiguration getPrefConfig() {
         return prefConfig;
+    }
+
+    // Delos: SGSR on 8-bit output draws into window-sized buffers, while onCreate sized the surface for the
+    // requested HDR. The decoder calls this from its setup thread when the host settled on 8-bit, before it
+    // creates the SGSR stage; it returns once the surface has its new size (or after a short wait).
+    public void useLayoutSizedStreamSurface() {
+        final java.util.concurrent.CountDownLatch resized = new java.util.concurrent.CountDownLatch(1);
+        runOnUiThread(() -> {
+            try {
+                if (streamContainer != null) streamContainer.getSurfaceView().getHolder().setSizeFromLayout();
+            } catch (Throwable t) {
+                LimeLog.warning("SurfaceView setSizeFromLayout failed: " + t);
+            } finally {
+                resized.countDown();
+            }
+        });
+        try {
+            resized.await(1, java.util.concurrent.TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     // Delos: live stream-menu controls; only the local decoder changes output, not the connection.

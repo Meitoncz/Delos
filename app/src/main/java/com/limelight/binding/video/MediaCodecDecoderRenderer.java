@@ -23,7 +23,6 @@ import com.limelight.preferences.PreferenceConfiguration;
 import com.limelight.utils.TrafficStatsHelper;
 
 import android.annotation.SuppressLint;
-import android.util.LongSparseArray;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
@@ -49,8 +48,12 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     private boolean preferLowerDelays = false;
 
 
-    // Decode latency tracking: map PTS(us) -> enqueue time (ns)
-    private final LongSparseArray<Long> enqueueNsByPtsUs = new LongSparseArray<>();
+    // Decode latency tracking: enqueue time (ns) per PTS (us), oldest first. Primitive arrays keep
+    // the per-frame path free of boxing.
+    private static final int ENQUEUE_TRACK_CAP = 256;
+    private final long[] enqueuePtsUs = new long[ENQUEUE_TRACK_CAP];
+    private final long[] enqueueNsOfPts = new long[ENQUEUE_TRACK_CAP];
+    private int enqueueCount; // guarded by enqueuePtsUs
 
     // Output dequeue timeout in microseconds (Game sets 500 with LFR, 2000 otherwise)
     private volatile int preferLowerDelaysTimeoutUs = 2000;
@@ -76,17 +79,36 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     }
     private int getOutputDequeueTimeoutUs(){ return preferLowerDelays ? Math.max(250, preferLowerDelaysTimeoutUs) : preferLowerDelaysTimeoutUs; }
 
-    // Update stats using real decode time: enqueue->dequeue, instead of uptime - PTS
-    private void updateDecodeLatencyStats(long presentationTimeUs) {
-        synchronized (enqueueNsByPtsUs) {
-            int idx = enqueueNsByPtsUs.indexOfKey(presentationTimeUs);
+    // Remember when the frame with this PTS went into the codec
+    private void recordEnqueueTime(long presentationTimeUs, long enqueueNs) {
+        synchronized (enqueuePtsUs) {
+            if (enqueueCount == ENQUEUE_TRACK_CAP) {
+                // Nothing came out for this many frames; forget the oldest
+                System.arraycopy(enqueuePtsUs, 1, enqueuePtsUs, 0, ENQUEUE_TRACK_CAP - 1);
+                System.arraycopy(enqueueNsOfPts, 1, enqueueNsOfPts, 0, ENQUEUE_TRACK_CAP - 1);
+                enqueueCount--;
+            }
+            enqueuePtsUs[enqueueCount] = presentationTimeUs;
+            enqueueNsOfPts[enqueueCount] = enqueueNs;
+            enqueueCount++;
+        }
+    }
+
+    // Update stats using real decode time: enqueue->dequeue, instead of uptime - PTS. dequeueNs is when
+    // the frame left the codec; the caller stamps it before any pacer wait, so the figure is the
+    // decoder's time, not decode plus pacing.
+    private void updateDecodeLatencyStats(long presentationTimeUs, long dequeueNs) {
+        synchronized (enqueuePtsUs) {
+            // Submission times rise strictly with the PTS, so the table stays sorted
+            int idx = Arrays.binarySearch(enqueuePtsUs, 0, enqueueCount, presentationTimeUs);
             if (idx >= 0) {
-                long enqNs = enqueueNsByPtsUs.valueAt(idx);
+                long enqNs = enqueueNsOfPts[idx];
                 // Also forget older entries: those frames were dropped and will never be presented
-                for (int i = idx; i >= 0; i--) {
-                    enqueueNsByPtsUs.removeAt(i);
-                }
-                long decMs = (System.nanoTime() - enqNs) / 1_000_000L;
+                int remaining = enqueueCount - (idx + 1);
+                System.arraycopy(enqueuePtsUs, idx + 1, enqueuePtsUs, 0, remaining);
+                System.arraycopy(enqueueNsOfPts, idx + 1, enqueueNsOfPts, 0, remaining);
+                enqueueCount = remaining;
+                long decMs = (dequeueNs - enqNs) / 1_000_000L;
                 if (decMs >= 0 && decMs < 1000) {
                     activeWindowVideoStats.decoderTimeMs += decMs;
                     if (!USE_FRAME_RENDER_TIME) {
@@ -147,7 +169,6 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     private final NanoPacer.OutputCallbacks nanoCallbacks = new NanoPacer.OutputCallbacks() {
         @Override public int nextOutputIndex(BufferInfo info, int timeoutUs) { return dequeueOutput(info, timeoutUs); }
         @Override public void releaseOutputBuffer(int index, boolean render) { videoDecoder.releaseOutputBuffer(index, render); }
-        @Override public void onDequeued(long ptsUs, long dequeueNs) { }
     };
 
     private boolean needsSpsBitstreamFixup, isExynos4;
@@ -715,6 +736,11 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                 videoDecoder.release();
                 videoDecoder = null;
             }
+            // The SGSR renderer made for this attempt; the connection never calls cleanup() when setup() fails
+            if (!configured && sgsr != null) {
+                sgsr.close();
+                sgsr = null;
+            }
         }
         return configured;
     }
@@ -854,6 +880,13 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
             }
             LimeLog.info("PyroWave renderer created");
             return 0;
+        }
+
+        // Delos: SGSR on SDR output draws into window-sized buffers; the surface was sized for the
+        // requested HDR, so size it again if the host settled on 8-bit.
+        if (sgsrRequested && prefs.enableHdr && (format & MoonBridge.VIDEO_FORMAT_MASK_10BIT) == 0 &&
+                context instanceof com.limelight.Game) {
+            ((com.limelight.Game) context).useLayoutSizedStreamSurface();
         }
 
         return initializeDecoder(false);
@@ -1382,6 +1415,9 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                         if (outIndex >= 0) {
                             long presentationTimeUs = info.presentationTimeUs;
                             int lastIndex = outIndex;
+                            // When the newest frame left the codec: stamped before any pacer wait or
+                            // release, so the decode statistics do not include time spent pacing.
+                            long dequeueNs = System.nanoTime();
 
                             numFramesOut++;
 
@@ -1395,17 +1431,18 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
 
                                     lastIndex = outIndex;
                                     presentationTimeUs = info.presentationTimeUs;
+                                    dequeueNs = System.nanoTime();
                                 }
 
                                 if (prefs.framePacing == PreferenceConfiguration.FRAME_PACING_FAST_VSYNC) {
                                     nanoPacer.updatePacingMode(true, refreshRate, activity.getWindowManager().getDefaultDisplay().getRefreshRate());
                                     nanoLatest.index = lastIndex;
                                     nanoLatest.ptsUs = presentationTimeUs;
-                                    nanoLatest.flags = info.flags;
-                                    nanoLatest.dequeueNs = System.nanoTime();
+                                    nanoLatest.dequeueNs = dequeueNs;
                                     numFramesOut += nanoPacer.waitAndDrainLatest(info, nanoLatest, nanoCallbacks);
                                     lastIndex = nanoLatest.index;
                                     presentationTimeUs = nanoLatest.ptsUs;
+                                    dequeueNs = nanoLatest.dequeueNs;
                                     videoDecoder.releaseOutputBuffer(lastIndex, System.nanoTime());
                                 }
                                 else if (prefs.framePacing == PreferenceConfiguration.FRAME_PACING_MAX_SMOOTHNESS ||
@@ -1447,7 +1484,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                                 outputBufferQueue.add(lastIndex);
                             }
 
-                            updateDecodeLatencyStats(presentationTimeUs);
+                            updateDecodeLatencyStats(presentationTimeUs, dequeueNs);
                         } else if (outIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
                             handleOutputFormatChanged();
                         }
@@ -1492,10 +1529,11 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
             return false;
         }
 
+        final long dequeueNs = System.nanoTime();
         videoDecoder.releaseOutputBuffer(newestIndex, System.nanoTime());
         activeWindowVideoStats.totalFramesRendered++;
         frameTimes.add(System.nanoTime());
-        updateDecodeLatencyStats(newestPtsUs);
+        updateDecodeLatencyStats(newestPtsUs, dequeueNs);
         return true;
     }
 
@@ -1666,7 +1704,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
             return;
         }
         detachAsyncCodec();
-        videoDecoder.release();
+        if (videoDecoder != null) videoDecoder.release();
         if (sgsr != null) { sgsr.close(); sgsr = null; }
     }
 
@@ -1717,7 +1755,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                     timestampUs, codecFlags);
 
             // Track enqueue time for this PTS
-            try { synchronized (enqueueNsByPtsUs) { enqueueNsByPtsUs.put(timestampUs, System.nanoTime()); } } catch (Throwable ignored) { /* per-frame stats are best effort */ }
+            recordEnqueueTime(timestampUs, System.nanoTime());
 
             // We need a new buffer now
             nextInputBufferIndex = -1;
@@ -1823,7 +1861,8 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                     decoder = "(unknown)";
                 }
 
-                float decodeTimeMs = (float)lastTwo.decoderTimeMs / lastTwo.totalFramesReceived;
+                float decodeTimeMs = lastTwo.totalFramesReceived > 0 ?
+                        (float)lastTwo.decoderTimeMs / lastTwo.totalFramesReceived : 0f;
                 SgsrRenderer activeSgsr = sgsr;
                 float processingTimeMs = activeSgsr != null ? activeSgsr.getGpuTimeMs() : 0f;
                 long rttInfo = MoonBridge.getEstimatedRttInfo();
