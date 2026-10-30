@@ -105,6 +105,7 @@ import com.limelight.shell.ui.ArtworkProgressBar
 import com.limelight.shell.screens.ArtworkScreen
 import com.limelight.shell.screens.DebugInfoScreen
 import com.limelight.shell.screens.OscPreviewScreen
+import com.limelight.shell.screens.UNVERIFIED_HDR_LABEL
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 
@@ -477,7 +478,7 @@ fun Shell(
                             val index = genreIds.indexOf(filters.genreId).coerceAtLeast(0)
                             metadata.updateFilters(filters.copy(genreId = genreIds[Math.floorMod(index + direction, genreIds.size)]))
                         }), compact = true)
-                        val hdrLabels = listOf("All", "Native HDR", "SDR", "Unknown")
+                        val hdrLabels = listOf("All", "Native HDR", "SDR", UNVERIFIED_HDR_LABEL)
                         SettingRow(Symbols.HDR_ON, "HDR support", RowValue.Choice(hdrLabels[filters.hdr.ordinal], { direction ->
                             metadata.updateFilters(filters.copy(hdr = HdrFilter.entries[Math.floorMod(filters.hdr.ordinal + direction, HdrFilter.entries.size)]))
                         }), compact = true)

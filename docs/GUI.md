@@ -63,15 +63,20 @@ decisions and verification status live in [GitHub Issues](https://github.com/Mei
 
 The existing information area under the game title/logo also shows IGDB genres, native HDR/SDR,
 and the HowLongToBeat headline duration. HDR uses a readable rainbow badge; confirmed native-SDR
-games use a neutral SDR chip. Unknown/unmatched/ambiguous evidence has no HDR/SDR badge. The host's
-streaming HDR flag is not native game support. Special K, ReShade, Auto HDR, RTX HDR and enabling
-workarounds do not qualify as native out-of-the-box HDR. File-enabling instructions, conflicting
-claims, and platform/edition limitations remain unknown rather than producing a positive badge.
+games use a neutral SDR chip. A muted `HDR ?` chip means native HDR/SDR could not be verified:
+the wiki has no page, evidence is unknown/ambiguous, or claimed HDR is broken, disabled, simulated
+or platform/edition-restricted. Only successfully evaluated unknown records (`updatedAt > 0` and
+`pcgwFailedAt == 0`) show this third state. Missing records and failed/backed-off unknown lookups
+show no badge; previously confirmed HDR/SDR evidence remains visible during a later refresh failure.
+The host's streaming HDR flag is not native game support. Special K, ReShade, Auto HDR and RTX HDR
+do not qualify as native game HDR.
 
-The left menu filters by genre, native HDR/SDR/unknown, and headline length (<10, 10–30, 30–60,
+The left menu filters by genre, native HDR/SDR/`HDR ?` (unknown), and headline length (<10, 10–30, 30–60,
 60+ hours, or unknown). Filters follow the active profile and combine across categories. Empty
 results retain a controller/touch reset action. Original library order, running-game state,
 artwork and cover layout are preserved.
+The `HDR ?` filter retains unknown-support matching, including pending/failed records without a
+badge; the display rule above does not change filter membership.
 
 Game options → Metadata provides IGDB search/match selection, refresh and reset. Automatic matching
 compares titles tolerantly (case, punctuation, diacritics, a leading "The", "&"/"and", Roman/Arabic
@@ -104,10 +109,10 @@ login and Cargo plus Video-template notes. Neither credentialed client follows r
 307/308 can never replay a secret-carrying POST elsewhere. A refused PCGamingWiki login is latched
 for the process instead of being retried per game. PCGamingWiki notes are reduced to reader text
 (references, templates' named arguments, URLs and link markup removed) before the native-HDR
-heuristics run. The wiki's own HDR value decides: `false` is SDR; `true`, `always on` and `limited`
-(native HDR with flaws, e.g. No Man's Sky) are HDR; `hackable`, `unknown` and a missing value stay
-unknown, except that `hackable` with a note naming Special K/ReShade/Auto HDR/RTX HDR/a mod as the only
-way is SDR. A note withdraws a native value only when it says HDR needs such a tool, is console/edition
+heuristics run. The wiki's own HDR value decides: `false` and `hackable` are SDR. Notes never promote
+`hackable`, even when they describe native HDR output via Engine.ini. `unknown` and a missing value
+stay unknown. `true`, `always on` and `limited` (native HDR with flaws, e.g. No Man's Sky) are HDR.
+A note withdraws a native value only when it says HDR needs Special K/ReShade/Auto HDR/RTX HDR/a mod, is console/edition
 specific, "not native"/"not supported", or that HDR is currently broken, disabled, simulated or does not
 work; config files, command lines, improvement mods and "limited" brightness are caveats, not
 retractions. A game is looked up by every IGDB Steam AppID; when no page lists one (or IGDB lists none),

@@ -60,6 +60,17 @@ internal fun NativeHdrChip() {
 }
 
 @Composable
+internal fun UnverifiedHdrChip() {
+    val colors = LocalDelosColors.current
+    BasicText(
+        UNVERIFIED_HDR_LABEL,
+        style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 19.tpx),
+        modifier = Modifier.clip(CircleShape).background(colors.surface)
+            .border(1.px, colors.line, CircleShape).padding(horizontal = 16.px, vertical = 6.px),
+    )
+}
+
+@Composable
 internal fun FilteredLibraryEmpty() {
     val metadata = LocalGameMetadata.current
     val shell = LocalShell.current

@@ -302,8 +302,7 @@ class PcGamingWikiClient internal constructor(
             val notes = fields["hdr notes"]?.takeIf { it.isNotBlank() }
             val prose = notes?.let(::plainText)
             val support = when {
-                value == "false" -> NativeHdr.SDR
-                value == "hackable" && prose != null && retrofitOnly.containsMatchIn(prose) -> NativeHdr.SDR
+                value == "false" || value == "hackable" -> NativeHdr.SDR
                 value !in NATIVE_VALUES -> NativeHdr.UNKNOWN
                 prose != null && (retrofitOnly.containsMatchIn(prose) || limitedSupport.containsMatchIn(prose) ||
                     notWorking.containsMatchIn(prose)) -> NativeHdr.UNKNOWN

@@ -477,10 +477,11 @@ private fun GameInfo(pc: Pc, app: App, modifier: Modifier, reducedMotion: Boolea
         FlowRow(Modifier.padding(top = 10.px).widthIn(max = 1620.px), horizontalArrangement = Arrangement.spacedBy(12.px), verticalArrangement = Arrangement.spacedBy(6.px)) {
             if (app.running) Chip(Symbols.PLAY_ARROW, "Running on ${pc.name}") else Chip(Symbols.COMPUTER, pc.name)
             val metadata = LocalGameMetadata.current.entry(pc, app).data
-            when (metadata?.hdr?.support) {
+            when (hdrBadgeKind(metadata)) {
                 NativeHdr.HDR -> NativeHdrChip()
                 NativeHdr.SDR -> Chip(Symbols.HDR_ON, "SDR")
-                else -> Unit
+                NativeHdr.UNKNOWN -> UnverifiedHdrChip()
+                null -> Unit
             }
             metadata?.completion?.takeIf { it.seconds > 0 }?.let {
                 Chip(Symbols.HISTORY, "HLTB ${it.headline}")

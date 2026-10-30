@@ -92,11 +92,24 @@ class PcGamingWikiClientTest {
         }
     }
 
-    @Test fun falseIsSdrButMissingHackableAndAmbiguousAreNotGuessed() {
+    @Test fun falseIsSdrButMissingAndAmbiguousAreNotGuessed() {
         assertEquals(NativeHdr.SDR, PcGamingWikiClient.parseVideo("{{Video|hdr=false}}", "Game").support)
-        for (source in listOf("{{Video|hdr=unknown}}", "{{Video|hdr=hackable}}",
+        for (source in listOf("{{Video|hdr=unknown}}",
             "{{Video|hdr=}}", "{{Video|hdr=true", "{{Other|hdr=true}}", "<!-- {{Video|hdr=true}} -->")) {
             assertEquals(source, NativeHdr.UNKNOWN, PcGamingWikiClient.parseVideo(source, "Game").support)
+        }
+    }
+
+    @Test fun hackableIsSdrEvenWithConfigurationOrNativeOutputNotes() {
+        // Include the real PCGamingWiki configuration/mod notes used by the native-value fixtures above.
+        for (notes in listOf(
+            "Change the value bUseHDRDisplayOutput from false to true in GameUserSettings.ini",
+            "RenoDX mod for fix broken black level and white point",
+            "Supports native HDR output via Engine.ini.",
+            "",
+        )) {
+            assertEquals(notes, NativeHdr.SDR,
+                PcGamingWikiClient.parseVideo("{{Video|hdr=hackable|hdr notes=$notes}}", "Game").support)
         }
     }
 
