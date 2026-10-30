@@ -556,8 +556,8 @@ class StreamMenu(private val game: Game) {
                     val modeValue = if (prefs.sgsrTemporalQuality) "temporal-quality" else if (prefs.sgsrTemporal) "temporal" else if (prefs.sgsrHighQuality) "high" else "standard"
                     val helpText = when (helpKey) {
                         "Touchscreen mode" -> SettingsHelp.choice("mouse_mode_list", game.activeMouseMode.toString()) +
-                            "\n\n" + if (prefs.rememberMouseMode) "Applies now and is saved (Remember mouse mode is on)."
-                            else "Applies now and lasts for this stream (Remember mouse mode is off)."
+                            "\n\n" + if (prefs.rememberMouseMode) "Applies now and is saved."
+                            else "Applies now; this stream only."
                         "Mode" -> SettingsHelp.choice("list_sgsr_quality", modeValue) + "\n\n" + StreamMenuHelp.description(helpKey)
                         "Upscaler", "Upscaling", "Supersampling" -> "$upscalerStatus\n\n${StreamMenuHelp.description(helpKey)}"
                         else -> StreamMenuHelp.description(helpKey)

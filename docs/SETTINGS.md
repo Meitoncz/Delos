@@ -114,8 +114,10 @@ catalog setting and choice has authored help. The right panel explains the curre
 choice, interactions, applicability and when changes take effect. Long text scrolls automatically
 between both ends with edge fades; the title stays fixed. The panel does not accept focus or manual
 touch/controller scrolling. The same help is used per game.
-Help texts are kept factual and short (typically 3-6 lines of the settings box, about 11 lines of
-39 characters at most); `SettingsHelpFitTest` checks that every setting and value fits.
+Help texts are kept factual and short (typically 3-5 lines of the settings box). The box holds about
+7 lines of 31 characters at the largest interface scale (125%, where the text grows but the box does
+not), so nothing scrolls there; `SettingsHelpFitTest` checks that every setting and value fits.
+Settings apply on the next stream unless their text says otherwise.
 Stream-menu actions and live controls have a right-hand panel too, including the native mouse-mode
 page. Search includes choice descriptions. Preference keys and stored values are unchanged.
 
