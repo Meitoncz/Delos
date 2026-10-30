@@ -17,9 +17,12 @@ immediately and shows a toast.
 - Resolution, FPS, HDR and codec changes among non-PyroWave codecs preserve the current bitrate. An
   inherited bitrate keeps following the profile instead of becoming a new game override. Selecting
   PyroWave, or changing resolution/FPS/HDR while it is selected, writes its recommendation as a game
-  override. Leaving PyroWave replaces that recommendation with the normal default bitrate for the new
-  codec, resolution and FPS (as an override, since the inherited value may be PyroWave's own); a bitrate
-  chosen by hand is kept. Bitrate can be adjusted or reset separately.
+  override. Before replacing an existing custom bitrate, it remembers that value for this user, PC
+  and game; inherited profile values are not copied into that history. Further automatic updates
+  keep the remembered value. Leaving PyroWave restores it only while the bitrate is still automatic;
+  without remembered history, the new codec/resolution/FPS default is written as an override, since
+  the profile may itself use PyroWave. A hand-edited bitrate is kept, including one equal to the
+  recommendation. Editing or resetting bitrate clears its history; restoration consumes it.
 - The upscaler rows (SGSR) are unavailable for H.264, HEVC and AV1 on devices below OpenGL ES 3.1.
 - Advanced custom resolution/FPS definitions remain in the profile; their choices are available here.
 - Audio, controls, appearance and other global options continue to come from the user profile.
@@ -27,8 +30,10 @@ immediately and shows a toast.
 `GameSettingsStore` stores sparse, typed values under `ui_game_<PC hash>_<app ID>_<setting key>` in
 the user's `ui_profile_<UUID>` preferences. PC UUID plus host app ID distinguishes libraries; titles
 and artwork do not affect identity. Creating a user copies these values with the other profile
-settings. Later edits are independent; deleting a user deletes their overrides too, and removing a PC
-in Devices deletes that PC's overrides for every user.
+settings, including private bitrate history. Later edits are independent; deleting a user deletes
+their overrides/history too, and removing a PC in Devices deletes both for every user. Resetting all
+overrides also clears this game's history without affecting other games. History never inherits
+from the profile or appears among editable options or in the stream's launch snapshot.
 
 ## Launch integration
 

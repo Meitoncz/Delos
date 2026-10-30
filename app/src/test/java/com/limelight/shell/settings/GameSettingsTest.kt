@@ -63,6 +63,69 @@ class GameSettingsTest {
         stream.close()
     }
 
+    @Test fun rememberedBitratesAreRestoredOnlyForTheirOwnPcAndGame() {
+        val selected = game()
+        val other = game(pc = "pc-b")
+        val stream = StreamSettingsStore(profiles.catalog) { selected.preferences }
+        val otherStream = StreamSettingsStore(profiles.catalog) { other.preferences }
+        stream.write(spec("video_format"), "forceav1")
+        stream.write(spec("seekbar_bitrate_kbps"), 200000)
+        otherStream.write(spec("seekbar_bitrate_kbps"), 110000)
+        stream.write(spec("video_format"), "pyrowave")
+        otherStream.write(spec("video_format"), "pyrowave")
+        stream.write(spec("list_fps"), "120")
+        stream.write(spec("checkbox_enable_hdr"), true)
+        stream.write(spec("video_format"), "forceav1")
+        assertEquals(200000, selected.preferences.getInt("seekbar_bitrate_kbps", -1))
+        assertFalse(selected.preferences.contains(BITRATE_BEFORE_PYROWAVE))
+        assertEquals("pyrowave", other.preferences.getString("video_format", null))
+        assertFalse(game(id = 2).preferences.contains(BITRATE_BEFORE_PYROWAVE))
+        otherStream.write(spec("video_format"), "forceav1")
+        assertEquals(110000, other.preferences.getInt("seekbar_bitrate_kbps", -1))
+        assertEquals(20000, profiles.settings().getInt("seekbar_bitrate_kbps", -1))
+        stream.close()
+        otherStream.close()
+    }
+
+    @Test fun manuallyEditedGameBitrateSurvivesLeavingPyroWave() {
+        val selected = game()
+        val stream = StreamSettingsStore(profiles.catalog) { selected.preferences }
+        stream.write(spec("seekbar_bitrate_kbps"), 200000)
+        stream.write(spec("video_format"), "pyrowave")
+        stream.write(spec("seekbar_bitrate_kbps"), 225000)
+        assertFalse(selected.preferences.contains(BITRATE_BEFORE_PYROWAVE))
+        stream.write(spec("video_format"), "forceav1")
+        assertEquals(225000, selected.preferences.getInt("seekbar_bitrate_kbps", -1))
+        assertFalse(selected.preferences.contains(PYROWAVE_BITRATE_MANUAL))
+        stream.close()
+    }
+
+    @Test fun resettingBitrateOrAllOverridesDiscardsOnlyThatGamesHistory() {
+        val selected = game()
+        val other = game(id = 2)
+        val stream = StreamSettingsStore(profiles.catalog) { selected.preferences }
+        val otherStream = StreamSettingsStore(profiles.catalog) { other.preferences }
+        stream.write(spec("seekbar_bitrate_kbps"), 200000)
+        stream.write(spec("video_format"), "pyrowave")
+        otherStream.write(spec("seekbar_bitrate_kbps"), 110000)
+        otherStream.write(spec("video_format"), "pyrowave")
+        selected.reset("seekbar_bitrate_kbps")
+        profiles.settings().edit().putInt("seekbar_bitrate_kbps", 37000).commit()
+        assertFalse(selected.isCustom("seekbar_bitrate_kbps"))
+        assertFalse(selected.preferences.contains(BITRATE_BEFORE_PYROWAVE))
+        assertEquals(37000, selected.preferences.getInt("seekbar_bitrate_kbps", -1))
+        stream.write(spec("seekbar_bitrate_kbps"), 300000)
+        stream.write(spec("list_fps"), "120")
+        assertTrue(selected.preferences.contains(BITRATE_BEFORE_PYROWAVE))
+        selected.resetAll()
+        assertFalse(selected.preferences.contains(BITRATE_BEFORE_PYROWAVE))
+        assertEquals(37000, selected.preferences.getInt("seekbar_bitrate_kbps", -1))
+        otherStream.write(spec("video_format"), "forceav1")
+        assertEquals(110000, other.preferences.getInt("seekbar_bitrate_kbps", -1))
+        stream.close()
+        otherStream.close()
+    }
+
     @Test fun unmodifiedValuesFollowProfileWhileOverridesStayLocalToPcAndGame() {
         val a = game()
         assertTrue(a.overrides().isEmpty())
@@ -93,6 +156,30 @@ class GameSettingsTest {
         assertTrue(removed.all.keys.none { it.startsWith("ui_game_") })
     }
 
+    @Test fun rememberedGameBitratesAreCopiedAndDeletedWithTheirUser() {
+        val first = profiles.profiles.value.current!!.id
+        val selected = game()
+        val stream = StreamSettingsStore(profiles.catalog) { selected.preferences }
+        stream.write(spec("seekbar_bitrate_kbps"), 200000)
+        stream.write(spec("video_format"), "pyrowave")
+        val second = profiles.create("Other player", 1)
+        val copied = game()
+        val copiedStream = StreamSettingsStore(profiles.catalog) { copied.preferences }
+        copiedStream.write(spec("video_format"), "forceav1")
+        assertEquals(200000, copied.preferences.getInt("seekbar_bitrate_kbps", -1))
+        copiedStream.write(spec("seekbar_bitrate_kbps"), 310000)
+        copiedStream.write(spec("video_format"), "pyrowave")
+        profiles.switchTo(first)
+        stream.write(spec("video_format"), "forceav1")
+        assertEquals(200000, selected.preferences.getInt("seekbar_bitrate_kbps", -1))
+        profiles.delete(second.id)
+        val removed = context.getSharedPreferences("ui_profile_${second.id}", Context.MODE_PRIVATE)
+        assertTrue(removed.all.keys.none { it.startsWith("ui_game_") })
+        assertEquals(200000, selected.preferences.getInt("seekbar_bitrate_kbps", -1))
+        stream.close()
+        copiedStream.close()
+    }
+
     @Test fun resettingAllOnlyRemovesThisGamesOverrides() {
         game().preferences.edit().putInt("seekbar_bitrate_kbps", 42000).putBoolean("checkbox_full_range", true).commit()
         game(id = 2).preferences.edit().putInt("seekbar_bitrate_kbps", 33000).commit()
@@ -103,33 +190,54 @@ class GameSettingsTest {
         assertEquals(20000, profiles.settings().getInt("seekbar_bitrate_kbps", 0))
     }
 
-    @Test fun forgettingAPcRemovesItsOverridesInEveryUserAndKeepsOtherPcs() {
+    @Test fun forgettingAPcRemovesItsBitrateHistoryInEveryUserAndKeepsOtherPcs() {
         val first = profiles.profiles.value.current!!.id
-        game().preferences.edit().putBoolean("checkbox_enable_hdr", true).commit()
-        game(id = 2).preferences.edit().putInt("seekbar_bitrate_kbps", 30000).commit()
-        game(pc = "pc-b").preferences.edit().putBoolean("checkbox_full_range", true).commit()
+        val selected = game()
+        val other = game(pc = "pc-b")
+        val stream = StreamSettingsStore(profiles.catalog) { selected.preferences }
+        val otherStream = StreamSettingsStore(profiles.catalog) { other.preferences }
+        val another = game(id = 2)
+        val anotherStream = StreamSettingsStore(profiles.catalog) { another.preferences }
+        stream.write(spec("seekbar_bitrate_kbps"), 200000)
+        stream.write(spec("video_format"), "pyrowave")
+        anotherStream.write(spec("seekbar_bitrate_kbps"), 30000)
+        anotherStream.write(spec("video_format"), "pyrowave")
+        otherStream.write(spec("seekbar_bitrate_kbps"), 110000)
+        otherStream.write(spec("video_format"), "pyrowave")
         profiles.create("Other player", 1)
-        game().preferences.edit().putBoolean("checkbox_full_range", true).commit()
         profiles.forgetGameSettings("pc-a")
         assertTrue(game().overrides().isEmpty())
+        assertFalse(game().preferences.contains(BITRATE_BEFORE_PYROWAVE))
         assertTrue(game(id = 2).overrides().isEmpty())
-        assertTrue(game(pc = "pc-b").isCustom("checkbox_full_range"))
+        assertFalse(game(id = 2).preferences.contains(BITRATE_BEFORE_PYROWAVE))
+        val copiedOther = game(pc = "pc-b")
+        val copiedOtherStream = StreamSettingsStore(profiles.catalog) { copiedOther.preferences }
+        copiedOtherStream.write(spec("video_format"), "forceav1")
+        assertEquals(110000, copiedOther.preferences.getInt("seekbar_bitrate_kbps", -1))
         profiles.switchTo(first)
         assertTrue(game().overrides().isEmpty())
+        assertFalse(game().preferences.contains(BITRATE_BEFORE_PYROWAVE))
         assertTrue(game(id = 2).overrides().isEmpty())
-        assertTrue(game(pc = "pc-b").isCustom("checkbox_full_range"))
+        assertFalse(game(id = 2).preferences.contains(BITRATE_BEFORE_PYROWAVE))
+        otherStream.write(spec("video_format"), "forceav1")
+        assertEquals(110000, other.preferences.getInt("seekbar_bitrate_kbps", -1))
+        stream.close()
+        otherStream.close()
+        anotherStream.close()
+        copiedOtherStream.close()
     }
 
-    @Test fun codecAndHdrUseExistingBitrateGuidanceWithoutChangingProfile() {
+    @Test fun inheritedBitrateIsNotRememberedAsACustomGameValue() {
         val a = game()
         val stream = StreamSettingsStore(profiles.catalog) { a.preferences }
         stream.write(spec("video_format"), "pyrowave")
         assertEquals(PreferenceConfiguration.getDefaultBitrate("1920x1080", "60", "pyrowave", false),
             a.preferences.getInt("seekbar_bitrate_kbps", 0))
+        assertFalse(a.preferences.contains(BITRATE_BEFORE_PYROWAVE))
         stream.write(spec("checkbox_enable_hdr"), true)
         assertEquals(PreferenceConfiguration.getDefaultBitrate("1920x1080", "60", "pyrowave", true),
             a.preferences.getInt("seekbar_bitrate_kbps", 0))
-        // Leaving PyroWave gives the new codec its normal default, not PyroWave's recommendation
+        // There was no custom bitrate to remember, so leaving uses the normal codec default.
         stream.write(spec("video_format"), "forceh265")
         assertEquals(PreferenceConfiguration.getDefaultBitrate("1920x1080", "60"), a.preferences.getInt("seekbar_bitrate_kbps", 0))
         assertEquals(20000, profiles.settings().getInt("seekbar_bitrate_kbps", 0))
@@ -143,11 +251,20 @@ class GameSettingsTest {
         val pyroWaveBitrate = profiles.settings().getInt("seekbar_bitrate_kbps", 0)
         val a = game()
         val stream = StreamSettingsStore(profiles.catalog) { a.preferences }
+        assertFalse(a.preferences.contains(BITRATE_BEFORE_PYROWAVE))
         stream.write(spec("video_format"), "forceh265")
         assertEquals(PreferenceConfiguration.getDefaultBitrate("1920x1080", "60"), a.preferences.getInt("seekbar_bitrate_kbps", 0))
         assertEquals(pyroWaveBitrate, profiles.settings().getInt("seekbar_bitrate_kbps", 0))
         assertEquals("pyrowave", profiles.settings().getString("video_format", null))
         stream.close()
+        // A profile's explicit manual-choice marker must not affect a game's independent history either.
+        profileStream.write(spec("seekbar_bitrate_kbps"), pyroWaveBitrate)
+        val other = game(id = 2)
+        val otherStream = StreamSettingsStore(profiles.catalog) { other.preferences }
+        otherStream.write(spec("video_format"), "forceav1")
+        assertEquals(PreferenceConfiguration.getDefaultBitrate("1920x1080", "60"),
+            other.preferences.getInt("seekbar_bitrate_kbps", 0))
+        otherStream.close()
         profileStream.close()
     }
 
