@@ -81,17 +81,17 @@ internal fun nativeSettings(
         list += SettingsItem(key, tab, section, icon, title, help, value, enabled,
             NativeSettingsHelp.details(key, help, value))
     }
-    row("ui_dark", Symbols.DARK_MODE, "Theme", RowValue.Choice(if (a.dark) "Dark" else "Light", { update { it.copy(dark = !it.dark) } }), "Dark or light interface. Applies immediately.")
+    row("ui_dark", Symbols.DARK_MODE, "Theme", RowValue.Choice(if (a.dark) "Dark" else "Light", { update { it.copy(dark = !it.dark) } }), "Dark or light interface.")
     row("ui_material_you", Symbols.SYSTEM_COLORS, "Material You colors", RowValue.Toggle(a.materialYou) { on -> update { it.copy(materialYou = on) } },
-        if (systemHue != null) "Uses only your system wallpaper colors. Turn off to choose a palette."
+        if (systemHue != null) "Uses only your wallpaper colors. Turn off to choose a palette."
         else "No wallpaper palette on this device, so Lagoon's colors are used. Turn off to choose a palette.")
     row("ui_palette", Symbols.PALETTE, "Color palette", RowValue.Choice(a.palette.label, { dir -> update { it.copy(palette = it.palette.step(dir)) } }, hsl(a.palette.accent, 90f, 60f)),
-        if (a.materialYou) "Needs Material You colors off." else "Colors of the whole interface and animated backgrounds. Applies immediately.", !a.materialYou)
+        if (a.materialYou) "Needs Material You colors off." else "Colors of the interface and animated backgrounds.", !a.materialYou)
     row("ui_match_game_colors", Symbols.MATCH_COLORS, "Match the game's colors", RowValue.Toggle(a.matchGameColors) { on -> update { it.copy(matchGameColors = on) } },
         if (a.materialYou) "Needs Material You colors off." else "The animated background takes the main color of the selected game's background image.", !a.materialYou)
     row("ui_clock", Symbols.SCHEDULE, "Clock", RowValue.Choice(a.clock.label, { dir -> update { it.copy(clock = it.clock.step(dir)) } }),
-        "12- or 24-hour time in the status bar.")
-    row("ui_background", Symbols.ANIMATION, "Animated background", RowValue.Choice(a.background.label, { dir -> update { it.copy(background = it.background.step(dir)) } }), "Animated shader background, or a still one. Applies immediately.")
+        "Time format in the status bar.")
+    row("ui_background", Symbols.ANIMATION, "Animated background", RowValue.Choice(a.background.label, { dir -> update { it.copy(background = it.background.step(dir)) } }), "Animated shader background (Android 13 or later), or a still one.")
     row("ui_home_layout", Symbols.VIEW_CAROUSEL, "Home layout", RowValue.Choice(a.homeLayout.label, { dir -> update { it.copy(homeLayout = it.homeLayout.step(dir)) } }), "Library as a scrolling grid or a single row.")
     row("ui_hero_background", Symbols.IMAGE, "Game background", RowValue.Toggle(a.heroBackground) { on -> update { it.copy(heroBackground = on) } }, "Shows the selected game's background on the home screen.")
     row("ui_hero_blur", Symbols.BLUR_ON, "Game background blur", RowValue.Slider(a.heroBlur, 0, 40, 5, " px") { v -> update { it.copy(heroBlur = v) } }, "Blurs the game background behind the library. Needs Game background.", a.heroBackground)
@@ -103,22 +103,22 @@ internal fun nativeSettings(
     val menuButtons = StreamMenuSettings.buttons(settings)
     row("ui_stream_menu_buttons", Symbols.SPORTS_ESPORTS, "Stream menu buttons", RowValue.Text(StreamMenuSettings.label(menuButtons)) {
         shell.buttonCapture = { buttons -> StreamMenuSettings.setButtons(settings, buttons) }
-    }, "Buttons pressed together during a stream to open or close the Delos stream menu. Select to record others, e.g. a rear button. Applies next stream.",
+    }, "Buttons pressed together during a stream to open or close the stream menu. Select to record others, e.g. a rear button.",
         tab = SettingsTab.CONTROLS, section = "Stream menu")
     row("ui_stream_menu_swipe", Symbols.SWIPE_UP, "Swipe up to open the menu", RowValue.Toggle(StreamMenuSettings.swipe(settings)) { on ->
         settings.edit().putBoolean(StreamMenuSettings.KEY_SWIPE, on).apply()
-    }, "A swipe up from the bottom edge also opens the stream menu; touches starting at that edge do not reach the game. Applies next stream.",
+    }, "A swipe up from the bottom edge also opens the stream menu. Touches starting there do not reach the game.",
         tab = SettingsTab.CONTROLS, section = "Stream menu")
     val statsPosition = StatsPosition.read(settings)
     row("ui_stats_position", Symbols.STATS_POSITION, "Statistics position", RowValue.Choice(statsPosition.label, { dir ->
         settings.edit().putString(StatsPosition.KEY, statsPosition.step(dir).name).apply()
-    }), "Corner of the full statistics panel while streaming; compact mode is always top center. Applies next stream.", tab = SettingsTab.DISPLAY, section = "Statistics")
+    }), "Corner of the full statistics panel while streaming. Compact mode is always top center.", tab = SettingsTab.DISPLAY, section = "Statistics")
     val choices = listOf<Pc?>(null) + pcs.filter { it.paired }.sortedBy { it.name.lowercase() }
     val index = choices.indexOfFirst { it?.uuid == startup.defaultPc }.coerceAtLeast(0)
     row("ui_default_pc", Symbols.STAR, "Default device", RowValue.Choice(choices[index]?.name ?: "None", { dir ->
         val next = choices[Math.floorMod(index + dir, choices.size)]
         updateStartup { it.copy(defaultPc = next?.uuid, skipStart = next != null && it.skipStart) }
-    }), "Marked on the start screen; Delos can connect to it right away.", choices.size > 1, SettingsTab.DEVICES, "Startup")
+    }), "Preferred PC, marked on the start screen.", choices.size > 1, SettingsTab.DEVICES, "Startup")
     row("ui_skip_start", Symbols.FAST_FORWARD, "Skip the start screen", RowValue.Toggle(startup.skipStart) { on -> updateStartup { it.copy(skipStart = on) } },
         "Connects straight to the default device at startup.", startup.defaultPc != null, SettingsTab.DEVICES, "Startup")
     row("devices_manage", Symbols.DEVICES, "Manage devices", RowValue.Action { shell.navigate(Screen.Devices) }, "Connect, rename, wake, unpair or remove a PC.", tab = SettingsTab.DEVICES, section = "Paired PCs")
@@ -140,7 +140,7 @@ internal fun nativeSettings(
     }, "Your own key lets Delos download covers, wide covers, backgrounds and logos from SteamGridDB. Kept on this device for every profile.",
         tab = SettingsTab.COVERS, section = "SteamGridDB")
     row("covers_sgdb_auto", Symbols.AUTORENEW, "Download automatically", RowValue.Toggle(artwork.automatic) { on -> artwork.automatic = on },
-        "Fetches SteamGridDB's best-rated cover, wide cover, background and logo for new games when the PC's library loads.",
+        "Fetches SteamGridDB's best-rated cover, wide cover, background and logo for new games when the library loads.",
         artwork.enabled, SettingsTab.COVERS, "SteamGridDB")
     fun downloadAll(refresh: Boolean) {
         val ready = library ?: return shell.showToast("Connect to a PC first", Symbols.ERROR)
@@ -159,7 +159,7 @@ internal fun nativeSettings(
     row("covers_sgdb_refresh", Symbols.REFRESH, "Download all artwork again", RowValue.Action { downloadAll(refresh = true) },
         "Looks up every game again and takes the best-rated images; ones you picked stay.", artwork.enabled, SettingsTab.COVERS, "SteamGridDB")
     row("covers_sgdb_choose", Symbols.PHOTO_LIBRARY, "Choose artwork for one game", RowValue.Info("Game options"),
-        "Home screen: right menu button on a game → Artwork. Pick any cover, wide cover, background or logo, or another game's.",
+        "Home screen: right menu button on a game → Artwork. Pick any cover, wide cover, background or logo.",
         tab = SettingsTab.COVERS, section = "SteamGridDB")
     row("about_version", Symbols.DEPLOYED_CODE, "Version", RowValue.Info(BuildConfig.VERSION_NAME), "Delos for Android.", tab = SettingsTab.ABOUT, section = "Delos")
     row("about_based", Symbols.ACCOUNT_TREE, "Based on", RowValue.Info("Artemis · Moonlight"), "Open source game streaming, licensed under the GPLv3.", tab = SettingsTab.ABOUT, section = "Delos")

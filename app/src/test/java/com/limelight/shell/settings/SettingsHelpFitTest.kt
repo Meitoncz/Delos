@@ -10,6 +10,7 @@ import com.limelight.shell.StatsPosition
 import com.limelight.shell.screens.NativeSettingsHelp
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -18,7 +19,8 @@ import org.robolectric.annotation.Config
 
 /**
  * The help box is about [SettingsHelp.LINE_CHARS] characters wide and [SettingsHelp.MAX_LINES] lines
- * tall. Whatever the screens can render must fit it, so the text never has to scroll.
+ * tall at the largest interface scale. Whatever the screens can render must fit it, so the text never
+ * has to scroll; every violation is reported at once.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33], shadows = [ShadowMoonBridge::class, ShadowGameManager::class])
@@ -45,10 +47,16 @@ class SettingsHelpFitTest {
         lines
     }
 
+    private val problems = mutableListOf<String>()
+
     private fun assertFits(what: String, text: String) {
-        assertTrue("Empty help for $what", text.isNotBlank())
-        assertTrue("Help for $what needs ${renderedLines(text)} lines (max ${SettingsHelp.MAX_LINES}):\n$text",
-            renderedLines(text) <= SettingsHelp.MAX_LINES)
+        if (text.isBlank()) problems += "Empty help for $what"
+        else if (renderedLines(text) > SettingsHelp.MAX_LINES)
+            problems += "Help for $what needs ${renderedLines(text)} lines (max ${SettingsHelp.MAX_LINES}):\n$text"
+    }
+
+    @After fun everyHelpFits() {
+        assertTrue("${problems.size} help texts do not fit:\n\n" + problems.joinToString("\n\n"), problems.isEmpty())
     }
 
     /** Value sets that change what the help shows next to the selected value. */
@@ -129,7 +137,7 @@ class SettingsHelpFitTest {
         }
         listOf("0", "1", "2", "3", "4", "5").forEach {
             assertFits("stream menu mouse mode $it", SettingsHelp.choice("mouse_mode_list", it) +
-                "\n\nApplies now and lasts for this stream (Remember mouse mode is off).")
+                "\n\nApplies now; this stream only.")
         }
     }
 }
