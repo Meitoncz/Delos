@@ -15,6 +15,10 @@ class GlobalKeys {
     var canSearch: () -> Boolean = { false }
     var onSearch: (() -> Unit)? = null
 
+    /** Y toggles the library filters on the home screen (and closes them while they are open). */
+    var canFilter: () -> Boolean = { false }
+    var onFilter: (() -> Unit)? = null
+
     /** While set, every key goes here first (recording the stream menu buttons); true consumes it. */
     var capture: ((KeyEvent) -> Boolean)? = null
 
@@ -22,9 +26,10 @@ class GlobalKeys {
     fun dispatch(event: KeyEvent): Boolean {
         capture?.let { if (it(event)) return true }
         if (event.keyCode == KeyEvent.KEYCODE_BUTTON_Y) {
-            val search = onSearch ?: return false
-            if (!canSearch()) return false
-            if (event.action == KeyEvent.ACTION_UP && event.repeatCount == 0 && !event.isCanceled) search()
+            val search = onSearch?.takeIf { canSearch() }
+            val filter = onFilter?.takeIf { search == null && canFilter() }
+            val action = search ?: filter ?: return false
+            if (event.action == KeyEvent.ACTION_UP && event.repeatCount == 0 && !event.isCanceled) action()
             return true
         }
         if (event.keyCode !in KEYS) return false

@@ -158,6 +158,27 @@ class ShellSettingsTest {
         assertEquals(1, opened)
     }
 
+    @Test fun filterShortcutTogglesOnReleaseWhereAllowedAndLeavesSettingsSearchAlone() {
+        val keys = GlobalKeys()
+        var search = 0
+        var filter = 0
+        keys.onSearch = { search++ }
+        keys.onFilter = { filter++ }
+        val down = KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BUTTON_Y)
+        val up = KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BUTTON_Y)
+        assertFalse(keys.dispatch(down))
+        assertFalse(keys.dispatch(up))
+        keys.canFilter = { true }
+        assertTrue(keys.dispatch(down))
+        assertEquals(0, filter)
+        assertTrue(keys.dispatch(up))
+        assertEquals(1, filter)
+        keys.canSearch = { true } // Settings never shows filters; search wins if both were ever allowed.
+        assertTrue(keys.dispatch(up))
+        assertEquals(1, search)
+        assertEquals(1, filter)
+    }
+
     @Test fun newProfileCopiesStreamValuesThenSwitchingKeepsUsersIndependent() {
         val base = PreferenceManager.getDefaultSharedPreferences(context)
         base.edit().putInt("seekbar_bitrate_kbps", 15000).putBoolean("checkbox_enable_perf_overlay", true).commit()

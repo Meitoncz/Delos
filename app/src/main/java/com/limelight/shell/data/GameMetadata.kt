@@ -65,7 +65,10 @@ data class MetadataFilters(
     val hdr: HdrFilter = HdrFilter.ANY,
     val length: LengthFilter = LengthFilter.ANY,
 ) {
-    val active: Boolean get() = genreId != null || hdr != HdrFilter.ANY || length != LengthFilter.ANY
+    val active: Boolean get() = activeCount > 0
+
+    /** How many of the three criteria narrow the library. */
+    val activeCount: Int get() = listOf(genreId != null, hdr != HdrFilter.ANY, length != LengthFilter.ANY).count { it }
 
     fun matches(metadata: GameMetadata?): Boolean {
         if (genreId != null && metadata?.candidate?.genres?.none { it.id == genreId } != false) return false
