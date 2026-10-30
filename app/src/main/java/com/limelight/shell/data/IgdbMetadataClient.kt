@@ -10,59 +10,62 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 import java.util.Calendar
 import java.util.TimeZone
-import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 
 class IgdbMetadataException(message: String) : IOException(message)
 
-/** Direct IGDB v4 calls. Blocking: callers must dispatch off the UI thread. */
-class IgdbMetadataClient(
-    private val http: OkHttpClient,
+/**
+ * Direct IGDB v4 calls. Blocking: callers must dispatch off the UI thread. Redirects are never followed:
+ * the Twitch token request carries the client secret in its body, which a 307/308 would replay elsewhere.
+ */
+class IgdbMetadataClient internal constructor(
+    http: OkHttpClient,
     private val clientId: String,
     private val clientSecret: String,
+    private val pacer: RequestPacer,
 ) {
+    constructor(http: OkHttpClient, clientId: String, clientSecret: String) :
+        this(http, clientId, clientSecret, RequestPacer(260))
+
+    private val http = http.newBuilder().followRedirects(false).followSslRedirects(false).build()
     private var accessToken: String? = null
     private var tokenDeadline = 0L
 
+    /** PC and Steam entries first, then entries without platform data; console-only entries are dropped. */
     fun search(query: String): List<MetadataCandidate> {
         if (query.isBlank()) return emptyList()
-        return games("search \"${escape(query.trim())}\"; $FIELDS where platforms = (6); limit 30;")
+        return preferPc(games("search \"${escape(query.trim())}\"; $FIELDS limit 50;"))
     }
 
     fun game(id: Long): MetadataCandidate? {
         require(id > 0) { "IGDB game ID must be positive" }
-        return games("$FIELDS where id = $id & platforms = (6); limit 1;").firstOrNull()
+        return games("$FIELDS where id = $id; limit 1;").firstOrNull()
     }
 
     // Keep editions as independent IDs/names; do not filter version_parent or substitute its metadata.
     private fun games(query: String): List<MetadataCandidate> {
-        permits.acquire()
-        try {
-            var token = token()
-            repeat(2) { attempt ->
-                pace()
-                val request = Request.Builder().url("https://api.igdb.com/v4/games")
-                    .header("Client-ID", clientId).header("Authorization", "Bearer $token")
-                    .header("Accept", "application/json")
-                    .post(query.toRequestBody("text/plain; charset=utf-8".toMediaType())).build()
-                http.newCall(request).execute().use { response ->
-                    // One token renewal is authentication maintenance, not an HTTP retry loop.
-                    if (response.code == 401 && attempt == 0) {
-                        token = token(rejected = token)
-                    } else {
-                        if (!response.isSuccessful) throw IgdbMetadataException("IGDB HTTP ${response.code}")
-                        return try {
-                            parseGames(JsonParser.parseString(response.body.string()).asJsonArray)
-                        } catch (_: RuntimeException) {
-                            throw IgdbMetadataException("IGDB returned invalid game data")
-                        }
+        var token = token()
+        repeat(2) { attempt ->
+            pacer.await()
+            val request = Request.Builder().url("https://api.igdb.com/v4/games")
+                .header("Client-ID", clientId).header("Authorization", "Bearer $token")
+                .header("Accept", "application/json")
+                .post(query.toRequestBody("text/plain; charset=utf-8".toMediaType())).build()
+            http.newCall(request).execute().use { response ->
+                // One token renewal is authentication maintenance, not an HTTP retry loop.
+                if (response.code == 401 && attempt == 0) {
+                    token = token(rejected = token)
+                } else {
+                    if (!response.isSuccessful) throw IgdbMetadataException("IGDB HTTP ${response.code}")
+                    return try {
+                        parseGames(JsonParser.parseString(response.body.string()).asJsonArray)
+                    } catch (_: RuntimeException) {
+                        throw IgdbMetadataException("IGDB returned invalid game data")
                     }
                 }
             }
-            throw IgdbMetadataException("IGDB authentication rejected")
-        } finally {
-            permits.release()
         }
+        throw IgdbMetadataException("IGDB authentication rejected")
     }
 
     @Synchronized private fun token(rejected: String? = null): String {
@@ -89,15 +92,17 @@ class IgdbMetadataClient(
     }
 
     companion object {
-        private const val FIELDS = "fields name,first_release_date,summary,genres.id,genres.name,external_games.uid,external_games.external_game_source;"
-        private val permits = Semaphore(8, true)
-        private val rateLock = Any()
-        private var nextRequest = 0L
+        private const val FIELDS = "fields name,first_release_date,summary,platforms,genres.id,genres.name,external_games.uid,external_games.external_game_source;"
 
-        private fun pace() = synchronized(rateLock) {
-            val wait = nextRequest - System.nanoTime()
-            if (wait > 0) TimeUnit.NANOSECONDS.sleep(wait)
-            nextRequest = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(260)
+        /**
+         * IGDB platform data is incomplete, so a missing list is not evidence against PC. Entries that list
+         * only other platforms and no Steam listing are dropped; PC/Steam entries come first.
+         */
+        internal fun preferPc(candidates: List<MetadataCandidate>): List<MetadataCandidate> {
+            val (preferred, unknown) = candidates
+                .filter { it.isPc || it.steamAppIds.isNotEmpty() || it.platformIds.isEmpty() }
+                .partition { it.isPc || it.steamAppIds.isNotEmpty() }
+            return preferred + unknown
         }
 
         internal fun escape(value: String): String = value.replace("\\", "\\\\")
@@ -119,12 +124,15 @@ class IgdbMetadataClient(
                 id = game.get("id").asLong,
                 name = game.get("name").asString,
                 year = year,
-                steamAppId = steamIds.singleOrNull(),
+                steamAppIds = steamIds,
                 genres = game.getAsJsonArray("genres")?.map { genre ->
                     val entry = genre.asJsonObject
                     GameGenre(entry.get("id").asInt, entry.get("name").asString)
                 }.orEmpty(),
                 summary = game.get("summary")?.takeUnless { it.isJsonNull }?.asString,
+                platformIds = game.getAsJsonArray("platforms")?.mapNotNull { platform ->
+                    platform.takeIf { it.isJsonPrimitive }?.asInt
+                }?.distinct().orEmpty(),
             )
         }
     }

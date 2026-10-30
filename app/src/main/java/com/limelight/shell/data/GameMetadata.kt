@@ -5,15 +5,23 @@ import androidx.compose.runtime.Immutable
 @Immutable
 data class GameGenre(val id: Int, val name: String)
 
+/** IGDB's Windows/PC platform ID. */
+private const val IGDB_PC_PLATFORM = 6
+
 @Immutable
 data class MetadataCandidate(
     val id: Long,
     val name: String,
     val year: Int?,
-    val steamAppId: Long?,
-    val genres: List<GameGenre>,
+    /** Every distinct Steam UID IGDB lists for this game; several mean base game plus bundle/edition entries. */
+    val steamAppIds: List<Long> = emptyList(),
+    val genres: List<GameGenre> = emptyList(),
     val summary: String? = null,
-)
+    /** IGDB platform IDs; empty means IGDB did not list any. */
+    val platformIds: List<Int> = emptyList(),
+) {
+    val isPc: Boolean get() = IGDB_PC_PLATFORM in platformIds
+}
 
 enum class NativeHdr { HDR, SDR, UNKNOWN }
 
@@ -29,8 +37,13 @@ data class GameMetadata(
     val candidate: MetadataCandidate? = null,
     val hdr: HdrEvidence = HdrEvidence(NativeHdr.UNKNOWN),
     val completion: CompletionTime? = null,
+    /** Last time every provider answered (or, for an unmatched game, the last answered IGDB search); 0 after a failure. */
     val updatedAt: Long = 0,
     val manual: Boolean = false,
+    /** When the provider last failed, 0 if its last request succeeded. Drives the per-provider retry backoff. */
+    val igdbFailedAt: Long = 0,
+    val pcgwFailedAt: Long = 0,
+    val hltbFailedAt: Long = 0,
 )
 
 @Immutable

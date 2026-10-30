@@ -16,6 +16,15 @@
 -keep class com.limelight.profiles.ProfilesManager$ProfilesData {*;}
 -keep class com.limelight.profiles.SettingsProfile {*;}
 
+# Game metadata cache - read and written through Gson reflection
+-keep class com.limelight.shell.data.GameMetadataStore$CachedMetadata {*;}
+-keep class com.limelight.shell.data.GameMetadata {*;}
+-keep class com.limelight.shell.data.MetadataCandidate {*;}
+-keep class com.limelight.shell.data.GameGenre {*;}
+-keep class com.limelight.shell.data.HdrEvidence {*;}
+-keep class com.limelight.shell.data.CompletionTime {*;}
+-keep class com.limelight.shell.data.NativeHdr {*;}
+
 # Moonlight common
 -keep class com.limelight.nvstream.jni.* {*;}
 

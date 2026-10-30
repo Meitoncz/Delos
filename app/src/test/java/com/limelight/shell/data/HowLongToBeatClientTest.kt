@@ -10,6 +10,7 @@ import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
 import okio.Buffer
 import java.io.InterruptedIOException
+import java.util.concurrent.TimeUnit
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -19,18 +20,20 @@ import org.junit.Test
 
 /** All requests terminate in an interceptor; these tests never contact the real website. */
 class HowLongToBeatClientTest {
-    @Test fun byIdUsesHeadlineCombinedNotMainStoryOrDetailedAverage() {
+    @Test fun headlineCombinedIsUsedNotMainStoryOrDetailedAverage() {
         val fixture = Fixture(mapOf(2127L to detail(2127, "Cyberpunk 2077", 1091500,
-            "\"comp_all\":237341,\"comp_all_count\":10805,\"comp_main\":94177,\"comp_all_avg\":253582")))
-        val result = fixture.client.byId(2127)
+            "\"comp_all\":237341,\"comp_all_count\":10805,\"comp_main\":94177,\"comp_all_avg\":253582")),
+            listOf(search(1, 1, 2127L to "Cyberpunk 2077")))
+        val result = fixture.client.lookup("Cyberpunk 2077", listOf(1091500L))
         assertEquals(CompletionTime(2127, "Cyberpunk 2077", 237341, "https://howlongtobeat.com/game/2127", "66 Hours"), result)
-        assertEquals(listOf("/game/2127"), fixture.requests.map { it.url.encodedPath })
+        assertEquals(listOf("/game/2127"), fixture.requests.map { it.url.encodedPath }.filter { it.startsWith("/game/") })
     }
 
     @Test fun fractionalHeadlineKeepsTheWebsiteValueInsteadOfRoundingToWholeHours() {
         val fixture = Fixture(mapOf(86015L to detail(86015, "Alba: A Wildlife Adventure", 1337010,
-            "\"comp_all\":12772,\"comp_all_count\":100", headline = "3½ Hours")))
-        val result = fixture.client.byId(86015)
+            "\"comp_all\":12772,\"comp_all_count\":100", headline = "3½ Hours")),
+            listOf(search(1, 1, 86015L to "Alba: A Wildlife Adventure")))
+        val result = fixture.client.lookup("Alba: A Wildlife Adventure", listOf(1337010L))
         assertEquals(12772L, result?.seconds)
         assertEquals("3½ Hours", result?.headline)
     }
@@ -43,9 +46,9 @@ class HowLongToBeatClientTest {
             Thread.currentThread().interrupt()
             Response.Builder().request(request).protocol(Protocol.HTTP_1_1).code(200).message("Fixture")
                 .body("<script src='/_next/static/chunks/search.js'></script>".toResponseBody()).build()
-        }.build())
+        }.build(), RequestPacer(0), System::nanoTime)
         try {
-            assertThrows(InterruptedIOException::class.java) { client.lookup("Game", null) }
+            assertThrows(InterruptedIOException::class.java) { client.lookup("Game", emptyList()) }
             assertEquals(listOf("/"), paths)
         } finally {
             Thread.interrupted()
@@ -59,7 +62,8 @@ class HowLongToBeatClientTest {
             "\"comp_all\":null,\"comp_all_count\":null",
             "\"comp_all\":0,\"comp_all_count\":0,\"comp_lvl_sp\":0,\"comp_lvl_mp\":1,\"invested_mp\":999999",
         )) {
-            assertNull(Fixture(mapOf(1L to detail(1, "Game", 0, stats))).client.byId(1))
+            val fixture = Fixture(mapOf(1L to detail(1, "Game", 0, stats)), listOf(search(1, 1, 1L to "Game")))
+            assertNull(fixture.client.lookup("Game", emptyList()))
         }
     }
 
@@ -68,7 +72,7 @@ class HowLongToBeatClientTest {
             mapOf(2127L to detail(2127, "Cyberpunk 2077", 1091500), 2L to detail(2, "Cyberpunk 2077: Ultimate Edition", 0)),
             listOf(search(1, 1, 2127L to "Cyberpunk 2077", 2L to "Cyberpunk 2077: Ultimate Edition")),
         )
-        val result = fixture.client.lookup("Cyberpunk 2077", 1091500)
+        val result = fixture.client.lookup("Cyberpunk 2077", listOf(1091500L))
         assertEquals(2127L, result?.id)
         assertEquals(237341L, result?.seconds)
         val post = fixture.requests.single { it.method == "POST" }
@@ -86,52 +90,57 @@ class HowLongToBeatClientTest {
 
     @Test fun exactTitleCannotOverrideConflictingSteamIdentity() {
         val fixture = Fixture(mapOf(1L to detail(1, "Game", 222)), listOf(search(1, 1, 1L to "Game")))
-        assertNull(fixture.client.lookup("Game", 111))
+        assertNull(fixture.client.lookup("Game", listOf(111L)))
     }
 
     @Test fun steamIdentityCanResolveDifferentPunctuationOrProviderTitle() {
         val fixture = Fixture(mapOf(1L to detail(1, "Provider's Official Title", 111)),
             listOf(search(1, 1, 1L to "Provider's Official Title")))
-        assertEquals(1L, fixture.client.lookup("Local title", 111)?.id)
+        assertEquals(1L, fixture.client.lookup("Local title", listOf(111L))?.id)
+    }
+
+    @Test fun anyOfSeveralSteamIdsMayVerifyTheMatch() {
+        val fixture = Fixture(mapOf(1L to detail(1, "Game", 222)), listOf(search(1, 1, 1L to "Game")))
+        assertEquals(1L, fixture.client.lookup("Game", listOf(111L, 222L))?.id)
     }
 
     @Test fun alternativeSteamIdentityIsVerifiedFromDetails() {
         val page = detail(1, "Game", 222).replace("\"profile_steam\":222", "\"profile_steam\":222,\"profile_steam_alt\":111")
         val fixture = Fixture(mapOf(1L to page), listOf(search(1, 1, 1L to "Game")))
-        assertEquals(1L, fixture.client.lookup("Game", 111)?.id)
+        assertEquals(1L, fixture.client.lookup("Game", listOf(111L))?.id)
     }
 
     @Test fun exactNormalizedTitleFallbackOnlyWhenSteamIdentityIsUnavailable() {
         val fixture = Fixture(mapOf(1L to detail(1, "The Game: Subtitle", 0)),
             listOf(search(1, 1, 1L to "The Game: Subtitle")))
-        assertEquals(1L, fixture.client.lookup(" THE GAME™ — Subtitle® ", 111)?.id)
+        assertEquals(1L, fixture.client.lookup(" THE GAME™ — Subtitle® ", emptyList())?.id)
     }
 
     @Test fun fuzzyOrEditionStrippedTitleIsNotASafeFallback() {
         val fixture = Fixture(mapOf(1L to detail(1, "Game: Definitive Edition", 0)),
             listOf(search(1, 1, 1L to "Game: Definitive Edition")))
-        assertNull(fixture.client.lookup("Game", null))
+        assertNull(fixture.client.lookup("Game", emptyList()))
         assertFalse(fixture.requests.any { it.url.encodedPath == "/game/1" })
     }
 
     @Test fun duplicateExactTitlesAreAmbiguousEvenWithoutSteam() {
         val fixture = Fixture(mapOf(1L to detail(1, "Game", 0), 2L to detail(2, "Game", 0)),
             listOf(search(1, 1, 1L to "Game", 2L to "Game")))
-        assertNull(fixture.client.lookup("Game", null))
+        assertNull(fixture.client.lookup("Game", emptyList()))
     }
 
     @Test fun multipleEditionsSharingSteamRemainAmbiguousAcrossSearchPages() {
         val fixture = Fixture(mapOf(1L to detail(1, "Game", 111), 2L to detail(2, "Game: Ultimate Edition", 111)),
             listOf(search(1, 2, 1L to "Game"), search(2, 2, 2L to "Game: Ultimate Edition")))
-        assertNull(fixture.client.lookup("Game", 111))
+        assertNull(fixture.client.lookup("Game", listOf(111L)))
         assertEquals(2, fixture.requests.count { it.method == "POST" })
     }
 
     @Test fun emptySearchAndMissingDetailAreGenuinelyUnavailable() {
-        assertNull(Fixture(emptyMap(), listOf(search(1, 0))).client.lookup("No Match", null))
-        assertNull(Fixture(emptyMap()).client.byId(999))
+        assertNull(Fixture(emptyMap(), listOf(search(1, 0))).client.lookup("No Match", emptyList()))
+        assertNull(Fixture(emptyMap(), listOf(search(1, 1, 999L to "Missing"))).client.lookup("Missing", emptyList()))
         val emptyPage = "<script id='__NEXT_DATA__'>{\"props\":{\"pageProps\":{\"game\":{\"data\":{\"game\":[]}}}}}</script>"
-        assertNull(Fixture(mapOf(1L to emptyPage)).client.byId(1))
+        assertNull(Fixture(mapOf(1L to emptyPage), listOf(search(1, 1, 1L to "Game"))).client.lookup("Game", emptyList()))
     }
 
     @Test fun malformedChangedOrWrongIdentityDetailIsAnErrorNotMissingTime() {
@@ -146,33 +155,71 @@ class HowLongToBeatClientTest {
             valid.replace("\"comp_all\":237341", "\"comp_all\":-1"),
             valid.replace("<h4>HowLongToBeat</h4><h5>66 Hours</h5>", ""),
         )) {
-            assertThrows(HowLongToBeatException::class.java) { Fixture(mapOf(1L to page)).client.byId(1) }
+            val fixture = Fixture(mapOf(1L to page), listOf(search(1, 1, 1L to "Game")))
+            assertThrows(HowLongToBeatException::class.java) { fixture.client.lookup("Game", listOf(111L)) }
         }
     }
 
     @Test fun searchBlocksHttpErrorsAndChangedResponseShapesStayExplicit() {
         for (status in listOf(401, 403, 429, 503)) {
             val fixture = Fixture(emptyMap(), initStatus = status)
-            val error = assertThrows(HowLongToBeatException::class.java) { fixture.client.lookup("Game", null) }
-            assertTrue(error.message!!.contains("HTTP $status"))
+            val error = assertThrows(HowLongToBeatException::class.java) { fixture.client.lookup("Game", emptyList()) }
+            assertEquals(status, error.httpStatus)
             assertFalse(fixture.requests.any { it.method == "POST" })
         }
         for (body in listOf("<html>CAPTCHA</html>", "{}", "{\"data\":{},\"pageCurrent\":1,\"pageTotal\":1}")) {
             val fixture = Fixture(emptyMap(), listOf(body))
-            assertThrows(HowLongToBeatException::class.java) { fixture.client.lookup("Game", null) }
+            assertThrows(HowLongToBeatException::class.java) { fixture.client.lookup("Game", emptyList()) }
         }
     }
 
     @Test fun changedSearchScriptsNeverFallBackToHomepagePopularGames() {
         val fixture = Fixture(emptyMap(), script = "fetch('/api/unrelated', {method:'GET'})")
-        assertThrows(HowLongToBeatException::class.java) { fixture.client.lookup("Game", null) }
+        assertThrows(HowLongToBeatException::class.java) { fixture.client.lookup("Game", emptyList()) }
         assertFalse(fixture.requests.any { it.method == "POST" })
+    }
+
+    @Test fun aPostEndpointThatIsNotASearchApiIsNeverTrusted() {
+        val fixture = Fixture(emptyMap(), script = "fetch('/api/login', {method:'POST'})")
+        assertThrows(HowLongToBeatException::class.java) { fixture.client.lookup("Game", emptyList()) }
+        assertFalse(fixture.requests.any { it.method == "POST" })
+    }
+
+    @Test fun failedSearchDiscoveryIsRememberedInsteadOfRefetchingEveryChunkPerLookup() {
+        val fixture = Fixture(emptyMap(), script = "fetch('/api/unrelated', {method:'GET'})")
+        assertThrows(HowLongToBeatException::class.java) { fixture.client.lookup("Game", emptyList()) }
+        val afterFirst = fixture.requests.size
+        assertThrows(HowLongToBeatException::class.java) { fixture.client.lookup("Other", emptyList()) }
+        assertEquals(afterFirst, fixture.requests.size)
+        fixture.nanos += TimeUnit.HOURS.toNanos(1)
+        assertThrows(HowLongToBeatException::class.java) { fixture.client.lookup("Game", emptyList()) }
+        assertTrue(fixture.requests.size > afterFirst)
+    }
+
+    @Test fun oneLookupOfACommonTitleIsBoundedAndSkipsAnUnreadableDetailPage() {
+        val ids = (1L..12L).toList()
+        val details = ids.associateWith { id -> if (id == 1L) "<html>changed</html>" else detail(id, "Game $id", if (id == 2L) 111 else 0) }
+        val fixture = Fixture(details, listOf(
+            search(1, 5, *ids.take(6).map { it to "Game $it" }.toTypedArray()),
+            search(2, 5, *ids.drop(6).map { it to "Game $it" }.toTypedArray()),
+        ))
+        assertEquals(2L, fixture.client.lookup("Game", listOf(111L))?.id)
+        assertEquals(2, fixture.requests.count { it.method == "POST" })
+        assertTrue(fixture.requests.count { it.url.encodedPath.startsWith("/game/") } <= 5)
+    }
+
+    @Test fun aBlockedDetailPageStopsTheLookupInsteadOfHammeringTheRemainingResults() {
+        val fixture = Fixture(mapOf(2L to detail(2, "Game 2", 0), 3L to detail(3, "Game 3", 0)),
+            listOf(search(1, 1, 1L to "Game 1", 2L to "Game 2", 3L to "Game 3")), blockedDetails = setOf(1L))
+        val error = assertThrows(HowLongToBeatException::class.java) { fixture.client.lookup("Game", listOf(111L)) }
+        assertEquals(429, error.httpStatus)
+        assertEquals(1, fixture.requests.count { it.url.encodedPath.startsWith("/game/") })
     }
 
     @Test fun optionalReferenceAuthorizationFieldsAreSentWithoutInventingValues() {
         val fixture = Fixture(emptyMap(), listOf(search(1, 0)),
             init = "{\"token\":\"fixture-token\",\"requestKey\":\"fixture-field\",\"requestValue\":\"fixture-value\"}")
-        assertNull(fixture.client.lookup("Game", null))
+        assertNull(fixture.client.lookup("Game", emptyList()))
         val post = fixture.requests.single { it.method == "POST" }
         assertEquals("fixture-field", post.header("x-hp-key"))
         assertEquals("fixture-value", post.header("x-hp-val"))
@@ -180,7 +227,7 @@ class HowLongToBeatClientTest {
         post.body!!.writeTo(buffer)
         assertEquals("fixture-value", JsonParser.parseString(buffer.readUtf8()).asJsonObject.get("fixture-field").asString)
         val incomplete = Fixture(emptyMap(), init = "{\"token\":\"fixture-token\",\"requestKey\":\"fixture-field\"}")
-        assertThrows(HowLongToBeatException::class.java) { incomplete.client.lookup("Game", null) }
+        assertThrows(HowLongToBeatException::class.java) { incomplete.client.lookup("Game", emptyList()) }
     }
 
     private class Fixture(
@@ -189,8 +236,11 @@ class HowLongToBeatClientTest {
         private val initStatus: Int = 200,
         private val init: String = "{\"token\":\"fixture-token\"}",
         private val script: String = "fetch(\"/api/search/site\",{method:\"POST\",headers:{\"Content-Type\":\"application/json\"}})",
+        private val blockedDetails: Set<Long> = emptySet(),
     ) {
         val requests = mutableListOf<Request>()
+        /** The injected clock; tests advance it instead of waiting. */
+        var nanos = 0L
         val client = HowLongToBeatClient(OkHttpClient.Builder().addInterceptor { chain ->
             val request = chain.request()
             requests += request
@@ -205,12 +255,16 @@ class HowLongToBeatClientTest {
                     val page = JsonParser.parseString(buffer.readUtf8()).asJsonObject.get("searchPage").asInt
                     200 to searches[page - 1]
                 }
-                path.startsWith("/game/") -> details[path.substringAfterLast('/').toLong()]?.let { 200 to it } ?: (404 to "not found")
+                path.startsWith("/game/") -> {
+                    val id = path.substringAfterLast('/').toLong()
+                    if (id in blockedDetails) 429 to "rate limited"
+                    else details[id]?.let { 200 to it } ?: (404 to "not found")
+                }
                 else -> throw AssertionError("Unexpected provider request: ${request.method} $path")
             }
             Response.Builder().request(request).protocol(Protocol.HTTP_1_1).code(code).message("Fixture")
                 .body(body.toResponseBody("text/plain".toMediaType())).build()
-        }.build())
+        }.build(), RequestPacer(0), { nanos })
     }
 
     companion object {

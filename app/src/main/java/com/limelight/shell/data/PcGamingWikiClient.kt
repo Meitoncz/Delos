@@ -15,24 +15,39 @@ import java.util.concurrent.TimeUnit
 
 class PcGamingWikiException(message: String) : IOException(message)
 
-/** Bot-password login and read-only Cargo/page requests; all calls are blocking. */
-class PcGamingWikiClient(http: OkHttpClient, private val username: String, private val password: String) {
-    private val http = http.newBuilder().cookieJar(SessionCookies()).build()
+/**
+ * Bot-password login and read-only Cargo/page requests; all calls are blocking. Redirects are never followed:
+ * the login POST carries the bot password in its body, which a 307/308 would replay elsewhere.
+ */
+class PcGamingWikiClient internal constructor(
+    http: OkHttpClient,
+    private val username: String,
+    private val password: String,
+    private val pacer: RequestPacer,
+) {
+    constructor(http: OkHttpClient, username: String, password: String) :
+        this(http, username, password, RequestPacer(1050))
+
+    private val http = http.newBuilder().cookieJar(SessionCookies()).followRedirects(false).followSslRedirects(false).build()
     private var loggedIn = false
+    // Latched when the wiki definitively refuses the bot account, so a wrong or rotated password is not retried per game.
+    private var credentialsRejected = false
     private data class Cached(val time: Long, val evidence: HdrEvidence)
     private val cache = LinkedHashMap<String, Cached>()
 
-    @Synchronized fun lookup(steamAppId: Long?, title: String): HdrEvidence {
-        require(steamAppId == null || steamAppId > 0) { "Steam AppID must be positive" }
-        if (steamAppId == null && title.isBlank()) return HdrEvidence(NativeHdr.UNKNOWN)
-        val key = steamAppId?.let { "steam:$it" } ?: "title:${title.trim()}"
+    /** [steamAppIds] are every Steam app IGDB lists for the game; any of them may identify the wiki page. */
+    @Synchronized fun lookup(steamAppIds: List<Long>, title: String): HdrEvidence {
+        require(steamAppIds.all { it > 0 }) { "Steam AppID must be positive" }
+        val ids = steamAppIds.distinct().sorted()
+        if (ids.isEmpty() && title.isBlank()) return HdrEvidence(NativeHdr.UNKNOWN)
+        val key = if (ids.isNotEmpty()) "steam:${ids.joinToString(",")}" else "title:${title.trim()}"
         cache[key]?.takeIf { System.nanoTime() - it.time < CACHE_NANOS }?.let { return it.evidence }
         login()
-        val where = if (steamAppId != null) "Game.Steam_AppID HOLDS \"$steamAppId\""
+        val where = if (ids.isNotEmpty()) ids.joinToString(" OR ") { "Game.Steam_AppID HOLDS \"$it\"" }
             else "Game._pageName = \"${cargoLiteral(title.trim().replace('_', ' '))}\""
         val data = api(mapOf(
             "action" to "cargoquery", "tables" to "Game,Video",
-            "fields" to "Game._pageName=Page,Video.HDR=HDR",
+            "fields" to "Game._pageName=Page",
             "join_on" to "Game._pageID=Video._pageID", "where" to where, "limit" to "10",
             "assert" to "user",
         ))
@@ -47,16 +62,21 @@ class PcGamingWikiClient(http: OkHttpClient, private val username: String, priva
         } catch (_: RuntimeException) {
             throw PcGamingWikiException("PCGamingWiki returned invalid Cargo rows")
         }
-        val evidence = if (pages.size != 1) HdrEvidence(NativeHdr.UNKNOWN) else {
-            val page = pages.single()
-            val parsed = api(mapOf("action" to "parse", "page" to page, "prop" to "wikitext", "assert" to "user"))
-            val source = try {
-                parsed.getAsJsonObject("parse").getAsJsonObject("wikitext").get("*").asString
-            } catch (_: RuntimeException) {
-                throw PcGamingWikiException("PCGamingWiki returned invalid page data")
+        val evidence = if (pages.isEmpty() || pages.size > MAX_PAGES) HdrEvidence(NativeHdr.UNKNOWN) else {
+            val results = pages.map { page ->
+                val parsed = api(mapOf("action" to "parse", "page" to page, "prop" to "wikitext", "assert" to "user"))
+                val source = try {
+                    parsed.getAsJsonObject("parse").getAsJsonObject("wikitext").get("*").asString
+                } catch (_: RuntimeException) {
+                    throw PcGamingWikiException("PCGamingWiki returned invalid page data")
+                }
+                // Cargo's string HDR column alone is not evidence of native support; inspect Video notes.
+                parseVideo(source, page)
             }
-            // Cargo's string HDR column alone is not evidence of native support; inspect Video notes.
-            parseVideo(source, page)
+            // Several pages (editions) count only when they all state the same definite answer.
+            val first = results.first()
+            if (results.size == 1 || (first.support != NativeHdr.UNKNOWN && results.all { it.support == first.support })) first
+            else HdrEvidence(NativeHdr.UNKNOWN)
         }
         if (cache.size >= 128) cache.remove(cache.keys.first())
         cache[key] = Cached(System.nanoTime(), evidence)
@@ -66,6 +86,7 @@ class PcGamingWikiClient(http: OkHttpClient, private val username: String, priva
     private fun login() {
         if (loggedIn) return
         if (username.isBlank() || password.isBlank()) throw PcGamingWikiException("PCGamingWiki credentials missing")
+        if (credentialsRejected) throw PcGamingWikiException("PCGamingWiki credentials were rejected")
         val tokens = api(mapOf("action" to "query", "meta" to "tokens", "type" to "login"))
         val token = try {
             tokens.getAsJsonObject("query").getAsJsonObject("tokens").get("logintoken").asString
@@ -73,19 +94,21 @@ class PcGamingWikiClient(http: OkHttpClient, private val username: String, priva
             throw PcGamingWikiException("PCGamingWiki returned invalid login data")
         }
         val result = api(mapOf("action" to "login", "lgname" to username, "lgpassword" to password, "lgtoken" to token), post = true)
-        val accepted = try {
-            result.getAsJsonObject("login")?.get("result")?.asString == "Success"
+        val outcome = try {
+            result.getAsJsonObject("login")?.get("result")?.asString
         } catch (_: RuntimeException) {
-            false
+            null
         }
-        if (!accepted) {
+        if (outcome != "Success") {
+            // Only a definite refusal is latched; throttling or an unreadable answer may be transient.
+            if (outcome != null && outcome != "Throttled" && outcome != "NeedToken") credentialsRejected = true
             throw PcGamingWikiException("PCGamingWiki authentication rejected")
         }
         loggedIn = true
     }
 
     private fun api(parameters: Map<String, String>, post: Boolean = false): JsonObject {
-        pace()
+        pacer.await()
         val params = parameters + ("format" to "json")
         val request = Request.Builder().header("User-Agent", "Delos/1.0 (https://github.com/Meitoncz/Delos)")
         if (post) {
@@ -128,21 +151,60 @@ class PcGamingWikiClient(http: OkHttpClient, private val username: String, priva
     companion object {
         private const val ENDPOINT = "https://www.pcgamingwiki.com/w/api.php"
         private val CACHE_NANOS = TimeUnit.HOURS.toNanos(6)
-        private val rateLock = Any()
-        private var nextRequest = 0L
+        private const val MAX_PAGES = 3
         private val comments = Regex("<!--.*?-->", RegexOption.DOT_MATCHES_ALL)
         private val videoStart = Regex("\\{\\{\\s*(?:Template:)?Video\\s*(?=[|}])", RegexOption.IGNORE_CASE)
         private val workaround = Regex("special\\s*k|reshade|auto\\s*hdr|rtx\\s*hdr|\\bini\\b|\\.(?:ini|json|cfg|xml|reg|dll|txt)\\b|registry|\\bmods?\\b|modifications|workaround|retrofit|inject|\\bedit(?:ing)?\\b|\\bfiles?\\b|\\bdownloads?\\b|\\binstall(?:ation)?\\b|command[ -]?line|launch (?:arguments?|options?)|hex[ -]?edit", RegexOption.IGNORE_CASE)
         private val retrofitOnly = Regex("(?:only|requires?|must|via|using|through|with).{0,60}(?:special\\s*k|reshade|auto\\s*hdr|rtx\\s*hdr|\\bmod\\b|retrofit)|(?:no|not|without) native|not supported natively", RegexOption.IGNORE_CASE)
-        private val limitedSupport = Regex("\\bonly\\b|\\blimited\\b|\\bversions?\\b|\\beditions?\\b|\\bconsoles?\\b|\\bxbox\\b|playstation|\\bps[345]\\b|\\bswitch\\b|not supported|unsupported|not native|no native|broken", RegexOption.IGNORE_CASE)
+        // Platform/edition restrictions need their own context; a bare "only", "version" or "switch" is ordinary prose.
+        private val limitedSupport = Regex("\\blimited\\b|\\bconsoles?\\b|\\bxbox\\b|playstation|\\bps[345]\\b|nintendo\\s+switch|\\bswitch\\s+(?:version|edition)\\b|not supported|unsupported|not native|no native|broken" +
+            "|\\b(?:specific|certain|some|particular|newer|older|later|earlier)\\s+(?:versions?|editions?|builds?)\\b" +
+            "|\\b(?:enhanced|special|deluxe|ultimate|gold|definitive|complete|anniversary|remastered?)\\s+editions?\\b" +
+            "|\\bonly\\b[^.]{0,40}\\b(?:versions?|editions?)\\b", RegexOption.IGNORE_CASE)
 
-        private fun pace() = synchronized(rateLock) {
-            val wait = nextRequest - System.nanoTime()
-            if (wait > 0) TimeUnit.NANOSECONDS.sleep(wait)
-            nextRequest = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(1050)
-        }
+        private val refTags = Regex("<ref\\b[^>]*?/>|<ref\\b[^>]*>.*?</ref\\s*>", setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
+        private val htmlTags = Regex("</?[a-zA-Z][^>]*>")
+        private val innermostTemplate = Regex("\\{\\{([^{}]*)\\}\\}")
+        private val wikiLink = Regex("\\[\\[([^\\]|]*)(?:\\|([^\\]]*))?\\]\\]")
+        private val wikiNamespaceTarget = Regex("\\s*(?:file|image|category|media):.*", RegexOption.IGNORE_CASE)
+        private val externalLink = Regex("\\[(?:https?:)?//[^\\s\\]]+(?:\\s+([^\\]]*))?\\]", RegexOption.IGNORE_CASE)
+        private val bareUrl = Regex("(?:https?://|www\\.)\\S+", RegexOption.IGNORE_CASE)
+        private val htmlEntity = Regex("&(?:[a-zA-Z]+|#\\d+);")
+        private val whitespace = Regex("\\s+")
 
         private fun cargoLiteral(value: String): String = value.replace("\\", "\\\\").replace("\"", "\\\"")
+
+        /**
+         * Reader-visible text of wikitext. References, tags, URLs and link markup carry file extensions and words
+         * ("download", "version", "only") that say nothing about the game's HDR, so the heuristics read this instead.
+         * Template arguments and link targets stay because `{{file|x.ini}}` or `[[Special K]]` are real evidence.
+         */
+        internal fun plainText(wikitext: String): String {
+            var text = refTags.replace(wikitext, " ")
+            text = htmlTags.replace(text, " ")
+            do {
+                val before = text
+                text = innermostTemplate.replace(text) { match ->
+                    // Drop the template name and named arguments ("url=...", "title=..."); keep positional ones.
+                    match.groupValues[1].split('|').drop(1).filter { '=' !in it }.joinToString(" ")
+                }
+            } while (text != before)
+            text = wikiLink.replace(text) { match ->
+                val target = match.groupValues[1]
+                val label = match.groupValues[2]
+                val keptTarget = if (target.startsWith("#") || wikiNamespaceTarget.matches(target)) "" else target
+                (keptTarget + " " + label).trim()
+            }
+            text = externalLink.replace(text) { it.groupValues[1] }
+            text = bareUrl.replace(text, " ")
+            return htmlEntity.replace(text.replace("'''", "").replace("''", ""), " ").replace(whitespace, " ").trim()
+        }
+
+        private fun startsReference(text: String, index: Int): Boolean {
+            if (!text.startsWith("<ref", index, ignoreCase = true)) return false
+            val next = text.getOrNull(index + 4)
+            return next == null || next == '>' || next == '/' || next.isWhitespace()
+        }
 
         /** Split only at Video's own pipes, not nested templates, links or reference parameters. */
         internal fun parseVideo(wikitext: String, page: String): HdrEvidence {
@@ -154,6 +216,13 @@ class PcGamingWikiClient(http: OkHttpClient, private val username: String, priva
             var templates = 1
             var links = 0
             while (i < text.length - 1) {
+                if (startsReference(text, i)) {
+                    // A reference may contain pipes that are not Video parameters.
+                    val tagEnd = text.indexOf('>', i)
+                    val close = if (tagEnd < 0 || text[tagEnd - 1] == '/') -1 else text.indexOf("</ref", tagEnd, ignoreCase = true)
+                    i = if (close >= 0) close + 5 else i + 4
+                    continue
+                }
                 when {
                     text.startsWith("{{", i) -> { templates++; i += 2; continue }
                     text.startsWith("}}", i) -> {
@@ -176,12 +245,13 @@ class PcGamingWikiClient(http: OkHttpClient, private val username: String, priva
             }.toMap()
             val value = fields["hdr"]?.lowercase(Locale.ROOT)?.trim()
             val notes = fields["hdr notes"]?.takeIf { it.isNotBlank() }
+            val prose = notes?.let(::plainText)
             val support = when {
                 value == "false" -> NativeHdr.SDR
-                value == "hackable" && notes != null && retrofitOnly.containsMatchIn(notes) -> NativeHdr.SDR
+                value == "hackable" && prose != null && retrofitOnly.containsMatchIn(prose) -> NativeHdr.SDR
                 value != "true" && value != "always on" && value != "alwayson" -> NativeHdr.UNKNOWN
-                notes != null && (workaround.containsMatchIn(notes) || retrofitOnly.containsMatchIn(notes) ||
-                    limitedSupport.containsMatchIn(notes)) -> NativeHdr.UNKNOWN
+                prose != null && (workaround.containsMatchIn(prose) || retrofitOnly.containsMatchIn(prose) ||
+                    limitedSupport.containsMatchIn(prose)) -> NativeHdr.UNKNOWN
                 else -> NativeHdr.HDR
             }
             return HdrEvidence(support, page, notes)

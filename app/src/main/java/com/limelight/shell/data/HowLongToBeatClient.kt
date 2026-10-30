@@ -36,20 +36,31 @@ import java.io.IOException
 import java.io.InterruptedIOException
 import java.text.Normalizer
 import java.util.Locale
+import java.util.concurrent.TimeUnit
 
-class HowLongToBeatException(message: String, cause: Throwable? = null) : IOException(message, cause)
+/** [httpStatus] is set when the provider answered with an error status, as opposed to unreadable content. */
+class HowLongToBeatException(message: String, cause: Throwable? = null, val httpStatus: Int? = null) : IOException(message, cause)
 
-/** Unofficial direct website client. Blocking: the metadata store calls this off the main thread. */
-class HowLongToBeatClient(private val http: OkHttpClient) {
+/**
+ * Unofficial direct website client. Blocking: the metadata store calls this off the main thread.
+ * Every lookup is bounded: at most [MAX_SEARCH_PAGES] search pages and [MAX_DETAILS] detail pages, all paced.
+ */
+class HowLongToBeatClient internal constructor(
+    private val http: OkHttpClient,
+    private val pacer: RequestPacer,
+    private val clock: () -> Long,
+) {
+    constructor(http: OkHttpClient) : this(http, RequestPacer(PACE_MILLIS), System::nanoTime)
+
     @Volatile private var searchPath: String? = null
+    private var discoveryFailedAt: Long? = null
     private val gson = Gson()
 
-    fun lookup(title: String, steamAppId: Long?): CompletionTime? {
+    fun lookup(title: String, steamAppIds: Collection<Long>): CompletionTime? {
         val normalizedTitle = normalize(title)
         if (normalizedTitle.isEmpty()) return null
-        val steam = steamAppId?.takeIf { it > 0 }
-        val path = searchEndpoint()
-        val auth = searchAuth(path)
+        val steam = steamAppIds.filter { it > 0 }.toSet()
+        val (path, auth) = searchSession()
         val results = LinkedHashMap<Long, SearchGame>()
         var page = 1
         do {
@@ -66,24 +77,39 @@ class HowLongToBeatClient(private val http: OkHttpClient) {
                 results[id] = SearchGame(id, name)
             }
             page++
-        } while (page.toLong() <= total)
+        } while (page.toLong() <= total && page <= MAX_SEARCH_PAGES)
 
-        // Search cards omit Steam IDs. Verify on detail pages before accepting a result.
-        val details = results.values.asSequence()
-            .filter { steam != null || normalize(it.name) == normalizedTitle }
-            .mapNotNull { detail(it.id) }.toList()
-        val matchingSteam = if (steam == null) emptyList() else details.filter { steam in it.steamIds }
+        // Search cards omit Steam IDs, so candidates are verified on their detail pages. Only the few results
+        // closest to the title are fetched: one lookup must never fan out to every result of a common title.
+        val ranked = results.values.sortedBy { closeness(normalize(it.name), normalizedTitle) }
+        val candidates = if (steam.isNotEmpty()) ranked.take(MAX_DETAILS)
+            else ranked.filter { normalize(it.name) == normalizedTitle }.take(MAX_DETAILS)
+        val details = ArrayList<DetailGame>()
+        var failure: HowLongToBeatException? = null
+        for (candidate in candidates) {
+            try {
+                detail(candidate.id)?.let { details.add(it) }
+            } catch (e: HowLongToBeatException) {
+                // One unreadable detail page must not hide the others; an HTTP error (block/rate limit) stops at once.
+                if (e.httpStatus != null) throw e
+                failure = e
+            }
+        }
+        if (details.isEmpty() && failure != null) throw failure
+        val matchingSteam = if (steam.isEmpty()) emptyList() else details.filter { d -> d.steamIds.any { it in steam } }
         if (matchingSteam.size > 1) return null // Multiple editions sharing an app ID are not a safe match.
         if (matchingSteam.size == 1) return matchingSteam.single().completion
         val exact = details.filter {
-            normalize(it.name) == normalizedTitle && (steam == null || it.steamIds.isEmpty())
+            normalize(it.name) == normalizedTitle && (steam.isEmpty() || it.steamIds.isEmpty())
         }
         return exact.singleOrNull()?.completion
     }
 
-    fun byId(id: Long): CompletionTime? {
-        require(id > 0) { "HLTB game ID must be positive" }
-        return detail(id)?.completion
+    /** 0 exact, 1 one name contains the other, 2 unrelated; stable within a rank so provider order survives. */
+    private fun closeness(name: String, title: String): Int = when {
+        name == title -> 0
+        name.isNotEmpty() && (name.contains(title) || title.contains(name)) -> 1
+        else -> 2
     }
 
     private fun detail(id: Long): DetailGame? {
@@ -115,15 +141,36 @@ class HowLongToBeatClient(private val http: OkHttpClient) {
         return DetailGame(name, steamIds, completion)
     }
 
-    @Synchronized private fun searchEndpoint(): String {
-        searchPath?.let { return it }
+    /** The search path and its authorization handshake; the discovery failure is remembered for a few minutes. */
+    private fun searchSession(): Pair<String, SearchAuth> {
+        searchPath?.let { return it to searchAuth(it) }
+        synchronized(this) {
+            searchPath?.let { return it to searchAuth(it) }
+            val failedAt = discoveryFailedAt
+            if (failedAt != null && clock() - failedAt < DISCOVERY_BACKOFF_NANOS) {
+                throw HowLongToBeatException("HowLongToBeat search discovery failed recently; retrying later")
+            }
+            try {
+                val path = discoverSearchPath()
+                // The init handshake proves the path is the search API before it is trusted for the process lifetime.
+                val auth = searchAuth(path)
+                searchPath = path
+                discoveryFailedAt = null
+                return path to auth
+            } catch (e: HowLongToBeatException) {
+                discoveryFailedAt = clock()
+                throw e
+            }
+        }
+    }
+
+    private fun discoverSearchPath(): String {
         val html = request("/") ?: changed("homepage")
         val scripts = SCRIPT_SOURCE.findAll(html).map { it.groupValues[1] }
             .filter { it.startsWith("/_next/static/chunks/") && it.endsWith(".js") }.distinct()
         for (script in scripts) {
             val source = request(script) ?: changed("search script")
             val path = SEARCH_POST.find(source)?.groupValues?.get(1)?.trimEnd('/') ?: continue
-            searchPath = path
             return path
         }
         changed("search endpoint")
@@ -162,6 +209,7 @@ class HowLongToBeatClient(private val http: OkHttpClient) {
 
     private fun request(path: String, payload: String? = null, auth: SearchAuth? = null, allowMissing: Boolean = false): String? {
         if (Thread.currentThread().isInterrupted) throw InterruptedIOException("HowLongToBeat lookup cancelled")
+        pacer.await()
         val url = "$BASE$path".toHttpUrl()
         val builder = Request.Builder().url(url).header("User-Agent", "Delos/1.0")
             .header("Referer", "$BASE/").header("Origin", BASE).header("Accept", "*/*")
@@ -173,7 +221,7 @@ class HowLongToBeatClient(private val http: OkHttpClient) {
         }
         http.newCall(builder.build()).execute().use { response ->
             if (allowMissing && response.code == 404) return null
-            if (!response.isSuccessful) throw HowLongToBeatException("HowLongToBeat answered HTTP ${response.code}")
+            if (!response.isSuccessful) throw HowLongToBeatException("HowLongToBeat answered HTTP ${response.code}", httpStatus = response.code)
             if (response.request.url.host != url.host || !response.request.url.isHttps) {
                 throw HowLongToBeatException("HowLongToBeat redirected outside the provider")
             }
@@ -222,12 +270,17 @@ class HowLongToBeatClient(private val http: OkHttpClient) {
 
     companion object {
         private const val BASE = "https://howlongtobeat.com"
+        private const val PACE_MILLIS = 500L
+        private const val MAX_SEARCH_PAGES = 2
+        private const val MAX_DETAILS = 5
+        private val DISCOVERY_BACKOFF_NANOS = TimeUnit.MINUTES.toNanos(5)
         private val JSON_TYPE = "application/json; charset=utf-8".toMediaType()
         private val WHITESPACE = Regex("\\s+")
         private val PUNCTUATION = Regex("[^\\p{L}\\p{N}]+")
         private val SCRIPT_SOURCE = Regex("""<script\b[^>]*\bsrc\s*=\s*["']([^"']+)["'][^>]*>""", RegexOption.IGNORE_CASE)
         private val NEXT_DATA = Regex("""<script\b[^>]*\bid\s*=\s*["']__NEXT_DATA__["'][^>]*>(.*?)</script\s*>""", setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
         private val HEADLINE = Regex("""<h4\b[^>]*>\s*HowLongToBeat\s*</h4>\s*<h5\b[^>]*>([^<]+)</h5>""", RegexOption.IGNORE_CASE)
-        private val SEARCH_POST = Regex("""fetch\s*\(\s*["'](/api/[a-zA-Z0-9_/]+)[^"']*["']\s*,\s*\{[^}]*method:\s*["']POST["'][^}]*\}""", setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
+        // The path must itself say "search": any other chunk POST (login, submit) must never be trusted as the search API.
+        private val SEARCH_POST = Regex("""fetch\s*\(\s*["'](/api/[a-zA-Z0-9_/]*search[a-zA-Z0-9_/]*)[^"']*["']\s*,\s*\{[^}]*method:\s*["']POST["'][^}]*\}""", setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
     }
 }
