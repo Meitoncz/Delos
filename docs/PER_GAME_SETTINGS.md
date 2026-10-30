@@ -14,15 +14,16 @@ immediately and shows a toast.
   mode. Hardware rules and dependencies match the existing settings screen.
 - Each row says **From profile** or **Custom for this game**. Unchanged values follow later edits to
   the user profile. Changes are saved immediately and apply when the next stream starts or resumes.
-- Resolution, FPS, HDR and codec changes among non-PyroWave codecs preserve the current bitrate. An
-  inherited bitrate keeps following the profile instead of becoming a new game override. Selecting
-  PyroWave, or changing resolution/FPS/HDR while it is selected, writes its recommendation as a game
-  override. Before replacing an existing custom bitrate, it remembers that value for this user, PC
-  and game; inherited profile values are not copied into that history. Further automatic updates
-  keep the remembered value. Leaving PyroWave restores it only while the bitrate is still automatic;
-  without remembered history, the new codec/resolution/FPS default is written as an override, since
-  the profile may itself use PyroWave. A hand-edited bitrate is kept, including one equal to the
-  recommendation. Editing or resetting bitrate clears its history; restoration consumes it.
+- Resolution, FPS, HDR and codec changes preserve an inherited bitrate: no bitrate override or
+  history is created, including when entering or leaving PyroWave. The game keeps following the
+  profile, even when the profile itself uses PyroWave.
+- For an explicit game bitrate override, non-PyroWave quality edits preserve its value. Entering
+  PyroWave remembers the previous non-PyroWave bitrate for this user, PC and game, then writes the
+  recommendation. Resolution/FPS/HDR changes while on PyroWave recalculate the recommendation.
+  Neither these recalculations nor manual PyroWave edits replace the remembered pre-PyroWave value.
+  Leaving PyroWave always restores it, or writes the new codec/resolution/FPS default if no history
+  exists. A bitrate first hand-set on PyroWave uses that default on exit, never its PyroWave value.
+  Restoration consumes history; editing on another codec or resetting bitrate clears it.
 - The upscaler rows (SGSR) are unavailable for H.264, HEVC and AV1 on devices below OpenGL ES 3.1.
 - Advanced custom resolution/FPS definitions remain in the profile; their choices are available here.
 - Audio, controls, appearance and other global options continue to come from the user profile.

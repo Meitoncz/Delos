@@ -51,29 +51,24 @@ class StreamSettingsStore(val catalog: SettingsCatalog, private val settings: ()
         fun resolution() = if (spec.key == "list_resolution") value as String else prefs.getString("list_resolution", "1280x720")!!
         fun fps() = if (spec.key == "list_fps") value as String else prefs.getString("list_fps", "60")!!
         fun hdr() = if (spec.key == "checkbox_enable_hdr") value as Boolean else prefs.getBoolean("checkbox_enable_hdr", false)
-        val bitrate = prefs.getInt("seekbar_bitrate_kbps", -1)
-        val manual = prefs.getBoolean(PYROWAVE_BITRATE_MANUAL, false)
-        fun previousRecommendation() = PreferenceConfiguration.getDefaultBitrate(
-            prefs.getString("list_resolution", "1280x720")!!, prefs.getString("list_fps", "60")!!,
-            before, prefs.getBoolean("checkbox_enable_hdr", false),
-        )
+        val hasBitrateOverride = (prefs as? BitrateOverrideState)?.hasBitrateOverride ?: true
         if (spec.key == "seekbar_bitrate_kbps") {
             editor.bitrateEdited(prefs)
         } else if (format == "pyrowave" && (spec.key == "list_resolution" || spec.key == "list_fps" ||
                 spec.key == "video_format" || spec.key == "checkbox_enable_hdr")) {
-            // Keep the last user bitrate, not an earlier automatically generated recommendation.
-            if (prefs.contains("seekbar_bitrate_kbps") &&
-                (before != "pyrowave" || manual || bitrate != previousRecommendation())) {
-                editor.putInt(BITRATE_BEFORE_PYROWAVE, bitrate)
+            if (hasBitrateOverride) {
+                // Only entering PyroWave captures the other codec's bitrate; PyroWave edits stay local to it.
+                if (before != "pyrowave" && prefs.contains("seekbar_bitrate_kbps")) {
+                    editor.putInt(BITRATE_BEFORE_PYROWAVE, prefs.getInt("seekbar_bitrate_kbps", -1))
+                }
+                editor.putInt("seekbar_bitrate_kbps", PreferenceConfiguration.getDefaultBitrate(resolution(), fps(), format, hdr()))
             }
-            editor.remove(PYROWAVE_BITRATE_MANUAL)
-                .putInt("seekbar_bitrate_kbps", PreferenceConfiguration.getDefaultBitrate(resolution(), fps(), format, hdr()))
         } else if (spec.key == "video_format" && before == "pyrowave" && format != "pyrowave") {
-            if (!manual && bitrate == previousRecommendation()) {
+            if (hasBitrateOverride) {
                 editor.putInt("seekbar_bitrate_kbps", prefs.getInt(BITRATE_BEFORE_PYROWAVE,
                     PreferenceConfiguration.getDefaultBitrate(resolution(), fps(), format, hdr())))
             }
-            editor.remove(BITRATE_BEFORE_PYROWAVE).remove(PYROWAVE_BITRATE_MANUAL)
+            editor.remove(BITRATE_BEFORE_PYROWAVE)
         }
         editor.apply()
     }
@@ -105,9 +100,7 @@ class StreamSettingsStore(val catalog: SettingsCatalog, private val settings: ()
     }
 
     private fun SharedPreferences.Editor.bitrateEdited(prefs: SharedPreferences) = apply {
-        remove(BITRATE_BEFORE_PYROWAVE)
-        if (prefs.getString("video_format", "auto") == "pyrowave") putBoolean(PYROWAVE_BITRATE_MANUAL, true)
-        else remove(PYROWAVE_BITRATE_MANUAL)
+        if (prefs.getString("video_format", "auto") != "pyrowave") remove(BITRATE_BEFORE_PYROWAVE)
     }
 
     /** Match the classic screen's fallback when device rules remove the selected resolution or FPS. */
@@ -133,5 +126,3 @@ class StreamSettingsStore(val catalog: SettingsCatalog, private val settings: ()
 }
 
 internal const val BITRATE_BEFORE_PYROWAVE = "ui_bitrate_before_pyrowave"
-internal const val PYROWAVE_BITRATE_MANUAL = "ui_pyrowave_bitrate_manual"
-internal val BITRATE_MEMORY_KEYS = setOf(BITRATE_BEFORE_PYROWAVE, PYROWAVE_BITRATE_MANUAL)
