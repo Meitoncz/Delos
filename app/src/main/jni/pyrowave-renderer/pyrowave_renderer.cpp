@@ -446,6 +446,10 @@ namespace {
 
     constexpr int YUV_BUFFERS = 4;
 
+    // How many RGB swapchain frames a retired P010 output keeps covering the screen after an HDR switch, so
+    // the first of them has reached SurfaceFlinger before the old picture leaves
+    constexpr int RETIRED_OUTPUT_FRAMES = 3;
+
     // Which P010 buffers SurfaceFlinger still holds, updated from its completion callbacks (binder threads).
     // Shared with the callbacks so it outlives the renderer; the surface control is released with it.
     struct YuvReleases {
@@ -561,8 +565,10 @@ namespace {
         bool isUpscalingEnabled() const { return getUpscalingMode() != 0; }
         void setSharpness(float sharpness) { sgsrSharpness.store(std::clamp(sharpness, 0.0f, 1.0f)); }
         void setSupersamplingLevel(int level) { sgsrLevel.store(level >= 2 ? 2 : 1); }
-        // The level the renderer applies, which may differ from the requested one
-        int getSupersamplingLevel() const { return reportAppliedLevel.load(); }
+        // The level in effect: the requested one at once, or 1 after the renderer found that 2 does not fit
+        // (it then stores 1 as the request). Not the level of the last applied frame: the stream menu reads it
+        // right after a press, before the next frame has applied the request.
+        int getSupersamplingLevel() const { return sgsrLevel.load(); }
         bool isSupersampling() const {
             return getUpscalingMode() != 0 && reportInternalWidth.load() > reportPresentationWidth.load() &&
                    reportInternalHeight.load() > reportPresentationHeight.load();
@@ -635,9 +641,12 @@ namespace {
                     for (int level : {1, 1, 2, 2}) {
                         setUpscalingMode(mode);
                         setSupersamplingLevel(level);
+                        // The stream menu reads the level right after a press, before any frame applies it
+                        if (getSupersamplingLevel() != level) return "FAIL\nRequested level not reported at once\n";
                         setSharpness(level == 1 ? 0.0f : 0.85f);
                         applyUpscalingSettings();
                         if (getUpscalingMode() != mode) return "FAIL\nProduction applied mode mismatch\n";
+                        if (getSupersamplingLevel() != level) return "FAIL\nApplied level mismatch\n";
                         if (mode != 0 && !isSupersampling()) return "FAIL\nProduction supersampling missing\n";
                         if (mode == 0 && isSupersampling()) return "FAIL\nOff reported supersampling\n";
                         if (mode != 0 && (sgsrOutputWidth != (level == 2 ? 256u : 170u) ||
@@ -1389,7 +1398,7 @@ namespace {
             csc.matrix = hdrActive ? 2 : sdrMatrix;
             LOGI("HDR %s", hdrActive ? "on" : "off");
             destroySwapchainResources();
-            destroyYuvOutput();
+            retireYuvOutput();
             destroySgsrMotion();
             destroyPipeline();
             swapchainFormat = VK_FORMAT_UNDEFINED;
@@ -1694,14 +1703,44 @@ namespace {
             return fence;
         }
 
-        void destroyYuvOutput() {
-            if (releases != nullptr && releases->control != nullptr) {
+        // Takes the surface control off its parent: the layer and its picture leave the screen
+        void removeYuvControl(std::shared_ptr<YuvReleases> &output) {
+            if (output != nullptr && output->control != nullptr) {
                 ASurfaceTransaction *transaction = surfaceApi.createTransaction();
-                surfaceApi.reparent(transaction, releases->control, nullptr);
+                surfaceApi.reparent(transaction, output->control, nullptr);
                 surfaceApi.apply(transaction);
                 surfaceApi.deleteTransaction(transaction);
             }
-            releases.reset();
+            output.reset();
+        }
+
+        // Takes the P010 output down for good: nothing of it stays on the screen
+        void destroyYuvOutput() {
+            removeYuvControl(releases);
+            removeYuvControl(retiredYuv);
+            releaseYuvOutput();
+        }
+
+        // Takes the P010 output down for a rebuild (other upscaler settings, an HDR switch to RGB) without a
+        // black gap: its buffers, GL bridge and pack pass go now, but its surface control stays on the screen
+        // with the last picture (SurfaceFlinger holds that buffer itself) until the next output shows its first
+        // frame (presentYuv) or the RGB swapchain has shown a few (present).
+        void retireYuvOutput() {
+            if (releases != nullptr && yuvShown) {
+                // The control it replaces is covered by this one
+                removeYuvControl(retiredYuv);
+                retiredYuv = std::move(releases);
+                retiredFrames = 0;
+                LOGI("P010 output stays on screen while it is rebuilt");
+            } else {
+                // It never showed a frame: nothing to hold, and an older retired control keeps the picture
+                removeYuvControl(releases);
+            }
+            releaseYuvOutput();
+        }
+
+        // Everything of the P010 output but its surface control, which the caller has removed or retired
+        void releaseYuvOutput() {
             yuvGl.destroy();
             destroyPackPass();
             releaseYuvBuffers();
@@ -1884,6 +1923,7 @@ namespace {
             ASurfaceTransaction *transaction = surfaceApi.createTransaction();
             surfaceApi.setBuffer(transaction, releases->control, yuvBuffers[index], acquireFence);
             surfaceApi.setDataSpace(transaction, releases->control, ADATASPACE_BT2020_ITU_PQ);
+            std::shared_ptr<YuvReleases> replaced;
             if (!yuvShown) {
                 // Fit the stream into the window, preserving its aspect ratio
                 const float scale = std::min(float(swapchainExtent.width) / float(width),
@@ -1899,6 +1939,12 @@ namespace {
                 surfaceApi.setZOrder(transaction, releases->control, 1);
                 surfaceApi.setTransparency(transaction, releases->control, ASURFACE_TRANSACTION_TRANSPARENCY_OPAQUE);
                 surfaceApi.setVisibility(transaction, releases->control, ASURFACE_TRANSACTION_VISIBILITY_SHOW);
+                if (retiredYuv != nullptr) {
+                    // The output this one replaces leaves in the same transaction, so the picture never gaps.
+                    // Its reference ends with this function, after the transaction is applied.
+                    surfaceApi.reparent(transaction, retiredYuv->control, nullptr);
+                    replaced = std::move(retiredYuv);
+                }
                 yuvShown = true;
                 LOGI("P010 HDR output on, %dx%d at %d,%d", w, h, x, y);
             }
@@ -2002,7 +2048,7 @@ namespace {
 
         void destroyPipeline() {
             // The YUV output's pass uses this layout and these descriptors
-            destroyYuvOutput();
+            releaseYuvOutput();
             if (pipeline != VK_NULL_HANDLE) vk.DestroyPipeline(device, pipeline, nullptr);
             if (descriptorPool != VK_NULL_HANDLE) vk.DestroyDescriptorPool(device, descriptorPool, nullptr);
             if (pipelineLayout != VK_NULL_HANDLE) vk.DestroyPipelineLayout(device, pipelineLayout, nullptr);
@@ -2346,8 +2392,8 @@ namespace {
         }
 
         // Builds the upscaler for the applied settings. A level that does not fit falls back to level 1
-        // (reported through reportAppliedLevel), and a failure after that leaves direct rendering active
-        // rather than a half-built upscaler.
+        // (stored as the requested level, which getSupersamplingLevel reports), and a failure after that leaves
+        // direct rendering active rather than a half-built upscaler.
         bool createSgsrWithFallback() {
             bool created = createSgsrMotion();
             if (!created && sgsrApplied && sgsrAppliedLevel > 1) {
@@ -2365,7 +2411,6 @@ namespace {
                 sgsrAppliedMode = 0;
             }
             reportAppliedMode.store(sgsrAppliedMode);
-            reportAppliedLevel.store(sgsrAppliedLevel);
             return created;
         }
 
@@ -2381,7 +2426,7 @@ namespace {
                     (requestedProcessing && requestedLevel != sgsrAppliedLevel);
             const bool resetHistory = requestedMode != sgsrAppliedMode;
             if (recreate) {
-                if (yuvOutput) destroyYuvOutput();
+                if (yuvOutput) retireYuvOutput();
                 destroySgsrMotion();
             }
             sgsrApplied = requestedProcessing;
@@ -2391,7 +2436,6 @@ namespace {
             if (recreate) createSgsrWithFallback();
             if (recreate || resetHistory) sgsrInitialized = false;
             reportAppliedMode.store(sgsrAppliedMode);
-            reportAppliedLevel.store(sgsrAppliedLevel);
         }
 
         // The temporal history is only valid for consecutive frames: after a stall it describes a picture that
@@ -2571,6 +2615,12 @@ namespace {
             stats.acquireWaitUs += afterAcquire - beforeAcquire;
             stats.presentUs += frameEnd - afterAcquire;
             logStatsIfDue(frameEnd);
+            // A P010 output that an HDR switch retired covers the first RGB frames until they have reached the
+            // screen
+            if (retiredYuv != nullptr && (presented == VK_SUCCESS || presented == VK_SUBOPTIMAL_KHR) &&
+                    ++retiredFrames >= RETIRED_OUTPUT_FRAMES) {
+                removeYuvControl(retiredYuv);
+            }
 
             if (presented == VK_ERROR_OUT_OF_DATE_KHR) {
                 return recreateSwapchain();
@@ -2698,6 +2748,9 @@ namespace {
         int yuvNext = 0;
         int yuvPrevious = -1;
         std::shared_ptr<YuvReleases> releases;
+        // The previous P010 output, kept on the screen with its last picture while the next one is built
+        std::shared_ptr<YuvReleases> retiredYuv;
+        int retiredFrames = 0;
         AHardwareBuffer *yuvBuffers[YUV_BUFFERS] = {};
         uint64_t yuvSubmittedUs[YUV_BUFFERS] = {};
         uint64_t yuvStarvedSinceUs = 0;
@@ -2738,7 +2791,6 @@ namespace {
         bool fragmentPath = false;
         std::atomic<int> sgsrMode{0};
         std::atomic<int> reportAppliedMode{0};
-        std::atomic<int> reportAppliedLevel{1};
         std::atomic<float> sgsrSharpness{0.0f};
         std::atomic<int> sgsrLevel{1};
         bool sgsrAvailable = false;

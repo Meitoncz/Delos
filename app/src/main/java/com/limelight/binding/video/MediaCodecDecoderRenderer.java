@@ -965,7 +965,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         if (pw != null) pw.setSupersamplingLevel(prefs.sgsrSupersamplingLevel);
     }
 
-    /** The level the renderer applies; PyroWave falls back to level 1 when level 2 does not fit. */
+    /** The level in effect: the requested one at once, or 1 once PyroWave found that 2 does not fit. */
     public int getSupersamplingLevel() {
         PyroWaveRenderer pw = pyroWave;
         return pw != null ? pw.getSupersamplingLevel() : prefs.sgsrSupersamplingLevel;

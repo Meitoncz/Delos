@@ -392,6 +392,11 @@ class StreamMenu(private val game: Game) {
         val supersamplingMode by produceState(game.isSupersamplingMode) {
             while (true) { value = game.isSupersamplingMode; delay(250) }
         }
+        // The level the renderer reports: it follows a press at once, and the poll shows a later correction (the
+        // renderer found that 2× does not fit). Reading the level the last frame applied instead made the row
+        // show the old value after a press, until the next press redrew it.
+        var supersamplingLevel by remember { mutableIntStateOf(game.supersamplingLevel) }
+        LaunchedEffect(Unit) { while (true) { supersamplingLevel = game.supersamplingLevel; delay(250) } }
         @Suppress("UNUSED_EXPRESSION") changes // subscribes to it
         val classic = game.gameMenuCallbacks as? GameMenu
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
@@ -517,10 +522,11 @@ class StreamMenu(private val game: Game) {
                                         }, Modifier.focusRequester(first), enabled = available && upscalerStatus !in listOf("Starting", "Stopping"),
                                             onFocused = { helpKey = if (supersamplingMode) "Supersampling" else "Upscaling" })
                                         if (supersamplingMode) {
-                                            val level = game.supersamplingLevel.coerceIn(1, 2)
+                                            val level = supersamplingLevel.coerceIn(1, 2)
                                             SettingRow(Symbols.HIGH_QUALITY, "Supersampling quality",
                                                 RowValue.Choice(if (level == 1) "1× (1440p)" else "2× (2160p)", { direction ->
                                                     game.setSupersamplingLevel(if (direction < 0) 1 else 2)
+                                                    supersamplingLevel = game.supersamplingLevel
                                                     changes++
                                                 }), enabled = available,
                                                 onFocused = { helpKey = "Supersampling quality" })

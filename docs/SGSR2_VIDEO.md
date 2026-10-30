@@ -224,6 +224,11 @@ In HDR the upscaler needs P010 buffers at the presentation size. If those cannot
 upscaler is dropped (and stays off until the next HDR switch retries it) and the GPU P010 bridge is
 retried at the stream size; only if that fails too does the CPU readback path take over, which also
 reports direct rendering. A later HDR switch retries the GPU bridge.
+A rebuild of the P010 output (a mode or level change that needs new resources, or the switch to SDR)
+keeps the previous output's SurfaceControl on screen with its last picture. The new output's first
+transaction shows it and removes the old control atomically; after a switch to the RGB swapchain the
+old control leaves once three swapchain frames have been presented. The display therefore holds the
+last frame for the rebuild instead of showing the empty window underneath.
 All post-decode passes remain inside the existing GPU draw timestamp interval.
 
 Native-resolution supersampling is available for all four modes at the existing 1x/2x levels and
@@ -232,7 +237,7 @@ size limits, matching the MediaCodec path. The native planner receives its size 
 stream is native against the display it is aspect-fitted to: a stream larger than its display is
 a downscale and is never supersampled (its presentation size stays the stream size, since shrinking is
 the display scaler's job). If level 2 cannot be allocated the renderer falls back to level 1 and the
-stream menu reports the level actually applied.
+stream menu reports the level in effect: the request at once, 1 after that fallback.
 
 ### GPU regression probe
 

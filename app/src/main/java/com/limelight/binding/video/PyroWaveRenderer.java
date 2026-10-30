@@ -89,7 +89,10 @@ public final class PyroWaveRenderer {
         return h != 0 ? nativeGetUpscalingMode(h) : UPSCALING_OFF;
     }
 
-    /** The supersampling level actually applied by the renderer (1 or 2), not the requested setting. */
+    /**
+     * The supersampling level in effect (1 or 2): the one last requested, or 1 once the renderer found that 2
+     * does not fit. It follows a request at once; it does not wait for the renderer's next frame.
+     */
     public int getSupersamplingLevel() {
         final long h = handle;
         return h != 0 ? nativeGetSupersamplingLevel(h) : 1;

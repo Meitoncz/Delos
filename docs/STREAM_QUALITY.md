@@ -122,7 +122,12 @@ The sizing policy tolerates a two-pixel Surface aspect-fit difference, checks th
 and caps the internal target at 3840x2160. Native 4K therefore never attempts an unsafe 8K target.
 Changing the level live resets only temporal history and size-dependent SGSR resources, not the
 network stream or decoder. PyroWave recreates those Vulkan resources after its current frame fence and
-falls back from `2x` to `1x` if the larger allocation fails.
+falls back from `2x` to `1x` if the larger allocation fails. The stream menu row shows the level in
+effect, which is the request at once and `1x` after such a fallback, so one D-pad press moves it; it
+does not wait for the renderer's next frame to apply the request. In HDR the P010 output is rebuilt
+with the upscaler: the previous surface control stays on screen with its last picture until the rebuilt
+output has shown its first frame, so a level or mode change holds the picture for the rebuild instead
+of flashing black.
 
 The full statistics panel reports the actual active target directly below the source resolution, for
 example `Supersampled to: 2560 x 1440` or `Upscaled to: 1920 x 1080`. It reads the renderer's applied

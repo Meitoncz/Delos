@@ -135,6 +135,9 @@ in assets.
 - SGSR upscaling and independent sharpening are implemented. Codec-specific behavior and measured
   results are documented in [STREAM_QUALITY.md](STREAM_QUALITY.md) and [SGSR2_VIDEO.md](SGSR2_VIDEO.md);
   current quality/performance acceptance is tracked only in [#19](https://github.com/Meitoncz/Delos/issues/19).
+- The Upscaler page of the stream menu changes a row with one press. Its supersampling quality, mode
+  and sharpness rows show the value just requested, not the one the renderer applied on its last frame
+  (a fallback from 2× to 1× corrects the row afterwards).
 
 ## Native shell architecture and design constraints
 
