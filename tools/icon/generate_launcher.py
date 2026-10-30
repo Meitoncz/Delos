@@ -3,8 +3,8 @@
 
 Run: python tools/icon/generate_launcher.py
 Geometry is LogoMark's 40-unit ring, 3-unit stroke, moon (38.5, 7.5),
-5.5-unit moon and 9-unit 35%-opacity halo, uniformly scaled by 1.15.
-The enclosing ring-plus-halo bounds are centered on the 108dp canvas.
+5.5-unit moon and 9-unit 35%-opacity halo, uniformly scaled by 1.012
+(88% of the previous launcher mark). The ring itself is centered at (54, 54).
 All foreground pixels fit inside Android's centered 66dp safe circle.
 """
 from pathlib import Path
@@ -16,9 +16,9 @@ from PIL import Image, ImageChops, ImageDraw
 ROOT = Path(__file__).resolve().parents[2]
 RES = ROOT / "app/src/main/res"
 PREVIEW = ROOT / "build/icon-preview"
-SCALE = 1.15
-# Center the complete visible bounds, not just the ring, in the canvas.
-CX, CY = 54 - 3.75 * SCALE, 54 + .75 * SCALE
+SCALE = 1.15 * .88
+# Optically center the ring; the moon keeps its original upper-right orbit angle.
+CX, CY = 54.0, 54.0
 RADIUS, STROKE = 18.5 * SCALE, 3 * SCALE
 MOON_X, MOON_Y = CX + 18.5 * SCALE, CY - 12.5 * SCALE
 MOON_RADIUS, HALO_RADIUS = 5.5 * SCALE, 9 * SCALE
@@ -60,6 +60,7 @@ def vector(monochrome=False):
     return ('<?xml version="1.0" encoding="utf-8"?>\n'
             '<vector xmlns:android="http://schemas.android.com/apk/res/android"\n'
             '    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">\n'
+            f'    <!-- Ring center ({CX:g}, {CY:g}), radius {RADIUS:g}dp; moon offset ({MOON_X-CX:g}, {MOON_Y-CY:g})dp. -->\n'
             + "\n".join(paths) + '\n</vector>\n')
 
 

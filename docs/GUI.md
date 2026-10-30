@@ -23,8 +23,9 @@ decisions and verification status live in [GitHub Issues](https://github.com/Mei
 ### Android launcher identity
 
 The Android launcher uses the same Delos ring and orbiting moon as `LogoMark`, with the default
-dark Delos background and gold/cyan accents. Adaptive foreground geometry fits the centered 66dp
-safe circle on a 108dp canvas; the Android 13 monochrome layer preserves the ring and moon.
+dark Delos background and gold/cyan accents. The ring is optically centered at (54, 54) on the 108dp
+canvas; the complete mark, including the moon halo, fits inside the centered 66dp safe circle.
+All layers use the same uniformly reduced geometry; the Android 13 monochrome layer preserves the ring and moon.
 Run `python tools/icon/generate_launcher.py` to rebuild vectors and the 48/72/96/144/192px legacy
 PNGs. Circle, squircle and rounded-square color/monochrome previews go to ignored `build/icon-preview`.
 The TV channel uses the same mark; PC shortcut icons remain unchanged.
