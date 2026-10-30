@@ -25,6 +25,9 @@ immediately and shows a toast.
   Returning to PyroWave restores its saved value, including a hand-edited value. Resolution/FPS/HDR
   changes while PyroWave is selected still recalculate its recommendation; other codecs keep their
   bitrate on quality edits. Recalculation becomes the saved PyroWave value when leaving that codec.
+- With effective codec PyroWave, the bitrate row and live help also show the recommendation from the
+  effective (inherited or overridden) resolution/FPS/HDR, separately from the chosen bitrate. The
+  row keeps its inheritance label; other codecs show no additional recommendation.
 - Resetting the bitrate row removes that game's current override and all its codec bitrate slots.
   Use profile for all also removes all slots, without changing other games or the profile.
 - The upscaler rows (SGSR) are unavailable for H.264, HEVC and AV1 on devices below OpenGL ES 3.1.

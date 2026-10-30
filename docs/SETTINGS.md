@@ -62,6 +62,8 @@ one scrolls to and focuses the actual setting, including disabled dependencies.
 - `screens/SettingsScreen.kt`, `NativeSettings.kt` and `SettingsActions.kt` render the design system's
   rows, description panel, tab bar and search, and handle editing, reset, import/export and links.
   Resets run immediately and report a toast. Android's document picker handles file selection.
+  When PyroWave is selected, the bitrate row and live help also show its recommended Mbps for the
+  current resolution/FPS/HDR, independently of the chosen bitrate. Other codecs add no recommendation.
 
 ## User profiles
 

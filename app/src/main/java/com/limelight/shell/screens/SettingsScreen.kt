@@ -63,6 +63,7 @@ import com.limelight.shell.settings.SettingsCapabilities
 import com.limelight.shell.settings.SettingsHelp
 import com.limelight.shell.settings.choiceLabel
 import com.limelight.shell.settings.nextSettingChoice
+import com.limelight.shell.settings.pyroWaveRecommendedBitrateKbps
 import com.limelight.shell.settings.SettingsTab
 import com.limelight.shell.settings.Startup
 import com.limelight.shell.settings.StreamSettingsStore
@@ -126,6 +127,9 @@ fun SettingsScreen(
         onDispose { stream.close() }
     }
     val values by stream.values.collectAsStateWithLifecycle()
+    val bitrateHint = remember(values) {
+        pyroWaveRecommendedBitrateKbps(values)?.let { "Recommended: ${it / 1000} Mbps" }
+    }
     var capabilities by remember(activity) { mutableStateOf<SettingsCapabilities?>(null) }
     LaunchedEffect(activity) {
         if (activity != null) capabilities = withContext(Dispatchers.Default) { SettingsCapabilities.read(activity) }
@@ -251,7 +255,8 @@ fun SettingsScreen(
                                 previous = row.section
                             }
                             item(row.key) {
-                                SettingsItemRow(row, Modifier.focusRequester(rowRequesters.getValue(row.key))) { focusedKey = row.key }
+                                SettingsItemRow(row, Modifier.focusRequester(rowRequesters.getValue(row.key)),
+                                    hint = if (row.key == "seekbar_bitrate_kbps") bitrateHint else null) { focusedKey = row.key }
                             }
                         }
                     }
@@ -269,9 +274,9 @@ private fun SectionHeading(label: String) {
 }
 
 @Composable
-private fun SettingsItemRow(item: SettingsItem, modifier: Modifier = Modifier, focused: () -> Unit = {}) {
+private fun SettingsItemRow(item: SettingsItem, modifier: Modifier = Modifier, hint: String? = null, focused: () -> Unit = {}) {
     SettingRow(item.icon, item.label, item.value, modifier,
-        enabled = item.enabled, onFocused = focused)
+        description = hint, enabled = item.enabled, onFocused = focused)
 }
 
 /** The L1 / R1 hint beside a row of tabs. */

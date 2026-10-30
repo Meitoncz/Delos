@@ -60,6 +60,9 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
     val stream = remember(game) { StreamSettingsStore(profiles.catalog) { game.preferences } }
     DisposableEffect(stream) { onDispose { stream.close() } }
     val values by stream.values.collectAsStateWithLifecycle()
+    val bitrateHint = remember(values) {
+        pyroWaveRecommendedBitrateKbps(values)?.let { "Recommended: ${it / 1000} Mbps" }
+    }
     var caps by remember(activity) { mutableStateOf<SettingsCapabilities?>(null) }
     LaunchedEffect(activity) {
         if (activity != null) caps = withContext(Dispatchers.Default) { SettingsCapabilities.read(activity) }
@@ -157,10 +160,11 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
                                     spec.min, spec.max, spec.step, spec.unit, spec.divisor) { stream.write(spec, it) }
                                 else -> RowValue.Info(current?.toString().orEmpty())
                             }
+                            val source = if (spec.key in custom) "Custom for this game" else "From profile"
                             val menu = ContextMenu(spec.label, listOf(MenuItem(Symbols.RESET, "Use profile value") { reset(spec.key) }))
                             SettingRow(spec.icon, spec.label, value,
                                 if (index == 0) Modifier.focusRequester(first) else Modifier,
-                                description = if (spec.key in custom) "Custom for this game" else "From profile",
+                                description = if (spec.key == "seekbar_bitrate_kbps" && bitrateHint != null) "$source · $bitrateHint" else source,
                                 enabled = caps != null && stream.enabled(spec, caps), contextMenu = menu,
                                 onFocused = { focusedKey = spec.key })
                         }

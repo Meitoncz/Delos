@@ -1,5 +1,18 @@
 package com.limelight.shell.settings
 
+import com.limelight.preferences.PreferenceConfiguration
+
+/** Reads the same effective values as the settings rows, without depending on the chosen bitrate. */
+internal fun pyroWaveRecommendedBitrateKbps(values: Map<String, *>): Int? {
+    if (values["video_format"] != "pyrowave") return null
+    return PreferenceConfiguration.getDefaultBitrate(
+        values["list_resolution"] as? String ?: "1280x720",
+        values["list_fps"] as? String ?: "60",
+        "pyrowave",
+        values["checkbox_enable_hdr"] as? Boolean ?: false,
+    )
+}
+
 /** English help for the shell. Keys and stored values still come from the preference catalog. */
 object SettingsHelp {
     fun description(key: String, fallback: String): String = descriptions[key] ?: fallback
@@ -29,6 +42,9 @@ object SettingsHelp {
     private fun context(key: String, values: Map<String, *>): String {
         val pyro = values["video_format"] == "pyrowave"
         return when {
+            key == "seekbar_bitrate_kbps" -> pyroWaveRecommendedBitrateKbps(values)?.let {
+                "PyroWave recommends ${it / 1000} Mbps for the current resolution, frame rate and HDR setting."
+            }.orEmpty()
             key == "frame_pacing" && values["pref_low_latency_frame_balance"] == true && values[key] != "fast-vsync" ->
                 "LFR is enabled: MediaCodec uses its Balanced timing variant instead of the selected presentation mode. Warp's extra host frame-rate request still applies. Turn LFR off to compare the other timing modes directly."
             key == "frame_pacing" && values[key] == "fast-vsync" -> "Fast V-Sync takes precedence over LFR. For H.264, HEVC and AV1; PyroWave has its own native presentation path."
