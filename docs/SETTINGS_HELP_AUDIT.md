@@ -2,7 +2,7 @@
 
 ## Scope and evidence
 
-Reviewed Delos history from the Vibetemis documentation and fork identity through `cc8270e4`,
+Reviewed Delos history from the Vibetemis documentation and fork identity through `8e7923b5`,
 including commits co-authored by Claude Opus 5.5, subsequent Codex work, the current preference
 catalog, shell rows, per-game settings, stream menu and the actual decoder/launch implementations.
 This is a feature-surface and help audit, not a new line-by-line security review or a benchmark of
@@ -17,14 +17,14 @@ The old 116-setting count in the Phase 6.7 document was a historical count, not 
 
 | Work | Evidence | Current user-facing result |
 | --- | --- | --- |
-| Fork identity, common-c and Moonlight merge | `59406aef`, `08fbfc15`, `f12e5c9a`, `a3381ff3` | Delos identity and updated streaming platform; not extra user switches for build dependencies. |
-| Artemis cleanup and low-latency audit | `242ebb91`, `ee0764f6`, `a22dce52`, `aeec40f2`, `1440b990`, `f4ac11aa` | Supported controller/input/display features retained; removed SBS 3D, obsolete logging and unsupported/dead options are deliberate removals. |
-| Native shell, profiles, settings and artwork | `c42665bf` through `5e589749`, `af64ada0`, `181a4537` | Shell settings and diagnostics are present; profile changes, SteamGridDB and controls previews have their own entry points. |
-| Stream-menu and statistics cleanup | `c9ad9c82`, `4da62862`, `c2cdfbd7` | Stream actions moved into the Delos menu. Fullscreen is permanent; the ignored host optimization switch and old overlay zoom button were intentionally removed. |
-| PyroWave, HDR, brightness and 1% low FPS | `bff27790`, `5c75c263`, `c8f21874`, `f2927c62` | Codec selection, HDR, stream brightness and statistics are exposed. PyroWave has a separate decoder with different applicable controls. |
-| Per-game quality/display settings | `9fd31402` | Sparse overrides use the same setting keys and explanations as profile settings. Touch settings intentionally stay at profile level. |
-| Runtime bitrate, async decode, Nano Pacer and SGSR | `c50d69c2`, `55b49e3a`, `9ac68315` | Saved defaults and live session controls are distinct. Supersampling quality is intentionally session-only, not an accidentally missing global setting. |
-| External displays and Wi-Fi keep-alive naming | `b3540dfd`, `cc8270e4` | External output preserves configured stream resolution/FPS. Keep-alive already existed; it is not another unimplemented feature. |
+| Fork identity, common-c and Moonlight merge | `e5810da0`, `df07176a`, `43f1ca24`, `9758dd83` | Delos identity and updated streaming platform; not extra user switches for build dependencies. |
+| Artemis cleanup and low-latency audit | `69cf4527`, `d084d856`, `7824ee1f`, `ffb5e8da`, `e87e9106`, `d20527ba` | Supported controller/input/display features retained; removed SBS 3D, obsolete logging and unsupported/dead options are deliberate removals. |
+| Native shell, profiles, settings and artwork | `98902f89` through `1974711d`, `dd34740f`, `bccc694c` | Shell settings and diagnostics are present; profile changes, SteamGridDB and controls previews have their own entry points. |
+| Stream-menu and statistics cleanup | `35f44700`, `c6219b88`, `a34f6927` | Stream actions moved into the Delos menu. Fullscreen is permanent; the ignored host optimization switch and old overlay zoom button were intentionally removed. |
+| PyroWave, HDR, brightness and 1% low FPS | `47a0509d`, `6a0cddd2`, `4158f666`, `e1c65ba8` | Codec selection, HDR, stream brightness and statistics are exposed. PyroWave has a separate decoder with different applicable controls. |
+| Per-game quality/display settings | `714f21a3` | Sparse overrides use the same setting keys and explanations as profile settings. Touch settings intentionally stay at profile level. |
+| Runtime bitrate, async decode, Nano Pacer and SGSR | `a7c8c22b`, `01476d51`, `999bde9a` | Saved defaults and live session controls are distinct. Supersampling quality is intentionally session-only, not an accidentally missing global setting. |
+| External displays and Wi-Fi keep-alive naming | `7b6acf99`, `8e7923b5` | External output preserves configured stream resolution/FPS. Keep-alive already existed; it is not another unimplemented feature. |
 
 ## Findings and changes
 
@@ -100,5 +100,5 @@ The old 116-setting count in the Phase 6.7 document was a historical count, not 
 - **The user accepted the installed Odin build on 2026-10-28.** This is overall device acceptance,
   not a separately recorded test of every control. The later external-display help layout still
   needs a dedicated TV check. No game was launched and no navigation input was injected by the agent.
-- Integrated in `77d4771e` using the agreed commit, fast-forward, `[skip ci]` push and feature-branch
+- Integrated in `398e4a8e` using the agreed commit, fast-forward, `[skip ci]` push and feature-branch
   cleanup workflow. GitHub Actions were not requested or run.

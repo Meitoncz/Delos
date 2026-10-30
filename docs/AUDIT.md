@@ -1,6 +1,6 @@
 # Phase 4 Audit – Artemis-specific code
 
-Date: October 22, 2026. Codebase: `main` at `a3381ff3` (Artemis 20.2.6 + Moonlight 12.2 merged).
+Date: October 22, 2026. Codebase: `main` at `9758dd83` (Artemis 20.2.6 + Moonlight 12.2 merged).
 
 This is a dated audit record, not the current bug list or execution plan. Findings/counts may have
 been resolved or superseded. Current work is in [GitHub Issues](https://github.com/Meitoncz/Delos/issues);

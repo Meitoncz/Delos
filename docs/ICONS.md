@@ -5,7 +5,7 @@ The shared `Symbol` component crossfades between the two bundled fonts over 350 
 The fonts use the same code points and advance widths, so the transition does not move labels.
 Colors, icon sizes, controller navigation and actions keep their existing behavior.
 
-Implemented and integrated as **`18a904c7`** on `main` and `origin/main`, including the user's
+Implemented and integrated as **`cbd16c9b`** on `main` and `origin/main`, including the user's
 Palette adjustment. The completed feature branch was deleted; the push used `[skip ci]`.
 
 ## Sources and generation

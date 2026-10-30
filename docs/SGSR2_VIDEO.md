@@ -136,7 +136,7 @@ is configured with the original `renderTarget`. No Delos sharpening shader is ap
 Added an explicit configuration log to verify live toggles reach direct output. This does not establish
 whether the game, host, decoder/display scaler or device software applies its own enhancement.
 
-A/B verification then used the actual pre-feature CI APK from main `9fd31402`, temporarily re-signed
+A/B verification then used the actual pre-feature CI APK from main `714f21a3`, temporarily re-signed
 with the existing local debug key for a data-preserving update. User tested the same 480p HDR game
 and confirmed the original build is equally oversharpened. This rules out today's changes as the
 origin of that baseline appearance; it does not identify the exact upstream/display component.

@@ -5,7 +5,7 @@
 This audit follows a sub-native-resolution stream from the launch request through decoding and local
 presentation. It focuses on the direct MediaCodec path with SGSR disabled, because the user observed
 an over-sharpened 480p HDR image there. The same appearance was reproduced with the accepted
-`9fd31402` main build, before the stream-quality branch existed.
+`714f21a3` main build, before the stream-quality branch existed.
 
 ## Findings
 
@@ -42,7 +42,7 @@ Vibepollo, Windows display scaling, or the host encoder.
   1920x1080 display layer.
 - That unconditional fixed-size behavior entered the fork through commit `3c8b9600`, whose stated
   purpose was stabilizing low-latency presentation on MediaTek devices. The later cleanup commit
-  `1440b990` retained it for every device, including the Qualcomm-based Odin.
+  `e87e9106` retained it for every device, including the Qualcomm-based Odin.
 - Current Moonlight behavior on modern Android normally leaves an aspect-fitted surface at its
   layout size instead of unconditionally forcing the coded size.
 

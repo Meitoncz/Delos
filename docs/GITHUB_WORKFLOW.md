@@ -48,7 +48,7 @@ Use the issue number selected for the actual task. CLI access must cover the pri
 
 The full migration checkpoint contains 52 issues: the initial 22 plus 30 new records; six remaining conditional/optional checks were folded into existing verification issues. All 77 non-retired audit IDs are represented, including merged aliases. Eight implemented/historical records were excluded. Read GitHub for subsequent counts/status.
 
-The [frozen code audit at cab8c7c4](https://github.com/Meitoncz/Delos/blob/cab8c7c4/docs/TODO.md) retains all 85 source records and evidence for source snapshot `6d0688c2`; it is history, not a local task queue. The Project README explains original-ID aliases. Detailed readiness research and idea constraints were moved into their issues before the planning files were removed. Feature attribution is preserved in the [README](../README.md#feature-provenance); current UI architecture is preserved in GUI.md.
+The [frozen code audit at 299d98b1](https://github.com/Meitoncz/Delos/blob/299d98b1/docs/TODO.md) retains all 85 source records and evidence for source snapshot `17310729`; it is history, not a local task queue. The Project README explains original-ID aliases. Detailed readiness research and idea constraints were moved into their issues before the planning files were removed. Feature attribution is preserved in the [README](../README.md#feature-provenance); current UI architecture is preserved in GUI.md.
 
 REST/GraphQL readback verifies issue content/labels, Project membership/fields, privacy, saved Board/All work layouts and the native client→host readiness dependency. The managed browser is signed out and the authenticated relay unavailable; a signed-in visual check is not claimed.
 

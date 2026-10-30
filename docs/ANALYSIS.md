@@ -3,7 +3,7 @@
 As of **October 19, 2026**. Compared directly from git history and code.
 
 - **Artemis** – `ClassicOldSong/moonlight-android`, branch `moonlight-noir`, version **20.2.6** (versionCode 57), HEAD `c5cf27f4`
-- **Moonlight** – `moonlight-stream/moonlight-android`, branch `master`, version **12.2** (versionCode 315), HEAD `b48494cb` (September 12, 2026)
+- **Moonlight** – `moonlight-stream/moonlight-android`, branch `master`, version **12.2** (versionCode 315), HEAD `ae0af6e4` (September 12, 2026)
 
 ## Key numbers
 
@@ -57,14 +57,14 @@ Trial merge of upstream into the fork: **no text conflicts**.
 
 ### Android part (55 commits from Moonlight)
 
-- Keyboard capture on **Android 16.1** (`ddb674a9`). Artemis only has the old Samsung `SemWindowManager` hack.
-- Disabled producer throttling of the video surface, Android 16+ (`6d4c64a5`, lower latency).
-- Disabled H.264 constraint/level_idc fixups on Oreo+ (`68adf9ec`).
-- Controller LED crash and ANR fixes (`abde6021`).
-- **Rumble fix** (`3c6a0d12`, #1454). Artemis still uses the deprecated `VIBRATOR_SERVICE`.
-- Xbox Series S/X init packet (`280454fd`, IDs `0x0b05/0x0b12/0x0b13`). Artemis already has the 8BitDo vendor.
-- New Android 15/16 keycodes (`8974dcda`), Shift for the `+` key (`b9c5eddd`), Meta Quest UI (`0711e236`).
-- SDL joystick code sync (`c2e224eb`), desugaring for jmDNS (`4eb24a8d`).
+- Keyboard capture on **Android 16.1** (`f144c7fa`). Artemis only has the old Samsung `SemWindowManager` hack.
+- Disabled producer throttling of the video surface, Android 16+ (`767cfcd0`, lower latency).
+- Disabled H.264 constraint/level_idc fixups on Oreo+ (`ac04a97d`).
+- Controller LED crash and ANR fixes (`16477d82`).
+- **Rumble fix** (`cbc5270e`, #1454). Artemis still uses the deprecated `VIBRATOR_SERVICE`.
+- Xbox Series S/X init packet (`273281a3`, IDs `0x0b05/0x0b12/0x0b13`). Artemis already has the 8BitDo vendor.
+- New Android 15/16 keycodes (`075ed853`), Shift for the `+` key (`6d69962d`), Meta Quest UI (`f05d8b46`).
+- SDL joystick code sync (`c2e224eb`), desugaring for jmDNS (`ed4cc1e0`).
 - ~25 Weblate translation updates; Latvian (`values-lv`) and Tamil (`values-ta`) are missing.
 
 ## Trial merge Moonlight → Artemis

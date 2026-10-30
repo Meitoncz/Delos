@@ -100,7 +100,7 @@ games on the PC themselves.
 2026-10-23: the user confirmed that a changed resolution was applied in a real stream. All eight tabs,
 controller search/jump, the Y shortcut/hint, single feedback per tab switch and complete headings after
 upward D-pad navigation were checked on the Odin. Local validation passed all 63 unit tests and lint
-(zero errors). The reviewed Experimental labels remain exactly as established in `f4ac11aa`.
+(zero errors). The reviewed Experimental labels remain exactly as established in `d20527ba`.
 The repeated tab-switch regression was checked over three complete cycles in both directions:
 24 shoulder-button presses produced exactly 24 application vibrations.
 The scrolled-list case is checked separately: six rows down in Stream then R1 to Display; six down
