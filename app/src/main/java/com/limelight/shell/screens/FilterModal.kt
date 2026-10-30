@@ -173,8 +173,10 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
     // One requester per genre chip: the first focus goes to the selected one, a reset back to "All"
     val genreRequesters = remember { HashMap<Int, FocusRequester>() }
     fun genreRequester(id: Int?) = genreRequesters.getOrPut(id ?: 0) { FocusRequester() }
-    val startGenre = remember { filters.genreId?.takeIf { id -> genres.any { it.id == id } } }
-    InitialFocus(genreRequester(startGenre))
+    val startGenre = filters.genreId?.takeIf { id -> genres.any { it.id == id } }
+    // The focus goes in every time the modal opens, also when it is reopened while it still animates out:
+    // the panel then stays composed, so a one-time request would leave the focus on the dashboard behind it.
+    if (open) InitialFocus(genreRequester(startGenre))
 
     // Reset disables itself once nothing is filtered; if it had the focus, the focus goes back up to "All"
     var panelFocused by remember { mutableStateOf(false) }
