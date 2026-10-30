@@ -52,4 +52,19 @@ public class SgsrDimensionsTest {
         SgsrDimensions.Plan plan = SgsrDimensions.plan(1920, 1080, 1920, 1080, 2048, 2);
         assertFalse(plan.isSupersampling());
     }
+
+    // The native PyroWave planner follows the same rules, with the same constants passed in at creation
+    @Test
+    public void streamLargerThanDisplayIsNeverSupersampled() {
+        SgsrDimensions.Plan plan = SgsrDimensions.plan(2560, 1440, 1920, 1080, 8192, 1);
+        assertFalse(plan.isSupersampling());
+        assertEquals(1920, plan.internalWidth);
+        assertEquals(1080, plan.internalHeight);
+    }
+
+    @Test
+    public void nativeToleranceIsInclusive() {
+        assertTrue(SgsrDimensions.isNativeInput(1920, 1080, 1920 + SgsrDimensions.NATIVE_TOLERANCE, 1080));
+        assertFalse(SgsrDimensions.isNativeInput(1920, 1080, 1920 + SgsrDimensions.NATIVE_TOLERANCE + 1, 1080));
+    }
 }

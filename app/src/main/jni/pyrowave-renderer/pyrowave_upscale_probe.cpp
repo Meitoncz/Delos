@@ -115,7 +115,7 @@ struct Params {
     int32_t reset = 1, fullRange = 1, matrix = 1, sixteenBit = 0, mode = 0, padding = 0;
 };
 static_assert(sizeof(Params) == 48, "Production shader push constants");
-struct PresentParams { float sharpness; int32_t hdr; };
+struct PresentParams { float sharpness; };
 
 struct Probe {
     static constexpr uint32_t width = 32, height = 24, outWidth = 72, outHeight = 54;
@@ -412,14 +412,14 @@ struct Probe {
         info.pColorBlendState = &blend; info.layout = p.layout; info.renderPass = renderPass;
         checked(vk.CreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &info, nullptr, &p.pipeline), "CreateGraphicsPipelines"); return p;
     }
-    std::vector<float> present(Pipeline &p, Image &source, Image &target, float sharpness, int hdr) {
+    std::vector<float> present(Pipeline &p, Image &source, Image &target, float sharpness) {
         bindImages(p, {&source}); begin(); barrier();
         VkRenderPassBeginInfo pass{VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO}; pass.renderPass = renderPass; pass.framebuffer = framebuffer;
         pass.renderArea.extent = {target.width, target.height};
         vk.CmdBeginRenderPass(command, &pass, VK_SUBPASS_CONTENTS_INLINE);
         vk.CmdBindPipeline(command, VK_PIPELINE_BIND_POINT_GRAPHICS, p.pipeline);
         vk.CmdBindDescriptorSets(command, VK_PIPELINE_BIND_POINT_GRAPHICS, p.layout, 0, 1, &p.set, 0, nullptr);
-        PresentParams params{sharpness, hdr};
+        PresentParams params{sharpness};
         vk.CmdPushConstants(command, p.layout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(params), &params);
         vk.CmdDraw(command, 3, 1, 0, 0); vk.CmdEndRenderPass(command); barrier(); submit(); return readback(target);
     }
@@ -461,14 +461,17 @@ struct Probe {
         Image &backward = image(width / 8, height / 8);
         Image &forward = image(width / 8, height / 8);
         Image &activation = image(width, height);
+        Image &sceneFlag = image(1, 1);
         upload(cb, std::vector<float>(width * height / 4, 128.f / 255));
         upload(cr, std::vector<float>(width * height / 4, 128.f / 255));
         upload(history, rgba(outWidth, outHeight, .2f));
         upload(backward, rgba(width / 8, height / 8, 0)); upload(forward, rgba(width / 8, height / 8, 0));
         upload(activation, rgba(width, height, 0));
+        upload(sceneFlag, rgba(1, 1, 0));
         Pipeline &spatial = compute(sgsr_spatial_comp_spv, sizeof(sgsr_spatial_comp_spv), {0, 1, 2, 6}, 6);
-        Pipeline &temporal = compute(sgsr_upscale_comp_spv, sizeof(sgsr_upscale_comp_spv), {0, 1, 2, 3, 4, 5, 6, 7}, 6);
+        Pipeline &temporal = compute(sgsr_upscale_comp_spv, sizeof(sgsr_upscale_comp_spv), {0, 1, 2, 3, 4, 5, 6, 7, 8}, 6);
         Pipeline &flow = compute(sgsr_flow_comp_spv, sizeof(sgsr_flow_comp_spv), {0, 1, 2}, 2);
+        Pipeline &sceneChange = compute(sgsr_scene_comp_spv, sizeof(sgsr_scene_comp_spv), {0, 1, 2}, 2);
         Pipeline &activate = compute(sgsr_activate_comp_spv, sizeof(sgsr_activate_comp_spv), {0, 1, 2, 3, 4}, 4);
         Params params{{int32_t(width), int32_t(height)}, {int32_t(outWidth), int32_t(outHeight)}, {int32_t(width / 8), int32_t(height / 8)}};
         bindImages(spatial, {&y, &cb, &cr, &output});
@@ -525,7 +528,7 @@ struct Probe {
         report << "PASS Standard/HQ textured diagonal local bounds, maxDelta=" << spatialDelta << '\n';
 
         // Produce history with the real temporal shader, then reconstruct a one-pixel translation.
-        bindImages(temporal, {&y, &cb, &cr, &history, &backward, &forward, &output, &activation});
+        bindImages(temporal, {&y, &cb, &cr, &history, &backward, &forward, &output, &activation, &sceneFlag});
         params.mode = 3; params.reset = 1; dispatch(temporal, &params, sizeof(params), outWidth, outHeight);
         upload(history, readback(output)); upload(previous, fixture()); upload(y, fixture(1));
         bindImages(flow, {&y, &previous, &backward}); int32_t flowParams[] = {int32_t(width), int32_t(height), int32_t(width / 8), int32_t(height / 8)};
@@ -559,6 +562,15 @@ struct Probe {
                 "Regular/Quality motion reconstructions must differ sensibly, maxDelta=" + std::to_string(temporalDelta));
         report << "PASS actual bidirectional flow + Quality activation + temporal motion: maxMotion=" << maxMotion
                << " confidence=" << maxConfidence << " regular/Quality maxDelta=" << temporalDelta << '\n';
+        // Whole-frame cut detection: the same picture keeps its history, a different one drops it.
+        int32_t sceneParams[] = {int32_t(width), int32_t(height), int32_t(width / 8), int32_t(height / 8)};
+        bindImages(sceneChange, {&y, &previous, &sceneFlag});
+        upload(y, fixture()); dispatch(sceneChange, sceneParams, sizeof(sceneParams), 8, 8);
+        require(readback(sceneFlag)[0] < .5f, "Identical frames were reported as a scene cut");
+        upload(y, std::vector<float>(width * height, 23.f / 255)); dispatch(sceneChange, sceneParams, sizeof(sceneParams), 8, 8);
+        require(readback(sceneFlag)[0] > .5f, "A different picture was not reported as a scene cut");
+        upload(y, fixture(1)); upload(sceneFlag, rgba(1, 1, 0));
+        report << "PASS scene cut detection: identical frames keep history, a different picture drops it\n";
         for (int mode : {3, 4}) {
             params.mode = mode; params.reset = 1;
             upload(history, rgba(outWidth, outHeight, .05f)); dispatch(temporal, &params, sizeof(params), outWidth, outHeight); auto resetA = readback(output);
@@ -570,6 +582,7 @@ struct Probe {
             float maxSceneActivation = 0;
             for (size_t i = 0; i < sceneMask.size(); i += 4) maxSceneActivation = std::max(maxSceneActivation, sceneMask[i]);
             require(maxSceneActivation > .9f, "Scene cut did not activate fresh reconstruction");
+            dispatch(sceneChange, sceneParams, sizeof(sceneParams), 8, 8);
             dispatch(temporal, &params, sizeof(params), outWidth, outHeight); auto scene = readback(output);
             float sceneError = 0; bounded(scene, 0, 1, "Scene transition");
             for (size_t i = 0; i < scene.size(); ++i) if (i % 4 != 3) sceneError = std::max(sceneError, std::abs(scene[i] - 23.f / 255));
@@ -602,19 +615,19 @@ struct Probe {
             for (int c = 0; c < 3; ++c) presentationFixture[(py * outWidth + px) * 4 + c] = v;
         }
         upload(presentSource, presentationFixture);
-        for (int hdr : {0, 1}) {
-            auto zero = present(presentPipeline, presentSource, target, 0, hdr);
-            auto sharp = present(presentPipeline, presentSource, target, .85f, hdr);
+        {
+            auto zero = present(presentPipeline, presentSource, target, 0);
+            auto sharp = present(presentPipeline, presentSource, target, .85f);
             bounded(zero, 0, 1, "Present zero"); bounded(sharp, 0, 1, "Present sharp");
             float bypassError = 0;
             for (size_t i = 0; i < zero.size(); ++i) bypassError = std::max(bypassError, std::abs(zero[i] - unhalf(half(presentationFixture[i]))));
             require(bypassError < .001f, "Sharpness zero did not bypass spatial processing");
             float sharpDelta = difference(zero, sharp); require(sharpDelta > .0005f && sharpDelta < .25f, "Sharpness control must change actual fragments sensibly");
-            auto packZero = present(packPipeline, presentSource, target, 0, hdr);
-            auto packSharp = present(packPipeline, presentSource, target, .85f, hdr);
+            auto packZero = present(packPipeline, presentSource, target, 0);
+            auto packSharp = present(packPipeline, presentSource, target, .85f);
             bounded(packZero, 0, 1, "Pack zero"); bounded(packSharp, 0, 1, "Pack sharp");
             require(difference(packZero, packSharp) > .0001f, "P010 pack ignored sharpness");
-            report << "PASS offscreen present + P010 pack fragments HDR=" << hdr << " bypassError=" << bypassError << " sharpness maxDelta=" << sharpDelta << '\n';
+            report << "PASS offscreen present + P010 pack fragments bypassError=" << bypassError << " sharpness maxDelta=" << sharpDelta << '\n';
         }
         // Use different channels: catch accidental luma-only output and 8-bit HDR intermediates.
         auto codes = rgba(outWidth, outHeight, 0);
@@ -622,11 +635,11 @@ struct Probe {
         for (size_t i = 0; i < codes.size(); ++i) if (i % 4 != 3) codes[i] = values[i % 4];
         upload(presentSource, codes);
         for (float strength : {0.f, .85f}) {
-            auto hdr = present(presentPipeline, presentSource, target, strength, 1); float error = 0;
+            auto hdr = present(presentPipeline, presentSource, target, strength); float error = 0;
             for (size_t i = 0; i < hdr.size(); ++i) error = std::max(error, std::abs(hdr[i] - codes[i]));
             require(error < .0003f, "HDR presentation lost ten-bit precision or changed constant colour");
             report << "PASS HDR ten-bit RGB constants sharpness=" << strength << " maxError=" << error << '\n';
-            auto packed = present(packPipeline, presentSource, target, strength, 1);
+            auto packed = present(packPipeline, presentSource, target, strength);
             const float luma = .2627f * unhalf(half(values[0])) + .6780f * unhalf(half(values[1])) + .0593f * unhalf(half(values[2]));
             const std::array<float, 3> expected{
                 64.f / 1023 + luma * 876.f / 1023,

@@ -3,7 +3,6 @@
 // samples remain PQ code values: never apply an SDR gamma or quantize to 8 bits.
 layout(push_constant) uniform Presentation {
     float sharpness;
-    int hdr;
 } presentation;
 vec3 presentationColor(vec2 uv) {
     vec3 center=texture(u_image,uv).rgb;

@@ -67,6 +67,8 @@ namespace {
 
     constexpr uint64_t ACQUIRE_TIMEOUT_NS = 250'000'000;
     constexpr uint64_t FENCE_TIMEOUT_NS = 2'000'000'000;
+    // A longer pause between two frames resets the upscaler's temporal history
+    constexpr uint64_t SGSR_HISTORY_GAP_US = 50'000;
 
     // Colour conversion of the planes (push constants of planar_csc.frag)
     struct CscParams {
@@ -79,7 +81,15 @@ namespace {
 
     struct PresentParams {
         float sharpness;
-        int32_t hdr;
+    };
+
+    // The limits of the upscaled size and the "native input" tolerance. SgsrDimensions (Java) owns them and
+    // passes them in, so this planner and the MediaCodec path cannot drift apart.
+    struct SgsrLimits {
+        uint32_t maxWidth;
+        uint32_t maxHeight;
+        uint64_t maxPixels;
+        int nativeTolerance;
     };
 
     // Delos: the colour space extensions are optional; without them a stream stays SDR
@@ -492,7 +502,8 @@ namespace {
 
         bool create(ANativeWindow *nativeWindow, int streamWidth, int streamHeight, int frameRate,
                     int targetWidth, int targetHeight, bool fullChroma, bool fullRange, int matrix,
-                    bool tenBitStream, int upscalingMode, int supersamplingLevel, float sharpness) {
+                    bool tenBitStream, int upscalingMode, int supersamplingLevel, float sharpness,
+                    const SgsrLimits &limits) {
             window = nativeWindow;
             // API 28; Delos builds the native code for API 21
             void *android = dlopen("libandroid.so", RTLD_NOW | RTLD_NOLOAD);
@@ -522,20 +533,17 @@ namespace {
             sgsrAppliedLevel = sgsrLevel.load();
             width = uint32_t(streamWidth);
             height = uint32_t(streamHeight);
-            sgsrTargetWidth = uint32_t(std::max(targetWidth, streamWidth));
-            sgsrTargetHeight = uint32_t(std::max(targetHeight, streamHeight));
+            // The real display size: whether the stream is "native" depends on it, not on a size clamped up to
+            // the stream's (a 1440p stream on a 1080p display is a downscale, never supersampled)
+            sgsrTargetWidth = uint32_t(targetWidth > 0 ? targetWidth : streamWidth);
+            sgsrTargetHeight = uint32_t(targetHeight > 0 ? targetHeight : streamHeight);
+            sgsrLimits = limits;
             const bool ok = apiVersionSupported() && createInstanceAndSurface() && createDevice() &&
                    createDecoder() && createPlanes() && createSwapchain() && createPipeline() &&
                    createFrameResources();
-            if (ok && !createSgsrMotion()) {
-                LOGW("PyroWave upscaler initialization failed; direct rendering remains active");
-                destroySgsrMotion();
-                sgsrAvailable = false;
-                sgsrAppliedMode = 0;
-                sgsrApplied = false;
-            } else if (ok) {
+            if (ok) {
                 sgsrAvailable = true;
-                reportAppliedMode.store(sgsrAppliedMode);
+                createSgsrWithFallback();
             }
             if (ok) {
                 applyHdrMetadata();
@@ -553,6 +561,8 @@ namespace {
         bool isUpscalingEnabled() const { return getUpscalingMode() != 0; }
         void setSharpness(float sharpness) { sgsrSharpness.store(std::clamp(sharpness, 0.0f, 1.0f)); }
         void setSupersamplingLevel(int level) { sgsrLevel.store(level >= 2 ? 2 : 1); }
+        // The level the renderer applies, which may differ from the requested one
+        int getSupersamplingLevel() const { return reportAppliedLevel.load(); }
         bool isSupersampling() const {
             return getUpscalingMode() != 0 && reportInternalWidth.load() > reportPresentationWidth.load() &&
                    reportInternalHeight.load() > reportPresentationHeight.load();
@@ -607,15 +617,18 @@ namespace {
         }
 
 #if defined(LC_DEBUG)
-        // Exercise production allocation, mode application and dispatch without receiving a stream.
-        // The independent offscreen probe checks pixel values; this checks actual renderer transitions.
-        std::string probeUpscalingLifecycle() {
+        // Exercises the production upscaler's resource lifecycle and compute dispatch without receiving a
+        // stream: mode/level/HDR-format transitions rebuild the real resources and the compute passes run on
+        // cleared planes. It does not call present() or presentYuv(), so the swapchain/P010 present passes, the
+        // P010 pack pass and the GL bridge are not covered. The independent offscreen probe checks pixel values.
+        // The stream is the 128x96 one nativeRunRendererProbe creates, whose expected sizes are written out.
+        std::string probeUpscalerLifecycle() {
             auto clear = reinterpret_cast<PFN_vkCmdClearColorImage>(vk.GetDeviceProcAddr(device, "vkCmdClearColorImage"));
             if (clear == nullptr) return "FAIL\nMissing vkCmdClearColorImage\n";
-            std::string report = "PASS\nProduction renderer mode/HDR lifecycle:\n";
+            std::string report = "PASS\nProduction upscaler resource lifecycle and compute dispatch (present passes not run):\n";
             for (bool hdr : {false, true, false}) {
                 setHdrMode(hdr);
-                if (hdrWanted != hdrActive && !applyHdrMode()) return "FAIL\nProduction HDR rebuild\n";
+                if ((hdrWanted != hdrActive || outputBroken) && !applyHdrMode()) return "FAIL\nProduction HDR rebuild\n";
                 for (int mode : {1, 2, 3, 4, 3, 0, 4, 2, 0}) {
                     // Repeat each level to exercise accumulated history and optical-flow dispatch,
                     // not only the reset frame immediately after resource creation.
@@ -627,7 +640,8 @@ namespace {
                         if (getUpscalingMode() != mode) return "FAIL\nProduction applied mode mismatch\n";
                         if (mode != 0 && !isSupersampling()) return "FAIL\nProduction supersampling missing\n";
                         if (mode == 0 && isSupersampling()) return "FAIL\nOff reported supersampling\n";
-                        if (mode != 0 && sgsrOutputWidth != (level == 2 ? width * 2 : (width * 4 / 3 & ~1u)))
+                        if (mode != 0 && (sgsrOutputWidth != (level == 2 ? 256u : 170u) ||
+                                          sgsrOutputHeight != (level == 2 ? 192u : 128u)))
                             return "FAIL\nProduction supersampling target mismatch\n";
                         if (mode == 0 && sgsrHistory[0].image != VK_NULL_HANDLE)
                             return "FAIL\nOff retained reconstruction resources\n";
@@ -658,8 +672,8 @@ namespace {
                             return "FAIL\nProduction dispatch submission\n";
                     }
                 }
-                report += hdr ? "HDR: " : "SDR: ";
-                report += "all four modes, both levels, reset/history frames, sharpness 0/85%, Off resource/bypass verified\n";
+                report += hdr ? "HDR swapchain format: " : "SDR swapchain format: ";
+                report += "all four modes, both levels, reset/history frames, sharpness 0/85%, Off resource/bypass\n";
             }
             return report;
         }
@@ -920,10 +934,9 @@ namespace {
             imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
             imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
             imageInfo.usage = (fragmentPath ? VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT : VK_IMAGE_USAGE_STORAGE_BIT) |
-                              VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
-#if defined(LC_DEBUG)
-            imageInfo.usage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
-#endif
+                              VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
+                              // The debug probe clears the planes; every build creates the same images
+                              VK_IMAGE_USAGE_TRANSFER_DST_BIT;
             imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
             imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
             if (!check(vk.CreateImage(device, &imageInfo, nullptr, &plane.image), "vkCreateImage")) {
@@ -1015,7 +1028,7 @@ namespace {
 
         bool createComputeLayout(uint32_t count, uint32_t storageBinding, uint32_t pushBytes,
                                  VkDescriptorSetLayout &layout, VkPipelineLayout &pipelineLayout) {
-            VkDescriptorSetLayoutBinding bindings[8] = {};
+            VkDescriptorSetLayoutBinding bindings[9] = {};
             for (uint32_t i = 0; i < count; ++i) {
                 bindings[i] = {i, i == storageBinding ? VK_DESCRIPTOR_TYPE_STORAGE_IMAGE :
                         VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr};
@@ -1040,8 +1053,8 @@ namespace {
             info.descriptorSetCount = 1;
             info.pSetLayouts = &layout;
             if (!check(vk.AllocateDescriptorSets(device, &info, &set), "upscaler descriptor set")) return false;
-            VkDescriptorImageInfo images[8] = {};
-            VkWriteDescriptorSet writes[8] = {};
+            VkDescriptorImageInfo images[9] = {};
+            VkWriteDescriptorSet writes[9] = {};
             for (uint32_t i = 0; i < count; ++i) {
                 const bool storage = int(i) == storageBinding;
                 images[i] = {storage ? VK_NULL_HANDLE : sgsrSampler, views[i], VK_IMAGE_LAYOUT_GENERAL};
@@ -1061,11 +1074,16 @@ namespace {
             const bool temporal = sgsrAppliedMode >= 3;
             const bool quality = sgsrAppliedMode == 4;
             const uint32_t flowWidth = (width + 7) / 8, flowHeight = (height + 7) / 8;
-            const float scale = std::min(float(sgsrTargetWidth) / float(width), float(sgsrTargetHeight) / float(height));
+            const float fit = std::min(float(sgsrTargetWidth) / float(width), float(sgsrTargetHeight) / float(height));
+            // The presentation size is never below the stream's: shrinking to a smaller display is the display
+            // scaler's job, not the upscaler's
+            const float scale = std::max(fit, 1.0f);
             sgsrPresentationWidth = std::max(2u, uint32_t(float(width) * scale)) & ~1u;
             sgsrPresentationHeight = std::max(2u, uint32_t(float(height) * scale)) & ~1u;
-            const bool nativeInput = std::abs(int(width) - int(sgsrPresentationWidth)) <= 2 &&
-                                     std::abs(int(height) - int(sgsrPresentationHeight)) <= 2;
+            // Like SgsrDimensions, the stream is native only when it matches the display it is fitted to
+            const int fittedWidth = int(float(width) * fit), fittedHeight = int(float(height) * fit);
+            const bool nativeInput = std::abs(int(width) - fittedWidth) <= sgsrLimits.nativeTolerance &&
+                                     std::abs(int(height) - fittedHeight) <= sgsrLimits.nativeTolerance;
             const uint32_t numerator = sgsrAppliedLevel >= 2 ? 2u : 4u;
             const uint32_t denominator = sgsrAppliedLevel >= 2 ? 1u : 3u;
             const uint32_t candidateWidth = (sgsrPresentationWidth * numerator / denominator) & ~1u;
@@ -1074,8 +1092,8 @@ namespace {
             vk.GetPhysicalDeviceProperties(physicalDevice, &properties);
             const bool fits = candidateWidth <= properties.limits.maxImageDimension2D &&
                     candidateHeight <= properties.limits.maxImageDimension2D &&
-                    candidateWidth <= 3840 && candidateHeight <= 3840 &&
-                    uint64_t(candidateWidth) * candidateHeight <= uint64_t(3840) * 2160;
+                    candidateWidth <= sgsrLimits.maxWidth && candidateHeight <= sgsrLimits.maxHeight &&
+                    uint64_t(candidateWidth) * candidateHeight <= sgsrLimits.maxPixels;
             sgsrOutputWidth = nativeInput && fits ? candidateWidth : sgsrPresentationWidth;
             sgsrOutputHeight = nativeInput && fits ? candidateHeight : sgsrPresentationHeight;
             reportInternalWidth.store(sgsrOutputWidth);
@@ -1089,15 +1107,17 @@ namespace {
                     !createAuxImage(sgsrFlow[1], VK_FORMAT_R16G16B16A16_SFLOAT, flowWidth, flowHeight, sampledStorage) ||
                     !createAuxImage(sgsrHistory[1], VK_FORMAT_R16G16B16A16_SFLOAT, sgsrOutputWidth, sgsrOutputHeight, sampledStorage))) return false;
             if (quality && !createAuxImage(sgsrReactive, VK_FORMAT_R16G16B16A16_SFLOAT, width, height, sampledStorage)) return false;
+            if (temporal && !createAuxImage(sgsrScene, VK_FORMAT_R16G16B16A16_SFLOAT, 1, 1, sampledStorage)) return false;
             VkSamplerCreateInfo samplerInfo = {VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO};
             samplerInfo.magFilter = VK_FILTER_LINEAR;
             samplerInfo.minFilter = VK_FILTER_LINEAR;
             samplerInfo.addressModeU = samplerInfo.addressModeV = samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
             if (!check(vk.CreateSampler(device, &samplerInfo, nullptr, &sgsrSampler), "upscaler sampler")) return false;
-            if (!createComputeLayout(8, 6, 48, sgsrUpscaleLayout, sgsrUpscalePipelineLayout)) return false;
+            if (!createComputeLayout(9, 6, 48, sgsrUpscaleLayout, sgsrUpscalePipelineLayout)) return false;
             if (temporal) {
                 if (!createComputeLayout(3, 2, 16, sgsrFlowLayout, sgsrFlowPipelineLayout) ||
-                        !createComputePipeline(sgsr_flow_comp_spv, sizeof(sgsr_flow_comp_spv), sgsrFlowPipelineLayout, sgsrFlowPipeline)) return false;
+                        !createComputePipeline(sgsr_flow_comp_spv, sizeof(sgsr_flow_comp_spv), sgsrFlowPipelineLayout, sgsrFlowPipeline) ||
+                        !createComputePipeline(sgsr_scene_comp_spv, sizeof(sgsr_scene_comp_spv), sgsrFlowPipelineLayout, sgsrScenePipeline)) return false;
             }
             if (quality && (!createComputeLayout(5, 4, 48, sgsrActivateLayout, sgsrActivatePipelineLayout) ||
                     !createComputePipeline(sgsr_activate_comp_spv, sizeof(sgsr_activate_comp_spv), sgsrActivatePipelineLayout, sgsrActivatePipeline))) return false;
@@ -1109,16 +1129,16 @@ namespace {
             presentLayout.bindingCount = 1;
             presentLayout.pBindings = &presentBinding;
             if (!check(vk.CreateDescriptorSetLayout(device, &presentLayout, nullptr, &sgsrPresentLayout), "upscaler present layout")) return false;
-            VkPushConstantRange presentRange = {VK_SHADER_STAGE_FRAGMENT_BIT, 0, 8};
+            VkPushConstantRange presentRange = {VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PresentParams)};
             VkPipelineLayoutCreateInfo presentPipelineLayout = {VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
             presentPipelineLayout.setLayoutCount = 1;
             presentPipelineLayout.pSetLayouts = &sgsrPresentLayout;
             presentPipelineLayout.pushConstantRangeCount = 1;
             presentPipelineLayout.pPushConstantRanges = &presentRange;
             if (!check(vk.CreatePipelineLayout(device, &presentPipelineLayout, nullptr, &sgsrPresentPipelineLayout), "upscaler present pipeline layout")) return false;
-            VkDescriptorPoolSize sizes[2] = {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 24}, {VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 5}};
+            VkDescriptorPoolSize sizes[2] = {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 28}, {VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 6}};
             VkDescriptorPoolCreateInfo pool = {VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO};
-            pool.maxSets = 7;
+            pool.maxSets = 8;
             pool.poolSizeCount = 2;
             pool.pPoolSizes = sizes;
             if (!check(vk.CreateDescriptorPool(device, &pool, nullptr, &sgsrPool), "upscaler descriptor pool")) return false;
@@ -1128,6 +1148,8 @@ namespace {
                             direction == 0 ? sgsrPrevious.view : planes[0].view, sgsrFlow[direction].view};
                     if (!allocateImageSet(sgsrFlowLayout, sgsrFlowSets[direction], views, 3, 2)) return false;
                 }
+                const VkImageView sceneViews[] = {planes[0].view, sgsrPrevious.view, sgsrScene.view};
+                if (!allocateImageSet(sgsrFlowLayout, sgsrSceneSet, sceneViews, 3, 2)) return false;
             }
             if (quality) {
                 const VkImageView views[] = {planes[0].view, sgsrPrevious.view, sgsrFlow[0].view, sgsrFlow[1].view, sgsrReactive.view};
@@ -1138,8 +1160,9 @@ namespace {
                         temporal ? sgsrHistory[1 - output].view : planes[0].view,
                         temporal ? sgsrFlow[0].view : planes[0].view,
                         temporal ? sgsrFlow[1].view : planes[0].view, sgsrHistory[output].view,
-                        quality ? sgsrReactive.view : planes[0].view};
-                if (!allocateImageSet(sgsrUpscaleLayout, sgsrUpscaleSets[output], views, 8, 6)) return false;
+                        quality ? sgsrReactive.view : planes[0].view,
+                        temporal ? sgsrScene.view : planes[0].view};
+                if (!allocateImageSet(sgsrUpscaleLayout, sgsrUpscaleSets[output], views, 9, 6)) return false;
                 const VkImageView present[] = {sgsrHistory[output].view};
                 if (!allocateImageSet(sgsrPresentLayout, sgsrPresentSets[output], present, 1, -1)) return false;
             }
@@ -1356,9 +1379,12 @@ namespace {
             return createSwapchain();
         }
 
-        // Delos: a new swapchain format means a new render pass and pipeline as well
+        // Delos: a new swapchain format means a new render pass and pipeline as well. A failed swapchain or
+        // pipeline rebuild leaves outputBroken set, so the next frame rebuilds again instead of drawing with
+        // destroyed resources; a failed upscaler rebuild only turns the upscaler off (direct rendering).
         bool applyHdrMode() {
             vk.DeviceWaitIdle(device);
+            outputBroken = true;
             hdrActive = hdrWanted;
             csc.matrix = hdrActive ? 2 : sdrMatrix;
             LOGI("HDR %s", hdrActive ? "on" : "off");
@@ -1367,9 +1393,15 @@ namespace {
             destroySgsrMotion();
             destroyPipeline();
             swapchainFormat = VK_FORMAT_UNDEFINED;
-            if (!createSwapchain() || !createPipeline() || !createSgsrMotion()) {
+            // A new output format is a fresh chance for the GPU P010 bridge and the upscaler that needs it
+            yuvCpu = false;
+            sgsrYuvBlocked = false;
+            sgsrAvailable = true;
+            if (!createSwapchain() || !createPipeline()) {
                 return false;
             }
+            createSgsrWithFallback();
+            outputBroken = false;
             sgsrInitialized = false;
             applyHdrMetadata();
             return true;
@@ -1392,29 +1424,45 @@ namespace {
             }
             // GPU_SAMPLED_IMAGE everywhere: SurfaceFlinger composes with the GPU under the stream menu's blur
             if (!yuvCpu) {
-                if (allocateYuvBuffers(AHARDWAREBUFFER_USAGE_GPU_COLOR_OUTPUT | AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE |
-                                       AHARDWAREBUFFER_USAGE_COMPOSER_OVERLAY) &&
-                        createPackPass() && yuvGl.create(packBuffer, yuvBuffers, YUV_BUFFERS,
-                            int(sgsrApplied ? sgsrPresentationWidth : width),
-                            int(sgsrApplied ? sgsrPresentationHeight : height))) {
+                if (createGpuYuvBridge()) {
                     LOGI("P010 HDR output filled on the GPU");
                     return true;
                 }
-                LOGW("P010 HDR output: no GPU copy on this device, the CPU fills the buffers");
-                yuvGl.destroy();
-                destroyPackPass();
-                releaseYuvBuffers();
                 if (sgsrApplied) {
-                    LOGW("PyroWave upscaling and sharpening require the GPU P010 bridge");
+                    // The upscaler needs P010 buffers at the presentation size, which may not fit where the
+                    // stream size does: give up the upscaler, not the GPU path
+                    LOGW("P010 HDR output: no GPU copy at the upscaled size; retrying without upscaling");
+                    destroySgsrMotion();
                     sgsrApplied = false;
                     sgsrAppliedMode = 0;
+                    sgsrYuvBlocked = true;
                     reportAppliedMode.store(0);
+                    if (createGpuYuvBridge()) {
+                        LOGI("P010 HDR output filled on the GPU");
+                        return true;
+                    }
                 }
+                LOGW("P010 HDR output: no GPU copy on this device, the CPU fills the buffers");
                 yuvCpu = true;
             }
             return allocateYuvBuffers(AHARDWAREBUFFER_USAGE_CPU_WRITE_OFTEN | AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE |
                                       AHARDWAREBUFFER_USAGE_COMPOSER_OVERLAY) &&
                    createReadback();
+        }
+
+        // The GPU half of the P010 output at the current size: buffers, pack pass and the GL copy
+        bool createGpuYuvBridge() {
+            if (allocateYuvBuffers(AHARDWAREBUFFER_USAGE_GPU_COLOR_OUTPUT | AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE |
+                                   AHARDWAREBUFFER_USAGE_COMPOSER_OVERLAY) &&
+                    createPackPass() && yuvGl.create(packBuffer, yuvBuffers, YUV_BUFFERS,
+                        int(sgsrApplied ? sgsrPresentationWidth : width),
+                        int(sgsrApplied ? sgsrPresentationHeight : height))) {
+                return true;
+            }
+            yuvGl.destroy();
+            destroyPackPass();
+            releaseYuvBuffers();
+            return false;
         }
 
         bool allocateYuvBuffers(uint64_t usage) {
@@ -2207,8 +2255,8 @@ namespace {
             vk.CmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT |
                     VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 1, &reuse, 0, nullptr, 0, nullptr);
             if (!sgsrInitialized) {
-                Plane *images[] = {&sgsrPrevious, &sgsrFlow[0], &sgsrFlow[1], &sgsrHistory[0], &sgsrHistory[1], &sgsrReactive};
-                VkImageMemoryBarrier init[6] = {};
+                Plane *images[] = {&sgsrPrevious, &sgsrFlow[0], &sgsrFlow[1], &sgsrHistory[0], &sgsrHistory[1], &sgsrReactive, &sgsrScene};
+                VkImageMemoryBarrier init[7] = {};
                 uint32_t count = 0;
                 for (Plane *image : images) {
                     if (image->image == VK_NULL_HANDLE) continue;
@@ -2231,14 +2279,20 @@ namespace {
                     vk.CmdPushConstants(cmd,sgsrFlowPipelineLayout,VK_SHADER_STAGE_COMPUTE_BIT,0,sizeof(params),&params);
                     vk.CmdDispatch(cmd,(flowWidth+7)/8,(flowHeight+7)/8,1);
                 }
+                // Whole-frame cut: the upscaler discards its history for this frame (SgsrTemporal's scene change)
+                vk.CmdBindPipeline(cmd,VK_PIPELINE_BIND_POINT_COMPUTE,sgsrScenePipeline);
+                vk.CmdBindDescriptorSets(cmd,VK_PIPELINE_BIND_POINT_COMPUTE,sgsrFlowPipelineLayout,0,1,&sgsrSceneSet,0,nullptr);
+                vk.CmdPushConstants(cmd,sgsrFlowPipelineLayout,VK_SHADER_STAGE_COMPUTE_BIT,0,sizeof(params),&params);
+                vk.CmdDispatch(cmd,1,1,1);
             }
             if (temporal && sgsrInitialized) {
-                VkImageMemoryBarrier flowReady[2]={};
-                for(int i=0;i<2;i++){flowReady[i].sType=VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;flowReady[i].srcAccessMask=VK_ACCESS_SHADER_WRITE_BIT;
+                VkImageMemoryBarrier flowReady[3]={};
+                const Plane *produced[3]={&sgsrFlow[0],&sgsrFlow[1],&sgsrScene};
+                for(int i=0;i<3;i++){flowReady[i].sType=VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;flowReady[i].srcAccessMask=VK_ACCESS_SHADER_WRITE_BIT;
                     flowReady[i].dstAccessMask=VK_ACCESS_SHADER_READ_BIT;flowReady[i].oldLayout=flowReady[i].newLayout=VK_IMAGE_LAYOUT_GENERAL;
-                    flowReady[i].srcQueueFamilyIndex=flowReady[i].dstQueueFamilyIndex=VK_QUEUE_FAMILY_IGNORED;flowReady[i].image=sgsrFlow[i].image;
+                    flowReady[i].srcQueueFamilyIndex=flowReady[i].dstQueueFamilyIndex=VK_QUEUE_FAMILY_IGNORED;flowReady[i].image=produced[i]->image;
                     flowReady[i].subresourceRange={VK_IMAGE_ASPECT_COLOR_BIT,0,1,0,1};}
-                vk.CmdPipelineBarrier(cmd,VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,0,0,nullptr,0,nullptr,2,flowReady);
+                vk.CmdPipelineBarrier(cmd,VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,0,0,nullptr,0,nullptr,3,flowReady);
             }
             const int output = temporal ? sgsrHistoryIndex ^ 1 : 0;
             struct UpscaleParams{int32_t input[2],output[2],flow[2],reset,fullRange,matrix,sixteenBit,mode,padding;} params={
@@ -2291,8 +2345,32 @@ namespace {
                                   0,0,nullptr,0,nullptr,2,toCopy);sgsrInitialized=true;sgsrHistoryIndex=output;return output;
         }
 
+        // Builds the upscaler for the applied settings. A level that does not fit falls back to level 1
+        // (reported through reportAppliedLevel), and a failure after that leaves direct rendering active
+        // rather than a half-built upscaler.
+        bool createSgsrWithFallback() {
+            bool created = createSgsrMotion();
+            if (!created && sgsrApplied && sgsrAppliedLevel > 1) {
+                LOGW("PyroWave supersampling level 2 unavailable; falling back to level 1");
+                destroySgsrMotion();
+                sgsrAppliedLevel = 1;
+                sgsrLevel.store(1);
+                created = createSgsrMotion();
+            }
+            if (!created) {
+                LOGW("PyroWave upscaler initialization failed; direct rendering remains active");
+                destroySgsrMotion();
+                sgsrAvailable = false;
+                sgsrApplied = false;
+                sgsrAppliedMode = 0;
+            }
+            reportAppliedMode.store(sgsrAppliedMode);
+            reportAppliedLevel.store(sgsrAppliedLevel);
+            return created;
+        }
+
         void applyUpscalingSettings() {
-            const bool processingSupported = sgsrAvailable && !(yuvOutput && yuvCpu);
+            const bool processingSupported = sgsrAvailable && !sgsrYuvBlocked && !(yuvOutput && yuvCpu);
             const int requestedMode = processingSupported ? sgsrMode.load() : 0;
             const float requestedSharpness = processingSupported ? sgsrSharpness.load() : 0.0f;
             const int requestedLevel = sgsrLevel.load();
@@ -2310,25 +2388,20 @@ namespace {
             sgsrAppliedMode = requestedMode;
             sgsrAppliedSharpness = requestedSharpness;
             sgsrAppliedLevel = requestedLevel;
-            if (recreate) {
-                bool created = createSgsrMotion();
-                if (!created && requestedProcessing && requestedLevel > 1) {
-                    LOGW("PyroWave supersampling level 2 unavailable; falling back to level 1");
-                    destroySgsrMotion();
-                    sgsrAppliedLevel = 1;
-                    sgsrLevel.store(1);
-                    created = createSgsrMotion();
-                }
-                if (!created) {
-                    LOGW("PyroWave upscaler recreation failed; direct rendering remains active");
-                    destroySgsrMotion();
-                    sgsrAvailable = false;
-                    sgsrApplied = false;
-                    sgsrAppliedMode = 0;
-                }
-            }
+            if (recreate) createSgsrWithFallback();
             if (recreate || resetHistory) sgsrInitialized = false;
             reportAppliedMode.store(sgsrAppliedMode);
+            reportAppliedLevel.store(sgsrAppliedLevel);
+        }
+
+        // The temporal history is only valid for consecutive frames: after a stall it describes a picture that
+        // is gone (SgsrTemporal resets after the same gap)
+        void resetUpscalerHistoryAfterGap(uint64_t now) {
+            if (!sgsrApplied || sgsrAppliedMode < 3) return;
+            if (sgsrLastFrameUs != 0 && now - sgsrLastFrameUs > SGSR_HISTORY_GAP_US) {
+                sgsrInitialized = false;
+            }
+            sgsrLastFrameUs = now;
         }
 
         bool present() {
@@ -2343,10 +2416,11 @@ namespace {
             const uint64_t afterFence = nowUs();
             readTimestamps();
             enterStage(STAGE_HDR_SWITCH);
-            if (hdrWanted != hdrActive && !applyHdrMode()) {
+            if ((hdrWanted != hdrActive || outputBroken) && !applyHdrMode()) {
                 return false;
             }
             applyUpscalingSettings();
+            resetUpscalerHistoryAfterGap(frameStart);
             enterStage(STAGE_DECODE);
 
             // Decode first, without waiting for the display, so the GPU starts on the
@@ -2454,7 +2528,7 @@ namespace {
             vk.CmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,activeLayout,0,1,&activeSet,0,nullptr);
             if(!useSgsr)vk.CmdPushConstants(commandBuffer,pipelineLayout,VK_SHADER_STAGE_FRAGMENT_BIT,0,sizeof(CscParams),&csc);
             else {
-                const PresentParams params = {sgsrAppliedSharpness, hdrActive ? 1 : 0};
+                const PresentParams params = {sgsrAppliedSharpness};
                 vk.CmdPushConstants(commandBuffer, activeLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(params), &params);
             }
             vk.CmdDraw(commandBuffer, 3, 1, 0, 0);
@@ -2555,6 +2629,7 @@ namespace {
         }
 
         void destroySgsrMotion() {
+            if(sgsrScenePipeline!=VK_NULL_HANDLE)vk.DestroyPipeline(device,sgsrScenePipeline,nullptr);
             if(sgsrPresentPipeline!=VK_NULL_HANDLE)vk.DestroyPipeline(device,sgsrPresentPipeline,nullptr);
             if(sgsrUpscalePipeline!=VK_NULL_HANDLE)vk.DestroyPipeline(device,sgsrUpscalePipeline,nullptr);
             if(sgsrFlowPipeline!=VK_NULL_HANDLE)vk.DestroyPipeline(device,sgsrFlowPipeline,nullptr);
@@ -2569,12 +2644,12 @@ namespace {
             if(sgsrFlowLayout!=VK_NULL_HANDLE)vk.DestroyDescriptorSetLayout(device,sgsrFlowLayout,nullptr);
             if(sgsrPool!=VK_NULL_HANDLE)vk.DestroyDescriptorPool(device,sgsrPool,nullptr);
             if(sgsrSampler!=VK_NULL_HANDLE)vk.DestroySampler(device,sgsrSampler,nullptr);
-            for(Plane *image:{&sgsrPrevious,&sgsrFlow[0],&sgsrFlow[1],&sgsrHistory[0],&sgsrHistory[1],&sgsrReactive}){
+            for(Plane *image:{&sgsrPrevious,&sgsrFlow[0],&sgsrFlow[1],&sgsrHistory[0],&sgsrHistory[1],&sgsrReactive,&sgsrScene}){
                 if(image->view!=VK_NULL_HANDLE)vk.DestroyImageView(device,image->view,nullptr);
                 if(image->image!=VK_NULL_HANDLE)vk.DestroyImage(device,image->image,nullptr);
                 if(image->memory!=VK_NULL_HANDLE)vk.FreeMemory(device,image->memory,nullptr);*image={};
             }
-            sgsrPresentPipeline=sgsrUpscalePipeline=sgsrFlowPipeline=VK_NULL_HANDLE;
+            sgsrPresentPipeline=sgsrUpscalePipeline=sgsrFlowPipeline=sgsrScenePipeline=VK_NULL_HANDLE;
             sgsrPresentPipelineLayout=sgsrUpscalePipelineLayout=sgsrFlowPipelineLayout=VK_NULL_HANDLE;
             sgsrPresentLayout=sgsrUpscaleLayout=sgsrFlowLayout=VK_NULL_HANDLE;
             sgsrPool=VK_NULL_HANDLE;sgsrSampler=VK_NULL_HANDLE;
@@ -2608,6 +2683,11 @@ namespace {
         SurfaceApi surfaceApi;
         bool yuvSupported = false;
         bool yuvCpu = false;
+        // The P010 GPU bridge failed at the upscaled size but not at the stream size: SGSR stays off until the
+        // next HDR switch retries it
+        bool sgsrYuvBlocked = false;
+        // A rebuild for an HDR switch failed halfway; the next frame tries again before it uses the output
+        bool outputBroken = false;
         VkBuffer readbackBuffer = VK_NULL_HANDLE;
         VkDeviceMemory readbackMemory = VK_NULL_HANDLE;
         VkDeviceSize readbackSize = 0;
@@ -2658,6 +2738,7 @@ namespace {
         bool fragmentPath = false;
         std::atomic<int> sgsrMode{0};
         std::atomic<int> reportAppliedMode{0};
+        std::atomic<int> reportAppliedLevel{1};
         std::atomic<float> sgsrSharpness{0.0f};
         std::atomic<int> sgsrLevel{1};
         bool sgsrAvailable = false;
@@ -2666,12 +2747,19 @@ namespace {
         float sgsrAppliedSharpness = 0.0f;
         int sgsrAppliedLevel = 1;
         bool sgsrInitialized = false;
+        // The display size the stream is fitted to (SgsrDimensions' "presentation size"), and the limits of
+        // the upscaled size, which the Java side owns
         uint32_t sgsrTargetWidth = 0;
         uint32_t sgsrTargetHeight = 0;
+        SgsrLimits sgsrLimits = {};
+        uint64_t sgsrLastFrameUs = 0;
         Plane sgsrPrevious;
         Plane sgsrFlow[2];
         Plane sgsrHistory[2];
         Plane sgsrReactive;
+        Plane sgsrScene;
+        VkDescriptorSet sgsrSceneSet = VK_NULL_HANDLE;
+        VkPipeline sgsrScenePipeline = VK_NULL_HANDLE;
         uint32_t sgsrOutputWidth = 0;
         uint32_t sgsrOutputHeight = 0;
         uint32_t sgsrPresentationWidth = 0;
@@ -2737,8 +2825,8 @@ namespace {
 
     public:
         // GPU decode time of the most recently completed frame, or 0 when unknown.
-        uint32_t lastGpuDecodeUs = 0;
-        uint32_t lastGpuDrawUs = 0;
+        std::atomic<uint32_t> lastGpuDecodeUs{0};
+        std::atomic<uint32_t> lastGpuDrawUs{0};
 
     private:
         struct {
@@ -2854,6 +2942,25 @@ namespace {
 namespace {
     std::mutex activeLock;
     Renderer *activeRenderer = nullptr;
+
+    // The renderers Java still holds a handle to. The setters and getters (UI thread) must not wait on
+    // activeLock, which the video thread holds for a whole frame, so they use this lock instead; destroy
+    // unlists the renderer under it before deleting, and a late call from another thread then finds
+    // nothing instead of freed memory.
+    std::mutex handleLock;
+    Renderer *liveRenderer = nullptr;
+
+    // Runs [use] on the renderer behind [handle] while it is alive; false when it is gone
+    template <typename Use>
+    bool withLiveRenderer(jlong handle, Use &&use) {
+        std::lock_guard<std::mutex> lock(handleLock);
+        auto *renderer = reinterpret_cast<Renderer *>(handle);
+        if (renderer == nullptr || renderer != liveRenderer) {
+            return false;
+        }
+        use(*renderer);
+        return true;
+    }
 
     // The statistics window for the stream's overlay (PyroWaveRenderer.takeStats), filled per frame
     // like MediaCodecDecoderRenderer's VideoStats for the other codecs
@@ -2988,10 +3095,25 @@ Java_com_limelight_binding_video_PyroWaveGpuInstrumentation_nativeRunRendererPro
                                                                                  jobject surface) {
     ANativeWindow *window = ANativeWindow_fromSurface(env, surface);
     if (window == nullptr) return env->NewStringUTF("FAIL\nProbe surface unavailable\n");
-    Renderer renderer;
-    if (!renderer.create(window, 128, 96, 60, 128, 96, false, true, 1, true, 0, 1, 0.0f))
-        return env->NewStringUTF("FAIL\nProduction renderer initialization\n");
-    const std::string report = renderer.probeUpscalingLifecycle();
+    const SgsrLimits limits = {3840, 3840, 3840ull * 2160, 2};
+    std::string report;
+    {
+        Renderer renderer;
+        if (!renderer.create(window, 128, 96, 60, 128, 96, false, true, 1, true, 0, 1, 0.0f, limits))
+            return env->NewStringUTF("FAIL\nProduction renderer initialization\n");
+        report = renderer.probeUpscalerLifecycle();
+    }
+    if (report.compare(0, 5, "PASS\n") == 0) {
+        // A stream larger than its display is a downscale: it keeps its own size and is never supersampled
+        ANativeWindow *second = ANativeWindow_fromSurface(env, surface);
+        if (second == nullptr) return env->NewStringUTF("FAIL\nProbe surface unavailable\n");
+        Renderer downscaled;
+        if (!downscaled.create(second, 128, 96, 60, 64, 48, false, true, 1, true, 1, 2, 0.0f, limits))
+            return env->NewStringUTF("FAIL\nProduction renderer initialization (downscale)\n");
+        if (downscaled.getUpscalingMode() != 1 || downscaled.isSupersampling())
+            return env->NewStringUTF("FAIL\nA stream larger than its display was supersampled\n");
+        report += "Stream larger than its display: upscaler on, not supersampled\n";
+    }
     return env->NewStringUTF(report.c_str());
 }
 #endif
@@ -3010,7 +3132,9 @@ Java_com_limelight_binding_video_PyroWaveRenderer_nativeCreate(JNIEnv *env, jcla
                                                                jint height, jint frameRate, jint outputWidth,
                                                                jint outputHeight, jboolean chroma444, jboolean fullRange,
                                                                jint matrix, jboolean tenBit, jint upscalingMode,
-                                                               jint supersamplingLevel, jfloat sharpness) {
+                                                               jint supersamplingLevel, jfloat sharpness,
+                                                               jint maxInternalWidth, jint maxInternalHeight,
+                                                               jlong maxInternalPixels, jint nativeTolerance) {
     if (surface == nullptr || width <= 0 || height <= 0 || (!chroma444 && ((width & 1) || (height & 1)))) {
         LOGE("PyroWave needs a surface and positive dimensions, even for 4:2:0 (%dx%d)", width, height);
         return 0;
@@ -3021,8 +3145,10 @@ Java_com_limelight_binding_video_PyroWaveRenderer_nativeCreate(JNIEnv *env, jcla
     }
     installStackSignal();
     auto renderer = std::make_unique<Renderer>();
+    const SgsrLimits limits = {uint32_t(std::max(maxInternalWidth, 2)), uint32_t(std::max(maxInternalHeight, 2)),
+                               uint64_t(std::max<jlong>(maxInternalPixels, 4)), std::max(nativeTolerance, 0)};
     if (!renderer->create(window, width, height, frameRate, outputWidth, outputHeight, chroma444, fullRange,
-                          matrix, tenBit, upscalingMode, supersamplingLevel, sharpness)) {
+                          matrix, tenBit, upscalingMode, supersamplingLevel, sharpness, limits)) {
         return 0;  // The renderer releases the window.
     }
     LOGI("PyroWave renderer ready for %dx%d %s %s", width, height, chroma444 ? "4:4:4" : "4:2:0",
@@ -3037,62 +3163,69 @@ Java_com_limelight_binding_video_PyroWaveRenderer_nativeCreate(JNIEnv *env, jcla
     }
     std::lock_guard<std::mutex> lock(activeLock);
     activeRenderer = renderer.get();
+    {
+        std::lock_guard<std::mutex> handles(handleLock);
+        liveRenderer = renderer.get();
+    }
     return reinterpret_cast<jlong>(renderer.release());
 }
 
 JNIEXPORT jint JNICALL
 Java_com_limelight_binding_video_PyroWaveRenderer_nativeGetLastGpuDecodeUs(JNIEnv *, jclass, jlong handle) {
-    auto *renderer = reinterpret_cast<Renderer *>(handle);
-    return renderer != nullptr ? jint(renderer->lastGpuDecodeUs) : 0;
+    jint result = 0;
+    withLiveRenderer(handle, [&](Renderer &renderer) { result = jint(renderer.lastGpuDecodeUs.load()); });
+    return result;
 }
 
 JNIEXPORT void JNICALL
 Java_com_limelight_binding_video_PyroWaveRenderer_nativeSetHdrMode(JNIEnv *, jclass, jlong handle, jboolean enabled) {
-    auto *renderer = reinterpret_cast<Renderer *>(handle);
-    if (renderer != nullptr) {
-        renderer->setHdrMode(enabled);
-    }
+    withLiveRenderer(handle, [&](Renderer &renderer) { renderer.setHdrMode(enabled); });
 }
 
 JNIEXPORT void JNICALL
 Java_com_limelight_binding_video_PyroWaveRenderer_nativeSetUpscalingMode(JNIEnv *, jclass, jlong handle,
                                                                       jint mode) {
-    auto *renderer=reinterpret_cast<Renderer *>(handle);
-    if(renderer!=nullptr)renderer->setUpscalingMode(mode);
+    withLiveRenderer(handle, [&](Renderer &renderer) { renderer.setUpscalingMode(mode); });
 }
 
 JNIEXPORT jint JNICALL
 Java_com_limelight_binding_video_PyroWaveRenderer_nativeGetUpscalingMode(JNIEnv *, jclass, jlong handle) {
-    auto *renderer=reinterpret_cast<Renderer *>(handle);
-    return renderer!=nullptr?renderer->getUpscalingMode():0;
+    jint result = 0;
+    withLiveRenderer(handle, [&](Renderer &renderer) { result = renderer.getUpscalingMode(); });
+    return result;
 }
 
 JNIEXPORT void JNICALL
 Java_com_limelight_binding_video_PyroWaveRenderer_nativeSetSharpness(JNIEnv *, jclass, jlong handle,
                                                                   jfloat sharpness) {
-    auto *renderer=reinterpret_cast<Renderer *>(handle);
-    if(renderer!=nullptr)renderer->setSharpness(sharpness);
+    withLiveRenderer(handle, [&](Renderer &renderer) { renderer.setSharpness(sharpness); });
 }
 
 JNIEXPORT void JNICALL
 Java_com_limelight_binding_video_PyroWaveRenderer_nativeSetSupersamplingLevel(JNIEnv *, jclass, jlong handle,
                                                                                jint level) {
-    auto *renderer=reinterpret_cast<Renderer *>(handle);
-    if(renderer!=nullptr)renderer->setSupersamplingLevel(level);
+    withLiveRenderer(handle, [&](Renderer &renderer) { renderer.setSupersamplingLevel(level); });
+}
+
+JNIEXPORT jint JNICALL
+Java_com_limelight_binding_video_PyroWaveRenderer_nativeGetSupersamplingLevel(JNIEnv *, jclass, jlong handle) {
+    jint result = 1;
+    withLiveRenderer(handle, [&](Renderer &renderer) { result = renderer.getSupersamplingLevel(); });
+    return result;
 }
 
 JNIEXPORT jboolean JNICALL
 Java_com_limelight_binding_video_PyroWaveRenderer_nativeIsSupersampling(JNIEnv *, jclass, jlong handle) {
-    auto *renderer=reinterpret_cast<Renderer *>(handle);
-    return renderer!=nullptr&&renderer->isSupersampling()?JNI_TRUE:JNI_FALSE;
+    jboolean result = JNI_FALSE;
+    withLiveRenderer(handle, [&](Renderer &renderer) { result = renderer.isSupersampling() ? JNI_TRUE : JNI_FALSE; });
+    return result;
 }
 
 JNIEXPORT jstring JNICALL
 Java_com_limelight_binding_video_PyroWaveRenderer_nativeGetScaleDescription(JNIEnv *env, jclass, jlong handle) {
-    auto *renderer=reinterpret_cast<Renderer *>(handle);
-    if(renderer==nullptr)return nullptr;
-    const std::string description=renderer->scaleDescription();
-    return description.empty()?nullptr:env->NewStringUTF(description.c_str());
+    std::string description;
+    withLiveRenderer(handle, [&](Renderer &renderer) { description = renderer.scaleDescription(); });
+    return description.empty() ? nullptr : env->NewStringUTF(description.c_str());
 }
 
 // Copies the statistics window into [out] (the order of PyroWaveRenderer.Stats) and starts a new one
@@ -3137,6 +3270,12 @@ Java_com_limelight_binding_video_PyroWaveRenderer_nativeTakeStats(JNIEnv *env, j
 JNIEXPORT void JNICALL
 Java_com_limelight_binding_video_PyroWaveRenderer_nativeDestroy(JNIEnv *, jclass, jlong handle) {
     auto *renderer = reinterpret_cast<Renderer *>(handle);
+    {
+        std::lock_guard<std::mutex> lock(handleLock);
+        if (liveRenderer == renderer) {
+            liveRenderer = nullptr;
+        }
+    }
     {
         std::lock_guard<std::mutex> lock(activeLock);
         if (activeRenderer == renderer) {

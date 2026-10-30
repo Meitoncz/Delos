@@ -1,0 +1,28 @@
+#version 450
+// Copyright (c) 2026 Delos contributors. GPL-3.0-or-later.
+// Whole-frame cut detection for the PyroWave SGSR 2 upscaler, the Vulkan counterpart of
+// assets/sgsr/scene_change.comp: compares the mean luma of an 8x8 grid of the current and the previous
+// frame. A false positive only drops the temporal history for one frame. The pipeline layout is the
+// flow pass's, whose push constants this pass does not need.
+layout(local_size_x = 8, local_size_y = 8) in;
+layout(set = 0, binding = 0) uniform sampler2D u_current;
+layout(set = 0, binding = 1) uniform sampler2D u_previous;
+layout(set = 0, binding = 2, rgba16f) writeonly uniform image2D u_scene;
+shared float differences[64];
+void main() {
+    uint index = gl_LocalInvocationIndex;
+    vec2 cell = vec2(gl_LocalInvocationID.xy);
+    float current = 0.0, previous = 0.0;
+    for (int y = 0; y < 8; y++) for (int x = 0; x < 8; x++) {
+        vec2 uv = (cell + (vec2(x, y) + .5) / 8.0) / 8.0;
+        current += textureLod(u_current, uv, 0.0).r;
+        previous += textureLod(u_previous, uv, 0.0).r;
+    }
+    differences[index] = abs(current - previous) / 64.0;
+    barrier();
+    if (index == 0u) {
+        float sum = 0.0;
+        for (int i = 0; i < 64; i++) sum += differences[i];
+        imageStore(u_scene, ivec2(0), vec4(sum / 64.0 > 0.12 ? 1.0 : 0.0, 0.0, 0.0, 1.0));
+    }
+}

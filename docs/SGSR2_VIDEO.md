@@ -49,7 +49,9 @@ History resets on mode changes, initialization/output resize, HDR transitions, n
 and source timestamp gaps over 50 ms. The last threshold is conservative and needs revisiting for
 unusually low frame rates. Decoder reset/recreate closes the stage. Spatial modes do not allocate
 temporal resources until needed. A failed temporal shader/allocation goes through the existing SGSR
-failure status and direct-decoder recovery rather than displaying an invalid HDR frame.
+failure status and direct-decoder recovery rather than displaying an invalid HDR frame. A single failed
+frame (a texture update or buffer swap failing while the surface is replaced) is skipped; only a streak
+of about a second of failed frames stops SGSR and recovers to direct output.
 
 The current flow implementation uses ordinary GLES compute, not QCOM block-matching instructions.
 The simple SAD prototype was rejected after synthetic periodic patterns exposed incorrect vectors.
@@ -211,13 +213,26 @@ Off bypasses all reconstruction and sharpening while retaining the saved sharpne
 Requested mode and applied mode are separate. Live changes apply after the current frame fence,
 without restarting the network connection or decoder. Switching between spatial, temporal and
 Quality modes recreates only the required resources; spatial modes allocate no motion/history pair.
-Mode and HDR changes reset temporal history. A reset returns fresh reconstruction before reading
+Mode and HDR changes reset temporal history. A whole-frame luma cut (the same conservative 8x8
+comparison as the MediaCodec path, `sgsr_scene.comp`) and a gap of more than 50 ms between
+frames reset it as well. A reset returns fresh reconstruction before reading
 undefined previous-frame images. HDR rebuilds the dependent pack/present pipelines in ownership order.
-Failure or a CPU-only P010 bridge reports direct rendering rather than an unsupported active mode.
+A failed upscaler rebuild, at the HDR switch or when its level does not fit, falls back to level 1 and
+then to direct rendering rather than an unsupported active mode; a failed swapchain or pipeline rebuild
+is retried before the next frame is drawn.
+In HDR the upscaler needs P010 buffers at the presentation size. If those cannot be allocated, the
+upscaler is dropped (and stays off until the next HDR switch retries it) and the GPU P010 bridge is
+retried at the stream size; only if that fails too does the CPU readback path take over, which also
+reports direct rendering. A later HDR switch retries the GPU bridge.
 All post-decode passes remain inside the existing GPU draw timestamp interval.
 
 Native-resolution supersampling is available for all four modes at the existing 1x/2x levels and
-size limits, matching the MediaCodec path.
+size limits, matching the MediaCodec path. The native planner receives its size limits and the
+"native input" tolerance from `SgsrDimensions` when the renderer is created, and judges whether a
+stream is native against the display it is aspect-fitted to: a stream larger than its display is
+a downscale and is never supersampled (its presentation size stays the stream size, since shrinking is
+the display scaler's job). If level 2 cannot be allocated the renderer falls back to level 1 and the
+stream menu reports the level actually applied.
 
 ### GPU regression probe
 
@@ -234,8 +249,10 @@ bidirectional motion, distinct regular/Quality output, activation/reset and scen
 Standard/HQ maximum pixel difference was 0.0620117; regular/Quality was 0.0114746.
 P010 packing maximum error was 0.000482917. These are synthetic correctness checks, not a claim
 of visual acceptance or sustained 60/120 FPS performance in a game.
-The production-renderer probe additionally checks allocation/dispatch, actual applied modes,
-both supersampling levels, Off teardown and SDR → HDR → SDR pipeline rebuilding.
+The production-renderer probe additionally checks the upscaler's resource allocation and compute
+dispatch, actual applied modes, both supersampling levels, the downscale case, Off teardown and the
+swapchain-format rebuild of SDR → HDR → SDR. It does not run `present()`, so the swapchain/P010
+present passes, the P010 pack pass and the GL bridge are not covered by it.
 
 ### Earlier SGSR 2 Video acceptance
 

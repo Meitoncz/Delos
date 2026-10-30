@@ -37,6 +37,10 @@ public final class SgsrRenderer implements AutoCloseable {
     private final Handler handler;
     private final AtomicBoolean closed = new AtomicBoolean();
     private final Runnable failure;
+    // About a second of frames: a replaced surface recovers within it, a broken pipeline never does
+    private static final int MAX_CONSECUTIVE_DRAW_FAILURES = 60;
+    // Only touched on the SGSR thread
+    private int consecutiveDrawFailures;
     private final int width, height;
     private volatile float sharpness;
     private volatile int mode;
@@ -298,7 +302,14 @@ public final class SgsrRenderer implements AutoCloseable {
             }
             float elapsedMs=(System.nanoTime()-processingStartNs)/1_000_000f;
             gpuTimeMs=gpuTimeMs==0f?elapsedMs:gpuTimeMs*.8f+elapsedMs*.2f;
+            consecutiveDrawFailures=0;
         } catch (RuntimeException e) {
+            // A surface being replaced or lost fails single frames (texture update, swap); only a streak of
+            // them means SGSR itself is broken and the stream must fall back to direct output.
+            if (++consecutiveDrawFailures < MAX_CONSECUTIVE_DRAW_FAILURES) {
+                LimeLog.warning("SGSR frame skipped (" + consecutiveDrawFailures + "): " + e);
+                return;
+            }
             LimeLog.warning("SGSR stopped; recovering to direct output: " + e);
             if (closed.compareAndSet(false,true)) {
                 release();

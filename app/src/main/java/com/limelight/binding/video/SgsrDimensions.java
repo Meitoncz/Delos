@@ -5,7 +5,7 @@ final class SgsrDimensions {
     static final int MAX_INTERNAL_WIDTH = 3840;
     static final int MAX_INTERNAL_HEIGHT = 3840;
     static final long MAX_INTERNAL_PIXELS = 3840L * 2160L;
-    private static final int NATIVE_TOLERANCE = 2;
+    static final int NATIVE_TOLERANCE = 2;
 
     static final class Plan {
         final int presentationWidth;
