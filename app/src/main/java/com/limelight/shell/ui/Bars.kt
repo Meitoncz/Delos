@@ -266,7 +266,13 @@ private fun NavButtonView(button: NavButton) {
 @Immutable
 sealed interface Glyph {
     data class Letter(val text: String) : Glyph
-    /** [scale] evens out icons that look too big or too small next to the others. */
+    /**
+     * [scale] multiplies the 24 px base font size to even out icons that look too big or too small next to
+     * the others. The scales are measured against the Material Symbols Rounded glyphs (FILL 1, wght 600,
+     * opsz 24, 960 units/em) the sizes were tuned on by eye (b83165f2) and recalibrated for the Phosphor Fill
+     * glyphs (1024 units/em), which have another ink size in the em box:
+     * `new = old * (oldInk / 960) / (newInk / 1024)`, ink being the glyph's bounding box.
+     */
     data class Icon(val symbol: String, val scale: Float = 1f) : Glyph
 
     companion object {
@@ -280,12 +286,23 @@ sealed interface Glyph {
         /** AYN handhelds (Odin, Thor) have a square and a play icon on their two menu buttons. */
         private val ayn = Build.MANUFACTURER.equals("AYN", ignoreCase = true)
 
-        /** The left top menu button (View / Select). */
-        val MENU_LEFT = if (ayn) Icon(Symbols.SQUARE, scale = .72f) else Icon(Symbols.FILTER_NONE)
+        /**
+         * The left top menu button (View / Select). AYN square: ink 0.790 em (Material, scale .72 = 13.65 px) vs
+         * 0.750 em (Phosphor) -> .72 * 0.790 / 0.750 = .758, the same 13.65 px. Other devices, copy: 0.9005 em vs
+         * 0.750 em -> 1.2, 21.6 px.
+         */
+        val MENU_LEFT = if (ayn) Icon(Symbols.SQUARE, scale = .758f) else Icon(Symbols.FILTER_NONE, scale = 1.2f)
 
-        /** The right top menu button (Start). */
-        val MENU_RIGHT = if (ayn) Icon(Symbols.PLAY_ARROW, scale = 1.3f) else Icon(Symbols.MENU)
-        val ADJUST = Icon(Symbols.SWAP_HORIZ)
+        /**
+         * The right top menu button (Start). AYN play: ink 0.4672 x 0.5640 em (Material, scale 1.3 = 14.6 x 17.6 px)
+         * vs 0.6875 x 0.8125 em (Phosphor) -> 1.3 * 0.5640 / 0.8125 = .9025, 14.9 x 17.6 px (the same height). Other
+         * devices, list: Material bars 0.790 x 0.558 em vs the Phosphor list-fill block 0.750 x 0.750 em; the shapes
+         * differ, so the area-equivalent factor sqrt(0.790/0.750 * 0.558/0.750) = .885 is used (15.9 px block).
+         */
+        val MENU_RIGHT = if (ayn) Icon(Symbols.PLAY_ARROW, scale = .9025f) else Icon(Symbols.MENU, scale = .885f)
+
+        /** Material swap_horiz 0.827 x 0.661 em vs Phosphor arrows-left-right 0.6875 x 0.6875 em -> area-equivalent 1.075 (17.7 px). */
+        val ADJUST = Icon(Symbols.SWAP_HORIZ, scale = 1.075f)
     }
 }
 
