@@ -514,7 +514,9 @@ fun Shell(
                 }
             }
 
-            ArtworkProgressBar(artwork.progress.value)
+            val artworkProgress = artwork.progress.value
+            ArtworkProgressBar(artworkProgress ?: metadata.progress.value,
+                label = if (artworkProgress != null) "Downloading artwork" else "Downloading metadata")
             val note = (library as? Library.Ready)?.takeIf { shell.screen == Screen.Home && shell.layer == null }?.let { ready ->
                 val shown = if (metadata.filters.active) ready.apps.count { metadata.filters.matches(metadata.entry(ready.pc, it).data) } else ready.apps.size
                 if (shown == ready.apps.size) "$shown apps on ${ready.pc.name}" else "$shown of ${ready.apps.size} apps on ${ready.pc.name}"

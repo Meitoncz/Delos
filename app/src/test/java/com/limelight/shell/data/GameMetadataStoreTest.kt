@@ -2,16 +2,20 @@ package com.limelight.shell.data
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.test.core.app.ApplicationProvider
 import com.limelight.nvstream.http.ComputerDetails
 import com.limelight.nvstream.http.NvApp
 import java.io.File
 import java.io.IOException
+import java.util.Collections
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -72,6 +76,227 @@ class GameMetadataStoreTest {
         GameMetadataStore(root, { prefs }, providers, { now }, Dispatchers.IO, Dispatchers.Unconfined)
 
     private fun fileOf(app: App) = File(File(root, "pc-${pc.uuid}"), "${app.id}.json")
+
+    // The write observer runs synchronously after a state write, including N/N immediately before null.
+    private fun recordProgress(store: GameMetadataStore, observed: MutableList<ArtworkProgress?>) =
+        Snapshot.registerGlobalWriteObserver { state ->
+            if (state === store.progress) observed.add(store.progress.value)
+        }
+
+    @Test fun libraryProgressCountsOnlyStaleGamesAndIncludesEveryAttemptThroughCompletion() = runBlocking {
+        val stale = listOf(game, app(2, "Another Game"), app(3, "Third Game"))
+        val fresh = listOf(app(4, "Fresh Game"), app(5, "Other Fresh Game"))
+        val seeding = newStore(FakeProviders().apply {
+            onSearch = { listOf(candidate.copy(name = it)) }
+        })
+        stale.forEach { seeding.ensure(pc, it) }
+        now += 8 * day
+        fresh.forEach { seeding.ensure(pc, it) }
+
+        val started = LinkedBlockingQueue<String>()
+        val releases = stale.associate { it.name to CountDownLatch(1) }
+        val providers = FakeProviders().apply {
+            onSearch = { query ->
+                started.add(query)
+                releases.getValue(query).await()
+                if (query == stale.last().name) throw IOException("fixture")
+                listOf(candidate.copy(name = query))
+            }
+        }
+        val store = newStore(providers)
+        val observed = Collections.synchronizedList(mutableListOf<ArtworkProgress?>())
+        val observer = recordProgress(store, observed)
+        val advanced = CountDownLatch(1)
+        val advancementObserver = Snapshot.registerGlobalWriteObserver { state ->
+            if (state === store.progress && store.progress.value == ArtworkProgress(1, stale.size)) {
+                advanced.countDown()
+            }
+        }
+        val job = launch(Dispatchers.Default) { store.ensureLibrary(pc, stale + fresh) }
+        try {
+            val first = started.poll(10, TimeUnit.SECONDS)
+            assertNotNull("first lookup never started", first)
+            assertNotNull("second lookup never started", started.poll(10, TimeUnit.SECONDS))
+            assertEquals(ArtworkProgress(0, stale.size), store.progress.value)
+            fresh.forEach { assertEquals(it.name, store.entry(pc, it).data?.candidate?.name) }
+            releases.getValue(first!!).countDown()
+            assertTrue("first attempt never advanced progress", advanced.await(10, TimeUnit.SECONDS))
+            assertEquals(ArtworkProgress(1, stale.size), store.progress.value)
+            releases.values.forEach { it.countDown() }
+            job.join()
+            assertEquals(
+                listOf(ArtworkProgress(0, 3), ArtworkProgress(1, 3), ArtworkProgress(2, 3), ArtworkProgress(3, 3), null),
+                observed,
+            )
+            assertEquals(stale.size, providers.searchCalls.get())
+            assertNotNull(store.entry(pc, stale.last()).error)
+            assertNull(store.progress.value)
+        } finally {
+            releases.values.forEach { it.countDown() }
+            job.cancelAndJoin()
+            advancementObserver.dispose()
+            observer.dispose()
+        }
+    }
+
+    @Test fun aFullyCachedLibraryNeverRegistersProgress() = runBlocking {
+        val games = listOf(game, app(2, "Another Game"))
+        val seeding = newStore(FakeProviders().apply {
+            onSearch = { listOf(candidate.copy(name = it)) }
+        })
+        games.forEach { seeding.ensure(pc, it) }
+        now += day
+        val providers = FakeProviders()
+        val store = newStore(providers)
+        val observed = Collections.synchronizedList(mutableListOf<ArtworkProgress?>())
+        val observer = recordProgress(store, observed)
+        try {
+            store.ensureLibrary(pc, games)
+            store.ensureLibrary(pc, games)
+            games.forEach { assertEquals(it.name, store.entry(pc, it).data?.candidate?.name) }
+            assertEquals(0, providers.searchCalls.get())
+            assertTrue(observed.isEmpty())
+            assertNull(store.progress.value)
+        } finally {
+            observer.dispose()
+        }
+    }
+
+    @Test fun callsInsideFailureBackoffNeverRegisterProgress() = runBlocking {
+        val failing = FakeProviders().apply { onSearch = { throw IOException("fixture") } }
+        newStore(failing).ensure(pc, game)
+        val providers = FakeProviders()
+        val store = newStore(providers)
+        val observed = Collections.synchronizedList(mutableListOf<ArtworkProgress?>())
+        val observer = recordProgress(store, observed)
+        try {
+            store.ensureLibrary(pc, listOf(game))
+            store.ensure(pc, game)
+            store.ensureLibrary(pc, listOf(game))
+            assertNotNull(store.entry(pc, game).error)
+            assertEquals(0, providers.searchCalls.get())
+            assertTrue(observed.isEmpty())
+            assertNull(store.progress.value)
+        } finally {
+            observer.dispose()
+        }
+    }
+
+    @Test fun standaloneAndMenuOperationsEachReportOneAttemptThenClearProgress() = runBlocking {
+        lateinit var store: GameMetadataStore
+        val providers = FakeProviders().apply {
+            onSearch = {
+                assertEquals(ArtworkProgress(0, 1), store.progress.value)
+                listOf(candidate)
+            }
+            onHdr = {
+                assertEquals(ArtworkProgress(0, 1), store.progress.value)
+                HdrEvidence(NativeHdr.HDR, "Page")
+            }
+        }
+        store = newStore(providers)
+        val observed = Collections.synchronizedList(mutableListOf<ArtworkProgress?>())
+        val observer = recordProgress(store, observed)
+        suspend fun assertSingleAttempt(name: String, operation: suspend () -> Unit) {
+            observed.clear()
+            operation()
+            assertEquals(name, listOf(ArtworkProgress(0, 1), ArtworkProgress(1, 1), null), observed)
+            assertNull(name, store.progress.value)
+        }
+        try {
+            assertSingleAttempt("ensure") { store.ensure(pc, game) }
+            assertSingleAttempt("force refresh") { store.ensure(pc, game, force = true) }
+            assertSingleAttempt("reset") { store.reset(pc, game) }
+            assertSingleAttempt("select") { store.select(pc, game, candidate) }
+            assertSingleAttempt("search") { store.search("Game") }
+        } finally {
+            observer.dispose()
+        }
+    }
+
+    @Test fun cancellingALibraryClearsProgressAndEveryLoadingEntry() = runBlocking {
+        val games = listOf(game, app(2, "Another Game"), app(3, "Third Game"))
+        val started = CountDownLatch(2)
+        val release = CountDownLatch(1)
+        val providers = FakeProviders().apply {
+            onSearch = { started.countDown(); release.await(); emptyList() }
+        }
+        val store = newStore(providers)
+        val job = launch(Dispatchers.Default) { store.ensureLibrary(pc, games) }
+        try {
+            assertTrue("library lookups never started", started.await(10, TimeUnit.SECONDS))
+            assertEquals(ArtworkProgress(0, games.size), store.progress.value)
+            assertTrue(games.any { store.entry(pc, it).loading })
+            job.cancelAndJoin()
+            assertTrue(job.isCancelled)
+            assertNull(store.progress.value)
+            games.forEach {
+                assertFalse(store.entry(pc, it).loading)
+                assertNull(store.entry(pc, it).error)
+            }
+        } finally {
+            release.countDown()
+            job.cancelAndJoin()
+        }
+    }
+
+    @Test fun aConcurrentFocusedRefreshCannotReplaceOrClearLibraryProgress() = runBlocking {
+        val games = listOf(game, app(2, "Another Game"))
+        val focused = app(3, "Focused Game")
+        val started = LinkedBlockingQueue<String>()
+        val releases = games.associate { it.name to CountDownLatch(1) }
+        lateinit var store: GameMetadataStore
+        val providers = FakeProviders().apply {
+            onSearch = { query ->
+                if (query == focused.name) {
+                    assertEquals(2, store.progress.value?.total)
+                } else {
+                    started.add(query)
+                    releases.getValue(query).await()
+                }
+                emptyList()
+            }
+        }
+        store = newStore(providers)
+        val observed = Collections.synchronizedList(mutableListOf<ArtworkProgress?>())
+        val observer = recordProgress(store, observed)
+        val advanced = CountDownLatch(1)
+        val advancementObserver = Snapshot.registerGlobalWriteObserver { state ->
+            if (state === store.progress && store.progress.value == ArtworkProgress(1, 2)) {
+                advanced.countDown()
+            }
+        }
+        val library = launch(Dispatchers.Default) { store.ensureLibrary(pc, games) }
+        var focus: kotlinx.coroutines.Job? = null
+        try {
+            val first = started.poll(10, TimeUnit.SECONDS)
+            assertNotNull("first library lookup never started", first)
+            assertNotNull("second library lookup never started", started.poll(10, TimeUnit.SECONDS))
+            focus = launch(Dispatchers.Default, start = CoroutineStart.UNDISPATCHED) {
+                store.ensure(pc, focused, force = true)
+            }
+            releases.getValue(first!!).countDown()
+            focus.join()
+            assertTrue("library never advanced", advanced.await(10, TimeUnit.SECONDS))
+            assertEquals(ArtworkProgress(1, 2), store.progress.value)
+            assertFalse(library.isCompleted)
+            assertFalse(store.entry(pc, focused).loading)
+            assertEquals(listOf(ArtworkProgress(0, 2), ArtworkProgress(1, 2)), observed)
+            releases.values.forEach { it.countDown() }
+            library.join()
+            assertEquals(
+                listOf(ArtworkProgress(0, 2), ArtworkProgress(1, 2), ArtworkProgress(2, 2), null),
+                observed,
+            )
+            assertNull(store.progress.value)
+        } finally {
+            releases.values.forEach { it.countDown() }
+            focus?.cancelAndJoin()
+            library.cancelAndJoin()
+            advancementObserver.dispose()
+            observer.dispose()
+        }
+    }
 
     @Test fun anAutomaticMatchIsCachedOnDiskAndReusedByAFreshStoreWithoutAskingProvidersAgain() = runBlocking {
         val providers = FakeProviders().apply { onSearch = { listOf(candidate) } }
@@ -185,17 +410,24 @@ class GameMetadataStoreTest {
 
     @Test fun aCancelledLookupStopsPromptlyAndIsNotRecordedAsAProviderFailure() = runBlocking {
         val started = CountDownLatch(1)
+        val release = CountDownLatch(1)
         val providers = FakeProviders().apply {
-            onSearch = { started.countDown(); CountDownLatch(1).await(); emptyList() }
+            onSearch = { started.countDown(); release.await(); emptyList() }
         }
         val store = newStore(providers)
         val job = launch(Dispatchers.Default, start = CoroutineStart.DEFAULT) { store.ensure(pc, game) }
-        assertTrue("lookup never started", started.await(10, TimeUnit.SECONDS))
-        job.cancel()
-        job.join()
-        assertTrue(job.isCancelled)
-        assertFalse(store.entry(pc, game).loading)
-        assertNull(store.entry(pc, game).error)
+        try {
+            assertTrue("lookup never started", started.await(10, TimeUnit.SECONDS))
+            assertEquals(ArtworkProgress(0, 1), store.progress.value)
+            job.cancelAndJoin()
+            assertTrue(job.isCancelled)
+            assertFalse(store.entry(pc, game).loading)
+            assertNull(store.entry(pc, game).error)
+            assertNull(store.progress.value)
+        } finally {
+            release.countDown()
+            job.cancelAndJoin()
+        }
 
         providers.onSearch = { listOf(candidate) }
         store.ensure(pc, game)
