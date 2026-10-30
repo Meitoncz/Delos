@@ -1,10 +1,11 @@
 package com.limelight.ui;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
@@ -35,7 +36,23 @@ public class ExternalControllerViewTest {
 
         assertTrue(view.onKeyPreIme(event.getKeyCode(), event));
         verify(menu).handle(event);
-        verify(stream, never()).handleKeyDown(event);
+        verifyNoMoreInteractions(stream);
+    }
+
+    @Test
+    public void keyTheMenuHandlerLeavesAloneIsNotHandedToTheStreamBeforeIme() {
+        Context context = ApplicationProvider.getApplicationContext();
+        ExternalControllerView view = new ExternalControllerView(context);
+        ExternalControllerView.PreImeKeyHandler menu = mock(ExternalControllerView.PreImeKeyHandler.class);
+        ExternalControllerView.InputCallbacks stream = mock(ExternalControllerView.InputCallbacks.class);
+        KeyEvent event = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_A);
+        when(menu.handle(event)).thenReturn(false);
+        view.setPreImeKeyHandler(menu);
+        view.setInputCallbacks(stream);
+
+        assertFalse(view.onKeyPreIme(event.getKeyCode(), event));
+        verify(menu).handle(event);
+        verifyNoMoreInteractions(stream);
     }
 
     @Test

@@ -377,10 +377,6 @@
     <string name="clipboard_sync_unsupported">Этот сервер не поддерживает синхронизацию буфера. Установите или обновите сервер до последней версии Apollo.</string>
     <string name="send_clipboard_failed">Не удалось отправить буфер обмена:</string>
     <string name="external_display_info">Внешний дисплей подключён с: %1$dx%2$d при %3$.1fГц</string>
-    <string name="notification_channel_name">Управление внешним дисплеем</string>
-    <string name="notification_title">Внешний дисплей активен</string>
-    <string name="notification_text">Нажмите, чтобы открыть контроллер-тачпад</string>
-    <string name="permission_denied">Разрешение на уведомления отклонено</string>
     <string name="no_external_display">Внешний дисплей не обнаружен</string>
     <string name="no_game_instance">Экземпляр игры недоступен</string>
     <string name="get_clipboard_failed">Не удалось получить буфер обмена:</string>

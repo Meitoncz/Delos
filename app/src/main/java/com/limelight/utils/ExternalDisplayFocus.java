@@ -1,8 +1,7 @@
-package com.limelight;
+package com.limelight.utils;
 
 import android.app.ActivityManager;
 import android.app.ActivityOptions;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
@@ -11,19 +10,18 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.Display;
 
-import androidx.annotation.RequiresApi;
+import com.limelight.Game;
 
-import com.limelight.utils.ExternalDisplayControlActivity;
-
-public class StartExternalDisplayControlReceiver extends BroadcastReceiver {
+/**
+ * Moves focus between the stream (on the external display) and the controller activity on the
+ * device's own screen.
+ */
+public final class ExternalDisplayFocus {
     private static final long TIMEOUT_MS = 300;
-    private static Handler handler = new Handler(Looper.getMainLooper());
+    private static final Handler handler = new Handler(Looper.getMainLooper());
     private static boolean isTimeoutActive = false;
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    @Override
-    public void onReceive(Context context, Intent intent) {
-        requestFocusToGameActivity(true);
+    private ExternalDisplayFocus() {
     }
 
     public static void requestFocusToExternalDisplayControl(Context context) {
@@ -35,7 +33,8 @@ public class StartExternalDisplayControlReceiver extends BroadcastReceiver {
         }
     }
 
-    public static void requestFocusToGameActivity(boolean focusExternalDisplayControl) {
+    /** Brings the stream's task to the front; repeated calls within a short time are ignored. */
+    public static void requestFocusToGameActivity() {
         if (isTimeoutActive) {
             return;
         }
@@ -43,9 +42,6 @@ public class StartExternalDisplayControlReceiver extends BroadcastReceiver {
         isTimeoutActive = true;
 
         if (Game.instance != null) {
-            if (focusExternalDisplayControl) {
-                requestFocusToExternalDisplayControl(Game.instance);
-            }
             ActivityManager am = (ActivityManager) Game.instance.getSystemService(Context.ACTIVITY_SERVICE);
             if (am != null) {
                 am.moveTaskToFront(Game.instance.getTaskId(), 0);

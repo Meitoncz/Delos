@@ -25,7 +25,13 @@ commit `66e169c325dab73e4e780fe34ac3c613af4cdf52`.
 It estimates a stable cadence at the lower of stream/display rate, handles fractional display rates,
 maps PTS to monotonic time and drains stale output while waiting. Delos bounds the final spin to
 100 microseconds and makes the wait interruptible. Existing Balanced/LFR/Cap FPS/Smoothness/Warp paths
-remain separate; Fast V-Sync takes precedence over the optional Balanced LFR switch.
+remain separate; Fast V-Sync takes precedence over the optional Balanced LFR switch. A frame that
+arrives a full period or more late is presented at once instead of waiting another period.
+
+Decode time and total latency in the statistics are stamped when a frame leaves the codec, before any
+pacer wait, so they do not include time spent pacing. The 1% low FPS is measured when frames are handed
+to the display (after `releaseOutputBuffer`), so it reflects submission cadence, not the panel's
+presentation times.
 
 **Asynchronous decoding** is an opt-in Stream setting. MediaCodec callbacks feed bounded input/output
 queues instead of polling the codec. The existing submit/render/recovery threads consume those queues.
@@ -33,6 +39,9 @@ Generation guards and a closed acceptance gate prevent old indices crossing flus
 Flush resumes callbacks with `start()`, as required by MediaCodec; stop/reset/release detach callbacks.
 Callback errors are handed to the render loop's recovery handling rather than swallowed or handled
 by blocking the callback thread. Decode timestamp bookkeeping is synchronized between submit/output.
+The output queue holds 32 frames, above any codec's own buffer count, so the codec's buffer pool is the
+backpressure as in synchronous decoding. If the renderer stalls long enough to fill it (or the input
+queue), the dropped output frame or left-out input index is counted and logged, not silent.
 
 Both are MediaCodec features (H.264, HEVC, AV1); PyroWave remains on its separate native Vulkan path.
 These settings also participate in the existing per-game profile/launch snapshot mechanism.
@@ -68,6 +77,8 @@ flow and replacing its other assumptions would be separate video reconstruction 
 a first pass resolves its transform/crop to a 2D image, then SGSR reconstructs at the display size.
 SDR uses an RGBA8 intermediate and the final SurfaceView. The SurfaceView retains aspect-ratio and
 input geometry, while interface/statistics/virtual-controls overlays remain outside the filter.
+The surface is sized when the stream starts from the requested HDR; if the host then settles on 8-bit
+video, the decoder asks `Game` to give the surface its layout size before creating the SGSR stage.
 
 Ten-bit video uses an RGBA16F intermediate and **P010 AHardwareBuffer** output, via a child
 SurfaceControl. This is required on the Odin: labelling an RGB layer as HDR is insufficient on its

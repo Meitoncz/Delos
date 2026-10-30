@@ -487,10 +487,6 @@
 	<string name="send_clipboard_failed">傳送剪貼簿失敗： </string>
 
 	<string name="external_display_info">外接顯示器連接：%1$dx%2$d，%3$.1fHz</string>
-	<string name="notification_channel_name">外接顯示控制</string>
-	<string name="notification_title">外接顯示已啟用</string>
-	<string name="notification_text">點擊以開啟觸控板控制器</string>
-	<string name="permission_denied">通知權限被拒</string>
 	<string name="no_external_display">未偵測到外接顯示器</string>
 	<string name="no_game_instance">沒有可用的遊戲實例</string>
 	<string name="get_clipboard_failed">取得剪貼簿失敗： </string>

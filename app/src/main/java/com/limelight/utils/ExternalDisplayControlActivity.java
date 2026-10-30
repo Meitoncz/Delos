@@ -1,6 +1,6 @@
 package com.limelight.utils;
 
-import static com.limelight.StartExternalDisplayControlReceiver.requestFocusToGameActivity;
+import static com.limelight.utils.ExternalDisplayFocus.requestFocusToGameActivity;
 import static com.limelight.utils.ServerHelper.getSecondaryDisplay;
 
 import android.annotation.SuppressLint;
@@ -93,6 +93,17 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
         }
     }
 
+    /**
+     * The stream menu's brightness slider. The stream's own window is on the external display,
+     * which ignores window brightness, so the value goes to this device's screen, and it is what
+     * the screen returns to after it dimmed from inactivity.
+     */
+    public static void setStreamBrightness(float brightness) {
+        if (instance != null) {
+            instance.applyStreamBrightness(brightness);
+        }
+    }
+
     // --- Activity Lifecycle ---
 
     @Override
@@ -174,7 +185,7 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
         createProgrammaticUI();
         initTouchEventHandling();
         setupInactivityTimeoutForBrightness();
-        requestFocusToGameActivity(false);
+        requestFocusToGameActivity();
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -252,6 +263,16 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
         WindowManager.LayoutParams l = getWindow().getAttributes();
         if (l.screenBrightness == 0.0f) {
             l.screenBrightness = originalBrightness;
+            getWindow().setAttributes(l);
+        }
+    }
+
+    private void applyStreamBrightness(float brightness) {
+        // The dimmed screen comes back to this value on the next touch
+        originalBrightness = brightness;
+        WindowManager.LayoutParams l = getWindow().getAttributes();
+        if (l.screenBrightness != 0.0f) {
+            l.screenBrightness = brightness;
             getWindow().setAttributes(l);
         }
     }
@@ -350,7 +371,6 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
         // Top-left buttons
         LinearLayout topLeftButtons = createButtonContainer(Gravity.TOP | Gravity.START);
         topLeftButtons.setFocusable(false);
-//        topLeftButtons.addView(createImageButton(R.drawable.ic_focus_secondary, v -> requestFocusToGameActivity(false)));
         zoomButton = createImageButton(R.drawable.ic_zoom_toggle, v -> toggleZoomMode(true));
         if (Game.instance != null && Game.instance.isZoomModeEnabled()) {
             zoomButton.setAlpha(1.0f);

@@ -39,23 +39,10 @@ public class ExternalControllerView extends FrameLayout {
     public boolean onKeyPreIme(int keyCode, KeyEvent event) {
         // The focused IME may consume gamepad buttons before Activity.dispatchKeyEvent(). Give the
         // external-display input router first refusal while keeping the InputConnection available.
+        // A key it leaves alone goes on to the IME and then to the activity's own routing; it is
+        // not handed to the stream here as well.
         if (preImeKeyHandler != null && preImeKeyHandler.handle(event)) {
             return true;
-        }
-
-        // This callbacks allows us to override dumb IME behavior like when
-        // Samsung's default keyboard consumes Shift+Space.
-        if (inputCallbacks != null) {
-            if (event.getAction() == KeyEvent.ACTION_DOWN) {
-                if (inputCallbacks.handleKeyDown(event)) {
-                    return true;
-                }
-            }
-            else if (event.getAction() == KeyEvent.ACTION_UP) {
-                if (inputCallbacks.handleKeyUp(event)) {
-                    return true;
-                }
-            }
         }
 
         return super.onKeyPreIme(keyCode, event);
@@ -96,8 +83,6 @@ public class ExternalControllerView extends FrameLayout {
     }
 
     public interface InputCallbacks {
-        boolean handleKeyUp(KeyEvent event);
-        boolean handleKeyDown(KeyEvent event);
         boolean handleCommitText(CharSequence text);
         boolean handleDeleteSurroundingText(int beforeLength, int afterLength);
     }

@@ -37,13 +37,11 @@ public class KeyboardAccessibilityService extends AccessibilityService {
         ExternalDisplayControlActivity controller = ExternalDisplayControlActivity.instance;
         boolean externalDisplayFocused = controller != null && controller.hasWindowFocus();
 
-        if (event.getAction() == KeyEvent.ACTION_DOWN) {
+        if (event.getAction() == KeyEvent.ACTION_DOWN || event.getAction() == KeyEvent.ACTION_UP) {
+            // The same routes the keys take without this service: the controller Activity's router on
+            // the external display, the stream's dispatchKeyEvent() (menu shortcut first) on the device.
             if (externalDisplayFocused) game.handleExternalDisplayKeyEvent(routedEvent);
-            else game.handleKeyDown(routedEvent);
-            return true;
-        } else if (event.getAction() == KeyEvent.ACTION_UP) {
-            if (externalDisplayFocused) game.handleExternalDisplayKeyEvent(routedEvent);
-            else game.handleKeyUp(routedEvent);
+            else game.dispatchKeyEvent(routedEvent);
             return true;
         }
 

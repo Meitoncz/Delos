@@ -18,10 +18,6 @@
 
     <!-- External Display Info -->
     <string name="external_display_info">外接显示器已连接：%1$dx%2$d，%3$.1fHz</string>
-    <string name="notification_channel_name">外接显示器控制</string>
-    <string name="notification_title">外接显示器已激活</string>
-    <string name="notification_text">点击打开触控板控制器</string>
-    <string name="permission_denied">通知权限被拒绝</string>
     <string name="no_external_display">未检测到外接显示器</string>
     <string name="no_game_instance">未检测到游戏实例</string>
 
