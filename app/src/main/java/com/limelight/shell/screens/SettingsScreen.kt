@@ -223,9 +223,9 @@ fun SettingsScreen(
     Box(Modifier.fillMaxSize()) {
         Box(Modifier.size(0.px).focusRequester(focusTransfer).focusable())
         BasicText("Settings", style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx),
-            modifier = Modifier.offset(150.px, 124.px))
+            modifier = Modifier.offset(SettingsLayout.TITLE_X.px, SettingsLayout.TITLE_Y.px))
         PillButton("Search", Symbols.SEARCH, { shell.onSettingsSearch?.invoke() }, Modifier.offset(1530.px, 122.px), clickCue = null)
-        Row(Modifier.offset(y = 206.px).fillMaxWidth().height(66.px), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.offset(y = SettingsLayout.TABS_Y.px).fillMaxWidth().height(SettingsLayout.TABS_HEIGHT.px), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
             ShoulderLabel("L1")
             SettingsTab.entries.forEach { next ->
                 TabPill(next.icon, next.label, tab == next, Modifier.padding(horizontal = 5.px)) {
@@ -241,7 +241,7 @@ fun SettingsScreen(
             }
             ShoulderLabel("R1")
         }
-        Row(Modifier.fillMaxSize().padding(start = 150.px, end = 150.px, top = 312.px, bottom = (96f + (appearance.uiScale / 100f - 1f) * 92f).px),
+        Row(Modifier.fillMaxSize().padding(start = SettingsLayout.TITLE_X.px, end = SettingsLayout.TITLE_X.px, top = SettingsLayout.LIST_TOP.px, bottom = SettingsLayout.bottom(appearance).px),
             horizontalArrangement = Arrangement.spacedBy(56.px)) {
             CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
                 key(tab) {
@@ -415,3 +415,15 @@ private fun LetterKey(letter: String, modifier: Modifier, click: () -> Unit) {
 
 /** The rows the description panel previews the game background for. */
 private val GAME_BACKGROUND_ROWS = setOf("ui_hero_background", "ui_hero_blur", "ui_hero_opacity")
+
+/** Where the settings screens put their title, tab row and list; the per-game screen reuses it 1:1. */
+internal object SettingsLayout {
+    const val TITLE_X = 150f
+    const val TITLE_Y = 124f
+    const val TABS_Y = 206f
+    const val TABS_HEIGHT = 66f
+    const val LIST_TOP = 312f
+
+    /** The room kept free at the bottom for the hint bar, which grows with the interface scale. */
+    fun bottom(appearance: Appearance): Float = 96f + (appearance.uiScale / 100f - 1f) * 92f
+}

@@ -167,7 +167,7 @@ in assets.
 ## Menus and settings
 
 - Menus and settings follow a **PS5-like layout**, but the main settings screen also shows the **main categories as icon tabs** that can be switched.
-- The per-game settings screen keeps the rows and tabs on the left and a right column with a large 2:3 cover, the focused option's help and two glass reset buttons ("Reset setting", "Reset all to profile"); a chip under the title says how many settings are custom. Details in [PER_GAME_SETTINGS.md](PER_GAME_SETTINGS.md).
+- The per-game settings screen mirrors the global settings layout (title, tabs and list at the same positions); the game and a chip with the number of custom settings share the title's line. The right column has a 260x390 cover at the top of the list, the focused option's help and the autosave note. "Reset all settings" is the last row of the list, after a gap. Details in [PER_GAME_SETTINGS.md](PER_GAME_SETTINGS.md).
 
 ## Controls
 
