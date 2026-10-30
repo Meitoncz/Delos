@@ -8,6 +8,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.draw.alpha
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -38,6 +39,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.StrokeCap
@@ -105,27 +107,42 @@ fun Spinner(size: Float, modifier: Modifier = Modifier, color: Color = LocalDelo
     }
 }
 
-/** `.btn` (and `.btn.primary`): a pill with an icon and a label. */
+/**
+ * `.btn` (and `.btn.primary`): a pill with an icon and a label. A [compact] pill is lower and has a smaller
+ * label, so two of them fit under a cover. A disabled pill is dimmed and the focus passes over it. The
+ * content is centered, which only shows when the caller gives it a width.
+ */
 @Composable
-fun PillButton(label: String, icon: String?, onClick: () -> Unit, modifier: Modifier = Modifier, primary: Boolean = false, clickCue: Cue? = Cue.SELECT) {
+fun PillButton(
+    label: String,
+    icon: String?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    primary: Boolean = false,
+    clickCue: Cue? = Cue.SELECT,
+    compact: Boolean = false,
+    enabled: Boolean = true,
+) {
     val colors = LocalDelosColors.current
     var focused by remember { mutableStateOf(false) }
     val content = if (primary) colors.onAccent else colors.text
     Row(
         modifier
+            .focusProperties { canFocus = enabled }
             .focusEffects(
-                onClick = onClick, corner = 999f, focusScale = 1.08f, ring = FocusRing(4f, 4f), glow = FocusGlow(18f, 50f, -12f),
-                sweep = primary, clickCue = clickCue, onFocusChange = { focused = it },
+                onClick = { if (enabled) onClick() }, corner = 999f, focusScale = 1.08f, ring = FocusRing(4f, 4f), glow = FocusGlow(18f, 50f, -12f),
+                sweep = primary, clickCue = if (enabled) clickCue else null, onFocusChange = { focused = it },
             )
             .clip(CircleShape)
             .then(if (primary) Modifier.background(colors.accent) else Modifier.glass(colors.surface).border(1.px, colors.line, CircleShape))
-            .height(76.px)
-            .padding(horizontal = 40.px),
+            .height((if (compact) 64f else 76f).px)
+            .padding(horizontal = (if (compact) 28f else 40f).px)
+            .alpha(if (enabled) 1f else .45f),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.px),
+        horizontalArrangement = Arrangement.spacedBy((if (compact) 12f else 14f).px, Alignment.CenterHorizontally),
     ) {
-        if (icon != null) Symbol(icon, 32.tpx, content, filled = focused)
-        BasicText(label, style = TextStyle(color = content, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx))
+        if (icon != null) Symbol(icon, (if (compact) 30f else 32f).tpx, content, filled = focused)
+        BasicText(label, style = TextStyle(color = content, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = (if (compact) 22f else 26f).tpx))
     }
 }
 

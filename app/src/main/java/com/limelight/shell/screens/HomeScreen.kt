@@ -508,8 +508,9 @@ private fun Modifier.gameTitleEntrance(game: String, image: ImageBitmap?, reduce
     }
 }
 
+/** An info pill (icon and label) in the glass style, shared by the dashboard and the game settings header. */
 @Composable
-private fun Chip(icon: String, label: String) {
+internal fun Chip(icon: String, label: String, iconTint: Color? = null) {
     val colors = LocalDelosColors.current
     Row(
         Modifier
@@ -520,7 +521,7 @@ private fun Chip(icon: String, label: String) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.px),
     ) {
-        Symbol(icon, 22.tpx, colors.text2)
+        Symbol(icon, 22.tpx, iconTint ?: colors.text2)
         BasicText(label, style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 19.tpx))
     }
 }
