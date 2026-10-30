@@ -292,7 +292,7 @@ class GameMetadataStore internal constructor(
     private data class CachedMetadata(val schema: Int, val data: GameMetadata)
 
     private companion object {
-        const val CACHE_SCHEMA = 3
+        const val CACHE_SCHEMA = 4
         const val LIBRARY_CONCURRENCY = 2
         const val KEY_GENRE = "metadata_filter_genre"
         const val KEY_HDR = "metadata_filter_hdr"

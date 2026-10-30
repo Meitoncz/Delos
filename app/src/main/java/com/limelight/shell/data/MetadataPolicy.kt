@@ -65,6 +65,8 @@ private val apostrophes = "['\u2018\u2019`\u00b4]".toRegex()
 private val separators = "[^\\p{L}\\p{N}]+".toRegex()
 private val romanNumeral = "^(?:x{1,2}(?:ix|iv|v?i{0,3})|ix|iv|v?i{1,3})$".toRegex()
 private val hostYear = "[(\\[]\\s*((?:19|20)\\d{2})\\s*[)\\]]".toRegex()
+private val symbols = "[\\p{So}\\p{Cf}]".toRegex()
+private val whitespace = "\\s+".toRegex()
 
 /** Trailing edition qualifiers that do not change which game it is, longest first. */
 private val EDITION_SUFFIXES: List<List<String>> = listOf(
@@ -119,16 +121,26 @@ internal fun matchKey(name: String): String {
 }
 
 /**
+ * The text sent to IGDB's name search. Trademark and copyright signs that Steam puts in names ("LEGO® Batman™")
+ * make IGDB return nothing for the whole query ("®" and "©" do; "™" happens not to), so every "other symbol"
+ * character is dropped; they carry no part of the title.
+ */
+internal fun searchTerm(name: String): String = name.replace(symbols, "").replace(whitespace, " ").trim()
+
+/**
  * Picks the IGDB entry for a host app name, or null when the name is unmatched or still ambiguous.
  * Entries sharing the tolerant name (for example "Doom" 1993 and "DOOM" 2016) are narrowed by the literal name,
- * a release year written in the host name, a Steam listing, the PC platform and finally the newest release,
- * each step applying only if it leaves at least one candidate.
+ * a release year written in the host name, a Steam listing, the PC platform, the newest release and finally a
+ * clearly most-rated entry, each step applying only if it leaves at least one candidate. When nothing has the
+ * tolerant name, a host name that is the title without its subtitle ("Planet of Lana II" for "Planet of Lana II:
+ * Children of the Leaf") matches the one PC/Steam entry that extends it with a subtitle.
  */
 internal fun chooseMatch(hostName: String, candidates: List<MetadataCandidate>): MetadataCandidate? {
     val key = matchKey(hostName)
     if (key.isEmpty()) return null
     var pool = candidates.filter { matchKey(it.name) == key }
-    if (pool.size <= 1) return pool.firstOrNull()
+    if (pool.isEmpty()) return subtitled(hostName, candidates)
+    if (pool.size == 1) return pool.single()
     fun narrow(predicate: (MetadataCandidate) -> Boolean): MetadataCandidate? {
         val narrowed = pool.filter(predicate)
         if (narrowed.isNotEmpty()) pool = narrowed
@@ -141,6 +153,17 @@ internal fun chooseMatch(hostName: String, candidates: List<MetadataCandidate>):
     }
     narrow { it.steamAppIds.isNotEmpty() }?.let { return it }
     narrow { it.isPc }?.let { return it }
-    val newest = pool.mapNotNull { it.year }.maxOrNull() ?: return null
-    return pool.filter { it.year == newest }.singleOrNull()
+    pool.mapNotNull { it.year }.maxOrNull()?.let { newest -> narrow { it.year == newest }?.let { return it } }
+    val ranked = pool.sortedByDescending { it.ratingCount }
+    return ranked.first().takeIf { it.ratingCount > 0 && it.ratingCount >= 3L * ranked[1].ratingCount }
+}
+
+private fun subtitled(hostName: String, candidates: List<MetadataCandidate>): MetadataCandidate? {
+    val host = lowerPlain(hostName).replace(bracketed, " ").replace(whitespace, " ").trim()
+    if (host.isEmpty()) return null
+    return candidates.filter { candidate ->
+        val name = lowerPlain(candidate.name).replace(whitespace, " ")
+        (candidate.isPc || candidate.steamAppIds.isNotEmpty()) && name.startsWith(host) &&
+            name.substring(host.length).let { it.startsWith(":") || it.startsWith(" - ") || it.startsWith(" \u2013 ") || it.startsWith(" \u2014 ") }
+    }.singleOrNull()
 }

@@ -76,11 +76,16 @@ artwork and cover layout are preserved.
 Game options → Metadata provides IGDB search/match selection, refresh and reset. Automatic matching
 compares titles tolerantly (case, punctuation, diacritics, a leading "The", "&"/"and", Roman/Arabic
 sequel numbers, a bracketed note such as "(Steam)" and trailing edition qualifiers such as "Definitive
-Edition", "GOTY" or "Director's Cut"); subtitles and different sequel numbers stay distinct. IGDB
-entries with the same tolerant name are narrowed by the exact name, a year written in the host name,
-a Steam listing, the PC platform, and finally the newest release; if still tied the game stays
-unmatched until the user picks a match. IGDB search is PC-focused: console-only entries are dropped,
-but entries without platform data are kept. IGDB IDs, Steam AppIDs and host app IDs are distinct.
+Edition", "GOTY" or "Director's Cut"); different sequel numbers stay distinct, and a subtitle stays
+significant except that a host name without its subtitle ("Planet of Lana II") matches the one PC/Steam
+IGDB entry that extends it ("Planet of Lana II: Children of the Leaf") when nothing has the exact
+name. IGDB entries with the same tolerant name are narrowed by the exact name, a year written in the
+host name, a Steam listing, the PC platform, the newest release, and finally an entry with at least
+three times the IGDB rating count of every other; if still tied the game stays
+unmatched until the user picks a match. The IGDB query drops symbol characters such as "®", "©" and
+"™" (IGDB returns nothing at all for a query containing "®" or "©", which Steam titles like
+"LEGO® Batman™: Legacy of the Dark Knight" contain). IGDB search is PC-focused: console-only entries
+are dropped, but entries without platform data are kept. IGDB IDs, Steam AppIDs and host app IDs are distinct.
 Metadata matches never overwrite manual SteamGridDB artwork matches. Data/matches are cached in
 application files; missing provider data stays missing, and genres are IGDB genres only (IGDB themes
 share no ID space with genres and are not substituted). A fully answered record is refreshed after
@@ -99,13 +104,30 @@ login and Cargo plus Video-template notes. Neither credentialed client follows r
 307/308 can never replay a secret-carrying POST elsewhere. A refused PCGamingWiki login is latched
 for the process instead of being retried per game. PCGamingWiki notes are reduced to reader text
 (references, templates' named arguments, URLs and link markup removed) before the native-HDR
-heuristics run; one Steam ID or several, and one wiki page or several, only yield a result when the
-pages agree. The unofficial HLTB client uses its website search/detail data, specifically positive
-`comp_all` with submissions, not `comp_main`, `comp_all_avg`, or an invented average. One lookup
+heuristics run. The wiki's own HDR value decides: `false` is SDR; `true`, `always on` and `limited`
+(native HDR with flaws, e.g. No Man's Sky) are HDR; `hackable`, `unknown` and a missing value stay
+unknown, except that `hackable` with a note naming Special K/ReShade/Auto HDR/RTX HDR/a mod as the only
+way is SDR. A note withdraws a native value only when it says HDR needs such a tool, is console/edition
+specific, "not native"/"not supported", or that HDR is currently broken, disabled, simulated or does not
+work; config files, command lines, improvement mods and "limited" brightness are caveats, not
+retractions. A game is looked up by every IGDB Steam AppID; when no page lists one (or IGDB lists none),
+the game's title is used: a page named exactly that, the target of a wiki redirect of that name ("Sea of
+Stars: Sunset Edition" is a redirect to "Sea of Stars"), or a page whose title differs only in case and
+punctuation ("The Witcher 3: Wild Hunt: Remastered"). After a Steam miss only a page whose Cargo row
+names no Steam app at all counts (Euro Truck Simulator 2's row has an empty AppID although the page is
+its own); a page naming another Steam app is a different product. One Steam ID or several, and one
+wiki page or several, only yield a result when the pages agree. The unofficial HLTB client uses its
+website search/detail data, specifically positive
+`comp_all` with submissions, not `comp_main`, `comp_all_avg`, or an invented average. Without a Steam
+ID the name decides: exactly, or the plain game for an edition title ("Sea of Stars: Sunset Edition" is
+listed as "Sea of Stars"), never an edition entry for a plain title. One lookup
 reads at most two search pages and five detail pages, paced, skips a detail page that cannot be
 read, and stops on an HTTP error; a failed search-endpoint discovery is remembered for five minutes
 and the discovered endpoint must itself be a search API. The chip preserves the
-rendered **HowLongToBeat** headline text, including half-hours; unrounded seconds drive the filters.
+rendered **HowLongToBeat** headline text, including half-hours (pages without the banner, such as some
+co-op games, get the same text from `comp_all` by the website's rounding); unrounded seconds drive the filters.
+The cache schema is bumped whenever matching or evidence rules change so records classified by older
+rules are looked up again instead of being trusted for a week.
 Unavailable/changed provider responses are reported rather than replaced with another provider's
 metric. Cancelled work stops before further provider requests or publishing a resolved result.
 

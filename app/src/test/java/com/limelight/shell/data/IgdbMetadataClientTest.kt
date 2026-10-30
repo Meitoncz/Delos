@@ -52,6 +52,34 @@ class IgdbMetadataClientTest {
         assertFalse(without.isPc)
     }
 
+    @Test fun ratingCountIsTheLargerOfTheUserAndTotalCountsAndZeroWhenAbsent() {
+        val (both, userOnly, none) = IgdbMetadataClient.parseGames(JsonParser.parseString("""
+            [{"id":1,"name":"Peak","rating_count":154,"total_rating_count":155},
+             {"id":2,"name":"Peak","rating_count":7},{"id":3,"name":"Peak"}]
+        """).asJsonArray)
+        assertEquals(155, both.ratingCount)
+        assertEquals(7, userOnly.ratingCount)
+        assertEquals(0, none.ratingCount)
+    }
+
+    @Test fun searchSendsTheTitleWithoutTrademarkSigns() {
+        var query = ""
+        val http = OkHttpClient.Builder().addInterceptor { chain ->
+            val request = chain.request()
+            val body = if (request.url.host == "id.twitch.tv") """{"access_token":"t","expires_in":3600}""" else {
+                val buffer = okio.Buffer()
+                request.body!!.writeTo(buffer)
+                query = buffer.readUtf8()
+                "[]"
+            }
+            Response.Builder().request(request).protocol(Protocol.HTTP_1_1).code(200)
+                .message("fixture").body(body.toResponseBody("application/json".toMediaType())).build()
+        }.build()
+        IgdbMetadataClient(http, "test-client", "test-secret", RequestPacer(0)).search("LEGO\u00ae Batman\u2122: Legacy of the Dark Knight")
+        assertTrue(query, query.startsWith("search \"LEGO Batman: Legacy of the Dark Knight\";"))
+        assertTrue(query, query.contains("rating_count"))
+    }
+
     @Test fun searchKeepsPcSteamAndPlatformlessEntriesButDropsConsoleOnlyOnes() {
         fun candidate(id: Long, platforms: List<Int>, steam: List<Long> = emptyList()) =
             MetadataCandidate(id, "Game", null, steam, platformIds = platforms)

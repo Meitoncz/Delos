@@ -43,25 +43,12 @@ class PcGamingWikiClient internal constructor(
         val key = if (ids.isNotEmpty()) "steam:${ids.joinToString(",")}" else "title:${title.trim()}"
         cache[key]?.takeIf { System.nanoTime() - it.time < CACHE_NANOS }?.let { return it.evidence }
         login()
-        val where = if (ids.isNotEmpty()) ids.joinToString(" OR ") { "Game.Steam_AppID HOLDS \"$it\"" }
-            else "Game._pageName = \"${cargoLiteral(title.trim().replace('_', ' '))}\""
-        val data = api(mapOf(
-            "action" to "cargoquery", "tables" to "Game,Video",
-            "fields" to "Game._pageName=Page",
-            "join_on" to "Game._pageID=Video._pageID", "where" to where, "limit" to "10",
-            "assert" to "user",
-        ))
-        val rows = try {
-            data.getAsJsonArray("cargoquery") ?: throw IllegalArgumentException()
-        } catch (_: RuntimeException) {
-            throw PcGamingWikiException("PCGamingWiki returned invalid Cargo data")
-        }
-        // One Steam ID can point at several pages/editions. Never arbitrarily take the first.
-        val pages = try {
-            rows.map { it.asJsonObject.getAsJsonObject("title").get("Page").asString }.distinct()
-        } catch (_: RuntimeException) {
-            throw PcGamingWikiException("PCGamingWiki returned invalid Cargo rows")
-        }
+        var pages = if (ids.isNotEmpty()) wikiPages(ids.joinToString(" OR ") { "Game.Steam_AppID HOLDS \"$it\"" }, withoutSteamId = false)
+            else pagesByTitle(title, withoutSteamId = false)
+        // Some wiki pages carry no Steam AppID in Cargo (Euro Truck Simulator 2 does not, although its wikitext lists
+        // one). A page of exactly the game's title that names no Steam app at all is still this game; one that names
+        // another Steam app is a different product.
+        if (pages.isEmpty() && ids.isNotEmpty() && title.isNotBlank()) pages = pagesByTitle(title, withoutSteamId = true)
         val evidence = if (pages.isEmpty() || pages.size > MAX_PAGES) HdrEvidence(NativeHdr.UNKNOWN) else {
             val results = pages.map { page ->
                 val parsed = api(mapOf("action" to "parse", "page" to page, "prop" to "wikitext", "assert" to "user"))
@@ -81,6 +68,67 @@ class PcGamingWikiClient internal constructor(
         if (cache.size >= 128) cache.remove(cache.keys.first())
         cache[key] = Cached(System.nanoTime(), evidence)
         return evidence
+    }
+
+    /**
+     * The wiki page named [title], a page a redirect of that name points to ("Sea of Stars: Sunset Edition"
+     * redirects to "Sea of Stars"), or a page whose title differs only in case and punctuation ("The Witcher 3:
+     * Wild Hunt: Remastered" for "The Witcher 3: Wild Hunt Remastered"); the wiki editors decide what is the same page.
+     */
+    private fun pagesByTitle(title: String, withoutSteamId: Boolean): List<String> {
+        val name = title.trim().replace('_', ' ')
+        fun resolve(page: String): List<String> {
+            wikiPages("Game._pageName = \"${cargoLiteral(page)}\"", withoutSteamId).let { if (it.isNotEmpty()) return it }
+            val target = redirectTarget(page) ?: return emptyList()
+            return wikiPages("Game._pageName = \"${cargoLiteral(target)}\"", withoutSteamId)
+        }
+        resolve(name).let { if (it.isNotEmpty()) return it }
+        val key = literalKey(name)
+        for (similar in searchTitles(name).filter { it != name && literalKey(it) == key }.take(2)) {
+            resolve(similar).let { if (it.isNotEmpty()) return it }
+        }
+        return emptyList()
+    }
+
+    private fun redirectTarget(name: String): String? {
+        val data = api(mapOf("action" to "query", "titles" to name, "redirects" to "1", "assert" to "user"))
+        return try {
+            data.getAsJsonObject("query")?.getAsJsonArray("redirects")?.lastOrNull()?.asJsonObject?.get("to")?.asString
+        } catch (_: RuntimeException) {
+            throw PcGamingWikiException("PCGamingWiki returned invalid redirect data")
+        }
+    }
+
+    private fun searchTitles(name: String): List<String> {
+        val data = api(mapOf("action" to "query", "list" to "search", "srsearch" to name, "srnamespace" to "0", "srlimit" to "5", "assert" to "user"))
+        return try {
+            data.getAsJsonObject("query")?.getAsJsonArray("search")?.map { it.asJsonObject.get("title").asString }.orEmpty()
+        } catch (_: RuntimeException) {
+            throw PcGamingWikiException("PCGamingWiki returned invalid search data")
+        }
+    }
+
+    /** Names of the wiki pages (with a Video template) matching [where]; optionally only those without a Steam AppID. */
+    private fun wikiPages(where: String, withoutSteamId: Boolean): List<String> {
+        val data = api(mapOf(
+            "action" to "cargoquery", "tables" to "Game,Video",
+            "fields" to "Game._pageName=Page,Game.Steam_AppID=Steam",
+            "join_on" to "Game._pageID=Video._pageID", "where" to where, "limit" to "10",
+            "assert" to "user",
+        ))
+        val rows = try {
+            data.getAsJsonArray("cargoquery") ?: throw IllegalArgumentException()
+        } catch (_: RuntimeException) {
+            throw PcGamingWikiException("PCGamingWiki returned invalid Cargo data")
+        }
+        // One Steam ID can point at several pages/editions. Never arbitrarily take the first.
+        return try {
+            rows.map { it.asJsonObject.getAsJsonObject("title") }
+                .filter { !withoutSteamId || it.get("Steam")?.takeIf { steam -> steam.isJsonPrimitive }?.asString.isNullOrBlank() }
+                .map { it.get("Page").asString }.distinct()
+        } catch (_: RuntimeException) {
+            throw PcGamingWikiException("PCGamingWiki returned invalid Cargo rows")
+        }
     }
 
     private fun login() {
@@ -152,15 +200,22 @@ class PcGamingWikiClient internal constructor(
         private const val ENDPOINT = "https://www.pcgamingwiki.com/w/api.php"
         private val CACHE_NANOS = TimeUnit.HOURS.toNanos(6)
         private const val MAX_PAGES = 3
+        private val NATIVE_VALUES = setOf("true", "always on", "alwayson", "limited")
         private val comments = Regex("<!--.*?-->", RegexOption.DOT_MATCHES_ALL)
         private val videoStart = Regex("\\{\\{\\s*(?:Template:)?Video\\s*(?=[|}])", RegexOption.IGNORE_CASE)
-        private val workaround = Regex("special\\s*k|reshade|auto\\s*hdr|rtx\\s*hdr|\\bini\\b|\\.(?:ini|json|cfg|xml|reg|dll|txt)\\b|registry|\\bmods?\\b|modifications|workaround|retrofit|inject|\\bedit(?:ing)?\\b|\\bfiles?\\b|\\bdownloads?\\b|\\binstall(?:ation)?\\b|command[ -]?line|launch (?:arguments?|options?)|hex[ -]?edit", RegexOption.IGNORE_CASE)
-        private val retrofitOnly = Regex("(?:only|requires?|must|via|using|through|with).{0,60}(?:special\\s*k|reshade|auto\\s*hdr|rtx\\s*hdr|\\bmod\\b|retrofit)|(?:no|not|without) native|not supported natively", RegexOption.IGNORE_CASE)
+        // PCGamingWiki's own HDR value already says the game renders HDR itself ("true", "always on", or "limited" for a
+        // native but flawed implementation). The notes can only withdraw that, and only in these specific ways; mentions
+        // of config files, mods that improve the image, or "limited" brightness are ordinary caveats, not retractions.
+        private val retrofitOnly = Regex("\\b(?:only|requires?|required|must|via|using|through)\\b[^.]{0,60}\\b(?:special\\s*k|reshade|auto\\s*hdr|rtx\\s*hdr|mod|retrofit)\\b|\\b(?:use|enable|with)\\s+(?:special\\s*k|reshade|auto\\s*hdr|rtx\\s*hdr)\\b|\\b(?:no|not|without)\\s+native\\b|\\bnot supported natively", RegexOption.IGNORE_CASE)
         // Platform/edition restrictions need their own context; a bare "only", "version" or "switch" is ordinary prose.
-        private val limitedSupport = Regex("\\blimited\\b|\\bconsoles?\\b|\\bxbox\\b|playstation|\\bps[345]\\b|nintendo\\s+switch|\\bswitch\\s+(?:version|edition)\\b|not supported|unsupported|not native|no native|broken" +
+        private val limitedSupport = Regex("\\bconsoles?\\b|\\bxbox\\b|playstation|\\bps[345]\\b|nintendo\\s+switch|\\bswitch\\s+(?:version|edition)\\b|\\bnot supported\\b|\\bunsupported\\b" +
             "|\\b(?:specific|certain|some|particular|newer|older|later|earlier)\\s+(?:versions?|editions?|builds?)\\b" +
             "|\\b(?:enhanced|special|deluxe|ultimate|gold|definitive|complete|anniversary|remastered?)\\s+editions?\\b" +
             "|\\bonly\\b[^.]{0,40}\\b(?:versions?|editions?)\\b", RegexOption.IGNORE_CASE)
+        // The HDR output exists but the note says it currently does not work or is not real HDR. A mere "fix broken
+        // black level" is a quality caveat and stays out of this.
+        private val notWorking = Regex("\\bhdr\\b[^.]{0,30}\\b(?:is|are|was|currently|now|still)\\s+(?:\\w+\\s+)?broken\\b|^\\s*broken\\b|currently disabled|disabled in (?:a |the )?(?:recent|latest|current|last)\\b" +
+            "|\\bhdr\\b[^.]{0,30}\\b(?:does not|doesn't|do not|don't|cannot|can't|will not|won't)\\s+work\\b(?!\\s+(?:well|properly|correctly))|\\bno longer\\s+(?:works?|available|supported|present)\\b|\\bsimulated\\s+hdr\\b|\\bfake\\s+hdr\\b", RegexOption.IGNORE_CASE)
 
         private val refTags = Regex("<ref\\b[^>]*?/>|<ref\\b[^>]*>.*?</ref\\s*>", setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
         private val htmlTags = Regex("</?[a-zA-Z][^>]*>")
@@ -249,9 +304,9 @@ class PcGamingWikiClient internal constructor(
             val support = when {
                 value == "false" -> NativeHdr.SDR
                 value == "hackable" && prose != null && retrofitOnly.containsMatchIn(prose) -> NativeHdr.SDR
-                value != "true" && value != "always on" && value != "alwayson" -> NativeHdr.UNKNOWN
-                prose != null && (workaround.containsMatchIn(prose) || retrofitOnly.containsMatchIn(prose) ||
-                    limitedSupport.containsMatchIn(prose)) -> NativeHdr.UNKNOWN
+                value !in NATIVE_VALUES -> NativeHdr.UNKNOWN
+                prose != null && (retrofitOnly.containsMatchIn(prose) || limitedSupport.containsMatchIn(prose) ||
+                    notWorking.containsMatchIn(prose)) -> NativeHdr.UNKNOWN
                 else -> NativeHdr.HDR
             }
             return HdrEvidence(support, page, notes)

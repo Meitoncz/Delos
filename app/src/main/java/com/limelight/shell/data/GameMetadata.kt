@@ -19,6 +19,8 @@ data class MetadataCandidate(
     val summary: String? = null,
     /** IGDB platform IDs; empty means IGDB did not list any. */
     val platformIds: List<Int> = emptyList(),
+    /** IGDB's count of user and critic ratings; the only popularity signal used to break an otherwise exact tie. */
+    val ratingCount: Int = 0,
 ) {
     val isPc: Boolean get() = IGDB_PC_PLATFORM in platformIds
 }
