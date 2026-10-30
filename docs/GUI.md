@@ -63,7 +63,7 @@ decisions and verification status live in [GitHub Issues](https://github.com/Mei
 
 The existing information area under the game title/logo also shows IGDB genres, native HDR/SDR,
 and the HowLongToBeat headline duration. HDR uses a readable rainbow badge; confirmed native-SDR
-games use a neutral SDR chip. A muted `HDR ?` chip means native HDR/SDR could not be verified:
+games use a neutral SDR chip. A muted `HDR/SDR unverified` chip means native HDR/SDR could not be verified:
 the wiki has no page, evidence is unknown/ambiguous, or claimed HDR is broken, disabled, simulated
 or platform/edition-restricted. Only successfully evaluated unknown records (`updatedAt > 0` and
 `pcgwFailedAt == 0`) show this third state. Missing records and failed/backed-off unknown lookups
@@ -71,11 +71,11 @@ show no badge; previously confirmed HDR/SDR evidence remains visible during a la
 The host's streaming HDR flag is not native game support. Special K, ReShade, Auto HDR and RTX HDR
 do not qualify as native game HDR.
 
-The left menu filters by genre, native HDR/SDR/`HDR ?` (unknown), and headline length (<10, 10–30, 30–60,
+The left menu filters by genre, native HDR/SDR/`HDR/SDR unverified` (unknown), and headline length (<10, 10–30, 30–60,
 60+ hours, or unknown). Filters follow the active profile and combine across categories. Empty
 results retain a controller/touch reset action. Original library order, running-game state,
 artwork and cover layout are preserved.
-The `HDR ?` filter retains unknown-support matching, including pending/failed records without a
+The `HDR/SDR unverified` filter retains unknown-support matching, including pending/failed records without a
 badge; the display rule above does not change filter membership.
 
 Game options → Metadata provides IGDB search/match selection, refresh and reset. Automatic matching
