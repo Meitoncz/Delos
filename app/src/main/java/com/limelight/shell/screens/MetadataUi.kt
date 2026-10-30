@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
@@ -38,6 +39,7 @@ import com.limelight.shell.ui.Figtree
 import com.limelight.shell.ui.LocalDelosColors
 import com.limelight.shell.ui.RowValue
 import com.limelight.shell.ui.SettingRow
+import com.limelight.shell.ui.Symbol
 import com.limelight.shell.ui.Symbols
 import androidx.compose.foundation.layout.widthIn
 import com.limelight.shell.ui.px
@@ -51,12 +53,15 @@ internal fun NativeHdrChip() {
     val rainbow = remember {
         Brush.horizontalGradient(listOf(Color(0xFFE94256), Color(0xFFF39335), Color(0xFFF7D449), Color(0xFF5EBE68), Color(0xFF479EE8), Color(0xFF9064D8)))
     }
-    BasicText(
-        "HDR",
-        style = TextStyle(color = Color.White, fontFamily = Figtree, fontSize = 19.tpx),
-        modifier = Modifier.clip(CircleShape).background(rainbow).background(Color.Black.copy(alpha = .5f))
+    Row(
+        Modifier.clip(CircleShape).background(rainbow).background(Color.Black.copy(alpha = .5f))
             .border(1.px, Color.White.copy(alpha = .35f), CircleShape).padding(horizontal = 16.px, vertical = 6.px),
-    )
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.px),
+    ) {
+        Symbol(Symbols.ANIMATION, 22.tpx, Color.White)
+        BasicText("HDR", style = TextStyle(color = Color.White, fontFamily = Figtree, fontSize = 19.tpx))
+    }
 }
 
 @Composable
