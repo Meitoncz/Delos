@@ -11,8 +11,8 @@ import org.junit.Test
 
 class MetadataPolicyTest {
     private fun game(
-        id: Long, name: String, year: Int? = null, steam: List<Long> = emptyList(), platforms: List<Int> = emptyList(),
-    ) = MetadataCandidate(id, name, year, steam, platformIds = platforms)
+        id: Long, name: String, year: Int? = null, steam: List<Long> = emptyList(), platforms: List<Int> = emptyList(), rating: Int = 0,
+    ) = MetadataCandidate(id, name, year, steam, platformIds = platforms, ratingCount = rating)
 
     @Test fun hostNamesThatDifferOnlyByEditionNoteArticleAmpersandOrNumeralStillMatch() {
         for ((host, igdb) in listOf(
@@ -62,6 +62,50 @@ class MetadataPolicyTest {
     @Test fun nothingSeparatesTwoEntriesSoTheGameStaysUnmatchedForTheUserToChoose() {
         assertNull(chooseMatch("Game", listOf(game(1, "Game", 2020, platforms = listOf(6)), game(2, "Game", 2020, platforms = listOf(6)))))
         assertNull(chooseMatch("Game", listOf(game(1, "Game"), game(2, "Game"))))
+    }
+
+    @Test fun registeredAndCopyrightSignsNeverReachTheIgdbSearch() {
+        // IGDB returns no result at all for a query containing "®" or "©".
+        assertEquals("LEGO Batman: Legacy of the Dark Knight", searchTerm("LEGO\u00ae Batman\u2122: Legacy of the Dark Knight"))
+        assertEquals("Titanfall 2", searchTerm("Titanfall\u00ae 2"))
+        assertEquals("Returnal", searchTerm("Returnal\u2122"))
+        assertEquals("Tom Clancy's Rainbow Six Siege", searchTerm("Tom Clancy's Rainbow Six\u00ae  Siege"))
+        assertEquals("Pok\u00e9mon Legends: Arceus", searchTerm("Pok\u00e9mon Legends: Arceus"))
+        assertEquals("No Man's Sky", searchTerm("No Man's Sky"))
+    }
+
+    @Test fun legoBatmanMatchesItsBaseEntryAmongEditionAndDlcEntries() {
+        // IGDB's real result list for "LEGO Batman: Legacy of the Dark Knight".
+        val pc = listOf(169, 508, 6, 167)
+        val candidates = listOf(
+            game(404392, "LEGO Batman: Legacy of the Dark Knight - Batman Beyond Pack", 2026, platforms = pc),
+            game(387030, "LEGO Batman: Legacy of the Dark Knight - Deluxe Edition", 2026, platforms = pc),
+            game(361855, "LEGO Batman: Legacy of the Dark Knight", 2026, steam = listOf(2215200L), platforms = pc),
+            game(403335, "LEGO Batman: Legacy of the Dark Knight - Deluxe Edition Upgrade", 2026, steam = listOf(4468750L), platforms = pc),
+        )
+        assertEquals(361855L, chooseMatch("LEGO\u00ae Batman\u2122: Legacy of the Dark Knight", candidates)?.id)
+        assertEquals(387030L, chooseMatch("LEGO Batman: Legacy of the Dark Knight Deluxe Edition", candidates)?.id)
+    }
+
+    @Test fun sameNamedEntriesWithOneClearlyMostRatedAreNotLeftUnmatched() {
+        // Real IGDB entries named "Peak": the 2025 co-op climbing game and an unrelated 2025 PC entry.
+        val peak = game(349524, "Peak", 2025, steam = listOf(3527290L), platforms = listOf(169, 508, 6, 167), rating = 154)
+        val other = game(360757, "Peak", 2025, steam = listOf(3506430L), platforms = listOf(6))
+        val old = game(184165, "The Peak", null, platforms = listOf(6, 14))
+        assertEquals(349524L, chooseMatch("PEAK", listOf(other, old, peak))?.id)
+        // Comparable popularity is not a basis to pick one.
+        assertNull(chooseMatch("PEAK", listOf(peak, other.copy(ratingCount = 100))))
+        assertNull(chooseMatch("PEAK", listOf(other, other.copy(id = 2))))
+    }
+
+    @Test fun hostNameWithoutTheSubtitleMatchesTheOnePcEntryThatExtendsIt() {
+        val lana = game(348200, "Planet of Lana II: Children of the Leaf", 2026, steam = listOf(2997230L), platforms = listOf(6))
+        assertEquals(348200L, chooseMatch("Planet of Lana II", listOf(lana))?.id)
+        // An exact entry always wins over a longer one, and an ambiguous or console-only extension never matches.
+        assertEquals(1L, chooseMatch("Game", listOf(game(1, "Game"), game(2, "Game: Subtitle", steam = listOf(1L))))?.id)
+        assertNull(chooseMatch("Game", listOf(game(2, "Game: One", platforms = listOf(6)), game(3, "Game - Two", platforms = listOf(6)))))
+        assertNull(chooseMatch("Game", listOf(game(2, "Game: Console Edition", platforms = listOf(48)))))
+        assertNull(chooseMatch("Game", listOf(game(2, "Gamer: One", platforms = listOf(6)))))
     }
 
     @Test fun recordsAreFreshOnlyWhenARealPastTimestampIsYoungEnough() {

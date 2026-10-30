@@ -81,9 +81,15 @@ class HowLongToBeatClient internal constructor(
 
         // Search cards omit Steam IDs, so candidates are verified on their detail pages. Only the few results
         // closest to the title are fetched: one lookup must never fan out to every result of a common title.
+        // Without a Steam ID the name is the only identity: exact first, then the plain game for an edition title
+        // ("Sea of Stars: Sunset Edition" is the game HowLongToBeat lists as "Sea of Stars"). A plain title never
+        // matches an edition entry, whose time may include extra content.
+        val baseTitle = normalizedTitle.replace(EDITION_TAIL, "").takeIf { it != normalizedTitle && it.isNotEmpty() }
         val ranked = results.values.sortedBy { closeness(normalize(it.name), normalizedTitle) }
         val candidates = if (steam.isNotEmpty()) ranked.take(MAX_DETAILS)
-            else ranked.filter { normalize(it.name) == normalizedTitle }.take(MAX_DETAILS)
+            else ranked.filter { normalize(it.name) == normalizedTitle }
+                .ifEmpty { if (baseTitle == null) emptyList() else ranked.filter { normalize(it.name) == baseTitle } }
+                .take(MAX_DETAILS)
         val details = ArrayList<DetailGame>()
         var failure: HowLongToBeatException? = null
         for (candidate in candidates) {
@@ -102,7 +108,8 @@ class HowLongToBeatClient internal constructor(
         val exact = details.filter {
             normalize(it.name) == normalizedTitle && (steam.isEmpty() || it.steamIds.isEmpty())
         }
-        return exact.singleOrNull()?.completion
+        if (exact.isNotEmpty() || steam.isNotEmpty() || baseTitle == null) return exact.singleOrNull()?.completion
+        return details.filter { normalize(it.name) == baseTitle }.singleOrNull()?.completion
     }
 
     /** 0 exact, 1 one name contains the other, 2 unrelated; stable within a rank so provider order survives. */
@@ -134,8 +141,10 @@ class HowLongToBeatClient internal constructor(
         val count = integer(entry, "comp_all_count")
         if ((seconds != null && seconds < 0) || (count != null && count < 0)) changed("completion time")
         val completion = if (seconds != null && seconds > 0 && count != null && count > 0) {
+            // Some pages (for example co-op titles) omit the banner and show only the per-style table, although
+            // comp_all is present; the headline is then written the way the website writes it from the same value.
             val headline = HEADLINE.find(html)?.groupValues?.get(1)?.trim()?.takeIf { it.isNotEmpty() }
-                ?: changed("headline display")
+                ?: headlineText(seconds)
             CompletionTime(id, name, seconds, "$BASE/game/$id", headline)
         } else null
         return DetailGame(name, steamIds, completion)
@@ -264,6 +273,14 @@ class HowLongToBeatClient internal constructor(
     private fun changed(context: String): Nothing =
         throw HowLongToBeatException("HowLongToBeat changed or blocked its $context data")
 
+    /** The website's rounding: minutes below an hour, half hours up to 100 hours, whole hours beyond. */
+    private fun headlineText(seconds: Long): String {
+        if (seconds < 3600) return "${(seconds + 30) / 60} Mins"
+        val halves = if (seconds >= 100 * 3600L) ((seconds + 1800) / 3600) * 2 else (seconds + 900) / 1800
+        val hours = "${halves / 2}${if (halves % 2 == 1L) "\u00bd" else ""}"
+        return if (hours == "1") "1 Hour" else "$hours Hours"
+    }
+
     private data class SearchAuth(val token: String, val key: String?, val value: String?)
     private data class SearchGame(val id: Long, val name: String)
     private data class DetailGame(val name: String, val steamIds: Set<Long>, val completion: CompletionTime?)
@@ -277,6 +294,7 @@ class HowLongToBeatClient internal constructor(
         private val JSON_TYPE = "application/json; charset=utf-8".toMediaType()
         private val WHITESPACE = Regex("\\s+")
         private val PUNCTUATION = Regex("[^\\p{L}\\p{N}]+")
+        private val EDITION_TAIL = Regex("\\s+(?:\\S+\\s+)?edition$")
         private val SCRIPT_SOURCE = Regex("""<script\b[^>]*\bsrc\s*=\s*["']([^"']+)["'][^>]*>""", RegexOption.IGNORE_CASE)
         private val NEXT_DATA = Regex("""<script\b[^>]*\bid\s*=\s*["']__NEXT_DATA__["'][^>]*>(.*?)</script\s*>""", setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
         private val HEADLINE = Regex("""<h4\b[^>]*>\s*HowLongToBeat\s*</h4>\s*<h5\b[^>]*>([^<]+)</h5>""", RegexOption.IGNORE_CASE)

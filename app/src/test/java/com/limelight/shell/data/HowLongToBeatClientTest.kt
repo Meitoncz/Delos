@@ -38,6 +38,30 @@ class HowLongToBeatClientTest {
         assertEquals("3½ Hours", result?.headline)
     }
 
+    @Test fun pageWithoutTheHeadlineBannerStillYieldsTheCombinedTimeInTheWebsitesRounding() {
+        // Co-op titles such as Overcooked! All You Can Eat render only the per-style table next to a valid comp_all.
+        for ((seconds, headline) in listOf(12772L to "3½ Hours", 80_713L to "22½ Hours", 469_657L to "130 Hours")) {
+            val page = detail(1, "Game", 7, "\"comp_all\":$seconds,\"comp_all_count\":100").replace("<h4>HowLongToBeat</h4><h5>66 Hours</h5>", "")
+            val fixture = Fixture(mapOf(1L to page), listOf(search(1, 1, 1L to "Game")))
+            val result = fixture.client.lookup("Game", listOf(7L))
+            assertEquals(seconds, result?.seconds)
+            assertEquals(headline, result?.headline)
+        }
+    }
+
+    @Test fun withoutSteamIdAnEditionTitleFindsTheOnePlainGamePageButExactNamesWinAndTiesAreRefused() {
+        fun lookup(title: String, vararg entries: Pair<Long, String>) = Fixture(
+            entries.associate { (id, name) -> id to detail(id, name, 1244090, "\"comp_all\":${id * 1000},\"comp_all_count\":100") },
+            listOf(search(1, 1, *entries)),
+        ).client.lookup(title, emptyList())?.id
+        assertEquals(1L, lookup("Sea of Stars: Sunset Edition", 1L to "Sea of Stars", 3L to "Sea of Stars: Definitive Edition"))
+        assertEquals(2L, lookup("Sea of Stars: Sunset Edition", 1L to "Sea of Stars", 2L to "Sea of Stars: Sunset Edition"))
+        assertNull(lookup("Game: Deluxe Edition", 1L to "Game", 2L to "Game"))
+        assertNull(lookup("Game: Deluxe Edition", 1L to "Other"))
+        // The reverse is never safe: a plain title does not take an edition entry's time.
+        assertNull(lookup("Sea of Stars", 3L to "Sea of Stars: Definitive Edition"))
+    }
+
     @Test fun interruptedSearchDoesNotFetchMoreProviderPages() {
         val paths = mutableListOf<String>()
         val client = HowLongToBeatClient(OkHttpClient.Builder().addInterceptor { chain ->
@@ -153,7 +177,6 @@ class HowLongToBeatClientTest {
             valid.replace("\"comp_all\":237341,", ""),
             valid.replace("\"comp_all_count\":10805", "\"comp_all_count\":\"not-a-count\""),
             valid.replace("\"comp_all\":237341", "\"comp_all\":-1"),
-            valid.replace("<h4>HowLongToBeat</h4><h5>66 Hours</h5>", ""),
         )) {
             val fixture = Fixture(mapOf(1L to page), listOf(search(1, 1, 1L to "Game")))
             assertThrows(HowLongToBeatException::class.java) { fixture.client.lookup("Game", listOf(111L)) }

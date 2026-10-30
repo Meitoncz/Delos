@@ -229,8 +229,10 @@ class GameMetadataStoreTest {
     }
 
     @Test fun corruptOrForeignCacheFilesAreIgnoredAndReplacedByAFreshLookup() = runBlocking {
+        // Schema 3 records were classified by the old HDR/matching rules and must be looked up again.
         for (content in listOf("{ not json", "", """{"schema":1,"data":{"candidate":{"id":1,"name":"Old"}}}""",
-            """{"schema":3,"data":{"candidate":{"id":1}}}""")) {
+            """{"schema":3,"data":{"candidate":{"id":1,"name":"Old"},"updatedAt":$now}}""",
+            """{"schema":4,"data":{"candidate":{"id":1}}}""")) {
             fileOf(game).apply { parentFile!!.mkdirs(); writeText(content) }
             val providers = FakeProviders().apply { onSearch = { listOf(candidate) } }
             val store = newStore(providers)
@@ -243,7 +245,7 @@ class GameMetadataStoreTest {
     @Test fun aCacheRecordMissingFieldsIsUsableWithoutCrashingAndKeepsUnknownHdrUnknown() = runBlocking {
         fileOf(game).apply {
             parentFile!!.mkdirs()
-            writeText("""{"schema":3,"data":{"candidate":{"id":7,"name":"Game"},"updatedAt":$now}}""")
+            writeText("""{"schema":4,"data":{"candidate":{"id":7,"name":"Game"},"updatedAt":$now}}""")
         }
         val providers = FakeProviders()
         val store = newStore(providers)
@@ -260,7 +262,7 @@ class GameMetadataStoreTest {
     @Test fun aRecordStampedInTheFutureIsRefreshedInsteadOfTrustedForever() = runBlocking {
         fileOf(game).apply {
             parentFile!!.mkdirs()
-            writeText("""{"schema":3,"data":{"candidate":{"id":7,"name":"Game"},"updatedAt":${now + 30 * day}}}""")
+            writeText("""{"schema":4,"data":{"candidate":{"id":7,"name":"Game"},"updatedAt":${now + 30 * day}}}""")
         }
         val providers = FakeProviders().apply { onSearch = { listOf(candidate) } }
         newStore(providers).ensure(pc, game)

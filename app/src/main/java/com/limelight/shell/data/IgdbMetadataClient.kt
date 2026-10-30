@@ -1,6 +1,7 @@
 package com.limelight.shell.data
 
 import com.google.gson.JsonArray
+import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import okhttp3.FormBody
 import okhttp3.MediaType.Companion.toMediaType
@@ -33,8 +34,9 @@ class IgdbMetadataClient internal constructor(
 
     /** PC and Steam entries first, then entries without platform data; console-only entries are dropped. */
     fun search(query: String): List<MetadataCandidate> {
-        if (query.isBlank()) return emptyList()
-        return preferPc(games("search \"${escape(query.trim())}\"; $FIELDS limit 50;"))
+        val term = searchTerm(query)
+        if (term.isEmpty()) return emptyList()
+        return preferPc(games("search \"${escape(term)}\"; $FIELDS limit 50;"))
     }
 
     fun game(id: Long): MetadataCandidate? {
@@ -92,7 +94,7 @@ class IgdbMetadataClient internal constructor(
     }
 
     companion object {
-        private const val FIELDS = "fields name,first_release_date,summary,platforms,genres.id,genres.name,external_games.uid,external_games.external_game_source;"
+        private const val FIELDS = "fields name,first_release_date,summary,platforms,rating_count,total_rating_count,genres.id,genres.name,external_games.uid,external_games.external_game_source;"
 
         /**
          * IGDB platform data is incomplete, so a missing list is not evidence against PC. Entries that list
@@ -104,6 +106,8 @@ class IgdbMetadataClient internal constructor(
                 .partition { it.isPc || it.steamAppIds.isNotEmpty() }
             return preferred + unknown
         }
+
+        private fun JsonObject.intOrZero(name: String): Int = get(name)?.takeIf { it.isJsonPrimitive }?.asInt ?: 0
 
         internal fun escape(value: String): String = value.replace("\\", "\\\\")
             .replace("\"", "\\\"").replace('\n', ' ').replace('\r', ' ')
@@ -133,6 +137,7 @@ class IgdbMetadataClient internal constructor(
                 platformIds = game.getAsJsonArray("platforms")?.mapNotNull { platform ->
                     platform.takeIf { it.isJsonPrimitive }?.asInt
                 }?.distinct().orEmpty(),
+                ratingCount = maxOf(game.intOrZero("rating_count"), game.intOrZero("total_rating_count")),
             )
         }
     }
