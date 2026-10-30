@@ -1818,6 +1818,12 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
     @Override
     public boolean handleKeyDown(KeyEvent event) {
+        // Delos: the stream menu shortcut first. The focused stream view gets keys before the activity's
+        // dispatchKeyEvent() (onKeyPreIme), and the controller handler below eats every gamepad button.
+        if (streamMenu != null && !isOnExternalDisplay() && streamMenu.onKey(event)) {
+            return true;
+        }
+
         // Pass-through virtual navigation keys
         if ((event.getFlags() & KeyEvent.FLAG_VIRTUAL_HARD_KEY) != 0) {
             return false;
@@ -1905,6 +1911,11 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
     @Override
     public boolean handleKeyUp(KeyEvent event) {
+        // Delos: see handleKeyDown()
+        if (streamMenu != null && !isOnExternalDisplay() && streamMenu.onKey(event)) {
+            return true;
+        }
+
         // Pass-through virtual navigation keys
         if ((event.getFlags() & KeyEvent.FLAG_VIRTUAL_HARD_KEY) != 0) {
             return false;

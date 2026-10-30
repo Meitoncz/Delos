@@ -109,15 +109,16 @@ private val LocalStreamHelp = staticCompositionLocalOf<(String) -> Unit> { {} }
  * controller does not reach the game while it is open. Created by Game (a small "Delos:" hook).
  */
 class StreamMenu(private val game: Game) {
-    private val buttons = StreamMenuSettings.buttons(game)
     private val swipe = StreamMenuSettings.swipe(game)
-    private val held = HashSet<Int>()
 
     /**
      * The shortcut is complete; the menu opens (or, when open, closes) once its buttons are let go (the
      * game sees them released).
      */
-    private var pending = false
+    private val shortcut = ButtonShortcut(StreamMenuSettings.buttons(game)) {
+        if (!isOpen) show()
+        else if (menuReady) hide()
+    }
     private var edgeGesture = false
     private var edgeStartY = 0f
     private var dialog: ComponentDialog? = null
@@ -131,30 +132,7 @@ class StreamMenu(private val game: Game) {
     val isOpen: Boolean get() = dialog?.isShowing == true
 
     /** Returns whether the stream (or the open menu) must not see [event] (the shortcut's final button). */
-    fun onKey(event: KeyEvent): Boolean {
-        val code = event.keyCode
-        if (code !in buttons) return false
-        when (event.action) {
-            KeyEvent.ACTION_DOWN -> {
-                if (event.repeatCount == 0) held += code
-                if (held.containsAll(buttons)) {
-                    if (!pending) held.retainAll(buttons)
-                    pending = true
-                    return true
-                }
-            }
-            KeyEvent.ACTION_UP -> {
-                held -= code
-                if (pending && held.isEmpty()) {
-                    pending = false
-                    if (!isOpen) show()
-                    else if (menuReady) hide()
-                    return true
-                }
-            }
-        }
-        return false
-    }
+    fun onKey(event: KeyEvent): Boolean = shortcut.onKey(event.keyCode, event.action, event.repeatCount)
 
     /**
      * Accepts controller and keyboard input from the activity on the built-in display. Android
