@@ -32,14 +32,18 @@ import androidx.compose.ui.text.font.FontWeight
 import com.limelight.shell.data.ArtworkProgress
 
 /**
- * Downloading the artwork of many games (SteamGridDB): a glass pill with the count and a bar at the bottom
+ * Downloading artwork or metadata: a glass pill with the count and a bar at the bottom
  * of every screen, above the button hints.
  */
 @Composable
-fun ArtworkProgressBar(progress: ArtworkProgress?) {
+fun ArtworkProgressBar(progress: ArtworkProgress?, label: String = "Downloading artwork") {
     val colors = LocalDelosColors.current
     val last = remember { arrayOfNulls<ArtworkProgress>(1) }
-    if (progress != null) last[0] = progress
+    val lastLabel = remember { arrayOf(label) }
+    if (progress != null) {
+        last[0] = progress
+        lastLabel[0] = label
+    }
     Box(Modifier.fillMaxSize().padding(bottom = 118.px), contentAlignment = Alignment.BottomCenter) {
         AnimatedVisibility(
             progress != null,
@@ -56,7 +60,7 @@ fun ArtworkProgressBar(progress: ArtworkProgress?) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.px)) {
                     Spinner(28f, color = colors.accent3)
                     BasicText(
-                        "Downloading artwork", modifier = Modifier.weight(1f),
+                        lastLabel[0], modifier = Modifier.weight(1f),
                         style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 22.tpx),
                     )
                     BasicText("${p.done} of ${p.total}", style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 22.tpx, fontFeatureSettings = "tnum"))

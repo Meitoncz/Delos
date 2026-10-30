@@ -103,6 +103,15 @@ remove its tile. Refresh/Reset report "No IGDB match found" when the re-match fi
 When a library opens, every cached record is loaded and published first (so filters and the genre
 list are complete immediately); stale games are then refreshed with at most two concurrent lookups.
 
+Network metadata lookups reuse the artwork progress pill above the button hints, labeled
+"Downloading metadata" with completed/total games. Library batches count only games needing a
+provider refresh; focused lookups, Refresh/Reset, match selection and IGDB search use a single-item
+batch. Cached-only reads and failure-backoff skips do not show progress. Updates are serialized on
+main, and each batch is removed in `finally` on completion, error or cancellation. Overlapping
+metadata operations display the largest active batch; finishing one cannot clear another's counter.
+Artwork takes priority while both stores are busy, so there is only one pill. Both use the same
+existing artwork animation/reduced-motion behavior, retaining the last count and label during exit.
+
 Provider calls run off the UI thread, are paced, and are interrupted when their coroutine is
 cancelled. IGDB authenticates through Twitch client credentials; PCGamingWiki uses bot-password
 login and Cargo plus Video-template notes. Neither credentialed client follows redirects, so a

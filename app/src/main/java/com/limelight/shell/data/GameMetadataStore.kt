@@ -54,6 +54,11 @@ class GameMetadataStore internal constructor(
     private val emptyState = GameMetadataState()
     private var filterState by mutableStateOf(readFilters())
 
+    /** Games being fetched from providers; cached/backed-off reads never start a batch. */
+    val progress = mutableStateOf<ArtworkProgress?>(null)
+    private val progressMutex = Mutex()
+    private val progressBatches = ArrayList<ProgressBatch>()
+
     val credentialsAvailable: Boolean get() = providers.credentialsAvailable
 
     val filters: MetadataFilters get() = filterState
@@ -85,56 +90,93 @@ class GameMetadataStore internal constructor(
             currentCoroutineContext().ensureActive()
             lock(pc, app).withLock { loadLocked(pc, app) }
         }
+        val now = clock()
+        val pending = games.filter { refreshDue(entry(pc, it).data, now) }
+        if (pending.isEmpty()) return
+        if (!providers.credentialsAvailable) {
+            for (app in pending) ensure(pc, app)
+            return
+        }
         val gate = Semaphore(LIBRARY_CONCURRENCY)
-        coroutineScope {
-            for (app in games) launch { gate.withPermit { ensure(pc, app) } }
+        withProgressBatch(pending.size) { batch ->
+            coroutineScope {
+                for (app in pending) launch {
+                    gate.withPermit {
+                        val fetched = ensure(pc, app, force = false, batch = batch)
+                        finishProgressGame(batch, fetched)
+                    }
+                }
+            }
         }
     }
 
     suspend fun ensure(pc: Pc, app: App, force: Boolean = false) {
+        ensure(pc, app, force, batch = null)
+    }
+
+    private suspend fun ensure(pc: Pc, app: App, force: Boolean, batch: ProgressBatch?): Boolean {
         lock(pc, app).withLock {
             val key = key(pc, app)
             if (isDesktop(app)) {
                 publish(key, GameMetadataState(resolved = true))
-                return
+                return false
             }
             val previous = loadLocked(pc, app)
-            if (!force && !refreshDue(previous.data, clock())) return
+            if (!force && !refreshDue(previous.data, clock())) return false
             if (!providers.credentialsAvailable) {
                 publish(key, previous.copy(resolved = true, error = "Game metadata credentials are not available in this build"))
-                return
+                return false
             }
-            publish(key, previous.copy(loading = true, error = null))
-            try {
-                network.withPermit { refresh(pc, app, previous.data, force) }
-            } catch (cancelled: CancellationException) {
-                throw cancelled
-            } catch (_: Exception) {
-                // A cancelled call can surface as an I/O error; that is not a provider failure.
-                currentCoroutineContext().ensureActive()
-                // Provider payloads and authentication failures must never leak credentials to the UI/log.
-                recordLookupFailure(pc, app, previous.data)
-            } finally {
-                clearLoading(key)
+            if (batch == null) {
+                withProgressBatch(1) { single ->
+                    refreshLocked(pc, app, key, previous, force)
+                    finishProgressGame(single, fetched = true)
+                }
+            } else {
+                refreshLocked(pc, app, key, previous, force)
             }
+            return true
         }
     }
 
-    suspend fun search(query: String): List<MetadataCandidate> = blocking { providers.search(query.trim()) }
+    private suspend fun refreshLocked(pc: Pc, app: App, key: String, previous: GameMetadataState, force: Boolean) {
+        publish(key, previous.copy(loading = true, error = null))
+        try {
+            network.withPermit { refresh(pc, app, previous.data, force) }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            // A cancelled call can surface as an I/O error; that is not a provider failure.
+            currentCoroutineContext().ensureActive()
+            // Provider payloads and authentication failures must never leak credentials to the UI/log.
+            recordLookupFailure(pc, app, previous.data)
+        } finally {
+            clearLoading(key)
+        }
+    }
+
+    suspend fun search(query: String): List<MetadataCandidate> = withProgressBatch(1) { batch ->
+        val matches = blocking { providers.search(query.trim()) }
+        finishProgressGame(batch, fetched = true)
+        matches
+    }
 
     suspend fun select(pc: Pc, app: App, candidate: MetadataCandidate) {
         lock(pc, app).withLock {
             val key = key(pc, app)
-            network.withPermit {
-                // Commit the explicit identity before slower secondary lookups. Never reuse another game's evidence.
-                val selected = GameMetadata(candidate = candidate, manual = true)
-                withContext(io) { write(pc, app, selected) }
-                initialized.add(key)
-                publish(key, GameMetadataState(data = selected, loading = true, resolved = true))
-                try {
-                    resolve(pc, app, candidate, manual = true, previous = null, force = true)
-                } finally {
-                    clearLoading(key)
+            withProgressBatch(1) { batch ->
+                network.withPermit {
+                    // Commit the explicit identity before slower secondary lookups. Never reuse another game's evidence.
+                    val selected = GameMetadata(candidate = candidate, manual = true)
+                    withContext(io) { write(pc, app, selected) }
+                    initialized.add(key)
+                    publish(key, GameMetadataState(data = selected, loading = true, resolved = true))
+                    try {
+                        resolve(pc, app, candidate, manual = true, previous = null, force = true)
+                        finishProgressGame(batch, fetched = true)
+                    } finally {
+                        clearLoading(key)
+                    }
                 }
             }
         }
@@ -240,6 +282,40 @@ class GameMetadataStore internal constructor(
         else -> null
     }
 
+    private suspend fun <T> withProgressBatch(total: Int, block: suspend (ProgressBatch) -> T): T {
+        val batch = ProgressBatch(total)
+        try {
+            withContext(main) {
+                progressMutex.withLock {
+                    progressBatches.add(batch)
+                    publishProgress()
+                }
+            }
+            return block(batch)
+        } finally {
+            withContext(NonCancellable + main) {
+                progressMutex.withLock {
+                    progressBatches.remove(batch)
+                    publishProgress()
+                }
+            }
+        }
+    }
+
+    private suspend fun finishProgressGame(batch: ProgressBatch, fetched: Boolean) =
+        withContext(NonCancellable + main) {
+            progressMutex.withLock {
+                if (fetched) batch.done++ else batch.total--
+                publishProgress()
+            }
+        }
+
+    /** Called on main with progressMutex held; a focused lookup cannot replace a larger library batch. */
+    private fun publishProgress() {
+        val batch = progressBatches.maxByOrNull { it.total }
+        progress.value = if (batch == null || batch.total == 0) null else ArtworkProgress(batch.done, batch.total)
+    }
+
     private suspend fun clearLoading(key: String) = withContext(NonCancellable + main) {
         val current = states[key]
         if (current?.loading == true) states[key] = current.copy(loading = false)
@@ -288,6 +364,8 @@ class GameMetadataStore internal constructor(
             runCatching { LengthFilter.valueOf(prefs.getString(KEY_LENGTH, null).orEmpty()) }.getOrDefault(LengthFilter.ANY),
         )
     }
+
+    private class ProgressBatch(var total: Int, var done: Int = 0)
 
     private data class CachedMetadata(val schema: Int, val data: GameMetadata)
 
