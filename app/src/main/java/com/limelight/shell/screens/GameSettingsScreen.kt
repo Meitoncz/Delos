@@ -189,7 +189,7 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
                         val isCustom = spec.key in custom
                         val source = if (isCustom) "Custom for this game" else "From profile"
                         val menu = ContextMenu(spec.label, listOf(MenuItem(Symbols.RESET, "Reset to profile value") { reset(spec.key) }))
-                        val requester = rowFocus.getOrPut(spec.key) { if (index == 0) first else FocusRequester() }
+                        val requester = remember(spec.key, first) { rowFocus.getOrPut(spec.key) { if (index == 0) first else FocusRequester() } }
                         // Choice and slider rows use Left/Right to adjust, so the buttons are reached from the last row with Down
                         val rowModifier = Modifier.focusRequester(requester).focusProperties {
                             right = buttons()

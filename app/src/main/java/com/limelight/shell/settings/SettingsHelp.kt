@@ -194,9 +194,9 @@ object SettingsHelp {
         ),
         "list_sgsr_quality" to mapOf(
             "standard" to "SGSR 1 Standard: edge reconstruction from the current frame only. Cheapest; no motion trails.",
-            "high" to "SGSR 1 High Quality: another spatial filter on the current frame, not just stronger sharpening.",
-            "temporal" to "SGSR 2 Video: estimates motion and reuses reliable detail from earlier frames. More GPU cost; text and fast changes can break it.",
-            "temporal-quality" to "SGSR 2 Video Quality: adds a reactive mask, nine-tap reconstruction and better color-history clipping. More GPU cost.",
+            "high" to "SGSR 1 High Quality: a stronger spatial filter on the current frame, not just sharpening.",
+            "temporal" to "SGSR 2 Video: reuses earlier frames via motion estimation. More GPU cost; text and fast motion can break it.",
+            "temporal-quality" to "SGSR 2 Video Quality: adds a reactive mask, nine-tap filter and color-history clipping. Most GPU cost.",
         ),
         "list_video_scale_mode" to mapOf(
             "fit" to "Whole picture at its aspect ratio; black bars if shapes differ. Nothing cropped or stretched.",
