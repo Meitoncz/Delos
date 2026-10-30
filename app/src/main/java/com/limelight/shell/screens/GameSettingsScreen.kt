@@ -1,5 +1,6 @@
 package com.limelight.shell.screens
 
+import android.content.SharedPreferences
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -69,8 +70,16 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
         .filter { it.key !in (caps?.hidden ?: emptySet()) }
     var focusedKey by remember(tab) { mutableStateOf<String?>(null) }
     val focused = rows.firstOrNull { it.key == focusedKey }
-    // Read after values so changing or clearing an override also updates its source label.
-    val custom = remember(game, values) { game.overrides().keys }
+    // The effective values do not change when an override equals the value it replaces, so the source
+    // labels follow the stored overrides instead.
+    var overrideVersion by remember(game) { mutableIntStateOf(0) }
+    DisposableEffect(game) {
+        val base = profiles.settings()
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> overrideVersion++ }
+        base.registerOnSharedPreferenceChangeListener(listener)
+        onDispose { base.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
+    val custom = remember(game, overrideVersion) { game.overrides().keys }
     val first = remember(tab, game) { FocusRequester() }
     val transfer = remember { FocusRequester() }
     val window = LocalWindowInfo.current

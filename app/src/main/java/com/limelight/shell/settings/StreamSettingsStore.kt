@@ -31,6 +31,7 @@ class StreamSettingsStore(val catalog: SettingsCatalog, private val settings: ()
         // PyroWave has its own Vulkan decoder; MediaCodec-only options do not apply.
         if (spec.key in setOf("checkbox_async_decode", "checkbox_ultra_low_latency", "pref_low_latency_frame_balance") &&
             state.value["video_format"] == "pyrowave") return false
+        if (spec.key in SGSR_KEYS && caps?.sgsr == false && state.value["video_format"] != "pyrowave") return false
         if (spec.key == "pref_low_latency_frame_balance" && state.value["frame_pacing"] == "fast-vsync") return false
         fun dependencyEnabled(key: String?, seen: Set<String>): Boolean {
             if (key == null) return true
@@ -45,14 +46,21 @@ class StreamSettingsStore(val catalog: SettingsCatalog, private val settings: ()
     fun write(spec: SettingSpec, value: Any) {
         val prefs = settings()
         val editor = prefs.edit().putSetting(spec.key, value)
-        val format = if (spec.key == "video_format") value as String else prefs.getString("video_format", "auto")!!
-        // Delos: preserve the user's bitrate except when configuring PyroWave's higher bandwidth needs.
+        val before = prefs.getString("video_format", "auto")!!
+        val format = if (spec.key == "video_format") value as String else before
+        fun resolution() = if (spec.key == "list_resolution") value as String else prefs.getString("list_resolution", "1280x720")!!
+        fun fps() = if (spec.key == "list_fps") value as String else prefs.getString("list_fps", "60")!!
+        fun hdr() = if (spec.key == "checkbox_enable_hdr") value as Boolean else prefs.getBoolean("checkbox_enable_hdr", false)
+        // Delos: PyroWave needs far more bandwidth, so its bitrate follows resolution, FPS and HDR. Every
+        // other codec keeps the user's bitrate across quality edits.
         if (format == "pyrowave" && (spec.key == "list_resolution" || spec.key == "list_fps" ||
                 spec.key == "video_format" || spec.key == "checkbox_enable_hdr")) {
-            val resolution = if (spec.key == "list_resolution") value as String else prefs.getString("list_resolution", "1280x720")!!
-            val fps = if (spec.key == "list_fps") value as String else prefs.getString("list_fps", "60")!!
-            val hdr = if (spec.key == "checkbox_enable_hdr") value as Boolean else prefs.getBoolean("checkbox_enable_hdr", false)
-            editor.putInt("seekbar_bitrate_kbps", PreferenceConfiguration.getDefaultBitrate(resolution, fps, format, hdr))
+            editor.putInt("seekbar_bitrate_kbps", PreferenceConfiguration.getDefaultBitrate(resolution(), fps(), format, hdr()))
+        } else if (spec.key == "video_format" && before == "pyrowave" && format != "pyrowave" &&
+            prefs.getInt("seekbar_bitrate_kbps", -1) == PreferenceConfiguration.getDefaultBitrate(resolution(), fps(), before, hdr())) {
+            // Leaving PyroWave: its own recommendation is not a bitrate the user chose, so it must not carry
+            // over. A bitrate the user set by hand is kept.
+            editor.putInt("seekbar_bitrate_kbps", PreferenceConfiguration.getDefaultBitrate(resolution(), fps(), format, hdr()))
         }
         editor.apply()
     }
@@ -96,4 +104,9 @@ class StreamSettingsStore(val catalog: SettingsCatalog, private val settings: ()
     }
 
     fun close() { observed?.unregisterOnSharedPreferenceChangeListener(listener) }
+
+    private companion object {
+        // The upscaler needs OpenGL ES 3.1 (MediaCodec codecs) or PyroWave's own Vulkan decoder
+        val SGSR_KEYS = setOf("checkbox_sgsr", "list_sgsr_quality", "seekbar_sgsr_sharpness")
+    }
 }

@@ -30,7 +30,8 @@ reserves space above the focused row for its section heading, including when ret
 Unavailable dependencies remain visible, dimmed and searchable. Hardware-inapplicable controls are
 hidden, following the classic screen. The description panel stays outside controller focus. Long
 help automatically scrolls down and back up, with pauses and fading text edges; manual scrolling is
-disabled. A new selection resets it to the top.
+disabled. With Animations set to Reduced the help stays still and can be scrolled by touch. A new
+selection resets it to the top.
 
 Y opens search from settings; the hint bar also shows this shortcut. Search accepts typed text or
 letters selected with the controller. Results span all tabs and selecting
@@ -46,7 +47,8 @@ one scrolls to and focuses the actual setting, including disabled dependencies.
   added to the original choices. Explicitly unavailable codec choices are omitted.
 - `StreamSettingsStore.kt` writes typed preferences. Resolution, FPS and non-PyroWave codec changes
   preserve bitrate. Selecting PyroWave, or changing resolution/FPS/HDR while it is selected,
-  recalculates its recommended bitrate. Leaving PyroWave preserves the current value too. Custom
+  recalculates its recommended bitrate. Leaving PyroWave replaces that recommendation with the normal
+  default for the new codec unless the user set a bitrate by hand. Custom
   numeric input rejects invalid and non-finite values before writing.
 - `screens/SettingsScreen.kt`, `NativeSettings.kt` and `SettingsActions.kt` render the design system's
   rows, description panel, tab bar and search, and handle editing, reset, import/export and links.

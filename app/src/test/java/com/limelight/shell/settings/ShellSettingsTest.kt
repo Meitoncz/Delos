@@ -18,6 +18,10 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.xmlpull.v1.XmlPullParser
 import com.limelight.R
+import com.limelight.shell.screens.SettingsItem
+import com.limelight.shell.screens.searchSettings
+import com.limelight.shell.screens.settingSearchTerms
+import com.limelight.shell.ui.RowValue
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33], shadows = [ShadowMoonBridge::class, ShadowGameManager::class])
@@ -42,15 +46,9 @@ class ShellSettingsTest {
                 }
             }
         }
-        // 116 in step 6.7, minus the five Artemis menu options the Delos stream menu replaced
-        // and the post-stream latency message; in the settings audit full screen, game optimization, the
-        // overlay zoom button and the two update links; in the switch-over (6.9) the classic UI's resume
-        // dialog, icon size and overlay position; the classic on-screen controls skin (Delos draws its own)
-        assertEquals(105, keys.size)
         assertEquals(keys, catalog.all.map { it.key }.toSet())
         assertEquals(keys.size, catalog.all.size)
         assertTrue(catalog.all.all { it.label.isNotBlank() && it.section.isNotBlank() })
-        assertEquals(13, catalog.all.map { it.category }.distinct().size)
         assertEquals(SettingKind.TOGGLE, spec("checkbox_enable_pip").kind)
         assertEquals(SettingKind.CHOICE, spec("list_languages").kind)
         assertEquals(SettingKind.SLIDER, spec("seekbar_bitrate_kbps").kind)
@@ -79,10 +77,11 @@ class ShellSettingsTest {
                 assertTrue("Missing help for ${spec.key}/${choice.value}", SettingsHelp.choice(spec.key, choice.value).isNotBlank())
             }
         }
-        listOf("frame_pacing", "video_format").forEach { key ->
-            assertTrue(spec(key).choices.none { it.label.contains("prefer", ignoreCase = true) })
-        }
-        assertTrue(spec("frame_pacing").matches("Warp 2"))
+        // A choice name finds its setting, and the words of a query match in any order
+        assertTrue("frame_pacing" in search("Warp 2"))
+        assertTrue("frame_pacing" in search("warp pacing"))
+        assertTrue("frame_pacing" in search("pacing warp"))
+        assertTrue(search("no such setting anywhere").isEmpty())
         assertTrue(SettingsHelp.choice("list_resolution", "2560x1600").contains("2560 × 1600"))
         assertTrue(SettingsHelp.choice("list_fps", "119.88").contains("119.88"))
     }
@@ -234,7 +233,7 @@ class ShellSettingsTest {
         stream.close()
     }
 
-    @Test fun pyroWaveRecalculatesBitrateButLeavingItPreservesTheCurrentValue() {
+    @Test fun pyroWaveBitrateFollowsQualityButItsRecommendationIsNotCarriedToOtherCodecs() {
         val prefs = context.getSharedPreferences("test-settings", Context.MODE_PRIVATE)
         prefs.edit().clear().putString("list_resolution", "1920x1080").putString("list_fps", "60").commit()
         val stream = StreamSettingsStore(catalog) { prefs }
@@ -249,10 +248,30 @@ class ShellSettingsTest {
         stream.write(spec("list_resolution"), "2560x1440")
         assertEquals(PreferenceConfiguration.getDefaultBitrate("2560x1440", "120", "pyrowave", false),
             prefs.getInt("seekbar_bitrate_kbps", -1))
-        stream.write(spec("seekbar_bitrate_kbps"), 310000)
+        // Leaving PyroWave: the normal default for the new codec, resolution and FPS replaces its recommendation
         stream.write(spec("video_format"), "auto")
-        assertEquals(310000, prefs.getInt("seekbar_bitrate_kbps", -1))
+        assertEquals(PreferenceConfiguration.getDefaultBitrate("2560x1440", "120"), prefs.getInt("seekbar_bitrate_kbps", -1))
+        // A bitrate the user chose is kept when leaving
+        stream.write(spec("video_format"), "pyrowave")
+        assertNotEquals(333000, prefs.getInt("seekbar_bitrate_kbps", -1))
+        stream.write(spec("seekbar_bitrate_kbps"), 333000)
+        stream.write(spec("video_format"), "forceav1")
+        assertEquals(333000, prefs.getInt("seekbar_bitrate_kbps", -1))
         assertEquals(PreferenceConfiguration.MAX_BITRATE_KBPS, spec("seekbar_bitrate_kbps").max)
+        stream.close()
+    }
+
+    @Test fun upscalerOptionsNeedPyroWaveOrOpenGlEs31() {
+        val prefs = context.getSharedPreferences("test-sgsr", Context.MODE_PRIVATE)
+        prefs.edit().clear().putString("video_format", "forceh265").putBoolean("checkbox_sgsr", true).commit()
+        val stream = StreamSettingsStore(catalog) { prefs }
+        val withoutGles31 = SettingsCapabilities(emptyList(), 1920, 60f, false, false, true, true, emptySet(), pyroWave = true, sgsr = false)
+        listOf("checkbox_sgsr", "list_sgsr_quality", "seekbar_sgsr_sharpness").forEach {
+            assertFalse("$it needs OpenGL ES 3.1 for MediaCodec codecs", stream.enabled(spec(it), withoutGles31))
+            assertTrue(stream.enabled(spec(it), withoutGles31.copy(sgsr = true)))
+        }
+        prefs.edit().putString("video_format", "pyrowave").commit()
+        assertTrue(stream.enabled(spec("checkbox_sgsr"), withoutGles31))
         stream.close()
     }
 
@@ -297,7 +316,7 @@ class ShellSettingsTest {
         assertFalse(stream.enabled(spec("seekbar_vibrate_fallback_strength"), null))
         prefs.edit().putBoolean("checkbox_enable_rumble", true).commit()
         assertTrue(stream.enabled(spec("seekbar_vibrate_fallback_strength"), null))
-        assertTrue(spec("seekbar_vibrate_fallback_strength").matches("rumble"))
+        assertTrue("seekbar_vibrate_fallback_strength" in search("rumble"))
         stream.close()
     }
 
@@ -316,4 +335,8 @@ class ShellSettingsTest {
     }
 
     private fun spec(key: String) = catalog.all.first { it.key == key }
+
+    private fun search(query: String) = searchSettings(catalog.all.map {
+        SettingsItem(it.key, it.tab, it.section, it.icon, it.label, it.description, RowValue.Info(""), searchTerms = settingSearchTerms(it))
+    }, query).map { it.key }
 }

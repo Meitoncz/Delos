@@ -33,6 +33,7 @@ import com.limelight.shell.settings.AppearanceStore
 import com.limelight.shell.settings.StartupStore
 import com.limelight.shell.ui.Feedback
 import com.limelight.shell.ui.LocalDelosColors
+import com.limelight.shell.ui.LocalReducedMotion
 import com.limelight.shell.ui.LocalFeedback
 import com.limelight.shell.ui.Stage
 import com.limelight.shell.ui.animateDelosColors
@@ -82,7 +83,7 @@ class ShellActivity : ComponentActivity() {
             com.limelight.shell.ui.BackgroundShaders.verify()
         }
         val launcher = GameLauncher(this, repo)
-        val setup = PcSetup(this, repo)
+        val setup = PcSetup(this, repo, profiles)
         if (savedInstanceState == null) links.value = ShellLink.from(this, intent)
         setContent { ShellRoot(appearance, feedback, keys, repo, boxArt, artwork, metadata, launcher, profiles, startup, setup, links) }
         feedback.view = window.decorView
@@ -154,7 +155,7 @@ private fun ShellRoot(
         feedback.soundsEnabled = appearance.sounds
         feedback.hapticsEnabled = appearance.haptics
     }
-    CompositionLocalProvider(LocalDelosColors provides colors, LocalFeedback provides feedback, LocalBoxArt provides boxArt, LocalArtwork provides artwork, LocalGameMetadata provides metadata) {
+    CompositionLocalProvider(LocalDelosColors provides colors, LocalFeedback provides feedback, LocalBoxArt provides boxArt, LocalArtwork provides artwork, LocalGameMetadata provides metadata, LocalReducedMotion provides appearance.reducedMotion) {
         Stage(textScale = appearance.uiScale / 100f) {
             Shell(appearance, store::update, keys, repo, launcher, profiles, startup, setup, links)
         }

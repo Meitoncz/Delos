@@ -20,7 +20,7 @@ import java.net.UnknownHostException
  * the classic PcView and AddComputerManually. Every call runs off the main thread and reports what to
  * show instead of opening dialogs.
  */
-class PcSetup(context: Context, private val repo: PcRepository) {
+class PcSetup(context: Context, private val repo: PcRepository, private val profiles: ProfileStore) {
     private val app = context.applicationContext
 
     sealed interface PairResult {
@@ -137,6 +137,7 @@ class PcSetup(context: Context, private val repo: PcRepository) {
         val binder = repo.binder ?: return
         binder.removeComputer(binder.getComputer(pc.uuid) ?: pc.details)
         repo.forget(pc.uuid)
+        profiles.forgetGameSettings(pc.uuid)
     }
 
     private fun http(details: ComputerDetails, uniqueId: String) = NvHTTP(

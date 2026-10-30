@@ -1,7 +1,7 @@
 package com.limelight;
 
 
-import static com.limelight.StartExternalDisplayControlReceiver.requestFocusToExternalDisplayControl;
+import static com.limelight.utils.ExternalDisplayFocus.requestFocusToExternalDisplayControl;
 import static com.limelight.binding.input.KeyboardTranslator.getModifier;
 import static com.limelight.utils.ExternalDisplayControlActivity.closeExternalDisplayControl;
 import static com.limelight.utils.ServerHelper.getActiveDisplay;

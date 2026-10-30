@@ -7,7 +7,7 @@ Delos is a fork of [Artemis Android](https://github.com/ClassicOldSong/moonlight
 > đźš§ Work in progress. Version 0.1.0 is based on Artemis 20.2.6 with Delos branding.
 
 - Application ID: `io.github.meitoncz.delos` (debug builds: `io.github.meitoncz.delos.debug`), so Delos installs alongside Artemis and Moonlight.
-- Debug APKs are built by GitHub Actions on every push (see the *Build* workflow artifacts).
+- Debug APKs are built by the GitHub Actions *Build* workflow, which runs only when started manually (see its artifacts).
 
 All unfinished work, ideas, investigations and maintenance are tracked in [GitHub Issues](https://github.com/Meitoncz/Delos/issues) and the [private Delos Project](https://github.com/users/Meitoncz/projects/1). Do not maintain separate Markdown task lists. See the [workflow](docs/GITHUB_WORKFLOW.md).
 

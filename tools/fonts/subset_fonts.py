@@ -13,8 +13,9 @@ the licences to app/src/main/assets/licenses/.
 Usage (needs fontTools: pip install fonttools):
     python tools/fonts/subset_fonts.py [--work DIR] [--icons-only]
 
-Source fonts are downloaded from the official Google and Phosphor repositories into the work
-directory (a fresh temporary directory by default). Phosphor downloads are versioned and hash-checked.
+Source fonts are downloaded from the official Google (pinned to a google/fonts commit) and Phosphor
+(versioned) repositories into the work directory (a fresh temporary directory by default). Every download
+is checked against a SHA-256 digest.
 """
 
 import argparse
@@ -36,14 +37,16 @@ SYMBOLS_KT = REPO / "app/src/main/java/com/limelight/shell/ui/Symbols.kt"
 ICONS_TXT = Path(__file__).with_name("icons.txt")
 PROTOTYPE_CSS = REPO / "docs/prototype/phosphor-icons.css"
 
-GOOGLE_FONTS = "https://raw.githubusercontent.com/google/fonts/main/ofl"
+# google/fonts is pinned to a commit so a rebuild cannot pick up a newer upstream font by accident.
+GOOGLE_FONTS_COMMIT = "e7db6ca603fd4862010383ff17ffd6cc4ffac1c0"
+GOOGLE_FONTS = f"https://raw.githubusercontent.com/google/fonts/{GOOGLE_FONTS_COMMIT}/ofl"
 PHOSPHOR_VERSION = "2.1.2"
 PHOSPHOR = f"https://raw.githubusercontent.com/phosphor-icons/web/v{PHOSPHOR_VERSION}"
 SOURCES = {
-    "Unbounded.ttf": f"{GOOGLE_FONTS}/unbounded/Unbounded%5Bwght%5D.ttf",
-    "Unbounded-OFL.txt": f"{GOOGLE_FONTS}/unbounded/OFL.txt",
-    "Figtree.ttf": f"{GOOGLE_FONTS}/figtree/Figtree%5Bwght%5D.ttf",
-    "Figtree-OFL.txt": f"{GOOGLE_FONTS}/figtree/OFL.txt",
+    "Unbounded.ttf": (f"{GOOGLE_FONTS}/unbounded/Unbounded%5Bwght%5D.ttf", "323b511be380c8d474ef030686b71aedde501f8d9cd46da558b7c40454372c3f"),
+    "Unbounded-OFL.txt": (f"{GOOGLE_FONTS}/unbounded/OFL.txt", "31e5d4e83955e7103c34570dd49b0570ef490800bd65b42923c0dd02445263b3"),
+    "Figtree.ttf": (f"{GOOGLE_FONTS}/figtree/Figtree%5Bwght%5D.ttf", "26ad3db9b31ff7dde67a91ff515d022d2f495cd506590699cf264f0bfe6fb714"),
+    "Figtree-OFL.txt": (f"{GOOGLE_FONTS}/figtree/OFL.txt", "140d37233e7f3ce7313798befa9600893bcceaf41a55fa0fa5ad52f7f657a268"),
 }
 ICON_SOURCES = {
     "Phosphor.ttf": (f"{PHOSPHOR}/src/regular/Phosphor.ttf", "06b91e022b7ee899a63efced879392a74f0bacbda54e4467e9f663220d173a10"),
@@ -63,13 +66,13 @@ TEXT_RANGES = [
 
 def fetch(work: Path, icons_only: bool) -> None:
     sources = {} if icons_only else SOURCES.copy()
-    sources.update({name: url for name, (url, _) in ICON_SOURCES.items()})
-    for name, url in sources.items():
+    sources.update(ICON_SOURCES)
+    for name, (url, digest) in sources.items():
         target = work / name
         if not target.exists():
             print(f"download {name}")
             urllib.request.urlretrieve(url, target)
-        if name in ICON_SOURCES and hashlib.sha256(target.read_bytes()).hexdigest() != ICON_SOURCES[name][1]:
+        if hashlib.sha256(target.read_bytes()).hexdigest() != digest:
             raise SystemExit(f"source checksum mismatch: {target}")
 
 

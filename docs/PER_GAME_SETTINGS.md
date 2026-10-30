@@ -14,24 +14,30 @@ immediately and shows a toast.
   mode. Hardware rules and dependencies match the existing settings screen.
 - Each row says **From profile** or **Custom for this game**. Unchanged values follow later edits to
   the user profile. Changes are saved immediately and apply when the next stream starts or resumes.
-- Resolution, FPS and non-PyroWave codec changes preserve the current bitrate. An inherited bitrate
-  keeps following the profile instead of becoming a new game override. Selecting PyroWave, or
-  changing resolution/FPS/HDR while it is selected, writes its recommendation as a game override.
-  Leaving PyroWave preserves the current value too. Bitrate can be adjusted or reset separately.
+- Resolution, FPS, HDR and codec changes among non-PyroWave codecs preserve the current bitrate. An
+  inherited bitrate keeps following the profile instead of becoming a new game override. Selecting
+  PyroWave, or changing resolution/FPS/HDR while it is selected, writes its recommendation as a game
+  override. Leaving PyroWave replaces that recommendation with the normal default bitrate for the new
+  codec, resolution and FPS (as an override, since the inherited value may be PyroWave's own); a bitrate
+  chosen by hand is kept. Bitrate can be adjusted or reset separately.
+- The upscaler rows (SGSR) are unavailable for H.264, HEVC and AV1 on devices below OpenGL ES 3.1.
 - Advanced custom resolution/FPS definitions remain in the profile; their choices are available here.
 - Audio, controls, appearance and other global options continue to come from the user profile.
 
 `GameSettingsStore` stores sparse, typed values under `ui_game_<PC hash>_<app ID>_<setting key>` in
 the user's `ui_profile_<UUID>` preferences. PC UUID plus host app ID distinguishes libraries; titles
 and artwork do not affect identity. Creating a user copies these values with the other profile
-settings. Later edits are independent; deleting a user deletes their overrides too.
+settings. Later edits are independent; deleting a user deletes their overrides too, and removing a PC
+in Devices deletes that PC's overrides for every user.
 
 ## Launch integration
 
-`GameLauncher.prepare` reads the effective virtual-display setting and attaches a snapshot of the
-curated options to the Game intent. External-display launches carry it on the nested Game intent.
-`ProfilesManager.getOverlayingSharedPreferences` applies this snapshot only when called with that
-Game Activity (or a context wrapping it). No active profile is changed and no temporary global values
+`GameLauncher.startIntent` is the one place that builds a game's start intent: it reads the effective
+virtual-display setting and attaches a snapshot of the curated options to the Game intent. The Delos UI
+(`GameLauncher.prepare`) and launcher/PC shortcuts (`ShortcutTrampoline`) both use it, so every way to
+start a game streams with that game's overrides. External-display launches carry the snapshot on the nested
+Game intent. `ProfilesManager.getOverlayingSharedPreferences` applies this snapshot only when called with
+that Game Activity (or a context wrapping it). No active profile is changed and no temporary global values
 are written. Unrelated options retain the existing profile behavior. The snapshot survives Activity
 recreation through its intent, and another game receives its own values at launch.
 
@@ -40,8 +46,8 @@ Moonlight X; see the preserved [feature provenance](../README.md#feature-provena
 
 ## Verification
 
-`GameSettingsTest` covers live inheritance, PC/game/user isolation, copying users, persistence across
-store recreation, resetting one/all overrides, existing PyroWave bitrate guidance, the actual
+`GameSettingsTest` covers live inheritance, PC/game/user isolation, copying and deleting users, forgetting a
+PC, persistence across store recreation, resetting one/all overrides, PyroWave bitrate guidance, the actual
 `PreferenceConfiguration` stream reader, wrapped contexts and external-display intent forwarding.
 
 Device acceptance: open settings from a game, check both tabs, change its resolution to 720p and

@@ -153,9 +153,6 @@ data class SettingSpec(
             else -> tab.icon
         }
     }
-
-    fun matches(query: String): Boolean = query.trim().lowercase(Locale.ROOT).split(Regex("\\s+"))
-        .all { word -> "$label $description $section ${tab.label} $key ${choices.joinToString(" ") { "${it.label} ${SettingsHelp.choice(key, it.value)}" }}".lowercase(Locale.ROOT).contains(word) }
 }
 
 /**

@@ -7,6 +7,7 @@ import androidx.preference.PreferenceManager
 import com.limelight.LimeLog
 import com.limelight.shell.ui.Symbols
 import com.limelight.shell.settings.SettingsCatalog
+import com.limelight.shell.settings.GameSettingsStore
 import com.limelight.shell.settings.StreamProfileStore
 import com.limelight.shell.settings.ProfileLayouts
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -115,6 +116,12 @@ class ProfileStore(context: Context) {
             settingsListeners.forEach { it() }
         }
         return rest.isNotEmpty()
+    }
+
+    /** Drops the per-game overrides of every app on [pcUuid], in every profile (the PC was removed). */
+    fun forgetGameSettings(pcUuid: String) {
+        GameSettingsStore.purge(prefs, pcUuid)
+        state.value.all.forEach { GameSettingsStore.purge(settingsOf(it.id), pcUuid) }
     }
 
     private fun settingsOf(id: String): SharedPreferences = app.getSharedPreferences("ui_profile_$id", Context.MODE_PRIVATE)

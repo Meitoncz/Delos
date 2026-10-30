@@ -74,6 +74,7 @@ import com.limelight.shell.settings.StreamMenuSettings
 import com.limelight.shell.settings.SettingsHelp
 import com.limelight.shell.settings.StreamMenuHelp
 import com.limelight.shell.ui.InformationPanel
+import com.limelight.shell.ui.LocalReducedMotion
 import com.limelight.shell.ui.Feedback
 import com.limelight.shell.ui.Figtree
 import com.limelight.shell.ui.FocusGlow
@@ -263,7 +264,7 @@ class StreamMenu(private val game: Game) {
                     withFrameNanos { }
                     menuReady = true
                 }
-                CompositionLocalProvider(LocalDelosColors provides colors, LocalFeedback provides feedback, LocalFocusTracker provides remember { FocusTracker() }) {
+                CompositionLocalProvider(LocalDelosColors provides colors, LocalFeedback provides feedback, LocalFocusTracker provides remember { FocusTracker() }, LocalReducedMotion provides appearance.reducedMotion) {
                     Stage(textScale = appearance.uiScale / 100f) { MenuPanel(title, d) }
                 }
             }
@@ -508,6 +509,8 @@ class StreamMenu(private val game: Game) {
                                                             }
                                                         } finally { bitrateBusy = false }
                                                     }
+                                                } else if (!bitrateBusy) {
+                                                    bitrateMessage = "The stream is not connected, so the bitrate cannot be changed."
                                                 }
                                             }, Modifier.onFocusChanged { if (it.isFocused) helpKey = "Apply bitrate" })
                                             BasicText(bitrateMessage ?: "Vibepollo is required. The host may limit the requested bitrate.",

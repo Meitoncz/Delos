@@ -22,10 +22,9 @@ import com.limelight.nvstream.http.NvApp;
 import com.limelight.nvstream.http.NvHTTP;
 import com.limelight.nvstream.http.PairingManager;
 import com.limelight.nvstream.wol.WakeOnLanSender;
-import com.limelight.preferences.PreferenceConfiguration;
+import com.limelight.shell.data.GameLauncher;
 import com.limelight.utils.CacheHelper;
 import com.limelight.utils.Dialog;
-import com.limelight.utils.ServerHelper;
 import com.limelight.utils.ShortcutHelper;
 import com.limelight.utils.SpinnerDialog;
 import com.limelight.utils.UiHelper;
@@ -45,7 +44,6 @@ import java.util.Objects;
 import java.util.UUID;
 
 public class ShortcutTrampoline extends AppCompatActivity {
-    private PreferenceConfiguration prefConfig;
     private String uuidString;
     private NvApp app;
     // The PC of a shortcut (and of the stream started from it)
@@ -150,7 +148,7 @@ public class ShortcutTrampoline extends AppCompatActivity {
                                             // Launch game if provided app ID, otherwise launch app view
                                             if (app != null) {
                                                 if (details.runningGameId == 0 || details.runningGameId == app.getAppId() || Objects.equals(details.runningGameUUID, app.getAppUUID())) {
-                                                    intentStack.add(ServerHelper.createStartIntent(ShortcutTrampoline.this, app, details, managerBinder, prefConfig.useVirtualDisplay));
+                                                    intentStack.add(GameLauncher.startIntent(ShortcutTrampoline.this, managerBinder, details, app).getIntent());
 
                                                     // Close this activity
                                                     finish();
@@ -160,7 +158,7 @@ public class ShortcutTrampoline extends AppCompatActivity {
                                                 } else {
                                                     // Create the start intent immediately, so we can safely unbind the managerBinder
                                                     // below before we return.
-                                                    final Intent startIntent = ServerHelper.createStartIntent(ShortcutTrampoline.this, app, details, managerBinder, prefConfig.useVirtualDisplay);
+                                                    final Intent startIntent = GameLauncher.startIntent(ShortcutTrampoline.this, managerBinder, details, app).getIntent();
 
                                                     UiHelper.displayQuitConfirmationDialog(ShortcutTrampoline.this, new Runnable() {
                                                         @Override
@@ -344,8 +342,6 @@ public class ShortcutTrampoline extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        prefConfig = PreferenceConfiguration.readPreferences(this);
 
         UiHelper.notifyNewRootView(this);
         ComputerDatabaseManager dbManager = new ComputerDatabaseManager(this);

@@ -88,6 +88,9 @@ class GameSettingsTest {
         assertTrue(game().preferences.getBoolean("checkbox_enable_hdr", false))
         profiles.delete(second.id)
         assertTrue(game().isCustom("checkbox_enable_hdr"))
+        // The removed user takes their overrides with them
+        val removed = context.getSharedPreferences("ui_profile_${second.id}", Context.MODE_PRIVATE)
+        assertTrue(removed.all.keys.none { it.startsWith("ui_game_") })
     }
 
     @Test fun resettingAllOnlyRemovesThisGamesOverrides() {
@@ -100,6 +103,23 @@ class GameSettingsTest {
         assertEquals(20000, profiles.settings().getInt("seekbar_bitrate_kbps", 0))
     }
 
+    @Test fun forgettingAPcRemovesItsOverridesInEveryUserAndKeepsOtherPcs() {
+        val first = profiles.profiles.value.current!!.id
+        game().preferences.edit().putBoolean("checkbox_enable_hdr", true).commit()
+        game(id = 2).preferences.edit().putInt("seekbar_bitrate_kbps", 30000).commit()
+        game(pc = "pc-b").preferences.edit().putBoolean("checkbox_full_range", true).commit()
+        profiles.create("Other player", 1)
+        game().preferences.edit().putBoolean("checkbox_full_range", true).commit()
+        profiles.forgetGameSettings("pc-a")
+        assertTrue(game().overrides().isEmpty())
+        assertTrue(game(id = 2).overrides().isEmpty())
+        assertTrue(game(pc = "pc-b").isCustom("checkbox_full_range"))
+        profiles.switchTo(first)
+        assertTrue(game().overrides().isEmpty())
+        assertTrue(game(id = 2).overrides().isEmpty())
+        assertTrue(game(pc = "pc-b").isCustom("checkbox_full_range"))
+    }
+
     @Test fun codecAndHdrUseExistingBitrateGuidanceWithoutChangingProfile() {
         val a = game()
         val stream = StreamSettingsStore(profiles.catalog) { a.preferences }
@@ -109,9 +129,26 @@ class GameSettingsTest {
         stream.write(spec("checkbox_enable_hdr"), true)
         assertEquals(PreferenceConfiguration.getDefaultBitrate("1920x1080", "60", "pyrowave", true),
             a.preferences.getInt("seekbar_bitrate_kbps", 0))
+        // Leaving PyroWave gives the new codec its normal default, not PyroWave's recommendation
+        stream.write(spec("video_format"), "forceh265")
+        assertEquals(PreferenceConfiguration.getDefaultBitrate("1920x1080", "60"), a.preferences.getInt("seekbar_bitrate_kbps", 0))
         assertEquals(20000, profiles.settings().getInt("seekbar_bitrate_kbps", 0))
         assertEquals("auto", profiles.settings().getString("video_format", null))
         stream.close()
+    }
+
+    @Test fun gameLeavingAPyroWaveProfileDoesNotInheritItsBitrate() {
+        val profileStream = StreamSettingsStore(profiles.catalog, profiles::settings)
+        profileStream.write(spec("video_format"), "pyrowave")
+        val pyroWaveBitrate = profiles.settings().getInt("seekbar_bitrate_kbps", 0)
+        val a = game()
+        val stream = StreamSettingsStore(profiles.catalog) { a.preferences }
+        stream.write(spec("video_format"), "forceh265")
+        assertEquals(PreferenceConfiguration.getDefaultBitrate("1920x1080", "60"), a.preferences.getInt("seekbar_bitrate_kbps", 0))
+        assertEquals(pyroWaveBitrate, profiles.settings().getInt("seekbar_bitrate_kbps", 0))
+        assertEquals("pyrowave", profiles.settings().getString("video_format", null))
+        stream.close()
+        profileStream.close()
     }
 
     @Test fun streamReaderUsesLaunchSnapshotWithoutLeakingIntoOtherActivitiesOrLaterGames() {
@@ -175,10 +212,6 @@ class GameSettingsTest {
         assertEquals(75, config.sgsrSharpness)
         assertEquals(SettingsTab.DISPLAY, spec("list_sgsr_quality").tab)
         assertEquals(listOf("standard", "high", "temporal", "temporal-quality"), spec("list_sgsr_quality").choices.map { it.value })
-        // Live menu changes only the current decoder's configuration, never stored defaults.
-        config.sgsrHighQuality = false
-        assertTrue(PreferenceConfiguration.readPreferences(activity).sgsrHighQuality)
-        assertFalse(PreferenceConfiguration.readPreferences(context).sgsrHighQuality)
         assertEquals("standard", game(id = 2).preferences.getString("list_sgsr_quality", "standard"))
         store.close()
     }

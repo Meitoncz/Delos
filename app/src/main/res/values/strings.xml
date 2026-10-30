@@ -245,6 +245,20 @@
     <string name="pacing_balanced">Balanced</string>
     <string name="pacing_balanced_alt">Balanced with FPS limit</string>
     <string name="pacing_smoothness">Smoothest video</string>
+    <string name="pacing_fast_vsync">Fast V-Sync (Nano Pacer)</string>
+
+    <string name="title_async_decode">Asynchronous decoding</string>
+    <string name="summary_async_decode">MediaCodec delivers ready buffers through callbacks instead of polling. For H.264, HEVC and AV1; applies to the next stream. Turn it off if your decoder is less stable.</string>
+    <string name="title_sgsr">Snapdragon Game Super Resolution</string>
+    <string name="summary_sgsr">Upscale lower-resolution video with SGSR 1. Requires OpenGL ES 3.1; HDR uses ten-bit P010 output where supported. Toggle it live in the stream menu. PyroWave uses its own renderer. Choose a stream resolution below the display resolution.</string>
+    <string name="title_sgsr_quality">Upscaler mode</string>
+    <string name="summary_sgsr_quality">SGSR 1 filters the current frame. SGSR 2 Video estimates motion and reuses reliable detail from previous frames. All modes support HDR and live switching in the stream menu; GPU cost and results depend on the content.</string>
+    <string name="title_sgsr_sharpness">Upscaler sharpness</string>
+    <string name="summary_sgsr_sharpness">Strength of a separate final sharpening pass, from 0 to 100. Zero disables sharpening. It does not change SGSR reconstruction quality and can be adjusted live.</string>
+    <string name="sgsr_quality_standard">SGSR 1 Standard</string>
+    <string name="sgsr_quality_high">SGSR 1 High Quality</string>
+    <string name="sgsr_quality_temporal">SGSR 2 Video</string>
+    <string name="sgsr_quality_temporal_quality">SGSR 2 Video Quality</string>
 
 
     <string name="keyboard_service_label">Delos Physical keyboard</string>

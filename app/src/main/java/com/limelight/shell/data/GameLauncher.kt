@@ -4,7 +4,10 @@ import android.app.Activity
 import android.content.Intent
 import com.limelight.Game
 import com.limelight.binding.PlatformBinding
+import com.limelight.computers.ComputerManagerService
+import com.limelight.nvstream.http.ComputerDetails
 import com.limelight.nvstream.http.HostHttpResponseException
+import com.limelight.nvstream.http.NvApp
 import com.limelight.nvstream.http.NvHTTP
 import com.limelight.preferences.PreferenceConfiguration
 import com.limelight.shell.StreamLoader
@@ -32,12 +35,8 @@ class GameLauncher(private val activity: Activity, private val repo: PcRepositor
         val binder = repo.binder ?: return null
         val details = binder.getComputer(pc.uuid) ?: pc.details
         if (details.activeAddress == null) return null
-        val settings = GameSettingsStore(ProfileStore.currentSettings(activity), pc.uuid, app.id)
-        val wantsVirtual = settings.preferences.getBoolean("checkbox_use_virtual_display",
-            PreferenceConfiguration.readPreferences(activity).useVirtualDisplay)
-        val virtualReady = details.vDisplaySupported && details.vDisplayDriverReady
-        val intent = ServerHelper.createStartIntent(activity, app.nvApp, details, binder, wantsVirtual && virtualReady)
-        GameSettingsStore.attach(intent, settings.snapshot())
+        val start = startIntent(activity, binder, details, app.nvApp)
+        val intent = start.intent
         val streamIntent = ServerHelper.getStreamIntent(intent)
         // The stream shows the new UI's loader while it connects (not the classic dialog), with the PC's
         // name as set in Delos, like the new UI's half of the launch scene. External-display launches
@@ -47,7 +46,7 @@ class GameLauncher(private val activity: Activity, private val repo: PcRepositor
         if (streamIntent !== intent) {
             intent.putExtra(ExternalDisplayControlActivity.EXTRA_LAUNCH_INTENT, streamIntent)
         }
-        return Start(intent, wantsVirtual && !virtualReady)
+        return start
     }
 
     /** Quits the running game on the PC; returns the message to show. */
@@ -71,4 +70,28 @@ class GameLauncher(private val activity: Activity, private val repo: PcRepositor
     }
 
     data class QuitResult(val success: Boolean, val message: String)
+
+    companion object {
+        /**
+         * The intent that starts [app] on [details] with the current profile's settings and this game's
+         * overrides attached, so every way to start a game (the new UI, launcher and PC shortcuts) streams
+         * with the same values. [Start.virtualDisplayUnavailable] is set when the virtual display was wanted
+         * but the PC has no working driver; the main display is streamed then.
+         */
+        @JvmStatic
+        fun startIntent(
+            activity: Activity,
+            binder: ComputerManagerService.ComputerManagerBinder,
+            details: ComputerDetails,
+            app: NvApp,
+        ): Start {
+            val settings = GameSettingsStore(ProfileStore.currentSettings(activity), details.uuid, app.appId)
+            val wantsVirtual = settings.preferences.getBoolean("checkbox_use_virtual_display",
+                PreferenceConfiguration.readPreferences(activity).useVirtualDisplay)
+            val virtualReady = details.vDisplaySupported && details.vDisplayDriverReady
+            val intent = ServerHelper.createStartIntent(activity, app, details, binder, wantsVirtual && virtualReady)
+            GameSettingsStore.attach(intent, settings.snapshot())
+            return Start(intent, wantsVirtual && !virtualReady)
+        }
+    }
 }

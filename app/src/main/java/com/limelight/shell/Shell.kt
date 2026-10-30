@@ -29,9 +29,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.withTimeoutOrNull
-import androidx.compose.runtime.withFrameNanos
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
@@ -152,7 +149,6 @@ fun Shell(
     val profiles by profileStore.profiles.collectAsStateWithLifecycle()
     val startup by startupStore.startup.collectAsStateWithLifecycle()
     val pcs by repo.pcs.collectAsStateWithLifecycle()
-    var contextRefreshRequired by remember { mutableStateOf(false) }
 
     // "Skip the start screen": straight into the default device
     LaunchedEffect(Unit) {
@@ -235,7 +231,6 @@ fun Shell(
             }
         }
         if (shell.launch != null && shell.diving) {
-            contextRefreshRequired = true
             shell.launch = null
             shell.diving = false
             repo.refresh()
@@ -303,24 +298,9 @@ fun Shell(
                 shell.closeLayer()
             }
             null -> {
-                fun openCurrentContext() {
-                    val menu = tracker.contextMenu ?: defaultMenu.takeIf { sideMenu } ?: return
-                    feedback.play(Cue.OPEN)
-                    shell.openLayer(Layer.Context(menu, tracker.bounds()), tracker)
-                }
-                if (contextRefreshRequired) {
-                    contextRefreshRequired = false
-                    scope.launch {
-                        val before = repo.library.value
-                        repo.refresh()
-                        withTimeoutOrNull(1_500) { repo.library.first { it != before } }
-                        // Let HomeScreen publish the refreshed menu into the focus tracker.
-                        withFrameNanos { }
-                        openCurrentContext()
-                    }
-                } else {
-                    openCurrentContext()
-                }
+                val menu = tracker.contextMenu ?: defaultMenu.takeIf { sideMenu } ?: return
+                feedback.play(Cue.OPEN)
+                shell.openLayer(Layer.Context(menu, tracker.bounds()), tracker)
             }
             else -> Unit
         }
@@ -534,7 +514,10 @@ fun Shell(
             }
 
             ArtworkProgressBar(artwork.progress.value)
-            val note = (library as? Library.Ready)?.takeIf { shell.screen == Screen.Home && shell.layer == null }?.let { "${it.apps.size} apps on ${it.pc.name}" }
+            val note = (library as? Library.Ready)?.takeIf { shell.screen == Screen.Home && shell.layer == null }?.let { ready ->
+                val shown = if (metadata.filters.active) ready.apps.count { metadata.filters.matches(metadata.entry(ready.pc, it).data) } else ready.apps.size
+                if (shown == ready.apps.size) "$shown apps on ${ready.pc.name}" else "$shown of ${ready.apps.size} apps on ${ready.pc.name}"
+            }
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
                 ZoomedBar(uiScale) { HintBar(hints(shell, tracker.adjustable), note = note, noteLabel = if (note != null) "LIBRARY" else null) }
             }

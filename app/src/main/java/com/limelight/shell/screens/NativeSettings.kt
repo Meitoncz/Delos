@@ -3,6 +3,7 @@ package com.limelight.shell.screens
 import android.content.Intent
 import android.net.Uri
 import android.content.SharedPreferences
+import java.util.Locale
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
@@ -22,6 +23,7 @@ import com.limelight.shell.Screen
 import com.limelight.shell.StatsPosition
 import com.limelight.shell.data.Pc
 import com.limelight.shell.settings.Appearance
+import com.limelight.shell.settings.SettingSpec
 import com.limelight.shell.settings.SettingsTab
 import com.limelight.shell.settings.SettingsHelp
 import com.limelight.shell.settings.Startup
@@ -43,6 +45,19 @@ internal data class SettingsItem(
     val detail: String = description,
     val searchTerms: String = "",
 )
+
+/** The choice names a setting can be found by, besides its own texts. */
+internal fun settingSearchTerms(spec: SettingSpec): String =
+    spec.choices.joinToString(" ") { "${it.label} ${SettingsHelp.choice(spec.key, it.value)}" }
+
+/** The settings whose texts contain every word of [query], in any order and case. */
+internal fun searchSettings(items: List<SettingsItem>, query: String): List<SettingsItem> {
+    val words = query.trim().lowercase(Locale.ROOT).split(Regex("\\s+"))
+    return items.filter { item ->
+        val text = "${item.label} ${item.description} ${item.detail} ${item.searchTerms} ${item.section} ${item.tab.label}".lowercase(Locale.ROOT)
+        words.all { text.contains(it) }
+    }
+}
 
 /** Shell preferences and device actions participate in the same search as stream settings. */
 @Composable

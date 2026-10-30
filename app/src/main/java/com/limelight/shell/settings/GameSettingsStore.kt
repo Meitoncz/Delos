@@ -12,7 +12,7 @@ import java.util.UUID
 
 /** Sparse overrides belong to a user, PC and app. Unchanged options keep following the user profile. */
 class GameSettingsStore(private val base: SharedPreferences, pc: String, appId: Int) {
-    private val prefix = "ui_game_${UUID.nameUUIDFromBytes(pc.toByteArray(Charsets.UTF_8))}_${appId}_"
+    private val prefix = prefixFor(pc, appId)
     val preferences: SharedPreferences = object : ValueOverlay(base, { overrides() }) {
         override fun edit(): SharedPreferences.Editor = GameEditor(base.edit())
     }
@@ -60,6 +60,16 @@ class GameSettingsStore(private val base: SharedPreferences, pc: String, appId: 
         val KEYS = (STREAM_KEYS + DISPLAY_KEYS).toSet()
         private const val EXTRA = "com.limelight.shell.GAME_SETTINGS"
 
+        private fun pcPrefix(pc: String) = "ui_game_${UUID.nameUUIDFromBytes(pc.toByteArray(Charsets.UTF_8))}_"
+        private fun prefixFor(pc: String, appId: Int) = "${pcPrefix(pc)}${appId}_"
+
+        /** Removes every override of every app on [pc] from [base] (a PC that Delos forgets). */
+        fun purge(base: SharedPreferences, pc: String) {
+            val prefix = pcPrefix(pc)
+            val stale = base.all.keys.filter { it.startsWith(prefix) }
+            if (stale.isNotEmpty()) base.edit().apply { stale.forEach { remove(it) } }.apply()
+        }
+
         /** External-display launches wrap the actual Game intent; attach the snapshot to that inner intent. */
         fun attach(intent: Intent, snapshot: Bundle) {
             @Suppress("DEPRECATION")
@@ -102,8 +112,10 @@ private open class ValueOverlay(
 ) : SharedPreferences by base {
     override fun getAll(): Map<String, *> = base.all + patch()
     override fun contains(key: String) = patch().containsKey(key) || base.contains(key)
-    override fun getString(key: String, defValue: String?): String? =
-        if (patch().containsKey(key)) patch()[key] as? String ?: defValue else base.getString(key, defValue)
+    override fun getString(key: String, defValue: String?): String? {
+        val values = patch()
+        return if (values.containsKey(key)) values[key] as? String ?: defValue else base.getString(key, defValue)
+    }
     override fun getInt(key: String, defValue: Int) = (patch()[key] as? Number)?.toInt() ?: base.getInt(key, defValue)
     override fun getLong(key: String, defValue: Long) = (patch()[key] as? Number)?.toLong() ?: base.getLong(key, defValue)
     override fun getFloat(key: String, defValue: Float) = (patch()[key] as? Number)?.toFloat() ?: base.getFloat(key, defValue)

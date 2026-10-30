@@ -156,7 +156,7 @@ fun SettingsScreen(
         SettingsItem(spec.key, spec.tab, spec.section, spec.icon, spec.label,
             description, row, stream.enabled(spec, capabilities),
             detail = SettingsHelp.details(spec.copy(description = description), values, capabilities?.choices(spec, values) ?: spec.choices),
-            searchTerms = spec.choices.joinToString(" ") { "${it.label} ${SettingsHelp.choice(spec.key, it.value)}" })
+            searchTerms = settingSearchTerms(spec))
     }
     val all = nativeSettings(appearance, update, startup, updateStartup, pcs, profiles.settings()) + classic
     if (search) {
@@ -357,8 +357,7 @@ private fun SettingsSearch(all: List<SettingsItem>, scale: Float) {
     var query by rememberSaveable { mutableStateOf("") }
     val first = remember { FocusRequester() }
     InitialFocus(first)
-    val words = query.trim().lowercase(Locale.ROOT).split(Regex("\\s+"))
-    val results = all.filter { item -> words.all { "${item.label} ${item.description} ${item.detail} ${item.searchTerms} ${item.section} ${item.tab.label}".lowercase(Locale.ROOT).contains(it) } }
+    val results = searchSettings(all, query)
     Column(Modifier.fillMaxSize().padding(start = 150.px, end = 150.px, top = 130.px, bottom = (96f * scale).px)) {
         BasicText("Find a setting", style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx))
         BasicText("Pick letters with the controller, or select the field to type", style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 22.tpx), modifier = Modifier.padding(top = 14.px, bottom = 32.px))

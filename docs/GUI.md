@@ -118,7 +118,7 @@ These preserve implementation/design context from the removed UI plan, not phase
   Compose implement the shell. Existing Java/backend behavior is reused rather than rewritten:
   `ComputerManagerService`, `NvHTTP` / `PairingManager`, `PreferenceConfiguration`, `ProfilesManager`,
   `ShortcutHelper` and `ServerHelper`. Streams still start through `ServerHelper.createStartIntent()`
-  into `Game`. Keep upstream-shared changes small.
+  into `Game`, wrapped by `GameLauncher.startIntent` (shared with launcher shortcuts) to attach per-game settings. Keep upstream-shared changes small.
 - Use Compose foundation/ui/animation and the Delos design system, not Material components. The
   shell owns its small navigation stack, animated transitions and overlay focus. Fonts are bundled
   Unbounded/Figtree (OFL); Phosphor icon generation/licensing is documented in [ICONS.md](ICONS.md).

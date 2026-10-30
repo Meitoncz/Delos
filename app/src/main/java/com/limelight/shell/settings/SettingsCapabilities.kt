@@ -9,6 +9,7 @@ import android.os.Vibrator
 import android.view.Display
 import com.limelight.binding.video.MediaCodecHelper
 import com.limelight.binding.video.PyroWaveRenderer
+import com.limelight.binding.video.SgsrRenderer
 import com.limelight.preferences.GlPreferences
 import com.limelight.preferences.PreferenceConfiguration
 import kotlin.math.max
@@ -27,6 +28,8 @@ data class SettingsCapabilities(
     val hidden: Set<String>,
     // Delos: whether this device can decode PyroWave (PyroWaveRenderer)
     val pyroWave: Boolean = false,
+    // Delos: whether MediaCodec streams can use the SGSR upscaler (OpenGL ES 3.1)
+    val sgsr: Boolean = true,
 ) {
     fun choices(spec: SettingSpec, values: Map<String, *>): List<SettingChoice> = when (spec.key) {
         "list_resolution" -> {
@@ -82,8 +85,9 @@ data class SettingsCapabilities(
                 }
             }
             val pyroWave = PyroWaveRenderer.isAvailable()
+            val sgsr = SgsrRenderer.isSupported(activity)
             val hidden = mutableSetOf<String>()
-            if (!com.limelight.binding.video.SgsrRenderer.isSupported(activity) && !pyroWave) {
+            if (!sgsr && !pyroWave) {
                 hidden += setOf("checkbox_sgsr", "list_sgsr_quality", "seekbar_sgsr_sharpness")
             }
             if (pm.hasSystemFeature("com.nvidia.feature.shield")) hidden += "checkbox_absolute_mouse_mode"
@@ -102,7 +106,7 @@ data class SettingsCapabilities(
             return SettingsCapabilities(native.distinctBy { it.value }, maxWidth,
                 modes.maxOfOrNull { it.refreshRate } ?: display.refreshRate,
                 hdr10 && main10, PreferenceConfiguration.isShieldAtvFirmwareWithBrokenHdr(), hevc != null, av1 != null, hidden,
-                pyroWave)
+                pyroWave, sgsr)
         }
 
         private fun addResolution(into: MutableList<SettingChoice>, width: Int, height: Int, prefix: String) {

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string-array name="sgsr_quality_names">
-        <item>SGSR 1 Standard</item>
-        <item>SGSR 1 High Quality</item>
-        <item>SGSR 2 Video</item>
-        <item>SGSR 2 Video Quality</item>
+        <item>@string/sgsr_quality_standard</item>
+        <item>@string/sgsr_quality_high</item>
+        <item>@string/sgsr_quality_temporal</item>
+        <item>@string/sgsr_quality_temporal_quality</item>
     </string-array>
     <string-array name="sgsr_quality_values">
         <item>standard</item>
@@ -146,7 +146,7 @@
         <item>@string/pacing_balanced</item>
         <item>@string/pacing_balanced_alt</item>
         <item>@string/pacing_smoothness</item>
-        <item>Fast V-Sync (Nano Pacer)</item>
+        <item>@string/pacing_fast_vsync</item>
     </string-array>
     <string-array name="video_frame_pacing_values" translatable="false">
         <item>warp2</item>
