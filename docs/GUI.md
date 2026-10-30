@@ -20,6 +20,15 @@ decisions and verification status live in [GitHub Issues](https://github.com/Mei
   actions stay consistent across screens. The color-palette selector uses **Palette** for every
   palette choice. See [ICONS.md](ICONS.md) for the approved implementation and generation workflow.
 
+### Android launcher identity
+
+The Android launcher uses the same Delos ring and orbiting moon as `LogoMark`, with the default
+dark Delos background and gold/cyan accents. Adaptive foreground geometry fits the centered 66dp
+safe circle on a 108dp canvas; the Android 13 monochrome layer preserves the ring and moon.
+Run `python tools/icon/generate_launcher.py` to rebuild vectors and the 48/72/96/144/192px legacy
+PNGs. Circle, squircle and rounded-square color/monochrome previews go to ignored `build/icon-preview`.
+The TV channel uses the same mark; PC shortcut icons remain unchanged.
+
 ## First launch
 
 1. The user is asked to **create a profile**: a splash screen with **circular icons** (similar in spirit to the PS5 UI).
