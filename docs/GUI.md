@@ -72,13 +72,13 @@ The host's streaming HDR flag is not native game support. Special K, ReShade, Au
 do not qualify as native game HDR.
 
 **Y** on the home screen opens the **Filter library** modal (Y or B closes it; Done as well). It is a
-centered glass panel with the title, a live result line (`27 of 55 games`, or `All 55 games` without a filter)
-and three sections of chips: **Genre** (`All` plus every genre, each with its number of games), **HDR
+centered glass panel with the title, a live result line as a pill (`27 of 55 games`, or `All 55 games` without a filter)
+and three sections of chips, each with a large Unbounded heading and its icon in an accent-tinted circle, separated by thin dividers: **Genre** (`All` plus every genre, each with its number of games), **HDR
 support** (`All`, `Native HDR`, `SDR`, `HDR/SDR unverified`, with the sparkle, sun and question-mark icons of
 the home badges) and **Duration** from HowLongToBeat (Any, <10 h, 10–30 h, 30–60 h, 60+ h, Unknown). The chosen chip is
 filled with the accent; a choice applies at once (no confirmation) and the library behind the modal
 updates with it. D-pad up/down moves between the sections and the buttons, left/right within a row; a
-long genre list scrolls the panel and keeps the focused chip in view. **X** resets (the Reset button is
+long genre list scrolls the panel (its top and bottom edges fade out) and keeps the focused chip in view. **X** resets (the Reset button is
 disabled while nothing is filtered), and closing returns the focus to the game that was focused. While
 filters are active the home hint reads `Y Filter • N active`. Filters follow the active profile and
 combine across categories. Empty results say to press Y and keep a controller/touch reset action.

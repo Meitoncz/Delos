@@ -88,6 +88,7 @@ import com.limelight.shell.ui.Scrim
 import com.limelight.shell.ui.SettingRow
 import com.limelight.shell.ui.SideMenuHeader
 import com.limelight.shell.ui.SideMenuLayer
+import com.limelight.shell.ui.SideMenuScroll
 import com.limelight.shell.ui.px
 import com.limelight.shell.ui.StatusBar
 import com.limelight.shell.ui.Symbols
@@ -499,7 +500,7 @@ fun Shell(
                         )
                     },
                 ) { first ->
-                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.px)) {
+                    SideMenuScroll {
                     SideMenuRows(appearance, update, Modifier.focusRequester(first)) { shell.navigate(Screen.Settings) }
                     val hiddenCount = (library as? Library.Ready)?.hiddenCount ?: 0
                     if (hiddenCount > 0 || showHidden) {

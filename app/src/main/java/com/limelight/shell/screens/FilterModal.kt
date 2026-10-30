@@ -12,7 +12,9 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.focusGroup
+import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +27,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -32,6 +35,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -68,11 +72,13 @@ import com.limelight.shell.ui.FocusRing
 import com.limelight.shell.ui.InitialFocus
 import com.limelight.shell.ui.LocalDelosColors
 import com.limelight.shell.ui.LocalStage
+import com.limelight.shell.ui.MarginBringIntoView
 import com.limelight.shell.ui.PillButton
 import com.limelight.shell.ui.Symbol
 import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.Unbounded
 import com.limelight.shell.ui.backdropBlur
+import com.limelight.shell.ui.fadeEdges
 import com.limelight.shell.ui.focusEffects
 import com.limelight.shell.ui.glass
 import com.limelight.shell.ui.px
@@ -146,7 +152,7 @@ fun FilterModalLayer(visible: Boolean, ready: Library.Ready?, haze: HazeState, r
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable
 private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, onClose: () -> Unit) {
     val colors = LocalDelosColors.current
@@ -154,6 +160,7 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
     val metadata = LocalGameMetadata.current
     val k = stage.dpPerPx * LocalDensity.current.density
     val shape = RoundedCornerShape(34.px)
+    val bringIntoView = remember(k) { MarginBringIntoView(before = 56f * k, after = 56f * k) }
     val filters = metadata.filters
     val apps = ready.apps
 
@@ -200,18 +207,29 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
             .focusProperties { onExit = { if (open) cancelFocusChange() } }
             .focusGroup(),
     ) {
-        Row(Modifier.fillMaxWidth().padding(start = 12.px, end = 12.px, bottom = 22.px), verticalAlignment = Alignment.CenterVertically) {
-            BasicText("Filter library", style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 38.tpx))
+        Row(Modifier.fillMaxWidth().padding(start = 12.px, end = 12.px, bottom = 26.px), verticalAlignment = Alignment.CenterVertically) {
+            BasicText("Filter library", style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 40.tpx))
             Spacer(Modifier.weight(1f))
+            val result = filterResultLine(matching, apps.size, filters.active)
             BasicText(
-                filterResultLine(matching, apps.size, filters.active),
-                style = TextStyle(color = if (filters.active) colors.accent3 else colors.text2, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx),
+                result,
+                Modifier
+                    .clip(CircleShape)
+                    .background(if (filters.active) colors.accent.copy(alpha = .16f) else colors.surface)
+                    .border(1.px, if (filters.active) colors.accent.copy(alpha = .45f) else colors.line, CircleShape)
+                    .padding(horizontal = 26.px, vertical = 10.px),
+                style = TextStyle(color = if (filters.active) colors.accent3 else colors.text2, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 24.tpx),
             )
         }
         // The chips scroll when the genres need more room than the panel has; the focused one stays in view
+        CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
         Column(
-            Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).padding(12.px),
-            verticalArrangement = Arrangement.spacedBy(30.px),
+            Modifier
+                .weight(1f, fill = false)
+                .fadeEdges(stage, top = 20f, bottom = 40f)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 12.px, vertical = 22.px),
+            verticalArrangement = Arrangement.spacedBy(34.px),
         ) {
             FilterSection(Symbols.SPORTS_ESPORTS, "Genre") {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(14.px), verticalArrangement = Arrangement.spacedBy(14.px)) {
@@ -229,6 +247,7 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
                     }
                 }
             }
+            FilterDivider()
             FilterSection(Symbols.HDR_ON, "HDR support") {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(14.px), verticalArrangement = Arrangement.spacedBy(14.px)) {
                     HdrFilter.entries.forEach { option ->
@@ -239,6 +258,7 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
                     }
                 }
             }
+            FilterDivider()
             FilterSection(Symbols.HISTORY, "Duration (HowLongToBeat)") {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(14.px), verticalArrangement = Arrangement.spacedBy(14.px)) {
                     LengthFilter.entries.forEach { option ->
@@ -249,8 +269,9 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
                 }
             }
         }
+        }
         Row(
-            Modifier.fillMaxWidth().padding(top = 26.px, start = 12.px, end = 12.px),
+            Modifier.fillMaxWidth().padding(top = 30.px, start = 12.px, end = 12.px),
             horizontalArrangement = Arrangement.spacedBy(24.px, Alignment.End),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -267,16 +288,21 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
 @Composable
 private fun FilterSection(icon: String, title: String, content: @Composable () -> Unit) {
     val colors = LocalDelosColors.current
-    Column(verticalArrangement = Arrangement.spacedBy(14.px)) {
-        Row(Modifier.padding(start = 6.px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.px)) {
-            Symbol(icon, 24.tpx, colors.text3)
-            BasicText(
-                title.uppercase(),
-                style = TextStyle(color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 18.tpx, letterSpacing = .12.em),
-            )
+    Column(verticalArrangement = Arrangement.spacedBy(22.px)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(18.px)) {
+            Box(Modifier.size(60.px).clip(CircleShape).background(colors.accent.copy(alpha = .18f)), contentAlignment = Alignment.Center) {
+                Symbol(icon, 32.tpx, colors.accent3, filled = true)
+            }
+            BasicText(title, style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 29.tpx))
         }
         content()
     }
+}
+
+/** The thin line between two filter sections. */
+@Composable
+private fun FilterDivider() {
+    Box(Modifier.fillMaxWidth().height(1.px).background(LocalDelosColors.current.line))
 }
 
 /** A selectable chip: filled with the accent while chosen, glass otherwise; the focus ring marks the cursor. */
@@ -293,8 +319,8 @@ private fun FilterChip(label: String, selected: Boolean, onClick: () -> Unit, mo
             )
             .clip(CircleShape)
             .then(if (selected) Modifier.background(colors.accent) else Modifier.glass(colors.surface).border(1.px, colors.line, CircleShape))
-            .height(64.px)
-            .padding(horizontal = 26.px),
+            .heightIn(min = 60.px)
+            .padding(horizontal = 30.px, vertical = 12.px),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.px),
     ) {

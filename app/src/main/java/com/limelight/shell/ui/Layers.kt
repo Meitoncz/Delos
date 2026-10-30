@@ -12,7 +12,11 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,6 +39,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -262,6 +267,30 @@ fun SideMenuLayer(
         Box(Modifier.fillMaxHeight().width(620.px), contentAlignment = Alignment.CenterEnd) {
             Box(Modifier.fillMaxHeight().width(1.px).background(colors.line))
         }
+    }
+}
+
+/**
+ * The scrolling rows of the side menu. The content padding leaves room for the focus scale and ring of the
+ * first and last row (the scroll area clips to its bounds), the edges fade out like the other lists and the
+ * focused row is scrolled clear of the fades.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun ColumnScope.SideMenuScroll(content: @Composable ColumnScope.() -> Unit) {
+    val stage = LocalStage.current
+    val k = stage.dpPerPx * LocalDensity.current.density
+    val bringIntoView = remember(k) { MarginBringIntoView(before = 40f * k, after = 56f * k) }
+    CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
+        Column(
+            Modifier
+                .weight(1f)
+                .fadeEdges(stage, top = 16f, bottom = 40f)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 14.px, vertical = 18.px),
+            verticalArrangement = Arrangement.spacedBy(10.px),
+            content = content,
+        )
     }
 }
 
