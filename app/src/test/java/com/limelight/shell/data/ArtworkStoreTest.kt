@@ -174,29 +174,51 @@ class ArtworkStoreTest {
         imageFile(other, ArtKind.HERO).writeBytes(jpeg(1280, 400, Color.BLUE))
         val selected = mutableStateOf(app)
         val kind = mutableStateOf(ArtKind.HERO)
-        var result = ArtworkResult(null, false)
-        var consumerImage: ImageBitmap? = null
+        data class Publication(val appId: Int, val kind: ArtKind, val result: ArtworkResult, val image: ImageBitmap?)
+        val publications = mutableListOf<Publication>()
+        fun assertCurrentImage(publication: Publication, image: ImageBitmap?) {
+            if (publication.kind == ArtKind.LOGO) {
+                assertNull("A missing logo must not retain the hero", image)
+            } else if (image != null) {
+                val original = publication.appId == app.id
+                assertImage(image, if (original) 1920 else 1280, if (original) 620 else 400,
+                    if (original) Color.RED else Color.BLUE)
+            }
+        }
         CompositionDriver().use { driver ->
             driver.setContent {
-                val loaded = rememberArtworkResult(store, pc, selected.value, kind.value).value
-                val visible = rememberArtwork(store, pc, selected.value, kind.value).value
-                SideEffect { result = loaded; consumerImage = visible }
+                val currentApp = selected.value
+                val currentKind = kind.value
+                val loaded = rememberArtworkResult(store, pc, currentApp, currentKind).value
+                val visible = rememberArtwork(store, pc, currentApp, currentKind).value
+                SideEffect { publications.add(Publication(currentApp.id, currentKind, loaded, visible)) }
             }
-            driver.until { consumerImage != null }
-            assertImage(consumerImage, 1920, 620, Color.RED)
+            driver.until { publications.lastOrNull()?.image != null }
+            assertImage(publications.last().image, 1920, 620, Color.RED)
 
             selected.value = other
-            // Stop at the first applied composition, before either replacement load can run.
-            driver.until { !result.resolved }
-            assertNull(consumerImage)
-            driver.until { result.resolved && consumerImage != null }
-            assertImage(consumerImage, 1280, 400, Color.BLUE)
+            // Observe the applied key, not an unresolved state from either independent loader.
+            // A replacement may already be decoded when this composition is applied.
+            driver.until {
+                publications.lastOrNull()?.let {
+                    it.appId == other.id && it.kind == ArtKind.HERO && it.result.resolved && it.image != null
+                } == true
+            }
+            assertImage(publications.last().image, 1280, 400, Color.BLUE)
 
             kind.value = ArtKind.LOGO
-            driver.until { !result.resolved }
-            assertNull(consumerImage)
-            driver.until { result.resolved }
-            assertNull(consumerImage)
+            driver.until {
+                publications.lastOrNull()?.let {
+                    it.appId == other.id && it.kind == ArtKind.LOGO && it.result.resolved
+                } == true
+            }
+            assertNull(publications.last().image)
+
+            // Reject stale images in every applied composition, even if a later load replaces them.
+            for (publication in publications) {
+                assertCurrentImage(publication, publication.result.image)
+                assertCurrentImage(publication, publication.image)
+            }
         }
     }
 
@@ -257,7 +279,7 @@ class ArtworkStoreTest {
                 assertTrue("Timed out waiting for the artwork consumer", System.nanoTime() < deadline)
                 shadowOf(Looper.getMainLooper()).idle()
                 Snapshot.sendApplyNotifications()
-                // One task at a time keeps intermediate, unresolved app-switch states observable.
+                // Apply queued recompositions while IO completion remains asynchronous.
                 tasks.poll()?.run()
                 if (clock.hasAwaiters) clock.sendFrame(System.nanoTime())
                 Thread.yield()
