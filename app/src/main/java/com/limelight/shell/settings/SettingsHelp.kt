@@ -49,7 +49,7 @@ object SettingsHelp {
 
     /** Explanations follow the selected value, including resolutions and rates added by the device. */
     fun choice(key: String, value: String): String = choices[key]?.get(value) ?: when (key) {
-        "list_resolution" -> "Requests a ${value.replace("x", " × ")} stream. Upscaling is separate."
+        "list_resolution" -> "Requests a ${value.replace("x", " × ")} stream."
         "list_fps" -> "Requests $value FPS. Warp modes multiply it."
         "list_languages" -> if (value == "default") "Follows the Android language." else "Uses this language where translations exist."
         "keyboard_axi_list" -> "Import, export and reset act on this layout."

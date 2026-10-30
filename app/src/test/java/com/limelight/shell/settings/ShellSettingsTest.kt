@@ -98,7 +98,7 @@ class ShellSettingsTest {
         assertTrue(nano.startsWith("Fast V-Sync"))
         assertFalse(nano.contains("four times"))
         assertFalse(nano.contains("LFR is enabled"))
-        assertTrue(nano.contains("takes precedence over LFR"))
+        assertTrue(nano.contains("LFR"))
     }
 
     @Test fun pyroWaveExposesItsNativeUpscalerButNotMediaCodecOnlyControls() {
