@@ -1,24 +1,23 @@
 # Per-game stream settings
 
-Open a game's context menu on the dashboard and choose **Game settings**. The settings rows with the
-Stream / Display tabs are on the left; the right column holds a large portrait cover (320x480 stage
-px, top right), the focused option's help and two reset buttons. Under the title, a chip says how
-many settings are custom for this game ("3 custom settings") or "Follows your profile". L1/R1 change
-tabs, left/right adjust choices and sliders, A changes a value, and B returns to the dashboard. Touch
-uses the same controls.
+Open a game's context menu on the dashboard and choose **Game settings**. The title, Stream / Display
+tabs and list sit exactly where the global settings put theirs (title at y=124, tabs at y=206, list
+from y=312, from `SettingsLayout`). On the title's line, right-aligned, are the game and PC and a
+chip that says how many settings are custom for this game ("3 custom settings") or "Follows your
+profile". The right column starts at the top of the list: a 260x390 stage px cover, then the focused
+option's help (heading and scrolling text, about 240 px tall at 100% UI scale and 210 px at 125%) and
+the note "Saved automatically · applies next stream". L1/R1 change tabs, left/right adjust choices
+and sliders, A changes a value, and B returns to the dashboard. Touch uses the same controls.
 
 Resetting never asks for confirmation; each action shows a toast:
 
-- **Reset setting** (button, or **Reset to profile value** in a row's context menu: right menu button
-  or X) returns the focused option to the profile ("Back to the profile value"). The button is
-  dimmed when that option already follows the profile.
-- **Reset all to profile** clears all of this game's overrides ("All settings follow the profile
-  again"). It is dimmed when the game has no custom settings.
+- **Reset to profile value** in a row's context menu (right menu button or X) returns that option to
+  the profile ("Back to the profile value").
+- **Reset all settings** is the last row of both tabs, set apart from the settings by a gap. It clears
+  all of this game's overrides ("All settings follow the profile again") and is dimmed when the game
+  has no custom settings. Down from the last setting reaches it, like any other row.
 
-With a controller, Right from a row that does not adjust (toggles, unavailable rows), Down from the
-last row, or Right from the Display tab moves to the buttons; Left or Up returns to the last row. After
-a reset from a button the focus returns to the row. Custom rows show their source line in the accent
-color.
+Custom rows show their source line in the accent color.
 
 ## Scope and inheritance
 
@@ -42,7 +41,7 @@ color.
   effective (inherited or overridden) resolution/FPS/HDR, separately from the chosen bitrate. The
   row keeps its inheritance label; other codecs show no additional recommendation.
 - Resetting the bitrate row removes that game's current override and all its codec bitrate slots.
-  Reset all to profile also removes all slots, without changing other games or the profile.
+  Reset all settings also removes all slots, without changing other games or the profile.
 - The upscaler rows (SGSR) are unavailable for H.264, HEVC and AV1 on devices below OpenGL ES 3.1.
 - Advanced custom resolution/FPS definitions remain in the profile; their choices are available here.
 - Audio, controls, appearance and other global options continue to come from the user profile.
@@ -77,8 +76,9 @@ PC, persistence across store recreation, resetting one/all overrides, PyroWave b
 
 Device acceptance: open settings from a game, check both tabs, change its resolution to 720p and
 start/resume its stream manually. Verify 1280x720 in statistics, then check that the profile and
-another game retain their resolution. Use Reset setting or Reset all to profile and check this game
-follows the profile again. Also check tab switches after scrolling, one feedback event per switch, touch
+another game retain their resolution. Use the row's Reset to profile value or Reset all settings and
+check this game follows the profile again. Also check tab switches after scrolling, one feedback event
+per switch, touch
 adjustment, cover display, help scrolling and focus returning to the dashboard. The user drives the
 Odin; agents do not launch games or send navigation input.
 

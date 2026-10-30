@@ -21,7 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -113,26 +112,6 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
         feedback.silenceNextFocus()
         runCatching { first.requestFocus() }
     }
-    // The rows that can take the focus back from the side buttons: only composed ones have a live requester.
-    val rowFocus = remember(tab, game) { mutableMapOf<String, FocusRequester>() }
-    val composedRows = remember(tab, game) { mutableSetOf<String>() }
-    fun lastRow(): FocusRequester? = focusedKey?.takeIf { it in composedRows }?.let { rowFocus[it] }
-    val resetOne = remember { FocusRequester() }
-    val resetAll = remember { FocusRequester() }
-    val focusedCustom = focusedKey.let { it != null && it in custom }
-    val canResetOne by rememberUpdatedState(focusedCustom)
-    val canResetAll by rememberUpdatedState(custom.isNotEmpty())
-    // Where Right (from a row that does not adjust) or Down (from the last row) goes: the first button that works.
-    fun buttons(): FocusRequester = when {
-        canResetOne -> resetOne
-        canResetAll -> resetAll
-        else -> FocusRequester.Default
-    }
-    fun backToRows() {
-        val target = lastRow() ?: return
-        feedback.silenceNextFocus()
-        runCatching { target.requestFocus() }
-    }
     fun reset(key: String) {
         game.reset(key)
         shell.showToast("Back to the profile value", Symbols.RESET)
@@ -140,39 +119,36 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
     val cover by rememberArtwork(LocalArtwork.current, screen.pc, screen.app, ArtKind.COVER)
     val box by rememberBoxArt(LocalBoxArt.current, screen.pc, screen.app)
     val art = appArt(screen.pc, screen.app)
-    val bottom = 96f + (appearance.uiScale / 100f - 1f) * 92f
+    val bottom = SettingsLayout.bottom(appearance)
     Box(Modifier.fillMaxSize()) {
         Box(Modifier.size(0.px).focusRequester(transfer).focusable())
-        Column(Modifier.offset(150.px, 100.px).width(1120.px)) {
+        // The title, tab row and list sit exactly where the global settings put theirs. The game and the
+        // status chip share the title's line, to the right of it.
+        Row(Modifier.offset(SettingsLayout.TITLE_X.px, SettingsLayout.TITLE_Y.px).width((1920f - 2 * SettingsLayout.TITLE_X).px),
+            verticalAlignment = Alignment.CenterVertically) {
             BasicText("Game settings", style = TextStyle(color = colors.text, fontFamily = Unbounded,
                 fontWeight = FontWeight.SemiBold, fontSize = 46.tpx))
             BasicText("${screen.app.name} · ${screen.pc.name}", maxLines = 1, overflow = TextOverflow.Ellipsis,
-                style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 22.tpx),
-                modifier = Modifier.padding(top = 12.px))
-            Row(Modifier.padding(top = 14.px)) {
-                Chip(if (custom.isEmpty()) Symbols.CHECK_CIRCLE else Symbols.TUNE, customSettingsLabel(custom.size),
-                    if (custom.isEmpty()) null else colors.accent3)
-            }
+                style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 22.tpx, textAlign = TextAlign.End),
+                modifier = Modifier.weight(1f).padding(horizontal = 28.px))
+            Chip(if (custom.isEmpty()) Symbols.CHECK_CIRCLE else Symbols.TUNE, customSettingsLabel(custom.size),
+                if (custom.isEmpty()) null else colors.accent3)
         }
-        Row(Modifier.offset(x = 150.px, y = 262.px), verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.px)) {
+        Row(Modifier.offset(y = SettingsLayout.TABS_Y.px).fillMaxWidth().height(SettingsLayout.TABS_HEIGHT.px),
+            horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
             ShoulderLabel("L1")
-            TabPill(Symbols.CAST, "Stream", tab == 0, Modifier) { changeTab(0) }
-            TabPill(Symbols.MONITOR, "Display", tab == 1, Modifier.focusProperties { right = buttons() }) { changeTab(1) }
+            TabPill(Symbols.CAST, "Stream", tab == 0, Modifier.padding(horizontal = 5.px)) { changeTab(0) }
+            TabPill(Symbols.MONITOR, "Display", tab == 1, Modifier.padding(horizontal = 5.px)) { changeTab(1) }
             ShoulderLabel("R1")
         }
         CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
             key(tab, game) {
                 LazyColumn(state = scroll,
-                    modifier = Modifier.padding(start = 150.px, top = 336.px, bottom = bottom.px).width(1140.px).fillMaxHeight()
-                        .fadeEdges(stage, top = 14f, bottom = 70f),
-                    contentPadding = PaddingValues(start = 18.px, end = 18.px, top = 18.px, bottom = 140.px),
+                    modifier = Modifier.padding(start = SettingsLayout.TITLE_X.px, top = SettingsLayout.LIST_TOP.px, bottom = bottom.px)
+                        .width(1140.px).fillMaxHeight().fadeEdges(stage, top = 14f, bottom = 70f),
+                    contentPadding = PaddingValues(start = 18.px, end = 18.px, top = 14.px, bottom = 140.px),
                     verticalArrangement = Arrangement.spacedBy(10.px)) {
                     itemsIndexed(rows, key = { _, spec -> spec.key }) { index, spec ->
-                        DisposableEffect(spec.key) {
-                            composedRows.add(spec.key)
-                            onDispose { composedRows.remove(spec.key) }
-                        }
                         val current = values[spec.key] ?: spec.default
                         val value = when (spec.kind) {
                             SettingKind.TOGGLE -> RowValue.Toggle(current as? Boolean ?: false) { stream.write(spec, it) }
@@ -189,28 +165,33 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
                         val isCustom = spec.key in custom
                         val source = if (isCustom) "Custom for this game" else "From profile"
                         val menu = ContextMenu(spec.label, listOf(MenuItem(Symbols.RESET, "Reset to profile value") { reset(spec.key) }))
-                        val requester = remember(spec.key, first) { rowFocus.getOrPut(spec.key) { if (index == 0) first else FocusRequester() } }
-                        // Choice and slider rows use Left/Right to adjust, so the buttons are reached from the last row with Down
-                        val rowModifier = Modifier.focusRequester(requester).focusProperties {
-                            right = buttons()
-                            if (index == rows.lastIndex) down = buttons()
-                        }
-                        SettingRow(spec.icon, spec.label, value, rowModifier,
+                        SettingRow(spec.icon, spec.label, value, if (index == 0) Modifier.focusRequester(first) else Modifier,
                             description = if (spec.key == "seekbar_bitrate_kbps" && bitrateHint != null) "$source · $bitrateHint" else source,
                             descriptionColor = if (isCustom) colors.accent3 else null,
                             enabled = caps != null && stream.enabled(spec, caps), contextMenu = menu,
                             onFocused = { focusedKey = spec.key })
                     }
+                    // The one game-wide action closes the list, set apart from the settings; the list spacing adds 10 px on each side.
+                    item(key = "reset-all-gap") { Spacer(Modifier.height(20.px)) }
+                    item(key = "reset-all") {
+                        SettingRow(Symbols.RESET, "Reset all settings", RowValue.Action {
+                            game.resetAll()
+                            shell.showToast("All settings follow the profile again", Symbols.RESET)
+                        }, description = "This game follows your profile again", enabled = custom.isNotEmpty(),
+                            onFocused = { focusedKey = null })
+                    }
                 }
             }
         }
-        Column(Modifier.align(Alignment.TopEnd).padding(top = 100.px, end = 150.px, bottom = bottom.px).width(360.px).fillMaxHeight(),
+        // The cover starts at the top of the list; the help takes the rest of the column
+        Column(Modifier.align(Alignment.TopEnd).padding(top = SettingsLayout.LIST_TOP.px, end = SettingsLayout.TITLE_X.px, bottom = bottom.px)
+            .width(360.px).fillMaxHeight(),
             horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.px)) {
             val shape = RoundedCornerShape(24.px)
-            Box(Modifier.size(320.px, 480.px).clip(shape).background(colors.bg2).border(1.px, colors.line, shape)) {
+            Box(Modifier.size(260.px, 390.px).clip(shape).background(colors.bg2).border(1.px, colors.line, shape)) {
                 val image = cover ?: box
                 if (image != null) Image(image, screen.app.name, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-                else PlaceholderArt(art.hue, art.hue2, art.icon, Modifier.fillMaxSize(), glyphSize = 210f)
+                else PlaceholderArt(art.hue, art.hue2, art.icon, Modifier.fillMaxSize(), glyphSize = 180f)
             }
             val detail = focused?.let { SettingsHelp.details(it, values, caps?.choices(it, values) ?: it.choices) }
             Column(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 6.px),
@@ -222,24 +203,6 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
                         ?: "Only this game uses these changes. Everything else follows your profile.",
                         style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 19.tpx, lineHeight = 1.35.em))
                 }
-            }
-            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.px)) {
-                PillButton("Reset setting", Symbols.RESET, {
-                    focusedKey?.let { reset(it) }
-                    backToRows()
-                }, Modifier.fillMaxWidth().focusRequester(resetOne).focusProperties {
-                    left = lastRow() ?: FocusRequester.Default
-                    up = lastRow() ?: FocusRequester.Default
-                    if (canResetAll) down = resetAll
-                }, compact = true, enabled = focusedCustom)
-                PillButton("Reset all to profile", Symbols.RESET, {
-                    game.resetAll()
-                    shell.showToast("All settings follow the profile again", Symbols.RESET)
-                    backToRows()
-                }, Modifier.fillMaxWidth().focusRequester(resetAll).focusProperties {
-                    left = lastRow() ?: FocusRequester.Default
-                    up = if (canResetOne) resetOne else lastRow() ?: FocusRequester.Default
-                }, compact = true, enabled = custom.isNotEmpty())
             }
             BasicText("Saved automatically · applies next stream", style = TextStyle(color = colors.text3,
                 fontFamily = Figtree, fontSize = 16.tpx, textAlign = TextAlign.Center))
