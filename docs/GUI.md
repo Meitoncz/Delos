@@ -79,9 +79,8 @@ the home badges) and **Duration** from HowLongToBeat (Any, <10 h, 10–30 h, 30�
 filled with the accent; a choice applies at once (no confirmation) and the library behind the modal
 updates with it. D-pad up/down moves between the sections and the buttons, left/right within a row; a
 long genre list scrolls the panel (its top and bottom edges fade out) and keeps the focused chip in view.
-Focusing a genre chip reveals the top heading; duration chips and footer buttons reveal the bottom.
-Middle-section navigation retains normal chip scrolling. Content padding keeps the heading and end
-focus ring outside the fades, including at 125% text scale. **X** resets (the Reset button is
+The focused chip is kept 150 px from the top edge, so the first row scrolls the heading into view; the
+bottom padding keeps the last row's focus ring outside the fade, including at 125% text scale. **X** resets (the Reset button is
 disabled while nothing is filtered), and closing returns the focus to the game that was focused. While
 filters are active the home hint reads `Y Filter • N active`. Filters follow the active profile and
 combine across categories. Empty results say to press Y and keep a controller/touch reset action.
