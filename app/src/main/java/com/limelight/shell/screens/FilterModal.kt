@@ -128,6 +128,9 @@ private fun hdrFilterIcon(filter: HdrFilter): String? = when (filter) {
     HdrFilter.UNKNOWN -> Symbols.HELP
 }
 
+/** How close to a scroll edge (in pixels) a focused chip must be for the panel to snap to that edge. */
+private const val EDGE_SNAP_PX = 220
+
 private enum class FilterModalArea { GENRE, HDR, DURATION, FOOTER }
 private data class FilterModalFocus(val area: FilterModalArea, val choice: Int)
 
@@ -170,14 +173,19 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, re
     var focusedChoice by remember { mutableStateOf<FilterModalFocus?>(null) }
     val maximum = scroll.maxValue
     LaunchedEffect(focusedChoice, maximum, reducedMotion) {
-        val target = when (focusedChoice?.area) {
-            FilterModalArea.GENRE -> 0
-            FilterModalArea.DURATION, FilterModalArea.FOOTER -> maximum
+        if (focusedChoice == null || maximum == Int.MAX_VALUE) return@LaunchedEffect
+        // Let layout and the chip's normal bring-into-view request run before revealing an edge.
+        withFrameNanos { }
+        withFrameNanos { }
+        // A focused chip in the first or last rows is scrolled into view by the chip itself, which leaves the
+        // heading (or the footer) under the fade. Within one row of an edge, go all the way to it; a chip deep
+        // in a long genre grid keeps its own position.
+        val target = when {
+            scroll.value <= EDGE_SNAP_PX -> 0
+            maximum - scroll.value <= EDGE_SNAP_PX -> maximum
             else -> return@LaunchedEffect
         }
-        if (maximum == Int.MAX_VALUE) return@LaunchedEffect
-        // Let layout and the chip's normal bring-into-view request run before revealing the section edge.
-        withFrameNanos { }
+        if (target == scroll.value) return@LaunchedEffect
         if (reducedMotion) scroll.scrollTo(target) else scroll.animateScrollTo(target)
     }
 
