@@ -1,7 +1,8 @@
-package com.limelight.utils;
+package com.limelight;
 
 import android.app.ActivityManager;
 import android.app.ActivityOptions;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
@@ -10,15 +11,20 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.Display;
 
-import com.limelight.Game;
+import androidx.annotation.RequiresApi;
 
-/** Moves the stream and its external-display controller to the front, with a short debounce. */
-public final class ExternalDisplayFocus {
+import com.limelight.utils.ExternalDisplayControlActivity;
+
+public class StartExternalDisplayControlReceiver extends BroadcastReceiver {
     private static final long TIMEOUT_MS = 300;
     private static Handler handler = new Handler(Looper.getMainLooper());
     private static boolean isTimeoutActive = false;
 
-    private ExternalDisplayFocus() {}
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        requestFocusToGameActivity(true);
+    }
 
     public static void requestFocusToExternalDisplayControl(Context context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {

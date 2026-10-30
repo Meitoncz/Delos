@@ -1,6 +1,6 @@
 package com.limelight.utils;
 
-import static com.limelight.utils.ExternalDisplayFocus.requestFocusToGameActivity;
+import static com.limelight.StartExternalDisplayControlReceiver.requestFocusToGameActivity;
 import static com.limelight.utils.ServerHelper.getSecondaryDisplay;
 
 import android.annotation.SuppressLint;
