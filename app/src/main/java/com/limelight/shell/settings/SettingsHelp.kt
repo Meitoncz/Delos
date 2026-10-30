@@ -13,8 +13,19 @@ internal fun pyroWaveRecommendedBitrateKbps(values: Map<String, *>): Int? {
     )
 }
 
-/** English help for the shell. Keys and stored values still come from the preference catalog. */
+/**
+ * English help for the shell. Keys and stored values still come from the preference catalog.
+ *
+ * Texts are factual and short: what the setting does, what the selected value means, and the limits
+ * that matter. The settings screen's right box has a 432 px text width and about 372 px of height at
+ * 22 px / 1.45 line height: roughly 39 characters by 11 lines. Two thirds of that is about 7 lines;
+ * [LINE_CHARS] and [MAX_LINES] (the box capacity) are checked by the tests; the box scrolls beyond it.
+ * The per-game screen's smaller box also scrolls for the longest texts.
+ */
 object SettingsHelp {
+    const val LINE_CHARS = 39
+    const val MAX_LINES = 11
+
     fun description(key: String, fallback: String): String = descriptions[key] ?: fallback
 
     fun details(spec: SettingSpec, values: Map<String, *>, choices: List<SettingChoice> = spec.choices): String {
@@ -23,7 +34,7 @@ object SettingsHelp {
         val explanation = selected?.let { choice(spec.key, it.value) }.orEmpty()
         return listOfNotNull(
             selected?.takeIf { explanation.isNotBlank() }?.let { "${it.label}\n$explanation" },
-            "The saved choice is unavailable with the current codec or device. Select a supported choice to change it."
+            "The saved choice is unavailable here."
                 .takeIf { selected != null && selected !in choices },
             context(spec.key, values).takeIf { it.isNotBlank() },
             spec.description,
@@ -32,10 +43,10 @@ object SettingsHelp {
 
     /** Explanations follow the selected value, including resolutions and rates added by the device. */
     fun choice(key: String, value: String): String = choices[key]?.get(value) ?: when (key) {
-        "list_resolution" -> "Requests a ${value.replace("x", " × ")} video stream from the PC. More pixels improve fine detail but increase encoding, decoding and network demands. This is separate from the local upscaler's internal resolution."
-        "list_fps" -> "$value frames per second requested from the PC. Higher rates can improve motion and response, at a higher GPU, network and battery cost. The display can only show as many distinct frames as its refresh rate allows. Warp modes multiply this request."
-        "list_languages" -> if (value == "default") "Follow the Android language for translated stream messages and system-facing screens. The Delos shell currently uses English." else "Use this language for available translations of stream messages and system-facing screens. The Delos shell currently uses English."
-        "keyboard_axi_list" -> "One of five separately editable special-key layouts. Switching layouts keeps the other four. Import and reset act on the selected layout for this user profile."
+        "list_resolution" -> "Requests a ${value.replace("x", " × ")} stream from the PC. Local upscaling is separate."
+        "list_fps" -> "Requests $value FPS from the PC. Warp modes multiply it; the display shows no more frames than its refresh rate."
+        "list_languages" -> if (value == "default") "Follows the Android language." else "Uses this language where translations exist."
+        "keyboard_axi_list" -> "Edited on its own; switching keeps the other four. Import, export and reset act on it."
         else -> ""
     }
 
@@ -43,178 +54,177 @@ object SettingsHelp {
         val pyro = values["video_format"] == "pyrowave"
         return when {
             key == "seekbar_bitrate_kbps" -> pyroWaveRecommendedBitrateKbps(values)?.let {
-                "PyroWave recommends ${it / 1000} Mbps for the current resolution, frame rate and HDR setting."
+                "PyroWave recommends ${it / 1000} Mbps for the current resolution, FPS and HDR."
             }.orEmpty()
             key == "frame_pacing" && values["pref_low_latency_frame_balance"] == true && values[key] != "fast-vsync" ->
-                "LFR is enabled: MediaCodec uses its Balanced timing variant instead of the selected presentation mode. Warp's extra host frame-rate request still applies. Turn LFR off to compare the other timing modes directly."
-            key == "frame_pacing" && values[key] == "fast-vsync" -> "Fast V-Sync takes precedence over LFR. For H.264, HEVC and AV1; PyroWave has its own native presentation path."
+                "LFR is enabled: Balanced variant used."
+            key == "frame_pacing" && values[key] == "fast-vsync" -> "Fast V-Sync takes precedence over LFR."
             key in setOf("checkbox_async_decode", "checkbox_ultra_low_latency", "pref_low_latency_frame_balance") && pyro ->
-                "PyroWave uses its own Vulkan decoder. This MediaCodec option does not apply to it."
-            key == "list_sgsr_quality" && pyro -> "PyroWave supports all four modes in its native Vulkan renderer: SGSR 1 Standard, SGSR 1 High Quality, SGSR 2 Video and SGSR 2 Video Quality."
-            key == "checkbox_sgsr" && pyro -> "Native PyroWave upscaling supports HDR and all four modes offer live supersampling for native-resolution input."
+                "PyroWave uses its own Vulkan decoder; this MediaCodec option does not apply."
+            key == "list_sgsr_quality" && pyro -> "PyroWave supports all four modes natively."
             else -> ""
         }
     }
 
     private val descriptions = mapOf(
-        "list_resolution" to "The size of the video sent by the PC. Lower resolutions reduce load and bandwidth; higher resolutions preserve more detail. Your bitrate is preserved; only PyroWave recalculates it when resolution changes. Applies to the next stream.",
-        "list_fps" to "How many video frames the PC sends each second. Match it to your display and what the PC can sustain. Your bitrate is preserved; only PyroWave recalculates it when the rate changes. Applies to the next stream.",
-        "seekbar_bitrate_kbps" to "The requested video data rate in Mbps. Higher values reduce compression artifacts but need a stable connection. Excessive bitrate can cause stutter and packet loss. PyroWave needs much more bandwidth than H.264, HEVC or AV1. Applies to the next stream; Stream menu → Bitrate changes only the running session.",
-        "seekbar_metered_bitrate_kbps" to "Video bitrate when Android marks the active network as metered, such as mobile data or some hotspots. Zero uses one quarter of the normal video bitrate. Lower values save data at the expense of image quality. Applies to the next stream.",
-        "frame_pacing" to "How decoded frames reach the display: quicker delivery favors response, while paced delivery favors regular motion. The choices below explain each method. Warp Drive and Warp 2 may not work on every device. Applies to the next stream.",
-        "checkbox_async_decode" to "Let MediaCodec notify Delos when decoder buffers are ready instead of repeatedly polling for them. Independent of frame pacing; available for H.264, HEVC and AV1. Try it for responsiveness, and turn it off if decoding becomes unstable. Applies to the next stream.",
-        "pref_low_latency_frame_balance" to "A low-latency variant of Balanced pacing that polls the decoder more frequently and releases queued frames close to the next display refresh. It overrides other MediaCodec pacing choices except Fast V-Sync. Results depend on the device; it is separate from Ultra Low Latency. Applies to the next stream.",
-        "checkbox_ultra_low_latency" to "Try additional decoder-specific low-latency settings beyond the normal decoder setup. This is a MediaCodec option, separate from frame pacing and LFR. Support depends on the chip, codec and driver; it is not a guaranteed latency reduction. Turn it off if video becomes unstable. Applies to the next stream.",
-        "checkbox_use_virtual_display" to "Ask Vibepollo or Apollo to use a virtual PC display for streaming. With the host's virtual-display support configured, it can match the requested resolution and frame rate without changing your physical monitor. This is the PC's display, not a monitor attached to the Android device. Applies to the next stream.",
-        "checkbox_auto_orientation" to "Use the Android device's orientation when starting the stream. This chooses its initial portrait or landscape orientation; it does not rotate the PC desktop by itself.",
-        "checkbox_auto_invert_video_resolution" to "Swap the requested width and height for a portrait stream, for example 1920 × 1080 becomes 1080 × 1920. Requires Auto Orientation. The host must support the resulting resolution. Applies to the next stream.",
-        "checkbox_enable_view_top_center" to "Align a stream that does not fill the screen to the top center instead of the screen center. This changes where the picture appears, not its transmitted resolution. Applies to the next stream.",
-        "seekbar_resolution_scale_factor" to "Scale the resolution requested for the host's virtual display. At 150%, a 1920 × 1080 stream requests a 2880 × 1620 PC display while the transmitted video stays 1920 × 1080. Can improve detail in some games but increases PC rendering load. Requires compatible Vibepollo or Apollo virtual-display support. Separate from local supersampling. Applies to the next stream.",
-        "list_video_scale_mode" to "How the received picture fits your Android screen. This affects local presentation and touch coordinates, not the resolution sent over the network. Applies to the next stream.",
-        "edit_diy_w_h" to "Add a resolution to the Video resolution choices. Enter width x height, for example 1920x1080, then select it in Video resolution. The host and decoder must support it. A different aspect ratio can add black bars or require cropping.",
-        "edit_diy_bitrate" to "Enter a video bitrate in Mbps, including decimal values. Saving it also updates Video bitrate and can exceed the slider's range. A higher number cannot fix a slow connection. Applies to the next stream.",
-        "custom_refresh_rate" to "Add a custom FPS value to Video frame rate, then select it there. Decimal rates are allowed. The host, game, decoder and display determine what can actually be delivered and shown. Applies to the next stream.",
-        "checkbox_enforce_display_mode" to "Ask Android more strongly to use the selected display mode for the stream surface. Useful on devices that otherwise ignore refresh-rate requests. Some firmware, including Chromecast 4K, may behave poorly with it. Applies to the next stream.",
-        "checkbox_enable_hdr" to "Request HDR video. The game, host GPU, decoder and connected display must all support HDR. Supported paths include ten-bit HEVC, AV1 and PyroWave; the final format is negotiated with the host. It cannot turn SDR content into HDR. Applies to the next stream; changing it also recalculates PyroWave's suggested bitrate.",
-        "checkbox_enable_fullexdisplay" to "Show the stream on an attached monitor or TV, with the Delos loader and stream menu there too. The configured stream resolution and FPS remain in use; Android chooses a compatible display mode. Built-in handheld controls can operate the external-screen menu. HDR requires a compatible display and connection. Applies to the next stream.",
-        "checkbox_sgsr" to "Reconstruct a lower-resolution stream to the display size on this device. H.264, HEVC, AV1 and PyroWave offer SGSR 1 and SGSR 2 Video. HDR is supported on compatible output paths. Uses extra GPU time and cannot restore detail missing from the source. At native resolution supported modes offer supersampling instead. Saved defaults apply to the next stream; live menu changes last for that session.",
-        "list_sgsr_quality" to "Choose the reconstruction method, independently of final sharpness. SGSR 1 processes one frame; SGSR 2 Video estimates motion and combines reliable history. Moving text, scene changes and low-resolution input can affect the result. All modes add GPU work. Saved defaults apply to the next stream; the stream menu can switch modes live.",
-        "seekbar_sgsr_sharpness" to "Strength of the separate final sharpening pass, independently of reconstruction mode. Zero disables that sharpening, not SGSR reconstruction. High values can emphasize edges and compression artifacts. Available for MediaCodec and PyroWave. Saved defaults apply to the next stream; live changes affect only that session.",
-        "list_audio_config" to "The audio channels requested from the PC. Use Stereo for handheld speakers and most headphones. Surround needs a compatible host configuration and playback system. This is channel layout, not a volume control. Applies to the next stream.",
-        "checkbox_enable_audiofx" to "Allow Android's system equalizer and other audio effects to process streamed sound. Can add audio delay; leave off when minimizing latency matters more than system effects. Applies to the next stream.",
-        "checkbox_host_audio" to "Play the game's sound on the PC as well as this device. Disable it to keep the PC speakers quiet while streaming. Applies to the next stream.",
-        "seekbar_deadzone" to "Ignore small stick movements near the center to reduce drift. Positive values create a dead zone; negative values compensate for an existing controller dead zone and can make centering difficult. Start near zero and adjust to your controller. Applies to the next stream.",
-        "checkbox_multi_controller" to "Report gamepad connections to the PC as controllers appear or disappear. When off, Delos keeps a gamepad present even when Android has not detected one. Useful for games that need a controller at launch. Applies to the next stream.",
-        "checkbox_usb_driver" to "Use the Delos USB driver for supported Xbox and Nintendo Pro controllers that Android cannot handle natively. USB access may require Android's permission prompt. Bluetooth controllers still use Android's input system. Applies to the next stream.",
-        "checkbox_usb_bind_all" to "Let the Delos USB driver claim supported controllers even when Android already supports them. Requires the USB driver option. Use it to work around native-driver problems; it can change which controller features are available. Applies to the next stream.",
-        "checkbox_mouse_emulation" to "Hold Start during a stream to switch the gamepad between normal game input and mouse emulation. The selected analog scrolling option controls scrolling in mouse mode. Applies to the next stream.",
-        "analog_scrolling" to "Choose which stick scrolls the PC page while the gamepad is in mouse-emulation mode. Does not change stick input during normal gamepad use. Applies to the next stream.",
-        "checkbox_flip_face_buttons" to "Swap A with B and X with Y for gamepad input and on-screen controls. Useful when matching Nintendo-style face-button positions. This is stream input, separate from navigating the Delos interface. Applies to the next stream.",
-        "checkbox_gamepad_touchpad_as_mouse" to "Always use a connected controller's touchpad as a PC mouse, including when the emulated host controller has a touchpad of its own. Leave off to let supported hosts use native touchpad input. Applies to the next stream.",
-        "checkbox_gamepad_motion_sensors" to "Allow supported hosts to receive a connected gamepad's motion sensors. Requires a compatible controller and Android version. Disable it if you do not use motion controls or want to reduce sensor traffic. Applies to the next stream.",
-        "checkbox_gamepad_motion_fallback" to "Use this device's motion sensors when the connected controller or Android cannot supply controller motion. The host may see an emulated PlayStation controller. Requires device motion sensors. Applies to the next stream.",
-        "checkbox_force_device_motion" to "Use this device's motion sensors even when the connected gamepad reports working sensors. Useful for handheld aiming with an external controller connected. Requires the motion fallback setting. Applies to the next stream.",
-        "checkbox_enable_joyconfix" to "Enable a compatibility path for Switch Joy-Con controllers with missing or incorrectly recognized buttons. Leave off if the controllers already work correctly. Applies to the next stream.",
-        "checkbox_gamepad_enable_battery_report" to "Report supported gamepad battery information to the host. Disable it as a troubleshooting step if battery polling coincides with stutter in touch, mouse or stylus input. Not all controllers expose battery data. Applies to the next stream.",
-        "checkbox_enable_rumble" to "Send host rumble feedback to supported gamepads. The controller, connection and Android driver determine which vibration effects work. Device vibration is configured separately. Applies to the next stream.",
-        "checkbox_vibrate_fallback" to "Use the handheld's vibration motor for game rumble when the connected gamepad cannot provide it. This is game feedback, separate from interface haptics. Requires a device vibration motor. Applies to the next stream.",
-        "checkbox_enable_device_rumble" to "Use the handheld's vibration motor even when a connected controller supports rumble. Does not override controllers handled by the built-in USB driver. Requires device vibration support. Applies to the next stream.",
-        "seekbar_vibrate_fallback_strength" to "Adjust how strongly this device vibrates for emulated game rumble. This does not change interface haptics or an external controller's own motor strength. Requires a device with amplitude control. Applies to the next stream.",
-        "mouse_mode_list" to "How touchscreen gestures become PC input. The selected mode below explains its gestures. Stylus input remains available when touch is disabled. External-display streaming uses the handheld as a natural trackpad. Applies to the next stream; Mouse mode in the stream menu can change the running session.",
-        "checkbox_remember_mouse_mode" to "Save mouse-mode changes made during a stream for later sessions. When off, stream-menu changes are temporary and the next stream starts with the saved touchscreen mode.",
-        "checkbox_mouse_local_cursor" to "Show Android's local pointer for a physical mouse instead of keeping it captured and hidden. This is the pointer on this device; it does not hide the cursor drawn by the PC in the streamed image. Applies to the next stream.",
-        "checkbox_multi_touch_gestures" to "In multi-touch mode, three-finger tap opens the system keyboard, four-finger tap the full keyboard and five-finger tap the stream menu. These gestures are separate from the configurable controller menu shortcut and edge swipe. Applies to the next stream.",
-        "checkbox_mouse_nav_buttons" to "Forward physical mouse Back and Forward buttons to the PC. Some Android devices misreport these buttons, so disable it if right-clicking or navigation behaves incorrectly. Applies to the next stream.",
-        "checkbox_absolute_mouse_mode" to "Use desktop-style absolute mouse positioning instead of relative game-style movement. Can make remote desktop work more natural, but many games require relative input. Applies to the next stream.",
-        "seekbar_trackpad_sensitivity_x" to "Horizontal sensitivity for physical trackpad input. Larger magnitudes move the pointer farther; negative values reverse horizontal movement. Separate from touchscreen and virtual-touchpad sensitivity. Applies to the next stream.",
-        "seekbar_trackpad_sensitivity_y" to "Vertical sensitivity for physical trackpad input. Larger magnitudes move the pointer farther; negative values reverse vertical movement. Separate from touchscreen and virtual-touchpad sensitivity. Applies to the next stream.",
-        "checkbox_trackpad_drag_drop_vibration" to "Vibrate when a hold activates drag-and-drop on supported Samsung trackpads. Does not add vibration to all ordinary mouse clicks. Applies to the next stream.",
-        "seekbar_trackpad_drag_drop_threshold" to "How long to hold on a supported Samsung trackpad before a drag begins. Shorter holds react sooner but may start an unwanted drag. Applies to the next stream.",
-        "checkbox_trackpad_swap_axis" to "Exchange horizontal and vertical physical trackpad input. A compatibility fix for devices that report a rotated trackpad; leave off when movement already follows your fingers. Applies to the next stream.",
-        "checkbox_force_qwerty" to "Use QWERTY key translation for stream input. Disable it when using another keyboard layout with a compatible host. Some legacy hosts require QWERTY. This does not change the layout of the Delos menus. Applies to the next stream.",
-        "checkbox_right_alt_as_meta" to "Send Right Alt as the Mac Command key, including key combinations. Left Alt stays unchanged. Intended for streaming a Mac desktop. Applies to the next stream.",
-        "checkbox_ignore_synth_events" to "Ignore synthetic Android input events. Can avoid accidental extra keys from buggy mouse or input drivers, but also prevents normal system soft-keyboard input. Leave off unless troubleshooting that issue. Applies to the next stream.",
-        "checkbox_enable_commit_text" to "Forward text produced in chunks by Android keyboards, such as swipe typing, predictions and voice dictation. Useful on the desktop; some games expect individual key presses and may not accept it. Applies to the next stream.",
-        "checkbox_smart_clipboard_sync" to "Upload this device's clipboard when the stream starts or regains focus; fetch the PC clipboard when the stream loses focus. Requires Vibepollo or Apollo clipboard support. For manual transfer, use Send clipboard or Get clipboard in the stream menu. Applies to the next stream.",
-        "checkbox_smart_clipboard_sync_toast" to "Show a brief message when automatic clipboard transfer completes or fails. Does not enable clipboard synchronization by itself. Applies to the next stream.",
-        "checkbox_hide_clipboard_content" to "Mark clipboard content received from the PC as sensitive so compatible Android versions avoid displaying its preview. This does not encrypt or disable clipboard transfer. Applies to the next stream.",
-        "seekbar_keyboard_axi_opacity" to "Opacity of the full on-screen keyboard. Lower values reveal more of the game underneath; higher values make keys easier to read. Separate from the virtual gamepad opacity. Applies to the next stream.",
-        "onscreen_keyboard_autofit" to "Disable automatic fitting of the full keyboard so the saved width, height and alignment can be used. Turn it off again to let the keyboard fit the viewport automatically. Applies to the next stream.",
-        "seekbar_onscreen_keyboard_height" to "Height of the full on-screen keyboard when automatic fitting is disabled. More height makes keys larger but covers more of the game. Applies to the next stream.",
-        "seekbar_onscreen_keyboard_width" to "Width of the full on-screen keyboard when automatic fitting is disabled. Choose a width that leaves the keyboard reachable on your screen. Applies to the next stream.",
-        "list_onscreen_keyboard_align_mode" to "Where the full on-screen keyboard is anchored horizontally within the viewport. Used with its manual size settings. Applies to the next stream.",
-        "checkbox_enable_sticky_modifier_key_virtual_keyboard" to "Keep virtual Shift, Ctrl, Alt and similar modifiers active after tapping them so combinations can be entered one key at a time. Applies to the full and custom on-screen keyboards. Applies to the next stream.",
-        "checkbox_disable_warnings" to "Hide on-screen connection-quality warning messages during streaming. This only hides warnings; it does not fix the network or remove the performance statistics. Applies to the next stream.",
-        "checkbox_remember_zoom_pan" to "Save the stream picture's zoom and pan position for future sessions. When off, those adjustments are temporary. Use Zoom in the stream menu to adjust the picture.",
-        "checkbox_enable_pip" to "Allow the stream to remain visible in Android Picture-in-Picture when multitasking. It is an observer view: game control is not available inside the small window. Requires device and firmware support. Applies to the next stream.",
-        "checkbox_show_onscreen_controls" to "Show the virtual gamepad over the stream for touchscreen play. Its layout, visibility rules and opacity are configured below. The stream menu can toggle it for the running session. Applies to the next stream.",
-        "checkbox_hide_osc_when_has_gamepad" to "Hide the virtual gamepad when Android detects a physical controller. The saved on-screen layout remains available when that controller disconnects. Applies to the next stream.",
-        "checkbox_vibrate_osc" to "Give local vibration feedback for virtual gamepad buttons. This is touch feedback, separate from game rumble and interface haptics. Requires a vibration motor. Applies to the next stream.",
-        "checkbox_only_show_L3R3" to "Show only the two virtual stick-click buttons, L3 and R3, instead of the full virtual gamepad. Useful when a controller lacks convenient stick clicks. Applies to the next stream.",
-        "checkbox_show_guide_button" to "Include the Guide/Home button in the virtual gamepad. Its action depends on the host and the game platform. Applies to the next stream.",
-        "seekbar_osc_opacity" to "Opacity of virtual gamepad and custom special-key controls. Lower values reveal the game; higher values make buttons easier to see. Separate from full-keyboard opacity. Applies to the next stream.",
-        "checkbox_enable_analog_stick_new" to "Allow virtual stick centers to move within their interaction area instead of staying at fixed positions. Can make touch control more comfortable. Applies to the next stream.",
-        "seekbar_osc_free_analog_stick_opacity" to "Visibility of the virtual free-stick background when it is not moving. A low value keeps the picture clearer; a higher value makes the stick's area easier to find. Applies to the next stream.",
-        "option_reset_osc_preference" to "Immediately restore the current profile's virtual gamepad layout to its default sizes and positions. Custom placement is replaced. Other user profiles are kept.",
-        "checkbox_enable_keyboard" to "Show the custom special-key layer over the stream. It is separate from the full keyboard and uses the selected layout profile below. Its opacity follows the virtual gamepad. Applies to the next stream.",
-        "checkbox_enable_clear_default_special_button" to "Hide the built-in key combinations from the stream menu's Send keys list, leaving your imported custom commands. Does not disable the normal keyboard. Applies to the next stream.",
-        "checkbox_vibrate_keyboard" to "Vibrate locally when tapping custom on-screen keyboard buttons. This is touch feedback rather than rumble sent by the game. Requires a vibration motor. Applies to the next stream.",
-        "keyboard_axi_list" to "Choose which of the current user profile's five special-key layouts is active. Each can be edited separately. Import, export and reset use the selected layout. Applies to the next stream.",
-        "checkbox_enable_keyboard_square" to "Draw ordinary custom special-key buttons as squares instead of circles. Changes their appearance, not which keys they send. Applies to the next stream.",
-        "option_reset_osc" to "Immediately restore the selected special-key layout to its defaults. Custom buttons and positions in that layout are replaced. Other layouts and user profiles are kept.",
-        "import_keyboard_file" to "Choose a keyboard-layout file with Android's file picker. Import replaces the current profile's selected special-key layout. Export that layout first if you want a backup.",
-        "export_keyboard_file" to "Save the current profile's selected special-key layout to a file using Android's file picker. Use the file as a backup or import it on another device.",
-        "checkbox_enable_touch_sensitivity" to "Apply extra sensitivity scaling to touchscreen game input. The axis controls below adjust horizontal and vertical movement. Separate from physical trackpad and virtual mouse-trackpad sensitivity. Applies to the next stream; the menu can toggle it live.",
-        "checkbox_enable_global_touch_sensitivity" to "Apply touchscreen sensitivity scaling across the whole screen. When off, only the right half is affected, leaving the other half suitable for movement controls. Requires touchscreen sensitivity. Applies to the next stream.",
-        "checkbox_enable_touch_sensitivity_rotation_auto" to "Recenter scaled touch coordinates when they run beyond the screen boundary, so high-sensitivity dragging can continue. Can help camera movement in touch-controlled games. Requires touchscreen sensitivity. Applies to the next stream.",
-        "seekbar_touch_sensitivity_opacity_x" to "Horizontal sensitivity for multi-touch game input. Higher values turn a small finger movement into a larger in-game movement. Requires touchscreen sensitivity. Applies to the next stream.",
-        "seekbar_touch_sensitivity_opacity_y" to "Vertical sensitivity for multi-touch game input. Higher values turn a small finger movement into a larger in-game movement. Requires touchscreen sensitivity. Applies to the next stream.",
-        "seekbar_touchpad_sensitivity_opacity" to "Horizontal pointer sensitivity shared by touchscreen trackpad mode and custom virtual touchpad controls. These two input methods can feel different at the same value. Separate from physical trackpad sensitivity. Applies to the next stream.",
-        "seekbar_touchpad_sensitivity_y_opacity" to "Vertical pointer sensitivity shared by touchscreen trackpad mode and custom virtual touchpad controls. These two input methods can feel different at the same value. Separate from physical trackpad sensitivity. Applies to the next stream.",
-        "checkbox_enable_perf_overlay" to "Show stream statistics, including FPS, 1% low FPS, bitrate, packet loss and latency measurements. Total latency combines measured network, host and local processing time; it is not complete button-to-screen latency. The stream menu cycles full, compact and off. Applies to the next stream.",
-        "checkbox_enable_perf_overlay_lite" to "Use a single compact statistics line at the top center instead of the full panel. The full panel's corner is set separately. The stream menu's Overlay button cycles full, compact and off. Applies to the next stream.",
-        "video_format" to "How the PC encodes streamed video. Select a codec below to see its compatibility and bandwidth tradeoffs. The host and decoder must both support it; the performance overlay reports the format actually in use. Each codec remembers its bitrate when you leave it and restores that value when you return. First use of PyroWave calculates its recommendation; resolution, FPS and HDR edits while on PyroWave recalculate it. For another codec without a saved value, ordinary codec changes preserve bitrate; leaving PyroWave uses the normal profile default or resumes per-game inheritance. Applies to the next stream.",
-        "checkbox_unlock_fps" to "Show frame-rate choices above the display's detected capability. Extra host frames can improve freshness in some modes but increase load and cannot raise the screen's physical refresh rate. Applies to the next stream.",
-        "checkbox_reduce_refresh_rate" to "Allow Android to choose a lower display refresh rate when suitable for the stream. Can reduce power use, at the cost of slower presentation in some cases. Separate from the requested video FPS. Applies to the next stream.",
-        "checkbox_full_range" to "Request full-range video levels instead of the normal limited range. Only enable when the host and display path interpret those levels correctly; a mismatch can crush blacks and bright details. This is separate from HDR and is not a general image-quality upgrade. Applies to the next stream.",
-        "checkbox_prevent_packet_loss" to "Send a small control packet approximately every 20 ms while connected, to discourage Wi-Fi power saving between transfers. Separate from Android's Wi-Fi locks. May help device-specific unexplained packet loss; it cannot recover lost packets or fix weak signal and congestion. Applies to the next stream.",
-        "list_languages" to "Language for translated stream messages and system-facing screens. The new Delos shell, settings help and menus currently use English.",
-        "import_special_button_file" to "Import custom key combinations for Send keys and the special-key controls. Import replaces the current profile's custom command configuration. This is separate from importing button positions with Import keyboard layout.",
-        "option_help_custom_keys" to "Open instructions for the supported custom-key file format and key combinations. Use Import Custom Keys to load the resulting file.",
-        "pref_debug_info" to "Open device and controller diagnostics without starting a stream. Inspect Android, kernel and device details, controller IDs and sensors, test vibration, and preview or edit on-screen controls. No game is launched.",
-        "ui_match_game_colors" to "Use three colors extracted from the selected game's cover for the animated background. Falls back to artwork from the PC when needed. Requires Material You colors to be off. This changes background colors, not the game picture.",
+        "list_resolution" to "Resolution of the video the PC sends. More pixels mean more detail and more encoding, decoding and bandwidth load. Applies next stream.",
+        "list_fps" to "Frames per second the PC sends. Match your display and what the PC sustains. Applies next stream.",
+        "seekbar_bitrate_kbps" to "Requested video bitrate in Mbps. Higher reduces artifacts but needs a stable link; too high causes stutter and packet loss. Applies next stream; Stream menu → Bitrate changes only the running session.",
+        "seekbar_metered_bitrate_kbps" to "Video bitrate on a metered network (mobile data, some hotspots). 0 uses a quarter of the normal bitrate. Applies next stream.",
+        "frame_pacing" to "How frames reach the display. Warp Drive and Warp 2 may not work on every device. Applies next stream.",
+        "checkbox_async_decode" to "MediaCodec signals ready buffers with callbacks instead of polling. H.264, HEVC and AV1 only; independent of frame pacing. Turn off if decoding is unstable. Applies next stream.",
+        "pref_low_latency_frame_balance" to "Balanced pacing that polls the decoder more often and releases frames near the next refresh. Overrides other MediaCodec pacing except Fast V-Sync. Device-dependent; separate from Ultra Low Latency. Applies next stream.",
+        "checkbox_ultra_low_latency" to "Extra decoder-specific low-latency options (MediaCodec only). Gain depends on chip, codec and driver. Turn off if video is unstable. Applies next stream.",
+        "checkbox_use_virtual_display" to "Asks Vibepollo or Apollo for a virtual PC display matching the requested resolution and FPS, leaving your physical monitor unchanged. Needs host virtual-display support. Applies next stream.",
+        "checkbox_auto_orientation" to "Starts the stream in the device's current portrait or landscape orientation. Does not rotate the PC desktop. Applies next stream.",
+        "checkbox_auto_invert_video_resolution" to "Swaps width and height for a portrait stream (1920 × 1080 becomes 1080 × 1920). Needs Auto Orientation; the host must support the result. Applies next stream.",
+        "checkbox_enable_view_top_center" to "Aligns a stream that does not fill the screen to the top center instead of the middle. Transmitted resolution is unchanged. Applies next stream.",
+        "seekbar_resolution_scale_factor" to "Scales the host virtual display: at 150%, a 1920 × 1080 stream renders a 2880 × 1620 PC display but still transmits 1920 × 1080. Costs PC GPU load; needs Vibepollo or Apollo virtual display. Separate from local supersampling. Applies next stream.",
+        "list_video_scale_mode" to "How the picture fits your screen. Affects local presentation and touch mapping, not the network resolution. Applies next stream.",
+        "edit_diy_w_h" to "Adds a resolution to Video resolution: enter width x height (1920x1080), then select it there. Host and decoder must support it; another aspect ratio adds black bars or cropping.",
+        "edit_diy_bitrate" to "Sets the video bitrate in Mbps; decimals allowed, values above the slider's range allowed. Also updates Video bitrate. Applies next stream.",
+        "custom_refresh_rate" to "Adds a custom FPS (decimals allowed) to Video frame rate; select it there. Host, game, decoder and display limit what is delivered and shown. Applies next stream.",
+        "checkbox_enforce_display_mode" to "Asks Android firmly to use the selected display mode for the stream surface. Helps devices that ignore refresh-rate requests; may misbehave on some firmware, e.g. Chromecast 4K. Applies next stream.",
+        "checkbox_enable_hdr" to "Requests HDR video. Needs game, host GPU, decoder and display support (10-bit HEVC, AV1 or PyroWave); the format is negotiated with the host. Cannot turn SDR content into HDR. Applies next stream.",
+        "checkbox_enable_fullexdisplay" to "Shows the stream, loader and stream menu on an attached monitor or TV, keeping the configured resolution and FPS; Android picks a compatible display mode. Handheld controls operate the menu. HDR needs a compatible display. Applies next stream.",
+        "checkbox_sgsr" to "Upscales a lower-resolution stream to the display size on this device (H.264, HEVC, AV1, PyroWave; HDR supported). Costs GPU time; cannot add missing detail. Native-resolution input gets supersampling instead. Defaults apply next stream; menu changes last one session.",
+        "list_sgsr_quality" to "Reconstruction method (MediaCodec and PyroWave); all add GPU work. Menu changes apply live.",
+        "seekbar_sgsr_sharpness" to "Final sharpening pass, separate from the reconstruction mode (MediaCodec and PyroWave). 0 turns off sharpening only. High values emphasize edges and artifacts. Defaults apply next stream; menu changes last one session.",
+        "list_audio_config" to "Audio channels requested from the PC. Surround needs host and playback support. Applies next stream.",
+        "checkbox_enable_audiofx" to "Lets Android's system equalizer and audio effects process stream audio. May add delay; leave off for the lowest latency. Applies next stream.",
+        "checkbox_host_audio" to "Plays game audio on the PC as well as this device. Turn off to keep the PC speakers quiet. Applies next stream.",
+        "seekbar_deadzone" to "Positive values ignore small stick movement near center (drift); negative values offset a controller's own dead zone and can make centering hard. Applies next stream.",
+        "checkbox_multi_controller" to "Reports gamepads to the PC as they connect or disconnect. When off, one gamepad always stays present, even if Android sees none; useful for games that need a controller at launch. Applies next stream.",
+        "checkbox_usb_driver" to "Uses the Delos USB driver for supported Xbox and Nintendo Pro controllers that Android cannot handle natively; may show a USB permission prompt. Bluetooth controllers are unaffected. Applies next stream.",
+        "checkbox_usb_bind_all" to "Lets the Delos USB driver also claim controllers Android supports natively. Needs the USB driver option. A workaround for native-driver problems; can change available controller features. Applies next stream.",
+        "checkbox_mouse_emulation" to "Hold Start during a stream to switch the gamepad between game input and mouse emulation. Scrolling follows Analog scrolling. Applies next stream.",
+        "analog_scrolling" to "Stick that scrolls in gamepad mouse mode; normal stick input is unchanged. Applies next stream.",
+        "checkbox_flip_face_buttons" to "Swaps A/B and X/Y for gamepad input and on-screen controls, for Nintendo-style layouts. Stream input only, not Delos navigation. Applies next stream.",
+        "checkbox_gamepad_touchpad_as_mouse" to "Always uses a controller's touchpad as a PC mouse, even if the emulated host controller has its own touchpad. Off lets supported hosts receive native touchpad input. Applies next stream.",
+        "checkbox_gamepad_motion_sensors" to "Lets supported hosts receive the gamepad's motion sensors. Needs a compatible controller and Android version. Turn off to cut sensor traffic. Applies next stream.",
+        "checkbox_gamepad_motion_fallback" to "Uses this device's motion sensors when the controller or Android supplies none; the host may see an emulated PlayStation controller. Needs device sensors. Applies next stream.",
+        "checkbox_force_device_motion" to "Uses this device's motion sensors even when the gamepad reports working ones, e.g. handheld aiming with an external controller. Needs the motion fallback. Applies next stream.",
+        "checkbox_enable_joyconfix" to "Compatibility path for Joy-Cons with missing or misrecognized buttons. Leave off if they work. Applies next stream.",
+        "checkbox_gamepad_enable_battery_report" to "Reports supported gamepad battery status to the host. Turn off if battery polling coincides with stutter in touch, mouse or stylus input; not all controllers expose it. Applies next stream.",
+        "checkbox_enable_rumble" to "Sends host rumble to supported gamepads; controller, connection and Android driver decide which effects work. Device vibration is separate. Applies next stream.",
+        "checkbox_vibrate_fallback" to "Uses the handheld's vibration motor for game rumble when the gamepad cannot. Not interface haptics. Needs a vibration motor. Applies next stream.",
+        "checkbox_enable_device_rumble" to "Uses the handheld's vibration motor even when a connected controller supports rumble. Does not override controllers on the built-in USB driver. Applies next stream.",
+        "seekbar_vibrate_fallback_strength" to "Strength of this device's vibration for emulated game rumble. Does not affect interface haptics or a controller's own motor. Needs amplitude control. Applies next stream.",
+        "mouse_mode_list" to "How touch becomes PC input; stylus works even with touch off. Applies next stream; stream menu → Mouse mode changes the running session.",
+        "checkbox_remember_mouse_mode" to "Saves mouse-mode changes made in a stream for later sessions. When off, they last only that stream.",
+        "checkbox_mouse_local_cursor" to "Shows Android's pointer for a physical mouse instead of capturing and hiding it. Does not hide the cursor the PC draws in the video. Applies next stream.",
+        "checkbox_multi_touch_gestures" to "In multi-touch mode: a three-finger tap opens the system keyboard, four fingers the full keyboard, five the stream menu. Separate from the controller menu shortcut and edge swipe. Applies next stream.",
+        "checkbox_mouse_nav_buttons" to "Forwards a physical mouse's Back and Forward buttons to the PC. Turn off if right-click or navigation misbehaves on devices that misreport them. Applies next stream.",
+        "checkbox_absolute_mouse_mode" to "Desktop-style absolute positioning instead of relative game movement. Suits remote desktop; many games need relative input. Applies next stream.",
+        "seekbar_trackpad_sensitivity_x" to "Horizontal sensitivity of a physical trackpad. Larger magnitude moves farther; negative reverses. Separate from touchscreen and virtual-touchpad sensitivity. Applies next stream.",
+        "seekbar_trackpad_sensitivity_y" to "Vertical sensitivity of a physical trackpad. Larger magnitude moves farther; negative reverses. Separate from touchscreen and virtual-touchpad sensitivity. Applies next stream.",
+        "checkbox_trackpad_drag_drop_vibration" to "Vibrates when a hold starts drag-and-drop on supported Samsung trackpads; not for ordinary clicks. Applies next stream.",
+        "seekbar_trackpad_drag_drop_threshold" to "Hold time on a supported Samsung trackpad before a drag starts. Shorter reacts sooner but may start unwanted drags. Applies next stream.",
+        "checkbox_trackpad_swap_axis" to "Swaps horizontal and vertical physical trackpad input, for devices that report a rotated trackpad. Leave off if movement already follows your fingers. Applies next stream.",
+        "checkbox_force_qwerty" to "Uses QWERTY key translation for stream input. Turn off for another layout with a compatible host; some legacy hosts need QWERTY. Does not affect Delos menus. Applies next stream.",
+        "checkbox_right_alt_as_meta" to "Sends Right Alt as the Mac Command key, including combinations; Left Alt is unchanged. For streaming a Mac. Applies next stream.",
+        "checkbox_ignore_synth_events" to "Ignores synthetic Android input events. Can stop stray keys from buggy mouse or input drivers, but also blocks soft-keyboard input. Leave off unless troubleshooting. Applies next stream.",
+        "checkbox_enable_commit_text" to "Forwards text that Android keyboards produce in chunks (swipe typing, predictions, dictation). Good on the desktop; some games expect single key presses. Applies next stream.",
+        "checkbox_smart_clipboard_sync" to "Uploads this device's clipboard when the stream starts or regains focus; fetches the PC clipboard when it loses focus. Needs Vibepollo or Apollo clipboard support. Manual: Send or Get clipboard in the stream menu. Applies next stream.",
+        "checkbox_smart_clipboard_sync_toast" to "Shows a brief message when automatic clipboard transfer succeeds or fails. Does not enable synchronization itself. Applies next stream.",
+        "checkbox_hide_clipboard_content" to "Marks clipboard content from the PC as sensitive so compatible Android versions hide its preview. Does not encrypt or disable transfer. Applies next stream.",
+        "seekbar_keyboard_axi_opacity" to "Opacity of the full on-screen keyboard. Separate from virtual gamepad opacity. Applies next stream.",
+        "onscreen_keyboard_autofit" to "Turns off automatic fitting of the full keyboard so the saved width, height and alignment apply. Applies next stream.",
+        "seekbar_onscreen_keyboard_height" to "Height of the full on-screen keyboard when automatic fitting is off. Taller means larger keys but more of the game covered. Applies next stream.",
+        "seekbar_onscreen_keyboard_width" to "Width of the full on-screen keyboard when automatic fitting is off; keep it reachable on your screen. Applies next stream.",
+        "list_onscreen_keyboard_align_mode" to "Horizontal anchor of the manually sized full keyboard in the viewport. Applies next stream.",
+        "checkbox_enable_sticky_modifier_key_virtual_keyboard" to "Keeps virtual Shift, Ctrl, Alt and similar modifiers active after a tap, so combinations can be entered one key at a time. Full and custom on-screen keyboards. Applies next stream.",
+        "checkbox_disable_warnings" to "Hides on-screen connection-quality warnings during streaming. Does not fix the network or remove statistics. Applies next stream.",
+        "checkbox_remember_zoom_pan" to "Saves the stream's zoom and pan for later sessions. When off, adjustments last only that stream. Adjust with Zoom in the stream menu.",
+        "checkbox_enable_pip" to "Keeps the stream visible in Android Picture-in-Picture while multitasking. View only: no game control in the small window. Needs device and firmware support. Applies next stream.",
+        "checkbox_show_onscreen_controls" to "Shows the virtual gamepad over the stream for touch play; layout and opacity are set below. The stream menu toggles it for the session. Applies next stream.",
+        "checkbox_hide_osc_when_has_gamepad" to "Hides the virtual gamepad while Android detects a physical controller; it returns when the controller disconnects. Applies next stream.",
+        "checkbox_vibrate_osc" to "Local vibration when pressing virtual gamepad buttons. Touch feedback, not game rumble or interface haptics. Needs a vibration motor. Applies next stream.",
+        "checkbox_only_show_L3R3" to "Shows only the virtual L3 and R3 stick-click buttons instead of the full gamepad. Applies next stream.",
+        "checkbox_show_guide_button" to "Adds the Guide/Home button to the virtual gamepad; its action depends on host and platform. Applies next stream.",
+        "seekbar_osc_opacity" to "Opacity of the virtual gamepad and custom special-key controls. Separate from full-keyboard opacity. Applies next stream.",
+        "checkbox_enable_analog_stick_new" to "Lets virtual stick centers move within their interaction area instead of staying fixed. Applies next stream.",
+        "seekbar_osc_free_analog_stick_opacity" to "Visibility of the free virtual stick's background while idle. Low keeps the picture clearer; high makes the area easier to find. Applies next stream.",
+        "option_reset_osc_preference" to "Restores this profile's virtual gamepad to default sizes and positions at once, replacing custom placement. Other profiles are kept.",
+        "checkbox_enable_keyboard" to "Shows the custom special-key layer over the stream, using the selected layout below. Separate from the full keyboard; opacity follows the virtual gamepad. Applies next stream.",
+        "checkbox_enable_clear_default_special_button" to "Hides the built-in key combinations from the stream menu's Send keys, leaving your imported commands. The normal keyboard stays. Applies next stream.",
+        "checkbox_vibrate_keyboard" to "Local vibration when tapping custom on-screen keyboard buttons; not game rumble. Needs a vibration motor. Applies next stream.",
+        "keyboard_axi_list" to "Chooses the active one of this profile's five special-key layouts. Applies next stream.",
+        "checkbox_enable_keyboard_square" to "Draws custom special-key buttons as squares instead of circles; the keys sent are unchanged. Applies next stream.",
+        "option_reset_osc" to "Restores the selected special-key layout to defaults at once, replacing its custom buttons and positions. Other layouts and profiles are kept.",
+        "import_keyboard_file" to "Replaces the selected special-key layout with a file chosen in Android's picker. Export first for a backup.",
+        "export_keyboard_file" to "Saves the selected special-key layout to a file via Android's picker, as a backup or for another device.",
+        "checkbox_enable_touch_sensitivity" to "Extra sensitivity scaling for touchscreen game input, set by the axis sliders below. Separate from trackpad and virtual-touchpad sensitivity. Applies next stream; the stream menu toggles it live.",
+        "checkbox_enable_global_touch_sensitivity" to "Applies touch sensitivity to the whole screen; when off, only to the right half, leaving the left for movement controls. Needs touchscreen sensitivity. Applies next stream.",
+        "checkbox_enable_touch_sensitivity_rotation_auto" to "Recenters scaled touch coordinates that run past the screen edge so high-sensitivity drags can continue; helps camera control. Needs touchscreen sensitivity. Applies next stream.",
+        "seekbar_touch_sensitivity_opacity_x" to "Horizontal sensitivity of multi-touch game input; higher turns small finger movement into larger in-game movement. Needs touchscreen sensitivity. Applies next stream.",
+        "seekbar_touch_sensitivity_opacity_y" to "Vertical sensitivity of multi-touch game input; higher turns small finger movement into larger in-game movement. Needs touchscreen sensitivity. Applies next stream.",
+        "seekbar_touchpad_sensitivity_opacity" to "Horizontal pointer sensitivity shared by touchscreen trackpad mode and custom virtual touchpads, which can feel different at the same value. Separate from physical trackpad sensitivity. Applies next stream.",
+        "seekbar_touchpad_sensitivity_y_opacity" to "Vertical pointer sensitivity shared by touchscreen trackpad mode and custom virtual touchpads, which can feel different at the same value. Separate from physical trackpad sensitivity. Applies next stream.",
+        "checkbox_enable_perf_overlay" to "Shows stream statistics: FPS, 1% low FPS, bitrate, packet loss, latency. Total latency adds measured network, host and local time; it is not button-to-screen latency. The stream menu cycles full, compact, off. Applies next stream.",
+        "checkbox_enable_perf_overlay_lite" to "Shows one compact statistics line at the top center instead of the full panel (its corner is set separately). Overlay in the stream menu cycles full, compact, off. Applies next stream.",
+        "video_format" to "Codec the PC encodes with; host and decoder must support it. Each codec keeps its own bitrate. Applies next stream.",
+        "checkbox_unlock_fps" to "Shows frame-rate choices above the display's detected capability. Extra host frames can improve freshness in some modes but raise load; the screen's refresh rate is unchanged. Applies next stream.",
+        "checkbox_reduce_refresh_rate" to "Lets Android choose a lower display refresh rate when suitable for the stream. Saves power but can slow presentation. Separate from the requested video FPS. Applies next stream.",
+        "checkbox_full_range" to "Requests full-range video levels instead of limited range. Enable only if the host and display interpret them correctly; a mismatch crushes blacks and highlights. Separate from HDR. Applies next stream.",
+        "checkbox_prevent_packet_loss" to "Sends a small control packet about every 20 ms to discourage Wi-Fi power saving between transfers. Separate from Android Wi-Fi locks. May help unexplained device-specific loss; cannot fix weak signal or congestion. Applies next stream.",
+        "list_languages" to "Language for translated stream messages and system-facing screens. The Delos shell and its help are English only.",
+        "import_special_button_file" to "Imports custom key combinations for Send keys and the special-key controls, replacing this profile's custom commands. Separate from Import keyboard layout, which imports button positions.",
+        "option_help_custom_keys" to "Opens instructions for the custom-key file format and key combinations. Load the resulting file with Import Custom Keys.",
+        "pref_debug_info" to "Opens device and controller diagnostics without starting a stream: Android, kernel and device details, controller IDs and sensors, a vibration test, and on-screen control preview and editing.",
+        "ui_match_game_colors" to "Takes three colors from the selected game's cover for the animated background, falling back to PC artwork. Needs Material You colors off. Changes the background, not the game picture.",
     )
 
     private val choices = mapOf(
         "frame_pacing" to mapOf(
-            "latency" to "Display the newest decoded frame as soon as possible and discard older queued frames. Favors response over perfectly even motion; may stutter when stream FPS and display refresh do not align.",
-            "balanced" to "Schedule decoded frames with the display refresh using a small bounded queue. A middle ground between fast response and consistent motion. LFR is a separate variant of this mode.",
-            "cap-fps" to "Use paced presentation and, when the stream is close to the display refresh rate, request slightly fewer host frames to avoid a steadily growing queue. Favors regular motion with controlled latency.",
-            "smoothness" to "Favor steady frame delivery instead of immediate presentation. Can add noticeable buffering and latency. Useful when even motion matters more than the fastest response.",
-            "warp" to "Request twice the selected FPS from the PC, then favor the freshest available decoded frame. For example, 60 FPS requests 120 FPS. Can reduce frame age, but increases host, decoder and network load. Does not double the display refresh rate.",
-            "warp2" to "Request four times the selected FPS from the PC, then favor the freshest decoded frame. For example, 60 FPS requests 240 FPS. More demanding than Warp Drive and only useful if the host and decoder can keep up. Does not quadruple the display refresh rate.",
-            "fast-vsync" to "Nano Pacer times the newest available frame to a cadence based on the lower of stream FPS and display refresh, dropping stale frames while waiting. Aims to balance response and regular motion. MediaCodec only; it takes precedence over LFR.",
+            "latency" to "Shows the newest frame at once, dropping older ones. Best response; may stutter if FPS and refresh differ.",
+            "balanced" to "Schedules frames with the display refresh using a small bounded queue. LFR is a variant of this mode.",
+            "cap-fps" to "Paced; near the display refresh it requests slightly fewer host frames so the queue does not grow.",
+            "smoothness" to "Steady delivery rather than immediate presentation; can add buffering and latency.",
+            "warp" to "Requests twice the selected FPS (60 → 120), shows the freshest frame. More host, decoder and network load; display refresh unchanged.",
+            "warp2" to "Requests four times the selected FPS (60 → 240), shows the freshest frame. Heavier than Warp Drive; display refresh unchanged.",
+            "fast-vsync" to "Nano Pacer times the newest frame to the lower of stream FPS and refresh, dropping stale ones. MediaCodec only.",
         ),
         "video_format" to mapOf(
-            "auto" to "Let Delos and the host negotiate compatible H.264 or HEVC based on decoder support and stream requirements. AV1 and PyroWave require explicit selection. Useful as a compatibility default; check the overlay for the actual codec.",
-            "forceav1" to "Request AV1, an efficient codec that can preserve detail at lower bitrates. Requires AV1 encoding on the host and AV1 decoding on this device. It is not automatically lower-latency than HEVC. Negotiation may fall back when the host cannot provide it.",
-            "forceh265" to "Request HEVC (H.265). Usually needs less bandwidth than H.264 for similar quality and supports ten-bit HDR on compatible hardware. Requires host encoding and device decoding support; negotiation can fall back if unavailable.",
-            "neverh265" to "Use H.264 for broad compatibility and troubleshooting. Usually needs more bandwidth than newer codecs for similar quality. This stream path does not provide HDR; host requirements can still limit the final negotiated format.",
-            "pyrowave" to "Use Vibepollo's GPU wavelet codec with an independent Vulkan decoder. Needs a compatible host and device and much higher bitrate; a strong local connection is important. Supports HDR, SGSR 1, SGSR 2 Video and independent final sharpness. MediaCodec asynchronous decoding, LFR and Ultra Low Latency do not apply.",
+            "auto" to "Negotiates H.264 or HEVC by decoder support; AV1 and PyroWave need explicit selection.",
+            "forceav1" to "Efficient at low bitrates. Needs AV1 encode on the host and decode here; not inherently lower latency. May fall back.",
+            "forceh265" to "Less bandwidth than H.264; supports 10-bit HDR. Needs host encode and device decode; may fall back.",
+            "neverh265" to "Broadest compatibility, good for troubleshooting; needs more bandwidth. No HDR on this path.",
+            "pyrowave" to "Vibepollo GPU wavelet codec, own Vulkan decoder. Needs a strong local link and a far higher bitrate (recalculated when resolution, FPS or HDR change).",
         ),
         "list_sgsr_quality" to mapOf(
-            "standard" to "SGSR 1 Standard reconstructs edges from the current frame without using motion history. Lower complexity and no temporal history to trail behind moving objects. Separate final sharpness is adjustable. Available for MediaCodec and PyroWave.",
-            "high" to "SGSR 1 High Quality uses a different spatial filter with RGB-derived brightness and a blend of edge and smooth estimates. Processes only the current frame; it is not just a stronger sharpening setting. Available for MediaCodec and PyroWave.",
-            "temporal" to "SGSR 2 Video estimates motion from decoded frames and reuses reliable detail from earlier frames. Can improve reconstruction but adds GPU cost and can struggle with disocclusion, text or fast changes. Available for MediaCodec and PyroWave.",
-            "temporal-quality" to "Adds a reactive mask, nine-tap reconstruction and improved color-history clipping to SGSR 2 Video. Aims to reduce unreliable history at extra GPU cost. Available for MediaCodec and PyroWave as a distinct quality mode.",
+            "standard" to "SGSR 1 Standard: edge reconstruction from the current frame only. Cheapest; no motion trails.",
+            "high" to "SGSR 1 High Quality: another spatial filter on the current frame, not just stronger sharpening.",
+            "temporal" to "SGSR 2 Video: estimates motion and reuses reliable detail from earlier frames. More GPU cost; text and fast changes can break it.",
+            "temporal-quality" to "SGSR 2 Video Quality: adds a reactive mask, nine-tap reconstruction and better color-history clipping. More GPU cost.",
         ),
         "list_video_scale_mode" to mapOf(
-            "fit" to "Preserve the complete picture and its aspect ratio. Black bars appear when the screen and stream have different shapes. Nothing is cropped or stretched.",
-            "fill" to "Preserve the aspect ratio while filling the screen. Parts of the picture are cropped when the screen and stream have different shapes.",
-            "stretch" to "Fill the whole screen without cropping. If the aspect ratios differ, circles and other shapes can look wider or taller.",
+            "fit" to "Whole picture at its aspect ratio; black bars if shapes differ. Nothing cropped or stretched.",
+            "fill" to "Fills the screen at the picture's aspect ratio; crops when shapes differ.",
+            "stretch" to "Fills the screen without cropping; shapes look wider or taller if aspect ratios differ.",
         ),
         "list_audio_config" to mapOf(
-            "2" to "Two-channel stereo. Best starting point for handheld speakers and ordinary headphones. Surround virtualization, if wanted, belongs to the host or audio system.",
-            "51" to "Six channels: front left/right, center, rear left/right and subwoofer. Requires a compatible 5.1 audio configuration and playback path; it does not make a handheld's speakers into six physical channels.",
-            "71" to "Eight channels for a compatible 7.1 surround system. Requires host and playback support. Use Stereo if channels are missing or voices become hard to hear.",
+            "2" to "Two-channel stereo for handheld speakers and most headphones. Surround virtualization comes from the host or audio system.",
+            "51" to "Six channels (front L/R, center, rear L/R, subwoofer). Needs a 5.1 playback path; handheld speakers stay two physical channels.",
+            "71" to "Eight channels for a 7.1 system. Use Stereo if channels are missing or voices are hard to hear.",
         ),
         "analog_scrolling" to mapOf(
-            "none" to "Neither stick sends scrolling while emulating a mouse.",
-            "right" to "Use the right analog stick for scrolling in gamepad mouse mode.",
-            "left" to "Use the left analog stick for scrolling in gamepad mouse mode.",
+            "none" to "Neither stick scrolls.",
+            "right" to "The right stick scrolls.",
+            "left" to "The left stick scrolls.",
         ),
         "mouse_mode_list" to mapOf(
-            "0" to "Forward touch contacts to a compatible host for direct multi-touch input. Useful for touch-enabled games and applications. The host must support the touch protocol.",
-            "1" to "Direct single-touch mouse input: touch a position in the stream to point or click there. Useful for desktop controls laid out on screen.",
-            "2" to "Natural trackpad behavior: finger movement moves the PC pointer relative to its current position, so you do not need to touch the target itself. Used for external-display control.",
-            "3" to "Trackpad behavior tuned for games rather than direct touch positioning. Relative pointer movement can suit games that need mouse-style input.",
-            "4" to "Do not forward ordinary touchscreen input to the PC. Stylus input remains available; the configured edge swipe can still open the stream menu.",
-            "5" to "Direct single-touch input with the mouse buttons exchanged. Useful when the application's primary touch action should behave as the other mouse button.",
+            "0" to "Forwards touch contacts for direct multi-touch; the host must support touch.",
+            "1" to "Direct single-touch: touch a point in the stream to point or click there.",
+            "2" to "Natural trackpad: finger movement moves the PC pointer relative to its position. Used for external displays.",
+            "3" to "Game-tuned trackpad: relative movement for games that need mouse-style input.",
+            "4" to "Touch is not forwarded; stylus and the stream-menu edge swipe still work.",
+            "5" to "Direct single-touch with the mouse buttons swapped.",
         ),
         "list_onscreen_keyboard_align_mode" to mapOf(
-            "left" to "Anchor the manually sized full keyboard to the left side of the viewport.",
-            "center" to "Center the manually sized full keyboard horizontally.",
-            "right" to "Anchor the manually sized full keyboard to the right side of the viewport.",
+            "left" to "Anchored to the left edge.",
+            "center" to "Centered horizontally.",
+            "right" to "Anchored to the right edge.",
         ),
     )
 }

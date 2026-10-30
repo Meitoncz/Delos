@@ -63,6 +63,8 @@ The old 116-setting count in the Phase 6.7 document was a historical count, not 
    and endpoint padding lets the first/last lines rest fully visible. The panel cannot take focus
    or be scrolled manually with touch or a controller. Short text stays still. The same behavior
    is used in profile settings, per-game settings and the stream menu.
+   Help text length is bounded: every setting and selectable value must fit the settings box
+   (about 39 characters by 11 lines) without scrolling; see `SettingsHelpFitTest`.
 9. **Descriptions were inconsistently duplicated under short rows.** Explanatory text now stays in
    the right panel, while controls remain compact. Per-game source labels remain under the rows.
    Search includes option names and explanations, including unselected pacing/codec options.

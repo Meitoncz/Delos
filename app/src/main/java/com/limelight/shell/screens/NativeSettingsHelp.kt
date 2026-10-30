@@ -11,22 +11,22 @@ internal object NativeSettingsHelp {
     }
 
     fun choice(key: String, label: String): String = when (key) {
-        "ui_dark" -> if (label == "Dark") "Dark surfaces with light text. Applied immediately to the Delos interface; the streamed picture is unchanged."
-            else "Light surfaces with dark text. Applied immediately to the Delos interface; the streamed picture is unchanged."
+        "ui_dark" -> if (label == "Dark") "Dark surfaces with light text. The streamed picture is unchanged."
+            else "Light surfaces with dark text. The streamed picture is unchanged."
         "ui_clock" -> when (label) {
-            "System" -> "Follow Android's current 12-hour or 24-hour time format."
-            "12-hour" -> "Show a 12-hour clock with AM or PM in the status bar."
-            else -> "Show a 24-hour clock without AM or PM in the status bar."
+            "System" -> "Follows Android's 12-hour or 24-hour format."
+            "12-hour" -> "12-hour clock with AM or PM in the status bar."
+            else -> "24-hour clock in the status bar."
         }
-        "ui_home_layout" -> if (label == "Grid") "Show several rows of covers and scroll vertically through the library."
-            else "Show one horizontal row of covers. Left and right wrap between the ends; the running game and recently played games appear first."
-        "ui_reduced_motion" -> if (label == "Reduced") "Reduce interface motion for a calmer experience. This does not change game FPS or the stream's frame pacing."
-            else "Use the full interface transitions and focus animations. This does not change game FPS or the stream's frame pacing."
-        "ui_palette" -> palettes[label]?.let { "$it The swatches below show the main, secondary and accent colors. Applies immediately when Material You colors are off." }.orEmpty()
-        "ui_background" -> backgrounds[label]?.let { "$it Changes immediately. Shader backgrounds need Android 13 or later; supported fallbacks are used on older devices or when a shader cannot run." }.orEmpty()
-        "ui_stats_position" -> "Place the full statistics panel in the ${label.lowercase()} corner during streaming. Compact statistics stay at the top center."
-        "ui_default_pc" -> if (label == "None") "No preferred PC. Choose a device on the start screen; skipping the start screen is unavailable."
-            else "Use $label as the preferred PC. It is marked on the start screen and used by Skip the start screen. Pairing and network availability are still required."
+        "ui_home_layout" -> if (label == "Grid") "Several rows of covers; scrolls vertically."
+            else "One horizontal row of covers that wraps at the ends; the running and recent games come first."
+        "ui_reduced_motion" -> if (label == "Reduced") "Less interface motion. Game FPS and frame pacing are unchanged."
+            else "Full transitions and focus animations. Game FPS and frame pacing are unchanged."
+        "ui_palette" -> palettes[label]?.let { "$it The swatches below show main, secondary and accent colors." }.orEmpty()
+        "ui_background" -> backgrounds[label]?.let { "$it Shader backgrounds need Android 13 or later; older devices use fallbacks." }.orEmpty()
+        "ui_stats_position" -> "Full statistics panel in the ${label.lowercase()} corner while streaming."
+        "ui_default_pc" -> if (label == "None") "No preferred PC; Skip the start screen is unavailable."
+            else "$label is marked on the start screen and used by Skip the start screen. It must be paired and reachable."
         else -> ""
     }
 
