@@ -14,17 +14,19 @@ immediately and shows a toast.
   mode. Hardware rules and dependencies match the existing settings screen.
 - Each row says **From profile** or **Custom for this game**. Unchanged values follow later edits to
   the user profile. Changes are saved immediately and apply when the next stream starts or resumes.
-- Non-PyroWave resolution, FPS, HDR and codec changes preserve the current bitrate and its inheritance.
-- Entering PyroWave, or changing resolution/FPS/HDR while it is selected, always writes its recommended
-  bitrate as a game override, even if bitrate previously came from the profile. The inherited AV1/HEVC
-  bitrate must not be used as PyroWave's recommendation.
-- Only an existing game-owned bitrate is remembered when entering PyroWave from another codec.
-  Inherited profile values are not remembered. Automatic recalculations and manual PyroWave edits
-  leave that pre-PyroWave value unchanged.
-- Leaving PyroWave restores the remembered game bitrate when present; otherwise it removes the
-  temporary bitrate override so the game follows the profile's current value again. This also applies
-  to a bitrate first hand-set on PyroWave and when the profile itself uses PyroWave.
-  Restoration consumes history; editing on another codec or resetting bitrate clears it.
+- Each selected codec keeps its own bitrate for this user, PC and game. Switching away saves the
+  current bitrate only when the game owns a bitrate override; inherited profile values are never
+  captured. Switching to a codec with a saved value restores it as a game override.
+- With no saved value, first use of PyroWave always writes its recommended bitrate, creating an
+  override when necessary. First use of an ordinary codec from another ordinary codec keeps the
+  current bitrate and inheritance. Leaving PyroWave for an ordinary codec with no saved game value
+  removes the bitrate override, so the game follows the profile's current bitrate again.
+- Hand edits change the current bitrate but update its codec slot only when switching away.
+  Returning to PyroWave restores its saved value, including a hand-edited value. Resolution/FPS/HDR
+  changes while PyroWave is selected still recalculate its recommendation; other codecs keep their
+  bitrate on quality edits. Recalculation becomes the saved PyroWave value when leaving that codec.
+- Resetting the bitrate row removes that game's current override and all its codec bitrate slots.
+  Use profile for all also removes all slots, without changing other games or the profile.
 - The upscaler rows (SGSR) are unavailable for H.264, HEVC and AV1 on devices below OpenGL ES 3.1.
 - Advanced custom resolution/FPS definitions remain in the profile; their choices are available here.
 - Audio, controls, appearance and other global options continue to come from the user profile.
@@ -32,10 +34,10 @@ immediately and shows a toast.
 `GameSettingsStore` stores sparse, typed values under `ui_game_<PC hash>_<app ID>_<setting key>` in
 the user's `ui_profile_<UUID>` preferences. PC UUID plus host app ID distinguishes libraries; titles
 and artwork do not affect identity. Creating a user copies these values with the other profile
-settings, including private bitrate history. Later edits are independent; deleting a user deletes
-their overrides/history too, and removing a PC in Devices deletes both for every user. Resetting all
-overrides also clears this game's history without affecting other games. History never inherits
-from the profile or appears among editable options or in the stream's launch snapshot.
+settings, including private codec bitrate slots. Later edits are independent; deleting a user deletes
+their overrides/slots too, and removing a PC in Devices deletes both for every user. Slot keys use the
+same per-game prefix and never inherit the profile's codec slots or appear in effective-value maps,
+the settings catalog or the stream's launch snapshot.
 
 ## Launch integration
 

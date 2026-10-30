@@ -22,7 +22,7 @@ class StreamSettingsStore(val catalog: SettingsCatalog, private val settings: ()
         refresh()
     }
 
-    private fun refresh() { state.value = settings().all.toMap() }
+    private fun refresh() { state.value = settings().all.filterKeys { !isCodecBitrateStorageKey(it) } }
 
     fun value(spec: SettingSpec): Any? = state.value[spec.key] ?: spec.default
 
@@ -52,25 +52,23 @@ class StreamSettingsStore(val catalog: SettingsCatalog, private val settings: ()
         fun fps() = if (spec.key == "list_fps") value as String else prefs.getString("list_fps", "60")!!
         fun hdr() = if (spec.key == "checkbox_enable_hdr") value as Boolean else prefs.getBoolean("checkbox_enable_hdr", false)
         val gameBitrate = prefs as? BitrateOverrideState
-        if (spec.key == "seekbar_bitrate_kbps") {
-            editor.bitrateEdited(prefs)
-        } else if (format == "pyrowave" && (spec.key == "list_resolution" || spec.key == "list_fps" ||
-                spec.key == "video_format" || spec.key == "checkbox_enable_hdr")) {
-            // Capture only a bitrate owned by this store, never an inherited profile value.
-            if (before != "pyrowave" && prefs.contains("seekbar_bitrate_kbps") &&
-                gameBitrate?.hasBitrateOverride != false) {
-                editor.putInt(BITRATE_BEFORE_PYROWAVE, prefs.getInt("seekbar_bitrate_kbps", -1))
+        if (spec.key == "video_format" && format != before) {
+            if (prefs.contains("seekbar_bitrate_kbps") && gameBitrate?.hasBitrateOverride != false) {
+                editor.putInt(codecBitrateKey(before), prefs.getInt("seekbar_bitrate_kbps", -1))
             }
-            editor.putInt("seekbar_bitrate_kbps", PreferenceConfiguration.getDefaultBitrate(resolution(), fps(), format, hdr()))
-        } else if (spec.key == "video_format" && before == "pyrowave" && format != "pyrowave") {
+            val target = codecBitrateKey(format)
             when {
-                prefs.contains(BITRATE_BEFORE_PYROWAVE) ->
-                    editor.putInt("seekbar_bitrate_kbps", prefs.getInt(BITRATE_BEFORE_PYROWAVE, -1))
-                gameBitrate != null -> editor.remove("seekbar_bitrate_kbps")
-                else -> editor.putInt("seekbar_bitrate_kbps",
+                prefs.contains(target) -> editor.putInt("seekbar_bitrate_kbps", prefs.getInt(target, -1))
+                format == "pyrowave" -> editor.putInt("seekbar_bitrate_kbps",
                     PreferenceConfiguration.getDefaultBitrate(resolution(), fps(), format, hdr()))
+                before == "pyrowave" && gameBitrate != null -> editor.remove("seekbar_bitrate_kbps")
+                before == "pyrowave" -> editor.putInt("seekbar_bitrate_kbps",
+                    PreferenceConfiguration.getDefaultBitrate(resolution(), fps(), format, hdr()))
+                // First use of another ordinary codec preserves the current bitrate and inheritance.
             }
-            editor.remove(BITRATE_BEFORE_PYROWAVE)
+        } else if (format == "pyrowave" && (spec.key == "list_resolution" || spec.key == "list_fps" ||
+                spec.key == "checkbox_enable_hdr")) {
+            editor.putInt("seekbar_bitrate_kbps", PreferenceConfiguration.getDefaultBitrate(resolution(), fps(), format, hdr()))
         }
         editor.apply()
     }
@@ -93,17 +91,13 @@ class StreamSettingsStore(val catalog: SettingsCatalog, private val settings: ()
                 val mbps = value.toFloatOrNull()
                 if (mbps == null || !mbps.isFinite() || mbps <= 0 || mbps > 9999) return "Enter a bitrate above 0 and up to 9999 Mbps"
                 val prefs = settings()
-                prefs.edit().putString(spec.key, value).putInt("seekbar_bitrate_kbps", (mbps * 1000).roundToInt())
-                    .bitrateEdited(prefs).apply()
+                prefs.edit().putString(spec.key, value).putInt("seekbar_bitrate_kbps", (mbps * 1000).roundToInt()).apply()
             }
             else -> write(spec, input.trim())
         }
         return null
     }
 
-    private fun SharedPreferences.Editor.bitrateEdited(prefs: SharedPreferences) = apply {
-        if (prefs.getString("video_format", "auto") != "pyrowave") remove(BITRATE_BEFORE_PYROWAVE)
-    }
 
     /** Match the classic screen's fallback when device rules remove the selected resolution or FPS. */
     fun normalize(caps: SettingsCapabilities) {
@@ -127,4 +121,7 @@ class StreamSettingsStore(val catalog: SettingsCatalog, private val settings: ()
     }
 }
 
-internal const val BITRATE_BEFORE_PYROWAVE = "ui_bitrate_before_pyrowave"
+internal const val CODEC_BITRATE_PREFIX = "ui_codec_bitrate_"
+internal fun codecBitrateKey(codec: String) = CODEC_BITRATE_PREFIX + codec
+internal fun isCodecBitrateStorageKey(key: String) =
+    key.startsWith(CODEC_BITRATE_PREFIX) || (key.startsWith("ui_game_") && key.contains("_$CODEC_BITRATE_PREFIX"))

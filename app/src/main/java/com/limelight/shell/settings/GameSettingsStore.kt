@@ -16,20 +16,28 @@ class GameSettingsStore(private val base: SharedPreferences, pc: String, appId: 
     val preferences: SharedPreferences = object : ValueOverlay(base, { overrides() }), BitrateOverrideState {
         override val hasBitrateOverride: Boolean get() = isCustom("seekbar_bitrate_kbps")
         override fun edit(): SharedPreferences.Editor = GameEditor(base.edit())
-        // Bitrate history belongs to this game, never the profile values behind the overlay.
-        override fun getAll(): Map<String, *> = super.getAll() - BITRATE_BEFORE_PYROWAVE
         override fun contains(key: String) =
-            if (key == BITRATE_BEFORE_PYROWAVE) base.contains(prefix + key) else super.contains(key)
+            if (key.startsWith(CODEC_BITRATE_PREFIX)) base.contains(prefix + key) else super.contains(key)
         override fun getInt(key: String, defValue: Int) =
-            if (key == BITRATE_BEFORE_PYROWAVE) base.getInt(prefix + key, defValue) else super.getInt(key, defValue)
+            if (key.startsWith(CODEC_BITRATE_PREFIX)) base.getInt(prefix + key, defValue) else super.getInt(key, defValue)
     }
 
     fun overrides(): Map<String, *> = base.all.filterKeys { it.startsWith(prefix) }
         .mapKeys { it.key.removePrefix(prefix) }.filterKeys { it in KEYS }
 
     fun isCustom(key: String) = key in KEYS && base.contains(prefix + key)
-    fun reset(key: String) { if (key in KEYS) preferences.edit().remove(key).apply() }
+    fun reset(key: String) {
+        if (key !in KEYS) return
+        val editor = base.edit().remove(prefix + key)
+        if (key == "seekbar_bitrate_kbps") clearCodecBitrates(editor)
+        editor.apply()
+    }
     fun resetAll() { preferences.edit().clear().apply() }
+
+    private fun clearCodecBitrates(editor: SharedPreferences.Editor) {
+        val slots = prefix + CODEC_BITRATE_PREFIX
+        base.all.keys.forEach { key -> if (key.startsWith(slots)) editor.remove(key) }
+    }
 
     /** Capture the effective values for this launch, including inherited values. Never activate a profile. */
     fun snapshot(): Bundle = Bundle().apply {
@@ -45,12 +53,7 @@ class GameSettingsStore(private val base: SharedPreferences, pc: String, appId: 
 
     private inner class GameEditor(private val editor: SharedPreferences.Editor) : SharedPreferences.Editor {
         private fun put(key: String, value: Any?) = apply {
-            require(key in STORED_KEYS) { "Not a per-game setting: $key" }
-            // An inherited bitrate is not a user override to remember when PyroWave recalculates it.
-            if (key == BITRATE_BEFORE_PYROWAVE && value != null && !isCustom("seekbar_bitrate_kbps")) return@apply
-            if (key == "seekbar_bitrate_kbps" && value == null) {
-                editor.remove(prefix + BITRATE_BEFORE_PYROWAVE)
-            }
+            require(key in KEYS || key.startsWith(CODEC_BITRATE_PREFIX)) { "Not a per-game setting: $key" }
             editor.putSetting(prefix + key, value)
         }
         override fun putString(key: String, value: String?) = put(key, value)
@@ -60,7 +63,10 @@ class GameSettingsStore(private val base: SharedPreferences, pc: String, appId: 
         override fun putFloat(key: String, value: Float) = put(key, value)
         override fun putBoolean(key: String, value: Boolean) = put(key, value)
         override fun remove(key: String) = put(key, null)
-        override fun clear() = apply { STORED_KEYS.forEach { editor.remove(prefix + it) } }
+        override fun clear() = apply {
+            KEYS.forEach { editor.remove(prefix + it) }
+            clearCodecBitrates(editor)
+        }
         override fun commit() = editor.commit()
         override fun apply() = editor.apply()
     }
@@ -70,7 +76,6 @@ class GameSettingsStore(private val base: SharedPreferences, pc: String, appId: 
         val DISPLAY_KEYS = listOf("checkbox_enable_hdr", "checkbox_full_range", "list_video_scale_mode",
             "seekbar_resolution_scale_factor", "checkbox_use_virtual_display", "checkbox_enforce_display_mode", "checkbox_sgsr", "list_sgsr_quality", "seekbar_sgsr_sharpness")
         val KEYS = (STREAM_KEYS + DISPLAY_KEYS).toSet()
-        private val STORED_KEYS = KEYS + BITRATE_BEFORE_PYROWAVE
         private const val EXTRA = "com.limelight.shell.GAME_SETTINGS"
 
         private fun pcPrefix(pc: String) = "ui_game_${UUID.nameUUIDFromBytes(pc.toByteArray(Charsets.UTF_8))}_"
@@ -118,7 +123,7 @@ class GameSettingsStore(private val base: SharedPreferences, pc: String, appId: 
     }
 }
 
-/** Identifies an owned game bitrate for capture and restores inheritance when no history exists. */
+/** Identifies per-game preferences and whether the active bitrate is owned or inherited. */
 internal interface BitrateOverrideState {
     val hasBitrateOverride: Boolean
 }
@@ -128,7 +133,7 @@ private open class ValueOverlay(
     private val base: SharedPreferences,
     private val patch: () -> Map<String, *>,
 ) : SharedPreferences by base {
-    override fun getAll(): Map<String, *> = base.all + patch()
+    override fun getAll(): Map<String, *> = (base.all + patch()).filterKeys { !isCodecBitrateStorageKey(it) }
     override fun contains(key: String) = patch().containsKey(key) || base.contains(key)
     override fun getString(key: String, defValue: String?): String? {
         val values = patch()

@@ -45,20 +45,20 @@ one scrolls to and focuses the actual setting, including disabled dependencies.
 - `SettingsCapabilities.kt` contains the display, codec, HDR, sensors, USB, vibration, PiP and
   touchscreen rules ported from `StreamSettings`. Native and custom resolutions/frame rates are
   added to the original choices. Explicitly unavailable codec choices are omitted.
-- `StreamSettingsStore.kt` writes typed preferences. Resolution, FPS and non-PyroWave codec changes
-  preserve bitrate. Selecting PyroWave, or changing resolution/FPS/HDR while it is selected,
-  recalculates its recommended bitrate. Entering PyroWave remembers the previous non-PyroWave
-  bitrate for that profile. Manual edits and automatic quality recalculations while on PyroWave
-  leave that remembered value unchanged: a PyroWave bitrate never carries into another codec.
-  In profile settings, leaving PyroWave always restores that value, or the new codec/resolution/FPS
-  default when no history exists, then consumes the history. Manual edits on another codec clear stale
-  history. The remembered value is copied/deleted with its profile and is not a stream option. Custom
-  numeric input rejects invalid and non-finite values before writing.
-  Per-game codec/resolution/FPS/HDR changes resulting in PyroWave always write the recommendation,
-  creating an override when necessary.
-  On exit, a remembered game-owned bitrate is restored; without one, the temporary bitrate override
-  is removed so the game resumes inheriting the profile. Inherited values are never captured as
-  game-owned bitrate history.
+- `StreamSettingsStore.kt` writes typed preferences. Each selected codec (Automatic, H.264, HEVC, AV1
+  and PyroWave) remembers its own bitrate when the user switches away, and restores it on return.
+  Hand edits change the current bitrate immediately; the codec's saved value updates only on exit.
+  With no saved value, first use of PyroWave calculates its recommendation. First use of another
+  ordinary codec preserves the current bitrate; leaving PyroWave for an ordinary codec without a
+  saved value uses its normal resolution/FPS default in profile settings.
+  Resolution/FPS/HDR changes while on PyroWave recalculate its recommendation; other codecs preserve
+  their bitrate on those changes. Returning to PyroWave with a saved value restores it instead of
+  recalculating just because the codec changed.
+  Codec bitrate slots are private profile data, copied/deleted with the profile, never settings rows
+  or effective stream values. For per-game settings they are isolated by profile, PC and game:
+  inherited rates are never saved into game slots, and leaving PyroWave for an unsaved ordinary
+  codec restores profile inheritance. See [PER_GAME_SETTINGS.md](PER_GAME_SETTINGS.md).
+  Custom numeric input rejects invalid and non-finite values before writing.
 - `screens/SettingsScreen.kt`, `NativeSettings.kt` and `SettingsActions.kt` render the design system's
   rows, description panel, tab bar and search, and handle editing, reset, import/export and links.
   Resets run immediately and report a toast. Android's document picker handles file selection.
