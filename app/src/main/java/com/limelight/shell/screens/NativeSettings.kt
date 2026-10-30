@@ -81,48 +81,48 @@ internal fun nativeSettings(
         list += SettingsItem(key, tab, section, icon, title, help, value, enabled,
             NativeSettingsHelp.details(key, help, value))
     }
-    row("ui_dark", Symbols.DARK_MODE, "Theme", RowValue.Choice(if (a.dark) "Dark" else "Light", { update { it.copy(dark = !it.dark) } }), "Choose a dark or light interface.")
+    row("ui_dark", Symbols.DARK_MODE, "Theme", RowValue.Choice(if (a.dark) "Dark" else "Light", { update { it.copy(dark = !it.dark) } }), "Dark or light interface. Applies immediately.")
     row("ui_material_you", Symbols.SYSTEM_COLORS, "Material You colors", RowValue.Toggle(a.materialYou) { on -> update { it.copy(materialYou = on) } },
-        if (systemHue != null) "Uses only the colors of your system wallpaper. Turn it off to choose a color palette."
-        else "This device has no wallpaper palette, so Material You uses Lagoon's colors. Turn it off to choose a color palette.")
+        if (systemHue != null) "Uses only your system wallpaper colors. Turn off to choose a palette."
+        else "No wallpaper palette on this device, so Lagoon's colors are used. Turn off to choose a palette.")
     row("ui_palette", Symbols.PALETTE, "Color palette", RowValue.Choice(a.palette.label, { dir -> update { it.copy(palette = it.palette.step(dir)) } }, hsl(a.palette.accent, 90f, 60f)),
-        if (a.materialYou) "Turn off Material You colors to choose a palette." else "The colors of the whole interface and the animated backgrounds.", !a.materialYou)
+        if (a.materialYou) "Needs Material You colors off." else "Colors of the whole interface and animated backgrounds. Applies immediately.", !a.materialYou)
     row("ui_match_game_colors", Symbols.MATCH_COLORS, "Match the game's colors", RowValue.Toggle(a.matchGameColors) { on -> update { it.copy(matchGameColors = on) } },
-        if (a.materialYou) "Turn off Material You colors to use it." else "The animated background takes on the main color of the selected game's background image.", !a.materialYou)
+        if (a.materialYou) "Needs Material You colors off." else "The animated background takes the main color of the selected game's background image.", !a.materialYou)
     row("ui_clock", Symbols.SCHEDULE, "Clock", RowValue.Choice(a.clock.label, { dir -> update { it.copy(clock = it.clock.step(dir)) } }),
-        "12- or 24-hour time in the status bar; System follows the Android setting.")
-    row("ui_background", Symbols.ANIMATION, "Animated background", RowValue.Choice(a.background.label, { dir -> update { it.copy(background = it.background.step(dir)) } }), "Aurora, Tide, Silk, Contour, Nebula, Plasma, Lava, Caustics, Bokeh, Orbit or a still background.")
-    row("ui_home_layout", Symbols.VIEW_CAROUSEL, "Home layout", RowValue.Choice(a.homeLayout.label, { dir -> update { it.copy(homeLayout = it.homeLayout.step(dir)) } }), "Grid scrolls down. Row is one horizontally scrolling row.")
-    row("ui_hero_background", Symbols.IMAGE, "Game background", RowValue.Toggle(a.heroBackground) { on -> update { it.copy(heroBackground = on) } }, "Shows the background of the selected game on the home screen.")
-    row("ui_hero_blur", Symbols.BLUR_ON, "Game background blur", RowValue.Slider(a.heroBlur, 0, 40, 5, " px") { v -> update { it.copy(heroBlur = v) } }, "Soften the game background behind the library.", a.heroBackground)
-    row("ui_hero_opacity", Symbols.OPACITY, "Game background opacity", RowValue.Slider(a.heroOpacity, 0, 100, 5, " %") { v -> update { it.copy(heroOpacity = v) } }, "How strongly the game artwork shows through the animated background.", a.heroBackground)
-    row("ui_scale", Symbols.SCALE, "Interface scale", RowValue.Slider(a.uiScale, 100, 130, 5, " %") { v -> update { it.copy(uiScale = v) } }, "Text size, status bar and button hints.")
-    row("ui_reduced_motion", Symbols.MOTION_PHOTOS_ON, "Animations", RowValue.Choice(if (a.reducedMotion) "Reduced" else "Full", { update { it.copy(reducedMotion = !it.reducedMotion) } }), "Reduce movement in the interface.")
+        "12- or 24-hour time in the status bar.")
+    row("ui_background", Symbols.ANIMATION, "Animated background", RowValue.Choice(a.background.label, { dir -> update { it.copy(background = it.background.step(dir)) } }), "Animated shader background, or a still one. Applies immediately.")
+    row("ui_home_layout", Symbols.VIEW_CAROUSEL, "Home layout", RowValue.Choice(a.homeLayout.label, { dir -> update { it.copy(homeLayout = it.homeLayout.step(dir)) } }), "Library as a scrolling grid or a single row.")
+    row("ui_hero_background", Symbols.IMAGE, "Game background", RowValue.Toggle(a.heroBackground) { on -> update { it.copy(heroBackground = on) } }, "Shows the selected game's background on the home screen.")
+    row("ui_hero_blur", Symbols.BLUR_ON, "Game background blur", RowValue.Slider(a.heroBlur, 0, 40, 5, " px") { v -> update { it.copy(heroBlur = v) } }, "Blurs the game background behind the library. Needs Game background.", a.heroBackground)
+    row("ui_hero_opacity", Symbols.OPACITY, "Game background opacity", RowValue.Slider(a.heroOpacity, 0, 100, 5, " %") { v -> update { it.copy(heroOpacity = v) } }, "How strongly the game artwork shows through the animated background. Needs Game background.", a.heroBackground)
+    row("ui_scale", Symbols.SCALE, "Interface scale", RowValue.Slider(a.uiScale, 100, 130, 5, " %") { v -> update { it.copy(uiScale = v) } }, "Size of text, status bar and button hints.")
+    row("ui_reduced_motion", Symbols.MOTION_PHOTOS_ON, "Animations", RowValue.Choice(if (a.reducedMotion) "Reduced" else "Full", { update { it.copy(reducedMotion = !it.reducedMotion) } }), "Interface movement only.")
     row("ui_haptics", Symbols.VIBRATION, "Interface haptics", RowValue.Toggle(a.haptics) { on -> update { it.copy(haptics = on) } }, "Vibration when moving and selecting.", tab = SettingsTab.CONTROLS)
-    row("ui_sounds", Symbols.MUSIC_NOTE, "Interface sounds", RowValue.Toggle(a.sounds) { on -> update { it.copy(sounds = on) } }, "Soft clicks when you move around the menus.", tab = SettingsTab.AUDIO)
+    row("ui_sounds", Symbols.MUSIC_NOTE, "Interface sounds", RowValue.Toggle(a.sounds) { on -> update { it.copy(sounds = on) } }, "Soft clicks when moving through menus.", tab = SettingsTab.AUDIO)
     val menuButtons = StreamMenuSettings.buttons(settings)
     row("ui_stream_menu_buttons", Symbols.SPORTS_ESPORTS, "Stream menu buttons", RowValue.Text(StreamMenuSettings.label(menuButtons)) {
         shell.buttonCapture = { buttons -> StreamMenuSettings.setButtons(settings, buttons) }
-    }, "Press them together while streaming to open the Delos stream menu, and again to close it. Select to record other buttons, e.g. a rear button. A changed shortcut applies to the next stream.",
+    }, "Buttons pressed together during a stream to open or close the Delos stream menu. Select to record others, e.g. a rear button. Applies next stream.",
         tab = SettingsTab.CONTROLS, section = "Stream menu")
     row("ui_stream_menu_swipe", Symbols.SWIPE_UP, "Swipe up to open the menu", RowValue.Toggle(StreamMenuSettings.swipe(settings)) { on ->
         settings.edit().putBoolean(StreamMenuSettings.KEY_SWIPE, on).apply()
-    }, "A swipe up from the bottom edge of the screen opens the stream menu too. Touches that start right at that edge do not reach the game. Changes apply to the next stream.",
+    }, "A swipe up from the bottom edge also opens the stream menu; touches starting at that edge do not reach the game. Applies next stream.",
         tab = SettingsTab.CONTROLS, section = "Stream menu")
     val statsPosition = StatsPosition.read(settings)
     row("ui_stats_position", Symbols.STATS_POSITION, "Statistics position", RowValue.Choice(statsPosition.label, { dir ->
         settings.edit().putString(StatsPosition.KEY, statsPosition.step(dir).name).apply()
-    }), "The corner of the statistics panel while streaming (Overlay in the stream menu). Compact mode is always at the top center. Changes apply to the next stream.", tab = SettingsTab.DISPLAY, section = "Statistics")
+    }), "Corner of the full statistics panel while streaming; compact mode is always top center. Applies next stream.", tab = SettingsTab.DISPLAY, section = "Statistics")
     val choices = listOf<Pc?>(null) + pcs.filter { it.paired }.sortedBy { it.name.lowercase() }
     val index = choices.indexOfFirst { it?.uuid == startup.defaultPc }.coerceAtLeast(0)
     row("ui_default_pc", Symbols.STAR, "Default device", RowValue.Choice(choices[index]?.name ?: "None", { dir ->
         val next = choices[Math.floorMod(index + dir, choices.size)]
         updateStartup { it.copy(defaultPc = next?.uuid, skipStart = next != null && it.skipStart) }
-    }), "Marked on the start screen. Delos can connect to it right away.", choices.size > 1, SettingsTab.DEVICES, "Startup")
+    }), "Marked on the start screen; Delos can connect to it right away.", choices.size > 1, SettingsTab.DEVICES, "Startup")
     row("ui_skip_start", Symbols.FAST_FORWARD, "Skip the start screen", RowValue.Toggle(startup.skipStart) { on -> updateStartup { it.copy(skipStart = on) } },
-        "Connect straight to the default device when Delos starts.", startup.defaultPc != null, SettingsTab.DEVICES, "Startup")
+        "Connects straight to the default device at startup.", startup.defaultPc != null, SettingsTab.DEVICES, "Startup")
     row("devices_manage", Symbols.DEVICES, "Manage devices", RowValue.Action { shell.navigate(Screen.Devices) }, "Connect, rename, wake, unpair or remove a PC.", tab = SettingsTab.DEVICES, section = "Paired PCs")
-    row("devices_pair", Symbols.ADD_LINK, "Pair a new PC", RowValue.Action { shell.navigate(Screen.PairPc(Screen.Settings)) }, "Find a PC running Vibepollo, Apollo or Sunshine.", tab = SettingsTab.DEVICES, section = "Paired PCs")
+    row("devices_pair", Symbols.ADD_LINK, "Pair a new PC", RowValue.Action { shell.navigate(Screen.PairPc(Screen.Settings)) }, "Finds a PC running Vibepollo, Apollo or Sunshine.", tab = SettingsTab.DEVICES, section = "Paired PCs")
     val artwork = LocalArtwork.current
     val tracker = LocalFocusTracker.current
     val library = LocalLibrary.current as? Library.Ready
@@ -137,10 +137,10 @@ internal fun nativeSettings(
             shell.showToast(if (artwork.enabled) "API key saved" else "SteamGridDB is off", Symbols.CHECK_CIRCLE)
             true
         }), tracker)
-    }, "Your own key: Delos downloads covers, wide covers, backgrounds and logos from SteamGridDB with it. It is kept on this device for every profile.",
+    }, "Your own key lets Delos download covers, wide covers, backgrounds and logos from SteamGridDB. Kept on this device for every profile.",
         tab = SettingsTab.COVERS, section = "SteamGridDB")
     row("covers_sgdb_auto", Symbols.AUTORENEW, "Download automatically", RowValue.Toggle(artwork.automatic) { on -> artwork.automatic = on },
-        "New games get SteamGridDB's best-rated cover, wide cover, background and logo as soon as the PC's library loads.",
+        "Fetches SteamGridDB's best-rated cover, wide cover, background and logo for new games when the PC's library loads.",
         artwork.enabled, SettingsTab.COVERS, "SteamGridDB")
     fun downloadAll(refresh: Boolean) {
         val ready = library ?: return shell.showToast("Connect to a PC first", Symbols.ERROR)
@@ -155,23 +155,23 @@ internal fun nativeSettings(
         }
     }
     row("covers_sgdb_missing", Symbols.DOWNLOAD, "Download missing artwork", RowValue.Action { downloadAll(refresh = false) },
-        "For the games of ${library?.pc?.name ?: "the current PC"} that have none yet.", artwork.enabled, SettingsTab.COVERS, "SteamGridDB")
+        "Fetches artwork for the games of ${library?.pc?.name ?: "the current PC"} that have none.", artwork.enabled, SettingsTab.COVERS, "SteamGridDB")
     row("covers_sgdb_refresh", Symbols.REFRESH, "Download all artwork again", RowValue.Action { downloadAll(refresh = true) },
-        "Looks every game up again and takes the best-rated images; the ones you picked yourself stay.", artwork.enabled, SettingsTab.COVERS, "SteamGridDB")
+        "Looks up every game again and takes the best-rated images; ones you picked stay.", artwork.enabled, SettingsTab.COVERS, "SteamGridDB")
     row("covers_sgdb_choose", Symbols.PHOTO_LIBRARY, "Choose artwork for one game", RowValue.Info("Game options"),
-        "On the home screen: the right menu button on a game → Artwork. Pick any cover, wide cover, background or logo, or another game.",
+        "Home screen: right menu button on a game → Artwork. Pick any cover, wide cover, background or logo, or another game's.",
         tab = SettingsTab.COVERS, section = "SteamGridDB")
     row("about_version", Symbols.DEPLOYED_CODE, "Version", RowValue.Info(BuildConfig.VERSION_NAME), "Delos for Android.", tab = SettingsTab.ABOUT, section = "Delos")
     row("about_based", Symbols.ACCOUNT_TREE, "Based on", RowValue.Info("Artemis · Moonlight"), "Open source game streaming, licensed under the GPLv3.", tab = SettingsTab.ABOUT, section = "Delos")
-    row("about_welcome", Symbols.REPLAY, "Replay the welcome", RowValue.Action { shell.navigate(Screen.Boot(back = Screen.Settings)) }, "Open the welcome screen again. Existing profiles and paired PCs are kept.", tab = SettingsTab.ABOUT, section = "Delos")
+    row("about_welcome", Symbols.REPLAY, "Replay the welcome", RowValue.Action { shell.navigate(Screen.Boot(back = Screen.Settings)) }, "Opens the welcome screen again. Profiles and paired PCs are kept.", tab = SettingsTab.ABOUT, section = "Delos")
     row("about_igdb", Symbols.SPORTS_ESPORTS, "Game metadata · IGDB",
         RowValue.Action { providerWebsite("https://www.igdb.com/") },
         "Game information and genres provided by IGDB.", tab = SettingsTab.ABOUT, section = "Game data")
     row("about_pcgw", Symbols.HDR_ON, "Technical data · PCGamingWiki",
         RowValue.Action { providerWebsite("https://www.pcgamingwiki.com/wiki/PCGamingWiki:Copyrights") },
-        "Native HDR evidence from PCGamingWiki. Data under CC BY-NC-SA 3.0; derived status is interpreted by Delos.", tab = SettingsTab.ABOUT, section = "Game data")
+        "Native HDR evidence from PCGamingWiki (CC BY-NC-SA 3.0); the derived status is Delos's interpretation.", tab = SettingsTab.ABOUT, section = "Game data")
     row("about_hltb", Symbols.SPORTS_ESPORTS, "Completion times · HowLongToBeat",
         RowValue.Action { providerWebsite("https://howlongtobeat.com/") },
-        "The HowLongToBeat headline value. Unofficial client adapted from howlongtobeatpy (MIT, © 2018 Michele).", tab = SettingsTab.ABOUT, section = "Game data")
+        "HowLongToBeat's headline time. Unofficial client adapted from howlongtobeatpy (MIT, © 2018 Michele).", tab = SettingsTab.ABOUT, section = "Game data")
     return list
 }
