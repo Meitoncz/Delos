@@ -232,6 +232,13 @@ private fun MenuItemView(icon: String, label: String, modifier: Modifier, onClic
 }
 
 /**
+ * Width of the side menu in stage pixels (the prototype's 620 plus room for the longest quick-setting row, Background
+ * with Caustics, at the largest interface scale: the row's label and value need about 402 stage pixels at 130 % and
+ * the panel leaves 680 - 248 = 432).
+ */
+private const val SIDE_MENU_WIDTH = 680f
+
+/**
  * The side menu (left menu button), sliding in from the left: profile header and quick settings.
  * [header] and [content] are supplied by the shell; the first focusable of [content] should use
  * [firstFocus].
@@ -254,7 +261,7 @@ fun SideMenuLayer(
         Column(
             Modifier
                 .fillMaxHeight()
-                .width(620.px)
+                .width(SIDE_MENU_WIDTH.px)
                 .focusTrap(visible)
                 .backdropBlur(haze, 28f, colors.surface3)
                 .padding(horizontal = 40.px, vertical = 48.px),
@@ -264,7 +271,7 @@ fun SideMenuLayer(
             content(first)
         }
         // border-right: 1px line
-        Box(Modifier.fillMaxHeight().width(620.px), contentAlignment = Alignment.CenterEnd) {
+        Box(Modifier.fillMaxHeight().width(SIDE_MENU_WIDTH.px), contentAlignment = Alignment.CenterEnd) {
             Box(Modifier.fillMaxHeight().width(1.px).background(colors.line))
         }
     }
