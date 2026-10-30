@@ -1,6 +1,10 @@
 #version 450
 #extension GL_GOOGLE_include_directive : require
-// Video-adapted SGSR 2 reconstruction for PyroWave. Motion comes from decoded frames rather than an
+// Copyright (c) 2025-2026 Qualcomm Innovation Center, Inc. All rights reserved.
+// SPDX-License-Identifier: BSD-3-Clause
+// Video-adapted SGSR 2 reconstruction for PyroWave: the Lanczos kernel and the reconstruction structure
+// derive from SGSR 2 (FastLanczos in assets/sgsr/sgsr2_video.frag); the licence is
+// assets/licenses/sgsr.txt. Motion comes from decoded frames rather than an
 // engine, so history is accepted only where forward/backward flow and local colour bounds agree.
 layout(local_size_x = 8, local_size_y = 8) in;
 layout(set = 0, binding = 0) uniform sampler2D u_y;
@@ -11,6 +15,7 @@ layout(set = 0, binding = 4) uniform sampler2D u_backward;
 layout(set = 0, binding = 5) uniform sampler2D u_forward;
 layout(set = 0, binding = 6, rgba16f) writeonly uniform image2D u_output;
 layout(set = 0, binding = 7) uniform sampler2D u_reactive;
+layout(set = 0, binding = 8) uniform sampler2D u_scene;
 layout(push_constant) uniform Params {
     ivec2 inputSize;
     ivec2 outputSize;
@@ -57,8 +62,9 @@ void main() {
     }
     reconstructed=abs(weightSum)>1e-5?clamp(reconstructed/weightSum,localMin,localMax):source(base);
     // Reset resources may be newly allocated: even a zero-weight NaN history
-    // would poison a mix. Do not read history, flow or activation on this path.
-    if(p.reset!=0) {
+    // would poison a mix. Do not read history, flow, activation or the cut flag on this path. A whole-frame
+    // cut (sgsr_scene.comp) drops the history the same way.
+    if(p.reset!=0||texelFetch(u_scene,ivec2(0),0).r>.5) {
         imageStore(u_output,outPos,vec4(reconstructed,1.0));
         return;
     }

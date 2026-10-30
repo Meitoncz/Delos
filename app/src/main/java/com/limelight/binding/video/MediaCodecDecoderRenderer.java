@@ -165,7 +165,8 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     private volatile boolean sgsrRequested;
     private volatile boolean sgsrHdrActive;
     // Delos: the Vulkan renderer of a PyroWave stream; MediaCodec stays unused while it exists
-    private PyroWaveRenderer pyroWave;
+    // Written by setup() and cleanup(), read by the stream menu, the stats thread and the HDR callback
+    private volatile PyroWaveRenderer pyroWave;
     private Thread pyroWaveStatsThread;
     // Delos: when the drawn frames came, for the 1% low in the statistics (PyroWave keeps its own natively)
     private final FrameTimes frameTimes = new FrameTimes();
@@ -866,10 +867,11 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     /** Delos: live post-processing controls; a decoder reset requests an IDR, not a reconnect. */
     public void setUpscalingEnabled(boolean enabled) {
         if (stopping) return;
-        if (pyroWave != null) {
+        PyroWaveRenderer pw = pyroWave;
+        if (pw != null) {
             sgsrRequested = enabled;
             prefs.sgsrEnabled = enabled;
-            pyroWave.setUpscalingMode(getRequestedPyroWaveUpscalingMode());
+            pw.setUpscalingMode(getRequestedPyroWaveUpscalingMode());
             return;
         }
         if (enabled == sgsrRequested && !sgsrFailed) return;
@@ -881,8 +883,9 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     }
     public boolean isUpscalingRequested() { return sgsrRequested; }
     public String getUpscalingStatus() {
-        if (pyroWave != null) {
-            switch (pyroWave.getUpscalingMode()) {
+        PyroWaveRenderer pw = pyroWave;
+        if (pw != null) {
+            switch (pw.getUpscalingMode()) {
                 case PyroWaveRenderer.UPSCALING_SGSR1_STANDARD: return "On: SGSR 1 Standard";
                 case PyroWaveRenderer.UPSCALING_SGSR1_HIGH: return "On: SGSR 1 High Quality";
                 case PyroWaveRenderer.UPSCALING_SGSR2_VIDEO: return "On: SGSR 2 Video";
@@ -899,7 +902,8 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         prefs.sgsrSharpness = Math.max(0, Math.min(100, value));
         SgsrRenderer current = sgsr;
         if (current != null) current.setSharpness(prefs.sgsrSharpness);
-        if (pyroWave != null) pyroWave.setSharpness(prefs.sgsrSharpness / 100f);
+        PyroWaveRenderer pw = pyroWave;
+        if (pw != null) pw.setSharpness(prefs.sgsrSharpness / 100f);
     }
 
     public void setUpscalingMode(int mode) {
@@ -908,7 +912,8 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         prefs.sgsrTemporalQuality = mode == 3;
         SgsrRenderer current = sgsr;
         if (current != null) current.setMode(mode);
-        if (pyroWave != null) pyroWave.setUpscalingMode(getRequestedPyroWaveUpscalingMode());
+        PyroWaveRenderer pw = pyroWave;
+        if (pw != null) pw.setUpscalingMode(getRequestedPyroWaveUpscalingMode());
     }
 
     private int getRequestedPyroWaveUpscalingMode() {
@@ -923,13 +928,19 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         prefs.sgsrSupersamplingLevel = level >= 2 ? 2 : 1;
         SgsrRenderer current = sgsr;
         if (current != null) current.setSupersamplingLevel(prefs.sgsrSupersamplingLevel);
-        if (pyroWave != null) pyroWave.setSupersamplingLevel(prefs.sgsrSupersamplingLevel);
+        PyroWaveRenderer pw = pyroWave;
+        if (pw != null) pw.setSupersamplingLevel(prefs.sgsrSupersamplingLevel);
     }
 
-    public int getSupersamplingLevel() { return prefs.sgsrSupersamplingLevel; }
+    /** The level the renderer applies; PyroWave falls back to level 1 when level 2 does not fit. */
+    public int getSupersamplingLevel() {
+        PyroWaveRenderer pw = pyroWave;
+        return pw != null ? pw.getSupersamplingLevel() : prefs.sgsrSupersamplingLevel;
+    }
 
     public boolean isSupersamplingMode() {
-        if (pyroWave != null) return pyroWave.isSupersampling();
+        PyroWaveRenderer pw = pyroWave;
+        if (pw != null) return pw.isSupersampling();
         SgsrRenderer current = sgsr;
         if (current != null && current.isSupersampling()) return true;
         if (!(context instanceof com.limelight.Game)) return false;
@@ -966,7 +977,9 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                 long now = SystemClock.uptimeMillis();
                 float seconds = Math.max(now - windowStart, 1) / 1000f;
                 windowStart = now;
-                long[] stats = pyroWave.takeStats();
+                PyroWaveRenderer pw = pyroWave;
+                if (pw == null) return;
+                long[] stats = pw.takeStats();
                 if (prefs.enablePerfOverlay) {
                     reportPyroWaveStats(stats, seconds);
                 }
@@ -1000,10 +1013,11 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         sb.append(context.getString(R.string.perf_overlay_dectime, decodeTimeMs));
         perfListener.onPerfUpdate(sb.toString());
 
+        PyroWaveRenderer pw = pyroWave;
         perfListener.onPerfStats(new com.limelight.shell.StreamStats(
                 initialWidth, initialHeight, totalFps, receivedFps, renderedFps,
                 "PyroWave", (videoFormat & MoonBridge.VIDEO_FORMAT_MASK_10BIT) != 0, decoder,
-                pyroWave != null ? pyroWave.getScaleDescription() : null, lossPercent,
+                pw != null ? pw.getScaleDescription() : null, lossPercent,
                 (int) (rttInfo >> 32), (int) rttInfo, decodeTimeMs, processingTimeMs,
                 hostFrames > 0 ? stats[PyroWaveRenderer.STAT_HOST_LATENCY_MIN] / 10f : -1f,
                 hostFrames > 0 ? stats[PyroWaveRenderer.STAT_HOST_LATENCY_MAX] / 10f : -1f,
@@ -1660,9 +1674,10 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
 
     @Override
     public void cleanup() {
-        if (pyroWave != null) {
-            pyroWave.destroy();
+        PyroWaveRenderer pw = pyroWave;
+        if (pw != null) {
             pyroWave = null;
+            pw.destroy();
             return;
         }
         detachAsyncCodec();
@@ -1675,9 +1690,10 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         sgsrHdrActive = enabled;
         SgsrRenderer currentSgsr = sgsr;
         if (currentSgsr != null) currentSgsr.setHdrMode(enabled, hdrMetadata);
-        if (pyroWave != null) {
+        PyroWaveRenderer pw = pyroWave;
+        if (pw != null) {
             // The renderer reads the host's metadata itself
-            pyroWave.setHdrMode(enabled);
+            pw.setHdrMode(enabled);
             return;
         }
         // HDR metadata is only supported in Android 7.0 and later, so don't bother

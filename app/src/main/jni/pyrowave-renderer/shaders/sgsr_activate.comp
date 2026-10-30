@@ -1,5 +1,7 @@
 #version 450
-// Video-adapted SGSR 2 Activate, matching assets/sgsr/video_activate.comp.
+// Copyright (c) 2025-2026 Qualcomm Innovation Center, Inc. All rights reserved.
+// SPDX-License-Identifier: BSD-3-Clause
+// Video-adapted SGSR 2 Activate (licence: assets/licenses/sgsr.txt), matching assets/sgsr/video_activate.comp.
 // Uses decoded luma rather than engine depth: disocclusion, inconsistent flow and
 // source-frame changes activate fresh reconstruction before history is accumulated.
 layout(local_size_x=8,local_size_y=8) in;

@@ -25,7 +25,9 @@ public final class PyroWaveRenderer {
 
     private static Boolean available;
 
-    private long handle;
+    // Written by destroy() on one thread, read by the setters and getters of others; the native entry points
+    // check the handle against the live renderer, so a stale value is harmless.
+    private volatile long handle;
 
     private PyroWaveRenderer(long handle) {
         this.handle = handle;
@@ -48,52 +50,69 @@ public final class PyroWaveRenderer {
 
     /**
      * The renderer for a stream on [surface], or null when it cannot be created. A 10-bit stream shows in
-     * HDR10 whenever the host is in HDR mode (setHdrMode), in SDR otherwise.
+     * HDR10 whenever the host is in HDR mode (setHdrMode), in SDR otherwise. The upscaler's sizing limits are
+     * SgsrDimensions', so the native planner and the MediaCodec path cannot drift apart.
      */
     public static PyroWaveRenderer create(Surface surface, int width, int height, int frameRate,
                                           int outputWidth, int outputHeight, boolean chroma444,
                                           boolean fullRange, int matrix, boolean tenBit, int upscalingMode,
                                           int supersamplingLevel, float sharpness) {
         long handle = nativeCreate(surface, width, height, frameRate, outputWidth, outputHeight, chroma444,
-                fullRange, matrix, tenBit, upscalingMode, supersamplingLevel, sharpness);
+                fullRange, matrix, tenBit, upscalingMode, supersamplingLevel, sharpness,
+                SgsrDimensions.MAX_INTERNAL_WIDTH, SgsrDimensions.MAX_INTERNAL_HEIGHT,
+                SgsrDimensions.MAX_INTERNAL_PIXELS, SgsrDimensions.NATIVE_TOLERANCE);
         return handle != 0 ? new PyroWaveRenderer(handle) : null;
     }
 
     /** The GPU time of the last decoded frame in microseconds, 0 when unknown. */
     public int lastGpuDecodeUs() {
-        return handle != 0 ? nativeGetLastGpuDecodeUs(handle) : 0;
+        final long h = handle;
+        return h != 0 ? nativeGetLastGpuDecodeUs(h) : 0;
     }
 
     /** The host switched HDR on or off. */
     public void setHdrMode(boolean enabled) {
-        if (handle != 0) {
-            nativeSetHdrMode(handle, enabled);
+        final long h = handle;
+        if (h != 0) {
+            nativeSetHdrMode(h, enabled);
         }
     }
 
     public void setUpscalingMode(int mode) {
-        if (handle != 0) nativeSetUpscalingMode(handle, mode);
+        final long h = handle;
+        if (h != 0) nativeSetUpscalingMode(h, mode);
     }
 
     /** The mode actually applied by the renderer, not the requested setting. */
     public int getUpscalingMode() {
-        return handle != 0 ? nativeGetUpscalingMode(handle) : UPSCALING_OFF;
+        final long h = handle;
+        return h != 0 ? nativeGetUpscalingMode(h) : UPSCALING_OFF;
+    }
+
+    /** The supersampling level actually applied by the renderer (1 or 2), not the requested setting. */
+    public int getSupersamplingLevel() {
+        final long h = handle;
+        return h != 0 ? nativeGetSupersamplingLevel(h) : 1;
     }
 
     public void setSharpness(float sharpness) {
-        if (handle != 0) nativeSetSharpness(handle, Math.max(0f, Math.min(1f, sharpness)));
+        final long h = handle;
+        if (h != 0) nativeSetSharpness(h, Math.max(0f, Math.min(1f, sharpness)));
     }
 
     public void setSupersamplingLevel(int level) {
-        if (handle != 0) nativeSetSupersamplingLevel(handle, level >= 2 ? 2 : 1);
+        final long h = handle;
+        if (h != 0) nativeSetSupersamplingLevel(h, level >= 2 ? 2 : 1);
     }
 
     public boolean isSupersampling() {
-        return handle != 0 && nativeIsSupersampling(handle);
+        final long h = handle;
+        return h != 0 && nativeIsSupersampling(h);
     }
 
     public String getScaleDescription() {
-        return handle != 0 ? nativeGetScaleDescription(handle) : null;
+        final long h = handle;
+        return h != 0 ? nativeGetScaleDescription(h) : null;
     }
 
     /** The frame statistics since the last call, in the order of the STAT_* indices. */
@@ -132,7 +151,8 @@ public final class PyroWaveRenderer {
     private static native long nativeCreate(Surface surface, int width, int height, int frameRate,
                                             int outputWidth, int outputHeight, boolean chroma444,
                                             boolean fullRange, int matrix, boolean tenBit, int upscalingMode,
-                                            int supersamplingLevel, float sharpness);
+                                            int supersamplingLevel, float sharpness, int maxInternalWidth,
+                                            int maxInternalHeight, long maxInternalPixels, int nativeTolerance);
 
     private static native void nativeSetHdrMode(long handle, boolean enabled);
     private static native void nativeSetUpscalingMode(long handle, int mode);
@@ -140,6 +160,7 @@ public final class PyroWaveRenderer {
     private static native void nativeSetSharpness(long handle, float sharpness);
     private static native void nativeSetSupersamplingLevel(long handle, int level);
     private static native boolean nativeIsSupersampling(long handle);
+    private static native int nativeGetSupersamplingLevel(long handle);
     private static native String nativeGetScaleDescription(long handle);
 
     private static native int nativeGetLastGpuDecodeUs(long handle);

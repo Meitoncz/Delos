@@ -71,7 +71,6 @@ ifeq ($(NDK_DEBUG),1)
 LOCAL_SRC_FILES += ../pyrowave-renderer/pyrowave_upscale_probe.cpp
 endif
 LOCAL_CFLAGS += -DDELOS_PYROWAVE
-LOCAL_CPPFLAGS += -std=c++17 -fexceptions -frtti
 LOCAL_STATIC_LIBRARIES += pyrowave
 LOCAL_LDLIBS += -landroid -ldl -lEGL -lGLESv3
 else
