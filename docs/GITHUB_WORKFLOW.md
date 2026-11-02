@@ -34,6 +34,10 @@ Use matching type/area labels. `needs-decision`, `blocked`, `deferred`, `conditi
 7. For recurring records, add dated review results and create bounded linked work for concrete changes. A standing record is not completed by one review unless explicitly retired. No scheduled/background automation is implied.
 8. Refresh GitHub at the next task interaction; no persistent background watcher is running. Preserve related technical documentation when behavior changes, but keep its task state on GitHub.
 
+## Roadmap
+
+Agreed 2026-11-02. The roadmap lives only on GitHub: **milestones M1–M7**, **Research and ideas** and **After publication** order the open work by phase (the milestone description states each goal), and the Project **Priority** field holds P1 (M1, M2), P2 (M3–M5) or P3 (M6, M7, research). Recurring records (I01–I03) have no milestone or priority; conditional publication records have a milestone but no priority until the project goes public. Milestones have no due dates: the order is the plan. Move an issue by changing its milestone and priority and record the reason in a comment. Add the Project **Roadmap** view (layout Roadmap, group by Milestone) in the web UI; the API cannot create views. A milestone is closed when all its issues are closed.
+
 ## CLI examples (PowerShell)
 
 ```powershell
