@@ -17,6 +17,7 @@ public class CacheHelper {
         File f = root;
         for (int i = 0; i < path.length; i++) {
             String component = path[i];
+            requireSafeComponent(component);
 
             if (i == path.length - 1) {
                 // This is the file component so now we create parent directories
@@ -28,6 +29,17 @@ public class CacheHelper {
             f = new File(f, component);
         }
         return f;
+    }
+
+    /**
+     * Path components can carry values that originate outside the app (server UUIDs, content URIs),
+     * so a component must never be able to leave the directory it is appended to.
+     */
+    private static void requireSafeComponent(String component) {
+        if (component == null || component.equals("..") || component.indexOf('/') >= 0
+                || component.indexOf('\\') >= 0 || component.indexOf('\0') >= 0) {
+            throw new IllegalArgumentException("Unsafe cache path component");
+        }
     }
 
     public static long getFileSize(File root, String... path) {

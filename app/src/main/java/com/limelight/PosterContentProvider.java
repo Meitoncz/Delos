@@ -8,10 +8,11 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
 
-import com.limelight.grid.assets.DiskAssetLoader;
+import com.limelight.utils.CacheHelper;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.List;
 
 public class PosterContentProvider extends ContentProvider {
@@ -21,7 +22,6 @@ public class PosterContentProvider extends ContentProvider {
     public static final String PNG_MIME_TYPE = "image/png";
     public static final int APP_ID_PATH_INDEX = 2;
     public static final int COMPUTER_UUID_PATH_INDEX = 1;
-    private DiskAssetLoader mDiskAssetLoader;
 
     private static final UriMatcher sUriMatcher;
     private static final String BOXART_PATH = "boxart";
@@ -51,11 +51,47 @@ public class PosterContentProvider extends ContentProvider {
         if (segments.size() != 3) {
             throw new FileNotFoundException();
         }
-        String appId = segments.get(APP_ID_PATH_INDEX);
-        String uuid = segments.get(COMPUTER_UUID_PATH_INDEX);
-        File file = mDiskAssetLoader.getFile(uuid, Integer.parseInt(appId));
-        if (file.exists()) {
-            return ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY);
+        File file = resolveBoxArtFile(getContext().getCacheDir(),
+                segments.get(COMPUTER_UUID_PATH_INDEX), segments.get(APP_ID_PATH_INDEX));
+        return ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY);
+    }
+
+    /**
+     * Maps untrusted URI segments to an existing cached box art file. The provider is exported,
+     * so the result is guaranteed to be a regular file inside {@code <cacheDir>/boxart}.
+     *
+     * @throws FileNotFoundException if the ids are malformed, escape the cache or the file is missing
+     */
+    static File resolveBoxArtFile(File cacheDir, String uuid, String appId) throws FileNotFoundException {
+        if (uuid == null || uuid.isEmpty() || uuid.equals(".") || uuid.equals("..")
+                || uuid.indexOf('/') >= 0 || uuid.indexOf('\\') >= 0
+                || uuid.indexOf('%') >= 0 || uuid.indexOf('\0') >= 0) {
+            throw new FileNotFoundException();
+        }
+        if (appId == null || appId.isEmpty() || appId.length() > 10) {
+            throw new FileNotFoundException();
+        }
+        for (int i = 0; i < appId.length(); i++) {
+            char c = appId.charAt(i);
+            if (c < '0' || c > '9') {
+                throw new FileNotFoundException();
+            }
+        }
+        int id;
+        try {
+            id = Integer.parseInt(appId);
+        } catch (NumberFormatException e) {
+            throw new FileNotFoundException();
+        }
+
+        try {
+            File boxArtRoot = new File(cacheDir, BOXART_PATH).getCanonicalFile();
+            File file = CacheHelper.openPath(false, cacheDir, BOXART_PATH, uuid, id + ".png").getCanonicalFile();
+            if (file.getPath().startsWith(boxArtRoot.getPath() + File.separator) && file.isFile()) {
+                return file;
+            }
+        } catch (IOException | IllegalArgumentException e) {
+            // fall through
         }
         throw new FileNotFoundException();
     }
@@ -77,7 +113,6 @@ public class PosterContentProvider extends ContentProvider {
 
     @Override
     public boolean onCreate() {
-        mDiskAssetLoader = new DiskAssetLoader(getContext());
         return true;
     }
 
