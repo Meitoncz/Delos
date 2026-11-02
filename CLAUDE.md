@@ -21,6 +21,16 @@ Android client for streaming games from **Vibepollo** (a fork of Apollo/Sunshine
 - Environment: `docs/WINDOWS_SETUP.md`.
 - Priority: **Moonlight updates first** (common-c → toolchain → merge `moonlight/master` → OpenSSL/opus), **UI and custom features after that**.
 
+## Multi-agent workflow
+
+Claude is the lead agent and Codex a helper for smaller scoped tasks (agreed 2026-10-30). Delegate through
+herdr with a task file; helpers use their own git worktree and branch, never run Gradle/ADB, push or merge,
+and report back with `herdr agent prompt`. The lead reviews every helper commit, builds, tests, lints,
+installs on the Odin and integrates. Agent commits have the agent as author (`Claude <noreply@anthropic.com>`,
+`Codex <noreply@openai.com>`), the user as committer, messages end with `[skip ci]`; issues and comments
+created with `gh` end with `Created by <agent> via gh as Meitoncz`. Full rules: `AGENTS.md`, section
+"Multi-agent workflow".
+
 ## Remotes
 
 - `origin` – `Meitoncz/Delos` (private)
