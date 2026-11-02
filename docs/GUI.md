@@ -36,6 +36,16 @@ The TV channel uses the same mark; PC shortcut icons remain unchanged.
 2. In the same style, the next step automatically shows the **PCs to pair, in circles**.
 3. Logging in to a PC plays the main **"portal" animation** (not the same as the PlayStation Portal one). The same kind of animation is used when connecting to a remote device elsewhere in the UI.
 
+### Profile avatars
+
+- A profile's avatar is one of **12 illustrated characters** (game-styled flat vector mascots with soft shading and thick friendly outlines, no text), not an icon: Sailor, Voyager, Player, Fox, Spark and Calm (the original six, in this order) and Knight, Robot, Cat, Wizard, Racer and Ghost. The profile stores only the avatar's **index**, so existing profiles keep theirs and the order only ever grows at the end.
+- Every avatar has its own **hue**; the character is drawn on the same radial-gradient hue background as before (`radial-gradient(circle at 35% 30%, hsl(h 80% 62%), hsl(h+30 70% 38%))`), so a profile's color stays recognizable. The illustrations are transparent images (384 px WebP, character in the central ~72% because every badge is a circle); the font icon of the old avatar is only the stand-in while the image loads.
+- The picker on the create/change-avatar screen shows all twelve at once in **two rows of six** circles with the avatar's name under each. D-pad moves spatially, left at the start of a row and right at its end continue in the previous/next row, A selects.
+- The images are **procedural illustrations from a script**, not hand-painted or AI-generated art. Rebuild them with:
+  `python tools/avatars/generate.py` (Pillow 11.3.0 with WebP; writes `app/src/main/assets/avatars/<slug>.webp`),
+  `python tools/avatars/generate.py --preview` (also writes a contact sheet, a small-size strip and a stress sheet on foreign hues to ignored `build/avatars-preview/`),
+  `python tools/avatars/generate.py --fast --only fox cat` (quick 2x look at selected avatars; writes no assets).
+
 ## Start screen (every launch)
 
 - Every time Delos starts, it opens on a **start screen with the remote devices** (in the same circle style as the first launch).

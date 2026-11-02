@@ -20,17 +20,28 @@ import org.json.JSONObject
 import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
 
-/** An avatar to choose from (the prototype's `AVATARS`): icon, name and color. */
+/**
+ * An avatar to choose from (the prototype's `AVATARS`): its name and color, the illustration [asset]
+ * (a file under `assets/avatars`, drawn over the color) and the font [icon] shown until the image is
+ * loaded or when it is missing. A profile stores the avatar's index, so the order must never change:
+ * new avatars are only appended.
+ */
 @Immutable
-data class Avatar(val icon: String, val name: String, val hue: Float)
+data class Avatar(val icon: String, val name: String, val hue: Float, val asset: String?)
 
 val AVATARS = listOf(
-    Avatar(Symbols.SAILING, "Sailor", 205f),
-    Avatar(Symbols.ROCKET_LAUNCH, "Voyager", 262f),
-    Avatar(Symbols.SPORTS_ESPORTS, "Player", 330f),
-    Avatar(Symbols.PETS, "Fox", 24f),
-    Avatar(Symbols.BOLT, "Spark", 48f),
-    Avatar(Symbols.SPA, "Calm", 150f),
+    Avatar(Symbols.SAILING, "Sailor", 205f, "sailor.webp"),
+    Avatar(Symbols.ROCKET_LAUNCH, "Voyager", 262f, "voyager.webp"),
+    Avatar(Symbols.SPORTS_ESPORTS, "Player", 330f, "player.webp"),
+    Avatar(Symbols.PETS, "Fox", 24f, "fox.webp"),
+    Avatar(Symbols.BOLT, "Spark", 48f, "spark.webp"),
+    Avatar(Symbols.SPA, "Calm", 150f, "calm.webp"),
+    Avatar(Symbols.SWORDS, "Knight", 232f, "knight.webp"),
+    Avatar(Symbols.MEMORY, "Robot", 182f, "robot.webp"),
+    Avatar(Symbols.PETS, "Cat", 84f, "cat.webp"),
+    Avatar(Symbols.STAR, "Wizard", 292f, "wizard.webp"),
+    Avatar(Symbols.SPEED, "Racer", 356f, "racer.webp"),
+    Avatar(Symbols.FACE, "Ghost", 118f, "ghost.webp"),
 )
 
 /** A user profile of the new UI: identity and a complete, independent set of preferences. */

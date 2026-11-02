@@ -65,6 +65,10 @@ import androidx.compose.ui.zIndex
 import androidx.compose.ui.unit.em
 import com.limelight.shell.ContextMenu
 import com.limelight.shell.data.Avatar
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.layout.ContentScale
+import com.limelight.shell.data.rememberAvatarImage
 
 /** `.center-col`: a centered column; it moves up while the on-screen keyboard is shown. */
 @Composable
@@ -129,11 +133,11 @@ fun PillButton(label: String, icon: String?, onClick: () -> Unit, modifier: Modi
     }
 }
 
-/** The avatar's colors (`radial-gradient(circle at 35% 30%, …)`) behind its white icon. */
+/** The avatar's colors (`radial-gradient(circle at 35% 30%, …)`) behind its illustration. */
 @Composable
 fun AvatarBadge(avatar: Avatar, size: Float, iconSize: Float, modifier: Modifier = Modifier) {
     Box(modifier.size(size.px).clip(CircleShape).avatarBackground(avatar.hue), contentAlignment = Alignment.Center) {
-        Symbol(avatar.icon, iconSize.tpx, Color.White, filled = true)
+        AvatarArt(avatar, iconSize)
     }
 }
 
@@ -142,9 +146,32 @@ private fun Modifier.avatarBackground(hue: Float) = drawBehind {
 }
 
 /**
- * A `.circle-item`: a focusable circle (176 px, [big] 220 px) with an icon, its label and an optional
- * meta line with a status dot. [avatarHue] fills it with an avatar's colors, [selected] adds the check
- * badge, [pulse] the online pulse ring (`.online-ring`).
+ * The avatar's bundled illustration filling its badge; the white font icon (at [iconSize]) stands in
+ * until the image is decoded and fades out as it fades in, and stays when the asset is missing. An
+ * image that is cached already is there in the first frame. The badge keeps its size throughout.
+ */
+@Composable
+private fun AvatarArt(avatar: Avatar, iconSize: Float) {
+    val image by rememberAvatarImage(avatar.asset)
+    val bitmap = image
+    val shown by animateFloatAsState(if (bitmap != null) 1f else 0f, tween(180), label = "avatarArt")
+    if (shown < 1f) {
+        Box(Modifier.graphicsLayer { alpha = 1f - shown }) { Symbol(avatar.icon, iconSize.tpx, Color.White, filled = true) }
+    }
+    if (bitmap != null) {
+        // Medium keeps the 384 px artwork smooth (mipmaps) at the small badge sizes
+        Image(
+            bitmap, contentDescription = null, contentScale = ContentScale.Fit, filterQuality = FilterQuality.Medium,
+            modifier = Modifier.fillMaxSize().graphicsLayer { alpha = shown },
+        )
+    }
+}
+
+/**
+ * A `.circle-item`: a focusable circle (176 px, [big] 220 px, or [diameter]) with an icon, its label and an
+ * optional meta line with a status dot. [avatar] fills it with the avatar's colors and illustration,
+ * [selected] adds the check badge, [pulse] the online pulse ring (`.online-ring`). [width] is the width
+ * of the item, which the label may use.
  */
 @Composable
 fun CircleItem(
@@ -157,7 +184,9 @@ fun CircleItem(
     big: Boolean = false,
     selected: Boolean = false,
     pulse: Boolean = false,
-    avatarHue: Float? = null,
+    avatar: Avatar? = null,
+    diameter: Float? = null,
+    width: Float = 220f,
     contextMenu: ContextMenu? = null,
 ) {
     val colors = LocalDelosColors.current
@@ -166,10 +195,11 @@ fun CircleItem(
     val lit by animateFloatAsState(if (focused || selected) 1f else 0f, tween(400, easing = EaseOut), label = "circleLabel")
     // The same scale as focusEffects, for the check badge that is drawn above the focus ring
     val badgeScale by animateFloatAsState(if (focused) 1.16f else 1f, tween(380, easing = EaseSpring), label = "circleBadge")
-    val side = if (big) 220f else 176f
+    val side = diameter ?: if (big) 220f else 176f
+    val iconSize = if (big) 96f else 76f
     val pulseTransition = rememberInfiniteTransition(label = "pulse")
     val wave by pulseTransition.animateFloat(0f, 1f, infiniteRepeatable(tween(2400, easing = EaseOut)), label = "pulseWave")
-    Column(Modifier.width(220.px), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(22.px)) {
+    Column(Modifier.width(width.px), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy((if (side < 176f) 14f else 22f).px)) {
         Box {
             Box(
                 modifier
@@ -192,13 +222,11 @@ fun CircleItem(
                     Modifier
                         .fillMaxSize()
                         .clip(CircleShape)
-                        .then(if (avatarHue != null) Modifier.avatarBackground(avatarHue) else Modifier.glass(colors.surface2).border(1.px, colors.line, CircleShape)),
+                        .then(if (avatar != null) Modifier.avatarBackground(avatar.hue) else Modifier.glass(colors.surface2).border(1.px, colors.line, CircleShape)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Symbol(
-                        icon, (if (big) 96f else 76f).tpx, if (avatarHue != null) Color.White else colors.text,
-                        filled = avatarHue != null || focused,
-                    )
+                    if (avatar != null) AvatarArt(avatar, iconSize)
+                    else Symbol(icon, iconSize.tpx, colors.text, filled = focused)
                 }
             }
             if (selected) {

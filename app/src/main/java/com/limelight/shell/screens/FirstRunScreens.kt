@@ -35,7 +35,7 @@ import com.limelight.shell.data.AVATARS
 import com.limelight.shell.data.Profile
 import com.limelight.shell.ui.CenterColumn
 import com.limelight.shell.ui.CircleItem
-import com.limelight.shell.ui.Circles
+import androidx.compose.ui.focus.focusProperties
 import com.limelight.shell.ui.Cue
 import com.limelight.shell.ui.Figtree
 import com.limelight.shell.ui.Heading
@@ -104,7 +104,7 @@ private fun BootLogo(modifier: Modifier = Modifier) {
 fun CreateProfileScreen(editing: Boolean, initial: Profile?, onDone: (name: String, avatar: Int) -> Unit) {
     val shell = LocalShell.current
     val feedback = LocalFeedback.current
-    var avatar by remember { mutableIntStateOf(initial?.avatar ?: 0) }
+    var avatar by remember { mutableIntStateOf((initial?.avatar ?: 0).coerceIn(AVATARS.indices)) }
     var name by remember { mutableStateOf(initial?.name ?: "Player") }
     val avatarFocus = remember { List(AVATARS.size) { FocusRequester() } }
     val nameField = remember { FocusRequester() }
@@ -122,21 +122,38 @@ fun CreateProfileScreen(editing: Boolean, initial: Profile?, onDone: (name: Stri
             if (editing) "Choose your avatar" else "Who's playing?",
             if (editing) "And a new name, if you like." else "Pick an avatar and a name for your profile.",
         )
-        Circles {
-            AVATARS.forEachIndexed { i, a ->
-                CircleItem(
-                    a.icon, a.name,
-                    onClick = {
-                        avatar = i
-                        if (!editing) runCatching { nameField.requestFocus() }
-                    },
-                    modifier = Modifier.focusRequester(avatarFocus[i]),
-                    selected = i == avatar,
-                    avatarHue = a.hue,
-                )
+        // All avatars in rows of AVATAR_COLUMNS. Up and down move spatially; left at the start of a row and
+        // right at its end continue in the previous and the next row (and wrap from the first to the last).
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(26.px)) {
+            AVATARS.withIndex().chunked(AVATAR_COLUMNS).forEach { row ->
+                Row(horizontalArrangement = Arrangement.spacedBy(32.px), verticalAlignment = Alignment.Top) {
+                    row.forEach { (i, a) ->
+                        val wrap = Modifier.focusProperties {
+                            if (i % AVATAR_COLUMNS == 0) left = avatarFocus[(i - 1 + AVATARS.size) % AVATARS.size]
+                            if (i % AVATAR_COLUMNS == AVATAR_COLUMNS - 1 || i == AVATARS.lastIndex) right = avatarFocus[(i + 1) % AVATARS.size]
+                        }
+                        CircleItem(
+                            a.icon, a.name,
+                            onClick = {
+                                avatar = i
+                                if (!editing) runCatching { nameField.requestFocus() }
+                            },
+                            modifier = wrap.focusRequester(avatarFocus[i]),
+                            selected = i == avatar,
+                            avatar = a,
+                            diameter = AVATAR_DIAMETER,
+                            width = AVATAR_CELL,
+                        )
+                    }
+                }
             }
         }
         TextFieldPill(name, { name = it }, Symbols.BADGE, Modifier.focusRequester(nameField), placeholder = "Your name", maxLength = 20, onDone = submit)
         PillButton(if (editing) "Save" else "Create profile", Symbols.CHECK, submit, primary = true)
     }
 }
+
+/** The avatar picker: 6 columns of 144 px circles in 184 px cells, 2 rows (six cells and five gaps are 1264 px of the 1920 px stage). */
+private const val AVATAR_COLUMNS = 6
+private const val AVATAR_DIAMETER = 144f
+private const val AVATAR_CELL = 184f
