@@ -136,7 +136,7 @@ fun PillButton(label: String, icon: String?, onClick: () -> Unit, modifier: Modi
 
 /**
  * The avatar's colors (`radial-gradient(circle at 35% 30%, …)`) behind its illustration: the colors made
- * for an imported image (avatars.json), else the ones of its hue.
+ * for a warm imported character (avatars.json), else the ones of its fixed hue.
  */
 @Composable
 fun AvatarBadge(avatar: Avatar, size: Float, iconSize: Float, modifier: Modifier = Modifier) {

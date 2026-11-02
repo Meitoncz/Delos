@@ -23,7 +23,7 @@ class AvatarsTest {
         assertEquals(AVATARS.size, AVATARS.map { it.asset }.toSet().size)
     }
 
-    /** An avatar with colors of its own (imported image) is told apart by them; the others by their hue. */
+    /** An avatar with colors of its own (a warm imported character) is told apart by them; the others by their hue. */
     @Test fun avatarsWithoutImportedColorsHaveWellSeparatedHues() {
         val hued = AVATARS.filter { slug(it.asset) !in gradients }
         for (i in hued.indices) for (j in i + 1 until hued.size) {

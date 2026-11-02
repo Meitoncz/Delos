@@ -12,19 +12,24 @@ For every PNG found it
   * resizes it to 384x384 with Lanczos (a non-square canvas is padded to a square first, nothing is cut)
     and writes app/src/main/assets/avatars/<slug>.webp, replacing the procedural file of that slug,
   * derives the badge background from the character (see `background`) and writes the colors of every
-    imported slug to app/src/main/assets/avatars/avatars.json: {"fox": {"c0": "#rrggbb", "c1": "#rrggbb"}}.
-Slugs without an imported image keep their procedural webp (tools/avatars/generate.py, the fallback
-generator) and have no json entry, so the app keeps their old hue-based gradient.
+    imported WARM character (dominant hue 330..70 degrees) to app/src/main/assets/avatars/avatars.json:
+    {"fox": {"c0": "#rrggbb", "c1": "#rrggbb"}}.
+Every other slug (cool or grey characters, slugs without an imported image) has no json entry, so the
+app keeps its fixed per-avatar hue gradient (AVATARS / Profiles.kt); the json is rewritten from scratch on
+every run, so the entry of a slug that is no longer warm disappears. Slugs without an imported image
+keep their procedural webp (tools/avatars/generate.py, the fallback generator).
 
 The badge color: the character's dominant color is found like the app's cover colors do it
 (HeroBitmap.dominantHues: 16-level RGB buckets, CAM16 chroma squared weights, grey / near-black /
 near-white clusters ignored, hue groups of 15 degrees), ported with a real CAM16/HCT conversion (the
-Material color utilities' math, default viewing conditions). The background hue leans to the
-complement of that color so the character pops instead of blending in; a mostly grey or white character
-(ghost, robot) uses the avatar's configured base hue instead.
+material color utilities' math, default viewing conditions). Only a character whose dominant hue is warm
+gets a computed background: its hue leans to the complement of that color so the character pops instead
+of blending in. Cool characters (blue, purple) already stand out on their fixed-hue gradient.
+A mostly grey or white character (ghost, robot) is not warm (no dominant hue): fixed-hue gradient.
 
 --preview-dir (default build/avatars-preview) gets contact sheets: every imported avatar at 280/96/72/56 px
-on its computed gradient and on the old fixed-hue gradient, plus a family sheet of all twelve.
+on its computed gradient and on its final background (computed for warm characters, fixed hue for the
+others: what the app draws), plus a family sheet of all twelve with the final backgrounds.
 --preview-all also computes and shows the gradient of the slugs that were not imported (from their
 current webp; nothing is written for them). Useful to tune the constants below.
 """
@@ -57,6 +62,7 @@ CENTER_TOLERANCE = .06
 FILL_MIN, FILL_MAX = .60, .85
 
 # ------------------------------------------------------------ background constants (tuned on previews)
+WARM_FROM, WARM_TO = 330, 70           # dominant hue in [WARM_FROM, 360) or [0, WARM_TO): computed background
 COMPLEMENT_OFFSETS = (150, 165, 180, 195, 210)  # background hue = dominant hue + one of these
 INNER_S, INNER_L = .78, .58            # c0: radial center
 OUTER_S, OUTER_L = .75, .40            # c1: deeper edge
@@ -209,8 +215,13 @@ def hue_distance(a: float, b: float) -> float:
     return min(d, 360 - d)
 
 
+def is_warm(hue: float) -> bool:
+    return hue >= WARM_FROM or hue < WARM_TO
+
+
 def background(image: Image.Image, base_hue: float):
-    """(c0, c1, info) for a character image: a complement-leaning radial gradient, see the module docs."""
+    """(c0, c1, info, warm) for a character image: a complement-leaning radial gradient, see the module docs.
+    warm: the character's dominant hue is warm, so the gradient is to be used (else the fixed hue one)."""
     found = dominant_hues(image)
     if found is None or found[2] < MIN_COLORFUL:
         hue, source = float(base_hue), "base"
@@ -236,7 +247,8 @@ def background(image: Image.Image, base_hue: float):
     # warm and yellow-green edges go toward red, not toward green: a dark orange or yellow is mud
     shift = -OUTER_SHIFT if 20 <= bg < 110 else OUTER_SHIFT
     c1 = hsl(bg + shift, OUTER_S, OUTER_L)
-    return c0, c1, f"{source} {hue:.0f}° -> bg {bg:.0f}°"
+    warm = source == "dominant" and is_warm(hue)
+    return c0, c1, f"{source} {hue:.0f}° -> bg {bg:.0f}°", warm
 
 
 # ------------------------------------------------------------ validation and resize
@@ -317,7 +329,7 @@ def badge(art: Image.Image, c0, c1, size: int) -> Image.Image:
 
 
 def sheets(rows, family, folder: Path):
-    """rows: (slug, art, new colors, old colors); family: (slug, art, colors) for all twelve."""
+    """rows: (slug, art, computed colors, final colors); family: (slug, art, final colors) for all twelve."""
     folder.mkdir(parents=True, exist_ok=True)
     font = ImageFont.load_default(size=16)
     bg = (13, 17, 28, 255)
@@ -328,7 +340,7 @@ def sheets(rows, family, folder: Path):
     sheet = Image.new("RGBA", (width, height), bg)
     draw = ImageDraw.Draw(sheet)
     draw.text((150, 14), "computed (new)", fill=(235, 240, 250), font=font)
-    draw.text((150 + sum(sizes) + gap * len(sizes) + gap, 14), "old fixed hue", fill=(235, 240, 250), font=font)
+    draw.text((150 + sum(sizes) + gap * len(sizes) + gap, 14), "final (as the app)", fill=(235, 240, 250), font=font)
     y = 50
     for slug, art, new, old in rows:
         draw.text((14, y + 120), slug, fill=(235, 240, 250), font=font)
@@ -380,25 +392,29 @@ def main():
             art = Image.open(target).convert("RGBA")
             old = old_colors(hue)
             if args.preview_all:
-                c0, c1, info = background(art, hue)
-                rows.append((slug + "*", art, (c0, c1), old))
-                family.append((slug + "*", art, (c0, c1)))
+                c0, c1, info, warm = background(art, hue)
+                rows.append((slug + "*", art, (c0, c1), (c0, c1) if warm else old))
+                family.append((slug + "*", art, (c0, c1) if warm else old))
             else:
                 family.append((slug, art, old))
-            report.append((slug, "kept procedural", "-", "-", f"hue gradient; preview-all: {hex_color(c0)} {hex_color(c1)} ({info})" if args.preview_all else "hue gradient", ""))
+            report.append((slug, "kept procedural", "-", "-", f"hue gradient; preview-all: {hex_color(c0)} {hex_color(c1)} ({info}, {'warm' if warm else 'cool/grey'})" if args.preview_all else "hue gradient", ""))
             continue
         with Image.open(path) as source:
             source.load()
             warnings, fill, offset = validate(path, source)
-            c0, c1, info = background(source, hue)
+            c0, c1, info, warm = background(source, hue)
             art = to_asset(source)
         art.save(target, "WEBP", quality=90, method=6, alpha_quality=100)
-        colors_json[slug] = {"c0": hex_color(c0), "c1": hex_color(c1)}
-        rows.append((slug, art, (c0, c1), old_colors(hue)))
-        family.append((slug, art, (c0, c1)))
-        report.append((slug, "imported", f"{fill * 100:.1f}%", f"{offset * 100:.1f}%", f"{hex_color(c0)} {hex_color(c1)} ({info})", "; ".join(warnings)))
+        final = (c0, c1) if warm else old_colors(hue)
+        if warm:
+            colors_json[slug] = {"c0": hex_color(c0), "c1": hex_color(c1)}
+        rows.append((slug, art, (c0, c1), final))
+        family.append((slug, art, final))
+        shown = f"{hex_color(final[0])} {hex_color(final[1])} ({info}, warm: computed)" if warm else f"{hex_color(final[0])} {hex_color(final[1])} (fixed hue {hue}; computed {hex_color(c0)} {hex_color(c1)} unused: {info})"
+        report.append((slug, "imported", f"{fill * 100:.1f}%", f"{offset * 100:.1f}%", shown, "; ".join(warnings)))
 
-    # json: imported slugs only, in avatar order; a stale entry of a slug without an image is dropped
+    # json: warm imported slugs only, in avatar order; rewritten from scratch, so the entry of a slug that
+    # is no longer warm or has no image any more is dropped
     (ASSETS / "avatars.json").write_text(json.dumps(colors_json, indent=2) + "\n", encoding="utf-8", newline="\n")
 
     print(f"{'slug':9} {'status':16} {'fill':>6} {'offset':>7}  gradient")
@@ -406,7 +422,7 @@ def main():
         print(f"{slug:9} {status:16} {fill:>6} {offset:>7}  {gradient_text}")
         if warn:
             print(f"          WARN {warn}")
-    print(f"{len(colors_json)} imported, {len(AVATARS) - len(colors_json)} procedural kept")
+    print(f"{len(colors_json)} json entries (warm), {len(rows)} previewed; slugs without an entry use their fixed hue")
     if rows:
         sheets(rows, family, args.preview_dir)
         print(f"previews in {args.preview_dir}")

@@ -70,9 +70,9 @@ fun rememberAvatarImage(asset: String?): State<ImageBitmap?> {
 data class AvatarGradient(val c0: Color, val c1: Color)
 
 /**
- * `assets/avatars/avatars.json` (written by `tools/avatars/import.py`): `{"fox": {"c0": "#rrggbb", "c1": "#rrggbb"}}`,
- * keyed by the avatar's file name without `.webp`. Parsed once, at first use; a missing or broken file
- * means no avatar has colors of its own.
+ * `assets/avatars/avatars.json` (written by `tools/avatars/import.py`, only for warm characters):
+ * `{"fox": {"c0": "#rrggbb", "c1": "#rrggbb"}}`, keyed by the avatar's file name without `.webp`. Parsed once,
+ * at first use; a missing or broken file means no avatar has colors of its own.
  */
 internal object AvatarGradients {
     private const val FILE = "avatars/avatars.json"
