@@ -58,6 +58,9 @@ class ShellActivity : ComponentActivity() {
     /** A link or shortcut the shell still has to handle (from the intent that started or reached it). */
     private val links = MutableStateFlow<ShellLink?>(null)
 
+    /** The result of a stream that ended on its own, which the shell still has to show (once). */
+    private val results = MutableStateFlow<StreamResult?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
@@ -84,8 +87,11 @@ class ShellActivity : ComponentActivity() {
         }
         val launcher = GameLauncher(this, repo)
         val setup = PcSetup(this, repo, profiles)
-        if (savedInstanceState == null) links.value = ShellLink.from(this, intent)
-        setContent { ShellRoot(appearance, feedback, keys, repo, boxArt, artwork, metadata, launcher, profiles, startup, setup, links) }
+        if (savedInstanceState == null) {
+            links.value = ShellLink.from(this, intent)
+            results.value = StreamResult.take(intent)
+        }
+        setContent { ShellRoot(appearance, feedback, keys, repo, boxArt, artwork, metadata, launcher, profiles, startup, setup, links, results) }
         feedback.view = window.decorView
     }
 
@@ -93,6 +99,7 @@ class ShellActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         ShellLink.from(this, intent)?.let { links.value = it }
+        StreamResult.take(intent)?.let { results.value = it }
     }
 
     // Activity's public key dispatcher must still run after the shell's global controller keys.
@@ -140,6 +147,7 @@ private fun ShellRoot(
     startup: StartupStore,
     setup: PcSetup,
     links: MutableStateFlow<ShellLink?>,
+    results: MutableStateFlow<StreamResult?>,
 ) {
     val appearance by store.appearance.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -157,7 +165,7 @@ private fun ShellRoot(
     }
     CompositionLocalProvider(LocalDelosColors provides colors, LocalFeedback provides feedback, LocalBoxArt provides boxArt, LocalArtwork provides artwork, LocalGameMetadata provides metadata, LocalReducedMotion provides appearance.reducedMotion) {
         Stage(textScale = appearance.uiScale / 100f) {
-            Shell(appearance, store::update, keys, repo, launcher, profiles, startup, setup, links)
+            Shell(appearance, store::update, keys, repo, launcher, profiles, startup, setup, links, results)
         }
     }
 }

@@ -6,20 +6,13 @@
     <!-- WOL messages -->
     <!-- Unpair messages -->
     <!-- Errors -->
-    <string name="error_pc_offline">El ordenador está apagado</string>
     <string name="error_unknown_host">Fallo al resolver el host</string>
     <string name="error_404">GFE ha devuelto un error HTTP 404. Asegúrate que el PC tiene una GPU soportada.
 	    Usar software de Escritorio Remoto puede causar este error. Intenta reiniciar el equipo o reinstalar GFE.
     </string>
     <!-- Start application messages -->
-    <string name="conn_establishing_title">Estableciendo conexión</string>
-    <string name="conn_establishing_msg">Iniciando conexión</string>
     <string name="conn_metered">Aviso: ¡Tu conexión de red está siendo medida!</string>
     <string name="conn_starting">Iniciando</string>
-    <string name="conn_error_title">Error de conexión</string>
-    <string name="conn_error_msg">Fallo al iniciar</string>
-    <string name="conn_terminated_title">Conexión finalizada</string>
-    <string name="conn_terminated_msg">La conexión ha finalizado.</string>
     <!-- General strings -->
     <string name="yes">Si</string>
     <string name="no">No</string>
@@ -60,7 +53,6 @@
     <string name="videoformat_auto">Automático (Recomendado)</string>
     <string name="videoformat_hevcalways">Preferir HEVC</string>
     <string name="nettest_title_done">Prueba de Red Completada</string>
-    <string name="scut_not_paired">PC no emparejado</string>
     <string name="scut_invalid_uuid">El PC proporcionado no es válido</string>
     <string name="scut_invalid_app_id">La App proporcionada no es válida</string>
     <string name="help_loading_title">Visor de ayuda</string>
@@ -79,10 +71,8 @@
     <string name="nettest_text_success">Tu red parece no estar bloqueando Delos. Si aun tienes problemas de conexión, comprueba la configuración del firewall de tu PC.
 \n
 \nSi estas intentado transmitir mediante Internet, instala en tu pc la Moonlight Internet Hosting Tool y ejecuta el Internet Streaming Tester incluido para comprobar la conexión de tu PC a internet.</string>
-    <string name="nettest_text_blocked">La conexión de red actual de tu dispositivo esta bloqueando Delos. La Transmisión mediante Internet puede no funcionar mientras estés conectado a esta red.</string>
     <string name="title_audio_config_list">Configuración de Sonido Envolvente</string>
     <string name="title_decoding_reset">Reiniciar Opciones de Video</string>
-    <string name="no_video_received_error">No se recibe video desde el equipo anfitrión.</string>
     <string name="title_checkbox_mouse_emulation">Emulación de ratón usando el mando</string>
     <string name="pacing_latency">Preferir la menor latencia posible</string>
     <string name="pacing_balanced">Equilibrado</string>
@@ -110,17 +100,10 @@
     <string name="pacing_balanced_alt">Equilibrado con limitador de FPS (Cuadros por Segundo)</string>
     <string name="audioconf_51surround">5.1 Sonido Envolvente</string>
     <string name="audioconf_stereo">Estéreo</string>
-    <string name="check_ports_msg">Revisa la configuración de tu firewall, así como, las reglas de redireccionamiento para él(los) puerto(s):</string>
     <string name="error_usb_prohibited">El acceso a USB está restringido en tu dispositivo por el administrador. Revisar tus ajustes en MDM o Knox.</string>
     <string name="message_decoding_error">Delos se ha bloqueado debido a una incompatibilidad con el descodificador de vídeo de este dispositivo. Intenta ajustar la configuración de streaming si los bloqueos continúan.</string>
     <string name="message_decoding_reset">La decodificación de video de tu equipo sigue fallando con las opciones elegidas. Las opciones de la transmisión han sido revertidas a las predeterminadas.</string>
-    <string name="video_decoder_init_failed">El descodificador de video no pudo ser iniciado. Tu dispositivo puede no soportar la resolución elegida o la tasa de cuadros por segundo.</string>
-    <string name="no_frame_received_error">La conexión de red no está teniendo un buen desempeño. Reduce la tasa de bits de video o prueba con una conexión de mayor velocidad.</string>
-    <string name="early_termination_error">Algo ha fallado en tu ordenador al iniciar la transmisión.
-\n
-\nAsegúrate de que no tienes ningún contenido protegido por DRM abierto en tu ordenador. También puedes probar a reiniciar el ordenador.</string>
     <string name="poor_connection_msg">Conexión pobre al PC</string>
-    <string name="applist_connect_msg">Conectando al Equipo…</string>
     <string name="summary_checkbox_mouse_nav_buttons">Activar esta opción puede desconfigurar la función de clic derecho en algunos dispositivos inestables</string>
     <string name="summary_audio_config_list">Activar sonido envolvente de 5.1 o 7.1 canales para sistemas de teatro en casa</string>
     <string name="title_checkbox_vibrate_fallback">Emular la vibración del mando con vibración del equipo</string>
@@ -160,9 +143,6 @@
     <string name="fps_60">60 FPS</string>
     <string name="fps_90">90 FPS</string>
     <string name="title_frame_pacing">Ritmo de cuadros por segundo en video</string>
-    <string name="frame_conversion_error">El PC anfitrión ha reportado un error fatal en el codificador de video.
-\n
-\nIntenta deshabilitar el modo HDR, cambiar la resolución de la transmisión, o cambiar la resolución de pantalla del PC anfitrión.</string>
     <string name="summary_checkbox_reduce_refresh_rate">Tasa de refresco menores pueden ahorrar energía a cambio de una mayor latencia de video</string>
     <string name="title_checkbox_reduce_refresh_rate">Permitir reducción de la tasa de refresco</string>
     <string name="title_full_range">Forzar video de rango completo</string>
@@ -184,7 +164,6 @@
     <string name="analogscroll_left">Joystick analógico izquierdo</string>
     <string name="title_analog_scrolling">Usa un joystick analógico para hacer scroll</string>
     <string name="summary_analog_scrolling">Selecciona un joystick analógico para scroll cuando la emulación del mouse está habilitada</string>
-    <string name="error_code_prefix">Código del error:</string>
     <string name="title_seekbar_vibrate_fallback_strength">Ajustar la intensidad del ruido emulado</string>
     <string name="summary_seekbar_vibrate_fallback_strength">Amplifica o reduce la intensidad de la vibración de tu dispositivo</string>
     <string name="suffix_seekbar_vibrate_fallback_strength">%</string>

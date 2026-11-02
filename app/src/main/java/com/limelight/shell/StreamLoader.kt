@@ -1,6 +1,6 @@
 package com.limelight.shell
 
-import android.content.Intent
+import android.content.Context
 import android.graphics.BitmapFactory
 import android.view.ViewGroup
 import androidx.activity.ComponentActivity
@@ -88,9 +88,6 @@ class StreamLoader private constructor(private val activity: ComponentActivity, 
     }
 
     companion object {
-        /** Intent extra set by the new UI when it starts a stream. */
-        const val EXTRA = "DelosLoader"
-
         /** How long a connection line stays at least, so it can be read (later stages skip the ones in between). */
         private const val LINE_MS = 700L
 
@@ -109,9 +106,6 @@ class StreamLoader private constructor(private val activity: ComponentActivity, 
         /** The line under the title until the first stage (the same in the new UI and in the stream). */
         @JvmStatic
         fun greeting(pcName: String): String = "Calling up $pcName"
-
-        @JvmStatic
-        fun requested(intent: Intent): Boolean = intent.getBooleanExtra(EXTRA, false)
 
         @JvmStatic
         fun show(activity: ComponentActivity): StreamLoader {
@@ -178,9 +172,9 @@ class StreamLoader private constructor(private val activity: ComponentActivity, 
         }
 
         /** The cover the home screen shows: the SteamGridDB one, else the PC's box art. */
-        private fun loadCover(activity: ComponentActivity, pcUuid: String, appId: Int): ImageBitmap? = runCatching {
-            val sgdb = java.io.File(activity.filesDir, "artwork/$pcUuid/$appId/cover")
-            val file = if (sgdb.exists() && sgdb.length() > 0) sgdb else CacheHelper.openPath(false, activity.cacheDir, "boxart", pcUuid, "$appId.png")
+        fun loadCover(context: Context, pcUuid: String, appId: Int): ImageBitmap? = runCatching {
+            val sgdb = java.io.File(context.filesDir, "artwork/$pcUuid/$appId/cover")
+            val file = if (sgdb.exists() && sgdb.length() > 0) sgdb else CacheHelper.openPath(false, context.cacheDir, "boxart", pcUuid, "$appId.png")
             if (file.exists()) BitmapFactory.decodeFile(file.path)?.asImageBitmap() else null
         }.getOrNull()
     }

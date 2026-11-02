@@ -1,8 +1,7 @@
 package com.limelight.utils;
 
 /**
- * What the stream shows while it connects: the classic {@link SpinnerDialog}, or the loader of the new
- * Delos UI ({@code com.limelight.shell.StreamLoader}) when the stream was started from it.
+ * What the stream shows while it connects: the loader of the Delos UI ({@code com.limelight.shell.StreamLoader}).
  */
 public interface ConnectionProgress {
     /** Shows the current connection stage. May be called from any thread. */

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Shortcut strings -->
-    <string name="scut_not_paired">Chưa ghép nối PC</string>
     <string name="scut_pc_not_found">Không tìm thấy PC</string>
     <string name="scut_invalid_uuid">PC được cung cấp không hợp lệ</string>
     <string name="scut_invalid_app_id">Ứng dụng được cung cấp không hợp lệ</string>
@@ -24,7 +23,6 @@
     <string name="nettest_text_success">Mạng của bạn dường như không chặn Delos. Nếu bạn vẫn gặp khó khăn khi kết nối, hãy kiểm tra cài đặt tường lửa của PC.\n\nNếu bạn đang cố gắng phát trực tuyến qua Internet, hãy cài đặt Công cụ Lưu trữ Internet Moonlight trên PC của bạn và chạy Trình kiểm tra Phát trực tuyến Internet đi kèm để kiểm tra kết nối Internet của PC.</string>
     <string name="nettest_text_inconclusive">Không thể thực hiện kiểm tra mạng vì không có máy chủ kiểm tra kết nối của Delos nào có thể truy cập được. Kiểm tra kết nối Internet của bạn hoặc thử lại sau.</string>
     <string name="nettest_text_failure">Kết nối mạng hiện tại của thiết bị của bạn dường như đang chặn Delos. Phát trực tuyến qua Internet có thể không hoạt động khi kết nối với mạng này.\n\nCác cổng mạng sau đã bị chặn:\n</string>
-    <string name="nettest_text_blocked">Kết nối mạng hiện tại của thiết bị của bạn đang chặn Delos. Phát trực tuyến qua Internet có thể không hoạt động khi kết nối với mạng này.</string>
 
     <!-- Pair messages -->
     <string name="pair_pc_offline">Máy tính đang ngoại tuyến</string>
@@ -34,7 +32,6 @@
     <!-- Unpair messages -->
 
     <!-- Errors -->
-    <string name="error_pc_offline">Máy tính đang ngoại tuyến</string>
     <string name="error_unknown_host">Không thể giải quyết máy chủ</string>
     <string name="error_404">GFE trả về lỗi HTTP 404. Đảm bảo PC của bạn đang chạy GPU được hỗ trợ.
 	    Sử dụng phần mềm điều khiển từ xa cũng có thể gây ra lỗi này. Thử khởi động lại máy của bạn hoặc cài đặt lại GFE.
@@ -44,23 +41,10 @@
     <string name="title_decoding_reset">Cài đặt video đã được đặt lại</string>
     <string name="message_decoding_reset">Bộ giải mã video của thiết bị của bạn tiếp tục gặp sự cố ở cài đặt phát trực tuyến đã chọn. Cài đặt phát trực tuyến của bạn đã được đặt lại về mặc định.</string>
     <string name="error_usb_prohibited">Truy cập USB bị cấm bởi quản trị viên thiết bị của bạn. Kiểm tra cài đặt Knox hoặc MDM của bạn.</string>
-    <string name="video_decoder_init_failed">Bộ giải mã video không thể khởi tạo. Thiết bị của bạn có thể không hỗ trợ độ phân giải hoặc tốc độ khung hình đã chọn.</string>
-    <string name="no_video_received_error">Không nhận được video từ máy chủ.</string>
-    <string name="no_frame_received_error">Kết nối mạng của bạn không hoạt động tốt. Giảm cài đặt tốc độ bit video của bạn hoặc thử kết nối nhanh hơn.</string>
-    <string name="early_termination_error">Đã xảy ra sự cố trên PC máy chủ của bạn khi bắt đầu phát trực tuyến.\n\nĐảm bảo rằng bạn không có bất kỳ nội dung được bảo vệ DRM nào mở trên PC máy chủ của mình. Bạn cũng có thể thử khởi động lại PC máy chủ của mình.</string>
-    <string name="frame_conversion_error">PC máy chủ đã báo cáo lỗi mã hóa video nghiêm trọng.\n\nThử tắt chế độ HDR, thay đổi độ phân giải phát trực tuyến hoặc thay đổi độ phân giải màn hình của PC máy chủ của bạn.</string>
-    <string name="check_ports_msg">Kiểm tra tường lửa và quy tắc chuyển tiếp cổng cho cổng:</string>
 
     <!-- Start application messages -->
-    <string name="conn_establishing_title">Đang thiết lập kết nối</string>
-    <string name="conn_establishing_msg">Đang bắt đầu kết nối</string>
     <string name="conn_metered">Cảnh báo: Kết nối mạng hiện tại của bạn bị đo lường!</string>
     <string name="conn_starting">Đang bắt đầu</string>
-    <string name="conn_error_title">Lỗi kết nối</string>
-    <string name="conn_error_msg">Không thể bắt đầu</string>
-    <string name="conn_terminated_title">Kết nối bị chấm dứt</string>
-    <string name="conn_terminated_msg">Kết nối đã bị chấm dứt.</string>
-    <string name="error_code_prefix">Mã lỗi:</string>
 
     <!-- General strings -->
     <string name="yes">Có</string>
@@ -78,7 +62,6 @@
     <string name="perf_overlay_dectime">Thời gian giải mã trung bình: %1$.2f ms</string>
 
     <!-- AppList activity -->
-    <string name="applist_connect_msg">Đang kết nối với PC…</string>
     <string name="applist_quit_app">Đang thoát</string>
     <string name="applist_quit_success">Thoát thành công</string>
     <string name="applist_quit_fail">Thoát thất bại</string>
@@ -453,9 +436,6 @@
     <string name="configuration_mode_resize_buttons">Chế độ cấu hình (Thay đổi kích thước nút)</string>
     <string name="configuration_mode_exiting">Thoát chế độ cấu hình</string>
     <string name="unlocking_or_starting">Máy chủ đang khởi động hoặc máy tính đang mở khóa, vui lòng đợi…</string>
-    <string name="error_msg_permission_denied">Quyền bị từ chối</string>
-    <string name="error_msg_timeout">Hết thời gian kết nối</string>
-    <string name="permission_launch_app">Khởi chạy ứng dụng</string>
 
 
     <!-- Compliance -->

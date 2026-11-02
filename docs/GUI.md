@@ -256,6 +256,34 @@ These preserve implementation/design context from the removed UI plan, not phase
   fallback. `StreamMenu` provides the configured button combo/edge gesture and On/Compact/Off overlay
   cycle; `StreamExit` owns the accepted normal exit scene. No ordinary-flow confirmation dialogs;
   legitimate security prompts for external input remain. Further layout changes need user agreement.
+- **Stream exits.** The player's own Disconnect / Quit game keeps the `StreamExit` portal. A stream that
+  ends by itself goes through `StreamOutcome` (no classic error dialog): `Game` ends, opens
+  `ShellActivity` on the stream's PC (Home, with the PC selected) with a `StreamResult` in the intent
+  extras, and the shell takes it once (`StreamResult.take` removes the extras, so a recreated or
+  resumed activity never shows it again; external-display streams open the shell on the device's own
+  screen). Three outcomes:
+  1. **Failed to start** (a connection stage failed, the decoder cannot start, a shortcut's PC is
+     offline/unpaired) and 2. **Connection lost** (terminated with an error) show the **result
+     overlay** (`StreamResultLayer`): full-screen glass over Home, a sad face (Phosphor `smiley-sad`,
+     `Symbols.SENTIMENT_DISSATISFIED`) in an accent-tinted circle that settles in and floats gently
+     (fade only with reduced motion), a short Unbounded title ("Couldn't start the stream", "Connection
+     lost", "The PC closed the stream"), one calm Figtree sentence, and two pills: **Try again**
+     (primary, focused first: the same game on the same PC through `GameActions.start` →
+     `GameLauncher`, so the per-game settings are read again; an offline PC or a game that is gone
+     gets a toast) and **Back to library**. A / Enter activate, **B = Back to library**, D-pad
+     left/right moves between the pills and **down** reaches **Details** (never open by default), which
+     expands the technical text: stage, error code and the former dialogs' hints (permission, timeout,
+     firewall ports, blocked network, DRM, HDR). The focus stays inside the overlay; the menu buttons
+     do nothing; no confirmation.
+  3. **Host closed** (the game exited, the PC ended the session normally): no overlay; Home with the
+     toast "The PC ended the stream".
+
+  `describeStreamFailure` (pure, `StreamResult.kt`) maps stage / MoonBridge error code / ports / blocked
+  network to title, sentence and details; `StreamResultTest` covers each case. Every start (Home,
+  shortcut, `.art`, link) shows the Delos loader: `ShortcutTrampoline` shows the launch scene itself
+  (`ShortcutSplash`, the same `LaunchOverlay` Home shows) while it finds and wakes the PC and then
+  hands the progress to `StreamLoader`. Shortcut inputs that name no known PC (bad UUID, PC not
+  found, unreadable `.art`) end with a toast.
 - **Deleting a profile asks nothing.** The profile disappears at once and the next one takes over (the
   first-launch screens return when it was the last). A toast offers **Undo** (`Y` or a tap) for 10 s:
   `ProfileStore` keeps the profile's settings, per-game overrides and control layouts until then and

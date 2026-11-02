@@ -58,6 +58,7 @@ object Symbols {
     const val DEVICES = "\uEBA4"
     const val EDIT = "\uE3B4"
     const val FACE = "\uE436"
+    const val SENTIMENT_DISSATISFIED = "\uE43E"
     const val KEY = "\uE2D6"
     const val LINK_OFF = "\uE2E4"
     const val LOCK = "\uE2FE"

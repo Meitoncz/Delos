@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Shortcut strings -->
-    <string name="scut_not_paired">PC not paired</string>
     <string name="scut_pc_not_found">PC not found</string>
     <string name="scut_invalid_uuid">Provided PC is not valid</string>
     <string name="scut_invalid_app_id">Provided App is not valid</string>
@@ -30,7 +29,6 @@
     <string name="nettest_text_success">Your network does not appear to be blocking Delos. If you still have trouble connecting, check your PC\'s firewall settings.\n\nIf you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your PC and run the included Internet Streaming Tester to check your PC\'s Internet connection.</string>
     <string name="nettest_text_inconclusive">The network test could not be performed because none of the Delos connection testing servers were reachable. Check your Internet connection or try again later.</string>
     <string name="nettest_text_failure">Your device\'s current network connection seems to be blocking Delos. Streaming over the Internet may not work while connected to this network.\n\nThe following network ports were blocked:\n</string>
-    <string name="nettest_text_blocked">Your device\'s current network connection is blocking Delos. Streaming over the Internet may not work while connected to this network.</string>
 
     <!-- Pair messages -->
     <string name="pair_pc_offline">Computer is offline</string>
@@ -40,7 +38,6 @@
     <!-- Unpair messages -->
 
     <!-- Errors -->
-    <string name="error_pc_offline">Computer is offline</string>
     <string name="error_unknown_host">Failed to resolve host</string>
     <string name="error_404">GFE returned an HTTP 404 error. Make sure your PC is running a supported GPU.
 	    Using remote desktop software can also cause this error. Try rebooting your machine or reinstalling GFE.
@@ -50,23 +47,10 @@
     <string name="title_decoding_reset">Video Settings Reset</string>
     <string name="message_decoding_reset">Your device\'s video decoder continues to crash at your selected streaming settings. Your streaming settings have been reset to default.</string>
     <string name="error_usb_prohibited">USB access is prohibited by your device administrator. Check your Knox or MDM settings.</string>
-    <string name="video_decoder_init_failed">Video decoder failed to initialize. Your device may not support the selected resolution or frame rate.</string>
-    <string name="no_video_received_error">No video received from host.</string>
-    <string name="no_frame_received_error">Your network connection isn\'t performing well. Reduce your video bitrate setting or try a faster connection.</string>
-    <string name="early_termination_error">Something went wrong on your host PC when starting the stream.\n\nMake sure you don\'t have any DRM-protected content open on your host PC. You can also try restarting your host PC.</string>
-    <string name="frame_conversion_error">The host PC reported a fatal video encoding error.\n\nTry disabling HDR mode, changing the streaming resolution, or changing your host PC\'s display resolution.</string>
-    <string name="check_ports_msg">Check your firewall and port forwarding rules for port(s):</string>
 
     <!-- Start application messages -->
-    <string name="conn_establishing_title">Establishing Connection</string>
-    <string name="conn_establishing_msg">Starting connection</string>
     <string name="conn_metered">Warning: Your active network connection is metered!</string>
     <string name="conn_starting">Starting</string>
-    <string name="conn_error_title">Connection Error</string>
-    <string name="conn_error_msg">Failed to start</string>
-    <string name="conn_terminated_title">Connection Terminated</string>
-    <string name="conn_terminated_msg">The connection was terminated.</string>
-    <string name="error_code_prefix">Error code:</string>
 
     <!-- General strings -->
     <string name="yes">Yes</string>
@@ -87,7 +71,6 @@
 
 
     <!-- AppList activity -->
-    <string name="applist_connect_msg">Connecting to PC…</string>
     <string name="applist_quit_app">Quitting</string>
     <string name="applist_quit_success">Successfully quit</string>
     <string name="applist_quit_fail">Failed to quit</string>
@@ -455,9 +438,6 @@
     <string name="proceed">Proceed</string>
     <string name="cancel">Cancel</string>
     <string name="unlocking_or_starting">Server is starting or computer is unlocking, please wait…</string>
-    <string name="error_msg_permission_denied">Permission Denied</string>
-    <string name="error_msg_timeout">Connection Timeout</string>
-    <string name="permission_launch_app">Launch Apps</string>
 
 
     <!-- Keyboard -->

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Shortcut strings -->
-	<string name="scut_not_paired">未配對電腦</string>
 	<string name="scut_pc_not_found">找不到電腦</string>
 	<string name="scut_invalid_uuid">提供的電腦無效</string>
 	<string name="scut_invalid_app_id">提供的應用程式無效</string>
@@ -28,7 +27,6 @@
 	<string name="nettest_text_success">您的網路似乎沒有阻擋 Delos。如果您仍然無法連線，請檢查您電腦的防火牆設定。\n\n如果您嘗試透過網際網路進行串流，請在電腦上安裝 Moonlight Internet Hosting Tool，並執行內建的 Internet Streaming Tester 以檢查網際網路連線。</string>
 	<string name="nettest_text_inconclusive">無法執行網路測試，因為無法連線至 Delos 的測試伺服器。請檢查您的網際網路連線，或稍後再試。</string>
 	<string name="nettest_text_failure">您目前的網路連線似乎正在阻擋 Delos。在此網路下，透過網際網路串流可能無法正常運作。\n\n以下連接埠被阻擋：\n</string>
-	<string name="nettest_text_blocked">您目前的網路連線正在阻擋 Delos。在此網路下，透過網際網路串流可能無法正常運作。</string>
 
 	<!-- Pair messages -->
 	<string name="pair_pc_offline">電腦已離線</string>
@@ -38,7 +36,6 @@
 	<!-- Unpair messages -->
 
 	<!-- Errors -->
-	<string name="error_pc_offline">電腦已離線</string>
 	<string name="error_unknown_host">無法解析主機</string>
 	<string name="error_404">GFE 回傳 HTTP 404 錯誤。請確認您的電腦正在執行支援的 GPU。
 		使用遠端桌面軟體也可能導致此錯誤。請嘗試重新啟動電腦或重新安裝 GFE。
@@ -48,23 +45,10 @@
 	<string name="title_decoding_reset">影片設定已重設</string>
 	<string name="message_decoding_reset">您的裝置影片解碼器在目前的串流設定下持續當機，串流設定已重設為預設值。</string>
 	<string name="error_usb_prohibited">您的裝置管理員禁止存取 USB。請檢查 Knox 或 MDM 設定。</string>
-	<string name="video_decoder_init_failed">影片解碼器初始化失敗。您的裝置可能不支援所選的解析度或幀率。</string>
-	<string name="no_video_received_error">未接收到主機端的影像。</string>
-	<string name="no_frame_received_error">您的網路效能不佳。請降低影片位元率設定，或使用更快的連線。</string>
-	<string name="early_termination_error">在啟動串流時，您的主機電腦發生錯誤。\n\n請確認主機端未開啟任何受 DRM 保護的內容。您也可以嘗試重新啟動主機電腦。</string>
-	<string name="frame_conversion_error">主機電腦回報嚴重的影片編碼錯誤。\n\n請嘗試停用 HDR 模式、調整串流解析度，或更改主機電腦的顯示解析度。</string>
-	<string name="check_ports_msg">請檢查防火牆及連接埠轉發規則，以下連接埠： </string>
 	
 	<!-- Start application messages -->
-	<string name="conn_establishing_title">正在建立連線</string>
-	<string name="conn_establishing_msg">正在啟動連線</string>
 	<string name="conn_metered">警告：您目前的網路連線為計量網路！</string>
 	<string name="conn_starting">正在啟動</string>
-	<string name="conn_error_title">連線錯誤</string>
-	<string name="conn_error_msg">啟動失敗</string>
-	<string name="conn_terminated_title">連線已中斷</string>
-	<string name="conn_terminated_msg">連線已被中斷。</string>
-	<string name="error_code_prefix">錯誤代碼：</string>
 
 	<!-- General strings -->
 	<string name="yes">是</string>
@@ -85,7 +69,6 @@
 
 
 	<!-- AppList activity -->
-	<string name="applist_connect_msg">正在連線至電腦…</string>
 	<string name="applist_quit_app">正在結束</string>
 	<string name="applist_quit_success">已成功結束</string>
 	<string name="applist_quit_fail">結束失敗</string>
@@ -494,10 +477,7 @@
 	<string name="proceed">繼續</string>
 	<string name="cancel">取消</string>
 	<string name="unlocking_or_starting">伺服器正在啟動或電腦正在解鎖中，請稍候…</string>
-	<string name="error_msg_permission_denied">權限被拒</string>
-	<string name="error_msg_timeout">連線逾時</string>
 
-	<string name="permission_launch_app">啟動應用程式</string>
 	
 
 	<!-- Keyboard -->

@@ -9,6 +9,7 @@ Implemented and accepted on the AYN Odin 2 Portal Max on 2026-10-27.
 - The Delos stream menu is shown on the external display. The built-in Odin controller supports the configured menu shortcut, D-pad, analog navigation, A/B activation and back, and left/right adjustment of choices and sliders.
 - HDR continues through both MediaCodec and PyroWave paths.
 - Removing the external display closes its menu and controller activity before returning to the shell. The first game context menu waits for the refreshed running-game state, so Resume and Quit are immediately available.
+- A stream on the external display that fails to start, loses its connection or is closed by the PC ends without the classic error dialog (which only showed on the TV): `StreamOutcome` opens the shell on the device's own screen (`setLaunchDisplayId(DEFAULT_DISPLAY)`) with the same result overlay or "The PC ended the stream" toast as any other stream (docs/GUI.md, "Stream exits").
 - The obsolete external-display notification, its runtime permission and its receiver were removed; focus changes go through `ExternalDisplayFocus`.
 - The stream menu's brightness slider sets the brightness of the device's own screen (the controller activity), because the TV ignores window brightness. After the screen dims from inactivity it returns to that value on the next touch.
 

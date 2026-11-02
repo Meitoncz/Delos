@@ -10,7 +10,6 @@ import com.limelight.nvstream.http.HostHttpResponseException
 import com.limelight.nvstream.http.NvApp
 import com.limelight.nvstream.http.NvHTTP
 import com.limelight.preferences.PreferenceConfiguration
-import com.limelight.shell.StreamLoader
 import com.limelight.shell.settings.GameSettingsStore
 import com.limelight.utils.ExternalDisplayControlActivity
 import com.limelight.utils.ServerHelper
@@ -38,10 +37,8 @@ class GameLauncher(private val activity: Activity, private val repo: PcRepositor
         val start = startIntent(activity, binder, details, app.nvApp)
         val intent = start.intent
         val streamIntent = ServerHelper.getStreamIntent(intent)
-        // The stream shows the new UI's loader while it connects (not the classic dialog), with the PC's
-        // name as set in Delos, like the new UI's half of the launch scene. External-display launches
-        // wrap Game in a controller Activity, so these extras belong to the inner stream intent.
-        streamIntent.putExtra(StreamLoader.EXTRA, true)
+        // The PC's name as set in Delos goes to the stream's loader (the new UI's half of the launch scene).
+        // External-display launches wrap Game in a controller Activity, so it belongs to the inner stream intent.
         streamIntent.putExtra(Game.EXTRA_PC_NAME, pc.name)
         if (streamIntent !== intent) {
             intent.putExtra(ExternalDisplayControlActivity.EXTRA_LAUNCH_INTENT, streamIntent)

@@ -1,14 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="error_pc_offline">Dators ir izslēgts vai nav tiešsaistē</string>
     <string name="nettest_title_done">Tīkla pārbaude pabeigta</string>
     <string name="nettest_title_waiting">Notiek tīkla savienojuma pārbaude</string>
     <string name="pair_pc_offline">Dators ir izslēgts vai nav tiešsaistē</string>
-    <string name="no_video_received_error">Video no datora nav saņemts.</string>
-    <string name="conn_establishing_title">Izveido savienojumu</string>
-    <string name="conn_establishing_msg">Savienojas</string>
-    <string name="conn_error_title">Savienojuma kļūda</string>
-    <string name="error_code_prefix">Kļūdas kods:</string>
     <string name="no">Nē</string>
     <string name="help">Palīdzība</string>
     <string name="poor_connection_msg">Slikts savienojums ar datoru</string>
@@ -17,7 +11,6 @@
     <string name="pacing_smoothness">Vēlos plūdenāku, vienmērīgāku video (var ievērojami palielināt latentumu)</string>
     <string name="summary_frame_pacing">Norādiet, kā līdzsvarot video latentumu un plūdenumu, vienmērīgumu</string>
     <string name="pacing_latency">Vēlos mazāku aizkavi</string>
-    <string name="check_ports_msg">Pārbaudiet savus ugunsmūra un portu pārsūtīšanas noteikumus portam(-iem):</string>
     <string name="error_usb_prohibited">Jūsu ierīces administrators aizliedzis piekļuvi USB. Pārbaudiet savus Knox vai MDM iestatījumus.</string>
     <string name="slow_connection_msg">Lēns savienojums ar datoru\nSamaziniet bitu pārraides ātrumu</string>
     <string name="title_decoding_error">Video dekodētājs avarēja</string>

@@ -22,15 +22,20 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRequester
@@ -98,6 +103,7 @@ import com.limelight.shell.ui.AvatarBadge
 import com.limelight.shell.ui.ButtonCaptureLayer
 import com.limelight.shell.ui.DialogLayer
 import com.limelight.shell.ui.PortalOverlay
+import com.limelight.shell.ui.StreamResultLayer
 import com.limelight.shell.data.LocalArtwork
 import com.limelight.shell.data.downloadAll
 import com.limelight.shell.data.BundledArtwork
@@ -125,6 +131,7 @@ fun Shell(
     startupStore: StartupStore,
     setup: PcSetup,
     links: MutableStateFlow<ShellLink?>,
+    results: MutableStateFlow<StreamResult?>,
 ) {
     val colors = LocalDelosColors.current
     val feedback = LocalFeedback.current
@@ -197,6 +204,57 @@ fun Shell(
                 )
             }
             is ShellLink.OpenPc -> repo.awaitPc(l.uuid, 4_000) { it.paired }?.let { devices.connect(it) }
+        }
+    }
+
+    // A stream that ended on its own (it never started, the connection broke, the PC closed it): Home of
+    // that PC first, then a toast or the result overlay. Shown once; the activity only held it until here.
+    val streamResult by results.collectAsStateWithLifecycle()
+    LaunchedEffect(streamResult) {
+        val r = streamResult ?: return@LaunchedEffect
+        // Cleared only once it has been taken over below (the change restarts this effect)
+        if (r.pcUuid.isNotEmpty()) repo.selectPc(r.pcUuid)
+        if (profiles.all.isNotEmpty() && shell.screen !is Screen.Boot && shell.screen !is Screen.CreateProfile) shell.navigate(Screen.Home)
+        if (r.kind == StreamResultKind.HOST_CLOSED) {
+            results.value = null
+            shell.showToast(r.title, Symbols.INFO)
+            return@LaunchedEffect
+        }
+        // The launch scene that was waiting for the stream goes away when the shell resumes; the overlay follows it
+        withTimeoutOrNull(3_000) { snapshotFlow { shell.launch == null }.first { it } }
+        feedback.play(Cue.OPEN)
+        results.value = null
+        shell.result = r
+    }
+    fun dismissResult() {
+        shell.result = null
+        scope.launch {
+            delay(400)
+            feedback.silenceNextFocus()
+            runCatching { shell.restoreScreenFocus?.invoke() }
+        }
+    }
+    // Try again: the same game on the same PC, started the way Home starts it (the per-game settings are read again)
+    fun retryStream() {
+        val r = shell.result ?: return
+        shell.result = null
+        scope.launch {
+            val target = if (r.pcUuid.isEmpty()) null else repo.awaitPc(r.pcUuid, 4_000) { it.paired && it.online }
+            if (target == null) {
+                feedback.play(Cue.ERROR)
+                shell.showToast("${r.pcName} cannot be reached", Symbols.WIFI_OFF)
+                return@launch
+            }
+            repo.selectPc(target.uuid)
+            val ready = withTimeoutOrNull(5_000) { repo.library.first { it is Library.Ready && it.pc.uuid == target.uuid } } as? Library.Ready
+            val app = ready?.apps?.let { apps -> apps.firstOrNull { it.id == r.appId } ?: apps.firstOrNull { it.name == r.appName } }
+            if (app == null) {
+                feedback.play(Cue.ERROR)
+                shell.showToast("${r.appName.ifEmpty { "The game" }} is not available on ${target.name}", Symbols.ERROR)
+                return@launch
+            }
+            val cover = activity?.let { withContext(Dispatchers.IO) { StreamLoader.loadCover(it, target.uuid, app.id) } }
+            actions.start(target, app, cover)
         }
     }
 
@@ -323,19 +381,19 @@ fun Shell(
     }
 
     DisposableEffect(keys) {
-        keys.canUndo = { shell.toast?.action != null && shell.portal == null && shell.launch == null }
+        keys.canUndo = { shell.toast?.action != null && shell.portal == null && shell.launch == null && shell.result == null }
         keys.onUndo = { shell.runToastAction() }
         keys.canSearch = { shell.screen == Screen.Settings && shell.layer == null && shell.portal == null && shell.launch == null }
         keys.onSearch = { shell.onSettingsSearch?.invoke() }
         // Y opens the filters over a library with games (and closes them again); nothing else may react to it
         keys.canFilter = {
-            shell.screen == Screen.Home && shell.portal == null && shell.launch == null && (
+            shell.screen == Screen.Home && shell.portal == null && shell.launch == null && shell.result == null && (
                 shell.layer == Layer.Filters || (shell.layer == null && (library as? Library.Ready)?.apps?.isNotEmpty() == true)
             )
         }
         keys.onFilter = { toggleFilters() }
         keys.listener = listener@{ code ->
-            if (shell.launch != null || shell.portal != null) return@listener
+            if (shell.launch != null || shell.portal != null || shell.result != null) return@listener
             when (code) {
                 KeyEvent.KEYCODE_BUTTON_SELECT -> if (sideMenu) toggleSide()
                 KeyEvent.KEYCODE_BUTTON_START -> toggleContext()
@@ -377,6 +435,11 @@ fun Shell(
             }
         }
     }
+    // B on the result overlay is Back to library (registered last, so it wins while the overlay is shown)
+    BackHandler(enabled = shell.result != null) {
+        feedback.play(Cue.BACK)
+        dismissResult()
+    }
 
     // The filter modal belongs to a ready library: a PC that goes offline takes it down with it
     LaunchedEffect(shell.layer, library is Library.Ready) {
@@ -407,7 +470,7 @@ fun Shell(
             // The blur source re-records the whole screen every frame, so it is only active while an overlay
             // is shown (and while it fades out)
             // On in the very frame an overlay appears (its blur would otherwise start empty and clipped)
-            Box(Modifier.fillMaxSize().then(if (blurSource || shell.layer != null || shell.portal != null) Modifier.hazeSource(haze) else Modifier)) {
+            Box(Modifier.fillMaxSize().then(if (blurSource || shell.layer != null || shell.portal != null || shell.result != null) Modifier.hazeSource(haze) else Modifier)) {
                 Box(Modifier.fillMaxSize().hazeSource(backdropHaze)) {
                     Backdrop(appearance, colors, hero = if (shell.screen == Screen.Home) shell.hero else null)
                 }
@@ -529,6 +592,8 @@ fun Shell(
 
                 PortalOverlay(shell.portal, shell.portalBurst, haze, appearance.reducedMotion)
 
+                StreamResultLayer(shell.result, haze, appearance.reducedMotion, onRetry = ::retryStream, onBack = ::dismissResult)
+
                 ButtonCaptureLayer(shell.buttonCapture != null, keys) { buttons ->
                     val save = shell.buttonCapture
                     shell.buttonCapture = null
@@ -618,6 +683,7 @@ private class ShellGameActions(
 private fun hints(shell: ShellState, adjustable: Boolean, filterHint: String?): List<Hint> {
     val adjust = if (adjustable) listOf(Hint(Glyph.ADJUST, "Adjust")) else emptyList()
     shell.portal?.let { return if (it.cancellable) listOf(Hint(Glyph.B, "Cancel")) else emptyList() }
+    if (shell.result != null) return listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back to library"))
     return when (shell.layer) {
         is Layer.Context -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Close"))
         Layer.Side -> adjust + listOf(Hint(Glyph.A, "Change"), Hint(Glyph.B, "Close"))

@@ -45,10 +45,6 @@ object StreamExit {
     /** The burst to finish, if the stream just ended through the portal. */
     fun take(): Arrival? = pending.also { pending = null }
 
-    /** Whether [game] was started from the new UI, so leaving it goes back there through the portal. */
-    @JvmStatic
-    fun applies(game: Game): Boolean = StreamLoader.requested(game.intent)
-
     /** Plays the portal over [game], then brings the new UI back and runs [end] (disconnect or quit). */
     @JvmStatic
     fun play(game: Game, quit: Boolean, end: Runnable) {
