@@ -1,6 +1,8 @@
 package com.limelight.shell.data
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.content.SharedPreferences
 import androidx.compose.runtime.Immutable
 import androidx.preference.PreferenceManager
@@ -47,17 +49,28 @@ data class Profiles(val all: List<Profile>, val currentId: String?) {
  * profile keeps all of its settings in its own preferences file (`ui_profile_<id>`): appearance, how
  * Delos starts, hidden games, the last played game and the names given to PCs.
  */
-class ProfileStore(context: Context) {
+class ProfileStore(context: Context, private val later: (Long, () -> Unit) -> Unit = ::onMainThreadLater) {
     private val app = context.applicationContext
     private val prefs = PreferenceManager.getDefaultSharedPreferences(app)
     private val state = MutableStateFlow(read())
     private val settingsListeners = CopyOnWriteArrayList<() -> Unit>()
+    private val deleted = LinkedHashMap<String, Deleted>()
+
+    /** A profile in its undo grace period: where it was, whether it was current and who took over. */
+    private class Deleted(val profile: Profile, val index: Int, val wasCurrent: Boolean, val successor: String?)
+
     val catalog = SettingsCatalog(app)
     val streamProfiles = StreamProfileStore(app, catalog)
 
     val profiles: StateFlow<Profiles> = state.asStateFlow()
 
     init {
+        // Profiles deleted before the last close are gone for good: nobody can undo them any more
+        val leftovers = prefs.getStringSet(KEY_DELETED, emptySet()).orEmpty()
+        if (leftovers.isNotEmpty()) {
+            leftovers.filter { id -> state.value.all.none { it.id == id } }.forEach { purgeFiles(it) }
+            prefs.edit().remove(KEY_DELETED).apply()
+        }
         // Profiles made before they had their own settings take over the new UI's settings so far
         state.value.all.forEach { p -> settingsOf(p.id).takeIf { it.all.isEmpty() }?.let { copySettings(into = it, from = null) } }
         streamProfiles.activate(state.value.current, settings())
@@ -98,30 +111,64 @@ class ProfileStore(context: Context) {
     }
 
     /**
-     * Deletes a profile with everything it keeps: its settings, control layouts and linked stream
-     * settings profile. The next profile becomes the current one; returns false when none is left (the
-     * first launch starts again).
+     * Deletes a profile without asking: it disappears at once, the next profile becomes the current
+     * one, and the linked stream settings profile goes. Its settings (with the per-game overrides) and
+     * control layouts are kept for [DELETE_GRACE_MS] so [undoDelete] can bring it back; after that, or
+     * at the next start if Delos was closed meanwhile, [purge] removes them for good. Returns false
+     * when no profile is left (the first launch starts again).
      */
     fun delete(id: String): Boolean {
+        val profile = state.value.all.firstOrNull { it.id == id } ?: return state.value.all.isNotEmpty()
         val wasCurrent = state.value.current?.id == id
-        val rest = state.value.all.filter { it.id != id }
-        save(Profiles(rest, if (wasCurrent) rest.firstOrNull()?.id else state.value.currentId))
+        val rest = state.value.all - profile
+        val successor = rest.firstOrNull()?.id
+        deleted[id] = Deleted(profile, state.value.all.indexOf(profile), wasCurrent, successor)
+        save(Profiles(rest, if (wasCurrent) successor else state.value.currentId))
         streamProfiles.delete(id)
-        ProfileLayouts.delete(app, id)
-        settingsOf(id).edit().clear().commit()
-        app.deleteSharedPreferences("ui_profile_$id")
-        if (wasCurrent) {
-            streamProfiles.activate(state.value.current, settings())
-            state.value.current?.let { ProfileLayouts.initialize(app, it.id, settings()) }
-            settingsListeners.forEach { it() }
-        }
+        if (wasCurrent) activateCurrent()
+        later(DELETE_GRACE_MS) { purge(id) }
         return rest.isNotEmpty()
     }
 
-    /** Drops the per-game overrides of every app on [pcUuid], in every profile (the PC was removed). */
+    /**
+     * Brings back a profile deleted less than [DELETE_GRACE_MS] ago at its old place with everything it
+     * kept. It becomes the current one again when it was and nobody has chosen another profile since.
+     * False when it was purged already.
+     */
+    fun undoDelete(id: String): Boolean {
+        val gone = deleted.remove(id) ?: return false
+        val takesOver = gone.wasCurrent && state.value.current?.id == gone.successor
+        val all = state.value.all.toMutableList().apply { add(gone.index.coerceAtMost(size), gone.profile) }
+        save(Profiles(all, if (takesOver) id else state.value.currentId))
+        if (takesOver) activateCurrent()
+        return true
+    }
+
+    /** Removes what a deleted profile kept: its settings, control layouts and per-game overrides. */
+    private fun purge(id: String) {
+        if (id !in deleted) return
+        purgeFiles(id)
+        deleted.remove(id)
+        prefs.edit().putStringSet(KEY_DELETED, deleted.keys.toSet()).apply()
+    }
+
+    private fun purgeFiles(id: String) {
+        ProfileLayouts.delete(app, id)
+        settingsOf(id).edit().clear().commit()
+        app.deleteSharedPreferences("ui_profile_$id")
+    }
+
+    /** The stream settings, layouts and listeners follow the profile that is current now. */
+    private fun activateCurrent() {
+        streamProfiles.activate(state.value.current, settings())
+        state.value.current?.let { ProfileLayouts.initialize(app, it.id, settings()) }
+        settingsListeners.forEach { it() }
+    }
+
+    /** Drops the per-game overrides of every app on [pcUuid], in every profile (the PC was removed), also those still restorable. */
     fun forgetGameSettings(pcUuid: String) {
         GameSettingsStore.purge(prefs, pcUuid)
-        state.value.all.forEach { GameSettingsStore.purge(settingsOf(it.id), pcUuid) }
+        (state.value.all.map { it.id } + deleted.keys).forEach { GameSettingsStore.purge(settingsOf(it), pcUuid) }
     }
 
     private fun settingsOf(id: String): SharedPreferences = app.getSharedPreferences("ui_profile_$id", Context.MODE_PRIVATE)
@@ -135,7 +182,7 @@ class ProfileStore(context: Context) {
         if (from != null) {
             settingsOf(from.id).all.forEach { (key, value) -> editor.put(key, value) }
         } else {
-            prefs.all.forEach { (key, value) -> if (key.startsWith("ui_") && key != KEY_PROFILES && key != KEY_CURRENT) editor.put(key, value) }
+            prefs.all.forEach { (key, value) -> if (key.startsWith("ui_") && key != KEY_PROFILES && key != KEY_CURRENT && key != KEY_DELETED) editor.put(key, value) }
             app.getSharedPreferences(CLASSIC_HIDDEN_APPS, Context.MODE_PRIVATE).all.forEach { (pcUuid, ids) ->
                 if (ids is Set<*>) editor.putStringSet(hiddenAppsKey(pcUuid), ids.filterIsInstance<String>().toSet())
             }
@@ -171,13 +218,21 @@ class ProfileStore(context: Context) {
     private fun save(profiles: Profiles) {
         val array = JSONArray()
         profiles.all.forEach { array.put(JSONObject().put("id", it.id).put("name", it.name).put("avatar", it.avatar)) }
-        prefs.edit().putString(KEY_PROFILES, array.toString()).putString(KEY_CURRENT, profiles.currentId).apply()
+        // One edit: the list and the profiles still to purge never disagree on disk
+        prefs.edit().putString(KEY_PROFILES, array.toString()).putString(KEY_CURRENT, profiles.currentId)
+            .putStringSet(KEY_DELETED, deleted.keys.toSet()).apply()
         state.value = profiles
     }
 
     companion object {
         private const val KEY_PROFILES = "ui_profiles"
         private const val KEY_CURRENT = "ui_profile"
+
+        /** Ids of the profiles deleted but not yet purged (the undo grace period); the next start finishes them. */
+        private const val KEY_DELETED = "ui_profiles_deleted"
+
+        /** How long a deleted profile can still be restored. */
+        const val DELETE_GRACE_MS = 10_000L
 
         /** The classic AppView's hidden games (per PC uuid), taken over by the first profile. */
         private const val CLASSIC_HIDDEN_APPS = "HiddenApps"
@@ -193,6 +248,13 @@ class ProfileStore(context: Context) {
             return app.getSharedPreferences("ui_profile_$id", Context.MODE_PRIVATE)
         }
     }
+}
+
+private val mainHandler by lazy { Handler(Looper.getMainLooper()) }
+
+/** The default way [ProfileStore] waits out the undo grace period. */
+private fun onMainThreadLater(delayMs: Long, work: () -> Unit) {
+    mainHandler.postDelayed(work, delayMs)
 }
 
 /** A profile's hidden games on [pcUuid] (app ids as strings). */

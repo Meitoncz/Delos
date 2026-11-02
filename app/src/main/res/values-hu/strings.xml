@@ -60,7 +60,6 @@
     <string name="title_fps_list">Videó képkockasebessége</string>
     <string name="summary_resolution_list">Növeld a jobb képélességhez, csökkentsd a jobb teljesítményhez az alsóbb kategóriás eszközökön és a lassabb hálózatokon.</string>
     <string name="title_resolution_list">Videó felbontás</string>
-    <string name="applist_quit_confirmation">Biztosan kilépsz a futó alkalmazásból? Minden nem mentett adat elvész.</string>
     <string name="applist_quit_fail">Nem sikerült kilépni</string>
     <string name="applist_quit_success">Sikeresen kiléptél</string>
     <string name="applist_quit_app">Kilépés</string>
@@ -74,7 +73,6 @@
     <string name="perf_overlay_streamdetails">Videófolyam: %1$s %2$.2f FPS</string>
     <string name="poor_connection_msg">Gyenge a kapcsolat a számítógéppel</string>
     <string name="slow_connection_msg">Lassú a kapcsolat a számítógéppel\nCsökkentsd a bitrátát</string>
-    <string name="delete_pc_msg">Biztosan törlöd ezt a számítógépet?</string>
     <string name="help">Súgó</string>
     <string name="no">Nem</string>
     <string name="yes">Igen</string>

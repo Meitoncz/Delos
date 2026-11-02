@@ -27,7 +27,6 @@
     <string name="applist_quit_app">Cerrando</string>
     <string name="applist_quit_success">Cerrado satisfactoriamente</string>
     <string name="applist_quit_fail">Error al cerrar</string>
-    <string name="applist_quit_confirmation">¿Estás seguro que deseas quitar la aplicación en ejecución? Todo dato sin salvar se perderá.</string>
     <!-- Add computer manually activity -->
     <!-- Preferences -->
     <string name="title_resolution_list">Seleccionar resolución</string>
@@ -133,7 +132,6 @@
     <string name="summary_unlock_fps">Transmitir a 90 o 120 FPS puede reducir latencia en dispositivos de gama alta pero puede causar retrasos en dispositivos que no lo soporten</string>
     <string name="title_enable_perf_overlay">Mostrar estadísticas de rendimiento mientras la transmisión está activa</string>
     <string name="help">Ayuda</string>
-    <string name="delete_pc_msg">¿Estás seguro de eliminar este PC\?</string>
     <string name="slow_connection_msg">Conexión lenta al PC
 \nReduce la tasa de bits</string>
     <string name="suffix_seekbar_bitrate_mbps">Mbps</string>

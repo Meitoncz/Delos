@@ -25,7 +25,6 @@
     <string name="applist_quit_app">Виходимо з</string>
     <string name="applist_quit_success">Успішний вихід з</string>
     <string name="applist_quit_fail">Помилка при виході</string>
-    <string name="applist_quit_confirmation">Ви впевнені, що хочете вийти з запущеного застосунку\? Усі незбережені дані будуть втрачені.</string>
     <!-- Add computer manually activity -->
     <!-- Preferences -->
     <string name="title_resolution_list">Роздільна здатність</string>
@@ -82,7 +81,6 @@
     <string name="title_checkbox_vibrate_osc">Увімкнути вібрацію</string>
     <string name="title_fps_list">Частота кадрів</string>
     <string name="category_input_settings">Налаштування введення</string>
-    <string name="delete_pc_msg">Ви впевнені що хочете видалити цей пристрій\?</string>
     <string name="poor_connection_msg">Слабке з\'єднання з пристроєм</string>
     <string name="title_enable_perf_overlay">Увімкнути відображення статистики</string>
     <string name="title_unlock_fps">Розблокувати всі можливі частоти кадрів</string>

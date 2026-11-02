@@ -19,7 +19,6 @@
 \n</string>
     <string name="perf_overlay_netlatency">Μέσος λανθάνων χρόνος δικτύου: %1$d MS (διακύμανση: %2$d ms)</string>
     <string name="applist_quit_fail">Αποτυχία διακοπής</string>
-    <string name="applist_quit_confirmation">Είστε σίγουροι ότι θέλετε να τερματίσετε την τρέχουσα εφαρμογή; Όλα τα μη αποθηκευμένα δεδομένα θα χαθούν.</string>
     <string name="dialog_text_reset_osc">Είστε βέβαιοι ότι θέλετε να διαγράψετε την αποθηκευμένη διάταξη στοιχείων ελέγχου στην οθόνη;</string>
     <string name="title_enable_perf_overlay">Εμφάνιση στατιστικών στοιχείων απόδοσης κατά τη ροή</string>
     <string name="error_pc_offline">Ο υπολογιστής είναι εκτός σύνδεσης</string>
@@ -99,7 +98,6 @@
     <string name="conn_error_title">Σφάλμα σύνδεσης</string>
     <string name="conn_error_msg">Απέτυχε η εκκίνηση</string>
     <string name="no">Οχι</string>
-    <string name="delete_pc_msg">Είστε βέβαιοι ότι θέλετε να διαγράψετε αυτόν τον υπολογιστή;</string>
     <string name="slow_connection_msg">Αργή σύνδεση με υπολογιστή
 \nΜειώστε το bitrate σας</string>
     <string name="poor_connection_msg">Κακή σύνδεση με τον υπολογιστή</string>

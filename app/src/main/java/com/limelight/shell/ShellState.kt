@@ -130,8 +130,12 @@ data class DialogSpec(
 @Immutable
 data class Portal(val id: Int, val icon: String, val label: String, val sub: String, val cancellable: Boolean, val arriving: Boolean = false)
 
+/** The one thing a toast offers (Undo): [run] on Y of the controller or a tap, while the toast is visible. */
 @Immutable
-data class Toast(val text: String, val icon: String?, val id: Int)
+data class ToastAction(val label: String, val run: () -> Unit)
+
+@Immutable
+data class Toast(val text: String, val icon: String?, val id: Int, val action: ToastAction? = null)
 
 /** Starting [app] on [pc]; [intent] opens the stream. */
 data class LaunchRequest(val id: Int, val pc: Pc, val app: App, val intent: android.content.Intent, val image: ImageBitmap?, val background: ImageBitmap?)
@@ -270,12 +274,22 @@ class ShellState(initial: Screen) {
     /** The element to focus again once the closed layer has left the composition. */
     fun takeReturnFocus(): FocusRequester? = returnFocus.also { returnFocus = null }
 
-    fun showToast(text: String, icon: String? = null) {
-        toast = Toast(text, icon, ++toastCounter)
+    /** A toast with an [action] stays longer (ToastHost) and can be run once with [runToastAction]. */
+    fun showToast(text: String, icon: String? = null, action: ToastAction? = null) {
+        toast = Toast(text, icon, ++toastCounter, action)
     }
 
     fun hideToast(id: Int) {
         if (toast?.id == id) toast = null
+    }
+
+    /** Runs the action of the visible toast and hides it; false when there is none. */
+    fun runToastAction(): Boolean {
+        val shown = toast ?: return false
+        val action = shown.action ?: return false
+        toast = null
+        action.run()
+        return true
     }
 }
 

@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -322,15 +323,18 @@ fun SideMenuHeader(avatar: @Composable BoxScope.() -> Unit, name: String, status
     }
 }
 
-/** A toast at the bottom center (`#toast`), hidden after 2.6 s. */
+/**
+ * A toast at the bottom center (`#toast`), hidden after 2.6 s; one with an action ("Undo") stays for
+ * [ACTION_TOAST_MS] and runs it on Y of the controller (GlobalKeys) or a tap.
+ */
 @Composable
-fun ToastHost(toast: Toast?, onHidden: (Int) -> Unit) {
+fun ToastHost(toast: Toast?, onHidden: (Int) -> Unit, onAction: () -> Unit) {
     val colors = LocalDelosColors.current
     var shown by remember { mutableStateOf(toast) }
     if (toast != null) shown = toast
     LaunchedEffect(toast?.id) {
         val id = toast?.id ?: return@LaunchedEffect
-        delay(2600)
+        delay(if (toast?.action != null) ACTION_TOAST_MS else 2600)
         onHidden(id)
     }
     Box(Modifier.fillMaxSize().padding(bottom = 120.px), contentAlignment = Alignment.BottomCenter) {
@@ -341,16 +345,32 @@ fun ToastHost(toast: Toast?, onHidden: (Int) -> Unit) {
         ) {
             val t = shown ?: return@AnimatedVisibility
             Row(
-                Modifier.clip(CircleShape).background(colors.text).padding(horizontal = 30.px, vertical = 16.px),
+                Modifier.clip(CircleShape).background(colors.text)
+                    .then(if (t.action != null) Modifier.pointerInput(t.id) { detectTapGestures { onAction() } } else Modifier)
+                    .padding(horizontal = 30.px, vertical = 16.px),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.px),
             ) {
                 if (t.icon != null) Symbol(t.icon, 30.tpx, colors.bg, filled = true)
                 BasicText(t.text, style = TextStyle(color = colors.bg, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 22.tpx))
+                if (t.action != null) {
+                    Row(Modifier.padding(start = 10.px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.px)) {
+                        Box(
+                            Modifier.defaultMinSize(minWidth = 34.px).height(34.px).clip(CircleShape).background(colors.bg).padding(horizontal = 8.px),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            BasicText("Y", style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.ExtraBold, fontSize = 20.tpx))
+                        }
+                        BasicText(t.action.label, style = TextStyle(color = colors.bg, fontFamily = Figtree, fontWeight = FontWeight.ExtraBold, fontSize = 22.tpx))
+                    }
+                }
             }
         }
     }
 }
+
+/** How long a toast with an action stays (the profile deletion lets itself be undone for as long). */
+const val ACTION_TOAST_MS = 10_000L
 
 /** Soft gradient used behind the side menu avatar placeholder. */
 fun avatarBrush(hue: Float): Brush = Brush.linearGradient(listOf(hsl(hue, 80f, 60f), hsl(hue + 40f, 70f, 40f)))

@@ -30,7 +30,6 @@
     <string name="yes">Ja</string>
     <string name="no">Nej</string>
     <string name="help">Hjälp</string>
-    <string name="delete_pc_msg">Är du säker på att du vill ta bort den här datorn\?</string>
     <string name="slow_connection_msg">Långsam anslutning till datorn
 \nMinska din bithastighet</string>
     <string name="poor_connection_msg">Dålig anslutning till datorn</string>
@@ -43,7 +42,6 @@
     <string name="applist_connect_msg">Fogar till dator…</string>
     <string name="applist_quit_app">Avslutar</string>
     <string name="applist_quit_success">Framgångsrikt avslutad</string>
-    <string name="applist_quit_confirmation">Är du säker på att du vill avsluta den pågående appen\? Alla osparade datamatrial kommer att gå förlorade.</string>
     <string name="title_resolution_list">Videoupplösning</string>
     <string name="summary_resolution_list">Öka för att förbättra bildens tydlighet. Sänk för bättre prestanda på mindre avancerade enheter och långsammare nätverk.</string>
     <string name="title_fps_list">Videobildfrekvens</string>

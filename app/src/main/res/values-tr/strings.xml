@@ -57,7 +57,6 @@
     <string name="conn_terminated_msg">Bağlantı sonlandırıldı.</string>
     <string name="yes">Evet</string>
     <string name="help">Yardım</string>
-    <string name="delete_pc_msg">Bu bilgisayarı silmek istediğinizden emin misiniz\?</string>
     <string name="slow_connection_msg">Bilgisayara yavaş bağlantı
 \nBit hızınızı düşürün</string>
     <string name="poor_connection_msg">Bilgisayar ile zayıf bağlantı</string>
@@ -70,7 +69,6 @@
     <string name="applist_quit_success">Başarıyla çıkıldı</string>
     <string name="applist_quit_app">Çıkılıyor</string>
     <string name="applist_quit_fail">Çıkılamadı</string>
-    <string name="applist_quit_confirmation">Çalışan uygulamadan çıkmak istediğinizden emin misiniz\? Kaydedilmemiş tüm veriler kaybolacaktır.</string>
     <string name="summary_resolution_list">Görüntü netliğini artırmak için yükseltin. Düşük güçteki cihazlarda ve daha yavaş ağlarda daha iyi performans için azaltın.</string>
     <string name="title_fps_list">Video kare hızı</string>
     <string name="title_seekbar_bitrate">Video bit hızı</string>

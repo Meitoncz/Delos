@@ -50,7 +50,9 @@ Custom rows show their source line in the accent color.
 the user's `ui_profile_<UUID>` preferences. PC UUID plus host app ID distinguishes libraries; titles
 and artwork do not affect identity. Creating a user copies these values with the other profile
 settings, including private codec bitrate slots. Later edits are independent; deleting a user deletes
-their overrides/slots too, and removing a PC in Devices deletes both for every user. Slot keys use the
+their overrides/slots too (after the 10 s undo period of the profile toast, see `ProfileStore.delete`;
+`ProfileDeleteUndoTest` covers it), and removing a PC in Devices deletes both for every user, also in
+profiles that are only waiting to be purged. Slot keys use the
 same per-game prefix and never inherit the profile's codec slots or appear in effective-value maps,
 the settings catalog or the stream's launch snapshot.
 
