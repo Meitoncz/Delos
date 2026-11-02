@@ -104,7 +104,6 @@
     <string name="yes">Sim</string>
     <string name="no">Não</string>
     <string name="help">Ajuda</string>
-    <string name="delete_pc_msg">Tem certeza de que deseja apagar este PC\?</string>
     <string name="poor_connection_msg">Conexão ruim com o PC</string>
     <string name="slow_connection_msg">Conexão lenta com o PC
 \nReduza sua taxa de bits</string>
@@ -113,7 +112,6 @@
     <string name="perf_overlay_incomingfps">Taxa de quadros recebidos pela rede:: %1$.2f FPS</string>
     <string name="perf_overlay_dectime">Tempo médio de decodificação: %1$.2f ms</string>
     <string name="applist_connect_msg">Conectando ao PC…</string>
-    <string name="applist_quit_confirmation">Tem certeza de que deseja sair da app em execução\? Todos os dados não salvos serão perdidos.</string>
     <string name="title_resolution_list">Resolução</string>
     <string name="summary_resolution_list">Aumente para melhorar a clareza da imagem. Diminua para melhor desempenho em aparelhos de baixo custo e redes mais lentas.</string>
     <string name="title_fps_list">Taxa de quadros por segundo</string>

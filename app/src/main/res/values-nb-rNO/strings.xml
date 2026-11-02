@@ -3,7 +3,6 @@
     <string name="title_checkbox_multi_controller">Automatisk oppdaging av spillkontroller</string>
     <string name="title_seekbar_bitrate">Video-bitrate</string>
     <string name="title_fps_list">Videobilderammetakt</string>
-    <string name="applist_quit_confirmation">Er du sikker på at du vil avslutte det kjørende programmet\? All ulagret data vil gå tapt.</string>
     <string name="perf_overlay_decoder">Dekoder: %1$s</string>
     <string name="perf_overlay_incomingfps">Innkommende bilderammetakt fra nettverket: %1$.2f BPS</string>
     <string name="perf_overlay_renderingfps">Opptegningsbilderammetakt: %1$.2f BPS</string>
@@ -51,7 +50,6 @@
     <string name="poor_connection_msg">Dårlig tilknytning til PC</string>
     <string name="slow_connection_msg">Vis tilkobling til PC
 \nReduser bitraten din</string>
-    <string name="delete_pc_msg">Er du sikker på at du vil slette denne PC-en\?</string>
     <string name="help">Hjelp</string>
     <string name="no">Nei</string>
     <string name="yes">Ja</string>

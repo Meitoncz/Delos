@@ -49,7 +49,6 @@
     <string name="conn_error_title">Грешка във връзката</string>
     <string name="no">Не</string>
     <string name="help">Помощ</string>
-    <string name="delete_pc_msg">Наистина ли искате да изтриете този компютър?</string>
     <string name="poor_connection_msg">Слаба връзка с компютъра</string>
     <string name="perf_overlay_streamdetails">Видео поток: %1$s %2$.2f кадъра/сек</string>
     <string name="perf_overlay_decoder">Декодер: %1$s</string>
@@ -62,7 +61,6 @@
     <string name="applist_quit_success">Успешно затваряне</string>
     <string name="applist_quit_app">Затваряне</string>
     <string name="applist_quit_fail">Неуспешно затваряне</string>
-    <string name="applist_quit_confirmation">Наистина ли искате да затворите работещото приложение? Всички незапазени данни ще бъдат загубени.</string>
     <string name="title_resolution_list">Видео резолюция</string>
     <string name="summary_fps_list">Увеличете за по-плавен видео поток. Намалете за по-добра производителност на устройства от по-нисък клас.</string>
     <string name="title_seekbar_bitrate">Побитова скорост на видеото</string>

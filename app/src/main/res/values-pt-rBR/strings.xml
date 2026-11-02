@@ -65,7 +65,6 @@
     <string name="yes">Sim</string>
     <string name="no">Não</string>
     <string name="help">Ajuda</string>
-    <string name="delete_pc_msg">Tem certeza de que deseja excluir este PC\?</string>
     <string name="slow_connection_msg">Conexão lenta com o PC
 \nReduza sua taxa de bits</string>
     <string name="poor_connection_msg">Conexão ruim com o PC</string>
@@ -86,7 +85,6 @@
     <string name="applist_quit_app">Saindo</string>
     <string name="applist_quit_success">Saiu com sucesso</string>
     <string name="applist_quit_fail">Falha ao sair</string>
-    <string name="applist_quit_confirmation">Tem certeza de que deseja sair do aplicativo em execução\? Todos os dados não salvos serão perdidos.</string>
     <string name="category_input_settings">Configurações de Controles</string>
     <string name="title_resolution_list">Resolução</string>
     <string name="summary_resolution_list">Aumente para melhorar a clareza da imagem. Diminua para melhor desempenho em dispositivos de baixo custo e redes mais lentas.</string>

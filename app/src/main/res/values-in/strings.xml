@@ -35,7 +35,6 @@
     <string name="conn_terminated_msg">Koneksi telah terputus.</string>
     <string name="yes">Ya</string>
     <string name="no">Tidak</string>
-    <string name="delete_pc_msg">Apakah Anda yakin ingin menghapus komputer ini\?</string>
     <string name="slow_connection_msg">Koneksi terhadap komputer lambat
 \nKurangi bitrate anda</string>
     <string name="poor_connection_msg">Koneksi dengan komputer buruk</string>
@@ -53,7 +52,6 @@
 \n
 \nPastikan tidak ada konten yang dilindungi DRM yang terbuka di komputer host Anda. Coba mulai ulang komputer host.</string>
     <string name="help">Bantuan</string>
-    <string name="applist_quit_confirmation">Anda yakin ingin keluar dari aplikasi yang sedang berjalan\? Semua data yang belum disimpan akan hilang.</string>
     <string name="title_fps_list">Kecepatan bingkai video</string>
     <string name="summary_fps_list">Tingkatkan untuk streaming video yang lebih lancar. Turunkan untuk kinerja yang lebih baik pada perangkat kelas bawah.</string>
     <string name="title_seekbar_bitrate">Kecepatan bit video</string>

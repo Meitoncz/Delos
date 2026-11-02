@@ -78,6 +78,9 @@ public class KeyBoardController {
     private Vibrator vibrator;
     private List<keyBoardVirtualControllerElement> elements = new ArrayList<>();
 
+    // The keys hidden by the last "Clear all", kept until the editor step ends so the button can bring them back
+    private List<keyBoardVirtualControllerElement> clearedElements = null;
+
     public KeyBoardController(final NvConnection conn, FrameLayout layout, final Context context) {
         this.conn = conn;
         this.frame_layout = layout;
@@ -198,21 +201,11 @@ public class KeyBoardController {
         buttonClearAll.setAlpha(0.7f);
         buttonClearAll.setVisibility(View.GONE);
         buttonClearAll.setOnClickListener(v -> {
-            AlertDialog.Builder builder = new AlertDialog.Builder(context);
-            builder.setTitle(context.getString(R.string.keyboard_clear_all_confirm_title));
-            builder.setMessage(context.getString(R.string.keyboard_clear_all_confirm_message));
-            builder.setPositiveButton(context.getString(R.string.yes), (dialog, which) -> {
-                // Instead of removing elements, mark them as hidden
-                for (keyBoardVirtualControllerElement element : elements) {
-                    element.hidden = true;
-                    element.setVisibility(View.GONE);
-                }
-                // Save the new state
-                KeyBoardControllerConfigurationLoader.saveProfile(KeyBoardController.this, context);
-                vibrate(KeyEvent.ACTION_DOWN);
-            });
-            builder.setNegativeButton(context.getString(R.string.no), null);
-            builder.show();
+            if (clearedElements != null) {
+                restoreCleared();
+            } else {
+                clearAll();
+            }
         });
 
         // Add Keys button
@@ -282,6 +275,7 @@ public class KeyBoardController {
     }
 
     public void removeElements() {
+        forgetCleared();
         for (keyBoardVirtualControllerElement element : elements) {
             frame_layout.removeView(element);
         }
@@ -412,6 +406,44 @@ public class KeyBoardController {
         int visibility = show ? View.VISIBLE : View.GONE;
         buttonClearAll.setVisibility(visibility);
         buttonAddKeys.setVisibility(visibility);
+        if (!show) {
+            forgetCleared();
+        }
+    }
+
+    /** Hides every shown key without asking; the button turns into "Restore" until the editor step ends. */
+    private void clearAll() {
+        List<keyBoardVirtualControllerElement> cleared = new ArrayList<>();
+        // Instead of removing elements, mark them as hidden
+        for (keyBoardVirtualControllerElement element : elements) {
+            if (!element.hidden) {
+                cleared.add(element);
+            }
+            element.hidden = true;
+            element.setVisibility(View.GONE);
+        }
+        if (!cleared.isEmpty()) {
+            clearedElements = cleared;
+            buttonClearAll.setText(context.getString(R.string.keyboard_clear_all_restore));
+        }
+        // Save the new state
+        KeyBoardControllerConfigurationLoader.saveProfile(KeyBoardController.this, context);
+        vibrate(KeyEvent.ACTION_DOWN);
+    }
+
+    private void restoreCleared() {
+        for (keyBoardVirtualControllerElement element : clearedElements) {
+            element.hidden = false;
+            element.setVisibility(View.VISIBLE);
+        }
+        forgetCleared();
+        KeyBoardControllerConfigurationLoader.saveProfile(KeyBoardController.this, context);
+        vibrate(KeyEvent.ACTION_DOWN);
+    }
+
+    private void forgetCleared() {
+        clearedElements = null;
+        buttonClearAll.setText(context.getString(R.string.keyboard_clear_all));
     }
 
     private void showKeySelectionDialog() {
@@ -512,6 +544,8 @@ public class KeyBoardController {
             });
 
             builder.setPositiveButton(context.getString(R.string.keyboard_add), (dialog, which) -> {
+                // New keys would clash with the hidden ones "Restore" brings back
+                forgetCleared();
                 DisplayMetrics screen = context.getResources().getDisplayMetrics();
                 int height = screen.heightPixels;
                 

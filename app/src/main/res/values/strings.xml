@@ -5,6 +5,8 @@
     <string name="scut_pc_not_found">PC not found</string>
     <string name="scut_invalid_uuid">Provided PC is not valid</string>
     <string name="scut_invalid_app_id">Provided App is not valid</string>
+    <string name="scut_game_running">%1$s is already running · quit it from Delos first</string>
+    <string name="scut_other_game_running">Another game is already running · quit it from Delos first</string>
 
     <string name="quick_menu_title">Quick Menu</string>
     <string name="configuration_mode_move_buttons">Move buttons mode</string>
@@ -70,7 +72,6 @@
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="help">Help</string>
-    <string name="delete_pc_msg">Are you sure you want to delete this PC?</string>
     <string name="slow_connection_msg">Slow connection to PC\nReduce your bitrate</string>
     <string name="poor_connection_msg">Poor connection to PC</string>
     <string name="perf_overlay_streamdetails">Video stream: %1$s %2$.2f FPS</string>
@@ -90,7 +91,6 @@
     <string name="applist_quit_app">Quitting</string>
     <string name="applist_quit_success">Successfully quit</string>
     <string name="applist_quit_fail">Failed to quit</string>
-    <string name="applist_quit_confirmation">Are you sure you want to quit the running app? All unsaved data will be lost.</string>
 
     <!-- Add computer manually activity -->
 
@@ -462,10 +462,9 @@
 
     <!-- Keyboard -->
     <string name="keyboard_clear_all">Clear All</string>
+    <string name="keyboard_clear_all_restore">Restore</string>
     <string name="keyboard_add_keys">Add Keys</string>
     <string name="keyboard_select_keys">Select Keys to Add</string>
-    <string name="keyboard_clear_all_confirm_title">Clear All Keys</string>
-    <string name="keyboard_clear_all_confirm_message">Are you sure you want to hide all on-screen controls? You can add them back later in configuration mode.</string>
     <string name="keyboard_keys_added">%d keys added successfully</string>
     <string name="keyboard_duplicates_skipped">%d duplicates were skipped</string>
     <string name="keyboard_configure_movable">You can now move the settings button.</string>

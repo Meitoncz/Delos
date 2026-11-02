@@ -11,6 +11,10 @@ class GlobalKeys {
     /** Handles a key-up of one of [KEYS]. */
     var listener: ((keyCode: Int) -> Unit)? = null
 
+    /** Y runs the action of the visible toast (Undo) first, wherever the shell is; nothing else reacts to Y then. */
+    var canUndo: () -> Boolean = { false }
+    var onUndo: (() -> Unit)? = null
+
     /** Y opens settings search only while the settings screen accepts input. */
     var canSearch: () -> Boolean = { false }
     var onSearch: (() -> Unit)? = null
@@ -26,9 +30,10 @@ class GlobalKeys {
     fun dispatch(event: KeyEvent): Boolean {
         capture?.let { if (it(event)) return true }
         if (event.keyCode == KeyEvent.KEYCODE_BUTTON_Y) {
-            val search = onSearch?.takeIf { canSearch() }
-            val filter = onFilter?.takeIf { search == null && canFilter() }
-            val action = search ?: filter ?: return false
+            val undo = onUndo?.takeIf { canUndo() }
+            val search = onSearch?.takeIf { undo == null && canSearch() }
+            val filter = onFilter?.takeIf { undo == null && search == null && canFilter() }
+            val action = undo ?: search ?: filter ?: return false
             if (event.action == KeyEvent.ACTION_UP && event.repeatCount == 0 && !event.isCanceled) action()
             return true
         }

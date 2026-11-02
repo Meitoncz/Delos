@@ -70,7 +70,6 @@
 	<string name="yes">是</string>
 	<string name="no">否</string>
 	<string name="help">說明</string>
-	<string name="delete_pc_msg">您確定要刪除此電腦嗎？</string>
 	<string name="slow_connection_msg">與電腦連線速度緩慢\n請降低位元率</string>
 	<string name="poor_connection_msg">與電腦的連線品質不佳</string>
 	<string name="perf_overlay_streamdetails">影片串流：%1$s %2$.2f FPS</string>
@@ -90,7 +89,6 @@
 	<string name="applist_quit_app">正在結束</string>
 	<string name="applist_quit_success">已成功結束</string>
 	<string name="applist_quit_fail">結束失敗</string>
-	<string name="applist_quit_confirmation">您確定要結束正在執行的應用程式嗎？所有未儲存的資料將會遺失。</string>
 
 	<!-- Add computer manually activity -->
 
@@ -506,8 +504,6 @@
 	<string name="keyboard_clear_all">全部清除</string>
 	<string name="keyboard_add_keys">新增按鍵</string>
 	<string name="keyboard_select_keys">選擇要新增的按鍵</string>
-	<string name="keyboard_clear_all_confirm_title">清除所有按鍵</string>
-	<string name="keyboard_clear_all_confirm_message">確定要隱藏所有螢幕控制嗎？之後可在配置模式中再行新增。</string>
 	<string name="keyboard_keys_added">成功新增 %d 個按鍵</string>
 	<string name="keyboard_duplicates_skipped">已略過 %d 個重複項目</string>
 	<string name="keyboard_configure_movable">您現在可以移動設定按鈕。</string>

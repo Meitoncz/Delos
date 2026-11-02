@@ -25,7 +25,6 @@
     <string name="applist_quit_app">終了中</string>
     <string name="applist_quit_success">ゲームを終了しました</string>
     <string name="applist_quit_fail">ゲームが終了できませんでした</string>
-    <string name="applist_quit_confirmation">本当にゲームを終了しますか?  保存されていないデータは破棄されます</string>
     <!-- Add computer manually activity -->
     <!-- Preferences -->
     <string name="title_resolution_list">解像度とフレームレート</string>

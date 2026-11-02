@@ -265,30 +265,6 @@ public class UiHelper {
         );
     }
 
-    public static void displayQuitConfirmationDialog(Activity parent, final Runnable onYes, final Runnable onNo) {
-        displayConfirmationDialog(
-                parent,
-                null,
-                parent.getResources().getString(R.string.applist_quit_confirmation),
-                parent.getResources().getString(R.string.yes),
-                parent.getResources().getString(R.string.no),
-                onYes,
-                onNo
-        );
-    }
-
-    public static void displayDeletePcConfirmationDialog(Activity parent, ComputerDetails computer, final Runnable onYes, final Runnable onNo) {
-        displayConfirmationDialog(
-                parent,
-                computer.name,
-                parent.getResources().getString(R.string.delete_pc_msg),
-                parent.getResources().getString(R.string.yes),
-                parent.getResources().getString(R.string.no),
-                onYes,
-                onNo
-        );
-    }
-
     public static float dpToPx(Context context, float dp) {
         return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, context.getResources().getDisplayMetrics());
     }

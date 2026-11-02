@@ -44,7 +44,6 @@
     <string name="yes">ஆம்</string>
     <string name="no">இல்லை</string>
     <string name="help">உதவி</string>
-    <string name="delete_pc_msg">இந்த கணினியை நீக்க விரும்புகிறீர்களா?</string>
     <string name="slow_connection_msg">பிசிக்கு மெதுவான இணைப்பு\n உங்கள் பிட்ரேட்டைக் குறைக்கவும்</string>
     <string name="poor_connection_msg">பிசிக்கு மோசமான இணைப்பு</string>
     <string name="perf_overlay_streamdetails">வீடியோ ச்ட்ரீம்: %1$s %2$.2f FPS</string>
@@ -59,7 +58,6 @@
     <string name="applist_quit_app">வெளியேறுதல்</string>
     <string name="applist_quit_success">வெற்றிகரமாக விலகுங்கள்</string>
     <string name="applist_quit_fail">வெளியேறத் தவறிவிட்டது</string>
-    <string name="applist_quit_confirmation">இயங்கும் பயன்பாட்டை விட்டு வெளியேற விரும்புகிறீர்களா? சேமிக்கப்படாத அனைத்து தரவும் இழக்கப்படும்.</string>
     <string name="title_resolution_list">வீடியோ தீர்மானம்</string>
     <string name="summary_resolution_list">பட தெளிவை மேம்படுத்த அதிகரிக்கவும். குறைந்த இறுதி சாதனங்கள் மற்றும் மெதுவான நெட்வொர்க்குகளில் சிறந்த செயல்திறனுக்கான குறைவு.</string>
     <string name="title_fps_list">வீடியோ பிரேம் வீதம்</string>

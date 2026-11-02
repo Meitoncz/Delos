@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -156,28 +157,22 @@ public class ShortcutTrampoline extends AppCompatActivity {
                                                     // Now start the activities
                                                     startActivities(intentStack.toArray(new Intent[]{}));
                                                 } else {
-                                                    // Create the start intent immediately, so we can safely unbind the managerBinder
-                                                    // below before we return.
-                                                    final Intent startIntent = GameLauncher.startIntent(ShortcutTrampoline.this, managerBinder, details, app).getIntent();
+                                                    // Another game is running on the PC. Delos never quits it without an explicit
+                                                    // choice in its own menu ("Quit X and start"), and this activity cannot tell a
+                                                    // pinned shortcut from another app's intent, so nothing is quit here and no
+                                                    // dialog asks: open the PC's games in Delos, where the running game is marked
+                                                    // and the menu of the chosen game offers to quit it and start.
+                                                    Toast.makeText(getApplicationContext(),
+                                                            getRunningGameMessage(details), Toast.LENGTH_LONG).show();
 
-                                                    UiHelper.displayQuitConfirmationDialog(ShortcutTrampoline.this, new Runnable() {
-                                                        @Override
-                                                        public void run() {
-                                                            intentStack.add(startIntent);
+                                                    finish();
 
-                                                            // Close this activity
-                                                            finish();
+                                                    Intent i = new Intent(getIntent());
+                                                    i.setClass(ShortcutTrampoline.this, com.limelight.shell.ShellActivity.class);
+                                                    i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                                    intentStack.add(i);
 
-                                                            // Now start the activities
-                                                            startActivities(intentStack.toArray(new Intent[]{}));
-                                                        }
-                                                    }, new Runnable() {
-                                                        @Override
-                                                        public void run() {
-                                                            // Close this activity
-                                                            finish();
-                                                        }
-                                                    });
+                                                    startActivities(intentStack.toArray(new Intent[]{}));
                                                 }
                                             } else {
                                                 // Close this activity
@@ -262,6 +257,25 @@ public class ShortcutTrampoline extends AppCompatActivity {
         return true;
     }
 
+
+    /** The toast for a shortcut whose game cannot start because another one runs: names it when the PC's app list does. */
+    private String getRunningGameMessage(ComputerDetails details) {
+        if (details.rawAppList != null) {
+            try {
+                for (NvApp running : NvHTTP.getAppListByReader(new StringReader(details.rawAppList))) {
+                    boolean sameUuid = details.runningGameUUID != null && !details.runningGameUUID.isEmpty()
+                            && details.runningGameUUID.equals(running.getAppUUID());
+                    boolean sameId = details.runningGameId != 0 && running.getAppId() == details.runningGameId;
+                    if ((sameUuid || sameId) && running.getAppName() != null) {
+                        return getString(R.string.scut_game_running, running.getAppName());
+                    }
+                }
+            } catch (IOException | XmlPullParserException e) {
+                Log.w(TAG, "Unreadable app list of the PC", e);
+            }
+        }
+        return getString(R.string.scut_other_game_running);
+    }
 
     protected boolean validateAppInput(String appUUID, String appIDStr, String appName) {
         if (appUUID == null && appIDStr == null && appName == null) {

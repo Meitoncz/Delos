@@ -34,7 +34,6 @@
     <string name="applist_quit_app">Выход из</string>
     <string name="applist_quit_success">Выход произошёл успешно из</string>
     <string name="applist_quit_fail">Ошибка при выходе</string>
-    <string name="applist_quit_confirmation">Вы уверены, что хотите выйти из запущенного приложения? Все несохранённые данные будут потеряны.</string>
     <!-- Add computer manually activity -->
     <!-- Preferences -->
     <string name="keyboard_key_custom">%s (польз.)</string>
@@ -104,7 +103,6 @@
     <string name="summary_checkbox_force_device_motion">Принудительно использовать встроенный в устройство датчик движения, даже если контроллер сообщает о поддержке датчиков движения.</string>
     <string name="summary_enable_rumble">"Включить вибрацию на поддерживаемых геймпадах.   "</string>
     <string name="category_input_settings">Настройки ввода</string>
-    <string name="delete_pc_msg">Вы уверены что хотите удалить этот ПК?</string>
     <string name="poor_connection_msg">Слабое соединение с ПК</string>
     <string name="summary_prevent_packet_loss">Отправляет небольшие пакеты во время трансляции, чтобы Wi-Fi не переходил в режим энергосбережения. Может помочь на устройствах с необъяснимой потерей пакетов.</string>
     <string name="title_enable_perf_overlay">Включить отображение статистики</string>
@@ -391,8 +389,6 @@
     <string name="keyboard_clear_all">Очистить всё</string>
     <string name="keyboard_add_keys">Добавить клавиши</string>
     <string name="keyboard_select_keys">Выберите клавиши для добавления</string>
-    <string name="keyboard_clear_all_confirm_title">Удалить все клавиши</string>
-    <string name="keyboard_clear_all_confirm_message">Вы уверены, что хотите скрыть все экранные элементы? Их можно вернуть в режиме настройки.</string>
     <string name="keyboard_keys_added">%d клавиш успешно добавлено</string>
     <string name="keyboard_duplicates_skipped">%d дубликатов пропущено</string>
     <string name="keyboard_configure_movable">Теперь можно переместить кнопку настроек.</string>

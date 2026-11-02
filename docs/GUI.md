@@ -246,6 +246,19 @@ These preserve implementation/design context from the removed UI plan, not phase
   fallback. `StreamMenu` provides the configured button combo/edge gesture and On/Compact/Off overlay
   cycle; `StreamExit` owns the accepted normal exit scene. No ordinary-flow confirmation dialogs;
   legitimate security prompts for external input remain. Further layout changes need user agreement.
+- **Deleting a profile asks nothing.** The profile disappears at once and the next one takes over (the
+  first-launch screens return when it was the last). A toast offers **Undo** (`Y` or a tap) for 10 s:
+  `ProfileStore` keeps the profile's settings, per-game overrides and control layouts until then and
+  restores them in the old place (current again unless another profile was chosen meanwhile). They are
+  purged when the 10 s end, or at the next start if Delos was closed meanwhile; a restart never
+  resurrects a deleted profile. Another toast replaces the Undo toast; the profile then stays deleted.
+- The keyboard editor's **Clear All** hides the keys without asking and the button becomes
+  **Restore** until editing ends or keys are added; the layout is saved as before.
+- A PC shortcut or `.art` launch of another game while one runs never quits the running game and
+  asks nothing: Delos opens that PC's games with a toast naming the running game ("quit it from
+  Delos first"). Quitting stays the explicit "Quit X and start" choice in Delos' own game menu
+  (`ShortcutTrampoline` cannot tell a pinned shortcut from an intent of another app). `art://launch`
+  links keep their security prompt.
 - SteamGridDB supplies portrait/wide covers, hero and logo; the API key is device-local. Artwork
   lives in application storage, and hand-picked files survive bulk redownloads. Desktop is manually
   selected. Dashboard logos use the accepted 800 ms slide/fade with no scale; reduced motion shows

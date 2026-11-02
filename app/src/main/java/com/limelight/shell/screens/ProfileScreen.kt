@@ -27,6 +27,7 @@ import com.limelight.shell.LocalShell
 import com.limelight.shell.MenuItem
 import com.limelight.shell.Screen
 import com.limelight.shell.ShellState
+import com.limelight.shell.ToastAction
 import com.limelight.shell.data.ProfileStore
 import com.limelight.shell.data.Profiles
 import com.limelight.shell.ui.AvatarBadge
@@ -82,35 +83,30 @@ fun ProfileScreen(profiles: Profiles, store: ProfileStore) {
             CircleItem(Symbols.EDIT, "Rename", { renameProfile(shell, tracker, store, feedback, profile.id, profile.name) })
             CircleItem(Symbols.SWITCH_ACCOUNT, "Switch profile", { openProfilesMenu(shell, tracker, feedback, profiles, store, Screen.Profile) })
             CircleItem(Symbols.PERSON_ADD, "Add profile", { shell.navigate(Screen.CreateProfile(editing = false, back = Screen.Profile)) })
-            CircleItem(Symbols.DELETE, "Delete profile", { deleteProfile(shell, tracker, store, feedback, profile.id, profile.name) })
+            CircleItem(Symbols.DELETE, "Delete profile", { deleteProfile(shell, store, profile.id, profile.name) })
         }
     }
 }
 
 /**
- * Deletes the current profile after asking once: it loses data (its settings, stream settings and
- * control layouts), the one case the plan keeps a question for. The next profile takes over; without
- * one, the first launch starts again.
+ * Deletes the current profile at once: choosing "Delete profile" is the confirmation. What it loses
+ * (its settings, stream settings and control layouts) stays on the device for [ProfileStore.DELETE_GRACE_MS]
+ * so the toast can undo it with Y or a tap. The next profile takes over; without one, the first launch
+ * starts again (and Undo still brings the profile back).
  */
-private fun deleteProfile(shell: ShellState, tracker: FocusTracker, store: ProfileStore, feedback: Feedback, id: String, name: String) {
-    feedback.play(Cue.OPEN)
-    shell.openLayer(
-        Layer.Dialog(
-            DialogSpec(
-                "Delete $name?", "Its settings, stream settings and control layouts are removed. This cannot be undone.",
-                emptyList(), "Delete",
-            ) {
-                if (store.delete(id)) {
-                    shell.showToast("$name was deleted", Symbols.DELETE)
-                    shell.navigate(Screen.Start)
-                } else {
-                    shell.navigate(Screen.Boot())
-                }
-                true
-            }
-        ),
-        tracker,
-    )
+private fun deleteProfile(shell: ShellState, store: ProfileStore, id: String, name: String) {
+    val another = store.delete(id)
+    val undo = ToastAction("Undo") {
+        if (store.undoDelete(id)) {
+            shell.showToast("$name is back", Symbols.CHECK_CIRCLE)
+            // The first launch screens make no sense with a profile again
+            if (shell.screen is Screen.Boot || shell.screen is Screen.CreateProfile) shell.navigate(Screen.Start)
+        } else {
+            shell.showToast("$name could not be restored", Symbols.ERROR)
+        }
+    }
+    shell.showToast("$name was deleted", Symbols.DELETE, undo)
+    shell.navigate(if (another) Screen.Start else Screen.Boot())
 }
 
 /** The profiles to switch to (the current one marked), and a new one; [from] is where creating returns to. */

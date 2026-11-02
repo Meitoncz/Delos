@@ -39,7 +39,6 @@
     <string name="applist_quit_app">Chiusura in corso</string>
     <string name="applist_quit_success">Sessione chiusa con successo</string>
     <string name="applist_quit_fail">Chiusura sessione fallita</string>
-    <string name="applist_quit_confirmation">Sei sicuro di voler chiudere l\'applicazione avviata? Tutti i dati non salvati saranno persi.</string>
     <!-- Add computer manually activity -->
     <!-- Preferences -->
     <string name="title_resolution_list">Risoluzione video</string>
@@ -85,7 +84,6 @@
     <string name="scut_pc_not_found">PC non trovato</string>
     <string name="scut_invalid_uuid">Il PC indicato non è valido</string>
     <string name="scut_invalid_app_id">L\'App indicata non è valida</string>
-    <string name="delete_pc_msg">Sei sicuro di voler rimuovere questo PC\?</string>
     <string name="slow_connection_msg">Connessione lenta al PC
 \nRidurre il bitrate</string>
     <string name="poor_connection_msg">Connessione al PC di bassa qualità</string>

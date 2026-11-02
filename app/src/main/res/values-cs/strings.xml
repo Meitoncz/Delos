@@ -98,7 +98,6 @@
     <string name="applist_quit_app">Ukončování</string>
     <string name="applist_quit_success">Úspěšně ukončeno</string>
     <string name="applist_quit_fail">Ukončení se nezdařilo</string>
-    <string name="applist_quit_confirmation">Určitě chcete ukončit běžící aplikaci\? Neuložená data budou ztracena.</string>
     <string name="title_resolution_list">Rozlišení videa</string>
     <string name="summary_resolution_list">Zvyšte přo zlepšení ostrosti obrazu. Snižte pro lepší výkon na levnějších zařízeních nebo pomalejších sítích.</string>
     <string name="summary_audio_config_list">Povolit 5.1 nebo 7.1 prostorový zvuk pro systémy domácího kina</string>
@@ -126,7 +125,6 @@
     <string name="scut_invalid_app_id">Zadaná aplikace není platná</string>
     <string name="help_loading_title">Zobrazení nápovědy</string>
     <string name="help">Nápověda</string>
-    <string name="delete_pc_msg">Určitě chcete smazat tento PC\?</string>
     <string name="slow_connection_msg">Pomalé připojení k PC
 \nSnižte datový tok</string>
     <string name="poor_connection_msg">Špatné připojení k PC</string>

@@ -11,7 +11,6 @@
     <string name="summary_checkbox_mouse_emulation">Długie naciśnięcie przycisku Start spowoduje przełączenie gamepada w tryb myszy</string>
     <string name="error_code_prefix">Kod błędu:</string>
     <string name="help">Pomoc</string>
-    <string name="delete_pc_msg">Czy na pewno chcesz usunąć ten komputer?</string>
     <string name="slow_connection_msg">Wolne połączenie z komputerem
 \nZmniejsz szybkość transmisji</string>
     <string name="poor_connection_msg">Słabe połączenie z komputerem</string>
@@ -21,7 +20,6 @@
     <string name="applist_quit_app">Rezygnacja</string>
     <string name="applist_quit_success">Zakończono z powodzeniem</string>
     <string name="applist_quit_fail">Nie udało się zakończyć</string>
-    <string name="applist_quit_confirmation">Czy na pewno chcesz zamknąć uruchomioną aplikację? Wszystkie niezapisane dane zostaną utracone.</string>
     <string name="title_resolution_list">Rozdzielczość wideo</string>
     <string name="summary_resolution_list">Zwiększ, aby poprawić klarowność obrazu. Zmniejsz, aby uzyskać lepszą wydajność na słabszych urządzeniach i wolniejszych połączeniach sieciowych.</string>
     <string name="title_fps_list">Częstotliwość odświeżania wideo</string>

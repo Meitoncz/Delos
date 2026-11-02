@@ -27,7 +27,6 @@
     <string name="applist_quit_app">Stoppen</string>
     <string name="applist_quit_success">Succesvol afgesloten</string>
     <string name="applist_quit_fail">Stoppen mislukt</string>
-    <string name="applist_quit_confirmation">Weet u zeker dat u de actieve app wilt afsluiten? Alle niet-opgeslagen gegevens gaan verloren.</string>
     <!-- Add computer manually activity -->
     <!-- Preferences -->
     <string name="title_resolution_list">Video­resolutie</string>
@@ -104,7 +103,6 @@
     <string name="title_enable_hdr">HDR Inschakelen</string>
     <string name="summary_enable_hdr">Stream HDR wanneer het spel en PC-GPU dit ondersteunen. HDR vereist een GPU met HEVC Main 10-coderingsondersteuning.</string>
     <string name="title_enable_perf_overlay">Prestatiestatistieken tonen tijdens het streamen</string>
-    <string name="delete_pc_msg">Bent u zeker dat u deze PC wilt verwijderen\?</string>
     <string name="help">Hulp</string>
     <string name="perf_overlay_streamdetails">Video stream: %1$s %2$.2f FPS</string>
     <string name="perf_overlay_incomingfps">Binnenkomende frame rate van het netwerk: %1$.2f FPS</string>

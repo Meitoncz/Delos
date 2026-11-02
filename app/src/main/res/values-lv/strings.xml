@@ -23,7 +23,6 @@
     <string name="title_decoding_error">Video dekodētājs avarēja</string>
     <string name="yes">Jā</string>
     <string name="analogscroll_right">Labā analogā kursorsvira</string>
-    <string name="delete_pc_msg">Vai tiešām vēlaties dzēst šo datoru?</string>
     <string name="perf_overlay_netlatency">Vidējā tīkla aizkave: %1$d ms (novirze, izkliede, dispersija: %2$d ms)</string>
     <string name="analogscroll_none">Nav (abas kursorsviras pārvieto peli)</string>
     <string name="analogscroll_left">Kreisā analogā kursorsvira</string>

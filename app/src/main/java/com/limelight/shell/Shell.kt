@@ -323,6 +323,8 @@ fun Shell(
     }
 
     DisposableEffect(keys) {
+        keys.canUndo = { shell.toast?.action != null && shell.portal == null && shell.launch == null }
+        keys.onUndo = { shell.runToastAction() }
         keys.canSearch = { shell.screen == Screen.Settings && shell.layer == null && shell.portal == null && shell.launch == null }
         keys.onSearch = { shell.onSettingsSearch?.invoke() }
         // Y opens the filters over a library with games (and closes them again); nothing else may react to it
@@ -349,6 +351,8 @@ fun Shell(
         }
         onDispose {
             keys.listener = null
+            keys.onUndo = null
+            keys.canUndo = { false }
             keys.onSearch = null
             keys.canSearch = { false }
             keys.onFilter = null
@@ -548,7 +552,7 @@ fun Shell(
                 launch?.let { LaunchCard(it.id, it.app.name, StreamLoader.greeting(it.pc.name), appArt(it.pc, it.app, it.image), it.background) },
                 appearance.reducedMotion,
             )
-            ToastHost(shell.toast) { shell.hideToast(it) }
+            ToastHost(shell.toast, onHidden = { shell.hideToast(it) }, onAction = { shell.runToastAction() })
         }
     }
 }

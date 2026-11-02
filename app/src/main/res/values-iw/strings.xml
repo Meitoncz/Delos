@@ -58,7 +58,6 @@
     <string name="conn_starting">מתחיל</string>
     <string name="conn_metered">אזהרה: החיבור הנוכחי הוא נמדד!</string>
     <string name="conn_terminated_title">החיבור הופסק</string>
-    <string name="delete_pc_msg">אתה בטוח שאתה רוצה להסיר מחשב זה\?</string>
     <string name="conn_error_msg">נכשל להפעיל</string>
     <string name="yes">כן</string>
     <string name="no">לא</string>
@@ -67,7 +66,6 @@
     <string name="perf_overlay_renderingfps">פריימים מרונדרים: %1$.2f FPS</string>
     <string name="perf_overlay_netlatency">מהירות תגובה ממוצעת: %1$d ms (שונות: %2$d ms)</string>
     <string name="applist_quit_fail">יציאה נכשלה</string>
-    <string name="applist_quit_confirmation">אתה בטוח שאתה רוצה לסגור את האפליקציה הנוכחית\? מידע שלא נשמר ייאבד.</string>
     <string name="summary_resolution_list">להגביר לשיפור איכות התמונה. להוריד לשיפור ביצועים על מערכות ישנות ורשתות איטיות.</string>
     <string name="summary_seekbar_bitrate">הגבר לשיפור איכות התמונה. הנמך בכדי לשפר ביצועים על גבי חיבור רשת איטי.</string>
     <string name="summary_audio_config_list">הפעל קול היקפי בהגדרת 5.1 או 7.1 עבור מערכות קולנוע ביתי</string>

@@ -38,7 +38,6 @@
     <string name="yes">Da</string>
     <string name="no">Nu</string>
     <string name="help">Ajutor</string>
-    <string name="delete_pc_msg">Sigur dorești să ștergi acest PC?</string>
     <string name="slow_connection_msg">Conexiune inceată catre PC\nRedu rata de biți</string>
     <string name="poor_connection_msg">Conexiune slabă catre PC</string>
     <string name="perf_overlay_decoder">Decodor: %1$s</string>
@@ -51,7 +50,6 @@
     <string name="applist_quit_app">Închidere în curs</string>
     <string name="applist_quit_success">Închis cu succes</string>
     <string name="applist_quit_fail">Nu s-a putut închide lista</string>
-    <string name="applist_quit_confirmation">Sigur dorești să închizi aplicația curentă? Toate datele nesalvate vor fi pierdute.</string>
     <!-- Add computer manually activity -->
     <!-- Preferences -->
     <string name="title_resolution_list">Rezolutia video</string>
