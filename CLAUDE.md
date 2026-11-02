@@ -28,7 +28,7 @@ herdr with a task file; helpers use their own git worktree and branch, never run
 and report back with `herdr agent prompt`. The lead reviews every helper commit, builds, tests, lints,
 installs on the Odin and integrates. Agent commits have the agent as author (`Claude <noreply@anthropic.com>`,
 `Codex <noreply@openai.com>`), the user as committer, messages end with `[skip ci]`; issues and comments
-created with `gh` end with `Created by <agent> via gh as Meitoncz`. Full rules: `AGENTS.md`, section
+created with `gh` end with `Created by <agent> via gh as Meitoncz`. Before delegating, check the remaining quota with `omp usage --redact` (Claude and Codex 5h/7d windows) and shift work to subagents when the helper is nearly out. Full rules: `AGENTS.md`, section
 "Multi-agent workflow".
 
 ## Remotes
