@@ -68,6 +68,7 @@ import com.limelight.shell.data.Avatar
 import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.layout.ContentScale
+import com.limelight.shell.data.rememberAvatarGradient
 import com.limelight.shell.data.rememberAvatarImage
 
 /** `.center-col`: a centered column; it moves up while the on-screen keyboard is shown. */
@@ -133,16 +134,26 @@ fun PillButton(label: String, icon: String?, onClick: () -> Unit, modifier: Modi
     }
 }
 
-/** The avatar's colors (`radial-gradient(circle at 35% 30%, …)`) behind its illustration. */
+/**
+ * The avatar's colors (`radial-gradient(circle at 35% 30%, …)`) behind its illustration: the colors made
+ * for an imported image (avatars.json), else the ones of its hue.
+ */
 @Composable
 fun AvatarBadge(avatar: Avatar, size: Float, iconSize: Float, modifier: Modifier = Modifier) {
-    Box(modifier.size(size.px).clip(CircleShape).avatarBackground(avatar.hue), contentAlignment = Alignment.Center) {
+    Box(modifier.size(size.px).clip(CircleShape).avatarBackground(avatar), contentAlignment = Alignment.Center) {
         AvatarArt(avatar, iconSize)
     }
 }
 
-private fun Modifier.avatarBackground(hue: Float) = drawBehind {
-    drawRect(cssRadialCircle(Offset(size.width * .35f, size.height * .3f), size, 0f to hsl(hue, 80f, 62f), 1f to hsl(hue + 30f, 70f, 38f)))
+@Composable
+private fun Modifier.avatarBackground(avatar: Avatar): Modifier {
+    val gradient = rememberAvatarGradient(avatar.asset)
+    val hue = avatar.hue
+    return drawBehind {
+        val inner = gradient?.c0 ?: hsl(hue, 80f, 62f)
+        val outer = gradient?.c1 ?: hsl(hue + 30f, 70f, 38f)
+        drawRect(cssRadialCircle(Offset(size.width * .35f, size.height * .3f), size, 0f to inner, 1f to outer))
+    }
 }
 
 /**
@@ -222,7 +233,7 @@ fun CircleItem(
                     Modifier
                         .fillMaxSize()
                         .clip(CircleShape)
-                        .then(if (avatar != null) Modifier.avatarBackground(avatar.hue) else Modifier.glass(colors.surface2).border(1.px, colors.line, CircleShape)),
+                        .then(if (avatar != null) Modifier.avatarBackground(avatar) else Modifier.glass(colors.surface2).border(1.px, colors.line, CircleShape)),
                     contentAlignment = Alignment.Center,
                 ) {
                     if (avatar != null) AvatarArt(avatar, iconSize)

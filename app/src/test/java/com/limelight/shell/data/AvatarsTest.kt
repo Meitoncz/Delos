@@ -13,15 +13,40 @@ class AvatarsTest {
 
     private fun hueDistance(a: Float, b: Float) = min(abs(a - b) % 360f, 360f - abs(a - b) % 360f)
 
-    @Test fun thereAreTwelveAvatarsWithUniqueNamesAssetsAndWellSeparatedHues() {
+    private val gradients get() = AvatarGradients.parse(File(assets, "avatars.json").readText(Charsets.UTF_8))
+
+    private fun slug(asset: String?) = asset!!.removeSuffix(".webp")
+
+    @Test fun thereAreTwelveAvatarsWithUniqueNamesAndAssets() {
         assertEquals(12, AVATARS.size)
         assertEquals(AVATARS.size, AVATARS.map { it.name }.toSet().size)
         assertEquals(AVATARS.size, AVATARS.map { it.asset }.toSet().size)
-        for (i in AVATARS.indices) for (j in i + 1 until AVATARS.size) {
+    }
+
+    /** An avatar with colors of its own (imported image) is told apart by them; the others by their hue. */
+    @Test fun avatarsWithoutImportedColorsHaveWellSeparatedHues() {
+        val hued = AVATARS.filter { slug(it.asset) !in gradients }
+        for (i in hued.indices) for (j in i + 1 until hued.size) {
             assertTrue(
-                "${AVATARS[i].name} and ${AVATARS[j].name} are too close in hue",
-                hueDistance(AVATARS[i].hue, AVATARS[j].hue) >= 12f,
+                "${hued[i].name} and ${hued[j].name} are too close in hue",
+                hueDistance(hued[i].hue, hued[j].hue) >= 12f,
             )
+        }
+    }
+
+    @Test fun everyColorEntryIsValidAndBelongsToAnAvatar() {
+        val slugs = AVATARS.map { slug(it.asset) }.toSet()
+        // parse() rejects anything but "#rrggbb" for c0 and c1
+        for ((name, gradient) in gradients) {
+            assertTrue("$name in avatars.json is not an avatar", name in slugs)
+            assertTrue("$name has transparent colors", gradient.c0.alpha == 1f && gradient.c1.alpha == 1f)
+        }
+    }
+
+    @Test fun brokenColorEntriesAreRejected() {
+        assertEquals(1, AvatarGradients.parse("""{"fox":{"c0":"#ff8800","c1":"#0033aa"}}""").size)
+        for (bad in listOf("""{"fox":{"c0":"ff8800","c1":"#0033aa"}}""", """{"fox":{"c0":"#ff8800"}}""", """{"fox":1}""", "[]", "nope")) {
+            assertTrue("accepted $bad", runCatching { AvatarGradients.parse(bad) }.isFailure)
         }
     }
 
@@ -33,7 +58,7 @@ class AvatarsTest {
     }
 
     @Test fun everyAvatarHasItsBundledImageAndNoImageIsLeftOver() {
-        val files = assets.listFiles().orEmpty().map { it.name }.toSet()
+        val files = assets.listFiles().orEmpty().map { it.name }.toSet() - "avatars.json"
         assertEquals(AVATARS.map { it.asset }.toSet(), files)
     }
 

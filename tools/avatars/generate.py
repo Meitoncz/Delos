@@ -1,4 +1,8 @@
-"""Generate the 12 illustrated profile avatars of Delos (flat-vector game mascots).
+"""Fallback generator of the 12 illustrated profile avatars of Delos (flat-vector game mascots).
+
+The real avatars are generated images imported by tools/avatars/import.py; this script only draws the
+procedural stand-ins for slugs that have no generated image yet (it overwrites every webp it renders,
+so pass --only for slugs that were not imported).
 
 Usage: python tools/avatars/generate.py [--preview] [--only slug ...] [--fast]
 Dependencies: Pillow 11.3.0 with WebP support (pip install Pillow==11.3.0). Nothing is downloaded.
