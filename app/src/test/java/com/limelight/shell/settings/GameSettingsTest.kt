@@ -34,7 +34,7 @@ class GameSettingsTest {
         PreferenceManager.getDefaultSharedPreferences(context).edit().clear().commit()
         ProfilesManager::class.java.getDeclaredField("instance").apply { isAccessible = true }.set(null, null)
         ProfilesManager.getInstance().load(context)
-        profiles = ProfileStore(context)
+        profiles = ProfileStore(context) { _, purge -> purge() }
         profiles.create("Player", 0)
         profiles.settings().edit().putString("list_resolution", "1920x1080").putString("list_fps", "60")
             .putString("video_format", "auto").putInt("seekbar_bitrate_kbps", 20000).commit()

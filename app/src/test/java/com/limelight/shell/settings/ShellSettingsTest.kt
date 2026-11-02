@@ -348,7 +348,7 @@ class ShellSettingsTest {
     }
 
     @Test fun codecSlotsAreCopiedIsolatedAndDeletedWithTheirProfile() {
-        val profiles = ProfileStore(context)
+        val profiles = ProfileStore(context) { _, purge -> purge() }
         val first = profiles.create("One", 0)
         val stream = StreamSettingsStore(catalog, profiles::settings)
         stream.write(spec("video_format"), "forceav1")
