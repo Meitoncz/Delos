@@ -17,5 +17,4 @@
     <string name="suffix_seekbar_deadzone">%</string>
     <string name="resolution_1080p">1080p</string>
     <string name="resolution_1440p">1440p</string>
-    <string name="applist_connect_msg">Konektante al komputilo…</string>
 </resources>

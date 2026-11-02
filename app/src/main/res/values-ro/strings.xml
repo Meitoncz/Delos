@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Shortcut strings -->
-    <string name="scut_not_paired">PC neîmperecheat</string>
     <string name="scut_pc_not_found">PC negăsit</string>
     <string name="scut_invalid_uuid">PC-ul este invalid</string>
     <string name="scut_invalid_app_id">Aplicația este invalidă</string>
@@ -14,7 +13,6 @@
     <!-- WOL messages -->
     <!-- Unpair messages -->
     <!-- Errors -->
-    <string name="error_pc_offline">PC-ul este inaccesibil</string>
     <string name="error_unknown_host">Nu am putut identifica hostul</string>
     <string name="error_404">GFE a returnat un cod de eroare HTTP 404. Asigură-te ca PC-ul are o placa video suportată.
 	Este posibil sa apară această eroare daca folosești o alta aplicație de remote desktop. Încearcă să repornești PC-ul sau să reinstalezi GFE.
@@ -24,16 +22,9 @@
     <string name="title_decoding_reset">Resetează setările video</string>
     <string name="message_decoding_reset">Decodorul video al acestui dispozitiv continuă să se blocheze folosind setările video curente. Au fost resetate cele implicite.</string>
     <string name="error_usb_prohibited">Accesul USB este interzis de către administratorul dispozitivului. Verifică setarile Knox sau MDM.</string>
-    <string name="video_decoder_init_failed">Inițializarea decodorului video a eșuat. Este posibil ca acest dispozitiv să nu suporte rezoluția sau rata cadrelor selectată.</string>
     <!-- Start application messages -->
-    <string name="conn_establishing_title">Se stabilește conexiunea</string>
-    <string name="conn_establishing_msg">Se pornește conexiunea</string>
     <string name="conn_metered">Atenție: Conexiunea ta curentă este contorizată!</string>
     <string name="conn_starting">Se pornește</string>
-    <string name="conn_error_title">Eroare la conectare</string>
-    <string name="conn_error_msg">Pornirea a eșuat</string>
-    <string name="conn_terminated_title">Conexiunea închisă</string>
-    <string name="conn_terminated_msg">Conexiunea a fost terminată</string>
     <!-- General strings -->
     <string name="yes">Da</string>
     <string name="no">Nu</string>
@@ -46,7 +37,6 @@
     <string name="perf_overlay_netdrops">Cadre pierdute de rețea: %1$.2f%%</string>
     <string name="perf_overlay_dectime">Timpul mediu de decodare: %1$.2f ms</string>
     <!-- AppList activity -->
-    <string name="applist_connect_msg">Se conectează la PC…</string>
     <string name="applist_quit_app">Închidere în curs</string>
     <string name="applist_quit_success">Închis cu succes</string>
     <string name="applist_quit_fail">Nu s-a putut închide lista</string>

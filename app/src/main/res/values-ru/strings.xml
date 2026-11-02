@@ -15,18 +15,11 @@
     <!-- WOL messages -->
     <!-- Unpair messages -->
     <!-- Errors -->
-    <string name="error_pc_offline">Компьютер выключен или находится не в сети</string>
     <string name="error_unknown_host">Не удалось найти хост</string>
     <string name="error_404">GFE вернул ошибку HTTP 404. Убедитесь что Ваш ПК использует поддерживаемый GPU. Использование программ для удалённого доступа также может вызывать эту ошибку. Попробуйте перезагрузить компьютер или переустановить GFE.</string>
     <!-- Start application messages -->
-    <string name="conn_establishing_title">Создание соединения</string>
-    <string name="conn_establishing_msg">Подключение</string>
     <string name="conn_metered">Внимание: Происходит измерение Вашего сетевого соединения!</string>
     <string name="conn_starting">Запуск</string>
-    <string name="conn_error_title">Ошибка соединения</string>
-    <string name="conn_error_msg">Запуск не удался</string>
-    <string name="conn_terminated_title">Соединение разорвано</string>
-    <string name="conn_terminated_msg">Подключение было прервано.</string>
     <!-- General strings -->
     <string name="yes">Да</string>
     <string name="no">Нет</string>
@@ -73,12 +66,10 @@
     <string name="summary_only_l3r3">Скрывать все экранные кнопки кроме L3 и R3</string>
     <string name="summary_osc_opacity">Сделать экранные кнопки более/менее прозрачными</string>
     <string name="dialog_title_osc_opacity">Изменить прозрачность</string>
-    <string name="scut_not_paired">ПК не сопряжён</string>
     <string name="configuration_mode_exiting">Выход из режима настройки</string>
     <string name="help_loading_title">Просмотр помощи</string>
     <string name="help_loading_msg">Загрузка страницы помощи…</string>
     <string name="help">Помощь</string>
-    <string name="applist_connect_msg">Подключение к ПК…</string>
     <string name="title_decoding_error">Сбой декодирования видео</string>
     <string name="message_decoding_error">Delos произошел сбой из-за несовместимости с видеодекодером этого устройства. Попробуйте изменить настройки потоковой передачи, если сбои продолжаются.</string>
     <string name="title_decoding_reset">Настройки видео были сброшены</string>
@@ -129,15 +120,7 @@
     <string name="summary_seekbar_metered_bitrate">Высокий битрейт потребляет больше трафика, низкий - повышает плавность в платных сетях.\nУстановите 0 для ¼ от указанного значения.</string>
     <string name="suffix_seekbar_bitrate_mbps">Мбит/с</string>
     <string name="align_right">Выровнять вправо</string>
-    <string name="check_ports_msg">Проверьте свой брандмауэр и правила переадресации портов для порта(ов):</string>
-    <string name="early_termination_error">При запуске потока на вашем хост-компьютере что-то пошло не так.
-\n
-\nУбедитесь, что на вашем хост-ПК не открыт контент, защищенный DRM. Вы также можете попробовать перезагрузить хост-компьютер.</string>
-    <string name="no_frame_received_error">Ваше сетевое подключение не справляется с заданными настройками. Попробуйте изменить битрейт или использовать более быстрое подключение.</string>
-    <string name="no_video_received_error">Видео от хоста не получено.</string>
-    <string name="nettest_text_blocked">Текущее сетевое соединение вашего устройства блокирует Delos. Потоковая передача через Интернет может не работать при подключении к этой сети.</string>
     <string name="summary_resolution_scale_factor">Запрашиваемое на сервере виртуальное разрешение экрана будет умножено на этот коэффициент. Разрешение стрима не изменяется.\nПример: 120% превратит 2000×1000 в 2400×1200.\nПовышение коэффициента может улучшить качество изображения в некоторых играх.\nТребуется Apollo для применения.</string>
-    <string name="video_decoder_init_failed">Видеодекодер не инициализирован. Ваше устройство может не поддерживать выбранное разрешение или частоту кадров.</string>
     <string name="perf_overlay_streamdetails">Видеострим: %1$s %2$.2f FPS</string>
     <string name="perf_overlay_netlatency">Средняя задержка сети: %1$d мс (дисперсия: %2$d мс)</string>
     <!-- Array strings -->
@@ -156,9 +139,6 @@
     <string name="fps_60">60 FPS</string>
     <string name="fps_90">90 FPS</string>
     <string name="fps_120">120 FPS</string>
-    <string name="frame_conversion_error">Хост-ПК сообщил о критической ошибке кодирования видео.
-\n
-\nПопробуйте выключить HDR, изменить разрешение стрима или разрешение экрана на хост-ПК.</string>
     <string name="summary_checkbox_enable_audiofx">Позволяет работать аудио эффектам во время стрима, но может увеличить задержку звука</string>
     <string name="summary_frame_pacing">Укажите, как сбалансировать задержку и плавность видеосигнала</string>
     <string name="resolution_360p">360p</string>
@@ -183,7 +163,6 @@
     <string name="pan_zoom_mode_disabled">Режим прокрутки/масш. выключен</string>
     <string name="title_analog_scrolling">Использовать аналоговый джойстик для прокрутки</string>
     <string name="analogscroll_right">Правый аналоговый джойстик</string>
-    <string name="error_code_prefix">Код ошибки:</string>
     <string name="perf_overlay_hostprocessinglatency">Задержка обработки хоста мин/макс/среднее: %1$.1f/%2$.1f/%3$.1f мс</string>
     <string name="summary_seekbar_vibrate_fallback_strength">Увеличьте или уменьшите интенсивность вибрации на вашем устройстве</string>
     <string name="summary_checkbox_gamepad_touchpad_as_mouse">Заставляет ввод с сенсорной панели геймпада управлять мышью хоста, даже при эмуляции геймпада с помощью тачпада.</string>
@@ -383,9 +362,6 @@
     <string name="proceed">Продолжить</string>
     <string name="cancel">Отмена</string>
     <string name="unlocking_or_starting">Сервер запускается или компьютер разблокируется — подождите…</string>
-    <string name="error_msg_permission_denied">Доступ запрещён</string>
-    <string name="error_msg_timeout">Таймаут соединения</string>
-    <string name="permission_launch_app">Запустить приложения</string>
     <string name="keyboard_clear_all">Очистить всё</string>
     <string name="keyboard_add_keys">Добавить клавиши</string>
     <string name="keyboard_select_keys">Выберите клавиши для добавления</string>

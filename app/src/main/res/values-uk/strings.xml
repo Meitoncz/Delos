@@ -6,18 +6,11 @@
     <!-- WOL messages -->
     <!-- Unpair messages -->
     <!-- Errors -->
-    <string name="error_pc_offline">Пристрій вимкнено чи знаходиться поза мережею</string>
     <string name="error_unknown_host">Неможливо знайти хоста</string>
     <string name="error_404">GFE повернув помилку HTTP 404. Переконайтеся що ваш пристрій використовує підтримуваний GPU. Використання програм для віддаленого доступу також може викликати цю помилку. Спробуйте перезавантажити пристрій або перевстановити GFE.</string>
     <!-- Start application messages -->
-    <string name="conn_establishing_title">Створення з\'єднання</string>
-    <string name="conn_establishing_msg">Підключення</string>
     <string name="conn_metered">Увага: Ваше мережеве з\'єднання вимірюється оператором!</string>
     <string name="conn_starting">Запуск</string>
-    <string name="conn_error_title">Помилка з\'єднання</string>
-    <string name="conn_error_msg">Запуск не вдався</string>
-    <string name="conn_terminated_title">З\'єднання припинено</string>
-    <string name="conn_terminated_msg">З’єднання було розірване.</string>
     <!-- General strings -->
     <string name="yes">Так</string>
     <string name="no">Ні</string>
@@ -56,11 +49,9 @@
     <string name="summary_checkbox_show_onscreen_controls">Відображати віртуальні ґудзики контролера на екрані</string>
     <string name="title_only_l3r3">Показувати тільки L3 та R3</string>
     <string name="summary_only_l3r3">Приховувати всі віртуальні ґудзики окрім L3 та R3</string>
-    <string name="scut_not_paired">Пристрій не парований</string>
     <string name="help_loading_title">Перегляд допомоги</string>
     <string name="help_loading_msg">Завантаження сторінки допомоги…</string>
     <string name="help">Допомога</string>
-    <string name="applist_connect_msg">Підключення до пристрою…</string>
     <string name="title_decoding_error">Збій відео розцифрувача</string>
     <string name="message_decoding_error">Delos аварійно завершив роботу через несумісність із відеодекодером цього пристрою. Спробуйте налаштувати параметри потокового передавання, якщо збої триватимуть.</string>
     <string name="title_decoding_reset">Налаштування відео скинуті</string>
@@ -107,20 +98,12 @@
     <string name="summary_osc_opacity">Зробити екранні елементи керування більш/менш прозорими</string>
     <string name="dialog_title_osc_opacity">Зміна прозорості</string>
     <string name="suffix_osc_opacity">%</string>
-    <string name="early_termination_error">Щось пішло не так на вашому головному ПК під час запуску потоку.
-\n
-\nПереконайтеся, що на головному ПК немає відкритого вмісту, захищеного DRM. Ви також можете спробувати перезавантажити головний ПК.</string>
     <string name="nettest_text_success">Схоже що ваша мережа не блокує Delos. Якщо у вас й надалі проблеми з підключенням, перевірте налаштування брандмауера.
 \n
 \nЯкщо ви намагаєтеся транслювати через Інтернет, встановіть на своєму пристрої Moonlight Internet Hosting Tool, та запустіть випробування мережі щоб перевірити ваше з\'єднання до Інтернету.</string>
     <string name="suffix_seekbar_bitrate_mbps">Мб/с</string>
     <string name="perf_overlay_netlatency">Середня затримка мережі: %1$d мс (розбіжність %2$d мс)</string>
     <string name="perf_overlay_streamdetails">Відео трансл: %1$s %2$.2f FPS</string>
-    <string name="check_ports_msg">Перевірте правила брандмауера та переадресації для наступних портів:</string>
-    <string name="no_frame_received_error">Здається, ваше мережеве з\'єднання човпає. Спробуйте зменшити швидкість потоку (бітрейт) чи переключіть пристрій на швидшу мережу.</string>
-    <string name="no_video_received_error">Не отримано відео від хоста.</string>
-    <string name="video_decoder_init_failed">Не вдалося запустити відео розцифрувач. Ваш пристрій може не підтримувати розмір екрану чи частоту кадрів.</string>
-    <string name="nettest_text_blocked">Поточне мережеве з’єднання вашого пристрою блокує Delos. Трансляції через Інтернет можуть не працювати на цієї мережі.</string>
     <string name="nettest_text_failure">Поточне мережеве з’єднання вашого пристрою блокує Delos. Трансляції через Інтернет можуть не працювати на цієї мережі.
 \n
 \nНаступні мережеві порти були заблоковані:
@@ -160,12 +143,8 @@
     <string name="title_checkbox_enable_audiofx">Увімкнення підтримки системного еквалайзера</string>
     <string name="summary_checkbox_absolute_mouse_mode">Це може зробити прискорення миші більш природним під час використання віддаленого робочого столу, але воно несумісне з багатьма іграми.</string>
     <string name="title_checkbox_reduce_refresh_rate">Дозволити зниження частоти оновлення</string>
-    <string name="frame_conversion_error">Головний комп\'ютер повідомив про фатальну помилку кодування відео.
-\n
-\nСпробуйте вимкнути режим HDR, змінити роздільну здатність потокового відео або змінити роздільну здатність дисплея головного комп\'ютера.</string>
     <string name="title_full_range">Сила повного спектру відео</string>
     <string name="summary_full_range">Це може призвести до втрати деталей у світлих і темних областях, якщо пристрій не відображає належним чином весь діапазон відеоконтенту.</string>
-    <string name="error_code_prefix">Код помилки:</string>
     <string name="title_seekbar_vibrate_fallback_strength">Налаштування інтенсивності вібро</string>
     <string name="summary_seekbar_vibrate_fallback_strength">Посилюйте або зменшуйте інтенсивність вібрації пристрою</string>
     <string name="title_checkbox_gamepad_motion_fallback">Емуляція підтримки датчика руху геймпада</string>

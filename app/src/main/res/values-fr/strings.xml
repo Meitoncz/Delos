@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Shortcut strings -->
-    <string name="scut_not_paired">PC non appairé</string>
     <string name="scut_pc_not_found">PC non trouvé</string>
     <string name="scut_invalid_uuid">Le PC fourni n\'est pas valide</string>
     <string name="scut_invalid_app_id">L\'application fournie n\'est pas valide</string>
@@ -24,7 +23,6 @@
     <string name="nettest_text_success">Votre réseau ne semble pas bloquer Delos. Si vous avez encore des difficultés à vous connecter, vérifiez les paramètres du pare-feu de votre PC.\n\nSi vous essayez de streamer depuis Internet, installez l\'outil Moonlight Internet Hosting Tool sur votre PC et exécutez le testeur de streaming Internet inclus pour vérifier la connexion Internet de votre PC.</string>
     <string name="nettest_text_inconclusive">Le test réseau n\'a pas pu être effectué car aucun des serveurs de test de connexion de Delos n\'était accessible. Vérifiez votre connexion Internet ou réessayez plus tard.</string>
     <string name="nettest_text_failure">La connexion réseau actuelle de votre appareil semble bloquer Delos. Le streaming sur Internet peut ne pas fonctionner lorsque vous êtes connecté à ce réseau.\n\nLes ports réseau suivants ont été bloqués :</string>
-    <string name="nettest_text_blocked">Votre appareil bloque Delos. Le streaming sur Internet peut ne pas fonctionner lorsque vous êtes connecté à ce réseau.</string>
 
     <!-- Pair messages -->
     <string name="pair_pc_offline">L\'ordinateur est hors ligne</string>
@@ -34,7 +32,6 @@
     <!-- Unpair messages -->
 
     <!-- Errors -->
-    <string name="error_pc_offline">L\'ordinateur est hors ligne</string>
     <string name="error_unknown_host">Échec de la résolution de l\'hôte</string>
     <string name="error_404">GFE renvoie une erreur HTTP 404. Assurez-vous que votre PC possède un GPU pris en charge. L\'utilisation d\'un logiciel de bureau à distance peut également provoquer cette erreur. Essayez de redémarrer votre machine ou de réinstaller GFE.</string>
     <string name="title_decoding_error">Le décodeur vidéo a planté</string>
@@ -42,22 +39,10 @@
     <string name="title_decoding_reset">Réinitialiser les paramètres vidéo</string>
     <string name="message_decoding_reset">Le décodeur vidéo de votre appareil continue de planter avec les paramètres de streaming sélectionnés. Vos paramètres de streaming ont été réinitialisés à ceux par défaut.</string>
     <string name="error_usb_prohibited">L\'accès USB est interdit par l\'administrateur de votre appareil. Vérifiez vos paramètres Knox ou MDM.</string>
-    <string name="video_decoder_init_failed">Le décodeur vidéo n\'a pas pu démarrer. Vérifiez que votre appareil supporte la résolution ou la fréquence d\'images choisie.</string>
-    <string name="no_video_received_error">Aucune vidéo reçue de l\'hôte.</string>
-    <string name="no_frame_received_error">Votre connexion réseau ne fonctionne pas bien. Réduisez votre débit ou utilisez une connexion plus rapide.</string>
-    <string name="early_termination_error">Quelque chose s\'est mal passé sur votre PC hôte en démarrant le stream.\n\nVérifiez qu\'aucune application utilisant un DRM n\'est ouverte sur votre PC hôte. Vous pouvez aussi essayer de redémarrer votre PC hôte.</string>
-    <string name="frame_conversion_error">Le PC hôte a signalé une erreur d\'encodage fatale.\n\nEssayez de désactiver le mode HDR, de changer la résolution du stream ou la résolution de votre PC hôte.</string>
-    <string name="check_ports_msg">Vérifiez vos règles de pare-feu pour les ports suivants :</string>
 
     <!-- Start application messages -->
-    <string name="conn_establishing_title">Établissement de la connexion</string>
-    <string name="conn_establishing_msg">Démarrage de la connexion</string>
     <string name="conn_metered">Attention : Votre connexion réseau active est limitée !</string>
     <string name="conn_starting">Démarrage</string>
-    <string name="conn_error_title">Erreur de connexion</string>
-    <string name="conn_error_msg">Impossible de démarrer</string>
-    <string name="conn_terminated_title">Connexion interrompue</string>
-    <string name="conn_terminated_msg">La connexion a été interrompue.</string>
 
     <!-- General strings -->
     <string name="yes">Oui</string>
@@ -75,7 +60,6 @@
     <string name="perf_overlay_dectime">Temps moyen de décodage : %1$.2f ms</string>
 
     <!-- AppList activity -->
-    <string name="applist_connect_msg">Connexion au PC…</string>
     <string name="applist_quit_app">Fermeture de</string>
     <string name="applist_quit_success">Application fermée avec succès</string>
     <string name="applist_quit_fail">Échec de la fermeture</string>
@@ -410,12 +394,8 @@
     <string name="configuration_mode_resize_buttons">Mode de configuration (Redimensionner les boutons)</string>
     <string name="configuration_mode_exiting">Sortie du mode de configuration</string>
     <string name="unlocking_or_starting">Le serveur démarre ou l\'ordinateur se déverrouille, veuillez patienter…</string>
-    <string name="error_msg_permission_denied">Autorisation refusée</string>
-    <string name="error_msg_timeout">Délai de connexion dépassé</string>
-    <string name="permission_launch_app">Lancer les applications</string>
     <string name="title_enable_commit_text">Activer la saisie commit-text (gestes/voix)</string>
     <string name="summary_enable_commit_text">Transfère le texte multi-caractères des claviers virtuels (saisie gestuelle, suggestions, dictée vocale). Peut perturber les jeux qui attendent des frappes une par une.</string>
     <string name="title_checkbox_remember_zoom_pan">Mémoriser le zoom et le panoramique</string>
     <string name="summary_checkbox_remember_zoom_pan">Enregistre la position de zoom et de panoramique entre les sessions.</string>
-    <string name="error_code_prefix">Code d\'erreur :</string>
 </resources>

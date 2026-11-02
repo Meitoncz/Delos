@@ -25,9 +25,13 @@ import com.limelight.nvstream.http.PairingManager;
 import com.limelight.nvstream.wol.WakeOnLanSender;
 import com.limelight.shell.data.GameLauncher;
 import com.limelight.utils.CacheHelper;
-import com.limelight.utils.Dialog;
+import com.limelight.shell.ResultText;
+import com.limelight.shell.ShortcutFailure;
+import com.limelight.shell.ShortcutSplash;
+import com.limelight.shell.StreamOutcome;
+import com.limelight.shell.StreamResultKind;
+import com.limelight.shell.StreamResultKt;
 import com.limelight.utils.ShortcutHelper;
-import com.limelight.utils.SpinnerDialog;
 import com.limelight.utils.UiHelper;
 
 import org.xmlpull.v1.XmlPullParserException;
@@ -55,7 +59,6 @@ public class ShortcutTrampoline extends AppCompatActivity {
 
     private int wakeHostTries = 10;
     private ComputerDetails computer;
-    private SpinnerDialog blockingLoadSpinner;
 
     private ComputerManagerService.ComputerManagerBinder managerBinder;
 
@@ -80,15 +83,7 @@ public class ShortcutTrampoline extends AppCompatActivity {
                     computer = managerBinder.getComputer(uuidString);
 
                     if (computer == null) {
-                        Dialog.displayDialog(ShortcutTrampoline.this,
-                                getResources().getString(R.string.conn_error_title),
-                                getResources().getString(R.string.scut_pc_not_found),
-                                true);
-
-                        if (blockingLoadSpinner != null) {
-                            blockingLoadSpinner.dismiss();
-                            blockingLoadSpinner = null;
-                        }
+                        reject(R.string.scut_pc_not_found);
 
                         if (managerBinder != null) {
                             unbindService(serviceConnection);
@@ -131,12 +126,6 @@ public class ShortcutTrampoline extends AppCompatActivity {
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        // Stop showing the spinner
-                                        if (blockingLoadSpinner != null) {
-                                            blockingLoadSpinner.dismiss();
-                                            blockingLoadSpinner = null;
-                                        }
-
                                         // If the managerBinder was destroyed before this callback,
                                         // just finish the activity.
                                         if (managerBinder == null) {
@@ -151,7 +140,8 @@ public class ShortcutTrampoline extends AppCompatActivity {
                                                 if (details.runningGameId == 0 || details.runningGameId == app.getAppId() || Objects.equals(details.runningGameUUID, app.getAppUUID())) {
                                                     intentStack.add(GameLauncher.startIntent(ShortcutTrampoline.this, managerBinder, details, app).getIntent());
 
-                                                    // Close this activity
+                                                    // Close this activity; the stream's loader goes on from the launch scene
+                                                    ShortcutSplash.handOff();
                                                     finish();
 
                                                     // Now start the activities
@@ -165,41 +155,17 @@ public class ShortcutTrampoline extends AppCompatActivity {
                                                     Toast.makeText(getApplicationContext(),
                                                             getRunningGameMessage(details), Toast.LENGTH_LONG).show();
 
-                                                    finish();
-
-                                                    Intent i = new Intent(getIntent());
-                                                    i.setClass(ShortcutTrampoline.this, com.limelight.shell.ShellActivity.class);
-                                                    i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                                                    intentStack.add(i);
-
-                                                    startActivities(intentStack.toArray(new Intent[]{}));
+                                                    openPcInDelos();
                                                 }
                                             } else {
-                                                // Close this activity
-                                                finish();
-
-                                                // Delos: the PC's games in the Delos UI (it connects to the PC from the UUID)
-                                                Intent i = new Intent(getIntent());
-                                                i.setClass(ShortcutTrampoline.this, com.limelight.shell.ShellActivity.class);
-                                                i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                                                intentStack.add(i);
-
-                                                startActivities(intentStack.toArray(new Intent[]{}));
+                                                openPcInDelos();
                                             }
                                             
                                         }
                                         else if (details.state == ComputerDetails.State.OFFLINE) {
-                                            // Computer offline - display an error dialog
-                                            Dialog.displayDialog(ShortcutTrampoline.this,
-                                                    getResources().getString(R.string.conn_error_title),
-                                                    getResources().getString(R.string.error_pc_offline),
-                                                    true);
+                                            failStart(details, ShortcutFailure.OFFLINE);
                                         } else if (details.pairState != PairingManager.PairState.PAIRED) {
-                                            // Computer not paired - display an error dialog
-                                            Dialog.displayDialog(ShortcutTrampoline.this,
-                                                    getResources().getString(R.string.conn_error_title),
-                                                    getResources().getString(R.string.scut_not_paired),
-                                                    true);
+                                            failStart(details, ShortcutFailure.NOT_PAIRED);
                                         }
 
                                         // We don't want any more callbacks from now on, so go ahead
@@ -223,13 +189,49 @@ public class ShortcutTrampoline extends AppCompatActivity {
         }
     };
 
+    /** A shortcut that names nothing Delos can start (no known PC to show a result for): a toast, then this activity ends. */
+    private void reject(String message) {
+        runOnUiThread(() -> {
+            Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
+            finish();
+        });
+    }
+
+    private void reject(int message) {
+        reject(getString(message));
+    }
+
+    /** The PC's games in the Delos UI (it connects to the PC from the UUID). */
+    private void openPcInDelos() {
+        // Close this activity
+        finish();
+
+        Intent i = new Intent(getIntent());
+        i.setClass(ShortcutTrampoline.this, com.limelight.shell.ShellActivity.class);
+        i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+        intentStack.add(i);
+
+        startActivities(intentStack.toArray(new Intent[]{}));
+    }
+
+    /**
+     * The PC of the shortcut cannot start its game. Delos opens on that PC with the result overlay (Try again
+     * starts the game again); a shortcut that asked for no game gets a toast and the PC's games.
+     */
+    private void failStart(ComputerDetails details, ShortcutFailure failure) {
+        ResultText text = StreamResultKt.describeShortcutFailure(details.name, failure);
+        if (app == null) {
+            Toast.makeText(getApplicationContext(), text.getSentence(), Toast.LENGTH_LONG).show();
+            openPcInDelos();
+        } else {
+            StreamOutcome.failed(this, StreamResultKind.FAILED_TO_START, text, details.uuid, details.name, app.getAppId(), app.getAppName());
+        }
+    }
+
     protected boolean validateHostInput(String hostUUID, String hostName) {
         // Validate PC UUID/Name
         if (hostUUID == null && hostName == null) {
-            Dialog.displayDialog(ShortcutTrampoline.this,
-                    getResources().getString(R.string.conn_error_title),
-                    getResources().getString(R.string.scut_invalid_uuid),
-                    true);
+            reject(R.string.scut_invalid_uuid);
             return false;
         }
 
@@ -237,19 +239,13 @@ public class ShortcutTrampoline extends AppCompatActivity {
             try {
                 UUID.fromString(hostUUID);
             } catch (IllegalArgumentException ex) {
-                Dialog.displayDialog(ShortcutTrampoline.this,
-                        getResources().getString(R.string.conn_error_title),
-                        getResources().getString(R.string.scut_invalid_uuid),
-                        true);
+                reject(R.string.scut_invalid_uuid);
                 return false;
             }
         } else {
             // UUID is null, so fallback to Name
             if (hostName == null || hostName.isEmpty()) {
-                Dialog.displayDialog(ShortcutTrampoline.this,
-                        getResources().getString(R.string.conn_error_title),
-                        getResources().getString(R.string.scut_invalid_uuid),
-                        true);
+                reject(R.string.scut_invalid_uuid);
                 return false;
             }
         }
@@ -287,10 +283,7 @@ public class ShortcutTrampoline extends AppCompatActivity {
             try {
                 UUID.fromString(appUUID);
             } catch (IllegalArgumentException ex) {
-                Dialog.displayDialog(ShortcutTrampoline.this,
-                        getResources().getString(R.string.conn_error_title),
-                        getResources().getString(R.string.scut_invalid_app_id),
-                        true);
+                reject(R.string.scut_invalid_app_id);
                 return false;
             }
         } else {
@@ -299,10 +292,7 @@ public class ShortcutTrampoline extends AppCompatActivity {
                 try {
                     Integer.parseInt(appIDStr);
                 } catch (NumberFormatException ex) {
-                    Dialog.displayDialog(ShortcutTrampoline.this,
-                            getResources().getString(R.string.conn_error_title),
-                            getResources().getString(R.string.scut_invalid_app_id),
-                            true);
+                    reject(R.string.scut_invalid_app_id);
                     return false;
                 }
             }
@@ -345,10 +335,7 @@ public class ShortcutTrampoline extends AppCompatActivity {
             }
         } catch (IOException e) {
             Log.e(TAG, "Error reading .art file", e);
-            Dialog.displayDialog(ShortcutTrampoline.this,
-                    getResources().getString(R.string.conn_error_title),
-                    "Error reading .art file: " + e.getMessage(),
-                    true);
+            reject("Error reading .art file: " + e.getMessage());
         }
         return artData;
     }
@@ -415,10 +402,7 @@ public class ShortcutTrampoline extends AppCompatActivity {
             _computer = dbManager.getComputerByName(hostName);
 
             if (_computer == null) {
-                Dialog.displayDialog(ShortcutTrampoline.this,
-                        getResources().getString(R.string.conn_error_title),
-                        getResources().getString(R.string.scut_pc_not_found),
-                        true);
+                reject(R.string.scut_pc_not_found);
 //                    finish();
                 return;
             }
@@ -452,10 +436,7 @@ public class ShortcutTrampoline extends AppCompatActivity {
                     String rawAppList = CacheHelper.readInputStreamToString(CacheHelper.openCacheFileForInput(getCacheDir(), "applist", uuidString));
 
                     if (rawAppList.isEmpty()) {
-                        Dialog.displayDialog(ShortcutTrampoline.this,
-                                getResources().getString(R.string.conn_error_title),
-                                getResources().getString(R.string.scut_invalid_app_id) + " (applist cache empty or unreadable)",
-                                true);
+                        reject(getString(R.string.scut_invalid_app_id) + " (applist cache empty or unreadable)");
 //                    finish();
                         return;
                     }
@@ -469,10 +450,7 @@ public class ShortcutTrampoline extends AppCompatActivity {
                         }
                     }
                     if (appID < 0 && appUuidFromFile == null) { // Need at least one
-                        Dialog.displayDialog(ShortcutTrampoline.this,
-                                getResources().getString(R.string.conn_error_title),
-                                getResources().getString(R.string.scut_invalid_app_id) + " (app not found in cache)",
-                                true);
+                        reject(getString(R.string.scut_invalid_app_id) + " (app not found in cache)");
 //                    finish();
                         return;
                     }
@@ -491,10 +469,7 @@ public class ShortcutTrampoline extends AppCompatActivity {
                             getIntent().getBooleanExtra(Game.EXTRA_APP_HDR, false));
                 } catch (IOException | XmlPullParserException e) {
                     Log.e(TAG, "Error processing app list from cache", e);
-                    Dialog.displayDialog(ShortcutTrampoline.this,
-                            getResources().getString(R.string.conn_error_title),
-                            getResources().getString(R.string.scut_invalid_app_id) + " (error parsing applist cache)",
-                            true);
+                    reject(getString(R.string.scut_invalid_app_id) + " (error parsing applist cache)");
 //                finish();
                     return;
                 }
@@ -505,20 +480,19 @@ public class ShortcutTrampoline extends AppCompatActivity {
         bindService(new Intent(this, ComputerManagerService.class), serviceConnection,
                 Service.BIND_AUTO_CREATE);
 
-        blockingLoadSpinner = SpinnerDialog.displayDialog(this, getResources().getString(R.string.conn_establishing_title),
-                getResources().getString(R.string.applist_connect_msg), true);
+        // Delos: the launch scene of the new UI while the PC is looked up (no classic spinner dialog); the
+        // stream's loader goes on from it
+        String shownPc = hostName;
+        if (shownPc == null || shownPc.isEmpty()) {
+            ComputerDetails known = _computer != null ? _computer : dbManager.getComputerByUUID(uuidString);
+            shownPc = known != null ? known.name : null;
+        }
+        ShortcutSplash.show(this, appName, shownPc, uuidString, app != null ? app.getAppId() : -1);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-
-        if (blockingLoadSpinner != null) {
-            blockingLoadSpinner.dismiss();
-            blockingLoadSpinner = null;
-        }
-
-        Dialog.closeDialogs();
 
         if (managerBinder != null) {
             managerBinder.stopPolling();

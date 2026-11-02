@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="scut_not_paired">PC desemparelhado</string>
     <string name="scut_pc_not_found">PC não encontrado</string>
     <string name="scut_invalid_uuid">O PC fornecido não é válido</string>
     <string name="scut_invalid_app_id">A aplicação fornecida não é válida</string>
@@ -18,23 +17,10 @@
 \n
 \nAs seguintes portas de rede estão bloqueadas:
 \n</string>
-    <string name="nettest_text_blocked">A conexão de rede atual do seu aparelho está a bloquear o Delos. A transmissão pela Internet pode não funcionar enquanto estiver conectado a esta rede.</string>
     <string name="title_decoding_error">Decodificador de Vídeo Crashou</string>
     <string name="title_decoding_reset">Resetar Configurações de Vídeo</string>
     <string name="message_decoding_error">Delos crashou devido a uma incompatibilidade com o decodificador de vídeo deste aparelho. Certifique-se de que o GeForce Experience esteja atualizado à versão mais recente no seu PC. Tente ajustar as configurações de transmissão se as falhas continuarem.</string>
-    <string name="video_decoder_init_failed">Falha ao iniciar o decodificador de vídeo. O seu aparelho pode não suportar a resolução ou taxa de quadros selecionada.</string>
-    <string name="frame_conversion_error">O PC host relatou um erro fatal de codificação de vídeo.
-\n
-\nTente desativar o modo HDR, alterar a resolução de streaming ou alterar a resolução do PC host.</string>
-    <string name="early_termination_error">Algo deu errado no seu PC ao iniciar a transmissão.
-\n
-\nCertifique-se de não ter nenhum conteúdo protegido por DRM aberto no seu PC. Também pode tentar reiniciar ele.
-\n
-\nSe o problema persistir, tente reinstalar os drivers da GPU e o GeForce Experience.</string>
     <string name="conn_metered">Aviso: A sua conexão de rede atual é limitada!</string>
-    <string name="conn_error_msg">Falha ao iniciar</string>
-    <string name="conn_terminated_title">Conexão Encerrada</string>
-    <string name="conn_terminated_msg">A conexão foi encerrada</string>
     <string name="perf_overlay_renderingfps">Taxa de quadros renderizando: %1$.2f FPS</string>
     <string name="perf_overlay_netdrops">Quadros dropados pela rede: %1$.2f%%</string>
     <string name="perf_overlay_netlatency">Latência média da rede: %1$d ms (variação: %2$d ms)</string>
@@ -96,11 +82,7 @@
     <string name="error_404">GFE retornou um erro HTTP 404. Verifique se o seu PC tem uma GPU compatível. O uso do software de área de trabalho remota também pode causar esse erro. Tente reiniciar o seu computador ou reinstalar o GFE.</string>
     <string name="message_decoding_reset">O decodificador de vídeo do seu aparelho continua crashando nas configurações de transmissão selecionadas. As suas configurações de transmissão foram redefinidas para o padrão.</string>
     <string name="error_usb_prohibited">O acesso USB é proibido pelo administrador do seu aparelho. Verifique as suas configurações de Knox ou MDM.</string>
-    <string name="no_video_received_error">Nenhum vídeo recebido do host.</string>
-    <string name="no_frame_received_error">A sua conexão de rede não está funcionando bem. Reduza a configuração da taxa de bits do vídeo ou tente uma conexão mais rápida.</string>
-    <string name="check_ports_msg">Verifique o firewall e permita a(s) seguinte(s) para porta(s):</string>
     <string name="conn_starting">Iniciando</string>
-    <string name="conn_error_title">Erro de Conexão</string>
     <string name="yes">Sim</string>
     <string name="no">Não</string>
     <string name="help">Ajuda</string>
@@ -111,7 +93,6 @@
     <string name="perf_overlay_decoder">Decodificador: %1$s</string>
     <string name="perf_overlay_incomingfps">Taxa de quadros recebidos pela rede:: %1$.2f FPS</string>
     <string name="perf_overlay_dectime">Tempo médio de decodificação: %1$.2f ms</string>
-    <string name="applist_connect_msg">Conectando ao PC…</string>
     <string name="title_resolution_list">Resolução</string>
     <string name="summary_resolution_list">Aumente para melhorar a clareza da imagem. Diminua para melhor desempenho em aparelhos de baixo custo e redes mais lentas.</string>
     <string name="title_fps_list">Taxa de quadros por segundo</string>
@@ -138,11 +119,8 @@
     <string name="nettest_title_done">Teste completo da rede</string>
     <string name="nettest_text_inconclusive">O teste de rede não pôde ser executado porque nenhum dos servidores de teste de conexão do Delos estava acessível. Verifique a sua conexão com a Internet ou tente novamente mais tarde.</string>
     <string name="pair_pc_offline">Esse computador está offline</string>
-    <string name="error_pc_offline">Esse computador está indisponível</string>
     <string name="error_unknown_host">Falha ao encontrar o host</string>
     <string name="title_full_range">Forçar vídeo de gama completa de cores</string>
-    <string name="conn_establishing_title">Estabelecendo Conexão</string>
-    <string name="conn_establishing_msg">Iniciando a conexão</string>
     <string name="summary_fps_list">Aumente para uma transmissão de vídeo mais suave. Diminua para melhor desempenho em aparelhos de baixo custo.</string>
     <string name="suffix_seekbar_deadzone">%</string>
     <string name="title_checkbox_xb1_driver">Driver de gamepad USB Xbox 360/One</string>

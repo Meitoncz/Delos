@@ -9,14 +9,6 @@
     <string name="perf_overlay_netdrops">Bilderammer droppet av din nettverkstilknytning: %1$.2f%%</string>
     <string name="perf_overlay_dectime">Gjennomsnittlig dekodingstid: %1$.2f ms</string>
     <string name="conn_starting">Starter</string>
-    <string name="check_ports_msg">Sjekk om din brannmur og portvideresendingsreglene for port(ene):</string>
-    <string name="early_termination_error">Noe gikk galt på din verts-PC under oppstart av strømmen.
-\n
-\nForsikre deg om at du ikke har noe DRM-beskyttet innhold åpent på din PC. Du kan også prøve å starte din verts-PC på ny.
-\n
-\nHvis problemet vedvarer, kan du prøve å reinstallere skjermkortsdriverne og GeForce Experience.</string>
-    <string name="no_frame_received_error">Din nettverkstilkobling fungerer ikke så godt. Reduser videobitraten fra dens innstilling, eller prøv en raskere tilknytning.</string>
-    <string name="no_video_received_error">Fikk ingen video fra verten.</string>
     <string name="title_decoding_error">Videodekoderen krasjet</string>
     <string name="error_unknown_host">Klarte ikke å utlede vertsadresse</string>
     <string name="nettest_title_done">Nettverkstest fullført</string>
@@ -46,21 +38,13 @@
     <string name="applist_quit_fail">Klarte ikke å avslutte</string>
     <string name="applist_quit_success">Avsluttet</string>
     <string name="applist_quit_app">Avslutter …</string>
-    <string name="applist_connect_msg">Kobler til PC …</string>
     <string name="poor_connection_msg">Dårlig tilknytning til PC</string>
     <string name="slow_connection_msg">Vis tilkobling til PC
 \nReduser bitraten din</string>
     <string name="help">Hjelp</string>
     <string name="no">Nei</string>
     <string name="yes">Ja</string>
-    <string name="conn_terminated_msg">Tilkoblingen ble avsluttet</string>
-    <string name="conn_terminated_title">Tilkobling avsluttet</string>
-    <string name="conn_error_msg">Klarte ikke å starte</string>
-    <string name="conn_error_title">Tilkoblingsfeil</string>
     <string name="conn_metered">Advarsel: Din aktive nettverkstilknytning er kvotebasert.</string>
-    <string name="conn_establishing_msg">Starter tilkobling</string>
-    <string name="conn_establishing_title">Etablerer tilkobling</string>
-    <string name="error_pc_offline">Datamaskinen er frakoblet</string>
     <string name="pair_pc_offline">Datamaskinen er frakoblet</string>
     <string name="nettest_title_waiting">Testing av nettverkstilkobling</string>
     <string name="help_loading_msg">Laster inn hjelpeside …</string>
@@ -76,7 +60,6 @@
     <string name="title_decoding_reset">Tilbakestilling av videoinnstillinger</string>
     <string name="message_decoding_error">Delos har krasjet som følge av inkompatibilitet med denne enhetens videodekoder. Prøv å justere strømmingsinnstillingene hvis problemet vedvarer.</string>
     <string name="error_404">GFE returnerte en HTTP-404-feil. Forsikre deg om at PC-en kjører et støttet skjermkort. Bruk av fjernskrivebordsprogramvare kan også forårsake denne feilen. Prøv å starte maskinen på ny, eller å reinstallere GFE.</string>
-    <string name="nettest_text_blocked">Nettverkstilkoblingen på din enhet ser ut til å blokkere Delos. Strømming over Internett vil muligens ikke fungere tilkoblet gjennom dette nettverket.</string>
     <string name="nettest_text_failure">Nettverkstilkoblingen på din enhet ser ut til å blokkere Delos. Strømming over Internett vil muligens ikke fungere når tilkoblet gjennom dette nettverket.
 \n
 \nFølgende nettverksporter ble blokkert:
@@ -96,7 +79,6 @@
     <string name="summary_audio_config_list">Skru på for 5,1- eller 7,1-kringlyd for hjemmekinosystemer</string>
     <string name="summary_seekbar_bitrate">Øk for bedret bildekvalitet. Senk for bedre ytelse på trege tilkoblinger.</string>
     <string name="summary_fps_list">Øk for jevnere videostrøm. Senk for bedre ytelse på trege enheter.</string>
-    <string name="video_decoder_init_failed">Klarte ikke å starte videodekoder. Enheten din støtter kanskje ikke valgt oppløsning eller bilderammetakt.</string>
     <string name="error_usb_prohibited">USB-tilgang har blitt forbudt av din enhetsadministrator. Sjekk dine Knox- eller MDM-innstillinger.</string>
     <string name="message_decoding_reset">Strømmingsinnstilinger tilbakestilt til forvalg som følge av at enhetens videodekoder fortsatte å krasje.</string>
     <string name="summary_resolution_list">Øk for å forbedre bildeklarhet. Senk for bedre ytelse på svakere enheter og tregere nettverk.</string>
@@ -117,7 +99,6 @@
     <string name="nettest_text_waiting">Delos tester din nettverksforbindelse for å fastsette hvorvidt NVIDIA GameStream er blokkert.
 \n
 \nDette kan ta noen sekunder …</string>
-    <string name="scut_not_paired">PC ikke parret</string>
     <string name="summary_checkbox_flip_face_buttons">Veksler A/B og X/Y-knapper for spillkontrollere, og innstillingskontroller som vises på skjermen</string>
     <string name="summary_checkbox_multi_controller">Å fjerne dette valget påtvinger tilkoblet spillkontroller</string>
     <string name="title_checkbox_flip_face_buttons">Veksle diamantknapper</string>

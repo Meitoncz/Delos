@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Shortcut strings -->
-    <string name="scut_not_paired">PC와 페어링되지 않음</string>
     <!-- Help strings -->
     <string name="help_loading_title">도움말 뷰어</string>
     <string name="help_loading_msg">도움말 페이지 로딩중…</string>
@@ -11,26 +10,18 @@
     <!-- WOL messages -->
     <!-- Unpair messages -->
     <!-- Errors -->
-    <string name="error_pc_offline">컴퓨터가 오프라인 상태입니다</string>
     <string name="error_unknown_host">호스트 응답에 실패함</string>
     <string name="error_404">GFE가 HTTP 404에러를 보냈습니다. 지원되는 GPU가 설치되어 있는지 확인하세요.
 	    원격 데스트톱 응용 프로그램을 사용하는 것도 이 에러를 유발할 수 있습니다. PC를 다시 시작하거나 Geforce Experience를 다시 설치해보세요.
     </string>
     <!-- Start application messages -->
-    <string name="conn_establishing_title">연결 시도중</string>
-    <string name="conn_establishing_msg">연결 시작</string>
     <string name="conn_metered">경고: 데이터 요금이 부과될 수 있습니다!</string>
     <string name="conn_starting">시작 중</string>
-    <string name="conn_error_title">연결 오류</string>
-    <string name="conn_error_msg">시작 실패</string>
-    <string name="conn_terminated_title">연결 종료 됨</string>
-    <string name="conn_terminated_msg">연결이 종료되었습니다.</string>
     <!-- General strings -->
     <string name="yes">예</string>
     <string name="no">아니오</string>
     <string name="help">도움말</string>
     <!-- AppList activity -->
-    <string name="applist_connect_msg">PC에 연결중…</string>
     <string name="applist_quit_app">종료중</string>
     <string name="applist_quit_success">종료됨</string>
     <string name="applist_quit_fail">종료 실패</string>
@@ -79,19 +70,11 @@
     <string name="poor_connection_msg">PC와의 연결이 불안정함</string>
     <string name="slow_connection_msg">PC와의 연결이 불안정합니다.
 \n비트레이트를 줄이세요</string>
-    <string name="check_ports_msg">다음 포트의 방화벽 및 포트 포워딩 설정을 확인하십시오:</string>
-    <string name="early_termination_error">스트림을 시작할 때 호스트 PC에서 문제가 발생했습니다.
-\n
-\n호스트 PC에 DRM으로 보호 된 콘텐츠가 열려 있지 않은지 확인하거나 호스트 PC를 재부팅하십시오 .</string>
-    <string name="no_frame_received_error">네트워크 연결이 불안정합니다. 비트레이트를 낮추거나 더 빠른 네트워크에 연결하십시오.</string>
-    <string name="no_video_received_error">호스트로부터 비디오를 받지 못했습니다.</string>
-    <string name="video_decoder_init_failed">비디오 디코더를 실행하지 못했습니다. 이 장치가 선택한 해상도 또는 프레임 속도를 지원하지 않을 수 있습니다.</string>
     <string name="error_usb_prohibited">기기 관리자에 의해 USB 액세스가 차단되었습니다. Knox 또는 MDM 설정을 확인하십시오.</string>
     <string name="message_decoding_reset">선택한 스트리밍 설정에서 장치의 비디오 디코더가 계속 문제가 발생합니다. 스트리밍 설정이 기본값으로 재설정되었습니다.</string>
     <string name="title_decoding_reset">비디오 설정 초기화</string>
     <string name="message_decoding_error">이 장치의 비디오 디코더와 호환되지 않아 Delos에서 오류가 발생했습니다. 충돌이 계속되면 스트리밍 설정을 조정 해보십시오.</string>
     <string name="title_decoding_error">비디오 디코더 오류</string>
-    <string name="nettest_text_blocked">기기의 현재 네트워크가 Delos를 차단하고 있습니다. 이 네트워크에 연결되어 있으면 인터넷을 통한 스트리밍이 작동하지 않을 수 있습니다.</string>
     <string name="nettest_text_failure">기기의 현재 네트워크가 Delos를 차단하는 것 같습니다. 이 네트워크에 연결되어 있으면 인터넷을 통한 스트리밍이 작동하지 않을 수 있습니다.
 \n
 \n차단된 네트워크 포트:
@@ -164,9 +147,6 @@
     <string name="pacing_smoothness">가장 부드러운 비디오 선호(대기 시간이 크게 증가할 수 있음)</string>
     <string name="title_checkbox_reduce_refresh_rate">주사율 감소 허용</string>
     <string name="summary_checkbox_reduce_refresh_rate">화면 주사율을 낮춰서 영상 지연 시간이 증가하고 전력을 절약할 수 있습니다</string>
-    <string name="frame_conversion_error">호스트 PC에서 치명적인 비디오 인코딩 오류를 보고했습니다.
-\n
-\nHDR 모드를 비활성화하거나 스트리밍 해상도를 변경하거나 호스트 PC의 디스플레이 해상도를 변경해 보십시오.</string>
     <string name="summary_full_range">밝기범위를 \"전체(0~255)\"로 설정합니다. 장치의 디스플레이가 \"제한(16~235)\" 범위로 출력하는 경우 밝기가 제대로 표현되지 않습니다.</string>
     <string name="title_full_range">전체 범위 비디오 활성화</string>
     <string name="title_checkbox_gamepad_motion_sensors">컨트롤러 모션 센서 사용 허용</string>
@@ -181,7 +161,6 @@
     <string name="summary_checkbox_gamepad_motion_fallback">연결된 컨트롤러 또는 기기의 Android 버전에서 컨트롤러 센서가 지원되지 않는 경우 장치에 내장된 모션 센서를 사용합니다.
 \n참고: 이 옵션을 활성화하면 사용 중인 컨트롤러가 호스트에서 PlayStation 컨트롤러로 나타날 수 있습니다.</string>
     <string name="title_checkbox_gamepad_motion_fallback">컨트롤러의 모션 센서 에뮬레이션 지원</string>
-    <string name="error_code_prefix">에러 코드:</string>
     <string name="summary_seekbar_vibrate_fallback_strength">장치의 진동 강도를 증폭하거나 감소시킵니다</string>
     <string name="title_analog_scrolling">아날로그 스틱을 사용하여 스크롤</string>
     <string name="analogscroll_none">없음 (두 스틱 모두 마우스를 움직입니다)</string>

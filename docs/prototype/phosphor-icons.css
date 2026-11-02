@@ -65,6 +65,7 @@
 .ms[data-icon="devices"] { --phosphor-glyph: "\eba4"; }
 .ms[data-icon="edit"] { --phosphor-glyph: "\e3b4"; }
 .ms[data-icon="face"] { --phosphor-glyph: "\e436"; }
+.ms[data-icon="sentiment_dissatisfied"] { --phosphor-glyph: "\e43e"; }
 .ms[data-icon="key"] { --phosphor-glyph: "\e2d6"; }
 .ms[data-icon="link_off"] { --phosphor-glyph: "\e2e4"; }
 .ms[data-icon="lock"] { --phosphor-glyph: "\e2fe"; }

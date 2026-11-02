@@ -43,7 +43,6 @@ import com.limelight.profiles.ProfilesManager;
 import com.limelight.ui.ExternalControllerView;
 import com.limelight.ui.GameGestures;
 import com.limelight.ui.StreamContainer;
-import com.limelight.utils.Dialog;
 import com.limelight.utils.ExternalDisplayControlActivity;
 import com.limelight.utils.MouseModeOption;
 import com.limelight.utils.PanZoomHandler;
@@ -51,7 +50,9 @@ import com.limelight.utils.ServerHelper;
 import com.limelight.utils.ShortcutHelper;
 import com.limelight.shell.StreamLoader;
 import com.limelight.utils.ConnectionProgress;
-import com.limelight.utils.SpinnerDialog;
+import com.limelight.shell.StreamOutcome;
+import com.limelight.shell.StreamResultKind;
+import com.limelight.shell.StreamResultKt;
 import com.limelight.utils.UiHelper;
 
 import android.annotation.SuppressLint;
@@ -183,7 +184,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
     public NvConnection conn;
     private ConnectionProgress spinner;
-    private boolean displayedFailureDialog = false;
+    private boolean endedWithResult = false;
     private boolean connecting = false;
     public boolean connected = false;
     private boolean autoEnterPip = false;
@@ -376,17 +377,10 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
         clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
 
-        // Start the spinner (Delos: a stream started from the new UI keeps showing its loader instead,
-        // with the system bars hidden from the first frame, as in the new UI)
-        if (StreamLoader.requested(getIntent())) {
-            hideSystemUi.run();
-            spinner = StreamLoader.show(this);
-        }
-        else {
-            spinner = SpinnerDialog.displayDialog(this, getResources().getString(R.string.conn_establishing_title),
-                    getResources().getString(R.string.conn_establishing_msg), true);
-        }
-
+        // The loader of the new UI (the stream's half of the launch scene), with the system bars hidden from
+        // the first frame, as in the new UI
+        hideSystemUi.run();
+        spinner = StreamLoader.show(this);
 
         Display currentDisplay = null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -516,9 +510,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         performanceOverlayLite = findViewById(R.id.performanceOverlayLite);
 
         performanceOverlayBig = findViewById(R.id.performanceOverlayBig);
-        if (StreamLoader.requested(getIntent())) {
-            statsPanel = com.limelight.shell.StreamStatsPanel.attach(this, (android.view.ViewGroup) performanceOverlayView, prefConfig.enablePerfOverlayLite);
-        }
+        statsPanel = com.limelight.shell.StreamStatsPanel.attach(this, (android.view.ViewGroup) performanceOverlayView, prefConfig.enablePerfOverlayLite);
 
         inputCaptureProvider = InputCaptureManager.getInputCaptureProvider(this, this);
 
@@ -837,14 +829,8 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         }
 
         if (!decoderRenderer.isAvcSupported()) {
-            if (spinner != null) {
-                spinner.dismiss();
-                spinner = null;
-            }
-
             // If we can't find an AVC decoder, we can't proceed
-            Dialog.displayDialog(this, getResources().getString(R.string.conn_error_title),
-                    "This device or ROM doesn't support hardware accelerated H.264 playback.", true);
+            StreamOutcome.failed(this, StreamResultKind.FAILED_TO_START, StreamResultKt.describeNoH264Decoder());
             return;
         }
 
@@ -1593,9 +1579,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     protected void onStop() {
         super.onStop();
 
-        SpinnerDialog.closeDialogs(this);
-        Dialog.closeDialogs();
-
         if (virtualController != null) {
             virtualController.hide();
         }
@@ -1608,7 +1591,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         }
 
         if (conn != null) {
-            displayedFailureDialog = true;
+            endedWithResult = true;
             stopConnection();
 
             // Clear the tombstone count if we terminated normally
@@ -3271,66 +3254,24 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                if (spinner != null) {
-                    spinner.dismiss();
-                    spinner = null;
-                }
-
-                if (!displayedFailureDialog) {
-                    displayedFailureDialog = true;
+                if (!endedWithResult) {
+                    endedWithResult = true;
                     LimeLog.severe(stage + " failed: " + errorCode);
 
-                    // If video initialization failed and the surface is still valid, display extra information for the user
+                    // If video initialization failed while the surface is still valid, the decoder is to blame
                     Surface currentSurface = streamContainer.getSurface();
-                    if (stage.contains("video") && currentSurface != null && currentSurface.isValid()) {
-                        Toast.makeText(Game.this, getResources().getText(R.string.video_decoder_init_failed), Toast.LENGTH_LONG).show();
-                    }
+                    boolean decoderFailed = stage.contains("video") && currentSurface != null && currentSurface.isValid();
+                    String ports = portFlags != 0 ? MoonBridge.stringifyPortFlags(portFlags, "\n") : null;
+                    boolean portsBlocked = portTestResult != MoonBridge.ML_TEST_RESULT_INCONCLUSIVE && portTestResult != 0;
 
-                    String dialogText = getResources().getString(R.string.conn_error_msg) + " " + stage +" (error "+errorCode+")";
-
-                    switch (errorCode) {
-                        case 403: {
-                            dialogText += "\n\n" + getResources().getString(R.string.error_msg_permission_denied) + " (" + getResources().getString(R.string.permission_launch_app) + ")";
-                            break;
-                        }
-                        case -408: {
-                            dialogText += "\n\n" + getResources().getString(R.string.error_msg_timeout);
-                            break;
-                        }
-                        default: {
-                            // do nothing
-                        }
-                    }
-
-                    if (portFlags != 0) {
-                        dialogText += "\n\n" + getResources().getString(R.string.check_ports_msg) + "\n" +
-                                MoonBridge.stringifyPortFlags(portFlags, "\n");
-                    }
-
-                    if (portTestResult != MoonBridge.ML_TEST_RESULT_INCONCLUSIVE && portTestResult != 0)  {
-                        dialogText += "\n\n" + getResources().getString(R.string.nettest_text_blocked);
-                    }
-
-                    Dialog.displayDialog(Game.this, getResources().getString(R.string.conn_error_title), dialogText, true);
-                    finishSecondScreen();
+                    // Delos: the shell shows what happened (docs/GUI.md, "Stream exits")
+                    StreamOutcome.failed(Game.this, StreamResultKind.FAILED_TO_START,
+                            StreamResultKt.describeStreamFailure(stage, errorCode, ports, portsBlocked, decoderFailed));
                 }
             }
         });
 
         return false;
-    }
-
-    private void finishSecondScreen() {
-        // Otherwise screen stays connected but not working with no way of quitting it
-        if (prefConfig.enableFullExDisplay) {
-            Handler h = new Handler();
-            h.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    finish();
-                }
-            }, 2000);
-        }
     }
 
     @Override
@@ -3353,64 +3294,21 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                 // Ungrab input
                 setInputGrabState(false);
 
-                if (!displayedFailureDialog) {
-                    displayedFailureDialog = true;
+                if (!endedWithResult) {
+                    endedWithResult = true;
                     LimeLog.severe("Connection terminated: " + errorCode);
                     stopConnection();
 
-                    // Display the error dialog if it was an unexpected termination.
-                    // Otherwise, just finish the activity immediately.
+                    // Delos: the shell shows what happened (docs/GUI.md, "Stream exits"): an unexpected
+                    // termination as the result overlay, the host ending the session normally as a toast.
                     if (errorCode != MoonBridge.ML_ERROR_GRACEFUL_TERMINATION) {
-                        String message;
-
-                        if (portTestResult != MoonBridge.ML_TEST_RESULT_INCONCLUSIVE && portTestResult != 0) {
-                            // If we got a blocked result, that supersedes any other error message
-                            message = getResources().getString(R.string.nettest_text_blocked);
-                        }
-                        else {
-                            switch (errorCode) {
-                                case MoonBridge.ML_ERROR_NO_VIDEO_TRAFFIC:
-                                    message = getResources().getString(R.string.no_video_received_error);
-                                    break;
-
-                                case MoonBridge.ML_ERROR_NO_VIDEO_FRAME:
-                                    message = getResources().getString(R.string.no_frame_received_error);
-                                    break;
-
-                                case MoonBridge.ML_ERROR_UNEXPECTED_EARLY_TERMINATION:
-                                case MoonBridge.ML_ERROR_PROTECTED_CONTENT:
-                                    message = getResources().getString(R.string.early_termination_error);
-                                    break;
-
-                                case MoonBridge.ML_ERROR_FRAME_CONVERSION:
-                                    message = getResources().getString(R.string.frame_conversion_error);
-                                    break;
-
-                                default:
-                                    String errorCodeString;
-                                    // We'll assume large errors are hex values
-                                    if (Math.abs(errorCode) > 1000) {
-                                        errorCodeString = Integer.toHexString(errorCode);
-                                    }
-                                    else {
-                                        errorCodeString = Integer.toString(errorCode);
-                                    }
-                                    message = getResources().getString(R.string.conn_terminated_msg) + "\n\n" +
-                                            getResources().getString(R.string.error_code_prefix) + " " + errorCodeString;
-                                    break;
-                            }
-                        }
-
-                        if (portFlags != 0) {
-                            message += "\n\n" + getResources().getString(R.string.check_ports_msg) + "\n" +
-                                    MoonBridge.stringifyPortFlags(portFlags, "\n");
-                        }
-
-                        Dialog.displayDialog(Game.this, getResources().getString(R.string.conn_terminated_title),
-                                message, true);
+                        String ports = portFlags != 0 ? MoonBridge.stringifyPortFlags(portFlags, "\n") : null;
+                        boolean portsBlocked = portTestResult != MoonBridge.ML_TEST_RESULT_INCONCLUSIVE && portTestResult != 0;
+                        StreamOutcome.failed(Game.this, StreamResultKind.CONNECTION_LOST,
+                                StreamResultKt.describeStreamFailure(null, errorCode, ports, portsBlocked, false));
                     }
                     else {
-                        finish();
+                        StreamOutcome.hostClosed(Game.this);
                     }
                 }
             }

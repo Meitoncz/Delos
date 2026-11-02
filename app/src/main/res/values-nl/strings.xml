@@ -6,20 +6,13 @@
     <!-- WOL messages -->
     <!-- Unpair messages -->
     <!-- Errors -->
-    <string name="error_pc_offline">Computer is offline</string>
     <string name="error_unknown_host">Host achterhalen mislukt</string>
     <string name="error_404">GFE geeft een HTTP 404 fout. Kijk na of de PC een ondersteunde GPU heeft.
     Remote desktop software kan soms ook voor deze fout zorgen. Probeer de computer opnieuw op te starten of GFE te herinstalleren.
   </string>
     <!-- Start application messages -->
-    <string name="conn_establishing_title">Verbinding maken</string>
-    <string name="conn_establishing_msg">Verbinding starten</string>
     <string name="conn_metered">Waarschuwing: Actieve internet verbinding bevat een datalimiet!</string>
     <string name="conn_starting">Starten</string>
-    <string name="conn_error_title">Verbindingsprobleem</string>
-    <string name="conn_error_msg">Starten mislukt</string>
-    <string name="conn_terminated_title">Verbinding beëindigd</string>
-    <string name="conn_terminated_msg">De verbinding is beëindigd.</string>
     <!-- General strings -->
     <string name="yes">Ja</string>
     <string name="no">Nee</string>
@@ -56,7 +49,6 @@
     <string name="summary_video_format">Nieuwere codecs kunnen de vereiste bandbreedte voor video verlagen als uw apparaat deze ondersteunt. Codec-selecties kunnen worden genegeerd als ze niet worden ondersteund door de host-software of GPU.</string>
     <string name="suffix_osc_opacity">%</string>
     <string name="message_decoding_error">Delos is gecrasht vanwege een incompatibiliteit met de videodecoder van dit apparaat. Probeer de streaminginstellingen aan te passen als de crashes aanhouden.</string>
-    <string name="scut_not_paired">PC niet gekoppeld</string>
     <string name="scut_pc_not_found">PC niet gevonden</string>
     <string name="scut_invalid_uuid">Opgegeven PC is niet geldig</string>
     <string name="scut_invalid_app_id">Opgegeven App is niet geldig</string>
@@ -72,19 +64,13 @@
 \n
 \nDe volgende netwerkpoorten zijn geblokkeerd:
 \n</string>
-    <string name="nettest_text_blocked">De internetverbinding van dit toestel blokkeert Delos. Streamen over het internet werkt mogelijks niet wanneer u verbonden bent met dit netwerk.</string>
     <string name="title_decoding_error">Video Decoder Gecrasht</string>
     <string name="title_decoding_reset">Video Instellingen Resetten</string>
     <string name="message_decoding_reset">De videodecoder van uw toestel blijft crashen met uw geselecteerde streamingsinstellingen. De streamingsinstellingen zijn teruggezet naar de standaardinstellingen.</string>
     <string name="error_usb_prohibited">USB-toegang is uitgeschakeld door uw systeemadministrator. Controleer uw Knox of MDM instellingen.</string>
-    <string name="video_decoder_init_failed">Videodecoder niet gestart. Uw apparaat ondersteund mogelijk de geselecteerde resolutie of frame rate niet.</string>
-    <string name="no_video_received_error">Geen video ontvangen van de host.</string>
-    <string name="no_frame_received_error">De kwaliteit van uw netwerkverbinding is niet goed. Verlaag de bitrate of gebruik een snellere verbinding.</string>
-    <string name="check_ports_msg">Controleer uw firewall en port forwarding regels voor de poort(en):</string>
     <string name="slow_connection_msg">Trage verbinding met PC
 \nVerlaag uw bitrate</string>
     <string name="poor_connection_msg">Slechte verbinding met PC</string>
-    <string name="applist_connect_msg">Verbinden met PC…</string>
     <string name="title_fps_list">Video frame rate</string>
     <string name="suffix_seekbar_bitrate_mbps">Mbps</string>
     <string name="title_audio_config_list">Surround sound configuratie</string>
@@ -106,7 +92,6 @@
     <string name="help">Hulp</string>
     <string name="perf_overlay_streamdetails">Video stream: %1$s %2$.2f FPS</string>
     <string name="perf_overlay_incomingfps">Binnenkomende frame rate van het netwerk: %1$.2f FPS</string>
-    <string name="early_termination_error">Er is iets misgegaan op uw host-PC bij het starten van de stream.\n\nZorg ervoor dat er geen DRM-beveiligde content openstaat op uw host-PC. U kunt ook proberen uw host-PC opnieuw op te starten.</string>
     <string name="perf_overlay_netlatency">Gemiddelde netwerkvertraging: %1$d ms (variantie: %2$d ms)</string>
     <string name="summary_fps_list">Verhogen voor een vloeiendere video stream. Verlagen voor betere prestaties op minder krachtige apparaten.</string>
     <string name="summary_audio_config_list">5.1 of 7.1 surround sound inschakelen voor home-cinema systemen</string>
@@ -133,7 +118,6 @@
     <string name="videoformat_hevcalways">Gebruik HEVC altijd (mogelijkheid tot crashes)</string>
     <string name="title_enable_commit_text">Commit-tekstinvoer inschakelen (veeg/stem)</string>
     <string name="summary_enable_commit_text">Stuurt meerteksts invoer van softwaretoetsenborden (veegtypen, voorspellingen, spraakdicteren) door naar de pc. Kan problemen geven bij games die per-toetsinvoer vereisen.</string>
-    <string name="error_code_prefix">Fout­code:</string>
     <string name="suffix_seekbar_vibrate_fallback_strength">%</string>
     <string name="resolution_360p">360p</string>
     <string name="resolution_720p">720p</string>
@@ -159,7 +143,6 @@
     <string name="analogscroll_left">Linker analoge stick</string>
     <string name="audioconf_51surround">5.1 Surround Sound</string>
     <string name="title_frame_pacing">Video­frame­tempo</string>
-    <string name="frame_conversion_error">De host-PC meldde een fatale videocoderingsfout.\n\nProbeer de HDR-modus uit te schakelen, de streamingresolutie te wijzigen of de schermresolutie van uw host-PC te wijzigen.</string>
     <string name="perf_overlay_hostprocessinglatency">Hostverwerkingsvertraging min/max/gemiddeld: %1$.1f/%2$.1f/%3$.1f ms</string>
     <string name="title_checkbox_enable_audiofx">Systeem-equalizerondersteuning inschakelen</string>
     <string name="summary_checkbox_enable_audiofx">Zorgt ervoor dat audio-effecten werken tijdens het streamen, maar kan de audiovertraging verhogen</string>

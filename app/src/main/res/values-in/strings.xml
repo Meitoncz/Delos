@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="scut_not_paired">Komputer tidak terpasang</string>
     <string name="scut_pc_not_found">Komputer tidak ditemukan</string>
     <string name="scut_invalid_uuid">Komputer yang diberikan tidak valid</string>
     <string name="help_loading_title">Lihat bantuan</string>
@@ -14,25 +13,14 @@
 \n
 \nPort-port ini telah diblokir:
 \n</string>
-    <string name="nettest_text_blocked">Koneksi jaringan perangkat anda memblokir Delos. Streaming lewat Internet mungkin tidak bekerja ketika terhubung dengan jaringan ini.</string>
     <string name="pair_pc_offline">Komputer tidak tersedia</string>
-    <string name="error_pc_offline">Komputer tidak tersedia</string>
     <string name="title_decoding_error">Dekoder video berhenti bekerja</string>
     <string name="message_decoding_error">Delos telah berhenti bekerja dikarenakan inkompatibilitas dengan dekoder video perangkat ini. Coba ganti pengaturan stream jika masih berlanjut.</string>
     <string name="title_decoding_reset">Pengaturan video dipulihkan</string>
     <string name="message_decoding_reset">Dekoder video perangkat Anda terus-menerus berhenti pada pengaturan stream yang dipilih. Pengaturan stream Anda telah dipulihkan ke bawaan.</string>
     <string name="error_usb_prohibited">Akses USB dilarang oleh Administrator perangkat Anda. Cek pengaturan Knox atau MDM Anda.</string>
-    <string name="no_video_received_error">Tidak ada video yang diterima dari host.</string>
-    <string name="no_frame_received_error">Kinerja koneksi jaringan anda tidak baik. Kurangi pengaturan bitrate video Anda atau coba koneksi yang lebih cepat.</string>
-    <string name="check_ports_msg">Cek pengaturan firewall dan port forwarding untuk port-port ini:</string>
-    <string name="conn_establishing_title">Membangun koneksi</string>
-    <string name="conn_establishing_msg">Memulai koneksi</string>
     <string name="conn_metered">Peringatan: Koneksi aktif Anda terbatas!</string>
     <string name="conn_starting">Memulai</string>
-    <string name="conn_error_title">Koneksi eror</string>
-    <string name="conn_error_msg">Gagal untuk memulai</string>
-    <string name="conn_terminated_title">Koneksi dihentikan</string>
-    <string name="conn_terminated_msg">Koneksi telah terputus.</string>
     <string name="yes">Ya</string>
     <string name="no">Tidak</string>
     <string name="slow_connection_msg">Koneksi terhadap komputer lambat
@@ -47,10 +35,6 @@
 \n
 \nJika anda mencoba stream lewat internet, install Moonlight Internet Hosting Tool pada komputer anda dan jalankan Internet Streaming Tester untuk mengecek koneksi Internet komputer Anda.</string>
     <string name="error_404">GFE memberikan eror HTTP 404. Pastikan komputer anda menggunakan kartu grafis yang didukung. Penggunaan aplikasi remote desktop juga dapat menyebabakan eror ini. Coba mulai ulang perangkat Anda atau install ulang GFE.</string>
-    <string name="video_decoder_init_failed">Gagal memulai dekoder video. Perangkat Anda mungkin tidak mendukung resolusi atau kecepatan bingkai yang dipilih.</string>
-    <string name="early_termination_error">Ada yang salah dengan komputer host Anda ketika memulai stream.
-\n
-\nPastikan tidak ada konten yang dilindungi DRM yang terbuka di komputer host Anda. Coba mulai ulang komputer host.</string>
     <string name="help">Bantuan</string>
     <string name="title_fps_list">Kecepatan bingkai video</string>
     <string name="summary_fps_list">Tingkatkan untuk streaming video yang lebih lancar. Turunkan untuk kinerja yang lebih baik pada perangkat kelas bawah.</string>
@@ -74,9 +58,6 @@
     <string name="error_unknown_host">Gagal menyelesaikan host</string>
     <string name="perf_overlay_dectime">Waktu decoding rata-rata: %1$.2f ms</string>
     <string name="category_host_settings">Pengaturan tuan rumah</string>
-    <string name="frame_conversion_error">PC host melaporkan kesalahan penyandian video yang fatal.
-\n
-\nCoba nonaktifkan mode HDR, ubah resolusi streaming, atau ubah resolusi tampilan PC host Anda.</string>
     <string name="applist_quit_fail">Gagal untuk keluar</string>
     <string name="title_resolution_list">Resolusi video</string>
     <string name="summary_resolution_list">Tingkatkan untuk meningkatkan kejernihan gambar. Turunkan untuk kinerja yang lebih baik pada perangkat kelas bawah dan jaringan yang lebih lambat.</string>
@@ -115,7 +96,6 @@
     <string name="perf_overlay_renderingfps">Frekuensi gambar rendering: %1$.2f FPS</string>
     <string name="perf_overlay_netlatency">Rata-rata latensi jaringan: %1$d ms (variasi: %2$d ms)</string>
     <string name="perf_overlay_netdrops">Bingkai hilang oleh koneksi jaringan Anda: %1$.2f%%</string>
-    <string name="applist_connect_msg">Menghubungkan ke PC…</string>
     <string name="applist_quit_success">Berhasil keluar</string>
     <string name="summary_audio_config_list">Aktifkan suara surround 5.1 atau 7.1 untuk sistem home theater</string>
     <string name="summary_seekbar_deadzone">Catatan: Beberapa game dapat menerapkan zona mati yang lebih besar daripada yang dikonfigurasi untuk digunakan oleh Delos.</string>
@@ -125,7 +105,6 @@
     <string name="summary_checkbox_mouse_nav_buttons">Mengaktifkan opsi ini dapat merusak klik kanan pada beberapa perangkat bermasalah</string>
     <string name="title_checkbox_enable_pip">Aktifkan mode pengamat Gambar-dalam-Gambar</string>
     <string name="summary_language_list">Bahasa yang digunakan untuk Delos</string>
-    <string name="error_code_prefix">Kode galat:</string>
     <string name="title_enable_commit_text">Aktifkan input commit-text (geser/suara)</string>
     <string name="summary_enable_commit_text">Meneruskan teks multi-karakter dari papan ketik lunak (gestur geser, prediksi, dikte suara). Mungkin menyebabkan masalah pada gim yang bergantung pada input per tombol.</string>
     <string name="category_gamepad_settings">Setelan Gamepad</string>

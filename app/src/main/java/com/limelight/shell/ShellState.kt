@@ -225,6 +225,9 @@ class ShellState(initial: Screen) {
     /** The stream window has been opened for [launch] (it took over the launch scene). */
     var diving by mutableStateOf(false)
 
+    /** The result overlay of a stream that failed or lost its connection (docs/GUI.md, "Stream exits"), until it is answered. */
+    var result by mutableStateOf<StreamResult?>(null)
+
     /** L1 / R1 handler of the current screen (settings tabs), -1 / +1. */
     var onShoulder: ((Int) -> Unit)? = null
     var settingsTab by mutableStateOf(SettingsTab.STREAM)

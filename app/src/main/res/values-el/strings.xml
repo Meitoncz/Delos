@@ -9,7 +9,6 @@
     <string name="nettest_title_waiting">Δοκιμή σύνδεσης δικτύου</string>
     <string name="nettest_title_done">Ολοκληρώθηκε η δοκιμή δικτύου</string>
     <string name="nettest_text_inconclusive">Η δοκιμή δικτύου δεν μπορούσε να πραγματοποιηθεί επειδή κανένας από τους διακομιστές δοκιμής σύνδεσης της Delos δεν ήταν προσβάσιμος. Ελέγξτε τη σύνδεσή σας στο Internet ή δοκιμάστε ξανά αργότερα.</string>
-    <string name="nettest_text_blocked">Η τρέχουσα σύνδεση δικτύου της συσκευής σας εμποδίζει το Delos. Η ροή μέσω του Internet ενδέχεται να μην λειτουργεί ενώ είστε συνδεδεμένοι σε αυτό το δίκτυο.</string>
     <string name="pair_pc_offline">Ο υπολογιστής είναι εκτός σύνδεσης</string>
     <string name="scut_invalid_app_id">Η παρεχόμενη εφαρμογή δεν είναι έγκυρη</string>
     <string name="scut_invalid_uuid">Ο παρεχόμενος υπολογιστής δεν είναι έγκυρος</string>
@@ -21,20 +20,13 @@
     <string name="applist_quit_fail">Αποτυχία διακοπής</string>
     <string name="dialog_text_reset_osc">Είστε βέβαιοι ότι θέλετε να διαγράψετε την αποθηκευμένη διάταξη στοιχείων ελέγχου στην οθόνη;</string>
     <string name="title_enable_perf_overlay">Εμφάνιση στατιστικών στοιχείων απόδοσης κατά τη ροή</string>
-    <string name="error_pc_offline">Ο υπολογιστής είναι εκτός σύνδεσης</string>
     <string name="error_unknown_host">Αποτυχία επίλυσης ονόματος κεντρικού υπολογιστή</string>
     <string name="title_decoding_error">Ο αποκωδικοποιητής βίντεο κατέρρευσε</string>
     <string name="title_decoding_reset">Επαναφορά ρυθμίσεων βίντεο</string>
     <string name="message_decoding_reset">Ο αποκωδικοποιητής βίντεο της συσκευής σας συνεχίζει να κολλάει στις επιλεγμένες ρυθμίσεις ροής. Οι ρυθμίσεις ροής σας επαναφέρθηκαν στις προεπιλογές.</string>
     <string name="error_usb_prohibited">Η πρόσβαση μέσω USB απαγορεύεται από το διαχειριστή της συσκευής σας. Ελέγξτε τις ρυθμίσεις Knox ή MDM.</string>
-    <string name="no_video_received_error">Δεν ελήφθη βίντεο από τον κεντρικό υπολογιστή.</string>
-    <string name="no_frame_received_error">Η σύνδεσή σας στο δίκτυο δεν αποδίδει καλά. Μειώστε το bitrate ή δοκιμάστε μια ταχύτερη σύνδεση.</string>
-    <string name="check_ports_msg">Ελέγξτε το τείχος προστασίας και τους κανόνες προώθησης θυρών για τις θύρες:</string>
-    <string name="conn_establishing_title">Δημιουργία σύνδεσης</string>
-    <string name="conn_establishing_msg">Έναρξη σύνδεσης</string>
     <string name="conn_metered">Προειδοποίηση: Η ενεργή σύνδεσή σας στο δίκτυο έχει όριο δεδομένων!</string>
     <string name="conn_starting">Εκκίνηση</string>
-    <string name="conn_terminated_msg">Η σύνδεση τερματίστηκε</string>
     <string name="yes">Ναί</string>
     <string name="perf_overlay_streamdetails">Ροή βίντεο: %1$s %2$.2f FPS</string>
     <string name="perf_overlay_decoder">Αποκωδικοποιητής: %1$s</string>
@@ -69,7 +61,6 @@
     <string name="summary_checkbox_enable_pip">Επιτρέπει την προβολή της ροής (αλλά όχι τον έλεγχο) κατά την εκτέλεση πολλαπλών εργασιών</string>
     <string name="title_language_list">Γλώσσα</string>
     <string name="summary_language_list">Γλώσσα που χρησιμοποιείται για το Delos</string>
-    <string name="scut_not_paired">Ο υπολογιστής δεν έχει συζευχθεί</string>
     <string name="nettest_text_waiting">Το Delos δοκιμάζει τη σύνδεση δικτύου σας για να διαπιστώσει εάν κάποια θύρα είναι αποκλεισμένη.
 \n
 \n
@@ -83,25 +74,15 @@
     <string name="summary_enable_hdr">Μεταδώστε HDR όταν το παιχνίδι και η GPU του υπολογιστή το υποστηρίζουν. Το HDR απαιτεί GPU της σειράς GTX 1000 ή νεότερη.</string>
     <string name="summary_enable_perf_overlay">Εμφάνιση πληροφοριών απόδοσης ροής σε πραγματικό χρόνο κατά τη ροή</string>
     <string name="scut_pc_not_found">Ο υπολογιστής δεν βρέθηκε</string>
-    <string name="early_termination_error">Κάτι πήγε στραβά στον κεντρικό υπολογιστή σας κατά την εκκίνηση της ροής.
-\n
-\nΒεβαιωθείτε ότι δεν έχετε ανοιχτό περιεχόμενο που προστατεύεται από DRM στον κεντρικό υπολογιστή σας. Μπορείτε επίσης να δοκιμάσετε να κάνετε επανεκκίνηση του κεντρικού υπολογιστή σας.
-\n
-\nΑν το πρόβλημα παραμένει, δοκιμάστε να επανεγκαταστήσετε τα προγράμματα οδήγησης της κάρτας γραφικών και το GeForce Experience.</string>
-    <string name="conn_terminated_title">Η σύνδεση τερματίστηκε</string>
     <string name="help">Βοήθεια</string>
     <string name="perf_overlay_netdrops">Πλαίσια που απορρίπτονται από τη σύνδεση δικτύου σας: %1$.2f%%</string>
     <string name="applist_quit_app">Εγκατάλειψη</string>
     <string name="error_404">Το GFE επέστρεψε ένα σφάλμα HTTP 404. Βεβαιωθείτε ότι ο υπολογιστής σας χρησιμοποιεί μια υποστηριζόμενη κάρτα γραφικών. Η χρήση λογισμικού απομακρυσμένης επιφάνειας εργασίας μπορεί επίσης να προκαλέσει αυτό το σφάλμα. Δοκιμάστε την επανεκκίνηση του υπολογιστή σας ή την επανεγκατάσταση του GFE.</string>
-    <string name="video_decoder_init_failed">Απέτυχε η προετοιμασία του αποκωδικοποιητή βίντεο. Η συσκευή σας ενδέχεται να μην υποστηρίζει την επιλεγμένη ανάλυση ή ρυθμό καρέ.</string>
     <string name="perf_overlay_dectime">Μέσος χρόνος αποκωδικοποίησης: %1$.2f ms</string>
-    <string name="conn_error_title">Σφάλμα σύνδεσης</string>
-    <string name="conn_error_msg">Απέτυχε η εκκίνηση</string>
     <string name="no">Οχι</string>
     <string name="slow_connection_msg">Αργή σύνδεση με υπολογιστή
 \nΜειώστε το bitrate σας</string>
     <string name="poor_connection_msg">Κακή σύνδεση με τον υπολογιστή</string>
-    <string name="applist_connect_msg">Σύνδεση σε υπολογιστή…</string>
     <string name="title_checkbox_multi_controller">Αυτόματη ανίχνευση παρουσίας gamepad</string>
     <string name="applist_quit_success">Επιτυχής έξοδος</string>
     <string name="title_resolution_list">Ανάλυση βίντεο</string>
@@ -123,10 +104,6 @@
     <string name="summary_unlock_fps">Η ροή στα 90 ή 120 FPS μπορεί να μειώσει τον λανθάνοντα χρόνο σε συσκευές υψηλών προδιαγραφών, αλλά μπορεί να προκαλέσει καθυστέρηση ή αστάθεια σε συσκευές που δεν μπορούν να την υποστηρίξουν</string>
     <string name="title_video_format">Αλλαγή ρυθμίσεων HEVC</string>
     <string name="summary_video_format">Το HEVC μειώνει τις απαιτήσεις εύρους ζώνης βίντεο, αλλά απαιτεί μια νεότερη συσκευή</string>
-    <string name="error_code_prefix">Κωδικός σφάλματος:</string>
-    <string name="frame_conversion_error">Ο υπολογιστής φιλοξενίας ανέφερε ένα σφάλμα κωδικοποίησης βίντεο.
-\n
-\nΔοκιμάστε να απενεργοποιήσετε τη λειτουργία HDR, να αλλάξετε την ανάλυση ροής ή να αλλάξετε την ανάλυση οθόνης του υπολογιστή φιλοξενίας.</string>
     <string name="title_enable_commit_text">Ενεργοποίηση εισαγωγής commit-text (σάρωση/φωνή)</string>
     <string name="summary_enable_commit_text">Προωθεί κείμενο πολλών χαρακτήρων από τα εικονικά πληκτρολόγια (σάρωση, προτάσεις, φωνητική πληκτρολόγηση). Ίσως προκαλέσει προβλήματα σε παιχνίδια που βασίζονται σε πληκτρολόγηση πλήκτρο-πλήκτρο.</string>
 </resources>

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="scut_not_paired">PC inte kopplad</string>
     <string name="scut_pc_not_found">PC inte hittad</string>
     <string name="scut_invalid_uuid">Den angivna PC:n är inte giltig</string>
     <string name="scut_invalid_app_id">Angiven App är inte giltlig</string>
@@ -10,23 +9,13 @@
     <string name="nettest_text_waiting">Delos testar din nätverksanslutning för att avgöra om några nödvändiga portar är blockerade.
 \n
 \nDetta kan ta några sekunder…</string>
-    <string name="error_pc_offline">Dator är offline</string>
     <string name="error_unknown_host">Misslyckades med att lösa värd</string>
     <string name="title_decoding_error">Videoavkodare brakade</string>
     <string name="message_decoding_error">Delos har brakat på grund av en inkompatibilitet med den här enhetens videodekoder. Försök att jämka streaminginställningarna om braket fortsätter.</string>
     <string name="title_decoding_reset">Återställning av videoinställningar</string>
     <string name="error_usb_prohibited">USB-åtkomst är förbjuden av enhetens administratör. Kontrollera dina Knox- eller MDM-inställningar.</string>
-    <string name="no_video_received_error">Ingen video har tagits emot från värden.</string>
-    <string name="no_frame_received_error">Din nätverksanslutning fungerar inte bra. Minska inställningen för videobitrate eller prova en snabbare anslutning.</string>
-    <string name="check_ports_msg">Kontrollera din brandvägg och dina regler för portvidarebefordran för port(er):</string>
-    <string name="conn_establishing_title">Upprättar fogning</string>
-    <string name="conn_establishing_msg">Startar fogning</string>
     <string name="conn_metered">Varning: Din aktiva nätverksfogning är mätbar!</string>
     <string name="conn_starting">Börjar</string>
-    <string name="conn_error_title">Fogningsfel</string>
-    <string name="conn_error_msg">Misslyckades att börja</string>
-    <string name="conn_terminated_title">Fogning förstörd</string>
-    <string name="conn_terminated_msg">Förbindelsen avbröts.</string>
     <string name="yes">Ja</string>
     <string name="no">Nej</string>
     <string name="help">Hjälp</string>
@@ -39,7 +28,6 @@
     <string name="perf_overlay_renderingfps">Renderingens bildfrekvens: %1$.2f FPS</string>
     <string name="perf_overlay_netdrops">Ramar som tappats av din nätverksanslutning: %1$.2f%%</string>
     <string name="perf_overlay_dectime">Genomsnittlig avkodningstid: %1$.2f ms</string>
-    <string name="applist_connect_msg">Fogar till dator…</string>
     <string name="applist_quit_app">Avslutar</string>
     <string name="applist_quit_success">Framgångsrikt avslutad</string>
     <string name="title_resolution_list">Videoupplösning</string>
@@ -119,17 +107,9 @@
 \n
 \nOm du försöker streama via Internet installerar du Moonlight Internet Hosting Tool på din dator och kör den medföljande Internet Streaming Tester för att kontrollera datorns Internetanslutning.</string>
     <string name="nettest_text_inconclusive">Nätverkstestet kunde inte utföras eftersom ingen av servrarna för anslutningstestning i Delos kunde nås. Kontrollera din internetanslutning eller försök igen senare.</string>
-    <string name="nettest_text_blocked">Enhetens aktuella nätverksanslutning blockerar Delos. Streaming via Internet kanske inte fungerar när du är ansluten till det här nätverket.</string>
     <string name="pair_pc_offline">Dator är offline</string>
     <string name="error_404">GFE returnerade ett HTTP 404-fel. Kontrollera att din dator har en GPU som stöds. Användning av fjärrskrivbordsprogram kan också orsaka det här felet. Försök att starta om maskinen eller installera om GFE.</string>
     <string name="message_decoding_reset">Enhetens videoavkodare fortsätter att braka vid de valda streaminginställningarna. Dina streaminginställningar har återställts till standardinställningen.</string>
-    <string name="video_decoder_init_failed">Videodekodern misslyckades med att initialisera. Din enhet kanske inte stöder den valda upplösningen eller bildfrekvensen.</string>
-    <string name="early_termination_error">Något gick fel på din värddator när du startade strömmen.
-\n
-\nKontrollera att du inte har något DRM-skyddat innehåll öppet på din värddator. Du kan också försöka starta om din värddator.</string>
-    <string name="frame_conversion_error">Värddatorn rapporterade ett allvarligt fel i videokodningen.
-\n
-\nFörsök att inaktivera HDR-läget, ändra streamingupplösningen eller ändra värddatorns skärmupplösning.</string>
     <string name="perf_overlay_netlatency">Genomsnittlig nätverksfördröjning: %1$d ms (varians: %2$d ms)</string>
     <string name="applist_quit_fail">Misslyckades att avsluta</string>
     <string name="summary_seekbar_bitrate">Öka för bättre bildkvalitet. Minska för att förbättra prestandan på långsammare anslutningar.</string>
@@ -166,7 +146,6 @@
     <string name="summary_checkbox_gamepad_motion_fallback">Använder enhetens inbyggda rörelsesensorer om spelkontrollsensorer inte stöds av din anslutna spelkontroll eller din Android-version.
 \nObs: Om du aktiverar det här alternativet kan din spelkontroll visas som en PlayStation-kontroller på värden.</string>
     <string name="title_checkbox_gamepad_motion_fallback">Emulera spelkontroll rörelsesensor stöd</string>
-    <string name="error_code_prefix">Felkod:</string>
     <string name="summary_analog_scrolling">Välj en analog spak för att scrolla när du är i musemuleringsläge</string>
     <string name="analogscroll_none">Ingen (båda spakarna flyttar musen)</string>
     <string name="analogscroll_left">Vänster analogspak</string>

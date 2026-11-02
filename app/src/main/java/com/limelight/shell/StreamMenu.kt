@@ -289,13 +289,9 @@ class StreamMenu(private val game: Game) {
         }
     }
 
-    /** Disconnect or Quit game: back into the new UI through the portal when the stream came from there. */
+    /** Disconnect or Quit game: back into the new UI through the portal. */
     private fun leave(quit: Boolean) {
         val end = if (quit) Runnable { game.quitWithoutAsking() } else Runnable { game.disconnect() }
-        if (!StreamExit.applies(game)) {
-            end.run()
-            return
-        }
         game.blockInput()
         StreamExit.play(game, quit, end)
     }

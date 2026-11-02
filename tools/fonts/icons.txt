@@ -61,6 +61,7 @@ desktop_windows = desktop-tower
 devices = devices
 edit = pencil-simple
 face = smiley
+sentiment_dissatisfied = smiley-sad
 key = key
 link_off = link-break
 lock = lock-key
