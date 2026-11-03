@@ -82,6 +82,23 @@ The TV channel uses the same mark; PC shortcut icons remain unchanged.
   Steam uses the checksum-verified canonical Valve geometry in `tools/artwork/steam-emblem.svg`.
   The script writes 600×900 covers, 920×430 wide covers and text-free 1920×1080 heroes; previews stay in `build/artwork-preview`.
 
+## ES-DE shortcuts
+
+Technical details (file format, ES-DE configuration): [ES-DE.md](ES-DE.md).
+
+- The game context menu (right menu button / Start / X on a cover) has **Create ES-DE shortcut** right below
+  **Game settings**, for every game including the built-in apps. It writes `<game name>.art` into one folder
+  and shows the toast `Shortcut created: <file name>`. It never asks for confirmation. A file of the same name is
+  overwritten.
+- The first time (and whenever the remembered folder cannot be used any more: access revoked, folder deleted)
+  Android's folder picker opens so the user chooses the ES-DE folder; the shortcut is written right after.
+  Delos keeps that access (a persisted URI permission) and remembers the folder for every profile of the device.
+  Cancelling the picker writes nothing.
+- Settings → **Devices** → section **ES-DE**: **ES-DE shortcut folder** (the folder's name, or `Not set`; A opens
+  the picker to change it) and, only while a folder is set, **Forget ES-DE folder** (A forgets it and releases the
+  access; the focus returns to the folder row). Their help text follows the usual 31 × 7 rule
+  (`NativeSettingsHelp`, covered by `SettingsHelpFitTest`).
+
 ## Game information and library filters
 
 The information area under the game title/logo is a small label and one row in two groups. The label is

@@ -31,7 +31,8 @@ import com.limelight.shell.ShortcutSplash;
 import com.limelight.shell.StreamOutcome;
 import com.limelight.shell.StreamResultKind;
 import com.limelight.shell.StreamResultKt;
-import com.limelight.utils.ShortcutHelper;
+import com.limelight.utils.ArtEntry;
+import com.limelight.utils.ArtFileKt;
 import com.limelight.utils.UiHelper;
 
 import org.xmlpull.v1.XmlPullParserException;
@@ -42,9 +43,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -301,43 +301,20 @@ public class ShortcutTrampoline extends AppCompatActivity {
         return true;
     }
 
-    private Map<String, String> parseArtFileData(Uri fileUri) {
+    /** The entry of the .art file at [fileUri], or null (after a toast) when it cannot be read. */
+    private ArtEntry readArtFile(Uri fileUri) {
         if (fileUri == null) {
             return null;
         }
 
-        Map<String, String> artData = new HashMap<>();
-
         try (InputStream inputStream = getContentResolver().openInputStream(fileUri);
-             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                line = line.trim();
-                if (line.startsWith("#") || line.isEmpty()) {
-                    continue; // Skip comments and empty lines
-                }
-
-                if (!line.startsWith("[")) {
-                    throw new IOException("Invalid .art file format");
-                }
-
-                int separatorIndex = line.indexOf(' ');
-                if (separatorIndex > 0 && separatorIndex < line.length() - 1) {
-                    String key = line.substring(0, separatorIndex).trim();
-                    String value = line.substring(separatorIndex + 1).trim();
-                    if (key.endsWith("]")) {
-                        key = key.substring(1, key.length() - 1);
-                        artData.put(key, value);
-                    } else {
-                        throw new IOException("Invalid .art file format");
-                    }
-                }
-            }
-        } catch (IOException e) {
+             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+            return ArtFileKt.parseArtFile(reader);
+        } catch (IOException | SecurityException e) {
             Log.e(TAG, "Error reading .art file", e);
             reject("Error reading .art file: " + e.getMessage());
+            return null;
         }
-        return artData;
     }
 
     @Override
@@ -359,14 +336,14 @@ public class ShortcutTrampoline extends AppCompatActivity {
         String appIDStr = null;
 
         if (Intent.ACTION_VIEW.equals(action) && dataUri != null) {
-            Map<String, String> artData = parseArtFileData(dataUri);
+            ArtEntry artData = readArtFile(dataUri);
 
             if (artData != null) {
-                hostUUID = artData.get(ShortcutHelper.KEY_HOST_UUID);
-                hostName = artData.get(ShortcutHelper.KEY_HOST_NAME);
-                appName = artData.get(ShortcutHelper.KEY_APP_NAME);
-                appUUID = artData.get(ShortcutHelper.KEY_APP_UUID);
-                appIDStr = artData.get(ShortcutHelper.KEY_APP_ID);
+                hostUUID = artData.getHostUuid();
+                hostName = artData.getHostName();
+                appName = artData.getAppName();
+                appUUID = artData.getAppUuid();
+                appIDStr = artData.getAppId();
             }
         }
 

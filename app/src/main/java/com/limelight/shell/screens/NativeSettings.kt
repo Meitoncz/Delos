@@ -11,6 +11,7 @@ import com.limelight.BuildConfig
 import com.limelight.shell.DialogField
 import com.limelight.shell.DialogSpec
 import com.limelight.shell.Layer
+import com.limelight.shell.LocalEsDeShortcuts
 import com.limelight.shell.LocalFocusTracker
 import com.limelight.shell.LocalLibrary
 import com.limelight.shell.LocalShell
@@ -123,6 +124,18 @@ internal fun nativeSettings(
         "Connects straight to the default device at startup.", startup.defaultPc != null, SettingsTab.DEVICES, "Startup")
     row("devices_manage", Symbols.DEVICES, "Manage devices", RowValue.Action { shell.navigate(Screen.Devices) }, "Connect, rename, wake, unpair or remove a PC.", tab = SettingsTab.DEVICES, section = "Paired PCs")
     row("devices_pair", Symbols.ADD_LINK, "Pair a new PC", RowValue.Action { shell.navigate(Screen.PairPc(Screen.Settings)) }, "Finds a PC running Vibepollo, Apollo or Sunshine.", tab = SettingsTab.DEVICES, section = "Paired PCs")
+    val esde = LocalEsDeShortcuts.current
+    val esdeFolder = esde.folderName
+    row("devices_esde_folder", Symbols.ADD_LINK, "ES-DE shortcut folder", RowValue.Text(esdeFolder ?: "Not set") { esde.choose() },
+        NativeSettingsHelp.ES_DE_FOLDER, tab = SettingsTab.DEVICES, section = "ES-DE")
+    if (esdeFolder != null) {
+        row("devices_esde_forget", Symbols.LINK_OFF, "Forget ES-DE folder", RowValue.Action {
+            // This row goes away: the focus stays next to it
+            shell.settingsFocus = "devices_esde_folder"
+            esde.forget()
+        },
+            NativeSettingsHelp.ES_DE_FORGET, tab = SettingsTab.DEVICES, section = "ES-DE")
+    }
     val artwork = LocalArtwork.current
     val tracker = LocalFocusTracker.current
     val library = LocalLibrary.current as? Library.Ready
