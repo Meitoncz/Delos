@@ -110,6 +110,7 @@ import com.limelight.shell.ui.LocalStage
 import com.limelight.shell.ui.PlaceholderArt
 import com.limelight.shell.ui.Symbol
 import com.limelight.shell.ui.Symbols
+import com.limelight.shell.ui.genreIcon
 import com.limelight.shell.ui.Unbounded
 import com.limelight.shell.ui.fadeMask
 import com.limelight.shell.ui.focusEffects
@@ -490,7 +491,7 @@ private fun GameInfo(pc: Pc, app: App, modifier: Modifier, reducedMotion: Boolea
                 Chip(Symbols.HISTORY, "HLTB ${it.headline}")
             }
             if (art.icon == Symbols.DESKTOP_WINDOWS && pc.details.vDisplaySupported) Chip(Symbols.SCREEN_SHARE, "Virtual display")
-            metadata?.candidate?.genres?.forEach { genre -> if (genre.name.isNotBlank()) Chip(Symbols.SPORTS_ESPORTS, genre.name) }
+            metadata?.candidate?.genres?.forEach { genre -> if (genre.name.isNotBlank()) Chip(genreIcon(genre.id), genre.name) }
         }
     }
 }

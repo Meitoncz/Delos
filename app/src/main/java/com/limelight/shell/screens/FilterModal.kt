@@ -76,6 +76,7 @@ import com.limelight.shell.ui.MarginBringIntoView
 import com.limelight.shell.ui.PillButton
 import com.limelight.shell.ui.Symbol
 import com.limelight.shell.ui.Symbols
+import com.limelight.shell.ui.genreIcon
 import com.limelight.shell.ui.Unbounded
 import com.limelight.shell.ui.backdropBlur
 import com.limelight.shell.ui.fadeEdges
@@ -243,7 +244,7 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
                         key(genre.id) {
                             FilterChip(
                                 genre.name, filters.genreId == genre.id, { metadata.updateFilters(metadata.filters.copy(genreId = genre.id)) },
-                                Modifier.focusRequester(genreRequester(genre.id)), count = counts[genre.id] ?: 0,
+                                Modifier.focusRequester(genreRequester(genre.id)), icon = genreIcon(genre.id), count = counts[genre.id] ?: 0,
                             )
                         }
                     }
