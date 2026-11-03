@@ -84,6 +84,16 @@ class GameMetadataStoreTest {
     private fun newStore(providers: MetadataProviders) =
         GameMetadataStore(root, { prefs }, providers, { now }, Dispatchers.IO, Dispatchers.Unconfined)
 
+    /**
+     * The JVM running these tests (Windows) cannot rename a finished AtomicFile over an existing file, so a second write
+     * leaves its content in `<file>.new`; on Android the rename replaces the file. Complete it the way Android does.
+     */
+    private fun settleAtomicWrite(app: App) {
+        val base = fileOf(app)
+        val pending = File(base.parentFile, base.name + ".new")
+        if (pending.exists()) java.nio.file.Files.move(pending.toPath(), base.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+    }
+
     private fun fileOf(app: App) = File(File(root, "pc-${pc.uuid}"), "${app.id}.json")
 
     // The write observer runs synchronously after a state write, including N/N immediately before null.
@@ -564,6 +574,7 @@ class GameMetadataStoreTest {
         assertNull("the card falls back silently, not as an error", store.entry(pc, game).error)
 
         store.ensure(pc, game)
+        settleAtomicWrite(game)
         newStore(providers).ensure(pc, game)
         assertEquals("focus changes and restarts must not retrigger the lookup", 2, providers.steamCalls.get())
 
