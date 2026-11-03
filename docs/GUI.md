@@ -84,8 +84,38 @@ The TV channel uses the same mark; PC shortcut icons remain unchanged.
 
 ## Game information and library filters
 
-The existing information area under the game title/logo also shows IGDB genres (each with its own icon, `genreIcon` in `shell/ui/GenreIcons.kt`; unmapped new genres get a neutral tag), native HDR/SDR,
-and the HowLongToBeat headline duration. HDR uses a readable rainbow badge; confirmed native-SDR
+The information area under the game title/logo is one row in two groups. The **facts** come first
+(PC or `Running on …`, native HDR/SDR, the HowLongToBeat headline duration, `Virtual display`), then a
+1 px divider (`colors.line`, 26 px tall, 14 px margins on both sides) and the **tags**: the game's one main
+genre and one theme. A game shows at most one of each; IGDB's complete genre list stays in the metadata and
+keeps feeding the Y filter. Games without a genre or theme just omit that pill, and without either the divider
+goes away too; built-in apps and games without metadata show the facts only. The facts keep their usual
+pill look; the tag pills have exactly the same size. The row wraps at group boundaries (facts as before,
+the tags as one group): when the tags do not fit beside the facts they move to the next line as a whole and
+the divider stays out, also at 125 % interface scale.
+
+- **Main genre** (`mainGenre` in `shell/ui/GameTags.kt`) is the first genre of this ladder that the game
+  has: Shooter, Fighting, Racing, Role-playing, Real Time Strategy, Turn-based strategy, Tactical, Hack and
+  slash/Beat 'em up, Platform, Puzzle, MOBA, Music, Visual Novel, Card & Board Game, Quiz/Trivia, Pinball,
+  Point-and-click, Sport, Simulator, Strategy, Arcade, Adventure; genres IGDB adds later come after these in
+  IGDB's order. Indie is a business model, not a genre: it only shows when it is the game's only entry.
+  Examples: Cronos (Shooter, Puzzle, Adventure) shows Shooter, Forza (Racing, Simulator, Sport, Arcade)
+  Racing, Overcooked (Simulator, Strategy, Indie) Simulator, Cairn (Simulator, Sport, Adventure, Indie) Sport.
+- **Main theme** (`mainTheme`) skips Action and Erotic entirely, then takes the first of: Horror, Survival,
+  Open world, Science fiction, Fantasy, Stealth, Warfare, Sandbox, Mystery, Thriller, Party, 4X, Historical,
+  Comedy, Drama, Romance, Business, Educational, Kids, Non-fiction; later additions come after these.
+- The **genre pill** is the accent of the row: filled with a tint of the game's main color from its cover
+  (`HeroBitmaps.coverHues`, the game background's while the cover's are unknown) over the glass:
+  `hsl(hue, 0.8 × vividness, 34 %)` at 35 % alpha, a 1 px `hsl(hue, …, 55 %)` border at 55 % alpha, and
+  the icon and text in the same hue at 85 % lightness (a light theme uses darker shades). With *Match the
+  game's colors* off, with Material You, or while the colors are not known, the palette's accent hue is used.
+  The **theme pill** is the quiet one: no fill, a 1 px `colors.line` border, icon and text in `colors.text3`.
+  Neither pill animates; like the facts they appear when the metadata is there.
+- Every genre and theme has its own Phosphor icon (`genreIcon`, `themeIcon` in `shell/ui/GenreIcons.kt`;
+  the neutral tag stands in for ones IGDB adds later). The theme icons come from `tools/fonts/icons.txt`
+  like every other icon (see `docs/ICONS.md`).
+
+HDR uses a readable rainbow badge; confirmed native-SDR
 games use a neutral SDR chip. A muted `HDR/SDR unverified` chip means native HDR/SDR could not be verified:
 the wiki has no page, evidence is unknown/ambiguous, or claimed HDR is broken, disabled, simulated
 or platform/edition-restricted. Only successfully evaluated unknown records (`updatedAt > 0` and

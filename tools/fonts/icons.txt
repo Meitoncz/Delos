@@ -242,3 +242,25 @@ genre_visual_novel = book-open-text
 genre_card_and_board = cards
 genre_moba = users-three
 genre_unknown = tag
+
+# Game themes (IGDB theme chips, see shell/ui/GameTags.kt)
+theme_horror = skull
+theme_survival = campfire
+theme_open_world = globe-hemisphere-west
+theme_science_fiction = planet
+theme_fantasy = magic-wand
+theme_stealth = eye-slash
+theme_warfare = bomb
+theme_sandbox = cube
+theme_mystery = magnifying-glass
+theme_thriller = lightning
+theme_party = confetti
+theme_4x = map-trifold
+theme_historical = scroll
+theme_comedy = smiley
+theme_drama = mask-happy
+theme_romance = heart
+theme_business = briefcase
+theme_educational = graduation-cap
+theme_kids = balloon
+theme_non_fiction = newspaper

@@ -30,3 +30,31 @@ fun genreIcon(id: Int): String = when (id) {
     36 -> Symbols.GENRE_MOBA
     else -> Symbols.GENRE_UNKNOWN
 }
+
+/**
+ * Icon of an IGDB theme chip, one per theme like [genreIcon]. Action and Erotic are never shown (see
+ * [mainTheme]), so they have none; unmapped themes get the same neutral tag as unmapped genres.
+ */
+fun themeIcon(id: Int): String = when (id) {
+    17 -> Symbols.THEME_FANTASY
+    18 -> Symbols.THEME_SCIENCE_FICTION
+    19 -> Symbols.THEME_HORROR
+    20 -> Symbols.THEME_THRILLER
+    21 -> Symbols.THEME_SURVIVAL
+    22 -> Symbols.THEME_HISTORICAL
+    23 -> Symbols.THEME_STEALTH
+    27 -> Symbols.THEME_COMEDY
+    28 -> Symbols.THEME_BUSINESS
+    31 -> Symbols.THEME_DRAMA
+    32 -> Symbols.THEME_NON_FICTION
+    33 -> Symbols.THEME_SANDBOX
+    34 -> Symbols.THEME_EDUCATIONAL
+    35 -> Symbols.THEME_KIDS
+    38 -> Symbols.THEME_OPEN_WORLD
+    39 -> Symbols.THEME_WARFARE
+    40 -> Symbols.THEME_PARTY
+    41 -> Symbols.THEME_4X
+    43 -> Symbols.THEME_MYSTERY
+    44 -> Symbols.THEME_ROMANCE
+    else -> Symbols.GENRE_UNKNOWN
+}

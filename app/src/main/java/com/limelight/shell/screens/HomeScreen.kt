@@ -18,8 +18,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.gestures.BringIntoViewSpec
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.gestures.ScrollableState
@@ -110,13 +108,14 @@ import com.limelight.shell.ui.LocalStage
 import com.limelight.shell.ui.PlaceholderArt
 import com.limelight.shell.ui.Symbol
 import com.limelight.shell.ui.Symbols
-import com.limelight.shell.ui.genreIcon
 import com.limelight.shell.ui.Unbounded
 import com.limelight.shell.ui.fadeMask
 import com.limelight.shell.ui.focusEffects
 import com.limelight.shell.ui.glass
 import com.limelight.shell.ui.focusPulse
 import com.limelight.shell.ui.hsl
+import com.limelight.shell.ui.mainGenre
+import com.limelight.shell.ui.mainTheme
 import com.limelight.shell.ui.px
 import com.limelight.shell.ui.tpx
 import kotlinx.coroutines.Dispatchers
@@ -283,7 +282,9 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
 
     Box(Modifier.fillMaxSize()) {
         GameInfo(pc, focused,
-            modifier = Modifier.padding(start = 150.px, top = if (row) 210.px else 116.px), reducedMotion = appearance.reducedMotion)
+            modifier = Modifier.padding(start = 150.px, top = if (row) 210.px else 116.px), reducedMotion = appearance.reducedMotion,
+            // The same condition as the animated background's: the genre takes the game's colors only while it does
+            matchGameColors = appearance.matchGameColors && !appearance.materialYou)
         CompositionLocalProvider(LocalBringIntoViewSpec provides NoAutoScroll) {
             if (row) {
                 // At the end the row stops with the last cover at the right edge, so the right fade goes away there
@@ -445,9 +446,8 @@ private fun gameMenu(
         },
     )
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun GameInfo(pc: Pc, app: App, modifier: Modifier, reducedMotion: Boolean) {
+private fun GameInfo(pc: Pc, app: App, modifier: Modifier, reducedMotion: Boolean, matchGameColors: Boolean) {
     val colors = LocalDelosColors.current
     val art = appArt(pc, app)
     Column(modifier) {
@@ -478,9 +478,26 @@ private fun GameInfo(pc: Pc, app: App, modifier: Modifier, reducedMotion: Boolea
                 modifier = Modifier.padding(end = 150.px).gameTitleEntrance(homeKey(pc, app), null, reducedMotion),
             )
         } else Box(Modifier.height(200.px)) // Keep the title space while the logo lookup is pending.
-        FlowRow(Modifier.padding(top = 10.px).widthIn(max = 1620.px), horizontalArrangement = Arrangement.spacedBy(12.px), verticalArrangement = Arrangement.spacedBy(6.px)) {
+        val metadata = LocalGameMetadata.current.entry(pc, app).data
+        // One main genre and one theme out of IGDB's lists (the filter still offers every genre); the facts come first
+        val genre = mainGenre(metadata?.candidate?.genres.orEmpty().filter { it.name.isNotBlank() })
+        val theme = mainTheme(metadata?.candidate?.themes.orEmpty().filter { it.name.isNotBlank() })
+        val key = homeKey(pc, app)
+        // The colors of the animated background: the cover's, the game background's while those are unknown
+        val gameColors = when {
+            !matchGameColors -> null
+            HeroBitmaps.coverKnown(key) -> HeroBitmaps.coverHues(key)
+            else -> HeroBitmaps.hues(key)
+        }
+        InfoRow(
+            Modifier.padding(top = 10.px).widthIn(max = 1620.px),
+            hasTags = genre != null || theme != null,
+            tags = {
+                if (genre != null) GenrePill(genre, gameColors)
+                if (theme != null) ThemePill(theme)
+            },
+        ) {
             if (app.running) Chip(Symbols.PLAY_ARROW, "Running on ${pc.name}") else Chip(Symbols.COMPUTER, pc.name)
-            val metadata = LocalGameMetadata.current.entry(pc, app).data
             when (hdrBadgeKind(metadata)) {
                 NativeHdr.HDR -> NativeHdrChip()
                 NativeHdr.SDR -> Chip(Symbols.HDR_ON, "SDR")
@@ -491,7 +508,6 @@ private fun GameInfo(pc: Pc, app: App, modifier: Modifier, reducedMotion: Boolea
                 Chip(Symbols.HISTORY, "HLTB ${it.headline}")
             }
             if (art.icon == Symbols.DESKTOP_WINDOWS && pc.details.vDisplaySupported) Chip(Symbols.SCREEN_SHARE, "Virtual display")
-            metadata?.candidate?.genres?.forEach { genre -> if (genre.name.isNotBlank()) Chip(genreIcon(genre.id), genre.name) }
         }
     }
 }
@@ -516,17 +532,23 @@ private fun Modifier.gameTitleEntrance(game: String, image: ImageBitmap?, reduce
 @Composable
 internal fun Chip(icon: String, label: String, iconTint: Color? = null) {
     val colors = LocalDelosColors.current
+    Pill(icon, label, colors.text2, iconTint ?: colors.text2, Modifier.glass(colors.surface), colors.line)
+}
+
+/** The shape and size of every info pill; [fill] is what lies behind its content, [border] its 1 px outline. */
+@Composable
+internal fun Pill(icon: String, label: String, textColor: Color, iconColor: Color, fill: Modifier, border: Color) {
     Row(
         Modifier
             .clip(CircleShape)
-            .glass(colors.surface)
-            .border(1.px, colors.line, CircleShape)
+            .then(fill)
+            .border(1.px, border, CircleShape)
             .padding(horizontal = 16.px, vertical = 6.px),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.px),
     ) {
-        Symbol(icon, 22.tpx, iconTint ?: colors.text2)
-        BasicText(label, style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 19.tpx))
+        Symbol(icon, 22.tpx, iconColor)
+        BasicText(label, style = TextStyle(color = textColor, fontFamily = Figtree, fontSize = 19.tpx))
     }
 }
 
