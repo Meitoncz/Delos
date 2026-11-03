@@ -9,8 +9,11 @@ import org.junit.Test
 class MetadataFiltersTest {
     private val game = App(1, "Game", false, false, NvApp())
 
-    private fun metadata(hdr: NativeHdr = NativeHdr.UNKNOWN, seconds: Long? = null, genre: Int = 1) = GameMetadata(
-        candidate = MetadataCandidate(10, "Game", 2020, listOf(20L), listOf(GameGenre(genre, "Genre"))),
+    private fun metadata(hdr: NativeHdr = NativeHdr.UNKNOWN, seconds: Long? = null, genre: Int = 1, themes: IntArray = intArrayOf()) = GameMetadata(
+        candidate = MetadataCandidate(
+            10, "Game", 2020, listOf(20L), listOf(GameGenre(genre, "Genre")),
+            themes = themes.map { GameGenre(it, "Theme $it") },
+        ),
         hdr = HdrEvidence(hdr),
         completion = seconds?.let { CompletionTime(30, "Game", it, "https://howlongtobeat.com/game/30", "10 Hours") },
     )
@@ -36,8 +39,33 @@ class MetadataFiltersTest {
         assertEquals(0, MetadataFilters().activeCount)
         assertFalse(MetadataFilters().active)
         assertEquals(1, MetadataFilters(length = LengthFilter.UNKNOWN).activeCount)
-        assertEquals(3, MetadataFilters(genreId = 5, hdr = HdrFilter.SDR, length = LengthFilter.OVER_60).activeCount)
+        assertEquals(4, MetadataFilters(genreId = 5, themeId = 19, hdr = HdrFilter.SDR, length = LengthFilter.OVER_60).activeCount)
+        assertEquals(1, MetadataFilters(themeId = 19).activeCount)
         assertTrue(MetadataFilters(genreId = 5).active)
+        assertTrue(MetadataFilters(themeId = 19).active)
+    }
+
+    @Test fun aThemeFilterMatchesAnyOfTheGamesThemesAndNeverGamesWithoutThemes() {
+        val filter = MetadataFilters(themeId = 19)
+        assertTrue(filter.matches(game, metadata(themes = intArrayOf(1, 19))))
+        assertTrue(filter.matches(game, metadata(themes = intArrayOf(19))))
+        assertFalse(filter.matches(game, metadata(themes = intArrayOf(1, 21))))
+        assertFalse(filter.matches(game, metadata()))
+        assertFalse(filter.matches(game, null))
+    }
+
+    @Test fun aGenreFilterMatchesAnyOfTheGamesGenresNotOnlyTheMainOne() {
+        val twoGenres = GameMetadata(candidate = MetadataCandidate(10, "Game", 2020, genres = listOf(GameGenre(9, "Puzzle"), GameGenre(31, "Adventure"))))
+        assertTrue(MetadataFilters(genreId = 9).matches(game, twoGenres))
+        assertTrue(MetadataFilters(genreId = 31).matches(game, twoGenres))
+        assertFalse(MetadataFilters(genreId = 5).matches(game, twoGenres))
+    }
+
+    @Test fun genreAndThemeAreIndependentRequirements() {
+        val filter = MetadataFilters(genreId = 12, themeId = 19)
+        assertTrue(filter.matches(game, metadata(genre = 12, themes = intArrayOf(19))))
+        assertFalse(filter.matches(game, metadata(genre = 12, themes = intArrayOf(21))))
+        assertFalse(filter.matches(game, metadata(genre = 5, themes = intArrayOf(19))))
     }
 
     @Test fun durationRangesHaveUnambiguousBoundariesAndKeepMissingValuesSeparate() {
@@ -80,7 +108,7 @@ class MetadataFiltersTest {
         ).mapIndexed { index, (name, uuid) ->
             App(index + 10, name, false, false, NvApp().apply { setAppUUID(uuid) })
         }
-        val activeFilters = listOf(MetadataFilters(genreId = 1)) +
+        val activeFilters = listOf(MetadataFilters(genreId = 1), MetadataFilters(themeId = 1)) +
             HdrFilter.values().filter { it != HdrFilter.ANY }.map { MetadataFilters(hdr = it) } +
             LengthFilter.values().filter { it != LengthFilter.ANY }.map { MetadataFilters(length = it) }
         for (builtIn in builtIns) {

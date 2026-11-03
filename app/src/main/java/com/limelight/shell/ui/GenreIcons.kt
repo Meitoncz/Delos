@@ -32,10 +32,11 @@ fun genreIcon(id: Int): String = when (id) {
 }
 
 /**
- * Icon of an IGDB theme chip, one per theme like [genreIcon]. Action and Erotic are never shown (see
- * [mainTheme]), so they have none; unmapped themes get the same neutral tag as unmapped genres.
+ * Icon of an IGDB theme chip, one per theme like [genreIcon]. Erotic is never shown (see [mainTheme]), so
+ * it has none; unmapped themes get the same neutral tag as unmapped genres.
  */
 fun themeIcon(id: Int): String = when (id) {
+    1 -> Symbols.THEME_ACTION
     17 -> Symbols.THEME_FANTASY
     18 -> Symbols.THEME_SCIENCE_FICTION
     19 -> Symbols.THEME_HORROR

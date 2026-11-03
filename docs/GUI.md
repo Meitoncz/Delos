@@ -84,38 +84,50 @@ The TV channel uses the same mark; PC shortcut icons remain unchanged.
 
 ## Game information and library filters
 
-The information area under the game title/logo is one row in two groups. The **facts** come first
-(PC or `Running on …`, native HDR/SDR, the HowLongToBeat headline duration, `Virtual display`), then a
-1 px divider (`colors.line`, 26 px tall, 14 px margins on both sides) and the **tags**: the game's one main
-genre and one theme. A game shows at most one of each; IGDB's complete genre list stays in the metadata and
-keeps feeding the Y filter. Games without a genre or theme just omit that pill, and without either the divider
-goes away too; built-in apps and games without metadata show the facts only. The facts keep their usual
-pill look; the tag pills have exactly the same size. The row wraps at group boundaries (facts as before,
+The information area under the game title/logo is a small label and one row in two groups. The label is
+`GAME INFO` (`APP INFO` for the built-in apps) in the style of the library footer's `LIBRARY` label (Figtree
+SemiBold, 17 px, tracking .14 em, `colors.text3`) with an 8 px gap to the pills; it is shown only while at
+least one pill is. The **facts** come first (`Running on <PC>` while the game runs, native HDR/SDR, the
+HowLongToBeat headline duration, `Virtual display`; the PC's name is no chip while nothing runs), then a
+divider (a 2 px wide, 28 px tall rounded bar in `colors.text3` at 55 % alpha, 16 px margins on both sides) and
+the **tags**: the game's one main genre and one theme. A game shows at most one of each; IGDB's complete
+genre and theme lists stay in the metadata and keep feeding the Y filter. Games without a genre or theme just
+omit that pill, and without either the divider goes away too; built-in apps and games without metadata show
+the facts only. The facts keep their usual pill look; the tag pills have exactly the same size. The row wraps at group boundaries (facts as before,
 the tags as one group): when the tags do not fit beside the facts they move to the next line as a whole and
 the divider stays out, also at 125 % interface scale.
 
 - **Main genre** (`mainGenre` in `shell/ui/GameTags.kt`) is the first genre of this ladder that the game
   has: Shooter, Fighting, Racing, Role-playing, Real Time Strategy, Turn-based strategy, Tactical, Hack and
-  slash/Beat 'em up, Platform, Puzzle, MOBA, Music, Visual Novel, Card & Board Game, Quiz/Trivia, Pinball,
-  Point-and-click, Sport, Simulator, Strategy, Arcade, Adventure; genres IGDB adds later come after these in
+  slash/Beat 'em up, Platform, Adventure, Puzzle, MOBA, Music, Visual Novel, Card & Board Game, Quiz/Trivia,
+  Pinball, Point-and-click, Sport, Simulator, Strategy, Arcade; genres IGDB adds later come after these in
   IGDB's order. Indie is a business model, not a genre: it only shows when it is the game's only entry.
   Examples: Cronos (Shooter, Puzzle, Adventure) shows Shooter, Forza (Racing, Simulator, Sport, Arcade)
-  Racing, Overcooked (Simulator, Strategy, Indie) Simulator, Cairn (Simulator, Sport, Adventure, Indie) Sport.
-- **Main theme** (`mainTheme`) skips Action and Erotic entirely, then takes the first of: Horror, Survival,
-  Open world, Science fiction, Fantasy, Stealth, Warfare, Sandbox, Mystery, Thriller, Party, 4X, Historical,
-  Comedy, Drama, Romance, Business, Educational, Kids, Non-fiction; later additions come after these.
+  Racing, LEGO Batman (Puzzle, Adventure) Adventure, Overcooked (Simulator, Strategy, Indie) Simulator,
+  Cairn (Simulator, Sport, Adventure, Indie) Adventure.
+- **Main theme** (`mainTheme`) skips Erotic entirely and Action unless it is the game's only usable theme
+  (Life is Strange: Double Exposure lists Action alone and shows it), then takes the first of: Horror,
+  Survival, Open world, Science fiction, Fantasy, Stealth, Warfare, Sandbox, Mystery, Thriller, Party, 4X,
+  Historical, Comedy, Drama, Romance, Business, Educational, Kids, Non-fiction; later additions come after
+  these.
 - The **genre pill** is the accent of the row: filled with a tint of the game's main color from its cover
   (`HeroBitmaps.coverHues`, the game background's while the cover's are unknown) over the glass:
   `hsl(hue, 0.8 × vividness, 34 %)` at 35 % alpha, a 1 px `hsl(hue, …, 55 %)` border at 55 % alpha, and
   the icon and text in the same hue at 85 % lightness (a light theme uses darker shades). With *Match the
   game's colors* off, with Material You, or while the colors are not known, the palette's accent hue is used.
-  The **theme pill** is the quiet one: no fill, a 1 px `colors.line` border, icon and text in `colors.text3`.
+  The **theme pill** uses the game's *second* cover color (`hues[1]`; the main hue shifted by +40° when
+  there is none, the accent's hue shifted likewise in the fallbacks above) but fainter, so it stays behind
+  the genre: `hsl(hue2, 0.7 × the genre's saturation, 30 %)` at 16 % alpha over the glass, a 1 px
+  `hsl(hue2, …, 55 %)` border at 45 % alpha, icon and text at 80 % lightness and 90 % alpha.
   Neither pill animates; like the facts they appear when the metadata is there.
 - Every genre and theme has its own Phosphor icon (`genreIcon`, `themeIcon` in `shell/ui/GenreIcons.kt`;
   the neutral tag stands in for ones IGDB adds later). The theme icons come from `tools/fonts/icons.txt`
   like every other icon (see `docs/ICONS.md`).
 
-HDR uses a readable rainbow badge; confirmed native-SDR
+Native HDR uses a gradient badge instead of a rainbow: a diagonal linear gradient from cyan `#22D3EE` over
+indigo `#6366F1` to fuchsia `#D946EF` under a 12 % black scrim (keeps the white text readable on the cyan
+end), the sparkle icon, white text, a 1 px border of white at 35 % alpha and a very soft static glow (8 px
+blur, 35 % alpha) in the indigo behind the pill; it has the size of every info pill. Confirmed native-SDR
 games use a neutral SDR chip. A muted `HDR/SDR unverified` chip means native HDR/SDR could not be verified:
 the wiki has no page, evidence is unknown/ambiguous, or claimed HDR is broken, disabled, simulated
 or platform/edition-restricted. Only successfully evaluated unknown records (`updatedAt > 0` and
@@ -126,7 +138,7 @@ do not qualify as native game HDR.
 
 **Y** on the home screen opens the **Filter library** modal (Y or B closes it; Done as well). It is a
 centered glass panel with the title, a live result line as a pill (`27 of 55 games`, or `All 55 games` without a filter)
-and three sections of chips, each with a large Unbounded heading and its icon in an accent-tinted circle, separated by thin dividers: **Genre** (`All` plus every genre, each with its icon and number of games), **HDR
+and four sections of chips, each with a large Unbounded heading and its icon in an accent-tinted circle, separated by thin dividers: **Genre** (`All` plus every genre any game in the downloaded metadata lists, each with its icon and number of games), **Theme** (the same for IGDB themes, single-select, shown while the library has any theme), **HDR
 support** (`All`, `Native HDR`, `SDR`, `HDR/SDR unverified`, with the sparkle, sun and question-mark icons of
 the home badges) and **Duration** from HowLongToBeat (Any, <10 h, 10–30 h, 30–60 h, 60+ h, Unknown). The chosen chip is
 filled with the accent; a choice applies at once (no confirmation) and the library behind the modal
@@ -135,8 +147,12 @@ long genre list scrolls the panel (its top and bottom edges fade out) and keeps 
 The focused chip is kept 150 px from the top edge, so the first row scrolls the heading into view; the
 bottom padding keeps the last row's focus ring outside the fade, including at 125% text scale. **X** resets (the Reset button is
 disabled while nothing is filtered), and closing returns the focus to the game that was focused. While
-filters are active the home hint reads `Y Filter • N active`. Filters follow the active profile and
-combine across categories. Empty results say to press Y and keep a controller/touch reset action.
+filters are active the home hint reads `Y Filter • N active`. Filters follow the active profile (genre, theme,
+HDR and duration are stored per profile) and combine across categories. The Genre and Theme filters match a
+game when *any* of its genres/themes is the chosen one, not only the main genre and theme the home screen
+shows, so the chip lists can hold entries no tile displays as its main tag. Both lists and their counts are
+read from the metadata store while the modal is open, so they follow records as they arrive and after a
+cache-schema refetch. Empty results say to press Y and keep a controller/touch reset action.
 Original library order, running-game state, artwork and cover layout are preserved.
 The `HDR/SDR unverified` filter retains unknown-support matching, including pending/failed records without a
 badge; the display rule above does not change filter membership.

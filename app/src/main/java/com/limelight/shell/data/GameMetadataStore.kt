@@ -70,6 +70,7 @@ class GameMetadataStore internal constructor(
         filterState = value
         settings().edit()
             .putInt(KEY_GENRE, value.genreId ?: 0)
+            .putInt(KEY_THEME, value.themeId ?: 0)
             .putString(KEY_HDR, value.hdr.name)
             .putString(KEY_LENGTH, value.length.name)
             .apply()
@@ -78,8 +79,14 @@ class GameMetadataStore internal constructor(
     fun entry(pc: Pc, app: App): GameMetadataState =
         if (BundledArtwork.kind(app) != null) resolvedEmptyState else states[key(pc, app)] ?: emptyState
 
+    /** Every genre any of [apps] has in the records published so far, by name. */
     fun genres(pc: Pc, apps: List<App>): List<GameGenre> = apps.asSequence()
         .flatMap { entry(pc, it).data?.candidate?.genres.orEmpty().asSequence() }
+        .distinctBy { it.id }.sortedBy { it.name }.toList()
+
+    /** Every theme any of [apps] has in the records published so far, by name. */
+    fun themes(pc: Pc, apps: List<App>): List<GameGenre> = apps.asSequence()
+        .flatMap { entry(pc, it).data?.candidate?.themes.orEmpty().asSequence() }
         .distinctBy { it.id }.sortedBy { it.name }.toList()
 
     /**
@@ -360,6 +367,7 @@ class GameMetadataStore internal constructor(
         val prefs = settings()
         return MetadataFilters(
             prefs.getInt(KEY_GENRE, 0).takeIf { it > 0 },
+            prefs.getInt(KEY_THEME, 0).takeIf { it > 0 },
             runCatching { HdrFilter.valueOf(prefs.getString(KEY_HDR, null).orEmpty()) }.getOrDefault(HdrFilter.ANY),
             runCatching { LengthFilter.valueOf(prefs.getString(KEY_LENGTH, null).orEmpty()) }.getOrDefault(LengthFilter.ANY),
         )
@@ -373,6 +381,7 @@ class GameMetadataStore internal constructor(
         const val CACHE_SCHEMA = 5
         const val LIBRARY_CONCURRENCY = 2
         const val KEY_GENRE = "metadata_filter_genre"
+        const val KEY_THEME = "metadata_filter_theme"
         const val KEY_HDR = "metadata_filter_hdr"
         const val KEY_LENGTH = "metadata_filter_length"
     }

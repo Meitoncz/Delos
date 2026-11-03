@@ -6,9 +6,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.Placeable
@@ -39,12 +41,13 @@ internal fun InfoRow(modifier: Modifier = Modifier, hasTags: Boolean, tags: @Com
     val colors = LocalDelosColors.current
     val gap = 12.px
     val lineGap = 6.px
-    val dividerMargin = 14.px
+    val dividerMargin = 16.px
     Layout(
         content = {
             facts()
             if (hasTags) {
-                Box(Modifier.layoutId(InfoPart.DIVIDER).width(1.px).height(26.px).background(colors.line))
+                // Clearly visible but light: a short rounded bar in the dim text color
+                Box(Modifier.layoutId(InfoPart.DIVIDER).width(2.px).height(28.px).clip(CircleShape).background(colors.text3.copy(alpha = .55f)))
                 Row(Modifier.layoutId(InfoPart.TAGS), horizontalArrangement = Arrangement.spacedBy(gap)) { tags() }
             }
         },
@@ -117,9 +120,27 @@ internal fun GenrePill(genre: GameGenre, gameColors: GameColors?) {
     Pill(genreIcon(genre.id), genre.name, tint.content, tint.content, Modifier.glass(colors.surface).background(tint.fill), tint.border)
 }
 
-/** The game's main theme: only an outline and the dimmer text color, so it stays behind the genre. */
+/** How far the theme's hue lies from the genre's when the game has no second color. */
+private const val THEME_HUE_SHIFT = 40f
+
+/** The theme's pill: the genre's recipe in the game's second color, but fainter, so the genre stays the accent. */
+private fun themeTint(hue: Float, saturation: Float, dark: Boolean): GenreTint {
+    val s = saturation.coerceIn(20f, 95f)
+    return if (dark) GenreTint(hsl(hue, s, 30f, .16f), hsl(hue, s, 55f, .45f), hsl(hue, s, 80f, .9f))
+    else GenreTint(hsl(hue, s, 50f, .14f), hsl(hue, s, 40f, .45f), hsl(hue, s, 26f, .92f))
+}
+
+/**
+ * The game's main theme: tinted with the game's second cover color (its main color shifted along the hue
+ * wheel when there is none, the accent's while the game's colors are off or unknown), fainter than the genre.
+ */
 @Composable
-internal fun ThemePill(theme: GameGenre) {
+internal fun ThemePill(theme: GameGenre, gameColors: GameColors?) {
     val colors = LocalDelosColors.current
-    Pill(themeIcon(theme.id), theme.name, colors.text3, colors.text3, Modifier, colors.line)
+    val hues = gameColors?.hues.orEmpty()
+    val hue = hues.getOrNull(1) ?: ((hues.firstOrNull() ?: colors.accentHue) + THEME_HUE_SHIFT)
+    val saturations = gameColors?.saturations.orEmpty()
+    val vividness = saturations.getOrNull(1) ?: saturations.firstOrNull() ?: 1f
+    val tint = themeTint(hue, vividness * 80f * .7f, colors.dark)
+    Pill(themeIcon(theme.id), theme.name, tint.content, tint.content, Modifier.glass(colors.surface).background(tint.fill), tint.border)
 }

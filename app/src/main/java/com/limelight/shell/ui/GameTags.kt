@@ -7,8 +7,9 @@ private const val INDIE = 32
 
 /**
  * Genres from the most to the least specific for what the game plays like: a game listed as Shooter and
- * Adventure is a Shooter, one listed as Simulator and Sport is a Sport. Genres IGDB adds later come after
- * these, in IGDB's order.
+ * Adventure is a Shooter, one listed as Puzzle and Adventure is an Adventure (its puzzles are part of the
+ * adventure), one listed as Simulator and Sport is a Sport. Genres IGDB adds later come after these, in
+ * IGDB's order.
  */
 private val GENRE_LADDER = intArrayOf(
     5, // Shooter
@@ -20,6 +21,7 @@ private val GENRE_LADDER = intArrayOf(
     24, // Tactical
     25, // Hack and slash/Beat 'em up
     8, // Platform
+    31, // Adventure
     9, // Puzzle
     36, // MOBA
     7, // Music
@@ -32,11 +34,13 @@ private val GENRE_LADDER = intArrayOf(
     13, // Simulator
     15, // Strategy
     33, // Arcade
-    31, // Adventure
 )
 
-/** IGDB themes that say nothing about the game: Action is a genre in disguise, Erotic is no label for a shelf. */
-private val IGNORED_THEMES = setOf(1, 42)
+/** IGDB's theme "Erotic": no label for a shelf, never shown. */
+private const val EROTIC = 42
+
+/** IGDB's theme "Action": a genre in disguise, so it is only shown when it is the one usable theme. */
+private const val ACTION = 1
 
 /** Themes from the most to the least telling; themes IGDB adds later come after these, in IGDB's order. */
 private val THEME_LADDER = intArrayOf(
@@ -70,6 +74,11 @@ private fun firstRanked(entries: List<GameGenre>, ladder: IntArray): GameGenre? 
 fun mainGenre(genres: List<GameGenre>): GameGenre? =
     firstRanked(genres.filter { it.id != INDIE }, GENRE_LADDER) ?: genres.firstOrNull { it.id == INDIE }
 
-/** The one theme that describes a game best, or null when IGDB lists none worth showing. */
-fun mainTheme(themes: List<GameGenre>): GameGenre? =
-    firstRanked(themes.filter { it.id !in IGNORED_THEMES }, THEME_LADDER)
+/**
+ * The one theme that describes a game best, or null when IGDB lists none worth showing. Action only counts
+ * when no other usable theme is listed; Erotic never does.
+ */
+fun mainTheme(themes: List<GameGenre>): GameGenre? {
+    val usable = themes.filter { it.id != EROTIC }
+    return firstRanked(usable.filter { it.id != ACTION }, THEME_LADDER) ?: usable.firstOrNull { it.id == ACTION }
+}

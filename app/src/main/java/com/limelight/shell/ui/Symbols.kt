@@ -249,4 +249,5 @@ object Symbols {
     const val THEME_EDUCATIONAL = "\uE62C"
     const val THEME_KIDS = "\uE76C"
     const val THEME_NON_FICTION = "\uE344"
+    const val THEME_ACTION = "\uE242"
 }

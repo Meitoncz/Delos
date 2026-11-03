@@ -140,6 +140,30 @@ class GameMetadataStoreTest {
         }
     }
 
+    @Test fun genreAndThemeFiltersSurviveARestart() {
+        val filters = MetadataFilters(genreId = 12, themeId = 19, hdr = HdrFilter.HDR, length = LengthFilter.OVER_60)
+        newStore(FakeProviders()).updateFilters(filters)
+        assertEquals(filters, newStore(FakeProviders()).filters)
+        newStore(FakeProviders()).updateFilters(MetadataFilters(genreId = 12))
+        assertEquals(MetadataFilters(genreId = 12), newStore(FakeProviders()).filters)
+    }
+
+    @Test fun genreAndThemeListsFollowTheCachedRecordsAndIgnoreOlderSchemas() = runBlocking {
+        val current = app(30, "Current")
+        val outdated = app(31, "Outdated")
+        fun record(schema: Int) =
+            """{"schema":$schema,"data":{"candidate":{"id":10,"name":"Game","genres":[{"id":12,"name":"RPG"}],"themes":[{"id":19,"name":"Horror"}]},"updatedAt":$now}}"""
+        fileOf(current).apply { parentFile!!.mkdirs(); writeText(record(5)) }
+        fileOf(outdated).writeText(record(4))
+        val providers = FakeProviders().apply { proxyAvailable = false }
+        val store = newStore(providers)
+        assertTrue(store.genres(pc, listOf(current)).isEmpty())
+        store.ensureLibrary(pc, listOf(current, outdated))
+        assertEquals(listOf(GameGenre(12, "RPG")), store.genres(pc, listOf(current, outdated)))
+        assertEquals(listOf(GameGenre(19, "Horror")), store.themes(pc, listOf(current, outdated)))
+        assertTrue(store.themes(pc, listOf(outdated)).isEmpty())
+    }
+
     @Test fun builtInOperationsLeavePreExistingCacheFilesUntouched() = runBlocking {
         val builtIns = builtIns()
         val cached = builtIns.associateWith { builtIn ->

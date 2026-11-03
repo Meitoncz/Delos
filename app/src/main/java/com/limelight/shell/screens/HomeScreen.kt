@@ -489,25 +489,37 @@ private fun GameInfo(pc: Pc, app: App, modifier: Modifier, reducedMotion: Boolea
             HeroBitmaps.coverKnown(key) -> HeroBitmaps.coverHues(key)
             else -> HeroBitmaps.hues(key)
         }
+        val hdrKind = hdrBadgeKind(metadata)
+        val completion = metadata?.completion?.takeIf { it.seconds > 0 }
+        val virtualDisplay = art.icon == Symbols.DESKTOP_WINDOWS && pc.details.vDisplaySupported
+        val hasTags = genre != null || theme != null
+        // The title above the pills is shown only while there is at least one pill under it
+        val showLabel = hasTags || app.running || hdrKind != null || completion != null || virtualDisplay
+        if (showLabel) BasicText(
+            if (BundledArtwork.kind(app) != null) "APP INFO" else "GAME INFO",
+            modifier = Modifier.padding(top = 10.px),
+            style = TextStyle(
+                color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold,
+                fontSize = 17.tpx, letterSpacing = .14.em,
+            ),
+        )
         InfoRow(
-            Modifier.padding(top = 10.px).widthIn(max = 1620.px),
-            hasTags = genre != null || theme != null,
+            Modifier.padding(top = if (showLabel) 8.px else 10.px).widthIn(max = 1620.px),
+            hasTags = hasTags,
             tags = {
                 if (genre != null) GenrePill(genre, gameColors)
-                if (theme != null) ThemePill(theme)
+                if (theme != null) ThemePill(theme, gameColors)
             },
         ) {
-            if (app.running) Chip(Symbols.PLAY_ARROW, "Running on ${pc.name}") else Chip(Symbols.COMPUTER, pc.name)
-            when (hdrBadgeKind(metadata)) {
+            if (app.running) Chip(Symbols.PLAY_ARROW, "Running on ${pc.name}")
+            when (hdrKind) {
                 NativeHdr.HDR -> NativeHdrChip()
                 NativeHdr.SDR -> Chip(Symbols.HDR_ON, "SDR")
                 NativeHdr.UNKNOWN -> Chip(Symbols.HELP, UNVERIFIED_HDR_LABEL)
                 null -> Unit
             }
-            metadata?.completion?.takeIf { it.seconds > 0 }?.let {
-                Chip(Symbols.HISTORY, "HLTB ${it.headline}")
-            }
-            if (art.icon == Symbols.DESKTOP_WINDOWS && pc.details.vDisplaySupported) Chip(Symbols.SCREEN_SHARE, "Virtual display")
+            if (completion != null) Chip(Symbols.HISTORY, "HLTB ${completion.headline}")
+            if (virtualDisplay) Chip(Symbols.SCREEN_SHARE, "Virtual display")
         }
     }
 }

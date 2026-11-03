@@ -11,6 +11,7 @@ class GameTagsTest {
     private fun g(id: Int) = GameGenre(id, "genre $id")
 
     private val shooter = 5
+    private val platform = 8
     private val puzzle = 9
     private val racing = 10
     private val simulator = 13
@@ -24,9 +25,14 @@ class GameTagsTest {
     fun mostSpecificGenreWins() {
         assertEquals(g(shooter), mainGenre(listOf(g(shooter), g(puzzle), g(adventure))))
         assertEquals(g(racing), mainGenre(listOf(g(racing), g(simulator), g(sport), g(arcade))))
-        assertEquals(g(puzzle), mainGenre(listOf(g(puzzle), g(adventure))))
-        assertEquals(g(sport), mainGenre(listOf(g(simulator), g(sport), g(adventure), g(indie))))
-        assertEquals(g(simulator), mainGenre(listOf(g(strategy), g(simulator), g(indie))))
+        // LEGO Batman and Silent Hill: Townfall: IGDB lists Puzzle and Adventure
+        assertEquals(g(adventure), mainGenre(listOf(g(puzzle), g(adventure))))
+        // Cairn
+        assertEquals(g(adventure), mainGenre(listOf(g(simulator), g(sport), g(adventure), g(indie))))
+        assertEquals(g(platform), mainGenre(listOf(g(platform), g(adventure))))
+        // Overcooked
+        assertEquals(g(simulator), mainGenre(listOf(g(simulator), g(strategy), g(indie))))
+        assertEquals(g(sport), mainGenre(listOf(g(simulator), g(sport))))
     }
 
     @Test
@@ -62,10 +68,18 @@ class GameTagsTest {
     }
 
     @Test
-    fun actionAndEroticAreNeverShown() {
-        assertNull(mainTheme(listOf(g(1))))
-        assertNull(mainTheme(listOf(g(42), g(1))))
+    fun actionIsShownOnlyWhenItIsTheOnlyUsableTheme() {
+        // Life is Strange: Double Exposure lists Action alone
+        assertEquals(g(1), mainTheme(listOf(g(1))))
+        assertEquals(g(1), mainTheme(listOf(g(42), g(1))))
         assertEquals(g(32), mainTheme(listOf(g(1), g(42), g(32))))
+        assertEquals(g(27), mainTheme(listOf(g(1), g(27))))
+    }
+
+    @Test
+    fun eroticIsNeverShown() {
+        assertNull(mainTheme(listOf(g(42))))
+        assertNull(mainTheme(listOf(g(42), g(42))))
     }
 
     @Test
@@ -81,7 +95,7 @@ class GameTagsTest {
 
     @Test
     fun everyShownThemeHasItsOwnIcon() {
-        val themeIds = listOf(17, 18, 19, 20, 21, 22, 23, 27, 28, 31, 32, 33, 34, 35, 38, 39, 40, 41, 43, 44)
+        val themeIds = listOf(1, 17, 18, 19, 20, 21, 22, 23, 27, 28, 31, 32, 33, 34, 35, 38, 39, 40, 41, 43, 44)
         val icons = themeIds.map { themeIcon(it) }
         icons.forEach { assertNotEquals(Symbols.GENRE_UNKNOWN, it) }
         assertEquals(themeIds.size, icons.toSet().size)
@@ -92,12 +106,14 @@ class GameTagsTest {
         assertEquals(Symbols.GENRE_UNKNOWN, themeIcon(0))
         assertEquals(Symbols.GENRE_UNKNOWN, themeIcon(999))
         assertEquals(Symbols.GENRE_UNKNOWN, themeIcon(-1))
+        // Erotic is never shown, so it has no icon of its own
+        assertEquals(Symbols.GENRE_UNKNOWN, themeIcon(42))
     }
 
     @Test
     fun everyThemeIconDiffersFromEveryGenreIcon() {
         val genreIcons = listOf(2, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 24, 25, 26, 30, 31, 32, 33, 34, 35, 36).map { genreIcon(it) }.toSet()
-        listOf(17, 18, 19, 20, 21, 22, 23, 27, 28, 31, 32, 33, 34, 35, 38, 39, 40, 41, 43, 44).forEach {
+        listOf(1, 17, 18, 19, 20, 21, 22, 23, 27, 28, 31, 32, 33, 34, 35, 38, 39, 40, 41, 43, 44).forEach {
             assertFalse(themeIcon(it) in genreIcons)
         }
     }
