@@ -315,64 +315,68 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
 .side-head .nm { font-family: var(--font-display); font-weight: 600; font-size: calc(28px * var(--ts)); }
 .side-head .pc { font-size: calc(20px * var(--ts)); color: var(--text-3); }
 #sidemenu .row { min-height: 80px; grid-template-columns: 44px 1fr auto; }
-/* Stream menu (docs/GUI.md "Stream menu"): a bar at the bottom, the pages in a popover above its right end.
-   Stage pixels = Android stage pixels; the bar is 1520 x 224 and 48 from the bottom. */
-#quickmenu { left: 0; right: 0; bottom: 0; height: 320px; transform: translateY(60px); background: linear-gradient(transparent, rgba(0, 0, 0, .18) 50%, rgba(0, 0, 0, .55)); }
+/* Stream menu (docs/GUI.md "Stream menu"): a bar at the bottom, its pages in a popover above the circle that opened them
+   with a caret on the popover's bottom edge pointing at that circle. Stage pixels = Android stage pixels; the bar is
+   1700 x 341 and 48 from the bottom, the popover's tip 12 above the bar. */
+#quickmenu { left: 0; right: 0; bottom: 0; height: 380px; transform: translateY(80px); background: linear-gradient(transparent, rgba(0, 0, 0, .17) 50%, rgba(0, 0, 0, .55)); transition: opacity .3s ease, transform .5s cubic-bezier(.34, 1.3, .64, 1); }
 #quickmenu.open { transform: none; }
-.qm-card { border-radius: 34px; box-sizing: border-box; background: color-mix(in srgb, var(--bg) 86%, transparent); box-shadow: inset 0 0 0 1px var(--line), 0 18px 70px -10px rgba(0, 0, 0, .47); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
-.qm-bar { position: absolute; left: 200px; width: 1520px; bottom: 48px; height: 224px; padding: 24px 28px 0; }
-.qm-main { display: flex; height: 138px; }
-.qm-side { width: 190px; flex: none; display: flex; flex-direction: column; justify-content: space-between; }
-.qm-title { font-family: var(--font-display); font-weight: 600; font-size: calc(20px * var(--ts)); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.qm-hints { display: flex; flex-direction: column; gap: 8px; color: var(--text-2); font-size: 19px; }
-.qm-hints .hint { display: inline-flex; align-items: center; gap: 12px; }
-.qm-hints .glyph-btn { min-width: 30px; height: 30px; font-size: 17px; }
-.qm-sep { flex: none; width: 1px; margin: 0 7px 0 8px; background: var(--line); }
+.qm-card { border-radius: 40px; box-sizing: border-box; background: color-mix(in srgb, var(--bg) 88%, transparent); box-shadow: inset 0 0 0 1px var(--line), 0 18px 70px -10px rgba(0, 0, 0, .47); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+.qm-bar { position: absolute; left: 110px; width: 1700px; bottom: 48px; height: 341px; padding: 28px 40px 0; }
+.qm-main { display: flex; height: 188px; }
+.qm-side { width: 250px; flex: none; display: flex; flex-direction: column; justify-content: space-between; }
+.qm-title { font-family: var(--font-display); font-weight: 600; font-size: calc(22px * var(--ts)); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.qm-hints { display: flex; flex-direction: column; gap: 10px; color: var(--text-2); font-size: calc(22px * var(--ts)); }
+.qm-hints .hint { display: inline-flex; align-items: center; gap: 14px; }
+.qm-hints .glyph-btn { min-width: 44px; height: 44px; font-size: 24px; }
+.qm-sep { flex: none; width: 1px; margin: 0 28px; background: var(--line); }
 #quickmenu .circles { flex: 1; gap: 0; align-items: flex-start; }
 #quickmenu .circle-item { flex: 1; width: auto; min-width: 0; gap: 0; }
-#quickmenu .circle { width: 80px; height: 80px; box-sizing: border-box; background: var(--surface-3); border: 1px solid var(--line); color: var(--text); }
-#quickmenu .circle .ms { font-size: 36px; }
+#quickmenu .circle { width: 108px; height: 108px; box-sizing: border-box; background: var(--surface-3); border: 1px solid var(--line); color: var(--text); }
+#quickmenu .circle .ms { font-size: 50px; }
 #quickmenu .circle.on { background: var(--accent); color: var(--on-accent); }
 #quickmenu .circle.on .ms { --phosphor-fill: 1; }
-#quickmenu .circle.sel { border: 3px solid var(--accent); }
-#quickmenu .circle.on.sel { border-color: var(--on-accent); }
-#quickmenu .circle.is-focus { transform: scale(1.12); box-shadow: 0 0 0 4px var(--bg), 0 0 0 8px var(--accent), 0 14px 40px -10px var(--glow); }
-#quickmenu .circle-label { font-size: 17px; opacity: 1; transform: none; margin-top: 12px; white-space: nowrap; }
-#quickmenu .circle-meta { font-size: 14.5px; font-weight: 700; margin-top: 2px; color: var(--text-3); }
+#quickmenu .circle.sel { box-shadow: 0 0 0 5px color-mix(in srgb, var(--bg) 90%, transparent), 0 0 0 9px color-mix(in srgb, var(--accent) 70%, transparent); }
+#quickmenu .circle.is-focus { transform: scale(1.08); box-shadow: 0 0 0 5px var(--bg), 0 0 0 9px var(--accent), 0 0 44px 4px var(--glow); }
+#quickmenu .circle-label { font-size: calc(22px * var(--ts)); opacity: 1; transform: none; margin-top: 14px; white-space: nowrap; color: var(--text-2); transition: color .2s ease; }
+#quickmenu .circle.is-focus + .circle-label, #quickmenu .circle.sel + .circle-label { color: var(--text); }
+#quickmenu .circle-meta { font-size: calc(18px * var(--ts)); font-weight: 700; margin-top: 2px; color: var(--text-3); }
 #quickmenu .circle.on + .circle-label + .circle-meta { color: var(--accent); }
+#quickmenu .circle:active { transform: scale(.95); }
 .qm-rule { height: 1px; margin: 14px 0 0; background: var(--line); }
-.qm-help { display: flex; align-items: center; gap: 14px; height: 47px; padding: 0 2px; font-size: 20px; }
-.qm-help b { flex: none; max-width: 360px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.qm-help-box { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; color: var(--text-2); -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent); }
-.qm-help-box span { display: inline-block; }
-.qm-help-box.run span { animation: qmMarquee var(--dur, 10s) linear infinite; }
-@keyframes qmMarquee { 0%, 14% { transform: none; } 86%, 100% { transform: translateX(var(--dx)); } }
-#qmpop { left: 1020px; width: 700px; bottom: 288px; transform: scale(.96); transform-origin: right bottom; }
+/* The help area never scrolls: a box of two lines of the largest text scale, the complete help wraps inside it */
+.qm-help { display: flex; align-items: center; height: 86px; margin-top: 12px; font-size: calc(22px * var(--ts)); line-height: 1.4; }
+.qm-help b { flex: none; width: 307px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.qm-help-box { flex: 1; min-width: 0; color: var(--text-2); }
+#qmpop { left: 829px; width: 860px; bottom: 401px; transform: scale(.9); transform-origin: 50% 100%; transition: opacity .25s ease, transform .45s cubic-bezier(.34, 1.3, .64, 1); }
 #qmpop.open { transform: none; }
-#qmpop .qm-card { max-height: 440px; display: flex; flex-direction: column; overflow: hidden; }
-.qmp-head { flex: none; display: flex; align-items: center; gap: 10px; height: 54px; margin: 16px 26px 0 14px; font-family: var(--font-display); font-weight: 600; font-size: 21px; white-space: nowrap; }
-.qmp-back { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: var(--accent-2); }
-.qmp-back .ms { font-size: 30px; }
+#qmpop .qm-card { max-height: 617px; border-radius: 32px; display: flex; flex-direction: column; overflow: hidden; }
+.qm-caret { position: absolute; bottom: -13px; width: 28px; height: 14px; pointer-events: none; }
+.qm-caret .c { fill: color-mix(in srgb, var(--bg) 88%, transparent); }
+.qm-caret .l { fill: none; stroke: var(--line); stroke-width: 1; }
+.qmp-head { flex: none; display: flex; align-items: center; gap: 12px; height: 72px; margin: 20px 36px 0 24px; font-family: var(--font-display); font-weight: 600; font-size: calc(24px * var(--ts)); white-space: nowrap; }
+.qmp-back { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; color: var(--accent-2); }
+.qmp-back .ms { font-size: 36px; }
 .qmp-back.is-focus { transform: scale(1.08); box-shadow: 0 0 0 2px var(--bg), 0 0 0 5px var(--accent); }
-.qmp-rows { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px 14px; min-height: 0; overflow-y: auto; scrollbar-width: none; }
+.qmp-rows { display: flex; flex-direction: column; gap: 14px; padding: 6px 36px 8px; min-height: 0; overflow-y: auto; scrollbar-width: none; }
 .qmp-rows::-webkit-scrollbar { display: none; }
 .qmp-rows.scrolls { -webkit-mask-image: linear-gradient(transparent, #000 12px, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(transparent, #000 12px, #000 calc(100% - 28px), transparent); }
-#qmpop .row { flex: none; min-height: 56px; padding: 8px 18px; border-radius: 18px; grid-template-columns: 34px 1fr auto; gap: 14px; }
-#qmpop .row > .ms { font-size: 26px; }
-#qmpop .row-label { font-size: 21px; }
-#qmpop .row-desc { font-size: 15.5px; margin-top: 2px; line-height: 1.3; }
-#qmpop .row-value { font-size: 20px; gap: 10px; }
-#qmpop .row.is-focus { transform: scale(1.015); box-shadow: 0 0 0 3px var(--accent), 0 12px 32px -16px var(--glow); }
-#qmpop .choice .ms { font-size: 24px; }
-#qmpop .slider { width: 180px; height: 8px; }
-#qmpop .slider + span { min-width: 96px !important; }
-#qmpop .switch { width: 58px; height: 33px; }
-#qmpop .switch i { top: 4px; left: 5px; width: 24px; height: 24px; }
-#qmpop .switch.on i { transform: translateX(25px); }
+.qmp-foot { flex: none; margin: 0 36px; padding: 12px 0 14px; border-top: 1px solid var(--line); }
+.qmp-foot div { height: 109px; font-size: calc(20px * var(--ts)); line-height: 1.35; color: var(--text-2); }
+#qmpop.short .qmp-foot div { height: 74px; }
+#qmpop .row { flex: none; min-height: 68px; padding: 8px 22px; border-radius: 22px; grid-template-columns: 40px 1fr auto; gap: 18px; }
+#qmpop .row > .ms { font-size: 30px; }
+#qmpop .row-label { font-size: calc(22px * var(--ts)); }
+#qmpop .row-desc { font-size: calc(17px * var(--ts)); margin-top: 2px; line-height: 1.3; }
+#qmpop .row-value { font-size: calc(21px * var(--ts)); gap: 10px; }
+#qmpop .row.is-focus { transform: scale(1.012); box-shadow: 0 0 0 3px var(--accent), 0 14px 36px -18px var(--glow); }
+#qmpop .choice .ms { font-size: 26px; }
+#qmpop .slider { width: 210px; height: 10px; }
+#qmpop .slider + span { min-width: 110px !important; }
+#qmpop .switch { width: 62px; height: 36px; }
+#qmpop .switch i { top: 4px; left: 4px; width: 28px; height: 28px; }
+#qmpop .switch.on i { transform: translateX(26px); }
 /* Reduced motion: the bar and the popover only fade */
 #stage.reduce #quickmenu, #stage.reduce #qmpop { transform: none !important; }
-#stage.reduce .qm-help-box.run span { animation: none; }
-#stage.reduce .qm-help-box { text-overflow: ellipsis; }
 .dialog { left: 50%; top: 50%; width: 760px; padding: 52px; box-sizing: border-box; border-radius: 40px; background: var(--surface-3); border: 1px solid var(--line); transform: translate(-50%, -46%) scale(.96); display: flex; flex-direction: column; gap: 22px; align-items: center; text-align: center; box-shadow: 0 40px 100px -30px rgba(0, 0, 0, .7); }
 .dialog.open { transform: translate(-50%, -50%); }
 .dialog h3 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: calc(38px * var(--ts)); }
@@ -616,14 +620,16 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
           </div>
           </div>
           <div class="qm-rule"></div>
-          <div class="qm-help"><b id="qmHelpTitle">Resume</b><div class="qm-help-box" id="qmHelpBox"><span id="qmHelpText"></span></div></div>
+          <div class="qm-help"><b id="qmHelpTitle">Resume</b><div class="qm-help-box" id="qmHelpBox"></div></div>
         </div>
       </div>
       <div class="layer" id="qmpop" aria-label="Stream menu page">
         <div class="qm-card">
           <div class="qmp-head"><div class="qmp-back f" tabindex="-1" data-action="back" data-id="qmp-back"><span class="ms" data-icon="chevron_left"></span></div><span id="qmpTitle">Brightness</span></div>
           <div class="qmp-rows" id="qmpRows" data-scroll></div>
+          <div class="qmp-foot"><div id="qmpFoot"></div></div>
         </div>
+        <svg class="qm-caret" id="qmCaret" viewBox="0 0 28 14" aria-hidden="true"><path class="c" d="M0 0H28L16.4 11Q14 13.4 11.6 11Z"/><path class="l" d="M.5 0L11.6 11Q14 13.4 16.4 11L27.5 0"/></svg>
       </div>
       <div class="layer dialog" id="renameDlg" role="dialog" aria-labelledby="renameTitle">
         <h3 id="renameTitle">Rename PC</h3>
@@ -981,10 +987,10 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
       { id: "qmApply", icon: "check", label: "Apply", desc: "Vibepollo is required. The host may limit the requested bitrate.", type: "action", help: "Sends the requested bitrate to Vibepollo. The accepted value can be lower. Saved defaults are unchanged." }
     ]},
     upscaler: { title: "Snapdragon Game Super Resolution", rows: [
-      { id: "qmUpscale", icon: "upscaler", label: "Upscaling", type: "toggle", ref: "qm", help: "Turns local SGSR reconstruction on or off for this stream. The PC's resolution is unchanged; the picture may flicker briefly." },
-      { id: "qmUpMode", icon: "upscaler_mode", label: "Mode", type: "choice", options: QM_MODES, ref: "qm", help: "SGSR 1 uses the current frame; SGSR 2 Video also reuses earlier frames. Applies live." },
+      { id: "qmUpscale", icon: "upscaler", label: "Upscaling", type: "toggle", ref: "qm", help: "Turns SGSR on or off for this stream; the picture may flicker." },
+      { id: "qmUpMode", icon: "upscaler_mode", label: "Mode", type: "choice", options: QM_MODES, ref: "qm", help: "Reuses earlier frames; text and fast motion can break it. Applies live." },
       { id: "qmSharp", icon: "sharpness", label: "Sharpness", type: "slider", min: 0, max: 100, step: 5, unit: " %", ref: "qm", help: "Final sharpening pass, separate from the mode. 0 turns sharpening off. Lasts for this stream." },
-      { id: "qmSave", icon: "remember", label: "Save for this game", descFn: () => QM.qmSaved ? "Saved for " + state.currentGame.title : "Applies to future launches of this game", type: "action", help: "Saves the current upscaler state, mode, sharpness and supersampling level for this game's future launches only." }
+      { id: "qmSave", icon: "remember", label: "Save for this game", descFn: () => QM.qmSaved ? "Saved for " + state.currentGame.title : "", type: "action", help: "Saves the upscaler state, mode, sharpness and supersampling level for this game's future launches." }
     ]},
     more: { title: "More", rows: [
       { id: "qmKeys", icon: "keyboard_command_key", label: "Send keys", type: "action", toast: "Key combinations are not part of this prototype", help: "Sends a built-in or imported key combination to the PC once; the menu closes. Import custom ones under Controls." },
@@ -1007,7 +1013,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
     "qm-perf": ["Overlay", "Cycles full statistics, compact statistics, off. 1% low FPS covers the slowest frames of about ten seconds."],
     "qm-bright": ["Brightness", "Adjusts this device's brightness for this stream; the system setting returns afterwards."],
     "qm-bitrate": ["Bitrate", "Requests a new video bitrate without reconnecting. Needs Vibepollo; the host may cap it. Lasts for this stream."],
-    "qm-upscaler": ["Upscaler", "Upscales a lower-resolution stream; native-resolution input gets supersampling. Costs GPU time. Lasts for this stream unless saved."],
+    "qm-upscaler": ["Upscaler", "Upscales a low-resolution stream, or supersamples a native one. Costs GPU time; lasts for this stream unless saved."],
     "qm-more": ["More", "More stream controls: clipboard, host commands, key combinations, zoom, touch and on-screen controls. Actions run at once."],
     "qm-disconnect": ["Disconnect", "Stops streaming and returns to the Delos library. The game keeps running on the PC."],
     "qm-quit": ["Quit game", "Asks the host to end the running application, then disconnects. Runs at once, so save first."],
@@ -1497,13 +1503,24 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
     let title = "", text = "";
     if (el.dataset.row) { const r = findRow(el.dataset.row); if (r) { title = r.label; text = r.help || ""; } }
     else { const h = QM_HELP[el.dataset.id]; if (h) { title = h[0]; text = h[1]; } }
+    // A row of the popover shows its help in the popover's footer, a circle in the bar's help area (never scrolls: both are boxes
+    // of fixed height for the longest text)
+    if (el.closest("#qmpop") && el.dataset.row) { $("#qmpFoot").textContent = text; return; }
+    if (el.closest("#qmpop")) return;
     $("#qmHelpTitle").textContent = title;
-    // One line under the circles: a text that does not fit runs through as a marquee (ellipsis with reduced motion)
-    const box = $("#qmHelpBox"), span = $("#qmHelpText");
-    span.textContent = text;
-    box.classList.remove("run");
-    const over = span.offsetWidth - box.clientWidth;
-    if (over > 4) { box.style.setProperty("--dx", -(over + 40) + "px"); box.style.setProperty("--dur", Math.max(6, (over + 40) / 30) + "s"); box.classList.add("run"); }
+    $("#qmHelpBox").textContent = text;
+  }
+  // The popover's width per page (780-860): it is centered on the circle that opened it, kept inside the bar and 48 from the screen edges
+  const QM_WIDTH = { bright: 780, bitrate: 800, more: 800, upscaler: 860 };
+  function placeQmPop(page) {
+    const circle = $(`#quickmenu .circle[data-page="${page}"]`), pop = $("#qmpop");
+    const rs = stage.getBoundingClientRect(), k = rs.width / 1920, rc = circle.getBoundingClientRect();
+    const anchor = (rc.left + rc.width / 2 - rs.left) / k, w = QM_WIDTH[page] || 800;
+    const left = Math.min(Math.max(anchor - w / 2, 110), 1810 - w);
+    const caret = Math.min(Math.max(anchor - left, 40), w - 40);
+    pop.style.left = left + "px"; pop.style.width = w + "px"; pop.style.transformOrigin = caret + "px 100%";
+    pop.classList.toggle("short", page === "upscaler");
+    $("#qmCaret").style.left = (caret - 14) + "px";
   }
   function openQmPage(page) {
     const p = QM_PAGES[page]; if (!p) return;
@@ -1511,6 +1528,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
     const rows = $("#qmpRows");
     rows.innerHTML = p.rows.map(rowHtml).join("");
     rows.scrollTop = 0;
+    placeQmPop(page);
     $$("#quickmenu .circle").forEach(c => c.classList.toggle("sel", c.dataset.page === page));
     openLayer("qmpop");
     // The focus goes into the first row (the back chevron is one step up)

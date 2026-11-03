@@ -308,40 +308,72 @@ in assets.
 
 ### Stream menu
 
-A compact **bar at the bottom of the stream**, with the pages it opens in a **popover above it**. The stream is
-never dimmed as a whole: only a soft gradient sits behind the bar. Sizes are stage pixels (1920 × 1080); the
-numbers live in `StreamMenuLayout`, the drawing in `StreamMenuBar`, the wiring in `StreamMenu`. The prototype's
-`#quickmenu` / `#qmpop` show the same layout.
+A **bar at the bottom of the stream**, with the pages it opens in a **popover above the circle that opened it**, a
+caret on its bottom edge pointing at that circle. While the menu is open the player looks at the menu, not at the
+game, so it is generous: big circles, plenty of padding, the complete help text. The stream is never dimmed as a
+whole: only a soft gradient sits behind the bar. Sizes are stage pixels (1920 × 1080); the numbers and the pure
+geometry live in `StreamMenuLayout`, the bar in `StreamMenuBar`, the popover in `StreamMenuPopover`, the whole menu in
+one composable (`StreamMenuRoot`, so a window of its own can host it), the stream behind it in `StreamMenuHost`
+(`StreamMenu` implements it with the live `Game`, the debug preview with fake state). The prototype's `#quickmenu` /
+`#qmpop` show the same layout.
 
-- **Bar**: 1520 × 224, centered, 48 from the bottom edge (never closer than 48 to a side: TV overscan). Left cell:
-  the game's name (Unbounded 20, two lines at most) and the **A Select** / **B Resume** hints (30 px glyphs); then one
-  row of nine equal cells: Resume, Keyboard, Overlay, Brightness, Bitrate, Upscaler (Supersampling), More,
-  Disconnect, Quit game. Each is an 80 px glass circle with its label (17) under it; toggles (Overlay, Upscaler)
-  fill with the accent and say On / Off (Overlay: Compact) in 14.5. The circle whose popover is open keeps a 3 px
-  outline while the focus is inside the popover. Under the circles, behind a hairline, is **one help line**: the
-  focused item's name, then its help on a single line. It never grows the bar; a text that does not fit runs
-  through as a marquee, with reduced motion it stays still and ends in an ellipsis.
-- **Gradient**: transparent to 55 % black over the bottom 320 px (18 % at the middle), nothing above, no full-height
-  dimming. Glass here is the palette's background at 86 % with a hairline border and a soft shadow: the stream is a
-  separate window (a `SurfaceView`), so the shell's background blur cannot reach it.
-- **Popover**: a glass card at most 700 × 440, **aligned to the right end of the bar** (the picture's centre stays
-  clear) and 16 above it, never closer than 48 to the top. Header: a back chevron (focusable, B does the same) and
-  the page's title. Rows are the compact `SettingRow(dense = true)`: about 56 tall, label 21, icon 26, a 58 × 33
-  switch, a 180 px slider. Taller content (More: 12 rows) scrolls inside with faded edges; the Upscaler page, with
-  Supersampling quality and **Save for this game**, fits without scrolling.
+- **Bar**: 1700 × 341, centered, 48 from the bottom edge (never closer than 48 to a side: TV overscan), corner 40,
+  padding 40 (28 above). Left cell (250): the game's name (Unbounded 22, two lines at most) and the **A Select** /
+  **B Resume** hints (44 px glyphs, label 22). Then one row of nine equal cells (about 146): Resume, Keyboard,
+  Overlay, Brightness, Bitrate, Upscaler (Supersampling), More, Disconnect, Quit game. Each is a **108 px** glass
+  circle (50 px icon) with its label (22, SemiBold) 14 under it; toggles (Overlay, Upscaler) fill with the accent and
+  say On / Off (Overlay: Compact) in 18. A label wider than its cell ("Supersampling") reaches into the free space
+  beside it. The focused circle lifts (1.08) and its label brightens. Under the circles, behind a hairline, is the
+  **help area**: the focused circle's name in the left cell's width and its **complete help**, wrapped, 22 with
+  line height 1.4. It is a box of exactly two lines of the largest interface scale (130 %: 86 px), never grows and never
+  scrolls or runs as a marquee: `StreamMenuLayoutTest` checks every text the bar can show (all circles, every upscaler
+  status) against its 91 characters per line; a text that does not fit fails the test and is shortened in
+  `StreamMenuHelp`.
+- **Gradient**: transparent to 55 % black over the bottom 380 px (17 % at the middle), nothing above, no full-height
+  dimming. Glass is one function (`menuGlass`: the palette's background at 88 %, a hairline border with a light top
+  edge, a soft shadow): the stream is a separate window (a `SurfaceView`), so the shell's background blur cannot reach
+  it; a blurring window can replace that one function later.
+- **Popover**: a glass card **above its own circle**, centered on the circle's center and clamped into the bar's bounds
+  (and 48 from the screen edges), so near the ends it shifts inward. Width per page 780–860 (never below 700 unless the
+  bar is narrower), corner 32, padding 36, header 72 (back chevron in a 56 px circle, focusable, B does the same; title
+  Unbounded 24), rows `SettingRow(dense = true)` 68 tall with 14 between them (label 22, icon 30, a 62 × 36 switch,
+  a 210 px slider). A **caret** (28 × 14, rounded, the same path as the card so surface, border and shadow follow it)
+  sits on the bottom edge at the circle's center, kept at least 40 from the card's corners, its tip 12 above the bar.
+  The pages opened from More (Send keys, Commands, Mouse mode) are anchored over the More circle. The card is at most
+  as tall as fits above the bar with 48 from the top; only More (12 rows) and a long list of keys scroll inside, with
+  faded edges. The Upscaler page, with Supersampling quality and **Save for this game**, fits at every interface
+  scale (a test pins the sum). Rows show their help in a **footer inside the card** (hairline, a fixed box of three
+  lines of 20 at the largest scale, two on the Upscaler page), complete, also never scrolling.
 - **Navigation**: Left/Right move along the bar. A on a toggle or action circle acts at once; A on Brightness,
   Bitrate, Upscaler or More opens its popover and puts the focus on its first row (the focus cannot leave the
   popover with the D-pad). B in a popover closes it and returns the focus to its circle; Send keys, Commands and
   Mouse mode are opened from More, so B there goes back to that row of More first. B on the bar resumes the stream.
   The open and close buttons (L3 + R3 by default, the swipe up) and the external display's input routing are
-  unchanged. **Touch**: a tap on a circle is A; a tap outside the popover closes the popover only and never
-  resumes the stream (Resume and B do).
-- **Motion**: the bar slides up 60 px and fades in (350–400 ms, ease-out); a popover scales .96 → 1 and fades. With
-  reduced motion both only fade.
-- **Footprint** (measured on the design study, `build/streammenu-preview/final`): the bar alone covers 16.4 % of
-  the screen, with the largest popover 31–32 % (the old full-width layout 23–38 %, plus a scrim over 72–75 % of the
-  screen with 44–46 % mean darkening). The gradient darkens 25.6 % of the screen, 6.7 % on average. The middle
-  zone of the picture (60 × 60 %) is touched 8.6 % by the bar alone and 38–40 % with a popover.
+  unchanged. **Touch**: a tap on a circle is A (a tap on another circle while a popover is open moves the popover
+  there); a tap outside the popover closes the popover only and never resumes the stream (Resume and B do).
+- **Motion** (console feel; every duration 150–450 ms, only `graphicsLayer` transforms): the bar slides up 80 px and
+  fades in with a spring (damping .8, medium-low stiffness), its circles follow left to right 35 ms apart (scale .85 → 1
+  and fade); the exit is a quicker 200 ms in reverse. There is **one focus ring** that glides between the circles with
+  a spring (damping .72) with a soft accent glow, instead of popping up on each; while the focus is inside the popover it
+  rests on the circle that opened it. A press shrinks a circle to .95. The popover scales .90 → 1 from the caret's
+  point with a spring and fades in, its rows rise 12 px and fade in 25 ms apart; it scales back to the caret when it
+  closes; switching to another circle's popover slides the card and the caret to the new anchor while the pages
+  cross-fade. A new help text fades in. With reduced motion everything only fades.
+
+### Stream menu preview (debug builds)
+
+The real menu can be drawn without a stream, over a sunset "game scene", with made-up values (`FakeStreamMenuHost` in
+`src/debug`; `ShellActivity` hands the intent to `StreamMenuPreview`, which `src/release` replaces by a stub):
+
+```
+adb shell am start -n io.github.meitoncz.delos.debug/com.limelight.shell.ShellActivity --es preview_screen stream_menu \
+  --es preview_page <main|upscaler|bitrate|brightness|more|keys|commands|mouse> --ei preview_focus <circle 0..8> \
+  [--ei preview_row <row of the page to focus>] [--ez preview_animate true]
+```
+
+The menu starts already open at that page without its entrance; `--ez preview_animate true` plays the entrance, so a
+screenshot after about 1.2 s shows the settled result. No profile is needed. Resume or B close the menu; a tap on the
+scene opens it again.
 
 ## Native shell architecture and design constraints
 

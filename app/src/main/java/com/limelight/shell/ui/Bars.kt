@@ -335,11 +335,10 @@ fun HintBar(hints: List<Hint>, note: String?, modifier: Modifier = Modifier, not
     }
 }
 
-/** A button hint's glyph; [compact] is the smaller one (30 instead of 38 stage pixels) of the stream menu's bar. */
+/** A button hint's glyph, [size] stage pixels (the stream menu's bar uses a bigger one than the hint bars). */
 @Composable
-fun GlyphButton(glyph: Glyph, compact: Boolean = false) {
+fun GlyphButton(glyph: Glyph, size: Int = 38) {
     val colors = LocalDelosColors.current
-    val size = if (compact) 30 else 38
     val k = size / 38f
     Box(
         // Icons always sit in a circle; letters (L1…) may widen it into a pill
