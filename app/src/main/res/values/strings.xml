@@ -238,6 +238,10 @@
     <string name="summary_sgsr_quality">SGSR 1 filters the current frame. SGSR 2 Video estimates motion and reuses reliable detail from previous frames. All modes support HDR and live switching in the stream menu; GPU cost and results depend on the content.</string>
     <string name="title_sgsr_sharpness">Upscaler sharpness</string>
     <string name="summary_sgsr_sharpness">Strength of a separate final sharpening pass, from 0 to 100. Zero disables sharpening. It does not change SGSR reconstruction quality and can be adjusted live.</string>
+    <string name="title_sgsr_supersampling_level">Supersampling quality</string>
+    <string name="summary_sgsr_supersampling_level">Internal size when the stream already matches the display: 2560 x 1440 at 1x or 3840 x 2160 at 2x, from a 1080p stream. 2x needs more GPU time and memory and falls back to 1x if it does not fit. It can be changed live in the stream menu.</string>
+    <string name="sgsr_supersampling_level_1">1× (1440p)</string>
+    <string name="sgsr_supersampling_level_2">2× (2160p)</string>
     <string name="sgsr_quality_standard">SGSR 1 Standard</string>
     <string name="sgsr_quality_high">SGSR 1 High Quality</string>
     <string name="sgsr_quality_temporal">SGSR 2 Video</string>

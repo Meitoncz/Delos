@@ -406,4 +406,115 @@ class GameSettingsTest {
         assertTrue(config.sgsrTemporalQuality)
         assertFalse(config.sgsrHighQuality)
     }
+
+    private fun launched(pc: String = "pc-a", id: Int = 1, snapshot: Boolean = true): Game {
+        val intent = Intent(context, Game::class.java).putExtra(Game.EXTRA_PC_UUID, pc).putExtra(Game.EXTRA_APP_ID, id)
+        if (snapshot) GameSettingsStore.attach(intent, game(pc, id).snapshot())
+        return Robolectric.buildActivity(Game::class.java, intent).get()
+    }
+
+    private fun profileValues() = profiles.settings().all.filterKeys { !it.startsWith("ui_game_") }
+
+    @Test fun savingTheLiveUpscalerWritesOnlyItsFourOverridesForThatGame() {
+        profiles.settings().edit().putBoolean("checkbox_sgsr", false).putString("list_sgsr_quality", "high")
+            .putInt("seekbar_sgsr_sharpness", 40).putString("list_sgsr_supersampling_level", "1").commit()
+        game().preferences.edit().putString("list_resolution", "1280x720").putInt("seekbar_bitrate_kbps", 17000)
+            .putBoolean("checkbox_enable_hdr", true).commit()
+        game(id = 2).preferences.edit().putInt("seekbar_sgsr_sharpness", 10).commit()
+        game(pc = "pc-b").preferences.edit().putBoolean("checkbox_sgsr", true).commit()
+        val profileBefore = profileValues()
+        val otherBefore = game(id = 2).overrides()
+        val otherPcBefore = game(pc = "pc-b").overrides()
+        val gameBefore = game().overrides()
+
+        GameSettingsStore.forLaunch(launched())!!.save(upscalerSaveValues(true, 3, 75, 2))
+
+        val saved = game().overrides().filterKeys { it !in gameBefore.keys }
+        assertEquals(mapOf("checkbox_sgsr" to true, "list_sgsr_quality" to "temporal-quality",
+            "seekbar_sgsr_sharpness" to 75, "list_sgsr_supersampling_level" to "2"), saved)
+        // The game's other overrides, the profile, other games and other PCs are untouched
+        assertEquals(gameBefore, game().overrides().filterKeys { it in gameBefore.keys })
+        assertEquals(profileBefore, profileValues())
+        assertEquals(otherBefore, game(id = 2).overrides())
+        assertEquals(otherPcBefore, game(pc = "pc-b").overrides())
+    }
+
+    @Test fun aLaterLaunchUsesTheSavedUpscalerWhileOtherGamesKeepTheProfile() {
+        profiles.settings().edit().putBoolean("checkbox_sgsr", false).putString("list_sgsr_quality", "high")
+            .putInt("seekbar_sgsr_sharpness", 40).putString("list_sgsr_supersampling_level", "1").commit()
+        GameSettingsStore.forLaunch(launched())!!.save(upscalerSaveValues(true, 3, 75, 2))
+
+        val next = PreferenceConfiguration.readPreferences(launched())
+        assertTrue(next.sgsrEnabled)
+        assertTrue(next.sgsrTemporalQuality)
+        assertEquals(75, next.sgsrSharpness)
+        assertEquals(2, next.sgsrSupersamplingLevel)
+        val other = PreferenceConfiguration.readPreferences(launched(id = 2))
+        assertFalse(other.sgsrEnabled)
+        assertTrue(other.sgsrHighQuality)
+        assertEquals(40, other.sgsrSharpness)
+        assertEquals(1, other.sgsrSupersamplingLevel)
+
+        game().reset("list_sgsr_supersampling_level")
+        assertEquals(1, PreferenceConfiguration.readPreferences(launched()).sgsrSupersamplingLevel)
+        assertTrue(game().isCustom("checkbox_sgsr"))
+        game().resetAll()
+        assertTrue(game().overrides().isEmpty())
+        val reset = PreferenceConfiguration.readPreferences(launched())
+        assertFalse(reset.sgsrEnabled)
+        assertEquals(40, reset.sgsrSharpness)
+    }
+
+    @Test fun theSavedLevelIsAnOrdinaryPerGameSetting() {
+        val level = spec("list_sgsr_supersampling_level")
+        assertEquals(SettingsTab.DISPLAY, level.tab)
+        assertEquals("1", level.default)
+        assertEquals(listOf("1", "2"), level.choices.map { it.value })
+        assertEquals("checkbox_sgsr", level.dependency)
+        assertTrue("list_sgsr_supersampling_level" in GameSettingsStore.DISPLAY_KEYS)
+        assertTrue(UPSCALER_KEYS.all { it in GameSettingsStore.KEYS })
+        assertFalse(game().isCustom("list_sgsr_supersampling_level"))
+        game().preferences.edit().putString("list_sgsr_supersampling_level", "2").commit()
+        assertTrue(game().isCustom("list_sgsr_supersampling_level"))
+        assertEquals("1", game(id = 2).preferences.getString("list_sgsr_supersampling_level", "1"))
+    }
+
+    @Test fun anUnknownStoredSupersamplingLevelFallsBackToOne() {
+        assertEquals(1, PreferenceConfiguration.readPreferences(context).sgsrSupersamplingLevel)
+        listOf("3", "0", "-1", "", "two", "2.0").forEach {
+            profiles.settings().edit().putString("list_sgsr_supersampling_level", it).commit()
+            assertEquals("level $it", 1, PreferenceConfiguration.readPreferences(context).sgsrSupersamplingLevel)
+        }
+        profiles.settings().edit().putString("list_sgsr_supersampling_level", "2").commit()
+        assertEquals(2, PreferenceConfiguration.readPreferences(context).sgsrSupersamplingLevel)
+    }
+
+    @Test fun upscalerSaveValuesAreClampedToWhatALaterLaunchReadsBack() {
+        assertEquals(UPSCALER_KEYS.toSet(), upscalerSaveValues(false, 0, 50, 1).keys)
+        listOf(-5 to 0, 0 to 0, 5 to 5, 100 to 100, 105 to 100).forEach { (live, stored) ->
+            assertEquals(stored, upscalerSaveValues(true, 0, live, 1)["seekbar_sgsr_sharpness"])
+        }
+        listOf(-1 to "1", 0 to "1", 1 to "1", 2 to "2", 3 to "2").forEach { (live, stored) ->
+            assertEquals(stored, upscalerSaveValues(true, 0, 50, live)["list_sgsr_supersampling_level"])
+        }
+        listOf(-1 to "standard", 0 to "standard", 1 to "high", 2 to "temporal", 3 to "temporal-quality", 4 to "temporal-quality")
+            .forEach { (live, stored) -> assertEquals(stored, upscalerSaveValues(true, live, 50, 1)["list_sgsr_quality"]) }
+        assertEquals(false, upscalerSaveValues(false, 0, 50, 1)["checkbox_sgsr"])
+        assertEquals(true, upscalerSaveValues(true, 0, 50, 1)["checkbox_sgsr"])
+        // Every value is one the settings screen offers for that key
+        (0..3).forEach { mode ->
+            val values = upscalerSaveValues(true, mode, 50, 2)
+            assertTrue(spec("list_sgsr_quality").choices.any { it.value == values["list_sgsr_quality"] })
+            assertTrue(spec("list_sgsr_supersampling_level").choices.any { it.value == values["list_sgsr_supersampling_level"] })
+        }
+    }
+
+    @Test fun onlyAStreamLaunchedWithItsGameIdentityCanSaveForThatGame() {
+        assertNotNull(GameSettingsStore.forLaunch(launched()))
+        assertNull(GameSettingsStore.forLaunch(launched(snapshot = false)))
+        assertNull(GameSettingsStore.forLaunch(launched(id = 0)))
+        assertNull(GameSettingsStore.forLaunch(launched(pc = "")))
+        assertNull(GameSettingsStore.forLaunch(Robolectric.buildActivity(Game::class.java, Intent(context, Game::class.java)).get()))
+        assertThrows(IllegalArgumentException::class.java) { game().save(mapOf("ui_profile" to "other")) }
+    }
 }

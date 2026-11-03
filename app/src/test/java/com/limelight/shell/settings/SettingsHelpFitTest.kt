@@ -126,7 +126,7 @@ class SettingsHelpFitTest {
         }
         listOf(
             "Resume", "Keyboard", "Overlay", "Brightness", "Screen brightness", "Bitrate", "Apply bitrate", "Upscaler",
-            "Upscaling", "Supersampling", "Supersampling quality", "Mode", "Sharpness", "More", "Disconnect", "Quit game",
+            "Upscaling", "Supersampling", "Supersampling quality", "Mode", "Sharpness", "Save for this game", "More", "Disconnect", "Quit game",
             "Send keys", "Send clipboard", "Get clipboard", "Commands", "Task manager", "Zoom", "Mouse mode",
             "Local mouse cursor", "On-screen controls", "Full keyboard", "Key layout", "Touch sensitivity", "Rotate",
             "Keys: Ctrl + Alt + Delete", "Command: Restart the game",
@@ -134,6 +134,10 @@ class SettingsHelpFitTest {
         // Mode help adds the selected method and the upscaler pages add their status line
         listOf("standard", "high", "temporal", "temporal-quality").forEach {
             assertFits("stream menu Mode/$it", SettingsHelp.choice("list_sgsr_quality", it) + "\n\n" + StreamMenuHelp.description("Mode"))
+        }
+        // The page's status line (a long one: "Upscaled to: 1920 x 1080") precedes the help of the page and its on/off row
+        listOf("Upscaler", "Upscaling", "Supersampling").forEach {
+            assertFits("stream menu $it with status", "Upscaled to: 1920 x 1080\n\n" + StreamMenuHelp.description(it))
         }
         listOf("0", "1", "2", "3", "4", "5").forEach {
             assertFits("stream menu mouse mode $it", SettingsHelp.choice("mouse_mode_list", it) +

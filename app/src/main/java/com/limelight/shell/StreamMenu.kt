@@ -71,6 +71,8 @@ import com.limelight.Game
 import com.limelight.utils.ExternalDisplayControlActivity
 import com.limelight.shell.data.ProfileStore
 import com.limelight.shell.settings.AppearanceStore
+import com.limelight.shell.settings.GameSettingsStore
+import com.limelight.shell.settings.upscalerSaveValues
 import com.limelight.shell.settings.StreamMenuSettings
 import com.limelight.shell.settings.SettingsHelp
 import com.limelight.shell.settings.StreamMenuHelp
@@ -516,6 +518,19 @@ class StreamMenu(private val game: Game) {
                                             changes++
                                         }, enabled = available,
                                             onFocused = { helpKey = "Sharpness" })
+                                        // The one way a menu change outlives the session: the live values become this game's own settings.
+                                        // A stream started without its launch identity has no game to save for, so the row is not offered.
+                                        val saveTarget = remember { GameSettingsStore.forLaunch(game) }
+                                        if (saveTarget != null) {
+                                            var savedTick by remember { mutableIntStateOf(0) }
+                                            LaunchedEffect(savedTick) { if (savedTick > 0) { delay(2500); savedTick = 0 } }
+                                            SettingRow(if (savedTick > 0) Symbols.CHECK_CIRCLE else Symbols.REMEMBER, "Save for this game", RowValue.Action {
+                                                saveTarget.save(upscalerSaveValues(game.isUpscalingRequested, upscalerMode, prefs.sgsrSharpness, game.supersamplingLevel))
+                                                savedTick++
+                                            }, description = if (savedTick > 0) "Saved for $title" else "Applies to future launches of this game",
+                                                enabled = available,
+                                                onFocused = { helpKey = "Save for this game" })
+                                        }
                                     }
                                     Page.MOUSE -> Column(Modifier.width(1000.px), verticalArrangement = Arrangement.spacedBy(22.px)) {
                                         val modes = remember { com.limelight.shell.settings.SettingsCatalog(game).all.first { it.key == "mouse_mode_list" }.choices }

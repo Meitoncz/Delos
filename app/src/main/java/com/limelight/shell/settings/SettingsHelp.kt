@@ -96,6 +96,7 @@ object SettingsHelp {
         "checkbox_sgsr" to "Upscales a lower-resolution stream to the display size on this device. Costs GPU time. Menu changes last one session.",
         "list_sgsr_quality" to "Reconstruction method. All add GPU work.",
         "seekbar_sgsr_sharpness" to "Final sharpening pass, separate from the mode. 0 turns sharpening off; high values add artifacts. Menu changes last one session.",
+        "list_sgsr_supersampling_level" to "Internal size when the stream already matches the display. Menu changes last one session.",
         "list_audio_config" to "Channels the PC sends. Surround needs matching playback.",
         "checkbox_enable_audiofx" to "Lets Android's system equalizer and effects process stream audio. May add delay.",
         "checkbox_host_audio" to "Plays game audio on the PC as well as here. Turn off to keep the PC speakers quiet.",
@@ -203,6 +204,10 @@ object SettingsHelp {
             "high" to "A stronger spatial filter on the current frame.",
             "temporal" to "Reuses earlier frames; text and fast motion can break it.",
             "temporal-quality" to "Adds a reactive mask. Most GPU cost.",
+        ),
+        "list_sgsr_supersampling_level" to mapOf(
+            "1" to "Renders 1080p at 2560 × 1440.",
+            "2" to "Renders 1080p at 3840 × 2160. Costs more GPU time and memory.",
         ),
         "list_video_scale_mode" to mapOf(
             "fit" to "Whole picture; black bars if aspect ratios differ.",

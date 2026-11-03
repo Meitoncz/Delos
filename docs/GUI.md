@@ -285,6 +285,9 @@ in assets.
 - The Upscaler page of the stream menu changes a row with one press. Its supersampling quality, mode
   and sharpness rows show the value just requested, not the one the renderer applied on its last frame
   (a fallback from 2× to 1× corrects the row afterwards).
+- Its last row, **Save for this game**, saves the live on/off, mode, sharpness and supersampling quality
+  as this game's overrides for future launches, with a check and "Saved for <game>" on the row and no
+  confirmation dialog. It is hidden for a stream without its launch identity.
 
 ## Native shell architecture and design constraints
 

@@ -12,6 +12,14 @@
         <item>temporal</item>
         <item>temporal-quality</item>
     </string-array>
+    <string-array name="sgsr_supersampling_level_names">
+        <item>@string/sgsr_supersampling_level_1</item>
+        <item>@string/sgsr_supersampling_level_2</item>
+    </string-array>
+    <string-array name="sgsr_supersampling_level_values">
+        <item>1</item>
+        <item>2</item>
+    </string-array>
     <string-array name="resolution_names">
         <item>@string/resolution_360p</item>
         <item>@string/resolution_480p</item>

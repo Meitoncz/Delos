@@ -23,7 +23,7 @@ The old 116-setting count in the Phase 6.7 document was a historical count, not 
 | Stream-menu and statistics cleanup | `35f44700`, `c6219b88`, `a34f6927` | Stream actions moved into the Delos menu. Fullscreen is permanent; the ignored host optimization switch and old overlay zoom button were intentionally removed. |
 | PyroWave, HDR, brightness and 1% low FPS | `47a0509d`, `6a0cddd2`, `4158f666`, `e1c65ba8` | Codec selection, HDR, stream brightness and statistics are exposed. PyroWave has a separate decoder with different applicable controls. |
 | Per-game quality/display settings | `714f21a3` | Sparse overrides use the same setting keys and explanations as profile settings. Touch settings intentionally stay at profile level. |
-| Runtime bitrate, async decode, Nano Pacer and SGSR | `a7c8c22b`, `01476d51`, `999bde9a` | Saved defaults and live session controls are distinct. Supersampling quality is intentionally session-only, not an accidentally missing global setting. |
+| Runtime bitrate, async decode, Nano Pacer and SGSR | `a7c8c22b`, `01476d51`, `999bde9a` | Saved defaults and live session controls are distinct. Supersampling quality is a stored profile and per-game setting (Display); stream menu changes last one session unless Stream menu → Upscaler → Save for this game stores the live values for that game. |
 | External displays and Wi-Fi keep-alive naming | `7b6acf99`, `8e7923b5` | External output preserves configured stream resolution/FPS. Keep-alive already existed; it is not another unimplemented feature. |
 
 ## Findings and changes

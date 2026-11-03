@@ -409,7 +409,7 @@ class ShellSettingsTest {
         prefs.edit().clear().putString("video_format", "forceh265").putBoolean("checkbox_sgsr", true).commit()
         val stream = StreamSettingsStore(catalog) { prefs }
         val withoutGles31 = SettingsCapabilities(emptyList(), 1920, 60f, false, false, true, true, emptySet(), pyroWave = true, sgsr = false)
-        listOf("checkbox_sgsr", "list_sgsr_quality", "seekbar_sgsr_sharpness").forEach {
+        UPSCALER_KEYS.forEach {
             assertFalse("$it needs OpenGL ES 3.1 for MediaCodec codecs", stream.enabled(spec(it), withoutGles31))
             assertTrue(stream.enabled(spec(it), withoutGles31.copy(sgsr = true)))
         }

@@ -88,7 +88,7 @@ data class SettingsCapabilities(
             val sgsr = SgsrRenderer.isSupported(activity)
             val hidden = mutableSetOf<String>()
             if (!sgsr && !pyroWave) {
-                hidden += setOf("checkbox_sgsr", "list_sgsr_quality", "seekbar_sgsr_sharpness")
+                hidden += UPSCALER_KEYS
             }
             if (pm.hasSystemFeature("com.nvidia.feature.shield")) hidden += "checkbox_absolute_mouse_mode"
             if (Build.VERSION.SDK_INT < 31) hidden += "checkbox_gamepad_motion_sensors"

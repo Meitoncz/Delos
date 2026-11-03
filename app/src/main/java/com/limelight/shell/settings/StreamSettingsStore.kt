@@ -31,7 +31,7 @@ class StreamSettingsStore(val catalog: SettingsCatalog, private val settings: ()
         // PyroWave has its own Vulkan decoder; MediaCodec-only options do not apply.
         if (spec.key in setOf("checkbox_async_decode", "checkbox_ultra_low_latency", "pref_low_latency_frame_balance") &&
             state.value["video_format"] == "pyrowave") return false
-        if (spec.key in SGSR_KEYS && caps?.sgsr == false && state.value["video_format"] != "pyrowave") return false
+        if (spec.key in UPSCALER_KEYS && caps?.sgsr == false && state.value["video_format"] != "pyrowave") return false
         if (spec.key == "pref_low_latency_frame_balance" && state.value["frame_pacing"] == "fast-vsync") return false
         fun dependencyEnabled(key: String?, seen: Set<String>): Boolean {
             if (key == null) return true
@@ -114,11 +114,6 @@ class StreamSettingsStore(val catalog: SettingsCatalog, private val settings: ()
     }
 
     fun close() { observed?.unregisterOnSharedPreferenceChangeListener(listener) }
-
-    private companion object {
-        // The upscaler needs OpenGL ES 3.1 (MediaCodec codecs) or PyroWave's own Vulkan decoder
-        val SGSR_KEYS = setOf("checkbox_sgsr", "list_sgsr_quality", "seekbar_sgsr_sharpness")
-    }
 }
 
 internal const val CODEC_BITRATE_PREFIX = "ui_codec_bitrate_"
