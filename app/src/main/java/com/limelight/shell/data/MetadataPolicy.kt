@@ -47,6 +47,7 @@ internal fun GameMetadata.validated(): GameMetadata? {
         rawCandidate.copy(
             steamAppIds = nullable(rawCandidate.steamAppIds)?.mapNotNull { nullable(it) }.orEmpty(),
             genres = nullable(rawCandidate.genres)?.filter { nullable(it) != null && nullable(it.name) != null }.orEmpty(),
+            themes = nullable(rawCandidate.themes)?.filter { nullable(it) != null && nullable(it.name) != null }.orEmpty(),
             platformIds = nullable(rawCandidate.platformIds)?.mapNotNull { nullable(it) }.orEmpty(),
         )
     }

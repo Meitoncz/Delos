@@ -10,6 +10,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
 import org.junit.Test
+import java.io.IOException
+
+private const val BASE = "https://meta.test"
 
 class PcGamingWikiClientTest {
     @Test fun actualVideoFieldsDistinguishNativeHdrFromUnrelatedModifications() {
@@ -140,10 +143,10 @@ class PcGamingWikiClientTest {
     @Test fun apiFailureIsNotAbsenceAndNeverPropagatesProviderEchoes() {
         val http = OkHttpClient.Builder().addInterceptor { chain ->
             Response.Builder().request(chain.request()).protocol(Protocol.HTTP_1_1).code(200)
-                .message("fixture").body("""{"error":{"info":"test-password must never escape"}}""".toResponseBody()).build()
+                .message("fixture").body("""{"error":{"info":"test-echo must never escape"}}""".toResponseBody()).build()
         }.build()
         try {
-            PcGamingWikiClient(http, "test-user", "test-password", RequestPacer(0)).lookup(listOf(1245620), "Elden Ring")
+            PcGamingWikiClient(http, BASE, RequestPacer(0)).lookup(listOf(1245620), "Elden Ring")
             throw AssertionError("API failure was swallowed")
         } catch (error: PcGamingWikiException) {
             assertEquals("PCGamingWiki API request rejected", error.message)
@@ -151,15 +154,17 @@ class PcGamingWikiClientTest {
         }
     }
 
-    @Test fun steamLookupUsesExactCargoJoinAndCachesGenuineAbsence() {
+    @Test fun steamLookupSendsOnlyTheIdsToTheProxyAndCachesGenuineAbsence() {
         val wiki = Wiki()
         assertEquals(HdrEvidence(NativeHdr.UNKNOWN), wiki.client.lookup(listOf(1245620), "Elden Ring"))
         assertEquals(HdrEvidence(NativeHdr.UNKNOWN), wiki.client.lookup(listOf(1245620), "Different title"))
-        assertEquals(6, wiki.requests.size)
-        val cargo = wiki.requests.first { it.url.queryParameter("action") == "cargoquery" }
-        assertEquals("Game,Video", cargo.url.queryParameter("tables"))
-        assertEquals("Game._pageID=Video._pageID", cargo.url.queryParameter("join_on"))
-        assertEquals("Game.Steam_AppID HOLDS \"1245620\"", cargo.url.queryParameter("where"))
+        // Steam cargo, then the title steps (page cargo, redirect, search); the second lookup is cached.
+        assertEquals(4, wiki.requests.size)
+        val cargo = wiki.requests.first()
+        assertEquals("GET", cargo.method)
+        assertEquals("https://meta.test/v1/pcgw/cargo?steam=1245620", cargo.url.toString())
+        assertNull(cargo.header("Cookie"))
+        assertNull(cargo.body)
     }
 
     @Test fun aPageOfTheExactTitleWithoutSteamIdIsUsedWhenNoPageListsTheSteamId() {
@@ -168,14 +173,13 @@ class PcGamingWikiClientTest {
         val wiki = Wiki(titleRows = mapOf("Euro Truck Simulator 2" to ""),
             pages = mapOf("Euro Truck Simulator 2" to "{{Video\n|hdr = true\n|hdr notes = $notes\n|ray tracing = false\n}}"))
         assertEquals(HdrEvidence(NativeHdr.HDR, "Euro Truck Simulator 2", notes), wiki.client.lookup(listOf(227300), "Euro Truck Simulator 2"))
-        val wheres = wiki.requests.filter { it.url.queryParameter("action") == "cargoquery" }.map { it.url.queryParameter("where") }
-        assertEquals(listOf("Game.Steam_AppID HOLDS \"227300\"", "Game._pageName = \"Euro Truck Simulator 2\""), wheres)
+        assertEquals(listOf("steam=227300", "page=Euro Truck Simulator 2"), wiki.cargoSelectors())
     }
 
     @Test fun aPageOfTheSameTitleThatNamesAnotherSteamAppIsADifferentGame() {
         val wiki = Wiki(titleRows = mapOf("Prey" to "3830"), pages = mapOf("Prey" to "{{Video|hdr=false}}"))
         assertEquals(HdrEvidence(NativeHdr.UNKNOWN), wiki.client.lookup(listOf(480490), "Prey"))
-        assertEquals(0, wiki.requests.count { it.url.queryParameter("action") == "parse" })
+        assertEquals(0, wiki.count("page"))
     }
 
     @Test fun aGameWithoutSteamIdFindsItsPageThroughTheWikisRedirectOfThatName() {
@@ -183,8 +187,7 @@ class PcGamingWikiClientTest {
         val wiki = Wiki(redirects = mapOf("Sea of Stars: Sunset Edition" to "Sea of Stars"),
             titleRows = mapOf("Sea of Stars" to "1244090,2385060, 3457510"), pages = mapOf("Sea of Stars" to "{{Video|hdr=false}}"))
         assertEquals(HdrEvidence(NativeHdr.SDR, "Sea of Stars"), wiki.client.lookup(emptyList(), "Sea of Stars: Sunset Edition"))
-        val wheres = wiki.requests.filter { it.url.queryParameter("action") == "cargoquery" }.map { it.url.queryParameter("where") }
-        assertEquals(listOf("Game._pageName = \"Sea of Stars: Sunset Edition\"", "Game._pageName = \"Sea of Stars\""), wheres)
+        assertEquals(listOf("page=Sea of Stars: Sunset Edition", "page=Sea of Stars"), wiki.cargoSelectors())
         assertEquals(HdrEvidence(NativeHdr.UNKNOWN), Wiki().client.lookup(emptyList(), "Kopi"))
     }
 
@@ -206,8 +209,24 @@ class PcGamingWikiClientTest {
     @Test fun everySteamIdOfTheGameIsQueriedSoOneAmbiguousIdDoesNotForceATitleLookup() {
         val wiki = Wiki(rows = listOf("Game"), pages = mapOf("Game" to "{{Video|hdr=true}}"))
         wiki.client.lookup(listOf(20L, 10L, 10L), "Game")
-        val cargo = wiki.requests.single { it.url.queryParameter("action") == "cargoquery" }
-        assertEquals("Game.Steam_AppID HOLDS \"10\" OR Game.Steam_AppID HOLDS \"20\"", cargo.url.queryParameter("where"))
+        assertEquals(listOf("steam=10,20"), wiki.cargoSelectors())
+    }
+
+    @Test fun steamIdListsAreCappedAndOutOfRangeIdsAreDropped() {
+        val wiki = Wiki()
+        wiki.client.lookup((1L..25L).toList() + 5_000_000_000L, "")
+        assertEquals(listOf("steam=" + (1..20).joinToString(",")), wiki.cargoSelectors())
+    }
+
+    @Test fun titlesNoWikiPageCanCarryNeverReachTheProxy() {
+        val wiki = Wiki()
+        for (title in listOf("Game [Remastered]", "Game #1", "A|B", "{{x}}", "a".repeat(201))) {
+            assertEquals(HdrEvidence(NativeHdr.UNKNOWN), wiki.client.lookup(emptyList(), title))
+        }
+        assertEquals(0, wiki.requests.size)
+        // Control characters are only whitespace to the wiki and are cleaned instead of rejected.
+        wiki.client.lookup(emptyList(), "Two\nLines")
+        assertEquals(listOf("page=Two Lines"), wiki.cargoSelectors())
     }
 
     @Test fun editionPagesCountOnlyWhenTheyAgreeOnADefiniteAnswer() {
@@ -227,66 +246,103 @@ class PcGamingWikiClientTest {
         val names = (1..8).map { "Game $it" }
         val wiki = Wiki(rows = names, pages = names.associateWith { "{{Video|hdr=true}}" })
         assertEquals(HdrEvidence(NativeHdr.UNKNOWN), wiki.client.lookup(listOf(1), "Game"))
-        assertEquals(0, wiki.requests.count { it.url.queryParameter("action") == "parse" })
+        assertEquals(0, wiki.count("page"))
     }
 
-    @Test fun refusedCredentialsAreLatchedButThrottlingIsRetried() {
-        val refused = Wiki(loginResult = "Failed")
-        assertThrows(PcGamingWikiException::class.java) { refused.client.lookup(listOf(1), "Game") }
-        val afterFirst = refused.requests.size
-        assertThrows(PcGamingWikiException::class.java) { refused.client.lookup(listOf(2), "Other") }
-        assertEquals(afterFirst, refused.requests.size)
-
-        val throttled = Wiki(loginResult = "Throttled")
-        assertThrows(PcGamingWikiException::class.java) { throttled.client.lookup(listOf(1), "Game") }
-        val throttledAfterFirst = throttled.requests.size
-        assertThrows(PcGamingWikiException::class.java) { throttled.client.lookup(listOf(2), "Other") }
-        assertEquals(throttledAfterFirst * 2, throttled.requests.size)
+    @Test fun proxyFailuresAreProviderFailuresAreNeverCachedAndNeverEchoTheBody() {
+        for (code in listOf(429, 503, 502, 500)) {
+            val wiki = Wiki(status = code)
+            repeat(2) {
+                val error = assertThrows(PcGamingWikiException::class.java) { wiki.client.lookup(listOf(1), "Game") }
+                assertEquals("PCGamingWiki HTTP $code", error.message)
+                assertNull(error.cause)
+            }
+            // Each lookup reached the proxy again: a failure is neither remembered as absence nor latched.
+            assertEquals(2, wiki.requests.size)
+        }
     }
 
-    /** A fake wiki behind an interceptor; nothing here touches the network or sleeps. */
+    @Test fun malformedJsonAndNetworkErrorsAreProviderFailures() {
+        for (body in listOf("", "not json", "[]", """{"cargoquery":"x"}""")) {
+            val http = OkHttpClient.Builder().addInterceptor { chain ->
+                Response.Builder().request(chain.request()).protocol(Protocol.HTTP_1_1).code(200).message("fixture").body(body.toResponseBody()).build()
+            }.build()
+            assertThrows(PcGamingWikiException::class.java) { PcGamingWikiClient(http, BASE, RequestPacer(0)).lookup(listOf(1), "Game") }
+        }
+        val offline = OkHttpClient.Builder().addInterceptor { throw IOException("offline") }.build()
+        assertThrows(IOException::class.java) { PcGamingWikiClient(offline, BASE, RequestPacer(0)).lookup(listOf(1), "Game") }
+    }
+
+    @Test fun redirectsAreNotFollowedAndAMissingServiceUrlSendsNothing() {
+        var calls = 0
+        val http = OkHttpClient.Builder().addInterceptor { chain ->
+            calls++
+            Response.Builder().request(chain.request()).protocol(Protocol.HTTP_1_1).code(307).message("fixture")
+                .header("Location", "https://evil.test/").body("".toResponseBody()).build()
+        }.build()
+        val error = assertThrows(PcGamingWikiException::class.java) { PcGamingWikiClient(http, BASE, RequestPacer(0)).lookup(listOf(1), "Game") }
+        assertEquals("PCGamingWiki HTTP 307", error.message)
+        assertEquals(1, calls)
+        for (base in listOf("", "http://meta.test")) {
+            val missing = assertThrows(PcGamingWikiException::class.java) { PcGamingWikiClient(http, base, RequestPacer(0)).lookup(listOf(1), "Game") }
+            assertEquals("PCGamingWiki metadata service is not configured", missing.message)
+        }
+        assertEquals(1, calls)
+    }
+
+    /** A fake proxy behind an interceptor, answering what the Worker's PCGW endpoints answer; nothing touches the network or sleeps. */
     private class Wiki(
         private val rows: List<String> = emptyList(),
         private val pages: Map<String, String> = emptyMap(),
-        private val loginResult: String = "Success",
         /** Page title to its Cargo Steam_AppID text, answered only to exact page-name queries. */
         private val titleRows: Map<String, String> = emptyMap(),
         /** Redirect page name to its target, answered to redirect-resolving title queries. */
         private val redirects: Map<String, String> = emptyMap(),
         /** Page-name search query to the titles the wiki search lists. */
         private val searchHits: Map<String, List<String>> = emptyMap(),
+        private val status: Int = 200,
     ) {
         val requests = mutableListOf<Request>()
         private val gson = Gson()
+
+        fun count(endpoint: String) = requests.count { it.url.encodedPath == "/v1/pcgw/$endpoint" }
+
+        /** The Cargo requests as `steam=<ids>` or `page=<title>`. */
+        fun cargoSelectors() = requests.filter { it.url.encodedPath == "/v1/pcgw/cargo" }.map {
+            val name = it.url.queryParameterName(0)
+            "$name=${it.url.queryParameterValue(0)}"
+        }
+
         val client = PcGamingWikiClient(OkHttpClient.Builder().addInterceptor { chain ->
             val request = chain.request()
             requests.add(request)
-            val body = when (request.url.queryParameter("action")) {
-                "query" -> if (request.url.queryParameter("list") == "search") {
-                    val hits = searchHits[request.url.queryParameter("srsearch")].orEmpty()
+            assertEquals("GET", request.method)
+            assertEquals(1, request.url.querySize)
+            val body = when (request.url.encodedPath) {
+                "/v1/pcgw/search" -> {
+                    val hits = searchHits[request.url.queryParameter("q")].orEmpty()
                     "{\"query\":{\"search\":[" + hits.joinToString(",") { "{\"title\":${gson.toJson(it)}}" } + "]}}"
-                } else request.url.queryParameter("titles")?.let { name ->
+                }
+                "/v1/pcgw/redirect" -> {
+                    val name = request.url.queryParameter("title")!!
                     val target = redirects[name]
                     if (target == null) "{\"query\":{\"pages\":{}}}"
                     else "{\"query\":{\"redirects\":[{\"from\":${gson.toJson(name)},\"to\":${gson.toJson(target)}}]}}"
-                } ?: "{\"query\":{\"tokens\":{\"logintoken\":\"test-login-token\"}}}"
-                "cargoquery" -> {
-                    val where = request.url.queryParameter("where")!!
-                    val found = if (where.startsWith("Game._pageName")) {
-                        titleRows.filter { where == "Game._pageName = \"${it.key}\"" }.map { it.key to it.value }
+                }
+                "/v1/pcgw/cargo" -> {
+                    val page = request.url.queryParameter("page")
+                    val found = if (page != null) {
+                        titleRows.filter { it.key == page }.map { it.key to it.value }
                     } else rows.map { it to "" }
-                    "{\"cargoquery\":[" + found.joinToString(",") { (page, steam) ->
-                        "{\"title\":{\"Page\":" + gson.toJson(page) + ",\"Steam\":" + gson.toJson(steam) + "}}"
+                    "{\"cargoquery\":[" + found.joinToString(",") { (name, steam) ->
+                        "{\"title\":{\"Page\":" + gson.toJson(name) + ",\"Steam\":" + gson.toJson(steam) + "}}"
                     } + "]}"
                 }
-                "parse" -> "{\"parse\":{\"wikitext\":{\"*\":" + gson.toJson(pages.getValue(request.url.queryParameter("page")!!)) + "}}}"
-                else -> {
-                    assertEquals("POST", request.method)
-                    "{\"login\":{\"result\":\"$loginResult\"}}"
-                }
+                "/v1/pcgw/page" -> "{\"parse\":{\"wikitext\":{\"*\":" + gson.toJson(pages.getValue(request.url.queryParameter("title")!!)) + "}}}"
+                else -> throw AssertionError("unexpected path ${request.url.encodedPath}")
             }
-            Response.Builder().request(request).protocol(Protocol.HTTP_1_1).code(200)
-                .message("fixture").body(body.toResponseBody()).build()
-        }.build(), "test-user", "test-password", RequestPacer(0))
+            Response.Builder().request(request).protocol(Protocol.HTTP_1_1).code(status)
+                .message("fixture").body((if (status == 200) body else "{\"error\":\"test-echo\"}").toResponseBody()).build()
+        }.build(), BASE, RequestPacer(0))
     }
 }

@@ -146,10 +146,13 @@ Artwork takes priority while both stores are busy, so there is only one pill. Bo
 existing artwork animation/reduced-motion behavior, retaining the last count and label during exit.
 
 Provider calls run off the UI thread, are paced, and are interrupted when their coroutine is
-cancelled. IGDB authenticates through Twitch client credentials; PCGamingWiki uses bot-password
-login and Cargo plus Video-template notes. Neither credentialed client follows redirects, so a
-307/308 can never replay a secret-carrying POST elsewhere. A refused PCGamingWiki login is latched
-for the process instead of being retried per game. PCGamingWiki notes are reduced to reader text
+cancelled. IGDB and PCGamingWiki are reached through the Delos metadata Worker (`tools/metadata-worker`),
+which holds their credentials, authenticates (Twitch app token, PCGamingWiki bot session), builds the
+upstream queries itself from validated parameters and returns the providers' raw JSON; the app keeps all
+matching, parsing, caching and backoff. The app clients never follow redirects, and an HTTP 429/503 from
+the Worker (its rate limit or an upstream throttle), any other non-2xx answer, malformed JSON or a network
+error is a provider failure that uses the per-provider backoff, never an empty or absent result.
+PCGamingWiki notes are reduced to reader text
 (references, templates' named arguments, URLs and link markup removed) before the native-HDR
 heuristics run. The wiki's own HDR value decides: `false` and `hackable` are SDR. Notes never promote
 `hackable`, even when they describe native HDR output via Engine.ini. `unknown` and a missing value
@@ -178,14 +181,16 @@ rules are looked up again instead of being trusted for a week.
 Unavailable/changed provider responses are reported rather than replaced with another provider's
 metric. Cancelled work stops before further provider requests or publishing a resolved result.
 
-Developer builds read `DELOS_IGDB_CLIENT_ID`, `DELOS_IGDB_CLIENT_SECRET`,
-`DELOS_PCGW_BOT_USERNAME`, and `DELOS_PCGW_BOT_PASSWORD` from environment variables (an empty or blank
-variable is ignored) or ignored `local.properties`. The values are plain `BuildConfig` string constants:
-`-dontobfuscate` is set and R8 does not encrypt strings, so anyone holding such an APK can read them with
-`strings` or apktool. The user explicitly accepted this direct-in-APK exposure; there is no backend or
-end-user key entry. Mitigate by using a minimally privileged PCGamingWiki bot password, rotating both
-credentials on any distribution, and never attaching a credentialed APK to a public artifact (CI builds
-carry no credentials, so the feature is inert there). Never commit credentials or log tokens/passwords.
+Game metadata needs the Worker's base URL, a non-secret `DELOS_METADATA_URL` `BuildConfig` string read
+from the environment variable of that name (an empty or blank variable is ignored) or the ignored
+`local.properties`; it defaults to empty, and then the app reports "Game metadata is not available in
+this build" without contacting any provider (CI builds carry no URL, so the feature is inert there).
+The IGDB client secret and the PCGamingWiki bot password are Worker secrets and never ship in the APK
+(deploy and secret handling: [tools/metadata-worker/README.md](../tools/metadata-worker/README.md)).
+Privacy: the Worker sees the game names the app looks up and the client IP address (Cloudflare's
+request metadata); it logs no query text, only a short hash on failures. HowLongToBeat has no
+credentials and is still queried directly from the device, so it sees the device's IP and game names.
+Never commit credentials or log tokens/passwords.
 Provider attribution is visible in Settings → About, and the adapted HLTB client's MIT notice is bundled
 in assets.
 

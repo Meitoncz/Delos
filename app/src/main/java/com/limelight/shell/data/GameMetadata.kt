@@ -21,6 +21,8 @@ data class MetadataCandidate(
     val platformIds: List<Int> = emptyList(),
     /** IGDB's count of user and critic ratings; the only popularity signal used to break an otherwise exact tie. */
     val ratingCount: Int = 0,
+    /** IGDB themes (Fantasy, Horror, ...), same shape as [genres]; empty when IGDB lists none. */
+    val themes: List<GameGenre> = emptyList(),
 ) {
     val isPc: Boolean get() = IGDB_PC_PLATFORM in platformIds
 }

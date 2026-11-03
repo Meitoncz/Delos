@@ -36,6 +36,12 @@ Backslashes and colons in paths must be escaped. Do not set `ndk.dir` (deprecate
 sdk.dir=C\:\\Users\\<user>\\AppData\\Local\\Android\\Sdk
 ```
 
+Game metadata (IGDB/PCGamingWiki) goes through the Delos metadata Worker. Its base URL is not a secret; set it in `local.properties` (or the `DELOS_METADATA_URL` environment variable, which wins when not blank). Without it the build still works and reports game metadata as unavailable. Deploy the Worker and its secrets with [tools/metadata-worker/README.md](../tools/metadata-worker/README.md).
+
+```properties
+DELOS_METADATA_URL=https://delos-meta.<account>.workers.dev
+```
+
 ## 4. Build
 
 ```powershell

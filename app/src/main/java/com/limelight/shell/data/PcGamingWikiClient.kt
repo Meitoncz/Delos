@@ -2,11 +2,6 @@ package com.limelight.shell.data
 
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import okhttp3.Cookie
-import okhttp3.CookieJar
-import okhttp3.FormBody
-import okhttp3.HttpUrl
-import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.IOException
@@ -16,34 +11,30 @@ import java.util.concurrent.TimeUnit
 class PcGamingWikiException(message: String) : IOException(message)
 
 /**
- * Bot-password login and read-only Cargo/page requests; all calls are blocking. Redirects are never followed:
- * the login POST carries the bot password in its body, which a 307/308 would replay elsewhere.
+ * Read-only PCGamingWiki Cargo/page lookups through the Delos metadata Worker, which holds the wiki bot login,
+ * keeps the session and builds the Cargo/parse/redirect queries itself (`GET <base>/v1/pcgw/...`, answering the
+ * wiki's raw JSON). All calls are blocking. Redirects are never followed; any non-2xx answer (including the Worker's
+ * 429 rate limit and 503 backoff) or network error is a provider failure, never an absent page.
  */
 class PcGamingWikiClient internal constructor(
     http: OkHttpClient,
-    private val username: String,
-    private val password: String,
+    private val baseUrl: String,
     private val pacer: RequestPacer,
 ) {
-    constructor(http: OkHttpClient, username: String, password: String) :
-        this(http, username, password, RequestPacer(1050))
+    constructor(http: OkHttpClient, baseUrl: String) : this(http, baseUrl, RequestPacer(1050))
 
-    private val http = http.newBuilder().cookieJar(SessionCookies()).followRedirects(false).followSslRedirects(false).build()
-    private var loggedIn = false
-    // Latched when the wiki definitively refuses the bot account, so a wrong or rotated password is not retried per game.
-    private var credentialsRejected = false
+    private val http = http.newBuilder().followRedirects(false).followSslRedirects(false).build()
     private data class Cached(val time: Long, val evidence: HdrEvidence)
     private val cache = LinkedHashMap<String, Cached>()
 
     /** [steamAppIds] are every Steam app IGDB lists for the game; any of them may identify the wiki page. */
     @Synchronized fun lookup(steamAppIds: List<Long>, title: String): HdrEvidence {
         require(steamAppIds.all { it > 0 }) { "Steam AppID must be positive" }
-        val ids = steamAppIds.distinct().sorted()
+        val ids = steamAppIds.filter { it <= MetadataProxy.MAX_STEAM_APP_ID }.distinct().sorted().take(MetadataProxy.MAX_STEAM_IDS)
         if (ids.isEmpty() && title.isBlank()) return HdrEvidence(NativeHdr.UNKNOWN)
         val key = if (ids.isNotEmpty()) "steam:${ids.joinToString(",")}" else "title:${title.trim()}"
         cache[key]?.takeIf { System.nanoTime() - it.time < CACHE_NANOS }?.let { return it.evidence }
-        login()
-        var pages = if (ids.isNotEmpty()) wikiPages(ids.joinToString(" OR ") { "Game.Steam_AppID HOLDS \"$it\"" }, withoutSteamId = false)
+        var pages = if (ids.isNotEmpty()) wikiPages("steam" to ids.joinToString(","), withoutSteamId = false)
             else pagesByTitle(title, withoutSteamId = false)
         // Some wiki pages carry no Steam AppID in Cargo (Euro Truck Simulator 2 does not, although its wikitext lists
         // one). A page of exactly the game's title that names no Steam app at all is still this game; one that names
@@ -51,7 +42,7 @@ class PcGamingWikiClient internal constructor(
         if (pages.isEmpty() && ids.isNotEmpty() && title.isNotBlank()) pages = pagesByTitle(title, withoutSteamId = true)
         val evidence = if (pages.isEmpty() || pages.size > MAX_PAGES) HdrEvidence(NativeHdr.UNKNOWN) else {
             val results = pages.map { page ->
-                val parsed = api(mapOf("action" to "parse", "page" to page, "prop" to "wikitext", "assert" to "user"))
+                val parsed = api("v1/pcgw/page", "title" to page)
                 val source = try {
                     parsed.getAsJsonObject("parse").getAsJsonObject("wikitext").get("*").asString
                 } catch (_: RuntimeException) {
@@ -74,13 +65,15 @@ class PcGamingWikiClient internal constructor(
      * The wiki page named [title], a page a redirect of that name points to ("Sea of Stars: Sunset Edition"
      * redirects to "Sea of Stars"), or a page whose title differs only in case and punctuation ("The Witcher 3:
      * Wild Hunt: Remastered" for "The Witcher 3: Wild Hunt Remastered"); the wiki editors decide what is the same page.
+     * A title no wiki page can carry (MediaWiki forbids `# < > [ ] { | }`) or that exceeds the wiki's length matches nothing.
      */
     private fun pagesByTitle(title: String, withoutSteamId: Boolean): List<String> {
-        val name = title.trim().replace('_', ' ')
+        val name = MetadataProxy.title(title.trim().replace('_', ' ')) ?: return emptyList()
         fun resolve(page: String): List<String> {
-            wikiPages("Game._pageName = \"${cargoLiteral(page)}\"", withoutSteamId).let { if (it.isNotEmpty()) return it }
-            val target = redirectTarget(page) ?: return emptyList()
-            return wikiPages("Game._pageName = \"${cargoLiteral(target)}\"", withoutSteamId)
+            if (MetadataProxy.title(page) == null) return emptyList()
+            wikiPages("page" to page, withoutSteamId).let { if (it.isNotEmpty()) return it }
+            val target = redirectTarget(page)?.takeIf { MetadataProxy.title(it) != null } ?: return emptyList()
+            return wikiPages("page" to target, withoutSteamId)
         }
         resolve(name).let { if (it.isNotEmpty()) return it }
         val key = literalKey(name)
@@ -91,7 +84,7 @@ class PcGamingWikiClient internal constructor(
     }
 
     private fun redirectTarget(name: String): String? {
-        val data = api(mapOf("action" to "query", "titles" to name, "redirects" to "1", "assert" to "user"))
+        val data = api("v1/pcgw/redirect", "title" to name)
         return try {
             data.getAsJsonObject("query")?.getAsJsonArray("redirects")?.lastOrNull()?.asJsonObject?.get("to")?.asString
         } catch (_: RuntimeException) {
@@ -100,7 +93,7 @@ class PcGamingWikiClient internal constructor(
     }
 
     private fun searchTitles(name: String): List<String> {
-        val data = api(mapOf("action" to "query", "list" to "search", "srsearch" to name, "srnamespace" to "0", "srlimit" to "5", "assert" to "user"))
+        val data = api("v1/pcgw/search", "q" to name)
         return try {
             data.getAsJsonObject("query")?.getAsJsonArray("search")?.map { it.asJsonObject.get("title").asString }.orEmpty()
         } catch (_: RuntimeException) {
@@ -108,14 +101,9 @@ class PcGamingWikiClient internal constructor(
         }
     }
 
-    /** Names of the wiki pages (with a Video template) matching [where]; optionally only those without a Steam AppID. */
-    private fun wikiPages(where: String, withoutSteamId: Boolean): List<String> {
-        val data = api(mapOf(
-            "action" to "cargoquery", "tables" to "Game,Video",
-            "fields" to "Game._pageName=Page,Game.Steam_AppID=Steam",
-            "join_on" to "Game._pageID=Video._pageID", "where" to where, "limit" to "10",
-            "assert" to "user",
-        ))
+    /** Names of the wiki pages (with a Video template) for [selector] (`steam` ids or a `page` name); optionally only those without a Steam AppID. */
+    private fun wikiPages(selector: Pair<String, String>, withoutSteamId: Boolean): List<String> {
+        val data = api("v1/pcgw/cargo", selector)
         val rows = try {
             data.getAsJsonArray("cargoquery") ?: throw IllegalArgumentException()
         } catch (_: RuntimeException) {
@@ -131,42 +119,12 @@ class PcGamingWikiClient internal constructor(
         }
     }
 
-    private fun login() {
-        if (loggedIn) return
-        if (username.isBlank() || password.isBlank()) throw PcGamingWikiException("PCGamingWiki credentials missing")
-        if (credentialsRejected) throw PcGamingWikiException("PCGamingWiki credentials were rejected")
-        val tokens = api(mapOf("action" to "query", "meta" to "tokens", "type" to "login"))
-        val token = try {
-            tokens.getAsJsonObject("query").getAsJsonObject("tokens").get("logintoken").asString
-        } catch (_: RuntimeException) {
-            throw PcGamingWikiException("PCGamingWiki returned invalid login data")
-        }
-        val result = api(mapOf("action" to "login", "lgname" to username, "lgpassword" to password, "lgtoken" to token), post = true)
-        val outcome = try {
-            result.getAsJsonObject("login")?.get("result")?.asString
-        } catch (_: RuntimeException) {
-            null
-        }
-        if (outcome != "Success") {
-            // Only a definite refusal is latched; throttling or an unreadable answer may be transient.
-            if (outcome != null && outcome != "Throttled" && outcome != "NeedToken") credentialsRejected = true
-            throw PcGamingWikiException("PCGamingWiki authentication rejected")
-        }
-        loggedIn = true
-    }
-
-    private fun api(parameters: Map<String, String>, post: Boolean = false): JsonObject {
+    private fun api(path: String, vararg parameters: Pair<String, String>): JsonObject {
+        val url = MetadataProxy.url(baseUrl, path, *parameters)
+            ?: throw PcGamingWikiException("PCGamingWiki metadata service is not configured")
         pacer.await()
-        val params = parameters + ("format" to "json")
-        val request = Request.Builder().header("User-Agent", "Delos/1.0 (https://github.com/Meitoncz/Delos)")
-        if (post) {
-            request.url(ENDPOINT).post(FormBody.Builder().apply { params.forEach { (key, value) -> add(key, value) } }.build())
-        } else {
-            request.url(ENDPOINT.toHttpUrl().newBuilder().apply {
-                params.forEach { (key, value) -> addQueryParameter(key, value) }
-            }.build())
-        }
-        http.newCall(request.build()).execute().use { response ->
+        val request = Request.Builder().url(url).header("Accept", "application/json").get().build()
+        http.newCall(request).execute().use { response ->
             if (!response.isSuccessful) throw PcGamingWikiException("PCGamingWiki HTTP ${response.code}")
             val json = try {
                 JsonParser.parseString(response.body.string()).asJsonObject
@@ -174,7 +132,6 @@ class PcGamingWikiClient internal constructor(
                 throw PcGamingWikiException("PCGamingWiki returned invalid JSON")
             }
             if (json.has("error") || json.has("errors")) {
-                loggedIn = false
                 // Provider error text may echo submitted parameters. Do not propagate it or causes.
                 throw PcGamingWikiException("PCGamingWiki API request rejected")
             }
@@ -182,22 +139,7 @@ class PcGamingWikiClient internal constructor(
         }
     }
 
-    private class SessionCookies : CookieJar {
-        private val cookies = mutableListOf<Cookie>()
-        @Synchronized override fun saveFromResponse(url: HttpUrl, cookies: List<Cookie>) {
-            for (cookie in cookies) {
-                this.cookies.removeAll { it.name == cookie.name && it.domain == cookie.domain && it.path == cookie.path }
-                if (cookie.expiresAt > System.currentTimeMillis()) this.cookies.add(cookie)
-            }
-        }
-        @Synchronized override fun loadForRequest(url: HttpUrl): List<Cookie> {
-            cookies.removeAll { it.expiresAt <= System.currentTimeMillis() }
-            return cookies.filter { it.matches(url) }
-        }
-    }
-
     companion object {
-        private const val ENDPOINT = "https://www.pcgamingwiki.com/w/api.php"
         private val CACHE_NANOS = TimeUnit.HOURS.toNanos(6)
         private const val MAX_PAGES = 3
         private val NATIVE_VALUES = setOf("true", "always on", "alwayson", "limited")
@@ -226,8 +168,6 @@ class PcGamingWikiClient internal constructor(
         private val bareUrl = Regex("(?:https?://|www\\.)\\S+", RegexOption.IGNORE_CASE)
         private val htmlEntity = Regex("&(?:[a-zA-Z]+|#\\d+);")
         private val whitespace = Regex("\\s+")
-
-        private fun cargoLiteral(value: String): String = value.replace("\\", "\\\\").replace("\"", "\\\"")
 
         /**
          * Reader-visible text of wikitext. References, tags, URLs and link markup carry file extensions and words

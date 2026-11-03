@@ -44,8 +44,8 @@ The search flow is adapted from
 [howlongtobeatpy 1.0.24](https://github.com/ScrappyCocco/HowLongToBeat-PythonAPI/tree/4275a452b9ccd230b7c2a82b8d1a5d851285eb14),
 MIT, Copyright (c) 2018 Michele. The full notice is bundled in
 `app/src/main/assets/licenses/howlongtobeatpy.txt`. Provider access/data terms are separate from the
-client's code license. See [GUI.md](docs/GUI.md#game-information-and-library-filters) for behavior and
-local credential provisioning; never commit real credentials.
+client's code license. See [GUI.md](docs/GUI.md#game-information-and-library-filters) for behavior and the
+metadata service setup; the provider credentials live only in the Cloudflare Worker, never in the APK or the repository.
 
 ---
 

@@ -148,6 +148,7 @@ class MetadataPolicyTest {
         assertNotNull(minimal)
         assertEquals(NativeHdr.UNKNOWN, minimal!!.hdr.support)
         assertTrue(minimal.candidate!!.genres.isEmpty())
+        assertTrue(minimal.candidate!!.themes.isEmpty())
         assertTrue(minimal.candidate!!.steamAppIds.isEmpty())
         assertTrue(minimal.candidate!!.platformIds.isEmpty())
 
@@ -158,5 +159,8 @@ class MetadataPolicyTest {
         assertNull(brokenCompletion!!.completion)
 
         assertNull(gson.fromJson("""{"candidate":{"id":1}}""", GameMetadata::class.java).validated())
+
+        val themed = gson.fromJson("""{"candidate":{"id":1,"name":"Game","themes":[{"id":17,"name":"Fantasy"},{"id":3},null]}}""", GameMetadata::class.java).validated()
+        assertEquals(listOf(GameGenre(17, "Fantasy")), themed!!.candidate!!.themes)
     }
 }

@@ -60,7 +60,7 @@ class GameMetadataStore internal constructor(
     private val progressMutex = Mutex()
     private val progressBatches = ArrayList<ProgressBatch>()
 
-    val credentialsAvailable: Boolean get() = providers.credentialsAvailable
+    val proxyAvailable: Boolean get() = providers.proxyAvailable
 
     val filters: MetadataFilters get() = filterState
 
@@ -95,7 +95,7 @@ class GameMetadataStore internal constructor(
         val now = clock()
         val pending = games.filter { refreshDue(entry(pc, it).data, now) }
         if (pending.isEmpty()) return
-        if (!providers.credentialsAvailable) {
+        if (!providers.proxyAvailable) {
             for (app in pending) ensure(pc, app)
             return
         }
@@ -122,8 +122,8 @@ class GameMetadataStore internal constructor(
             val key = key(pc, app)
             val previous = loadLocked(pc, app)
             if (!force && !refreshDue(previous.data, clock())) return false
-            if (!providers.credentialsAvailable) {
-                publish(key, previous.copy(resolved = true, error = "Game metadata credentials are not available in this build"))
+            if (!providers.proxyAvailable) {
+                publish(key, previous.copy(resolved = true, error = "Game metadata is not available in this build"))
                 return false
             }
             if (batch == null) {
@@ -147,7 +147,7 @@ class GameMetadataStore internal constructor(
         } catch (_: Exception) {
             // A cancelled call can surface as an I/O error; that is not a provider failure.
             currentCoroutineContext().ensureActive()
-            // Provider payloads and authentication failures must never leak credentials to the UI/log.
+            // Provider payloads and failures must never leak details to the UI/log.
             recordLookupFailure(pc, app, previous.data)
         } finally {
             clearLoading(key)
@@ -370,7 +370,7 @@ class GameMetadataStore internal constructor(
     private data class CachedMetadata(val schema: Int, val data: GameMetadata)
 
     private companion object {
-        const val CACHE_SCHEMA = 4
+        const val CACHE_SCHEMA = 5
         const val LIBRARY_CONCURRENCY = 2
         const val KEY_GENRE = "metadata_filter_genre"
         const val KEY_HDR = "metadata_filter_hdr"
