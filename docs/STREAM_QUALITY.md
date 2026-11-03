@@ -7,7 +7,7 @@ Feature provenance is preserved in the [README](../README.md#feature-provenance)
 
 ## Runtime bitrate
 
-The stream menu's **Bitrate** page previews 1–1000 Mbps and sends **Apply** over the existing pinned,
+The stream menu's **Bitrate** page (a popover above the menu bar) previews 1–1000 Mbps and sends **Apply** over the existing pinned,
 client-certificate HTTPS connection to Vibepollo's `/bitrate?bitrate=<kbps>`. No common-c protocol
 extension or host modification is needed. Requests run off the UI thread and only one runs at a time.
 The host's XML status must indicate success, and its returned bitrate is the authoritative value.

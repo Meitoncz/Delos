@@ -335,20 +335,23 @@ fun HintBar(hints: List<Hint>, note: String?, modifier: Modifier = Modifier, not
     }
 }
 
+/** A button hint's glyph; [compact] is the smaller one (30 instead of 38 stage pixels) of the stream menu's bar. */
 @Composable
-fun GlyphButton(glyph: Glyph) {
+fun GlyphButton(glyph: Glyph, compact: Boolean = false) {
     val colors = LocalDelosColors.current
+    val size = if (compact) 30 else 38
+    val k = size / 38f
     Box(
         // Icons always sit in a circle; letters (L1…) may widen it into a pill
-        (if (glyph is Glyph.Icon) Modifier.size(38.px) else Modifier.defaultMinSize(minWidth = 38.px).height(38.px))
+        (if (glyph is Glyph.Icon) Modifier.size(size.px) else Modifier.defaultMinSize(minWidth = size.px).height(size.px))
             .clip(CircleShape)
             .background(colors.text)
             .then(if (glyph is Glyph.Icon) Modifier else Modifier.padding(horizontal = 8.px)),
         contentAlignment = Alignment.Center,
     ) {
         when (glyph) {
-            is Glyph.Letter -> BasicText(glyph.text, style = TextStyle(color = colors.bg, fontFamily = Figtree, fontWeight = FontWeight.ExtraBold, fontSize = 21.tpx))
-            is Glyph.Icon -> Symbol(glyph.symbol, (24f * glyph.scale).tpx, colors.bg, filled = true)
+            is Glyph.Letter -> BasicText(glyph.text, style = TextStyle(color = colors.bg, fontFamily = Figtree, fontWeight = FontWeight.ExtraBold, fontSize = (21f * k).tpx))
+            is Glyph.Icon -> Symbol(glyph.symbol, (24f * glyph.scale * k).tpx, colors.bg, filled = true)
         }
     }
 }

@@ -306,6 +306,43 @@ in assets.
   as this game's overrides for future launches, with a check and "Saved for <game>" on the row and no
   confirmation dialog. It is hidden for a stream without its launch identity.
 
+### Stream menu
+
+A compact **bar at the bottom of the stream**, with the pages it opens in a **popover above it**. The stream is
+never dimmed as a whole: only a soft gradient sits behind the bar. Sizes are stage pixels (1920 × 1080); the
+numbers live in `StreamMenuLayout`, the drawing in `StreamMenuBar`, the wiring in `StreamMenu`. The prototype's
+`#quickmenu` / `#qmpop` show the same layout.
+
+- **Bar**: 1520 × 224, centered, 48 from the bottom edge (never closer than 48 to a side: TV overscan). Left cell:
+  the game's name (Unbounded 20, two lines at most) and the **A Select** / **B Resume** hints (30 px glyphs); then one
+  row of nine equal cells: Resume, Keyboard, Overlay, Brightness, Bitrate, Upscaler (Supersampling), More,
+  Disconnect, Quit game. Each is an 80 px glass circle with its label (17) under it; toggles (Overlay, Upscaler)
+  fill with the accent and say On / Off (Overlay: Compact) in 14.5. The circle whose popover is open keeps a 3 px
+  outline while the focus is inside the popover. Under the circles, behind a hairline, is **one help line**: the
+  focused item's name, then its help on a single line. It never grows the bar; a text that does not fit runs
+  through as a marquee, with reduced motion it stays still and ends in an ellipsis.
+- **Gradient**: transparent to 55 % black over the bottom 320 px (18 % at the middle), nothing above, no full-height
+  dimming. Glass here is the palette's background at 86 % with a hairline border and a soft shadow: the stream is a
+  separate window (a `SurfaceView`), so the shell's background blur cannot reach it.
+- **Popover**: a glass card at most 700 × 440, **aligned to the right end of the bar** (the picture's centre stays
+  clear) and 16 above it, never closer than 48 to the top. Header: a back chevron (focusable, B does the same) and
+  the page's title. Rows are the compact `SettingRow(dense = true)`: about 56 tall, label 21, icon 26, a 58 × 33
+  switch, a 180 px slider. Taller content (More: 12 rows) scrolls inside with faded edges; the Upscaler page, with
+  Supersampling quality and **Save for this game**, fits without scrolling.
+- **Navigation**: Left/Right move along the bar. A on a toggle or action circle acts at once; A on Brightness,
+  Bitrate, Upscaler or More opens its popover and puts the focus on its first row (the focus cannot leave the
+  popover with the D-pad). B in a popover closes it and returns the focus to its circle; Send keys, Commands and
+  Mouse mode are opened from More, so B there goes back to that row of More first. B on the bar resumes the stream.
+  The open and close buttons (L3 + R3 by default, the swipe up) and the external display's input routing are
+  unchanged. **Touch**: a tap on a circle is A; a tap outside the popover closes the popover only and never
+  resumes the stream (Resume and B do).
+- **Motion**: the bar slides up 60 px and fades in (350–400 ms, ease-out); a popover scales .96 → 1 and fades. With
+  reduced motion both only fade.
+- **Footprint** (measured on the design study, `build/streammenu-preview/final`): the bar alone covers 16.4 % of
+  the screen, with the largest popover 31–32 % (the old full-width layout 23–38 %, plus a scrim over 72–75 % of the
+  screen with 44–46 % mean darkening). The gradient darkens 25.6 % of the screen, 6.7 % on average. The middle
+  zone of the picture (60 × 60 %) is touched 8.6 % by the bar alone and 38–40 % with a popover.
+
 ## Native shell architecture and design constraints
 
 These preserve implementation/design context from the removed UI plan, not phase checklists.

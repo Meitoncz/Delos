@@ -315,14 +315,64 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
 .side-head .nm { font-family: var(--font-display); font-weight: 600; font-size: calc(28px * var(--ts)); }
 .side-head .pc { font-size: calc(20px * var(--ts)); color: var(--text-3); }
 #sidemenu .row { min-height: 80px; grid-template-columns: 44px 1fr auto; }
-#quickmenu { left: 0; right: 0; bottom: 0; padding: 40px 0 56px; display: flex; flex-direction: column; align-items: center; gap: 26px; transform: translateY(60px); background: linear-gradient(transparent, rgba(0, 0, 0, .75) 40%); }
+/* Stream menu (docs/GUI.md "Stream menu"): a bar at the bottom, the pages in a popover above its right end.
+   Stage pixels = Android stage pixels; the bar is 1520 x 224 and 48 from the bottom. */
+#quickmenu { left: 0; right: 0; bottom: 0; height: 320px; transform: translateY(60px); background: linear-gradient(transparent, rgba(0, 0, 0, .18) 50%, rgba(0, 0, 0, .55)); }
 #quickmenu.open { transform: none; }
-#quickmenu .qm-title { color: #fff; font-family: var(--font-display); font-weight: 600; font-size: calc(30px * var(--ts)); }
-#quickmenu .circles { gap: 34px; }
-#quickmenu .circle-item { width: 150px; }
-#quickmenu .circle { width: 112px; height: 112px; background: rgba(30, 40, 60, .85); color: #fff; }
-#quickmenu .circle .ms { font-size: 48px; }
-#quickmenu .circle-label { font-size: calc(20px * var(--ts)); color: #fff; }
+.qm-card { border-radius: 34px; box-sizing: border-box; background: color-mix(in srgb, var(--bg) 86%, transparent); box-shadow: inset 0 0 0 1px var(--line), 0 18px 70px -10px rgba(0, 0, 0, .47); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+.qm-bar { position: absolute; left: 200px; width: 1520px; bottom: 48px; height: 224px; padding: 24px 28px 0; }
+.qm-main { display: flex; height: 138px; }
+.qm-side { width: 190px; flex: none; display: flex; flex-direction: column; justify-content: space-between; }
+.qm-title { font-family: var(--font-display); font-weight: 600; font-size: calc(20px * var(--ts)); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.qm-hints { display: flex; flex-direction: column; gap: 8px; color: var(--text-2); font-size: 19px; }
+.qm-hints .hint { display: inline-flex; align-items: center; gap: 12px; }
+.qm-hints .glyph-btn { min-width: 30px; height: 30px; font-size: 17px; }
+.qm-sep { flex: none; width: 1px; margin: 0 7px 0 8px; background: var(--line); }
+#quickmenu .circles { flex: 1; gap: 0; align-items: flex-start; }
+#quickmenu .circle-item { flex: 1; width: auto; min-width: 0; gap: 0; }
+#quickmenu .circle { width: 80px; height: 80px; box-sizing: border-box; background: var(--surface-3); border: 1px solid var(--line); color: var(--text); }
+#quickmenu .circle .ms { font-size: 36px; }
+#quickmenu .circle.on { background: var(--accent); color: var(--on-accent); }
+#quickmenu .circle.on .ms { --phosphor-fill: 1; }
+#quickmenu .circle.sel { border: 3px solid var(--accent); }
+#quickmenu .circle.on.sel { border-color: var(--on-accent); }
+#quickmenu .circle.is-focus { transform: scale(1.12); box-shadow: 0 0 0 4px var(--bg), 0 0 0 8px var(--accent), 0 14px 40px -10px var(--glow); }
+#quickmenu .circle-label { font-size: 17px; opacity: 1; transform: none; margin-top: 12px; white-space: nowrap; }
+#quickmenu .circle-meta { font-size: 14.5px; font-weight: 700; margin-top: 2px; color: var(--text-3); }
+#quickmenu .circle.on + .circle-label + .circle-meta { color: var(--accent); }
+.qm-rule { height: 1px; margin: 14px 0 0; background: var(--line); }
+.qm-help { display: flex; align-items: center; gap: 14px; height: 47px; padding: 0 2px; font-size: 20px; }
+.qm-help b { flex: none; max-width: 360px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.qm-help-box { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; color: var(--text-2); -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent); }
+.qm-help-box span { display: inline-block; }
+.qm-help-box.run span { animation: qmMarquee var(--dur, 10s) linear infinite; }
+@keyframes qmMarquee { 0%, 14% { transform: none; } 86%, 100% { transform: translateX(var(--dx)); } }
+#qmpop { left: 1020px; width: 700px; bottom: 288px; transform: scale(.96); transform-origin: right bottom; }
+#qmpop.open { transform: none; }
+#qmpop .qm-card { max-height: 440px; display: flex; flex-direction: column; overflow: hidden; }
+.qmp-head { flex: none; display: flex; align-items: center; gap: 10px; height: 54px; margin: 16px 26px 0 14px; font-family: var(--font-display); font-weight: 600; font-size: 21px; white-space: nowrap; }
+.qmp-back { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: var(--accent-2); }
+.qmp-back .ms { font-size: 30px; }
+.qmp-back.is-focus { transform: scale(1.08); box-shadow: 0 0 0 2px var(--bg), 0 0 0 5px var(--accent); }
+.qmp-rows { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px 14px; min-height: 0; overflow-y: auto; scrollbar-width: none; }
+.qmp-rows::-webkit-scrollbar { display: none; }
+.qmp-rows.scrolls { -webkit-mask-image: linear-gradient(transparent, #000 12px, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(transparent, #000 12px, #000 calc(100% - 28px), transparent); }
+#qmpop .row { flex: none; min-height: 56px; padding: 8px 18px; border-radius: 18px; grid-template-columns: 34px 1fr auto; gap: 14px; }
+#qmpop .row > .ms { font-size: 26px; }
+#qmpop .row-label { font-size: 21px; }
+#qmpop .row-desc { font-size: 15.5px; margin-top: 2px; line-height: 1.3; }
+#qmpop .row-value { font-size: 20px; gap: 10px; }
+#qmpop .row.is-focus { transform: scale(1.015); box-shadow: 0 0 0 3px var(--accent), 0 12px 32px -16px var(--glow); }
+#qmpop .choice .ms { font-size: 24px; }
+#qmpop .slider { width: 180px; height: 8px; }
+#qmpop .slider + span { min-width: 96px !important; }
+#qmpop .switch { width: 58px; height: 33px; }
+#qmpop .switch i { top: 4px; left: 5px; width: 24px; height: 24px; }
+#qmpop .switch.on i { transform: translateX(25px); }
+/* Reduced motion: the bar and the popover only fade */
+#stage.reduce #quickmenu, #stage.reduce #qmpop { transform: none !important; }
+#stage.reduce .qm-help-box.run span { animation: none; }
+#stage.reduce .qm-help-box { text-overflow: ellipsis; }
 .dialog { left: 50%; top: 50%; width: 760px; padding: 52px; box-sizing: border-box; border-radius: 40px; background: var(--surface-3); border: 1px solid var(--line); transform: translate(-50%, -46%) scale(.96); display: flex; flex-direction: column; gap: 22px; align-items: center; text-align: center; box-shadow: 0 40px 100px -30px rgba(0, 0, 0, .7); }
 .dialog.open { transform: translate(-50%, -50%); }
 .dialog h3 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: calc(38px * var(--ts)); }
@@ -545,14 +595,34 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
       <div id="scrim"></div>
       <div class="layer" id="ctxmenu" role="menu"></div>
       <aside class="layer" id="sidemenu" aria-label="Side menu"></aside>
-      <div class="layer" id="quickmenu" aria-label="Quick menu">
-        <div class="qm-title" id="qmTitle">Returnal</div>
-        <div class="circles">
+      <div class="layer" id="quickmenu" aria-label="Stream menu">
+        <div class="qm-bar qm-card">
+          <div class="qm-main">
+            <div class="qm-side">
+              <div class="qm-title" id="qmTitle">Returnal</div>
+              <div class="qm-hints"><span class="hint"><span class="glyph-btn">A</span>Select</span><span class="hint"><span class="glyph-btn">B</span><span id="qmBack">Resume</span></span></div>
+            </div>
+            <div class="qm-sep"></div>
+            <div class="circles">
           <div class="circle-item"><div class="circle f" tabindex="-1" data-action="qm:resume" data-id="qm-resume"><span class="ms" data-icon="resume"></span></div><div class="circle-label">Resume</div></div>
           <div class="circle-item"><div class="circle f" tabindex="-1" data-action="qm:keyboard" data-id="qm-keyboard"><span class="ms" data-icon="keyboard"></span></div><div class="circle-label">Keyboard</div></div>
-          <div class="circle-item"><div class="circle f" tabindex="-1" data-action="qm:perf" data-id="qm-perf"><span class="ms" data-icon="overlay"></span></div><div class="circle-label">Performance</div></div>
+          <div class="circle-item"><div class="circle f" tabindex="-1" data-action="qm:perf" data-id="qm-perf"><span class="ms" data-icon="overlay"></span></div><div class="circle-label">Overlay</div><div class="circle-meta"></div></div>
+          <div class="circle-item"><div class="circle f" tabindex="-1" data-action="qm:bright" data-id="qm-bright" data-page="bright"><span class="ms" data-icon="brightness_medium"></span></div><div class="circle-label">Brightness</div></div>
+          <div class="circle-item"><div class="circle f" tabindex="-1" data-action="qm:bitrate" data-id="qm-bitrate" data-page="bitrate"><span class="ms" data-icon="network_check"></span></div><div class="circle-label">Bitrate</div></div>
+          <div class="circle-item"><div class="circle f" tabindex="-1" data-action="qm:upscaler" data-id="qm-upscaler" data-page="upscaler"><span class="ms" data-icon="upscaler"></span></div><div class="circle-label">Upscaler</div><div class="circle-meta"></div></div>
+          <div class="circle-item"><div class="circle f" tabindex="-1" data-action="qm:more" data-id="qm-more" data-page="more"><span class="ms" data-icon="more_horiz"></span></div><div class="circle-label">More</div></div>
           <div class="circle-item"><div class="circle f" tabindex="-1" data-action="qm:disconnect" data-id="qm-disconnect"><span class="ms" data-icon="logout"></span></div><div class="circle-label">Disconnect</div></div>
           <div class="circle-item"><div class="circle f" tabindex="-1" data-action="qm:quit" data-id="qm-quit"><span class="ms" data-icon="power_settings_new"></span></div><div class="circle-label">Quit game</div></div>
+          </div>
+          </div>
+          <div class="qm-rule"></div>
+          <div class="qm-help"><b id="qmHelpTitle">Resume</b><div class="qm-help-box" id="qmHelpBox"><span id="qmHelpText"></span></div></div>
+        </div>
+      </div>
+      <div class="layer" id="qmpop" aria-label="Stream menu page">
+        <div class="qm-card">
+          <div class="qmp-head"><div class="qmp-back f" tabindex="-1" data-action="back" data-id="qmp-back"><span class="ms" data-icon="chevron_left"></span></div><span id="qmpTitle">Brightness</span></div>
+          <div class="qmp-rows" id="qmpRows" data-scroll></div>
         </div>
       </div>
       <div class="layer dialog" id="renameDlg" role="dialog" aria-labelledby="renameTitle">
@@ -899,13 +969,58 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
       { id: "replay", icon: "replay", label: "Replay the first launch", desc: "Shows the welcome, profile and pairing steps again", type: "action" }
     ]}
   ];
+  // Stream menu: the pages of the popover (rows use the settings machinery; their values live in QM)
+  const QM = { qmBright: 70, qmBitrate: 60, qmUpscale: true, qmUpMode: "SGSR 2 Video", qmSharp: 40, qmZoom: false, qmPad: false, qmTouch: false, qmSaved: false };
+  const QM_MODES = ["SGSR 1 Standard", "SGSR 1 High Quality", "SGSR 2 Video", "SGSR 2 Video Quality"];
+  const QM_PAGES = {
+    bright: { title: "Brightness", rows: [
+      { id: "qmBright", icon: "brightness_medium", label: "Screen brightness", type: "slider", min: 5, max: 100, step: 5, unit: " %", ref: "qm", help: "Changes this device's screen brightness now; the system setting returns afterwards. Not the PC or a monitor." }
+    ]},
+    bitrate: { title: "Stream bitrate", rows: [
+      { id: "qmBitrate", icon: "network_check", label: "Bitrate", type: "slider", min: 1, max: 150, step: 1, unit: " Mbps", ref: "qm", help: "Requests a new video bitrate without reconnecting. Needs Vibepollo; the host may cap it. Lasts for this stream." },
+      { id: "qmApply", icon: "check", label: "Apply", desc: "Vibepollo is required. The host may limit the requested bitrate.", type: "action", help: "Sends the requested bitrate to Vibepollo. The accepted value can be lower. Saved defaults are unchanged." }
+    ]},
+    upscaler: { title: "Snapdragon Game Super Resolution", rows: [
+      { id: "qmUpscale", icon: "upscaler", label: "Upscaling", type: "toggle", ref: "qm", help: "Turns local SGSR reconstruction on or off for this stream. The PC's resolution is unchanged; the picture may flicker briefly." },
+      { id: "qmUpMode", icon: "upscaler_mode", label: "Mode", type: "choice", options: QM_MODES, ref: "qm", help: "SGSR 1 uses the current frame; SGSR 2 Video also reuses earlier frames. Applies live." },
+      { id: "qmSharp", icon: "sharpness", label: "Sharpness", type: "slider", min: 0, max: 100, step: 5, unit: " %", ref: "qm", help: "Final sharpening pass, separate from the mode. 0 turns sharpening off. Lasts for this stream." },
+      { id: "qmSave", icon: "remember", label: "Save for this game", descFn: () => QM.qmSaved ? "Saved for " + state.currentGame.title : "Applies to future launches of this game", type: "action", help: "Saves the current upscaler state, mode, sharpness and supersampling level for this game's future launches only." }
+    ]},
+    more: { title: "More", rows: [
+      { id: "qmKeys", icon: "keyboard_command_key", label: "Send keys", type: "action", toast: "Key combinations are not part of this prototype", help: "Sends a built-in or imported key combination to the PC once; the menu closes. Import custom ones under Controls." },
+      { id: "qmSendClip", icon: "upload", label: "Send clipboard", type: "action", toast: "Clipboard sent to the PC", help: "Copies this device's clipboard to the PC once. Needs Vibepollo or Apollo clipboard support." },
+      { id: "qmGetClip", icon: "download", label: "Get clipboard", type: "action", toast: "Clipboard received from the PC", help: "Fetches the PC clipboard to this device once. Needs Vibepollo or Apollo clipboard support." },
+      { id: "qmCmds", icon: "terminal", label: "Commands", type: "action", toast: "Server commands are not part of this prototype", help: "Lists server commands configured in Vibepollo or Apollo. The host decides what each does." },
+      { id: "qmTasks", icon: "task_manager", label: "Task manager", type: "action", toast: "Ctrl + Shift + Esc sent", help: "Sends Ctrl + Shift + Esc to the PC, which opens Task Manager on Windows." },
+      { id: "qmZoom", icon: "zoom_in", label: "Zoom", type: "toggle", ref: "qm", help: "Toggles the stream's zoom-and-pan controls. Local view only; Remember Zoom & Pan decides whether it persists." },
+      { id: "qmMouse", icon: "mouse", label: "Mouse mode", type: "action", toast: "Mouse mode is not part of this prototype", help: "Chooses how touch controls the PC: direct touch, trackpad or off. Remember mouse mode decides whether it persists." },
+      { id: "qmPad", icon: "joystick", label: "On-screen controls", type: "toggle", ref: "qm", help: "Shows or hides the virtual gamepad during this stream. Opacity and layout are set under Controls." },
+      { id: "qmFullKb", icon: "keyboard_full", label: "Full keyboard", type: "action", toast: "Full keyboard (later)", help: "Shows or hides the Delos full on-screen keyboard. Not Android's system keyboard." },
+      { id: "qmLayout", icon: "key_layout", label: "Key layout", type: "action", toast: "Key layout (later)", help: "Shows or hides the custom special-key layer from the profile's selected layout. Separate from the full keyboard." },
+      { id: "qmTouch", icon: "touch_app", label: "Touch sensitivity", type: "toggle", ref: "qm", help: "Toggles extra touchscreen sensitivity scaling, configured in settings." },
+      { id: "qmRotate", icon: "screen_rotation", label: "Rotate", type: "action", toast: "Stream view rotated", help: "Rotates the stream view locally; the host game's display settings are unchanged." }
+    ]}
+  };
+  const QM_HELP = {
+    "qm-resume": ["Resume", "Closes this menu and continues the stream."],
+    "qm-keyboard": ["Keyboard", "Opens or closes Android's system keyboard for typing on the PC. Not the Delos full keyboard."],
+    "qm-perf": ["Overlay", "Cycles full statistics, compact statistics, off. 1% low FPS covers the slowest frames of about ten seconds."],
+    "qm-bright": ["Brightness", "Adjusts this device's brightness for this stream; the system setting returns afterwards."],
+    "qm-bitrate": ["Bitrate", "Requests a new video bitrate without reconnecting. Needs Vibepollo; the host may cap it. Lasts for this stream."],
+    "qm-upscaler": ["Upscaler", "Upscales a lower-resolution stream; native-resolution input gets supersampling. Costs GPU time. Lasts for this stream unless saved."],
+    "qm-more": ["More", "More stream controls: clipboard, host commands, key combinations, zoom, touch and on-screen controls. Actions run at once."],
+    "qm-disconnect": ["Disconnect", "Stops streaming and returns to the Delos library. The game keeps running on the PC."],
+    "qm-quit": ["Quit game", "Asks the host to end the running application, then disconnects. Runs at once, so save first."],
+    "qmp-back": ["Back", "Closes this page and returns to the bar."]
+  };
   function rowValue(r) {
-    const holder = r.ref === "state" ? state : S;
+    const holder = r.ref === "state" ? state : r.ref === "qm" ? QM : S;
     return holder[r.id];
   }
   function setRowValue(r, v) {
-    const holder = r.ref === "state" ? state : S;
+    const holder = r.ref === "state" ? state : r.ref === "qm" ? QM : S;
     holder[r.id] = v;
+    if (r.ref === "qm") qmSync();
     if (["mode", "materialYou", "seed", "motion"].includes(r.id)) { store.set({ mode: "mode", materialYou: "my", seed: "seed", motion: "motion" }[r.id], v); applyTheme(); }
     if (r.id === "bg") store.set("bg", v);
     if (r.id === "sound") store.set("sound", v);
@@ -933,6 +1048,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
   function findRow(id) {
     for (const t of TABS) for (const r of t.rows) if (r.id === id) return r;
     for (const r of SIDE_ROWS) if (r.id === id) return r;
+    for (const k in QM_PAGES) for (const r of QM_PAGES[k].rows) if (r.id === id) return r;
     return null;
   }
   function renderTabs() {
@@ -980,6 +1096,13 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
     const r = findRow(id); if (!r) return;
     if (r.type === "toggle") { setRowValue(r, !rowValue(r)); blip("select"); refreshRow(id); if (state.screen === "settings" && !layers.length && ["materialYou", "heroBg"].includes(id)) renderSettings(focused && focused.dataset.id); return; }
     if (r.type === "choice" || r.type === "seed" || r.type === "slider") { adjustRow(r, 1); return; }
+    if (id === "qmApply") { toast(`Host accepted ${QM.qmBitrate} Mbps`, "network_check"); blip("select"); return; }
+    if (id === "qmSave") {
+      QM.qmSaved = true; blip("select"); refreshRow(id);
+      setTimeout(() => { QM.qmSaved = false; refreshRow(id); }, 2500);
+      return;
+    }
+    if (r.toast) { toast(r.toast, r.icon); blip("select"); return; }
     if (r.type === "text") { openRename("gridKey"); return; }
     if (r.type === "progress") { fetchCovers(); return; }
     if (id === "renamePc") { openRename("pc"); return; }
@@ -1099,7 +1222,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
     layerFocus.push(focused);
     layers.push(id);
     el.classList.add("open");
-    $("#scrim").classList.toggle("open", id !== "quickmenu");
+    $("#scrim").classList.toggle("open", id !== "quickmenu" && id !== "qmpop");
     blip("open");
     const first = focusables()[0];
     if (first) focusEl(first, { silent: true });
@@ -1108,6 +1231,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
   function closeLayer() {
     const id = layers.pop(); if (!id) return;
     $("#" + id).classList.remove("open");
+    if (id === "qmpop") $$("#quickmenu .circle.sel").forEach(c => c.classList.remove("sel"));
     if (!layers.length) $("#scrim").classList.remove("open");
     const prev = layerFocus.pop();
     if (prev && document.body.contains(prev)) focusEl(prev, { silent: true, noScroll: true });
@@ -1236,6 +1360,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
       const i = +el.dataset.tab;
       if (i !== state.settingsTab) { state.settingsTab = i; renderSettings(); $("#setList").scrollTop = 0; }
     }
+    if (el.closest("#quickmenu, #qmpop")) qmHelp(el);
     updateHints();
   }
 
@@ -1329,6 +1454,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
   function startStream() {
     const g = state.currentGame;
     $("#qmTitle").textContent = g.title;
+    qmSync();
     $("#streamBanner").innerHTML = `<span><span class="glyph-btn"><span class="ms" data-icon="filter_none"></span></span>Left menu button for the quick menu</span>`;
     $("#perf").hidden = !state.perfOverlay;
     gameT0 = performance.now();
@@ -1361,10 +1487,41 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
     gameRaf = requestAnimationFrame(draw);
   }
   function stopStream() { cancelAnimationFrame(gameRaf); }
+  // The bar: the overlay and upscaler circles show their On / Off state
+  function qmSync() {
+    const set = (id, on) => { const c = $(`[data-id="${id}"]`); if (!c) return; c.classList.toggle("on", on); c.parentElement.querySelector(".circle-meta").textContent = on ? "On" : "Off"; };
+    set("qm-perf", state.perfOverlay);
+    set("qm-upscaler", QM.qmUpscale);
+  }
+  function qmHelp(el) {
+    let title = "", text = "";
+    if (el.dataset.row) { const r = findRow(el.dataset.row); if (r) { title = r.label; text = r.help || ""; } }
+    else { const h = QM_HELP[el.dataset.id]; if (h) { title = h[0]; text = h[1]; } }
+    $("#qmHelpTitle").textContent = title;
+    // One line under the circles: a text that does not fit runs through as a marquee (ellipsis with reduced motion)
+    const box = $("#qmHelpBox"), span = $("#qmHelpText");
+    span.textContent = text;
+    box.classList.remove("run");
+    const over = span.offsetWidth - box.clientWidth;
+    if (over > 4) { box.style.setProperty("--dx", -(over + 40) + "px"); box.style.setProperty("--dur", Math.max(6, (over + 40) / 30) + "s"); box.classList.add("run"); }
+  }
+  function openQmPage(page) {
+    const p = QM_PAGES[page]; if (!p) return;
+    $("#qmpTitle").textContent = p.title;
+    const rows = $("#qmpRows");
+    rows.innerHTML = p.rows.map(rowHtml).join("");
+    rows.scrollTop = 0;
+    $$("#quickmenu .circle").forEach(c => c.classList.toggle("sel", c.dataset.page === page));
+    openLayer("qmpop");
+    // The focus goes into the first row (the back chevron is one step up)
+    const first = rows.querySelector(".f"); if (first) focusEl(first, { silent: true });
+    rows.classList.toggle("scrolls", rows.scrollHeight > rows.clientHeight + 1);
+  }
   function qmAction(a) {
+    if (QM_PAGES[a]) { openQmPage(a); return; }
     if (a === "resume") { closeLayer(); return; }
     if (a === "keyboard") { closeLayer(); toast("On-screen keyboard (later)", "keyboard"); return; }
-    if (a === "perf") { state.perfOverlay = !state.perfOverlay; $("#perf").hidden = !state.perfOverlay; toast(state.perfOverlay ? "Performance overlay on" : "Performance overlay off", "speed"); return; }
+    if (a === "perf") { state.perfOverlay = !state.perfOverlay; $("#perf").hidden = !state.perfOverlay; qmSync(); toast(state.perfOverlay ? "Performance overlay on" : "Performance overlay off", "speed"); return; }
     if (a === "disconnect" || a === "quit") {
       closeLayer();
       portalTo("home", { icon: "home", label: a === "quit" ? `Closing ${state.currentGame.title}` : "Back to Delos", sub: state.pcName, focusId: "game-" + state.currentGame.id });
@@ -1439,7 +1596,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
     const top = layers[layers.length - 1];
     if (top === "ctxmenu") items = [hint("A", "Select"), hint("B", "Close")];
     else if (top === "sidemenu") items = [hint("A", "Change"), hint("B", "Close")];
-    else if (top === "quickmenu") items = [hint("A", "Select"), hint("B", "Resume")];
+    else if (top === "quickmenu" || top === "qmpop") { items = [hint("A", "Select"), hint("B", top === "qmpop" ? "Back" : "Resume")]; $("#qmBack").textContent = top === "qmpop" ? "Back" : "Resume"; }
     else if (top === "renameDlg" || top === "help") items = [hint("A", "Confirm"), hint("B", "Cancel")];
     else {
       switch (state.screen) {
@@ -1495,6 +1652,13 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
     press(btn);
   });
   stage.addEventListener("click", (ev) => {
+    // A tap outside the stream menu's popover closes only the popover (it never resumes the stream); a tap on a circle also acts
+    if (layers[layers.length - 1] === "qmpop" && !ev.target.closest("#qmpop")) {
+      const c = ev.target.closest(".qm-bar .circle");
+      const same = c && c.classList.contains("sel");
+      closeLayer();
+      if (!c || same) return;
+    }
     const el = ev.target.closest(".f");
     if (!el || !stage.contains(el)) return;
     if (!focusables().includes(el)) return;

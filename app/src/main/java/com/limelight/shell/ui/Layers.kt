@@ -121,7 +121,7 @@ fun Scrim(visible: Boolean, haze: HazeState, onDismiss: () -> Unit) {
  * closes (still animating out) the trap is released, so the focus can return to the screen.
  */
 @Composable
-private fun Modifier.focusTrap(active: Boolean): Modifier {
+internal fun Modifier.focusTrap(active: Boolean): Modifier {
     val current by rememberUpdatedState(active)
     return focusProperties { onExit = { if (current) cancelFocusChange() } }.focusGroup()
 }

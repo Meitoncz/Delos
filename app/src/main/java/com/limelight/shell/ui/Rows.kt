@@ -97,6 +97,8 @@ fun SettingRow(
     descriptionColor: Color? = null,
     enabled: Boolean = true,
     compact: Boolean = false,
+    /** The stream menu's popover: a row of about 56 stage pixels with smaller type, controls and corners. */
+    dense: Boolean = false,
     contextMenu: ContextMenu? = null,
     onFocused: (() -> Unit)? = null,
 ) {
@@ -126,7 +128,7 @@ fun SettingRow(
         feedback.play(Cue.MOVE)
         adjust(direction * if (value is RowValue.Slider) sliderAcceleration(value, repeatCount) else 1)
     }
-    val shape = RoundedCornerShape(24.px)
+    val shape = RoundedCornerShape((if (dense) 18 else 24).px)
     Row(
         modifier
             .fillMaxWidth()
@@ -145,10 +147,10 @@ fun SettingRow(
             }
             .focusEffects(
                 onClick = { if (enabled) activate() else feedback.play(Cue.ERROR) },
-                corner = 24f,
-                focusScale = 1.02f,
+                corner = if (dense) 18f else 24f,
+                focusScale = if (dense) 1.015f else 1.02f,
                 ring = FocusRing(width = 3f, gap = 0f),
-                glow = FocusGlow(offsetY = 20f, blur = 50f, spread = -24f),
+                glow = if (dense) FocusGlow(offsetY = 12f, blur = 32f, spread = -16f) else FocusGlow(offsetY = 20f, blur = 50f, spread = -24f),
                 clickCue = if (enabled && value !is RowValue.Info) (if (value is RowValue.Action) Cue.OPEN else Cue.SELECT) else null,
                 contextMenu = contextMenu,
                 adjustable = adjust != null && enabled,
@@ -164,53 +166,55 @@ fun SettingRow(
                 LocalBackdropHaze.current?.takeIf { focused }?.let { Modifier.backdropBlur(it, 8f, colors.surface2) }
                     ?: Modifier.background(if (focused) colors.surface2 else Color.Transparent)
             )
-            .defaultMinSize(minHeight = if (compact) 80.px else 92.px)
-            .padding(horizontal = 26.px, vertical = 14.px)
+            .defaultMinSize(minHeight = if (dense) 56.px else if (compact) 80.px else 92.px)
+            .padding(horizontal = if (dense) 18.px else 26.px, vertical = if (dense) 8.px else 14.px)
             .alpha(if (enabled) 1f else .45f),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(22.px),
+        horizontalArrangement = Arrangement.spacedBy(if (dense) 14.px else 22.px),
     ) {
-        Box(Modifier.width(if (compact) 44.px else 52.px), contentAlignment = Alignment.CenterStart) {
+        Box(Modifier.width(if (dense) 34.px else if (compact) 44.px else 52.px), contentAlignment = Alignment.CenterStart) {
             // The palette's accent: full on the focused row, softer on the others
-            Symbol(icon, 34.tpx, if (focused) colors.accent3 else colors.accent3.copy(alpha = .62f), filled = focused)
+            Symbol(icon, (if (dense) 26 else 34).tpx, if (focused) colors.accent3 else colors.accent3.copy(alpha = .62f), filled = focused)
         }
         Column(Modifier.weight(1f)) {
-            BasicText(label, style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx))
+            BasicText(label, style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = (if (dense) 21 else 26).tpx))
             if (description != null) {
                 BasicText(
                     description,
-                    style = TextStyle(color = descriptionColor ?: colors.text3, fontFamily = Figtree, fontSize = 19.tpx, lineHeight = 1.35.em),
-                    modifier = Modifier.padding(top = 4.px),
+                    style = TextStyle(color = descriptionColor ?: colors.text3, fontFamily = Figtree, fontSize = (if (dense) 15.5f else 19f).tpx, lineHeight = (if (dense) 1.3 else 1.35).em),
+                    modifier = Modifier.padding(top = if (dense) 2.px else 4.px),
                 )
             }
         }
-        RowValueView(value, focused)
+        RowValueView(value, focused, dense)
     }
 }
 
 @Composable
-private fun RowValueView(value: RowValue, focused: Boolean) {
+private fun RowValueView(value: RowValue, focused: Boolean, dense: Boolean) {
     val colors = LocalDelosColors.current
-    val text = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 23.tpx)
+    val text = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = (if (dense) 20 else 23).tpx)
+    val chevron = (if (dense) 24 else 30).tpx
     when (value) {
-        is RowValue.Toggle -> Switch(value.on)
+        is RowValue.Toggle -> Switch(value.on, dense)
         // The arrows are always shown (muted when not focused), so all values end at the same edge
-        is RowValue.Choice -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.px)) {
+        is RowValue.Choice -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(if (dense) 8.px else 12.px)) {
             val arrows = if (focused) colors.accent3 else colors.text3
-            Symbol(Symbols.CHEVRON_LEFT, 30.tpx, arrows)
-            if (value.swatch != null) Box(Modifier.size(26.px).clip(CircleShape).background(value.swatch))
-            BasicText(value.label, style = text, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 360.px))
+            Symbol(Symbols.CHEVRON_LEFT, chevron, arrows)
+            if (value.swatch != null) Box(Modifier.size(if (dense) 22.px else 26.px).clip(CircleShape).background(value.swatch))
+            BasicText(value.label, style = text, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = if (dense) 280.px else 360.px))
             // The glyph has empty space on its right; shift it so its visible edge lines up with switches and values
-            Symbol(Symbols.CHEVRON_RIGHT, 30.tpx, arrows, Modifier.offset(x = 9.px))
+            Symbol(Symbols.CHEVRON_RIGHT, chevron, arrows, Modifier.offset(x = if (dense) 7.px else 9.px))
         }
-        is RowValue.Slider -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.px)) {
+        is RowValue.Slider -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(if (dense) 10.px else 12.px)) {
             val onChange by rememberUpdatedState(value.onChange)
             var dragging by remember { mutableStateOf<Int?>(null) }
             val number = dragging ?: value.value
             val fraction by animateFloatAsState(
                 ((number - value.min) / (value.max - value.min).coerceAtLeast(1).toFloat()).coerceIn(0f, 1f), tween(if (dragging == null) 250 else 0, easing = EaseOut), label = "slider",
             )
-            Box(Modifier.size(220.px, 48.px).pointerInput(value.min, value.max, value.step) {
+            val trackWidth = if (dense) 180 else 220
+            Box(Modifier.size(trackWidth.px, (if (dense) 40 else 48).px).pointerInput(value.min, value.max, value.step) {
                 awaitEachGesture {
                     fun setAt(x: Float) {
                         val raw = value.min + (value.max - value.min) * (x / size.width).coerceIn(0f, 1f)
@@ -226,38 +230,38 @@ private fun RowValueView(value: RowValue, focused: Boolean) {
                     } finally { dragging = null }
                 }
             }, contentAlignment = Alignment.Center) {
-                Box(Modifier.fillMaxWidth().size(height = 10.px, width = 220.px).clip(CircleShape).background(colors.surface3)) {
+                Box(Modifier.fillMaxWidth().size(height = (if (dense) 8 else 10).px, width = trackWidth.px).clip(CircleShape).background(colors.surface3)) {
                     Box(Modifier.fillMaxHeight().fillMaxWidth(fraction).clip(CircleShape).background(colors.accent))
                 }
             }
             val label = if (number % value.divisor == 0) (number / value.divisor).toString() else String.format(java.util.Locale.US, "%.1f", number.toDouble() / value.divisor)
-            BasicText("$label${value.unit}", style = text.copy(textAlign = TextAlign.End), maxLines = 1, modifier = Modifier.width(160.px))
+            BasicText("$label${value.unit}", style = text.copy(textAlign = TextAlign.End, fontFeatureSettings = "tnum"), maxLines = 1, modifier = Modifier.width(if (dense) 96.px else 160.px))
         }
-        is RowValue.Action -> Symbol(Symbols.CHEVRON_RIGHT, 30.tpx, if (focused) colors.accent3 else colors.text3)
+        is RowValue.Action -> Symbol(Symbols.CHEVRON_RIGHT, chevron, if (focused) colors.accent3 else colors.text3)
         is RowValue.Text -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.px)) {
             BasicText(value.text.ifEmpty { "Not set" }, style = text, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 220.px))
-            Symbol(Symbols.CHEVRON_RIGHT, 30.tpx, if (focused) colors.accent3 else colors.text3)
+            Symbol(Symbols.CHEVRON_RIGHT, chevron, if (focused) colors.accent3 else colors.text3)
         }
         is RowValue.Info -> BasicText(value.text, style = text)
     }
 }
 
-/** The on/off switch (`.switch`). */
+/** The on/off switch (`.switch`); [dense] is the smaller one of the stream menu's popover rows. */
 @Composable
-fun Switch(on: Boolean) {
+fun Switch(on: Boolean, dense: Boolean = false) {
     val colors = LocalDelosColors.current
     val knob by animateFloatAsState(if (on) 1f else 0f, tween(380, easing = EaseSpring), label = "switch")
     Box(
         Modifier
-            .size(74.px, 42.px)
+            .size(if (dense) 58.px else 74.px, if (dense) 33.px else 42.px)
             .clip(CircleShape)
             .background(if (on) colors.accent else colors.surface3)
             .border(1.px, colors.line, CircleShape),
     ) {
         Box(
             Modifier
-                .offset(x = (6f + 32f * knob).px, y = 5.px)
-                .size(30.px)
+                .offset(x = (if (dense) 5f + 25f * knob else 6f + 32f * knob).px, y = (if (dense) 4 else 5).px)
+                .size(if (dense) 24.px else 30.px)
                 .clip(CircleShape)
                 .background(if (on) colors.onAccent else colors.text2),
         )
