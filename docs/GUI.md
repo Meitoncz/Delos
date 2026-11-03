@@ -84,7 +84,7 @@ The TV channel uses the same mark; PC shortcut icons remain unchanged.
 
 ## Game information and library filters
 
-The existing information area under the game title/logo also shows IGDB genres, native HDR/SDR,
+The existing information area under the game title/logo also shows IGDB genres (each with its own icon, `genreIcon` in `shell/ui/GenreIcons.kt`; unmapped new genres get a neutral tag), native HDR/SDR,
 and the HowLongToBeat headline duration. HDR uses a readable rainbow badge; confirmed native-SDR
 games use a neutral SDR chip. A muted `HDR/SDR unverified` chip means native HDR/SDR could not be verified:
 the wiki has no page, evidence is unknown/ambiguous, or claimed HDR is broken, disabled, simulated
@@ -96,7 +96,7 @@ do not qualify as native game HDR.
 
 **Y** on the home screen opens the **Filter library** modal (Y or B closes it; Done as well). It is a
 centered glass panel with the title, a live result line as a pill (`27 of 55 games`, or `All 55 games` without a filter)
-and three sections of chips, each with a large Unbounded heading and its icon in an accent-tinted circle, separated by thin dividers: **Genre** (`All` plus every genre, each with its number of games), **HDR
+and three sections of chips, each with a large Unbounded heading and its icon in an accent-tinted circle, separated by thin dividers: **Genre** (`All` plus every genre, each with its icon and number of games), **HDR
 support** (`All`, `Native HDR`, `SDR`, `HDR/SDR unverified`, with the sparkle, sun and question-mark icons of
 the home badges) and **Duration** from HowLongToBeat (Any, <10 h, 10–30 h, 30–60 h, 60+ h, Unknown). The chosen chip is
 filled with the accent; a choice applies at once (no confirmation) and the library behind the modal
