@@ -3,11 +3,13 @@ import { HttpError, RETRY_AFTER_SECONDS } from "./errors.js";
 import { buildIdQuery, buildSearchQuery, createIgdb } from "./igdb.js";
 import { createBucket, createGate } from "./limits.js";
 import { cargoParams, createPcgw, pageWhere, parseParams, redirectParams, searchParams, steamWhere } from "./pcgw.js";
-import { MAX_IGDB_ID, singleParams, validId, validSteamIds, validTerm, validTitle } from "./validate.js";
+import { createSteam } from "./steam.js";
+import { MAX_IGDB_ID, MAX_STEAM_TAGS_APP_ID, singleParams, validId, validSteamIds, validTerm, validTitle } from "./validate.js";
 
 export const MAX_URL_LENGTH = 2048;
 export const MAX_HEADER_BYTES = 8192;
 export const CACHE_SECONDS = 6 * 60 * 60;
+export const STEAM_CACHE_SECONDS = 24 * 60 * 60;
 
 const JSON_TYPE = "application/json; charset=utf-8";
 
@@ -58,6 +60,8 @@ export function createHandler(deps = {}) {
   const pcgwGate = createGate({ intervalMs: deps.pcgwIntervalMs ?? 550, maxWaitMs: 4000, now, sleep });
   const igdb = createIgdb({ fetch: fetchFn, now, gate: igdbGate });
   const pcgw = createPcgw({ fetch: fetchFn, now, gate: pcgwGate });
+  const steamGate = createGate({ intervalMs: deps.steamIntervalMs ?? 600, maxWaitMs: 4000, now, sleep });
+  const steam = createSteam({ fetch: fetchFn, gate: steamGate });
   const cache = createResponseCache({ cacheApi: deps.cacheApi ?? null, now });
   const bucket = createBucket({ capacity: BUCKET_CAPACITY, refillPerSecond: BUCKET_REFILL_PER_SECOND, now });
   const inflight = new Map();
@@ -109,6 +113,13 @@ export function createHandler(deps = {}) {
         return term ? { normalized: [["q", term]], upstream: (env) => pcgw.query(env, searchParams(term)) } : null;
       },
     },
+    "/v1/steam/tags": {
+      parse(params) {
+        const values = singleParams(params, ["app"], { required: ["app"] });
+        const id = values && validId(values.app, MAX_STEAM_TAGS_APP_ID);
+        return id ? { normalized: [["app", String(id)]], cacheSeconds: STEAM_CACHE_SECONDS, upstream: () => steam.tags(id) } : null;
+      },
+    },
   };
 
   async function allowed(env, clientKey) {
@@ -153,13 +164,14 @@ export function createHandler(deps = {}) {
     if (!lookup) throw new HttpError(400, "invalid_request");
 
     const key = `${url.origin}${url.pathname}?${lookup.normalized.map(([name, value]) => `${name}=${encodeURIComponent(value)}`).join("&")}`;
-    const cacheControl = `public, max-age=${CACHE_SECONDS}`;
+    const seconds = lookup.cacheSeconds ?? CACHE_SECONDS;
+    const cacheControl = `public, max-age=${seconds}`;
     const cached = await cache.get(key);
     if (cached !== null) return jsonResponse(200, cached, cacheControl, { "X-Delos-Cache": "HIT" });
     try {
       const body = await coalesce(key, async () => {
         const text = await lookup.upstream(env);
-        cache.put(key, text, CACHE_SECONDS, ctx && ctx.waitUntil ? (promise) => ctx.waitUntil(promise) : null);
+        cache.put(key, text, seconds, ctx && ctx.waitUntil ? (promise) => ctx.waitUntil(promise) : null);
         return text;
       });
       return jsonResponse(200, body, cacheControl, { "X-Delos-Cache": "MISS" });

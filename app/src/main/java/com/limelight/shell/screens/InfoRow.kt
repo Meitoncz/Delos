@@ -32,7 +32,7 @@ private class InfoSlot(val placeable: Placeable, val x: Int, val line: Int)
 
 /**
  * The information row under a game's title: the [facts], then a thin divider and the [tags] (the game's
- * main genre and theme). It wraps like a FlowRow, but the tags are one group: it moves to the next line as a
+ * genre and theme pills, each with up to two entries). It wraps like a FlowRow, but the tags are one group: it moves to the next line as a
  * whole, and its divider stays behind, so a line never starts with a divider and the pills never split up.
  * Without [hasTags] there is neither a divider nor a group.
  */
@@ -96,7 +96,11 @@ internal fun InfoRow(modifier: Modifier = Modifier, hasTags: Boolean, tags: @Com
     }
 }
 
-/** The colors of the main genre's pill: a soft tint of one hue, its text and icon a light shade of it. */
+/** One icon and label inside an info pill; a pill holds one entry, or two set apart by a divider. */
+@Immutable
+internal class PillEntry(val icon: String, val label: String)
+
+/** The colors of the genre pill: a soft tint of one hue, its text and icon a light shade of it. */
 @Immutable
 private class GenreTint(val fill: Color, val border: Color, val content: Color)
 
@@ -107,17 +111,17 @@ private fun genreTint(hue: Float, saturation: Float, dark: Boolean): GenreTint {
 }
 
 /**
- * The game's main genre: the size of every info pill, filled with a tint of the game's main color (the
- * accent's while the game's colors are off or unknown), so it is the row's accent.
+ * The game's genres (one or two, in one pill): the size of every info pill, filled with a tint of the game's main
+ * color (the accent's while the game's colors are off or unknown), so it is the row's accent.
  */
 @Composable
-internal fun GenrePill(genre: GameGenre, gameColors: GameColors?) {
+internal fun GenrePill(genres: List<GameGenre>, gameColors: GameColors?) {
     val colors = LocalDelosColors.current
     val hue = gameColors?.hues?.firstOrNull() ?: colors.accentHue
     // How vivid the game's color is (1 = as the palette's) sets the pill's saturation; the accent's is 1
     val vividness = gameColors?.saturations?.firstOrNull() ?: 1f
     val tint = genreTint(hue, vividness * 80f, colors.dark)
-    Pill(genreIcon(genre.id), genre.name, tint.content, tint.content, Modifier.glass(colors.surface).background(tint.fill), tint.border)
+    Pill(genres.map { PillEntry(genreIcon(it.id), it.name) }, tint.content, tint.content, Modifier.glass(colors.surface).background(tint.fill), tint.border)
 }
 
 /** How far the theme's hue lies from the genre's when the game has no second color. */
@@ -131,16 +135,17 @@ private fun themeTint(hue: Float, saturation: Float, dark: Boolean): GenreTint {
 }
 
 /**
- * The game's main theme: tinted with the game's second cover color (its main color shifted along the hue
- * wheel when there is none, the accent's while the game's colors are off or unknown), fainter than the genre.
+ * The game's themes (one or two, in one pill): tinted with the game's second cover color (its main color shifted
+ * along the hue wheel when there is none, the accent's while the game's colors are off or unknown), fainter than
+ * the genre.
  */
 @Composable
-internal fun ThemePill(theme: GameGenre, gameColors: GameColors?) {
+internal fun ThemePill(themes: List<GameGenre>, gameColors: GameColors?) {
     val colors = LocalDelosColors.current
     val hues = gameColors?.hues.orEmpty()
     val hue = hues.getOrNull(1) ?: ((hues.firstOrNull() ?: colors.accentHue) + THEME_HUE_SHIFT)
     val saturations = gameColors?.saturations.orEmpty()
     val vividness = saturations.getOrNull(1) ?: saturations.firstOrNull() ?: 1f
     val tint = themeTint(hue, vividness * 80f * .7f, colors.dark)
-    Pill(themeIcon(theme.id), theme.name, tint.content, tint.content, Modifier.glass(colors.surface).background(tint.fill), tint.border)
+    Pill(themes.map { PillEntry(themeIcon(it.id), it.name) }, tint.content, tint.content, Modifier.glass(colors.surface).background(tint.fill), tint.border)
 }

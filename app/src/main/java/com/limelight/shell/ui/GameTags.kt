@@ -66,19 +66,60 @@ private val THEME_LADDER = intArrayOf(
     32, // Non-fiction
 )
 
-/** The entry of [entries] that comes first in [ladder]; else the first one the ladder does not know. */
-private fun firstRanked(entries: List<GameGenre>, ladder: IntArray): GameGenre? =
-    entries.filter { it.id in ladder }.minByOrNull { ladder.indexOf(it.id) } ?: entries.firstOrNull { it.id !in ladder }
+/** [entries] one per id, those the [ladder] knows by their position in it, then the others in their own order. */
+private fun ranked(entries: List<GameGenre>, ladder: IntArray): List<GameGenre> {
+    val distinct = entries.distinctBy { it.id }
+    return distinct.filter { it.id in ladder }.sortedBy { ladder.indexOf(it.id) } + distinct.filter { it.id !in ladder }
+}
 
-/** The one genre that describes a game best (shown on the home screen); the whole list stays in the metadata. */
-fun mainGenre(genres: List<GameGenre>): GameGenre? =
-    firstRanked(genres.filter { it.id != INDIE }, GENRE_LADDER) ?: genres.firstOrNull { it.id == INDIE }
+/** Every genre of [genres] from the one that describes the game best to the least; Indie only when nothing else is listed. */
+fun rankedGenres(genres: List<GameGenre>): List<GameGenre> =
+    ranked(genres.filter { it.id != INDIE }, GENRE_LADDER).ifEmpty { genres.filter { it.id == INDIE }.take(1) }
 
 /**
- * The one theme that describes a game best, or null when IGDB lists none worth showing. Action only counts
- * when no other usable theme is listed; Erotic never does.
+ * Every usable theme of [themes] from the most to the least telling. Action only counts when no other usable
+ * theme is listed; Erotic never does.
  */
-fun mainTheme(themes: List<GameGenre>): GameGenre? {
+fun rankedThemes(themes: List<GameGenre>): List<GameGenre> {
     val usable = themes.filter { it.id != EROTIC }
-    return firstRanked(usable.filter { it.id != ACTION }, THEME_LADDER) ?: usable.firstOrNull { it.id == ACTION }
+    return ranked(usable.filter { it.id != ACTION }, THEME_LADDER).ifEmpty { usable.filter { it.id == ACTION }.take(1) }
+}
+
+/** The one genre that describes a game best (IGDB data only); the whole list stays in the metadata. */
+fun mainGenre(genres: List<GameGenre>): GameGenre? = rankedGenres(genres).firstOrNull()
+
+/** The one theme that describes a game best (IGDB data only), or null when IGDB lists none worth showing. */
+fun mainTheme(themes: List<GameGenre>): GameGenre? = rankedThemes(themes).firstOrNull()
+
+/**
+ * Up to [limit] entries: [steam] in its order; when that has fewer, the first IGDB [ranked] entries that are
+ * [eligible] as a filler and not present yet. Without any Steam entry the IGDB ranking decides alone.
+ */
+private fun top(steam: List<GameGenre>, ranked: List<GameGenre>, limit: Int, eligible: (GameGenre) -> Boolean): List<GameGenre> {
+    require(limit > 0) { "limit must be positive" }
+    if (steam.isEmpty()) return ranked.take(limit)
+    val result = steam.take(limit).toMutableList()
+    for (entry in ranked) {
+        if (result.size >= limit) break
+        if (eligible(entry) && result.none { it.id == entry.id }) result += entry
+    }
+    return result
+}
+
+/**
+ * The genres shown on the card, at most [limit]: those Steam's user tags give ([steamGenres], vote order), the
+ * next ones from IGDB's ranking when Steam gives fewer, or IGDB's ranking alone when Steam gives none (or the
+ * game has no Steam tags). Never a duplicate; Indie only when nothing else exists.
+ */
+fun topGenres(igdbGenres: List<GameGenre>, steamTags: List<String>, limit: Int = 2): List<GameGenre> =
+    top(steamGenres(steamTags), rankedGenres(igdbGenres), limit) { it.id != INDIE }
+
+/**
+ * The themes shown on the card, at most [limit], chosen like [topGenres]. Action (IGDB's genre in disguise) only
+ * counts when it is the one usable theme, whichever provider lists it.
+ */
+fun topThemes(igdbThemes: List<GameGenre>, steamTags: List<String>, limit: Int = 2): List<GameGenre> {
+    val steam = steamThemes(steamTags)
+    val chosen = top(steam.filter { it.id != ACTION }, rankedThemes(igdbThemes), limit) { it.id != ACTION }
+    return chosen.ifEmpty { steam.take(limit) }
 }

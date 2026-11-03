@@ -170,6 +170,9 @@ internal fun nativeSettings(
     row("about_pcgw", Symbols.HDR_ON, "Technical data · PCGamingWiki",
         RowValue.Action { providerWebsite("https://www.pcgamingwiki.com/wiki/PCGamingWiki:Copyrights") },
         "Native HDR evidence from PCGamingWiki (CC BY-NC-SA 3.0); the derived status is Delos's interpretation.", tab = SettingsTab.ABOUT, section = "Game data")
+    row("about_steam", Symbols.GENRE_UNKNOWN, "Genre and theme tags · Steam store",
+        RowValue.Action { providerWebsite("https://store.steampowered.com/") },
+        "Card genres and themes come from Steam's public user tags where a game has a Steam page, read from the store page through the Delos metadata service. Unofficial and may change; IGDB is used otherwise.", tab = SettingsTab.ABOUT, section = "Game data")
     row("about_hltb", Symbols.SPORTS_ESPORTS, "Completion times · HowLongToBeat",
         RowValue.Action { providerWebsite("https://howlongtobeat.com/") },
         "HowLongToBeat's headline time. Unofficial client adapted from howlongtobeatpy (MIT, © 2018 Michele).", tab = SettingsTab.ABOUT, section = "Game data")

@@ -23,7 +23,7 @@ Worker secrets (never in the repository, never in `wrangler.toml`, never logged)
 
 All endpoints are `GET` only and answer `application/json`. Anything else is `405` (with `Allow: GET`), an
 unknown path is `404`. CORS is not enabled (native app only, no preflight). Every response carries
-`Cache-Control`: `public, max-age=21600` on success, `no-store` on errors. Parameter names are fixed, each may
+`Cache-Control`: `public, max-age=21600` on success (`86400` for Steam tags), `no-store` on errors. Parameter names are fixed, each may
 appear once, unknown parameters are `400`. Strings are trimmed; control characters are rejected.
 
 | Endpoint | Parameters | Upstream call (built by the Worker) | Success body |
@@ -33,6 +33,7 @@ appear once, unknown parameters are `400`. Strings are trimmed; control characte
 | `/v1/pcgw/page` | `title=<title>` | `action=parse&page=<title>&prop=wikitext` | MediaWiki JSON (`{"parse":{"wikitext":{"*":...}}}`) |
 | `/v1/pcgw/redirect` | `title=<title>` | `action=query&titles=<title>&redirects=1` | MediaWiki JSON (`{"query":{"redirects":[...]}}`) |
 | `/v1/pcgw/search` | `q=<title>` | `action=query&list=search&srsearch=<q>&srnamespace=0&srlimit=5` | MediaWiki JSON (`{"query":{"search":[...]}}`) |
+| `/v1/steam/tags` | `app=<positive int, max 2000000000>` | `GET https://store.steampowered.com/app/<id>/?l=english` (see "Steam store tags") | `{"app":<id>,"tags":["Survival Horror",...]}`, built by the Worker |
 
 A wiki `<title>` is 1-200 code points without control characters and without `# < > [ ] { | }` (MediaWiki
 forbids those in page titles, so no wiki page can carry them). IGDB search escaping: `\` and `"` are escaped,
@@ -63,6 +64,28 @@ included.
 The app treats every non-2xx answer and every network error as a provider failure that uses its existing
 per-provider backoff.
 
+## Steam store tags
+
+`GET /v1/steam/tags?app=<positive integer, max 2000000000>` returns the user tags of a game's Steam store page,
+most voted first, for the Delos info row: `{"app":2101960,"tags":["Survival Horror","Horror","Sci-fi"]}` (at
+most 20 tags). The Worker fetches `https://store.steampowered.com/app/<id>/?l=english` itself with a browser
+`User-Agent` and an age-gate cookie (`birthtime`, `lastagecheckage`, `wants_mature_content`) so age-restricted
+games return their normal page, reads the tag anchors (`class="app_tag"`, the "+" button is skipped), decodes
+HTML entities and returns plain strings only. **No HTML is ever relayed.**
+
+This reads the **public store page**. It is not an official API, is not covered by any Steam stability promise
+and may change or be blocked at any time. When that happens the app simply keeps using IGDB for the genre and
+theme pills, so a failure degrades the feature and never the app.
+
+- No tags (the page has none, an age gate without tags, 404, or Steam redirects to the store front page because
+  the app was removed) is a normal answer: `200` with `"tags":[]`, cached 24 hours.
+- Steam answering 429/503 is `503 upstream_busy` (`Retry-After` 30 s); any other failure, a redirect to another
+  host, a malformed answer or a network error is a generic `502 upstream_error`, a 5 s timeout is
+  `504 upstream_timeout`. Failures are never cached.
+- At most two same-host redirects are followed (a redirect to the front page ends the lookup with no tags);
+  a redirect to any other host or protocol is refused.
+- Fetches are paced 600 ms apart per isolate, and the usual per-client rate limit applies.
+
 ## Behavior and abuse limits
 
 - **Validation**: strict allow-lists, length caps and integer ranges (above); queries are built from the
@@ -73,11 +96,13 @@ per-provider backoff.
   token bucket (burst 60, refill 200 per minute per client, up to 2000 clients tracked) is used instead; it is
   per isolate and therefore approximate.
 - **Upstream pacing**: per isolate, IGDB calls are spaced 260 ms apart (IGDB allows 4 requests/s) and
-  PCGamingWiki calls 550 ms; a call that would wait longer than 2.5 s / 4 s is refused with 503 `busy`.
-- **Caching**: successful lookups are cached for 6 hours, keyed by the normalized, validated URL only (not by
-  headers or the client). Two layers: an in-isolate LRU (256 entries) and the Workers Cache API. The Cache API
-  stores only on custom domains, not on `*.workers.dev`, so on workers.dev the in-isolate layer does the work.
-  Identical concurrent lookups share one upstream call. Errors are never cached.
+  PCGamingWiki calls 550 ms, Steam store pages 600 ms; a call that would wait longer than 2.5 s / 4 s / 4 s is
+  refused with 503 `busy`.
+- **Caching**: successful lookups are cached for 6 hours (Steam tags: 24 hours), keyed by the normalized,
+  validated URL only (not by headers or the client). Two layers: an in-isolate LRU (256 entries) and the
+  Workers Cache API. The Cache API stores only on custom domains, not on `*.workers.dev`, so on workers.dev the
+  in-isolate layer does the work. Identical concurrent lookups share one upstream call. Errors are never
+  cached.
 - **Twitch app token**: fetched with the client credentials, kept in memory until 60 s before expiry, refreshed
   once when IGDB answers 401 (a second 401 is `upstream_auth`), and never returned. A failing token request is
   not repeated for 30 s.
@@ -85,13 +110,14 @@ per-provider backoff.
   cookies are kept in memory per isolate, and one re-login plus one retry happens when the wiki reports a lost
   session. A definitely refused login is not retried for 10 minutes (a wrong or rotated password must not be
   hammered into a lockout); throttling is retried.
-- **Redirects** from providers are never followed (`redirect: "manual"`), so a 307/308 cannot replay a
-  credential-carrying POST elsewhere.
+- **Redirects** from providers are never followed automatically (`redirect: "manual"`), so a 307/308 cannot
+  replay a credential-carrying POST elsewhere. The only exception is the Steam store page lookup (no
+  credentials), which follows at most two redirects within `store.steampowered.com` itself.
 - **Logging**: nothing per request. On a failure (status >= 500) one line with route, status, error code and the
   first 12 hex digits of a SHA-256 of the normalized query; never the query text, secrets or upstream text.
 - **Free plan limits**: 100,000 requests/day (beyond that Cloudflare answers with error 1027 before the Worker
   runs), 10 ms CPU per request (upstream waiting does not count), 50 subrequests per request (a request makes
-  at most about 4: token, or login token + login + query).
+  at most about 4: token, or login token + login + query; at most 3 for a Steam lookup).
 
 ## Develop and test
 
@@ -143,6 +169,7 @@ curl.exe -s "$URL/v1/pcgw/cargo?page=Elden%20Ring"
 curl.exe -s "$URL/v1/pcgw/page?title=Elden%20Ring"                    # wikitext (large)
 curl.exe -s "$URL/v1/pcgw/redirect?title=Sea%20of%20Stars%3A%20Sunset%20Edition"
 curl.exe -s "$URL/v1/pcgw/search?q=Witcher%203"
+curl.exe -s "$URL/v1/steam/tags?app=2101960"                          # {"app":2101960,"tags":["Survival Horror",...]}
 # Negative checks
 curl.exe -s -i "$URL/v1/igdb/games?search="                           # 400 invalid_request
 curl.exe -s -i -X POST "$URL/v1/igdb/games?search=x"                  # 405

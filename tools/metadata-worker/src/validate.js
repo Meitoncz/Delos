@@ -9,6 +9,7 @@ export const MAX_TITLE_LENGTH = 200;
 export const MAX_STEAM_IDS = 20;
 export const MAX_IGDB_ID = 2_000_000_000;
 export const MAX_STEAM_APP_ID = 4_294_967_295;
+export const MAX_STEAM_TAGS_APP_ID = 2_000_000_000;
 
 function codePoints(value) {
   let count = 0;

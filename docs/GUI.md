@@ -90,26 +90,48 @@ SemiBold, 17 px, tracking .14 em, `colors.text3`) with an 8 px gap to the pills;
 least one pill is. The **facts** come first (`Running on <PC>` while the game runs, native HDR/SDR, the
 HowLongToBeat headline duration, `Virtual display`; the PC's name is no chip while nothing runs), then a
 divider (a 2 px wide, 28 px tall rounded bar in `colors.text3` at 55 % alpha, 16 px margins on both sides) and
-the **tags**: the game's one main genre and one theme. A game shows at most one of each; IGDB's complete
-genre and theme lists stay in the metadata and keep feeding the Y filter. Games without a genre or theme just
-omit that pill, and without either the divider goes away too; built-in apps and games without metadata show
-the facts only. The facts keep their usual pill look; the tag pills have exactly the same size. The row wraps at group boundaries (facts as before,
-the tags as one group): when the tags do not fit beside the facts they move to the next line as a whole and
-the divider stays out, also at 125 % interface scale.
+the **tags**: the game's genre pill and theme pill. **Each pill shows up to two entries** inside one pill,
+set apart by a thin vertical bar in the pill's own text color (1.5 px wide, 18 px tall, rounded, 55 % alpha,
+12 px margins on both sides): `[icon Shooter | icon Adventure] [icon Horror | icon Sci-fi]`. Every entry has
+its own icon and name, the icon-to-text spacing is that of the other pills; with one entry the pill shows just
+that entry (no bar), and with none the pill is omitted. IGDB's complete genre and theme lists stay in the
+metadata and keep feeding the Y filter: **Steam tags only drive the card pills**, never the filter. Without a
+genre or theme pill the divider goes away too; built-in apps and games without metadata show the facts only.
+The facts keep their usual pill look; the tag pills have exactly the same height, padding, font and icon size.
+The row wraps at group boundaries (facts as before, the tags as one group, a pill is never split): when the
+tags do not fit beside the facts they move to the next line as a whole and the divider stays out, also at
+125 % interface scale.
 
-- **Main genre** (`mainGenre` in `shell/ui/GameTags.kt`) is the first genre of this ladder that the game
-  has: Shooter, Fighting, Racing, Role-playing, Real Time Strategy, Turn-based strategy, Tactical, Hack and
-  slash/Beat 'em up, Platform, Adventure, Puzzle, MOBA, Music, Visual Novel, Card & Board Game, Quiz/Trivia,
-  Pinball, Point-and-click, Sport, Simulator, Strategy, Arcade; genres IGDB adds later come after these in
-  IGDB's order. Indie is a business model, not a genre: it only shows when it is the game's only entry.
-  Examples: Cronos (Shooter, Puzzle, Adventure) shows Shooter, Forza (Racing, Simulator, Sport, Arcade)
-  Racing, LEGO Batman (Puzzle, Adventure) Adventure, Overcooked (Simulator, Strategy, Indie) Simulator,
-  Cairn (Simulator, Sport, Adventure, Indie) Adventure.
-- **Main theme** (`mainTheme`) skips Erotic entirely and Action unless it is the game's only usable theme
-  (Life is Strange: Double Exposure lists Action alone and shows it), then takes the first of: Horror,
-  Survival, Open world, Science fiction, Fantasy, Stealth, Warfare, Sandbox, Mystery, Thriller, Party, 4X,
-  Historical, Comedy, Drama, Romance, Business, Educational, Kids, Non-fiction; later additions come after
-  these.
+- **Steam tags first** (`topGenres`, `topThemes` in `shell/ui/GameTags.kt`, the mapping in
+  `shell/ui/SteamTags.kt`). A game with a Steam app id (the first one IGDB lists) gets its Steam *user tags*,
+  most voted first, from the metadata Worker (`GET /v1/steam/tags?app=<id>`, which reads the public store
+  page; this is **unofficial and may change or be blocked**). Of the first 15 tags, every tag the mapping table
+  knows becomes a genre or a theme entry in vote order, without duplicates; features, modes, moods, art styles
+  and meta tags (Singleplayer, Co-op, Indie, Atmospheric, Third Person, ...) are ignored. The table maps each
+  Steam tag name (case-insensitive) to exactly one IGDB genre or theme, so the icons and names are IGDB's
+  (Platformer -> Platform, Action-Adventure -> Adventure, Cooking -> Simulator, Funny -> Comedy, Open World ->
+  Open world, ...). A few "weak" mappings are only a fallback: Roguelike/Roguelite -> Role-playing joins the
+  genres only when fewer than two strong genres exist, and Action/Superhero -> the Action theme only when the
+  game has no other theme (the rule IGDB's Action theme follows too). When Steam gives one entry the second
+  slot is filled from IGDB's ranking (below) with the first entry not shown yet; Indie and Action never fill.
+- **IGDB ladder** is used when a game has no Steam id, the Steam fetch failed or the store lists no mappable
+  tag. Genres are ordered by this ladder, and the pill shows the first two: Shooter, Fighting, Racing,
+  Role-playing, Real Time Strategy, Turn-based strategy, Tactical, Hack and slash/Beat 'em up, Platform,
+  Adventure, Puzzle, MOBA, Music, Visual Novel, Card & Board Game, Quiz/Trivia, Pinball, Point-and-click,
+  Sport, Simulator, Strategy, Arcade; genres IGDB adds later come after these in IGDB's order. Indie is a
+  business model, not a genre: it only shows when it is the game's only entry. Themes skip Erotic entirely
+  and Action unless it is the game's only usable theme (Life is Strange: Double Exposure lists Action alone
+  and shows it), then follow: Horror, Survival, Open world, Science fiction, Fantasy, Stealth, Warfare,
+  Sandbox, Mystery, Thriller, Party, 4X, Historical, Comedy, Drama, Romance, Business, Educational, Kids,
+  Non-fiction; later additions come after these. `mainGenre`/`mainTheme` are the first entries of this
+  ranking (`rankedGenres`, `rankedThemes`).
+- Examples. From Steam tags: Cronos (Survival Horror, Horror, Sci-fi, Third-Person Shooter, ...) shows
+  `Shooter | Adventure` (the second genre comes from IGDB's Shooter, Puzzle, Adventure) and
+  `Horror | Science fiction`; LEGO Batman (Co-op, Open World, Superhero, ..., Action-Adventure, Funny, ...,
+  3D Platformer, Adventure) `Adventure | Platform` and `Open world | Comedy`; Forza Horizon (Racing, Open
+  World, Driving, ..., Automobile Sim, ...) `Racing | Simulator` and `Open world`. From IGDB alone: LEGO
+  Batman (Puzzle, Adventure) shows `Adventure | Puzzle`, Forza (Racing, Simulator, Sport, Arcade)
+  `Racing | Sport`, Overcooked (Simulator, Strategy, Indie) `Simulator | Strategy`.
 - The **genre pill** is the accent of the row: filled with a tint of the game's main color from its cover
   (`HeroBitmaps.coverHues`, the game background's while the cover's are unknown) over the glass:
   `hsl(hue, 0.8 × vividness, 34 %)` at 35 % alpha, a 1 px `hsl(hue, …, 55 %)` border at 55 % alpha, and
@@ -171,8 +193,8 @@ unmatched until the user picks a match. The IGDB query drops symbol characters s
 "LEGO® Batman™: Legacy of the Dark Knight" contain). IGDB search is PC-focused: console-only entries
 are dropped, but entries without platform data are kept. IGDB IDs, Steam AppIDs and host app IDs are distinct.
 Metadata matches never overwrite manual SteamGridDB artwork matches. Data/matches are cached in
-application files; missing provider data stays missing, and genres are IGDB genres only (IGDB themes
-share no ID space with genres and are not substituted). A fully answered record is refreshed after
+application files; missing provider data stays missing, and filter genres are IGDB genres only (IGDB themes
+share no ID space with genres and are not substituted; Steam tags never feed the filter). A fully answered record is refreshed after
 seven days and an unmatched one after six hours. Each provider's failure time is stored in the
 record: a failing provider is not asked about that game again for 30 minutes, across focus changes
 and restarts, unless the user chooses Refresh. A record stamped in the future is treated as stale.
@@ -197,7 +219,11 @@ which holds their credentials, authenticates (Twitch app token, PCGamingWiki bot
 upstream queries itself from validated parameters and returns the providers' raw JSON; the app keeps all
 matching, parsing, caching and backoff. The app clients never follow redirects, and an HTTP 429/503 from
 the Worker (its rate limit or an upstream throttle), any other non-2xx answer, malformed JSON or a network
-error is a provider failure that uses the per-provider backoff, never an empty or absent result.
+error is a provider failure that uses the per-provider backoff, never an empty or absent result. The Steam
+tags (`steamTags` and `steamFailedAt` in the record, only asked for games with a Steam id, after the other
+secondary lookups) follow the same rules, with one difference: a store page without tags is a successful empty
+list. A failed Steam fetch keeps the tags stored earlier, is not shown as an error (without earlier tags the
+pills use IGDB), and the record is retried after the 30-minute backoff.
 PCGamingWiki notes are reduced to reader text
 (references, templates' named arguments, URLs and link markup removed) before the native-HDR
 heuristics run. The wiki's own HDR value decides: `false` and `hackable` are SDR. Notes never promote

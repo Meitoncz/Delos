@@ -48,6 +48,9 @@ data class GameMetadata(
     val igdbFailedAt: Long = 0,
     val pcgwFailedAt: Long = 0,
     val hltbFailedAt: Long = 0,
+    val steamFailedAt: Long = 0,
+    /** The game's Steam store user tags, most voted first; empty when it has no Steam id or the store listed none. */
+    val steamTags: List<String> = emptyList(),
 )
 
 @Immutable

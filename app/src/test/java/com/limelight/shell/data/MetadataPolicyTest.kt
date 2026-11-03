@@ -137,6 +137,10 @@ class MetadataPolicyTest {
         assertTrue(refreshDue(base.copy(pcgwFailedAt = longAgo), now))
         // One provider still backing off does not hide another whose backoff is over.
         assertTrue(refreshDue(base.copy(pcgwFailedAt = justFailed, hltbFailedAt = longAgo), now))
+        // The Steam provider has its own backoff like the others
+        assertFalse(refreshDue(base.copy(steamFailedAt = justFailed), now))
+        assertTrue(refreshDue(base.copy(steamFailedAt = longAgo), now))
+        assertTrue(refreshDue(base.copy(steamFailedAt = justFailed, hltbFailedAt = longAgo), now))
         assertTrue(refreshDue(base.copy(pcgwFailedAt = now + TimeUnit.DAYS.toMillis(1)), now))
         assertFalse(refreshDue(GameMetadata(igdbFailedAt = justFailed), now))
         assertTrue(refreshDue(GameMetadata(igdbFailedAt = longAgo), now))
@@ -162,5 +166,10 @@ class MetadataPolicyTest {
 
         val themed = gson.fromJson("""{"candidate":{"id":1,"name":"Game","themes":[{"id":17,"name":"Fantasy"},{"id":3},null]}}""", GameMetadata::class.java).validated()
         assertEquals(listOf(GameGenre(17, "Fantasy")), themed!!.candidate!!.themes)
+
+        // Steam tags: missing (older record) and null entries are defaulted, the order of real tags is kept
+        assertTrue(minimal.steamTags.isEmpty())
+        val tagged = gson.fromJson("""{"candidate":{"id":1,"name":"Game"},"steamTags":["Horror",null,"Sci-fi"]}""", GameMetadata::class.java).validated()
+        assertEquals(listOf("Horror", "Sci-fi"), tagged!!.steamTags)
     }
 }

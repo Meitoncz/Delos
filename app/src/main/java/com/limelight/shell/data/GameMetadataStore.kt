@@ -228,7 +228,7 @@ class GameMetadataStore internal constructor(
     }
 
     /**
-     * Asks PCGamingWiki and HowLongToBeat about a matched game. A provider whose last failure is still inside its
+     * Asks PCGamingWiki, HowLongToBeat and (for a game with a Steam id) the Steam store about a matched game. A provider whose last failure is still inside its
      * backoff is skipped (unless [force]) and keeps its previous answer; the failure time is persisted per provider.
      */
     private suspend fun resolve(pc: Pc, app: App, candidate: MetadataCandidate, manual: Boolean, previous: GameMetadata?, force: Boolean) {
@@ -262,10 +262,30 @@ class GameMetadataStore internal constructor(
             }
         }
         currentCoroutineContext().ensureActive()
-        val failed = hdrFailedAt > 0 || completionFailedAt > 0
+        // Steam store user tags drive the card's genre and theme pills for games that have a Steam id; a failed
+        // fetch keeps the earlier tags and, like the other providers, is remembered so it is not retried on every focus.
+        var steamTags = carried?.steamTags.orEmpty()
+        var steamFailedAt = carried?.steamFailedAt ?: 0L
+        if (candidate.steamAppIds.isEmpty()) {
+            steamTags = emptyList()
+            steamFailedAt = 0
+        } else if (force || !isBackedOff(steamFailedAt, started)) {
+            try {
+                steamTags = blocking { providers.steamTags(candidate) }
+                steamFailedAt = 0
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                currentCoroutineContext().ensureActive()
+                steamFailedAt = clock()
+            }
+        }
+        currentCoroutineContext().ensureActive()
+        val failed = hdrFailedAt > 0 || completionFailedAt > 0 || steamFailedAt > 0
         val data = GameMetadata(
             candidate, hdr, completion, if (failed) 0 else clock(), manual,
             igdbFailedAt = 0, pcgwFailedAt = hdrFailedAt, hltbFailedAt = completionFailedAt,
+            steamFailedAt = steamFailedAt, steamTags = steamTags,
         )
         withContext(io) { write(pc, app, data) }
         publish(key(pc, app), GameMetadataState(data = data, resolved = true, error = errorFor(data)))
@@ -378,7 +398,7 @@ class GameMetadataStore internal constructor(
     private data class CachedMetadata(val schema: Int, val data: GameMetadata)
 
     private companion object {
-        const val CACHE_SCHEMA = 5
+        const val CACHE_SCHEMA = 6
         const val LIBRARY_CONCURRENCY = 2
         const val KEY_GENRE = "metadata_filter_genre"
         const val KEY_THEME = "metadata_filter_theme"

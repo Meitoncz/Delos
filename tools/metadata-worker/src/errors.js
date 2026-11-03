@@ -19,10 +19,10 @@ export const MAX_UPSTREAM_TEXT = 2_000_000;
 export const UPSTREAM_TIMEOUT_MS = 8000;
 
 /** fetch() to an upstream: no redirects (a 307/308 must never replay a credential-carrying POST), bounded time. */
-export async function upstreamFetch(fetchFn, url, init) {
+export async function upstreamFetch(fetchFn, url, init, timeoutMs = UPSTREAM_TIMEOUT_MS) {
   let response;
   try {
-    response = await fetchFn(url, { ...init, redirect: "manual", signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS) });
+    response = await fetchFn(url, { ...init, redirect: "manual", signal: AbortSignal.timeout(timeoutMs) });
   } catch (error) {
     throw new HttpError(error && error.name === "TimeoutError" ? 504 : 502, error && error.name === "TimeoutError" ? "upstream_timeout" : "upstream_error");
   }

@@ -25,7 +25,7 @@ internal fun isBackedOff(failedAt: Long, now: Long) = failedAt in 1..now && now 
  */
 internal fun refreshDue(data: GameMetadata?, now: Long): Boolean {
     if (data == null) return true
-    val failures = listOf(data.igdbFailedAt, data.pcgwFailedAt, data.hltbFailedAt).filter { it > 0 }
+    val failures = listOf(data.igdbFailedAt, data.pcgwFailedAt, data.hltbFailedAt, data.steamFailedAt).filter { it > 0 }
     if (data.candidate == null) {
         if (failures.isNotEmpty()) return failures.any { !isBackedOff(it, now) }
         return !isFresh(data.updatedAt, METADATA_ABSENT_MAX_AGE, now)
@@ -57,7 +57,10 @@ internal fun GameMetadata.validated(): GameMetadata? {
     val checkedCompletion = nullable(completion)?.takeIf {
         nullable(it.name) != null && nullable(it.url) != null && nullable(it.headline) != null
     }
-    return copy(candidate = checkedCandidate, hdr = checkedHdr, completion = checkedCompletion)
+    return copy(
+        candidate = checkedCandidate, hdr = checkedHdr, completion = checkedCompletion,
+        steamTags = nullable(steamTags)?.mapNotNull { nullable(it) }.orEmpty(),
+    )
 }
 
 private val combiningMarks = "\\p{M}+".toRegex()

@@ -15,7 +15,7 @@ const json = (value, status = 200, headers = []) =>
   new Response(typeof value === "string" ? value : JSON.stringify(value), { status, headers: new Headers(headers) });
 
 /**
- * A fake world: Twitch, IGDB and PCGamingWiki behind one fetch function plus a manual clock. Nothing touches the
+ * A fake world: Twitch, IGDB, PCGamingWiki and the Steam store behind one fetch function plus a manual clock. Nothing touches the
  * network and nothing really sleeps. Every upstream call is recorded in [calls].
  */
 export function createWorld(options = {}) {
@@ -30,6 +30,7 @@ export function createWorld(options = {}) {
     igdbResponse: (_call) => json([{ id: 1, name: "Game" }]),
     tokenResponse: (n) => json({ access_token: `tok-${n}`, expires_in: 3600 }),
     wikiResponse: (_params) => json({ cargoquery: [] }),
+    steamResponse: (_call) => new Response("<html></html>"),
     loginResult: "Success",
     validSessions: new Set(),
     ...options,
@@ -56,6 +57,7 @@ export function createWorld(options = {}) {
       return world.igdbResponse(call);
     }
     if (url.host === "www.pcgamingwiki.com") return wiki(world, call);
+    if (url.host === "store.steampowered.com") return world.steamResponse(call);
     throw new Error(`unexpected upstream ${url.host}`);
   };
   return world;
