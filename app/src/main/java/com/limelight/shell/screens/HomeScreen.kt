@@ -283,7 +283,8 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
 
     Box(Modifier.fillMaxSize()) {
         GameInfo(pc, focused,
-            modifier = Modifier.padding(start = 150.px, top = if (row) 210.px else 116.px), reducedMotion = appearance.reducedMotion,
+            // The block (logo, GAME INFO label and pill row) sits high enough that the pills clear the focused cover
+            modifier = Modifier.padding(start = 150.px, top = if (row) 150.px else 100.px), reducedMotion = appearance.reducedMotion,
             // The same condition as the animated background's: the genre takes the game's colors only while it does
             matchGameColors = appearance.matchGameColors && !appearance.materialYou)
         CompositionLocalProvider(LocalBringIntoViewSpec provides NoAutoScroll) {
