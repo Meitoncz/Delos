@@ -48,6 +48,30 @@ internal object HyperspaceConfig {
 }
 
 /** CPU counterparts of the shader's exit equations; x/y and dimensions are physical pixels. */
+/**
+ * The tunnel's travel is the INTEGRAL of its speed over time, never time times the current speed: connection stages move the
+ * progress in steps, and a speed that multiplies the elapsed time would make the whole tunnel leap at every step. The speed
+ * follows a smoothed progress, so even a big step only bends the speed gently.
+ */
+internal object HyperspaceTravel {
+    /** Time constant (seconds) with which the speed's progress follows the real progress. */
+    const val FOLLOW_SECONDS = .55f
+
+    /** Longest frame step that counts (a stalled frame must not throw the tunnel forward). */
+    const val MAX_STEP = .1f
+
+    fun speed(progress: Float): Float = HyperspaceConfig.VELOCITY + progress * progress * HyperspaceConfig.ACCELERATION
+
+    /** [smoothed] moved towards [target] over [dt] seconds (exponential approach, never overshoots). */
+    fun follow(smoothed: Float, target: Float, dt: Float): Float {
+        val step = dt.coerceIn(0f, MAX_STEP)
+        return smoothed + (target - smoothed) * (1f - kotlin.math.exp(-step / FOLLOW_SECONDS))
+    }
+
+    /** [travel] advanced by one frame of [dt] seconds at the speed of [smoothed]. */
+    fun advance(travel: Float, smoothed: Float, dt: Float): Float = travel + speed(smoothed) * dt.coerceIn(0f, MAX_STEP)
+}
+
 internal object HyperspaceTimeline {
     fun smootherstep(value: Float): Float {
         val x = unit(value)

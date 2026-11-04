@@ -73,6 +73,10 @@ object LaunchHandoff {
     /** Last drawn connection progress; copied when the stream window takes ownership. */
     @Volatile var progress: Float = 0f
 
+    /** How far the tunnel has travelled and the smoothed progress that drives its speed; the stream window goes on from them. */
+    @Volatile var travel: Float = 0f
+    @Volatile var speedProgress: Float = 0f
+
     /** Shared scene origin in System.nanoTime units; never restart it during window handoff. */
     @Volatile var startedAt: Long = 0L
 

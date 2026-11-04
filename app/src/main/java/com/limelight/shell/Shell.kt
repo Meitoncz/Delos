@@ -160,6 +160,8 @@ fun Shell(
     val scope = rememberCoroutineScope()
     // The connection line the launch screen tells under the title (null: the greeting)
     val launchLine = remember { mutableStateOf<String?>(null) }
+    // Set when the launch overlay was cleared as the stream window took over; the next resume does the return work
+    val returningFromStream = remember { mutableStateOf(false) }
     val activity = LocalActivity.current
     val actions = remember(launcher) { ShellGameActions(shell, launcher, feedback, scope) }
     val reducedMotion by rememberUpdatedState(appearance.reducedMotion)
@@ -272,6 +274,8 @@ fun Shell(
         val launch = shell.launch ?: return@LaunchedEffect
         LaunchHandoff.background = launch.background
         LaunchHandoff.progress = 0f
+        LaunchHandoff.travel = 0f
+        LaunchHandoff.speedProgress = 0f
         // The first witty connection line is told here already; the stream window goes on with the next ones
         StreamLoader.resetLines()
         launchLine.value = null
@@ -292,6 +296,15 @@ fun Shell(
     }
     // Back from the stream: the overlay goes away, the focus stays on the game, the PC's state is refreshed.
     // Left through the stream menu, the portal's burst that began over the stream ends here.
+    // The stream window fully covers this one: the launch overlay (and its tunnel) goes away now, not at the next resume,
+    // where it would flash for a few frames when the stream is left. The resume work is remembered for that moment.
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
+        if (shell.launch != null && shell.diving) {
+            shell.launch = null
+            shell.diving = false
+            returningFromStream.value = true
+        }
+    }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         StreamExit.take()?.let { exit ->
             scope.launch {
@@ -317,7 +330,8 @@ fun Shell(
                 shell.portal = null
             }
         }
-        if (shell.launch != null && shell.diving) {
+        if (returningFromStream.value || (shell.launch != null && shell.diving)) {
+            returningFromStream.value = false
             shell.launch = null
             shell.diving = false
             repo.refresh()

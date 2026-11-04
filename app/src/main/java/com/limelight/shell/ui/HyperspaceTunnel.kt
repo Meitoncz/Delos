@@ -32,6 +32,8 @@ internal fun HyperspaceTunnel(
     // Deliberately let AGSL compilation errors surface instead of hiding a broken port.
     val shader = remember { RuntimeShader(HYPERSPACE_SHADER) }
     val brush = remember(shader) { ShaderBrush(shader) }
+    // Draw-phase state (not Compose state): the travel integral and the smoothed progress, taken over from the other window
+    val run = remember { TunnelRun(LaunchHandoff.travel, LaunchHandoff.speedProgress) }
     Box(modifier.fillMaxSize(), contentAlignment = AbsoluteAlignment.TopLeft) {
         Canvas(
             Modifier
@@ -49,8 +51,17 @@ internal fun HyperspaceTunnel(
             if (o >= 1f || size.width <= 0f || size.height <= 0f) return@Canvas
             // State reads and every uniform mutation belong to drawing, not composition/layout.
             shader.setFloatUniform("uResolution", size.width, size.height)
-            shader.setFloatUniform("uTime", clock())
-            shader.setFloatUniform("uProgress", progress())
+            val now = clock()
+            val dt = if (run.lastTime < 0f) 0f else now - run.lastTime
+            run.lastTime = now
+            run.speedProgress = HyperspaceTravel.follow(run.speedProgress, progress().coerceIn(0f, 1f), dt)
+            // Frozen once the exit starts: the exit's own integral takes over in the shader
+            if (o <= 0f) run.travel = HyperspaceTravel.advance(run.travel, run.speedProgress, dt)
+            LaunchHandoff.travel = run.travel
+            LaunchHandoff.speedProgress = run.speedProgress
+            shader.setFloatUniform("uTime", now)
+            shader.setFloatUniform("uTravel", run.travel)
+            shader.setFloatUniform("uProgress", run.speedProgress)
             shader.setFloatUniform("uOpening", o)
             shader.setFloatUniform("uBg", colors.bg.red, colors.bg.green, colors.bg.blue)
             shader.setFloatUniform("uGold", colors.accent.red, colors.accent.green, colors.accent.blue)
@@ -61,11 +72,15 @@ internal fun HyperspaceTunnel(
     }
 }
 
+private class TunnelRun(var travel: Float, var speedProgress: Float) {
+    var lastTime = -1f
+}
+
 // The approved GLSL math, with top-left Canvas coordinates and premultiplied AGSL output.
 // Immutable CONFIG values become shader constants, not redundant per-frame uniform updates.
 private val HYPERSPACE_SHADER = """
 uniform float2 uResolution;
-uniform float uTime, uProgress, uOpening;
+uniform float uTime, uProgress, uOpening, uTravel;
 uniform float3 uBg, uGold, uCyan, uIndigo;
 
 const float2 uCenter = float2(${HyperspaceConfig.CENTER_X}, ${HyperspaceConfig.CENTER_Y});
@@ -115,7 +130,7 @@ half4 main(float2 fragCoord) {
     float t = uTime;
     // Integrated exponential acceleration/deceleration, continuous at exit takeover.
     float arrivalSeconds = ${HyperspaceConfig.OPENING_MS / 1000f};
-    float travel = max(0., t - o * arrivalSeconds) * baseSpeed + arrivalSeconds *
+    float travel = uTravel + arrivalSeconds *
         (baseSpeed * o + 3. * uOpeningAcceleration * (1. - (1. + k * o) * exp(-k * o)) / (k * k));
 
     float2 q = screen * (1. + ${HyperspaceConfig.LENS_PINCH} * float2(screen.y * screen.y, screen.x * screen.x));
