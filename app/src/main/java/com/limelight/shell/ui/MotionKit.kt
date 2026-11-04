@@ -136,6 +136,8 @@ fun Modifier.staggerEntrance(
     return graphicsLayer {
         alpha = appear.value
         translationY = Motion.rise(distance, appear.value, reduced)
+        // Each draw call fades by itself: an offscreen layer would cut off what lies outside the element (the glow and the ring of a focused circle)
+        compositingStrategy = CompositingStrategy.ModulateAlpha
     }
 }
 
