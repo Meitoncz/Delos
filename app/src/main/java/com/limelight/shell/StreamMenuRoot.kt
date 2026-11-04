@@ -133,12 +133,9 @@ internal fun StreamMenuRoot(
     LaunchedEffect(Unit) {
         if (start.animate) enterClock.animateTo(M.ENTER_TOTAL.toFloat(), tween(M.ENTER_TOTAL, easing = LinearEasing))
     }
-    // While the Upscaler page is open the stream is shown sharp, so the changes to the picture can be judged; it blurs
-    // again when the page closes (both eased, never a jump)
+    // While the Upscaler is on and its page is open the stream is shown sharp, so the changes to the picture can be judged;
+    // it blurs again when the page closes or the upscaler is turned off (both eased, never a jump)
     val sharp = remember { Animatable(1f) }
-    LaunchedEffect(page, closing) {
-        sharp.animateTo(if (page == MenuPage.UPSCALER && !closing) 0f else 1f, tween(Motion.GRADIENT, easing = Motion.Ease))
-    }
     LaunchedEffect(Unit) { snapshotFlow { gradient.value * sharp.value }.collect { host.setBackdrop(it) } }
     LaunchedEffect(closing) {
         gradient.animateTo(if (closing) 0f else 1f, tween(if (closing) M.CLOSE else Motion.GRADIENT, easing = Motion.Ease))
@@ -240,6 +237,10 @@ internal fun StreamMenuRoot(
     var supersamplingLevel by remember { mutableIntStateOf(host.supersamplingLevel) }
     LaunchedEffect(Unit) { while (true) { supersamplingLevel = host.supersamplingLevel; delay(250) } }
     @Suppress("UNUSED_EXPRESSION") changes // subscribes to it
+    val upscalerOn = host.upscalerRequested
+    LaunchedEffect(page, closing, upscalerOn) {
+        sharp.animateTo(if (page == MenuPage.UPSCALER && upscalerOn && !closing) 0f else 1f, tween(Motion.GRADIENT, easing = Motion.Ease))
+    }
     // Composed already visible-bound, so the dock's first tile exists when the focus is requested
     if (start.page == MenuPage.MAIN) InitialFocus(circleFocus.getValue(start.focus))
 

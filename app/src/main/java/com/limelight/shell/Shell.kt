@@ -290,15 +290,20 @@ fun Shell(
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         StreamExit.take()?.let { exit ->
             scope.launch {
-                shell.portalBurst = true
-                shell.portal = Portal(-1, Symbols.HOME, exit.label, exit.sub, cancellable = false, arriving = true)
-                delay(500)
-                // Quit game: the portal stays until the PC has really quit the game (at most 25 s)
-                var waited = 0
-                while (StreamExit.quitting && waited < 25_000) {
-                    delay(100)
-                    waited += 100
+                // Quit game: the portal waits, with its text and pulses, until the PC has really quit the game (at most 25 s),
+                // and only then bursts into the dashboard. Disconnect bursts at once.
+                val waitForQuit = StreamExit.quitting
+                shell.portalBurst = !waitForQuit
+                shell.portal = Portal(-1, if (waitForQuit) Symbols.POWER_SETTINGS_NEW else Symbols.HOME, exit.label, exit.sub, cancellable = false, arriving = true)
+                if (waitForQuit) {
+                    var waited = 0
+                    while (StreamExit.quitting && waited < 25_000) {
+                        delay(100)
+                        waited += 100
+                    }
+                    shell.portalBurst = true
                 }
+                delay(500)
                 shell.portal = null
                 delay(400)
                 shell.portalBurst = false
