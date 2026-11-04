@@ -41,4 +41,4 @@ jobs:
           path: |
             app/build/outputs/apk/nonRoot_game/debug/*arm64-v8a*.apk
             app/build/outputs/apk/nonRoot_game/debug/*armeabi-v7a*.apk
-          retention-days: 14
+          retention-days: 1
