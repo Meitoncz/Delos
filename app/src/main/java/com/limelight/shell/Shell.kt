@@ -310,13 +310,10 @@ fun Shell(
                         waited += 100
                     }
                 }
-                shell.portalBurst = true
+                // The loader just ends: the background and the portal fade away together into the dashboard, no second scene
                 feedback.play(Cue.SELECT)
                 shell.exitCover = false
-                delay(500)
                 shell.portal = null
-                delay(400)
-                shell.portalBurst = false
             }
         }
         if (shell.launch != null && shell.diving) {
@@ -617,13 +614,14 @@ fun Shell(
                 }
 
                 // Fully there from the first frame: the stream window's portal already ended on this very background
-                val cover by animateFloatAsState(if (shell.exitCover) 1f else 0f, if (shell.exitCover) snap() else tween(800, easing = EaseOut), label = "exitCover")
+                val cover by animateFloatAsState(if (shell.exitCover) 1f else 0f, if (shell.exitCover) snap() else tween(350, easing = EaseOut), label = "exitCover")
                 if (cover > 0f) {
                     Box(Modifier.fillMaxSize().graphicsLayer { alpha = cover }) {
                         Backdrop(appearance, colors, hero = if (appearance.background == BackgroundKind.STILL) shell.hero else null)
                     }
                 }
-                PortalOverlay(shell.portal, shell.portalBurst, haze, appearance.reducedMotion)
+                // The portal of a stream exit sits on the opaque cover: it must not blur the dashboard behind (that was the third scene)
+                PortalOverlay(shell.portal, shell.portalBurst, if (shell.portal?.arriving == true) null else haze, appearance.reducedMotion)
 
                 StreamResultLayer(shell.result, haze, appearance.reducedMotion, onRetry = ::retryStream, onBack = ::dismissResult)
 
