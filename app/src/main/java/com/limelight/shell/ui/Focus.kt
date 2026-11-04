@@ -16,6 +16,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.focus.FocusRequester
@@ -23,6 +24,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -140,6 +142,25 @@ fun Modifier.focusEffects(
         }
         .then(
             if (glow == null) Modifier
+            // A round element draws its glow itself: the blurred shadow of dropShadow is cut off at the element's square
+            else if (corner >= 500f) Modifier.drawBehind {
+                val a = ringAlpha
+                if (a > 0f) {
+                    val inner = (size.minDimension / 2f + glow.spread * k).coerceAtLeast(1f)
+                    val outer = inner + glow.blur * k
+                    val c = colors.glow
+                    drawCircle(
+                        Brush.radialGradient(
+                            0f to c.copy(alpha = c.alpha * a),
+                            inner / outer to c.copy(alpha = c.alpha * a),
+                            (inner / outer + 1f) / 2f to c.copy(alpha = c.alpha * a * .32f),
+                            1f to Color.Transparent,
+                            center = Offset(size.width / 2f, size.height / 2f + glow.offsetY * k), radius = outer,
+                        ),
+                        radius = outer, center = Offset(size.width / 2f, size.height / 2f + glow.offsetY * k),
+                    )
+                }
+            }
             else Modifier.dropShadow(shape) {
                 radius = glow.blur * k
                 spread = glow.spread * k
