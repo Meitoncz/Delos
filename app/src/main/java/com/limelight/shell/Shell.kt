@@ -26,6 +26,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -678,8 +679,9 @@ fun Shell(
             }
             val launch = shell.launch
             val launchLogo = launch?.let { rememberArtwork(artwork, it.pc, it.app, ArtKind.LOGO).value }
-            val launchParameters = remember(launch?.id) {
-                launch?.let { item -> activity?.let { StreamLoader.parametersFor(it, item.pc.uuid, item.app.id) } }.orEmpty()
+            // Read off the main thread: profile and per-game settings; the card gets them when they are ready
+            val launchParameters by produceState("", launch?.id) {
+                value = launch?.let { item -> activity?.let { withContext(Dispatchers.IO) { StreamLoader.parametersFor(it, item.pc.uuid, item.app.id) } } }.orEmpty()
             }
             LaunchOverlay(
                 launch?.let { LaunchCard(it.id, it.app.name, launchLine.value ?: StreamLoader.greeting(it.pc.name),

@@ -854,6 +854,11 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                 @Override
                 public void onFrameRendered(MediaCodec mediaCodec, long presentationTimeUs, long renderTimeNanos) {
                     firstFramePresented = true;
+                    if (!USE_FRAME_RENDER_TIME) {
+                        // A one-shot signal for the launch reveal: no callback per decoded frame afterwards
+                        mediaCodec.setOnFrameRenderedListener(null, null);
+                        return;
+                    }
                     long delta = (renderTimeNanos / 1000000L) - (presentationTimeUs / 1000);
                     if (delta >= 0 && delta < 1000) {
                         if (USE_FRAME_RENDER_TIME) {

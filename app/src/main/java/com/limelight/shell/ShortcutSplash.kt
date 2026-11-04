@@ -47,8 +47,7 @@ object ShortcutSplash {
             GameArt("$pcUuid/$appId", hue, (hue + 35f) % 360f, Symbols.SPORTS_ESPORTS, cover),
             null, logo, parameters,
         )
-        LaunchHandoff.background = null
-        LaunchHandoff.progress = 0f
+        LaunchHandoff.reset()
         LaunchHandoff.logo = logo
         LaunchHandoff.streamParameters = parameters
         // No white or grey flash before the first frame, and no bars, as in the new UI

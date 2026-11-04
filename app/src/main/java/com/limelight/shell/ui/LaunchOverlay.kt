@@ -87,6 +87,19 @@ object LaunchHandoff {
 
     @Volatile var logo: ImageBitmap? = null
     @Volatile var streamParameters: String = ""
+
+    /** Forgets everything handed over (single use): the next launch must not inherit speed, phase, clock, line or art. */
+    fun reset() {
+        background = null
+        progress = 0f
+        travel = 0f
+        speedProgress = 0f
+        startedAt = 0L
+        line = null
+        lineAt = 0L
+        logo = null
+        streamParameters = ""
+    }
 }
 
 /** Seconds since [start] (System.nanoTime, like the frame clock), updated every frame; read it while drawing. */
