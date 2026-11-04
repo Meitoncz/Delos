@@ -133,7 +133,13 @@ internal fun StreamMenuRoot(
     LaunchedEffect(Unit) {
         if (start.animate) enterClock.animateTo(M.ENTER_TOTAL.toFloat(), tween(M.ENTER_TOTAL, easing = LinearEasing))
     }
-    LaunchedEffect(Unit) { snapshotFlow { gradient.value }.collect { host.setBackdrop(it) } }
+    // While the Upscaler page is open the stream is shown sharp, so the changes to the picture can be judged; it blurs
+    // again when the page closes (both eased, never a jump)
+    val sharp = remember { Animatable(1f) }
+    LaunchedEffect(page, closing) {
+        sharp.animateTo(if (page == MenuPage.UPSCALER && !closing) 0f else 1f, tween(Motion.GRADIENT, easing = Motion.Ease))
+    }
+    LaunchedEffect(Unit) { snapshotFlow { gradient.value * sharp.value }.collect { host.setBackdrop(it) } }
     LaunchedEffect(closing) {
         gradient.animateTo(if (closing) 0f else 1f, tween(if (closing) M.CLOSE else Motion.GRADIENT, easing = Motion.Ease))
     }

@@ -9,6 +9,7 @@ import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.widget.FrameLayout
 import androidx.activity.ComponentDialog
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -153,7 +154,8 @@ class StreamMenu(private val game: Game) {
 
     fun show() {
         if (isOpen || game.isFinishing) return
-        val feedback = Feedback(game)
+        val appearance = AppearanceStore(game) { ProfileStore.currentSettings(game) }.appearance.value
+        val feedback = Feedback(game).also { it.hapticsEnabled = appearance.haptics }
         val d = ComponentDialog(game, android.R.style.Theme_Translucent_NoTitleBar_Fullscreen)
         d.window?.apply {
             setBackgroundDrawable(ColorDrawable(AndroidColor.TRANSPARENT))
@@ -162,7 +164,6 @@ class StreamMenu(private val game: Game) {
             attributes = attributes.apply { layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS }
             WindowCompat.setDecorFitsSystemWindows(this, false)
         }
-        val appearance = AppearanceStore(game) { ProfileStore.currentSettings(game) }.appearance.value
         val colors = delosColors(appearance, systemAccentHue(game))
         val host = GameHost(d)
         menuReady = false
@@ -177,10 +178,26 @@ class StreamMenu(private val game: Game) {
                 }
             }
         }
-        d.setContentView(composeView)
+        // The stream behind the menu is blurred, so the statistics overlay moves into the menu's window while it is open: it
+        // stays in front of the blur, sharp (and goes back to the stream's layout when the menu closes)
+        val overlay = game.performanceOverlayContainer
+        val overlayHome = overlay.parent as? ViewGroup
+        val overlayIndex = overlayHome?.indexOfChild(overlay) ?: -1
+        val overlayParams = overlay.layoutParams
+        val root = FrameLayout(d.context)
+        root.addView(composeView, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+        if (overlayHome != null) {
+            overlayHome.removeView(overlay)
+            root.addView(overlay, overlayParams)
+        }
+        d.setContentView(root)
         // While the menu is open the buttons reach its window, not the stream: the shortcut closes it again
         d.setOnKeyListener { _, _, event -> onKey(event) }
         d.setOnDismissListener {
+            if (overlayHome != null) {
+                (overlay.parent as? ViewGroup)?.removeView(overlay)
+                overlayHome.addView(overlay, overlayIndex.coerceIn(0, overlayHome.childCount), overlayParams)
+            }
             feedback.release()
             analogNavigation.reset()
             menuReady = false
