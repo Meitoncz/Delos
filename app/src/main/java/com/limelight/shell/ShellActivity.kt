@@ -66,6 +66,9 @@ class ShellActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         hideSystemBars()
+        // No system snapshot of this window (Android 13+): coming back from a stream it would show the last frame from before, the launch
+        // tunnel, for a moment
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) setRecentsScreenshotEnabled(false)
         feedback = Feedback(this)
         // Everything below reads the current profile's settings
         profiles = ProfileStore(this)

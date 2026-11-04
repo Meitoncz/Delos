@@ -8,6 +8,7 @@ import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.graphicsLayer
 import com.limelight.shell.settings.BackgroundKind
 import androidx.compose.animation.fadeIn
@@ -166,6 +167,17 @@ fun Shell(
     // Stays set until the next launch: the overlay it cleared leaves without a fade (a fade would run after the return)
     val launchExitInstant = remember { mutableStateOf(false) }
     val activity = LocalActivity.current
+    // What the system shows while this window comes back to the front is NOT drawn by us: it is a snapshot starting window. Recorded on
+    // the Odin (the SurfaceFlinger layer list showed "SnapshotStartingWindow" for this task during the flash): it held the last frame
+    // from before the stream, the launch tunnel. The window no longer lets the system snapshot it (ShellActivity), and the system then
+    // shows a plain starting window in the task's background color: the palette's own, so it blends into the exit scene.
+    val taskBackground = colors.bg.toArgb()
+    LaunchedEffect(taskBackground) {
+        // Android 13+ (the same versions that can switch the snapshot off, see ShellActivity)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            activity?.setTaskDescription(android.app.ActivityManager.TaskDescription.Builder().setBackgroundColor(taskBackground).build())
+        }
+    }
     val actions = remember(launcher) { ShellGameActions(shell, launcher, feedback, scope) }
     val reducedMotion by rememberUpdatedState(appearance.reducedMotion)
     val devices = remember { ShellDeviceActions(shell, tracker, repo, setup, startupStore, feedback, scope) { reducedMotion } }
