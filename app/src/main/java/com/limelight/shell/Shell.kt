@@ -302,9 +302,10 @@ fun Shell(
     // Left through the stream menu, the portal's burst that began over the stream ends here.
     // The stream window fully covers this one: the launch overlay (and its tunnel) goes away now, not at the next resume,
     // where it would flash for a few frames when the stream is left. The resume work is remembered for that moment.
-    // A stopped window keeps showing the last frame it drew when it comes back, until its first new frame: that frame must not be
-    // the tunnel (recorded on the Odin: the tunnel flashed for a moment on leaving a stream). So shortly after the stream
-    // window has taken over, while this window still draws, the overlay is swapped for the opaque background of the exit scene.
+    // The system keeps a snapshot of this window from the moment it stops and shows it while the window comes back to the
+    // front (recorded on the Odin: the tunnel flashed for 0.3 s on leaving a stream, and the log proved the overlay itself was
+    // already gone: it was the snapshot). The snapshot is taken at stop, about 0.45 s after the pause, so the overlay is swapped
+    // for the opaque background of the exit scene early enough for a frame of it to be drawn before that.
     fun handOverToStream() {
         if (shell.launch != null && shell.diving) {
             shell.exitCover = true
@@ -316,7 +317,7 @@ fun Shell(
     }
     LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) {
         if (shell.launch != null && shell.diving) scope.launch {
-            delay(450)
+            delay(HAND_OVER_DELAY_MS)
             handOverToStream()
         }
     }
@@ -780,3 +781,6 @@ private fun hints(shell: ShellState, adjustable: Boolean, filterHint: String?): 
         }
     }
 }
+
+/** How long after the stream window took over the launch overlay is swapped for the exit background (before the system snapshots the stopped window). */
+private const val HAND_OVER_DELAY_MS = 200L
