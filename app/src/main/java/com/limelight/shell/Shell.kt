@@ -112,6 +112,8 @@ import com.limelight.shell.ui.StreamResultLayer
 import com.limelight.shell.data.LocalArtwork
 import com.limelight.shell.data.downloadAll
 import com.limelight.shell.data.BundledArtwork
+import com.limelight.shell.data.ArtKind
+import com.limelight.shell.data.rememberArtwork
 import com.limelight.shell.ui.ArtworkProgressBar
 import com.limelight.shell.screens.ArtworkScreen
 import com.limelight.shell.screens.DebugInfoScreen
@@ -265,12 +267,11 @@ fun Shell(
         }
     }
 
-    // Starting a game: the launch scene appears and its ring starts filling, then the stream window takes
-    // over the very same scene (StreamLoader), connects and opens the ring into the game
+    // The stream window inherits the last drawn tunnel progress, scene origin and game identity.
     LaunchedEffect(shell.launch?.id) {
         val launch = shell.launch ?: return@LaunchedEffect
         LaunchHandoff.background = launch.background
-        LaunchHandoff.progress = HANDOFF_PROGRESS
+        LaunchHandoff.progress = 0f
         // The first witty connection line is told here already; the stream window goes on with the next ones
         StreamLoader.resetLines()
         launchLine.value = null
@@ -644,8 +645,13 @@ fun Shell(
                 ZoomedBar(uiScale) { HintBar(hints(shell, tracker.adjustable, filterHint), note = note, noteLabel = if (note != null) "LIBRARY" else null) }
             }
             val launch = shell.launch
+            val launchLogo = launch?.let { rememberArtwork(artwork, it.pc, it.app, ArtKind.LOGO).value }
+            val launchParameters = remember(launch?.id) {
+                launch?.let { item -> activity?.let { StreamLoader.parametersFor(it, item.pc.uuid, item.app.id) } }.orEmpty()
+            }
             LaunchOverlay(
-                launch?.let { LaunchCard(it.id, it.app.name, launchLine.value ?: StreamLoader.greeting(it.pc.name), appArt(it.pc, it.app, it.image), it.background) },
+                launch?.let { LaunchCard(it.id, it.app.name, launchLine.value ?: StreamLoader.greeting(it.pc.name),
+                    appArt(it.pc, it.app, it.image), it.background, launchLogo, launchParameters) },
                 appearance.reducedMotion,
             )
             ToastHost(shell.toast, onHidden = { shell.hideToast(it) }, onAction = { shell.runToastAction() })

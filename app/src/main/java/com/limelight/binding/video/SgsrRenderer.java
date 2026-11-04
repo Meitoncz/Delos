@@ -50,6 +50,7 @@ public final class SgsrRenderer implements AutoCloseable {
     private volatile int activePresentationWidth, activePresentationHeight;
     private Integer drawnQuality;
     private volatile float gpuTimeMs;
+    private volatile boolean firstFramePresented;
     private int highQualityProgram;
     private int supersampleUpscaleProgram;
     private int supersampleHighQualityProgram;
@@ -73,6 +74,10 @@ public final class SgsrRenderer implements AutoCloseable {
     private final float[] transform = new float[16];
     private final int[] size = new int[1];
     private int outputWidth, outputHeight;
+
+    public boolean hasPresentedFrame() {
+        return firstFramePresented && !closed.get();
+    }
 
     public static boolean isSupported(Context context) {
         ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
@@ -300,6 +305,7 @@ public final class SgsrRenderer implements AutoCloseable {
                 EGLExt.eglPresentationTimeANDROID(display,window,System.nanoTime());
                 require(EGL14.eglSwapBuffers(display,window),"SGSR swap");
             }
+            firstFramePresented = true;
             float elapsedMs=(System.nanoTime()-processingStartNs)/1_000_000f;
             gpuTimeMs=gpuTimeMs==0f?elapsedMs:gpuTimeMs*.8f+elapsedMs*.2f;
             consecutiveDrawFailures=0;

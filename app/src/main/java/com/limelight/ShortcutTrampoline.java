@@ -141,7 +141,6 @@ public class ShortcutTrampoline extends AppCompatActivity {
                                                     intentStack.add(GameLauncher.startIntent(ShortcutTrampoline.this, managerBinder, details, app).getIntent());
 
                                                     // Close this activity; the stream's loader goes on from the launch scene
-                                                    ShortcutSplash.handOff();
                                                     finish();
 
                                                     // Now start the activities

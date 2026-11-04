@@ -3,6 +3,7 @@ package com.limelight.shell
 import android.graphics.drawable.ColorDrawable
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.ComposeView
 import androidx.core.view.WindowCompat
@@ -24,7 +25,7 @@ import com.limelight.shell.ui.systemAccentHue
 /**
  * What a shortcut, `.art` file or link shows while it looks for its PC (ShortcutTrampoline cannot start
  * the stream before the PC answers): the same launch scene Delos shows when a game starts from Home, so
- * the stream's loader (StreamLoader) continues it exactly as it does there ([handOff]).
+ * the stream loader continues its exact clock, displayed stage and last drawn progress.
  */
 object ShortcutSplash {
     /** Shows the launch scene for [appName] on [pcName] (either may be unknown) over the whole [activity]. */
@@ -37,12 +38,19 @@ object ShortcutSplash {
         val colors = delosColors(appearance, systemAccentHue(activity))
         val hue = ((title.hashCode() and 0x7fffffff) % 360).toFloat()
         val cover = if (pcUuid != null && appId >= 0) StreamLoader.loadCover(activity, pcUuid, appId) else null
+        StreamLoader.resetLines()
+        val firstLine = StreamLoader.firstLine(pc)
+        val logo = null
+        val parameters = StreamLoader.parametersFor(activity, pcUuid, appId)
         val card = LaunchCard(
-            0, title, StreamLoader.greeting(pc),
+            0, title, firstLine,
             GameArt("$pcUuid/$appId", hue, (hue + 35f) % 360f, Symbols.SPORTS_ESPORTS, cover),
-            null,
+            null, logo, parameters,
         )
         LaunchHandoff.background = null
+        LaunchHandoff.progress = 0f
+        LaunchHandoff.logo = logo
+        LaunchHandoff.streamParameters = parameters
         // No white or grey flash before the first frame, and no bars, as in the new UI
         activity.window.setBackgroundDrawable(ColorDrawable(colors.bg.toArgb()))
         activity.supportActionBar?.hide()
@@ -54,16 +62,12 @@ object ShortcutSplash {
             ComposeView(activity).apply {
                 setContent {
                     CompositionLocalProvider(LocalDelosColors provides colors) {
-                        Stage(textScale = appearance.uiScale / 100f) { LaunchOverlay(card, appearance.reducedMotion) }
+                        val loadedLogo by StreamLoader.rememberLogo(activity, pcUuid, appId, card.logo)
+                        Stage(textScale = appearance.uiScale / 100f) { LaunchOverlay(card.copy(logo = loadedLogo), appearance.reducedMotion) }
                     }
                 }
             }
         )
     }
 
-    /** The stream window is about to open: its loader goes on from where Home's launch scene hands over. */
-    @JvmStatic
-    fun handOff() {
-        LaunchHandoff.progress = HANDOFF_PROGRESS
-    }
 }

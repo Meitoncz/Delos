@@ -192,6 +192,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     // Delos: when the drawn frames came, for the 1% low in the statistics (PyroWave keeps its own natively)
     private final FrameTimes frameTimes = new FrameTimes();
     private volatile boolean stopping;
+    private volatile boolean firstFramePresented;
     private CrashListener crashListener;
     private boolean reportedCrash;
     private int consecutiveCrashCount;
@@ -571,6 +572,16 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         return this.videoFormat;
     }
 
+    /** A decoded buffer alone is insufficient: the launch aperture waits for presentation. */
+    public boolean hasPresentedFrame() {
+        if (stopping) return false;
+        SgsrRenderer current = sgsr;
+        return current != null ? current.hasPresentedFrame() : firstFramePresented;
+    }
+
+    public int getStreamWidth() { return initialWidth; }
+    public int getStreamHeight() { return initialHeight; }
+
     private MediaFormat createBaseMediaFormat(String mimeType) {
         MediaFormat videoFormat = MediaFormat.createVideoFormat(mimeType, initialWidth, initialHeight);
 
@@ -838,10 +849,11 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
             }
         }
 
-        if (USE_FRAME_RENDER_TIME && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             videoDecoder.setOnFrameRenderedListener(new MediaCodec.OnFrameRenderedListener() {
                 @Override
                 public void onFrameRendered(MediaCodec mediaCodec, long presentationTimeUs, long renderTimeNanos) {
+                    firstFramePresented = true;
                     long delta = (renderTimeNanos / 1000000L) - (presentationTimeUs / 1000);
                     if (delta >= 0 && delta < 1000) {
                         if (USE_FRAME_RENDER_TIME) {
@@ -1013,6 +1025,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                 PyroWaveRenderer pw = pyroWave;
                 if (pw == null) return;
                 long[] stats = pw.takeStats();
+                if (stats[PyroWaveRenderer.STAT_RENDERED_FRAMES] > 0) firstFramePresented = true;
                 if (prefs.enablePerfOverlay) {
                     reportPyroWaveStats(stats, seconds);
                 }

@@ -1,5 +1,14 @@
 package com.limelight.shell.ui
 
+import android.os.Build
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
@@ -58,18 +67,21 @@ import kotlin.math.sin
  * one that started it left off, so the switch between the two windows cannot be seen.
  */
 object LaunchHandoff {
-    /** The game background (HeroBitmaps) behind the ring. */
+    /** The legacy scene's game background, retained only for the pre-Android-13 fallback. */
     @Volatile var background: ImageBitmap? = null
 
-    /** How far the ring got before the stream window took over. */
+    /** Last drawn connection progress; copied when the stream window takes ownership. */
     @Volatile var progress: Float = 0f
 
-    /** When the launch scene started (System.nanoTime), so its pulses and moon go on without a jump. */
+    /** Shared scene origin in System.nanoTime units; never restart it during window handoff. */
     @Volatile var startedAt: Long = 0L
 
     /** The connection line the launch screen was telling when the stream window took over, and when it appeared (System.nanoTime). */
     @Volatile var line: String? = null
     @Volatile var lineAt: Long = 0L
+
+    @Volatile var logo: ImageBitmap? = null
+    @Volatile var streamParameters: String = ""
 }
 
 /** Seconds since [start] (System.nanoTime, like the frame clock), updated every frame; read it while drawing. */
@@ -82,7 +94,79 @@ fun rememberLaunchClock(start: Long): () -> Float {
 
 /** What the launch scene shows. */
 @Immutable
-data class LaunchCard(val id: Int, val title: String, val subtitle: String, val art: GameArt, val background: ImageBitmap?)
+data class LaunchCard(
+    val id: Int,
+    val title: String,
+    val subtitle: String,
+    val art: GameArt,
+    val background: ImageBitmap?,
+    val logo: ImageBitmap?,
+    val streamParameters: String,
+)
+
+/** One information layout above either the native tunnel, reduced-motion scene, or legacy renderer. */
+@Composable
+fun LaunchScene(card: LaunchCard, stage: String?, progress: () -> Float, opening: () -> Float, clock: (() -> Float)?, modifier: Modifier = Modifier) {
+    val colors = LocalDelosColors.current
+    val calm = remember(colors) {
+        Brush.radialGradient(listOf(colors.accent3.copy(alpha = .16f), colors.bg))
+    }
+    Box(modifier.fillMaxSize()) {
+        when {
+            clock == null -> Canvas(Modifier.fillMaxSize().graphicsLayer { alpha = 1f - opening().coerceIn(0f, 1f) }) {
+                drawRect(colors.bg)
+                drawRect(calm)
+            }
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ->
+                HyperspaceTunnel(progress, opening, clock, Modifier.fillMaxSize())
+            else -> LegacyLaunchScene(card, stage, progress, opening, clock)
+        }
+        LaunchInformation(card, stage, progress, opening, Modifier.align(Alignment.BottomCenter))
+    }
+}
+
+@Composable
+private fun LaunchInformation(card: LaunchCard, stage: String?, progress: () -> Float, opening: () -> Float, modifier: Modifier) {
+    val colors = LocalDelosColors.current
+    val track = remember(colors) { Brush.horizontalGradient(listOf(colors.accent2, colors.accent)) }
+    Column(
+        modifier.width(1000.px).padding(bottom = 100.px)
+            .graphicsLayer { alpha = HyperspaceTimeline.infoAlpha(opening()) },
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        if (card.logo != null) {
+            Image(card.logo, contentDescription = card.title, contentScale = ContentScale.Fit,
+                modifier = Modifier.width(440.px).height(124.px))
+        } else {
+            BasicText(card.title, style = TextStyle(color = colors.text, fontFamily = Unbounded,
+                fontWeight = FontWeight.SemiBold, fontSize = 58.tpx, textAlign = TextAlign.Center))
+        }
+        Spacer(Modifier.height(18.px))
+        BasicText(card.streamParameters, style = TextStyle(color = colors.text2, fontFamily = Figtree,
+            fontSize = 17.tpx, letterSpacing = 2.tpx, textAlign = TextAlign.Center))
+        Spacer(Modifier.height(15.px))
+        BasicText(stage ?: card.subtitle, style = TextStyle(color = colors.text, fontFamily = Figtree,
+            fontSize = 23.tpx, lineHeight = (23f * 1.35f).tpx, textAlign = TextAlign.Center))
+        Spacer(Modifier.height(15.px))
+        Canvas(Modifier.width(360.px).height(3.px)) {
+            val radius = CornerRadius(size.height / 2f)
+            drawRoundRect(colors.text.copy(alpha = .16f), cornerRadius = radius)
+            drawRoundRect(track, size = Size(size.width * progress().coerceIn(0f, 1f), size.height), cornerRadius = radius)
+        }
+        Spacer(Modifier.height(12.px))
+        LaunchPercentage(progress)
+    }
+}
+
+/** Only the percentage text recomposes when an integer changes; shader uniforms stay draw-only. */
+@Composable
+private fun LaunchPercentage(progress: () -> Float) {
+    val colors = LocalDelosColors.current
+    val labels = remember { Array(101) { "$it%" } }
+    val percent by remember(progress) { derivedStateOf { (progress().coerceIn(0f, 1f) * 100).roundToInt() } }
+    BasicText(labels[percent], style = TextStyle(color = colors.text2, fontFamily = Figtree,
+        fontSize = 15.tpx, letterSpacing = 3.tpx, fontFeatureSettings = "tnum", textAlign = TextAlign.Center))
+}
 
 /** Ring geometry in stage pixels (the prototype's 300 px loader with a 248 px cover). */
 private const val RING_RADIUS = 140f
@@ -97,7 +181,7 @@ private const val COVER_RADIUS = 124f
  * with it. Everything is read while drawing, so the animations recompose nothing.
  */
 @Composable
-fun LaunchScene(card: LaunchCard, stage: String?, progress: () -> Float, opening: () -> Float, clock: (() -> Float)?, modifier: Modifier = Modifier) {
+private fun LegacyLaunchScene(card: LaunchCard, stage: String?, progress: () -> Float, opening: () -> Float, clock: (() -> Float)?, modifier: Modifier = Modifier) {
     val colors = LocalDelosColors.current
     val metrics = LocalStage.current
     Box(
@@ -156,23 +240,6 @@ fun LaunchScene(card: LaunchCard, stage: String?, progress: () -> Float, opening
                 drawCircle(colors.accent3, radius = 8f * k, center = center + Offset(cos(end).toFloat() * ring, sin(end).toFloat() * ring), alpha = fade)
             }
             if (time != null) drawMoon(center, ring + 30f * k, k, fade, time, colors)
-        }
-        Column(
-            Modifier
-                .align(Alignment.Center)
-                .offset(y = (RING_RADIUS + 34f + 60f).px)
-                .graphicsLayer { alpha = (1f - opening() * 4f).coerceIn(0f, 1f) },
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            BasicText(
-                card.title,
-                style = TextStyle(color = Color.White, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 38.tpx, textAlign = TextAlign.Center),
-            )
-            BasicText(
-                stage ?: card.subtitle,
-                style = TextStyle(color = Color.White.copy(alpha = .7f), fontFamily = Figtree, fontWeight = FontWeight.Medium, fontSize = 24.tpx, textAlign = TextAlign.Center),
-                modifier = Modifier.padding(top = 10.px),
-            )
         }
     }
 }
@@ -263,8 +330,7 @@ private fun DrawScope.drawCover(card: LaunchCard, center: Offset, radius: Float,
 }
 
 /**
- * The new UI's half of starting a game: the scene fades in over the home screen and the ring starts
- * filling; the stream window then takes over the same scene (StreamLoader).
+ * The shell half of launch: the stream window inherits its last drawn progress, logo and scene clock.
  */
 @Composable
 fun LaunchOverlay(card: LaunchCard?, reducedMotion: Boolean) {
@@ -273,14 +339,23 @@ fun LaunchOverlay(card: LaunchCard?, reducedMotion: Boolean) {
     AnimatedVisibility(card != null, enter = fadeIn(tween(300)), exit = fadeOut(tween(450))) {
         val c = last[0] ?: return@AnimatedVisibility
         val progress = remember(c.id) { Animatable(0f) }
-        LaunchedEffect(c.id) { progress.animateTo(HANDOFF_PROGRESS, tween(700, easing = EaseOut)) }
+        LaunchedEffect(c.id) {
+            LaunchHandoff.logo = c.logo
+            LaunchHandoff.streamParameters = c.streamParameters
+            progress.animateTo(HANDOFF_PROGRESS, tween(700, easing = EaseOut))
+        }
+        LaunchedEffect(c.logo, c.streamParameters) {
+            LaunchHandoff.logo = c.logo
+            LaunchHandoff.streamParameters = c.streamParameters
+        }
         val start = remember(c.id) { System.nanoTime().also { LaunchHandoff.startedAt = it } }
-        val clock = rememberLaunchClock(start)
+        val clock = if (reducedMotion) null else rememberLaunchClock(start)
+        val drawnProgress = remember(c.id) { { progress.value.also { LaunchHandoff.progress = it } } }
         // Holds the focus while a game starts, so nothing underneath reacts; only B (cancel) passes through
         val trap = remember { FocusRequester() }
         LaunchedEffect(c.id) { runCatching { trap.requestFocus() } }
         LaunchScene(
-            c, stage = null, progress = { progress.value }, opening = { 0f }, clock = clock.takeUnless { reducedMotion },
+            c, stage = null, progress = drawnProgress, opening = { 0f }, clock = clock,
             modifier = Modifier
                 .focusRequester(trap)
                 .focusable()

@@ -62,9 +62,13 @@ The TV channel uses the same mark; PC shortcut icons remain unchanged.
 
 ## Launching a game
 
-- Starting a game shows an **animated circular loader**, then the UI **"dives" into the streamed game**.
-- The dive uses the existing shader/ring effect. Optional visual refinement requires agreement and
-  is recorded in [#23](https://github.com/Meitoncz/Delos/issues/23), not permission to redesign.
+- Android 13+ launch uses the approved **hyperspace tunnel**: fixed-center symmetric lens curvature, traveling ribs/bands, **24 streaks + 24 independently distributed dark clouds**, moving peripheral bloom and a high-contrast palette-aware gradient. `HyperspaceConfig.RENDER_SCALE` is **0.6** (1152×648 at 1920×1080); the shader and brush belong only to the active overlay and animate in drawing, not composition.
+- The shell, shortcut splash and stream loader share the scene clock, last drawn progress and inherited connection line. The game’s existing SteamGridDB **logo** replaces the cover, with Unbounded title fallback; below it are read-only **effective resolution · codec · FPS**, a real connection-stage line, a thin progress track and percentage. Before codec negotiation, automatic selection is labeled **Auto**; the loader then uses the active codec and decoded dimensions.
+- Each real witty connection line receives its **1200 ms** visible dwell, including its remaining time across window handoff; bursts are queued in order without skipping. Network and decoder initialization continue independently.
+- After connection and stage presentation complete, the loader waits for a **presented video frame**, not merely `connectionStarted`. Its **2200 ms** exit expands the tunnel and opens a soft central aperture during **68–88%** of the exit; the information block fades during the first **34%**. The revealed image is the actual underlying video surface, not a screenshot.
+- Reduced motion uses a static dark gradient, the same information block and a **500 ms** fade; the animation clock is not started. Android versions below 13 retain the previous ring/cover renderer as the visual fallback, with the same new information block.
+- The approved visual reference is the local, uncommitted `build/launchfx-proto/b_hyperspace_balanced.html` (preserved locally under `.gradle-agent/keep/`), not the legacy launch-loader drawing in `docs/prototype/delos-gui.html`. The latter is not a simple shader replacement; the native constants and shader are committed in `shell/ui/HyperspaceConfig.kt` and `HyperspaceTunnel.kt`. See [#62](https://github.com/Meitoncz/Delos/issues/62).
+- The Phase 1 overlay does not sample, blur, warp or RGB-separate the video surface. Applying those approved arrival effects to real decoded frames requires the separate native rendering integration, without changing HDR or normal steady-state presentation.
 - Game-window readiness behavior and its proposed host protocol are recorded in
   [#13](https://github.com/Meitoncz/Delos/issues/13) and [#14](https://github.com/Meitoncz/Delos/issues/14).
   A visible game window is not a guarantee that gameplay loading has finished.

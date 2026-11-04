@@ -380,7 +380,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         // The loader of the new UI (the stream's half of the launch scene), with the system bars hidden from
         // the first frame, as in the new UI
         hideSystemUi.run();
-        spinner = StreamLoader.show(this);
+        spinner = StreamLoader.show(this, prefConfig);
 
         Display currentDisplay = null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -4066,6 +4066,20 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     public boolean isSupersamplingMode() { return decoderRenderer.isSupersamplingMode(); }
     public int getSupersamplingLevel() { return decoderRenderer.getSupersamplingLevel(); }
     public void setSupersamplingLevel(int level) { decoderRenderer.setSupersamplingLevel(level); }
+
+    /** Actual frame presentation, not merely completion of the network handshake. */
+    public boolean isLaunchFrameReady() {
+        return decoderRenderer != null && decoderRenderer.hasPresentedFrame();
+    }
+
+    public String getLaunchStreamParameters() {
+        int format = decoderRenderer != null ? decoderRenderer.getActiveVideoFormat() : 0;
+        int width = decoderRenderer != null && decoderRenderer.getStreamWidth() > 0
+                ? decoderRenderer.getStreamWidth() : prefConfig.width;
+        int height = decoderRenderer != null && decoderRenderer.getStreamHeight() > 0
+                ? decoderRenderer.getStreamHeight() : prefConfig.height;
+        return StreamLoader.parameters(prefConfig, format, width, height);
+    }
 
     public boolean isStreamMenuOpen() {
         return streamMenu != null && streamMenu.isOpen();
