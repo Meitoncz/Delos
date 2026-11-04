@@ -37,6 +37,7 @@ import com.limelight.shell.ui.rememberLaunchClock
 import com.limelight.shell.ui.systemAccentHue
 import com.limelight.utils.CacheHelper
 import com.limelight.utils.ConnectionProgress
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlin.random.Random
 
@@ -48,16 +49,14 @@ import kotlin.random.Random
  * into the game.
  */
 class StreamLoader private constructor(private val activity: ComponentActivity, private val view: ComposeView, private val pcName: String) : ConnectionProgress {
-    private val stage = mutableStateOf<String?>(null)
+    /** The lines to tell, in order: every one is shown (for [LINE_MS]) even when the stages come faster. */
+    private val lines = Channel<String>(Channel.UNLIMITED)
     private val target = mutableFloatStateOf(LaunchHandoff.progress)
     private val streaming = mutableStateOf(false)
 
-    /** How many lines each stage has told already (a stream is first set up, then started). */
-    private val told = HashMap<String, Int>()
-
     override fun setMessage(message: String) {
         activity.runOnUiThread {
-            stage.value = friendlyStage(message)
+            lines.trySend(lineFor(message, pcName))
             // Each stage fills the ring a little more; the last part is left for the stream itself
             target.floatValue = (target.floatValue + .08f).coerceAtMost(.92f)
         }
@@ -78,18 +77,39 @@ class StreamLoader private constructor(private val activity: ComponentActivity, 
      * (like the loading lines of The Sims). Each stage starts at a random line and tells the next one when
      * it comes again.
      */
-    private fun friendlyStage(message: String): String {
-        val m = message.lowercase()
-        val key = STAGE_LINES.keys.firstOrNull { it in m } ?: return message
-        val lines = STAGE_LINES.getValue(key)
-        val n = told[key] ?: Random.nextInt(lines.size)
-        told[key] = n + 1
-        return lines[n % lines.size].replace("%pc", pcName)
-    }
-
     companion object {
-        /** How long a connection line stays at least, so it can be read (later stages skip the ones in between). */
-        private const val LINE_MS = 700L
+        /** How long a connection line stays, so it can be read (every line is shown, none is skipped). */
+        const val LINE_MS = 1200L
+
+        /** How many lines each stage has told already (a stream is first set up, then started); shared by both screens. */
+        private val told = HashMap<String, Int>()
+
+        /** A new launch starts with fresh lines. */
+        @JvmStatic
+        fun resetLines() {
+            synchronized(told) { told.clear() }
+            LaunchHandoff.line = null
+        }
+
+        /** The first witty line, told on the new UI's launch screen before the stream window takes over. */
+        @JvmStatic
+        fun firstLine(pcName: String): String = lineFor("platform", pcName).also {
+            LaunchHandoff.line = it
+            LaunchHandoff.lineAt = System.nanoTime()
+        }
+
+        /**
+         * Moonlight's stage names ("Starting RTSP handshake"…) as something a player understands, with a wink
+         * (like the loading lines of The Sims). Each stage starts at a random line and tells the next one when
+         * it comes again.
+         */
+        private fun lineFor(message: String, pcName: String): String {
+            val m = message.lowercase()
+            val key = STAGE_LINES.keys.firstOrNull { it in m } ?: return message
+            val options = STAGE_LINES.getValue(key)
+            val n = synchronized(told) { (told[key] ?: Random.nextInt(options.size)).also { told[key] = it + 1 } }
+            return options[n % options.size].replace("%pc", pcName)
+        }
 
         /** Lines per connection stage (keys: parts of Moonlight's stage names); %pc is the PC's name. */
         private val STAGE_LINES = linkedMapOf(
@@ -146,12 +166,15 @@ class StreamLoader private constructor(private val activity: ComponentActivity, 
             val clock = rememberLaunchClock(remember { LaunchHandoff.startedAt.takeIf { it != 0L } ?: System.nanoTime() })
             val target = loader.target.floatValue
             LaunchedEffect(target) { progress.animateTo(target, tween(600, easing = EaseOut)) }
-            // The latest stage, but each line stays a moment (the flow skips what came in between)
-            var line by remember { mutableStateOf<String?>(null) }
+            // The line the launch screen of the new UI was telling goes on for the rest of its time, then every line of the
+            // connection in turn, each for a moment
+            var line by remember { mutableStateOf(LaunchHandoff.line) }
             LaunchedEffect(Unit) {
-                snapshotFlow { loader.stage.value }.collect {
-                    line = it
-                    if (it != null) delay(LINE_MS)
+                val rest = if (LaunchHandoff.line == null) 0L else LINE_MS - (System.nanoTime() - LaunchHandoff.lineAt) / 1_000_000L
+                if (rest > 0L) delay(rest)
+                for (next in loader.lines) {
+                    line = next
+                    delay(LINE_MS)
                 }
             }
             val streaming = loader.streaming.value

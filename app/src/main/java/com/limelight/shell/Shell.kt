@@ -152,6 +152,8 @@ fun Shell(
         }
     }
     val scope = rememberCoroutineScope()
+    // The connection line the launch screen tells under the title (null: the greeting)
+    val launchLine = remember { mutableStateOf<String?>(null) }
     val activity = LocalActivity.current
     val actions = remember(launcher) { ShellGameActions(shell, launcher, feedback, scope) }
     val reducedMotion by rememberUpdatedState(appearance.reducedMotion)
@@ -265,7 +267,12 @@ fun Shell(
         val launch = shell.launch ?: return@LaunchedEffect
         LaunchHandoff.background = launch.background
         LaunchHandoff.progress = HANDOFF_PROGRESS
-        delay(if (appearance.reducedMotion) 300 else 700)
+        // The first witty connection line is told here already; the stream window goes on with the next ones
+        StreamLoader.resetLines()
+        launchLine.value = null
+        delay(if (appearance.reducedMotion) 150 else 350)
+        launchLine.value = StreamLoader.firstLine(launch.pc.name)
+        delay(if (appearance.reducedMotion) 150 else 350)
         shell.diving = true
         // Only a game that really opens counts as last played (not one cancelled in the loader)
         repo.setLastPlayed(launch.pc.uuid, launch.app.id)
@@ -618,7 +625,7 @@ fun Shell(
             }
             val launch = shell.launch
             LaunchOverlay(
-                launch?.let { LaunchCard(it.id, it.app.name, StreamLoader.greeting(it.pc.name), appArt(it.pc, it.app, it.image), it.background) },
+                launch?.let { LaunchCard(it.id, it.app.name, launchLine.value ?: StreamLoader.greeting(it.pc.name), appArt(it.pc, it.app, it.image), it.background) },
                 appearance.reducedMotion,
             )
             ToastHost(shell.toast, onHidden = { shell.hideToast(it) }, onAction = { shell.runToastAction() })

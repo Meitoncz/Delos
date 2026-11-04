@@ -66,6 +66,10 @@ object LaunchHandoff {
 
     /** When the launch scene started (System.nanoTime), so its pulses and moon go on without a jump. */
     @Volatile var startedAt: Long = 0L
+
+    /** The connection line the launch screen was telling when the stream window took over, and when it appeared (System.nanoTime). */
+    @Volatile var line: String? = null
+    @Volatile var lineAt: Long = 0L
 }
 
 /** Seconds since [start] (System.nanoTime, like the frame clock), updated every frame; read it while drawing. */
