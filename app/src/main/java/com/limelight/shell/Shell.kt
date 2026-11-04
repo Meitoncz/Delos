@@ -6,6 +6,9 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.ui.graphics.graphicsLayer
+import com.limelight.shell.settings.BackgroundKind
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -293,16 +296,21 @@ fun Shell(
                 // Quit game: the portal waits, with its text and pulses, until the PC has really quit the game (at most 25 s),
                 // and only then bursts into the dashboard. Disconnect bursts at once.
                 val waitForQuit = StreamExit.quitting
-                shell.portalBurst = !waitForQuit
+                // The chosen animated background fades in over the dashboard first (the dashboard's own background still
+                // settles after the return), and only then does the portal burst into it
+                shell.exitCover = true
+                shell.portalBurst = false
                 shell.portal = Portal(-1, if (waitForQuit) Symbols.POWER_SETTINGS_NEW else Symbols.HOME, exit.label, exit.sub, cancellable = false, arriving = true)
+                delay(700)
                 if (waitForQuit) {
                     var waited = 0
                     while (StreamExit.quitting && waited < 25_000) {
                         delay(100)
                         waited += 100
                     }
-                    shell.portalBurst = true
                 }
+                shell.portalBurst = true
+                shell.exitCover = false
                 delay(500)
                 shell.portal = null
                 delay(400)
@@ -606,6 +614,12 @@ fun Shell(
                     shell.closeLayer()
                 }
 
+                val cover by animateFloatAsState(if (shell.exitCover) 1f else 0f, tween(if (shell.exitCover) 300 else 800, easing = EaseOut), label = "exitCover")
+                if (cover > 0f) {
+                    Box(Modifier.fillMaxSize().graphicsLayer { alpha = cover }) {
+                        Backdrop(appearance, colors, hero = if (appearance.background == BackgroundKind.STILL) shell.hero else null)
+                    }
+                }
                 PortalOverlay(shell.portal, shell.portalBurst, haze, appearance.reducedMotion)
 
                 StreamResultLayer(shell.result, haze, appearance.reducedMotion, onRetry = ::retryStream, onBack = ::dismissResult)

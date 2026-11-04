@@ -219,6 +219,9 @@ class ShellState(initial: Screen) {
     var portal by mutableStateOf<Portal?>(null)
     var portalBurst by mutableStateOf(false)
 
+    /** While a stream is left through the portal the chosen animated background (the game background when it is still) covers the dashboard. */
+    var exitCover by mutableStateOf(false)
+
     /** A game being started: the launch overlay is shown until the stream has opened (step 6.5). */
     var launch by mutableStateOf<LaunchRequest?>(null)
 
