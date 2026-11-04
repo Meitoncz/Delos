@@ -215,7 +215,8 @@ class StreamLoader private constructor(
                     val now = System.nanoTime()
                     loader.stages.advance(now)
                     line = loader.stages.currentLine
-                    if (loader.streaming.value && loader.stages.isDrained(now)) {
+                    // The game opens as soon as it really runs: the lines queued behind the current one are simply not told
+                    if (loader.streaming.value) {
                         drained = true
                         break
                     }
