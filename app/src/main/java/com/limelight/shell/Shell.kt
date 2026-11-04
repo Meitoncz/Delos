@@ -1,5 +1,6 @@
 package com.limelight.shell
 
+import androidx.compose.animation.core.snap
 import android.app.ActivityOptions
 import android.view.KeyEvent
 import androidx.activity.compose.BackHandler
@@ -301,7 +302,7 @@ fun Shell(
                 shell.exitCover = true
                 shell.portalBurst = false
                 shell.portal = Portal(-1, if (waitForQuit) Symbols.POWER_SETTINGS_NEW else Symbols.HOME, exit.label, exit.sub, cancellable = false, arriving = true)
-                delay(700)
+                delay(if (waitForQuit) 400 else 600)
                 if (waitForQuit) {
                     var waited = 0
                     while (StreamExit.quitting && waited < 25_000) {
@@ -310,6 +311,7 @@ fun Shell(
                     }
                 }
                 shell.portalBurst = true
+                feedback.play(Cue.SELECT)
                 shell.exitCover = false
                 delay(500)
                 shell.portal = null
@@ -614,7 +616,8 @@ fun Shell(
                     shell.closeLayer()
                 }
 
-                val cover by animateFloatAsState(if (shell.exitCover) 1f else 0f, tween(if (shell.exitCover) 300 else 800, easing = EaseOut), label = "exitCover")
+                // Fully there from the first frame: the stream window's portal already ended on this very background
+                val cover by animateFloatAsState(if (shell.exitCover) 1f else 0f, if (shell.exitCover) snap() else tween(800, easing = EaseOut), label = "exitCover")
                 if (cover > 0f) {
                     Box(Modifier.fillMaxSize().graphicsLayer { alpha = cover }) {
                         Backdrop(appearance, colors, hero = if (appearance.background == BackgroundKind.STILL) shell.hero else null)

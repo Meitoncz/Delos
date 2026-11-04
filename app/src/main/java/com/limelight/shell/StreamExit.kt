@@ -1,5 +1,15 @@
 package com.limelight.shell
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+import com.limelight.shell.ui.Backdrop
+import com.limelight.shell.ui.EaseOut
 import android.animation.ValueAnimator
 import android.app.ActivityOptions
 import android.content.Intent
@@ -60,9 +70,8 @@ object StreamExit {
         val label = if (quit) "Quitting $title" else "Disconnecting"
         val appearance = AppearanceStore(game) { ProfileStore.currentSettings(game) }.appearance.value
         val colors = delosColors(appearance, systemAccentHue(game))
-        val portal = Portal((System.nanoTime() and 0x7fffffff).toInt(), Symbols.HOME, label, pcName, cancellable = false)
+        val portal = Portal((System.nanoTime() and 0x7fffffff).toInt(), if (quit) Symbols.POWER_SETTINGS_NEW else Symbols.HOME, label, pcName, cancellable = false)
         val shown = mutableStateOf<Portal?>(null)
-        val burst = mutableStateOf(false)
         val feedback = Feedback(game).also { it.hapticsEnabled = appearance.haptics }
         val blur = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && game.getSystemService(WindowManager::class.java).isCrossWindowBlurEnabled
         val dialog = ComponentDialog(game, android.R.style.Theme_Translucent_NoTitleBar_Fullscreen)
@@ -70,7 +79,14 @@ object StreamExit {
         val view = ComposeView(dialog.context).apply {
             setContent {
                 CompositionLocalProvider(LocalDelosColors provides colors) {
-                    Stage(textScale = appearance.uiScale / 100f) { PortalOverlay(shown.value, burst.value, null, appearance.reducedMotion, dim = !blur) }
+                    Stage(textScale = appearance.uiScale / 100f) {
+                        // One continuous exit: the Delos background fades in over the blurred stream, and the new UI goes on with
+                        // this very scene (same background, same portal) instead of switching to another one
+                        val cover = remember { Animatable(0f) }
+                        LaunchedEffect(Unit) { cover.animateTo(1f, tween(if (appearance.reducedMotion) 250 else 700, easing = EaseOut)) }
+                        Box(Modifier.fillMaxSize().graphicsLayer { alpha = cover.value }) { Backdrop(appearance, colors, hero = null) }
+                        PortalOverlay(shown.value, false, null, appearance.reducedMotion, dim = false)
+                    }
                 }
             }
         }
@@ -115,26 +131,19 @@ object StreamExit {
             s.animate().scaleX(s.scaleX * ZOOM).scaleY(s.scaleY * ZOOM).setDuration(2400).setInterpolator(PathInterpolator(.16f, 1f, .3f, 1f)).start()
         }
         view.postDelayed({
-            burst.value = true
-            feedback.play(Cue.SELECT)
-            view.postDelayed({
-                if (game.isFinishing) return@postDelayed
-                pending = Arrival(label, pcName)
-                val root = game.window.decorView
-                val home = Intent().setClassName(game, "com.limelight.shell.ShellActivity")
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                // From the whole screen a scale-up only fades the new UI in over the stream (like starting one)
-                game.startActivity(home, ActivityOptions.makeScaleUpAnimation(root, 0, 0, root.width, root.height).toBundle())
-                end.run()
-                feedback.release()
-                // Gone with the stream window anyway; closed once the new UI has faded in over it
-                view.postDelayed({ runCatching { dialog.dismiss() } }, 600)
-            }, BURST_MS)
-        }, if (appearance.reducedMotion) 600L else 2100L)
+            if (game.isFinishing) return@postDelayed
+            pending = Arrival(label, pcName)
+            val root = game.window.decorView
+            val home = Intent().setClassName(game, "com.limelight.shell.ShellActivity")
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            // From the whole screen a scale-up only fades the new UI in over the stream (like starting one)
+            game.startActivity(home, ActivityOptions.makeScaleUpAnimation(root, 0, 0, root.width, root.height).toBundle())
+            end.run()
+            feedback.release()
+            // Gone with the stream window anyway; closed once the new UI has faded in over it
+            view.postDelayed({ runCatching { dialog.dismiss() } }, 600)
+        }, if (appearance.reducedMotion) 700L else 1500L)
     }
-
-    /** How long the burst plays over the stream before the new UI takes over (the prototype's 380 ms). */
-    const val BURST_MS = 380L
 
     /** How far the stream behind the portal zooms in. */
     private const val ZOOM = 1.12f

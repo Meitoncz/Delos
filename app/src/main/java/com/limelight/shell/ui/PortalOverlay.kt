@@ -67,12 +67,7 @@ fun PortalOverlay(portal: Portal?, burst: Boolean, haze: HazeState?, reducedMoti
         val flash = remember(p.id) { Animatable(0f) }
         LaunchedEffect(burst) {
             if (!burst) flash.snapTo(0f)
-            else if (p.arriving) {
-                // Goes on from where the burst over the stream left off
-                val from = StreamExit.BURST_MS / 900f
-                flash.snapTo(from)
-                flash.animateTo(1f, tween((900 * (1f - from)).toInt(), easing = EaseOut))
-            } else flash.animateTo(1f, tween(900, easing = EaseOut))
+            else flash.animateTo(1f, tween(900, easing = EaseOut))
         }
         // .core: scale(1.6) and fade out over .8 / .6 s when it bursts
         val coreScale by animateFloatAsState(if (burst) 1.6f else 1f, tween(800, easing = EaseOut), label = "portalCore")
