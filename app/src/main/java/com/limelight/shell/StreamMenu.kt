@@ -3,6 +3,7 @@ package com.limelight.shell
 import android.graphics.Color as AndroidColor
 import android.graphics.drawable.ColorDrawable
 import android.provider.Settings
+import android.os.Build
 import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
@@ -293,6 +294,22 @@ class StreamMenu(private val game: Game) {
 
         override val gameName: String = game.intent.getStringExtra(Game.EXTRA_APP_NAME) ?: "Stream"
         override fun dismiss() { menu.dismiss() }
+
+        // The whole stream behind the menu is blurred (the way leaving a stream does it): a window can only blur what lies
+        // behind its whole rectangle, so not the tiles one by one. Android 12 and newer, with window blur enabled.
+        private val blurRadius = run {
+            val m = game.resources.displayMetrics
+            50f * minOf(m.widthPixels / 1920f, m.heightPixels / 1080f)
+        }
+        private val blurOn = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && game.getSystemService(WindowManager::class.java).isCrossWindowBlurEnabled
+        init {
+            if (blurOn) menu.window?.addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
+        }
+        override fun setBackdrop(amount: Float) {
+            if (!blurOn || Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+            val w = menu.window ?: return
+            w.attributes = w.attributes.apply { blurBehindRadius = (amount * blurRadius).toInt() }
+        }
         override fun runWhenStreamFocused(action: () -> Unit) = whenGameFocused(action)
 
         override val overlayOn get() = prefs.enablePerfOverlay

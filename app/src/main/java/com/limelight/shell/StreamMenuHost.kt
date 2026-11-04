@@ -22,6 +22,12 @@ internal interface StreamMenuHost {
     /** Closes the menu's window at once (the menu has played its exit before). */
     fun dismiss()
 
+    /**
+     * How much the stream behind the menu is blurred, 0 to 1: it follows the soft gradient behind the tiles (in with the
+     * entrance, out with the exit). A host without a window of its own to blur (the debug preview) ignores it.
+     */
+    fun setBackdrop(amount: Float) = Unit
+
     /** Runs [action] once the stream has the focus again (after the menu closed). */
     fun runWhenStreamFocused(action: () -> Unit)
 

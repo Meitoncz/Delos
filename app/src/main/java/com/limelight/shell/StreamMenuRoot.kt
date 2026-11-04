@@ -23,6 +23,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -132,6 +133,7 @@ internal fun StreamMenuRoot(
     LaunchedEffect(Unit) {
         if (start.animate) enterClock.animateTo(M.ENTER_TOTAL.toFloat(), tween(M.ENTER_TOTAL, easing = LinearEasing))
     }
+    LaunchedEffect(Unit) { snapshotFlow { gradient.value }.collect { host.setBackdrop(it) } }
     LaunchedEffect(closing) {
         gradient.animateTo(if (closing) 0f else 1f, tween(if (closing) M.CLOSE else Motion.GRADIENT, easing = Motion.Ease))
     }
