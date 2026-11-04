@@ -29,7 +29,7 @@ import kotlin.math.sin
 /**
  * Debug builds only: the real stream menu on a drawn game scene with fake state, started with
  * `adb shell am start -n io.github.meitoncz.delos.debug/com.limelight.shell.ShellActivity --es preview_screen stream_menu`
- * and optionally `--es preview_page <main|upscaler|bitrate|brightness|more|keys|commands|mouse>`, `--ei preview_focus <circle 0..8>`,
+ * and optionally `--es preview_page <main|upscaler|bitrate|brightness|more|keys|commands|mouse>`, `--ei preview_focus <tile 0..8>`,
  * `--ei preview_row <row of the page to focus>` and `--ez preview_animate true` (plays the entrance; without it the menu is
  * already open). Handled by `ShellActivity` before the shell, so no profile is needed (docs/GUI.md, "Stream menu preview").
  */
@@ -125,16 +125,16 @@ internal class FakeStreamMenuHost : StreamMenuHost {
 
     override var bitrateKbps = 50000
     override var bitrateBusy by mutableStateOf(false)
-    override var bitrateMessage by mutableStateOf<String?>(null)
+    override var bitrateResult by mutableStateOf<BitrateResult?>(null)
     override fun applyBitrate(requested: Int, accepted: (Int) -> Unit) {
         if (bitrateBusy) return
         bitrateBusy = true
-        bitrateMessage = null
+        bitrateResult = null
         handler.postDelayed({
             val applied = minOf(requested, 80000)
             bitrateKbps = applied
             accepted(applied)
-            bitrateMessage = "Host accepted ${applied / 1000} Mbps" + if (applied < requested) " (limited by the host)" else ""
+            bitrateResult = if (applied < requested) BitrateResult.Limited(applied) else BitrateResult.Accepted(applied)
             bitrateBusy = false
         }, 700)
     }
@@ -143,13 +143,14 @@ internal class FakeStreamMenuHost : StreamMenuHost {
     override var upscalerRequested = true
     override val upscalerStatus get() = if (upscalerRequested) "On: " + listOf("SGSR 1 Standard", "SGSR 1 High Quality", "SGSR 2 Video", "SGSR 2 Video Quality")[upscalerMode] else "Off"
     override val supersamplingMode = true
-    override var supersamplingLevel = 1
+    private var level = 1
+    override val supersamplingLevel get() = level
     override var upscalerMode = 2
     override var upscalerSharpness = 50
     override fun setUpscalingEnabled(on: Boolean) { upscalerRequested = on }
     override fun setUpscalingMode(mode: Int) { upscalerMode = mode }
     override fun setUpscalingSharpness(percent: Int) { upscalerSharpness = percent }
-    override fun setSupersamplingLevel(level: Int) { supersamplingLevel = level }
+    override fun setSupersamplingLevel(level: Int) { this.level = level }
     override val canSaveUpscaler = true
     override fun saveUpscaler() = Unit
 
@@ -167,13 +168,14 @@ internal class FakeStreamMenuHost : StreamMenuHost {
     override fun rotate() = Unit
 
     override val allowChangeMouseMode = true
-    override var mouseMode = 0
+    private var mode = 0
+    override val mouseMode get() = mode
     override val rememberMouseMode = false
     override fun mouseModes() = listOf(
         SettingChoice("Multi-touch", "0"), SettingChoice("Trackpad", "1"), SettingChoice("Relative", "2"),
         SettingChoice("Classic mouse", "3"), SettingChoice("Disabled", "4"), SettingChoice("Multi-touch, buttons swapped", "5"),
     )
-    override fun setMouseMode(mode: Int) { mouseMode = mode }
+    override fun setMouseMode(mode: Int) { this.mode = mode }
     override var localMouseCursorVisible = false
     override fun toggleLocalMouseCursor() { localMouseCursorVisible = !localMouseCursorVisible }
 

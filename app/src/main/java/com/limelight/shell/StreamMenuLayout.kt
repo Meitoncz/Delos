@@ -2,29 +2,29 @@ package com.limelight.shell
 
 import com.limelight.shell.settings.SettingsHelp
 import com.limelight.shell.settings.StreamMenuHelp
-import kotlin.math.ceil
 import kotlin.math.floor
 
 /**
- * The decisions of the stream menu that need no Compose: which circle of the bar a page belongs to, where
- * the focus goes when a popover closes, where the bar, its circles and the popover with its caret sit, and
- * how much room the help texts have. Sizes are stage pixels (the 1920 x 1080 stage of docs/GUI.md).
+ * The decisions of the stream menu that need no Compose: which tile of the dock a page belongs to, where the
+ * focus goes when a popover closes, where the tiles, the ring and the popover with its caret sit, and how much
+ * room the help texts have. Sizes are stage pixels (the 1920 x 1080 stage of docs/GUI.md); the numbers are the
+ * CSS variables of prototype B (docs/prototype/delos-gui.html, `#quickmenu`), one for one.
  */
 
-/** The circles of the bottom bar, in the order they appear. */
+/** The tiles of the dock, in the order they appear. */
 internal enum class BarItem { RESUME, KEYBOARD, OVERLAY, BRIGHTNESS, BITRATE, UPSCALER, MORE, DISCONNECT, QUIT }
 
-/** What the popover above the bar shows; [MAIN] is no popover (the bar alone). */
+/** What the popover above the dock shows; [MAIN] is no popover (the dock alone). */
 internal enum class MenuPage { MAIN, MORE, KEYS, COMMANDS, BRIGHTNESS, BITRATE, UPSCALER, MOUSE }
 
-/** The page B goes back to: the bar for the pages of a circle, More for the pages that More opens. */
+/** The page B goes back to: the dock for the pages of a tile, More for the pages that More opens. */
 internal fun MenuPage.parent(): MenuPage? = when (this) {
     MenuPage.MAIN -> null
     MenuPage.KEYS, MenuPage.COMMANDS, MenuPage.MOUSE -> MenuPage.MORE
     else -> MenuPage.MAIN
 }
 
-/** The circle that opens this page, directly or through More. */
+/** The tile that opens this page, directly or through More. */
 internal fun MenuPage.barItem(): BarItem? = when (this) {
     MenuPage.MAIN -> null
     MenuPage.MORE, MenuPage.KEYS, MenuPage.COMMANDS, MenuPage.MOUSE -> BarItem.MORE
@@ -40,7 +40,7 @@ internal object MoreRow {
     const val MOUSE = "Mouse mode"
 }
 
-/** The row of the parent page that opened this page (by its label), or null when the bar's circle did. */
+/** The row of the parent page that opened this page (by its label), or null when the dock's tile did. */
 internal fun MenuPage.openedByRow(): String? = when (this) {
     MenuPage.KEYS -> MoreRow.KEYS
     MenuPage.COMMANDS -> MoreRow.COMMANDS
@@ -52,27 +52,22 @@ internal fun MenuPage.openedByRow(): String? = when (this) {
 internal data class PageExit(val page: MenuPage, val focusCircle: BarItem?, val focusRow: String?)
 
 /**
- * B (or the back chevron) on [page]: one level up, to the row that opened it or to its circle on the bar.
- * Null on the bar itself: there B resumes the stream.
+ * B (or the back chevron) on [page]: one level up, to the row that opened it or to its tile on the dock.
+ * Null on the dock itself: there B resumes the stream.
  */
 internal fun pageAfterBack(page: MenuPage): PageExit? {
     val parent = page.parent() ?: return null
     return if (parent == MenuPage.MAIN) PageExit(parent, page.barItem(), null) else PageExit(parent, null, page.openedByRow())
 }
 
-/** A tap outside the popover: the whole popover closes and its circle gets the focus. Null when none is open. */
+/** A tap outside the popover: the whole popover closes and its tile gets the focus. Null when none is open. */
 internal fun pageAfterDismiss(page: MenuPage): PageExit? =
     if (page == MenuPage.MAIN) null else PageExit(MenuPage.MAIN, page.barItem(), null)
 
-/** A rectangle in stage pixels. */
-internal data class StageRect(val left: Float, val top: Float, val right: Float, val bottom: Float) {
-    val width: Float get() = right - left
-    val height: Float get() = bottom - top
-}
-
 internal object StreamMenuLayout {
-    /** Nothing of the menu comes closer to a screen edge than this (TV overscan). */
-    const val SAFE_MARGIN = 48f
+    /** The stage every number below is measured on. */
+    const val STAGE_WIDTH = 1920f
+    const val STAGE_HEIGHT = 1080f
 
     /** The largest interface scale of Settings -> Appearance: text grows with it, its boxes do not. */
     const val MAX_TEXT_SCALE = 1.3f
@@ -80,156 +75,198 @@ internal object StreamMenuLayout {
     /** The share of its font size that an average character of Figtree is wide (the model of the help fit tests). */
     const val AVERAGE_CHAR_WIDTH = .5f
 
-    // The bar: the game's name and the hints on the left, one row of nine circles, the help area under them
-    const val BAR_MAX_WIDTH = 1700f
-    const val BAR_CORNER = 40f
-    const val BAR_PADDING_X = 40f
-    const val BAR_PADDING_TOP = 28f
-    const val TITLE_WIDTH = 250f
-    const val SEPARATOR_GAP = 28f
-    const val CIRCLE_SIZE = 108f
-    const val CIRCLE_LABEL_SIZE = 22f
-    const val CIRCLE_STATE_SIZE = 18f
-    const val CIRCLE_ROW_HEIGHT = 188f
+    // The tiles: 9 x 150 + 8 x 40 = 1670, 125 left and right
+    const val TILE = 150f
+    const val TILE_RADIUS = 42f
+    const val TILE_GAP = 40f
+    const val TILE_ICON = 64f
+    const val TILES_WIDTH = 9 * TILE + 8 * TILE_GAP
+    const val TILES_LEFT = (STAGE_WIDTH - TILES_WIDTH) / 2f
+    const val FOCUS_SCALE = 1.12f
+    const val ICON_FOCUS_SCALE = 1.04f
+    const val PRESS_SCALE = .97f
+
+    /** The gold ring around the focused tile: a 186 box (the tile at 1.12 is 168, plus 9 on each side). */
+    const val RING = 186f
+    const val RING_RADIUS = 56f
+    const val RING_WIDTH = 4f
+
+    // Labels, pills and the caption
+    const val LABEL_SIZE = 24f
+    const val LABEL_LINE_HEIGHT = 1.2f
+    const val LABEL_GAP = 24f
+    const val LABEL_FOCUS_SHIFT = 8f
+    const val PILL_HEIGHT = 34f
+    const val PILL_SIZE = 18f
+    const val PILL_PADDING_X = 15f
+    const val PILL_RIGHT = -12f
+    const val PILL_TOP = -14f
+    const val CAPTION_SIZE = 28f
+    const val CAPTION_LINE_HEIGHT = 1.4f
+    const val CAPTION_WIDTH = 1100f
+    const val CAPTION_GAP = 26f
+
+    /** The caption's box is this many lines tall at the current text scale: it never grows, nothing scrolls. */
+    const val CAPTION_LINES = 3
+
+    // The dock: the title block above the tiles, the tiles, the caption; it sinks while a popover is open
+    const val DOCK_TOP = 628f
+    const val DOCK_SHIFT = 160f
+    const val HEAD_BOTTOM = 46f
+    const val HEAD_GAP = 22f
+    const val HINTS_GAP = 12f
+    const val TITLE_SIZE = 36f
+    const val TITLE_LINE_HEIGHT = 1.15f
+    const val HINT_SIZE = 24f
     const val HINT_GLYPH_SIZE = 44
 
-    /** The ring that glides between the circles: its gap and width around the lifted circle. */
-    const val RING_GAP = 5f
-    const val RING_WIDTH = 4f
-    const val FOCUS_LIFT = 1.08f
+    /** A long game name stops here (one line, ellipsis) instead of running over the HUD. */
+    const val TITLE_MAX_WIDTH = 900f
 
-    // The help area of the bar: HELP_LINES lines of HELP_TEXT_SIZE at the largest text scale, never scrolling
-    const val HELP_LINES = 2
-    const val HELP_TEXT_SIZE = 22f
+    // The popover: a frosted card with a caret on its bottom edge, pointing at the tile that opened it
+    const val POPOVER_RADIUS = 44f
+    const val POPOVER_PADDING_X = 40f
+    const val POPOVER_PADDING_Y = 36f
+    const val POPOVER_PADDING_BOTTOM = 28f
+    const val POPOVER_MAX_HEIGHT = 686f
+    const val POPOVER_HEAD_HEIGHT = 64f
+    const val POPOVER_HEAD_GAP = 20f
+    const val POPOVER_GAP_AFTER_HEAD = 16f
+    const val POPOVER_HELP_GAP = 22f
+    const val POPOVER_TITLE_SIZE = 30f
+    const val CARET_WIDTH = 60f
+    const val CARET_HEIGHT = 24f
+
+    /** The popover's box ends here above the bottom of the stage: card bottom 734, caret tip about 13 above the sunk tile's ring. */
+    const val POPOVER_BOTTOM = 322f
+
+    /** The card keeps this far from the stage's sides, and its caret this far from the card's corners. */
+    const val POPOVER_MIN_LEFT = 110f
+    const val POPOVER_MAX_RIGHT = 1810f
+    const val CARET_MIN_INSET = 72f
+    const val POPOVER_HIDDEN_SCALE = .86f
+
+    // Rows of a page
+    const val ROW_HEIGHT = 72f
+    const val ROW_RADIUS = 28f
+    const val ROW_GAP = 8f
+    const val ROW_SIZE = 24f
+    const val ROW_ICON = 32f
+    const val ROW_ICON_COLUMN = 56f
+    const val ROW_COLUMN_GAP = 14f
+    const val ROW_PADDING_START = 22f
+    const val ROW_PADDING_END = 28f
+    const val ROW_RING = 3f
+    const val CHOICE_VALUE_MIN_WIDTH = 170f
+    const val NUMBER_MIN_WIDTH = 104f
+    const val SWITCH_WIDTH = 78f
+    const val SWITCH_HEIGHT = 44f
+    const val SLIDER_WIDTH = 240f
+    const val SLIDER_HEIGHT = 12f
+    const val KNOB = 32f
+    const val HELP_SIZE = 22f
     const val HELP_LINE_HEIGHT = 1.4f
-    const val HELP_GAP = 14f
-    const val HELP_PADDING_Y = 12f
 
-    /** A little more than [HELP_LINES] lines at the largest text scale (rounding of line heights). */
-    const val HELP_TEXT_HEIGHT = 86f
-    const val BAR_HEIGHT = BAR_PADDING_TOP + CIRCLE_ROW_HEIGHT + HELP_GAP + 1f + HELP_PADDING_Y * 2 + HELP_TEXT_HEIGHT
+    /** The soft tint under the tiles and the extra one under an open popover. */
+    const val SCRIM_POPOVER_ALPHA = .22f
 
-    // The popover: a card with a caret on its bottom edge, pointing at the circle that opened it
-    const val POPOVER_MIN_WIDTH = 700f
-    const val POPOVER_CORNER = 32f
-    const val POPOVER_PADDING_X = 36f
-    const val POPOVER_PADDING_TOP = 20f
-    const val POPOVER_HEADER_HEIGHT = 72f
-    const val ROW_HEIGHT = 68f
-    const val ROW_SPACING = 14f
-    const val CARET_WIDTH = 28f
-    const val CARET_HEIGHT = 14f
-
-    /** The caret never comes closer to a corner of the card than this (center of the caret). */
-    const val CARET_MIN_INSET = 40f
-
-    /** The space between the caret's tip and the top of the bar. */
-    const val POPOVER_GAP = 12f
-    const val FOOTER_TEXT_SIZE = 20f
-    const val FOOTER_LINE_HEIGHT = 1.35f
-
-    /** The soft gradient under the bar: its height and its alpha at the top, middle and bottom. */
-    const val GRADIENT_HEIGHT = 380f
-    const val GRADIENT_MID_ALPHA = .17f
-    const val GRADIENT_BOTTOM_ALPHA = .55f
-
-    /** The translucent tint of every glass surface of the menu (see `menuGlass`). */
-    const val GLASS_ALPHA = .88f
+    /**
+     * The stream is another window (a `SurfaceView`): the menu cannot blur it, as the prototype's frosted glass does.
+     * These dark undercoats stand in for the missing blur so the glass stays readable on a bright picture; the
+     * prototype's own tint and white gradients are drawn over them unchanged.
+     */
+    const val TILE_BACKING_ALPHA = .28f
+    const val CARD_BACKING_ALPHA = .30f
 }
 
-/** The bar: centered, at most [StreamMenuLayout.BAR_MAX_WIDTH] wide, [StreamMenuLayout.SAFE_MARGIN] from the sides and the bottom. */
-internal fun barFrame(areaWidth: Float, areaHeight: Float): StageRect {
-    val width = minOf(StreamMenuLayout.BAR_MAX_WIDTH, (areaWidth - 2 * StreamMenuLayout.SAFE_MARGIN).coerceAtLeast(0f))
-    val left = (areaWidth - width) / 2f
-    val bottom = areaHeight - StreamMenuLayout.SAFE_MARGIN
-    return StageRect(left, bottom - StreamMenuLayout.BAR_HEIGHT, left + width, bottom)
+/** The left edge of [item]'s tile, stage pixels. */
+internal fun tileLeft(item: BarItem): Float = StreamMenuLayout.TILES_LEFT + item.ordinal * (StreamMenuLayout.TILE + StreamMenuLayout.TILE_GAP)
+
+/** The horizontal center of [item]'s tile. */
+internal fun tileCenterX(item: BarItem): Float = tileLeft(item) + StreamMenuLayout.TILE / 2f
+
+/** The left edge of the ring's box around [item]'s tile. */
+internal fun ringLeft(item: BarItem): Float = tileCenterX(item) - StreamMenuLayout.RING / 2f
+
+/** The ring's top edge relative to the tiles' top edge (negative: it reaches above the tile). */
+internal const val RING_TOP = (StreamMenuLayout.TILE - StreamMenuLayout.RING) / 2f
+
+/** The popover's width: wide enough for its rows. More and the pages it opens share one width. */
+internal fun popoverWidth(page: MenuPage): Float = when (page) {
+    MenuPage.MAIN -> 0f
+    MenuPage.BRIGHTNESS -> 780f
+    MenuPage.BITRATE -> 860f
+    MenuPage.UPSCALER -> 980f
+    MenuPage.MORE, MenuPage.KEYS, MenuPage.COMMANDS, MenuPage.MOUSE -> 920f
 }
 
-/** Where the nine equal cells of the circles start and end (left edge of the first, right edge of the last), in stage pixels. */
-internal fun circlesSpan(bar: StageRect): Pair<Float, Float> {
-    val start = bar.left + StreamMenuLayout.BAR_PADDING_X + StreamMenuLayout.TITLE_WIDTH + 2 * StreamMenuLayout.SEPARATOR_GAP + 1f
-    return start to (bar.right - StreamMenuLayout.BAR_PADDING_X)
-}
+/** The card's left edge: centered on [anchorX] (the center of the tile that opened it), [StreamMenuLayout.POPOVER_MIN_LEFT] to [StreamMenuLayout.POPOVER_MAX_RIGHT]. */
+internal fun popoverLeft(anchorX: Float, width: Float): Float =
+    (anchorX - width / 2f).coerceIn(StreamMenuLayout.POPOVER_MIN_LEFT, (StreamMenuLayout.POPOVER_MAX_RIGHT - width).coerceAtLeast(StreamMenuLayout.POPOVER_MIN_LEFT))
 
-/** The horizontal center of [item]'s circle: the middle of its equal cell. */
-internal fun circleCenterX(bar: StageRect, item: BarItem): Float {
-    val (start, end) = circlesSpan(bar)
-    return start + (end - start) / BarItem.entries.size * (item.ordinal + .5f)
-}
+/** The caret's center from the card's left edge: the anchor kept [StreamMenuLayout.CARET_MIN_INSET] from both corners. */
+internal fun caretCenterX(anchorX: Float, left: Float, width: Float): Float =
+    (anchorX - left).coerceIn(StreamMenuLayout.CARET_MIN_INSET, (width - StreamMenuLayout.CARET_MIN_INSET).coerceAtLeast(StreamMenuLayout.CARET_MIN_INSET))
 
-/** The vertical center of the circles, in stage pixels. */
-internal fun circleCenterY(bar: StageRect): Float =
-    bar.top + StreamMenuLayout.BAR_PADDING_TOP + StreamMenuLayout.CIRCLE_SIZE / 2f
-
-/** The popover's width: wide enough for its rows, never narrower than 700 unless the bar is, never wider than the bar. */
-internal fun popoverWidth(page: MenuPage, bar: StageRect): Float {
-    val wanted = when (page) {
-        MenuPage.MAIN -> 0f
-        MenuPage.BRIGHTNESS -> 780f
-        // The pages of More (and More itself) end at the bar's right end when centered on the More circle
-        MenuPage.BITRATE, MenuPage.MORE, MenuPage.KEYS, MenuPage.COMMANDS, MenuPage.MOUSE -> 800f
-        MenuPage.UPSCALER -> 860f
-    }
-    return minOf(wanted, bar.width)
-}
-
-/**
- * The card's left edge: centered on [anchorX] (the center of the circle that opened it) but kept inside the bar's
- * horizontal bounds and [StreamMenuLayout.SAFE_MARGIN] from the sides of the [areaWidth]-wide screen.
- */
-internal fun popoverLeft(anchorX: Float, width: Float, bar: StageRect, areaWidth: Float): Float {
-    val minLeft = maxOf(bar.left, StreamMenuLayout.SAFE_MARGIN)
-    val maxLeft = minOf(bar.right, areaWidth - StreamMenuLayout.SAFE_MARGIN) - width
-    return if (maxLeft < minLeft) minLeft else (anchorX - width / 2f).coerceIn(minLeft, maxLeft)
-}
-
-/** The caret's center: [anchorX] kept at least [StreamMenuLayout.CARET_MIN_INSET] from both corners of the card. */
-internal fun caretCenterX(anchorX: Float, left: Float, width: Float): Float {
-    val inset = minOf(StreamMenuLayout.CARET_MIN_INSET, width / 2f)
-    return anchorX.coerceIn(left + inset, left + width - inset)
-}
-
-/** The tallest popover including its caret: what fits above the bar's gap, keeping the safe margin from the top. */
-internal fun popoverMaxHeight(bar: StageRect): Float =
-    (bar.top - StreamMenuLayout.POPOVER_GAP - StreamMenuLayout.SAFE_MARGIN).coerceAtLeast(0f)
-
-/** Where the popover of [page] sits: its frame (the card and the caret below it) and the caret's center, in stage pixels. */
+/** Where the popover of a page sits, stage pixels: the card's left edge, its width, and the caret's center from the left edge. */
 internal data class PopoverPlacement(val left: Float, val width: Float, val caretX: Float)
 
-internal fun popoverPlacement(page: MenuPage, bar: StageRect, areaWidth: Float): PopoverPlacement? {
+internal fun popoverPlacement(page: MenuPage): PopoverPlacement? {
     val item = page.barItem() ?: return null
-    val anchor = circleCenterX(bar, item)
-    val width = popoverWidth(page, bar)
-    val left = popoverLeft(anchor, width, bar, areaWidth)
+    val anchor = tileCenterX(item)
+    val width = popoverWidth(page)
+    val left = popoverLeft(anchor, width)
     return PopoverPlacement(left, width, caretCenterX(anchor, left, width))
 }
 
-/** The footer of a popover: as many lines of help as the page has room for (the Upscaler page is the tallest). */
-internal fun popoverFooterLines(page: MenuPage): Int = if (page == MenuPage.UPSCALER) 2 else 3
+/** The lines the popover's help text reserves: 2 at the normal text scale, 3 from 1.15 up. */
+internal fun helpLines(textScale: Float): Int = if (textScale > 1.15f) 3 else 2
 
-/** The height of the footer's text box for [lines] lines at the largest text scale, stage pixels. */
-internal fun popoverFooterTextHeight(lines: Int): Float =
-    ceil(lines * StreamMenuLayout.FOOTER_TEXT_SIZE * StreamMenuLayout.MAX_TEXT_SCALE * StreamMenuLayout.FOOTER_LINE_HEIGHT) + 4f
+/** The height of the popover's help box at [textScale]. */
+internal fun popoverHelpHeight(textScale: Float): Float =
+    StreamMenuLayout.HELP_SIZE * textScale * StreamMenuLayout.HELP_LINE_HEIGHT * helpLines(textScale)
 
-/** How many characters of [textSize] (stage pixels) fit a line of [width] stage pixels at the largest text scale. */
-internal fun helpLineChars(width: Float, textSize: Float): Int =
-    floor(width / (textSize * StreamMenuLayout.MAX_TEXT_SCALE * StreamMenuLayout.AVERAGE_CHAR_WIDTH)).toInt()
+/** The height of [rows] rows with the gaps between them. */
+internal fun rowsHeight(rows: Int): Float =
+    if (rows <= 0) 0f else rows * StreamMenuLayout.ROW_HEIGHT + (rows - 1) * StreamMenuLayout.ROW_GAP
 
-/** The width of the text box of the bar's help area, and the characters of a line in it. */
-internal fun barHelpTextWidth(barWidth: Float): Float {
-    val (start, end) = circlesSpan(StageRect(0f, 0f, barWidth, 0f))
-    return end - start
+/** The card's height with [rows] rows at [textScale] when nothing scrolls, caret excluded; capped at [StreamMenuLayout.POPOVER_MAX_HEIGHT]. */
+internal fun popoverCardHeight(rows: Int, textScale: Float): Float {
+    val c = StreamMenuLayout
+    val natural = c.POPOVER_PADDING_Y + c.POPOVER_HEAD_HEIGHT + c.POPOVER_GAP_AFTER_HEAD + rowsHeight(rows) + c.POPOVER_HELP_GAP + popoverHelpHeight(textScale) + c.POPOVER_PADDING_BOTTOM
+    return minOf(natural, c.POPOVER_MAX_HEIGHT)
 }
 
-internal fun barHelpLineChars(barWidth: Float = StreamMenuLayout.BAR_MAX_WIDTH): Int =
-    helpLineChars(barHelpTextWidth(barWidth), StreamMenuLayout.HELP_TEXT_SIZE)
+/** True when a page of [rows] rows needs no scrolling at [textScale]. */
+internal fun popoverFits(rows: Int, textScale: Float): Boolean {
+    val c = StreamMenuLayout
+    return c.POPOVER_PADDING_Y + c.POPOVER_HEAD_HEIGHT + c.POPOVER_GAP_AFTER_HEAD + rowsHeight(rows) + c.POPOVER_HELP_GAP + popoverHelpHeight(textScale) + c.POPOVER_PADDING_BOTTOM <= c.POPOVER_MAX_HEIGHT
+}
 
-/** The width of the footer's text in the popover of [page], and the characters of a line in it. */
-internal fun popoverFooterTextWidth(page: MenuPage, bar: StageRect): Float =
-    popoverWidth(page, bar) - 2 * StreamMenuLayout.POPOVER_PADDING_X
+/** The height of the caption's box at [textScale]. */
+internal fun captionHeight(textScale: Float): Float =
+    StreamMenuLayout.CAPTION_SIZE * textScale * StreamMenuLayout.CAPTION_LINE_HEIGHT * StreamMenuLayout.CAPTION_LINES
 
-internal fun popoverFooterLineChars(page: MenuPage, bar: StageRect): Int =
-    helpLineChars(popoverFooterTextWidth(page, bar), StreamMenuLayout.FOOTER_TEXT_SIZE)
+/** The caption's top edge below the tiles' top edge at [textScale] (below the label, its gap and 8). */
+internal fun captionTop(textScale: Float): Float {
+    val c = StreamMenuLayout
+    return c.TILE + c.LABEL_GAP + c.LABEL_SIZE * textScale * c.LABEL_LINE_HEIGHT + c.CAPTION_GAP + 8f
+}
+
+/** How many characters of [textSize] (stage pixels) fit a line of [width] stage pixels at the largest text scale. */
+internal fun helpLineChars(width: Float, textSize: Float, textScale: Float = StreamMenuLayout.MAX_TEXT_SCALE): Int =
+    floor(width / (textSize * textScale * StreamMenuLayout.AVERAGE_CHAR_WIDTH)).toInt()
+
+/** The characters of a caption line at [textScale]. */
+internal fun captionLineChars(textScale: Float = StreamMenuLayout.MAX_TEXT_SCALE): Int =
+    helpLineChars(StreamMenuLayout.CAPTION_WIDTH, StreamMenuLayout.CAPTION_SIZE, textScale)
+
+/** The width of the help text in the popover of [page]. */
+internal fun popoverHelpWidth(page: MenuPage): Float = popoverWidth(page) - 2 * StreamMenuLayout.POPOVER_PADDING_X
+
+/** The characters of a help line in the popover of [page] at [textScale]. */
+internal fun popoverHelpLineChars(page: MenuPage, textScale: Float = StreamMenuLayout.MAX_TEXT_SCALE): Int =
+    helpLineChars(popoverHelpWidth(page), StreamMenuLayout.HELP_SIZE, textScale)
 
 /** The lines [text] needs with greedy word wrapping at [lineChars] characters per line. */
 internal fun wrappedLineCount(text: String, lineChars: Int): Int {
@@ -251,14 +288,14 @@ internal fun pageTitle(page: MenuPage, supersampling: Boolean): String = when (p
     MenuPage.COMMANDS -> "Server commands"
     MenuPage.BRIGHTNESS -> "Brightness"
     MenuPage.BITRATE -> "Stream bitrate"
-    MenuPage.UPSCALER -> if (supersampling) "Supersampling" else "Snapdragon Game Super Resolution"
+    MenuPage.UPSCALER -> if (supersampling) "Supersampling" else "Upscaler"
     MenuPage.MOUSE -> "Mouse and touch"
 }
 
-/** The help key of the circle (or the page's first row) that shows before anything inside a page is focused. */
+/** The help key of the tile (or the page's first row) that shows before anything inside a page is focused. */
 internal fun pageHelpKey(page: MenuPage): String = when (page) {
     MenuPage.MAIN -> "Resume"
-    MenuPage.MORE -> "More"
+    MenuPage.MORE -> "Send keys"
     MenuPage.KEYS -> "Send keys"
     MenuPage.COMMANDS -> "Commands"
     MenuPage.BRIGHTNESS -> "Screen brightness"
@@ -267,7 +304,7 @@ internal fun pageHelpKey(page: MenuPage): String = when (page) {
     MenuPage.MOUSE -> "Touchscreen mode"
 }
 
-/** The help key of a circle: the upscaler's circle is called Supersampling when the stream is supersampled. */
+/** The help key of a tile: the upscaler's tile is called Supersampling when the stream is supersampled. */
 internal fun circleHelpKey(item: BarItem, supersampling: Boolean): String = when (item) {
     BarItem.RESUME -> "Resume"
     BarItem.KEYBOARD -> "Keyboard"
@@ -286,7 +323,16 @@ private val upscalerModeValues = listOf("standard", "high", "temporal", "tempora
  * What the help of [key] says. The Mouse mode row follows the active mode, the Mode row the selected method and
  * the upscaler's toggles start with the renderer's status.
  */
-internal fun streamMenuHelp(key: String, upscalerStatus: String, upscalerMode: Int, mouseMode: Int, rememberMouseMode: Boolean): String = when (key) {
+internal fun streamMenuHelp(
+    key: String,
+    upscalerStatus: String,
+    upscalerMode: Int,
+    mouseMode: Int,
+    rememberMouseMode: Boolean,
+    bitrateFailure: String? = null,
+): String = when (key) {
+    // A failed Apply explains itself where the help is
+    "Apply bitrate" -> bitrateFailure ?: StreamMenuHelp.description(key)
     "Touchscreen mode" -> SettingsHelp.choice("mouse_mode_list", mouseMode.toString()) +
         "\n\n" + if (rememberMouseMode) "Applies now and is saved." else "Applies now; this stream only."
     "Mode" -> SettingsHelp.choice("list_sgsr_quality", upscalerModeValues[upscalerMode.coerceIn(0, upscalerModeValues.lastIndex)]) +
@@ -295,8 +341,31 @@ internal fun streamMenuHelp(key: String, upscalerStatus: String, upscalerMode: I
     else -> StreamMenuHelp.description(key)
 }
 
+/** What the Apply row of the Bitrate page says on its right: null before anything was applied. */
+internal fun bitrateStatusText(busy: Boolean, result: BitrateResult?): String? = when {
+    busy -> "Applying\u2026"
+    result is BitrateResult.Accepted -> "Accepted ${result.kbps / 1000} Mbps"
+    result is BitrateResult.Limited -> "Limited by the host to ${result.kbps / 1000} Mbps"
+    result is BitrateResult.Failed -> "Failed"
+    else -> null
+}
+
+/** The reasons a bitrate change can fail, as the help says them (all short enough for it). */
+internal object BitrateFailure {
+    const val NOT_CONNECTED = "The stream is not connected, so the bitrate cannot be changed."
+    const val UNSUPPORTED = "The host does not support live bitrate changes, or the stream has ended."
+    const val DENIED = "The host did not allow this change."
+    const val UNCONFIRMED = "The bitrate was not confirmed. Check the connection and try again."
+
+    /** The host answered with an error of its own; its [detail] is cut so the sentence still fits. */
+    fun rejected(detail: String?): String {
+        val clean = detail?.trim().orEmpty().replace('\n', ' ')
+        return "The host could not apply the change" + if (clean.isEmpty()) "." else ": " + (if (clean.length > 60) clean.take(59) + "\u2026" else clean)
+    }
+}
+
 /**
- * The few words that fit under the upscaler's circle, from the renderer's status ("On: SGSR 2 Video" -> "On",
+ * The few words that fit in the pill of the upscaler's tile, from the renderer's status ("On: SGSR 2 Video" -> "On",
  * "Unavailable; direct rendering is active" -> "Unavailable"). The full status stays in the help.
  */
 internal fun upscalerCircleState(status: String): String =

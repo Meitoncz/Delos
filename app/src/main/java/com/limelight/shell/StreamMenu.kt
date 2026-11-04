@@ -46,9 +46,9 @@ import kotlinx.coroutines.withContext
 import java.io.FileNotFoundException
 
 /**
- * The Delos stream menu (the prototype's `#quickmenu`): a bar at the bottom of the stream with the game's
- * name and one row of circles (Resume, Keyboard, Overlay, Brightness, Bitrate, Upscaler, More, Disconnect,
- * Quit game); the pages behind the circles open in a popover above the circle that opened them. It opens with
+ * The Delos stream menu (the prototype's `#quickmenu`, "Console tiles"): over the lower part of the stream the game's
+ * name and one row of nine glass tiles (Resume, Keyboard, Overlay, Brightness, Bitrate, Upscaler, More, Disconnect,
+ * Quit game) with the complete help of the focused tile under them; the pages behind the tiles open in a popover above the tile that opened them. It opens with
  * the buttons set in Delos (L3 + R3 by default), a swipe up from the bottom edge (unless turned off) and every
  * way the classic menu opened. It is its own window, so the controller does not reach the game while it is
  * open. This class is that window and the bridge to the stream ([GameHost]); what is drawn is [StreamMenuRoot].
@@ -212,7 +212,7 @@ class StreamMenu(private val game: Game) {
     }
 
     private var bitrateBusy by mutableStateOf(false)
-    private var bitrateMessage by mutableStateOf<String?>(null)
+    private var bitrateResult by mutableStateOf<BitrateResult?>(null)
 
     // Delos: the stream's brightness in percent for this stream, -1 = the system's (from Moonlight X's
     // brightness slider)
@@ -261,28 +261,26 @@ class StreamMenu(private val game: Game) {
     private fun applyBitrate(requested: Int, accepted: (Int) -> Unit) {
         if (bitrateBusy) return
         if (!game.connected) {
-            bitrateMessage = "The stream is not connected, so the bitrate cannot be changed."
+            bitrateResult = BitrateResult.Failed(BitrateFailure.NOT_CONNECTED)
             return
         }
         bitrateBusy = true
-        bitrateMessage = null
+        bitrateResult = null
         game.lifecycleScope.launch {
             try {
                 val applied = withContext(Dispatchers.IO) { game.conn.setRuntimeBitrate(requested) }
                 if (game.connected && !game.isFinishing) {
-                    val limited = applied < requested
                     game.prefConfig.bitrate = applied
                     accepted(applied)
-                    bitrateMessage = "Host accepted ${applied / 1000} Mbps" +
-                        if (limited) " (limited by the host)" else ""
+                    bitrateResult = if (applied < requested) BitrateResult.Limited(applied) else BitrateResult.Accepted(applied)
                 }
             } catch (e: kotlinx.coroutines.CancellationException) { throw e }
             catch (e: Exception) {
-                bitrateMessage = when (e) {
-                    is FileNotFoundException -> "The host does not support live bitrate changes, or the stream has ended."
-                    is HostHttpResponseException -> if (e.errorCode == 403) "The host did not allow this change." else "The host could not apply the change: ${e.message}"
-                    else -> "The bitrate was not confirmed. Check the connection and try again."
-                }
+                bitrateResult = BitrateResult.Failed(when (e) {
+                    is FileNotFoundException -> BitrateFailure.UNSUPPORTED
+                    is HostHttpResponseException -> if (e.errorCode == 403) BitrateFailure.DENIED else BitrateFailure.rejected(e.message)
+                    else -> BitrateFailure.UNCONFIRMED
+                })
             } finally { bitrateBusy = false }
         }
     }
@@ -307,7 +305,7 @@ class StreamMenu(private val game: Game) {
 
         override val bitrateKbps get() = prefs.bitrate
         override val bitrateBusy get() = this@StreamMenu.bitrateBusy
-        override val bitrateMessage get() = this@StreamMenu.bitrateMessage
+        override val bitrateResult get() = this@StreamMenu.bitrateResult
         override fun applyBitrate(requested: Int, accepted: (Int) -> Unit) = this@StreamMenu.applyBitrate(requested, accepted)
 
         override val upscalerAvailable get() = game.isPyroWave || com.limelight.binding.video.SgsrRenderer.isSupported(game)

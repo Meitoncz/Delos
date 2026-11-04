@@ -1,36 +1,27 @@
 package com.limelight.shell
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -38,29 +29,39 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.dropShadow
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.inset
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.PointerEventPass
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.em
+import com.limelight.shell.StreamMenuLayout as L
+import com.limelight.shell.StreamMenuMotion as M
 import com.limelight.shell.ui.EaseOut
+import com.limelight.shell.ui.EaseSpring
 import com.limelight.shell.ui.Figtree
 import com.limelight.shell.ui.Glyph
 import com.limelight.shell.ui.GlyphButton
@@ -70,17 +71,19 @@ import com.limelight.shell.ui.LocalStage
 import com.limelight.shell.ui.Symbol
 import com.limelight.shell.ui.Unbounded
 import com.limelight.shell.ui.focusEffects
-import com.limelight.shell.ui.glass
 import com.limelight.shell.ui.px
 import com.limelight.shell.ui.tpx
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
-/** Called with the help key of the popover row that gets the focus; the popover's footer shows its text. */
+/** Called with the help key of the popover row that gets the focus; the popover's help text shows its text. */
 internal val LocalStreamHelp = staticCompositionLocalOf<(String) -> Unit> { {} }
 
 /**
- * One circle of the bar. [label] is also its help key. [on] is a toggle's state (filled with the accent and
- * "On" / "Off" under the label), null for actions; [state] replaces "On" / "Off" for toggles with more steps.
+ * One tile of the dock. [label] is also its help key. [on] is a toggle's state (the accent glass and an "On" / "Off"
+ * pill), null for actions; [state] replaces "On" / "Off" for toggles with more steps. [opensPage] is a tile whose
+ * page opens in the popover: those stay usable while a popover is open.
  */
 @Immutable
 internal class BarCircleSpec(
@@ -89,296 +92,422 @@ internal class BarCircleSpec(
     val label: String,
     val on: Boolean? = null,
     val state: String? = null,
+    val opensPage: Boolean = false,
     val onClick: () -> Unit,
 )
 
-/** The soft legibility gradient under the bar: transparent at the top, a little over half black at the bottom edge. */
+/** The room a node keeps around its box so a shadow that reaches outside it is not clipped by an alpha layer, stage pixels. */
+private const val SHADOW_ROOM = 130f
+
+private val Backing = Color(0xFF05070F)
+
+/**
+ * The soft gradient under the dock (`#grad`) and the extra scrim while a popover is open (`#scrim`): the only dimming
+ * of the stream, there is no card behind the tiles. Both fill the whole area; their alphas are read while drawing.
+ */
 @Composable
-internal fun StreamMenuGradient(modifier: Modifier = Modifier) {
-    Box(
-        modifier.fillMaxWidth().height(StreamMenuLayout.GRADIENT_HEIGHT.px).background(
-            Brush.verticalGradient(
-                0f to Color.Transparent,
-                .5f to Color.Black.copy(alpha = StreamMenuLayout.GRADIENT_MID_ALPHA),
-                1f to Color.Black.copy(alpha = StreamMenuLayout.GRADIENT_BOTTOM_ALPHA),
-            )
+internal fun StreamMenuBackdrop(gradientAlpha: () -> Float, scrimAlpha: () -> Float, modifier: Modifier = Modifier) {
+    val gradient = remember {
+        Brush.verticalGradient(
+            0f to Color(4, 6, 14, 0),
+            .34f to Color(4, 6, 14, 0),
+            .48f to Color(4, 6, 14).copy(alpha = .22f),
+            .66f to Color(4, 6, 14).copy(alpha = .55f),
+            .84f to Color(4, 6, 14).copy(alpha = .80f),
+            1f to Color(4, 6, 14).copy(alpha = .90f),
         )
+    }
+    Box(
+        modifier.fillMaxSize().drawBehind {
+            val g = gradientAlpha()
+            if (g > 0f) drawRect(gradient, alpha = g)
+            val s = scrimAlpha()
+            if (s > 0f) drawRect(Color(4, 6, 14).copy(alpha = L.SCRIM_POPOVER_ALPHA), alpha = s)
+        }
     )
 }
 
 /**
- * The glass of every surface of the stream menu (the bar and the popover): a soft shadow, the palette's
- * background tint ([StreamMenuLayout.GLASS_ALPHA]) and a hairline border with a light top edge, all following [shape].
- * The stream is a separate window (a `SurfaceView`), so the shell's background blur cannot reach it: this is the
- * one place to change when the menu gets a blurring window of its own.
+ * The dock (docs/GUI.md, "Stream menu"): the game's name and the button hints above the row of nine glass tiles, one
+ * gold ring that glides between them, and under them the caption with the complete help of the focused tile. All of it
+ * is placed on the 1920 x 1080 stage with the tiles' top at [StreamMenuLayout.DOCK_TOP]; the popover sinks it by
+ * [dockShift] stage pixels. [enter] and [exit] are the clocks (milliseconds) of the entrance and the exit, read while
+ * drawing; [firstItem] is the tile the focus starts on (the ring arrives after it).
  */
 @Composable
-internal fun Modifier.menuGlass(shape: Shape): Modifier {
-    val colors = LocalDelosColors.current
-    val k = LocalStage.current.dpPerPx * LocalDensity.current.density
-    return this
-        .dropShadow(shape) {
-            radius = 70f * k
-            spread = -10f * k
-            offset = Offset(0f, 18f * k)
-            color = Color.Black
-            alpha = .47f
-        }
-        .clip(shape)
-        .glass(colors.bg.copy(alpha = StreamMenuLayout.GLASS_ALPHA))
-        .border(1.px, Brush.verticalGradient(listOf(Color.White.copy(alpha = .28f), colors.line)), shape)
-}
-
-/**
- * The bottom bar (docs/GUI.md, "Stream menu"): the game's name and the button hints on the left, one row of
- * circles with one focus ring that glides between them, and under them the help area, which shows the complete
- * help of the circle. Always [StreamMenuLayout.BAR_HEIGHT] high. [entrance] runs the circles' staggered entrance.
- */
-@Composable
-internal fun StreamMenuBar(
+internal fun StreamMenuDock(
     title: String,
-    backLabel: String,
     circles: List<BarCircleSpec>,
     requesters: Map<BarItem, FocusRequester>,
-    selected: BarItem?,
-    initialItem: BarItem,
-    entrance: Boolean,
-    helpTitle: String,
-    helpText: String,
-    width: Float,
-    onCircleFocused: (BarItem) -> Unit,
+    focusItem: BarItem?,
+    firstItem: BarItem,
+    popOpen: Boolean,
+    caption: String,
+    enter: () -> Float,
+    exit: () -> Float,
+    dockShift: () -> Float,
+    onCircleFocused: (BarItem, Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val colors = LocalDelosColors.current
-    var focusedItem by remember { mutableStateOf<BarItem?>(null) }
+    val ts = LocalStage.current.textScale
+    val k = stageScale()
     Box(
         modifier
-            .width(width.px)
-            .height(StreamMenuLayout.BAR_HEIGHT.px)
-            .menuGlass(RoundedCornerShape(StreamMenuLayout.BAR_CORNER.px))
-            // A tap between the circles is not "outside"
-            .pointerInput(Unit) { detectTapGestures { } },
+            .size(L.STAGE_WIDTH.px, (L.STAGE_HEIGHT - L.DOCK_TOP).px)
+            .graphicsLayer { translationY = dockShift() * k },
     ) {
-        FocusGlider(width, focusedItem ?: selected, focusedItem != null, initialItem, Modifier.fillMaxSize())
-        Column(Modifier.fillMaxSize()) {
-            Row(Modifier.padding(start = StreamMenuLayout.BAR_PADDING_X.px, end = StreamMenuLayout.BAR_PADDING_X.px, top = StreamMenuLayout.BAR_PADDING_TOP.px).height(StreamMenuLayout.CIRCLE_ROW_HEIGHT.px)) {
-                Column(Modifier.width(StreamMenuLayout.TITLE_WIDTH.px).fillMaxHeight(), verticalArrangement = Arrangement.SpaceBetween) {
-                    BasicText(
-                        title,
-                        style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 22.tpx),
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    Column(verticalArrangement = Arrangement.spacedBy(10.px)) {
-                        BarHint(Glyph.A, "Select")
-                        BarHint(Glyph.B, backLabel)
-                    }
-                }
-                Box(Modifier.padding(horizontal = StreamMenuLayout.SEPARATOR_GAP.px).width(1.px).fillMaxHeight().background(colors.line))
-                Row(Modifier.weight(1f)) {
-                    circles.forEach { spec ->
-                        BarCircle(
-                            spec, requesters.getValue(spec.item), spec.item == selected, entrance,
-                            onFocused = { item, focused ->
-                                if (focused) {
-                                    focusedItem = item
-                                    onCircleFocused(item)
-                                } else if (focusedItem == item) focusedItem = null
-                            },
-                            Modifier.weight(1f),
-                        )
-                    }
-                }
-            }
-            Spacer(Modifier.height(StreamMenuLayout.HELP_GAP.px))
-            Box(Modifier.padding(horizontal = StreamMenuLayout.BAR_PADDING_X.px).fillMaxWidth().height(1.px).background(colors.line))
-            HelpArea(
-                helpTitle, helpText,
-                Modifier.fillMaxWidth().padding(horizontal = StreamMenuLayout.BAR_PADDING_X.px, vertical = StreamMenuLayout.HELP_PADDING_Y.px),
+        DockHead(title, enter, exit, Modifier.offset(L.TILES_LEFT.px, 0.px))
+        TileRing(focusItem ?: firstItem, firstItem, enter, exit)
+        circles.forEach { spec ->
+            TileCell(
+                spec, spec.item == focusItem, popOpen, requesters.getValue(spec.item), enter, exit, onCircleFocused,
+                Modifier.offset(tileLeft(spec.item).px, 0.px),
             )
+        }
+        DockCaption(caption, popOpen, enter, exit, Modifier.offset(((L.STAGE_WIDTH - L.CAPTION_WIDTH) / 2f).px, captionTop(ts).px))
+    }
+}
+
+/** The game's name (Unbounded 36) and the stacked A / B hints, their bottom edge [StreamMenuLayout.HEAD_BOTTOM] above the tiles. */
+@Composable
+private fun DockHead(title: String, enter: () -> Float, exit: () -> Float, modifier: Modifier) {
+    val colors = LocalDelosColors.current
+    val rm = LocalReducedMotion.current
+    val k = stageScale()
+    val shadow = menuTextShadow(k, 2f, 16f, .55f)
+    Column(
+        modifier
+            .layout { measurable, constraints ->
+                val placeable = measurable.measure(constraints.copy(minHeight = 0, maxHeight = Int.MAX_VALUE))
+                layout(placeable.width, 0) { placeable.place(0, -(placeable.height + (L.HEAD_BOTTOM * k).roundToInt())) }
+            }
+            .graphicsLayer {
+                val p = M.progress(enter(), M.HEAD_DELAY, M.ENTER, EaseOut)
+                alpha = p.coerceIn(0f, 1f) * (1f - M.linear(exit(), 0, M.EXIT))
+                translationY = if (rm) 0f else 24f * (1f - p) * k
+                compositingStrategy = CompositingStrategy.ModulateAlpha
+            },
+        verticalArrangement = Arrangement.spacedBy(L.HEAD_GAP.px),
+    ) {
+        BasicText(
+            title,
+            style = TextStyle(
+                color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = L.TITLE_SIZE.fsp,
+                lineHeight = L.TITLE_LINE_HEIGHT.em, lineHeightStyle = CssLineHeight, letterSpacing = (-.005f).em, shadow = shadow,
+            ),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.widthIn(max = L.TITLE_MAX_WIDTH.px),
+        )
+        Column(verticalArrangement = Arrangement.spacedBy(L.HINTS_GAP.px)) {
+            DockHint(Glyph.A, "Select", shadow)
+            DockHint(Glyph.B, "Back", shadow)
         }
     }
 }
 
 @Composable
-private fun BarHint(glyph: Glyph, label: String) {
+private fun DockHint(glyph: Glyph, label: String, shadow: Shadow) {
     val colors = LocalDelosColors.current
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.px)) {
-        GlyphButton(glyph, size = StreamMenuLayout.HINT_GLYPH_SIZE)
-        BasicText(label, style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 22.tpx), maxLines = 1)
-    }
-}
-
-/** Reports whether a pointer is down on the element, without consuming anything (taps still reach the element). */
-private fun Modifier.trackPress(onChange: (Boolean) -> Unit): Modifier = pointerInput(Unit) {
-    awaitEachGesture {
-        awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
-        onChange(true)
-        try {
-            do {
-                val event = awaitPointerEvent(PointerEventPass.Initial)
-            } while (event.changes.any { it.pressed })
-        } finally {
-            onChange(false)
-        }
+        GlyphButton(glyph, size = L.HINT_GLYPH_SIZE)
+        BasicText(
+            label,
+            style = TextStyle(color = colors.text2, fontFamily = Figtree, fontWeight = FontWeight.Medium, fontSize = L.HINT_SIZE.tpx, shadow = shadow),
+            maxLines = 1,
+        )
     }
 }
 
 /**
- * A circle of the bar: a [StreamMenuLayout.CIRCLE_SIZE] glass circle, its label and, for toggles, the state under
- * it. The focused circle lifts and its label brightens (the ring is the bar's one [FocusGlider]); a press shrinks
- * it a little; on entrance it fades and scales in, each [StreamMenuLayout] circle 35 ms after the one before.
- * A label wider than its cell reaches into the free space beside it instead of being cut off.
+ * The caption under the tiles: the complete help of the focused tile, centered, in a box as tall as three lines. A new
+ * text slides up 18 px out of a 6 px blur; while a popover is open it is gone.
  */
 @Composable
-private fun BarCircle(
+private fun DockCaption(text: String, popOpen: Boolean, enter: () -> Float, exit: () -> Float, modifier: Modifier) {
+    val colors = LocalDelosColors.current
+    val rm = LocalReducedMotion.current
+    val ts = LocalStage.current.textScale
+    val k = stageScale()
+    val change = remember { Animatable(1f) }
+    val first = remember { booleanArrayOf(true) }
+    LaunchedEffect(text) {
+        if (first[0]) { first[0] = false; return@LaunchedEffect }
+        change.snapTo(0f)
+        change.animateTo(1f, tween(M.CAPTION, easing = EaseOut))
+    }
+    val popAlpha by animateFloatAsState(if (popOpen) 0f else 1f, tween(M.FADE, easing = M.Ease), label = "captionPop")
+    Box(
+        modifier
+            .size(L.CAPTION_WIDTH.px, captionHeight(ts).px)
+            .graphicsLayer {
+                val p = M.progress(enter(), M.CAPTION_DELAY, M.ENTER, EaseOut)
+                val c = change.value
+                alpha = p.coerceIn(0f, 1f) * (1f - M.linear(exit(), 0, M.EXIT)) * popAlpha * c.coerceIn(0f, 1f)
+                translationY = if (rm) 0f else (20f * (1f - p) + 18f * (1f - c)) * k
+                renderEffect = if (rm || c >= 1f) null else BlurEffect(6f * (1f - c) * k, 6f * (1f - c) * k)
+            },
+    ) {
+        BasicText(
+            text,
+            style = TextStyle(
+                color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.Medium, fontSize = L.CAPTION_SIZE.tpx,
+                lineHeight = L.CAPTION_LINE_HEIGHT.em, lineHeightStyle = CssLineHeight, textAlign = TextAlign.Center, lineBreak = LineBreak.Heading,
+                shadow = menuTextShadow(k, 2f, 14f, .65f),
+            ),
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
+}
+
+/**
+ * The dock's one focus ring: a gold 186 box (radius 56, 4 px) with an outer glow and a soft glow inside that breathes
+ * (2.6 s) and glides to whichever tile is [target] with the prototype's `--ease-glide` (560 ms, overshoots). While the
+ * focus is in a popover it rests on the tile that opened it. It arrives after the first tile
+ * ([firstItem]): from a 0.7 scale, 260 ms after that tile. Behind the tiles, so only what reaches outside them shows.
+ */
+@Composable
+private fun TileRing(target: BarItem, firstItem: BarItem, enter: () -> Float, exit: () -> Float) {
+    val colors = LocalDelosColors.current
+    val rm = LocalReducedMotion.current
+    val k = stageScale()
+    val x = remember { Animatable(ringLeft(target)) }
+    LaunchedEffect(target) {
+        val goal = ringLeft(target)
+        if (rm) x.snapTo(goal) else x.animateTo(goal, tween(M.RING, easing = M.Glide))
+    }
+    val breathe = if (rm) null else rememberInfiniteTransition(label = "breathe").animateFloat(
+        0f, 1f,
+        infiniteRepeatable(
+            keyframes {
+                durationMillis = M.BREATHE
+                0f at 0 using M.EaseInOut
+                1f at M.BREATHE / 2 using M.EaseInOut
+                0f at M.BREATHE
+            },
+            RepeatMode.Restart,
+        ),
+        label = "breatheValue",
+    )
+    val room = SHADOW_ROOM
+    Box(
+        Modifier
+            .offset { IntOffset((x.value * k).roundToInt(), (RING_TOP * k).roundToInt()) }
+            .size(L.RING.px),
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            Modifier
+                .requiredSize((L.RING + 2 * room).px)
+                .graphicsLayer {
+                    val p = M.progress(enter(), M.ringDelay(firstItem.ordinal), M.ENTER, EaseSpring)
+                    alpha = p.coerceIn(0f, 1f) * (1f - M.linear(exit(), 0, M.EXIT))
+                    val s = if (rm) 1f else M.lerp(.7f, 1f, p)
+                    scaleX = s
+                    scaleY = s
+                }
+                .drawBehind {
+                    val b = breathe?.value ?: 0f
+                    val m = room * k
+                    val box = Rect(m, m, m + L.RING * k, m + L.RING * k)
+                    val corner = L.RING_RADIUS * k
+                    // 0 0 44px 4px glow, breathing to 0 0 62px 8px (the spread is folded into the strength: a positive one would show the shape itself)
+                    drawBoxShadow(box, corner, 0f, M.lerp(44f, 62f, b) * k, 0f, colors.glow.copy(alpha = colors.glow.alpha * M.lerp(1.15f, 1.3f, b)))
+                    val stroke = L.RING_WIDTH * k
+                    drawRoundRect(
+                        colors.accent,
+                        topLeft = Offset(box.left + stroke / 2f, box.top + stroke / 2f),
+                        size = Size(box.width - stroke, box.height - stroke),
+                        cornerRadius = CornerRadius(corner - stroke / 2f),
+                        style = Stroke(stroke),
+                    )
+                    // inset 0 0 30px -4px glow-soft, breathing to 36px -2px
+                    val inner = Rect(box.left + stroke, box.top + stroke, box.right - stroke, box.bottom - stroke)
+                    drawInsetShadow(inner, corner - stroke, M.lerp(30f, 36f, b) * k, M.lerp(-4f, -2f, b) * k, colors.accent.copy(alpha = .22f))
+                },
+        )
+    }
+}
+
+/**
+ * A tile of the dock with its label: 150 px of frosted glass (a 28 % dark undercoat stands in for the blur the
+ * stream's window cannot give), the icon, and for toggles the On / Off pill. Focus lifts it to 1.12 with the
+ * prototype's spring, lights its glass, fills its icon and turns the label gold and 8 px lower; a toggle that is on has
+ * accent glass and an accent icon. While a popover is open the tiles but the focused one dim. The entrance (each tile
+ * 42 ms after the one before, rising 90 px from a 0.8 scale with the spring) and the exit (the last tile first) run on
+ * the [enter] and [exit] clocks.
+ */
+@Composable
+private fun TileCell(
     spec: BarCircleSpec,
+    focused: Boolean,
+    popOpen: Boolean,
     requester: FocusRequester,
-    selected: Boolean,
-    entrance: Boolean,
+    enter: () -> Float,
+    exit: () -> Float,
     onFocused: (BarItem, Boolean) -> Unit,
     modifier: Modifier,
 ) {
     val colors = LocalDelosColors.current
-    val reducedMotion = LocalReducedMotion.current
-    var focused by remember { mutableStateOf(false) }
-    var pressed by remember { mutableStateOf(false) }
+    val rm = LocalReducedMotion.current
+    val k = stageScale()
+    val scope = rememberCoroutineScope()
+    val index = spec.item.ordinal
     val on = spec.on == true
-    val press by animateFloatAsState(if (pressed) .95f else 1f, spring(dampingRatio = .6f, stiffness = Spring.StiffnessMedium), label = "circlePress")
-    val appear = remember { Animatable(if (entrance) 0f else 1f) }
-    LaunchedEffect(Unit) {
-        if (entrance) {
-            delay(80L + spec.item.ordinal * 35L)
-            appear.animateTo(1f, tween(320, easing = EaseOut))
-        }
-    }
-    val labelColor by animateColorAsState(if (focused || selected) colors.text else colors.text2, tween(200), label = "circleLabel")
-    Column(
-        modifier.graphicsLayer {
-            val s = if (reducedMotion) 1f else .85f + .15f * appear.value
-            scaleX = s
-            scaleY = s
-            alpha = appear.value
-        },
-        horizontalAlignment = Alignment.CenterHorizontally,
+    val dim = popOpen && !focused
+    var pressed by remember { mutableStateOf(false) }
+
+    val scale by animateFloatAsState(
+        if (pressed) L.PRESS_SCALE else if (focused) L.FOCUS_SCALE else 1f,
+        if (rm) snap() else tween(if (pressed) M.PRESS else M.FOCUS, easing = EaseSpring), label = "tileScale",
+    )
+    val iconScale by animateFloatAsState(if (focused) L.ICON_FOCUS_SCALE else 1f, if (rm) snap() else tween(M.FOCUS, easing = EaseSpring), label = "iconScale")
+    val labelShift by animateFloatAsState(if (focused) L.LABEL_FOCUS_SHIFT else 0f, if (rm) snap() else tween(M.FOCUS, easing = EaseSpring), label = "labelShift")
+    val focusFill by animateFloatAsState(if (focused) 1f else 0f, tween(M.FADE, easing = M.Ease), label = "focusFill")
+    val onFill by animateFloatAsState(if (on) 1f else 0f, tween(M.FADE, easing = M.Ease), label = "onFill")
+    val lift by animateFloatAsState(if (focused) 1f else 0f, tween(M.FOCUS, easing = EaseOut), label = "tileLift")
+    val tileAlpha by animateFloatAsState(if (dim) .46f else 1f, tween(M.FADE, easing = M.Ease), label = "tileAlpha")
+    val labelAlpha by animateFloatAsState(if (dim) .4f else 1f, tween(M.FADE, easing = M.Ease), label = "labelAlpha")
+    val iconColor by animateColorAsState(if (on) colors.accent else colors.text, tween(M.FADE, easing = M.Ease), label = "iconColor")
+    val labelColor by animateColorAsState(if (focused) colors.accent else colors.text2, tween(M.FADE, easing = M.Ease), label = "labelColor")
+
+    Box(
+        modifier
+            .size(L.TILE.px)
+            // A dimmed tile that opens no page does nothing while a popover is open (and cannot take the focus out of it)
+            .focusProperties { canFocus = !(popOpen && !spec.opensPage) }
+            .focusRequester(requester)
+            .focusEffects(
+                {
+                    scope.launch {
+                        pressed = true
+                        delay(M.PRESS_HOLD)
+                        pressed = false
+                    }
+                    if (!popOpen || spec.opensPage) spec.onClick()
+                },
+                corner = L.TILE_RADIUS, focusScale = 1f, ring = null, glow = null,
+                onFocusChange = { onFocused(spec.item, it) },
+            ),
+        contentAlignment = Alignment.Center,
     ) {
         Box(
             Modifier
+                .requiredSize((L.TILE + 2 * SHADOW_ROOM).px)
                 .graphicsLayer {
-                    scaleX = press
-                    scaleY = press
+                    val p = M.progress(enter(), M.tileDelay(index), M.ENTER, EaseSpring)
+                    val q = M.progress(exit(), M.exitDelay(index), M.EXIT, M.In)
+                    var s = scale
+                    var dy = 0f
+                    if (!rm) {
+                        s = M.lerp(.8f, scale, p)
+                        dy = 90f * (1f - p)
+                        s = M.lerp(s, .92f, q)
+                        dy += 46f * q
+                    }
+                    scaleX = s
+                    scaleY = s
+                    translationY = dy * k
+                    alpha = p.coerceIn(0f, 1f) * (1f - q) * tileAlpha
                 }
-                .trackPress { pressed = it }
-                .focusRequester(requester)
-                .focusEffects(spec.onClick, corner = 999f, focusScale = StreamMenuLayout.FOCUS_LIFT, ring = null, glow = null, onFocusChange = {
-                    focused = it
-                    onFocused(spec.item, it)
-                })
-                .size(StreamMenuLayout.CIRCLE_SIZE.px)
-                .clip(CircleShape)
-                .background(if (on) colors.accent else colors.surface3)
-                .border(1.px, colors.line, CircleShape),
+                .drawBehind {
+                    val m = SHADOW_ROOM * k
+                    val box = Rect(m, m, m + L.TILE * k, m + L.TILE * k)
+                    val corner = L.TILE_RADIUS * k
+                    // 0 18px 40px -14px .55 at rest; focused: 0 26px 56px -14px .6 and 0 0 60px -8px glow-soft
+                    drawBoxShadow(box, corner, 18f * k, 40f * k, -14f * k, Color.Black.copy(alpha = .55f * (1f - lift)))
+                    drawBoxShadow(box, corner, 26f * k, 56f * k, -14f * k, Color.Black.copy(alpha = .60f * lift))
+                    drawBoxShadow(box, corner, 0f, 60f * k, -8f * k, colors.accent.copy(alpha = .22f * lift))
+                    inset(m) {
+                        drawRoundRect(Backing.copy(alpha = L.TILE_BACKING_ALPHA), cornerRadius = CornerRadius(corner))
+                        drawTileFill(corner)
+                        drawTileFocusFill(corner, focusFill)
+                        drawTileOnFill(corner, colors.accent, onFill)
+                    }
+                },
             contentAlignment = Alignment.Center,
         ) {
-            Symbol(spec.icon, 50.tpx, if (on) colors.onAccent else colors.text, filled = focused || on)
+            Box(Modifier.size(L.TILE.px), contentAlignment = Alignment.Center) {
+                Symbol(
+                    spec.icon, L.TILE_ICON.fsp, iconColor,
+                    Modifier.graphicsLayer {
+                        scaleX = iconScale
+                        scaleY = iconScale
+                    },
+                    filled = focused, fadeMillis = M.FADE,
+                )
+                if (spec.on != null) {
+                    TilePill(spec.state ?: if (on) "On" else "Off", on, Modifier.align(Alignment.TopEnd).offset((-L.PILL_RIGHT).px, L.PILL_TOP.px))
+                }
+            }
         }
         BasicText(
             spec.label,
-            style = TextStyle(color = labelColor, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = StreamMenuLayout.CIRCLE_LABEL_SIZE.tpx, textAlign = TextAlign.Center),
+            style = TextStyle(
+                color = labelColor, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = L.LABEL_SIZE.tpx,
+                lineHeight = L.LABEL_LINE_HEIGHT.em, lineHeightStyle = CssLineHeight, textAlign = TextAlign.Center, shadow = menuTextShadow(k, 2f, 12f, .6f),
+            ),
             maxLines = 1,
             softWrap = false,
-            modifier = Modifier.padding(top = 14.px).wrapContentWidth(unbounded = true),
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .wrapContentWidth(unbounded = true)
+                .graphicsLayer {
+                    val e = M.progress(enter(), M.labelDelay(index), M.LABEL_DURATION, M.EaseOutCss)
+                    alpha = e * (1f - M.linear(exit(), 0, M.EXIT)) * labelAlpha
+                    translationY = (L.TILE + L.LABEL_GAP + labelShift) * k
+                    compositingStrategy = CompositingStrategy.ModulateAlpha
+                },
         )
-        if (spec.on != null) {
+    }
+}
+
+/** The On / Off pill on a toggle tile's top right corner (it grows with the tile). A new text pops in from a 0.6 scale. */
+@Composable
+private fun TilePill(text: String, on: Boolean, modifier: Modifier) {
+    val colors = LocalDelosColors.current
+    val rm = LocalReducedMotion.current
+    val ts = LocalStage.current.textScale
+    val k = stageScale()
+    val pop = remember { Animatable(1f) }
+    val first = remember { booleanArrayOf(true) }
+    LaunchedEffect(text) {
+        if (first[0]) { first[0] = false; return@LaunchedEffect }
+        if (rm) return@LaunchedEffect
+        pop.snapTo(.6f)
+        pop.animateTo(1f, tween(M.PILL_POP, easing = EaseSpring))
+    }
+    // The pill is as wide as its text (it may be wider than the tile), its right edge 12 px outside the tile's
+    Box(modifier.wrapContentWidth(Alignment.End, unbounded = true)) {
+        Box(
+            Modifier
+                .graphicsLayer {
+                    scaleX = pop.value
+                    scaleY = pop.value
+                }
+                .drawBehind {
+                    val box = Rect(Offset.Zero, size)
+                    val corner = size.height / 2f
+                    if (on) {
+                        drawBoxShadow(box, corner, 8f * k, 22f * k, -6f * k, colors.glow)
+                        drawRoundRect(colors.accent, cornerRadius = CornerRadius(corner))
+                    } else {
+                        drawBoxShadow(box, corner, 8f * k, 18f * k, -6f * k, Color.Black.copy(alpha = .55f))
+                        drawRoundRect(Color(22, 28, 48).copy(alpha = .78f), cornerRadius = CornerRadius(corner))
+                    }
+                }
+                .requiredHeight((L.PILL_HEIGHT * ts).px)
+                .padding(horizontal = (L.PILL_PADDING_X * ts).px),
+            contentAlignment = Alignment.Center,
+        ) {
             BasicText(
-                spec.state ?: if (on) "On" else "Off",
-                style = TextStyle(color = if (on) colors.accent else colors.text3, fontFamily = Figtree, fontWeight = FontWeight.Bold, fontSize = StreamMenuLayout.CIRCLE_STATE_SIZE.tpx, textAlign = TextAlign.Center),
+                text,
+                style = TextStyle(
+                    color = if (on) colors.onAccent else colors.text2, fontFamily = Figtree, fontWeight = FontWeight.Bold,
+                    fontSize = L.PILL_SIZE.tpx, letterSpacing = .02f.em, lineHeight = 1f.em, lineHeightStyle = CssLineHeight,
+                ),
                 maxLines = 1,
                 softWrap = false,
-                modifier = Modifier.padding(top = 2.px).wrapContentWidth(unbounded = true),
-            )
-        }
-    }
-}
-
-/**
- * The bar's one focus ring: an accent ring with a gap and a soft glow that glides (a spring) to whichever circle
- * is [target] instead of popping up on it. While the focus is inside a popover ([active] false) it stays on the
- * circle that opened it, thinner in effect and without the lift; it is hidden when there is no [target]. With
- * reduced motion it only fades. Drawn behind the circles, so only the part outside them shows.
- */
-@Composable
-private fun FocusGlider(barWidth: Float, target: BarItem?, active: Boolean, initial: BarItem, modifier: Modifier) {
-    val colors = LocalDelosColors.current
-    val stage = LocalStage.current
-    val k = stage.dpPerPx * LocalDensity.current.density
-    val reducedMotion = LocalReducedMotion.current
-    val frame = remember(barWidth) { StageRect(0f, 0f, barWidth, 0f) }
-    val x = remember { Animatable(circleCenterX(frame, initial)) }
-    // The ring stays on the circle it left when the focus is nowhere (it only fades)
-    val last = remember { arrayOf(initial) }
-    if (target != null) last[0] = target
-    val resting = last[0]
-    LaunchedEffect(resting, frame) {
-        val goal = circleCenterX(frame, resting)
-        if (reducedMotion) x.snapTo(goal) else x.animateTo(goal, spring(dampingRatio = .72f, stiffness = Spring.StiffnessMediumLow))
-    }
-    val visible = animateFloatAsState(if (target == null) 0f else if (active) 1f else .7f, tween(220, easing = EaseOut), label = "ringAlpha")
-    val lift = animateFloatAsState(if (active) StreamMenuLayout.FOCUS_LIFT else 1f, tween(300, easing = EaseOut), label = "ringLift")
-    Canvas(modifier) {
-        val alpha = visible.value
-        if (alpha <= 0.01f) return@Canvas
-        val center = Offset(x.value * k, (StreamMenuLayout.BAR_PADDING_TOP + StreamMenuLayout.CIRCLE_SIZE / 2f) * k)
-        val inner = StreamMenuLayout.CIRCLE_SIZE / 2f * lift.value * k
-        val gap = StreamMenuLayout.RING_GAP * k
-        val width = StreamMenuLayout.RING_WIDTH * k
-        val glow = 44f * k
-        val outer = inner + gap + width
-        // The soft glow: strongest at the ring, fading outward
-        drawCircle(
-            Brush.radialGradient(
-                0f to Color.Transparent,
-                (outer - width) / (outer + glow) to colors.accent.copy(alpha = .30f * alpha),
-                1f to Color.Transparent,
-                center = center,
-                radius = outer + glow,
-            ),
-            radius = outer + glow,
-            center = center,
-        )
-        drawCircle(colors.bg.copy(alpha = .9f * alpha), radius = inner + gap / 2f, center = center, style = Stroke(gap))
-        drawCircle(colors.accent.copy(alpha = alpha), radius = inner + gap + width / 2f, center = center, style = Stroke(width))
-    }
-}
-
-/**
- * The help area of the bar: the focused circle's name and its complete help, wrapped over at most
- * [StreamMenuLayout.HELP_LINES] lines in a box that is always as tall as that many lines of the largest text
- * scale (the texts are checked against it: nothing scrolls, nothing is cut). A new text fades in.
- */
-@Composable
-private fun HelpArea(title: String, text: String, modifier: Modifier) {
-    val colors = LocalDelosColors.current
-    val body = remember(text) { helpLineText(text) }
-    AnimatedContent(
-        targetState = title to body,
-        modifier = modifier.height(StreamMenuLayout.HELP_TEXT_HEIGHT.px),
-        contentAlignment = Alignment.CenterStart,
-        transitionSpec = { fadeIn(tween(180, delayMillis = 50)) togetherWith fadeOut(tween(100)) },
-        label = "barHelp",
-    ) { (name, description) ->
-        Row(Modifier.fillMaxWidth()) {
-            BasicText(
-                name,
-                style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = StreamMenuLayout.HELP_TEXT_SIZE.tpx, lineHeight = StreamMenuLayout.HELP_LINE_HEIGHT.em),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.width((StreamMenuLayout.TITLE_WIDTH + 2 * StreamMenuLayout.SEPARATOR_GAP + 1f).px),
-            )
-            BasicText(
-                description,
-                style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = StreamMenuLayout.HELP_TEXT_SIZE.tpx, lineHeight = StreamMenuLayout.HELP_LINE_HEIGHT.em),
-                modifier = Modifier.weight(1f),
             )
         }
     }

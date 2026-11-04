@@ -303,62 +303,77 @@ in assets.
   and sharpness rows show the value just requested, not the one the renderer applied on its last frame
   (a fallback from 2× to 1× corrects the row afterwards).
 - Its last row, **Save for this game**, saves the live on/off, mode, sharpness and supersampling quality
-  as this game's overrides for future launches, with a check and "Saved for <game>" on the row and no
+  as this game's overrides for future launches, with a check and "Saved" on the row (for 2.5 seconds) and no
   confirmation dialog. It is hidden for a stream without its launch identity.
 
 ### Stream menu
 
-A **bar at the bottom of the stream**, with the pages it opens in a **popover above the circle that opened it**, a
-caret on its bottom edge pointing at that circle. While the menu is open the player looks at the menu, not at the
-game, so it is generous: big circles, plenty of padding, the complete help text. The stream is never dimmed as a
-whole: only a soft gradient sits behind the bar. Sizes are stage pixels (1920 × 1080); the numbers and the pure
-geometry live in `StreamMenuLayout`, the bar in `StreamMenuBar`, the popover in `StreamMenuPopover`, the whole menu in
-one composable (`StreamMenuRoot`, so a window of its own can host it), the stream behind it in `StreamMenuHost`
+"Console tiles" (prototype B, approved): **nine glass tiles** in one row over the lower part of the stream, the game's
+name and the A / B hints above the row's left end, the **complete help text** of the focused tile under it, and the
+pages behind the tiles in a **popover above the tile that opened it**, a caret on its bottom edge pointing at that
+tile. While the menu is open the player looks at the menu, not at the game, so it is generous: big tiles, the whole
+help text in large type, an unhurried entrance. The stream is never dimmed as a whole: only a soft gradient sits
+behind the dock (no card behind the tiles). Sizes are stage pixels (1920 × 1080, the dock bottom-aligned on it); the
+numbers and the pure geometry live in `StreamMenuLayout` (the CSS variables of `b.html` one for one), the durations and
+easings in `StreamMenuMotion`, the dock in `StreamMenuBar`, the popover and its rows in `StreamMenuPopover`, the whole
+menu in one composable (`StreamMenuRoot`, so a window of its own can host it), the stream behind it in `StreamMenuHost`
 (`StreamMenu` implements it with the live `Game`, the debug preview with fake state). The prototype's `#quickmenu` /
-`#qmpop` show the same layout.
+`#qmpop` show the same design; `build/streammenu-proto/b.html` with its screenshots is the specification.
 
-- **Bar**: 1700 × 341, centered, 48 from the bottom edge (never closer than 48 to a side: TV overscan), corner 40,
-  padding 40 (28 above). Left cell (250): the game's name (Unbounded 22, two lines at most) and the **A Select** /
-  **B Resume** hints (44 px glyphs, label 22). Then one row of nine equal cells (about 146): Resume, Keyboard,
-  Overlay, Brightness, Bitrate, Upscaler (Supersampling), More, Disconnect, Quit game. Each is a **108 px** glass
-  circle (50 px icon) with its label (22, SemiBold) 14 under it; toggles (Overlay, Upscaler) fill with the accent and
-  say On / Off (Overlay: Compact) in 18. A label wider than its cell ("Supersampling") reaches into the free space
-  beside it. The focused circle lifts (1.08) and its label brightens. Under the circles, behind a hairline, is the
-  **help area**: the focused circle's name in the left cell's width and its **complete help**, wrapped, 22 with
-  line height 1.4. It is a box of exactly two lines of the largest interface scale (130 %: 86 px), never grows and never
-  scrolls or runs as a marquee: `StreamMenuLayoutTest` checks every text the bar can show (all circles, every upscaler
-  status) against its 91 characters per line; a text that does not fit fails the test and is shortened in
-  `StreamMenuHelp`.
-- **Gradient**: transparent to 55 % black over the bottom 380 px (17 % at the middle), nothing above, no full-height
-  dimming. Glass is one function (`menuGlass`: the palette's background at 88 %, a hairline border with a light top
-  edge, a soft shadow): the stream is a separate window (a `SurfaceView`), so the shell's background blur cannot reach
-  it; a blurring window can replace that one function later.
-- **Popover**: a glass card **above its own circle**, centered on the circle's center and clamped into the bar's bounds
-  (and 48 from the screen edges), so near the ends it shifts inward. Width per page 780–860 (never below 700 unless the
-  bar is narrower), corner 32, padding 36, header 72 (back chevron in a 56 px circle, focusable, B does the same; title
-  Unbounded 24), rows `SettingRow(dense = true)` 68 tall with 14 between them (label 22, icon 30, a 62 × 36 switch,
-  a 210 px slider). A **caret** (28 × 14, rounded, the same path as the card so surface, border and shadow follow it)
-  sits on the bottom edge at the circle's center, kept at least 40 from the card's corners, its tip 12 above the bar.
-  The pages opened from More (Send keys, Commands, Mouse mode) are anchored over the More circle. The card is at most
-  as tall as fits above the bar with 48 from the top; only More (12 rows) and a long list of keys scroll inside, with
-  faded edges. The Upscaler page, with Supersampling quality and **Save for this game**, fits at every interface
-  scale (a test pins the sum). Rows show their help in a **footer inside the card** (hairline, a fixed box of three
-  lines of 20 at the largest scale, two on the Upscaler page), complete, also never scrolling.
-- **Navigation**: Left/Right move along the bar. A on a toggle or action circle acts at once; A on Brightness,
-  Bitrate, Upscaler or More opens its popover and puts the focus on its first row (the focus cannot leave the
-  popover with the D-pad). B in a popover closes it and returns the focus to its circle; Send keys, Commands and
-  Mouse mode are opened from More, so B there goes back to that row of More first. B on the bar resumes the stream.
-  The open and close buttons (L3 + R3 by default, the swipe up) and the external display's input routing are
-  unchanged. **Touch**: a tap on a circle is A (a tap on another circle while a popover is open moves the popover
-  there); a tap outside the popover closes the popover only and never resumes the stream (Resume and B do).
-- **Motion** (console feel; every duration 150–450 ms, only `graphicsLayer` transforms): the bar slides up 80 px and
-  fades in with a spring (damping .8, medium-low stiffness), its circles follow left to right 35 ms apart (scale .85 → 1
-  and fade); the exit is a quicker 200 ms in reverse. There is **one focus ring** that glides between the circles with
-  a spring (damping .72) with a soft accent glow, instead of popping up on each; while the focus is inside the popover it
-  rests on the circle that opened it. A press shrinks a circle to .95. The popover scales .90 → 1 from the caret's
-  point with a spring and fades in, its rows rise 12 px and fade in 25 ms apart; it scales back to the caret when it
-  closes; switching to another circle's popover slides the card and the caret to the new anchor while the pages
-  cross-fade. A new help text fades in. With reduced motion everything only fades.
+- **Tiles**: 150 px glass, corner 42, gap 40 (9 × 150 + 8 × 40 = 1670, 125 on each side), the top edge at y 628, icon 64
+  (Phosphor, filled on focus), label 24 SemiBold 24 below the tile. Resume, Keyboard, Overlay, Brightness, Bitrate,
+  Upscaler (Supersampling), More, Disconnect, Quit game. Toggles (Overlay, Upscaler) have an **On / Off pill**
+  (18 bold, 34 high) at the tile's top right corner (right −12, top −14; Overlay says Compact, the Upscaler its status
+  word) and turn accent: accent glass and icon, accent pill. **Focus** scales the tile to 1.12 (spring, 420 ms), lights
+  its glass, adds a glow and turns the label gold, 8 px lower; one **gold ring** (box 186, corner 56, 4 px, outer glow
+  and a soft glow inside that breathes over 2.6 s) glides under the focused tile. While a popover is open the ring rests
+  on the tile that opened it and the other tiles dim to 46 % (labels 40 %).
+- **Head**: the game's name (Unbounded 36, one line) and, stacked under it, the **A Select** / **B Back** hints
+  (44 px glyphs, label 24), their bottom edge 46 above the tiles, at the tile row's left edge.
+- **Caption**: the focused tile's name is not repeated; its **complete help** is centered under the labels, 28 with line
+  height 1.4, at most 1100 wide, balanced line breaks, in a box of exactly three lines at the current interface scale. It
+  never grows, scrolls or runs as a marquee: `StreamMenuLayoutTest` checks every text it can show (all tiles, every
+  upscaler status) at scales 1.0, 1.15 and 1.3 against the characters of a line; a text that does not fit fails the
+  test and is shortened in `StreamMenuHelp`. A new text slides up 18 px out of a 6 px blur (420 ms); it is gone while a
+  popover is open.
+- **Gradient and scrim**: transparent down to 34 % of the height, then 22 % at 48 %, 55 % at 66 %, 80 % at 84 % and 90 %
+  black at the bottom edge; an open popover adds a 22 % scrim. Glass is drawn as the prototype's tints and white
+  gradients over a dark undercoat (28 % under the tiles, 30 % under the card): the stream is a separate window (a
+  `SurfaceView`), so the frosted blur of the prototype is not available, and the undercoat keeps the glass readable
+  over a bright picture. A window that can blur its backdrop replaces the undercoat later (`TILE_BACKING_ALPHA`,
+  `CARD_BACKING_ALPHA`).
+- **Popover**: a glass card (tint rgba 34/44/84 at 50 %, white gradients, corner 44, shadow 0 40 90 −20) **above its own
+  tile**, centered on the tile and kept between 110 and 1810, its box ending 322 above the stage's bottom edge, with the
+  **caret** (60 × 24, rounded, ONE path with the card so the glass is continuous) at the tile's center, at least 72 from
+  the card's corners. Width per page: Brightness 780, Bitrate 860, Upscaler 980, More and the pages opened from it 920.
+  Padding 40 × 36 (28 below), header 64 (the back circle, focusable, B does the same, and the title in Unbounded 30),
+  rows 72 tall with 8 between them (corner 28, icon 32 in a 56 column, label 24 SemiBold, values 24), a 78 × 44 switch, a
+  240 × 12 slider with a 32 knob, choices between two chevrons. The card is as tall as its content, at most 686; only
+  More (12 rows) and a long list of keys scroll inside, with faded edges. The help of the focused row stands under the
+  rows in a box of two lines (three from interface scale 1.15 up), complete, never scrolling. The Upscaler page, with
+  Supersampling quality and **Save for this game**, fits at every interface scale (a test pins the sum). The pages
+  opened from More (Send keys, Commands, Mouse mode) are anchored over the More tile.
+- **Navigation**: Left/Right move along the tiles. A on a toggle or action tile acts at once; A on Brightness, Bitrate,
+  Upscaler or More opens its popover and puts the focus on its first row (the focus cannot leave the popover with the
+  D-pad). B in a popover closes it and returns the focus to its tile; Send keys, Commands and Mouse mode are opened from
+  More, so B there goes back to that row of More first. B on the dock resumes the stream. The open and close buttons (L3
+  + R3 by default, the swipe up) and the external display's input routing are unchanged. **Touch**: a tap on a tile is A
+  (a tap on another tile with a page while a popover is open morphs the popover to that page, a tap on the same tile
+  closes it; the tiles without a page do nothing then); a tap outside the popover closes the popover only and never
+  resumes the stream (Resume and B do).
+- **Motion** (every number is a `--d-*` / `--ease-*` variable of `b.html`, copied to `StreamMenuMotion`): the **entrance**
+  runs on one clock (about 1.3 s): each tile rises 90 px from a 0.8 scale with the overshooting spring (620 ms), 42 ms
+  after the one before, starting 100 ms in; labels fade in 140 ms after their tile; the head rises 24 px from 60 ms; the
+  ring scales in from 0.7, 260 ms after the first focused tile; the caption rises 20 px from 520 ms. The **exit** (240 ms,
+  ease-in) drops the tiles 46 px to a 0.92 scale and fades everything, the last tile first (8 ms apart); the window
+  closes 320 ms after it starts. Focus: tile and icon springs, ring glide 560 ms with a slight overshoot
+  (`--ease-glide`), label gold. **Popover**: the dock sinks 160 px over 640 ms; the card grows from 0.86 around the
+  caret's tip with the spring (560 ms) while its glass fades in over 336 ms; its rows rise 18 px and fade in 46 ms apart;
+  it shrinks back to the caret in 240 ms. Another tile's page **morphs** the card: x, width, caret and height follow
+  their targets with a spring (stiffness 190, damping ratio .8), the old rows rise out in 140 ms and the new ones, the
+  title and the help enter after 150 ms. A switch knob springs across, a choice's chevron nudges 7 px and its new value
+  slides in 22 px, a slider's knob grows to 1.18 when focused, a pill that changes pops in from 0.6. With reduced motion
+  every transform is dropped: only fades (and colors) remain, the ring and the dock jump, the geometry snaps.
 
 ### Stream menu preview (debug builds)
 
@@ -367,12 +382,12 @@ The real menu can be drawn without a stream, over a sunset "game scene", with ma
 
 ```
 adb shell am start -n io.github.meitoncz.delos.debug/com.limelight.shell.ShellActivity --es preview_screen stream_menu \
-  --es preview_page <main|upscaler|bitrate|brightness|more|keys|commands|mouse> --ei preview_focus <circle 0..8> \
+  --es preview_page <main|upscaler|bitrate|brightness|more|keys|commands|mouse> --ei preview_focus <tile 0..8> \
   [--ei preview_row <row of the page to focus>] [--ez preview_animate true]
 ```
 
 The menu starts already open at that page without its entrance; `--ez preview_animate true` plays the entrance, so a
-screenshot after about 1.2 s shows the settled result. No profile is needed. Resume or B close the menu; a tap on the
+screenshot after about 1.4 s shows the settled result. No profile is needed. Resume or B close the menu; a tap on the
 scene opens it again.
 
 ## Native shell architecture and design constraints

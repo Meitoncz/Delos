@@ -1,33 +1,23 @@
 package com.limelight.shell
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutLinearInEasing
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -39,33 +29,30 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.IntOffset
-import com.limelight.shell.ui.EaseOut
+import com.limelight.shell.StreamMenuLayout as L
+import com.limelight.shell.StreamMenuMotion as M
+import com.limelight.shell.ui.EaseSpring
 import com.limelight.shell.ui.Figtree
 import com.limelight.shell.ui.InitialFocus
 import com.limelight.shell.ui.LocalDelosColors
 import com.limelight.shell.ui.LocalReducedMotion
-import com.limelight.shell.ui.LocalStage
 import com.limelight.shell.ui.RowValue
-import com.limelight.shell.ui.SettingRow
 import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.px
 import com.limelight.shell.ui.tpx
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
 
 /**
- * How the menu starts: on the bar ([MenuPage.MAIN]) with the focus on the Resume circle and its entrance, as in a
- * stream; the debug preview opens it at another [page], [focus] circle and popover [row], with or without the entrance.
+ * How the menu starts: on the dock ([MenuPage.MAIN]) with the focus on the Resume tile and its entrance, as in a
+ * stream; the debug preview opens it at another [page], [focus] tile and popover [row], with or without the entrance.
  */
 internal data class StreamMenuStart(
     val page: MenuPage = MenuPage.MAIN,
@@ -75,10 +62,15 @@ internal data class StreamMenuStart(
 )
 
 /**
- * The whole stream menu in one composable (the bar, its popover and their motion), so a window of its own can
+ * The whole stream menu in one composable (the dock, its popover and their motion), so a window of its own can
  * host it, with the stream behind it however that window draws it. It reads and does everything through [host];
  * [actions] are the controller input an external display forwards, [closeRequests] a close from outside (the
  * shortcut's second press).
+ *
+ * The motion is prototype B's (docs/GUI.md, "Stream menu"): the dock enters and leaves on two clocks, the ring glides,
+ * the focused tile scales, the caption slides in, the dock sinks while a popover is open, the popover grows out of its
+ * caret, its rows enter one after the other and another tile's page morphs the card instead of replacing it. With
+ * reduced motion everything but the fades is switched off.
  */
 @Composable
 internal fun StreamMenuRoot(
@@ -88,16 +80,23 @@ internal fun StreamMenuRoot(
     start: StreamMenuStart = StreamMenuStart(),
 ) {
     var page by remember { mutableStateOf(start.page) }
-    // The popover's page while it animates out after [page] went back to the bar
+    // The page of the popover that is open or was open last: it stays while the popover animates out
     var shownPage by remember { mutableStateOf(if (start.page != MenuPage.MAIN) start.page else MenuPage.MORE) }
     if (page != MenuPage.MAIN) shownPage = page
-    // Each time the popover opens from the bar its card appears where its circle is; only a page change while it is open slides it
+    // The page whose rows are drawn: another page of the same tile replaces them after the old rows have left
+    var contentPage by remember { mutableStateOf(shownPage) }
+    var leaving by remember { mutableStateOf(false) }
+    var titleIn by remember { mutableStateOf(false) }
+    // True when [page] was reached while a popover was open (it morphs), false when the popover opens from the dock
+    var morph by remember { mutableStateOf(false) }
+    // Each time the popover opens from the dock its card appears where its tile is; only a page change while it is open slides it
     var session by remember { mutableIntStateOf(0) }
     // The rows of a page enter one after the other, but not in a menu that starts open without its entrance
     var navigated by remember { mutableStateOf(start.animate) }
-    var helpKey by remember(page) { mutableStateOf(pageHelpKey(page)) }
-    // The circle whose help the bar shows: the focused one, and the one that opened the popover while the focus is in it
+    var helpKey by remember(contentPage) { mutableStateOf(pageHelpKey(contentPage)) }
+    // The tile whose help the caption shows and that wears the focus: the focused one, and the one that opened the popover while the focus is in it
     var barHelpItem by remember { mutableStateOf(start.page.barItem() ?: start.focus) }
+    var focusedItem by remember { mutableStateOf<BarItem?>(null) }
     // The row of More that gets the focus when More shows again (the row that opened a page above it)
     var entryRow by remember { mutableStateOf<String?>(null) }
     val circleFocus = remember { BarItem.entries.associateWith { FocusRequester() } }
@@ -108,45 +107,77 @@ internal fun StreamMenuRoot(
         pendingCircle = null
     }
     val reducedMotion = LocalReducedMotion.current
-    val stage = LocalStage.current
-    val k = stage.dpPerPx * LocalDensity.current.density
-
-    // Entrance and exit of the whole menu: 0 = gone, 1 = shown. The entrance is a spring, the exit is quicker.
-    val shown = remember { Animatable(if (start.animate) 0f else 1f) }
+    // The popover: present from opening until it has animated out. Its geometry snaps when it opens from the dock
+    // (after its content reported its size), and follows its target with a spring when another page replaces it.
+    var popPresent by remember { mutableStateOf(start.page != MenuPage.MAIN) }
+    val geo = remember { PopoverGeometry(popoverPlacement(shownPage)!!) }
+    var natural by remember { mutableFloatStateOf(0f) }
+    var snapNext by remember { mutableStateOf(start.page != MenuPage.MAIN) }
+    var geoReady by remember { mutableStateOf(false) }
+    val popScale = remember { Animatable(if (start.page != MenuPage.MAIN) 1f else L.POPOVER_HIDDEN_SCALE) }
+    val popAlpha = remember { Animatable(if (start.page != MenuPage.MAIN) 1f else 0f) }
     var closing by remember { mutableStateOf(false) }
+    val popOpen = page != MenuPage.MAIN && !closing
+
+    // The clocks of the dock's entrance and exit, milliseconds; the gradient, the scrim and the dock's sinking
+    val enterClock = remember { Animatable(if (start.animate) 0f else M.ENTER_TOTAL.toFloat()) }
+    val exitClock = remember { Animatable(0f) }
+    val gradient = remember { Animatable(if (start.animate) 0f else 1f) }
+    val scrim = remember { Animatable(if (start.page != MenuPage.MAIN) 1f else 0f) }
+    val dockShift = remember { Animatable(if (start.page != MenuPage.MAIN) L.DOCK_SHIFT else 0f) }
     val scope = rememberCoroutineScope()
     LaunchedEffect(Unit) {
-        if (start.animate) {
-            if (reducedMotion) shown.animateTo(1f, tween(220, easing = EaseOut))
-            else shown.animateTo(1f, spring(dampingRatio = .8f, stiffness = Spring.StiffnessMediumLow))
+        if (start.animate) enterClock.animateTo(M.ENTER_TOTAL.toFloat(), tween(M.ENTER_TOTAL, easing = LinearEasing))
+    }
+    LaunchedEffect(closing) {
+        gradient.animateTo(if (closing) 0f else 1f, tween(if (closing) M.CLOSE else M.GRADIENT, easing = M.Ease))
+    }
+    LaunchedEffect(popOpen) {
+        coroutineScope {
+            launch { scrim.animateTo(if (popOpen) 1f else 0f, tween(M.SCRIM, easing = M.Ease)) }
+            launch {
+                val target = if (popOpen) L.DOCK_SHIFT else 0f
+                if (reducedMotion) dockShift.snapTo(target) else dockShift.animateTo(target, tween(M.DOCK, easing = com.limelight.shell.ui.EaseOut))
+            }
         }
     }
     fun close(then: () -> Unit = {}) {
         if (closing) return
         closing = true
         scope.launch {
-            shown.animateTo(0f, tween(if (reducedMotion) 150 else 200, easing = FastOutLinearInEasing))
+            exitClock.animateTo(M.CLOSE.toFloat(), tween(M.CLOSE, easing = LinearEasing))
             host.dismiss()
             host.runWhenStreamFocused(then)
         }
     }
     fun go(exit: PageExit) {
         navigated = true
+        morph = exit.page != MenuPage.MAIN && page != MenuPage.MAIN
         entryRow = exit.focusRow
         pendingCircle = exit.focusCircle
         page = exit.page
     }
-    // B: one level up, to the circle on the bar; on the bar it resumes (closes the menu)
+    // B: one level up, to the tile on the dock; on the dock it resumes (closes the menu)
     fun back() {
         val exit = pageAfterBack(page)
         if (exit == null) close() else go(exit)
     }
-    // A circle that opens a page; its own circle again closes the popover
+    // A tile that opens a page; its own tile again closes the popover; another tile's page morphs the card
     fun openPage(next: MenuPage) {
         if (page == next) pageAfterDismiss(page)?.let { go(it) }
         else {
             navigated = true
-            if (page == MenuPage.MAIN) session++
+            morph = page != MenuPage.MAIN
+            if (page == MenuPage.MAIN) {
+                // Opening from the dock: the card appears where its tile is, sized to its page
+                session++
+                contentPage = next
+                natural = 0f
+                snapNext = true
+                geoReady = false
+                // The card is at its tile before its first layout (an undispatched snap runs right here)
+                scope.launch(start = CoroutineStart.UNDISPATCHED) { geo.place(popoverPlacement(next)!!, snap = true) }
+            }
             entryRow = null
             page = next
         }
@@ -198,7 +229,7 @@ internal fun StreamMenuRoot(
     var supersamplingLevel by remember { mutableIntStateOf(host.supersamplingLevel) }
     LaunchedEffect(Unit) { while (true) { supersamplingLevel = host.supersamplingLevel; delay(250) } }
     @Suppress("UNUSED_EXPRESSION") changes // subscribes to it
-    // Composed already visible-bound, so the bar's first circle exists when the focus is requested
+    // Composed already visible-bound, so the dock's first tile exists when the focus is requested
     if (start.page == MenuPage.MAIN) InitialFocus(circleFocus.getValue(start.focus))
 
     val circles = listOf(
@@ -208,68 +239,122 @@ internal fun StreamMenuRoot(
             state = if (!host.overlayOn) "Off" else if (host.overlayCompact) "Compact" else "On") {
             toggle { host.toggleOverlay() }
         },
-        BarCircleSpec(BarItem.BRIGHTNESS, Symbols.BRIGHTNESS_MEDIUM, "Brightness") { openPage(MenuPage.BRIGHTNESS) },
-        BarCircleSpec(BarItem.BITRATE, Symbols.NETWORK_CHECK, "Bitrate") { openPage(MenuPage.BITRATE) },
+        BarCircleSpec(BarItem.BRIGHTNESS, Symbols.BRIGHTNESS_MEDIUM, "Brightness", opensPage = true) { openPage(MenuPage.BRIGHTNESS) },
+        BarCircleSpec(BarItem.BITRATE, Symbols.NETWORK_CHECK, "Bitrate", opensPage = true) { openPage(MenuPage.BITRATE) },
         BarCircleSpec(BarItem.UPSCALER, Symbols.UPSCALER, circleHelpKey(BarItem.UPSCALER, supersamplingMode),
-            on = host.upscalerRequested, state = upscalerCircleState(upscalerStatus)) { openPage(MenuPage.UPSCALER) },
-        BarCircleSpec(BarItem.MORE, Symbols.MORE_HORIZ, "More") { openPage(MenuPage.MORE) },
+            on = host.upscalerRequested, state = upscalerCircleState(upscalerStatus), opensPage = true) { openPage(MenuPage.UPSCALER) },
+        BarCircleSpec(BarItem.MORE, Symbols.MORE_HORIZ, "More", opensPage = true) { openPage(MenuPage.MORE) },
         BarCircleSpec(BarItem.DISCONNECT, Symbols.LOGOUT, "Disconnect") { close { host.leave(quit = false) } },
         BarCircleSpec(BarItem.QUIT, Symbols.POWER_SETTINGS_NEW, "Quit game") { close { host.leave(quit = true) } },
     )
-    fun helpText(key: String): String =
-        helpLineText(streamMenuHelp(key, upscalerStatus, host.upscalerMode, host.mouseMode, host.rememberMouseMode))
+    fun helpText(key: String): String = helpLineText(
+        streamMenuHelp(key, upscalerStatus, host.upscalerMode, host.mouseMode, host.rememberMouseMode, (host.bitrateResult as? BitrateResult.Failed)?.reason)
+    )
     val barHelpKey = circleHelpKey(barHelpItem, supersamplingMode)
 
+    LaunchedEffect(popOpen) {
+        if (popOpen) {
+            popPresent = true
+        } else {
+            coroutineScope {
+                launch { popScale.animateTo(L.POPOVER_HIDDEN_SCALE, if (reducedMotion) tween(0) else tween(M.POP_OUT, easing = M.In)) }
+                launch { popAlpha.animateTo(0f, tween(M.POP_OUT, easing = M.Ease)) }
+            }
+            popPresent = false
+            geoReady = false
+        }
+    }
+    val placement = popoverPlacement(shownPage)!!
+    LaunchedEffect(placement, session) {
+        val snap = snapNext || reducedMotion
+        geo.place(placement, snap)
+    }
+    LaunchedEffect(natural, session) {
+        if (natural <= 0f) return@LaunchedEffect
+        val snap = snapNext || reducedMotion
+        geo.fit(natural, snap)
+        snapNext = false
+        geoReady = true
+    }
+    LaunchedEffect(popOpen, geoReady) {
+        if (popOpen && geoReady) {
+            coroutineScope {
+                launch { if (reducedMotion) popScale.snapTo(1f) else popScale.animateTo(1f, tween(M.POP_IN, easing = EaseSpring)) }
+                launch { popAlpha.animateTo(1f, tween(M.CARD_FADE_IN, easing = M.Ease)) }
+            }
+        }
+    }
+    // Another page of the same tile: the old rows rise out, then the new rows are drawn and the card follows their size
+    LaunchedEffect(page) {
+        if (page == MenuPage.MAIN || contentPage == page) return@LaunchedEffect
+        if (!morph) {
+            contentPage = page
+            return@LaunchedEffect
+        }
+        leaving = true
+        delay(M.MORPH_SWAP)
+        titleIn = true
+        contentPage = page
+        leaving = false
+        delay(50)
+        titleIn = false
+    }
+
     CompositionLocalProvider(LocalStreamHelp provides { helpKey = it }) {
-        BoxWithConstraints(Modifier.fillMaxSize()) {
-            val areaWidth = maxWidth.value / stage.dpPerPx
-            val areaHeight = maxHeight.value / stage.dpPerPx
-            val bar = barFrame(areaWidth, areaHeight)
+        Box(Modifier.fillMaxSize()) {
             // A tap anywhere else closes the popover; it never resumes the stream (only Resume and B do)
             Box(Modifier.fillMaxSize().pointerInput(Unit) { detectTapGestures { pageAfterDismiss(page)?.let { go(it) } } })
-            StreamMenuGradient(Modifier.align(Alignment.BottomCenter).graphicsLayer { alpha = shown.value.coerceIn(0f, 1f) })
+            StreamMenuBackdrop(gradientAlpha = { gradient.value }, scrimAlpha = { scrim.value })
 
-            // The popover sits above the circle that opened it, its caret pointing down at that circle
-            val placement = popoverPlacement(shownPage, bar, areaWidth)!!
-            val left = key(session) { animateFloatAsState(placement.left, spring(dampingRatio = .85f, stiffness = Spring.StiffnessMedium), label = "popoverLeft") }
-            val caret = key(session) { animateFloatAsState(placement.caretX, spring(dampingRatio = .85f, stiffness = Spring.StiffnessMedium), label = "popoverCaret") }
-            val caretLocal = caret.value - left.value
-            val origin = TransformOrigin((caretLocal / placement.width).coerceIn(0f, 1f), 1f)
-            Box(Modifier.fillMaxSize().graphicsLayer { alpha = shown.value.coerceIn(0f, 1f) }) {
-                AnimatedVisibility(
-                    page != MenuPage.MAIN,
-                    Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(bottom = (areaHeight - bar.top + StreamMenuLayout.POPOVER_GAP).px)
-                        .offset { IntOffset((left.value * k).roundToInt(), 0) },
-                    enter = fadeIn(tween(220, easing = EaseOut)) +
-                        (if (reducedMotion) EnterTransition.None
-                        else scaleIn(spring(dampingRatio = .78f, stiffness = Spring.StiffnessMediumLow), initialScale = .9f, transformOrigin = origin)),
-                    exit = fadeOut(tween(170, easing = EaseOut)) +
-                        (if (reducedMotion) ExitTransition.None
-                        else scaleOut(tween(220, easing = FastOutLinearInEasing), targetScale = .92f, transformOrigin = origin)),
-                ) {
+            // Everything else sits on the 1920 x 1080 stage, bottom-aligned
+            Box(Modifier.align(Alignment.BottomCenter).size(L.STAGE_WIDTH.px, L.STAGE_HEIGHT.px)) {
+                StreamMenuDock(
+                    title = host.gameName,
+                    circles = circles,
+                    requesters = circleFocus,
+                    focusItem = focusedItem ?: page.barItem() ?: barHelpItem,
+                    firstItem = start.page.barItem() ?: start.focus,
+                    popOpen = popOpen,
+                    caption = helpText(barHelpKey),
+                    enter = { enterClock.value },
+                    exit = { exitClock.value },
+                    dockShift = { dockShift.value },
+                    onCircleFocused = { item, focused ->
+                        if (focused) {
+                            focusedItem = item
+                            barHelpItem = item
+                        } else if (focusedItem == item) focusedItem = null
+                    },
+                    modifier = Modifier.offset(0.px, L.DOCK_TOP.px),
+                )
+
+                // The popover sits above the tile that opened it, its caret pointing down at that tile
+                if (popPresent) {
                     StreamMenuPopover(
-                        width = placement.width,
-                        caretX = caretLocal,
-                        maxHeight = popoverMaxHeight(bar),
-                        active = page != MenuPage.MAIN,
+                        geo = geo,
+                        scale = { popScale.value },
+                        // Nothing shows until the card has its size (the first frames of an opening popover are empty)
+                        alpha = { if (geoReady) popAlpha.value else 0f },
+                        active = popOpen,
+                        onNaturalHeight = { natural = it },
+                        modifier = Modifier.align(Alignment.BottomStart).padding(bottom = L.POPOVER_BOTTOM.px),
                     ) {
-                        Crossfade(shownPage, animationSpec = tween(200, easing = EaseOut), label = "popoverPage") { current ->
+                        key(session, contentPage) {
                             val stagger = remember { RowStagger(enabled = navigated) }
                             CompositionLocalProvider(LocalRowStagger provides stagger) {
                                 PopoverPage(
-                                    title = pageTitle(current, supersamplingMode),
-                                    footer = helpText(helpKey),
-                                    footerLines = popoverFooterLines(current),
+                                    title = pageTitle(contentPage, supersamplingMode),
+                                    help = helpText(helpKey),
                                     onBack = { back() },
+                                    leaving = leaving,
+                                    titleIn = titleIn,
                                 ) {
                                     val first = remember { FocusRequester() }
                                     InitialFocus(first)
-                                    PreviewRow(start, current)
+                                    PreviewRow(start, contentPage)
                                     // [changes] redraws the rows after a toggle or a slider step (their values are not state)
                                     PageRows(
-                                        host, current, first, entryRow, supersamplingMode, supersamplingLevel, upscalerStatus, changes,
+                                        host, contentPage, first, entryRow, supersamplingMode, supersamplingLevel, upscalerStatus, changes,
                                         openPage = { openPage(it) },
                                         close = { close(it) },
                                         toggle = { toggle(it) },
@@ -282,27 +367,6 @@ internal fun StreamMenuRoot(
                     }
                 }
             }
-
-            StreamMenuBar(
-                title = host.gameName,
-                backLabel = if (page == MenuPage.MAIN) "Resume" else "Back",
-                circles = circles,
-                requesters = circleFocus,
-                selected = page.barItem(),
-                initialItem = start.page.barItem() ?: start.focus,
-                entrance = start.animate,
-                helpTitle = barHelpKey,
-                helpText = helpText(barHelpKey),
-                width = bar.width,
-                onCircleFocused = { barHelpItem = it },
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = StreamMenuLayout.SAFE_MARGIN.px)
-                    .graphicsLayer {
-                        translationY = if (reducedMotion) 0f else (1f - shown.value) * 80f * k
-                        alpha = shown.value.coerceIn(0f, 1f)
-                    },
-            )
         }
     }
 }
@@ -321,22 +385,7 @@ private fun PreviewRow(start: StreamMenuStart, current: MenuPage) {
     }
 }
 
-/** A compact row of a popover: its label doubles as the help key unless [help] says otherwise. */
-@Composable
-private fun MenuRow(
-    icon: String,
-    label: String,
-    value: RowValue,
-    modifier: Modifier = Modifier,
-    description: String? = null,
-    enabled: Boolean = true,
-    help: String = label,
-) {
-    val show = LocalStreamHelp.current
-    SettingRow(icon, label, value, modifier.rowEntrance(), description = description, enabled = enabled, dense = true, onFocused = { show(help) })
-}
-
-/** The rows (or pills) of [page], everything the classic Artemis quick menu offered that the bar does not included. */
+/** The rows (or pills) of [page]: everything the classic Artemis quick menu offered that the dock does not include. */
 @Composable
 private fun PageRows(
     host: StreamMenuHost,
@@ -382,14 +431,15 @@ private fun PageRows(
             MenuRow(Symbols.NETWORK_CHECK, "Bitrate",
                 RowValue.Slider(requested, 1000, 1000000, 1000, " Mbps", 1000) { requested = it },
                 Modifier.focusRequester(first), enabled = !host.bitrateBusy)
-            MenuRow(Symbols.CHECK, if (host.bitrateBusy) "Applying…" else "Apply",
-                RowValue.Action { host.applyBitrate(requested) { requested = it } },
-                description = host.bitrateMessage ?: "Vibepollo is required. The host may limit the requested bitrate.",
+            // The outcome stands on the right of the row; a failure explains itself in the help
+            val apply = { host.applyBitrate(requested) { requested = it } }
+            val status = bitrateStatusText(host.bitrateBusy, host.bitrateResult)
+            MenuRow(Symbols.CHECK, "Apply", if (status == null) RowValue.Action(apply) else RowValue.Text(status, apply),
                 enabled = !host.bitrateBusy, help = "Apply bitrate")
         }
         MenuPage.UPSCALER -> {
             val available = host.upscalerAvailable
-            MenuRow(Symbols.UPSCALER, if (supersamplingMode) "Supersampling" else "Upscaling", RowValue.Toggle(host.upscalerRequested) {
+            MenuRow(Symbols.UPSCALER, "Enabled", RowValue.Toggle(host.upscalerRequested) {
                 host.setUpscalingEnabled(it)
                 changesTick()
             }, Modifier.focusRequester(first), enabled = available && upscalerStatus !in listOf("Starting", "Stopping"),
@@ -416,10 +466,10 @@ private fun PageRows(
             if (host.canSaveUpscaler) {
                 var savedTick by remember { mutableIntStateOf(0) }
                 LaunchedEffect(savedTick) { if (savedTick > 0) { delay(2500); savedTick = 0 } }
-                MenuRow(if (savedTick > 0) Symbols.CHECK_CIRCLE else Symbols.REMEMBER, "Save for this game", RowValue.Action {
+                MenuRow(Symbols.REMEMBER, "Save for this game", RowValue.Action {
                     host.saveUpscaler()
                     savedTick++
-                }, description = if (savedTick > 0) "Saved for ${host.gameName}" else null, enabled = available)
+                }, confirmation = if (savedTick > 0) "Saved" else null, enabled = available)
             }
         }
         MenuPage.MOUSE -> {
@@ -441,7 +491,7 @@ private fun PageRows(
             if (commands.isEmpty()) {
                 BasicText(
                     "No commands are set up on the PC. Vibepollo can add them in its web UI.",
-                    style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 22.tpx, textAlign = TextAlign.Center),
+                    style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = L.HELP_SIZE.tpx, textAlign = TextAlign.Center),
                     modifier = Modifier.focusRequester(first).focusable().padding(horizontal = 12.px, vertical = 16.px),
                 )
             } else {

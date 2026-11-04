@@ -1,5 +1,6 @@
 package com.limelight.shell
 
+import androidx.compose.animation.core.LinearEasing
 import com.limelight.shell.settings.StreamMenuHelp
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
@@ -9,10 +10,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class StreamMenuLayoutTest {
-    private val safe = StreamMenuLayout.SAFE_MARGIN
+    private val c = StreamMenuLayout
 
     @Test
-    fun closingAPopoverReturnsTheFocusToItsCircle() {
+    fun closingAPopoverReturnsTheFocusToItsTile() {
         for (page in MenuPage.entries.filter { it != MenuPage.MAIN && it.parent() == MenuPage.MAIN }) {
             assertEquals(PageExit(MenuPage.MAIN, page.barItem(), null), pageAfterBack(page))
             assertEquals(PageExit(MenuPage.MAIN, page.barItem(), null), pageAfterDismiss(page))
@@ -34,13 +35,13 @@ class StreamMenuLayoutTest {
     }
 
     @Test
-    fun theBarItselfIsLeftOnlyByResumingAndATapOutsideNeverResumes() {
+    fun theDockItselfIsLeftOnlyByResumingAndATapOutsideNeverResumes() {
         assertNull(pageAfterBack(MenuPage.MAIN))
         assertNull(pageAfterDismiss(MenuPage.MAIN))
     }
 
     @Test
-    fun everyPageWalksBackToTheBarInAtMostTwoSteps() {
+    fun everyPageWalksBackToTheDockInAtMostTwoSteps() {
         for (page in MenuPage.entries.filter { it != MenuPage.MAIN }) {
             var at = page
             var steps = 0
@@ -53,127 +54,133 @@ class StreamMenuLayoutTest {
     }
 
     @Test
-    fun theBarIsCenteredAnd48FromTheBottomOnTheStage() {
-        val bar = barFrame(1920f, 1080f)
-        assertEquals(110f, bar.left, 0f)
-        assertEquals(1810f, bar.right, 0f)
-        assertEquals(1080f - safe, bar.bottom, 0f)
-        assertEquals(StreamMenuLayout.BAR_HEIGHT, bar.height, 0f)
-    }
-
-    @Test
-    fun aNarrowScreenKeepsTheBarInsideTheSafeMargins() {
-        val bar = barFrame(1440f, 1080f)
-        assertEquals(safe, bar.left, 0f)
-        assertEquals(1440f - safe, bar.right, 0f)
-        assertEquals(0f, barFrame(40f, 1080f).width, 0f)
-    }
-
-    @Test
-    fun theNineCirclesShareTheSpaceRightOfTheTitleEqually() {
-        val bar = barFrame(1920f, 1080f)
-        val (start, end) = circlesSpan(bar)
-        assertTrue(start > bar.left && end < bar.right)
-        val centers = BarItem.entries.map { circleCenterX(bar, it) }
-        val step = centers[1] - centers[0]
-        for (i in 1 until centers.size) assertEquals(step, centers[i] - centers[i - 1], .01f)
-        // Every circle has room for its own size and a gap of at least 20 beside it
-        assertTrue("cell $step", step >= StreamMenuLayout.CIRCLE_SIZE + 20f)
-        assertEquals(start + step / 2f, centers.first(), .01f)
-        assertEquals(end - step / 2f, centers.last(), .01f)
-    }
-
-    @Test
-    fun aPopoverSitsAboveItsOwnCircleWithTheCaretPointingAtIt() {
-        val bar = barFrame(1920f, 1080f)
-        for (page in MenuPage.entries.filter { it != MenuPage.MAIN }) {
-            val placement = popoverPlacement(page, bar, 1920f)!!
-            val circle = circleCenterX(bar, page.barItem()!!)
-            // On the full stage nothing needs shifting: the card is centered on its circle and the caret is at its center
-            assertEquals("$page card", circle, placement.left + placement.width / 2f, .01f)
-            assertEquals("$page caret", circle, placement.caretX, .01f)
-            assertTrue("$page width ${placement.width}", placement.width in 700f..860f)
+    fun nineTilesOf150WithGapsOf40FillTheStageWith125OnEachSide() {
+        assertEquals(1670f, c.TILES_WIDTH, 0f)
+        assertEquals(125f, c.TILES_LEFT, 0f)
+        assertEquals(125f, tileLeft(BarItem.RESUME), 0f)
+        val last = tileLeft(BarItem.QUIT) + c.TILE
+        assertEquals(c.STAGE_WIDTH - 125f, last, 0f)
+        for (item in BarItem.entries) {
+            assertEquals(125f + item.ordinal * 190f, tileLeft(item), 0f)
+            assertEquals(tileLeft(item) + 75f, tileCenterX(item), 0f)
         }
-        assertEquals(0f, popoverWidth(MenuPage.MAIN, bar), 0f)
-        assertNull(popoverPlacement(MenuPage.MAIN, bar, 1920f))
     }
 
     @Test
-    fun pagesOpenedFromMoreAreAnchoredOverTheMoreCircle() {
-        val bar = barFrame(1920f, 1080f)
+    fun theRingIsA186BoxCenteredOnItsTileAndReachesAbove() {
+        for (item in BarItem.entries) assertEquals(tileCenterX(item), ringLeft(item) + c.RING / 2f, 0f)
+        assertEquals(-18f, RING_TOP, 0f)
+        // The focused tile at 1.12 is 168 wide: the ring is 9 px outside it
+        assertEquals(9f, (c.RING - c.TILE * c.FOCUS_SCALE) / 2f, .001f)
+    }
+
+    @Test
+    fun aPopoverSitsAboveItsOwnTileWithTheCaretPointingAtIt() {
+        for (page in MenuPage.entries.filter { it != MenuPage.MAIN }) {
+            val placement = popoverPlacement(page)!!
+            val tile = tileCenterX(page.barItem()!!)
+            // The caret is where the tile is, whatever the card had to move to stay inside the stage
+            assertEquals("$page caret", tile, placement.left + placement.caretX, .01f)
+            assertTrue("$page left ${placement.left}", placement.left >= c.POPOVER_MIN_LEFT)
+            assertTrue("$page right", placement.left + placement.width <= c.POPOVER_MAX_RIGHT)
+            assertTrue("$page caret inset", placement.caretX >= c.CARET_MIN_INSET && placement.caretX <= placement.width - c.CARET_MIN_INSET)
+        }
+        assertEquals(0f, popoverWidth(MenuPage.MAIN), 0f)
+        assertNull(popoverPlacement(MenuPage.MAIN))
+    }
+
+    @Test
+    fun theWidthsOfThePrototypeHold() {
+        assertEquals(780f, popoverWidth(MenuPage.BRIGHTNESS), 0f)
+        assertEquals(860f, popoverWidth(MenuPage.BITRATE), 0f)
+        assertEquals(980f, popoverWidth(MenuPage.UPSCALER), 0f)
+        for (page in listOf(MenuPage.MORE, MenuPage.KEYS, MenuPage.COMMANDS, MenuPage.MOUSE)) assertEquals(920f, popoverWidth(page), 0f)
+    }
+
+    @Test
+    fun pagesOpenedFromMoreAreAnchoredOverTheMoreTile() {
         for (page in listOf(MenuPage.KEYS, MenuPage.COMMANDS, MenuPage.MOUSE, MenuPage.MORE)) {
-            assertEquals("$page", circleCenterX(bar, BarItem.MORE), popoverPlacement(page, bar, 1920f)!!.caretX, .01f)
+            val placement = popoverPlacement(page)!!
+            assertEquals("$page", tileCenterX(BarItem.MORE), placement.left + placement.caretX, .01f)
+            assertEquals(popoverPlacement(MenuPage.MORE), placement)
         }
     }
 
     @Test
-    fun theCardShiftsInwardNearTheEndsOfTheBar() {
-        val bar = barFrame(1920f, 1080f)
-        val width = 840f
-        // Far left: the card starts at the bar's left end, the caret still points at the circle
-        assertEquals(bar.left, popoverLeft(200f, width, bar, 1920f), 0f)
-        assertEquals(300f, caretCenterX(300f, bar.left, width), 0f)
-        // Far right: the card ends at the bar's right end
-        assertEquals(bar.right - width, popoverLeft(1750f, width, bar, 1920f), 0f)
+    fun theCardIsKeptInsideTheStageAndTheCaretOffItsCorners() {
+        // A tile near the left end: the card stops at 110 and the caret moves left inside it
+        assertEquals(110f, popoverLeft(200f, 980f), 0f)
+        assertEquals(200f - 110f, caretCenterX(200f, 110f, 980f), 0f)
+        // Near the right end: it stops at 1810
+        assertEquals(1810f - 920f, popoverLeft(1750f, 920f), 0f)
         // In the middle: centered on the anchor
-        assertEquals(960f - width / 2f, popoverLeft(960f, width, bar, 1920f), 0f)
+        assertEquals(960f - 430f, popoverLeft(960f, 860f), 0f)
+        // An anchor right at the card's corner is pulled in to 72
+        assertEquals(72f, caretCenterX(100f, 110f, 800f), 0f)
+        assertEquals(800f - 72f, caretCenterX(5000f, 110f, 800f), 0f)
+        assertEquals(390f, caretCenterX(500f, 110f, 800f), 0f)
     }
 
     @Test
-    fun theCaretStaysAtLeast40FromTheCornersOfTheCard() {
-        val inset = StreamMenuLayout.CARET_MIN_INSET
-        // An anchor right at the card's edge (or outside it) is pulled in
-        assertEquals(110f + inset, caretCenterX(100f, 110f, 800f), 0f)
-        assertEquals(110f + 800f - inset, caretCenterX(5000f, 110f, 800f), 0f)
-        assertEquals(500f, caretCenterX(500f, 110f, 800f), 0f)
+    fun theCaretTipClearsTheRingOfTheSunkTile() {
+        val cardBottom = c.STAGE_HEIGHT - c.POPOVER_BOTTOM - c.CARET_HEIGHT
+        val tip = cardBottom + c.CARET_HEIGHT
+        val sunkRingTop = c.DOCK_TOP + c.DOCK_SHIFT + RING_TOP
+        assertEquals(734f, cardBottom, 0f)
+        assertTrue("tip $tip ring $sunkRingTop", tip < sunkRingTop)
+        assertEquals(12f, sunkRingTop - tip, 1f)
     }
 
     @Test
-    fun aNarrowWindowShrinksTheCardToTheBarAndKeepsTheSafeMargins() {
-        for (areaWidth in listOf(900f, 1100f, 1280f, 1440f, 1920f, 2560f)) {
-            val bar = barFrame(areaWidth, 1080f)
-            for (page in MenuPage.entries.filter { it != MenuPage.MAIN }) {
-                val placement = popoverPlacement(page, bar, areaWidth)!!
-                val right = placement.left + placement.width
-                assertTrue("$page at $areaWidth: left ${placement.left}", placement.left >= safe)
-                assertTrue("$page at $areaWidth: right $right", right <= areaWidth - safe)
-                assertTrue("$page at $areaWidth: inside the bar", placement.left >= bar.left && right <= bar.right)
-                assertTrue("$page at $areaWidth: caret ${placement.caretX}",
-                    placement.caretX >= placement.left + StreamMenuLayout.CARET_MIN_INSET && placement.caretX <= right - StreamMenuLayout.CARET_MIN_INSET)
-                if (bar.width >= StreamMenuLayout.POPOVER_MIN_WIDTH) assertTrue("$page at $areaWidth: ${placement.width}", placement.width >= StreamMenuLayout.POPOVER_MIN_WIDTH)
-                else assertEquals(bar.width, placement.width, 0f)
-            }
-        }
-    }
-
-    @Test
-    fun thePopoverHasTheRoomBetweenTheBarsGapAndTheTopMargin() {
-        for (height in listOf(1080f, 1200f, 720f)) {
-            val bar = barFrame(1920f, height)
-            assertEquals(bar.top - StreamMenuLayout.POPOVER_GAP - safe, popoverMaxHeight(bar), 0f)
-        }
-        // A screen too short for the bar and its margins leaves no negative room
-        assertEquals(0f, popoverMaxHeight(barFrame(1920f, 100f)), 0f)
-    }
-
-    @Test
-    fun theTallestPageFitsAboveTheBarWithoutScrollingAtTheLargestTextScale() {
-        val bar = barFrame(1920f, 1080f)
-        val c = StreamMenuLayout
+    fun theTallestPageFitsWithoutScrollingAtTheLargestTextScaleAndMoreScrolls() {
         // The Upscaler page with supersampling: the toggle, quality, mode, sharpness and Save for this game
-        val rows = 5 * c.ROW_HEIGHT + 4 * c.ROW_SPACING
-        val footer = 1f + 12f + popoverFooterTextHeight(popoverFooterLines(MenuPage.UPSCALER)) + 14f
-        val card = c.POPOVER_PADDING_TOP + c.POPOVER_HEADER_HEIGHT + 6f + rows + 8f + footer
-        assertTrue("card $card of ${popoverMaxHeight(bar)}", card + c.CARET_HEIGHT <= popoverMaxHeight(bar))
+        assertEquals(619.6f, popoverCardHeight(5, 1f), .01f)
+        assertTrue("card ${popoverCardHeight(5, c.MAX_TEXT_SCALE)}", popoverFits(5, c.MAX_TEXT_SCALE))
+        // More has 12 rows: the card stops at its largest height and the rows scroll
+        assertTrue(!popoverFits(12, 1f))
+        assertEquals(c.POPOVER_MAX_HEIGHT, popoverCardHeight(12, 1f), 0f)
+        assertEquals(72f * 12 + 8f * 11, rowsHeight(12), 0f)
+        assertEquals(0f, rowsHeight(0), 0f)
     }
 
     @Test
-    fun theHelpBoxesHoldTheirLinesAtTheLargestTextScale() {
-        val c = StreamMenuLayout
-        assertTrue(c.HELP_TEXT_HEIGHT >= c.HELP_LINES * c.HELP_TEXT_SIZE * c.MAX_TEXT_SCALE * c.HELP_LINE_HEIGHT)
-        for (page in MenuPage.entries.filter { it != MenuPage.MAIN }) {
-            val lines = popoverFooterLines(page)
-            assertTrue(popoverFooterTextHeight(lines) >= lines * c.FOOTER_TEXT_SIZE * c.MAX_TEXT_SCALE * c.FOOTER_LINE_HEIGHT)
+    fun theHelpBoxesReserveTheirLinesAtEveryTextScale() {
+        assertEquals(2, helpLines(1f))
+        assertEquals(2, helpLines(1.15f))
+        assertEquals(3, helpLines(1.3f))
+        assertEquals(22f * 1.4f * 2f, popoverHelpHeight(1f), .01f)
+        assertEquals(22f * 1.3f * 1.4f * 3f, popoverHelpHeight(1.3f), .01f)
+        assertEquals(28f * 1.4f * 3f, captionHeight(1f), .01f)
+    }
+
+    @Test
+    fun theCaptionSitsBelowTheLabelsAndEndsOnTheStageAtEveryTextScale() {
+        assertEquals(236.8f, captionTop(1f), .01f)
+        for (scale in listOf(1f, 1.15f, c.MAX_TEXT_SCALE)) {
+            assertTrue("scale $scale", c.DOCK_TOP + captionTop(scale) + captionHeight(scale) <= c.STAGE_HEIGHT)
+        }
+    }
+
+    /**
+     * The width of the labels in Figtree SemiBold, in em, measured with the font file (Pillow ImageFont, Figtree.ttf at
+     * weight 600): what the budget of the tiles' cells is checked with. The upscaler tile is called Upscaler or
+     * Supersampling.
+     */
+    private val labelEm = mapOf(
+        "Resume" to 3.63f, "Keyboard" to 4.39f, "Overlay" to 3.55f, "Brightness" to 4.83f, "Bitrate" to 3.07f,
+        "Upscaler" to 4.0f, "Supersampling" to 6.78f, "More" to 2.34f, "Disconnect" to 5.14f, "Quit game" to 4.76f,
+    )
+
+    @Test
+    fun neighbouringLabelsKeepTheirClearanceAtEveryTextScale() {
+        val pitch = c.TILE + c.TILE_GAP
+        for (scale in listOf(1f, 1.15f, c.MAX_TEXT_SCALE)) for (upscaler in listOf("Upscaler", "Supersampling")) {
+            val labels = listOf("Resume", "Keyboard", "Overlay", "Brightness", "Bitrate", upscaler, "More", "Disconnect", "Quit game")
+            val widths = labels.map { labelEm.getValue(it) * c.LABEL_SIZE * scale }
+            for (i in 0 until widths.size - 1) {
+                val clear = pitch - widths[i] / 2f - widths[i + 1] / 2f
+                assertTrue("${labels[i]} / ${labels[i + 1]} at $scale: $clear", clear >= 28f)
+            }
         }
     }
 
@@ -197,41 +204,75 @@ class StreamMenuLayoutTest {
     }
 
     @Test
-    fun everyHelpTheBarCanShowFitsItsHelpArea() {
-        val chars = barHelpLineChars()
-        for (item in BarItem.entries) for (supersampling in listOf(false, true)) for (status in statuses) {
-            val key = circleHelpKey(item, supersampling)
-            assertFits("circle $key ($status)", streamMenuHelp(key, status, 0, 0, false), chars, StreamMenuLayout.HELP_LINES)
+    fun everyHelpTheCaptionCanShowFitsItsThreeLines() {
+        for (scale in listOf(1f, 1.15f, c.MAX_TEXT_SCALE)) {
+            val chars = captionLineChars(scale)
+            for (item in BarItem.entries) for (supersampling in listOf(false, true)) for (status in statuses) {
+                val key = circleHelpKey(item, supersampling)
+                assertFits("tile $key ($status) at $scale", streamMenuHelp(key, status, 0, 0, false), chars, c.CAPTION_LINES)
+            }
         }
     }
 
     @Test
-    fun everyHelpAPopoverCanShowFitsItsFooter() {
-        val bar = barFrame(1920f, 1080f)
+    fun everyHelpAPopoverCanShowFitsItsReservedLines() {
         val footerKeys = mapOf(
-            MenuPage.MORE to listOf("More", MoreRow.KEYS, "Send clipboard", "Get clipboard", MoreRow.COMMANDS, "Task manager", "Zoom", MoreRow.MOUSE,
+            MenuPage.MORE to listOf(MoreRow.KEYS, "Send clipboard", "Get clipboard", MoreRow.COMMANDS, "Task manager", "Zoom", MoreRow.MOUSE,
                 "On-screen controls", "Full keyboard", "Key layout", "Touch sensitivity", "Rotate"),
             // The labels of key combinations and commands come from the user and the host
             MenuPage.KEYS to listOf("Send keys", "Keys: Ctrl + Alt + Delete", "Keys: " + "K".repeat(40)),
-            MenuPage.COMMANDS to listOf("Commands", "Command: Restart the game", "Command: " + "C".repeat(48)),
+            MenuPage.COMMANDS to listOf("Commands", "Command: Restart the game", "Command: " + "C".repeat(80)),
             MenuPage.BRIGHTNESS to listOf("Screen brightness"),
             MenuPage.BITRATE to listOf("Bitrate", "Apply bitrate"),
             MenuPage.UPSCALER to listOf("Upscaling", "Supersampling on", "Supersampling quality", "Mode", "Sharpness", "Save for this game"),
             MenuPage.MOUSE to listOf("Touchscreen mode", "Local mouse cursor"),
         )
         assertEquals(MenuPage.entries.filter { it != MenuPage.MAIN }.toSet(), footerKeys.keys)
-        for ((page, keys) in footerKeys) {
-            val chars = popoverFooterLineChars(page, bar)
-            val lines = popoverFooterLines(page)
+        for (scale in listOf(1f, 1.15f, c.MAX_TEXT_SCALE)) for ((page, keys) in footerKeys) {
+            val chars = popoverHelpLineChars(page, scale)
+            val lines = helpLines(scale)
             for (key in keys) for (status in statuses) for (mode in 0..3) for (mouse in 0..5) for (remember in listOf(false, true)) {
-                assertFits("$page/$key ($status, mode $mode, mouse $mouse)", streamMenuHelp(key, status, mode, mouse, remember), chars, lines)
+                assertFits("$page/$key ($status, mode $mode, mouse $mouse) at $scale", streamMenuHelp(key, status, mode, mouse, remember), chars, lines)
             }
-            assertFits("$page default", streamMenuHelp(pageHelpKey(page), statuses[8], 0, 0, false), chars, lines)
+            assertFits("$page default at $scale", streamMenuHelp(pageHelpKey(page), statuses[8], 0, 0, false), chars, lines)
         }
     }
 
     @Test
-    fun theUpscalerCircleShowsOneWordOfTheRenderersStatus() {
+    fun aFailedBitrateChangeExplainsItselfInTheHelp() {
+        val reasons = listOf(
+            BitrateFailure.NOT_CONNECTED, BitrateFailure.UNSUPPORTED, BitrateFailure.DENIED, BitrateFailure.UNCONFIRMED,
+            BitrateFailure.rejected(null), BitrateFailure.rejected("x".repeat(500)),
+        )
+        for (scale in listOf(1f, 1.15f, c.MAX_TEXT_SCALE)) for (reason in reasons) {
+            assertEquals(reason, streamMenuHelp("Apply bitrate", "On", 0, 0, false, reason))
+            assertFits("bitrate failure at $scale", reason, popoverHelpLineChars(MenuPage.BITRATE, scale), helpLines(scale))
+        }
+        assertTrue(BitrateFailure.rejected("x".repeat(500)).length < 100)
+        // Without a failure the row has its own help
+        assertEquals(StreamMenuHelp.description("Apply bitrate"), streamMenuHelp("Apply bitrate", "On", 0, 0, false))
+    }
+
+    @Test
+    fun aVeryLongCommandNameIsCutInItsHelp() {
+        val help = StreamMenuHelp.description("Command: " + "C".repeat(80))
+        assertTrue(help, help.contains("C".repeat(35) + "\u2026"))
+        assertTrue(help, !help.contains("C".repeat(36)))
+        assertTrue(StreamMenuHelp.description("Command: Sleep the PC").contains("Sleep the PC on the PC"))
+    }
+
+    @Test
+    fun theApplyRowSaysWhatTheHostAnsweredOnTheRight() {
+        assertNull(bitrateStatusText(false, null))
+        assertEquals("Applying\u2026", bitrateStatusText(true, null))
+        assertEquals("Applying\u2026", bitrateStatusText(true, BitrateResult.Accepted(50000)))
+        assertEquals("Accepted 50 Mbps", bitrateStatusText(false, BitrateResult.Accepted(50000)))
+        assertEquals("Limited by the host to 80 Mbps", bitrateStatusText(false, BitrateResult.Limited(80000)))
+        assertEquals("Failed", bitrateStatusText(false, BitrateResult.Failed("x")))
+    }
+
+    @Test
+    fun theUpscalerTileShowsOneWordOfTheRenderersStatus() {
         assertEquals("On", upscalerCircleState("On: SGSR 2 Video Quality"))
         assertEquals("On", upscalerCircleState("On"))
         assertEquals("Off", upscalerCircleState("Off"))
@@ -248,14 +289,7 @@ class StreamMenuLayoutTest {
     }
 
     @Test
-    fun theGradientDarkensLessThanEightPercentOfTheScreenOnAverage() {
-        val half = StreamMenuLayout.GRADIENT_MID_ALPHA / 2 * .5f + (StreamMenuLayout.GRADIENT_MID_ALPHA + StreamMenuLayout.GRADIENT_BOTTOM_ALPHA) / 2 * .5f
-        val mean = half * StreamMenuLayout.GRADIENT_HEIGHT / 1080f
-        assertTrue("mean darkening $mean", mean < .08f)
-    }
-
-    @Test
-    fun everyCircleAndEveryPageHasHelpForTheSingleHelpLine() {
+    fun everyTileAndEveryPageHasHelp() {
         val circles = listOf("Resume", "Keyboard", "Overlay", "Brightness", "Bitrate", "Upscaler", "Supersampling", "More", "Disconnect", "Quit game")
         // The mouse page's help comes from the settings catalog (the active mode), not from StreamMenuHelp
         val pages = MenuPage.entries.filter { it != MenuPage.MOUSE }.map { pageHelpKey(it) }
@@ -269,10 +303,77 @@ class StreamMenuLayoutTest {
         for (page in MenuPage.entries.filter { it != MenuPage.MAIN }) {
             assertNotEquals("$page", "", pageTitle(page, supersampling = false))
         }
+        // The header is the tile's label
         assertEquals("Supersampling", pageTitle(MenuPage.UPSCALER, supersampling = true))
-        assertEquals("Snapdragon Game Super Resolution", pageTitle(MenuPage.UPSCALER, supersampling = false))
+        assertEquals("Upscaler", pageTitle(MenuPage.UPSCALER, supersampling = false))
+        for (supersampling in listOf(false, true)) {
+            assertEquals(circleHelpKey(BarItem.UPSCALER, supersampling), pageTitle(MenuPage.UPSCALER, supersampling))
+        }
         for (page in MenuPage.entries.filter { it.parent() == MenuPage.MORE }) {
             assertTrue("$page has no row in More", page.openedByRow() != null)
         }
+    }
+
+    // ---- Motion: the delays and durations of the prototype's variables ----
+
+    @Test
+    fun theEntranceStaggersTheTilesBy42AndTheRingArrivesAfterItsTile() {
+        assertEquals(100, StreamMenuMotion.tileDelay(0))
+        assertEquals(100 + 8 * 42, StreamMenuMotion.tileDelay(8))
+        assertEquals(StreamMenuMotion.tileDelay(3) + 140, StreamMenuMotion.labelDelay(3))
+        assertEquals(StreamMenuMotion.tileDelay(5) + 260, StreamMenuMotion.ringDelay(5))
+        assertEquals(496, StreamMenuMotion.LABEL_DURATION)
+        // The ring on the last tile is the last to arrive
+        assertEquals(100 + 8 * 42 + 260 + 620, StreamMenuMotion.ENTER_TOTAL)
+    }
+
+    @Test
+    fun theExitStartsWithTheLastTileAndTheMenuClosesEightyMillisecondsAfterIt() {
+        assertEquals(0, StreamMenuMotion.exitDelay(8))
+        assertEquals(64, StreamMenuMotion.exitDelay(0))
+        assertEquals(64 + 240, StreamMenuMotion.EXIT_TOTAL)
+        assertEquals(240 + 80, StreamMenuMotion.CLOSE)
+        assertTrue(StreamMenuMotion.EXIT_TOTAL <= StreamMenuMotion.CLOSE)
+    }
+
+    @Test
+    fun anAnimationIsAtItsStartBeforeItsDelayAndAtItsEndAfterItsDuration() {
+        val m = StreamMenuMotion
+        assertEquals(0f, m.progress(0f, 100, 620, LinearEasing), 0f)
+        assertEquals(0f, m.progress(100f, 100, 620, LinearEasing), 0f)
+        assertEquals(.5f, m.progress(410f, 100, 620, LinearEasing), 1e-6f)
+        assertEquals(1f, m.progress(720f, 100, 620, LinearEasing), 0f)
+        assertEquals(1f, m.progress(5000f, 100, 620, LinearEasing), 0f)
+        assertEquals(.25f, m.linear(60f, 0, 240), 0f)
+    }
+
+    @Test
+    fun theSpringAndTheGlideOvershootAndEaseInDoesNot() {
+        val m = StreamMenuMotion
+        val spring = com.limelight.shell.ui.EaseSpring
+        assertTrue((1..99).any { spring.transform(it / 100f) > 1.02f })
+        assertTrue((1..99).any { m.Glide.transform(it / 100f) > 1.0f })
+        assertTrue((1..99).all { m.In.transform(it / 100f) <= it / 100f + 1e-4f })
+        assertEquals(1f, spring.transform(1f), 1e-4f)
+        assertEquals(0f, m.Glide.transform(0f), 1e-4f)
+    }
+
+    @Test
+    fun thePrototypeDurationsHold() {
+        val m = StreamMenuMotion
+        assertEquals(620, m.ENTER)
+        assertEquals(240, m.EXIT)
+        assertEquals(420, m.FOCUS)
+        assertEquals(560, m.RING)
+        assertEquals(640, m.DOCK)
+        assertEquals(560, m.POP_IN)
+        assertEquals(240, m.POP_OUT)
+        assertEquals(46, m.STAGGER_ROW)
+        assertEquals(420, m.ROW_IN)
+        assertEquals(420, m.CAPTION)
+        assertEquals(280, m.FADE)
+        assertEquals(336, m.CARD_FADE_IN)
+        assertEquals(190f, m.GEO_STIFFNESS, 0f)
+        assertEquals(.8f, m.GEO_DAMPING, 0f)
     }
 }

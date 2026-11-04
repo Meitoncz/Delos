@@ -34,7 +34,7 @@ private val symbolsFill = FontFamily(Font(R.font.phosphor_fill))
 private val iconLineHeight = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.Both)
 
 /**
- * A Phosphor icon ([Symbols] code point). [filled] cross-fades from Regular to Fill,
+ * A Phosphor icon ([Symbols] code point). [filled] cross-fades from Regular to Fill over [fadeMillis],
  * preserving the prototype's focus effect. Both bundled subsets use the same code points and metrics.
  */
 @Composable
@@ -44,8 +44,9 @@ fun Symbol(
     color: Color,
     modifier: Modifier = Modifier,
     filled: Boolean = false,
+    fadeMillis: Int = 350,
 ) {
-    val f by animateFloatAsState(if (filled) 1f else 0f, tween(350, easing = EaseOut), label = "fill")
+    val f by animateFloatAsState(if (filled) 1f else 0f, tween(fadeMillis, easing = EaseOut), label = "fill")
     Box(modifier, contentAlignment = Alignment.Center) {
         if (f < 1f) {
             BasicText(icon, style = iconStyle(size, color.copy(alpha = color.alpha * (1f - f)), symbolsRegular))

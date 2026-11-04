@@ -2,6 +2,13 @@ package com.limelight.shell
 
 import com.limelight.shell.settings.SettingChoice
 
+/** What the host answered to the last Apply on the Bitrate page. */
+internal sealed interface BitrateResult {
+    data class Accepted(val kbps: Int) : BitrateResult
+    data class Limited(val kbps: Int) : BitrateResult
+    data class Failed(val reason: String) : BitrateResult
+}
+
 /**
  * Everything the stream menu's composables read from and do to the running stream. [StreamMenu] implements it
  * with the live [com.limelight.Game]; the debug build's preview (docs/GUI.md, "Stream menu preview") implements
@@ -9,7 +16,7 @@ import com.limelight.shell.settings.SettingChoice
  * again after every change the menu makes, so they may simply return the current value.
  */
 internal interface StreamMenuHost {
-    /** The name of the game, shown at the left of the bar. */
+    /** The name of the game, shown above the tiles. */
     val gameName: String
 
     /** Closes the menu's window at once (the menu has played its exit before). */
@@ -28,10 +35,10 @@ internal interface StreamMenuHost {
     val brightnessPercent: Int
     fun setBrightness(percent: Int)
 
-    // Bitrate: the host's answer to [applyBitrate] arrives later, through [bitrateBusy] and [bitrateMessage]
+    // Bitrate: the host's answer to [applyBitrate] arrives later, through [bitrateBusy] and [bitrateResult]
     val bitrateKbps: Int
     val bitrateBusy: Boolean
-    val bitrateMessage: String?
+    val bitrateResult: BitrateResult?
     fun applyBitrate(requested: Int, accepted: (Int) -> Unit)
 
     // Upscaler and supersampling

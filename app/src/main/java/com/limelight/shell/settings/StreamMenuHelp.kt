@@ -4,7 +4,7 @@ package com.limelight.shell.settings
 object StreamMenuHelp {
     fun description(label: String): String = descriptions[label] ?: when {
         label.startsWith("Keys: ") -> "Sends ${label.removePrefix("Keys: ")} to the PC once, then returns to the stream."
-        label.startsWith("Command: ") -> "Runs the host-defined command ${label.removePrefix("Command: ")} on the PC at once. Set in Vibepollo or Apollo."
+        label.startsWith("Command: ") -> "Runs the host-defined command ${label.removePrefix("Command: ").let { if (it.length > 36) it.take(35) + "\u2026" else it }} on the PC at once. Set in Vibepollo or Apollo."
         else -> ""
     }
 
@@ -37,7 +37,7 @@ object StreamMenuHelp {
         "Local mouse cursor" to "Shows or hides Android's pointer for a physical mouse during this stream. Not the PC cursor in the video.",
         "On-screen controls" to "Shows or hides the virtual gamepad during this stream. Opacity and layout are set under Controls.",
         "Full keyboard" to "Shows or hides the Delos full on-screen keyboard. Not Android's system keyboard.",
-        "Key layout" to "Shows or hides the custom special-key layer from the profile's selected layout. Separate from the full keyboard.",
+        "Key layout" to "Shows or hides the profile's custom special-key layer. Separate from the full keyboard.",
         "Touch sensitivity" to "Toggles extra touchscreen sensitivity scaling, configured in settings.",
         "Rotate" to "Rotates the stream view locally; the host game's display settings are unchanged.",
     )
