@@ -16,6 +16,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Arrangement
@@ -321,6 +322,7 @@ fun Shell(
     fun handOverToStream() {
         if (shell.launch != null && shell.diving) {
             shell.exitCover = true
+            shell.exitLights = false
             shell.launch = null
             shell.diving = false
             returningFromStream.value = true
@@ -337,7 +339,10 @@ fun Shell(
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         val arrival = StreamExit.take()
         // Not coming back through the exit portal (a cancelled or failed launch): the cover of the hand-over goes away
-        if (arrival == null && shell.exitCover) shell.exitCover = false
+        if (arrival == null && shell.exitCover) {
+            shell.exitCover = false
+            shell.exitLights = false
+        }
         arrival?.let { exit ->
             scope.launch {
                 // Quit game: the portal waits, with its text and pulses, until the PC has really quit the game (at most 25 s),
@@ -346,6 +351,8 @@ fun Shell(
                 // The chosen animated background fades in over the dashboard first (the dashboard's own background still
                 // settles after the return), and only then does the portal burst into it
                 shell.exitCover = true
+                // The flat background first (what the system window and the end of the stream window's scene showed), then the lights
+                shell.exitLights = true
                 shell.portalBurst = false
                 shell.portal = Portal(-1, if (waitForQuit) Symbols.POWER_SETTINGS_NEW else Symbols.HOME, exit.label, exit.sub, cancellable = false, arriving = true)
                 delay(if (waitForQuit) 400 else 600)
@@ -359,6 +366,7 @@ fun Shell(
                 // The loader just ends: the background and the portal fade away together into the dashboard, no second scene
                 feedback.play(Cue.SELECT)
                 shell.exitCover = false
+                shell.exitLights = false
                 shell.portal = null
             }
         }
@@ -662,9 +670,13 @@ fun Shell(
 
                 // Fully there from the first frame: the stream window's portal already ended on this very background
                 val cover by animateFloatAsState(if (shell.exitCover) 1f else 0f, if (shell.exitCover) snap() else tween(350, easing = EaseOut), label = "exitCover")
+                val lights by animateFloatAsState(if (shell.exitLights) 1f else 0f, tween(if (shell.exitLights) 400 else 350, easing = EaseOut), label = "exitLights")
                 if (cover > 0f) {
-                    Box(Modifier.fillMaxSize().graphicsLayer { alpha = cover }) {
-                        Backdrop(appearance, colors, hero = if (appearance.background == BackgroundKind.STILL) shell.hero else null)
+                    // Opaque flat background at once (it hides the dashboard and is the color the system window showed), the lights fade in over it
+                    Box(Modifier.fillMaxSize().graphicsLayer { alpha = cover }.background(colors.bg)) {
+                        Box(Modifier.fillMaxSize().graphicsLayer { alpha = lights }) {
+                            Backdrop(appearance, colors, hero = if (appearance.background == BackgroundKind.STILL) shell.hero else null)
+                        }
                     }
                 }
                 // The portal of a stream exit sits on the opaque cover: it must not blur the dashboard behind (that was the third scene)

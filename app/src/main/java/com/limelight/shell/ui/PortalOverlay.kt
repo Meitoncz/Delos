@@ -1,7 +1,6 @@
 package com.limelight.shell.ui
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -60,7 +59,7 @@ fun PortalOverlay(portal: Portal?, burst: Boolean, haze: HazeState?, reducedMoti
     val last = remember { arrayOfNulls<Portal>(1) }
     if (portal != null) last[0] = portal
     // An arriving burst is there at once: the window it comes in with fades in already
-    AnimatedVisibility(portal != null, enter = if (portal?.arriving == true) EnterTransition.None else fadeIn(tween(300)), exit = fadeOut(tween(300))) {
+    AnimatedVisibility(portal != null, enter = fadeIn(tween(if (portal?.arriving == true) 400 else 300)), exit = fadeOut(tween(300))) {
         val p = last[0] ?: return@AnimatedVisibility
         val start = remember(p.id) { System.nanoTime() }
         val clock = rememberLaunchClock(start)
