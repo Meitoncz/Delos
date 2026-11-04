@@ -156,7 +156,6 @@ fun Shell(
     val actions = remember(launcher) { ShellGameActions(shell, launcher, feedback, scope) }
     val reducedMotion by rememberUpdatedState(appearance.reducedMotion)
     val devices = remember { ShellDeviceActions(shell, tracker, repo, setup, startupStore, feedback, scope) { reducedMotion } }
-    val esde = rememberEsDeShortcuts(shell, scope)
     val profiles by profileStore.profiles.collectAsStateWithLifecycle()
     val startup by startupStore.startup.collectAsStateWithLifecycle()
     val pcs by repo.pcs.collectAsStateWithLifecycle()
@@ -465,7 +464,7 @@ fun Shell(
     )
 
     CompositionLocalProvider(
-        LocalShell provides shell, LocalFocusTracker provides tracker, LocalGameActions provides actions, LocalDeviceActions provides devices, LocalEsDeShortcuts provides esde,
+        LocalShell provides shell, LocalFocusTracker provides tracker, LocalGameActions provides actions, LocalDeviceActions provides devices,
         LocalBackdropHaze provides backdropHaze, LocalLibrary provides library,
     ) {
         Box(Modifier.fillMaxSize()) {

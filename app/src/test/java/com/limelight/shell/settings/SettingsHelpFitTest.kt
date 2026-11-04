@@ -124,8 +124,6 @@ class SettingsHelpFitTest {
         listOf("ui_match_game_colors", "pref_debug_info", "import_special_button_file").forEach {
             assertFits(it, SettingsHelp.description(it, ""))
         }
-        assertFits("devices_esde_folder", NativeSettingsHelp.ES_DE_FOLDER)
-        assertFits("devices_esde_forget", NativeSettingsHelp.ES_DE_FORGET)
         listOf(
             "Resume", "Keyboard", "Overlay", "Brightness", "Screen brightness", "Bitrate", "Apply bitrate", "Upscaler",
             "Upscaling", "Supersampling", "Supersampling quality", "Mode", "Sharpness", "Save for this game", "More", "Disconnect", "Quit game",

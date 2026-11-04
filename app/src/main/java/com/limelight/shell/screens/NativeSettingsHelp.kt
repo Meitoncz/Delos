@@ -4,10 +4,6 @@ import com.limelight.shell.ui.RowValue
 
 /** Choice-specific help for native shell rows; the row remains the source of its current value. */
 internal object NativeSettingsHelp {
-    /** Help of the Devices rows for the ES-DE shortcut folder (the settings screen shows it, SettingsHelpFitTest checks it). */
-    const val ES_DE_FOLDER = "Folder that receives the .art shortcut files made with Create ES-DE shortcut, such as the ROMs folder of an ES-DE custom system. Select to choose another folder."
-    const val ES_DE_FORGET = "Forgets the chosen folder and Delos' access to it. The next shortcut asks for a folder again. Files already there stay."
-
     fun details(key: String, description: String, value: RowValue): String {
         val selected = value as? RowValue.Choice ?: return description
         val help = choice(key, selected.label)

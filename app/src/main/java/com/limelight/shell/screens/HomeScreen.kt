@@ -77,7 +77,6 @@ import androidx.compose.ui.unit.em
 import com.limelight.shell.ContextMenu
 import com.limelight.shell.GameActions
 import com.limelight.shell.Layer
-import com.limelight.shell.LocalEsDeShortcuts
 import com.limelight.shell.LocalFocusTracker
 import com.limelight.shell.LocalGameActions
 import com.limelight.shell.LocalShell
@@ -428,8 +427,6 @@ private fun gameMenu(
     onArtwork: () -> Unit,
     onSettings: () -> Unit,
     onMetadata: () -> Unit,
-    /** Writes the game's `.art` file to the ES-DE folder. */
-    onEsDeShortcut: () -> Unit,
 ) =
     ContextMenu(
         app.name,
@@ -450,7 +447,6 @@ private fun gameMenu(
                 add(MenuItem(Symbols.SEARCH, "Metadata", onMetadata))
             }
             add(MenuItem(Symbols.SETTINGS, "Game settings", onSettings))
-            add(MenuItem(Symbols.ADD_LINK, "Create ES-DE shortcut", onEsDeShortcut))
             add(
                 if (hidden) MenuItem(Symbols.VISIBILITY, "Show game") { onHide(app, false) }
                 else MenuItem(Symbols.VISIBILITY_OFF, "Hide game") { onHide(app, true) }
@@ -611,7 +607,6 @@ private fun GameTile(
     val boxArt = LocalBoxArt.current
     val actions = LocalGameActions.current
     val shell = LocalShell.current
-    val esde = LocalEsDeShortcuts.current
     val tracker = LocalFocusTracker.current
     val feedback = LocalFeedback.current
     val artwork = LocalArtwork.current
@@ -629,7 +624,6 @@ private fun GameTile(
             pc, app, hidden, running, image, actions, onHide, onArtwork,
             onSettings = { shell.navigate(Screen.GameSettings(pc, app)) },
             onMetadata = { onMetadata(pc, app) },
-            onEsDeShortcut = { esde.create(pc, app) },
         )
     }
     var focused by remember { mutableStateOf(false) }
