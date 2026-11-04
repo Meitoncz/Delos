@@ -27,6 +27,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -301,6 +303,9 @@ class GlideRing {
     var target by mutableStateOf<Rect?>(null)
         private set
 
+    /** Re-reads the focused element's bounds (its layer may have moved without a layout, like an entrance rising). */
+    internal fun refresh() = update()
+
     internal fun attach(coordinates: LayoutCoordinates) {
         host = coordinates
         update()
@@ -354,21 +359,31 @@ fun GlideRingHost(ring: FocusRing, corner: Float, focusScale: Float, modifier: M
     val box = remember { Animatable(Rect.Zero, Rect.VectorConverter) }
     val alpha = remember { Animatable(0f) }
     val target = state.target
-    LaunchedEffect(target) {
-        if (target == null) {
+    // While the screen is still entering (its elements rise and fade in) the ring follows the element exactly instead of
+    // gliding to where it was measured: the first frames after the ring appears
+    var followUntil by remember { mutableLongStateOf(0L) }
+    LaunchedEffect(target != null) {
+        if (target == null) return@LaunchedEffect
+        val until = System.nanoTime() + Motion.RING_FOLLOW_MS * 1_000_000L
+        followUntil = until
+        while (System.nanoTime() < until) {
+            withFrameNanos { }
+            state.refresh()
+        }
+    }
+    LaunchedEffect(target != null) {
+        if (target != null) alpha.animateTo(1f, tween(120, easing = Motion.Ease))
+        else {
             // A moment of grace: focus moving from one element to the next passes through "nothing focused" for a frame
             delay(70)
             alpha.animateTo(0f, tween(Motion.FADE, easing = Motion.Ease))
-            return@LaunchedEffect
         }
+    }
+    LaunchedEffect(target) {
+        if (target == null) return@LaunchedEffect
         val grown = target.grownBy(focusScale)
-        if (alpha.value == 0f || reduced) {
-            box.snapTo(grown)
-            alpha.animateTo(1f, tween(120, easing = Motion.Ease))
-        } else coroutineScope {
-            launch { box.animateTo(grown, tween(Motion.RING, easing = Motion.Glide)) }
-            launch { alpha.animateTo(1f, tween(Motion.FADE, easing = Motion.Ease)) }
-        }
+        if (alpha.value == 0f || reduced || System.nanoTime() < followUntil) box.snapTo(grown)
+        else box.animateTo(grown, tween(Motion.RING, easing = Motion.Glide))
     }
     CompositionLocalProvider(LocalGlideRing provides state) {
         Box(

@@ -136,10 +136,13 @@ fun SettingRow(
         adjust(direction * if (value is RowValue.Slider) sliderAcceleration(value, repeatCount) else 1)
     }
     val shape = RoundedCornerShape(24.px)
+    // The entrance is the content's (icon, label, value), not the row's: the focus ring and the glass of the row stay put
+    // and fully visible from the first frame (the glass is a blur that would not fade with the row)
+    val stagger = LocalEntranceStagger.current
+    val entrance = remember { stagger.take() }
     Row(
         modifier
             .fillMaxWidth()
-            .staggerEntrance()
             .onPreviewKeyEvent { event ->
                 val dir = when (event.key) {
                     Key.DirectionLeft -> -1
@@ -180,11 +183,11 @@ fun SettingRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(22.px),
     ) {
-        Box(Modifier.width(if (compact) 44.px else 52.px), contentAlignment = Alignment.CenterStart) {
+        Box(Modifier.width(if (compact) 44.px else 52.px).staggerEntrance(entrance), contentAlignment = Alignment.CenterStart) {
             // The palette's accent: full on the focused row, softer on the others
             Symbol(icon, 34.tpx, if (focused) colors.accent2 else colors.accent2.copy(alpha = .62f), filled = focused)
         }
-        Column(Modifier.weight(1f)) {
+        Column(Modifier.weight(1f).staggerEntrance(entrance)) {
             BasicText(label, style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx))
             if (description != null) {
                 BasicText(
@@ -194,7 +197,7 @@ fun SettingRow(
                 )
             }
         }
-        RowValueView(value, focused, choice)
+        Box(Modifier.staggerEntrance(entrance)) { RowValueView(value, focused, choice) }
     }
 }
 

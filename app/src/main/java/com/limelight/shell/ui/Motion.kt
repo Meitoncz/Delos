@@ -59,6 +59,8 @@ object Motion {
 
     /** The focus ring gliding to the next element. */
     const val RING = 560
+    /** For this long after a gliding ring first appears it follows its element exactly (the screen is still entering). */
+    const val RING_FOLLOW_MS = 900
 
     /** A popover or menu growing out of its anchor, and shrinking back into it. */
     const val POP_IN = 560
