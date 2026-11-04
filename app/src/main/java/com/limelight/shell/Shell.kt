@@ -8,6 +8,7 @@ import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.graphicsLayer
 import com.limelight.shell.settings.BackgroundKind
 import androidx.compose.animation.fadeIn
@@ -15,6 +16,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Arrangement
@@ -26,6 +28,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -160,8 +163,22 @@ fun Shell(
     val scope = rememberCoroutineScope()
     // The connection line the launch screen tells under the title (null: the greeting)
     val launchLine = remember { mutableStateOf<String?>(null) }
-    var launchVisibility by remember { mutableStateOf(LaunchVisibilityState()) }
+    // Set when the launch overlay was cleared as the stream window took over; the next resume does the return work
+    val returningFromStream = remember { mutableStateOf(false) }
+    // Stays set until the next launch: the overlay it cleared leaves without a fade (a fade would run after the return)
+    val launchExitInstant = remember { mutableStateOf(false) }
     val activity = LocalActivity.current
+    // What the system shows while this window comes back to the front is NOT drawn by us: it is a snapshot starting window. Recorded on
+    // the Odin (the SurfaceFlinger layer list showed "SnapshotStartingWindow" for this task during the flash): it held the last frame
+    // from before the stream, the launch tunnel. The window no longer lets the system snapshot it (ShellActivity), and the system then
+    // shows a plain starting window in the task's background color: the palette's own, so it blends into the exit scene.
+    val taskBackground = colors.bg.toArgb()
+    LaunchedEffect(taskBackground) {
+        // Android 13+ (the same versions that can switch the snapshot off, see ShellActivity)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            activity?.setTaskDescription(android.app.ActivityManager.TaskDescription.Builder().setBackgroundColor(taskBackground).build())
+        }
+    }
     val actions = remember(launcher) { ShellGameActions(shell, launcher, feedback, scope) }
     val reducedMotion by rememberUpdatedState(appearance.reducedMotion)
     val devices = remember { ShellDeviceActions(shell, tracker, repo, setup, startupStore, feedback, scope) { reducedMotion } }
@@ -271,9 +288,11 @@ fun Shell(
     // The stream window inherits the last drawn tunnel progress, scene origin and game identity.
     LaunchedEffect(shell.launch?.id) {
         val launch = shell.launch ?: return@LaunchedEffect
-        launchVisibility = launchVisibility.newLaunch()
+        launchExitInstant.value = false
         LaunchHandoff.background = launch.background
         LaunchHandoff.progress = 0f
+        LaunchHandoff.travel = 0f
+        LaunchHandoff.speedProgress = 0f
         // The first witty connection line is told here already; the stream window goes on with the next ones
         StreamLoader.resetLines()
         launchLine.value = null
@@ -292,20 +311,39 @@ fun Shell(
         }
         activity?.startActivity(launch.intent, options)
     }
-    // Once Game fully covers this window, remove the launch subtree rather than replaying its fade
-    // when Compose resumes. Keep return refresh/focus work separate from the cleared launch request.
-    LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
-        val handedOver = shell.launch != null && shell.diving
-        launchVisibility = launchVisibility.stopped(shell.launch != null, shell.diving)
-        if (handedOver) {
-            shell.launch = null
-            shell.diving = false
-        }
-    }
     // Back from the stream: the overlay goes away, the focus stays on the game, the PC's state is refreshed.
     // Left through the stream menu, the portal's burst that began over the stream ends here.
+    // The stream window fully covers this one: the launch overlay (and its tunnel) goes away now, not at the next resume,
+    // where it would flash for a few frames when the stream is left. The resume work is remembered for that moment.
+    // The system keeps a snapshot of this window from the moment it stops and shows it while the window comes back to the
+    // front (recorded on the Odin: the tunnel flashed for 0.3 s on leaving a stream, and the log proved the overlay itself was
+    // already gone: it was the snapshot). The snapshot is taken at stop, about 0.45 s after the pause, so the overlay is swapped
+    // for the opaque background of the exit scene early enough for a frame of it to be drawn before that.
+    fun handOverToStream() {
+        if (shell.launch != null && shell.diving) {
+            shell.exitCover = true
+            shell.exitLights = false
+            shell.launch = null
+            shell.diving = false
+            returningFromStream.value = true
+            launchExitInstant.value = true
+        }
+    }
+    LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) {
+        if (shell.launch != null && shell.diving) scope.launch {
+            delay(HAND_OVER_DELAY_MS)
+            handOverToStream()
+        }
+    }
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { handOverToStream() }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-        StreamExit.take()?.let { exit ->
+        val arrival = StreamExit.take()
+        // Not coming back through the exit portal (a cancelled or failed launch): the cover of the hand-over goes away
+        if (arrival == null && shell.exitCover) {
+            shell.exitCover = false
+            shell.exitLights = false
+        }
+        arrival?.let { exit ->
             scope.launch {
                 // Quit game: the portal waits, with its text and pulses, until the PC has really quit the game (at most 25 s),
                 // and only then bursts into the dashboard. Disconnect bursts at once.
@@ -313,6 +351,8 @@ fun Shell(
                 // The chosen animated background fades in over the dashboard first (the dashboard's own background still
                 // settles after the return), and only then does the portal burst into it
                 shell.exitCover = true
+                // The flat background first (what the system window and the end of the stream window's scene showed), then the lights
+                shell.exitLights = true
                 shell.portalBurst = false
                 shell.portal = Portal(-1, if (waitForQuit) Symbols.POWER_SETTINGS_NEW else Symbols.HOME, exit.label, exit.sub, cancellable = false, arriving = true)
                 delay(if (waitForQuit) 400 else 600)
@@ -326,11 +366,12 @@ fun Shell(
                 // The loader just ends: the background and the portal fade away together into the dashboard, no second scene
                 feedback.play(Cue.SELECT)
                 shell.exitCover = false
+                shell.exitLights = false
                 shell.portal = null
             }
         }
-        if (launchVisibility.needsResumeCleanup(shell.launch != null, shell.diving)) {
-            launchVisibility = launchVisibility.resumed(shell.launch != null, shell.diving)
+        if (returningFromStream.value || (shell.launch != null && shell.diving)) {
+            returningFromStream.value = false
             shell.launch = null
             shell.diving = false
             repo.refresh()
@@ -629,9 +670,13 @@ fun Shell(
 
                 // Fully there from the first frame: the stream window's portal already ended on this very background
                 val cover by animateFloatAsState(if (shell.exitCover) 1f else 0f, if (shell.exitCover) snap() else tween(350, easing = EaseOut), label = "exitCover")
+                val lights by animateFloatAsState(if (shell.exitLights) 1f else 0f, tween(if (shell.exitLights) 400 else 350, easing = EaseOut), label = "exitLights")
                 if (cover > 0f) {
-                    Box(Modifier.fillMaxSize().graphicsLayer { alpha = cover }) {
-                        Backdrop(appearance, colors, hero = if (appearance.background == BackgroundKind.STILL) shell.hero else null)
+                    // Opaque flat background at once (it hides the dashboard and is the color the system window showed), the lights fade in over it
+                    Box(Modifier.fillMaxSize().graphicsLayer { alpha = cover }.background(colors.bg)) {
+                        Box(Modifier.fillMaxSize().graphicsLayer { alpha = lights }) {
+                            Backdrop(appearance, colors, hero = if (appearance.background == BackgroundKind.STILL) shell.hero else null)
+                        }
                     }
                 }
                 // The portal of a stream exit sits on the opaque cover: it must not blur the dashboard behind (that was the third scene)
@@ -659,16 +704,16 @@ fun Shell(
             }
             val launch = shell.launch
             val launchLogo = launch?.let { rememberArtwork(artwork, it.pc, it.app, ArtKind.LOGO).value }
-            val launchParameters = remember(launch?.id) {
-                launch?.let { item -> activity?.let { StreamLoader.parametersFor(it, item.pc.uuid, item.app.id) } }.orEmpty()
+            // Read off the main thread: profile and per-game settings; the card gets them when they are ready
+            val launchParameters by produceState("", launch?.id) {
+                value = launch?.let { item -> activity?.let { withContext(Dispatchers.IO) { StreamLoader.parametersFor(it, item.pc.uuid, item.app.id) } } }.orEmpty()
             }
-            if (!launchVisibility.suppressLaunchOverlay) {
-                LaunchOverlay(
-                    launch?.let { LaunchCard(it.id, it.app.name, launchLine.value ?: StreamLoader.greeting(it.pc.name),
-                        appArt(it.pc, it.app, it.image), it.background, launchLogo, launchParameters) },
-                    appearance.reducedMotion,
-                )
-            }
+            LaunchOverlay(
+                launch?.let { LaunchCard(it.id, it.app.name, launchLine.value ?: StreamLoader.greeting(it.pc.name),
+                    appArt(it.pc, it.app, it.image), it.background, launchLogo, launchParameters) },
+                appearance.reducedMotion,
+                instantExit = launchExitInstant.value,
+            )
             ToastHost(shell.toast, onHidden = { shell.hideToast(it) }, onAction = { shell.runToastAction() })
         }
     }
@@ -760,3 +805,6 @@ private fun hints(shell: ShellState, adjustable: Boolean, filterHint: String?): 
         }
     }
 }
+
+/** How long after the stream window took over the launch overlay is swapped for the exit background (before the system snapshots the stopped window). */
+private const val HAND_OVER_DELAY_MS = 200L

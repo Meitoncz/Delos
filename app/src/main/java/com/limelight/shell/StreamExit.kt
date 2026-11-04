@@ -1,5 +1,7 @@
 package com.limelight.shell
 
+import kotlinx.coroutines.delay
+import androidx.compose.foundation.background
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
@@ -47,6 +49,10 @@ import androidx.core.view.WindowInsetsControllerCompat
  * the stream ends behind it, and the new UI finishes the burst with the focus still on the game.
  */
 object StreamExit {
+    /** When (after the portal appears) it starts to fade into the flat background, and how long that takes; the new UI starts at 1500 ms. */
+    private const val FADE_OUT_AT_MS = 1150L
+    private const val FADE_OUT_MS = 330
+
     /** The burst the new UI finishes when it resumes; taken once. */
     class Arrival(val label: String, val sub: String)
 
@@ -86,6 +92,15 @@ object StreamExit {
                         LaunchedEffect(Unit) { cover.animateTo(1f, tween(if (appearance.reducedMotion) 250 else 700, easing = EaseOut)) }
                         Box(Modifier.fillMaxSize().graphicsLayer { alpha = cover.value }) { Backdrop(appearance, colors, hero = null) }
                         PortalOverlay(shown.value, false, null, appearance.reducedMotion, dim = false)
+                        // The last moments fade the whole scene into the flat background color: the system puts up its own window
+                        // while the new UI comes back (it shows exactly this color), and the new UI lights the scene up from it again.
+                        // A designed dip instead of a flash.
+                        val flat = remember { Animatable(0f) }
+                        LaunchedEffect(Unit) {
+                            delay(if (appearance.reducedMotion) 350L else FADE_OUT_AT_MS)
+                            flat.animateTo(1f, tween(if (appearance.reducedMotion) 200 else FADE_OUT_MS, easing = EaseOut))
+                        }
+                        Box(Modifier.fillMaxSize().graphicsLayer { alpha = flat.value }.background(colors.bg))
                     }
                 }
             }

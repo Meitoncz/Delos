@@ -9,6 +9,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
@@ -73,6 +74,10 @@ object LaunchHandoff {
     /** Last drawn connection progress; copied when the stream window takes ownership. */
     @Volatile var progress: Float = 0f
 
+    /** How far the tunnel has travelled and the smoothed progress that drives its speed; the stream window goes on from them. */
+    @Volatile var travel: Float = 0f
+    @Volatile var speedProgress: Float = 0f
+
     /** Shared scene origin in System.nanoTime units; never restart it during window handoff. */
     @Volatile var startedAt: Long = 0L
 
@@ -83,16 +88,17 @@ object LaunchHandoff {
     @Volatile var logo: ImageBitmap? = null
     @Volatile var streamParameters: String = ""
 
-    /** Both windows retain this same draw-thread integrator, including its previous frame timestamp. */
-    internal var motion = LaunchTravel()
-        private set
-    val travel: Float get() = motion.travel
-    val smoothedProgress: Float get() = motion.smoothedProgress
-
-    internal fun beginScene(start: Long): Long {
-        motion = LaunchTravel()
-        startedAt = start
-        return start
+    /** Forgets everything handed over (single use): the next launch must not inherit speed, phase, clock, line or art. */
+    fun reset() {
+        background = null
+        progress = 0f
+        travel = 0f
+        speedProgress = 0f
+        startedAt = 0L
+        line = null
+        lineAt = 0L
+        logo = null
+        streamParameters = ""
     }
 }
 
@@ -345,10 +351,12 @@ private fun DrawScope.drawCover(card: LaunchCard, center: Offset, radius: Float,
  * The shell half of launch: the stream window inherits its last drawn progress, logo and scene clock.
  */
 @Composable
-fun LaunchOverlay(card: LaunchCard?, reducedMotion: Boolean) {
+fun LaunchOverlay(card: LaunchCard?, reducedMotion: Boolean, instantExit: Boolean = false) {
     val last = remember { arrayOfNulls<LaunchCard>(1) }
     if (card != null) last[0] = card
-    AnimatedVisibility(card != null, enter = fadeIn(tween(300)), exit = fadeOut(tween(450))) {
+    // [instantExit]: cleared while the window is stopped behind the stream; a fade-out would only run when the window comes back
+    // (the frame clock stands still while it is stopped) and show the tunnel again for 450 ms
+    AnimatedVisibility(card != null, enter = fadeIn(tween(300)), exit = if (instantExit) ExitTransition.None else fadeOut(tween(450))) {
         val c = last[0] ?: return@AnimatedVisibility
         val progress = remember(c.id) { Animatable(0f) }
         LaunchedEffect(c.id) {
@@ -360,7 +368,7 @@ fun LaunchOverlay(card: LaunchCard?, reducedMotion: Boolean) {
             LaunchHandoff.logo = c.logo
             LaunchHandoff.streamParameters = c.streamParameters
         }
-        val start = remember(c.id) { LaunchHandoff.beginScene(System.nanoTime()) }
+        val start = remember(c.id) { System.nanoTime().also { LaunchHandoff.startedAt = it } }
         val clock = if (reducedMotion) null else rememberLaunchClock(start)
         val drawnProgress = remember(c.id) { { progress.value.also { LaunchHandoff.progress = it } } }
         // Holds the focus while a game starts, so nothing underneath reacts; only B (cancel) passes through

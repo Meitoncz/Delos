@@ -57,7 +57,6 @@ class StreamLoader private constructor(
     private val view: ComposeView,
     private val pcName: String,
     initialParameters: String,
-    val reducedMotion: Boolean,
 ) : ConnectionProgress {
     private val stages = LaunchStageQueue(LaunchHandoff.line, LaunchHandoff.lineAt, LINE_MS)
     private val changes = Channel<Unit>(Channel.CONFLATED)
@@ -91,11 +90,8 @@ class StreamLoader private constructor(
         if (removed) return
         removed = true
         changes.close()
-        activity.setLaunchArrivalProgress(-1f)
-        if (LaunchHandoff.startedAt == origin) {
-            LaunchHandoff.background = null
-            LaunchHandoff.logo = null
-        }
+        // One launch, one handoff: nothing of it may start the next launch (a shortcut launch has no shell overlay)
+        if (LaunchHandoff.startedAt == origin) LaunchHandoff.reset()
     }
 
     private fun remove() {
@@ -104,6 +100,9 @@ class StreamLoader private constructor(
     }
 
     companion object {
+        /** The longest the reveal waits for the first presented frame after the stream runs. */
+        private const val FRAME_WAIT_MS = 3000L
+
         const val LINE_MS = HyperspaceConfig.LINE_MS
         private val told = HashMap<String, Int>()
 
@@ -188,8 +187,8 @@ class StreamLoader private constructor(
                 GameArt("$pcUuid/$appId", hue, (hue + 35f) % 360f, Symbols.SPORTS_ESPORTS, cover),
                 LaunchHandoff.background, logo, info)
             val view = ComposeView(activity)
+            val loader = StreamLoader(activity, view, pcName, info)
             val appearance = AppearanceStore(activity) { ProfileStore.currentSettings(activity) }.appearance.value
-            val loader = StreamLoader(activity, view, pcName, info, appearance.reducedMotion)
             val colors = delosColors(appearance, systemAccentHue(activity))
             view.setContent {
                 CompositionLocalProvider(LocalDelosColors provides colors) {
@@ -217,7 +216,8 @@ class StreamLoader private constructor(
                     val now = System.nanoTime()
                     loader.stages.advance(now)
                     line = loader.stages.currentLine
-                    if (loader.streaming.value && loader.stages.isDrained(now)) {
+                    // The game opens as soon as it really runs: the lines queued behind the current one are simply not told
+                    if (loader.streaming.value) {
                         drained = true
                         break
                     }
@@ -230,31 +230,14 @@ class StreamLoader private constructor(
             val streaming = loader.streaming.value
             LaunchedEffect(streaming, drained) {
                 if (!streaming || !drained) return@LaunchedEffect
-                while (!loader.activity.isFinishing && !loader.activity.isLaunchFrameReady) delay(16)
+                // Bounded: a decoder that never reports a rendered frame must not leave the tunnel up for ever
+                withTimeoutOrNull(FRAME_WAIT_MS) {
+                    while (!loader.activity.isFinishing && !loader.activity.isLaunchFrameReady) delay(16)
+                }
                 if (loader.activity.isFinishing) return@LaunchedEffect
                 loader.parameters.value = loader.activity.launchStreamParameters
                 progress.animateTo(1f, tween(250, easing = EaseOut))
-                var effectAvailable = !reducedMotion
-                if (effectAvailable) {
-                    loader.activity.setLaunchArrivalProgress(0f)
-                    while (!loader.activity.isFinishing && !loader.activity.isLaunchArrivalReady &&
-                        loader.activity.launchArrivalError == null) delay(16)
-                    if (loader.activity.isFinishing) return@LaunchedEffect
-                    loader.activity.launchArrivalError?.let {
-                        loader.activity.reportLaunchArrivalError(it)
-                        effectAvailable = false
-                    }
-                }
-                opening.animateTo(1f, tween(if (reducedMotion) HyperspaceConfig.REDUCED_OPENING_MS else HyperspaceConfig.OPENING_MS,
-                    easing = LinearEasing)) {
-                    if (effectAvailable) loader.activity.setLaunchArrivalProgress(value)
-                }
-                if (effectAvailable) {
-                    loader.activity.setLaunchArrivalProgress(1f)
-                    while (!loader.activity.isFinishing && !loader.activity.isLaunchArrivalComplete &&
-                        loader.activity.launchArrivalError == null) delay(16)
-                    loader.activity.launchArrivalError?.let { loader.activity.reportLaunchArrivalError(it) }
-                }
+                opening.animateTo(1f, tween(if (reducedMotion) HyperspaceConfig.REDUCED_OPENING_MS else HyperspaceConfig.OPENING_MS, easing = LinearEasing))
                 loader.remove()
             }
             LaunchScene(card.copy(logo = logo, streamParameters = loader.parameters.value), line,
