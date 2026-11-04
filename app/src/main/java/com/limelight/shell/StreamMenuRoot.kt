@@ -40,6 +40,9 @@ import com.limelight.shell.ui.Figtree
 import com.limelight.shell.ui.InitialFocus
 import com.limelight.shell.ui.LocalDelosColors
 import com.limelight.shell.ui.LocalReducedMotion
+import com.limelight.shell.ui.EntranceStagger
+import com.limelight.shell.ui.LocalEntranceStagger
+import com.limelight.shell.ui.Motion
 import com.limelight.shell.ui.RowValue
 import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.px
@@ -130,11 +133,11 @@ internal fun StreamMenuRoot(
         if (start.animate) enterClock.animateTo(M.ENTER_TOTAL.toFloat(), tween(M.ENTER_TOTAL, easing = LinearEasing))
     }
     LaunchedEffect(closing) {
-        gradient.animateTo(if (closing) 0f else 1f, tween(if (closing) M.CLOSE else M.GRADIENT, easing = M.Ease))
+        gradient.animateTo(if (closing) 0f else 1f, tween(if (closing) M.CLOSE else Motion.GRADIENT, easing = Motion.Ease))
     }
     LaunchedEffect(popOpen) {
         coroutineScope {
-            launch { scrim.animateTo(if (popOpen) 1f else 0f, tween(M.SCRIM, easing = M.Ease)) }
+            launch { scrim.animateTo(if (popOpen) 1f else 0f, tween(Motion.SCRIM, easing = Motion.Ease)) }
             launch {
                 val target = if (popOpen) L.DOCK_SHIFT else 0f
                 if (reducedMotion) dockShift.snapTo(target) else dockShift.animateTo(target, tween(M.DOCK, easing = com.limelight.shell.ui.EaseOut))
@@ -257,8 +260,8 @@ internal fun StreamMenuRoot(
             popPresent = true
         } else {
             coroutineScope {
-                launch { popScale.animateTo(L.POPOVER_HIDDEN_SCALE, if (reducedMotion) tween(0) else tween(M.POP_OUT, easing = M.In)) }
-                launch { popAlpha.animateTo(0f, tween(M.POP_OUT, easing = M.Ease)) }
+                launch { popScale.animateTo(L.POPOVER_HIDDEN_SCALE, if (reducedMotion) tween(0) else tween(Motion.POP_OUT, easing = Motion.In)) }
+                launch { popAlpha.animateTo(0f, tween(Motion.POP_OUT, easing = Motion.Ease)) }
             }
             popPresent = false
             geoReady = false
@@ -279,8 +282,8 @@ internal fun StreamMenuRoot(
     LaunchedEffect(popOpen, geoReady) {
         if (popOpen && geoReady) {
             coroutineScope {
-                launch { if (reducedMotion) popScale.snapTo(1f) else popScale.animateTo(1f, tween(M.POP_IN, easing = EaseSpring)) }
-                launch { popAlpha.animateTo(1f, tween(M.CARD_FADE_IN, easing = M.Ease)) }
+                launch { if (reducedMotion) popScale.snapTo(1f) else popScale.animateTo(1f, tween(Motion.POP_IN, easing = EaseSpring)) }
+                launch { popAlpha.animateTo(1f, tween(Motion.CARD_FADE_IN, easing = Motion.Ease)) }
             }
         }
     }
@@ -340,8 +343,8 @@ internal fun StreamMenuRoot(
                         modifier = Modifier.align(Alignment.BottomStart).padding(bottom = L.POPOVER_BOTTOM.px),
                     ) {
                         key(session, contentPage) {
-                            val stagger = remember { RowStagger(enabled = navigated) }
-                            CompositionLocalProvider(LocalRowStagger provides stagger) {
+                            val stagger = remember { EntranceStagger(enabled = navigated) }
+                            CompositionLocalProvider(LocalEntranceStagger provides stagger) {
                                 PopoverPage(
                                     title = pageTitle(contentPage, supersamplingMode),
                                     help = helpText(helpKey),

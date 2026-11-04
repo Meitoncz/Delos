@@ -68,6 +68,8 @@ import com.limelight.shell.data.LocalGameMetadata
 import com.limelight.shell.data.MetadataFilters
 import com.limelight.shell.ui.Cue
 import com.limelight.shell.ui.EaseOut
+import com.limelight.shell.ui.dialogEnter
+import com.limelight.shell.ui.dialogExit
 import com.limelight.shell.ui.Figtree
 import com.limelight.shell.ui.FocusRing
 import com.limelight.shell.ui.InitialFocus
@@ -151,10 +153,8 @@ fun FilterModalLayer(visible: Boolean, ready: Library.Ready?, haze: HazeState, r
     var shown by remember { mutableStateOf(ready) }
     if (ready != null) shown = ready
     val open by rememberUpdatedState(visible)
-    val enter: EnterTransition = if (reducedMotion) fadeIn(tween(150)) else
-        fadeIn(tween(300)) + scaleIn(tween(450, easing = EaseOut), initialScale = .96f) + slideInVertically(tween(450, easing = EaseOut)) { it / 25 }
-    val exit: ExitTransition = if (reducedMotion) fadeOut(tween(150)) else
-        fadeOut(tween(300)) + scaleOut(tween(450, easing = EaseOut), targetScale = .96f) + slideOutVertically(tween(450, easing = EaseOut)) { it / 25 }
+    val enter: EnterTransition = dialogEnter(reducedMotion)
+    val exit: ExitTransition = dialogExit(reducedMotion)
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         AnimatedVisibility(visible, enter = enter, exit = exit) {
             val library = shown ?: return@AnimatedVisibility

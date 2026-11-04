@@ -141,7 +141,7 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
             TabPill(Symbols.MONITOR, "Display", tab == 1, Modifier.padding(horizontal = 5.px)) { changeTab(1) }
             ShoulderLabel("R1")
         }
-        CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
+        CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView, LocalEntranceStagger provides rememberEntranceStagger(tab to game)) {
             key(tab, game) {
                 LazyColumn(state = scroll,
                     modifier = Modifier.padding(start = SettingsLayout.TITLE_X.px, top = SettingsLayout.LIST_TOP.px, bottom = bottom.px)

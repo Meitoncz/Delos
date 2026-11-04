@@ -1,6 +1,6 @@
 package com.limelight.shell
 
-import androidx.compose.animation.core.LinearEasing
+import com.limelight.shell.ui.Motion
 import com.limelight.shell.settings.StreamMenuHelp
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
@@ -337,43 +337,26 @@ class StreamMenuLayoutTest {
     }
 
     @Test
-    fun anAnimationIsAtItsStartBeforeItsDelayAndAtItsEndAfterItsDuration() {
-        val m = StreamMenuMotion
-        assertEquals(0f, m.progress(0f, 100, 620, LinearEasing), 0f)
-        assertEquals(0f, m.progress(100f, 100, 620, LinearEasing), 0f)
-        assertEquals(.5f, m.progress(410f, 100, 620, LinearEasing), 1e-6f)
-        assertEquals(1f, m.progress(720f, 100, 620, LinearEasing), 0f)
-        assertEquals(1f, m.progress(5000f, 100, 620, LinearEasing), 0f)
-        assertEquals(.25f, m.linear(60f, 0, 240), 0f)
-    }
-
-    @Test
-    fun theSpringAndTheGlideOvershootAndEaseInDoesNot() {
-        val m = StreamMenuMotion
-        val spring = com.limelight.shell.ui.EaseSpring
-        assertTrue((1..99).any { spring.transform(it / 100f) > 1.02f })
-        assertTrue((1..99).any { m.Glide.transform(it / 100f) > 1.0f })
-        assertTrue((1..99).all { m.In.transform(it / 100f) <= it / 100f + 1e-4f })
-        assertEquals(1f, spring.transform(1f), 1e-4f)
-        assertEquals(0f, m.Glide.transform(0f), 1e-4f)
-    }
-
-    @Test
-    fun thePrototypeDurationsHold() {
-        val m = StreamMenuMotion
+    fun thePrototypeDurationsHoldAfterMovingToTheSharedMotion() {
+        val m = Motion
         assertEquals(620, m.ENTER)
         assertEquals(240, m.EXIT)
         assertEquals(420, m.FOCUS)
         assertEquals(560, m.RING)
-        assertEquals(640, m.DOCK)
+        assertEquals(640, StreamMenuMotion.DOCK)
         assertEquals(560, m.POP_IN)
         assertEquals(240, m.POP_OUT)
         assertEquals(46, m.STAGGER_ROW)
+        assertEquals(120, m.ROW_DELAY)
         assertEquals(420, m.ROW_IN)
+        assertEquals(18f, m.RISE, 0f)
         assertEquals(420, m.CAPTION)
         assertEquals(280, m.FADE)
         assertEquals(336, m.CARD_FADE_IN)
         assertEquals(190f, m.GEO_STIFFNESS, 0f)
         assertEquals(.8f, m.GEO_DAMPING, 0f)
+        assertEquals(c.POPOVER_HIDDEN_SCALE, m.POP_FROM_SCALE, 0f)
+        assertEquals(c.PRESS_SCALE, m.PRESS_SCALE, 0f)
+        assertEquals(c.FOCUS_SCALE, 1.12f, 0f)
     }
 }

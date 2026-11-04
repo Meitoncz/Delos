@@ -250,8 +250,8 @@ private fun NavButtonView(button: NavButton) {
         AnimatedVisibility(
             focused,
             modifier = Modifier.matchParentSize().wrapContentSize(Alignment.TopCenter, unbounded = true).offset(y = 84.px),
-            enter = fadeIn(tween(250)) + slideInVertically(tween(350, easing = EaseOut)) { -it / 4 },
-            exit = fadeOut(tween(250)) + slideOutVertically(tween(350, easing = EaseOut)) { -it / 4 },
+            enter = fadeIn(tween(Motion.FADE, easing = Motion.Ease)) + slideInVertically(tween(Motion.POP_IN, easing = EaseOut)) { -it / 4 },
+            exit = fadeOut(tween(Motion.EXIT, easing = Motion.Ease)) + slideOutVertically(tween(Motion.EXIT, easing = Motion.In)) { -it / 4 },
         ) {
             BasicText(
                 button.label,

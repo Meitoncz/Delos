@@ -27,10 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,14 +64,15 @@ import com.limelight.shell.ui.Glyph
 import com.limelight.shell.ui.GlyphButton
 import com.limelight.shell.ui.LocalDelosColors
 import com.limelight.shell.ui.LocalReducedMotion
+import com.limelight.shell.ui.Motion
+import com.limelight.shell.ui.animateFocusScale
+import com.limelight.shell.ui.rememberPressPulse
 import com.limelight.shell.ui.LocalStage
 import com.limelight.shell.ui.Symbol
 import com.limelight.shell.ui.Unbounded
 import com.limelight.shell.ui.focusEffects
 import com.limelight.shell.ui.px
 import com.limelight.shell.ui.tpx
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 /** Called with the help key of the popover row that gets the focus; the popover's help text shows its text. */
@@ -182,8 +180,8 @@ private fun DockHead(title: String, enter: () -> Float, exit: () -> Float, modif
                 layout(placeable.width, 0) { placeable.place(0, -(placeable.height + (L.HEAD_BOTTOM * k).roundToInt())) }
             }
             .graphicsLayer {
-                val p = M.progress(enter(), M.HEAD_DELAY, M.ENTER, EaseOut)
-                alpha = p.coerceIn(0f, 1f) * (1f - M.linear(exit(), 0, M.EXIT))
+                val p = Motion.progress(enter(), M.HEAD_DELAY, Motion.ENTER, EaseOut)
+                alpha = p.coerceIn(0f, 1f) * (1f - Motion.linear(exit(), 0, Motion.EXIT))
                 translationY = if (rm) 0f else 24f * (1f - p) * k
                 compositingStrategy = CompositingStrategy.ModulateAlpha
             },
@@ -234,16 +232,16 @@ private fun DockCaption(text: String, popOpen: Boolean, enter: () -> Float, exit
     LaunchedEffect(text) {
         if (first[0]) { first[0] = false; return@LaunchedEffect }
         change.snapTo(0f)
-        change.animateTo(1f, tween(M.CAPTION, easing = EaseOut))
+        change.animateTo(1f, tween(Motion.CAPTION, easing = EaseOut))
     }
-    val popAlpha by animateFloatAsState(if (popOpen) 0f else 1f, tween(M.FADE, easing = M.Ease), label = "captionPop")
+    val popAlpha by animateFloatAsState(if (popOpen) 0f else 1f, tween(Motion.FADE, easing = Motion.Ease), label = "captionPop")
     Box(
         modifier
             .size(L.CAPTION_WIDTH.px, captionHeight(ts).px)
             .graphicsLayer {
-                val p = M.progress(enter(), M.CAPTION_DELAY, M.ENTER, EaseOut)
+                val p = Motion.progress(enter(), M.CAPTION_DELAY, Motion.ENTER, EaseOut)
                 val c = change.value
-                alpha = p.coerceIn(0f, 1f) * (1f - M.linear(exit(), 0, M.EXIT)) * popAlpha * c.coerceIn(0f, 1f)
+                alpha = p.coerceIn(0f, 1f) * (1f - Motion.linear(exit(), 0, Motion.EXIT)) * popAlpha * c.coerceIn(0f, 1f)
                 translationY = if (rm) 0f else (20f * (1f - p) + 18f * (1f - c)) * k
                 renderEffect = if (rm || c >= 1f) null else BlurEffect(6f * (1f - c) * k, 6f * (1f - c) * k)
             },
@@ -274,16 +272,16 @@ private fun TileRing(target: BarItem, firstItem: BarItem, enter: () -> Float, ex
     val x = remember { Animatable(ringLeft(target)) }
     LaunchedEffect(target) {
         val goal = ringLeft(target)
-        if (rm) x.snapTo(goal) else x.animateTo(goal, tween(M.RING, easing = M.Glide))
+        if (rm) x.snapTo(goal) else x.animateTo(goal, tween(Motion.RING, easing = Motion.Glide))
     }
     val breathe = if (rm) null else rememberInfiniteTransition(label = "breathe").animateFloat(
         0f, 1f,
         infiniteRepeatable(
             keyframes {
-                durationMillis = M.BREATHE
-                0f at 0 using M.EaseInOut
-                1f at M.BREATHE / 2 using M.EaseInOut
-                0f at M.BREATHE
+                durationMillis = Motion.BREATHE
+                0f at 0 using Motion.EaseInOut
+                1f at Motion.BREATHE / 2 using Motion.EaseInOut
+                0f at Motion.BREATHE
             },
             RepeatMode.Restart,
         ),
@@ -300,9 +298,9 @@ private fun TileRing(target: BarItem, firstItem: BarItem, enter: () -> Float, ex
             Modifier
                 .requiredSize((L.RING + 2 * room).px)
                 .graphicsLayer {
-                    val p = M.progress(enter(), M.ringDelay(firstItem.ordinal), M.ENTER, EaseSpring)
-                    alpha = p.coerceIn(0f, 1f) * (1f - M.linear(exit(), 0, M.EXIT))
-                    val s = if (rm) 1f else M.lerp(.7f, 1f, p)
+                    val p = Motion.progress(enter(), M.ringDelay(firstItem.ordinal), Motion.ENTER, EaseSpring)
+                    alpha = p.coerceIn(0f, 1f) * (1f - Motion.linear(exit(), 0, Motion.EXIT))
+                    val s = if (rm) 1f else Motion.lerp(.7f, 1f, p)
                     scaleX = s
                     scaleY = s
                 }
@@ -312,7 +310,7 @@ private fun TileRing(target: BarItem, firstItem: BarItem, enter: () -> Float, ex
                     val box = Rect(m, m, m + L.RING * k, m + L.RING * k)
                     val corner = L.RING_RADIUS * k
                     // 0 0 44px 4px glow, breathing to 0 0 62px 8px (the spread is folded into the strength: a positive one would show the shape itself)
-                    drawBoxShadow(box, corner, 0f, M.lerp(44f, 62f, b) * k, 0f, colors.glow.copy(alpha = colors.glow.alpha * M.lerp(1.15f, 1.3f, b)))
+                    drawBoxShadow(box, corner, 0f, Motion.lerp(44f, 62f, b) * k, 0f, colors.glow.copy(alpha = colors.glow.alpha * Motion.lerp(1.15f, 1.3f, b)))
                     val stroke = L.RING_WIDTH * k
                     drawRoundRect(
                         colors.accent,
@@ -323,7 +321,7 @@ private fun TileRing(target: BarItem, firstItem: BarItem, enter: () -> Float, ex
                     )
                     // inset 0 0 30px -4px glow-soft, breathing to 36px -2px
                     val inner = Rect(box.left + stroke, box.top + stroke, box.right - stroke, box.bottom - stroke)
-                    drawInsetShadow(inner, corner - stroke, M.lerp(30f, 36f, b) * k, M.lerp(-4f, -2f, b) * k, colors.accent.copy(alpha = .22f))
+                    drawInsetShadow(inner, corner - stroke, Motion.lerp(30f, 36f, b) * k, Motion.lerp(-4f, -2f, b) * k, colors.accent.copy(alpha = .22f))
                 },
         )
     }
@@ -351,25 +349,21 @@ private fun TileCell(
     val colors = LocalDelosColors.current
     val rm = LocalReducedMotion.current
     val k = stageScale()
-    val scope = rememberCoroutineScope()
     val index = spec.item.ordinal
     val on = spec.on == true
     val dim = popOpen && !focused
-    var pressed by remember { mutableStateOf(false) }
+    val press = rememberPressPulse()
 
-    val scale by animateFloatAsState(
-        if (pressed) L.PRESS_SCALE else if (focused) L.FOCUS_SCALE else 1f,
-        if (rm) snap() else tween(if (pressed) M.PRESS else M.FOCUS, easing = EaseSpring), label = "tileScale",
-    )
-    val iconScale by animateFloatAsState(if (focused) L.ICON_FOCUS_SCALE else 1f, if (rm) snap() else tween(M.FOCUS, easing = EaseSpring), label = "iconScale")
-    val labelShift by animateFloatAsState(if (focused) L.LABEL_FOCUS_SHIFT else 0f, if (rm) snap() else tween(M.FOCUS, easing = EaseSpring), label = "labelShift")
-    val focusFill by animateFloatAsState(if (focused) 1f else 0f, tween(M.FADE, easing = M.Ease), label = "focusFill")
-    val onFill by animateFloatAsState(if (on) 1f else 0f, tween(M.FADE, easing = M.Ease), label = "onFill")
-    val lift by animateFloatAsState(if (focused) 1f else 0f, tween(M.FOCUS, easing = EaseOut), label = "tileLift")
-    val tileAlpha by animateFloatAsState(if (dim) .46f else 1f, tween(M.FADE, easing = M.Ease), label = "tileAlpha")
-    val labelAlpha by animateFloatAsState(if (dim) .4f else 1f, tween(M.FADE, easing = M.Ease), label = "labelAlpha")
-    val iconColor by animateColorAsState(if (on) colors.accent else colors.text, tween(M.FADE, easing = M.Ease), label = "iconColor")
-    val labelColor by animateColorAsState(if (focused) colors.accent else colors.text2, tween(M.FADE, easing = M.Ease), label = "labelColor")
+    val scale by animateFocusScale(focused, press.pressed, L.FOCUS_SCALE, L.PRESS_SCALE, "tileScale")
+    val iconScale by animateFloatAsState(if (focused) L.ICON_FOCUS_SCALE else 1f, if (rm) snap() else tween(Motion.FOCUS, easing = EaseSpring), label = "iconScale")
+    val labelShift by animateFloatAsState(if (focused) L.LABEL_FOCUS_SHIFT else 0f, if (rm) snap() else tween(Motion.FOCUS, easing = EaseSpring), label = "labelShift")
+    val focusFill by animateFloatAsState(if (focused) 1f else 0f, tween(Motion.FADE, easing = Motion.Ease), label = "focusFill")
+    val onFill by animateFloatAsState(if (on) 1f else 0f, tween(Motion.FADE, easing = Motion.Ease), label = "onFill")
+    val lift by animateFloatAsState(if (focused) 1f else 0f, tween(Motion.FOCUS, easing = EaseOut), label = "tileLift")
+    val tileAlpha by animateFloatAsState(if (dim) .46f else 1f, tween(Motion.FADE, easing = Motion.Ease), label = "tileAlpha")
+    val labelAlpha by animateFloatAsState(if (dim) .4f else 1f, tween(Motion.FADE, easing = Motion.Ease), label = "labelAlpha")
+    val iconColor by animateColorAsState(if (on) colors.accent else colors.text, tween(Motion.FADE, easing = Motion.Ease), label = "iconColor")
+    val labelColor by animateColorAsState(if (focused) colors.accent else colors.text2, tween(Motion.FADE, easing = Motion.Ease), label = "labelColor")
 
     Box(
         modifier
@@ -379,14 +373,10 @@ private fun TileCell(
             .focusRequester(requester)
             .focusEffects(
                 {
-                    scope.launch {
-                        pressed = true
-                        delay(M.PRESS_HOLD)
-                        pressed = false
-                    }
+                    press.fire()
                     if (!popOpen || spec.opensPage) spec.onClick()
                 },
-                corner = L.TILE_RADIUS, focusScale = 1f, ring = null, glow = null,
+                corner = L.TILE_RADIUS, focusScale = 1f, ring = null, glow = null, pressScale = 1f,
                 onFocusChange = { onFocused(spec.item, it) },
             ),
         contentAlignment = Alignment.Center,
@@ -395,14 +385,14 @@ private fun TileCell(
             Modifier
                 .requiredSize((L.TILE + 2 * SHADOW_ROOM).px)
                 .graphicsLayer {
-                    val p = M.progress(enter(), M.tileDelay(index), M.ENTER, EaseSpring)
-                    val q = M.progress(exit(), M.exitDelay(index), M.EXIT, M.In)
+                    val p = Motion.progress(enter(), M.tileDelay(index), Motion.ENTER, EaseSpring)
+                    val q = Motion.progress(exit(), M.exitDelay(index), Motion.EXIT, Motion.In)
                     var s = scale
                     var dy = 0f
                     if (!rm) {
-                        s = M.lerp(.8f, scale, p)
+                        s = Motion.lerp(.8f, scale, p)
                         dy = 90f * (1f - p)
-                        s = M.lerp(s, .92f, q)
+                        s = Motion.lerp(s, .92f, q)
                         dy += 46f * q
                     }
                     scaleX = s
@@ -434,7 +424,7 @@ private fun TileCell(
                         scaleX = iconScale
                         scaleY = iconScale
                     },
-                    filled = focused, fadeMillis = M.FADE,
+                    filled = focused, fadeMillis = Motion.FADE,
                 )
                 if (spec.on != null) {
                     TilePill(spec.state ?: if (on) "On" else "Off", on, Modifier.align(Alignment.TopEnd).offset((-L.PILL_RIGHT).px, L.PILL_TOP.px))
@@ -453,8 +443,8 @@ private fun TileCell(
                 .align(Alignment.TopCenter)
                 .wrapContentWidth(unbounded = true)
                 .graphicsLayer {
-                    val e = M.progress(enter(), M.labelDelay(index), M.LABEL_DURATION, M.EaseOutCss)
-                    alpha = e * (1f - M.linear(exit(), 0, M.EXIT)) * labelAlpha
+                    val e = Motion.progress(enter(), M.labelDelay(index), M.LABEL_DURATION, Motion.EaseOutCss)
+                    alpha = e * (1f - Motion.linear(exit(), 0, Motion.EXIT)) * labelAlpha
                     translationY = (L.TILE + L.LABEL_GAP + labelShift) * k
                     compositingStrategy = CompositingStrategy.ModulateAlpha
                 },
@@ -475,7 +465,7 @@ private fun TilePill(text: String, on: Boolean, modifier: Modifier) {
         if (first[0]) { first[0] = false; return@LaunchedEffect }
         if (rm) return@LaunchedEffect
         pop.snapTo(.6f)
-        pop.animateTo(1f, tween(M.PILL_POP, easing = EaseSpring))
+        pop.animateTo(1f, tween(Motion.PILL_POP, easing = EaseSpring))
     }
     // The pill is as wide as its text (it may be wider than the tile), its right edge 12 px outside the tile's
     Box(modifier.wrapContentWidth(Alignment.End, unbounded = true)) {

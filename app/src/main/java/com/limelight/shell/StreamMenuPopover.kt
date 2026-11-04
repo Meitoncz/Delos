@@ -82,6 +82,14 @@ import com.limelight.shell.ui.Figtree
 import com.limelight.shell.ui.LocalDelosColors
 import com.limelight.shell.ui.LocalFeedback
 import com.limelight.shell.ui.LocalReducedMotion
+import com.limelight.shell.ui.ChoiceMotion
+import com.limelight.shell.ui.Motion
+import com.limelight.shell.ui.MotionSwitch
+import com.limelight.shell.ui.animateKnobScale
+import com.limelight.shell.ui.chevronBump
+import com.limelight.shell.ui.rememberChoiceMotion
+import com.limelight.shell.ui.staggerEntrance
+import com.limelight.shell.ui.valueSlide
 import com.limelight.shell.ui.LocalStage
 import com.limelight.shell.ui.MarginBringIntoView
 import com.limelight.shell.ui.RowValue
@@ -114,7 +122,7 @@ internal class PopoverGeometry(initial: PopoverPlacement) {
     val w = Animatable(initial.width)
     val cx = Animatable(initial.caretX)
     val h = Animatable(0f)
-    private val follow = spring<Float>(dampingRatio = M.GEO_DAMPING, stiffness = M.GEO_STIFFNESS, visibilityThreshold = .15f)
+    private val follow = spring<Float>(dampingRatio = Motion.GEO_DAMPING, stiffness = Motion.GEO_STIFFNESS, visibilityThreshold = .15f)
 
     suspend fun place(placement: PopoverPlacement, snap: Boolean) {
         if (snap) {
@@ -251,7 +259,7 @@ internal fun ColumnScope.PopoverPage(
     val ts = stage.textScale
     val bringIntoView = remember(k) { MarginBringIntoView(before = 48f * k, after = 48f * k) }
     val scroll = rememberScrollState()
-    val leave by animateFloatAsState(if (leaving) 1f else 0f, tween(M.MORPH_ROWS_OUT, easing = M.EaseIn), label = "rowsLeave")
+    val leave by animateFloatAsState(if (leaving) 1f else 0f, tween(M.MORPH_ROWS_OUT, easing = Motion.EaseIn), label = "rowsLeave")
 
     Row(
         Modifier.fillMaxWidth().height(L.POPOVER_HEAD_HEIGHT.px),
@@ -273,8 +281,8 @@ internal fun ColumnScope.PopoverPage(
     }
     Spacer(Modifier.height(L.POPOVER_GAP_AFTER_HEAD.px))
     // A list at its top or bottom has nothing beyond that edge: no fade there, so the first or last row is never cut
-    val topFade by animateFloatAsState(if (scroll.value > 0) 1f else 0f, tween(M.FADE, easing = M.Ease), label = "fadeTop")
-    val bottomFade by animateFloatAsState(if (scroll.value < scroll.maxValue) 1f else 0f, tween(M.FADE, easing = M.Ease), label = "fadeBottom")
+    val topFade by animateFloatAsState(if (scroll.value > 0) 1f else 0f, tween(Motion.FADE, easing = Motion.Ease), label = "fadeTop")
+    val bottomFade by animateFloatAsState(if (scroll.value < scroll.maxValue) 1f else 0f, tween(Motion.FADE, easing = Motion.Ease), label = "fadeBottom")
     CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
         Box(
             Modifier
@@ -341,12 +349,12 @@ private fun BackButton(onBack: () -> Unit) {
     val colors = LocalDelosColors.current
     val k = stageScale()
     var focused by remember { mutableStateOf(false) }
-    val fill by animateColorAsState(Color.White.copy(alpha = if (focused) .20f else .10f), tween(M.FADE, easing = M.Ease), label = "backFill")
-    val ring by animateFloatAsState(if (focused) 1f else 0f, tween(M.FADE, easing = M.Ease), label = "backRing")
+    val fill by animateColorAsState(Color.White.copy(alpha = if (focused) .20f else .10f), tween(Motion.FADE, easing = Motion.Ease), label = "backFill")
+    val ring by animateFloatAsState(if (focused) 1f else 0f, tween(Motion.FADE, easing = Motion.Ease), label = "backRing")
     Box(
         Modifier
             .size(L.POPOVER_HEAD_HEIGHT.px)
-            .focusEffects(onBack, corner = 999f, focusScale = 1.06f, ring = null, glow = null, clickCue = Cue.BACK, onFocusChange = { focused = it })
+            .focusEffects(onBack, corner = 999f, focusScale = 1.06f, ring = null, glow = null, pressScale = 1f, clickCue = Cue.BACK, onFocusChange = { focused = it })
             .drawBehind {
                 drawCircle(fill)
                 if (ring > 0f) {
@@ -357,38 +365,6 @@ private fun BackButton(onBack: () -> Unit) {
         contentAlignment = Alignment.Center,
     ) {
         Symbol(Symbols.CHEVRON_LEFT, 36.fsp, colors.accent2)
-    }
-}
-
-/** Counts the rows of one page as they are composed, so each one knows its place in the staggered entrance. */
-internal class RowStagger(val enabled: Boolean) {
-    private var next = 0
-    fun take(): Int = next++
-}
-
-internal val LocalRowStagger = staticCompositionLocalOf { RowStagger(enabled = false) }
-
-/**
- * The rows of a page rise 18 px and fade in one after the other, 46 ms apart, 420 ms each, from 120 ms after the page
- * is composed. With reduced motion they only fade; without [RowStagger.enabled] (a menu that is already open) they are
- * simply there.
- */
-@Composable
-internal fun Modifier.rowEntrance(): Modifier {
-    val stagger = LocalRowStagger.current
-    val reducedMotion = LocalReducedMotion.current
-    val index = remember { stagger.take() }
-    val appear = remember { Animatable(if (stagger.enabled) 0f else 1f) }
-    val rise = 18f * stageScale()
-    LaunchedEffect(Unit) {
-        if (stagger.enabled) {
-            delay(120L + index * M.STAGGER_ROW)
-            appear.animateTo(1f, tween(M.ROW_IN, easing = EaseOut))
-        }
-    }
-    return graphicsLayer {
-        alpha = appear.value
-        translationY = if (reducedMotion) 0f else (1f - appear.value) * rise
     }
 }
 
@@ -415,13 +391,10 @@ internal fun MenuRow(
     val show = LocalStreamHelp.current
     val k = stageScale()
     var focused by remember { mutableStateOf(false) }
-    val bump = remember { Animatable(0f) }
-    var bumpDirection by remember { mutableIntStateOf(0) }
-    var bumpCount by remember { mutableIntStateOf(0) }
+    val choice = rememberChoiceMotion()
     val adjust: ((Int) -> Unit)? = when (value) {
         is RowValue.Choice -> { dir ->
-            bumpDirection = dir
-            bumpCount++
+            choice.step(dir)
             value.onStep(dir)
         }
         // Steps left or right ([dir] may be several while a key is held), landing on the slider's grid
@@ -444,19 +417,13 @@ internal fun MenuRow(
         feedback.play(Cue.MOVE)
         adjust(direction * if (value is RowValue.Slider) com.limelight.shell.ui.sliderAcceleration(value, repeatCount) else 1)
     }
-    LaunchedEffect(bumpCount) {
-        if (bumpCount == 0 || rm) return@LaunchedEffect
-        bump.snapTo(0f)
-        bump.animateTo(1f, tween((M.CHOICE_BUMP * .4f).toInt(), easing = EaseSpring))
-        bump.animateTo(0f, tween((M.CHOICE_BUMP * .6f).toInt(), easing = EaseSpring))
-    }
-    val ring by animateFloatAsState(if (focused) 1f else 0f, tween(M.FOCUS, easing = EaseOut), label = "rowRing")
-    val fill by animateFloatAsState(if (focused) 1f else 0f, tween(M.FADE, easing = M.Ease), label = "rowFill")
-    val iconColor by animateColorAsState(if (focused) colors.accent2 else colors.accent2.copy(alpha = .62f), tween(M.FADE, easing = M.Ease), label = "rowIcon")
+    val ring by animateFloatAsState(if (focused) 1f else 0f, tween(Motion.FOCUS, easing = EaseOut), label = "rowRing")
+    val fill by animateFloatAsState(if (focused) 1f else 0f, tween(Motion.FADE, easing = Motion.Ease), label = "rowFill")
+    val iconColor by animateColorAsState(if (focused) colors.accent2 else colors.accent2.copy(alpha = .62f), tween(Motion.FADE, easing = Motion.Ease), label = "rowIcon")
     Row(
         modifier
             .fillMaxWidth()
-            .rowEntrance()
+            .staggerEntrance()
             .onPreviewKeyEvent { event ->
                 val dir = when (event.key) {
                     Key.DirectionLeft -> -1
@@ -472,7 +439,7 @@ internal fun MenuRow(
             }
             .focusEffects(
                 onClick = { if (enabled) activate() else feedback.play(Cue.ERROR) },
-                corner = L.ROW_RADIUS, focusScale = 1f, ring = null, glow = null,
+                corner = L.ROW_RADIUS, focusScale = 1f, ring = null, glow = null, pressScale = 1f,
                 clickCue = if (enabled && value !is RowValue.Info) (if (value is RowValue.Action) Cue.OPEN else Cue.SELECT) else null,
                 adjustable = adjust != null && enabled,
                 controllerAdjust = controllerAdjust,
@@ -502,7 +469,7 @@ internal fun MenuRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.width(L.ROW_ICON_COLUMN.px), contentAlignment = Alignment.Center) {
-            Symbol(icon, L.ROW_ICON.fsp, iconColor, filled = focused, fadeMillis = M.FADE)
+            Symbol(icon, L.ROW_ICON.fsp, iconColor, filled = focused, fadeMillis = Motion.FADE)
         }
         Spacer(Modifier.width(L.ROW_COLUMN_GAP.px))
         MarqueeText(
@@ -511,52 +478,34 @@ internal fun MenuRow(
             modifier = Modifier.weight(1f),
         )
         Spacer(Modifier.width(L.ROW_COLUMN_GAP.px))
-        RowValueView(value, focused, confirmation, bump, bumpDirection, bumpCount, ts)
+        RowValueView(value, focused, confirmation, choice, ts)
     }
 }
 
-/** The value side of a row. [bump] is the chevron nudge of the last choice step in [bumpDirection]; [bumpCount] restarts the slide of the new value. */
+/** The value side of a row. [choice] is what the last step of a choice does: the chevron nudge and the slide of the new value. */
 @Composable
-private fun RowValueView(value: RowValue, focused: Boolean, confirmation: String?, bump: Animatable<Float, *>, bumpDirection: Int, bumpCount: Int, ts: Float) {
+private fun RowValueView(value: RowValue, focused: Boolean, confirmation: String?, choice: ChoiceMotion, ts: Float) {
     val colors = LocalDelosColors.current
-    val rm = LocalReducedMotion.current
-    val k = stageScale()
     val text = TextStyle(color = colors.text2, fontFamily = Figtree, fontWeight = FontWeight.Medium, fontSize = L.ROW_SIZE.tpx, fontFeatureSettings = "tnum")
-    val chevronColor by animateColorAsState(if (focused) colors.accent else colors.text3.copy(alpha = .5f), tween(M.FADE, easing = M.Ease), label = "chevron")
+    val chevronColor by animateColorAsState(if (focused) colors.accent else colors.text3.copy(alpha = .5f), tween(Motion.FADE, easing = Motion.Ease), label = "chevron")
     when {
         confirmation != null -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.px)) {
             Symbol(Symbols.CHECK, 28.fsp, colors.accent)
             BasicText(confirmation, style = text.copy(color = colors.accent, fontWeight = FontWeight.SemiBold), maxLines = 1, softWrap = false)
         }
-        value is RowValue.Toggle -> MenuSwitch(value.on)
+        value is RowValue.Toggle -> MotionSwitch(value.on, L.SWITCH_WIDTH, L.SWITCH_HEIGHT, Color.White.copy(alpha = .18f))
         value is RowValue.Choice -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.px)) {
-            Symbol(
-                Symbols.CHEVRON_LEFT, 28.fsp, chevronColor,
-                Modifier.graphicsLayer { translationX = if (rm || bumpDirection >= 0) 0f else -M.CHEVRON_BUMP * bump.value * k },
-            )
+            Symbol(Symbols.CHEVRON_LEFT, 28.fsp, chevronColor, Modifier.chevronBump(choice, -1))
             // A new value slides in from the side the key came from
-            val slide = remember { Animatable(1f) }
-            LaunchedEffect(bumpCount) {
-                if (bumpCount == 0) return@LaunchedEffect
-                slide.snapTo(0f)
-                slide.animateTo(1f, tween(M.CHOICE_SLIDE, easing = EaseOut))
-            }
             Box(
                 Modifier
                     .width((L.CHOICE_VALUE_MIN_WIDTH * ts).px)
-                    .graphicsLayer {
-                        alpha = slide.value
-                        translationX = if (rm) 0f else bumpDirection * M.VALUE_SLIDE * (1f - slide.value) * k
-                        compositingStrategy = CompositingStrategy.ModulateAlpha
-                    },
+                    .valueSlide(choice),
                 contentAlignment = Alignment.Center,
             ) {
                 MarqueeText(value.label, style = text, active = focused, modifier = Modifier.widthIn(max = 520.px))
             }
-            Symbol(
-                Symbols.CHEVRON_RIGHT, 28.fsp, chevronColor,
-                Modifier.graphicsLayer { translationX = if (rm || bumpDirection <= 0) 0f else M.CHEVRON_BUMP * bump.value * k },
-            )
+            Symbol(Symbols.CHEVRON_RIGHT, 28.fsp, chevronColor, Modifier.chevronBump(choice, 1))
         }
         value is RowValue.Slider -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.px)) {
             val number = MenuSlider(value, focused)
@@ -577,28 +526,6 @@ private fun RowValueView(value: RowValue, focused: Boolean, confirmation: String
     }
 }
 
-/** The on/off switch (`.sw`): 78 x 44, the knob springs across and turns from pale to dark as the track fills with the accent. */
-@Composable
-private fun MenuSwitch(on: Boolean) {
-    val colors = LocalDelosColors.current
-    val rm = LocalReducedMotion.current
-    val k = stageScale()
-    val knob by animateFloatAsState(if (on) 1f else 0f, if (rm) tween(0) else tween(M.FOCUS, easing = EaseSpring), label = "switchKnob")
-    val lit by animateFloatAsState(if (on) 1f else 0f, tween(M.FADE, easing = M.Ease), label = "switchTrack")
-    val knobColor by animateColorAsState(if (on) colors.onAccent else colors.text2, tween(M.FADE, easing = M.Ease), label = "switchKnobColor")
-    Box(
-        Modifier
-            .size(L.SWITCH_WIDTH.px, L.SWITCH_HEIGHT.px)
-            .drawBehind {
-                // Off: a light veil. On: the accent fading into the second accent, like the slider's fill
-                drawRoundRect(Color.White.copy(alpha = .18f * (1f - lit)), cornerRadius = CornerRadius(size.height / 2f))
-                if (lit > 0f) drawRoundRect(Brush.horizontalGradient(listOf(colors.accent.copy(alpha = lit), colors.accent2.copy(alpha = lit))), cornerRadius = CornerRadius(size.height / 2f))
-                val d = (L.SWITCH_HEIGHT - 12f) * k
-                drawCircle(knobColor, radius = d / 2f, center = Offset(6f * k + d / 2f + (L.SWITCH_WIDTH - L.SWITCH_HEIGHT) * k * knob, size.height / 2f))
-            },
-    )
-}
-
 /**
  * The slider of a row (`.sl`): a 240 x 12 track with the accent filling it up to the 32 px knob; the focused row's
  * knob grows to 1.18 inside a soft halo. A touch or a drag sets the value on the slider's grid. Returns the value
@@ -614,9 +541,9 @@ private fun MenuSlider(value: RowValue.Slider, focused: Boolean): Int {
     val number = dragging ?: value.value
     val fraction by animateFloatAsState(
         ((number - value.min) / (value.max - value.min).coerceAtLeast(1).toFloat()).coerceIn(0f, 1f),
-        tween(if (dragging == null && !rm) 160 else 0, easing = EaseOut), label = "sliderFraction",
+        tween(if (dragging == null && !rm) Motion.SLIDER_FILL else 0, easing = EaseOut), label = "sliderFraction",
     )
-    val knobScale by animateFloatAsState(if (focused) 1.18f else 1f, if (rm) tween(0) else tween(M.FOCUS, easing = EaseSpring), label = "knobScale")
+    val knobScale by animateKnobScale(focused)
     Box(
         Modifier
             .size(L.SLIDER_WIDTH.px, (L.KNOB + 12f).px)
@@ -668,14 +595,14 @@ internal fun PopoverPills(labels: List<String>, first: FocusRequester, command: 
     ) {
         labels.forEachIndexed { i, label ->
             var focused by remember { mutableStateOf(false) }
-            val ring by animateFloatAsState(if (focused) 1f else 0f, tween(M.FOCUS, easing = EaseOut), label = "pillRing")
+            val ring by animateFloatAsState(if (focused) 1f else 0f, tween(Motion.FOCUS, easing = EaseOut), label = "pillRing")
             BasicText(
                 label,
                 style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = L.ROW_SIZE.tpx),
                 maxLines = 1,
                 modifier = (if (i == 0) Modifier.focusRequester(first) else Modifier)
-                    .rowEntrance()
-                    .focusEffects({ onSelect(i) }, corner = 999f, focusScale = 1f, ring = null, glow = null, onFocusChange = {
+                    .staggerEntrance()
+                    .focusEffects({ onSelect(i) }, corner = 999f, focusScale = 1f, ring = null, glow = null, pressScale = 1f, onFocusChange = {
                         focused = it
                         if (it) help((if (command) "Command: " else "Keys: ") + label)
                     })

@@ -294,6 +294,39 @@ in assets.
 - The **two menu buttons at the top left and top right** of the handheld are used in the UI: the **left one (View/Select)** slides the **side menu** in from the left, the **right one (Start)** opens the **context menu** for the focused item. The hints show the buttons as they look on the device: on AYN handhelds (Odin, Thor) a square (left) and a play arrow (right).
 - Navigation must be **intuitive and direct**: pressing a direction takes you where you want to go, ideally in **one press** – never left, down, down just to reach something.
 
+## Motion
+
+One motion language for the whole UI. It was designed for the stream menu (below) and is now what every screen animates with, so
+one press, one focus and one menu feel the same everywhere. The numbers, easings and pure arithmetic are `Motion` in
+`shell/ui/Motion.kt` (no Compose runtime in it; `MotionTest` pins them and the stream menu's values); the building blocks are in
+`shell/ui/MotionKit.kt`. `StreamMenuMotion` keeps only what is particular to the dock (its entrance clock, the page morph).
+
+- **Rules.** Focus and press are springs (`EaseSpring`, 420 / 120 ms); things **enter** by rising 18 px and fading in, one after the
+  other (46 ms apart, 420 ms each, `EaseOut`); everything **leaves faster than it came** (240 ms, ease-in); a menu **grows out of its
+  anchor** (from 0.86 with the spring, its glass fading in faster, 336 ms; it shrinks back in 240 ms); a **changed value slides in**
+  22 px from the side the key came from while the chevron it went toward nudges 7 px; colors and opacities use CSS `ease` (280 ms).
+  **Reduced motion** drops every transform (rise, scale, slide, glide) and keeps the fades; springs snap. Nothing ever delays a
+  control: elements are focusable and usable while they enter, an entrance is only how they appear, a screen's elements finish
+  within about a second (at most the first 8 places wait for the ones before them), and an element that shows up later (data
+  arrives, a lazy list scrolls) just appears.
+- **Building blocks.** `Modifier.staggerEntrance()` (fade + rise by place; the place comes from the surrounding `EntranceScope`, from
+  an index, or from the counter of a stream menu page); `focusEffects` (focus spring, **press squeeze** to 0.97 for 130 ms, ring, glow;
+  `pressScale = 1f` turns the squeeze off); `GlideRingHost` + `Modifier.glideTarget` (**one ring that glides** to the focused
+  element, 560 ms with a slight overshoot, `Circles` uses it); `MotionSwitch` (knob springs across, gradient track fades in);
+  `ChoiceMotion` with `valueSlide` and `chevronBump` (**value slide** of choice rows); `animateKnobScale` (a focused slider's knob
+  grows to 1.18); `popEnter` / `popExit` (grow from an anchor), `dialogEnter` / `dialogExit`, `sideEnter` / `sideExit` and
+  `screenTransition` (the central crossfade of `Shell`: the new screen fades in while it settles from a 1.035 zoom, the old one
+  leaves in 240 ms).
+- **Where.** *Stream menu*: unchanged, built from the same blocks. *Start, Devices, Profile, pairing*: `CenterColumn` is an
+  `EntranceScope`, so the headline and then every PC circle rise in turn; one gold ring glides between the circles; the check badge
+  of the default PC pops in when the choice changes. *Home*: the first covers rise in turn (covers a scroll brings in later do not
+  animate), the empty and offline messages rise; every cover squeezes when activated. *Settings, game settings, side menu*:
+  `SettingRow` rises in turn, its glass fades in and out with the focus, a choice slides its new value in with the chevron nudge,
+  a slider's knob grows on focus, the switch is the stream menu's. *Context menus* grow out of the focused element's corner (or
+  under its button), their title and items rise in turn, the focused item fills with a fade. *Side menu*: slides in over 560 ms,
+  header and rows rise in turn, leaves in 240 ms. *Dialogs and the filter modal*: settle in from 0.96, title, note, fields and
+  buttons rise in turn, leave in 240 ms. *Toasts* leave in 240 ms.
+
 ## Stream
 
 - SGSR upscaling and independent sharpening are implemented. Codec-specific behavior and measured
@@ -315,7 +348,8 @@ tile. While the menu is open the player looks at the menu, not at the game, so i
 help text in large type, an unhurried entrance. The stream is never dimmed as a whole: only a soft gradient sits
 behind the dock (no card behind the tiles). Sizes are stage pixels (1920 × 1080, the dock bottom-aligned on it); the
 numbers and the pure geometry live in `StreamMenuLayout` (the CSS variables of `b.html` one for one), the durations and
-easings in `StreamMenuMotion`, the dock in `StreamMenuBar`, the popover and its rows in `StreamMenuPopover`, the whole
+easings in the shared `Motion` (the dock's own delays in `StreamMenuMotion`), the dock in `StreamMenuBar`, the popover and its rows in
+`StreamMenuPopover`, the whole
 menu in one composable (`StreamMenuRoot`, so a window of its own can host it), the stream behind it in `StreamMenuHost`
 (`StreamMenu` implements it with the live `Game`, the debug preview with fake state). The prototype's `#quickmenu` /
 `#qmpop` show the same design; `build/streammenu-proto/b.html` with its screenshots is the specification.
@@ -361,7 +395,7 @@ menu in one composable (`StreamMenuRoot`, so a window of its own can host it), t
   (a tap on another tile with a page while a popover is open morphs the popover to that page, a tap on the same tile
   closes it; the tiles without a page do nothing then); a tap outside the popover closes the popover only and never
   resumes the stream (Resume and B do).
-- **Motion** (every number is a `--d-*` / `--ease-*` variable of `b.html`, copied to `StreamMenuMotion`): the **entrance**
+- **Motion** (every number is a `--d-*` / `--ease-*` variable of `b.html`, copied to the shared `Motion` and `StreamMenuMotion`): the **entrance**
   runs on one clock (about 1.3 s): each tile rises 90 px from a 0.8 scale with the overshooting spring (620 ms), 42 ms
   after the one before, starting 100 ms in; labels fade in 140 ms after their tile; the head rises 24 px from 60 ms; the
   ring scales in from 0.7, 260 ms after the first focused tile; the caption rises 20 px from 520 ms. The **exit** (240 ms,

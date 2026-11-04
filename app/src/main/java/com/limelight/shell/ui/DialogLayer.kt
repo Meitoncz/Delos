@@ -53,14 +53,15 @@ fun DialogLayer(spec: DialogSpec?, haze: HazeState, onDismiss: () -> Unit) {
     val colors = LocalDelosColors.current
     val stage = LocalStage.current
     val density = LocalDensity.current.density
+    val reduced = LocalReducedMotion.current
     var shown by remember { mutableStateOf(spec) }
     if (spec != null) shown = spec
     val open by rememberUpdatedState(spec != null)
     Box(Modifier.fillMaxSize().imePadding(), contentAlignment = Alignment.Center) {
         AnimatedVisibility(
             spec != null,
-            enter = fadeIn(tween(300)) + scaleIn(tween(450, easing = EaseOut), initialScale = .96f) + slideInVertically(tween(450, easing = EaseOut)) { it / 25 },
-            exit = fadeOut(tween(300)) + scaleOut(tween(450, easing = EaseOut), targetScale = .96f) + slideOutVertically(tween(450, easing = EaseOut)) { it / 25 },
+            enter = dialogEnter(reduced),
+            exit = dialogExit(reduced),
         ) {
             val d = shown ?: return@AnimatedVisibility
             val values = remember(d) { mutableStateListOf(*d.fields.map { it.initial }.toTypedArray()) }
@@ -91,18 +92,18 @@ fun DialogLayer(spec: DialogSpec?, haze: HazeState, onDismiss: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(22.px),
             ) {
-                BasicText(d.title, style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 38.tpx, textAlign = TextAlign.Center))
-                BasicText(d.note, style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 24.tpx, lineHeight = 1.4.em, textAlign = TextAlign.Center))
+                BasicText(d.title, modifier = Modifier.staggerEntrance(0, Motion.MENU_DELAY), style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 38.tpx, textAlign = TextAlign.Center))
+                BasicText(d.note, modifier = Modifier.staggerEntrance(1, Motion.MENU_DELAY), style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 24.tpx, lineHeight = 1.4.em, textAlign = TextAlign.Center))
                 d.fields.forEachIndexed { i, field ->
                     TextFieldPill(
                         values[i], { values[i] = it }, field.icon,
-                        modifier = if (i == 0) Modifier.focusRequester(first) else Modifier,
+                        modifier = (if (i == 0) Modifier.focusRequester(first) else Modifier).staggerEntrance(i + 2, Motion.MENU_DELAY),
                         placeholder = field.placeholder, keyboardType = field.keyboard, password = field.password, maxLength = field.maxLength,
                         // Done on the last field confirms, like the button
                         onDone = { if (i == d.fields.lastIndex) confirm() },
                     )
                 }
-                Row(Modifier.padding(top = 8.px), horizontalArrangement = Arrangement.spacedBy(24.px)) {
+                Row(Modifier.staggerEntrance(d.fields.size + 2, Motion.MENU_DELAY).padding(top = 8.px), horizontalArrangement = Arrangement.spacedBy(24.px)) {
                     // A dialog without fields (a question) starts on its button
                     PillButton(d.confirm, Symbols.CHECK, confirm, if (d.fields.isEmpty()) Modifier.focusRequester(first) else Modifier, primary = true)
                     PillButton("Cancel", null, onDismiss, clickCue = Cue.BACK)

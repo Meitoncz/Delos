@@ -101,6 +101,10 @@ import com.limelight.shell.data.BundledArtwork
 import com.limelight.shell.settings.Appearance
 import com.limelight.shell.settings.HomeLayout
 import com.limelight.shell.ui.Cue
+import com.limelight.shell.ui.EntranceStagger
+import com.limelight.shell.ui.LocalEntranceStagger
+import com.limelight.shell.ui.Motion
+import com.limelight.shell.ui.staggerEntrance
 import com.limelight.shell.ui.Figtree
 import com.limelight.shell.ui.GameArt
 import com.limelight.shell.ui.IdleCoverFilter
@@ -282,13 +286,15 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
         )
     }
 
+    // The covers of the first screenful enter one after the other (docs/GUI.md, "Motion"); the ones a scroll brings in later are just there
+    val intro = remember(pc.uuid, row) { EntranceStagger(enabled = true, cap = Motion.STAGGER_CAP, lateAfterMs = Motion.STAGGER_WINDOW) }
     Box(Modifier.fillMaxSize()) {
         GameInfo(pc, focused,
             // The block (logo, GAME INFO label and pill row) sits high enough that the pills clear the focused cover
             modifier = Modifier.padding(start = 150.px, top = if (row) 150.px else 100.px), reducedMotion = appearance.reducedMotion,
             // The same condition as the animated background's: the genre takes the game's colors only while it does
             matchGameColors = appearance.matchGameColors && !appearance.materialYou)
-        CompositionLocalProvider(LocalBringIntoViewSpec provides NoAutoScroll) {
+        CompositionLocalProvider(LocalBringIntoViewSpec provides NoAutoScroll, LocalEntranceStagger provides intro) {
             if (row) {
                 // At the end the row stops with the last cover at the right edge, so the right fade goes away there
                 val endFade by animateFloatAsState(if (rowState.canScrollForward) 1f else 0f, tween(300), label = "rowEndFade")
@@ -650,6 +656,7 @@ private fun GameTile(
             )
             // The online pulse of the start screen, around the selected game
             .then(if (focused) Modifier.focusPulse(26f) else Modifier)
+            .staggerEntrance()
             .size(if (wide) 956.px else 300.px, 450.px)
             .clip(RoundedCornerShape(26.px))
             .background(colors.surface2),
@@ -702,7 +709,7 @@ private fun GameTile(
 private fun HomeMessage(icon: String, title: String, text: String?) {
     val colors = LocalDelosColors.current
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(22.px)) {
+        Column(Modifier.staggerEntrance(0, Motion.MENU_DELAY), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(22.px)) {
             Symbol(icon, 110.tpx, colors.accent, filled = true)
             BasicText(title, style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 52.tpx))
             if (text != null) {

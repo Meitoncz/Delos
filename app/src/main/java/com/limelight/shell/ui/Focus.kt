@@ -96,14 +96,17 @@ fun Modifier.focusEffects(
     adjustable: Boolean = false,
     controllerAdjust: ((direction: Int, repeatCount: Int) -> Unit)? = null,
     onFocusChange: ((Boolean) -> Unit)? = null,
+    /** What a press squeezes the element to for a moment ([Motion.PRESS_SCALE]); 1 for an element that has no press feedback of its own kind. */
+    pressScale: Float = Motion.PRESS_SCALE,
 ): Modifier = composed {
     val colors = LocalDelosColors.current
     val stage = LocalStage.current
     val feedback = LocalFeedback.current
     val tracker = LocalFocusTracker.current
     var focused by remember { mutableStateOf(false) }
-    val scale by animateFloatAsState(if (focused) focusScale else 1f, tween(380, easing = EaseSpring), label = "focusScale")
-    val ringAlpha by animateFloatAsState(if (focused) 1f else 0f, tween(380, easing = EaseOut), label = "focusRing")
+    val pulse = rememberPressPulse()
+    val scale by animateFocusScale(focused, pulse.pressed, focusScale, pressScale)
+    val ringAlpha by animateFloatAsState(if (focused) 1f else 0f, tween(Motion.FOCUS, easing = EaseOut), label = "focusRing")
     val sweepPos = remember { Animatable(0f) }
     LaunchedEffect(focused) {
         if (focused && sweep) {
@@ -116,6 +119,7 @@ fun Modifier.focusEffects(
     val position = remember { arrayOfNulls<LayoutCoordinates>(1) }
     val activate = {
         clickCue?.let(feedback::play)
+        pulse.fire()
         onClick()
     }
     val currentActivate by rememberUpdatedState(activate)
