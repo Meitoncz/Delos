@@ -3892,6 +3892,11 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         isPanZoomMode = false;
     }
 
+    /** Delos: the statistics overlay container, which the stream menu lifts above its blurred backdrop while it is open. */
+    public android.view.ViewGroup getPerformanceOverlayContainer() {
+        return (android.view.ViewGroup) performanceOverlayView;
+    }
+
     public void toggleHUD() {
         if (statsPanel != null) {
             // Delos: the stream menu's Overlay goes round full → compact → off

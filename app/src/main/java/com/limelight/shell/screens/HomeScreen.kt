@@ -18,8 +18,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.gestures.BringIntoViewSpec
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.gestures.ScrollableState
@@ -34,6 +32,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -101,6 +100,10 @@ import com.limelight.shell.data.BundledArtwork
 import com.limelight.shell.settings.Appearance
 import com.limelight.shell.settings.HomeLayout
 import com.limelight.shell.ui.Cue
+import com.limelight.shell.ui.EntranceStagger
+import com.limelight.shell.ui.LocalEntranceStagger
+import com.limelight.shell.ui.Motion
+import com.limelight.shell.ui.staggerEntrance
 import com.limelight.shell.ui.Figtree
 import com.limelight.shell.ui.GameArt
 import com.limelight.shell.ui.IdleCoverFilter
@@ -117,6 +120,8 @@ import com.limelight.shell.ui.glass
 import com.limelight.shell.ui.focusPulse
 import com.limelight.shell.ui.hsl
 import com.limelight.shell.ui.px
+import com.limelight.shell.ui.topGenres
+import com.limelight.shell.ui.topThemes
 import com.limelight.shell.ui.tpx
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -280,10 +285,15 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
         )
     }
 
+    // The covers of the first screenful enter one after the other (docs/GUI.md, "Motion"); the ones a scroll brings in later are just there
+    val intro = remember(pc.uuid, row) { EntranceStagger(enabled = true, cap = Motion.STAGGER_CAP, lateAfterMs = Motion.STAGGER_WINDOW) }
     Box(Modifier.fillMaxSize()) {
         GameInfo(pc, focused,
-            modifier = Modifier.padding(start = 150.px, top = if (row) 210.px else 116.px), reducedMotion = appearance.reducedMotion)
-        CompositionLocalProvider(LocalBringIntoViewSpec provides NoAutoScroll) {
+            // The block (logo, GAME INFO label and pill row) sits high enough that the pills clear the focused cover
+            modifier = Modifier.padding(start = 150.px, top = if (row) 150.px else 100.px), reducedMotion = appearance.reducedMotion,
+            // The same condition as the animated background's: the genre takes the game's colors only while it does
+            matchGameColors = appearance.matchGameColors && !appearance.materialYou)
+        CompositionLocalProvider(LocalBringIntoViewSpec provides NoAutoScroll, LocalEntranceStagger provides intro) {
             if (row) {
                 // At the end the row stops with the last cover at the right edge, so the right fade goes away there
                 val endFade by animateFloatAsState(if (rowState.canScrollForward) 1f else 0f, tween(300), label = "rowEndFade")
@@ -444,9 +454,8 @@ private fun gameMenu(
         },
     )
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun GameInfo(pc: Pc, app: App, modifier: Modifier, reducedMotion: Boolean) {
+private fun GameInfo(pc: Pc, app: App, modifier: Modifier, reducedMotion: Boolean, matchGameColors: Boolean) {
     val colors = LocalDelosColors.current
     val art = appArt(pc, app)
     Column(modifier) {
@@ -477,20 +486,53 @@ private fun GameInfo(pc: Pc, app: App, modifier: Modifier, reducedMotion: Boolea
                 modifier = Modifier.padding(end = 150.px).gameTitleEntrance(homeKey(pc, app), null, reducedMotion),
             )
         } else Box(Modifier.height(200.px)) // Keep the title space while the logo lookup is pending.
-        FlowRow(Modifier.padding(top = 10.px).widthIn(max = 1620.px), horizontalArrangement = Arrangement.spacedBy(12.px), verticalArrangement = Arrangement.spacedBy(6.px)) {
-            if (app.running) Chip(Symbols.PLAY_ARROW, "Running on ${pc.name}") else Chip(Symbols.COMPUTER, pc.name)
-            val metadata = LocalGameMetadata.current.entry(pc, app).data
-            when (hdrBadgeKind(metadata)) {
+        val metadata = LocalGameMetadata.current.entry(pc, app).data
+        // Up to two genres and two themes: Steam's user tags when the game has them, else IGDB's lists (the filter
+        // still offers every IGDB genre and theme); the facts come first
+        val genres = remember(metadata) {
+            topGenres(metadata?.candidate?.genres.orEmpty().filter { it.name.isNotBlank() }, metadata?.steamTags.orEmpty())
+        }
+        val themes = remember(metadata) {
+            topThemes(metadata?.candidate?.themes.orEmpty().filter { it.name.isNotBlank() }, metadata?.steamTags.orEmpty())
+        }
+        val key = homeKey(pc, app)
+        // The colors of the animated background: the cover's, the game background's while those are unknown
+        val gameColors = when {
+            !matchGameColors -> null
+            HeroBitmaps.coverKnown(key) -> HeroBitmaps.coverHues(key)
+            else -> HeroBitmaps.hues(key)
+        }
+        val hdrKind = hdrBadgeKind(metadata)
+        val completion = metadata?.completion?.takeIf { it.seconds > 0 }
+        val virtualDisplay = art.icon == Symbols.DESKTOP_WINDOWS && pc.details.vDisplaySupported
+        val hasTags = genres.isNotEmpty() || themes.isNotEmpty()
+        // The title above the pills is shown only while there is at least one pill under it
+        val showLabel = hasTags || app.running || hdrKind != null || completion != null || virtualDisplay
+        if (showLabel) BasicText(
+            if (BundledArtwork.kind(app) != null) "APP INFO" else "GAME INFO",
+            modifier = Modifier.padding(top = 10.px),
+            style = TextStyle(
+                color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold,
+                fontSize = 17.tpx, letterSpacing = .14.em,
+            ),
+        )
+        InfoRow(
+            Modifier.padding(top = if (showLabel) 8.px else 10.px).widthIn(max = 1620.px),
+            hasTags = hasTags,
+            tags = {
+                if (genres.isNotEmpty()) GenrePill(genres, gameColors)
+                if (themes.isNotEmpty()) ThemePill(themes, gameColors)
+            },
+        ) {
+            if (app.running) Chip(Symbols.PLAY_ARROW, "Running on ${pc.name}")
+            when (hdrKind) {
                 NativeHdr.HDR -> NativeHdrChip()
                 NativeHdr.SDR -> Chip(Symbols.HDR_ON, "SDR")
                 NativeHdr.UNKNOWN -> Chip(Symbols.HELP, UNVERIFIED_HDR_LABEL)
                 null -> Unit
             }
-            metadata?.completion?.takeIf { it.seconds > 0 }?.let {
-                Chip(Symbols.HISTORY, "HLTB ${it.headline}")
-            }
-            if (art.icon == Symbols.DESKTOP_WINDOWS && pc.details.vDisplaySupported) Chip(Symbols.SCREEN_SHARE, "Virtual display")
-            metadata?.candidate?.genres?.forEach { genre -> if (genre.name.isNotBlank()) Chip(Symbols.SPORTS_ESPORTS, genre.name) }
+            if (completion != null) Chip(Symbols.HISTORY, "HLTB ${completion.headline}")
+            if (virtualDisplay) Chip(Symbols.SCREEN_SHARE, "Virtual display")
         }
     }
 }
@@ -515,17 +557,35 @@ private fun Modifier.gameTitleEntrance(game: String, image: ImageBitmap?, reduce
 @Composable
 internal fun Chip(icon: String, label: String, iconTint: Color? = null) {
     val colors = LocalDelosColors.current
+    Pill(listOf(PillEntry(icon, label)), colors.text2, iconTint ?: colors.text2, Modifier.glass(colors.surface), colors.line)
+}
+
+/**
+ * The shape and size of every info pill; [fill] is what lies behind its content, [border] its 1 px outline. The
+ * [entries] (icon and label each) sit in one pill, set apart by a thin vertical bar in the text color.
+ */
+@Composable
+internal fun Pill(entries: List<PillEntry>, textColor: Color, iconColor: Color, fill: Modifier, border: Color) {
     Row(
         Modifier
             .clip(CircleShape)
-            .glass(colors.surface)
-            .border(1.px, colors.line, CircleShape)
+            .then(fill)
+            .border(1.px, border, CircleShape)
             .padding(horizontal = 16.px, vertical = 6.px),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.px),
     ) {
-        Symbol(icon, 22.tpx, iconTint ?: colors.text2)
-        BasicText(label, style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 19.tpx))
+        entries.forEachIndexed { index, entry ->
+            if (index > 0) {
+                Box(
+                    Modifier.padding(horizontal = 12.px).width(1.5.px).height(18.px).clip(CircleShape)
+                        .background(textColor.copy(alpha = .55f)),
+                )
+            }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.px)) {
+                Symbol(entry.icon, 22.tpx, iconColor)
+                BasicText(entry.label, style = TextStyle(color = textColor, fontFamily = Figtree, fontSize = 19.tpx))
+            }
+        }
     }
 }
 
@@ -590,6 +650,7 @@ private fun GameTile(
             )
             // The online pulse of the start screen, around the selected game
             .then(if (focused) Modifier.focusPulse(26f) else Modifier)
+            .staggerEntrance()
             .size(if (wide) 956.px else 300.px, 450.px)
             .clip(RoundedCornerShape(26.px))
             .background(colors.surface2),
@@ -642,7 +703,7 @@ private fun GameTile(
 private fun HomeMessage(icon: String, title: String, text: String?) {
     val colors = LocalDelosColors.current
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(22.px)) {
+        Column(Modifier.staggerEntrance(0, Motion.MENU_DELAY), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(22.px)) {
             Symbol(icon, 110.tpx, colors.accent, filled = true)
             BasicText(title, style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 52.tpx))
             if (text != null) {

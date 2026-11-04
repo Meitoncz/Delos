@@ -338,7 +338,7 @@ public class PreferenceConfiguration {
     public boolean sgsrTemporal;
     public boolean sgsrTemporalQuality;
     public int sgsrSharpness;
-    /** Session-only live choice for native-resolution SGSR: 1 = 1440p, 2 = 2160p from 1080p. */
+    /** Native-resolution SGSR level: 1 = 1440p, 2 = 2160p from 1080p. The stored choice; the stream menu changes it per session. */
     public int sgsrSupersamplingLevel;
     public boolean absoluteMouseMode;
     public boolean enableAudioFx;
@@ -823,7 +823,7 @@ private static int getFramePacingValue(SharedPreferences prefs) {
         config.sgsrTemporal = "temporal".equals(sgsrMode) || "temporal-quality".equals(sgsrMode);
         config.sgsrTemporalQuality = "temporal-quality".equals(sgsrMode);
         config.sgsrSharpness = Math.max(0, Math.min(100, prefs.getInt("seekbar_sgsr_sharpness", 50)));
-        config.sgsrSupersamplingLevel = 1;
+        config.sgsrSupersamplingLevel = parseSupersamplingLevel(prefs.getString("list_sgsr_supersampling_level", "1"));
         config.preferLowerDelays = getPreferLowerDelays(context);
 
 
@@ -983,5 +983,10 @@ private static int getFramePacingValue(SharedPreferences prefs) {
 
 
         return config;
+    }
+
+    /** The supersampling level behind a stored choice: only "2" selects 2x; anything else is the default 1x. */
+    public static int parseSupersamplingLevel(String stored) {
+        return "2".equals(stored) ? 2 : 1;
     }
 }

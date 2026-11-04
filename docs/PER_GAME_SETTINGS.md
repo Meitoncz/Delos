@@ -22,8 +22,10 @@ Custom rows show their source line in the accent color.
 ## Scope and inheritance
 
 - Stream: resolution, FPS, bitrate, codec and frame pacing.
-- Display: HDR, full color range, scaling mode, resolution scale, virtual display and enforced display
-  mode. Hardware rules and dependencies match the existing settings screen.
+- Display: HDR, full color range, scaling mode, resolution scale, virtual display, enforced display
+  mode and the upscaler (on/off `checkbox_sgsr`, mode `list_sgsr_quality`, sharpness
+  `seekbar_sgsr_sharpness` and supersampling quality `list_sgsr_supersampling_level`, 1 = 1x, 2 = 2x;
+  also a profile setting, default 1x). Hardware rules and dependencies match the existing settings screen.
 - Each row says **From profile** or **Custom for this game**. Unchanged values follow later edits to
   the user profile. Changes are saved immediately and apply when the next stream starts or resumes.
 - Each selected codec keeps its own bitrate for this user, PC and game. Switching away saves the
@@ -43,8 +45,28 @@ Custom rows show their source line in the accent color.
 - Resetting the bitrate row removes that game's current override and all its codec bitrate slots.
   Reset all settings also removes all slots, without changing other games or the profile.
 - The upscaler rows (SGSR) are unavailable for H.264, HEVC and AV1 on devices below OpenGL ES 3.1.
+  An unknown stored supersampling level is read as 1x; a saved 2x that does not fit falls back to 1x
+  like the live choice.
 - Advanced custom resolution/FPS definitions remain in the profile; their choices are available here.
 - Audio, controls, appearance and other global options continue to come from the user profile.
+
+## Saving the live upscaler
+
+Stream menu → Upscaler ends with **Save for this game** (icon: floppy disk; description "Applies to
+future launches of this game"). It is an ordinary row, so a controller reaches it with the D-pad and
+A, and it never asks for confirmation. A press writes the four upscaler values the menu shows now
+(upscaling on/off, mode, sharpness, supersampling quality) as this game's overrides, in the active
+user's profile for this PC and host app ID, then the row shows a check and "Saved for <game>" for
+a moment. Nothing else is written: no bitrate, no other display setting, no profile value, no other game.
+No profile is activated. The values then show as **Custom for this game** in Game settings → Display,
+and Reset to profile value / Reset all settings remove them like any override.
+
+Ordinary live changes stay session-only. The saved values apply to future launches only; the running
+stream keeps its own (the launch snapshot is fixed). The row is hidden when the stream was started
+without its launch identity (no snapshot, PC or app ID in the intent), and is dimmed where the upscaler
+is unavailable. Both renderers (MediaCodec SGSR and PyroWave) read the same live values, so the row
+works for both. The supersampling level saved is the one in effect, so a 2x that PyroWave already
+fell back from is saved as 1x.
 
 `GameSettingsStore` stores sparse, typed values under `ui_game_<PC hash>_<app ID>_<setting key>` in
 the user's `ui_profile_<UUID>` preferences. PC UUID plus host app ID distinguishes libraries; titles
@@ -74,7 +96,10 @@ Moonlight X; see the preserved [feature provenance](../README.md#feature-provena
 
 `GameSettingsTest` covers live inheritance, PC/game/user isolation, copying and deleting users, forgetting a
 PC, persistence across store recreation, resetting one/all overrides, PyroWave bitrate guidance, the actual
-`PreferenceConfiguration` stream reader, wrapped contexts and external-display intent forwarding.
+`PreferenceConfiguration` stream reader, wrapped contexts and external-display intent forwarding. It also
+covers Save for this game: exactly the four upscaler overrides are written for that game only, a later
+launch of it (and not of another game) reads them, including supersampling level 2, resets remove them,
+an unknown stored level reads as 1x, the clamping of the saved values, and which launches can save.
 
 Device acceptance: open settings from a game, check both tabs, change its resolution to 720p and
 start/resume its stream manually. Verify 1280x720 in statistics, then check that the profile and
@@ -83,6 +108,12 @@ check this game follows the profile again. Also check tab switches after scrolli
 per switch, touch
 adjustment, cover display, help scrolling and focus returning to the dashboard. The user drives the
 Odin; agents do not launch games or send navigation input.
+
+Device acceptance for Save for this game: in a stream, open Stream menu → Upscaler, switch the upscaler
+on, change mode, sharpness and supersampling quality, and press Save for this game with a controller
+(the row shows a check and "Saved for <game>"). End the stream and open Game settings → Display: the
+four rows say Custom for this game. Start the game again and check the upscaler comes up as saved
+(status line, statistics); another game keeps the profile values. Reset all settings returns it.
 
 2026-10-25: all 51 unit tests passed, including seven new per-game tests. Debug build and Android
 lint passed (zero errors, 380 warnings). The ARM64 build was installed on the Odin. The user confirmed

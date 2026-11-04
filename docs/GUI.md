@@ -95,8 +95,72 @@ The TV channel uses the same mark; PC shortcut icons remain unchanged.
 
 ## Game information and library filters
 
-The existing information area under the game title/logo also shows IGDB genres, native HDR/SDR,
-and the HowLongToBeat headline duration. HDR uses a readable rainbow badge; confirmed native-SDR
+The information area under the game title/logo is a small label and one row in two groups. The label is
+`GAME INFO` (`APP INFO` for the built-in apps) in the style of the library footer's `LIBRARY` label (Figtree
+SemiBold, 17 px, tracking .14 em, `colors.text3`) with an 8 px gap to the pills; it is shown only while at
+least one pill is. The **facts** come first (`Running on <PC>` while the game runs, native HDR/SDR, the
+HowLongToBeat headline duration, `Virtual display`; the PC's name is no chip while nothing runs), then a
+divider (a 2 px wide, 28 px tall rounded bar in `colors.text3` at 55 % alpha, 16 px margins on both sides) and
+the **tags**: the game's genre pill and theme pill. **Each pill shows up to two entries** inside one pill,
+set apart by a thin vertical bar in the pill's own text color (1.5 px wide, 18 px tall, rounded, 55 % alpha,
+12 px margins on both sides): `[icon Shooter | icon Adventure] [icon Horror | icon Sci-fi]`. Every entry has
+its own icon and name, the icon-to-text spacing is that of the other pills; with one entry the pill shows just
+that entry (no bar), and with none the pill is omitted. IGDB's complete genre and theme lists stay in the
+metadata and keep feeding the Y filter: **Steam tags only drive the card pills**, never the filter. Without a
+genre or theme pill the divider goes away too; built-in apps and games without metadata show the facts only.
+The facts keep their usual pill look; the tag pills have exactly the same height, padding, font and icon size.
+The row wraps at group boundaries (facts as before, the tags as one group, a pill is never split): when the
+tags do not fit beside the facts they move to the next line as a whole and the divider stays out, also at
+125 % interface scale.
+
+- **Steam tags first** (`topGenres`, `topThemes` in `shell/ui/GameTags.kt`, the mapping in
+  `shell/ui/SteamTags.kt`). A game with a Steam app id (the first one IGDB lists) gets its Steam *user tags*,
+  most voted first, from the metadata Worker (`GET /v1/steam/tags?app=<id>`, which reads the public store
+  page; this is **unofficial and may change or be blocked**). Of the first 15 tags, every tag the mapping table
+  knows becomes a genre or a theme entry in vote order, without duplicates; features, modes, moods, art styles
+  and meta tags (Singleplayer, Co-op, Indie, Atmospheric, Third Person, ...) are ignored. The table maps each
+  Steam tag name (case-insensitive) to exactly one IGDB genre or theme, so the icons and names are IGDB's
+  (Platformer -> Platform, Action-Adventure -> Adventure, Cooking -> Simulator, Funny -> Comedy, Open World ->
+  Open world, ...). A few "weak" mappings are only a fallback: Roguelike/Roguelite -> Role-playing joins the
+  genres only when fewer than two strong genres exist, and Action/Superhero -> the Action theme only when the
+  game has no other theme (the rule IGDB's Action theme follows too). When Steam gives one entry the second
+  slot is filled from IGDB's ranking (below) with the first entry not shown yet; Indie and Action never fill.
+- **IGDB ladder** is used when a game has no Steam id, the Steam fetch failed or the store lists no mappable
+  tag. Genres are ordered by this ladder, and the pill shows the first two: Shooter, Fighting, Racing,
+  Role-playing, Real Time Strategy, Turn-based strategy, Tactical, Hack and slash/Beat 'em up, Platform,
+  Adventure, Puzzle, MOBA, Music, Visual Novel, Card & Board Game, Quiz/Trivia, Pinball, Point-and-click,
+  Sport, Simulator, Strategy, Arcade; genres IGDB adds later come after these in IGDB's order. Indie is a
+  business model, not a genre: it only shows when it is the game's only entry. Themes skip Erotic entirely
+  and Action unless it is the game's only usable theme (Life is Strange: Double Exposure lists Action alone
+  and shows it), then follow: Horror, Survival, Open world, Science fiction, Fantasy, Stealth, Warfare,
+  Sandbox, Mystery, Thriller, Party, 4X, Historical, Comedy, Drama, Romance, Business, Educational, Kids,
+  Non-fiction; later additions come after these. `mainGenre`/`mainTheme` are the first entries of this
+  ranking (`rankedGenres`, `rankedThemes`).
+- Examples. From Steam tags: Cronos (Survival Horror, Horror, Sci-fi, Third-Person Shooter, ...) shows
+  `Shooter | Adventure` (the second genre comes from IGDB's Shooter, Puzzle, Adventure) and
+  `Horror | Science fiction`; LEGO Batman (Co-op, Open World, Superhero, ..., Action-Adventure, Funny, ...,
+  3D Platformer, Adventure) `Adventure | Platform` and `Open world | Comedy`; Forza Horizon (Racing, Open
+  World, Driving, ..., Automobile Sim, ...) `Racing | Simulator` and `Open world`. From IGDB alone: LEGO
+  Batman (Puzzle, Adventure) shows `Adventure | Puzzle`, Forza (Racing, Simulator, Sport, Arcade)
+  `Racing | Sport`, Overcooked (Simulator, Strategy, Indie) `Simulator | Strategy`.
+- The **genre pill** is the accent of the row: filled with a tint of the game's main color from its cover
+  (`HeroBitmaps.coverHues`, the game background's while the cover's are unknown) over the glass:
+  `hsl(hue, 0.8 × vividness, 34 %)` at 35 % alpha, a 1 px `hsl(hue, …, 55 %)` border at 55 % alpha, and
+  the icon and text in the same hue at 85 % lightness (a light theme uses darker shades). With *Match the
+  game's colors* off, with Material You, or while the colors are not known, the palette's accent hue is used.
+  The **theme pill** uses the game's *second* cover color (`hues[1]`; the main hue shifted by +40° when
+  the game has only one, the palette's accent (third) hue while the colors are off or unknown) but fainter, so it stays behind
+  the genre: `hsl(hue2, 0.7 × the genre's saturation, 30 %)` at 16 % alpha over the glass, a 1 px
+  `hsl(hue2, …, 55 %)` border at 45 % alpha, icon and text at 80 % lightness and 90 % alpha.
+  Neither pill animates; like the facts they appear when the metadata is there.
+- Every genre and theme has its own Phosphor icon (`genreIcon`, `themeIcon` in `shell/ui/GenreIcons.kt`;
+  the neutral tag stands in for ones IGDB adds later). The theme icons come from `tools/fonts/icons.txt`
+  like every other icon (see `docs/ICONS.md`).
+
+Native HDR uses a gradient badge instead of a rainbow: a diagonal linear gradient from cyan `#22D3EE` over
+indigo `#6366F1` to fuchsia `#D946EF` under a 12 % black scrim (keeps the white text readable on the cyan
+end), the sparkle icon, white text, a 1 px border of white at 35 % alpha and a very soft static glow (8 px
+blur, 35 % alpha) in the indigo behind the pill; it has the size of every info pill. Confirmed native-SDR
 games use a neutral SDR chip. A muted `HDR/SDR unverified` chip means native HDR/SDR could not be verified:
 the wiki has no page, evidence is unknown/ambiguous, or claimed HDR is broken, disabled, simulated
 or platform/edition-restricted. Only successfully evaluated unknown records (`updatedAt > 0` and
@@ -107,7 +171,7 @@ do not qualify as native game HDR.
 
 **Y** on the home screen opens the **Filter library** modal (Y or B closes it; Done as well). It is a
 centered glass panel with the title, a live result line as a pill (`27 of 55 games`, or `All 55 games` without a filter)
-and three sections of chips, each with a large Unbounded heading and its icon in an accent-tinted circle, separated by thin dividers: **Genre** (`All` plus every genre, each with its number of games), **HDR
+and four sections of chips, each with a large Unbounded heading and its icon in an accent-tinted circle, separated by thin dividers: **Genre** (`All` plus every genre any game in the downloaded metadata lists, each with its icon and number of games), **Theme** (the same for IGDB themes, single-select, shown while the library has any theme), **HDR
 support** (`All`, `Native HDR`, `SDR`, `HDR/SDR unverified`, with the sparkle, sun and question-mark icons of
 the home badges) and **Duration** from HowLongToBeat (Any, <10 h, 10–30 h, 30–60 h, 60+ h, Unknown). The chosen chip is
 filled with the accent; a choice applies at once (no confirmation) and the library behind the modal
@@ -116,8 +180,12 @@ long genre list scrolls the panel (its top and bottom edges fade out) and keeps 
 The focused chip is kept 150 px from the top edge, so the first row scrolls the heading into view; the
 bottom padding keeps the last row's focus ring outside the fade, including at 125% text scale. **X** resets (the Reset button is
 disabled while nothing is filtered), and closing returns the focus to the game that was focused. While
-filters are active the home hint reads `Y Filter • N active`. Filters follow the active profile and
-combine across categories. Empty results say to press Y and keep a controller/touch reset action.
+filters are active the home hint reads `Y Filter • N active`. Filters follow the active profile (genre, theme,
+HDR and duration are stored per profile) and combine across categories. The Genre and Theme filters match a
+game when *any* of its genres/themes is the chosen one, not only the main genre and theme the home screen
+shows, so the chip lists can hold entries no tile displays as its main tag. Both lists and their counts are
+read from the metadata store while the modal is open, so they follow records as they arrive and after a
+cache-schema refetch. Empty results say to press Y and keep a controller/touch reset action.
 Original library order, running-game state, artwork and cover layout are preserved.
 The `HDR/SDR unverified` filter retains unknown-support matching, including pending/failed records without a
 badge; the display rule above does not change filter membership.
@@ -136,8 +204,8 @@ unmatched until the user picks a match. The IGDB query drops symbol characters s
 "LEGO® Batman™: Legacy of the Dark Knight" contain). IGDB search is PC-focused: console-only entries
 are dropped, but entries without platform data are kept. IGDB IDs, Steam AppIDs and host app IDs are distinct.
 Metadata matches never overwrite manual SteamGridDB artwork matches. Data/matches are cached in
-application files; missing provider data stays missing, and genres are IGDB genres only (IGDB themes
-share no ID space with genres and are not substituted). A fully answered record is refreshed after
+application files; missing provider data stays missing, and filter genres are IGDB genres only (IGDB themes
+share no ID space with genres and are not substituted; Steam tags never feed the filter). A fully answered record is refreshed after
 seven days and an unmatched one after six hours. Each provider's failure time is stored in the
 record: a failing provider is not asked about that game again for 30 minutes, across focus changes
 and restarts, unless the user chooses Refresh. A record stamped in the future is treated as stale.
@@ -157,10 +225,17 @@ Artwork takes priority while both stores are busy, so there is only one pill. Bo
 existing artwork animation/reduced-motion behavior, retaining the last count and label during exit.
 
 Provider calls run off the UI thread, are paced, and are interrupted when their coroutine is
-cancelled. IGDB authenticates through Twitch client credentials; PCGamingWiki uses bot-password
-login and Cargo plus Video-template notes. Neither credentialed client follows redirects, so a
-307/308 can never replay a secret-carrying POST elsewhere. A refused PCGamingWiki login is latched
-for the process instead of being retried per game. PCGamingWiki notes are reduced to reader text
+cancelled. IGDB and PCGamingWiki are reached through the Delos metadata Worker (`tools/metadata-worker`),
+which holds their credentials, authenticates (Twitch app token, PCGamingWiki bot session), builds the
+upstream queries itself from validated parameters and returns the providers' raw JSON; the app keeps all
+matching, parsing, caching and backoff. The app clients never follow redirects, and an HTTP 429/503 from
+the Worker (its rate limit or an upstream throttle), any other non-2xx answer, malformed JSON or a network
+error is a provider failure that uses the per-provider backoff, never an empty or absent result. The Steam
+tags (`steamTags` and `steamFailedAt` in the record, only asked for games with a Steam id, after the other
+secondary lookups) follow the same rules, with one difference: a store page without tags is a successful empty
+list. A failed Steam fetch keeps the tags stored earlier, is not shown as an error (without earlier tags the
+pills use IGDB), and the record is retried after the 30-minute backoff.
+PCGamingWiki notes are reduced to reader text
 (references, templates' named arguments, URLs and link markup removed) before the native-HDR
 heuristics run. The wiki's own HDR value decides: `false` and `hackable` are SDR. Notes never promote
 `hackable`, even when they describe native HDR output via Engine.ini. `unknown` and a missing value
@@ -189,14 +264,16 @@ rules are looked up again instead of being trusted for a week.
 Unavailable/changed provider responses are reported rather than replaced with another provider's
 metric. Cancelled work stops before further provider requests or publishing a resolved result.
 
-Developer builds read `DELOS_IGDB_CLIENT_ID`, `DELOS_IGDB_CLIENT_SECRET`,
-`DELOS_PCGW_BOT_USERNAME`, and `DELOS_PCGW_BOT_PASSWORD` from environment variables (an empty or blank
-variable is ignored) or ignored `local.properties`. The values are plain `BuildConfig` string constants:
-`-dontobfuscate` is set and R8 does not encrypt strings, so anyone holding such an APK can read them with
-`strings` or apktool. The user explicitly accepted this direct-in-APK exposure; there is no backend or
-end-user key entry. Mitigate by using a minimally privileged PCGamingWiki bot password, rotating both
-credentials on any distribution, and never attaching a credentialed APK to a public artifact (CI builds
-carry no credentials, so the feature is inert there). Never commit credentials or log tokens/passwords.
+Game metadata needs the Worker's base URL, a non-secret `DELOS_METADATA_URL` `BuildConfig` string read
+from the environment variable of that name (an empty or blank variable is ignored) or the ignored
+`local.properties`; it defaults to empty, and then the app reports "Game metadata is not available in
+this build" without contacting any provider (CI builds carry no URL, so the feature is inert there).
+The IGDB client secret and the PCGamingWiki bot password are Worker secrets and never ship in the APK
+(deploy and secret handling: [tools/metadata-worker/README.md](../tools/metadata-worker/README.md)).
+Privacy: the Worker sees the game names the app looks up and the client IP address (Cloudflare's
+request metadata); it logs no query text, only a short hash on failures. HowLongToBeat has no
+credentials and is still queried directly from the device, so it sees the device's IP and game names.
+Never commit credentials or log tokens/passwords.
 Provider attribution is visible in Settings → About, and the adapted HLTB client's MIT notice is bundled
 in assets.
 
@@ -211,6 +288,61 @@ in assets.
 - The **two menu buttons at the top left and top right** of the handheld are used in the UI: the **left one (View/Select)** slides the **side menu** in from the left, the **right one (Start)** opens the **context menu** for the focused item. The hints show the buttons as they look on the device: on AYN handhelds (Odin, Thor) a square (left) and a play arrow (right).
 - Navigation must be **intuitive and direct**: pressing a direction takes you where you want to go, ideally in **one press** – never left, down, down just to reach something.
 
+## Motion
+
+One motion language for the whole UI. It was designed for the stream menu (below) and is now what every screen animates with, so
+one press, one focus and one menu feel the same everywhere. The numbers, easings and pure arithmetic are `Motion` in
+`shell/ui/Motion.kt` (no Compose runtime in it; `MotionTest` pins them and the stream menu's values); the building blocks are in
+`shell/ui/MotionKit.kt`. `StreamMenuMotion` keeps only what is particular to the dock (its entrance clock, the page morph).
+
+- **Rules.** Focus and press are springs (`EaseSpring`, 420 / 120 ms); things **enter** by rising 18 px and fading in, one after the
+  other (46 ms apart, 420 ms each, `EaseOut`); everything **leaves faster than it came** (240 ms, ease-in); a menu **grows out of its
+  anchor** (from 0.86 with the spring, its glass fading in faster, 336 ms; it shrinks back in 240 ms); a **changed value slides in**
+  22 px from the side the key came from while the chevron it went toward nudges 7 px; colors and opacities use CSS `ease` (280 ms).
+  **Reduced motion** drops every transform (rise, scale, slide, glide) and keeps the fades; springs snap. Nothing ever delays a
+  control: elements are focusable and usable while they enter, an entrance is only how they appear, a screen's elements finish
+  within about a second (at most the first 8 places wait for the ones before them), and an element that shows up later (data
+  arrives, a lazy list scrolls) just appears.
+- **Building blocks.** `Modifier.staggerEntrance()` (fade + rise by place; the place comes from the surrounding `EntranceScope`, from
+  an index, or from the counter of a stream menu page); `focusEffects` (focus spring, **press squeeze** to 0.97 for 130 ms, ring, glow;
+  `pressScale = 1f` turns the squeeze off); `GlideRingHost` + `Modifier.glideTarget` (**one ring that glides** to the focused
+  element, 560 ms with a slight overshoot, `Circles` uses it); `MotionSwitch` (knob springs across, gradient track fades in);
+  `ChoiceMotion` with `valueSlide` and `chevronBump` (**value slide** of choice rows); `animateKnobScale` (a focused slider's knob
+  grows to 1.18); `popEnter` / `popExit` (grow from an anchor), `dialogEnter` / `dialogExit`, `sideEnter` / `sideExit` and
+  `screenTransition` (the central crossfade of `Shell`: the new screen fades in while it settles from a 1.035 zoom, the old one
+  leaves in 240 ms).
+- **Where.** *Stream menu*: unchanged, built from the same blocks. *Start, Devices, Profile, pairing*: `CenterColumn` is an
+  `EntranceScope`, so the headline and then every PC circle rise in turn; one gold ring glides between the circles; the check badge
+  of the default PC pops in when the choice changes. *Home*: the first covers rise in turn (covers a scroll brings in later do not
+  animate), the empty and offline messages rise; every cover squeezes when activated. *Settings, game settings, side menu*:
+  `SettingRow` rises in turn, its glass fades in and out with the focus, a choice slides its new value in with the chevron nudge,
+  a slider's knob grows on focus, the switch is the stream menu's. *Context menus* grow out of the focused element's corner (or
+  under its button), their title and items rise in turn, the focused item fills with a fade. *Side menu*: slides in over 560 ms,
+  header and rows rise in turn, leaves in 240 ms. *Dialogs and the filter modal*: settle in from 0.96, title, note, fields and
+  buttons rise in turn, leave in 240 ms. *Toasts* leave in 240 ms.
+
+## Color roles
+
+Color is a seasoning, not a coating: the neutral text and surfaces carry the screen and the palette's three colors split
+the accents about **60 / 25 / 15** by visual weight (`colors.accent`, `accent2`, `accent3`; Delos: gold 40°, cyan 190°,
+indigo 250°, a split complement). Material You derives the same three from the wallpaper (main, +52°, tertiary) and
+follows the same roles. Light themes use darker shades (accent3 is dark there); content on an accent3 fill uses `onAccent3`
+(dark in the dark theme, white in the light one); a toast icon and a cover badge use `accent3OnInverse` / `accent3OnDark`
+and `accent3Line` is the faint hairline of the palette's third color, all in `ui/Colors.kt`.
+
+- **Text stays neutral**: labels of buttons and hints, titles, kickers and values are white or the grey text colors in
+  every palette. Color goes into shapes and icons.
+- `accent` (main, ~60 %): the focus ring and its glow, filled focus, on states (switch and slider fill, tiles that are
+  on), primary buttons, the selected tab, the gold of the active label in the stream menu.
+- `accent2` (secondary, ~25 %): icons of rows in the settings and the stream menu, arrows, the second half of every
+  gradient (switch, slider, progress), the check badge of a selected circle, spinners.
+- `accent3` (accent, ~15 %): the cherry on top, small and never text: the dot under the current page in the top bar, the
+  slider halo of the stream menu, the toast icon, the `Running` and cover badge icons, the ring ripple of the portal
+  overlay and the end dot of the launch ring.
+
+The animated backgrounds follow the same weights: the main color about 60 % of the lights, the secondary one a quarter,
+the accent the rest and fainter.
+
 ## Stream
 
 - SGSR upscaling and independent sharpening are implemented. Codec-specific behavior and measured
@@ -219,6 +351,94 @@ in assets.
 - The Upscaler page of the stream menu changes a row with one press. Its supersampling quality, mode
   and sharpness rows show the value just requested, not the one the renderer applied on its last frame
   (a fallback from 2× to 1× corrects the row afterwards).
+- Its last row, **Save for this game**, saves the live on/off, mode, sharpness and supersampling quality
+  as this game's overrides for future launches, with a check and "Saved" on the row (for 2.5 seconds) and no
+  confirmation dialog. It is hidden for a stream without its launch identity.
+
+### Stream menu
+
+"Console tiles" (prototype B, approved): **nine glass tiles** in one row over the lower part of the stream, the game's
+name and the A / B hints above the row's left end, the **complete help text** of the focused tile under it, and the
+pages behind the tiles in a **popover above the tile that opened it**, a caret on its bottom edge pointing at that
+tile. While the menu is open the player looks at the menu, not at the game, so it is generous: big tiles, the whole
+help text in large type, an unhurried entrance. The stream is never dimmed as a whole: only a soft gradient sits
+behind the dock (no card behind the tiles). Sizes are stage pixels (1920 × 1080, the dock bottom-aligned on it); the
+numbers and the pure geometry live in `StreamMenuLayout` (the CSS variables of `b.html` one for one), the durations and
+easings in the shared `Motion` (the dock's own delays in `StreamMenuMotion`), the dock in `StreamMenuBar`, the popover and its rows in
+`StreamMenuPopover`, the whole
+menu in one composable (`StreamMenuRoot`, so a window of its own can host it), the stream behind it in `StreamMenuHost`
+(`StreamMenu` implements it with the live `Game`, the debug preview with fake state). The prototype's `#quickmenu` /
+`#qmpop` show the same design; `build/streammenu-proto/b.html` with its screenshots is the specification.
+
+- **Tiles**: 150 px glass, corner 42, gap 40 (9 × 150 + 8 × 40 = 1670, 125 on each side), the top edge at y 628, icon 64
+  (Phosphor, filled on focus), label 24 SemiBold 24 below the tile. Resume, Keyboard, Overlay, Brightness, Bitrate,
+  Upscaler (Supersampling), More, Disconnect, Quit game. Toggles (Overlay, Upscaler) have an **On / Off pill**
+  (18 bold, 34 high) at the tile's top right corner (right −12, top −14; Overlay says Compact, the Upscaler its status
+  word) and turn accent: accent glass and icon, accent pill. **Focus** scales the tile to 1.12 (spring, 420 ms), lights
+  its glass, adds a glow and turns the label gold, 8 px lower; one **gold ring** (box 186, corner 56, 4 px, outer glow
+  and a soft glow inside that breathes over 2.6 s) glides under the focused tile. While a popover is open the ring rests
+  on the tile that opened it and the other tiles dim to 46 % (labels 40 %).
+- **Head**: the game's name (Unbounded 36, one line) and, stacked under it, the **A Select** / **B Back** hints
+  (44 px glyphs, label 24), their bottom edge 46 above the tiles, at the tile row's left edge.
+- **Caption**: the focused tile's name is not repeated; its **complete help** is centered under the labels, 28 with line
+  height 1.4, at most 1100 wide, balanced line breaks, in a box of exactly three lines at the current interface scale. It
+  never grows, scrolls or runs as a marquee: `StreamMenuLayoutTest` checks every text it can show (all tiles, every
+  upscaler status) at scales 1.0, 1.15 and 1.3 against the characters of a line; a text that does not fit fails the
+  test and is shortened in `StreamMenuHelp`. A new text slides up 18 px out of a 6 px blur (420 ms); it is gone while a
+  popover is open.
+- **Gradient and scrim**: transparent down to 34 % of the height, then 22 % at 48 %, 55 % at 66 %, 80 % at 84 % and 90 %
+  black at the bottom edge; an open popover adds a 22 % scrim. Glass is drawn as the prototype's tints and white
+  gradients over a dark undercoat (28 % under the tiles, 30 % under the card): the stream is a separate window (a
+  `SurfaceView`), so the frosted blur of the prototype is not available, and the undercoat keeps the glass readable
+  over a bright picture. A window that can blur its backdrop replaces the undercoat later (`TILE_BACKING_ALPHA`,
+  `CARD_BACKING_ALPHA`).
+- **Popover**: a glass card (tint rgba 34/44/84 at 50 %, white gradients, corner 44, shadow 0 40 90 −20) **above its own
+  tile**, centered on the tile and kept between 110 and 1810, its box ending 322 above the stage's bottom edge, with the
+  **caret** (60 × 24, rounded, ONE path with the card so the glass is continuous) at the tile's center, at least 72 from
+  the card's corners. Width per page: Brightness 780, Bitrate 860, Upscaler 980, More and the pages opened from it 920.
+  Padding 40 × 36 (28 below), header 64 (the back circle, focusable, B does the same, and the title in Unbounded 30),
+  rows 72 tall with 8 between them (corner 28, icon 32 in a 56 column, label 24 SemiBold, values 24), a 78 × 44 switch, a
+  240 × 12 slider with a 32 knob, choices between two chevrons. The card is as tall as its content, at most 686; only
+  More (12 rows) and a long list of keys scroll inside, with faded edges. The help of the focused row stands under the
+  rows in a box of two lines (three from interface scale 1.15 up), complete, never scrolling. The Upscaler page, with
+  Supersampling quality and **Save for this game**, fits at every interface scale (a test pins the sum). The pages
+  opened from More (Send keys, Commands, Mouse mode) are anchored over the More tile.
+- **Navigation**: Left/Right move along the tiles. A on a toggle or action tile acts at once; A on Brightness, Bitrate,
+  Upscaler or More opens its popover and puts the focus on its first row (the focus cannot leave the popover with the
+  D-pad). B in a popover closes it and returns the focus to its tile; Send keys, Commands and Mouse mode are opened from
+  More, so B there goes back to that row of More first. B on the dock resumes the stream. The open and close buttons (L3
+  + R3 by default, the swipe up) and the external display's input routing are unchanged. **Touch**: a tap on a tile is A
+  (a tap on another tile with a page while a popover is open morphs the popover to that page, a tap on the same tile
+  closes it; the tiles without a page do nothing then); a tap outside the popover closes the popover only and never
+  resumes the stream (Resume and B do).
+- **Motion** (every number is a `--d-*` / `--ease-*` variable of `b.html`, copied to the shared `Motion` and `StreamMenuMotion`): the **entrance**
+  runs on one clock (about 1.3 s): each tile rises 90 px from a 0.8 scale with the overshooting spring (620 ms), 42 ms
+  after the one before, starting 100 ms in; labels fade in 140 ms after their tile; the head rises 24 px from 60 ms; the
+  ring scales in from 0.7, 260 ms after the first focused tile; the caption rises 20 px from 520 ms. The **exit** (240 ms,
+  ease-in) drops the tiles 46 px to a 0.92 scale and fades everything, the last tile first (8 ms apart); the window
+  closes 320 ms after it starts. Focus: tile and icon springs, ring glide 560 ms with a slight overshoot
+  (`--ease-glide`), label gold. **Popover**: the dock sinks 160 px over 640 ms; the card grows from 0.86 around the
+  caret's tip with the spring (560 ms) while its glass fades in over 336 ms; its rows rise 18 px and fade in 46 ms apart;
+  it shrinks back to the caret in 240 ms. Another tile's page **morphs** the card: x, width, caret and height follow
+  their targets with a spring (stiffness 190, damping ratio .8), the old rows rise out in 140 ms and the new ones, the
+  title and the help enter after 150 ms. A switch knob springs across, a choice's chevron nudges 7 px and its new value
+  slides in 22 px, a slider's knob grows to 1.18 when focused, a pill that changes pops in from 0.6. With reduced motion
+  every transform is dropped: only fades (and colors) remain, the ring and the dock jump, the geometry snaps.
+
+### Stream menu preview (debug builds)
+
+The real menu can be drawn without a stream, over a sunset "game scene", with made-up values (`FakeStreamMenuHost` in
+`src/debug`; `ShellActivity` hands the intent to `StreamMenuPreview`, which `src/release` replaces by a stub):
+
+```
+adb shell am start -n io.github.meitoncz.delos.debug/com.limelight.shell.ShellActivity --es preview_screen stream_menu \
+  --es preview_page <main|upscaler|bitrate|brightness|more|keys|commands|mouse> --ei preview_focus <tile 0..8> \
+  [--ei preview_row <row of the page to focus>] [--ez preview_animate true]
+```
+
+The menu starts already open at that page without its entrance; `--ez preview_animate true` plays the entrance, so a
+screenshot after about 1.4 s shows the settled result. No profile is needed. Resume or B close the menu; a tap on the
+scene opens it again.
 
 ## Native shell architecture and design constraints
 

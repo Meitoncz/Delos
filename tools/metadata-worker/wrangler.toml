@@ -1,0 +1,18 @@
+name = "delos-meta"
+main = "src/index.js"
+compatibility_date = "2026-11-02"
+workers_dev = true
+preview_urls = false
+
+# Secrets are never listed here. Upload them with set-secrets.ps1 (see README.md):
+#   IGDB_CLIENT_ID, IGDB_CLIENT_SECRET, PCGW_BOT_USERNAME, PCGW_BOT_PASSWORD
+
+# Per-client rate limit (the key is the client IP). Approximate and per Cloudflare location; the Worker falls back
+# to an in-isolate token bucket when this binding is missing.
+[[ratelimits]]
+name = "RATE_LIMITER"
+namespace_id = "5901"
+
+  [ratelimits.simple]
+  limit = 200
+  period = 60

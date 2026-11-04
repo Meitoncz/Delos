@@ -190,7 +190,7 @@ fun DebugInfoScreen() {
         BasicText("Debug info", style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx),
             modifier = Modifier.offset(150.px, 124.px))
         Row(Modifier.fillMaxSize().padding(start = 150.px, end = 150.px, top = 230.px, bottom = 110.px), horizontalArrangement = Arrangement.spacedBy(56.px)) {
-            CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
+            CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView, com.limelight.shell.ui.LocalEntranceStagger provides com.limelight.shell.ui.rememberEntranceStagger()) {
                 LazyColumn(
                     Modifier.weight(1f).fadeEdges(stage, top = 14f, bottom = 90f),
                     contentPadding = PaddingValues(start = 18.px, end = 18.px, top = 14.px, bottom = 140.px),
@@ -235,7 +235,7 @@ private fun DetailsPanel(row: DebugRow?, modifier: Modifier) {
                 if (event.type == KeyEventType.KeyDown) scope.launch { scroll.animateScrollBy(direction * 130f * k) }
                 true
             } else false
-        }.focusEffects(onClick = {}, corner = 34f, focusScale = 1f, clickCue = null)
+        }.focusEffects(onClick = {}, corner = 34f, focusScale = 1f, clickCue = null, pressScale = 1f)
             .clip(shape).glass(colors.surface).border(1.px, colors.line, shape).verticalScroll(scroll).padding(44.px),
         verticalArrangement = Arrangement.spacedBy(18.px),
     ) {

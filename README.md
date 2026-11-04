@@ -39,13 +39,15 @@ that every idea is implemented or that its source code was copied.
 Game information uses [IGDB](https://www.igdb.com/) and technical evidence from
 [PCGamingWiki](https://www.pcgamingwiki.com/) (data under
 [CC BY-NC-SA 3.0](https://creativecommons.org/licenses/by-nc-sa/3.0/) unless otherwise noted).
+The genre and theme pills of a game with a Steam page use its public Steam store user tags, read from the store
+page through the metadata service (unofficial, may change; IGDB is used when the tags are unavailable).
 Completion times come from [HowLongToBeat](https://howlongtobeat.com/) through an unofficial client.
 The search flow is adapted from
 [howlongtobeatpy 1.0.24](https://github.com/ScrappyCocco/HowLongToBeat-PythonAPI/tree/4275a452b9ccd230b7c2a82b8d1a5d851285eb14),
 MIT, Copyright (c) 2018 Michele. The full notice is bundled in
 `app/src/main/assets/licenses/howlongtobeatpy.txt`. Provider access/data terms are separate from the
-client's code license. See [GUI.md](docs/GUI.md#game-information-and-library-filters) for behavior and
-local credential provisioning; never commit real credentials.
+client's code license. See [GUI.md](docs/GUI.md#game-information-and-library-filters) for behavior and the
+metadata service setup; the provider credentials live only in the Cloudflare Worker, never in the APK or the repository.
 
 ---
 

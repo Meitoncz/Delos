@@ -21,6 +21,8 @@ data class MetadataCandidate(
     val platformIds: List<Int> = emptyList(),
     /** IGDB's count of user and critic ratings; the only popularity signal used to break an otherwise exact tie. */
     val ratingCount: Int = 0,
+    /** IGDB themes (Fantasy, Horror, ...), same shape as [genres]; empty when IGDB lists none. */
+    val themes: List<GameGenre> = emptyList(),
 ) {
     val isPc: Boolean get() = IGDB_PC_PLATFORM in platformIds
 }
@@ -46,6 +48,9 @@ data class GameMetadata(
     val igdbFailedAt: Long = 0,
     val pcgwFailedAt: Long = 0,
     val hltbFailedAt: Long = 0,
+    val steamFailedAt: Long = 0,
+    /** The game's Steam store user tags, most voted first; empty when it has no Steam id or the store listed none. */
+    val steamTags: List<String> = emptyList(),
 )
 
 @Immutable
@@ -62,17 +67,20 @@ enum class LengthFilter { ANY, UNDER_10, FROM_10_TO_30, FROM_30_TO_60, OVER_60, 
 @Immutable
 data class MetadataFilters(
     val genreId: Int? = null,
+    val themeId: Int? = null,
     val hdr: HdrFilter = HdrFilter.ANY,
     val length: LengthFilter = LengthFilter.ANY,
 ) {
     val active: Boolean get() = activeCount > 0
 
-    /** How many of the three criteria narrow the library. */
-    val activeCount: Int get() = listOf(genreId != null, hdr != HdrFilter.ANY, length != LengthFilter.ANY).count { it }
+    /** How many of the four criteria narrow the library. */
+    val activeCount: Int get() = listOf(genreId != null, themeId != null, hdr != HdrFilter.ANY, length != LengthFilter.ANY).count { it }
 
     fun matches(app: App, metadata: GameMetadata?): Boolean {
         if (BundledArtwork.kind(app) != null) return !active
+        // Any of the game's genres and themes counts, not only the main ones the home screen shows
         if (genreId != null && metadata?.candidate?.genres?.none { it.id == genreId } != false) return false
+        if (themeId != null && metadata?.candidate?.themes?.none { it.id == themeId } != false) return false
         val support = metadata?.hdr?.support ?: NativeHdr.UNKNOWN
         if (hdr != HdrFilter.ANY && support.name != hdr.name) return false
         val seconds = metadata?.completion?.seconds?.takeIf { it > 0 }

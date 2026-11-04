@@ -68,6 +68,7 @@ data class SettingSpec(
         "checkbox_sgsr" -> Symbols.UPSCALER
         "list_sgsr_quality" -> Symbols.UPSCALER_MODE
         "seekbar_sgsr_sharpness" -> Symbols.SHARPNESS
+        "list_sgsr_supersampling_level" -> Symbols.HIGH_QUALITY
         "video_format" -> Symbols.MOVIE
         "checkbox_enable_hdr" -> Symbols.HDR_ON
         "checkbox_ultra_low_latency" -> Symbols.BOLT
@@ -231,7 +232,7 @@ class SettingsCatalog(context: Context) {
             key == "checkbox_host_audio" || category == "category_audio_settings" -> SettingsTab.AUDIO
             key == "checkbox_enable_hdr" || key == "checkbox_use_virtual_display" -> SettingsTab.DISPLAY
             category == "category_video_settings" -> if (key in setOf(
-                    "checkbox_sgsr", "list_sgsr_quality", "seekbar_sgsr_sharpness", "checkbox_auto_orientation", "checkbox_auto_invert_video_resolution", "checkbox_enable_view_top_center",
+                    "checkbox_sgsr", "list_sgsr_quality", "seekbar_sgsr_sharpness", "list_sgsr_supersampling_level", "checkbox_auto_orientation", "checkbox_auto_invert_video_resolution", "checkbox_enable_view_top_center",
                     "seekbar_resolution_scale_factor", "list_video_scale_mode", "checkbox_enforce_display_mode", "checkbox_enable_fullexdisplay",
                 )) SettingsTab.DISPLAY else SettingsTab.STREAM
             category == "category_advanced_settings" -> if (key in setOf("checkbox_full_range", "checkbox_reduce_refresh_rate")) SettingsTab.DISPLAY else SettingsTab.STREAM

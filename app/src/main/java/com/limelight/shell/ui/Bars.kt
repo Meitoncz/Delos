@@ -244,14 +244,16 @@ private fun NavButtonView(button: NavButton) {
                 },
                 filled = focused,
             )
+            // The page you are on: a small dot in the third color under its icon (the focused button is filled instead)
+            if (button.current && !focused) Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 5.px).size(6.px).clip(CircleShape).background(colors.accent3))
         }
         // Tooltip under the focused button (`.nav-btn .tip`); it takes the button's size, so a long label
         // cannot widen the bar, and overflows it centered
         AnimatedVisibility(
             focused,
             modifier = Modifier.matchParentSize().wrapContentSize(Alignment.TopCenter, unbounded = true).offset(y = 84.px),
-            enter = fadeIn(tween(250)) + slideInVertically(tween(350, easing = EaseOut)) { -it / 4 },
-            exit = fadeOut(tween(250)) + slideOutVertically(tween(350, easing = EaseOut)) { -it / 4 },
+            enter = fadeIn(tween(Motion.FADE, easing = Motion.Ease)) + slideInVertically(tween(Motion.POP_IN, easing = EaseOut)) { -it / 4 },
+            exit = fadeOut(tween(Motion.EXIT, easing = Motion.Ease)) + slideOutVertically(tween(Motion.EXIT, easing = Motion.In)) { -it / 4 },
         ) {
             BasicText(
                 button.label,
@@ -335,20 +337,22 @@ fun HintBar(hints: List<Hint>, note: String?, modifier: Modifier = Modifier, not
     }
 }
 
+/** A button hint's glyph, [size] stage pixels (the stream menu's bar uses a bigger one than the hint bars). */
 @Composable
-fun GlyphButton(glyph: Glyph) {
+fun GlyphButton(glyph: Glyph, size: Int = 38) {
     val colors = LocalDelosColors.current
+    val k = size / 38f
     Box(
         // Icons always sit in a circle; letters (L1…) may widen it into a pill
-        (if (glyph is Glyph.Icon) Modifier.size(38.px) else Modifier.defaultMinSize(minWidth = 38.px).height(38.px))
+        (if (glyph is Glyph.Icon) Modifier.size(size.px) else Modifier.defaultMinSize(minWidth = size.px).height(size.px))
             .clip(CircleShape)
             .background(colors.text)
             .then(if (glyph is Glyph.Icon) Modifier else Modifier.padding(horizontal = 8.px)),
         contentAlignment = Alignment.Center,
     ) {
         when (glyph) {
-            is Glyph.Letter -> BasicText(glyph.text, style = TextStyle(color = colors.bg, fontFamily = Figtree, fontWeight = FontWeight.ExtraBold, fontSize = 21.tpx))
-            is Glyph.Icon -> Symbol(glyph.symbol, (24f * glyph.scale).tpx, colors.bg, filled = true)
+            is Glyph.Letter -> BasicText(glyph.text, style = TextStyle(color = colors.bg, fontFamily = Figtree, fontWeight = FontWeight.ExtraBold, fontSize = (21f * k).tpx))
+            is Glyph.Icon -> Symbol(glyph.symbol, (24f * glyph.scale * k).tpx, colors.bg, filled = true)
         }
     }
 }

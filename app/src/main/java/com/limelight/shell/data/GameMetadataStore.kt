@@ -60,7 +60,7 @@ class GameMetadataStore internal constructor(
     private val progressMutex = Mutex()
     private val progressBatches = ArrayList<ProgressBatch>()
 
-    val credentialsAvailable: Boolean get() = providers.credentialsAvailable
+    val proxyAvailable: Boolean get() = providers.proxyAvailable
 
     val filters: MetadataFilters get() = filterState
 
@@ -70,6 +70,7 @@ class GameMetadataStore internal constructor(
         filterState = value
         settings().edit()
             .putInt(KEY_GENRE, value.genreId ?: 0)
+            .putInt(KEY_THEME, value.themeId ?: 0)
             .putString(KEY_HDR, value.hdr.name)
             .putString(KEY_LENGTH, value.length.name)
             .apply()
@@ -78,8 +79,14 @@ class GameMetadataStore internal constructor(
     fun entry(pc: Pc, app: App): GameMetadataState =
         if (BundledArtwork.kind(app) != null) resolvedEmptyState else states[key(pc, app)] ?: emptyState
 
+    /** Every genre any of [apps] has in the records published so far, by name. */
     fun genres(pc: Pc, apps: List<App>): List<GameGenre> = apps.asSequence()
         .flatMap { entry(pc, it).data?.candidate?.genres.orEmpty().asSequence() }
+        .distinctBy { it.id }.sortedBy { it.name }.toList()
+
+    /** Every theme any of [apps] has in the records published so far, by name. */
+    fun themes(pc: Pc, apps: List<App>): List<GameGenre> = apps.asSequence()
+        .flatMap { entry(pc, it).data?.candidate?.themes.orEmpty().asSequence() }
         .distinctBy { it.id }.sortedBy { it.name }.toList()
 
     /**
@@ -95,7 +102,7 @@ class GameMetadataStore internal constructor(
         val now = clock()
         val pending = games.filter { refreshDue(entry(pc, it).data, now) }
         if (pending.isEmpty()) return
-        if (!providers.credentialsAvailable) {
+        if (!providers.proxyAvailable) {
             for (app in pending) ensure(pc, app)
             return
         }
@@ -122,8 +129,8 @@ class GameMetadataStore internal constructor(
             val key = key(pc, app)
             val previous = loadLocked(pc, app)
             if (!force && !refreshDue(previous.data, clock())) return false
-            if (!providers.credentialsAvailable) {
-                publish(key, previous.copy(resolved = true, error = "Game metadata credentials are not available in this build"))
+            if (!providers.proxyAvailable) {
+                publish(key, previous.copy(resolved = true, error = "Game metadata is not available in this build"))
                 return false
             }
             if (batch == null) {
@@ -147,7 +154,7 @@ class GameMetadataStore internal constructor(
         } catch (_: Exception) {
             // A cancelled call can surface as an I/O error; that is not a provider failure.
             currentCoroutineContext().ensureActive()
-            // Provider payloads and authentication failures must never leak credentials to the UI/log.
+            // Provider payloads and failures must never leak details to the UI/log.
             recordLookupFailure(pc, app, previous.data)
         } finally {
             clearLoading(key)
@@ -221,7 +228,7 @@ class GameMetadataStore internal constructor(
     }
 
     /**
-     * Asks PCGamingWiki and HowLongToBeat about a matched game. A provider whose last failure is still inside its
+     * Asks PCGamingWiki, HowLongToBeat and (for a game with a Steam id) the Steam store about a matched game. A provider whose last failure is still inside its
      * backoff is skipped (unless [force]) and keeps its previous answer; the failure time is persisted per provider.
      */
     private suspend fun resolve(pc: Pc, app: App, candidate: MetadataCandidate, manual: Boolean, previous: GameMetadata?, force: Boolean) {
@@ -255,10 +262,30 @@ class GameMetadataStore internal constructor(
             }
         }
         currentCoroutineContext().ensureActive()
-        val failed = hdrFailedAt > 0 || completionFailedAt > 0
+        // Steam store user tags drive the card's genre and theme pills for games that have a Steam id; a failed
+        // fetch keeps the earlier tags and, like the other providers, is remembered so it is not retried on every focus.
+        var steamTags = carried?.steamTags.orEmpty()
+        var steamFailedAt = carried?.steamFailedAt ?: 0L
+        if (candidate.steamAppIds.isEmpty()) {
+            steamTags = emptyList()
+            steamFailedAt = 0
+        } else if (force || !isBackedOff(steamFailedAt, started)) {
+            try {
+                steamTags = blocking { providers.steamTags(candidate) }
+                steamFailedAt = 0
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                currentCoroutineContext().ensureActive()
+                steamFailedAt = clock()
+            }
+        }
+        currentCoroutineContext().ensureActive()
+        val failed = hdrFailedAt > 0 || completionFailedAt > 0 || steamFailedAt > 0
         val data = GameMetadata(
             candidate, hdr, completion, if (failed) 0 else clock(), manual,
             igdbFailedAt = 0, pcgwFailedAt = hdrFailedAt, hltbFailedAt = completionFailedAt,
+            steamFailedAt = steamFailedAt, steamTags = steamTags,
         )
         withContext(io) { write(pc, app, data) }
         publish(key(pc, app), GameMetadataState(data = data, resolved = true, error = errorFor(data)))
@@ -360,6 +387,7 @@ class GameMetadataStore internal constructor(
         val prefs = settings()
         return MetadataFilters(
             prefs.getInt(KEY_GENRE, 0).takeIf { it > 0 },
+            prefs.getInt(KEY_THEME, 0).takeIf { it > 0 },
             runCatching { HdrFilter.valueOf(prefs.getString(KEY_HDR, null).orEmpty()) }.getOrDefault(HdrFilter.ANY),
             runCatching { LengthFilter.valueOf(prefs.getString(KEY_LENGTH, null).orEmpty()) }.getOrDefault(LengthFilter.ANY),
         )
@@ -370,9 +398,10 @@ class GameMetadataStore internal constructor(
     private data class CachedMetadata(val schema: Int, val data: GameMetadata)
 
     private companion object {
-        const val CACHE_SCHEMA = 4
+        const val CACHE_SCHEMA = 6
         const val LIBRARY_CONCURRENCY = 2
         const val KEY_GENRE = "metadata_filter_genre"
+        const val KEY_THEME = "metadata_filter_theme"
         const val KEY_HDR = "metadata_filter_hdr"
         const val KEY_LENGTH = "metadata_filter_length"
     }

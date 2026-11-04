@@ -90,6 +90,7 @@ import com.limelight.shell.ui.LocalFeedback
 import com.limelight.shell.ui.NavButton
 import com.limelight.shell.ui.RowValue
 import com.limelight.shell.ui.Scrim
+import com.limelight.shell.ui.screenTransition
 import com.limelight.shell.ui.SettingRow
 import com.limelight.shell.ui.SideMenuHeader
 import com.limelight.shell.ui.SideMenuLayer
@@ -476,11 +477,8 @@ fun Shell(
                 }
                 AnimatedContent(
                     shell.screen,
-                    transitionSpec = {
-                        // `.screen`: fade in .5 s while settling from a slight zoom (.7 s)
-                        (fadeIn(tween(500)) + scaleIn(tween(700, easing = EaseOut), initialScale = 1.035f)) togetherWith
-                            (fadeOut(tween(500)) + scaleOut(tween(700, easing = EaseOut), targetScale = 1.035f))
-                    },
+                    // `.screen` (docs/GUI.md, "Motion"): the shared transition, only fades with reduced motion
+                    transitionSpec = { screenTransition(appearance.reducedMotion) },
                     label = "screen",
                 ) { screen ->
                     when (screen) {

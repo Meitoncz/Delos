@@ -3,110 +3,58 @@ package com.limelight.shell
 import android.graphics.Color as AndroidColor
 import android.graphics.drawable.ColorDrawable
 import android.provider.Settings
+import android.os.Build
 import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.widget.FrameLayout
 import androidx.activity.ComponentDialog
-import com.limelight.binding.input.KeyboardTranslator
-import com.limelight.GameMenu
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.focusable
-import androidx.compose.runtime.key
-import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.BasicText
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.runtime.produceState
-import androidx.compose.runtime.withFrameNanos
-import kotlinx.coroutines.delay
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.io.FileNotFoundException
-import com.limelight.nvstream.http.HostHttpResponseException
-import com.limelight.shell.ui.PillButton
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.lifecycleScope
 import com.limelight.Game
-import com.limelight.utils.ExternalDisplayControlActivity
+import com.limelight.GameMenu
+import com.limelight.binding.input.KeyboardTranslator
+import com.limelight.nvstream.http.HostHttpResponseException
 import com.limelight.shell.data.ProfileStore
 import com.limelight.shell.settings.AppearanceStore
+import com.limelight.shell.settings.GameSettingsStore
 import com.limelight.shell.settings.StreamMenuSettings
-import com.limelight.shell.settings.SettingsHelp
-import com.limelight.shell.settings.StreamMenuHelp
-import com.limelight.shell.ui.InformationPanel
-import com.limelight.shell.ui.LocalReducedMotion
+import com.limelight.shell.settings.upscalerSaveValues
 import com.limelight.shell.ui.Feedback
-import com.limelight.shell.ui.Figtree
-import com.limelight.shell.ui.FocusGlow
-import com.limelight.shell.ui.FocusRing
-import com.limelight.shell.ui.Glyph
-import com.limelight.shell.ui.GlyphButton
-import com.limelight.shell.ui.InitialFocus
 import com.limelight.shell.ui.LocalDelosColors
 import com.limelight.shell.ui.LocalFeedback
-import com.limelight.shell.ui.RowValue
-import com.limelight.shell.ui.SettingRow
+import com.limelight.shell.ui.LocalReducedMotion
 import com.limelight.shell.ui.Stage
-import com.limelight.shell.ui.Symbol
-import com.limelight.shell.ui.Symbols
-import com.limelight.shell.ui.Unbounded
 import com.limelight.shell.ui.delosColors
-import com.limelight.shell.ui.focusEffects
-import com.limelight.shell.ui.px
 import com.limelight.shell.ui.systemAccentHue
-import com.limelight.shell.ui.tpx
+import com.limelight.utils.ExternalDisplayControlActivity
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
-
-private val LocalStreamHelp = staticCompositionLocalOf<(String) -> Unit> { {} }
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.FileNotFoundException
 
 /**
- * The Delos stream menu (the prototype's `#quickmenu`): a panel at the bottom of the stream with the
- * game's name and Resume, Keyboard, Overlay, More (the classic Artemis quick menu), Disconnect and
- * Quit game. It opens with the buttons set in Delos (L3 + R3 by default), a swipe up from the bottom
- * edge (unless turned off) and every way the classic menu opened. It is its own window, so the
- * controller does not reach the game while it is open. Created by Game (a small "Delos:" hook).
+ * The Delos stream menu (the prototype's `#quickmenu`, "Console tiles"): over the lower part of the stream the game's
+ * name and one row of nine glass tiles (Resume, Keyboard, Overlay, Brightness, Bitrate, Upscaler, More, Disconnect,
+ * Quit game) with the complete help of the focused tile under them; the pages behind the tiles open in a popover above the tile that opened them. It opens with
+ * the buttons set in Delos (L3 + R3 by default), a swipe up from the bottom edge (unless turned off) and every
+ * way the classic menu opened. It is its own window, so the controller does not reach the game while it is
+ * open. This class is that window and the bridge to the stream ([GameHost]); what is drawn is [StreamMenuRoot].
+ * Created by Game (a small "Delos:" hook).
  */
 class StreamMenu(private val game: Game) {
     private val swipe = StreamMenuSettings.swipe(game)
@@ -117,7 +65,7 @@ class StreamMenu(private val game: Game) {
      */
     private val shortcut = ButtonShortcut(StreamMenuSettings.buttons(game)) {
         if (!isOpen) show()
-        else if (menuReady) hide()
+        else if (menuReady) requestClose()
     }
     private var edgeGesture = false
     private var edgeStartY = 0f
@@ -127,6 +75,7 @@ class StreamMenu(private val game: Game) {
         extraBufferCapacity = 16,
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
+    private val closeRequests = MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
     private val analogNavigation = DirectionalRepeater()
 
     val isOpen: Boolean get() = dialog?.isShowing == true
@@ -205,7 +154,8 @@ class StreamMenu(private val game: Game) {
 
     fun show() {
         if (isOpen || game.isFinishing) return
-        val feedback = Feedback(game)
+        val appearance = AppearanceStore(game) { ProfileStore.currentSettings(game) }.appearance.value
+        val feedback = Feedback(game).also { it.hapticsEnabled = appearance.haptics }
         val d = ComponentDialog(game, android.R.style.Theme_Translucent_NoTitleBar_Fullscreen)
         d.window?.apply {
             setBackgroundDrawable(ColorDrawable(AndroidColor.TRANSPARENT))
@@ -214,9 +164,8 @@ class StreamMenu(private val game: Game) {
             attributes = attributes.apply { layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS }
             WindowCompat.setDecorFitsSystemWindows(this, false)
         }
-        val appearance = AppearanceStore(game) { ProfileStore.currentSettings(game) }.appearance.value
         val colors = delosColors(appearance, systemAccentHue(game))
-        val title = game.intent.getStringExtra(Game.EXTRA_APP_NAME) ?: "Stream"
+        val host = GameHost(d)
         menuReady = false
         val composeView = ComposeView(d.context).apply {
             setContent {
@@ -225,14 +174,30 @@ class StreamMenu(private val game: Game) {
                     menuReady = true
                 }
                 CompositionLocalProvider(LocalDelosColors provides colors, LocalFeedback provides feedback, LocalFocusTracker provides remember { FocusTracker() }, LocalReducedMotion provides appearance.reducedMotion) {
-                    Stage(textScale = appearance.uiScale / 100f) { MenuPanel(title, d) }
+                    Stage(textScale = appearance.uiScale / 100f) { StreamMenuRoot(host, externalActions, closeRequests) }
                 }
             }
         }
-        d.setContentView(composeView)
+        // The stream behind the menu is blurred, so the statistics overlay moves into the menu's window while it is open: it
+        // stays in front of the blur, sharp (and goes back to the stream's layout when the menu closes)
+        val overlay = game.performanceOverlayContainer
+        val overlayHome = overlay.parent as? ViewGroup
+        val overlayIndex = overlayHome?.indexOfChild(overlay) ?: -1
+        val overlayParams = overlay.layoutParams
+        val root = FrameLayout(d.context)
+        root.addView(composeView, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+        if (overlayHome != null) {
+            overlayHome.removeView(overlay)
+            root.addView(overlay, overlayParams)
+        }
+        d.setContentView(root)
         // While the menu is open the buttons reach its window, not the stream: the shortcut closes it again
         d.setOnKeyListener { _, _, event -> onKey(event) }
         d.setOnDismissListener {
+            if (overlayHome != null) {
+                (overlay.parent as? ViewGroup)?.removeView(overlay)
+                overlayHome.addView(overlay, overlayIndex.coerceIn(0, overlayHome.childCount), overlayParams)
+            }
             feedback.release()
             analogNavigation.reset()
             menuReady = false
@@ -254,14 +219,18 @@ class StreamMenu(private val game: Game) {
         dialog?.dismiss()
     }
 
+    /** Closes the open menu the way its own Resume does, with its exit (the shortcut's second press). */
+    private fun requestClose() {
+        if (closeRequests.subscriptionCount.value > 0) closeRequests.tryEmit(Unit) else hide()
+    }
+
     /** The external display can disappear without giving its dialog a normal dismiss sequence. */
     fun closeForDisplayRemoval() {
         hide()
     }
 
-    private enum class Page { MAIN, MORE, KEYS, COMMANDS, BRIGHTNESS, BITRATE, UPSCALER, MOUSE }
     private var bitrateBusy by mutableStateOf(false)
-    private var bitrateMessage by mutableStateOf<String?>(null)
+    private var bitrateResult by mutableStateOf<BitrateResult?>(null)
 
     // Delos: the stream's brightness in percent for this stream, -1 = the system's (from Moonlight X's
     // brightness slider)
@@ -306,341 +275,120 @@ class StreamMenu(private val game: Game) {
         action()
     }
 
-    @OptIn(ExperimentalLayoutApi::class)
-    @Composable
-    private fun MenuPanel(title: String, d: ComponentDialog) {
-        var page by remember { mutableStateOf(Page.MAIN) }
-        var helpKey by remember(page) { mutableStateOf(when (page) {
-            Page.MAIN -> "Resume"
-            Page.MORE -> "More"
-            Page.KEYS -> "Send keys"
-            Page.COMMANDS -> "Commands"
-            Page.BRIGHTNESS -> "Screen brightness"
-            Page.BITRATE -> "Bitrate"
-            Page.UPSCALER -> "Upscaler"
-            Page.MOUSE -> "Touchscreen mode"
-        }) }
-        // B on a sub page goes back to the main page; on the main page it resumes (closes the menu)
-        BackHandler(enabled = page != Page.MAIN) { page = Page.MAIN }
-        fun close(then: () -> Unit = {}) {
-            d.dismiss()
-            whenGameFocused(then)
+    /** Asks the host for [requested] kbps (the Bitrate popover's Apply) and reports what it accepted. */
+    private fun applyBitrate(requested: Int, accepted: (Int) -> Unit) {
+        if (bitrateBusy) return
+        if (!game.connected) {
+            bitrateResult = BitrateResult.Failed(BitrateFailure.NOT_CONNECTED)
+            return
         }
-        val focusManager = LocalFocusManager.current
-        val focusTracker = LocalFocusTracker.current
-        LaunchedEffect(d) {
-            externalActions.collect { action ->
-                when (action) {
-                    ExternalMenuAction.Activate -> focusTracker.activate()
-                    ExternalMenuAction.Back -> if (page == Page.MAIN) close() else page = Page.MAIN
-                    is ExternalMenuAction.Move -> {
-                        val adjustment = when (action.direction) {
-                            MenuDirection.LEFT -> -1
-                            MenuDirection.RIGHT -> 1
-                            else -> 0
-                        }
-                        if (adjustment == 0 || !focusTracker.adjust(adjustment, action.repeatCount)) {
-                            focusManager.moveFocus(
-                                when (action.direction) {
-                                    MenuDirection.UP -> FocusDirection.Up
-                                    MenuDirection.DOWN -> FocusDirection.Down
-                                    MenuDirection.LEFT -> FocusDirection.Left
-                                    MenuDirection.RIGHT -> FocusDirection.Right
-                                }
-                            )
-                        }
-                    }
+        bitrateBusy = true
+        bitrateResult = null
+        game.lifecycleScope.launch {
+            try {
+                val applied = withContext(Dispatchers.IO) { game.conn.setRuntimeBitrate(requested) }
+                if (game.connected && !game.isFinishing) {
+                    game.prefConfig.bitrate = applied
+                    accepted(applied)
+                    bitrateResult = if (applied < requested) BitrateResult.Limited(applied) else BitrateResult.Accepted(applied)
                 }
-            }
-        }
-        // Toggles keep the menu open; reading [changes] redraws their On / Off state after each one
-        var changes by remember { mutableIntStateOf(0) }
-        fun toggle(action: () -> Unit) {
-            action()
-            changes++
-        }
-        val prefs = game.prefConfig
-        val upscalerStatus by produceState(game.upscalingStatus) {
-            while (true) { value = game.upscalingStatus; delay(250) }
-        }
-        val supersamplingMode by produceState(game.isSupersamplingMode) {
-            while (true) { value = game.isSupersamplingMode; delay(250) }
-        }
-        // The level the renderer reports: it follows a press at once, and the poll shows a later correction (the
-        // renderer found that 2× does not fit). Reading the level the last frame applied instead made the row
-        // show the old value after a press, until the next press redrew it.
-        var supersamplingLevel by remember { mutableIntStateOf(game.supersamplingLevel) }
-        LaunchedEffect(Unit) { while (true) { supersamplingLevel = game.supersamplingLevel; delay(250) } }
-        @Suppress("UNUSED_EXPRESSION") changes // subscribes to it
-        val classic = game.gameMenuCallbacks as? GameMenu
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
-            // linear-gradient(transparent, rgba(0, 0, 0, .75) 40%)
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .background(Brush.verticalGradient(0f to Color.Transparent, .4f to Color.Black.copy(alpha = .75f), 1f to Color.Black.copy(alpha = .75f)))
-                    .padding(top = 90.px, bottom = 56.px),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(26.px),
-            ) {
-                val heading = when (page) {
-                    Page.MAIN -> title
-                    Page.MORE -> "More"
-                    Page.KEYS -> "Send keys"
-                    Page.COMMANDS -> "Server commands"
-                    Page.BRIGHTNESS -> "Brightness"
-                    Page.BITRATE -> "Stream bitrate"
-                    Page.UPSCALER -> if (supersamplingMode) "Supersampling" else "Snapdragon Game Super Resolution"
-                    Page.MOUSE -> "Mouse and touch"
-                }
-                BasicText(heading, style = TextStyle(color = Color.White, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 30.tpx, textAlign = TextAlign.Center))
-                Row(Modifier.fillMaxWidth().padding(horizontal = 110.px),
-                    horizontalArrangement = Arrangement.spacedBy(40.px), verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                        CompositionLocalProvider(LocalStreamHelp provides { helpKey = it }) {
-                            key(page) {
-                                val first = remember { FocusRequester() }
-                                InitialFocus(first)
-                                when (page) {
-                                    Page.MAIN -> FlowRow(maxItemsInEachRow = 5,
-                                        horizontalArrangement = Arrangement.spacedBy(38.px, Alignment.CenterHorizontally),
-                                        verticalArrangement = Arrangement.spacedBy(26.px)) {
-                                        MenuCircle(Symbols.RESUME, "Resume", Modifier.focusRequester(first)) { close() }
-                                        MenuCircle(Symbols.KEYBOARD, "Keyboard") { close { game.toggleKeyboard() } }
-                                        MenuCircle(Symbols.OVERLAY, "Overlay", on = prefs.enablePerfOverlay, state = if (!prefs.enablePerfOverlay) "Off" else if (prefs.enablePerfOverlayLite) "Compact" else "On") {
-                                            toggle { game.toggleHUD() }
-                                        }
-                                        MenuCircle(Symbols.BRIGHTNESS_MEDIUM, "Brightness", state = "${brightnessPercent()} %") { page = Page.BRIGHTNESS }
-                                        MenuCircle(Symbols.NETWORK_CHECK, "Bitrate") { page = Page.BITRATE }
-                                        MenuCircle(Symbols.UPSCALER, if (supersamplingMode) "Supersampling" else "Upscaler",
-                                            on = game.isUpscalingRequested, state = upscalerStatus) { page = Page.UPSCALER }
-                                        MenuCircle(Symbols.MORE_HORIZ, "More") { page = Page.MORE }
-                                        MenuCircle(Symbols.LOGOUT, "Disconnect") { close { leave(quit = false) } }
-                                        MenuCircle(Symbols.POWER_SETTINGS_NEW, "Quit game") { close { leave(quit = true) } }
-                                    }
-                                    // Everything the classic Artemis quick menu offered that the main page does not
-                                    Page.MORE -> Column(verticalArrangement = Arrangement.spacedBy(26.px), horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Row(horizontalArrangement = Arrangement.spacedBy(38.px)) {
-                                            MenuCircle(Symbols.KEYBOARD_COMMAND_KEY, "Send keys", Modifier.focusRequester(first)) { page = Page.KEYS }
-                                            MenuCircle(Symbols.UPLOAD, "Send clipboard") { close { game.sendClipboard(true) } }
-                                            MenuCircle(Symbols.DOWNLOAD, "Get clipboard") { close { game.getClipboard(0) } }
-                                            MenuCircle(Symbols.TERMINAL, "Commands") { page = Page.COMMANDS }
-                                            MenuCircle(Symbols.TASK_MANAGER, "Task manager") {
-                                                close { game.sendKeys(shortArrayOf(KeyboardTranslator.VK_LCONTROL.toShort(), KeyboardTranslator.VK_LSHIFT.toShort(), KeyboardTranslator.VK_ESCAPE.toShort())) }
-                                            }
-                                            MenuCircle(Symbols.ZOOM_IN, "Zoom", on = game.isZoomModeEnabled) { toggle { game.toggleZoomMode() } }
-                                        }
-                                        Row(horizontalArrangement = Arrangement.spacedBy(38.px)) {
-                                            if (game.allowChangeMouseMode) MenuCircle(Symbols.MOUSE, "Mouse mode") { page = Page.MOUSE }
-                                            MenuCircle(Symbols.JOYSTICK, "On-screen controls", on = prefs.onscreenController) { toggle { game.toggleVirtualController() } }
-                                            MenuCircle(Symbols.KEYBOARD_FULL, "Full keyboard") { toggle { game.toggleFullKeyboard() } }
-                                            MenuCircle(Symbols.KEY_LAYOUT, "Key layout") { toggle { game.toggleKeyboardController() } }
-                                            MenuCircle(Symbols.TOUCH_APP, "Touch sensitivity", on = prefs.enableTouchSensitivity) { toggle { game.switchTouchSensitivity() } }
-                                            MenuCircle(Symbols.SCREEN_ROTATION, "Rotate") { close { game.rotateScreen() } }
-                                        }
-                                    }
-                                    Page.BRIGHTNESS -> Box(Modifier.width(900.px)) {
-                                        SettingRow(
-                                            Symbols.BRIGHTNESS_MEDIUM, "Screen brightness",
-                                            RowValue.Slider(brightnessPercent(), 5, 100, 5, " %") { toggle { applyBrightness(it, d) } },
-                                            Modifier.focusRequester(first),
-                                            onFocused = { helpKey = "Screen brightness" },
-                                        )
-                                    }
-                                    Page.BITRATE -> {
-                                        var requested by remember { mutableIntStateOf(prefs.bitrate.coerceIn(1000, 1000000)) }
-                                        Column(Modifier.width(1000.px), horizontalAlignment = Alignment.CenterHorizontally,
-                                            verticalArrangement = Arrangement.spacedBy(22.px)) {
-                                            SettingRow(Symbols.NETWORK_CHECK, "Bitrate",
-                                                RowValue.Slider(requested, 1000, 1000000, 1000, " Mbps", 1000) { requested = it },
-                                                Modifier.focusRequester(first), enabled = !bitrateBusy,
-                                                onFocused = { helpKey = "Bitrate" })
-                                            PillButton(if (bitrateBusy) "Applying…" else "Apply", Symbols.CHECK, {
-                                                if (!bitrateBusy && game.connected) {
-                                                    bitrateBusy = true
-                                                    bitrateMessage = null
-                                                    game.lifecycleScope.launch {
-                                                        try {
-                                                            val applied = withContext(Dispatchers.IO) { game.conn.setRuntimeBitrate(requested) }
-                                                            if (game.connected && !game.isFinishing) {
-                                                                val limited = applied < requested
-                                                                prefs.bitrate = applied
-                                                                requested = applied
-                                                                bitrateMessage = "Host accepted ${applied / 1000} Mbps" +
-                                                                    if (limited) " (limited by the host)" else ""
-                                                            }
-                                                        } catch (e: kotlinx.coroutines.CancellationException) { throw e }
-                                                        catch (e: Exception) {
-                                                            bitrateMessage = when (e) {
-                                                                is FileNotFoundException -> "The host does not support live bitrate changes, or the stream has ended."
-                                                                is HostHttpResponseException -> if (e.errorCode == 403) "The host did not allow this change." else "The host could not apply the change: ${e.message}"
-                                                                else -> "The bitrate was not confirmed. Check the connection and try again."
-                                                            }
-                                                        } finally { bitrateBusy = false }
-                                                    }
-                                                } else if (!bitrateBusy) {
-                                                    bitrateMessage = "The stream is not connected, so the bitrate cannot be changed."
-                                                }
-                                            }, Modifier.onFocusChanged { if (it.isFocused) helpKey = "Apply bitrate" })
-                                            BasicText(bitrateMessage ?: "Vibepollo is required. The host may limit the requested bitrate.",
-                                                style = TextStyle(color = Color.White.copy(alpha = .8f), fontFamily = Figtree,
-                                                    fontSize = 22.tpx, textAlign = TextAlign.Center))
-                                        }
-                                    }
-                                    Page.UPSCALER -> Column(Modifier.width(1100.px), horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.spacedBy(22.px)) {
-                                        val available = game.isPyroWave || com.limelight.binding.video.SgsrRenderer.isSupported(game)
-                                        SettingRow(Symbols.UPSCALER, if (supersamplingMode) "Supersampling" else "Upscaling", RowValue.Toggle(game.isUpscalingRequested) {
-                                            game.setUpscalingEnabled(it)
-                                            changes++
-                                        }, Modifier.focusRequester(first), enabled = available && upscalerStatus !in listOf("Starting", "Stopping"),
-                                            onFocused = { helpKey = if (supersamplingMode) "Supersampling" else "Upscaling" })
-                                        if (supersamplingMode) {
-                                            val level = supersamplingLevel.coerceIn(1, 2)
-                                            SettingRow(Symbols.HIGH_QUALITY, "Supersampling quality",
-                                                RowValue.Choice(if (level == 1) "1× (1440p)" else "2× (2160p)", { direction ->
-                                                    game.setSupersamplingLevel(if (direction < 0) 1 else 2)
-                                                    supersamplingLevel = game.supersamplingLevel
-                                                    changes++
-                                                }), enabled = available,
-                                                onFocused = { helpKey = "Supersampling quality" })
-                                        }
-                                        val upscalerMode = if (prefs.sgsrTemporalQuality) 3 else if (prefs.sgsrTemporal) 2 else if (prefs.sgsrHighQuality) 1 else 0
-                                        SettingRow(Symbols.UPSCALER_MODE, "Mode", RowValue.Choice(listOf("SGSR 1 Standard", "SGSR 1 High Quality", "SGSR 2 Video", "SGSR 2 Video Quality")[upscalerMode], { direction ->
-                                            game.setUpscalingMode((upscalerMode + direction + 4) % 4)
-                                            changes++
-                                        }), enabled = available,
-                                            onFocused = { helpKey = "Mode" })
-                                        SettingRow(Symbols.SHARPNESS, "Sharpness", RowValue.Slider(prefs.sgsrSharpness, 0, 100, 5, " %") {
-                                            game.setUpscalingSharpness(it)
-                                            changes++
-                                        }, enabled = available,
-                                            onFocused = { helpKey = "Sharpness" })
-                                    }
-                                    Page.MOUSE -> Column(Modifier.width(1000.px), verticalArrangement = Arrangement.spacedBy(22.px)) {
-                                        val modes = remember { com.limelight.shell.settings.SettingsCatalog(game).all.first { it.key == "mouse_mode_list" }.choices }
-                                            .filter { !game.isOnExternalDisplay || it.value in setOf("2", "3", "4") }
-                                        val selected = modes.indexOfFirst { it.value == game.activeMouseMode.toString() }.coerceAtLeast(0)
-                                        SettingRow(Symbols.TOUCH_APP, "Touchscreen mode", RowValue.Choice(modes[selected].label, { dir ->
-                                            toggle { game.setStreamMouseMode(modes[Math.floorMod(selected + dir, modes.size)].value.toInt()) }
-                                        }), Modifier.focusRequester(first), onFocused = { helpKey = "Touchscreen mode" })
-                                        SettingRow(Symbols.CURSOR, "Local mouse cursor", RowValue.Toggle(game.isLocalMouseCursorVisible) {
-                                            toggle { game.toggleMouseLocalCursor() }
-                                        }, onFocused = { helpKey = "Local mouse cursor" })
-                                    }
-                                    Page.KEYS -> PillGrid(classic?.specialKeyOptions().orEmpty().map { it.label }, first) { i ->
-                                        val option = classic?.specialKeyOptions()?.getOrNull(i)
-                                        d.dismiss()
-                                        if (option != null) classic?.run(option)
-                                    }
-                                    Page.COMMANDS -> {
-                                        val commands = game.serverCmds.orEmpty()
-                                        if (commands.isEmpty()) {
-                                            BasicText(
-                                                "No commands are set up on the PC. Vibepollo can add them in its web UI.",
-                                                style = TextStyle(color = Color.White.copy(alpha = .8f), fontFamily = Figtree, fontSize = 24.tpx, textAlign = TextAlign.Center),
-                                                modifier = Modifier.focusRequester(first).focusable(),
-                                            )
-                                        } else {
-                                            PillGrid(commands, first, command = true) { i -> close { game.sendExecServerCmd(i) } }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    val modeValue = if (prefs.sgsrTemporalQuality) "temporal-quality" else if (prefs.sgsrTemporal) "temporal" else if (prefs.sgsrHighQuality) "high" else "standard"
-                    val helpText = when (helpKey) {
-                        "Touchscreen mode" -> SettingsHelp.choice("mouse_mode_list", game.activeMouseMode.toString()) +
-                            "\n\n" + if (prefs.rememberMouseMode) "Applies now and is saved."
-                            else "Applies now; this stream only."
-                        "Mode" -> SettingsHelp.choice("list_sgsr_quality", modeValue) + "\n\n" + StreamMenuHelp.description(helpKey)
-                        "Upscaler", "Upscaling", "Supersampling" -> "$upscalerStatus\n\n${StreamMenuHelp.description(helpKey)}"
-                        else -> StreamMenuHelp.description(helpKey)
-                    }
-                    InformationPanel(helpKey.removePrefix("Keys: ").removePrefix("Command: "), helpText,
-                        Modifier.width(460.px).height(520.px))
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(28.px), verticalAlignment = Alignment.CenterVertically) {
-                    MenuHint(Glyph.A, "Select")
-                    MenuHint(Glyph.B, if (page == Page.MAIN) "Resume" else "Back")
-                }
-            }
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (e: Exception) {
+                bitrateResult = BitrateResult.Failed(when (e) {
+                    is FileNotFoundException -> BitrateFailure.UNSUPPORTED
+                    is HostHttpResponseException -> if (e.errorCode == 403) BitrateFailure.DENIED else BitrateFailure.rejected(e.message)
+                    else -> BitrateFailure.UNCONFIRMED
+                })
+            } finally { bitrateBusy = false }
         }
     }
 
-    /** Text choices (key combinations, server commands) as pills that wrap to the next line. */
-    @OptIn(ExperimentalLayoutApi::class)
-    @Composable
-    private fun PillGrid(labels: List<String>, first: FocusRequester, command: Boolean = false, onSelect: (Int) -> Unit) {
-        val help = LocalStreamHelp.current
-        FlowRow(
-            Modifier.widthIn(max = 1500.px),
-            horizontalArrangement = Arrangement.spacedBy(16.px, Alignment.CenterHorizontally),
-            verticalArrangement = Arrangement.spacedBy(16.px),
-        ) {
-            labels.forEachIndexed { i, label ->
-                var focused by remember { mutableStateOf(false) }
-                BasicText(
-                    label,
-                    style = TextStyle(color = Color.White, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 22.tpx),
-                    modifier = (if (i == 0) Modifier.focusRequester(first) else Modifier)
-                        .focusEffects({ onSelect(i) }, corner = 999f, focusScale = 1.06f, ring = FocusRing(4f, 4f), glow = FocusGlow(14f, 40f, -12f), onFocusChange = {
-                            focused = it
-                            if (it) help((if (command) "Command: " else "Keys: ") + label)
-                        })
-                        .clip(CircleShape)
-                        .background(if (focused) Color(0xFF2E3A52) else Color(0xD91E283C))
-                        .border(1.px, Color.White.copy(alpha = .12f), CircleShape)
-                        .padding(horizontal = 28.px, vertical = 16.px),
-                )
-            }
-        }
-    }
+    /** What the menu's composables read from and do to the stream: the live [Game], with [menu] as the menu's own window. */
+    private inner class GameHost(private val menu: ComponentDialog) : StreamMenuHost {
+        private val prefs get() = game.prefConfig
+        private val saveTarget by lazy { GameSettingsStore.forLaunch(game) }
+        private val classic get() = game.gameMenuCallbacks as? GameMenu
 
-    /** `#quickmenu .circle`: 112 px on a dark glass, white icon and label. */
-    @Composable
-    /**
-     * [on]: a toggle's state (filled with the accent and "On" under the label), null for actions;
-     * [state] replaces "On" / "Off" for toggles with more steps.
-     */
-    private fun MenuCircle(icon: String, label: String, modifier: Modifier = Modifier, on: Boolean? = null, state: String? = null, onClick: () -> Unit) {
-        val colors = LocalDelosColors.current
-        val help = LocalStreamHelp.current
-        var focused by remember { mutableStateOf(false) }
-        Column(Modifier.width(164.px), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(18.px)) {
-            Box(
-                modifier
-                    .focusEffects(onClick, corner = 999f, focusScale = 1.16f, ring = FocusRing(5f, 5f), glow = FocusGlow(20f, 50f, -14f), onFocusChange = {
-                        focused = it
-                        if (it) help(label)
-                    })
-                    .size(112.px)
-                    .clip(CircleShape)
-                    .background(if (on == true) colors.accent else Color(0xD91E283C))
-                    .border(1.px, Color.White.copy(alpha = .12f), CircleShape),
-                contentAlignment = Alignment.Center,
-            ) {
-                Symbol(icon, 48.tpx, if (on == true) colors.onAccent else Color.White, filled = focused || on == true)
-            }
-            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.px)) {
-                BasicText(label, style = TextStyle(color = Color.White, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx, textAlign = TextAlign.Center))
-                if (on != null) {
-                    BasicText(
-                        state ?: if (on) "On" else "Off",
-                        style = TextStyle(color = if (on) colors.accent else Color.White.copy(alpha = .55f), fontFamily = Figtree, fontWeight = FontWeight.Bold, fontSize = 17.tpx),
-                    )
-                }
-            }
-        }
-    }
+        override val gameName: String = game.intent.getStringExtra(Game.EXTRA_APP_NAME) ?: "Stream"
+        override fun dismiss() { menu.dismiss() }
 
-    @Composable
-    private fun MenuHint(glyph: Glyph, label: String) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.px)) {
-            GlyphButton(glyph)
-            BasicText(label, style = TextStyle(color = Color.White.copy(alpha = .8f), fontFamily = Figtree, fontSize = 21.tpx))
+        // The whole stream behind the menu is blurred (the way leaving a stream does it): a window can only blur what lies
+        // behind its whole rectangle, so not the tiles one by one. Android 12 and newer, with window blur enabled.
+        private val blurRadius = run {
+            val m = game.resources.displayMetrics
+            50f * minOf(m.widthPixels / 1920f, m.heightPixels / 1080f)
         }
+        private val blurOn = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && game.getSystemService(WindowManager::class.java).isCrossWindowBlurEnabled
+        init {
+            if (blurOn) menu.window?.addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
+        }
+        override fun setBackdrop(amount: Float) {
+            if (!blurOn || Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+            val w = menu.window ?: return
+            w.attributes = w.attributes.apply { blurBehindRadius = (amount * blurRadius).toInt() }
+        }
+        override fun runWhenStreamFocused(action: () -> Unit) = whenGameFocused(action)
+
+        override val overlayOn get() = prefs.enablePerfOverlay
+        override val overlayCompact get() = prefs.enablePerfOverlayLite
+        override fun toggleOverlay() { game.toggleHUD() }
+        override fun toggleKeyboard() { game.toggleKeyboard() }
+
+        override val brightnessPercent get() = this@StreamMenu.brightnessPercent()
+        override fun setBrightness(percent: Int) { applyBrightness(percent, menu) }
+
+        override val bitrateKbps get() = prefs.bitrate
+        override val bitrateBusy get() = this@StreamMenu.bitrateBusy
+        override val bitrateResult get() = this@StreamMenu.bitrateResult
+        override fun applyBitrate(requested: Int, accepted: (Int) -> Unit) = this@StreamMenu.applyBitrate(requested, accepted)
+
+        override val upscalerAvailable get() = game.isPyroWave || com.limelight.binding.video.SgsrRenderer.isSupported(game)
+        override val upscalerRequested get() = game.isUpscalingRequested
+        override val upscalerStatus get() = game.upscalingStatus
+        override val supersamplingMode get() = game.isSupersamplingMode
+        override val supersamplingLevel get() = game.supersamplingLevel
+        override val upscalerMode get() = if (prefs.sgsrTemporalQuality) 3 else if (prefs.sgsrTemporal) 2 else if (prefs.sgsrHighQuality) 1 else 0
+        override val upscalerSharpness get() = prefs.sgsrSharpness
+        override fun setUpscalingEnabled(on: Boolean) { game.setUpscalingEnabled(on) }
+        override fun setUpscalingMode(mode: Int) { game.setUpscalingMode(mode) }
+        override fun setUpscalingSharpness(percent: Int) { game.setUpscalingSharpness(percent) }
+        override fun setSupersamplingLevel(level: Int) { game.setSupersamplingLevel(level) }
+        override val canSaveUpscaler get() = saveTarget != null
+        override fun saveUpscaler() {
+            saveTarget?.save(upscalerSaveValues(game.isUpscalingRequested, upscalerMode, prefs.sgsrSharpness, game.supersamplingLevel))
+        }
+
+        override fun sendClipboard() { game.sendClipboard(true) }
+        override fun getClipboard() { game.getClipboard(0) }
+        override fun sendTaskManager() { game.sendKeys(shortArrayOf(KeyboardTranslator.VK_LCONTROL.toShort(), KeyboardTranslator.VK_LSHIFT.toShort(), KeyboardTranslator.VK_ESCAPE.toShort())) }
+        override val zoomOn get() = game.isZoomModeEnabled
+        override fun toggleZoom() { game.toggleZoomMode() }
+        override val onscreenControlsOn get() = prefs.onscreenController
+        override fun toggleOnscreenControls() { game.toggleVirtualController() }
+        override fun toggleFullKeyboard() { game.toggleFullKeyboard() }
+        override fun toggleKeyLayout() { game.toggleKeyboardController() }
+        override val touchSensitivityOn get() = prefs.enableTouchSensitivity
+        override fun toggleTouchSensitivity() { game.switchTouchSensitivity() }
+        override fun rotate() { game.rotateScreen() }
+
+        override val allowChangeMouseMode get() = game.allowChangeMouseMode
+        override val mouseMode get() = game.activeMouseMode
+        override val rememberMouseMode get() = prefs.rememberMouseMode
+        override fun mouseModes() = com.limelight.shell.settings.SettingsCatalog(game).all.first { it.key == "mouse_mode_list" }.choices
+            .filter { !game.isOnExternalDisplay || it.value in setOf("2", "3", "4") }
+        override fun setMouseMode(mode: Int) { game.setStreamMouseMode(mode) }
+        override val localMouseCursorVisible get() = game.isLocalMouseCursorVisible
+        override fun toggleLocalMouseCursor() { game.toggleMouseLocalCursor() }
+
+        override val specialKeys get() = classic?.specialKeyOptions().orEmpty().map { it.label }
+        override fun sendSpecialKey(index: Int) {
+            val option = classic?.specialKeyOptions()?.getOrNull(index) ?: return
+            classic?.run(option)
+        }
+        override val serverCommands get() = game.serverCmds.orEmpty()
+        override fun runServerCommand(index: Int) { game.sendExecServerCmd(index) }
+
+        override fun leave(quit: Boolean) { this@StreamMenu.leave(quit) }
     }
 
     private companion object {

@@ -315,14 +315,169 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
 .side-head .nm { font-family: var(--font-display); font-weight: 600; font-size: calc(28px * var(--ts)); }
 .side-head .pc { font-size: calc(20px * var(--ts)); color: var(--text-3); }
 #sidemenu .row { min-height: 80px; grid-template-columns: 44px 1fr auto; }
-#quickmenu { left: 0; right: 0; bottom: 0; padding: 40px 0 56px; display: flex; flex-direction: column; align-items: center; gap: 26px; transform: translateY(60px); background: linear-gradient(transparent, rgba(0, 0, 0, .75) 40%); }
-#quickmenu.open { transform: none; }
-#quickmenu .qm-title { color: #fff; font-family: var(--font-display); font-weight: 600; font-size: calc(30px * var(--ts)); }
-#quickmenu .circles { gap: 34px; }
-#quickmenu .circle-item { width: 150px; }
-#quickmenu .circle { width: 112px; height: 112px; background: rgba(30, 40, 60, .85); color: #fff; }
-#quickmenu .circle .ms { font-size: 48px; }
-#quickmenu .circle-label { font-size: calc(20px * var(--ts)); color: #fff; }
+/* Stream menu "Console tiles" (docs/GUI.md "Stream menu"): nine glass tiles with ONE gliding gold focus ring, the complete help of the
+   focused tile as a big caption underneath, and the pages of the tiles as a frosted popover above the tile that opened them (card and
+   caret are one clip-path shape) while the dock sinks. Stage pixels = Android stage pixels; the tokens below are the design's numbers 1:1.
+   The menu is always a dark overlay on the game, whatever the theme; the accent colors follow the theme. */
+#quickmenu, #qmpop {
+  --bg: #0b1220; --text: #eef3fb; --text-2: #b9c5d8; --text-3: #8592a8;
+  --glow-soft: color-mix(in srgb, var(--accent) 22%, transparent);
+  /* glass (frosted: backdrop blur + tint; no border lines anywhere) */
+  --blur-tile: 30px; --blur-card: 46px; --sat: 1.6;
+  --tile-fill: linear-gradient(155deg, rgba(255, 255, 255, .22), rgba(255, 255, 255, .08) 58%, rgba(255, 255, 255, .12));
+  --tile-fill-focus: linear-gradient(155deg, rgba(255, 255, 255, .40), rgba(255, 255, 255, .16) 60%, rgba(255, 255, 255, .22));
+  --tile-fill-on: linear-gradient(155deg, color-mix(in srgb, var(--accent) 30%, transparent), color-mix(in srgb, var(--accent) 10%, transparent) 60%, rgba(255, 255, 255, .12));
+  --card-tint: rgba(34, 44, 84, .50);
+  --card-fill: linear-gradient(180deg, rgba(255, 255, 255, .15), rgba(255, 255, 255, 0) 52%), linear-gradient(0deg, rgba(255, 255, 255, .20), rgba(255, 255, 255, 0) 150px), var(--card-tint);
+  --card-shadow: 0 40px 90px -20px rgba(0, 0, 0, .62);
+  --row-focus-fill: color-mix(in srgb, var(--accent) 17%, transparent);
+  --scrim-pop: rgba(4, 6, 14, .22);
+  /* type (--ts = the interface text scale; --help-lines is set with it: 2 up to 1.15, 3 above) */
+  --title-fs: 36px; --hint-fs: calc(24px * var(--ts)); --hint-glyph: 44px; --label-fs: calc(24px * var(--ts)); --pill-fs: calc(18px * var(--ts));
+  --cap-fs: calc(28px * var(--ts)); --cap-lh: 1.4; --cap-w: 1100px; --pop-title-fs: 30px; --row-fs: calc(24px * var(--ts));
+  --help-fs: calc(22px * var(--ts)); --help-lh: 1.4;
+  /* tiles / dock (9 x 150 + 8 x 40 = 1670, left and right margin 125) */
+  --tile: 150px; --tile-r: 42px; --tile-gap: 40px; --tile-icon: 64px; --focus-scale: 1.12;
+  --ring: 186px; --ring-r: 56px; --ring-w: 4px; --label-gap: 24px; --pill-h: calc(34px * var(--ts));
+  --dock-top: 628px; --dock-shift: 160px; --head-bottom: 46px; --caption-gap: 26px;
+  /* popover (box bottom = 1080 - 322 = 758 = card bottom 734 + caret 24; the caret tip is ~13 above the ring of the lowered tile) */
+  --pop-r: 44px; --pop-pad-x: 40px; --pop-pad-y: 36px; --pop-pad-bottom: 28px; --pop-max-h: 686px; --pop-head-h: 64px;
+  --pop-gap-after-head: 16px; --pop-help-gap: 22px; --caret-w: 60px; --caret-h: 24px; --pop-bottom: 322px;
+  --row-h: 72px; --row-r: 28px; --row-gap: 8px; --row-icon: 32px; --switch-w: 78px; --switch-h: 44px; --slider-w: 240px; --slider-h: 12px; --knob: 32px;
+  /* motion */
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1); --ease-glide: cubic-bezier(.3, 1.22, .42, 1); --ease-out: cubic-bezier(.16, 1, .3, 1); --ease-in: cubic-bezier(.5, 0, .75, 0);
+  --d-enter: 620ms; --d-stagger-tile: 42ms; --d-exit: 240ms; --d-focus: 420ms; --d-ring: 560ms; --d-dock: 640ms; --d-pop-in: 560ms; --d-pop-out: 240ms;
+  --d-morph: 520ms; --d-stagger-row: 46ms; --d-row-in: 420ms; --d-caption: 420ms; --d-fade: 280ms;
+}
+#quickmenu *, #qmpop * { box-sizing: border-box; }
+#quickmenu .ms::before, #quickmenu .ms::after, #qmpop .ms::before, #qmpop .ms::after { transition: opacity var(--d-fade) var(--ease-out); }
+/* The layer stays up for the exit animation (--d-exit + 80), then disappears at once */
+#quickmenu { inset: 0; transition: opacity 0s linear calc(var(--d-exit) + 80ms); }
+#quickmenu.open { transition: none; }
+.qm-grad, .qm-scrim { position: absolute; inset: 0; pointer-events: none; opacity: 0; }
+/* Soft gradient + scrim are the only dimming: no card behind the tiles */
+.qm-grad { transition: opacity 460ms ease; background: linear-gradient(180deg, rgba(4, 6, 14, 0) 0%, rgba(4, 6, 14, 0) 34%, rgba(4, 6, 14, .22) 48%, rgba(4, 6, 14, .55) 66%, rgba(4, 6, 14, .80) 84%, rgba(4, 6, 14, .90) 100%); }
+.qm-scrim { transition: opacity 420ms ease; background: var(--scrim-pop); }
+#quickmenu.open .qm-grad { opacity: 1; }
+#quickmenu.pop-open .qm-scrim { opacity: 1; }
+
+/* Dock: title, tiles and caption; it lowers while a popover is open */
+#qmDock { position: absolute; left: 0; top: var(--dock-top); width: 1920px; height: 0; transition: transform var(--d-dock) var(--ease-out); }
+#quickmenu.pop-open #qmDock { transform: translateY(var(--dock-shift)); }
+#qmHead { position: absolute; left: calc((1920px - (9 * var(--tile) + 8 * var(--tile-gap))) / 2); top: 0; transform: translateY(calc(-100% - var(--head-bottom))); display: flex; flex-direction: column; gap: 22px; align-items: flex-start; text-shadow: 0 2px 16px rgba(0, 0, 0, .55); }
+#qmTitle { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: var(--title-fs); line-height: 1.15; letter-spacing: -.005em; }
+.qm-hints { display: flex; flex-direction: column; gap: 12px; font-size: var(--hint-fs); color: var(--text-2); font-weight: 500; }
+.qm-hint { display: inline-flex; align-items: center; gap: 14px; }
+.qm-glyph { width: var(--hint-glyph); height: var(--hint-glyph); border-radius: 50%; display: grid; place-items: center; background: var(--text); color: var(--bg); font-weight: 800; font-size: 24px; text-shadow: none; }
+
+#qmTiles { position: absolute; left: calc((1920px - (9 * var(--tile) + 8 * var(--tile-gap))) / 2); top: 0; display: flex; gap: var(--tile-gap); }
+.qm-cell { position: relative; z-index: 2; width: var(--tile); height: var(--tile); flex: none; }
+.qm-tile {
+  position: absolute; inset: 0; border-radius: var(--tile-r); display: grid; place-items: center; color: var(--text);
+  background: var(--tile-fill); backdrop-filter: blur(var(--blur-tile)) saturate(var(--sat)); -webkit-backdrop-filter: blur(var(--blur-tile)) saturate(var(--sat));
+  box-shadow: 0 18px 40px -14px rgba(0, 0, 0, .55);
+  transition: transform var(--d-focus) var(--ease-spring), opacity var(--d-fade) ease, box-shadow var(--d-focus) var(--ease-out), color var(--d-fade) ease;
+}
+.qm-tile .ms { position: relative; z-index: 1; font-size: var(--tile-icon); transition: transform var(--d-focus) var(--ease-spring), color var(--d-fade) ease; }
+.qm-tile::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--tile-fill-focus); opacity: 0; transition: opacity var(--d-fade) ease; }
+.qm-tile::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--tile-fill-on); opacity: 0; transition: opacity var(--d-fade) ease; }
+.qm-cell.on .qm-tile::after { opacity: 1; }
+.qm-cell.on .qm-tile .ms { color: var(--accent); }
+.qm-cell.focus .qm-tile { transform: scale(var(--focus-scale)); box-shadow: 0 26px 56px -14px rgba(0, 0, 0, .6), 0 0 60px -8px var(--glow-soft); }
+.qm-cell.focus .qm-tile::before { opacity: 1; }
+.qm-cell.focus .qm-tile .ms { --phosphor-fill: 1; transform: scale(1.04); }
+.qm-cell.focus .qm-tile.press { transform: scale(.97); transition-duration: 120ms; }
+#quickmenu.pop-open .qm-cell:not(.focus) .qm-tile { opacity: .46; }
+#quickmenu.pop-open .qm-cell:not(.focus) .qm-label { opacity: .4; }
+
+.qm-pill {
+  position: absolute; z-index: 2; right: -12px; top: -14px; height: var(--pill-h); padding: 0 calc(15px * var(--ts)); border-radius: 999px;
+  display: grid; place-items: center; font-size: var(--pill-fs); font-weight: 700; letter-spacing: .02em; line-height: 1;
+  background: rgba(22, 28, 48, .78); color: var(--text-2); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 8px 18px -6px rgba(0, 0, 0, .55);
+}
+.qm-cell.on .qm-pill { background: var(--accent); color: var(--on-accent); box-shadow: 0 8px 22px -6px var(--glow); }
+.qm-pill.pop { animation: qmPillPop 460ms var(--ease-spring); }
+@keyframes qmPillPop { from { transform: scale(.6); } }
+.qm-label {
+  position: absolute; left: 50%; top: calc(var(--tile) + var(--label-gap)); transform: translateX(-50%); white-space: nowrap;
+  font-size: var(--label-fs); font-weight: 600; line-height: 1.2; color: var(--text-2); text-shadow: 0 2px 12px rgba(0, 0, 0, .6);
+  transition: color var(--d-fade) ease, transform var(--d-focus) var(--ease-spring), opacity var(--d-fade) ease;
+}
+.qm-cell.focus .qm-label { color: var(--accent); transform: translate(-50%, 8px); }
+
+/* One gold ring glides between the tiles; while a popover is open it rests on the tile that opened it */
+#qmRing {
+  position: absolute; left: 0; top: calc((var(--tile) - var(--ring)) / 2); width: var(--ring); height: var(--ring); border-radius: var(--ring-r);
+  border: var(--ring-w) solid var(--accent); pointer-events: none; z-index: 1;
+  box-shadow: 0 0 44px 4px var(--glow), inset 0 0 30px -4px var(--glow-soft);
+  transition: transform var(--d-ring) var(--ease-glide);
+  animation: qmBreathe 2.6s ease-in-out infinite;
+}
+@keyframes qmBreathe { 50% { box-shadow: 0 0 62px 8px var(--glow), inset 0 0 36px -2px var(--glow-soft); } }
+
+/* The complete help of the focused tile, centered under the labels (room for three lines) */
+#qmCap { position: absolute; left: calc((1920px - var(--cap-w)) / 2); width: var(--cap-w); top: calc(var(--tile) + var(--label-gap) + var(--label-fs) * 1.2 + var(--caption-gap) + 8px);
+  height: calc(var(--cap-fs) * var(--cap-lh) * 3); text-align: center; transition: opacity var(--d-fade) ease; }
+#qmCapP { margin: 0; font-size: var(--cap-fs); line-height: var(--cap-lh); font-weight: 500; color: var(--text); text-wrap: balance; text-shadow: 0 2px 14px rgba(0, 0, 0, .65); }
+#quickmenu.pop-open #qmCap { opacity: 0; }
+
+/* Popover: frosted card above the tile with the caret on its bottom edge. The box is the card plus --caret-h at the bottom; JS drives
+   left, width, height and the clip-path with a spring (card and caret are ONE shape, so the glass is continuous). The shadow is a sibling
+   with the card's rounded rect. */
+#qmpop { bottom: var(--pop-bottom); opacity: 1; transform: scale(.86); transform-origin: var(--caret-x, 50%) calc(100% - var(--caret-h) * .5); transition: transform var(--d-pop-out) var(--ease-in); }
+#qmpop.open { transform: none; transition: transform var(--d-pop-in) var(--ease-spring); }
+#qmpop.snap, #qmpop.snap * { transition: none !important; }
+.qm-shade { position: absolute; left: 0; top: 0; width: 100%; height: 100px; border-radius: var(--pop-r); box-shadow: var(--card-shadow); opacity: 0; transition: opacity var(--d-pop-out) ease; }
+.qm-card {
+  position: relative; width: 100%; max-height: calc(var(--pop-max-h) + var(--caret-h)); border-radius: var(--pop-r); padding: var(--pop-pad-y) var(--pop-pad-x) calc(var(--pop-pad-bottom) + var(--caret-h));
+  display: flex; flex-direction: column; overflow: hidden; opacity: 0; transition: opacity var(--d-pop-out) ease;
+  background: var(--card-fill); backdrop-filter: blur(var(--blur-card)) saturate(var(--sat)); -webkit-backdrop-filter: blur(var(--blur-card)) saturate(var(--sat));
+}
+#qmpop.open .qm-card, #qmpop.open .qm-shade { opacity: 1; transition-duration: calc(var(--d-pop-in) * .6); }
+.qm-ph { flex: none; height: var(--pop-head-h); display: flex; align-items: center; gap: 20px; margin-bottom: var(--pop-gap-after-head); }
+.qm-back { width: var(--pop-head-h); height: var(--pop-head-h); border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .10); color: var(--accent-2); cursor: pointer; transition: background-color var(--d-fade) ease, transform var(--d-focus) var(--ease-spring), box-shadow var(--d-focus) var(--ease-out); }
+.qm-back:hover { background: rgba(255, 255, 255, .2); transform: scale(1.06); }
+.qm-back.is-focus { background: var(--row-focus-fill); transform: scale(1.06); box-shadow: inset 0 0 0 3px var(--accent), inset 0 0 24px -6px var(--glow-soft); }
+.qm-back .ms { --phosphor-fill: 0; font-size: 36px; }
+.qm-ph h2 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: var(--pop-title-fs); letter-spacing: -.005em; white-space: nowrap; }
+#qmpBody { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
+#qmpRows { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: none; display: flex; flex-direction: column; gap: var(--row-gap); position: relative; }
+#qmpRows::-webkit-scrollbar { display: none; }
+#qmpRows.scrolls { -webkit-mask-image: linear-gradient(transparent, #000 26px, #000 calc(100% - 64px), transparent); mask-image: linear-gradient(transparent, #000 26px, #000 calc(100% - 64px), transparent); }
+/* The help under the rows never scrolls: a box of two lines (three from text scale 1.15 up), the complete help wraps inside it */
+.qm-phelp { flex: none; margin: var(--pop-help-gap) 0 0; height: calc(var(--help-fs) * var(--help-lh) * var(--help-lines, 2)); font-size: var(--help-fs); line-height: var(--help-lh); color: var(--text-2); font-weight: 500; text-wrap: pretty; }
+/* The rows are the shared settings rows, restyled for the glass card */
+#qmpop .row { flex: none; min-height: var(--row-h); border-radius: var(--row-r); padding: 0 28px 0 22px; grid-template-columns: 56px 1fr auto; gap: 14px; color: var(--text); background: transparent; transition: background-color var(--d-fade) ease, box-shadow var(--d-focus) var(--ease-out); }
+#qmpop .row > .ms { font-size: var(--row-icon); color: var(--text-3); justify-self: center; transition: color var(--d-fade) ease; }
+#qmpop .row-label { font-size: var(--row-fs); font-weight: 600; line-height: 1.2; white-space: nowrap; }
+#qmpop .row-value { gap: 14px; font-size: var(--row-fs); color: var(--text-2); font-weight: 500; }
+#qmpop .row.is-focus { transform: none; background: var(--row-focus-fill); box-shadow: inset 0 0 0 3px var(--accent), inset 0 0 36px -6px var(--glow-soft); }
+#qmpop .row.is-focus > .ms { color: var(--accent); }
+#qmpop .choice { display: inline-flex; align-items: center; gap: 14px; }
+#qmpop .chev { font-size: 28px; color: var(--text-3); opacity: .5; transition: opacity var(--d-fade) ease, color var(--d-fade) ease, transform var(--d-focus) var(--ease-spring); }
+#qmpop .row.is-focus .chev { opacity: 1; color: var(--accent); }
+#qmpop .chev.bump-l { animation: qmBumpL 320ms var(--ease-spring); }
+#qmpop .chev.bump-r { animation: qmBumpR 320ms var(--ease-spring); }
+@keyframes qmBumpL { 40% { transform: translateX(-7px); } }
+@keyframes qmBumpR { 40% { transform: translateX(7px); } }
+#qmpop .cv { display: inline-block; min-width: calc(170px * var(--ts)); text-align: center; }
+#qmpop .switch { width: var(--switch-w); height: var(--switch-h); border: 0; background: rgba(255, 255, 255, .18); }
+#qmpop .switch i { left: 6px; top: 6px; width: calc(var(--switch-h) - 12px); height: calc(var(--switch-h) - 12px); transition: transform var(--d-focus) var(--ease-spring), background-color var(--d-fade) ease, width 200ms ease; }
+#qmpop .switch.on { background: var(--accent); }
+#qmpop .switch.on i { transform: translateX(calc(var(--switch-w) - var(--switch-h))); }
+#qmpop .slider { width: var(--slider-w); height: var(--slider-h); background: rgba(255, 255, 255, .18); overflow: visible; }
+#qmpop .slider b { width: calc(var(--p, 0) * 1%); transition: width 160ms var(--ease-out); }
+#qmpop .slider u { position: absolute; top: 50%; left: calc(var(--p, 0) * 1%); width: var(--knob); height: var(--knob); margin: calc(var(--knob) / -2) 0 0 calc(var(--knob) / -2); border-radius: 50%; background: var(--text); box-shadow: 0 4px 12px rgba(0, 0, 0, .45); transition: left 160ms var(--ease-out), transform var(--d-focus) var(--ease-spring); }
+#qmpop .row.is-focus .slider u { transform: scale(1.18); box-shadow: 0 0 0 7px var(--glow-soft), 0 4px 12px rgba(0, 0, 0, .45); }
+#qmpop .num { min-width: calc(104px * var(--ts)); text-align: right; color: var(--text); }
+#qmpop .saved { display: inline-flex; align-items: center; gap: 8px; color: var(--accent); font-weight: 600; }
+#qmpop .saved .ms { font-size: 28px; color: var(--accent); }
+/* Reduced motion: only fades (no movement, no springs, no breathing) */
+#stage.reduce #quickmenu *, #stage.reduce #qmpop, #stage.reduce #qmpop * { animation: none !important; }
+#stage.reduce #qmDock, #stage.reduce #qmRing, #stage.reduce .qm-tile, #stage.reduce .qm-tile .ms, #stage.reduce .qm-label, #stage.reduce #qmpop, #stage.reduce .qm-card,
+#stage.reduce #qmpop .switch i, #stage.reduce #qmpop .slider b, #stage.reduce #qmpop .slider u, #stage.reduce #qmpop .chev { transition-property: opacity, color, background-color, box-shadow !important; }
+#stage.reduce #qmpop, #stage.reduce #qmpop.open, #stage.reduce .qm-card { transition-property: opacity !important; }
 .dialog { left: 50%; top: 50%; width: 760px; padding: 52px; box-sizing: border-box; border-radius: 40px; background: var(--surface-3); border: 1px solid var(--line); transform: translate(-50%, -46%) scale(.96); display: flex; flex-direction: column; gap: 22px; align-items: center; text-align: center; box-shadow: 0 40px 100px -30px rgba(0, 0, 0, .7); }
 .dialog.open { transform: translate(-50%, -50%); }
 .dialog h3 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: calc(38px * var(--ts)); }
@@ -545,15 +700,36 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
       <div id="scrim"></div>
       <div class="layer" id="ctxmenu" role="menu"></div>
       <aside class="layer" id="sidemenu" aria-label="Side menu"></aside>
-      <div class="layer" id="quickmenu" aria-label="Quick menu">
-        <div class="qm-title" id="qmTitle">Returnal</div>
-        <div class="circles">
-          <div class="circle-item"><div class="circle f" tabindex="-1" data-action="qm:resume" data-id="qm-resume"><span class="ms" data-icon="resume"></span></div><div class="circle-label">Resume</div></div>
-          <div class="circle-item"><div class="circle f" tabindex="-1" data-action="qm:keyboard" data-id="qm-keyboard"><span class="ms" data-icon="keyboard"></span></div><div class="circle-label">Keyboard</div></div>
-          <div class="circle-item"><div class="circle f" tabindex="-1" data-action="qm:perf" data-id="qm-perf"><span class="ms" data-icon="overlay"></span></div><div class="circle-label">Performance</div></div>
-          <div class="circle-item"><div class="circle f" tabindex="-1" data-action="qm:disconnect" data-id="qm-disconnect"><span class="ms" data-icon="logout"></span></div><div class="circle-label">Disconnect</div></div>
-          <div class="circle-item"><div class="circle f" tabindex="-1" data-action="qm:quit" data-id="qm-quit"><span class="ms" data-icon="power_settings_new"></span></div><div class="circle-label">Quit game</div></div>
+      <div class="layer" id="quickmenu" aria-label="Stream menu">
+        <div class="qm-grad"></div>
+        <div class="qm-scrim"></div>
+        <div id="qmDock">
+          <div id="qmHead">
+            <h1 id="qmTitle">Returnal</h1>
+            <div class="qm-hints"><span class="qm-hint"><span class="qm-glyph">A</span>Select</span><span class="qm-hint"><span class="qm-glyph">B</span><span id="qmBack">Resume</span></span></div>
+          </div>
+          <div id="qmTiles">
+            <div id="qmRing"></div>
+            <div class="qm-cell f" tabindex="-1" data-action="qm:resume" data-id="qm-resume"><div class="qm-tile"><span class="ms" data-icon="resume"></span></div><div class="qm-label">Resume</div></div>
+            <div class="qm-cell f" tabindex="-1" data-action="qm:keyboard" data-id="qm-keyboard"><div class="qm-tile"><span class="ms" data-icon="keyboard"></span></div><div class="qm-label">Keyboard</div></div>
+            <div class="qm-cell f" tabindex="-1" data-action="qm:perf" data-id="qm-perf"><div class="qm-tile"><span class="ms" data-icon="overlay"></span><span class="qm-pill"></span></div><div class="qm-label">Overlay</div></div>
+            <div class="qm-cell f" tabindex="-1" data-action="qm:bright" data-id="qm-bright" data-page="bright"><div class="qm-tile"><span class="ms" data-icon="brightness_medium"></span></div><div class="qm-label">Brightness</div></div>
+            <div class="qm-cell f" tabindex="-1" data-action="qm:bitrate" data-id="qm-bitrate" data-page="bitrate"><div class="qm-tile"><span class="ms" data-icon="network_check"></span></div><div class="qm-label">Bitrate</div></div>
+            <div class="qm-cell f" tabindex="-1" data-action="qm:upscaler" data-id="qm-upscaler" data-page="upscaler"><div class="qm-tile"><span class="ms" data-icon="upscaler"></span><span class="qm-pill"></span></div><div class="qm-label">Upscaler</div></div>
+            <div class="qm-cell f" tabindex="-1" data-action="qm:more" data-id="qm-more" data-page="more"><div class="qm-tile"><span class="ms" data-icon="more_horiz"></span></div><div class="qm-label">More</div></div>
+            <div class="qm-cell f" tabindex="-1" data-action="qm:disconnect" data-id="qm-disconnect"><div class="qm-tile"><span class="ms" data-icon="logout"></span></div><div class="qm-label">Disconnect</div></div>
+            <div class="qm-cell f" tabindex="-1" data-action="qm:quit" data-id="qm-quit"><div class="qm-tile"><span class="ms" data-icon="power_settings_new"></span></div><div class="qm-label">Quit game</div></div>
+          </div>
+          <div id="qmCap"><p id="qmCapP"></p></div>
         </div>
+      </div>
+      <div class="layer" id="qmpop" aria-label="Stream menu page">
+        <div class="qm-card" id="qmCard">
+          <div class="qm-ph"><div class="qm-back f" tabindex="-1" data-action="back" data-id="qmp-back"><span class="ms" data-icon="chevron_left"></span></div><h2 id="qmpTitle">Brightness</h2></div>
+          <div id="qmpBody"><div id="qmpRows" data-scroll></div></div>
+          <p class="qm-phelp" id="qmpHelp"></p>
+        </div>
+        <div class="qm-shade" id="qmShade"></div>
       </div>
       <div class="layer dialog" id="renameDlg" role="dialog" aria-labelledby="renameTitle">
         <h3 id="renameTitle">Rename PC</h3>
@@ -788,6 +964,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
   function applyUiScale() {
     const k = (state.uiScale / 100).toFixed(2);
     stage.style.setProperty("--ui", k); stage.style.setProperty("--ts", k);
+    stage.style.setProperty("--help-lines", state.uiScale > 115 ? 3 : 2);
   }
   function applyHomeLayout() {
     $("#scr-home").classList.toggle("row-layout", state.homeLayout === "Row");
@@ -899,13 +1076,59 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
       { id: "replay", icon: "replay", label: "Replay the first launch", desc: "Shows the welcome, profile and pairing steps again", type: "action" }
     ]}
   ];
+  // Stream menu: the pages of the popover (rows use the settings machinery; their values live in QM)
+  const QM = { qmBright: 70, qmBitrate: 60, qmUpscale: true, qmUpMode: "SGSR 2 Video", qmSharp: 40, qmZoom: false, qmPad: false, qmTouch: false, qmSaved: false };
+  const QM_MODES = ["SGSR 1 Standard", "SGSR 1 High Quality", "SGSR 2 Video", "SGSR 2 Video Quality"];
+  const QM_PAGES = {
+    bright: { title: "Brightness", rows: [
+      { id: "qmBright", icon: "brightness_medium", label: "Screen brightness", type: "slider", min: 5, max: 100, step: 5, unit: " %", ref: "qm", help: "Changes this device's screen brightness now; the system setting returns afterwards. Not the PC or a monitor." }
+    ]},
+    bitrate: { title: "Stream bitrate", rows: [
+      { id: "qmBitrate", icon: "network_check", label: "Bitrate", type: "slider", min: 1, max: 150, step: 1, unit: " Mbps", ref: "qm", help: "Requests a new video bitrate without reconnecting. Needs Vibepollo; the host may cap it. Lasts for this stream." },
+      { id: "qmApply", icon: "check", label: "Apply", type: "action", help: "Sends the requested bitrate to Vibepollo. The accepted value can be lower. Saved defaults are unchanged." }
+    ]},
+    upscaler: { title: "Snapdragon Game Super Resolution", rows: [
+      { id: "qmUpscale", icon: "upscaler", label: "Upscaling", type: "toggle", ref: "qm", help: "Turns SGSR on or off for this stream; the picture may flicker." },
+      { id: "qmUpMode", icon: "upscaler_mode", label: "Mode", type: "choice", options: QM_MODES, ref: "qm", help: "Reuses earlier frames; text and fast motion can break it. Applies live." },
+      { id: "qmSharp", icon: "sharpness", label: "Sharpness", type: "slider", min: 0, max: 100, step: 5, unit: " %", ref: "qm", help: "Final sharpening pass, separate from the mode. 0 turns sharpening off. Lasts for this stream." },
+      { id: "qmSave", icon: "remember", label: "Save for this game", type: "action", help: "Saves the upscaler state, mode, sharpness and supersampling level for this game's future launches." }
+    ]},
+    more: { title: "More", rows: [
+      { id: "qmKeys", icon: "keyboard_command_key", label: "Send keys", type: "action", toast: "Key combinations are not part of this prototype", help: "Sends a built-in or imported key combination to the PC once; the menu closes. Import custom ones under Controls." },
+      { id: "qmSendClip", icon: "upload", label: "Send clipboard", type: "action", toast: "Clipboard sent to the PC", help: "Copies this device's clipboard to the PC once. Needs Vibepollo or Apollo clipboard support." },
+      { id: "qmGetClip", icon: "download", label: "Get clipboard", type: "action", toast: "Clipboard received from the PC", help: "Fetches the PC clipboard to this device once. Needs Vibepollo or Apollo clipboard support." },
+      { id: "qmCmds", icon: "terminal", label: "Commands", type: "action", toast: "Server commands are not part of this prototype", help: "Lists server commands configured in Vibepollo or Apollo. The host decides what each does." },
+      { id: "qmTasks", icon: "task_manager", label: "Task manager", type: "action", toast: "Ctrl + Shift + Esc sent", help: "Sends Ctrl + Shift + Esc to the PC, which opens Task Manager on Windows." },
+      { id: "qmZoom", icon: "zoom_in", label: "Zoom", type: "toggle", ref: "qm", help: "Toggles the stream's zoom-and-pan controls. Local view only; Remember Zoom & Pan decides whether it persists." },
+      { id: "qmMouse", icon: "mouse", label: "Mouse mode", type: "action", toast: "Mouse mode is not part of this prototype", help: "Chooses how touch controls the PC: direct touch, trackpad or off. Remember mouse mode decides whether it persists." },
+      { id: "qmPad", icon: "joystick", label: "On-screen controls", type: "toggle", ref: "qm", help: "Shows or hides the virtual gamepad during this stream. Opacity and layout are set under Controls." },
+      { id: "qmFullKb", icon: "keyboard_full", label: "Full keyboard", type: "action", toast: "Full keyboard (later)", help: "Shows or hides the Delos full on-screen keyboard. Not Android's system keyboard." },
+      { id: "qmLayout", icon: "key_layout", label: "Key layout", type: "action", toast: "Key layout (later)", help: "Shows or hides the custom special-key layer from the profile's selected layout. Separate from the full keyboard." },
+      { id: "qmTouch", icon: "touch_app", label: "Touch sensitivity", type: "toggle", ref: "qm", help: "Toggles extra touchscreen sensitivity scaling, configured in settings." },
+      { id: "qmRotate", icon: "screen_rotation", label: "Rotate", type: "action", toast: "Stream view rotated", help: "Rotates the stream view locally; the host game's display settings are unchanged." }
+    ]}
+  };
+  for (const k in QM_PAGES) for (const r of QM_PAGES[k].rows) r.qm = true;   // rows of the popover: no description line, the help sits under the rows
+  // The complete help of each tile (the caption under the tiles)
+  const QM_HELP = {
+    "qm-resume": "Closes this menu and continues the stream.",
+    "qm-keyboard": "Opens or closes Android's system keyboard for typing on the PC. Not the Delos full keyboard.",
+    "qm-perf": "Cycles full statistics, compact statistics, off. 1% low FPS covers the slowest frames of about ten seconds.",
+    "qm-bright": "Adjusts this device's brightness for this stream; the system setting returns afterwards.",
+    "qm-bitrate": "Requests a new video bitrate without reconnecting. Needs Vibepollo; the host may cap it. Lasts for this stream.",
+    "qm-upscaler": "Upscales a low-resolution stream, or supersamples a native one. Costs GPU time; lasts for this stream unless saved.",
+    "qm-more": "More stream controls: clipboard, host commands, key combinations, zoom, touch and on-screen controls. Actions run at once.",
+    "qm-disconnect": "Stops streaming and returns to the Delos library. The game keeps running on the PC.",
+    "qm-quit": "Asks the host to end the running application, then disconnects. Runs at once, so save first."
+  };
   function rowValue(r) {
-    const holder = r.ref === "state" ? state : S;
+    const holder = r.ref === "state" ? state : r.ref === "qm" ? QM : S;
     return holder[r.id];
   }
   function setRowValue(r, v) {
-    const holder = r.ref === "state" ? state : S;
+    const holder = r.ref === "state" ? state : r.ref === "qm" ? QM : S;
     holder[r.id] = v;
+    if (r.ref === "qm") qmSync(true);
     if (["mode", "materialYou", "seed", "motion"].includes(r.id)) { store.set({ mode: "mode", materialYou: "my", seed: "seed", motion: "motion" }[r.id], v); applyTheme(); }
     if (r.id === "bg") store.set("bg", v);
     if (r.id === "sound") store.set("sound", v);
@@ -917,15 +1140,17 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
     const v = rowValue(r);
     let val = "";
     if (r.type === "toggle") val = `<span class="switch${v ? " on" : ""}"><i></i></span>`;
-    else if (r.type === "choice") val = `<span class="choice"><span class="ms" data-icon="chevron_left"></span>${escapeHtml(r.labels ? r.labels[v] : v)}<span class="ms" data-icon="chevron_right"></span></span>`;
-    else if (r.type === "seed") val = `<span class="choice"><span class="ms" data-icon="chevron_left"></span><i style="display:inline-block;width:26px;height:26px;border-radius:50%;margin-right:12px;vertical-align:-5px;background:hsl(${seedHue(state.seed)} 70% 55%)"></i>${escapeHtml(seedName(state.seed))}<span class="ms" data-icon="chevron_right"></span></span>`;
+    else if (r.type === "choice") val = `<span class="choice"><span class="ms chev" data-icon="chevron_left"></span><span class="cv">${escapeHtml(r.labels ? r.labels[v] : v)}</span><span class="ms chev" data-icon="chevron_right"></span></span>`;
+    else if (r.type === "seed") val = `<span class="choice"><span class="ms chev" data-icon="chevron_left"></span><i style="display:inline-block;width:26px;height:26px;border-radius:50%;margin-right:12px;vertical-align:-5px;background:hsl(${seedHue(state.seed)} 70% 55%)"></i>${escapeHtml(seedName(state.seed))}<span class="ms chev" data-icon="chevron_right"></span></span>`;
+    else if (r.type === "slider" && r.qm) val = `<span class="slider" style="--p:${((v - r.min) / (r.max - r.min) * 100).toFixed(1)}"><b></b><u></u></span><span class="num">${v}${r.unit}</span>`;
     else if (r.type === "slider") val = `<span class="slider"><b style="width:${((v - r.min) / (r.max - r.min) * 100).toFixed(1)}%"></b></span><span style="min-width:120px;text-align:right">${v}${r.unit}</span>`;
-    else if (r.type === "text") val = v ? `<span>••••••••${escapeHtml(v.slice(-4))}</span>` : `<span style="color:var(--text-3)">Not set</span><span class="ms" data-icon="chevron_right"></span>`;
+    else if (r.type === "text") val = v ? `<span>••••••••${escapeHtml(v.slice(-4))}</span>` : `<span style="color:var(--text-3)">Not set</span><span class="ms chev" data-icon="chevron_right"></span>`;
     else if (r.type === "progress") val = `<span class="progress"><b id="coverProg"></b></span><span id="coverProgTxt" style="min-width:90px;text-align:right">Start</span>`;
     else if (r.type === "info") val = `<span>${escapeHtml(r.value)}</span>`;
-    else val = `<span class="ms" data-icon="chevron_right"></span>`;
+    else if (r.id === "qmSave" && QM.qmSaved) val = `<span class="saved"><span class="ms" data-icon="check"></span>Saved</span>`;
+    else val = `<span class="ms chev" data-icon="chevron_right"></span>`;
     const disabled = r.id === "seed" && !state.materialYou;
-    const desc = r.descFn ? r.descFn() : r.desc;
+    const desc = r.qm ? "" : r.descFn ? r.descFn() : r.desc;
     const focusable = r.type !== "info";
     return `<div class="row${focusable ? " f" : ""}${disabled ? " disabled" : ""}" tabindex="-1" data-row="${r.id}" data-id="row-${r.id}"${focusable ? ` data-action="row:${r.id}" data-ctx="row"` : ""}${["choice", "slider", "seed"].includes(r.type) ? " data-adjust" : ""}>` +
       `<span class="ms" data-icon="${r.icon}"></span><div style="min-width:0"><div class="row-label">${escapeHtml(r.label)}</div>${desc ? `<div class="row-desc">${escapeHtml(desc)}</div>` : ""}</div><div class="row-value">${val}</div></div>`;
@@ -933,6 +1158,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
   function findRow(id) {
     for (const t of TABS) for (const r of t.rows) if (r.id === id) return r;
     for (const r of SIDE_ROWS) if (r.id === id) return r;
+    for (const k in QM_PAGES) for (const r of QM_PAGES[k].rows) if (r.id === id) return r;
     return null;
   }
   function renderTabs() {
@@ -953,13 +1179,14 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
     $("#setPanel").innerHTML = `<div class="big-ic"><span class="ms" data-icon="${t.icon}"></span></div><h2>${t.name}</h2><p>${escapeHtml(t.desc)}</p>${extra}`;
     if (keepFocusId) { const el = $(`[data-id="${keepFocusId}"]`); if (el) focusEl(el, { silent: true, noScroll: true }); }
   }
-  function refreshRow(id) {
+  function refreshRow(id, dir) {
     const r = findRow(id); if (!r) return;
     $$(`[data-row="${id}"]`).forEach(old => {
       const wasFocus = old.classList.contains("is-focus");
       const tmp = document.createElement("div"); tmp.innerHTML = rowHtml(r);
       const el = tmp.firstElementChild; old.replaceWith(el);
       if (wasFocus) focusEl(el, { silent: true, noScroll: true });
+      if (dir && r.qm && r.type === "choice") qmBump(el, dir);
     });
     if (id === "materialYou") refreshRow("seed");
   }
@@ -973,13 +1200,20 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
     } else if (r.type === "slider") {
       setRowValue(r, Math.min(r.max, Math.max(r.min, v + dir * r.step)));
     } else return;
-    blip("move"); refreshRow(r.id);
+    blip("move"); refreshRow(r.id, r.type === "choice" ? dir : 0);
     if (["mode", "materialYou", "seed"].includes(r.id) && state.screen === "settings" && !layers.length) { renderSettings(focused && focused.dataset.id); }
   }
   function activateRow(id) {
     const r = findRow(id); if (!r) return;
     if (r.type === "toggle") { setRowValue(r, !rowValue(r)); blip("select"); refreshRow(id); if (state.screen === "settings" && !layers.length && ["materialYou", "heroBg"].includes(id)) renderSettings(focused && focused.dataset.id); return; }
     if (r.type === "choice" || r.type === "seed" || r.type === "slider") { adjustRow(r, 1); return; }
+    if (id === "qmApply") { toast(`Host accepted ${QM.qmBitrate} Mbps`, "network_check"); blip("select"); return; }
+    if (id === "qmSave") {
+      QM.qmSaved = true; blip("select"); refreshRow(id); toast("Saved for " + state.currentGame.title, "remember");
+      setTimeout(() => { QM.qmSaved = false; refreshRow(id); }, 2500);
+      return;
+    }
+    if (r.toast) { toast(r.toast, r.icon); blip("select"); return; }
     if (r.type === "text") { openRename("gridKey"); return; }
     if (r.type === "progress") { fetchCovers(); return; }
     if (id === "renamePc") { openRename("pc"); return; }
@@ -1099,15 +1333,18 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
     layerFocus.push(focused);
     layers.push(id);
     el.classList.add("open");
-    $("#scrim").classList.toggle("open", id !== "quickmenu");
+    $("#scrim").classList.toggle("open", id !== "quickmenu" && id !== "qmpop");
     blip("open");
     const first = focusables()[0];
     if (first) focusEl(first, { silent: true });
+    if (id === "quickmenu") qmEnter();
     updateHints();
   }
   function closeLayer() {
     const id = layers.pop(); if (!id) return;
     $("#" + id).classList.remove("open");
+    if (id === "qmpop") qmPopClosed();
+    if (id === "quickmenu") qmExit();
     if (!layers.length) $("#scrim").classList.remove("open");
     const prev = layerFocus.pop();
     if (prev && document.body.contains(prev)) focusEl(prev, { silent: true, noScroll: true });
@@ -1178,11 +1415,11 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
       return;
     }
     const topIn = (er.top - cr.top) / s + sc.scrollTop;
-    const h = er.height / s, ch = sc.clientHeight;
+    const h = er.height / s, ch = sc.clientHeight, pad = sc.id === "qmpRows" ? 48 : 14;
     let target = sc.scrollTop;
     if (sc.id === "library") target = topIn - 98;
-    else if (topIn - 14 < sc.scrollTop) target = topIn - 14;
-    else if (topIn + h + 14 > sc.scrollTop + ch) target = topIn + h + 14 - ch;
+    else if (topIn - pad < sc.scrollTop) target = topIn - pad;
+    else if (topIn + h + pad > sc.scrollTop + ch) target = topIn + h + pad - ch;
     target = Math.max(0, target);
     if (Math.abs(target - sc.scrollTop) < 1) return;
     if (sc.id === "library") scrollFast(sc, "scrollTop", target);
@@ -1236,6 +1473,8 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
       const i = +el.dataset.tab;
       if (i !== state.settingsTab) { state.settingsTab = i; renderSettings(); $("#setList").scrollTop = 0; }
     }
+    if (el.classList.contains("qm-cell")) qmSetFocus(qmCells.indexOf(el));
+    else if (el.closest("#qmpop")) qmPopFocus(el);
     updateHints();
   }
 
@@ -1329,6 +1568,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
   function startStream() {
     const g = state.currentGame;
     $("#qmTitle").textContent = g.title;
+    qmSync();
     $("#streamBanner").innerHTML = `<span><span class="glyph-btn"><span class="ms" data-icon="filter_none"></span></span>Left menu button for the quick menu</span>`;
     $("#perf").hidden = !state.perfOverlay;
     gameT0 = performance.now();
@@ -1361,10 +1601,165 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
     gameRaf = requestAnimationFrame(draw);
   }
   function stopStream() { cancelAnimationFrame(gameRaf); }
-  function qmAction(a) {
+
+  // ---------- Stream menu: "Console tiles" ----------
+  // The tiles dock, the one gliding ring and the caption live in #quickmenu; a page is a popover (#qmpop) whose card and caret are one
+  // clip-path shape. Motion = the design's: CSS transitions for focus, WAAPI for entrance / exit / caption / row stagger, and a spring
+  // for the card's position, width and height while it glides from one tile's page to another's. All numbers are the CSS variables above.
+  const qmView = { focus: 0, page: null, fresh: false };   // focus = the tile the ring rests on; page = the open popover page (or null)
+  const qmRoot = $("#quickmenu"), qmPop = $("#qmpop"), qmCard = $("#qmCard"), qmRows = $("#qmpRows"), qmRing = $("#qmRing"), qmCapP = $("#qmCapP"), qmPHelp = $("#qmpHelp"), qmShade = $("#qmShade");
+  const qmCells = $$("#qmTiles .qm-cell"), qmCs = getComputedStyle(qmRoot);
+  const qmMs = (name) => parseFloat(qmCs.getPropertyValue(name)), qmVar = (name) => qmCs.getPropertyValue(name).trim();
+  const QM_CARET_H = qmMs("--caret-h"), QM_CARET_W = qmMs("--caret-w"), QM_POP_R = qmMs("--pop-r");
+  // The popover's width per page; it is centered on the tile that opened it and kept 110 from the screen edges
+  const QM_WIDTH = { bright: 780, bitrate: 860, upscaler: 980, more: 920 };
+  const qmReduced = () => stage.classList.contains("reduce") || matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // Animation helper: reduced motion keeps only the opacity (and other non-movement) keyframes
+  function qmAnim(el, frames, opts) {
+    if (qmReduced()) frames = frames.map(f => { const o = {}; for (const k in f) if (k !== "transform" && k !== "filter") o[k] = f[k]; return o; });
+    return el.animate(frames, { fill: "backwards", ...opts });
+  }
+  // The tiles with a state show On / Off in a pill (it pops when the word changes)
+  function qmSync(popPill) {
+    for (const [id, on] of [["qm-perf", state.perfOverlay], ["qm-upscaler", QM.qmUpscale]]) {
+      const c = $(`[data-id="${id}"]`), pill = $(".qm-pill", c), txt = on ? "On" : "Off";
+      c.classList.toggle("on", on);
+      if (pill.textContent !== txt) { pill.textContent = txt; if (popPill) { pill.classList.remove("pop"); void pill.offsetWidth; pill.classList.add("pop"); } }
+    }
+  }
+  function qmMoveRing(instant) {
+    const c = qmCells[qmView.focus], x = c.offsetLeft + c.offsetWidth / 2 - qmRing.offsetWidth / 2;
+    if (instant) qmRing.style.transition = "none";
+    qmRing.style.transform = `translateX(${x}px)`;
+    if (instant) { void qmRing.offsetWidth; qmRing.style.transition = ""; }
+  }
+  function qmCaption(first) {
+    qmCapP.textContent = QM_HELP[qmCells[qmView.focus].dataset.id];
+    if (!first) qmAnim(qmCapP, [{ opacity: 0, transform: "translateY(18px)", filter: "blur(6px)" }, { opacity: 1, transform: "none", filter: "blur(0)" }], { duration: qmMs("--d-caption"), easing: qmVar("--ease-out") });
+  }
+  // The tile the ring rests on (also while a popover is open: the framework's focus is in the popover then)
+  function qmSetFocus(i, first) {
+    const changed = i !== qmView.focus;
+    qmView.focus = i;
+    qmCells.forEach((c, k) => c.classList.toggle("focus", k === i));
+    qmMoveRing(first);
+    if (changed || first) qmCaption(first);
+  }
+  // Entrance: tiles rise one after the other, the ring scales in on the focused one, the title and the caption fade-rise
+  const qmExitAnims = [];
+  function qmEnter() {
+    qmExitAnims.splice(0).forEach(a => a.cancel());
+    qmView.page = null; qmRoot.classList.remove("pop-open");
+    qmSync(); qmSetFocus(qmView.focus, true);
+    const enter = qmMs("--d-enter"), stag = qmMs("--d-stagger-tile"), spring = qmVar("--ease-spring"), out = qmVar("--ease-out");
+    qmCells.forEach((c, i) => {
+      const d = 100 + i * stag;
+      qmAnim($(".qm-tile", c), [{ opacity: 0, transform: "translateY(90px) scale(.8)" }], { duration: enter, delay: d, easing: spring });
+      qmAnim($(".qm-label", c), [{ opacity: 0 }], { duration: enter * .8, delay: d + 140, easing: "ease-out" });
+    });
+    qmAnim($("#qmHead"), [{ opacity: 0, transform: `translateY(calc(-100% - ${qmVar("--head-bottom")} + 24px))` }], { duration: enter, delay: 60, easing: out });
+    qmAnim(qmRing, [{ opacity: 0, transform: qmRing.style.transform + " scale(.7)" }], { duration: enter, delay: 100 + qmView.focus * stag + 260, easing: spring });
+    qmAnim($("#qmCap"), [{ opacity: 0, transform: "translateY(20px)" }], { duration: enter, delay: 520, easing: out });
+  }
+  // Exit: the tiles sink and fade from the right, the rest fades; the layer itself disappears after --d-exit + 80 (CSS)
+  function qmExit() {
+    const d = qmMs("--d-exit"), ease = qmVar("--ease-in"), kf = [{}, { opacity: 0, transform: "translateY(46px) scale(.92)" }];
+    qmCells.forEach((c, i) => {
+      qmExitAnims.push(qmAnim($(".qm-tile", c), kf, { duration: d, delay: (8 - i) * 8, easing: ease, fill: "forwards" }));
+      qmExitAnims.push(qmAnim($(".qm-label", c), [{}, { opacity: 0 }], { duration: d, fill: "forwards" }));
+    });
+    for (const el of [$("#qmHead"), qmRing, $("#qmCap")]) qmExitAnims.push(qmAnim(el, [{}, { opacity: 0 }], { duration: d, fill: "forwards" }));
+  }
+  // Popover geometry (x, width, visible height, caret x) follows its target with a slightly under-damped spring
+  const qmGeo = { x: 0, w: 0, h: 0, cx: 0 }, qmTgt = { x: 0, w: 0, h: 0, cx: 0 }, qmVel = { x: 0, w: 0, h: 0, cx: 0 };
+  let qmGeoRaf = 0, qmGeoT = 0;
+  function qmCardPath(w, h, cx) {
+    const r = Math.min(QM_POP_R, h / 2 - 1), a = QM_CARET_W / 2, b = QM_CARET_W / 6, d = QM_CARET_H, f = (n) => n.toFixed(1);
+    return `path("M${f(r)} 0H${f(w - r)}A${r} ${r} 0 0 1 ${f(w)} ${f(r)}V${f(h - r)}A${r} ${r} 0 0 1 ${f(w - r)} ${f(h)}H${f(cx + a)}L${f(cx + b)} ${f(h + d * .78)}Q${f(cx)} ${f(h + d * 1.15)} ${f(cx - b)} ${f(h + d * .78)}L${f(cx - a)} ${f(h)}H${f(r)}A${r} ${r} 0 0 1 0 ${f(h - r)}V${f(r)}A${r} ${r} 0 0 1 ${f(r)} 0Z")`;
+  }
+  function qmApplyGeo() {
+    qmPop.style.left = qmGeo.x + "px"; qmPop.style.width = qmGeo.w + "px"; qmPop.style.setProperty("--caret-x", qmGeo.cx + "px");
+    qmCard.style.height = (qmGeo.h + QM_CARET_H) + "px"; qmCard.style.clipPath = qmCardPath(qmGeo.w, Math.max(qmGeo.h, 120), qmGeo.cx);
+    qmShade.style.height = qmGeo.h + "px";
+  }
+  function qmStepGeo(t) {
+    const dt = Math.min(.032, (t - qmGeoT) / 1000 || .016); qmGeoT = t; let busy = false;
+    for (const k in qmGeo) {
+      const K = 190, C = 2 * Math.sqrt(K) * .8;
+      qmVel[k] += ((qmTgt[k] - qmGeo[k]) * K - qmVel[k] * C) * dt; qmGeo[k] += qmVel[k] * dt;
+      if (Math.abs(qmTgt[k] - qmGeo[k]) > .15 || Math.abs(qmVel[k]) > .4) busy = true; else { qmGeo[k] = qmTgt[k]; qmVel[k] = 0; }
+    }
+    qmApplyGeo(); qmGeoRaf = busy ? requestAnimationFrame(qmStepGeo) : 0;
+  }
+  function qmSetGeo(t, snap) {
+    Object.assign(qmTgt, t);
+    if (snap || qmReduced()) { cancelAnimationFrame(qmGeoRaf); qmGeoRaf = 0; Object.assign(qmGeo, t); for (const k in qmVel) qmVel[k] = 0; qmApplyGeo(); return; }
+    if (!qmGeoRaf) { qmGeoT = performance.now(); qmGeoRaf = requestAnimationFrame(qmStepGeo); }
+  }
+  function qmPlace(i, page, snap) {
+    const w = QM_WIDTH[page] || 860, c = qmCells[i], cx = $("#qmTiles").offsetLeft + c.offsetLeft + c.offsetWidth / 2;
+    const left = Math.min(Math.max(cx - w / 2, 110), 1810 - w);
+    qmSetGeo({ x: left, w, cx: Math.min(Math.max(cx - left, 72), w - 72) }, snap);
+  }
+  function qmFit(snap) {
+    qmCard.style.height = "auto";
+    const total = qmCard.offsetHeight;
+    qmRows.classList.toggle("scrolls", qmRows.scrollHeight > qmRows.clientHeight + 1);
+    qmSetGeo({ h: total - QM_CARET_H }, snap);
+    qmApplyGeo();
+  }
+  function qmFill(page) {
+    $("#qmpTitle").textContent = QM_PAGES[page].title;
+    qmRows.innerHTML = QM_PAGES[page].rows.map(rowHtml).join("");
+    qmRows.scrollTop = 0;
+    [...qmRows.children].forEach((el, i) => qmAnim(el, [{ opacity: 0, transform: "translateY(18px)" }], { duration: qmMs("--d-row-in"), delay: 120 + i * qmMs("--d-stagger-row"), easing: qmVar("--ease-out") }));
+  }
+  // The focus goes into the first row (the back chevron is one step up); its help fades in after the card has grown
+  function qmFocusFirstRow() {
+    const first = qmRows.querySelector(".f"); if (!first) return;
+    qmView.fresh = true; focusEl(first, { silent: true, noScroll: true }); qmView.fresh = false;
+  }
+  function qmOpenPage(page, cell) {
+    if (!QM_PAGES[page]) return;
+    const i = qmCells.indexOf(cell), morph = layers[layers.length - 1] === "qmpop";
+    qmView.page = page;
+    qmSetFocus(i);
+    if (!morph) {
+      qmPop.classList.add("snap");
+      qmPlace(i, page, true); qmFill(page); qmFit(true);
+      void qmPop.offsetWidth; qmPop.classList.remove("snap");
+      qmRoot.classList.add("pop-open");
+      openLayer("qmpop");
+      qmFocusFirstRow();
+      return;
+    }
+    // Another tile's page: card and caret glide to the new anchor, the old rows fade up and out, the new ones stagger in
+    layerFocus[layerFocus.length - 1] = cell;
+    [...qmRows.children].forEach(el => qmAnim(el, [{}, { opacity: 0, transform: "translateY(-10px)" }], { duration: 140, fill: "forwards", easing: "ease-in" }));
+    qmPlace(i, page);
+    setTimeout(() => { if (qmView.page !== page) return; qmFill(page); qmFit(false); qmFocusFirstRow(); }, 150);
+    qmAnim($("#qmpTitle"), [{ opacity: 0, transform: "translateY(8px)" }], { duration: 360, delay: 150, easing: qmVar("--ease-out") });
+  }
+  function qmPopClosed() { qmView.page = null; qmRoot.classList.remove("pop-open"); }
+  function qmBump(row, dir) {
+    $$(".chev", row)[dir < 0 ? 0 : 1].classList.add(dir < 0 ? "bump-l" : "bump-r");
+    qmAnim($(".cv", row), [{ opacity: 0, transform: `translateX(${dir * 22}px)` }], { duration: 300, easing: qmVar("--ease-out") });
+  }
+  // The help of the focused row under the rows (only when its text changes, so adjusting a value does not replay it)
+  function qmPopFocus(el) {
+    const r = el.dataset.row && findRow(el.dataset.row); if (!r) return;
+    const text = r.help || "", changed = qmPHelp.textContent !== text;
+    qmPHelp.textContent = text;
+    if (qmView.fresh) qmAnim(qmPHelp, [{ opacity: 0, transform: "translateY(8px)" }], { duration: 400, delay: 260, easing: qmVar("--ease-out") });
+    else if (changed) qmAnim(qmPHelp, [{ opacity: 0, transform: "translateY(8px)" }], { duration: 300, easing: qmVar("--ease-out") });
+  }
+  function qmAction(a, el) {
+    const tile = $(".qm-tile", el);
+    tile.classList.add("press"); setTimeout(() => tile.classList.remove("press"), 130);
+    if (QM_PAGES[a]) { qmOpenPage(a, el); return; }
     if (a === "resume") { closeLayer(); return; }
     if (a === "keyboard") { closeLayer(); toast("On-screen keyboard (later)", "keyboard"); return; }
-    if (a === "perf") { state.perfOverlay = !state.perfOverlay; $("#perf").hidden = !state.perfOverlay; toast(state.perfOverlay ? "Performance overlay on" : "Performance overlay off", "speed"); return; }
+    if (a === "perf") { state.perfOverlay = !state.perfOverlay; $("#perf").hidden = !state.perfOverlay; qmSync(true); toast(state.perfOverlay ? "Performance overlay on" : "Performance overlay off", "speed"); return; }
     if (a === "disconnect" || a === "quit") {
       closeLayer();
       portalTo("home", { icon: "home", label: a === "quit" ? `Closing ${state.currentGame.title}` : "Back to Delos", sub: state.pcName, focusId: "game-" + state.currentGame.id });
@@ -1401,7 +1796,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
       case "tab": { const first = $("#setRows .f"); if (first) focusEl(first); break; }
       case "row": activateRow(arg); break;
       case "ctx": ctxAction(arg); break;
-      case "qm": qmAction(arg); break;
+      case "qm": qmAction(arg, el); break;
       case "device-menu": openContext(); break;
       case "edit-avatar": blip("select"); state.editingAvatar = true; goScreen("create"); break;
       case "rename-profile": openRename("profile"); break;
@@ -1439,7 +1834,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
     const top = layers[layers.length - 1];
     if (top === "ctxmenu") items = [hint("A", "Select"), hint("B", "Close")];
     else if (top === "sidemenu") items = [hint("A", "Change"), hint("B", "Close")];
-    else if (top === "quickmenu") items = [hint("A", "Select"), hint("B", "Resume")];
+    else if (top === "quickmenu" || top === "qmpop") { items = [hint("A", "Select"), hint("B", top === "qmpop" ? "Back" : "Resume")]; $("#qmBack").textContent = top === "qmpop" ? "Back" : "Resume"; }
     else if (top === "renameDlg" || top === "help") items = [hint("A", "Confirm"), hint("B", "Cancel")];
     else {
       switch (state.screen) {
@@ -1495,6 +1890,14 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
     press(btn);
   });
   stage.addEventListener("click", (ev) => {
+    // A tap outside the stream menu's popover: on a tile with a page it glides to that page (the same tile closes it); any other tap closes
+    // only the popover (it never resumes the stream), and a tap on another tile also acts
+    if (layers[layers.length - 1] === "qmpop" && !ev.target.closest("#qmpop")) {
+      const c = ev.target.closest("#qmTiles .qm-cell");
+      if (c && c.dataset.page) { if (c.dataset.page !== qmView.page) { blip("select"); qmOpenPage(c.dataset.page, c); } else closeLayer(); return; }
+      closeLayer();
+      if (!c) return;
+    }
     const el = ev.target.closest(".f");
     if (!el || !stage.contains(el)) return;
     if (!focusables().includes(el)) return;

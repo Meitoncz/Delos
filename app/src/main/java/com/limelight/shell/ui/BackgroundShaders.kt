@@ -78,7 +78,11 @@ float fbm(float2 p) {
     }
     return v;
 }
-float3 tri(float k) { return mix(mix(c1, c2, clamp(k * 2.0, 0.0, 1.0)), c3, clamp(k * 2.0 - 1.0, 0.0, 1.0)); }
+// The three colors by weight: 60 / 25 / 15 (main, secondary, accent). tri(): k around 0.5 is the main color,
+// lower values lean to the secondary one, only the high end brings in the accent
+float3 tri(float k) { return mix(mix(c2, c1, clamp(k * 3.0 - 0.3, 0.0, 1.0)), c3, clamp(k * 2.5 - 1.55, 0.0, 1.0)); }
+// pick(): the same weights for u in 0..1; (i + 0.5) * 0.618 keeps the colors of neighbouring items well spread
+float3 pick(float u) { return u < 0.6 ? c1 : (u < 0.85 ? c2 : c3); }
 half4 emit(float3 col, float a) { a = clamp(a * glow, 0.0, 1.0); return half4(half3(col * a), half(a)); }
 """
 
@@ -104,7 +108,7 @@ half4 main(float2 fc) {
     float line = 1.0 - smoothstep(width * 0.5 - 0.45, width * 0.5 + 0.45, dist);
     float u = level / 16.0;
     float a = ((major ? 0.46 : 0.16) + u * (dark > 0.5 ? 0.18 : 0.14)) * line;
-    float3 col = mix(c1, c2, u);
+    float3 col = mix(c1, c2, u * (0.4 + 0.6 * u));
     return half4(half3(col * a), half(a));
 }""",
         // Soft clouds of the three colors drifting through each other
@@ -113,7 +117,7 @@ half4 main(float2 fc) {
     float2 uv = fc / res.y;
     float2 q = float2(fbm(uv * 2.2 + t * 0.03), fbm(uv * 2.2 + float2(5.2, 1.3) - t * 0.025));
     float n = fbm(uv * 2.0 + q * 1.6 + float2(t * 0.02, 0.0));
-    float3 col = mix(c1, c2, smoothstep(0.2, 0.8, q.x));
+    float3 col = mix(c1, c2, smoothstep(0.3, 0.9, q.x));
     col = mix(col, c3, smoothstep(0.45, 0.85, q.y) * 0.8);
     return emit(col, smoothstep(0.3, 0.95, n) * 0.9);
 }""",
@@ -139,8 +143,7 @@ half4 main(float2 fc) {
         float r = 0.09 + 0.04 * sin(fi * 3.1);
         float d = r * r / max(dot(uv - c, uv - c), 0.0001);
         f += d;
-        float k = mod(fi, 3.0);
-        float3 cc = k < 0.5 ? c1 : (k < 1.5 ? c2 : c3);
+        float3 cc = pick(fract((fi + 0.5) * 0.618034));
         acc += cc * d;
     }
     float3 col = acc / max(f, 0.0001);
@@ -162,7 +165,7 @@ half4 main(float2 fc) {
     c /= 4.0;
     c = 1.17 - pow(c, 1.4);
     float v = clamp(pow(abs(c), 8.0), 0.0, 1.0);
-    float3 col = mix(mix(c2, c1, uv.y), c3, v * 0.5);
+    float3 col = mix(mix(c2, c1, smoothstep(0.0, 0.7, uv.y)), c3, v * 0.5);
     return emit(col, v * 0.9 + 0.12 * (1.0 - uv.y));
 }""",
         // Out-of-focus lights drifting slowly
@@ -181,8 +184,7 @@ half4 main(float2 fc) {
         float d = length(uv - c);
         float m = (1.0 - smoothstep(r * 0.8, r, d)) * (0.3 + 0.7 * (1.0 - s));
         m += smoothstep(r * 0.75, r * 0.96, d) * (1.0 - smoothstep(r * 0.96, r, d)) * 0.35;
-        float k = mod(fi, 3.0);
-        float3 cc = k < 0.5 ? c1 : (k < 1.5 ? c2 : c3);
+        float3 cc = pick(fract((fi + 0.5) * 0.618034));
         acc += cc * m * 0.4;
         aa += m * 0.4;
     }
@@ -206,8 +208,7 @@ half4 main(float2 fc) {
         float da = abs(mod(ang - pa + 3.14159, 6.28318) - 3.14159);
         float trail = exp(-da * 3.0) * (1.0 - smoothstep(0.0, 0.01, abs(r - rr)));
         float spark = exp(-da * da * 300.0) * exp(-pow((r - rr) / 0.01, 2.0));
-        float m = mod(fk, 3.0);
-        float3 cc = m < 0.5 ? c1 : (m < 1.5 ? c2 : c3);
+        float3 cc = pick(fract((fk + 0.5) * 0.618034));
         float v = line * 0.28 + trail * 0.45 + spark * 1.4;
         col += cc * v;
         a += v;

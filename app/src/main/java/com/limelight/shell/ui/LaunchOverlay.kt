@@ -146,6 +146,11 @@ fun LaunchScene(card: LaunchCard, stage: String?, progress: () -> Float, opening
             val topLeft = Offset(center.x - ring, center.y - ring)
             drawArc(colors.glow.copy(alpha = colors.glow.alpha * fade), -90f, sweep, false, topLeft, box, style = Stroke(22f * k, cap = StrokeCap.Round))
             drawArc(colors.accent.copy(alpha = fade), -90f, sweep, false, topLeft, box, style = Stroke(10f * k, cap = StrokeCap.Round))
+            if (sweep > 0f) {
+                // The end of the progress ring: a dot in the third color
+                val end = Math.toRadians((sweep - 90f).toDouble())
+                drawCircle(colors.accent3, radius = 8f * k, center = center + Offset(cos(end).toFloat() * ring, sin(end).toFloat() * ring), alpha = fade)
+            }
             if (time != null) drawMoon(center, ring + 30f * k, k, fade, time, colors)
         }
         Column(

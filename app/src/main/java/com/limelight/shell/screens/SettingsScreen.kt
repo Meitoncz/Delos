@@ -243,7 +243,7 @@ fun SettingsScreen(
         }
         Row(Modifier.fillMaxSize().padding(start = SettingsLayout.TITLE_X.px, end = SettingsLayout.TITLE_X.px, top = SettingsLayout.LIST_TOP.px, bottom = SettingsLayout.bottom(appearance).px),
             horizontalArrangement = Arrangement.spacedBy(56.px)) {
-            CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
+            CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView, com.limelight.shell.ui.LocalEntranceStagger provides com.limelight.shell.ui.rememberEntranceStagger(tab)) {
                 key(tab) {
                     LazyColumn(state = scroll, modifier = Modifier.weight(1f).fadeEdges(stage, top = 14f, bottom = 90f),
                         contentPadding = PaddingValues(start = 18.px, end = 18.px, top = 14.px, bottom = 140.px),

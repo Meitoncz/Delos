@@ -75,7 +75,10 @@ import com.limelight.shell.data.rememberAvatarImage
 @Composable
 fun CenterColumn(gap: Float, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
     Box(modifier.fillMaxSize().imePadding(), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(gap.px), content = content)
+        // Its headline and circles enter one after the other (docs/GUI.md, "Motion")
+        EntranceScope {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(gap.px), content = content)
+        }
     }
 }
 
@@ -83,7 +86,7 @@ fun CenterColumn(gap: Float, modifier: Modifier = Modifier, content: @Composable
 @Composable
 fun Heading(title: String, sub: String? = null) {
     val colors = LocalDelosColors.current
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(Modifier.staggerEntrance(), horizontalAlignment = Alignment.CenterHorizontally) {
         BasicText(
             title,
             style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 64.tpx, letterSpacing = (-.01).em, textAlign = TextAlign.Center),
@@ -202,20 +205,25 @@ fun CircleItem(
 ) {
     val colors = LocalDelosColors.current
     val stage = LocalStage.current
+    val glide = LocalGlideRing.current
+    val reduced = LocalReducedMotion.current
     var focused by remember { mutableStateOf(false) }
-    val lit by animateFloatAsState(if (focused || selected) 1f else 0f, tween(400, easing = EaseOut), label = "circleLabel")
+    val lit by animateFloatAsState(if (focused || selected) 1f else 0f, tween(Motion.FOCUS, easing = EaseOut), label = "circleLabel")
     // The same scale as focusEffects, for the check badge that is drawn above the focus ring
-    val badgeScale by animateFloatAsState(if (focused) 1.16f else 1f, tween(380, easing = EaseSpring), label = "circleBadge")
+    val badgeScale by animateFocusScale(focused, false, 1.16f, label = "circleBadge")
+    // The badge pops in when the circle becomes the selected one
+    val badgePop by animateFloatAsState(if (selected) 1f else 0f, if (reduced) tween(Motion.FADE, easing = Motion.Ease) else tween(Motion.PILL_POP, easing = EaseSpring), label = "circleBadgePop")
     val side = diameter ?: if (big) 220f else 176f
     val iconSize = if (big) 96f else 76f
     val pulseTransition = rememberInfiniteTransition(label = "pulse")
     val wave by pulseTransition.animateFloat(0f, 1f, infiniteRepeatable(tween(2400, easing = EaseOut)), label = "pulseWave")
-    Column(Modifier.width(width.px), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy((if (side < 176f) 14f else 22f).px)) {
+    Column(Modifier.staggerEntrance().width(width.px), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy((if (side < 176f) 14f else 22f).px)) {
         Box {
             Box(
                 modifier
+                    .glideTarget(focused)
                     .focusEffects(
-                        onClick = onClick, corner = 999f, focusScale = 1.16f, ring = FocusRing(5f, 5f), glow = FocusGlow(26f, 70f, -16f),
+                        onClick = onClick, corner = 999f, focusScale = 1.16f, ring = if (glide != null) null else FocusRing(5f, 5f), glow = FocusGlow(26f, 70f, -16f),
                         contextMenu = contextMenu, onFocusChange = { focused = it },
                     )
                     .size(side.px)
@@ -240,24 +248,26 @@ fun CircleItem(
                     else Symbol(icon, iconSize.tpx, colors.text, filled = focused)
                 }
             }
-            if (selected) {
+            if (badgePop > 0f) {
                 // `.circle::before` is content, so it lies above the focus ring (a box shadow)
                 Box(
                     Modifier
                         .matchParentSize()
                         .zIndex(2f)
                         .graphicsLayer {
-                            scaleX = badgeScale
-                            scaleY = badgeScale
+                            val pop = Motion.scaleIn(Motion.POP_FROM_PILL, badgePop, reduced)
+                            scaleX = badgeScale * pop
+                            scaleY = badgeScale * pop
+                            alpha = badgePop.coerceIn(0f, 1f)
                         },
                 ) {
                     // Centered on the circle's edge at the top right (45°)
                     val edge = side / 2f * (1f - 0.70710677f)
                     Box(
-                        Modifier.offset(x = (side - edge - 26f).px, y = (edge - 26f).px).size(52.px).clip(CircleShape).background(colors.accent),
+                        Modifier.offset(x = (side - edge - 26f).px, y = (edge - 26f).px).size(52.px).clip(CircleShape).background(colors.accent2),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Symbol(Symbols.CHECK, 34.tpx, colors.onAccent, filled = true)
+                        Symbol(Symbols.CHECK, 26.tpx, colors.onAccent)
                     }
                 }
             }
@@ -285,7 +295,10 @@ fun CircleItem(
 /** `.circles`: a centered row of circle items. */
 @Composable
 fun Circles(content: @Composable () -> Unit) {
-    Row(horizontalArrangement = Arrangement.spacedBy(56.px), verticalAlignment = Alignment.Top) { content() }
+    // One ring glides between the circles (docs/GUI.md, "Motion") instead of every circle fading its own
+    GlideRingHost(FocusRing(5f, 5f), corner = 999f, focusScale = 1.16f) {
+        Row(horizontalArrangement = Arrangement.spacedBy(56.px), verticalAlignment = Alignment.Top) { content() }
+    }
 }
 
 /** The green of an online PC (`.status-dot`). */
@@ -314,8 +327,8 @@ fun TextFieldPill(
     val keyboard = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
     var focused by remember { mutableStateOf(false) }
-    val scale by animateFloatAsState(if (focused) 1.05f else 1f, tween(380, easing = EaseSpring), label = "fieldScale")
-    val ring by animateFloatAsState(if (focused) 1f else 0f, tween(380, easing = EaseOut), label = "fieldRing")
+    val scale by animateFloatAsState(if (focused) 1.05f else 1f, tween(Motion.FOCUS, easing = EaseSpring), label = "fieldScale")
+    val ring by animateFloatAsState(if (focused) 1f else 0f, tween(Motion.FOCUS, easing = EaseOut), label = "fieldRing")
     BasicTextField(
         value = value,
         onValueChange = { onValueChange(it.take(maxLength)) },

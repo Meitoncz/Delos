@@ -21,6 +21,15 @@ class FilterModalTest {
 
     @Test fun noGamesHaveNoCounts() {
         assertEquals(emptyMap<Int, Int>(), genreCounts(emptyList()))
+        assertEquals(emptyMap<Int, Int>(), themeCounts(emptyList()))
+    }
+
+    @Test fun themeCountsCountGamesNotListingsAndKeepGenresApart() {
+        fun themed(vararg themes: Int) = GameMetadata(
+            candidate = MetadataCandidate(1, "Game", 2020, genres = listOf(GameGenre(7, "Genre 7")), themes = themes.map { GameGenre(it, "Theme $it") }),
+        )
+        val counts = themeCounts(listOf(themed(19, 21), themed(19), themed(19, 19), themed(), null, GameMetadata()))
+        assertEquals(mapOf(19 to 3, 21 to 1), counts)
     }
 
     @Test fun resultLineShowsTheMatchesOfAnActiveFilterAndTheWholeLibraryOtherwise() {
@@ -34,7 +43,8 @@ class FilterModalTest {
     @Test fun hintLabelShowsHowManyCriteriaNarrowTheLibrary() {
         assertEquals("Filter", filterHintLabel(MetadataFilters()))
         assertEquals("Filter • 1 active", filterHintLabel(MetadataFilters(hdr = HdrFilter.SDR)))
-        assertEquals("Filter • 3 active", filterHintLabel(MetadataFilters(2, HdrFilter.HDR, LengthFilter.OVER_60)))
+        assertEquals("Filter • 3 active", filterHintLabel(MetadataFilters(genreId = 2, hdr = HdrFilter.HDR, length = LengthFilter.OVER_60)))
+        assertEquals("Filter • 4 active", filterHintLabel(MetadataFilters(2, 19, HdrFilter.HDR, LengthFilter.OVER_60)))
     }
 
     @Test fun theUnverifiedHdrOptionUsesTheBadgeLabelAndEveryOptionHasItsOwnLabel() {

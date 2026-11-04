@@ -1,16 +1,16 @@
 apply plugin: 'com.android.application'
 apply plugin: 'org.jetbrains.kotlin.plugin.compose'
 
-// Application-owned provider credentials are supplied locally, never committed.
+// The metadata Worker's base URL (non-secret) comes from the environment or the ignored local.properties.
 def metadataProperties = new Properties()
 def metadataLocalFile = rootProject.file('local.properties')
 if (metadataLocalFile.exists()) {
     metadataLocalFile.withInputStream { metadataProperties.load(it) }
 }
-def metadataCredential = { String name ->
+def metadataSetting = { String name ->
     // A defined-but-empty environment variable must not hide the value in local.properties.
     def fromEnvironment = System.getenv(name)
-    def value = fromEnvironment?.trim() ? fromEnvironment : metadataProperties.getProperty(name, '')
+    def value = fromEnvironment?.trim() ? fromEnvironment.trim() : metadataProperties.getProperty(name, '').trim()
     '"' + value.replace('\\', '\\\\').replace('"', '\\"').replace('\r', '\\r').replace('\n', '\\n') + '"'
 }
 
@@ -37,10 +37,8 @@ android {
         // Generate native debug symbols to allow Google Play to symbolicate our native crashes
         ndk.debugSymbolLevel = 'FULL'
 
-        ['DELOS_IGDB_CLIENT_ID', 'DELOS_IGDB_CLIENT_SECRET',
-         'DELOS_PCGW_BOT_USERNAME', 'DELOS_PCGW_BOT_PASSWORD'].each { name ->
-            buildConfigField 'String', name, metadataCredential(name)
-        }
+        // Empty by default (CI builds): game metadata is then reported as unavailable.
+        buildConfigField 'String', 'DELOS_METADATA_URL', metadataSetting('DELOS_METADATA_URL')
     }
 
     flavorDimensions.add("root")

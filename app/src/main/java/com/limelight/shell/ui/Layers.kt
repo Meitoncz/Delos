@@ -1,6 +1,8 @@
 package com.limelight.shell.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -50,6 +52,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.foundation.focusGroup
 import androidx.compose.ui.focus.focusProperties
@@ -106,7 +109,7 @@ fun Modifier.glass(tint: Color): Modifier =
 @Composable
 fun Scrim(visible: Boolean, haze: HazeState, onDismiss: () -> Unit) {
     val colors = LocalDelosColors.current
-    AnimatedVisibility(visible, enter = fadeIn(tween(350)), exit = fadeOut(tween(350))) {
+    AnimatedVisibility(visible, enter = fadeIn(tween(Motion.SCRIM, easing = Motion.Ease)), exit = fadeOut(tween(Motion.EXIT, easing = Motion.Ease))) {
         Box(
             Modifier
                 .fillMaxSize()
@@ -121,7 +124,7 @@ fun Scrim(visible: Boolean, haze: HazeState, onDismiss: () -> Unit) {
  * closes (still animating out) the trap is released, so the focus can return to the screen.
  */
 @Composable
-private fun Modifier.focusTrap(active: Boolean): Modifier {
+internal fun Modifier.focusTrap(active: Boolean): Modifier {
     val current by rememberUpdatedState(active)
     return focusProperties { onExit = { if (current) cancelFocusChange() } }.focusGroup()
 }
@@ -136,6 +139,7 @@ fun ContextMenuLayer(menu: ContextMenu?, anchor: Rect?, below: Boolean, haze: Ha
     val colors = LocalDelosColors.current
     val stage = LocalStage.current
     val density = LocalDensity.current.density
+    val reduced = LocalReducedMotion.current
     // Keep the last menu while animating out
     var shown by remember { mutableStateOf(menu) }
     var shownAnchor by remember { mutableStateOf(anchor) }
@@ -168,8 +172,8 @@ fun ContextMenuLayer(menu: ContextMenu?, anchor: Rect?, below: Boolean, haze: Ha
         AnimatedVisibility(
             menu != null,
             modifier = Modifier.fillMaxSize(),
-            enter = fadeIn(tween(300)) + scaleIn(tween(450, easing = EaseOut), initialScale = .9f, transformOrigin = origin),
-            exit = fadeOut(tween(300)) + scaleOut(tween(450, easing = EaseOut), targetScale = .9f, transformOrigin = origin),
+            enter = popEnter(origin, reduced),
+            exit = popExit(origin, reduced),
         ) {
             val m = shown ?: return@AnimatedVisibility
             val first = remember { FocusRequester() }
@@ -199,10 +203,10 @@ fun ContextMenuLayer(menu: ContextMenu?, anchor: Rect?, below: Boolean, haze: Ha
                 BasicText(
                     m.title.uppercase(),
                     style = TextStyle(color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 18.tpx, letterSpacing = .12.em),
-                    modifier = Modifier.padding(start = 24.px, end = 24.px, top = 14.px, bottom = 10.px),
+                    modifier = Modifier.staggerEntrance(0, Motion.MENU_DELAY).padding(start = 24.px, end = 24.px, top = 14.px, bottom = 10.px),
                 )
                 m.items.forEachIndexed { i, item ->
-                    MenuItemView(item.icon, item.label, if (i == 0) Modifier.focusRequester(first) else Modifier) {
+                    MenuItemView(item.icon, item.label, i + 1, if (i == 0) Modifier.focusRequester(first) else Modifier) {
                         onDismiss()
                         item.action()
                     }
@@ -213,22 +217,26 @@ fun ContextMenuLayer(menu: ContextMenu?, anchor: Rect?, below: Boolean, haze: Ha
 }
 
 @Composable
-private fun MenuItemView(icon: String, label: String, modifier: Modifier, onClick: () -> Unit) {
+private fun MenuItemView(icon: String, label: String, index: Int, modifier: Modifier, onClick: () -> Unit) {
     val colors = LocalDelosColors.current
     var focused by remember { mutableStateOf(false) }
+    val fill by animateFloatAsState(if (focused) 1f else 0f, tween(Motion.FADE, easing = Motion.Ease), label = "menuItemFill")
+    val iconTint by animateColorAsState(if (focused) colors.onAccent else colors.text3, tween(Motion.FADE, easing = Motion.Ease), label = "menuItemIcon")
+    val labelTint by animateColorAsState(if (focused) colors.onAccent else colors.text, tween(Motion.FADE, easing = Motion.Ease), label = "menuItemLabel")
     Row(
         modifier
+            .staggerEntrance(minOf(index, Motion.STAGGER_CAP), Motion.MENU_DELAY)
             .focusEffects(onClick = onClick, corner = 20f, focusScale = 1f, ring = null, glow = null, onFocusChange = { focused = it })
             .fillMaxWidth()
             .height(72.px)
             .clip(RoundedCornerShape(20.px))
-            .background(if (focused) colors.accent else Color.Transparent)
+            .drawBehind { drawRect(colors.accent.fade(fill)) }
             .padding(horizontal = 24.px),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(18.px),
     ) {
-        Symbol(icon, 30.tpx, if (focused) colors.onAccent else colors.text3, filled = focused)
-        BasicText(label, style = TextStyle(color = if (focused) colors.onAccent else colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 24.tpx))
+        Symbol(icon, 30.tpx, iconTint, filled = focused)
+        BasicText(label, style = TextStyle(color = labelTint, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 24.tpx))
     }
 }
 
@@ -252,10 +260,11 @@ fun SideMenuLayer(
     content: @Composable ColumnScope.(firstFocus: FocusRequester) -> Unit,
 ) {
     val colors = LocalDelosColors.current
+    val reduced = LocalReducedMotion.current
     AnimatedVisibility(
         visible,
-        enter = fadeIn(tween(300)) + slideInHorizontally(tween(450, easing = EaseOut)) { -it / 10 },
-        exit = fadeOut(tween(300)) + slideOutHorizontally(tween(450, easing = EaseOut)) { -it / 10 },
+        enter = sideEnter(reduced),
+        exit = sideExit(reduced),
     ) {
         val first = remember { FocusRequester() }
         InitialFocus(first)
@@ -268,8 +277,10 @@ fun SideMenuLayer(
                 .padding(horizontal = 40.px, vertical = 48.px),
             verticalArrangement = Arrangement.spacedBy(10.px),
         ) {
-            header()
-            content(first)
+            EntranceScope {
+                header()
+                content(first)
+            }
         }
         // border-right: 1px line
         Box(Modifier.fillMaxHeight().width(SIDE_MENU_WIDTH.px), contentAlignment = Alignment.CenterEnd) {
@@ -306,7 +317,7 @@ fun ColumnScope.SideMenuScroll(content: @Composable ColumnScope.() -> Unit) {
 @Composable
 fun SideMenuHeader(avatar: @Composable BoxScope.() -> Unit, name: String, status: String) {
     val colors = LocalDelosColors.current
-    Column {
+    Column(Modifier.staggerEntrance()) {
         Row(
             Modifier.padding(start = 12.px, end = 12.px, bottom = 24.px),
             verticalAlignment = Alignment.CenterVertically,
@@ -340,8 +351,8 @@ fun ToastHost(toast: Toast?, onHidden: (Int) -> Unit, onAction: () -> Unit) {
     Box(Modifier.fillMaxSize().padding(bottom = 120.px), contentAlignment = Alignment.BottomCenter) {
         AnimatedVisibility(
             toast != null,
-            enter = fadeIn(tween(300)) + slideInVertically(spring(dampingRatio = .6f, stiffness = 400f)) { it / 3 },
-            exit = fadeOut(tween(300)) + slideOutVertically(tween(450, easing = EaseOut)) { it / 3 },
+            enter = fadeIn(tween(Motion.FADE, easing = Motion.Ease)) + slideInVertically(spring(dampingRatio = .6f, stiffness = 400f)) { it / 3 },
+            exit = fadeOut(tween(Motion.EXIT, easing = Motion.Ease)) + slideOutVertically(tween(Motion.EXIT, easing = Motion.In)) { it / 3 },
         ) {
             val t = shown ?: return@AnimatedVisibility
             Row(
@@ -351,7 +362,7 @@ fun ToastHost(toast: Toast?, onHidden: (Int) -> Unit, onAction: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.px),
             ) {
-                if (t.icon != null) Symbol(t.icon, 30.tpx, colors.bg, filled = true)
+                if (t.icon != null) Symbol(t.icon, 30.tpx, colors.accent3OnInverse, filled = true)
                 BasicText(t.text, style = TextStyle(color = colors.bg, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 22.tpx))
                 if (t.action != null) {
                     Row(Modifier.padding(start = 10.px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.px)) {

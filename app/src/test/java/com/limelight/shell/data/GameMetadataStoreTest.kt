@@ -57,24 +57,42 @@ class GameMetadataStoreTest {
     }
 
     private class FakeProviders : MetadataProviders {
-        override var credentialsAvailable = true
+        override var proxyAvailable = true
         val searchCalls = AtomicInteger()
         val gameCalls = AtomicInteger()
         val hdrCalls = AtomicInteger()
         val completionCalls = AtomicInteger()
+        val steamCalls = AtomicInteger()
+        @Volatile var lastSteamCandidate: MetadataCandidate? = null
         var onSearch: (String) -> List<MetadataCandidate> = { emptyList() }
         var onGame: (Long) -> MetadataCandidate? = { null }
         var onHdr: (MetadataCandidate) -> HdrEvidence = { HdrEvidence(NativeHdr.HDR, "Page") }
         var onCompletion: (MetadataCandidate) -> CompletionTime? = { null }
+        var onSteam: (MetadataCandidate) -> List<String> = { emptyList() }
 
         override fun search(query: String): List<MetadataCandidate> { searchCalls.incrementAndGet(); return onSearch(query) }
         override fun game(id: Long): MetadataCandidate? { gameCalls.incrementAndGet(); return onGame(id) }
         override fun hdr(candidate: MetadataCandidate): HdrEvidence { hdrCalls.incrementAndGet(); return onHdr(candidate) }
         override fun completion(candidate: MetadataCandidate): CompletionTime? { completionCalls.incrementAndGet(); return onCompletion(candidate) }
+        override fun steamTags(candidate: MetadataCandidate): List<String> {
+            steamCalls.incrementAndGet()
+            lastSteamCandidate = candidate
+            return onSteam(candidate)
+        }
     }
 
     private fun newStore(providers: MetadataProviders) =
         GameMetadataStore(root, { prefs }, providers, { now }, Dispatchers.IO, Dispatchers.Unconfined)
+
+    /**
+     * The JVM running these tests (Windows) cannot rename a finished AtomicFile over an existing file, so a second write
+     * leaves its content in `<file>.new`; on Android the rename replaces the file. Complete it the way Android does.
+     */
+    private fun settleAtomicWrite(app: App) {
+        val base = fileOf(app)
+        val pending = File(base.parentFile, base.name + ".new")
+        if (pending.exists()) java.nio.file.Files.move(pending.toPath(), base.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+    }
 
     private fun fileOf(app: App) = File(File(root, "pc-${pc.uuid}"), "${app.id}.json")
 
@@ -108,6 +126,7 @@ class GameMetadataStoreTest {
         assertEquals(0, providers.gameCalls.get())
         assertEquals(0, providers.hdrCalls.get())
         assertEquals(0, providers.completionCalls.get())
+        assertEquals(0, providers.steamCalls.get())
     }
 
     private suspend fun exerciseBuiltInGuards(store: GameMetadataStore, builtIn: App) {
@@ -140,10 +159,34 @@ class GameMetadataStoreTest {
         }
     }
 
+    @Test fun genreAndThemeFiltersSurviveARestart() {
+        val filters = MetadataFilters(genreId = 12, themeId = 19, hdr = HdrFilter.HDR, length = LengthFilter.OVER_60)
+        newStore(FakeProviders()).updateFilters(filters)
+        assertEquals(filters, newStore(FakeProviders()).filters)
+        newStore(FakeProviders()).updateFilters(MetadataFilters(genreId = 12))
+        assertEquals(MetadataFilters(genreId = 12), newStore(FakeProviders()).filters)
+    }
+
+    @Test fun genreAndThemeListsFollowTheCachedRecordsAndIgnoreOlderSchemas() = runBlocking {
+        val current = app(30, "Current")
+        val outdated = app(31, "Outdated")
+        fun record(schema: Int) =
+            """{"schema":$schema,"data":{"candidate":{"id":10,"name":"Game","genres":[{"id":12,"name":"RPG"}],"themes":[{"id":19,"name":"Horror"}]},"updatedAt":$now}}"""
+        fileOf(current).apply { parentFile!!.mkdirs(); writeText(record(6)) }
+        fileOf(outdated).writeText(record(5))
+        val providers = FakeProviders().apply { proxyAvailable = false }
+        val store = newStore(providers)
+        assertTrue(store.genres(pc, listOf(current)).isEmpty())
+        store.ensureLibrary(pc, listOf(current, outdated))
+        assertEquals(listOf(GameGenre(12, "RPG")), store.genres(pc, listOf(current, outdated)))
+        assertEquals(listOf(GameGenre(19, "Horror")), store.themes(pc, listOf(current, outdated)))
+        assertTrue(store.themes(pc, listOf(outdated)).isEmpty())
+    }
+
     @Test fun builtInOperationsLeavePreExistingCacheFilesUntouched() = runBlocking {
         val builtIns = builtIns()
         val cached = builtIns.associateWith { builtIn ->
-            """{"schema":4,"data":{"candidate":{"id":10,"name":"Game","genres":[{"id":12,"name":"RPG"}]},"hdr":{"support":"HDR"},"updatedAt":$now}}"""
+            """{"schema":6,"data":{"candidate":{"id":10,"name":"Game","genres":[{"id":12,"name":"RPG"}]},"hdr":{"support":"HDR"},"updatedAt":$now}}"""
                 .also { content -> fileOf(builtIn).apply { parentFile!!.mkdirs(); writeText(content) } }
         }
         val providers = FakeProviders()
@@ -469,6 +512,131 @@ class GameMetadataStoreTest {
         assertEquals(1, providers.searchCalls.get())
     }
 
+    @Test fun steamTagsAreFetchedForAGameWithASteamIdStoredAndReusedByAFreshStore() = runBlocking {
+        val providers = FakeProviders().apply {
+            onSearch = { listOf(candidate) }
+            onSteam = { listOf("Survival Horror", "Horror", "Sci-fi") }
+        }
+        val first = newStore(providers)
+        first.ensure(pc, game)
+        assertEquals(1, providers.steamCalls.get())
+        assertEquals(candidate, providers.lastSteamCandidate)
+        val data = first.entry(pc, game).data!!
+        assertEquals(listOf("Survival Horror", "Horror", "Sci-fi"), data.steamTags)
+        assertEquals(0L, data.steamFailedAt)
+        assertEquals("a fully answered record is stamped", now, data.updatedAt)
+        assertNull(first.entry(pc, game).error)
+
+        val restarted = newStore(providers)
+        now += day
+        restarted.ensure(pc, game)
+        assertEquals(listOf("Survival Horror", "Horror", "Sci-fi"), restarted.entry(pc, game).data?.steamTags)
+        assertEquals("the stored tags are served from disk", 1, providers.steamCalls.get())
+        assertEquals(1, providers.searchCalls.get())
+    }
+
+    @Test fun aGameWithoutASteamIdNeverAsksTheSteamProvider() = runBlocking {
+        val providers = FakeProviders().apply {
+            onSearch = { listOf(candidate.copy(steamAppIds = emptyList())) }
+            onSteam = { throw AssertionError("no Steam id, no Steam lookup") }
+        }
+        val store = newStore(providers)
+        store.ensure(pc, game)
+        store.ensure(pc, game, force = true)
+        assertEquals(0, providers.steamCalls.get())
+        assertEquals(2, providers.hdrCalls.get())
+        val data = store.entry(pc, game).data!!
+        assertTrue(data.steamTags.isEmpty())
+        assertEquals(0L, data.steamFailedAt)
+        assertTrue("without a Steam lookup the record is complete", data.updatedAt > 0)
+    }
+
+    @Test fun aFailedSteamFetchKeepsTheOldTagsRecordsTheBackoffAndRetriesAfterIt() = runBlocking {
+        val providers = FakeProviders().apply {
+            onSearch = { listOf(candidate) }
+            onSteam = { listOf("Horror") }
+        }
+        val first = newStore(providers)
+        first.ensure(pc, game)
+        assertEquals(listOf("Horror"), first.entry(pc, game).data?.steamTags)
+
+        providers.onSteam = { throw IOException("fixture") }
+        now += 8 * day
+        val failedAt = now
+        val store = newStore(providers)
+        store.ensure(pc, game)
+        assertEquals(2, providers.steamCalls.get())
+        val data = store.entry(pc, game).data!!
+        assertEquals("the earlier answer for the same game is kept", listOf("Horror"), data.steamTags)
+        assertEquals(failedAt, data.steamFailedAt)
+        assertEquals("a failed provider leaves the record unstamped", 0L, data.updatedAt)
+        assertEquals(NativeHdr.HDR, data.hdr.support)
+        assertNull("the card falls back silently, not as an error", store.entry(pc, game).error)
+
+        store.ensure(pc, game)
+        settleAtomicWrite(game)
+        newStore(providers).ensure(pc, game)
+        assertEquals("focus changes and restarts must not retrigger the lookup", 2, providers.steamCalls.get())
+
+        providers.onSteam = { listOf("Sci-fi") }
+        now += TimeUnit.HOURS.toMillis(2)
+        val later = newStore(providers)
+        later.ensure(pc, game)
+        assertEquals(3, providers.steamCalls.get())
+        assertEquals(listOf("Sci-fi"), later.entry(pc, game).data?.steamTags)
+        assertEquals(0L, later.entry(pc, game).data?.steamFailedAt)
+        assertTrue(later.entry(pc, game).data!!.updatedAt > 0)
+    }
+
+    @Test fun aFailedFirstSteamFetchLeavesNoTagsAndAnExplicitRefreshIgnoresTheBackoff() = runBlocking {
+        val providers = FakeProviders().apply {
+            onSearch = { listOf(candidate) }
+            onSteam = { throw IOException("fixture") }
+        }
+        val store = newStore(providers)
+        store.ensure(pc, game)
+        assertTrue(store.entry(pc, game).data!!.steamTags.isEmpty())
+        assertTrue(store.entry(pc, game).data!!.steamFailedAt > 0)
+        assertEquals("the other providers still answered", NativeHdr.HDR, store.entry(pc, game).data?.hdr?.support)
+
+        providers.onSteam = { listOf("Open World") }
+        store.ensure(pc, game, force = true)
+        assertEquals(2, providers.steamCalls.get())
+        assertEquals(listOf("Open World"), store.entry(pc, game).data?.steamTags)
+        assertEquals(0L, store.entry(pc, game).data?.steamFailedAt)
+    }
+
+    @Test fun aStoreListingNoTagsIsASuccessfulEmptyAnswer() = runBlocking {
+        val providers = FakeProviders().apply { onSearch = { listOf(candidate) } }
+        val store = newStore(providers)
+        store.ensure(pc, game)
+        store.ensure(pc, game)
+        assertEquals(1, providers.steamCalls.get())
+        assertTrue(store.entry(pc, game).data!!.steamTags.isEmpty())
+        assertEquals(0L, store.entry(pc, game).data?.steamFailedAt)
+    }
+
+    @Test fun tagsFromAnotherMatchAreNeverCarriedOver() = runBlocking {
+        val providers = FakeProviders().apply {
+            onSearch = { listOf(candidate) }
+            onSteam = { listOf("Horror") }
+        }
+        val store = newStore(providers)
+        store.ensure(pc, game)
+        assertEquals(listOf("Horror"), store.entry(pc, game).data?.steamTags)
+
+        // The next match is a different IGDB entry (id 11): the old entry's tags are not its evidence
+        providers.onSearch = { listOf(candidate.copy(id = 11)) }
+        providers.onSteam = { throw IOException("fixture") }
+        now += 8 * day
+        val later = newStore(providers)
+        later.ensure(pc, game)
+        val data = later.entry(pc, game).data!!
+        assertEquals(11L, data.candidate?.id)
+        assertTrue("another game's tags must not be shown", data.steamTags.isEmpty())
+        assertTrue(data.steamFailedAt > 0)
+    }
+
     @Test fun cachedRecordsAreVisibleBeforeAnySlowNetworkLookupHasFinished() = runBlocking {
         val seeded = FakeProviders().apply { onSearch = { listOf(candidate) } }
         val seeding = newStore(seeded)
@@ -616,10 +784,13 @@ class GameMetadataStoreTest {
     }
 
     @Test fun corruptOrForeignCacheFilesAreIgnoredAndReplacedByAFreshLookup() = runBlocking {
-        // Schema 3 records were classified by the old HDR/matching rules and must be looked up again.
+        // Schema 3 records were classified by the old HDR/matching rules; schema 4 records carry no themes; schema 5 records
+        // carry no Steam tags. All are looked up again.
         for (content in listOf("{ not json", "", """{"schema":1,"data":{"candidate":{"id":1,"name":"Old"}}}""",
             """{"schema":3,"data":{"candidate":{"id":1,"name":"Old"},"updatedAt":$now}}""",
-            """{"schema":4,"data":{"candidate":{"id":1}}}""")) {
+            """{"schema":4,"data":{"candidate":{"id":7,"name":"Game"},"updatedAt":$now}}""",
+            """{"schema":5,"data":{"candidate":{"id":7,"name":"Game","steamAppIds":[100]},"updatedAt":$now}}""",
+            """{"schema":6,"data":{"candidate":{"id":1}}}""")) {
             fileOf(game).apply { parentFile!!.mkdirs(); writeText(content) }
             val providers = FakeProviders().apply { onSearch = { listOf(candidate) } }
             val store = newStore(providers)
@@ -632,7 +803,7 @@ class GameMetadataStoreTest {
     @Test fun aCacheRecordMissingFieldsIsUsableWithoutCrashingAndKeepsUnknownHdrUnknown() = runBlocking {
         fileOf(game).apply {
             parentFile!!.mkdirs()
-            writeText("""{"schema":4,"data":{"candidate":{"id":7,"name":"Game"},"updatedAt":$now}}""")
+            writeText("""{"schema":6,"data":{"candidate":{"id":7,"name":"Game"},"updatedAt":$now}}""")
         }
         val providers = FakeProviders()
         val store = newStore(providers)
@@ -649,18 +820,18 @@ class GameMetadataStoreTest {
     @Test fun aRecordStampedInTheFutureIsRefreshedInsteadOfTrustedForever() = runBlocking {
         fileOf(game).apply {
             parentFile!!.mkdirs()
-            writeText("""{"schema":4,"data":{"candidate":{"id":7,"name":"Game"},"updatedAt":${now + 30 * day}}}""")
+            writeText("""{"schema":6,"data":{"candidate":{"id":7,"name":"Game"},"updatedAt":${now + 30 * day}}}""")
         }
         val providers = FakeProviders().apply { onSearch = { listOf(candidate) } }
         newStore(providers).ensure(pc, game)
         assertEquals(1, providers.searchCalls.get())
     }
 
-    @Test fun withoutCredentialsNoProviderIsContactedAndTheReasonIsShown() = runBlocking {
-        val providers = FakeProviders().apply { credentialsAvailable = false }
+    @Test fun withoutTheMetadataServiceNoProviderIsContactedAndTheReasonIsShown() = runBlocking {
+        val providers = FakeProviders().apply { proxyAvailable = false }
         val store = newStore(providers)
         store.ensure(pc, game)
         assertEquals(0, providers.searchCalls.get())
-        assertNotNull(store.entry(pc, game).error)
+        assertEquals("Game metadata is not available in this build", store.entry(pc, game).error)
     }
 }

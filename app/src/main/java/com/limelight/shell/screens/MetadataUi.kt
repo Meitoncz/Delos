@@ -17,10 +17,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import com.limelight.shell.ContextMenu
 import com.limelight.shell.DialogField
@@ -38,6 +40,7 @@ import com.limelight.shell.data.MetadataFilters
 import com.limelight.shell.data.Pc
 import com.limelight.shell.ui.Figtree
 import com.limelight.shell.ui.LocalDelosColors
+import com.limelight.shell.ui.LocalStage
 import com.limelight.shell.ui.RowValue
 import com.limelight.shell.ui.SettingRow
 import com.limelight.shell.ui.Symbol
@@ -49,13 +52,27 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
+/** The native HDR badge's gradient stops: cyan to indigo to fuchsia, the middle one also tints the glow. */
+private val HdrCyan = Color(0xFF22D3EE)
+private val HdrIndigo = Color(0xFF6366F1)
+private val HdrFuchsia = Color(0xFFD946EF)
+
+/** A light dark layer under the gradient, so the white text keeps its contrast on the cyan end. */
+private const val HDR_SCRIM = .12f
+
 @Composable
 internal fun NativeHdrChip() {
-    val rainbow = remember {
-        Brush.horizontalGradient(listOf(Color(0xFFE94256), Color(0xFFF39335), Color(0xFFF7D449), Color(0xFF5EBE68), Color(0xFF479EE8), Color(0xFF9064D8)))
-    }
+    val k = LocalStage.current.dpPerPx * LocalDensity.current.density
+    val gradient = remember { Brush.linearGradient(listOf(HdrCyan, HdrIndigo, HdrFuchsia)) }
     Row(
-        Modifier.clip(CircleShape).background(rainbow).background(Color.Black.copy(alpha = .5f))
+        Modifier
+            // A very soft glow in the gradient's middle color, behind the pill
+            .dropShadow(CircleShape) {
+                radius = 8f * k
+                color = HdrIndigo
+                alpha = .35f
+            }
+            .clip(CircleShape).background(gradient).background(Color.Black.copy(alpha = HDR_SCRIM))
             .border(1.px, Color.White.copy(alpha = .35f), CircleShape).padding(horizontal = 16.px, vertical = 6.px),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.px),

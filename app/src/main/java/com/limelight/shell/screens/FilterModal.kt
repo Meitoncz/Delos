@@ -59,6 +59,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
+import com.limelight.shell.data.GameGenre
 import com.limelight.shell.data.GameMetadata
 import com.limelight.shell.data.HdrFilter
 import com.limelight.shell.data.LengthFilter
@@ -67,6 +68,8 @@ import com.limelight.shell.data.LocalGameMetadata
 import com.limelight.shell.data.MetadataFilters
 import com.limelight.shell.ui.Cue
 import com.limelight.shell.ui.EaseOut
+import com.limelight.shell.ui.dialogEnter
+import com.limelight.shell.ui.dialogExit
 import com.limelight.shell.ui.Figtree
 import com.limelight.shell.ui.FocusRing
 import com.limelight.shell.ui.InitialFocus
@@ -76,6 +79,8 @@ import com.limelight.shell.ui.MarginBringIntoView
 import com.limelight.shell.ui.PillButton
 import com.limelight.shell.ui.Symbol
 import com.limelight.shell.ui.Symbols
+import com.limelight.shell.ui.genreIcon
+import com.limelight.shell.ui.themeIcon
 import com.limelight.shell.ui.Unbounded
 import com.limelight.shell.ui.backdropBlur
 import com.limelight.shell.ui.fadeEdges
@@ -85,14 +90,22 @@ import com.limelight.shell.ui.px
 import com.limelight.shell.ui.tpx
 import dev.chrisbanes.haze.HazeState
 
-/** How many games carry each genre (by genre id); a game lists a genre at most once. */
-internal fun genreCounts(games: List<GameMetadata?>): Map<Int, Int> {
+private fun countGames(games: List<GameMetadata?>, entries: (GameMetadata) -> List<GameGenre>): Map<Int, Int> {
     val counts = HashMap<Int, Int>()
     for (game in games) {
-        for (id in game?.candidate?.genres.orEmpty().map { it.id }.toSet()) counts[id] = (counts[id] ?: 0) + 1
+        if (game == null) continue
+        for (id in entries(game).map { it.id }.toSet()) counts[id] = (counts[id] ?: 0) + 1
     }
     return counts
 }
+
+/** How many games carry each genre (by genre id); a game lists a genre at most once. */
+internal fun genreCounts(games: List<GameMetadata?>): Map<Int, Int> =
+    countGames(games) { it.candidate?.genres.orEmpty() }
+
+/** How many games carry each theme (by theme id); a game lists a theme at most once. */
+internal fun themeCounts(games: List<GameMetadata?>): Map<Int, Int> =
+    countGames(games) { it.candidate?.themes.orEmpty() }
 
 /** The live result line of the filter modal: "27 of 55 games", or "All 55 games" without a filter. */
 internal fun filterResultLine(shown: Int, total: Int, active: Boolean): String {
@@ -129,8 +142,8 @@ private fun hdrFilterIcon(filter: HdrFilter): String? = when (filter) {
 }
 
 /**
- * The library filter modal (Y on the home screen): a centered glass panel with genre, HDR support and
- * duration chips. Choices apply at once; the focus stays inside while it is open and starts on the selected
+ * The library filter modal (Y on the home screen): a centered glass panel with genre, theme, HDR support
+ * and duration chips. Choices apply at once; the focus stays inside while it is open and starts on the selected
  * genre. [ready] is the library to count in (null while it is not available, which also hides the panel).
  */
 @OptIn(ExperimentalLayoutApi::class)
@@ -140,10 +153,8 @@ fun FilterModalLayer(visible: Boolean, ready: Library.Ready?, haze: HazeState, r
     var shown by remember { mutableStateOf(ready) }
     if (ready != null) shown = ready
     val open by rememberUpdatedState(visible)
-    val enter: EnterTransition = if (reducedMotion) fadeIn(tween(150)) else
-        fadeIn(tween(300)) + scaleIn(tween(450, easing = EaseOut), initialScale = .96f) + slideInVertically(tween(450, easing = EaseOut)) { it / 25 }
-    val exit: ExitTransition = if (reducedMotion) fadeOut(tween(150)) else
-        fadeOut(tween(300)) + scaleOut(tween(450, easing = EaseOut), targetScale = .96f) + slideOutVertically(tween(450, easing = EaseOut)) { it / 25 }
+    val enter: EnterTransition = dialogEnter(reducedMotion)
+    val exit: ExitTransition = dialogExit(reducedMotion)
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         AnimatedVisibility(visible, enter = enter, exit = exit) {
             val library = shown ?: return@AnimatedVisibility
@@ -167,7 +178,9 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
     // Reading the entries here makes the counts follow the metadata as it arrives
     val games = apps.map { metadata.entry(ready.pc, it).data }
     val genres = remember(games) { metadata.genres(ready.pc, apps) }
+    val themes = remember(games) { metadata.themes(ready.pc, apps) }
     val counts = remember(games) { genreCounts(games) }
+    val themeCount = remember(games) { themeCounts(games) }
     val matching = games.indices.count { filters.matches(apps[it], games[it]) }
 
     // One requester per genre chip: the first focus goes to the selected one, a reset back to "All"
@@ -243,13 +256,33 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
                         key(genre.id) {
                             FilterChip(
                                 genre.name, filters.genreId == genre.id, { metadata.updateFilters(metadata.filters.copy(genreId = genre.id)) },
-                                Modifier.focusRequester(genreRequester(genre.id)), count = counts[genre.id] ?: 0,
+                                Modifier.focusRequester(genreRequester(genre.id)), icon = genreIcon(genre.id), count = counts[genre.id] ?: 0,
                             )
                         }
                     }
                 }
             }
             FilterDivider()
+            // Without any theme in the library there is nothing to choose (a theme that was chosen stays visible)
+            if (themes.isNotEmpty() || filters.themeId != null) {
+                FilterSection(Symbols.THEME_DRAMA, "Theme") {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(14.px), verticalArrangement = Arrangement.spacedBy(14.px)) {
+                        FilterChip(
+                            "All", filters.themeId == null, { metadata.updateFilters(metadata.filters.copy(themeId = null)) },
+                            count = apps.size,
+                        )
+                        themes.forEach { theme ->
+                            key(theme.id) {
+                                FilterChip(
+                                    theme.name, filters.themeId == theme.id, { metadata.updateFilters(metadata.filters.copy(themeId = theme.id)) },
+                                    icon = themeIcon(theme.id), count = themeCount[theme.id] ?: 0,
+                                )
+                            }
+                        }
+                    }
+                }
+                FilterDivider()
+            }
             FilterSection(Symbols.HDR_ON, "HDR support") {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(14.px), verticalArrangement = Arrangement.spacedBy(14.px)) {
                     HdrFilter.entries.forEach { option ->
@@ -293,7 +326,7 @@ private fun FilterSection(icon: String, title: String, content: @Composable () -
     Column(verticalArrangement = Arrangement.spacedBy(22.px)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(18.px)) {
             Box(Modifier.size(60.px).clip(CircleShape).background(colors.accent.copy(alpha = .18f)), contentAlignment = Alignment.Center) {
-                Symbol(icon, 32.tpx, colors.accent3, filled = true)
+                Symbol(icon, 32.tpx, colors.accent2, filled = true)
             }
             BasicText(title, style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 29.tpx))
         }

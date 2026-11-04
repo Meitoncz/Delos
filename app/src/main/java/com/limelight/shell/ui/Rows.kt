@@ -1,6 +1,7 @@
 package com.limelight.shell.ui
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -32,7 +33,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -43,7 +47,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.em
 import com.limelight.shell.ContextMenu
 
@@ -103,8 +106,14 @@ fun SettingRow(
     val colors = LocalDelosColors.current
     val feedback = LocalFeedback.current
     var focused by remember { mutableStateOf(false) }
+    val choice = rememberChoiceMotion()
+    // The glass and its blur follow the focus at once (a fade would leave the blur of the row just left on screen for a moment)
+    val fill = if (focused) 1f else 0f
     val adjust: ((Int) -> Unit)? = when (value) {
-        is RowValue.Choice -> value.onStep
+        is RowValue.Choice -> { dir ->
+            choice.step(dir)
+            value.onStep(dir)
+        }
         // Steps left or right ([dir] may be several while a key is held), landing on the slider's grid
         // (a stored value between steps snaps to it)
         is RowValue.Slider -> { dir ->
@@ -116,7 +125,7 @@ fun SettingRow(
     }
     val activate: () -> Unit = when (value) {
         is RowValue.Toggle -> ({ value.onChange(!value.on) })
-        is RowValue.Choice -> ({ value.onStep(1) })
+        is RowValue.Choice -> ({ adjust?.invoke(1) })
         is RowValue.Slider -> ({ adjust?.invoke(1) })
         is RowValue.Action -> value.onClick
         is RowValue.Text -> value.onClick
@@ -127,6 +136,10 @@ fun SettingRow(
         adjust(direction * if (value is RowValue.Slider) sliderAcceleration(value, repeatCount) else 1)
     }
     val shape = RoundedCornerShape(24.px)
+    // The entrance is the content's (icon, label, value), not the row's: the focus ring and the glass of the row stay put
+    // and fully visible from the first frame (the glass is a blur that would not fade with the row)
+    val stagger = LocalEntranceStagger.current
+    val entrance = remember { stagger.take() }
     Row(
         modifier
             .fillMaxWidth()
@@ -161,8 +174,8 @@ fun SettingRow(
             .clip(shape)
             // Focused: frosted glass over the animated background
             .then(
-                LocalBackdropHaze.current?.takeIf { focused }?.let { Modifier.backdropBlur(it, 8f, colors.surface2) }
-                    ?: Modifier.background(if (focused) colors.surface2 else Color.Transparent)
+                LocalBackdropHaze.current?.takeIf { fill > 0f }?.let { Modifier.backdropBlur(it, 8f, colors.surface2.fade(fill)) }
+                    ?: Modifier.background(colors.surface2.fade(fill))
             )
             .defaultMinSize(minHeight = if (compact) 80.px else 92.px)
             .padding(horizontal = 26.px, vertical = 14.px)
@@ -170,11 +183,11 @@ fun SettingRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(22.px),
     ) {
-        Box(Modifier.width(if (compact) 44.px else 52.px), contentAlignment = Alignment.CenterStart) {
+        Box(Modifier.width(if (compact) 44.px else 52.px).staggerEntrance(entrance), contentAlignment = Alignment.CenterStart) {
             // The palette's accent: full on the focused row, softer on the others
-            Symbol(icon, 34.tpx, if (focused) colors.accent3 else colors.accent3.copy(alpha = .62f), filled = focused)
+            Symbol(icon, 34.tpx, if (focused) colors.accent2 else colors.accent2.copy(alpha = .62f), filled = focused)
         }
-        Column(Modifier.weight(1f)) {
+        Column(Modifier.weight(1f).staggerEntrance(entrance)) {
             BasicText(label, style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx))
             if (description != null) {
                 BasicText(
@@ -184,33 +197,47 @@ fun SettingRow(
                 )
             }
         }
-        RowValueView(value, focused)
+        Box(Modifier.staggerEntrance(entrance)) { RowValueView(value, focused, choice) }
     }
 }
 
 @Composable
-private fun RowValueView(value: RowValue, focused: Boolean) {
+private fun RowValueView(value: RowValue, focused: Boolean, choice: ChoiceMotion) {
     val colors = LocalDelosColors.current
+    val reduced = LocalReducedMotion.current
     val text = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 23.tpx)
     when (value) {
         is RowValue.Toggle -> Switch(value.on)
         // The arrows are always shown (muted when not focused), so all values end at the same edge
         is RowValue.Choice -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.px)) {
-            val arrows = if (focused) colors.accent3 else colors.text3
-            Symbol(Symbols.CHEVRON_LEFT, 30.tpx, arrows)
-            if (value.swatch != null) Box(Modifier.size(26.px).clip(CircleShape).background(value.swatch))
-            BasicText(value.label, style = text, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 360.px))
+            val arrows by animateColorAsState(if (focused) colors.accent2 else colors.text3, tween(Motion.FADE, easing = Motion.Ease), label = "chevron")
+            Symbol(Symbols.CHEVRON_LEFT, 30.tpx, arrows, Modifier.chevronBump(choice, -1))
+            // A new value slides in from the side the key came from
+            Row(Modifier.valueSlide(choice), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.px)) {
+                if (value.swatch != null) Box(Modifier.size(26.px).clip(CircleShape).background(value.swatch))
+                MarqueeText(value.label, style = text, active = focused, modifier = Modifier.widthIn(max = 360.px))
+            }
             // The glyph has empty space on its right; shift it so its visible edge lines up with switches and values
-            Symbol(Symbols.CHEVRON_RIGHT, 30.tpx, arrows, Modifier.offset(x = 9.px))
+            Symbol(Symbols.CHEVRON_RIGHT, 30.tpx, arrows, Modifier.offset(x = 9.px).chevronBump(choice, 1))
         }
         is RowValue.Slider -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.px)) {
             val onChange by rememberUpdatedState(value.onChange)
             var dragging by remember { mutableStateOf<Int?>(null) }
             val number = dragging ?: value.value
             val fraction by animateFloatAsState(
-                ((number - value.min) / (value.max - value.min).coerceAtLeast(1).toFloat()).coerceIn(0f, 1f), tween(if (dragging == null) 250 else 0, easing = EaseOut), label = "slider",
+                ((number - value.min) / (value.max - value.min).coerceAtLeast(1).toFloat()).coerceIn(0f, 1f), tween(if (dragging == null && !reduced) Motion.SLIDER_FILL else 0, easing = EaseOut), label = "slider",
             )
-            Box(Modifier.size(220.px, 48.px).pointerInput(value.min, value.max, value.step) {
+            val knobScale by animateKnobScale(focused)
+            val k = stageUnit()
+            Box(Modifier.size(220.px, 48.px).drawWithContent {
+                drawContent()
+                // The knob of the slider grows while its row is focused, inside a soft halo
+                val radius = 14f * k * knobScale
+                val center = Offset(size.width * fraction, size.height / 2f)
+                if (focused) drawCircle(colors.accent3.copy(alpha = .40f), radius = radius + 6f * k * knobScale, center = center)
+                drawCircle(Color.Black.copy(alpha = .30f), radius = radius, center = center + Offset(0f, 3f * k))
+                drawCircle(colors.text, radius = radius, center = center)
+            }.pointerInput(value.min, value.max, value.step) {
                 awaitEachGesture {
                     fun setAt(x: Float) {
                         val raw = value.min + (value.max - value.min) * (x / size.width).coerceIn(0f, 1f)
@@ -227,39 +254,24 @@ private fun RowValueView(value: RowValue, focused: Boolean) {
                 }
             }, contentAlignment = Alignment.Center) {
                 Box(Modifier.fillMaxWidth().size(height = 10.px, width = 220.px).clip(CircleShape).background(colors.surface3)) {
-                    Box(Modifier.fillMaxHeight().fillMaxWidth(fraction).clip(CircleShape).background(colors.accent))
+                    Box(Modifier.fillMaxHeight().fillMaxWidth(fraction).clip(CircleShape).background(Brush.horizontalGradient(listOf(colors.accent, colors.accent2))))
                 }
             }
             val label = if (number % value.divisor == 0) (number / value.divisor).toString() else String.format(java.util.Locale.US, "%.1f", number.toDouble() / value.divisor)
             BasicText("$label${value.unit}", style = text.copy(textAlign = TextAlign.End), maxLines = 1, modifier = Modifier.width(160.px))
         }
-        is RowValue.Action -> Symbol(Symbols.CHEVRON_RIGHT, 30.tpx, if (focused) colors.accent3 else colors.text3)
+        is RowValue.Action -> Symbol(Symbols.CHEVRON_RIGHT, 30.tpx, if (focused) colors.accent2 else colors.text3)
         is RowValue.Text -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.px)) {
-            BasicText(value.text.ifEmpty { "Not set" }, style = text, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 220.px))
-            Symbol(Symbols.CHEVRON_RIGHT, 30.tpx, if (focused) colors.accent3 else colors.text3)
+            MarqueeText(value.text.ifEmpty { "Not set" }, style = text, active = focused, modifier = Modifier.widthIn(max = 220.px))
+            Symbol(Symbols.CHEVRON_RIGHT, 30.tpx, if (focused) colors.accent2 else colors.text3)
         }
         is RowValue.Info -> BasicText(value.text, style = text)
     }
 }
 
-/** The on/off switch (`.switch`). */
+/** The on/off switch (`.switch`): the shared animated switch of the stream menu, with the settings' veil and outline. */
 @Composable
 fun Switch(on: Boolean) {
     val colors = LocalDelosColors.current
-    val knob by animateFloatAsState(if (on) 1f else 0f, tween(380, easing = EaseSpring), label = "switch")
-    Box(
-        Modifier
-            .size(74.px, 42.px)
-            .clip(CircleShape)
-            .background(if (on) colors.accent else colors.surface3)
-            .border(1.px, colors.line, CircleShape),
-    ) {
-        Box(
-            Modifier
-                .offset(x = (6f + 32f * knob).px, y = 5.px)
-                .size(30.px)
-                .clip(CircleShape)
-                .background(if (on) colors.onAccent else colors.text2),
-        )
-    }
+    MotionSwitch(on, 74f, 42f, colors.surface3, border = colors.line)
 }

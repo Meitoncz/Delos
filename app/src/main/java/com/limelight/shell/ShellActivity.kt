@@ -29,6 +29,7 @@ import com.limelight.shell.data.LocalBoxArt
 import com.limelight.shell.data.PcRepository
 import com.limelight.shell.data.PcSetup
 import com.limelight.shell.data.ProfileStore
+import com.limelight.shell.settings.Appearance
 import com.limelight.shell.settings.AppearanceStore
 import com.limelight.shell.settings.StartupStore
 import com.limelight.shell.ui.Feedback
@@ -91,7 +92,12 @@ class ShellActivity : ComponentActivity() {
             links.value = ShellLink.from(this, intent)
             results.value = StreamResult.take(intent)
         }
-        setContent { ShellRoot(appearance, feedback, keys, repo, boxArt, artwork, metadata, launcher, profiles, startup, setup, links, results) }
+        // Debug builds only: the stream menu with fake state instead of the shell (docs/GUI.md, "Stream menu preview")
+        val preview = StreamMenuPreview.from(intent)
+        setContent {
+            if (preview != null) ShellTheme(appearance, feedback) { preview() }
+            else ShellRoot(appearance, feedback, keys, repo, boxArt, artwork, metadata, launcher, profiles, startup, setup, links, results)
+        }
         feedback.view = window.decorView
     }
 
@@ -149,6 +155,16 @@ private fun ShellRoot(
     links: MutableStateFlow<ShellLink?>,
     results: MutableStateFlow<StreamResult?>,
 ) {
+    ShellTheme(store, feedback) { appearance ->
+        CompositionLocalProvider(LocalBoxArt provides boxArt, LocalArtwork provides artwork, LocalGameMetadata provides metadata) {
+            Shell(appearance, store::update, keys, repo, launcher, profiles, startup, setup, links, results)
+        }
+    }
+}
+
+/** The palette, feedback, reduced motion and the 1920 x 1080 stage every screen of Delos is drawn in. */
+@Composable
+private fun ShellTheme(store: AppearanceStore, feedback: Feedback, content: @Composable (Appearance) -> Unit) {
     val appearance by store.appearance.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val systemHue = remember { systemAccentHue(context) }
@@ -163,9 +179,7 @@ private fun ShellRoot(
         feedback.soundsEnabled = appearance.sounds
         feedback.hapticsEnabled = appearance.haptics
     }
-    CompositionLocalProvider(LocalDelosColors provides colors, LocalFeedback provides feedback, LocalBoxArt provides boxArt, LocalArtwork provides artwork, LocalGameMetadata provides metadata, LocalReducedMotion provides appearance.reducedMotion) {
-        Stage(textScale = appearance.uiScale / 100f) {
-            Shell(appearance, store::update, keys, repo, launcher, profiles, startup, setup, links, results)
-        }
+    CompositionLocalProvider(LocalDelosColors provides colors, LocalFeedback provides feedback, LocalReducedMotion provides appearance.reducedMotion) {
+        Stage(textScale = appearance.uiScale / 100f) { content(appearance) }
     }
 }

@@ -41,6 +41,25 @@ data class DelosColors(
     val scrim: Color,
 )
 
+/**
+ * Visual weights of the three colors on a screen (a guide, not a formula): the main color [DelosColors.accent] about
+ * 60 % (focus, on states, primary actions, selection), the secondary [DelosColors.accent2] about 35 % (icons, arrows,
+ * gradient ends, section kickers, progress, hints) and the accent [DelosColors.accent3] about 15 % (state pills and
+ * dots, ends of bars, check badges, thin rings, labels). docs/GUI.md lists where each is used.
+ */
+
+/** What sits on a [DelosColors.accent3] fill: dark on the light colors of the dark theme, white on the darker ones of the light theme. */
+val DelosColors.onAccent3: Color get() = if (dark) onAccent else Color.White
+
+/** A thin ring around panels and pills ([DelosColors.accent3], faint). */
+val DelosColors.accent3Line: Color get() = accent3.copy(alpha = .34f)
+
+/** The accent3 for small icons on a dark overlay (a cover's badge), whatever the theme: always the dark theme's light shade. */
+val DelosColors.accent3OnDark: Color get() = hsl(accent3Hue, 85f, 68f)
+
+/** The accent3 for the icon of a toast, which is the inverse of the theme (a light pill in the dark theme, a dark one in the light theme). */
+val DelosColors.accent3OnInverse: Color get() = if (dark) hsl(accent3Hue, 80f, 38f) else hsl(accent3Hue, 85f, 68f)
+
 /** CSS-style hsl(): hue in degrees (any value), saturation and lightness in percent. */
 fun hsl(h: Float, s: Float, l: Float, a: Float = 1f): Color =
     Color.hsl(((h % 360f) + 360f) % 360f, (s / 100f).coerceIn(0f, 1f), (l / 100f).coerceIn(0f, 1f), a.coerceIn(0f, 1f))

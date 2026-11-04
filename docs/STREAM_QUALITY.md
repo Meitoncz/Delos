@@ -7,7 +7,7 @@ Feature provenance is preserved in the [README](../README.md#feature-provenance)
 
 ## Runtime bitrate
 
-The stream menu's **Bitrate** page previews 1–1000 Mbps and sends **Apply** over the existing pinned,
+The stream menu's **Bitrate** page (a popover above the menu bar) previews 1–1000 Mbps and sends **Apply** over the existing pinned,
 client-certificate HTTPS connection to Vibepollo's `/bitrate?bitrate=<kbps>`. No common-c protocol
 extension or host modification is needed. Requests run off the UI thread and only one runs at a time.
 The host's XML status must indicate success, and its returned bitrate is the authoritative value.
@@ -96,6 +96,13 @@ presentation parameters without restarting either decoder. Live changes are sess
 defaults remain in Display settings and may be overridden per game. Initialization/runtime failures
 fall back to direct rendering and are exposed in the menu/logs; HDR is not silently converted to SDR.
 
+The page's last row, **Save for this game**, is the one way to keep live changes: it writes the current
+upscaler on/off, mode, sharpness and supersampling level as that game's per-game overrides (see
+[PER_GAME_SETTINGS.md](PER_GAME_SETTINGS.md#saving-the-live-upscaler)) and applies from its next
+launch. It saves nothing else (no bitrate, no other display setting) and changes neither the profile
+nor other games; the running stream keeps its live values. It is hidden for a stream started without
+its launch identity.
+
 Both renderers implement SGSR 1 Standard, SGSR 1 High Quality, SGSR 2 Video and SGSR 2 Video Quality.
 PyroWave uses native Vulkan shaders rather than the GLES stage. Spatial modes use distinct Qualcomm
 Standard/HQ kernels; temporal Quality adds a separate reactive activation pass and tighter YCoCg
@@ -113,10 +120,14 @@ input-to-photon latency.
 
 For all four SGSR modes, a stream already matching the display uses supersampling instead of
 same-resolution reconstruction. The live stream menu calls this mode **Supersampling** and offers two
-session-only levels: `1x` reconstructs 1920x1080 into 2560x1440, while `2x` reconstructs it into
+levels, session-only unless saved: `1x` reconstructs 1920x1080 into 2560x1440, while `2x` reconstructs it into
 3840x2160. A separate presentation pass reduces the internal image to the display resolution.
 The HDR path performs RGB-to-P010 conversion only after that reduction; intermediate RGB remains
 FP16 and PQ-encoded, not linear-light or eight-bit SDR.
+
+The level a stream starts with is the Display setting **Supersampling quality**
+(`list_sgsr_supersampling_level`, 1 or 2, default 1; profile value with a per-game override). An unknown
+stored value reads as 1x, and a 2x that does not fit falls back to 1x exactly as for the live choice.
 
 The sizing policy tolerates a two-pixel Surface aspect-fit difference, checks the GPU texture limit,
 and caps the internal target at 3840x2160. Native 4K therefore never attempts an unsafe 8K target.

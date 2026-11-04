@@ -56,7 +56,7 @@ object StreamExit {
         val portal = Portal((System.nanoTime() and 0x7fffffff).toInt(), Symbols.HOME, label, pcName, cancellable = false)
         val shown = mutableStateOf<Portal?>(null)
         val burst = mutableStateOf(false)
-        val feedback = Feedback(game)
+        val feedback = Feedback(game).also { it.hapticsEnabled = appearance.haptics }
         val blur = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && game.getSystemService(WindowManager::class.java).isCrossWindowBlurEnabled
         val dialog = ComponentDialog(game, android.R.style.Theme_Translucent_NoTitleBar_Fullscreen)
         dialog.setCancelable(false)

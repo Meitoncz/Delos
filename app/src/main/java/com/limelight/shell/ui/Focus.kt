@@ -16,6 +16,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.focus.FocusRequester
@@ -23,6 +24,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -96,14 +98,18 @@ fun Modifier.focusEffects(
     adjustable: Boolean = false,
     controllerAdjust: ((direction: Int, repeatCount: Int) -> Unit)? = null,
     onFocusChange: ((Boolean) -> Unit)? = null,
+    /** What a press squeezes the element to for a moment ([Motion.PRESS_SCALE]); 1 for an element that has no press feedback of its own kind. */
+    pressScale: Float = Motion.PRESS_SCALE,
 ): Modifier = composed {
     val colors = LocalDelosColors.current
     val stage = LocalStage.current
     val feedback = LocalFeedback.current
     val tracker = LocalFocusTracker.current
     var focused by remember { mutableStateOf(false) }
-    val scale by animateFloatAsState(if (focused) focusScale else 1f, tween(380, easing = EaseSpring), label = "focusScale")
-    val ringAlpha by animateFloatAsState(if (focused) 1f else 0f, tween(380, easing = EaseOut), label = "focusRing")
+    val pulse = rememberPressPulse()
+    val scale by animateFocusScale(focused, pulse.pressed, focusScale, pressScale)
+    // The ring comes in quickly and goes out quickly, so it never trails behind the focus
+    val ringAlpha by animateFloatAsState(if (focused) 1f else 0f, tween(if (focused) 140 else 110, easing = EaseOut), label = "focusRing")
     val sweepPos = remember { Animatable(0f) }
     LaunchedEffect(focused) {
         if (focused && sweep) {
@@ -116,6 +122,7 @@ fun Modifier.focusEffects(
     val position = remember { arrayOfNulls<LayoutCoordinates>(1) }
     val activate = {
         clickCue?.let(feedback::play)
+        pulse.fire()
         onClick()
     }
     val currentActivate by rememberUpdatedState(activate)
@@ -135,6 +142,25 @@ fun Modifier.focusEffects(
         }
         .then(
             if (glow == null) Modifier
+            // A round element draws its glow itself, centered on it: the blurred shadow of dropShadow is cut off at the element's square
+            else if (corner >= 500f) Modifier.drawBehind {
+                val a = ringAlpha
+                if (a > 0f) {
+                    val inner = (size.minDimension / 2f + glow.spread * k).coerceAtLeast(1f)
+                    val outer = inner + glow.blur * k
+                    val c = colors.glow
+                    drawCircle(
+                        Brush.radialGradient(
+                            0f to c.copy(alpha = c.alpha * a),
+                            inner / outer to c.copy(alpha = c.alpha * a),
+                            (inner / outer + 1f) / 2f to c.copy(alpha = c.alpha * a * .32f),
+                            1f to Color.Transparent,
+                            center = Offset(size.width / 2f, size.height / 2f), radius = outer,
+                        ),
+                        radius = outer, center = Offset(size.width / 2f, size.height / 2f),
+                    )
+                }
+            }
             else Modifier.dropShadow(shape) {
                 radius = glow.blur * k
                 spread = glow.spread * k

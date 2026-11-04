@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import com.limelight.shell.data.ArtworkProgress
@@ -58,7 +59,7 @@ fun ArtworkProgressBar(progress: ArtworkProgress?, label: String = "Downloading 
                 verticalArrangement = Arrangement.spacedBy(12.px),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.px)) {
-                    Spinner(28f, color = colors.accent3)
+                    Spinner(28f, color = colors.accent2)
                     BasicText(
                         lastLabel[0], modifier = Modifier.weight(1f),
                         style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 22.tpx),
@@ -66,7 +67,7 @@ fun ArtworkProgressBar(progress: ArtworkProgress?, label: String = "Downloading 
                     BasicText("${p.done} of ${p.total}", style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 22.tpx, fontFeatureSettings = "tnum"))
                 }
                 Box(Modifier.fillMaxWidth().height(8.px).clip(CircleShape).background(colors.surface2)) {
-                    Box(Modifier.fillMaxWidth(fraction).fillMaxHeight().clip(CircleShape).background(colors.accent3))
+                    Box(Modifier.fillMaxWidth(fraction).fillMaxHeight().clip(CircleShape).background(Brush.horizontalGradient(listOf(colors.accent, colors.accent2))))
                 }
             }
         }
