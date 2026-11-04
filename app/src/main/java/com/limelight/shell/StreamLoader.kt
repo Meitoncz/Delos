@@ -158,7 +158,8 @@ class StreamLoader private constructor(
         /** The shell uses the same profile and per-game overrides attached to its launch intent. */
         fun parametersFor(context: Context, pcUuid: String?, appId: Int): String {
             val base = ProfileStore.currentSettings(context)
-            val prefs = if (pcUuid != null && appId >= 0) GameSettingsStore(base, pcUuid, appId).preferences else base
+            val game = if (pcUuid != null && appId >= 0) GameSettingsStore(base, pcUuid, appId) else null
+            val prefs = launchParameterPreferences(base, game?.preferences ?: base, game?.overrides().orEmpty())
             val config = PreferenceConfiguration.readPreferences(context, prefs)
             // readPreferences' legacy codec reader reads the context; this shell context is not Game.
             config.videoFormat = when (prefs.getString("video_format", "auto")) {
