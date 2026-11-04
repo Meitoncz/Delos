@@ -329,22 +329,25 @@ one press, one focus and one menu feel the same everywhere. The numbers, easings
 
 ## Color roles
 
-Every screen splits its color about **50 / 35 / 15** by visual weight between the palette's three colors
-(`colors.accent`, `accent2`, `accent3`; Delos: gold 40°, cyan 190°, blue 250°). Material You derives the same
-three from the wallpaper (main, +52°, tertiary) and follows the same roles. Light themes use darker shades
-(accent3 is dark there), so text in `accent2`/`accent3` stays readable; content on an accent3 fill uses
-`onAccent3` (dark in the dark theme, white in the light one); a toast icon and a cover badge use
-`accent3OnInverse` / `accent3OnDark`, which fit their fixed light or dark pill. The helpers live in `ui/Colors.kt`.
+Color is a seasoning, not a coating: the neutral text and surfaces carry the screen and the palette's three colors split
+the accents about **60 / 25 / 15** by visual weight (`colors.accent`, `accent2`, `accent3`; Delos: gold 40°, cyan 190°,
+indigo 250°, a split complement). Material You derives the same three from the wallpaper (main, +52°, tertiary) and
+follows the same roles. Light themes use darker shades (accent3 is dark there); content on an accent3 fill uses `onAccent3`
+(dark in the dark theme, white in the light one); a toast icon and a cover badge use `accent3OnInverse` / `accent3OnDark`
+and `accent3Line` is the faint hairline of the palette's third color, all in `ui/Colors.kt`.
 
-| Role | Weight | Where |
-| --- | --- | --- |
-| `accent` (main) | ~50 % | The focus ring and its glow; filled focus (nav buttons, tabs, menu items, primary buttons, chips that are chosen); on states (switch and slider fill, a tile that is on); the selected tab icon; the in-use border of artwork; the launch ring; the PIN digits; the cursor; the disc behind the icon of the settings and debug panels; the big icon of an empty Home; the stream menu's ring |
-| `accent2` (secondary) | ~35 % | Icons of rows, menu items, pills (chips), non-primary buttons, filter chips and text fields (when focused); arrows and chevrons; the second half of every gradient (switch, slider, tile glass sheen); section kickers (settings sections, menu titles, `ARTWORK`, `CURRENTLY USED`); the labels of the button hints; downloads (spinner and the bar's start); online and focus pulses; the logo's moon; empty-state icons of the artwork grid; the stream menu's chevrons and row icons |
-| `accent3` (accent) | ~15 % | Check badges (the selected circle, `In use`); state: the `Running` chip and the cover badge icons, the dot under the current page in the top bar, the `Custom` hints of per-game settings; label tint: `GAME INFO`, `LIBRARY`, L1 / R1, the label of a focused circle, the value of a focused row, counts in filter chips, `N settings`; thin rings (dialogs, context menu, filter panel, button capture, the PC pill, profile chip, selected tab, the rim of the settings disc, PIN digits, the sad face, the portal icon); the ends of bars (the slider's dot, the end of the download bar, the launch ring's dot); the toast icon; the stream menu's slider halo; the theme pill without game colors; the boot logo's island |
+- **Text stays neutral**: labels of buttons and hints, titles, kickers and values are white or the grey text colors in
+  every palette. Color goes into shapes and icons.
+- `accent` (main, ~60 %): the focus ring and its glow, filled focus, on states (switch and slider fill, tiles that are
+  on), primary buttons, the selected tab, the gold of the active label in the stream menu.
+- `accent2` (secondary, ~25 %): icons of rows in the settings and the stream menu, arrows, the second half of every
+  gradient (switch, slider, progress), the check badge of a selected circle, spinners.
+- `accent3` (accent, ~15 %): the cherry on top, small and never text: the dot under the current page in the top bar, the
+  slider halo of the stream menu, the toast icon, the `Running` and cover badge icons, the ring ripple of the portal
+  overlay and the end dot of the launch ring.
 
-The animated backgrounds follow the same weights: the main color about half (Aurora: two of four lights, Tide: three of six
-waves, Silk: two of four ribbons, Contour lines lean to it, the shader backgrounds pick the main color for about half of
-their lights), the secondary color a third, the accent the rest and fainter.
+The animated backgrounds follow the same weights: the main color about 60 % of the lights, the secondary one a quarter,
+the accent the rest and fainter.
 
 ## Stream
 

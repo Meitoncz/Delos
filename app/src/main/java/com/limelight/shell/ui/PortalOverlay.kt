@@ -156,7 +156,7 @@ fun PortalOverlay(portal: Portal?, burst: Boolean, haze: HazeState?, reducedMoti
                         .drawBehind {
                             drawRect(cssRadialCircle(Offset(size.width * .4f, size.height * .35f), size, 0f to colors.surface3, 1f to colors.bg2))
                         }
-                        .border(2.px, colors.accent3Line, CircleShape),
+                        .border(2.px, colors.line, CircleShape),
                     contentAlignment = Alignment.Center,
                 ) {
                     Symbol(p.icon, 100.tpx, colors.accent, filled = true)

@@ -78,11 +78,11 @@ float fbm(float2 p) {
     }
     return v;
 }
-// The three colors by weight, main about half, secondary a third, accent the rest. tri(): k around 0.5 is the main color,
+// The three colors by weight: 60 / 25 / 15 (main, secondary, accent). tri(): k around 0.5 is the main color,
 // lower values lean to the secondary one, only the high end brings in the accent
 float3 tri(float k) { return mix(mix(c2, c1, clamp(k * 3.0 - 0.3, 0.0, 1.0)), c3, clamp(k * 2.5 - 1.55, 0.0, 1.0)); }
 // pick(): the same weights for u in 0..1; (i + 0.5) * 0.618 keeps the colors of neighbouring items well spread
-float3 pick(float u) { return u < 0.5 ? c1 : (u < 0.85 ? c2 : c3); }
+float3 pick(float u) { return u < 0.6 ? c1 : (u < 0.85 ? c2 : c3); }
 half4 emit(float3 col, float a) { a = clamp(a * glow, 0.0, 1.0); return half4(half3(col * a), half(a)); }
 """
 

@@ -43,7 +43,7 @@ data class DelosColors(
 
 /**
  * Visual weights of the three colors on a screen (a guide, not a formula): the main color [DelosColors.accent] about
- * 50 % (focus, on states, primary actions, selection), the secondary [DelosColors.accent2] about 35 % (icons, arrows,
+ * 60 % (focus, on states, primary actions, selection), the secondary [DelosColors.accent2] about 35 % (icons, arrows,
  * gradient ends, section kickers, progress, hints) and the accent [DelosColors.accent3] about 15 % (state pills and
  * dots, ends of bars, check badges, thin rings, labels). docs/GUI.md lists where each is used.
  */

@@ -47,7 +47,6 @@ import com.limelight.shell.ui.Figtree
 import com.limelight.shell.ui.Heading
 import com.limelight.shell.ui.InitialFocus
 import com.limelight.shell.ui.LocalDelosColors
-import com.limelight.shell.ui.accent3Line
 import com.limelight.shell.ui.LocalFeedback
 import com.limelight.shell.ui.LocalStage
 import com.limelight.shell.ui.OnlineGreen
@@ -201,10 +200,10 @@ private fun PinDigits(pin: String) {
                     .size(148.px, 176.px)
                     .clip(shape)
                     .glass(colors.surface2)
-                    .border(1.px, colors.accent3Line, shape),
+                    .border(1.px, colors.line, shape),
                 contentAlignment = Alignment.Center,
             ) {
-                BasicText(digit.toString(), style = TextStyle(color = colors.accent, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 92.tpx))
+                BasicText(digit.toString(), style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 92.tpx))
             }
         }
     }
@@ -222,6 +221,6 @@ private fun Spinner() {
         val box = androidx.compose.ui.geometry.Size(size.width - w, size.height - w)
         val topLeft = androidx.compose.ui.geometry.Offset(inset, inset)
         drawArc(colors.line, 0f, 360f, false, topLeft, box, style = Stroke(w))
-        drawArc(colors.accent2, turn - 135f, 90f, false, topLeft, box, style = Stroke(w, cap = StrokeCap.Butt))
+        drawArc(colors.accent, turn - 135f, 90f, false, topLeft, box, style = Stroke(w, cap = StrokeCap.Butt))
     }
 }

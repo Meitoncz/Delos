@@ -188,7 +188,7 @@ fun LogoMark(size: Float = 40f) {
 private fun PcPill(name: String, online: Boolean) {
     val colors = LocalDelosColors.current
     Row(
-        Modifier.clip(CircleShape).glass(colors.surface).border(1.px, colors.accent3Line, CircleShape).padding(horizontal = 18.px, vertical = 8.px),
+        Modifier.clip(CircleShape).glass(colors.surface).border(1.px, colors.line, CircleShape).padding(horizontal = 18.px, vertical = 8.px),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.px),
     ) {
@@ -331,7 +331,7 @@ fun HintBar(hints: List<Hint>, note: String?, modifier: Modifier = Modifier, not
         hints.forEach { hint ->
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.px)) {
                 GlyphButton(hint.glyph)
-                BasicText(hint.label, style = TextStyle(color = colors.accent2, fontFamily = Figtree, fontSize = 21.tpx))
+                BasicText(hint.label, style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 21.tpx))
             }
         }
     }

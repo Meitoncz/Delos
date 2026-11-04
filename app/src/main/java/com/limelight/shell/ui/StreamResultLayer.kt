@@ -141,7 +141,7 @@ private fun FaceBadge(id: Long, reducedMotion: Boolean) {
             }
             .clip(shape)
             .background(colors.accent.copy(alpha = .16f))
-            .border(2.px, colors.accent3.copy(alpha = .6f), shape),
+            .border(2.px, colors.accent.copy(alpha = .42f), shape),
         contentAlignment = Alignment.Center,
     ) {
         Symbol(Symbols.SENTIMENT_DISSATISFIED, 128.tpx, colors.accent, filled = true)
@@ -161,6 +161,6 @@ private fun DetailsToggle(expanded: Boolean, onClick: () -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(8.px),
     ) {
         BasicText("Details", style = TextStyle(color = colors.text2, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 22.tpx))
-        Symbol(if (expanded) Symbols.EXPAND_LESS else Symbols.EXPAND_MORE, 26.tpx, colors.accent2)
+        Symbol(if (expanded) Symbols.EXPAND_LESS else Symbols.EXPAND_MORE, 26.tpx, colors.text2)
     }
 }

@@ -74,7 +74,6 @@ import com.limelight.shell.ui.Figtree
 import com.limelight.shell.ui.FocusRing
 import com.limelight.shell.ui.InitialFocus
 import com.limelight.shell.ui.LocalDelosColors
-import com.limelight.shell.ui.accent3Line
 import com.limelight.shell.ui.LocalStage
 import com.limelight.shell.ui.MarginBringIntoView
 import com.limelight.shell.ui.PillButton
@@ -217,7 +216,7 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
             }
             .clip(shape)
             .backdropBlur(haze, 24f, colors.surface3)
-            .border(1.px, colors.accent3Line, shape)
+            .border(1.px, colors.line, shape)
             .padding(horizontal = 40.px, vertical = 44.px)
             .onFocusChanged { panelFocused = it.hasFocus }
             .focusProperties { onExit = { if (open) cancelFocusChange() } }
@@ -360,8 +359,8 @@ private fun FilterChip(label: String, selected: Boolean, onClick: () -> Unit, mo
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.px),
     ) {
-        if (icon != null) Symbol(icon, 28.tpx, if (selected) content else colors.accent2, filled = selected || focused)
+        if (icon != null) Symbol(icon, 28.tpx, content, filled = selected || focused)
         BasicText(label, style = TextStyle(color = content, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 24.tpx))
-        if (count != null) BasicText("$count", style = TextStyle(color = if (selected) content.copy(alpha = .6f) else colors.accent3, fontFamily = Figtree, fontSize = 22.tpx))
+        if (count != null) BasicText("$count", style = TextStyle(color = content.copy(alpha = .6f), fontFamily = Figtree, fontSize = 22.tpx))
     }
 }

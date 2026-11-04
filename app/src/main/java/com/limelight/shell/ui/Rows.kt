@@ -202,8 +202,6 @@ private fun RowValueView(value: RowValue, focused: Boolean, choice: ChoiceMotion
     val colors = LocalDelosColors.current
     val reduced = LocalReducedMotion.current
     val text = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 23.tpx)
-    // The value of the focused row takes the accent color (the icon and arrows the secondary one)
-    val shown = if (focused) text.copy(color = colors.accent3) else text
     when (value) {
         is RowValue.Toggle -> Switch(value.on)
         // The arrows are always shown (muted when not focused), so all values end at the same edge
@@ -213,7 +211,7 @@ private fun RowValueView(value: RowValue, focused: Boolean, choice: ChoiceMotion
             // A new value slides in from the side the key came from
             Row(Modifier.valueSlide(choice), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.px)) {
                 if (value.swatch != null) Box(Modifier.size(26.px).clip(CircleShape).background(value.swatch))
-                MarqueeText(value.label, style = shown, active = focused, modifier = Modifier.widthIn(max = 360.px))
+                MarqueeText(value.label, style = text, active = focused, modifier = Modifier.widthIn(max = 360.px))
             }
             // The glyph has empty space on its right; shift it so its visible edge lines up with switches and values
             Symbol(Symbols.CHEVRON_RIGHT, 30.tpx, arrows, Modifier.offset(x = 9.px).chevronBump(choice, 1))
@@ -254,15 +252,13 @@ private fun RowValueView(value: RowValue, focused: Boolean, choice: ChoiceMotion
                 Box(Modifier.fillMaxWidth().size(height = 10.px, width = 220.px).clip(CircleShape).background(colors.surface3)) {
                     Box(Modifier.fillMaxHeight().fillMaxWidth(fraction).clip(CircleShape).background(Brush.horizontalGradient(listOf(colors.accent, colors.accent2))))
                 }
-                // The end of the bar: a small dot in the third color, a little wider than the bar
-                if (fraction > 0f) Box(Modifier.offset(x = (220f * fraction - 110f).px).size(16.px).clip(CircleShape).background(colors.accent3))
             }
             val label = if (number % value.divisor == 0) (number / value.divisor).toString() else String.format(java.util.Locale.US, "%.1f", number.toDouble() / value.divisor)
-            BasicText("$label${value.unit}", style = shown.copy(textAlign = TextAlign.End), maxLines = 1, modifier = Modifier.width(160.px))
+            BasicText("$label${value.unit}", style = text.copy(textAlign = TextAlign.End), maxLines = 1, modifier = Modifier.width(160.px))
         }
         is RowValue.Action -> Symbol(Symbols.CHEVRON_RIGHT, 30.tpx, if (focused) colors.accent2 else colors.text3)
         is RowValue.Text -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.px)) {
-            MarqueeText(value.text.ifEmpty { "Not set" }, style = shown, active = focused, modifier = Modifier.widthIn(max = 220.px))
+            MarqueeText(value.text.ifEmpty { "Not set" }, style = text, active = focused, modifier = Modifier.widthIn(max = 220.px))
             Symbol(Symbols.CHEVRON_RIGHT, 30.tpx, if (focused) colors.accent2 else colors.text3)
         }
         is RowValue.Info -> BasicText(value.text, style = text)

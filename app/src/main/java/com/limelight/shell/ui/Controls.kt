@@ -127,7 +127,7 @@ fun PillButton(label: String, icon: String?, onClick: () -> Unit, modifier: Modi
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.px),
     ) {
-        if (icon != null) Symbol(icon, 32.tpx, if (primary) content else colors.accent2, filled = focused)
+        if (icon != null) Symbol(icon, 32.tpx, content, filled = focused)
         BasicText(label, style = TextStyle(color = content, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx))
     }
 }
@@ -206,7 +206,7 @@ fun CircleItem(
                     Symbol(
                         icon, (if (big) 96f else 76f).tpx,
                         // A focused or selected circle (the default PC, the connected one) lights its icon with the secondary color
-                        if (avatarHue != null) Color.White else if (focused || selected) colors.accent2 else colors.text,
+                        if (avatarHue != null) Color.White else colors.text,
                         filled = avatarHue != null || focused,
                     )
                 }
@@ -227,10 +227,10 @@ fun CircleItem(
                     // Centered on the circle's edge at the top right (45°)
                     val edge = side / 2f * (1f - 0.70710677f)
                     Box(
-                        Modifier.offset(x = (side - edge - 26f).px, y = (edge - 26f).px).size(52.px).clip(CircleShape).background(colors.accent3),
+                        Modifier.offset(x = (side - edge - 26f).px, y = (edge - 26f).px).size(52.px).clip(CircleShape).background(colors.accent2),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Symbol(Symbols.CHECK, 26.tpx, colors.onAccent3)
+                        Symbol(Symbols.CHECK, 26.tpx, colors.onAccent)
                     }
                 }
             }
@@ -238,7 +238,7 @@ fun CircleItem(
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.px)) {
             BasicText(
                 label,
-                style = TextStyle(color = if (focused) colors.accent3 else colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx, textAlign = TextAlign.Center),
+                style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx, textAlign = TextAlign.Center),
                 maxLines = 1,
                 modifier = Modifier.graphicsLayer {
                     alpha = .55f + .45f * lit
@@ -350,7 +350,7 @@ fun TextFieldPill(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.px),
             ) {
-                Symbol(icon, 34.tpx, if (focused) colors.accent2 else colors.text3)
+                Symbol(icon, 34.tpx, colors.text3)
                 Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
                     if (value.isEmpty() && placeholder.isNotEmpty()) {
                         BasicText(placeholder, style = TextStyle(color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 30.tpx), maxLines = 1)
