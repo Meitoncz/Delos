@@ -8,11 +8,11 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.graphics.ClipOp
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.Shadow
-import androidx.compose.ui.graphics.asFrameworkPaint
+import androidx.compose.ui.graphics.asAndroidPath
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
@@ -66,12 +66,11 @@ internal fun DrawScope.drawBoxShadow(box: Rect, corner: Float, offsetY: Float, b
     }
     clipPath(hole, ClipOp.Difference) {
         drawIntoCanvas { canvas ->
-            val paint = Paint()
-            paint.asFrameworkPaint().apply {
+            val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
                 this.color = android.graphics.Color.BLACK
                 setShadowLayer(shadowRadius(blur), 0f, offsetY, color.toArgb())
             }
-            canvas.drawPath(shape, paint)
+            canvas.nativeCanvas.drawPath(shape.asAndroidPath(), paint)
         }
     }
 }
@@ -93,12 +92,11 @@ internal fun DrawScope.drawInsetShadow(box: Rect, corner: Float, blur: Float, sp
     }
     clipPath(inner) {
         drawIntoCanvas { canvas ->
-            val paint = Paint()
-            paint.asFrameworkPaint().apply {
+            val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
                 this.color = android.graphics.Color.BLACK
                 setShadowLayer(shadowRadius(blur), 0f, 0f, color.toArgb())
             }
-            canvas.drawPath(frame, paint)
+            canvas.nativeCanvas.drawPath(frame.asAndroidPath(), paint)
         }
     }
 }

@@ -52,7 +52,8 @@ fun Symbol(
             BasicText(icon, style = iconStyle(size, color.copy(alpha = color.alpha * (1f - f)), symbolsRegular))
         }
         if (f > 0f) {
-            BasicText(icon, style = iconStyle(size, color.copy(alpha = color.alpha * f), symbolsFill))
+            // The filled check is a tick in a square; the filled variant should be the tick in a circle
+            BasicText(if (icon == Symbols.CHECK) Symbols.CHECK_CIRCLE else icon, style = iconStyle(size, color.copy(alpha = color.alpha * f), symbolsFill))
         }
     }
 }

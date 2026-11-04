@@ -215,10 +215,10 @@ fun CircleItem(
                     // Centered on the circle's edge at the top right (45°)
                     val edge = side / 2f * (1f - 0.70710677f)
                     Box(
-                        Modifier.offset(x = (side - edge - 26f).px, y = (edge - 26f).px).size(52.px).clip(CircleShape).background(colors.accent),
+                        Modifier.offset(x = (side - edge - 26f).px, y = (edge - 26f).px).size(52.px).clip(CircleShape).background(colors.accent3),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Symbol(Symbols.CHECK, 34.tpx, colors.onAccent, filled = true)
+                        Symbol(Symbols.CHECK, 26.tpx, colors.onAccent)
                     }
                 }
             }

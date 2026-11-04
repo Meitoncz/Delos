@@ -33,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -43,7 +44,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.em
 import com.limelight.shell.ContextMenu
 
@@ -172,7 +172,7 @@ fun SettingRow(
     ) {
         Box(Modifier.width(if (compact) 44.px else 52.px), contentAlignment = Alignment.CenterStart) {
             // The palette's accent: full on the focused row, softer on the others
-            Symbol(icon, 34.tpx, if (focused) colors.accent3 else colors.accent3.copy(alpha = .62f), filled = focused)
+            Symbol(icon, 34.tpx, if (focused) colors.accent2 else colors.accent2.copy(alpha = .62f), filled = focused)
         }
         Column(Modifier.weight(1f)) {
             BasicText(label, style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx))
@@ -196,10 +196,10 @@ private fun RowValueView(value: RowValue, focused: Boolean) {
         is RowValue.Toggle -> Switch(value.on)
         // The arrows are always shown (muted when not focused), so all values end at the same edge
         is RowValue.Choice -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.px)) {
-            val arrows = if (focused) colors.accent3 else colors.text3
+            val arrows = if (focused) colors.accent2 else colors.text3
             Symbol(Symbols.CHEVRON_LEFT, 30.tpx, arrows)
             if (value.swatch != null) Box(Modifier.size(26.px).clip(CircleShape).background(value.swatch))
-            BasicText(value.label, style = text, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 360.px))
+            MarqueeText(value.label, style = text, active = focused, modifier = Modifier.widthIn(max = 360.px))
             // The glyph has empty space on its right; shift it so its visible edge lines up with switches and values
             Symbol(Symbols.CHEVRON_RIGHT, 30.tpx, arrows, Modifier.offset(x = 9.px))
         }
@@ -227,16 +227,16 @@ private fun RowValueView(value: RowValue, focused: Boolean) {
                 }
             }, contentAlignment = Alignment.Center) {
                 Box(Modifier.fillMaxWidth().size(height = 10.px, width = 220.px).clip(CircleShape).background(colors.surface3)) {
-                    Box(Modifier.fillMaxHeight().fillMaxWidth(fraction).clip(CircleShape).background(colors.accent))
+                    Box(Modifier.fillMaxHeight().fillMaxWidth(fraction).clip(CircleShape).background(Brush.horizontalGradient(listOf(colors.accent, colors.accent2))))
                 }
             }
             val label = if (number % value.divisor == 0) (number / value.divisor).toString() else String.format(java.util.Locale.US, "%.1f", number.toDouble() / value.divisor)
             BasicText("$label${value.unit}", style = text.copy(textAlign = TextAlign.End), maxLines = 1, modifier = Modifier.width(160.px))
         }
-        is RowValue.Action -> Symbol(Symbols.CHEVRON_RIGHT, 30.tpx, if (focused) colors.accent3 else colors.text3)
+        is RowValue.Action -> Symbol(Symbols.CHEVRON_RIGHT, 30.tpx, if (focused) colors.accent2 else colors.text3)
         is RowValue.Text -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.px)) {
-            BasicText(value.text.ifEmpty { "Not set" }, style = text, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 220.px))
-            Symbol(Symbols.CHEVRON_RIGHT, 30.tpx, if (focused) colors.accent3 else colors.text3)
+            MarqueeText(value.text.ifEmpty { "Not set" }, style = text, active = focused, modifier = Modifier.widthIn(max = 220.px))
+            Symbol(Symbols.CHEVRON_RIGHT, 30.tpx, if (focused) colors.accent2 else colors.text3)
         }
         is RowValue.Info -> BasicText(value.text, style = text)
     }
@@ -251,7 +251,7 @@ fun Switch(on: Boolean) {
         Modifier
             .size(74.px, 42.px)
             .clip(CircleShape)
-            .background(if (on) colors.accent else colors.surface3)
+            .then(if (on) Modifier.background(Brush.horizontalGradient(listOf(colors.accent, colors.accent2))) else Modifier.background(colors.surface3))
             .border(1.px, colors.line, CircleShape),
     ) {
         Box(

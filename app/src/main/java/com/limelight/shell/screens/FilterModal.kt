@@ -326,7 +326,7 @@ private fun FilterSection(icon: String, title: String, content: @Composable () -
     Column(verticalArrangement = Arrangement.spacedBy(22.px)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(18.px)) {
             Box(Modifier.size(60.px).clip(CircleShape).background(colors.accent.copy(alpha = .18f)), contentAlignment = Alignment.Center) {
-                Symbol(icon, 32.tpx, colors.accent3, filled = true)
+                Symbol(icon, 32.tpx, colors.accent2, filled = true)
             }
             BasicText(title, style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 29.tpx))
         }

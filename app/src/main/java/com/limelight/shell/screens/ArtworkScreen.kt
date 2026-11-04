@@ -192,7 +192,7 @@ fun ArtworkScreen(screen: Screen.Artwork) {
         Column(Modifier.offset(150.px, 92.px).width(1620.px)) {
             BasicText(
                 "ARTWORK",
-                style = TextStyle(color = colors.accent3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx, letterSpacing = .14.em),
+                style = TextStyle(color = colors.accent2, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx, letterSpacing = .14.em),
             )
             BasicText(
                 app.name, maxLines = 1, overflow = TextOverflow.Ellipsis,

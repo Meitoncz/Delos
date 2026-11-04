@@ -23,7 +23,7 @@ enum class HomeLayout(val label: String) { GRID("Grid"), ROW("Row") }
  * animated backgrounds). Delos is the prototype's own palette.
  */
 enum class Palette(val label: String, val base: Float, val accent: Float, val accent2: Float, val accent3: Float) {
-    DELOS("Delos", 222f, 40f, 192f, 300f),
+    DELOS("Delos", 222f, 40f, 190f, 250f),
     LAGOON("Lagoon", 190f, 176f, 228f, 18f),
     DUSK("Dusk", 262f, 268f, 320f, 200f),
     EMBER("Ember", 14f, 14f, 40f, 330f),

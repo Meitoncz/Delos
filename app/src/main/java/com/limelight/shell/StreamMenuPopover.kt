@@ -70,7 +70,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.em
@@ -91,6 +90,7 @@ import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.Unbounded
 import com.limelight.shell.ui.fadeEdges
 import com.limelight.shell.ui.focusEffects
+import com.limelight.shell.ui.MarqueeText
 import com.limelight.shell.ui.focusTrap
 import com.limelight.shell.ui.px
 import com.limelight.shell.ui.tpx
@@ -179,6 +179,7 @@ internal fun StreamMenuPopover(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val k = stageScale()
+    val sheen = LocalDelosColors.current.accent2
     val maxHeight = ((L.POPOVER_MAX_HEIGHT + L.CARET_HEIGHT) * k).roundToInt()
     Box(
         modifier
@@ -197,9 +198,9 @@ internal fun StreamMenuPopover(
                 clipPath(caretCardPath(size.width, maxOf(body, 120f * k), geo.cx.value * k, k)) {
                     drawRect(CardBacking.copy(alpha = L.CARD_BACKING_ALPHA * a))
                     drawRect(CardTint.copy(alpha = .50f * a))
-                    drawRect(Brush.verticalGradient(0f to Color.White.copy(alpha = .15f * a), .52f to Color.Transparent, 1f to Color.Transparent))
+                    drawRect(Brush.verticalGradient(0f to sheen.copy(alpha = .20f * a), .52f to Color.Transparent, 1f to Color.Transparent))
                     drawRect(Brush.verticalGradient(0f to Color.Transparent, 1f to Color.White.copy(alpha = .20f * a), startY = size.height - 150f * k, endY = size.height))
-                    drawContent()
+                    this@drawWithContent.drawContent()
                 }
             }
             .layout { measurable, _ ->
@@ -260,11 +261,9 @@ internal fun ColumnScope.PopoverPage(
         BackButton(onBack)
         val titleShow = remember { Animatable(if (titleIn) 0f else 1f) }
         LaunchedEffect(Unit) { if (titleIn) titleShow.animateTo(1f, tween(M.MORPH_TITLE, easing = EaseOut)) }
-        BasicText(
+        MarqueeText(
             title,
             style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = L.POPOVER_TITLE_SIZE.fsp, letterSpacing = (-.005f).em),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
             modifier = Modifier.graphicsLayer {
                 alpha = if (leaving) 0f else titleShow.value
                 translationY = if (rm) 0f else 8f * (1f - titleShow.value) * k
@@ -273,6 +272,9 @@ internal fun ColumnScope.PopoverPage(
         )
     }
     Spacer(Modifier.height(L.POPOVER_GAP_AFTER_HEAD.px))
+    // A list at its top or bottom has nothing beyond that edge: no fade there, so the first or last row is never cut
+    val topFade by animateFloatAsState(if (scroll.value > 0) 1f else 0f, tween(M.FADE, easing = M.Ease), label = "fadeTop")
+    val bottomFade by animateFloatAsState(if (scroll.value < scroll.maxValue) 1f else 0f, tween(M.FADE, easing = M.Ease), label = "fadeBottom")
     CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
         Box(
             Modifier
@@ -286,7 +288,7 @@ internal fun ColumnScope.PopoverPage(
             Column(
                 Modifier
                     .fillMaxWidth()
-                    .then(if (scroll.maxValue > 0) Modifier.fadeEdges(stage, top = 26f, bottom = 64f) else Modifier)
+                    .then(if (scroll.maxValue > 0) Modifier.fadeEdges(stage, top = 26f * topFade, bottom = 64f * bottomFade) else Modifier)
                     .verticalScroll(scroll),
                 verticalArrangement = Arrangement.spacedBy(L.ROW_GAP.px),
                 content = content,
@@ -450,7 +452,7 @@ internal fun MenuRow(
     }
     val ring by animateFloatAsState(if (focused) 1f else 0f, tween(M.FOCUS, easing = EaseOut), label = "rowRing")
     val fill by animateFloatAsState(if (focused) 1f else 0f, tween(M.FADE, easing = M.Ease), label = "rowFill")
-    val iconColor by animateColorAsState(if (focused) colors.accent else colors.text3, tween(M.FADE, easing = M.Ease), label = "rowIcon")
+    val iconColor by animateColorAsState(if (focused) colors.accent2 else colors.accent2.copy(alpha = .62f), tween(M.FADE, easing = M.Ease), label = "rowIcon")
     Row(
         modifier
             .fillMaxWidth()
@@ -503,11 +505,9 @@ internal fun MenuRow(
             Symbol(icon, L.ROW_ICON.fsp, iconColor, filled = focused, fadeMillis = M.FADE)
         }
         Spacer(Modifier.width(L.ROW_COLUMN_GAP.px))
-        BasicText(
-            label,
+        MarqueeText(
+            label, active = focused,
             style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = L.ROW_SIZE.tpx, lineHeight = 1.2f.em, lineHeightStyle = CssLineHeight),
-            maxLines = 1,
-            softWrap = false,
             modifier = Modifier.weight(1f),
         )
         Spacer(Modifier.width(L.ROW_COLUMN_GAP.px))
@@ -551,7 +551,7 @@ private fun RowValueView(value: RowValue, focused: Boolean, confirmation: String
                     },
                 contentAlignment = Alignment.Center,
             ) {
-                BasicText(value.label, style = text, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 520.px))
+                MarqueeText(value.label, style = text, active = focused, modifier = Modifier.widthIn(max = 520.px))
             }
             Symbol(
                 Symbols.CHEVRON_RIGHT, 28.fsp, chevronColor,
@@ -570,7 +570,7 @@ private fun RowValueView(value: RowValue, focused: Boolean, confirmation: String
         }
         value is RowValue.Action -> Symbol(Symbols.CHEVRON_RIGHT, 28.fsp, chevronColor)
         value is RowValue.Text -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.px)) {
-            BasicText(value.text.ifEmpty { "Not set" }, style = text, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 420.px))
+            MarqueeText(value.text.ifEmpty { "Not set" }, style = text, active = focused, modifier = Modifier.widthIn(max = 420.px))
             Symbol(Symbols.CHEVRON_RIGHT, 28.fsp, chevronColor)
         }
         value is RowValue.Info -> BasicText(value.text, style = text)
@@ -584,13 +584,15 @@ private fun MenuSwitch(on: Boolean) {
     val rm = LocalReducedMotion.current
     val k = stageScale()
     val knob by animateFloatAsState(if (on) 1f else 0f, if (rm) tween(0) else tween(M.FOCUS, easing = EaseSpring), label = "switchKnob")
-    val track by animateColorAsState(if (on) colors.accent else Color.White.copy(alpha = .18f), tween(M.FADE, easing = M.Ease), label = "switchTrack")
+    val lit by animateFloatAsState(if (on) 1f else 0f, tween(M.FADE, easing = M.Ease), label = "switchTrack")
     val knobColor by animateColorAsState(if (on) colors.onAccent else colors.text2, tween(M.FADE, easing = M.Ease), label = "switchKnobColor")
     Box(
         Modifier
             .size(L.SWITCH_WIDTH.px, L.SWITCH_HEIGHT.px)
             .drawBehind {
-                drawRoundRect(track, cornerRadius = CornerRadius(size.height / 2f))
+                // Off: a light veil. On: the accent fading into the second accent, like the slider's fill
+                drawRoundRect(Color.White.copy(alpha = .18f * (1f - lit)), cornerRadius = CornerRadius(size.height / 2f))
+                if (lit > 0f) drawRoundRect(Brush.horizontalGradient(listOf(colors.accent.copy(alpha = lit), colors.accent2.copy(alpha = lit))), cornerRadius = CornerRadius(size.height / 2f))
                 val d = (L.SWITCH_HEIGHT - 12f) * k
                 drawCircle(knobColor, radius = d / 2f, center = Offset(6f * k + d / 2f + (L.SWITCH_WIDTH - L.SWITCH_HEIGHT) * k * knob, size.height / 2f))
             },
@@ -638,10 +640,13 @@ private fun MenuSlider(value: RowValue.Slider, focused: Boolean): Int {
                 val trackHeight = L.SLIDER_HEIGHT * k
                 val top = (size.height - trackHeight) / 2f
                 drawRoundRect(Color.White.copy(alpha = .18f), Offset(0f, top), Size(size.width, trackHeight), CornerRadius(trackHeight / 2f))
-                if (fraction > 0f) drawRoundRect(colors.accent, Offset(0f, top), Size(size.width * fraction, trackHeight), CornerRadius(trackHeight / 2f))
+                if (fraction > 0f) drawRoundRect(
+                    Brush.horizontalGradient(listOf(colors.accent, colors.accent2), startX = 0f, endX = size.width * fraction),
+                    Offset(0f, top), Size(size.width * fraction, trackHeight), CornerRadius(trackHeight / 2f),
+                )
                 val radius = L.KNOB * k / 2f * knobScale
                 val center = Offset(size.width * fraction, size.height / 2f)
-                if (focused) drawCircle(colors.accent.copy(alpha = .22f), radius = radius + 7f * k * knobScale, center = center)
+                if (focused) drawCircle(colors.accent3.copy(alpha = .40f), radius = radius + 7f * k * knobScale, center = center)
                 drawBoxShadow(Rect(center.x - radius, center.y - radius, center.x + radius, center.y + radius), radius, 4f * k, 12f * k, 0f, Color.Black.copy(alpha = .45f))
                 drawCircle(colors.text, radius = radius, center = center)
             },
