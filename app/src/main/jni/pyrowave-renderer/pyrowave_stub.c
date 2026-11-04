@@ -23,6 +23,10 @@ JNIEXPORT void JNICALL Java_com_limelight_binding_video_PyroWaveRenderer_nativeS
 JNIEXPORT jboolean JNICALL Java_com_limelight_binding_video_PyroWaveRenderer_nativeIsSupersampling(JNIEnv *env, jclass clazz, jlong handle) { return JNI_FALSE; }
 JNIEXPORT jint JNICALL Java_com_limelight_binding_video_PyroWaveRenderer_nativeGetSupersamplingLevel(JNIEnv *env, jclass clazz, jlong handle) { return 1; }
 JNIEXPORT jstring JNICALL Java_com_limelight_binding_video_PyroWaveRenderer_nativeGetScaleDescription(JNIEnv *env, jclass clazz, jlong handle) { return NULL; }
+JNIEXPORT void JNICALL Java_com_limelight_binding_video_PyroWaveRenderer_nativeSetLaunchArrivalPose(JNIEnv *env, jclass clazz, jlong handle, jboolean prepare, jfloat progress, jfloat scaleX, jfloat scaleY, jfloat skew, jfloat warp, jfloat blur, jfloat chromatic) {}
+JNIEXPORT jboolean JNICALL Java_com_limelight_binding_video_PyroWaveRenderer_nativeIsLaunchArrivalReady(JNIEnv *env, jclass clazz, jlong handle) { return JNI_FALSE; }
+JNIEXPORT jboolean JNICALL Java_com_limelight_binding_video_PyroWaveRenderer_nativeIsLaunchArrivalComplete(JNIEnv *env, jclass clazz, jlong handle) { return JNI_FALSE; }
+JNIEXPORT jstring JNICALL Java_com_limelight_binding_video_PyroWaveRenderer_nativeGetLaunchArrivalError(JNIEnv *env, jclass clazz, jlong handle) { return (*env)->NewStringUTF(env, "PyroWave launch arrival is unavailable on this ABI (Vulkan 1.3 renderer required)"); }
 
 JNIEXPORT jint JNICALL
 Java_com_limelight_binding_video_PyroWaveRenderer_nativeGetLastGpuDecodeUs(JNIEnv *env, jclass clazz, jlong handle) {

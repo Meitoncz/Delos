@@ -57,6 +57,7 @@ class StreamLoader private constructor(
     private val view: ComposeView,
     private val pcName: String,
     initialParameters: String,
+    val reducedMotion: Boolean,
 ) : ConnectionProgress {
     private val stages = LaunchStageQueue(LaunchHandoff.line, LaunchHandoff.lineAt, LINE_MS)
     private val changes = Channel<Unit>(Channel.CONFLATED)
@@ -90,6 +91,7 @@ class StreamLoader private constructor(
         if (removed) return
         removed = true
         changes.close()
+        activity.setLaunchArrivalProgress(-1f)
         if (LaunchHandoff.startedAt == origin) {
             LaunchHandoff.background = null
             LaunchHandoff.logo = null
@@ -186,8 +188,8 @@ class StreamLoader private constructor(
                 GameArt("$pcUuid/$appId", hue, (hue + 35f) % 360f, Symbols.SPORTS_ESPORTS, cover),
                 LaunchHandoff.background, logo, info)
             val view = ComposeView(activity)
-            val loader = StreamLoader(activity, view, pcName, info)
             val appearance = AppearanceStore(activity) { ProfileStore.currentSettings(activity) }.appearance.value
+            val loader = StreamLoader(activity, view, pcName, info, appearance.reducedMotion)
             val colors = delosColors(appearance, systemAccentHue(activity))
             view.setContent {
                 CompositionLocalProvider(LocalDelosColors provides colors) {
@@ -232,7 +234,27 @@ class StreamLoader private constructor(
                 if (loader.activity.isFinishing) return@LaunchedEffect
                 loader.parameters.value = loader.activity.launchStreamParameters
                 progress.animateTo(1f, tween(250, easing = EaseOut))
-                opening.animateTo(1f, tween(if (reducedMotion) HyperspaceConfig.REDUCED_OPENING_MS else HyperspaceConfig.OPENING_MS, easing = LinearEasing))
+                var effectAvailable = !reducedMotion
+                if (effectAvailable) {
+                    loader.activity.setLaunchArrivalProgress(0f)
+                    while (!loader.activity.isFinishing && !loader.activity.isLaunchArrivalReady &&
+                        loader.activity.launchArrivalError == null) delay(16)
+                    if (loader.activity.isFinishing) return@LaunchedEffect
+                    loader.activity.launchArrivalError?.let {
+                        loader.activity.reportLaunchArrivalError(it)
+                        effectAvailable = false
+                    }
+                }
+                opening.animateTo(1f, tween(if (reducedMotion) HyperspaceConfig.REDUCED_OPENING_MS else HyperspaceConfig.OPENING_MS,
+                    easing = LinearEasing)) {
+                    if (effectAvailable) loader.activity.setLaunchArrivalProgress(value)
+                }
+                if (effectAvailable) {
+                    loader.activity.setLaunchArrivalProgress(1f)
+                    while (!loader.activity.isFinishing && !loader.activity.isLaunchArrivalComplete &&
+                        loader.activity.launchArrivalError == null) delay(16)
+                    loader.activity.launchArrivalError?.let { loader.activity.reportLaunchArrivalError(it) }
+                }
                 loader.remove()
             }
             LaunchScene(card.copy(logo = logo, streamParameters = loader.parameters.value), line,

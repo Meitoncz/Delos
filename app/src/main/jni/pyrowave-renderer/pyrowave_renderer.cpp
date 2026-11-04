@@ -83,6 +83,13 @@ namespace {
         float sharpness;
     };
 
+    // Two vec4s: below Vulkan's guaranteed 128-byte push-constant limit. Curves live in LaunchArrival.java.
+    struct ArrivalParams {
+        float pose[6] = {1, 1, 0, 0, 0, 0};
+        float sourceSize[2] = {};
+    };
+    static_assert(sizeof(ArrivalParams) == 32, "Arrival push constants must match GLSL");
+
     // The limits of the upscaled size and the "native input" tolerance. SgsrDimensions (Java) owns them and
     // passes them in, so this planner and the MediaCodec path cannot drift apart.
     struct SgsrLimits {
@@ -111,6 +118,7 @@ namespace {
     X(EnumeratePhysicalDevices) \
     X(GetPhysicalDeviceProperties) \
     X(GetPhysicalDeviceFeatures2) \
+    X(GetPhysicalDeviceFormatProperties) \
     X(GetPhysicalDeviceQueueFamilyProperties) \
     X(GetPhysicalDeviceMemoryProperties) \
     X(CreateDevice) \
@@ -194,6 +202,7 @@ namespace {
     X(MapMemory) \
     X(CmdCopyImageToBuffer) \
     X(CmdCopyImage) \
+    X(CmdBlitImage) \
     X(InvalidateMappedMemoryRanges)
 
     struct VulkanLoader {
@@ -588,6 +597,30 @@ namespace {
             return text;
         }
 
+        void setLaunchArrivalPose(bool prepare, float progress, const float *pose) {
+            std::lock_guard<std::mutex> lock(arrivalLock);
+            if (prepare) {
+                arrivalRequested = true;
+                arrivalPending = true;
+                arrivalStarted = false;
+                arrivalReady = false;
+                arrivalComplete = false;
+                arrivalError.clear();
+            }
+            if (!arrivalRequested) return;
+            if (!prepare) arrivalStarted = true;
+            if (!prepare && progress < 0) arrivalError.clear();
+            arrivalProgress = progress;
+            std::copy(pose, pose + 6, arrivalRequestedParams.pose);
+        }
+
+        bool isLaunchArrivalReady() const { return arrivalReady.load(); }
+        bool isLaunchArrivalComplete() const { return arrivalComplete.load(); }
+        std::string getLaunchArrivalError() {
+            std::lock_guard<std::mutex> lock(arrivalLock);
+            return arrivalError;
+        }
+
         // One frame as moonlight-common-c delivered it: its bytes and, per RTP packet, whether it was lost
         // and whether it starts a record (see pyrowaveframing.h). Same steps as the official client's
         // PyroWaveDecoder::decode.
@@ -619,7 +652,9 @@ namespace {
                     return SUBMIT_SKIPPED;
                 }
             }
-            return present() ? SUBMIT_OK : SUBMIT_ERROR;
+            if (present()) return SUBMIT_OK;
+            failArrival(lastVulkanError[0] != 0 ? lastVulkanError : "PyroWave launch arrival: video decode/presentation failed");
+            return SUBMIT_ERROR;
         }
 
 #if defined(LC_DEBUG)
@@ -692,6 +727,8 @@ namespace {
         bool check(VkResult result, const char *what) {
             if (result != VK_SUCCESS) {
                 LOGE("%s failed: %d", what, result);
+                snprintf(lastVulkanError, sizeof(lastVulkanError),
+                         "PyroWave launch arrival: %s failed (VkResult %d)", what, result);
                 return false;
             }
             return true;
@@ -995,11 +1032,11 @@ namespace {
         }
 
         bool createAuxImage(Plane &image, VkFormat format, uint32_t imageWidth, uint32_t imageHeight,
-                            VkImageUsageFlags usage) {
+                            VkImageUsageFlags usage, uint32_t mipLevels = 1) {
             image.width = imageWidth; image.height = imageHeight;
             VkImageCreateInfo info = {VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
             info.imageType = VK_IMAGE_TYPE_2D; info.format = format;
-            info.extent = {imageWidth, imageHeight, 1}; info.mipLevels = 1; info.arrayLayers = 1;
+            info.extent = {imageWidth, imageHeight, 1}; info.mipLevels = mipLevels; info.arrayLayers = 1;
             info.samples = VK_SAMPLE_COUNT_1_BIT; info.tiling = VK_IMAGE_TILING_OPTIMAL;
             info.usage = usage; info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
             if (!check(vk.CreateImage(device, &info, nullptr, &image.image), "SGSR image")) return false;
@@ -1015,7 +1052,7 @@ namespace {
                !check(vk.BindImageMemory(device,image.image,image.memory,0),"SGSR bind")) return false;
             VkImageViewCreateInfo view={VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
             view.image=image.image;view.viewType=VK_IMAGE_VIEW_TYPE_2D;view.format=format;
-            view.subresourceRange={VK_IMAGE_ASPECT_COLOR_BIT,0,1,0,1};
+            view.subresourceRange={VK_IMAGE_ASPECT_COLOR_BIT,0,mipLevels,0,1};
             return check(vk.CreateImageView(device,&view,nullptr,&image.view),"SGSR view");
         }
 
@@ -1078,6 +1115,267 @@ namespace {
             return true;
         }
 
+        bool failArrival(const char *message) {
+            std::lock_guard<std::mutex> lock(arrivalLock);
+            if (arrivalRequested && arrivalError.empty()) arrivalError = message;
+            return false;
+        }
+
+        // Called only after the previous frame fence (or DeviceWaitIdle at output teardown).
+        void destroyArrivalResources() {
+            if (arrivalPresentPipeline != VK_NULL_HANDLE) vk.DestroyPipeline(device, arrivalPresentPipeline, nullptr);
+            if (arrivalPackPipeline != VK_NULL_HANDLE) vk.DestroyPipeline(device, arrivalPackPipeline, nullptr);
+            if (arrivalCscPipeline != VK_NULL_HANDLE) vk.DestroyPipeline(device, arrivalCscPipeline, nullptr);
+            if (arrivalPool != VK_NULL_HANDLE) vk.DestroyDescriptorPool(device, arrivalPool, nullptr);
+            if (arrivalPresentLayout != VK_NULL_HANDLE) vk.DestroyPipelineLayout(device, arrivalPresentLayout, nullptr);
+            if (arrivalCscLayout != VK_NULL_HANDLE) vk.DestroyPipelineLayout(device, arrivalCscLayout, nullptr);
+            if (arrivalPresentSetLayout != VK_NULL_HANDLE) vk.DestroyDescriptorSetLayout(device, arrivalPresentSetLayout, nullptr);
+            if (arrivalCscSetLayout != VK_NULL_HANDLE) vk.DestroyDescriptorSetLayout(device, arrivalCscSetLayout, nullptr);
+            if (arrivalSampler != VK_NULL_HANDLE) vk.DestroySampler(device, arrivalSampler, nullptr);
+            if (arrivalStorageView != VK_NULL_HANDLE) vk.DestroyImageView(device, arrivalStorageView, nullptr);
+            if (arrivalImage.view != VK_NULL_HANDLE) vk.DestroyImageView(device, arrivalImage.view, nullptr);
+            if (arrivalImage.image != VK_NULL_HANDLE) vk.DestroyImage(device, arrivalImage.image, nullptr);
+            if (arrivalImage.memory != VK_NULL_HANDLE) vk.FreeMemory(device, arrivalImage.memory, nullptr);
+            arrivalPresentPipeline = arrivalPackPipeline = arrivalCscPipeline = VK_NULL_HANDLE;
+            arrivalPool = VK_NULL_HANDLE;
+            arrivalPresentLayout = arrivalCscLayout = VK_NULL_HANDLE;
+            arrivalPresentSetLayout = arrivalCscSetLayout = VK_NULL_HANDLE;
+            arrivalPresentSet = arrivalCscSet = VK_NULL_HANDLE;
+            arrivalSampler = VK_NULL_HANDLE;
+            arrivalStorageView = VK_NULL_HANDLE;
+            arrivalImage = {};
+            arrivalInitialized = false;
+            arrivalReady = false;
+        }
+
+        bool createArrivalResources() {
+            VkFormatProperties properties = {};
+            vk.GetPhysicalDeviceFormatProperties(physicalDevice, VK_FORMAT_R16G16B16A16_SFLOAT, &properties);
+            const bool planarSource = !sgsrApplied;
+            const VkFormatFeatureFlags required = VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT |
+                    VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT |
+                    (planarSource ? VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT : 0) |
+                    VK_FORMAT_FEATURE_BLIT_SRC_BIT | VK_FORMAT_FEATURE_BLIT_DST_BIT;
+            if ((properties.optimalTilingFeatures & required) != required)
+                return failArrival("PyroWave launch arrival requires filterable FP16 storage images with linear mip blits");
+            const uint32_t imageWidth = sgsrApplied ? sgsrOutputWidth : width;
+            const uint32_t imageHeight = sgsrApplied ? sgsrOutputHeight : height;
+            arrivalMipLevels = 1;
+            uint32_t footprint = uint32_t(1 + 20 * float(imageWidth) / float(width)) + 1;
+            for (uint32_t size = std::max(imageWidth, imageHeight); size > 1 && footprint > 1; size >>= 1) {
+                ++arrivalMipLevels;
+                footprint = (footprint + 1) / 2;
+            }
+            if (!createAuxImage(arrivalImage, VK_FORMAT_R16G16B16A16_SFLOAT, imageWidth, imageHeight,
+                    (planarSource ? VK_IMAGE_USAGE_STORAGE_BIT : 0) | VK_IMAGE_USAGE_SAMPLED_BIT |
+                    VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, arrivalMipLevels)) return false;
+            if (planarSource) {
+                VkImageViewCreateInfo view = {VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
+                view.image = arrivalImage.image;
+                view.viewType = VK_IMAGE_VIEW_TYPE_2D;
+                view.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+                view.subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1};
+                if (!check(vk.CreateImageView(device, &view, nullptr, &arrivalStorageView), "arrival storage view")) return false;
+            }
+            VkSamplerCreateInfo samplerInfo = {VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO};
+            samplerInfo.magFilter = samplerInfo.minFilter = VK_FILTER_LINEAR;
+            samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+            samplerInfo.addressModeU = samplerInfo.addressModeV = samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+            samplerInfo.maxLod = float(arrivalMipLevels - 1);
+            if (!check(vk.CreateSampler(device, &samplerInfo, nullptr, &arrivalSampler), "arrival mip sampler")) return false;
+            if (planarSource &&
+                    (!createComputeLayout(4, 3, sizeof(CscParams), arrivalCscSetLayout, arrivalCscLayout) ||
+                     !createComputePipeline(arrival_csc_comp_spv, sizeof(arrival_csc_comp_spv), arrivalCscLayout,
+                                            arrivalCscPipeline))) return false;
+            VkDescriptorSetLayoutBinding binding = {0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1,
+                                                     VK_SHADER_STAGE_FRAGMENT_BIT, nullptr};
+            VkDescriptorSetLayoutCreateInfo setInfo = {VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
+            setInfo.bindingCount = 1;
+            setInfo.pBindings = &binding;
+            if (!check(vk.CreateDescriptorSetLayout(device, &setInfo, nullptr, &arrivalPresentSetLayout), "arrival presentation descriptors")) return false;
+            VkPushConstantRange range = {VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(ArrivalParams)};
+            VkPipelineLayoutCreateInfo layoutInfo = {VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
+            layoutInfo.setLayoutCount = 1;
+            layoutInfo.pSetLayouts = &arrivalPresentSetLayout;
+            layoutInfo.pushConstantRangeCount = 1;
+            layoutInfo.pPushConstantRanges = &range;
+            if (!check(vk.CreatePipelineLayout(device, &layoutInfo, nullptr, &arrivalPresentLayout), "arrival presentation layout")) return false;
+            VkDescriptorPoolSize sizes[] = {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, planarSource ? 4u : 1u},
+                                            {VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1}};
+            VkDescriptorPoolCreateInfo poolInfo = {VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO};
+            poolInfo.maxSets = planarSource ? 2 : 1;
+            poolInfo.poolSizeCount = planarSource ? 2 : 1;
+            poolInfo.pPoolSizes = sizes;
+            if (!check(vk.CreateDescriptorPool(device, &poolInfo, nullptr, &arrivalPool), "arrival descriptor pool")) return false;
+            VkDescriptorSetLayout layouts[] = {arrivalPresentSetLayout, arrivalCscSetLayout};
+            VkDescriptorSet sets[2] = {};
+            VkDescriptorSetAllocateInfo allocation = {VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};
+            allocation.descriptorPool = arrivalPool;
+            allocation.descriptorSetCount = planarSource ? 2 : 1;
+            allocation.pSetLayouts = layouts;
+            if (!check(vk.AllocateDescriptorSets(device, &allocation, sets), "arrival descriptor sets")) return false;
+            arrivalPresentSet = sets[0];
+            arrivalCscSet = planarSource ? sets[1] : VK_NULL_HANDLE;
+            VkDescriptorImageInfo images[5] = {};
+            VkWriteDescriptorSet writes[5] = {};
+            const uint32_t firstWrite = planarSource ? 0 : 4;
+            for (uint32_t i = firstWrite; i < 5; ++i) {
+                images[i] = {i == 3 ? VK_NULL_HANDLE : arrivalSampler,
+                             i < 3 ? planes[i].view : (i == 3 ? arrivalStorageView : arrivalImage.view),
+                             VK_IMAGE_LAYOUT_GENERAL};
+                writes[i] = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+                writes[i].dstSet = i < 4 ? arrivalCscSet : arrivalPresentSet;
+                writes[i].dstBinding = i < 4 ? i : 0;
+                writes[i].descriptorCount = 1;
+                writes[i].descriptorType = i == 3 ? VK_DESCRIPTOR_TYPE_STORAGE_IMAGE : VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                writes[i].pImageInfo = &images[i];
+            }
+            vk.UpdateDescriptorSets(device, 5 - firstWrite, writes + firstWrite, 0, nullptr);
+            if (yuvOutput) {
+                arrivalPackPipeline = buildPipeline(packRenderPass, arrival_pack_frag_spv,
+                        sizeof(arrival_pack_frag_spv), arrivalPresentLayout);
+                if (arrivalPackPipeline == VK_NULL_HANDLE) return false;
+            } else {
+                arrivalPresentPipeline = buildPipeline(renderPass, arrival_present_frag_spv,
+                        sizeof(arrival_present_frag_spv), arrivalPresentLayout);
+                if (arrivalPresentPipeline == VK_NULL_HANDLE) return false;
+            }
+            return true;
+        }
+
+        bool prepareArrivalFrame() {
+            if (!arrivalPending.load()) {
+                arrivalFrameRequested = arrivalFrameActive = false;
+                return true;
+            }
+            bool warmOnly;
+            {
+                std::lock_guard<std::mutex> lock(arrivalLock);
+                warmOnly = arrivalRequested && !arrivalStarted;
+                arrivalFrameRequested = arrivalRequested && arrivalStarted;
+                arrivalFrameActive = arrivalFrameRequested && arrivalProgress >= 0 && arrivalProgress < 1;
+                arrivalFrameParams = arrivalRequestedParams;
+                if (arrivalRequested && !arrivalError.empty()) return false;
+            }
+            if (!arrivalFrameActive && !warmOnly) return true;
+            // Resolve the existing HDR bridge before readiness; never animate a CPU readback or SDR fallback.
+            if (yuvOutput && releases == nullptr && !createYuvOutput())
+                return failArrival("PyroWave launch arrival could not initialize the HDR P010 GPU output");
+            if (yuvOutput && yuvCpu)
+                return failArrival("PyroWave launch arrival requires the HDR Vulkan/GL P010 GPU bridge; only CPU readback is available");
+            if (hdrActive && !yuvOutput &&
+                    ((swapchainFormat != VK_FORMAT_A2B10G10R10_UNORM_PACK32 &&
+                      swapchainFormat != VK_FORMAT_A2R10G10B10_UNORM_PACK32) ||
+                     (swapchainColorSpace != VK_COLOR_SPACE_HDR10_ST2084_EXT && !pqDataspace)))
+                return failArrival("PyroWave launch arrival requires HDR10/PQ ten-bit presentation; the surface only offers SDR");
+            if (arrivalImage.image == VK_NULL_HANDLE) {
+                lastVulkanError[0] = 0;
+                if (!createArrivalResources()) {
+                    failArrival(lastVulkanError[0] != 0 ? lastVulkanError : "PyroWave launch arrival GPU resource preparation failed");
+                    destroyArrivalResources();
+                    return false;
+                }
+            }
+            // Pixel amplitudes are always measured in the decoded source, including when SGSR supersamples.
+            arrivalFrameParams.sourceSize[0] = float(width);
+            arrivalFrameParams.sourceSize[1] = float(height);
+            return true;
+        }
+
+        void arrivalImageBarrier(VkCommandBuffer cmd, VkImage image, uint32_t baseMip, uint32_t levels,
+                                 VkPipelineStageFlags srcStage, VkAccessFlags srcAccess,
+                                 VkPipelineStageFlags dstStage, VkAccessFlags dstAccess,
+                                 VkImageLayout oldLayout = VK_IMAGE_LAYOUT_GENERAL) {
+            VkImageMemoryBarrier barrier = {VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER};
+            barrier.srcAccessMask = srcAccess;
+            barrier.dstAccessMask = dstAccess;
+            barrier.oldLayout = oldLayout;
+            barrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
+            barrier.srcQueueFamilyIndex = barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            barrier.image = image;
+            barrier.subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, baseMip, levels, 0, 1};
+            vk.CmdPipelineBarrier(cmd, srcStage, dstStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+        }
+
+        void recordArrival(VkCommandBuffer cmd, int sgsrOutput) {
+            if (!arrivalFrameActive) return;
+            arrivalImageBarrier(cmd, arrivalImage.image, 0, arrivalMipLevels,
+                    VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, arrivalInitialized ? VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT : 0,
+                    VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_TRANSFER_BIT,
+                    VK_ACCESS_SHADER_WRITE_BIT | VK_ACCESS_TRANSFER_WRITE_BIT,
+                    arrivalInitialized ? VK_IMAGE_LAYOUT_GENERAL : VK_IMAGE_LAYOUT_UNDEFINED);
+            if (sgsrOutput >= 0) {
+                // Reuse the actual reconstructed FP16 RGB; do not reconvert the planar input or freeze a frame.
+                const Plane &source = sgsrHistory[sgsrOutput];
+                arrivalImageBarrier(cmd, source.image, 0, 1, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                        VK_ACCESS_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_READ_BIT);
+                VkImageBlit blit = {};
+                blit.srcSubresource = blit.dstSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1};
+                blit.srcOffsets[1] = {int32_t(source.width), int32_t(source.height), 1};
+                blit.dstOffsets[1] = {int32_t(arrivalImage.width), int32_t(arrivalImage.height), 1};
+                vk.CmdBlitImage(cmd, source.image, VK_IMAGE_LAYOUT_GENERAL, arrivalImage.image,
+                        VK_IMAGE_LAYOUT_GENERAL, 1, &blit, VK_FILTER_LINEAR);
+                arrivalImageBarrier(cmd, source.image, 0, 1, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                        VK_ACCESS_TRANSFER_READ_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                        VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT);
+            } else {
+                vk.CmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, arrivalCscPipeline);
+                vk.CmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, arrivalCscLayout, 0, 1, &arrivalCscSet, 0, nullptr);
+                vk.CmdPushConstants(cmd, arrivalCscLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(csc), &csc);
+                vk.CmdDispatch(cmd, (arrivalImage.width + 7) / 8, (arrivalImage.height + 7) / 8, 1);
+            }
+            // Source-pixel blur footprint determines mip count, including SGSR's larger RGB dimensions.
+            for (uint32_t mip = 1; mip < arrivalMipLevels; ++mip) {
+                arrivalImageBarrier(cmd, arrivalImage.image, mip - 1, 1,
+                        VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_TRANSFER_BIT,
+                        VK_ACCESS_SHADER_WRITE_BIT | VK_ACCESS_TRANSFER_WRITE_BIT,
+                        VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_READ_BIT);
+                VkImageBlit blit = {};
+                blit.srcSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, mip - 1, 0, 1};
+                blit.dstSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, mip, 0, 1};
+                blit.srcOffsets[1] = {int32_t(std::max(1u, arrivalImage.width >> (mip - 1))),
+                                      int32_t(std::max(1u, arrivalImage.height >> (mip - 1))), 1};
+                blit.dstOffsets[1] = {int32_t(std::max(1u, arrivalImage.width >> mip)),
+                                      int32_t(std::max(1u, arrivalImage.height >> mip)), 1};
+                vk.CmdBlitImage(cmd, arrivalImage.image, VK_IMAGE_LAYOUT_GENERAL, arrivalImage.image,
+                        VK_IMAGE_LAYOUT_GENERAL, 1, &blit, VK_FILTER_LINEAR);
+            }
+            arrivalImageBarrier(cmd, arrivalImage.image, 0, arrivalMipLevels,
+                    VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_TRANSFER_BIT,
+                    VK_ACCESS_SHADER_WRITE_BIT | VK_ACCESS_TRANSFER_WRITE_BIT,
+                    VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_ACCESS_SHADER_READ_BIT);
+            arrivalInitialized = true;
+        }
+
+        void bindArrivalPresentation(VkCommandBuffer cmd, bool pack) {
+            vk.CmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pack ? arrivalPackPipeline : arrivalPresentPipeline);
+            vk.CmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, arrivalPresentLayout,
+                    0, 1, &arrivalPresentSet, 0, nullptr);
+            vk.CmdPushConstants(cmd, arrivalPresentLayout, VK_SHADER_STAGE_FRAGMENT_BIT,
+                    0, sizeof(arrivalFrameParams), &arrivalFrameParams);
+        }
+
+        bool finishArrivalPresentation() {
+            if (!arrivalFrameRequested) return true;
+            if (arrivalFrameActive) {
+                // Resource allocation/texture readiness alone never unlocks the reveal.
+                if (!arrivalReady.load() &&
+                        !check(vk.WaitForFences(device, 1, &frameFence, VK_TRUE, FENCE_TIMEOUT_NS),
+                               "arrival first-effect fence")) return false;
+                arrivalReady = true;
+                return true;
+            }
+            // This frame used the exact original presentation path (including SGSR sharpness/P010).
+            // Retire only after it and every earlier arrival image read have completed.
+            if (!check(vk.WaitForFences(device, 1, &frameFence, VK_TRUE, FENCE_TIMEOUT_NS), "arrival identity fence")) return false;
+            destroyArrivalResources();
+            std::lock_guard<std::mutex> lock(arrivalLock);
+            arrivalRequested = false;
+            arrivalPending = false;
+            arrivalComplete = true;
+            return true;
+        }
+
         bool createSgsrMotion() {
             if (!sgsrApplied) return true;
             const bool temporal = sgsrAppliedMode >= 3;
@@ -1110,11 +1408,13 @@ namespace {
             reportPresentationWidth.store(sgsrPresentationWidth);
             reportPresentationHeight.store(sgsrPresentationHeight);
             constexpr VkImageUsageFlags sampledStorage = VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-            if (!createAuxImage(sgsrHistory[0], VK_FORMAT_R16G16B16A16_SFLOAT, sgsrOutputWidth, sgsrOutputHeight, sampledStorage)) return false;
+            if (!createAuxImage(sgsrHistory[0], VK_FORMAT_R16G16B16A16_SFLOAT, sgsrOutputWidth, sgsrOutputHeight,
+                    sampledStorage | VK_IMAGE_USAGE_TRANSFER_SRC_BIT)) return false;
             if (temporal && (!createAuxImage(sgsrPrevious, planeFormat, width, height, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT) ||
                     !createAuxImage(sgsrFlow[0], VK_FORMAT_R16G16B16A16_SFLOAT, flowWidth, flowHeight, sampledStorage) ||
                     !createAuxImage(sgsrFlow[1], VK_FORMAT_R16G16B16A16_SFLOAT, flowWidth, flowHeight, sampledStorage) ||
-                    !createAuxImage(sgsrHistory[1], VK_FORMAT_R16G16B16A16_SFLOAT, sgsrOutputWidth, sgsrOutputHeight, sampledStorage))) return false;
+                    !createAuxImage(sgsrHistory[1], VK_FORMAT_R16G16B16A16_SFLOAT, sgsrOutputWidth, sgsrOutputHeight,
+                            sampledStorage | VK_IMAGE_USAGE_TRANSFER_SRC_BIT))) return false;
             if (quality && !createAuxImage(sgsrReactive, VK_FORMAT_R16G16B16A16_SFLOAT, width, height, sampledStorage)) return false;
             if (temporal && !createAuxImage(sgsrScene, VK_FORMAT_R16G16B16A16_SFLOAT, 1, 1, sampledStorage)) return false;
             VkSamplerCreateInfo samplerInfo = {VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO};
@@ -1393,6 +1693,7 @@ namespace {
         // destroyed resources; a failed upscaler rebuild only turns the upscaler off (direct rendering).
         bool applyHdrMode() {
             vk.DeviceWaitIdle(device);
+            destroyArrivalResources();
             outputBroken = true;
             hdrActive = hdrWanted;
             csc.matrix = hdrActive ? 2 : sdrMatrix;
@@ -1835,6 +2136,7 @@ namespace {
                          VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_TRANSFER_BIT,
                          VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_TRANSFER_READ_BIT, VK_IMAGE_LAYOUT_GENERAL);
             const int sgsrOutput=recordSgsrMotion(commandBuffer);
+            recordArrival(commandBuffer, sgsrOutput);
             if (yuvCpu) {
                 VkDeviceSize offset = 0;
                 for (auto &plane : planes) {
@@ -1866,16 +2168,20 @@ namespace {
                 VkRect2D scissor = {{0, 0}, {outputWidth, outputHeight}};
                 vk.CmdSetViewport(commandBuffer, 0, 1, &viewport);
                 vk.CmdSetScissor(commandBuffer, 0, 1, &scissor);
-                vk.CmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, packPipeline);
-                const VkPipelineLayout activeLayout=sgsrOutput>=0?sgsrPresentPipelineLayout:pipelineLayout;
-                const VkDescriptorSet activeSet=sgsrOutput>=0?sgsrPresentSets[sgsrOutput]:descriptorSet;
-                vk.CmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, activeLayout, 0, 1,
-                                         &activeSet, 0, nullptr);
-                if (sgsrOutput >= 0) {
-                    const PresentParams params = {sgsrAppliedSharpness};
-                    vk.CmdPushConstants(commandBuffer, activeLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(params), &params);
+                if (arrivalFrameActive) {
+                    bindArrivalPresentation(commandBuffer, true);
                 } else {
-                    vk.CmdPushConstants(commandBuffer, activeLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(csc), &csc);
+                    vk.CmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, packPipeline);
+                    const VkPipelineLayout activeLayout=sgsrOutput>=0?sgsrPresentPipelineLayout:pipelineLayout;
+                    const VkDescriptorSet activeSet=sgsrOutput>=0?sgsrPresentSets[sgsrOutput]:descriptorSet;
+                    vk.CmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, activeLayout, 0, 1,
+                                             &activeSet, 0, nullptr);
+                    if (sgsrOutput >= 0) {
+                        const PresentParams params = {sgsrAppliedSharpness};
+                        vk.CmdPushConstants(commandBuffer, activeLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(params), &params);
+                    } else {
+                        vk.CmdPushConstants(commandBuffer, activeLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(csc), &csc);
+                    }
                 }
                 vk.CmdDraw(commandBuffer, 3, 1, 0, 0);
                 vk.CmdEndRenderPass(commandBuffer);
@@ -1961,6 +2267,7 @@ namespace {
             stats.acquireWaitUs += afterAcquire - afterFence;
             stats.presentUs += frameEnd - afterAcquire;
             logStatsIfDue(frameEnd);
+            if (!finishArrivalPresentation()) return false;
             return true;
         }
 
@@ -2426,6 +2733,7 @@ namespace {
                     (requestedProcessing && requestedLevel != sgsrAppliedLevel);
             const bool resetHistory = requestedMode != sgsrAppliedMode;
             if (recreate) {
+                destroyArrivalResources();
                 if (yuvOutput) retireYuvOutput();
                 destroySgsrMotion();
             }
@@ -2450,6 +2758,7 @@ namespace {
 
         bool present() {
             const uint64_t frameStart = nowUs();
+            lastVulkanError[0] = 0;
 
             // One frame in flight: after this wait the previous frame's sampling of the
             // planes is finished, so decoding may overwrite them.
@@ -2464,6 +2773,7 @@ namespace {
                 return false;
             }
             applyUpscalingSettings();
+            if (!prepareArrivalFrame()) return false;
             resetUpscalerHistoryAfterGap(frameStart);
             enterStage(STAGE_DECODE);
 
@@ -2542,6 +2852,7 @@ namespace {
                          VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                          VK_ACCESS_SHADER_READ_BIT, VK_IMAGE_LAYOUT_GENERAL);
             const int sgsrOutput=recordSgsrMotion(commandBuffer);
+            recordArrival(commandBuffer, sgsrOutput);
 
             VkClearValue clear = {};
             clear.color = {{0.0f, 0.0f, 0.0f, 1.0f}};
@@ -2565,15 +2876,19 @@ namespace {
             VkRect2D scissor = {{0, 0}, swapchainExtent};
             vk.CmdSetViewport(commandBuffer, 0, 1, &viewport);
             vk.CmdSetScissor(commandBuffer, 0, 1, &scissor);
-            const bool useSgsr=sgsrOutput>=0;
-            vk.CmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,useSgsr?sgsrPresentPipeline:pipeline);
-            const VkPipelineLayout activeLayout=useSgsr?sgsrPresentPipelineLayout:pipelineLayout;
-            const VkDescriptorSet activeSet=useSgsr?sgsrPresentSets[sgsrOutput]:descriptorSet;
-            vk.CmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,activeLayout,0,1,&activeSet,0,nullptr);
-            if(!useSgsr)vk.CmdPushConstants(commandBuffer,pipelineLayout,VK_SHADER_STAGE_FRAGMENT_BIT,0,sizeof(CscParams),&csc);
-            else {
-                const PresentParams params = {sgsrAppliedSharpness};
-                vk.CmdPushConstants(commandBuffer, activeLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(params), &params);
+            if (arrivalFrameActive) {
+                bindArrivalPresentation(commandBuffer, false);
+            } else {
+                const bool useSgsr=sgsrOutput>=0;
+                vk.CmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,useSgsr?sgsrPresentPipeline:pipeline);
+                const VkPipelineLayout activeLayout=useSgsr?sgsrPresentPipelineLayout:pipelineLayout;
+                const VkDescriptorSet activeSet=useSgsr?sgsrPresentSets[sgsrOutput]:descriptorSet;
+                vk.CmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,activeLayout,0,1,&activeSet,0,nullptr);
+                if(!useSgsr)vk.CmdPushConstants(commandBuffer,pipelineLayout,VK_SHADER_STAGE_FRAGMENT_BIT,0,sizeof(CscParams),&csc);
+                else {
+                    const PresentParams params = {sgsrAppliedSharpness};
+                    vk.CmdPushConstants(commandBuffer, activeLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(params), &params);
+                }
             }
             vk.CmdDraw(commandBuffer, 3, 1, 0, 0);
             vk.CmdEndRenderPass(commandBuffer);
@@ -2631,7 +2946,8 @@ namespace {
             if ((presented == VK_SUBOPTIMAL_KHR || acquired == VK_SUBOPTIMAL_KHR) && surfaceSizeChanged(frameEnd)) {
                 return recreateSwapchain();
             }
-            return presented == VK_SUBOPTIMAL_KHR || check(presented, "vkQueuePresentKHR");
+            if (presented != VK_SUBOPTIMAL_KHR && !check(presented, "vkQueuePresentKHR")) return false;
+            return finishArrivalPresentation();
         }
 
         void destroy() {
@@ -2648,6 +2964,7 @@ namespace {
                 pyroDevice = nullptr;
             }
             if (device != VK_NULL_HANDLE) {
+                destroyArrivalResources();
                 // The HDR pack pipeline may use SGSR's descriptor layout, and the SDR SGSR pipeline
                 // uses the main render pass. Tear down the bridge first, then SGSR, then the pass.
                 destroyYuvOutput();
@@ -2708,6 +3025,35 @@ namespace {
             sgsrActivateLayout = VK_NULL_HANDLE;
             sgsrInitialized = false;
         }
+
+        std::mutex arrivalLock;
+        char lastVulkanError[160] = {};
+        bool arrivalRequested = false;
+        std::atomic<bool> arrivalPending{false};
+        bool arrivalStarted = false;
+        float arrivalProgress = -1;
+        ArrivalParams arrivalRequestedParams;
+        std::atomic<bool> arrivalReady{false};
+        std::atomic<bool> arrivalComplete{false};
+        std::string arrivalError;
+        bool arrivalFrameRequested = false;
+        bool arrivalFrameActive = false;
+        ArrivalParams arrivalFrameParams;
+        Plane arrivalImage;
+        uint32_t arrivalMipLevels = 0;
+        bool arrivalInitialized = false;
+        VkImageView arrivalStorageView = VK_NULL_HANDLE;
+        VkSampler arrivalSampler = VK_NULL_HANDLE;
+        VkDescriptorPool arrivalPool = VK_NULL_HANDLE;
+        VkDescriptorSetLayout arrivalCscSetLayout = VK_NULL_HANDLE;
+        VkDescriptorSetLayout arrivalPresentSetLayout = VK_NULL_HANDLE;
+        VkPipelineLayout arrivalCscLayout = VK_NULL_HANDLE;
+        VkPipelineLayout arrivalPresentLayout = VK_NULL_HANDLE;
+        VkDescriptorSet arrivalCscSet = VK_NULL_HANDLE;
+        VkDescriptorSet arrivalPresentSet = VK_NULL_HANDLE;
+        VkPipeline arrivalCscPipeline = VK_NULL_HANDLE;
+        VkPipeline arrivalPresentPipeline = VK_NULL_HANDLE;
+        VkPipeline arrivalPackPipeline = VK_NULL_HANDLE;
 
         VulkanLoader vk;
         ANativeWindow *window = nullptr;
@@ -3251,6 +3597,36 @@ JNIEXPORT void JNICALL
 Java_com_limelight_binding_video_PyroWaveRenderer_nativeSetSharpness(JNIEnv *, jclass, jlong handle,
                                                                   jfloat sharpness) {
     withLiveRenderer(handle, [&](Renderer &renderer) { renderer.setSharpness(sharpness); });
+}
+
+JNIEXPORT void JNICALL
+Java_com_limelight_binding_video_PyroWaveRenderer_nativeSetLaunchArrivalPose(JNIEnv *, jclass, jlong handle,
+        jboolean prepare, jfloat progress, jfloat scaleX, jfloat scaleY, jfloat skew,
+        jfloat warp, jfloat blur, jfloat chromatic) {
+    const float pose[] = {scaleX, scaleY, skew, warp, blur, chromatic};
+    withLiveRenderer(handle, [&](Renderer &renderer) { renderer.setLaunchArrivalPose(prepare, progress, pose); });
+}
+
+JNIEXPORT jboolean JNICALL
+Java_com_limelight_binding_video_PyroWaveRenderer_nativeIsLaunchArrivalReady(JNIEnv *, jclass, jlong handle) {
+    jboolean ready = JNI_FALSE;
+    withLiveRenderer(handle, [&](Renderer &renderer) { ready = renderer.isLaunchArrivalReady() ? JNI_TRUE : JNI_FALSE; });
+    return ready;
+}
+
+JNIEXPORT jboolean JNICALL
+Java_com_limelight_binding_video_PyroWaveRenderer_nativeIsLaunchArrivalComplete(JNIEnv *, jclass, jlong handle) {
+    jboolean complete = JNI_FALSE;
+    withLiveRenderer(handle, [&](Renderer &renderer) { complete = renderer.isLaunchArrivalComplete() ? JNI_TRUE : JNI_FALSE; });
+    return complete;
+}
+
+JNIEXPORT jstring JNICALL
+Java_com_limelight_binding_video_PyroWaveRenderer_nativeGetLaunchArrivalError(JNIEnv *env, jclass, jlong handle) {
+    std::string error;
+    if (!withLiveRenderer(handle, [&](Renderer &renderer) { error = renderer.getLaunchArrivalError(); }))
+        return env->NewStringUTF("PyroWave renderer is no longer available");
+    return error.empty() ? nullptr : env->NewStringUTF(error.c_str());
 }
 
 JNIEXPORT void JNICALL

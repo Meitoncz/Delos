@@ -74,6 +74,19 @@ public final class SgsrRenderer implements AutoCloseable {
     private final float[] transform = new float[16];
     private final int[] size = new int[1];
     private int outputWidth, outputHeight;
+    private final boolean arrivalOnly;
+    private Surface arrivalOutputSurface;
+    private int hdrTargetWidth, hdrTargetHeight;
+    private EGLConfig eglConfig;
+    private EGLSurface pbuffer = EGL14.EGL_NO_SURFACE;
+    private boolean outputAttached;
+    private volatile float arrivalProgress = -1f;
+    private volatile boolean arrivalReady, arrivalComplete;
+    private volatile String arrivalError;
+    private final float[] arrivalPose = new float[LaunchArrival.POSE_FLOATS];
+    private ArrivalGlPass arrival;
+    private int arrivalSpatialProgram, arrivalHighProgram, arrivalTemporalProgram, arrivalPresentProgram;
+    private Runnable arrivalCompletionListener;
 
     public boolean hasPresentedFrame() {
         return firstFramePresented && !closed.get();
@@ -89,7 +102,7 @@ public final class SgsrRenderer implements AutoCloseable {
                                       boolean hdrActive, byte[] hdrMetadata, Runnable failure) {
         if (!isSupported(app)) return null;
         SgsrRenderer renderer = new SgsrRenderer(width, height, sharpness, mode, supersamplingLevel,
-                tenBit, hdrActive, hdrMetadata, failure);
+                tenBit, hdrActive, hdrMetadata, failure, false);
         FutureTask<Void> initialize = new FutureTask<>(() -> {
             renderer.initialize(app, output);
             return null;
@@ -105,9 +118,29 @@ public final class SgsrRenderer implements AutoCloseable {
         }
     }
 
+    /** Builds only a pbuffer/decoder producer. The codec must redirect before attaching the output. */
+    public static SgsrRenderer createArrival(Context app, Surface output, int width, int height,
+                                             boolean tenBit, boolean hdrActive, byte[] hdrMetadata,
+                                             Runnable failure) {
+        if (!isSupported(app)) throw new IllegalStateException("Stream arrival requires GLES 3.1");
+        if (hdrActive && !tenBit) throw new IllegalStateException("HDR arrival requires ten-bit FP16/P010 output");
+        SgsrRenderer renderer = new SgsrRenderer(width,height,0,0,1,tenBit,hdrActive,hdrMetadata,failure,true);
+        FutureTask<Void> initialize = new FutureTask<>(() -> { renderer.initialize(app,output); return null; });
+        renderer.handler.post(initialize);
+        try {
+            initialize.get(8,TimeUnit.SECONDS);
+            return renderer;
+        } catch (Exception e) {
+            if (e instanceof InterruptedException) Thread.currentThread().interrupt();
+            renderer.close();
+            throw new IllegalStateException("Stream arrival initialization failed: " + e,e);
+        }
+    }
+
     private SgsrRenderer(int width, int height, int sharpness, int mode, int supersamplingLevel,
-                         boolean tenBit, boolean hdrActive, byte[] metadata, Runnable failure) {
+                         boolean tenBit, boolean hdrActive, byte[] metadata, Runnable failure, boolean arrivalOnly) {
         this.width = width;
+        this.arrivalOnly = arrivalOnly;
         this.height = height;
         this.sharpness = Math.max(0, Math.min(100, sharpness)) / 100f;
         this.tenBit = tenBit;
@@ -135,34 +168,145 @@ public final class SgsrRenderer implements AutoCloseable {
         hdrMetadata = metadata != null ? metadata.clone() : null;
     }
 
+    public boolean isLaunchArrivalReady() { return arrivalReady && arrivalError == null && !closed.get(); }
+    public boolean isLaunchArrivalComplete() { return arrivalComplete && arrivalError == null; }
+    public String getLaunchArrivalError() { return arrivalError; }
+
+    /** Warm only: the normal SGSR image remains untouched until progress zero is requested. */
+    public void prepareLaunchArrival() {
+        if (closed.get()) return;
+        handler.post(() -> {
+            if (closed.get() || arrival != null || arrivalComplete || arrivalError != null) return;
+            try {
+                int w = width, h = height;
+                if (outputAttached) {
+                    if (tenBit) { w = nativeHdrWidth(hdrOutput); h = nativeHdrHeight(hdrOutput); }
+                    else {
+                        EGL14.eglQuerySurface(display,window,EGL14.EGL_WIDTH,size,0); w=size[0];
+                        EGL14.eglQuerySurface(display,window,EGL14.EGL_HEIGHT,size,0); h=size[0];
+                    }
+                }
+                ensureArrival(Math.max(1,w),Math.max(1,h));
+                if (tenBit && !arrivalOnly) {
+                    arrivalRgbProgram(0,false);
+                    arrivalRgbProgram(1,false);
+                    arrivalRgbProgram(2,false);
+                    arrivalRgbProgram(0,true);
+                }
+                GLES31.glBindFramebuffer(GLES31.GL_FRAMEBUFFER,0);
+            } catch (Exception e) { failArrival(e); }
+        });
+    }
+
+    public void setLaunchArrivalProgress(float progress) {
+        if (closed.get()) return;
+        if (arrivalComplete && progress >= 0) return;
+        // A coherent scalar snapshot is read by the video thread; no per-animation-frame task/array.
+        arrivalProgress = Float.isNaN(progress) ? -1f : Math.min(progress,1f);
+        if (progress < 0 || Float.isNaN(progress)) handler.post(() -> {
+            if (arrivalProgress < 0) {
+                releaseArrival();
+                arrivalCompletionListener = null;
+                arrivalReady = false;
+                arrivalComplete = false;
+            }
+        });
+    }
+
+    public void setLaunchArrivalCompletionListener(Runnable listener) {
+        handler.post(() -> {
+            if (closed.get()) return;
+            arrivalCompletionListener = listener;
+            if (arrivalComplete && listener != null) {
+                arrivalCompletionListener = null;
+                listener.run();
+            }
+        });
+    }
+
+    public void attachArrivalOutput() {
+        runOutputChange(() -> {
+            if (!arrivalOnly || outputAttached) return;
+            if (tenBit) {
+                if (hdrOutput == 0) createHdrOutput(arrivalOutputSurface);
+            }
+            else {
+                window = EGL14.eglCreateWindowSurface(display,eglConfig,arrivalOutputSurface,
+                        new int[]{EGL14.EGL_NONE},0);
+                require(window != EGL14.EGL_NO_SURFACE &&
+                        EGL14.eglMakeCurrent(display,window,window,context),"Arrival EGL output attachment");
+                EGL14.eglSwapInterval(display,0);
+            }
+            outputAttached = true;
+        });
+    }
+
+    public void detachArrivalOutput() {
+        runOutputChange(() -> {
+            if (!arrivalOnly || !outputAttached) return;
+            outputAttached = false;
+            // Keep consuming the decoder producer and retain the HDR child's last identity picture.
+            if (!tenBit) {
+                require(EGL14.eglMakeCurrent(display,pbuffer,pbuffer,context),"Arrival EGL output detachment");
+                require(EGL14.eglDestroySurface(display,window),"Arrival EGL output release");
+                window = pbuffer;
+            }
+        });
+    }
+
+    private void runOutputChange(Runnable action) {
+        if (closed.get()) throw new IllegalStateException("Arrival renderer is closed");
+        if (Thread.currentThread() == thread) { action.run(); return; }
+        FutureTask<Void> change = new FutureTask<>(() -> { action.run(); return null; });
+        handler.post(change);
+        try { change.get(8,TimeUnit.SECONDS); }
+        catch (Exception e) {
+            if (e instanceof InterruptedException) Thread.currentThread().interrupt();
+            arrivalError = "Stream arrival surface handover failed: " + e;
+            throw new IllegalStateException(arrivalError,e);
+        }
+    }
+
     private void initialize(Context app, Surface output) throws Exception {
         diagnosticContext = app.getApplicationContext();
+        arrivalOutputSurface = arrivalOnly ? output : null;
+        android.view.View streamView = app instanceof com.limelight.Game ?
+                ((com.limelight.Game)app).getStreamSurface() : null;
+        hdrTargetWidth = streamView != null ? streamView.getWidth() : 0;
+        hdrTargetHeight = streamView != null ? streamView.getHeight() : 0;
         display = EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY);
         require(EGL14.eglInitialize(display, new int[2], 0, new int[2], 0), "EGL initialize");
         int[] attrs = {EGL14.EGL_RED_SIZE,8, EGL14.EGL_GREEN_SIZE,8, EGL14.EGL_BLUE_SIZE,8,
-                EGL14.EGL_ALPHA_SIZE,8, EGL14.EGL_SURFACE_TYPE,tenBit ? EGL14.EGL_PBUFFER_BIT : EGL14.EGL_WINDOW_BIT,
+                EGL14.EGL_ALPHA_SIZE,8, EGL14.EGL_SURFACE_TYPE,tenBit ? EGL14.EGL_PBUFFER_BIT :
+                        arrivalOnly ? EGL14.EGL_PBUFFER_BIT | EGL14.EGL_WINDOW_BIT : EGL14.EGL_WINDOW_BIT,
                 EGL14.EGL_RENDERABLE_TYPE,0x40, EGL14.EGL_NONE}; // EGL_OPENGL_ES3_BIT_KHR
         EGLConfig[] configs = new EGLConfig[1];
         int[] count = new int[1];
         require(EGL14.eglChooseConfig(display, attrs,0,configs,0,1,count,0) && count[0]>0, "EGL config");
+        eglConfig = configs[0];
         context = EGL14.eglCreateContext(display, configs[0], EGL14.EGL_NO_CONTEXT,
                 new int[]{EGL14.EGL_CONTEXT_CLIENT_VERSION,3,EGL14.EGL_NONE},0);
         require(context != EGL14.EGL_NO_CONTEXT, "EGL context");
-        window = tenBit ? EGL14.eglCreatePbufferSurface(display,configs[0],new int[]{EGL14.EGL_WIDTH,1,EGL14.EGL_HEIGHT,1,EGL14.EGL_NONE},0)
-                : EGL14.eglCreateWindowSurface(display, configs[0], output, new int[]{EGL14.EGL_NONE},0);
+        if (tenBit || arrivalOnly) {
+            pbuffer = EGL14.eglCreatePbufferSurface(display,configs[0],
+                    new int[]{EGL14.EGL_WIDTH,1,EGL14.EGL_HEIGHT,1,EGL14.EGL_NONE},0);
+            window = pbuffer;
+        } else window = EGL14.eglCreateWindowSurface(display,configs[0],output,new int[]{EGL14.EGL_NONE},0);
         require(window != EGL14.EGL_NO_SURFACE && EGL14.eglMakeCurrent(display,window,window,context), "EGL window");
         String extensions=GLES31.glGetString(GLES31.GL_EXTENSIONS);
         require(extensions.contains("GL_OES_EGL_image_external_essl3"), "External texture support");
         if (tenBit) require(extensions.contains("GL_EXT_YUV_target"), "P010 output support");
         EGL14.eglSwapInterval(display,0);
         copyProgram = program(VERTEX,COPY);
-        upscaleProgram = createUpscaleProgram(app,"sgsr/sgsr1.frag");
-        highQualityProgram = createUpscaleProgram(app,"sgsr/sgsr1_high.frag");
-        if (tenBit) {
-            supersampleUpscaleProgram = createUpscaleProgram(app,"sgsr/sgsr1.frag",false);
-            supersampleHighQualityProgram = createUpscaleProgram(app,"sgsr/sgsr1_high.frag",false);
+        if (!arrivalOnly) {
+            upscaleProgram = createUpscaleProgram(app,"sgsr/sgsr1.frag");
+            highQualityProgram = createUpscaleProgram(app,"sgsr/sgsr1_high.frag");
+            if (tenBit) {
+                supersampleUpscaleProgram = createUpscaleProgram(app,"sgsr/sgsr1.frag",false);
+                supersampleHighQualityProgram = createUpscaleProgram(app,"sgsr/sgsr1_high.frag",false);
+            }
+            supersamplePresentProgram = createUpscaleProgram(app,"sgsr/supersample_present.frag");
         }
-        supersamplePresentProgram = createUpscaleProgram(app,"sgsr/supersample_present.frag");
         GLES31.glGetIntegerv(GLES31.GL_MAX_TEXTURE_SIZE,size,0);
         maxTextureSize = size[0];
         externalTexture = texture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES);
@@ -175,16 +319,20 @@ public final class SgsrRenderer implements AutoCloseable {
         GLES31.glFramebufferTexture2D(GLES31.GL_FRAMEBUFFER,GLES31.GL_COLOR_ATTACHMENT0,GLES31.GL_TEXTURE_2D,colorTexture,0);
         require(GLES31.glCheckFramebufferStatus(GLES31.GL_FRAMEBUFFER)==GLES31.GL_FRAMEBUFFER_COMPLETE,"SGSR framebuffer");
         GLES31.glBindFramebuffer(GLES31.GL_FRAMEBUFFER,0);
-        if (tenBit) {
-            android.view.View view = app instanceof com.limelight.Game ? ((com.limelight.Game)app).getStreamSurface() : null;
-            hdrOutput = nativeCreateHdr(output,view != null ? view.getWidth() : 0,view != null ? view.getHeight() : 0);
-            require(hdrOutput != 0,"P010 SurfaceControl output");
-        }
+        if (tenBit && !arrivalOnly) createHdrOutput(output);
+        outputAttached = !arrivalOnly;
+        if (arrivalOnly) ensureArrival(width,height);
         texture = new SurfaceTexture(externalTexture);
         texture.setDefaultBufferSize(width,height);
         decoderSurface = new Surface(texture);
         texture.setOnFrameAvailableListener(unused -> draw(),handler);
         LimeLog.info("SGSR 1 initialized: " + width + "x" + height + ", sharpness=" + sharpness + ", P010=" + tenBit);
+    }
+
+    private void createHdrOutput(Surface output) {
+        System.loadLibrary("moonlight-core");
+        hdrOutput = nativeCreateHdr(output,hdrTargetWidth,hdrTargetHeight);
+        require(hdrOutput != 0,"Arrival/SGSR requires P010 SurfaceControl output");
     }
 
     private int createUpscaleProgram(Context app, String asset) throws Exception {
@@ -217,6 +365,7 @@ public final class SgsrRenderer implements AutoCloseable {
         try {
             texture.updateTexImage();
             texture.getTransformMatrix(transform);
+            if (!outputAttached || (arrivalError != null && (arrivalOnly || arrivalProgress >= 0))) return;
             GLES31.glBindFramebuffer(GLES31.GL_FRAMEBUFFER,framebuffer);
             GLES31.glViewport(0,0,width,height);
             GLES31.glUseProgram(copyProgram);
@@ -233,6 +382,21 @@ public final class SgsrRenderer implements AutoCloseable {
                 EGL14.eglQuerySurface(display,window,EGL14.EGL_HEIGHT,size,0); h=size[0];
             }
             if (w<=0 || h<=0) return;
+            final float progress = arrivalProgress;
+            final boolean arrivalActive = progress >= 0 && !arrivalComplete;
+            if (arrivalOnly) {
+                if (!arrivalActive) return;
+                ensureArrival(w,h);
+                arrival.copySource(colorTexture);
+                arrival.prefilter();
+                if (tenBit && nativeAcquireHdr(hdrOutput)<0) return;
+                if (!tenBit) GLES31.glBindFramebuffer(GLES31.GL_FRAMEBUFFER,0);
+                LaunchArrival.writePose(progress,arrivalPose);
+                arrival.present(arrivalPose,width,height,hdrActive);
+                presentOutput();
+                arrivalFramePresented(progress);
+                return;
+            }
             if (com.limelight.BuildConfig.DEBUG && !diagnosticsChecked) {
                 diagnosticsChecked = true;
                 if (new java.io.File(diagnosticContext.getFilesDir(), "sgsr-capture-request").exists()) {
@@ -291,25 +455,36 @@ public final class SgsrRenderer implements AutoCloseable {
                 sampledHeight = internalHeight;
                 selectedProgram = supersamplePresentProgram;
             }
-            if (tenBit && nativeAcquireHdr(hdrOutput)<0) return;
             if (outputWidth!=w || outputHeight!=h || dimensionsChanged) {
                 outputWidth=w; outputHeight=h;
                 LimeLog.info("SGSR output: " + width + "x" + height + " -> " + internalWidth + "x" +
                         internalHeight + " -> " + w + "x" + h + (supersampling ? " (supersampling)" : ""));
             }
-            if (!tenBit) GLES31.glBindFramebuffer(GLES31.GL_FRAMEBUFFER,0);
-            drawProgram(selectedProgram,source,w,h,sampledWidth,sampledHeight,w>=width && h>=height);
-            require(GLES31.glGetError()==GLES31.GL_NO_ERROR,"SGSR draw");
-            if (tenBit) nativePresentHdr(hdrOutput,hdrActive,hdrMetadata);
-            else {
-                EGLExt.eglPresentationTimeANDROID(display,window,System.nanoTime());
-                require(EGL14.eglSwapBuffers(display,window),"SGSR swap");
+            // Submit the exact normal SGSR pipeline at the endpoint, not an extra filtered copy.
+            if (arrivalActive && progress < 1f) {
+                ensureArrival(w,h);
+                int rgbProgram = tenBit ? arrivalRgbProgram(quality,supersampling) : selectedProgram;
+                drawProgram(rgbProgram,source,w,h,sampledWidth,sampledHeight,w>=width && h>=height);
+                arrival.prefilter();
+                if (tenBit && nativeAcquireHdr(hdrOutput)<0) return;
+                if (!tenBit) GLES31.glBindFramebuffer(GLES31.GL_FRAMEBUFFER,0);
+                LaunchArrival.writePose(progress,arrivalPose);
+                arrival.present(arrivalPose,width,height,hdrActive);
+            } else {
+                if (tenBit && nativeAcquireHdr(hdrOutput)<0) return;
+                if (!tenBit) GLES31.glBindFramebuffer(GLES31.GL_FRAMEBUFFER,0);
+                drawProgram(selectedProgram,source,w,h,sampledWidth,sampledHeight,w>=width && h>=height);
             }
-            firstFramePresented = true;
+            presentOutput();
+            if (arrivalActive) arrivalFramePresented(progress);
             float elapsedMs=(System.nanoTime()-processingStartNs)/1_000_000f;
             gpuTimeMs=gpuTimeMs==0f?elapsedMs:gpuTimeMs*.8f+elapsedMs*.2f;
             consecutiveDrawFailures=0;
         } catch (RuntimeException e) {
+            if (arrivalProgress >= 0 || arrivalOnly) {
+                failArrival(e);
+                return;
+            }
             // A surface being replaced or lost fails single frames (texture update, swap); only a streak of
             // them means SGSR itself is broken and the stream must fall back to direct output.
             if (++consecutiveDrawFailures < MAX_CONSECUTIVE_DRAW_FAILURES) {
@@ -323,6 +498,80 @@ public final class SgsrRenderer implements AutoCloseable {
                 failure.run();
             }
         }
+    }
+
+    private void ensureArrival(int w, int h) {
+        if (arrival == null) {
+            try { arrival = new ArrivalGlPass(diagnosticContext,tenBit); }
+            catch (Exception e) { throw new IllegalStateException("Arrival shader initialization failed",e); }
+        }
+        arrival.beginReconstruction(w,h);
+    }
+
+    private int arrivalRgbProgram(int quality, boolean supersampled) {
+        if (quality >= 2) {
+            if (arrivalTemporalProgram == 0)
+                arrivalTemporalProgram = createArrivalRgbProgram("sgsr/temporal_present.frag");
+            return arrivalTemporalProgram;
+        }
+        if (supersampled) {
+            if (arrivalPresentProgram == 0)
+                arrivalPresentProgram = createArrivalRgbProgram("sgsr/supersample_present.frag");
+            return arrivalPresentProgram;
+        }
+        if (quality == 1) {
+            if (arrivalHighProgram == 0)
+                arrivalHighProgram = createArrivalRgbProgram("sgsr/sgsr1_high.frag");
+            return arrivalHighProgram;
+        }
+        if (arrivalSpatialProgram == 0)
+            arrivalSpatialProgram = createArrivalRgbProgram("sgsr/sgsr1.frag");
+        return arrivalSpatialProgram;
+    }
+
+    private int createArrivalRgbProgram(String asset) {
+        try { return createUpscaleProgram(diagnosticContext,asset,false); }
+        catch (Exception e) { throw new IllegalStateException("Arrival RGB reconstruction shader failed",e); }
+    }
+
+    private void presentOutput() {
+        require(GLES31.glGetError()==GLES31.GL_NO_ERROR,"SGSR/arrival draw");
+        if (tenBit) nativePresentHdr(hdrOutput,hdrActive,hdrMetadata);
+        else {
+            EGLExt.eglPresentationTimeANDROID(display,window,System.nanoTime());
+            require(EGL14.eglSwapBuffers(display,window),"SGSR swap");
+        }
+        firstFramePresented = true;
+    }
+
+    private void arrivalFramePresented(float progress) {
+        arrivalReady = true;
+        if (progress >= 1f) {
+            releaseArrival();
+            arrivalComplete = true;
+            arrivalProgress = -1f;
+            Runnable listener = arrivalCompletionListener;
+            arrivalCompletionListener = null;
+            if (listener != null && !closed.get()) listener.run();
+        }
+    }
+
+    private void failArrival(Exception error) {
+        if (arrivalError != null) return;
+        arrivalError = "Stream arrival GPU path failed: " + error;
+        LimeLog.warning(arrivalError);
+        arrivalReady = false;
+        releaseArrival();
+        failure.run();
+    }
+
+    private void releaseArrival() {
+        if (arrival != null) { arrival.close(); arrival = null; }
+        if (arrivalSpatialProgram != 0) GLES31.glDeleteProgram(arrivalSpatialProgram);
+        if (arrivalHighProgram != 0) GLES31.glDeleteProgram(arrivalHighProgram);
+        if (arrivalTemporalProgram != 0) GLES31.glDeleteProgram(arrivalTemporalProgram);
+        if (arrivalPresentProgram != 0) GLES31.glDeleteProgram(arrivalPresentProgram);
+        arrivalSpatialProgram = arrivalHighProgram = arrivalTemporalProgram = arrivalPresentProgram = 0;
     }
 
     /** Smoothed wall time of the completed SGSR processing path, excluding decode. */
@@ -400,12 +649,15 @@ public final class SgsrRenderer implements AutoCloseable {
         }
     }
     private void release() {
+        arrivalCompletionListener = null;
+        arrivalReady = false;
         if (hdrOutput!=0) { nativeDestroyHdr(hdrOutput); hdrOutput=0; }
         if (texture!=null) { texture.setOnFrameAvailableListener(null); texture.release(); texture=null; }
         if (decoderSurface!=null) { decoderSurface.release(); decoderSurface=null; }
         if (display!=EGL14.EGL_NO_DISPLAY) {
             if (context!=EGL14.EGL_NO_CONTEXT && window!=EGL14.EGL_NO_SURFACE) {
                 EGL14.eglMakeCurrent(display,window,window,context);
+                releaseArrival();
                 if(copyProgram!=0) GLES31.glDeleteProgram(copyProgram);
                 if(upscaleProgram!=0) GLES31.glDeleteProgram(upscaleProgram);
                 if(highQualityProgram!=0) GLES31.glDeleteProgram(highQualityProgram);
@@ -421,6 +673,7 @@ public final class SgsrRenderer implements AutoCloseable {
             }
             EGL14.eglMakeCurrent(display,EGL14.EGL_NO_SURFACE,EGL14.EGL_NO_SURFACE,EGL14.EGL_NO_CONTEXT);
             if(window!=EGL14.EGL_NO_SURFACE) EGL14.eglDestroySurface(display,window);
+            if(pbuffer!=EGL14.EGL_NO_SURFACE && pbuffer!=window) EGL14.eglDestroySurface(display,pbuffer);
             if(context!=EGL14.EGL_NO_CONTEXT) EGL14.eglDestroyContext(display,context);
             EGL14.eglTerminate(display);
             EGL14.eglReleaseThread();

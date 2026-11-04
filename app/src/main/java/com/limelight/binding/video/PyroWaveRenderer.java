@@ -28,6 +28,8 @@ public final class PyroWaveRenderer {
     // Written by destroy() on one thread, read by the setters and getters of others; the native entry points
     // check the handle against the live renderer, so a stale value is harmless.
     private volatile long handle;
+    private final float[] launchArrivalPose = new float[LaunchArrival.POSE_FLOATS];
+    private boolean launchArrivalPrepared;
 
     private PyroWaveRenderer(long handle) {
         this.handle = handle;
@@ -118,6 +120,39 @@ public final class PyroWaveRenderer {
         return h != 0 ? nativeGetScaleDescription(h) : null;
     }
 
+    /** Arms GPU preparation on the owning video thread, without blocking decoder startup. */
+    public synchronized void prepareLaunchArrival() {
+        if (launchArrivalPrepared || handle == 0) return;
+        launchArrivalPrepared = true;
+        sendLaunchArrivalPose(-1f, true);
+    }
+
+    public boolean isLaunchArrivalReady() {
+        final long h = handle;
+        return h != 0 && nativeIsLaunchArrivalReady(h);
+    }
+
+    public synchronized void setLaunchArrivalProgress(float progress) {
+        if (handle != 0 && launchArrivalPrepared) sendLaunchArrivalPose(progress, false);
+    }
+
+    private void sendLaunchArrivalPose(float progress, boolean prepare) {
+        LaunchArrival.writePose(progress, launchArrivalPose);
+        nativeSetLaunchArrivalPose(handle, prepare, progress,
+                launchArrivalPose[0], launchArrivalPose[1], launchArrivalPose[2],
+                launchArrivalPose[3], launchArrivalPose[4], launchArrivalPose[5]);
+    }
+
+    public boolean isLaunchArrivalComplete() {
+        final long h = handle;
+        return h != 0 && nativeIsLaunchArrivalComplete(h);
+    }
+
+    public String getLaunchArrivalError() {
+        final long h = handle;
+        return h != 0 ? nativeGetLaunchArrivalError(h) : "PyroWave renderer has been destroyed";
+    }
+
     /** The frame statistics since the last call, in the order of the STAT_* indices. */
     public static final int STAT_TOTAL_FRAMES = 0;
     public static final int STAT_RECEIVED_FRAMES = 1;
@@ -165,6 +200,12 @@ public final class PyroWaveRenderer {
     private static native boolean nativeIsSupersampling(long handle);
     private static native int nativeGetSupersamplingLevel(long handle);
     private static native String nativeGetScaleDescription(long handle);
+    private static native void nativeSetLaunchArrivalPose(long handle, boolean prepare, float progress,
+                                                          float scaleX, float scaleY, float skew,
+                                                          float warp, float blur, float chromatic);
+    private static native boolean nativeIsLaunchArrivalReady(long handle);
+    private static native boolean nativeIsLaunchArrivalComplete(long handle);
+    private static native String nativeGetLaunchArrivalError(long handle);
 
     private static native int nativeGetLastGpuDecodeUs(long handle);
 

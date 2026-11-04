@@ -49,7 +49,6 @@ import com.limelight.utils.PanZoomHandler;
 import com.limelight.utils.ServerHelper;
 import com.limelight.utils.ShortcutHelper;
 import com.limelight.shell.StreamLoader;
-import com.limelight.utils.ConnectionProgress;
 import com.limelight.shell.StreamOutcome;
 import com.limelight.shell.StreamResultKind;
 import com.limelight.shell.StreamResultKt;
@@ -183,7 +182,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     private int currentOrientation;
 
     public NvConnection conn;
-    private ConnectionProgress spinner;
+    private StreamLoader spinner;
     private boolean endedWithResult = false;
     private boolean connecting = false;
     public boolean connected = false;
@@ -662,6 +661,8 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                 shouldInvertDecoderResolution,
                 glPrefs.glRenderer,
                 this);
+        // Warm arrival resources without taking the video surface away from the decoder yet.
+        decoderRenderer.prepareLaunchArrival(spinner == null || spinner.getReducedMotion());
 
         // LFR (low latency frame balance) is a variant of Balanced frame pacing that presents
         // queued frames at the next vsync and polls the decoder more often
@@ -4079,6 +4080,29 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         int height = decoderRenderer != null && decoderRenderer.getStreamHeight() > 0
                 ? decoderRenderer.getStreamHeight() : prefConfig.height;
         return StreamLoader.parameters(prefConfig, format, width, height);
+    }
+
+    public void setLaunchArrivalProgress(float progress) {
+        if (decoderRenderer != null) decoderRenderer.setLaunchArrivalProgress(progress);
+    }
+
+    public boolean isLaunchArrivalReady() {
+        return decoderRenderer != null && decoderRenderer.isLaunchArrivalReady();
+    }
+
+    public boolean isLaunchArrivalComplete() {
+        return decoderRenderer == null || decoderRenderer.isLaunchArrivalComplete();
+    }
+
+    public String getLaunchArrivalError() {
+        return decoderRenderer != null ? decoderRenderer.getLaunchArrivalError() : null;
+    }
+
+    /** Preserve the live game on a graphics-path failure, but never hide a missing arrival effect. */
+    public void reportLaunchArrivalError(String error) {
+        LimeLog.warning("Launch image effect unavailable: " + error);
+        Toast.makeText(this, "Launch image effect unavailable: " + error, Toast.LENGTH_LONG).show();
+        setLaunchArrivalProgress(-1f);
     }
 
     public boolean isStreamMenuOpen() {

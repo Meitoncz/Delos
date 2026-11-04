@@ -17,6 +17,18 @@ internal object HyperspaceConfig {
     const val ZOOM_END = 1f
     const val ZOOM_SCALE = 11f
 
+    // Approved real-stream arrival; independent of the tunnel's geometry and palette.
+    const val STREAM_SETTLE_START = .68f
+    const val STREAM_INITIAL_ZOOM = 1.18f
+    const val STREAM_DECAY = 6f
+    const val STREAM_SPRING_DAMPING = 3.8f
+    const val STREAM_SPRING_FREQUENCY = 15f
+    const val STREAM_SQUISH = .10f
+    const val STREAM_SPRING_ZOOM = .025f
+    const val STREAM_WARP = 70f
+    const val STREAM_BLUR = 20f
+    const val STREAM_CHROMATIC = 9f
+
     const val CENTER_X = .5f
     const val CENTER_Y = .5f
     const val DEPTH = .28f
@@ -34,6 +46,8 @@ internal object HyperspaceConfig {
     const val ABERRATION = .0016f
     const val OPENING_ACCELERATION = 5.5f
     const val SPEED_DECAY = 3.2f
+    const val MAX_FRAME_SECONDS = .1f
+    const val PROGRESS_RESPONSE_SECONDS = .45f
 
     const val CLOUD_COUNT = 24
     const val CLOUD_SIZE = .19f

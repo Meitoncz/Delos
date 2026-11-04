@@ -133,14 +133,14 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     private final ArrayList<byte[]> spsBuffers = new ArrayList<>();
     private final ArrayList<byte[]> ppsBuffers = new ArrayList<>();
     private boolean submittedCsd;
-    private byte[] currentHdrMetadata;
+    private volatile byte[] currentHdrMetadata;
 
     private int nextInputBufferIndex = -1;
     private ByteBuffer nextInputBuffer;
 
     private Context context;
     private Activity activity;
-    private MediaCodec videoDecoder;
+    private volatile MediaCodec videoDecoder;
     private Thread rendererThread;
     // Delos: the callback adapter is adapted from Starwire/Artemide (GPL-3.0).
     private final AsyncCodecAdapter asyncCodec = new AsyncCodecAdapter();
@@ -180,7 +180,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     private int initialWidth, initialHeight;
     private boolean invertResolution;
     private int videoFormat;
-    private Surface renderTarget;
+    private volatile Surface renderTarget;
     private volatile SgsrRenderer sgsr;
     private volatile boolean sgsrFailed;
     private volatile boolean sgsrRequested;
@@ -193,6 +193,14 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     private final FrameTimes frameTimes = new FrameTimes();
     private volatile boolean stopping;
     private volatile boolean firstFramePresented;
+    private volatile DirectLaunchArrival directLaunchArrival;
+    private volatile boolean decoderStarted;
+    private volatile boolean launchArrivalRequested, launchArrivalReducedMotion, launchArrivalComplete;
+    private volatile float launchArrivalProgress = -1f;
+    private volatile String launchArrivalError;
+    // Protected by codecRecoveryMonitor; preparation never waits for GL on this monitor.
+    private boolean launchBackendPrepared;
+    private Boolean pendingUpscalingAfterArrival;
     private CrashListener crashListener;
     private boolean reportedCrash;
     private int consecutiveCrashCount;
@@ -208,8 +216,9 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     private AtomicInteger codecRecoveryType = new AtomicInteger(CR_RECOVERY_TYPE_NONE);
     private final Object codecRecoveryMonitor = new Object();
 
-    // Each thread that touches the MediaCodec object or any associated buffers must have a flag
-    // here and must call doCodecRecoveryIfRequired() on a regular basis.
+    // Streaming threads that retain codec buffers must have a quiescence flag and call recovery
+    // regularly. The temporary surface worker retains no buffers: its entire setOutputSurface
+    // operation is serialized with reset/release by codecRecoveryMonitor instead.
     private static final int CR_FLAG_INPUT_THREAD = 0x1;
     private static final int CR_FLAG_RENDER_THREAD = 0x2;
     private static final int CR_FLAG_CHOREOGRAPHER = 0x4;
@@ -232,7 +241,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     private VideoStats lastWindowVideoStats;
     private VideoStats globalVideoStats;
 
-    private long lastTimestampUs;
+    private volatile long lastTimestampUs;
     private long baseTimestampUs;
     private int lastFrameNumber;
     private int refreshRate;
@@ -397,7 +406,12 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     }
 
     public void setRenderTarget(Surface renderTarget) {
-        this.renderTarget = renderTarget;
+        synchronized (codecRecoveryMonitor) {
+            if (this.renderTarget != null && this.renderTarget != renderTarget) {
+                cancelLaunchArrival("Stream surface changed during arrival");
+            }
+            this.renderTarget = renderTarget;
+        }
     }
 
     public MediaCodecDecoderRenderer(Activity activity, PreferenceConfiguration prefs,
@@ -582,6 +596,167 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     public int getStreamWidth() { return initialWidth; }
     public int getStreamHeight() { return initialHeight; }
 
+    /** Warm only: neither network setup nor the direct codec waits for shader preparation. */
+    public void prepareLaunchArrival(boolean reducedMotion) {
+        synchronized (codecRecoveryMonitor) {
+            if (stopping || launchArrivalRequested) return;
+            launchArrivalRequested = true;
+            launchArrivalReducedMotion = reducedMotion;
+            launchArrivalComplete = reducedMotion;
+            prepareLaunchArrivalBackend();
+        }
+    }
+
+    // Called under codecRecoveryMonitor, once the selected backend exists.
+    private void prepareLaunchArrivalBackend() {
+        if (!launchArrivalRequested || launchArrivalReducedMotion || launchBackendPrepared || stopping) return;
+        PyroWaveRenderer pw = pyroWave;
+        SgsrRenderer current = sgsr;
+        if (pw != null) {
+            launchBackendPrepared = true;
+            pw.prepareLaunchArrival();
+            if (launchArrivalProgress >= 0f) pw.setLaunchArrivalProgress(launchArrivalProgress);
+        } else if (current != null) {
+            launchBackendPrepared = true;
+            current.prepareLaunchArrival();
+            if (launchArrivalProgress >= 0f) current.setLaunchArrivalProgress(launchArrivalProgress);
+        } else if (decoderStarted && renderTarget != null && renderTarget.isValid()) {
+            launchBackendPrepared = true;
+            DirectLaunchArrival arrival = new DirectLaunchArrival(this, context, renderTarget,
+                    initialWidth, initialHeight, (videoFormat & MoonBridge.VIDEO_FORMAT_MASK_10BIT) != 0,
+                    sgsrHdrActive, currentHdrMetadata);
+            directLaunchArrival = arrival;
+            arrival.prepare();
+            if (launchArrivalProgress >= 0f) arrival.setProgress(launchArrivalProgress);
+        }
+    }
+
+    public boolean isLaunchArrivalReady() {
+        if (stopping || getLaunchArrivalError() != null) return false;
+        if (launchArrivalReducedMotion) return hasPresentedFrame();
+        DirectLaunchArrival arrival = directLaunchArrival;
+        if (arrival != null) return arrival.isReady();
+        PyroWaveRenderer pw = pyroWave;
+        if (pw != null) return pw.isLaunchArrivalReady();
+        SgsrRenderer current = sgsr;
+        return current != null && current.isLaunchArrivalReady();
+    }
+
+    public void setLaunchArrivalProgress(float progress) {
+        if (stopping || !launchArrivalRequested || launchArrivalReducedMotion || launchArrivalComplete) return;
+        if (!Float.isFinite(progress) || progress < 0f) {
+            cancelLaunchArrival(null);
+            return;
+        }
+        launchArrivalProgress = Math.min(progress, 1f);
+        DirectLaunchArrival arrival = directLaunchArrival;
+        if (arrival != null) { arrival.setProgress(launchArrivalProgress); return; }
+        PyroWaveRenderer pw = pyroWave;
+        if (pw != null) { pw.setLaunchArrivalProgress(launchArrivalProgress); return; }
+        SgsrRenderer current = sgsr;
+        if (current != null) current.setLaunchArrivalProgress(launchArrivalProgress);
+    }
+
+    public boolean isLaunchArrivalComplete() {
+        if (stopping || getLaunchArrivalError() != null) return false;
+        if (launchArrivalComplete) return true;
+        if (directLaunchArrival != null) return false;
+        PyroWaveRenderer pw = pyroWave;
+        if (pw != null) return pw.isLaunchArrivalComplete();
+        SgsrRenderer current = sgsr;
+        return current != null && current.isLaunchArrivalComplete();
+    }
+
+    public String getLaunchArrivalError() {
+        if (launchArrivalError != null) return launchArrivalError;
+        DirectLaunchArrival arrival = directLaunchArrival;
+        if (arrival != null) return arrival.getError();
+        PyroWaveRenderer pw = pyroWave;
+        if (pw != null) return pw.getLaunchArrivalError();
+        SgsrRenderer current = sgsr;
+        return current != null ? current.getLaunchArrivalError() : null;
+    }
+
+    private void cancelLaunchArrival(String error) {
+        if (error != null && launchArrivalRequested && !launchArrivalComplete) launchArrivalError = error;
+        launchArrivalRequested = false;
+        launchArrivalProgress = -1f;
+        DirectLaunchArrival arrival = directLaunchArrival;
+        if (arrival != null) arrival.cancel();
+        SgsrRenderer current = sgsr;
+        if (current != null) current.setLaunchArrivalProgress(-1f);
+        PyroWaveRenderer pw = pyroWave;
+        if (pw != null) pw.setLaunchArrivalProgress(-1f);
+    }
+
+    // Only the temporary worker calls these methods. The same monitor excludes codec reset/release;
+    // input/output callbacks keep running, as permitted by MediaCodec.setOutputSurface().
+    boolean attachLaunchArrivalOutput(DirectLaunchArrival arrival, SgsrRenderer renderer) {
+        synchronized (codecRecoveryMonitor) {
+            if (stopping || directLaunchArrival != arrival || !decoderStarted || videoDecoder == null) return false;
+            if (renderTarget == null || !renderTarget.isValid()) {
+                throw new IllegalStateException("Stream arrival output surface is unavailable");
+            }
+            // Disconnect MediaCodec's producer BEFORE EGL connects to the real SurfaceView.
+            videoDecoder.setOutputSurface(renderer.getDecoderSurface());
+            arrival.didRedirect();
+            renderer.attachArrivalOutput();
+            return true;
+        }
+    }
+
+    void restoreLaunchArrivalOutput(DirectLaunchArrival arrival, SgsrRenderer renderer) {
+        synchronized (codecRecoveryMonitor) {
+            if (directLaunchArrival != arrival || !decoderStarted || videoDecoder == null) return;
+            // The OES decoder surface and HDR child remain alive until a fresh direct frame.
+            // Detach EGL BEFORE MediaCodec reconnects to the real SurfaceView producer.
+            renderer.detachArrivalOutput();
+            if (renderTarget == null || !renderTarget.isValid()) {
+                throw new IllegalStateException("Direct stream output surface is unavailable");
+            }
+            videoDecoder.setOutputSurface(renderTarget);
+            arrival.didRestoreDirect(lastTimestampUs, System.nanoTime());
+        }
+    }
+
+    void recoverFailedLaunchArrivalOutput(DirectLaunchArrival arrival) {
+        synchronized (codecRecoveryMonitor) {
+            if (stopping || directLaunchArrival != arrival || videoDecoder == null
+                    || !arrival.isRedirected()) return;
+            // Only an exceptional failed return-to-direct reaches this hook. Keep the OES producer
+            // alive while the existing quiescence protocol resets/reconfigures the codec to direct;
+            // configureAndStartDecoder sees the latched arrival error and detaches its EGL output.
+            // Do not reset the attempt counter: repeated codec failures retain the normal limit.
+            codecRecoveryType.set(CR_RECOVERY_TYPE_RESET);
+        }
+    }
+
+    void onDirectLaunchArrivalClosed(DirectLaunchArrival arrival, String error, boolean complete) {
+        synchronized (codecRecoveryMonitor) {
+            if (directLaunchArrival != arrival) return;
+            if (error != null) launchArrivalError = error;
+            launchArrivalComplete = complete;
+            directLaunchArrival = null;
+            if (pendingUpscalingAfterArrival != null && !stopping) {
+                boolean enabled = pendingUpscalingAfterArrival;
+                pendingUpscalingAfterArrival = null;
+                setUpscalingEnabled(enabled);
+            }
+        }
+    }
+
+    private final MediaCodec.OnFrameRenderedListener frameRenderedListener = (codec, ptsUs, timeNs) -> {
+        if (codec != videoDecoder || stopping) return;
+        DirectLaunchArrival arrival = directLaunchArrival;
+        if (arrival != null) arrival.onFrameRendered(ptsUs, timeNs);
+        // A codec callback into an OES SurfaceTexture is NOT proof of output presentation.
+        if (sgsr == null && (arrival == null || !arrival.isRedirected())) firstFramePresented = true;
+        long delta = timeNs / 1000000L - ptsUs / 1000;
+        if (USE_FRAME_RENDER_TIME && delta >= 0 && delta < 1000) {
+            activeWindowVideoStats.totalTimeMs += delta;
+        }
+    };
+
     private MediaFormat createBaseMediaFormat(String mimeType) {
         MediaFormat videoFormat = MediaFormat.createVideoFormat(mimeType, initialWidth, initialHeight);
 
@@ -625,6 +800,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     }
 
     private void configureAndStartDecoder(MediaFormat format) {
+        decoderStarted = false;
         // Set HDR metadata if present
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             if (currentHdrMetadata != null) {
@@ -670,6 +846,16 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                     prefs.sgsrTemporalQuality ? 3 : prefs.sgsrTemporal ? 2 : prefs.sgsrHighQuality ? 1 : 0,
                     prefs.sgsrSupersamplingLevel,
                     (videoFormat & MoonBridge.VIDEO_FORMAT_MASK_10BIT) != 0, sgsrHdrActive, currentHdrMetadata, () -> {
+                SgsrRenderer failed = sgsr;
+                String arrivalFailure = failed != null ? failed.getLaunchArrivalError() : null;
+                if (arrivalFailure != null) {
+                    // The steady SGSR path still works: cancellation restores it without a codec reset.
+                    launchArrivalError = arrivalFailure;
+                    return;
+                }
+                if (launchArrivalRequested && !launchArrivalReducedMotion) {
+                    launchArrivalError = "Stream arrival SGSR output failed";
+                }
                 sgsrFailed = true;
                 sgsrRequested = false;
                 codecRecoveryType.compareAndSet(CR_RECOVERY_TYPE_NONE, CR_RECOVERY_TYPE_RESET);
@@ -677,9 +863,19 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
             if (sgsr == null) { sgsrFailed = true; sgsrRequested = false; }
         }
         if (sgsrFailed && sgsr != null) { sgsr.close(); sgsr = null; }
-        videoDecoder.configure(format, sgsr != null ? sgsr.getDecoderSurface() : renderTarget, null, 0);
-        LimeLog.info(sgsr != null ? "Delos video output: SGSR surface" :
-                "Delos video output: direct MediaCodec surface; no Delos sharpening shader");
+        DirectLaunchArrival arrival = directLaunchArrival;
+        boolean continueArrival = arrival != null && arrival.isRedirected() && arrival.getError() == null;
+        if (arrival != null && arrival.isRedirected() && !continueArrival) {
+            // Recovery already stopped/reset the codec. Disconnect the effect before configuring
+            // the direct producer, but retain its decoder Surface/HDR image until direct presentation.
+            arrival.detachForCodecRecovery();
+        }
+        Surface decoderOutput = sgsr != null ? sgsr.getDecoderSurface()
+                : continueArrival ? arrival.getDecoderSurface() : renderTarget;
+        videoDecoder.configure(format, decoderOutput, null, 0);
+        LimeLog.info(sgsr != null ? "Delos video output: SGSR surface" : continueArrival
+                ? "Delos video output: temporary stream arrival surface"
+                : "Delos video output: direct MediaCodec surface; no Delos sharpening shader");
 
         try { applySurfaceFrameRate(renderTarget, targetFps); } catch (Throwable t) { LimeLog.warning("applySurfaceFrameRate failed: " + t); }
 
@@ -708,6 +904,15 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
 
         // Start the decoder
         videoDecoder.start();
+        decoderStarted = true;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            // stop/reset/recreate may remove listeners, so reinstall for every codec start.
+            videoDecoder.setOnFrameRenderedListener(frameRenderedListener, null);
+        }
+        if (arrival != null && (arrival.isRedirected() || arrival.isAwaitingDirectFrame())
+                && !continueArrival && sgsr == null) {
+            arrival.didRestoreDirect(lastTimestampUs, System.nanoTime());
+        }
 
 // Diagnostics: dump negotiated input/output formats and check vendor keys acceptance
         try {
@@ -744,6 +949,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
             }
         } finally {
             if (!configured && videoDecoder != null) {
+                decoderStarted = false;
                 detachAsyncCodec();
                 videoDecoder.release();
                 videoDecoder = null;
@@ -849,20 +1055,6 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
             }
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            videoDecoder.setOnFrameRenderedListener(new MediaCodec.OnFrameRenderedListener() {
-                @Override
-                public void onFrameRendered(MediaCodec mediaCodec, long presentationTimeUs, long renderTimeNanos) {
-                    firstFramePresented = true;
-                    long delta = (renderTimeNanos / 1000000L) - (presentationTimeUs / 1000);
-                    if (delta >= 0 && delta < 1000) {
-                        if (USE_FRAME_RENDER_TIME) {
-                            activeWindowVideoStats.totalTimeMs += delta;
-                        }
-                    }
-                }
-            }, null);
-        }
 
         return 0;
     }
@@ -911,20 +1103,33 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
 
     /** Delos: live post-processing controls; a decoder reset requests an IDR, not a reconnect. */
     public void setUpscalingEnabled(boolean enabled) {
-        if (stopping) return;
-        PyroWaveRenderer pw = pyroWave;
-        if (pw != null) {
+        synchronized (codecRecoveryMonitor) {
+            if (stopping) return;
+            PyroWaveRenderer pw = pyroWave;
+            if (pw != null) {
+                sgsrRequested = enabled;
+                prefs.sgsrEnabled = enabled;
+                pw.setUpscalingMode(getRequestedPyroWaveUpscalingMode());
+                return;
+            }
+            if (directLaunchArrival != null
+                    && (enabled != sgsrRequested || pendingUpscalingAfterArrival != null)) {
+                // A codec reset must not create a second EGL producer while temporary output owns
+                // the window. Apply this explicit menu change after the direct handover is finished.
+                pendingUpscalingAfterArrival = enabled;
+                cancelLaunchArrival("Video output pipeline changed during stream arrival");
+                return;
+            }
+            if (enabled == sgsrRequested && !sgsrFailed) return;
+            if (launchArrivalRequested && !launchArrivalComplete) {
+                cancelLaunchArrival("Video output pipeline changed during stream arrival");
+            }
             sgsrRequested = enabled;
+            sgsrFailed = false;
             prefs.sgsrEnabled = enabled;
-            pw.setUpscalingMode(getRequestedPyroWaveUpscalingMode());
-            return;
+            codecRecoveryAttempts = 0;
+            codecRecoveryType.set(CR_RECOVERY_TYPE_RESET);
         }
-        if (enabled == sgsrRequested && !sgsrFailed) return;
-        sgsrRequested = enabled;
-        sgsrFailed = false;
-        prefs.sgsrEnabled = enabled;
-        codecRecoveryAttempts = 0;
-        codecRecoveryType.set(CR_RECOVERY_TYPE_RESET);
     }
     public boolean isUpscalingRequested() { return sgsrRequested; }
     public String getUpscalingStatus() {
@@ -1071,7 +1276,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                 realtimeNetData, stats[PyroWaveRenderer.STAT_ONE_PERCENT_LOW_FPS_X100] / 100f));
     }
 
-    // All threads that interact with the MediaCodec instance must call this function regularly!
+    // All streaming input/output/buffer owners must call this function regularly.
     private boolean doCodecRecoveryIfRequired(int quiescenceFlag) {
         // NB: We cannot check 'stopping' here because we could end up bailing in a partially
         // quiesced state that will cause the quiesced threads to never wake up.
@@ -1125,6 +1330,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                     LimeLog.warning("Trying to restart decoder after CodecException");
                     try {
                         detachAsyncCodec();
+                        decoderStarted = false;
                         videoDecoder.stop();
                         configureAndStartDecoder(configuredFormat);
                         codecRecoveryType.set(CR_RECOVERY_TYPE_NONE);
@@ -1149,6 +1355,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                     LimeLog.warning("Trying to reset decoder after CodecException");
                     try {
                         detachAsyncCodec();
+                        decoderStarted = false;
                         videoDecoder.reset();
                         configureAndStartDecoder(configuredFormat);
                         codecRecoveryType.set(CR_RECOVERY_TYPE_NONE);
@@ -1171,6 +1378,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                 if (codecRecoveryType.get() == CR_RECOVERY_TYPE_RESET) {
                     LimeLog.warning("Trying to recreate decoder after CodecException");
                     detachAsyncCodec();
+                    decoderStarted = false;
                     videoDecoder.release();
 
                     try {
@@ -1638,6 +1846,9 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
 
     @Override
     public void start() {
+        synchronized (codecRecoveryMonitor) {
+            prepareLaunchArrivalBackend();
+        }
         if (pyroWave != null) {
             startPyroWaveStatsThread();
             return;
@@ -1650,6 +1861,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     public void prepareForStop() {
         // Let the decoding code know to ignore codec exceptions now
         stopping = true;
+        cancelLaunchArrival(null);
 
         // Halt the rendering thread
         if (rendererThread != null) {
@@ -1712,7 +1924,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
 
         // Wait for the renderer thread to shut down
         try {
-            rendererThread.join();
+            if (rendererThread != null) rendererThread.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
 
@@ -1731,14 +1943,28 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
             pw.destroy();
             return;
         }
-        detachAsyncCodec();
-        if (videoDecoder != null) videoDecoder.release();
+        DirectLaunchArrival arrival;
+        synchronized (codecRecoveryMonitor) {
+            decoderStarted = false;
+            detachAsyncCodec();
+            if (videoDecoder != null) {
+                videoDecoder.release();
+                videoDecoder = null;
+            }
+            arrival = directLaunchArrival;
+            directLaunchArrival = null;
+        }
+        // No UI joins: the worker releases GL/SurfaceTexture/HDR and shuts itself down after
+        // codec release, even if preparation was still in flight when the surface disappeared.
+        if (arrival != null) arrival.onDecoderReleased();
         if (sgsr != null) { sgsr.close(); sgsr = null; }
     }
 
     @Override
     public void setHdrMode(boolean enabled, byte[] hdrMetadata) {
         sgsrHdrActive = enabled;
+        DirectLaunchArrival arrival = directLaunchArrival;
+        if (arrival != null) arrival.setHdrMode(enabled, enabled ? hdrMetadata : null);
         SgsrRenderer currentSgsr = sgsr;
         if (currentSgsr != null) currentSgsr.setHdrMode(enabled, hdrMetadata);
         PyroWaveRenderer pw = pyroWave;

@@ -82,6 +82,18 @@ object LaunchHandoff {
 
     @Volatile var logo: ImageBitmap? = null
     @Volatile var streamParameters: String = ""
+
+    /** Both windows retain this same draw-thread integrator, including its previous frame timestamp. */
+    internal var motion = LaunchTravel()
+        private set
+    val travel: Float get() = motion.travel
+    val smoothedProgress: Float get() = motion.smoothedProgress
+
+    internal fun beginScene(start: Long): Long {
+        motion = LaunchTravel()
+        startedAt = start
+        return start
+    }
 }
 
 /** Seconds since [start] (System.nanoTime, like the frame clock), updated every frame; read it while drawing. */
@@ -348,7 +360,7 @@ fun LaunchOverlay(card: LaunchCard?, reducedMotion: Boolean) {
             LaunchHandoff.logo = c.logo
             LaunchHandoff.streamParameters = c.streamParameters
         }
-        val start = remember(c.id) { System.nanoTime().also { LaunchHandoff.startedAt = it } }
+        val start = remember(c.id) { LaunchHandoff.beginScene(System.nanoTime()) }
         val clock = if (reducedMotion) null else rememberLaunchClock(start)
         val drawnProgress = remember(c.id) { { progress.value.also { LaunchHandoff.progress = it } } }
         // Holds the focus while a game starts, so nothing underneath reacts; only B (cancel) passes through

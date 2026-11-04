@@ -160,6 +160,7 @@ fun Shell(
     val scope = rememberCoroutineScope()
     // The connection line the launch screen tells under the title (null: the greeting)
     val launchLine = remember { mutableStateOf<String?>(null) }
+    var launchVisibility by remember { mutableStateOf(LaunchVisibilityState()) }
     val activity = LocalActivity.current
     val actions = remember(launcher) { ShellGameActions(shell, launcher, feedback, scope) }
     val reducedMotion by rememberUpdatedState(appearance.reducedMotion)
@@ -270,6 +271,7 @@ fun Shell(
     // The stream window inherits the last drawn tunnel progress, scene origin and game identity.
     LaunchedEffect(shell.launch?.id) {
         val launch = shell.launch ?: return@LaunchedEffect
+        launchVisibility = launchVisibility.newLaunch()
         LaunchHandoff.background = launch.background
         LaunchHandoff.progress = 0f
         // The first witty connection line is told here already; the stream window goes on with the next ones
@@ -289,6 +291,16 @@ fun Shell(
             ActivityOptions.makeScaleUpAnimation(root, 0, 0, root.width, root.height).toBundle()
         }
         activity?.startActivity(launch.intent, options)
+    }
+    // Once Game fully covers this window, remove the launch subtree rather than replaying its fade
+    // when Compose resumes. Keep return refresh/focus work separate from the cleared launch request.
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
+        val handedOver = shell.launch != null && shell.diving
+        launchVisibility = launchVisibility.stopped(shell.launch != null, shell.diving)
+        if (handedOver) {
+            shell.launch = null
+            shell.diving = false
+        }
     }
     // Back from the stream: the overlay goes away, the focus stays on the game, the PC's state is refreshed.
     // Left through the stream menu, the portal's burst that began over the stream ends here.
@@ -317,7 +329,8 @@ fun Shell(
                 shell.portal = null
             }
         }
-        if (shell.launch != null && shell.diving) {
+        if (launchVisibility.needsResumeCleanup(shell.launch != null, shell.diving)) {
+            launchVisibility = launchVisibility.resumed(shell.launch != null, shell.diving)
             shell.launch = null
             shell.diving = false
             repo.refresh()
@@ -649,11 +662,13 @@ fun Shell(
             val launchParameters = remember(launch?.id) {
                 launch?.let { item -> activity?.let { StreamLoader.parametersFor(it, item.pc.uuid, item.app.id) } }.orEmpty()
             }
-            LaunchOverlay(
-                launch?.let { LaunchCard(it.id, it.app.name, launchLine.value ?: StreamLoader.greeting(it.pc.name),
-                    appArt(it.pc, it.app, it.image), it.background, launchLogo, launchParameters) },
-                appearance.reducedMotion,
-            )
+            if (!launchVisibility.suppressLaunchOverlay) {
+                LaunchOverlay(
+                    launch?.let { LaunchCard(it.id, it.app.name, launchLine.value ?: StreamLoader.greeting(it.pc.name),
+                        appArt(it.pc, it.app, it.image), it.background, launchLogo, launchParameters) },
+                    appearance.reducedMotion,
+                )
+            }
             ToastHost(shell.toast, onHidden = { shell.hideToast(it) }, onAction = { shell.runToastAction() })
         }
     }
