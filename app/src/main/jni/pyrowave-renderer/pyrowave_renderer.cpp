@@ -39,12 +39,15 @@
 
 #include <algorithm>
 #include <atomic>
+#include <chrono>
+#include <condition_variable>
 #include <cstdint>
 #include <cstring>
 #include <iterator>
 #include <memory>
 #include <mutex>
 #include <vector>
+#include <thread>
 
 #include "shaders_spv.h"
 #include "pyrowaveframing.h"
@@ -510,6 +513,15 @@ namespace {
     class Renderer {
     public:
         ~Renderer() {
+            {
+                std::unique_lock<std::mutex> lock(workerLock);
+                workerStopping = true;
+                workerChanged.notify_one();
+                // Native destruction runs on the reaper, never the UI. Waiting also retains `this`
+                // until the detached arrival worker has made its final access and released EGL.
+                workerDone.wait(lock, [this] { return !workerCreated || workerFinished; });
+            }
+            if (workerFinished && !directVideoOwner.load()) yuvGl.acquireThread();
             destroy();
         }
 
@@ -597,21 +609,34 @@ namespace {
             return text;
         }
 
-        void setLaunchArrivalPose(bool prepare, float progress, const float *pose) {
-            std::lock_guard<std::mutex> lock(arrivalLock);
-            if (prepare) {
-                arrivalRequested = true;
-                arrivalPending = true;
-                arrivalStarted = false;
-                arrivalReady = false;
-                arrivalComplete = false;
-                arrivalError.clear();
+        void setLaunchArrivalPose(bool prepare, float progress, const float *pose, float maxBlurSourcePixels) {
+            std::lock_guard<std::mutex> workerGuard(workerLock);
+            if (prepare && directVideoOwner.load()) {
+                std::lock_guard<std::mutex> arrival(arrivalLock);
+                arrivalError = "PyroWave launch arrival must be prepared before the first decoder submission";
+                return;
             }
-            if (!arrivalRequested) return;
-            if (!prepare) arrivalStarted = true;
-            if (!prepare && progress < 0) arrivalError.clear();
-            arrivalProgress = progress;
-            std::copy(pose, pose + 6, arrivalRequestedParams.pose);
+            {
+                std::lock_guard<std::mutex> lock(arrivalLock);
+                if (prepare) {
+                    arrivalRequested = true;
+                    arrivalPending = true;
+                    arrivalStarted = false;
+                    arrivalReady = false;
+                    arrivalComplete = false;
+                    arrivalError.clear();
+                    arrivalMaxBlurSourcePixels = maxBlurSourcePixels;
+                }
+                if (!arrivalRequested) return;
+                if (!prepare) arrivalStarted = true;
+                if (!prepare && progress < 0) arrivalError.clear();
+                arrivalProgress = progress;
+                std::copy(pose, pose + 6, arrivalRequestedParams.pose);
+                arrivalTickActive = arrivalStarted;
+            }
+            if (prepare && !workerCreated) startVideoWorker();
+            workerWake = true;
+            workerChanged.notify_one();
         }
 
         bool isLaunchArrivalReady() const { return arrivalReady.load(); }
@@ -619,6 +644,109 @@ namespace {
         std::string getLaunchArrivalError() {
             std::lock_guard<std::mutex> lock(arrivalLock);
             return arrivalError;
+        }
+
+        bool hasPresentedFrame() const { return firstPresented.load(); }
+
+        // Only arrival uses a worker: it owns GPU/GL while re-presenting the last real GPU image.
+        // The caller lends its assembled packet buffer until synchronous submission returns.
+        // On identity/cancel the worker detaches EGL and exits; normal submission then resumes inline.
+        void startVideoWorker() {
+            workerCreated = true;
+            std::thread([this] {
+                std::unique_lock<std::mutex> lock(workerLock);
+                while (!workerStopping && (arrivalPending.load() || workerFrame)) {
+                    if (!workerFrame && !workerWake) {
+                        if (arrivalTickActive.load() && arrivalPending.load() && planesInitialized) {
+                            workerChanged.wait_for(lock, std::chrono::milliseconds(16),
+                                    [this] { return workerStopping || workerFrame || workerWake; });
+                        } else {
+                            workerChanged.wait(lock, [this] { return workerStopping || workerFrame || workerWake; });
+                        }
+                    }
+                    if (workerStopping) break;
+                    const bool frame = workerFrame;
+                    workerWake = false;
+                    lock.unlock();
+                    videoTid.store(pid_t(syscall(SYS_gettid)), std::memory_order_relaxed);
+                    if (frame) {
+                        workerResult = submit(workerData, workerLength, *workerSegments, workerCriticalPackets);
+                    } else if (arrivalPending.load()) {
+                        bool cancelWithoutFrame;
+                        {
+                            std::lock_guard<std::mutex> arrival(arrivalLock);
+                            cancelWithoutFrame = arrivalStarted && arrivalProgress < 0 && !planesInitialized;
+                        }
+                        if (cancelWithoutFrame) {
+                            destroyArrivalResources();
+                            std::lock_guard<std::mutex> arrival(arrivalLock);
+                            arrivalRequested = false;
+                            arrivalPending = false;
+                            arrivalTickActive = false;
+                            arrivalComplete = true;
+                        } else if (arrivalTickActive.load() && planesInitialized) {
+                            if (!present(false)) {
+                                failArrival(lastVulkanError[0] != 0 ? lastVulkanError :
+                                        "PyroWave launch arrival: last-frame presentation failed");
+                                arrivalTickActive = false;
+                            }
+                        } else if (!arrivalTickActive.load()) {
+                            // Warm resources only, with no copy, mip generation or presentation pass.
+                            if (!check(vk.WaitForFences(device, 1, &frameFence, VK_TRUE, FENCE_TIMEOUT_NS),
+                                       "arrival warm fence")) {
+                                failArrival(lastVulkanError);
+                            } else {
+                                prepareArrivalFrame();
+                            }
+                        }
+                    }
+                    enterStage(STAGE_IDLE);
+                    lock.lock();
+                    if (frame) {
+                        workerFrame = false;
+                        workerDone.notify_one();
+                    }
+                }
+                lock.unlock();
+                // No future GL operation may run on the callback thread before this detachment.
+                if (!yuvGl.releaseThread()) {
+                    std::lock_guard<std::mutex> arrival(arrivalLock);
+                    arrivalError = "PyroWave HDR context could not leave the arrival thread";
+                }
+                lock.lock();
+                workerFinished = true;
+                workerDone.notify_all();
+            }).detach();
+        }
+
+        int submitOnVideoWorker(const uint8_t *data, size_t length,
+                const std::vector<PyroWaveFraming::Segment> &segments, size_t criticalPackets) {
+            if (directVideoOwner.load()) return submit(data, length, segments, criticalPackets);
+            std::unique_lock<std::mutex> lock(workerLock);
+            if (workerCreated && !arrivalPending.load()) {
+                workerDone.wait(lock, [this] { return workerFinished; });
+            }
+            if (!workerCreated || workerFinished) {
+                const bool migrate = workerFinished;
+                lock.unlock();
+                if (migrate) {
+                    if (!yuvGl.acquireThread()) {
+                        std::lock_guard<std::mutex> arrival(arrivalLock);
+                        arrivalError = "PyroWave HDR context could not return to the decoder thread";
+                        return SUBMIT_ERROR;
+                    }
+                }
+                directVideoOwner = true;
+                return submit(data, length, segments, criticalPackets);
+            }
+            workerData = data;
+            workerLength = length;
+            workerSegments = &segments;
+            workerCriticalPackets = criticalPackets;
+            workerFrame = true;
+            workerChanged.notify_one();
+            workerDone.wait(lock, [this] { return !workerFrame; });
+            return workerResult;
         }
 
         // One frame as moonlight-common-c delivered it: its bytes and, per RTP packet, whether it was lost
@@ -1161,7 +1289,8 @@ namespace {
             const uint32_t imageWidth = sgsrApplied ? sgsrOutputWidth : width;
             const uint32_t imageHeight = sgsrApplied ? sgsrOutputHeight : height;
             arrivalMipLevels = 1;
-            uint32_t footprint = uint32_t(1 + 20 * float(imageWidth) / float(width)) + 1;
+            // Java supplies the approved source-pixel cap, not the current (possibly zero) pose blur.
+            uint32_t footprint = uint32_t(1 + arrivalMaxBlurSourcePixels * float(imageWidth) / float(width)) + 1;
             for (uint32_t size = std::max(imageWidth, imageHeight); size > 1 && footprint > 1; size >>= 1) {
                 ++arrivalMipLevels;
                 footprint = (footprint + 1) / 2;
@@ -1297,8 +1426,8 @@ namespace {
             vk.CmdPipelineBarrier(cmd, srcStage, dstStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
         }
 
-        void recordArrival(VkCommandBuffer cmd, int sgsrOutput) {
-            if (!arrivalFrameActive) return;
+        void recordArrival(VkCommandBuffer cmd, int sgsrOutput, bool decoded) {
+            if (!arrivalFrameActive || (!decoded && arrivalInitialized)) return;
             arrivalImageBarrier(cmd, arrivalImage.image, 0, arrivalMipLevels,
                     VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, arrivalInitialized ? VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT : 0,
                     VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_TRANSFER_BIT,
@@ -1372,6 +1501,7 @@ namespace {
             std::lock_guard<std::mutex> lock(arrivalLock);
             arrivalRequested = false;
             arrivalPending = false;
+            arrivalTickActive = false;
             arrivalComplete = true;
             return true;
         }
@@ -2102,7 +2232,7 @@ namespace {
         }
 
         // Puts the decoded frame into a free P010 buffer and hands it to SurfaceFlinger
-        bool presentYuv(VkCommandBufferBeginInfo &beginInfo, uint64_t frameStart, uint64_t afterFence) {
+        bool presentYuv(VkCommandBufferBeginInfo &beginInfo, uint64_t frameStart, uint64_t afterFence, bool decoded) {
             if (releases == nullptr && !createYuvOutput()) {
                 LOGW("P010 HDR output failed; falling back to the RGB swapchain");
                 destroyYuvOutput();
@@ -2135,8 +2265,10 @@ namespace {
             planeBarrier(commandBuffer, decodeWriteStage(), decodeWriteAccess(),
                          VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_TRANSFER_BIT,
                          VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_TRANSFER_READ_BIT, VK_IMAGE_LAYOUT_GENERAL);
-            const int sgsrOutput=recordSgsrMotion(commandBuffer);
-            recordArrival(commandBuffer, sgsrOutput);
+            const int sgsrOutput = decoded || (sgsrApplied && lastSgsrOutput < 0)
+                    ? recordSgsrMotion(commandBuffer) : lastSgsrOutput;
+            lastSgsrOutput = sgsrOutput;
+            recordArrival(commandBuffer, sgsrOutput, decoded);
             if (yuvCpu) {
                 VkDeviceSize offset = 0;
                 for (auto &plane : planes) {
@@ -2197,7 +2329,7 @@ namespace {
                 vk.CmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
                                       VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0, nullptr, 0, nullptr, 1, &toForeign);
             }
-            if (queryPool != VK_NULL_HANDLE) {
+            if (decoded && queryPool != VK_NULL_HANDLE) {
                 vk.CmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, queryPool, 2);
             }
             if (!check(vk.EndCommandBuffer(commandBuffer), "vkEndCommandBuffer(P010)")) {
@@ -2211,7 +2343,7 @@ namespace {
             if (!check(vk.QueueSubmit(queue, 1, &submitInfo, frameFence), "vkQueueSubmit(P010)")) {
                 return false;
             }
-            queriesPending = queryPool != VK_NULL_HANDLE;
+            queriesPending = decoded && queryPool != VK_NULL_HANDLE;
             // The decode is done before OpenGL ES or the CPU uses its result
             if (!check(vk.WaitForFences(device, 1, &frameFence, VK_TRUE, FENCE_TIMEOUT_NS), "P010 fence")) {
                 return false;
@@ -2256,6 +2388,7 @@ namespace {
             }
             surfaceApi.setOnComplete(transaction, new YuvCallback{releases, yuvPrevious}, onYuvTransactionComplete);
             surfaceApi.apply(transaction);
+            firstPresented = true;
             surfaceApi.deleteTransaction(transaction);
             yuvPrevious = index;
             yuvSubmittedUs[index] = afterAcquire;
@@ -2756,7 +2889,7 @@ namespace {
             sgsrLastFrameUs = now;
         }
 
-        bool present() {
+        bool present(bool decoded = true) {
             const uint64_t frameStart = nowUs();
             lastVulkanError[0] = 0;
 
@@ -2769,63 +2902,65 @@ namespace {
             const uint64_t afterFence = nowUs();
             readTimestamps();
             enterStage(STAGE_HDR_SWITCH);
-            if ((hdrWanted != hdrActive || outputBroken) && !applyHdrMode()) {
-                return false;
+            if (decoded) {
+                if ((hdrWanted != hdrActive || outputBroken) && !applyHdrMode()) return false;
+                applyUpscalingSettings();
+                resetUpscalerHistoryAfterGap(frameStart);
             }
-            applyUpscalingSettings();
             if (!prepareArrivalFrame()) return false;
-            resetUpscalerHistoryAfterGap(frameStart);
             enterStage(STAGE_DECODE);
 
             // Decode first, without waiting for the display, so the GPU starts on the
             // frame immediately. The draw below is ordered after it on the same queue.
-            vk.ResetCommandBuffer(decodeCommandBuffer, 0);
             VkCommandBufferBeginInfo beginInfo = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
             beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-            vk.BeginCommandBuffer(decodeCommandBuffer, &beginInfo);
-            if (queryPool != VK_NULL_HANDLE) {
-                vk.CmdResetQueryPool(decodeCommandBuffer, queryPool, 0, QUERY_COUNT);
-                vk.CmdWriteTimestamp(decodeCommandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, queryPool, 0);
-            }
-            planeBarrier(decodeCommandBuffer, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, decodeWriteStage(),
-                         decodeWriteAccess(), planesInitialized ? VK_IMAGE_LAYOUT_GENERAL : VK_IMAGE_LAYOUT_UNDEFINED);
+            if (decoded) {
+                vk.ResetCommandBuffer(decodeCommandBuffer, 0);
+                vk.BeginCommandBuffer(decodeCommandBuffer, &beginInfo);
+                if (queryPool != VK_NULL_HANDLE) {
+                    vk.CmdResetQueryPool(decodeCommandBuffer, queryPool, 0, QUERY_COUNT);
+                    vk.CmdWriteTimestamp(decodeCommandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, queryPool, 0);
+                }
+                planeBarrier(decodeCommandBuffer, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, decodeWriteStage(),
+                             decodeWriteAccess(), planesInitialized ? VK_IMAGE_LAYOUT_GENERAL : VK_IMAGE_LAYOUT_UNDEFINED);
 
-            pyrowave_gpu_buffers buffers = {};
-            for (int i = 0; i < 3; ++i) {
-                auto &view = buffers.planes[i];
-                view.image = planes[i].image;
-                view.width = planes[i].width;
-                view.height = planes[i].height;
-                view.image_format = planeFormat;
-                view.view_format = planeFormat;
-                view.aspect = VK_IMAGE_ASPECT_COLOR_BIT;
-                view.swizzle = VK_COMPONENT_SWIZZLE_IDENTITY;
-                view.layout = VK_IMAGE_LAYOUT_GENERAL;
-            }
-            pyrowave_device_set_command_buffer(pyroDevice, decodeCommandBuffer);
-            const auto decoded = pyrowave_decoder_decode_gpu_buffer(decoder, nullptr, nullptr, &buffers);
-            pyrowave_device_set_command_buffer(pyroDevice, VK_NULL_HANDLE);
-            if (decoded != PYROWAVE_SUCCESS) {
-                LOGE("pyrowave_decoder_decode_gpu_buffer failed: %d", decoded);
-                vk.EndCommandBuffer(decodeCommandBuffer);
-                return false;
-            }
-            planesInitialized = true;
-            if (queryPool != VK_NULL_HANDLE) {
-                vk.CmdWriteTimestamp(decodeCommandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, queryPool, 1);
-            }
-            if (!check(vk.EndCommandBuffer(decodeCommandBuffer), "vkEndCommandBuffer(decode)")) {
-                return false;
-            }
-            VkSubmitInfo decodeSubmit = {VK_STRUCTURE_TYPE_SUBMIT_INFO};
-            decodeSubmit.commandBufferCount = 1;
-            decodeSubmit.pCommandBuffers = &decodeCommandBuffer;
-            if (!check(vk.QueueSubmit(queue, 1, &decodeSubmit, VK_NULL_HANDLE), "vkQueueSubmit(decode)")) {
-                return false;
+                pyrowave_gpu_buffers buffers = {};
+                for (int i = 0; i < 3; ++i) {
+                    auto &view = buffers.planes[i];
+                    view.image = planes[i].image;
+                    view.width = planes[i].width;
+                    view.height = planes[i].height;
+                    view.image_format = planeFormat;
+                    view.view_format = planeFormat;
+                    view.aspect = VK_IMAGE_ASPECT_COLOR_BIT;
+                    view.swizzle = VK_COMPONENT_SWIZZLE_IDENTITY;
+                    view.layout = VK_IMAGE_LAYOUT_GENERAL;
+                }
+                pyrowave_device_set_command_buffer(pyroDevice, decodeCommandBuffer);
+                const auto decodeResult = pyrowave_decoder_decode_gpu_buffer(decoder, nullptr, nullptr, &buffers);
+                pyrowave_device_set_command_buffer(pyroDevice, VK_NULL_HANDLE);
+                if (decodeResult != PYROWAVE_SUCCESS) {
+                    LOGE("pyrowave_decoder_decode_gpu_buffer failed: %d", decodeResult);
+                    vk.EndCommandBuffer(decodeCommandBuffer);
+                    return false;
+                }
+                planesInitialized = true;
+                if (queryPool != VK_NULL_HANDLE) {
+                    vk.CmdWriteTimestamp(decodeCommandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, queryPool, 1);
+                }
+                if (!check(vk.EndCommandBuffer(decodeCommandBuffer), "vkEndCommandBuffer(decode)")) {
+                    return false;
+                }
+                VkSubmitInfo decodeSubmit = {VK_STRUCTURE_TYPE_SUBMIT_INFO};
+                decodeSubmit.commandBufferCount = 1;
+                decodeSubmit.pCommandBuffers = &decodeCommandBuffer;
+                if (!check(vk.QueueSubmit(queue, 1, &decodeSubmit, VK_NULL_HANDLE), "vkQueueSubmit(decode)")) {
+                    return false;
+                }
             }
 
             if (yuvOutput) {
-                return presentYuv(beginInfo, frameStart, afterFence);
+                return presentYuv(beginInfo, frameStart, afterFence, decoded);
             }
 
             uint32_t imageIndex = 0;
@@ -2851,8 +2986,10 @@ namespace {
             planeBarrier(commandBuffer, decodeWriteStage(), decodeWriteAccess(),
                          VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                          VK_ACCESS_SHADER_READ_BIT, VK_IMAGE_LAYOUT_GENERAL);
-            const int sgsrOutput=recordSgsrMotion(commandBuffer);
-            recordArrival(commandBuffer, sgsrOutput);
+            const int sgsrOutput = decoded || (sgsrApplied && lastSgsrOutput < 0)
+                    ? recordSgsrMotion(commandBuffer) : lastSgsrOutput;
+            lastSgsrOutput = sgsrOutput;
+            recordArrival(commandBuffer, sgsrOutput, decoded);
 
             VkClearValue clear = {};
             clear.color = {{0.0f, 0.0f, 0.0f, 1.0f}};
@@ -2892,7 +3029,7 @@ namespace {
             }
             vk.CmdDraw(commandBuffer, 3, 1, 0, 0);
             vk.CmdEndRenderPass(commandBuffer);
-            if (queryPool != VK_NULL_HANDLE) {
+            if (decoded && queryPool != VK_NULL_HANDLE) {
                 vk.CmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, queryPool, 2);
             }
             if (!check(vk.EndCommandBuffer(commandBuffer), "vkEndCommandBuffer")) {
@@ -2913,7 +3050,7 @@ namespace {
             if (!check(vk.QueueSubmit(queue, 1, &submitInfo, frameFence), "vkQueueSubmit")) {
                 return false;
             }
-            queriesPending = queryPool != VK_NULL_HANDLE;
+            queriesPending = decoded && queryPool != VK_NULL_HANDLE;
 
             VkPresentInfoKHR presentInfo = {VK_STRUCTURE_TYPE_PRESENT_INFO_KHR};
             presentInfo.waitSemaphoreCount = 1;
@@ -2947,6 +3084,7 @@ namespace {
                 return recreateSwapchain();
             }
             if (presented != VK_SUBOPTIMAL_KHR && !check(presented, "vkQueuePresentKHR")) return false;
+            firstPresented = true;
             return finishArrivalPresentation();
         }
 
@@ -3024,7 +3162,27 @@ namespace {
             sgsrActivatePipelineLayout = VK_NULL_HANDLE;
             sgsrActivateLayout = VK_NULL_HANDLE;
             sgsrInitialized = false;
+            lastSgsrOutput = -1;
         }
+
+        std::mutex workerLock;
+        std::condition_variable workerChanged;
+        std::condition_variable workerDone;
+        bool workerCreated = false;
+        bool workerStopping = false;
+        bool workerFrame = false;
+        bool workerWake = false;
+        bool workerFinished = false;
+        std::atomic<bool> directVideoOwner{false};
+        const uint8_t *workerData = nullptr;
+        size_t workerLength = 0;
+        const std::vector<PyroWaveFraming::Segment> *workerSegments = nullptr;
+        size_t workerCriticalPackets = 0;
+        int workerResult = SUBMIT_SKIPPED;
+        std::atomic<bool> firstPresented{false};
+        std::atomic<bool> arrivalTickActive{false};
+        float arrivalMaxBlurSourcePixels = 0;
+        int lastSgsrOutput = -1;
 
         std::mutex arrivalLock;
         char lastVulkanError[160] = {};
@@ -3437,7 +3595,7 @@ int PyroWave_SubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
         enterStage(STAGE_LOCK);
         std::lock_guard<std::mutex> lock(activeLock);
         if (activeRenderer != nullptr) {
-            result = activeRenderer->submit(frame.data(), offset, segments, decodeUnit->pyrowaveCriticalPackets);
+            result = activeRenderer->submitOnVideoWorker(frame.data(), offset, segments, decodeUnit->pyrowaveCriticalPackets);
             // The GPU time of the previous frame, read back while this one was submitted
             gpuDecodeUs = activeRenderer->lastGpuDecodeUs;
             gpuDrawUs = activeRenderer->lastGpuDrawUs;
@@ -3602,9 +3760,18 @@ Java_com_limelight_binding_video_PyroWaveRenderer_nativeSetSharpness(JNIEnv *, j
 JNIEXPORT void JNICALL
 Java_com_limelight_binding_video_PyroWaveRenderer_nativeSetLaunchArrivalPose(JNIEnv *, jclass, jlong handle,
         jboolean prepare, jfloat progress, jfloat scaleX, jfloat scaleY, jfloat skew,
-        jfloat warp, jfloat blur, jfloat chromatic) {
+        jfloat warp, jfloat blur, jfloat chromatic, jfloat maxBlurSourcePixels) {
     const float pose[] = {scaleX, scaleY, skew, warp, blur, chromatic};
-    withLiveRenderer(handle, [&](Renderer &renderer) { renderer.setLaunchArrivalPose(prepare, progress, pose); });
+    withLiveRenderer(handle, [&](Renderer &renderer) {
+        renderer.setLaunchArrivalPose(prepare, progress, pose, maxBlurSourcePixels);
+    });
+}
+
+JNIEXPORT jboolean JNICALL
+Java_com_limelight_binding_video_PyroWaveRenderer_nativeHasPresentedFrame(JNIEnv *, jclass, jlong handle) {
+    jboolean presented = JNI_FALSE;
+    withLiveRenderer(handle, [&](Renderer &renderer) { presented = renderer.hasPresentedFrame() ? JNI_TRUE : JNI_FALSE; });
+    return presented;
 }
 
 JNIEXPORT jboolean JNICALL
@@ -3700,17 +3867,18 @@ Java_com_limelight_binding_video_PyroWaveRenderer_nativeDestroy(JNIEnv *, jclass
     auto *renderer = reinterpret_cast<Renderer *>(handle);
     {
         std::lock_guard<std::mutex> lock(handleLock);
-        if (liveRenderer == renderer) {
-            liveRenderer = nullptr;
-        }
+        if (renderer == nullptr || liveRenderer != renderer) return;
+        liveRenderer = nullptr;
     }
-    {
-        std::lock_guard<std::mutex> lock(activeLock);
-        if (activeRenderer == renderer) {
-            activeRenderer = nullptr;
+    // The UI never waits for an in-flight decode, arrival fence or worker join. The existing active lock
+    // retains the raw renderer until the callback returns; late JNI calls already see it unlisted.
+    std::thread([renderer] {
+        {
+            std::lock_guard<std::mutex> lock(activeLock);
+            if (activeRenderer == renderer) activeRenderer = nullptr;
         }
-    }
-    delete renderer;
+        delete renderer;
+    }).detach();
 }
 
 }  // extern "C"

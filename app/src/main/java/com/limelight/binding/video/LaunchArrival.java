@@ -13,8 +13,18 @@ public final class LaunchArrival {
     public static final int CHROMATIC = 5;
     public static final int DURATION_MS = HyperspaceConfig.OPENING_MS;
     public static final float SETTLE_START = HyperspaceConfig.STREAM_SETTLE_START;
+    public static final float ACTIVATE_AT = .55f;
+    public static final float READY_CHECK_AT = .60f;
+    public static final long READY_WAIT_MS = 1500L;
+    public static final long COMPLETE_WAIT_MS = 1000L;
+    public static final float MAX_BLUR_SOURCE_PIXELS = HyperspaceConfig.STREAM_BLUR;
 
     private LaunchArrival() { }
+
+    /** Keep the real image pass idle while the tunnel is entirely opaque. */
+    public static boolean shouldActivate(float opening) {
+        return Float.isFinite(opening) && opening >= ACTIVATE_AT && opening < 1f;
+    }
 
     /** Negative/inactive, invalid, and completed progress always produce the exact direct pose. */
     public static void writePose(float opening, float[] target) {
@@ -46,15 +56,6 @@ public final class LaunchArrival {
                 * Math.exp(-1.2 * x)) * envelope;
     }
 
-    /** A requested endpoint is not sufficient: an identity image must actually reach the output. */
-    public static boolean canSwitchToDirect(float opening, boolean identityPresented) {
-        return Float.isFinite(opening) && opening >= 1f && identityPresented;
-    }
-
-    /** Keep the temporary last picture until the new producer has supplied its first direct image. */
-    public static boolean canReleaseTemporaryOutput(boolean producerSwitched, boolean directFramePresented) {
-        return producerSwitched && directFramePresented;
-    }
 
     private static float unit(float value) {
         return Math.max(0f, Math.min(1f, value));

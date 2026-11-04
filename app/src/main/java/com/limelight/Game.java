@@ -4101,7 +4101,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     /** Preserve the live game on a graphics-path failure, but never hide a missing arrival effect. */
     public void reportLaunchArrivalError(String error) {
         LimeLog.warning("Launch image effect unavailable: " + error);
-        Toast.makeText(this, "Launch image effect unavailable: " + error, Toast.LENGTH_LONG).show();
         setLaunchArrivalProgress(-1f);
     }
 

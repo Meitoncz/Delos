@@ -3,8 +3,9 @@ package com.limelight.binding.video;
 import android.content.Context;
 import android.view.Surface;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /** Temporary direct-codec GPU output. Only lifecycle events enqueue work, never animation frames. */
 final class DirectLaunchArrival {
@@ -14,8 +15,9 @@ final class DirectLaunchArrival {
     private final int width, height;
     private final boolean tenBit;
     private final Object submissionLock = new Object();
-    private final ExecutorService executor = Executors.newSingleThreadExecutor(
+    private final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1,
             runnable -> new Thread(runnable, "Video - Launch arrival"));
+    private final LaunchArrivalHandover handover = new LaunchArrivalHandover();
     private final Runnable activateTask = this::activate;
     private final Runnable restoreTask = this::restore;
     private final Runnable releaseTask = this::release;
@@ -24,11 +26,12 @@ final class DirectLaunchArrival {
     private volatile byte[] hdrMetadata;
     private volatile float progress = -1f;
     private volatile boolean cancelled, decoderReleased, redirected, awaitingDirectFrame;
-    private volatile boolean activationRequested, finished;
+    private volatile boolean detachedForCodecRecovery;
+    private volatile boolean activationRequested, identityRequested, finished;
     private volatile String error;
-    private volatile long directPtsExclusive, directNotBeforeNs;
-    // submissionLock protects queue lifetime and the one-shot direct-frame completion notification.
-    private boolean executorClosed, directFrameConfirmed;
+    // submissionLock protects queue lifetime and the two one-shot timeout tasks.
+    private boolean executorClosed;
+    private ScheduledFuture<?> identityTimeout, directTimeout;
     // Worker-owned: a failed surface handover enters existing codec recovery exactly once.
     private boolean handoverRecoveryRequested;
 
@@ -42,6 +45,7 @@ final class DirectLaunchArrival {
         this.tenBit = tenBit;
         this.hdrActive = hdrActive;
         this.hdrMetadata = hdrMetadata;
+        executor.setRemoveOnCancelPolicy(true);
     }
 
     void prepare() { enqueue(this::initialize); }
@@ -76,12 +80,18 @@ final class DirectLaunchArrival {
         progress = Math.min(value, 1f);
         SgsrRenderer current = renderer;
         if (current != null) current.setLaunchArrivalProgress(progress);
-        // This API has one animation producer. The lock only runs at activation, not every frame.
-        if (!activationRequested) {
+        // Ordinary progress writes enqueue nothing. Only activation and final identity are events.
+        if (!activationRequested || (progress >= 1f && !identityRequested)) {
             synchronized (submissionLock) {
-                if (!activationRequested && !executorClosed) {
+                if (executorClosed || cancelled) return;
+                if (!activationRequested && handover.activate()) {
                     activationRequested = true;
                     executor.execute(activateTask);
+                }
+                if (progress >= 1f && handover.requestIdentity(System.nanoTime())) {
+                    identityRequested = true;
+                    identityTimeout = executor.schedule(restoreTask,
+                            LaunchArrivalHandover.IDENTITY_WAIT_NS, TimeUnit.NANOSECONDS);
                 }
             }
         }
@@ -93,7 +103,10 @@ final class DirectLaunchArrival {
         if (current == null) return;
         try {
             current.setLaunchArrivalProgress(progress);
-            if (!owner.attachLaunchArrivalOutput(this, current)) releaseIfDisconnected();
+            if (!owner.attachLaunchArrivalOutput(this, current)) {
+                fail("Stream arrival decoder output is unavailable", null);
+                releaseIfDisconnected();
+            }
         } catch (RuntimeException exception) {
             fail("Stream arrival output attachment failed", exception);
             restore();
@@ -108,6 +121,7 @@ final class DirectLaunchArrival {
 
     boolean isRedirected() { return redirected; }
     boolean isAwaitingDirectFrame() { return awaitingDirectFrame; }
+    boolean isDetachedForCodecRecovery() { return detachedForCodecRecovery; }
     Surface getDecoderSurface() {
         SgsrRenderer current = renderer;
         return current != null ? current.getDecoderSurface() : null;
@@ -115,6 +129,7 @@ final class DirectLaunchArrival {
     void detachForCodecRecovery() {
         SgsrRenderer current = renderer;
         if (current != null && current.getDecoderSurface() != null) current.detachArrivalOutput();
+        detachedForCodecRecovery = true;
     }
     String getError() {
         SgsrRenderer current = renderer;
@@ -122,28 +137,35 @@ final class DirectLaunchArrival {
         return error != null ? error : rendererError;
     }
 
-    void didRedirect() { redirected = true; }
+    void didRedirect() {
+        detachedForCodecRecovery = false;
+        redirected = true;
+    }
 
     /** Called under the codec recovery monitor, after setOutputSurface(real) has returned. */
     void didRestoreDirect(long lastAssignedPtsUs, long nowNs) {
-        directPtsExclusive = lastAssignedPtsUs;
-        directNotBeforeNs = nowNs;
+        handover.restored(lastAssignedPtsUs, nowNs);
         redirected = false;
         awaitingDirectFrame = true;
+        synchronized (submissionLock) {
+            if (executorClosed) return;
+            if (directTimeout != null) directTimeout.cancel(false);
+            directTimeout = executor.schedule(() -> {
+                if (handover.finishDirectWait(System.nanoTime())) {
+                    awaitingDirectFrame = false;
+                    release();
+                }
+            }, LaunchArrivalHandover.DIRECT_WAIT_NS, TimeUnit.NANOSECONDS);
+        }
     }
 
     void onFrameRendered(long presentationTimeUs, long renderTimeNanos) {
-        if (!awaitingDirectFrame || presentationTimeUs <= directPtsExclusive
-                || renderTimeNanos < directNotBeforeNs) return;
+        if (!awaitingDirectFrame || !handover.directFrame(presentationTimeUs, renderTimeNanos)) return;
         synchronized (submissionLock) {
-            if (executorClosed || directFrameConfirmed) return;
-            // PTS was assigned after the switch: a delayed callback from the old OES producer
-            // cannot remove the HDR child's retained identity image prematurely.
-            directFrameConfirmed = true;
-            if (LaunchArrival.canReleaseTemporaryOutput(!redirected, directFrameConfirmed)) {
-                awaitingDirectFrame = false;
-                executor.execute(releaseTask);
-            }
+            if (executorClosed) return;
+            // Reject delayed OES callbacks using both the assigned PTS and handover time.
+            awaitingDirectFrame = false;
+            executor.execute(releaseTask);
         }
     }
 
@@ -158,12 +180,16 @@ final class DirectLaunchArrival {
 
     void cancel() {
         cancelled = true;
+        handover.cancel();
+        SgsrRenderer current = renderer;
+        if (current != null) current.setLaunchArrivalProgress(-1f);
         enqueue(restoreTask);
     }
 
     void onDecoderReleased() {
         decoderReleased = true;
         cancelled = true;
+        handover.cancel();
         enqueue(releaseTask);
     }
 
@@ -179,8 +205,12 @@ final class DirectLaunchArrival {
         SgsrRenderer current = renderer;
         if (!redirected || current == null) { releaseIfDisconnected(); return; }
         if (handoverRecoveryRequested) return;
-        if (!cancelled && error == null
-                && !LaunchArrival.canSwitchToDirect(progress, current.isLaunchArrivalComplete())) return;
+        boolean identity = current.isLaunchArrivalComplete();
+        long nowNs = System.nanoTime();
+        if (!cancelled && error == null && !handover.canRestore(identity, nowNs)) return;
+        if (handover.identityTimedOut(nowNs)) {
+            fail("Stream arrival identity presentation timed out", null);
+        }
         try {
             owner.restoreLaunchArrivalOutput(this, current);
         } catch (RuntimeException exception) {
@@ -203,14 +233,17 @@ final class DirectLaunchArrival {
         SgsrRenderer current = renderer;
         if (current != null) {
             if (error == null) error = current.getLaunchArrivalError();
-            current.close();
+            current.closeAsync();
             renderer = null;
         }
         synchronized (submissionLock) {
             executorClosed = true;
+            if (identityTimeout != null) identityTimeout.cancel(false);
+            if (directTimeout != null) directTimeout.cancel(false);
             executor.shutdown();
         }
-        owner.onDirectLaunchArrivalClosed(this, error, !cancelled && directFrameConfirmed);
+        owner.onDirectLaunchArrivalClosed(this, error, !cancelled && error == null
+                && handover.hasIdentityPresentation());
     }
 
     private void fail(String message, RuntimeException exception) {

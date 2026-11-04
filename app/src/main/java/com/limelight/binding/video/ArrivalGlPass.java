@@ -18,8 +18,10 @@ final class ArrivalGlPass implements AutoCloseable {
     private final boolean tenBit;
     private final int[] id = new int[1];
     private final int effectProgram, copyProgram;
-    private final int sourceLocation, copySourceLocation, sizeLocation, presentationLocation, poseLocation, effectsLocation, hdrLocation;
+    private final int sizeLocation, presentationLocation, poseLocation, effectsLocation, hdrLocation;
     private int texture, framebuffer, width, height;
+    private int sampledWidth, sampledHeight;
+    private int appliedHdrMode = -1;
 
     ArrivalGlPass(Context app, boolean tenBit) throws Exception {
         this.tenBit = tenBit;
@@ -43,8 +45,10 @@ final class ArrivalGlPass implements AutoCloseable {
         try { copy = SgsrRenderer.program(VERTEX, COPY); }
         catch (RuntimeException e) { GLES31.glDeleteProgram(effectProgram); throw e; }
         copyProgram = copy;
-        copySourceLocation = GLES31.glGetUniformLocation(copyProgram, "source");
-        sourceLocation = GLES31.glGetUniformLocation(effectProgram, "source");
+        GLES31.glUseProgram(copyProgram);
+        GLES31.glUniform1i(GLES31.glGetUniformLocation(copyProgram, "source"), 0);
+        GLES31.glUseProgram(effectProgram);
+        GLES31.glUniform1i(GLES31.glGetUniformLocation(effectProgram, "source"), 0);
         sizeLocation = GLES31.glGetUniformLocation(effectProgram, "sourceSize");
         presentationLocation = GLES31.glGetUniformLocation(effectProgram, "presentationSize");
         poseLocation = GLES31.glGetUniformLocation(effectProgram, "pose");
@@ -72,6 +76,8 @@ final class ArrivalGlPass implements AutoCloseable {
             GLES31.glFramebufferTexture2D(GLES31.GL_FRAMEBUFFER, GLES31.GL_COLOR_ATTACHMENT0, GLES31.GL_TEXTURE_2D, texture, 0);
             if (GLES31.glCheckFramebufferStatus(GLES31.GL_FRAMEBUFFER) != GLES31.GL_FRAMEBUFFER_COMPLETE)
                 throw new IllegalStateException(tenBit ? "Arrival requires renderable FP16 RGB" : "Arrival RGB framebuffer unavailable");
+            GLES31.glUseProgram(effectProgram);
+            GLES31.glUniform2f(presentationLocation, width, height);
         } else GLES31.glBindFramebuffer(GLES31.GL_FRAMEBUFFER, framebuffer);
         GLES31.glViewport(0, 0, width, height);
     }
@@ -80,7 +86,6 @@ final class ArrivalGlPass implements AutoCloseable {
         GLES31.glUseProgram(copyProgram);
         GLES31.glActiveTexture(GLES31.GL_TEXTURE0);
         GLES31.glBindTexture(GLES31.GL_TEXTURE_2D, source);
-        GLES31.glUniform1i(copySourceLocation, 0);
         GLES31.glDrawArrays(GLES31.GL_TRIANGLE_STRIP, 0, 4);
     }
 
@@ -98,12 +103,18 @@ final class ArrivalGlPass implements AutoCloseable {
         GLES31.glUseProgram(effectProgram);
         GLES31.glActiveTexture(GLES31.GL_TEXTURE0);
         GLES31.glBindTexture(GLES31.GL_TEXTURE_2D, texture);
-        GLES31.glUniform1i(sourceLocation, 0);
-        GLES31.glUniform2f(sizeLocation, sourceWidth, sourceHeight);
-        GLES31.glUniform2f(presentationLocation, width, height);
+        if (sampledWidth != sourceWidth || sampledHeight != sourceHeight) {
+            sampledWidth = sourceWidth;
+            sampledHeight = sourceHeight;
+            GLES31.glUniform2f(sizeLocation, sourceWidth, sourceHeight);
+        }
         GLES31.glUniform4f(poseLocation, pose[0], pose[1], pose[2], pose[3]);
         GLES31.glUniform2f(effectsLocation, pose[4], pose[5]);
-        if (tenBit) GLES31.glUniform1i(hdrLocation, hdr ? 1 : 0);
+        int hdrMode = hdr ? 1 : 0;
+        if (tenBit && appliedHdrMode != hdrMode) {
+            GLES31.glUniform1i(hdrLocation, hdrMode);
+            appliedHdrMode = hdrMode;
+        }
         GLES31.glDrawArrays(GLES31.GL_TRIANGLE_STRIP, 0, 4);
     }
 

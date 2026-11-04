@@ -10,6 +10,23 @@ import static org.junit.Assert.assertTrue;
 public class LaunchArrivalTest {
     private static final float[] IDENTITY = {1f, 1f, 0f, 0f, 0f, 0f};
 
+    @Test public void realImageProcessingStartsLateButBeforeTheAperture() {
+        assertFalse(LaunchArrival.shouldActivate(0f));
+        assertFalse(LaunchArrival.shouldActivate(LaunchArrival.ACTIVATE_AT - .001f));
+        assertTrue(LaunchArrival.shouldActivate(LaunchArrival.ACTIVATE_AT));
+        assertTrue(LaunchArrival.shouldActivate(LaunchArrival.READY_CHECK_AT));
+        assertFalse(LaunchArrival.shouldActivate(1f));
+        assertFalse(LaunchArrival.shouldActivate(Float.NaN));
+        assertTrue(LaunchArrival.ACTIVATE_AT < LaunchArrival.READY_CHECK_AT);
+        assertTrue(LaunchArrival.READY_CHECK_AT < LaunchArrival.SETTLE_START);
+    }
+
+    @Test public void readinessAndCompletionCannotHoldTheLoaderIndefinitely() {
+        assertTrue(LaunchArrival.READY_WAIT_MS > 0 && LaunchArrival.READY_WAIT_MS <= 1500L);
+        assertTrue(LaunchArrival.COMPLETE_WAIT_MS > 0 && LaunchArrival.COMPLETE_WAIT_MS <= 1000L);
+        assertEquals(LaunchArrival.MAX_BLUR_SOURCE_PIXELS, pose(LaunchArrival.SETTLE_START)[LaunchArrival.BLUR], 0f);
+    }
+
     @Test public void imageWaitsZoomedAndBlurredUntilTheLateAperture() {
         for (float opening : new float[]{0f, .25f, .5f, LaunchArrival.SETTLE_START}) {
             assertArrayEquals(new float[]{1.18f, 1.18f, 0f, 0f, 20f, 0f}, pose(opening), 1e-6f);
@@ -41,7 +58,7 @@ public class LaunchArrivalTest {
             for (float value : values) assertTrue(Float.isFinite(value));
             assertTrue(values[LaunchArrival.SCALE_X] > .95f && values[LaunchArrival.SCALE_X] < 1.4f);
             assertTrue(values[LaunchArrival.SCALE_Y] > .95f && values[LaunchArrival.SCALE_Y] < 1.4f);
-            assertTrue(values[LaunchArrival.BLUR] >= 0f && values[LaunchArrival.BLUR] <= 20f);
+            assertTrue(values[LaunchArrival.BLUR] >= 0f && values[LaunchArrival.BLUR] <= LaunchArrival.MAX_BLUR_SOURCE_PIXELS);
             assertTrue(values[LaunchArrival.BLUR] <= previousBlur + .0001f);
             assertTrue(values[LaunchArrival.CHROMATIC] >= 0f && values[LaunchArrival.CHROMATIC] <= 9f);
             previousBlur = values[LaunchArrival.BLUR];
@@ -60,20 +77,6 @@ public class LaunchArrivalTest {
         assertEquals(0f, almost[LaunchArrival.CHROMATIC], .0001f);
     }
 
-    @Test public void decoderCannotRetakeTheSurfaceBeforeAnIdentityImageWasPresented() {
-        assertFalse(LaunchArrival.canSwitchToDirect(.99f, true));
-        assertFalse(LaunchArrival.canSwitchToDirect(1f, false));
-        assertFalse(LaunchArrival.canSwitchToDirect(Float.NaN, true));
-        assertFalse(LaunchArrival.canSwitchToDirect(Float.POSITIVE_INFINITY, true));
-        assertTrue(LaunchArrival.canSwitchToDirect(1f, true));
-    }
-
-    @Test public void temporaryOutputSurvivesUntilTheNewProducerHasShownAFrame() {
-        assertFalse(LaunchArrival.canReleaseTemporaryOutput(false, false));
-        assertFalse(LaunchArrival.canReleaseTemporaryOutput(false, true));
-        assertFalse(LaunchArrival.canReleaseTemporaryOutput(true, false));
-        assertTrue(LaunchArrival.canReleaseTemporaryOutput(true, true));
-    }
 
     private static float[] pose(float opening) {
         float[] result = new float[LaunchArrival.POSE_FLOATS];

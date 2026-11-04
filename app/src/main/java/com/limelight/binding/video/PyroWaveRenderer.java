@@ -72,6 +72,12 @@ public final class PyroWaveRenderer {
         return h != 0 ? nativeGetLastGpuDecodeUs(h) : 0;
     }
 
+    /** Latched by the native output path; never consumes the performance statistics window. */
+    public boolean hasPresentedFrame() {
+        final long h = handle;
+        return h != 0 && nativeHasPresentedFrame(h);
+    }
+
     /** The host switched HDR on or off. */
     public void setHdrMode(boolean enabled) {
         final long h = handle;
@@ -140,7 +146,8 @@ public final class PyroWaveRenderer {
         LaunchArrival.writePose(progress, launchArrivalPose);
         nativeSetLaunchArrivalPose(handle, prepare, progress,
                 launchArrivalPose[0], launchArrivalPose[1], launchArrivalPose[2],
-                launchArrivalPose[3], launchArrivalPose[4], launchArrivalPose[5]);
+                launchArrivalPose[3], launchArrivalPose[4], launchArrivalPose[5],
+                LaunchArrival.MAX_BLUR_SOURCE_PIXELS);
     }
 
     public boolean isLaunchArrivalComplete() {
@@ -202,12 +209,14 @@ public final class PyroWaveRenderer {
     private static native String nativeGetScaleDescription(long handle);
     private static native void nativeSetLaunchArrivalPose(long handle, boolean prepare, float progress,
                                                           float scaleX, float scaleY, float skew,
-                                                          float warp, float blur, float chromatic);
+                                                          float warp, float blur, float chromatic,
+                                                          float maxBlurSourcePixels);
     private static native boolean nativeIsLaunchArrivalReady(long handle);
     private static native boolean nativeIsLaunchArrivalComplete(long handle);
     private static native String nativeGetLaunchArrivalError(long handle);
 
     private static native int nativeGetLastGpuDecodeUs(long handle);
+    private static native boolean nativeHasPresentedFrame(long handle);
 
     private static native void nativeTakeStats(long[] out);
 

@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.ComposeView
 import com.limelight.Game
+import com.limelight.binding.video.LaunchArrival
 import com.limelight.nvstream.jni.MoonBridge
 import com.limelight.preferences.PreferenceConfiguration
 import com.limelight.shell.data.ProfileStore
@@ -57,6 +58,7 @@ class StreamLoader private constructor(
     private val view: ComposeView,
     private val pcName: String,
     initialParameters: String,
+    val reducedMotion: Boolean,
 ) : ConnectionProgress {
     private val stages = LaunchStageQueue(LaunchHandoff.line, LaunchHandoff.lineAt, LINE_MS)
     private val changes = Channel<Unit>(Channel.CONFLATED)
@@ -90,6 +92,7 @@ class StreamLoader private constructor(
         if (removed) return
         removed = true
         changes.close()
+        activity.setLaunchArrivalProgress(-1f)
         // One launch, one handoff: nothing of it may start the next launch (a shortcut launch has no shell overlay)
         if (LaunchHandoff.startedAt == origin) LaunchHandoff.reset()
     }
@@ -187,8 +190,8 @@ class StreamLoader private constructor(
                 GameArt("$pcUuid/$appId", hue, (hue + 35f) % 360f, Symbols.SPORTS_ESPORTS, cover),
                 LaunchHandoff.background, logo, info)
             val view = ComposeView(activity)
-            val loader = StreamLoader(activity, view, pcName, info)
             val appearance = AppearanceStore(activity) { ProfileStore.currentSettings(activity) }.appearance.value
+            val loader = StreamLoader(activity, view, pcName, info, appearance.reducedMotion)
             val colors = delosColors(appearance, systemAccentHue(activity))
             view.setContent {
                 CompositionLocalProvider(LocalDelosColors provides colors) {
@@ -237,7 +240,42 @@ class StreamLoader private constructor(
                 if (loader.activity.isFinishing) return@LaunchedEffect
                 loader.parameters.value = loader.activity.launchStreamParameters
                 progress.animateTo(1f, tween(250, easing = EaseOut))
-                opening.animateTo(1f, tween(if (reducedMotion) HyperspaceConfig.REDUCED_OPENING_MS else HyperspaceConfig.OPENING_MS, easing = LinearEasing))
+                var effectAvailable = !reducedMotion
+                val firstLegMs = (HyperspaceConfig.OPENING_MS * LaunchArrival.READY_CHECK_AT).toInt()
+                opening.animateTo(LaunchArrival.READY_CHECK_AT,
+                    tween(if (reducedMotion) (HyperspaceConfig.REDUCED_OPENING_MS * LaunchArrival.READY_CHECK_AT).toInt() else firstLegMs,
+                        easing = LinearEasing)) {
+                    if (effectAvailable && LaunchArrival.shouldActivate(value)) loader.activity.setLaunchArrivalProgress(value)
+                }
+                if (effectAvailable) {
+                    val ready = withTimeoutOrNull(LaunchArrival.READY_WAIT_MS) {
+                        while (!loader.activity.isFinishing && !loader.activity.isLaunchArrivalReady &&
+                            loader.activity.launchArrivalError == null) delay(16)
+                        !loader.activity.isFinishing && loader.activity.isLaunchArrivalReady
+                    } == true
+                    if (loader.activity.isFinishing) return@LaunchedEffect
+                    if (!ready) {
+                        loader.activity.reportLaunchArrivalError(loader.activity.launchArrivalError ?: "Arrival preparation timed out")
+                        effectAvailable = false
+                    }
+                }
+                opening.animateTo(1f,
+                    tween(if (reducedMotion) HyperspaceConfig.REDUCED_OPENING_MS -
+                        (HyperspaceConfig.REDUCED_OPENING_MS * LaunchArrival.READY_CHECK_AT).toInt()
+                        else HyperspaceConfig.OPENING_MS - firstLegMs, easing = LinearEasing)) {
+                    if (effectAvailable) loader.activity.setLaunchArrivalProgress(value)
+                }
+                if (effectAvailable) {
+                    loader.activity.setLaunchArrivalProgress(1f)
+                    val complete = withTimeoutOrNull(LaunchArrival.COMPLETE_WAIT_MS) {
+                        while (!loader.activity.isFinishing && !loader.activity.isLaunchArrivalComplete &&
+                            loader.activity.launchArrivalError == null) delay(16)
+                        !loader.activity.isFinishing && loader.activity.isLaunchArrivalComplete
+                    } == true
+                    if (!complete && !loader.activity.isFinishing) {
+                        loader.activity.reportLaunchArrivalError(loader.activity.launchArrivalError ?: "Arrival handover timed out")
+                    }
+                }
                 loader.remove()
             }
             LaunchScene(card.copy(logo = logo, streamParameters = loader.parameters.value), line,

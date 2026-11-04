@@ -27,6 +27,10 @@ public:
     // (-1 when there is none), or -2 on failure
     int draw(int index);
 
+    // One-shot ownership transfer after launch arrival; ordinary frames keep the context current.
+    bool releaseThread();
+    bool acquireThread();
+
     void destroy();
 
 private:

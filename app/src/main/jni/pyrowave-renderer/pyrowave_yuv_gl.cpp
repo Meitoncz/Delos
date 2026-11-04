@@ -211,6 +211,15 @@ int YuvTargetGl::draw(int index) {
     return fd >= 0 ? fd : -1;
 }
 
+bool YuvTargetGl::releaseThread() {
+    return context == EGL_NO_CONTEXT ||
+           eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT) == EGL_TRUE;
+}
+
+bool YuvTargetGl::acquireThread() {
+    return context == EGL_NO_CONTEXT || eglMakeCurrent(display, pbuffer, pbuffer, context) == EGL_TRUE;
+}
+
 void YuvTargetGl::destroy() {
     if (display == EGL_NO_DISPLAY) {
         return;
