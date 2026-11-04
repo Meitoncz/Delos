@@ -40,6 +40,13 @@ object StreamExit {
     /** The burst the new UI finishes when it resumes; taken once. */
     class Arrival(val label: String, val sub: String)
 
+    /**
+     * True from the moment Quit game ends the stream until the PC has really quit the game (or gave up): the new UI keeps
+     * the portal on screen for that long, so the dashboard never shows up while the game is still running.
+     */
+    @Volatile
+    var quitting = false
+
     private var pending: Arrival? = null
 
     /** The burst to finish, if the stream just ended through the portal. */

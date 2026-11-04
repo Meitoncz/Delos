@@ -286,6 +286,12 @@ fun Shell(
                 shell.portalBurst = true
                 shell.portal = Portal(-1, Symbols.HOME, exit.label, exit.sub, cancellable = false, arriving = true)
                 delay(500)
+                // Quit game: the portal stays until the PC has really quit the game (at most 25 s)
+                var waited = 0
+                while (StreamExit.quitting && waited < 25_000) {
+                    delay(100)
+                    waited += 100
+                }
                 shell.portal = null
                 delay(400)
                 shell.portalBurst = false

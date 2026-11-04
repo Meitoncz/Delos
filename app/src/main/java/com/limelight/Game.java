@@ -3246,7 +3246,10 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                         final String message = quit
                                 ? app.getResources().getString(R.string.applist_quit_success) + " " + quitName
                                 : (failure != null && !failure.isEmpty() ? failure : "The PC did not quit " + quitName);
+                        com.limelight.shell.StreamExit.INSTANCE.setQuitting(false);
                         new Handler(Looper.getMainLooper()).post(() -> Toast.makeText(app, message, Toast.LENGTH_LONG).show());
+                    } else {
+                        com.limelight.shell.StreamExit.INSTANCE.setQuitting(false);
                     }
                 }
             }.start();
@@ -4096,6 +4099,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     // Delos: "Quit game" in the Delos stream menu is the confirmation (no dialog)
     public void quitWithoutAsking() {
         quitOnStop = true;
+        com.limelight.shell.StreamExit.INSTANCE.setQuitting(true);
         finish();
     }
 
