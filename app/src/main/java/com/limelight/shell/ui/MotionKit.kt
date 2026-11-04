@@ -356,13 +356,15 @@ fun GlideRingHost(ring: FocusRing, corner: Float, focusScale: Float, modifier: M
     val target = state.target
     LaunchedEffect(target) {
         if (target == null) {
+            // A moment of grace: focus moving from one element to the next passes through "nothing focused" for a frame
+            delay(70)
             alpha.animateTo(0f, tween(Motion.FADE, easing = Motion.Ease))
             return@LaunchedEffect
         }
         val grown = target.grownBy(focusScale)
         if (alpha.value == 0f || reduced) {
             box.snapTo(grown)
-            alpha.animateTo(1f, tween(Motion.FADE, easing = Motion.Ease))
+            alpha.animateTo(1f, tween(120, easing = Motion.Ease))
         } else coroutineScope {
             launch { box.animateTo(grown, tween(Motion.RING, easing = Motion.Glide)) }
             launch { alpha.animateTo(1f, tween(Motion.FADE, easing = Motion.Ease)) }

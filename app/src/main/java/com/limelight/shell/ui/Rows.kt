@@ -107,7 +107,8 @@ fun SettingRow(
     val feedback = LocalFeedback.current
     var focused by remember { mutableStateOf(false) }
     val choice = rememberChoiceMotion()
-    val fill by animateFloatAsState(if (focused) 1f else 0f, tween(Motion.FADE, easing = Motion.Ease), label = "rowFill")
+    // The glass and its blur follow the focus at once (a fade would leave the blur of the row just left on screen for a moment)
+    val fill = if (focused) 1f else 0f
     val adjust: ((Int) -> Unit)? = when (value) {
         is RowValue.Choice -> { dir ->
             choice.step(dir)

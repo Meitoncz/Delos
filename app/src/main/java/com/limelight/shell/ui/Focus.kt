@@ -106,7 +106,8 @@ fun Modifier.focusEffects(
     var focused by remember { mutableStateOf(false) }
     val pulse = rememberPressPulse()
     val scale by animateFocusScale(focused, pulse.pressed, focusScale, pressScale)
-    val ringAlpha by animateFloatAsState(if (focused) 1f else 0f, tween(Motion.FOCUS, easing = EaseOut), label = "focusRing")
+    // The ring comes in quickly and goes out quickly, so it never trails behind the focus
+    val ringAlpha by animateFloatAsState(if (focused) 1f else 0f, tween(if (focused) 140 else 110, easing = EaseOut), label = "focusRing")
     val sweepPos = remember { Animatable(0f) }
     LaunchedEffect(focused) {
         if (focused && sweep) {
