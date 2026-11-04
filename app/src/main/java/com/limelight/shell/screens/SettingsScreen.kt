@@ -77,6 +77,7 @@ import com.limelight.shell.ui.HeroBitmaps
 import com.limelight.shell.ui.PlaceholderArt
 import com.limelight.shell.ui.LocalBackdropHaze
 import com.limelight.shell.ui.LocalDelosColors
+import com.limelight.shell.ui.accent3Line
 import com.limelight.shell.ui.backdropBlur
 import com.limelight.shell.ui.LocalFeedback
 import com.limelight.shell.ui.LocalStage
@@ -269,7 +270,7 @@ fun SettingsScreen(
 
 @Composable
 private fun SectionHeading(label: String) {
-    BasicText(label.uppercase(Locale.ROOT), style = TextStyle(color = LocalDelosColors.current.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 16.tpx, letterSpacing = .08.em),
+    BasicText(label.uppercase(Locale.ROOT), style = TextStyle(color = LocalDelosColors.current.accent2, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 16.tpx, letterSpacing = .08.em),
         modifier = Modifier.padding(start = 26.px, top = 10.px, bottom = 2.px))
 }
 
@@ -283,8 +284,8 @@ private fun SettingsItemRow(item: SettingsItem, modifier: Modifier = Modifier, h
 @Composable
 internal fun ShoulderLabel(label: String) {
     val colors = LocalDelosColors.current
-    BasicText(label, style = TextStyle(color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.Bold, fontSize = 18.tpx),
-        modifier = Modifier.padding(horizontal = 10.px).border(1.px, colors.line, RoundedCornerShape(10.px)).padding(horizontal = 12.px, vertical = 6.px))
+    BasicText(label, style = TextStyle(color = colors.accent3, fontFamily = Figtree, fontWeight = FontWeight.Bold, fontSize = 18.tpx),
+        modifier = Modifier.padding(horizontal = 10.px).border(1.px, colors.accent3Line, RoundedCornerShape(10.px)).padding(horizontal = 12.px, vertical = 6.px))
 }
 
 /** A tab of a row switched with L1 / R1 (the settings categories, the artwork kinds). */
@@ -294,7 +295,7 @@ internal fun TabPill(icon: String, label: String, selected: Boolean, modifier: M
     var focused by remember { mutableStateOf(false) }
     Row(modifier.focusEffects(onClick, corner = 999f, focusScale = 1.08f, ring = FocusRing(0f, 0f), glow = FocusGlow(12f, 36f, -10f), onFocusChange = { focused = it })
         .clip(CircleShape)
-        .then(if (focused) Modifier.background(colors.accent) else if (selected) Modifier.glass(colors.surface2) else Modifier)
+        .then(if (focused) Modifier.background(colors.accent) else if (selected) Modifier.glass(colors.surface2).border(1.px, colors.accent3Line, CircleShape) else Modifier)
         .height(66.px).padding(horizontal = 22.px),
         horizontalArrangement = Arrangement.spacedBy(12.px), verticalAlignment = Alignment.CenterVertically) {
         Symbol(icon, 30.tpx, if (focused) colors.onAccent else if (selected) colors.accent else colors.text2, filled = focused || selected)
@@ -312,7 +313,7 @@ private fun DescriptionPanel(tab: SettingsTab, focused: SettingsItem?, modifier:
         .then(LocalBackdropHaze.current?.let { Modifier.backdropBlur(it, 8f, colors.surface) } ?: Modifier.background(colors.surface))
         .border(1.px, colors.line, shape).padding(44.px),
         verticalArrangement = Arrangement.spacedBy(18.px)) {
-        Box(Modifier.size(120.px).clip(CircleShape).background(colors.accent), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(120.px).clip(CircleShape).background(colors.accent).border(3.px, colors.accent3, CircleShape), contentAlignment = Alignment.Center) {
             Symbol(focused?.icon ?: tab.icon, 64.tpx, colors.onAccent, filled = true)
         }
         BasicText(focused?.label ?: tab.label, style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 30.tpx), modifier = Modifier.padding(top = 8.px))
@@ -322,7 +323,7 @@ private fun DescriptionPanel(tab: SettingsTab, focused: SettingsItem?, modifier:
             if (focused?.enabled == false) BasicText("Unavailable with the current settings or on this device.", style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 18.tpx))
             val rowValue = focused?.value
             if (rowValue is RowValue.Text) BasicText(rowValue.text,
-                style = TextStyle(color = colors.accent, fontFamily = Figtree, fontSize = 22.tpx, lineHeight = 1.3.em))
+                style = TextStyle(color = colors.accent3, fontFamily = Figtree, fontSize = 22.tpx, lineHeight = 1.3.em))
             // The palette's three colors, only for the palette row
             if (focused?.key == "ui_palette") {
                 Row(horizontalArrangement = Arrangement.spacedBy(16.px)) {
@@ -385,7 +386,7 @@ private fun SettingsSearch(all: List<SettingsItem>, scale: Float) {
                 }
             }
             Column(Modifier.weight(1f)) {
-                BasicText("${results.size} ${if (results.size == 1) "setting" else "settings"}", style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 22.tpx), modifier = Modifier.padding(bottom = 16.px))
+                BasicText("${results.size} ${if (results.size == 1) "setting" else "settings"}", style = TextStyle(color = colors.accent3, fontFamily = Figtree, fontSize = 22.tpx), modifier = Modifier.padding(bottom = 16.px))
                 if (results.isEmpty()) BasicText("No matching settings", style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 26.tpx))
                 key(query) {
                     LazyColumn(verticalArrangement = Arrangement.spacedBy(10.px), contentPadding = PaddingValues(12.px)) {
@@ -409,7 +410,7 @@ private fun LetterKey(letter: String, modifier: Modifier, click: () -> Unit) {
     var focused by remember { mutableStateOf(false) }
     Box(modifier.size(74.px).focusEffects(click, corner = 18f, focusScale = 1.06f, onFocusChange = { focused = it })
         .clip(RoundedCornerShape(18.px)).background(if (focused) colors.surface2 else colors.surface), contentAlignment = Alignment.Center) {
-        BasicText(letter, style = TextStyle(color = if (focused) colors.accent else colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 28.tpx))
+        BasicText(letter, style = TextStyle(color = if (focused) colors.accent2 else colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 28.tpx))
     }
 }
 

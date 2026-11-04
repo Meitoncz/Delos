@@ -84,9 +84,9 @@ private fun BootLogo(modifier: Modifier = Modifier) {
         drawCircle(Brush.radialGradient(0f to colors.glow, .66f to colors.glow.copy(alpha = colors.glow.alpha * .4f), 1f to Color.Transparent, center = center, radius = glow), radius = glow)
         drawCircle(colors.accent, radius = 101f * k, style = Stroke(8f * k))
         val isle = 37f * k
-        // radial-gradient(circle at 35% 30%, text, text-2)
+        // radial-gradient(circle at 35% 30%, text, accent-3): the third color tints the island's shadow side
         val light = Offset(center.x - isle * .3f, center.y - isle * .4f)
-        drawCircle(Brush.radialGradient(0f to colors.text, 1f to colors.text2, center = light, radius = isle * 1.6f), radius = isle, alpha = .92f)
+        drawCircle(Brush.radialGradient(0f to colors.text, 1f to colors.accent3, center = light, radius = isle * 1.6f), radius = isle, alpha = .92f)
         // The moon sits at the orbit's top right (top 18, right 30 in a 262 px box)
         rotate(turn) {
             val moon = center + Offset(87f * k, -99f * k)

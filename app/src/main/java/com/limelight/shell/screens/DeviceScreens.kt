@@ -45,6 +45,7 @@ import com.limelight.shell.ui.FocusRing
 import com.limelight.shell.ui.Heading
 import com.limelight.shell.ui.InitialFocus
 import com.limelight.shell.ui.LocalDelosColors
+import com.limelight.shell.ui.accent3Line
 import com.limelight.shell.ui.LocalFeedback
 import com.limelight.shell.ui.OnlineGreen
 import com.limelight.shell.ui.Symbol
@@ -129,7 +130,7 @@ private fun ProfileChip(profiles: Profiles, store: ProfileStore, modifier: Modif
             )
             .clip(CircleShape)
             .glass(colors.surface)
-            .border(1.px, colors.line, CircleShape)
+            .border(1.px, colors.accent3Line, CircleShape)
             .height(68.px)
             .padding(start = 6.px, end = 26.px),
         verticalAlignment = Alignment.CenterVertically,
@@ -137,7 +138,7 @@ private fun ProfileChip(profiles: Profiles, store: ProfileStore, modifier: Modif
     ) {
         AvatarBadge(profile.look, 56f, 30f)
         BasicText(profile.name, style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 24.tpx))
-        Symbol(Symbols.EXPAND_MORE, 28.tpx, if (focused) colors.accent else colors.text3)
+        Symbol(Symbols.EXPAND_MORE, 28.tpx, if (focused) colors.accent else colors.accent2)
     }
 }
 

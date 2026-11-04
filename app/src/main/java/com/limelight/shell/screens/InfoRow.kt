@@ -136,14 +136,14 @@ private fun themeTint(hue: Float, saturation: Float, dark: Boolean): GenreTint {
 
 /**
  * The game's themes (one or two, in one pill): tinted with the game's second cover color (its main color shifted
- * along the hue wheel when there is none, the accent's while the game's colors are off or unknown), fainter than
- * the genre.
+ * along the hue wheel when it has only one, the palette's accent color while the game's colors are off or unknown),
+ * fainter than the genre.
  */
 @Composable
 internal fun ThemePill(themes: List<GameGenre>, gameColors: GameColors?) {
     val colors = LocalDelosColors.current
     val hues = gameColors?.hues.orEmpty()
-    val hue = hues.getOrNull(1) ?: ((hues.firstOrNull() ?: colors.accentHue) + THEME_HUE_SHIFT)
+    val hue = hues.getOrNull(1) ?: if (hues.isEmpty()) colors.accent3Hue else hues[0] + THEME_HUE_SHIFT
     val saturations = gameColors?.saturations.orEmpty()
     val vividness = saturations.getOrNull(1) ?: saturations.firstOrNull() ?: 1f
     val tint = themeTint(hue, vividness * 80f * .7f, colors.dark)

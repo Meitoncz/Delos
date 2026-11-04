@@ -313,7 +313,8 @@ private class BackgroundPaths {
 
 private fun DrawScope.drawAurora(p: BgParams) {
     val blend = if (p.dark) BlendMode.Plus else BlendMode.SrcOver
-    val hues = if (p.my) floatArrayOf(p.acc, p.acc2, p.base, p.acc3) else floatArrayOf(p.tint, p.acc, p.acc3, p.acc2)
+    // The main color twice, the secondary and the accent once, the accent fainter: about 50 / 35 / 15
+    val hues = if (p.my) floatArrayOf(p.acc, p.acc2, p.base, p.acc3) else floatArrayOf(p.acc, p.tint, p.acc, p.acc3)
     val t = p.t
     for (i in 0 until 4) {
         val h = hues[i]
@@ -321,7 +322,8 @@ private fun DrawScope.drawAurora(p: BgParams) {
         val y = H * (.45f + .32f * cos(t * .09f + i * 1.3f))
         val r = W * (.42f + .08f * sin(t * .2f + i))
         val sat = p.s(h)
-        val inner = if (p.dark) hsl(h, 85f * sat, 52f, .32f) else hsl(h, 80f * sat, 70f, .45f)
+        val w = if (i == 3) .6f else 1f
+        val inner = if (p.dark) hsl(h, 85f * sat, 52f, .32f * w) else hsl(h, 80f * sat, 70f, .45f * w)
         drawRect(
             Brush.radialGradient(0f to inner, 1f to hsl(h, 80f, 50f, 0f), center = Offset(x, y), radius = r),
             size = Size(W, H), blendMode = blend,
@@ -345,7 +347,8 @@ private fun DrawScope.drawTide(p: BgParams, paths: BackgroundPaths) {
         }
         path.lineTo(W, H)
         path.close()
-        val h = when (i % 3) { 1 -> p.tint; 2 -> p.acc3; else -> p.base + 10f }
+        // Three of the six waves in the main color, two in the secondary one, one in the accent
+        val h = when (i) { 1, 3 -> p.tint; 4 -> p.acc3; else -> p.acc }
         val sat = 70f * p.s(h)
         drawPath(path, if (p.dark) hsl(h, sat, 30f + i * 5f, .2f + i * .04f) else hsl(h, sat, 70f - i * 4f, .22f + i * .05f))
     }
@@ -354,7 +357,7 @@ private fun DrawScope.drawTide(p: BgParams, paths: BackgroundPaths) {
 private fun DrawScope.drawSilk(p: BgParams, paths: BackgroundPaths) {
     // Flowing satin ribbons; a band twists where its width crosses zero
     val blend = if (p.dark) BlendMode.Plus else BlendMode.SrcOver
-    val ribbons = if (p.my) floatArrayOf(p.acc, p.acc2, p.base, p.acc3) else floatArrayOf(p.tint, p.acc, p.acc2, p.acc3)
+    val ribbons = if (p.my) floatArrayOf(p.acc, p.acc2, p.base, p.acc3) else floatArrayOf(p.acc, p.tint, p.acc, p.acc3)
     val t = p.t
     withTransform({ rotateRad(-.21f, pivot = Offset(W / 2f, H / 2f)) }) {
         for (i in 0 until 4) {
@@ -376,7 +379,7 @@ private fun DrawScope.drawSilk(p: BgParams, paths: BackgroundPaths) {
             }
             for (j in count - 1 downTo 0) fill.lineTo(bottom[j * 2], bottom[j * 2 + 1])
             fill.close()
-            val a = if (p.dark) .26f else .3f
+            val a = (if (p.dark) .26f else .3f) * (if (i == 3) .6f else 1f)
             val l = if (p.dark) 60f else 62f
             val brush = Brush.horizontalGradient(
                 0f to hsl(h, 85f * sat, l, 0f), .3f to hsl(h, 85f * sat, l, a), .7f to hsl(h + 30f, 85f * sat, l + 8f, a), 1f to hsl(h, 85f * sat, l, 0f),
@@ -455,7 +458,9 @@ private fun DrawScope.drawContour(p: BgParams, paths: BackgroundPaths) {
             // Every crossing pair is one segment (two segments in a saddle cell)
             for (q in 0 until (n / 4) * 4) lines[count++] = pts[q]
         }
-        val h = lerpHue(r0, r1, k / 16f)
+        // The lines lean to the main color: the secondary one takes over only in the upper levels (like the shader)
+        val u = k / 16f
+        val h = lerpHue(r0, r1, u * (.4f + .6f * u))
         paint.color = hsl(h, 80f * (p.s(r0) + p.s(r1)) / 2f, if (p.dark) 68f else 40f, (if (major) .46f else .16f) + k / 16f * (if (p.dark) .18f else .14f)).toArgb()
         paint.strokeWidth = if (major) 1.7f else 1f
         // One batched line draw per level: stroking a path of hundreds of pieces every frame is what made

@@ -85,6 +85,7 @@ import com.limelight.shell.ui.Figtree
 import com.limelight.shell.ui.FocusGlow
 import com.limelight.shell.ui.FocusRing
 import com.limelight.shell.ui.LocalDelosColors
+import com.limelight.shell.ui.onAccent3
 import com.limelight.shell.ui.LocalFeedback
 import com.limelight.shell.ui.LocalStage
 import com.limelight.shell.ui.PillButton
@@ -308,7 +309,7 @@ private fun CurrentPanel(pc: Pc, app: App, tab: ArtTab, match: SgdbGame?, busy: 
         modifier.clip(RoundedCornerShape(30.px)).glass(colors.surface).border(1.px, colors.line, RoundedCornerShape(30.px)).padding(28.px),
         verticalArrangement = Arrangement.spacedBy(18.px),
     ) {
-        BasicText("CURRENTLY USED", style = TextStyle(color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 18.tpx, letterSpacing = .12.em))
+        BasicText("CURRENTLY USED", style = TextStyle(color = colors.accent2, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 18.tpx, letterSpacing = .12.em))
         Box(
             Modifier.fillMaxWidth().aspectRatio(if (tab == ArtTab.COVER) 1.1f else tab.ratio).clip(RoundedCornerShape(20.px)).background(colors.surface2),
             contentAlignment = Alignment.Center,
@@ -333,7 +334,7 @@ private fun CurrentPanel(pc: Pc, app: App, tab: ArtTab, match: SgdbGame?, busy: 
             BasicText(if (store.isBusy(pc, app)) "Downloading…" else source, style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 21.tpx))
         }
         Box(Modifier.fillMaxWidth().height(1.px).background(colors.line))
-        BasicText("STEAMGRIDDB GAME", style = TextStyle(color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 18.tpx, letterSpacing = .12.em))
+        BasicText("STEAMGRIDDB GAME", style = TextStyle(color = colors.accent2, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 18.tpx, letterSpacing = .12.em))
         BasicText(
             when {
                 busy -> "Looking for ${app.name}…"
@@ -408,12 +409,12 @@ private fun Tile(tab: ArtTab, inUse: Boolean, loading: Boolean, caption: String?
         }
         if (inUse) {
             Row(
-                Modifier.padding(12.px).clip(CircleShape).background(colors.accent).padding(horizontal = 12.px, vertical = 4.px),
+                Modifier.padding(12.px).clip(CircleShape).background(colors.accent3).padding(horizontal = 12.px, vertical = 4.px),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.px),
             ) {
-                Symbol(Symbols.CHECK, 20.tpx, colors.onAccent)
-                BasicText("In use", style = TextStyle(color = colors.onAccent, fontFamily = Figtree, fontWeight = FontWeight.Bold, fontSize = 16.tpx))
+                Symbol(Symbols.CHECK, 20.tpx, colors.onAccent3)
+                BasicText("In use", style = TextStyle(color = colors.onAccent3, fontFamily = Figtree, fontWeight = FontWeight.Bold, fontSize = 16.tpx))
             }
         }
     }
@@ -435,7 +436,7 @@ private fun NameAsLogo(name: String) {
 private fun GridMessage(icon: String, title: String, text: String?) {
     val colors = LocalDelosColors.current
     Column(Modifier.fillMaxSize().padding(top = 120.px), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(18.px)) {
-        Symbol(icon, 90.tpx, colors.accent, filled = true)
+        Symbol(icon, 90.tpx, colors.accent2, filled = true)
         BasicText(title, style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 34.tpx, textAlign = TextAlign.Center))
         if (text != null) BasicText(text, style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 22.tpx, textAlign = TextAlign.Center), modifier = Modifier.width(820.px))
     }

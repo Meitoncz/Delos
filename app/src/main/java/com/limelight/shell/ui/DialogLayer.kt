@@ -86,7 +86,7 @@ fun DialogLayer(spec: DialogSpec?, haze: HazeState, onDismiss: () -> Unit) {
                     }
                     .clip(shape)
                     .backdropBlur(haze, 24f, colors.surface3)
-                    .border(1.px, colors.line, shape)
+                    .border(1.px, colors.accent3Line, shape)
                     .padding(52.px),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(22.px),
