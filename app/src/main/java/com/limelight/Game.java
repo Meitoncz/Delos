@@ -3227,13 +3227,26 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                 public void run() {
                     conn.stop();
                     if (httpConn != null && quitOnStop) {
-                        try {
-                            sleep(1000);
-                            httpConn.quitApp();
-                            Game.this.runOnUiThread(() -> Toast.makeText(Game.this, Game.this.getResources().getString(R.string.applist_quit_success) + " " + appName, Toast.LENGTH_LONG).show());
-                        } catch (Exception e) {
-                            Game.this.runOnUiThread(() -> Toast.makeText(Game.this, e.getMessage(), Toast.LENGTH_LONG).show());
+                        // Delos: the host is still tearing the stream down for a while and then refuses the quit request
+                        // ("Another stream operation is still running", cancel = 0), so it is repeated until it is accepted.
+                        // The toasts use the application context: this activity is already gone.
+                        final android.content.Context app = getApplicationContext();
+                        final String quitName = appName;
+                        String failure = null;
+                        boolean quit = false;
+                        for (int attempt = 0; attempt < 12 && !quit; attempt++) {
+                            try {
+                                sleep(attempt == 0 ? 1000 : 1500);
+                                quit = httpConn.quitApp();
+                                failure = null;
+                            } catch (Exception e) {
+                                failure = e.getMessage();
+                            }
                         }
+                        final String message = quit
+                                ? app.getResources().getString(R.string.applist_quit_success) + " " + quitName
+                                : (failure != null && !failure.isEmpty() ? failure : "The PC did not quit " + quitName);
+                        new Handler(Looper.getMainLooper()).post(() -> Toast.makeText(app, message, Toast.LENGTH_LONG).show());
                     }
                 }
             }.start();

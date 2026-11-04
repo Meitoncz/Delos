@@ -50,7 +50,7 @@ object StreamExit {
     fun play(game: Game, quit: Boolean, end: Runnable) {
         val title = game.intent.getStringExtra(Game.EXTRA_APP_NAME) ?: "the game"
         val pcName = game.intent.getStringExtra(Game.EXTRA_PC_NAME) ?: ""
-        val label = if (quit) "Closing $title" else "Back to Delos"
+        val label = if (quit) "Quitting $title" else "Disconnecting"
         val appearance = AppearanceStore(game) { ProfileStore.currentSettings(game) }.appearance.value
         val colors = delosColors(appearance, systemAccentHue(game))
         val portal = Portal((System.nanoTime() and 0x7fffffff).toInt(), Symbols.HOME, label, pcName, cancellable = false)
