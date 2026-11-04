@@ -142,7 +142,7 @@ fun Modifier.focusEffects(
         }
         .then(
             if (glow == null) Modifier
-            // A round element draws its glow itself: the blurred shadow of dropShadow is cut off at the element's square
+            // A round element draws its glow itself, centered on it: the blurred shadow of dropShadow is cut off at the element's square
             else if (corner >= 500f) Modifier.drawBehind {
                 val a = ringAlpha
                 if (a > 0f) {
@@ -155,9 +155,9 @@ fun Modifier.focusEffects(
                             inner / outer to c.copy(alpha = c.alpha * a),
                             (inner / outer + 1f) / 2f to c.copy(alpha = c.alpha * a * .32f),
                             1f to Color.Transparent,
-                            center = Offset(size.width / 2f, size.height / 2f + glow.offsetY * k), radius = outer,
+                            center = Offset(size.width / 2f, size.height / 2f), radius = outer,
                         ),
-                        radius = outer, center = Offset(size.width / 2f, size.height / 2f + glow.offsetY * k),
+                        radius = outer, center = Offset(size.width / 2f, size.height / 2f),
                     )
                 }
             }
