@@ -162,6 +162,8 @@ fun Shell(
     val launchLine = remember { mutableStateOf<String?>(null) }
     // Set when the launch overlay was cleared as the stream window took over; the next resume does the return work
     val returningFromStream = remember { mutableStateOf(false) }
+    // Stays set until the next launch: the overlay it cleared leaves without a fade (a fade would run after the return)
+    val launchExitInstant = remember { mutableStateOf(false) }
     val activity = LocalActivity.current
     val actions = remember(launcher) { ShellGameActions(shell, launcher, feedback, scope) }
     val reducedMotion by rememberUpdatedState(appearance.reducedMotion)
@@ -272,6 +274,7 @@ fun Shell(
     // The stream window inherits the last drawn tunnel progress, scene origin and game identity.
     LaunchedEffect(shell.launch?.id) {
         val launch = shell.launch ?: return@LaunchedEffect
+        launchExitInstant.value = false
         LaunchHandoff.background = launch.background
         LaunchHandoff.progress = 0f
         LaunchHandoff.travel = 0f
@@ -303,6 +306,7 @@ fun Shell(
             shell.launch = null
             shell.diving = false
             returningFromStream.value = true
+            launchExitInstant.value = true
         }
     }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
@@ -667,6 +671,7 @@ fun Shell(
                 launch?.let { LaunchCard(it.id, it.app.name, launchLine.value ?: StreamLoader.greeting(it.pc.name),
                     appArt(it.pc, it.app, it.image), it.background, launchLogo, launchParameters) },
                 appearance.reducedMotion,
+                instantExit = launchExitInstant.value,
             )
             ToastHost(shell.toast, onHidden = { shell.hideToast(it) }, onAction = { shell.runToastAction() })
         }

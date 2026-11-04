@@ -9,6 +9,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
@@ -337,10 +338,12 @@ private fun DrawScope.drawCover(card: LaunchCard, center: Offset, radius: Float,
  * The shell half of launch: the stream window inherits its last drawn progress, logo and scene clock.
  */
 @Composable
-fun LaunchOverlay(card: LaunchCard?, reducedMotion: Boolean) {
+fun LaunchOverlay(card: LaunchCard?, reducedMotion: Boolean, instantExit: Boolean = false) {
     val last = remember { arrayOfNulls<LaunchCard>(1) }
     if (card != null) last[0] = card
-    AnimatedVisibility(card != null, enter = fadeIn(tween(300)), exit = fadeOut(tween(450))) {
+    // [instantExit]: cleared while the window is stopped behind the stream; a fade-out would only run when the window comes back
+    // (the frame clock stands still while it is stopped) and show the tunnel again for 450 ms
+    AnimatedVisibility(card != null, enter = fadeIn(tween(300)), exit = if (instantExit) ExitTransition.None else fadeOut(tween(450))) {
         val c = last[0] ?: return@AnimatedVisibility
         val progress = remember(c.id) { Animatable(0f) }
         LaunchedEffect(c.id) {
