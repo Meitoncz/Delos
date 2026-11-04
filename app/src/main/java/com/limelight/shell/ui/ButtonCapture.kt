@@ -84,11 +84,11 @@ fun ButtonCaptureLayer(visible: Boolean, keys: GlobalKeys, onDone: (Set<Int>?) -
             contentAlignment = Alignment.Center,
         ) {
             Column(
-                Modifier.width(820.px).clip(RoundedCornerShape(40.px)).background(colors.surface3).border(1.px, colors.line, RoundedCornerShape(40.px)).padding(52.px),
+                Modifier.width(820.px).clip(RoundedCornerShape(40.px)).background(colors.surface3).border(1.px, colors.accent3Line, RoundedCornerShape(40.px)).padding(52.px),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(26.px),
             ) {
-                Symbol(Symbols.SPORTS_ESPORTS, 72.tpx, colors.accent, filled = true)
+                Symbol(Symbols.SPORTS_ESPORTS, 72.tpx, colors.accent2, filled = true)
                 BasicText("Press the stream menu buttons", style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 36.tpx, textAlign = TextAlign.Center))
                 BasicText(
                     "Hold them together, then let go. One button works too, e.g. a rear button. Wait or tap to cancel.",

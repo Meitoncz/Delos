@@ -155,7 +155,7 @@ tags do not fit beside the facts they move to the next line as a whole and the d
   the icon and text in the same hue at 85 % lightness (a light theme uses darker shades). With *Match the
   game's colors* off, with Material You, or while the colors are not known, the palette's accent hue is used.
   The **theme pill** uses the game's *second* cover color (`hues[1]`; the main hue shifted by +40° when
-  there is none, the accent's hue shifted likewise in the fallbacks above) but fainter, so it stays behind
+  the game has only one, the palette's accent (third) hue while the colors are off or unknown) but fainter, so it stays behind
   the genre: `hsl(hue2, 0.7 × the genre's saturation, 30 %)` at 16 % alpha over the glass, a 1 px
   `hsl(hue2, …, 55 %)` border at 45 % alpha, icon and text at 80 % lightness and 90 % alpha.
   Neither pill animates; like the facts they appear when the metadata is there.
@@ -326,6 +326,25 @@ one press, one focus and one menu feel the same everywhere. The numbers, easings
   under its button), their title and items rise in turn, the focused item fills with a fade. *Side menu*: slides in over 560 ms,
   header and rows rise in turn, leaves in 240 ms. *Dialogs and the filter modal*: settle in from 0.96, title, note, fields and
   buttons rise in turn, leave in 240 ms. *Toasts* leave in 240 ms.
+
+## Color roles
+
+Every screen splits its color about **50 / 35 / 15** by visual weight between the palette's three colors
+(`colors.accent`, `accent2`, `accent3`; Delos: gold 40°, cyan 190°, blue 250°). Material You derives the same
+three from the wallpaper (main, +52°, tertiary) and follows the same roles. Light themes use darker shades
+(accent3 is dark there), so text in `accent2`/`accent3` stays readable; content on an accent3 fill uses
+`onAccent3` (dark in the dark theme, white in the light one); a toast icon and a cover badge use
+`accent3OnInverse` / `accent3OnDark`, which fit their fixed light or dark pill. The helpers live in `ui/Colors.kt`.
+
+| Role | Weight | Where |
+| --- | --- | --- |
+| `accent` (main) | ~50 % | The focus ring and its glow; filled focus (nav buttons, tabs, menu items, primary buttons, chips that are chosen); on states (switch and slider fill, a tile that is on); the selected tab icon; the in-use border of artwork; the launch ring; the PIN digits; the cursor; the disc behind the icon of the settings and debug panels; the big icon of an empty Home; the stream menu's ring |
+| `accent2` (secondary) | ~35 % | Icons of rows, menu items, pills (chips), non-primary buttons, filter chips and text fields (when focused); arrows and chevrons; the second half of every gradient (switch, slider, tile glass sheen); section kickers (settings sections, menu titles, `ARTWORK`, `CURRENTLY USED`); the labels of the button hints; downloads (spinner and the bar's start); online and focus pulses; the logo's moon; empty-state icons of the artwork grid; the stream menu's chevrons and row icons |
+| `accent3` (accent) | ~15 % | Check badges (the selected circle, `In use`); state: the `Running` chip and the cover badge icons, the dot under the current page in the top bar, the `Custom` hints of per-game settings; label tint: `GAME INFO`, `LIBRARY`, L1 / R1, the label of a focused circle, the value of a focused row, counts in filter chips, `N settings`; thin rings (dialogs, context menu, filter panel, button capture, the PC pill, profile chip, selected tab, the rim of the settings disc, PIN digits, the sad face, the portal icon); the ends of bars (the slider's dot, the end of the download bar, the launch ring's dot); the toast icon; the stream menu's slider halo; the theme pill without game colors; the boot logo's island |
+
+The animated backgrounds follow the same weights: the main color about half (Aurora: two of four lights, Tide: three of six
+waves, Silk: two of four ribbons, Contour lines lean to it, the shader backgrounds pick the main color for about half of
+their lights), the secondary color a third, the accent the rest and fainter.
 
 ## Stream
 

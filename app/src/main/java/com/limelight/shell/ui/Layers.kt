@@ -197,12 +197,12 @@ fun ContextMenuLayer(menu: ContextMenu?, anchor: Rect?, below: Boolean, haze: Ha
                     .widthIn(min = 380.px)
                     .clip(RoundedCornerShape(30.px))
                     .backdropBlur(haze, 24f, colors.surface3)
-                    .border(1.px, colors.line, RoundedCornerShape(30.px))
+                    .border(1.px, colors.accent3Line, RoundedCornerShape(30.px))
                     .padding(12.px),
             ) {
                 BasicText(
                     m.title.uppercase(),
-                    style = TextStyle(color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 18.tpx, letterSpacing = .12.em),
+                    style = TextStyle(color = colors.accent2, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 18.tpx, letterSpacing = .12.em),
                     modifier = Modifier.staggerEntrance(0, Motion.MENU_DELAY).padding(start = 24.px, end = 24.px, top = 14.px, bottom = 10.px),
                 )
                 m.items.forEachIndexed { i, item ->
@@ -221,7 +221,7 @@ private fun MenuItemView(icon: String, label: String, index: Int, modifier: Modi
     val colors = LocalDelosColors.current
     var focused by remember { mutableStateOf(false) }
     val fill by animateFloatAsState(if (focused) 1f else 0f, tween(Motion.FADE, easing = Motion.Ease), label = "menuItemFill")
-    val iconTint by animateColorAsState(if (focused) colors.onAccent else colors.text3, tween(Motion.FADE, easing = Motion.Ease), label = "menuItemIcon")
+    val iconTint by animateColorAsState(if (focused) colors.onAccent else colors.accent2.copy(alpha = .8f), tween(Motion.FADE, easing = Motion.Ease), label = "menuItemIcon")
     val labelTint by animateColorAsState(if (focused) colors.onAccent else colors.text, tween(Motion.FADE, easing = Motion.Ease), label = "menuItemLabel")
     Row(
         modifier
@@ -362,7 +362,7 @@ fun ToastHost(toast: Toast?, onHidden: (Int) -> Unit, onAction: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.px),
             ) {
-                if (t.icon != null) Symbol(t.icon, 30.tpx, colors.bg, filled = true)
+                if (t.icon != null) Symbol(t.icon, 30.tpx, colors.accent3OnInverse, filled = true)
                 BasicText(t.text, style = TextStyle(color = colors.bg, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 22.tpx))
                 if (t.action != null) {
                     Row(Modifier.padding(start = 10.px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.px)) {

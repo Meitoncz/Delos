@@ -119,7 +119,7 @@ fun PortalOverlay(portal: Portal?, burst: Boolean, haze: HazeState?, reducedMoti
                             ),
                             radius = outer, center = center, alpha = alpha,
                         )
-                        drawCircle(if (i % 2 == 0) colors.accent else colors.accent2, radius = radius, center = center, style = Stroke(3f * k), alpha = alpha)
+                        drawCircle(when (i) { 1 -> colors.accent2; 3 -> colors.accent3; else -> colors.accent }, radius = radius, center = center, style = Stroke(3f * k), alpha = alpha)
                     }
                     // .flash: accent → accent-2 → transparent, scale .5 → 16 while fading out
                     val f = flash.value
@@ -156,7 +156,7 @@ fun PortalOverlay(portal: Portal?, burst: Boolean, haze: HazeState?, reducedMoti
                         .drawBehind {
                             drawRect(cssRadialCircle(Offset(size.width * .4f, size.height * .35f), size, 0f to colors.surface3, 1f to colors.bg2))
                         }
-                        .border(2.px, colors.line, CircleShape),
+                        .border(2.px, colors.accent3Line, CircleShape),
                     contentAlignment = Alignment.Center,
                 ) {
                     Symbol(p.icon, 100.tpx, colors.accent, filled = true)

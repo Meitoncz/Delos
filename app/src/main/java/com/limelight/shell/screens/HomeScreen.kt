@@ -109,6 +109,7 @@ import com.limelight.shell.ui.Figtree
 import com.limelight.shell.ui.GameArt
 import com.limelight.shell.ui.IdleCoverFilter
 import com.limelight.shell.ui.LocalDelosColors
+import com.limelight.shell.ui.accent3OnDark
 import com.limelight.shell.ui.LocalFeedback
 import com.limelight.shell.ui.LocalStage
 import com.limelight.shell.ui.PlaceholderArt
@@ -516,7 +517,7 @@ private fun GameInfo(pc: Pc, app: App, modifier: Modifier, reducedMotion: Boolea
             if (BundledArtwork.kind(app) != null) "APP INFO" else "GAME INFO",
             modifier = Modifier.padding(top = 10.px),
             style = TextStyle(
-                color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold,
+                color = colors.accent3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold,
                 fontSize = 17.tpx, letterSpacing = .14.em,
             ),
         )
@@ -528,7 +529,7 @@ private fun GameInfo(pc: Pc, app: App, modifier: Modifier, reducedMotion: Boolea
                 if (themes.isNotEmpty()) ThemePill(themes, gameColors)
             },
         ) {
-            if (app.running) Chip(Symbols.PLAY_ARROW, "Running on ${pc.name}")
+            if (app.running) Chip(Symbols.PLAY_ARROW, "Running on ${pc.name}", colors.accent3)
             when (hdrKind) {
                 NativeHdr.HDR -> NativeHdrChip()
                 NativeHdr.SDR -> Chip(Symbols.HDR_ON, "SDR")
@@ -561,7 +562,7 @@ private fun Modifier.gameTitleEntrance(game: String, image: ImageBitmap?, reduce
 @Composable
 internal fun Chip(icon: String, label: String, iconTint: Color? = null) {
     val colors = LocalDelosColors.current
-    Pill(listOf(PillEntry(icon, label)), colors.text2, iconTint ?: colors.text2, Modifier.glass(colors.surface), colors.line)
+    Pill(listOf(PillEntry(icon, label)), colors.text2, iconTint ?: colors.accent2, Modifier.glass(colors.surface), colors.line)
 }
 
 /**
@@ -697,7 +698,7 @@ private fun GameTile(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.px),
             ) {
-                Symbol(badge.icon, 22.tpx, Color.White, filled = true)
+                Symbol(badge.icon, 22.tpx, colors.accent3OnDark, filled = true)
                 BasicText(badge.label, style = TextStyle(color = Color.White, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 18.tpx))
             }
         }

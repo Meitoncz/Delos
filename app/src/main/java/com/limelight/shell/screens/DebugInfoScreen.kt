@@ -201,7 +201,7 @@ fun DebugInfoScreen() {
                         if (row.section != previous) {
                             val section = row.section
                             item("section-$section") {
-                                BasicText(section.uppercase(Locale.ROOT), style = TextStyle(color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 16.tpx, letterSpacing = .08.em),
+                                BasicText(section.uppercase(Locale.ROOT), style = TextStyle(color = colors.accent2, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 16.tpx, letterSpacing = .08.em),
                                     modifier = Modifier.padding(start = 26.px, top = 10.px, bottom = 2.px))
                             }
                             previous = section
@@ -239,7 +239,7 @@ private fun DetailsPanel(row: DebugRow?, modifier: Modifier) {
             .clip(shape).glass(colors.surface).border(1.px, colors.line, shape).verticalScroll(scroll).padding(44.px),
         verticalArrangement = Arrangement.spacedBy(18.px),
     ) {
-        Box(Modifier.size(120.px).clip(CircleShape).background(colors.accent), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(120.px).clip(CircleShape).background(colors.accent).border(3.px, colors.accent3, CircleShape), contentAlignment = Alignment.Center) {
             Symbol(row?.icon ?: Symbols.INFO, 64.tpx, colors.onAccent, filled = true)
         }
         BasicText(row?.label ?: "Debug info", style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 30.tpx), modifier = Modifier.padding(top = 8.px))
