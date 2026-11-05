@@ -34,7 +34,6 @@ import android.view.MotionEvent;
 import android.view.Surface;
 import android.widget.Toast;
 
-import com.limelight.GameMenu;
 import com.limelight.LimeLog;
 import com.limelight.R;
 import com.limelight.binding.input.driver.AbstractController;
@@ -2506,7 +2505,7 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
                 // Delos: a quick double Start (held the second time) opens the stream menu
                 if (context.backMenuPending){
                     context.backMenuPending = false;
-                    gestures.showGameMenu(context);
+                    gestures.showGameMenu();
                 } else if (prefConfig.mouseEmulation) {
                     context.toggleMouseEmulation();
                 }
@@ -3013,7 +3012,7 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
         usbDeviceContexts.put(controller.getControllerId(), context);
     }
 
-    class GenericControllerContext implements GameInputDevice{
+    class GenericControllerContext {
         public int id;
         public boolean external;
 
@@ -3070,16 +3069,6 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
                 mainThreadHandler.postDelayed(this, mouseEmulationReportPeriod);
             }
         };
-
-        @Override
-        public List<GameMenu.MenuOption> getGameMenuOptions() {
-            List<GameMenu.MenuOption> options = new ArrayList<>();
-            options.add(new GameMenu.MenuOption(activityContext.getString(mouseEmulationActive ?
-                    R.string.game_menu_toggle_mouse_off : R.string.game_menu_toggle_mouse_on),
-                    true, () -> toggleMouseEmulation()));
-
-            return options;
-        }
 
         public void toggleMouseEmulation() {
             mainThreadHandler.removeCallbacks(mouseEmulationRunnable);

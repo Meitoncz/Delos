@@ -1,5 +1,9 @@
 # Windows Setup
 
+Development moved to macOS Apple Silicon on 2026-11-05; see [MAC_SETUP.md](MAC_SETUP.md)
+for the current workstation. These instructions remain available for Windows development;
+the Windows PC also runs the Vibepollo host.
+
 ## 1. Tools
 
 ```powershell
@@ -7,15 +11,27 @@ winget install Git.Git GitHub.cli Google.AndroidStudio EclipseAdoptium.Temurin.2
 gh auth login
 ```
 
-**JDK 21** is needed separately: Android Studio bundles Java 25, which the current Gradle 8.13 cannot run on (addressed in Phase 2). Set the user environment variable `JAVA_HOME` to `C:\Program Files\Eclipse Adoptium\jdk-21...`.
+Use **JDK 21** to run the build, independently of the JDK bundled with Android Studio.
+Set the user environment variable `JAVA_HOME` to the actual installed JDK 21 directory,
+for example `C:\Program Files\Eclipse Adoptium\jdk-21...`. The wrapper pins **Gradle 9.7.1**
+(`gradle/wrapper/gradle-wrapper.properties`) and the Android Gradle plugin is **9.4.0**
+(`build.gradle`). App Java source/target compatibility is **17**; this is distinct from
+the JDK used to run Gradle.
 
-In Android Studio → **SDK Manager** (or `sdkmanager.bat` from `cmdline-tools`) install: **Android SDK Platform** matching `compileSdk` in `app/build.gradle`, **NDK (Side by side)** in the version from `ndkVersion`, and **Platform-Tools**. The project uses `ndk-build`, CMake is not needed.
+In Android Studio → **SDK Manager** (or `sdkmanager.bat` from `cmdline-tools`) install
+**Android SDK Platform 37** (package `platforms;android-37.0`), **NDK (Side by side)
+29.0.14206865**, and **Platform-Tools**. `app/build.gradle` sets `compileSdk 37`,
+`targetSdk 36`, and `minSdk 29` (Android 10). The project uses `ndk-build`, not CMake.
 
 Claude Code: https://claude.com/claude-code. Run `claude` in the repo directory (or open `Delos.code-workspace` in VS Code). Project context lives in `CLAUDE.md`.
 
 Delos is built for ARM only (`arm64-v8a`, `armeabi-v7a`) and tested on a real handheld; the emulator is not used.
 
 ## 2. Clone
+
+Use a checkout path without spaces, such as `C:\src\Delos`. The checkout and build-output
+paths must not contain spaces: `ndk-build`/make and the Android Gradle plugin cannot
+handle them reliably, even when the shell path is quoted.
 
 ```powershell
 gh repo clone Meitoncz/Delos
@@ -45,11 +61,13 @@ DELOS_METADATA_URL=https://delos-meta.<account>.workers.dev
 ## 4. Build
 
 ```powershell
-$env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot"   # if not set globally
-.\gradlew.bat assembleNonRoot_gameDebug   # exact variant names: .\gradlew.bat tasks
+$env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-21..."   # use the installed directory
+.\gradlew.bat :app:testNonRoot_gameDebugUnitTest :app:assembleNonRoot_gameDebug :app:lintNonRoot_gameDebug
 ```
 
-APKs end up in `app\build\outputs\apk\nonRoot_game\debug\`.
+The flavor is `nonRoot_game`; debug APKs end up in `app\build\outputs\apk\nonRoot_game\debug\`.
+The release application ID is `io.github.meitoncz.delos`; debug adds `.debug`
+(`io.github.meitoncz.delos.debug`). The source namespace remains `com.limelight`.
 
 ## 5. Install on a device
 

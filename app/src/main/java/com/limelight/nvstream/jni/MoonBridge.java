@@ -225,7 +225,6 @@ public class MoonBridge {
         }
     }
 
-    // TODO: no picture is shown
     public static int bridgeDrSubmitDecodeUnit(byte[] decodeUnitData, int decodeUnitLength, int decodeUnitType,
                                                int frameNumber, int frameType, char frameHostProcessingLatency,
                                                long receiveTimeUs, long enqueueTimeUs) {
@@ -265,7 +264,6 @@ public class MoonBridge {
         }
     }
 
-    // TODO: mute
     public static void bridgeArPlaySample(short[] pcmData) {
         if (audioRenderer != null) {
             audioRenderer.playDecodedAudio(pcmData);

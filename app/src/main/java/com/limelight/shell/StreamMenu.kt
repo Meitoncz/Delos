@@ -24,7 +24,6 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import com.limelight.Game
-import com.limelight.GameMenu
 import com.limelight.binding.input.KeyboardTranslator
 import com.limelight.nvstream.http.HostHttpResponseException
 import com.limelight.shell.data.ProfileStore
@@ -265,7 +264,7 @@ class StreamMenu(private val game: Game) {
         StreamExit.play(game, quit, end)
     }
 
-    /** Runs [action] once the stream window has the focus again (after the menu closed), like GameMenu. */
+    /** Runs [action] once the stream window has the focus again (after the menu closed). */
     private fun whenGameFocused(action: () -> Unit) {
         if (game.isFinishing) return
         if (!game.hasWindowFocus()) {
@@ -307,7 +306,7 @@ class StreamMenu(private val game: Game) {
     private inner class GameHost(private val menu: ComponentDialog) : StreamMenuHost {
         private val prefs get() = game.prefConfig
         private val saveTarget by lazy { GameSettingsStore.forLaunch(game) }
-        private val classic get() = game.gameMenuCallbacks as? GameMenu
+        private val classic get() = game.gameMenuCallbacks
 
         override val gameName: String = game.intent.getStringExtra(Game.EXTRA_APP_NAME) ?: "Stream"
         override fun dismiss() { menu.dismiss() }

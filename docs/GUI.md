@@ -376,6 +376,12 @@ menu in one composable (`StreamMenuRoot`, so a window of its own can host it), t
 (`StreamMenu` implements it with the live `Game`, the debug preview with fake state). The prototype's `#quickmenu` /
 `#qmpop` show the same design; `build/streammenu-proto/b.html` with its screenshots is the specification.
 
+`StreamMenu` owns every stream-menu entry point, including controller, touch and Back.
+There is no classic dialog fallback. `GameMenu` remains only as the special-key action
+helper and storage constants used by the stream menu and keyboard layouts; it does not
+create a menu window. TV poster cache/provider paths are independent of the removed
+classic grid asset adapters.
+
 - **Tiles**: 150 px glass, corner 42, gap 40 (9 × 150 + 8 × 40 = 1670, 125 on each side), the top edge at y 628, icon 64
   (Phosphor, filled on focus), label 24 SemiBold 24 below the tile. Resume, Keyboard, Overlay, Brightness, Bitrate,
   Upscaler (Supersampling), More, Disconnect, Quit game. Toggles (Overlay, Upscaler) have an **On / Off pill**

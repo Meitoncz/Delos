@@ -86,12 +86,15 @@ Classic Artemis profiles that are not linked to shell users keep their original 
 
 `ShellSettingsTest` checks XML coverage, category assignment, numeric validation, nested dependencies,
 device choices, copying/isolation/persistence of users, layout copying/reset and the actual
-`PreferenceConfiguration` reader. Run the full unit suite with the debug build:
+`PreferenceConfiguration` reader. Run the full unit suite with the debug build on the
+current Mac workstation (JDK 21; see [MAC_SETUP.md](MAC_SETUP.md)):
 
-```powershell
-$env:JAVA_HOME = 'C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot'
-.\gradlew.bat assembleNonRoot_gameDebug testNonRoot_gameDebugUnitTest lintNonRoot_gameDebug --console=plain
+```sh
+./gradlew :app:testNonRoot_gameDebugUnitTest :app:assembleNonRoot_gameDebug :app:lintNonRoot_gameDebug
 ```
+
+For Windows environment setup and the equivalent `gradlew.bat` command, see
+[WINDOWS_SETUP.md](WINDOWS_SETUP.md).
 
 Device checks use the Odin, never an emulator. Final acceptance also requires the user to start a
 stream and verify a changed resolution or bitrate in the performance overlay. Agents must not launch

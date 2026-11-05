@@ -10,7 +10,6 @@ import static com.limelight.utils.ServerHelper.getSecondaryDisplay;
 import com.limelight.binding.PlatformBinding;
 import com.limelight.binding.audio.AndroidAudioRenderer;
 import com.limelight.binding.input.ControllerHandler;
-import com.limelight.binding.input.GameInputDevice;
 import com.limelight.binding.input.KeyboardTranslator;
 import com.limelight.binding.input.capture.InputCaptureManager;
 import com.limelight.binding.input.capture.InputCaptureProvider;
@@ -44,7 +43,6 @@ import com.limelight.ui.ExternalControllerView;
 import com.limelight.ui.GameGestures;
 import com.limelight.ui.StreamContainer;
 import com.limelight.utils.ExternalDisplayControlActivity;
-import com.limelight.utils.MouseModeOption;
 import com.limelight.utils.PanZoomHandler;
 import com.limelight.utils.ServerHelper;
 import com.limelight.utils.ShortcutHelper;
@@ -56,7 +54,6 @@ import com.limelight.utils.UiHelper;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
-import android.app.AlertDialog;
 import android.app.PictureInPictureParams;
 import android.app.Service;
 import android.content.ClipData;
@@ -113,8 +110,6 @@ import androidx.preference.PreferenceManager;
 
 import android.os.Looper;
 import java.nio.charset.StandardCharsets;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Queue;
 import java.util.ArrayDeque;
@@ -125,11 +120,9 @@ import java.lang.reflect.Method;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import android.view.SurfaceView;
 import android.view.ViewGroup;
 
@@ -284,13 +277,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
     private NvHTTP httpConn;
 
-    public interface GameMenuCallbacks {
-        void showMenu(GameInputDevice devic);
-        void hideMenu();
-        boolean isMenuOpen();
-    }
-
-    public GameMenuCallbacks gameMenuCallbacks;
+    public GameMenu gameMenuCallbacks;
     // Delos: the stream menu of the new UI
     private com.limelight.shell.StreamMenu streamMenu;
 
@@ -2119,9 +2106,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             return false;
         }
 
-        if (delay == 0 && gameMenuCallbacks != null && gameMenuCallbacks.isMenuOpen()) {
-            return false;
-        }
 
         new Thread() {
             public void run() {
@@ -3017,7 +3001,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                             toggleFullKeyboard();
                             return true;
                         } else if (currentEventTime - fiveFingerDownTime < FIVE_FINGER_TAP_THRESHOLD) {
-                            showGameMenu(null);
+                            showGameMenu();
                             return true;
                         }
                     }
@@ -3080,7 +3064,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             case MotionEvent.ACTION_UP:
                 long currentEventTime = event.getEventTime();
                 if (pointerCount >= 5 && fiveFingerDownTime > 0 && currentEventTime - fiveFingerDownTime < FIVE_FINGER_TAP_THRESHOLD) {
-                    showGameMenu(null);
+                    showGameMenu();
                     fiveFingerDownTime = 0;
                     break;
                 } else if (pointerCount == 4 && fourFingerDownTime > 0 && currentEventTime - fourFingerDownTime < FOUR_FINGER_TAP_THRESHOLD) {
@@ -3686,7 +3670,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     @SuppressLint("MissingSuperCall") // Delos: consume Back; the superclass would finish the stream.
     public void onBackPressed() {
         // Delos: Back always opens the stream menu
-        showGameMenu(null);
+        showGameMenu();
     }
 
     public void sendExecServerCmd(int cmdId) {
@@ -3783,60 +3767,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         }
     }
 
-    /**
-     * Displays a dialog allowing the user to select a mouse input mode.
-     *
-     * Behavior:
-     * - On regular displays, all available mouse modes are shown.
-     * - On secondary displays (e.g. Samsung DeX), only a limited set of modes are allowed:
-     *   "Trackpad Natural", "Trackpad Gaming", and "Disabled".
-     * - An additional option to toggle the local mouse cursor is always included.
-     *
-     * When the user selects a mode:
-     * - If it's the toggle option, the local mouse cursor mode is toggled.
-     * - Otherwise, the selected mode is applied and saved to shared preferences.
-     *
-     * @param context The context to use to decide where to show the dialog.
-     */
-    public void selectMouseMode(Context context){
-        String[] allModes = getResources().getStringArray(R.array.mouse_mode_names);
-
-        Set<String> allowedLabels = new HashSet<>(Arrays.asList(
-                getString(R.string.mouse_mode_track_pad_natural),
-                getString(R.string.mouse_mode_track_pad_gaming),
-                getString(R.string.mouse_mode_disabled)
-        ));
-
-        List<MouseModeOption> options = new ArrayList<>();
-
-        for (int i = 0; i < allModes.length; i++) {
-            String label = allModes[i];
-            boolean isAllowed = !isOnExternalDisplay() || allowedLabels.contains(label);
-            if (isAllowed) {
-                options.add(new MouseModeOption(i, label));
-            }
-        }
-
-        options.add(new MouseModeOption(-1, getString(R.string.toggle_local_mouse_cursor)));
-
-        String[] labels = new String[options.size()];
-        for (int i = 0; i < options.size(); i++) {
-            labels[i] = options.get(i).label;
-        }
-        final MouseModeOption[] optionArray = options.toArray(new MouseModeOption[0]);
-
-        new AlertDialog.Builder(context)
-                .setTitle(getString(R.string.game_menu_select_mouse_mode))
-                .setItems(labels, (dialog, which) -> {
-                    dialog.dismiss();
-                    MouseModeOption selected = optionArray[which];
-                    if (selected.index == -1) {
-                        toggleMouseLocalCursor();
-                    } else setStreamMouseMode(selected.index);
-                })
-                .create()
-                .show();
-    }
 
     // Toggle the local mouse cursor
     public void toggleMouseLocalCursor(){
@@ -3961,30 +3891,8 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         finish();
     }
 
-    public void quit() {
-        Context context;
-        if (isOnExternalDisplay() && ExternalDisplayControlActivity.instance != null) {
-            context = ExternalDisplayControlActivity.instance;
-        } else {
-            context = this;
-        }
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle(R.string.game_dialog_title_quit_confirm);
-        builder.setMessage(R.string.game_dialog_message_quit_confirm);
 
-        builder.setPositiveButton(getString(R.string.yes), (dialog, which) -> {
-            quitOnStop = true;
-            dialog.dismiss();
-            finish();
-        });
-
-        builder.setNegativeButton(getString(R.string.no), (dialog, which) -> dialog.dismiss());
-
-        AlertDialog dialog = builder.create();
-        dialog.show();
-    }
-
-    // Delos: every way into the menu opens the Delos stream menu; its "More" opens the classic one.
+    // Delos: every way into the menu opens the Delos stream menu.
     // The shortcut (L3+R3 or the buttons chosen in Delos) and the swipe up are checked before the stream.
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
@@ -4141,13 +4049,9 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     }
 
     @Override
-    public void showGameMenu(GameInputDevice device) {
+    public void showGameMenu() {
         if (streamMenu != null) {
             streamMenu.show();
-        } else {
-            if (gameMenuCallbacks != null) {
-                gameMenuCallbacks.showMenu(device);
-            }
         }
     }
 
@@ -4155,9 +4059,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         // Delos
         if (streamMenu != null) {
             streamMenu.hide();
-        }
-        if (gameMenuCallbacks != null) {
-            gameMenuCallbacks.hideMenu();
         }
     }
 
