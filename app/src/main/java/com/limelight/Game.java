@@ -9,6 +9,7 @@ import static com.limelight.utils.ServerHelper.getSecondaryDisplay;
 
 import com.limelight.binding.PlatformBinding;
 import com.limelight.binding.audio.AndroidAudioRenderer;
+import com.limelight.binding.input.ActiveKeyboardInput;
 import com.limelight.binding.input.ControllerHandler;
 import com.limelight.binding.input.KeyboardTranslator;
 import com.limelight.binding.input.capture.InputCaptureManager;
@@ -131,7 +132,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         OnGenericMotionListener, OnTouchListener, NvConnectionListener, EvdevListener,
         OnSystemUiVisibilityChangeListener, GameGestures, StreamContainer.InputCallbacks,
         ExternalControllerView.InputCallbacks,
-        PerfOverlayListener, UsbDriverService.UsbDriverStateListener, View.OnKeyListener {
+        PerfOverlayListener, UsbDriverService.UsbDriverStateListener, ActiveKeyboardInput.Target {
     public static Game instance;
 
     private int lastButtonState = 0;
@@ -329,6 +330,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         }
 
         instance = this;
+        ActiveKeyboardInput.register(this);
         timerHandler = new Handler(Looper.getMainLooper());
 
         UiHelper.setLocale(this);
@@ -1510,6 +1512,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         super.onDestroy();
 
         instance = null;
+        ActiveKeyboardInput.unregister(this);
         timerHandler.removeCallbacksAndMessages(null);
 
         if (prefConfig.enableFullExDisplay) handleDisplayRemoved();
@@ -3532,6 +3535,11 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                 stopConnection();
             }
         }
+    }
+
+    @Override
+    public boolean isKeyboardInputConnected() {
+        return connected;
     }
 
     @Override

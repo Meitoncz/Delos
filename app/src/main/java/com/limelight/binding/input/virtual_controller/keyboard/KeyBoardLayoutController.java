@@ -25,7 +25,7 @@ import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 
-import com.limelight.Game;
+import com.limelight.binding.input.ActiveKeyboardInput;
 import com.limelight.R;
 import com.limelight.preferences.PreferenceConfiguration;
 
@@ -361,14 +361,15 @@ public class KeyBoardLayoutController {
     }
 
     public void sendKeyEvent(KeyEvent keyEvent) {
-        if (Game.instance == null || !Game.instance.connected) {
+        ActiveKeyboardInput.Target target = ActiveKeyboardInput.connectedTarget();
+        if (target == null) {
             return;
         }
         // 1-Mouse 0-Buttons 2-Stick 3-DPad
         if (keyEvent.getSource() == 1) {
-            Game.instance.mouseButtonEvent(keyEvent.getKeyCode(), KeyEvent.ACTION_DOWN == keyEvent.getAction());
+            target.mouseButtonEvent(keyEvent.getKeyCode(), KeyEvent.ACTION_DOWN == keyEvent.getAction());
         } else {
-            Game.instance.onKey(null, keyEvent.getKeyCode(), keyEvent);
+            target.onKey(null, keyEvent.getKeyCode(), keyEvent);
         }
     }
 

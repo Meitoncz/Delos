@@ -25,7 +25,7 @@ import android.widget.FrameLayout;
 import android.widget.Toast;
 import com.limelight.utils.DeviceVibrator;
 
-import com.limelight.Game;
+import com.limelight.binding.input.ActiveKeyboardInput;
 import com.limelight.GameMenu;
 import com.limelight.LimeLog;
 import com.limelight.R;
@@ -361,14 +361,15 @@ public class KeyBoardController {
     }
 
     public void sendKeyEvent(KeyEvent keyEvent) {
-        if (Game.instance == null || !Game.instance.connected) {
+        ActiveKeyboardInput.Target target = ActiveKeyboardInput.connectedTarget();
+        if (target == null) {
             return;
         }
         // 1 = mouse, 0 = key, 2 = stick, 3 = D-pad
         if (keyEvent.getSource() == 1) {
-            Game.instance.mouseButtonEvent(keyEvent.getKeyCode(), KeyEvent.ACTION_DOWN == keyEvent.getAction());
+            target.mouseButtonEvent(keyEvent.getKeyCode(), KeyEvent.ACTION_DOWN == keyEvent.getAction());
         } else {
-            Game.instance.onKey(null, keyEvent.getKeyCode(), keyEvent);
+            target.onKey(null, keyEvent.getKeyCode(), keyEvent);
         }
 
         if (keyEvent.getSource() != 2) {
@@ -377,10 +378,11 @@ public class KeyBoardController {
     }
 
     public void sendMouseMove(int x,int y){
-        if (Game.instance == null || !Game.instance.connected) {
+        ActiveKeyboardInput.Target target = ActiveKeyboardInput.connectedTarget();
+        if (target == null) {
             return;
         }
-        Game.instance.mouseMove(x,y);
+        target.mouseMove(x,y);
     }
 
     public void vibrate(int action) {

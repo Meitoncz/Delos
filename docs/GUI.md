@@ -388,6 +388,12 @@ The stream window keeps its existing immersive/multi-window system-UI flags and 
 selection: these are compatibility behavior on Android 10+, not interchangeable with
 app-window bounds or the shell's separate modern insets controller.
 
+The custom and full on-screen keyboards resolve `ActiveKeyboardInput` for each event,
+not a static Activity or a cached session. Its narrow target is weakly held, available
+only while connected, and owner-cleared when the stream Activity is destroyed; an old
+owner cannot clear a replacement stream. Accessibility focus/key forwarding and external
+controller window ownership keep their existing paths.
+
 - **Tiles**: 150 px glass, corner 42, gap 40 (9 × 150 + 8 × 40 = 1670, 125 on each side), the top edge at y 628, icon 64
   (Phosphor, filled on focus), label 24 SemiBold 24 below the tile. Resume, Keyboard, Overlay, Brightness, Bitrate,
   Upscaler (Supersampling), More, Disconnect, Quit game. Toggles (Overlay, Upscaler) have an **On / Off pill**
