@@ -6,7 +6,7 @@ Android client for streaming games from **Vibepollo** (a fork of Apollo/Sunshine
 - Code, comments, commit messages, PR descriptions and all repo documentation are **in English**.
 - The app name **"Delos" is never translated or inflected** in any language (no case endings, no possessive `'s`); rephrase instead, e.g. "aplikace Delos", "the Delos USB driver".
 - **Agreed work runs end to end without asking at each step** (agreed 2026-10-23): feature branch → local build, tests and lint → test on the Odin → commit → fast-forward `main` → push with `[skip ci]` → delete the feature branch, then report. Run GitHub Actions **only when the user explicitly requests CI**. Ask first for anything outside the plan, open design decisions, force pushes, deleting other branches, rewriting history and releases.
-- Development happens on **Windows** (same machine as Vibepollo). Write commands for PowerShell, build with `gradlew.bat`.
+- Development moved to a **Mac** (Apple Silicon) on 2026-11-05; repo at `/Volumes/Data/Vibecoding/Delos` (never move it; the path must not contain spaces). Write zsh commands, build with `./gradlew` (`docs/MAC_SETUP.md`). The Windows PC still runs Vibepollo.
 - **Task tracking:** [GitHub Issues](https://github.com/Meitoncz/Delos/issues) and the
   [private Delos Project](https://github.com/users/Meitoncz/projects/1) are the only task tracker.
   All unfinished work belongs there, including ideas, research, deferred/conditional plans and
@@ -24,8 +24,8 @@ Android client for streaming games from **Vibepollo** (a fork of Apollo/Sunshine
 ## Multi-agent workflow
 
 Claude is the lead agent and Codex a helper for smaller scoped tasks (agreed 2026-10-30). Delegate through
-herdr with a task file; helpers use their own git worktree and branch, never run Gradle/ADB, push or merge,
-and report back with `herdr agent prompt`. The lead reviews every helper commit, builds, tests, lints,
+herdr (on the Mac its CLI is `hc`: `hc ls/send/read/wait`) with a task file; helpers use their own git worktree and branch, never run Gradle/ADB, push or merge,
+and report back with `hc send`. The lead reviews every helper commit, builds, tests, lints,
 installs on the Odin and integrates. Agent commits have the agent as author (`Claude <noreply@anthropic.com>`,
 `Codex <noreply@openai.com>`), the user as committer, messages end with `[skip ci]`; issues and comments
 created with `gh` end with `Created by <agent> via gh as Meitoncz`. Before delegating, check the remaining quota with `omp usage --redact` (Claude and Codex 5h/7d windows) and shift work to subagents when the helper is nearly out. Full rules: `AGENTS.md`, section
