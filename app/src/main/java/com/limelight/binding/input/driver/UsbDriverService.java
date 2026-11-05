@@ -14,6 +14,7 @@ import android.os.Binder;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.view.InputDevice;
 import android.widget.Toast;
 
@@ -94,7 +95,7 @@ public class UsbDriverService extends Service implements UsbDriverListener {
                 // kernel is capable of running the device. Let's post a delayed
                 // message to process this state change to allow the kernel
                 // some time to bring up the stack.
-                new Handler().postDelayed(new Runnable() {
+                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         // Continue the state machine

@@ -1982,7 +1982,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             modifier[0] |= getModifier(key);
         }
 
-        new Handler().postDelayed((() -> {
+        new Handler(Looper.getMainLooper()).postDelayed((() -> {
             for (int pos = keys.length - 1; pos >= 0; pos--) {
                 short key = keys[pos];
 

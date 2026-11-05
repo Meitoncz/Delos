@@ -382,6 +382,12 @@ helper and storage constants used by the stream menu and keyboard layouts; it do
 create a menu window. TV poster cache/provider paths are independent of the removed
 classic grid asset adapters.
 
+Delayed shortcut releases, pointer recapture after focus and USB attachment handling use
+explicit main-Looper handlers, retaining their 25 ms, 500 ms and 1000 ms delays respectively.
+The stream window keeps its existing immersive/multi-window system-UI flags and display
+selection: these are compatibility behavior on Android 10+, not interchangeable with
+app-window bounds or the shell's separate modern insets controller.
+
 - **Tiles**: 150 px glass, corner 42, gap 40 (9 × 150 + 8 × 40 = 1670, 125 on each side), the top edge at y 628, icon 64
   (Phosphor, filled on focus), label 24 SemiBold 24 below the tile. Resume, Keyboard, Overlay, Brightness, Bitrate,
   Upscaler (Supersampling), More, Disconnect, Quit game. Toggles (Overlay, Upscaler) have an **On / Off pill**
