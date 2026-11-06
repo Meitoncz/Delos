@@ -71,7 +71,7 @@ internal object SettingsListPreview {
             requesters[0].requestFocus()
         }
         Box(Modifier.fillMaxSize().background(colors.bg)) {
-            CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
+            CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView, LocalFocusTracker provides remember { FocusTracker() }) {
                 LazyColumn(Modifier.fillMaxSize().padding(horizontal = 300.px, vertical = 150.px).fadeEdges(stage, top = 14f, bottom = 90f), state = listState,
                     contentPadding = PaddingValues(18.px), verticalArrangement = Arrangement.spacedBy(10.px)) {
                     items(ROWS) { i ->
