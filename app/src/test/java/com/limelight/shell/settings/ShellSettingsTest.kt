@@ -463,6 +463,30 @@ class ShellSettingsTest {
         stream.close()
     }
 
+    @Test fun rumbleFeelIsDerivedFromTheRumbleKeysAndAppliesThePresetPath() {
+        val prefs = context.getSharedPreferences("test-rumble-feel", Context.MODE_PRIVATE)
+        prefs.edit().clear().commit()
+        val stream = StreamSettingsStore(catalog) { prefs }
+        val feel = spec("list_rumble_feel")
+        assertEquals(listOf("ORIGINAL", "GENTLE", "KICK_ONLY", "PULSE_25"), feel.choices.map { it.value })
+        assertEquals("ORIGINAL", stream.value(feel))
+        stream.write(feel, "KICK_ONLY")
+        assertEquals("KICK_ONLY", stream.value(feel))
+        assertFalse(prefs.contains("list_rumble_feel"))
+        assertEquals(com.limelight.utils.RumblePresets.KICK_ONLY, com.limelight.utils.RumblePreferences.activePreset(prefs))
+        // A preset chosen elsewhere (Debug lab, stream menu) and an Advanced edit show up in the row
+        com.limelight.utils.RumblePreferences.applyPreset(prefs, com.limelight.utils.RumblePresets.PULSE_25)
+        assertEquals("PULSE_25", stream.value(feel))
+        com.limelight.utils.RumblePreferences.saveCustom(prefs, com.limelight.utils.RumblePresets.PULSE_25.profile, true)
+        assertEquals("CUSTOM", stream.value(feel))
+        val caps = SettingsCapabilities(emptyList(), 1920, 60f, false, false, false, false, emptySet())
+        assertEquals("CUSTOM", caps.choices(feel, stream.values.value).last().value)
+        assertEquals(4, caps.choices(feel, mapOf("list_rumble_feel" to "GENTLE")).size)
+        stream.write(feel, "CUSTOM")
+        assertEquals("CUSTOM", stream.value(feel))
+        stream.close()
+    }
+
     @Test fun deviceChoicesRetainNativeAndCustomValuesAndFilterUnsupportedCodecs() {
         val caps = SettingsCapabilities(listOf(SettingChoice("Native", "2400x1080")), 1920, 60f, false, false, false, false, emptySet())
         val values = mapOf("edit_diy_w_h" to "2560x1600", "custom_refresh_rate" to "59.94")

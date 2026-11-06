@@ -2,11 +2,46 @@ package com.limelight.utils;
 
 import org.junit.Test;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class RumblePresetsTest {
+
+    @Test
+    public void thereAreExactlyTheFourOfferedFeels() {
+        RumblePresets[] all = RumblePresets.values();
+        assertArrayEquals(new RumblePresets[] {RumblePresets.ORIGINAL, RumblePresets.GENTLE,
+                RumblePresets.KICK_ONLY, RumblePresets.PULSE_25}, all);
+        assertEquals("Original", RumblePresets.ORIGINAL.label);
+        assertEquals("Soft", RumblePresets.GENTLE.label);
+        assertEquals("Kick-start", RumblePresets.KICK_ONLY.label);
+        assertEquals("Pulsing", RumblePresets.PULSE_25.label);
+        assertFalse(RumblePresets.ORIGINAL.enabled);
+        assertProfile(RumblePresets.GENTLE, .7f, 1.3f, 0, 0, RumbleTechnique.AMPLITUDE, 0, 0);
+        assertProfile(RumblePresets.KICK_ONLY, 1f, 1f, 0, 100, RumbleTechnique.AMPLITUDE, 0, 0);
+        assertProfile(RumblePresets.PULSE_25, 1f, .8f, 50, 0, RumbleTechnique.PULSE, 20, 20);
+        for (RumblePresets preset : all) {
+            assertTrue(preset.name(), preset.enabled || preset == RumblePresets.ORIGINAL);
+        }
+    }
+
+    private static void assertProfile(RumblePresets preset, float gain, float curve, int floor, int kickMs,
+                                      RumbleTechnique technique, int onMs, int offMs) {
+        RumbleTranslator.Profile p = preset.profile;
+        assertEquals(gain, p.gain, 0f);
+        assertEquals(curve, p.curve, 0f);
+        assertEquals(floor, p.minAmplitude);
+        assertEquals(kickMs, p.kickMs);
+        assertEquals(technique, p.technique);
+        assertEquals(onMs, p.pulseOnMs);
+        assertEquals(offMs, p.pulseOffMs);
+        boolean pulse = technique == RumbleTechnique.PULSE;
+        assertEquals(pulse ? 1f : .80f, p.lowWeight, 0f);
+        assertEquals(pulse ? .35f : .33f, p.highWeight, 0f);
+        assertEquals(0f, p.smoothing, 0f);
+    }
 
     @Test
     public void everyPresetFitsAllAdvancedControlBounds() {

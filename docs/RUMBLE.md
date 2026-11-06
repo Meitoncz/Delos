@@ -1,11 +1,33 @@
-# Rumble laboratory
+# Rumble feel and the rumble laboratory
+
+## Rumble feel (Settings)
+
+**Settings → Controls → Gamepad** (next to *Enable Rumble*) has a **Rumble feel** row with four choices.
+It is shown only where the other vibration settings are (not on a device without a vibration motor) and is
+dimmed while *Enable Rumble* is off. It applies from the next stream, is profile-scoped like the rumble
+keys and has **no per-game override** (the other rumble settings have none either).
+
+| Choice | What it does | Parameters |
+| --- | --- | --- |
+| Original | The game's rumble exactly as it sends it (translator off) | gain 1.0, curve 1.0, floor 0, kick 0 ms, low/high 0.80 / 0.33 |
+| Soft | A weaker, rounded rumble | gain 0.7, curve 1.3, floor 0, kick 0 ms, low/high 0.80 / 0.33 |
+| Kick-start | A strong short kick at the start of each rumble, then the normal level | gain 1.0, curve 1.0, floor 0, kick 100 ms, low/high 0.80 / 0.33 |
+| Pulsing | A slow pulsed rumble that feels deeper | gain 1.0, curve 0.8, floor 50, no kick, low/high 1.00 / 0.35, pulse 20 ms on / 20 ms off |
+
+The row has no value of its own: it shows `RumblePreferences.feelValue` of the saved rumble keys and writes
+through `RumblePreferences.applyPreset`, so it always agrees with the laboratory and the stream menu. It
+shows **Custom** (not selectable) after an Advanced edit in the laboratory, or when a profile was saved under a
+preset that no longer exists; picking a choice replaces it. The stored identities are the enum names of
+`RumblePresets` (`ORIGINAL`, `GENTLE`, `KICK_ONLY`, `PULSE_25`) and must not be renamed.
+
+## Rumble laboratory (TEMPORARY, #66)
 
 Open **Settings → About → Debug info**, then scroll to **Rumble laboratory**.
 Use up/down to focus a preset and A to select it; B returns. Touch works through the
 same setting rows. Selection saves all parameters, marks the active row, and immediately
 plays the same short **Test** sample: a 60 ms tap, 1 second of steady 50% input, a ramp,
 and an explosion decay (about 2.8 seconds including pauses). **Replay Test sample** repeats
-it without changing the selection. The separate Controls tab is unchanged.
+it without changing the selection. The laboratory lists the same four presets as Settings.
 
 The translator is **off by default**. Off preserves the existing streaming path exactly;
 lab patterns use the Original mapping. Turning it on applies the saved tuning to Android
@@ -17,7 +39,7 @@ a per-game override. It also affects external pads using those Android paths whe
 ## Switching presets in a running stream (TEMPORARY, #66)
 
 To compare presets in a real game, open the stream menu (**More** tile), scroll to the last row,
-**Rumble preset** (it shows the active name), and press A. The page lists the same eighteen presets (a long page: it scrolls and every row stays reachable with the D-pad) (a preset the hardware cannot run is marked **Problem** with the reason in the help line and does nothing; if the active preset's technique fails during the stream the row shows **Problem** too, with the reason);
+**Rumble preset** (it shows the active name), and press A. The page lists the same four presets (a preset the hardware cannot run is marked **Problem** with the reason in the help line and does nothing; if the active preset's technique fails during the stream the row shows **Problem** too, with the reason);
 A on one applies and saves it exactly like the laboratory (same `RumblePreferences.applyPreset`), marks it
 **Active**, plays no sample and leaves the menu open so presets can be tried back to back. B returns to More.
 `ControllerHandler` follows `PreferenceConfiguration.rumbleTranslatorEnabled`/`rumbleProfile` at every rumble
@@ -32,52 +54,27 @@ final `RumblePlayback` built in the constructor) plus `volatile` on the two `Pre
 
 ## Presets
 
-These are comparison candidates, not measured or agreed device defaults. Values exactly
-match the requested preset list; no numeric adjustments were made. All presets except
-**Original (off)** enable translation. Selecting Original disables it and restores the
-original parameter values. **Current preset** and the **Active** marker identify the selection.
+The four presets are the ones chosen on the Odin out of eighteen comparison candidates; their values are unchanged
+(see the table above). **Original** disables the translator and restores the original parameter values; the others
+enable it. **Current preset** and the **Active** marker identify the selection.
 
-| Preset | Intended feel | Gain | Curve | Floor | Kick ms | Low / high weight | Smoothing |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| Original (off) | Today's unmodified response; translator disabled | 1.0 | 1.0 | 0 | 0 | 0.80 / 0.33 | 0 |
-| Stronger | More overall force with the original response curve | 1.5 | 1.0 | 0 | 0 | 0.80 / 0.33 | 0 |
-| Always felt | Lift weak requests to a higher minimum | 1.0 | 1.0 | 140 | 0 | 0.80 / 0.33 | 0 |
-| Deep rumble | Favor low-motor rumble over high-motor buzz; compare with PXPlay | 1.0 | 0.8 | 170 | 0 | 1.00 / 0.15 | 0 |
-| Sharp impacts | Emphasize impact onset with a short strong kick | 1.0 | 1.0 | 150 | 60 | 0.60 / 0.50 | 0 |
-| Smooth deep | Low-motor emphasis with slower amplitude changes | 1.0 | 0.9 | 160 | 0 | 1.00 / 0.20 | 0.6 |
-| Max immersion | Strong weak requests, high floor and a kick | 1.4 | 0.7 | 200 | 80 | 1.00 / 0.40 | 0.2 |
-| Gentle | Less force and softer weak requests | 0.7 | 1.3 | 0 | 0 | 0.80 / 0.33 | 0 |
-| Kick only | Original response after a strong start kick | 1.0 | 1.0 | 0 | 100 | 0.80 / 0.33 | 0 |
-| Everything felt | High floor and a brief kick for nonzero input | 1.0 | 0.6 | 220 | 50 | 0.80 / 0.40 | 0 |
-
-### Experimental pulse presets 11-18 (TEMPORARY, #66)
-
-The Odin 2 Portal Max has **one** vibrator with amplitude control but no frequency control, so presets 1-10 (amplitude
-only) all share the same high buzz. Presets 11-18 change the *technique*: a repeating on/off amplitude waveform
+The Odin 2 Portal Max has **one** vibrator with amplitude control but no frequency control, so the amplitude presets
+all share the same high buzz. **Pulsing** changes the *technique*: a repeating on/off amplitude waveform
 (`VibrationEffect.createWaveform`, repeating from index 0) whose on and off durations are part of the profile
 (`pulseOnMs`, `pulseOffMs`; saved as `pref_rumble_pulse_on_ms`/`pref_rumble_pulse_off_ms`). The on phase plays the translated
 amplitude (never below the floor), the off phase amplitude 0; the waveform is replaced when the amplitude changes (also at the end
-of a start kick) and cancelled at zero. Low/high weight 1.00 / 0.35 and no smoothing for all of them. They apply to the
-single-vibrator path (the Odin); dual/quad vibrators keep the amplitude path and record that as a problem.
+of a start kick) and cancelled at zero. It applies to the single-vibrator path (the Odin); dual/quad vibrators keep the
+amplitude path and record that as a problem.
 
-On the Odin the user liked Gentle (#8), Kick only (#9) and Pulse 25 Hz; slow pulsed amplitude is the most promising direction, so
-11-15 combine and stretch that pulse. 16-18 are the original Pulse 25/40/60 presets with unchanged timings.
-
-| # | Preset | On / off ms | Gain | Curve | Floor | Kick ms | What to listen/feel for |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 11 | Pulse 25 + kick | 20 / 20 | 0.9 | 0.8 | 50 | 100 | The favourite pulse with a hard start (the kick plays as full-amplitude pulses for 100 ms) |
-| 12 | Pulse 20 Hz | 25 / 25 | 1.0 | 0.8 | 50 | 0 | A slower, heavier rattle |
-| 13 | Pulse 15 Hz | 33 / 33 | 1.0 | 0.8 | 50 | 0 | The slowest, deepest-sounding rattle |
-| 14 | Pulse 25 gentle | 20 / 20 | 0.7 | 1.3 | 0 | 0 | The pulse at Gentle strength, weak requests stay weak |
-| 15 | Pulse 25 heavy | 28 / 12 | 1.0 | 0.8 | 50 | 0 | Long pushes with short gaps: more force, same 25 Hz |
-| 16 | Pulse 25 Hz | 20 / 20 | 1.0 | 0.8 | 50 | 0 | A slow, coarse rattle |
-| 17 | Pulse 40 Hz | 13 / 12 | 1.0 | 0.8 | 50 | 0 | A medium rumble |
-| 18 | Pulse 60 Hz | 8 / 8 | 1.0 | 0.8 | 50 | 0 | A fast, tight rumble; the motor may not follow so quickly |
+**Removed presets:** Stronger, Always felt, Deep rumble, Sharp impacts, Smooth deep, Max immersion, Everything felt and
+the pulse variants (kick, 20/15/60/40 Hz, gentle, heavy) were not chosen and are gone. A profile saved under one of them
+loads with its saved values and shows as **Custom**. The PULSE technique stays (Pulsing needs it); a profile saved by an
+earlier build under `PULSE_40`/`PULSE_60` without on/off keys keeps its timings (13/12, 8/8).
 
 **Removed techniques:** the Thud burst and Low-tick burst presets (compositions of 12 `PRIMITIVE_THUD`/`PRIMITIVE_LOW_TICK`) were
 tried on the Odin and did nothing the user could feel, so the code, the primitive capability probe and the presets are gone.
 Profiles saved under those names load as the plain amplitude path and show as Custom; `HAPTIC_WAVE` and unknown names load the same
-way. A profile saved by an earlier build under `PULSE_25`/`PULSE_40`/`PULSE_60` without on/off keys keeps its timings (20/20, 13/12, 8/8).
+way.
 
 **Removed technique:** a haptic audio channel (`AudioTrack` with `CHANNEL_OUT_HAPTIC_A`, the old Deep wave 40/60/80 Hz presets) was
 tried and removed because it cannot work here: on the Odin (Android 13, API 33) `AudioTrack` rejects haptic channel masks for apps
@@ -90,9 +87,8 @@ and amplitude control), the preset row says `Problem: <reason>` in its help text
 **Problem** with `Problem: <reason>` in its help line. Presets the device cannot run at all (checked from the capability block) are listed
 as **Problem** and cannot be selected.
 
-The names describe the intent, not a guarantee: a floor of 140 or 170 is below the
-previously observed Odin interface-haptic threshold of about 220/255, and may still
-be imperceptible. Low/high weights change the host-motor mix on a single vibrator;
+The names describe the intent, not a guarantee: a floor of 50 is well below the
+previously observed Odin interface-haptic threshold of about 220/255. Low/high weights change the host-motor mix on a single vibrator;
 they do not change the physical frequency of the motor or promise PXPlay equivalence.
 
 ## Advanced parameters
@@ -122,7 +118,7 @@ independent reusable state. A kick with smoothing enabled slews down from 255 af
 The weights preserve the original double-literal math even after loading float preferences.
 
 The Advanced **Reset parameters to Original** action restores parameters as Custom
-without changing the enable switch; this differs from selecting **Original (off)**.
+without changing the enable switch; this differs from selecting **Original**.
 Changes are saved immediately in the current profile (`checkbox_rumble_translator`,
 `pref_rumble_preset`, `pref_rumble_gain`, `pref_rumble_curve`, `pref_rumble_min_amplitude`,
 `pref_rumble_kick_ms`, `pref_rumble_low_weight`, `pref_rumble_high_weight`, `pref_rumble_smoothing`).

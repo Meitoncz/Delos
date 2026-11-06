@@ -16,7 +16,13 @@ public final class RumblePreferences {
     public static final String PULSE_ON_MS = "pref_rumble_pulse_on_ms";
     public static final String PULSE_OFF_MS = "pref_rumble_pulse_off_ms";
     public static final String PRESET = "pref_rumble_preset";
-    private static final String CUSTOM = "CUSTOM";
+    /**
+     * The "Rumble feel" row of Settings. It has no stored value of its own: it is {@link #feelValue} of the
+     * saved selection, so it always agrees with the Debug laboratory and the stream menu.
+     */
+    public static final String FEEL = "list_rumble_feel";
+    /** The {@link #FEEL} value of a selection that matches no preset. */
+    public static final String CUSTOM = "CUSTOM";
 
     private RumblePreferences() {}
 
@@ -75,6 +81,23 @@ public final class RumblePreferences {
                 .putBoolean(ENABLED, enabled)
                 .putString(PRESET, identity)
                 .apply();
+    }
+
+    /** The {@link #FEEL} value: the active preset's identity, or {@link #CUSTOM}. */
+    public static String feelValue(SharedPreferences prefs) {
+        RumblePresets preset = activePreset(prefs);
+        return preset == null ? CUSTOM : preset.name();
+    }
+
+    /** Applies the preset named by a {@link #FEEL} value; {@link #CUSTOM} and unknown values change nothing. */
+    public static boolean applyFeel(SharedPreferences prefs, String value) {
+        for (RumblePresets preset : RumblePresets.values()) {
+            if (preset.name().equals(value)) {
+                applyPreset(prefs, preset);
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Returns null for Custom, including stale identities whose settings no longer match. */

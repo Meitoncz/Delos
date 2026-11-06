@@ -63,6 +63,20 @@
         <item>stretch</item>
     </string-array>
 
+    <!-- Mirrors RumblePresets; the values are its enum names, which are saved in the user's preferences -->
+    <string-array name="rumble_feel_names" translatable="false">
+        <item>Original</item>
+        <item>Soft</item>
+        <item>Kick-start</item>
+        <item>Pulsing</item>
+    </string-array>
+    <string-array name="rumble_feel_values" translatable="false">
+        <item>ORIGINAL</item>
+        <item>GENTLE</item>
+        <item>KICK_ONLY</item>
+        <item>PULSE_25</item>
+    </string-array>
+
     <string-array name="audio_config_names">
         <item>@string/audioconf_stereo</item>
         <item>@string/audioconf_51surround</item>

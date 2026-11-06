@@ -11,44 +11,6 @@ import static org.junit.Assert.assertTrue;
 
 public class RumbleHapticsTest {
     @Test
-    public void firstTenPresetsStayAmplitudeAndTheLastEightAreTheAgreedPulses() {
-        RumblePresets[] all = RumblePresets.values();
-        assertEquals(18, all.length);
-        for (int i = 0; i < 10; i++) {
-            assertSame(RumbleTechnique.AMPLITUDE, all[i].profile.technique);
-            assertEquals(0, all[i].profile.pulseOnMs);
-            assertEquals(0, all[i].profile.pulseOffMs);
-        }
-        assertPulse(RumblePresets.PULSE_25_KICK, "Pulse 25 + kick", 20, 20, .9f, .8f, 50, 100);
-        assertPulse(RumblePresets.PULSE_20, "Pulse 20 Hz", 25, 25, 1f, .8f, 50, 0);
-        assertPulse(RumblePresets.PULSE_15, "Pulse 15 Hz", 33, 33, 1f, .8f, 50, 0);
-        assertPulse(RumblePresets.PULSE_25_GENTLE, "Pulse 25 gentle", 20, 20, .7f, 1.3f, 0, 0);
-        assertPulse(RumblePresets.PULSE_25_HEAVY, "Pulse 25 heavy", 28, 12, 1f, .8f, 50, 0);
-        assertPulse(RumblePresets.PULSE_25, "Pulse 25 Hz", 20, 20, 1f, .8f, 50, 0);
-        assertPulse(RumblePresets.PULSE_40, "Pulse 40 Hz", 13, 12, 1f, .8f, 50, 0);
-        assertPulse(RumblePresets.PULSE_60, "Pulse 60 Hz", 8, 8, 1f, .8f, 50, 0);
-        for (int i = 10; i < 18; i++) {
-            assertEquals("Pulse", all[i].label.substring(0, 5));
-        }
-        assertSame(RumblePresets.PULSE_25_KICK, all[10]);
-        assertSame(RumblePresets.PULSE_25, all[15]);
-        assertSame(RumblePresets.PULSE_60, all[17]);
-    }
-
-    private static void assertPulse(RumblePresets preset, String label, int on, int off,
-                                    float gain, float curve, int floor, int kick) {
-        RumbleTranslator.Profile p = preset.profile;
-        assertEquals(label, preset.label);
-        assertSame(RumbleTechnique.PULSE, p.technique);
-        assertEquals(on, p.pulseOnMs);
-        assertEquals(off, p.pulseOffMs);
-        assertEquals(gain, p.gain, 0f);
-        assertEquals(curve, p.curve, 0f);
-        assertEquals(floor, p.minAmplitude);
-        assertEquals(kick, p.kickMs);
-    }
-
-    @Test
     public void techniqueNamesFromRemovedAndOlderBuildsLoadSafely() {
         assertSame(RumbleTechnique.AMPLITUDE, RumbleTechnique.fromName(null));
         assertSame(RumbleTechnique.AMPLITUDE, RumbleTechnique.fromName("nonsense"));
@@ -96,7 +58,9 @@ public class RumbleHapticsTest {
 
     @Test
     public void aKickedPulseStartsAtFullAmplitudeThenFollowsTheRequestAfterTheKick() {
-        RumbleTranslator.Profile profile = RumblePresets.PULSE_25_KICK.profile;
+        // No preset combines a kick with a pulse any more, but Advanced edits in the Debug lab can
+        RumbleTranslator.Profile profile = new RumbleTranslator.Profile(.9f, .8f, 50, 100, 1f, .35f, 0f,
+                RumbleTechnique.PULSE, 20, 20);
         RumbleTranslator.State state = new RumbleTranslator.State();
         // Raw 0x4000 on both motors: shaped below 255, so the kick is visible
         int start = RumbleTranslator.single(0x4000, 0x4000, profile, state, 1000);

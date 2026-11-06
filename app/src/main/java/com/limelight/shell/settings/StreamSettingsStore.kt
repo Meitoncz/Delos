@@ -2,6 +2,7 @@ package com.limelight.shell.settings
 
 import android.content.SharedPreferences
 import com.limelight.preferences.PreferenceConfiguration
+import com.limelight.utils.RumblePreferences
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.util.Locale
@@ -22,7 +23,11 @@ class StreamSettingsStore(val catalog: SettingsCatalog, private val settings: ()
         refresh()
     }
 
-    private fun refresh() { state.value = settings().all.filterKeys { !isCodecBitrateStorageKey(it) } }
+    private fun refresh() {
+        val prefs = settings()
+        // "Rumble feel" is derived from the saved rumble parameters, never stored itself
+        state.value = prefs.all.filterKeys { !isCodecBitrateStorageKey(it) } + (RumblePreferences.FEEL to RumblePreferences.feelValue(prefs))
+    }
 
     fun value(spec: SettingSpec): Any? = state.value[spec.key] ?: spec.default
 
@@ -45,6 +50,10 @@ class StreamSettingsStore(val catalog: SettingsCatalog, private val settings: ()
 
     fun write(spec: SettingSpec, value: Any) {
         val prefs = settings()
+        if (spec.key == RumblePreferences.FEEL) {
+            RumblePreferences.applyFeel(prefs, value as String)
+            return
+        }
         val editor = prefs.edit().putSetting(spec.key, value)
         val before = prefs.getString("video_format", "auto")!!
         val format = if (spec.key == "video_format") value as String else before

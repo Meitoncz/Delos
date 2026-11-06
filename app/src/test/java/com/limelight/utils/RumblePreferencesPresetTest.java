@@ -61,7 +61,7 @@ public class RumblePreferencesPresetTest {
 
     @Test
     public void presetAndCustomListenersOnlyObserveCompleteSelections() {
-        RumblePresets preset = RumblePresets.MAX_IMMERSION;
+        RumblePresets preset = RumblePresets.KICK_ONLY;
         int[] notifications = {0};
         SharedPreferences.OnSharedPreferenceChangeListener presetListener = (saved, key) -> {
             notifications[0]++;
@@ -102,12 +102,12 @@ public class RumblePreferencesPresetTest {
 
     @Test
     public void techniquePersistsAStaleTechniqueIsRejectedAndOldProfilesLoadSafely() {
-        RumblePreferences.applyPreset(prefs, RumblePresets.PULSE_40);
+        RumblePreferences.applyPreset(prefs, RumblePresets.PULSE_25);
         SharedPreferences reloaded = reloadSavedValues();
-        assertSame(RumblePresets.PULSE_40, RumblePreferences.activePreset(reloaded));
-        assertProfile(RumblePresets.PULSE_40.profile, RumblePreferences.readProfile(reloaded));
-        assertEquals(13, RumblePreferences.readProfile(reloaded).pulseOnMs);
-        assertEquals(12, RumblePreferences.readProfile(reloaded).pulseOffMs);
+        assertSame(RumblePresets.PULSE_25, RumblePreferences.activePreset(reloaded));
+        assertProfile(RumblePresets.PULSE_25.profile, RumblePreferences.readProfile(reloaded));
+        assertEquals(20, RumblePreferences.readProfile(reloaded).pulseOnMs);
+        assertEquals(20, RumblePreferences.readProfile(reloaded).pulseOffMs);
         prefs.edit().putString(RumblePreferences.TECHNIQUE, RumbleTechnique.AMPLITUDE.name()).commit();
         assertNull(RumblePreferences.activePreset(prefs));
 
@@ -125,11 +125,12 @@ public class RumblePreferencesPresetTest {
             assertNull(RumblePreferences.activePreset(prefs));
         }
 
-        // A pulse preset saved by an earlier build (fixed-period technique name, no on/off keys) keeps its timings and identity
-        RumblePreferences.applyPreset(prefs, RumblePresets.PULSE_60);
-        prefs.edit().putString(RumblePreferences.TECHNIQUE, "PULSE_60")
+        // A preset saved by an earlier build that has since been removed loads as Custom, keeping its values
+        RumblePreferences.applyPreset(prefs, RumblePresets.PULSE_25);
+        prefs.edit().putString(RumblePreferences.PRESET, "PULSE_60").putString(RumblePreferences.TECHNIQUE, "PULSE_60")
                 .remove(RumblePreferences.PULSE_ON_MS).remove(RumblePreferences.PULSE_OFF_MS).commit();
-        assertSame(RumblePresets.PULSE_60, RumblePreferences.activePreset(prefs));
+        assertNull(RumblePreferences.activePreset(prefs));
+        assertEquals(RumbleTechnique.PULSE, RumblePreferences.readProfile(prefs).technique);
         assertEquals(8, RumblePreferences.readProfile(prefs).pulseOnMs);
         assertEquals(8, RumblePreferences.readProfile(prefs).pulseOffMs);
 
@@ -139,15 +140,15 @@ public class RumblePreferencesPresetTest {
         assertNull(RumblePreferences.activePreset(prefs));
 
         // A profile saved before techniques existed
-        RumblePreferences.applyPreset(prefs, RumblePresets.STRONGER);
+        RumblePreferences.applyPreset(prefs, RumblePresets.GENTLE);
         prefs.edit().remove(RumblePreferences.TECHNIQUE).commit();
-        assertSame(RumblePresets.STRONGER, RumblePreferences.activePreset(prefs));
+        assertSame(RumblePresets.GENTLE, RumblePreferences.activePreset(prefs));
         assertEquals(RumbleTechnique.AMPLITUDE, RumblePreferences.readProfile(prefs).technique);
     }
 
     @Test
     public void everyAdvancedParameterEditAndEnableEditPersistsAsCustom() {
-        RumbleTranslator.Profile p = RumblePresets.STRONGER.profile;
+        RumbleTranslator.Profile p = RumblePresets.GENTLE.profile;
         RumbleTranslator.Profile[] edits = {
                 new RumbleTranslator.Profile(2f, p.curve, p.minAmplitude, p.kickMs, p.lowWeight, p.highWeight, p.smoothing),
                 new RumbleTranslator.Profile(p.gain, 2f, p.minAmplitude, p.kickMs, p.lowWeight, p.highWeight, p.smoothing),
@@ -158,14 +159,14 @@ public class RumblePreferencesPresetTest {
                 new RumbleTranslator.Profile(p.gain, p.curve, p.minAmplitude, p.kickMs, p.lowWeight, p.highWeight, .5f)
         };
         for (RumbleTranslator.Profile edit : edits) {
-            RumblePreferences.applyPreset(prefs, RumblePresets.STRONGER);
+            RumblePreferences.applyPreset(prefs, RumblePresets.GENTLE);
             RumblePreferences.saveCustom(prefs, edit, true);
             SharedPreferences reloaded = reloadSavedValues();
             assertNull(RumblePreferences.activePreset(reloaded));
             assertTrue(RumblePreferences.isEnabled(reloaded));
             assertProfile(edit, RumblePreferences.readProfile(reloaded));
         }
-        RumblePreferences.applyPreset(prefs, RumblePresets.STRONGER);
+        RumblePreferences.applyPreset(prefs, RumblePresets.GENTLE);
         RumblePreferences.saveCustom(prefs, p, false);
         SharedPreferences reloaded = reloadSavedValues();
         assertNull(RumblePreferences.activePreset(reloaded));
@@ -180,7 +181,7 @@ public class RumblePreferencesPresetTest {
                 RumblePreferences.LOW_WEIGHT, RumblePreferences.HIGH_WEIGHT,
                 RumblePreferences.SMOOTHING, RumblePreferences.ENABLED};
         for (String key : keys) {
-            RumblePreferences.applyPreset(prefs, RumblePresets.STRONGER);
+            RumblePreferences.applyPreset(prefs, RumblePresets.GENTLE);
             SharedPreferences.Editor edit = prefs.edit();
             if (key.equals(RumblePreferences.MIN_AMPLITUDE) || key.equals(RumblePreferences.KICK_MS)) {
                 edit.putInt(key, 1);
@@ -189,7 +190,7 @@ public class RumblePreferencesPresetTest {
                 edit.putBoolean(key, false);
             }
             else {
-                edit.putFloat(key, .7f);
+                edit.putFloat(key, .9f);
             }
             edit.commit();
             assertNull(key, RumblePreferences.activePreset(prefs));
@@ -208,6 +209,26 @@ public class RumblePreferencesPresetTest {
             assertNull(RumblePreferences.activePreset(prefs));
             assertNull(RumblePreferences.activePreset(reloadSavedValues()));
         }
+    }
+
+    @Test
+    public void feelValueFollowsTheSavedSelectionAndApplyFeelUsesThePresetPath() {
+        assertEquals("ORIGINAL", RumblePreferences.feelValue(prefs));
+        for (RumblePresets preset : RumblePresets.values()) {
+            assertTrue(RumblePreferences.applyFeel(prefs, preset.name()));
+            assertSelection(prefs, preset);
+            assertEquals(preset.name(), RumblePreferences.feelValue(prefs));
+        }
+        RumblePreferences.applyPreset(prefs, RumblePresets.PULSE_25);
+        RumblePreferences.saveCustom(prefs, RumblePresets.PULSE_25.profile, true);
+        assertEquals("CUSTOM", RumblePreferences.feelValue(prefs));
+        // Custom and unknown values are not selectable and leave the saved selection alone
+        assertFalse(RumblePreferences.applyFeel(prefs, "CUSTOM"));
+        assertFalse(RumblePreferences.applyFeel(prefs, "STRONGER"));
+        assertEquals("CUSTOM", RumblePreferences.feelValue(prefs));
+        // A selection saved under a removed preset shows as Custom
+        prefs.edit().putString(RumblePreferences.PRESET, "MAX_IMMERSION").commit();
+        assertEquals("CUSTOM", RumblePreferences.feelValue(prefs));
     }
 
     /** Rebuild a separate preference store from stored values, without sharing selection state. */
