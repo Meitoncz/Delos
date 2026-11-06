@@ -5,6 +5,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
@@ -59,7 +61,9 @@ internal object TopMenuPreview {
             }
         }
         Box(Modifier.fillMaxSize().background(LocalDelosColors.current.bg)) {
-            TopNav(buttons, Modifier.align(Alignment.TopCenter).offset(y = 40.px))
+            CompositionLocalProvider(LocalFocusTracker provides remember { FocusTracker() }) {
+                TopNav(buttons, Modifier.align(Alignment.TopCenter).offset(y = 40.px))
+            }
         }
     }
 }
