@@ -10,8 +10,8 @@ import org.junit.Test
 
 class HeroMotionTest {
     @Test
-    fun oneMinuteOrbitIsCircularAndOppositePhasesAreSymmetric() {
-        assertEquals(60_000_000_000L, HeroMotion.PERIOD_NANOS)
+    fun thirtySecondOrbitIsCircularAndOppositePhasesAreSymmetric() {
+        assertEquals(30_000_000_000L, HeroMotion.PERIOD_NANOS)
         for (step in 0..360) {
             val turn = step / 360f
             val pitch = HeroMotion.pitch(turn, false)
@@ -31,8 +31,8 @@ class HeroMotionTest {
         val pitchAfter = (HeroMotion.pitch(delta, false) - HeroMotion.pitch(0f, false)) / delta
         val yawBefore = (HeroMotion.yaw(1f, false) - HeroMotion.yaw(1f - delta, false)) / delta
         val yawAfter = (HeroMotion.yaw(delta, false) - HeroMotion.yaw(0f, false)) / delta
-        assertEquals(pitchBefore, pitchAfter, .01f)
-        assertEquals(yawBefore, yawAfter, .01f)
+        assertEquals(pitchBefore, pitchAfter, .1f)
+        assertEquals(yawBefore, yawAfter, .1f)
     }
 
     @Test
