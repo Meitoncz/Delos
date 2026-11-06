@@ -354,11 +354,11 @@ white game frame; it has **no blur** (the stream is a `SurfaceView`).
   (`GlobalKeys` → `ShellState.runToastAction`) or a tap runs it, as before; the chip squeezes for `PRESS_HOLD` before the card leaves. It exists only in the shell: the
   stream and controller windows host the card without any input.
 - **Time** (`ToastTiming`, one place): the stream's hints are 4 s (short) and 6.5 s (long), a shell toast 4.5 s, one with an action 10 s. The **gold line** along the
-  bottom edge is the remaining time: it draws in (`EaseOut` 420 ms from +280) and then drains.
+  bottom edge (one 4 px bar, no track, no glow) is the remaining time: it draws in (`EaseOut` 420 ms from +280) and then drains.
 - **Motion** (the numbers are in `Motion` and `ToastTiming`): the card **springs in** from outside the right edge (damping ratio 0.62, stiffness 150: it first reaches its place after
   233 ms, overshoots by 8.4 % of the travel at 327 ms and is within 1 % after 627 ms, with a single overshoot) while it grows from 94 % to 100 % around its right edge; it fades over
   `FADE` (280). Everything else is timed against the landing (`LANDING_MS` 230): the icon block pops from `POP_FROM_PILL` with a 50° turn (`PILL_POP`, `EaseSpring`) at +130, the word, the
-  text and the chip rise `RISE` one `STAGGER_ROW` after the other from +140 (`ROW_IN`), a soft kind-coloured halo (peak 22 % at the edge, reach 30 px) flashes at +230 and settles at 18 % of
+  text and the chip rise `RISE` one `STAGGER_ROW` after the other from +140 (`ROW_IN`), a soft kind-coloured halo (peak 45 % at the edge, reach 36 px) flashes at +230 and settles at 30 % of
   its peak (`Ease`, 900 ms), one light sweep crosses the card (`EaseOut`, 620 ms from +250) and the timer line draws in from +280. It leaves 72 px to the right and fades in `EXIT`
   (240 ms, `In`). **A new toast replaces the one on the stage, never a queue**: the old card leaves at once and the new one enters `ROW_DELAY` (120 ms) later, so the two cross; a toast
   that arrives in that gap replaces the waiting one (it never shows). **Reduced motion**: only the fades remain (no slide, scale, rise, pop, sweep).

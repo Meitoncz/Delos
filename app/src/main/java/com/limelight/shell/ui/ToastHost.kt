@@ -223,8 +223,6 @@ private fun ToastCard(
         Brush.linearGradient(*stops, start = Offset(pad, 0f), end = Offset(pad + band, band * tan(Math.toRadians(12.0)).toFloat()))
     }
     val lineBrush = remember(gold) { Brush.horizontalGradient(listOf(lerp(gold, Color(0xFFB87800), .6f), gold)) }
-    val lineGlowBrush = remember(gold) { Brush.verticalGradient(listOf(Color.Transparent, gold.copy(alpha = .35f))) }
-    val lineTrack = remember(gold) { gold.copy(alpha = .14f) }
     val glowHalo = remember(look.fill, m) { Halo(look.fill, ToastTiming.GLOW_PEAK, ToastTiming.GLOW_REACH * m.pxPerStage, CARD_RADIUS * m.pxPerU) }
     val shadowHalo = remember(m) {
         Halo(Color.Black, ToastTiming.SHADOW_PEAK, ToastTiming.SHADOW_REACH * m.pxPerStage, CARD_RADIUS * m.pxPerU - ToastTiming.SHADOW_INSET * m.pxPerStage)
@@ -262,7 +260,7 @@ private fun ToastCard(
                 drawHalo(glowHalo, 0f, 0f, size.width, size.height, glow)
                 drawRoundRect(look.fill.copy(alpha = .35f * glow), Offset(-m.pxPerStage, -m.pxPerStage), Size(size.width + 2f * m.pxPerStage, size.height + 2f * m.pxPerStage), CornerRadius(CARD_RADIUS * m.pxPerU + m.pxPerStage), style = Stroke(m.pxPerStage))
                 val inset = ToastTiming.SHADOW_INSET * m.pxPerStage
-                drawHalo(shadowHalo, inset, inset + ToastTiming.SHADOW_DROP * m.pxPerStage, size.width - 2f * inset, size.height - 2f * inset, op)
+                drawHalo(shadowHalo, inset, inset + ToastTiming.SHADOW_DROP * m.pxPerStage, size.width - 2f * inset, size.height - 2f * inset, op, fillInside = true)
             }
             .then(if (isLatest) Modifier.semantics(mergeDescendants = true) { liveRegion = live; contentDescription = description } else Modifier),
     ) {
@@ -292,15 +290,11 @@ private fun ToastCard(
                             translate(x - pad, 0f) { drawRect(sweepBrush, size = Size(SWEEP_BAND * m.pxPerStage + 2f * pad, size.height), alpha = strength) }
                         }
                     }
-                    // The timer: a gold line along the bottom edge that draws in and then drains
+                    // The timer: one thin gold line along the bottom edge (no track, no glow) that draws in from the left and then drains toward it
                     val line = ToastTiming.timerFraction(ageOf(), hold)
-                    val lineHeight = 4f * m.pxPerU
-                    val top = size.height - lineHeight
-                    drawRect(lineTrack, Offset(0f, top), Size(size.width, lineHeight))
                     if (line > 0f) {
-                        val glowHeight = 10f * m.pxPerStage
-                        drawRect(lineGlowBrush, Offset(0f, top - glowHeight), Size(size.width * line, glowHeight))
-                        drawRect(lineBrush, Offset(0f, top), Size(size.width * line, lineHeight))
+                        val lineHeight = TIMER_HEIGHT * m.pxPerStage
+                        drawRect(lineBrush, Offset(0f, size.height - lineHeight), Size(size.width * line, lineHeight))
                     }
                 },
         ) {
@@ -372,7 +366,7 @@ private fun Modifier.rising(slot: ToastSlot<Toast>, clock: LongState, m: ToastMe
  * opacity follows [ToastTiming.haloFalloff] in [STOPS] stops: smooth at any opacity, no blur, no offscreen layer. The brushes are built once per toast;
  * the strength of a frame is the `alpha` of the draw call, so nothing is allocated while it animates.
  */
-private class Halo(private val color: Color, private val peak: Float, val reach: Float, val radius: Float) {
+private class Halo(val color: Color, val peak: Float, val reach: Float, val radius: Float) {
     // Edge strips: position 0 is the far side
     private fun edge(farFirst: Boolean, vertical: Boolean): Brush {
         val stops = Array(STOPS + 1) { i ->
@@ -407,8 +401,10 @@ private class Halo(private val color: Color, private val peak: Float, val reach:
     val bottomRight = corner(0f, 0f)
 }
 
-private fun DrawScope.drawHalo(h: Halo, left: Float, top: Float, width: Float, height: Float, alpha: Float) {
+private fun DrawScope.drawHalo(h: Halo, left: Float, top: Float, width: Float, height: Float, alpha: Float, fillInside: Boolean = false) {
     if (alpha <= 0f) return
+    // The shadow rectangle reaches below the card: without a fill there would be a gap (a dark hairline) between the card and the halo
+    if (fillInside) drawRoundRect(h.color.copy(alpha = h.peak * alpha), Offset(left, top), Size(width, height), CornerRadius(h.radius))
     val d = h.reach
     val r = h.radius
     val span = Size(r + d, r + d)
@@ -423,6 +419,7 @@ private fun DrawScope.drawHalo(h: Halo, left: Float, top: Float, width: Float, h
 }
 
 private const val STOPS = 14
+private const val TIMER_HEIGHT = 4f
 private const val SWEEP_STOPS = 10
 private const val SWEEP_BAND = 190f
 private const val SWEEP_PAD = 56f
