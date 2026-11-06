@@ -6,6 +6,7 @@ import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.Matrix
 import android.graphics.Paint
+import android.os.Build
 import android.util.LruCache
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.graphics.ImageBitmap
@@ -21,10 +22,10 @@ import kotlin.math.roundToInt
 data class GameColors(val hues: List<Float>, val saturations: List<Float>)
 
 /**
- * The game background, rendered once per game: cropped to the hero area (2100×1260 stage pixels, the
- * prototype's inset -90 px) at a fifth of the size, saturated, blurred and faded out diagonally from the
- * top-right to the bottom-left corner. The screen then only scales one small bitmap up, instead of
- * blurring a full-screen layer on every frame (which made scrolling the home screen miss frames).
+ * Legacy Gaussian background snapshots for the launch scene and pre-Android 13 devices. The live
+ * Android 13+ hero uses a separately cached GPU disk blur, so changing its optics does not change
+ * [latest] or the launch handoff's visuals. Both paths crop to the overscanned 2100 × 1260 hero area,
+ * saturate by 1.15 and fade diagonally at a bounded 420 × 252 resolution.
  */
 object HeroBitmaps {
     const val WIDTH = 420
@@ -35,6 +36,7 @@ object HeroBitmaps {
 
     private val cache = LruCache<String, ImageBitmap>(24)
     private val latest = LruCache<String, ImageBitmap>(24)
+    private val lensCache = LruCache<String, ImageBitmap>(24)
 
     /**
      * The three main hues of each game's background, strongest first (null: grey), observed by the
@@ -49,6 +51,31 @@ object HeroBitmaps {
     private fun cacheKey(key: String, source: ImageBitmap, blurPx: Int) = "$key/${System.identityHashCode(source)}/$blurPx"
 
     fun cached(key: String, source: ImageBitmap, blurPx: Int): ImageBitmap? = cache.get(cacheKey(key, source, blurPx))
+
+    internal fun cachedLens(key: String, source: ImageBitmap, blurPx: Int): ImageBitmap? =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) lensCache.get(cacheKey(key, source, blurPx)) else cached(key, source, blurPx)
+
+    /** Live hero only. Keep the legacy snapshot populated for the unchanged launch handoff. */
+    internal fun renderLens(key: String, source: ImageBitmap, blurPx: Int): ImageBitmap {
+        cachedLens(key, source, blurPx)?.let { return it }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return render(key, source, blurPx)
+        val input = cropped(source)
+        val result = try {
+            val snapshot = cached(key, source, blurPx)
+                ?: renderSnapshot(key, source, blurPx, checkNotNull(input.copy(Bitmap.Config.ARGB_8888, true)))
+            try {
+                HeroLensShader.render(input, blurPx).asImageBitmap()
+            } catch (e: RuntimeException) {
+                // An unsupported GPU must retain the supported bitmap path, not crash the home screen.
+                com.limelight.LimeLog.warning("Hero lens $key unavailable: ${e.message}")
+                snapshot
+            }
+        } finally {
+            input.recycle()
+        }
+        lensCache.put(cacheKey(key, source, blurPx), result)
+        return result
+    }
 
     /** The dominant hue of [key]'s background once it has been rendered; null while unknown or grey. */
     fun hue(key: String): Float? = hues[key]?.hues?.firstOrNull()
@@ -88,20 +115,10 @@ object HeroBitmaps {
     /** Builds the background for [source]; call off the main thread. */
     fun render(key: String, source: ImageBitmap, blurPx: Int): ImageBitmap {
         cache.get(cacheKey(key, source, blurPx))?.let { return it }
-        val src = source.asAndroidBitmap()
-        val out = Bitmap.createBitmap(WIDTH, HEIGHT, Bitmap.Config.ARGB_8888)
-        // Center crop, like ContentScale.Crop, with saturate(1.15)
-        val scale = max(WIDTH / src.width.toFloat(), HEIGHT / src.height.toFloat())
-        val matrix = Matrix().apply {
-            setScale(scale, scale)
-            postTranslate((WIDTH - src.width * scale) / 2f, (HEIGHT - src.height * scale) / 2f)
-        }
-        val paint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG).apply {
-            colorFilter = ColorMatrixColorFilter(ColorMatrix().apply { setSaturation(1.15f) })
-        }
-        val readable = if (src.config == Bitmap.Config.HARDWARE) src.copy(Bitmap.Config.ARGB_8888, false) else src
-        Canvas(out).drawBitmap(readable, matrix, paint)
+        return renderSnapshot(key, source, blurPx, cropped(source))
+    }
 
+    private fun renderSnapshot(key: String, source: ImageBitmap, blurPx: Int, out: Bitmap): ImageBitmap {
         val pixels = IntArray(WIDTH * HEIGHT)
         out.getPixels(pixels, 0, WIDTH, 0, 0, WIDTH, HEIGHT)
         val sourceId = System.identityHashCode(source)
@@ -121,6 +138,27 @@ object HeroBitmaps {
             cache.put(cacheKey(key, source, blurPx), it)
             latest.put(key, it)
         }
+    }
+
+    /** Center crop, like ContentScale.Crop, with saturate(1.15), shared by both blur paths. */
+    private fun cropped(source: ImageBitmap): Bitmap {
+        val src = source.asAndroidBitmap()
+        val out = Bitmap.createBitmap(WIDTH, HEIGHT, Bitmap.Config.ARGB_8888)
+        val scale = max(WIDTH / src.width.toFloat(), HEIGHT / src.height.toFloat())
+        val matrix = Matrix().apply {
+            setScale(scale, scale)
+            postTranslate((WIDTH - src.width * scale) / 2f, (HEIGHT - src.height * scale) / 2f)
+        }
+        val paint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG).apply {
+            colorFilter = ColorMatrixColorFilter(ColorMatrix().apply { setSaturation(1.15f) })
+        }
+        val readable = if (src.config == Bitmap.Config.HARDWARE) checkNotNull(src.copy(Bitmap.Config.ARGB_8888, false)) else src
+        try {
+            Canvas(out).drawBitmap(readable, matrix, paint)
+        } finally {
+            if (readable !== src) readable.recycle()
+        }
+        return out
     }
 
     /**

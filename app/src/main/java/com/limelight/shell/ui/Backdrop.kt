@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -50,6 +51,9 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import com.limelight.shell.settings.Appearance
 import com.limelight.shell.settings.BackgroundKind
 import kotlinx.coroutines.Dispatchers
@@ -81,7 +85,7 @@ fun Backdrop(appearance: Appearance, colors: DelosColors, hero: GameArt?, modifi
         if (heroAlpha > 0f || heroOn) {
             Box(Modifier.fillMaxSize().graphicsLayer { alpha = heroAlpha }) {
                 Crossfade(hero, animationSpec = tween(900), label = "heroArt") { art ->
-                    if (art != null) HeroArt(art, appearance.heroBlur)
+                    if (art != null) HeroArt(art, appearance.heroBlur, appearance.reducedMotion, heroOn && art == hero)
                 }
                 // Fade the game background into the theme color at the bottom and on the left (behind the texts)
                 Box(Modifier.fillMaxSize().graphicsLayer { alpha = .9f }.drawBehind {
@@ -117,20 +121,21 @@ private fun DrawScope.drawVignette(scrim: Color) {
     }
 }
 
-/** The blurred game background (prototype `.hero`: inset -90px, blur, saturate 1.15). */
+/** The hero alone: cached lens blur, then a very slow centered image-plane tilt. */
 @Composable
-private fun HeroArt(art: GameArt, blurPx: Int) {
+private fun HeroArt(art: GameArt, blurPx: Int, reducedMotion: Boolean, active: Boolean) {
     val image = art.image
     if (image != null && blurPx > 0) {
-        // Pre-rendered once per game and blur (see HeroBitmaps): the screen only scales a small bitmap up
-        val hero by produceState(HeroBitmaps.cached(art.id, image, blurPx), art.id, image, blurPx) {
-            value = HeroBitmaps.cached(art.id, image, blurPx) ?: withContext(Dispatchers.Default) { HeroBitmaps.render(art.id, image, blurPx) }
+        // Only this bounded cache fill uses the GPU lens shader. The orbit scales its result like an
+        // ordinary image, with no shader work, bitmap allocations or recomposition on motion frames.
+        val hero by produceState(HeroBitmaps.cachedLens(art.id, image, blurPx), art.id, image, blurPx) {
+            value = HeroBitmaps.cachedLens(art.id, image, blurPx) ?: withContext(Dispatchers.Default) { HeroBitmaps.renderLens(art.id, image, blurPx) }
         }
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             hero?.let {
                 Image(
                     it, contentDescription = null, contentScale = ContentScale.FillBounds, filterQuality = FilterQuality.Low,
-                    modifier = Modifier.requiredSize(2100.px, 1260.px),
+                    modifier = Modifier.requiredSize(2100.px, 1260.px).then(heroTilt(active, reducedMotion)),
                 )
             }
         }
@@ -157,12 +162,44 @@ private fun HeroArt(art: GameArt, blurPx: Int) {
             },
         contentAlignment = Alignment.Center,
     ) {
-        val layer = Modifier.requiredSize(2100.px, 1260.px).graphicsLayer { renderEffect = effect }
+        val layer = Modifier.requiredSize(2100.px, 1260.px)
+            .then(if (image != null) heroTilt(active, reducedMotion) else Modifier)
+            .graphicsLayer { renderEffect = effect }
         if (image != null) {
             Image(image, contentDescription = null, contentScale = ContentScale.Crop, modifier = layer)
         } else {
             PlaceholderArt(art.hue, art.hue2, art.icon, glyphSize = 1050f, glyphRight = 84f, glyphTop = -.14f, glyphAlpha = .14f, modifier = layer)
         }
+    }
+}
+
+/** The clock exists only for a visible, loaded image, and stops when its Activity is not resumed. */
+@Composable
+private fun heroTilt(active: Boolean, reducedMotion: Boolean): Modifier {
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    var turn by remember { mutableFloatStateOf(0f) }
+    LaunchedEffect(active, reducedMotion, lifecycle) {
+        if (!active || reducedMotion) return@LaunchedEffect
+        lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            var previous = 0L
+            var elapsed = (turn.toDouble() * HeroMotion.PERIOD_NANOS).toLong()
+            while (true) {
+                withFrameNanos { now ->
+                    if (previous != 0L) elapsed = (elapsed + now - previous) % HeroMotion.PERIOD_NANOS
+                    previous = now
+                    turn = (elapsed.toDouble() / HeroMotion.PERIOD_NANOS).toFloat()
+                }
+            }
+        }
+    }
+    return Modifier.graphicsLayer {
+        rotationX = HeroMotion.pitch(turn, reducedMotion)
+        rotationY = HeroMotion.yaw(turn, reducedMotion)
+        // The existing 90-stage-pixel inset plus this fixed safety margin covers all four edges.
+        scaleX = if (reducedMotion) 1f else HeroMotion.OVERSCAN
+        scaleY = scaleX
+        cameraDistance = maxOf(size.width, size.height) * HeroMotion.CAMERA_DISTANCE_FACTOR
+        // Default TransformOrigin.Center: the center stays stationary at every point of the orbit.
     }
 }
 
