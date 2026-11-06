@@ -120,8 +120,8 @@ class ImeShiftTest {
     // The editing band: the field being edited is pinned into the top quarter whatever the keyboard reports (1920 x 1080 landscape unless said otherwise)
     private fun edit(
         fieldTop: Float, fieldBottom: Float, engaged: Boolean = true, keyboard: Float = 0f, regionTop: Float = fieldTop, regionBottom: Float = fieldBottom,
-        width: Float = 1920f, height: Float = 1080f, visible: Boolean = true,
-    ) = ImeShift.editShift(engaged, visible, fieldTop, fieldBottom, regionTop, regionBottom, width, height, keyboard, 24f)
+        width: Float = 1920f, height: Float = 1080f, visible: Boolean = true, moverTop: Float = 0f,
+    ) = ImeShift.editShift(engaged, visible, fieldTop, fieldBottom, regionTop, regionBottom, moverTop, width, height, keyboard, 24f, 48f)
 
     @Test
     fun theBandIsAQuarterOfALandscapeWindowAndAFifthOfAPortraitOne() {
@@ -130,38 +130,61 @@ class ImeShiftTest {
         assertEquals(.20f, ImeShift.EDIT_BAND_BOTTOM_FRACTION_PORTRAIT, 0f)
         // Portrait: 1080 x 1920, the band ends at 384
         assertEquals(384f, ImeShift.editBandBottom(1080f, 1920f), 0f)
-        assertEquals(1500f - 384f, edit(1416f, 1500f, width = 1080f, height = 1920f), 0f)
+        // The band asks for 1116 and the page may reach it, but the field only has to be at or above 40% (768): 1500 - 768
+        assertEquals(732f, edit(1416f, 1500f, width = 1080f, height = 1920f), 0f)
     }
 
     @Test
-    fun theProfileNameFieldMovesToTheTopQuarterWhateverTheKeyboardReports() {
-        // field 790..874: its bottom goes to 270. SwiftKey reports 111 px (a real keyboard covers 623 px), and no keyboard at all gives the same
-        assertEquals(604f, edit(790f, 874f), 0f)
-        assertEquals(604f, edit(790f, 874f, keyboard = 111f), 0f)
-        // With the button as a region: the band still decides, the button's measured need (540 px keyboard: 482) is smaller
-        assertEquals(604f, edit(790f, 874f, keyboard = 540f, regionTop = 790f, regionBottom = 998f), 0f)
+    fun theProfilePageMovesUntilTheFieldIsAtFortyPercentAndMayLeaveTheTop() {
+        // field 790..874 on a page whose content starts at 110 (or the whole window, 0): the band asks for 604, the page may only go up 62,
+        // but the field must be at or above 40% of 1080 = 432: 874 - 432 = 442. The field wins over the margin; the heading leaves the top
+        assertEquals(442f, edit(790f, 874f, moverTop = 110f), 0f)
+        assertEquals(442f, edit(790f, 874f), 0f)
+        // SwiftKey reports 111 px (and covers 623): the same
+        assertEquals(442f, edit(790f, 874f, keyboard = 111f), 0f)
+        // With the button as a region and a measured 540 px keyboard (it needs 482 for the region, but the margin caps that to what keeps the field above it, 358)
+        assertEquals(442f, edit(790f, 874f, keyboard = 540f, regionTop = 790f, regionBottom = 998f, moverTop = 110f), 0f)
     }
 
     @Test
-    fun aDialogFieldMovesToTheTopQuarter() {
-        // The rename dialog's field at 514..598
-        assertEquals(328f, edit(514f, 598f), 0f)
+    fun aDialogKeepsItsTopMarginFromTheEdge() {
+        // Rename profile: card top 324, field 514..598. The band says 328, the margin cap 324 - 48 = 276, the field floor 598 - 432 = 166: 276,
+        // the card is 48 px from the top, the field's bottom at 322, above the keyboard (about 457)
+        assertEquals(276f, edit(514f, 598f, moverTop = 324f), 0f)
+        assertEquals(598f - 276f, 322f, 0f)
+    }
+
+    @Test
+    fun aTinyDialogIsNotCappedByTheMarginAndALargeOneLetsTheFieldWin() {
+        // A small dialog low on the screen: card top 560, field 600..684: the band's 414 is within the margin's 512
+        assertEquals(414f, edit(600f, 684f, moverTop = 560f), 0f)
+        // A dialog taller than the free area: card top 100, field 500..584: the band says 314, the margin 52, the floor 152: the field wins, the card's top leaves the screen by 52
+        assertEquals(152f, edit(500f, 584f, moverTop = 100f), 0f)
+        // And one that starts at the top edge: the field is still above 40%
+        assertEquals(584f - 432f, edit(500f, 584f, moverTop = 0f), 0f)
     }
 
     @Test
     fun aFieldThatIsAlreadyInTheBandStaysWhereItIs() {
-        // The settings search field at 266..350 is 80 px under the band's edge, one at 100..184 is above it
-        assertEquals(80f, edit(266f, 350f), 0f)
+        // A field at 266..350 is 80 px under the band's edge but above 40%, and a mover with room to spare (card top 200) does not go over it; one at 100..184 is in the band
+        assertEquals(80f, edit(266f, 350f, moverTop = 200f), 0f)
+        // ... a page that begins at the top edge cannot go up without leaving it, and the field is above 40%: nothing moves
+        assertEquals(0f, edit(266f, 350f, moverTop = 0f), 0f)
         assertEquals(0f, edit(100f, 184f), 0f)
         assertEquals(0f, edit(100f, 184f, keyboard = 0f), 0f)
     }
 
     @Test
-    fun aMeasuredKeyboardThatNeedsMoreBeatsTheBandAndNeverLessThanIt() {
-        // A reported 700 px keyboard under a field at 400..484: the band needs 214, the keyboard 484 + 24 - 380 = 128: the band
-        assertEquals(214f, edit(400f, 484f, keyboard = 700f), 0f)
-        // A 600 px tall window, the band ends at 150: a field at 300..384 needs 234 for it; a 450 px keyboard needs 384 + 24 - 150 = 258: the keyboard
+    fun aMeasuredKeyboardThatNeedsMoreBeatsTheBandAndIsCappedByTheMarginExceptForTheField() {
+        // A reported 700 px keyboard (free 380) under a field at 400..484: the band needs 214 but is reached only to the floor, 52; the keyboard needs
+        // 484 + 24 - 380 = 128 to keep the field above it, and nothing caps that
+        assertEquals(128f, edit(400f, 484f, keyboard = 700f), 0f)
+        // A 600 px tall window, the field at 300..384: the band's 234 is cut to the floor 144; a 450 px keyboard needs 384 + 24 - 150 = 258: the keyboard
         assertEquals(258f, edit(300f, 384f, keyboard = 450f, height = 600f), 0f)
+        // A dialog (card top 324) over a 700 px keyboard: field 600..684 needs 328 for the keyboard itself, past the margin's 276; the field would be covered
+        assertEquals(328f, edit(600f, 684f, keyboard = 700f, moverTop = 324f), 0f)
+        // The same card with a keyboard whose region asks for more than the field needs: the margin caps the region, not the field
+        assertEquals(276f, edit(514f, 598f, keyboard = 540f, regionTop = 324f, regionBottom = 820f, moverTop = 324f), 0f)
     }
 
     @Test
@@ -184,11 +207,11 @@ class ImeShiftTest {
     @Test
     fun theBandOnlyHoldsWhileTheKeyboardIsVisible() {
         // The user hid the keyboard (SwiftKey's chevron, Back): the field is still focused and engaged, but everything glides back
-        assertEquals(604f, edit(790f, 874f, visible = true), 0f)
+        assertEquals(442f, edit(790f, 874f, visible = true), 0f)
         assertEquals(0f, edit(790f, 874f, visible = false), 0f)
-        assertEquals(0f, edit(514f, 598f, visible = false), 0f)
+        assertEquals(0f, edit(514f, 598f, visible = false, moverTop = 324f), 0f)
         // ... and A or a tap opens it again: visible, engaged, the same shift as before
-        assertEquals(328f, edit(514f, 598f, visible = true), 0f)
+        assertEquals(276f, edit(514f, 598f, visible = true, moverTop = 324f), 0f)
     }
 
     @Test

@@ -50,6 +50,12 @@ object ImeShift {
     /** The gap that stays between the keyboard (or the screen's top edge) and what is kept visible, in stage pixels. */
     const val MARGIN = 24f
 
+    /** What is moved keeps at least this far from the window's top edge (a dialog card), in stage pixels, unless the field itself would not be above [EDIT_FLOOR_FRACTION]. */
+    const val TOP_MARGIN = 48f
+
+    /** Whatever the margin says, a field being edited ends at or above this fraction of the window height: the field wins over the margin. */
+    const val EDIT_FLOOR_FRACTION = .40f
+
     /** A visible frame that is smaller than the window by less than this fraction of it is not a keyboard (a navigation bar, a cutout). */
     const val FRAME_MIN_FRACTION = .15f
 
@@ -90,17 +96,24 @@ object ImeShift {
         imeVisible || keyboardHeight(windowHeight, insetBottom, composeBottom, visibleBottom, false) > 0f
 
     /**
-     * The shift for the field being edited: the band rule while the field is [engaged] *and the keyboard is [visible]*, and the one for
-     * the measured [keyboard] height ([shift]); the larger of the two, so a keyboard that is measured to cover more can only push
-     * the field higher than the band does. A keyboard that is hidden (the user closed it, the field is still focused) or a field
-     * that is not engaged: nothing moves, and what moved glides back.
+     * The shift for the field being edited. While the field is [engaged] *and the keyboard is [visible]* the band rule pins it into
+     * the top quarter ([bandShift]), but never so high that what is moved leaves the top: its top ([moverTop], a dialog card) keeps [topMargin]
+     * pixels from the edge. The field wins over that margin: it must end up at or above [EDIT_FLOOR_FRACTION] of the window height in any case, so a
+     * dialog taller than the free area, or a page whose field is low, may still leave the top. Next to it, the measured [keyboard] height asks
+     * for [shift]; that is capped by the same margin, except for what keeps the field itself above the keyboard. The larger of the two
+     * wins, and the field's own top keeps [margin] from the edge. A keyboard that is hidden (the user closed it, the field is still
+     * focused) or a field that is not engaged: nothing moves, and what moved glides back.
      */
     fun editShift(
-        engaged: Boolean, visible: Boolean, fieldTop: Float, fieldBottom: Float, regionTop: Float, regionBottom: Float,
-        windowWidth: Float, windowHeight: Float, keyboard: Float, margin: Float,
+        engaged: Boolean, visible: Boolean, fieldTop: Float, fieldBottom: Float, regionTop: Float, regionBottom: Float, moverTop: Float,
+        windowWidth: Float, windowHeight: Float, keyboard: Float, margin: Float, topMargin: Float,
     ): Float {
-        val band = if (engaged && visible) bandShift(fieldTop, fieldBottom, editBandBottom(windowWidth, windowHeight), margin) else 0f
-        return maxOf(band, shift(fieldTop, fieldBottom, regionTop, regionBottom, windowHeight, keyboard, margin))
+        val floor = maxOf(fieldBottom - windowHeight * EDIT_FLOOR_FRACTION, 0f)
+        val room = moverTop - topMargin
+        val band = if (engaged && visible) minOf(bandShift(fieldTop, fieldBottom, editBandBottom(windowWidth, windowHeight), margin), maxOf(room, floor)) else 0f
+        val fieldOnly = shift(fieldTop, fieldBottom, fieldTop, fieldBottom, windowHeight, keyboard, margin)
+        val measured = minOf(shift(fieldTop, fieldBottom, regionTop, regionBottom, windowHeight, keyboard, margin), maxOf(room, fieldOnly))
+        return maxOf(band, measured).coerceIn(0f, maxOf(fieldTop - margin, 0f))
     }
 
     /**
@@ -231,7 +244,7 @@ class ImeAvoidance {
     internal fun removeMover(anchor: ImeAnchor) { movers.remove(anchor) }
 
     /** Reads every source for the keyboard and, with a field focused, where its mover should be; [margin] in pixels. */
-    internal fun measure(composeBottom: Int, margin: Float): ImeMeasure {
+    internal fun measure(composeBottom: Int, margin: Float, topMargin: Float): ImeMeasure {
         @Suppress("UNUSED_EXPRESSION") tick // read: the layout listener and the poll make this measure again
         val view = view ?: return ImeMeasure(composeBottom = composeBottom)
         val decor = view.rootView
@@ -270,7 +283,7 @@ class ImeAvoidance {
             anchor.coordinates?.takeIf { it.isAttached }?.let { held.inside.localBoundingBoxOf(it, clipBounds = false).toWindow() }
         }).filter { it.contains(f.center) }.minByOrNull { it.height } ?: whole
         val band = if (engaged) ImeShift.bandShift(f.top, f.bottom, ImeShift.editBandBottom(windowWidth.toFloat(), h), margin) else 0f
-        val shift = ImeShift.editShift(engaged, visible, f.top, f.bottom, region.top, region.bottom, windowWidth.toFloat(), h, keyboard, margin)
+        val shift = ImeShift.editShift(engaged, visible, f.top, f.bottom, region.top, region.bottom, whole.top, windowWidth.toFloat(), h, keyboard, margin, topMargin)
         return base.copy(field = f, fieldTopNow = fieldCoordinates.positionInWindow().y, region = region, band = band, mover = held.mover, shift = shift)
     }
 }
@@ -285,6 +298,7 @@ fun rememberImeAvoidance(): ImeAvoidance {
     val density = LocalDensity.current
     val view = LocalView.current
     val margin = ImeShift.MARGIN * stageUnit()
+    val topMargin = ImeShift.TOP_MARGIN * stageUnit()
     avoidance.view = view
     DisposableEffect(avoidance, view) {
         // A keyboard that is shown without an inset event still changes the layout or the visible frame
@@ -302,8 +316,8 @@ fun rememberImeAvoidance(): ImeAvoidance {
             if (avoidance.hasField) avoidance.poke()
         }
     }
-    LaunchedEffect(avoidance, density, margin) {
-        snapshotFlow { avoidance.measure(ime.getBottom(density), margin) }.collect { measure ->
+    LaunchedEffect(avoidance, density, margin, topMargin) {
+        snapshotFlow { avoidance.measure(ime.getBottom(density), margin, topMargin) }.collect { measure ->
             if (BuildConfig.DEBUG) log(view, measure)
             avoidance.current = measure
         }
