@@ -104,9 +104,8 @@ class ImeShiftTest {
     }
 
     @Test
-    fun theProfilePageSlidesUntilTheNameFieldAndItsButtonAreAboveTheKeyboard() {
-        // CreateProfileScreen on the 1920 x 1080 Odin: a column of about 860 px centered on the stage, the name field
-        // at 790..874 and "Create profile" at 914..998. The keyboard covers the lower half (540 px).
+    fun aRegionWithItsButtonIsBroughtInWithTheFieldByTheMeasuredKeyboard() {
+        // A field at 790..874 with a button under it at 914..998 on a 1080 px window, and a measured keyboard that covers the lower half (540 px).
         val kb = keyboard(visibleBottom = 540f)
         val moved = ImeShift.shift(790f, 874f, 790f, 998f, 1080f, kb, 24f)
         // 998 + 24 - 540 = 482: the button's bottom ends 24 px above the keyboard and the field is far above it
@@ -135,9 +134,9 @@ class ImeShiftTest {
     }
 
     @Test
-    fun theProfilePageMovesUntilTheFieldIsAtFortyPercentAndMayLeaveTheTop() {
-        // field 790..874 on a page whose content starts at 110 (or the whole window, 0): the band asks for 604, the page may only go up 62,
-        // but the field must be at or above 40% of 1080 = 432: 874 - 432 = 442. The field wins over the margin; the heading leaves the top
+    fun aLowFieldInATallContainerMovesUntilItIsAtFortyPercentAndMayLeaveTheTop() {
+        // field 790..874 in a container that starts at 110 (or the whole window, 0): the band asks for 604, the page may only go up 62,
+        // but the field must be at or above 40% of 1080 = 432: 874 - 432 = 442. The field wins over the margin; the container's top leaves the window
         assertEquals(442f, edit(790f, 874f, moverTop = 110f), 0f)
         assertEquals(442f, edit(790f, 874f), 0f)
         // SwiftKey reports 111 px (and covers 623): the same

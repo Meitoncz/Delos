@@ -433,6 +433,36 @@ fun TextFieldPill(
     )
 }
 
+/**
+ * A labelled value that looks like a [TextFieldPill] but is not an input: where the text is typed in the dialog (`DialogLayer`), the page
+ * shows what is there ([value], or [placeholder] in the muted color when it is empty) and offers a button next to it.
+ */
+@Composable
+fun ValuePill(label: String, value: String, icon: String, placeholder: String, modifier: Modifier = Modifier, width: Float = 520f) {
+    val colors = LocalDelosColors.current
+    Row(
+        modifier
+            .width(width.px)
+            .height(84.px)
+            .clip(CircleShape)
+            .glass(colors.surface2)
+            .border(1.px, colors.line, CircleShape)
+            .padding(horizontal = 28.px),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.px),
+    ) {
+        Symbol(icon, 34.tpx, colors.text3)
+        Column(verticalArrangement = Arrangement.Center) {
+            BasicText(label.uppercase(), style = TextStyle(color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 17.tpx, letterSpacing = .08.em), maxLines = 1)
+            BasicText(
+                value.ifEmpty { placeholder },
+                style = TextStyle(color = if (value.isEmpty()) colors.text3 else colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 30.tpx),
+                maxLines = 1,
+            )
+        }
+    }
+}
+
 /** Shows every character of a password field as a dot. */
 private val PasswordMask = OutputTransformation { replace(0, length, "\u2022".repeat(length)) }
 

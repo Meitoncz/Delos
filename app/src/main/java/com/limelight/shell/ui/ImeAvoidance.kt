@@ -201,11 +201,11 @@ internal data class ImeMeasure(
 
 /**
  * Keeps the focused text field above the on-screen keyboard, in one place for the whole shell. Only what is marked moves: a
- * container marked with [moveAboveIme] (the dialog, the profile page's content) glides up by [ImeMeasure.shift] while the
+ * container marked with [moveAboveIme] (the dialog card) glides up by [ImeMeasure.shift] while the
  * keyboard is up and the field in it is being edited, and glides back when the keyboard is hidden or the field is left. The
  * status bar, the background, the scrim and the other bars stay where they are. The text fields ([TextFieldPill]) report their
- * place when they have focus; a container marked with [keepVisibleWithIme] (the name field with its button) is brought in with the
- * field when the measured keyboard asks for it.
+ * place when they have focus. Text is typed in a dialog ([DialogLayer]) everywhere but the settings search, so the dialog is
+ * the one mover; the mover's card is also what is kept visible with the field when the measured keyboard asks for it.
  *
  * The keyboard is not taken from one place: the system does not always say its height in edge to edge windows with hidden bars
  * (and some keyboards say far less than they cover). [measure] reads Compose's `WindowInsets.ime`, the root window insets and the
@@ -222,7 +222,6 @@ class ImeAvoidance {
 
     private var focused by mutableStateOf<ImeAnchor?>(null)
     private var tick by mutableIntStateOf(0)
-    private val regions = ArrayList<ImeAnchor>()
     private val movers = ArrayList<ImeAnchor>()
     private var baselineHeight = 0
 
@@ -234,10 +233,6 @@ class ImeAvoidance {
     internal fun focusChanged(anchor: ImeAnchor, isFocused: Boolean) {
         if (isFocused) focused = anchor else if (focused === anchor) focused = null
     }
-
-    internal fun addRegion(anchor: ImeAnchor) { regions.add(anchor) }
-
-    internal fun removeRegion(anchor: ImeAnchor) { regions.remove(anchor) }
 
     internal fun addMover(anchor: ImeAnchor) { movers.add(anchor) }
 
@@ -277,13 +272,10 @@ class ImeAvoidance {
         }.minByOrNull { it.inside.size.width.toLong() * it.inside.size.height } ?: return base
         fun Rect.toWindow() = translate(held.origin)
         val f = held.field.toWindow()
-        // The region that holds the field: the mover itself, or a smaller marked one inside it
-        val whole = Rect(0f, 0f, held.inside.size.width.toFloat(), held.inside.size.height.toFloat()).toWindow()
-        val region = (listOf(whole) + regions.mapNotNull { anchor ->
-            anchor.coordinates?.takeIf { it.isAttached }?.let { held.inside.localBoundingBoxOf(it, clipBounds = false).toWindow() }
-        }).filter { it.contains(f.center) }.minByOrNull { it.height } ?: whole
+        // What is kept visible with the field is the mover itself: the dialog card
+        val region = Rect(0f, 0f, held.inside.size.width.toFloat(), held.inside.size.height.toFloat()).toWindow()
         val band = if (engaged) ImeShift.bandShift(f.top, f.bottom, ImeShift.editBandBottom(windowWidth.toFloat(), h), margin) else 0f
-        val shift = ImeShift.editShift(engaged, visible, f.top, f.bottom, region.top, region.bottom, whole.top, windowWidth.toFloat(), h, keyboard, margin, topMargin)
+        val shift = ImeShift.editShift(engaged, visible, f.top, f.bottom, region.top, region.bottom, region.top, windowWidth.toFloat(), h, keyboard, margin, topMargin)
         return base.copy(field = f, fieldTopNow = fieldCoordinates.positionInWindow().y, region = region, band = band, mover = held.mover, shift = shift)
     }
 }
@@ -396,16 +388,4 @@ fun Modifier.keepFieldAboveIme(engaged: Boolean): Modifier {
     SideEffect { anchor.engaged = engaged }
     DisposableEffect(avoidance, anchor) { onDispose { avoidance.focusChanged(anchor, false) } }
     return onGloballyPositioned { anchor.coordinates = it }.onFocusChanged { avoidance.focusChanged(anchor, it.isFocused) }
-}
-
-/** What should stay visible together with a text field inside it, when it fits above the keyboard: a dialog, a field with its button. */
-@Composable
-fun Modifier.keepVisibleWithIme(): Modifier {
-    val avoidance = LocalImeAvoidance.current ?: return this
-    val anchor = remember { ImeAnchor() }
-    DisposableEffect(avoidance, anchor) {
-        avoidance.addRegion(anchor)
-        onDispose { avoidance.removeRegion(anchor) }
-    }
-    return onGloballyPositioned { anchor.coordinates = it }
 }

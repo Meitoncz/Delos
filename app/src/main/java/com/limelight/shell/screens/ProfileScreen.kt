@@ -132,20 +132,30 @@ fun openProfilesMenu(shell: ShellState, tracker: FocusTracker, feedback: Feedbac
 }
 
 private fun renameProfile(shell: ShellState, tracker: FocusTracker, store: ProfileStore, feedback: Feedback, id: String, name: String) {
+    openProfileNameDialog(shell, tracker, feedback, "Rename profile", name) { value ->
+        store.update(id) { it.copy(name = value) }
+        shell.showToast("Profile renamed", Symbols.CHECK_CIRCLE)
+    }
+}
+
+/**
+ * The one dialog a profile's name is typed in: Rename on the profile screen and "Change name" on the new / edit profile pages. A blank
+ * name is refused with the same toast; [onName] gets the trimmed name when it is accepted and the dialog closes.
+ */
+fun openProfileNameDialog(shell: ShellState, tracker: FocusTracker, feedback: Feedback, title: String, initial: String, onName: (String) -> Unit) {
     feedback.play(Cue.OPEN)
     shell.openLayer(
         Layer.Dialog(
             DialogSpec(
-                "Rename profile", "Shown on the start screen and in the side menu.",
-                listOf(DialogField(Symbols.BADGE, initial = name, maxLength = 20)), "Save",
+                title, "Shown on the start screen and in the side menu.",
+                listOf(DialogField(Symbols.BADGE, initial = initial, maxLength = 20)), "Save",
             ) { (value) ->
                 if (value.isBlank()) {
                     feedback.play(Cue.ERROR)
                     shell.showToast("Enter a name for your profile", Symbols.BADGE)
                     false
                 } else {
-                    store.update(id) { it.copy(name = value.trim()) }
-                    shell.showToast("Profile renamed", Symbols.CHECK_CIRCLE)
+                    onName(value.trim())
                     true
                 }
             }

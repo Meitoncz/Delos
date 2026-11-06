@@ -280,6 +280,11 @@ class ShellState(initial: Screen) {
         layer = null
     }
 
+    /** The focus goes to [target] instead of where it was when the layer closes (a dialog that finishes a step moves on to the next one). */
+    fun returnFocusTo(target: FocusRequester) {
+        returnFocus = target
+    }
+
     /** The element to focus again once the closed layer has left the composition. */
     fun takeReturnFocus(): FocusRequester? = returnFocus.also { returnFocus = null }
 
