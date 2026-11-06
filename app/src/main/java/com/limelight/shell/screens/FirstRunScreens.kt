@@ -47,6 +47,7 @@ import com.limelight.shell.ui.PillButton
 import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.TextFieldPill
 import com.limelight.shell.ui.keepVisibleWithIme
+import com.limelight.shell.ui.moveAboveIme
 import com.limelight.shell.ui.Unbounded
 import com.limelight.shell.ui.px
 import com.limelight.shell.ui.tpx
@@ -119,7 +120,8 @@ fun CreateProfileScreen(editing: Boolean, initial: Profile?, onDone: (name: Stri
             onDone(entered.trim(), avatar)
         }
     }
-    CenterColumn(gap = 40f) {
+    // The page's content (not the status bar or the background) glides up while the name is being typed
+    CenterColumn(gap = 40f, Modifier.moveAboveIme()) {
         Heading(
             if (editing) "Choose your avatar" else "Who's playing?",
             if (editing) "And a new name, if you like." else "Pick an avatar and a name for your profile.",

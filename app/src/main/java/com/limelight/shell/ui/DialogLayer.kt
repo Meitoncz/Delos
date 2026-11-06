@@ -74,10 +74,10 @@ fun DialogLayer(spec: DialogSpec?, haze: HazeState, onDismiss: () -> Unit) {
             Column(
                 Modifier
                     .width(760.px)
+                    // The dialog (card, shadow, blur) glides up while its field is being edited; the scrim and everything else stay put
+                    .moveAboveIme()
                     .focusProperties { onExit = { if (open) cancelFocusChange() } }
                     .focusGroup()
-                    // With a field focused and the keyboard open, the whole dialog (buttons too) is brought in when it fits above the keyboard
-                    .keepVisibleWithIme()
                     // box-shadow: 0 40px 100px -30px rgba(0, 0, 0, .7)
                     .dropShadow(shape) {
                         radius = 100f * k

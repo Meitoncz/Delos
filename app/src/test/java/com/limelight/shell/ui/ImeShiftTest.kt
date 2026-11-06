@@ -120,8 +120,8 @@ class ImeShiftTest {
     // The editing band: the field being edited is pinned into the top quarter whatever the keyboard reports (1920 x 1080 landscape unless said otherwise)
     private fun edit(
         fieldTop: Float, fieldBottom: Float, engaged: Boolean = true, keyboard: Float = 0f, regionTop: Float = fieldTop, regionBottom: Float = fieldBottom,
-        width: Float = 1920f, height: Float = 1080f,
-    ) = ImeShift.editShift(engaged, fieldTop, fieldBottom, regionTop, regionBottom, width, height, keyboard, 24f)
+        width: Float = 1920f, height: Float = 1080f, visible: Boolean = true,
+    ) = ImeShift.editShift(engaged, visible, fieldTop, fieldBottom, regionTop, regionBottom, width, height, keyboard, 24f)
 
     @Test
     fun theBandIsAQuarterOfALandscapeWindowAndAFifthOfAPortraitOne() {
@@ -179,5 +179,31 @@ class ImeShiftTest {
         assertEquals(16f, edit(40f, 740f), 0f)
         // A field already at the very top with its bottom below the band
         assertEquals(0f, edit(0f, 300f), 0f)
+    }
+
+    @Test
+    fun theBandOnlyHoldsWhileTheKeyboardIsVisible() {
+        // The user hid the keyboard (SwiftKey's chevron, Back): the field is still focused and engaged, but everything glides back
+        assertEquals(604f, edit(790f, 874f, visible = true), 0f)
+        assertEquals(0f, edit(790f, 874f, visible = false), 0f)
+        assertEquals(0f, edit(514f, 598f, visible = false), 0f)
+        // ... and A or a tap opens it again: visible, engaged, the same shift as before
+        assertEquals(328f, edit(514f, 598f, visible = true), 0f)
+    }
+
+    @Test
+    fun theVisibleFlagAloneOrAnyMeasuredHeightMeansTheKeyboardIsUp() {
+        fun up(inset: Float = 0f, compose: Float = 0f, visibleBottom: Float = 1080f, flag: Boolean = false) =
+            ImeShift.keyboardVisible(1080f, inset, compose, visibleBottom, flag)
+        // The Odin's SwiftKey: a bogus 111 px, but the flag is true while it is open and false, with 0 everywhere, when it is closed
+        assertEquals(true, up(inset = 111f, flag = true))
+        assertEquals(false, up(inset = 0f, compose = 0f, flag = false))
+        // The flag without a height, a height without the flag, the frame alone
+        assertEquals(true, up(flag = true))
+        assertEquals(true, up(inset = 111f))
+        assertEquals(true, up(compose = 300f))
+        assertEquals(true, up(visibleBottom = 540f))
+        // A navigation bar's worth of visible frame is no keyboard
+        assertEquals(false, up(visibleBottom = 1026f))
     }
 }
