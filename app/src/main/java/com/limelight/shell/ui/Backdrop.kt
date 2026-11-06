@@ -51,6 +51,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
@@ -80,12 +81,15 @@ data class GameArt(val id: String, val hue: Float, val hue2: Float, val icon: St
 @Composable
 fun Backdrop(appearance: Appearance, colors: DelosColors, hero: GameArt?, modifier: Modifier = Modifier) {
     val heroOn = appearance.heroBackground && hero != null && appearance.heroOpacity > 0
+    // The tilt is the still background's only motion; it also stops when the system removes animations.
+    val context = LocalContext.current
+    val tiltReduced = appearance.reducedMotion || remember(context) { HeroMotion.animatorsOff(context) }
     val heroAlpha by animateFloatAsState(if (heroOn) appearance.heroOpacity / 100f else 0f, tween(800), label = "hero")
     Box(modifier.fillMaxSize().background(colors.bg)) {
         if (heroAlpha > 0f || heroOn) {
             Box(Modifier.fillMaxSize().graphicsLayer { alpha = heroAlpha }) {
                 Crossfade(hero, animationSpec = tween(900), label = "heroArt") { art ->
-                    if (art != null) HeroArt(art, appearance.heroBlur, appearance.reducedMotion, heroOn && art == hero)
+                    if (art != null) HeroArt(art, appearance.heroBlur, tiltReduced, heroOn && art == hero)
                 }
                 // Fade the game background into the theme color at the bottom and on the left (behind the texts)
                 Box(Modifier.fillMaxSize().graphicsLayer { alpha = .9f }.drawBehind {
@@ -177,18 +181,15 @@ private fun HeroArt(art: GameArt, blurPx: Int, reducedMotion: Boolean, active: B
 @Composable
 private fun Modifier.heroTilt(active: Boolean, reducedMotion: Boolean): Modifier {
     val lifecycle = LocalLifecycleOwner.current.lifecycle
-    var turn by remember { mutableFloatStateOf(0f) }
+    // System.nanoTime is the frame clock's timebase: a copy composed later starts in phase on its first frame.
+    var turn by remember { mutableFloatStateOf(HeroMotion.turnAt(System.nanoTime())) }
     LaunchedEffect(active, reducedMotion, lifecycle) {
         if (!active || reducedMotion) return@LaunchedEffect
         lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-            var previous = 0L
-            var elapsed = (turn.toDouble() * HeroMotion.PERIOD_NANOS).toLong()
             while (true) {
-                withFrameNanos { now ->
-                    if (previous != 0L) elapsed = (elapsed + now - previous) % HeroMotion.PERIOD_NANOS
-                    previous = now
-                    turn = (elapsed.toDouble() / HeroMotion.PERIOD_NANOS).toFloat()
-                }
+                // The phase is a pure function of the frame clock: every Backdrop (the stream-exit cover,
+                // a new game's hero) shows the same pose, and nothing restarts at phase 0.
+                withFrameNanos { now -> turn = HeroMotion.turnAt(now) }
             }
         }
     }

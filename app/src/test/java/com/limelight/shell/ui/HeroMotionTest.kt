@@ -10,8 +10,7 @@ import org.junit.Test
 
 class HeroMotionTest {
     @Test
-    fun thirtySecondOrbitIsCircularAndOppositePhasesAreSymmetric() {
-        assertEquals(30_000_000_000L, HeroMotion.PERIOD_NANOS)
+    fun orbitIsCircularAndOppositePhasesAreSymmetric() {
         for (step in 0..360) {
             val turn = step / 360f
             val pitch = HeroMotion.pitch(turn, false)
@@ -63,6 +62,14 @@ class HeroMotionTest {
                 }
             }
         }
+    }
+
+    @Test
+    fun phaseFollowsTheFrameClockAndWrapsEveryPeriod() {
+        assertEquals(0f, HeroMotion.turnAt(0L), 0f)
+        assertEquals(0f, HeroMotion.turnAt(HeroMotion.PERIOD_NANOS * 3), 0f)
+        assertEquals(.5f, HeroMotion.turnAt(HeroMotion.PERIOD_NANOS * 3 + HeroMotion.PERIOD_NANOS / 2), 1e-6f)
+        assertEquals(HeroMotion.turnAt(12_345_678_901L), HeroMotion.turnAt(12_345_678_901L + HeroMotion.PERIOD_NANOS), 1e-6f)
     }
 
     private data class Point(val x: Double, val y: Double)

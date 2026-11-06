@@ -46,12 +46,14 @@ internal object HeroLensShader {
             source.width, source.height, PixelFormat.RGBA_8888, 1,
             HardwareBuffer.USAGE_GPU_SAMPLED_IMAGE or HardwareBuffer.USAGE_GPU_COLOR_OUTPUT,
         )
-        val renderer = HardwareRenderer()
+        // Created inside the try, so the finally releases the reader even if the renderer cannot be created.
+        var renderer: HardwareRenderer? = null
         try {
-            renderer.setSurface(reader.surface)
-            renderer.setContentRoot(node)
-            renderer.setOpaque(false)
-            val status = renderer.createRenderRequest().setWaitForPresent(true).syncAndDraw()
+            val gpu = HardwareRenderer().also { renderer = it }
+            gpu.setSurface(reader.surface)
+            gpu.setContentRoot(node)
+            gpu.setOpaque(false)
+            val status = gpu.createRenderRequest().setWaitForPresent(true).syncAndDraw()
             check(status and (HardwareRenderer.SYNC_LOST_SURFACE_REWARD_IF_FOUND or HardwareRenderer.SYNC_CONTEXT_IS_STOPPED) == 0) {
                 "Hero lens GPU render failed: $status"
             }
@@ -69,7 +71,7 @@ internal object HeroLensShader {
                 }
             }
         } finally {
-            renderer.destroy()
+            renderer?.destroy()
             reader.close()
             node.discardDisplayList()
         }

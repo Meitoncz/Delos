@@ -340,7 +340,7 @@ private fun DescriptionPanel(tab: SettingsTab, focused: SettingsItem?, modifier:
             if (focused?.key in GAME_BACKGROUND_ROWS) {
                 val hero = LocalShell.current.hero
                 val image by produceState<ImageBitmap?>(null, hero?.id, appearance.heroBlur) {
-                    value = hero?.image?.let { source -> withContext(Dispatchers.Default) { HeroBitmaps.render(hero.id, source, appearance.heroBlur) } }
+                    value = hero?.image?.let { source -> withContext(Dispatchers.Default) { HeroBitmaps.renderLens(hero.id, source, appearance.heroBlur) } }
                 }
                 Box(Modifier.fillMaxWidth().height(150.px).clip(RoundedCornerShape(20.px)).background(colors.bg2), contentAlignment = Alignment.Center) {
                     if (appearance.heroBackground && hero != null) {

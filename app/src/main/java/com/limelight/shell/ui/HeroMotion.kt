@@ -1,5 +1,7 @@
 package com.limelight.shell.ui
 
+import android.content.Context
+import android.provider.Settings
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -10,6 +12,14 @@ internal object HeroMotion {
     const val DEGREES = 9f
     const val OVERSCAN = 1.025f
     const val CAMERA_DISTANCE_FACTOR = 3f
+
+    /** The orbit's phase (0–1) at a frame-clock time, so every copy of the hero is in phase and none restarts. */
+    fun turnAt(frameNanos: Long): Float =
+        ((frameNanos % PERIOD_NANOS).toDouble() / PERIOD_NANOS).toFloat()
+
+    /** The system's "remove animations" switch (animator duration scale 0) counts like reduced motion. */
+    fun animatorsOff(context: Context): Boolean =
+        Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
 
     fun pitch(turn: Float, reduced: Boolean): Float =
         if (reduced) 0f else DEGREES * sin(turn * (2.0 * PI)).toFloat()

@@ -967,6 +967,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     public boolean isVirtualControllerShown() {
         return virtualController != null && virtualController.shown;
     }
+
     // Show/hide the virtual gamepad controller
     public void toggleVirtualController(){
         if (virtualController==null) {
@@ -1859,6 +1860,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         if (fullKeyboard != null && fullKeyboard.ownsInputFrom(event)) {
             return fullKeyboard.onControllerKey(event);
         }
+
         boolean handled = false;
 
         if (ControllerHandler.isGameControllerDevice(event.getDevice())) {
@@ -1955,6 +1957,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         if (fullKeyboard != null && fullKeyboard.ownsInputFrom(event)) {
             return fullKeyboard.onControllerKey(event);
         }
+
         boolean handled = false;
         if (ControllerHandler.isGameControllerDevice(event.getDevice())) {
             // Always try the controller handler first, unless it's an alphanumeric keyboard device.
@@ -3839,6 +3842,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
     /** Why the running rumble preset could not use its technique, or null. */
     public String getRumbleProblem() { return controllerHandler == null ? null : controllerHandler.getRumbleProblem(); }
+
     /** Delos: the native stream menu reuses the same mode and persistence rules as the old chooser. */
     public void setStreamMouseMode(int mode) {
         if (mode < 0 || mode > 5 || (isOnExternalDisplay() && mode != 2 && mode != 3 && mode != 4)) return;

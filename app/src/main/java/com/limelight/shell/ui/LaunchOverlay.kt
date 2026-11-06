@@ -46,7 +46,10 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
@@ -85,12 +88,16 @@ object LaunchHandoff {
     @Volatile var line: String? = null
     @Volatile var lineAt: Long = 0L
 
+    /** The hero's tilt phase (HeroMotion.turnAt) when the launch began; NaN: it was flat. The legacy scene holds this pose. */
+    @Volatile var heroTurn: Float = Float.NaN
+
     @Volatile var logo: ImageBitmap? = null
     @Volatile var streamParameters: String = ""
 
     /** Forgets everything handed over (single use): the next launch must not inherit speed, phase, clock, line or art. */
     fun reset() {
         background = null
+        heroTurn = Float.NaN
         progress = 0f
         travel = 0f
         speedProgress = 0f
@@ -202,6 +209,7 @@ private const val COVER_RADIUS = 124f
 private fun LegacyLaunchScene(card: LaunchCard, stage: String?, progress: () -> Float, opening: () -> Float, clock: (() -> Float)?, modifier: Modifier = Modifier) {
     val colors = LocalDelosColors.current
     val metrics = LocalStage.current
+    val heroLayer = rememberGraphicsLayer()
     Box(
         modifier
             .fillMaxSize()
@@ -230,13 +238,21 @@ private fun LegacyLaunchScene(card: LaunchCard, stage: String?, progress: () -> 
             val k = metrics.dpPerPx * density
             drawRect(colors.bg)
             card.background?.let { bg ->
-                // The hero area of the home screen: 2100×1260 stage pixels around the screen
-                val w = 2100f * k
-                val h = 1260f * k
-                drawImage(
-                    bg, dstOffset = IntOffset(((size.width - w) / 2f).roundToInt(), ((size.height - h) / 2f).roundToInt()),
-                    dstSize = IntSize(w.roundToInt(), h.roundToInt()),
-                )
+                // The hero area of the home screen: 2100×1260 stage pixels around the screen, in the pose the live hero
+                // had when the launch began (the same overscan and tilt, held), so the hand-off does not snap.
+                val w = (2100f * k).roundToInt()
+                val h = (1260f * k).roundToInt()
+                val turn = LaunchHandoff.heroTurn
+                val tilted = !turn.isNaN()
+                heroLayer.record(this, layoutDirection, IntSize(w, h)) {
+                    drawImage(bg, dstSize = IntSize(w, h))
+                }
+                heroLayer.rotationX = HeroMotion.pitch(turn, !tilted)
+                heroLayer.rotationY = HeroMotion.yaw(turn, !tilted)
+                heroLayer.scaleX = if (tilted) HeroMotion.OVERSCAN else 1f
+                heroLayer.scaleY = heroLayer.scaleX
+                heroLayer.cameraDistance = maxOf(w, h) * HeroMotion.CAMERA_DISTANCE_FACTOR
+                translate((size.width - w) / 2f, (size.height - h) / 2f) { drawLayer(heroLayer) }
             }
             drawRect(colors.scrim)
             val o = opening()

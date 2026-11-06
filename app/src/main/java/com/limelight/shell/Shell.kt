@@ -87,6 +87,7 @@ import com.limelight.shell.ui.Glyph
 import com.limelight.shell.ui.Hint
 import com.limelight.shell.ui.HintBar
 import com.limelight.shell.ui.HeroBitmaps
+import com.limelight.shell.ui.HeroMotion
 import com.limelight.shell.ui.HANDOFF_PROGRESS
 import com.limelight.shell.ui.LaunchCard
 import com.limelight.shell.ui.LaunchHandoff
@@ -292,6 +293,7 @@ fun Shell(
         val launch = shell.launch ?: return@LaunchedEffect
         launchExitInstant.value = false
         LaunchHandoff.background = launch.background
+        LaunchHandoff.heroTurn = if (appearance.reducedMotion || activity?.let(HeroMotion::animatorsOff) == true) Float.NaN else HeroMotion.turnAt(System.nanoTime())
         LaunchHandoff.progress = 0f
         LaunchHandoff.travel = 0f
         LaunchHandoff.speedProgress = 0f
