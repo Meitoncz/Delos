@@ -291,6 +291,21 @@ internal fun ColumnScope.PopoverPage(
                     alpha = 1f - leave
                     translationY = if (rm) 0f else -10f * leave * k
                     compositingStrategy = CompositingStrategy.ModulateAlpha
+                }
+                // The scroll position, drawn in the card's side padding (outside the rows, so it never covers a ring or a value),
+                // only while the rows overflow
+                .drawWithContent {
+                    drawContent()
+                    val max = scroll.maxValue
+                    if (max > 0) {
+                        val width = L.SCROLL_BAR_WIDTH * k
+                        val x = size.width + L.SCROLL_BAR_OFFSET * k
+                        val track = size.height
+                        val thumb = (track * track / (track + max)).coerceAtLeast(L.SCROLL_BAR_MIN_THUMB * k).coerceAtMost(track)
+                        val y = (track - thumb) * scroll.value / max
+                        drawRoundRect(Color.White.copy(alpha = .14f), androidx.compose.ui.geometry.Offset(x, 0f), Size(width, track), CornerRadius(width / 2f))
+                        drawRoundRect(colors.accent2.copy(alpha = .9f), androidx.compose.ui.geometry.Offset(x, y), Size(width, thumb), CornerRadius(width / 2f))
+                    }
                 },
         ) {
             Column(

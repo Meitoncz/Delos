@@ -166,13 +166,17 @@ class StreamMenuLayoutTest {
 
     @Test
     fun everyPageKeepsItsNaturalHeightUpToOneSharedLimitAndTheRowsScrollBeyondIt() {
-        // The Upscaler page with supersampling (toggle, quality, mode, sharpness, Save for this game) is 619.6 tall by
-        // itself: a little above the limit, so its rows scroll a little
-        assertEquals(c.POPOVER_MAX_HEIGHT, popoverCardHeight(5, 1f), 0f)
-        assertTrue(!popoverFits(5, 1f))
+        // The Upscaler page with supersampling (toggle, quality, mode, sharpness, Save for this game) is 601.6 tall at
+        // text scale 1.0 and fits the limit without scrolling, also at 1.15 (610.8); at 1.3 the three-line help
+        // makes it scroll
+        assertEquals(601.6f, popoverCardHeight(5, 1f), .01f)
+        assertTrue(popoverFits(5, 1f))
+        assertEquals(610.84f, popoverCardHeight(5, 1.15f), .01f)
+        assertTrue(popoverFits(5, 1.15f))
+        assertTrue(!popoverFits(5, c.MAX_TEXT_SCALE))
         assertTrue(popoverFits(4, c.MAX_TEXT_SCALE))
         // Small pages stay small
-        assertEquals(36f + 64f + 16f + rowsHeight(2) + 22f + popoverHelpHeight(1f) + 28f, popoverCardHeight(2, 1f), .01f)
+        assertEquals(30f + 64f + 12f + rowsHeight(2) + 18f + popoverHelpHeight(1f) + 24f, popoverCardHeight(2, 1f), .01f)
         assertTrue(popoverCardHeight(2, 1f) < popoverCardHeight(4, 1f))
         // The More page, centered on its tile, ends exactly the margin from the stage's right edge
         val more = popoverPlacement(MenuPage.MORE)!!
