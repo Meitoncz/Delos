@@ -143,11 +143,6 @@ internal object StreamMenuLayout {
     const val POPOVER_HEAD_GAP = 20f
     const val POPOVER_GAP_AFTER_HEAD = 12f
     const val POPOVER_HELP_GAP = 18f
-
-    /** The scroll position of an overflowing page: a slim bar in the card's side padding, its width, its distance from the rows and its shortest thumb. */
-    const val SCROLL_BAR_WIDTH = 6f
-    const val SCROLL_BAR_OFFSET = 17f
-    const val SCROLL_BAR_MIN_THUMB = 48f
     const val POPOVER_TITLE_SIZE = 30f
     const val CARET_WIDTH = 60f
     const val CARET_HEIGHT = 24f

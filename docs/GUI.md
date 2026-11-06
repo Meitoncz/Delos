@@ -432,8 +432,7 @@ controller window ownership keep their existing paths.
   right edge at 1800) always had to the right edge. Every page keeps its content's
   height up to **one shared maximum**, the space from the card's bottom (734) up to M: 614 (`POPOVER_MAX_HEIGHT`; small
   pages stay small). Beyond it, the rows scroll inside the card with faded edges (D-pad focus scrolls the focused row into
-  view); the header and the help stay fixed; a slim **scroll bar** (6 wide, track and accent thumb) stands in the card's right
-  padding while the rows overflow. More (11 rows) and a long list of keys scroll, and the Upscaler page with
+  view); the header and the help stay fixed. More (11 rows) and a long list of keys scroll, and the Upscaler page with
   Supersampling (601.6 tall) only at interface scale above 1.15. The card stays clear of the compact statistics line (bottom edge 61.2, at
   interface scale 1.3 68.8, by `compactStatsBottom`). The help of the focused row stands under the
   rows in a box of two lines (three from interface scale 1.15 up), complete, never scrolling. A card pushed against the right
