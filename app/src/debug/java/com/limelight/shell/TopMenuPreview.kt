@@ -24,8 +24,9 @@ import kotlinx.coroutines.delay
  * Debug builds only: the home screen's top menu (Settings, Profile, Devices) with its transient gliding pill on a plain
  * background, started with
  * `adb shell am start -n io.github.meitoncz.delos.debug/com.limelight.shell.ShellActivity --es preview_screen top_menu`
- * and optionally `--ez preview_auto true` (moves the focus every 1.2 s: right, right, left, left, ...; the first button is focused
- * at once, which shows no pill, as focus coming in from outside). The D-pad, the stick and taps move the focus as on the real screen.
+ * and optionally `--ez preview_auto true` (moves the focus every 1.2 s: right, right, right (wraps to the first), left (wraps to the
+ * last), left, left, right, right: eight steps, then it rests; the first button is focused at once, which shows no pill, as focus
+ * coming in from outside). The D-pad, the stick and taps move the focus as on the real screen.
  */
 internal object TopMenuPreview {
     fun from(intent: Intent): (@Composable () -> Unit)? {
@@ -33,6 +34,11 @@ internal object TopMenuPreview {
         val auto = intent.getBooleanExtra("preview_auto", false)
         return { Preview(auto) }
     }
+
+    private val STEPS = listOf(
+        FocusDirection.Right, FocusDirection.Right, FocusDirection.Right, FocusDirection.Left,
+        FocusDirection.Left, FocusDirection.Left, FocusDirection.Right, FocusDirection.Right,
+    )
 
     @Composable
     private fun Preview(auto: Boolean) {
@@ -49,14 +55,9 @@ internal object TopMenuPreview {
         LaunchedEffect(auto) {
             if (!auto) return@LaunchedEffect
             delay(1600)
-            var direction = FocusDirection.Right
-            var step = 0
-            while (true) {
+            // Eight steps, then it rests (every move plays the focus sound)
+            for (direction in STEPS) {
                 focus.moveFocus(direction)
-                step++
-                // Right, right, left, left: every move is between two buttons
-                if (step == 2) direction = FocusDirection.Left
-                if (step == 4) { direction = FocusDirection.Right; step = 0 }
                 delay(1200)
             }
         }

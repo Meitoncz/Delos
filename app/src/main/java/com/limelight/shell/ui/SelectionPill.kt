@@ -1,6 +1,10 @@
 package com.limelight.shell.ui
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.runtime.withFrameNanos
+import kotlin.math.abs
+import kotlinx.coroutines.cancelAndJoin
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -201,8 +205,10 @@ internal fun Modifier.pillBody(geometry: PillGeometry, color: Color): Modifier =
 /**
  * The pill of a [TransientPillHost]: unlike the [SelectionPill] it is not the selected state but a flourish of the focus moving.
  * A button reports its focus changes with [focusChanged]; when one button loses focus and another gains it at once, the pill
- * starts at the old button, glides to the new one and fades into [handover] 0 over [Motion.FOCUS]. Focus that enters the host
- * from outside or leaves it, and reduced motion, show no pill.
+ * starts as the old button looks focused (its circle scaled by the focus scale), glides to the new button's focused look, stretching
+ * between the two, so it is one shape of the same height all the way. Once it has arrived and the button's own focus scale has
+ * settled ([Motion.FOCUS] after the gain) the button's accent fill fades in over it ([handover]) and the pill is removed.
+ * Focus that enters the host from outside or leaves it, and reduced motion, show no pill.
  */
 @Stable
 class TransientPill internal constructor(
@@ -215,14 +221,18 @@ class TransientPill internal constructor(
     private var lostBounds: Rect? = null
     private var moveJob: Job? = null
     private var hideJob: Job? = null
+    private val fill = Animatable(0f)
 
-    /** How much of the focused button's own accent background shows: 0 while the pill covers it, 1 once the pill has faded out. Read while drawing. */
-    fun handover(): Float = 1f - geometry.alpha.value
+    /** How much of the focused button's own accent fill shows: 0 while the pill is the focus, rising to 1 over the pill at the hand-over, 1 at rest. Read while drawing. */
+    fun handover(): Float = if (geometry.alpha.value > 0f) fill.value else 1f
 
-    /** A button of the host gained or lost focus; [coordinates] are its layout bounds (before any scale). */
-    fun focusChanged(focused: Boolean, coordinates: LayoutCoordinates?, now: Long = System.nanoTime()) {
+    /**
+     * A button of the host gained or lost focus; [coordinates] are its layout bounds (before any scale) and [focusScale] the
+     * scale it has while focused.
+     */
+    fun focusChanged(focused: Boolean, coordinates: LayoutCoordinates?, focusScale: Float, now: Long = System.nanoTime()) {
         if (!focused) {
-            lostBounds = coordinates?.let(host::boundsOf)
+            lostBounds = coordinates?.let(host::boundsOf)?.let { TransientPillMotion.scaled(it, focusScale) }
             lostAt = now
             // No button gained the focus right after: it left the host, so whatever pill is still on its way goes
             hideJob?.cancel()
@@ -234,13 +244,13 @@ class TransientPill internal constructor(
             return
         }
         hideJob?.cancel()
-        val to = coordinates?.let(host::boundsOf)
+        val to = coordinates?.let(host::boundsOf)?.let { TransientPillMotion.scaled(it, focusScale) }
         val from = lostBounds
         val moved = to != null && from != null && !reduced && TransientPillMotion.isMove(lostAt, now)
         lostAt = TransientPillMotion.NONE
         lostBounds = null
         moveJob?.cancel()
-        // Started in the focus event itself (not dispatched): the new button's own background is already handed over when it first draws
+        // Started in the focus event itself (not dispatched): the new button's own fill is already held back when it first draws
         moveJob = scope.launch(start = CoroutineStart.UNDISPATCHED) {
             if (!moved || to == null || from == null) {
                 geometry.alpha.snapTo(0f)
@@ -249,9 +259,19 @@ class TransientPill internal constructor(
             // A pill still on its way (a quick second move) carries on from where it is
             if (geometry.alpha.value <= 0f) geometry.snapEdges(from)
             geometry.setRow(to)
+            fill.snapTo(0f)
             geometry.alpha.snapTo(1f)
-            geometry.glideTo(to)
-            geometry.alpha.animateTo(0f, tween(Motion.FOCUS, easing = Motion.Ease))
+            val springs = launch { geometry.glideTo(to) }
+            while (abs(geometry.left.value - to.left) > TransientPillMotion.ARRIVE_PX || abs(geometry.right.value - to.right) > TransientPillMotion.ARRIVE_PX) {
+                withFrameNanos { }
+            }
+            // The button's focus scale has come to rest by now: pill and button have the same bounds
+            val rest = Motion.FOCUS - (System.nanoTime() - now) / 1_000_000L
+            if (rest > 0) delay(rest)
+            springs.cancelAndJoin()
+            geometry.snapEdges(to)
+            fill.animateTo(1f, tween(TransientPillMotion.HANDOVER_MS, easing = LinearEasing))
+            geometry.alpha.snapTo(0f)
         }
     }
 }
@@ -281,14 +301,27 @@ fun TransientPillHost(
     }
 }
 
-/** Which focus changes of a [TransientPillHost] play the pill. */
+/** Which focus changes of a [TransientPillHost] play the pill, and the numbers of its hand-over to the focused button. */
 object TransientPillMotion {
     const val NONE = Long.MIN_VALUE
 
     /** A focus move takes the old button's loss and the new one's gain in one go; a gain later than this is focus coming in from elsewhere. */
     const val MOVE_WINDOW_MS = 100L
 
+    /** The pill has arrived when both its edges are this close (px) to the target; the hand-over then waits for the button's own focus scale to settle. */
+    const val ARRIVE_PX = 2f
+
+    /** How long the button's own accent fill takes to fade in over the pill (which has the same bounds and colour, so nothing changes visibly). */
+    const val HANDOVER_MS = 140
+
     /** Whether a gain at [gainedAt] follows a loss at [lostAt] (both `System.nanoTime`, [NONE] = no loss) closely enough to be a move between two buttons. */
     fun isMove(lostAt: Long, gainedAt: Long): Boolean =
         lostAt != NONE && gainedAt - lostAt in 0..MOVE_WINDOW_MS * 1_000_000L
+
+    /** [bounds] scaled by [scale] about their centre: a button's bounds as it looks while focused (the pill matches that, not the resting circle). */
+    fun scaled(bounds: Rect, scale: Float): Rect {
+        val halfW = bounds.width * scale / 2f
+        val halfH = bounds.height * scale / 2f
+        return Rect(bounds.center.x - halfW, bounds.center.y - halfH, bounds.center.x + halfW, bounds.center.y + halfH)
+    }
 }

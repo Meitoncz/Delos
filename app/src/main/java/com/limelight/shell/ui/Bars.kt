@@ -1,6 +1,9 @@
 package com.limelight.shell.ui
 
 import android.os.Build
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.snap
@@ -207,6 +210,7 @@ private val ONLINE = androidx.compose.ui.graphics.Color(0xFF3DDC84)
 internal fun TopNav(buttons: List<NavButton>, modifier: Modifier) {
     val colors = LocalDelosColors.current
     val glass = LocalBackdropHaze.current
+    val requesters = remember(buttons.size) { List(buttons.size) { FocusRequester() } }
     TransientPillHost(
         modifier,
         background = {
@@ -222,13 +226,22 @@ internal fun TopNav(buttons: List<NavButton>, modifier: Modifier) {
         },
     ) {
         Row(Modifier.padding(8.px), horizontalArrangement = Arrangement.spacedBy(14.px)) {
-            buttons.forEach { NavButtonView(it) }
+            buttons.forEachIndexed { i, button ->
+                NavButtonView(
+                    button, requesters[i],
+                    wrapLeft = if (i == 0 && requesters.size > 1) requesters.last() else null,
+                    wrapRight = if (i == requesters.lastIndex && requesters.size > 1) requesters.first() else null,
+                )
+            }
         }
     }
 }
 
+/** What a focused top menu button is scaled to; the transient pill takes its focused bounds. */
+private const val NAV_FOCUS_SCALE = 1.12f
+
 @Composable
-private fun NavButtonView(button: NavButton) {
+private fun NavButtonView(button: NavButton, requester: FocusRequester, wrapLeft: FocusRequester?, wrapRight: FocusRequester?) {
     val colors = LocalDelosColors.current
     val pill = LocalTransientPill.current
     val reduced = LocalReducedMotion.current
@@ -246,19 +259,25 @@ private fun NavButtonView(button: NavButton) {
     Box(contentAlignment = Alignment.TopCenter) {
         Box(
             Modifier
-                // The layout bounds the pill glides between, before the focus scale
+                // Left of the first button is the last one, right of the last one the first (cyclic, like the stream menu's tile bar)
+                .focusProperties {
+                    wrapLeft?.let { left = it }
+                    wrapRight?.let { right = it }
+                }
+                .focusRequester(requester)
+                // The layout bounds the pill glides between (as a focused button looks: scaled), before the focus scale
                 .onGloballyPositioned { position[0] = it }
                 .focusEffects(
-                    onClick = button.onClick, corner = 999f, focusScale = 1.12f, ring = null,
+                    onClick = button.onClick, corner = 999f, focusScale = NAV_FOCUS_SCALE, ring = null,
                     glow = FocusGlow(offsetY = 10f, blur = 30f, spread = -8f),
                     onFocusChange = {
                         focused = it
-                        pill?.focusChanged(it, position[0])
+                        pill?.focusChanged(it, position[0], NAV_FOCUS_SCALE)
                     },
                 )
                 .size(64.px)
                 .clip(CircleShape)
-                // The focused button's accent fill; while the transient pill is on its way to it, the pill is what shows
+                // The focused button's accent fill; while the transient pill is the focus, the pill is what shows, the fill fades in over it at the hand-over
                 .drawBehind { if (focused) drawRect(colors.accent, alpha = pill?.handover() ?: 1f) },
             contentAlignment = Alignment.Center,
         ) {

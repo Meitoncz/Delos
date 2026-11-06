@@ -32,4 +32,14 @@ class SelectionPillMotionTest {
         // A gain before the loss cannot be its follow-up
         assertFalse(TransientPillMotion.isMove(lost, lost - ms))
     }
+
+    @Test
+    fun thePillTakesTheFocusedButtonsBoundsScaledAboutItsCentre() {
+        val rest = androidx.compose.ui.geometry.Rect(100f, 20f, 164f, 84f)
+        val focused = TransientPillMotion.scaled(rest, 1.12f)
+        assertEquals(64f * 1.12f, focused.width, .001f)
+        assertEquals(64f * 1.12f, focused.height, .001f)
+        assertEquals(rest.center.x, focused.center.x, .001f)
+        assertEquals(rest.center.y, focused.center.y, .001f)
+    }
 }
