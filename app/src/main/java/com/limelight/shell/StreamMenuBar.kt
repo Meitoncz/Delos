@@ -94,6 +94,9 @@ internal class BarCircleSpec(
     val onClick: () -> Unit,
 )
 
+/** A dimmed tile that opens no page does nothing while a popover is open (and cannot take the focus out of it). */
+private fun tileFocusable(spec: BarCircleSpec, popOpen: Boolean): Boolean = !(popOpen && !spec.opensPage)
+
 /** The room a node keeps around its box so a shadow that reaches outside it is not clipped by an alpha layer, stage pixels. */
 private const val SHADOW_ROOM = 130f
 
@@ -156,9 +159,16 @@ internal fun StreamMenuDock(
     ) {
         DockHead(title, enter, exit, Modifier.offset(L.TILES_LEFT.px, 0.px))
         TileRing(focusItem ?: firstItem, firstItem, enter, exit)
+        // The bar wraps: Right on the last tile that can take the focus goes to the first one and Left on the first goes
+        // to the last. Both ends come from the list (a hidden tile or the dimmed ones of an open popover are skipped).
+        val reachable = circles.filter { tileFocusable(it, popOpen) }
+        val firstReachable = reachable.firstOrNull()
+        val lastReachable = reachable.lastOrNull()
         circles.forEach { spec ->
+            val wrapLeft = if (spec === firstReachable && lastReachable !== spec) requesters.getValue(lastReachable!!.item) else null
+            val wrapRight = if (spec === lastReachable && firstReachable !== spec) requesters.getValue(firstReachable!!.item) else null
             TileCell(
-                spec, spec.item == focusItem, popOpen, requesters.getValue(spec.item), enter, exit, onCircleFocused,
+                spec, spec.item == focusItem, popOpen, requesters.getValue(spec.item), wrapLeft, wrapRight, enter, exit, onCircleFocused,
                 Modifier.offset(tileLeft(spec.item).px, 0.px),
             )
         }
@@ -341,6 +351,8 @@ private fun TileCell(
     focused: Boolean,
     popOpen: Boolean,
     requester: FocusRequester,
+    wrapLeft: FocusRequester?,
+    wrapRight: FocusRequester?,
     enter: () -> Float,
     exit: () -> Float,
     onFocused: (BarItem, Boolean) -> Unit,
@@ -369,7 +381,11 @@ private fun TileCell(
         modifier
             .size(L.TILE.px)
             // A dimmed tile that opens no page does nothing while a popover is open (and cannot take the focus out of it)
-            .focusProperties { canFocus = !(popOpen && !spec.opensPage) }
+            .focusProperties {
+                canFocus = tileFocusable(spec, popOpen)
+                wrapLeft?.let { left = it }
+                wrapRight?.let { right = it }
+            }
             .focusRequester(requester)
             .focusEffects(
                 {

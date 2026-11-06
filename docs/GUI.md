@@ -376,6 +376,8 @@ menu in one composable (`StreamMenuRoot`, so a window of its own can host it), t
 (`StreamMenu` implements it with the live `Game`, the debug preview with fake state). The prototype's `#quickmenu` /
 `#qmpop` show the same design; `build/streammenu-proto/b.html` with its screenshots is the specification.
 
+The focus on the dock **wraps** (Right on the last tile goes to the first, Left on the first to the last; the ring glides across the bar like any move); the popover's rows do not wrap.
+
 `StreamMenu` owns every stream-menu entry point, including controller, touch and Back.
 There is no classic dialog fallback. `GameMenu` remains only as the special-key action
 helper and storage constants used by the stream menu and keyboard layouts; it does not
