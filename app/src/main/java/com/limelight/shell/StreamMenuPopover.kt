@@ -91,7 +91,7 @@ import com.limelight.shell.ui.rememberChoiceMotion
 import com.limelight.shell.ui.staggerEntrance
 import com.limelight.shell.ui.valueSlide
 import com.limelight.shell.ui.LocalStage
-import com.limelight.shell.ui.MarginBringIntoView
+import com.limelight.shell.ui.rememberMarginBringIntoView
 import com.limelight.shell.ui.RowValue
 import com.limelight.shell.ui.Symbol
 import com.limelight.shell.ui.Symbols
@@ -257,9 +257,8 @@ internal fun ColumnScope.PopoverPage(
     val stage = LocalStage.current
     val k = stageScale()
     val ts = stage.textScale
-    val reducedMotion = LocalReducedMotion.current
-    val bringIntoView = remember(k, reducedMotion) { MarginBringIntoView(before = 48f * k, after = 48f * k, stagePx = k, reducedMotion = reducedMotion) }
     val scroll = rememberScrollState()
+    val bringIntoView = rememberMarginBringIntoView(scroll, before = 48f * k, after = 48f * k, stagePx = k)
     val leave by animateFloatAsState(if (leaving) 1f else 0f, tween(M.MORPH_ROWS_OUT, easing = Motion.EaseIn), label = "rowsLeave")
 
     Row(

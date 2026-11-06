@@ -89,8 +89,7 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
     val scroll = remember(tab) { LazyListState() }
     val stage = LocalStage.current
     val k = stage.dpPerPx * LocalDensity.current.density
-    val reducedMotion = LocalReducedMotion.current
-    val bringIntoView = remember(k, reducedMotion) { MarginBringIntoView(before = 72f * k, after = 110f * k, stagePx = k, reducedMotion = reducedMotion) }
+    val bringIntoView = rememberMarginBringIntoView(scroll, before = 72f * k, after = 110f * k, stagePx = k)
     fun changeTab(next: Int) {
         if (next == tab) return
         transfer.request()

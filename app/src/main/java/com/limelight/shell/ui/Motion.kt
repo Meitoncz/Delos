@@ -253,16 +253,71 @@ object ListScrollMotion {
         val a = v0 + omega * x0
         return (a - omega * (x0 + a * seconds)) * kotlin.math.exp(-omega * seconds)
     }
+}
 
-    /** Seconds until the spring is within [tolerance] of its target. */
-    fun durationSeconds(x0: Float, v0: Float, omega: Float, tolerance: Float): Float {
-        val a = kotlin.math.abs(v0 + omega * x0)
-        val m = maxOf(kotlin.math.abs(x0), a / omega)
-        if (m <= tolerance) return 0f
-        // (|x0| + |a|t)e^(−ωt) ≤ m(1 + ωt)e^(−ωt); solve (1 + s)e^(−s) = tolerance / m by fixed-point iteration.
-        var s = 1f
-        val goal = tolerance * .9f // a little inside, so float rounding cannot leave it just outside
-        repeat(12) { s = kotlin.math.ln(m * (1f + s) / goal) }
-        return s / omega
+/**
+ * The spring state of one list's bring-into-view scroll: [remaining] pixels to go (forward positive) and the
+ * [velocity] they are closing at. Pure, so it can be stepped in tests; [FocusScroller] runs it on a real scrollable.
+ */
+class ListScrollDriver(private val stagePx: Float) {
+    var remaining = 0f
+        private set
+    var velocity = 0f
+        private set
+
+    val active: Boolean get() = remaining != 0f || velocity != 0f
+
+    /** Adds [distance] to what is left; the velocity carries on, so a retarget neither restarts nor stutters. */
+    fun retarget(distance: Float) {
+        remaining += distance
+    }
+
+    fun stop() {
+        remaining = 0f
+        velocity = 0f
+    }
+
+    /** Advances [seconds] and returns how far to scroll for it; at rest (within [REST_PX] and [REST_SPEED]) it lands exactly and stops. */
+    fun step(seconds: Float): Float {
+        val x0 = remaining
+        val v0 = velocity
+        val toward = if (x0 > 0f) -v0 else v0
+        val omega = ListScrollMotion.omega(kotlin.math.abs(x0) / stagePx, toward / stagePx)
+        val x1 = ListScrollMotion.offset(x0, v0, omega, seconds)
+        val v1 = ListScrollMotion.velocity(x0, v0, omega, seconds)
+        if (kotlin.math.abs(x1) < REST_PX && kotlin.math.abs(v1) < REST_SPEED * stagePx) {
+            stop()
+            return x0
+        }
+        remaining = x1
+        velocity = v1
+        return x0 - x1
+    }
+
+    /**
+     * Runs until at rest: each frame [nextFrameNanos] gives the frame time and [scrollBy] applies the step and returns what
+     * it consumed (less than asked: the end of the list, the scroll stops there).
+     */
+    suspend fun run(scrollBy: (Float) -> Float, nextFrameNanos: suspend () -> Long) {
+        var last = nextFrameNanos()
+        while (active) {
+            val now = nextFrameNanos()
+            val seconds = ((now - last) / 1e9f).coerceIn(0f, MAX_FRAME_SECONDS)
+            last = now
+            val asked = step(seconds)
+            if (asked == 0f) continue
+            if (kotlin.math.abs(asked - scrollBy(asked)) > REST_PX) stop()
+        }
+    }
+
+    companion object {
+        /** Within this many pixels of the target (device pixels) and slower than [REST_SPEED] the scroll has landed. */
+        const val REST_PX = .5f
+
+        /** Stage pixels per second. */
+        const val REST_SPEED = 20f
+
+        /** A long frame (a hitch) advances the spring by at most this much. */
+        const val MAX_FRAME_SECONDS = .05f
     }
 }

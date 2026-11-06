@@ -1,18 +1,16 @@
 package com.limelight.shell.ui
 
-import androidx.compose.animation.core.AnimationSpec
-import androidx.compose.animation.core.AnimationVector
-import androidx.compose.animation.core.TwoWayConverter
-import androidx.compose.animation.core.VectorizedAnimationSpec
-import androidx.compose.animation.core.snap
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.BringIntoViewSpec
+import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
@@ -27,6 +25,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.withFrameNanos
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import kotlin.math.min
 
 /**
@@ -91,64 +92,87 @@ fun Modifier.fadeMask(stage: StageMetrics, vertical: Boolean, startClear: Float,
         }
 
 /**
- * Scrolls the focused element into view with a margin of [before] / [after] pixels, so it never sits
- * in a faded edge (see [fadeEdges]), and only when it would leave that safe area. The scroll is animated by
- * [ListScrollMotion] (calm, slightly longer for longer jumps); a new focus move retargets the running scroll and keeps
- * its velocity, so holding the D-pad glides. [stagePx] is one stage pixel in device pixels; with [reducedMotion] the
- * scroll snaps.
+ * Brings the focused element into view with a margin of [before] / [after] pixels, so it never sits in a faded edge
+ * (see [fadeEdges]), and only when it would leave that safe area.
+ *
+ * The animation is driven here, not by the framework: Foundation 1.12 deprecated `BringIntoViewSpec.scrollAnimationSpec`
+ * ("customization is no longer supported") and on the device a custom spec had no visible effect, the scroll stayed a
+ * ~150 ms default spring. So this spec only *measures*: [calculateScrollDistance] receives the focused element's bounds,
+ * hands the needed distance to a [FocusScroller] and returns 0, which leaves the framework nothing to scroll (like
+ * `NoAutoScroll`). Create it with [rememberMarginBringIntoView].
  */
 @OptIn(ExperimentalFoundationApi::class)
-class MarginBringIntoView(
+class MarginBringIntoView internal constructor(
     private val before: Float,
     private val after: Float,
-    stagePx: Float = 1f,
-    reducedMotion: Boolean = false,
+    private val scroller: FocusScroller,
 ) : BringIntoViewSpec {
-    // Marked deprecated ("customization is no longer supported") in foundation 1.12, yet ContentInViewNode still reads it (checked in 1.12.1).
-    @Suppress("OVERRIDE_DEPRECATION")
-    override val scrollAnimationSpec: AnimationSpec<Float> = if (reducedMotion) snap() else ListScrollSpec(stagePx)
-
     override fun calculateScrollDistance(offset: Float, size: Float, containerSize: Float): Float {
-        val start = offset - before
-        val end = offset + size + after - containerSize
-        return when {
-            start < 0f -> start
-            end > 0f -> minOf(end, start)
-            else -> 0f
+        // Where the element will be once the running scroll has arrived, so a retarget is measured against its destination.
+        scroller.request(distance(offset - scroller.remaining, size, containerSize, before, after))
+        return 0f
+    }
+
+    companion object {
+        /** How far to scroll forward (negative: back) so an element at [offset] of [size] sits inside the margins; 0 when it already does. */
+        fun distance(offset: Float, size: Float, containerSize: Float, before: Float, after: Float): Float {
+            val start = offset - before
+            val end = offset + size + after - containerSize
+            return when {
+                start < 0f -> start
+                end > 0f -> minOf(end, start)
+                else -> 0f
+            }
         }
     }
 }
 
-/** The spring of [ListScrollMotion] as an [AnimationSpec]; [stagePx] converts device pixels to stage pixels. */
-private class ListScrollSpec(private val stagePx: Float) : AnimationSpec<Float> {
-    override fun <V : AnimationVector> vectorize(converter: TwoWayConverter<Float, V>): VectorizedAnimationSpec<V> =
-        object : VectorizedAnimationSpec<V> {
-            override val isInfinite: Boolean get() = false
+/**
+ * Runs the scrolls of a [MarginBringIntoView] on [state]: one [ListScrollDriver] spring per list, started by the first
+ * request and fed by later ones (a new focus move adds its distance to what is left and keeps the velocity, so there is
+ * no restart and holding the D-pad glides). A drag or any other scroll of [state] takes over and ends it.
+ * With [reducedMotion] the scroll is applied at once.
+ */
+class FocusScroller(
+    private val state: ScrollableState,
+    private val scope: CoroutineScope,
+    stagePx: Float,
+    private val reducedMotion: Boolean,
+) {
+    private val driver = ListScrollDriver(stagePx)
+    private var running = false
 
-            private fun omega(x0: Float, v0: Float): Float {
-                val toward = if (x0 > 0f) -v0 else v0
-                return ListScrollMotion.omega(kotlin.math.abs(x0) / stagePx, toward / stagePx)
-            }
+    /** Pixels the running scroll still has to go. */
+    val remaining: Float get() = driver.remaining
 
-            override fun getDurationNanos(initialValue: V, targetValue: V, initialVelocity: V): Long {
-                val x0 = converter.convertFromVector(initialValue) - converter.convertFromVector(targetValue)
-                val v0 = converter.convertFromVector(initialVelocity)
-                return (ListScrollMotion.durationSeconds(x0 / stagePx, v0 / stagePx, omega(x0, v0), .5f) * 1e9f).toLong()
-            }
-
-            override fun getValueFromNanos(playTimeNanos: Long, initialValue: V, targetValue: V, initialVelocity: V): V {
-                val target = converter.convertFromVector(targetValue)
-                val x0 = converter.convertFromVector(initialValue) - target
-                val v0 = converter.convertFromVector(initialVelocity)
-                return converter.convertToVector(target + ListScrollMotion.offset(x0, v0, omega(x0, v0), playTimeNanos / 1e9f))
-            }
-
-            override fun getVelocityFromNanos(playTimeNanos: Long, initialValue: V, targetValue: V, initialVelocity: V): V {
-                val x0 = converter.convertFromVector(initialValue) - converter.convertFromVector(targetValue)
-                val v0 = converter.convertFromVector(initialVelocity)
-                return converter.convertToVector(ListScrollMotion.velocity(x0, v0, omega(x0, v0), playTimeNanos / 1e9f))
+    fun request(distance: Float) {
+        if (distance == 0f) return
+        if (reducedMotion) {
+            state.dispatchRawDelta(distance)
+            return
+        }
+        driver.retarget(distance)
+        if (running) return
+        running = true
+        scope.launch {
+            try {
+                state.scroll { driver.run({ scrollBy(it) }, { withFrameNanos { it } }) }
+            } finally {
+                driver.stop()
+                running = false
             }
         }
+    }
+}
+
+/** A [MarginBringIntoView] for the scrollable [state]; provide it as `LocalBringIntoViewSpec`. */
+@Composable
+fun rememberMarginBringIntoView(state: ScrollableState, before: Float, after: Float, stagePx: Float): MarginBringIntoView {
+    val reducedMotion = LocalReducedMotion.current
+    val scope = rememberCoroutineScope()
+    return remember(state, before, after, stagePx, reducedMotion) {
+        MarginBringIntoView(before, after, FocusScroller(state, scope, stagePx, reducedMotion))
+    }
 }
 
 /** Fits the 1920×1080 stage into the available space and provides [LocalStage]. */

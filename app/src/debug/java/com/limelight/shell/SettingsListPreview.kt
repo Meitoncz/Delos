@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -25,9 +26,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import com.limelight.shell.ui.FocusRing
 import com.limelight.shell.ui.LocalDelosColors
-import com.limelight.shell.ui.LocalReducedMotion
 import com.limelight.shell.ui.LocalStage
-import com.limelight.shell.ui.MarginBringIntoView
+import com.limelight.shell.ui.rememberMarginBringIntoView
 import com.limelight.shell.ui.fadeEdges
 import com.limelight.shell.ui.focusEffects
 import com.limelight.shell.ui.px
@@ -56,8 +56,8 @@ internal object SettingsListPreview {
         val colors = LocalDelosColors.current
         val stage = LocalStage.current
         val k = stage.dpPerPx * LocalDensity.current.density
-        val reduced = LocalReducedMotion.current
-        val bringIntoView = remember(k, reduced) { MarginBringIntoView(before = 72f * k, after = 110f * k, stagePx = k, reducedMotion = reduced) }
+        val listState = rememberLazyListState()
+        val bringIntoView = rememberMarginBringIntoView(listState, before = 72f * k, after = 110f * k, stagePx = k)
         val requesters = remember { List(ROWS) { FocusRequester() } }
         LaunchedEffect(Unit) {
             delay(300)
@@ -72,7 +72,7 @@ internal object SettingsListPreview {
         }
         Box(Modifier.fillMaxSize().background(colors.bg)) {
             CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
-                LazyColumn(Modifier.fillMaxSize().padding(horizontal = 300.px, vertical = 150.px).fadeEdges(stage, top = 14f, bottom = 90f),
+                LazyColumn(Modifier.fillMaxSize().padding(horizontal = 300.px, vertical = 150.px).fadeEdges(stage, top = 14f, bottom = 90f), state = listState,
                     contentPadding = PaddingValues(18.px), verticalArrangement = Arrangement.spacedBy(10.px)) {
                     items(ROWS) { i ->
                         Box(Modifier.fillMaxWidth().height(96.px).focusRequester(requesters[i]).background(colors.bg)

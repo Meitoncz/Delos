@@ -75,8 +75,7 @@ import com.limelight.shell.ui.FocusRing
 import com.limelight.shell.ui.InitialFocus
 import com.limelight.shell.ui.LocalDelosColors
 import com.limelight.shell.ui.LocalStage
-import com.limelight.shell.ui.LocalReducedMotion
-import com.limelight.shell.ui.MarginBringIntoView
+import com.limelight.shell.ui.rememberMarginBringIntoView
 import com.limelight.shell.ui.PillButton
 import com.limelight.shell.ui.Symbol
 import com.limelight.shell.ui.Symbols
@@ -172,8 +171,8 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
     val metadata = LocalGameMetadata.current
     val k = stage.dpPerPx * LocalDensity.current.density
     val shape = RoundedCornerShape(34.px)
-    val reducedMotion = LocalReducedMotion.current
-    val bringIntoView = remember(k, reducedMotion) { MarginBringIntoView(before = 150f * k, after = 56f * k, stagePx = k, reducedMotion = reducedMotion) }
+    val chipScroll = rememberScrollState()
+    val bringIntoView = rememberMarginBringIntoView(chipScroll, before = 150f * k, after = 56f * k, stagePx = k)
     val filters = metadata.filters
     val apps = ready.apps
 
@@ -244,7 +243,7 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
             Modifier
                 .weight(1f, fill = false)
                 .fadeEdges(stage, top = 20f, bottom = 40f)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(chipScroll)
                 .padding(start = 12.px, end = 12.px, top = 24.px, bottom = 48.px),
             verticalArrangement = Arrangement.spacedBy(34.px),
         ) {

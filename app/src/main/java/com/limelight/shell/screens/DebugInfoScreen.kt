@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -65,8 +66,7 @@ import com.limelight.shell.data.ProfileStore
 import com.limelight.shell.ui.LocalDelosColors
 import com.limelight.shell.ui.LocalFeedback
 import com.limelight.shell.ui.LocalStage
-import com.limelight.shell.ui.LocalReducedMotion
-import com.limelight.shell.ui.MarginBringIntoView
+import com.limelight.shell.ui.rememberMarginBringIntoView
 import com.limelight.shell.ui.RowValue
 import com.limelight.shell.ui.SettingRow
 import com.limelight.shell.ui.Symbol
@@ -364,8 +364,8 @@ fun DebugInfoScreen() {
         runCatching { first.requestFocus() }
     }
     val k = stage.dpPerPx * LocalDensity.current.density
-    val reducedMotion = LocalReducedMotion.current
-    val bringIntoView = remember(k, reducedMotion) { MarginBringIntoView(before = 72f * k, after = 110f * k, stagePx = k, reducedMotion = reducedMotion) }
+    val listState = rememberLazyListState()
+    val bringIntoView = rememberMarginBringIntoView(listState, before = 72f * k, after = 110f * k, stagePx = k)
 
     Box(Modifier.fillMaxSize()) {
         BasicText("Debug info", style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx),
@@ -373,7 +373,7 @@ fun DebugInfoScreen() {
         Row(Modifier.fillMaxSize().padding(start = 150.px, end = 150.px, top = 230.px, bottom = 110.px), horizontalArrangement = Arrangement.spacedBy(56.px)) {
             CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView, com.limelight.shell.ui.LocalEntranceStagger provides com.limelight.shell.ui.rememberEntranceStagger()) {
                 LazyColumn(
-                    Modifier.weight(1f).fadeEdges(stage, top = 14f, bottom = 90f),
+                    Modifier.weight(1f).fadeEdges(stage, top = 14f, bottom = 90f), state = listState,
                     contentPadding = PaddingValues(start = 18.px, end = 18.px, top = 14.px, bottom = 140.px),
                     verticalArrangement = Arrangement.spacedBy(10.px),
                 ) {
