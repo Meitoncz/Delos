@@ -31,6 +31,9 @@ class StreamSettingsStore(val catalog: SettingsCatalog, private val settings: ()
         // PyroWave has its own Vulkan decoder; MediaCodec-only options do not apply.
         if (spec.key in setOf("checkbox_async_decode", "checkbox_ultra_low_latency", "pref_low_latency_frame_balance") &&
             state.value["video_format"] == "pyrowave") return false
+        // 4:4:4 is PyroWave-only and is never offered with HDR (the P010 bridge is 4:2:0).
+        if (spec.key == "list_pyrowave_chroma" &&
+            (state.value["video_format"] != "pyrowave" || state.value["checkbox_enable_hdr"] == true)) return false
         if (spec.key in UPSCALER_KEYS && caps?.sgsr == false && state.value["video_format"] != "pyrowave") return false
         if (spec.key == "pref_low_latency_frame_balance" && state.value["frame_pacing"] == "fast-vsync") return false
         fun dependencyEnabled(key: String?, seen: Set<String>): Boolean {

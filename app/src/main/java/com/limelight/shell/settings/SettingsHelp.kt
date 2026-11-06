@@ -67,6 +67,8 @@ object SettingsHelp {
             key == "frame_pacing" && values[key] == "fast-vsync" -> "Fast V-Sync overrides LFR."
             key in setOf("checkbox_async_decode", "checkbox_ultra_low_latency", "pref_low_latency_frame_balance") && pyro ->
                 "Not used with PyroWave."
+            key == "list_pyrowave_chroma" && !pyro -> "Needs the PyroWave codec."
+            key == "list_pyrowave_chroma" && values["checkbox_enable_hdr"] == true -> "HDR is on: 4:2:0 used."
             key == "list_sgsr_quality" && pyro -> "PyroWave offers all four modes"
             else -> ""
         }
@@ -94,6 +96,7 @@ object SettingsHelp {
         "checkbox_enable_hdr" to "Requests HDR video. Needs game, host GPU, decoder and display support (10-bit HEVC, AV1 or PyroWave).",
         "checkbox_enable_fullexdisplay" to "Shows the stream and menu on an attached monitor or TV at the configured resolution and FPS. The handheld controls the menu.",
         "checkbox_sgsr" to "Upscales a lower-resolution stream to the display size on this device. Costs GPU time. Menu changes last one session.",
+        "list_pyrowave_chroma" to "4:4:4 costs bandwidth and GPU.",
         "list_sgsr_quality" to "Reconstruction method. All add GPU work.",
         "seekbar_sgsr_sharpness" to "Final sharpening pass, separate from the mode. 0 turns sharpening off; high values add artifacts. Menu changes last one session.",
         "list_sgsr_supersampling_level" to "Internal size when the stream already matches the display. Menu changes last one session.",
@@ -198,6 +201,10 @@ object SettingsHelp {
             "forceh265" to "Less bandwidth than H.264; supports 10-bit HDR. May fall back.",
             "neverh265" to "Broadest compatibility; needs more bandwidth. No HDR.",
             "pyrowave" to "GPU wavelet codec with its own Vulkan decoder. Needs a fast link and far higher bitrate.",
+        ),
+        "list_pyrowave_chroma" to mapOf(
+            "420" to "Half-resolution color. Cheapest.",
+            "444" to "Full color. Uses 4:2:0 if the host cannot.",
         ),
         "list_sgsr_quality" to mapOf(
             "standard" to "Edge reconstruction from the current frame. Cheapest.",

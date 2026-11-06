@@ -27,6 +27,7 @@ import com.limelight.binding.video.CrashListener;
 import com.limelight.binding.video.MediaCodecDecoderRenderer;
 import com.limelight.binding.video.MediaCodecHelper;
 import com.limelight.binding.video.PerfOverlayListener;
+import com.limelight.binding.video.PyroWaveFormats;
 import com.limelight.binding.video.PyroWaveRenderer;
 import com.limelight.nvstream.NvConnection;
 import com.limelight.nvstream.NvConnectionListener;
@@ -697,9 +698,9 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             }
         }
         if (offerPyroWave) {
-            supportedVideoFormats |= MoonBridge.VIDEO_FORMAT_PYROWAVE;
-            if (willStreamHdr) {
-                supportedVideoFormats |= MoonBridge.VIDEO_FORMAT_PYROWAVE_HDR10;
+            supportedVideoFormats |= PyroWaveFormats.offered(willStreamHdr, prefConfig.pyroWaveChroma444);
+            if (willStreamHdr && prefConfig.pyroWaveChroma444) {
+                Toast.makeText(this, "PyroWave 4:4:4 is not offered with HDR; using 4:2:0", Toast.LENGTH_LONG).show();
             }
         }
 

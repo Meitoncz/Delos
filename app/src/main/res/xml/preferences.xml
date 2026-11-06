@@ -845,6 +845,14 @@
             android:summary="@string/summary_video_format"
             android:title="@string/title_video_format"
             app:iconSpaceReserved="false" />
+        <ListPreference
+            android:defaultValue="420"
+            android:entries="@array/pyrowave_chroma_names"
+            android:entryValues="@array/pyrowave_chroma_values"
+            android:key="list_pyrowave_chroma"
+            android:summary="@string/summary_pyrowave_chroma"
+            android:title="@string/title_pyrowave_chroma"
+            app:iconSpaceReserved="false" />
         <CheckBoxPreference
             android:defaultValue="false"
             android:key="checkbox_unlock_fps"

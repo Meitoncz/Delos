@@ -70,6 +70,7 @@ data class SettingSpec(
         "seekbar_sgsr_sharpness" -> Symbols.SHARPNESS
         "list_sgsr_supersampling_level" -> Symbols.HIGH_QUALITY
         "video_format" -> Symbols.MOVIE
+        "list_pyrowave_chroma" -> Symbols.PALETTE
         "checkbox_enable_hdr" -> Symbols.HDR_ON
         "checkbox_ultra_low_latency" -> Symbols.BOLT
         "pref_low_latency_frame_balance" -> Symbols.TUNE

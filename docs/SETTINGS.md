@@ -64,6 +64,10 @@ one scrolls to and focuses the actual setting, including disabled dependencies.
   Resets run immediately and report a toast. Android's document picker handles file selection.
   When PyroWave is selected, the bitrate row and live help also show its recommended Mbps for the
   current resolution/FPS/HDR, independently of the chosen bitrate. Other codecs add no recommendation.
+- `list_pyrowave_chroma` (4:2:0 default / 4:4:4, Stream tab, also a per-game override) is only enabled with the
+  PyroWave codec and no HDR. 4:4:4 adds `VIDEO_FORMAT_PYROWAVE_444` to the offer next to the 4:2:0 flag
+  (`PyroWaveFormats`); the host picks, and the renderer follows the negotiated format. With HDR on, 4:4:4 is
+  never offered (the P010 output is 4:2:0 only) and the stream uses 4:2:0.
 
 ## Hidden phone-oriented settings
 

@@ -217,6 +217,8 @@ public class PreferenceConfiguration {
     public String customRefreshRate;
     public int meteredBitrate;
     public FormatOption videoFormat;
+    // Delos: PyroWave chroma setting (list_pyrowave_chroma = 444); only an offer, the host decides
+    public boolean pyroWaveChroma444;
     public int framePacingWarpFactor = 0;
     public int deadzonePercentage;
     public int oscOpacity;
@@ -815,6 +817,7 @@ private static int getFramePacingValue(SharedPreferences prefs) {
         config.videoScaleMode = getVideoScaleMode(context);
 
         config.videoFormat = getVideoFormatValue(context);
+        config.pyroWaveChroma444 = "444".equals(prefs.getString("list_pyrowave_chroma", "420"));
         config.framePacing = getFramePacingValue(prefs);
         config.asyncDecode = prefs.getBoolean("checkbox_async_decode", false);
         config.sgsrEnabled = prefs.getBoolean("checkbox_sgsr", false);

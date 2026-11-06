@@ -147,6 +147,15 @@
         <item>pyrowave</item>
     </string-array>
 
+    <string-array name="pyrowave_chroma_names">
+        <item>@string/pyrowave_chroma_420</item>
+        <item>@string/pyrowave_chroma_444</item>
+    </string-array>
+    <string-array name="pyrowave_chroma_values" translatable="false">
+        <item>420</item>
+        <item>444</item>
+    </string-array>
+
     <string-array name="video_frame_pacing_names">
         <item>@string/pacing_warp2</item>
         <item>@string/pacing_warp</item>

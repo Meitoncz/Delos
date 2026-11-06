@@ -219,6 +219,10 @@
     <string name="videoformat_hevcalways">HEVC (H.265)</string>
     <string name="videoformat_h264always">H.264</string>
     <string name="videoformat_pyrowave">PyroWave</string>
+    <string name="title_pyrowave_chroma">PyroWave chroma</string>
+    <string name="summary_pyrowave_chroma">Chroma resolution of PyroWave video. 4:4:4 keeps full color detail but needs more bandwidth and GPU time, and a host that supports it; otherwise the stream uses 4:2:0. Not offered with HDR.</string>
+    <string name="pyrowave_chroma_420">4:2:0 (default)</string>
+    <string name="pyrowave_chroma_444">4:4:4</string>
 
     <string name="title_frame_pacing">Video frame pacing</string>
     <string name="summary_frame_pacing">Specify how to balance video latency and smoothness. Warp Drive and Warp 2 may not work on every device.</string>
