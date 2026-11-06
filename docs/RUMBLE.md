@@ -40,8 +40,8 @@ a per-game override. It also affects external pads using those Android paths whe
 
 **Settings:** Controls > Gamepad > **Rumble feel** (see [SETTINGS.md](SETTINGS.md)).
 
-**Stream menu:** open the stream menu (**More** tile) and choose **Rumble feel**; the row sits between
-**Touch sensitivity** and **Rotate** and shows the active name. The page lists the same four presets (Original, Soft,
+**Stream menu:** open the stream menu (**More** tile) and choose **Rumble feel**; the row sits after
+**Touch sensitivity**, the last row of More, and shows the active name. The page lists the same four presets (Original, Soft,
 Kick-start, Pulsing). A preset the hardware cannot run is marked **Problem** with the reason in the help line and does
 nothing; if the active preset's technique fails during the stream the row shows **Problem** too, with the reason.
 A on a preset applies and saves it exactly like the laboratory (same `RumblePreferences.applyPreset`), marks it

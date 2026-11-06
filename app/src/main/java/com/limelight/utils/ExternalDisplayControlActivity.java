@@ -87,6 +87,10 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
         }
     }
 
+    public static boolean isFullKeyboardShown() {
+        return instance != null && instance.keyBoardLayoutController != null && instance.keyBoardLayoutController.shown;
+    }
+
     public static void toggleGameMenu() {
         if (Game.instance != null) {
             Game.instance.showStreamMenu();

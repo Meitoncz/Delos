@@ -72,17 +72,22 @@ preset keys through `RumblePreferences` (see [RUMBLE.md](RUMBLE.md)) and reads C
   When PyroWave is selected, the bitrate row and live help also show its recommended Mbps for the
   current resolution/FPS/HDR, independently of the chosen bitrate. Other codecs add no recommendation.
 
-## Hidden phone-oriented settings
+## Hidden phone-oriented and key-layout settings
 
 Delos is handheld-first, so the touch-mouse and on-screen gamepad settings are hidden from the settings
 list and search (issue #65): the mouse mode list, trackpad/touch sensitivity, drag-and-drop options,
 absolute mouse mode, remembered mouse mode/zoom and pan, and the on-screen controls (show, opacity, free
-stick, L3/R3 only, Guide button, hide with a gamepad, vibration, reset). Only the UI is affected: the XML
+stick, L3/R3 only, Guide button, hide with a gamepad, vibration, reset). The settings that exist only for
+the key-layout overlay (`KeyBoardController`, no longer offered in the stream menu) are hidden too: show
+at start (`checkbox_enable_keyboard`), the layout list, square buttons, reset, import and export of that
+layout. Only the UI is affected: the XML
 entries, defaults and stored values stay, so hidden settings keep applying and the stream menu still
 works. `shell/settings/PhoneOnlySettings.kt` is the single switch: set `HIDDEN` to `false` (or remove
 single keys from `KEYS`) to show them again. `SettingsCatalog.all` still lists every key; the screens
-use `SettingsCatalog.visible`, and section headings disappear with their last item. The on-screen
-keyboard settings, multi-touch gestures, clipboard, PiP and device rumble stay visible.
+use `SettingsCatalog.visible`, and section headings disappear with their last item. The full-keyboard
+settings (size, alignment, opacity, vibration, sticky modifiers), the custom keys import and the
+built-in key combinations switch (they feed Send keys), multi-touch gestures, clipboard, PiP and device
+rumble stay visible.
 
 ## User profiles
 

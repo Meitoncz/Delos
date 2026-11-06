@@ -138,10 +138,10 @@ class StreamMenuLayoutTest {
         // The Upscaler page with supersampling: the toggle, quality, mode, sharpness and Save for this game
         assertEquals(619.6f, popoverCardHeight(5, 1f), .01f)
         assertTrue("card ${popoverCardHeight(5, c.MAX_TEXT_SCALE)}", popoverFits(5, c.MAX_TEXT_SCALE))
-        // More has 12 rows: the card stops at its largest height and the rows scroll
-        assertTrue(!popoverFits(12, 1f))
-        assertEquals(c.POPOVER_MAX_HEIGHT, popoverCardHeight(12, 1f), 0f)
-        assertEquals(72f * 12 + 8f * 11, rowsHeight(12), 0f)
+        // More has 11 rows (with Mouse mode): the card stops at its largest height and the rows scroll
+        assertTrue(!popoverFits(11, 1f))
+        assertEquals(c.POPOVER_MAX_HEIGHT, popoverCardHeight(11, 1f), 0f)
+        assertEquals(72f * 11 + 8f * 10, rowsHeight(11), 0f)
         assertEquals(0f, rowsHeight(0), 0f)
     }
 
@@ -220,7 +220,7 @@ class StreamMenuLayoutTest {
     fun everyHelpAPopoverCanShowFitsItsReservedLines() {
         val footerKeys = mapOf(
             MenuPage.MORE to listOf(MoreRow.KEYS, "Send clipboard", "Get clipboard", MoreRow.COMMANDS, "Task manager", "Zoom", MoreRow.MOUSE,
-                "On-screen controls", "Full keyboard", "Key layout", "Touch sensitivity", "Rotate", MoreRow.RUMBLE),
+                "On-screen controls", "Full keyboard", "Touch sensitivity", MoreRow.RUMBLE),
             // The labels of key combinations and commands come from the user and the host
             MenuPage.KEYS to listOf("Send keys", "Keys: Ctrl + Alt + Delete", "Keys: " + "K".repeat(40)),
             MenuPage.COMMANDS to listOf("Commands", "Command: Restart the game", "Command: " + "C".repeat(80)),

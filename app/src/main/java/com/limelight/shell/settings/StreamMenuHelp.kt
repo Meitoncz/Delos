@@ -47,9 +47,7 @@ object StreamMenuHelp {
         "Local mouse cursor" to "Shows or hides Android's pointer for a physical mouse during this stream. Not the PC cursor in the video.",
         "On-screen controls" to "Shows or hides the virtual gamepad during this stream. Opacity and layout are set under Controls.",
         "Full keyboard" to "Shows or hides the Delos full on-screen keyboard. Not Android's system keyboard.",
-        "Key layout" to "Shows or hides the profile's custom special-key layer. Separate from the full keyboard.",
         "Touch sensitivity" to "Toggles extra touchscreen sensitivity scaling, configured in settings.",
-        "Rotate" to "Rotates the stream view locally; the host game's display settings are unchanged.",
         // Rumble feel row and page
         "Rumble feel" to "Picks how host rumble feels, at once and saved. Stays open: pick again to compare. B goes back.",
     )

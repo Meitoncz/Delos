@@ -163,11 +163,10 @@ internal class FakeStreamMenuHost : StreamMenuHost {
     override fun toggleZoom() { zoomOn = !zoomOn }
     override var onscreenControlsOn = false
     override fun toggleOnscreenControls() { onscreenControlsOn = !onscreenControlsOn }
-    override fun toggleFullKeyboard() = Unit
-    override fun toggleKeyLayout() = Unit
+    override var fullKeyboardOn = false
+    override fun toggleFullKeyboard() { fullKeyboardOn = !fullKeyboardOn }
     override var touchSensitivityOn = false
     override fun toggleTouchSensitivity() { touchSensitivityOn = !touchSensitivityOn }
-    override fun rotate() = Unit
 
     // Live rumble feel selection state
     override var rumblePreset by mutableStateOf<RumblePresets?>(RumblePresets.ORIGINAL)

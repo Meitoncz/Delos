@@ -1,12 +1,14 @@
 package com.limelight.shell.settings
 
 /**
- * Delos is handheld-first, so settings that only matter on a phone's touchscreen (touch mouse modes,
- * trackpad and touch sensitivity, the on-screen gamepad) are hidden from the settings list and search
- * (issue #65). Only the UI hides them: the XML entries, stored values, defaults and everything that
- * reads them (`PreferenceConfiguration`, `Game`, profiles, the stream menu) are untouched, so existing
- * values keep applying. [SettingsCatalog.all] still lists every key; [SettingsCatalog.visible] is what
- * the settings screens show.
+ * Delos is handheld-first, so two groups of settings are hidden from the settings list and search:
+ * settings that only matter on a phone's touchscreen (touch mouse modes, trackpad and touch sensitivity,
+ * the on-screen gamepad; issue #65), and the settings that exist only for the key-layout overlay
+ * (`KeyBoardController`, the custom special-key layout that the stream menu no longer offers). Only the UI
+ * hides them: the XML entries, stored values, defaults and everything that reads them
+ * (`PreferenceConfiguration`, `Game`, profiles, the stream menu) are untouched, so existing values keep
+ * applying. [SettingsCatalog.all] still lists every key; [SettingsCatalog.visible] is what the settings
+ * screens show.
  *
  * To bring the items back, set [HIDDEN] to `false` (or delete single keys from [KEYS]). Section headings
  * are derived from the visible items, so a heading disappears when all of its items are hidden.
@@ -33,7 +35,7 @@ object PhoneOnlySettings {
         "seekbar_touchpad_sensitivity_opacity",
         "seekbar_touchpad_sensitivity_y_opacity",
         // On-screen gamepad. checkbox_vibrate_osc depends on checkbox_show_onscreen_controls, so it goes
-        // with it. option_reset_osc is NOT here: despite its name it resets the on-screen keyboard layout.
+        // with it.
         "checkbox_show_onscreen_controls",
         "checkbox_hide_osc_when_has_gamepad",
         "checkbox_vibrate_osc",
@@ -43,6 +45,16 @@ object PhoneOnlySettings {
         "checkbox_enable_analog_stick_new",
         "seekbar_osc_free_analog_stick_opacity",
         "option_reset_osc_preference",
+        // Key-layout overlay (KeyBoardController) only. option_reset_osc resets that layout, not the
+        // gamepad. Kept visible because other code reads them: checkbox_vibrate_keyboard (full keyboard),
+        // seekbar_keyboard_axi_opacity (full keyboard), sticky modifiers, and import_special_button_file /
+        // checkbox_enable_clear_default_special_button / option_help_custom_keys (stream menu Send keys).
+        "checkbox_enable_keyboard",
+        "keyboard_axi_list",
+        "checkbox_enable_keyboard_square",
+        "option_reset_osc",
+        "import_keyboard_file",
+        "export_keyboard_file",
     )
 
     fun isHidden(key: String): Boolean = HIDDEN && key in KEYS

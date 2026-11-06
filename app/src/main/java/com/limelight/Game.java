@@ -941,6 +941,11 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         keyBoardLayoutController.toggleVisibility();
     }
 
+    /** Whether the full keyboard overlay is up, on this display or on the external control display. */
+    public boolean isFullKeyboardShown() {
+        return isOnExternalDisplay() ? ExternalDisplayControlActivity.isFullKeyboardShown() : isKeyboardLayoutVisible();
+    }
+
     // Show/hide the virtual gamepad controller
     public void toggleVirtualController(){
         if (virtualController==null) {

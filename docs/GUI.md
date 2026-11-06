@@ -423,10 +423,14 @@ controller window ownership keep their existing paths.
   Padding 40 × 36 (28 below), header 64 (the back circle, focusable, B does the same, and the title in Unbounded 30),
   rows 72 tall with 8 between them (corner 28, icon 32 in a 56 column, label 24 SemiBold, values 24), a 78 × 44 switch, a
   240 × 12 slider with a 32 knob, choices between two chevrons. The card is as tall as its content, at most 686; only
-  More (12 rows) and a long list of keys scroll inside, with faded edges. The help of the focused row stands under the
+  More (11 rows) and a long list of keys scroll inside, with faded edges. The help of the focused row stands under the
   rows in a box of two lines (three from interface scale 1.15 up), complete, never scrolling. The Upscaler page, with
   Supersampling quality and **Save for this game**, fits at every interface scale (a test pins the sum). The pages
-  opened from More (Send keys, Commands, Mouse mode) are anchored over the More tile.
+  opened from More (Send keys, Commands, Mouse mode) are anchored over the More tile. More lists Send keys, Send
+  clipboard, Get clipboard, Commands, Task manager, Zoom, Mouse mode (when allowed), On-screen controls, Full
+  keyboard (a toggle: on while the full keyboard is up), Touch sensitivity and Rumble feel. **Key layout** and
+  **Rotate** are not offered: the key-layout overlay is hidden (its code and preferences stay) and a rotation
+  re-lays out the overlays.
 - **Navigation**: Left/Right move along the tiles. A on a toggle or action tile acts at once; A on Brightness, Bitrate,
   Upscaler or More opens its popover and puts the focus on its first row (the focus cannot leave the popover with the
   D-pad). B in a popover closes it and returns the focus to its tile; Send keys, Commands and Mouse mode are opened from

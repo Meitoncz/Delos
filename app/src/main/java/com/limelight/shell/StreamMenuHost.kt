@@ -75,11 +75,10 @@ internal interface StreamMenuHost {
     fun toggleZoom()
     val onscreenControlsOn: Boolean
     fun toggleOnscreenControls()
+    val fullKeyboardOn: Boolean
     fun toggleFullKeyboard()
-    fun toggleKeyLayout()
     val touchSensitivityOn: Boolean
     fun toggleTouchSensitivity()
-    fun rotate()
 
     // Live selection of the rumble presets (same as the Debug laboratory) in a running stream
     /** The active preset, or null for Custom (parameters edited in the laboratory). */

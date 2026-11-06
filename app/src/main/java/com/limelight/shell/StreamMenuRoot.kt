@@ -431,11 +431,9 @@ private fun PageRows(
             MenuRow(Symbols.ZOOM_IN, "Zoom", RowValue.Toggle(host.zoomOn) { toggle { host.toggleZoom() } })
             if (host.allowChangeMouseMode) MenuRow(Symbols.MOUSE, MoreRow.MOUSE, RowValue.Action { openPage(MenuPage.MOUSE) }, entry(MoreRow.MOUSE))
             MenuRow(Symbols.JOYSTICK, "On-screen controls", RowValue.Toggle(host.onscreenControlsOn) { toggle { host.toggleOnscreenControls() } })
-            MenuRow(Symbols.KEYBOARD_FULL, "Full keyboard", RowValue.Action { toggle { host.toggleFullKeyboard() } })
-            MenuRow(Symbols.KEY_LAYOUT, "Key layout", RowValue.Action { toggle { host.toggleKeyLayout() } })
+            MenuRow(Symbols.KEYBOARD_FULL, "Full keyboard", RowValue.Toggle(host.fullKeyboardOn) { toggle { host.toggleFullKeyboard() } })
             MenuRow(Symbols.TOUCH_APP, "Touch sensitivity", RowValue.Toggle(host.touchSensitivityOn) { toggle { host.toggleTouchSensitivity() } })
             MenuRow(Symbols.VIBRATION, MoreRow.RUMBLE, RowValue.Text(host.rumblePreset?.label ?: "Custom") { openPage(MenuPage.RUMBLE) }, entry(MoreRow.RUMBLE))
-            MenuRow(Symbols.SCREEN_ROTATION, "Rotate", RowValue.Action { close { host.rotate() } })
         }
         MenuPage.BRIGHTNESS -> MenuRow(
             Symbols.BRIGHTNESS_MEDIUM, "Screen brightness",
