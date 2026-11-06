@@ -21,7 +21,6 @@ internal object NativeSettingsHelp {
             else "One row of covers; running and recent games come first."
         "ui_reduced_motion" -> if (label == "Reduced") "Less interface motion. Game FPS is unchanged."
             else "Full transitions and focus animations."
-        "ui_palette" -> "Colors of the interface and the animated backgrounds."
         "ui_background" -> backgrounds[label].orEmpty()
         "ui_stats_position" -> "Full statistics panel in the ${label.lowercase()} corner."
         "ui_default_pc" -> if (label == "None") "No preferred PC; Skip the start screen is unavailable."
