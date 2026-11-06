@@ -104,6 +104,7 @@ import android.widget.FrameLayout;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
 import com.limelight.utils.DelosToast;
+import com.limelight.utils.ToastKind;
 import android.widget.ImageButton;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -599,11 +600,11 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
                     if (!willStreamHdr) {
                         // Nope, no HDR for us :(
-                        DelosToast.show(this, "Display does not support HDR10", DelosToast.LONG);
+                        DelosToast.show(this, "Display does not support HDR10", DelosToast.LONG, ToastKind.WARNING);
                     }
                 }
                 else {
-                    DelosToast.show(this, "HDR requires Android 7.0 or later", DelosToast.LONG);
+                    DelosToast.show(this, "HDR requires Android 7.0 or later", DelosToast.LONG, ToastKind.WARNING);
                 }
             }
         }
@@ -615,7 +616,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             if (PyroWaveRenderer.isAvailable()) {
                 offerPyroWave = true;
             } else {
-                DelosToast.show(this, "This device cannot decode PyroWave", DelosToast.LONG);
+                DelosToast.show(this, "This device cannot decode PyroWave", DelosToast.LONG, ToastKind.WARNING);
             }
         }
 
@@ -671,16 +672,16 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         // Don't stream HDR if the decoder can't support it
         if (willStreamHdr && !offerPyroWave && !decoderRenderer.isHevcMain10Hdr10Supported() && !decoderRenderer.isAv1Main10Supported()) {
             willStreamHdr = false;
-            DelosToast.show(this, "Decoder does not support HDR10 profile", DelosToast.LONG);
+            DelosToast.show(this, "Decoder does not support HDR10 profile", DelosToast.LONG, ToastKind.WARNING);
         }
         // Display a message to the user if HEVC was forced on but we still didn't find a decoder
         if (prefConfig.videoFormat == PreferenceConfiguration.FormatOption.FORCE_HEVC && !decoderRenderer.isHevcSupported()) {
-            DelosToast.show(this, "No HEVC decoder found", DelosToast.LONG);
+            DelosToast.show(this, "No HEVC decoder found", DelosToast.LONG, ToastKind.WARNING);
         }
 
         // Display a message to the user if AV1 was forced on but we still didn't find a decoder
         if (prefConfig.videoFormat == PreferenceConfiguration.FormatOption.FORCE_AV1 && !decoderRenderer.isAv1Supported()) {
-            DelosToast.show(this, "No AV1 decoder found", DelosToast.LONG);
+            DelosToast.show(this, "No AV1 decoder found", DelosToast.LONG, ToastKind.WARNING);
         }
 
         // H.264 is always supported
@@ -2118,17 +2119,17 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                     try {
                         if (!httpConn.sendClipboard(clipboardText)) {
                             if (prefConfig.smartClipboardSyncToast) {
-                                Game.this.runOnUiThread(() -> DelosToast.show(Game.this, getString(R.string.clipboard_sync_unsupported), DelosToast.SHORT));
+                                Game.this.runOnUiThread(() -> DelosToast.show(Game.this, getString(R.string.clipboard_sync_unsupported), DelosToast.SHORT, ToastKind.WARNING));
                             }
                         } else {
                             if (prefConfig.smartClipboardSyncToast) {
-                                Game.this.runOnUiThread(() -> DelosToast.show(Game.this, getString(R.string.send_clipboard_success), DelosToast.SHORT));
+                                Game.this.runOnUiThread(() -> DelosToast.show(Game.this, getString(R.string.send_clipboard_success), DelosToast.SHORT, ToastKind.SUCCESS));
                             }
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
                         if (prefConfig.smartClipboardSyncToast) {
-                            Game.this.runOnUiThread(() -> DelosToast.show(Game.this, getString(R.string.send_clipboard_failed) + e.getMessage(), DelosToast.SHORT));
+                            Game.this.runOnUiThread(() -> DelosToast.show(Game.this, getString(R.string.send_clipboard_failed) + e.getMessage(), DelosToast.SHORT, ToastKind.ERROR));
                         }
                     }
                 }
@@ -2174,12 +2175,12 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
                     clipboardManager.setPrimaryClip(clipData);
                     if (prefConfig.smartClipboardSyncToast) {
-                        Game.this.runOnUiThread(() -> DelosToast.show(Game.this, getString(R.string.get_clipboard_success), DelosToast.SHORT));
+                        Game.this.runOnUiThread(() -> DelosToast.show(Game.this, getString(R.string.get_clipboard_success), DelosToast.SHORT, ToastKind.SUCCESS));
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
                     if (prefConfig.smartClipboardSyncToast) {
-                        Game.this.runOnUiThread(() -> DelosToast.show(Game.this, getString(R.string.get_clipboard_failed) + e.getMessage(), DelosToast.SHORT));
+                        Game.this.runOnUiThread(() -> DelosToast.show(Game.this, getString(R.string.get_clipboard_failed) + e.getMessage(), DelosToast.SHORT, ToastKind.ERROR));
                     }
                 }
                 clipboardSyncRunning = false;
@@ -3273,11 +3274,12 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                                 failure = e.getMessage();
                             }
                         }
+                        final ToastKind messageKind = quit ? ToastKind.SUCCESS : ToastKind.ERROR;
                         final String message = quit
                                 ? app.getResources().getString(R.string.applist_quit_success) + " " + quitName
                                 : (failure != null && !failure.isEmpty() ? failure : "The PC did not quit " + quitName);
                         com.limelight.shell.StreamExit.INSTANCE.setQuitting(false);
-                        new Handler(Looper.getMainLooper()).post(() -> DelosToast.show(app, message, DelosToast.LONG));
+                        new Handler(Looper.getMainLooper()).post(() -> DelosToast.show(app, message, DelosToast.LONG, messageKind));
                     } else {
                         com.limelight.shell.StreamExit.INSTANCE.setQuitting(false);
                     }
@@ -3468,7 +3470,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    DelosToast.show(Game.this, message, DelosToast.LONG);
+                    DelosToast.show(Game.this, message, DelosToast.LONG, ToastKind.WARNING);
                 }
             });
         }

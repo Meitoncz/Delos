@@ -17,6 +17,7 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.view.InputDevice;
 import com.limelight.utils.DelosToast;
+import com.limelight.utils.ToastKind;
 
 import com.limelight.LimeLog;
 import com.limelight.R;
@@ -176,7 +177,7 @@ public class UsbDriverService extends Service implements UsbDriverListener {
 
                     usbManager.requestPermission(device, PendingIntent.getBroadcast(UsbDriverService.this, 0, i, intentFlags));
                 } catch (SecurityException e) {
-                    DelosToast.show(this, this.getText(R.string.error_usb_prohibited), DelosToast.LONG);
+                    DelosToast.show(this, this.getText(R.string.error_usb_prohibited), DelosToast.LONG, ToastKind.ERROR);
                     if (stateListener != null) {
                         stateListener.onUsbPermissionPromptCompleted();
                     }

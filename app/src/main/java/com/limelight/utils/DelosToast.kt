@@ -26,17 +26,24 @@ object DelosToast {
     fun show(context: Context, @StringRes text: Int) = show(context, text, SHORT)
 
     @JvmStatic
-    fun show(context: Context, @StringRes text: Int, duration: Int) {
-        dispatch(context, duration) { it.getText(text).toString() }
+    fun show(context: Context, @StringRes text: Int, duration: Int) = show(context, text, duration, ToastKind.INFO)
+
+    @JvmStatic
+    fun show(context: Context, text: CharSequence, duration: Int) = show(context, text, duration, ToastKind.INFO)
+
+    /** [kind] picks the colour, word and icon of the toast (a toast says INFO unless its caller knows better). */
+    @JvmStatic
+    fun show(context: Context, @StringRes text: Int, duration: Int, kind: ToastKind) {
+        dispatch(context, duration, kind) { it.getText(text).toString() }
     }
 
     @JvmStatic
-    fun show(context: Context, text: CharSequence, duration: Int) {
+    fun show(context: Context, text: CharSequence, duration: Int, kind: ToastKind) {
         val message = text.toString()
-        dispatch(context, duration) { message }
+        dispatch(context, duration, kind) { message }
     }
 
-    private fun dispatch(context: Context, duration: Int, message: (Context) -> String) {
+    private fun dispatch(context: Context, duration: Int, kind: ToastKind, message: (Context) -> String) {
         // Queued work must not retain a finishing Activity. Resolve foreground UI only on main.
         val requested = WeakReference(context)
         val app = context.applicationContext
@@ -45,7 +52,7 @@ object DelosToast {
             val activity = source.activity()
             val host = routing.select { it.activity === activity }
             val text = message(source)
-            if (host != null) host.show(text, toastDurationMs(duration))
+            if (host != null) host.show(text, toastDurationMs(duration), kind)
             else android.widget.Toast.makeText(app, text, duration).show()
         }
         if (Looper.myLooper() == Looper.getMainLooper()) deliver.run() else main.post(deliver)
@@ -54,7 +61,7 @@ object DelosToast {
     /** The Activity owns this observer; the global router holds only a weak reference to it. */
     internal fun register(
         activity: ComponentActivity,
-        show: (String, Long) -> Unit,
+        show: (String, Long, ToastKind) -> Unit,
         onStart: () -> Unit = {},
         onStop: () -> Unit = {},
         onDestroy: () -> Unit = {},
@@ -66,7 +73,7 @@ object DelosToast {
 
     private class Host(
         val activity: ComponentActivity,
-        val show: (String, Long) -> Unit,
+        val show: (String, Long, ToastKind) -> Unit,
         val started: () -> Unit,
         val stopped: () -> Unit,
         val destroyed: () -> Unit,

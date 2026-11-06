@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.os.Build;
 import android.os.Looper;
 import com.limelight.utils.DelosToast;
+import com.limelight.utils.ToastKind;
 
 import com.limelight.LimeLog;
 import com.limelight.binding.input.capture.InputCaptureProvider;
@@ -208,7 +209,7 @@ public class EvdevCaptureProvider extends InputCaptureProvider {
         activity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                DelosToast.show(activity, "This device is not rooted - Mouse capture is unavailable", DelosToast.LONG);
+                DelosToast.show(activity, "This device is not rooted - Mouse capture is unavailable", DelosToast.LONG, ToastKind.WARNING);
             }
         });
     }

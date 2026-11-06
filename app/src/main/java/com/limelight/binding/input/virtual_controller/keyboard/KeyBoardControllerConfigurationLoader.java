@@ -13,6 +13,7 @@ import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.view.KeyEvent;
 import com.limelight.utils.DelosToast;
+import com.limelight.utils.ToastKind;
 
 import androidx.preference.PreferenceManager;
 
@@ -538,7 +539,7 @@ public class KeyBoardControllerConfigurationLoader {
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    DelosToast.show(context, context.getString(R.string.wrong_import_format), DelosToast.SHORT);
+                    DelosToast.show(context, context.getString(R.string.wrong_import_format), DelosToast.SHORT, ToastKind.WARNING);
                 }
             }
 

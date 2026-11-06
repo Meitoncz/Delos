@@ -23,6 +23,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import com.limelight.utils.DelosToast;
+import com.limelight.utils.ToastKind;
 import com.limelight.utils.DeviceVibrator;
 
 import com.limelight.binding.input.ActiveKeyboardInput;
@@ -539,7 +540,7 @@ public class KeyBoardController {
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    DelosToast.show(context, "Error loading custom keys: " + e.getMessage(), DelosToast.SHORT);
+                    DelosToast.show(context, "Error loading custom keys: " + e.getMessage(), DelosToast.SHORT, ToastKind.ERROR);
                 }
             }
 
@@ -742,7 +743,7 @@ public class KeyBoardController {
         } catch (Exception e) {
             LimeLog.warning("Error loading keyboard configuration: " + e.getMessage());
             e.printStackTrace();
-            DelosToast.show(context, context.getString(R.string.keyboard_load_error, e.getMessage()), DelosToast.SHORT);
+            DelosToast.show(context, context.getString(R.string.keyboard_load_error, e.getMessage()), DelosToast.SHORT, ToastKind.ERROR);
         }
     }
 

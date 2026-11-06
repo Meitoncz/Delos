@@ -16,7 +16,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import com.limelight.shell.data.App
 import com.limelight.shell.data.Pc
 import com.limelight.shell.settings.SettingsTab
+import com.limelight.shell.ui.ACTION_TOAST_MS
+import com.limelight.shell.ui.DEFAULT_TOAST_MS
 import com.limelight.shell.ui.GameArt
+import com.limelight.shell.ui.toastKindFor
+import com.limelight.utils.ToastKind
 
 /** Screens of the shell. [main] screens show the top navigation and the PC; [back] is where B goes (null: the system). */
 sealed interface Screen {
@@ -140,7 +144,8 @@ data class Toast(
     val icon: String?,
     val id: Int,
     val action: ToastAction? = null,
-    val durationMs: Long = if (action != null) com.limelight.shell.ui.ACTION_TOAST_MS else 2600L,
+    val durationMs: Long = if (action != null) ACTION_TOAST_MS else DEFAULT_TOAST_MS,
+    val kind: ToastKind = ToastKind.INFO,
 )
 
 /** Starting [app] on [pc]; [intent] opens the stream. */
@@ -213,6 +218,10 @@ class ShellState(initial: Screen) {
     var layer by mutableStateOf<Layer?>(null)
         private set
     var toast by mutableStateOf<Toast?>(null)
+        private set
+
+    /** Counts the presses of a toast's action (Y or a tap), so the toast can squeeze its chip before it leaves. */
+    var toastPress by mutableIntStateOf(0)
         private set
 
     /** Key ("pc uuid/app id") of the focused game on the home screen. */
@@ -294,14 +303,18 @@ class ShellState(initial: Screen) {
     /** The element to focus again once the closed layer has left the composition. */
     fun takeReturnFocus(): FocusRequester? = returnFocus.also { returnFocus = null }
 
-    /** A toast with an [action] keeps its existing Undo window unless a duration is supplied. */
+    /**
+     * A toast with an [action] keeps its existing Undo window unless a duration is supplied. Its [kind] is the caller's, else it is
+     * read from the [icon] (`toastKindFor`); information by default.
+     */
     fun showToast(
         text: String,
         icon: String? = null,
         action: ToastAction? = null,
-        durationMs: Long = if (action != null) com.limelight.shell.ui.ACTION_TOAST_MS else 2600L,
+        durationMs: Long = if (action != null) ACTION_TOAST_MS else DEFAULT_TOAST_MS,
+        kind: ToastKind? = null,
     ) {
-        toast = Toast(text, icon, ++toastCounter, action, durationMs)
+        toast = Toast(text, icon, ++toastCounter, action, durationMs, toastKindFor(kind, icon, action != null))
     }
 
     fun hideToast(id: Int) {
@@ -313,6 +326,7 @@ class ShellState(initial: Screen) {
         val shown = toast ?: return false
         val action = shown.action ?: return false
         toast = null
+        toastPress++
         action.run()
         return true
     }

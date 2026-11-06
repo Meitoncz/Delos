@@ -162,7 +162,7 @@ public class ServerHelper {
             boolean withVDisplay
     ) {
         if (computer.state == ComputerDetails.State.OFFLINE || computer.activeAddress == null) {
-            DelosToast.show(parent, parent.getString(R.string.pair_pc_offline), DelosToast.SHORT);
+            DelosToast.show(parent, parent.getString(R.string.pair_pc_offline), DelosToast.SHORT, ToastKind.ERROR);
             return;
         }
 
@@ -214,8 +214,10 @@ public class ServerHelper {
             public void run() {
                 String message;
                 boolean failed = false;
+                boolean quitOk = false;
                 try {
                     if (httpConn.quitApp()) {
+                        quitOk = true;
                         message = parent.getResources().getString(R.string.applist_quit_success) + " " + appName;
                     } else {
                         message = parent.getResources().getString(R.string.applist_quit_fail) + " " + appName;
@@ -253,7 +255,8 @@ public class ServerHelper {
                 }
 
                 final String toastMessage = message;
-                parent.runOnUiThread(() -> DelosToast.show(parent, toastMessage, DelosToast.LONG));
+                final ToastKind toastKind = quitOk ? ToastKind.SUCCESS : ToastKind.ERROR;
+                parent.runOnUiThread(() -> DelosToast.show(parent, toastMessage, DelosToast.LONG, toastKind));
             }
         }).start();
 
@@ -284,7 +287,7 @@ public class ServerHelper {
             e.printStackTrace();
 
             final String toastMessage = e.getMessage();
-            parent.runOnUiThread(() -> DelosToast.show(parent, toastMessage, DelosToast.LONG));
+            parent.runOnUiThread(() -> DelosToast.show(parent, toastMessage, DelosToast.LONG, ToastKind.ERROR));
         }
     }
 }

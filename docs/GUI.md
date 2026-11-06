@@ -331,18 +331,49 @@ one press, one focus and one menu feel the same everywhere. The numbers, easings
   a slider's knob grows on focus, the switch is the stream menu's. *Context menus* grow out of the focused element's corner (or
   under its button), their title and items rise in turn, the focused item fills with a fade. *Side menu*: slides in over 560 ms,
   header and rows rise in turn, leaves in 240 ms. *Dialogs and the filter modal*: settle in from 0.96, title, note, fields and
-  buttons rise in turn, leave in 240 ms. *Toasts* leave in 240 ms.
+  buttons rise in turn, leave in 240 ms. *Toasts* (the console notification): see [Toasts](#toasts).
 
-All app messages use the existing Delos `ToastHost` design, never system toasts while a
-Delos window is visible. `DelosToast` routes to the shell's own state or to a
-noninteractive decor overlay in the stream and external-display controller windows;
-the overlay never takes focus, touch or controller input and respects display cutouts.
-Messages replace the previous toast, with short/long hints of 2/3.5 seconds; native shell
-messages retain 2.6 seconds and Undo retains 10 seconds. Hosts are weakly registered for
-their Activity lifecycle, including pending initialization messages; service/helper
-messages use the visible foreground host. The only system-toast fallback is when no
-Delos host is visible. Closing the separate stream-menu dialog does not remove the
-stream toast host or discard a result delivered after stream focus returns.
+### Toasts
+
+Every app message is the same **console notification** (approved prototype B: `build/toast-proto`, local scratch), in the shell, over the stream and
+on the external display: `ui/ToastHost.kt`, the one composable, with the pure logic in `ui/ToastLogic.kt`. It sits at the **top right**, 112 stage
+pixels from the top (below the shell's status bar) and 44 from the right edge. Over a stream it covers the game's corner (a mini-map, the
+stats strip); the user accepted that. The card is flat and opaque (`#17223C` → `#0E1628`, radius 20, a faint inset ring), so it stays readable over a
+white game frame; it has **no blur** (the stream is a `SurfaceView`).
+
+- **Kinds**: `INFO` (the palette's cyan, `accent2`), `SUCCESS` (mint), `WARNING` (orange), `ERROR` (coral) and `ACTION` (the palette's indigo, light), each a solid
+  icon block with its icon (info, check circle, warning triangle, exclamation, trash), the word **INFO / DONE / WARNING / ERROR / UNDO** above the text and the
+  kind colour on the glow and the block. Mint, orange and coral are fixed semantic colours; the others follow the palette. A caller passes the kind
+  (`ShellState.showToast(…, kind = ToastKind.ERROR)`, `DelosToast.show(context, text, DelosToast.LONG, ToastKind.WARNING)`); without one it is read from the
+  icon (`Symbols.ERROR` / `WIFI_OFF` / `LINK_OFF` → error, `CHECK_CIRCLE` / `CHECK` → success, `WARNING` → warning, everything else → information; `toastKindFor`),
+  and a toast that carries an action is always `ACTION`. A toast without an icon of its own shows its kind's.
+- **Text**: Figtree 600 at 25 × interface scale (100 / 115 / 130 %), **two lines at most, then an ellipsis** (no marquee: a toast is never focused, and a
+  scrolling line cannot be stopped). The text is at most `min(560, stage width − 360) × scale` wide and the card is as wide as the widest line
+  (measured once per toast). Everything on the card scales with the interface scale; 16:9, 21:9 and 4:3 only change the stage width.
+- **Undo**: a toast with an action shows the gold chip with the white `Y` disc and the label (like the hint glyphs). **Y** on the controller
+  (`GlobalKeys` → `ShellState.runToastAction`) or a tap runs it, as before; the chip squeezes for `PRESS_HOLD` before the card leaves. It exists only in the shell: the
+  stream and controller windows host the card without any input.
+- **Time** (unchanged): the stream's hints are 2 s (short) and 3.5 s (long), a shell toast 2.6 s, one with an action 10 s. The **gold line** along the
+  bottom edge is the remaining time: it draws in (`EaseOut` 420 ms from +280) and then drains.
+- **Motion** (the numbers are in `Motion` and `ToastTiming`): the card slides in from outside the right edge with `EaseOut` over `ENTER` (620 ms); the card fades over
+  `FADE` (280); a kind-coloured edge glow flashes as it lands and settles at 38 % (`Ease`, 900 ms from +200); one light sweep crosses it (`EaseOut`, 620 ms from +260);
+  the icon block pops from `POP_FROM_PILL` with a 50° turn (`PILL_POP`, `EaseSpring`, from +120); the word, the text and the chip rise `RISE` one after the other
+  (`ROW_DELAY` + `STAGGER_ROW`, `ROW_IN`). It leaves 72 px to the right and fades in `EXIT` (240 ms, `In`). **A new toast replaces the one on the stage, never a queue**: the old
+  card leaves at once and the new one enters `ROW_DELAY` (120 ms) later, so the two cross; a toast that arrives in that gap replaces the waiting one (it never shows).
+  **Reduced motion**: only the fades remain (no slide, rise, pop, sweep).
+- **Cost**: one clock ticks only while a toast is on the stage (an idle host draws and invalidates nothing); every animated value is read in the draw phase
+  (`graphicsLayer` / `drawBehind`), nothing recomposes per frame, and the glow, shadow and sweep are stacked rectangles and one brush built once per toast (no blur, no `Path`,
+  no per-frame allocation).
+- **Accessibility**: the newest card is a live region (polite, assertive for an error) with the kind word and the text (and the Undo label) as its description, so
+  TalkBack announces it although the card can never take focus, touch or key input.
+- **Hosts**: `DelosToast` routes a message to the shell's own state or to a non-interactive decor overlay (`DelosToastOverlay`) in the stream and external-display
+  controller windows; the overlay rejects touch, key and generic-motion dispatch, blocks descendant focus, is padded by the display cutout and sits below the stream-menu dialog.
+  Hosts are weakly registered for their Activity lifecycle, including pending initialization messages; service/helper messages use the visible foreground host. The
+  only system-toast fallback is when no Delos host is visible (`DelosToast`). Closing the separate stream-menu dialog does not remove the stream toast host or discard a result
+  delivered after stream focus returns.
+- **Preview** (debug builds, `ToastPreview` in `src/debug`): `adb shell am start -n io.github.meitoncz.delos.debug/com.limelight.shell.ShellActivity --es preview_screen toast --es preview_kind <info|success|warning|error|action> [--ei preview_double 1] [--ei preview_long 1]`
+  shows the toast on the drawn game scene (`double`: a second toast 350 ms later, to watch the hand-over; `long`: a message that needs the ellipsis); a tap on the scene or `Y` shows it
+  again, and `Y` is Undo on the `action` toast.
 
 ## Color roles
 
@@ -350,7 +381,7 @@ Color is a seasoning, not a coating: the neutral text and surfaces carry the scr
 the accents about **60 / 25 / 15** by visual weight (`colors.accent`, `accent2`, `accent3`; Delos: gold 40°, cyan 190°,
 indigo 250°, a split complement). Material You derives the same three from the wallpaper (main, +52°, tertiary) and
 follows the same roles. Light themes use darker shades (accent3 is dark there); content on an accent3 fill uses `onAccent3`
-(dark in the dark theme, white in the light one); a toast icon and a cover badge use `accent3OnInverse` / `accent3OnDark`
+(dark in the dark theme, white in the light one); a cover badge uses `accent3OnDark`
 and `accent3Line` is the faint hairline of the palette's third color, all in `ui/Colors.kt`.
 
 - **Text stays neutral**: labels of buttons and hints, titles, kickers and values are white or the grey text colors in
@@ -360,7 +391,7 @@ and `accent3Line` is the faint hairline of the palette's third color, all in `ui
 - `accent2` (secondary, ~25 %): icons of rows in the settings and the stream menu, arrows, the second half of every
   gradient (switch, slider, progress), the check badge of a selected circle, spinners.
 - `accent3` (accent, ~15 %): the cherry on top, small and never text: the dot under the current page in the top bar, the
-  slider halo of the stream menu, the toast icon, the `Running` and cover badge icons, the ring ripple of the portal
+  slider halo of the stream menu, the `Running` and cover badge icons, the ring ripple of the portal
   overlay and the end dot of the launch ring.
 
 The animated backgrounds follow the same weights: the main color about 60 % of the lights, the secondary one a quarter,

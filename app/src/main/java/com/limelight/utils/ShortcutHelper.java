@@ -225,13 +225,13 @@ public class ShortcutHelper {
     public void exportLauncherFile(ComputerDetails computer, NvApp app) {
         if (computer == null || computer.uuid == null || computer.uuid.isEmpty() ||
             computer.name == null || computer.name.isEmpty()) {
-            DelosToast.show(context, R.string.export_launcher_computer_details_incomplete, DelosToast.LONG);
+            DelosToast.show(context, R.string.export_launcher_computer_details_incomplete, DelosToast.LONG, ToastKind.ERROR);
             LimeLog.warning("exportLauncherFile: Computer details incomplete.");
             return;
         }
 
         if (app == null || app.getAppName() == null || app.getAppName().isEmpty() || app.getAppUUID() == null || app.getAppUUID().isEmpty()) {
-            DelosToast.show(context, R.string.export_launcher_app_details_incomplete, DelosToast.LONG);
+            DelosToast.show(context, R.string.export_launcher_app_details_incomplete, DelosToast.LONG, ToastKind.ERROR);
             LimeLog.warning("exportLauncherFile: App details incomplete.");
             return;
         }
@@ -269,7 +269,7 @@ public class ShortcutHelper {
             context.startActivityForResult(intent, REQUEST_CODE_EXPORT_ART_FILE);
         } catch (Exception e) {
             LimeLog.severe("Failed to start activity for file export: " + e.getMessage());
-            DelosToast.show(context, context.getString(R.string.failed_to_initiate_file_export, e.getMessage()), DelosToast.LONG);
+            DelosToast.show(context, context.getString(R.string.failed_to_initiate_file_export, e.getMessage()), DelosToast.LONG, ToastKind.ERROR);
             artFileContentToExport = null; // Clear content if we can't even start the activity
         }
     }
@@ -277,7 +277,7 @@ public class ShortcutHelper {
     public static void writeArtFileToUri(Activity activityContext, Uri uri) {
         if (uri == null) {
             LimeLog.warning("writeArtFileToUri: URI is null.");
-            DelosToast.show(activityContext, R.string.file_export_failed_no_location_selected, DelosToast.LONG);
+            DelosToast.show(activityContext, R.string.file_export_failed_no_location_selected, DelosToast.LONG, ToastKind.ERROR);
             artFileContentToExport = null; // Clear if URI is null
             return;
         }
@@ -286,7 +286,7 @@ public class ShortcutHelper {
             LimeLog.warning("writeArtFileToUri: No content to export.");
             // Potentially the content was cleared due to an earlier error or state loss.
             // Or this method was called inappropriately.
-            DelosToast.show(activityContext, R.string.file_export_failed_no_content_to_write, DelosToast.LONG);
+            DelosToast.show(activityContext, R.string.file_export_failed_no_content_to_write, DelosToast.LONG, ToastKind.ERROR);
             return;
         }
 
@@ -295,17 +295,17 @@ public class ShortcutHelper {
                 outputStream.write(artFileContentToExport.getBytes());
                 outputStream.flush(); // Ensure all data is written
                 LimeLog.info("Successfully wrote .art file to: " + uri.toString());
-                DelosToast.show(activityContext, R.string.file_exported_successfully, DelosToast.SHORT);
+                DelosToast.show(activityContext, R.string.file_exported_successfully, DelosToast.SHORT, ToastKind.SUCCESS);
             } else {
                 LimeLog.severe("Failed to open output stream for URI: " + uri.toString());
-                DelosToast.show(activityContext, R.string.failed_to_open_file_for_writing, DelosToast.LONG);
+                DelosToast.show(activityContext, R.string.failed_to_open_file_for_writing, DelosToast.LONG, ToastKind.ERROR);
             }
         } catch (IOException e) {
             LimeLog.severe("Error writing .art file to URI: " + uri.toString() + " - " + e.getMessage());
-            DelosToast.show(activityContext, activityContext.getString(R.string.error_writing_file, e.getMessage()), DelosToast.LONG);
+            DelosToast.show(activityContext, activityContext.getString(R.string.error_writing_file, e.getMessage()), DelosToast.LONG, ToastKind.ERROR);
         } catch (Exception e) {
             LimeLog.severe("Unexpected error writing .art file to URI: " + uri.toString() + " - " + e.getMessage());
-            DelosToast.show(activityContext, R.string.unexpected_error_during_file_export, DelosToast.LONG);
+            DelosToast.show(activityContext, R.string.unexpected_error_during_file_export, DelosToast.LONG, ToastKind.ERROR);
         }
         finally {
             artFileContentToExport = null; // Clear content after attempt

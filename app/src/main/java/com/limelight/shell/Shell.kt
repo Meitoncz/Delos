@@ -106,6 +106,7 @@ import com.limelight.shell.ui.px
 import com.limelight.shell.ui.StatusBar
 import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.ToastHost
+import com.limelight.utils.ToastKind
 import com.limelight.shell.ui.ZoomedBar
 import com.limelight.shell.ui.AvatarBadge
 import com.limelight.shell.ui.ButtonCaptureLayer
@@ -590,7 +591,7 @@ fun Shell(
                                 shell.navigate(screen.back ?: Screen.Profile)
                             } else {
                                 profileStore.create(name, avatar)
-                                shell.showToast("Welcome, $name", Symbols.WAVING_HAND)
+                                shell.showToast("Welcome, $name", Symbols.WAVING_HAND, kind = ToastKind.SUCCESS)
                                 // The first launch goes on to pairing, unless PCs are paired already
                                 shell.navigate(
                                     when {
@@ -717,7 +718,7 @@ fun Shell(
                 appearance.reducedMotion,
                 instantExit = launchExitInstant.value,
             )
-            ToastHost(shell.toast, onHidden = { shell.hideToast(it) }, onAction = { shell.runToastAction() })
+            ToastHost(shell.toast, onHidden = { shell.hideToast(it) }, onAction = { shell.runToastAction() }, actionPress = shell.toastPress)
         }
     }
 }
@@ -752,7 +753,7 @@ private class ShellGameActions(
             return
         }
         if (start.virtualDisplayUnavailable) {
-            shell.showToast("The virtual display is not ready on ${pc.name} · streaming the main display", Symbols.MONITOR)
+            shell.showToast("The virtual display is not ready on ${pc.name} · streaming the main display", Symbols.MONITOR, kind = ToastKind.WARNING)
         }
         shell.diving = false
         shell.launch = LaunchRequest(++launches, pc, app, start.intent, image, HeroBitmaps.latest("${pc.uuid}/${app.id}"))

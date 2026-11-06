@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 import com.limelight.utils.DelosToast;
+import com.limelight.utils.ToastKind;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -190,7 +191,7 @@ public class ShortcutTrampoline extends AppCompatActivity {
     /** A shortcut that names nothing Delos can start (no known PC to show a result for): a toast, then this activity ends. */
     private void reject(String message) {
         runOnUiThread(() -> {
-            DelosToast.show(getApplicationContext(), message, DelosToast.LONG);
+            DelosToast.show(getApplicationContext(), message, DelosToast.LONG, ToastKind.ERROR);
             finish();
         });
     }
@@ -219,7 +220,7 @@ public class ShortcutTrampoline extends AppCompatActivity {
     private void failStart(ComputerDetails details, ShortcutFailure failure) {
         ResultText text = StreamResultKt.describeShortcutFailure(details.name, failure);
         if (app == null) {
-            DelosToast.show(getApplicationContext(), text.getSentence(), DelosToast.LONG);
+            DelosToast.show(getApplicationContext(), text.getSentence(), DelosToast.LONG, ToastKind.ERROR);
             openPcInDelos();
         } else {
             StreamOutcome.failed(this, StreamResultKind.FAILED_TO_START, text, details.uuid, details.name, app.getAppId(), app.getAppName());

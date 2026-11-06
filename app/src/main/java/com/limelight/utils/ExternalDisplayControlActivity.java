@@ -163,7 +163,7 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
     private void initViews() {
         if (Game.instance == null) {
             if (failCount > 10) {
-                DelosToast.show(this, getString(R.string.no_game_instance), DelosToast.LONG);
+                DelosToast.show(this, getString(R.string.no_game_instance), DelosToast.LONG, ToastKind.ERROR);
                 finish();
             }
             // Wait for the intent to get started

@@ -2,7 +2,6 @@ package com.limelight.shell
 
 import android.view.KeyEvent
 import android.view.MotionEvent
-import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.activity.ComponentActivity
@@ -23,7 +22,7 @@ import com.limelight.shell.ui.delosColors
 import com.limelight.shell.ui.systemAccentHue
 import com.limelight.utils.DelosToast
 
-/** The existing toast design, in the stream/control window, never a focusable or touchable window. */
+/** The toast of the stream and control windows: the shell's own console card, never a focusable or touchable window. */
 object DelosToastOverlay {
     /** Call immediately after super.onCreate, before initialization can report a toast. */
     @JvmStatic
@@ -33,7 +32,7 @@ object DelosToastOverlay {
         var compose: ComposeView? = null
         DelosToast.register(
             activity,
-            show = { text, durationMs -> state.showToast(text, durationMs = durationMs) },
+            show = { text, durationMs, kind -> state.showToast(text, durationMs = durationMs, kind = kind) },
             onStart = {
                 // Wait for onStart: setContentView and the intended window geometry are now ready.
                 val view = ComposeView(activity).apply {
@@ -53,7 +52,6 @@ object DelosToastOverlay {
                     isFocusable = false
                     isFocusableInTouchMode = false
                     descendantFocusability = ViewGroup.FOCUS_BLOCK_DESCENDANTS
-                    importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
                     addView(view, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
                 }
                 ViewCompat.setOnApplyWindowInsetsListener(overlay) { _, insets ->

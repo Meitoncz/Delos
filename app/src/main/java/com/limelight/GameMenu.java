@@ -3,6 +3,7 @@ package com.limelight;
 import android.content.SharedPreferences;
 import android.text.TextUtils;
 import com.limelight.utils.DelosToast;
+import com.limelight.utils.ToastKind;
 
 import com.limelight.binding.input.KeyboardTranslator;
 import com.limelight.preferences.PreferenceConfiguration;
@@ -143,7 +144,7 @@ public class GameMenu {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                DelosToast.show(game, getString(R.string.wrong_import_format), DelosToast.SHORT);
+                DelosToast.show(game, getString(R.string.wrong_import_format), DelosToast.SHORT, ToastKind.WARNING);
             }
         }
         return options;
