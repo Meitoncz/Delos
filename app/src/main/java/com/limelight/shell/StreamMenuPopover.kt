@@ -152,6 +152,7 @@ private class PopoverRowFocusDecoration(k: Float) {
             inner.rewind()
             inner.addRoundRect(stroke, stroke, width - stroke, height - stroke, radius, radius, android.graphics.Path.Direction.CW)
             frame.rewind()
+            frame.fillType = android.graphics.Path.FillType.EVEN_ODD // rewind() may reset it: with winding the whole frame (hole included) paints black
             frame.addRect(stroke - margin, stroke - margin, width - stroke + margin, height - stroke + margin, android.graphics.Path.Direction.CW)
             frame.addRoundRect(
                 stroke - spread, stroke - spread, width - stroke + spread, height - stroke + spread,
