@@ -7,7 +7,9 @@ internal object NativeSettingsHelp {
     fun details(key: String, description: String, value: RowValue): String {
         val selected = value as? RowValue.Choice ?: return description
         val help = choice(key, selected.label)
-        return listOf("${selected.label}\n$help", description).filter { it.isNotBlank() }.joinToString("\n\n")
+        // A choice without its own help (the palettes: the row description already says what they are) must not leave an empty line behind
+        val head = if (help.isBlank()) selected.label else "${selected.label}\n$help"
+        return listOf(head, description).filter { it.isNotBlank() }.joinToString("\n\n")
     }
 
     fun choice(key: String, label: String): String = when (key) {

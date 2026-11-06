@@ -119,7 +119,8 @@ class SettingsHelpFitTest {
             "ui_default_pc" to listOf("None", "Living room PC with a long name"),
         )
         native.forEach { (key, labels) -> labels.forEach {
-            assertFits("$key/$it", "$it\n${NativeSettingsHelp.choice(key, it)}\n\n${SettingsHelp.description(key, "")}")
+            val help = NativeSettingsHelp.choice(key, it)
+            assertFits("$key/$it", (if (help.isBlank()) it else "$it\n$help") + "\n\n${SettingsHelp.description(key, "")}")
         } }
         listOf("ui_match_game_colors", "pref_debug_info", "import_special_button_file").forEach {
             assertFits(it, SettingsHelp.description(it, ""))
