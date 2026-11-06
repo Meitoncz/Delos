@@ -17,7 +17,7 @@ a per-game override. It also affects external pads using those Android paths whe
 ## Switching presets in a running stream (TEMPORARY, #66)
 
 To compare presets in a real game, open the stream menu (**More** tile), scroll to the last row,
-**Rumble preset** (it shows the active name), and press A. The page lists the same fifteen presets (a preset the hardware cannot run is marked **Problem** with the reason in the help line and does nothing; if the active preset's technique fails during the stream the row shows **Problem** too, with the reason);
+**Rumble preset** (it shows the active name), and press A. The page lists the same eighteen presets (a long page: it scrolls and every row stays reachable with the D-pad) (a preset the hardware cannot run is marked **Problem** with the reason in the help line and does nothing; if the active preset's technique fails during the stream the row shows **Problem** too, with the reason);
 A on one applies and saves it exactly like the laboratory (same `RumblePreferences.applyPreset`), marks it
 **Active**, plays no sample and leaves the menu open so presets can be tried back to back. B returns to More.
 `ControllerHandler` follows `PreferenceConfiguration.rumbleTranslatorEnabled`/`rumbleProfile` at every rumble
@@ -50,31 +50,43 @@ original parameter values. **Current preset** and the **Active** marker identify
 | Kick only | Original response after a strong start kick | 1.0 | 1.0 | 0 | 100 | 0.80 / 0.33 | 0 |
 | Everything felt | High floor and a brief kick for nonzero input | 1.0 | 0.6 | 220 | 50 | 0.80 / 0.40 | 0 |
 
-### Experimental techniques 11-15 (TEMPORARY, #66)
+### Experimental pulse presets 11-18 (TEMPORARY, #66)
 
-The Odin 2 Portal Max has **one** vibrator with amplitude control and composition effects but no frequency control, so
-presets 1-10 (amplitude only) all share the same high buzz. Each THUD/LOW_TICK primitive lasts only about 7 ms
-(`dumpsys vibrator_manager`), so a single primitive per 40-100 ms (the first attempt) was felt as nothing. Presets 11-15
-change the *technique*. All five use gain 1.0, curve 0.8, floor 50, no kick, low/high weight 1.00 / 0.35, no smoothing; only the
-technique differs. The amplitude is the translated one (same translator as presets 1-10). They apply to the single-vibrator path
-(the Odin); dual/quad vibrators keep the amplitude path and record that as a problem.
+The Odin 2 Portal Max has **one** vibrator with amplitude control but no frequency control, so presets 1-10 (amplitude
+only) all share the same high buzz. Presets 11-18 change the *technique*: a repeating on/off amplitude waveform
+(`VibrationEffect.createWaveform`, repeating from index 0) whose on and off durations are part of the profile
+(`pulseOnMs`, `pulseOffMs`; saved as `pref_rumble_pulse_on_ms`/`pref_rumble_pulse_off_ms`). The on phase plays the translated
+amplitude (never below the floor), the off phase amplitude 0; the waveform is replaced when the amplitude changes (also at the end
+of a start kick) and cancelled at zero. Low/high weight 1.00 / 0.35 and no smoothing for all of them. They apply to the
+single-vibrator path (the Odin); dual/quad vibrators keep the amplitude path and record that as a problem.
 
-| # | Preset | Technique | What to listen/feel for |
-| --- | --- | --- | --- |
-| 11 | Thud burst | While held: a composition of 12 `PRIMITIVE_THUD`, 12 ms between primitives (about 50-60 thuds per second), scale = translated amplitude / 255; issued again every 200 ms or at once when the amplitude changes; cancelled at zero | A continuous dull thudding instead of a buzz; stronger requests are harder |
-| 12 | Low-tick burst | Same with `PRIMITIVE_LOW_TICK`, 10 ms between primitives | A lighter, lower, ticking texture |
-| 13 | Pulse 25 Hz | `VibrationEffect.createWaveform` repeating from index 0: 20 ms on at the translated amplitude (never below the floor), 20 ms off (amplitude 0); replaced on amplitude change, cancelled at zero | A slow, coarse rattle |
-| 14 | Pulse 40 Hz | Same with 13 ms on, 12 ms off (period 25 ms) | A medium rumble |
-| 15 | Pulse 60 Hz | Same with 8 ms on, 8 ms off (period 16 ms) | A fast, tight rumble; the motor may not follow so quickly |
+On the Odin the user liked Gentle (#8), Kick only (#9) and Pulse 25 Hz; slow pulsed amplitude is the most promising direction, so
+11-15 combine and stretch that pulse. 16-18 are the original Pulse 25/40/60 presets with unchanged timings.
+
+| # | Preset | On / off ms | Gain | Curve | Floor | Kick ms | What to listen/feel for |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 11 | Pulse 25 + kick | 20 / 20 | 0.9 | 0.8 | 50 | 100 | The favourite pulse with a hard start (the kick plays as full-amplitude pulses for 100 ms) |
+| 12 | Pulse 20 Hz | 25 / 25 | 1.0 | 0.8 | 50 | 0 | A slower, heavier rattle |
+| 13 | Pulse 15 Hz | 33 / 33 | 1.0 | 0.8 | 50 | 0 | The slowest, deepest-sounding rattle |
+| 14 | Pulse 25 gentle | 20 / 20 | 0.7 | 1.3 | 0 | 0 | The pulse at Gentle strength, weak requests stay weak |
+| 15 | Pulse 25 heavy | 28 / 12 | 1.0 | 0.8 | 50 | 0 | Long pushes with short gaps: more force, same 25 Hz |
+| 16 | Pulse 25 Hz | 20 / 20 | 1.0 | 0.8 | 50 | 0 | A slow, coarse rattle |
+| 17 | Pulse 40 Hz | 13 / 12 | 1.0 | 0.8 | 50 | 0 | A medium rumble |
+| 18 | Pulse 60 Hz | 8 / 8 | 1.0 | 0.8 | 50 | 0 | A fast, tight rumble; the motor may not follow so quickly |
+
+**Removed techniques:** the Thud burst and Low-tick burst presets (compositions of 12 `PRIMITIVE_THUD`/`PRIMITIVE_LOW_TICK`) were
+tried on the Odin and did nothing the user could feel, so the code, the primitive capability probe and the presets are gone.
+Profiles saved under those names load as the plain amplitude path and show as Custom; `HAPTIC_WAVE` and unknown names load the same
+way. A profile saved by an earlier build under `PULSE_25`/`PULSE_40`/`PULSE_60` without on/off keys keeps its timings (20/20, 13/12, 8/8).
 
 **Removed technique:** a haptic audio channel (`AudioTrack` with `CHANNEL_OUT_HAPTIC_A`, the old Deep wave 40/60/80 Hz presets) was
 tried and removed because it cannot work here: on the Odin (Android 13, API 33) `AudioTrack` rejects haptic channel masks for apps
 ("Channel configuration features unsupported channels"), so those presets silently played the plain amplitude path.
 
-**Problems are never silent:** if a technique cannot run (missing primitive, no amplitude control, dual/quad vibrators, an
+**Problems are never silent:** if a technique cannot run (no amplitude control, dual/quad vibrators, an
 exception from the vibrator service), the plain amplitude path is used for that output **and** the reason is recorded
-(`RumblePlayback.getProblem`). The lab's **Device haptic capabilities** block shows it in **Last problem** (plus vibrator count,
-amplitude control and the primitive list), the preset row says `Problem: <reason>` in its help text and the stream menu's preset row says
+(`RumblePlayback.getProblem`). The lab's **Device haptic capabilities** block shows it in **Last problem** (plus vibrator count
+and amplitude control), the preset row says `Problem: <reason>` in its help text and the stream menu's preset row says
 **Problem** with `Problem: <reason>` in its help line. Presets the device cannot run at all (checked from the capability block) are listed
 as **Problem** and cannot be selected.
 

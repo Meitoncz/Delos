@@ -22,21 +22,28 @@ public enum RumblePresets {
             true, new RumbleTranslator.Profile(1f, 1f, 0, 100, .80f, .33f, 0f)),
     EVERYTHING_FELT("Everything felt", "Lift all nonzero requests to a high floor with a brief start kick.",
             true, new RumbleTranslator.Profile(1f, .6f, 220, 50, .80f, .40f, 0f)),
-    // TEMPORARY (#66): experimental techniques 11-15. They share one shaping (low motor first, weak requests lifted)
-    // so only the technique differs between them.
-    THUD("Thud burst", "Bursts of about 12 manufacturer THUD primitives 12 ms apart while held; a stronger request is a harder thud.",
-            true, experimental(RumbleTechnique.PRIMITIVE_THUD)),
-    LOW_TICK("Low-tick burst", "Bursts of about 12 manufacturer LOW_TICK primitives 10 ms apart while held; a stronger request is a firmer tick.",
-            true, experimental(RumbleTechnique.PRIMITIVE_LOW_TICK)),
+    // TEMPORARY (#66): experimental pulse presets 11-18. Unless stated otherwise they share one shaping
+    // (gain 1.0, curve 0.8, floor 50) so only the pulse timing differs between them.
+    PULSE_25_KICK("Pulse 25 + kick", "Square pulses, 20 ms on and 20 ms off, after a 100 ms full-strength start kick.",
+            true, pulse(.9f, .8f, 50, 100, 20, 20)),
+    PULSE_20("Pulse 20 Hz", "Square pulses, 25 ms on and 25 ms off: a slower, heavier rattle.",
+            true, pulse(1f, .8f, 50, 0, 25, 25)),
+    PULSE_15("Pulse 15 Hz", "Square pulses, 33 ms on and 33 ms off: the slowest, deepest-sounding rattle.",
+            true, pulse(1f, .8f, 50, 0, 33, 33)),
+    PULSE_25_GENTLE("Pulse 25 gentle", "Square pulses, 20 ms on and 20 ms off, with the Gentle strength and no floor.",
+            true, pulse(.7f, 1.3f, 0, 0, 20, 20)),
+    PULSE_25_HEAVY("Pulse 25 heavy", "Square pulses, 28 ms on and 12 ms off: long pushes with short gaps.",
+            true, pulse(1f, .8f, 50, 0, 28, 12)),
     PULSE_25("Pulse 25 Hz", "Square pulses, 20 ms on and 20 ms off: a slow, coarse rattle.",
-            true, experimental(RumbleTechnique.PULSE_25)),
+            true, pulse(1f, .8f, 50, 0, 20, 20)),
     PULSE_40("Pulse 40 Hz", "Square pulses, 13 ms on and 12 ms off: a medium rumble.",
-            true, experimental(RumbleTechnique.PULSE_40)),
+            true, pulse(1f, .8f, 50, 0, 13, 12)),
     PULSE_60("Pulse 60 Hz", "Square pulses, 8 ms on and 8 ms off: a fast, tight rumble.",
-            true, experimental(RumbleTechnique.PULSE_60));
+            true, pulse(1f, .8f, 50, 0, 8, 8));
 
-    private static RumbleTranslator.Profile experimental(RumbleTechnique technique) {
-        return new RumbleTranslator.Profile(1f, .8f, 50, 0, 1f, .35f, 0f, technique);
+    private static RumbleTranslator.Profile pulse(float gain, float curve, int floor, int kickMs, int onMs, int offMs) {
+        return new RumbleTranslator.Profile(gain, curve, floor, kickMs, 1f, .35f, 0f,
+                RumbleTechnique.PULSE, onMs, offMs);
     }
 
     public final String label;

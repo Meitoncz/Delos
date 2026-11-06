@@ -18,18 +18,21 @@ public final class RumbleTranslator {
         public final float smoothing;
         /** TEMPORARY (#66): how the translated amplitude becomes vibration; AMPLITUDE is the original path. */
         public final RumbleTechnique technique;
+        /** TEMPORARY (#66): on and off durations of the PULSE technique in ms; 0 for AMPLITUDE. */
+        public final int pulseOnMs;
+        public final int pulseOffMs;
         private final double preciseLowWeight;
         private final double preciseHighWeight;
 
         public Profile(float gain, float curve, int minAmplitude, int kickMs,
                        float lowWeight, float highWeight, float smoothing) {
             this(gain, curve, minAmplitude, kickMs, lowWeight, highWeight, smoothing,
-                    RumbleTechnique.AMPLITUDE);
+                    RumbleTechnique.AMPLITUDE, 0, 0);
         }
 
         public Profile(float gain, float curve, int minAmplitude, int kickMs,
                        float lowWeight, float highWeight, float smoothing,
-                       RumbleTechnique technique) {
+                       RumbleTechnique technique, int pulseOnMs, int pulseOffMs) {
             this.gain = gain;
             this.curve = curve;
             this.minAmplitude = minAmplitude;
@@ -38,15 +41,17 @@ public final class RumbleTranslator {
             this.highWeight = highWeight;
             this.smoothing = smoothing;
             this.technique = technique;
+            this.pulseOnMs = pulseOnMs;
+            this.pulseOffMs = pulseOffMs;
             // A float preference for .80/.33 must still use the legacy double literals.
             preciseLowWeight = lowWeight == 0.80f ? 0.80 : lowWeight;
             preciseHighWeight = highWeight == 0.33f ? 0.33 : highWeight;
         }
 
-        /** The same shaping with another technique (advanced edits keep the technique of the selected preset). */
-        public Profile withTechnique(RumbleTechnique technique) {
+        /** The same shaping with the technique and pulse timings of [source] (advanced edits keep those of the selected preset). */
+        public Profile withTechniqueOf(Profile source) {
             return new Profile(gain, curve, minAmplitude, kickMs, lowWeight, highWeight, smoothing,
-                    technique);
+                    source.technique, source.pulseOnMs, source.pulseOffMs);
         }
     }
 

@@ -158,8 +158,8 @@ fun DebugInfoScreen() {
 
     fun updateProfile(edited: RumbleTranslator.Profile) {
         stopLab()
-        // TEMPORARY (#66): an advanced edit keeps the technique of the selected preset
-        val updated = edited.withTechnique(profile.technique)
+        // TEMPORARY (#66): an advanced edit keeps the technique and pulse timings of the selected preset
+        val updated = edited.withTechniqueOf(profile)
         profile = updated
         activePreset = null
         RumblePreferences.saveCustom(preferences, updated, translatorEnabled)
@@ -245,10 +245,6 @@ fun DebugInfoScreen() {
             "How many vibrators the system reports. One means every preset drives the same motor."))
         add(DebugRow("cap_amplitude", "Device haptic capabilities", Symbols.TUNE, "Amplitude control",
             RowValue.Info(if (capabilities.amplitudeControl) "Yes" else "No"), "Whether the vibrator can change its strength."))
-        add(DebugRow("cap_primitives", "Device haptic capabilities", Symbols.GRAPHIC_EQ, "Primitives",
-            RowValue.Info(if (capabilities.thud && capabilities.lowTick) "THUD, LOW_TICK ok" else "THUD ${if (capabilities.thud) "ok" else "no"}, LOW_TICK ${if (capabilities.lowTick) "ok" else "no"}"),
-            "Which manufacturer vibration primitives are supported; the Thud burst and Low-tick burst presets need them.",
-            "Supported: ${capabilities.supportedPrimitives}"))
         add(DebugRow("cap_problem", "Device haptic capabilities", Symbols.INFO, "Last problem",
             RowValue.Info(problem ?: "None"),
             "Shows when the last played preset could not use its technique and played the plain amplitude path instead, and why."))

@@ -1,52 +1,26 @@
 package com.limelight.utils;
 
 /**
- * TEMPORARY (#66): pure math of the experimental rumble techniques (no Android types), so it can be unit tested.
+ * TEMPORARY (#66): pure math of the experimental pulse technique (no Android types), so it can be unit tested.
  */
 public final class RumbleHaptics {
-    /** Primitives per burst composition. */
-    public static final int BURST_COUNT = 12;
-    /** A held burst is issued again after this long, or at once when the amplitude changes. */
-    public static final int BURST_REISSUE_MS = 200;
-    static final int THUD_DELAY_MS = 12;
-    static final int LOW_TICK_DELAY_MS = 10;
-    /** On-phase share of a pulse period. */
-    static final int PULSE_DUTY_PERCENT = 50;
-
     private RumbleHaptics() {
     }
 
-    /** Delay before every primitive after the first in a burst; 0 for techniques that are no bursts. */
-    public static int burstDelayMs(RumbleTechnique technique) {
-        if (technique == RumbleTechnique.PRIMITIVE_THUD) {
-            return THUD_DELAY_MS;
+    /** {on, off} timings saved by earlier builds under the fixed-period names, or null for any other name. */
+    public static int[] legacyPulse(String name) {
+        if ("PULSE_25".equals(name)) {
+            return new int[] {20, 20};
         }
-        return technique == RumbleTechnique.PRIMITIVE_LOW_TICK ? LOW_TICK_DELAY_MS : 0;
-    }
-
-    /** Primitive scale 0..1 following the translated amplitude 0..255. */
-    public static float primitiveScale(int amplitude) {
-        return Math.max(0, Math.min(255, amplitude)) / 255f;
-    }
-
-    /** Pulse period in milliseconds; 0 for techniques that are no pulses. */
-    public static int pulsePeriodMs(RumbleTechnique technique) {
-        switch (technique) {
-            case PULSE_25:
-                return 40;
-            case PULSE_40:
-                return 25;
-            case PULSE_60:
-                return 16;
-            default:
-                return 0;
+        if ("PULSE_40".equals(name)) {
+            return new int[] {13, 12};
         }
+        return "PULSE_60".equals(name) ? new int[] {8, 8} : null;
     }
 
-    /** {on, off} durations of one pulse period; the on-phase is rounded half up from the duty share. */
-    public static long[] pulseTimings(int periodMs) {
-        long on = (periodMs * PULSE_DUTY_PERCENT + 50) / 100;
-        return new long[] {on, periodMs - on};
+    /** {on, off} durations of one pulse period; each phase lasts at least 1 ms (a waveform rejects 0). */
+    public static long[] pulseTimings(int onMs, int offMs) {
+        return new long[] {Math.max(1, onMs), Math.max(1, offMs)};
     }
 
     /** {on, off} amplitudes: the translated amplitude, never below {@code floor}, then silence. */

@@ -212,9 +212,8 @@ public final class RumblePlayback {
         final boolean amplitudeControl;
         // TEMPORARY (#66): the technique in effect; the requested one until it cannot run, then AMPLITUDE (with a problem recorded).
         RumbleTechnique technique;
-        // Amplitude of the last burst/pulse effect that was issued, 0 while none is playing
+        // Amplitude of the last pulse effect that was issued, 0 while none is playing
         int issuedAmplitude;
-        long nextBurstMs;
         int low;
         int high;
 
@@ -223,7 +222,7 @@ public final class RumblePlayback {
             amplitudeControl = vibrator.hasAmplitudeControl();
             technique = profile.technique;
             if (technique != RumbleTechnique.AMPLITUDE) {
-                String reason = RumbleCapabilities.unavailableReason(technique, vibrator);
+                String reason = RumbleCapabilities.unavailableReason(technique, amplitudeControl);
                 if (reason != null) {
                     fallBack(reason);
                 }
@@ -240,7 +239,7 @@ public final class RumblePlayback {
             int amplitude = RumbleTranslator.single(low, high, profile, state, nowMs);
             if (technique != RumbleTechnique.AMPLITUDE) {
                 try {
-                    technique(amplitude, nowMs);
+                    technique(amplitude);
                     return;
                 }
                 catch (RuntimeException e) {
@@ -281,54 +280,27 @@ public final class RumblePlayback {
         }
 
         /**
-         * TEMPORARY (#66): burst or pulse output. A burst is issued again every {@link RumbleHaptics#BURST_REISSUE_MS}
-         * while held, a pulse waveform repeats by itself; both are replaced when the amplitude changes and cancelled at zero.
+         * TEMPORARY (#66): pulse output. The waveform repeats by itself; it is replaced when the amplitude changes
+         * (including the end of a start kick) and cancelled at zero.
          */
-        private void technique(int amplitude, long nowMs) {
+        private void technique(int amplitude) {
             maximum = amplitude;
             if (amplitude == 0) {
                 vibrator.cancel();
                 issuedAmplitude = 0;
-                nextBurstMs = 0;
                 return;
             }
-            if (technique.isPrimitive()) {
-                if (amplitude == issuedAmplitude && nowMs < nextBurstMs) {
-                    return;
-                }
-                play(burst(amplitude));
-                nextBurstMs = nowMs + RumbleHaptics.BURST_REISSUE_MS;
+            if (amplitude == issuedAmplitude) {
+                return;
             }
-            else {
-                if (amplitude == issuedAmplitude) {
-                    return;
-                }
-                int period = RumbleHaptics.pulsePeriodMs(technique);
-                play(VibrationEffect.createWaveform(RumbleHaptics.pulseTimings(period),
-                        RumbleHaptics.pulseAmplitudes(amplitude, profile.minAmplitude), 0));
-            }
+            play(VibrationEffect.createWaveform(RumbleHaptics.pulseTimings(profile.pulseOnMs, profile.pulseOffMs),
+                    RumbleHaptics.pulseAmplitudes(amplitude, profile.minAmplitude), 0));
             issuedAmplitude = amplitude;
-        }
-
-        @TargetApi(31)
-        private VibrationEffect burst(int amplitude) {
-            int primitive = RumbleCapabilities.primitiveId(technique);
-            float scale = RumbleHaptics.primitiveScale(amplitude);
-            int delay = RumbleHaptics.burstDelayMs(technique);
-            VibrationEffect.Composition composition = VibrationEffect.startComposition();
-            for (int i = 0; i < RumbleHaptics.BURST_COUNT; i++) {
-                composition.addPrimitive(primitive, scale, i == 0 ? 0 : delay);
-            }
-            return composition.compose();
         }
 
         @Override
         long delay(long nowMs) {
-            long delay = state.nextUpdateDelay(nowMs);
-            if (nextBurstMs != 0) {
-                delay = Math.min(delay, Math.max(0, nextBurstMs - nowMs));
-            }
-            return delay;
+            return state.nextUpdateDelay(nowMs);
         }
 
         @Override
@@ -336,7 +308,6 @@ public final class RumblePlayback {
             state.reset();
             vibrator.cancel();
             issuedAmplitude = 0;
-            nextBurstMs = 0;
             maximum = 0;
         }
     }

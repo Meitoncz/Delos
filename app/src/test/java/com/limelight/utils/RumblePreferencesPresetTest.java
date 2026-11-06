@@ -105,13 +105,37 @@ public class RumblePreferencesPresetTest {
         RumblePreferences.applyPreset(prefs, RumblePresets.PULSE_40);
         SharedPreferences reloaded = reloadSavedValues();
         assertSame(RumblePresets.PULSE_40, RumblePreferences.activePreset(reloaded));
-        assertEquals(RumbleTechnique.PULSE_40, RumblePreferences.readProfile(reloaded).technique);
+        assertProfile(RumblePresets.PULSE_40.profile, RumblePreferences.readProfile(reloaded));
+        assertEquals(13, RumblePreferences.readProfile(reloaded).pulseOnMs);
+        assertEquals(12, RumblePreferences.readProfile(reloaded).pulseOffMs);
         prefs.edit().putString(RumblePreferences.TECHNIQUE, RumbleTechnique.AMPLITUDE.name()).commit();
         assertNull(RumblePreferences.activePreset(prefs));
 
         // A profile saved by the removed haptic-audio technique loads as the plain amplitude path
         prefs.edit().putString(RumblePreferences.TECHNIQUE, "HAPTIC_WAVE").putString(RumblePreferences.PRESET, "DEEP_WAVE_60").commit();
         assertEquals(RumbleTechnique.AMPLITUDE, RumblePreferences.readProfile(prefs).technique);
+        assertNull(RumblePreferences.activePreset(prefs));
+
+        // Profiles saved by the removed burst techniques load as the plain amplitude path and Custom
+        for (String removed : new String[] {"THUD", "LOW_TICK"}) {
+            prefs.edit().putString(RumblePreferences.TECHNIQUE, "PRIMITIVE_" + removed).putString(RumblePreferences.PRESET, removed).commit();
+            assertEquals(RumbleTechnique.AMPLITUDE, RumblePreferences.readProfile(prefs).technique);
+            assertEquals(0, RumblePreferences.readProfile(prefs).pulseOnMs);
+            assertEquals(0, RumblePreferences.readProfile(prefs).pulseOffMs);
+            assertNull(RumblePreferences.activePreset(prefs));
+        }
+
+        // A pulse preset saved by an earlier build (fixed-period technique name, no on/off keys) keeps its timings and identity
+        RumblePreferences.applyPreset(prefs, RumblePresets.PULSE_60);
+        prefs.edit().putString(RumblePreferences.TECHNIQUE, "PULSE_60")
+                .remove(RumblePreferences.PULSE_ON_MS).remove(RumblePreferences.PULSE_OFF_MS).commit();
+        assertSame(RumblePresets.PULSE_60, RumblePreferences.activePreset(prefs));
+        assertEquals(8, RumblePreferences.readProfile(prefs).pulseOnMs);
+        assertEquals(8, RumblePreferences.readProfile(prefs).pulseOffMs);
+
+        // A changed pulse timing is no longer the preset
+        RumblePreferences.applyPreset(prefs, RumblePresets.PULSE_25);
+        prefs.edit().putInt(RumblePreferences.PULSE_OFF_MS, 25).commit();
         assertNull(RumblePreferences.activePreset(prefs));
 
         // A profile saved before techniques existed
@@ -227,5 +251,7 @@ public class RumblePreferencesPresetTest {
         assertEquals(expected.highWeight, actual.highWeight, 0f);
         assertEquals(expected.smoothing, actual.smoothing, 0f);
         assertEquals(expected.technique, actual.technique);
+        assertEquals(expected.pulseOnMs, actual.pulseOnMs);
+        assertEquals(expected.pulseOffMs, actual.pulseOffMs);
     }
 }
