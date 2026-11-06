@@ -49,7 +49,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
@@ -337,13 +341,23 @@ fun TextFieldPill(
     // (and with it the keyboard) on focus when showKeyboardOnFocus is true, so switching it on while the field
     // is focused is how a key press opens the keyboard. A tap does not need it. Reset when the focus leaves.
     var activated by remember { mutableStateOf(false) }
+    // The field is being edited: activated by A / the centre key or by a tap, until the focus leaves. ImeAvoidance pins an engaged field into the top
+    // band of the window whatever the keyboard is. It never starts the keyboard itself.
+    var engaged by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(if (focused) 1.05f else 1f, tween(Motion.FOCUS, easing = EaseSpring), label = "fieldScale")
     val ring by animateFloatAsState(if (focused) 1f else 0f, tween(Motion.FOCUS, easing = EaseOut), label = "fieldRing")
     BasicTextField(
         state = state,
         modifier = modifier
             // The shell moves up while the keyboard is open, so the field stays above it (ImeAvoidance.kt)
-            .keepFieldAboveIme()
+            .keepFieldAboveIme(engaged)
+            .pointerInput(Unit) {
+                // A tap starts the keyboard by itself; here it only marks the field as engaged (nothing is consumed)
+                awaitEachGesture {
+                    awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                    engaged = true
+                }
+            }
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
@@ -357,6 +371,7 @@ fun TextFieldPill(
                     focused = it.isFocused
                     if (focused) feedback.focusMoved() else {
                         activated = false
+                        engaged = false
                         keyboard?.hide()
                     }
                 }
@@ -366,6 +381,7 @@ fun TextFieldPill(
                     Key.ButtonA, Key.DirectionCenter -> {
                         if (it.type == KeyEventType.KeyUp) {
                             // Already activated (or tapped): the input method is running, so just show the keyboard again
+                            engaged = true
                             if (activated) keyboard?.show() else activated = true
                         }
                         true

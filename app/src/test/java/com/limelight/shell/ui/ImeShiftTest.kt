@@ -116,4 +116,68 @@ class ImeShiftTest {
         // Without the region (the field alone) it would only be brought in, and the button stays behind the keyboard
         assertEquals(358f, ImeShift.shift(790f, 874f, 790f, 874f, 1080f, kb, 24f), 0f)
     }
+
+    // The editing band: the field being edited is pinned into the top quarter whatever the keyboard reports (1920 x 1080 landscape unless said otherwise)
+    private fun edit(
+        fieldTop: Float, fieldBottom: Float, engaged: Boolean = true, keyboard: Float = 0f, regionTop: Float = fieldTop, regionBottom: Float = fieldBottom,
+        width: Float = 1920f, height: Float = 1080f,
+    ) = ImeShift.editShift(engaged, fieldTop, fieldBottom, regionTop, regionBottom, width, height, keyboard, 24f)
+
+    @Test
+    fun theBandIsAQuarterOfALandscapeWindowAndAFifthOfAPortraitOne() {
+        assertEquals(270f, ImeShift.editBandBottom(1920f, 1080f), 0f)
+        assertEquals(.25f, ImeShift.EDIT_BAND_BOTTOM_FRACTION, 0f)
+        assertEquals(.20f, ImeShift.EDIT_BAND_BOTTOM_FRACTION_PORTRAIT, 0f)
+        // Portrait: 1080 x 1920, the band ends at 384
+        assertEquals(384f, ImeShift.editBandBottom(1080f, 1920f), 0f)
+        assertEquals(1500f - 384f, edit(1416f, 1500f, width = 1080f, height = 1920f), 0f)
+    }
+
+    @Test
+    fun theProfileNameFieldMovesToTheTopQuarterWhateverTheKeyboardReports() {
+        // field 790..874: its bottom goes to 270. SwiftKey reports 111 px (a real keyboard covers 623 px), and no keyboard at all gives the same
+        assertEquals(604f, edit(790f, 874f), 0f)
+        assertEquals(604f, edit(790f, 874f, keyboard = 111f), 0f)
+        // With the button as a region: the band still decides, the button's measured need (540 px keyboard: 482) is smaller
+        assertEquals(604f, edit(790f, 874f, keyboard = 540f, regionTop = 790f, regionBottom = 998f), 0f)
+    }
+
+    @Test
+    fun aDialogFieldMovesToTheTopQuarter() {
+        // The rename dialog's field at 514..598
+        assertEquals(328f, edit(514f, 598f), 0f)
+    }
+
+    @Test
+    fun aFieldThatIsAlreadyInTheBandStaysWhereItIs() {
+        // The settings search field at 266..350 is 80 px under the band's edge, one at 100..184 is above it
+        assertEquals(80f, edit(266f, 350f), 0f)
+        assertEquals(0f, edit(100f, 184f), 0f)
+        assertEquals(0f, edit(100f, 184f, keyboard = 0f), 0f)
+    }
+
+    @Test
+    fun aMeasuredKeyboardThatNeedsMoreBeatsTheBandAndNeverLessThanIt() {
+        // A reported 700 px keyboard under a field at 400..484: the band needs 214, the keyboard 484 + 24 - 380 = 128: the band
+        assertEquals(214f, edit(400f, 484f, keyboard = 700f), 0f)
+        // A 600 px tall window, the band ends at 150: a field at 300..384 needs 234 for it; a 450 px keyboard needs 384 + 24 - 150 = 258: the keyboard
+        assertEquals(258f, edit(300f, 384f, keyboard = 450f, height = 600f), 0f)
+    }
+
+    @Test
+    fun aFieldThatIsNotBeingEditedFollowsOnlyTheKeyboard() {
+        // Deactivated (focus left, field dismissed): no band, no keyboard: back to 0
+        assertEquals(0f, edit(790f, 874f, engaged = false), 0f)
+        assertEquals(0f, edit(790f, 874f, engaged = false, keyboard = 0f), 0f)
+        // Not engaged but a keyboard that is measured: the old rule (874 + 24 - 540)
+        assertEquals(358f, edit(790f, 874f, engaged = false, keyboard = 540f), 0f)
+    }
+
+    @Test
+    fun theBandNeverPushesTheFieldOutOfTheWindow() {
+        // A field 700 px tall at 40..740 would need 470; its top keeps the 24 px margin: 16
+        assertEquals(16f, edit(40f, 740f), 0f)
+        // A field already at the very top with its bottom below the band
+        assertEquals(0f, edit(0f, 300f), 0f)
+    }
 }

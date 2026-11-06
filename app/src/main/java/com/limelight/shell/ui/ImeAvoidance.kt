@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -54,6 +55,44 @@ object ImeShift {
     const val ESTIMATE_FRACTION = .5f
 
     /**
+     * While a text field is being edited (activated by A or a tap, until the focus leaves it) its bottom edge is pinned at
+     * most this far down the window, as a fraction of the window height: the field sits in the top quarter of a landscape
+     * window, whatever the keyboard is. Keyboards report very different heights (the Odin's SwiftKey in its split layout says
+     * 111 px and covers 58% of the screen) and can be resized, floated, split or switched at any moment, so this rule does not
+     * look at the keyboard at all. The measured keyboard can only push the field higher.
+     */
+    const val EDIT_BAND_BOTTOM_FRACTION = .25f
+
+    /** The same band in a portrait window (taller than wide). */
+    const val EDIT_BAND_BOTTOM_FRACTION_PORTRAIT = .20f
+
+    /** Where the editing band ends, in pixels from the top of a window of [windowWidth] x [windowHeight] pixels. */
+    fun editBandBottom(windowWidth: Float, windowHeight: Float): Float =
+        windowHeight * if (windowWidth >= windowHeight) EDIT_BAND_BOTTOM_FRACTION else EDIT_BAND_BOTTOM_FRACTION_PORTRAIT
+
+    /**
+     * The shift that pins a field being edited into the band: its bottom edge ([fieldBottom], window coordinates, without any
+     * shift already applied) goes to [bandBottom] or above, and a field that is already there does not move. The field's top
+     * keeps [margin] pixels from the window's top edge, so a field taller than the band is not pushed out of the window. What
+     * is above the field (a dialog's title, a page's heading) is only left on the screen if there is room in the band.
+     */
+    fun bandShift(fieldTop: Float, fieldBottom: Float, bandBottom: Float, margin: Float): Float =
+        (fieldBottom - bandBottom).coerceIn(0f, maxOf(fieldTop - margin, 0f))
+
+    /**
+     * The shift of the whole screen for the field being edited: the band rule when the field is [engaged], and the one
+     * for the measured [keyboard] height ([shift]); the larger of the two, so a keyboard that is measured to cover more can only
+     * push the field higher than the band does. Not engaged and no keyboard: nothing moves.
+     */
+    fun editShift(
+        engaged: Boolean, fieldTop: Float, fieldBottom: Float, regionTop: Float, regionBottom: Float,
+        windowWidth: Float, windowHeight: Float, keyboard: Float, margin: Float,
+    ): Float {
+        val band = if (engaged) bandShift(fieldTop, fieldBottom, editBandBottom(windowWidth, windowHeight), margin) else 0f
+        return maxOf(band, shift(fieldTop, fieldBottom, regionTop, regionBottom, windowHeight, keyboard, margin))
+    }
+
+    /**
      * How much of the bottom of the window (which is [windowHeight] pixels tall *now*) the keyboard covers, from every
      * source the system may give: [insetBottom] (the root window insets), [composeBottom] (Compose's own `WindowInsets.ime`)
      * and the visible display frame ([visibleBottom], the bottom of the frame in window coordinates; the keyboard is whatever
@@ -77,7 +116,9 @@ object ImeShift {
      * window that is [height] pixels tall. The [regionTop] .. [regionBottom] band is what should stay visible with the field (a dialog
      * with its buttons, the field with the button under it): it is brought in as far as its own top still fits on the
      * screen, but the field always wins. Never more than the keyboard's own height, so no empty strip opens above the
-     * keyboard, and never so much that the field itself leaves the screen at the top.
+     * keyboard, and never so much that the field itself leaves the screen at the top. When the region is taller than
+     * what is left above the keyboard, its top stays on the screen and the field is shown below it; when even that does not
+     * work, the field wins and the rest of the region (a title) leaves at the top.
      */
     fun shift(fieldTop: Float, fieldBottom: Float, regionTop: Float, regionBottom: Float, height: Float, ime: Float, margin: Float): Float {
         if (ime <= 0f) return 0f
@@ -93,6 +134,9 @@ object ImeShift {
 @Stable
 class ImeAnchor {
     internal var coordinates: LayoutCoordinates? = null
+
+    /** The field was activated (A, a tap) and has not lost the focus since: the keyboard is meant to be up. */
+    internal var engaged by mutableStateOf(false)
 }
 
 /** One reading of every source and the shift computed from it. Pixels, window coordinates; equal readings are not logged twice. */
@@ -104,6 +148,11 @@ internal data class ImeMeasure(
     /** The bottom of the visible display frame, in window coordinates. */
     val visibleBottom: Int = 0,
     val windowHeight: Int = 0,
+    val windowWidth: Int = 0,
+    /** The field is engaged (activated, focus not left): it is pinned into the top band whatever the keyboard says. */
+    val engaged: Boolean = false,
+    /** The shift of the band rule alone (0 when not engaged). */
+    val band: Float = 0f,
     /** How much the window is lower than it was without the keyboard: `adjustResize` really resized it. */
     val resizedBy: Int = 0,
     val keyboard: Float = 0f,
@@ -160,17 +209,19 @@ class ImeAvoidance {
         val view = view ?: return ImeMeasure(composeBottom = composeBottom)
         val decor = view.rootView
         val windowHeight = decor.height
+        val windowWidth = decor.width
         val onScreen = IntArray(2).also { decor.getLocationOnScreen(it) }
         val frame = AndroidRect().also { view.getWindowVisibleDisplayFrame(it) }
         val visibleBottom = frame.bottom - onScreen[1]
         val insets = ViewCompat.getRootWindowInsets(view)
         val insetBottom = insets?.getInsets(WindowInsetsCompat.Type.ime())?.bottom ?: 0
         val insetVisible = insets?.isVisible(WindowInsetsCompat.Type.ime()) == true
+        val engaged = focused?.engaged == true
         val keyboard = ImeShift.keyboardHeight(windowHeight.toFloat(), insetBottom.toFloat(), composeBottom.toFloat(), visibleBottom.toFloat(), insetVisible)
         if (keyboard == 0f) baselineHeight = windowHeight
         val resizedBy = (baselineHeight - windowHeight).coerceAtLeast(0)
-        val base = ImeMeasure(insetBottom, insetVisible, composeBottom, visibleBottom, windowHeight, resizedBy, keyboard)
-        if (keyboard <= 0f) return base
+        val base = ImeMeasure(insetBottom, insetVisible, composeBottom, visibleBottom, windowHeight, windowWidth, engaged, 0f, resizedBy, keyboard)
+        if (keyboard <= 0f && !engaged) return base
         val root = root?.takeIf { it.isAttached } ?: return base
         val fieldCoordinates = focused?.coordinates?.takeIf { it.isAttached } ?: return base
         // Bounds in the root, which does not contain its own shift, moved to window coordinates by where the host view sits in the window
@@ -182,8 +233,9 @@ class ImeAvoidance {
             .filter { it.contains(f.center) }
             .minByOrNull { it.height }
         val r = region ?: f
-        val shift = ImeShift.shift(f.top, f.bottom, r.top, r.bottom, windowHeight.toFloat(), keyboard, margin)
-        return base.copy(field = f, fieldTopNow = fieldCoordinates.positionInWindow().y, region = region, shift = shift)
+        val band = if (engaged) ImeShift.bandShift(f.top, f.bottom, ImeShift.editBandBottom(windowWidth.toFloat(), windowHeight.toFloat()), margin) else 0f
+        val shift = ImeShift.editShift(engaged, f.top, f.bottom, r.top, r.bottom, windowWidth.toFloat(), windowHeight.toFloat(), keyboard, margin)
+        return base.copy(field = f, fieldTopNow = fieldCoordinates.positionInWindow().y, region = region, band = band, shift = shift)
     }
 }
 
@@ -230,7 +282,7 @@ fun rememberImeAvoidance(): ImeAvoidance {
 private const val TAG = "DelosIme"
 private const val POLL_MS = 60L
 
-/** `DelosIme` (debug builds): `ime inset=… compose=… frame=…/…, kb=…, window h=… resized=… | field=… now=… region=… | shift=… | softInput=…`. */
+/** `DelosIme` (debug builds): `ime inset=… compose=… visibleBottom=… -> keyboard=… | engaged=… band=… | window WxH resized=… | field=… topNow=… region=… | shift=… | softInput=…`. */
 @Suppress("DEPRECATION") // the adjust flags are deprecated, and still what the window reports
 private fun log(view: View, m: ImeMeasure) {
     fun Rect?.text() = if (this == null) "-" else "[${left.toInt()},${top.toInt()},${right.toInt()},${bottom.toInt()}]"
@@ -245,7 +297,8 @@ private fun log(view: View, m: ImeMeasure) {
     Log.d(
         TAG,
         "ime inset=${m.insetBottom}(visible=${m.insetVisible}) compose=${m.composeBottom} visibleBottom=${m.visibleBottom} -> keyboard=${m.keyboard.toInt()}" +
-            " | window h=${m.windowHeight} resized=${m.resizedBy > 0}(by ${m.resizedBy})" +
+            " | engaged=${m.engaged} band=${m.band.toInt()}" +
+            " | window ${m.windowWidth}x${m.windowHeight} resized=${m.resizedBy > 0}(by ${m.resizedBy})" +
             " | field(window, unshifted)=${m.field.text()} topNow=${m.fieldTopNow.takeIf { !it.isNaN() }?.toInt() ?: "-"} region=${m.region.text()}" +
             " | shift=${m.shift.toInt()} | softInput=0x${(mode ?: 0).toString(16)} adjust=$adjust",
     )
@@ -266,11 +319,12 @@ fun Modifier.imeAvoidance(avoidance: ImeAvoidance): Modifier =
     graphicsLayer { translationY = -avoidance.shift.value.coerceAtLeast(0f) }
         .onGloballyPositioned { avoidance.root = it }
 
-/** A text field reports its place while it has focus, so the shell can keep it above the keyboard. No-op outside the shell. */
+/** A text field reports its place while it has focus, and whether it is [engaged] (activated: the keyboard is meant to be up), so the shell can keep it above the keyboard. No-op outside the shell. */
 @Composable
-fun Modifier.keepFieldAboveIme(): Modifier {
+fun Modifier.keepFieldAboveIme(engaged: Boolean): Modifier {
     val avoidance = LocalImeAvoidance.current ?: return this
     val anchor = remember { ImeAnchor() }
+    SideEffect { anchor.engaged = engaged }
     DisposableEffect(avoidance, anchor) { onDispose { avoidance.focusChanged(anchor, false) } }
     return onGloballyPositioned { anchor.coordinates = it }.onFocusChanged { avoidance.focusChanged(anchor, it.isFocused) }
 }
