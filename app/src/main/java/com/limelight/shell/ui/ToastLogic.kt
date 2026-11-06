@@ -86,8 +86,8 @@ object ToastTiming {
 
     /** The kind-coloured halo flashes as the card lands, then settles at [GLOW_REST] of its peak. */
     /** The glow comes up quickly (its own short fade, ahead of the card's), so it is already there when the card lands. */
-    const val GLOW_IN = 150
-    const val GLOW_AT = 200
+    const val GLOW_IN = 70
+    const val GLOW_AT = 110
     const val GLOW_MS = 900
     const val GLOW_REST = .45f
 
