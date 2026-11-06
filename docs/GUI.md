@@ -504,8 +504,9 @@ drawn nothing is touchable: a finger on the game area goes to the stream even wh
   controller's other buttons are swallowed. The stream menu's open/close buttons keep working (they are handled first);
   rumble keeps running. **No stuck input**: `ControllerHandler.setInputSuspended` lets go of everything the physical
   controllers hold (a neutral packet each) when the keyboard opens and again when it closes, and sends nothing in between (also
-  from the USB driver path); keys the keyboard itself holds are released when it is hidden, while latched modifiers stay
-  latched like before. The interception is `Game.handleKeyDown/handleKeyUp/handleMotionEvent` (`visibleFullKeyboard()`), for
+  from the USB driver path); keys the keyboard itself holds are released when it is hidden, and so is **every latched
+  modifier** (Shift, Ctrl, Alt, Win: each gets its key up and the latch is cleared, `ModifierLatch.releaseAll`), whichever way the
+  keyboard closes (B, Hide, the menu toggle, PiP), so nothing stays down on the PC. The interception is `Game.handleKeyDown/handleKeyUp/handleMotionEvent` (`visibleFullKeyboard()`), for
   controller sources only. On the external display the same hooks work, because `ExternalDisplayControlActivity` already routes
   the controller's events to `Game`; the keyboard there is the activity's own `KeyBoardLayoutController`.
 - **Motion** (all from `Motion.kt` / `MotionKit.kt`, like the stream menu): the rows **rise** 18 px and fade in, the first after 120 ms,

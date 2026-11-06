@@ -170,6 +170,27 @@ class FullKeyboardInputTest {
         assertFalse(latch.isLatched(shift))
     }
 
+    @Test
+    fun hidingReleasesEveryLatchedModifierAndClearsTheLatch() {
+        val latch = ModifierLatch()
+        val shift = KeyEvent.KEYCODE_SHIFT_LEFT
+        val ctrl = KeyEvent.KEYCODE_CTRL_LEFT
+        val alt = KeyEvent.KEYCODE_ALT_LEFT
+        // one latched by touch (held), one by the controller, one only pressed and not latched
+        latch.touchDown(ctrl, true)
+        latch.latchHeld(ctrl)
+        latch.padPress(shift)
+        latch.touchDown(alt, true)
+
+        assertEquals(listOf(ctrl, shift), latch.releaseAll())
+        assertTrue(latch.codes().isEmpty())
+        assertFalse(latch.isLatched(ctrl))
+        // nothing is left to release, and the next touch starts a fresh press
+        assertTrue(latch.releaseAll().isEmpty())
+        assertEquals(KeySend.DOWN, latch.touchDown(ctrl, sticky = true))
+        assertEquals(KeySend.DOWN, latch.padPress(shift))
+    }
+
     // ---- Controller buttons ----
 
     @Test

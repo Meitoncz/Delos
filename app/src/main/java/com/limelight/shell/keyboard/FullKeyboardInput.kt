@@ -110,7 +110,7 @@ enum class KeySend { NONE, DOWN, UP }
  * Touch (sticky modifier setting on): a press sends Down; holding it for 300 ms latches it and the release is not sent;
  * touching a latched modifier unlatches it (that touch sends nothing, its release sends Up). With the setting off a
  * modifier is an ordinary key. A controller cannot hold one key while pressing another, so A on a modifier toggles the
- * latch whatever the setting says: Down (latched) or Up (unlatched).
+ * latch whatever the setting says: Down (latched) or Up (unlatched). Hiding the keyboard releases every latched modifier.
  */
 class ModifierLatch {
     private val latched = LinkedHashSet<Int>()
@@ -134,6 +134,13 @@ class ModifierLatch {
     /** The touch has been held long enough: the modifier stays down. */
     fun latchHeld(code: Int) {
         latched.add(code)
+    }
+
+    /** The keyboard is hidden: every latched modifier is let go. Returns the ones that were down, in the order they were latched, so the host gets their Up. */
+    fun releaseAll(): List<Int> {
+        val released = latched.toList()
+        latched.clear()
+        return released
     }
 
     fun padPress(code: Int): KeySend =

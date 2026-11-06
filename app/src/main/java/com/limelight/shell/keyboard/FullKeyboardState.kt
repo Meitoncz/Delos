@@ -117,6 +117,7 @@ class FullKeyboardState(private val host: FullKeyboardHost) {
     fun hide() {
         if (!open) return
         releaseHeld()
+        releaseLatched()
         analog.reset()
         open = false
         ringReady = false
@@ -274,7 +275,7 @@ class FullKeyboardState(private val host: FullKeyboardHost) {
         host.haptic(KeyHaptic.RELEASE)
     }
 
-    /** Lets go of every key that is held down (not the latched modifiers): a hidden keyboard must not leave a key pressed. */
+    /** Lets go of every key that is held down (the latched modifiers are [releaseLatched]'s): a hidden keyboard must not leave a key pressed. */
     private fun releaseHeld() {
         for (timer in latchTimers.values) handler.removeCallbacks(timer)
         latchTimers.clear()
@@ -284,6 +285,12 @@ class FullKeyboardState(private val host: FullKeyboardHost) {
         for (timer in releaseTimers.values) handler.removeCallbacks(timer)
         releaseTimers.clear()
         pressed = emptySet()
+    }
+
+    /** A hidden keyboard leaves no modifier down on the PC: each latched one gets its Up and the latch is cleared. */
+    private fun releaseLatched() {
+        for (code in latch.releaseAll()) host.sendKey(code, false)
+        syncLatched()
     }
 
     private fun scheduleLatch(code: Int) {
