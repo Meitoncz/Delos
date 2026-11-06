@@ -91,7 +91,7 @@ object ToastTiming {
 
     /** The light sweep crosses the card once, right after it lands. */
     const val SWEEP_AT = LANDING_MS + 20
-    const val SWEEP_MS = 620
+    const val SWEEP_MS = 860
 
     /** The gold timer line draws in, then drains. */
     const val LINE_AT = LANDING_MS + 50
@@ -99,10 +99,8 @@ object ToastTiming {
 
     // The soft halo and drop shadow around the card: a many-stop eased gradient per edge and corner (no blur, no banding at these alphas)
     /** Opacity of the glow at the card's edge at its peak, and how far it reaches (stage pixels). */
-    const val GLOW_PEAK = 1.0f
+    const val GLOW_PEAK = .55f
     const val GLOW_REACH = 34f
-    /** Elevation (stage px) of the tinted platform shadow that is the glow at full strength. */
-    const val GLOW_ELEVATION = 22f
     /** The glow's strength as the card lands, as a multiple of its settled strength: it rises with the card's fade-in and then falls quickly to [GLOW_REST]. */
     const val GLOW_FLASH = 1.8f
 

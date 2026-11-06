@@ -223,7 +223,6 @@ private fun ToastCard(
         Brush.linearGradient(*stops, start = Offset(pad, 0f), end = Offset(pad + band, band * tan(Math.toRadians(12.0)).toFloat()))
     }
     val lineBrush = remember(gold) { Brush.horizontalGradient(listOf(lerp(gold, Color(0xFFB87800), .6f), gold)) }
-    val glowHalo = remember(look.fill, m) { Halo(look.fill, ToastTiming.GLOW_PEAK, ToastTiming.GLOW_REACH * m.pxPerStage, CARD_RADIUS * m.pxPerU) }
     val shadowHalo = remember(m) {
         Halo(Color.Black, ToastTiming.SHADOW_PEAK, ToastTiming.SHADOW_REACH * m.pxPerStage, CARD_RADIUS * m.pxPerU - ToastTiming.SHADOW_INSET * m.pxPerStage)
     }
@@ -250,27 +249,26 @@ private fun ToastCard(
                         scaleY = scaleX
                     }
                 }
-                // The kind-coloured halo is the platform's own elevation shadow tinted with the kind colour: smooth by construction, drawn by the GPU outside the card
-                // and not clipped by the layer, so it costs nothing per frame beyond the elevation value read here
-                val glowAge = ageOf()
-                if (glowAge >= 0f) {
-                    val glowLevel = opacity(glowAge) * (ToastTiming.GLOW_REST + (ToastTiming.GLOW_FLASH - ToastTiming.GLOW_REST) * (1f - Motion.progress(glowAge, ToastTiming.GLOW_AT, ToastTiming.GLOW_MS, Motion.Ease)))
-                    this.shape = shape
-                    clip = false
-                    shadowElevation = ToastTiming.GLOW_ELEVATION * m.pxPerStage * glowLevel
-                    ambientShadowColor = look.fill.copy(alpha = ToastTiming.GLOW_PEAK)
-                    spotShadowColor = look.fill.copy(alpha = ToastTiming.GLOW_PEAK)
-                }
                 compositingStrategy = CompositingStrategy.ModulateAlpha
             }
             .drawBehind {
                 val age = ageOf()
                 if (age < 0f) return@drawBehind
                 val op = opacity(age)
-                val glow = op * (ToastTiming.GLOW_REST + (1f - ToastTiming.GLOW_REST) * (1f - Motion.progress(age, ToastTiming.GLOW_AT, ToastTiming.GLOW_MS, Motion.Ease)))
-                drawRoundRect(look.fill.copy(alpha = .35f * glow), Offset(-m.pxPerStage, -m.pxPerStage), Size(size.width + 2f * m.pxPerStage, size.height + 2f * m.pxPerStage), CornerRadius(CARD_RADIUS * m.pxPerU + m.pxPerStage), style = Stroke(m.pxPerStage))
+                val glow = op * (ToastTiming.GLOW_REST + (ToastTiming.GLOW_FLASH - ToastTiming.GLOW_REST) * (1f - Motion.progress(age, ToastTiming.GLOW_AT, ToastTiming.GLOW_MS, Motion.Ease)))
                 val inset = ToastTiming.SHADOW_INSET * m.pxPerStage
                 drawHalo(shadowHalo, inset, inset + ToastTiming.SHADOW_DROP * m.pxPerStage, size.width - 2f * inset, size.height - 2f * inset, op, fillInside = true)
+                // The glow: one-pixel rings that fade with the eased falloff, so every step differs by less than one 8-bit level: smooth, no blur, no offscreen layer
+                val reachPx = ToastTiming.GLOW_REACH * m.pxPerStage
+                val glowSteps = reachPx.toInt().coerceAtLeast(1)
+                val cardRadius = CARD_RADIUS * m.pxPerU
+                for (i in 1..glowSteps) {
+                    val a = (ToastTiming.GLOW_PEAK * ToastTiming.haloFalloff(i / glowSteps.toFloat()) * glow).coerceIn(0f, 1f)
+                    if (a < .004f) continue
+                    val o = i - .5f
+                    drawRoundRect(look.fill.copy(alpha = a), Offset(-o, -o), Size(size.width + 2f * o, size.height + 2f * o), CornerRadius(cardRadius + o), style = Stroke(1.1f))
+                }
+                drawRoundRect(look.fill.copy(alpha = .35f * glow), Offset(-m.pxPerStage, -m.pxPerStage), Size(size.width + 2f * m.pxPerStage, size.height + 2f * m.pxPerStage), CornerRadius(CARD_RADIUS * m.pxPerU + m.pxPerStage), style = Stroke(m.pxPerStage))
             }
             .then(if (isLatest) Modifier.semantics(mergeDescendants = true) { liveRegion = live; contentDescription = description } else Modifier),
     ) {
