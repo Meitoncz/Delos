@@ -136,7 +136,7 @@ fun SettingsScreen(
     }
     LaunchedEffect(capabilities, profile.currentId, values["checkbox_unlock_fps"]) { capabilities?.let(stream::normalize) }
     val act = settingsActions(profiles, stream)
-    val classic = profiles.catalog.all.filter { spec ->
+    val classic = profiles.catalog.visible.filter { spec ->
         spec.key !in (capabilities?.hidden ?: emptySet()) &&
             (activity?.packageManager?.hasSystemFeature(android.content.pm.PackageManager.FEATURE_TOUCHSCREEN) != false ||
                 spec.category !in setOf("category_onscreen_controls", "category_special_key_layout"))

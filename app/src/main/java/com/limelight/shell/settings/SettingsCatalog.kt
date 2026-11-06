@@ -214,6 +214,9 @@ class SettingsCatalog(context: Context) {
         rows.toList()
     }
 
+    /** What the settings list and search show: [all] without the [PhoneOnlySettings] items. */
+    val visible: List<SettingSpec> = all.filterNot { PhoneOnlySettings.isHidden(it.key) }
+
     private fun text(attrs: AttributeSet, name: String): String {
         val id = attrs.getAttributeResourceValue(ANDROID, name, 0)
         return if (id != 0) resources.getText(id).toString() else attrs.getAttributeValue(ANDROID, name) ?: ""

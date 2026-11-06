@@ -65,6 +65,18 @@ one scrolls to and focuses the actual setting, including disabled dependencies.
   When PyroWave is selected, the bitrate row and live help also show its recommended Mbps for the
   current resolution/FPS/HDR, independently of the chosen bitrate. Other codecs add no recommendation.
 
+## Hidden phone-oriented settings
+
+Delos is handheld-first, so the touch-mouse and on-screen gamepad settings are hidden from the settings
+list and search (issue #65): the mouse mode list, trackpad/touch sensitivity, drag-and-drop options,
+absolute mouse mode, remembered mouse mode/zoom and pan, and the on-screen controls (show, opacity, free
+stick, L3/R3 only, Guide button, hide with a gamepad, vibration, reset). Only the UI is affected: the XML
+entries, defaults and stored values stay, so hidden settings keep applying and the stream menu still
+works. `shell/settings/PhoneOnlySettings.kt` is the single switch: set `HIDDEN` to `false` (or remove
+single keys from `KEYS`) to show them again. `SettingsCatalog.all` still lists every key; the screens
+use `SettingsCatalog.visible`, and section headings disappear with their last item. The on-screen
+keyboard settings, multi-touch gestures, clipboard, PiP and device rumble stay visible.
+
 ## User profiles
 
 All shell and stream preferences are stored in `ui_profile_<user UUID>`. On first use, the existing
