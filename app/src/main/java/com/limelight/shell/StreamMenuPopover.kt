@@ -257,7 +257,8 @@ internal fun ColumnScope.PopoverPage(
     val stage = LocalStage.current
     val k = stageScale()
     val ts = stage.textScale
-    val bringIntoView = remember(k) { MarginBringIntoView(before = 48f * k, after = 48f * k) }
+    val reducedMotion = LocalReducedMotion.current
+    val bringIntoView = remember(k, reducedMotion) { MarginBringIntoView(before = 48f * k, after = 48f * k, stagePx = k, reducedMotion = reducedMotion) }
     val scroll = rememberScrollState()
     val leave by animateFloatAsState(if (leaving) 1f else 0f, tween(M.MORPH_ROWS_OUT, easing = Motion.EaseIn), label = "rowsLeave")
 

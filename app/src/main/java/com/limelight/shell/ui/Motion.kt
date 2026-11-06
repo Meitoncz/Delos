@@ -198,3 +198,71 @@ class EntranceStagger(
         return minOf(next++, cap)
     }
 }
+
+/**
+ * The bring-into-view scroll of the focus-driven lists ([MarginBringIntoView]): a critically damped spring whose rate
+ * follows the distance still to go, so a one-row step settles in about [SETTLE_NEAR_MS] and a long jump in
+ * [SETTLE_FAR_MS] (Compose's own default is a spring with stiffness 1500, which settles in ~150 ms and reads as a jump).
+ * Distances are stage pixels.
+ */
+object ListScrollMotion {
+    /** Settle time (to 2 %) of a step of one row or less, milliseconds. */
+    const val SETTLE_NEAR_MS = 320f
+
+    /** Settle time of a jump of [FAR_PX] or more, milliseconds. */
+    const val SETTLE_FAR_MS = 520f
+
+    /** Up to this distance the settle time is [SETTLE_NEAR_MS] (about one row plus its gap). */
+    const val NEAR_PX = 90f
+
+    /** From this distance on the settle time is [SETTLE_FAR_MS]. */
+    const val FAR_PX = 700f
+
+    /** `ωt` at which a critically damped spring `(1 + ωt)·e^(−ωt)` is within 2 % of its target. */
+    private const val SETTLE_TURNS = 5.83f
+
+    /** The fastest rate allowed when braking a retarget that arrives fast and close, 1/s (stiffness 3600). */
+    const val MAX_OMEGA = 60f
+
+    /** Below this remaining distance a retarget needs no extra braking. */
+    private const val BRAKE_MIN_PX = .5f
+
+    fun settleMillis(distance: Float): Float {
+        val t = ((distance - NEAR_PX) / (FAR_PX - NEAR_PX)).coerceIn(0f, 1f)
+        return SETTLE_NEAR_MS + (SETTLE_FAR_MS - SETTLE_NEAR_MS) * t
+    }
+
+    /**
+     * The spring rate ω (1/s) for a segment that starts [distance] from its target moving [speed] toward it (negative: away).
+     * Normally the one of [settleMillis]; a retarget that arrives fast and close (a key repeat catching a row early) gets
+     * `speed / distance` so the continuing velocity cannot overshoot the new target, at most [MAX_OMEGA].
+     * Because a retarget keeps the velocity, holding the D-pad glides on at a steady pace instead of restarting per row.
+     */
+    fun omega(distance: Float, speed: Float): Float {
+        val base = SETTLE_TURNS / (settleMillis(distance) / 1000f)
+        if (distance < BRAKE_MIN_PX || speed <= 0f) return base
+        return maxOf(base, minOf(speed / distance, MAX_OMEGA))
+    }
+
+    /** Stage-pixel offset from the target after [seconds] of the spring: start [x0] from target, velocity [v0] (positive: away from it). */
+    fun offset(x0: Float, v0: Float, omega: Float, seconds: Float): Float =
+        (x0 + (v0 + omega * x0) * seconds) * kotlin.math.exp(-omega * seconds)
+
+    /** Velocity belonging to [offset]. */
+    fun velocity(x0: Float, v0: Float, omega: Float, seconds: Float): Float {
+        val a = v0 + omega * x0
+        return (a - omega * (x0 + a * seconds)) * kotlin.math.exp(-omega * seconds)
+    }
+
+    /** Seconds until the spring is within [tolerance] of its target. */
+    fun durationSeconds(x0: Float, v0: Float, omega: Float, tolerance: Float): Float {
+        val a = kotlin.math.abs(v0 + omega * x0)
+        val m = maxOf(kotlin.math.abs(x0), a / omega)
+        if (m <= tolerance) return 0f
+        // (|x0| + |a|t)e^(−ωt) ≤ m(1 + ωt)e^(−ωt); solve (1 + s)e^(−s) = tolerance / m by fixed-point iteration.
+        var s = 1f
+        val goal = tolerance * .9f // a little inside, so float rounding cannot leave it just outside
+        repeat(12) { s = kotlin.math.ln(m * (1f + s) / goal) }
+        return s / omega
+    }
+}

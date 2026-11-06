@@ -192,7 +192,8 @@ fun SettingsScreen(
     val k = stage.dpPerPx * LocalDensity.current.density
     // Keep the section heading (including its padding and the top fade) above its first row.
     // A smaller margin stops short of the list's start when moving up with the controller.
-    val bringIntoView = remember(k) { MarginBringIntoView(before = 72f * k, after = 110f * k) }
+    val reducedMotion = LocalReducedMotion.current
+    val bringIntoView = remember(k, reducedMotion) { MarginBringIntoView(before = 72f * k, after = 110f * k, stagePx = k, reducedMotion = reducedMotion) }
     val tab = shell.settingsTab
     // Group sections so a category split across tabs still has one heading per tab.
     val rows = all.filter { it.tab == tab }.groupBy { it.section }.values.flatten()

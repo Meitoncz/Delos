@@ -65,6 +65,7 @@ import com.limelight.shell.data.ProfileStore
 import com.limelight.shell.ui.LocalDelosColors
 import com.limelight.shell.ui.LocalFeedback
 import com.limelight.shell.ui.LocalStage
+import com.limelight.shell.ui.LocalReducedMotion
 import com.limelight.shell.ui.MarginBringIntoView
 import com.limelight.shell.ui.RowValue
 import com.limelight.shell.ui.SettingRow
@@ -363,7 +364,8 @@ fun DebugInfoScreen() {
         runCatching { first.requestFocus() }
     }
     val k = stage.dpPerPx * LocalDensity.current.density
-    val bringIntoView = remember(k) { MarginBringIntoView(before = 72f * k, after = 110f * k) }
+    val reducedMotion = LocalReducedMotion.current
+    val bringIntoView = remember(k, reducedMotion) { MarginBringIntoView(before = 72f * k, after = 110f * k, stagePx = k, reducedMotion = reducedMotion) }
 
     Box(Modifier.fillMaxSize()) {
         BasicText("Debug info", style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx),

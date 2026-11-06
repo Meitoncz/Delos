@@ -288,7 +288,8 @@ fun SideMenuLayer(
 fun ColumnScope.SideMenuScroll(content: @Composable ColumnScope.() -> Unit) {
     val stage = LocalStage.current
     val k = stage.dpPerPx * LocalDensity.current.density
-    val bringIntoView = remember(k) { MarginBringIntoView(before = 40f * k, after = 56f * k) }
+    val reducedMotion = LocalReducedMotion.current
+    val bringIntoView = remember(k, reducedMotion) { MarginBringIntoView(before = 40f * k, after = 56f * k, stagePx = k, reducedMotion = reducedMotion) }
     CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
         Column(
             Modifier

@@ -30,6 +30,7 @@ import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalDensity
+import com.limelight.shell.ui.LocalReducedMotion
 import com.limelight.shell.ui.MarginBringIntoView
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -231,7 +232,8 @@ fun ArtworkScreen(screen: Screen.Artwork) {
                         val grid = rememberLazyGridState()
                         // The focused row keeps clear of the faded edges, like the settings rows
                         val k = stage.dpPerPx * LocalDensity.current.density
-                        val bringIntoView = remember(k) { MarginBringIntoView(before = 70f * k, after = 110f * k) }
+                        val reducedMotion = LocalReducedMotion.current
+                        val bringIntoView = remember(k, reducedMotion) { MarginBringIntoView(before = 70f * k, after = 110f * k, stagePx = k, reducedMotion = reducedMotion) }
                         CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
                         LazyVerticalGrid(
                             columns = GridCells.Fixed(tab.columns),

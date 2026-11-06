@@ -75,6 +75,7 @@ import com.limelight.shell.ui.FocusRing
 import com.limelight.shell.ui.InitialFocus
 import com.limelight.shell.ui.LocalDelosColors
 import com.limelight.shell.ui.LocalStage
+import com.limelight.shell.ui.LocalReducedMotion
 import com.limelight.shell.ui.MarginBringIntoView
 import com.limelight.shell.ui.PillButton
 import com.limelight.shell.ui.Symbol
@@ -171,7 +172,8 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
     val metadata = LocalGameMetadata.current
     val k = stage.dpPerPx * LocalDensity.current.density
     val shape = RoundedCornerShape(34.px)
-    val bringIntoView = remember(k) { MarginBringIntoView(before = 150f * k, after = 56f * k) }
+    val reducedMotion = LocalReducedMotion.current
+    val bringIntoView = remember(k, reducedMotion) { MarginBringIntoView(before = 150f * k, after = 56f * k, stagePx = k, reducedMotion = reducedMotion) }
     val filters = metadata.filters
     val apps = ready.apps
 

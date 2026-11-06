@@ -1,5 +1,10 @@
 package com.limelight.shell.ui
 
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.AnimationVector
+import androidx.compose.animation.core.TwoWayConverter
+import androidx.compose.animation.core.VectorizedAnimationSpec
+import androidx.compose.animation.core.snap
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.BringIntoViewSpec
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -87,10 +92,22 @@ fun Modifier.fadeMask(stage: StageMetrics, vertical: Boolean, startClear: Float,
 
 /**
  * Scrolls the focused element into view with a margin of [before] / [after] pixels, so it never sits
- * in a faded edge (see [fadeEdges]).
+ * in a faded edge (see [fadeEdges]), and only when it would leave that safe area. The scroll is animated by
+ * [ListScrollMotion] (calm, slightly longer for longer jumps); a new focus move retargets the running scroll and keeps
+ * its velocity, so holding the D-pad glides. [stagePx] is one stage pixel in device pixels; with [reducedMotion] the
+ * scroll snaps.
  */
 @OptIn(ExperimentalFoundationApi::class)
-class MarginBringIntoView(private val before: Float, private val after: Float) : BringIntoViewSpec {
+class MarginBringIntoView(
+    private val before: Float,
+    private val after: Float,
+    stagePx: Float = 1f,
+    reducedMotion: Boolean = false,
+) : BringIntoViewSpec {
+    // Marked deprecated ("customization is no longer supported") in foundation 1.12, yet ContentInViewNode still reads it (checked in 1.12.1).
+    @Suppress("OVERRIDE_DEPRECATION")
+    override val scrollAnimationSpec: AnimationSpec<Float> = if (reducedMotion) snap() else ListScrollSpec(stagePx)
+
     override fun calculateScrollDistance(offset: Float, size: Float, containerSize: Float): Float {
         val start = offset - before
         val end = offset + size + after - containerSize
@@ -100,6 +117,38 @@ class MarginBringIntoView(private val before: Float, private val after: Float) :
             else -> 0f
         }
     }
+}
+
+/** The spring of [ListScrollMotion] as an [AnimationSpec]; [stagePx] converts device pixels to stage pixels. */
+private class ListScrollSpec(private val stagePx: Float) : AnimationSpec<Float> {
+    override fun <V : AnimationVector> vectorize(converter: TwoWayConverter<Float, V>): VectorizedAnimationSpec<V> =
+        object : VectorizedAnimationSpec<V> {
+            override val isInfinite: Boolean get() = false
+
+            private fun omega(x0: Float, v0: Float): Float {
+                val toward = if (x0 > 0f) -v0 else v0
+                return ListScrollMotion.omega(kotlin.math.abs(x0) / stagePx, toward / stagePx)
+            }
+
+            override fun getDurationNanos(initialValue: V, targetValue: V, initialVelocity: V): Long {
+                val x0 = converter.convertFromVector(initialValue) - converter.convertFromVector(targetValue)
+                val v0 = converter.convertFromVector(initialVelocity)
+                return (ListScrollMotion.durationSeconds(x0 / stagePx, v0 / stagePx, omega(x0, v0), .5f) * 1e9f).toLong()
+            }
+
+            override fun getValueFromNanos(playTimeNanos: Long, initialValue: V, targetValue: V, initialVelocity: V): V {
+                val target = converter.convertFromVector(targetValue)
+                val x0 = converter.convertFromVector(initialValue) - target
+                val v0 = converter.convertFromVector(initialVelocity)
+                return converter.convertToVector(target + ListScrollMotion.offset(x0, v0, omega(x0, v0), playTimeNanos / 1e9f))
+            }
+
+            override fun getVelocityFromNanos(playTimeNanos: Long, initialValue: V, targetValue: V, initialVelocity: V): V {
+                val x0 = converter.convertFromVector(initialValue) - converter.convertFromVector(targetValue)
+                val v0 = converter.convertFromVector(initialVelocity)
+                return converter.convertToVector(ListScrollMotion.velocity(x0, v0, omega(x0, v0), playTimeNanos / 1e9f))
+            }
+        }
 }
 
 /** Fits the 1920×1080 stage into the available space and provides [LocalStage]. */
