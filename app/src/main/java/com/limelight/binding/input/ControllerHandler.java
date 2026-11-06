@@ -322,6 +322,12 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
         }
     }
 
+    /** TEMPORARY (#66): why the running rumble preset could not use its technique, or null. */
+    public String getRumbleProblem() {
+        ActiveRumble active = activeRumble;
+        return active == null ? null : active.playback.getProblem();
+    }
+
     private void stopTranslatedRumble() {
         synchronized (translatedRumbleLock) {
             ActiveRumble active = activeRumble;

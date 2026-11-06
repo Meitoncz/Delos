@@ -136,7 +136,7 @@ fun DebugInfoScreen() {
     var patternRun by remember { mutableIntStateOf(0) }
     var amplitude by remember { mutableIntStateOf(0) }
     val capabilities = remember { RumbleCapabilities.get(context) }
-    var fallbackReason by remember { mutableStateOf<String?>(null) }
+    var problem by remember { mutableStateOf<String?>(null) }
 
     fun stopLab() {
         patternRun++
@@ -159,7 +159,7 @@ fun DebugInfoScreen() {
     fun updateProfile(edited: RumbleTranslator.Profile) {
         stopLab()
         // TEMPORARY (#66): an advanced edit keeps the technique of the selected preset
-        val updated = edited.withTechnique(profile.technique, profile.waveHz)
+        val updated = edited.withTechnique(profile.technique)
         profile = updated
         activePreset = null
         RumblePreferences.saveCustom(preferences, updated, translatorEnabled)
@@ -200,7 +200,7 @@ fun DebugInfoScreen() {
         if (activePlayback != null) {
             while (isActive) {
                 amplitude = activePlayback.lastAmplitude
-                fallbackReason = activePlayback.fallbackReason
+                problem = activePlayback.problem
                 delay(16)
             }
         }
@@ -247,14 +247,11 @@ fun DebugInfoScreen() {
             RowValue.Info(if (capabilities.amplitudeControl) "Yes" else "No"), "Whether the vibrator can change its strength."))
         add(DebugRow("cap_primitives", "Device haptic capabilities", Symbols.GRAPHIC_EQ, "Primitives",
             RowValue.Info(if (capabilities.thud && capabilities.lowTick) "THUD, LOW_TICK ok" else "THUD ${if (capabilities.thud) "ok" else "no"}, LOW_TICK ${if (capabilities.lowTick) "ok" else "no"}"),
-            "Which manufacturer vibration primitives are supported; the Thud and Low tick presets need them.",
+            "Which manufacturer vibration primitives are supported; the Thud burst and Low-tick burst presets need them.",
             "Supported: ${capabilities.supportedPrimitives}"))
-        add(DebugRow("cap_haptic_audio", "Device haptic capabilities", Symbols.GRAPHIC_EQ, "Haptic audio channel",
-            RowValue.Info(if (capabilities.hapticPlayback) "Yes" else "No"),
-            "Whether audio with a haptic channel can drive the vibrator; the Deep wave presets need it."))
-        add(DebugRow("cap_wave_status", "Device haptic capabilities", Symbols.INFO, "Last Deep wave / primitive run",
-            RowValue.Info(fallbackReason ?: "OK"),
-            "Shows when the last played preset had to fall back to the plain amplitude path, and why."))
+        add(DebugRow("cap_problem", "Device haptic capabilities", Symbols.INFO, "Last problem",
+            RowValue.Info(problem ?: "None"),
+            "Shows when the last played preset could not use its technique and played the plain amplitude path instead, and why."))
         add(DebugRow("vibrate_once", "Vibration test", Symbols.MOBILE_VIBRATE, "Vibrate once", RowValue.Action {
             stopAll()
             device?.let { DeviceVibrator.vibrateOnce(it, 1000) }
@@ -273,7 +270,7 @@ fun DebugInfoScreen() {
             val unavailable = capabilities.unavailableReason(preset.profile.technique)
             if (unavailable != null) {
                 add(DebugRow("rumble_preset_${preset.name}", "Rumble laboratory", Symbols.VIBRATION, preset.label,
-                    RowValue.Info("Not supported"), "${preset.description} Unavailable: $unavailable.", unavailable))
+                    RowValue.Info("Problem"), "${preset.description} Problem: $unavailable.", unavailable))
                 return@forEach
             }
             add(DebugRow("rumble_preset_${preset.name}", "Rumble laboratory", Symbols.VIBRATION, preset.label,
@@ -284,7 +281,7 @@ fun DebugInfoScreen() {
                     activePreset = preset
                     // Pass the selection explicitly: this click still owns the previous composition's callbacks.
                     playPattern(RumblePattern.TEST, if (preset.enabled) preset.profile else RumbleTranslator.ORIGINAL)
-                }, preset.description))
+                }, if (activePreset == preset && problem != null) "${preset.description} Problem: $problem." else preset.description))
         }
         add(DebugRow("rumble_amplitude", "Rumble laboratory", Symbols.GRAPHIC_EQ, "Live amplitude · $presetName", RowValue.Info("$amplitude / 255"),
             "Live computed device amplitude, including the start kick and smoothing as they settle.",

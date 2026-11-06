@@ -7,11 +7,14 @@ object StreamMenuHelp {
     /** TEMPORARY (#66): the help key of a preset row on the live rumble preset page. */
     fun rumbleKey(preset: RumblePresets): String = "Rumble: ${preset.label}"
 
+    /** TEMPORARY (#66): the preset a help key belongs to, or null. */
+    fun rumblePreset(key: String): RumblePresets? = RumblePresets.values().firstOrNull { rumbleKey(it) == key }
+
     fun description(label: String): String = descriptions[label] ?: when {
         label.startsWith("Keys: ") -> "Sends ${label.removePrefix("Keys: ")} to the PC once, then returns to the stream."
         label.startsWith("Command: ") -> "Runs the host-defined command ${label.removePrefix("Command: ").let { if (it.length > 36) it.take(35) + "\u2026" else it }} on the PC at once. Set in Vibepollo or Apollo."
         // TEMPORARY (#66)
-        label.startsWith("Rumble: ") -> RumblePresets.values().firstOrNull { rumbleKey(it) == label }?.description.orEmpty()
+        label.startsWith("Rumble: ") -> rumblePreset(label)?.description.orEmpty()
         else -> ""
     }
 

@@ -101,23 +101,22 @@ public class RumblePreferencesPresetTest {
     }
 
     @Test
-    public void techniqueAndWaveHzPersistAndAStaleTechniqueIsRejected() {
-        RumblePreferences.applyPreset(prefs, RumblePresets.DEEP_WAVE_60);
+    public void techniquePersistsAStaleTechniqueIsRejectedAndOldProfilesLoadSafely() {
+        RumblePreferences.applyPreset(prefs, RumblePresets.PULSE_40);
         SharedPreferences reloaded = reloadSavedValues();
-        assertSame(RumblePresets.DEEP_WAVE_60, RumblePreferences.activePreset(reloaded));
-        assertEquals(RumbleTechnique.HAPTIC_WAVE, RumblePreferences.readProfile(reloaded).technique);
-        assertEquals(60, RumblePreferences.readProfile(reloaded).waveHz);
-        prefs.edit().putInt(RumblePreferences.WAVE_HZ, 40).commit();
+        assertSame(RumblePresets.PULSE_40, RumblePreferences.activePreset(reloaded));
+        assertEquals(RumbleTechnique.PULSE_40, RumblePreferences.readProfile(reloaded).technique);
+        prefs.edit().putString(RumblePreferences.TECHNIQUE, RumbleTechnique.AMPLITUDE.name()).commit();
         assertNull(RumblePreferences.activePreset(prefs));
-        prefs.edit().putInt(RumblePreferences.WAVE_HZ, 60)
-                .putString(RumblePreferences.TECHNIQUE, RumbleTechnique.AMPLITUDE.name()).commit();
-        assertNull(RumblePreferences.activePreset(prefs));
-    }
 
-    @Test
-    public void profilesSavedBeforeTechniquesExistStayOnTheAmplitudePath() {
+        // A profile saved by the removed haptic-audio technique loads as the plain amplitude path
+        prefs.edit().putString(RumblePreferences.TECHNIQUE, "HAPTIC_WAVE").putString(RumblePreferences.PRESET, "DEEP_WAVE_60").commit();
+        assertEquals(RumbleTechnique.AMPLITUDE, RumblePreferences.readProfile(prefs).technique);
+        assertNull(RumblePreferences.activePreset(prefs));
+
+        // A profile saved before techniques existed
         RumblePreferences.applyPreset(prefs, RumblePresets.STRONGER);
-        prefs.edit().remove(RumblePreferences.TECHNIQUE).remove(RumblePreferences.WAVE_HZ).commit();
+        prefs.edit().remove(RumblePreferences.TECHNIQUE).commit();
         assertSame(RumblePresets.STRONGER, RumblePreferences.activePreset(prefs));
         assertEquals(RumbleTechnique.AMPLITUDE, RumblePreferences.readProfile(prefs).technique);
     }
@@ -228,6 +227,5 @@ public class RumblePreferencesPresetTest {
         assertEquals(expected.highWeight, actual.highWeight, 0f);
         assertEquals(expected.smoothing, actual.smoothing, 0f);
         assertEquals(expected.technique, actual.technique);
-        assertEquals(expected.waveHz, actual.waveHz);
     }
 }

@@ -24,19 +24,19 @@ public enum RumblePresets {
             true, new RumbleTranslator.Profile(1f, .6f, 220, 50, .80f, .40f, 0f)),
     // TEMPORARY (#66): experimental techniques 11-15. They share one shaping (low motor first, weak requests lifted)
     // so only the technique differs between them.
-    THUD("Thud", "Repeated manufacturer THUD primitives; a stronger request is a louder, faster thud.",
-            true, experimental(RumbleTechnique.PRIMITIVE_THUD, 0)),
-    LOW_TICK("Low tick", "Repeated manufacturer LOW_TICK primitives; a stronger request is a firmer, faster tick.",
-            true, experimental(RumbleTechnique.PRIMITIVE_LOW_TICK, 0)),
-    DEEP_WAVE_40("Deep wave 40 Hz", "Our own 40 Hz sine on the haptic audio channel: the deepest, slowest hum.",
-            true, experimental(RumbleTechnique.HAPTIC_WAVE, 40)),
-    DEEP_WAVE_60("Deep wave 60 Hz", "Our own 60 Hz sine on the haptic audio channel: a deep, solid hum.",
-            true, experimental(RumbleTechnique.HAPTIC_WAVE, 60)),
-    DEEP_WAVE_80("Deep wave 80 Hz", "Our own 80 Hz sine on the haptic audio channel: a deep but tighter hum.",
-            true, experimental(RumbleTechnique.HAPTIC_WAVE, 80));
+    THUD("Thud burst", "Bursts of about 12 manufacturer THUD primitives 12 ms apart while held; a stronger request is a harder thud.",
+            true, experimental(RumbleTechnique.PRIMITIVE_THUD)),
+    LOW_TICK("Low-tick burst", "Bursts of about 12 manufacturer LOW_TICK primitives 10 ms apart while held; a stronger request is a firmer tick.",
+            true, experimental(RumbleTechnique.PRIMITIVE_LOW_TICK)),
+    PULSE_25("Pulse 25 Hz", "Square pulses, 20 ms on and 20 ms off: a slow, coarse rattle.",
+            true, experimental(RumbleTechnique.PULSE_25)),
+    PULSE_40("Pulse 40 Hz", "Square pulses, 13 ms on and 12 ms off: a medium rumble.",
+            true, experimental(RumbleTechnique.PULSE_40)),
+    PULSE_60("Pulse 60 Hz", "Square pulses, 8 ms on and 8 ms off: a fast, tight rumble.",
+            true, experimental(RumbleTechnique.PULSE_60));
 
-    private static RumbleTranslator.Profile experimental(RumbleTechnique technique, int waveHz) {
-        return new RumbleTranslator.Profile(1f, .8f, 50, 0, 1f, .35f, 0f, technique, waveHz);
+    private static RumbleTranslator.Profile experimental(RumbleTechnique technique) {
+        return new RumbleTranslator.Profile(1f, .8f, 50, 0, 1f, .35f, 0f, technique);
     }
 
     public final String label;

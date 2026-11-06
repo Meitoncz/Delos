@@ -379,6 +379,7 @@ class StreamMenu(private val game: Game) {
         override val rumblePreset get() = RumblePreferences.activePreset(rumbleSettings)
         override fun rumbleUnavailable(preset: RumblePresets) =
             RumbleCapabilities.get(game).unavailableReason(preset.profile.technique)
+        override val rumbleRuntimeProblem get() = game.rumbleProblem
         override fun selectRumblePreset(preset: RumblePresets) {
             if (rumbleUnavailable(preset) != null) return
             RumblePreferences.applyPreset(rumbleSettings, preset)

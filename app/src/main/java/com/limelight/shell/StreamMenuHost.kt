@@ -88,6 +88,13 @@ internal interface StreamMenuHost {
     /** Why [preset] cannot run on this device (an experimental technique the hardware lacks), or null when it can. */
     fun rumbleUnavailable(preset: RumblePresets): String? = null
 
+    /** Why the running stream could not use the technique of the active preset (plain amplitude is used instead), or null. */
+    val rumbleRuntimeProblem: String? get() = null
+
+    /** Why [preset] shows a problem: the device cannot run it, or it is active and its technique failed in the stream. */
+    fun rumbleProblem(preset: RumblePresets): String? =
+        rumbleUnavailable(preset) ?: if (preset == rumblePreset) rumbleRuntimeProblem else null
+
     /** Saves [preset] like the laboratory does and applies it to the running stream at once; no sample is played. */
     fun selectRumblePreset(preset: RumblePresets)
 

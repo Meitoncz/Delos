@@ -2,7 +2,6 @@ package com.limelight.utils;
 
 import android.annotation.TargetApi;
 import android.content.Context;
-import android.media.AudioManager;
 import android.os.Build;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
@@ -16,29 +15,40 @@ public final class RumbleCapabilities {
     public final boolean amplitudeControl;
     public final boolean thud;
     public final boolean lowTick;
-    public final boolean hapticPlayback;
     /** Names of all supported primitives among the eight the laboratory knows, e.g. "CLICK, THUD". */
     public final String supportedPrimitives;
 
     public RumbleCapabilities(int vibratorCount, boolean amplitudeControl, boolean thud, boolean lowTick,
-                              boolean hapticPlayback, String supportedPrimitives) {
+                              String supportedPrimitives) {
         this.vibratorCount = vibratorCount;
         this.amplitudeControl = amplitudeControl;
         this.thud = thud;
         this.lowTick = lowTick;
-        this.hapticPlayback = hapticPlayback;
         this.supportedPrimitives = supportedPrimitives;
     }
 
     /** Why [technique] cannot run here, or null when it can. */
     public String unavailableReason(RumbleTechnique technique) {
+        return reason(technique, amplitudeControl, thud, lowTick);
+    }
+
+    /** Why [technique] cannot run on [vibrator], or null when it can. */
+    static String unavailableReason(RumbleTechnique technique, Vibrator vibrator) {
+        return reason(technique, vibrator.hasAmplitudeControl(),
+                supportsPrimitive(vibrator, RumbleTechnique.PRIMITIVE_THUD),
+                supportsPrimitive(vibrator, RumbleTechnique.PRIMITIVE_LOW_TICK));
+    }
+
+    private static String reason(RumbleTechnique technique, boolean amplitudeControl, boolean thud, boolean lowTick) {
         switch (technique) {
             case PRIMITIVE_THUD:
                 return thud ? null : "This vibrator has no THUD primitive";
             case PRIMITIVE_LOW_TICK:
                 return lowTick ? null : "This vibrator has no LOW_TICK primitive";
-            case HAPTIC_WAVE:
-                return hapticPlayback ? null : "Haptic audio channel playback is not supported on this device";
+            case PULSE_25:
+            case PULSE_40:
+            case PULSE_60:
+                return amplitudeControl ? null : "This vibrator has no amplitude control";
             default:
                 return null;
         }
@@ -52,20 +62,19 @@ public final class RumbleCapabilities {
     }
 
     private static RumbleCapabilities probe(Context context) {
-        boolean haptic = AudioManager.isHapticPlaybackSupported();
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-            return new RumbleCapabilities(1, false, false, false, haptic, "none (needs Android 12)");
+            return new RumbleCapabilities(1, false, false, false, "none (needs Android 12)");
         }
-        return probeS(context, haptic);
+        return probeS(context);
     }
 
     @TargetApi(31)
-    private static RumbleCapabilities probeS(Context context, boolean haptic) {
+    private static RumbleCapabilities probeS(Context context) {
         VibratorManager manager = (VibratorManager) context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE);
         Vibrator vibrator = manager == null ? null : manager.getDefaultVibrator();
         int count = manager == null ? 0 : manager.getVibratorIds().length;
         if (vibrator == null) {
-            return new RumbleCapabilities(count, false, false, false, haptic, "none");
+            return new RumbleCapabilities(count, false, false, false, "none");
         }
         int[] ids = PRIMITIVE_IDS;
         StringBuilder names = new StringBuilder();
@@ -79,7 +88,7 @@ public final class RumbleCapabilities {
         }
         return new RumbleCapabilities(count, vibrator.hasAmplitudeControl(),
                 supportsPrimitive(vibrator, RumbleTechnique.PRIMITIVE_THUD),
-                supportsPrimitive(vibrator, RumbleTechnique.PRIMITIVE_LOW_TICK), haptic,
+                supportsPrimitive(vibrator, RumbleTechnique.PRIMITIVE_LOW_TICK),
                 names.length() == 0 ? "none" : names.toString());
     }
 

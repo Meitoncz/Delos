@@ -3795,6 +3795,9 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     public int getActiveMouseMode() { return activeMouseMode; }
     public boolean isLocalMouseCursorVisible() { return cursorVisible; }
 
+    /** TEMPORARY (#66): why the running rumble preset could not use its technique, or null. */
+    public String getRumbleProblem() { return controllerHandler == null ? null : controllerHandler.getRumbleProblem(); }
+
     /** Delos: the native stream menu reuses the same mode and persistence rules as the old chooser. */
     public void setStreamMouseMode(int mode) {
         if (mode < 0 || mode > 5 || (isOnExternalDisplay() && mode != 2 && mode != 3 && mode != 4)) return;
