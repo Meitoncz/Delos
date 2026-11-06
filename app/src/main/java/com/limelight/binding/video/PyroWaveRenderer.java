@@ -176,7 +176,21 @@ public final class PyroWaveRenderer {
     public static final int STAT_ONE_PERCENT_LOW_FPS_X100 = 11;
     public static final int STAT_GPU_DRAW_FRAMES = 12;
     public static final int STAT_GPU_DRAW_TOTAL_US = 13;
-    public static final int STAT_COUNT = 14;
+    // Delos diagnostics: how far the video thread (and with it the UDP reads of common-c) falls behind;
+    // see PyroWaveBacklog. Times in microseconds, summed over the window, plus the window's maximum.
+    public static final int STAT_SKIPPED_FRAMES = 14;
+    public static final int STAT_STALL_TOTAL_US = 15;
+    public static final int STAT_STALL_MAX_US = 16;
+    public static final int STAT_SUBMIT_AGE_FRAMES = 17;
+    public static final int STAT_SUBMIT_AGE_TOTAL_US = 18;
+    public static final int STAT_SUBMIT_AGE_MAX_US = 19;
+    public static final int STAT_PRESENT_AGE_FRAMES = 20;
+    public static final int STAT_PRESENT_AGE_TOTAL_US = 21;
+    public static final int STAT_PRESENT_AGE_MAX_US = 22;
+    public static final int STAT_FENCE_WAIT_TOTAL_US = 23;
+    public static final int STAT_ACQUIRE_WAIT_TOTAL_US = 24;
+    public static final int STAT_SUBMIT_PRESENT_TOTAL_US = 25;
+    public static final int STAT_COUNT = 26;
 
     public long[] takeStats() {
         long[] stats = new long[STAT_COUNT];

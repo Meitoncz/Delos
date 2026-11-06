@@ -50,6 +50,30 @@ The callback adapter and pacer are adapted from SicarioGaming/Starwire at
 `87624983e78782ac6346c0f7369f68f39dfe1082` (GPL-3.0), which credits **derflacco / Artemide** for the
 original async decoding and Nano Pacer. Reference flush-order regression tests retain that provenance.
 
+## PyroWave diagnostics
+
+PyroWave decodes and presents on moonlight-common-c's video receive thread, so a slow GPU frame also
+stops the UDP socket from being read. The overlay's "Latency" is only the control-channel round trip and
+"Lost frames" counts whole frames, so neither shows this. The full statistics panel (not the compact line)
+therefore has a **Backlog** section for PyroWave, averaged over one-second windows:
+
+- **Stall (recv thread) avg/max**: time spent inside one frame's submit call, i.e. how long the socket
+  was not read. Several times the frame interval (8 ms at 120 FPS) means the kernel buffer can overflow.
+- **Frame age at submit avg/max**: time since the frame's first packet arrived when the renderer starts on
+  it. Growing values mean frames queue up behind a slow previous frame.
+- **Receive to present avg/max**: the same age once the frame has been handed to the presentation queue.
+- **Partial frames /s**: frames that arrived with missing packets (zero-filled). **Skipped /s**: frames
+  the renderer dropped.
+
+Reading it: high or growing stall and frame age = receiver/GPU backlog (lower bitrate or chroma
+resolution, or a faster renderer); partial frames with a low stall = packets lost on the air or in the
+network. In debug builds the same numbers, plus received KB/s, bitrate, chroma mode and the per-stage
+waits (previous frame, swapchain image, submit+present), are logged once a second under the logcat tag
+`DelosPyroDiag`, with a `start:` line (bitrate, chroma requested/negotiated, directSubmit, capability) and
+the swapchain image count and present mode when it is created. The UDP receive buffer size is set and
+checked inside moonlight-common-c and not exposed to the app; it logs a warning only when the kernel
+clamps it. Suggested A/B: 4:2:0 at 225 Mbps, 4:4:4 at 225, 4:4:4 at 270, and 4:4:4 at 150.
+
 ## Snapdragon Game Super Resolution 1
 
 The official Qualcomm SGSR 1 spatial shader works with the final streamed image; temporal SGSR 2

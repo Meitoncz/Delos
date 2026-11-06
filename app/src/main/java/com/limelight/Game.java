@@ -773,6 +773,8 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                 .setPersistGamepadsAfterDisconnect(!prefConfig.multiController)
                 .build();
 
+        decoderRenderer.setStreamDiagnostics(config.getBitrate(), isMetered, prefConfig.pyroWaveChroma444);
+
         // Initialize the connection
         conn = new NvConnection(getApplicationContext(),
                 new ComputerDetails.AddressTuple(host, port),

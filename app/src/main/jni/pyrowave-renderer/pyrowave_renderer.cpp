@@ -55,6 +55,9 @@
 
 extern "C" {
 #include "Limelight.h"
+
+// moonlight-common-c's microsecond clock (the same library), the base of DECODE_UNIT's receive times
+extern "C" uint64_t PltGetMicroseconds(void);
 }
 
 #define LOG_TAG "PyroWave"
@@ -391,6 +394,9 @@ namespace {
         videoStage.store(stage, std::memory_order_relaxed);
         videoStageSinceUs.store(nowUs(), std::memory_order_relaxed);
     }
+
+    // Delos diagnostics (PyroWave backlog numbers), read with `logcat -s DelosPyroDiag`
+    constexpr const char *DIAG_TAG = "DelosPyroDiag";
 
     const char *presentModeName(VkPresentModeKHR mode) {
         switch (mode) {
@@ -1742,6 +1748,9 @@ namespace {
             vk.GetSwapchainImagesKHR(device, swapchain, &count, nullptr);
             swapchainImages.resize(count);
             vk.GetSwapchainImagesKHR(device, swapchain, &count, swapchainImages.data());
+            // Delos diagnostics: the buffering depth decides how stale a frame can get behind the compositor
+            __android_log_print(ANDROID_LOG_INFO, DIAG_TAG, "Swapchain: %u images, present mode %s, %ux%u",
+                                count, presentModeName(presentMode), swapchainExtent.width, swapchainExtent.height);
             return renderPass == VK_NULL_HANDLE || createSwapchainResources();
         }
 
@@ -2394,6 +2403,9 @@ namespace {
             yuvSubmittedUs[index] = afterAcquire;
 
             const uint64_t frameEnd = nowUs();
+            lastFenceWaitUs = uint32_t(afterFence - frameStart);
+            lastAcquireWaitUs = uint32_t(afterAcquire - afterFence);
+            lastSubmitPresentUs = uint32_t(frameEnd - afterAcquire);
             stats.frames++;
             stats.fenceWaitUs += afterFence - frameStart;
             // "wait swapchain image" in the stats log: here the Vulkan pack and the GL or CPU copy
@@ -3062,6 +3074,9 @@ namespace {
             const auto presented = vk.QueuePresentKHR(queue, &presentInfo);
             const uint64_t frameEnd = nowUs();
 
+            lastFenceWaitUs = uint32_t(afterFence - frameStart);
+            lastAcquireWaitUs = uint32_t(afterAcquire - beforeAcquire);
+            lastSubmitPresentUs = uint32_t(frameEnd - afterAcquire);
             stats.frames++;
             stats.fenceWaitUs += afterFence - frameStart;
             stats.acquireWaitUs += afterAcquire - beforeAcquire;
@@ -3383,6 +3398,11 @@ namespace {
         // GPU decode time of the most recently completed frame, or 0 when unknown.
         std::atomic<uint32_t> lastGpuDecodeUs{0};
         std::atomic<uint32_t> lastGpuDrawUs{0};
+        // Delos diagnostics: the wait stages of the most recently presented frame (the same numbers the
+        // 5-second log averages), for PyroWave_SubmitDecodeUnit's one-second window
+        std::atomic<uint32_t> lastFenceWaitUs{0};
+        std::atomic<uint32_t> lastAcquireWaitUs{0};
+        std::atomic<uint32_t> lastSubmitPresentUs{0};
 
     private:
         struct {
@@ -3534,6 +3554,19 @@ namespace {
         uint64_t gpuDecodeTotalUs = 0;
         uint32_t gpuDrawFrames = 0;
         uint64_t gpuDrawTotalUs = 0;
+        // Delos diagnostics: backlog of the video thread (see PyroWaveRenderer.STAT_STALL_TOTAL_US)
+        uint32_t skippedFrames = 0;
+        uint64_t stallTotalUs = 0;
+        uint64_t stallMaxUs = 0;
+        uint32_t submitAgeFrames = 0;
+        uint64_t submitAgeTotalUs = 0;
+        uint64_t submitAgeMaxUs = 0;
+        uint32_t presentAgeFrames = 0;
+        uint64_t presentAgeTotalUs = 0;
+        uint64_t presentAgeMaxUs = 0;
+        uint64_t fenceWaitTotalUs = 0;
+        uint64_t acquireWaitTotalUs = 0;
+        uint64_t submitPresentTotalUs = 0;
     };
     std::mutex statsLock;
     WindowStats windowStats;
@@ -3568,7 +3601,10 @@ extern "C" {
 // Called by moonlight-core's decode unit callback for PyroWave streams: one buffer per RTP packet,
 // lost packets zero-filled and typed BUFFER_TYPE_LOST, record starts BUFFER_TYPE_RECORD_START.
 int PyroWave_SubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
-    lastFrameUs.store(nowUs(), std::memory_order_relaxed);
+    const uint64_t submitStartUs = nowUs();
+    // The age of the frame when the renderer starts on it, on common-c's clock (PltGetMicroseconds)
+    const uint64_t commonStartUs = PltGetMicroseconds();
+    lastFrameUs.store(submitStartUs, std::memory_order_relaxed);
     videoTid.store(pid_t(syscall(SYS_gettid)), std::memory_order_relaxed);
     static thread_local std::vector<uint8_t> frame;
     static thread_local std::vector<PyroWaveFraming::Segment> segments;
@@ -3591,6 +3627,9 @@ int PyroWave_SubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
     int result = SUBMIT_SKIPPED;
     uint32_t gpuDecodeUs = 0;
     uint32_t gpuDrawUs = 0;
+    uint32_t fenceWaitUs = 0;
+    uint32_t acquireWaitUs = 0;
+    uint32_t submitPresentUs = 0;
     {
         enterStage(STAGE_LOCK);
         std::lock_guard<std::mutex> lock(activeLock);
@@ -3599,9 +3638,20 @@ int PyroWave_SubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
             // The GPU time of the previous frame, read back while this one was submitted
             gpuDecodeUs = activeRenderer->lastGpuDecodeUs;
             gpuDrawUs = activeRenderer->lastGpuDrawUs;
+            if (result == SUBMIT_OK) {
+                fenceWaitUs = activeRenderer->lastFenceWaitUs;
+                acquireWaitUs = activeRenderer->lastAcquireWaitUs;
+                submitPresentUs = activeRenderer->lastSubmitPresentUs;
+            }
         }
         enterStage(STAGE_IDLE);
     }
+    // Everything this call held the video thread for (and with it the socket reads of common-c)
+    const uint64_t stallUs = nowUs() - submitStartUs;
+    const uint64_t commonEndUs = PltGetMicroseconds();
+    const auto ageUs = [](uint64_t now, uint64_t since) { return since != 0 && now > since ? now - since : 0; };
+    const uint64_t submitAgeUs = ageUs(commonStartUs, decodeUnit->receiveTimeUs);
+    const uint64_t presentAgeUs = ageUs(commonEndUs, decodeUnit->receiveTimeUs);
     {
         std::lock_guard<std::mutex> lock(statsLock);
         WindowStats &w = windowStats;
@@ -3612,8 +3662,26 @@ int PyroWave_SubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
         lastFrameNumber = decodeUnit->frameNumber;
         w.totalFrames++;
         w.receivedFrames++;
+        w.stallTotalUs += stallUs;
+        w.stallMaxUs = std::max(w.stallMaxUs, stallUs);
+        if (decodeUnit->receiveTimeUs != 0) {
+            w.submitAgeFrames++;
+            w.submitAgeTotalUs += submitAgeUs;
+            w.submitAgeMaxUs = std::max(w.submitAgeMaxUs, submitAgeUs);
+        }
+        if (result != SUBMIT_OK) {
+            w.skippedFrames++;
+        }
         if (result == SUBMIT_OK) {
             w.renderedFrames++;
+            if (decodeUnit->receiveTimeUs != 0) {
+                w.presentAgeFrames++;
+                w.presentAgeTotalUs += presentAgeUs;
+                w.presentAgeMaxUs = std::max(w.presentAgeMaxUs, presentAgeUs);
+            }
+            w.fenceWaitTotalUs += fenceWaitUs;
+            w.acquireWaitTotalUs += acquireWaitUs;
+            w.submitPresentTotalUs += submitPresentUs;
             const uint64_t now = nowUs();
             if (lastPresentUs != 0 && now - lastPresentUs < IDLE_GAP_US) {
                 frameIntervals[frameIntervalNext] = now - lastPresentUs;
@@ -3858,7 +3926,11 @@ Java_com_limelight_binding_video_PyroWaveRenderer_nativeTakeStats(JNIEnv *env, j
     const jlong values[] = {w.totalFrames, w.receivedFrames, w.renderedFrames, w.lostFrames, w.partialFrames,
                             w.hostLatencyFrames, w.hostLatencyMin, w.hostLatencyMax, jlong(w.hostLatencyTotal),
                             w.gpuDecodeFrames, jlong(w.gpuDecodeTotalUs), jlong(onePercentLow),
-                            w.gpuDrawFrames, jlong(w.gpuDrawTotalUs)};
+                            w.gpuDrawFrames, jlong(w.gpuDrawTotalUs),
+                            jlong(w.skippedFrames), jlong(w.stallTotalUs), jlong(w.stallMaxUs),
+                            w.submitAgeFrames, jlong(w.submitAgeTotalUs), jlong(w.submitAgeMaxUs),
+                            w.presentAgeFrames, jlong(w.presentAgeTotalUs), jlong(w.presentAgeMaxUs),
+                            jlong(w.fenceWaitTotalUs), jlong(w.acquireWaitTotalUs), jlong(w.submitPresentTotalUs)};
     env->SetLongArrayRegion(out, 0, std::min<jsize>(env->GetArrayLength(out), jsize(std::size(values))), values);
 }
 

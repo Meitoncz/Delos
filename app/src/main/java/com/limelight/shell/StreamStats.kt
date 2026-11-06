@@ -27,6 +27,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.em
+import com.limelight.binding.video.PyroWaveBacklog
 import com.limelight.shell.data.ProfileStore
 import com.limelight.shell.settings.AppearanceStore
 import com.limelight.shell.ui.Figtree
@@ -77,6 +78,8 @@ class StreamStats(
     val bandwidthKb: Float,
     /** The frame rate of the slowest 1% of recent frames, -1 while too few to tell. */
     val onePercentLowFps: Float = -1f,
+    /** PyroWave only (null otherwise): where the video thread falls behind; shown in the full panel. */
+    val backlog: PyroWaveBacklog? = null,
 ) {
     /** The delay summed up: network round trip, the PC's processing when it reports it, and decoding. */
     val totalMs: Float get() = networkMs + maxOf(hostMs, 0f) + decodeMs + processingMs
@@ -181,6 +184,14 @@ class StreamStatsPanel private constructor(
                 add("Total latency" to "${format(s.totalMs)} ms")
                 if (s.bandwidthKb >= 0f) add("Bandwidth" to bandwidth(s.bandwidthKb))
                 add("Lost frames" to "${format(s.lossPercent, 2)} %")
+                s.backlog?.let { b ->
+                    add("Backlog" to "")
+                    add("Stall (recv thread)" to "${format(b.stallAvgMs)} / ${format(b.stallMaxMs)} ms avg/max")
+                    add("Frame age at submit" to "${format(b.submitAgeAvgMs)} / ${format(b.submitAgeMaxMs)} ms avg/max")
+                    add("Receive to present" to "${format(b.presentAgeAvgMs)} / ${format(b.presentAgeMaxMs)} ms avg/max")
+                    add("Partial frames" to "${format(b.partialPerSecond)} /s")
+                    add("Skipped" to "${format(b.skippedPerSecond)} /s")
+                }
             }
             val label = TextStyle(color = PANEL_TEXT.copy(alpha = .6f), fontFamily = Figtree, fontSize = 17.tpx, lineHeight = 1.5.em)
             val value = label.copy(color = PANEL_TEXT, fontFeatureSettings = "tnum")

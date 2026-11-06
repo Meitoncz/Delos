@@ -1155,6 +1155,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                 prepareLaunchArrivalBackend();
             }
             LimeLog.info("PyroWave renderer created");
+            logPyroWaveStreamStart();
             return 0;
         }
 
@@ -1302,7 +1303,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                 if (pw == null) return;
                 long[] stats = pw.takeStats();
                 if (stats[PyroWaveRenderer.STAT_RENDERED_FRAMES] > 0) firstFramePresented = true;
-                if (prefs.enablePerfOverlay) {
+                if (prefs.enablePerfOverlay || BuildConfig.DEBUG) {
                     reportPyroWaveStats(stats, seconds);
                 }
             }
@@ -1324,6 +1325,9 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         long rttInfo = MoonBridge.getEstimatedRttInfo();
         float realtimeNetData = measureNetDataKb();
         String decoder = "PyroWave (Vulkan)";
+        PyroWaveBacklog backlog = new PyroWaveBacklog(stats, seconds);
+        logPyroWaveDiag(stats, backlog, seconds, receivedFps, renderedFps, realtimeNetData);
+        if (!prefs.enablePerfOverlay) return;
 
         StringBuilder sb = new StringBuilder();
         sb.append(context.getString(R.string.perf_overlay_streamdetails, initialWidth + "x" + initialHeight, totalFps)).append('\n');
@@ -1344,7 +1348,52 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                 hostFrames > 0 ? stats[PyroWaveRenderer.STAT_HOST_LATENCY_MIN] / 10f : -1f,
                 hostFrames > 0 ? stats[PyroWaveRenderer.STAT_HOST_LATENCY_MAX] / 10f : -1f,
                 hostFrames > 0 ? stats[PyroWaveRenderer.STAT_HOST_LATENCY_TOTAL] / 10f / hostFrames : -1f,
-                realtimeNetData, stats[PyroWaveRenderer.STAT_ONE_PERCENT_LOW_FPS_X100] / 100f));
+                realtimeNetData, stats[PyroWaveRenderer.STAT_ONE_PERCENT_LOW_FPS_X100] / 100f, backlog));
+    }
+
+    /** Delos diagnostics: what the stream was asked for, set by Game before the connection starts. */
+    public void setStreamDiagnostics(int bitrateKbps, boolean metered, boolean chroma444Requested) {
+        diagBitrateKbps = bitrateKbps;
+        diagMetered = metered;
+        diagChroma444Requested = chroma444Requested;
+    }
+
+    private int diagBitrateKbps = -1;
+    private boolean diagMetered;
+    private boolean diagChroma444Requested;
+    private static final String DIAG_TAG = "DelosPyroDiag";
+
+    private String diagChromaNegotiated() {
+        return (videoFormat & MoonBridge.VIDEO_FORMAT_MASK_YUV444) != 0 ? "4:4:4" : "4:2:0";
+    }
+
+    private void logPyroWaveStreamStart() {
+        if (!BuildConfig.DEBUG) return;
+        // The UDP receive buffer is sized and read back inside moonlight-common-c (VideoStream.c logs "video
+        // receive buffer is N KB of M KB requested" only when clamped) and is not exposed to the app.
+        android.util.Log.i(DIAG_TAG, String.format(java.util.Locale.US,
+                "start: bitrate=%d kbps (metered=%b) chroma requested=%s negotiated=%s videoFormat=0x%X "
+                        + "%dx%d@%d directSubmit=%b pyroWaveCapable=%b hdr10=%b rcvbuf=not exposed by common-c",
+                diagBitrateKbps, diagMetered, diagChroma444Requested ? "4:4:4" : "4:2:0", diagChromaNegotiated(),
+                videoFormat, initialWidth, initialHeight, targetFps, directSubmit, PyroWaveRenderer.isAvailable(),
+                (videoFormat & MoonBridge.VIDEO_FORMAT_MASK_10BIT) != 0));
+    }
+
+    private void logPyroWaveDiag(long[] stats, PyroWaveBacklog b, float seconds, float receivedFps,
+                                 float renderedFps, float netKb) {
+        if (!BuildConfig.DEBUG) return;
+        android.util.Log.i(DIAG_TAG, String.format(java.util.Locale.US,
+                "in=%.1f out=%.1f fps rx=%.0f KB/s bitrate=%d kbps chroma=%s | stall avg/max %.2f/%.2f ms | "
+                        + "age@submit avg/max %.2f/%.2f ms | recv->present avg/max %.2f/%.2f ms | "
+                        + "partial %.1f/s skipped %.1f/s lostFrames %d | waits prevFrame %.2f acquire %.2f "
+                        + "submit+present %.2f ms | gpuDecode %.2f ms",
+                receivedFps, renderedFps, netKb, diagBitrateKbps, diagChromaNegotiated(),
+                b.stallAvgMs, b.stallMaxMs, b.submitAgeAvgMs, b.submitAgeMaxMs, b.presentAgeAvgMs, b.presentAgeMaxMs,
+                b.partialPerSecond, b.skippedPerSecond, stats[PyroWaveRenderer.STAT_LOST_FRAMES],
+                b.fenceWaitAvgMs, b.acquireWaitAvgMs, b.submitPresentAvgMs,
+                stats[PyroWaveRenderer.STAT_GPU_DECODE_FRAMES] > 0
+                        ? stats[PyroWaveRenderer.STAT_GPU_DECODE_TOTAL_US] / 1000f
+                                / stats[PyroWaveRenderer.STAT_GPU_DECODE_FRAMES] : 0f));
     }
 
     // All streaming input/output/buffer owners must call this function regularly.
@@ -2271,7 +2320,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                         hostLatency ? (float) lastTwo.minHostProcessingLatency / 10 : -1f,
                         hostLatency ? (float) lastTwo.maxHostProcessingLatency / 10 : -1f,
                         hostLatency ? (float) lastTwo.totalHostProcessingLatency / 10 / lastTwo.framesWithHostProcessingLatency : -1f,
-                        realtimeNetData, frameTimes.onePercentLowFps()));
+                        realtimeNetData, frameTimes.onePercentLowFps(), null));
             }
             globalVideoStats.add(activeWindowVideoStats);
             lastWindowVideoStats.copy(activeWindowVideoStats);
