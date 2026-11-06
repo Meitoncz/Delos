@@ -192,10 +192,17 @@ class StreamMenu(private val game: Game) {
             overlayHome.removeView(overlay)
             root.addView(overlay, overlayParams)
         }
+        // The same goes for a toast: the window's own host draws it, the topmost layer of the window (above the tiles, the popover and the
+        // statistics), sharp; the stream window's host stops while this one is up and carries on where it was when the window is gone
+        val toastCover = DelosToastOverlay.coverView(game, d.context, appearance, colors)
+        if (toastCover != null) {
+            root.addView(toastCover.view, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+        }
         d.setContentView(root)
         // While the menu is open the buttons reach its window, not the stream: the shortcut closes it again
         d.setOnKeyListener { _, _, event -> onKey(event) }
         d.setOnDismissListener {
+            toastCover?.release?.invoke()
             if (overlayHome != null) {
                 (overlay.parent as? ViewGroup)?.removeView(overlay)
                 overlayHome.addView(overlay, overlayIndex.coerceIn(0, overlayHome.childCount), overlayParams)

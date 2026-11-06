@@ -120,40 +120,38 @@ private const val CARD_RADIUS = 20f
  * The host never takes focus; it is also the stream overlay's content, where nothing can be pressed.
  */
 @Composable
-fun ToastHost(toast: Toast?, onHidden: (Int) -> Unit, onAction: () -> Unit, actionPress: Int = 0) {
+fun ToastHost(
+    toast: Toast?,
+    onHidden: (Int) -> Unit,
+    onAction: () -> Unit,
+    actionPress: Int = 0,
+    toastStage: ToastStage = remember { ToastStage() },
+    active: Boolean = true,
+) {
     val reduced = LocalReducedMotion.current
-    val logic = remember { ToastStageLogic<Toast>() }
-    var slots by remember { mutableStateOf(emptyList<ToastSlot<Toast>>()) }
-    val clock = remember { mutableLongStateOf(0L) }
     val hidden by rememberUpdatedState(onHidden)
     val currentId by rememberUpdatedState(toast?.id)
     val runAction by rememberUpdatedState(onAction)
-    val seenPress = remember { intArrayOf(actionPress) }
 
-    LaunchedEffect(toast?.id, actionPress) {
-        if (actionPress != seenPress[0]) {
-            seenPress[0] = actionPress
-            logic.press(nowMs())
-            slots = logic.slots()
-            delay(Motion.PRESS_HOLD)
+    // Only the active host drives the stage and draws it; a stage shared with another host (the stream menu's window) goes on
+    // exactly where it was when the other host takes over (`ToastStage.sync` ignores a toast it already shows)
+    if (active) {
+        LaunchedEffect(toast?.id, actionPress) {
+            if (toastStage.pressed(actionPress, nowMs())) delay(Motion.PRESS_HOLD)
+            toastStage.sync(toast, nowMs())
         }
-        val now = nowMs()
-        if (toast != null) logic.show(toast, toast.durationMs, now) else logic.dismiss(now)
-        slots = logic.slots()
-    }
-    // The clock only runs while something is on the stage: an idle host costs nothing
-    LaunchedEffect(slots.isNotEmpty()) {
-        if (slots.isEmpty()) return@LaunchedEffect
-        while (true) {
-            val now = withFrameNanos { it } / 1_000_000L
-            clock.longValue = now
-            if (logic.advance(now) { hidden(it.payload.id) }) {
-                slots = logic.slots()
-                if (slots.isEmpty()) break
+        // The clock only runs while something is on the stage: an idle host costs nothing
+        LaunchedEffect(toastStage.slots.isNotEmpty()) {
+            if (toastStage.slots.isEmpty()) return@LaunchedEffect
+            while (true) {
+                val now = withFrameNanos { it } / 1_000_000L
+                if (toastStage.tick(now) { hidden(it.payload.id) }) break
             }
         }
     }
-    if (slots.isEmpty()) return
+    if (!active || toastStage.slots.isEmpty()) return
+    val slots = toastStage.slots
+    val clock = toastStage.clock
 
     val stage = LocalStage.current
     val density = LocalDensity.current

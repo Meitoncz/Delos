@@ -371,7 +371,10 @@ white game frame; it has **no blur** (the stream is a `SurfaceView`).
   controller windows; the overlay rejects touch, key and generic-motion dispatch, blocks descendant focus, is padded by the display cutout and sits below the stream-menu dialog.
   Hosts are weakly registered for their Activity lifecycle, including pending initialization messages; service/helper messages use the visible foreground host. The
   only system-toast fallback is when no Delos host is visible (`DelosToast`). Closing the separate stream-menu dialog does not remove the stream toast host or discard a result
-  delivered after stream focus returns.
+  delivered after stream focus returns. **The windows that blur or cover the stream** (the stream menu, the exit) would blur the decor overlay behind them, so each gets a second host as the
+  topmost layer of its own window (`DelosToastOverlay.coverView`; above the tiles, the popover and the statistics strip, sharp, same non-interactive rules): both hosts draw one shared `ToastStage`
+  (slots, start time, clock), only the newest covering window's host is active (`ToastCovers`; it takes over after its first drawn frame, the stream window's host takes over again when it is gone), so the
+  toast carries on without restarting. The controller window has no blurring window.
 - **Preview** (debug builds, `ToastPreview` in `src/debug`): `adb shell am start -n io.github.meitoncz.delos.debug/com.limelight.shell.ShellActivity --es preview_screen toast --es preview_kind <info|success|warning|error|action> [--ei preview_double 1] [--ei preview_long 1]`
   shows the toast on the drawn game scene (`double`: a second toast 350 ms later, to watch the hand-over; `long`: a message that needs the ellipsis); a tap on the scene or `Y` shows it
   again, and `Y` is Undo on the `action` toast.

@@ -207,3 +207,24 @@ class ToastStageLogic<T> {
 
     private fun removeGone(now: Long): Boolean = items.removeAll { now >= it.goneMs }
 }
+
+/**
+ * Which windows cover the one that normally shows the toast (the stream's own window): a window that blurs or covers what is behind
+ * it (the stream menu, the exit) draws the toast itself, sharp and on top, from the moment it has drawn its first frame until it
+ * is gone. The newest one wins; without any the stream window's host draws. Only that one host is active.
+ */
+class ToastCovers {
+    private val stack = mutableListOf<Any>()
+
+    /** The window that draws the toast now, null: the stream window's own host. */
+    val top: Any? get() = stack.lastOrNull()
+
+    fun ready(window: Any) {
+        stack.remove(window)
+        stack.add(window)
+    }
+
+    fun gone(window: Any) {
+        stack.remove(window)
+    }
+}
