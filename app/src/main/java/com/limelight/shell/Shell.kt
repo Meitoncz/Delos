@@ -112,6 +112,9 @@ import com.limelight.shell.ui.ButtonCaptureLayer
 import com.limelight.shell.ui.DialogLayer
 import com.limelight.shell.ui.PortalOverlay
 import com.limelight.shell.ui.StreamResultLayer
+import com.limelight.shell.ui.LocalImeAvoidance
+import com.limelight.shell.ui.imeAvoidance
+import com.limelight.shell.ui.rememberImeAvoidance
 import com.limelight.shell.data.LocalArtwork
 import com.limelight.shell.data.downloadAll
 import com.limelight.shell.data.BundledArtwork
@@ -543,11 +546,13 @@ fun Shell(
         NavButton(Symbols.DEVICES, "Devices", shell.screen == Screen.Devices) { shell.navigate(Screen.Devices) },
     )
 
+    // The keyboard never covers the text field being edited: the whole shell moves up while it is open (docs/GUI.md, "Text input")
+    val imeAvoidance = rememberImeAvoidance()
     CompositionLocalProvider(
         LocalShell provides shell, LocalFocusTracker provides tracker, LocalGameActions provides actions, LocalDeviceActions provides devices,
-        LocalBackdropHaze provides backdropHaze, LocalLibrary provides library,
+        LocalBackdropHaze provides backdropHaze, LocalLibrary provides library, LocalImeAvoidance provides imeAvoidance,
     ) {
-        Box(Modifier.fillMaxSize()) {
+        Box(Modifier.fillMaxSize().imeAvoidance(imeAvoidance)) {
             // The blur source re-records the whole screen every frame, so it is only active while an overlay
             // is shown (and while it fades out)
             // On in the very frame an overlay appears (its blur would otherwise start empty and clipped)

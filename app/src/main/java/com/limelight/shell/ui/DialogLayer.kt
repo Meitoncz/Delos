@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -57,7 +56,7 @@ fun DialogLayer(spec: DialogSpec?, haze: HazeState, onDismiss: () -> Unit) {
     var shown by remember { mutableStateOf(spec) }
     if (spec != null) shown = spec
     val open by rememberUpdatedState(spec != null)
-    Box(Modifier.fillMaxSize().imePadding(), contentAlignment = Alignment.Center) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         AnimatedVisibility(
             spec != null,
             enter = dialogEnter(reduced),
@@ -77,6 +76,8 @@ fun DialogLayer(spec: DialogSpec?, haze: HazeState, onDismiss: () -> Unit) {
                     .width(760.px)
                     .focusProperties { onExit = { if (open) cancelFocusChange() } }
                     .focusGroup()
+                    // With a field focused and the keyboard open, the whole dialog (buttons too) is brought in when it fits above the keyboard
+                    .keepVisibleWithIme()
                     // box-shadow: 0 40px 100px -30px rgba(0, 0, 0, .7)
                     .dropShadow(shape) {
                         radius = 100f * k

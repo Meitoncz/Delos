@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -73,10 +72,10 @@ import androidx.compose.ui.layout.ContentScale
 import com.limelight.shell.data.rememberAvatarGradient
 import com.limelight.shell.data.rememberAvatarImage
 
-/** `.center-col`: a centered column; it moves up while the on-screen keyboard is shown. */
+/** `.center-col`: a centered column. */
 @Composable
 fun CenterColumn(gap: Float, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
-    Box(modifier.fillMaxSize().imePadding(), contentAlignment = Alignment.Center) {
+    Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         // Its headline and circles enter one after the other (docs/GUI.md, "Motion")
         EntranceScope {
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(gap.px), content = content)
@@ -343,6 +342,8 @@ fun TextFieldPill(
     BasicTextField(
         state = state,
         modifier = modifier
+            // The shell moves up while the keyboard is open, so the field stays above it (ImeAvoidance.kt)
+            .keepFieldAboveIme()
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale

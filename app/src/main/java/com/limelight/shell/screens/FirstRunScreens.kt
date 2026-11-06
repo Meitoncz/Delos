@@ -46,6 +46,7 @@ import com.limelight.shell.ui.LocalStage
 import com.limelight.shell.ui.PillButton
 import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.TextFieldPill
+import com.limelight.shell.ui.keepVisibleWithIme
 import com.limelight.shell.ui.Unbounded
 import com.limelight.shell.ui.px
 import com.limelight.shell.ui.tpx
@@ -149,8 +150,11 @@ fun CreateProfileScreen(editing: Boolean, initial: Profile?, onDone: (name: Stri
                 }
             }
         }
-        TextFieldPill(name, Symbols.BADGE, Modifier.focusRequester(nameField), placeholder = "Your name", maxLength = 20, onDone = submit)
-        PillButton(if (editing) "Save" else "Create profile", Symbols.CHECK, submit, primary = true)
+        // The name and its button stay together above the keyboard (same gap as the column's)
+        Column(Modifier.keepVisibleWithIme(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(40.px)) {
+            TextFieldPill(name, Symbols.BADGE, Modifier.focusRequester(nameField), placeholder = "Your name", maxLength = 20, onDone = submit)
+            PillButton(if (editing) "Save" else "Create profile", Symbols.CHECK, submit, primary = true)
+        }
     }
 }
 
