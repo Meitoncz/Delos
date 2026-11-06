@@ -30,8 +30,9 @@ class HeroMotionTest {
         val pitchAfter = (HeroMotion.pitch(delta, false) - HeroMotion.pitch(0f, false)) / delta
         val yawBefore = (HeroMotion.yaw(1f, false) - HeroMotion.yaw(1f - delta, false)) / delta
         val yawAfter = (HeroMotion.yaw(delta, false) - HeroMotion.yaw(0f, false)) / delta
-        assertEquals(pitchBefore, pitchAfter, .1f)
-        assertEquals(yawBefore, yawAfter, .1f)
+        // The slopes are about 100°/turn here, so the one-sided differences differ by the curvature times delta.
+        assertEquals(pitchBefore, pitchAfter, .25f)
+        assertEquals(yawBefore, yawAfter, .25f)
     }
 
     @Test
@@ -40,6 +41,14 @@ class HeroMotionTest {
             assertEquals(0f, HeroMotion.pitch(step / 360f, true), 0f)
             assertEquals(0f, HeroMotion.yaw(step / 360f, true), 0f)
         }
+    }
+
+    @Test
+    fun farEdgeMovesClearlyButStaysElegant() {
+        // Un-overscanned right edge midpoint at the yaw extreme: roughly 100 px at 2100 px wide.
+        val shift = 1050.0 - projectRaw(Point(1050.0, 0.0), 0.0, HeroMotion.DEGREES * PI / 180.0).x
+        assertTrue("far edge shift $shift", shift in 90.0..120.0)
+        assertEquals(12.0, HeroMotion.PERIOD_NANOS / 1e9, 0.0)
     }
 
     @Test
@@ -74,13 +83,14 @@ class HeroMotionTest {
 
     private data class Point(val x: Double, val y: Double)
 
-    private fun project(point: Point, pitch: Double, yaw: Double): Point {
-        val x = point.x * HeroMotion.OVERSCAN
-        val y = point.y * HeroMotion.OVERSCAN
-        val rotatedX = x * cos(yaw)
-        val rotatedZ = -x * sin(yaw)
-        val rotatedY = y * cos(pitch) - rotatedZ * sin(pitch)
-        val depth = y * sin(pitch) + rotatedZ * cos(pitch)
+    private fun project(point: Point, pitch: Double, yaw: Double): Point =
+        projectRaw(Point(point.x * HeroMotion.OVERSCAN, point.y * HeroMotion.OVERSCAN), pitch, yaw)
+
+    private fun projectRaw(point: Point, pitch: Double, yaw: Double): Point {
+        val rotatedX = point.x * cos(yaw)
+        val rotatedZ = -point.x * sin(yaw)
+        val rotatedY = point.y * cos(pitch) - rotatedZ * sin(pitch)
+        val depth = point.y * sin(pitch) + rotatedZ * cos(pitch)
         val camera = 2100.0 * HeroMotion.CAMERA_DISTANCE_FACTOR
         val perspective = camera / (camera - depth)
         return Point(rotatedX * perspective, rotatedY * perspective)
