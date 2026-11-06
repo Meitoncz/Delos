@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -69,12 +70,14 @@ internal object SettingsTabsPreview {
                 index = (index + step + tabs.size) % tabs.size
                 true
             }) {
+            CompositionLocalProvider(LocalFocusTracker provides remember { FocusTracker() }) {
             SelectionPillHost(Modifier.offset(y = 206.px).fillMaxWidth().height(66.px)) {
                 ShoulderLabel("L1")
                 tabs.forEachIndexed { i, tab ->
                     TabPill(tab.icon, tab.label, i == index, Modifier.padding(horizontal = 5.px)) { index = i }
                 }
                 ShoulderLabel("R1")
+            }
             }
         }
     }
