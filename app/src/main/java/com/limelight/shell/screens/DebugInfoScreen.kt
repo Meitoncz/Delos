@@ -18,15 +18,12 @@ import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -43,11 +40,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -67,6 +63,9 @@ import com.limelight.shell.ui.LocalDelosColors
 import com.limelight.shell.ui.LocalFeedback
 import com.limelight.shell.ui.LocalStage
 import com.limelight.shell.ui.rememberMarginBringIntoView
+import com.limelight.shell.ui.rememberFocusedListNavigation
+import com.limelight.shell.ui.focusedListBoundary
+import com.limelight.shell.ui.focusedListRow
 import com.limelight.shell.ui.RowValue
 import com.limelight.shell.ui.SettingRow
 import com.limelight.shell.ui.SettingRowList
@@ -357,15 +356,15 @@ fun DebugInfoScreen() {
 
     var focusedKey by remember { mutableStateOf<String?>(null) }
     val focused = rows.firstOrNull { it.key == focusedKey }
-    val first = remember { FocusRequester() }
+    val navigation = rememberFocusedListNavigation(rows.map { it.key })
     val window = LocalWindowInfo.current
     LaunchedEffect(Unit) {
         snapshotFlow { window.isWindowFocused }.first { it }
         feedback.silenceNextFocus()
-        runCatching { first.requestFocus() }
+        navigation.requester(rows.first().key).requestFocus()
     }
     val k = stage.dpPerPx * LocalDensity.current.density
-    val listState = rememberLazyListState()
+    val listState = rememberScrollState()
     val bringIntoView = rememberMarginBringIntoView(listState, before = 72f * k, after = 110f * k, stagePx = k)
 
     Box(Modifier.fillMaxSize()) {
@@ -375,23 +374,23 @@ fun DebugInfoScreen() {
             CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView, com.limelight.shell.ui.LocalEntranceStagger provides com.limelight.shell.ui.rememberEntranceStagger()) {
                 // One ring glides between the rows; the host carries the list's weight and faded edges, so the ring fades with the rows
                 SettingRowList(Modifier.weight(1f).fadeEdges(stage, top = 14f, bottom = 90f)) {
-                    LazyColumn(
-                        Modifier.fillMaxSize(), state = listState,
-                        contentPadding = PaddingValues(start = 18.px, end = 18.px, top = 14.px, bottom = 140.px),
+                    Column(
+                        Modifier.fillMaxSize().focusedListBoundary(navigation).verticalScroll(listState)
+                            .padding(start = 18.px, end = 18.px, top = 14.px, bottom = 140.px),
                         verticalArrangement = Arrangement.spacedBy(10.px),
                     ) {
                         var previous = ""
-                        rows.forEachIndexed { index, row ->
+                        rows.forEach { row ->
                             if (row.section != previous) {
                                 val section = row.section
-                                item("section-$section") {
+                                key("section-$section") {
                                     BasicText(section.uppercase(Locale.ROOT), style = TextStyle(color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 16.tpx, letterSpacing = .08.em),
                                         modifier = Modifier.padding(start = 26.px, top = 10.px, bottom = 2.px))
                                 }
                                 previous = section
                             }
-                            item(row.key) {
-                                SettingRow(row.icon, row.label, row.value, if (index == 0) Modifier.focusRequester(first) else Modifier,
+                            key(row.key) {
+                                SettingRow(row.icon, row.label, row.value, Modifier.focusedListRow(navigation, row.key),
                                     description = row.description.takeIf { it.length <= 100 }, onFocused = { focusedKey = row.key })
                             }
                         }

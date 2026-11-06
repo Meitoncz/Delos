@@ -19,7 +19,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -99,6 +100,9 @@ import com.limelight.shell.ui.backdropBlur
 import com.limelight.shell.ui.LocalFeedback
 import com.limelight.shell.ui.LocalStage
 import com.limelight.shell.ui.rememberMarginBringIntoView
+import com.limelight.shell.ui.rememberFocusedListNavigation
+import com.limelight.shell.ui.focusedListBoundary
+import com.limelight.shell.ui.focusedListRow
 import com.limelight.shell.ui.PillButton
 import com.limelight.shell.ui.RowValue
 import com.limelight.shell.ui.SettingRow
@@ -184,9 +188,7 @@ fun SettingsScreen(
         SettingsSearch(all, appearance.uiScale / 100f)
         return
     }
-    val first = remember { FocusRequester() }
-    // This stable, zero-size target holds focus while a scrolled lazy list is replaced (a tab change by L1 / R1 or a tap):
-    // clearing focus instead lets Compose's beyond-bounds focus search pick a row of the new list at once.
+    // Hold focus while a tab's eager list is replaced, then assign its intended row silently.
     val focusTransfer = rememberFocusTransfer()
     val stage = LocalStage.current
     val k = stage.dpPerPx * LocalDensity.current.density
@@ -207,25 +209,20 @@ fun SettingsScreen(
         shell.onSettingsSearch = handler
         onDispose { if (shell.onSettingsSearch === handler) shell.onSettingsSearch = null }
     }
-    val rowRequesters = remember(rows.map { it.key }) { rows.associate { it.key to FocusRequester() } }
-    val scroll = remember(tab) { LazyListState() }
+    val navigation = key(tab) { rememberFocusedListNavigation(rows.map { it.key }) }
+    val scroll = remember(tab) { ScrollState(0) }
     val bringIntoView = rememberMarginBringIntoView(scroll, before = 72f * k, after = 110f * k, stagePx = k)
     val window = LocalWindowInfo.current
     val target = shell.settingsFocus?.takeIf { id -> rows.any { it.key == id } } ?: rows.firstOrNull()?.key
-    LaunchedEffect(tab, target, rowRequesters) {
-        val index = rows.indexOfFirst { it.key == target }
-        if (index >= 0) {
+    LaunchedEffect(tab, target, navigation) {
+        if (target != null) {
             snapshotFlow { window.isWindowFocused }.first { it }
-            val headings = rows.take(index + 1).map { it.section }.distinct().size
-            scroll.scrollToItem(if (index == 0) 0 else index + headings)
             withFrameNanos { }
             withFrameNanos { }
-            rowRequesters[target]?.let {
-                // Tab selection/search already announced the action; assigning focus is silent.
-                feedback.silenceNextFocus()
-                runCatching { it.requestFocus() }
-            }
-        } else runCatching { first.requestFocus() }
+            // Every target is laid out, even while the visual scroll is still catching up.
+            feedback.silenceNextFocus()
+            navigation.requester(target).requestFocus()
+        }
     }
     DisposableEffect(shell, tab) {
         val handler: (Int) -> Unit = { dir ->
@@ -250,9 +247,9 @@ fun SettingsScreen(
                         focusTransfer.request()
                         shell.settingsFocus = null
                         shell.settingsTab = next
-                    } else rowRequesters[target]?.let {
+                    } else target?.let {
                         feedback.silenceNextFocus()
-                        runCatching { it.requestFocus() }
+                        navigation.requester(it).requestFocus()
                     }
                 }
             }
@@ -264,17 +261,17 @@ fun SettingsScreen(
                 key(tab) {
                     // One ring glides between the rows; the host carries the list's weight and its faded edges, so the ring fades with the rows
                     com.limelight.shell.ui.SettingRowList(Modifier.weight(1f).fadeEdges(stage, top = 14f, bottom = 90f)) {
-                        LazyColumn(state = scroll, modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(start = 18.px, end = 18.px, top = 14.px, bottom = 140.px),
+                        Column(Modifier.fillMaxSize().focusedListBoundary(navigation).verticalScroll(scroll)
+                            .padding(start = 18.px, end = 18.px, top = 14.px, bottom = 140.px),
                             verticalArrangement = Arrangement.spacedBy(10.px)) {
                             var previous = ""
                             rows.forEach { row ->
                                 if (row.section != previous) {
-                                    item("section-${row.section}") { SectionHeading(row.section) }
+                                    key("section-${row.section}") { SectionHeading(row.section) }
                                     previous = row.section
                                 }
-                                item(row.key) {
-                                    SettingsItemRow(row, Modifier.focusRequester(rowRequesters.getValue(row.key)),
+                                key(row.key) {
+                                    SettingsItemRow(row, Modifier.focusedListRow(navigation, row.key),
                                         hint = if (row.key == "seekbar_bitrate_kbps") bitrateHint else null) { focusedKey = row.key }
                                 }
                             }

@@ -8,9 +8,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.*
@@ -18,8 +17,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -83,10 +80,10 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
         onDispose { base.unregisterOnSharedPreferenceChangeListener(listener) }
     }
     val custom = remember(game, overrideVersion) { game.overrides().keys }
-    val first = remember(tab, game) { FocusRequester() }
     val transfer = rememberFocusTransfer()
     val window = LocalWindowInfo.current
-    val scroll = remember(tab) { LazyListState() }
+    val scroll = remember(tab) { ScrollState(0) }
+    val navigation = key(tab, game) { rememberFocusedListNavigation(rows.map { it.key } + "reset-all") }
     val stage = LocalStage.current
     val k = stage.dpPerPx * LocalDensity.current.density
     val bringIntoView = rememberMarginBringIntoView(scroll, before = 72f * k, after = 110f * k, stagePx = k)
@@ -103,13 +100,13 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
         shell.onShoulder = handler
         onDispose { if (shell.onShoulder === handler) shell.onShoulder = null }
     }
-    LaunchedEffect(tab, first, caps) {
+    LaunchedEffect(tab, navigation, caps) {
         if (caps == null) return@LaunchedEffect
         snapshotFlow { window.isWindowFocused }.first { it }
         withFrameNanos { }
         withFrameNanos { }
         feedback.silenceNextFocus()
-        runCatching { first.requestFocus() }
+        navigation.requester(rows.firstOrNull()?.key ?: "reset-all").requestFocus()
     }
     fun reset(key: String) {
         game.reset(key)
@@ -144,40 +141,43 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
                 // One ring glides between the rows; the host carries the list's size and faded edges, so the ring fades with the rows
                 SettingRowList(Modifier.padding(start = SettingsLayout.TITLE_X.px, top = SettingsLayout.LIST_TOP.px, bottom = bottom.px)
                     .width(1140.px).fillMaxHeight().fadeEdges(stage, top = 14f, bottom = 70f)) {
-                    LazyColumn(state = scroll,
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(start = 18.px, end = 18.px, top = 14.px, bottom = 140.px),
+                    Column(
+                        modifier = Modifier.fillMaxSize().focusedListBoundary(navigation).verticalScroll(scroll)
+                            .padding(start = 18.px, end = 18.px, top = 14.px, bottom = 140.px),
                         verticalArrangement = Arrangement.spacedBy(10.px)) {
-                        itemsIndexed(rows, key = { _, spec -> spec.key }) { index, spec ->
-                            val current = values[spec.key] ?: spec.default
-                            val value = when (spec.kind) {
-                                SettingKind.TOGGLE -> RowValue.Toggle(current as? Boolean ?: false) { stream.write(spec, it) }
-                                SettingKind.CHOICE -> {
-                                    val choices = caps?.choices(spec, values) ?: spec.choices
-                                    RowValue.Choice(spec.choiceLabel(current, choices), { dir ->
-                                        nextSettingChoice(current, choices, dir)?.let { stream.write(spec, it.value) }
-                                    })
+                        rows.forEach { spec ->
+                            key(spec.key) {
+                                val current = values[spec.key] ?: spec.default
+                                val value = when (spec.kind) {
+                                    SettingKind.TOGGLE -> RowValue.Toggle(current as? Boolean ?: false) { stream.write(spec, it) }
+                                    SettingKind.CHOICE -> {
+                                        val choices = caps?.choices(spec, values) ?: spec.choices
+                                        RowValue.Choice(spec.choiceLabel(current, choices), { dir ->
+                                            nextSettingChoice(current, choices, dir)?.let { stream.write(spec, it.value) }
+                                        })
+                                    }
+                                    SettingKind.SLIDER -> RowValue.Slider((current as? Number)?.toInt() ?: spec.min,
+                                        spec.min, spec.max, spec.step, spec.unit, spec.divisor) { stream.write(spec, it) }
+                                    else -> RowValue.Info(current?.toString().orEmpty())
                                 }
-                                SettingKind.SLIDER -> RowValue.Slider((current as? Number)?.toInt() ?: spec.min,
-                                    spec.min, spec.max, spec.step, spec.unit, spec.divisor) { stream.write(spec, it) }
-                                else -> RowValue.Info(current?.toString().orEmpty())
+                                val isCustom = spec.key in custom
+                                val source = if (isCustom) "Custom for this game" else "From profile"
+                                val menu = ContextMenu(spec.label, listOf(MenuItem(Symbols.RESET, "Reset to profile value") { reset(spec.key) }))
+                                SettingRow(spec.icon, spec.label, value, Modifier.focusedListRow(navigation, spec.key),
+                                    description = if (spec.key == "seekbar_bitrate_kbps" && bitrateHint != null) "$source · $bitrateHint" else source,
+                                    descriptionColor = if (isCustom) colors.accent3 else null,
+                                    enabled = caps != null && stream.enabled(spec, caps), contextMenu = menu,
+                                    onFocused = { focusedKey = spec.key })
                             }
-                            val isCustom = spec.key in custom
-                            val source = if (isCustom) "Custom for this game" else "From profile"
-                            val menu = ContextMenu(spec.label, listOf(MenuItem(Symbols.RESET, "Reset to profile value") { reset(spec.key) }))
-                            SettingRow(spec.icon, spec.label, value, if (index == 0) Modifier.focusRequester(first) else Modifier,
-                                description = if (spec.key == "seekbar_bitrate_kbps" && bitrateHint != null) "$source · $bitrateHint" else source,
-                                descriptionColor = if (isCustom) colors.accent3 else null,
-                                enabled = caps != null && stream.enabled(spec, caps), contextMenu = menu,
-                                onFocused = { focusedKey = spec.key })
                         }
                         // The one game-wide action closes the list, set apart from the settings; the list spacing adds 10 px on each side.
-                        item(key = "reset-all-gap") { Spacer(Modifier.height(20.px)) }
-                        item(key = "reset-all") {
+                        key("reset-all-gap") { Spacer(Modifier.height(20.px)) }
+                        key("reset-all") {
                             SettingRow(Symbols.RESET, "Reset all settings", RowValue.Action {
                                 game.resetAll()
                                 shell.showToast("All settings follow the profile again", Symbols.RESET)
-                            }, description = "This game follows your profile again", enabled = custom.isNotEmpty(),
+                            }, Modifier.focusedListRow(navigation, "reset-all"),
+                                description = "This game follows your profile again", enabled = custom.isNotEmpty(),
                                 onFocused = { focusedKey = null })
                         }
                     }

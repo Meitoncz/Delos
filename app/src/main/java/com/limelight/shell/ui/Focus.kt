@@ -1,9 +1,7 @@
 package com.limelight.shell.ui
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -104,11 +102,6 @@ fun Modifier.focusEffects(
     pressScale: Float = Motion.PRESS_SCALE,
     /** How long the focus spring of the scale takes ([Motion.FOCUS]). */
     focusMillis: Int = Motion.FOCUS,
-    /**
-     * How long the ring and the glow take to fade in and out; null is the quick default (140 ms in, 110 ms out, so a ring of its
-     * own never trails behind the focus). A row of a [RowGlideHost] sets it to [Motion.ROW_FOCUS]; reduced motion snaps then.
-     */
-    fadeMillis: Int? = null,
 ): Modifier = composed {
     val colors = LocalDelosColors.current
     val stage = LocalStage.current
@@ -116,15 +109,11 @@ fun Modifier.focusEffects(
     val tracker = LocalFocusTracker.current
     var focused by remember { mutableStateOf(false) }
     val pulse = rememberPressPulse()
-    val reduced = LocalReducedMotion.current
     val scale by animateFocusScale(focused, pulse.pressed, focusScale, pressScale, focusMillis = focusMillis)
-    // The ring comes in quickly and goes out quickly, so it never trails behind the focus (unless a gliding ring takes over)
-    val fadeSpec: FiniteAnimationSpec<Float> = when {
-        fadeMillis == null -> tween(if (focused) 140 else 110, easing = EaseOut)
-        reduced -> snap()
-        else -> tween(fadeMillis, easing = Motion.Ease)
-    }
-    val ringAlpha by animateFloatAsState(if (focused) 1f else 0f, fadeSpec, label = "focusRing")
+    // Local rings and glows fade quickly; hosted settings rows pass null for both and draw neither.
+    val ringAlpha by animateFloatAsState(
+        if (focused) 1f else 0f, tween(if (focused) 140 else 110, easing = EaseOut), label = "focusRing",
+    )
     val sweepPos = remember { Animatable(0f) }
     LaunchedEffect(focused) {
         if (focused && sweep) {

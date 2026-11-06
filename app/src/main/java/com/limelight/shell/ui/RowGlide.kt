@@ -20,10 +20,19 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.ClipOp
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.inset
+import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
+import com.limelight.shell.shadowRadius
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -31,15 +40,14 @@ import kotlinx.coroutines.launch
 import kotlin.math.min
 
 /**
- * The one focus ring of a scrolling list of rows (settings, per-game settings, debug info): it glides from the row that
- * lost the focus to the row that has it instead of every row fading its own ring in and out. Like [GlideRing] it is told
- * about the focused row by [rowGlideTarget] and drawn behind the host's content by [RowGlideHost] (which also gives the
- * ring its look); unlike it the ring is *not* animated in window space. A list that scrolls while the ring glides would
- * leave a window-space animation behind (and restart it with every scrolled frame), so the ring is drawn at the focused row's
- * bounds as they are in this very frame plus a carry that shrinks to nothing ([RowGlideMotion]): it travels with the row it
- * heads for and at rest sits exactly on it. Everything the draw phase needs is a snapshot state read there (or plain
- * arrays changed together with one), so a frame of the glide or of a scroll redraws the ring without recomposing anything
- * and without allocating.
+ * The one focus plate of a scrolling list of rows (settings, per-game settings, debug info): its tint, ring and glow
+ * glide together instead of every row fading its own layers in and out. Like [GlideRing] it is told about the focused
+ * row by [rowGlideTarget] and drawn behind the host's content by [RowGlideHost]; unlike it the plate is *not* animated
+ * in window space. A list that scrolls while the plate glides would leave a window-space animation behind (and restart
+ * it with every scrolled frame), so the plate is drawn at the focused row's bounds in this very frame plus a carry that
+ * shrinks to nothing ([RowGlideMotion]): it travels with the row it heads for and at rest sits exactly on it. Everything
+ * the draw phase needs is snapshot state read there (or plain arrays changed together with one), so a glide or scroll
+ * frame redraws the plate without recomposing rows. The shadow's paint and clipping path are reused.
  */
 @Stable
 class RowGlide internal constructor(private val scope: CoroutineScope) {
@@ -67,6 +75,15 @@ class RowGlide internal constructor(private val scope: CoroutineScope) {
     private val alpha = Animatable(0f)
     private var glideJob: Job? = null
     private var fadeJob: Job? = null
+
+    private val glow = FocusGlow(offsetY = 20f, blur = 50f, spread = -24f)
+    private val glowClip = Path()
+    private val glowPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.BLACK
+    }
+    private var shadowBlur = Float.NaN
+    private var shadowOffset = Float.NaN
+    private var shadowColor = 0
 
     internal fun attach(coordinates: LayoutCoordinates) {
         host = coordinates
@@ -158,7 +175,7 @@ class RowGlide internal constructor(private val scope: CoroutineScope) {
         return true
     }
 
-    /** Draws the ring around the focused row, [focusScale] times its size (the scale the row grows to), in the host's coordinates. */
+    /** Draws the sole tint, glow and ring at the same moving bounds, [focusScale] times the focused row's size. */
     internal fun draw(drawScope: DrawScope, ring: FocusRing, corner: Float, focusScale: Float, colors: DelosColors, stage: StageMetrics) {
         // Reading the tick is what redraws the ring when the row's bounds or the carry change
         if (tick == Int.MIN_VALUE) return
@@ -175,22 +192,55 @@ class RowGlide internal constructor(private val scope: CoroutineScope) {
                 RowGlideMotion.grownNear(l, r, focusScale), RowGlideMotion.grownNear(t, b, focusScale),
                 size.width - RowGlideMotion.grownFar(l, r, focusScale), size.height - RowGlideMotion.grownFar(t, b, focusScale),
             ) {
-                drawFocusRing(ring, min(stagePx(corner, stage), this.size.minDimension / 2f), a, colors, stage)
+                val radius = min(stagePx(corner, stage), this.size.minDimension / 2f)
+                drawGlow(radius, a, colors, stage, focusScale)
+                // Haze is a layout modifier; a plain tint keeps this shared plate entirely in the draw phase.
+                // Use the exact previous palette tint (including its translucency), without any row-local blur layer.
+                drawRoundRect(colors.surface2.copy(alpha = colors.surface2.alpha * a), cornerRadius = CornerRadius(radius))
+                drawFocusRing(ring, radius, a, colors, stage)
+            }
+        }
+    }
+
+    /** The existing CSS-style shadow, clipped outside the plate so its translucent tint is not darkened. */
+    private fun DrawScope.drawGlow(radius: Float, alpha: Float, colors: DelosColors, stage: StageMetrics, focusScale: Float) {
+        val k = stagePx(1f, stage) * focusScale
+        val blur = shadowRadius(glow.blur * k)
+        val offset = glow.offsetY * k
+        val color = colors.glow.copy(alpha = colors.glow.alpha * alpha).toArgb()
+        if (blur != shadowBlur || offset != shadowOffset || color != shadowColor) {
+            glowPaint.setShadowLayer(blur, 0f, offset, color)
+            shadowBlur = blur
+            shadowOffset = offset
+            shadowColor = color
+        }
+        val spread = (glow.spread * k).coerceAtLeast(-size.minDimension / 2f)
+        val innerRadius = (radius + spread).coerceAtLeast(0f)
+        glowClip.asAndroidPath().apply {
+            rewind()
+            addRoundRect(0f, 0f, size.width, size.height, radius, radius, android.graphics.Path.Direction.CW)
+        }
+        clipPath(glowClip, ClipOp.Difference) {
+            drawIntoCanvas {
+                it.nativeCanvas.drawRoundRect(
+                    -spread, -spread, size.width + spread, size.height + spread,
+                    innerRadius, innerRadius, glowPaint,
+                )
             }
         }
     }
 }
 
-/** The ring of the surrounding [RowGlideHost]; null outside one (a row then draws its own ring). */
+/** The focus plate of the surrounding [RowGlideHost]; null outside one (a row then draws its own focus effects). */
 val LocalRowGlide = staticCompositionLocalOf<RowGlide?> { null }
 
 /**
- * One focus ring for the rows of a (scrolling) list that glides to whichever row has the focus, [Motion.ROW_FOCUS] ms with
- * the slight overshoot of [Motion.Glide], instead of every row fading its own in and out ([RowGlide]). The rows mark
- * themselves with [rowGlideTarget] and draw no ring of their own while [LocalRowGlide] is set; the host has to enclose
- * the list (give it the list's size, fade and clip modifiers), because the ring is drawn behind the host's content,
- * [focusScale] times as big as the row. The first focus into the list, and reduced motion, put the ring on the row
- * without gliding.
+ * One focus plate for the rows of a (scrolling) list: palette surface tint, accent ring and glow glide together to the
+ * focused row over [Motion.ROW_FOCUS] ms with the slight overshoot of [Motion.Glide]. Rows mark themselves with
+ * [rowGlideTarget] and draw no glass, ring or glow of their own while [LocalRowGlide] is set. The shared fill is the
+ * same translucent palette tint as the former frosted glass, without blur: no independently fading Haze layer can
+ * linger on a previous row. The host encloses the list (give it the list's size, fade and clip modifiers); its plate
+ * is drawn behind the content, [focusScale] times as big as the row. First focus and reduced motion do not glide.
  */
 @Composable
 fun RowGlideHost(
@@ -217,7 +267,7 @@ fun RowGlideHost(
 }
 
 /**
- * Marks a row of a [RowGlideHost]: while it is [focused] the ring glides to it and follows it as it scrolls. Put it before the
+ * Marks a row of a [RowGlideHost]: while it is [focused] the plate glides to it and follows it as it scrolls. Put it before the
  * row's `focusEffects` (so its bounds are those of the layout, not of the focus scale). Does nothing outside a host.
  */
 @Composable

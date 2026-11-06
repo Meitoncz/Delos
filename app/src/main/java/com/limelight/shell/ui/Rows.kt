@@ -26,7 +26,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,7 +39,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -108,20 +106,13 @@ fun SettingRow(
 ) {
     val colors = LocalDelosColors.current
     val feedback = LocalFeedback.current
-    // Inside a RowGlideHost one ring glides between the rows and the row's own look cross-fades over the same time; elsewhere
-    // (the side menu) the row draws its own quick ring and its glass follows the focus at once
+    // Inside a RowGlideHost the entire focus plate (tint, ring and glow) belongs to the host, never to a row.
+    // Elsewhere (the side menu) the row keeps its own quick ring, glow and immediate frosted glass.
     val glide = LocalRowGlide.current
     val reduced = LocalReducedMotion.current
     val calm = glide != null && !reduced
     var focused by remember { mutableStateOf(false) }
     val choice = rememberChoiceMotion()
-    // The glass and its blur fade as one layer (see below), so the glass of the row just left cannot stay on screen as a blur
-    val fill = animateFloatAsState(
-        if (focused) 1f else 0f,
-        if (calm) tween(Motion.ROW_FOCUS, easing = Motion.Ease) else snap(),
-        label = "rowFill",
-    )
-    val glassShown by remember { derivedStateOf { fill.value > 0f } }
     val adjust: ((Int) -> Unit)? = when (value) {
         is RowValue.Choice -> { dir ->
             choice.step(dir)
@@ -175,13 +166,12 @@ fun SettingRow(
                 corner = ROW_CORNER,
                 focusScale = ROW_FOCUS_SCALE,
                 ring = if (glide != null) null else ROW_RING,
-                glow = FocusGlow(offsetY = 20f, blur = 50f, spread = -24f),
+                glow = if (glide != null) null else FocusGlow(offsetY = 20f, blur = 50f, spread = -24f),
                 clickCue = if (enabled && value !is RowValue.Info) (if (value is RowValue.Action) Cue.OPEN else Cue.SELECT) else null,
                 contextMenu = contextMenu,
                 adjustable = adjust != null && enabled,
                 controllerAdjust = controllerAdjust,
                 focusMillis = if (glide != null) Motion.ROW_FOCUS else Motion.FOCUS,
-                fadeMillis = if (glide != null) Motion.ROW_FOCUS else null,
                 onFocusChange = {
                     focused = it
                     if (it) onFocused?.invoke()
@@ -189,11 +179,11 @@ fun SettingRow(
             )
             .clip(shape),
     ) {
-        // Focused: frosted glass over the animated background
-        if (glassShown) {
+        // Hosted rows never create a glass layer, including while their content animates out of focus.
+        // Outside a host the glass still appears/disappears immediately, without a blur-layer alpha fade.
+        if (glide == null && focused) {
             Box(
                 Modifier.matchParentSize()
-                    .graphicsLayer { alpha = fill.value }
                     .then(LocalBackdropHaze.current?.let { Modifier.backdropBlur(it, 8f, colors.surface2) } ?: Modifier.background(colors.surface2))
             )
         }
@@ -223,15 +213,15 @@ fun SettingRow(
     }
 }
 
-/** The look of a focused settings row, shared by [SettingRow] and the ring of a [SettingRowList]. */
+/** The look of a focused settings row, shared by [SettingRow] and the focus plate of a [SettingRowList]. */
 private const val ROW_CORNER = 24f
 private const val ROW_FOCUS_SCALE = 1.02f
 private val ROW_RING = FocusRing(width = 3f, gap = 0f)
 
 /**
- * A scrolling list of [SettingRow]s (settings, per-game settings, debug info): the rows' focus ring is one ring that glides
- * from row to row ([RowGlideHost], [Motion.ROW_FOCUS]) and follows the scrolling list. [modifier] is the list's: its size and
- * [fadeEdges] (the ring fades with the rows). The list inside should fill it.
+ * A scrolling list of [SettingRow]s (settings, per-game settings, debug info): one focus plate (tint, ring and glow)
+ * glides from row to row ([RowGlideHost], [Motion.ROW_FOCUS]) and follows the scrolling list. [modifier] is the list's:
+ * its size and [fadeEdges] (the plate fades with the rows). The list inside should fill it.
  */
 @Composable
 fun SettingRowList(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
