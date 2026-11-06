@@ -21,26 +21,13 @@ internal object NativeSettingsHelp {
             else "One row of covers; running and recent games come first."
         "ui_reduced_motion" -> if (label == "Reduced") "Less interface motion. Game FPS is unchanged."
             else "Full transitions and focus animations."
-        "ui_palette" -> palettes[label].orEmpty()
+        "ui_palette" -> "Colors of the interface and the animated backgrounds."
         "ui_background" -> backgrounds[label].orEmpty()
         "ui_stats_position" -> "Full statistics panel in the ${label.lowercase()} corner."
         "ui_default_pc" -> if (label == "None") "No preferred PC; Skip the start screen is unavailable."
             else "Used by Skip the start screen. Must be paired and reachable."
         else -> ""
     }
-
-    private val palettes = mapOf(
-        "Delos" to "Warm orange, cyan and violet over a blue base.",
-        "Lagoon" to "Turquoise, blue and warm orange over a cool base.",
-        "Dusk" to "Violet, pink and cyan over a purple base.",
-        "Ember" to "Orange, gold and pink over a warm base.",
-        "Moss" to "Green, turquoise and gold over a green base.",
-        "Iris" to "Blue, violet and orange over a blue base.",
-        "Rose" to "Pink, orange and turquoise over a rose base.",
-        "Sunset" to "Orange, pink and gold over a purple base.",
-        "Mint" to "Mint, blue and pink over a cool green base.",
-        "Gold" to "Gold, cyan and pink over a warm base.",
-    )
 
     private val backgrounds = mapOf(
         "Aurora" to "Soft moving bands of color, like an aurora.",
