@@ -294,6 +294,10 @@ in assets.
 - The **two menu buttons at the top left and top right** of the handheld are used in the UI: the **left one (View/Select)** slides the **side menu** in from the left, the **right one (Start)** opens the **context menu** for the focused item. The hints show the buttons as they look on the device: on AYN handhelds (Odin, Thor) a square (left) and a play arrow (right).
 - Navigation must be **intuitive and direct**: pressing a direction takes you where you want to go, ideally in **one press** – never left, down, down just to reach something.
 
+### Text input
+
+Every text field in the shell is the one `TextFieldPill` (dialogs, the profile name, the settings search), built on the `TextFieldState` flavour of `BasicTextField` with `showKeyboardOnFocus` off. **Android's keyboard opens only when the field is activated**: a tap, or A / the D-pad centre key. Moving the focus onto the field (D-pad, stick, or code such as the name field after choosing an avatar) never opens it, and it closes when the focus leaves. After Back / B closes the keyboard the field keeps focus and the keyboard stays closed until the next tap or A. Do not use the `value: String` overload of `BasicTextField` or any other text widget: it starts the input method on every focus, which shows the keyboard. `ShellActivity` also has `windowSoftInputMode="stateHidden"`, so the keyboard does not come back by itself when the window regains focus. The stream's own keyboards (Full keyboard, More → Open Android keyboard) are separate and unchanged.
+
 ## Motion
 
 One motion language for the whole UI. It was designed for the stream menu (below) and is now what every screen animates with, so

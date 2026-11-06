@@ -12,10 +12,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -105,16 +105,17 @@ fun CreateProfileScreen(editing: Boolean, initial: Profile?, onDone: (name: Stri
     val shell = LocalShell.current
     val feedback = LocalFeedback.current
     var avatar by remember { mutableIntStateOf((initial?.avatar ?: 0).coerceIn(AVATARS.indices)) }
-    var name by remember { mutableStateOf(initial?.name ?: "Player") }
+    val name = rememberTextFieldState(initial?.name ?: "Player")
     val avatarFocus = remember { List(AVATARS.size) { FocusRequester() } }
     val nameField = remember { FocusRequester() }
     InitialFocus(avatarFocus[avatar.coerceIn(AVATARS.indices)])
     val submit = {
-        if (name.isBlank()) {
+        val entered = name.text.toString()
+        if (entered.isBlank()) {
             feedback.play(Cue.ERROR)
             shell.showToast("Enter a name for your profile", Symbols.BADGE)
         } else {
-            onDone(name.trim(), avatar)
+            onDone(entered.trim(), avatar)
         }
     }
     CenterColumn(gap = 40f) {
@@ -148,7 +149,7 @@ fun CreateProfileScreen(editing: Boolean, initial: Profile?, onDone: (name: Stri
                 }
             }
         }
-        TextFieldPill(name, { name = it }, Symbols.BADGE, Modifier.focusRequester(nameField), placeholder = "Your name", maxLength = 20, onDone = submit)
+        TextFieldPill(name, Symbols.BADGE, Modifier.focusRequester(nameField), placeholder = "Your name", maxLength = 20, onDone = submit)
         PillButton(if (editing) "Save" else "Create profile", Symbols.CHECK, submit, primary = true)
     }
 }

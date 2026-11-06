@@ -22,9 +22,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicText
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.InputTransformation
+import androidx.compose.foundation.text.input.OutputTransformation
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.maxLength
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -58,8 +62,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.unit.em
@@ -305,13 +307,18 @@ fun Circles(content: @Composable () -> Unit) {
 val OnlineGreen = Color(0xFF3DDC84)
 
 /**
- * `.field`: a pill-shaped text field. Moving the focus onto it does not open the on-screen keyboard
- * (that would pop up on every D-pad move); A, Enter or a tap does. Up and down leave the field.
+ * `.field`: a pill-shaped text field, the one text input of the whole app (dialogs, the profile name, the
+ * settings search). The on-screen keyboard appears only when the field is *activated*: a tap, or A / the
+ * D-pad centre key. Moving the focus onto it, by D-pad or in code, never opens it, and it closes again when
+ * the focus leaves. Up and down leave the field. See docs/GUI.md, "Text input".
+ *
+ * It uses the [TextFieldState] overload of `BasicTextField` on purpose. Only that one honours
+ * [KeyboardOptions.showKeyboardOnFocus]; the `value: String` overload starts the input method on every focus,
+ * and starting it shows the keyboard.
  */
 @Composable
 fun TextFieldPill(
-    value: String,
-    onValueChange: (String) -> Unit,
+    state: TextFieldState,
     icon: String,
     modifier: Modifier = Modifier,
     placeholder: String = "",
@@ -327,11 +334,14 @@ fun TextFieldPill(
     val keyboard = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
     var focused by remember { mutableStateOf(false) }
+    // Set by A / the D-pad centre key while the field has focus: the text field only starts the input method
+    // (and with it the keyboard) on focus when showKeyboardOnFocus is true, so switching it on while the field
+    // is focused is how a key press opens the keyboard. A tap does not need it. Reset when the focus leaves.
+    var activated by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(if (focused) 1.05f else 1f, tween(Motion.FOCUS, easing = EaseSpring), label = "fieldScale")
     val ring by animateFloatAsState(if (focused) 1f else 0f, tween(Motion.FOCUS, easing = EaseOut), label = "fieldRing")
     BasicTextField(
-        value = value,
-        onValueChange = { onValueChange(it.take(maxLength)) },
+        state = state,
         modifier = modifier
             .graphicsLayer {
                 scaleX = scale
@@ -344,13 +354,19 @@ fun TextFieldPill(
             .onFocusChanged {
                 if (it.isFocused != focused) {
                     focused = it.isFocused
-                    if (focused) feedback.focusMoved() else keyboard?.hide()
+                    if (focused) feedback.focusMoved() else {
+                        activated = false
+                        keyboard?.hide()
+                    }
                 }
             }
             .onPreviewKeyEvent {
                 when (it.key) {
                     Key.ButtonA, Key.DirectionCenter -> {
-                        if (it.type == KeyEventType.KeyUp) keyboard?.show()
+                        if (it.type == KeyEventType.KeyUp) {
+                            // Already activated (or tapped): the input method is running, so just show the keyboard again
+                            if (activated) keyboard?.show() else activated = true
+                        }
                         true
                     }
                     Key.DirectionUp, Key.DirectionDown -> {
@@ -360,22 +376,23 @@ fun TextFieldPill(
                     else -> false
                 }
             },
-        singleLine = true,
+        inputTransformation = InputTransformation.maxLength(maxLength),
         textStyle = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 30.tpx),
-        cursorBrush = SolidColor(colors.accent),
         keyboardOptions = KeyboardOptions(
             capitalization = if (keyboardType == KeyboardType.Text) KeyboardCapitalization.Words else KeyboardCapitalization.None,
             autoCorrectEnabled = false,
             keyboardType = keyboardType,
             imeAction = ImeAction.Done,
-            showKeyboardOnFocus = false,
+            showKeyboardOnFocus = activated,
         ),
-        keyboardActions = KeyboardActions(onDone = {
+        onKeyboardAction = {
             keyboard?.hide()
             onDone()
-        }),
-        visualTransformation = if (password) PasswordVisualTransformation() else VisualTransformation.None,
-        decorationBox = { inner ->
+        },
+        lineLimits = TextFieldLineLimits.SingleLine,
+        cursorBrush = SolidColor(colors.accent),
+        outputTransformation = if (password) PasswordMask else null,
+        decorator = { inner ->
             Row(
                 Modifier
                     .width(width.px)
@@ -389,7 +406,7 @@ fun TextFieldPill(
             ) {
                 Symbol(icon, 34.tpx, colors.text3)
                 Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
-                    if (value.isEmpty() && placeholder.isNotEmpty()) {
+                    if (state.text.isEmpty() && placeholder.isNotEmpty()) {
                         BasicText(placeholder, style = TextStyle(color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 30.tpx), maxLines = 1)
                     }
                     inner()
@@ -398,6 +415,9 @@ fun TextFieldPill(
         },
     )
 }
+
+/** Shows every character of a password field as a dot. */
+private val PasswordMask = OutputTransformation { replace(0, length, "\u2022".repeat(length)) }
 
 /**
  * The online pulse (`.online-ring`) for a rounded element: an accent-2 outline starts just outside the

@@ -20,9 +20,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -64,13 +64,13 @@ fun DialogLayer(spec: DialogSpec?, haze: HazeState, onDismiss: () -> Unit) {
             exit = dialogExit(reduced),
         ) {
             val d = shown ?: return@AnimatedVisibility
-            val values = remember(d) { mutableStateListOf(*d.fields.map { it.initial }.toTypedArray()) }
+            val values = remember(d) { d.fields.map { TextFieldState(it.initial) } }
             val first = remember { FocusRequester() }
             InitialFocus(first, d)
             val k = stage.dpPerPx * density
             val shape = RoundedCornerShape(40.px)
             val confirm = {
-                if (d.onConfirm(values.toList())) onDismiss()
+                if (d.onConfirm(values.map { it.text.toString() })) onDismiss()
             }
             Column(
                 Modifier
@@ -96,7 +96,7 @@ fun DialogLayer(spec: DialogSpec?, haze: HazeState, onDismiss: () -> Unit) {
                 BasicText(d.note, modifier = Modifier.staggerEntrance(1, Motion.MENU_DELAY), style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 24.tpx, lineHeight = 1.4.em, textAlign = TextAlign.Center))
                 d.fields.forEachIndexed { i, field ->
                     TextFieldPill(
-                        values[i], { values[i] = it }, field.icon,
+                        values[i], field.icon,
                         modifier = (if (i == 0) Modifier.focusRequester(first) else Modifier).staggerEntrance(i + 2, Motion.MENU_DELAY),
                         placeholder = field.placeholder, keyboardType = field.keyboard, password = field.password, maxLength = field.maxLength,
                         // Done on the last field confirms, like the button

@@ -35,7 +35,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.produceState
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.foundation.text.input.clearText
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.snapshotFlow
@@ -359,7 +361,8 @@ private fun DescriptionPanel(tab: SettingsTab, focused: SettingsItem?, modifier:
 private fun SettingsSearch(all: List<SettingsItem>, scale: Float) {
     val shell = LocalShell.current
     val colors = LocalDelosColors.current
-    var query by rememberSaveable { mutableStateOf("") }
+    val field = rememberTextFieldState()
+    val query = field.text.toString()
     val first = remember { FocusRequester() }
     InitialFocus(first)
     val results = searchSettings(all, query)
@@ -368,20 +371,20 @@ private fun SettingsSearch(all: List<SettingsItem>, scale: Float) {
         BasicText("Pick letters with the controller, or select the field to type", style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 22.tpx), modifier = Modifier.padding(top = 14.px, bottom = 32.px))
         Row(horizontalArrangement = Arrangement.spacedBy(70.px), modifier = Modifier.weight(1f)) {
             Column(Modifier.width(820.px), verticalArrangement = Arrangement.spacedBy(18.px)) {
-                TextFieldPill(query, { query = it }, Symbols.SEARCH, placeholder = "Search all settings", maxLength = 80, width = 790f)
+                TextFieldPill(field, Symbols.SEARCH, placeholder = "Search all settings", maxLength = 80, width = 790f)
                 Column(Modifier.padding(top = 16.px), verticalArrangement = Arrangement.spacedBy(12.px)) {
                     "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".chunked(9).forEachIndexed { row, letters ->
                         Row(horizontalArrangement = Arrangement.spacedBy(12.px)) {
                             letters.forEachIndexed { col, letter ->
-                                LetterKey(letter.toString(), if (row == 0 && col == 0) Modifier.focusRequester(first) else Modifier) { query = (query + letter.lowercaseChar()).take(80) }
+                                LetterKey(letter.toString(), if (row == 0 && col == 0) Modifier.focusRequester(first) else Modifier) { field.setTextAndPlaceCursorAtEnd((query + letter.lowercaseChar()).take(80)) }
                             }
                         }
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(14.px)) {
-                    PillButton("Space", null, { query = (query + " ").take(80) })
-                    PillButton("Delete", Symbols.ARROW_BACK, { query = query.dropLast(1) })
-                    PillButton("Clear", Symbols.CLOSE, { query = "" })
+                    PillButton("Space", null, { field.setTextAndPlaceCursorAtEnd((query + " ").take(80)) })
+                    PillButton("Delete", Symbols.ARROW_BACK, { field.setTextAndPlaceCursorAtEnd(query.dropLast(1)) })
+                    PillButton("Clear", Symbols.CLOSE, { field.clearText() })
                 }
             }
             Column(Modifier.weight(1f)) {
