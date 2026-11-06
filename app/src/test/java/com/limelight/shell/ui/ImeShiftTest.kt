@@ -54,4 +54,66 @@ class ImeShiftTest {
         // The field's own top edge keeps the margin: 40 - 24 = 16 at most
         assertEquals(16f, shift(40f, 700f), 0f)
     }
+
+    // The keyboard's height from every source: a 1080 px window and a 540 px keyboard unless said otherwise
+    private fun keyboard(window: Float = 1080f, inset: Float = 0f, compose: Float = 0f, visibleBottom: Float = window, visible: Boolean = false) =
+        ImeShift.keyboardHeight(window, inset, compose, visibleBottom, visible)
+
+    @Test
+    fun anySingleSourceIsEnoughAndTheLargestWins() {
+        assertEquals(540f, keyboard(inset = 540f), 0f)
+        assertEquals(540f, keyboard(compose = 540f), 0f)
+        // The visible frame alone: it ends where the keyboard begins
+        assertEquals(540f, keyboard(visibleBottom = 540f), 0f)
+        assertEquals(560f, keyboard(inset = 540f, compose = 500f, visibleBottom = 520f), 0f)
+    }
+
+    @Test
+    fun aVisibleFrameThatLostLessThanFifteenPercentIsNoKeyboard() {
+        // A navigation bar or a cutout: 5% of the window, and exactly 15%
+        assertEquals(0f, keyboard(visibleBottom = 1026f), 0f)
+        assertEquals(0f, keyboard(visibleBottom = 1080f - 162f), 0f)
+        assertEquals(165f, keyboard(visibleBottom = 1080f - 165f), 0f)
+    }
+
+    @Test
+    fun noSourceMeansNoKeyboardUnlessTheSystemSaysItIsVisible() {
+        assertEquals(0f, keyboard(), 0f)
+        // Visible with no height anywhere: half the window, so the field is not left under it
+        assertEquals(540f, keyboard(visible = true), 0f)
+        // A measured height beats the estimate
+        assertEquals(300f, keyboard(inset = 300f, visible = true), 0f)
+    }
+
+    @Test
+    fun aWindowThatAdjustResizeShrankToTheKeyboardIsNeverShiftedAgain() {
+        // 540 px window above a keyboard: every source measures against it, nothing overlaps
+        assertEquals(0f, keyboard(window = 540f, visibleBottom = 540f), 0f)
+        assertEquals(0f, ImeShift.shift(300f, 384f, 100f, 500f, 540f, keyboard(window = 540f), 24f), 0f)
+        // A partial resize (to 700 px) leaves 100 px of the keyboard on the window: only that part is shifted
+        val overlap = keyboard(window = 700f, inset = 100f, visibleBottom = 600f)
+        assertEquals(100f, overlap, 0f)
+        // field at 520..604, free area 600: 604 + 24 - 600
+        assertEquals(28f, ImeShift.shift(520f, 604f, 520f, 604f, 700f, overlap, 24f), 0f)
+    }
+
+    @Test
+    fun aKeyboardNeverCoversMoreThanTheWindow() {
+        assertEquals(1080f, keyboard(inset = 5000f), 0f)
+        assertEquals(0f, keyboard(window = 0f, inset = 100f), 0f)
+    }
+
+    @Test
+    fun theProfilePageSlidesUntilTheNameFieldAndItsButtonAreAboveTheKeyboard() {
+        // CreateProfileScreen on the 1920 x 1080 Odin: a column of about 860 px centered on the stage, the name field
+        // at 790..874 and "Create profile" at 914..998. The keyboard covers the lower half (540 px).
+        val kb = keyboard(visibleBottom = 540f)
+        val moved = ImeShift.shift(790f, 874f, 790f, 998f, 1080f, kb, 24f)
+        // 998 + 24 - 540 = 482: the button's bottom ends 24 px above the keyboard and the field is far above it
+        assertEquals(482f, moved, 0f)
+        assertEquals(516f, 998f - moved, 0f)
+        assertEquals(true, 874f - moved + 24f <= 540f)
+        // Without the region (the field alone) it would only be brought in, and the button stays behind the keyboard
+        assertEquals(358f, ImeShift.shift(790f, 874f, 790f, 874f, 1080f, kb, 24f), 0f)
+    }
 }
