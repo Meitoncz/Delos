@@ -118,15 +118,25 @@ The main repo had stayed silent for 5 months, with nobody actually responding to
 
 **Update**: They have contacted me and apologized for this incident, but the fact it **happened** still motivated me to start my own fork.
 
-## Downloads
+## Upstream Artemis downloads (not Delos)
+
+These links target ClassicOldSong's upstream Artemis, not a Delos release. The
+Obtainium link intentionally retains upstream's `nonRoot` APK filter.
+
 * [Download APK directly](https://github.com/ClassicOldSong/moonlight-android/releases)
 * [Use Obtainium](https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22com.limelight.noir%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2FClassicOldSong%2Fmoonlight-android%22%2C%22author%22%3A%22ClassicOldSong%22%2C%22name%22%3A%22Artemis%22%2C%22additionalSettings%22%3A%22%7B%5C%22apkFilterRegEx%5C%22%3A%5C%22nonRoot%5C%22%2C%5C%22matchGroutToUse%5C%22%3A%5C%22%241%5C%22%2C%5C%22versionExtractionRegEx%5C%22%3A%5C%22v(.%2B)%5C%22%7D%22%7D) (recommended)
 
 ## Building
-* Install Android Studio and the Android NDK
-* Run â€git submodule update --init --recursiveâ€™ from within moonlight-android/
-* In moonlight-android/, create a file called â€local.propertiesâ€™. Add an â€ndk.dir=â€™ property to the local.properties file and set it equal to your NDK directory.
-* Build the APK using Android Studio or gradle
+For the current Delos checkout, follow [Mac setup](docs/MAC_SETUP.md) or
+[Windows setup](docs/WINDOWS_SETUP.md) for the toolchain, submodules and local
+environment, then run:
+
+```sh
+./gradlew :app:assembleDebug :app:testDebugUnitTest :app:lintDebug
+```
+
+There are no product flavors; the ARM64 debug APK is
+`app/build/outputs/apk/debug/app-arm64-v8a-debug.apk`.
 
 ## Authors
 

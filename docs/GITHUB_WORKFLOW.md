@@ -59,3 +59,7 @@ REST/GraphQL readback verifies issue content/labels, Project membership/fields, 
 ## No implied CI or release
 
 GitHub Actions run only on explicit user request. No Actions, schedules, releases, milestones, versions or signing changes are authorized merely by task tracking. The build workflow (`.github/workflows/build.yml`) has only a `workflow_dispatch` trigger, so neither pushes, pull requests nor issue creation start it; repository pushes still carry `[skip ci]` in case a trigger is added later.
+
+An explicitly requested manual build runs `:app:assembleDebug` and `:app:testDebugUnitTest`
+and uploads debug APK artifacts from `app/build/outputs/apk/debug/`
+(for example, `app-arm64-v8a-debug.apk`). It does not publish releases.

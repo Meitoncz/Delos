@@ -31,6 +31,10 @@ The accessibility keyboard service uses the same routes: the controller activity
 
 ## Verification
 
+The following is historical evidence from 2026-10-27, before flavor removal.
+Current equivalents are `:app:assembleDebug`, `:app:testDebugUnitTest` and
+`:app:lintDebug`; the recorded results do not claim a run of those renamed tasks.
+
 - `assembleNonRoot_gameDebug`
 - `testNonRoot_gameDebugUnitTest` (68 tests)
 - `lintNonRoot_gameDebug` (0 errors)

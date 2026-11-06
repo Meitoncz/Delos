@@ -62,10 +62,13 @@ DELOS_METADATA_URL=https://delos-meta.<account>.workers.dev
 
 ```powershell
 $env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-21..."   # use the installed directory
-.\gradlew.bat :app:testNonRoot_gameDebugUnitTest :app:assembleNonRoot_gameDebug :app:lintNonRoot_gameDebug
+.\gradlew.bat :app:testDebugUnitTest :app:assembleDebug :app:lintDebug
 ```
 
-The flavor is `nonRoot_game`; debug APKs end up in `app\build\outputs\apk\nonRoot_game\debug\`.
+There are no product flavors; debug APKs end up in `app\build\outputs\apk\debug\`,
+including `app-arm64-v8a-debug.apk` and `app-armeabi-v7a-debug.apk`.
+For release builds, use `:app:assembleRelease`; APKs are written under
+`app\build\outputs\apk\release\`, with the standard `-unsigned` suffix when unsigned.
 The release application ID is `io.github.meitoncz.delos`; debug adds `.debug`
 (`io.github.meitoncz.delos.debug`). The source namespace remains `com.limelight`.
 
@@ -76,7 +79,7 @@ Over Wi-Fi (Android 11+, **Wireless debugging** enabled in Developer options; pa
 ```powershell
 adb mdns services                  # finds the device (_adb-tls-connect), the port changes after reboot
 adb connect <ip>:<port>
-adb -s <ip>:<port> install -r app\build\outputs\apk\nonRoot_game\debug\app-nonRoot_game-arm64-v8a-debug.apk
+adb -s <ip>:<port> install -r app\build\outputs\apk\debug\app-arm64-v8a-debug.apk
 ```
 
 Over USB (USB debugging enabled): `adb install -r <apk>`.

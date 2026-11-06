@@ -86,12 +86,14 @@ recreate or relocate the existing main checkout to follow the clone example.
 From the checkout root, with the environment above:
 
 ```sh
-./gradlew :app:testNonRoot_gameDebugUnitTest :app:assembleNonRoot_gameDebug :app:lintNonRoot_gameDebug
+./gradlew :app:testDebugUnitTest :app:assembleDebug :app:lintDebug
 ```
 
-The flavor is **`nonRoot_game`**. Debug APKs are written under
-`app/build/outputs/apk/nonRoot_game/debug/`, including
-`app-nonRoot_game-arm64-v8a-debug.apk` and the `armeabi-v7a` counterpart.
+There are no product flavors. Debug APKs are written under
+`app/build/outputs/apk/debug/`, including
+`app-arm64-v8a-debug.apk` and `app-armeabi-v7a-debug.apk`.
+For release builds, use `:app:assembleRelease`; APKs are written under
+`app/build/outputs/apk/release/`, with the standard `-unsigned` suffix when unsigned.
 The release application ID is **`io.github.meitoncz.delos`**; debug adds `.debug`,
 so its ID is **`io.github.meitoncz.delos.debug`**. The source namespace remains
 `com.limelight` to keep upstream merges small.
@@ -117,7 +119,7 @@ Before installing, inspect the foreground activity and ensure no stream is activ
 Never reinstall while the user is streaming. When safe, install the ARM64 debug APK:
 
 ```sh
-adb -s <odin-ip>:<connection-port> install -r app/build/outputs/apk/nonRoot_game/debug/app-nonRoot_game-arm64-v8a-debug.apk
+adb -s <odin-ip>:<connection-port> install -r app/build/outputs/apk/debug/app-arm64-v8a-debug.apk
 ```
 
 Real game launches and streaming acceptance belong to the user; do not launch PC

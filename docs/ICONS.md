@@ -90,7 +90,7 @@ build/unit/lint run, `browser-result.html` records the prototype check, and `odi
 the real-device shell. These checks belong to the implementation; documentation-only updates do
 not require reinstalling the APK or launching a game.
 
-- Build, unit tests and lint for `nonRoot_gameDebug`.
+- For current builds, run `:app:assembleDebug`, `:app:testDebugUnitTest` and `:app:lintDebug`.
 - Validate all semantic mappings against both fonts, including their code points and metrics.
 - Check prototype rendering and focus variants with the same local font subsets.
 - Physical Odin: check icons in the shell, settings, context/side menus and stream menu; verify

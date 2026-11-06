@@ -90,7 +90,7 @@ device choices, copying/isolation/persistence of users, layout copying/reset and
 current Mac workstation (JDK 21; see [MAC_SETUP.md](MAC_SETUP.md)):
 
 ```sh
-./gradlew :app:testNonRoot_gameDebugUnitTest :app:assembleNonRoot_gameDebug :app:lintNonRoot_gameDebug
+./gradlew :app:testDebugUnitTest :app:assembleDebug :app:lintDebug
 ```
 
 For Windows environment setup and the equivalent `gradlew.bat` command, see

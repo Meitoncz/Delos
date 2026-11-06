@@ -91,6 +91,11 @@ The old 116-setting count in the Phase 6.7 document was a historical count, not 
 
 ## Validation
 
+The command and results below are historical evidence from 2026-10-28.
+After flavor removal, the equivalent command is
+`gradlew.bat :app:assembleDebug :app:testDebugUnitTest :app:lintDebug --offline --console=plain`;
+this audit does not record a run of those renamed tasks.
+
 - Final command: `gradlew.bat assembleNonRoot_gameDebug testNonRoot_gameDebugUnitTest lintNonRoot_gameDebug --offline --console=plain`.
 - **79 unit tests passed**, zero failures or errors. The final autoscroll build succeeded.
 - **Lint: zero errors, 387 warnings**, matching the pre-audit warning count. The existing lint

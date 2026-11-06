@@ -6,6 +6,10 @@ This is a dated audit record, not the current bug list or execution plan. Findin
 been resolved or superseded. Current work is in [GitHub Issues](https://github.com/Meitoncz/Delos/issues);
 the later poster-provider boundary finding is [#1](https://github.com/Meitoncz/Delos/issues/1).
 
+Historical task names below describe the checks exercised at the time. Following the
+flavor removal, the current lint equivalent is `:app:lintDebug`; this audit does not
+record a run of that renamed task.
+
 ## Scope and method
 
 The Artemis vs. Moonlight analysis ([ANALYSIS.md](ANALYSIS.md)) only covered code both projects share. This audit looks at what Artemis added on its own. After the Phase 3 merge, the Artemis delta is exactly `git diff moonlight/master main`:
