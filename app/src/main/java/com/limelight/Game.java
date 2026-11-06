@@ -946,6 +946,11 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         return isOnExternalDisplay() ? ExternalDisplayControlActivity.isFullKeyboardShown() : isKeyboardLayoutVisible();
     }
 
+    /** Whether the on-screen gamepad is really up (not the stored preference). */
+    public boolean isVirtualControllerShown() {
+        return virtualController != null && virtualController.shown;
+    }
+
     // Show/hide the virtual gamepad controller
     public void toggleVirtualController(){
         if (virtualController==null) {

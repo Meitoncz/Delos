@@ -365,7 +365,7 @@ class StreamMenu(private val game: Game) {
         override fun sendTaskManager() { game.sendKeys(shortArrayOf(KeyboardTranslator.VK_LCONTROL.toShort(), KeyboardTranslator.VK_LSHIFT.toShort(), KeyboardTranslator.VK_ESCAPE.toShort())) }
         override val zoomOn get() = game.isZoomModeEnabled
         override fun toggleZoom() { game.toggleZoomMode() }
-        override val onscreenControlsOn get() = prefs.onscreenController
+        override val onscreenControlsOn get() = game.isVirtualControllerShown
         override fun toggleOnscreenControls() { game.toggleVirtualController() }
         override val fullKeyboardOn get() = game.isFullKeyboardShown
         override fun toggleFullKeyboard() { game.toggleFullKeyboard() }
