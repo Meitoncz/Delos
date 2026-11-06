@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,10 +17,8 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
@@ -398,6 +395,7 @@ private fun DescriptionPanel(tab: SettingsTab, focused: SettingsItem?, modifier:
 }
 
 /** Controller letter picker and typed search share one query and jump to the exact settings row. */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SettingsSearch(all: List<SettingsItem>, scale: Float) {
     val shell = LocalShell.current
@@ -432,13 +430,31 @@ private fun SettingsSearch(all: List<SettingsItem>, scale: Float) {
                 BasicText("${results.size} ${if (results.size == 1) "setting" else "settings"}", style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 22.tpx), modifier = Modifier.padding(bottom = 16.px))
                 if (results.isEmpty()) BasicText("No matching settings", style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 26.tpx))
                 key(query) {
-                    LazyColumn(verticalArrangement = Arrangement.spacedBy(10.px), contentPadding = PaddingValues(12.px)) {
-                        itemsIndexed(results, key = { _, item -> item.key }) { _, item ->
-                            SettingRow(item.icon, item.label, RowValue.Action {
-                                shell.settingsTab = item.tab
-                                shell.settingsFocus = item.key
-                                shell.navigate(Screen.Settings)
-                            }, description = "${item.tab.label} · ${item.section}")
+                    // At most 110 entries (77 visible catalog rows + 33 native rows): keep
+                    // every neighbour composed while the animated scroll catches up.
+                    val navigation = rememberFocusedListNavigation(results.map { it.key }, allowUpExit = false)
+                    val scroll = remember { ScrollState(0) }
+                    val stage = LocalStage.current
+                    val k = stage.dpPerPx * LocalDensity.current.density
+                    val bringIntoView = rememberMarginBringIntoView(scroll, before = 72f * k, after = 110f * k, stagePx = k)
+                    CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
+                        com.limelight.shell.ui.SettingRowList(Modifier.fillMaxSize().fadeEdges(stage, top = 14f, bottom = 40f)) {
+                            Column(
+                                Modifier.fillMaxSize().focusedListBoundary(navigation).verticalScroll(scroll)
+                                    .padding(start = 18.px, end = 18.px, top = 14.px, bottom = 48.px),
+                                verticalArrangement = Arrangement.spacedBy(10.px),
+                            ) {
+                                results.forEach { item ->
+                                    key(item.key) {
+                                        SettingRow(item.icon, item.label, RowValue.Action {
+                                            shell.settingsTab = item.tab
+                                            shell.settingsFocus = item.key
+                                            shell.navigate(Screen.Settings)
+                                        }, Modifier.focusedListRow(navigation, item.key),
+                                            description = "${item.tab.label} · ${item.section}")
+                                    }
+                                }
+                            }
                         }
                     }
                 }

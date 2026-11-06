@@ -100,6 +100,9 @@ import com.limelight.shell.ui.RowValue
 import com.limelight.shell.ui.Scrim
 import com.limelight.shell.ui.screenTransition
 import com.limelight.shell.ui.SettingRow
+import com.limelight.shell.ui.FocusedListNavigation
+import com.limelight.shell.ui.focusedListRow
+import com.limelight.shell.ui.rememberFocusedListNavigation
 import com.limelight.shell.ui.SideMenuHeader
 import com.limelight.shell.ui.SideMenuLayer
 import com.limelight.shell.ui.SideMenuScroll
@@ -652,15 +655,22 @@ fun Shell(
                         )
                     },
                 ) { first ->
-                    SideMenuScroll {
-                    SideMenuRows(appearance, update, Modifier.focusRequester(first)) { shell.navigate(Screen.Settings) }
                     val hiddenCount = (library as? Library.Ready)?.hiddenCount ?: 0
-                    if (hiddenCount > 0 || showHidden) {
-                        SettingRow(
-                            Symbols.VISIBILITY, "Show hidden games", RowValue.Toggle(showHidden) { repo.setShowHidden(it) },
-                            description = "$hiddenCount hidden on ${pc?.name ?: "this PC"}", compact = true,
-                        )
+                    val hiddenRow = hiddenCount > 0 || showHidden
+                    val rowKeys = remember(hiddenRow) {
+                        listOf("theme", "material-you", "background", "home-layout", "sounds", "haptics", "settings") +
+                            if (hiddenRow) listOf("show-hidden") else emptyList()
                     }
+                    val navigation = rememberFocusedListNavigation(rowKeys, allowUpExit = false)
+                    SideMenuScroll(navigation) {
+                        SideMenuRows(appearance, update, navigation, Modifier.focusRequester(first)) { shell.navigate(Screen.Settings) }
+                        if (hiddenRow) {
+                            SettingRow(
+                                Symbols.VISIBILITY, "Show hidden games", RowValue.Toggle(showHidden) { repo.setShowHidden(it) },
+                                Modifier.focusedListRow(navigation, "show-hidden"),
+                                description = "$hiddenCount hidden on ${pc?.name ?: "this PC"}", compact = true,
+                            )
+                        }
                     }
                 }
 
@@ -727,14 +737,20 @@ fun Shell(
 
 /** Quick settings of the side menu. */
 @Composable
-private fun SideMenuRows(appearance: Appearance, update: ((Appearance) -> Appearance) -> Unit, firstModifier: Modifier, openSettings: () -> Unit) {
-    SettingRow(Symbols.DARK_MODE, "Theme", RowValue.Choice(if (appearance.dark) "Dark" else "Light", { update { it.copy(dark = !it.dark) } }), firstModifier, compact = true)
-    SettingRow(Symbols.SYSTEM_COLORS, "Material You", RowValue.Toggle(appearance.materialYou) { on -> update { it.copy(materialYou = on) } }, compact = true)
-    SettingRow(Symbols.ANIMATION, "Background", RowValue.Choice(appearance.background.label, { dir -> update { it.copy(background = it.background.step(dir)) } }), compact = true)
-    SettingRow(Symbols.VIEW_CAROUSEL, "Home layout", RowValue.Choice(appearance.homeLayout.label, { dir -> update { it.copy(homeLayout = it.homeLayout.step(dir)) } }), compact = true)
-    SettingRow(Symbols.MUSIC_NOTE, "Interface sounds", RowValue.Toggle(appearance.sounds) { on -> update { it.copy(sounds = on) } }, compact = true)
-    SettingRow(Symbols.VIBRATION, "Haptics", RowValue.Toggle(appearance.haptics) { on -> update { it.copy(haptics = on) } }, compact = true)
-    SettingRow(Symbols.SETTINGS, "All settings", RowValue.Action(openSettings), compact = true)
+private fun SideMenuRows(
+    appearance: Appearance,
+    update: ((Appearance) -> Appearance) -> Unit,
+    navigation: FocusedListNavigation<String>,
+    firstModifier: Modifier,
+    openSettings: () -> Unit,
+) {
+    SettingRow(Symbols.DARK_MODE, "Theme", RowValue.Choice(if (appearance.dark) "Dark" else "Light", { update { it.copy(dark = !it.dark) } }), firstModifier.focusedListRow(navigation, "theme"), compact = true)
+    SettingRow(Symbols.SYSTEM_COLORS, "Material You", RowValue.Toggle(appearance.materialYou) { on -> update { it.copy(materialYou = on) } }, Modifier.focusedListRow(navigation, "material-you"), compact = true)
+    SettingRow(Symbols.ANIMATION, "Background", RowValue.Choice(appearance.background.label, { dir -> update { it.copy(background = it.background.step(dir)) } }), Modifier.focusedListRow(navigation, "background"), compact = true)
+    SettingRow(Symbols.VIEW_CAROUSEL, "Home layout", RowValue.Choice(appearance.homeLayout.label, { dir -> update { it.copy(homeLayout = it.homeLayout.step(dir)) } }), Modifier.focusedListRow(navigation, "home-layout"), compact = true)
+    SettingRow(Symbols.MUSIC_NOTE, "Interface sounds", RowValue.Toggle(appearance.sounds) { on -> update { it.copy(sounds = on) } }, Modifier.focusedListRow(navigation, "sounds"), compact = true)
+    SettingRow(Symbols.VIBRATION, "Haptics", RowValue.Toggle(appearance.haptics) { on -> update { it.copy(haptics = on) } }, Modifier.focusedListRow(navigation, "haptics"), compact = true)
+    SettingRow(Symbols.SETTINGS, "All settings", RowValue.Action(openSettings), Modifier.focusedListRow(navigation, "settings"), compact = true)
 }
 
 /** The game actions of the shell: start with the launch animation, quit with toasts, no dialogs. */

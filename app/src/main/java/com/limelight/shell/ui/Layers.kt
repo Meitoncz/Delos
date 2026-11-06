@@ -2,7 +2,6 @@ package com.limelight.shell.ui
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -24,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -43,7 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.foundation.focusGroup
 import androidx.compose.ui.focus.focusProperties
@@ -123,6 +123,7 @@ internal fun Modifier.focusTrap(active: Boolean): Modifier {
  * slightly inside its top-left corner, kept on screen. With [below] it opens centered under the
  * element instead (a menu that belongs to a button, like the start screen's profile).
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ContextMenuLayer(menu: ContextMenu?, anchor: Rect?, below: Boolean, haze: HazeState, onDismiss: () -> Unit) {
     val colors = LocalDelosColors.current
@@ -165,7 +166,11 @@ fun ContextMenuLayer(menu: ContextMenu?, anchor: Rect?, below: Boolean, haze: Ha
             exit = popExit(origin, reduced),
         ) {
             val m = shown ?: return@AnimatedVisibility
-            val first = remember { FocusRequester() }
+            val keys = remember(m.items.size) { m.items.indices.toList() }
+            val navigation = rememberFocusedListNavigation(keys, allowUpExit = false)
+            val first = keys.firstOrNull()?.let(navigation::requester) ?: remember { FocusRequester() }
+            val scroll = remember(m) { androidx.compose.foundation.ScrollState(0) }
+            val bringIntoView = rememberMarginBringIntoView(scroll, before = 12f * k, after = 12f * k, stagePx = k)
             InitialFocus(first, m)
             Column(
                 Modifier
@@ -184,6 +189,7 @@ fun ContextMenuLayer(menu: ContextMenu?, anchor: Rect?, below: Boolean, haze: Ha
                     // As wide as the longest item (the items fill that width), at least 380
                     .width(IntrinsicSize.Max)
                     .widthIn(min = 380.px)
+                    .heightIn(max = (1080f - y - 40f).px)
                     .clip(RoundedCornerShape(30.px))
                     .backdropBlur(haze, 24f, colors.surface3)
                     .border(1.px, colors.line, RoundedCornerShape(30.px))
@@ -194,10 +200,27 @@ fun ContextMenuLayer(menu: ContextMenu?, anchor: Rect?, below: Boolean, haze: Ha
                     style = TextStyle(color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 18.tpx, letterSpacing = .12.em),
                     modifier = Modifier.staggerEntrance(0, Motion.MENU_DELAY).padding(start = 24.px, end = 24.px, top = 14.px, bottom = 10.px),
                 )
-                m.items.forEachIndexed { i, item ->
-                    MenuItemView(item.icon, item.label, i + 1, if (i == 0) Modifier.focusRequester(first) else Modifier) {
-                        onDismiss()
-                        item.action()
+                RowGlideHost(
+                    ring = null,
+                    corner = 20f,
+                    focusScale = 1f,
+                    modifier = Modifier.weight(1f, fill = false).clipToBounds(),
+                    fill = colors.accent,
+                    glow = null,
+                ) {
+                    CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
+                        Column(
+                            Modifier.fillMaxWidth()
+                                .focusedListBoundary(navigation)
+                                .verticalScroll(scroll),
+                        ) {
+                            m.items.forEachIndexed { i, item ->
+                                MenuItemView(item.icon, item.label, i + 1, Modifier.focusedListRow(navigation, i)) {
+                                    onDismiss()
+                                    item.action()
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -209,17 +232,15 @@ fun ContextMenuLayer(menu: ContextMenu?, anchor: Rect?, below: Boolean, haze: Ha
 private fun MenuItemView(icon: String, label: String, index: Int, modifier: Modifier, onClick: () -> Unit) {
     val colors = LocalDelosColors.current
     var focused by remember { mutableStateOf(false) }
-    val fill by animateFloatAsState(if (focused) 1f else 0f, tween(Motion.FADE, easing = Motion.Ease), label = "menuItemFill")
     val iconTint by animateColorAsState(if (focused) colors.onAccent else colors.text3, tween(Motion.FADE, easing = Motion.Ease), label = "menuItemIcon")
     val labelTint by animateColorAsState(if (focused) colors.onAccent else colors.text, tween(Motion.FADE, easing = Motion.Ease), label = "menuItemLabel")
     Row(
         modifier
             .staggerEntrance(minOf(index, Motion.STAGGER_CAP), Motion.MENU_DELAY)
-            .focusEffects(onClick = onClick, corner = 20f, focusScale = 1f, ring = null, glow = null, onFocusChange = { focused = it })
+            .focusEffects(onClick = onClick, corner = 20f, focusScale = 1f, ring = null, glow = null, glide = true, onFocusChange = { focused = it })
             .fillMaxWidth()
             .height(72.px)
             .clip(RoundedCornerShape(20.px))
-            .drawBehind { drawRect(colors.accent.fade(fill)) }
             .padding(horizontal = 24.px),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(18.px),
@@ -285,21 +306,23 @@ fun SideMenuLayer(
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ColumnScope.SideMenuScroll(content: @Composable ColumnScope.() -> Unit) {
+fun <K : Any> ColumnScope.SideMenuScroll(navigation: FocusedListNavigation<K>, content: @Composable ColumnScope.() -> Unit) {
     val stage = LocalStage.current
     val k = stage.dpPerPx * LocalDensity.current.density
     val sideScroll = rememberScrollState()
     val bringIntoView = rememberMarginBringIntoView(sideScroll, before = 40f * k, after = 56f * k, stagePx = k)
     CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
-        Column(
-            Modifier
-                .weight(1f)
-                .fadeEdges(stage, top = 16f, bottom = 40f)
-                .verticalScroll(sideScroll)
-                .padding(horizontal = 14.px, vertical = 18.px),
-            verticalArrangement = Arrangement.spacedBy(10.px),
-            content = content,
-        )
+        SettingRowList(Modifier.weight(1f).fadeEdges(stage, top = 16f, bottom = 40f)) {
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .focusedListBoundary(navigation)
+                    .verticalScroll(sideScroll)
+                    .padding(horizontal = 14.px, vertical = 18.px),
+                verticalArrangement = Arrangement.spacedBy(10.px),
+                content = content,
+            )
+        }
     }
 }
 

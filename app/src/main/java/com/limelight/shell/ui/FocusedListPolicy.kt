@@ -1,13 +1,13 @@
 package com.limelight.shell.ui
 
-/** A vertical move is based on the actual focus order, never the scrolling viewport. */
+/** A list-axis move is based on the actual focus order, never the scrolling viewport. */
 internal enum class FocusedListMove { PREVIOUS, NEXT, STOP, EXIT_UP }
 
-internal fun focusedListMove(index: Int, count: Int, direction: Int, repeatCount: Int): FocusedListMove = when {
+internal fun focusedListMove(index: Int, count: Int, direction: Int, repeatCount: Int, allowUpExit: Boolean = true): FocusedListMove = when {
     index !in 0 until count -> FocusedListMove.STOP
     direction < 0 && index > 0 -> FocusedListMove.PREVIOUS
     direction > 0 && index < count - 1 -> FocusedListMove.NEXT
-    direction < 0 && index == 0 && repeatCount == 0 -> FocusedListMove.EXIT_UP
+    allowUpExit && direction < 0 && index == 0 && repeatCount == 0 -> FocusedListMove.EXIT_UP
     else -> FocusedListMove.STOP
 }
 

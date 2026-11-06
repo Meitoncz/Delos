@@ -38,12 +38,15 @@ import com.limelight.shell.ui.CenterColumn
 import com.limelight.shell.ui.CircleItem
 import androidx.compose.ui.focus.focusProperties
 import com.limelight.shell.ui.Figtree
+import com.limelight.shell.ui.FocusGlow
+import com.limelight.shell.ui.FocusRing
 import com.limelight.shell.ui.Heading
 import com.limelight.shell.ui.InitialFocus
 import com.limelight.shell.ui.LocalDelosColors
 import com.limelight.shell.ui.LocalFeedback
 import com.limelight.shell.ui.LocalStage
 import com.limelight.shell.ui.PillButton
+import com.limelight.shell.ui.RowGlideHost
 import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.ValuePill
 import com.limelight.shell.ui.Unbounded
@@ -127,6 +130,10 @@ fun CreateProfileScreen(editing: Boolean, initial: Profile?, onDone: (name: Stri
         )
         // All avatars in rows of AVATAR_COLUMNS. Up and down move spatially; left at the start of a row and
         // right at its end continue in the previous and the next row (and wrap from the first to the last).
+        RowGlideHost(
+            ring = FocusRing(5f, 5f), corner = 999f, focusScale = 1.16f,
+            fill = null, glow = FocusGlow(26f, 70f, -16f),
+        ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(26.px)) {
             AVATARS.withIndex().chunked(AVATAR_COLUMNS).forEach { row ->
                 Row(horizontalArrangement = Arrangement.spacedBy(32.px), verticalAlignment = Alignment.Top) {
@@ -150,6 +157,7 @@ fun CreateProfileScreen(editing: Boolean, initial: Profile?, onDone: (name: Stri
                     }
                 }
             }
+        }
         }
         // The name as it is (not an input) and the button that opens the dialog; D-pad: avatars, Change name, Create / Save
         Row(horizontalArrangement = Arrangement.spacedBy(24.px), verticalAlignment = Alignment.CenterVertically) {

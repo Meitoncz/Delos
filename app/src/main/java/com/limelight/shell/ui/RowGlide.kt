@@ -24,6 +24,8 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.ClipOp
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asAndroidPath
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.inset
 import androidx.compose.ui.graphics.drawscope.clipPath
@@ -40,8 +42,8 @@ import kotlinx.coroutines.launch
 import kotlin.math.min
 
 /**
- * The one focus plate of a scrolling list of rows (settings, per-game settings, debug info): its tint, ring and glow
- * glide together instead of every row fading its own layers in and out. Like [GlideRing] it is told about the focused
+ * The one focus plate of a list: its optional tint, ring and shadow glide together instead of each
+ * item fading its own layers. Like [GlideRing] it is told about the focused
  * row by [rowGlideTarget] and drawn behind the host's content by [RowGlideHost]; unlike it the plate is *not* animated
  * in window space. A list that scrolls while the plate glides would leave a window-space animation behind (and restart
  * it with every scrolled frame), so the plate is drawn at the focused row's bounds in this very frame plus a carry that
@@ -76,13 +78,12 @@ class RowGlide internal constructor(private val scope: CoroutineScope) {
     private var glideJob: Job? = null
     private var fadeJob: Job? = null
 
-    private val glow = FocusGlow(offsetY = 20f, blur = 50f, spread = -24f)
-    private val glowClip = Path()
-    private val glowPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-        color = android.graphics.Color.BLACK
-    }
+    private var glowClip: Path? = null
+    private var glowPaint: android.graphics.Paint? = null
     private var shadowBlur = Float.NaN
     private var shadowOffset = Float.NaN
+    private var ringStroke: Stroke? = null
+    private var gapStroke: Stroke? = null
     private var shadowColor = 0
 
     internal fun attach(coordinates: LayoutCoordinates) {
@@ -176,7 +177,11 @@ class RowGlide internal constructor(private val scope: CoroutineScope) {
     }
 
     /** Draws the sole tint, glow and ring at the same moving bounds, [focusScale] times the focused row's size. */
-    internal fun draw(drawScope: DrawScope, ring: FocusRing, corner: Float, focusScale: Float, colors: DelosColors, stage: StageMetrics) {
+    internal fun draw(
+        drawScope: DrawScope, ring: FocusRing?, corner: Float, focusScale: Float,
+        colors: DelosColors, stage: StageMetrics, fill: Color?, glow: FocusGlow?,
+        decoration: (DrawScope.(Float) -> Unit)?,
+    ) {
         // Reading the tick is what redraws the ring when the row's bounds or the carry change
         if (tick == Int.MIN_VALUE) return
         val a = alpha.value
@@ -193,38 +198,51 @@ class RowGlide internal constructor(private val scope: CoroutineScope) {
                 size.width - RowGlideMotion.grownFar(l, r, focusScale), size.height - RowGlideMotion.grownFar(t, b, focusScale),
             ) {
                 val radius = min(stagePx(corner, stage), this.size.minDimension / 2f)
-                drawGlow(radius, a, colors, stage, focusScale)
-                // Haze is a layout modifier; a plain tint keeps this shared plate entirely in the draw phase.
-                // Use the exact previous palette tint (including its translucency), without any row-local blur layer.
-                drawRoundRect(colors.surface2.copy(alpha = colors.surface2.alpha * a), cornerRadius = CornerRadius(radius))
-                drawFocusRing(ring, radius, a, colors, stage)
+                if (glow != null) drawGlow(glow, radius, a, colors, stage, focusScale)
+                // Draw-only tint: no row-local blur layer can linger after focus moves.
+                if (fill != null) drawRoundRect(fill.copy(alpha = fill.alpha * a), cornerRadius = CornerRadius(radius))
+                decoration?.invoke(this, a)
+                if (ring != null) {
+                    val width = stagePx(ring.width, stage)
+                    val gap = stagePx(ring.gap, stage)
+                    val stroke = ringStroke?.takeIf { it.width == width } ?: Stroke(width).also { ringStroke = it }
+                    val gapStyle = if (gap > 0f) {
+                        gapStroke?.takeIf { it.width == gap } ?: Stroke(gap).also { gapStroke = it }
+                    } else null
+                    drawFocusRing(ring, radius, a, colors, stage, stroke, gapStyle)
+                }
             }
         }
     }
 
     /** The existing CSS-style shadow, clipped outside the plate so its translucent tint is not darkened. */
-    private fun DrawScope.drawGlow(radius: Float, alpha: Float, colors: DelosColors, stage: StageMetrics, focusScale: Float) {
+    private fun DrawScope.drawGlow(glow: FocusGlow, radius: Float, alpha: Float, colors: DelosColors, stage: StageMetrics, focusScale: Float) {
+        val paint = glowPaint ?: android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            color = android.graphics.Color.BLACK
+            glowPaint = this
+        }
+        val clip = glowClip ?: Path().also { glowClip = it }
         val k = stagePx(1f, stage) * focusScale
         val blur = shadowRadius(glow.blur * k)
         val offset = glow.offsetY * k
         val color = colors.glow.copy(alpha = colors.glow.alpha * alpha).toArgb()
         if (blur != shadowBlur || offset != shadowOffset || color != shadowColor) {
-            glowPaint.setShadowLayer(blur, 0f, offset, color)
+            paint.setShadowLayer(blur, 0f, offset, color)
             shadowBlur = blur
             shadowOffset = offset
             shadowColor = color
         }
         val spread = (glow.spread * k).coerceAtLeast(-size.minDimension / 2f)
         val innerRadius = (radius + spread).coerceAtLeast(0f)
-        glowClip.asAndroidPath().apply {
+        clip.asAndroidPath().apply {
             rewind()
             addRoundRect(0f, 0f, size.width, size.height, radius, radius, android.graphics.Path.Direction.CW)
         }
-        clipPath(glowClip, ClipOp.Difference) {
+        clipPath(clip, ClipOp.Difference) {
             drawIntoCanvas {
                 it.nativeCanvas.drawRoundRect(
                     -spread, -spread, size.width + spread, size.height + spread,
-                    innerRadius, innerRadius, glowPaint,
+                    innerRadius, innerRadius, paint,
                 )
             }
         }
@@ -235,19 +253,22 @@ class RowGlide internal constructor(private val scope: CoroutineScope) {
 val LocalRowGlide = staticCompositionLocalOf<RowGlide?> { null }
 
 /**
- * One focus plate for the rows of a (scrolling) list: palette surface tint, accent ring and glow glide together to the
- * focused row over [Motion.ROW_FOCUS] ms with the slight overshoot of [Motion.Glide]. Rows mark themselves with
- * [rowGlideTarget] and draw no glass, ring or glow of their own while [LocalRowGlide] is set. The shared fill is the
- * same translucent palette tint as the former frosted glass, without blur: no independently fading Haze layer can
- * linger on a previous row. The host encloses the list (give it the list's size, fade and clip modifiers); its plate
- * is drawn behind the content, [focusScale] times as big as the row. First focus and reduced motion do not glide.
+ * One locally styled focus plate for a list or choice grid. [fill], [ring] and [glow] may each be
+ * omitted; [decoration] draws context-specific accents inside the current moving bounds, receiving
+ * the plate's visibility alpha. Settings keep the accepted default tint and glow. Targets register
+ * through [rowGlideTarget] or `focusEffects(glide = true)` and draw no local focus plate.
+ * Give the host the viewport's size, fade and clip modifiers. [focusScale] grows its bounds around
+ * the target's center. First focus and reduced motion do not glide.
  */
 @Composable
 fun RowGlideHost(
-    ring: FocusRing,
+    ring: FocusRing?,
     corner: Float,
     focusScale: Float,
     modifier: Modifier = Modifier,
+    fill: Color? = LocalDelosColors.current.surface2,
+    glow: FocusGlow? = FocusGlow(offsetY = 20f, blur = 50f, spread = -24f),
+    decoration: (DrawScope.(alpha: Float) -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
     val colors = LocalDelosColors.current
@@ -260,7 +281,7 @@ fun RowGlideHost(
         Box(
             modifier
                 .onGloballyPositioned { state.attach(it) }
-                .drawBehind { state.draw(this, ring, corner, focusScale, colors, stage) },
+                .drawBehind { state.draw(this, ring, corner, focusScale, colors, stage, fill, glow, decoration) },
             content = { content() },
         )
     }

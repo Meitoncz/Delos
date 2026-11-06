@@ -102,15 +102,18 @@ fun Modifier.focusEffects(
     pressScale: Float = Motion.PRESS_SCALE,
     /** How long the focus spring of the scale takes ([Motion.FOCUS]). */
     focusMillis: Int = Motion.FOCUS,
+    /** Share the surrounding list's moving plate instead of drawing a separate ring and glow. */
+    glide: Boolean = false,
 ): Modifier = composed {
     val colors = LocalDelosColors.current
     val stage = LocalStage.current
     val feedback = LocalFeedback.current
     val tracker = LocalFocusTracker.current
+    val plate = if (glide) LocalRowGlide.current else null
     var focused by remember { mutableStateOf(false) }
     val pulse = rememberPressPulse()
-    val scale by animateFocusScale(focused, pulse.pressed, focusScale, pressScale, focusMillis = focusMillis)
-    // Local rings and glows fade quickly; hosted settings rows pass null for both and draw neither.
+    val scale by animateFocusScale(focused, pulse.pressed, focusScale, pressScale, focusMillis = if (plate != null) Motion.ROW_FOCUS else focusMillis)
+    // Hosted rows never draw an independent ring or glow.
     val ringAlpha by animateFloatAsState(
         if (focused) 1f else 0f, tween(if (focused) 140 else 110, easing = EaseOut), label = "focusRing",
     )
@@ -137,6 +140,7 @@ fun Modifier.focusEffects(
     // The animated values (scale, glow and ring alpha) are only read while drawing, never while composing:
     // a focus change would otherwise rebuild both affected elements on every frame of the animation
     this
+        .then(if (plate != null) Modifier.rowGlideTarget(focused) else Modifier)
         // The focused element is drawn above its neighbours, so its ring and scale are never covered
         .zIndex(if (focused) 1f else 0f)
         .graphicsLayer {
@@ -145,7 +149,7 @@ fun Modifier.focusEffects(
             transformOrigin = origin
         }
         .then(
-            if (glow == null) Modifier
+            if (plate != null || glow == null) Modifier
             // A round element draws its glow itself, centered on it: the blurred shadow of dropShadow is cut off at the element's square
             else if (corner >= 500f) Modifier.drawBehind {
                 val a = ringAlpha
@@ -177,7 +181,7 @@ fun Modifier.focusEffects(
             drawContent()
             val r = min(stagePx(corner, stage), size.minDimension / 2f)
             if (sweep && focused) drawSweep(sweepPos.value, r)
-            if (ring != null && ringAlpha > 0f) drawFocusRing(ring, r, ringAlpha, colors, stage)
+            if (plate == null && ring != null && ringAlpha > 0f) drawFocusRing(ring, r, ringAlpha, colors, stage)
         }
         .onGloballyPositioned {
             position[0] = it
@@ -230,22 +234,25 @@ private val ACTIVATE_KEYS = setOf(Key.ButtonA, Key.Enter, Key.NumPadEnter, Key.D
 private fun min(a: Float, b: Float) = if (a < b) a else b
 
 /** A rounded stroke [offset] outside the element's bounds (box-shadow 0 0 0 spread). */
-private fun DrawScope.drawRing(color: Color, radius: Float, offset: Float, width: Float) {
+private fun DrawScope.drawRing(color: Color, radius: Float, offset: Float, width: Float, stroke: Stroke? = null) {
     drawRoundRect(
         color = color,
         topLeft = Offset(-offset, -offset),
         size = Size(size.width + offset * 2f, size.height + offset * 2f),
         cornerRadius = CornerRadius(radius + offset),
-        style = Stroke(width),
+        style = stroke ?: Stroke(width),
     )
 }
 
 /** The focus ring (`box-shadow: 0 0 0 gap bg, 0 0 0 gap+width accent`) around an element with corner [radius]. */
-fun DrawScope.drawFocusRing(ring: FocusRing, radius: Float, alpha: Float, colors: DelosColors, stage: StageMetrics) {
+fun DrawScope.drawFocusRing(
+    ring: FocusRing, radius: Float, alpha: Float, colors: DelosColors, stage: StageMetrics,
+    stroke: Stroke? = null, gapStroke: Stroke? = null,
+) {
     val width = stagePx(ring.width, stage)
     val gap = stagePx(ring.gap, stage)
-    drawRing(colors.accent.copy(alpha = alpha), radius, gap + width / 2f, width)
-    if (gap > 0f) drawRing(colors.bg.copy(alpha = alpha), radius, gap / 2f, gap)
+    drawRing(colors.accent.copy(alpha = alpha), radius, gap + width / 2f, width, stroke)
+    if (gap > 0f) drawRing(colors.bg.copy(alpha = alpha), radius, gap / 2f, gap, gapStroke)
 }
 
 /**

@@ -26,6 +26,16 @@ class FocusedListPolicyTest {
     }
 
     @Test
+    fun closedMenusKeepEvenFreshInputAtBothEndpoints() {
+        for (repeat in listOf(0, 1, 40)) {
+            assertEquals(FocusedListMove.STOP, focusedListMove(0, 3, -1, repeat, allowUpExit = false))
+            assertEquals(FocusedListMove.STOP, focusedListMove(2, 3, 1, repeat, allowUpExit = false))
+            assertEquals(FocusedListMove.NEXT, focusedListMove(0, 3, 1, repeat, allowUpExit = false))
+            assertEquals(FocusedListMove.PREVIOUS, focusedListMove(2, 3, -1, repeat, allowUpExit = false))
+        }
+    }
+
+    @Test
     fun downStopsAtTheLastRowForBothInitialAndRepeatedInput() {
         assertEquals(FocusedListMove.NEXT, focusedListMove(38, 40, 1, 0))
         assertEquals(FocusedListMove.NEXT, focusedListMove(38, 40, 1, 50))

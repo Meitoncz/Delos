@@ -107,7 +107,7 @@ fun SettingRow(
     val colors = LocalDelosColors.current
     val feedback = LocalFeedback.current
     // Inside a RowGlideHost the entire focus plate (tint, ring and glow) belongs to the host, never to a row.
-    // Elsewhere (the side menu) the row keeps its own quick ring, glow and immediate frosted glass.
+    // Outside a list host, an isolated row keeps its own quick ring, glow and immediate frosted glass.
     val glide = LocalRowGlide.current
     val reduced = LocalReducedMotion.current
     val calm = glide != null && !reduced
@@ -225,7 +225,7 @@ private val ROW_RING = FocusRing(width = 3f, gap = 0f)
  */
 @Composable
 fun SettingRowList(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
-    RowGlideHost(ROW_RING, ROW_CORNER, ROW_FOCUS_SCALE, modifier, content)
+    RowGlideHost(ROW_RING, ROW_CORNER, ROW_FOCUS_SCALE, modifier, content = content)
 }
 
 /** The row's icon: full accent on the focused row, softer on the others; the color cross-fades with the row's other focus effects while [calm]. */

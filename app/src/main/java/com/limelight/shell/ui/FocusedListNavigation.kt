@@ -19,7 +19,7 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalFocusManager
 
 /**
- * Focus order for a small, eagerly laid out settings list. Scrolling may lag behind held navigation;
+ * Focus order for a small, eagerly laid out list. Scrolling may lag behind held navigation;
  * neither the visible viewport nor the animated row geometry determines the next focus target.
  */
 class FocusedListNavigation<K : Any> internal constructor() {
@@ -29,6 +29,8 @@ class FocusedListNavigation<K : Any> internal constructor() {
     internal var focused: K? = null
     internal var hasFocus = false
     internal var deliberateUpExit = false
+    internal var allowUpExit = true
+    internal var horizontal = false
 
     internal fun update(next: List<K>): K? {
         val restore = retainedFocusedListKey(keys, next, focused)
@@ -50,8 +52,12 @@ class FocusedListNavigation<K : Any> internal constructor() {
 
 /** Keeps surviving rows' requesters stable when debug rows expand, collapse or disconnect. */
 @Composable
-fun <K : Any> rememberFocusedListNavigation(keys: List<K>): FocusedListNavigation<K> {
+fun <K : Any> rememberFocusedListNavigation(
+    keys: List<K>, allowUpExit: Boolean = true, horizontal: Boolean = false,
+): FocusedListNavigation<K> {
     val navigation = remember { FocusedListNavigation<K>() }
+    navigation.allowUpExit = allowUpExit && !horizontal
+    navigation.horizontal = horizontal
     val restore = remember(keys) { navigation.update(keys) }
     LaunchedEffect(keys) {
         if (restore != null) navigation.requester(restore).requestFocus()
@@ -59,12 +65,16 @@ fun <K : Any> rememberFocusedListNavigation(keys: List<K>): FocusedListNavigatio
     return navigation
 }
 
-/** No failed vertical search may fall through to a parent, except one deliberate Up at the first row. */
+/** Failed searches along the list axis stay inside, except a settings list's deliberate initial Up. */
 fun <K : Any> Modifier.focusedListBoundary(navigation: FocusedListNavigation<K>): Modifier =
     onFocusChanged { navigation.hasFocus = it.hasFocus }.focusProperties {
         onExit = {
-            if ((requestedFocusDirection == FocusDirection.Up || requestedFocusDirection == FocusDirection.Down) &&
-                !navigation.deliberateUpExit) cancelFocusChange()
+            val alongAxis = if (navigation.horizontal) {
+                requestedFocusDirection == FocusDirection.Left || requestedFocusDirection == FocusDirection.Right
+            } else {
+                requestedFocusDirection == FocusDirection.Up || requestedFocusDirection == FocusDirection.Down
+            }
+            if (alongAxis && !navigation.deliberateUpExit) cancelFocusChange()
         }
     }.focusGroup()
 
@@ -79,18 +89,27 @@ fun <K : Any> Modifier.focusedListRow(navigation: FocusedListNavigation<K>, key:
         .focusRequester(navigation.requester(key))
         .onFocusChanged { if (it.isFocused) navigation.focused = key }
         .focusProperties {
-            up = if (navigation.deliberateUpExit) FocusRequester.Default else navigation.neighbour(key, -1)
-            down = navigation.neighbour(key, 1)
+            if (navigation.horizontal) {
+                left = navigation.neighbour(key, -1)
+                right = navigation.neighbour(key, 1)
+            } else {
+                up = if (navigation.deliberateUpExit) FocusRequester.Default else navigation.neighbour(key, -1)
+                down = navigation.neighbour(key, 1)
+            }
         }
         .onPreviewKeyEvent { event ->
-            val direction = when (event.key) {
+            val direction = if (navigation.horizontal) when (event.key) {
+                Key.DirectionLeft -> -1
+                Key.DirectionRight -> 1
+                else -> return@onPreviewKeyEvent false
+            } else when (event.key) {
                 Key.DirectionUp -> -1
                 Key.DirectionDown -> 1
                 else -> return@onPreviewKeyEvent false
             }
             if (event.type == KeyEventType.KeyDown) {
                 val index = navigation.keys.indexOf(key)
-                when (focusedListMove(index, navigation.keys.size, direction, event.nativeKeyEvent.repeatCount)) {
+                when (focusedListMove(index, navigation.keys.size, direction, event.nativeKeyEvent.repeatCount, navigation.allowUpExit)) {
                     FocusedListMove.PREVIOUS, FocusedListMove.NEXT -> navigation.neighbour(key, direction).requestFocus()
                     FocusedListMove.EXIT_UP -> {
                         navigation.deliberateUpExit = true

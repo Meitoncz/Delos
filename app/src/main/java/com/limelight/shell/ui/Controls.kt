@@ -211,11 +211,12 @@ fun CircleItem(
     val colors = LocalDelosColors.current
     val stage = LocalStage.current
     val glide = LocalGlideRing.current
+    val rowPlate = LocalRowGlide.current
     val reduced = LocalReducedMotion.current
     var focused by remember { mutableStateOf(false) }
     val lit by animateFloatAsState(if (focused || selected) 1f else 0f, tween(Motion.FOCUS, easing = EaseOut), label = "circleLabel")
     // The same scale as focusEffects, for the check badge that is drawn above the focus ring
-    val badgeScale by animateFocusScale(focused, false, 1.16f, label = "circleBadge")
+    val badgeScale by animateFocusScale(focused, false, 1.16f, label = "circleBadge", focusMillis = if (rowPlate != null) Motion.ROW_FOCUS else Motion.FOCUS)
     // The badge pops in when the circle becomes the selected one
     val badgePop by animateFloatAsState(if (selected) 1f else 0f, if (reduced) tween(Motion.FADE, easing = Motion.Ease) else tween(Motion.PILL_POP, easing = EaseSpring), label = "circleBadgePop")
     val side = diameter ?: if (big) 220f else 176f
@@ -230,6 +231,7 @@ fun CircleItem(
                     .focusEffects(
                         onClick = onClick, corner = 999f, focusScale = 1.16f, ring = if (glide != null) null else FocusRing(5f, 5f), glow = FocusGlow(26f, 70f, -16f),
                         contextMenu = contextMenu, onFocusChange = { focused = it },
+                        glide = rowPlate != null,
                     )
                     .size(side.px)
                     .then(

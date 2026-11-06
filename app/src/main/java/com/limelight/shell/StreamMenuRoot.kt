@@ -41,6 +41,7 @@ import com.limelight.shell.StreamMenuMotion as M
 import com.limelight.shell.ui.EaseSpring
 import com.limelight.shell.ui.Figtree
 import com.limelight.shell.ui.InitialFocus
+import com.limelight.shell.ui.rememberFocusedListNavigation
 import com.limelight.shell.ui.LocalDelosColors
 import com.limelight.shell.ui.LocalReducedMotion
 import com.limelight.shell.ui.EntranceStagger
@@ -348,12 +349,18 @@ internal fun StreamMenuRoot(
 
                 // The popover sits above the tile that opened it, its caret pointing down at that tile
                 if (popPresent) {
+                    val navigation = key(session, contentPage) {
+                        pageFocusKeys(host, contentPage, supersamplingMode)?.let { keys ->
+                            rememberFocusedListNavigation(listOf(PopoverBackFocusKey) + keys, allowUpExit = false)
+                        }
+                    }
                     StreamMenuPopover(
                         geo = geo,
                         scale = { popScale.value },
                         // Nothing shows until the card has its size (the first frames of an opening popover are empty)
                         alpha = { if (geoReady) popAlpha.value else 0f },
                         active = popOpen,
+                        navigation = navigation,
                         onNaturalHeight = { natural = it },
                         modifier = Modifier.align(Alignment.BottomStart).padding(bottom = L.POPOVER_BOTTOM.px),
                     ) {
@@ -366,6 +373,7 @@ internal fun StreamMenuRoot(
                                     onBack = { back() },
                                     leaving = leaving,
                                     titleIn = titleIn,
+                                    navigation = navigation,
                                 ) {
                                     val first = remember { FocusRequester() }
                                     InitialFocus(first)
@@ -402,6 +410,36 @@ private fun PreviewRow(start: StreamMenuStart, current: MenuPage) {
         }
     }
 }
+
+/** Only genuinely linear pages use ordered navigation; wrapping key/command pills keep spatial 2D moves. */
+private fun pageFocusKeys(host: StreamMenuHost, page: MenuPage, supersamplingMode: Boolean): List<String>? =
+    when (page) {
+        MenuPage.MAIN, MenuPage.KEYS, MenuPage.COMMANDS -> null
+        MenuPage.MORE -> buildList {
+            add(MoreRow.KEYS)
+            add("Send clipboard")
+            add("Get clipboard")
+            add(MoreRow.COMMANDS)
+            add("Task manager")
+            add("Zoom")
+            if (host.allowChangeMouseMode) add(MoreRow.MOUSE)
+            add("On-screen controls")
+            add(MoreRow.ANDROID_KEYBOARD)
+            add("Touch sensitivity")
+            add(MoreRow.RUMBLE)
+        }
+        MenuPage.BRIGHTNESS -> listOf("Screen brightness")
+        MenuPage.BITRATE -> listOf("Bitrate", "Apply")
+        MenuPage.UPSCALER -> buildList {
+            add("Enabled")
+            if (supersamplingMode) add("Supersampling quality")
+            add("Mode")
+            add("Sharpness")
+            if (host.canSaveUpscaler) add("Save for this game")
+        }
+        MenuPage.MOUSE -> listOf("Touchscreen mode", "Local mouse cursor")
+        MenuPage.RUMBLE -> RumblePresets.values().map { it.label }
+    }
 
 /** The rows (or pills) of [page]: everything the classic Artemis quick menu offered that the dock does not include. */
 @Composable

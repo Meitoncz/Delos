@@ -56,8 +56,12 @@ import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -98,6 +102,10 @@ import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.Unbounded
 import com.limelight.shell.ui.fadeEdges
 import com.limelight.shell.ui.focusEffects
+import com.limelight.shell.ui.FocusedListNavigation
+import com.limelight.shell.ui.RowGlideHost
+import com.limelight.shell.ui.focusedListBoundary
+import com.limelight.shell.ui.focusedListRow
 import com.limelight.shell.ui.MarqueeText
 import com.limelight.shell.ui.focusTrap
 import com.limelight.shell.ui.px
@@ -109,6 +117,62 @@ import kotlin.math.roundToInt
 
 private val CardTint = Color(34, 44, 84)
 private val CardBacking = Color(0xFF070A18)
+
+internal const val PopoverBackFocusKey = "popoverBack"
+private val LocalPopoverNavigation = staticCompositionLocalOf<FocusedListNavigation<String>?> { null }
+
+/** The popover's original inset ring/shadow, with reusable native paths and paint for moving plate frames. */
+private class PopoverRowFocusDecoration(k: Float) {
+    private val corner = L.ROW_RADIUS * k
+    private val stroke = L.ROW_RING * k
+    private val strokeStyle = Stroke(stroke)
+    private val blur = 36f * k
+    private val spread = 6f * k
+    private val margin = blur * 2f + 8f
+    private val inner = android.graphics.Path()
+    private val frame = android.graphics.Path().apply { fillType = android.graphics.Path.FillType.EVEN_ODD }
+    private val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.BLACK
+    }
+    private var width = Float.NaN
+    private var height = Float.NaN
+    private var shadowColor = 0
+    private var shadowReady = false
+
+    fun draw(scope: DrawScope, accent: Color, alpha: Float) = with(scope) {
+        drawRoundRect(
+            accent.copy(alpha = alpha), topLeft = Offset(stroke / 2f, stroke / 2f),
+            size = Size(size.width - stroke, size.height - stroke),
+            cornerRadius = CornerRadius(corner - stroke / 2f), style = strokeStyle,
+        )
+        if (width != size.width || height != size.height) {
+            width = size.width
+            height = size.height
+            val radius = corner - stroke
+            inner.rewind()
+            inner.addRoundRect(stroke, stroke, width - stroke, height - stroke, radius, radius, android.graphics.Path.Direction.CW)
+            frame.rewind()
+            frame.addRect(stroke - margin, stroke - margin, width - stroke + margin, height - stroke + margin, android.graphics.Path.Direction.CW)
+            frame.addRoundRect(
+                stroke - spread, stroke - spread, width - stroke + spread, height - stroke + spread,
+                radius + spread, radius + spread, android.graphics.Path.Direction.CW,
+            )
+        }
+        val color = accent.copy(alpha = .22f * alpha).toArgb()
+        if (!shadowReady || shadowColor != color) {
+            shadowColor = color
+            shadowReady = true
+            paint.setShadowLayer(shadowRadius(blur), 0f, 0f, color)
+        }
+        drawIntoCanvas { canvas ->
+            val native = canvas.nativeCanvas
+            val save = native.save()
+            native.clipPath(inner)
+            native.drawPath(frame, paint)
+            native.restoreToCount(save)
+        }
+    }
+}
 
 /**
  * The geometry of the popover, stage pixels: the card's left edge [x], its [w]idth, the caret's center from the left
@@ -182,6 +246,7 @@ internal fun StreamMenuPopover(
     scale: () -> Float,
     alpha: () -> Float,
     active: Boolean,
+    navigation: FocusedListNavigation<String>? = null,
     onNaturalHeight: (Float) -> Unit,
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
@@ -222,6 +287,7 @@ internal fun StreamMenuPopover(
         Column(
             Modifier
                 .fillMaxWidth()
+                .then(if (navigation != null) Modifier.focusedListBoundary(navigation) else Modifier)
                 .graphicsLayer {
                     this.alpha = alpha()
                     compositingStrategy = CompositingStrategy.ModulateAlpha
@@ -250,12 +316,14 @@ internal fun ColumnScope.PopoverPage(
     onBack: () -> Unit,
     leaving: Boolean,
     titleIn: Boolean,
+    navigation: FocusedListNavigation<String>? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val colors = LocalDelosColors.current
     val rm = LocalReducedMotion.current
     val stage = LocalStage.current
     val k = stageScale()
+    val rowDecoration = remember(k) { PopoverRowFocusDecoration(k) }
     val ts = stage.textScale
     val scroll = rememberScrollState()
     val bringIntoView = rememberMarginBringIntoView(scroll, before = 48f * k, after = 48f * k, stagePx = k)
@@ -266,7 +334,10 @@ internal fun ColumnScope.PopoverPage(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(L.POPOVER_HEAD_GAP.px),
     ) {
-        BackButton(onBack)
+        BackButton(
+            onBack,
+            if (navigation != null) Modifier.focusedListRow(navigation, PopoverBackFocusKey) else Modifier,
+        )
         val titleShow = remember { Animatable(if (titleIn) 0f else 1f) }
         LaunchedEffect(Unit) { if (titleIn) titleShow.animateTo(1f, tween(M.MORPH_TITLE, easing = EaseOut)) }
         MarqueeText(
@@ -283,7 +354,10 @@ internal fun ColumnScope.PopoverPage(
     // A list at its top or bottom has nothing beyond that edge: no fade there, so the first or last row is never cut
     val topFade by animateFloatAsState(if (scroll.value > 0) 1f else 0f, tween(Motion.FADE, easing = Motion.Ease), label = "fadeTop")
     val bottomFade by animateFloatAsState(if (scroll.value < scroll.maxValue) 1f else 0f, tween(Motion.FADE, easing = Motion.Ease), label = "fadeBottom")
-    CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
+    CompositionLocalProvider(
+        LocalBringIntoViewSpec provides bringIntoView,
+        LocalPopoverNavigation provides navigation,
+    ) {
         Box(
             Modifier
                 .weight(1f, fill = false)
@@ -293,14 +367,24 @@ internal fun ColumnScope.PopoverPage(
                     compositingStrategy = CompositingStrategy.ModulateAlpha
                 },
         ) {
-            Column(
-                Modifier
+            RowGlideHost(
+                ring = null,
+                corner = L.ROW_RADIUS,
+                focusScale = 1f,
+                fill = colors.accent.copy(alpha = .17f),
+                glow = null,
+                modifier = Modifier
                     .fillMaxWidth()
                     .then(if (scroll.maxValue > 0) Modifier.fadeEdges(stage, top = 26f * topFade, bottom = 64f * bottomFade) else Modifier)
                     .verticalScroll(scroll),
-                verticalArrangement = Arrangement.spacedBy(L.ROW_GAP.px),
-                content = content,
-            )
+                decoration = { alpha -> rowDecoration.draw(this, colors.accent, alpha) },
+            ) {
+                Column(
+                    Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(L.ROW_GAP.px),
+                    content = content,
+                )
+            }
         }
     }
     Spacer(Modifier.height(L.POPOVER_HELP_GAP.px))
@@ -345,14 +429,14 @@ private fun PageHelp(text: String, modifier: Modifier) {
 
 /** The back circle of a popover (`.back`): 64 px, a pale fill, the chevron in the secondary accent; its focus is the gold ring. */
 @Composable
-private fun BackButton(onBack: () -> Unit) {
+private fun BackButton(onBack: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalDelosColors.current
     val k = stageScale()
     var focused by remember { mutableStateOf(false) }
     val fill by animateColorAsState(Color.White.copy(alpha = if (focused) .20f else .10f), tween(Motion.FADE, easing = Motion.Ease), label = "backFill")
     val ring by animateFloatAsState(if (focused) 1f else 0f, tween(Motion.FADE, easing = Motion.Ease), label = "backRing")
     Box(
-        Modifier
+        modifier
             .size(L.POPOVER_HEAD_HEIGHT.px)
             .focusEffects(onBack, corner = 999f, focusScale = 1.06f, ring = null, glow = null, pressScale = 1f, clickCue = Cue.BACK, onFocusChange = { focused = it })
             .drawBehind {
@@ -369,10 +453,10 @@ private fun BackButton(onBack: () -> Unit) {
 }
 
 /**
- * A row of a popover page (`.row`): 72 px, the icon in a 56 px column, the label, and the value on the right. Its focus
- * is a pale gold fill with a 3 px gold ring and a soft glow just inside it, the icon turning gold and filled. Left and
- * right adjust choices and sliders (a held key accelerates a slider); A or a tap activates. [help] is the key of the help
- * text shown while the row has the focus; [confirmation] replaces the chevron of an action with a check and a word.
+ * A row of a popover page (`.row`): 72 px, the icon in a 56 px column, the label, and the value on the right. The page's
+ * shared focus plate carries its pale gold fill, 3 px gold inset ring and soft inner shadow; the icon turns gold and
+ * filled. Left and right adjust choices and sliders (a held key accelerates a slider); A or a tap activates. [help]
+ * selects the help text; [confirmation] replaces the chevron of an action with a check and a word.
  */
 @Composable
 internal fun MenuRow(
@@ -386,10 +470,9 @@ internal fun MenuRow(
 ) {
     val colors = LocalDelosColors.current
     val feedback = LocalFeedback.current
-    val rm = LocalReducedMotion.current
+    val navigation = LocalPopoverNavigation.current
     val ts = LocalStage.current.textScale
     val show = LocalStreamHelp.current
-    val k = stageScale()
     var focused by remember { mutableStateOf(false) }
     val choice = rememberChoiceMotion()
     val adjust: ((Int) -> Unit)? = when (value) {
@@ -417,11 +500,10 @@ internal fun MenuRow(
         feedback.play(Cue.MOVE)
         adjust(direction * if (value is RowValue.Slider) com.limelight.shell.ui.sliderAcceleration(value, repeatCount) else 1)
     }
-    val ring by animateFloatAsState(if (focused) 1f else 0f, tween(Motion.FOCUS, easing = EaseOut), label = "rowRing")
-    val fill by animateFloatAsState(if (focused) 1f else 0f, tween(Motion.FADE, easing = Motion.Ease), label = "rowFill")
     val iconColor by animateColorAsState(if (focused) colors.accent2 else colors.accent2.copy(alpha = .62f), tween(Motion.FADE, easing = Motion.Ease), label = "rowIcon")
     Row(
         modifier
+            .then(if (navigation != null) Modifier.focusedListRow(navigation, label) else Modifier)
             .fillMaxWidth()
             .staggerEntrance()
             .onPreviewKeyEvent { event ->
@@ -440,6 +522,7 @@ internal fun MenuRow(
             .focusEffects(
                 onClick = { if (enabled) activate() else feedback.play(Cue.ERROR) },
                 corner = L.ROW_RADIUS, focusScale = 1f, ring = null, glow = null, pressScale = 1f,
+                glide = true,
                 clickCue = if (enabled && value !is RowValue.Info) (if (value is RowValue.Action) Cue.OPEN else Cue.SELECT) else null,
                 adjustable = adjust != null && enabled,
                 controllerAdjust = controllerAdjust,
@@ -448,18 +531,6 @@ internal fun MenuRow(
                     if (it) show(help)
                 },
             )
-            .drawBehind {
-                val corner = L.ROW_RADIUS * k
-                if (fill > 0f) drawRoundRect(colors.accent.copy(alpha = .17f * fill), cornerRadius = CornerRadius(corner))
-                if (ring > 0f) {
-                    val stroke = L.ROW_RING * k
-                    drawRoundRect(
-                        colors.accent.copy(alpha = ring), topLeft = Offset(stroke / 2f, stroke / 2f), size = Size(size.width - stroke, size.height - stroke),
-                        cornerRadius = CornerRadius(corner - stroke / 2f), style = Stroke(stroke),
-                    )
-                    drawInsetShadow(Rect(stroke, stroke, size.width - stroke, size.height - stroke), corner - stroke, 36f * k, -6f * k, colors.accent.copy(alpha = .22f * ring))
-                }
-            }
             .defaultMinSize(minHeight = L.ROW_HEIGHT.px)
             .padding(start = L.ROW_PADDING_START.px, end = L.ROW_PADDING_END.px)
             .graphicsLayer {
@@ -581,45 +652,55 @@ private fun MenuSlider(value: RowValue.Slider, focused: Boolean): Int {
     return number
 }
 
-/** Text choices (key combinations, server commands) as pills that wrap to the next line, with the focus of a row. */
+/** Wrapping text choices keep spatial 2D navigation and a static white base under one gliding capsule focus plate. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun PopoverPills(labels: List<String>, first: FocusRequester, command: Boolean = false, onSelect: (Int) -> Unit) {
     val colors = LocalDelosColors.current
     val help = LocalStreamHelp.current
     val k = stageScale()
-    FlowRow(
-        Modifier.fillMaxWidth().padding(horizontal = 4.px, vertical = 4.px),
-        horizontalArrangement = Arrangement.spacedBy(14.px),
-        verticalArrangement = Arrangement.spacedBy(14.px),
-    ) {
-        labels.forEachIndexed { i, label ->
-            var focused by remember { mutableStateOf(false) }
-            val ring by animateFloatAsState(if (focused) 1f else 0f, tween(Motion.FOCUS, easing = EaseOut), label = "pillRing")
-            BasicText(
-                label,
-                style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = L.ROW_SIZE.tpx),
-                maxLines = 1,
-                modifier = (if (i == 0) Modifier.focusRequester(first) else Modifier)
-                    .staggerEntrance()
-                    .focusEffects({ onSelect(i) }, corner = 999f, focusScale = 1f, ring = null, glow = null, pressScale = 1f, onFocusChange = {
-                        focused = it
-                        if (it) help((if (command) "Command: " else "Keys: ") + label)
-                    })
-                    .drawBehind {
-                        val corner = size.height / 2f
-                        drawRoundRect(Color.White.copy(alpha = .10f), cornerRadius = CornerRadius(corner))
-                        if (ring > 0f) {
-                            drawRoundRect(colors.accent.copy(alpha = .17f * ring), cornerRadius = CornerRadius(corner))
-                            val stroke = L.ROW_RING * k
-                            drawRoundRect(
-                                colors.accent.copy(alpha = ring), topLeft = Offset(stroke / 2f, stroke / 2f), size = Size(size.width - stroke, size.height - stroke),
-                                cornerRadius = CornerRadius(corner - stroke / 2f), style = Stroke(stroke),
-                            )
-                        }
-                    }
-                    .padding(horizontal = 26.px, vertical = 14.px),
+    val stroke = L.ROW_RING * k
+    val strokeStyle = remember(stroke) { Stroke(stroke) }
+    RowGlideHost(
+        ring = null,
+        corner = 999f,
+        focusScale = 1f,
+        fill = colors.accent.copy(alpha = .17f),
+        glow = null,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.px, vertical = 4.px),
+        decoration = { alpha ->
+            drawRoundRect(
+                colors.accent.copy(alpha = alpha), topLeft = Offset(stroke / 2f, stroke / 2f),
+                size = Size(size.width - stroke, size.height - stroke),
+                cornerRadius = CornerRadius(size.height / 2f - stroke / 2f), style = strokeStyle,
             )
+        },
+    ) {
+        FlowRow(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(14.px),
+            verticalArrangement = Arrangement.spacedBy(14.px),
+        ) {
+            labels.forEachIndexed { i, label ->
+                BasicText(
+                    label,
+                    style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = L.ROW_SIZE.tpx),
+                    maxLines = 1,
+                    modifier = (if (i == 0) Modifier.focusRequester(first) else Modifier)
+                        .staggerEntrance()
+                        .focusEffects(
+                            { onSelect(i) }, corner = 999f, focusScale = 1f, ring = null, glow = null,
+                            pressScale = 1f, glide = true,
+                            onFocusChange = {
+                                if (it) help((if (command) "Command: " else "Keys: ") + label)
+                            },
+                        )
+                        .drawBehind {
+                            drawRoundRect(Color.White.copy(alpha = .10f), cornerRadius = CornerRadius(size.height / 2f))
+                        }
+                        .padding(horizontal = 26.px, vertical = 14.px),
+                )
+            }
         }
     }
 }

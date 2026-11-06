@@ -77,6 +77,7 @@ import com.limelight.shell.ui.LocalDelosColors
 import com.limelight.shell.ui.LocalStage
 import com.limelight.shell.ui.rememberMarginBringIntoView
 import com.limelight.shell.ui.PillButton
+import com.limelight.shell.ui.RowGlideHost
 import com.limelight.shell.ui.Symbol
 import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.genreIcon
@@ -239,10 +240,14 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
         }
         // The chips scroll when the genres need more room than the panel has; the focused one stays in view
         CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
+        // Share the cursor across the wrapping chip rows without changing spatial D-pad navigation.
+        RowGlideHost(
+            ring = FocusRing(3f, 3f), corner = 999f, focusScale = 1.05f,
+            fill = null, glow = null,
+            modifier = Modifier.weight(1f, fill = false).fadeEdges(stage, top = 20f, bottom = 40f),
+        ) {
         Column(
             Modifier
-                .weight(1f, fill = false)
-                .fadeEdges(stage, top = 20f, bottom = 40f)
                 .verticalScroll(chipScroll)
                 .padding(start = 12.px, end = 12.px, top = 24.px, bottom = 48.px),
             verticalArrangement = Arrangement.spacedBy(34.px),
@@ -306,6 +311,7 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
             }
         }
         }
+        }
         Row(
             Modifier.fillMaxWidth().padding(top = 30.px, start = 12.px, end = 12.px),
             horizontalArrangement = Arrangement.spacedBy(24.px, Alignment.End),
@@ -351,7 +357,7 @@ private fun FilterChip(label: String, selected: Boolean, onClick: () -> Unit, mo
         modifier
             .focusEffects(
                 onClick = onClick, corner = 999f, focusScale = 1.05f, ring = FocusRing(3f, 3f), glow = null,
-                onFocusChange = { focused = it },
+                onFocusChange = { focused = it }, glide = true,
             )
             .clip(CircleShape)
             .then(if (selected) Modifier.background(colors.accent) else Modifier.glass(colors.surface).border(1.px, colors.line, CircleShape))
