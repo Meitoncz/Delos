@@ -1,10 +1,17 @@
 package com.limelight.shell.settings
 
+import com.limelight.utils.RumblePresets
+
 /** Help for actions that are available only while a stream is running. */
 object StreamMenuHelp {
+    /** TEMPORARY (#66): the help key of a preset row on the live rumble preset page. */
+    fun rumbleKey(preset: RumblePresets): String = "Rumble: ${preset.label}"
+
     fun description(label: String): String = descriptions[label] ?: when {
         label.startsWith("Keys: ") -> "Sends ${label.removePrefix("Keys: ")} to the PC once, then returns to the stream."
         label.startsWith("Command: ") -> "Runs the host-defined command ${label.removePrefix("Command: ").let { if (it.length > 36) it.take(35) + "\u2026" else it }} on the PC at once. Set in Vibepollo or Apollo."
+        // TEMPORARY (#66)
+        label.startsWith("Rumble: ") -> RumblePresets.values().firstOrNull { rumbleKey(it) == label }?.description.orEmpty()
         else -> ""
     }
 
@@ -40,5 +47,7 @@ object StreamMenuHelp {
         "Key layout" to "Shows or hides the profile's custom special-key layer. Separate from the full keyboard.",
         "Touch sensitivity" to "Toggles extra touchscreen sensitivity scaling, configured in settings.",
         "Rotate" to "Rotates the stream view locally; the host game's display settings are unchanged.",
+        // TEMPORARY (#66)
+        "Rumble preset" to "Picks how host rumble feels, at once and saved. Stays open: pick again to compare. B goes back.",
     )
 }

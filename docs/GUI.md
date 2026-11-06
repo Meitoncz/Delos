@@ -456,7 +456,7 @@ The real menu can be drawn without a stream, over a sunset "game scene", with ma
 
 ```
 adb shell am start -n io.github.meitoncz.delos.debug/com.limelight.shell.ShellActivity --es preview_screen stream_menu \
-  --es preview_page <main|upscaler|bitrate|brightness|more|keys|commands|mouse> --ei preview_focus <tile 0..8> \
+  --es preview_page <main|upscaler|bitrate|brightness|more|keys|commands|mouse|rumble> --ei preview_focus <tile 0..8> \
   [--ei preview_row <row of the page to focus>] [--ez preview_animate true]
 ```
 

@@ -1,6 +1,7 @@
 package com.limelight.shell
 
 import com.limelight.shell.settings.SettingChoice
+import com.limelight.utils.RumblePresets
 
 /** What the host answered to the last Apply on the Bitrate page. */
 internal sealed interface BitrateResult {
@@ -79,6 +80,13 @@ internal interface StreamMenuHost {
     val touchSensitivityOn: Boolean
     fun toggleTouchSensitivity()
     fun rotate()
+
+    // TEMPORARY (#66): live comparison of the laboratory's rumble presets in a running stream
+    /** The active preset, or null for Custom (parameters edited in the laboratory). */
+    val rumblePreset: RumblePresets?
+
+    /** Saves [preset] like the laboratory does and applies it to the running stream at once; no sample is played. */
+    fun selectRumblePreset(preset: RumblePresets)
 
     // Mouse mode
     val allowChangeMouseMode: Boolean

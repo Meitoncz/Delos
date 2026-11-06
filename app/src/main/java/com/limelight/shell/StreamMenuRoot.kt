@@ -34,6 +34,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
+import com.limelight.shell.settings.StreamMenuHelp
+import com.limelight.utils.RumblePresets
 import com.limelight.shell.StreamMenuLayout as L
 import com.limelight.shell.StreamMenuMotion as M
 import com.limelight.shell.ui.EaseSpring
@@ -431,6 +433,8 @@ private fun PageRows(
             MenuRow(Symbols.KEY_LAYOUT, "Key layout", RowValue.Action { toggle { host.toggleKeyLayout() } })
             MenuRow(Symbols.TOUCH_APP, "Touch sensitivity", RowValue.Toggle(host.touchSensitivityOn) { toggle { host.toggleTouchSensitivity() } })
             MenuRow(Symbols.SCREEN_ROTATION, "Rotate", RowValue.Action { close { host.rotate() } })
+            // TEMPORARY (#66): the last row, so no existing row moves; remove with the page below once a preset is chosen
+            MenuRow(Symbols.VIBRATION, MoreRow.RUMBLE, RowValue.Text(host.rumblePreset?.label ?: "Custom") { openPage(MenuPage.RUMBLE) }, entry(MoreRow.RUMBLE))
         }
         MenuPage.BRIGHTNESS -> MenuRow(
             Symbols.BRIGHTNESS_MEDIUM, "Screen brightness",
@@ -507,6 +511,22 @@ private fun PageRows(
                 )
             } else {
                 PopoverPills(commands, first, command = true) { i -> close { host.runServerCommand(i) } }
+            }
+        }
+        // TEMPORARY (#66): the laboratory's presets, switched live. A selection applies at once, plays no sample and keeps
+        // the menu open so presets can be compared back to back; B returns to More.
+        MenuPage.RUMBLE -> {
+            val presets = RumblePresets.values()
+            val active = host.rumblePreset
+            // The focus starts on the active preset (on the first one while the preset is Custom)
+            val start = remember { host.rumblePreset ?: presets.first() }
+            presets.forEach { preset ->
+                MenuRow(
+                    Symbols.VIBRATION, preset.label, RowValue.Action { toggle { host.selectRumblePreset(preset) } },
+                    if (preset == start) Modifier.focusRequester(first) else Modifier,
+                    confirmation = if (preset == active) "Active" else null,
+                    help = StreamMenuHelp.rumbleKey(preset),
+                )
             }
         }
     }

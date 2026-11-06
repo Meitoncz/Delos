@@ -14,20 +14,23 @@ import kotlin.math.floor
 /** The tiles of the dock, in the order they appear. */
 internal enum class BarItem { RESUME, KEYBOARD, OVERLAY, BRIGHTNESS, BITRATE, UPSCALER, MORE, DISCONNECT, QUIT }
 
-/** What the popover above the dock shows; [MAIN] is no popover (the dock alone). */
-internal enum class MenuPage { MAIN, MORE, KEYS, COMMANDS, BRIGHTNESS, BITRATE, UPSCALER, MOUSE }
+/**
+ * What the popover above the dock shows; [MAIN] is no popover (the dock alone).
+ * [RUMBLE] is TEMPORARY (#66): the live rumble preset comparison, opened from the More page.
+ */
+internal enum class MenuPage { MAIN, MORE, KEYS, COMMANDS, BRIGHTNESS, BITRATE, UPSCALER, MOUSE, RUMBLE }
 
 /** The page B goes back to: the dock for the pages of a tile, More for the pages that More opens. */
 internal fun MenuPage.parent(): MenuPage? = when (this) {
     MenuPage.MAIN -> null
-    MenuPage.KEYS, MenuPage.COMMANDS, MenuPage.MOUSE -> MenuPage.MORE
+    MenuPage.KEYS, MenuPage.COMMANDS, MenuPage.MOUSE, MenuPage.RUMBLE -> MenuPage.MORE
     else -> MenuPage.MAIN
 }
 
 /** The tile that opens this page, directly or through More. */
 internal fun MenuPage.barItem(): BarItem? = when (this) {
     MenuPage.MAIN -> null
-    MenuPage.MORE, MenuPage.KEYS, MenuPage.COMMANDS, MenuPage.MOUSE -> BarItem.MORE
+    MenuPage.MORE, MenuPage.KEYS, MenuPage.COMMANDS, MenuPage.MOUSE, MenuPage.RUMBLE -> BarItem.MORE
     MenuPage.BRIGHTNESS -> BarItem.BRIGHTNESS
     MenuPage.BITRATE -> BarItem.BITRATE
     MenuPage.UPSCALER -> BarItem.UPSCALER
@@ -38,6 +41,9 @@ internal object MoreRow {
     const val KEYS = "Send keys"
     const val COMMANDS = "Commands"
     const val MOUSE = "Mouse mode"
+
+    /** TEMPORARY (#66): the row that opens the live rumble preset page. */
+    const val RUMBLE = "Rumble preset"
 }
 
 /** The row of the parent page that opened this page (by its label), or null when the dock's tile did. */
@@ -45,6 +51,7 @@ internal fun MenuPage.openedByRow(): String? = when (this) {
     MenuPage.KEYS -> MoreRow.KEYS
     MenuPage.COMMANDS -> MoreRow.COMMANDS
     MenuPage.MOUSE -> MoreRow.MOUSE
+    MenuPage.RUMBLE -> MoreRow.RUMBLE
     else -> null
 }
 
@@ -197,7 +204,7 @@ internal fun popoverWidth(page: MenuPage): Float = when (page) {
     MenuPage.BRIGHTNESS -> 780f
     MenuPage.BITRATE -> 860f
     MenuPage.UPSCALER -> 980f
-    MenuPage.MORE, MenuPage.KEYS, MenuPage.COMMANDS, MenuPage.MOUSE -> 920f
+    MenuPage.MORE, MenuPage.KEYS, MenuPage.COMMANDS, MenuPage.MOUSE, MenuPage.RUMBLE -> 920f
 }
 
 /** The card's left edge: centered on [anchorX] (the center of the tile that opened it), [StreamMenuLayout.POPOVER_MIN_LEFT] to [StreamMenuLayout.POPOVER_MAX_RIGHT]. */
@@ -290,6 +297,7 @@ internal fun pageTitle(page: MenuPage, supersampling: Boolean): String = when (p
     MenuPage.BITRATE -> "Stream bitrate"
     MenuPage.UPSCALER -> if (supersampling) "Supersampling" else "Upscaler"
     MenuPage.MOUSE -> "Mouse and touch"
+    MenuPage.RUMBLE -> "Rumble preset"
 }
 
 /** The help key of the tile (or the page's first row) that shows before anything inside a page is focused. */
@@ -302,6 +310,7 @@ internal fun pageHelpKey(page: MenuPage): String = when (page) {
     MenuPage.BITRATE -> "Bitrate"
     MenuPage.UPSCALER -> "Upscaling"
     MenuPage.MOUSE -> "Touchscreen mode"
+    MenuPage.RUMBLE -> "Rumble preset"
 }
 
 /** The help key of a tile: the upscaler's tile is called Supersampling when the stream is supersampled. */

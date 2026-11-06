@@ -132,15 +132,17 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
     private boolean stopped = false;
 
     private final PreferenceConfiguration prefConfig;
-    private final com.limelight.utils.RumblePlayback translatedRumble;
+    // TEMPORARY (#66): the stream menu switches the rumble preset live, so the translated playback follows
+    // prefConfig.rumbleTranslatorEnabled/rumbleProfile at every rumble event instead of being fixed at construction.
+    // Once a preset is chosen this can go back to a final field built in the constructor.
+    private final Object translatedRumbleLock = new Object();
+    private volatile ActiveRumble activeRumble;
     private short currentControllers, initialControllers;
 
     public ControllerHandler(Activity activityContext, NvConnection conn, GameGestures gestures, PreferenceConfiguration prefConfig) {
         this.activityContext = activityContext;
         this.conn = conn;
         this.gestures = gestures;
-        this.translatedRumble = prefConfig.rumbleTranslatorEnabled
-                ? new com.limelight.utils.RumblePlayback(prefConfig.rumbleProfile) : null;
         this.prefConfig = prefConfig;
 		
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -274,6 +276,61 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
         inputDeviceContexts.put(deviceId, newContext);
     }
 
+    // TEMPORARY (#66): one translated playback per (enabled, profile) pair; see activeRumble.
+    private static final class ActiveRumble {
+        final com.limelight.utils.RumbleTranslator.Profile profile;
+        final com.limelight.utils.RumblePlayback playback;
+
+        ActiveRumble(com.limelight.utils.RumbleTranslator.Profile profile) {
+            this.profile = profile;
+            this.playback = new com.limelight.utils.RumblePlayback(profile);
+        }
+    }
+
+    /**
+     * The playback for the rumble settings in effect right now, or null while translation is off. A change of
+     * prefConfig.rumbleTranslatorEnabled/rumbleProfile (the stream menu's live preset switch) takes effect on the
+     * next rumble event: the old playback is stopped (its vibration cancelled) and a new one starts.
+     */
+    private com.limelight.utils.RumblePlayback translatedRumble() {
+        ActiveRumble active = activeRumble;
+        boolean enabled = prefConfig.rumbleTranslatorEnabled;
+        com.limelight.utils.RumbleTranslator.Profile profile = prefConfig.rumbleProfile;
+        if (active == null ? !enabled : (enabled && active.profile == profile)) {
+            return active == null ? null : active.playback;
+        }
+        return resyncTranslatedRumble();
+    }
+
+    private com.limelight.utils.RumblePlayback resyncTranslatedRumble() {
+        synchronized (translatedRumbleLock) {
+            ActiveRumble active = activeRumble;
+            if (stopped) {
+                return active == null ? null : active.playback;
+            }
+            boolean enabled = prefConfig.rumbleTranslatorEnabled;
+            com.limelight.utils.RumbleTranslator.Profile profile = prefConfig.rumbleProfile;
+            if (active != null && enabled && active.profile == profile) {
+                return active.playback;
+            }
+            if (active != null) {
+                active.playback.stop();
+            }
+            active = enabled ? new ActiveRumble(profile) : null;
+            activeRumble = active;
+            return active == null ? null : active.playback;
+        }
+    }
+
+    private void stopTranslatedRumble() {
+        synchronized (translatedRumbleLock) {
+            ActiveRumble active = activeRumble;
+            if (active != null) {
+                active.playback.stop();
+            }
+        }
+    }
+
     public void stop() {
         if (stopped) {
             return;
@@ -281,7 +338,7 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
 
         // Stop new device contexts from being created or used
         stopped = true;
-        if (translatedRumble != null) translatedRumble.stop();
+        stopTranslatedRumble();
 
         // Unregister our input device callbacks
         inputManager.unregisterInputDeviceListener(this);
@@ -2027,7 +2084,8 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
     // This must only be called if hasDualAmplitudeControlledRumbleVibrators() is true!
     @TargetApi(31)
     private void rumbleDualVibrators(VibratorManager vm, short lowFreqMotor, short highFreqMotor) {
-        if (translatedRumble != null) { translatedRumble.dual(vm, lowFreqMotor, highFreqMotor); return; }
+        com.limelight.utils.RumblePlayback translated = translatedRumble();
+        if (translated != null) { translated.dual(vm, lowFreqMotor, highFreqMotor); return; }
         // Normalize motor values to 0-255 amplitudes for VibrationManager
         highFreqMotor = (short)((highFreqMotor >> 8) & 0xFF);
         lowFreqMotor = (short)((lowFreqMotor >> 8) & 0xFF);
@@ -2085,7 +2143,8 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
     // This must only be called if hasQuadAmplitudeControlledRumbleVibrators() is true!
     @TargetApi(31)
     private void rumbleQuadVibrators(VibratorManager vm, short lowFreqMotor, short highFreqMotor, short leftTrigger, short rightTrigger) {
-        if (translatedRumble != null) { translatedRumble.quad(vm, lowFreqMotor, highFreqMotor, leftTrigger, rightTrigger); return; }
+        com.limelight.utils.RumblePlayback translated = translatedRumble();
+        if (translated != null) { translated.quad(vm, lowFreqMotor, highFreqMotor, leftTrigger, rightTrigger); return; }
         // Normalize motor values to 0-255 amplitudes for VibrationManager
         highFreqMotor = (short)((highFreqMotor >> 8) & 0xFF);
         lowFreqMotor = (short)((lowFreqMotor >> 8) & 0xFF);
@@ -2123,7 +2182,8 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
     }
 
     private void rumbleSingleVibrator(Vibrator vibrator, short lowFreqMotor, short highFreqMotor) {
-        if (translatedRumble != null) { translatedRumble.single(vibrator, lowFreqMotor, highFreqMotor); return; }
+        com.limelight.utils.RumblePlayback translated = translatedRumble();
+        if (translated != null) { translated.single(vibrator, lowFreqMotor, highFreqMotor); return; }
         // Since we can only use a single amplitude value, compute the desired amplitude
         // by taking 80% of the big motor and 33% of the small motor, then capping to 255.
         // NB: This value is now 0-255 as required by VibrationEffect.
@@ -3224,11 +3284,12 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
         @Override
         public void destroy() {
             super.destroy();
-            if (translatedRumble != null) {
+            ActiveRumble active = activeRumble;
+            if (active != null) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && vibratorManager != null) {
-                    translatedRumble.cancel(vibratorManager);
+                    active.playback.cancel(vibratorManager);
                 } else if (vibrator != null) {
-                    translatedRumble.cancel(vibrator);
+                    active.playback.cancel(vibrator);
                 }
             }
 

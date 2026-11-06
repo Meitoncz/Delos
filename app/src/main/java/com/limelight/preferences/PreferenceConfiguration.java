@@ -351,8 +351,10 @@ public class PreferenceConfiguration {
     public boolean gamepadMotionSensorsFallbackToDevice;
     public boolean forceMotionSensorsFallbackToDevice;
     public boolean enableRumble;
-    public boolean rumbleTranslatorEnabled;
-    public RumbleTranslator.Profile rumbleProfile;
+    // TEMPORARY (#66): volatile because the stream menu switches the rumble preset while ControllerHandler
+    // reads these on the native rumble thread. Remove with the live preset page once a preset is chosen.
+    public volatile boolean rumbleTranslatorEnabled;
+    public volatile RumbleTranslator.Profile rumbleProfile;
     public boolean preventPacketLoss;
 
     public boolean rememberZoomPan;

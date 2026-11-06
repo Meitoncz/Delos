@@ -2,6 +2,7 @@ package com.limelight.shell
 
 import com.limelight.shell.ui.Motion
 import com.limelight.shell.settings.StreamMenuHelp
+import com.limelight.utils.RumblePresets
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
@@ -29,7 +30,8 @@ class StreamMenuLayoutTest {
         assertEquals(PageExit(MenuPage.MORE, null, "Send keys"), pageAfterBack(MenuPage.KEYS))
         assertEquals(PageExit(MenuPage.MORE, null, "Commands"), pageAfterBack(MenuPage.COMMANDS))
         assertEquals(PageExit(MenuPage.MORE, null, "Mouse mode"), pageAfterBack(MenuPage.MOUSE))
-        for (page in listOf(MenuPage.KEYS, MenuPage.COMMANDS, MenuPage.MOUSE)) {
+        assertEquals(PageExit(MenuPage.MORE, null, "Rumble preset"), pageAfterBack(MenuPage.RUMBLE))
+        for (page in listOf(MenuPage.KEYS, MenuPage.COMMANDS, MenuPage.MOUSE, MenuPage.RUMBLE)) {
             assertEquals(PageExit(MenuPage.MAIN, BarItem.MORE, null), pageAfterDismiss(page))
         }
     }
@@ -94,12 +96,12 @@ class StreamMenuLayoutTest {
         assertEquals(780f, popoverWidth(MenuPage.BRIGHTNESS), 0f)
         assertEquals(860f, popoverWidth(MenuPage.BITRATE), 0f)
         assertEquals(980f, popoverWidth(MenuPage.UPSCALER), 0f)
-        for (page in listOf(MenuPage.MORE, MenuPage.KEYS, MenuPage.COMMANDS, MenuPage.MOUSE)) assertEquals(920f, popoverWidth(page), 0f)
+        for (page in listOf(MenuPage.MORE, MenuPage.KEYS, MenuPage.COMMANDS, MenuPage.MOUSE, MenuPage.RUMBLE)) assertEquals(920f, popoverWidth(page), 0f)
     }
 
     @Test
     fun pagesOpenedFromMoreAreAnchoredOverTheMoreTile() {
-        for (page in listOf(MenuPage.KEYS, MenuPage.COMMANDS, MenuPage.MOUSE, MenuPage.MORE)) {
+        for (page in listOf(MenuPage.KEYS, MenuPage.COMMANDS, MenuPage.MOUSE, MenuPage.RUMBLE, MenuPage.MORE)) {
             val placement = popoverPlacement(page)!!
             assertEquals("$page", tileCenterX(BarItem.MORE), placement.left + placement.caretX, .01f)
             assertEquals(popoverPlacement(MenuPage.MORE), placement)
@@ -218,7 +220,7 @@ class StreamMenuLayoutTest {
     fun everyHelpAPopoverCanShowFitsItsReservedLines() {
         val footerKeys = mapOf(
             MenuPage.MORE to listOf(MoreRow.KEYS, "Send clipboard", "Get clipboard", MoreRow.COMMANDS, "Task manager", "Zoom", MoreRow.MOUSE,
-                "On-screen controls", "Full keyboard", "Key layout", "Touch sensitivity", "Rotate"),
+                "On-screen controls", "Full keyboard", "Key layout", "Touch sensitivity", "Rotate", MoreRow.RUMBLE),
             // The labels of key combinations and commands come from the user and the host
             MenuPage.KEYS to listOf("Send keys", "Keys: Ctrl + Alt + Delete", "Keys: " + "K".repeat(40)),
             MenuPage.COMMANDS to listOf("Commands", "Command: Restart the game", "Command: " + "C".repeat(80)),
@@ -226,6 +228,8 @@ class StreamMenuLayoutTest {
             MenuPage.BITRATE to listOf("Bitrate", "Apply bitrate"),
             MenuPage.UPSCALER to listOf("Upscaling", "Supersampling on", "Supersampling quality", "Mode", "Sharpness", "Save for this game"),
             MenuPage.MOUSE to listOf("Touchscreen mode", "Local mouse cursor"),
+            // TEMPORARY (#66)
+            MenuPage.RUMBLE to listOf("Rumble preset") + RumblePresets.values().map { StreamMenuHelp.rumbleKey(it) },
         )
         assertEquals(MenuPage.entries.filter { it != MenuPage.MAIN }.toSet(), footerKeys.keys)
         for (scale in listOf(1f, 1.15f, c.MAX_TEXT_SCALE)) for ((page, keys) in footerKeys) {

@@ -39,6 +39,8 @@ import com.limelight.shell.ui.Stage
 import com.limelight.shell.ui.delosColors
 import com.limelight.shell.ui.systemAccentHue
 import com.limelight.utils.ExternalDisplayControlActivity
+import com.limelight.utils.RumblePreferences
+import com.limelight.utils.RumblePresets
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -369,6 +371,16 @@ class StreamMenu(private val game: Game) {
         override val touchSensitivityOn get() = prefs.enableTouchSensitivity
         override fun toggleTouchSensitivity() { game.switchTouchSensitivity() }
         override fun rotate() { game.rotateScreen() }
+
+        // TEMPORARY (#66): the laboratory's preset logic, live. RumblePreferences saves the whole preset in one edit; the
+        // stream's ControllerHandler reads prefConfig at every rumble event, so the next event uses the new preset.
+        private val rumbleSettings by lazy { ProfileStore.currentSettings(game) }
+        override val rumblePreset get() = RumblePreferences.activePreset(rumbleSettings)
+        override fun selectRumblePreset(preset: RumblePresets) {
+            RumblePreferences.applyPreset(rumbleSettings, preset)
+            prefs.rumbleProfile = preset.profile
+            prefs.rumbleTranslatorEnabled = preset.enabled
+        }
 
         override val allowChangeMouseMode get() = game.allowChangeMouseMode
         override val mouseMode get() = game.activeMouseMode

@@ -14,6 +14,22 @@ remain unchanged. Existing device/OSC/fallback routing and fallback-strength sca
 apply before translation. This is a user-profile setting, not automatic device detection or
 a per-game override. It also affects external pads using those Android paths when enabled.
 
+## Switching presets in a running stream (TEMPORARY, #66)
+
+To compare presets in a real game, open the stream menu (**More** tile), scroll to the last row,
+**Rumble preset** (it shows the active name), and press A. The page lists the same ten presets;
+A on one applies and saves it exactly like the laboratory (same `RumblePreferences.applyPreset`), marks it
+**Active**, plays no sample and leaves the menu open so presets can be tried back to back. B returns to More.
+`ControllerHandler` follows `PreferenceConfiguration.rumbleTranslatorEnabled`/`rumbleProfile` at every rumble
+event, so the new preset is used from the next rumble the game sends (the previous output is cancelled
+when the preset changes; a rumble the game keeps holding stays silent until its next update).
+
+**Remove once a preset is chosen** (search for `TEMPORARY (#66)`): the `RUMBLE` page and `MoreRow.RUMBLE` in
+`StreamMenuLayout.kt`, its rows in `StreamMenuRoot.kt`, `rumblePreset`/`selectRumblePreset` in
+`StreamMenuHost.kt`, `StreamMenu.kt` and the debug preview host, the help texts in `StreamMenuHelp.kt`
+and `StreamMenuLayoutTest.kt`, and in `ControllerHandler.java` the `activeRumble` machinery (back to a
+final `RumblePlayback` built in the constructor) plus `volatile` on the two `PreferenceConfiguration` fields.
+
 ## Presets
 
 These are comparison candidates, not measured or agreed device defaults. Values exactly
@@ -73,7 +89,7 @@ Changes are saved immediately in the current profile (`checkbox_rumble_translato
 The preset identity and all parameter values are saved together. A stale identity whose
 parameters or enable state no longer match is displayed as Custom. Existing installations
 without a saved preset show Original when translation is off and Custom when it is on.
-Streaming reads a snapshot at connection setup; reconnect after changing lab values.
+Streaming reads the saved values at connection setup; the stream menu's live switch (above) overrides them for the running stream. Lab edits still need a reconnect.
 
 ## Comparing patterns
 
