@@ -255,11 +255,13 @@ private fun ToastCard(
                 val age = ageOf()
                 if (age < 0f) return@drawBehind
                 val op = opacity(age)
-                val glow = op * (ToastTiming.GLOW_REST + (ToastTiming.GLOW_FLASH - ToastTiming.GLOW_REST) * (1f - Motion.progress(age, ToastTiming.GLOW_AT, ToastTiming.GLOW_MS, Motion.Ease)))
+                val glow = op * (1f - Motion.progress(age, ToastTiming.GLOW_AT, (hold - ToastTiming.GLOW_AT).toInt().coerceAtLeast(1), Motion.Ease))
                 val inset = ToastTiming.SHADOW_INSET * m.pxPerStage
                 drawHalo(shadowHalo, inset, inset + ToastTiming.SHADOW_DROP * m.pxPerStage, size.width - 2f * inset, size.height - 2f * inset, op, fillInside = true)
                 // The glow: one-pixel rings that fade with the eased falloff, so every step differs by less than one 8-bit level: smooth, no blur, no offscreen layer
-                val reachPx = ToastTiming.GLOW_REACH * m.pxPerStage
+                // The halo also spreads while the toast is shown: from [GLOW_REACH_FROM] of its reach at the start to all of it at the end
+                val spread = ToastTiming.GLOW_REACH_FROM + (1f - ToastTiming.GLOW_REACH_FROM) * Motion.progress(age, 0, hold.toInt().coerceAtLeast(1), EaseOut)
+                val reachPx = ToastTiming.GLOW_REACH * m.pxPerStage * spread
                 val glowSteps = (reachPx / GLOW_RING).toInt().coerceAtLeast(1)
                 val cardRadius = CARD_RADIUS * m.pxPerU
                 for (i in 1..glowSteps) {
