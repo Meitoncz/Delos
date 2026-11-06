@@ -73,7 +73,7 @@ class ToastStateTest {
     fun shellDefaultAndUndoDurationsRemainUnchanged() {
         val state = ShellState(Screen.Start)
         state.showToast("Default")
-        assertEquals(2600L, state.toast!!.durationMs)
+        assertEquals(4500L, state.toast!!.durationMs)
         state.showToast("Undo", action = ToastAction("Undo") {})
         assertEquals(10_000L, state.toast!!.durationMs)
     }

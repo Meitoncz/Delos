@@ -16,8 +16,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import com.limelight.shell.data.App
 import com.limelight.shell.data.Pc
 import com.limelight.shell.settings.SettingsTab
-import com.limelight.shell.ui.ACTION_TOAST_MS
-import com.limelight.shell.ui.DEFAULT_TOAST_MS
+import com.limelight.shell.ui.ToastTiming
 import com.limelight.shell.ui.GameArt
 import com.limelight.shell.ui.toastKindFor
 import com.limelight.utils.ToastKind
@@ -144,7 +143,7 @@ data class Toast(
     val icon: String?,
     val id: Int,
     val action: ToastAction? = null,
-    val durationMs: Long = if (action != null) ACTION_TOAST_MS else DEFAULT_TOAST_MS,
+    val durationMs: Long = if (action != null) ToastTiming.ACTION_MS else ToastTiming.SHELL_MS,
     val kind: ToastKind = ToastKind.INFO,
 )
 
@@ -311,7 +310,7 @@ class ShellState(initial: Screen) {
         text: String,
         icon: String? = null,
         action: ToastAction? = null,
-        durationMs: Long = if (action != null) ACTION_TOAST_MS else DEFAULT_TOAST_MS,
+        durationMs: Long = if (action != null) ToastTiming.ACTION_MS else ToastTiming.SHELL_MS,
         kind: ToastKind? = null,
     ) {
         toast = Toast(text, icon, ++toastCounter, action, durationMs, toastKindFor(kind, icon, action != null))

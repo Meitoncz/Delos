@@ -7,9 +7,9 @@ import org.junit.Test
 
 class ToastRoutingTest {
     @Test
-    fun durationHintsKeepAndroidShortAndLongTimes() {
-        assertEquals(2000L, toastDurationMs(0))
-        assertEquals(3500L, toastDurationMs(1))
+    fun durationHintsAreTheStreamsShortAndLongToastTimes() {
+        assertEquals(4000L, toastDurationMs(0))
+        assertEquals(6500L, toastDurationMs(1))
     }
 
     @Test

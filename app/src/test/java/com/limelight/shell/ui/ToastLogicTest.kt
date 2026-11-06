@@ -50,6 +50,52 @@ class ToastLogicTest {
     }
 
     @Test
+    fun theLifetimesAreNamedInOnePlace() {
+        assertEquals(4000L, ToastTiming.STREAM_SHORT_MS)
+        assertEquals(6500L, ToastTiming.STREAM_LONG_MS)
+        assertEquals(4500L, ToastTiming.SHELL_MS)
+        assertEquals(10_000L, ToastTiming.ACTION_MS)
+        // The timer line drains over the whole lifetime
+        assertEquals(.5f, ToastTiming.timerFraction(ToastTiming.SHELL_MS / 2f, ToastTiming.SHELL_MS), 1e-4f)
+        assertEquals(0f, ToastTiming.timerFraction(ToastTiming.STREAM_LONG_MS.toFloat(), ToastTiming.STREAM_LONG_MS), 0f)
+    }
+
+    @Test
+    fun theEnterSpringOvershootsOnceAndSettles() {
+        assertEquals(0f, ToastTiming.springStep(0f), 0f)
+        // It first reaches its place at the landing time the other effects are tied to
+        var landed = 0
+        while (ToastTiming.springStep(landed.toFloat()) < 1f) landed++
+        assertEquals(ToastTiming.LANDING_MS.toFloat(), landed.toFloat(), 8f)
+        // One overshoot of about 8 % of the travel, then it comes back
+        var peak = 0f
+        for (ms in 0..1500) peak = maxOf(peak, ToastTiming.springStep(ms.toFloat()))
+        assertEquals(1.084f, peak, .01f)
+        assertEquals(1f, ToastTiming.springStep(650f), .015f)
+        assertEquals(1f, ToastTiming.springStep(1500f), .001f)
+        // The undershoot after the peak is below 1 %: no wobble
+        var low = 2f
+        for (ms in 400..1500) low = minOf(low, ToastTiming.springStep(ms.toFloat()))
+        assertTrue(low > .99f)
+    }
+
+    @Test
+    fun theHaloFallsOffSmoothlyFromItsEdgeToItsReach() {
+        assertEquals(1f, ToastTiming.haloFalloff(0f), 0f)
+        assertEquals(0f, ToastTiming.haloFalloff(1f), 0f)
+        assertEquals(.5f, ToastTiming.haloFalloff(.5f), 1e-4f)
+        var before = 1f
+        for (i in 1..100) {
+            val now = ToastTiming.haloFalloff(i / 100f)
+            assertTrue(now <= before)
+            before = now
+        }
+        // No step at either end: the slope there is zero
+        assertTrue(ToastTiming.haloFalloff(.01f) > .999f)
+        assertTrue(ToastTiming.haloFalloff(.99f) < .001f)
+    }
+
+    @Test
     fun aToastLeavesAtItsHoldTimeAndIsGoneAfterTheExit() {
         val logic = ToastStageLogic<String>()
         val slot = logic.show("A", 2000L, 1000L)

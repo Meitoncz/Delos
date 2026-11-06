@@ -1,9 +1,10 @@
 package com.limelight.utils
 
+import com.limelight.shell.ui.ToastTiming
 import java.lang.ref.WeakReference
 
 /** Android's duration hints, kept independent of Android for the routing tests. */
-internal fun toastDurationMs(duration: Int): Long = if (duration == 1) 3500L else 2000L
+internal fun toastDurationMs(duration: Int): Long = if (duration == 1) ToastTiming.STREAM_LONG_MS else ToastTiming.STREAM_SHORT_MS
 
 /** Main-thread-only routing. Registration must not keep an Activity or its host alive. */
 internal class ToastRouting<H : Any> {

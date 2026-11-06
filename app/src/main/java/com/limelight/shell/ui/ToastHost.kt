@@ -42,6 +42,7 @@ import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.input.pointer.pointerInput
@@ -65,6 +66,7 @@ import com.limelight.shell.Toast
 import com.limelight.utils.ToastKind
 import kotlinx.coroutines.delay
 import kotlin.math.ceil
+import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sin
@@ -210,17 +212,23 @@ private fun ToastCard(
     }
     val density = LocalDensity.current
     val cardBrush = remember { Brush.verticalGradient(listOf(CardTop, CardBottom)) }
+    // The sweep: a band whose opacity follows a raised cosine (zero, with zero slope, at both ends), so it has no edge; the rect around it is padded by what the 12 degree tilt shifts it
     val sweepBrush = remember(m) {
-        val band = 190f * m.pxPerStage
-        Brush.linearGradient(
-            0f to Color.Transparent, .45f to Color.White.copy(alpha = .20f), .5f to Color.White.copy(alpha = .34f),
-            .55f to Color.White.copy(alpha = .20f), 1f to Color.Transparent,
-            start = Offset.Zero, end = Offset(band, band * tan(Math.toRadians(12.0)).toFloat()),
-        )
+        val band = SWEEP_BAND * m.pxPerStage
+        val pad = SWEEP_PAD * m.pxPerU
+        val stops = Array(SWEEP_STOPS + 1) { i ->
+            val t = i / SWEEP_STOPS.toFloat()
+            t to Color.White.copy(alpha = SWEEP_PEAK * .5f * (1f - cos(2f * Math.PI.toFloat() * t)))
+        }
+        Brush.linearGradient(*stops, start = Offset(pad, 0f), end = Offset(pad + band, band * tan(Math.toRadians(12.0)).toFloat()))
     }
     val lineBrush = remember(gold) { Brush.horizontalGradient(listOf(lerp(gold, Color(0xFFB87800), .6f), gold)) }
     val lineGlowBrush = remember(gold) { Brush.verticalGradient(listOf(Color.Transparent, gold.copy(alpha = .35f))) }
     val lineTrack = remember(gold) { gold.copy(alpha = .14f) }
+    val glowHalo = remember(look.fill, m) { Halo(look.fill, ToastTiming.GLOW_PEAK, ToastTiming.GLOW_REACH * m.pxPerStage, CARD_RADIUS * m.pxPerU) }
+    val shadowHalo = remember(m) {
+        Halo(Color.Black, ToastTiming.SHADOW_PEAK, ToastTiming.SHADOW_REACH * m.pxPerStage, CARD_RADIUS * m.pxPerU - ToastTiming.SHADOW_INSET * m.pxPerStage)
+    }
     val hold = slot.holdMs
 
     fun ageOf(): Float = (clock.longValue - slot.startMs).toFloat()
@@ -236,8 +244,13 @@ private fun ToastCard(
                 if (ageOf() < 0f) {
                     alpha = 0f // still waiting for the card it replaces to leave
                 } else {
-                    val enter = Motion.progress(ageOf(), 0, Motion.ENTER, EaseOut)
-                    translationX = if (reduced) 0f else (size.width + ToastTiming.SLIDE_EXTRA * m.pxPerStage) * (1f - enter) + ToastTiming.EXIT_SLIDE * m.pxPerStage * leaving()
+                    val step = ToastTiming.springStep(ageOf())
+                    translationX = if (reduced) 0f else (size.width + ToastTiming.SLIDE_EXTRA * m.pxPerStage) * (1f - step) + ToastTiming.EXIT_SLIDE * m.pxPerStage * leaving()
+                    if (!reduced) {
+                        transformOrigin = RightCenter
+                        scaleX = Motion.lerp(ToastTiming.FROM_SCALE, 1f, step)
+                        scaleY = scaleX
+                    }
                 }
                 compositingStrategy = CompositingStrategy.ModulateAlpha
             }
@@ -246,8 +259,10 @@ private fun ToastCard(
                 if (age < 0f) return@drawBehind
                 val op = opacity(age)
                 val glow = op * (ToastTiming.GLOW_REST + (1f - ToastTiming.GLOW_REST) * (1f - Motion.progress(age, ToastTiming.GLOW_AT, ToastTiming.GLOW_MS, Motion.Ease)))
-                drawGlow(look.fill, glow, m)
-                drawCardShadow(op, m)
+                drawHalo(glowHalo, 0f, 0f, size.width, size.height, glow)
+                drawRoundRect(look.fill.copy(alpha = .35f * glow), Offset(-m.pxPerStage, -m.pxPerStage), Size(size.width + 2f * m.pxPerStage, size.height + 2f * m.pxPerStage), CornerRadius(CARD_RADIUS * m.pxPerU + m.pxPerStage), style = Stroke(m.pxPerStage))
+                val inset = ToastTiming.SHADOW_INSET * m.pxPerStage
+                drawHalo(shadowHalo, inset, inset + ToastTiming.SHADOW_DROP * m.pxPerStage, size.width - 2f * inset, size.height - 2f * inset, op)
             }
             .then(if (isLatest) Modifier.semantics(mergeDescendants = true) { liveRegion = live; contentDescription = description } else Modifier),
     ) {
@@ -272,9 +287,9 @@ private fun ToastCard(
                         val sweep = Motion.progress(ageOf(), ToastTiming.SWEEP_AT, ToastTiming.SWEEP_MS, EaseOut)
                         val strength = sin(Math.PI.toFloat() * sweep)
                         if (strength > 0f) {
-                            val band = 190f * m.pxPerStage
+                            val pad = SWEEP_PAD * m.pxPerU
                             val x = size.width * Motion.lerp(-.4f, 1.4f, sweep)
-                            translate(x, 0f) { drawRect(sweepBrush, size = Size(band + size.height * .25f, size.height), alpha = strength) }
+                            translate(x - pad, 0f) { drawRect(sweepBrush, size = Size(SWEEP_BAND * m.pxPerStage + 2f * pad, size.height), alpha = strength) }
                         }
                     }
                     // The timer: a gold line along the bottom edge that draws in and then drains
@@ -309,17 +324,17 @@ private fun ToastCard(
                 horizontalArrangement = Arrangement.spacedBy(m.dp(22f)),
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(m.dp(3f))) {
-                    BasicText(kind.word, style = eyebrowStyle, modifier = Modifier.rising(slot, clock, m, reduced, Motion.ROW_DELAY))
+                    BasicText(kind.word, style = eyebrowStyle, modifier = Modifier.rising(slot, clock, m, reduced, ToastTiming.ROW_AT))
                     BasicText(
                         toast.text, style = textStyle,
-                        modifier = Modifier.width(with(density) { textWidthPx.toDp() }).rising(slot, clock, m, reduced, Motion.ROW_DELAY + Motion.STAGGER_ROW),
+                        modifier = Modifier.width(with(density) { textWidthPx.toDp() }).rising(slot, clock, m, reduced, ToastTiming.ROW_AT + Motion.STAGGER_ROW),
                         overflow = TextOverflow.Ellipsis, maxLines = TOAST_MAX_LINES,
                     )
                 }
                 if (action != null) {
                     Row(
                         Modifier
-                            .rising(slot, clock, m, reduced, Motion.ROW_DELAY + 2 * Motion.STAGGER_ROW, pressed = true)
+                            .rising(slot, clock, m, reduced, ToastTiming.ROW_AT + 2 * Motion.STAGGER_ROW, pressed = true)
                             .background(gold.copy(alpha = .16f), CircleShape)
                             .border(m.dp(1.5f), gold.copy(alpha = .6f), CircleShape)
                             .padding(start = m.dp(8f), top = m.dp(7f), bottom = m.dp(7f), end = m.dp(22f)),
@@ -352,37 +367,64 @@ private fun Modifier.rising(slot: ToastSlot<Toast>, clock: LongState, m: ToastMe
         compositingStrategy = CompositingStrategy.ModulateAlpha
     }
 
-/** The kind-coloured edge glow: stacked rounded rectangles of low opacity stand in for a blur (nothing is blurred, nothing allocates). */
-private fun DrawScope.drawGlow(color: Color, strength: Float, m: ToastMetrics) {
-    if (strength <= 0f) return
-    val radius = CARD_RADIUS * m.pxPerU
-    val sp = m.pxPerStage
-    for (i in 0 until FAR_STEPS) {
-        val e = FAR_SPREAD * sp * (1f - i / FAR_STEPS.toFloat())
-        drawRoundRect(color.copy(alpha = FAR_ALPHA * strength), Offset(-e, -e), Size(size.width + 2f * e, size.height + 2f * e), CornerRadius(radius + e))
+/**
+ * A soft halo around a rounded rectangle, drawn as four edge strips (a linear gradient each) and four corner quadrants (a radial gradient each) whose
+ * opacity follows [ToastTiming.haloFalloff] in [STOPS] stops: smooth at any opacity, no blur, no offscreen layer. The brushes are built once per toast;
+ * the strength of a frame is the `alpha` of the draw call, so nothing is allocated while it animates.
+ */
+private class Halo(private val color: Color, private val peak: Float, val reach: Float, val radius: Float) {
+    // Edge strips: position 0 is the far side
+    private fun edge(farFirst: Boolean, vertical: Boolean): Brush {
+        val stops = Array(STOPS + 1) { i ->
+            val p = i / STOPS.toFloat()
+            p to color.copy(alpha = peak * ToastTiming.haloFalloff(if (farFirst) 1f - p else p))
+        }
+        return if (vertical) Brush.verticalGradient(*stops) else Brush.horizontalGradient(*stops)
     }
-    for (i in 0 until NEAR_STEPS) {
-        val e = NEAR_SPREAD * sp * (1f - i / NEAR_STEPS.toFloat())
-        drawRoundRect(color.copy(alpha = NEAR_ALPHA * strength), Offset(-e, -e), Size(size.width + 2f * e, size.height + 2f * e), CornerRadius(radius + e))
+
+    val top = edge(true, true)
+    val bottom = edge(false, true)
+    val left = edge(true, false)
+    val right = edge(false, false)
+
+    private fun corner(cx: Float, cy: Float): Brush {
+        val outer = radius + reach
+        val inner = radius / outer
+        val stops = Array(STOPS + 2) { i ->
+            if (i == 0) 0f to color.copy(alpha = peak)
+            else {
+                val t = (i - 1) / STOPS.toFloat()
+                (inner + (1f - inner) * t) to color.copy(alpha = peak * ToastTiming.haloFalloff(t))
+            }
+        }
+        return Brush.radialGradient(*stops, center = Offset(cx, cy), radius = outer)
     }
-    drawRoundRect(color.copy(alpha = .4f * strength), Offset(-sp, -sp), Size(size.width + 2f * sp, size.height + 2f * sp), CornerRadius(radius + sp), style = Stroke(sp))
+
+    private val span = radius + reach
+    val topLeft = corner(span, span)
+    val topRight = corner(0f, span)
+    val bottomLeft = corner(span, 0f)
+    val bottomRight = corner(0f, 0f)
 }
 
-/** The soft drop shadow under the card (22 stage pixels down), built the same way. */
-private fun DrawScope.drawCardShadow(opacity: Float, m: ToastMetrics) {
-    val radius = CARD_RADIUS * m.pxPerU
-    val sp = m.pxPerStage
-    for (i in 0 until SHADOW_STEPS) {
-        val e = (10f - 4f * i) * sp
-        drawRoundRect(Color.Black.copy(alpha = SHADOW_ALPHA * opacity), Offset(-e, 22f * sp - e), Size(size.width + 2f * e, size.height + 2f * e), CornerRadius(max(0f, radius + e)))
-    }
+private fun DrawScope.drawHalo(h: Halo, left: Float, top: Float, width: Float, height: Float, alpha: Float) {
+    if (alpha <= 0f) return
+    val d = h.reach
+    val r = h.radius
+    val span = Size(r + d, r + d)
+    drawRect(h.top, Offset(left + r, top - d), Size(width - 2f * r, d), alpha)
+    drawRect(h.bottom, Offset(left + r, top + height), Size(width - 2f * r, d), alpha)
+    drawRect(h.left, Offset(left - d, top + r), Size(d, height - 2f * r), alpha)
+    drawRect(h.right, Offset(left + width, top + r), Size(d, height - 2f * r), alpha)
+    drawRect(h.topLeft, Offset(left - d, top - d), span, alpha)
+    drawRect(h.topRight, Offset(left + width - r, top - d), span, alpha)
+    drawRect(h.bottomLeft, Offset(left - d, top + height - r), span, alpha)
+    drawRect(h.bottomRight, Offset(left + width - r, top + height - r), span, alpha)
 }
 
-private const val FAR_STEPS = 8
-private const val FAR_SPREAD = 110f
-private const val FAR_ALPHA = .03f
-private const val NEAR_STEPS = 10
-private const val NEAR_SPREAD = 46f
-private const val NEAR_ALPHA = .075f
-private const val SHADOW_STEPS = 6
-private const val SHADOW_ALPHA = .125f
+private const val STOPS = 14
+private const val SWEEP_STOPS = 10
+private const val SWEEP_BAND = 190f
+private const val SWEEP_PAD = 56f
+private const val SWEEP_PEAK = .30f
+private val RightCenter = TransformOrigin(1f, .5f)

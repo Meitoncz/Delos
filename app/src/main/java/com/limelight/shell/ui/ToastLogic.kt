@@ -1,13 +1,11 @@
 package com.limelight.shell.ui
 
 import com.limelight.utils.ToastKind
+import kotlin.math.cos
+import kotlin.math.exp
 import kotlin.math.min
-
-/** How long a toast with an action stays (the profile deletion lets itself be undone for as long). */
-const val ACTION_TOAST_MS = 10_000L
-
-/** How long a shell toast stays; the stream's toasts bring their own 2 / 3.5 s hints (`DelosToast`). */
-const val DEFAULT_TOAST_MS = 2600L
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 /** A toast shows at most this many lines of text, then an ellipsis (no marquee: a toast is never focused). */
 const val TOAST_MAX_LINES = 2
@@ -56,27 +54,74 @@ fun toastTextMaxWidth(stageWidth: Float, scale: Float): Float = min(560f * scale
 
 /** Timings of the console toast that are not in [Motion] (milliseconds, stage pixels, fractions). */
 object ToastTiming {
-    /** Distance the card travels beyond its own width when it slides in from outside the right edge. */
+    // How long a toast stays, from the moment it starts to enter to the moment it starts to leave (milliseconds). One place for all of them.
+    /** The stream's and the controller windows' short and long hints (`DelosToast.SHORT` / `LONG`). */
+    const val STREAM_SHORT_MS = 4000L
+    const val STREAM_LONG_MS = 6500L
+
+    /** A toast of the shell. */
+    const val SHELL_MS = 4500L
+
+    /** A toast with an action: the profile deletion lets itself be undone for as long. */
+    const val ACTION_MS = 10_000L
+
+    /** Distance the card travels beyond its own width when it springs in from outside the right edge. */
     const val SLIDE_EXTRA = 140f
 
     /** Distance the card leaves to the right. */
     const val EXIT_SLIDE = 72f
 
-    /** The icon block pops [ICON_DELAY] after the card starts to enter. */
-    const val ICON_DELAY = 120
+    // The enter is a spring (a single, clearly visible overshoot): the card is 94 % wide at the start and grows to 100 % around its right edge.
+    /** Damping ratio and stiffness (mass 1) of the enter spring: it overshoots 8.4 % of the travel (peak at 327 ms), first reaches its place at 233 ms and is within 1 % after 627 ms. */
+    const val SPRING_DAMPING = .62f
+    const val SPRING_STIFFNESS = 150f
+    const val FROM_SCALE = .94f
 
-    /** The kind-coloured glow flashes as the card lands, then settles at [GLOW_REST] of its strength. */
-    const val GLOW_AT = 200
+    /** When the card first reaches its place (ms after it started to enter; `springStep` crosses 1 at 233 ms): everything else is timed against it. */
+    const val LANDING_MS = 230
+
+    /** The icon block pops and the word, the text and the chip rise (one [Motion.STAGGER_ROW] apart) just before the card lands, so they settle with its overshoot. */
+    const val ICON_DELAY = LANDING_MS - 100
+    const val ROW_AT = LANDING_MS - 90
+
+    /** The kind-coloured halo flashes as the card lands, then settles at [GLOW_REST] of its peak. */
+    const val GLOW_AT = LANDING_MS
     const val GLOW_MS = 900
-    const val GLOW_REST = .38f
+    const val GLOW_REST = .18f
 
-    /** The light sweep crosses the card once. */
-    const val SWEEP_AT = 260
+    /** The light sweep crosses the card once, right after it lands. */
+    const val SWEEP_AT = LANDING_MS + 20
     const val SWEEP_MS = 620
 
     /** The gold timer line draws in, then drains. */
-    const val LINE_AT = 280
+    const val LINE_AT = LANDING_MS + 50
     const val LINE_DRAW = 420
+
+    // The soft halo and drop shadow around the card: a many-stop eased gradient per edge and corner (no blur, no banding at these alphas)
+    /** Opacity of the glow at the card's edge at its peak, and how far it reaches (stage pixels). */
+    const val GLOW_PEAK = .22f
+    const val GLOW_REACH = 30f
+
+    /** The drop shadow: its opacity at the edge, reach, drop and inset from the card (stage pixels). */
+    const val SHADOW_PEAK = .30f
+    const val SHADOW_REACH = 44f
+    const val SHADOW_DROP = 20f
+    const val SHADOW_INSET = 8f
+
+    /** The enter spring's position [ms] after the card started to enter: 0 at the start, 1 at rest, above 1 while it overshoots. */
+    fun springStep(ms: Float): Float {
+        if (ms <= 0f) return 0f
+        val w0 = sqrt(SPRING_STIFFNESS)
+        val wd = w0 * sqrt(1f - SPRING_DAMPING * SPRING_DAMPING)
+        val t = ms / 1000f
+        return 1f - exp(-SPRING_DAMPING * w0 * t) * (cos(wd * t) + SPRING_DAMPING * w0 / wd * sin(wd * t))
+    }
+
+    /** How strong the halo is at [t] (0 at the card's edge, 1 at its reach) as a fraction of its peak: a smoothstep, so it starts and ends without a visible edge. */
+    fun haloFalloff(t: Float): Float {
+        val s = 1f - t.coerceIn(0f, 1f)
+        return s * s * (3f - 2f * s)
+    }
 
     /** How much of the timer line is there [age] ms after the toast started to enter: it draws in, then drains over [holdMs]. */
     fun timerFraction(age: Float, holdMs: Long): Float {
