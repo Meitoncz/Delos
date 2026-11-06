@@ -30,9 +30,9 @@ class HeroMotionTest {
         val pitchAfter = (HeroMotion.pitch(delta, false) - HeroMotion.pitch(0f, false)) / delta
         val yawBefore = (HeroMotion.yaw(1f, false) - HeroMotion.yaw(1f - delta, false)) / delta
         val yawAfter = (HeroMotion.yaw(delta, false) - HeroMotion.yaw(0f, false)) / delta
-        // The slopes are about 100°/turn here, so the one-sided differences differ by the curvature times delta.
-        assertEquals(pitchBefore, pitchAfter, .25f)
-        assertEquals(yawBefore, yawAfter, .25f)
+        // The slopes are about 94°/turn here, so the one-sided differences differ by the curvature times delta.
+        assertEquals(pitchBefore, pitchAfter, .15f)
+        assertEquals(yawBefore, yawAfter, .15f)
     }
 
     @Test
@@ -45,10 +45,10 @@ class HeroMotionTest {
 
     @Test
     fun farEdgeMovesClearlyButStaysElegant() {
-        // Un-overscanned right edge midpoint at the yaw extreme: roughly 100 px at 2100 px wide.
+        // Un-overscanned right edge midpoint at the yaw extreme: about 92 px at 2100 px wide (15°, camera 2.2 × 2100 px).
         val shift = 1050.0 - projectRaw(Point(1050.0, 0.0), 0.0, HeroMotion.DEGREES * PI / 180.0).x
-        assertTrue("far edge shift $shift", shift in 90.0..120.0)
-        assertEquals(12.0, HeroMotion.PERIOD_NANOS / 1e9, 0.0)
+        assertTrue("far edge shift $shift", shift in 88.0..96.0)
+        assertEquals(25.0, HeroMotion.PERIOD_NANOS / 1e9, 0.0)
     }
 
     @Test
