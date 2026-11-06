@@ -95,3 +95,34 @@ not require reinstalling the APK or launching a game.
 - Check prototype rendering and focus variants with the same local font subsets.
 - Physical Odin: check icons in the shell, settings, context/side menus and stream menu; verify
   focus transitions and controller hints. Device acceptance is required before integration.
+
+## Console glyph review assets (2026-11-06)
+
+`tools/fonts/console/` contains two original, unapproved standing-console candidates:
+**A — Open seam** and **B — Swept wing**, each in Regular and Fill. They use the Phosphor
+256-unit design grid; Regular's 16-unit round strokes are already expanded into closed paths.
+Fill keeps the rear-wing separation and disc slot as transparent negative space. Neither design
+contains a logo or wordmark. These assets are not part of the bundled fonts or app UI.
+
+Generate the self-contained, offline comparison sheet with the standard-library-only script:
+
+```sh
+python3 tools/fonts/console/review.py --output build/ps5-icon-proto/round4/index.html
+```
+
+It embeds the actual bundled Phosphor fonts and candidate SVGs at 24, 32, 48 and 96 px, with
+a selected device-pill context and a light-surface check. The review PNG is a headless Chromium
+capture of this HTML, not an independently reconstructed drawing. In that renderer both candidates
+retain separate rear/front ink runs at all four sizes. B emphasizes the curved shell; choosing a
+candidate remains a user decision.
+
+For later integration after selection, extend `subset_fonts.py` with a local custom-glyph source
+before subsetting. Reserve one unused private-use code point after checking both full upstream
+cmaps, import the selected Regular/Fill paths into the respective fonts, and preserve their shared
+advance and origin. Map the 256-unit SVG coordinates to the font's actual units-per-em, flip the
+Y axis to its baseline convention, and keep counters/negative-space winding. Add a semantic
+`CONSOLE` entry through `icons.txt` and the generator so `Symbols.kt` and prototype CSS are generated
+together. Regenerate both committed TTF subsets and validate their bounds, matching advances and
+Regular/Fill crossfade before using `Symbols.CONSOLE`. The current mapping parser accepts only
+upstream Phosphor names, so adding a mapping alone is not sufficient. A vector drawable is an
+alternative, but font integration preserves the existing shared `Symbol` focus crossfade.
