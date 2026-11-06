@@ -20,7 +20,6 @@ import android.view.View;
 import android.view.WindowInsets;
 import android.view.WindowManager;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.limelight.Game;
 import com.limelight.LimeLog;

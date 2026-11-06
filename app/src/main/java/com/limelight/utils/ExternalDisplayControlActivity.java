@@ -24,7 +24,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.widget.Toast;
+import com.limelight.utils.DelosToast;
 
 import androidx.annotation.NonNull;
 import androidx.activity.OnBackPressedCallback;
@@ -118,6 +118,7 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        com.limelight.shell.DelosToastOverlay.attach(this);
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
@@ -141,12 +142,10 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
                     gameIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                     ActivityOptions options = ActivityOptions.makeBasic();
                     options.setLaunchDisplayId(secondaryDisplay.getDisplayId());
-                    Toast.makeText(this,
-                            getString(R.string.external_display_info,
-                                    secondaryDisplay.getMode().getPhysicalWidth(),
-                                    secondaryDisplay.getMode().getPhysicalHeight(),
-                                    secondaryDisplay.getMode().getRefreshRate()),
-                            Toast.LENGTH_LONG).show();
+                    DelosToast.show(this, getString(R.string.external_display_info,
+                            secondaryDisplay.getMode().getPhysicalWidth(),
+                            secondaryDisplay.getMode().getPhysicalHeight(),
+                            secondaryDisplay.getMode().getRefreshRate()), DelosToast.LONG);
 
                     startActivity(gameIntent, options.toBundle());
                     overridePendingTransition(0, 0);
@@ -164,7 +163,7 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
     private void initViews() {
         if (Game.instance == null) {
             if (failCount > 10) {
-                Toast.makeText(this, getString(R.string.no_game_instance), Toast.LENGTH_LONG).show();
+                DelosToast.show(this, getString(R.string.no_game_instance), DelosToast.LONG);
                 finish();
             }
             // Wait for the intent to get started

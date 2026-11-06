@@ -144,11 +144,10 @@ fun Shell(
     setup: PcSetup,
     links: MutableStateFlow<ShellLink?>,
     results: MutableStateFlow<StreamResult?>,
+    shell: ShellState,
 ) {
     val colors = LocalDelosColors.current
     val feedback = LocalFeedback.current
-    // The first launch starts with the logo and a new profile; every later one with the start screen
-    val shell = remember { ShellState(if (profileStore.profiles.value.all.isEmpty()) Screen.Boot() else Screen.Start) }
     val tracker = remember { FocusTracker() }
     val haze = rememberHazeState()
     // Only the animated background, for glass that is always on (the focused row, the top bar)

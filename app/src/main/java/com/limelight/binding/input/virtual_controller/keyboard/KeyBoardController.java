@@ -22,7 +22,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.Toast;
+import com.limelight.utils.DelosToast;
 import com.limelight.utils.DeviceVibrator;
 
 import com.limelight.binding.input.ActiveKeyboardInput;
@@ -101,7 +101,7 @@ public class KeyBoardController {
         buttonConfigure.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                Toast.makeText(context, context.getString(R.string.keyboard_configure_movable), Toast.LENGTH_SHORT).show();
+                DelosToast.show(context, context.getString(R.string.keyboard_configure_movable), DelosToast.SHORT);
                 buttonConfigure.setTag("movable");
                 DeviceVibrator.vibrateOnce(vibrator, 100); // Give haptic feedback
                 return true;
@@ -184,7 +184,7 @@ public class KeyBoardController {
                     message = context.getString(R.string.configuration_mode_exiting);
                 }
 
-                Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
+                DelosToast.show(context, message, DelosToast.SHORT);
 
                 buttonConfigure.invalidate();
 
@@ -539,7 +539,7 @@ public class KeyBoardController {
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    Toast.makeText(context, "Error loading custom keys: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    DelosToast.show(context, "Error loading custom keys: " + e.getMessage(), DelosToast.SHORT);
                 }
             }
 
@@ -732,7 +732,7 @@ public class KeyBoardController {
                 }
 
                 if (feedback.length() > 0) {
-                    Toast.makeText(context, feedback.toString(), Toast.LENGTH_LONG).show();
+                    DelosToast.show(context, feedback.toString(), DelosToast.LONG);
                 }
             });
 
@@ -742,7 +742,7 @@ public class KeyBoardController {
         } catch (Exception e) {
             LimeLog.warning("Error loading keyboard configuration: " + e.getMessage());
             e.printStackTrace();
-            Toast.makeText(context, context.getString(R.string.keyboard_load_error, e.getMessage()), Toast.LENGTH_SHORT).show();
+            DelosToast.show(context, context.getString(R.string.keyboard_load_error, e.getMessage()), DelosToast.SHORT);
         }
     }
 

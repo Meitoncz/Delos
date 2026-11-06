@@ -32,7 +32,7 @@ import android.view.InputEvent;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.Surface;
-import android.widget.Toast;
+import com.limelight.utils.DelosToast;
 
 import com.limelight.LimeLog;
 import com.limelight.R;
@@ -3200,7 +3200,7 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
         public void toggleMouseEmulation() {
             mainThreadHandler.removeCallbacks(mouseEmulationRunnable);
             mouseEmulationActive = !mouseEmulationActive;
-            Toast.makeText(activityContext, "Mouse emulation is: " + (mouseEmulationActive ? "ON" : "OFF"), Toast.LENGTH_SHORT).show();
+            DelosToast.show(activityContext, "Mouse emulation is: " + (mouseEmulationActive ? "ON" : "OFF"), DelosToast.SHORT);
 
             if (mouseEmulationActive) {
                 mainThreadHandler.postDelayed(mouseEmulationRunnable, mouseEmulationReportPeriod);
@@ -3469,7 +3469,7 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
             byte reportedType;
             if (type != MoonBridge.LI_CTYPE_PS && sensorManager != null) {
                 // Override the detected controller type if we're emulating motion sensors on an Xbox controller
-                Toast.makeText(activityContext, activityContext.getResources().getText(R.string.toast_controller_type_changed), Toast.LENGTH_LONG).show();
+                DelosToast.show(activityContext, activityContext.getResources().getText(R.string.toast_controller_type_changed), DelosToast.LONG);
                 reportedType = MoonBridge.LI_CTYPE_UNKNOWN;
 
                 // Remember that we should enable the clickpad emulation combo (Select+LB) for this device
@@ -3608,7 +3608,7 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
 
             if (type != MoonBridge.LI_CTYPE_PS && (capabilities & (MoonBridge.LI_CCAP_GYRO | MoonBridge.LI_CCAP_ACCEL)) != 0) {
                 activityContext.runOnUiThread(() -> {
-                    Toast.makeText(activityContext, activityContext.getResources().getText(R.string.toast_controller_type_changed), Toast.LENGTH_LONG).show();
+                    DelosToast.show(activityContext, activityContext.getResources().getText(R.string.toast_controller_type_changed), DelosToast.LONG);
                 });
             }
 

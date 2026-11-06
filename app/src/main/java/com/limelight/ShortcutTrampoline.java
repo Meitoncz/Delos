@@ -11,7 +11,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
-import android.widget.Toast;
+import com.limelight.utils.DelosToast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -151,8 +151,7 @@ public class ShortcutTrampoline extends AppCompatActivity {
                                                     // pinned shortcut from another app's intent, so nothing is quit here and no
                                                     // dialog asks: open the PC's games in Delos, where the running game is marked
                                                     // and the menu of the chosen game offers to quit it and start.
-                                                    Toast.makeText(getApplicationContext(),
-                                                            getRunningGameMessage(details), Toast.LENGTH_LONG).show();
+                                                    DelosToast.show(getApplicationContext(), getRunningGameMessage(details), DelosToast.LONG);
 
                                                     openPcInDelos();
                                                 }
@@ -191,7 +190,7 @@ public class ShortcutTrampoline extends AppCompatActivity {
     /** A shortcut that names nothing Delos can start (no known PC to show a result for): a toast, then this activity ends. */
     private void reject(String message) {
         runOnUiThread(() -> {
-            Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
+            DelosToast.show(getApplicationContext(), message, DelosToast.LONG);
             finish();
         });
     }
@@ -220,7 +219,7 @@ public class ShortcutTrampoline extends AppCompatActivity {
     private void failStart(ComputerDetails details, ShortcutFailure failure) {
         ResultText text = StreamResultKt.describeShortcutFailure(details.name, failure);
         if (app == null) {
-            Toast.makeText(getApplicationContext(), text.getSentence(), Toast.LENGTH_LONG).show();
+            DelosToast.show(getApplicationContext(), text.getSentence(), DelosToast.LONG);
             openPcInDelos();
         } else {
             StreamOutcome.failed(this, StreamResultKind.FAILED_TO_START, text, details.uuid, details.name, app.getAppId(), app.getAppName());

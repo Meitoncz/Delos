@@ -15,7 +15,7 @@ import android.view.HapticFeedbackConstants;
 import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.Toast;
+import com.limelight.utils.DelosToast;
 
 import com.limelight.LimeLog;
 import com.limelight.R;
@@ -111,7 +111,7 @@ public class VirtualController {
                     message = context.getString(R.string.configuration_mode_exiting);
                 }
 
-                Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
+                DelosToast.show(context, message, DelosToast.SHORT);
 
                 buttonConfigure.invalidate();
 

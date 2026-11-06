@@ -333,6 +333,17 @@ one press, one focus and one menu feel the same everywhere. The numbers, easings
   header and rows rise in turn, leaves in 240 ms. *Dialogs and the filter modal*: settle in from 0.96, title, note, fields and
   buttons rise in turn, leave in 240 ms. *Toasts* leave in 240 ms.
 
+All app messages use the existing Delos `ToastHost` design, never system toasts while a
+Delos window is visible. `DelosToast` routes to the shell's own state or to a
+noninteractive decor overlay in the stream and external-display controller windows;
+the overlay never takes focus, touch or controller input and respects display cutouts.
+Messages replace the previous toast, with short/long hints of 2/3.5 seconds; native shell
+messages retain 2.6 seconds and Undo retains 10 seconds. Hosts are weakly registered for
+their Activity lifecycle, including pending initialization messages; service/helper
+messages use the visible foreground host. The only system-toast fallback is when no
+Delos host is visible. Closing the separate stream-menu dialog does not remove the
+stream toast host or discard a result delivered after stream focus returns.
+
 ## Color roles
 
 Color is a seasoning, not a coating: the neutral text and surfaces carry the screen and the palette's three colors split

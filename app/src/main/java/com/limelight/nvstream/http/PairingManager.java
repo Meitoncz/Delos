@@ -1,6 +1,5 @@
 package com.limelight.nvstream.http;
 
-import android.widget.Toast;
 
 import org.bouncycastle.crypto.BlockCipher;
 import org.bouncycastle.crypto.engines.AESLightEngine;

@@ -135,7 +135,13 @@ data class Portal(val id: Int, val icon: String, val label: String, val sub: Str
 data class ToastAction(val label: String, val run: () -> Unit)
 
 @Immutable
-data class Toast(val text: String, val icon: String?, val id: Int, val action: ToastAction? = null)
+data class Toast(
+    val text: String,
+    val icon: String?,
+    val id: Int,
+    val action: ToastAction? = null,
+    val durationMs: Long = if (action != null) com.limelight.shell.ui.ACTION_TOAST_MS else 2600L,
+)
 
 /** Starting [app] on [pc]; [intent] opens the stream. */
 data class LaunchRequest(val id: Int, val pc: Pc, val app: App, val intent: android.content.Intent, val image: ImageBitmap?, val background: ImageBitmap?)
@@ -288,9 +294,14 @@ class ShellState(initial: Screen) {
     /** The element to focus again once the closed layer has left the composition. */
     fun takeReturnFocus(): FocusRequester? = returnFocus.also { returnFocus = null }
 
-    /** A toast with an [action] stays longer (ToastHost) and can be run once with [runToastAction]. */
-    fun showToast(text: String, icon: String? = null, action: ToastAction? = null) {
-        toast = Toast(text, icon, ++toastCounter, action)
+    /** A toast with an [action] keeps its existing Undo window unless a duration is supplied. */
+    fun showToast(
+        text: String,
+        icon: String? = null,
+        action: ToastAction? = null,
+        durationMs: Long = if (action != null) com.limelight.shell.ui.ACTION_TOAST_MS else 2600L,
+    ) {
+        toast = Toast(text, icon, ++toastCounter, action, durationMs)
     }
 
     fun hideToast(id: Int) {

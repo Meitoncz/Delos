@@ -103,7 +103,7 @@ import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
-import android.widget.Toast;
+import com.limelight.utils.DelosToast;
 import android.widget.ImageButton;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -318,6 +318,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        com.limelight.shell.DelosToastOverlay.attach(this);
 
         // External-display Game runs as a separate task. Android otherwise applies its default
         // side-slide even though the Delos loader is a continuation of the shell's launch scene.
@@ -598,11 +599,11 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
                     if (!willStreamHdr) {
                         // Nope, no HDR for us :(
-                        Toast.makeText(this, "Display does not support HDR10", Toast.LENGTH_LONG).show();
+                        DelosToast.show(this, "Display does not support HDR10", DelosToast.LONG);
                     }
                 }
                 else {
-                    Toast.makeText(this, "HDR requires Android 7.0 or later", Toast.LENGTH_LONG).show();
+                    DelosToast.show(this, "HDR requires Android 7.0 or later", DelosToast.LONG);
                 }
             }
         }
@@ -614,7 +615,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             if (PyroWaveRenderer.isAvailable()) {
                 offerPyroWave = true;
             } else {
-                Toast.makeText(this, "This device cannot decode PyroWave", Toast.LENGTH_LONG).show();
+                DelosToast.show(this, "This device cannot decode PyroWave", DelosToast.LONG);
             }
         }
 
@@ -670,16 +671,16 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         // Don't stream HDR if the decoder can't support it
         if (willStreamHdr && !offerPyroWave && !decoderRenderer.isHevcMain10Hdr10Supported() && !decoderRenderer.isAv1Main10Supported()) {
             willStreamHdr = false;
-            Toast.makeText(this, "Decoder does not support HDR10 profile", Toast.LENGTH_LONG).show();
+            DelosToast.show(this, "Decoder does not support HDR10 profile", DelosToast.LONG);
         }
         // Display a message to the user if HEVC was forced on but we still didn't find a decoder
         if (prefConfig.videoFormat == PreferenceConfiguration.FormatOption.FORCE_HEVC && !decoderRenderer.isHevcSupported()) {
-            Toast.makeText(this, "No HEVC decoder found", Toast.LENGTH_LONG).show();
+            DelosToast.show(this, "No HEVC decoder found", DelosToast.LONG);
         }
 
         // Display a message to the user if AV1 was forced on but we still didn't find a decoder
         if (prefConfig.videoFormat == PreferenceConfiguration.FormatOption.FORCE_AV1 && !decoderRenderer.isAv1Supported()) {
-            Toast.makeText(this, "No AV1 decoder found", Toast.LENGTH_LONG).show();
+            DelosToast.show(this, "No AV1 decoder found", DelosToast.LONG);
         }
 
         // H.264 is always supported
@@ -2117,17 +2118,17 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                     try {
                         if (!httpConn.sendClipboard(clipboardText)) {
                             if (prefConfig.smartClipboardSyncToast) {
-                                Game.this.runOnUiThread(() -> Toast.makeText(Game.this, getString(R.string.clipboard_sync_unsupported), Toast.LENGTH_SHORT).show());
+                                Game.this.runOnUiThread(() -> DelosToast.show(Game.this, getString(R.string.clipboard_sync_unsupported), DelosToast.SHORT));
                             }
                         } else {
                             if (prefConfig.smartClipboardSyncToast) {
-                                Game.this.runOnUiThread(() -> Toast.makeText(Game.this, getString(R.string.send_clipboard_success), Toast.LENGTH_SHORT).show());
+                                Game.this.runOnUiThread(() -> DelosToast.show(Game.this, getString(R.string.send_clipboard_success), DelosToast.SHORT));
                             }
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
                         if (prefConfig.smartClipboardSyncToast) {
-                            Game.this.runOnUiThread(() -> Toast.makeText(Game.this, getString(R.string.send_clipboard_failed) + e.getMessage(), Toast.LENGTH_SHORT).show());
+                            Game.this.runOnUiThread(() -> DelosToast.show(Game.this, getString(R.string.send_clipboard_failed) + e.getMessage(), DelosToast.SHORT));
                         }
                     }
                 }
@@ -2173,12 +2174,12 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
                     clipboardManager.setPrimaryClip(clipData);
                     if (prefConfig.smartClipboardSyncToast) {
-                        Game.this.runOnUiThread(() -> Toast.makeText(Game.this, getString(R.string.get_clipboard_success), Toast.LENGTH_SHORT).show());
+                        Game.this.runOnUiThread(() -> DelosToast.show(Game.this, getString(R.string.get_clipboard_success), DelosToast.SHORT));
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
                     if (prefConfig.smartClipboardSyncToast) {
-                        Game.this.runOnUiThread(() -> Toast.makeText(Game.this, getString(R.string.get_clipboard_failed) + e.getMessage(), Toast.LENGTH_SHORT).show());
+                        Game.this.runOnUiThread(() -> DelosToast.show(Game.this, getString(R.string.get_clipboard_failed) + e.getMessage(), DelosToast.SHORT));
                     }
                 }
                 clipboardSyncRunning = false;
@@ -3276,7 +3277,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                                 ? app.getResources().getString(R.string.applist_quit_success) + " " + quitName
                                 : (failure != null && !failure.isEmpty() ? failure : "The PC did not quit " + quitName);
                         com.limelight.shell.StreamExit.INSTANCE.setQuitting(false);
-                        new Handler(Looper.getMainLooper()).post(() -> Toast.makeText(app, message, Toast.LENGTH_LONG).show());
+                        new Handler(Looper.getMainLooper()).post(() -> DelosToast.show(app, message, DelosToast.LONG));
                     } else {
                         com.limelight.shell.StreamExit.INSTANCE.setQuitting(false);
                     }
@@ -3456,7 +3457,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(Game.this, message, Toast.LENGTH_LONG).show();
+                DelosToast.show(Game.this, message, DelosToast.LONG);
             }
         });
     }
@@ -3467,7 +3468,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(Game.this, message, Toast.LENGTH_LONG).show();
+                    DelosToast.show(Game.this, message, DelosToast.LONG);
                 }
             });
         }
@@ -3736,9 +3737,9 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     public void toggleZoomMode() {
         this.isPanZoomMode = !this.isPanZoomMode;
         if (this.isPanZoomMode) {
-            Toast.makeText(this, getString(R.string.pan_zoom_mode_enabled), Toast.LENGTH_SHORT).show();
+            DelosToast.show(this, getString(R.string.pan_zoom_mode_enabled), DelosToast.SHORT);
         } else {
-            Toast.makeText(this, getString(R.string.pan_zoom_mode_disabled), Toast.LENGTH_SHORT).show();
+            DelosToast.show(this, getString(R.string.pan_zoom_mode_disabled), DelosToast.SHORT);
         }
 
         if (ExternalDisplayControlActivity.instance != null) {

@@ -335,8 +335,8 @@ fun SideMenuHeader(avatar: @Composable BoxScope.() -> Unit, name: String, status
 }
 
 /**
- * A toast at the bottom center (`#toast`), hidden after 2.6 s; one with an action ("Undo") stays for
- * [ACTION_TOAST_MS] and runs it on Y of the controller (GlobalKeys) or a tap.
+ * A toast at the bottom center (`#toast`), hidden after its duration (2.6 s by default); one with an
+ * action ("Undo") stays for [ACTION_TOAST_MS] and runs it on Y of the controller or a tap.
  */
 @Composable
 fun ToastHost(toast: Toast?, onHidden: (Int) -> Unit, onAction: () -> Unit) {
@@ -345,7 +345,7 @@ fun ToastHost(toast: Toast?, onHidden: (Int) -> Unit, onAction: () -> Unit) {
     if (toast != null) shown = toast
     LaunchedEffect(toast?.id) {
         val id = toast?.id ?: return@LaunchedEffect
-        delay(if (toast?.action != null) ACTION_TOAST_MS else 2600)
+        delay(toast.durationMs)
         onHidden(id)
     }
     Box(Modifier.fillMaxSize().padding(bottom = 120.px), contentAlignment = Alignment.BottomCenter) {
