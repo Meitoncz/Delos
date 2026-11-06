@@ -250,6 +250,17 @@ private fun ToastCard(
                         scaleY = scaleX
                     }
                 }
+                // The kind-coloured halo is the platform's own elevation shadow tinted with the kind colour: smooth by construction, drawn by the GPU outside the card
+                // and not clipped by the layer, so it costs nothing per frame beyond the elevation value read here
+                val glowAge = ageOf()
+                if (glowAge >= 0f) {
+                    val glowLevel = opacity(glowAge) * (ToastTiming.GLOW_REST + (ToastTiming.GLOW_FLASH - ToastTiming.GLOW_REST) * (1f - Motion.progress(glowAge, ToastTiming.GLOW_AT, ToastTiming.GLOW_MS, Motion.Ease)))
+                    this.shape = shape
+                    clip = false
+                    shadowElevation = ToastTiming.GLOW_ELEVATION * m.pxPerStage * glowLevel
+                    ambientShadowColor = look.fill.copy(alpha = ToastTiming.GLOW_PEAK)
+                    spotShadowColor = look.fill.copy(alpha = ToastTiming.GLOW_PEAK)
+                }
                 compositingStrategy = CompositingStrategy.ModulateAlpha
             }
             .drawBehind {
@@ -257,7 +268,6 @@ private fun ToastCard(
                 if (age < 0f) return@drawBehind
                 val op = opacity(age)
                 val glow = op * (ToastTiming.GLOW_REST + (1f - ToastTiming.GLOW_REST) * (1f - Motion.progress(age, ToastTiming.GLOW_AT, ToastTiming.GLOW_MS, Motion.Ease)))
-                drawHalo(glowHalo, 0f, 0f, size.width, size.height, glow)
                 drawRoundRect(look.fill.copy(alpha = .35f * glow), Offset(-m.pxPerStage, -m.pxPerStage), Size(size.width + 2f * m.pxPerStage, size.height + 2f * m.pxPerStage), CornerRadius(CARD_RADIUS * m.pxPerU + m.pxPerStage), style = Stroke(m.pxPerStage))
                 val inset = ToastTiming.SHADOW_INSET * m.pxPerStage
                 drawHalo(shadowHalo, inset, inset + ToastTiming.SHADOW_DROP * m.pxPerStage, size.width - 2f * inset, size.height - 2f * inset, op, fillInside = true)
