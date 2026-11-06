@@ -20,7 +20,7 @@ object StreamMenuHelp {
 
     private val descriptions = mapOf(
         "Resume" to "Closes this menu and continues the stream.",
-        "Keyboard" to "Opens or closes Android's system keyboard for typing on the PC. Not the Delos full keyboard.",
+        "Keyboard" to "Opens or closes the Delos on-screen keyboard: D-pad moves, A types, B closes. Not Android's system keyboard (More).",
         "Overlay" to "Cycles full statistics, compact statistics, off. 1% low FPS covers the slowest frames of about ten seconds.",
         "Brightness" to "Adjusts this device's brightness for this stream; the system setting returns afterwards.",
         "Screen brightness" to "Changes this device's screen brightness now; the system setting returns afterwards. Not the PC or a monitor.",
@@ -46,7 +46,7 @@ object StreamMenuHelp {
         "Mouse mode" to "Chooses how touch controls the PC: direct touch, trackpad or off. Remember mouse mode decides whether it persists.",
         "Local mouse cursor" to "Shows or hides Android's pointer for a physical mouse during this stream. Not the PC cursor in the video.",
         "On-screen controls" to "Shows or hides the virtual gamepad during this stream. Opacity and layout are set under Controls.",
-        "Full keyboard" to "Shows or hides the Delos full on-screen keyboard. Not Android's system keyboard.",
+        "Open Android keyboard" to "Opens or closes Android's system keyboard, after closing this menu. Not the Delos keyboard (the Keyboard tile).",
         "Touch sensitivity" to "Toggles extra touchscreen sensitivity scaling, configured in settings.",
         // Rumble feel row and page
         "Rumble feel" to "Picks how host rumble feels, at once and saved. Stays open: pick again to compare. B goes back.",

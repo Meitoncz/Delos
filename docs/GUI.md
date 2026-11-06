@@ -398,7 +398,8 @@ controller window ownership keep their existing paths.
 
 - **Tiles**: 150 px glass, corner 42, gap 40 (9 × 150 + 8 × 40 = 1670, 125 on each side), the top edge at y 628, icon 64
   (Phosphor, filled on focus), label 24 SemiBold 24 below the tile. Resume, Keyboard, Overlay, Brightness, Bitrate,
-  Upscaler (Supersampling), More, Disconnect, Quit game. Toggles (Overlay, Upscaler) have an **On / Off pill**
+  Upscaler (Supersampling), More, Disconnect, Quit game. The **Keyboard** tile is the Delos Full keyboard (on while it is up;
+  A closes the menu, then toggles it); Android's system keyboard is the More row Open Android keyboard. Toggles (Keyboard, Overlay, Upscaler) have an **On / Off pill**
   (18 bold, 34 high) at the tile's top right corner (right −12, top −14; Overlay says Compact, the Upscaler its status
   word) and turn accent: accent glass and icon, accent pill. **Focus** scales the tile to 1.12 (spring, 420 ms), lights
   its glass, adds a glow and turns the label gold, 8 px lower; one **gold ring** (box 186, corner 56, 4 px, outer glow
@@ -429,8 +430,8 @@ controller window ownership keep their existing paths.
   rows in a box of two lines (three from interface scale 1.15 up), complete, never scrolling. The Upscaler page, with
   Supersampling quality and **Save for this game**, fits at every interface scale (a test pins the sum). The pages
   opened from More (Send keys, Commands, Mouse mode) are anchored over the More tile. More lists Send keys, Send
-  clipboard, Get clipboard, Commands, Task manager, Zoom, Mouse mode (when allowed), On-screen controls, Full
-  keyboard (a toggle: on while the full keyboard is up), Touch sensitivity and Rumble feel. **Key layout** and
+  clipboard, Get clipboard, Commands, Task manager, Zoom, Mouse mode (when allowed), On-screen controls, **Open Android
+  keyboard** (an action: closes the menu, then opens or closes Android's system keyboard), Touch sensitivity and Rumble feel. **Key layout** and
   **Rotate** are not offered: the key-layout overlay is hidden (its code and preferences stay) and a rotation
   re-lays out the overlays.
 - **Navigation**: Left/Right move along the tiles. A on a toggle or action tile acts at once; A on Brightness, Bitrate,
@@ -457,7 +458,7 @@ controller window ownership keep their existing paths.
 
 ### Full keyboard
 
-The on-screen keyboard over the stream (stream menu → More → Full keyboard, a four-finger tap, the button on the external
+The on-screen keyboard over the stream (stream menu → the Keyboard tile, a four-finger tap, the button on the external
 display's control screen) is the approved **Flat console** prototype (`build/fullkeyboard-proto/b.html`, local scratch, with
 its screenshots): a solid bar docked to the bottom edge, flat keys, a hint strip under them. It is one Compose
 layer (`shell/keyboard`: `FullKeyboard`, `FullKeyboardState`, the key table in `FullKeyboardKeys`, the pure logic in
@@ -468,8 +469,13 @@ drawn nothing is touchable: a finger on the game area goes to the stream even wh
 
 - **Keys**: the same 80 keys, six rows and weights as the old XML layout (Esc, F1–F12, Ins, Del / ~` 1–0 _- += Back / Tab
   QWERTY… {[ }] |\ / Caps ASDF… :; "' Enter / Shift ZXCV… <, >. ?/ ↑ Hide / Ctrl Win Alt Space Home End PgUp PgDn ← ↓ →; `FullKeyboardKeysTest`
-  pins them). Letters are upper case, the punctuation keys stack the character Shift gives above the plain one (with Shift
-  latched the shifted one lights up and the plain one dims), Space is a thin bar, the arrows are drawn strokes, Home/End/PgUp/PgDn
+  pins them). **The keys show what they type** (`keyLabel`, US layout): letters are lower case, upper case while Shift is held
+  (touch or latched, also X on the controller) or Caps Lock is on (both: lower again); the number row shows `!@#$%^&*()` while
+  Shift is down; the punctuation keys stack their two characters (the other one small above, the typed one below) and Shift swaps
+  them. The labels crossfade (280 ms, no layout change) and update at once when Shift latches, unlatches or the keyboard
+  hides. Caps Lock is tracked by the keyboard (toggled on every press of the Caps key; the host's real state is not readable)
+  and survives hiding; the stream's QWERTY setting only changes the codes sent, not the labels. The popup shows the typed
+  character too. Space is a thin bar, the arrows are drawn strokes, Home/End/PgUp/PgDn
   have a smaller legend (.8), Hide is the Phosphor close icon (second accent, filled on focus) over "HIDE". Colors come from
   the theme (the Delos palette gives the prototype's `#131c31`→`#0d1424` bar, `#1f2b46` keys, `#151e35` function and modifier
   keys, a plum-tinted Hide key); the light theme gets a light bar. Legend: Figtree SemiBold at .38 of the key height.
@@ -500,7 +506,13 @@ drawn nothing is touchable: a finger on the game area goes to the stream even wh
   modifier latches and unlatches, because a controller cannot hold one key while pressing another, whatever the sticky setting
   says), **B** (and Back) closes it, **X** toggles Shift. Moves are row-aware like the prototype: left/right stay in the row and
   stop at its ends (the ring nudges 7 px against the edge), up/down go to the key of the next row under the *column* of the last
-  horizontal move, else the nearest (`KeyGrid`, `FullKeyboardInputTest`). The first focus is Q, then the last key. The
+  horizontal move, else the nearest (`KeyGrid`, `FullKeyboardInputTest`). The first focus is Q, then the last key. **The D-pad
+  works in both shapes a pad reports it**: as `DPAD_*` key events (the system repeats them) and as the hat axes
+  `AXIS_HAT_X` / `AXIS_HAT_Y` of the joystick motion event, which is what most handhelds (the Odin) send and which never
+  reaches the keys. `DpadTracker` (pure, tested) turns the hat into moves: a newly pressed direction moves at once, a timer
+  repeats the last one after 350 ms every 100 ms until the hat is back at the center, and a device that sends both the hat
+  and the key moves once per press. A, B and X are the raw Android codes (`BUTTON_A` 96, `BUTTON_B` 97, `BUTTON_X` 99), also
+  when a handheld's built-in pad reports them with a plain keyboard source. The
   controller's other buttons are swallowed. The stream menu's open/close buttons keep working (they are handled first);
   rumble keeps running. **No stuck input**: `ControllerHandler.setInputSuspended` lets go of everything the physical
   controllers hold (a neutral packet each) when the keyboard opens and again when it closes, and sends nothing in between (also
@@ -517,7 +529,7 @@ drawn nothing is touchable: a finger on the game area goes to the stream even wh
   .97 in 120 ms and holds it 130 ms (a tap is always seen); colors and opacities take 280 ms; the popup settles with the
   spring in 120 ms. At the keyboard's edge the ring bumps 7 px and returns (the choices' chevron nudge). Reduced motion: only fades.
 - **Visibility** rules are unchanged: the state is kept across rotation and PiP (`hide(true)` / `show()`), `Game.isFullKeyboardShown()` feeds the stream
-  menu's toggle row; a rotation only re-reads the settings (`refreshLayout`), it does not rebuild the keyboard.
+  menu's Keyboard tile (the tile is the Delos keyboard; Android's system keyboard is the More row **Open Android keyboard**); a rotation only re-reads the settings (`refreshLayout`), it does not rebuild the keyboard.
 
 #### Full keyboard preview (debug builds)
 

@@ -120,7 +120,7 @@ internal class FakeStreamMenuHost : StreamMenuHost {
         else if (!overlayCompact) overlayCompact = true
         else { overlayOn = false; overlayCompact = false }
     }
-    override fun toggleKeyboard() = Unit
+    override fun toggleSystemKeyboard() = Unit
 
     override var brightnessPercent = 70
     override fun setBrightness(percent: Int) { brightnessPercent = percent }

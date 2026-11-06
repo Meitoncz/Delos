@@ -334,7 +334,7 @@ class StreamMenu(private val game: Game) {
         override val overlayOn get() = prefs.enablePerfOverlay
         override val overlayCompact get() = prefs.enablePerfOverlayLite
         override fun toggleOverlay() { game.toggleHUD() }
-        override fun toggleKeyboard() { game.toggleKeyboard() }
+        override fun toggleSystemKeyboard() { game.toggleKeyboard() }
 
         override val brightnessPercent get() = this@StreamMenu.brightnessPercent()
         override fun setBrightness(percent: Int) { applyBrightness(percent, menu) }

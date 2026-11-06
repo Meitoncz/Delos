@@ -128,7 +128,7 @@ class SettingsHelpFitTest {
             "Resume", "Keyboard", "Overlay", "Brightness", "Screen brightness", "Bitrate", "Apply bitrate", "Upscaler",
             "Upscaling", "Supersampling", "Supersampling quality", "Mode", "Sharpness", "Save for this game", "More", "Disconnect", "Quit game",
             "Send keys", "Send clipboard", "Get clipboard", "Commands", "Task manager", "Zoom", "Mouse mode",
-            "Local mouse cursor", "On-screen controls", "Full keyboard", "Touch sensitivity",
+            "Local mouse cursor", "On-screen controls", "Open Android keyboard", "Touch sensitivity",
             "Keys: Ctrl + Alt + Delete", "Command: Restart the game",
         ).forEach { assertFits("stream menu $it", StreamMenuHelp.description(it)) }
         // Mode help adds the selected method and the upscaler pages add their status line

@@ -1,5 +1,6 @@
 package com.limelight.shell.keyboard
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
@@ -333,6 +334,8 @@ private fun KeyCap(key: KeyDef, pos: KeyPos, state: FullKeyboardState, metrics: 
     val focused by remember(pos) { derivedStateOf { state.focusVisible && state.focus == pos } }
     val latched by remember(key.code) { derivedStateOf { key.code in state.latched } }
     val pressed by remember(key.code) { derivedStateOf { key.code in state.pressed } }
+    // What the key shows follows Shift and Caps Lock; only the keys whose label changes recompose
+    val label by remember(key) { derivedStateOf { keyLabel(key, state.shifted, state.capsOn) } }
     val lit = latched && !focused
     // The look, by priority: pressed (cyan), sticky (gold), focused (white, inverted), the Hide key's tint, quiet and plain keys
     val fillTarget = when {
@@ -370,8 +373,8 @@ private fun KeyCap(key: KeyDef, pos: KeyPos, state: FullKeyboardState, metrics: 
         contentAlignment = Alignment.Center,
     ) {
         when (key.glyph) {
-            KeyGlyph.TEXT -> Legend(key.legend, if (key.small) fontSize * .8f else fontSize, content)
-            KeyGlyph.STACKED -> StackedLegend(key, fontSize, content, state, palette, focused, pressed)
+            KeyGlyph.TEXT -> FadingLegend(label.primary, if (key.small) fontSize * .8f else fontSize, content)
+            KeyGlyph.STACKED -> StackedLegend(label, fontSize, content, palette, focused, pressed)
             KeyGlyph.ARROW -> ArrowGlyph(arrowOf(key.code)!!, fontSize * 1.1f, content)
             KeyGlyph.SPACE -> Box(
                 Modifier
@@ -422,21 +425,25 @@ private fun Modifier.keyTouch(state: FullKeyboardState, code: Int): Modifier = p
 }
 
 @Composable
-private fun StackedLegend(key: KeyDef, fontSize: Float, content: Color, state: FullKeyboardState, palette: KeyboardPalette, focused: Boolean, pressed: Boolean) {
-    val shift = android.view.KeyEvent.KEYCODE_SHIFT_LEFT in state.latched
-    val topTarget = when {
+private fun StackedLegend(label: KeyLabel, fontSize: Float, content: Color, palette: KeyboardPalette, focused: Boolean, pressed: Boolean) {
+    val hintTarget = when {
         pressed -> palette.onPressed
-        shift && focused -> palette.focusShiftTop
-        shift -> palette.latched
         focused -> palette.focusTop
         else -> palette.text2
     }
-    val top by animateColorAsState(topTarget, tween(Motion.FADE, easing = Motion.Ease), label = "stackTop")
-    val bottom by animateFloatAsState(if (shift) .5f else 1f, tween(Motion.FADE, easing = Motion.Ease), label = "stackBottom")
+    val hint by animateColorAsState(hintTarget, tween(Motion.FADE, easing = Motion.Ease), label = "stackHint")
     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy((fontSize * .08f).px)) {
-        // Shifted character above, plain one below; with Shift latched the shifted one lights up and the plain one dims
-        Legend(key.legend.substring(0, 1), fontSize * .7f, top)
-        Box(Modifier.graphicsLayer { alpha = bottom }) { Legend(key.legend.substring(1), fontSize, content) }
+        // The other character small above, the one the key types now below: Shift swaps them with a crossfade, so nothing moves
+        FadingLegend(label.secondary.orEmpty(), fontSize * .7f, hint)
+        FadingLegend(label.primary, fontSize, content)
+    }
+}
+
+/** A legend that crossfades when its text changes (Shift, Caps Lock): both texts are centered in the same box, so the key does not jump. */
+@Composable
+private fun FadingLegend(text: String, size: Float, color: Color) {
+    Crossfade(text, Modifier.fillMaxWidth(), animationSpec = tween(Motion.FADE, easing = Motion.Ease), label = "legend") { shown ->
+        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { Legend(shown, size, color) }
     }
 }
 

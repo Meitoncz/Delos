@@ -50,6 +50,7 @@ class FullKeyboardState(private val host: FullKeyboardHost) {
     private val latch = ModifierLatch()
     private val handler = Handler(Looper.getMainLooper())
     private val analog = DirectionalRepeater()
+    private val dpad = DpadTracker()
 
     /** The keyboard is up (it takes the controller). */
     var open by mutableStateOf(false)
@@ -74,6 +75,19 @@ class FullKeyboardState(private val host: FullKeyboardHost) {
 
     var latched by mutableStateOf<Set<Int>>(emptySet())
         private set
+
+    /** A Shift key is held by a finger right now (not yet, or no longer, latched). */
+    private var shiftTouched by mutableStateOf(false)
+
+    /**
+     * Caps Lock as this keyboard tracks it: toggled on every press of the Caps key, whether or not the host agrees (the
+     * real state of the host's Caps Lock is not readable), and kept when the keyboard hides, like the host's.
+     */
+    var capsOn by mutableStateOf(false)
+        private set
+
+    /** Shift is down (held or latched), so the keys show their shifted characters. */
+    val shifted: Boolean get() = shiftTouched || latched.any(::isShiftCode)
 
     var pressed by mutableStateOf<Set<Int>>(emptySet())
         private set
@@ -105,10 +119,15 @@ class FullKeyboardState(private val host: FullKeyboardHost) {
     private val releaseTimers = HashMap<Int, Runnable>()
     private val hidePopup = Runnable { popupOn = false }
     private val leave = Runnable { present = false }
+    private val dpadRepeat = Runnable {
+        dpad.repeat(SystemClock.uptimeMillis())?.let { act(PadAction.Move(it)) }
+        scheduleDpadRepeat()
+    }
 
     fun show() {
         handler.removeCallbacks(leave)
         analog.reset()
+        resetDpad()
         input = if (hasController()) InputMode.CONTROLLER else InputMode.TOUCH
         present = true
         open = true
@@ -119,6 +138,8 @@ class FullKeyboardState(private val host: FullKeyboardHost) {
         releaseHeld()
         releaseLatched()
         analog.reset()
+        resetDpad()
+        shiftTouched = false
         open = false
         ringReady = false
         handler.removeCallbacks(hidePopup)
@@ -145,6 +166,7 @@ class FullKeyboardState(private val host: FullKeyboardHost) {
         val send = latch.touchDown(code, sticky)
         syncLatched()
         if (send == KeySend.DOWN) {
+            if (isShiftCode(code)) shiftTouched = true
             showPopup(code)
             keyDown(code)
             if (sticky && isModifierCode(code)) scheduleLatch(code)
@@ -155,6 +177,7 @@ class FullKeyboardState(private val host: FullKeyboardHost) {
     fun touchUp(code: Int) {
         cancelLatch(code)
         removePressed(code)
+        if (isShiftCode(code)) shiftTouched = false
         if (code == HIDE_CODE) {
             if (open) host.close()
             return
@@ -167,16 +190,40 @@ class FullKeyboardState(private val host: FullKeyboardHost) {
 
     /** A controller key event while the keyboard is up. Always consumed: nothing of it reaches the game. */
     fun onControllerKey(event: KeyEvent): Boolean {
-        padKeyAction(event.keyCode, event.action, event.repeatCount, event.isCanceled)?.let(::act)
+        val direction = dpadDirection(event.keyCode)
+        if (direction != null) {
+            if (dpad.onKey(direction, event.action == KeyEvent.ACTION_DOWN)) act(PadAction.Move(direction))
+            scheduleDpadRepeat()
+        } else {
+            padKeyAction(event.keyCode, event.action, event.repeatCount, event.isCanceled)?.let(::act)
+        }
         return true
     }
 
-    /** A stick event while the keyboard is up: the left stick moves the focus like the D-pad. Always consumed. */
+    /**
+     * A joystick event while the keyboard is up. Always consumed. The D-pad usually arrives as the hat axes (the stick
+     * sends no key events for it), so the hat and the left stick both move the focus; the stick repeats with its events,
+     * the hat, which sends one only on a change, with a timer.
+     */
     fun onControllerMotion(event: MotionEvent): Boolean {
         if (event.actionMasked != MotionEvent.ACTION_MOVE) return true
+        val hat = dpad.onHat(event.getAxisValue(MotionEvent.AXIS_HAT_X), event.getAxisValue(MotionEvent.AXIS_HAT_Y), event.eventTime)
+        if (hat != null) act(PadAction.Move(hat))
+        scheduleDpadRepeat()
         val direction = analogDirection(event.getAxisValue(MotionEvent.AXIS_X), event.getAxisValue(MotionEvent.AXIS_Y))
         if (analog.shouldMove(direction, event.eventTime)) act(PadAction.Move(direction!!))
         return true
+    }
+
+    /** Arms the timer for the hat's next repeat (or disarms it when the hat does not repeat). */
+    private fun scheduleDpadRepeat() {
+        handler.removeCallbacks(dpadRepeat)
+        dpad.repeatAt?.let { handler.postAtTime(dpadRepeat, it) }
+    }
+
+    private fun resetDpad() {
+        dpad.reset()
+        handler.removeCallbacks(dpadRepeat)
     }
 
     private fun act(action: PadAction) {
@@ -265,6 +312,7 @@ class FullKeyboardState(private val host: FullKeyboardHost) {
 
     private fun keyDown(code: Int) {
         held.add(code)
+        if (code == KeyEvent.KEYCODE_CAPS_LOCK) capsOn = !capsOn
         host.sendKey(code, true)
         host.haptic(KeyHaptic.PRESS)
     }
@@ -339,7 +387,7 @@ class FullKeyboardState(private val host: FullKeyboardHost) {
 
     private fun showPopup(code: Int) {
         val pos = grid.find(code) ?: return
-        val text = popupText(grid.key(pos)) ?: return
+        val text = popupText(grid.key(pos), shifted, capsOn) ?: return
         handler.removeCallbacks(hidePopup)
         popup = KeyPopup(code, text)
         popupOn = true

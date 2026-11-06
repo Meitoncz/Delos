@@ -2,6 +2,7 @@ package com.limelight.shell.keyboard
 
 import android.view.KeyEvent
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -91,5 +92,61 @@ class FullKeyboardKeysTest {
         assertNull(popupText(key("Tab")))
         assertNull(popupText(key("___")))
         assertNull(popupText(key("Hide")))
+    }
+
+    private fun primary(legend: String, shift: Boolean = false, caps: Boolean = false) = keyLabel(key(legend), shift, caps).primary
+
+    @Test
+    fun lettersAreLowerCaseUntilShiftOrCapsLockMakesThemUpperAndBothMakeThemLowerAgain() {
+        assertEquals("q", primary("Q"))
+        assertEquals("Q", primary("Q", shift = true))
+        assertEquals("Q", primary("Q", caps = true))
+        assertEquals("q", primary("Q", shift = true, caps = true))
+        assertNull(keyLabel(key("Q"), shift = true, caps = false).secondary)
+    }
+
+    @Test
+    fun theNumberRowShowsItsSymbolsWhileShiftIsDownAndCapsLockDoesNotChangeThem() {
+        val plain = "1234567890"
+        val shifted = "!@#$%^&*()"
+        for (i in plain.indices) {
+            assertEquals(plain[i].toString(), primary(plain[i].toString()))
+            assertEquals(shifted[i].toString(), primary(plain[i].toString(), shift = true))
+            assertEquals(plain[i].toString(), primary(plain[i].toString(), caps = true))
+        }
+    }
+
+    @Test
+    fun punctuationKeysSwapTheirTwoCharactersWithShift() {
+        val pairs = listOf("_-", "+=", "{[", "}]", ":;", "\"'", "<,", ">.", "?/", "~`", "|\\")
+        for (pair in pairs) {
+            assertEquals(KeyLabel(pair.substring(1), pair.substring(0, 1)), keyLabel(key(pair), shift = false, caps = false))
+            assertEquals(KeyLabel(pair.substring(0, 1), pair.substring(1)), keyLabel(key(pair), shift = true, caps = false))
+            // Caps Lock changes letters only
+            assertEquals(keyLabel(key(pair), shift = false, caps = false), keyLabel(key(pair), shift = false, caps = true))
+        }
+    }
+
+    @Test
+    fun otherKeysKeepTheirLegendWhateverShiftDoes() {
+        for (legend in listOf("Tab", "Enter", "Caps", "Shift", "F1", "Home", "Hide", "\u2191", "___")) {
+            assertEquals(KeyLabel(legend), keyLabel(key(legend), shift = true, caps = true))
+            assertEquals(KeyLabel(legend), keyLabel(key(legend), shift = false, caps = false))
+        }
+    }
+
+    @Test
+    fun popupsShowTheShiftedCharacterToo() {
+        assertEquals("E", popupText(key("E"), shift = true))
+        assertEquals("%", popupText(key("5"), shift = true))
+        assertEquals("_", popupText(key("_-"), shift = true))
+        assertEquals("e", popupText(key("E"), shift = true, caps = true))
+    }
+
+    @Test
+    fun bothShiftKeyCodesAreShift() {
+        assertTrue(isShiftCode(KeyEvent.KEYCODE_SHIFT_LEFT))
+        assertTrue(isShiftCode(KeyEvent.KEYCODE_SHIFT_RIGHT))
+        assertFalse(isShiftCode(KeyEvent.KEYCODE_CAPS_LOCK))
     }
 }

@@ -107,7 +107,7 @@ public class KeyBoardLayoutController implements FullKeyboardHost {
 
     /** Whether [event] comes from a controller, which the open keyboard owns (the touch screen, a mouse and a physical keyboard keep their ways). */
     public boolean ownsInputFrom(InputEvent event) {
-        return FullKeyboardInputKt.isControllerSource(event.getSource());
+        return FullKeyboardInputKt.isControllerEvent(event);
     }
 
     /** A controller button while the keyboard is up: moves the focus, presses, closes. Always consumed. */
@@ -115,7 +115,7 @@ public class KeyBoardLayoutController implements FullKeyboardHost {
         return state.onControllerKey(event);
     }
 
-    /** A stick event while the keyboard is up: the left stick moves the focus. Always consumed. */
+    /** A joystick event while the keyboard is up: the hat (D-pad) and the left stick move the focus. Always consumed. */
     public boolean onControllerMotion(MotionEvent event) {
         return state.onControllerMotion(event);
     }

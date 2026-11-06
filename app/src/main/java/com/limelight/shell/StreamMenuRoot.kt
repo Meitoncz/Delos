@@ -247,7 +247,10 @@ internal fun StreamMenuRoot(
 
     val circles = listOf(
         BarCircleSpec(BarItem.RESUME, Symbols.RESUME, "Resume") { close() },
-        BarCircleSpec(BarItem.KEYBOARD, Symbols.KEYBOARD, "Keyboard") { close { host.toggleKeyboard() } },
+        // The Delos keyboard takes the controller, so the menu closes first (the state shows when the menu is opened again)
+        BarCircleSpec(BarItem.KEYBOARD, Symbols.KEYBOARD_FULL, "Keyboard", on = host.fullKeyboardOn, state = if (host.fullKeyboardOn) "On" else "Off") {
+            close { host.toggleFullKeyboard() }
+        },
         BarCircleSpec(BarItem.OVERLAY, Symbols.OVERLAY, "Overlay", on = host.overlayOn,
             state = if (!host.overlayOn) "Off" else if (host.overlayCompact) "Compact" else "On") {
             toggle { host.toggleOverlay() }
@@ -431,7 +434,7 @@ private fun PageRows(
             MenuRow(Symbols.ZOOM_IN, "Zoom", RowValue.Toggle(host.zoomOn) { toggle { host.toggleZoom() } })
             if (host.allowChangeMouseMode) MenuRow(Symbols.MOUSE, MoreRow.MOUSE, RowValue.Action { openPage(MenuPage.MOUSE) }, entry(MoreRow.MOUSE))
             MenuRow(Symbols.JOYSTICK, "On-screen controls", RowValue.Toggle(host.onscreenControlsOn) { toggle { host.toggleOnscreenControls() } })
-            MenuRow(Symbols.KEYBOARD_FULL, "Full keyboard", RowValue.Toggle(host.fullKeyboardOn) { toggle { host.toggleFullKeyboard() } })
+            MenuRow(Symbols.KEYBOARD, MoreRow.ANDROID_KEYBOARD, RowValue.Action { close { host.toggleSystemKeyboard() } })
             MenuRow(Symbols.TOUCH_APP, "Touch sensitivity", RowValue.Toggle(host.touchSensitivityOn) { toggle { host.toggleTouchSensitivity() } })
             MenuRow(Symbols.VIBRATION, MoreRow.RUMBLE, RowValue.Text(host.rumblePreset?.label ?: "Custom") { openPage(MenuPage.RUMBLE) }, entry(MoreRow.RUMBLE))
         }

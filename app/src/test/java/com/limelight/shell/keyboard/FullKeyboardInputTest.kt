@@ -194,10 +194,132 @@ class FullKeyboardInputTest {
     // ---- Controller buttons ----
 
     @Test
-    fun theDpadMovesOnPressAndOnEveryRepeat() {
-        assertEquals(PadAction.Move(MenuDirection.LEFT), padKeyAction(KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.ACTION_DOWN, 0, false))
-        assertEquals(PadAction.Move(MenuDirection.DOWN), padKeyAction(KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.ACTION_DOWN, 4, false))
-        assertNull(padKeyAction(KeyEvent.KEYCODE_DPAD_UP, KeyEvent.ACTION_UP, 0, false))
+    fun dpadKeyCodesMapToDirectionsAndTheOtherKeysDoNot() {
+        assertEquals(MenuDirection.LEFT, dpadDirection(KeyEvent.KEYCODE_DPAD_LEFT))
+        assertEquals(MenuDirection.RIGHT, dpadDirection(KeyEvent.KEYCODE_DPAD_RIGHT))
+        assertEquals(MenuDirection.UP, dpadDirection(KeyEvent.KEYCODE_DPAD_UP))
+        assertEquals(MenuDirection.DOWN, dpadDirection(KeyEvent.KEYCODE_DPAD_DOWN))
+        assertNull(dpadDirection(KeyEvent.KEYCODE_DPAD_CENTER))
+        assertNull(dpadDirection(KeyEvent.KEYCODE_BUTTON_A))
+        // The D-pad is not a PadAction: it goes through the tracker, which also takes the hat
+        assertNull(padKeyAction(KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.ACTION_DOWN, 0, false))
+    }
+
+    @Test
+    fun aHatPressMovesAtOnceThenRepeatsAfterTheInitialDelayUntilItReturnsToCenter() {
+        val dpad = DpadTracker(initialDelayMs = 300, repeatIntervalMs = 100)
+        assertEquals(MenuDirection.RIGHT, dpad.onHat(1f, 0f, 1000))
+        assertEquals(1300L, dpad.repeatAt)
+        // Re-sent hat events change nothing
+        assertNull(dpad.onHat(1f, 0f, 1100))
+        assertNull(dpad.repeat(1299))
+        assertEquals(MenuDirection.RIGHT, dpad.repeat(1300))
+        assertEquals(1400L, dpad.repeatAt)
+        assertNull(dpad.repeat(1399))
+        assertEquals(MenuDirection.RIGHT, dpad.repeat(1410))
+        assertEquals(1510L, dpad.repeatAt)
+        // Back to the center: no move, no more repeats
+        assertNull(dpad.onHat(0f, 0f, 1500))
+        assertNull(dpad.repeatAt)
+        assertNull(dpad.repeat(2000))
+    }
+
+    @Test
+    fun everyHatDirectionMapsToItsOwnMove() {
+        val dpad = DpadTracker()
+        assertEquals(MenuDirection.LEFT, dpad.onHat(-1f, 0f, 0))
+        dpad.onHat(0f, 0f, 10)
+        assertEquals(MenuDirection.UP, dpad.onHat(0f, -1f, 20))
+        dpad.onHat(0f, 0f, 30)
+        assertEquals(MenuDirection.DOWN, dpad.onHat(0f, 1f, 40))
+        // Straight from one direction to another counts as a new press
+        assertEquals(MenuDirection.LEFT, dpad.onHat(-1f, 0f, 50))
+    }
+
+    @Test
+    fun aDiagonalIsTheSideThatWasPressedLastAndLettingGoOfItStopsTheRepeat() {
+        val dpad = DpadTracker(initialDelayMs = 300, repeatIntervalMs = 100)
+        assertEquals(MenuDirection.RIGHT, dpad.onHat(1f, 0f, 0))
+        // Thumb rolls up: Up is new and moves, and repeats from now on
+        assertEquals(MenuDirection.UP, dpad.onHat(1f, -1f, 50))
+        assertEquals(350L, dpad.repeatAt)
+        assertEquals(MenuDirection.UP, dpad.repeat(350))
+        // Letting go of Right (the older side) changes nothing
+        assertNull(dpad.onHat(0f, -1f, 400))
+        assertEquals(MenuDirection.UP, dpad.repeat(450))
+        // Back to Up-right: Right is new and moves
+        assertEquals(MenuDirection.RIGHT, dpad.onHat(1f, -1f, 500))
+        // Letting go of Right (the one repeating) leaves Up, which was not pressed anew: the repeat stops
+        assertNull(dpad.onHat(0f, -1f, 520))
+        assertNull(dpad.repeatAt)
+        assertNull(dpad.repeat(2000))
+        // The next press works as ever
+        dpad.onHat(0f, 0f, 2100)
+        assertEquals(MenuDirection.DOWN, dpad.onHat(0f, 1f, 2200))
+    }
+
+    @Test
+    fun aDiagonalPressedInOneReportMovesHorizontally() {
+        val dpad = DpadTracker()
+        assertEquals(MenuDirection.LEFT, dpad.onHat(-1f, 1f, 0))
+        assertNull(dpad.onHat(-1f, 1f, 5))
+    }
+
+    @Test
+    fun smallHatValuesAreTheCenter() {
+        val dpad = DpadTracker()
+        assertNull(dpad.onHat(.3f, -.2f, 0))
+        assertNull(dpad.repeatAt)
+    }
+
+    @Test
+    fun aDpadKeyMovesWhenNoHatSendsItToo() {
+        val dpad = DpadTracker()
+        assertTrue(dpad.onKey(MenuDirection.LEFT, down = true))
+        // The system's key repeat comes as more downs
+        assertTrue(dpad.onKey(MenuDirection.LEFT, down = true))
+        assertFalse(dpad.onKey(MenuDirection.LEFT, down = false))
+        assertNull(dpad.repeatAt)
+    }
+
+    @Test
+    fun aDeviceThatSendsTheHatAndTheKeyMovesOncePerPress() {
+        val dpad = DpadTracker()
+        // Hat first, then the key of the same press
+        assertEquals(MenuDirection.DOWN, dpad.onHat(0f, 1f, 0))
+        assertFalse(dpad.onKey(MenuDirection.DOWN, down = true))
+        assertFalse(dpad.onKey(MenuDirection.DOWN, down = true))
+        assertNull(dpad.onHat(0f, 0f, 80))
+        assertFalse(dpad.onKey(MenuDirection.DOWN, down = false))
+        // Key first, then the hat of the same press: the hat does not move, nor repeat (the key's repeat does)
+        assertTrue(dpad.onKey(MenuDirection.UP, down = true))
+        assertNull(dpad.onHat(0f, -1f, 100))
+        assertNull(dpad.repeatAt)
+        assertNull(dpad.onHat(0f, 0f, 200))
+        assertFalse(dpad.onKey(MenuDirection.UP, down = false))
+        // After the release everything works again
+        assertEquals(MenuDirection.UP, dpad.onHat(0f, -1f, 300))
+        assertNull(dpad.onHat(0f, 0f, 310))
+        assertTrue(dpad.onKey(MenuDirection.UP, down = true))
+    }
+
+    @Test
+    fun aDifferentDirectionOnTheKeyIsNotMistakenForTheHat() {
+        val dpad = DpadTracker()
+        assertEquals(MenuDirection.LEFT, dpad.onHat(-1f, 0f, 0))
+        assertTrue(dpad.onKey(MenuDirection.UP, down = true))
+    }
+
+    @Test
+    fun resetForgetsAHeldHatAndKey() {
+        val dpad = DpadTracker()
+        dpad.onHat(1f, 0f, 0)
+        dpad.onKey(MenuDirection.LEFT, down = true)
+        dpad.reset()
+        assertNull(dpad.repeatAt)
+        assertEquals(MenuDirection.RIGHT, dpad.onHat(1f, 0f, 10))
+        dpad.reset()
+        assertTrue(dpad.onKey(MenuDirection.RIGHT, down = true))
     }
 
     @Test

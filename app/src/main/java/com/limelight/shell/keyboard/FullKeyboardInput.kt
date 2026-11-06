@@ -158,14 +158,11 @@ internal sealed interface PadAction {
 
 /**
  * The keyboard action of a controller key event, or null for a key the keyboard does not use (it still swallows it, so
- * nothing reaches the game): the D-pad moves on every press and repeat, A holds the focused key down and lets it go
- * (also when the release is cancelled), B and Back close on release, X toggles Shift.
+ * nothing reaches the game): A holds the focused key down and lets it go (also when the release is cancelled), B and Back
+ * close on release, X toggles Shift. The D-pad keys are not here: they go through [DpadTracker] ([dpadDirection]), which
+ * also takes the hat axes of the same D-pad.
  */
 internal fun padKeyAction(keyCode: Int, keyAction: Int, repeatCount: Int, canceled: Boolean): PadAction? = when (keyCode) {
-    KeyEvent.KEYCODE_DPAD_UP -> move(MenuDirection.UP, keyAction)
-    KeyEvent.KEYCODE_DPAD_DOWN -> move(MenuDirection.DOWN, keyAction)
-    KeyEvent.KEYCODE_DPAD_LEFT -> move(MenuDirection.LEFT, keyAction)
-    KeyEvent.KEYCODE_DPAD_RIGHT -> move(MenuDirection.RIGHT, keyAction)
     KeyEvent.KEYCODE_BUTTON_A, KeyEvent.KEYCODE_DPAD_CENTER -> when (keyAction) {
         KeyEvent.ACTION_DOWN -> if (repeatCount == 0) PadAction.PressDown else null
         KeyEvent.ACTION_UP -> PadAction.PressUp
@@ -177,8 +174,115 @@ internal fun padKeyAction(keyCode: Int, keyAction: Int, repeatCount: Int, cancel
     else -> null
 }
 
-private fun move(direction: MenuDirection, keyAction: Int): PadAction? =
-    if (keyAction == KeyEvent.ACTION_DOWN) PadAction.Move(direction) else null
+/** The direction a D-pad key code means, null for any other key. */
+internal fun dpadDirection(keyCode: Int): MenuDirection? = when (keyCode) {
+    KeyEvent.KEYCODE_DPAD_UP -> MenuDirection.UP
+    KeyEvent.KEYCODE_DPAD_DOWN -> MenuDirection.DOWN
+    KeyEvent.KEYCODE_DPAD_LEFT -> MenuDirection.LEFT
+    KeyEvent.KEYCODE_DPAD_RIGHT -> MenuDirection.RIGHT
+    else -> null
+}
+
+/**
+ * The D-pad of a controller, which reaches the app in one of two shapes: as DPAD_* key events (they repeat by themselves)
+ * or, on most handhelds (the Odin among them), as the hat axes of a joystick motion event (`AXIS_HAT_X` / `AXIS_HAT_Y`, -1,
+ * 0 or 1, sent only when they change, so nothing repeats unless a timer does). One physical press must move the focus
+ * once, whichever shape (or both) the device sends.
+ *
+ * - [onHat] is edge-triggered: a direction that is newly pressed moves at once, and [repeatAt] / [repeat] then repeat the
+ *   most recent one after [initialDelayMs] every [repeatIntervalMs] until the hat returns to the center (or that
+ *   direction is let go). A diagonal is the direction pressed last; rolling the thumb from Right to Up-right moves Up, and
+ *   releasing Up afterwards stops the repeat (the thumb makes no new press) until the next one.
+ * - [onKey] says whether a D-pad key event moves: not when the same direction is already held on the hat, and
+ *   a hat press that arrives while the same direction's key is held does not move either (the key's own repeat does).
+ */
+internal class DpadTracker(
+    private val initialDelayMs: Long = 350,
+    private val repeatIntervalMs: Long = 100,
+) {
+    private var hatX = 0
+    private var hatY = 0
+    private var hatDirection: MenuDirection? = null
+    private var keyDirection: MenuDirection? = null
+    private var nextRepeat = NO_REPEAT
+
+    /** When [repeat] is next due ([android.os.SystemClock.uptimeMillis] time base), null while nothing repeats. */
+    val repeatAt: Long? get() = if (nextRepeat == NO_REPEAT) null else nextRepeat
+
+    /** The hat axes ([x] and [y]) changed or were re-sent at [now]; the direction to move to right now, if any. */
+    fun onHat(x: Float, y: Float, now: Long): MenuDirection? {
+        val sx = hatSign(x)
+        val sy = hatSign(y)
+        val pressedX = sx != 0 && sx != hatX
+        val pressedY = sy != 0 && sy != hatY
+        hatX = sx
+        hatY = sy
+        if (sx == 0 && sy == 0) {
+            hatDirection = null
+            nextRepeat = NO_REPEAT
+            return null
+        }
+        val horizontal = if (sx < 0) MenuDirection.LEFT else MenuDirection.RIGHT
+        val vertical = if (sy < 0) MenuDirection.UP else MenuDirection.DOWN
+        if (!pressedX && !pressedY) {
+            // Nothing new was pressed: a diagonal let go of one side keeps repeating the side that is still the one pressed last
+            val held = hatDirection
+            val stillHeld = held != null && ((sx != 0 && held == horizontal) || (sy != 0 && held == vertical))
+            if (!stillHeld) {
+                hatDirection = if (sx != 0) horizontal else vertical
+                nextRepeat = NO_REPEAT
+            }
+            return null
+        }
+        val direction = if (pressedX) horizontal else vertical
+        hatDirection = direction
+        if (keyDirection == direction) {
+            nextRepeat = NO_REPEAT
+            return null
+        }
+        nextRepeat = now + initialDelayMs
+        return direction
+    }
+
+    /** A D-pad key event; true when it moves the focus. */
+    fun onKey(direction: MenuDirection, down: Boolean): Boolean {
+        if (!down) {
+            if (keyDirection == direction) keyDirection = null
+            return false
+        }
+        keyDirection = direction
+        val onHat = (hatX != 0 && direction == (if (hatX < 0) MenuDirection.LEFT else MenuDirection.RIGHT)) ||
+            (hatY != 0 && direction == (if (hatY < 0) MenuDirection.UP else MenuDirection.DOWN))
+        return !onHat
+    }
+
+    /** The hat's repeat timer fired at [now]: the direction to move to again, or null when none is due. */
+    fun repeat(now: Long): MenuDirection? {
+        val direction = hatDirection
+        if (direction == null || nextRepeat == NO_REPEAT || now < nextRepeat) return null
+        nextRepeat = now + repeatIntervalMs
+        return direction
+    }
+
+    fun reset() {
+        hatX = 0
+        hatY = 0
+        hatDirection = null
+        keyDirection = null
+        nextRepeat = NO_REPEAT
+    }
+
+    private fun hatSign(value: Float) = when {
+        value <= -HAT_THRESHOLD -> -1
+        value >= HAT_THRESHOLD -> 1
+        else -> 0
+    }
+
+    private companion object {
+        const val NO_REPEAT = Long.MIN_VALUE
+        const val HAT_THRESHOLD = .5f
+    }
+}
 
 private const val ANALOG_THRESHOLD = .55f
 
@@ -196,6 +300,13 @@ fun isControllerSource(source: Int): Boolean =
     (source and android.view.InputDevice.SOURCE_GAMEPAD) == android.view.InputDevice.SOURCE_GAMEPAD ||
         (source and android.view.InputDevice.SOURCE_DPAD) == android.view.InputDevice.SOURCE_DPAD ||
         (source and android.view.InputDevice.SOURCE_JOYSTICK) == android.view.InputDevice.SOURCE_JOYSTICK
+
+/**
+ * Whether the open keyboard owns [event]: it comes from a controller source, or it is a gamepad button (A, B, X, ...) that a
+ * handheld's built-in pad reports with a plain keyboard source. A physical keyboard's keys (arrows, Enter, Esc) stay its own.
+ */
+fun isControllerEvent(event: android.view.InputEvent): Boolean =
+    isControllerSource(event.source) || (event is KeyEvent && KeyEvent.isGamepadButton(event.keyCode))
 
 /** How the user's size settings lay the keyboard out: see [keyboardMetrics]. */
 data class KeyboardPrefs(

@@ -52,6 +52,8 @@ private val SPECIAL_CODES = setOf(
 
 fun isModifierCode(code: Int): Boolean = code in MODIFIER_CODES
 
+fun isShiftCode(code: Int): Boolean = code == KeyEvent.KEYCODE_SHIFT_LEFT || code == KeyEvent.KEYCODE_SHIFT_RIGHT
+
 /** The arrow keys, drawn as strokes. */
 enum class Arrow { UP, DOWN, LEFT, RIGHT }
 
@@ -83,20 +85,39 @@ private fun keyOf(code: Int, legend: String, weight: Int, marginStart: Boolean =
     return KeyDef(code, legend, weight.toFloat(), kind, glyph, marginStart, marginEnd, small)
 }
 
+/** The symbols the number row types with Shift (US layout), by digit. */
+private const val DIGIT_SHIFTED = ")!@#$%^&*("
+
 /**
- * What a pressed key shows in the popup above it, null for a key without one: letters in lower case, a stacked pair
- * as the plain (second) character, everything else as written.
+ * What a key shows now: the [primary] label is what the key types, the [secondary] one (null for most keys) the other
+ * character of a punctuation key, drawn small above it. A letter shows lower case, upper case while Shift is down or
+ * Caps Lock is on (both: lower again); a digit shows its symbol while Shift is down; a punctuation key swaps its two
+ * characters while Shift is down. Labels are the US layout whatever the stream's key translation setting says (it only
+ * changes the codes the host receives). Keys with a fixed legend show it as written.
  */
-fun popupText(key: KeyDef): String? = when {
-    !key.hasPopup -> null
-    key.glyph == KeyGlyph.STACKED -> key.legend.substring(1)
-    key.legend.length == 1 && key.legend[0].isLetter() -> key.legend.lowercase()
-    else -> key.legend
+@Immutable
+data class KeyLabel(val primary: String, val secondary: String? = null)
+
+fun keyLabel(key: KeyDef, shift: Boolean, caps: Boolean): KeyLabel {
+    val legend = key.legend
+    return when {
+        key.glyph == KeyGlyph.STACKED ->
+            if (shift) KeyLabel(legend.substring(0, 1), legend.substring(1)) else KeyLabel(legend.substring(1), legend.substring(0, 1))
+        key.kind == KeyKind.CHAR && key.glyph == KeyGlyph.TEXT && legend.length == 1 && legend[0].isLetter() ->
+            KeyLabel(if (shift != caps) legend.uppercase() else legend.lowercase())
+        key.kind == KeyKind.CHAR && key.glyph == KeyGlyph.TEXT && legend.length == 1 && legend[0].isDigit() ->
+            KeyLabel(if (shift) DIGIT_SHIFTED[legend[0] - '0'].toString() else legend)
+        else -> KeyLabel(legend)
+    }
 }
+
+/** What a pressed key shows in the popup above it, null for a key without one: its [keyLabel], what the key types. */
+fun popupText(key: KeyDef, shift: Boolean = false, caps: Boolean = false): String? =
+    if (key.hasPopup) keyLabel(key, shift, caps).primary else null
 
 /**
  * The 80 keys of the Full keyboard in its six rows: the keys, weights and margins of the old `layout_axixi_keyboard.xml`.
- * Letters are always upper case; there are only the left modifiers.
+ * The legends of letters are upper case (see [keyLabel] for what is drawn); there are only the left modifiers.
  */
 object FullKeyboardKeys {
     val rows: List<List<KeyDef>> = listOf(

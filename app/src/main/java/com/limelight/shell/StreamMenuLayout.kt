@@ -42,6 +42,9 @@ internal object MoreRow {
     const val COMMANDS = "Commands"
     const val MOUSE = "Mouse mode"
 
+    /** The More row that opens Android's system keyboard (the Keyboard tile is the Delos keyboard). */
+    const val ANDROID_KEYBOARD = "Open Android keyboard"
+
     /** The More row that opens the live rumble feel page. */
     const val RUMBLE = "Rumble feel"
 }

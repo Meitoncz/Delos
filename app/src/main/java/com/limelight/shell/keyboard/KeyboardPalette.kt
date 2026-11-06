@@ -26,9 +26,8 @@ class KeyboardPalette(
     val onText: Color,
     val focus: Color,
     val onFocus: Color,
-    /** The shifted character of a stacked key on the focused (white) key. */
+    /** The small hint character of a stacked key on the focused (white) key. */
     val focusTop: Color,
-    val focusShiftTop: Color,
     val latched: Color,
     val onLatched: Color,
     val latchedBarFocused: Color,
@@ -47,7 +46,7 @@ internal fun keyboardPalette(c: DelosColors): KeyboardPalette {
             hide = hsl(c.accent3Hue + 30f, 28f, 18f), hideIcon = c.accent2,
             text = c.text, text2 = c.text2, text3 = c.text3, onText = c.bg,
             focus = c.text, onFocus = c.bg,
-            focusTop = hsl(base, 17f, 42f), focusShiftTop = hsl(c.accentHue, 100f, 31f),
+            focusTop = hsl(base, 17f, 42f),
             latched = c.accent, onLatched = c.onAccent, latchedBarFocused = hsl(c.accentHue, 100f, 43f),
             pressed = c.accent2, onPressed = hsl(c.accent2Hue, 85f, 9f),
             popup = c.text, onPopup = c.bg,
@@ -59,7 +58,7 @@ internal fun keyboardPalette(c: DelosColors): KeyboardPalette {
             hide = hsl(c.accent3Hue + 30f, 40f, 92f), hideIcon = c.accent2,
             text = c.text, text2 = c.text2, text3 = c.text3, onText = c.bg,
             focus = c.text, onFocus = c.bg,
-            focusTop = hsl(base, 15f, 70f), focusShiftTop = hsl(c.accentHue, 100f, 70f),
+            focusTop = hsl(base, 15f, 70f),
             latched = c.accent, onLatched = c.onAccent, latchedBarFocused = hsl(c.accentHue, 100f, 38f),
             pressed = c.accent2, onPressed = Color.White,
             popup = c.text, onPopup = c.bg,
