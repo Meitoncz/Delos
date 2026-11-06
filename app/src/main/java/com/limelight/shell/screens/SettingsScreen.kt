@@ -262,18 +262,21 @@ fun SettingsScreen(
             horizontalArrangement = Arrangement.spacedBy(56.px)) {
             CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView, com.limelight.shell.ui.LocalEntranceStagger provides com.limelight.shell.ui.rememberEntranceStagger(tab)) {
                 key(tab) {
-                    LazyColumn(state = scroll, modifier = Modifier.weight(1f).fadeEdges(stage, top = 14f, bottom = 90f),
-                        contentPadding = PaddingValues(start = 18.px, end = 18.px, top = 14.px, bottom = 140.px),
-                        verticalArrangement = Arrangement.spacedBy(10.px)) {
-                        var previous = ""
-                        rows.forEach { row ->
-                            if (row.section != previous) {
-                                item("section-${row.section}") { SectionHeading(row.section) }
-                                previous = row.section
-                            }
-                            item(row.key) {
-                                SettingsItemRow(row, Modifier.focusRequester(rowRequesters.getValue(row.key)),
-                                    hint = if (row.key == "seekbar_bitrate_kbps") bitrateHint else null) { focusedKey = row.key }
+                    // One ring glides between the rows; the host carries the list's weight and its faded edges, so the ring fades with the rows
+                    com.limelight.shell.ui.SettingRowList(Modifier.weight(1f).fadeEdges(stage, top = 14f, bottom = 90f)) {
+                        LazyColumn(state = scroll, modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(start = 18.px, end = 18.px, top = 14.px, bottom = 140.px),
+                            verticalArrangement = Arrangement.spacedBy(10.px)) {
+                            var previous = ""
+                            rows.forEach { row ->
+                                if (row.section != previous) {
+                                    item("section-${row.section}") { SectionHeading(row.section) }
+                                    previous = row.section
+                                }
+                                item(row.key) {
+                                    SettingsItemRow(row, Modifier.focusRequester(rowRequesters.getValue(row.key)),
+                                        hint = if (row.key == "seekbar_bitrate_kbps") bitrateHint else null) { focusedKey = row.key }
+                                }
                             }
                         }
                     }

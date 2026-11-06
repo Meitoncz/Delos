@@ -8,13 +8,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -23,20 +20,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.TextStyle
-import com.limelight.shell.ui.FocusRing
 import com.limelight.shell.ui.LocalDelosColors
 import com.limelight.shell.ui.LocalStage
+import com.limelight.shell.ui.RowValue
+import com.limelight.shell.ui.SettingRow
+import com.limelight.shell.ui.SettingRowList
+import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.rememberMarginBringIntoView
 import com.limelight.shell.ui.fadeEdges
-import com.limelight.shell.ui.focusEffects
 import com.limelight.shell.ui.px
-import com.limelight.shell.ui.tpx
 import kotlinx.coroutines.delay
 
 /**
- * Debug builds only: a long list of plain rows with the settings list's scroll (`MarginBringIntoView`, margins 72 / 110),
- * started with
+ * Debug builds only: a long list of real settings rows (toggle, choice, slider, action; every third with a description) with
+ * the settings list's scroll (`MarginBringIntoView`, margins 72 / 110) and its one focus ring that glides from row to row
+ * (`SettingRowList`), started with
  * `adb shell am start -n io.github.meitoncz.delos.debug/com.limelight.shell.ShellActivity --es preview_screen settings_list`
  * and optionally `--ez preview_auto true`: the focus steps down 12 rows slowly (650 ms apart), then 3 rows quickly (150 ms, like a held
  * D-pad), then jumps back to the top, and rests. Without it the D-pad and the stick move the focus (docs/GUI.md, "Settings list scroll").
@@ -72,13 +70,19 @@ internal object SettingsListPreview {
         }
         Box(Modifier.fillMaxSize().background(colors.bg)) {
             CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView, LocalFocusTracker provides remember { FocusTracker() }) {
-                LazyColumn(Modifier.fillMaxSize().padding(horizontal = 300.px, vertical = 150.px).fadeEdges(stage, top = 14f, bottom = 90f), state = listState,
-                    contentPadding = PaddingValues(18.px), verticalArrangement = Arrangement.spacedBy(10.px)) {
-                    items(ROWS) { i ->
-                        Box(Modifier.fillMaxWidth().height(96.px).focusRequester(requesters[i]).background(colors.bg)
-                            .focusEffects(onClick = {}, corner = 28f, ring = FocusRing(3f, 0f), glow = null),
-                            contentAlignment = androidx.compose.ui.Alignment.CenterStart) {
-                            BasicText("Row ${i + 1}", Modifier.padding(start = 30.px), style = TextStyle(color = colors.text, fontSize = 30.tpx))
+                // The same list the settings screens use: real rows, one ring that glides between them while the list scrolls
+                SettingRowList(Modifier.fillMaxSize().padding(horizontal = 300.px, vertical = 150.px).fadeEdges(stage, top = 14f, bottom = 90f)) {
+                    LazyColumn(Modifier.fillMaxSize(), state = listState,
+                        contentPadding = PaddingValues(18.px), verticalArrangement = Arrangement.spacedBy(10.px)) {
+                        items(ROWS) { i ->
+                            val value = when (i % 4) {
+                                0 -> RowValue.Toggle(i % 8 == 0) {}
+                                1 -> RowValue.Choice("Option ${i + 1}", {})
+                                2 -> RowValue.Slider(40, 0, 100, 5, "%") {}
+                                else -> RowValue.Action {}
+                            }
+                            SettingRow(Symbols.SETTINGS, "Row ${i + 1}", value, Modifier.focusRequester(requesters[i]),
+                                description = if (i % 3 == 0) "A description that makes this row taller than its neighbours" else null)
                         }
                     }
                 }

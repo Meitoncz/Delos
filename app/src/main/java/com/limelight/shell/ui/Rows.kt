@@ -1,6 +1,7 @@
 package com.limelight.shell.ui
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -25,6 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,6 +40,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -105,10 +108,20 @@ fun SettingRow(
 ) {
     val colors = LocalDelosColors.current
     val feedback = LocalFeedback.current
+    // Inside a RowGlideHost one ring glides between the rows and the row's own look cross-fades over the same time; elsewhere
+    // (the side menu) the row draws its own quick ring and its glass follows the focus at once
+    val glide = LocalRowGlide.current
+    val reduced = LocalReducedMotion.current
+    val calm = glide != null && !reduced
     var focused by remember { mutableStateOf(false) }
     val choice = rememberChoiceMotion()
-    // The glass and its blur follow the focus at once (a fade would leave the blur of the row just left on screen for a moment)
-    val fill = if (focused) 1f else 0f
+    // The glass and its blur fade as one layer (see below), so the glass of the row just left cannot stay on screen as a blur
+    val fill = animateFloatAsState(
+        if (focused) 1f else 0f,
+        if (calm) tween(Motion.ROW_FOCUS, easing = Motion.Ease) else snap(),
+        label = "rowFill",
+    )
+    val glassShown by remember { derivedStateOf { fill.value > 0f } }
     val adjust: ((Int) -> Unit)? = when (value) {
         is RowValue.Choice -> { dir ->
             choice.step(dir)
@@ -135,12 +148,12 @@ fun SettingRow(
         feedback.play(Cue.MOVE)
         adjust(direction * if (value is RowValue.Slider) sliderAcceleration(value, repeatCount) else 1)
     }
-    val shape = RoundedCornerShape(24.px)
+    val shape = RoundedCornerShape(ROW_CORNER.px)
     // The entrance is the content's (icon, label, value), not the row's: the focus ring and the glass of the row stay put
     // and fully visible from the first frame (the glass is a blur that would not fade with the row)
     val stagger = LocalEntranceStagger.current
     val entrance = remember { stagger.take() }
-    Row(
+    Box(
         modifier
             .fillMaxWidth()
             .onPreviewKeyEvent { event ->
@@ -156,61 +169,101 @@ fun SettingRow(
                 }
                 true
             }
+            .rowGlideTarget(focused)
             .focusEffects(
                 onClick = { if (enabled) activate() else feedback.play(Cue.ERROR) },
-                corner = 24f,
-                focusScale = 1.02f,
-                ring = FocusRing(width = 3f, gap = 0f),
+                corner = ROW_CORNER,
+                focusScale = ROW_FOCUS_SCALE,
+                ring = if (glide != null) null else ROW_RING,
                 glow = FocusGlow(offsetY = 20f, blur = 50f, spread = -24f),
                 clickCue = if (enabled && value !is RowValue.Info) (if (value is RowValue.Action) Cue.OPEN else Cue.SELECT) else null,
                 contextMenu = contextMenu,
                 adjustable = adjust != null && enabled,
                 controllerAdjust = controllerAdjust,
+                focusMillis = if (glide != null) Motion.ROW_FOCUS else Motion.FOCUS,
+                fadeMillis = if (glide != null) Motion.ROW_FOCUS else null,
                 onFocusChange = {
                     focused = it
                     if (it) onFocused?.invoke()
                 },
             )
-            .clip(shape)
-            // Focused: frosted glass over the animated background
-            .then(
-                LocalBackdropHaze.current?.takeIf { fill > 0f }?.let { Modifier.backdropBlur(it, 8f, colors.surface2.fade(fill)) }
-                    ?: Modifier.background(colors.surface2.fade(fill))
-            )
-            .defaultMinSize(minHeight = if (compact) 80.px else 92.px)
-            .padding(horizontal = 26.px, vertical = 14.px)
-            .alpha(if (enabled) 1f else .45f),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(22.px),
+            .clip(shape),
     ) {
-        Box(Modifier.width(if (compact) 44.px else 52.px).staggerEntrance(entrance), contentAlignment = Alignment.CenterStart) {
-            // The palette's accent: full on the focused row, softer on the others
-            Symbol(icon, 34.tpx, if (focused) colors.accent2 else colors.accent2.copy(alpha = .62f), filled = focused)
+        // Focused: frosted glass over the animated background
+        if (glassShown) {
+            Box(
+                Modifier.matchParentSize()
+                    .graphicsLayer { alpha = fill.value }
+                    .then(LocalBackdropHaze.current?.let { Modifier.backdropBlur(it, 8f, colors.surface2) } ?: Modifier.background(colors.surface2))
+            )
         }
-        Column(Modifier.weight(1f).staggerEntrance(entrance)) {
-            BasicText(label, style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx))
-            if (description != null) {
-                BasicText(
-                    description,
-                    style = TextStyle(color = descriptionColor ?: colors.text3, fontFamily = Figtree, fontSize = 19.tpx, lineHeight = 1.35.em),
-                    modifier = Modifier.padding(top = 4.px),
-                )
+        Row(
+            Modifier.fillMaxWidth()
+                .defaultMinSize(minHeight = if (compact) 80.px else 92.px)
+                .padding(horizontal = 26.px, vertical = 14.px)
+                .alpha(if (enabled) 1f else .45f),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(22.px),
+        ) {
+            Box(Modifier.width(if (compact) 44.px else 52.px).staggerEntrance(entrance), contentAlignment = Alignment.CenterStart) {
+                RowIcon(icon, focused, calm)
             }
+            Column(Modifier.weight(1f).staggerEntrance(entrance)) {
+                BasicText(label, style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx))
+                if (description != null) {
+                    BasicText(
+                        description,
+                        style = TextStyle(color = descriptionColor ?: colors.text3, fontFamily = Figtree, fontSize = 19.tpx, lineHeight = 1.35.em),
+                        modifier = Modifier.padding(top = 4.px),
+                    )
+                }
+            }
+            Box(Modifier.staggerEntrance(entrance)) { RowValueView(value, focused, choice, calm) }
         }
-        Box(Modifier.staggerEntrance(entrance)) { RowValueView(value, focused, choice) }
     }
 }
 
+/** The look of a focused settings row, shared by [SettingRow] and the ring of a [SettingRowList]. */
+private const val ROW_CORNER = 24f
+private const val ROW_FOCUS_SCALE = 1.02f
+private val ROW_RING = FocusRing(width = 3f, gap = 0f)
+
+/**
+ * A scrolling list of [SettingRow]s (settings, per-game settings, debug info): the rows' focus ring is one ring that glides
+ * from row to row ([RowGlideHost], [Motion.ROW_FOCUS]) and follows the scrolling list. [modifier] is the list's: its size and
+ * [fadeEdges] (the ring fades with the rows). The list inside should fill it.
+ */
 @Composable
-private fun RowValueView(value: RowValue, focused: Boolean, choice: ChoiceMotion) {
+fun SettingRowList(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    RowGlideHost(ROW_RING, ROW_CORNER, ROW_FOCUS_SCALE, modifier, content)
+}
+
+/** The row's icon: full accent on the focused row, softer on the others; the color cross-fades with the row's other focus effects while [calm]. */
+@Composable
+private fun RowIcon(icon: String, focused: Boolean, calm: Boolean) {
+    val colors = LocalDelosColors.current
+    // The palette's accent: full on the focused row, softer on the others
+    val color by animateColorAsState(
+        if (focused) colors.accent2 else colors.accent2.copy(alpha = .62f),
+        if (calm) tween(Motion.ROW_FOCUS, easing = Motion.Ease) else snap(),
+        label = "rowIcon",
+    )
+    Symbol(icon, 34.tpx, color, filled = focused)
+}
+
+@Composable
+private fun RowValueView(value: RowValue, focused: Boolean, choice: ChoiceMotion, calm: Boolean) {
     val colors = LocalDelosColors.current
     val reduced = LocalReducedMotion.current
     val text = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 23.tpx)
+    // The arrows cross-fade with the rest of the row's focus effects while it is calm; a choice's arrows always fade
+    val arrowColor = animateColorAsState(if (focused) colors.accent2 else colors.text3, tween(if (calm) Motion.ROW_FOCUS else Motion.FADE, easing = Motion.Ease), label = "chevron")
+    val staticArrows = if (focused) colors.accent2 else colors.text3
     when (value) {
         is RowValue.Toggle -> Switch(value.on)
         // The arrows are always shown (muted when not focused), so all values end at the same edge
         is RowValue.Choice -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.px)) {
-            val arrows by animateColorAsState(if (focused) colors.accent2 else colors.text3, tween(Motion.FADE, easing = Motion.Ease), label = "chevron")
+            val arrows by arrowColor
             Symbol(Symbols.CHEVRON_LEFT, 30.tpx, arrows, Modifier.chevronBump(choice, -1))
             // A new value slides in from the side the key came from
             Row(Modifier.valueSlide(choice), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.px)) {
@@ -260,10 +313,10 @@ private fun RowValueView(value: RowValue, focused: Boolean, choice: ChoiceMotion
             val label = if (number % value.divisor == 0) (number / value.divisor).toString() else String.format(java.util.Locale.US, "%.1f", number.toDouble() / value.divisor)
             BasicText("$label${value.unit}", style = text.copy(textAlign = TextAlign.End), maxLines = 1, modifier = Modifier.width(160.px))
         }
-        is RowValue.Action -> Symbol(Symbols.CHEVRON_RIGHT, 30.tpx, if (focused) colors.accent2 else colors.text3)
+        is RowValue.Action -> Symbol(Symbols.CHEVRON_RIGHT, 30.tpx, if (calm) arrowColor.value else staticArrows)
         is RowValue.Text -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.px)) {
             MarqueeText(value.text.ifEmpty { "Not set" }, style = text, active = focused, modifier = Modifier.widthIn(max = 220.px))
-            Symbol(Symbols.CHEVRON_RIGHT, 30.tpx, if (focused) colors.accent2 else colors.text3)
+            Symbol(Symbols.CHEVRON_RIGHT, 30.tpx, if (calm) arrowColor.value else staticArrows)
         }
         is RowValue.Info -> BasicText(value.text, style = text)
     }

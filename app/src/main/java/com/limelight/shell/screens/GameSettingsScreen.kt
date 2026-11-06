@@ -141,42 +141,45 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
         }
         CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView, LocalEntranceStagger provides rememberEntranceStagger(tab to game)) {
             key(tab, game) {
-                LazyColumn(state = scroll,
-                    modifier = Modifier.padding(start = SettingsLayout.TITLE_X.px, top = SettingsLayout.LIST_TOP.px, bottom = bottom.px)
-                        .width(1140.px).fillMaxHeight().fadeEdges(stage, top = 14f, bottom = 70f),
-                    contentPadding = PaddingValues(start = 18.px, end = 18.px, top = 14.px, bottom = 140.px),
-                    verticalArrangement = Arrangement.spacedBy(10.px)) {
-                    itemsIndexed(rows, key = { _, spec -> spec.key }) { index, spec ->
-                        val current = values[spec.key] ?: spec.default
-                        val value = when (spec.kind) {
-                            SettingKind.TOGGLE -> RowValue.Toggle(current as? Boolean ?: false) { stream.write(spec, it) }
-                            SettingKind.CHOICE -> {
-                                val choices = caps?.choices(spec, values) ?: spec.choices
-                                RowValue.Choice(spec.choiceLabel(current, choices), { dir ->
-                                    nextSettingChoice(current, choices, dir)?.let { stream.write(spec, it.value) }
-                                })
+                // One ring glides between the rows; the host carries the list's size and faded edges, so the ring fades with the rows
+                SettingRowList(Modifier.padding(start = SettingsLayout.TITLE_X.px, top = SettingsLayout.LIST_TOP.px, bottom = bottom.px)
+                    .width(1140.px).fillMaxHeight().fadeEdges(stage, top = 14f, bottom = 70f)) {
+                    LazyColumn(state = scroll,
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(start = 18.px, end = 18.px, top = 14.px, bottom = 140.px),
+                        verticalArrangement = Arrangement.spacedBy(10.px)) {
+                        itemsIndexed(rows, key = { _, spec -> spec.key }) { index, spec ->
+                            val current = values[spec.key] ?: spec.default
+                            val value = when (spec.kind) {
+                                SettingKind.TOGGLE -> RowValue.Toggle(current as? Boolean ?: false) { stream.write(spec, it) }
+                                SettingKind.CHOICE -> {
+                                    val choices = caps?.choices(spec, values) ?: spec.choices
+                                    RowValue.Choice(spec.choiceLabel(current, choices), { dir ->
+                                        nextSettingChoice(current, choices, dir)?.let { stream.write(spec, it.value) }
+                                    })
+                                }
+                                SettingKind.SLIDER -> RowValue.Slider((current as? Number)?.toInt() ?: spec.min,
+                                    spec.min, spec.max, spec.step, spec.unit, spec.divisor) { stream.write(spec, it) }
+                                else -> RowValue.Info(current?.toString().orEmpty())
                             }
-                            SettingKind.SLIDER -> RowValue.Slider((current as? Number)?.toInt() ?: spec.min,
-                                spec.min, spec.max, spec.step, spec.unit, spec.divisor) { stream.write(spec, it) }
-                            else -> RowValue.Info(current?.toString().orEmpty())
+                            val isCustom = spec.key in custom
+                            val source = if (isCustom) "Custom for this game" else "From profile"
+                            val menu = ContextMenu(spec.label, listOf(MenuItem(Symbols.RESET, "Reset to profile value") { reset(spec.key) }))
+                            SettingRow(spec.icon, spec.label, value, if (index == 0) Modifier.focusRequester(first) else Modifier,
+                                description = if (spec.key == "seekbar_bitrate_kbps" && bitrateHint != null) "$source · $bitrateHint" else source,
+                                descriptionColor = if (isCustom) colors.accent3 else null,
+                                enabled = caps != null && stream.enabled(spec, caps), contextMenu = menu,
+                                onFocused = { focusedKey = spec.key })
                         }
-                        val isCustom = spec.key in custom
-                        val source = if (isCustom) "Custom for this game" else "From profile"
-                        val menu = ContextMenu(spec.label, listOf(MenuItem(Symbols.RESET, "Reset to profile value") { reset(spec.key) }))
-                        SettingRow(spec.icon, spec.label, value, if (index == 0) Modifier.focusRequester(first) else Modifier,
-                            description = if (spec.key == "seekbar_bitrate_kbps" && bitrateHint != null) "$source · $bitrateHint" else source,
-                            descriptionColor = if (isCustom) colors.accent3 else null,
-                            enabled = caps != null && stream.enabled(spec, caps), contextMenu = menu,
-                            onFocused = { focusedKey = spec.key })
-                    }
-                    // The one game-wide action closes the list, set apart from the settings; the list spacing adds 10 px on each side.
-                    item(key = "reset-all-gap") { Spacer(Modifier.height(20.px)) }
-                    item(key = "reset-all") {
-                        SettingRow(Symbols.RESET, "Reset all settings", RowValue.Action {
-                            game.resetAll()
-                            shell.showToast("All settings follow the profile again", Symbols.RESET)
-                        }, description = "This game follows your profile again", enabled = custom.isNotEmpty(),
-                            onFocused = { focusedKey = null })
+                        // The one game-wide action closes the list, set apart from the settings; the list spacing adds 10 px on each side.
+                        item(key = "reset-all-gap") { Spacer(Modifier.height(20.px)) }
+                        item(key = "reset-all") {
+                            SettingRow(Symbols.RESET, "Reset all settings", RowValue.Action {
+                                game.resetAll()
+                                shell.showToast("All settings follow the profile again", Symbols.RESET)
+                            }, description = "This game follows your profile again", enabled = custom.isNotEmpty(),
+                                onFocused = { focusedKey = null })
+                        }
                     }
                 }
             }

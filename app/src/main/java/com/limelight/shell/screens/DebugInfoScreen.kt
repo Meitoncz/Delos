@@ -69,6 +69,7 @@ import com.limelight.shell.ui.LocalStage
 import com.limelight.shell.ui.rememberMarginBringIntoView
 import com.limelight.shell.ui.RowValue
 import com.limelight.shell.ui.SettingRow
+import com.limelight.shell.ui.SettingRowList
 import com.limelight.shell.ui.Symbol
 import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.Figtree
@@ -372,24 +373,27 @@ fun DebugInfoScreen() {
             modifier = Modifier.offset(150.px, 124.px))
         Row(Modifier.fillMaxSize().padding(start = 150.px, end = 150.px, top = 230.px, bottom = 110.px), horizontalArrangement = Arrangement.spacedBy(56.px)) {
             CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView, com.limelight.shell.ui.LocalEntranceStagger provides com.limelight.shell.ui.rememberEntranceStagger()) {
-                LazyColumn(
-                    Modifier.weight(1f).fadeEdges(stage, top = 14f, bottom = 90f), state = listState,
-                    contentPadding = PaddingValues(start = 18.px, end = 18.px, top = 14.px, bottom = 140.px),
-                    verticalArrangement = Arrangement.spacedBy(10.px),
-                ) {
-                    var previous = ""
-                    rows.forEachIndexed { index, row ->
-                        if (row.section != previous) {
-                            val section = row.section
-                            item("section-$section") {
-                                BasicText(section.uppercase(Locale.ROOT), style = TextStyle(color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 16.tpx, letterSpacing = .08.em),
-                                    modifier = Modifier.padding(start = 26.px, top = 10.px, bottom = 2.px))
+                // One ring glides between the rows; the host carries the list's weight and faded edges, so the ring fades with the rows
+                SettingRowList(Modifier.weight(1f).fadeEdges(stage, top = 14f, bottom = 90f)) {
+                    LazyColumn(
+                        Modifier.fillMaxSize(), state = listState,
+                        contentPadding = PaddingValues(start = 18.px, end = 18.px, top = 14.px, bottom = 140.px),
+                        verticalArrangement = Arrangement.spacedBy(10.px),
+                    ) {
+                        var previous = ""
+                        rows.forEachIndexed { index, row ->
+                            if (row.section != previous) {
+                                val section = row.section
+                                item("section-$section") {
+                                    BasicText(section.uppercase(Locale.ROOT), style = TextStyle(color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 16.tpx, letterSpacing = .08.em),
+                                        modifier = Modifier.padding(start = 26.px, top = 10.px, bottom = 2.px))
+                                }
+                                previous = section
                             }
-                            previous = section
-                        }
-                        item(row.key) {
-                            SettingRow(row.icon, row.label, row.value, if (index == 0) Modifier.focusRequester(first) else Modifier,
-                                description = row.description.takeIf { it.length <= 100 }, onFocused = { focusedKey = row.key })
+                            item(row.key) {
+                                SettingRow(row.icon, row.label, row.value, if (index == 0) Modifier.focusRequester(first) else Modifier,
+                                    description = row.description.takeIf { it.length <= 100 }, onFocused = { focusedKey = row.key })
+                            }
                         }
                     }
                 }

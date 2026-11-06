@@ -170,8 +170,9 @@ fun rememberPressPulse(): PressPulse {
 }
 
 /**
- * The scale of a focusable element: the focus lifts it to [focusScale] with the overshooting spring ([Motion.FOCUS]),
- * a press squeezes it to [pressScale] for a moment ([Motion.PRESS]). With reduced motion it jumps.
+ * The scale of a focusable element: the focus lifts it to [focusScale] with the overshooting spring ([focusMillis], by default
+ * [Motion.FOCUS]; a settings row with a gliding ring takes the calmer [Motion.ROW_FOCUS]), a press squeezes it to [pressScale]
+ * for a moment ([Motion.PRESS]). With reduced motion it jumps.
  */
 @Composable
 fun animateFocusScale(
@@ -180,11 +181,12 @@ fun animateFocusScale(
     focusScale: Float,
     pressScale: Float = Motion.PRESS_SCALE,
     label: String = "focusScale",
+    focusMillis: Int = Motion.FOCUS,
 ): State<Float> {
     val reduced = LocalReducedMotion.current
     return animateFloatAsState(
         Motion.scaleTarget(focused, pressed, focusScale, pressScale),
-        if (reduced) snap() else tween(if (pressed) Motion.PRESS else Motion.FOCUS, easing = EaseSpring),
+        if (reduced) snap() else tween(if (pressed) Motion.PRESS else focusMillis, easing = EaseSpring),
         label = label,
     )
 }

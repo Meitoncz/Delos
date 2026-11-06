@@ -59,6 +59,15 @@ object Motion {
 
     /** The focus ring gliding to the next element. */
     const val RING = 560
+
+    /**
+     * A settings-style list row gaining or losing the focus while one ring glides between the rows ([RowGlideHost]): the ring's
+     * glide (with [Glide]), the row's glass, glow, scale and icon / arrow colors all take this long, so the old row lets go
+     * as the ring leaves it and the new one is lit as the ring arrives. Calmer than [FOCUS] (the quick fade of a row that
+     * draws its own ring).
+     */
+    const val ROW_FOCUS = 520
+
     /** For this long after a gliding ring first appears it follows its element exactly (the screen is still entering). */
     const val RING_FOLLOW_MS = 900
 
@@ -320,4 +329,32 @@ class ListScrollDriver(private val stagePx: Float) {
         /** A long frame (a hitch) advances the spring by at most this much. */
         const val MAX_FRAME_SECONDS = .05f
     }
+}
+
+/**
+ * The arithmetic of the ring that glides between the rows of a scrolling list ([RowGlideHost]). The ring is not animated
+ * in window space (a list that scrolls while the ring glides would leave it behind): it is drawn at the focused row's
+ * *current* edges plus a [carry] that starts as the distance from the new row back to where the ring was and shrinks to
+ * nothing as the glide goes on, so a scroll moves the ring with the row it is heading for and at rest it lies exactly on it.
+ */
+internal object RowGlideMotion {
+    /** The ring counts as shown, and so is glided away from by the next focus, while it is at least this opaque. */
+    const val VISIBLE_FROM = .5f
+
+    /**
+     * Whether a focus change glides from where the ring is, or the ring just appears on the new row (it was not on
+     * screen, so it has no place to glide from; reduced motion jumps).
+     */
+    fun glides(ringAlpha: Float, reduced: Boolean): Boolean = !reduced && ringAlpha >= VISIBLE_FROM
+
+    /** One edge of the ring: the row's current [edge] plus what is left of the [carry] at the eased [progress] (1 = arrived, may overshoot). */
+    fun edge(edge: Float, carry: Float, progress: Float): Float = edge + carry * (1f - progress)
+
+    /** The carry that puts the ring on [from] while the row's edge is [edge]. */
+    fun carry(from: Float, edge: Float): Float = from - edge
+
+    /** An edge of the ring grown around its center to [scale] times the element's size: [near] is the left or top edge, [far] the right or bottom one. */
+    fun grownNear(near: Float, far: Float, scale: Float): Float = near - (far - near) * (scale - 1f) / 2f
+
+    fun grownFar(near: Float, far: Float, scale: Float): Float = far + (far - near) * (scale - 1f) / 2f
 }
