@@ -79,6 +79,14 @@ import com.limelight.shell.ui.HeroBitmaps
 import com.limelight.shell.ui.PlaceholderArt
 import com.limelight.shell.ui.LocalBackdropHaze
 import com.limelight.shell.ui.LocalDelosColors
+import com.limelight.shell.ui.LocalReducedMotion
+import com.limelight.shell.ui.LocalSelectionPill
+import com.limelight.shell.ui.Motion
+import com.limelight.shell.ui.selectionPillTarget
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.graphics.Color
 import com.limelight.shell.ui.backdropBlur
 import com.limelight.shell.ui.LocalFeedback
 import com.limelight.shell.ui.LocalStage
@@ -227,7 +235,7 @@ fun SettingsScreen(
         BasicText("Settings", style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx),
             modifier = Modifier.offset(SettingsLayout.TITLE_X.px, SettingsLayout.TITLE_Y.px))
         PillButton("Search", Symbols.SEARCH, { shell.onSettingsSearch?.invoke() }, Modifier.offset(1530.px, 122.px), clickCue = null)
-        Row(Modifier.offset(y = SettingsLayout.TABS_Y.px).fillMaxWidth().height(SettingsLayout.TABS_HEIGHT.px), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+        com.limelight.shell.ui.SelectionPillHost(Modifier.offset(y = SettingsLayout.TABS_Y.px).fillMaxWidth().height(SettingsLayout.TABS_HEIGHT.px)) {
             ShoulderLabel("L1")
             SettingsTab.entries.forEach { next ->
                 TabPill(next.icon, next.label, tab == next, Modifier.padding(horizontal = 5.px)) {
@@ -293,14 +301,20 @@ internal fun ShoulderLabel(label: String) {
 @Composable
 internal fun TabPill(icon: String, label: String, selected: Boolean, modifier: Modifier, onClick: () -> Unit) {
     val colors = LocalDelosColors.current
+    val reduced = LocalReducedMotion.current
     var focused by remember { mutableStateOf(false) }
-    Row(modifier.focusEffects(onClick, corner = 999f, focusScale = 1.08f, ring = FocusRing(0f, 0f), glow = FocusGlow(12f, 36f, -10f), onFocusChange = { focused = it })
+    // Inside a SelectionPillHost the selected tab's frosted pill is the host's, gliding between the tabs
+    val hosted = LocalSelectionPill.current != null
+    val fade = if (reduced) snap<Color>() else tween(Motion.FADE, easing = Motion.Ease)
+    val iconColor by animateColorAsState(if (focused) colors.onAccent else if (selected) colors.accent else colors.text2, fade, label = "tabIcon")
+    val textColor by animateColorAsState(if (focused) colors.onAccent else if (selected) colors.text else colors.text2, fade, label = "tabText")
+    Row(modifier.selectionPillTarget(selected).focusEffects(onClick, corner = 999f, focusScale = 1.08f, ring = FocusRing(0f, 0f), glow = FocusGlow(12f, 36f, -10f), onFocusChange = { focused = it })
         .clip(CircleShape)
-        .then(if (focused) Modifier.background(colors.accent) else if (selected) Modifier.glass(colors.surface2) else Modifier)
+        .then(if (focused) Modifier.background(colors.accent) else if (selected && !hosted) Modifier.glass(colors.surface2) else Modifier)
         .height(66.px).padding(horizontal = 22.px),
         horizontalArrangement = Arrangement.spacedBy(12.px), verticalAlignment = Alignment.CenterVertically) {
-        Symbol(icon, 30.tpx, if (focused) colors.onAccent else if (selected) colors.accent else colors.text2, filled = focused || selected)
-        BasicText(label, style = TextStyle(color = if (focused) colors.onAccent else if (selected) colors.text else colors.text2,
+        Symbol(icon, 30.tpx, iconColor, filled = focused || selected)
+        BasicText(label, style = TextStyle(color = textColor,
             fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 22.tpx))
     }
 }

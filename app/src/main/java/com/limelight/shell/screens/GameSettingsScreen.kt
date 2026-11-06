@@ -134,8 +134,7 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
             Chip(if (custom.isEmpty()) Symbols.CHECK_CIRCLE else Symbols.TUNE, customSettingsLabel(custom.size),
                 if (custom.isEmpty()) null else colors.accent3)
         }
-        Row(Modifier.offset(y = SettingsLayout.TABS_Y.px).fillMaxWidth().height(SettingsLayout.TABS_HEIGHT.px),
-            horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+        com.limelight.shell.ui.SelectionPillHost(Modifier.offset(y = SettingsLayout.TABS_Y.px).fillMaxWidth().height(SettingsLayout.TABS_HEIGHT.px)) {
             ShoulderLabel("L1")
             TabPill(Symbols.CAST, "Stream", tab == 0, Modifier.padding(horizontal = 5.px)) { changeTab(0) }
             TabPill(Symbols.MONITOR, "Display", tab == 1, Modifier.padding(horizontal = 5.px)) { changeTab(1) }
