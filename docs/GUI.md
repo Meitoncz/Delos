@@ -292,6 +292,7 @@ in assets.
 ## Menus and settings
 
 - Menus and settings follow a **PS5-like layout**, but the main settings screen also shows the **main categories as icon tabs** that can be switched.
+- **Tab pill:** the frosted pill behind the selected tab (settings, per-game settings, artwork; `SelectionPillHost` in `ui/SelectionPill.kt`) glides to the newly selected tab with the geometry spring (`GEO_STIFFNESS`/`GEO_DAMPING`, its leading edge 1.5× stiffer and trailing edge 0.75× so it stretches and squashes with the gap and follows the new tab's width), wraps across the bar, starts in place on first composition and jumps with reduced motion; icon and label colors cross-fade over `FADE`. Debug preview: `--es preview_screen settings_tabs [--ez preview_auto true]`.
 - The per-game settings screen mirrors the global settings layout (title, tabs and list at the same positions); the game and a chip with the number of custom settings share the title's line. The right column has a 260x390 cover at the top of the list, the focused option's help and the autosave note. "Reset all settings" is the last row of the list, after a gap. Details in [PER_GAME_SETTINGS.md](PER_GAME_SETTINGS.md).
 
 ## Controls

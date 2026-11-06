@@ -199,7 +199,7 @@ fun ArtworkScreen(screen: Screen.Artwork) {
                 style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx),
             )
         }
-        Row(Modifier.offset(y = 206.px).fillMaxWidth().height(66.px), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+        com.limelight.shell.ui.SelectionPillHost(Modifier.offset(y = 206.px).fillMaxWidth().height(66.px)) {
             ShoulderLabel("L1")
             ArtTab.entries.forEach { next ->
                 TabPill(next.icon, next.label, tab == next, Modifier.padding(horizontal = 5.px)) {
