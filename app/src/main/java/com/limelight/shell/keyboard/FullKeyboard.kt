@@ -249,7 +249,7 @@ private fun KeyboardBar(
                 .fillMaxWidth()
                 .padding(start = KeyboardMetrics.SIDE.px, end = KeyboardMetrics.SIDE.px, bottom = HINT_BOTTOM.px),
         ) {
-            HintStrip(state, palette, Modifier.width(metrics.bodyWidth.px).align(alignment))
+            HintStrip(state, palette, metrics.bodyWidth, Modifier.width(metrics.bodyWidth.px).align(alignment))
         }
     }
 }
@@ -532,9 +532,9 @@ private fun KeyPopupLayer(state: FullKeyboardState, metrics: KeyboardMetrics, pa
 
 // ---- Hints ----
 
-/** `A Press`, `B Close`, `X Shift` and the strip's title: only while a controller drives the keyboard. */
+/** `A Press`, `B Close`, `L3 Shift`, `X Delete`, `Y Space` and the strip's title: only while a controller drives the keyboard. */
 @Composable
-private fun HintStrip(state: FullKeyboardState, palette: KeyboardPalette, modifier: Modifier) {
+private fun HintStrip(state: FullKeyboardState, palette: KeyboardPalette, bodyWidth: Float, modifier: Modifier) {
     val on = state.open && state.input == InputMode.CONTROLLER
     // They come in after the keys (the row delay), go out with everything else
     val visible by animateFloatAsState(
@@ -552,9 +552,16 @@ private fun HintStrip(state: FullKeyboardState, palette: KeyboardPalette, modifi
         Spacer(Modifier.width(30f.px))
         Hint("B", "Close", palette)
         Spacer(Modifier.width(30f.px))
-        Hint("X", "Shift", palette)
+        Hint("L3", "Shift", palette)
+        Spacer(Modifier.width(30f.px))
+        Hint("X", "Delete", palette)
+        Spacer(Modifier.width(30f.px))
+        Hint("Y", "Space", palette)
         Spacer(Modifier.weight(1f))
-        BasicText("ON-SCREEN KEYBOARD", style = legendStyle(17f, palette.text3, FontWeight.SemiBold, .14.em), maxLines = 1, softWrap = false)
+        // The five hints take about 720 px: on a narrower keyboard the title goes, so the strip stays one line
+        if (bodyWidth >= TITLE_MIN_WIDTH) {
+            BasicText("ON-SCREEN KEYBOARD", style = legendStyle(17f, palette.text3, FontWeight.SemiBold, .14.em), maxLines = 1, softWrap = false)
+        }
     }
 }
 
@@ -562,10 +569,12 @@ private fun HintStrip(state: FullKeyboardState, palette: KeyboardPalette, modifi
 private fun Hint(glyph: String, label: String, palette: KeyboardPalette) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12f.px)) {
         Box(Modifier.size(GLYPH_SIZE.px).clip(CircleShape).background(palette.text), contentAlignment = Alignment.Center) {
-            BasicText(glyph, style = legendStyle(GLYPH_SIZE * .55f, palette.onText, FontWeight.ExtraBold, TextUnit.Unspecified))
+            // The stick click is a two-letter glyph: smaller, so it stays inside the circle
+            BasicText(glyph, style = legendStyle(GLYPH_SIZE * (if (glyph.length > 1) .42f else .55f), palette.onText, FontWeight.ExtraBold, TextUnit.Unspecified))
         }
         BasicText(label, style = legendStyle(22f, palette.text2, FontWeight.SemiBold, TextUnit.Unspecified), maxLines = 1, softWrap = false)
     }
 }
 
 private const val GLYPH_SIZE = 36f
+private const val TITLE_MIN_WIDTH = 1100f

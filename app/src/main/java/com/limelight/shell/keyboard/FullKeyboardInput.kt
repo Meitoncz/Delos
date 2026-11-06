@@ -147,19 +147,37 @@ class ModifierLatch {
         if (latched.remove(code)) KeySend.UP else { latched.add(code); KeySend.DOWN }
 }
 
+/** The controller's key repeat: the D-pad hat and the held X / Y keys repeat after the delay, then every interval. */
+internal const val PAD_REPEAT_DELAY_MS = 350L
+internal const val PAD_REPEAT_INTERVAL_MS = 100L
+
 /** What a controller button does while the keyboard is up. */
 internal sealed interface PadAction {
     data class Move(val direction: MenuDirection) : PadAction
     data object PressDown : PadAction
     data object PressUp : PadAction
     data object Close : PadAction
+    /** L3: Shift on or off as a latch. */
     data object ToggleShift : PadAction
+
+    /** X or Y went down: the key [code] (Backspace, Space) goes down and repeats while the button is held. */
+    data class BoundDown(val code: Int) : PadAction
+
+    data class BoundUp(val code: Int) : PadAction
+}
+
+/** The key a face button types while the keyboard is up: X is Backspace, Y is Space. */
+internal fun boundKeyCode(keyCode: Int): Int? = when (keyCode) {
+    KeyEvent.KEYCODE_BUTTON_X -> KeyEvent.KEYCODE_DEL
+    KeyEvent.KEYCODE_BUTTON_Y -> KeyEvent.KEYCODE_SPACE
+    else -> null
 }
 
 /**
  * The keyboard action of a controller key event, or null for a key the keyboard does not use (it still swallows it, so
  * nothing reaches the game): A holds the focused key down and lets it go (also when the release is cancelled), B and Back
- * close on release, X toggles Shift. The D-pad keys are not here: they go through [DpadTracker] ([dpadDirection]), which
+ * close on release, L3 (the left stick click) toggles Shift, X types Backspace and Y Space (down on press, up on release or
+ * cancel; the keyboard repeats them itself, so the system's repeats are ignored). The D-pad keys are not here: they go through [DpadTracker] ([dpadDirection]), which
  * also takes the hat axes of the same D-pad.
  */
 internal fun padKeyAction(keyCode: Int, keyAction: Int, repeatCount: Int, canceled: Boolean): PadAction? = when (keyCode) {
@@ -170,7 +188,13 @@ internal fun padKeyAction(keyCode: Int, keyAction: Int, repeatCount: Int, cancel
     }
     KeyEvent.KEYCODE_BUTTON_B, KeyEvent.KEYCODE_BACK ->
         if (keyAction == KeyEvent.ACTION_UP && !canceled) PadAction.Close else null
-    KeyEvent.KEYCODE_BUTTON_X -> if (keyAction == KeyEvent.ACTION_DOWN && repeatCount == 0) PadAction.ToggleShift else null
+    KeyEvent.KEYCODE_BUTTON_THUMBL ->
+        if (keyAction == KeyEvent.ACTION_DOWN && repeatCount == 0) PadAction.ToggleShift else null
+    KeyEvent.KEYCODE_BUTTON_X, KeyEvent.KEYCODE_BUTTON_Y -> when (keyAction) {
+        KeyEvent.ACTION_DOWN -> if (repeatCount == 0) PadAction.BoundDown(boundKeyCode(keyCode)!!) else null
+        KeyEvent.ACTION_UP -> PadAction.BoundUp(boundKeyCode(keyCode)!!)
+        else -> null
+    }
     else -> null
 }
 
@@ -197,8 +221,8 @@ internal fun dpadDirection(keyCode: Int): MenuDirection? = when (keyCode) {
  *   a hat press that arrives while the same direction's key is held does not move either (the key's own repeat does).
  */
 internal class DpadTracker(
-    private val initialDelayMs: Long = 350,
-    private val repeatIntervalMs: Long = 100,
+    private val initialDelayMs: Long = PAD_REPEAT_DELAY_MS,
+    private val repeatIntervalMs: Long = PAD_REPEAT_INTERVAL_MS,
 ) {
     private var hatX = 0
     private var hatY = 0

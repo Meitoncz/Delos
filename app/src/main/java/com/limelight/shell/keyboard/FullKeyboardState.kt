@@ -114,6 +114,8 @@ class FullKeyboardState(private val host: FullKeyboardHost) {
     private val held = HashSet<Int>()
     private var padHeld: Int? = null
     private var padHeldSendsUp = false
+    /** X / Y keys (Backspace, Space) held by the controller, each with the timer that repeats it. */
+    private val boundHeld = HashMap<Int, Runnable>()
     private val latchTimers = HashMap<Int, Runnable>()
     private val pressStart = HashMap<Int, Long>()
     private val releaseTimers = HashMap<Int, Runnable>()
@@ -235,6 +237,8 @@ class FullKeyboardState(private val host: FullKeyboardHost) {
             PadAction.PressUp -> padUp()
             PadAction.Close -> host.close()
             PadAction.ToggleShift -> toggleShift()
+            is PadAction.BoundDown -> boundDown(action.code)
+            is PadAction.BoundUp -> boundUp(action.code)
         }
     }
 
@@ -292,15 +296,43 @@ class FullKeyboardState(private val host: FullKeyboardHost) {
         if (code == HIDE_CODE) host.close() else if (padHeldSendsUp) keyUp(code)
     }
 
+    /** L3: Shift is latched (down on the host) or, when any Shift is latched, every latched Shift is let go. */
     private fun toggleShift() {
-        val shift = KeyEvent.KEYCODE_SHIFT_LEFT
-        toggleLatch(shift)
-        // A tap of the key, so it shows the press like a touch would
-        addPressed(shift)
-        handler.post { removePressed(shift) }
+        val latchedShifts = latch.codes().filter(::isShiftCode)
+        val toggled = latchedShifts.ifEmpty { listOf(KeyEvent.KEYCODE_SHIFT_LEFT) }
+        for (shift in toggled) {
+            toggleLatch(shift)
+            // A tap of the key, so it shows the press like a touch would
+            addPressed(shift)
+            handler.post { removePressed(shift) }
+        }
     }
 
-    /** A or X on a modifier: latch it (down on the host) or let it go. */
+    /** X or Y went down: [code] is typed through the same path as a press of A and repeats while the button is held. */
+    private fun boundDown(code: Int) {
+        if (code in boundHeld || code in held) return
+        addPressed(code)
+        showPopup(code)
+        keyDown(code)
+        val repeat = object : Runnable {
+            override fun run() {
+                host.sendKey(code, true)
+                handler.postDelayed(this, PAD_REPEAT_INTERVAL_MS)
+            }
+        }
+        boundHeld[code] = repeat
+        handler.postDelayed(repeat, PAD_REPEAT_DELAY_MS)
+    }
+
+    private fun boundUp(code: Int) {
+        val repeat = boundHeld.remove(code) ?: return
+        handler.removeCallbacks(repeat)
+        removePressed(code)
+        hidePopupSoon()
+        keyUp(code)
+    }
+
+    /** A or L3 on a modifier: latch it (down on the host) or let it go. */
     private fun toggleLatch(code: Int) {
         val send = latch.padPress(code)
         syncLatched()
@@ -330,6 +362,8 @@ class FullKeyboardState(private val host: FullKeyboardHost) {
         for (code in held.toList()) host.sendKey(code, false)
         held.clear()
         padHeld = null
+        for (repeat in boundHeld.values) handler.removeCallbacks(repeat)
+        boundHeld.clear()
         for (timer in releaseTimers.values) handler.removeCallbacks(timer)
         releaseTimers.clear()
         pressed = emptySet()

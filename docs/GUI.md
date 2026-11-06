@@ -492,8 +492,9 @@ drawn nothing is touchable: a finger on the game area goes to the stream even wh
   **focused** key turns white with a dark legend and the **gold ring** (4 px, 3 px dark gap) around it; **pressed** is the second
   accent (cyan) with a dark legend and squeezes to .97; **sticky** is solid gold with a bar under the legend (state never
   relies on color alone). The key popup (white bubble, 1.15 keys tall, 10 above the key, the character typed) shows for
-  character keys only and stays 75 ms after the release. The hint strip says **A Press, B Close, X Shift** (36 px glyph circles,
-  label 22) and "ON-SCREEN KEYBOARD" at its right end; it only shows while a controller drives the keyboard (touching hides
+  character keys only and stays 75 ms after the release. The hint strip says **A Press, B Close, L3 Shift, X Delete, Y Space** (36 px glyph circles, `L3` a
+  two-letter glyph in the same circle, label 22) and "ON-SCREEN KEYBOARD" at its right end (left out when the keys are narrower than
+  1100 px, so the strip stays one line); it only shows while a controller drives the keyboard (touching hides
   it, the ring and the focused key's white; the next D-pad press brings them back). The stream darkens a little behind the
   bar (the prototype's `#shade`, 0 to .38 from half the height down).
 - **Size and settings** (stage px; the design is laid out on the 1080-high stage like the rest of the UI): by default the
@@ -513,14 +514,18 @@ drawn nothing is touchable: a finger on the game area goes to the stream even wh
 - **Controller** (handheld first): **while the keyboard is up it operates the keyboard and nothing of the controller reaches
   the game**; the D-pad and the left stick move the focus, **A** presses the focused key (held for as long as A is held; a
   modifier latches and unlatches, because a controller cannot hold one key while pressing another, whatever the sticky setting
-  says), **B** (and Back) closes it, **X** toggles Shift. Moves are row-aware like the prototype: left/right stay in the row and
+  says), **B** (and Back) closes it, **L3** (the left stick click) toggles Shift as a latch (Shift down on the host while latched, labels shifted;
+  L3 again releases it; the stick click never moves the focus), **X** types **Backspace** and **Y** **Space** (down on press, up on
+  release, repeating after 350 ms every 100 ms while held, `PAD_REPEAT_DELAY_MS` / `PAD_REPEAT_INTERVAL_MS`; the keyboard repeats them
+  itself and ignores the system's repeats). X and Y go through the same send path as a touch (haptics, popup) and flash the Back
+  and Space keys even when the layout hides them; closing the keyboard lets go of both. Moves are row-aware like the prototype: left/right stay in the row and
   stop at its ends (the ring nudges 7 px against the edge), up/down go to the key of the next row under the *column* of the last
   horizontal move, else the nearest (`KeyGrid`, `FullKeyboardInputTest`). The first focus is Q, then the last key. **The D-pad
   works in both shapes a pad reports it**: as `DPAD_*` key events (the system repeats them) and as the hat axes
   `AXIS_HAT_X` / `AXIS_HAT_Y` of the joystick motion event, which is what most handhelds (the Odin) send and which never
   reaches the keys. `DpadTracker` (pure, tested) turns the hat into moves: a newly pressed direction moves at once, a timer
   repeats the last one after 350 ms every 100 ms until the hat is back at the center, and a device that sends both the hat
-  and the key moves once per press. A, B and X are the raw Android codes (`BUTTON_A` 96, `BUTTON_B` 97, `BUTTON_X` 99), also
+  and the key moves once per press. A, B, X, Y and L3 are the raw Android codes (`BUTTON_A` 96, `BUTTON_B` 97, `BUTTON_X` 99, `BUTTON_Y` 100, `BUTTON_THUMBL` 106), also
   when a handheld's built-in pad reports them with a plain keyboard source. The
   controller's other buttons are swallowed. The stream menu's open/close buttons keep working (they are handled first);
   rumble keeps running. **No stuck input**: `ControllerHandler.setInputSuspended` lets go of everything the physical

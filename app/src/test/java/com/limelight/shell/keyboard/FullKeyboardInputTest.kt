@@ -333,20 +333,62 @@ class FullKeyboardInputTest {
     }
 
     @Test
-    fun bAndBackCloseOnReleaseAndXTogglesShift() {
+    fun bAndBackCloseOnRelease() {
         for (key in intArrayOf(KeyEvent.KEYCODE_BUTTON_B, KeyEvent.KEYCODE_BACK)) {
             assertNull(padKeyAction(key, KeyEvent.ACTION_DOWN, 0, false))
             assertEquals(PadAction.Close, padKeyAction(key, KeyEvent.ACTION_UP, 0, false))
             assertNull(padKeyAction(key, KeyEvent.ACTION_UP, 0, true))
         }
-        assertEquals(PadAction.ToggleShift, padKeyAction(KeyEvent.KEYCODE_BUTTON_X, KeyEvent.ACTION_DOWN, 0, false))
-        assertNull(padKeyAction(KeyEvent.KEYCODE_BUTTON_X, KeyEvent.ACTION_DOWN, 2, false))
-        assertNull(padKeyAction(KeyEvent.KEYCODE_BUTTON_X, KeyEvent.ACTION_UP, 0, false))
+    }
+
+    @Test
+    fun l3TogglesShiftOnPressOnlyAndMovesNoFocus() {
+        val l3 = KeyEvent.KEYCODE_BUTTON_THUMBL
+        assertEquals(PadAction.ToggleShift, padKeyAction(l3, KeyEvent.ACTION_DOWN, 0, false))
+        assertNull(padKeyAction(l3, KeyEvent.ACTION_DOWN, 2, false))
+        assertNull(padKeyAction(l3, KeyEvent.ACTION_UP, 0, false))
+        assertNull(dpadDirection(l3))
+        assertFalse(padKeyAction(l3, KeyEvent.ACTION_DOWN, 0, false) is PadAction.Move)
+    }
+
+    @Test
+    fun l3LatchesShiftAndTheNextPressReleasesIt() {
+        val latch = ModifierLatch()
+        val shift = KeyEvent.KEYCODE_SHIFT_LEFT
+        assertEquals(KeySend.DOWN, latch.padPress(shift))
+        assertTrue(latch.isLatched(shift))
+        assertEquals(KeySend.UP, latch.padPress(shift))
+        assertFalse(latch.isLatched(shift))
+    }
+
+    @Test
+    fun xIsBackspaceAndYIsSpaceDownOnPressUpOnReleaseOrCancel() {
+        val keys = mapOf(
+            KeyEvent.KEYCODE_BUTTON_X to KeyEvent.KEYCODE_DEL,
+            KeyEvent.KEYCODE_BUTTON_Y to KeyEvent.KEYCODE_SPACE,
+        )
+        for ((button, key) in keys) {
+            assertEquals(PadAction.BoundDown(key), padKeyAction(button, KeyEvent.ACTION_DOWN, 0, false))
+            // The keyboard repeats the key itself: the system's repeats are ignored
+            assertNull(padKeyAction(button, KeyEvent.ACTION_DOWN, 1, false))
+            assertEquals(PadAction.BoundUp(key), padKeyAction(button, KeyEvent.ACTION_UP, 0, false))
+            assertEquals(PadAction.BoundUp(key), padKeyAction(button, KeyEvent.ACTION_UP, 0, true))
+            assertEquals(key, boundKeyCode(button))
+        }
+    }
+
+    @Test
+    fun heldKeysRepeatLikeTheDpad() {
+        assertEquals(350L, PAD_REPEAT_DELAY_MS)
+        assertEquals(100L, PAD_REPEAT_INTERVAL_MS)
+        val dpad = DpadTracker()
+        assertEquals(MenuDirection.RIGHT, dpad.onHat(1f, 0f, 1000))
+        assertEquals(1000 + PAD_REPEAT_DELAY_MS, dpad.repeatAt)
     }
 
     @Test
     fun otherButtonsDoNothingForTheKeyboard() {
-        for (key in intArrayOf(KeyEvent.KEYCODE_BUTTON_Y, KeyEvent.KEYCODE_BUTTON_L1, KeyEvent.KEYCODE_BUTTON_R2, KeyEvent.KEYCODE_BUTTON_START, KeyEvent.KEYCODE_BUTTON_THUMBL)) {
+        for (key in intArrayOf(KeyEvent.KEYCODE_BUTTON_L1, KeyEvent.KEYCODE_BUTTON_R2, KeyEvent.KEYCODE_BUTTON_START, KeyEvent.KEYCODE_BUTTON_THUMBR)) {
             assertNull(padKeyAction(key, KeyEvent.ACTION_DOWN, 0, false))
             assertNull(padKeyAction(key, KeyEvent.ACTION_UP, 0, false))
         }
