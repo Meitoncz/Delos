@@ -110,17 +110,48 @@ class StreamMenuLayoutTest {
 
     @Test
     fun theCardIsKeptInsideTheStageAndTheCaretOffItsCorners() {
-        // A tile near the left end: the card stops at 110 and the caret moves left inside it
-        assertEquals(110f, popoverLeft(200f, 980f), 0f)
-        assertEquals(200f - 110f, caretCenterX(200f, 110f, 980f), 0f)
-        // Near the right end: it stops at 1810
-        assertEquals(1810f - 920f, popoverLeft(1750f, 920f), 0f)
+        // A tile near the left end: the card stops at the margin (120) and the caret moves left inside it
+        assertEquals(120f, popoverLeft(200f, 980f), 0f)
+        assertEquals(200f - 120f, caretCenterX(200f, 120f, 980f), 0f)
+        // Near the right end: it stops 120 from the right edge
+        assertEquals(1800f - 920f, popoverLeft(1750f, 920f), 0f)
         // In the middle: centered on the anchor
         assertEquals(960f - 430f, popoverLeft(960f, 860f), 0f)
         // An anchor right at the card's corner is pulled in to 72
-        assertEquals(72f, caretCenterX(100f, 110f, 800f), 0f)
-        assertEquals(800f - 72f, caretCenterX(5000f, 110f, 800f), 0f)
-        assertEquals(390f, caretCenterX(500f, 110f, 800f), 0f)
+        assertEquals(72f, caretCenterX(100f, 120f, 800f), 0f)
+        assertEquals(800f - 72f, caretCenterX(5000f, 120f, 800f), 0f)
+        assertEquals(380f, caretCenterX(500f, 120f, 800f), 0f)
+    }
+
+    @Test
+    fun theSideMarginsAreTheTopMarginAndEveryPageKeepsThem() {
+        assertEquals(c.POPOVER_MARGIN, c.POPOVER_MIN_LEFT, 0f)
+        assertEquals(c.STAGE_WIDTH - c.POPOVER_MARGIN, c.POPOVER_MAX_RIGHT, 0f)
+        // A card at its height limit: its top edge is the margin below the stage's top
+        assertEquals(c.POPOVER_MARGIN, c.POPOVER_CARD_BOTTOM - c.POPOVER_MAX_HEIGHT, 0f)
+        assertEquals(614f, c.POPOVER_MAX_HEIGHT, 0f)
+        for (page in MenuPage.entries.filter { it != MenuPage.MAIN }) {
+            val placement = popoverPlacement(page)!!
+            val left = placement.left
+            val right = c.STAGE_WIDTH - (placement.left + placement.width)
+            assertTrue("$page left $left", left >= c.POPOVER_MARGIN - .001f)
+            assertTrue("$page right $right", right >= c.POPOVER_MARGIN - .001f)
+        }
+        // Pushed against the right edge (the Disconnect tile): the gap to the edge is the gap to the top
+        val atEdge = popoverLeft(tileCenterX(BarItem.DISCONNECT), popoverWidth(MenuPage.MORE))
+        assertEquals(c.POPOVER_MARGIN, c.STAGE_WIDTH - (atEdge + popoverWidth(MenuPage.MORE)), 0f)
+        // and the caret still points at the tile
+        assertEquals(tileCenterX(BarItem.DISCONNECT), atEdge + caretCenterX(tileCenterX(BarItem.DISCONNECT), atEdge, popoverWidth(MenuPage.MORE)), .01f)
+    }
+
+    @Test
+    fun theCardNeverReachesTheCompactStatisticsLineAtAnyTextScale() {
+        for (scale in listOf(1f, 1.15f, 1.3f)) {
+            val gap = popoverStatsGap(scale)
+            assertTrue("scale $scale gap $gap", gap >= c.STATS_GAP - .01f)
+        }
+        assertEquals(61.2f, compactStatsBottom(1f), .01f)
+        assertEquals(68.76f, compactStatsBottom(c.MAX_TEXT_SCALE), .01f)
     }
 
     @Test
@@ -134,15 +165,28 @@ class StreamMenuLayoutTest {
     }
 
     @Test
-    fun theTallestPageFitsWithoutScrollingAtTheLargestTextScaleAndMoreScrolls() {
-        // The Upscaler page with supersampling: the toggle, quality, mode, sharpness and Save for this game
-        assertEquals(619.6f, popoverCardHeight(5, 1f), .01f)
-        assertTrue("card ${popoverCardHeight(5, c.MAX_TEXT_SCALE)}", popoverFits(5, c.MAX_TEXT_SCALE))
-        // More has 11 rows (with Mouse mode): the card stops at its largest height and the rows scroll
+    fun everyPageKeepsItsNaturalHeightUpToOneSharedLimitAndTheRowsScrollBeyondIt() {
+        // The Upscaler page with supersampling (toggle, quality, mode, sharpness, Save for this game) is 619.6 tall by
+        // itself: a little above the limit, so its rows scroll a little
+        assertEquals(c.POPOVER_MAX_HEIGHT, popoverCardHeight(5, 1f), 0f)
+        assertTrue(!popoverFits(5, 1f))
+        assertTrue(popoverFits(4, c.MAX_TEXT_SCALE))
+        // Small pages stay small
+        assertEquals(36f + 64f + 16f + rowsHeight(2) + 22f + popoverHelpHeight(1f) + 28f, popoverCardHeight(2, 1f), .01f)
+        assertTrue(popoverCardHeight(2, 1f) < popoverCardHeight(4, 1f))
+        // The More page, centered on its tile, ends exactly the margin from the stage's right edge
+        val more = popoverPlacement(MenuPage.MORE)!!
+        assertEquals(c.POPOVER_MARGIN, c.STAGE_WIDTH - (more.left + more.width), 0f)
+        // More has 11 rows (with Mouse mode): the card stops at the shared limit and the rows scroll
         assertTrue(!popoverFits(11, 1f))
         assertEquals(c.POPOVER_MAX_HEIGHT, popoverCardHeight(11, 1f), 0f)
         assertEquals(72f * 11 + 8f * 10, rowsHeight(11), 0f)
         assertEquals(0f, rowsHeight(0), 0f)
+        // No page is ever taller than the limit, at any text scale
+        for (scale in listOf(1f, 1.15f, 1.3f)) for (rows in 0..20) assertTrue(popoverCardHeight(rows, scale) <= c.POPOVER_MAX_HEIGHT)
+        // The rows area keeps room for at least four rows beside the fixed header and help, even at the largest text scale
+        val fixed = c.POPOVER_PADDING_Y + c.POPOVER_HEAD_HEIGHT + c.POPOVER_GAP_AFTER_HEAD + c.POPOVER_HELP_GAP + popoverHelpHeight(c.MAX_TEXT_SCALE) + c.POPOVER_PADDING_BOTTOM
+        assertTrue(c.POPOVER_MAX_HEIGHT - fixed >= rowsHeight(4))
     }
 
     @Test

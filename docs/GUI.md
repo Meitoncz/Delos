@@ -398,8 +398,10 @@ controller window ownership keep their existing paths.
 
 - **Tiles**: 150 px glass, corner 42, gap 40 (9 × 150 + 8 × 40 = 1670, 125 on each side), the top edge at y 628, icon 64
   (Phosphor, filled on focus), label 24 SemiBold 24 below the tile. Resume, Keyboard, Overlay, Brightness, Bitrate,
-  Upscaler (Supersampling), More, Disconnect, Quit game. The **Keyboard** tile is the Delos Full keyboard (on while it is up;
-  A closes the menu, then toggles it); Android's system keyboard is the More row Open Android keyboard. Toggles (Keyboard, Overlay, Upscaler) have an **On / Off pill**
+  Upscaler (Supersampling), More, Disconnect, Quit game. The **Keyboard** tile is the Delos Full keyboard (A closes the menu,
+  then toggles it) with the plain keyboard icon (`Symbols.KEYBOARD`, the one of the Settings > Controls rows); it turns accent
+  while the keyboard is up but has **no On / Off pill**. Android's system keyboard is the More row Open Android keyboard.
+  The other toggles (Overlay, Upscaler) have an **On / Off pill**
   (18 bold, 34 high) at the tile's top right corner (right −12, top −14; Overlay says Compact, the Upscaler its status
   word) and turn accent: accent glass and icon, accent pill. **Focus** scales the tile to 1.12 (spring, 420 ms), lights
   its glass, adds a glow and turns the label gold, 8 px lower; one **gold ring** (box 186, corner 56, 4 px, outer glow
@@ -420,15 +422,22 @@ controller window ownership keep their existing paths.
   over a bright picture. A window that can blur its backdrop replaces the undercoat later (`TILE_BACKING_ALPHA`,
   `CARD_BACKING_ALPHA`).
 - **Popover**: a glass card (tint rgba 34/44/84 at 50 %, white gradients, corner 44, shadow 0 40 90 −20) **above its own
-  tile**, centered on the tile and kept between 110 and 1810, its box ending 322 above the stage's bottom edge, with the
+  tile**, centered on the tile and kept 120 from the stage's left and right edges, its box ending 322 above the stage's bottom edge, with the
   **caret** (60 × 24, rounded, ONE path with the card so the glass is continuous) at the tile's center, at least 72 from
   the card's corners. Width per page: Brightness 780, Bitrate 860, Upscaler 980, More and the pages opened from it 920.
   Padding 40 × 36 (28 below), header 64 (the back circle, focusable, B does the same, and the title in Unbounded 30),
   rows 72 tall with 8 between them (corner 28, icon 32 in a 56 column, label 24 SemiBold, values 24), a 78 × 44 switch, a
-  240 × 12 slider with a 32 knob, choices between two chevrons. The card is as tall as its content, at most 686; only
-  More (11 rows) and a long list of keys scroll inside, with faded edges. The help of the focused row stands under the
-  rows in a box of two lines (three from interface scale 1.15 up), complete, never scrolling. The Upscaler page, with
-  Supersampling quality and **Save for this game**, fits at every interface scale (a test pins the sum). The pages
+  240 × 12 slider with a 32 knob, choices between two chevrons. **One margin M = 120** (`POPOVER_MARGIN`) is the card's gap to
+  the left, right and top edges of the stage: it is the gap More (the rightmost popover, 920 wide centered on its tile, its
+  right edge at 1800) always had to the right edge. Every page keeps its content's
+  height up to **one shared maximum**, the space from the card's bottom (734) up to M: 614 (`POPOVER_MAX_HEIGHT`; small
+  pages stay small). Beyond it, the rows scroll inside the card with faded edges (D-pad focus scrolls the focused row into
+  view); the header and the help stay fixed. More (11 rows), a long list of keys and the Upscaler page with
+  Supersampling (619.6 tall by itself) scroll. The card stays clear of the compact statistics line (bottom edge 61.2, at
+  interface scale 1.3 68.8, by `compactStatsBottom`). The help of the focused row stands under the
+  rows in a box of two lines (three from interface scale 1.15 up), complete, never scrolling. A card pushed against the right
+  edge keeps M there too (the top gap and the side gap are equal) and the caret still points at its tile (the card is
+  clamped, the caret stays inside its corners). The pages
   opened from More (Send keys, Commands, Mouse mode) are anchored over the More tile. More lists Send keys, Send
   clipboard, Get clipboard, Commands, Task manager, Zoom, Mouse mode (when allowed), On-screen controls, **Open Android
   keyboard** (an action: closes the menu, then opens or closes Android's system keyboard), Touch sensitivity and Rumble feel. **Key layout** and

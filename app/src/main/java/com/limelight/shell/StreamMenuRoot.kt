@@ -247,8 +247,8 @@ internal fun StreamMenuRoot(
 
     val circles = listOf(
         BarCircleSpec(BarItem.RESUME, Symbols.RESUME, "Resume") { close() },
-        // The Delos keyboard takes the controller, so the menu closes first (the state shows when the menu is opened again)
-        BarCircleSpec(BarItem.KEYBOARD, Symbols.KEYBOARD_FULL, "Keyboard", on = host.fullKeyboardOn, state = if (host.fullKeyboardOn) "On" else "Off") {
+        // The Delos keyboard takes the controller, so the menu closes first. A toggle without a state word: only the accent shows it
+        BarCircleSpec(BarItem.KEYBOARD, Symbols.KEYBOARD, "Keyboard", on = host.fullKeyboardOn, showState = false) {
             close { host.toggleFullKeyboard() }
         },
         BarCircleSpec(BarItem.OVERLAY, Symbols.OVERLAY, "Overlay", on = host.overlayOn,

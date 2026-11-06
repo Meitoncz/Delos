@@ -80,7 +80,8 @@ internal val LocalStreamHelp = staticCompositionLocalOf<(String) -> Unit> { {} }
 
 /**
  * One tile of the dock. [label] is also its help key. [on] is a toggle's state (the accent glass and an "On" / "Off"
- * pill), null for actions; [state] replaces "On" / "Off" for toggles with more steps. [opensPage] is a tile whose
+ * pill), null for actions; [state] replaces "On" / "Off" for toggles with more steps; [showState] false keeps the accent
+ * but draws no pill. [opensPage] is a tile whose
  * page opens in the popover: those stay usable while a popover is open.
  */
 @Immutable
@@ -90,6 +91,7 @@ internal class BarCircleSpec(
     val label: String,
     val on: Boolean? = null,
     val state: String? = null,
+    val showState: Boolean = true,
     val opensPage: Boolean = false,
     val onClick: () -> Unit,
 )
@@ -442,7 +444,7 @@ private fun TileCell(
                     },
                     filled = focused, fadeMillis = Motion.FADE,
                 )
-                if (spec.on != null) {
+                if (spec.on != null && spec.showState) {
                     TilePill(spec.state ?: if (on) "On" else "Off", on, Modifier.align(Alignment.TopEnd).offset((-L.PILL_RIGHT).px, L.PILL_TOP.px))
                 }
             }
