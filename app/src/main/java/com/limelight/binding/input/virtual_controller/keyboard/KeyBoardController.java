@@ -354,6 +354,13 @@ public class KeyBoardController {
         // Apply default layout
         KeyBoardControllerConfigurationLoader.createDefaultLayout(this, context, conn);
         KeyBoardControllerConfigurationLoader.loadFromPreferences(this, context);
+
+        // Rebuilding adds the buttons visible; keep the state the user chose
+        if (shown) {
+            show();
+        } else {
+            hide(true);
+        }
     }
 
     public ControllerMode getControllerMode() {

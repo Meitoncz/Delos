@@ -1025,7 +1025,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                 isHidingOverlays = true;
 
                 if (virtualController != null) {
-                    virtualController.hide();
+                    virtualController.hide(true);
                 }
 
                 if (keyBoardController != null && keyBoardController.shown) {
@@ -1052,7 +1052,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
                 // Restore overlays to previous state when leaving PiP
 
-                if (virtualController != null) {
+                if (virtualController != null && virtualController.shown) {
                     virtualController.show();
                 }
 
