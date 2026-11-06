@@ -8,6 +8,8 @@ import android.view.Display;
 
 import com.limelight.nvstream.jni.MoonBridge;
 import com.limelight.profiles.ProfilesManager;
+import com.limelight.utils.RumblePreferences;
+import com.limelight.utils.RumbleTranslator;
 
 public class PreferenceConfiguration {
 
@@ -349,6 +351,8 @@ public class PreferenceConfiguration {
     public boolean gamepadMotionSensorsFallbackToDevice;
     public boolean forceMotionSensorsFallbackToDevice;
     public boolean enableRumble;
+    public boolean rumbleTranslatorEnabled;
+    public RumbleTranslator.Profile rumbleProfile;
     public boolean preventPacketLoss;
 
     public boolean rememberZoomPan;
@@ -969,6 +973,8 @@ private static int getFramePacingValue(SharedPreferences prefs) {
         config.gamepadMotionSensorsFallbackToDevice = prefs.getBoolean(GAMEPAD_MOTION_FALLBACK_PREF_STRING, DEFAULT_GAMEPAD_MOTION_FALLBACK);
         config.forceMotionSensorsFallbackToDevice = prefs.getBoolean(FORCE_MOTION_SENSORS_FALLBACK_PREF_STRING, DEFAULT_FORCE_MOTION_SENSORS_FALLBACK);
         config.enableRumble = prefs.getBoolean(ENABLE_RUMBLE_PREF_STRING, DEFAULT_ENABLE_RUMBLE);
+        config.rumbleTranslatorEnabled = RumblePreferences.isEnabled(prefs);
+        config.rumbleProfile = RumblePreferences.readProfile(prefs);
         config.preventPacketLoss = prefs.getBoolean(PREVENT_PACKET_LOSS_PREF_STRING, DEFAULT_PREVENT_PACKET_LOSS);
 
         // Read custom values

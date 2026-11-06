@@ -132,12 +132,15 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
     private boolean stopped = false;
 
     private final PreferenceConfiguration prefConfig;
+    private final com.limelight.utils.RumblePlayback translatedRumble;
     private short currentControllers, initialControllers;
 
     public ControllerHandler(Activity activityContext, NvConnection conn, GameGestures gestures, PreferenceConfiguration prefConfig) {
         this.activityContext = activityContext;
         this.conn = conn;
         this.gestures = gestures;
+        this.translatedRumble = prefConfig.rumbleTranslatorEnabled
+                ? new com.limelight.utils.RumblePlayback(prefConfig.rumbleProfile) : null;
         this.prefConfig = prefConfig;
 		
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -278,6 +281,7 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
 
         // Stop new device contexts from being created or used
         stopped = true;
+        if (translatedRumble != null) translatedRumble.stop();
 
         // Unregister our input device callbacks
         inputManager.unregisterInputDeviceListener(this);
@@ -2023,6 +2027,7 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
     // This must only be called if hasDualAmplitudeControlledRumbleVibrators() is true!
     @TargetApi(31)
     private void rumbleDualVibrators(VibratorManager vm, short lowFreqMotor, short highFreqMotor) {
+        if (translatedRumble != null) { translatedRumble.dual(vm, lowFreqMotor, highFreqMotor); return; }
         // Normalize motor values to 0-255 amplitudes for VibrationManager
         highFreqMotor = (short)((highFreqMotor >> 8) & 0xFF);
         lowFreqMotor = (short)((lowFreqMotor >> 8) & 0xFF);
@@ -2080,6 +2085,7 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
     // This must only be called if hasQuadAmplitudeControlledRumbleVibrators() is true!
     @TargetApi(31)
     private void rumbleQuadVibrators(VibratorManager vm, short lowFreqMotor, short highFreqMotor, short leftTrigger, short rightTrigger) {
+        if (translatedRumble != null) { translatedRumble.quad(vm, lowFreqMotor, highFreqMotor, leftTrigger, rightTrigger); return; }
         // Normalize motor values to 0-255 amplitudes for VibrationManager
         highFreqMotor = (short)((highFreqMotor >> 8) & 0xFF);
         lowFreqMotor = (short)((lowFreqMotor >> 8) & 0xFF);
@@ -2117,6 +2123,7 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
     }
 
     private void rumbleSingleVibrator(Vibrator vibrator, short lowFreqMotor, short highFreqMotor) {
+        if (translatedRumble != null) { translatedRumble.single(vibrator, lowFreqMotor, highFreqMotor); return; }
         // Since we can only use a single amplitude value, compute the desired amplitude
         // by taking 80% of the big motor and 33% of the small motor, then capping to 255.
         // NB: This value is now 0-255 as required by VibrationEffect.
@@ -3217,6 +3224,13 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
         @Override
         public void destroy() {
             super.destroy();
+            if (translatedRumble != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && vibratorManager != null) {
+                    translatedRumble.cancel(vibratorManager);
+                } else if (vibrator != null) {
+                    translatedRumble.cancel(vibrator);
+                }
+            }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && vibratorManager != null) {
                 vibratorManager.cancel();

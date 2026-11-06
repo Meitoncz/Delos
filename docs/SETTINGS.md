@@ -37,6 +37,10 @@ Y opens search from settings; the hint bar also shows this shortcut. Search acce
 letters selected with the controller. Results span all tabs and selecting
 one scrolls to and focuses the actual setting, including disabled dependencies.
 
+The **About → Debug info** screen also contains an opt-in [rumble laboratory](RUMBLE.md)
+with profile-scoped translation parameters, fixed test patterns and a live amplitude readout.
+Translation is off by default; it is not added to the normal Controls tab.
+
 ## Implementation
 
 - `shell/settings/SettingsCatalog.kt` reads titles, summaries, defaults, dependencies, choices, types,
