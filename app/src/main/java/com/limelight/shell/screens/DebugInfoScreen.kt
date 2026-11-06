@@ -81,6 +81,7 @@ import com.limelight.utils.DeviceUtils
 import com.limelight.utils.DeviceVibrator
 import com.limelight.utils.RumblePlayback
 import com.limelight.utils.RumblePreferences
+import com.limelight.utils.RumblePresets
 import com.limelight.utils.RumbleTranslator
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -124,6 +125,8 @@ fun DebugInfoScreen() {
     val preferences = remember(context) { ProfileStore.currentSettings(context) }
     var profile by remember(preferences) { mutableStateOf(RumblePreferences.readProfile(preferences)) }
     var translatorEnabled by remember(preferences) { mutableStateOf(RumblePreferences.isEnabled(preferences)) }
+    var activePreset by remember(preferences) { mutableStateOf(RumblePreferences.activePreset(preferences)) }
+    var advancedExpanded by remember { mutableStateOf(false) }
     val playbackState = remember { mutableStateOf<RumblePlayback?>(null) }
     var playback by playbackState
     val scope = rememberCoroutineScope()
@@ -153,18 +156,11 @@ fun DebugInfoScreen() {
     fun updateProfile(updated: RumbleTranslator.Profile) {
         stopLab()
         profile = updated
-        preferences.edit()
-            .putFloat(RumblePreferences.GAIN, updated.gain)
-            .putFloat(RumblePreferences.CURVE, updated.curve)
-            .putInt(RumblePreferences.MIN_AMPLITUDE, updated.minAmplitude)
-            .putInt(RumblePreferences.KICK_MS, updated.kickMs)
-            .putFloat(RumblePreferences.LOW_WEIGHT, updated.lowWeight)
-            .putFloat(RumblePreferences.HIGH_WEIGHT, updated.highWeight)
-            .putFloat(RumblePreferences.SMOOTHING, updated.smoothing)
-            .apply()
+        activePreset = null
+        RumblePreferences.saveCustom(preferences, updated, translatorEnabled)
     }
 
-    fun playPattern(pattern: RumblePattern) {
+    fun playPattern(pattern: RumblePattern, selectedProfile: RumbleTranslator.Profile) {
         stopAll()
         val vibrator = device?.takeIf { it.hasVibrator() }
         if (vibrator == null) {
@@ -172,7 +168,7 @@ fun DebugInfoScreen() {
             return
         }
         val run = patternRun
-        val runPlayback = RumblePlayback(if (translatorEnabled) profile else RumbleTranslator.ORIGINAL)
+        val runPlayback = RumblePlayback(selectedProfile)
         playback = runPlayback
         patternName = pattern.label
         patternJob = scope.launch {
@@ -226,6 +222,8 @@ fun DebugInfoScreen() {
     }
 
     val hasMotor = device?.hasVibrator() == true
+    val presetName = activePreset?.label ?: "Custom"
+    val modeName = "$presetName · translator ${if (translatorEnabled) "on" else "off"}"
     val rows = buildList {
         add(DebugRow("android", "Device", Symbols.DEPLOYED_CODE, "Android", RowValue.Info("${DeviceUtils.getSDKVersionName()} · API ${Build.VERSION.SDK_INT}"),
             "The Android version of this device and its API level."))
@@ -246,44 +244,67 @@ fun DebugInfoScreen() {
             "Keeps vibrating at the strength below until it is turned off or you leave this screen."))
         add(DebugRow("strength", "Vibration test", Symbols.TUNE, "Strength", RowValue.Slider(strength, 5, 255, 5, "") { strength = it },
             "The strength of continuous vibration, 1–255, for the device and the controllers."))
-        add(DebugRow("rumble_enabled", "Rumble laboratory", Symbols.VIBRATION, "Enable rumble translator", RowValue.Toggle(translatorEnabled) {
-            stopLab()
-            translatorEnabled = it
-            preferences.edit().putBoolean(RumblePreferences.ENABLED, it).apply()
-        }, "Off by default: use Original translation. On: apply this profile to streaming rumble and lab patterns."))
-        add(DebugRow("rumble_gain", "Rumble laboratory", Symbols.TUNE, "Gain", RowValue.Slider((profile.gain * 100).roundToInt(), 50, 300, 1, "%") {
-            updateProfile(RumbleTranslator.Profile(it / 100f, profile.curve, profile.minAmplitude, profile.kickMs, profile.lowWeight, profile.highWeight, profile.smoothing))
-        }, "Overall rumble multiplier, 50–300%. Changing a parameter stops the current pattern."))
-        add(DebugRow("rumble_curve", "Rumble laboratory", Symbols.TUNE, "Curve", RowValue.Slider((profile.curve * 100).roundToInt(), 50, 300, 1, "%") {
-            updateProfile(RumbleTranslator.Profile(profile.gain, it / 100f, profile.minAmplitude, profile.kickMs, profile.lowWeight, profile.highWeight, profile.smoothing))
-        }, "Response exponent: below 100% boosts weak rumble; above 100% softens it."))
-        add(DebugRow("rumble_min", "Rumble laboratory", Symbols.TUNE, "Minimum amplitude", RowValue.Slider(profile.minAmplitude, 0, 255, 1, "") {
-            updateProfile(RumbleTranslator.Profile(profile.gain, profile.curve, it, profile.kickMs, profile.lowWeight, profile.highWeight, profile.smoothing))
-        }, "Minimum output for a nonzero host request. Zero input remains silent."))
-        add(DebugRow("rumble_kick", "Rumble laboratory", Symbols.TUNE, "Start kick", RowValue.Slider(profile.kickMs, 0, 120, 1, " ms") {
-            updateProfile(RumbleTranslator.Profile(profile.gain, profile.curve, profile.minAmplitude, it, profile.lowWeight, profile.highWeight, profile.smoothing))
-        }, "Start from silence with a full-strength kick, then settle to the translated amplitude."))
-        add(DebugRow("rumble_low", "Rumble laboratory", Symbols.TUNE, "Low motor weight", RowValue.Slider((profile.lowWeight * 100).roundToInt(), 0, 100, 1, "%") {
-            updateProfile(RumbleTranslator.Profile(profile.gain, profile.curve, profile.minAmplitude, profile.kickMs, it / 100f, profile.highWeight, profile.smoothing))
-        }, "Low-frequency host motor contribution to the single device vibrator. Original: 80%."))
-        add(DebugRow("rumble_high", "Rumble laboratory", Symbols.TUNE, "High motor weight", RowValue.Slider((profile.highWeight * 100).roundToInt(), 0, 100, 1, "%") {
-            updateProfile(RumbleTranslator.Profile(profile.gain, profile.curve, profile.minAmplitude, profile.kickMs, profile.lowWeight, it / 100f, profile.smoothing))
-        }, "High-frequency host motor contribution to the single device vibrator. Original: 33%."))
-        add(DebugRow("rumble_smoothing", "Rumble laboratory", Symbols.TUNE, "Smoothing", RowValue.Slider((profile.smoothing * 100).roundToInt(), 0, 100, 1, "%") {
-            updateProfile(RumbleTranslator.Profile(profile.gain, profile.curve, profile.minAmplitude, profile.kickMs, profile.lowWeight, profile.highWeight, it / 100f))
-        }, "Limit rapid amplitude changes. Zero responds immediately; higher values settle more slowly."))
-        add(DebugRow("rumble_reset", "Rumble laboratory", Symbols.TUNE, "Reset to Original", RowValue.Action {
-            updateProfile(RumbleTranslator.ORIGINAL)
-        }, "Restore gain and curve to 100%, floor/kick/smoothing to zero, weights to 80%/33%. The enable switch is unchanged."))
-        add(DebugRow("rumble_amplitude", "Rumble laboratory", Symbols.GRAPHIC_EQ, "Live amplitude", RowValue.Info("$amplitude / 255"),
+        add(DebugRow("rumble_preset", "Rumble laboratory", Symbols.VIBRATION, "Current preset", RowValue.Info(presetName),
+            "Select a preset below to save it and immediately play the Test sample.",
+            "Mode: $modeName\nAdvanced edits are saved as Custom, even if the values match a preset."))
+        RumblePresets.values().forEach { preset ->
+            add(DebugRow("rumble_preset_${preset.name}", "Rumble laboratory", Symbols.VIBRATION, preset.label,
+                RowValue.Text(if (activePreset == preset) "Active" else "Select") {
+                    RumblePreferences.applyPreset(preferences, preset)
+                    profile = preset.profile
+                    translatorEnabled = preset.enabled
+                    activePreset = preset
+                    // Pass the selection explicitly: this click still owns the previous composition's callbacks.
+                    playPattern(RumblePattern.TEST, if (preset.enabled) preset.profile else RumbleTranslator.ORIGINAL)
+                }, preset.description))
+        }
+        add(DebugRow("rumble_amplitude", "Rumble laboratory", Symbols.GRAPHIC_EQ, "Live amplitude · $presetName", RowValue.Info("$amplitude / 255"),
             "Live computed device amplitude, including the start kick and smoothing as they settle.",
-            "Mode: ${if (translatorEnabled) "Custom profile" else "Original (translator off)"}\nPattern: ${patternName ?: "Stopped"}\nBoth host motors receive the labelled input percentage; this is not the final output percentage."))
+            "Mode: $modeName\nPattern: ${patternName ?: "Stopped"}\nBoth host motors receive the labelled input percentage; this is not the final output percentage."))
         add(DebugRow("rumble_stop", "Rumble laboratory", Symbols.VIBRATION, "Stop vibration", RowValue.Action { stopAll() },
             "Stop the laboratory pattern and all continuous device/controller vibration tests."))
-        RumblePattern.entries.forEach { pattern ->
+        add(DebugRow("rumble_test", "Rumble laboratory", Symbols.MOBILE_VIBRATE, "Replay Test sample", RowValue.Action {
+            playPattern(RumblePattern.TEST, if (translatorEnabled) profile else RumbleTranslator.ORIGINAL)
+        }, RumblePattern.TEST.description))
+        RumblePattern.entries.filter { it != RumblePattern.TEST }.forEach { pattern ->
             add(DebugRow("rumble_pattern_${pattern.name}", "Rumble patterns", Symbols.MOBILE_VIBRATE, pattern.label,
-                RowValue.Action { playPattern(pattern) }, pattern.description,
-                "Live amplitude: $amplitude / 255\nMode: ${if (translatorEnabled) "Custom profile" else "Original (translator off)"}\nPlaying: ${patternName ?: "Stopped"}\nInputs are host motor percentages, not final device output. Select another pattern to replace this one, or use Stop vibration."))
+                RowValue.Action { playPattern(pattern, if (translatorEnabled) profile else RumbleTranslator.ORIGINAL) }, pattern.description,
+                "Live amplitude: $amplitude / 255\nMode: $modeName\nPlaying: ${patternName ?: "Stopped"}\nInputs are host motor percentages, not final device output. Select another pattern to replace this one, or use Stop vibration."))
+        }
+        add(DebugRow("rumble_advanced", "Rumble advanced", Symbols.TUNE, "Advanced", RowValue.Toggle(advancedExpanded) {
+            advancedExpanded = it
+        }, "Show manual controls. Editing a value marks the preset as Custom and stops the current pattern."))
+        if (advancedExpanded) {
+            add(DebugRow("rumble_enabled", "Rumble advanced", Symbols.VIBRATION, "Enable rumble translator", RowValue.Toggle(translatorEnabled) {
+                stopLab()
+                translatorEnabled = it
+                activePreset = null
+                RumblePreferences.saveCustom(preferences, profile, it)
+            }, "Off uses Original translation. On applies these parameters to streaming rumble and lab patterns."))
+            add(DebugRow("rumble_gain", "Rumble advanced", Symbols.TUNE, "Gain", RowValue.Slider((profile.gain * 100).roundToInt(), 50, 300, 1, "%") {
+                updateProfile(RumbleTranslator.Profile(it / 100f, profile.curve, profile.minAmplitude, profile.kickMs, profile.lowWeight, profile.highWeight, profile.smoothing))
+            }, "Overall rumble multiplier, 50–300%. Changing a parameter stops the current pattern."))
+            add(DebugRow("rumble_curve", "Rumble advanced", Symbols.TUNE, "Curve", RowValue.Slider((profile.curve * 100).roundToInt(), 50, 300, 1, "%") {
+                updateProfile(RumbleTranslator.Profile(profile.gain, it / 100f, profile.minAmplitude, profile.kickMs, profile.lowWeight, profile.highWeight, profile.smoothing))
+            }, "Response exponent: below 100% boosts weak rumble; above 100% softens it."))
+            add(DebugRow("rumble_min", "Rumble advanced", Symbols.TUNE, "Minimum amplitude", RowValue.Slider(profile.minAmplitude, 0, 255, 1, "") {
+                updateProfile(RumbleTranslator.Profile(profile.gain, profile.curve, it, profile.kickMs, profile.lowWeight, profile.highWeight, profile.smoothing))
+            }, "Minimum output for a nonzero host request. Zero input remains silent."))
+            add(DebugRow("rumble_kick", "Rumble advanced", Symbols.TUNE, "Start kick", RowValue.Slider(profile.kickMs, 0, 120, 1, " ms") {
+                updateProfile(RumbleTranslator.Profile(profile.gain, profile.curve, profile.minAmplitude, it, profile.lowWeight, profile.highWeight, profile.smoothing))
+            }, "Start from silence with a full-strength kick, then settle to the translated amplitude."))
+            add(DebugRow("rumble_low", "Rumble advanced", Symbols.TUNE, "Low motor weight", RowValue.Slider((profile.lowWeight * 100).roundToInt(), 0, 100, 1, "%") {
+                updateProfile(RumbleTranslator.Profile(profile.gain, profile.curve, profile.minAmplitude, profile.kickMs, it / 100f, profile.highWeight, profile.smoothing))
+            }, "Low-frequency host motor contribution to the single device vibrator. Original: 80%."))
+            add(DebugRow("rumble_high", "Rumble advanced", Symbols.TUNE, "High motor weight", RowValue.Slider((profile.highWeight * 100).roundToInt(), 0, 100, 1, "%") {
+                updateProfile(RumbleTranslator.Profile(profile.gain, profile.curve, profile.minAmplitude, profile.kickMs, profile.lowWeight, it / 100f, profile.smoothing))
+            }, "High-frequency host motor contribution to the single device vibrator. Original: 33%."))
+            add(DebugRow("rumble_smoothing", "Rumble advanced", Symbols.TUNE, "Smoothing", RowValue.Slider((profile.smoothing * 100).roundToInt(), 0, 100, 1, "%") {
+                updateProfile(RumbleTranslator.Profile(profile.gain, profile.curve, profile.minAmplitude, profile.kickMs, profile.lowWeight, profile.highWeight, it / 100f))
+            }, "Limit rapid amplitude changes. Zero responds immediately; higher values settle more slowly."))
+            add(DebugRow("rumble_reset", "Rumble advanced", Symbols.TUNE, "Reset parameters to Original", RowValue.Action {
+                updateProfile(RumbleTranslator.ORIGINAL)
+            }, "Restore Original parameters as Custom. The enable switch is unchanged."))
         }
         add(DebugRow("osc_preview", "On-screen controls", Symbols.JOYSTICK, "Preview on-screen controls", RowValue.Action { shell.navigate(Screen.OscPreview) },
             "Your on-screen controls without a stream: try every button, the D-pad and the sticks, nothing is sent. The gear in the corner edits the layout, as in a stream."))
@@ -413,6 +434,7 @@ private fun rumble(vibrator: Vibrator, strength: Int) {
 
 /** Fixed host-motor inputs; the shared playback path owns kick and smoothing timing. */
 private enum class RumblePattern(val label: String, val description: String) {
+    TEST("Test", "A short tap, one second of steady rumble, a rising ramp and a decaying explosion."),
     STEADY_25("Steady 25% · quiet engine", "Two seconds of low engine rumble, both host motors at 25%."),
     STEADY_50("Steady 50% · cruising engine", "Two seconds of medium engine rumble, both host motors at 50%."),
     STEADY_75("Steady 75% · rough terrain", "Two seconds of strong terrain rumble, both host motors at 75%."),
@@ -433,6 +455,15 @@ private suspend fun playRumblePattern(pattern: RumblePattern, playback: RumblePl
         delay(milliseconds)
     }
     when (pattern) {
+        RumblePattern.TEST -> {
+            hold(100, 60)
+            hold(0, 180)
+            hold(50, 1000)
+            hold(0, 180)
+            for (percent in 0..100 step 5) hold(percent, 25)
+            hold(0, 120)
+            for (percent in 100 downTo 0 step 5) hold(percent, 35)
+        }
         RumblePattern.STEADY_25 -> hold(25, 2000)
         RumblePattern.STEADY_50 -> hold(50, 2000)
         RumblePattern.STEADY_75 -> hold(75, 2000)
