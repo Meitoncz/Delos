@@ -1,6 +1,7 @@
 package com.limelight.shell
 
 import com.limelight.shell.settings.SettingChoice
+import com.limelight.utils.RumblePresets
 
 /** What the host answered to the last Apply on the Bitrate page. */
 internal sealed interface BitrateResult {
@@ -35,7 +36,7 @@ internal interface StreamMenuHost {
     val overlayOn: Boolean
     val overlayCompact: Boolean
     fun toggleOverlay()
-    fun toggleKeyboard()
+    fun toggleSystemKeyboard()
 
     // Brightness
     val brightnessPercent: Int
@@ -74,11 +75,27 @@ internal interface StreamMenuHost {
     fun toggleZoom()
     val onscreenControlsOn: Boolean
     fun toggleOnscreenControls()
+    val fullKeyboardOn: Boolean
     fun toggleFullKeyboard()
-    fun toggleKeyLayout()
     val touchSensitivityOn: Boolean
     fun toggleTouchSensitivity()
-    fun rotate()
+
+    // Live selection of the rumble presets (same as the Debug laboratory) in a running stream
+    /** The active preset, or null for Custom (parameters edited in the laboratory). */
+    val rumblePreset: RumblePresets?
+
+    /** Why [preset] cannot run on this device (an experimental technique the hardware lacks), or null when it can. */
+    fun rumbleUnavailable(preset: RumblePresets): String? = null
+
+    /** Why the running stream could not use the technique of the active preset (plain amplitude is used instead), or null. */
+    val rumbleRuntimeProblem: String? get() = null
+
+    /** Why [preset] shows a problem: the device cannot run it, or it is active and its technique failed in the stream. */
+    fun rumbleProblem(preset: RumblePresets): String? =
+        rumbleUnavailable(preset) ?: if (preset == rumblePreset) rumbleRuntimeProblem else null
+
+    /** Saves [preset] like the laboratory does and applies it to the running stream at once; no sample is played. */
+    fun selectRumblePreset(preset: RumblePresets)
 
     // Mouse mode
     val allowChangeMouseMode: Boolean

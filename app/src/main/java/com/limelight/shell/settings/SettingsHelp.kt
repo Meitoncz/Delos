@@ -117,6 +117,7 @@ object SettingsHelp {
         "checkbox_enable_joyconfix" to "Compatibility path for Joy-Cons with missing or misrecognized buttons. Leave off if they work.",
         "checkbox_gamepad_enable_battery_report" to "Reports gamepad battery status to the host. Turn off if battery polling coincides with touch or mouse stutter.",
         "checkbox_enable_rumble" to "Sends host rumble to supported gamepads. Controller, connection and driver decide which effects work.",
+        "list_rumble_feel" to "How game rumble feels. Next stream.",
         "checkbox_vibrate_fallback" to "Uses the handheld's vibration motor for game rumble when the gamepad cannot. Needs a vibration motor.",
         "checkbox_enable_device_rumble" to "Uses the handheld's vibration motor even when a controller supports rumble. Not for the built-in USB driver.",
         "seekbar_vibrate_fallback_strength" to "Strength of this device's vibration for game rumble. Needs amplitude control. Not interface haptics.",
@@ -225,6 +226,13 @@ object SettingsHelp {
             "2" to "Two channels for handheld speakers and most headphones.",
             "51" to "Six channels. Needs a 5.1 playback path.",
             "71" to "Eight channels. Use Stereo if channels are missing.",
+        ),
+        "list_rumble_feel" to mapOf(
+            "ORIGINAL" to "The game's rumble exactly as it sends it.",
+            "GENTLE" to "A weaker, rounded rumble.",
+            "KICK_ONLY" to "A strong short kick at the start of each rumble, then the normal level.",
+            "PULSE_25" to "A slow pulsed rumble that feels deeper.",
+            "CUSTOM" to "Values edited under About → Debug info.",
         ),
         "analog_scrolling" to mapOf(
             "none" to "Neither stick scrolls.",

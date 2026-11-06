@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -22,9 +21,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicText
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.InputTransformation
+import androidx.compose.foundation.text.input.OutputTransformation
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.maxLength
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,7 +49,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
@@ -58,8 +65,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.unit.em
@@ -71,10 +76,10 @@ import androidx.compose.ui.layout.ContentScale
 import com.limelight.shell.data.rememberAvatarGradient
 import com.limelight.shell.data.rememberAvatarImage
 
-/** `.center-col`: a centered column; it moves up while the on-screen keyboard is shown. */
+/** `.center-col`: a centered column. */
 @Composable
 fun CenterColumn(gap: Float, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
-    Box(modifier.fillMaxSize().imePadding(), contentAlignment = Alignment.Center) {
+    Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         // Its headline and circles enter one after the other (docs/GUI.md, "Motion")
         EntranceScope {
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(gap.px), content = content)
@@ -305,13 +310,18 @@ fun Circles(content: @Composable () -> Unit) {
 val OnlineGreen = Color(0xFF3DDC84)
 
 /**
- * `.field`: a pill-shaped text field. Moving the focus onto it does not open the on-screen keyboard
- * (that would pop up on every D-pad move); A, Enter or a tap does. Up and down leave the field.
+ * `.field`: a pill-shaped text field, the one text input of the whole app (dialogs, the profile name, the
+ * settings search). The on-screen keyboard appears only when the field is *activated*: a tap, or A / the
+ * D-pad centre key. Moving the focus onto it, by D-pad or in code, never opens it, and it closes again when
+ * the focus leaves. Up and down leave the field. See docs/GUI.md, "Text input".
+ *
+ * It uses the [TextFieldState] overload of `BasicTextField` on purpose. Only that one honours
+ * [KeyboardOptions.showKeyboardOnFocus]; the `value: String` overload starts the input method on every focus,
+ * and starting it shows the keyboard.
  */
 @Composable
 fun TextFieldPill(
-    value: String,
-    onValueChange: (String) -> Unit,
+    state: TextFieldState,
     icon: String,
     modifier: Modifier = Modifier,
     placeholder: String = "",
@@ -327,12 +337,27 @@ fun TextFieldPill(
     val keyboard = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
     var focused by remember { mutableStateOf(false) }
+    // Set by A / the D-pad centre key while the field has focus: the text field only starts the input method
+    // (and with it the keyboard) on focus when showKeyboardOnFocus is true, so switching it on while the field
+    // is focused is how a key press opens the keyboard. A tap does not need it. Reset when the focus leaves.
+    var activated by remember { mutableStateOf(false) }
+    // The field is being edited: activated by A / the centre key or by a tap, until the focus leaves. ImeAvoidance pins an engaged field into the top
+    // band of the window whatever the keyboard is. It never starts the keyboard itself.
+    var engaged by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(if (focused) 1.05f else 1f, tween(Motion.FOCUS, easing = EaseSpring), label = "fieldScale")
     val ring by animateFloatAsState(if (focused) 1f else 0f, tween(Motion.FOCUS, easing = EaseOut), label = "fieldRing")
     BasicTextField(
-        value = value,
-        onValueChange = { onValueChange(it.take(maxLength)) },
+        state = state,
         modifier = modifier
+            // The shell moves up while the keyboard is open, so the field stays above it (ImeAvoidance.kt)
+            .keepFieldAboveIme(engaged)
+            .pointerInput(Unit) {
+                // A tap starts the keyboard by itself; here it only marks the field as engaged (nothing is consumed)
+                awaitEachGesture {
+                    awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                    engaged = true
+                }
+            }
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
@@ -344,13 +369,21 @@ fun TextFieldPill(
             .onFocusChanged {
                 if (it.isFocused != focused) {
                     focused = it.isFocused
-                    if (focused) feedback.focusMoved() else keyboard?.hide()
+                    if (focused) feedback.focusMoved() else {
+                        activated = false
+                        engaged = false
+                        keyboard?.hide()
+                    }
                 }
             }
             .onPreviewKeyEvent {
                 when (it.key) {
                     Key.ButtonA, Key.DirectionCenter -> {
-                        if (it.type == KeyEventType.KeyUp) keyboard?.show()
+                        if (it.type == KeyEventType.KeyUp) {
+                            // Already activated (or tapped): the input method is running, so just show the keyboard again
+                            engaged = true
+                            if (activated) keyboard?.show() else activated = true
+                        }
                         true
                     }
                     Key.DirectionUp, Key.DirectionDown -> {
@@ -360,22 +393,23 @@ fun TextFieldPill(
                     else -> false
                 }
             },
-        singleLine = true,
+        inputTransformation = InputTransformation.maxLength(maxLength),
         textStyle = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 30.tpx),
-        cursorBrush = SolidColor(colors.accent),
         keyboardOptions = KeyboardOptions(
             capitalization = if (keyboardType == KeyboardType.Text) KeyboardCapitalization.Words else KeyboardCapitalization.None,
             autoCorrectEnabled = false,
             keyboardType = keyboardType,
             imeAction = ImeAction.Done,
-            showKeyboardOnFocus = false,
+            showKeyboardOnFocus = activated,
         ),
-        keyboardActions = KeyboardActions(onDone = {
+        onKeyboardAction = {
             keyboard?.hide()
             onDone()
-        }),
-        visualTransformation = if (password) PasswordVisualTransformation() else VisualTransformation.None,
-        decorationBox = { inner ->
+        },
+        lineLimits = TextFieldLineLimits.SingleLine,
+        cursorBrush = SolidColor(colors.accent),
+        outputTransformation = if (password) PasswordMask else null,
+        decorator = { inner ->
             Row(
                 Modifier
                     .width(width.px)
@@ -389,7 +423,7 @@ fun TextFieldPill(
             ) {
                 Symbol(icon, 34.tpx, colors.text3)
                 Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
-                    if (value.isEmpty() && placeholder.isNotEmpty()) {
+                    if (state.text.isEmpty() && placeholder.isNotEmpty()) {
                         BasicText(placeholder, style = TextStyle(color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 30.tpx), maxLines = 1)
                     }
                     inner()
@@ -398,6 +432,39 @@ fun TextFieldPill(
         },
     )
 }
+
+/**
+ * A labelled value that looks like a [TextFieldPill] but is not an input: where the text is typed in the dialog (`DialogLayer`), the page
+ * shows what is there ([value], or [placeholder] in the muted color when it is empty) and offers a button next to it.
+ */
+@Composable
+fun ValuePill(label: String, value: String, icon: String, placeholder: String, modifier: Modifier = Modifier, width: Float = 520f) {
+    val colors = LocalDelosColors.current
+    Row(
+        modifier
+            .width(width.px)
+            .height(84.px)
+            .clip(CircleShape)
+            .glass(colors.surface2)
+            .border(1.px, colors.line, CircleShape)
+            .padding(horizontal = 28.px),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.px),
+    ) {
+        Symbol(icon, 34.tpx, colors.text3)
+        Column(verticalArrangement = Arrangement.Center) {
+            BasicText(label.uppercase(), style = TextStyle(color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 17.tpx, letterSpacing = .08.em), maxLines = 1)
+            BasicText(
+                value.ifEmpty { placeholder },
+                style = TextStyle(color = if (value.isEmpty()) colors.text3 else colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 30.tpx),
+                maxLines = 1,
+            )
+        }
+    }
+}
+
+/** Shows every character of a password field as a dot. */
+private val PasswordMask = OutputTransformation { replace(0, length, "\u2022".repeat(length)) }
 
 /**
  * The online pulse (`.online-ring`) for a rounded element: an accent-2 outline starts just outside the

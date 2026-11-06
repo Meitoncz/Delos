@@ -15,7 +15,7 @@ import android.view.HapticFeedbackConstants;
 import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.Toast;
+import com.limelight.utils.DelosToast;
 
 import com.limelight.LimeLog;
 import com.limelight.R;
@@ -111,7 +111,7 @@ public class VirtualController {
                     message = context.getString(R.string.configuration_mode_exiting);
                 }
 
-                Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
+                DelosToast.show(context, message, DelosToast.SHORT);
 
                 buttonConfigure.invalidate();
 
@@ -123,26 +123,41 @@ public class VirtualController {
 
     }
 
+    /** Whether the user wants the overlay visible (unaffected by temporary hides). */
+    public boolean shown = false;
+
     Handler getHandler() {
         return handler;
     }
 
-    public void hide() {
+    /**
+     * Hides the overlay. A temporary hide (e.g. Picture-in-Picture) keeps {@link #shown}
+     * so the state the user chose can be restored afterwards.
+     */
+    public void hide(boolean temporary) {
         for (VirtualControllerElement element : elements) {
             element.setVisibility(View.GONE);
         }
 
         buttonConfigure.setVisibility(View.GONE);
+        if (!temporary) {
+            shown = false;
+        }
+    }
+
+    public void hide() {
+        hide(false);
     }
 
     public void show() {
         showEnabledElements();
 
         buttonConfigure.setVisibility(View.VISIBLE);
+        shown = true;
     }
 
     public int switchShowHide() {
-        if (buttonConfigure.getVisibility() == View.VISIBLE) {
+        if (shown) {
             hide();
             return 0;
         } else {
@@ -213,6 +228,13 @@ public class VirtualController {
 
         // Apply user preferences onto the default layout
         VirtualControllerConfigurationLoader.loadFromPreferences(this, context);
+
+        // Rebuilding adds the elements visible; keep the state the user chose
+        if (shown) {
+            show();
+        } else {
+            hide(true);
+        }
     }
 
     public ControllerMode getControllerMode() {

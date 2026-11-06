@@ -6,7 +6,7 @@ import android.content.Intent;
 import android.hardware.display.DisplayManager;
 import android.os.Build;
 import android.view.Display;
-import android.widget.Toast;
+import com.limelight.utils.DelosToast;
 
 import androidx.annotation.RequiresApi;
 
@@ -162,7 +162,7 @@ public class ServerHelper {
             boolean withVDisplay
     ) {
         if (computer.state == ComputerDetails.State.OFFLINE || computer.activeAddress == null) {
-            Toast.makeText(parent, parent.getString(R.string.pair_pc_offline), Toast.LENGTH_SHORT).show();
+            DelosToast.show(parent, parent.getString(R.string.pair_pc_offline), DelosToast.SHORT, ToastKind.ERROR);
             return;
         }
 
@@ -208,14 +208,16 @@ public class ServerHelper {
                               final Runnable onComplete,
                               final Runnable onFail
     ) {
-        parent.runOnUiThread(() -> Toast.makeText(parent, parent.getResources().getString(R.string.applist_quit_app) + " " + appName + "...", Toast.LENGTH_SHORT).show());
+        parent.runOnUiThread(() -> DelosToast.show(parent, parent.getResources().getString(R.string.applist_quit_app) + " " + appName + "...", DelosToast.SHORT));
         new Thread(new Runnable() {
             @Override
             public void run() {
                 String message;
                 boolean failed = false;
+                boolean quitOk = false;
                 try {
                     if (httpConn.quitApp()) {
+                        quitOk = true;
                         message = parent.getResources().getString(R.string.applist_quit_success) + " " + appName;
                     } else {
                         message = parent.getResources().getString(R.string.applist_quit_fail) + " " + appName;
@@ -253,7 +255,8 @@ public class ServerHelper {
                 }
 
                 final String toastMessage = message;
-                parent.runOnUiThread(() -> Toast.makeText(parent, toastMessage, Toast.LENGTH_LONG).show());
+                final ToastKind toastKind = quitOk ? ToastKind.SUCCESS : ToastKind.ERROR;
+                parent.runOnUiThread(() -> DelosToast.show(parent, toastMessage, DelosToast.LONG, toastKind));
             }
         }).start();
 
@@ -284,7 +287,7 @@ public class ServerHelper {
             e.printStackTrace();
 
             final String toastMessage = e.getMessage();
-            parent.runOnUiThread(() -> Toast.makeText(parent, toastMessage, Toast.LENGTH_LONG).show());
+            parent.runOnUiThread(() -> DelosToast.show(parent, toastMessage, DelosToast.LONG, ToastKind.ERROR));
         }
     }
 }

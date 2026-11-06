@@ -7,6 +7,7 @@ import com.limelight.preferences.PreferenceConfiguration
 import com.limelight.profiles.ProfilesManager
 import com.limelight.profiles.SettingsProfile
 import com.limelight.shell.data.Profile
+import com.limelight.utils.RumblePreferences
 import java.util.UUID
 
 /**
@@ -16,7 +17,8 @@ import java.util.UUID
  */
 class StreamProfileStore(private val context: Context, val catalog: SettingsCatalog) {
     private val manager = ProfilesManager.getInstance()
-    private val keys = catalog.all.filter { it.kind != SettingKind.ACTION }.map { it.key }.toSet()
+    private val storedSpecs = catalog.all.filter { it.kind != SettingKind.ACTION && it.key != RumblePreferences.FEEL }
+    private val keys = storedSpecs.map { it.key }.toSet()
     private var current: Profile? = null
     private var prefs: SharedPreferences? = null
     private var projecting = false
@@ -33,7 +35,7 @@ class StreamProfileStore(private val context: Context, val catalog: SettingsCata
         if (!settings.getBoolean(INITIALIZED, false)) {
             val source = manager.getOverlayingSharedPreferences(context).all
             val editor = settings.edit()
-            catalog.all.filter { it.kind != SettingKind.ACTION }.forEach { spec ->
+            storedSpecs.forEach { spec ->
                 editor.putSetting(spec.key, source[spec.key] ?: defaultValue(spec, source))
             }
             editor.putBoolean(INITIALIZED, true).apply()

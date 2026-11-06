@@ -106,12 +106,15 @@ import com.limelight.shell.ui.px
 import com.limelight.shell.ui.StatusBar
 import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.ToastHost
+import com.limelight.utils.ToastKind
 import com.limelight.shell.ui.ZoomedBar
 import com.limelight.shell.ui.AvatarBadge
 import com.limelight.shell.ui.ButtonCaptureLayer
 import com.limelight.shell.ui.DialogLayer
 import com.limelight.shell.ui.PortalOverlay
 import com.limelight.shell.ui.StreamResultLayer
+import com.limelight.shell.ui.LocalImeAvoidance
+import com.limelight.shell.ui.rememberImeAvoidance
 import com.limelight.shell.data.LocalArtwork
 import com.limelight.shell.data.downloadAll
 import com.limelight.shell.data.BundledArtwork
@@ -142,11 +145,10 @@ fun Shell(
     setup: PcSetup,
     links: MutableStateFlow<ShellLink?>,
     results: MutableStateFlow<StreamResult?>,
+    shell: ShellState,
 ) {
     val colors = LocalDelosColors.current
     val feedback = LocalFeedback.current
-    // The first launch starts with the logo and a new profile; every later one with the start screen
-    val shell = remember { ShellState(if (profileStore.profiles.value.all.isEmpty()) Screen.Boot() else Screen.Start) }
     val tracker = remember { FocusTracker() }
     val haze = rememberHazeState()
     // Only the animated background, for glass that is always on (the focused row, the top bar)
@@ -543,9 +545,11 @@ fun Shell(
         NavButton(Symbols.DEVICES, "Devices", shell.screen == Screen.Devices) { shell.navigate(Screen.Devices) },
     )
 
+    // The keyboard never covers the text field being edited: the dialog or the page content that holds it moves up (docs/GUI.md, "Text input")
+    val imeAvoidance = rememberImeAvoidance()
     CompositionLocalProvider(
         LocalShell provides shell, LocalFocusTracker provides tracker, LocalGameActions provides actions, LocalDeviceActions provides devices,
-        LocalBackdropHaze provides backdropHaze, LocalLibrary provides library,
+        LocalBackdropHaze provides backdropHaze, LocalLibrary provides library, LocalImeAvoidance provides imeAvoidance,
     ) {
         Box(Modifier.fillMaxSize()) {
             // The blur source re-records the whole screen every frame, so it is only active while an overlay
@@ -587,7 +591,7 @@ fun Shell(
                                 shell.navigate(screen.back ?: Screen.Profile)
                             } else {
                                 profileStore.create(name, avatar)
-                                shell.showToast("Welcome, $name", Symbols.WAVING_HAND)
+                                shell.showToast("Welcome, $name", Symbols.WAVING_HAND, kind = ToastKind.SUCCESS)
                                 // The first launch goes on to pairing, unless PCs are paired already
                                 shell.navigate(
                                     when {
@@ -714,7 +718,7 @@ fun Shell(
                 appearance.reducedMotion,
                 instantExit = launchExitInstant.value,
             )
-            ToastHost(shell.toast, onHidden = { shell.hideToast(it) }, onAction = { shell.runToastAction() })
+            ToastHost(shell.toast, onHidden = { shell.hideToast(it) }, onAction = { shell.runToastAction() }, actionPress = shell.toastPress)
         }
     }
 }
@@ -749,7 +753,7 @@ private class ShellGameActions(
             return
         }
         if (start.virtualDisplayUnavailable) {
-            shell.showToast("The virtual display is not ready on ${pc.name} · streaming the main display", Symbols.MONITOR)
+            shell.showToast("The virtual display is not ready on ${pc.name} · streaming the main display", Symbols.MONITOR, kind = ToastKind.WARNING)
         }
         shell.diving = false
         shell.launch = LaunchRequest(++launches, pc, app, start.intent, image, HeroBitmaps.latest("${pc.uuid}/${app.id}"))

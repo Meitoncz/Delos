@@ -98,6 +98,7 @@
             android:exported="true"
             android:taskAffinity="${applicationId}.shell"
             android:theme="@style/Theme.Delos.Shell"
+            android:windowSoftInputMode="stateHidden|adjustResize"
             android:resizeableActivity="true"
             android:enableOnBackInvokedCallback="true"
             android:configChanges="mcc|mnc|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize|layoutDirection">

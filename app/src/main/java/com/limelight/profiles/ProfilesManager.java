@@ -3,7 +3,6 @@ package com.limelight.profiles;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 

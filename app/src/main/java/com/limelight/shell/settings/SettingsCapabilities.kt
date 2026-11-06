@@ -48,6 +48,8 @@ data class SettingsCapabilities(
         }
         "frame_pacing" -> if (values["video_format"] == "pyrowave") spec.choices.filter { it.value != "fast-vsync" } else spec.choices
         // The classic array repeats a formatted label; make the five stored layouts distinguishable.
+        // A selection that matches no preset (Advanced edits in the Debug lab) stays visible instead of looking unset
+        "list_rumble_feel" -> if (values[spec.key] == "CUSTOM") spec.choices + SettingChoice("Custom", "CUSTOM") else spec.choices
         "keyboard_axi_list" -> spec.choices.mapIndexed { i, choice -> choice.copy(label = "Layout ${i + 1}") }
         else -> spec.choices
     }
@@ -98,7 +100,7 @@ data class SettingsCapabilities(
             if (!pm.hasSystemFeature(PackageManager.FEATURE_USB_HOST)) hidden += setOf("checkbox_usb_driver", "checkbox_usb_bind_all")
             if (!pm.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE) || pm.hasSystemFeature("com.amazon.software.fireos")) hidden += "checkbox_enable_pip"
             val vibrator = activity.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
-            if (vibrator?.hasVibrator() != true) hidden += setOf("checkbox_vibrate_fallback", "seekbar_vibrate_fallback_strength", "checkbox_vibrate_osc", "checkbox_vibrate_keyboard", "checkbox_enable_device_rumble")
+            if (vibrator?.hasVibrator() != true) hidden += setOf("checkbox_vibrate_fallback", "seekbar_vibrate_fallback_strength", "checkbox_vibrate_osc", "checkbox_vibrate_keyboard", "checkbox_enable_device_rumble", "list_rumble_feel")
             if (vibrator?.hasAmplitudeControl() != true) hidden += "seekbar_vibrate_fallback_strength"
             val hdr10 = display.hdrCapabilities?.supportedHdrTypes?.contains(Display.HdrCapabilities.HDR_TYPE_HDR10) == true
             val main10 = runCatching { hevc?.getCapabilitiesForType("video/hevc")?.profileLevels?.any { it.profile == MediaCodecInfo.CodecProfileLevel.HEVCProfileMain10 } == true }.getOrDefault(false)

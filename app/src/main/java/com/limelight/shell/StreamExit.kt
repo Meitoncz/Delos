@@ -19,6 +19,7 @@ import android.graphics.Color as AndroidColor
 import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.view.WindowManager
 import android.view.animation.PathInterpolator
 import androidx.activity.ComponentDialog
@@ -105,7 +106,13 @@ object StreamExit {
                 }
             }
         }
-        dialog.setContentView(view)
+        // A toast raised while the stream blurs behind this window is drawn by this window's own host, on top and sharp
+        val toastCover = DelosToastOverlay.coverView(game, dialog.context, appearance, colors)
+        val content = FrameLayout(dialog.context)
+        content.addView(view, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+        if (toastCover != null) content.addView(toastCover.view, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+        dialog.setContentView(content)
+        dialog.setOnDismissListener { toastCover?.release?.invoke() }
         dialog.window?.apply {
             setBackgroundDrawable(ColorDrawable(AndroidColor.TRANSPARENT))
             setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)

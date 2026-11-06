@@ -37,6 +37,13 @@ Y opens search from settings; the hint bar also shows this shortcut. Search acce
 letters selected with the controller. Results span all tabs and selecting
 one scrolls to and focuses the actual setting, including disabled dependencies.
 
+The **About → Debug info** screen also contains an opt-in [rumble laboratory](RUMBLE.md)
+with profile-scoped translation parameters, fixed test patterns and a live amplitude readout.
+Translation is off by default. The four presets chosen there are offered in the normal Controls tab as the
+**Rumble feel** row (Original, Soft, Kick-start, Pulsing; Controls → Gamepad, below *Enable Rumble*, hidden
+without a vibration motor, no per-game override). The row is not stored: it shows and applies the rumble
+preset keys through `RumblePreferences` (see [RUMBLE.md](RUMBLE.md)) and reads Custom after Advanced edits.
+
 ## Implementation
 
 - `shell/settings/SettingsCatalog.kt` reads titles, summaries, defaults, dependencies, choices, types,
@@ -69,17 +76,25 @@ one scrolls to and focuses the actual setting, including disabled dependencies.
   (`PyroWaveFormats`); the host picks, and the renderer follows the negotiated format. With HDR on, 4:4:4 is
   never offered (the P010 output is 4:2:0 only) and the stream uses 4:2:0.
 
-## Hidden phone-oriented settings
+## Hidden phone-oriented and key-layout settings
 
 Delos is handheld-first, so the touch-mouse and on-screen gamepad settings are hidden from the settings
 list and search (issue #65): the mouse mode list, trackpad/touch sensitivity, drag-and-drop options,
 absolute mouse mode, remembered mouse mode/zoom and pan, and the on-screen controls (show, opacity, free
-stick, L3/R3 only, Guide button, hide with a gamepad, vibration, reset). Only the UI is affected: the XML
+stick, L3/R3 only, Guide button, hide with a gamepad, vibration, reset). The settings that exist only for
+the key-layout overlay (`KeyBoardController`, no longer offered in the stream menu) are hidden too: show
+at start (`checkbox_enable_keyboard`), the layout list, square buttons, reset, import and export of that
+layout. Only the UI is affected: the XML
 entries, defaults and stored values stay, so hidden settings keep applying and the stream menu still
 works. `shell/settings/PhoneOnlySettings.kt` is the single switch: set `HIDDEN` to `false` (or remove
 single keys from `KEYS`) to show them again. `SettingsCatalog.all` still lists every key; the screens
-use `SettingsCatalog.visible`, and section headings disappear with their last item. The on-screen
-keyboard settings, multi-touch gestures, clipboard, PiP and device rumble stay visible.
+use `SettingsCatalog.visible`, and section headings disappear with their last item. The full-keyboard
+settings (size, alignment, opacity, vibration, sticky modifiers), the custom keys import and the
+built-in key combinations switch (they feed Send keys), multi-touch gestures, clipboard, PiP and device
+rumble stay visible.
+
+The full-keyboard settings keep their keys, defaults and texts; how the redesigned keyboard applies them (automatic fit, width and
+height of the bar, alignment, opacity) is described under "Full keyboard" in [GUI.md](GUI.md).
 
 ## User profiles
 

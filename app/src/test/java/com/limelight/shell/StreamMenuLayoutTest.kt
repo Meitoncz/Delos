@@ -2,6 +2,7 @@ package com.limelight.shell
 
 import com.limelight.shell.ui.Motion
 import com.limelight.shell.settings.StreamMenuHelp
+import com.limelight.utils.RumblePresets
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
@@ -29,7 +30,8 @@ class StreamMenuLayoutTest {
         assertEquals(PageExit(MenuPage.MORE, null, "Send keys"), pageAfterBack(MenuPage.KEYS))
         assertEquals(PageExit(MenuPage.MORE, null, "Commands"), pageAfterBack(MenuPage.COMMANDS))
         assertEquals(PageExit(MenuPage.MORE, null, "Mouse mode"), pageAfterBack(MenuPage.MOUSE))
-        for (page in listOf(MenuPage.KEYS, MenuPage.COMMANDS, MenuPage.MOUSE)) {
+        assertEquals(PageExit(MenuPage.MORE, null, "Rumble feel"), pageAfterBack(MenuPage.RUMBLE))
+        for (page in listOf(MenuPage.KEYS, MenuPage.COMMANDS, MenuPage.MOUSE, MenuPage.RUMBLE)) {
             assertEquals(PageExit(MenuPage.MAIN, BarItem.MORE, null), pageAfterDismiss(page))
         }
     }
@@ -94,12 +96,12 @@ class StreamMenuLayoutTest {
         assertEquals(780f, popoverWidth(MenuPage.BRIGHTNESS), 0f)
         assertEquals(860f, popoverWidth(MenuPage.BITRATE), 0f)
         assertEquals(980f, popoverWidth(MenuPage.UPSCALER), 0f)
-        for (page in listOf(MenuPage.MORE, MenuPage.KEYS, MenuPage.COMMANDS, MenuPage.MOUSE)) assertEquals(920f, popoverWidth(page), 0f)
+        for (page in listOf(MenuPage.MORE, MenuPage.KEYS, MenuPage.COMMANDS, MenuPage.MOUSE, MenuPage.RUMBLE)) assertEquals(920f, popoverWidth(page), 0f)
     }
 
     @Test
     fun pagesOpenedFromMoreAreAnchoredOverTheMoreTile() {
-        for (page in listOf(MenuPage.KEYS, MenuPage.COMMANDS, MenuPage.MOUSE, MenuPage.MORE)) {
+        for (page in listOf(MenuPage.KEYS, MenuPage.COMMANDS, MenuPage.MOUSE, MenuPage.RUMBLE, MenuPage.MORE)) {
             val placement = popoverPlacement(page)!!
             assertEquals("$page", tileCenterX(BarItem.MORE), placement.left + placement.caretX, .01f)
             assertEquals(popoverPlacement(MenuPage.MORE), placement)
@@ -108,17 +110,48 @@ class StreamMenuLayoutTest {
 
     @Test
     fun theCardIsKeptInsideTheStageAndTheCaretOffItsCorners() {
-        // A tile near the left end: the card stops at 110 and the caret moves left inside it
-        assertEquals(110f, popoverLeft(200f, 980f), 0f)
-        assertEquals(200f - 110f, caretCenterX(200f, 110f, 980f), 0f)
-        // Near the right end: it stops at 1810
-        assertEquals(1810f - 920f, popoverLeft(1750f, 920f), 0f)
+        // A tile near the left end: the card stops at the margin (120) and the caret moves left inside it
+        assertEquals(120f, popoverLeft(200f, 980f), 0f)
+        assertEquals(200f - 120f, caretCenterX(200f, 120f, 980f), 0f)
+        // Near the right end: it stops 120 from the right edge
+        assertEquals(1800f - 920f, popoverLeft(1750f, 920f), 0f)
         // In the middle: centered on the anchor
         assertEquals(960f - 430f, popoverLeft(960f, 860f), 0f)
         // An anchor right at the card's corner is pulled in to 72
-        assertEquals(72f, caretCenterX(100f, 110f, 800f), 0f)
-        assertEquals(800f - 72f, caretCenterX(5000f, 110f, 800f), 0f)
-        assertEquals(390f, caretCenterX(500f, 110f, 800f), 0f)
+        assertEquals(72f, caretCenterX(100f, 120f, 800f), 0f)
+        assertEquals(800f - 72f, caretCenterX(5000f, 120f, 800f), 0f)
+        assertEquals(380f, caretCenterX(500f, 120f, 800f), 0f)
+    }
+
+    @Test
+    fun theSideMarginsAreTheTopMarginAndEveryPageKeepsThem() {
+        assertEquals(c.POPOVER_MARGIN, c.POPOVER_MIN_LEFT, 0f)
+        assertEquals(c.STAGE_WIDTH - c.POPOVER_MARGIN, c.POPOVER_MAX_RIGHT, 0f)
+        // A card at its height limit: its top edge is the margin below the stage's top
+        assertEquals(c.POPOVER_MARGIN, c.POPOVER_CARD_BOTTOM - c.POPOVER_MAX_HEIGHT, 0f)
+        assertEquals(614f, c.POPOVER_MAX_HEIGHT, 0f)
+        for (page in MenuPage.entries.filter { it != MenuPage.MAIN }) {
+            val placement = popoverPlacement(page)!!
+            val left = placement.left
+            val right = c.STAGE_WIDTH - (placement.left + placement.width)
+            assertTrue("$page left $left", left >= c.POPOVER_MARGIN - .001f)
+            assertTrue("$page right $right", right >= c.POPOVER_MARGIN - .001f)
+        }
+        // Pushed against the right edge (the Disconnect tile): the gap to the edge is the gap to the top
+        val atEdge = popoverLeft(tileCenterX(BarItem.DISCONNECT), popoverWidth(MenuPage.MORE))
+        assertEquals(c.POPOVER_MARGIN, c.STAGE_WIDTH - (atEdge + popoverWidth(MenuPage.MORE)), 0f)
+        // and the caret still points at the tile
+        assertEquals(tileCenterX(BarItem.DISCONNECT), atEdge + caretCenterX(tileCenterX(BarItem.DISCONNECT), atEdge, popoverWidth(MenuPage.MORE)), .01f)
+    }
+
+    @Test
+    fun theCardNeverReachesTheCompactStatisticsLineAtAnyTextScale() {
+        for (scale in listOf(1f, 1.15f, 1.3f)) {
+            val gap = popoverStatsGap(scale)
+            assertTrue("scale $scale gap $gap", gap >= c.STATS_GAP - .01f)
+        }
+        assertEquals(61.2f, compactStatsBottom(1f), .01f)
+        assertEquals(68.76f, compactStatsBottom(c.MAX_TEXT_SCALE), .01f)
     }
 
     @Test
@@ -132,15 +165,32 @@ class StreamMenuLayoutTest {
     }
 
     @Test
-    fun theTallestPageFitsWithoutScrollingAtTheLargestTextScaleAndMoreScrolls() {
-        // The Upscaler page with supersampling: the toggle, quality, mode, sharpness and Save for this game
-        assertEquals(619.6f, popoverCardHeight(5, 1f), .01f)
-        assertTrue("card ${popoverCardHeight(5, c.MAX_TEXT_SCALE)}", popoverFits(5, c.MAX_TEXT_SCALE))
-        // More has 12 rows: the card stops at its largest height and the rows scroll
-        assertTrue(!popoverFits(12, 1f))
-        assertEquals(c.POPOVER_MAX_HEIGHT, popoverCardHeight(12, 1f), 0f)
-        assertEquals(72f * 12 + 8f * 11, rowsHeight(12), 0f)
+    fun everyPageKeepsItsNaturalHeightUpToOneSharedLimitAndTheRowsScrollBeyondIt() {
+        // The Upscaler page with supersampling (toggle, quality, mode, sharpness, Save for this game) is 601.6 tall at
+        // text scale 1.0 and fits the limit without scrolling, also at 1.15 (610.8); at 1.3 the three-line help
+        // makes it scroll
+        assertEquals(601.6f, popoverCardHeight(5, 1f), .01f)
+        assertTrue(popoverFits(5, 1f))
+        assertEquals(610.84f, popoverCardHeight(5, 1.15f), .01f)
+        assertTrue(popoverFits(5, 1.15f))
+        assertTrue(!popoverFits(5, c.MAX_TEXT_SCALE))
+        assertTrue(popoverFits(4, c.MAX_TEXT_SCALE))
+        // Small pages stay small
+        assertEquals(30f + 64f + 12f + rowsHeight(2) + 18f + popoverHelpHeight(1f) + 24f, popoverCardHeight(2, 1f), .01f)
+        assertTrue(popoverCardHeight(2, 1f) < popoverCardHeight(4, 1f))
+        // The More page, centered on its tile, ends exactly the margin from the stage's right edge
+        val more = popoverPlacement(MenuPage.MORE)!!
+        assertEquals(c.POPOVER_MARGIN, c.STAGE_WIDTH - (more.left + more.width), 0f)
+        // More has 11 rows (with Mouse mode): the card stops at the shared limit and the rows scroll
+        assertTrue(!popoverFits(11, 1f))
+        assertEquals(c.POPOVER_MAX_HEIGHT, popoverCardHeight(11, 1f), 0f)
+        assertEquals(72f * 11 + 8f * 10, rowsHeight(11), 0f)
         assertEquals(0f, rowsHeight(0), 0f)
+        // No page is ever taller than the limit, at any text scale
+        for (scale in listOf(1f, 1.15f, 1.3f)) for (rows in 0..20) assertTrue(popoverCardHeight(rows, scale) <= c.POPOVER_MAX_HEIGHT)
+        // The rows area keeps room for at least four rows beside the fixed header and help, even at the largest text scale
+        val fixed = c.POPOVER_PADDING_Y + c.POPOVER_HEAD_HEIGHT + c.POPOVER_GAP_AFTER_HEAD + c.POPOVER_HELP_GAP + popoverHelpHeight(c.MAX_TEXT_SCALE) + c.POPOVER_PADDING_BOTTOM
+        assertTrue(c.POPOVER_MAX_HEIGHT - fixed >= rowsHeight(4))
     }
 
     @Test
@@ -218,7 +268,7 @@ class StreamMenuLayoutTest {
     fun everyHelpAPopoverCanShowFitsItsReservedLines() {
         val footerKeys = mapOf(
             MenuPage.MORE to listOf(MoreRow.KEYS, "Send clipboard", "Get clipboard", MoreRow.COMMANDS, "Task manager", "Zoom", MoreRow.MOUSE,
-                "On-screen controls", "Full keyboard", "Key layout", "Touch sensitivity", "Rotate"),
+                "On-screen controls", MoreRow.ANDROID_KEYBOARD, "Touch sensitivity", MoreRow.RUMBLE),
             // The labels of key combinations and commands come from the user and the host
             MenuPage.KEYS to listOf("Send keys", "Keys: Ctrl + Alt + Delete", "Keys: " + "K".repeat(40)),
             MenuPage.COMMANDS to listOf("Commands", "Command: Restart the game", "Command: " + "C".repeat(80)),
@@ -226,6 +276,8 @@ class StreamMenuLayoutTest {
             MenuPage.BITRATE to listOf("Bitrate", "Apply bitrate"),
             MenuPage.UPSCALER to listOf("Upscaling", "Supersampling on", "Supersampling quality", "Mode", "Sharpness", "Save for this game"),
             MenuPage.MOUSE to listOf("Touchscreen mode", "Local mouse cursor"),
+            // Rumble feel page
+            MenuPage.RUMBLE to listOf("Rumble feel") + RumblePresets.values().map { StreamMenuHelp.rumbleKey(it) },
         )
         assertEquals(MenuPage.entries.filter { it != MenuPage.MAIN }.toSet(), footerKeys.keys)
         for (scale in listOf(1f, 1.15f, c.MAX_TEXT_SCALE)) for ((page, keys) in footerKeys) {

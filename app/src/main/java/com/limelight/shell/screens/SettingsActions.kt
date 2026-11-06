@@ -24,6 +24,7 @@ import com.limelight.shell.settings.SettingSpec
 import com.limelight.shell.settings.StreamSettingsStore
 import com.limelight.shell.settings.ProfileLayouts
 import com.limelight.shell.ui.Symbols
+import com.limelight.utils.ToastKind
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -92,12 +93,12 @@ internal fun settingsActions(profiles: ProfileStore, stream: StreamSettingsStore
         when (spec.key) {
             "option_reset_osc_preference" -> {
                 ProfileLayouts.preferences(context, VirtualControllerConfigurationLoader.OSC_PREFERENCE).edit().clear().apply()
-                shell.showToast("On-screen controls reset", Symbols.RESTART_ALT)
+                shell.showToast("On-screen controls reset", Symbols.RESTART_ALT, kind = ToastKind.SUCCESS)
             }
             "option_reset_osc" -> {
                 val name = profiles.settings().getString("keyboard_axi_list", "OSC_Keyboard")!!
                 ProfileLayouts.preferences(context, name).edit().clear().apply()
-                shell.showToast("Keyboard layout reset", Symbols.RESTART_ALT)
+                shell.showToast("Keyboard layout reset", Symbols.RESTART_ALT, kind = ToastKind.SUCCESS)
             }
             "import_keyboard_file", "import_special_button_file" -> {
                 importing = spec.key

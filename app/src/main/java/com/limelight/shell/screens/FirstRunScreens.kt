@@ -30,13 +30,13 @@ import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
+import com.limelight.shell.LocalFocusTracker
 import com.limelight.shell.LocalShell
 import com.limelight.shell.data.AVATARS
 import com.limelight.shell.data.Profile
 import com.limelight.shell.ui.CenterColumn
 import com.limelight.shell.ui.CircleItem
 import androidx.compose.ui.focus.focusProperties
-import com.limelight.shell.ui.Cue
 import com.limelight.shell.ui.Figtree
 import com.limelight.shell.ui.Heading
 import com.limelight.shell.ui.InitialFocus
@@ -45,7 +45,7 @@ import com.limelight.shell.ui.LocalFeedback
 import com.limelight.shell.ui.LocalStage
 import com.limelight.shell.ui.PillButton
 import com.limelight.shell.ui.Symbols
-import com.limelight.shell.ui.TextFieldPill
+import com.limelight.shell.ui.ValuePill
 import com.limelight.shell.ui.Unbounded
 import com.limelight.shell.ui.px
 import com.limelight.shell.ui.tpx
@@ -104,19 +104,22 @@ private fun BootLogo(modifier: Modifier = Modifier) {
 fun CreateProfileScreen(editing: Boolean, initial: Profile?, onDone: (name: String, avatar: Int) -> Unit) {
     val shell = LocalShell.current
     val feedback = LocalFeedback.current
+    val tracker = LocalFocusTracker.current
     var avatar by remember { mutableIntStateOf((initial?.avatar ?: 0).coerceIn(AVATARS.indices)) }
     var name by remember { mutableStateOf(initial?.name ?: "Player") }
     val avatarFocus = remember { List(AVATARS.size) { FocusRequester() } }
-    val nameField = remember { FocusRequester() }
+    val changeName = remember { FocusRequester() }
+    val create = remember { FocusRequester() }
     InitialFocus(avatarFocus[avatar.coerceIn(AVATARS.indices)])
-    val submit = {
-        if (name.isBlank()) {
-            feedback.play(Cue.ERROR)
-            shell.showToast("Enter a name for your profile", Symbols.BADGE)
-        } else {
-            onDone(name.trim(), avatar)
+    // The name is typed in the same dialog as Rename profile; when it is accepted the page shows it and the focus goes on to Create / Save
+    val askName = {
+        openProfileNameDialog(shell, tracker, feedback, "Profile name", name) { entered ->
+            name = entered
+            shell.returnFocusTo(create)
         }
     }
+    // Without a name there is nothing to create: the dialog asks for one
+    val submit = { if (name.isBlank()) askName() else onDone(name.trim(), avatar) }
     CenterColumn(gap = 40f) {
         Heading(
             if (editing) "Choose your avatar" else "Who's playing?",
@@ -136,7 +139,7 @@ fun CreateProfileScreen(editing: Boolean, initial: Profile?, onDone: (name: Stri
                             a.icon, a.name,
                             onClick = {
                                 avatar = i
-                                if (!editing) runCatching { nameField.requestFocus() }
+                                if (!editing) runCatching { changeName.requestFocus() }
                             },
                             modifier = wrap.focusRequester(avatarFocus[i]),
                             selected = i == avatar,
@@ -148,8 +151,12 @@ fun CreateProfileScreen(editing: Boolean, initial: Profile?, onDone: (name: Stri
                 }
             }
         }
-        TextFieldPill(name, { name = it }, Symbols.BADGE, Modifier.focusRequester(nameField), placeholder = "Your name", maxLength = 20, onDone = submit)
-        PillButton(if (editing) "Save" else "Create profile", Symbols.CHECK, submit, primary = true)
+        // The name as it is (not an input) and the button that opens the dialog; D-pad: avatars, Change name, Create / Save
+        Row(horizontalArrangement = Arrangement.spacedBy(24.px), verticalAlignment = Alignment.CenterVertically) {
+            ValuePill("Profile name", name, Symbols.BADGE, placeholder = "Your name")
+            PillButton("Change name", Symbols.EDIT, askName, Modifier.focusRequester(changeName))
+        }
+        PillButton(if (editing) "Save" else "Create profile", Symbols.CHECK, submit, Modifier.focusRequester(create), primary = true)
     }
 }
 

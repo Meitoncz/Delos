@@ -328,6 +328,15 @@
             android:summary="@string/summary_enable_rumble"
             android:title="@string/title_enable_rumble"
             app:iconSpaceReserved="false" />
+        <ListPreference
+            android:defaultValue="ORIGINAL"
+            android:dependency="checkbox_enable_rumble"
+            android:entries="@array/rumble_feel_names"
+            android:entryValues="@array/rumble_feel_values"
+            android:key="list_rumble_feel"
+            android:summary="@string/summary_rumble_feel"
+            android:title="@string/title_rumble_feel"
+            app:iconSpaceReserved="false" />
         <CheckBoxPreference
             android:defaultValue="false"
             android:dependency="checkbox_enable_rumble"

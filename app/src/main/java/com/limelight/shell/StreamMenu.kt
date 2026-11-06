@@ -39,6 +39,9 @@ import com.limelight.shell.ui.Stage
 import com.limelight.shell.ui.delosColors
 import com.limelight.shell.ui.systemAccentHue
 import com.limelight.utils.ExternalDisplayControlActivity
+import com.limelight.utils.RumblePreferences
+import com.limelight.utils.RumbleCapabilities
+import com.limelight.utils.RumblePresets
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -189,10 +192,17 @@ class StreamMenu(private val game: Game) {
             overlayHome.removeView(overlay)
             root.addView(overlay, overlayParams)
         }
+        // The same goes for a toast: the window's own host draws it, the topmost layer of the window (above the tiles, the popover and the
+        // statistics), sharp; the stream window's host stops while this one is up and carries on where it was when the window is gone
+        val toastCover = DelosToastOverlay.coverView(game, d.context, appearance, colors)
+        if (toastCover != null) {
+            root.addView(toastCover.view, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+        }
         d.setContentView(root)
         // While the menu is open the buttons reach its window, not the stream: the shortcut closes it again
         d.setOnKeyListener { _, _, event -> onKey(event) }
         d.setOnDismissListener {
+            toastCover?.release?.invoke()
             if (overlayHome != null) {
                 (overlay.parent as? ViewGroup)?.removeView(overlay)
                 overlayHome.addView(overlay, overlayIndex.coerceIn(0, overlayHome.childCount), overlayParams)
@@ -331,7 +341,7 @@ class StreamMenu(private val game: Game) {
         override val overlayOn get() = prefs.enablePerfOverlay
         override val overlayCompact get() = prefs.enablePerfOverlayLite
         override fun toggleOverlay() { game.toggleHUD() }
-        override fun toggleKeyboard() { game.toggleKeyboard() }
+        override fun toggleSystemKeyboard() { game.toggleKeyboard() }
 
         override val brightnessPercent get() = this@StreamMenu.brightnessPercent()
         override fun setBrightness(percent: Int) { applyBrightness(percent, menu) }
@@ -362,13 +372,26 @@ class StreamMenu(private val game: Game) {
         override fun sendTaskManager() { game.sendKeys(shortArrayOf(KeyboardTranslator.VK_LCONTROL.toShort(), KeyboardTranslator.VK_LSHIFT.toShort(), KeyboardTranslator.VK_ESCAPE.toShort())) }
         override val zoomOn get() = game.isZoomModeEnabled
         override fun toggleZoom() { game.toggleZoomMode() }
-        override val onscreenControlsOn get() = prefs.onscreenController
+        override val onscreenControlsOn get() = game.isVirtualControllerShown
         override fun toggleOnscreenControls() { game.toggleVirtualController() }
+        override val fullKeyboardOn get() = game.isFullKeyboardShown
         override fun toggleFullKeyboard() { game.toggleFullKeyboard() }
-        override fun toggleKeyLayout() { game.toggleKeyboardController() }
         override val touchSensitivityOn get() = prefs.enableTouchSensitivity
         override fun toggleTouchSensitivity() { game.switchTouchSensitivity() }
-        override fun rotate() { game.rotateScreen() }
+
+        // The laboratory's preset logic, live. RumblePreferences saves the whole preset in one edit; the
+        // stream's ControllerHandler reads prefConfig at every rumble event, so the next event uses the new preset.
+        private val rumbleSettings by lazy { ProfileStore.currentSettings(game) }
+        override val rumblePreset get() = RumblePreferences.activePreset(rumbleSettings)
+        override fun rumbleUnavailable(preset: RumblePresets) =
+            RumbleCapabilities.get(game).unavailableReason(preset.profile.technique)
+        override val rumbleRuntimeProblem get() = game.rumbleProblem
+        override fun selectRumblePreset(preset: RumblePresets) {
+            if (rumbleUnavailable(preset) != null) return
+            RumblePreferences.applyPreset(rumbleSettings, preset)
+            prefs.rumbleProfile = preset.profile
+            prefs.rumbleTranslatorEnabled = preset.enabled
+        }
 
         override val allowChangeMouseMode get() = game.allowChangeMouseMode
         override val mouseMode get() = game.activeMouseMode

@@ -37,6 +37,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -46,7 +47,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.inset
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -350,10 +353,21 @@ val LocalGlideRing = staticCompositionLocalOf<GlideRing?> { null }
  * overshoot of [Motion.Glide]) instead of every element fading its own in and out, like the dock of the stream menu.
  * The elements mark themselves with [glideTarget] and draw no ring of their own while [LocalGlideRing] is set. The ring
  * is drawn behind the host's content, [focusScale] times as big as the element's bounds (the scale the element grows to
- * when focused), so what sits above the elements (a badge) stays above it. With reduced motion it jumps.
+ * when focused), so what sits above the elements (a badge) stays above it, unless [inFront] draws it over them (a grid of
+ * keys whose neighbours lie closer than the ring is wide). [scale] and [offset] are read while drawing: the ring squeezes
+ * with a pressed element and nudges against the edge of the group. With reduced motion it jumps.
  */
 @Composable
-fun GlideRingHost(ring: FocusRing, corner: Float, focusScale: Float, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+fun GlideRingHost(
+    ring: FocusRing,
+    corner: Float,
+    focusScale: Float,
+    modifier: Modifier = Modifier,
+    inFront: Boolean = false,
+    scale: () -> Float = { 1f },
+    offset: () -> Offset = { Offset.Zero },
+    content: @Composable () -> Unit,
+) {
     val colors = LocalDelosColors.current
     val stage = LocalStage.current
     val reduced = LocalReducedMotion.current
@@ -387,19 +401,27 @@ fun GlideRingHost(ring: FocusRing, corner: Float, focusScale: Float, modifier: M
         if (alpha.value == 0f || reduced || System.nanoTime() < followUntil) box.snapTo(grown)
         else box.animateTo(grown, tween(Motion.RING, easing = Motion.Glide))
     }
+    val drawRing: DrawScope.() -> Unit = {
+        val a = alpha.value
+        val r = box.value
+        if (a > 0f && r.width > 0f) {
+            val o = offset()
+            val s = scale()
+            withTransform({
+                translate(o.x, o.y)
+                scale(s, s, pivot = r.center)
+            }) {
+                inset(r.left, r.top, size.width - r.right, size.height - r.bottom) {
+                    drawFocusRing(ring, min(stagePx(corner, stage), this.size.minDimension / 2f), a, colors, stage)
+                }
+            }
+        }
+    }
     CompositionLocalProvider(LocalGlideRing provides state) {
         Box(
             modifier
                 .onGloballyPositioned { state.attach(it) }
-                .drawBehind {
-                    val a = alpha.value
-                    val r = box.value
-                    if (a > 0f && r.width > 0f) {
-                        inset(r.left, r.top, size.width - r.right, size.height - r.bottom) {
-                            drawFocusRing(ring, min(stagePx(corner, stage), this.size.minDimension / 2f), a, colors, stage)
-                        }
-                    }
-                },
+                .then(if (inFront) Modifier.drawWithContent { drawContent(); drawRing() } else Modifier.drawBehind(drawRing)),
             content = { content() },
         )
     }

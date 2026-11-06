@@ -32,7 +32,7 @@ import android.view.InputEvent;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.Surface;
-import android.widget.Toast;
+import com.limelight.utils.DelosToast;
 
 import com.limelight.LimeLog;
 import com.limelight.R;
@@ -130,8 +130,15 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
     private final Handler backgroundThreadHandler;
     private boolean hasGameController;
     private boolean stopped = false;
+    // Delos: the Full keyboard owns the controller while it is up (setInputSuspended)
+    private volatile boolean inputSuspended = false;
 
     private final PreferenceConfiguration prefConfig;
+    // The stream menu switches the rumble preset live, so the translated playback follows
+    // prefConfig.rumbleTranslatorEnabled/rumbleProfile at every rumble event instead of being fixed at construction.
+    // Once a preset is chosen this can go back to a final field built in the constructor.
+    private final Object translatedRumbleLock = new Object();
+    private volatile ActiveRumble activeRumble;
     private short currentControllers, initialControllers;
 
     public ControllerHandler(Activity activityContext, NvConnection conn, GameGestures gestures, PreferenceConfiguration prefConfig) {
@@ -271,6 +278,67 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
         inputDeviceContexts.put(deviceId, newContext);
     }
 
+    // One translated playback per (enabled, profile) pair; see activeRumble.
+    private static final class ActiveRumble {
+        final com.limelight.utils.RumbleTranslator.Profile profile;
+        final com.limelight.utils.RumblePlayback playback;
+
+        ActiveRumble(com.limelight.utils.RumbleTranslator.Profile profile) {
+            this.profile = profile;
+            this.playback = new com.limelight.utils.RumblePlayback(profile);
+        }
+    }
+
+    /**
+     * The playback for the rumble settings in effect right now, or null while translation is off. A change of
+     * prefConfig.rumbleTranslatorEnabled/rumbleProfile (the stream menu's live preset switch) takes effect on the
+     * next rumble event: the old playback is stopped (its vibration cancelled) and a new one starts.
+     */
+    private com.limelight.utils.RumblePlayback translatedRumble() {
+        ActiveRumble active = activeRumble;
+        boolean enabled = prefConfig.rumbleTranslatorEnabled;
+        com.limelight.utils.RumbleTranslator.Profile profile = prefConfig.rumbleProfile;
+        if (active == null ? !enabled : (enabled && active.profile == profile)) {
+            return active == null ? null : active.playback;
+        }
+        return resyncTranslatedRumble();
+    }
+
+    private com.limelight.utils.RumblePlayback resyncTranslatedRumble() {
+        synchronized (translatedRumbleLock) {
+            ActiveRumble active = activeRumble;
+            if (stopped) {
+                return active == null ? null : active.playback;
+            }
+            boolean enabled = prefConfig.rumbleTranslatorEnabled;
+            com.limelight.utils.RumbleTranslator.Profile profile = prefConfig.rumbleProfile;
+            if (active != null && enabled && active.profile == profile) {
+                return active.playback;
+            }
+            if (active != null) {
+                active.playback.stop();
+            }
+            active = enabled ? new ActiveRumble(profile) : null;
+            activeRumble = active;
+            return active == null ? null : active.playback;
+        }
+    }
+
+    /** Why the running rumble preset could not use its technique, or null. */
+    public String getRumbleProblem() {
+        ActiveRumble active = activeRumble;
+        return active == null ? null : active.playback.getProblem();
+    }
+
+    private void stopTranslatedRumble() {
+        synchronized (translatedRumbleLock) {
+            ActiveRumble active = activeRumble;
+            if (active != null) {
+                active.playback.stop();
+            }
+        }
+    }
+
     public void stop() {
         if (stopped) {
             return;
@@ -278,6 +346,7 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
 
         // Stop new device contexts from being created or used
         stopped = true;
+        stopTranslatedRumble();
 
         // Unregister our input device callbacks
         inputManager.unregisterInputDeviceListener(this);
@@ -409,6 +478,48 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
 
         LimeLog.info("Enumerated "+count+" gamepads");
         return mask;
+    }
+
+    /**
+     * Delos: while the Full keyboard is up the physical controllers drive the keyboard, not the game. Starting and ending
+     * the suspension lets go of everything they hold (a neutral packet each, which also ends a mouse emulation click);
+     * while it lasts no controller state reaches the host (the on-screen gamepad is not a physical controller and keeps going).
+     */
+    public void setInputSuspended(boolean suspended) {
+        if (inputSuspended == suspended) {
+            return;
+        }
+        inputSuspended = false;
+        for (int i = 0; i < inputDeviceContexts.size(); i++) {
+            clearControllerState(inputDeviceContexts.valueAt(i));
+        }
+        for (int i = 0; i < usbDeviceContexts.size(); i++) {
+            clearControllerState(usbDeviceContexts.valueAt(i));
+        }
+        for (int i = 0; i < inputDeviceContexts.size(); i++) {
+            sendNeutralPacket(inputDeviceContexts.valueAt(i));
+        }
+        for (int i = 0; i < usbDeviceContexts.size(); i++) {
+            sendNeutralPacket(usbDeviceContexts.valueAt(i));
+        }
+        inputSuspended = suspended;
+    }
+
+    private void clearControllerState(GenericControllerContext context) {
+        context.inputMap = 0;
+        context.leftTrigger = 0;
+        context.rightTrigger = 0;
+        context.leftStickX = 0;
+        context.leftStickY = 0;
+        context.rightStickX = 0;
+        context.rightStickY = 0;
+    }
+
+    private void sendNeutralPacket(GenericControllerContext context) {
+        // A controller the host never heard of has nothing to release
+        if (context.assignedControllerNumber) {
+            sendControllerInputPacket(context);
+        }
     }
 
     private void releaseControllerNumber(GenericControllerContext context) {
@@ -1224,6 +1335,11 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
     }
 
     private void sendControllerInputPacket(GenericControllerContext originalContext) {
+        // Delos: the Full keyboard owns the physical controllers (the on-screen gamepad is the default context)
+        if (inputSuspended && originalContext != defaultContext) {
+            return;
+        }
+
         assignControllerNumberIfNeeded(originalContext);
 
         // Take the context's controller number and fuse all inputs with the same number
@@ -2023,6 +2139,8 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
     // This must only be called if hasDualAmplitudeControlledRumbleVibrators() is true!
     @TargetApi(31)
     private void rumbleDualVibrators(VibratorManager vm, short lowFreqMotor, short highFreqMotor) {
+        com.limelight.utils.RumblePlayback translated = translatedRumble();
+        if (translated != null) { translated.dual(vm, lowFreqMotor, highFreqMotor); return; }
         // Normalize motor values to 0-255 amplitudes for VibrationManager
         highFreqMotor = (short)((highFreqMotor >> 8) & 0xFF);
         lowFreqMotor = (short)((lowFreqMotor >> 8) & 0xFF);
@@ -2080,6 +2198,8 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
     // This must only be called if hasQuadAmplitudeControlledRumbleVibrators() is true!
     @TargetApi(31)
     private void rumbleQuadVibrators(VibratorManager vm, short lowFreqMotor, short highFreqMotor, short leftTrigger, short rightTrigger) {
+        com.limelight.utils.RumblePlayback translated = translatedRumble();
+        if (translated != null) { translated.quad(vm, lowFreqMotor, highFreqMotor, leftTrigger, rightTrigger); return; }
         // Normalize motor values to 0-255 amplitudes for VibrationManager
         highFreqMotor = (short)((highFreqMotor >> 8) & 0xFF);
         lowFreqMotor = (short)((lowFreqMotor >> 8) & 0xFF);
@@ -2117,6 +2237,8 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
     }
 
     private void rumbleSingleVibrator(Vibrator vibrator, short lowFreqMotor, short highFreqMotor) {
+        com.limelight.utils.RumblePlayback translated = translatedRumble();
+        if (translated != null) { translated.single(vibrator, lowFreqMotor, highFreqMotor); return; }
         // Since we can only use a single amplitude value, compute the desired amplitude
         // by taking 80% of the big motor and 33% of the small motor, then capping to 255.
         // NB: This value is now 0-255 as required by VibrationEffect.
@@ -2947,6 +3069,11 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
                                       float leftStickX, float leftStickY,
                                       float rightStickX, float rightStickY,
                                       float leftTrigger, float rightTrigger) {
+        // Delos: the Full keyboard owns the physical controllers
+        if (inputSuspended) {
+            return;
+        }
+
         GenericControllerContext context = usbDeviceContexts.get(controllerId);
         if (context == null) {
             return;
@@ -3073,7 +3200,7 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
         public void toggleMouseEmulation() {
             mainThreadHandler.removeCallbacks(mouseEmulationRunnable);
             mouseEmulationActive = !mouseEmulationActive;
-            Toast.makeText(activityContext, "Mouse emulation is: " + (mouseEmulationActive ? "ON" : "OFF"), Toast.LENGTH_SHORT).show();
+            DelosToast.show(activityContext, "Mouse emulation is: " + (mouseEmulationActive ? "ON" : "OFF"), DelosToast.SHORT);
 
             if (mouseEmulationActive) {
                 mainThreadHandler.postDelayed(mouseEmulationRunnable, mouseEmulationReportPeriod);
@@ -3217,6 +3344,14 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
         @Override
         public void destroy() {
             super.destroy();
+            ActiveRumble active = activeRumble;
+            if (active != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && vibratorManager != null) {
+                    active.playback.cancel(vibratorManager);
+                } else if (vibrator != null) {
+                    active.playback.cancel(vibrator);
+                }
+            }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && vibratorManager != null) {
                 vibratorManager.cancel();
@@ -3334,7 +3469,7 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
             byte reportedType;
             if (type != MoonBridge.LI_CTYPE_PS && sensorManager != null) {
                 // Override the detected controller type if we're emulating motion sensors on an Xbox controller
-                Toast.makeText(activityContext, activityContext.getResources().getText(R.string.toast_controller_type_changed), Toast.LENGTH_LONG).show();
+                DelosToast.show(activityContext, activityContext.getResources().getText(R.string.toast_controller_type_changed), DelosToast.LONG);
                 reportedType = MoonBridge.LI_CTYPE_UNKNOWN;
 
                 // Remember that we should enable the clickpad emulation combo (Select+LB) for this device
@@ -3473,7 +3608,7 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
 
             if (type != MoonBridge.LI_CTYPE_PS && (capabilities & (MoonBridge.LI_CCAP_GYRO | MoonBridge.LI_CCAP_ACCEL)) != 0) {
                 activityContext.runOnUiThread(() -> {
-                    Toast.makeText(activityContext, activityContext.getResources().getText(R.string.toast_controller_type_changed), Toast.LENGTH_LONG).show();
+                    DelosToast.show(activityContext, activityContext.getResources().getText(R.string.toast_controller_type_changed), DelosToast.LONG);
                 });
             }
 

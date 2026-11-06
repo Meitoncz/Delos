@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.input.pointer.pointerInput
 import com.limelight.shell.settings.SettingChoice
+import com.limelight.utils.RumblePresets
 import kotlinx.coroutines.flow.emptyFlow
 import kotlin.math.PI
 import kotlin.math.sin
@@ -29,7 +30,7 @@ import kotlin.math.sin
 /**
  * Debug builds only: the real stream menu on a drawn game scene with fake state, started with
  * `adb shell am start -n io.github.meitoncz.delos.debug/com.limelight.shell.ShellActivity --es preview_screen stream_menu`
- * and optionally `--es preview_page <main|upscaler|bitrate|brightness|more|keys|commands|mouse>`, `--ei preview_focus <tile 0..8>`,
+ * and optionally `--es preview_page <main|upscaler|bitrate|brightness|more|keys|commands|mouse|rumble>`, `--ei preview_focus <tile 0..8>`,
  * `--ei preview_row <row of the page to focus>` and `--ez preview_animate true` (plays the entrance; without it the menu is
  * already open). Handled by `ShellActivity` before the shell, so no profile is needed (docs/GUI.md, "Stream menu preview").
  */
@@ -44,6 +45,7 @@ internal object StreamMenuPreview {
             "bitrate" -> MenuPage.BITRATE
             "upscaler" -> MenuPage.UPSCALER
             "mouse" -> MenuPage.MOUSE
+            "rumble" -> MenuPage.RUMBLE
             else -> MenuPage.MAIN
         }
         val focus = BarItem.entries.getOrElse(intent.getIntExtra("preview_focus", 0)) { BarItem.RESUME }
@@ -73,9 +75,9 @@ private fun StreamMenuPreviewScreen(start: StreamMenuStart) {
     }
 }
 
-/** A sunset over hills, so the menu is seen on a picture like in a stream. */
+/** A sunset over hills, so the menu (and the Full keyboard preview) is seen on a picture like in a stream. */
 @Composable
-private fun GameScene() {
+internal fun GameScene() {
     Canvas(Modifier.fillMaxSize()) {
         drawRect(
             Brush.verticalGradient(
@@ -118,7 +120,7 @@ internal class FakeStreamMenuHost : StreamMenuHost {
         else if (!overlayCompact) overlayCompact = true
         else { overlayOn = false; overlayCompact = false }
     }
-    override fun toggleKeyboard() = Unit
+    override fun toggleSystemKeyboard() = Unit
 
     override var brightnessPercent = 70
     override fun setBrightness(percent: Int) { brightnessPercent = percent }
@@ -161,11 +163,14 @@ internal class FakeStreamMenuHost : StreamMenuHost {
     override fun toggleZoom() { zoomOn = !zoomOn }
     override var onscreenControlsOn = false
     override fun toggleOnscreenControls() { onscreenControlsOn = !onscreenControlsOn }
-    override fun toggleFullKeyboard() = Unit
-    override fun toggleKeyLayout() = Unit
+    override var fullKeyboardOn = false
+    override fun toggleFullKeyboard() { fullKeyboardOn = !fullKeyboardOn }
     override var touchSensitivityOn = false
     override fun toggleTouchSensitivity() { touchSensitivityOn = !touchSensitivityOn }
-    override fun rotate() = Unit
+
+    // Live rumble feel selection state
+    override var rumblePreset by mutableStateOf<RumblePresets?>(RumblePresets.ORIGINAL)
+    override fun selectRumblePreset(preset: RumblePresets) { rumblePreset = preset }
 
     override val allowChangeMouseMode = true
     private var mode = 0

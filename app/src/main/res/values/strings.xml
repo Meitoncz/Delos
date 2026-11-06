@@ -135,6 +135,8 @@
     <string name="title_checkbox_force_device_motion">Always use device\'s motion sensors</string>
     <string name="summary_checkbox_force_device_motion">Enforce using devices\'s built-in motion sensor even when the controller reported motion sensors are supported.</string>
     <string name="title_enable_rumble">Enable Rumble</string>
+    <string name="title_rumble_feel" translatable="false">Rumble feel</string>
+    <string name="summary_rumble_feel" translatable="false">How game rumble feels on this device\'s vibration motor.</string>
     <string name="summary_enable_rumble">Enable rumble feedback on supported gamepads.</string>
     <string name="category_input_settings">Input Settings</string>
     <string name="title_checkbox_absolute_mouse_mode">Remote desktop mouse mode</string>
@@ -415,7 +417,6 @@
     <string name="summary_checkbox_use_virtual_display">Use Virtual Display by default.\nVirtual Display can automatically match your client side resolution and frame rate settings, giving you a seamless streaming experience.\nRequires Apollo as host streaming software.</string>
     <string name="title_checkbox_enable_sticky_modifier_key_virtual_keyboard">Sticky modifier keys</string>
     <string name="summary_checkbox_enable_sticky_modifier_key_virtual_keyboard">Use sticky modifier keys on virtual full keyboard and custom onscreen keyboard.</string>
-    <string name="virtual_keyboard_hide">Hide\nKBD</string>
     <string name="mouse_mode_multi_touch">Multi touch</string>
     <string name="mouse_mode_absolute_touch">Absolute touch</string>
     <string name="mouse_mode_track_pad_natural">Track pad(Natural/Double tap to drag)</string>

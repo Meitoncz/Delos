@@ -122,7 +122,7 @@ class StreamStatsPanel private constructor(
         val s = stats.value ?: return
         val compact = compactState.value
         Box(
-            Modifier.fillMaxWidth().padding(horizontal = 40.px, vertical = if (compact) 20.px else 32.px),
+            Modifier.fillMaxWidth().padding(horizontal = 40.px, vertical = if (compact) StreamMenuLayout.STATS_COMPACT_TOP.px else 32.px),
             contentAlignment = when {
                 compact -> Alignment.TopCenter
                 position.start -> Alignment.TopStart
@@ -146,8 +146,8 @@ class StreamStatsPanel private constructor(
                 if (s.bandwidthKb >= 0f) append("  ·  ${bandwidth(s.bandwidthKb)}")
                 append("  ·  Network ${s.networkMs} ms  ·  Decode ${format(s.decodeMs)} ms  ·  Total ${format(s.totalMs)} ms  ·  Lost ${format(s.lossPercent)} %")
             },
-            modifier.padding(horizontal = 24.px, vertical = 8.px),
-            style = TextStyle(color = PANEL_TEXT, fontFamily = Figtree, fontSize = 18.tpx, lineHeight = 1.4.em, fontFeatureSettings = "tnum"),
+            modifier.padding(horizontal = 24.px, vertical = StreamMenuLayout.STATS_COMPACT_PADDING_Y.px),
+            style = TextStyle(color = PANEL_TEXT, fontFamily = Figtree, fontSize = StreamMenuLayout.STATS_COMPACT_TEXT_SIZE.tpx, lineHeight = StreamMenuLayout.STATS_COMPACT_LINE_HEIGHT.em, fontFeatureSettings = "tnum"),
         )
     }
 

@@ -24,7 +24,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.widget.Toast;
+import com.limelight.utils.DelosToast;
 
 import androidx.annotation.NonNull;
 import androidx.activity.OnBackPressedCallback;
@@ -87,6 +87,15 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
         }
     }
 
+    public static boolean isFullKeyboardShown() {
+        return instance != null && instance.keyBoardLayoutController != null && instance.keyBoardLayoutController.shown;
+    }
+
+    /** The full keyboard of this screen, or null before it was first shown (Game hands the controller to it while it is up). */
+    public static KeyBoardLayoutController getFullKeyboard() {
+        return instance != null ? instance.keyBoardLayoutController : null;
+    }
+
     public static void toggleGameMenu() {
         if (Game.instance != null) {
             Game.instance.showStreamMenu();
@@ -109,6 +118,7 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        com.limelight.shell.DelosToastOverlay.attach(this);
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
@@ -132,12 +142,10 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
                     gameIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                     ActivityOptions options = ActivityOptions.makeBasic();
                     options.setLaunchDisplayId(secondaryDisplay.getDisplayId());
-                    Toast.makeText(this,
-                            getString(R.string.external_display_info,
-                                    secondaryDisplay.getMode().getPhysicalWidth(),
-                                    secondaryDisplay.getMode().getPhysicalHeight(),
-                                    secondaryDisplay.getMode().getRefreshRate()),
-                            Toast.LENGTH_LONG).show();
+                    DelosToast.show(this, getString(R.string.external_display_info,
+                            secondaryDisplay.getMode().getPhysicalWidth(),
+                            secondaryDisplay.getMode().getPhysicalHeight(),
+                            secondaryDisplay.getMode().getRefreshRate()), DelosToast.LONG);
 
                     startActivity(gameIntent, options.toBundle());
                     overridePendingTransition(0, 0);
@@ -155,7 +163,7 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
     private void initViews() {
         if (Game.instance == null) {
             if (failCount > 10) {
-                Toast.makeText(this, getString(R.string.no_game_instance), Toast.LENGTH_LONG).show();
+                DelosToast.show(this, getString(R.string.no_game_instance), DelosToast.LONG, ToastKind.ERROR);
                 finish();
             }
             // Wait for the intent to get started
@@ -220,11 +228,18 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
     protected void onDestroy() {
         super.onDestroy();
         instance = null;
+        // Its full keyboard goes with it: the controller is the game's again
+        if (Game.instance != null) {
+            Game.instance.onFullKeyboardVisibilityChanged();
+        }
     }
 
     @Override
     public void onKeyboardControllerVisibilityChange(boolean visible) {
         updateKeyboardVisibility(visible);
+        if (Game.instance != null) {
+            Game.instance.onFullKeyboardVisibilityChanged();
+        }
     }
 
     @SuppressLint("ClickableViewAccessibility")

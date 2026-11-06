@@ -57,9 +57,6 @@ val DelosColors.accent3Line: Color get() = accent3.copy(alpha = .34f)
 /** The accent3 for small icons on a dark overlay (a cover's badge), whatever the theme: always the dark theme's light shade. */
 val DelosColors.accent3OnDark: Color get() = hsl(accent3Hue, 85f, 68f)
 
-/** The accent3 for the icon of a toast, which is the inverse of the theme (a light pill in the dark theme, a dark one in the light theme). */
-val DelosColors.accent3OnInverse: Color get() = if (dark) hsl(accent3Hue, 80f, 38f) else hsl(accent3Hue, 85f, 68f)
-
 /** CSS-style hsl(): hue in degrees (any value), saturation and lightness in percent. */
 fun hsl(h: Float, s: Float, l: Float, a: Float = 1f): Color =
     Color.hsl(((h % 360f) + 360f) % 360f, (s / 100f).coerceIn(0f, 1f), (l / 100f).coerceIn(0f, 1f), a.coerceIn(0f, 1f))

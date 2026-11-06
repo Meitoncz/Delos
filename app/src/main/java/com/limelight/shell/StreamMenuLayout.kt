@@ -14,20 +14,23 @@ import kotlin.math.floor
 /** The tiles of the dock, in the order they appear. */
 internal enum class BarItem { RESUME, KEYBOARD, OVERLAY, BRIGHTNESS, BITRATE, UPSCALER, MORE, DISCONNECT, QUIT }
 
-/** What the popover above the dock shows; [MAIN] is no popover (the dock alone). */
-internal enum class MenuPage { MAIN, MORE, KEYS, COMMANDS, BRIGHTNESS, BITRATE, UPSCALER, MOUSE }
+/**
+ * What the popover above the dock shows; [MAIN] is no popover (the dock alone).
+ * [RUMBLE] is the live rumble feel selection, opened from the More page.
+ */
+internal enum class MenuPage { MAIN, MORE, KEYS, COMMANDS, BRIGHTNESS, BITRATE, UPSCALER, MOUSE, RUMBLE }
 
 /** The page B goes back to: the dock for the pages of a tile, More for the pages that More opens. */
 internal fun MenuPage.parent(): MenuPage? = when (this) {
     MenuPage.MAIN -> null
-    MenuPage.KEYS, MenuPage.COMMANDS, MenuPage.MOUSE -> MenuPage.MORE
+    MenuPage.KEYS, MenuPage.COMMANDS, MenuPage.MOUSE, MenuPage.RUMBLE -> MenuPage.MORE
     else -> MenuPage.MAIN
 }
 
 /** The tile that opens this page, directly or through More. */
 internal fun MenuPage.barItem(): BarItem? = when (this) {
     MenuPage.MAIN -> null
-    MenuPage.MORE, MenuPage.KEYS, MenuPage.COMMANDS, MenuPage.MOUSE -> BarItem.MORE
+    MenuPage.MORE, MenuPage.KEYS, MenuPage.COMMANDS, MenuPage.MOUSE, MenuPage.RUMBLE -> BarItem.MORE
     MenuPage.BRIGHTNESS -> BarItem.BRIGHTNESS
     MenuPage.BITRATE -> BarItem.BITRATE
     MenuPage.UPSCALER -> BarItem.UPSCALER
@@ -38,6 +41,12 @@ internal object MoreRow {
     const val KEYS = "Send keys"
     const val COMMANDS = "Commands"
     const val MOUSE = "Mouse mode"
+
+    /** The More row that opens Android's system keyboard (the Keyboard tile is the Delos keyboard). */
+    const val ANDROID_KEYBOARD = "Open Android keyboard"
+
+    /** The More row that opens the live rumble feel page. */
+    const val RUMBLE = "Rumble feel"
 }
 
 /** The row of the parent page that opened this page (by its label), or null when the dock's tile did. */
@@ -45,6 +54,7 @@ internal fun MenuPage.openedByRow(): String? = when (this) {
     MenuPage.KEYS -> MoreRow.KEYS
     MenuPage.COMMANDS -> MoreRow.COMMANDS
     MenuPage.MOUSE -> MoreRow.MOUSE
+    MenuPage.RUMBLE -> MoreRow.RUMBLE
     else -> null
 }
 
@@ -126,13 +136,13 @@ internal object StreamMenuLayout {
     // The popover: a frosted card with a caret on its bottom edge, pointing at the tile that opened it
     const val POPOVER_RADIUS = 44f
     const val POPOVER_PADDING_X = 40f
-    const val POPOVER_PADDING_Y = 36f
-    const val POPOVER_PADDING_BOTTOM = 28f
-    const val POPOVER_MAX_HEIGHT = 686f
+    const val POPOVER_PADDING_Y = 30f
+    const val POPOVER_PADDING_BOTTOM = 24f
     const val POPOVER_HEAD_HEIGHT = 64f
+    // The card's height limit (POPOVER_MAX_HEIGHT) is derived below from the margin.
     const val POPOVER_HEAD_GAP = 20f
-    const val POPOVER_GAP_AFTER_HEAD = 16f
-    const val POPOVER_HELP_GAP = 22f
+    const val POPOVER_GAP_AFTER_HEAD = 12f
+    const val POPOVER_HELP_GAP = 18f
     const val POPOVER_TITLE_SIZE = 30f
     const val CARET_WIDTH = 60f
     const val CARET_HEIGHT = 24f
@@ -140,11 +150,35 @@ internal object StreamMenuLayout {
     /** The popover's box ends here above the bottom of the stage: card bottom 734, caret tip about 13 above the sunk tile's ring. */
     const val POPOVER_BOTTOM = 322f
 
-    /** The card keeps this far from the stage's sides, and its caret this far from the card's corners. */
-    const val POPOVER_MIN_LEFT = 110f
-    const val POPOVER_MAX_RIGHT = 1810f
+    /** The caret keeps this far from the card's corners. */
     const val CARET_MIN_INSET = 72f
     const val POPOVER_HIDDEN_SCALE = .86f
+
+    /**
+     * The compact statistics line at the top center (`StreamStatsPanel`): its top gap, its vertical padding, its text size
+     * (grows with the interface scale) and its line height. The popover must stay below its bottom edge at every scale.
+     */
+    const val STATS_COMPACT_TOP = 20f
+    const val STATS_COMPACT_PADDING_Y = 8f
+    const val STATS_COMPACT_TEXT_SIZE = 18f
+    const val STATS_COMPACT_LINE_HEIGHT = 1.4f
+
+    /** The least air the tests demand between the compact statistics line (at the largest text scale) and a full-height popover. */
+    const val STATS_GAP = 11f
+
+    /**
+     * The ONE margin of the popover: the card keeps it from the stage's left, right and top edges. 120 is the gap
+     * the rightmost popover (More, centered on its tile: its right edge is at 1800) already had to the stage's right
+     * edge; the height limit gives a too-tall card the same gap to the top. It clears the compact statistics line
+     * (bottom edge about 68.8 at the largest text scale) by about 51.
+     */
+    const val POPOVER_MARGIN = 120f
+    const val POPOVER_MIN_LEFT = POPOVER_MARGIN
+    const val POPOVER_MAX_RIGHT = STAGE_WIDTH - POPOVER_MARGIN
+
+    /** The card's bottom edge (the caret excluded) and the tallest card: from there up to the [POPOVER_MARGIN] below the stage's top. */
+    const val POPOVER_CARD_BOTTOM = STAGE_HEIGHT - POPOVER_BOTTOM - CARET_HEIGHT
+    const val POPOVER_MAX_HEIGHT = POPOVER_CARD_BOTTOM - POPOVER_MARGIN
 
     // Rows of a page
     const val ROW_HEIGHT = 72f
@@ -197,7 +231,7 @@ internal fun popoverWidth(page: MenuPage): Float = when (page) {
     MenuPage.BRIGHTNESS -> 780f
     MenuPage.BITRATE -> 860f
     MenuPage.UPSCALER -> 980f
-    MenuPage.MORE, MenuPage.KEYS, MenuPage.COMMANDS, MenuPage.MOUSE -> 920f
+    MenuPage.MORE, MenuPage.KEYS, MenuPage.COMMANDS, MenuPage.MOUSE, MenuPage.RUMBLE -> 920f
 }
 
 /** The card's left edge: centered on [anchorX] (the center of the tile that opened it), [StreamMenuLayout.POPOVER_MIN_LEFT] to [StreamMenuLayout.POPOVER_MAX_RIGHT]. */
@@ -230,7 +264,7 @@ internal fun popoverHelpHeight(textScale: Float): Float =
 internal fun rowsHeight(rows: Int): Float =
     if (rows <= 0) 0f else rows * StreamMenuLayout.ROW_HEIGHT + (rows - 1) * StreamMenuLayout.ROW_GAP
 
-/** The card's height with [rows] rows at [textScale] when nothing scrolls, caret excluded; capped at [StreamMenuLayout.POPOVER_MAX_HEIGHT]. */
+/** The card's height with [rows] rows at [textScale] when nothing scrolls, caret excluded; capped at [StreamMenuLayout.POPOVER_MAX_HEIGHT], the one height every page shares as its limit. */
 internal fun popoverCardHeight(rows: Int, textScale: Float): Float {
     val c = StreamMenuLayout
     val natural = c.POPOVER_PADDING_Y + c.POPOVER_HEAD_HEIGHT + c.POPOVER_GAP_AFTER_HEAD + rowsHeight(rows) + c.POPOVER_HELP_GAP + popoverHelpHeight(textScale) + c.POPOVER_PADDING_BOTTOM
@@ -242,6 +276,16 @@ internal fun popoverFits(rows: Int, textScale: Float): Boolean {
     val c = StreamMenuLayout
     return c.POPOVER_PADDING_Y + c.POPOVER_HEAD_HEIGHT + c.POPOVER_GAP_AFTER_HEAD + rowsHeight(rows) + c.POPOVER_HELP_GAP + popoverHelpHeight(textScale) + c.POPOVER_PADDING_BOTTOM <= c.POPOVER_MAX_HEIGHT
 }
+
+/** The bottom edge of the compact statistics line at [textScale], stage pixels from the stage's top. */
+internal fun compactStatsBottom(textScale: Float): Float {
+    val c = StreamMenuLayout
+    return c.STATS_COMPACT_TOP + 2 * c.STATS_COMPACT_PADDING_Y + c.STATS_COMPACT_TEXT_SIZE * textScale * c.STATS_COMPACT_LINE_HEIGHT
+}
+
+/** The gap between the top of a card at its height limit and the compact statistics line at [textScale]. */
+internal fun popoverStatsGap(textScale: Float): Float =
+    StreamMenuLayout.POPOVER_CARD_BOTTOM - StreamMenuLayout.POPOVER_MAX_HEIGHT - compactStatsBottom(textScale)
 
 /** The height of the caption's box at [textScale]. */
 internal fun captionHeight(textScale: Float): Float =
@@ -290,6 +334,7 @@ internal fun pageTitle(page: MenuPage, supersampling: Boolean): String = when (p
     MenuPage.BITRATE -> "Stream bitrate"
     MenuPage.UPSCALER -> if (supersampling) "Supersampling" else "Upscaler"
     MenuPage.MOUSE -> "Mouse and touch"
+    MenuPage.RUMBLE -> "Rumble feel"
 }
 
 /** The help key of the tile (or the page's first row) that shows before anything inside a page is focused. */
@@ -302,6 +347,7 @@ internal fun pageHelpKey(page: MenuPage): String = when (page) {
     MenuPage.BITRATE -> "Bitrate"
     MenuPage.UPSCALER -> "Upscaling"
     MenuPage.MOUSE -> "Touchscreen mode"
+    MenuPage.RUMBLE -> "Rumble feel"
 }
 
 /** The help key of a tile: the upscaler's tile is called Supersampling when the stream is supersampled. */

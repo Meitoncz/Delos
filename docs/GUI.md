@@ -294,6 +294,12 @@ in assets.
 - The **two menu buttons at the top left and top right** of the handheld are used in the UI: the **left one (View/Select)** slides the **side menu** in from the left, the **right one (Start)** opens the **context menu** for the focused item. The hints show the buttons as they look on the device: on AYN handhelds (Odin, Thor) a square (left) and a play arrow (right).
 - Navigation must be **intuitive and direct**: pressing a direction takes you where you want to go, ideally in **one press** – never left, down, down just to reach something.
 
+### Text input
+
+**Text is typed in one place: the dialog (`DialogLayer`, a `DialogSpec` with `DialogField`s)**, for everything from the pairing PIN and the PC's name to the API keys and a profile's name. The profile pages (first run "Who's playing?", new and edit profile) do not have an input: they show the name in a labelled `ValuePill`, and **Change name** (D-pad order: avatars, Change name, Create / Save) opens the very same dialog as Rename profile on the profile screen (`openProfileNameDialog`, title "Profile name"; a blank name gets the same toast). Choosing an avatar moves the focus to Change name, accepting the dialog shows the new name and moves the focus on to Create / Save, and Create without a name opens the dialog. The one exception is the settings search, which has its own letter pad next to the field. Every text field in the shell is the one `TextFieldPill` (dialogs and the settings search), built on the `TextFieldState` flavour of `BasicTextField` with `showKeyboardOnFocus` off. **Android's keyboard opens only when the field is activated**: a tap, or A / the D-pad centre key. Moving the focus onto the field (D-pad, stick, or code such as the dialog's first field when it opens) never opens it, and it closes when the focus leaves. After Back / B closes the keyboard the field keeps focus and the keyboard stays closed until the next tap or A. Do not use the `value: String` overload of `BasicTextField` or any other text widget: it starts the input method on every focus, which shows the keyboard. `ShellActivity` also has `windowSoftInputMode="stateHidden|adjustResize"`: `stateHidden` so the keyboard does not come back by itself when the window regains focus, `adjustResize` so the keyboard's inset reaches the app on every API level (the shell is edge to edge, so the window itself is never resized). The stream's own keyboards (Full keyboard, More → Open Android keyboard) are separate and unchanged.
+
+**The keyboard never covers the field being edited: the editing field moves to the top quarter of the screen, regardless of the keyboard.** One mechanism, `ImeAvoidance` in `shell/ui/ImeAvoidance.kt` (no screen has its own `imePadding`). **Only what is marked moves**: `Modifier.moveAboveIme()` is on the dialog column in `DialogLayer` (card, shadow and blur; the scrim, the status bar, the background and the bars stay put). A text field outside such a container (the settings search, which is already high) does not move anything. `TextFieldPill` is *engaged* from A / the D-pad centre key or a tap until the focus leaves it. While it is engaged **and the keyboard is visible**, its mover glides up so the field's bottom edge is at most `EDIT_BAND_BOTTOM_FRACTION` = 0.25 of the window height (0.20 in a portrait window) from the top, with the shared `Motion.GEO_*` spring (a snap with reduced motion); a field already in the band does not move it. The moment the keyboard is hidden (SwiftKey's chevron, Back) the mover glides back to its place, the field keeps the focus, and A or a tap opens the keyboard again and the mover glides up again. "Visible" is the system's flag (`rootWindowInsets.isVisible(ime())`) or any measured keyboard height from the sources below: the flag is reliable where the height is not (the Odin's SwiftKey reports 111 px while it covers 58% of the screen, but the flag follows the keyboard). The band rule never uses the height, because keyboards can be resized, floated, split or switched at any moment and may live in a transparent full-screen window. What moves keeps `TOP_MARGIN` = 48 stage px from the window's top edge (a dialog card never touches or crosses it), and the field wins over that margin: it must end up at or above `EDIT_FLOOR_FRACTION` = 0.40 of the window height in any case, so the shift is `min(band, max(moverTop - TOP_MARGIN, fieldBottom - 0.40 * H))`. On the Odin (1080 px): the Rename profile dialog (card top 324, field 514..598) moves 276 px (card 48 px below the edge, field bottom at 322). A dialog taller than the free area lets its top leave the screen, because the field wins; the buttons may end up behind the keyboard (its Done calls the same `onDone`, and D-pad Down leaves the field and closes it). The keyboard is still measured (Compose's `WindowInsets.ime`, the root window insets, the visible display frame when it lost more than 15% of the window; the largest wins) and the shift is the larger of the band's and the measured one, so a keyboard that is measured to cover more can only push the field higher (that part is capped by the same margin, except for what keeps the field itself above the keyboard); the dialog card is brought in with the field as far as the measured keyboard asks. A layout listener and a 60 ms poll while a field has focus catch a keyboard that shows without an inset event. Places are window pixels measured against the window as it is now, with the mover's own offset left out (the shift is a layout offset, so the node before it keeps its place), so a window that `adjustResize` really shrank is never shifted twice; the stage scale only enters in the margin. Debug builds log every change under the tag `DelosIme` (`adb logcat -s DelosIme`: inset and its visible flag, compose, visible frame, keyboard, engaged, visible, band, window size and whether it was resized, the field's bounds and live top, the shift, `softInputMode`). A new text field needs nothing; new text entry is a new `DialogSpec`. It lives in `Shell` only, so the stream, the stream menu and `ExternalDisplayControlActivity` are untouched. The arithmetic is `ImeShift` (`ImeShiftTest`).
+
 ## Motion
 
 One motion language for the whole UI. It was designed for the stream menu (below) and is now what every screen animates with, so
@@ -325,7 +331,53 @@ one press, one focus and one menu feel the same everywhere. The numbers, easings
   a slider's knob grows on focus, the switch is the stream menu's. *Context menus* grow out of the focused element's corner (or
   under its button), their title and items rise in turn, the focused item fills with a fade. *Side menu*: slides in over 560 ms,
   header and rows rise in turn, leaves in 240 ms. *Dialogs and the filter modal*: settle in from 0.96, title, note, fields and
-  buttons rise in turn, leave in 240 ms. *Toasts* leave in 240 ms.
+  buttons rise in turn, leave in 240 ms. *Toasts* (the console notification): see [Toasts](#toasts).
+
+### Toasts
+
+Every app message is the same **console notification** (approved prototype B: `build/toast-proto`, local scratch), in the shell, over the stream and
+on the external display: `ui/ToastHost.kt`, the one composable, with the pure logic in `ui/ToastLogic.kt`. It sits at the **top right**, 112 stage
+pixels from the top (below the shell's status bar) and 44 from the right edge. Over a stream it covers the game's corner (a mini-map, the
+stats strip); the user accepted that. The card is flat and opaque (`#17223C` → `#0E1628`, radius 20, a faint inset ring), so it stays readable over a
+white game frame; it has **no blur** (the stream is a `SurfaceView`).
+
+- **Kinds**: `INFO` (the palette's cyan, `accent2`), `SUCCESS` (mint), `WARNING` (orange), `ERROR` (coral) and `ACTION` (the palette's indigo, light), each a solid
+  icon block with its icon (info, check circle, warning triangle, exclamation, trash), the word **INFO / DONE / WARNING / ERROR / UNDO** above the text and the
+  kind colour on the glow and the block. Mint, orange and coral are fixed semantic colours; the others follow the palette. A caller passes the kind
+  (`ShellState.showToast(…, kind = ToastKind.ERROR)`, `DelosToast.show(context, text, DelosToast.LONG, ToastKind.WARNING)`); without one it is read from the
+  icon (`Symbols.ERROR` / `WIFI_OFF` / `LINK_OFF` → error, `CHECK_CIRCLE` / `CHECK` → success, `WARNING` → warning, everything else → information; `toastKindFor`),
+  and a toast that carries an action is always `ACTION`. A toast without an icon of its own shows its kind's.
+- **Text**: Figtree 600 at 25 × interface scale (100 / 115 / 130 %), **two lines at most, then an ellipsis** (no marquee: a toast is never focused, and a
+  scrolling line cannot be stopped). The text is at most `min(560, stage width − 360) × scale` wide and the card is as wide as the widest line
+  (measured once per toast). Everything on the card scales with the interface scale; 16:9, 21:9 and 4:3 only change the stage width.
+- **Undo**: a toast with an action shows the gold chip with the white `Y` disc and the label (like the hint glyphs). **Y** on the controller
+  (`GlobalKeys` → `ShellState.runToastAction`) or a tap runs it, as before; the chip squeezes for `PRESS_HOLD` before the card leaves. It exists only in the shell: the
+  stream and controller windows host the card without any input.
+- **Time** (`ToastTiming`, one place): the stream's hints are 4 s (short) and 6.5 s (long), a shell toast 4.5 s, one with an action 10 s. The **gold line** along the
+  bottom edge (one 4 px bar, no track, no glow) is the remaining time: it draws in (`EaseOut` 420 ms from +280) and then drains.
+- **Motion** (the numbers are in `Motion` and `ToastTiming`): the card **springs in** from outside the right edge (damping ratio 0.62, stiffness 150: it first reaches its place after
+  233 ms, overshoots by 8.4 % of the travel at 327 ms and is within 1 % after 627 ms, with a single overshoot) while it grows from 94 % to 100 % around its right edge; it fades over
+  `FADE` (280). Everything else is timed against the landing (`LANDING_MS` 230): the icon block pops from `POP_FROM_PILL` with a 50° turn (`PILL_POP`, `EaseSpring`) at +130, the word, the
+  text and the chip rise `RISE` one `STAGGER_ROW` after the other from +140 (`ROW_IN`), a soft kind-coloured halo (peak 45 % at the edge, reach 36 px) flashes at +230 and settles at 30 % of
+  its peak (`Ease`, 900 ms), one light sweep crosses the card (`EaseOut`, 620 ms from +250) and the timer line draws in from +280. It leaves 72 px to the right and fades in `EXIT`
+  (240 ms, `In`). **A new toast replaces the one on the stage, never a queue**: the old card leaves at once and the new one enters `ROW_DELAY` (120 ms) later, so the two cross; a toast
+  that arrives in that gap replaces the waiting one (it never shows). **Reduced motion**: only the fades remain (no slide, scale, rise, pop, sweep).
+- **Cost**: one clock ticks only while a toast is on the stage (an idle host draws and invalidates nothing); every animated value is read in the draw phase
+  (`graphicsLayer` / `drawBehind`), nothing recomposes per frame. The halo, the drop shadow (peak 30 %, reach 44 px) and the sweep are many-stop eased gradients (four edge strips
+  and four corner quadrants per halo, a smoothstep falloff), built once per toast and faded by the `alpha` of the draw call: smooth at any opacity, no blur, no `Path`, no per-frame allocation.
+- **Accessibility**: the newest card is a live region (polite, assertive for an error) with the kind word and the text (and the Undo label) as its description, so
+  TalkBack announces it although the card can never take focus, touch or key input.
+- **Hosts**: `DelosToast` routes a message to the shell's own state or to a non-interactive decor overlay (`DelosToastOverlay`) in the stream and external-display
+  controller windows; the overlay rejects touch, key and generic-motion dispatch, blocks descendant focus, is padded by the display cutout and sits below the stream-menu dialog.
+  Hosts are weakly registered for their Activity lifecycle, including pending initialization messages; service/helper messages use the visible foreground host. The
+  only system-toast fallback is when no Delos host is visible (`DelosToast`). Closing the separate stream-menu dialog does not remove the stream toast host or discard a result
+  delivered after stream focus returns. **The windows that blur or cover the stream** (the stream menu, the exit) would blur the decor overlay behind them, so each gets a second host as the
+  topmost layer of its own window (`DelosToastOverlay.coverView`; above the tiles, the popover and the statistics strip, sharp, same non-interactive rules): both hosts draw one shared `ToastStage`
+  (slots, start time, clock), only the newest covering window's host is active (`ToastCovers`; it takes over after its first drawn frame, the stream window's host takes over again when it is gone), so the
+  toast carries on without restarting. The controller window has no blurring window.
+- **Preview** (debug builds, `ToastPreview` in `src/debug`): `adb shell am start -n io.github.meitoncz.delos.debug/com.limelight.shell.ShellActivity --es preview_screen toast --es preview_kind <info|success|warning|error|action> [--ei preview_double 1] [--ei preview_long 1]`
+  shows the toast on the drawn game scene (`double`: a second toast 350 ms later, to watch the hand-over; `long`: a message that needs the ellipsis); a tap on the scene or `Y` shows it
+  again, and `Y` is Undo on the `action` toast.
 
 ## Color roles
 
@@ -333,7 +385,7 @@ Color is a seasoning, not a coating: the neutral text and surfaces carry the scr
 the accents about **60 / 25 / 15** by visual weight (`colors.accent`, `accent2`, `accent3`; Delos: gold 40°, cyan 190°,
 indigo 250°, a split complement). Material You derives the same three from the wallpaper (main, +52°, tertiary) and
 follows the same roles. Light themes use darker shades (accent3 is dark there); content on an accent3 fill uses `onAccent3`
-(dark in the dark theme, white in the light one); a toast icon and a cover badge use `accent3OnInverse` / `accent3OnDark`
+(dark in the dark theme, white in the light one); a cover badge uses `accent3OnDark`
 and `accent3Line` is the faint hairline of the palette's third color, all in `ui/Colors.kt`.
 
 - **Text stays neutral**: labels of buttons and hints, titles, kickers and values are white or the grey text colors in
@@ -343,7 +395,7 @@ and `accent3Line` is the faint hairline of the palette's third color, all in `ui
 - `accent2` (secondary, ~25 %): icons of rows in the settings and the stream menu, arrows, the second half of every
   gradient (switch, slider, progress), the check badge of a selected circle, spinners.
 - `accent3` (accent, ~15 %): the cherry on top, small and never text: the dot under the current page in the top bar, the
-  slider halo of the stream menu, the toast icon, the `Running` and cover badge icons, the ring ripple of the portal
+  slider halo of the stream menu, the `Running` and cover badge icons, the ring ripple of the portal
   overlay and the end dot of the launch ring.
 
 The animated backgrounds follow the same weights: the main color about 60 % of the lights, the secondary one a quarter,
@@ -376,6 +428,8 @@ menu in one composable (`StreamMenuRoot`, so a window of its own can host it), t
 (`StreamMenu` implements it with the live `Game`, the debug preview with fake state). The prototype's `#quickmenu` /
 `#qmpop` show the same design; `build/streammenu-proto/b.html` with its screenshots is the specification.
 
+The focus on the dock **wraps** (Right on the last tile goes to the first, Left on the first to the last; the ring glides across the bar like any move); the popover's rows do not wrap.
+
 `StreamMenu` owns every stream-menu entry point, including controller, touch and Back.
 There is no classic dialog fallback. `GameMenu` remains only as the special-key action
 helper and storage constants used by the stream menu and keyboard layouts; it does not
@@ -396,7 +450,10 @@ controller window ownership keep their existing paths.
 
 - **Tiles**: 150 px glass, corner 42, gap 40 (9 × 150 + 8 × 40 = 1670, 125 on each side), the top edge at y 628, icon 64
   (Phosphor, filled on focus), label 24 SemiBold 24 below the tile. Resume, Keyboard, Overlay, Brightness, Bitrate,
-  Upscaler (Supersampling), More, Disconnect, Quit game. Toggles (Overlay, Upscaler) have an **On / Off pill**
+  Upscaler (Supersampling), More, Disconnect, Quit game. The **Keyboard** tile is the Delos Full keyboard (A closes the menu,
+  then toggles it) with the plain keyboard icon (`Symbols.KEYBOARD`, the one of the Settings > Controls rows); it turns accent
+  while the keyboard is up but has **no On / Off pill**. Android's system keyboard is the More row Open Android keyboard.
+  The other toggles (Overlay, Upscaler) have an **On / Off pill**
   (18 bold, 34 high) at the tile's top right corner (right −12, top −14; Overlay says Compact, the Upscaler its status
   word) and turn accent: accent glass and icon, accent pill. **Focus** scales the tile to 1.12 (spring, 420 ms), lights
   its glass, adds a glow and turns the label gold, 8 px lower; one **gold ring** (box 186, corner 56, 4 px, outer glow
@@ -417,16 +474,27 @@ controller window ownership keep their existing paths.
   over a bright picture. A window that can blur its backdrop replaces the undercoat later (`TILE_BACKING_ALPHA`,
   `CARD_BACKING_ALPHA`).
 - **Popover**: a glass card (tint rgba 34/44/84 at 50 %, white gradients, corner 44, shadow 0 40 90 −20) **above its own
-  tile**, centered on the tile and kept between 110 and 1810, its box ending 322 above the stage's bottom edge, with the
+  tile**, centered on the tile and kept 120 from the stage's left and right edges, its box ending 322 above the stage's bottom edge, with the
   **caret** (60 × 24, rounded, ONE path with the card so the glass is continuous) at the tile's center, at least 72 from
   the card's corners. Width per page: Brightness 780, Bitrate 860, Upscaler 980, More and the pages opened from it 920.
-  Padding 40 × 36 (28 below), header 64 (the back circle, focusable, B does the same, and the title in Unbounded 30),
+  Padding 40 × 30 (24 below), header 64 (the back circle, focusable, B does the same, and the title in Unbounded 30),
   rows 72 tall with 8 between them (corner 28, icon 32 in a 56 column, label 24 SemiBold, values 24), a 78 × 44 switch, a
-  240 × 12 slider with a 32 knob, choices between two chevrons. The card is as tall as its content, at most 686; only
-  More (12 rows) and a long list of keys scroll inside, with faded edges. The help of the focused row stands under the
-  rows in a box of two lines (three from interface scale 1.15 up), complete, never scrolling. The Upscaler page, with
-  Supersampling quality and **Save for this game**, fits at every interface scale (a test pins the sum). The pages
-  opened from More (Send keys, Commands, Mouse mode) are anchored over the More tile.
+  240 × 12 slider with a 32 knob, choices between two chevrons. **One margin M = 120** (`POPOVER_MARGIN`) is the card's gap to
+  the left, right and top edges of the stage: it is the gap More (the rightmost popover, 920 wide centered on its tile, its
+  right edge at 1800) always had to the right edge. Every page keeps its content's
+  height up to **one shared maximum**, the space from the card's bottom (734) up to M: 614 (`POPOVER_MAX_HEIGHT`; small
+  pages stay small). Beyond it, the rows scroll inside the card with faded edges (D-pad focus scrolls the focused row into
+  view); the header and the help stay fixed. More (11 rows) and a long list of keys scroll, and the Upscaler page with
+  Supersampling (601.6 tall) only at interface scale above 1.15. The card stays clear of the compact statistics line (bottom edge 61.2, at
+  interface scale 1.3 68.8, by `compactStatsBottom`). The help of the focused row stands under the
+  rows in a box of two lines (three from interface scale 1.15 up), complete, never scrolling. A card pushed against the right
+  edge keeps M there too (the top gap and the side gap are equal) and the caret still points at its tile (the card is
+  clamped, the caret stays inside its corners). The pages
+  opened from More (Send keys, Commands, Mouse mode) are anchored over the More tile. More lists Send keys, Send
+  clipboard, Get clipboard, Commands, Task manager, Zoom, Mouse mode (when allowed), On-screen controls, **Open Android
+  keyboard** (an action: closes the menu, then opens or closes Android's system keyboard), Touch sensitivity and Rumble feel. **Key layout** and
+  **Rotate** are not offered: the key-layout overlay is hidden (its code and preferences stay) and a rotation
+  re-lays out the overlays.
 - **Navigation**: Left/Right move along the tiles. A on a toggle or action tile acts at once; A on Brightness, Bitrate,
   Upscaler or More opens its popover and puts the focus on its first row (the focus cannot leave the popover with the
   D-pad). B in a popover closes it and returns the focus to its tile; Send keys, Commands and Mouse mode are opened from
@@ -449,6 +517,99 @@ controller window ownership keep their existing paths.
   slides in 22 px, a slider's knob grows to 1.18 when focused, a pill that changes pops in from 0.6. With reduced motion
   every transform is dropped: only fades (and colors) remain, the ring and the dock jump, the geometry snaps.
 
+### Full keyboard
+
+The on-screen keyboard over the stream (stream menu → the Keyboard tile, a four-finger tap, the button on the external
+display's control screen) is the approved **Flat console** prototype (`build/fullkeyboard-proto/b.html`, local scratch, with
+its screenshots): a solid bar docked to the bottom edge, flat keys, a hint strip under them. It is one Compose
+layer (`shell/keyboard`: `FullKeyboard`, `FullKeyboardState`, the key table in `FullKeyboardKeys`, the pure logic in
+`FullKeyboardInput`) inside a `ComposeView` that `KeyBoardLayoutController` (still the class `Game` and
+`ExternalDisplayControlActivity` use: `show`, `hide`, `toggleVisibility`, `refreshLayout`, `isKeyboardVisible`, `shown`)
+adds to the stream's layout, bottom-docked and as wide as the layout. It never takes the focus. Where nothing of it is
+drawn nothing is touchable: a finger on the game area goes to the stream even while a key is held.
+
+- **Keys**: the same 80 keys, six rows and weights as the old XML layout (Esc, F1–F12, Ins, Del / ~` 1–0 _- += Back / Tab
+  QWERTY… {[ }] |\ / Caps ASDF… :; "' Enter / Shift ZXCV… <, >. ?/ ↑ Hide / Ctrl Win Alt Space Home End PgUp PgDn ← ↓ →; `FullKeyboardKeysTest`
+  pins them). **The keys show what they type** (`keyLabel`, US layout): letters are lower case, upper case while Shift is held
+  (touch or latched, also X on the controller) or Caps Lock is on (both: lower again); the number row shows `!@#$%^&*()` while
+  Shift is down; the punctuation keys stack their two characters (the other one small above, the typed one below) and Shift swaps
+  them. The labels crossfade (280 ms, no layout change) and update at once when Shift latches, unlatches or the keyboard
+  hides. Caps Lock is tracked by the keyboard (toggled on every press of the Caps key; the host's real state is not readable)
+  and survives hiding; the stream's QWERTY setting only changes the codes sent, not the labels. The popup shows the typed
+  character too. Space is a thin bar, the arrows are drawn strokes, Home/End/PgUp/PgDn
+  have a smaller legend (.8), Hide is the Phosphor close icon (second accent, filled on focus) over "HIDE". Colors come from
+  the theme (the Delos palette gives the prototype's `#131c31`→`#0d1424` bar, `#1f2b46` keys, `#151e35` function and modifier
+  keys, a plum-tinted Hide key); the light theme gets a light bar. Legend: Figtree SemiBold at .38 of the key height.
+- **Look**: key corner 11, gap 6, 12 more around Esc, Ins and Space, bar padding 22 above and 78 below the rows. The
+  **focused** key turns white with a dark legend and the **gold ring** (4 px, 3 px dark gap) around it; **pressed** is the second
+  accent (cyan) with a dark legend and squeezes to .97; **sticky** is solid gold with a bar under the legend (state never
+  relies on color alone). The key popup (white bubble, 1.15 keys tall, 10 above the key, the character typed) shows for
+  character keys only and stays 75 ms after the release. The hint strip says **A Press, B Close, L3 Shift, X Delete, Y Space** (36 px glyph circles, `L3` a
+  two-letter glyph in the same circle, label 22) and "ON-SCREEN KEYBOARD" at its right end (left out when the keys are narrower than
+  1100 px, so the strip stays one line); it only shows while a controller drives the keyboard (touching hides
+  it, the ring and the focused key's white; the next D-pad press brings them back). The stream darkens a little behind the
+  bar (the prototype's `#shade`, 0 to .38 from half the height down).
+- **Size and settings** (stage px; the design is laid out on the 1080-high stage like the rest of the UI): by default the
+  keys span the width less 24 each side, at most 1840, and are 3.65 % of that wide (44 to 68 tall), so 16:9 gives a bar of about
+  half the screen (532 of 1080), 21:9 centers a keyboard of the same width and 4:3 gets smaller keys instead of a taller
+  keyboard. **Virtual Full Keyboard Disable Autofit** (`onscreen_keyboard_autofit`, the setting that turns the fit off) makes the
+  width and height settings apply: **Width** (`seekbar_onscreen_keyboard_width`, dp, 1000 = full width, never wider than the
+  default) is the width of the keys, **Height** (`seekbar_onscreen_keyboard_height`, dp) the height of the whole bar, from which the
+  key height follows (24 to 130); **Align Mode** (`list_onscreen_keyboard_align_mode`) puts the keys left, center or right inside
+  the bar, which stays full width. **Opacity** (`seekbar_keyboard_axi_opacity`) dims the bar, keys and ring together (not the hints,
+  not the popup). **Sticky modifier keys** and **vibration** (`checkbox_vibrate_keyboard`) work as before.
+- **Touch** is what it always was: every key reads its own finger (so Shift + a letter, WASD, chords work), Down sends the key
+  down, up or cancel sends it up, a finger that wanders off its key still holds it until it lifts. With sticky modifiers on, a
+  modifier held 300 ms latches (its release is not sent), touching a latched one releases it. Hide acts on release. Keys
+  go to the host through `KeyBoardLayoutController.sendKeyEvent` → `ActiveKeyboardInput` exactly as before (source 0, haptics
+  on down, release and latch). A physical keyboard keeps typing into the PC; the keyboard never sees it.
+- **Controller** (handheld first): **while the keyboard is up it operates the keyboard and nothing of the controller reaches
+  the game**; the D-pad and the left stick move the focus, **A** presses the focused key (held for as long as A is held; a
+  modifier latches and unlatches, because a controller cannot hold one key while pressing another, whatever the sticky setting
+  says), **B** (and Back) closes it, **L3** (the left stick click) toggles Shift as a latch (Shift down on the host while latched, labels shifted;
+  L3 again releases it; the stick click never moves the focus), **X** types **Backspace** and **Y** **Space** (down on press, up on
+  release, repeating after 350 ms every 100 ms while held, `PAD_REPEAT_DELAY_MS` / `PAD_REPEAT_INTERVAL_MS`; the keyboard repeats them
+  itself and ignores the system's repeats). X and Y go through the same send path as a touch (haptics, popup) and flash the Back
+  and Space keys even when the layout hides them; closing the keyboard lets go of both. Moves are row-aware like the prototype: left/right stay in the row and
+  stop at its ends (the ring nudges 7 px against the edge), up/down go to the key of the next row under the *column* of the last
+  horizontal move, else the nearest (`KeyGrid`, `FullKeyboardInputTest`). The first focus is Q, then the last key. **The D-pad
+  works in both shapes a pad reports it**: as `DPAD_*` key events (the system repeats them) and as the hat axes
+  `AXIS_HAT_X` / `AXIS_HAT_Y` of the joystick motion event, which is what most handhelds (the Odin) send and which never
+  reaches the keys. `DpadTracker` (pure, tested) turns the hat into moves: a newly pressed direction moves at once, a timer
+  repeats the last one after 350 ms every 100 ms until the hat is back at the center, and a device that sends both the hat
+  and the key moves once per press. A, B, X, Y and L3 are the raw Android codes (`BUTTON_A` 96, `BUTTON_B` 97, `BUTTON_X` 99, `BUTTON_Y` 100, `BUTTON_THUMBL` 106), also
+  when a handheld's built-in pad reports them with a plain keyboard source. The
+  controller's other buttons are swallowed. The stream menu's open/close buttons keep working (they are handled first);
+  rumble keeps running. **No stuck input**: `ControllerHandler.setInputSuspended` lets go of everything the physical
+  controllers hold (a neutral packet each) when the keyboard opens and again when it closes, and sends nothing in between (also
+  from the USB driver path); keys the keyboard itself holds are released when it is hidden, and so is **every latched
+  modifier** (Shift, Ctrl, Alt, Win: each gets its key up and the latch is cleared, `ModifierLatch.releaseAll`), whichever way the
+  keyboard closes (B, Hide, the menu toggle, PiP), so nothing stays down on the PC. The interception is `Game.handleKeyDown/handleKeyUp/handleMotionEvent` (`visibleFullKeyboard()`), for
+  controller sources only. On the external display the same hooks work, because `ExternalDisplayControlActivity` already routes
+  the controller's events to `Game`; the keyboard there is the activity's own `KeyBoardLayoutController`.
+- **Motion** (all from `Motion.kt` / `MotionKit.kt`, like the stream menu): the rows **rise** 18 px and fade in, the first after 120 ms,
+  then 46 ms apart, 420 ms each (ease-out); the bar's glass fades in over 336 ms; everything **leaves** in 240 ms (ease-in,
+  no stagger). **Focus** is not a scale here: one **gliding ring** (`GlideRingHost`, 560 ms with the slight overshoot) moves between the
+  keys, follows the keys exactly while they are still rising (900 ms) and appears 560 ms after opening; the ring is drawn over the
+  keys (their neighbours lie closer than the ring is wide: `inFront`) and squeezes with the key under it. **Press** squeezes the key to
+  .97 in 120 ms and holds it 130 ms (a tap is always seen); colors and opacities take 280 ms; the popup settles with the
+  spring in 120 ms. At the keyboard's edge the ring bumps 7 px and returns (the choices' chevron nudge). Reduced motion: only fades.
+- **Visibility** rules are unchanged: the state is kept across rotation and PiP (`hide(true)` / `show()`), `Game.isFullKeyboardShown()` feeds the stream
+  menu's Keyboard tile (the tile is the Delos keyboard; Android's system keyboard is the More row **Open Android keyboard**); a rotation only re-reads the settings (`refreshLayout`), it does not rebuild the keyboard.
+
+#### Full keyboard preview (debug builds)
+
+The real keyboard on the sunset scene, no stream or profile needed (`FullKeyboardPreview` in `src/debug`, a stub in `src/release`):
+
+```
+adb shell am start -n io.github.meitoncz.delos.debug/com.limelight.shell.ShellActivity --es preview_screen full_keyboard \
+  [--ei preview_opacity 0..100] [--es preview_align left|center|right] \
+  [--ez preview_custom_size true --ei preview_height <dp> --ei preview_width <dp>]
+```
+
+Touch, D-pad, left stick, A, B and X work as in a stream; the keys that would go to the PC are listed at the top left. After
+B or the Hide key a tap on the scene opens the keyboard again.
+
 ### Stream menu preview (debug builds)
 
 The real menu can be drawn without a stream, over a sunset "game scene", with made-up values (`FakeStreamMenuHost` in
@@ -456,7 +617,7 @@ The real menu can be drawn without a stream, over a sunset "game scene", with ma
 
 ```
 adb shell am start -n io.github.meitoncz.delos.debug/com.limelight.shell.ShellActivity --es preview_screen stream_menu \
-  --es preview_page <main|upscaler|bitrate|brightness|more|keys|commands|mouse> --ei preview_focus <tile 0..8> \
+  --es preview_page <main|upscaler|bitrate|brightness|more|keys|commands|mouse|rumble> --ei preview_focus <tile 0..8> \
   [--ei preview_row <row of the page to focus>] [--ez preview_animate true]
 ```
 

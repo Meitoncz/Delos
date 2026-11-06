@@ -34,6 +34,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
+import com.limelight.shell.settings.StreamMenuHelp
+import com.limelight.utils.RumblePresets
 import com.limelight.shell.StreamMenuLayout as L
 import com.limelight.shell.StreamMenuMotion as M
 import com.limelight.shell.ui.EaseSpring
@@ -245,7 +247,10 @@ internal fun StreamMenuRoot(
 
     val circles = listOf(
         BarCircleSpec(BarItem.RESUME, Symbols.RESUME, "Resume") { close() },
-        BarCircleSpec(BarItem.KEYBOARD, Symbols.KEYBOARD, "Keyboard") { close { host.toggleKeyboard() } },
+        // The Delos keyboard takes the controller, so the menu closes first. A toggle without a state word: only the accent shows it
+        BarCircleSpec(BarItem.KEYBOARD, Symbols.KEYBOARD, "Keyboard", on = host.fullKeyboardOn, showState = false) {
+            close { host.toggleFullKeyboard() }
+        },
         BarCircleSpec(BarItem.OVERLAY, Symbols.OVERLAY, "Overlay", on = host.overlayOn,
             state = if (!host.overlayOn) "Off" else if (host.overlayCompact) "Compact" else "On") {
             toggle { host.toggleOverlay() }
@@ -258,8 +263,10 @@ internal fun StreamMenuRoot(
         BarCircleSpec(BarItem.DISCONNECT, Symbols.LOGOUT, "Disconnect") { close { host.leave(quit = false) } },
         BarCircleSpec(BarItem.QUIT, Symbols.POWER_SETTINGS_NEW, "Quit game") { close { host.leave(quit = true) } },
     )
+    // A rumble preset the device cannot run, or whose technique failed in the stream, says so in its help line
     fun helpText(key: String): String = helpLineText(
-        streamMenuHelp(key, upscalerStatus, host.upscalerMode, host.mouseMode, host.rememberMouseMode, (host.bitrateResult as? BitrateResult.Failed)?.reason)
+        streamMenuHelp(key, upscalerStatus, host.upscalerMode, host.mouseMode, host.rememberMouseMode, (host.bitrateResult as? BitrateResult.Failed)?.reason) +
+            (StreamMenuHelp.rumblePreset(key)?.let { host.rumbleProblem(it) }?.let { "\nProblem: $it" }.orEmpty())
     )
     val barHelpKey = circleHelpKey(barHelpItem, supersamplingMode)
 
@@ -427,10 +434,9 @@ private fun PageRows(
             MenuRow(Symbols.ZOOM_IN, "Zoom", RowValue.Toggle(host.zoomOn) { toggle { host.toggleZoom() } })
             if (host.allowChangeMouseMode) MenuRow(Symbols.MOUSE, MoreRow.MOUSE, RowValue.Action { openPage(MenuPage.MOUSE) }, entry(MoreRow.MOUSE))
             MenuRow(Symbols.JOYSTICK, "On-screen controls", RowValue.Toggle(host.onscreenControlsOn) { toggle { host.toggleOnscreenControls() } })
-            MenuRow(Symbols.KEYBOARD_FULL, "Full keyboard", RowValue.Action { toggle { host.toggleFullKeyboard() } })
-            MenuRow(Symbols.KEY_LAYOUT, "Key layout", RowValue.Action { toggle { host.toggleKeyLayout() } })
+            MenuRow(Symbols.KEYBOARD, MoreRow.ANDROID_KEYBOARD, RowValue.Action { close { host.toggleSystemKeyboard() } })
             MenuRow(Symbols.TOUCH_APP, "Touch sensitivity", RowValue.Toggle(host.touchSensitivityOn) { toggle { host.toggleTouchSensitivity() } })
-            MenuRow(Symbols.SCREEN_ROTATION, "Rotate", RowValue.Action { close { host.rotate() } })
+            MenuRow(Symbols.VIBRATION, MoreRow.RUMBLE, RowValue.Text(host.rumblePreset?.label ?: "Custom") { openPage(MenuPage.RUMBLE) }, entry(MoreRow.RUMBLE))
         }
         MenuPage.BRIGHTNESS -> MenuRow(
             Symbols.BRIGHTNESS_MEDIUM, "Screen brightness",
@@ -507,6 +513,22 @@ private fun PageRows(
                 )
             } else {
                 PopoverPills(commands, first, command = true) { i -> close { host.runServerCommand(i) } }
+            }
+        }
+        // The laboratory's presets, switched live. A selection applies at once, plays no sample and keeps
+        // the menu open so presets can be compared back to back; B returns to More.
+        MenuPage.RUMBLE -> {
+            val presets = RumblePresets.values()
+            val active = host.rumblePreset
+            // The focus starts on the active preset (on the first one while the preset is Custom)
+            val start = remember { host.rumblePreset ?: presets.first() }
+            presets.forEach { preset ->
+                MenuRow(
+                    Symbols.VIBRATION, preset.label, RowValue.Action { toggle { host.selectRumblePreset(preset) } },
+                    if (preset == start) Modifier.focusRequester(first) else Modifier,
+                    confirmation = if (host.rumbleProblem(preset) != null) "Problem" else if (preset == active) "Active" else null,
+                    help = StreamMenuHelp.rumbleKey(preset),
+                )
             }
         }
     }

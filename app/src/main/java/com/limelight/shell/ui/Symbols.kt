@@ -179,7 +179,6 @@ object Symbols {
     const val AXIS_Y = "\uEB04"
     const val AXIS_SWAP = "\uE098"
     const val KEY_LAYOUT = "\uEC8C"
-    const val KEYBOARD_FULL = "\uEB0A"
     const val TEXT_INPUT = "\uE17A"
     const val SYNTHETIC_INPUT = "\uE40C"
     const val CLIPBOARD_SYNC = "\uE198"

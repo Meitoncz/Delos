@@ -10,6 +10,7 @@ import com.limelight.shell.settings.StartupStore
 import com.limelight.shell.ui.Cue
 import com.limelight.shell.ui.Feedback
 import com.limelight.shell.ui.Symbols
+import com.limelight.utils.ToastKind
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -93,7 +94,7 @@ class ShellDeviceActions(
                     )
                     if (repo.awaitPc(pc.uuid, WAKE_TIMEOUT_MS) { it.online } == null) {
                         feedback.play(Cue.ERROR)
-                        shell.showToast("${pc.name} did not wake up", Symbols.POWER)
+                        shell.showToast("${pc.name} did not wake up", Symbols.POWER, kind = ToastKind.ERROR)
                         return@launch
                     }
                 }
@@ -213,7 +214,7 @@ class ShellDeviceActions(
         scope.launch {
             val error = setup.wake(pc)
             if (error != null) feedback.play(Cue.ERROR)
-            shell.showToast(error ?: "Wake-up signal sent to ${pc.name}", Symbols.POWER)
+            shell.showToast(error ?: "Wake-up signal sent to ${pc.name}", Symbols.POWER, kind = if (error != null) ToastKind.ERROR else ToastKind.INFO)
         }
     }
 
@@ -221,7 +222,7 @@ class ShellDeviceActions(
         scope.launch {
             val (ok, message) = setup.unpair(pc)
             if (!ok) feedback.play(Cue.ERROR)
-            shell.showToast(message, if (ok) Symbols.LINK_OFF else Symbols.ERROR)
+            shell.showToast(message, if (ok) Symbols.LINK_OFF else Symbols.ERROR, kind = if (ok) ToastKind.SUCCESS else ToastKind.ERROR)
         }
     }
 

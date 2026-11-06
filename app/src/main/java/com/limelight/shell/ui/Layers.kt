@@ -3,16 +3,9 @@ package com.limelight.shell.ui
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.border
@@ -30,7 +23,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -43,7 +35,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -68,13 +59,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
 import com.limelight.shell.ContextMenu
-import com.limelight.shell.Toast
 import dev.chrisbanes.haze.HazeInput
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.blur.HazeBlurStyle
 import dev.chrisbanes.haze.blur.HazeColorEffect
 import dev.chrisbanes.haze.blur.hazeBlur
-import kotlinx.coroutines.delay
 
 /**
  * The animated background as a blur source, for glass that stays on (the focused settings row, the top
@@ -333,55 +322,6 @@ fun SideMenuHeader(avatar: @Composable BoxScope.() -> Unit, name: String, status
         Box(Modifier.height(14.px))
     }
 }
-
-/**
- * A toast at the bottom center (`#toast`), hidden after 2.6 s; one with an action ("Undo") stays for
- * [ACTION_TOAST_MS] and runs it on Y of the controller (GlobalKeys) or a tap.
- */
-@Composable
-fun ToastHost(toast: Toast?, onHidden: (Int) -> Unit, onAction: () -> Unit) {
-    val colors = LocalDelosColors.current
-    var shown by remember { mutableStateOf(toast) }
-    if (toast != null) shown = toast
-    LaunchedEffect(toast?.id) {
-        val id = toast?.id ?: return@LaunchedEffect
-        delay(if (toast?.action != null) ACTION_TOAST_MS else 2600)
-        onHidden(id)
-    }
-    Box(Modifier.fillMaxSize().padding(bottom = 120.px), contentAlignment = Alignment.BottomCenter) {
-        AnimatedVisibility(
-            toast != null,
-            enter = fadeIn(tween(Motion.FADE, easing = Motion.Ease)) + slideInVertically(spring(dampingRatio = .6f, stiffness = 400f)) { it / 3 },
-            exit = fadeOut(tween(Motion.EXIT, easing = Motion.Ease)) + slideOutVertically(tween(Motion.EXIT, easing = Motion.In)) { it / 3 },
-        ) {
-            val t = shown ?: return@AnimatedVisibility
-            Row(
-                Modifier.clip(CircleShape).background(colors.text)
-                    .then(if (t.action != null) Modifier.pointerInput(t.id) { detectTapGestures { onAction() } } else Modifier)
-                    .padding(horizontal = 30.px, vertical = 16.px),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.px),
-            ) {
-                if (t.icon != null) Symbol(t.icon, 30.tpx, colors.accent3OnInverse, filled = true)
-                BasicText(t.text, style = TextStyle(color = colors.bg, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 22.tpx))
-                if (t.action != null) {
-                    Row(Modifier.padding(start = 10.px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.px)) {
-                        Box(
-                            Modifier.defaultMinSize(minWidth = 34.px).height(34.px).clip(CircleShape).background(colors.bg).padding(horizontal = 8.px),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            BasicText("Y", style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.ExtraBold, fontSize = 20.tpx))
-                        }
-                        BasicText(t.action.label, style = TextStyle(color = colors.bg, fontFamily = Figtree, fontWeight = FontWeight.ExtraBold, fontSize = 22.tpx))
-                    }
-                }
-            }
-        }
-    }
-}
-
-/** How long a toast with an action stays (the profile deletion lets itself be undone for as long). */
-const val ACTION_TOAST_MS = 10_000L
 
 /** Soft gradient used behind the side menu avatar placeholder. */
 fun avatarBrush(hue: Float): Brush = Brush.linearGradient(listOf(hsl(hue, 80f, 60f), hsl(hue + 40f, 70f, 40f)))

@@ -101,7 +101,7 @@ data class SettingSpec(
         "checkbox_force_device_motion" -> Symbols.DEVICE_MOTION
         "checkbox_enable_joyconfix" -> Symbols.SPORTS_ESPORTS
         "checkbox_gamepad_enable_battery_report" -> Symbols.BATTERY_FULL
-        "checkbox_enable_rumble", "checkbox_vibrate_fallback", "checkbox_vibrate_osc", "checkbox_vibrate_keyboard" -> Symbols.VIBRATION
+        "checkbox_enable_rumble", "list_rumble_feel", "checkbox_vibrate_fallback", "checkbox_vibrate_osc", "checkbox_vibrate_keyboard" -> Symbols.VIBRATION
         "checkbox_enable_device_rumble" -> Symbols.MOBILE_VIBRATE
         "seekbar_vibrate_fallback_strength" -> Symbols.GRAPHIC_EQ
         "mouse_mode_list", "checkbox_enable_touch_sensitivity" -> Symbols.TOUCH_APP
