@@ -260,13 +260,13 @@ private fun ToastCard(
                 drawHalo(shadowHalo, inset, inset + ToastTiming.SHADOW_DROP * m.pxPerStage, size.width - 2f * inset, size.height - 2f * inset, op, fillInside = true)
                 // The glow: one-pixel rings that fade with the eased falloff, so every step differs by less than one 8-bit level: smooth, no blur, no offscreen layer
                 val reachPx = ToastTiming.GLOW_REACH * m.pxPerStage
-                val glowSteps = reachPx.toInt().coerceAtLeast(1)
+                val glowSteps = (reachPx / GLOW_RING).toInt().coerceAtLeast(1)
                 val cardRadius = CARD_RADIUS * m.pxPerU
                 for (i in 1..glowSteps) {
                     val a = (ToastTiming.GLOW_PEAK * ToastTiming.haloFalloff(i / glowSteps.toFloat()) * glow).coerceIn(0f, 1f)
                     if (a < .004f) continue
-                    val o = i - .5f
-                    drawRoundRect(look.fill.copy(alpha = a), Offset(-o, -o), Size(size.width + 2f * o, size.height + 2f * o), CornerRadius(cardRadius + o), style = Stroke(1.1f))
+                    val o = i * GLOW_RING - GLOW_RING / 2f
+                    drawRoundRect(look.fill.copy(alpha = a), Offset(-o, -o), Size(size.width + 2f * o, size.height + 2f * o), CornerRadius(cardRadius + o), style = Stroke(GLOW_RING * 1.1f))
                 }
                 drawRoundRect(look.fill.copy(alpha = .35f * glow), Offset(-m.pxPerStage, -m.pxPerStage), Size(size.width + 2f * m.pxPerStage, size.height + 2f * m.pxPerStage), CornerRadius(CARD_RADIUS * m.pxPerU + m.pxPerStage), style = Stroke(m.pxPerStage))
             }
@@ -426,6 +426,7 @@ private fun DrawScope.drawHalo(h: Halo, left: Float, top: Float, width: Float, h
     drawRect(h.bottomRight, Offset(left + width - r, top + height - r), span, alpha)
 }
 
+private const val GLOW_RING = 2f // px per glow ring: 2 px steps change the opacity by far less than one 8-bit level each, and halve the draw calls
 private const val STOPS = 14
 private const val TIMER_HEIGHT = 4f
 private const val SWEEP_STOPS = 10
