@@ -99,7 +99,7 @@ class ShellActivity : ComponentActivity() {
             results.value = StreamResult.take(intent)
         }
         // Debug builds only: the stream menu, the Full keyboard or a toast with fake state instead of the shell (docs/GUI.md, "Stream menu preview", "Full keyboard", "Toasts")
-        val preview = StreamMenuPreview.from(intent) ?: FullKeyboardPreview.from(intent) ?: ToastPreview.from(intent, shell) ?: SettingsTabsPreview.from(intent)
+        val preview = StreamMenuPreview.from(intent) ?: FullKeyboardPreview.from(intent) ?: ToastPreview.from(intent, shell) ?: SettingsTabsPreview.from(intent) ?: TopMenuPreview.from(intent)
         setContent {
             if (preview != null) ShellTheme(appearance, feedback) {
                 preview()

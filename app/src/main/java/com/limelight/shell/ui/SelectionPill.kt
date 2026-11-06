@@ -2,11 +2,13 @@ package com.limelight.shell.ui
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
@@ -15,21 +17,29 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntOffset
 import kotlin.math.roundToInt
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /** Where the pill of a [SelectionPillHost] goes: the selected tab reports its bounds here. */
@@ -46,11 +56,15 @@ class SelectionPill {
         host = coordinates
     }
 
+    internal fun boundsOf(coordinates: LayoutCoordinates): Rect? {
+        val h = host ?: return null
+        if (!h.isAttached || !coordinates.isAttached) return null
+        return h.localBoundingBoxOf(coordinates, clipBounds = false)
+    }
+
     internal fun report(key: Any, coordinates: LayoutCoordinates) {
-        val h = host ?: return
-        if (!h.isAttached || !coordinates.isAttached) return
+        val bounds = boundsOf(coordinates) ?: return
         holder = key
-        val bounds = h.localBoundingBoxOf(coordinates, clipBounds = false)
         if (bounds != target) target = bounds
     }
 
@@ -80,40 +94,23 @@ fun SelectionPillHost(
     val colors = LocalDelosColors.current
     val reduced = LocalReducedMotion.current
     val state = remember { SelectionPill() }
-    val left = remember { Animatable(0f) }
-    val right = remember { Animatable(0f) }
-    val alpha = remember { Animatable(0f) }
+    val geometry = remember { PillGeometry() }
     val target = state.target
     LaunchedEffect(target) {
         if (target == null) {
-            alpha.snapTo(0f)
+            geometry.alpha.snapTo(0f)
             return@LaunchedEffect
         }
-        if (alpha.value == 0f || reduced) {
-            left.snapTo(target.left)
-            right.snapTo(target.right)
-            alpha.snapTo(1f)
+        geometry.setRow(target)
+        if (geometry.alpha.value == 0f || reduced) {
+            geometry.snapEdges(target)
+            geometry.alpha.snapTo(1f)
             return@LaunchedEffect
         }
-        val rightwards = SelectionPillMotion.travelsRight(left.value, right.value, target.left, target.right)
-        coroutineScope {
-            launch { left.animateTo(target.left, SelectionPillMotion.edgeSpec(leading = !rightwards)) }
-            launch { right.animateTo(target.right, SelectionPillMotion.edgeSpec(leading = rightwards)) }
-        }
+        geometry.glideTo(target)
     }
     Box(modifier.onGloballyPositioned { state.attach(it) }) {
-        Box(
-            Modifier
-                .layout { measurable, _ ->
-                    val a = alpha.value
-                    val w = (right.value - left.value).roundToInt().coerceAtLeast(0)
-                    val h = (state.target?.height ?: 0f).roundToInt()
-                    val placeable = measurable.measure(Constraints.fixed(if (a > 0f) w else 0, if (a > 0f) h else 0))
-                    layout(0, 0) { placeable.place(IntOffset(left.value.roundToInt(), state.target?.top?.roundToInt() ?: 0)) }
-                }
-                .clip(CircleShape)
-                .background(colors.accent),
-        )
+        Box(Modifier.pillBody(geometry, colors.accent))
         Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
             CompositionLocalProvider(LocalSelectionPill provides state) { content() }
         }
@@ -153,4 +150,145 @@ object SelectionPillMotion {
 
     fun edgeSpec(leading: Boolean) =
         spring<Float>(dampingRatio = Motion.GEO_DAMPING, stiffness = stiffness(leading), visibilityThreshold = .25f)
+}
+
+/**
+ * The two edges of a pill (springs), its visibility and the row it travels in. Shared by the [SelectionPillHost] and the
+ * [TransientPillHost]; the values are read in the layout and draw phases only ([pillBody]).
+ */
+@Stable
+class PillGeometry {
+    val left = Animatable(0f)
+    val right = Animatable(0f)
+    val alpha = Animatable(0f)
+    var top by mutableFloatStateOf(0f)
+        private set
+    var height by mutableFloatStateOf(0f)
+        private set
+
+    internal fun setRow(bounds: Rect) {
+        top = bounds.top
+        height = bounds.height
+    }
+
+    internal suspend fun snapEdges(bounds: Rect) {
+        left.snapTo(bounds.left)
+        right.snapTo(bounds.right)
+    }
+
+    /** Both edges to [bounds] with their springs: the one in the direction of travel is the quicker. Returns when both have settled. */
+    internal suspend fun glideTo(bounds: Rect) {
+        val rightwards = SelectionPillMotion.travelsRight(left.value, right.value, bounds.left, bounds.right)
+        coroutineScope {
+            launch { left.animateTo(bounds.left, SelectionPillMotion.edgeSpec(leading = !rightwards)) }
+            launch { right.animateTo(bounds.right, SelectionPillMotion.edgeSpec(leading = rightwards)) }
+        }
+    }
+}
+
+/** The capsule of a pill between its edges; it takes no space in its parent and is not drawn while [PillGeometry.alpha] is 0. */
+internal fun Modifier.pillBody(geometry: PillGeometry, color: Color): Modifier = this
+    .layout { measurable, _ ->
+        val visible = geometry.alpha.value > 0f
+        val w = (geometry.right.value - geometry.left.value).roundToInt().coerceAtLeast(0)
+        val placeable = measurable.measure(Constraints.fixed(if (visible) w else 0, if (visible) geometry.height.roundToInt() else 0))
+        layout(0, 0) { placeable.place(IntOffset(geometry.left.value.roundToInt(), geometry.top.roundToInt())) }
+    }
+    .graphicsLayer { alpha = geometry.alpha.value }
+    .clip(CircleShape)
+    .background(color)
+
+/**
+ * The pill of a [TransientPillHost]: unlike the [SelectionPill] it is not the selected state but a flourish of the focus moving.
+ * A button reports its focus changes with [focusChanged]; when one button loses focus and another gains it at once, the pill
+ * starts at the old button, glides to the new one and fades into [handover] 0 over [Motion.FOCUS]. Focus that enters the host
+ * from outside or leaves it, and reduced motion, show no pill.
+ */
+@Stable
+class TransientPill internal constructor(
+    private val scope: CoroutineScope,
+    private val host: SelectionPill,
+    internal val geometry: PillGeometry,
+) {
+    internal var reduced = false
+    private var lostAt = TransientPillMotion.NONE
+    private var lostBounds: Rect? = null
+    private var moveJob: Job? = null
+    private var hideJob: Job? = null
+
+    /** How much of the focused button's own accent background shows: 0 while the pill covers it, 1 once the pill has faded out. Read while drawing. */
+    fun handover(): Float = 1f - geometry.alpha.value
+
+    /** A button of the host gained or lost focus; [coordinates] are its layout bounds (before any scale). */
+    fun focusChanged(focused: Boolean, coordinates: LayoutCoordinates?, now: Long = System.nanoTime()) {
+        if (!focused) {
+            lostBounds = coordinates?.let(host::boundsOf)
+            lostAt = now
+            // No button gained the focus right after: it left the host, so whatever pill is still on its way goes
+            hideJob?.cancel()
+            hideJob = scope.launch {
+                delay(TransientPillMotion.MOVE_WINDOW_MS * 2)
+                moveJob?.cancel()
+                geometry.alpha.animateTo(0f, tween(Motion.EXIT, easing = Motion.Ease))
+            }
+            return
+        }
+        hideJob?.cancel()
+        val to = coordinates?.let(host::boundsOf)
+        val from = lostBounds
+        val moved = to != null && from != null && !reduced && TransientPillMotion.isMove(lostAt, now)
+        lostAt = TransientPillMotion.NONE
+        lostBounds = null
+        moveJob?.cancel()
+        // Started in the focus event itself (not dispatched): the new button's own background is already handed over when it first draws
+        moveJob = scope.launch(start = CoroutineStart.UNDISPATCHED) {
+            if (!moved || to == null || from == null) {
+                geometry.alpha.snapTo(0f)
+                return@launch
+            }
+            // A pill still on its way (a quick second move) carries on from where it is
+            if (geometry.alpha.value <= 0f) geometry.snapEdges(from)
+            geometry.setRow(to)
+            geometry.alpha.snapTo(1f)
+            geometry.glideTo(to)
+            geometry.alpha.animateTo(0f, tween(Motion.FOCUS, easing = Motion.Ease))
+        }
+    }
+}
+
+val LocalTransientPill = staticCompositionLocalOf<TransientPill?> { null }
+
+/**
+ * A box with a [TransientPill] between its [background] and its [content] (the buttons, see `NavButtonView`): the pill
+ * glides behind the buttons while the focus moves between them and is never drawn at rest.
+ */
+@Composable
+fun TransientPillHost(
+    modifier: Modifier = Modifier,
+    background: @Composable BoxScope.() -> Unit,
+    content: @Composable BoxScope.() -> Unit,
+) {
+    val colors = LocalDelosColors.current
+    val scope = rememberCoroutineScope()
+    val host = remember { SelectionPill() }
+    val geometry = remember { PillGeometry() }
+    val pill = remember { TransientPill(scope, host, geometry) }
+    pill.reduced = LocalReducedMotion.current
+    Box(modifier.onGloballyPositioned { host.attach(it) }) {
+        background()
+        Box(Modifier.pillBody(geometry, colors.accent))
+        CompositionLocalProvider(LocalTransientPill provides pill) { content() }
+    }
+}
+
+/** Which focus changes of a [TransientPillHost] play the pill. */
+object TransientPillMotion {
+    const val NONE = Long.MIN_VALUE
+
+    /** A focus move takes the old button's loss and the new one's gain in one go; a gain later than this is focus coming in from elsewhere. */
+    const val MOVE_WINDOW_MS = 100L
+
+    /** Whether a gain at [gainedAt] follows a loss at [lostAt] (both `System.nanoTime`, [NONE] = no loss) closely enough to be a move between two buttons. */
+    fun isMove(lostAt: Long, gainedAt: Long): Boolean =
+        lostAt != NONE && gainedAt - lostAt in 0..MOVE_WINDOW_MS * 1_000_000L
 }

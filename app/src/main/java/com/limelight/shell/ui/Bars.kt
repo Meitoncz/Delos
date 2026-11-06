@@ -2,6 +2,10 @@ package com.limelight.shell.ui
 
 import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.foundation.layout.fillMaxSize
@@ -200,19 +204,23 @@ private fun PcPill(name: String, online: Boolean) {
 private val ONLINE = androidx.compose.ui.graphics.Color(0xFF3DDC84)
 
 @Composable
-private fun TopNav(buttons: List<NavButton>, modifier: Modifier) {
+internal fun TopNav(buttons: List<NavButton>, modifier: Modifier) {
     val colors = LocalDelosColors.current
     val glass = LocalBackdropHaze.current
-    Box(modifier) {
-        // Frosted glass in its own layer: the pill itself is not clipped, the focused button's glow and
-        // tooltip reach outside it
-        Box(
-            Modifier
-                .matchParentSize()
-                .clip(CircleShape)
-                .then(if (glass != null) Modifier.backdropBlur(glass, 8f, colors.surface) else Modifier.background(colors.surface))
-                .border(1.px, colors.line, CircleShape),
-        )
+    TransientPillHost(
+        modifier,
+        background = {
+            // Frosted glass in its own layer: the pill itself is not clipped, the focused button's glow and
+            // tooltip reach outside it
+            Box(
+                Modifier
+                    .matchParentSize()
+                    .clip(CircleShape)
+                    .then(if (glass != null) Modifier.backdropBlur(glass, 8f, colors.surface) else Modifier.background(colors.surface))
+                    .border(1.px, colors.line, CircleShape),
+            )
+        },
+    ) {
         Row(Modifier.padding(8.px), horizontalArrangement = Arrangement.spacedBy(14.px)) {
             buttons.forEach { NavButtonView(it) }
         }
@@ -222,28 +230,39 @@ private fun TopNav(buttons: List<NavButton>, modifier: Modifier) {
 @Composable
 private fun NavButtonView(button: NavButton) {
     val colors = LocalDelosColors.current
+    val pill = LocalTransientPill.current
+    val reduced = LocalReducedMotion.current
     var focused by remember { mutableStateOf(false) }
+    val position = remember { arrayOfNulls<LayoutCoordinates>(1) }
+    // The icon's colour follows the pill under it (dark while the accent pill is there) instead of switching at once
+    val iconColor by animateColorAsState(
+        when {
+            focused -> colors.onAccent
+            button.current -> colors.accent
+            else -> colors.text2
+        },
+        if (reduced) snap() else tween(Motion.FADE, easing = Motion.Ease), label = "navIcon",
+    )
     Box(contentAlignment = Alignment.TopCenter) {
         Box(
             Modifier
+                // The layout bounds the pill glides between, before the focus scale
+                .onGloballyPositioned { position[0] = it }
                 .focusEffects(
                     onClick = button.onClick, corner = 999f, focusScale = 1.12f, ring = null,
-                    glow = FocusGlow(offsetY = 10f, blur = 30f, spread = -8f), onFocusChange = { focused = it },
+                    glow = FocusGlow(offsetY = 10f, blur = 30f, spread = -8f),
+                    onFocusChange = {
+                        focused = it
+                        pill?.focusChanged(it, position[0])
+                    },
                 )
                 .size(64.px)
                 .clip(CircleShape)
-                .background(if (focused) colors.accent else androidx.compose.ui.graphics.Color.Transparent),
+                // The focused button's accent fill; while the transient pill is on its way to it, the pill is what shows
+                .drawBehind { if (focused) drawRect(colors.accent, alpha = pill?.handover() ?: 1f) },
             contentAlignment = Alignment.Center,
         ) {
-            Symbol(
-                button.icon, 34.tpx,
-                when {
-                    focused -> colors.onAccent
-                    button.current -> colors.accent
-                    else -> colors.text2
-                },
-                filled = focused,
-            )
+            Symbol(button.icon, 34.tpx, iconColor, filled = focused)
             // The page you are on: a small dot in the third color under its icon (the focused button is filled instead)
             if (button.current && !focused) Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 5.px).size(6.px).clip(CircleShape).background(colors.accent3))
         }
