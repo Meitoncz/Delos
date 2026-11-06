@@ -16,11 +16,22 @@ public final class RumbleTranslator {
         public final float lowWeight;
         public final float highWeight;
         public final float smoothing;
+        /** TEMPORARY (#66): how the translated amplitude becomes vibration; AMPLITUDE is the original path. */
+        public final RumbleTechnique technique;
+        /** TEMPORARY (#66): sine frequency of {@link RumbleTechnique#HAPTIC_WAVE}, otherwise 0. */
+        public final int waveHz;
         private final double preciseLowWeight;
         private final double preciseHighWeight;
 
         public Profile(float gain, float curve, int minAmplitude, int kickMs,
                        float lowWeight, float highWeight, float smoothing) {
+            this(gain, curve, minAmplitude, kickMs, lowWeight, highWeight, smoothing,
+                    RumbleTechnique.AMPLITUDE, 0);
+        }
+
+        public Profile(float gain, float curve, int minAmplitude, int kickMs,
+                       float lowWeight, float highWeight, float smoothing,
+                       RumbleTechnique technique, int waveHz) {
             this.gain = gain;
             this.curve = curve;
             this.minAmplitude = minAmplitude;
@@ -28,9 +39,17 @@ public final class RumbleTranslator {
             this.lowWeight = lowWeight;
             this.highWeight = highWeight;
             this.smoothing = smoothing;
+            this.technique = technique;
+            this.waveHz = waveHz;
             // A float preference for .80/.33 must still use the legacy double literals.
             preciseLowWeight = lowWeight == 0.80f ? 0.80 : lowWeight;
             preciseHighWeight = highWeight == 0.33f ? 0.33 : highWeight;
+        }
+
+        /** The same shaping with another technique (advanced edits keep the technique of the selected preset). */
+        public Profile withTechnique(RumbleTechnique technique, int waveHz) {
+            return new Profile(gain, curve, minAmplitude, kickMs, lowWeight, highWeight, smoothing,
+                    technique, waveHz);
         }
     }
 

@@ -524,7 +524,7 @@ private fun PageRows(
                 MenuRow(
                     Symbols.VIBRATION, preset.label, RowValue.Action { toggle { host.selectRumblePreset(preset) } },
                     if (preset == start) Modifier.focusRequester(first) else Modifier,
-                    confirmation = if (preset == active) "Active" else null,
+                    confirmation = if (preset == active) "Active" else if (host.rumbleUnavailable(preset) != null) "Not supported" else null,
                     help = StreamMenuHelp.rumbleKey(preset),
                 )
             }

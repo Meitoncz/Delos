@@ -79,6 +79,7 @@ import com.limelight.shell.ui.px
 import com.limelight.shell.ui.tpx
 import com.limelight.utils.DeviceUtils
 import com.limelight.utils.DeviceVibrator
+import com.limelight.utils.RumbleCapabilities
 import com.limelight.utils.RumblePlayback
 import com.limelight.utils.RumblePreferences
 import com.limelight.utils.RumblePresets
@@ -134,6 +135,8 @@ fun DebugInfoScreen() {
     var patternName by remember { mutableStateOf<String?>(null) }
     var patternRun by remember { mutableIntStateOf(0) }
     var amplitude by remember { mutableIntStateOf(0) }
+    val capabilities = remember { RumbleCapabilities.get(context) }
+    var fallbackReason by remember { mutableStateOf<String?>(null) }
 
     fun stopLab() {
         patternRun++
@@ -153,8 +156,10 @@ fun DebugInfoScreen() {
         gamepads().forEach { DeviceVibrator.get(it)?.cancel() }
     }
 
-    fun updateProfile(updated: RumbleTranslator.Profile) {
+    fun updateProfile(edited: RumbleTranslator.Profile) {
         stopLab()
+        // TEMPORARY (#66): an advanced edit keeps the technique of the selected preset
+        val updated = edited.withTechnique(profile.technique, profile.waveHz)
         profile = updated
         activePreset = null
         RumblePreferences.saveCustom(preferences, updated, translatorEnabled)
@@ -195,6 +200,7 @@ fun DebugInfoScreen() {
         if (activePlayback != null) {
             while (isActive) {
                 amplitude = activePlayback.lastAmplitude
+                fallbackReason = activePlayback.fallbackReason
                 delay(16)
             }
         }
@@ -233,6 +239,22 @@ fun DebugInfoScreen() {
             "The manufacturer and model.", "Board: ${Build.BOARD}\nHardware: ${Build.HARDWARE}\nSoC: ${if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) "${Build.SOC_MANUFACTURER} ${Build.SOC_MODEL}" else "unknown"}\nBuild: ${Build.DISPLAY}"))
         add(DebugRow("motor", "Device", Symbols.VIBRATION, "Vibration motor", RowValue.Info(if (hasMotor) "Yes" else "No"),
             if (hasMotor) "This device can vibrate." else "This device has no vibration motor."))
+        // TEMPORARY (#66): why an experimental preset is unavailable
+        add(DebugRow("cap_vibrators", "Device haptic capabilities", Symbols.VIBRATION, "Vibrators",
+            RowValue.Info(if (capabilities.vibratorCount == 1) "1 (single)" else "${capabilities.vibratorCount}"),
+            "How many vibrators the system reports. One means every preset drives the same motor."))
+        add(DebugRow("cap_amplitude", "Device haptic capabilities", Symbols.TUNE, "Amplitude control",
+            RowValue.Info(if (capabilities.amplitudeControl) "Yes" else "No"), "Whether the vibrator can change its strength."))
+        add(DebugRow("cap_primitives", "Device haptic capabilities", Symbols.GRAPHIC_EQ, "Primitives",
+            RowValue.Info(if (capabilities.thud && capabilities.lowTick) "THUD, LOW_TICK ok" else "THUD ${if (capabilities.thud) "ok" else "no"}, LOW_TICK ${if (capabilities.lowTick) "ok" else "no"}"),
+            "Which manufacturer vibration primitives are supported; the Thud and Low tick presets need them.",
+            "Supported: ${capabilities.supportedPrimitives}"))
+        add(DebugRow("cap_haptic_audio", "Device haptic capabilities", Symbols.GRAPHIC_EQ, "Haptic audio channel",
+            RowValue.Info(if (capabilities.hapticPlayback) "Yes" else "No"),
+            "Whether audio with a haptic channel can drive the vibrator; the Deep wave presets need it."))
+        add(DebugRow("cap_wave_status", "Device haptic capabilities", Symbols.INFO, "Last Deep wave / primitive run",
+            RowValue.Info(fallbackReason ?: "OK"),
+            "Shows when the last played preset had to fall back to the plain amplitude path, and why."))
         add(DebugRow("vibrate_once", "Vibration test", Symbols.MOBILE_VIBRATE, "Vibrate once", RowValue.Action {
             stopAll()
             device?.let { DeviceVibrator.vibrateOnce(it, 1000) }
@@ -248,6 +270,12 @@ fun DebugInfoScreen() {
             "Select a preset below to save it and immediately play the Test sample.",
             "Mode: $modeName\nAdvanced edits are saved as Custom, even if the values match a preset."))
         RumblePresets.values().forEach { preset ->
+            val unavailable = capabilities.unavailableReason(preset.profile.technique)
+            if (unavailable != null) {
+                add(DebugRow("rumble_preset_${preset.name}", "Rumble laboratory", Symbols.VIBRATION, preset.label,
+                    RowValue.Info("Not supported"), "${preset.description} Unavailable: $unavailable.", unavailable))
+                return@forEach
+            }
             add(DebugRow("rumble_preset_${preset.name}", "Rumble laboratory", Symbols.VIBRATION, preset.label,
                 RowValue.Text(if (activePreset == preset) "Active" else "Select") {
                     RumblePreferences.applyPreset(preferences, preset)

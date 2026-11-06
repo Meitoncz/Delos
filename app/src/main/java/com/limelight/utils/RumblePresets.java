@@ -21,7 +21,23 @@ public enum RumblePresets {
     KICK_ONLY("Kick only", "Keep the original response after a full-strength start kick.",
             true, new RumbleTranslator.Profile(1f, 1f, 0, 100, .80f, .33f, 0f)),
     EVERYTHING_FELT("Everything felt", "Lift all nonzero requests to a high floor with a brief start kick.",
-            true, new RumbleTranslator.Profile(1f, .6f, 220, 50, .80f, .40f, 0f));
+            true, new RumbleTranslator.Profile(1f, .6f, 220, 50, .80f, .40f, 0f)),
+    // TEMPORARY (#66): experimental techniques 11-15. They share one shaping (low motor first, weak requests lifted)
+    // so only the technique differs between them.
+    THUD("Thud", "Repeated manufacturer THUD primitives; a stronger request is a louder, faster thud.",
+            true, experimental(RumbleTechnique.PRIMITIVE_THUD, 0)),
+    LOW_TICK("Low tick", "Repeated manufacturer LOW_TICK primitives; a stronger request is a firmer, faster tick.",
+            true, experimental(RumbleTechnique.PRIMITIVE_LOW_TICK, 0)),
+    DEEP_WAVE_40("Deep wave 40 Hz", "Our own 40 Hz sine on the haptic audio channel: the deepest, slowest hum.",
+            true, experimental(RumbleTechnique.HAPTIC_WAVE, 40)),
+    DEEP_WAVE_60("Deep wave 60 Hz", "Our own 60 Hz sine on the haptic audio channel: a deep, solid hum.",
+            true, experimental(RumbleTechnique.HAPTIC_WAVE, 60)),
+    DEEP_WAVE_80("Deep wave 80 Hz", "Our own 80 Hz sine on the haptic audio channel: a deep but tighter hum.",
+            true, experimental(RumbleTechnique.HAPTIC_WAVE, 80));
+
+    private static RumbleTranslator.Profile experimental(RumbleTechnique technique, int waveHz) {
+        return new RumbleTranslator.Profile(1f, .8f, 50, 0, 1f, .35f, 0f, technique, waveHz);
+    }
 
     public final String label;
     public final String description;

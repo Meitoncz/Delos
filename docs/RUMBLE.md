@@ -17,7 +17,7 @@ a per-game override. It also affects external pads using those Android paths whe
 ## Switching presets in a running stream (TEMPORARY, #66)
 
 To compare presets in a real game, open the stream menu (**More** tile), scroll to the last row,
-**Rumble preset** (it shows the active name), and press A. The page lists the same ten presets;
+**Rumble preset** (it shows the active name), and press A. The page lists the same fifteen presets (an experimental one the hardware cannot run is marked **Not supported** and does nothing);
 A on one applies and saves it exactly like the laboratory (same `RumblePreferences.applyPreset`), marks it
 **Active**, plays no sample and leaves the menu open so presets can be tried back to back. B returns to More.
 `ControllerHandler` follows `PreferenceConfiguration.rumbleTranslatorEnabled`/`rumbleProfile` at every rumble
@@ -49,6 +49,30 @@ original parameter values. **Current preset** and the **Active** marker identify
 | Gentle | Less force and softer weak requests | 0.7 | 1.3 | 0 | 0 | 0.80 / 0.33 | 0 |
 | Kick only | Original response after a strong start kick | 1.0 | 1.0 | 0 | 100 | 0.80 / 0.33 | 0 |
 | Everything felt | High floor and a brief kick for nonzero input | 1.0 | 0.6 | 220 | 50 | 0.80 / 0.40 | 0 |
+
+### Experimental techniques 11-15 (TEMPORARY, #66)
+
+The Odin 2 Portal Max has **one** vibrator with amplitude control, composition effects and external control, but no
+frequency control, so presets 1-10 (amplitude only) all share the same high buzz. Presets 11-15 change the
+*technique*. All five use gain 1.0, curve 0.8, floor 50, no kick, low/high weight 1.00 / 0.35, no smoothing; only the
+technique differs. They apply to the single-vibrator path (the Odin); dual/quad vibrators keep the amplitude path.
+
+| # | Preset | Technique | What to listen/feel for |
+| --- | --- | --- | --- |
+| 11 | Thud | Repeated `PRIMITIVE_THUD` compositions; scale = translated amplitude / 255; repeats every 100 ms (weak) to 60 ms (strong) while the rumble is held, stops at zero | Distinct dull thumps instead of a buzz; stronger requests are harder and faster |
+| 12 | Low tick | Same with `PRIMITIVE_LOW_TICK`, 70 ms (weak) to 40 ms (strong) | Lighter, lower ticks; a rattle-like texture |
+| 13 | Deep wave 40 Hz | `EXTERNAL_CONTROL`: our own 40 Hz sine (4 ms attack, 20 ms decay, amplitude = translated amplitude) written to the haptic channel of an `AudioTrack` (`CHANNEL_OUT_HAPTIC_A`, `USAGE_GAME`, haptic channels unmuted) | Deepest, slowest hum, felt more than heard; may be weak on a small motor |
+| 14 | Deep wave 60 Hz | Same at 60 Hz | A solid deep hum; the likely PXPlay-like candidate |
+| 15 | Deep wave 80 Hz | Same at 80 Hz | Deep but tighter and more present |
+
+The wave tracks play **no audio**: the audio channel(s) of the track are written as zeros, only the haptic channel carries the
+sine. The track is created at the first nonzero rumble, parks while the rumble is zero, and is released when the preset
+changes, the stream ends, the controller handler stops or the lab screen is left.
+
+**Unsupported devices:** the lab's **Device haptic capabilities** block lists the vibrator count, amplitude control, the supported
+primitives (`Vibrator.areAllPrimitivesSupported`) and `AudioManager.isHapticPlaybackSupported`. A preset whose technique the device
+lacks is shown as *Not supported* with the reason (and the same in the stream menu) and cannot be selected. If a track still fails
+at run time, that output falls back to the plain amplitude path and the block's last row says why; nothing crashes or stays silent.
 
 The names describe the intent, not a guarantee: a floor of 140 or 170 is below the
 previously observed Odin interface-haptic threshold of about 220/255, and may still

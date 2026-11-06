@@ -12,6 +12,8 @@ public final class RumblePreferences {
     public static final String LOW_WEIGHT = "pref_rumble_low_weight";
     public static final String HIGH_WEIGHT = "pref_rumble_high_weight";
     public static final String SMOOTHING = "pref_rumble_smoothing";
+    public static final String TECHNIQUE = "pref_rumble_technique";
+    public static final String WAVE_HZ = "pref_rumble_wave_hz";
     public static final String PRESET = "pref_rumble_preset";
     private static final String CUSTOM = "CUSTOM";
 
@@ -26,7 +28,8 @@ public final class RumblePreferences {
                 prefs.getFloat(GAIN, 1f), prefs.getFloat(CURVE, 1f),
                 prefs.getInt(MIN_AMPLITUDE, 0), prefs.getInt(KICK_MS, 0),
                 prefs.getFloat(LOW_WEIGHT, .80f), prefs.getFloat(HIGH_WEIGHT, .33f),
-                prefs.getFloat(SMOOTHING, 0f));
+                prefs.getFloat(SMOOTHING, 0f),
+                RumbleTechnique.fromName(prefs.getString(TECHNIQUE, null)), prefs.getInt(WAVE_HZ, 0));
     }
 
     /** Saves the entire selection in one editor so listeners never see a partial preset. */
@@ -50,6 +53,8 @@ public final class RumblePreferences {
                 .putFloat(LOW_WEIGHT, profile.lowWeight)
                 .putFloat(HIGH_WEIGHT, profile.highWeight)
                 .putFloat(SMOOTHING, profile.smoothing)
+                .putString(TECHNIQUE, profile.technique.name())
+                .putInt(WAVE_HZ, profile.waveHz)
                 .putBoolean(ENABLED, enabled)
                 .putString(PRESET, identity)
                 .apply();
@@ -82,6 +87,8 @@ public final class RumblePreferences {
                 && prefs.getInt(KICK_MS, 0) == expected.kickMs
                 && prefs.getFloat(LOW_WEIGHT, .80f) == expected.lowWeight
                 && prefs.getFloat(HIGH_WEIGHT, .33f) == expected.highWeight
-                && prefs.getFloat(SMOOTHING, 0f) == expected.smoothing ? preset : null;
+                && prefs.getFloat(SMOOTHING, 0f) == expected.smoothing
+                && RumbleTechnique.fromName(prefs.getString(TECHNIQUE, null)) == expected.technique
+                && prefs.getInt(WAVE_HZ, 0) == expected.waveHz ? preset : null;
     }
 }

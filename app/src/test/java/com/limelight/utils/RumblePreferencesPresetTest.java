@@ -101,6 +101,28 @@ public class RumblePreferencesPresetTest {
     }
 
     @Test
+    public void techniqueAndWaveHzPersistAndAStaleTechniqueIsRejected() {
+        RumblePreferences.applyPreset(prefs, RumblePresets.DEEP_WAVE_60);
+        SharedPreferences reloaded = reloadSavedValues();
+        assertSame(RumblePresets.DEEP_WAVE_60, RumblePreferences.activePreset(reloaded));
+        assertEquals(RumbleTechnique.HAPTIC_WAVE, RumblePreferences.readProfile(reloaded).technique);
+        assertEquals(60, RumblePreferences.readProfile(reloaded).waveHz);
+        prefs.edit().putInt(RumblePreferences.WAVE_HZ, 40).commit();
+        assertNull(RumblePreferences.activePreset(prefs));
+        prefs.edit().putInt(RumblePreferences.WAVE_HZ, 60)
+                .putString(RumblePreferences.TECHNIQUE, RumbleTechnique.AMPLITUDE.name()).commit();
+        assertNull(RumblePreferences.activePreset(prefs));
+    }
+
+    @Test
+    public void profilesSavedBeforeTechniquesExistStayOnTheAmplitudePath() {
+        RumblePreferences.applyPreset(prefs, RumblePresets.STRONGER);
+        prefs.edit().remove(RumblePreferences.TECHNIQUE).remove(RumblePreferences.WAVE_HZ).commit();
+        assertSame(RumblePresets.STRONGER, RumblePreferences.activePreset(prefs));
+        assertEquals(RumbleTechnique.AMPLITUDE, RumblePreferences.readProfile(prefs).technique);
+    }
+
+    @Test
     public void everyAdvancedParameterEditAndEnableEditPersistsAsCustom() {
         RumbleTranslator.Profile p = RumblePresets.STRONGER.profile;
         RumbleTranslator.Profile[] edits = {
@@ -205,5 +227,7 @@ public class RumblePreferencesPresetTest {
         assertEquals(expected.lowWeight, actual.lowWeight, 0f);
         assertEquals(expected.highWeight, actual.highWeight, 0f);
         assertEquals(expected.smoothing, actual.smoothing, 0f);
+        assertEquals(expected.technique, actual.technique);
+        assertEquals(expected.waveHz, actual.waveHz);
     }
 }

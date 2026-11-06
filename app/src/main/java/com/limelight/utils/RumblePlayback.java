@@ -2,6 +2,7 @@ package com.limelight.utils;
 
 import android.annotation.TargetApi;
 import android.media.AudioAttributes;
+import android.media.AudioManager;
 import android.os.Build;
 import android.os.CombinedVibration;
 import android.os.Handler;
@@ -30,6 +31,8 @@ public final class RumblePlayback {
     private long scheduledAt = Long.MAX_VALUE;
     private boolean stopped;
     private volatile int lastAmplitude;
+    // TEMPORARY (#66): why the selected technique fell back to the plain amplitude path, or null while it works.
+    private volatile String fallbackReason;
 
     public RumblePlayback(RumbleTranslator.Profile profile) {
         this.profile = profile;
@@ -49,6 +52,11 @@ public final class RumblePlayback {
     /** Maximum translated amplitude of the most recently updated hardware output. */
     public int getLastAmplitude() {
         return lastAmplitude;
+    }
+
+    /** TEMPORARY (#66): null while the profile's technique runs; otherwise why the plain amplitude path is used. */
+    public String getFallbackReason() {
+        return fallbackReason;
     }
 
     public synchronized void single(Vibrator vibrator, short low, short high) {
@@ -203,17 +211,45 @@ public final class RumblePlayback {
         final RumbleTranslator.State state = new RumbleTranslator.State();
         final long[] pwm = new long[3];
         final boolean amplitudeControl;
+        // TEMPORARY (#66): the technique in effect; the requested one, or AMPLITUDE when this device cannot do it.
+        final RumbleTechnique technique;
+        HapticWaveOutput wave;
+        boolean waveBroken;
+        long nextPulseMs;
         int low;
         int high;
 
         SingleOutput(Vibrator vibrator) {
             this.vibrator = vibrator;
             amplitudeControl = vibrator.hasAmplitudeControl();
+            RumbleTechnique requested = profile.technique;
+            technique = canRun(requested, vibrator) ? requested : RumbleTechnique.AMPLITUDE;
+            if (technique != requested) {
+                fallbackReason = "unsupported, using plain amplitude";
+            }
+        }
+
+        private boolean canRun(RumbleTechnique requested, Vibrator vibrator) {
+            if (requested.isPrimitive()) {
+                return RumbleCapabilities.supportsPrimitive(vibrator, requested);
+            }
+            if (requested == RumbleTechnique.HAPTIC_WAVE) {
+                return profile.waveHz > 0 && AudioManager.isHapticPlaybackSupported();
+            }
+            return true;
         }
 
         @Override
         void update(long nowMs, boolean hostEvent) {
             int amplitude = RumbleTranslator.single(low, high, profile, state, nowMs);
+            if (technique.isPrimitive()) {
+                pulse(amplitude, nowMs);
+                return;
+            }
+            if (technique == RumbleTechnique.HAPTIC_WAVE && driveWave(amplitude)) {
+                maximum = amplitude;
+                return;
+            }
             if (!hostEvent && amplitude == maximum) {
                 return;
             }
@@ -243,15 +279,79 @@ public final class RumblePlayback {
             }
         }
 
+        /** TEMPORARY (#66): one primitive per interval while held; host events in between only update the amplitude. */
+        @TargetApi(31)
+        private void pulse(int amplitude, long nowMs) {
+            maximum = amplitude;
+            if (amplitude == 0) {
+                vibrator.cancel();
+                nextPulseMs = 0;
+                return;
+            }
+            if (nowMs < nextPulseMs) {
+                return;
+            }
+            VibrationEffect effect = VibrationEffect.startComposition()
+                    .addPrimitive(RumbleCapabilities.primitiveId(technique), RumbleHaptics.primitiveScale(amplitude))
+                    .compose();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                vibrator.vibrate(effect, vibrationAttributes);
+            }
+            else {
+                vibrator.vibrate(effect, audioAttributes);
+            }
+            nextPulseMs = nowMs + RumbleHaptics.primitiveIntervalMs(technique, amplitude);
+        }
+
+        /** TEMPORARY (#66): feeds the haptic wave; false means the plain amplitude path must handle this update. */
+        private boolean driveWave(int amplitude) {
+            if (wave != null && wave.isFailed()) {
+                wave.close();
+                wave = null;
+                waveBroken = true;
+                fallbackReason = "haptic track failed, using plain amplitude";
+            }
+            if (amplitude == 0) {
+                if (wave == null) {
+                    return false;
+                }
+                wave.setAmplitude(0);
+                return true;
+            }
+            if (wave == null && !waveBroken) {
+                try {
+                    wave = new HapticWaveOutput(profile.waveHz);
+                }
+                catch (RuntimeException e) {
+                    waveBroken = true;
+                    fallbackReason = e.getMessage() + ", using plain amplitude";
+                }
+            }
+            if (wave == null) {
+                return false;
+            }
+            wave.setAmplitude(amplitude);
+            return true;
+        }
+
         @Override
         long delay(long nowMs) {
-            return state.nextUpdateDelay(nowMs);
+            long delay = state.nextUpdateDelay(nowMs);
+            if (nextPulseMs != 0) {
+                delay = Math.min(delay, Math.max(0, nextPulseMs - nowMs));
+            }
+            return delay;
         }
 
         @Override
         void cancel() {
             state.reset();
             vibrator.cancel();
+            if (wave != null) {
+                wave.close();
+                wave = null;
+            }
+            nextPulseMs = 0;
             maximum = 0;
         }
     }

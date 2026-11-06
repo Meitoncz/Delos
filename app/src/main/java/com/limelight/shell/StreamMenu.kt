@@ -40,6 +40,7 @@ import com.limelight.shell.ui.delosColors
 import com.limelight.shell.ui.systemAccentHue
 import com.limelight.utils.ExternalDisplayControlActivity
 import com.limelight.utils.RumblePreferences
+import com.limelight.utils.RumbleCapabilities
 import com.limelight.utils.RumblePresets
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
@@ -376,7 +377,10 @@ class StreamMenu(private val game: Game) {
         // stream's ControllerHandler reads prefConfig at every rumble event, so the next event uses the new preset.
         private val rumbleSettings by lazy { ProfileStore.currentSettings(game) }
         override val rumblePreset get() = RumblePreferences.activePreset(rumbleSettings)
+        override fun rumbleUnavailable(preset: RumblePresets) =
+            RumbleCapabilities.get(game).unavailableReason(preset.profile.technique)
         override fun selectRumblePreset(preset: RumblePresets) {
+            if (rumbleUnavailable(preset) != null) return
             RumblePreferences.applyPreset(rumbleSettings, preset)
             prefs.rumbleProfile = preset.profile
             prefs.rumbleTranslatorEnabled = preset.enabled

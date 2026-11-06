@@ -85,6 +85,9 @@ internal interface StreamMenuHost {
     /** The active preset, or null for Custom (parameters edited in the laboratory). */
     val rumblePreset: RumblePresets?
 
+    /** Why [preset] cannot run on this device (an experimental technique the hardware lacks), or null when it can. */
+    fun rumbleUnavailable(preset: RumblePresets): String? = null
+
     /** Saves [preset] like the laboratory does and applies it to the running stream at once; no sample is played. */
     fun selectRumblePreset(preset: RumblePresets)
 
