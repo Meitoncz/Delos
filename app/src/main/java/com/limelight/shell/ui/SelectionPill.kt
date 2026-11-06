@@ -2,6 +2,7 @@ package com.limelight.shell.ui
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
@@ -64,7 +65,7 @@ class SelectionPill {
 val LocalSelectionPill = staticCompositionLocalOf<SelectionPill?> { null }
 
 /**
- * A row of tabs with one frosted pill behind the selected tab that glides to the next selected one instead of switching
+ * A row of tabs with one accent pill (`colors.accent`) behind the selected tab that glides to the next selected one instead of switching
  * statically. The pill's two edges are two springs ([Motion.GEO_STIFFNESS], [Motion.GEO_DAMPING], the geometry spring of
  * the rest of the app); the edge in the direction of travel is quicker, so the pill stretches over the gap between the old and
  * the new tab and squashes into the new one: it follows the new tab's width as well as its position. The first tab is
@@ -111,7 +112,7 @@ fun SelectionPillHost(
                     layout(0, 0) { placeable.place(IntOffset(left.value.roundToInt(), state.target?.top?.roundToInt() ?: 0)) }
                 }
                 .clip(CircleShape)
-                .glass(colors.surface2),
+                .background(colors.accent),
         )
         Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
             CompositionLocalProvider(LocalSelectionPill provides state) { content() }
@@ -120,8 +121,8 @@ fun SelectionPillHost(
 }
 
 /**
- * Marks a tab of a [SelectionPillHost]: while it is [selected] the pill glides to it. Put it before the tab's `focusEffects`
- * (so its bounds are those of the layout, not of the focus scale). Does nothing outside a host.
+ * Marks a tab of a [SelectionPillHost]: while it is [selected] the pill glides to it. Put it before any scale or other
+ * transform on the tab (so its bounds are those of the layout, not of the press squeeze). Does nothing outside a host.
  */
 @Composable
 fun Modifier.selectionPillTarget(selected: Boolean): Modifier {

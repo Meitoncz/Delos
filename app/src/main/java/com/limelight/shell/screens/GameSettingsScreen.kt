@@ -6,7 +6,6 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -85,7 +84,7 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
     }
     val custom = remember(game, overrideVersion) { game.overrides().keys }
     val first = remember(tab, game) { FocusRequester() }
-    val transfer = remember { FocusRequester() }
+    val transfer = rememberFocusTransfer()
     val window = LocalWindowInfo.current
     val scroll = remember(tab) { LazyListState() }
     val stage = LocalStage.current
@@ -93,7 +92,7 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
     val bringIntoView = remember(k) { MarginBringIntoView(before = 72f * k, after = 110f * k) }
     fun changeTab(next: Int) {
         if (next == tab) return
-        transfer.requestFocus()
+        transfer.request()
         tab = next
     }
     DisposableEffect(shell, tab) {
@@ -121,7 +120,7 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
     val art = appArt(screen.pc, screen.app)
     val bottom = SettingsLayout.bottom(appearance)
     Box(Modifier.fillMaxSize()) {
-        Box(Modifier.size(0.px).focusRequester(transfer).focusable())
+        FocusTransferTarget(transfer)
         // The title, tab row and list sit exactly where the global settings put theirs. The game and the
         // status chip share the title's line, to the right of it.
         Row(Modifier.offset(SettingsLayout.TITLE_X.px, SettingsLayout.TITLE_Y.px).width((1920f - 2 * SettingsLayout.TITLE_X).px),

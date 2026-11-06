@@ -13,7 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -35,8 +34,8 @@ import kotlinx.coroutines.delay
 /**
  * Debug builds only: the settings category tabs with their gliding pill on a plain background, started with
  * `adb shell am start -n io.github.meitoncz.delos.debug/com.limelight.shell.ShellActivity --es preview_screen settings_tabs`
- * and optionally `--ez preview_auto true` (steps to the next tab every 1.2 s, wrapping). D-pad / stick left and right (or L1 / R1)
- * step through the tabs with wrap-around, a tap selects one (docs/GUI.md, "Settings tabs").
+ * and optionally `--ez preview_auto true` (steps to the next tab every 1.2 s, wrapping). L1 / R1 step through the tabs with
+ * wrap-around and a tap selects one; the D-pad and the stick do nothing, the tabs are touch only (docs/GUI.md, "Settings tabs").
  */
 internal object SettingsTabsPreview {
     fun from(intent: Intent): (@Composable () -> Unit)? {
@@ -63,21 +62,19 @@ internal object SettingsTabsPreview {
             .onKeyEvent { e ->
                 if (e.type != KeyEventType.KeyDown) return@onKeyEvent false
                 val step = when (e.key) {
-                    Key.DirectionLeft, Key.ButtonL1 -> -1
-                    Key.DirectionRight, Key.ButtonR1 -> 1
+                    Key.ButtonL1 -> -1
+                    Key.ButtonR1 -> 1
                     else -> return@onKeyEvent false
                 }
                 index = (index + step + tabs.size) % tabs.size
                 true
             }) {
-            CompositionLocalProvider(LocalFocusTracker provides remember { FocusTracker() }) {
             SelectionPillHost(Modifier.offset(y = 206.px).fillMaxWidth().height(66.px)) {
                 ShoulderLabel("L1")
                 tabs.forEachIndexed { i, tab ->
                     TabPill(tab.icon, tab.label, i == index, Modifier.padding(horizontal = 5.px)) { index = i }
                 }
                 ShoulderLabel("R1")
-            }
             }
         }
     }

@@ -5,7 +5,6 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
-import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -72,8 +71,17 @@ import com.limelight.shell.settings.StreamSettingsStore
 import com.limelight.shell.ui.Cue
 import com.limelight.shell.ui.AutoScrollingHelp
 import com.limelight.shell.ui.Figtree
-import com.limelight.shell.ui.FocusGlow
-import com.limelight.shell.ui.FocusRing
+import com.limelight.shell.ui.FocusTransferTarget
+import com.limelight.shell.ui.animateFocusScale
+import com.limelight.shell.ui.rememberFocusTransfer
+import com.limelight.shell.ui.rememberPressPulse
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import com.limelight.shell.ui.InitialFocus
 import com.limelight.shell.ui.HeroBitmaps
 import com.limelight.shell.ui.PlaceholderArt
@@ -100,7 +108,6 @@ import com.limelight.shell.ui.TextFieldPill
 import com.limelight.shell.ui.Unbounded
 import com.limelight.shell.ui.fadeEdges
 import com.limelight.shell.ui.focusEffects
-import com.limelight.shell.ui.glass
 import com.limelight.shell.ui.px
 import com.limelight.shell.ui.tpx
 import java.util.Locale
@@ -178,9 +185,9 @@ fun SettingsScreen(
         return
     }
     val first = remember { FocusRequester() }
-    // This stable, zero-size target holds focus while a scrolled lazy list is replaced. Clearing
-    // focus instead lets Compose's beyond-bounds focus search re-enter through the first tab.
-    val focusTransfer = remember { FocusRequester() }
+    // This stable, zero-size target holds focus while a scrolled lazy list is replaced (a tab change by L1 / R1 or a tap):
+    // clearing focus instead lets Compose's beyond-bounds focus search pick a row of the new list at once.
+    val focusTransfer = rememberFocusTransfer()
     val stage = LocalStage.current
     val k = stage.dpPerPx * LocalDensity.current.density
     // Keep the section heading (including its padding and the top fade) above its first row.
@@ -222,7 +229,7 @@ fun SettingsScreen(
     }
     DisposableEffect(shell, tab) {
         val handler: (Int) -> Unit = { dir ->
-            focusTransfer.requestFocus()
+            focusTransfer.request()
             shell.settingsFocus = null
             shell.settingsTab = tab.step(dir)
             feedback.play(Cue.MOVE)
@@ -231,7 +238,7 @@ fun SettingsScreen(
         onDispose { if (shell.onShoulder === handler) shell.onShoulder = null }
     }
     Box(Modifier.fillMaxSize()) {
-        Box(Modifier.size(0.px).focusRequester(focusTransfer).focusable())
+        FocusTransferTarget(focusTransfer)
         BasicText("Settings", style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx),
             modifier = Modifier.offset(SettingsLayout.TITLE_X.px, SettingsLayout.TITLE_Y.px))
         PillButton("Search", Symbols.SEARCH, { shell.onSettingsSearch?.invoke() }, Modifier.offset(1530.px, 122.px), clickCue = null)
@@ -240,7 +247,7 @@ fun SettingsScreen(
             SettingsTab.entries.forEach { next ->
                 TabPill(next.icon, next.label, tab == next, Modifier.padding(horizontal = 5.px)) {
                     if (next != tab) {
-                        focusTransfer.requestFocus()
+                        focusTransfer.request()
                         shell.settingsFocus = null
                         shell.settingsTab = next
                     } else rowRequesters[target]?.let {
@@ -297,24 +304,44 @@ internal fun ShoulderLabel(label: String) {
         modifier = Modifier.padding(horizontal = 10.px).border(1.px, colors.line, RoundedCornerShape(10.px)).padding(horizontal = 12.px, vertical = 6.px))
 }
 
-/** A tab of a row switched with L1 / R1 (the settings categories, the artwork kinds). */
+/**
+ * A tab of a row switched with L1 / R1 (the settings categories, the artwork kinds). Tabs are touch only: they are never
+ * focusable, so the D-pad and the stick pass over them, and the selected one is shown by the accent pill of the surrounding
+ * [com.limelight.shell.ui.SelectionPillHost] with dark ([DelosColors.onAccent]) icon and label, fading to the quiet
+ * [DelosColors.text2] when another tab is selected. A tap squeezes the tab for a moment and plays the select cue.
+ */
 @Composable
 internal fun TabPill(icon: String, label: String, selected: Boolean, modifier: Modifier, onClick: () -> Unit) {
     val colors = LocalDelosColors.current
     val reduced = LocalReducedMotion.current
-    var focused by remember { mutableStateOf(false) }
-    // Inside a SelectionPillHost the selected tab's frosted pill is the host's, gliding between the tabs
+    val feedback = LocalFeedback.current
+    val pulse = rememberPressPulse()
+    val scale by animateFocusScale(focused = false, pressed = pulse.pressed, focusScale = 1f)
+    // Inside a SelectionPillHost the selected tab's accent pill is the host's, gliding between the tabs
     val hosted = LocalSelectionPill.current != null
     val fade = if (reduced) snap<Color>() else tween(Motion.FADE, easing = Motion.Ease)
-    val iconColor by animateColorAsState(if (focused) colors.onAccent else if (selected) colors.accent else colors.text2, fade, label = "tabIcon")
-    val textColor by animateColorAsState(if (focused) colors.onAccent else if (selected) colors.text else colors.text2, fade, label = "tabText")
-    Row(modifier.selectionPillTarget(selected).focusEffects(onClick, corner = 999f, focusScale = 1.08f, ring = FocusRing(0f, 0f), glow = FocusGlow(12f, 36f, -10f), onFocusChange = { focused = it })
+    val contentColor by animateColorAsState(if (selected) colors.onAccent else colors.text2, fade, label = "tabContent")
+    val currentClick by rememberUpdatedState(onClick)
+    Row(modifier.selectionPillTarget(selected)
+        .graphicsLayer { scaleX = scale; scaleY = scale }
         .clip(CircleShape)
-        .then(if (focused) Modifier.background(colors.accent) else if (selected && !hosted) Modifier.glass(colors.surface2) else Modifier)
+        .then(if (selected && !hosted) Modifier.background(colors.accent) else Modifier)
+        .pointerInput(Unit) {
+            detectTapGestures(onTap = {
+                feedback.play(Cue.SELECT)
+                pulse.fire()
+                currentClick()
+            })
+        }
+        .semantics {
+            role = Role.Tab
+            this.selected = selected
+            onClick { feedback.play(Cue.SELECT); currentClick(); true }
+        }
         .height(66.px).padding(horizontal = 22.px),
         horizontalArrangement = Arrangement.spacedBy(12.px), verticalAlignment = Alignment.CenterVertically) {
-        Symbol(icon, 30.tpx, iconColor, filled = focused || selected)
-        BasicText(label, style = TextStyle(color = textColor,
+        Symbol(icon, 30.tpx, contentColor, filled = selected)
+        BasicText(label, style = TextStyle(color = contentColor,
             fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 22.tpx))
     }
 }

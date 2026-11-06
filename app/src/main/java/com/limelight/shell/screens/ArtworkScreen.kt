@@ -5,7 +5,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -93,7 +92,9 @@ import com.limelight.shell.ui.Spinner
 import com.limelight.shell.ui.Symbol
 import com.limelight.shell.ui.InitialFocus
 import com.limelight.shell.ui.Symbols
+import com.limelight.shell.ui.FocusTransferTarget
 import com.limelight.shell.ui.Unbounded
+import com.limelight.shell.ui.rememberFocusTransfer
 import com.limelight.shell.ui.fadeEdges
 import com.limelight.shell.ui.focusEffects
 import com.limelight.shell.ui.glass
@@ -168,7 +169,7 @@ fun ArtworkScreen(screen: Screen.Artwork) {
         }
     }
 
-    val focusTransfer = remember { FocusRequester() }
+    val focusTransfer = rememberFocusTransfer()
     val first = remember { FocusRequester() }
     val window = LocalWindowInfo.current
     LaunchedEffect(tab, choices is Choices.Ready) {
@@ -179,7 +180,7 @@ fun ArtworkScreen(screen: Screen.Artwork) {
     }
     DisposableEffect(shell) {
         val handler: (Int) -> Unit = { dir ->
-            focusTransfer.requestFocus()
+            focusTransfer.request()
             tab = tab.step(dir)
             feedback.play(Cue.MOVE)
         }
@@ -188,7 +189,7 @@ fun ArtworkScreen(screen: Screen.Artwork) {
     }
 
     Box(Modifier.fillMaxSize()) {
-        Box(Modifier.size(0.px).focusRequester(focusTransfer).focusable())
+        FocusTransferTarget(focusTransfer)
         Column(Modifier.offset(150.px, 92.px).width(1620.px)) {
             BasicText(
                 "ARTWORK",
@@ -204,7 +205,7 @@ fun ArtworkScreen(screen: Screen.Artwork) {
             ArtTab.entries.forEach { next ->
                 TabPill(next.icon, next.label, tab == next, Modifier.padding(horizontal = 5.px)) {
                     if (next != tab) {
-                        focusTransfer.requestFocus()
+                        focusTransfer.request()
                         tab = next
                     } else runCatching { first.requestFocus() }
                 }
