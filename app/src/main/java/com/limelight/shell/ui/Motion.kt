@@ -207,10 +207,10 @@ class EntranceStagger(
  */
 object ListScrollMotion {
     /** Settle time (to 2 %) of a step of one row or less, milliseconds. */
-    const val SETTLE_NEAR_MS = 320f
+    const val SETTLE_NEAR_MS = 600f
 
     /** Settle time of a jump of [FAR_PX] or more, milliseconds. */
-    const val SETTLE_FAR_MS = 520f
+    const val SETTLE_FAR_MS = 950f
 
     /** Up to this distance the settle time is [SETTLE_NEAR_MS] (about one row plus its gap). */
     const val NEAR_PX = 90f
