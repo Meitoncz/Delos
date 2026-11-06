@@ -95,8 +95,8 @@ class ShellActivity : ComponentActivity() {
             links.value = ShellLink.from(this, intent)
             results.value = StreamResult.take(intent)
         }
-        // Debug builds only: the stream menu with fake state instead of the shell (docs/GUI.md, "Stream menu preview")
-        val preview = StreamMenuPreview.from(intent)
+        // Debug builds only: the stream menu or the Full keyboard with fake state instead of the shell (docs/GUI.md, "Stream menu preview", "Full keyboard")
+        val preview = StreamMenuPreview.from(intent) ?: FullKeyboardPreview.from(intent)
         setContent {
             if (preview != null) ShellTheme(appearance, feedback) { preview() }
             else ShellRoot(appearance, feedback, keys, repo, boxArt, artwork, metadata, launcher, profiles, startup, setup, links, results)

@@ -89,6 +89,9 @@ settings (size, alignment, opacity, vibration, sticky modifiers), the custom key
 built-in key combinations switch (they feed Send keys), multi-touch gestures, clipboard, PiP and device
 rumble stay visible.
 
+The full-keyboard settings keep their keys, defaults and texts; how the redesigned keyboard applies them (automatic fit, width and
+height of the bar, alignment, opacity) is described under "Full keyboard" in [GUI.md](GUI.md).
+
 ## User profiles
 
 All shell and stream preferences are stored in `ui_profile_<user UUID>`. On first use, the existing

@@ -914,8 +914,22 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         virtualController.show();
     }
 
+    /** Delos: the Full keyboard that is up, on this display or on the external control display; null when there is none. */
+    private KeyBoardLayoutController visibleFullKeyboard() {
+        KeyBoardLayoutController keyboard = isOnExternalDisplay() ? ExternalDisplayControlActivity.getFullKeyboard() : keyBoardLayoutController;
+        return keyboard != null && keyboard.isKeyboardVisible() ? keyboard : null;
+    }
+
+    /** Delos: the Full keyboard went up or down: it takes the controller (everything held is let go) or gives it back. */
+    public void onFullKeyboardVisibilityChanged() {
+        if (controllerHandler != null) {
+            controllerHandler.setInputSuspended(visibleFullKeyboard() != null);
+        }
+    }
+
     private void initkeyBoardLayoutController(){
         keyBoardLayoutController = new KeyBoardLayoutController((FrameLayout)rootView, this, prefConfig);
+        keyBoardLayoutController.setViewCallbacks(visible -> onFullKeyboardVisibilityChanged());
         keyBoardLayoutController.refreshLayout();
         keyBoardLayoutController.show();
     }
@@ -1838,6 +1852,12 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             return true;
         }
 
+        // Delos: while the Full keyboard is up it owns the controller (docs/GUI.md, "Full keyboard")
+        KeyBoardLayoutController fullKeyboard = visibleFullKeyboard();
+        if (fullKeyboard != null && fullKeyboard.ownsInputFrom(event)) {
+            return fullKeyboard.onControllerKey(event);
+        }
+
         boolean handled = false;
 
         if (ControllerHandler.isGameControllerDevice(event.getDevice())) {
@@ -1927,6 +1947,12 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             // Always return true, otherwise the back press will be propagated
             // up to the parent and finish the activity.
             return true;
+        }
+
+        // Delos: see handleKeyDown()
+        KeyBoardLayoutController fullKeyboard = visibleFullKeyboard();
+        if (fullKeyboard != null && fullKeyboard.ownsInputFrom(event)) {
+            return fullKeyboard.onControllerKey(event);
         }
 
         boolean handled = false;
@@ -2541,6 +2567,11 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         int eventSource = event.getSource();
         int deviceSources = event.getDevice() != null ? event.getDevice().getSources() : 0;
         if ((eventSource & InputDevice.SOURCE_CLASS_JOYSTICK) != 0) {
+            // Delos: see handleKeyDown()
+            KeyBoardLayoutController fullKeyboard = visibleFullKeyboard();
+            if (fullKeyboard != null) {
+                return fullKeyboard.onControllerMotion(event);
+            }
             if (controllerHandler.handleMotionEvent(event)) {
                 return true;
             }

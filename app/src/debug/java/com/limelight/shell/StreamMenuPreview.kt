@@ -75,9 +75,9 @@ private fun StreamMenuPreviewScreen(start: StreamMenuStart) {
     }
 }
 
-/** A sunset over hills, so the menu is seen on a picture like in a stream. */
+/** A sunset over hills, so the menu (and the Full keyboard preview) is seen on a picture like in a stream. */
 @Composable
-private fun GameScene() {
+internal fun GameScene() {
     Canvas(Modifier.fillMaxSize()) {
         drawRect(
             Brush.verticalGradient(

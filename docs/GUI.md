@@ -455,6 +455,82 @@ controller window ownership keep their existing paths.
   slides in 22 px, a slider's knob grows to 1.18 when focused, a pill that changes pops in from 0.6. With reduced motion
   every transform is dropped: only fades (and colors) remain, the ring and the dock jump, the geometry snaps.
 
+### Full keyboard
+
+The on-screen keyboard over the stream (stream menu → More → Full keyboard, a four-finger tap, the button on the external
+display's control screen) is the approved **Flat console** prototype (`build/fullkeyboard-proto/b.html`, local scratch, with
+its screenshots): a solid bar docked to the bottom edge, flat keys, a hint strip under them. It is one Compose
+layer (`shell/keyboard`: `FullKeyboard`, `FullKeyboardState`, the key table in `FullKeyboardKeys`, the pure logic in
+`FullKeyboardInput`) inside a `ComposeView` that `KeyBoardLayoutController` (still the class `Game` and
+`ExternalDisplayControlActivity` use: `show`, `hide`, `toggleVisibility`, `refreshLayout`, `isKeyboardVisible`, `shown`)
+adds to the stream's layout, bottom-docked and as wide as the layout. It never takes the focus. Where nothing of it is
+drawn nothing is touchable: a finger on the game area goes to the stream even while a key is held.
+
+- **Keys**: the same 80 keys, six rows and weights as the old XML layout (Esc, F1–F12, Ins, Del / ~` 1–0 _- += Back / Tab
+  QWERTY… {[ }] |\ / Caps ASDF… :; "' Enter / Shift ZXCV… <, >. ?/ ↑ Hide / Ctrl Win Alt Space Home End PgUp PgDn ← ↓ →; `FullKeyboardKeysTest`
+  pins them). Letters are upper case, the punctuation keys stack the character Shift gives above the plain one (with Shift
+  latched the shifted one lights up and the plain one dims), Space is a thin bar, the arrows are drawn strokes, Home/End/PgUp/PgDn
+  have a smaller legend (.8), Hide is the Phosphor close icon (second accent, filled on focus) over "HIDE". Colors come from
+  the theme (the Delos palette gives the prototype's `#131c31`→`#0d1424` bar, `#1f2b46` keys, `#151e35` function and modifier
+  keys, a plum-tinted Hide key); the light theme gets a light bar. Legend: Figtree SemiBold at .38 of the key height.
+- **Look**: key corner 11, gap 6, 12 more around Esc, Ins and Space, bar padding 22 above and 78 below the rows. The
+  **focused** key turns white with a dark legend and the **gold ring** (4 px, 3 px dark gap) around it; **pressed** is the second
+  accent (cyan) with a dark legend and squeezes to .97; **sticky** is solid gold with a bar under the legend (state never
+  relies on color alone). The key popup (white bubble, 1.15 keys tall, 10 above the key, the character typed) shows for
+  character keys only and stays 75 ms after the release. The hint strip says **A Press, B Close, X Shift** (36 px glyph circles,
+  label 22) and "ON-SCREEN KEYBOARD" at its right end; it only shows while a controller drives the keyboard (touching hides
+  it, the ring and the focused key's white; the next D-pad press brings them back). The stream darkens a little behind the
+  bar (the prototype's `#shade`, 0 to .38 from half the height down).
+- **Size and settings** (stage px; the design is laid out on the 1080-high stage like the rest of the UI): by default the
+  keys span the width less 24 each side, at most 1840, and are 3.65 % of that wide (44 to 68 tall), so 16:9 gives a bar of about
+  half the screen (532 of 1080), 21:9 centers a keyboard of the same width and 4:3 gets smaller keys instead of a taller
+  keyboard. **Virtual Full Keyboard Disable Autofit** (`onscreen_keyboard_autofit`, the setting that turns the fit off) makes the
+  width and height settings apply: **Width** (`seekbar_onscreen_keyboard_width`, dp, 1000 = full width, never wider than the
+  default) is the width of the keys, **Height** (`seekbar_onscreen_keyboard_height`, dp) the height of the whole bar, from which the
+  key height follows (24 to 130); **Align Mode** (`list_onscreen_keyboard_align_mode`) puts the keys left, center or right inside
+  the bar, which stays full width. **Opacity** (`seekbar_keyboard_axi_opacity`) dims the bar, keys and ring together (not the hints,
+  not the popup). **Sticky modifier keys** and **vibration** (`checkbox_vibrate_keyboard`) work as before.
+- **Touch** is what it always was: every key reads its own finger (so Shift + a letter, WASD, chords work), Down sends the key
+  down, up or cancel sends it up, a finger that wanders off its key still holds it until it lifts. With sticky modifiers on, a
+  modifier held 300 ms latches (its release is not sent), touching a latched one releases it. Hide acts on release. Keys
+  go to the host through `KeyBoardLayoutController.sendKeyEvent` → `ActiveKeyboardInput` exactly as before (source 0, haptics
+  on down, release and latch). A physical keyboard keeps typing into the PC; the keyboard never sees it.
+- **Controller** (handheld first): **while the keyboard is up it operates the keyboard and nothing of the controller reaches
+  the game**; the D-pad and the left stick move the focus, **A** presses the focused key (held for as long as A is held; a
+  modifier latches and unlatches, because a controller cannot hold one key while pressing another, whatever the sticky setting
+  says), **B** (and Back) closes it, **X** toggles Shift. Moves are row-aware like the prototype: left/right stay in the row and
+  stop at its ends (the ring nudges 7 px against the edge), up/down go to the key of the next row under the *column* of the last
+  horizontal move, else the nearest (`KeyGrid`, `FullKeyboardInputTest`). The first focus is Q, then the last key. The
+  controller's other buttons are swallowed. The stream menu's open/close buttons keep working (they are handled first);
+  rumble keeps running. **No stuck input**: `ControllerHandler.setInputSuspended` lets go of everything the physical
+  controllers hold (a neutral packet each) when the keyboard opens and again when it closes, and sends nothing in between (also
+  from the USB driver path); keys the keyboard itself holds are released when it is hidden, while latched modifiers stay
+  latched like before. The interception is `Game.handleKeyDown/handleKeyUp/handleMotionEvent` (`visibleFullKeyboard()`), for
+  controller sources only. On the external display the same hooks work, because `ExternalDisplayControlActivity` already routes
+  the controller's events to `Game`; the keyboard there is the activity's own `KeyBoardLayoutController`.
+- **Motion** (all from `Motion.kt` / `MotionKit.kt`, like the stream menu): the rows **rise** 18 px and fade in, the first after 120 ms,
+  then 46 ms apart, 420 ms each (ease-out); the bar's glass fades in over 336 ms; everything **leaves** in 240 ms (ease-in,
+  no stagger). **Focus** is not a scale here: one **gliding ring** (`GlideRingHost`, 560 ms with the slight overshoot) moves between the
+  keys, follows the keys exactly while they are still rising (900 ms) and appears 560 ms after opening; the ring is drawn over the
+  keys (their neighbours lie closer than the ring is wide: `inFront`) and squeezes with the key under it. **Press** squeezes the key to
+  .97 in 120 ms and holds it 130 ms (a tap is always seen); colors and opacities take 280 ms; the popup settles with the
+  spring in 120 ms. At the keyboard's edge the ring bumps 7 px and returns (the choices' chevron nudge). Reduced motion: only fades.
+- **Visibility** rules are unchanged: the state is kept across rotation and PiP (`hide(true)` / `show()`), `Game.isFullKeyboardShown()` feeds the stream
+  menu's toggle row; a rotation only re-reads the settings (`refreshLayout`), it does not rebuild the keyboard.
+
+#### Full keyboard preview (debug builds)
+
+The real keyboard on the sunset scene, no stream or profile needed (`FullKeyboardPreview` in `src/debug`, a stub in `src/release`):
+
+```
+adb shell am start -n io.github.meitoncz.delos.debug/com.limelight.shell.ShellActivity --es preview_screen full_keyboard \
+  [--ei preview_opacity 0..100] [--es preview_align left|center|right] \
+  [--ez preview_custom_size true --ei preview_height <dp> --ei preview_width <dp>]
+```
+
+Touch, D-pad, left stick, A, B and X work as in a stream; the keys that would go to the PC are listed at the top left. After
+B or the Hide key a tap on the scene opens the keyboard again.
+
 ### Stream menu preview (debug builds)
 
 The real menu can be drawn without a stream, over a sunset "game scene", with made-up values (`FakeStreamMenuHost` in

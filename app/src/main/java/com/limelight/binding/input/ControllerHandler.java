@@ -130,6 +130,8 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
     private final Handler backgroundThreadHandler;
     private boolean hasGameController;
     private boolean stopped = false;
+    // Delos: the Full keyboard owns the controller while it is up (setInputSuspended)
+    private volatile boolean inputSuspended = false;
 
     private final PreferenceConfiguration prefConfig;
     // The stream menu switches the rumble preset live, so the translated playback follows
@@ -476,6 +478,48 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
 
         LimeLog.info("Enumerated "+count+" gamepads");
         return mask;
+    }
+
+    /**
+     * Delos: while the Full keyboard is up the physical controllers drive the keyboard, not the game. Starting and ending
+     * the suspension lets go of everything they hold (a neutral packet each, which also ends a mouse emulation click);
+     * while it lasts no controller state reaches the host (the on-screen gamepad is not a physical controller and keeps going).
+     */
+    public void setInputSuspended(boolean suspended) {
+        if (inputSuspended == suspended) {
+            return;
+        }
+        inputSuspended = false;
+        for (int i = 0; i < inputDeviceContexts.size(); i++) {
+            clearControllerState(inputDeviceContexts.valueAt(i));
+        }
+        for (int i = 0; i < usbDeviceContexts.size(); i++) {
+            clearControllerState(usbDeviceContexts.valueAt(i));
+        }
+        for (int i = 0; i < inputDeviceContexts.size(); i++) {
+            sendNeutralPacket(inputDeviceContexts.valueAt(i));
+        }
+        for (int i = 0; i < usbDeviceContexts.size(); i++) {
+            sendNeutralPacket(usbDeviceContexts.valueAt(i));
+        }
+        inputSuspended = suspended;
+    }
+
+    private void clearControllerState(GenericControllerContext context) {
+        context.inputMap = 0;
+        context.leftTrigger = 0;
+        context.rightTrigger = 0;
+        context.leftStickX = 0;
+        context.leftStickY = 0;
+        context.rightStickX = 0;
+        context.rightStickY = 0;
+    }
+
+    private void sendNeutralPacket(GenericControllerContext context) {
+        // A controller the host never heard of has nothing to release
+        if (context.assignedControllerNumber) {
+            sendControllerInputPacket(context);
+        }
     }
 
     private void releaseControllerNumber(GenericControllerContext context) {
@@ -1291,6 +1335,11 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
     }
 
     private void sendControllerInputPacket(GenericControllerContext originalContext) {
+        // Delos: the Full keyboard owns the physical controllers (the on-screen gamepad is the default context)
+        if (inputSuspended && originalContext != defaultContext) {
+            return;
+        }
+
         assignControllerNumberIfNeeded(originalContext);
 
         // Take the context's controller number and fuse all inputs with the same number
@@ -3020,6 +3069,11 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
                                       float leftStickX, float leftStickY,
                                       float rightStickX, float rightStickY,
                                       float leftTrigger, float rightTrigger) {
+        // Delos: the Full keyboard owns the physical controllers
+        if (inputSuspended) {
+            return;
+        }
+
         GenericControllerContext context = usbDeviceContexts.get(controllerId);
         if (context == null) {
             return;

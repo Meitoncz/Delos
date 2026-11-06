@@ -91,6 +91,11 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
         return instance != null && instance.keyBoardLayoutController != null && instance.keyBoardLayoutController.shown;
     }
 
+    /** The full keyboard of this screen, or null before it was first shown (Game hands the controller to it while it is up). */
+    public static KeyBoardLayoutController getFullKeyboard() {
+        return instance != null ? instance.keyBoardLayoutController : null;
+    }
+
     public static void toggleGameMenu() {
         if (Game.instance != null) {
             Game.instance.showStreamMenu();
@@ -224,11 +229,18 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
     protected void onDestroy() {
         super.onDestroy();
         instance = null;
+        // Its full keyboard goes with it: the controller is the game's again
+        if (Game.instance != null) {
+            Game.instance.onFullKeyboardVisibilityChanged();
+        }
     }
 
     @Override
     public void onKeyboardControllerVisibilityChange(boolean visible) {
         updateKeyboardVisibility(visible);
+        if (Game.instance != null) {
+            Game.instance.onFullKeyboardVisibilityChanged();
+        }
     }
 
     @SuppressLint("ClickableViewAccessibility")

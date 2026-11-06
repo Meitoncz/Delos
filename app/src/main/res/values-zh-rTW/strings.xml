@@ -437,7 +437,6 @@
 	<string name="title_checkbox_enable_sticky_modifier_key_virtual_keyboard">黏滯式組合鍵</string>
 	<string name="summary_checkbox_enable_sticky_modifier_key_virtual_keyboard">在虛擬全鍵盤與自訂螢幕鍵盤上啟用黏滯式組合鍵。</string>
 
-	<string name="virtual_keyboard_hide">隱藏\nKBD</string>
 
 	<string name="mouse_mode_multi_touch">多點觸控</string>
 	<string name="mouse_mode_absolute_touch">單點觸控</string>
