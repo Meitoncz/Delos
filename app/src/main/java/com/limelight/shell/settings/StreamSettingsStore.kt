@@ -63,6 +63,7 @@ class StreamSettingsStore(val catalog: SettingsCatalog, private val settings: ()
         fun resolution() = if (spec.key == "list_resolution") value as String else prefs.getString("list_resolution", "1280x720")!!
         fun fps() = if (spec.key == "list_fps") value as String else prefs.getString("list_fps", "60")!!
         fun hdr() = if (spec.key == "checkbox_enable_hdr") value as Boolean else prefs.getBoolean("checkbox_enable_hdr", false)
+        fun chroma444() = (if (spec.key == "list_pyrowave_chroma") value as String else prefs.getString("list_pyrowave_chroma", "420")) == "444"
         val gameBitrate = prefs as? BitrateOverrideState
         if (spec.key == "video_format" && format != before) {
             if (prefs.contains("seekbar_bitrate_kbps") && gameBitrate?.hasBitrateOverride != false) {
@@ -72,15 +73,15 @@ class StreamSettingsStore(val catalog: SettingsCatalog, private val settings: ()
             when {
                 prefs.contains(target) -> editor.putInt("seekbar_bitrate_kbps", prefs.getInt(target, -1))
                 format == "pyrowave" -> editor.putInt("seekbar_bitrate_kbps",
-                    PreferenceConfiguration.getDefaultBitrate(resolution(), fps(), format, hdr()))
+                    PreferenceConfiguration.getDefaultBitrate(resolution(), fps(), format, hdr(), chroma444()))
                 before == "pyrowave" && gameBitrate != null -> editor.remove("seekbar_bitrate_kbps")
                 before == "pyrowave" -> editor.putInt("seekbar_bitrate_kbps",
-                    PreferenceConfiguration.getDefaultBitrate(resolution(), fps(), format, hdr()))
+                    PreferenceConfiguration.getDefaultBitrate(resolution(), fps(), format, hdr(), chroma444()))
                 // First use of another ordinary codec preserves the current bitrate and inheritance.
             }
         } else if (format == "pyrowave" && (spec.key == "list_resolution" || spec.key == "list_fps" ||
-                spec.key == "checkbox_enable_hdr")) {
-            editor.putInt("seekbar_bitrate_kbps", PreferenceConfiguration.getDefaultBitrate(resolution(), fps(), format, hdr()))
+                spec.key == "checkbox_enable_hdr" || spec.key == "list_pyrowave_chroma")) {
+            editor.putInt("seekbar_bitrate_kbps", PreferenceConfiguration.getDefaultBitrate(resolution(), fps(), format, hdr(), chroma444()))
         }
         editor.apply()
     }

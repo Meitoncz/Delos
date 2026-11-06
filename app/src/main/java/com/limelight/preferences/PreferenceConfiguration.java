@@ -536,11 +536,11 @@ public class PreferenceConfiguration {
     // Delos: the bitrate slider's maximum (preferences.xml), high enough for PyroWave at 1080p HDR 120 FPS
     public static final int MAX_BITRATE_KBPS = 1000000;
 
-    // Delos: PyroWave needs its own, much higher default (PyroWaveBitrate), 1.2x with HDR
-    public static int getDefaultBitrate(String resString, String fpsString, String videoFormat, boolean hdr) {
+    // Delos: PyroWave's default follows effective chroma; HDR uses the 4:2:0 P010 bridge.
+    public static int getDefaultBitrate(String resString, String fpsString, String videoFormat, boolean hdr, boolean chroma444) {
         if ("pyrowave".equals(videoFormat)) {
             int kbps = PyroWaveBitrate.recommendedKbps(getWidthFromResolutionString(resString),
-                    getHeightFromResolutionString(resString), Math.round(Float.parseFloat(fpsString)), false, hdr);
+                    getHeightFromResolutionString(resString), Math.round(Float.parseFloat(fpsString)), chroma444 && !hdr, hdr);
             return Math.min(kbps, MAX_BITRATE_KBPS);
         }
         return getDefaultBitrate(resString, fpsString);
@@ -552,7 +552,8 @@ public class PreferenceConfiguration {
                 prefs.getString(RESOLUTION_PREF_STRING, DEFAULT_RESOLUTION),
                 prefs.getString(FPS_PREF_STRING, DEFAULT_FPS),
                 prefs.getString(VIDEO_FORMAT_PREF_STRING, DEFAULT_VIDEO_FORMAT),
-                prefs.getBoolean(ENABLE_HDR_PREF_STRING, false));
+                prefs.getBoolean(ENABLE_HDR_PREF_STRING, false),
+                "444".equals(prefs.getString("list_pyrowave_chroma", "420")));
     }
 
     private static FormatOption getVideoFormatValue(Context context) {

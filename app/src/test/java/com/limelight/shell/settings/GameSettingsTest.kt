@@ -8,6 +8,7 @@ import androidx.preference.PreferenceManager
 import androidx.test.core.app.ApplicationProvider
 import com.limelight.Game
 import com.limelight.preferences.PreferenceConfiguration
+import com.limelight.preferences.PyroWaveBitrate
 import com.limelight.profiles.ProfilesManager
 import com.limelight.shadows.ShadowGameManager
 import com.limelight.shadows.ShadowMoonBridge
@@ -48,6 +49,7 @@ class GameSettingsTest {
         stream.write(spec("list_resolution"), "1280x720")
         stream.write(spec("list_fps"), "120")
         stream.write(spec("video_format"), "forceav1")
+        stream.write(spec("list_pyrowave_chroma"), "444")
         assertFalse(selected.isCustom("seekbar_bitrate_kbps"))
         assertEquals(20000, selected.preferences.getInt("seekbar_bitrate_kbps", -1))
         profiles.settings().edit().putInt("seekbar_bitrate_kbps", 37000).commit()
@@ -303,7 +305,7 @@ class GameSettingsTest {
         assertFalse(a.preferences.contains(codecBitrateKey("pyrowave")))
         assertFalse(a.preferences.contains(codecBitrateKey("forceav1")))
         stream.write(spec("checkbox_enable_hdr"), true)
-        val recommended = PreferenceConfiguration.getDefaultBitrate("1920x1080", "60", "pyrowave", true)
+        val recommended = PreferenceConfiguration.getDefaultBitrate("1920x1080", "60", "pyrowave", true, false)
         assertEquals(recommended, a.preferences.getInt("seekbar_bitrate_kbps", -1))
         stream.write(spec("video_format"), "forceav1")
         assertFalse(a.isCustom("seekbar_bitrate_kbps"))
@@ -312,6 +314,66 @@ class GameSettingsTest {
         assertEquals(recommended, a.preferences.getInt("seekbar_bitrate_kbps", -1))
         stream.close()
         profileStream.close()
+    }
+
+    @Test fun perGameChromaRecalculatesInheritedPyroWaveWithoutLeakingOrBreakingInheritance() {
+        val profileStream = StreamSettingsStore(profiles.catalog, profiles::settings)
+        profileStream.write(spec("video_format"), "pyrowave")
+        profileStream.write(spec("seekbar_bitrate_kbps"), 528000)
+        val selected = game()
+        val stream = StreamSettingsStore(profiles.catalog) { selected.preferences }
+        val sdr444 = PyroWaveBitrate.recommendedKbps(1920, 1080, 60, true, false)
+        val sdr420 = PyroWaveBitrate.recommendedKbps(1920, 1080, 60, false, false)
+        val hdr420 = PyroWaveBitrate.recommendedKbps(1920, 1080, 60, false, true)
+        assertFalse(selected.isCustom("seekbar_bitrate_kbps"))
+        stream.write(spec("list_pyrowave_chroma"), "444")
+        assertEquals(sdr444, selected.preferences.getInt("seekbar_bitrate_kbps", -1))
+        assertTrue(selected.isCustom("seekbar_bitrate_kbps"))
+        stream.write(spec("list_pyrowave_chroma"), "420")
+        assertEquals(sdr420, selected.preferences.getInt("seekbar_bitrate_kbps", -1))
+        stream.write(spec("list_pyrowave_chroma"), "444")
+        stream.write(spec("checkbox_enable_hdr"), true)
+        assertEquals(hdr420, selected.preferences.getInt("seekbar_bitrate_kbps", -1))
+        for (chroma in listOf("420", "444")) {
+            stream.write(spec("list_pyrowave_chroma"), chroma)
+            assertEquals(hdr420, selected.preferences.getInt("seekbar_bitrate_kbps", -1))
+        }
+        stream.write(spec("checkbox_enable_hdr"), false)
+        assertEquals(sdr444, selected.preferences.getInt("seekbar_bitrate_kbps", -1))
+        assertEquals(528000, profiles.settings().getInt("seekbar_bitrate_kbps", -1))
+        assertEquals(528000, game(id = 2).preferences.getInt("seekbar_bitrate_kbps", -1))
+        assertFalse(game(id = 2).isCustom("list_pyrowave_chroma"))
+        assertFalse(selected.preferences.contains(codecBitrateKey("pyrowave")))
+        stream.write(spec("video_format"), "forceav1")
+        assertFalse(selected.isCustom("seekbar_bitrate_kbps"))
+        assertFalse(selected.preferences.contains(codecBitrateKey("forceav1")))
+        assertEquals(sdr444, selected.preferences.getInt(codecBitrateKey("pyrowave"), -1))
+        profiles.settings().edit().putInt("seekbar_bitrate_kbps", 37000).commit()
+        assertEquals(37000, selected.preferences.getInt("seekbar_bitrate_kbps", -1))
+        stream.write(spec("video_format"), "pyrowave")
+        assertEquals(sdr444, selected.preferences.getInt("seekbar_bitrate_kbps", -1))
+        selected.reset("seekbar_bitrate_kbps")
+        assertFalse(selected.preferences.contains(codecBitrateKey("pyrowave")))
+        assertEquals(37000, selected.preferences.getInt("seekbar_bitrate_kbps", -1))
+        stream.close()
+        profileStream.close()
+    }
+
+    @Test fun automaticGameBitrateUsesSnapshotChromaAndHdrPrecedence() {
+        profiles.settings().edit().putString("video_format", "pyrowave")
+            .putString("list_pyrowave_chroma", "420").putInt("seekbar_bitrate_kbps", 0).commit()
+        val selected = game()
+        selected.preferences.edit().putString("list_pyrowave_chroma", "444").commit()
+        for (hdr in listOf(false, true)) {
+            selected.preferences.edit().putBoolean("checkbox_enable_hdr", hdr).commit()
+            val intent = Intent(context, Game::class.java)
+            GameSettingsStore.attach(intent, selected.snapshot())
+            val activity = Robolectric.buildActivity(Game::class.java, intent).get()
+            assertEquals(PyroWaveBitrate.recommendedKbps(1920, 1080, 60, !hdr, hdr),
+                PreferenceConfiguration.readPreferences(activity).bitrate)
+        }
+        assertEquals(PyroWaveBitrate.recommendedKbps(1920, 1080, 60, false, false),
+            PreferenceConfiguration.readPreferences(context).bitrate)
     }
 
     @Test fun streamReaderUsesLaunchSnapshotWithoutLeakingIntoOtherActivitiesOrLaterGames() {

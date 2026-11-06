@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.preference.PreferenceManager
 import androidx.test.core.app.ApplicationProvider
 import com.limelight.preferences.PreferenceConfiguration
+import com.limelight.preferences.PyroWaveBitrate
 import com.limelight.profiles.ProfilesManager
 import com.limelight.shadows.ShadowGameManager
 import com.limelight.shadows.ShadowMoonBridge
@@ -222,6 +223,33 @@ class ShellSettingsTest {
         profiles.streamProfiles.close()
     }
 
+    @Test fun automaticBitrateUsesRequestedSdrChromaButHdrAlwaysUses420() {
+        val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+        prefs.edit().putString("video_format", "pyrowave").putString("list_resolution", "1920x1080")
+            .putString("list_fps", "60").remove("seekbar_bitrate_kbps").commit()
+        for (hdr in listOf(false, true)) {
+            for (chroma in listOf("420", "444")) {
+                prefs.edit().putBoolean("checkbox_enable_hdr", hdr).putString("list_pyrowave_chroma", chroma).commit()
+                val expected = PyroWaveBitrate.recommendedKbps(1920, 1080, 60, chroma == "444" && !hdr, hdr)
+                assertEquals(expected, PreferenceConfiguration.readPreferences(context).bitrate)
+            }
+        }
+        prefs.edit().putInt("seekbar_bitrate_kbps", 528000).commit()
+        assertEquals(528000, PreferenceConfiguration.readPreferences(context).bitrate)
+    }
+
+    @Test fun newProfileSeedsMissingBitrateFromSdr444Recommendation() {
+        PreferenceManager.getDefaultSharedPreferences(context).edit()
+            .putString("video_format", "pyrowave").putString("list_resolution", "1920x1080")
+            .putString("list_fps", "60").putString("list_pyrowave_chroma", "444").commit()
+        val profiles = ProfileStore(context)
+        profiles.create("Player", 0)
+        val expected = PyroWaveBitrate.recommendedKbps(1920, 1080, 60, true, false)
+        assertEquals(expected, profiles.settings().getInt("seekbar_bitrate_kbps", -1))
+        assertEquals(expected, PreferenceConfiguration.readPreferences(context).bitrate)
+        profiles.streamProfiles.close()
+    }
+
     @Test fun profileSurvivesRestartAndClassicProfileEditsArePickedUp() {
         val profiles = ProfileStore(context)
         val user = profiles.create("Player", 0)
@@ -249,6 +277,7 @@ class ShellSettingsTest {
             stream.write(spec("list_resolution"), "1920x1080")
             stream.write(spec("list_fps"), "120")
             stream.write(spec("checkbox_enable_hdr"), true)
+            stream.write(spec("list_pyrowave_chroma"), "444")
             assertEquals("Bitrate changed for $codec", 34000, prefs.getInt("seekbar_bitrate_kbps", -1))
         }
         stream.close()
@@ -290,12 +319,12 @@ class ShellSettingsTest {
             .putInt("seekbar_bitrate_kbps", 528000).commit()
         val stream = StreamSettingsStore(catalog) { prefs }
         stream.write(spec("video_format"), "forceav1")
-        assertEquals(PreferenceConfiguration.getDefaultBitrate("1920x1080", "120", "forceav1", true),
+        assertEquals(PreferenceConfiguration.getDefaultBitrate("1920x1080", "120", "forceav1", true, false),
             prefs.getInt("seekbar_bitrate_kbps", -1))
         stream.write(spec("video_format"), "pyrowave")
         assertEquals(528000, prefs.getInt("seekbar_bitrate_kbps", -1))
         stream.write(spec("video_format"), "forceh265")
-        assertEquals(PreferenceConfiguration.getDefaultBitrate("1920x1080", "120", "forceh265", true),
+        assertEquals(PreferenceConfiguration.getDefaultBitrate("1920x1080", "120", "forceh265", true, false),
             prefs.getInt("seekbar_bitrate_kbps", -1))
         stream.close()
     }
@@ -311,12 +340,12 @@ class ShellSettingsTest {
         stream.write(spec("video_format"), "forceav1")
         stream.write(spec("video_format"), "pyrowave")
         stream.write(spec("list_fps"), "60")
-        assertEquals(PreferenceConfiguration.getDefaultBitrate("1920x1080", "60", "pyrowave", true),
+        assertEquals(PreferenceConfiguration.getDefaultBitrate("1920x1080", "60", "pyrowave", true, false),
             prefs.getInt("seekbar_bitrate_kbps", -1))
         stream.write(spec("checkbox_enable_hdr"), false)
         assertEquals(225000, prefs.getInt("seekbar_bitrate_kbps", -1))
         stream.write(spec("list_resolution"), "2560x1440")
-        val recalculated = PreferenceConfiguration.getDefaultBitrate("2560x1440", "60", "pyrowave", false)
+        val recalculated = PreferenceConfiguration.getDefaultBitrate("2560x1440", "60", "pyrowave", false, false)
         assertEquals(recalculated, prefs.getInt("seekbar_bitrate_kbps", -1))
         assertEquals(528000, prefs.getInt(codecBitrateKey("pyrowave"), -1))
         stream.write(spec("video_format"), "forceav1")
@@ -324,6 +353,49 @@ class ShellSettingsTest {
         stream.write(spec("list_resolution"), "3840x2160")
         stream.write(spec("video_format"), "pyrowave")
         assertEquals(recalculated, prefs.getInt("seekbar_bitrate_kbps", -1))
+        stream.close()
+    }
+
+    @Test fun pyroWaveChromaChangesRecalculateWithoutReplacingOtherCodecMemory() {
+        val prefs = context.getSharedPreferences("test-settings", Context.MODE_PRIVATE)
+        prefs.edit().clear().putString("video_format", "forceav1").putString("list_resolution", "1920x1080")
+            .putString("list_fps", "60").putString("list_pyrowave_chroma", "444")
+            .putInt("seekbar_bitrate_kbps", 200000).commit()
+        val stream = StreamSettingsStore(catalog) { prefs }
+        val sdr444 = PyroWaveBitrate.recommendedKbps(1920, 1080, 60, true, false)
+        val sdr420 = PyroWaveBitrate.recommendedKbps(1920, 1080, 60, false, false)
+        val hdr420 = PyroWaveBitrate.recommendedKbps(1920, 1080, 60, false, true)
+        assertNotEquals(sdr420, sdr444)
+        stream.write(spec("video_format"), "pyrowave")
+        assertEquals(sdr444, prefs.getInt("seekbar_bitrate_kbps", -1))
+        stream.write(spec("list_pyrowave_chroma"), "420")
+        assertEquals(sdr420, prefs.getInt("seekbar_bitrate_kbps", -1))
+        stream.write(spec("list_pyrowave_chroma"), "444")
+        assertEquals(sdr444, prefs.getInt("seekbar_bitrate_kbps", -1))
+        stream.write(spec("checkbox_enable_hdr"), true)
+        assertEquals(hdr420, prefs.getInt("seekbar_bitrate_kbps", -1))
+        for (chroma in listOf("420", "444")) {
+            stream.write(spec("list_pyrowave_chroma"), chroma)
+            assertEquals(hdr420, prefs.getInt("seekbar_bitrate_kbps", -1))
+        }
+        stream.write(spec("checkbox_enable_hdr"), false)
+        assertEquals(sdr444, prefs.getInt("seekbar_bitrate_kbps", -1))
+        stream.write(spec("list_fps"), "120")
+        assertEquals(PyroWaveBitrate.recommendedKbps(1920, 1080, 120, true, false),
+            prefs.getInt("seekbar_bitrate_kbps", -1))
+        stream.write(spec("list_resolution"), "2560x1440")
+        val recalculated = PyroWaveBitrate.recommendedKbps(2560, 1440, 120, true, false)
+        assertEquals(recalculated, prefs.getInt("seekbar_bitrate_kbps", -1))
+        stream.write(spec("video_format"), "forceav1")
+        assertEquals(200000, prefs.getInt("seekbar_bitrate_kbps", -1))
+        stream.write(spec("list_pyrowave_chroma"), "420")
+        assertEquals(200000, prefs.getInt("seekbar_bitrate_kbps", -1))
+        stream.write(spec("video_format"), "pyrowave")
+        assertEquals(recalculated, prefs.getInt("seekbar_bitrate_kbps", -1))
+        stream.write(spec("list_pyrowave_chroma"), "420")
+        assertEquals(PyroWaveBitrate.recommendedKbps(2560, 1440, 120, false, false),
+            prefs.getInt("seekbar_bitrate_kbps", -1))
+        assertEquals(recalculated, prefs.getInt(codecBitrateKey("pyrowave"), -1))
         stream.close()
     }
 

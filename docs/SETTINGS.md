@@ -58,7 +58,7 @@ preset keys through `RumblePreferences` (see [RUMBLE.md](RUMBLE.md)) and reads C
   With no saved value, first use of PyroWave calculates its recommendation. First use of another
   ordinary codec preserves the current bitrate; leaving PyroWave for an ordinary codec without a
   saved value uses its normal resolution/FPS default in profile settings.
-  Resolution/FPS/HDR changes while on PyroWave recalculate its recommendation; other codecs preserve
+  Resolution/FPS/HDR/chroma changes while on PyroWave recalculate its recommendation; other codecs preserve
   their bitrate on those changes. Returning to PyroWave with a saved value restores it instead of
   recalculating just because the codec changed.
   Codec bitrate slots are private profile data, copied/deleted with the profile, never settings rows
@@ -70,7 +70,9 @@ preset keys through `RumblePreferences` (see [RUMBLE.md](RUMBLE.md)) and reads C
   rows, description panel, tab bar and search, and handle editing, reset, import/export and links.
   Resets run immediately and report a toast. Android's document picker handles file selection.
   When PyroWave is selected, the bitrate row and live help also show its recommended Mbps for the
-  current resolution/FPS/HDR, independently of the chosen bitrate. Other codecs add no recommendation.
+  current resolution/FPS/effective chroma/HDR, independently of the chosen bitrate. SDR 4:4:4 uses
+  its own regression coefficients; HDR uses the 4:2:0 recommendation even if 4:4:4 remains saved.
+  Other codecs add no recommendation.
 - `list_pyrowave_chroma` (4:2:0 default / 4:4:4, Stream tab, also a per-game override) is only enabled with the
   PyroWave codec and no HDR. 4:4:4 adds `VIDEO_FORMAT_PYROWAVE_444` to the offer next to the 4:2:0 flag
   (`PyroWaveFormats`); the host picks, and the renderer follows the negotiated format. With HDR on, 4:4:4 is

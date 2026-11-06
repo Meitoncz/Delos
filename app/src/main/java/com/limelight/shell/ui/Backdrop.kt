@@ -135,7 +135,7 @@ private fun HeroArt(art: GameArt, blurPx: Int, reducedMotion: Boolean, active: B
             hero?.let {
                 Image(
                     it, contentDescription = null, contentScale = ContentScale.FillBounds, filterQuality = FilterQuality.Low,
-                    modifier = Modifier.requiredSize(2100.px, 1260.px).then(heroTilt(active, reducedMotion)),
+                    modifier = Modifier.requiredSize(2100.px, 1260.px).heroTilt(active, reducedMotion),
                 )
             }
         }
@@ -163,7 +163,7 @@ private fun HeroArt(art: GameArt, blurPx: Int, reducedMotion: Boolean, active: B
         contentAlignment = Alignment.Center,
     ) {
         val layer = Modifier.requiredSize(2100.px, 1260.px)
-            .then(if (image != null) heroTilt(active, reducedMotion) else Modifier)
+            .then(if (image != null) Modifier.heroTilt(active, reducedMotion) else Modifier)
             .graphicsLayer { renderEffect = effect }
         if (image != null) {
             Image(image, contentDescription = null, contentScale = ContentScale.Crop, modifier = layer)
@@ -175,7 +175,7 @@ private fun HeroArt(art: GameArt, blurPx: Int, reducedMotion: Boolean, active: B
 
 /** The clock exists only for a visible, loaded image, and stops when its Activity is not resumed. */
 @Composable
-private fun heroTilt(active: Boolean, reducedMotion: Boolean): Modifier {
+private fun Modifier.heroTilt(active: Boolean, reducedMotion: Boolean): Modifier {
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     var turn by remember { mutableFloatStateOf(0f) }
     LaunchedEffect(active, reducedMotion, lifecycle) {
@@ -192,7 +192,7 @@ private fun heroTilt(active: Boolean, reducedMotion: Boolean): Modifier {
             }
         }
     }
-    return Modifier.graphicsLayer {
+    return graphicsLayer {
         rotationX = HeroMotion.pitch(turn, reducedMotion)
         rotationY = HeroMotion.yaw(turn, reducedMotion)
         // The existing 90-stage-pixel inset plus this fixed safety margin covers all four edges.

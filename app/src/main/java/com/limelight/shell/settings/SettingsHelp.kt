@@ -10,6 +10,7 @@ internal fun pyroWaveRecommendedBitrateKbps(values: Map<String, *>): Int? {
         values["list_fps"] as? String ?: "60",
         "pyrowave",
         values["checkbox_enable_hdr"] as? Boolean ?: false,
+        values["list_pyrowave_chroma"] == "444",
     )
 }
 
