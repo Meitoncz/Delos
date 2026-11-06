@@ -84,9 +84,10 @@ The TV channel uses the same mark; PC shortcut icons remain unchanged.
   SteamGridDB cover and PC fallback; clearing it restores that fallback order.
 - Must also run **automatically for all games at once**.
 - When a game is focused on the home screen, its **logo is shown in the top area** (the covers sit a bit lower) and the **background changes to the game's hero image** with a fade in/out and a **blur effect**. The game background covers the whole screen and **fades out diagonally from the top-right to the bottom-left corner**. **Blur amount and opacity are configurable.** The hero image **blends with the dynamic background** – the animated effects (aurora, waves, silk, contour lines…) light it up instead of covering it.
-- The hero image alone uses lens-style shader blur on Android 13+ and a calm, seamless,
-  symmetric 3D tilt around its center: a 30 s loop, 9° amplitude, camera distance 3× the longer
-  side (far edge shifts about 40 px at the extreme), 2.5 % overscan keeps image edges outside the viewport.
+- The hero image alone uses a **bokeh lens** on Android 13+ (`HeroBokeh`/`HeroLensShader`, rendered once per artwork and strength at 420 × 252, never per frame): a round aperture of golden-angle taps, radius 0.4 px per blur unit (blur 15 → 6 px, 40 → 16 px), with `clamp(π·R²/0.6, 128, 1280)` taps rounded to a multiple of 32 (192 at blur 15, 1280 at blur 40; the count is baked into the AGSL source because loops need a compile-time bound). Each tap weighs `1 + 120·smoothstep(t0, t1, luma)^1.5`, where t0/t1 are the artwork's own 97th/99.4th luma percentiles (at least 0.06 apart, computed on the CPU from the working bitmap and passed as uniforms), times a rim profile `0.6 + 0.4·smoothstep(0.55, 0.97, r/R)` that brightens the aperture's edge (onion ring); the sum is normalised by the weight sum, so only the brightest ~3 % of pixels become discs and dark or flat art stays a smooth blur. Saturation 1.15, the diagonal fade and the opacity are applied as before. The cache key includes the algorithm version; the one-time render time is logged in debug builds under the tag `DelosHeroLens`. The hero also has a calm, seamless,
+  symmetric 3D tilt around its center: a 12 s loop, 16° amplitude, camera distance 2.2× the longer
+  side (far edge shifts about 100 px at the extreme on the 2100 px hero area; was 9°, 3×, 30 s, about 40 px),
+  3 % overscan (computed: 1.0157 is the minimum that keeps all four viewport edges covered) keeps image edges outside the viewport.
   Reduced motion holds the hero still. The foreground animated/procedural background retains
   its existing shader, timing and blending; logos, covers, text and controls do not tilt or blur.
   Older Android versions retain the supported cached hero rendering.

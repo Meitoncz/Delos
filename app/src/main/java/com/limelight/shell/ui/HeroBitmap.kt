@@ -52,8 +52,11 @@ object HeroBitmaps {
 
     fun cached(key: String, source: ImageBitmap, blurPx: Int): ImageBitmap? = cache.get(cacheKey(key, source, blurPx))
 
+    /** The lens' own key: the algorithm version keeps entries of an older look from ever being reused. */
+    private fun lensKey(key: String, source: ImageBitmap, blurPx: Int) = "${cacheKey(key, source, blurPx)}/lens${HeroBokeh.ALGORITHM_VERSION}"
+
     internal fun cachedLens(key: String, source: ImageBitmap, blurPx: Int): ImageBitmap? =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) lensCache.get(cacheKey(key, source, blurPx)) else cached(key, source, blurPx)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) lensCache.get(lensKey(key, source, blurPx)) else cached(key, source, blurPx)
 
     /** Live hero only. Keep the legacy snapshot populated for the unchanged launch handoff. */
     internal fun renderLens(key: String, source: ImageBitmap, blurPx: Int): ImageBitmap {
@@ -64,7 +67,13 @@ object HeroBitmaps {
             val snapshot = cached(key, source, blurPx)
                 ?: renderSnapshot(key, source, blurPx, checkNotNull(input.copy(Bitmap.Config.ARGB_8888, true)))
             try {
-                HeroLensShader.render(input, blurPx).asImageBitmap()
+                val started = System.nanoTime()
+                HeroLensShader.render(input, blurPx).asImageBitmap().also {
+                    // One-time cost per artwork/strength (shader compile + GPU pass + readback); read it from logcat.
+                    if (com.limelight.BuildConfig.DEBUG) {
+                        android.util.Log.d("DelosHeroLens", "$key blur=$blurPx taps=${HeroBokeh.sampleCount(HeroBokeh.radiusPx(blurPx, input.width))} render=${(System.nanoTime() - started) / 1_000_000} ms")
+                    }
+                }
             } catch (e: RuntimeException) {
                 // An unsupported GPU must retain the supported bitmap path, not crash the home screen.
                 com.limelight.LimeLog.warning("Hero lens $key unavailable: ${e.message}")
@@ -73,7 +82,7 @@ object HeroBitmaps {
         } finally {
             input.recycle()
         }
-        lensCache.put(cacheKey(key, source, blurPx), result)
+        lensCache.put(lensKey(key, source, blurPx), result)
         return result
     }
 

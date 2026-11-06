@@ -15,8 +15,9 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 
 /**
- * A uniform circular aperture, not a Gaussian blur. Rendered once per artwork/strength at 420 × 252;
- * motion only transforms the cached result, never runs a many-tap shader across the screen.
+ * Bokeh lens, not a Gaussian blur: a round aperture of golden-angle taps whose weights boost the artwork's
+ * brightest pixels and brighten the aperture rim (see [HeroBokeh]). Rendered once per artwork/strength at
+ * 420 × 252; motion only transforms the cached result, never runs a many-tap shader across the screen.
  */
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 internal object HeroLensShader {
@@ -24,12 +25,17 @@ internal object HeroLensShader {
         val input = BitmapShader(source, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP).apply {
             setFilterMode(BitmapShader.FILTER_MODE_LINEAR)
         }
-        val shader = RuntimeShader(SOURCE).apply {
+        val radius = HeroBokeh.radiusPx(blurPx, source.width)
+        val pixels = IntArray(source.width * source.height)
+        source.getPixels(pixels, 0, source.width, 0, 0, source.width, source.height)
+        val (t0, t1) = HeroBokeh.thresholds(pixels)
+        val shader = RuntimeShader(HeroBokeh.shaderSource(HeroBokeh.sampleCount(radius))).apply {
             // setInputShader preserves BitmapShader's explicit linear sampling (API 33).
             setInputShader("image", input)
             setFloatUniform("resolution", source.width.toFloat(), source.height.toFloat())
             // Match the old Gaussian's apparent strength: a disk's per-axis sigma is radius / 2.
-            setFloatUniform("radius", blurPx.coerceIn(0, 40) * (source.width / 2100f) * 2f)
+            setFloatUniform("radius", radius)
+            setFloatUniform("thresholds", t0, t1)
         }
         val node = RenderNode("Delos hero lens").apply {
             setPosition(0, 0, source.width, source.height)
@@ -76,28 +82,4 @@ internal object HeroLensShader {
             node.discardDisplayList()
         }
     }
-
-    // Equal-area golden-angle disk samples make a round bokeh footprint without directional box
-    // streaks. Blur is static: 48 taps × 420 × 252 only on a cache miss, not on animation frames.
-    internal const val SOURCE = """
-uniform shader image;
-uniform float2 resolution;
-uniform float radius;
-
-half4 main(float2 p) {
-    half4 color = half4(0.0);
-    for (int i = 0; i < 48; ++i) {
-        float fi = float(i);
-        float angle = fi * 2.39996323;
-        float r = radius * sqrt((fi + 0.5) / 48.0);
-        color += image.eval(p + r * float2(cos(angle), sin(angle)));
-    }
-    color /= 48.0;
-    // Same diagonal stops as HeroBitmaps' legacy snapshot, after (not inside) the blur.
-    float2 direction = float2(-resolution.x, resolution.y);
-    float t = dot(p - float2(resolution.x, 0.0), direction) / dot(direction, direction);
-    float alpha = clamp((0.95 - t) / 0.65, 0.0, 1.0);
-    return color * half(alpha);
-}
-"""
 }
