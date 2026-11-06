@@ -373,7 +373,7 @@ class StreamMenu(private val game: Game) {
         override fun toggleTouchSensitivity() { game.switchTouchSensitivity() }
         override fun rotate() { game.rotateScreen() }
 
-        // TEMPORARY (#66): the laboratory's preset logic, live. RumblePreferences saves the whole preset in one edit; the
+        // The laboratory's preset logic, live. RumblePreferences saves the whole preset in one edit; the
         // stream's ControllerHandler reads prefConfig at every rumble event, so the next event uses the new preset.
         private val rumbleSettings by lazy { ProfileStore.currentSettings(game) }
         override val rumblePreset get() = RumblePreferences.activePreset(rumbleSettings)

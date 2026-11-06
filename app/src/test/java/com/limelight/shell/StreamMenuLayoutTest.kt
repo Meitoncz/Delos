@@ -30,7 +30,7 @@ class StreamMenuLayoutTest {
         assertEquals(PageExit(MenuPage.MORE, null, "Send keys"), pageAfterBack(MenuPage.KEYS))
         assertEquals(PageExit(MenuPage.MORE, null, "Commands"), pageAfterBack(MenuPage.COMMANDS))
         assertEquals(PageExit(MenuPage.MORE, null, "Mouse mode"), pageAfterBack(MenuPage.MOUSE))
-        assertEquals(PageExit(MenuPage.MORE, null, "Rumble preset"), pageAfterBack(MenuPage.RUMBLE))
+        assertEquals(PageExit(MenuPage.MORE, null, "Rumble feel"), pageAfterBack(MenuPage.RUMBLE))
         for (page in listOf(MenuPage.KEYS, MenuPage.COMMANDS, MenuPage.MOUSE, MenuPage.RUMBLE)) {
             assertEquals(PageExit(MenuPage.MAIN, BarItem.MORE, null), pageAfterDismiss(page))
         }
@@ -228,8 +228,8 @@ class StreamMenuLayoutTest {
             MenuPage.BITRATE to listOf("Bitrate", "Apply bitrate"),
             MenuPage.UPSCALER to listOf("Upscaling", "Supersampling on", "Supersampling quality", "Mode", "Sharpness", "Save for this game"),
             MenuPage.MOUSE to listOf("Touchscreen mode", "Local mouse cursor"),
-            // TEMPORARY (#66)
-            MenuPage.RUMBLE to listOf("Rumble preset") + RumblePresets.values().map { StreamMenuHelp.rumbleKey(it) },
+            // Rumble feel page
+            MenuPage.RUMBLE to listOf("Rumble feel") + RumblePresets.values().map { StreamMenuHelp.rumbleKey(it) },
         )
         assertEquals(MenuPage.entries.filter { it != MenuPage.MAIN }.toSet(), footerKeys.keys)
         for (scale in listOf(1f, 1.15f, c.MAX_TEXT_SCALE)) for ((page, keys) in footerKeys) {

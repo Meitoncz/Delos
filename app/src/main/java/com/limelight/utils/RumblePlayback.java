@@ -30,7 +30,7 @@ public final class RumblePlayback {
     private long scheduledAt = Long.MAX_VALUE;
     private boolean stopped;
     private volatile int lastAmplitude;
-    // TEMPORARY (#66): why the selected technique could not run (the plain amplitude path is used instead), or null.
+    // Why the selected technique could not run (the plain amplitude path is used instead), or null.
     private volatile String problem;
 
     public RumblePlayback(RumbleTranslator.Profile profile) {
@@ -53,7 +53,7 @@ public final class RumblePlayback {
         return lastAmplitude;
     }
 
-    /** TEMPORARY (#66): null while the profile's technique runs; otherwise why it could not and amplitude is used. */
+    /** Null while the profile's technique runs; otherwise why it could not and amplitude is used. */
     public String getProblem() {
         return problem;
     }
@@ -210,7 +210,7 @@ public final class RumblePlayback {
         final RumbleTranslator.State state = new RumbleTranslator.State();
         final long[] pwm = new long[3];
         final boolean amplitudeControl;
-        // TEMPORARY (#66): the technique in effect; the requested one until it cannot run, then AMPLITUDE (with a problem recorded).
+        // The technique in effect; the requested one until it cannot run, then AMPLITUDE (with a problem recorded).
         RumbleTechnique technique;
         // Amplitude of the last pulse effect that was issued, 0 while none is playing
         int issuedAmplitude;
@@ -280,7 +280,7 @@ public final class RumblePlayback {
         }
 
         /**
-         * TEMPORARY (#66): pulse output. The waveform repeats by itself; it is replaced when the amplitude changes
+         * Pulse output. The waveform repeats by itself; it is replaced when the amplitude changes
          * (including the end of a start kick) and cancelled at zero.
          */
         private void technique(int amplitude) {

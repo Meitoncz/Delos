@@ -16,7 +16,7 @@ internal enum class BarItem { RESUME, KEYBOARD, OVERLAY, BRIGHTNESS, BITRATE, UP
 
 /**
  * What the popover above the dock shows; [MAIN] is no popover (the dock alone).
- * [RUMBLE] is TEMPORARY (#66): the live rumble preset comparison, opened from the More page.
+ * [RUMBLE] is the live rumble feel selection, opened from the More page.
  */
 internal enum class MenuPage { MAIN, MORE, KEYS, COMMANDS, BRIGHTNESS, BITRATE, UPSCALER, MOUSE, RUMBLE }
 
@@ -42,8 +42,8 @@ internal object MoreRow {
     const val COMMANDS = "Commands"
     const val MOUSE = "Mouse mode"
 
-    /** TEMPORARY (#66): the row that opens the live rumble preset page. */
-    const val RUMBLE = "Rumble preset"
+    /** The More row that opens the live rumble feel page. */
+    const val RUMBLE = "Rumble feel"
 }
 
 /** The row of the parent page that opened this page (by its label), or null when the dock's tile did. */
@@ -297,7 +297,7 @@ internal fun pageTitle(page: MenuPage, supersampling: Boolean): String = when (p
     MenuPage.BITRATE -> "Stream bitrate"
     MenuPage.UPSCALER -> if (supersampling) "Supersampling" else "Upscaler"
     MenuPage.MOUSE -> "Mouse and touch"
-    MenuPage.RUMBLE -> "Rumble preset"
+    MenuPage.RUMBLE -> "Rumble feel"
 }
 
 /** The help key of the tile (or the page's first row) that shows before anything inside a page is focused. */
@@ -310,7 +310,7 @@ internal fun pageHelpKey(page: MenuPage): String = when (page) {
     MenuPage.BITRATE -> "Bitrate"
     MenuPage.UPSCALER -> "Upscaling"
     MenuPage.MOUSE -> "Touchscreen mode"
-    MenuPage.RUMBLE -> "Rumble preset"
+    MenuPage.RUMBLE -> "Rumble feel"
 }
 
 /** The help key of a tile: the upscaler's tile is called Supersampling when the stream is supersampled. */

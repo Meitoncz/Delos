@@ -38,7 +38,7 @@ letters selected with the controller. Results span all tabs and selecting
 one scrolls to and focuses the actual setting, including disabled dependencies.
 
 The **About → Debug info** screen also contains an opt-in [rumble laboratory](RUMBLE.md)
-with profile-scoped translation parameters, fixed test patterns and a live amplitude readout (TEMPORARY, #66).
+with profile-scoped translation parameters, fixed test patterns and a live amplitude readout.
 Translation is off by default. The four presets chosen there are offered in the normal Controls tab as the
 **Rumble feel** row (Original, Soft, Kick-start, Pulsing; Controls → Gamepad, below *Enable Rumble*, hidden
 without a vibration motor, no per-game override). The row is not stored: it shows and applies the rumble

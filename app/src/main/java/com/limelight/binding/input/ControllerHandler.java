@@ -132,7 +132,7 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
     private boolean stopped = false;
 
     private final PreferenceConfiguration prefConfig;
-    // TEMPORARY (#66): the stream menu switches the rumble preset live, so the translated playback follows
+    // The stream menu switches the rumble preset live, so the translated playback follows
     // prefConfig.rumbleTranslatorEnabled/rumbleProfile at every rumble event instead of being fixed at construction.
     // Once a preset is chosen this can go back to a final field built in the constructor.
     private final Object translatedRumbleLock = new Object();
@@ -276,7 +276,7 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
         inputDeviceContexts.put(deviceId, newContext);
     }
 
-    // TEMPORARY (#66): one translated playback per (enabled, profile) pair; see activeRumble.
+    // One translated playback per (enabled, profile) pair; see activeRumble.
     private static final class ActiveRumble {
         final com.limelight.utils.RumbleTranslator.Profile profile;
         final com.limelight.utils.RumblePlayback playback;
@@ -322,7 +322,7 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
         }
     }
 
-    /** TEMPORARY (#66): why the running rumble preset could not use its technique, or null. */
+    /** Why the running rumble preset could not use its technique, or null. */
     public String getRumbleProblem() {
         ActiveRumble active = activeRumble;
         return active == null ? null : active.playback.getProblem();

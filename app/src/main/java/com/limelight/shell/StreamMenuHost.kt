@@ -81,7 +81,7 @@ internal interface StreamMenuHost {
     fun toggleTouchSensitivity()
     fun rotate()
 
-    // TEMPORARY (#66): live comparison of the laboratory's rumble presets in a running stream
+    // Live selection of the rumble presets (same as the Debug laboratory) in a running stream
     /** The active preset, or null for Custom (parameters edited in the laboratory). */
     val rumblePreset: RumblePresets?
 

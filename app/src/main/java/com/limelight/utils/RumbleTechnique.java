@@ -1,6 +1,6 @@
 package com.limelight.utils;
 
-/** TEMPORARY (#66): how a translated amplitude is turned into vibration. */
+/** How a translated amplitude is turned into vibration. */
 public enum RumbleTechnique {
     /** The original path: a one-shot at the translated amplitude. */
     AMPLITUDE,

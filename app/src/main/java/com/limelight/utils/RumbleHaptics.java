@@ -1,7 +1,7 @@
 package com.limelight.utils;
 
 /**
- * TEMPORARY (#66): pure math of the experimental pulse technique (no Android types), so it can be unit tested.
+ * Pure math of the experimental pulse technique (no Android types), so it can be unit tested.
  */
 public final class RumbleHaptics {
     private RumbleHaptics() {

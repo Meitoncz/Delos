@@ -20,7 +20,7 @@ shows **Custom** (not selectable) after an Advanced edit in the laboratory, or w
 preset that no longer exists; picking a choice replaces it. The stored identities are the enum names of
 `RumblePresets` (`ORIGINAL`, `GENTLE`, `KICK_ONLY`, `PULSE_25`) and must not be renamed.
 
-## Rumble laboratory (TEMPORARY, #66)
+## Rumble laboratory
 
 Open **Settings → About → Debug info**, then scroll to **Rumble laboratory**.
 Use up/down to focus a preset and A to select it; B returns. Touch works through the
@@ -36,21 +36,21 @@ remain unchanged. Existing device/OSC/fallback routing and fallback-strength sca
 apply before translation. This is a user-profile setting, not automatic device detection or
 a per-game override. It also affects external pads using those Android paths when enabled.
 
-## Switching presets in a running stream (TEMPORARY, #66)
+## Rumble feel in Settings and in the stream
 
-To compare presets in a real game, open the stream menu (**More** tile), scroll to the last row,
-**Rumble preset** (it shows the active name), and press A. The page lists the same four presets (a preset the hardware cannot run is marked **Problem** with the reason in the help line and does nothing; if the active preset's technique fails during the stream the row shows **Problem** too, with the reason);
-A on one applies and saves it exactly like the laboratory (same `RumblePreferences.applyPreset`), marks it
+**Settings:** Controls > Gamepad > **Rumble feel** (see [SETTINGS.md](SETTINGS.md)).
+
+**Stream menu:** open the stream menu (**More** tile) and choose **Rumble feel**; the row sits between
+**Touch sensitivity** and **Rotate** and shows the active name. The page lists the same four presets (Original, Soft,
+Kick-start, Pulsing). A preset the hardware cannot run is marked **Problem** with the reason in the help line and does
+nothing; if the active preset's technique fails during the stream the row shows **Problem** too, with the reason.
+A on a preset applies and saves it exactly like the laboratory (same `RumblePreferences.applyPreset`), marks it
 **Active**, plays no sample and leaves the menu open so presets can be tried back to back. B returns to More.
 `ControllerHandler` follows `PreferenceConfiguration.rumbleTranslatorEnabled`/`rumbleProfile` at every rumble
 event, so the new preset is used from the next rumble the game sends (the previous output is cancelled
 when the preset changes; a rumble the game keeps holding stays silent until its next update).
 
-**Remove once a preset is chosen** (search for `TEMPORARY (#66)`): the `RUMBLE` page and `MoreRow.RUMBLE` in
-`StreamMenuLayout.kt`, its rows in `StreamMenuRoot.kt`, `rumblePreset`/`selectRumblePreset` in
-`StreamMenuHost.kt`, `StreamMenu.kt` and the debug preview host, the help texts in `StreamMenuHelp.kt`
-and `StreamMenuLayoutTest.kt`, and in `ControllerHandler.java` the `activeRumble` machinery (back to a
-final `RumblePlayback` built in the constructor) plus `volatile` on the two `PreferenceConfiguration` fields.
+The Debug laboratory (Settings > About > Debug info) stays as a developer tool for tuning the parameters.
 
 ## Presets
 

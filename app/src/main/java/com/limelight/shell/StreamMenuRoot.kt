@@ -260,7 +260,7 @@ internal fun StreamMenuRoot(
         BarCircleSpec(BarItem.DISCONNECT, Symbols.LOGOUT, "Disconnect") { close { host.leave(quit = false) } },
         BarCircleSpec(BarItem.QUIT, Symbols.POWER_SETTINGS_NEW, "Quit game") { close { host.leave(quit = true) } },
     )
-    // TEMPORARY (#66): a rumble preset the device cannot run, or whose technique failed in the stream, says so in its help line
+    // A rumble preset the device cannot run, or whose technique failed in the stream, says so in its help line
     fun helpText(key: String): String = helpLineText(
         streamMenuHelp(key, upscalerStatus, host.upscalerMode, host.mouseMode, host.rememberMouseMode, (host.bitrateResult as? BitrateResult.Failed)?.reason) +
             (StreamMenuHelp.rumblePreset(key)?.let { host.rumbleProblem(it) }?.let { "\nProblem: $it" }.orEmpty())
@@ -434,9 +434,8 @@ private fun PageRows(
             MenuRow(Symbols.KEYBOARD_FULL, "Full keyboard", RowValue.Action { toggle { host.toggleFullKeyboard() } })
             MenuRow(Symbols.KEY_LAYOUT, "Key layout", RowValue.Action { toggle { host.toggleKeyLayout() } })
             MenuRow(Symbols.TOUCH_APP, "Touch sensitivity", RowValue.Toggle(host.touchSensitivityOn) { toggle { host.toggleTouchSensitivity() } })
-            MenuRow(Symbols.SCREEN_ROTATION, "Rotate", RowValue.Action { close { host.rotate() } })
-            // TEMPORARY (#66): the last row, so no existing row moves; remove with the page below once a preset is chosen
             MenuRow(Symbols.VIBRATION, MoreRow.RUMBLE, RowValue.Text(host.rumblePreset?.label ?: "Custom") { openPage(MenuPage.RUMBLE) }, entry(MoreRow.RUMBLE))
+            MenuRow(Symbols.SCREEN_ROTATION, "Rotate", RowValue.Action { close { host.rotate() } })
         }
         MenuPage.BRIGHTNESS -> MenuRow(
             Symbols.BRIGHTNESS_MEDIUM, "Screen brightness",
@@ -515,7 +514,7 @@ private fun PageRows(
                 PopoverPills(commands, first, command = true) { i -> close { host.runServerCommand(i) } }
             }
         }
-        // TEMPORARY (#66): the laboratory's presets, switched live. A selection applies at once, plays no sample and keeps
+        // The laboratory's presets, switched live. A selection applies at once, plays no sample and keeps
         // the menu open so presets can be compared back to back; B returns to More.
         MenuPage.RUMBLE -> {
             val presets = RumblePresets.values()

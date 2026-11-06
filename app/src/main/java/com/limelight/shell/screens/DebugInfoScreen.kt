@@ -158,7 +158,7 @@ fun DebugInfoScreen() {
 
     fun updateProfile(edited: RumbleTranslator.Profile) {
         stopLab()
-        // TEMPORARY (#66): an advanced edit keeps the technique and pulse timings of the selected preset
+        // An advanced edit keeps the technique and pulse timings of the selected preset
         val updated = edited.withTechniqueOf(profile)
         profile = updated
         activePreset = null
@@ -239,7 +239,7 @@ fun DebugInfoScreen() {
             "The manufacturer and model.", "Board: ${Build.BOARD}\nHardware: ${Build.HARDWARE}\nSoC: ${if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) "${Build.SOC_MANUFACTURER} ${Build.SOC_MODEL}" else "unknown"}\nBuild: ${Build.DISPLAY}"))
         add(DebugRow("motor", "Device", Symbols.VIBRATION, "Vibration motor", RowValue.Info(if (hasMotor) "Yes" else "No"),
             if (hasMotor) "This device can vibrate." else "This device has no vibration motor."))
-        // TEMPORARY (#66): why an experimental preset is unavailable
+        // Why an experimental preset is unavailable
         add(DebugRow("cap_vibrators", "Device haptic capabilities", Symbols.VIBRATION, "Vibrators",
             RowValue.Info(if (capabilities.vibratorCount == 1) "1 (single)" else "${capabilities.vibratorCount}"),
             "How many vibrators the system reports. One means every preset drives the same motor."))

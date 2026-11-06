@@ -169,7 +169,7 @@ internal class FakeStreamMenuHost : StreamMenuHost {
     override fun toggleTouchSensitivity() { touchSensitivityOn = !touchSensitivityOn }
     override fun rotate() = Unit
 
-    // TEMPORARY (#66)
+    // Live rumble feel selection state
     override var rumblePreset by mutableStateOf<RumblePresets?>(RumblePresets.ORIGINAL)
     override fun selectRumblePreset(preset: RumblePresets) { rumblePreset = preset }
 

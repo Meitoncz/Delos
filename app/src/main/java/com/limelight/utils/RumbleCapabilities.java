@@ -6,7 +6,7 @@ import android.os.Build;
 import android.os.Vibrator;
 import android.os.VibratorManager;
 
-/** TEMPORARY (#66): what this device's vibrator can do, for the laboratory and for preset availability. */
+/** What this device's vibrator can do; used by the Debug laboratory and for preset availability. */
 public final class RumbleCapabilities {
     private static RumbleCapabilities cached;
 

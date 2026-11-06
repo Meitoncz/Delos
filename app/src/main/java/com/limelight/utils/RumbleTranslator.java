@@ -16,9 +16,9 @@ public final class RumbleTranslator {
         public final float lowWeight;
         public final float highWeight;
         public final float smoothing;
-        /** TEMPORARY (#66): how the translated amplitude becomes vibration; AMPLITUDE is the original path. */
+        /** How the translated amplitude becomes vibration; AMPLITUDE is the original path. */
         public final RumbleTechnique technique;
-        /** TEMPORARY (#66): on and off durations of the PULSE technique in ms; 0 for AMPLITUDE. */
+        /** On and off durations of the PULSE technique in ms; 0 for AMPLITUDE. */
         public final int pulseOnMs;
         public final int pulseOffMs;
         private final double preciseLowWeight;
