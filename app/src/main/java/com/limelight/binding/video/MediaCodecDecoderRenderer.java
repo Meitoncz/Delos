@@ -1432,7 +1432,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                 "in=%.1f out=%.1f fps rx=%.0f KB/s bitrate=%d kbps chroma=%s | stall avg/max %.2f/%.2f ms | "
                         + "age@submit avg/max %.2f/%.2f ms | recv->present avg/max %.2f/%.2f ms | "
                         + "partial %.1f/s skipped %.1f/s lostFrames %d | waits prevFrame %.2f acquire %.2f "
-                        + "submit+present %.2f ms | gpuDecode %.2f ms | %s",
+                        + "submit+present %.2f ms | gpuDecode %.2f ms | %s | %s",
                 receivedFps, renderedFps, netKb, diagBitrateKbps, diagChromaNegotiated(),
                 b.stallAvgMs, b.stallMaxMs, b.submitAgeAvgMs, b.submitAgeMaxMs, b.presentAgeAvgMs, b.presentAgeMaxMs,
                 b.partialPerSecond, b.skippedPerSecond, stats[PyroWaveRenderer.STAT_LOST_FRAMES],
@@ -1440,7 +1440,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                 stats[PyroWaveRenderer.STAT_GPU_DECODE_FRAMES] > 0
                         ? stats[PyroWaveRenderer.STAT_GPU_DECODE_TOTAL_US] / 1000f
                                 / stats[PyroWaveRenderer.STAT_GPU_DECODE_FRAMES] : 0f,
-                diagSharpen(stats)));
+                diagSharpen(stats), PyroWavePresentInfo.describe(stats)));
     }
 
     /** The Sharpen only part of the diagnostics line: the pass's GPU time and the conversion before it. */

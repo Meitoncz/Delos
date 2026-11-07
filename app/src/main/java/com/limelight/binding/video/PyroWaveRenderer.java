@@ -199,7 +199,12 @@ public final class PyroWaveRenderer {
     public static final int STAT_SHARPEN_MAX_US = 28;
     public static final int STAT_SHARPEN_PREPARE_TOTAL_US = 29;
     public static final int STAT_SHARPEN_PREPARE_MAX_US = 30;
-    public static final int STAT_COUNT = 31;
+    // Delos diagnostics: what the swapchain was created with (raw Vulkan enums; -1 until it exists), not per window:
+    // the present mode (VkPresentModeKHR), the number of images and the pre-transform (VkSurfaceTransformFlagBitsKHR)
+    public static final int STAT_PRESENT_MODE = 31;
+    public static final int STAT_SWAPCHAIN_IMAGES = 32;
+    public static final int STAT_PRE_TRANSFORM = 33;
+    public static final int STAT_COUNT = 34;
 
     public long[] takeStats() {
         long[] stats = new long[STAT_COUNT];

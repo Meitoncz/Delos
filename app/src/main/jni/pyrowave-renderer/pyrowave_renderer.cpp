@@ -406,7 +406,20 @@ namespace {
 
     // Delos diagnostics (PyroWave backlog numbers), read with `logcat -s DelosPyroDiag`
     constexpr const char *DIAG_TAG = "DelosPyroDiag";
+    // What the swapchain was created with, read back by takeStats for the diagnostics line (-1 until a swapchain exists)
+    std::atomic<int> diagPresentMode{-1}, diagSwapchainImages{-1}, diagPreTransform{-1};
 
+    const char *surfaceTransformName(VkSurfaceTransformFlagBitsKHR transform) {
+        switch (transform) {
+            case VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR: return "identity";
+            case VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR: return "rotate90";
+            case VK_SURFACE_TRANSFORM_ROTATE_180_BIT_KHR: return "rotate180";
+            case VK_SURFACE_TRANSFORM_ROTATE_270_BIT_KHR: return "rotate270";
+            case VK_SURFACE_TRANSFORM_HORIZONTAL_MIRROR_BIT_KHR: return "mirror";
+            case VK_SURFACE_TRANSFORM_INHERIT_BIT_KHR: return "inherit";
+            default: return "other";
+        }
+    }
     const char *presentModeName(VkPresentModeKHR mode) {
         switch (mode) {
             case VK_PRESENT_MODE_IMMEDIATE_KHR: return "IMMEDIATE";
@@ -1711,8 +1724,15 @@ namespace {
                 std::vector<VkPresentModeKHR> modes(modeCount);
                 vk.GetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &modeCount, modes.data());
                 // MAILBOX shows the newest frame without tearing where available.
-                presentMode = std::find(modes.begin(), modes.end(), VK_PRESENT_MODE_MAILBOX_KHR) != modes.end() ?
-                    VK_PRESENT_MODE_MAILBOX_KHR : VK_PRESENT_MODE_FIFO_KHR;
+                const bool mailbox = std::find(modes.begin(), modes.end(), VK_PRESENT_MODE_MAILBOX_KHR) != modes.end();
+                presentMode = mailbox ? VK_PRESENT_MODE_MAILBOX_KHR : VK_PRESENT_MODE_FIFO_KHR;
+                std::string offered;
+                for (auto mode : modes) {
+                    offered += offered.empty() ? "" : ", ";
+                    offered += presentModeName(mode);
+                }
+                __android_log_print(ANDROID_LOG_INFO, DIAG_TAG, "Present modes offered: %s; chosen %s", offered.c_str(),
+                                    presentModeName(presentMode));
             }
 
             uint32_t imageCount = caps.minImageCount + 1;
@@ -1761,8 +1781,15 @@ namespace {
             swapchainImages.resize(count);
             vk.GetSwapchainImagesKHR(device, swapchain, &count, swapchainImages.data());
             // Delos diagnostics: the buffering depth decides how stale a frame can get behind the compositor
-            __android_log_print(ANDROID_LOG_INFO, DIAG_TAG, "Swapchain: %u images, present mode %s, %ux%u",
-                                count, presentModeName(presentMode), swapchainExtent.width, swapchainExtent.height);
+            diagPresentMode.store(int(presentMode), std::memory_order_relaxed);
+            diagSwapchainImages.store(int(count), std::memory_order_relaxed);
+            diagPreTransform.store(int(info.preTransform), std::memory_order_relaxed);
+            __android_log_print(ANDROID_LOG_INFO, DIAG_TAG,
+                                "Swapchain: %u images (minImageCount asked %u, surface min %u max %u), present mode %s, "
+                                "%ux%u, preTransform %s (surface current %s)",
+                                count, imageCount, caps.minImageCount, caps.maxImageCount, presentModeName(presentMode),
+                                swapchainExtent.width, swapchainExtent.height, surfaceTransformName(info.preTransform),
+                                surfaceTransformName(caps.currentTransform));
             return renderPass == VK_NULL_HANDLE || createSwapchainResources();
         }
 
@@ -3998,7 +4025,10 @@ Java_com_limelight_binding_video_PyroWaveRenderer_nativeTakeStats(JNIEnv *env, j
                             w.presentAgeFrames, jlong(w.presentAgeTotalUs), jlong(w.presentAgeMaxUs),
                             jlong(w.fenceWaitTotalUs), jlong(w.acquireWaitTotalUs), jlong(w.submitPresentTotalUs),
                             w.sharpenFrames, jlong(w.sharpenTotalUs), jlong(w.sharpenMaxUs),
-                            jlong(w.sharpenPrepareTotalUs), jlong(w.sharpenPrepareMaxUs)};
+                            jlong(w.sharpenPrepareTotalUs), jlong(w.sharpenPrepareMaxUs),
+                            jlong(diagPresentMode.load(std::memory_order_relaxed)),
+                            jlong(diagSwapchainImages.load(std::memory_order_relaxed)),
+                            jlong(diagPreTransform.load(std::memory_order_relaxed))};
     env->SetLongArrayRegion(out, 0, std::min<jsize>(env->GetArrayLength(out), jsize(std::size(values))), values);
 }
 
