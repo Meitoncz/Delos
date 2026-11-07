@@ -116,7 +116,9 @@ capture of this HTML, not an independently reconstructed drawing. In that render
 retain separate rear/front ink runs at all four sizes. B emphasizes the curved shell; choosing a
 candidate remains a user decision.
 
-For later integration after selection, extend `subset_fonts.py` with a local custom-glyph source
+**Decision (user, 2026-11-07):** both candidates are kept. When the PS Remote Play work needs the glyph, import BOTH A (Open seam) and B (Swept wing), Regular and Fill, into the fonts as two semantic entries (for example `CONSOLE` for B, the earlier favourite, and `CONSOLE_ALT` for A), so the user can compare them inside the real app (shell, device pills, settings) and choose one. The loser is then removed from the font, the generator and this note. Until then neither is part of the bundled fonts or UI.
+
+For the integration, extend `subset_fonts.py` with a local custom-glyph source
 before subsetting. Reserve one unused private-use code point after checking both full upstream
 cmaps, import the selected Regular/Fill paths into the respective fonts, and preserve their shared
 advance and origin. Map the 256-unit SVG coordinates to the font's actual units-per-em, flip the
