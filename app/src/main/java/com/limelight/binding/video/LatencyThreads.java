@@ -6,6 +6,7 @@ import android.os.PerformanceHintManager;
 
 import androidx.annotation.RequiresApi;
 
+import com.limelight.BuildConfig;
 import com.limelight.LimeLog;
 
 import java.io.File;
@@ -66,6 +67,7 @@ public final class LatencyThreads {
             readCoreMaskOnce();
             for (int tid : registry.live(LatencyThreads::isAlive)) applyAffinity(tid);
             rebuildHintSession();
+            if (BuildConfig.DEBUG) UdpDropSampler.start();
         }
     }
 
@@ -76,6 +78,7 @@ public final class LatencyThreads {
     public static void end() {
         synchronized (lock) {
             active = false;
+            UdpDropSampler.stop();
             closeHintSession();
             registry.clear();
             workWindow.reset();

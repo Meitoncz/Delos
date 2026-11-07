@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/resource.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -20,6 +22,8 @@
 
 #define LOG_TAG "DelosLatency"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+// The tag of the stream diagnostics (DelosPyroDiag in MediaCodecDecoderRenderer)
+#define DIAG_TAG "DelosPyroDiag"
 
 // Process.THREAD_PRIORITY_URGENT_DISPLAY, the priority the render thread already runs at
 #define STREAM_THREAD_NICE (-8)
@@ -76,6 +80,48 @@ static uint64_t nowNs(void) {
     return (uint64_t)ts.tv_sec * 1000000000ull + (uint64_t)ts.tv_nsec;
 }
 
+// moonlight-common-c sizes the video socket's receive buffer and reads the grant back, but only warns when
+// the grant is below the request and does not expose the socket. Its descriptor is found by listing this
+// process's UDP sockets: the video socket has by far the biggest receive buffer (the audio and control
+// sockets keep the default). The kernel reports twice the value an app sets (bookkeeping overhead).
+static void logUdpReceiveBuffers(void) {
+    DIR* dir = opendir("/proc/self/fd");
+    if (dir == NULL) return;
+
+    char sockets[256] = "";
+    int largestKb = 0;
+    struct dirent* entry;
+    while ((entry = readdir(dir)) != NULL) {
+        int fd = atoi(entry->d_name);
+        if (fd <= 2 || fd == dirfd(dir)) continue;
+
+        int type = 0, domain = 0, rcvbuf = 0;
+        socklen_t len = sizeof(type);
+        if (getsockopt(fd, SOL_SOCKET, SO_TYPE, &type, &len) != 0 || type != SOCK_DGRAM) continue;
+        len = sizeof(domain);
+        if (getsockopt(fd, SOL_SOCKET, SO_DOMAIN, &domain, &len) != 0 || (domain != AF_INET && domain != AF_INET6)) continue;
+        len = sizeof(rcvbuf);
+        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &rcvbuf, &len) != 0) continue;
+
+        struct sockaddr_storage address;
+        socklen_t addressLen = sizeof(address);
+        int port = 0;
+        if (getsockname(fd, (struct sockaddr*)&address, &addressLen) == 0) {
+            port = ntohs(domain == AF_INET6 ? ((struct sockaddr_in6*)&address)->sin6_port
+                                            : ((struct sockaddr_in*)&address)->sin_port);
+        }
+        int kb = rcvbuf / 1024;
+        if (kb > largestKb) largestKb = kb;
+        size_t used = strlen(sockets);
+        snprintf(sockets + used, sizeof(sockets) - used, "%sport %d %d KB", used > 0 ? ", " : "", port, kb);
+    }
+    closedir(dir);
+    __android_log_print(ANDROID_LOG_INFO, DIAG_TAG,
+            "UDP receive buffers (SO_RCVBUF as the kernel reports it, double the granted size): %s | largest %d KB = the video "
+            "socket; common-c requests about 2900 KB (11500 KB for PyroWave), so about 5800 KB (23000 KB) here is a full grant and less is clamped",
+            sockets[0] != '\0' ? sockets : "no UDP sockets found", largestKb);
+}
+
 uint64_t LatencyFrameBegin(JNIEnv* env) {
     if (!VideoThreadTuned) {
         VideoThreadTuned = true;
@@ -83,6 +129,7 @@ uint64_t LatencyFrameBegin(JNIEnv* env) {
         int tid = (int)gettid();
         raiseThread(tid);
         registerThread(env, tid);
+        logUdpReceiveBuffers();
     }
     return nowNs();
 }
