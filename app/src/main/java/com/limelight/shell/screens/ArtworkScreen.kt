@@ -368,7 +368,7 @@ fun ArtworkScreen(screen: Screen.Artwork) {
                 style = TextStyle(color = colors.accent2, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx, letterSpacing = .14.em),
             )
             BasicText(
-                app.name, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                "SteamGridDB", maxLines = 1, overflow = TextOverflow.Ellipsis,
                 style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 40.tpx),
             )
         }
