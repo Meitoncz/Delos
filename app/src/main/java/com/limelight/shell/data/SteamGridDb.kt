@@ -12,6 +12,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.preference.PreferenceManager
 import com.google.gson.Gson
@@ -551,6 +552,28 @@ object Thumbnails {
 
     fun cached(url: String): ImageBitmap? = memory.get(url)
 
+    /** Thumbnails found to be SteamGridDB's takedown placeholder (black, one line of text): the API does not flag them, the picture does. */
+    private val removed = mutableStateMapOf<String, Boolean>()
+
+    fun isRemoved(url: String): Boolean = removed[url] == true
+
+    /**
+     * Whether [argb] (a small downscaled thumbnail) is a placeholder rather than artwork: nearly all of it opaque pure black,
+     * which real artwork, even a dark one, hardly ever is. Transparent images (logos) never qualify.
+     */
+    internal fun looksRemoved(argb: IntArray): Boolean {
+        if (argb.isEmpty()) return false
+        val black = argb.count { c -> (c ushr 24) >= 200 && ((c shr 16) and 255) < 6 && ((c shr 8) and 255) < 6 && (c and 255) < 6 }
+        return black >= argb.size * 0.9
+    }
+
+    private fun checkRemoved(url: String, image: ImageBitmap) {
+        val small = android.graphics.Bitmap.createScaledBitmap(image.asAndroidBitmap(), 48, 48, true)
+        val pixels = IntArray(48 * 48)
+        small.getPixels(pixels, 0, 48, 0, 0, 48, 48)
+        if (looksRemoved(pixels)) removed[url] = true
+    }
+
     suspend fun load(http: OkHttpClient, url: String): ImageBitmap? = withContext(Dispatchers.IO) {
         memory.get(url)?.let { return@withContext it }
         network.withPermit {
@@ -565,7 +588,10 @@ object Thumbnails {
                     BitmapFactory.decodeByteArray(bytes, 0, bytes.size, BitmapFactory.Options().apply { inSampleSize = sample })?.asImageBitmap()
                 }
             }.getOrNull()
-        }?.also { memory.put(url, it) }
+        }?.also {
+            memory.put(url, it)
+            runCatching { checkRemoved(url, it) }
+        }
     }
 
     /** Animated WebP files of the choices (whole files, bounded), the empty array standing for "known not to be animated". */

@@ -428,7 +428,9 @@ fun ArtworkScreen(screen: Screen.Artwork) {
                     // The focused row keeps clear of the faded edges, like the settings rows
                     val k = stage.dpPerPx * LocalDensity.current.density
                     val bringIntoView = rememberMarginBringIntoView(grid, before = 70f * k, after = 110f * k, stagePx = k)
-                    val inUse = c.images.indexOfFirst { it.id == chosen }
+                    // Takedown placeholders found while the thumbnails load disappear (the chosen image always stays)
+                    val images = c.images.filter { it.id == chosen || !Thumbnails.isRemoved(it.previewUrl) }
+                    val inUse = images.indexOfFirst { it.id == chosen }
                     val noneInUse = chosen == NONE || (chosen == null && c.images.isEmpty() && !filters.active)
                     CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
                         LazyVerticalGrid(
@@ -446,7 +448,7 @@ fun ArtworkScreen(screen: Screen.Artwork) {
                                     onFocused = { described = Described.FirstChoice },
                                 ) { apply(scope, shell, feedback, store, pc, app, tab, null) }
                             }
-                            itemsIndexed(c.images, key = { _, image -> image.id }) { index, image ->
+                            itemsIndexed(images, key = { _, image -> image.id }) { index, image ->
                                 ChoiceTile(
                                     image, tab, inUse = image.id == chosen, loading = store.applying(pc, app, tab.kind) == image.id,
                                     playing = image.id in playing, ticker = ticker,
