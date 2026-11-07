@@ -36,7 +36,11 @@ public final class SgsrRenderer implements AutoCloseable {
             "layout(location=0) out highp vec4 in_TEXCOORD0;" +
             "void main(){vec2 p=vec2(float(gl_VertexID&1),float(gl_VertexID>>1));" +
             "gl_Position=vec4(p*2.0-1.0,0,1); in_TEXCOORD0=vec4(p,0,0);}";
-    private final HandlerThread thread = new HandlerThread("Video - SGSR", android.os.Process.THREAD_PRIORITY_DISPLAY);
+    // The GL thread draws every frame inside the display's deadline, like the codec renderer thread
+    private final HandlerThread thread = new HandlerThread("Video - SGSR", android.os.Process.THREAD_PRIORITY_URGENT_DISPLAY);
+    // EGL_IMG_context_priority attribute and values (not in android.opengl.EGL14)
+    private static final int EGL_CONTEXT_PRIORITY_LEVEL_IMG = 0x3100, EGL_CONTEXT_PRIORITY_HIGH_IMG = 0x3101,
+            EGL_CONTEXT_PRIORITY_MEDIUM_IMG = 0x3102, EGL_CONTEXT_PRIORITY_LOW_IMG = 0x3103;
     private final Handler handler;
     // Receives the decoder's frame-available callbacks apart from the GL thread so frames queued behind a long
     // draw are counted as they arrive
@@ -355,9 +359,24 @@ public final class SgsrRenderer implements AutoCloseable {
         int[] count = new int[1];
         require(EGL14.eglChooseConfig(display, attrs,0,configs,0,1,count,0) && count[0]>0, "EGL config");
         eglConfig = configs[0];
-        context = EGL14.eglCreateContext(display, configs[0], EGL14.EGL_NO_CONTEXT,
-                new int[]{EGL14.EGL_CONTEXT_CLIENT_VERSION,3,EGL14.EGL_NONE},0);
+        context = EGL14.EGL_NO_CONTEXT;
+        // EGL_IMG_context_priority: the GPU scheduler serves this context ahead of ordinary ones (SurfaceFlinger's own
+        // GPU work, other apps). A driver that refuses the request gets a plain context.
+        final String eglExtensions = EGL14.eglQueryString(display, EGL14.EGL_EXTENSIONS);
+        if (eglExtensions != null && eglExtensions.contains("EGL_IMG_context_priority")) {
+            context = EGL14.eglCreateContext(display, configs[0], EGL14.EGL_NO_CONTEXT,
+                    new int[]{EGL14.EGL_CONTEXT_CLIENT_VERSION,3,EGL_CONTEXT_PRIORITY_LEVEL_IMG,EGL_CONTEXT_PRIORITY_HIGH_IMG,
+                            EGL14.EGL_NONE},0);
+            if (context == EGL14.EGL_NO_CONTEXT) LimeLog.info("SGSR: high-priority EGL context refused, using the default priority");
+        }
+        if (context == EGL14.EGL_NO_CONTEXT) {
+            context = EGL14.eglCreateContext(display, configs[0], EGL14.EGL_NO_CONTEXT,
+                    new int[]{EGL14.EGL_CONTEXT_CLIENT_VERSION,3,EGL14.EGL_NONE},0);
+        }
         require(context != EGL14.EGL_NO_CONTEXT, "EGL context");
+        if (EGL14.eglQueryContext(display, context, EGL_CONTEXT_PRIORITY_LEVEL_IMG, size, 0))
+            LimeLog.info("SGSR EGL context priority level: " + (size[0] == EGL_CONTEXT_PRIORITY_HIGH_IMG ? "high" :
+                    size[0] == EGL_CONTEXT_PRIORITY_MEDIUM_IMG ? "medium" : size[0] == EGL_CONTEXT_PRIORITY_LOW_IMG ? "low" : "unknown"));
         if (tenBit || arrivalOnly) {
             pbuffer = EGL14.eglCreatePbufferSurface(display,configs[0],
                     new int[]{EGL14.EGL_WIDTH,1,EGL14.EGL_HEIGHT,1,EGL14.EGL_NONE},0);
