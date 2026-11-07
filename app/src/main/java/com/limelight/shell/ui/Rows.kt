@@ -50,6 +50,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.em
 import com.limelight.shell.ContextMenu
+import com.limelight.shell.settings.SettingImpact
 
 /** The value side of a settings row. */
 @Immutable
@@ -89,7 +90,8 @@ internal fun sliderAcceleration(slider: RowValue.Slider, repeatCount: Int): Int 
 /**
  * A settings row (`.row`): icon, label with an optional description, and the value. Used by the side
  * menu and the settings screen. Choice and slider rows are adjusted with left/right instead of moving
- * the focus, like in the prototype.
+ * the focus, like in the prototype. [impact] (cost-bearing settings only) adds three small GPU / latency / network chips
+ * after the name, without changing the row's height.
  */
 @Composable
 fun SettingRow(
@@ -103,6 +105,7 @@ fun SettingRow(
     compact: Boolean = false,
     contextMenu: ContextMenu? = null,
     onFocused: (() -> Unit)? = null,
+    impact: SettingImpact? = null,
 ) {
     val colors = LocalDelosColors.current
     val feedback = LocalFeedback.current
@@ -199,7 +202,13 @@ fun SettingRow(
                 RowIcon(icon, focused, calm)
             }
             Column(Modifier.weight(1f).staggerEntrance(entrance)) {
-                BasicText(label, style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx))
+                val labelStyle = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx)
+                if (impact == null) BasicText(label, style = labelStyle)
+                else Row(verticalAlignment = Alignment.CenterVertically) {
+                    // A long name scrolls like a long value; the chips keep their place and never shrink
+                    MarqueeText(label, style = labelStyle, active = focused, modifier = Modifier.weight(1f, fill = false))
+                    ImpactChips(impact, focused, Modifier.padding(start = 22.px))
+                }
                 if (description != null) {
                     BasicText(
                         description,

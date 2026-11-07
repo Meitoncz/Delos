@@ -61,6 +61,7 @@ import com.limelight.shell.settings.Appearance
 import com.limelight.shell.settings.SettingKind
 import com.limelight.shell.settings.SettingsCapabilities
 import com.limelight.shell.settings.SettingsHelp
+import com.limelight.shell.settings.impact
 import com.limelight.shell.settings.choiceLabel
 import com.limelight.shell.settings.nextSettingChoice
 import com.limelight.shell.settings.pyroWaveRecommendedBitrateKbps
@@ -102,6 +103,7 @@ import com.limelight.shell.ui.rememberFocusedListNavigation
 import com.limelight.shell.ui.focusedListBoundary
 import com.limelight.shell.ui.focusedListRow
 import com.limelight.shell.ui.PillButton
+import com.limelight.shell.ui.ImpactLegend
 import com.limelight.shell.ui.RowValue
 import com.limelight.shell.ui.SettingRow
 import com.limelight.shell.ui.Symbol
@@ -180,7 +182,7 @@ fun SettingsScreen(
         SettingsItem(spec.key, spec.tab, spec.section, spec.icon, spec.label,
             description, row, stream.enabled(spec, capabilities),
             detail = SettingsHelp.details(spec.copy(description = description), values, capabilities?.choices(spec, values) ?: spec.choices),
-            searchTerms = settingSearchTerms(spec))
+            searchTerms = settingSearchTerms(spec), impact = impact(spec.key, values))
     }
     val withLink = withLinkRows(classic, guidance, pc, values, profiles.catalog.all.firstOrNull { it.key == "seekbar_bitrate_kbps" }) { spec, kbps -> stream.write(spec, kbps) }
     val all = nativeSettings(appearance, update, startup, updateStartup, pcs, profiles.settings()) + withLink
@@ -297,7 +299,7 @@ private fun SectionHeading(label: String) {
 @Composable
 private fun SettingsItemRow(item: SettingsItem, modifier: Modifier = Modifier, hint: String? = null, focused: () -> Unit = {}) {
     SettingRow(item.icon, item.label, item.value, modifier,
-        description = hint, enabled = item.enabled, onFocused = focused)
+        description = hint, enabled = item.enabled, onFocused = focused, impact = item.impact)
 }
 
 /** The L1 / R1 hint beside a row of tabs. */
@@ -398,6 +400,8 @@ private fun DescriptionPanel(tab: SettingsTab, focused: SettingsItem?, modifier:
                 }
             }
         }
+        // What the three chips of the focused row mean
+        if (focused?.impact != null) ImpactLegend()
     }
 }
 

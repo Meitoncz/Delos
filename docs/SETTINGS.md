@@ -90,6 +90,38 @@ preset keys through `RumblePreferences` (see [RUMBLE.md](RUMBLE.md)) and reads C
   only. `list_sgsr_supersampling_level` is disabled in Sharpen only ("Not used by Sharpen only.") because that
   mode never scales. See [STREAM_QUALITY.md](STREAM_QUALITY.md#sharpen-only-mode).
 
+## Performance impact chips (issue #40)
+
+`impact(key, values): SettingImpact?` in `shell/settings/SettingsImpact.kt` (pure, unit-tested in `SettingsImpactTest`)
+returns the cost of a setting's **current value** as three levels (`NONE`, `LOW`, `MEDIUM`, `HIGH`): `gpu`, `latency`,
+`network`. `SettingRow` draws them as chips after the name (docs/GUI.md, "Impact chips"). The global settings screen passes
+`impact(spec.key, values)` through `SettingsItem.impact`; the per-game screen can do the same with its effective values map.
+Null means no chips (any other key, PyroWave chroma without PyroWave, supersampling with Sharpen only). With the upscaler off
+its on/off, mode, sharpness and supersampling rows return all-`NONE` (dimmed chips). A level is a bucket, never a measurement.
+
+- GPU of SGSR2-DV is its pass time over the frame period: about 6.85 ms (1080p to 1440p, the 1.33x level) or 10.23 ms (1080p
+  to 4K, 2x) on the Odin (docs/STREAM_QUALITY.md); below 35 % Low, below 70 % Medium, else High. A pass longer than the frame
+  period (4K at 120 FPS) is over budget and the latency is High. SGSR2-DV (Quality) has no number ("most GPU"): one level above Normal.
+  Sharpen only and the sharpness pass are about 0.31 ms: Low. SGSR 1 modes are qualitative (Normal Low, Quality Medium).
+- Network uses one scale: below 50 Mbps Low, below 150 Medium, else High. The bitrate row uses its own value; PyroWave rows use the
+  real `PyroWaveBitrate` recommendation (4:2:0 / 4:4:4 / HDR, resolution, FPS); ordinary codecs use LinkPolicy's judgment table
+  (20 / 40 / 80 Mbps at 1080p / 1440p / 4K 60 FPS, doubled for HEVC and AV1, tripled for H.264, capped at 150), only at 60 FPS.
+- Codec, HDR, frame pacing and the remaining GPU / latency levels are qualitative, taken from the help texts (for example Warp
+  "requests twice the FPS", Smoothness "adds buffering and latency", PyroWave "needs a fast link and far higher bitrate").
+
+| Setting | GPU | Latency | Network |
+|---|---|---|---|
+| Video resolution | 4K Medium, else Low | 4K Medium, else Low | recommended Mbps of the codec at 60 FPS; PyroWave real; otherwise Medium (720p Low) |
+| Video frame rate | upscaler pass share of the frame (PyroWave without upscaler: 60 Medium, above High; else Low) | 60 FPS Medium, above Low | PyroWave High; 60 Low, above Medium |
+| Video bitrate | none | 150 Mbps and up Medium, else Low | by Mbps |
+| Video codec | PyroWave High, else Low | Low | PyroWave High, H.264 Medium, else Low |
+| HDR | on: Low | none | on: Low, PyroWave High |
+| PyroWave chroma | 4:4:4 (SDR) High, 4:2:0 Medium | Low | High |
+| Frame pacing | Warp 2 High, Warp Medium, else Low | Lowest latency / Fast V-Sync / Warp Low, Balanced and FPS limit Medium, Smoothness High | Warp 2 High, Warp Medium, else none |
+| Upscaler on/off, mode | Normal Low, Quality Medium, SGSR2-DV by the pass share (Quality one higher), Sharpen only Low | Low, SGSR2-DV Medium (High when over budget) | none |
+| Upscaler sharpness | 0 none, else Low | 0 none, else Low | none |
+| Supersampling quality | SGSR2-DV like the mode at that level; SGSR 1: 2x Medium, 1.33x Low | as the mode | none |
+
 ## Hidden phone-oriented and key-layout settings
 
 Delos is handheld-first, so the touch-mouse and on-screen gamepad settings are hidden from the settings

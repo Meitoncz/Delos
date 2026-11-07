@@ -23,6 +23,7 @@ import com.limelight.shell.Screen
 import com.limelight.shell.StatsPosition
 import com.limelight.shell.data.Pc
 import com.limelight.shell.settings.Appearance
+import com.limelight.shell.settings.SettingImpact
 import com.limelight.shell.settings.SettingSpec
 import com.limelight.shell.settings.SettingsTab
 import com.limelight.shell.settings.SettingsHelp
@@ -44,6 +45,7 @@ internal data class SettingsItem(
     val enabled: Boolean = true,
     val detail: String = description,
     val searchTerms: String = "",
+    val impact: SettingImpact? = null,
 )
 
 /** The choice names a setting can be found by, besides its own texts. */

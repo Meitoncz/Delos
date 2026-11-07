@@ -127,7 +127,7 @@ private fun wifiIcon(wifi: WifiStatus) = when (wifi.level) {
 /** Battery at or below this level shows red while not charging (like iOS). */
 private const val LOW_BATTERY = .2f
 
-private val LowRed = androidx.compose.ui.graphics.Color(0xFFFF453A)
+internal val LowRed = androidx.compose.ui.graphics.Color(0xFFFF453A)
 
 /**
  * The battery in the style of iOS: a light outline with a small cap, filled green to the charge level
