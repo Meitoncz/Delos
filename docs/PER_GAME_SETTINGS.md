@@ -66,7 +66,8 @@ stream keeps its own (the launch snapshot is fixed). The row is hidden when the 
 without its launch identity (no snapshot, PC or app ID in the intent), and is dimmed where the upscaler
 is unavailable. Both renderers (MediaCodec SGSR and PyroWave) read the same live values, so the row
 works for both. The supersampling level saved is the one in effect, so a 2x that PyroWave already
-fell back from is saved as 1x.
+fell back from is saved as 1x. The mode is saved by its stored value, so Sharpen only (`sharpen`) is saved and
+restored like the four SGSR modes; the level is still written, but Sharpen only ignores it.
 
 `GameSettingsStore` stores sparse, typed values under `ui_game_<PC hash>_<app ID>_<setting key>` in
 the user's `ui_profile_<UUID>` preferences. PC UUID plus host app ID distinguishes libraries; titles

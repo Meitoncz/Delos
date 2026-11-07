@@ -77,6 +77,13 @@ preset keys through `RumblePreferences` (see [RUMBLE.md](RUMBLE.md)) and reads C
   PyroWave codec and no HDR. 4:4:4 adds `VIDEO_FORMAT_PYROWAVE_444` to the offer next to the 4:2:0 flag
   (`PyroWaveFormats`); the host picks, and the renderer follows the negotiated format. With HDR on, 4:4:4 is
   never offered (the P010 output is 4:2:0 only) and the stream uses 4:2:0.
+- `list_sgsr_quality` (Display tab, also a per-game override, depends on `checkbox_sgsr`) has five modes; the stored
+  values are `standard`, `high`, `temporal`, `temporal-quality` and **`sharpen`** (Sharpen only: no scaling, a
+  contrast-adaptive sharpen pass at the stream's own resolution). `UpscalerMode` is the one definition of the
+  values, labels and menu positions; an unknown stored value reads as `standard`, so a value from a newer build
+  never breaks an older one. `seekbar_sgsr_sharpness` works in every mode and is the whole effect in Sharpen
+  only. `list_sgsr_supersampling_level` is disabled in Sharpen only ("Not used by Sharpen only.") because that
+  mode never scales. See [STREAM_QUALITY.md](STREAM_QUALITY.md#sharpen-only-mode).
 
 ## Hidden phone-oriented and key-layout settings
 

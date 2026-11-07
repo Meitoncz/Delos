@@ -127,7 +127,8 @@ launch. It saves nothing else (no bitrate, no other display setting) and changes
 nor other games; the running stream keeps its live values. It is hidden for a stream started without
 its launch identity.
 
-Both renderers implement SGSR 1 Standard, SGSR 1 High Quality, SGSR 2 Video and SGSR 2 Video Quality.
+Both renderers implement SGSR 1 Standard, SGSR 1 High Quality, SGSR 2 Video and SGSR 2 Video Quality, and
+the [Sharpen only mode](#sharpen-only-mode).
 PyroWave uses native Vulkan shaders rather than the GLES stage. Spatial modes use distinct Qualcomm
 Standard/HQ kernels; temporal Quality adds a separate reactive activation pass and tighter YCoCg
 history clipping. All modes retain FP16 intermediates and use the existing HDR/P010 bridge.
@@ -139,6 +140,69 @@ The statistics overlay includes the measured post-decoding processing time for e
 both renderers and adds it to total latency. MediaCodec uses smoothed wall time around a successful
 SGSR draw; PyroWave uses its Vulkan draw timestamps. This is processing cost, not a claim of complete
 input-to-photon latency.
+
+### Sharpen only mode
+
+Issue [#67](https://github.com/Meitoncz/Delos/issues/67). **Sharpen only** is a fifth Upscaler mode (setting value
+`sharpen`, Mode row position 5) for sharpness without scaling: the internal size is the stream's resolution whatever
+the supersampling level, and the only picture change is one contrast-adaptive sharpen pass using the existing
+sharpness value (0 leaves the picture unchanged). The Sharpness slider keeps working in every other mode as before.
+The Enabled toggle, the Mode row and Sharpness work live; the supersampling quality has no meaning in this mode, so
+the stream menu hides that row and Settings disables it with "Not used by Sharpen only.". The mode is saved and
+restored globally and per game like the others (`list_sgsr_quality=sharpen`); older builds read the value as Standard.
+
+**Algorithm.** SGSR 1 at a scale factor of 1 is not a plain sharpen (it is an edge-directed resample of the luma with
+a Lanczos kernel), so the mode has its own pass: FidelityFX CAS (contrast adaptive sharpening, AMD, MIT) on the
+five-sample cross, per colour channel, in the encoded domain (SDR gamma or HDR PQ code values, never linearised):
+
+```
+mn, mx = min / max of centre e and its up b, left d, right f, down h
+amp    = sqrt(clamp(min(mn, 1 - mx) / max(mx, 1e-4), 0, 1))   // less where the signal is near black or white
+w      = -amp * 0.2 * sqrt(sharpness)                          // sharpness 0..1; 0 = off, 1 = CAS's strongest 1/5
+out    = clamp((b + d + f + h) * w + e) / (1 + 4 w)           // the weights sum to 1, flat areas never change
+```
+
+CAS's own default peak is 1/6.5; the square root puts the middle of the slider (50 %) at 0.141 instead of the weak
+0.1 a linear ramp would give. `SharpenOnly.java` is the CPU reference with unit tests of documented values; the
+shaders evaluate the same steps and must be kept in step with it.
+
+| Pipeline | Where | Passes per frame |
+| --- | --- | --- |
+| OpenGL ES (MediaCodec) | `assets/sgsr/sharpen_only.frag`, drawn by `SgsrRenderer` | the existing OES to 2D copy, then the sharpen pass straight into the window or the P010 layer |
+| Vulkan (PyroWave) | `shaders/sgsr_sharpen.glsl` (`contrastAdaptive`) in `sgsr_present.frag` / `sgsr_pack.frag`; mode 5 of `sgsr_spatial.comp` | a YCbCr to RGB compute pass into the existing FP16 image at stream size, then the sharpen present (or P010 pack) pass |
+
+Both are GPU-only and keep FP16 intermediates, the P010/PQ HDR output and the launch arrival pass of the SGSR modes
+(the arrival renders the sharpened frame). The Vulkan side supports 4:2:0 and 4:4:4 planes (the chroma planes are
+sampled at their own size) and SDR, HDR10 swapchain and the HDR P010 bridge.
+
+**Surface size.** Sharpen only must not enlarge anything, so the cost stays that of the stream's own pixels. SDR
+MediaCodec output keeps the stream-sized SurfaceView buffers (`Game.sizeStreamSurfaceForUpscaler`: a scaling mode
+asks for the layout size, Sharpen only for the stream's fixed size) and the HDR child layer is created at the
+stream's size, not the display's; SurfaceFlinger scales the result to the view as it does for direct output.
+PyroWave presents at the stream's size in this mode (`sgsrPresentationWidth/Height` = stream size, no supersampling
+candidate). Because these sizes differ from the scaling modes', switching Mode to or from Sharpen only (or enabling
+with a stored Sharpen only) rebuilds the output stage: a MediaCodec decoder reset like the Enabled toggle, and for
+PyroWave the existing upscaler recreate at a frame boundary. Switching among the other four modes is as before.
+
+**Measuring the cost.** Both pipelines publish what the mode costs, for the next stream test:
+
+- OpenGL ES: once a second, while the mode runs, one debug line under the log tag `DelosSharpen`
+  (`adb logcat -s DelosSharpen`), for example
+  `sharpen-only 1920x1080->1920x1080 sharpness=0.5 p010=true hdr=true timer=gpu | pass gpu avg=0.310 max=0.620 ms (n=119) | copy gpu avg=0.180 max=0.400 ms | cpu submit pass avg=0.040 max=0.200 ms copy avg=0.030 max=0.100 ms`.
+  GPU time is an `EXT_disjoint_timer_query` time-elapsed query around the sharpen draw and around the OES copy that
+  the direct output does not have; if the extension is missing (or a probe query errors) the line says
+  `timer=cpu-submit` and only the CPU time of submitting the draws is reported. Disjoint GPU events discard the
+  affected samples. The full statistics panel shows the row **Sharpen pass** (`0.31 ms avg / 0.62 max · copy 0.18 ms`,
+  with `(CPU submit)` when no GPU timer exists).
+- Vulkan: the existing timestamp queries gain a fourth stamp after the reconstruction stage, so the draw time is
+  split into the YCbCr to RGB conversion and the sharpen/pack pass. `DelosPyroDiag` (debug builds) ends with
+  `sharpen pass gpu avg/max .../... ms, conversion avg/max .../... ms (n=...)` (or `sharpen off`), the native 5-second
+  log line `Sharpen only: GPU sharpen pass ... ms, colour conversion ... ms`, and the full panel's **Backlog**
+  section gains **Sharpen pass** (`0.50 ms avg / 0.90 max · conversion 0.25 ms`). The existing "GPU draw" number
+  already covers the whole draw stage in every mode, so the cost against the direct path is the difference in it.
+
+The numbers are what the pass costs; they are not an input-to-photon measurement. Cost on the Odin at 1080p120,
+the visual result, and the shader compile on the Adreno 740 are verified only by a stream test (issue #67).
 
 ### Native-resolution supersampling
 

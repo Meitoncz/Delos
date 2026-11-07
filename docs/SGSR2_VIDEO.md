@@ -19,6 +19,8 @@ All remain opt-in, retain live On/Off and independent sharpness, and use the exi
 The mode also participates in global and per-game settings through `list_sgsr_quality=temporal`.
 Live changes only affect the session; changing modes resets temporal history without reconnecting.
 PyroWave uses separate Vulkan implementations of all four modes; it does not feed this GLES stage.
+A fifth mode, **Sharpen only** (`list_sgsr_quality=sharpen`), does no scaling and no temporal work: it is documented in
+[STREAM_QUALITY.md](STREAM_QUALITY.md#sharpen-only-mode) together with how its cost is measured.
 
 The user reported SGSR 1 made the overall game look worse even though identical-frame diagnostics
 showed stronger text edges than bilinear. Do not claim SGSR 1 visual acceptance or dismiss this report.

@@ -426,6 +426,13 @@ the accent the rest and fainter.
 - The Upscaler page of the stream menu changes a row with one press. Its supersampling quality, mode
   and sharpness rows show the value just requested, not the one the renderer applied on its last frame
   (a fallback from 2× to 1× corrects the row afterwards).
+- Rows of the Upscaler page: **Enabled** (the on/off toggle for the upscaler and Sharpen only alike), **Supersampling
+  quality** (only while the stream matches the display and the mode scales), **Mode** (SGSR 1 Standard, SGSR 1 High
+  Quality, SGSR 2 Video, SGSR 2 Video Quality, **Sharpen only**), **Sharpness** and Save for this game. In
+  **Sharpen only** the Supersampling quality row is hidden (nothing is scaled, so it has no meaning), the page is
+  titled Upscaler and the Sharpness slider is the whole effect; the tile's status reads "On: Sharpen only" in the help.
+  Mode and Sharpness change live. Switching Mode to or from Sharpen only rebuilds the output stage the way the Enabled
+  toggle does (the picture may flicker once), because Sharpen only draws at the stream's size.
 - Its last row, **Save for this game**, saves the live on/off, mode, sharpness and supersampling quality
   as this game's overrides for future launches, with a check and "Saved" on the row (for 2.5 seconds) and no
   confirmation dialog. It is hidden for a stream without its launch identity.
@@ -636,6 +643,7 @@ The real menu can be drawn without a stream, over a sunset "game scene", with ma
 ```
 adb shell am start -n io.github.meitoncz.delos.debug/com.limelight.shell.ShellActivity --es preview_screen stream_menu \
   --es preview_page <main|upscaler|bitrate|brightness|more|keys|commands|mouse|rumble> --ei preview_focus <tile 0..8> \
+  [--ei preview_upscaler_mode <0..4; 4 = Sharpen only, whose page has no Supersampling quality row>] \
   [--ei preview_row <row of the page to focus>] [--ez preview_animate true]
 ```
 
