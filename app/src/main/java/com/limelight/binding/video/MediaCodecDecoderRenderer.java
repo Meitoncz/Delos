@@ -1821,6 +1821,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
             public void run() {
                 // Boost thread priority to reduce decoding latency
                 android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_DISPLAY);
+                LatencyThreads.register(android.os.Process.myTid());
 
                 BufferInfo info = new BufferInfo();
                 int tryAgainStreak = 0;
@@ -2042,6 +2043,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
 
     @Override
     public void start() {
+        LatencyThreads.begin();
         synchronized (codecRecoveryMonitor) {
             prepareLaunchArrivalBackend();
         }
@@ -2057,6 +2059,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     public void prepareForStop() {
         // Let the decoding code know to ignore codec exceptions now
         stopping = true;
+        LatencyThreads.end();
         cancelLaunchArrival(null);
 
         // Halt the rendering thread

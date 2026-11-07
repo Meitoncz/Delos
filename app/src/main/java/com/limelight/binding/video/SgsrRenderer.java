@@ -188,6 +188,7 @@ public final class SgsrRenderer implements AutoCloseable {
         this.failure = failure;
         thread.start();
         handler = new Handler(thread.getLooper());
+        LatencyThreads.register(thread.getThreadId());
     }
 
     public Surface getDecoderSurface() { return decoderSurface; }

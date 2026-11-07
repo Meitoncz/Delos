@@ -1,0 +1,17 @@
+#pragma once
+
+#include <jni.h>
+
+// Delos: scheduling of the latency-critical stream threads (see LatencyThreads.java). Everything here runs
+// from Delos' own callbacks; nothing in moonlight-common-c is touched.
+
+// Looks up the Java side once (MoonBridge.init); a missing class only disables these hooks.
+void LatencyThreadsInit(JNIEnv* env);
+
+// Raises the priority of the threads moonlight-common-c creates and never calls back from (InputSend,
+// ControlRecv, VideoRecv), found by the names it gives them. Call once the connection has started.
+void LatencyTuneConnectionThreads(JNIEnv* env);
+
+// The first call on a thread raises its priority and registers it with LatencyThreads; later calls cost a
+// thread-local flag check. Call it on the thread that receives video decode units.
+void LatencyTuneVideoThread(JNIEnv* env);

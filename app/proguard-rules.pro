@@ -4,6 +4,9 @@
 # Our code
 -keep class com.limelight.binding.input.evdev.* {*;}
 
+# Called back from native code (latency_threads.c)
+-keep class com.limelight.binding.video.LatencyThreads {*;}
+
 # KeyMapper - keep all VK_* fields for reflection
 -keep class com.limelight.utils.KeyMapper {*;}
 

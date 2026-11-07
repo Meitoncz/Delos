@@ -10,6 +10,8 @@
 
 #include <cpu-features.h>
 
+#include "latency_threads.h"
+
 static OpusMSDecoder* Decoder;
 static OPUS_MULTISTREAM_CONFIGURATION OpusConfig;
 
@@ -102,6 +104,7 @@ Java_com_limelight_nvstream_jni_MoonBridge_init(JNIEnv *env, jclass clazz) {
     BridgeClRumbleTriggersMethod = (*env)->GetStaticMethodID(env, clazz, "bridgeClRumbleTriggers", "(SSS)V");
     BridgeClSetMotionEventStateMethod = (*env)->GetStaticMethodID(env, clazz, "bridgeClSetMotionEventState", "(SBS)V");
     BridgeClSetControllerLEDMethod = (*env)->GetStaticMethodID(env, clazz, "bridgeClSetControllerLED", "(SBBB)V");
+    LatencyThreadsInit(env);
 }
 
 // Delos: PyroWave frames go straight to the native PyroWave renderer (pyrowave-renderer), never through
@@ -155,6 +158,9 @@ void BridgeDrCleanup(void) {
 int BridgeDrSubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
     JNIEnv* env = GetThreadEnv();
     int ret;
+
+    // Delos: raise this thread's priority and register it for placement and hints; a flag check after the first frame
+    LatencyTuneVideoThread(env);
 
 #ifdef DELOS_PYROWAVE
     if (ActiveVideoFormat & VIDEO_FORMAT_MASK_PYROWAVE) {
@@ -313,6 +319,9 @@ void BridgeClStageFailed(int stage, int errorCode) {
 
 void BridgeClConnectionStarted(void) {
     JNIEnv* env = GetThreadEnv();
+
+    // Delos: the connection's other threads exist now
+    LatencyTuneConnectionThreads(env);
 
     (*env)->CallStaticVoidMethod(env, GlobalBridgeClass, BridgeClConnectionStartedMethod);
 }

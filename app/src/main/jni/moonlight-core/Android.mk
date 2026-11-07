@@ -42,6 +42,7 @@ LOCAL_SRC_FILES := moonlight-common-c/src/AudioStream.c \
                    moonlight-common-c/enet/win32.c \
                    simplejni.c \
                    callbacks.c \
+                   latency_threads.c \
                    minisdl.c \
 
 

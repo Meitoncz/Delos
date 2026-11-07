@@ -319,6 +319,7 @@ public final class AsyncCodecAdapter {
         }
 
         final Handler cb = new Handler(callbackThread.getLooper());
+        LatencyThreads.register(callbackThread.getThreadId());
         // A new generation before the reset, so the last attach's callbacks add nothing after it
         final MediaCodec.Callback callback = newCallback(cb, callbacks, release);
 
