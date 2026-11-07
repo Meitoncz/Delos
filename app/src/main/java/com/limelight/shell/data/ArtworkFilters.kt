@@ -81,8 +81,15 @@ object ArtFilterRules {
         }
     }
 
-    /** One list from several answers, an image once, the first answer's order. */
-    fun merge(lists: List<List<SgdbImage>>): List<SgdbImage> = lists.flatten().distinctBy { it.id }
+    /**
+     * One list from several answers, an image once (the earlier answer's copy), the answers interleaved so that neither
+     * the still nor the animated images end up behind the other when the sort cannot tell them apart.
+     */
+    fun merge(lists: List<List<SgdbImage>>): List<SgdbImage> {
+        val seen = HashSet<Int>()
+        val unique = lists.map { list -> list.filter { seen.add(it.id) } }
+        return (0 until (unique.maxOfOrNull { it.size } ?: 0)).flatMap { i -> unique.mapNotNull { it.getOrNull(i) } }
+    }
 
     /** [images] in the order of [sort]; ties keep the order they came in (SteamGridDB lists the best rated first). */
     fun sort(images: List<SgdbImage>, sort: ArtSort): List<SgdbImage> = when (sort) {

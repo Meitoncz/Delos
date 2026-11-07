@@ -73,10 +73,10 @@ class ArtworkFiltersTest {
         assertEquals(listOf(1, 2, 4, 3), ArtFilterRules.sort(images, ArtSort.OLDEST).map { it.id })
     }
 
-    @Test fun mergingKeepsAnImageOnceInTheFirstOrder() {
+    @Test fun mergingKeepsAnImageOnceAndInterleavesTheAnswers() {
         val merged = ArtFilterRules.merge(listOf(listOf(image(1), image(2)), listOf(image(2, animated = true), image(3, animated = true))))
-        assertEquals(listOf(1, 2, 3), merged.map { it.id })
-        assertFalse(merged[1].animated)
+        assertEquals(listOf(1, 3, 2), merged.map { it.id })
+        assertFalse(merged[2].animated)
     }
 
     @Test fun cacheKeyIgnoresTheSortBecauseItIsAppliedToWhatWasLoaded() {

@@ -515,19 +515,14 @@ private fun GameChip(match: SgdbGame?, busy: Boolean, appName: String, imageCoun
             Symbol(Symbols.SPORTS_ESPORTS, 24.tpx, colors.accent2, filled = true)
         }
         BasicText(
-            "STEAMGRIDDB GAME",
-            style = TextStyle(color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 14.tpx, letterSpacing = .12.em),
-        )
-        BasicText(
             when {
                 busy -> "Looking for $appName…"
                 match != null -> match.name.ifEmpty { "Game #${match.id}" }
                 else -> "Not found yet"
             },
-            maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false),
+            maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f),
             style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 22.tpx),
         )
-        Spacer(Modifier.weight(1f))
         if (match != null) {
             match.year?.let { MetaChip("$it") }
             MetaChip("#${match.id}")
@@ -833,7 +828,7 @@ private fun ChoiceTile(
     modifier: Modifier, onFocused: () -> Unit, onClick: () -> Unit,
 ) {
     val store = LocalArtwork.current
-    val thumb by rememberThumbnail(store, image.thumb)
+    val thumb by rememberThumbnail(store, image.previewUrl)
     Tile(tab, inUse, loading, null, image.animated, modifier, onFocused, onClick) {
         Crossfade(thumb, animationSpec = tween(300), label = "thumb") { img ->
             if (img != null) {

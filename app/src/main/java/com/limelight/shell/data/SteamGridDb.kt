@@ -68,6 +68,12 @@ data class SgdbImage(
             else -> m.uppercase()
         }
 
+    /**
+     * What a tile shows first: the thumbnail, except that SteamGridDB gives animated images a WebM thumbnail the app cannot decode
+     * (the tile would load for ever), so those use the full image, whose first frame is the still.
+     */
+    val previewUrl: String get() = if (thumb.substringBefore('?').endsWith(".webm", ignoreCase = true)) url else thumb
+
     companion object {
         /** The image of one entry of a SteamGridDB list; null when it has no usable URL or is a WebM (the app cannot play it). */
         fun parse(o: JsonObject, animated: Boolean): SgdbImage? {
@@ -570,12 +576,12 @@ object Thumbnails {
     private const val FULL_ANIMATION_BYTES = 4 * 1024 * 1024
 
     /** The cached animation of [image] (null: not known yet), an empty array when it has none. */
-    fun cachedAnimation(image: SgdbImage): ByteArray? = animations.get(image.thumb)?.takeIf { it.isNotEmpty() }
+    fun cachedAnimation(image: SgdbImage): ByteArray? = animations.get(image.previewUrl)?.takeIf { it.isNotEmpty() }
         ?: animations.get(image.url)?.takeIf { it.isNotEmpty() }
 
     /** Whether loading [image]'s animation was tried and found nothing to play (the tile keeps its first frame). */
-    fun hasNoAnimation(image: SgdbImage): Boolean = animations.get(image.thumb)?.isEmpty() == true &&
-        (image.mime != "image/webp" || image.url == image.thumb || animations.get(image.url)?.isEmpty() == true)
+    fun hasNoAnimation(image: SgdbImage): Boolean = animations.get(image.previewUrl)?.isEmpty() == true &&
+        (image.mime != "image/webp" || image.url == image.previewUrl || animations.get(image.url)?.isEmpty() == true)
 
     /**
      * The animated WebP of [image] ([SgdbImage.animated]) to play in its tile: its thumbnail when that is animated,
@@ -584,8 +590,8 @@ object Thumbnails {
     suspend fun loadAnimation(http: OkHttpClient, image: SgdbImage): ByteArray? = withContext(Dispatchers.IO) {
         if (!image.animated) return@withContext null
         cachedAnimation(image)?.let { return@withContext it }
-        fetchAnimation(http, image.thumb, THUMB_ANIMATION_BYTES)
-            ?: if (image.mime == "image/webp" && image.url != image.thumb) fetchAnimation(http, image.url, FULL_ANIMATION_BYTES) else null
+        fetchAnimation(http, image.previewUrl, THUMB_ANIMATION_BYTES)
+            ?: if (image.mime == "image/webp" && image.url != image.previewUrl) fetchAnimation(http, image.url, FULL_ANIMATION_BYTES) else null
     }
 
     private suspend fun fetchAnimation(http: OkHttpClient, url: String, limit: Int): ByteArray? {
