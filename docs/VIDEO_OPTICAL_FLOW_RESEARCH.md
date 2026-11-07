@@ -1,7 +1,7 @@
 # Video optical flow for an SGSR 2-derived upscaler
 
 Research requested 2026-10-26. This is a feasibility report and proposed experiment, not an implemented
-feature or a benchmark. The existing SGSR 1 Standard / High Quality implementation remains separate.
+feature or a benchmark. The existing SGSR 1 (Normal) / High Quality implementation remains separate.
 
 ## Finding
 
@@ -111,7 +111,7 @@ unproven. Resolve the current SGSR 1 softness report before starting the tempora
    Include a vector/confidence visualization; test forward/backward consistency and frame drops.
 3. **Adapt SGSR 2's two-pass fragment path.** Replace its Convert input logic with estimated total
    motion and rejection, keep jitter zero, conservative history clipping, and spatial fallback for
-   uncertain pixels. Compare with bilinear and SGSR 1 High Quality at identical inputs/bitrate/HDR.
+   uncertain pixels. Compare with bilinear and SGSR 1 (Quality) at identical inputs/bitrate/HDR.
    This may work, but visual superiority is not established by source inspection.
 4. **Device acceptance.** Measure complete added GPU time at 60/120 fps, p50/p95/p99 frame delivery,
    end-to-end latency, dropped frames, sustained thermals/power and HDR correctness. No future-frame

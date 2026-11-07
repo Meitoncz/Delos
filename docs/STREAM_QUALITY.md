@@ -127,7 +127,7 @@ launch. It saves nothing else (no bitrate, no other display setting) and changes
 nor other games; the running stream keeps its live values. It is hidden for a stream started without
 its launch identity.
 
-Both renderers implement SGSR 1 Standard, SGSR 1 High Quality, SGSR 2 Video and SGSR 2 Video Quality, and
+Both renderers implement SGSR 1 (Normal), SGSR 1 (Quality), SGSR2-DV and SGSR2-DV (Quality), and
 the [Sharpen only mode](#sharpen-only-mode).
 PyroWave uses native Vulkan shaders rather than the GLES stage. Spatial modes use distinct Qualcomm
 Standard/HQ kernels; temporal Quality adds a separate reactive activation pass and tighter YCoCg
@@ -155,7 +155,7 @@ detail gain of `0.75` gives a correction coefficient of `0.375*s` (`0.1875` at 5
 local-range/output clamps. **0 bypasses only the final sharpener: fixed-gain SGSR 1 reconstruction
 remains active.** Upscaler Off bypasses both. The milder final-filter mapping is intended to add
 gentle sharpening to full-gain reconstruction **[INFERENCE]**; it is not RCAS equivalence or device
-acceptance. SGSR 2 Video/Video Quality and Sharpen only's CAS mapping are unchanged.
+acceptance. SGSR2-DV/Video Quality and Sharpen only's CAS mapping are unchanged.
 
 GLES reuses the existing supersampling RGB target for one reconstruction draw and a separate
 cross-filter presentation draw, avoiding five complete reconstruction evaluations per output
@@ -299,7 +299,7 @@ size), with sharpness 100%; scaling is directly to the view, not a fixed 2x stag
 adding the High Quality variant for comparison. Its visual acceptance is pending.
 
 Final upscaler acceptance used 480p HDR as a deliberately difficult source. The user preferred
-`SGSR 2 Video Quality` over the other three modes while asking to retain all four choices. The
+`SGSR2-DV (Quality)` over the other three modes while asking to retain all four choices. The
 improvement was modest and static source aliasing remains visible. A future 1080p-to-4K comparison
 should be a more representative upscale ratio but is not required to complete this feature.
 
@@ -327,7 +327,7 @@ confirmed MediaCodec output at 1920x1080 for a 1280x720 source.
 
 ### PyroWave upscaler parity, 2026-10-28
 
-Completed A01–A05: genuine SGSR 1 Standard/HQ, distinct temporal Quality activation/reconstruction,
+Completed A01–A05: genuine SGSR 1 (Normal)/HQ, distinct temporal Quality activation/reconstruction,
 presentation sharpening and matching saved/live controls/help. The native mode replaces the old
 temporal-enabled boolean; requested settings remain separate from the actually applied mode.
 Shaders are generated with `jni/pyrowave-renderer/shaders/build.sh`; no runtime shader compiler
@@ -344,5 +344,5 @@ at both supersampling levels, checked applied state/Off teardown and rebuilt SDR
 No game, emulator, streaming connection or injected navigation was used.
 
 These checks establish implementation and GPU correctness, not new visual acceptance or sustained
-game performance. The earlier 118–119 FPS result above is specifically the old SGSR 2 Video path,
+game performance. The earlier 118–119 FPS result above is specifically the old SGSR2-DV path,
 not a benchmark for the new HQ/Quality modes. Track current acceptance in [#19](https://github.com/Meitoncz/Delos/issues/19).

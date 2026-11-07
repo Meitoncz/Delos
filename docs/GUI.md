@@ -513,8 +513,8 @@ the accent the rest and fainter.
   and sharpness rows show the value just requested, not the one the renderer applied on its last frame
   (a fallback from 2× to 1× corrects the row afterwards).
 - Rows of the Upscaler page: **Enabled** (the on/off toggle for the upscaler and Sharpen only alike), **Supersampling
-  quality** (only while the stream matches the display and the mode scales), **Mode** (SGSR 1 Standard, SGSR 1 High
-  Quality, SGSR 2 Video, SGSR 2 Video Quality, **Sharpen only**), **Sharpness** and Save for this game. In
+  quality** (only while the stream matches the display and the mode scales), **Mode** (SGSR 1 (Normal), SGSR 1 High
+  Quality, SGSR2-DV, SGSR2-DV (Quality), **Sharpen only**), **Sharpness** and Save for this game. In
   **Sharpen only** the Supersampling quality row is hidden (nothing is scaled, so it has no meaning), the page is
   titled Upscaler and the Sharpness slider is the whole effect; the tile's status reads "On: Sharpen only" in the help.
   Mode and Sharpness change live. Switching Mode to or from Sharpen only rebuilds the output stage the way the Enabled

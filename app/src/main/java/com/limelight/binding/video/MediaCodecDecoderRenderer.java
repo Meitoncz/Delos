@@ -1209,10 +1209,10 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         PyroWaveRenderer pw = pyroWave;
         if (pw != null) {
             switch (pw.getUpscalingMode()) {
-                case PyroWaveRenderer.UPSCALING_SGSR1_STANDARD: return "On: SGSR 1 Standard";
-                case PyroWaveRenderer.UPSCALING_SGSR1_HIGH: return "On: SGSR 1 High Quality";
-                case PyroWaveRenderer.UPSCALING_SGSR2_VIDEO: return "On: SGSR 2 Video";
-                case PyroWaveRenderer.UPSCALING_SGSR2_VIDEO_QUALITY: return "On: SGSR 2 Video Quality";
+                case PyroWaveRenderer.UPSCALING_SGSR1_STANDARD: return "On: SGSR 1 (Normal)";
+                case PyroWaveRenderer.UPSCALING_SGSR1_HIGH: return "On: SGSR 1 (Quality)";
+                case PyroWaveRenderer.UPSCALING_SGSR2_VIDEO: return "On: SGSR2-DV (Normal)";
+                case PyroWaveRenderer.UPSCALING_SGSR2_VIDEO_QUALITY: return "On: SGSR2-DV (Quality)";
                 case PyroWaveRenderer.UPSCALING_SHARPEN_ONLY: return "On: Sharpen only";
                 default: return sgsrRequested ? "Unavailable; direct rendering is active" : "Off";
             }

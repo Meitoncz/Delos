@@ -1077,8 +1077,8 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
     ]}
   ];
   // Stream menu: the pages of the popover (rows use the settings machinery; their values live in QM)
-  const QM = { qmBright: 70, qmBitrate: 60, qmUpscale: true, qmUpMode: "SGSR 2 Video", qmSharp: 40, qmZoom: false, qmPad: false, qmTouch: false, qmSaved: false };
-  const QM_MODES = ["SGSR 1 Standard", "SGSR 1 High Quality", "SGSR 2 Video", "SGSR 2 Video Quality"];
+  const QM = { qmBright: 70, qmBitrate: 60, qmUpscale: true, qmUpMode: "SGSR2-DV (Normal)", qmSharp: 40, qmZoom: false, qmPad: false, qmTouch: false, qmSaved: false };
+  const QM_MODES = ["SGSR 1 (Normal)", "SGSR 1 (Quality)", "SGSR2-DV (Normal)", "SGSR2-DV (Quality)"];
   const QM_PAGES = {
     bright: { title: "Brightness", rows: [
       { id: "qmBright", icon: "brightness_medium", label: "Screen brightness", type: "slider", min: 5, max: 100, step: 5, unit: " %", ref: "qm", help: "Changes this device's screen brightness now; the system setting returns afterwards. Not the PC or a monitor." }

@@ -6,10 +6,10 @@ package com.limelight.preferences;
  * {@link #index()} the renderers' mode number, so new modes are only ever appended.
  */
 public enum UpscalerMode {
-    STANDARD("standard", "SGSR 1 Standard"),
-    HIGH("high", "SGSR 1 High Quality"),
-    VIDEO("temporal", "SGSR 2 Video"),
-    VIDEO_QUALITY("temporal-quality", "SGSR 2 Video Quality"),
+    STANDARD("standard", "SGSR 1 (Normal)"),
+    HIGH("high", "SGSR 1 (Quality)"),
+    VIDEO("temporal", "SGSR2-DV (Normal)"),
+    VIDEO_QUALITY("temporal-quality", "SGSR2-DV (Quality)"),
     /** No scaling: the stream keeps its resolution and only a contrast-adaptive sharpen pass runs. */
     SHARPEN_ONLY("sharpen", "Sharpen only");
 
@@ -30,7 +30,7 @@ public enum UpscalerMode {
     /** The position in the stream menu's Mode row; also the renderers' mode number. */
     public int index() { return ordinal(); }
 
-    /** SGSR 2 Video modes keep a history of earlier frames. */
+    /** SGSR2-DV modes keep a history of earlier frames. */
     public boolean isTemporal() { return this == VIDEO || this == VIDEO_QUALITY; }
 
     /**

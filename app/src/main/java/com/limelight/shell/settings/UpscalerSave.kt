@@ -10,7 +10,7 @@ val UPSCALER_KEYS = listOf("checkbox_sgsr", "list_sgsr_quality", "seekbar_sgsr_s
 
 /**
  * The per-game overrides that save the live upscaler state: [enabled], the [mode] the stream menu shows
- * (its position in [UpscalerMode]: 0 = SGSR 1 Standard, 1 = High Quality, 2 = SGSR 2 Video, 3 = Video Quality,
+ * (its position in [UpscalerMode]: 0 = SGSR 1 (Normal), 1 = High Quality, 2 = SGSR2-DV, 3 = Video Quality,
  * 4 = Sharpen only), the [sharpness] in percent and the supersampling [level]. Values outside the supported
  * ranges are clamped, so what is stored is always something a later launch reads back unchanged.
  */

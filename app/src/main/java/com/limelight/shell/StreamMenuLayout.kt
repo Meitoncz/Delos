@@ -421,7 +421,7 @@ internal object BitrateFailure {
 }
 
 /**
- * The few words that fit in the pill of the upscaler's tile, from the renderer's status ("On: SGSR 2 Video" -> "On",
+ * The few words that fit in the pill of the upscaler's tile, from the renderer's status ("On: SGSR2-DV (Normal)" -> "On",
  * "Unavailable; direct rendering is active" -> "Unavailable"). The full status stays in the help.
  */
 internal fun upscalerCircleState(status: String): String =

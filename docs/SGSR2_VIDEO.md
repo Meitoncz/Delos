@@ -1,7 +1,7 @@
-# SGSR 2 Video
+# SGSR2-DV
 
 Initially implemented on `feature/stream-quality` on 2026-10-26 after the user requested
-optical-flow research and then explicitly prioritized SGSR 2. The user accepted `SGSR 2 Video
+optical-flow research and then explicitly prioritized SGSR 2. The user accepted `SGSR2-DV
 Quality` as the best of the four modes in a 480p HDR comparison while retaining every mode.
 Physical-display verification is tracked in [#22](https://github.com/Meitoncz/Delos/issues/22),
 separately from this recorded acceptance.
@@ -13,8 +13,8 @@ quality and sustained-performance verification is tracked in [#19](https://githu
 
 ## Behavior
 
-Stream menu → Upscaler → Mode offers SGSR 1 Standard, SGSR 1 High Quality, **SGSR 2 Video**
-and **SGSR 2 Video Quality**.
+Stream menu → Upscaler → Mode offers SGSR 1 (Normal), SGSR 1 (Quality), **SGSR2-DV**
+and **SGSR2-DV (Quality)**.
 All remain opt-in, retain live On/Off and independent sharpness, and use the existing HDR/P010 output.
 The mode also participates in global and per-game settings through `list_sgsr_quality=temporal`.
 Live changes only affect the session; changing modes resets temporal history without reconnecting.
@@ -176,7 +176,7 @@ The quality-oriented 3-pass pipeline adds an Activate stage, reactive/disocclusi
 optional pixel lock for thin-feature stability. Its optional RCAS sharpening is a separate fourth
 stage and is disabled by default in Qualcomm's Unity integration.
 
-`SGSR 2 Video Quality` adapts that structure for decoded video. A separate Activate compute pass
+`SGSR2-DV (Quality)` adapts that structure for decoded video. A separate Activate compute pass
 derives a reactive mask from optical-flow confidence, luma residual and forward/backward
 consistency. Reconstruction retains the nine-tap kernel and clips temporal history in YCoCg so
 colored edges are not rejected independently per RGB channel. RCAS and pixel lock remain disabled:
@@ -199,11 +199,11 @@ is never accumulated into temporal history.
 
 PyroWave implements all four modes directly from decoded Y/Cb/Cr planes:
 
-- **SGSR 1 Standard:** Qualcomm's spatial edge-direction filter.
-- **SGSR 1 High Quality:** the distinct Unity HQ reconstruction with RGB-derived luma,
+- **SGSR 1 (Normal):** Qualcomm's spatial edge-direction filter.
+- **SGSR 1 (Quality):** the distinct Unity HQ reconstruction with RGB-derived luma,
   lower edge threshold and a 60/40 blend of two weighted estimates.
-- **SGSR 2 Video:** bidirectional optical flow on an 8-pixel grid and temporal reconstruction.
-- **SGSR 2 Video Quality:** a separate input-resolution Activate pass derives a reactive mask
+- **SGSR2-DV:** bidirectional optical flow on an 8-pixel grid and temporal reconstruction.
+- **SGSR2-DV (Quality):** a separate input-resolution Activate pass derives a reactive mask
   from luma changes, flow confidence, forward/backward consistency and disocclusion; reconstruction
   additionally clips history in YCoCg around a weighted current-frame center.
 
@@ -261,7 +261,7 @@ dispatch, actual applied modes, both supersampling levels, the downscale case, O
 swapchain-format rebuild of SDR → HDR → SDR. It does not run `present()`, so the swapchain/P010
 present passes, the P010 pack pass and the GL bridge are not covered by it.
 
-### Earlier SGSR 2 Video acceptance
+### Earlier SGSR2-DV acceptance
 
 The target is the real display size, aspect-fitted from the stream dimensions; the first implementation
 incorrectly inherited a fixed surface size and reconstructed 720p back to 720p. Device logs after the
@@ -285,7 +285,7 @@ The two video renderers are not interchangeable implementations of an unchanged 
   [two-pass fragment reconstruction](https://raw.githubusercontent.com/SnapdragonGameStudios/snapdragon-gsr/d926f074bcb9d714e179f1ce0fcb9ee2eeb5074e/sgsr/v2/include/glsl_2_pass_fs/sgsr2_upscale.fs),
   and the three-pass compute Convert/Activate/Upscale sources at that revision.
 - Official Unity package, `ab685c993ebd0f65a762c6e28f64f124c7f12532`:
-  [SGSR 1 Standard/HQ/VR kernels](https://raw.githubusercontent.com/SnapdragonGameStudios/com.qualcomm.snapdragon.sgsr.for.unity/ab685c993ebd0f65a762c6e28f64f124c7f12532/Shaders/v1/sgsr.hlsl),
+  [SGSR 1 (Normal)/HQ/VR kernels](https://raw.githubusercontent.com/SnapdragonGameStudios/com.qualcomm.snapdragon.sgsr.for.unity/ab685c993ebd0f65a762c6e28f64f124c7f12532/Shaders/v1/sgsr.hlsl),
   [spatial defaults](https://raw.githubusercontent.com/SnapdragonGameStudios/com.qualcomm.snapdragon.sgsr.for.unity/ab685c993ebd0f65a762c6e28f64f124c7f12532/Shaders/v1/SGSRShader.shader),
   and [SGSR 2 parameter setup](https://raw.githubusercontent.com/SnapdragonGameStudios/com.qualcomm.snapdragon.sgsr.for.unity/ab685c993ebd0f65a762c6e28f64f124c7f12532/Runtime/v2/SGSR2RenderPass.cs).
 - Official Vulkan/Android sample framework, `60a13ff4bfa2eb4e5b293babbeccb9be9e4bfc4f`:
@@ -305,7 +305,7 @@ scene/presentation/pack/sharpen shaders and HDR output bridge. The native source
 
 | Area | Verified result |
 | --- | --- |
-| SGSR 1 Standard | Twelve-tap positions/gather ordering, green-channel luma, `8/255` edge threshold, direction regularization `3.07574e-05`, variance factor `10.14185`, Lanczos polynomial and `±23/255` correction limit match the edge-direction reference when that optional path is enabled. Delos deliberately enables direction filtering; the standalone official file comments its switch out by default. |
+| SGSR 1 (Normal) | Twelve-tap positions/gather ordering, green-channel luma, `8/255` edge threshold, direction regularization `3.07574e-05`, variance factor `10.14185`, Lanczos polynomial and `±23/255` correction limit match the edge-direction reference when that optional path is enabled. Delos deliberately enables direction filtering; the standalone official file comments its switch out by default. |
 | SGSR 1 HQ | RGB luma `0.299/0.587/0.114`, `4/255` threshold, `-6/sumSquares` variance, both weighted estimates and the 60% edge / 40% smooth blend match the Unity HQ target. The zero-variance guard and GLES full precision are deliberate robustness differences, not a different tap layout. Gain differs materially; see below. |
 | Spatial sample coordinates | GLES passes `(1/inputWidth,1/inputHeight,inputWidth,inputHeight)` and full normalized UVs, with the reference's half-pixel convention. Native SGSR 1 reproduces the gather taps with explicit plane reads and bilinear base sampling. No unconditional missing half-pixel correction was found in these spatial paths. |
 | GLES temporal reconstruction | `FastLanczos`, the weighted center/variance calculations and nine-tap structure derive from the pinned fragment shader. All nine taps are enabled rather than its default five. `scaleRatio.y = min(20, areaRatio^3)` matches Unity and the Android sample; the footprint's scale-dependent term is intentionally not used for zero-jitter video. |
@@ -325,7 +325,7 @@ not new measurements. Exact formulas and operation order are source observations
 
 | Difference | Reason/current behavior | Expected effect or limit |
 | --- | --- | --- |
-| Follow-up status (2026-11-07) | The next two rows preserve the pre-change audit baseline. Both pipelines now fix SGSR 1 Standard/HQ reconstruction gain at `2.0` and apply an independent final sharpener; see the dated follow-up below. | The old slider/gain mismatch is no longer the intended behavior. This is not device acceptance. |
+| Follow-up status (2026-11-07) | The next two rows preserve the pre-change audit baseline. Both pipelines now fix SGSR 1 (Normal)/HQ reconstruction gain at `2.0` and apply an independent final sharpener; see the dated follow-up below. | The old slider/gain mismatch is no longer the intended behavior. This is not device acceptance. |
 | SGSR 1 reconstruction gain | Official Standard/HQ use `2.0` (documented range 1–2). GLES uses `0.5 + 1.5*sharpness`: 50% means 1.25; 100% reaches 2.0. Native uses a fixed 0.5 and applies its separate presentation sharpener afterwards (`sgsr_spatial.comp`, `sgsr_sharpen.glsl`). | The same slider value is **not** the same spatial reconstruction across renderers. Lower gain attenuates the mean-subtracted reconstruction correction before local clamping; a later bounded sharpener is not mathematically equivalent. This is an evidence-backed softness candidate, not a measured ranking or an automatically corrected tuning defect. |
 | SGSR 1 slider semantics | GLES spatial modes change the reconstruction gain itself. Native and GLES temporal modes use a separate presentation filter. | The general description of an independent final sharpener does not precisely describe GLES SGSR 1. Zero sharpness does not turn off SGSR 1 reconstruction; use Enabled/Off for that comparison. |
 | No engine jitter/depth/object vectors | Video already contains the host's resolved, compressed scene and HUD. Delos substitutes bidirectional Lucas–Kanade flow, confidence, photometric residual and scene heuristics; jitter is zero. | Sound as a conservative video heuristic, **not equivalent** to engine SGSR 2. A static image supplies no new jittered subpixel samples; optical flow cannot infer reliable depth, transparency, occlusion or lost source detail. |
@@ -405,15 +405,15 @@ than silently retuned; the source audit does not establish one universal cause o
 
 ## SGSR 1 fixed-gain follow-up (2026-11-07)
 
-The user approved restoring the official **2.0 reconstruction gain** for SGSR 1 Standard and
+The user approved restoring the official **2.0 reconstruction gain** for SGSR 1 (Normal) and
 High Quality in both MediaCodec/GLES and PyroWave/Vulkan. This supersedes the two historical
 SGSR 1 gain/slider rows above, without changing their audit evidence or the earlier device results.
 
 | Pipeline / mode | Audit baseline | Follow-up |
 | --- | --- | --- |
-| GLES SGSR 1 Standard and HQ | Reconstruction gain `0.5 + 1.5*s`: `1.25` at 50%, `2.0` at 100%. | Fixed reconstruction gain `2.0` at every slider value; independent bounded final presentation filter. |
-| Native SGSR 1 Standard and HQ | Fixed reconstruction gain `0.5`, then the existing presentation filter. | Fixed reconstruction gain `2.0`; the same SGSR 1-only final-filter mapping as GLES. |
-| SGSR 2 Video / Video Quality | Independent presentation sharpening after reconstruction. | Unchanged reconstruction and slider mapping; sharpened pixels still never enter history. |
+| GLES SGSR 1 (Normal) and HQ | Reconstruction gain `0.5 + 1.5*s`: `1.25` at 50%, `2.0` at 100%. | Fixed reconstruction gain `2.0` at every slider value; independent bounded final presentation filter. |
+| Native SGSR 1 (Normal) and HQ | Fixed reconstruction gain `0.5`, then the existing presentation filter. | Fixed reconstruction gain `2.0`; the same SGSR 1-only final-filter mapping as GLES. |
+| SGSR2-DV / Video Quality | Independent presentation sharpening after reconstruction. | Unchanged reconstruction and slider mapping; sharpened pixels still never enter history. |
 | Sharpen only | Stream-size CAS-style filter, no reconstruction. | Unchanged algorithm, slider mapping and sizing. |
 
 Here `s` is the normalized Sharpness slider (`0..1`, default `0.5`). For **SGSR 1 only**, effective

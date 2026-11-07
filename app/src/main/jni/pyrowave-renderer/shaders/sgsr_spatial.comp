@@ -2,7 +2,7 @@
 #extension GL_GOOGLE_include_directive : require
 // Copyright (c) 2025-2026 Qualcomm Innovation Center, Inc. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
-// SGSR 1 Standard (upstream d926f074) and Unity High Quality (ab685c993ebd),
+// SGSR 1 (Normal) (upstream d926f074) and Unity High Quality (ab685c993ebd),
 // matching assets/sgsr/sgsr1{,_high}.frag with presentation-only user sharpening. Mode 5 (Sharpen only)
 // does no resampling at all.
 layout(local_size_x=8,local_size_y=8) in;

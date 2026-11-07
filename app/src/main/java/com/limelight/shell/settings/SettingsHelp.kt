@@ -214,8 +214,8 @@ object SettingsHelp {
         "list_sgsr_quality" to mapOf(
             "standard" to "Edge reconstruction from the current frame. Cheapest.",
             "high" to "A stronger spatial filter on the current frame.",
-            "temporal" to "Reuses earlier frames; text and fast motion can break it.",
-            "temporal-quality" to "Adds a reactive mask. Most GPU cost.",
+            "temporal" to "Delos SGSR 2 for video: motion from optical flow.",
+            "temporal-quality" to "SGSR2-DV plus a mask that rejects stale detail. Most GPU.",
             "sharpen" to "No scaling; sharpens at stream size. Costs little GPU.",
         ),
         "list_sgsr_supersampling_level" to mapOf(

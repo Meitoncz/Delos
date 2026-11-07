@@ -93,7 +93,7 @@ namespace {
     };
 
     // The upscaler modes the renderer is given (PyroWaveRenderer.UPSCALING_*): 0 off, 1 and 2 SGSR 1,
-    // 3 and 4 SGSR 2 Video, 5 Sharpen only (no scaling: the stream's own size, only a sharpen pass)
+    // 3 and 4 SGSR2-DV, 5 Sharpen only (no scaling: the stream's own size, only a sharpen pass)
     constexpr int UPSCALING_MAX = 5;
     constexpr int UPSCALING_SHARPEN_ONLY = 5;
     constexpr bool isTemporalMode(int mode) { return mode == 3 || mode == 4; }

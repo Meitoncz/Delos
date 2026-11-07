@@ -235,7 +235,7 @@ class StreamMenuLayoutTest {
     }
 
     private val statuses = listOf(
-        "Off", "On", "On: SGSR 1 Standard", "On: SGSR 1 High Quality", "On: SGSR 2 Video", "On: SGSR 2 Video Quality", "On: Sharpen only",
+        "Off", "On", "On: SGSR 1 (Normal)", "On: SGSR 1 (Quality)", "On: SGSR2-DV (Normal)", "On: SGSR2-DV (Quality)", "On: Sharpen only",
         "Starting", "Stopping", "Unavailable; direct rendering is active",
     )
 
@@ -325,7 +325,7 @@ class StreamMenuLayoutTest {
 
     @Test
     fun theUpscalerTileShowsOneWordOfTheRenderersStatus() {
-        assertEquals("On", upscalerCircleState("On: SGSR 2 Video Quality"))
+        assertEquals("On", upscalerCircleState("On: SGSR2-DV (Quality)"))
         assertEquals("On", upscalerCircleState("On"))
         assertEquals("Off", upscalerCircleState("Off"))
         assertEquals("Starting", upscalerCircleState("Starting"))
@@ -335,7 +335,7 @@ class StreamMenuLayoutTest {
     @Test
     fun theHelpLineJoinsParagraphsOnOneLine() {
         assertEquals("Closes this menu.", helpLineText("Closes this menu."))
-        assertEquals("On: SGSR 2 Video \u00B7 Applies live.", helpLineText("On: SGSR 2 Video\n\nApplies live."))
+        assertEquals("On: SGSR2-DV (Normal) \u00B7 Applies live.", helpLineText("On: SGSR2-DV (Normal)\n\nApplies live."))
         assertEquals("Reuses frames. Applies live.", helpLineText("Reuses frames.\n\nApplies live."))
         assertEquals("", helpLineText("\n \n"))
     }
