@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.em
 import com.limelight.binding.video.PyroWaveBacklog
+import com.limelight.binding.video.FrameQueueStats
 import com.limelight.binding.video.SharpenCost
 import com.limelight.shell.link.LinkReading
 import com.limelight.shell.link.oneDecimal
@@ -87,6 +88,8 @@ class StreamStats @JvmOverloads constructor(
     val sharpen: SharpenCost? = null,
     /** PyroWave only: the rolling reading of the link (null for other codecs and before the first sample); shown in the Link block. */
     val link: LinkReading? = null,
+    /** SGSR output only (null otherwise): the frames waiting at the start of a draw, their age and the skipped ones. */
+    val frameQueue: FrameQueueStats? = null,
 ) {
     /** The delay summed up: network round trip, the PC's processing when it reports it, and decoding. */
     val totalMs: Float get() = networkMs + maxOf(hostMs, 0f) + decodeMs + processingMs
@@ -110,6 +113,17 @@ internal fun sharpenPassText(cost: SharpenCost): String = buildString {
     append(String.format(Locale.US, "%.2f ms avg / %.2f max", cost.passAvgMs, cost.passMaxMs))
     if (cost.prepareAvgMs >= 0f) append(String.format(Locale.US, " · %s %.2f ms", cost.prepareName, cost.prepareAvgMs))
     if (!cost.gpuTimed) append(" (CPU submit)")
+}
+
+/**
+ * The Frame queue row of the SGSR output stage: how many decoder frames were waiting when a draw started (1 means it
+ * kept up), how long the newest had waited, and how many older frames were skipped per second because a newer one was
+ * ready ("2.0 skipped /s" means the GPU work per frame is longer than the frame interval).
+ */
+internal fun frameQueueText(queue: FrameQueueStats): String = buildString {
+    append(String.format(Locale.US, "%.1f avg / %d max waiting", queue.pendingAvg, queue.pendingMax))
+    if (queue.ageAvgMs >= 0f) append(String.format(Locale.US, " · age %.1f / %.1f ms", queue.ageAvgMs, queue.ageMaxMs))
+    append(String.format(Locale.US, " · %.1f skipped /s", queue.skippedPerSecond()))
 }
 
 /**
@@ -208,6 +222,7 @@ class StreamStatsPanel private constructor(
                 if (s.hostMs >= 0f) add("PC processing" to "${format(s.hostMs)} ms (${format(s.hostMinMs)}–${format(s.hostMaxMs)})")
                 add("Decoding" to "${format(s.decodeMs, 2)} ms")
                 if (s.processingMs > 0f) add("Upscaling" to "${format(s.processingMs, 2)} ms")
+                s.frameQueue?.let { add("Frame queue" to frameQueueText(it)) }
                 // PyroWave shows the pass with its backlog, the others next to the other post-processing
                 if (s.backlog == null) s.sharpen?.let { add("Sharpen pass" to sharpenPassText(it)) }
                 add("Total latency" to "${format(s.totalMs)} ms")

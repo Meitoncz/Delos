@@ -2383,7 +2383,8 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                         hostLatency ? (float) lastTwo.maxHostProcessingLatency / 10 : -1f,
                         hostLatency ? (float) lastTwo.totalHostProcessingLatency / 10 / lastTwo.framesWithHostProcessingLatency : -1f,
                         realtimeNetData, frameTimes.onePercentLowFps(), null,
-                        sgsr != null ? sgsr.getSharpenCost() : null));
+                        sgsr != null ? sgsr.getSharpenCost() : null, null,
+                        sgsr != null ? sgsr.getFrameQueueStats() : null));
             }
             globalVideoStats.add(activeWindowVideoStats);
             lastWindowVideoStats.copy(activeWindowVideoStats);

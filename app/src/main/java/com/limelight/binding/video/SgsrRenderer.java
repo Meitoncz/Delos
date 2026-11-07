@@ -38,6 +38,12 @@ public final class SgsrRenderer implements AutoCloseable {
             "gl_Position=vec4(p*2.0-1.0,0,1); in_TEXCOORD0=vec4(p,0,0);}";
     private final HandlerThread thread = new HandlerThread("Video - SGSR", android.os.Process.THREAD_PRIORITY_DISPLAY);
     private final Handler handler;
+    // Receives the decoder's frame-available callbacks apart from the GL thread so frames queued behind a long
+    // draw are counted as they arrive
+    private final HandlerThread frameThread = new HandlerThread("Video - SGSR frames", android.os.Process.THREAD_PRIORITY_URGENT_DISPLAY);
+    private final Handler frameHandler;
+    private final FrameQueue frameQueue = new FrameQueue();
+    private final Runnable drawTask = this::draw;
     private final AtomicBoolean closed = new AtomicBoolean();
     private final Runnable failure;
     // About a second of frames: a replaced surface recovers within it, a broken pipeline never does
@@ -189,9 +195,16 @@ public final class SgsrRenderer implements AutoCloseable {
         thread.start();
         handler = new Handler(thread.getLooper());
         LatencyThreads.register(thread.getThreadId());
+        frameThread.start();
+        frameHandler = new Handler(frameThread.getLooper());
     }
 
     public Surface getDecoderSurface() { return decoderSurface; }
+    /** The last statistics window of the output's frame queue, null before the first or when it is stale. */
+    public FrameQueueStats getFrameQueueStats() {
+        FrameQueueStats stats = frameQueue.snapshot();
+        return stats != null && stats.isFresh(System.nanoTime()) ? stats : null;
+    }
     public void setSharpness(int value) { sharpness = Math.max(0, Math.min(100, value)) / 100f; }
     public void setMode(int mode) { this.mode = UpscalerMode.fromIndex(mode).index(); }
     public void setSupersamplingLevel(int level) { supersamplingLevel = level >= 2 ? 2 : 1; }
@@ -379,7 +392,12 @@ public final class SgsrRenderer implements AutoCloseable {
         texture = new SurfaceTexture(externalTexture);
         texture.setDefaultBufferSize(width,height);
         decoderSurface = new Surface(texture);
-        texture.setOnFrameAvailableListener(unused -> draw(),handler);
+        texture.setOnFrameAvailableListener(unused -> {
+            // Counted on the callback's own thread: on the GL thread the callbacks of frames queued behind a
+            // long draw would not be seen until that draw is over
+            frameQueue.onFrameAvailable(System.nanoTime());
+            handler.post(drawTask);
+        },frameHandler);
         LimeLog.info("SGSR 1 initialized: " + width + "x" + height + ", sharpness=" + sharpness + ", P010=" + tenBit);
     }
 
@@ -417,9 +435,22 @@ public final class SgsrRenderer implements AutoCloseable {
 
     private void draw() {
         if (closed.get()) return;
+        // The frame this draw was posted for may already have been consumed by an earlier draw that took
+        // everything queued at that time: nothing new to show
+        final int pending = frameQueue.pending();
+        if (pending <= 0) return;
         final long processingStartNs=System.nanoTime();
         try {
-            texture.updateTexImage();
+            // Everything that queued up while the previous draw ran is consumed, only the newest is drawn: a
+            // stale frame is never shown while a newer one is waiting. A skipped frame is simply not drawn, so
+            // SGSR 2's history sees the newest frame's timestamp and resets only if the gap exceeds its limit.
+            for (int i=0;i<pending;i++) {
+                texture.updateTexImage();
+                frameQueue.consumeOne();
+            }
+            final long drawStartNs=System.nanoTime();
+            final FrameQueueStats queueWindow=frameQueue.recordDraw(drawStartNs,pending,drawStartNs-frameQueue.lastConsumedArrivalNs());
+            if (queueWindow!=null && !arrivalOnly) android.util.Log.d(FrameQueue.TAG,queueWindow.describe());
             texture.getTransformMatrix(transform);
             if (!outputAttached || (arrivalError != null && arrivalOnly)) return;
             GLES31.glBindFramebuffer(GLES31.GL_FRAMEBUFFER,framebuffer);
@@ -561,6 +592,7 @@ public final class SgsrRenderer implements AutoCloseable {
             if (closed.compareAndSet(false,true)) {
                 release();
                 thread.quitSafely();
+                frameThread.quitSafely();
                 failure.run();
             }
         }
@@ -832,7 +864,7 @@ public final class SgsrRenderer implements AutoCloseable {
     /** Queue GL-owned cleanup without extending the direct-output handover deadline. */
     void closeAsync() {
         if (!closed.compareAndSet(false,true)) return;
-        handler.post(() -> { try { release(); } finally { thread.quitSafely(); } });
+        handler.post(() -> { try { release(); } finally { thread.quitSafely(); frameThread.quitSafely(); } });
     }
 
     @Override public void close() {
