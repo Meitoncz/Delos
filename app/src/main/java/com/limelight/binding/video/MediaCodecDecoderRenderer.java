@@ -2043,7 +2043,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
 
     @Override
     public void start() {
-        LatencyThreads.begin();
+        LatencyThreads.begin(context, targetFps);
         synchronized (codecRecoveryMonitor) {
             prepareLaunchArrivalBackend();
         }

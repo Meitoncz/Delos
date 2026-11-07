@@ -155,12 +155,8 @@ void BridgeDrCleanup(void) {
     (*env)->CallStaticVoidMethod(env, GlobalBridgeClass, BridgeDrCleanupMethod);
 }
 
-int BridgeDrSubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
-    JNIEnv* env = GetThreadEnv();
+static int SubmitDecodeUnit(JNIEnv* env, PDECODE_UNIT decodeUnit) {
     int ret;
-
-    // Delos: raise this thread's priority and register it for placement and hints; a flag check after the first frame
-    LatencyTuneVideoThread(env);
 
 #ifdef DELOS_PYROWAVE
     if (ActiveVideoFormat & VIDEO_FORMAT_MASK_PYROWAVE) {
@@ -219,6 +215,17 @@ int BridgeDrSubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
     else {
         return ret;
     }
+}
+
+int BridgeDrSubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
+    JNIEnv* env = GetThreadEnv();
+
+    // Delos: the first call raises this thread's priority and registers it for core placement and the
+    // performance hint session; the time the frame takes goes to the session
+    uint64_t beginNs = LatencyFrameBegin(env);
+    int ret = SubmitDecodeUnit(env, decodeUnit);
+    LatencyFrameEnd(env, beginNs);
+    return ret;
 }
 
 int BridgeArInit(int audioConfiguration, POPUS_MULTISTREAM_CONFIGURATION opusConfig, void* context, int flags) {

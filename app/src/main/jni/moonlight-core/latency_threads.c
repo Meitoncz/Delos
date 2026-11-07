@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/resource.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <android/log.h>
@@ -25,6 +26,7 @@
 
 static jclass LatencyClass;
 static jmethodID OnNativeThreadMethod;
+static jmethodID ReportWorkMethod;
 
 static __thread bool VideoThreadTuned;
 static bool NiceFailureLogged;
@@ -41,7 +43,14 @@ void LatencyThreadsInit(JNIEnv* env) {
         (*env)->DeleteLocalRef(env, local);
         return;
     }
+    jmethodID reportWork = (*env)->GetStaticMethodID(env, local, "reportWork", "(J)V");
+    if (reportWork == NULL) {
+        (*env)->ExceptionClear(env);
+        (*env)->DeleteLocalRef(env, local);
+        return;
+    }
     OnNativeThreadMethod = onNativeThread;
+    ReportWorkMethod = reportWork;
     LatencyClass = (*env)->NewGlobalRef(env, local);
     (*env)->DeleteLocalRef(env, local);
 }
@@ -61,13 +70,29 @@ static void registerThread(JNIEnv* env, int tid) {
     }
 }
 
-void LatencyTuneVideoThread(JNIEnv* env) {
-    if (VideoThreadTuned) return;
-    VideoThreadTuned = true;
+static uint64_t nowNs(void) {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (uint64_t)ts.tv_sec * 1000000000ull + (uint64_t)ts.tv_nsec;
+}
 
-    int tid = (int)gettid();
-    raiseThread(tid);
-    registerThread(env, tid);
+uint64_t LatencyFrameBegin(JNIEnv* env) {
+    if (!VideoThreadTuned) {
+        VideoThreadTuned = true;
+
+        int tid = (int)gettid();
+        raiseThread(tid);
+        registerThread(env, tid);
+    }
+    return nowNs();
+}
+
+void LatencyFrameEnd(JNIEnv* env, uint64_t beginNs) {
+    if (LatencyClass == NULL) return;
+    (*env)->CallStaticVoidMethod(env, LatencyClass, ReportWorkMethod, (jlong)(nowNs() - beginNs));
+    if ((*env)->ExceptionCheck(env)) {
+        (*env)->ExceptionClear(env);
+    }
 }
 
 void LatencyTuneConnectionThreads(JNIEnv* env) {
