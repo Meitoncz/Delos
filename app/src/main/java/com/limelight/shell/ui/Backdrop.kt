@@ -160,15 +160,28 @@ private fun HeroArt(art: GameArt, blurPx: Int, reducedMotion: Boolean, active: B
             dwelled = AnimatedPlayback.HERO_DWELL_MS
         }
     }
+    // The animation needs the live blur (Android 12+); below it the first frame stays
+    val liveWanted = image != null && art.animated != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && AnimatedPlayback.heroMayPlay(animate, dwelled)
+    // Decided in the very composition that adds or removes the animation (not by its callback, a frame later), so the still hero
+    // is back at once, in full, when the animation is released: a hero that was superseded and is cross-fading out never shows a
+    // gap or a still that fades back in on its way out
+    val liveShown = live && liveWanted
     // The still hero leaves once the animation has faded in over it (its soft diagonal edge must not show the first frame)
-    val stillAlpha by animateFloatAsState(if (live) 0f else 1f, tween(Motion.FADE, delayMillis = if (live) Motion.FADE else 0), label = "stillHero")
+    val stillFade = remember { Animatable(1f) }
+    LaunchedEffect(liveShown) {
+        if (liveShown) {
+            delay(Motion.FADE.toLong())
+            stillFade.animateTo(0f, tween(Motion.FADE))
+        } else {
+            stillFade.snapTo(1f)
+        }
+    }
     // Once the animation has faded in over it, the still leaves composition for good (it only held a second tilt clock
     // and an invisible layer); stopping the animation brings it back, from the cache, in the same pose
-    val stillOn by remember { derivedStateOf { !live || stillAlpha > 0f } }
+    val stillOn by remember(liveShown) { derivedStateOf { !liveShown || stillFade.value > 0f } }
     Box(Modifier.fillMaxSize()) {
-        if (stillOn) Box(Modifier.fillMaxSize().graphicsLayer { alpha = stillAlpha }) { HeroStill(art, blurPx, reducedMotion, active) }
-        // The animation needs the live blur (Android 12+); below it the first frame stays
-        if (image != null && art.animated != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && AnimatedPlayback.heroMayPlay(animate, dwelled)) {
+        if (stillOn) Box(Modifier.fillMaxSize().graphicsLayer { alpha = if (liveShown) stillFade.value else 1f }) { HeroStill(art, blurPx, reducedMotion, active) }
+        if (liveWanted) {
             HeroLive(art.id, image, art.animated, blurPx, reducedMotion, active, !reducedMotion) { live = it }
         }
     }
