@@ -49,6 +49,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
@@ -108,6 +109,9 @@ import com.limelight.shell.ui.staggerEntrance
 import com.limelight.shell.ui.Figtree
 import com.limelight.shell.ui.GameArt
 import com.limelight.shell.ui.IdleCoverFilter
+import com.limelight.shell.ui.AnimatedArtLayer
+import com.limelight.shell.ui.rememberAnimationTicker
+import kotlin.math.roundToInt
 import com.limelight.shell.ui.LocalDelosColors
 import com.limelight.shell.ui.LocalFeedback
 import com.limelight.shell.ui.LocalStage
@@ -212,6 +216,17 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
     val rowState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val windowInfo = LocalWindowInfo.current
+    // Animated artwork (covers, the wide cover, the logo) plays only for the games on screen, and only while nothing covers
+    // or stops it; one ticker draws every playing tile
+    val artMotion = rememberArtworkMotion { it == Screen.Home }
+    val visibleGames = remember(row) {
+        derivedStateOf {
+            val items = if (row) rowState.layoutInfo.visibleItemsInfo.map { it.key } else gridState.layoutInfo.visibleItemsInfo.map { it.key }
+            items.filterIsInstance<Int>().toSet()
+        }
+    }
+    val ticker = rememberAnimationTicker(artMotion.value)
+    val dashboardArt = remember(ticker, artMotion, visibleGames) { DashboardArt(ticker, artMotion, visibleGames) }
 
     // Initial focus when the library appears or the layout changes: jump to the focused game, focus it silently.
     // Not keyed on the focused game: moving the focus is animated by anchor() alone.
@@ -290,7 +305,7 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
 
     // The covers of the first screenful enter one after the other (docs/GUI.md, "Motion"); the ones a scroll brings in later are just there
     val intro = remember(pc.uuid, row) { EntranceStagger(enabled = true, cap = Motion.STAGGER_CAP, lateAfterMs = Motion.STAGGER_WINDOW) }
-    Box(Modifier.fillMaxSize()) {
+    CompositionLocalProvider(LocalDashboardArt provides dashboardArt) { Box(Modifier.fillMaxSize()) {
         GameInfo(pc, focused,
             // The block (logo, GAME INFO label and pill row) sits high enough that the pills clear the focused cover
             modifier = Modifier.padding(start = 150.px, top = if (row) 150.px else 100.px), reducedMotion = appearance.reducedMotion,
@@ -383,7 +398,7 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
                 }
             }
         }
-    }
+    } }
 }
 
 /** Row layout: the wide first cover, the others and the gap between them, in stage pixels. */
@@ -466,11 +481,23 @@ private fun GameInfo(pc: Pc, app: App, modifier: Modifier, reducedMotion: Boolea
         val logoImage = logo.image
         // The SteamGridDB logo stands in for the icon and the name
         if (logoImage != null) Box(Modifier.height(200.px).padding(vertical = 10.px), contentAlignment = Alignment.CenterStart) {
-            Image(
-                logoImage, contentDescription = app.name, contentScale = ContentScale.Fit, alignment = Alignment.CenterStart,
-                modifier = Modifier.height(180.px).widthIn(max = 900.px)
-                    .gameTitleEntrance(homeKey(pc, app), logoImage, reducedMotion),
-            )
+            Box(Modifier.gameTitleEntrance(homeKey(pc, app), logoImage, reducedMotion)) {
+                Image(
+                    logoImage, contentDescription = app.name, contentScale = ContentScale.Fit, alignment = Alignment.CenterStart,
+                    modifier = Modifier.height(180.px).widthIn(max = 900.px),
+                )
+                // The chosen animated logo plays over its first frame, fitted into the same box (start-aligned like the still)
+                val artwork = LocalArtwork.current
+                val animatedArt = LocalDashboardArt.current
+                val animation by rememberAnimatedArtwork(artwork, pc, app, ArtKind.LOGO)
+                if (animatedArt != null && animation != null) {
+                    val k = LocalStage.current.dpPerPx * LocalDensity.current.density
+                    AnimatedArtLayer(
+                        animation, animatedArt.motionOn, animatedArt.ticker, (900f * k).roundToInt(), (180f * k).roundToInt(),
+                        Modifier.matchParentSize(), fit = true, alignX = 0f, stamp = artwork.version.intValue,
+                    )
+                }
+            }
         } else if (logo.resolved) Row(Modifier.height(200.px), verticalAlignment = Alignment.CenterVertically) {
             val size = when {
                 app.name.length > 22 -> 56
@@ -677,6 +704,18 @@ private fun GameTile(
                     titleBottom = if (wide) 40f else 26f,
                 )
             }
+        }
+        // The chosen animated cover plays over its still first frame, cropped and muted exactly like it (the idle filter), only while
+        // the tile is on screen; decoded no bigger than the tile (its focused size) needs
+        val animatedArt = LocalDashboardArt.current
+        val animation by rememberAnimatedArtwork(artwork, pc, app, if (wide) ArtKind.WIDE else ArtKind.COVER)
+        val playing by remember(animatedArt, app.id) { derivedStateOf { animatedArt?.plays(app.id) == true } }
+        if (animatedArt != null && animation != null && (if (wide) wideCover else cover) != null) {
+            val k = LocalStage.current.dpPerPx * LocalDensity.current.density * TILE_FOCUS_SCALE
+            AnimatedArtLayer(
+                animation, playing, animatedArt.ticker, ((if (wide) 956f else 300f) * k).roundToInt(), (450f * k).roundToInt(),
+                Modifier.fillMaxSize(), colorFilter = if (focused) null else IdleCoverFilter, stamp = artwork.version.intValue,
+            )
         }
         if (artwork.isBusy(pc, app)) {
             Box(

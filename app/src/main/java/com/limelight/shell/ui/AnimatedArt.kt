@@ -15,6 +15,8 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.asAndroidColorFilter
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
@@ -30,7 +32,7 @@ import java.io.IOException
 import java.nio.ByteBuffer
 
 /**
- * When animated artwork plays and how much of it plays at once. The animation of a hero or a picker tile follows the
+ * When animated artwork plays and how much of it plays at once. The animation of a hero, a tile or a logo follows the
  * same rules as the rest of the app's motion: nothing moves with reduced motion or the system's animations off, and
  * nothing runs where it cannot be seen.
  */
@@ -48,12 +50,22 @@ object AnimatedPlayback {
     fun shouldPlay(visible: Boolean, foreground: Boolean, streaming: Boolean, reducedMotion: Boolean, animatorsOff: Boolean): Boolean =
         visible && foreground && !streaming && !reducedMotion && !animatorsOff
 
-    /** The keys of the animated tiles that play: those in [visibleAnimated] (in screen order), at most [limit]. */
-    /** The size a [width] × [height] image is decoded at: [maxWidth] across at most, never enlarged, the shape kept. */
-    fun decodeSize(width: Int, height: Int, maxWidth: Int): Pair<Int, Int> {
+    /**
+     * The size a [width] × [height] animation is decoded at: never enlarged, the shape kept, and no bigger than the view it
+     * is drawn in needs. With only [maxWidth] it is that many pixels across at most. With a [maxHeight] too, the view is
+     * [maxWidth] × [maxHeight]: a cropped animation (not [fit]) is decoded just big enough to cover it, a [fit] one just big
+     * enough to fit in it.
+     */
+    fun decodeSize(width: Int, height: Int, maxWidth: Int, maxHeight: Int = Int.MAX_VALUE, fit: Boolean = false): Pair<Int, Int> {
         if (width <= 0 || height <= 0) return 1 to 1
-        if (width <= maxWidth) return width to height
-        return maxWidth to (height.toLong() * maxWidth / width).toInt().coerceAtLeast(1)
+        val byWidth = maxWidth.toDouble() / width
+        val scale = when {
+            maxHeight == Int.MAX_VALUE -> byWidth
+            fit -> minOf(byWidth, maxHeight.toDouble() / height)
+            else -> maxOf(byWidth, maxHeight.toDouble() / height)
+        }.coerceAtMost(1.0)
+        if (scale >= 1.0) return width to height
+        return Math.round(width * scale).toInt().coerceAtLeast(1) to Math.round(height * scale).toInt().coerceAtLeast(1)
     }
 }
 
@@ -89,7 +101,8 @@ fun rememberAnimationTicker(active: Boolean): AnimationTicker {
 
 /** What an animation is decoded from: a downloaded file or the bytes of a thumbnail. */
 sealed interface AnimatedSource {
-    data class OfFile(val file: File) : AnimatedSource
+    /** [modified] is part of what identifies the animation: a file replaced by another animation is decoded again. */
+    data class OfFile(val file: File, val modified: Long = file.lastModified()) : AnimatedSource
     class OfBytes(val bytes: ByteArray) : AnimatedSource {
         // Identity: the same bytes are the same animation
         override fun equals(other: Any?) = other is OfBytes && other.bytes === bytes
@@ -97,8 +110,8 @@ sealed interface AnimatedSource {
     }
 }
 
-/** The animation of [source] decoded at [maxWidth] across, or null when it is not an animation or cannot be decoded. */
-private suspend fun decodeAnimation(source: AnimatedSource, maxWidth: Int): AnimatedImageDrawable? = withContext(Dispatchers.Default) {
+/** The animation of [source] decoded at the size [AnimatedPlayback.decodeSize] gives, or null when it is not an animation or cannot be decoded. */
+private suspend fun decodeAnimation(source: AnimatedSource, maxWidth: Int, maxHeight: Int, fit: Boolean): AnimatedImageDrawable? = withContext(Dispatchers.Default) {
     runCatching {
         val decoderSource = when (source) {
             is AnimatedSource.OfFile -> ImageDecoder.createSource(source.file)
@@ -106,7 +119,7 @@ private suspend fun decodeAnimation(source: AnimatedSource, maxWidth: Int): Anim
         }
         val drawable = ImageDecoder.decodeDrawable(decoderSource) { decoder, info, _ ->
             if (info.size.width.toLong() * info.size.height > com.limelight.shell.data.AnimatedWebp.MAX_PIXELS) throw IOException("canvas too big")
-            val (w, h) = AnimatedPlayback.decodeSize(info.size.width, info.size.height, maxWidth)
+            val (w, h) = AnimatedPlayback.decodeSize(info.size.width, info.size.height, maxWidth, maxHeight, fit)
             decoder.setTargetSize(w, h)
         }
         (drawable as? AnimatedImageDrawable)?.apply { repeatCount = AnimatedImageDrawable.REPEAT_INFINITE }
@@ -116,10 +129,14 @@ private suspend fun decodeAnimation(source: AnimatedSource, maxWidth: Int): Anim
 /**
  * The decoded animation of [source], running while [playing] and the window is resumed, null while it is not loaded or
  * [playing] is false (the drawable is released then: a paused tile costs no memory). Frames are decoded on demand by the
- * platform, one at a time, at [maxWidth] across; every new frame is reported to [ticker].
+ * platform, one at a time, at the size [AnimatedPlayback.decodeSize] gives for [maxWidth] (and [maxHeight], [fit]); every
+ * new frame is reported to [ticker].
  */
 @Composable
-fun rememberAnimatedDrawable(source: AnimatedSource?, playing: Boolean, maxWidth: Int, ticker: AnimationTicker): AnimatedImageDrawable? {
+fun rememberAnimatedDrawable(
+    source: AnimatedSource?, playing: Boolean, maxWidth: Int, ticker: AnimationTicker,
+    maxHeight: Int = Int.MAX_VALUE, fit: Boolean = false,
+): AnimatedImageDrawable? {
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     // Held strongly here: a drawable only keeps a weak reference to its callback
     val callback = remember(ticker) {
@@ -129,8 +146,8 @@ fun rememberAnimatedDrawable(source: AnimatedSource?, playing: Boolean, maxWidth
             override fun unscheduleDrawable(who: Drawable, what: Runnable) = Unit
         }
     }
-    val drawable by produceState<AnimatedImageDrawable?>(null, source, playing, maxWidth) {
-        value = if (source != null && playing) decodeAnimation(source, maxWidth) else null
+    val drawable by produceState<AnimatedImageDrawable?>(null, source, playing, maxWidth, maxHeight, fit) {
+        value = if (source != null && playing) decodeAnimation(source, maxWidth, maxHeight, fit) else null
         awaitDispose { value?.let { it.stop(); it.callback = null } }
     }
     val current = drawable
@@ -151,12 +168,18 @@ fun rememberAnimatedDrawable(source: AnimatedSource?, playing: Boolean, maxWidth
 
 /**
  * Draws [drawable] over the whole [modifier] area, cropped to fill it or ([fit]) whole, fading in over the still image
- * underneath. The current frame is drawn whenever [ticker] has a new one, with no recomposition.
+ * underneath. The current frame is drawn whenever [ticker] has a new one, with no recomposition. [colorFilter] is the
+ * one the still image underneath is drawn with, so both look alike; [alignX] (0 start, .5 center) where a fitted image
+ * sits horizontally.
  */
 @Composable
-fun AnimatedDrawableView(drawable: AnimatedImageDrawable, ticker: AnimationTicker, modifier: Modifier = Modifier, fit: Boolean = false) {
+fun AnimatedDrawableView(
+    drawable: AnimatedImageDrawable, ticker: AnimationTicker, modifier: Modifier = Modifier, fit: Boolean = false,
+    colorFilter: ColorFilter? = null, alignX: Float = .5f,
+) {
     val shown = remember(drawable) { Animatable(0f) }
     LaunchedEffect(shown) { shown.animateTo(1f, tween(Motion.FADE, easing = Motion.Ease)) }
+    val filter = remember(colorFilter) { colorFilter?.asAndroidColorFilter() }
     Canvas(modifier.graphicsLayer { alpha = shown.value }) {
         // Reading the frame is what redraws this view for the next image
         if (ticker.frame.intValue == Int.MIN_VALUE) return@Canvas
@@ -165,15 +188,32 @@ fun AnimatedDrawableView(drawable: AnimatedImageDrawable, ticker: AnimationTicke
         val scale = if (fit) minOf(size.width / iw, size.height / ih) else maxOf(size.width / iw, size.height / ih)
         val w = iw * scale
         val h = ih * scale
-        val left = ((size.width - w) / 2f).toInt()
+        val left = ((size.width - w) * alignX).toInt()
         val top = ((size.height - h) / 2f).toInt()
         drawIntoCanvas { canvas ->
             val c = canvas.nativeCanvas
             c.save()
             c.clipRect(0f, 0f, size.width, size.height)
             drawable.setBounds(left, top, left + w.toInt(), top + h.toInt())
+            drawable.colorFilter = filter
             drawable.draw(c)
             c.restore()
         }
     }
+}
+
+/**
+ * The playing animation of a chosen artwork file over its still image (which the caller draws underneath): decoded for a view
+ * of [width] × [height] pixels (cropped to fill it, or [fit] whole) only while [playing], released when it stops, drawn from
+ * the screen's one [ticker]. Nothing is drawn until the first frame is decoded; then it fades in. [stamp] (the artwork store's
+ * version) makes the file's date be read again, so a file replaced by another animation plays the new one.
+ */
+@Composable
+fun AnimatedArtLayer(
+    file: File?, playing: Boolean, ticker: AnimationTicker, width: Int, height: Int, modifier: Modifier = Modifier,
+    fit: Boolean = false, colorFilter: ColorFilter? = null, alignX: Float = .5f, stamp: Int = 0,
+) {
+    val source = remember(file, stamp) { file?.let { AnimatedSource.OfFile(it) } }
+    val drawable = rememberAnimatedDrawable(source, playing, width, ticker, height, fit)
+    if (drawable != null) AnimatedDrawableView(drawable, ticker, modifier, fit, colorFilter, alignX)
 }

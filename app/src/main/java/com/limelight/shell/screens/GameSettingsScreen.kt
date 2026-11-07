@@ -31,6 +31,8 @@ import com.limelight.shell.LocalShell
 import com.limelight.shell.MenuItem
 import com.limelight.shell.Screen
 import com.limelight.shell.data.ArtKind
+import com.limelight.shell.data.rememberAnimatedArtwork
+import kotlin.math.roundToInt
 import com.limelight.shell.data.LocalArtwork
 import com.limelight.shell.data.LocalBoxArt
 import com.limelight.shell.data.ProfileStore
@@ -115,6 +117,10 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
     val cover by rememberArtwork(LocalArtwork.current, screen.pc, screen.app, ArtKind.COVER)
     val box by rememberBoxArt(LocalBoxArt.current, screen.pc, screen.app)
     val art = appArt(screen.pc, screen.app)
+    // The chosen animated cover plays over its first frame while nothing covers this page
+    val artMotion = rememberArtworkMotion { it is Screen.GameSettings }
+    val ticker = rememberAnimationTicker(artMotion.value)
+    val animatedCover by rememberAnimatedArtwork(LocalArtwork.current, screen.pc, screen.app, ArtKind.COVER)
     val bottom = SettingsLayout.bottom(appearance)
     Box(Modifier.fillMaxSize()) {
         FocusTransferTarget(transfer)
@@ -193,6 +199,13 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
                 val image = cover ?: box
                 if (image != null) Image(image, screen.app.name, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
                 else PlaceholderArt(art.hue, art.hue2, art.icon, Modifier.fillMaxSize(), glyphSize = 180f)
+                if (animatedCover != null && cover != null) {
+                    val k = LocalStage.current.dpPerPx * LocalDensity.current.density
+                    AnimatedArtLayer(
+                        animatedCover, artMotion.value, ticker, (260f * k).roundToInt(), (390f * k).roundToInt(),
+                        Modifier.fillMaxSize(), stamp = LocalArtwork.current.version.intValue,
+                    )
+                }
             }
             val detail = focused?.let { SettingsHelp.details(it, values, caps?.choices(it, values) ?: it.choices) }
             Column(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 6.px),

@@ -285,16 +285,33 @@ class ArtworkStore(context: Context) {
     }
 
     /**
-     * The chosen image of [kind] as a file when it is an animated WebP the hero (or any live view) may play,
-     * else null (a still image, a missing file, an app with built-in artwork, a canvas over [AnimatedWebp.MAX_PIXELS]).
+     * The chosen image of [kind] as a file when it is an animated WebP the dashboard may play (the hero, a cover, a wide cover,
+     * a logo), else null (a still image, a missing file, an app with built-in artwork, a canvas over [AnimatedWebp.MAX_PIXELS]).
+     * The chosen file is the stored one: choosing an image stores the downloaded bytes as they are (the animation stays), and
+     * the still readers ([load]) decode its first frame. The answer is kept per file (size and date), so a tile that scrolls
+     * back in does not read the header again.
      */
     suspend fun animatedFile(pc: Pc, app: App, kind: ArtKind): File? = withContext(Dispatchers.IO) {
         if (!eligible(app)) return@withContext null
         val file = file(pc, app, kind)
-        if (!file.isFile || file.length() == 0L) return@withContext null
+        val length = file.length()
+        val modified = file.lastModified()
+        if (!file.isFile || length == 0L) return@withContext null
+        val key = memoryKey(pc, app, kind)
+        animatedMemory[key]?.takeIf { it.length == length && it.modified == modified }?.let { return@withContext it.file }
         val header = runCatching { file.inputStream().use { AnimatedWebp.read(it, AnimatedWebp.HEADER_BYTES) } }.getOrNull() ?: return@withContext null
-        file.takeIf { AnimatedWebp.isAnimated(header) && AnimatedWebp.pixels(header) in 1..AnimatedWebp.MAX_PIXELS }
+        val playable = file.takeIf { AnimatedWebp.isAnimated(header) && AnimatedWebp.pixels(header) in 1..AnimatedWebp.MAX_PIXELS }
+        animatedMemory.put(key, AnimatedEntry(length, modified, playable))
+        playable
     }
+
+    /** What [animatedFile] answered last for [kind], null when unknown, so a tile can start with it instead of waiting for the lookup. */
+    fun cachedAnimatedFile(pc: Pc, app: App, kind: ArtKind): File? =
+        if (!eligible(app)) null else animatedMemory[memoryKey(pc, app, kind)]?.file
+
+    private class AnimatedEntry(val length: Long, val modified: Long, val file: File?)
+
+    private val animatedMemory = LruCache<String, AnimatedEntry>(512)
 
     /** Built-ins ignore old local choices; ordinary apps retain their existing local-image precedence. */
     suspend fun load(pc: Pc, app: App, kind: ArtKind): ImageBitmap? = loadResult(pc, app, kind).image
@@ -423,6 +440,7 @@ class ArtworkStore(context: Context) {
         val file = file(pc, app, kind)
         if (image == null) file.delete() else client.download(image.url, file)
         memory.remove(memoryKey(pc, app, kind))
+        animatedMemory.remove(memoryKey(pc, app, kind))
     }
 
     private suspend fun changed() = withContext(Dispatchers.Main) { version.intValue++ }
@@ -540,7 +558,7 @@ fun rememberArtworkResult(store: ArtworkStore, pc: Pc, app: App, kind: ArtKind):
 @Composable
 fun rememberAnimatedArtwork(store: ArtworkStore, pc: Pc, app: App, kind: ArtKind): State<File?> {
     val version = store.version.intValue
-    val state = remember(store, pc.uuid, app.id, app.name, kind) { mutableStateOf<File?>(null) }
+    val state = remember(store, pc.uuid, app.id, app.name, kind) { mutableStateOf(store.cachedAnimatedFile(pc, app, kind)) }
     LaunchedEffect(state, version) { state.value = store.animatedFile(pc, app, kind) }
     return state
 }

@@ -123,22 +123,38 @@ The TV channel uses the same mark; PC shortcut icons remain unchanged.
   requests). Filters are kept per tab in memory and reset when the screen is left. Logic: `data/ArtworkFilters.kt`
   (`ArtFilterRules`, `ArtworkInfo`), parsing: `SgdbImage.parse`.
 - **Animated artwork:** animated SteamGridDB images are **animated WebP only** (WebM and GIF are not requested; a WebM entry is skipped).
-  A chosen animated image is stored like any image; its first frame is what the still paths decode (BitmapFactory), so everything
-  that does not animate keeps working. There is **no setting**:
+  Choosing an image stores the **downloaded bytes as they are** for every kind (cover, wide cover, hero, logo: the animation stays in
+  the artwork store's file, nothing is re-encoded or downscaled); its first frame is what the still paths decode (BitmapFactory), so
+  everything that does not animate keeps working and the still is always the animation's first frame. `ArtworkStore.animatedFile`
+  answers with that file when it is an animated WebP (header check, kept per file size and date). There is **no setting**:
   - *Hero:* the home screen's game background plays the chosen animated hero automatically (`GameArt.animated`, `HeroLive` in
     `ui/Backdrop.kt`) through `ImageDecoder` / `AnimatedImageDrawable` (frames decoded on demand at most 1050 px wide, one frame in
-    memory, file ≤ 15 MB, canvas ≤ 8 million pixels), on Android 12+ (below it the first frame stays). It is drawn live with the
-    platform blur (`RenderEffect`, the sharp-hero path) inside the same crop, diagonal fade and tilt, fading in over the still lens-blurred
+    memory, canvas ≤ 100 million pixels), on Android 12+ (below it the first frame stays). It is drawn live with the
+    platform blur (`RenderEffect`, the sharp-hero path) inside the same composition (band at the top with its soft bottom edge over the
+    still extension), diagonal fade and tilt, fading in over the still lens-blurred
     hero (the lens shader renders a cached bitmap and cannot run per frame), which leaves once the animation is shown. It plays only
     while the hero is visible and the window is resumed (`repeatOnLifecycle`), and **not** during the launch loader / portal, in the
     background, in a stream (a separate resumed activity), or with reduced motion or the system's animator scale 0 (then the first
     frame, like the tilt). Pure rules: `AnimatedPlayback.shouldPlay`.
-  - *Picker tiles:* every **visible** animated tile loops (at most 14 at once, `AnimatedPlayback.tilesToPlay`); its animated
-    thumbnail (else the full file when it is a WebP up to 4 MB) is fetched once into a 32 MB LRU of whole files and decoded at 520 px
-    across; off-screen tiles, all tiles while the filter sheet or a dialog covers the grid, in the background, or with reduced
+  - *Home screen tiles, logo and game page:* the chosen animated **cover** (portrait tiles), **wide cover** (the wide first tile) and
+    **logo** loop wherever they show on the dashboard: the grid and row tiles (`GameTile`), the logo in the game info, and the cover on
+    the game settings page. The animation is an `AnimatedArtLayer` over the still image (which keeps showing until the decoder is
+    ready; the animation then fades in over it with the app's fade), drawn with the same crop (`ContentScale.Crop` cover, fitted and
+    start-aligned logo) and the same color filter (the idle filter of an unfocused cover) as the still. **Only visible tiles play**
+    (the keys of the lazy grid's / row's `visibleItemsInfo`, no count cap); a tile that scrolls out releases its decoder and holds the
+    still again. The frames are **decoded at the displayed size** (tile width × height at its focused scale, a logo 900 × 180 stage px;
+    `AnimatedPlayback.decodeSize` with the view's size: cover or fit, never enlarged), never the full canvas, from the file on disk (no
+    heap copy). The home screen has **one `AnimationTicker`** for all of it (`DashboardArt` in `screens/DashboardArt.kt`); it runs only
+    while something may play. Nothing plays (still frames) while a menu, dialog or the filter sheet covers the screen, during the launch
+    loader, the portal, the stream exit or its result, in a stream or the background, with reduced motion or the system's animations off
+    (`rememberArtworkMotion`, `AnimatedPlayback.shouldPlay`). The launch loader's card, the stream exit and the context menu keep the
+    first frame.
+  - *Picker tiles:* every **visible** animated tile loops (no count cap); its animation (the animated thumbnail, else the full WebP) is
+    fetched once into a file in the app's cache (never the heap) and decoded from there at 520 px
+    across at most; off-screen tiles, all tiles while the filter sheet or a dialog covers the grid, in the background, or with reduced
     motion show the first frame and hold no decoder. All tiles share **one `AnimationTicker`**: the drawables report new frames, the
     ticker turns them into one redraw per frame, and it does not run while nothing plays.
-  - Not animated: covers and wide covers on the home screen and the launch screens (first frame only), animated GIF/WebM files.
+  - Not animated: the launch loader's card and the stream exit (first frame only), animated GIF/WebM files.
   Older Android versions retain the supported cached hero rendering.
 - Host artwork synchronization decisions are recorded in [#15](https://github.com/Meitoncz/Delos/issues/15).
 - Desktop, Remote Input, Remote Monitor and Steam Big Picture use fixed bundled cover/wide/hero
