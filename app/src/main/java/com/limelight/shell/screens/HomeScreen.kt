@@ -756,11 +756,13 @@ private fun GameTile(
             ) { Spinner(32f) }
         } else if (custom) {
             // Above the (idle-filtered) art; the busy spinner takes this corner while it shows
+            // Nearly opaque dark disc with a thin light rim: readable on bright covers as well as dark ones
             Box(
-                Modifier.align(Alignment.TopEnd).padding(16.px).size(56.px).clip(CircleShape).background(Color(0x8C050A14))
+                Modifier.align(Alignment.TopEnd).padding(16.px).size(60.px).clip(CircleShape).background(Color(0xE60A1020))
+                    .border(2.px, Color(0x66FFFFFF), CircleShape)
                     .semantics { contentDescription = "Custom settings for this game" },
                 contentAlignment = Alignment.Center,
-            ) { Symbol(Symbols.TUNE, 30.tpx, colors.accent3OnDark, filled = true) }
+            ) { Symbol(Symbols.TUNE, 32.tpx, Color(0xFFC9B8FF), filled = true) }
         }
         if (badge != null) {
             Row(
