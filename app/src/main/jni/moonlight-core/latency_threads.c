@@ -20,7 +20,7 @@
 
 #include "latency_threads.h"
 
-#define LOG_TAG "DelosLatency"
+#define LOG_TAG "DelosThreads"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 // The tag of the stream diagnostics (DelosPyroDiag in MediaCodecDecoderRenderer)
 #define DIAG_TAG "DelosPyroDiag"
