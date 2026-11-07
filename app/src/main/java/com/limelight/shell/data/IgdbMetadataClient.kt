@@ -26,7 +26,7 @@ class IgdbMetadataClient internal constructor(
 
     private val http = http.newBuilder().followRedirects(false).followSslRedirects(false).build()
 
-    /** PC and Steam entries first, then entries without platform data; console-only entries are dropped. */
+    /** PC and Steam entries first, then entries without platform data, then console-only ones (a manually added non-Steam game may be one). */
     fun search(query: String): List<MetadataCandidate> {
         val term = MetadataProxy.term(searchTerm(query))
         if (term.isEmpty()) return emptyList()
@@ -56,14 +56,14 @@ class IgdbMetadataClient internal constructor(
 
     companion object {
         /**
-         * IGDB platform data is incomplete, so a missing list is not evidence against PC. Entries that list
-         * only other platforms and no Steam listing are dropped; PC/Steam entries come first.
+         * IGDB platform data is incomplete, so a missing list is not evidence against PC. PC/Steam entries come first,
+         * then entries without platform data, then console-only ones: a game added by hand to the host (an emulated
+         * console title) exists on IGDB only for its console, so dropping those would make it unfindable.
          */
         internal fun preferPc(candidates: List<MetadataCandidate>): List<MetadataCandidate> {
-            val (preferred, unknown) = candidates
-                .filter { it.isPc || it.steamAppIds.isNotEmpty() || it.platformIds.isEmpty() }
-                .partition { it.isPc || it.steamAppIds.isNotEmpty() }
-            return preferred + unknown
+            val (preferred, rest) = candidates.partition { it.isPc || it.steamAppIds.isNotEmpty() }
+            val (unknown, consoleOnly) = rest.partition { it.platformIds.isEmpty() }
+            return preferred + unknown + consoleOnly
         }
 
         private fun JsonObject.intOrZero(name: String): Int = get(name)?.takeIf { it.isJsonPrimitive }?.asInt ?: 0

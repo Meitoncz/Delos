@@ -176,14 +176,14 @@ class IgdbMetadataClientTest {
             .apply { headers.forEach { (name, value) -> header(name, value) } }
             .body(body.toResponseBody("application/json".toMediaType())).build()
 
-    @Test fun searchKeepsPcSteamAndPlatformlessEntriesButDropsConsoleOnlyOnes() {
+    @Test fun searchRanksPcSteamThenPlatformlessThenConsoleOnlyEntries() {
         fun candidate(id: Long, platforms: List<Int>, steam: List<Long> = emptyList()) =
             MetadataCandidate(id, "Game", null, steam, platformIds = platforms)
         val result = IgdbMetadataClient.preferPc(listOf(
             candidate(1, emptyList()), candidate(2, listOf(48)), candidate(3, listOf(6)),
             candidate(4, listOf(14), steam = listOf(7L)), candidate(5, listOf(130)),
         ))
-        assertEquals(listOf(3L, 4L, 1L), result.map { it.id })
+        assertEquals(listOf(3L, 4L, 1L, 2L, 5L), result.map { it.id })
     }
 
 }
