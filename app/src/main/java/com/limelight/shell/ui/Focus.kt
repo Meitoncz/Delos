@@ -127,7 +127,7 @@ fun Modifier.focusEffects(
             glowHeld = false
         }
     }
-    val glowVisible = !PerfFlags.has('k') && (focused || glowHeld || PerfFlags.has('d'))
+    val glowVisible = focused || glowHeld
     val sweepPos = remember { Animatable(0f) }
     LaunchedEffect(focused) {
         if (focused && sweep) {
@@ -191,7 +191,7 @@ fun Modifier.focusEffects(
         .drawWithContent {
             drawContent()
             val r = min(stagePx(corner, stage), size.minDimension / 2f)
-            if (sweep && focused && !PerfFlags.has('k')) drawSweep(sweepPos.value, r)
+            if (sweep && focused) drawSweep(sweepPos.value, r)
             if (plate == null && ring != null && ringAlpha > 0f) drawFocusRing(ring, r, ringAlpha, colors, stage)
         }
         .onGloballyPositioned {

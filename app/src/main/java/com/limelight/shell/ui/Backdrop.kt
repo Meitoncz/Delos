@@ -93,7 +93,7 @@ data class GameArt(val id: String, val hue: Float, val hue2: Float, val icon: St
  */
 @Composable
 fun Backdrop(appearance: Appearance, colors: DelosColors, hero: GameArt?, modifier: Modifier = Modifier, animate: Boolean = true) {
-    val heroOn = appearance.heroBackground && hero != null && appearance.heroOpacity > 0 && !PerfFlags.has('f')
+    val heroOn = appearance.heroBackground && hero != null && appearance.heroOpacity > 0
     // The tilt is the still background's only motion; it also stops when the system removes animations.
     val context = LocalContext.current
     val tiltReduced = appearance.reducedMotion || remember(context) { HeroMotion.animatorsOff(context) }
@@ -103,32 +103,23 @@ fun Backdrop(appearance: Appearance, colors: DelosColors, hero: GameArt?, modifi
             // The game background's opacity multiplies each draw of the hero (ModulateAlpha) instead of putting the whole hero into
             // an offscreen layer, which the tilt would render again on every display frame. The fade into the theme color below is
             // drawn over it at its own opacity: the theme color is also what lies under the hero, so this is the same picture.
-            val fadeIntoTheme: @Composable () -> Unit = {
-                // Fade the game background into the theme color at the bottom and on the left (behind the texts)
-                Box(Modifier.fillMaxSize().graphicsLayer { alpha = .9f }.drawBehind {
-                    drawRect(Brush.verticalGradient(0f to Color.Transparent, .42f to Color.Transparent, 1f to colors.bg))
-                    drawRect(Brush.horizontalGradient(0f to colors.bg, .38f to colors.bg.copy(alpha = 0f)))
-                })
-            }
-            val groupLayer = PerfFlags.has('a')
-            Box(Modifier.fillMaxSize().graphicsLayer {
-                alpha = heroAlpha
-                compositingStrategy = if (PerfFlags.has('a')) CompositingStrategy.Auto else CompositingStrategy.ModulateAlpha
-            }) {
-                val heroArt: @Composable (GameArt) -> Unit = { art ->
-                    HeroArt(art, appearance.heroBlur, tiltReduced, heroOn && art == hero && !PerfFlags.has('j'), animate && heroOn && art == hero)
+            Box(Modifier.fillMaxSize().graphicsLayer { alpha = heroAlpha; compositingStrategy = CompositingStrategy.ModulateAlpha }) {
+                Crossfade(hero, animationSpec = tween(900), label = "heroArt") { art ->
+                    if (art != null) HeroArt(art, appearance.heroBlur, tiltReduced, heroOn && art == hero, animate && heroOn && art == hero)
                 }
-                Crossfade(hero, animationSpec = tween(900), label = "heroArt") { art -> if (art != null) heroArt(art) }
-                if (groupLayer) fadeIntoTheme()
             }
-            if (!groupLayer) fadeIntoTheme()
+            // Fade the game background into the theme color at the bottom and on the left (behind the texts)
+            Box(Modifier.fillMaxSize().graphicsLayer { alpha = .9f }.drawBehind {
+                drawRect(Brush.verticalGradient(0f to Color.Transparent, .42f to Color.Transparent, 1f to colors.bg))
+                drawRect(Brush.horizontalGradient(0f to colors.bg, .38f to colors.bg.copy(alpha = 0f)))
+            })
         }
         // The animated background takes on the main color of the game's background image (with the setting on)
         val matching = heroOn && appearance.matchGameColors
         // The game's colors come from its cover (the game background's while the cover's are unknown)
         val known = matching && (HeroBitmaps.coverKnown(hero.id) || HeroBitmaps.huesKnown(hero.id))
         val gameHues = if (!matching) null else if (HeroBitmaps.coverKnown(hero.id)) HeroBitmaps.coverHues(hero.id) else HeroBitmaps.hues(hero.id)
-        if (!PerfFlags.has('e')) AnimatedBackground(
+        AnimatedBackground(
             appearance, colors, gameHues = gameHues,
             // A game whose colors are not worked out yet keeps the previous game's, so nothing flashes in between
             gamePending = matching && !known, heroActive = heroOn,
@@ -177,7 +168,7 @@ private fun HeroArt(art: GameArt, blurPx: Int, reducedMotion: Boolean, active: B
     Box(Modifier.fillMaxSize()) {
         if (stillOn) Box(Modifier.fillMaxSize().graphicsLayer { alpha = stillAlpha }) { HeroStill(art, blurPx, reducedMotion, active) }
         // The animation needs the live blur (Android 12+); below it the first frame stays
-        if (image != null && art.animated != null && !PerfFlags.has('g') && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && AnimatedPlayback.heroMayPlay(animate, dwelled)) {
+        if (image != null && art.animated != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && AnimatedPlayback.heroMayPlay(animate, dwelled)) {
             HeroLive(art.id, image, art.animated, blurPx, reducedMotion, active, !reducedMotion) { live = it }
         }
     }
@@ -272,7 +263,7 @@ private fun HeroLive(id: String, image: ImageBitmap, file: java.io.File, blurPx:
     val density = LocalDensity.current.density
     // Physical pixels per stage pixel at full size, and the live layer's resolution as a fraction of it
     val k = stage.dpPerPx * density
-    val scale = if (PerfFlags.has('i')) 1f else remember(blurPx, k) { HeroGeometry.liveScale(blurPx * k) }
+    val scale = remember(blurPx, k) { HeroGeometry.liveScale(blurPx * k) }
     val unit = scale * k
     val layout = remember(image) { HeroGeometry.layout(image.width, image.height) }
     val ticker = rememberAnimationTicker(play)
@@ -412,7 +403,7 @@ private fun AnimatedBackground(appearance: Appearance, colors: DelosColors, game
     val speed by rememberUpdatedState(if (appearance.reducedMotion) .15f else 1f)
     val tintTarget by rememberUpdatedState(gameHues)
     val baseTarget by rememberUpdatedState(if (heroActive) .12f else 1f)
-    val redrawNanos by rememberUpdatedState(if (heroActive && !PerfFlags.has('c')) MIN_REDRAW_NANOS_UNDER_HERO else MIN_REDRAW_NANOS)
+    val redrawNanos by rememberUpdatedState(if (heroActive) MIN_REDRAW_NANOS_UNDER_HERO else MIN_REDRAW_NANOS)
     LaunchedEffect(Unit) {
         var last = 0L
         var lastDrawn = 0L

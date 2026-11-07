@@ -113,12 +113,9 @@ The TV channel uses the same mark; PC shortcut icons remain unchanged.
   (`AnimatedPlayback.HERO_DWELL_MS`, the still hero shows meanwhile) and ends at once when the focus leaves; (3) the animated background repaints at most 30 times a second while a game background
   is shown (60 otherwise); (4) a tile's focus glow (the blurred `dropShadow`) exists only while the tile is focused or recently was (it
   stays attached 2.5 s after the focus leaves, so focus moving back and forth between two tiles never attaches and detaches it).
-- **Performance A/B switches (debug builds)** (`ui/PerfFlags.kt`): `adb shell setprop debug.delos.perf <letters>` (re-read once a second,
-  no restart, `setprop debug.delos.perf ""` clears it; release builds ignore it) turns one thing off or back to the old way each, to
-  bisect the frame cost on the same listing run: **a** hero opacity as one full-screen offscreen layer (instead of `ModulateAlpha`),
-  **c** animated background at 60 Hz under a hero, **d** glow
-  shadow on every tile, **e** no animated background, **f** no game background, **g** hero always the still one, **h** no animated
-  tiles / logo / game page cover, **i** the live hero's layer at full resolution, **j** no tilt, **k** no focus pulse, glow or sweep.
+  Measured on the Odin with automated RIGHT/LEFT focus changes between two games with animated covers and hero (0.3 s apart): the
+  design above (Compose `Crossfade`, 500 ms dwell, low-resolution live hero) holds about 3 % janky frames, p50 6 ms, the same as a
+  still hero.
 - **Artwork page** (game options → Artwork, `ArtworkScreen`; approved prototype variant B): no side column. Header and tab pills
   (`SelectionPillHost`, touch only, L1 / R1) over a toolbar with the **SteamGridDB game chip** (name, year, id, image count of the tab),
   **Search for another name** (X) and **Filter** (Y, with a count badge of the active filters); under it the result line

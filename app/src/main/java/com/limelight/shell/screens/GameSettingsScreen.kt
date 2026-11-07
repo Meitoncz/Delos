@@ -199,7 +199,7 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
                 val image = cover ?: box
                 if (image != null) Image(image, screen.app.name, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
                 else PlaceholderArt(art.hue, art.hue2, art.icon, Modifier.fillMaxSize(), glyphSize = 180f)
-                if (animatedCover != null && cover != null && !PerfFlags.has('h')) {
+                if (animatedCover != null && cover != null) {
                     val k = LocalStage.current.dpPerPx * LocalDensity.current.density
                     AnimatedArtLayer(
                         animatedCover, artMotion.value, ticker, (260f * k).roundToInt(), (390f * k).roundToInt(),
