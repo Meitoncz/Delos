@@ -9,10 +9,12 @@ import android.os.HandlerThread;
 import android.view.Choreographer;
 import android.view.Surface;
 import com.limelight.LimeLog;
+import com.limelight.preferences.UpscalerMode;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.FutureTask;
+import java.util.function.Supplier;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -42,6 +44,8 @@ public final class SgsrRenderer implements AutoCloseable {
     private static final int MAX_CONSECUTIVE_DRAW_FAILURES = 60;
     // Only touched on the SGSR thread
     private int consecutiveDrawFailures;
+    // Sharpen only: the mode number (UpscalerMode.index) of the pass that only sharpens, without scaling
+    private static final int SHARPEN_ONLY = UpscalerMode.SHARPEN_ONLY.index();
     private final int width, height;
     private volatile float sharpness;
     private volatile int mode;
@@ -57,6 +61,13 @@ public final class SgsrRenderer implements AutoCloseable {
     private int supersampleHighQualityProgram;
     private int temporalPresentProgram;
     private int supersamplePresentProgram;
+    private int sharpenProgram;
+    private SharpenMeter sharpenMeter;
+    private final Supplier<String> sharpenDescription = this::describeSharpen;
+    // Created for Sharpen only, whose output keeps the stream's size: the surface is not enlarged and the HDR
+    // layer is stream-sized. A switch between this and the other modes needs a new renderer (see isSharpenGeometry).
+    private final boolean sharpenGeometry;
+    private volatile boolean sharpenActive;
     private SgsrTemporal temporal;
     private Context diagnosticContext;
     private boolean diagnosticsChecked;
@@ -86,7 +97,7 @@ public final class SgsrRenderer implements AutoCloseable {
     private volatile String arrivalError;
     private final float[] arrivalPose = new float[LaunchArrival.POSE_FLOATS];
     private ArrivalGlPass arrival;
-    private int arrivalSpatialProgram, arrivalHighProgram, arrivalTemporalProgram, arrivalPresentProgram;
+    private int arrivalSpatialProgram, arrivalHighProgram, arrivalTemporalProgram, arrivalPresentProgram, arrivalSharpenProgram;
     private Runnable arrivalCompletionListener;
     private Choreographer choreographer;
     private boolean arrivalFrameScheduled, arrivalReconstructionDirty, hdrFrameAcquired;
@@ -167,6 +178,7 @@ public final class SgsrRenderer implements AutoCloseable {
     private SgsrRenderer(int width, int height, int sharpness, int mode, int supersamplingLevel,
                          boolean tenBit, boolean hdrActive, byte[] metadata, Runnable failure, boolean arrivalOnly) {
         this.width = width;
+        this.sharpenGeometry = !arrivalOnly && mode == SHARPEN_ONLY;
         this.arrivalOnly = arrivalOnly;
         this.height = height;
         this.sharpness = Math.max(0, Math.min(100, sharpness)) / 100f;
@@ -182,13 +194,25 @@ public final class SgsrRenderer implements AutoCloseable {
 
     public Surface getDecoderSurface() { return decoderSurface; }
     public void setSharpness(int value) { sharpness = Math.max(0, Math.min(100, value)) / 100f; }
-    public void setMode(int mode) { this.mode = Math.max(0, Math.min(3, mode)); }
+    public void setMode(int mode) { this.mode = UpscalerMode.fromIndex(mode).index(); }
     public void setSupersamplingLevel(int level) { supersamplingLevel = level >= 2 ? 2 : 1; }
     public boolean isSupersampling() { return supersampling; }
+    /** Whether this renderer was built for Sharpen only's stream-sized output, which the other modes cannot use. */
+    public boolean isSharpenGeometry() { return sharpenGeometry; }
+    /** What the Sharpen only pass cost in the last window, null while that mode is not running. */
+    public SharpenCost getSharpenCost() {
+        SharpenMeter meter = sharpenMeter;
+        return meter != null ? meter.snapshot() : null;
+    }
     public String getScaleDescription() {
         if (activeInternalWidth <= 0 || activePresentationWidth <= 0) return null;
+        if (sharpenActive) return "Sharpen only: " + activePresentationWidth + " × " + activePresentationHeight;
         if (supersampling) return "Supersampled to: " + activeInternalWidth + " × " + activeInternalHeight;
         return "Upscaled to: " + activePresentationWidth + " × " + activePresentationHeight;
+    }
+    private String describeSharpen() {
+        return "sharpen-only " + width + "x" + height + "->" + outputWidth + "x" + outputHeight
+                + " sharpness=" + sharpness + " p010=" + tenBit + " hdr=" + hdrActive;
     }
     public void setHdrMode(boolean enabled, byte[] metadata) {
         hdrActive = enabled;
@@ -302,6 +326,11 @@ public final class SgsrRenderer implements AutoCloseable {
                 ((com.limelight.Game)app).getStreamSurface() : null;
         hdrTargetWidth = streamView != null ? streamView.getWidth() : 0;
         hdrTargetHeight = streamView != null ? streamView.getHeight() : 0;
+        if (sharpenGeometry) {
+            // No enlargement: the HDR layer has the stream's size and SurfaceFlinger scales it to the view
+            hdrTargetWidth = width;
+            hdrTargetHeight = height;
+        }
         display = EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY);
         require(EGL14.eglInitialize(display, new int[2], 0, new int[2], 0), "EGL initialize");
         int[] attrs = {EGL14.EGL_RED_SIZE,8, EGL14.EGL_GREEN_SIZE,8, EGL14.EGL_BLUE_SIZE,8,
@@ -324,6 +353,7 @@ public final class SgsrRenderer implements AutoCloseable {
         String extensions=GLES31.glGetString(GLES31.GL_EXTENSIONS);
         require(extensions.contains("GL_OES_EGL_image_external_essl3"), "External texture support");
         if (tenBit) require(extensions.contains("GL_EXT_YUV_target"), "P010 output support");
+        if (!arrivalOnly) sharpenMeter = SharpenMeter.create(extensions);
         EGL14.eglSwapInterval(display,0);
         copyProgram = program(VERTEX,COPY);
         copyTransformLocation = GLES31.glGetUniformLocation(copyProgram,"transform");
@@ -401,12 +431,16 @@ public final class SgsrRenderer implements AutoCloseable {
             if (!outputAttached || (arrivalError != null && arrivalOnly)) return;
             GLES31.glBindFramebuffer(GLES31.GL_FRAMEBUFFER,framebuffer);
             GLES31.glViewport(0,0,width,height);
+            final SharpenMeter meter = sharpenMeter;
+            final boolean measureCopy = meter != null && !arrivalOnly && mode == SHARPEN_ONLY;
+            if (measureCopy) meter.beginCopy();
             GLES31.glUseProgram(copyProgram);
             GLES31.glUniformMatrix4fv(copyTransformLocation,1,false,transform,0);
             GLES31.glActiveTexture(GLES31.GL_TEXTURE0);
             GLES31.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,externalTexture);
             GLES31.glUniform1i(copySourceLocation,0);
             GLES31.glDrawArrays(GLES31.GL_TRIANGLE_STRIP,0,4);
+            if (measureCopy) meter.endCopy();
             int w,h;
             if (tenBit) {
                 w=nativeHdrWidth(hdrOutput);h=nativeHdrHeight(hdrOutput);
@@ -442,22 +476,32 @@ public final class SgsrRenderer implements AutoCloseable {
             if (drawnQuality == null || drawnQuality != quality) {
                 drawnQuality = quality;
                 if (temporal != null) temporal.reset();
-                LimeLog.info("SGSR quality: " + (quality == 3 ? "SGSR 2 Video Quality" : quality == 2 ? "SGSR 2 Video" : quality == 1 ? "High Quality" : "Standard"));
+                LimeLog.info("SGSR quality: " + UpscalerMode.fromIndex(quality).label());
             }
-            int requestedSupersampling = supersamplingLevel;
-            if (dimensionsPlan == null || plannedWidth != w || plannedHeight != h
-                    || plannedSupersamplingLevel != requestedSupersampling) {
-                dimensionsPlan = SgsrDimensions.plan(width,height,w,h,maxTextureSize,requestedSupersampling);
-                plannedWidth = w;
-                plannedHeight = h;
-                plannedSupersamplingLevel = requestedSupersampling;
+            final boolean sharpenOnly = quality == SHARPEN_ONLY;
+            int internalWidth, internalHeight;
+            if (sharpenOnly) {
+                // No scaling at any supersampling level: the internal size is the stream's, only the pass runs
+                internalWidth = width;
+                internalHeight = height;
+                supersampling = false;
+            } else {
+                int requestedSupersampling = supersamplingLevel;
+                if (dimensionsPlan == null || plannedWidth != w || plannedHeight != h
+                        || plannedSupersamplingLevel != requestedSupersampling) {
+                    dimensionsPlan = SgsrDimensions.plan(width,height,w,h,maxTextureSize,requestedSupersampling);
+                    plannedWidth = w;
+                    plannedHeight = h;
+                    plannedSupersamplingLevel = requestedSupersampling;
+                }
+                SgsrDimensions.Plan dimensions = dimensionsPlan;
+                internalWidth = dimensions.internalWidth;
+                internalHeight = dimensions.internalHeight;
+                supersampling = dimensions.isSupersampling();
             }
-            SgsrDimensions.Plan dimensions = dimensionsPlan;
-            int internalWidth = dimensions.internalWidth;
-            int internalHeight = dimensions.internalHeight;
             boolean dimensionsChanged = activeInternalWidth != internalWidth || activeInternalHeight != internalHeight ||
                     activePresentationWidth != w || activePresentationHeight != h;
-            supersampling = dimensions.isSupersampling();
+            sharpenActive = sharpenOnly;
             activeInternalWidth = internalWidth;
             activeInternalHeight = internalHeight;
             activePresentationWidth = w;
@@ -466,7 +510,12 @@ public final class SgsrRenderer implements AutoCloseable {
             int sampledWidth = width;
             int sampledHeight = height;
             int selectedProgram = quality == 1 ? highQualityProgram : upscaleProgram;
-            if (quality >= 2) {
+            if (sharpenOnly) {
+                try {
+                    if (sharpenProgram == 0) sharpenProgram = createUpscaleProgram(diagnosticContext,"sgsr/sharpen_only.frag");
+                } catch (Exception e) { throw new IllegalStateException("Sharpen only",e); }
+                selectedProgram = sharpenProgram;
+            } else if (UpscalerMode.fromIndex(quality).isTemporal()) {
                 try {
                     if (temporal == null) temporal = new SgsrTemporal(diagnosticContext,width,height,internalWidth,internalHeight);
                     if (temporalPresentProgram == 0)
@@ -494,12 +543,13 @@ public final class SgsrRenderer implements AutoCloseable {
                         internalHeight + " -> " + w + "x" + h + (supersampling ? " (supersampling)" : ""));
             }
             cacheFrame(source,selectedProgram,w,h,sampledWidth,sampledHeight,quality,supersampling,
-                    w>=width && h>=height);
+                    sharpenOnly || (w>=width && h>=height));
             if (arrivalActive) {
                 scheduleArrivalTick();
                 return;
             }
             presentCachedNormal();
+            if (sharpenMeter != null) sharpenMeter.tick(System.nanoTime(),sharpenOnly,sharpenDescription);
             float elapsedMs=(System.nanoTime()-processingStartNs)/1_000_000f;
             gpuTimeMs=gpuTimeMs==0f?elapsedMs:gpuTimeMs*.8f+elapsedMs*.2f;
             consecutiveDrawFailures=0;
@@ -621,8 +671,14 @@ public final class SgsrRenderer implements AutoCloseable {
 
     private boolean presentCachedNormal() {
         if (cachedSource == 0 || !outputAttached || !acquireOutput()) return false;
-        drawProgram(cachedProgram,cachedSource,cachedWidth,cachedHeight,
-                cachedSampledWidth,cachedSampledHeight,cachedReconstruction);
+        final SharpenMeter meter = cachedQuality == SHARPEN_ONLY && !arrivalOnly ? sharpenMeter : null;
+        if (meter != null) meter.beginPass();
+        try {
+            drawProgram(cachedProgram,cachedSource,cachedWidth,cachedHeight,
+                    cachedSampledWidth,cachedSampledHeight,cachedReconstruction);
+        } finally {
+            if (meter != null) meter.endPass();
+        }
         presentOutput();
         return true;
     }
@@ -642,7 +698,12 @@ public final class SgsrRenderer implements AutoCloseable {
     }
 
     private int arrivalRgbProgram(int quality, boolean supersampled) {
-        if (quality >= 2) {
+        if (quality == SHARPEN_ONLY) {
+            if (arrivalSharpenProgram == 0)
+                arrivalSharpenProgram = createArrivalRgbProgram("sgsr/sharpen_only.frag");
+            return arrivalSharpenProgram;
+        }
+        if (UpscalerMode.fromIndex(quality).isTemporal()) {
             if (arrivalTemporalProgram == 0)
                 arrivalTemporalProgram = createArrivalRgbProgram("sgsr/temporal_present.frag");
             return arrivalTemporalProgram;
@@ -714,11 +775,13 @@ public final class SgsrRenderer implements AutoCloseable {
         programUniforms.remove(arrivalHighProgram);
         programUniforms.remove(arrivalTemporalProgram);
         programUniforms.remove(arrivalPresentProgram);
+        programUniforms.remove(arrivalSharpenProgram);
         if (arrivalSpatialProgram != 0) GLES31.glDeleteProgram(arrivalSpatialProgram);
         if (arrivalHighProgram != 0) GLES31.glDeleteProgram(arrivalHighProgram);
         if (arrivalTemporalProgram != 0) GLES31.glDeleteProgram(arrivalTemporalProgram);
         if (arrivalPresentProgram != 0) GLES31.glDeleteProgram(arrivalPresentProgram);
-        arrivalSpatialProgram = arrivalHighProgram = arrivalTemporalProgram = arrivalPresentProgram = 0;
+        if (arrivalSharpenProgram != 0) GLES31.glDeleteProgram(arrivalSharpenProgram);
+        arrivalSpatialProgram = arrivalHighProgram = arrivalTemporalProgram = arrivalPresentProgram = arrivalSharpenProgram = 0;
     }
 
     /** Smoothed wall time of the completed SGSR processing path, excluding decode. */
@@ -822,6 +885,8 @@ public final class SgsrRenderer implements AutoCloseable {
                 if(supersampleHighQualityProgram!=0) GLES31.glDeleteProgram(supersampleHighQualityProgram);
                 if(temporalPresentProgram!=0) GLES31.glDeleteProgram(temporalPresentProgram);
                 if(supersamplePresentProgram!=0) GLES31.glDeleteProgram(supersamplePresentProgram);
+                if(sharpenProgram!=0) GLES31.glDeleteProgram(sharpenProgram);
+                if(sharpenMeter!=null) { sharpenMeter.close(); sharpenMeter=null; }
                 if(temporal!=null) { temporal.close(); temporal=null; }
                 GLES31.glDeleteTextures(2,new int[]{externalTexture,colorTexture},0);
                 if(supersampleTexture!=0) GLES31.glDeleteTextures(1,new int[]{supersampleTexture},0);

@@ -356,7 +356,7 @@ class StreamMenu(private val game: Game) {
         override val upscalerStatus get() = game.upscalingStatus
         override val supersamplingMode get() = game.isSupersamplingMode
         override val supersamplingLevel get() = game.supersamplingLevel
-        override val upscalerMode get() = if (prefs.sgsrTemporalQuality) 3 else if (prefs.sgsrTemporal) 2 else if (prefs.sgsrHighQuality) 1 else 0
+        override val upscalerMode get() = prefs.sgsrMode.index()
         override val upscalerSharpness get() = prefs.sgsrSharpness
         override fun setUpscalingEnabled(on: Boolean) { game.setUpscalingEnabled(on) }
         override fun setUpscalingMode(mode: Int) { game.setUpscalingMode(mode) }

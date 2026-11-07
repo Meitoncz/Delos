@@ -115,7 +115,7 @@ struct Params {
     int32_t reset = 1, fullRange = 1, matrix = 1, sixteenBit = 0, mode = 0, padding = 0;
 };
 static_assert(sizeof(Params) == 48, "Production shader push constants");
-struct PresentParams { float sharpness; };
+struct PresentParams { float sharpness; int32_t contrastAdaptive = 0; };
 
 struct Probe {
     static constexpr uint32_t width = 32, height = 24, outWidth = 72, outHeight = 54;
@@ -412,14 +412,14 @@ struct Probe {
         info.pColorBlendState = &blend; info.layout = p.layout; info.renderPass = renderPass;
         checked(vk.CreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &info, nullptr, &p.pipeline), "CreateGraphicsPipelines"); return p;
     }
-    std::vector<float> present(Pipeline &p, Image &source, Image &target, float sharpness) {
+    std::vector<float> present(Pipeline &p, Image &source, Image &target, float sharpness, int32_t contrastAdaptive = 0) {
         bindImages(p, {&source}); begin(); barrier();
         VkRenderPassBeginInfo pass{VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO}; pass.renderPass = renderPass; pass.framebuffer = framebuffer;
         pass.renderArea.extent = {target.width, target.height};
         vk.CmdBeginRenderPass(command, &pass, VK_SUBPASS_CONTENTS_INLINE);
         vk.CmdBindPipeline(command, VK_PIPELINE_BIND_POINT_GRAPHICS, p.pipeline);
         vk.CmdBindDescriptorSets(command, VK_PIPELINE_BIND_POINT_GRAPHICS, p.layout, 0, 1, &p.set, 0, nullptr);
-        PresentParams params{sharpness};
+        PresentParams params{sharpness, contrastAdaptive};
         vk.CmdPushConstants(command, p.layout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(params), &params);
         vk.CmdDraw(command, 3, 1, 0, 0); vk.CmdEndRenderPass(command); barrier(); submit(); return readback(target);
     }
@@ -628,6 +628,36 @@ struct Probe {
             bounded(packZero, 0, 1, "Pack zero"); bounded(packSharp, 0, 1, "Pack sharp");
             require(difference(packZero, packSharp) > .0001f, "P010 pack ignored sharpness");
             report << "PASS offscreen present + P010 pack fragments bypassError=" << bypassError << " sharpness maxDelta=" << sharpDelta << '\n';
+        }
+        {
+            // Sharpen only: the shipped fragment against SharpenOnly.java's formula (FidelityFX CAS, five taps)
+            auto reference = [](float e, float b, float d, float f, float h, float sharpness) {
+                const float mn = std::min(std::min(std::min(d, e), std::min(f, b)), h);
+                const float mx = std::max(std::max(std::max(d, e), std::max(f, b)), h);
+                const float amp = std::sqrt(std::clamp(std::min(mn, 1.f - mx) / std::max(mx, 1e-4f), 0.f, 1.f));
+                const float w = -amp * .2f * std::sqrt(sharpness);
+                return std::clamp(((b + d + f + h) * w + e) / (1.f + 4.f * w), 0.f, 1.f);
+            };
+            auto at = [&](int x, int y) {
+                x = std::clamp(x, 0, int(outWidth) - 1); y = std::clamp(y, 0, int(outHeight) - 1);
+                return unhalf(half(presentationFixture[(y * outWidth + x) * 4]));
+            };
+            auto off = present(presentPipeline, presentSource, target, 0, 1);
+            float offError = 0;
+            for (size_t i = 0; i < off.size(); ++i) offError = std::max(offError, std::abs(off[i] - unhalf(half(presentationFixture[i]))));
+            require(offError < .001f, "Sharpen only at sharpness zero must not change the picture");
+            auto cas = present(presentPipeline, presentSource, target, .5f, 1);
+            float casError = 0, casChange = 0;
+            for (int y = 0; y < int(outHeight); ++y) for (int x = 0; x < int(outWidth); ++x) {
+                const float expected = reference(at(x, y), at(x, y - 1), at(x - 1, y), at(x + 1, y), at(x, y + 1), .5f);
+                const float got = cas[(size_t(y) * outWidth + x) * 4];
+                casError = std::max(casError, std::abs(got - expected));
+                casChange = std::max(casChange, std::abs(got - at(x, y)));
+            }
+            require(casError < .002f, "Sharpen only fragment differs from the CAS reference");
+            require(casChange > .001f, "Sharpen only did not sharpen the fixture");
+            report << "PASS Sharpen only (CAS) fragment: zero bypass=" << offError << " reference maxError=" << casError
+                   << " maxChange=" << casChange << '\n';
         }
         // Use different channels: catch accidental luma-only output and 8-bit HDR intermediates.
         auto codes = rgba(outWidth, outHeight, 0);

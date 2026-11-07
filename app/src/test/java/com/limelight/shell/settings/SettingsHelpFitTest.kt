@@ -133,7 +133,7 @@ class SettingsHelpFitTest {
             "Keys: Ctrl + Alt + Delete", "Command: Restart the game",
         ).forEach { assertFits("stream menu $it", StreamMenuHelp.description(it)) }
         // Mode help adds the selected method and the upscaler pages add their status line
-        listOf("standard", "high", "temporal", "temporal-quality").forEach {
+        listOf("standard", "high", "temporal", "temporal-quality", "sharpen").forEach {
             assertFits("stream menu Mode/$it", SettingsHelp.choice("list_sgsr_quality", it) + "\n\n" + StreamMenuHelp.description("Mode"))
         }
         // The page's status line (a long one: "Upscaled to: 1920 x 1080") precedes the help of the page and its on/off row

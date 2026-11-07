@@ -22,6 +22,8 @@ public final class PyroWaveRenderer {
     public static final int UPSCALING_SGSR1_HIGH = 2;
     public static final int UPSCALING_SGSR2_VIDEO = 3;
     public static final int UPSCALING_SGSR2_VIDEO_QUALITY = 4;
+    /** No scaling: the stream's own size, only a contrast-adaptive sharpen pass (see SharpenOnly). */
+    public static final int UPSCALING_SHARPEN_ONLY = 5;
 
     private static Boolean available;
 
@@ -190,7 +192,14 @@ public final class PyroWaveRenderer {
     public static final int STAT_FENCE_WAIT_TOTAL_US = 23;
     public static final int STAT_ACQUIRE_WAIT_TOTAL_US = 24;
     public static final int STAT_SUBMIT_PRESENT_TOTAL_US = 25;
-    public static final int STAT_COUNT = 26;
+    // Sharpen only (mode 5), per window: frames, GPU time of the sharpen pass (the final draw) summed and its
+    // maximum, and of the YCbCr to RGB conversion before it summed and its maximum, in microseconds
+    public static final int STAT_SHARPEN_FRAMES = 26;
+    public static final int STAT_SHARPEN_TOTAL_US = 27;
+    public static final int STAT_SHARPEN_MAX_US = 28;
+    public static final int STAT_SHARPEN_PREPARE_TOTAL_US = 29;
+    public static final int STAT_SHARPEN_PREPARE_MAX_US = 30;
+    public static final int STAT_COUNT = 31;
 
     public long[] takeStats() {
         long[] stats = new long[STAT_COUNT];

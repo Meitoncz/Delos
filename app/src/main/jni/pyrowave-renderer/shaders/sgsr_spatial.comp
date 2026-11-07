@@ -3,7 +3,8 @@
 // Copyright (c) 2025-2026 Qualcomm Innovation Center, Inc. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause
 // SGSR 1 Standard (upstream d926f074) and Unity High Quality (ab685c993ebd),
-// matching assets/sgsr/sgsr1{,_high}.frag with presentation-only user sharpening.
+// matching assets/sgsr/sgsr1{,_high}.frag with presentation-only user sharpening. Mode 5 (Sharpen only)
+// does no resampling at all.
 layout(local_size_x=8,local_size_y=8) in;
 layout(set=0,binding=0) uniform sampler2D u_y;
 layout(set=0,binding=1) uniform sampler2D u_cb;
@@ -53,6 +54,12 @@ vec4 weightY(vec2 d,float c,vec2 dir,float variance) {
 void main() {
     ivec2 outPos=ivec2(gl_GlobalInvocationID.xy);
     if(any(greaterThanEqual(outPos,p.outputSize))) return;
+    // Sharpen only (mode 5): output and input have the same size, so this is just the colour conversion;
+    // the contrast-adaptive sharpen runs in the present/pack pass.
+    if(p.mode==5) {
+        imageStore(u_output,outPos,vec4(source(outPos),1.0));
+        return;
+    }
     vec2 uv=(vec2(outPos)+.5)/vec2(p.outputSize);
     vec3 color=sourceBilinear(uv);
     // Do not spatially reconstruct a native-resolution or downscaled image.

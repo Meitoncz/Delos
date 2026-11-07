@@ -20,6 +20,7 @@ import com.limelight.R;
 import com.limelight.nvstream.av.video.VideoDecoderRenderer;
 import com.limelight.nvstream.jni.MoonBridge;
 import com.limelight.preferences.PreferenceConfiguration;
+import com.limelight.preferences.UpscalerMode;
 import com.limelight.utils.TrafficStatsHelper;
 
 import android.annotation.SuppressLint;
@@ -913,10 +914,10 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
             LimeLog.info("Delos async decode: " + useAsyncCodec);
         }
         // Delos: an explicit codec reset changes output locally; the network session stays connected.
-        if ((!sgsrRequested || sgsrFailed) && sgsr != null) { sgsr.close(); sgsr = null; }
+        if ((!sgsrRequested || sgsrFailed || sgsrOutputMismatch()) && sgsr != null) { sgsr.close(); sgsr = null; }
         if (sgsr == null && !sgsrFailed && sgsrRequested) {
             sgsr = SgsrRenderer.create(context, renderTarget, initialWidth, initialHeight, prefs.sgsrSharpness,
-                    prefs.sgsrTemporalQuality ? 3 : prefs.sgsrTemporal ? 2 : prefs.sgsrHighQuality ? 1 : 0,
+                    prefs.sgsrMode.index(),
                     prefs.sgsrSupersamplingLevel,
                     (videoFormat & MoonBridge.VIDEO_FORMAT_MASK_10BIT) != 0, sgsrHdrActive, currentHdrMetadata, () -> {
                 SgsrRenderer failed = sgsr;
@@ -1160,8 +1161,8 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         }
 
         // Delos: SGSR on SDR output draws into window-sized buffers; the surface was sized for the
-        // requested HDR, so size it again if the host settled on 8-bit.
-        if (sgsrRequested && prefs.enableHdr && (format & MoonBridge.VIDEO_FORMAT_MASK_10BIT) == 0 &&
+        // requested HDR, so size it again if the host settled on 8-bit. Sharpen only draws at the stream's size.
+        if (sgsrRequested && prefs.sgsrMode.scales() && prefs.enableHdr && (format & MoonBridge.VIDEO_FORMAT_MASK_10BIT) == 0 &&
                 context instanceof com.limelight.Game) {
             ((com.limelight.Game) context).useLayoutSizedStreamSurface();
         }
@@ -1185,14 +1186,14 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                 return;
             }
             if (directLaunchArrival != null
-                    && (enabled != sgsrRequested || pendingUpscalingAfterArrival != null)) {
+                    && (enabled != sgsrRequested || sgsrOutputMismatch() || pendingUpscalingAfterArrival != null)) {
                 // A codec reset must not create a second EGL producer while temporary output owns
                 // the window. Apply this explicit menu change after the direct handover is finished.
                 pendingUpscalingAfterArrival = enabled;
                 cancelLaunchArrival("Video output pipeline changed during stream arrival");
                 return;
             }
-            if (enabled == sgsrRequested && !sgsrFailed) return;
+            if (enabled == sgsrRequested && !sgsrFailed && !sgsrOutputMismatch()) return;
             if (launchArrivalRequested && !launchArrivalComplete) {
                 cancelLaunchArrival("Video output pipeline changed during stream arrival");
             }
@@ -1212,6 +1213,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                 case PyroWaveRenderer.UPSCALING_SGSR1_HIGH: return "On: SGSR 1 High Quality";
                 case PyroWaveRenderer.UPSCALING_SGSR2_VIDEO: return "On: SGSR 2 Video";
                 case PyroWaveRenderer.UPSCALING_SGSR2_VIDEO_QUALITY: return "On: SGSR 2 Video Quality";
+                case PyroWaveRenderer.UPSCALING_SHARPEN_ONLY: return "On: Sharpen only";
                 default: return sgsrRequested ? "Unavailable; direct rendering is active" : "Off";
             }
         }
@@ -1228,22 +1230,40 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         if (pw != null) pw.setSharpness(prefs.sgsrSharpness / 100f);
     }
 
-    public void setUpscalingMode(int mode) {
-        prefs.sgsrHighQuality = mode == 1;
-        prefs.sgsrTemporal = mode >= 2;
-        prefs.sgsrTemporalQuality = mode == 3;
-        SgsrRenderer current = sgsr;
-        if (current != null) current.setMode(mode);
+    public void setUpscalingMode(int index) {
+        UpscalerMode mode = UpscalerMode.fromIndex(index);
+        prefs.sgsrMode = mode;
         PyroWaveRenderer pw = pyroWave;
-        if (pw != null) pw.setUpscalingMode(getRequestedPyroWaveUpscalingMode());
+        if (pw != null) {
+            pw.setUpscalingMode(getRequestedPyroWaveUpscalingMode());
+            return;
+        }
+        SgsrRenderer current = sgsr;
+        if (current == null) return;
+        if (sgsrOutputMismatch()) {
+            // Sharpen only draws at the stream's size (a stream-sized surface and HDR layer), the other modes at
+            // the display's: rebuild the output stage the way the Enabled switch does.
+            setUpscalingEnabled(sgsrRequested);
+        } else {
+            current.setMode(mode.index());
+        }
+    }
+
+    /** Whether the running SGSR stage was built for a different output size than the selected mode needs. */
+    private boolean sgsrOutputMismatch() {
+        SgsrRenderer current = sgsr;
+        return current != null && current.isSharpenGeometry() != (prefs.sgsrMode == UpscalerMode.SHARPEN_ONLY);
     }
 
     private int getRequestedPyroWaveUpscalingMode() {
         if (!sgsrRequested) return PyroWaveRenderer.UPSCALING_OFF;
-        return prefs.sgsrTemporalQuality ? PyroWaveRenderer.UPSCALING_SGSR2_VIDEO_QUALITY :
-                prefs.sgsrTemporal ? PyroWaveRenderer.UPSCALING_SGSR2_VIDEO :
-                prefs.sgsrHighQuality ? PyroWaveRenderer.UPSCALING_SGSR1_HIGH :
-                PyroWaveRenderer.UPSCALING_SGSR1_STANDARD;
+        switch (prefs.sgsrMode) {
+            case VIDEO_QUALITY: return PyroWaveRenderer.UPSCALING_SGSR2_VIDEO_QUALITY;
+            case VIDEO: return PyroWaveRenderer.UPSCALING_SGSR2_VIDEO;
+            case HIGH: return PyroWaveRenderer.UPSCALING_SGSR1_HIGH;
+            case SHARPEN_ONLY: return PyroWaveRenderer.UPSCALING_SHARPEN_ONLY;
+            default: return PyroWaveRenderer.UPSCALING_SGSR1_STANDARD;
+        }
     }
 
     public void setSupersamplingLevel(int level) {
@@ -1261,6 +1281,8 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     }
 
     public boolean isSupersamplingMode() {
+        // Sharpen only never scales, so there is nothing to supersample whatever the stream's size
+        if (!prefs.sgsrMode.scales()) return false;
         PyroWaveRenderer pw = pyroWave;
         if (pw != null) return pw.isSupersampling();
         SgsrRenderer current = sgsr;
@@ -1327,6 +1349,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         String decoder = "PyroWave (Vulkan)";
         PyroWaveBacklog backlog = new PyroWaveBacklog(stats, seconds);
         logPyroWaveDiag(stats, backlog, seconds, receivedFps, renderedFps, realtimeNetData);
+        SharpenCost sharpenCost = SharpenCost.fromPyroWave(stats);
         if (!prefs.enablePerfOverlay) return;
 
         StringBuilder sb = new StringBuilder();
@@ -1348,7 +1371,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                 hostFrames > 0 ? stats[PyroWaveRenderer.STAT_HOST_LATENCY_MIN] / 10f : -1f,
                 hostFrames > 0 ? stats[PyroWaveRenderer.STAT_HOST_LATENCY_MAX] / 10f : -1f,
                 hostFrames > 0 ? stats[PyroWaveRenderer.STAT_HOST_LATENCY_TOTAL] / 10f / hostFrames : -1f,
-                realtimeNetData, stats[PyroWaveRenderer.STAT_ONE_PERCENT_LOW_FPS_X100] / 100f, backlog));
+                realtimeNetData, stats[PyroWaveRenderer.STAT_ONE_PERCENT_LOW_FPS_X100] / 100f, backlog, sharpenCost));
     }
 
     /** Delos diagnostics: what the stream was asked for, set by Game before the connection starts. */
@@ -1386,14 +1409,27 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                 "in=%.1f out=%.1f fps rx=%.0f KB/s bitrate=%d kbps chroma=%s | stall avg/max %.2f/%.2f ms | "
                         + "age@submit avg/max %.2f/%.2f ms | recv->present avg/max %.2f/%.2f ms | "
                         + "partial %.1f/s skipped %.1f/s lostFrames %d | waits prevFrame %.2f acquire %.2f "
-                        + "submit+present %.2f ms | gpuDecode %.2f ms",
+                        + "submit+present %.2f ms | gpuDecode %.2f ms | %s",
                 receivedFps, renderedFps, netKb, diagBitrateKbps, diagChromaNegotiated(),
                 b.stallAvgMs, b.stallMaxMs, b.submitAgeAvgMs, b.submitAgeMaxMs, b.presentAgeAvgMs, b.presentAgeMaxMs,
                 b.partialPerSecond, b.skippedPerSecond, stats[PyroWaveRenderer.STAT_LOST_FRAMES],
                 b.fenceWaitAvgMs, b.acquireWaitAvgMs, b.submitPresentAvgMs,
                 stats[PyroWaveRenderer.STAT_GPU_DECODE_FRAMES] > 0
                         ? stats[PyroWaveRenderer.STAT_GPU_DECODE_TOTAL_US] / 1000f
-                                / stats[PyroWaveRenderer.STAT_GPU_DECODE_FRAMES] : 0f));
+                                / stats[PyroWaveRenderer.STAT_GPU_DECODE_FRAMES] : 0f,
+                diagSharpen(stats)));
+    }
+
+    /** The Sharpen only part of the diagnostics line: the pass's GPU time and the conversion before it. */
+    private static String diagSharpen(long[] stats) {
+        long frames = stats[PyroWaveRenderer.STAT_SHARPEN_FRAMES];
+        if (frames <= 0) return "sharpen off";
+        return String.format(java.util.Locale.US,
+                "sharpen pass gpu avg/max %.3f/%.3f ms, conversion avg/max %.3f/%.3f ms (n=%d)",
+                stats[PyroWaveRenderer.STAT_SHARPEN_TOTAL_US] / 1000f / frames,
+                stats[PyroWaveRenderer.STAT_SHARPEN_MAX_US] / 1000f,
+                stats[PyroWaveRenderer.STAT_SHARPEN_PREPARE_TOTAL_US] / 1000f / frames,
+                stats[PyroWaveRenderer.STAT_SHARPEN_PREPARE_MAX_US] / 1000f, frames);
     }
 
     // All streaming input/output/buffer owners must call this function regularly.
@@ -2320,7 +2356,8 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                         hostLatency ? (float) lastTwo.minHostProcessingLatency / 10 : -1f,
                         hostLatency ? (float) lastTwo.maxHostProcessingLatency / 10 : -1f,
                         hostLatency ? (float) lastTwo.totalHostProcessingLatency / 10 / lastTwo.framesWithHostProcessingLatency : -1f,
-                        realtimeNetData, frameTimes.onePercentLowFps(), null));
+                        realtimeNetData, frameTimes.onePercentLowFps(), null,
+                        sgsr != null ? sgsr.getSharpenCost() : null));
             }
             globalVideoStats.add(activeWindowVideoStats);
             lastWindowVideoStats.copy(activeWindowVideoStats);

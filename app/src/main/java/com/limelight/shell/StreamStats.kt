@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.em
 import com.limelight.binding.video.PyroWaveBacklog
+import com.limelight.binding.video.SharpenCost
 import com.limelight.shell.data.ProfileStore
 import com.limelight.shell.settings.AppearanceStore
 import com.limelight.shell.ui.Figtree
@@ -80,9 +81,22 @@ class StreamStats(
     val onePercentLowFps: Float = -1f,
     /** PyroWave only (null otherwise): where the video thread falls behind; shown in the full panel. */
     val backlog: PyroWaveBacklog? = null,
+    /** What the Sharpen only pass cost in the last window; null while that mode is not running. */
+    val sharpen: SharpenCost? = null,
 ) {
     /** The delay summed up: network round trip, the PC's processing when it reports it, and decoding. */
     val totalMs: Float get() = networkMs + maxOf(hostMs, 0f) + decodeMs + processingMs
+}
+
+/**
+ * The Sharpen pass row: the pass's average and worst time per frame, then the preparation the mode adds before
+ * it (the frame copy, or PyroWave's colour conversion), and a note when only the CPU time of submitting
+ * the draw could be measured (no GPU timer on the device).
+ */
+internal fun sharpenPassText(cost: SharpenCost): String = buildString {
+    append(String.format(Locale.US, "%.2f ms avg / %.2f max", cost.passAvgMs, cost.passMaxMs))
+    if (cost.prepareAvgMs >= 0f) append(String.format(Locale.US, " · %s %.2f ms", cost.prepareName, cost.prepareAvgMs))
+    if (!cost.gpuTimed) append(" (CPU submit)")
 }
 
 /**
@@ -181,6 +195,8 @@ class StreamStatsPanel private constructor(
                 if (s.hostMs >= 0f) add("PC processing" to "${format(s.hostMs)} ms (${format(s.hostMinMs)}–${format(s.hostMaxMs)})")
                 add("Decoding" to "${format(s.decodeMs, 2)} ms")
                 if (s.processingMs > 0f) add("Upscaling" to "${format(s.processingMs, 2)} ms")
+                // PyroWave shows the pass with its backlog, the others next to the other post-processing
+                if (s.backlog == null) s.sharpen?.let { add("Sharpen pass" to sharpenPassText(it)) }
                 add("Total latency" to "${format(s.totalMs)} ms")
                 if (s.bandwidthKb >= 0f) add("Bandwidth" to bandwidth(s.bandwidthKb))
                 add("Lost frames" to "${format(s.lossPercent, 2)} %")
@@ -191,6 +207,7 @@ class StreamStatsPanel private constructor(
                     add("Receive to present" to "${format(b.presentAgeAvgMs)} / ${format(b.presentAgeMaxMs)} ms avg/max")
                     add("Partial frames" to "${format(b.partialPerSecond)} /s")
                     add("Skipped" to "${format(b.skippedPerSecond)} /s")
+                    s.sharpen?.let { add("Sharpen pass" to sharpenPassText(it)) }
                 }
             }
             val label = TextStyle(color = PANEL_TEXT.copy(alpha = .6f), fontFamily = Figtree, fontSize = 17.tpx, lineHeight = 1.5.em)

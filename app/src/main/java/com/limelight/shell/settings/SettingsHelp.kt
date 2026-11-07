@@ -1,6 +1,7 @@
 package com.limelight.shell.settings
 
 import com.limelight.preferences.PreferenceConfiguration
+import com.limelight.preferences.UpscalerMode
 
 /** Reads the same effective values as the settings rows, without depending on the chosen bitrate. */
 internal fun pyroWaveRecommendedBitrateKbps(values: Map<String, *>): Int? {
@@ -70,7 +71,9 @@ object SettingsHelp {
                 "Not used with PyroWave."
             key == "list_pyrowave_chroma" && !pyro -> "Needs the PyroWave codec."
             key == "list_pyrowave_chroma" && values["checkbox_enable_hdr"] == true -> "HDR is on: 4:2:0 used."
-            key == "list_sgsr_quality" && pyro -> "PyroWave offers all four modes"
+            key == "list_sgsr_quality" && pyro -> "PyroWave offers all five modes"
+            key == "list_sgsr_supersampling_level" && values["list_sgsr_quality"] == UpscalerMode.SHARPEN_ONLY.value() ->
+                "Not used by Sharpen only."
             else -> ""
         }
     }
@@ -96,10 +99,10 @@ object SettingsHelp {
         "checkbox_enforce_display_mode" to "Asks Android firmly to use the selected display mode. Helps if refresh-rate requests are ignored; may misbehave on some firmware.",
         "checkbox_enable_hdr" to "Requests HDR video. Needs game, host GPU, decoder and display support (10-bit HEVC, AV1 or PyroWave).",
         "checkbox_enable_fullexdisplay" to "Shows the stream and menu on an attached monitor or TV at the configured resolution and FPS. The handheld controls the menu.",
-        "checkbox_sgsr" to "Upscales a lower-resolution stream to the display size on this device. Costs GPU time. Menu changes last one session.",
+        "checkbox_sgsr" to "Upscales a lower-resolution stream to the display size, or only sharpens it (Mode). Costs GPU time. Menu changes last one session.",
         "list_pyrowave_chroma" to "4:4:4 costs bandwidth and GPU.",
         "list_sgsr_quality" to "Reconstruction method. All add GPU work.",
-        "seekbar_sgsr_sharpness" to "Final sharpening pass, separate from the mode. 0 turns sharpening off; high values add artifacts. Menu changes last one session.",
+        "seekbar_sgsr_sharpness" to "Sharpening strength. 0 is off; high values add artifacts. In Sharpen only it is the whole effect. Menu changes last one session.",
         "list_sgsr_supersampling_level" to "Internal size when the stream already matches the display. Menu changes last one session.",
         "list_audio_config" to "Channels the PC sends. Surround needs matching playback.",
         "checkbox_enable_audiofx" to "Lets Android's system equalizer and effects process stream audio. May add delay.",
@@ -213,6 +216,7 @@ object SettingsHelp {
             "high" to "A stronger spatial filter on the current frame.",
             "temporal" to "Reuses earlier frames; text and fast motion can break it.",
             "temporal-quality" to "Adds a reactive mask. Most GPU cost.",
+            "sharpen" to "No scaling; sharpens at stream size. Costs little GPU.",
         ),
         "list_sgsr_supersampling_level" to mapOf(
             "1" to "Renders 1080p at 2560 × 1440.",

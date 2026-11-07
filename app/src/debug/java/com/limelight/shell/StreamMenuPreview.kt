@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.input.pointer.pointerInput
+import com.limelight.preferences.UpscalerMode
 import com.limelight.shell.settings.SettingChoice
 import com.limelight.utils.RumblePresets
 import kotlinx.coroutines.flow.emptyFlow
@@ -31,8 +32,9 @@ import kotlin.math.sin
  * Debug builds only: the real stream menu on a drawn game scene with fake state, started with
  * `adb shell am start -n io.github.meitoncz.delos.debug/com.limelight.shell.ShellActivity --es preview_screen stream_menu`
  * and optionally `--es preview_page <main|upscaler|bitrate|brightness|more|keys|commands|mouse|rumble>`, `--ei preview_focus <tile 0..8>`,
- * `--ei preview_row <row of the page to focus>` and `--ez preview_animate true` (plays the entrance; without it the menu is
- * already open). Handled by `ShellActivity` before the shell, so no profile is needed (docs/GUI.md, "Stream menu preview").
+ * `--ei preview_row <row of the page to focus>`, `--ei preview_upscaler_mode <0..4, the Mode row's position; 4 = Sharpen only>`
+ * and `--ez preview_animate true` (plays the entrance; without it the menu is already open). Handled by `ShellActivity`
+ * before the shell, so no profile is needed (docs/GUI.md, "Stream menu preview").
  */
 internal object StreamMenuPreview {
     fun from(intent: Intent): (@Composable () -> Unit)? {
@@ -50,14 +52,15 @@ internal object StreamMenuPreview {
         }
         val focus = BarItem.entries.getOrElse(intent.getIntExtra("preview_focus", 0)) { BarItem.RESUME }
         val start = StreamMenuStart(page, focus, intent.getIntExtra("preview_row", 0), intent.getBooleanExtra("preview_animate", false))
-        return { StreamMenuPreviewScreen(start) }
+        val upscalerMode = intent.getIntExtra("preview_upscaler_mode", 2)
+        return { StreamMenuPreviewScreen(start, upscalerMode) }
     }
 }
 
 /** The menu over the scene; closing it (Resume, B) leaves the scene alone, a tap on it opens the menu again. */
 @Composable
-private fun StreamMenuPreviewScreen(start: StreamMenuStart) {
-    val host = remember { FakeStreamMenuHost() }
+private fun StreamMenuPreviewScreen(start: StreamMenuStart, upscalerMode: Int) {
+    val host = remember { FakeStreamMenuHost(upscalerMode) }
     var open by remember { mutableStateOf(true) }
     var session by remember { mutableIntStateOf(0) }
     host.onDismiss = { open = false }
@@ -105,7 +108,7 @@ internal fun GameScene() {
 }
 
 /** The stream menu's [StreamMenuHost] with made-up values: every row works, nothing reaches a stream. */
-internal class FakeStreamMenuHost : StreamMenuHost {
+internal class FakeStreamMenuHost(initialUpscalerMode: Int = 2) : StreamMenuHost {
     var onDismiss: () -> Unit = {}
     private val handler = Handler(Looper.getMainLooper())
 
@@ -143,11 +146,12 @@ internal class FakeStreamMenuHost : StreamMenuHost {
 
     override val upscalerAvailable = true
     override var upscalerRequested = true
-    override val upscalerStatus get() = if (upscalerRequested) "On: " + listOf("SGSR 1 Standard", "SGSR 1 High Quality", "SGSR 2 Video", "SGSR 2 Video Quality")[upscalerMode] else "Off"
-    override val supersamplingMode = true
+    override val upscalerStatus get() = if (upscalerRequested) "On: " + UpscalerMode.fromIndex(upscalerMode).label() else "Off"
+    // Like the renderer: a mode that does not scale has nothing to supersample
+    override val supersamplingMode get() = UpscalerMode.fromIndex(upscalerMode).scales()
     private var level = 1
     override val supersamplingLevel get() = level
-    override var upscalerMode = 2
+    override var upscalerMode = UpscalerMode.fromIndex(initialUpscalerMode).index()
     override var upscalerSharpness = 50
     override fun setUpscalingEnabled(on: Boolean) { upscalerRequested = on }
     override fun setUpscalingMode(mode: Int) { upscalerMode = mode }

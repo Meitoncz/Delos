@@ -338,9 +338,8 @@ public class PreferenceConfiguration {
     // Delos: opt-in stream-quality controls, stored in the regular profile overlay.
     public boolean asyncDecode;
     public boolean sgsrEnabled;
-    public boolean sgsrHighQuality;
-    public boolean sgsrTemporal;
-    public boolean sgsrTemporalQuality;
+    /** The upscaler's mode; the stream menu changes it per session. Unknown stored values read as Standard. */
+    public UpscalerMode sgsrMode = UpscalerMode.STANDARD;
     public int sgsrSharpness;
     /** Native-resolution SGSR level: 1 = 1440p, 2 = 2160p from 1080p. The stored choice; the stream menu changes it per session. */
     public int sgsrSupersamplingLevel;
@@ -828,10 +827,7 @@ private static int getFramePacingValue(SharedPreferences prefs) {
         config.framePacing = getFramePacingValue(prefs);
         config.asyncDecode = prefs.getBoolean("checkbox_async_decode", false);
         config.sgsrEnabled = prefs.getBoolean("checkbox_sgsr", false);
-        String sgsrMode = prefs.getString("list_sgsr_quality", "standard");
-        config.sgsrHighQuality = "high".equals(sgsrMode);
-        config.sgsrTemporal = "temporal".equals(sgsrMode) || "temporal-quality".equals(sgsrMode);
-        config.sgsrTemporalQuality = "temporal-quality".equals(sgsrMode);
+        config.sgsrMode = UpscalerMode.fromValue(prefs.getString("list_sgsr_quality", UpscalerMode.STANDARD.value()));
         config.sgsrSharpness = Math.max(0, Math.min(100, prefs.getInt("seekbar_sgsr_sharpness", 50)));
         config.sgsrSupersamplingLevel = parseSupersamplingLevel(prefs.getString("list_sgsr_supersampling_level", "1"));
         config.preferLowerDelays = getPreferLowerDelays(context);

@@ -40,6 +40,7 @@ import com.limelight.nvstream.input.MouseButtonPacket;
 import com.limelight.nvstream.jni.MoonBridge;
 import com.limelight.preferences.GlPreferences;
 import com.limelight.preferences.PreferenceConfiguration;
+import com.limelight.preferences.UpscalerMode;
 import com.limelight.profiles.ProfilesManager;
 import com.limelight.ui.ExternalControllerView;
 import com.limelight.ui.GameGestures;
@@ -857,12 +858,14 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
             if (streamSurfaceView != null) {
                 // Avoid resizes/glitches that break the compositor
-                int vw = (prefConfig != null && prefConfig.width > 0) ? prefConfig.width : displayWidth;
-                int vh = (prefConfig != null && prefConfig.height > 0) ? prefConfig.height : displayHeight;
+                int vw = streamSurfaceWidth();
+                int vh = streamSurfaceHeight();
                 try {
                     // SDR SGSR owns the window buffers. HDR SGSR uses a display-sized child layer,
                     // so keep its parent's source-sized coordinate space stable across live toggles.
-                    if (prefConfig.sgsrEnabled && !prefConfig.enableHdr) streamSurfaceView.getHolder().setSizeFromLayout();
+                    // Sharpen only never enlarges anything: its window buffers have the stream's size.
+                    if (prefConfig.sgsrEnabled && prefConfig.sgsrMode.scales() && !prefConfig.enableHdr)
+                        streamSurfaceView.getHolder().setSizeFromLayout();
                     else streamSurfaceView.getHolder().setFixedSize(vw, vh);
                 } catch (Throwable t) { LimeLog.warning("SurfaceView setFixedSize failed: " + t); }
                 try { streamSurfaceView.setZOrderOnTop(false); } catch (Throwable t) { LimeLog.warning("SurfaceView setZOrderOnTop failed: " + t); }
@@ -4017,17 +4020,38 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         }
     }
 
+    // Delos: the stream's own size as the SurfaceView's buffer size
+    private int streamSurfaceWidth() {
+        return (prefConfig != null && prefConfig.width > 0) ? prefConfig.width : displayWidth;
+    }
+
+    private int streamSurfaceHeight() {
+        return (prefConfig != null && prefConfig.height > 0) ? prefConfig.height : displayHeight;
+    }
+
+    // Delos: an upscaler on 8-bit output draws into window-sized buffers, so a scaling mode needs the surface at
+    // the layout's size, but Sharpen only draws at the stream's own size and must not enlarge it (the pass would
+    // then cost the display's pixels instead of the stream's). 10-bit output has its own layer and is unaffected.
+    private void sizeStreamSurfaceForUpscaler(UpscalerMode mode) {
+        if (streamContainer == null ||
+                (decoderRenderer.getActiveVideoFormat() & MoonBridge.VIDEO_FORMAT_MASK_10BIT) != 0) return;
+        SurfaceHolder holder = streamContainer.getSurfaceView().getHolder();
+        if (mode.scales()) holder.setSizeFromLayout();
+        else holder.setFixedSize(streamSurfaceWidth(), streamSurfaceHeight());
+    }
+
     // Delos: live stream-menu controls; only the local decoder changes output, not the connection.
     public void setUpscalingEnabled(boolean enabled) {
-        if (enabled && streamContainer != null &&
-                (decoderRenderer.getActiveVideoFormat() & MoonBridge.VIDEO_FORMAT_MASK_10BIT) == 0) {
-            streamContainer.getSurfaceView().getHolder().setSizeFromLayout();
-        }
+        if (enabled) sizeStreamSurfaceForUpscaler(prefConfig.sgsrMode);
         decoderRenderer.setUpscalingEnabled(enabled);
     }
     public boolean isUpscalingRequested() { return decoderRenderer.isUpscalingRequested(); }
     public boolean isPyroWave() { return decoderRenderer.isPyroWave(); }
-    public void setUpscalingMode(int mode) { decoderRenderer.setUpscalingMode(mode); }
+    public void setUpscalingMode(int mode) {
+        // The surface first: the renderer is rebuilt on it when the mode changes between scaling and not
+        if (decoderRenderer.isUpscalingRequested()) sizeStreamSurfaceForUpscaler(UpscalerMode.fromIndex(mode));
+        decoderRenderer.setUpscalingMode(mode);
+    }
     public String getUpscalingStatus() { return decoderRenderer.getUpscalingStatus(); }
     public void setUpscalingSharpness(int value) { decoderRenderer.setUpscalingSharpness(value); }
     public boolean isSupersamplingMode() { return decoderRenderer.isSupersamplingMode(); }

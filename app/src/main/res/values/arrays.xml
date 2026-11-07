@@ -5,12 +5,14 @@
         <item>@string/sgsr_quality_high</item>
         <item>@string/sgsr_quality_temporal</item>
         <item>@string/sgsr_quality_temporal_quality</item>
+        <item>@string/sgsr_quality_sharpen</item>
     </string-array>
     <string-array name="sgsr_quality_values">
         <item>standard</item>
         <item>high</item>
         <item>temporal</item>
         <item>temporal-quality</item>
+        <item>sharpen</item>
     </string-array>
     <string-array name="sgsr_supersampling_level_names">
         <item>@string/sgsr_supersampling_level_1</item>

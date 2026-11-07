@@ -34,6 +34,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
+import com.limelight.preferences.UpscalerMode
 import com.limelight.shell.settings.StreamMenuHelp
 import com.limelight.utils.RumblePresets
 import com.limelight.shell.StreamMenuLayout as L
@@ -432,7 +433,7 @@ private fun pageFocusKeys(host: StreamMenuHost, page: MenuPage, supersamplingMod
         MenuPage.BITRATE -> listOf("Bitrate", "Apply")
         MenuPage.UPSCALER -> buildList {
             add("Enabled")
-            if (supersamplingMode) add("Supersampling quality")
+            if (showsSupersamplingQuality(supersamplingMode, host.upscalerMode)) add("Supersampling quality")
             add("Mode")
             add("Sharpness")
             if (host.canSaveUpscaler) add("Save for this game")
@@ -499,7 +500,7 @@ private fun PageRows(
                 changesTick()
             }, Modifier.focusRequester(first), enabled = available && upscalerStatus !in listOf("Starting", "Stopping"),
                 help = if (supersamplingMode) "Supersampling on" else "Upscaling")
-            if (supersamplingMode) {
+            if (showsSupersamplingQuality(supersamplingMode, host.upscalerMode)) {
                 val level = supersamplingLevel.coerceIn(1, 2)
                 MenuRow(Symbols.HIGH_QUALITY, "Supersampling quality",
                     RowValue.Choice(if (level == 1) "1× (1440p)" else "2× (2160p)", { direction ->
@@ -508,8 +509,8 @@ private fun PageRows(
                     }), enabled = available)
             }
             val upscalerMode = host.upscalerMode
-            MenuRow(Symbols.UPSCALER_MODE, "Mode", RowValue.Choice(listOf("SGSR 1 Standard", "SGSR 1 High Quality", "SGSR 2 Video", "SGSR 2 Video Quality")[upscalerMode], { direction ->
-                host.setUpscalingMode((upscalerMode + direction + 4) % 4)
+            MenuRow(Symbols.UPSCALER_MODE, "Mode", RowValue.Choice(UpscalerMode.fromIndex(upscalerMode).label(), { direction ->
+                host.setUpscalingMode(nextUpscalerMode(upscalerMode, direction))
                 changesTick()
             }), enabled = available)
             MenuRow(Symbols.SHARPNESS, "Sharpness", RowValue.Slider(host.upscalerSharpness, 0, 100, 5, " %") {

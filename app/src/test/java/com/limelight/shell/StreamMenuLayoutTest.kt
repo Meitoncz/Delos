@@ -235,7 +235,7 @@ class StreamMenuLayoutTest {
     }
 
     private val statuses = listOf(
-        "Off", "On", "On: SGSR 1 Standard", "On: SGSR 1 High Quality", "On: SGSR 2 Video", "On: SGSR 2 Video Quality",
+        "Off", "On", "On: SGSR 1 Standard", "On: SGSR 1 High Quality", "On: SGSR 2 Video", "On: SGSR 2 Video Quality", "On: Sharpen only",
         "Starting", "Stopping", "Unavailable; direct rendering is active",
     )
 
@@ -283,10 +283,10 @@ class StreamMenuLayoutTest {
         for (scale in listOf(1f, 1.15f, c.MAX_TEXT_SCALE)) for ((page, keys) in footerKeys) {
             val chars = popoverHelpLineChars(page, scale)
             val lines = helpLines(scale)
-            for (key in keys) for (status in statuses) for (mode in 0..3) for (mouse in 0..5) for (remember in listOf(false, true)) {
+            for (key in keys) for (status in statuses) for (mode in 0..4) for (mouse in 0..5) for (remember in listOf(false, true)) {
                 assertFits("$page/$key ($status, mode $mode, mouse $mouse) at $scale", streamMenuHelp(key, status, mode, mouse, remember), chars, lines)
             }
-            assertFits("$page default at $scale", streamMenuHelp(pageHelpKey(page), statuses[8], 0, 0, false), chars, lines)
+            assertFits("$page default at $scale", streamMenuHelp(pageHelpKey(page), statuses.last(), 0, 0, false), chars, lines)
         }
     }
 

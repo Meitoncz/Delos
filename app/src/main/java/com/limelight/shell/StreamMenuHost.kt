@@ -55,7 +55,7 @@ internal interface StreamMenuHost {
     val supersamplingMode: Boolean
     val supersamplingLevel: Int
 
-    /** 0 = SGSR 1 Standard, 1 = SGSR 1 High Quality, 2 = SGSR 2 Video, 3 = SGSR 2 Video Quality. */
+    /** The position in the Mode row ([com.limelight.preferences.UpscalerMode.index]): 0 = SGSR 1 Standard … 4 = Sharpen only. */
     val upscalerMode: Int
     val upscalerSharpness: Int
     fun setUpscalingEnabled(on: Boolean)

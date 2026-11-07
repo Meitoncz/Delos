@@ -85,9 +85,18 @@ namespace {
         int32_t sixteenBit;
     };
 
+    // Push constants of the SGSR present and pack fragment shaders (sgsr_sharpen.glsl)
     struct PresentParams {
         float sharpness;
+        // 1: Sharpen only's contrast-adaptive sharpen; 0: the SGSR modes' bounded presentation filter
+        int32_t contrastAdaptive;
     };
+
+    // The upscaler modes the renderer is given (PyroWaveRenderer.UPSCALING_*): 0 off, 1 and 2 SGSR 1,
+    // 3 and 4 SGSR 2 Video, 5 Sharpen only (no scaling: the stream's own size, only a sharpen pass)
+    constexpr int UPSCALING_MAX = 5;
+    constexpr int UPSCALING_SHARPEN_ONLY = 5;
+    constexpr bool isTemporalMode(int mode) { return mode == 3 || mode == 4; }
 
     // Two vec4s: below Vulkan's guaranteed 128-byte push-constant limit. Curves live in LaunchArrival.java.
     struct ArrivalParams {
@@ -555,7 +564,7 @@ namespace {
             hdrWanted = hdrActive;
             csc = {fullRange ? 1 : 0, hdrActive ? 2 : matrix, tenBit ? 1 : 0};
             frameRateHz = frameRate > 0 ? frameRate : 60;
-            sgsrMode.store(std::clamp(upscalingMode, 0, 4));
+            sgsrMode.store(std::clamp(upscalingMode, 0, UPSCALING_MAX));
             sgsrAppliedMode = sgsrMode.load();
             sgsrSharpness.store(std::clamp(sharpness, 0.0f, 1.0f));
             sgsrAppliedSharpness = sgsrSharpness.load();
@@ -587,7 +596,7 @@ namespace {
             hdrWanted = tenBit && enabled;
         }
 
-        void setUpscalingMode(int mode) { sgsrMode.store(std::clamp(mode, 0, 4)); }
+        void setUpscalingMode(int mode) { sgsrMode.store(std::clamp(mode, 0, UPSCALING_MAX)); }
         int getUpscalingMode() const { return reportAppliedMode.load(); }
         bool isUpscalingEnabled() const { return getUpscalingMode() != 0; }
         void setSharpness(float sharpness) { sgsrSharpness.store(std::clamp(sharpness, 0.0f, 1.0f)); }
@@ -608,7 +617,9 @@ namespace {
             const uint32_t presentationHeight=reportPresentationHeight.load();
             if(internalWidth==0||presentationWidth==0)return {};
             char text[128];
-            if(internalWidth>presentationWidth&&internalHeight>presentationHeight)
+            if(getUpscalingMode()==UPSCALING_SHARPEN_ONLY)
+                snprintf(text,sizeof(text),"Sharpen only: %u × %u",presentationWidth,presentationHeight);
+            else if(internalWidth>presentationWidth&&internalHeight>presentationHeight)
                 snprintf(text,sizeof(text),"Supersampled to: %u × %u",internalWidth,internalHeight);
             else
                 snprintf(text,sizeof(text),"Upscaled to: %u × %u",presentationWidth,presentationHeight);
@@ -1514,15 +1525,16 @@ namespace {
 
         bool createSgsrMotion() {
             if (!sgsrApplied) return true;
-            const bool temporal = sgsrAppliedMode >= 3;
+            const bool temporal = isTemporalMode(sgsrAppliedMode);
             const bool quality = sgsrAppliedMode == 4;
+            const bool sharpenOnly = sgsrAppliedMode == UPSCALING_SHARPEN_ONLY;
             const uint32_t flowWidth = (width + 7) / 8, flowHeight = (height + 7) / 8;
             const float fit = std::min(float(sgsrTargetWidth) / float(width), float(sgsrTargetHeight) / float(height));
             // The presentation size is never below the stream's: shrinking to a smaller display is the display
-            // scaler's job, not the upscaler's
+            // scaler's job, not the upscaler's. Sharpen only never changes the size at all.
             const float scale = std::max(fit, 1.0f);
-            sgsrPresentationWidth = std::max(2u, uint32_t(float(width) * scale)) & ~1u;
-            sgsrPresentationHeight = std::max(2u, uint32_t(float(height) * scale)) & ~1u;
+            sgsrPresentationWidth = sharpenOnly ? width : std::max(2u, uint32_t(float(width) * scale)) & ~1u;
+            sgsrPresentationHeight = sharpenOnly ? height : std::max(2u, uint32_t(float(height) * scale)) & ~1u;
             // Like SgsrDimensions, the stream is native only when it matches the display it is fitted to
             const int fittedWidth = int(float(width) * fit), fittedHeight = int(float(height) * fit);
             const bool nativeInput = std::abs(int(width) - fittedWidth) <= sgsrLimits.nativeTolerance &&
@@ -1537,8 +1549,8 @@ namespace {
                     candidateHeight <= properties.limits.maxImageDimension2D &&
                     candidateWidth <= sgsrLimits.maxWidth && candidateHeight <= sgsrLimits.maxHeight &&
                     uint64_t(candidateWidth) * candidateHeight <= sgsrLimits.maxPixels;
-            sgsrOutputWidth = nativeInput && fits ? candidateWidth : sgsrPresentationWidth;
-            sgsrOutputHeight = nativeInput && fits ? candidateHeight : sgsrPresentationHeight;
+            sgsrOutputWidth = !sharpenOnly && nativeInput && fits ? candidateWidth : sgsrPresentationWidth;
+            sgsrOutputHeight = !sharpenOnly && nativeInput && fits ? candidateHeight : sgsrPresentationHeight;
             reportInternalWidth.store(sgsrOutputWidth);
             reportInternalHeight.store(sgsrOutputHeight);
             reportPresentationWidth.store(sgsrPresentationWidth);
@@ -2278,6 +2290,7 @@ namespace {
                     ? recordSgsrMotion(commandBuffer) : lastSgsrOutput;
             lastSgsrOutput = sgsrOutput;
             recordArrival(commandBuffer, sgsrOutput, decoded);
+            writeSharpenTimestamp(commandBuffer, decoded, sgsrOutput);
             if (yuvCpu) {
                 VkDeviceSize offset = 0;
                 for (auto &plane : planes) {
@@ -2318,7 +2331,7 @@ namespace {
                     vk.CmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, activeLayout, 0, 1,
                                              &activeSet, 0, nullptr);
                     if (sgsrOutput >= 0) {
-                        const PresentParams params = {sgsrAppliedSharpness};
+                        const PresentParams params = {sgsrAppliedSharpness, sgsrAppliedMode == UPSCALING_SHARPEN_ONLY ? 1 : 0};
                         vk.CmdPushConstants(commandBuffer, activeLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(params), &params);
                     } else {
                         vk.CmdPushConstants(commandBuffer, activeLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(csc), &csc);
@@ -2745,7 +2758,7 @@ namespace {
 
         int recordSgsrMotion(VkCommandBuffer cmd) {
             if (!sgsrApplied || !sgsrAvailable || sgsrUpscalePipeline == VK_NULL_HANDLE) return -1;
-            const bool temporal = sgsrAppliedMode >= 3;
+            const bool temporal = isTemporalMode(sgsrAppliedMode);
             const uint32_t flowWidth=(width+7)/8,flowHeight=(height+7)/8;
             VkMemoryBarrier reuse = {VK_STRUCTURE_TYPE_MEMORY_BARRIER};
             reuse.srcAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT | VK_ACCESS_TRANSFER_WRITE_BIT;
@@ -2872,10 +2885,13 @@ namespace {
             const float requestedSharpness = processingSupported ? sgsrSharpness.load() : 0.0f;
             const int requestedLevel = sgsrLevel.load();
             const bool requestedProcessing = requestedMode != 0;
+            // Sharpen only has the size of the stream, the others the display's or a supersampled one: a switch
+            // between them rebuilds the images. The supersampling level means nothing to it.
             const bool recreate = requestedProcessing != sgsrApplied ||
-                    (requestedMode >= 3) != (sgsrAppliedMode >= 3) ||
+                    isTemporalMode(requestedMode) != isTemporalMode(sgsrAppliedMode) ||
                     (requestedMode == 4) != (sgsrAppliedMode == 4) ||
-                    (requestedProcessing && requestedLevel != sgsrAppliedLevel);
+                    (requestedMode == UPSCALING_SHARPEN_ONLY) != (sgsrAppliedMode == UPSCALING_SHARPEN_ONLY) ||
+                    (requestedProcessing && requestedMode != UPSCALING_SHARPEN_ONLY && requestedLevel != sgsrAppliedLevel);
             const bool resetHistory = requestedMode != sgsrAppliedMode;
             if (recreate) {
                 destroyArrivalResources();
@@ -2894,7 +2910,7 @@ namespace {
         // The temporal history is only valid for consecutive frames: after a stall it describes a picture that
         // is gone (SgsrTemporal resets after the same gap)
         void resetUpscalerHistoryAfterGap(uint64_t now) {
-            if (!sgsrApplied || sgsrAppliedMode < 3) return;
+            if (!sgsrApplied || !isTemporalMode(sgsrAppliedMode)) return;
             if (sgsrLastFrameUs != 0 && now - sgsrLastFrameUs > SGSR_HISTORY_GAP_US) {
                 sgsrInitialized = false;
             }
@@ -3002,6 +3018,7 @@ namespace {
                     ? recordSgsrMotion(commandBuffer) : lastSgsrOutput;
             lastSgsrOutput = sgsrOutput;
             recordArrival(commandBuffer, sgsrOutput, decoded);
+            writeSharpenTimestamp(commandBuffer, decoded, sgsrOutput);
 
             VkClearValue clear = {};
             clear.color = {{0.0f, 0.0f, 0.0f, 1.0f}};
@@ -3035,7 +3052,7 @@ namespace {
                 vk.CmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,activeLayout,0,1,&activeSet,0,nullptr);
                 if(!useSgsr)vk.CmdPushConstants(commandBuffer,pipelineLayout,VK_SHADER_STAGE_FRAGMENT_BIT,0,sizeof(CscParams),&csc);
                 else {
-                    const PresentParams params = {sgsrAppliedSharpness};
+                    const PresentParams params = {sgsrAppliedSharpness, sgsrAppliedMode == UPSCALING_SHARPEN_ONLY ? 1 : 0};
                     vk.CmdPushConstants(commandBuffer, activeLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(params), &params);
                 }
             }
@@ -3383,8 +3400,9 @@ namespace {
         VkFence frameFence = VK_NULL_HANDLE;
         VkSemaphore acquireSemaphore = VK_NULL_HANDLE;
 
-        // Queries 0/1 bracket decode; 1/2 include reconstruction, sharpening and output conversion.
-        static constexpr uint32_t QUERY_COUNT = 3;
+        // Queries 0/1 bracket decode; 1/2 include reconstruction, sharpening and output conversion; 3 is written
+        // after the reconstruction stage, so 1..3 is Sharpen only's colour conversion and 3..2 its sharpen pass.
+        static constexpr uint32_t QUERY_COUNT = 4;
         static constexpr uint64_t STATS_INTERVAL_US = 5'000'000;
         VkCommandBuffer decodeCommandBuffer = VK_NULL_HANDLE;
         VkQueryPool queryPool = VK_NULL_HANDLE;
@@ -3392,12 +3410,18 @@ namespace {
         int frameRateHz = 60;
 
         bool queriesPending = false;
+        // The pending queries are of a Sharpen only frame (queries 1..3 and 3..2 are its two stages)
+        bool sharpenQueried = false;
         float timestampPeriodNs = 1.0f;
 
     public:
         // GPU decode time of the most recently completed frame, or 0 when unknown.
         std::atomic<uint32_t> lastGpuDecodeUs{0};
         std::atomic<uint32_t> lastGpuDrawUs{0};
+        // Sharpen only: the sharpen pass (the present/pack draw) and the colour conversion before it of the most
+        // recently completed frame; 0 when that frame was not in this mode
+        std::atomic<uint32_t> lastGpuSharpenUs{0};
+        std::atomic<uint32_t> lastGpuSharpenPrepareUs{0};
         // Delos diagnostics: the wait stages of the most recently presented frame (the same numbers the
         // 5-second log averages), for PyroWave_SubmitDecodeUnit's one-second window
         std::atomic<uint32_t> lastFenceWaitUs{0};
@@ -3411,6 +3435,9 @@ namespace {
             uint64_t gpuDecodeUs = 0;
             uint64_t gpuDrawUs = 0;
             uint32_t gpuSamples = 0;
+            uint32_t sharpenSamples = 0;
+            uint64_t sharpenUs = 0;
+            uint64_t sharpenPrepareUs = 0;
             uint64_t fenceWaitUs = 0;
             uint64_t acquireWaitUs = 0;
             uint64_t presentUs = 0;
@@ -3429,9 +3456,23 @@ namespace {
             const auto toUs = [this](uint64_t delta) { return uint64_t(double(delta) * timestampPeriodNs / 1000.0); };
             lastGpuDecodeUs = uint32_t(toUs(ticks[1] - ticks[0]));
             lastGpuDrawUs = uint32_t(toUs(ticks[2] - ticks[1]));
+            lastGpuSharpenUs = sharpenQueried && ticks[2] > ticks[3] ? uint32_t(toUs(ticks[2] - ticks[3])) : 0;
+            lastGpuSharpenPrepareUs = sharpenQueried && ticks[3] > ticks[1] ? uint32_t(toUs(ticks[3] - ticks[1])) : 0;
             stats.gpuDecodeUs += lastGpuDecodeUs;
             stats.gpuDrawUs += lastGpuDrawUs;
             stats.gpuSamples++;
+            if (lastGpuSharpenUs != 0) {
+                stats.sharpenUs += lastGpuSharpenUs;
+                stats.sharpenPrepareUs += lastGpuSharpenPrepareUs;
+                stats.sharpenSamples++;
+            }
+        }
+
+        void writeSharpenTimestamp(VkCommandBuffer cmd, bool decoded, int sgsrOutput) {
+            sharpenQueried = decoded && sgsrOutput >= 0 && sgsrAppliedMode == UPSCALING_SHARPEN_ONLY;
+            if (decoded && queryPool != VK_NULL_HANDLE) {
+                vk.CmdWriteTimestamp(cmd, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, queryPool, 3);
+            }
         }
 
         void logStatsIfDue(uint64_t now) {
@@ -3449,6 +3490,11 @@ namespace {
                  stats.frames / seconds, stats.gpuDecodeUs / gpuFrames / 1000.0, stats.gpuDrawUs / gpuFrames / 1000.0,
                  stats.fenceWaitUs / double(stats.frames) / 1000.0, stats.acquireWaitUs / double(stats.frames) / 1000.0,
                  stats.presentUs / double(stats.frames) / 1000.0, presentModeName(presentMode));
+            if (stats.sharpenSamples) {
+                LOGI("Sharpen only: GPU sharpen pass %.2f ms, colour conversion %.2f ms (%u frames)",
+                     stats.sharpenUs / double(stats.sharpenSamples) / 1000.0,
+                     stats.sharpenPrepareUs / double(stats.sharpenSamples) / 1000.0, stats.sharpenSamples);
+            }
             if (yuvOutput) {
                 LOGI("P010 output (%s): %u frames skipped for want of a buffer, %u buffers reused without a release",
                      yuvCpu ? "CPU" : "GPU", yuvSkipped, yuvForcedReleases);
@@ -3554,6 +3600,13 @@ namespace {
         uint64_t gpuDecodeTotalUs = 0;
         uint32_t gpuDrawFrames = 0;
         uint64_t gpuDrawTotalUs = 0;
+        // Sharpen only (see PyroWaveRenderer.STAT_SHARPEN_FRAMES): frames, the pass's and the preceding colour
+        // conversion's GPU time summed, and each one's maximum, in microseconds
+        uint32_t sharpenFrames = 0;
+        uint64_t sharpenTotalUs = 0;
+        uint64_t sharpenMaxUs = 0;
+        uint64_t sharpenPrepareTotalUs = 0;
+        uint64_t sharpenPrepareMaxUs = 0;
         // Delos diagnostics: backlog of the video thread (see PyroWaveRenderer.STAT_STALL_TOTAL_US)
         uint32_t skippedFrames = 0;
         uint64_t stallTotalUs = 0;
@@ -3627,6 +3680,8 @@ int PyroWave_SubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
     int result = SUBMIT_SKIPPED;
     uint32_t gpuDecodeUs = 0;
     uint32_t gpuDrawUs = 0;
+    uint32_t gpuSharpenUs = 0;
+    uint32_t gpuSharpenPrepareUs = 0;
     uint32_t fenceWaitUs = 0;
     uint32_t acquireWaitUs = 0;
     uint32_t submitPresentUs = 0;
@@ -3638,6 +3693,8 @@ int PyroWave_SubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
             // The GPU time of the previous frame, read back while this one was submitted
             gpuDecodeUs = activeRenderer->lastGpuDecodeUs;
             gpuDrawUs = activeRenderer->lastGpuDrawUs;
+            gpuSharpenUs = activeRenderer->lastGpuSharpenUs;
+            gpuSharpenPrepareUs = activeRenderer->lastGpuSharpenPrepareUs;
             if (result == SUBMIT_OK) {
                 fenceWaitUs = activeRenderer->lastFenceWaitUs;
                 acquireWaitUs = activeRenderer->lastAcquireWaitUs;
@@ -3707,6 +3764,13 @@ int PyroWave_SubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
         if (gpuDrawUs != 0) {
             w.gpuDrawTotalUs += gpuDrawUs;
             w.gpuDrawFrames++;
+        }
+        if (gpuSharpenUs != 0) {
+            w.sharpenFrames++;
+            w.sharpenTotalUs += gpuSharpenUs;
+            w.sharpenMaxUs = std::max<uint64_t>(w.sharpenMaxUs, gpuSharpenUs);
+            w.sharpenPrepareTotalUs += gpuSharpenPrepareUs;
+            w.sharpenPrepareMaxUs = std::max<uint64_t>(w.sharpenPrepareMaxUs, gpuSharpenPrepareUs);
         }
     }
     // Every PyroWave frame is independent: never ask the host for a keyframe
@@ -3930,7 +3994,9 @@ Java_com_limelight_binding_video_PyroWaveRenderer_nativeTakeStats(JNIEnv *env, j
                             jlong(w.skippedFrames), jlong(w.stallTotalUs), jlong(w.stallMaxUs),
                             w.submitAgeFrames, jlong(w.submitAgeTotalUs), jlong(w.submitAgeMaxUs),
                             w.presentAgeFrames, jlong(w.presentAgeTotalUs), jlong(w.presentAgeMaxUs),
-                            jlong(w.fenceWaitTotalUs), jlong(w.acquireWaitTotalUs), jlong(w.submitPresentTotalUs)};
+                            jlong(w.fenceWaitTotalUs), jlong(w.acquireWaitTotalUs), jlong(w.submitPresentTotalUs),
+                            w.sharpenFrames, jlong(w.sharpenTotalUs), jlong(w.sharpenMaxUs),
+                            jlong(w.sharpenPrepareTotalUs), jlong(w.sharpenPrepareMaxUs)};
     env->SetLongArrayRegion(out, 0, std::min<jsize>(env->GetArrayLength(out), jsize(std::size(values))), values);
 }
 

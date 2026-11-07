@@ -1,5 +1,6 @@
 package com.limelight.shell
 
+import com.limelight.preferences.UpscalerMode
 import com.limelight.shell.settings.SettingsHelp
 import com.limelight.shell.settings.StreamMenuHelp
 import kotlin.math.floor
@@ -363,7 +364,16 @@ internal fun circleHelpKey(item: BarItem, supersampling: Boolean): String = when
     BarItem.QUIT -> "Quit game"
 }
 
-private val upscalerModeValues = listOf("standard", "high", "temporal", "temporal-quality")
+/** The mode the Mode row shows after a press in [direction] (-1 or +1): the list wraps around. */
+internal fun nextUpscalerMode(mode: Int, direction: Int): Int =
+    Math.floorMod(mode + direction, UpscalerMode.values().size)
+
+/**
+ * Whether the Upscaler page offers the supersampling quality row: only while the stream could be supersampled and
+ * the mode scales at all. Sharpen only keeps the stream's size, so the quality means nothing for it.
+ */
+internal fun showsSupersamplingQuality(supersamplingMode: Boolean, mode: Int): Boolean =
+    supersamplingMode && UpscalerMode.fromIndex(mode).scales()
 
 /**
  * What the help of [key] says. The Mouse mode row follows the active mode, the Mode row the selected method and
@@ -381,7 +391,7 @@ internal fun streamMenuHelp(
     "Apply bitrate" -> bitrateFailure ?: StreamMenuHelp.description(key)
     "Touchscreen mode" -> SettingsHelp.choice("mouse_mode_list", mouseMode.toString()) +
         "\n\n" + if (rememberMouseMode) "Applies now and is saved." else "Applies now; this stream only."
-    "Mode" -> SettingsHelp.choice("list_sgsr_quality", upscalerModeValues[upscalerMode.coerceIn(0, upscalerModeValues.lastIndex)]) +
+    "Mode" -> SettingsHelp.choice("list_sgsr_quality", UpscalerMode.fromIndex(upscalerMode).value()) +
         "\n\n" + StreamMenuHelp.description(key)
     "Upscaler", "Upscaling", "Supersampling", "Supersampling on" -> "$upscalerStatus\n\n${StreamMenuHelp.description(key)}"
     else -> StreamMenuHelp.description(key)

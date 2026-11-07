@@ -8,6 +8,7 @@ import androidx.preference.PreferenceManager
 import androidx.test.core.app.ApplicationProvider
 import com.limelight.Game
 import com.limelight.preferences.PreferenceConfiguration
+import com.limelight.preferences.UpscalerMode
 import com.limelight.preferences.PyroWaveBitrate
 import com.limelight.profiles.ProfilesManager
 import com.limelight.shadows.ShadowGameManager
@@ -431,10 +432,12 @@ class GameSettingsTest {
         val config = PreferenceConfiguration.readPreferences(activity)
         assertTrue(config.enableHdr)
         assertTrue(config.sgsrEnabled)
-        assertTrue(config.sgsrHighQuality)
+        assertEquals(UpscalerMode.HIGH, config.sgsrMode)
         assertEquals(75, config.sgsrSharpness)
         assertEquals(SettingsTab.DISPLAY, spec("list_sgsr_quality").tab)
-        assertEquals(listOf("standard", "high", "temporal", "temporal-quality"), spec("list_sgsr_quality").choices.map { it.value })
+        assertEquals(listOf("standard", "high", "temporal", "temporal-quality", "sharpen"), spec("list_sgsr_quality").choices.map { it.value })
+        // The Settings list and the stream menu name every mode alike
+        assertEquals(UpscalerMode.values().map { it.label() }, spec("list_sgsr_quality").choices.map { it.label })
         assertEquals("standard", game(id = 2).preferences.getString("list_sgsr_quality", "standard"))
         store.close()
     }
@@ -452,21 +455,30 @@ class GameSettingsTest {
         val config=PreferenceConfiguration.readPreferences(Robolectric.buildActivity(Game::class.java,intent).get())
         assertTrue(config.sgsrEnabled)
         assertTrue(config.enableHdr)
-        assertTrue(config.sgsrTemporal)
-        assertFalse(config.sgsrHighQuality)
-        assertFalse(PreferenceConfiguration.readPreferences(context).sgsrTemporal)
+        assertEquals(UpscalerMode.VIDEO, config.sgsrMode)
+        assertNotEquals(UpscalerMode.VIDEO, PreferenceConfiguration.readPreferences(context).sgsrMode)
         profiles.settings().edit().putString("list_sgsr_quality","unknown-future-mode").commit()
         val fallback=PreferenceConfiguration.readPreferences(context)
-        assertFalse(fallback.sgsrTemporal)
-        assertFalse(fallback.sgsrHighQuality)
+        assertEquals(UpscalerMode.STANDARD, fallback.sgsrMode)
     }
 
-    @Test fun temporalQualityModeEnablesTemporalQualityWithoutSpatialHighQuality() {
+    @Test fun temporalQualityModeIsItsOwnModeAndSharpenOnlyIsStoredAsSharpen() {
         profiles.settings().edit().putString("list_sgsr_quality","temporal-quality").commit()
+        assertEquals(UpscalerMode.VIDEO_QUALITY, PreferenceConfiguration.readPreferences(context).sgsrMode)
+        // A build before Sharpen only stored nothing else than the four older values, which read unchanged
+        profiles.settings().edit().putString("list_sgsr_quality","sharpen").commit()
         val config=PreferenceConfiguration.readPreferences(context)
-        assertTrue(config.sgsrTemporal)
-        assertTrue(config.sgsrTemporalQuality)
-        assertFalse(config.sgsrHighQuality)
+        assertEquals(UpscalerMode.SHARPEN_ONLY, config.sgsrMode)
+        assertFalse(config.sgsrMode.scales())
+    }
+
+    @Test fun sharpenOnlySavedForAGameIsReadBackByItsNextLaunchOnly() {
+        GameSettingsStore.forLaunch(launched())!!.save(upscalerSaveValues(true, UpscalerMode.SHARPEN_ONLY.index(), 65, 2))
+        val next = PreferenceConfiguration.readPreferences(launched())
+        assertTrue(next.sgsrEnabled)
+        assertEquals(UpscalerMode.SHARPEN_ONLY, next.sgsrMode)
+        assertEquals(65, next.sgsrSharpness)
+        assertEquals(UpscalerMode.STANDARD, PreferenceConfiguration.readPreferences(launched(id = 2)).sgsrMode)
     }
 
     private fun launched(pc: String = "pc-a", id: Int = 1, snapshot: Boolean = true): Game {
@@ -508,12 +520,12 @@ class GameSettingsTest {
 
         val next = PreferenceConfiguration.readPreferences(launched())
         assertTrue(next.sgsrEnabled)
-        assertTrue(next.sgsrTemporalQuality)
+        assertEquals(UpscalerMode.VIDEO_QUALITY, next.sgsrMode)
         assertEquals(75, next.sgsrSharpness)
         assertEquals(2, next.sgsrSupersamplingLevel)
         val other = PreferenceConfiguration.readPreferences(launched(id = 2))
         assertFalse(other.sgsrEnabled)
-        assertTrue(other.sgsrHighQuality)
+        assertEquals(UpscalerMode.HIGH, other.sgsrMode)
         assertEquals(40, other.sgsrSharpness)
         assertEquals(1, other.sgsrSupersamplingLevel)
 
@@ -559,12 +571,12 @@ class GameSettingsTest {
         listOf(-1 to "1", 0 to "1", 1 to "1", 2 to "2", 3 to "2").forEach { (live, stored) ->
             assertEquals(stored, upscalerSaveValues(true, 0, 50, live)["list_sgsr_supersampling_level"])
         }
-        listOf(-1 to "standard", 0 to "standard", 1 to "high", 2 to "temporal", 3 to "temporal-quality", 4 to "temporal-quality")
+        listOf(-1 to "standard", 0 to "standard", 1 to "high", 2 to "temporal", 3 to "temporal-quality", 4 to "sharpen", 5 to "sharpen")
             .forEach { (live, stored) -> assertEquals(stored, upscalerSaveValues(true, live, 50, 1)["list_sgsr_quality"]) }
         assertEquals(false, upscalerSaveValues(false, 0, 50, 1)["checkbox_sgsr"])
         assertEquals(true, upscalerSaveValues(true, 0, 50, 1)["checkbox_sgsr"])
         // Every value is one the settings screen offers for that key
-        (0..3).forEach { mode ->
+        (0..4).forEach { mode ->
             val values = upscalerSaveValues(true, mode, 50, 2)
             assertTrue(spec("list_sgsr_quality").choices.any { it.value == values["list_sgsr_quality"] })
             assertTrue(spec("list_sgsr_supersampling_level").choices.any { it.value == values["list_sgsr_supersampling_level"] })

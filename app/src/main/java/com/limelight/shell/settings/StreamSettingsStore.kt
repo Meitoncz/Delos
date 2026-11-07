@@ -2,6 +2,7 @@ package com.limelight.shell.settings
 
 import android.content.SharedPreferences
 import com.limelight.preferences.PreferenceConfiguration
+import com.limelight.preferences.UpscalerMode
 import com.limelight.utils.RumblePreferences
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -40,6 +41,9 @@ class StreamSettingsStore(val catalog: SettingsCatalog, private val settings: ()
         if (spec.key == "list_pyrowave_chroma" &&
             (state.value["video_format"] != "pyrowave" || state.value["checkbox_enable_hdr"] == true)) return false
         if (spec.key in UPSCALER_KEYS && caps?.sgsr == false && state.value["video_format"] != "pyrowave") return false
+        // Sharpen only never scales, so there is no supersampling quality to choose
+        if (spec.key == "list_sgsr_supersampling_level" &&
+            UpscalerMode.fromValue(state.value["list_sgsr_quality"] as? String) == UpscalerMode.SHARPEN_ONLY) return false
         if (spec.key == "pref_low_latency_frame_balance" && state.value["frame_pacing"] == "fast-vsync") return false
         fun dependencyEnabled(key: String?, seen: Set<String>): Boolean {
             if (key == null) return true

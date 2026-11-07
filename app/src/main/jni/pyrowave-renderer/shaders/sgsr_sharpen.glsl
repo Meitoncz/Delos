@@ -1,10 +1,30 @@
-// Same bounded presentation filter as assets/sgsr/temporal_present.frag.
-// Both SDR and HDR are processed in their encoded domain. In particular, HDR
-// samples remain PQ code values: never apply an SDR gamma or quantize to 8 bits.
+// The presentation filters of the SGSR present and pack passes. Both SDR and HDR are processed in their
+// encoded domain. In particular, HDR samples remain PQ code values: never apply an SDR gamma or quantize
+// to 8 bits.
 layout(push_constant) uniform Presentation {
     float sharpness;
+    // 0: the bounded presentation filter of the SGSR modes (same as assets/sgsr/temporal_present.frag).
+    // 1: Sharpen only's contrast-adaptive sharpen (same as assets/sgsr/sharpen_only.frag; SharpenOnly.java
+    //    is the CPU reference of its steps).
+    int contrastAdaptive;
 } presentation;
+vec3 contrastAdaptiveColor(vec2 uv) {
+    vec3 e=texture(u_image,uv).rgb;
+    float strength=clamp(presentation.sharpness,0.0,1.0);
+    if(strength==0.0) return e;
+    vec2 stepSize=1.0/vec2(textureSize(u_image,0));
+    vec3 b=texture(u_image,uv-vec2(0,stepSize.y)).rgb;
+    vec3 d=texture(u_image,uv-vec2(stepSize.x,0)).rgb;
+    vec3 f=texture(u_image,uv+vec2(stepSize.x,0)).rgb;
+    vec3 h=texture(u_image,uv+vec2(0,stepSize.y)).rgb;
+    vec3 mn=min(min(min(d,e),min(f,b)),h);
+    vec3 mx=max(max(max(d,e),max(f,b)),h);
+    vec3 amp=sqrt(clamp(min(mn,1.0-mx)/max(mx,vec3(1e-4)),0.0,1.0));
+    vec3 w=-amp*(0.2*sqrt(strength));
+    return clamp(((b+d+f+h)*w+e)/(1.0+4.0*w),0.0,1.0);
+}
 vec3 presentationColor(vec2 uv) {
+    if(presentation.contrastAdaptive!=0) return contrastAdaptiveColor(uv);
     vec3 center=texture(u_image,uv).rgb;
     float strength=clamp(presentation.sharpness,0.0,1.0);
     if(strength==0.0) return center;
