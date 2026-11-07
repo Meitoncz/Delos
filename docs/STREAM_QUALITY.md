@@ -494,14 +494,14 @@ the visual result, and the shader compile on the Adreno 740 are verified only by
 
 For all four SGSR modes, a stream already matching the display uses supersampling instead of
 same-resolution reconstruction. The live stream menu calls this mode **Supersampling** and offers two
-levels, session-only unless saved: `1x` reconstructs 1920x1080 into 2560x1440, while `2x` reconstructs it into
+levels, session-only unless saved: `1.33x` (stored value 1, labelled 1x until 2026-11-07) reconstructs 1920x1080 into 2560x1440, while `2x` reconstructs it into
 3840x2160. A separate presentation pass reduces the internal image to the display resolution.
 The HDR path performs RGB-to-P010 conversion only after that reduction; intermediate RGB remains
 FP16 and PQ-encoded, not linear-light or eight-bit SDR.
 
 The level a stream starts with is the Display setting **Supersampling quality**
 (`list_sgsr_supersampling_level`, 1 or 2, default 1; profile value with a per-game override). An unknown
-stored value reads as 1x, and a 2x that does not fit falls back to 1x exactly as for the live choice.
+stored value reads as 1.33x, and a 2x that does not fit falls back to 1.33x exactly as for the live choice.
 
 The sizing policy tolerates a two-pixel Surface aspect-fit difference, checks the GPU texture limit,
 and caps the internal target at 3840x2160. Native 4K therefore never attempts an unsafe 8K target.

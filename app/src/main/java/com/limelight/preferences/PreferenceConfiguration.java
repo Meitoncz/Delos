@@ -341,7 +341,7 @@ public class PreferenceConfiguration {
     /** The upscaler's mode; the stream menu changes it per session. Unknown stored values read as Standard. */
     public UpscalerMode sgsrMode = UpscalerMode.STANDARD;
     public int sgsrSharpness;
-    /** Native-resolution SGSR level: 1 = 1440p, 2 = 2160p from 1080p. The stored choice; the stream menu changes it per session. */
+    /** Native-resolution SGSR level: 1 = 1.33x (1440p), 2 = 2x (2160p) from 1080p. The stored choice; the stream menu changes it per session. */
     public int sgsrSupersamplingLevel;
     public boolean absoluteMouseMode;
     public boolean enableAudioFx;

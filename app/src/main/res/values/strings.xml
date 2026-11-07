@@ -245,8 +245,8 @@
     <string name="title_sgsr_sharpness">Upscaler sharpness</string>
     <string name="summary_sgsr_sharpness">Strength of the sharpening, from 0 to 100. Zero disables sharpening. With the SGSR modes it is a separate final pass that does not change the reconstruction; with Sharpen only it is the whole effect. It can be adjusted live.</string>
     <string name="title_sgsr_supersampling_level">Supersampling quality</string>
-    <string name="summary_sgsr_supersampling_level">Internal size when the stream already matches the display: 2560 x 1440 at 1x or 3840 x 2160 at 2x, from a 1080p stream. 2x needs more GPU time and memory and falls back to 1x if it does not fit. It can be changed live in the stream menu.</string>
-    <string name="sgsr_supersampling_level_1">1× (1440p)</string>
+    <string name="summary_sgsr_supersampling_level">Internal size when the stream already matches the display: 2560 x 1440 (1.33x) or 3840 x 2160 (2x), from a 1080p stream. 2x needs more GPU time and memory and falls back to 1.33x if it does not fit. It can be changed live in the stream menu.</string>
+    <string name="sgsr_supersampling_level_1">1.33× (1440p)</string>
     <string name="sgsr_supersampling_level_2">2× (2160p)</string>
     <string name="sgsr_quality_standard">SGSR 1 (Normal)</string>
     <string name="sgsr_quality_high">SGSR 1 (Quality)</string>

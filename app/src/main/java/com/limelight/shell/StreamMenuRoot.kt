@@ -515,7 +515,7 @@ private fun PageRows(
             if (showsSupersamplingQuality(supersamplingMode, host.upscalerMode)) {
                 val level = supersamplingLevel.coerceIn(1, 2)
                 MenuRow(Symbols.HIGH_QUALITY, "Supersampling quality",
-                    RowValue.Choice(if (level == 1) "1× (1440p)" else "2× (2160p)", { direction ->
+                    RowValue.Choice(if (level == 1) "1.33× (1440p)" else "2× (2160p)", { direction ->
                         host.setSupersamplingLevel(if (direction < 0) 1 else 2)
                         onLevel(host.supersamplingLevel)
                     }), enabled = available)
