@@ -113,7 +113,17 @@ class ArtworkStoreTest {
                 // Same PC/game/kind and the same downloaded image id: only the pixels change.
                 server.jpeg = jpeg(1920, 620, Color.BLUE)
                 driver.await(driver.scope.async { store.apply(pc, app, ArtKind.HERO, first) })
-                driver.until { consumerImage != null && consumerImage !== originalImage }
+                // The two composed readers load independently: another RED decode can replace
+                // the first instance before this version's BLUE pixels reach the consumer.
+                driver.until {
+                    consumerImage?.asAndroidBitmap()?.let { bitmap ->
+                        val pixel = bitmap.getPixel(bitmap.width / 2, bitmap.height / 2)
+                        kotlin.math.abs(Color.red(pixel) - Color.red(Color.BLUE)) <= 3 &&
+                            kotlin.math.abs(Color.green(pixel) - Color.green(Color.BLUE)) <= 3 &&
+                            kotlin.math.abs(Color.blue(pixel) - Color.blue(Color.BLUE)) <= 3
+                    } == true
+                }
+                assertTrue(consumerImage !== originalImage)
                 assertImage(consumerImage, 1920, 620, Color.BLUE)
 
                 driver.await(driver.scope.async { store.apply(pc, app, ArtKind.HERO, null) })
