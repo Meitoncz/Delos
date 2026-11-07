@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.drag
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -34,10 +36,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -48,6 +53,12 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.em
 import com.limelight.shell.ContextMenu
 import com.limelight.shell.settings.SettingImpact
@@ -104,6 +115,7 @@ fun SettingRow(
     enabled: Boolean = true,
     compact: Boolean = false,
     contextMenu: ContextMenu? = null,
+    override: RowOverride? = null,
     onFocused: (() -> Unit)? = null,
     impact: SettingImpact? = null,
 ) {
@@ -190,6 +202,21 @@ fun SettingRow(
                     .then(LocalBackdropHaze.current?.let { Modifier.backdropBlur(it, 8f, colors.surface2) } ?: Modifier.background(colors.surface2))
             )
         }
+        // A game setting that differs from the profile: a violet tint with a faint ring (under the content, over the glide plate)
+        if (override != null) {
+            val k = stageUnit()
+            val tint = colors.accent3
+            Box(
+                Modifier.matchParentSize().drawBehind {
+                    drawRect(Brush.horizontalGradient(0f to tint.copy(alpha = .20f), .7f to tint.copy(alpha = .05f), 1f to tint.copy(alpha = .05f)))
+                    val line = 1f * k
+                    drawRoundRect(
+                        tint.copy(alpha = .28f), topLeft = Offset(line / 2f, line / 2f), size = androidx.compose.ui.geometry.Size(size.width - line, size.height - line),
+                        cornerRadius = CornerRadius(ROW_CORNER * k), style = Stroke(line),
+                    )
+                }
+            )
+        }
         Row(
             Modifier.fillMaxWidth()
                 .defaultMinSize(minHeight = if (compact) 80.px else 92.px)
@@ -209,7 +236,15 @@ fun SettingRow(
                     MarqueeText(label, style = labelStyle, active = focused, modifier = Modifier.weight(1f, fill = false))
                     ImpactChips(impact, focused, Modifier.padding(start = 22.px))
                 }
-                if (description != null) {
+                if (override != null) {
+                    Row(Modifier.padding(top = 4.px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.px)) {
+                        CustomBadge()
+                        BasicText(
+                            override.profileLine, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                            style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 19.tpx, lineHeight = 1.35.em),
+                        )
+                    }
+                } else if (description != null) {
                     BasicText(
                         description,
                         style = TextStyle(color = descriptionColor ?: colors.text3, fontFamily = Figtree, fontSize = 19.tpx, lineHeight = 1.35.em),
@@ -217,7 +252,62 @@ fun SettingRow(
                     )
                 }
             }
-            Box(Modifier.staggerEntrance(entrance)) { RowValueView(value, focused, choice, calm) }
+            Row(Modifier.staggerEntrance(entrance), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.px)) {
+                if (override != null) RowResetButton(override, focused && enabled)
+                RowValueView(value, focused, choice, calm)
+            }
+        }
+    }
+}
+
+/**
+ * The marker of a per-game setting that differs from the profile: [SettingRow] tints the row, shows a CUSTOM badge and [profileLine]
+ * (what the profile has) instead of its description, and offers a reset to the profile value. [touch]: the reset is a round button
+ * on every such row; otherwise a pill with the X glyph that fades in on the focused row (the controller's X resets it too).
+ */
+@Immutable
+data class RowOverride(val profileLine: String, val touch: Boolean, val onReset: () -> Unit)
+
+@Composable
+private fun CustomBadge() {
+    val colors = LocalDelosColors.current
+    Row(
+        Modifier.height(26.px).clip(CircleShape).background(colors.accent3).padding(start = 7.px, end = 10.px),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.px),
+    ) {
+        Symbol(Symbols.TUNE, 17.tpx, colors.onAccent3, filled = true)
+        BasicText("CUSTOM", style = TextStyle(color = colors.onAccent3, fontFamily = Figtree, fontWeight = FontWeight.ExtraBold, fontSize = 14.tpx, letterSpacing = .06.em))
+    }
+}
+
+/** The reset of a custom row: fades and pops in (a spring) while the row is focused, always shown for touch; reduced motion only fades. */
+@Composable
+private fun RowResetButton(override: RowOverride, focused: Boolean) {
+    val colors = LocalDelosColors.current
+    val reduced = LocalReducedMotion.current
+    val visible = override.touch || focused
+    val shown by animateFloatAsState(if (visible) 1f else 0f, tween(Motion.FADE, easing = Motion.Ease), label = "rowReset")
+    val pop by animateFloatAsState(if (visible) 1f else 0f, if (reduced) snap() else tween(Motion.PILL_POP, easing = EaseSpring), label = "rowResetPop")
+    val reset by rememberUpdatedState(override.onReset)
+    val tint = colors.accent3
+    val label = "Reset to profile value"
+    Row(
+        Modifier.graphicsLayer { alpha = shown; (.9f + .1f * pop).let { if (reduced) 1f else it }.let { scaleX = it; scaleY = it } }
+            .clip(CircleShape).background(tint.copy(alpha = .22f)).border(1.px, tint.copy(alpha = .5f), CircleShape)
+            .then(
+                if (visible) Modifier.pointerInput(Unit) { detectTapGestures(onTap = { reset() }) }
+                    .semantics { role = Role.Button; onClick(label) { reset(); true } }
+                else Modifier
+            )
+            .then(if (override.touch) Modifier.size(52.px) else Modifier.height(46.px).padding(start = 16.px, end = 8.px)),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = if (override.touch) Arrangement.Center else Arrangement.spacedBy(10.px),
+    ) {
+        if (override.touch) Symbol(Symbols.RESET, 28.tpx, tint)
+        else {
+            Symbol(Symbols.RESET, 24.tpx, tint)
+            BasicText(label, style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.Bold, fontSize = 19.tpx))
+            GlyphButton(Glyph.Letter("X"), 30)
         }
     }
 }
