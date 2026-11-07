@@ -360,7 +360,7 @@ fun ArtworkScreen(screen: Screen.Artwork) {
 
     Box(Modifier.fillMaxSize()) {
         FocusTransferTarget(focusTransfer)
-        Column(Modifier.offset(150.px, 56.px).width(560.px)) {
+        Column(Modifier.offset(150.px, 104.px).width(560.px)) {
             BasicText(
                 "ARTWORK",
                 style = TextStyle(color = colors.accent2, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx, letterSpacing = .14.em),
@@ -370,7 +370,7 @@ fun ArtworkScreen(screen: Screen.Artwork) {
                 style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 40.tpx),
             )
         }
-        SelectionPillHost(Modifier.offset(720.px, 58.px).width(1050.px).height(66.px)) {
+        SelectionPillHost(Modifier.offset(720.px, 124.px).width(1050.px).height(66.px)) {
             ShoulderLabel("L1")
             ArtTab.entries.forEach { next ->
                 TabPill(next.icon, next.label, tab == next, Modifier.padding(horizontal = 4.px)) {
@@ -382,7 +382,7 @@ fun ArtworkScreen(screen: Screen.Artwork) {
 
         // Toolbar: the matched game, search for another name (X), the filter sheet (Y)
         Row(
-            Modifier.offset(150.px, 158.px).width(1620.px).height(64.px),
+            Modifier.offset(150.px, 206.px).width(1620.px).height(64.px),
             horizontalArrangement = Arrangement.spacedBy(16.px), verticalAlignment = Alignment.CenterVertically,
         ) {
             GameChip(match, busy, app.name, (choices as? Choices.Ready)?.let { it.total ?: it.images.size.takeIf { _ -> !filters.active } }, tab, Modifier.weight(1f))
@@ -412,12 +412,12 @@ fun ArtworkScreen(screen: Screen.Artwork) {
                 tab, filters, ready, refreshing,
                 onClear = { chip -> filtersByTab[tab] = ArtFilterRules.clear(filters, chip) },
                 onReset = ::resetFilters,
-                modifier = Modifier.offset(150.px, 232.px).width(1620.px).height(48.px),
+                modifier = Modifier.offset(150.px, 276.px).width(1620.px).height(44.px),
             )
         }
 
         // The grid (or why there is none)
-        Box(Modifier.offset(132.px, 276.px).width(1656.px).height(590.px)) {
+        Box(Modifier.offset(132.px, 324.px).width(1656.px).height(552.px)) {
             when (val c = choices) {
                 Choices.Loading -> GridMessage(Symbols.REFRESH, "Looking on SteamGridDB…", null)
                 Choices.NoKey -> GridMessage(Symbols.KEY, "Add your SteamGridDB API key", "Settings → Covers → SteamGridDB API key. It is free on steamgriddb.com (Preferences → API).")
@@ -434,8 +434,8 @@ fun ArtworkScreen(screen: Screen.Artwork) {
                         LazyVerticalGrid(
                             columns = GridCells.Fixed(tab.columns),
                             state = grid,
-                            modifier = Modifier.fillMaxSize().fadeEdges(stage, top = 24f, bottom = 70f),
-                            contentPadding = PaddingValues(start = 18.px, end = 18.px, top = 14.px, bottom = 96.px),
+                            modifier = Modifier.fillMaxSize().fadeEdges(stage, top = 30f, bottom = 70f),
+                            contentPadding = PaddingValues(start = 18.px, end = 18.px, top = 40.px, bottom = 96.px),
                             horizontalArrangement = Arrangement.spacedBy(24.px),
                             verticalArrangement = Arrangement.spacedBy(24.px),
                         ) {
@@ -466,7 +466,7 @@ fun ArtworkScreen(screen: Screen.Artwork) {
 
         InfoStrip(
             described ?: Described.FirstChoice, tab, chosen,
-            Modifier.offset(150.px, 880.px).width(1620.px).height(88.px),
+            Modifier.offset(150.px, 886.px).width(1620.px).height(84.px),
         )
 
         // The filter sheet drops down from the toolbar over a dimmed page; the grid stays visible underneath
@@ -705,7 +705,7 @@ private fun FilterSheetLayer(
     }
     AnimatedVisibility(
         open,
-        modifier = Modifier.offset(150.px, 232.px),
+        modifier = Modifier.offset(150.px, 280.px),
         enter = popEnter(TransformOrigin(.92f, 0f), reduced),
         exit = popExit(TransformOrigin(.92f, 0f), reduced),
     ) {
