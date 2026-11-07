@@ -8,15 +8,14 @@ import kotlin.math.sin
 
 /** A centered, symmetric orbit of the image plane's normal; no pan, roll or changing zoom. */
 internal object HeroMotion {
-    const val PERIOD_NANOS = 25_000_000_000L
-    const val DEGREES = 15f
+    const val PERIOD_NANOS = 20_000_000_000L
+    const val DEGREES = 25f
 
     /**
      * Smallest uniform scale at which the 2100 × 1260 hero still covers the 1920 × 1080 viewport at every orbit
-     * phase is 1.0065 (found by bisection on the test's projection; the 90 px inset per side absorbs most of it),
-     * plus about 1.35 % margin.
+     * phase is 1.1828 at 25° (found by bisection on the test's projection; it was 1.0065 at 15°), plus about 1.5 % margin.
      */
-    const val OVERSCAN = 1.02f
+    const val OVERSCAN = 1.20f
     const val CAMERA_DISTANCE_FACTOR = 2.2f
 
     /** The orbit's phase (0–1) at a frame-clock time, so every copy of the hero is in phase and none restarts. */
