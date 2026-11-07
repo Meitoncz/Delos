@@ -30,6 +30,19 @@ internal object HeroGeometry {
     /** The background color of the dark theme (14, 18, 36) the extension is blended toward. */
     const val EXTENSION_TINT_COLOR = 0xFF0E1224.toInt()
 
+    /** The smallest blur (σ, in pixels of the live layer) the playing hero keeps: below it the low-resolution layer would show its pixels. */
+    const val LIVE_MIN_SIGMA = 2f
+
+    /** The resolutions the playing hero's layer may have, as a fraction of the full area, smallest (cheapest) first. */
+    private val LIVE_SCALES = floatArrayOf(.25f, .5f, 1f)
+
+    /**
+     * The size of the playing hero's layer as a fraction of the area: the smallest of [LIVE_SCALES] at which the blur
+     * ([blurSigma], σ in full-size pixels) is still at least [LIVE_MIN_SIGMA] pixels wide. A strongly blurred hero is drawn
+     * at a quarter of the area (a 16th of the pixels), a lightly blurred one larger, a sharp one in full.
+     */
+    fun liveScale(blurSigma: Float): Float = LIVE_SCALES.firstOrNull { blurSigma * it >= LIVE_MIN_SIGMA } ?: 1f
+
     /**
      * The shape of the band's bottom fade as (position along the fade, opacity) pairs: a smoothstep, so the fade has no
      * visible start or end. Shared by the bitmap mask and the live gradient.

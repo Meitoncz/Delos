@@ -8,6 +8,7 @@ import android.os.Build
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
@@ -54,6 +56,8 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
@@ -143,8 +147,11 @@ private fun HeroArt(art: GameArt, blurPx: Int, reducedMotion: Boolean, active: B
     var live by remember { mutableStateOf(false) }
     // The still hero leaves once the animation has faded in over it (its soft diagonal edge must not show the first frame)
     val stillAlpha by animateFloatAsState(if (live) 0f else 1f, tween(Motion.FADE, delayMillis = if (live) Motion.FADE else 0), label = "stillHero")
+    // Once the animation has faded in over it, the still leaves composition for good (it only held a second tilt clock
+    // and an invisible layer); stopping the animation brings it back, from the cache, in the same pose
+    val stillOn by remember { derivedStateOf { !live || stillAlpha > 0f } }
     Box(Modifier.fillMaxSize()) {
-        Box(Modifier.fillMaxSize().graphicsLayer { alpha = stillAlpha }) { HeroStill(art, blurPx, reducedMotion, active) }
+        if (stillOn) Box(Modifier.fillMaxSize().graphicsLayer { alpha = stillAlpha }) { HeroStill(art, blurPx, reducedMotion, active) }
         // The animation needs the live blur (Android 12+); below it the first frame stays
         if (image != null && art.animated != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             HeroLive(art.id, image, art.animated, blurPx, reducedMotion, active, animate && !reducedMotion) { live = it }
@@ -225,31 +232,30 @@ private fun heroBandMask(fade: Float, bottom: Float): Brush = Brush.verticalGrad
     startY = bottom - fade, endY = bottom,
 )
 
-/** The soft bottom edge of a live hero band: its content fades out over the last [fade] stage pixels of the band. */
-private fun Modifier.heroBandFade(fade: Float): Modifier = this
-    .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
-    .drawWithContent {
-        drawContent()
-        val f = fade * size.width / HeroGeometry.AREA_WIDTH
-        drawRect(heroBandMask(f, size.height), blendMode = BlendMode.DstIn)
-    }
-
 /**
- * The playing animated hero: its frames drawn live through the platform's blur ([heroEffect], saturation included),
- * the same composition, diagonal fade and tilt as the still hero, over which it fades in once decoded. The lens shader that
- * blurs the still hero renders a cached bitmap; frames change too often for it, so the animation uses the blur
- * of the sharp-hero path (the extension under a wide hero is its still first frame's, drawn once). It exists only while it
- * plays: paused (hidden, reduced motion, streaming, backgrounded) the drawable is released and the still hero shows.
+ * The playing animated hero. Its frames are composed in a small layer, never at the 2100 × 1260 stage-pixel area: the picture is
+ * blurred anyway, so the band, its soft bottom edge, the extension, the blur ([heroEffect], saturation included) and the
+ * diagonal fade are all drawn at [HeroGeometry.liveScale] of the area's size (a quarter with the default blur) into an offscreen
+ * layer that HWUI keeps as a texture. It is rendered again only when a new animation frame arrives (the animation's own rate);
+ * every display frame the tilt just draws that texture, scaled up, rotated by the orbit, with no effect on the rotating layer.
+ * The diagonal fade is part of the layer (it tilts with the image, as the cached still hero's does). It fades in over the still
+ * hero once decoded (the still leaves then), and exists only while it plays: paused (hidden, reduced motion, streaming,
+ * backgrounded) the drawable is released and the still hero shows. The extension under a wide hero is the still first frame's.
  */
 @Composable
 private fun HeroLive(id: String, image: ImageBitmap, file: java.io.File, blurPx: Int, reducedMotion: Boolean, active: Boolean, play: Boolean, onLive: (Boolean) -> Unit) {
     val stage = LocalStage.current
     val density = LocalDensity.current.density
-    val effect = remember(blurPx, stage, density) { heroEffect(blurPx * stage.dpPerPx * density) }
+    // Physical pixels per stage pixel at full size, and the live layer's resolution as a fraction of it
+    val k = stage.dpPerPx * density
+    val scale = remember(blurPx, k) { HeroGeometry.liveScale(blurPx * k) }
+    val unit = scale * k
+    val layout = remember(image) { HeroGeometry.layout(image.width, image.height) }
     val ticker = rememberAnimationTicker(play)
     val source = remember(file) { AnimatedSource.OfFile(file) }
-    val drawable = rememberAnimatedDrawable(source, play, AnimatedPlayback.HERO_WIDTH, ticker)
-    val layout = remember(image) { HeroGeometry.layout(image.width, image.height) }
+    // Frames are decoded no wider than they are drawn (and never above the hero's own cap)
+    val decodeWidth = minOf(AnimatedPlayback.HERO_WIDTH, (layout.width * unit).roundToInt().coerceAtLeast(1))
+    val drawable = rememberAnimatedDrawable(source, play, decodeWidth, ticker)
     val extension = if (layout.extended && drawable != null) rememberHeroExtension(id, image) else null
     val ready = drawable != null && (!layout.extended || extension != null)
     DisposableEffect(ready) {
@@ -257,32 +263,64 @@ private fun HeroLive(id: String, image: ImageBitmap, file: java.io.File, blurPx:
         onDispose { onLive(false) }
     }
     if (drawable == null || !ready) return
-    Box(Modifier.fillMaxSize().heroFade(), contentAlignment = Alignment.Center) {
-        Box(Modifier.requiredSize(2100.px, 1260.px).heroTilt(active, reducedMotion).graphicsLayer { renderEffect = effect }) {
-            if (extension == null) {
-                AnimatedDrawableView(drawable, ticker, Modifier.fillMaxSize())
-            } else {
-                Canvas(Modifier.fillMaxSize()) {
-                    drawImage(extension, dstSize = IntSize(size.width.roundToInt(), size.height.roundToInt()), filterQuality = FilterQuality.Low)
+    val shown = remember(drawable) { Animatable(0f) }
+    LaunchedEffect(shown) { shown.animateTo(1f, tween(Motion.FADE, easing = Motion.Ease)) }
+    val effect = remember(blurPx, unit) { heroEffect(blurPx * unit) }
+    val widthPx = (HeroGeometry.AREA_WIDTH * unit).roundToInt().coerceAtLeast(1)
+    val heightPx = (HeroGeometry.AREA_HEIGHT * unit).roundToInt().coerceAtLeast(1)
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        // The area, tilted: only this layer's transform changes every display frame
+        Box(Modifier.requiredSize(2100.px, 1260.px).heroTilt(active, reducedMotion)) {
+            Box(
+                Modifier.requiredSize((widthPx / density).dp, (heightPx / density).dp)
+                    .graphicsLayer {
+                        transformOrigin = TransformOrigin(0f, 0f)
+                        // Up to the area's size in pixels, from the size the layer was really given
+                        scaleX = HeroGeometry.AREA_WIDTH * k / size.width
+                        scaleY = HeroGeometry.AREA_HEIGHT * k / size.height
+                        alpha = shown.value
+                        // A texture of the small size, drawn again only when its content changes
+                        compositingStrategy = CompositingStrategy.Offscreen
+                    }
+                    .drawWithContent {
+                        drawContent()
+                        drawRect(heroDiagonalFade(size), blendMode = BlendMode.DstIn)
+                    },
+            ) {
+                // The blur sits on this child, so it runs inside the small layer, not on the way to the screen
+                Canvas(Modifier.fillMaxSize().graphicsLayer { renderEffect = effect }) {
+                    // Reading the frame is what redraws the layer for the animation's next image
+                    if (ticker.frame.intValue == Int.MIN_VALUE) return@Canvas
+                    val u = size.width / HeroGeometry.AREA_WIDTH
+                    if (extension != null) drawImage(extension, dstSize = IntSize(size.width.roundToInt(), size.height.roundToInt()), filterQuality = FilterQuality.Low)
+                    val bounds = androidx.compose.ui.geometry.Rect(layout.left * u, layout.top * u, layout.right * u, layout.bottom * u)
+                    if (layout.extended) drawContext.canvas.saveLayer(bounds, androidx.compose.ui.graphics.Paint())
+                    drawIntoCanvas { canvas ->
+                        drawable.setBounds(bounds.left.roundToInt(), bounds.top.roundToInt(), bounds.right.roundToInt(), bounds.bottom.roundToInt())
+                        drawable.draw(canvas.nativeCanvas)
+                    }
+                    if (layout.extended) {
+                        drawRect(heroBandMask(layout.fade * u, bounds.bottom), topLeft = bounds.topLeft, size = bounds.size, blendMode = BlendMode.DstIn)
+                        drawContext.canvas.restore()
+                    }
                 }
-                AnimatedDrawableView(drawable, ticker, Modifier.requiredSize(layout.width.px, layout.height.px).heroBandFade(layout.fade))
             }
         }
     }
 }
+
+/** Over the whole [size], fading out diagonally from the top-right corner to the bottom-left one (use with DstIn). */
+private fun heroDiagonalFade(size: Size): Brush = Brush.linearGradient(
+    0f to Color.Black, .3f to Color.Black, .95f to Color.Transparent,
+    start = Offset(size.width, 0f), end = Offset(0f, size.height),
+)
 
 /** Over the whole screen, fading out diagonally from the top-right corner to the bottom-left one. */
 private fun Modifier.heroFade(): Modifier = this
     .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
     .drawWithContent {
         drawContent()
-        drawRect(
-            Brush.linearGradient(
-                0f to Color.Black, .3f to Color.Black, .95f to Color.Transparent,
-                start = Offset(size.width, 0f), end = Offset(0f, size.height),
-            ),
-            blendMode = BlendMode.DstIn,
-        )
+        drawRect(heroDiagonalFade(size), blendMode = BlendMode.DstIn)
     }
 
 /** The clock exists only for a visible, loaded image, and stops when its Activity is not resumed. */

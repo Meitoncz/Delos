@@ -128,12 +128,19 @@ The TV channel uses the same mark; PC shortcut icons remain unchanged.
   everything that does not animate keeps working and the still is always the animation's first frame. `ArtworkStore.animatedFile`
   answers with that file when it is an animated WebP (header check, kept per file size and date). There is **no setting**:
   - *Hero:* the home screen's game background plays the chosen animated hero automatically (`GameArt.animated`, `HeroLive` in
-    `ui/Backdrop.kt`) through `ImageDecoder` / `AnimatedImageDrawable` (frames decoded on demand at most 1050 px wide, one frame in
-    memory, canvas ≤ 100 million pixels), on Android 12+ (below it the first frame stays). It is drawn live with the
-    platform blur (`RenderEffect`, the sharp-hero path) inside the same composition (band at the top with its soft bottom edge over the
-    still extension), diagonal fade and tilt, fading in over the still lens-blurred
-    hero (the lens shader renders a cached bitmap and cannot run per frame), which leaves once the animation is shown. It plays only
-    while the hero is visible and the window is resumed (`repeatOnLifecycle`), and **not** during the launch loader / portal, in the
+    `ui/Backdrop.kt`) through `ImageDecoder` / `AnimatedImageDrawable` (frames decoded on demand, no wider than they are drawn and at most
+    1050 px, one frame in memory, canvas ≤ 100 million pixels), on Android 12+ (below it the first frame stays). **Performance
+    pipeline** (the blur makes the full 2100 × 1260 resolution pointless, and a `RenderEffect` on a rotating full-size layer is
+    re-run by the render thread on every display frame, which measured at 48 % janky frames on the Odin): the band, its soft
+    bottom edge, the extension, the platform blur (`RenderEffect`, σ scaled with the layer, saturate 1.15) and the diagonal fade are
+    drawn into a **small offscreen layer** (`HeroGeometry.liveScale`: a quarter of the area from a blur of 8 stage px up, half from 4,
+    the full area for a sharper hero; σ never below 2 layer pixels), which HWUI keeps as a texture and renders again **only when a
+    new animation frame arrives** (the animation's own rate). Every display frame (120 Hz) the tilt just draws that texture,
+    scaled up and rotated, with no effect, no mask layer and no recomposition (the orbit is read in the layer block). The diagonal
+    fade is part of the layer, so it tilts with the image like the cached still hero's. The live hero fades in over the still
+    lens-blurred hero (the lens shader renders a cached bitmap and cannot run per frame); the still then leaves composition (with its
+    second tilt clock) until the animation stops.
+    It plays only while the hero is visible and the window is resumed (`repeatOnLifecycle`), and **not** during the launch loader / portal, in the
     background, in a stream (a separate resumed activity), or with reduced motion or the system's animator scale 0 (then the first
     frame, like the tilt). Pure rules: `AnimatedPlayback.shouldPlay`.
   - *Home screen tiles, logo and game page:* the chosen animated **cover** (portrait tiles), **wide cover** (the wide first tile) and

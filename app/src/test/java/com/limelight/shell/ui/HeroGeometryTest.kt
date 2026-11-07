@@ -83,4 +83,23 @@ class HeroGeometryTest {
         assertEquals(1f to 0f, stops.last())
         assertTrue(stops.zipWithNext().all { (a, b) -> b.first > a.first && b.second < a.second })
     }
+
+    @Test fun aBlurredLiveHeroIsDrawnAtAQuarterOfTheAreaAndASharpOneInFull() {
+        // The default blur (15 stage px) and everything above 8 px: a quarter, a 16th of the pixels
+        assertEquals(.25f, HeroGeometry.liveScale(15f), 0f)
+        assertEquals(.25f, HeroGeometry.liveScale(8f), 0f)
+        assertEquals(.25f, HeroGeometry.liveScale(40f), 0f)
+        // A lighter blur needs more pixels to stay smooth: half, then full
+        assertEquals(.5f, HeroGeometry.liveScale(7.9f), 0f)
+        assertEquals(.5f, HeroGeometry.liveScale(4f), 0f)
+        assertEquals(1f, HeroGeometry.liveScale(3.9f), 0f)
+        assertEquals(1f, HeroGeometry.liveScale(0f), 0f)
+    }
+
+    @Test fun theBlurNeverShrinksBelowItsMinimumWidthInTheLiveLayer() {
+        for (sigma in listOf(0f, 1f, 2f, 3f, 5f, 8f, 12f, 20f, 40f)) {
+            val scale = HeroGeometry.liveScale(sigma)
+            assertTrue(scale == 1f || sigma * scale >= HeroGeometry.LIVE_MIN_SIGMA)
+        }
+    }
 }
