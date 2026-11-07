@@ -89,6 +89,9 @@ public class ComputerDetails {
     // Server commands
     public List<String> serverCommands;
 
+    // Delos: the PyroWave link test fields of a paired Vibepollo's /serverinfo
+    public PyroWaveHostInfo pyroWave = PyroWaveHostInfo.NONE;
+
     public ComputerDetails() {
         // Use defaults
         state = State.UNKNOWN;
@@ -165,6 +168,8 @@ public class ComputerDetails {
         this.vDisplaySupported = details.vDisplaySupported;
 
         this.serverCommands = details.serverCommands;
+
+        this.pyroWave = details.pyroWave;
     }
 
     @NonNull

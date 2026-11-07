@@ -51,6 +51,7 @@ import com.limelight.nvstream.http.PairingManager.PairState;
 import com.limelight.nvstream.jni.MoonBridge;
 import com.limelight.utils.DeviceUtils;
 
+import okhttp3.Call;
 import okhttp3.ConnectionPool;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
@@ -436,6 +437,8 @@ public class NvHTTP {
         }
 
         details.serverCommands = getServerCmds(serverInfo);
+
+        details.pyroWave = PyroWaveHostInfo.parse(serverInfo);
 
         details.pairState = getPairState(serverInfo);
         details.runningGameId = getCurrentGame(serverInfo);
@@ -923,6 +926,28 @@ public class NvHTTP {
         } catch (NumberFormatException e) {
             throw new IOException("The host did not confirm a valid bitrate", e);
         }
+    }
+
+    /** Delos: the host name or address this client reaches the PC under (the probe resolves it itself). */
+    public String getHostName() {
+        return baseUrlHttp.host();
+    }
+
+    /**
+     * Delos: the pinned HTTPS request of one PyroWave UDP probe, not yet executed. [host] is the already
+     * resolved address the UDP receiver uses, so that the sender (the PC) and receiver agree on the family. The
+     * probe holds the response open for the handshake (up to 1.5 s) and 2 s of sending, hence the long read timeout.
+     */
+    public Call newPyroWaveUdpProbeCall(String host, int kbps, int udpPort, int packetSize, String token,
+                                        boolean handshake, long timeoutMs) throws IOException {
+        HttpUrl base = getHttpsUrl(true).newBuilder().host(host).build();
+        String query = "kbps=" + kbps + "&port=" + udpPort + "&packetsize=" + packetSize + "&token=" + token
+                + (handshake ? "&handshake=1" : "");
+        Request request = new Request.Builder().url(getCompleteUrl(base, "pyrowave-udp-probe", query)).get().build();
+        OkHttpClient client = httpClientLongConnectTimeout.newBuilder()
+                .readTimeout(timeoutMs, TimeUnit.MILLISECONDS)
+                .build();
+        return performAndroidTlsHack(client).newCall(request);
     }
 
     public boolean quitApp() throws IOException, XmlPullParserException {
