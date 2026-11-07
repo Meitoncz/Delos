@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.em
 import com.limelight.binding.video.PyroWaveBacklog
 import com.limelight.binding.video.FrameQueueStats
 import com.limelight.binding.video.SharpenCost
+import com.limelight.binding.video.StageSummary
 import com.limelight.shell.link.LinkReading
 import com.limelight.shell.link.oneDecimal
 import com.limelight.shell.data.ProfileStore
@@ -90,6 +91,8 @@ class StreamStats @JvmOverloads constructor(
     val link: LinkReading? = null,
     /** SGSR output only (null otherwise): the frames waiting at the start of a draw, their age and the skipped ones. */
     val frameQueue: FrameQueueStats? = null,
+    /** SGSR output only: frame available to display present over the last second; null when the platform gives no present time. */
+    val renderLatency: StageSummary? = null,
 ) {
     /** The delay summed up: network round trip, the PC's processing when it reports it, and decoding. */
     val totalMs: Float get() = networkMs + maxOf(hostMs, 0f) + decodeMs + processingMs
@@ -125,6 +128,15 @@ internal fun frameQueueText(queue: FrameQueueStats): String = buildString {
     if (queue.ageAvgMs >= 0f) append(String.format(Locale.US, " · age %.1f / %.1f ms", queue.ageAvgMs, queue.ageMaxMs))
     append(String.format(Locale.US, " · %.1f skipped /s", queue.skippedPerSecond()))
 }
+
+/**
+ * The Render latency row: how long a decoded frame took from the moment the SGSR output got it until the display
+ * presented it (average / 95th percentile / maximum over the last second). Shown only when the platform reports the
+ * display's present time. It does not include the controller, network, host or decoding, so it is not the delay
+ * between a button press and the changed picture.
+ */
+internal fun renderLatencyText(stage: StageSummary): String =
+    String.format(Locale.US, "%.1f / %.1f / %.1f ms avg/p95/max", stage.avgMs, stage.p95Ms, stage.maxMs)
 
 /**
  * The statistics panel of streams started from the new UI (the prototype's `.perf`), with everything the
@@ -225,6 +237,7 @@ class StreamStatsPanel private constructor(
                 s.frameQueue?.let { add("Frame queue" to frameQueueText(it)) }
                 // PyroWave shows the pass with its backlog, the others next to the other post-processing
                 if (s.backlog == null) s.sharpen?.let { add("Sharpen pass" to sharpenPassText(it)) }
+                s.renderLatency?.let { add("Render latency" to renderLatencyText(it)) }
                 add("Total latency" to "${format(s.totalMs)} ms")
                 if (s.bandwidthKb >= 0f) add("Bandwidth" to bandwidth(s.bandwidthKb))
                 add("Lost frames" to "${format(s.lossPercent, 2)} %")

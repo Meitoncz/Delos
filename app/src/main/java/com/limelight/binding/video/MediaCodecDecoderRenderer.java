@@ -110,6 +110,8 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                 System.arraycopy(enqueueNsOfPts, idx + 1, enqueueNsOfPts, 0, remaining);
                 enqueueCount = remaining;
                 long decMs = (dequeueNs - enqNs) / 1_000_000L;
+                LatencyStages stages = latency;
+                if (stages != null && decMs >= 0 && decMs < 1000) stages.record(LatencyStages.DECODE, dequeueNs - enqNs);
                 if (decMs >= 0 && decMs < 1000) {
                     activeWindowVideoStats.decoderTimeMs += decMs;
                     if (!USE_FRAME_RENDER_TIME) {
@@ -183,6 +185,8 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     private int videoFormat;
     private volatile Surface renderTarget;
     private volatile SgsrRenderer sgsr;
+    // Per-frame stage times for measuring where the render path spends its time; null while not wanted
+    private volatile LatencyStages latency;
     private volatile boolean sgsrFailed;
     private volatile boolean sgsrRequested;
     private volatile boolean sgsrHdrActive;
@@ -937,6 +941,9 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
             if (sgsr == null) { sgsrFailed = true; sgsrRequested = false; }
         }
         if (sgsrFailed && sgsr != null) { sgsr.close(); sgsr = null; }
+        // Stage timestamps cost a few stores per frame: only while the overlay shows them or in debug builds
+        if ((BuildConfig.DEBUG || prefs.enablePerfOverlay) && latency == null) latency = new LatencyStages();
+        if (sgsr != null) sgsr.setLatencyStages(latency);
         DirectLaunchArrival arrival = directLaunchArrival;
         // Error publication may race recovery; keep OES until its EGL detach is confirmed.
         boolean continueArrival = arrival != null && arrival.isRedirected()
@@ -1894,6 +1901,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                                     videoDecoder.releaseOutputBuffer(lastIndex, System.nanoTime());
                                 }
 
+                                recordPacing(dequeueNs);
                                 activeWindowVideoStats.totalFramesRendered++;
 
                                 frameTimes.add(System.nanoTime());
@@ -1938,6 +1946,11 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         rendererThread.start();
     }
 
+    /** The pacing stage: from the frame leaving the codec ({@code dequeueNs}) to its release to the output. */
+    private void recordPacing(long dequeueNs) {
+        LatencyStages stages = latency;
+        if (stages != null) stages.record(LatencyStages.PACING, System.nanoTime() - dequeueNs);
+    }
     /**
      * Latency mode fast path: drains all decoded frames without blocking and renders only
      * the newest one immediately, dropping older ones.
@@ -1970,6 +1983,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         videoDecoder.releaseOutputBuffer(newestIndex, System.nanoTime());
         activeWindowVideoStats.totalFramesRendered++;
         frameTimes.add(System.nanoTime());
+        recordPacing(dequeueNs);
         updateDecodeLatencyStats(newestPtsUs, dequeueNs);
         return true;
     }
@@ -2304,6 +2318,10 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
 
         // Flip stats windows roughly every second
         if (SystemClock.uptimeMillis() >= activeWindowVideoStats.measurementStartTimestamp + 1000) {
+            // The stage timestamps of the window that just ended; the log line is for debug builds only
+            LatencyStages stages = latency;
+            LatencyStages.Summary latencySummary = stages != null ? stages.summarize() : null;
+            if (latencySummary != null && BuildConfig.DEBUG) android.util.Log.d(LatencyStages.TAG, latencySummary.describe());
             if (prefs.enablePerfOverlay) {
                 VideoStats lastTwo = new VideoStats();
                 lastTwo.add(lastWindowVideoStats);
@@ -2389,7 +2407,8 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                         hostLatency ? (float) lastTwo.totalHostProcessingLatency / 10 / lastTwo.framesWithHostProcessingLatency : -1f,
                         realtimeNetData, frameTimes.onePercentLowFps(), null,
                         sgsr != null ? sgsr.getSharpenCost() : null, null,
-                        sgsr != null ? sgsr.getFrameQueueStats() : null));
+                        sgsr != null ? sgsr.getFrameQueueStats() : null,
+                        latencySummary != null ? latencySummary.stage(LatencyStages.AVAILABLE_TO_PRESENT) : null));
             }
             globalVideoStats.add(activeWindowVideoStats);
             lastWindowVideoStats.copy(activeWindowVideoStats);

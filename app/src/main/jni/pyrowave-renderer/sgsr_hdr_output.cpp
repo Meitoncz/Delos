@@ -41,6 +41,8 @@ struct Api {
     void (*cta)(ASurfaceTransaction *,ASurfaceControl *,AHdrMetadata_cta861_3 *)=nullptr;
     int (*allocate)(const AHardwareBuffer_Desc *,AHardwareBuffer **)=nullptr;
     void (*freeBuffer)(AHardwareBuffer *)=nullptr;
+    int64_t (*latchTime)(ASurfaceTransactionStats *)=nullptr;
+    int (*presentFence)(ASurfaceTransactionStats *)=nullptr;
     bool load() {
         // libandroid stays loaded for outstanding transaction callbacks.
         static void *lib=dlopen("libandroid.so",RTLD_NOW);
@@ -54,25 +56,75 @@ struct Api {
         get(complete,"ASurfaceTransaction_setOnComplete"); get(releaseFence,"ASurfaceTransactionStats_getPreviousReleaseFenceFd");
         get(smpte,"ASurfaceTransaction_setHdrMetadata_smpte2086"); get(cta,"ASurfaceTransaction_setHdrMetadata_cta861_3");
         get(allocate,"AHardwareBuffer_allocate"); get(freeBuffer,"AHardwareBuffer_release");
+        // Frame timing is optional: without it the stage timestamps are simply not available
+        latchTime=reinterpret_cast<decltype(latchTime)>(dlsym(lib,"ASurfaceTransactionStats_getLatchTime"));
+        presentFence=reinterpret_cast<decltype(presentFence)>(dlsym(lib,"ASurfaceTransactionStats_getPresentFenceFd"));
         return ok;
     }
 };
+constexpr int64_t kPending=-2,kUnavailable=-1;
+// The signal time of a sync file's last fence in CLOCK_MONOTONIC ns, 0 when the kernel does not say.
+int64_t fenceSignalNs(int fd) {
+    struct sync_file_info info={};
+    if(ioctl(fd,SYNC_IOC_FILE_INFO,&info)<0||info.num_fences==0) return 0;
+    struct sync_fence_info fences[8];
+    info.num_fences=std::min<uint32_t>(info.num_fences,8);
+    info.sync_fence_info=reinterpret_cast<uint64_t>(fences);
+    if(ioctl(fd,SYNC_IOC_FILE_INFO,&info)<0) return 0;
+    uint64_t latest=0;
+    for(uint32_t i=0;i<info.num_fences;i++) latest=std::max<uint64_t>(latest,fences[i].timestamp_ns);
+    return int64_t(latest);
+}
+int64_t monotonicNs() {
+    timespec now={};clock_gettime(CLOCK_MONOTONIC,&now);
+    return int64_t(now.tv_sec)*1000000000LL+now.tv_nsec;
+}
+bool signalled(int fd) { pollfd poller={fd,POLLIN,0}; return poll(&poller,1,0)>0; }
+// The times of one presented frame, all CLOCK_MONOTONIC ns: when the CPU flushed it, when its GPU work finished (the
+// signal time of the native fence), when SurfaceFlinger latched it and when the display presented it (the present
+// fence). kPending until known, kUnavailable when the platform does not give it. Guarded by Pool::lock.
+struct FrameTiming {
+    uint32_t seq=0;
+    bool used=false,tailTaken=false;
+    int64_t submitNs=0,gpuDoneNs=kPending,latchNs=kPending,presentNs=kPending;
+    int gpuFd=-1,presentFd=-1;
+    void closeFds(){ if(gpuFd>=0)close(gpuFd); if(presentFd>=0)close(presentFd); gpuFd=presentFd=-1; }
+    // Resolves the fences that have signalled by now
+    void harvest() {
+        if(gpuFd>=0&&signalled(gpuFd)){ const int64_t t=fenceSignalNs(gpuFd); gpuDoneNs=t>0?t:kUnavailable; close(gpuFd); gpuFd=-1; }
+        if(presentFd>=0&&signalled(presentFd)){ const int64_t t=fenceSignalNs(presentFd); presentNs=t>0?t:kUnavailable; close(presentFd); presentFd=-1; }
+    }
+};
 struct Pool {
+    static constexpr int kFrames=16;
     Api api;
     ASurfaceControl *control=nullptr;
     std::mutex lock;
     bool held[4]={};
     int fences[4]={-1,-1,-1,-1};
     AHardwareBuffer *buffers[4]={};
-    ~Pool(){ for(int i=0;i<4;i++){if(fences[i]>=0)close(fences[i]);if(buffers[i])api.freeBuffer(buffers[i]);}if(control)api.release(control); }
+    FrameTiming frames[kFrames];
+    uint32_t nextSeq=1;
+    ~Pool(){
+        for(int i=0;i<4;i++){if(fences[i]>=0)close(fences[i]);if(buffers[i])api.freeBuffer(buffers[i]);}
+        for(auto &frame:frames)frame.closeFds();
+        if(control)api.release(control);
+    }
 };
-struct Completion { std::shared_ptr<Pool> pool; int previous; };
+struct Completion { std::shared_ptr<Pool> pool; int previous; uint32_t seq; };
 void completed(void *data,ASurfaceTransactionStats *stats) {
     std::unique_ptr<Completion> callback(static_cast<Completion *>(data));
-    if(callback->previous<0) return;
     auto &p=*callback->pool;
-    int fence=p.api.releaseFence(stats,p.control);
+    const int64_t latch=p.api.latchTime?p.api.latchTime(stats):-1;
+    const int present=p.api.presentFence?p.api.presentFence(stats):-1;
+    const int fence=callback->previous>=0?p.api.releaseFence(stats,p.control):-1;
     std::lock_guard<std::mutex> guard(p.lock);
+    FrameTiming &frame=p.frames[callback->seq%Pool::kFrames];
+    if(frame.used&&frame.seq==callback->seq){
+        frame.latchNs=latch>0?latch:kUnavailable;
+        if(present>=0) frame.presentFd=present; else frame.presentNs=kUnavailable;
+    }else if(present>=0) close(present);
+    if(callback->previous<0) return;
     int i=callback->previous;
     if(p.fences[i]>=0) close(p.fences[i]);
     p.fences[i]=fence; p.held[i]=false;
@@ -90,20 +142,12 @@ struct Output {
     PFNEGLDESTROYSYNCKHRPROC destroySync=nullptr;
     PFNEGLDUPNATIVEFENCEFDANDROIDPROC dupFence=nullptr;
     bool nativeFence=false;
-    // Fences of frames in flight (GL thread only), and the GPU tails harvested since Java last asked
-    struct Timing{int fd=-1;int64_t submitNs=0;};
-    static constexpr int kTimings=8,kTails=16;
-    Timing timings[kTimings];
-    int timingHead=0,timingCount=0;
-    int64_t tails[kTails]={};
-    int tailCount=0;
     ~Output() {
-        for(auto &timing:timings)if(timing.fd>=0)close(timing.fd);
         if(pool->control){
             auto *t=pool->api.transaction();
             pool->api.visible(t,pool->control,ASURFACE_TRANSACTION_VISIBILITY_HIDE);
             pool->api.buffer(t,pool->control,nullptr,-1);
-            pool->api.complete(t,new Completion{pool,previous},completed);
+            pool->api.complete(t,new Completion{pool,previous,0},completed);
             pool->api.apply(t);pool->api.destroy(t);
         }
         glDeleteFramebuffers(4,framebuffers); glDeleteTextures(4,textures);
@@ -164,41 +208,6 @@ struct Output {
         }
         return -1; // Drop instead of reusing a buffer SurfaceFlinger might still be reading.
     }
-    // The signal time of a sync file's last fence in CLOCK_MONOTONIC ns, 0 when the kernel does not say.
-    static int64_t fenceSignalNs(int fd) {
-        struct sync_file_info info={};
-        if(ioctl(fd,SYNC_IOC_FILE_INFO,&info)<0||info.num_fences==0) return 0;
-        struct sync_fence_info fences[8];
-        info.num_fences=std::min<uint32_t>(info.num_fences,8);
-        info.sync_fence_info=reinterpret_cast<uint64_t>(fences);
-        if(ioctl(fd,SYNC_IOC_FILE_INFO,&info)<0) return 0;
-        uint64_t latest=0;
-        for(uint32_t i=0;i<info.num_fences;i++) latest=std::max<uint64_t>(latest,fences[i].timestamp_ns);
-        return int64_t(latest);
-    }
-    static int64_t monotonicNs() {
-        timespec now={};clock_gettime(CLOCK_MONOTONIC,&now);
-        return int64_t(now.tv_sec)*1000000000LL+now.tv_nsec;
-    }
-    // Collects the GPU-completion times of earlier frames whose fences have signalled (in submission order). The
-    // time from the flush to the signal is how long the GPU kept working after the CPU had submitted the frame.
-    void harvest() {
-        while(timingCount>0){
-            Timing &timing=timings[timingHead];
-            pollfd poller={timing.fd,POLLIN,0};
-            if(poll(&poller,1,0)<=0) break;
-            const int64_t done=fenceSignalNs(timing.fd);
-            if(done>=timing.submitNs&&tailCount<kTails) tails[tailCount++]=done-timing.submitNs;
-            close(timing.fd);timing.fd=-1;
-            timingHead=(timingHead+1)%kTimings;timingCount--;
-        }
-    }
-    // Keeps a duplicate of the frame's fence for harvest(); when the ring is full the oldest is dropped.
-    void track(int fd,int64_t submitNs) {
-        if(timingCount==kTimings){close(timings[timingHead].fd);timingHead=(timingHead+1)%kTimings;timingCount--;}
-        Timing &slot=timings[(timingHead+timingCount)%kTimings];
-        slot.fd=fd;slot.submitNs=submitNs;timingCount++;
-    }
     // Flushes the frame and returns a native fence for it, or -1 when the driver cannot make one and the GPU
     // had to be waited for instead (glFinish), which is the safe way to hand the buffer over without a fence.
     int flushWithFence() {
@@ -216,17 +225,28 @@ struct Output {
         glFinish();
         return -1;
     }
-    void present(JNIEnv *env,jboolean hdr,jbyteArray metadata) {
-        if(current<0)return;
-        harvest();
+    // Returns the sequence number of the presented frame, 0 when there was nothing to present.
+    uint32_t present(JNIEnv *env,jboolean hdr,jbyteArray metadata) {
+        if(current<0)return 0;
         // The buffer goes to SurfaceFlinger with the fence of this frame's GPU work, so it reads the picture only
         // once it is complete and the GL thread does not wait for the GPU. Release fences separately protect the
         // reuse of a buffer; no CPU pixel copy or eight-bit intermediate is used.
         const int64_t submitNs=monotonicNs();
         const int fence=flushWithFence();
-        if(fence>=0){
-            const int own=dup(fence);
-            if(own>=0) track(own,submitNs);
+        uint32_t seq;
+        {
+            std::lock_guard<std::mutex> guard(pool->lock);
+            seq=pool->nextSeq++;
+            FrameTiming &frame=pool->frames[seq%Pool::kFrames];
+            frame.closeFds();
+            frame=FrameTiming();
+            frame.used=true;frame.seq=seq;frame.submitNs=submitNs;
+            // Without a fence the GPU was waited for (glFinish): it is done now
+            if(fence<0) frame.gpuDoneNs=monotonicNs();
+            else{
+                frame.gpuFd=dup(fence);
+                if(frame.gpuFd<0) frame.gpuDoneNs=kUnavailable;
+            }
         }
         auto &api=pool->api;auto *t=api.transaction();
         // The transaction owns the fence descriptor from here on
@@ -249,8 +269,9 @@ struct Output {
             light.maxContentLightLevel=value(20);light.maxFrameAverageLightLevel=value(22);
             api.smpte(t,pool->control,&mastering);api.cta(t,pool->control,&light);
         }else{api.smpte(t,pool->control,nullptr);api.cta(t,pool->control,nullptr);}
-        api.complete(t,new Completion{pool,previous},completed);api.apply(t);api.destroy(t);
+        api.complete(t,new Completion{pool,previous,seq},completed);api.apply(t);api.destroy(t);
         previous=current;current=-1;
+        return seq;
     }
 };
 }
@@ -260,13 +281,43 @@ extern "C" JNIEXPORT jlong JNICALL Java_com_limelight_binding_video_SgsrRenderer
 extern "C" JNIEXPORT jint JNICALL Java_com_limelight_binding_video_SgsrRenderer_nativeAcquireHdr(JNIEnv *,jclass,jlong handle){return reinterpret_cast<Output *>(handle)->acquire();}
 extern "C" JNIEXPORT jint JNICALL Java_com_limelight_binding_video_SgsrRenderer_nativeHdrWidth(JNIEnv *,jclass,jlong handle){return reinterpret_cast<Output *>(handle)->width;}
 extern "C" JNIEXPORT jint JNICALL Java_com_limelight_binding_video_SgsrRenderer_nativeHdrHeight(JNIEnv *,jclass,jlong handle){return reinterpret_cast<Output *>(handle)->height;}
-extern "C" JNIEXPORT void JNICALL Java_com_limelight_binding_video_SgsrRenderer_nativePresentHdr(JNIEnv *env,jclass,jlong handle,jboolean hdr,jbyteArray metadata){reinterpret_cast<Output *>(handle)->present(env,hdr,metadata);}
+extern "C" JNIEXPORT jint JNICALL Java_com_limelight_binding_video_SgsrRenderer_nativePresentHdr(JNIEnv *env,jclass,jlong handle,jboolean hdr,jbyteArray metadata){return jint(reinterpret_cast<Output *>(handle)->present(env,hdr,metadata));}
 extern "C" JNIEXPORT void JNICALL Java_com_limelight_binding_video_SgsrRenderer_nativeDestroyHdr(JNIEnv *,jclass,jlong handle){delete reinterpret_cast<Output *>(handle);}
+// Copies the GPU tails (fence signal time minus the flush time, ns) of frames that finished since the last call
 extern "C" JNIEXPORT jint JNICALL Java_com_limelight_binding_video_SgsrRenderer_nativeHdrGpuTails(JNIEnv *env,jclass,jlong handle,jlongArray out){
-    auto *output=reinterpret_cast<Output *>(handle);
-    const jsize capacity=env->GetArrayLength(out);
-    const int count=std::min<int>(output->tailCount,capacity);
-    if(count>0)env->SetLongArrayRegion(out,0,count,reinterpret_cast<const jlong *>(output->tails));
-    output->tailCount=0;
+    auto &pool=*reinterpret_cast<Output *>(handle)->pool;
+    const jsize capacity=std::min<jsize>(env->GetArrayLength(out),jsize(Pool::kFrames));
+    jlong tails[Pool::kFrames];
+    int count=0;
+    {
+        std::lock_guard<std::mutex> guard(pool.lock);
+        // Oldest first, so the smoothing on the Java side sees them in presentation order
+        for(uint32_t seq=pool.nextSeq>Pool::kFrames?pool.nextSeq-Pool::kFrames:1;seq<pool.nextSeq&&count<capacity;seq++){
+            FrameTiming &frame=pool.frames[seq%Pool::kFrames];
+            if(!frame.used||frame.seq!=seq) continue;
+            frame.harvest();
+            if(frame.tailTaken||frame.gpuDoneNs<frame.submitNs) continue;
+            frame.tailTaken=true;
+            tails[count++]=frame.gpuDoneNs-frame.submitNs;
+        }
+    }
+    if(count>0)env->SetLongArrayRegion(out,0,count,tails);
     return count;
+}
+// The CLOCK_MONOTONIC times (ns) of a presented frame: out[0] GPU done, out[1] SurfaceFlinger latch, out[2] display
+// present, -1 for one the platform does not give. Returns 0 when all are known, 1 while one is still pending and -1
+// when the frame is no longer remembered.
+extern "C" JNIEXPORT jint JNICALL Java_com_limelight_binding_video_SgsrRenderer_nativeHdrFrameTimestamps(JNIEnv *env,jclass,jlong handle,jint seq,jlongArray out){
+    auto &pool=*reinterpret_cast<Output *>(handle)->pool;
+    jlong values[3];
+    {
+        std::lock_guard<std::mutex> guard(pool.lock);
+        FrameTiming &frame=pool.frames[uint32_t(seq)%Pool::kFrames];
+        if(!frame.used||frame.seq!=uint32_t(seq)) return -1;
+        frame.harvest();
+        if(frame.gpuDoneNs==kPending||frame.latchNs==kPending||frame.presentNs==kPending) return 1;
+        values[0]=frame.gpuDoneNs;values[1]=frame.latchNs;values[2]=frame.presentNs;
+    }
+    env->SetLongArrayRegion(out,0,3,values);
+    return 0;
 }

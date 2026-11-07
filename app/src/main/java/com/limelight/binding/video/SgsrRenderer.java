@@ -68,6 +68,14 @@ public final class SgsrRenderer implements AutoCloseable {
     private volatile float frameToSwapMs;
     // HDR output: smoothed time the GPU worked on a frame after it was submitted, and the scratch for reading it
     private float hdrGpuTailMs;
+    // Stage timestamps for measurement (null while off): what the GL thread records and the display timestamps it waits for
+    private volatile LatencyStages latencyStages;
+    private final DisplayTimestampTracker displayTimestamps = new DisplayTimestampTracker();
+    private final DisplayTimestampTracker.Source sdrTimestampSource = SgsrRenderer::nativeFrameTimestamps;
+    private final DisplayTimestampTracker.Source hdrTimestampSource =
+            (frameId, out) -> this.hdrOutput != 0 ? nativeHdrFrameTimestamps(this.hdrOutput,(int) frameId,out) : -1;
+    private boolean timestampsChecked, sdrTimestamps, statsFrameArmed;
+    private long statsFrameArrivalNs;
     private final long[] hdrGpuTails = new long[16];
     private volatile boolean firstFramePresented;
     private int highQualityProgram;
@@ -212,6 +220,21 @@ public final class SgsrRenderer implements AutoCloseable {
     public FrameQueueStats getFrameQueueStats() {
         FrameQueueStats stats = frameQueue.snapshot();
         return stats != null && stats.isFresh(System.nanoTime()) ? stats : null;
+    }
+    /**
+     * Switches the stage timestamps on (a collector) or off (null): the draw path then records its stages and, once
+     * the platform reports them, the GPU-done, latch and display-present times of each frame. Off by default; the
+     * checks and native calls cost nothing while it is off.
+     */
+    public void setLatencyStages(LatencyStages stages) { latencyStages = stages; }
+    /** On the GL thread with the window current: turns on EGL frame timestamps for the SDR window surface. */
+    private static boolean enableSdrTimestamps() {
+        try {
+            System.loadLibrary("moonlight-core");
+            return nativeFrameTimestampsEnable();
+        } catch (UnsatisfiedLinkError e) {
+            return false;
+        }
     }
     public void setSharpness(int value) { sharpness = Math.max(0, Math.min(100, value)) / 100f; }
     public void setMode(int mode) { this.mode = UpscalerMode.fromIndex(mode).index(); }
@@ -472,7 +495,13 @@ public final class SgsrRenderer implements AutoCloseable {
                 frameQueue.consumeOne();
             }
             final long drawStartNs=System.nanoTime();
-            final FrameQueueStats queueWindow=frameQueue.recordDraw(drawStartNs,pending,drawStartNs-frameQueue.lastConsumedArrivalNs());
+            final long arrivalNs=frameQueue.lastConsumedArrivalNs();
+            final LatencyStages stages=latencyStages;
+            if (stages != null && !timestampsChecked) {
+                timestampsChecked = true;
+                sdrTimestamps = enableSdrTimestamps();
+            }
+            final FrameQueueStats queueWindow=frameQueue.recordDraw(drawStartNs,pending,drawStartNs-arrivalNs);
             if (queueWindow!=null && !arrivalOnly) android.util.Log.d(FrameQueue.TAG,queueWindow.describe());
             texture.getTransformMatrix(transform);
             if (!outputAttached || (arrivalError != null && arrivalOnly)) return;
@@ -595,8 +624,16 @@ public final class SgsrRenderer implements AutoCloseable {
                 scheduleArrivalTick();
                 return;
             }
+            statsFrameArrivalNs = arrivalNs;
+            statsFrameArmed = true;
             presentCachedNormal();
+            statsFrameArmed = false;
             final long swapEndNs=System.nanoTime();
+            if (stages != null) {
+                stages.record(LatencyStages.AVAILABLE_TO_DRAW,drawStartNs-arrivalNs);
+                stages.record(LatencyStages.DRAW,swapEndNs-drawStartNs);
+                displayTimestamps.poll(tenBit ? hdrTimestampSource : sdrTimestampSource,stages);
+            }
             if (tenBit && hdrOutput!=0) collectHdrGpuTails();
             // The HDR swap hands over a native fence instead of waiting for the GPU, so the time the GPU kept
             // working after the submit (measured from the fences of earlier frames) is added to keep both figures
@@ -774,13 +811,19 @@ public final class SgsrRenderer implements AutoCloseable {
 
     private void presentOutput() {
         require(GLES31.glGetError()==GLES31.GL_NO_ERROR,"SGSR/arrival draw");
+        // Only the frames the draw path presents are timed, not the arrival animation's re-presents
+        final LatencyStages stages = statsFrameArmed ? latencyStages : null;
+        statsFrameArmed = false;
         if (tenBit) {
-            nativePresentHdr(hdrOutput,hdrActive,hdrMetadata);
+            int sequence = nativePresentHdr(hdrOutput,hdrActive,hdrMetadata);
             hdrFrameAcquired = false;
+            if (stages != null && sequence > 0) displayTimestamps.add(sequence,statsFrameArrivalNs);
         }
         else {
+            long frameId = stages != null && sdrTimestamps ? nativeFrameNextId() : -1;
             EGLExt.eglPresentationTimeANDROID(display,window,System.nanoTime());
             require(EGL14.eglSwapBuffers(display,window),"SGSR swap");
+            if (frameId >= 0) displayTimestamps.add(frameId,statsFrameArrivalNs);
         }
         firstFramePresented = true;
     }
@@ -956,7 +999,11 @@ public final class SgsrRenderer implements AutoCloseable {
     private static native int nativeAcquireHdr(long handle);
     private static native int nativeHdrWidth(long handle);
     private static native int nativeHdrHeight(long handle);
-    private static native void nativePresentHdr(long handle,boolean hdr,byte[] metadata);
+    private static native int nativePresentHdr(long handle,boolean hdr,byte[] metadata);
     private static native int nativeHdrGpuTails(long handle,long[] out);
+    private static native int nativeHdrFrameTimestamps(long handle,int sequence,long[] out);
     private static native void nativeDestroyHdr(long handle);
+    private static native boolean nativeFrameTimestampsEnable();
+    private static native long nativeFrameNextId();
+    private static native int nativeFrameTimestamps(long frameId,long[] out);
 }

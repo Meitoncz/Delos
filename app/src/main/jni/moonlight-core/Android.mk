@@ -58,7 +58,7 @@ LOCAL_CFLAGS += -DLC_DEBUG
 endif
 
 LOCAL_LDLIBS := -llog -landroid -ldl -lEGL -lGLESv3
-LOCAL_SRC_FILES += ../pyrowave-renderer/sgsr_hdr_output.cpp
+LOCAL_SRC_FILES += ../pyrowave-renderer/sgsr_hdr_output.cpp ../pyrowave-renderer/sgsr_frame_timestamps.cpp
 LOCAL_CPPFLAGS += -std=c++17 -fexceptions -frtti
 
 LOCAL_STATIC_LIBRARIES := libopus libcrypto cpufeatures
