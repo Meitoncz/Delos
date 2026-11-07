@@ -70,9 +70,75 @@ resolution, or a faster renderer); partial frames with a low stall = packets los
 network. In debug builds the same numbers, plus received KB/s, bitrate, chroma mode and the per-stage
 waits (previous frame, swapchain image, submit+present), are logged once a second under the logcat tag
 `DelosPyroDiag`, with a `start:` line (bitrate, chroma requested/negotiated, directSubmit, capability) and
-the swapchain image count and present mode when it is created. The UDP receive buffer size is set and
-checked inside moonlight-common-c and not exposed to the app; it logs a warning only when the kernel
-clamps it. Suggested A/B: 4:2:0 at 225 Mbps, 4:4:4 at 225, 4:4:4 at 270, and 4:4:4 at 150.
+the swapchain image count and present mode when it is created. The UDP receive buffer is set and
+checked inside moonlight-common-c, which logs a warning only when the kernel clamps it; Delos reads the
+grant back itself (see "Stream thread scheduling" below). Suggested A/B: 4:2:0 at 225 Mbps, 4:4:4 at 225,
+4:4:4 at 270, and 4:4:4 at 150.
+
+## Stream thread scheduling and performance hints (#75)
+
+Always on while a stream runs, with no setting (decided 2026-11-07). It changes where and how urgently the
+stream's threads run, not what they do; nothing in moonlight-common-c is modified (`LatencyThreads.java`,
+`latency_threads.c`).
+
+**What it does**
+
+- **Priority.** The video receive thread (`VideoRecv`; for PyroWave it also decodes and presents) is raised
+  to nice -8 (`THREAD_PRIORITY_URGENT_DISPLAY`, what the MediaCodec render thread already used) from its
+  first decode-unit callback. `InputSend` and `ControlRecv` ran at nice 0 and never call into Delos, so they
+  are found by their thread names (`/proc/self/task/*/comm`) when the connection has started and raised the
+  same way; `VideoRecv` is found too, for decoders that are not direct-submit (there `VideoDec` is the thread
+  that calls back).
+- **Big cores.** Threads that announce themselves (`LatencyThreads.register(tid)`: the receive thread, the
+  MediaCodec `Video - Renderer` thread, the `CodecAsync` callback thread and the `Video - SGSR` GL thread)
+  get a `sched_setaffinity` mask of the high-capacity cores: every core with at least 60 % of the biggest
+  core's `cpu_capacity` (the gold and prime cores of a Snapdragon 8 Gen 2). The kernel still picks the core
+  inside the mask. Nothing is pinned to the little cores, and placement is skipped when any capacity value is
+  unreadable, all cores are alike, or fewer than two cores qualify. The capacities and the mask are logged once
+  per process (`Delos latency threads: cpu_capacity [...]`).
+- **Performance hint session (ADPF, Android 12+).** One `PerformanceHintManager` session covers those
+  threads, with a target work duration of 0.6 x the frame period (5.0 ms at 120 FPS), and exists only from the
+  decoder's start to its stop or pause. The receive thread's time per decode unit (measured natively around
+  the submit callback, so MediaCodec and PyroWave are both covered) is reported as the mean of four frames. A
+  session takes its threads at creation, so it is re-created when a thread registers later (a codec reset
+  starting a new `CodecAsync` or SGSR thread). A device without support or any API failure is logged once and
+  the stream goes on without it. `setSustainedPerformanceMode` is deliberately not used: it caps clocks.
+  The stream's frame rate is fixed for a connection today; `LatencyThreads.setFrameRate` moves the target
+  if a live change is ever added.
+- **Receive buffer and UDP drops (evidence only).** On the first frame the receive thread logs the receive
+  buffer of every UDP socket of the process to `DelosPyroDiag`; the video socket is the largest. The kernel
+  reports twice the granted size, so about 5800 KB (23000 KB for PyroWave) is a full grant and less means the
+  kernel clamped the request. The socket's descriptor is not exposed by moonlight-common-c, hence the scan.
+  Debug builds also read `/proc/net/snmp` once a second and log increases of `RcvbufErrors` (kernel buffer
+  full) and `InErrors` to `DelosPyroDiag` (whole system, not only Delos); Android may deny apps that file,
+  and one line says so.
+
+**Cost.** Higher and steadier CPU clocks for the stream's threads: more battery use and heat than before,
+most visible on a long 120 FPS session. The whole path is per stream, so nothing runs in the menus. If the
+device throttles, the hint is a request, not a guarantee.
+
+**How it is verified (needs the device).** Compare a session before and after on the same stream:
+
+- Perfetto: `sched` and CPU frequency counters (the receive thread on a gold or prime core, no little-core
+  residency, no long runnable gaps), GPU frequency counters (the hint is expected to keep clocks from dropping
+  between frames).
+- `DelosPyroDiag` per second: stall max, frame age at submit and receive-to-present p95/p99 should fall
+  (the mean may not move: the expected gain is in the tail). The `DelosLatency` lines of the render-side work
+  in #75 give the same view for the MediaCodec path.
+- The `DelosThreads` lines (`raised to nice -8: ...`) and `Delos latency threads:` lines in logcat show what
+  was applied.
+
+**Not done, and why**
+
+- `recvmmsg` batching of the UDP reads: needs changes inside moonlight-common-c's receive loop (the fork),
+  and the saving (0.2-0.7 ms per frame) is only a guess until a trace shows per-packet syscall cost.
+- Splitting receive from decode for PyroWave: a structural change to the single-threaded reassembly queue; it
+  only avoids loss when a decode exceeds a frame interval, which the stall numbers must show first.
+- The input path (1 ms mouse batching, reliable controller packets): protocol behaviour, host-gated, and for
+  a handheld with its own controller the path is already short. Only `InputSend` and `ControlRecv` priority
+  was changed.
+- Socket marking (DSCP on the video socket): lives inside moonlight-common-c, and the downlink class is
+  decided by the host's marking; only the receive buffer and drop counters were made observable.
 
 ## PyroWave link guidance (#18)
 
