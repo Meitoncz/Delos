@@ -1,0 +1,64 @@
+package com.limelight.shell.ui
+
+import kotlin.math.max
+import kotlin.math.min
+
+/**
+ * Where a game background image sits in the hero area (2100 × 1260 stage pixels around the 1920 × 1080 screen), in one
+ * place for every path that draws the hero: the cached lens bitmap, the legacy launch / stream-exit snapshot, the sharp
+ * (blur 0) hero and the playing animation, so they all agree on the layout and the still → animated fade does not jump.
+ *
+ * A wide hero (SteamGridDB: about 3.1 : 1) is scaled so its WIDTH fills the area and is aligned to the TOP; its bottom edge
+ * fades over [FADE] pixels into an extension, a heavily blurred ([EXTENSION_BLUR]), darkened copy of the same image
+ * stretched over the whole area, so no bar stays empty. An image that would not leave anything to extend (its width-fit
+ * height reaches the area's height: an aspect of 5 : 3 or less, e.g. a box art used as the background) fills the whole area
+ * and is cropped as before. All numbers here are stage pixels of the hero area.
+ */
+internal object HeroGeometry {
+    const val AREA_WIDTH = 2100f
+    const val AREA_HEIGHT = 1260f
+
+    /** The soft bottom edge of a width-fitted hero. */
+    const val FADE = 160f
+
+    /** CSS blur(σ) of the extension, stage pixels. */
+    const val EXTENSION_BLUR = 40f
+
+    /** How far the blurred extension is blended toward [EXTENSION_TINT_COLOR] (darker, less saturated). */
+    const val EXTENSION_TINT = .55f
+
+    /** The background color of the dark theme (14, 18, 36) the extension is blended toward. */
+    const val EXTENSION_TINT_COLOR = 0xFF0E1224.toInt()
+
+    /**
+     * The shape of the band's bottom fade as (position along the fade, opacity) pairs: a smoothstep, so the fade has no
+     * visible start or end. Shared by the bitmap mask and the live gradient.
+     */
+    val FADE_STOPS: List<Pair<Float, Float>> = listOf(0f to 1f, .25f to .84375f, .5f to .5f, .75f to .15625f, 1f to 0f)
+
+    /**
+     * The image's rectangle in the hero area. [extended]: it is a width-fitted band over a blurred extension (its bottom [fade]
+     * pixels fade out), else it fills the area, cropped by the area's edges (no fade).
+     */
+    data class Layout(val extended: Boolean, val left: Float, val top: Float, val width: Float, val height: Float, val fade: Float) {
+        val right: Float get() = left + width
+        val bottom: Float get() = top + height
+    }
+
+    /** The layout of a [srcWidth] × [srcHeight] hero. An image of unknown size fills the area. */
+    fun layout(srcWidth: Int, srcHeight: Int): Layout {
+        if (srcWidth <= 0 || srcHeight <= 0) return Layout(false, 0f, 0f, AREA_WIDTH, AREA_HEIGHT, 0f)
+        val fitHeight = AREA_WIDTH * srcHeight / srcWidth
+        if (fitHeight >= AREA_HEIGHT) return cover(srcWidth, srcHeight)
+        return Layout(true, 0f, 0f, AREA_WIDTH, fitHeight, min(FADE, fitHeight))
+    }
+
+    /** The image scaled to fill the whole area and centered (ContentScale.Crop), whatever its shape. */
+    fun cover(srcWidth: Int, srcHeight: Int): Layout {
+        if (srcWidth <= 0 || srcHeight <= 0) return Layout(false, 0f, 0f, AREA_WIDTH, AREA_HEIGHT, 0f)
+        val scale = max(AREA_WIDTH / srcWidth, AREA_HEIGHT / srcHeight)
+        val w = srcWidth * scale
+        val h = srcHeight * scale
+        return Layout(false, (AREA_WIDTH - w) / 2f, (AREA_HEIGHT - h) / 2f, w, h, 0f)
+    }
+}

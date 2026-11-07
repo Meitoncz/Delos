@@ -53,6 +53,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -62,6 +64,7 @@ import com.limelight.shell.settings.BackgroundKind
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.math.cos
+import kotlin.math.roundToInt
 import kotlin.math.hypot
 import kotlin.math.min
 import kotlin.math.pow
@@ -131,7 +134,8 @@ private fun DrawScope.drawVignette(scrim: Color) {
 
 /**
  * The hero alone: cached lens blur, then a very slow centered image-plane tilt. An animated hero plays over its
- * still first frame ([HeroLive]) while [animate] allows it.
+ * still first frame ([HeroLive]) while [animate] allows it. Every path draws the same composition ([HeroGeometry]):
+ * a wide hero fitted to the width at the top, fading into its blurred extension, any other image cropped to fill.
  */
 @Composable
 private fun HeroArt(art: GameArt, blurPx: Int, reducedMotion: Boolean, active: Boolean, animate: Boolean) {
@@ -143,7 +147,7 @@ private fun HeroArt(art: GameArt, blurPx: Int, reducedMotion: Boolean, active: B
         Box(Modifier.fillMaxSize().graphicsLayer { alpha = stillAlpha }) { HeroStill(art, blurPx, reducedMotion, active) }
         // The animation needs the live blur (Android 12+); below it the first frame stays
         if (image != null && art.animated != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            HeroLive(art.animated, blurPx, reducedMotion, active, animate && !reducedMotion) { live = it }
+            HeroLive(art.id, image, art.animated, blurPx, reducedMotion, active, animate && !reducedMotion) { live = it }
         }
     }
 }
@@ -176,38 +180,94 @@ private fun HeroStill(art: GameArt, blurPx: Int, reducedMotion: Boolean, active:
             .then(if (image != null) Modifier.heroTilt(active, reducedMotion) else Modifier)
             .graphicsLayer { renderEffect = effect }
         if (image != null) {
-            Image(image, contentDescription = null, contentScale = ContentScale.Crop, modifier = layer)
+            val layout = remember(image) { HeroGeometry.layout(image.width, image.height) }
+            if (!layout.extended) {
+                Image(image, contentDescription = null, contentScale = ContentScale.Crop, modifier = layer)
+            } else {
+                val extension = rememberHeroExtension(art.id, image)
+                if (extension != null) Canvas(layer) { drawHeroBand(layout, extension, image) }
+            }
         } else {
             PlaceholderArt(art.hue, art.hue2, art.icon, glyphSize = 1050f, glyphRight = 84f, glyphTop = -.14f, glyphAlpha = .14f, modifier = layer)
         }
     }
 }
 
+/** The blurred, darkened extension under a wide hero ([HeroBitmaps.extension]), built off the main thread; null while it is. */
+@Composable
+private fun rememberHeroExtension(id: String, image: ImageBitmap): ImageBitmap? {
+    val extension by produceState(HeroBitmaps.cachedExtension(id, image), id, image) {
+        value = HeroBitmaps.cachedExtension(id, image) ?: withContext(Dispatchers.Default) { HeroBitmaps.extension(id, image) }
+    }
+    return extension
+}
+
+/**
+ * A wide hero at full resolution: the extension over the whole area, then the image fitted to the width at the top with its
+ * bottom edge fading into it, at the same place as the cached bitmap ([HeroBitmaps]) puts them.
+ */
+private fun DrawScope.drawHeroBand(layout: HeroGeometry.Layout, extension: ImageBitmap, image: ImageBitmap) {
+    val k = size.width / HeroGeometry.AREA_WIDTH
+    drawImage(extension, dstSize = IntSize(size.width.roundToInt(), size.height.roundToInt()), filterQuality = FilterQuality.Low)
+    val bounds = androidx.compose.ui.geometry.Rect(layout.left * k, layout.top * k, layout.right * k, layout.bottom * k)
+    drawContext.canvas.saveLayer(bounds, androidx.compose.ui.graphics.Paint())
+    drawImage(
+        image, dstOffset = IntOffset(bounds.left.roundToInt(), bounds.top.roundToInt()),
+        dstSize = IntSize(bounds.width.roundToInt(), bounds.height.roundToInt()), filterQuality = FilterQuality.Low,
+    )
+    drawRect(heroBandMask(layout.fade * k, bounds.bottom), topLeft = bounds.topLeft, size = bounds.size, blendMode = BlendMode.DstIn)
+    drawContext.canvas.restore()
+}
+
+/** An opacity mask: opaque down to [fade] above [bottom], then fading out (the shape of [HeroGeometry.FADE_STOPS]) to nothing at [bottom]. */
+private fun heroBandMask(fade: Float, bottom: Float): Brush = Brush.verticalGradient(
+    colorStops = HeroGeometry.FADE_STOPS.map { (at, opacity) -> at to Color.Black.copy(alpha = opacity) }.toTypedArray(),
+    startY = bottom - fade, endY = bottom,
+)
+
+/** The soft bottom edge of a live hero band: its content fades out over the last [fade] stage pixels of the band. */
+private fun Modifier.heroBandFade(fade: Float): Modifier = this
+    .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+    .drawWithContent {
+        drawContent()
+        val f = fade * size.width / HeroGeometry.AREA_WIDTH
+        drawRect(heroBandMask(f, size.height), blendMode = BlendMode.DstIn)
+    }
+
 /**
  * The playing animated hero: its frames drawn live through the platform's blur ([heroEffect], saturation included),
- * the same crop, diagonal fade and tilt as the still hero, over which it fades in once decoded. The lens shader that
+ * the same composition, diagonal fade and tilt as the still hero, over which it fades in once decoded. The lens shader that
  * blurs the still hero renders a cached bitmap; frames change too often for it, so the animation uses the blur
- * of the sharp-hero path. It exists only while it plays: paused (hidden, reduced motion, streaming, backgrounded)
- * the drawable is released and the still hero shows.
+ * of the sharp-hero path (the extension under a wide hero is its still first frame's, drawn once). It exists only while it
+ * plays: paused (hidden, reduced motion, streaming, backgrounded) the drawable is released and the still hero shows.
  */
 @Composable
-private fun HeroLive(file: java.io.File, blurPx: Int, reducedMotion: Boolean, active: Boolean, play: Boolean, onLive: (Boolean) -> Unit) {
+private fun HeroLive(id: String, image: ImageBitmap, file: java.io.File, blurPx: Int, reducedMotion: Boolean, active: Boolean, play: Boolean, onLive: (Boolean) -> Unit) {
     val stage = LocalStage.current
     val density = LocalDensity.current.density
     val effect = remember(blurPx, stage, density) { heroEffect(blurPx * stage.dpPerPx * density) }
     val ticker = rememberAnimationTicker(play)
     val source = remember(file) { AnimatedSource.OfFile(file) }
     val drawable = rememberAnimatedDrawable(source, play, AnimatedPlayback.HERO_WIDTH, ticker)
-    DisposableEffect(drawable != null) {
-        onLive(drawable != null)
+    val layout = remember(image) { HeroGeometry.layout(image.width, image.height) }
+    val extension = if (layout.extended && drawable != null) rememberHeroExtension(id, image) else null
+    val ready = drawable != null && (!layout.extended || extension != null)
+    DisposableEffect(ready) {
+        onLive(ready)
         onDispose { onLive(false) }
     }
-    if (drawable == null) return
+    if (drawable == null || !ready) return
     Box(Modifier.fillMaxSize().heroFade(), contentAlignment = Alignment.Center) {
-        AnimatedDrawableView(
-            drawable, ticker,
-            Modifier.requiredSize(2100.px, 1260.px).heroTilt(active, reducedMotion).graphicsLayer { renderEffect = effect },
-        )
+        Box(Modifier.requiredSize(2100.px, 1260.px).heroTilt(active, reducedMotion).graphicsLayer { renderEffect = effect }) {
+            if (extension == null) {
+                AnimatedDrawableView(drawable, ticker, Modifier.fillMaxSize())
+            } else {
+                Canvas(Modifier.fillMaxSize()) {
+                    drawImage(extension, dstSize = IntSize(size.width.roundToInt(), size.height.roundToInt()), filterQuality = FilterQuality.Low)
+                }
+                AnimatedDrawableView(drawable, ticker, Modifier.requiredSize(layout.width.px, layout.height.px).heroBandFade(layout.fade))
+            }
+        }
     }
 }
 

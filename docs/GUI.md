@@ -90,6 +90,18 @@ The TV channel uses the same mark; PC shortcut icons remain unchanged.
   the minimum that keeps all four viewport edges covered) keeps image edges outside the viewport.
   Reduced motion holds the hero still. The foreground animated/procedural background retains
   its existing shader, timing and blending; logos, covers, text and controls do not tilt or blur.
+- **Hero scaling** (`ui/HeroGeometry.kt`, pure and unit tested; one geometry for every path that draws the hero: the cached lens
+  bitmap, the legacy launch / stream-exit snapshot, the sharp blur-0 hero and the playing animation, so the still → animated fade
+  does not jump). A wide hero (SteamGridDB 1920×620 / 3840×1240 / 1600×650, wide covers) is **scaled to fill the width** of the
+  2100×1260 hero area and **aligned to the top** (1920×620 → 2100×678 px) instead of being cropped to 5:3, which lost about half of it. Its
+  bottom edge **fades softly over 160 px** (a smoothstep, `HeroGeometry.FADE_STOPS`) into an **extension**: a copy of the same image
+  stretched to cover the whole area, blurred (40 px), then blended 55 % toward the dark background color (14, 18, 36), so no bar stays
+  empty. The user's blur (Appearance → game background), saturate(1.15), the diagonal fade and the tilt with its overscan come on top,
+  unchanged. An image whose width-fit height reaches the area's height (aspect 5:3 or less: box art or a cover used as the background)
+  fills the area and is cropped as before; the placeholder art is unchanged. The cached bitmap is still 420×252 (the area at 1/5; the
+  extension is a 210×126 bitmap of its own, at most 24 kept) and is rendered only on a cache fill; its cache key carries a composition
+  version, so bitmaps of an older layout are never reused. The game's colors are still taken from the plain crop, not the darkened
+  composition. The live paths draw the extension from that small bitmap and the band at full resolution with the same fade as a mask.
 - **Artwork page** (game options → Artwork, `ArtworkScreen`; approved prototype variant B): no side column. Header and tab pills
   (`SelectionPillHost`, touch only, L1 / R1) over a toolbar with the **SteamGridDB game chip** (name, year, id, image count of the tab),
   **Search for another name** (X) and **Filter** (Y, with a count badge of the active filters); under it the result line
