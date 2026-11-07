@@ -95,6 +95,8 @@ class LinkSearchTest {
         val result = searchLink(100_000, 100_000, { kbps -> if (++calls == 1) score(kbps, true) else score(kbps, false) })
         assertTrue(result is LinkSearchResult.NoRate)
         assertEquals(ProbeFailure.LOSS, (result as LinkSearchResult.NoRate).last?.failure)
+        // The rate that passed once is reported, so the message is not a bare "unstable"
+        assertEquals(100_000, result.bestPassKbps)
     }
 
     @Test
@@ -121,5 +123,27 @@ class LinkSearchTest {
         val steps = mutableListOf<LinkStep>()
         searchLink(100_000, 100_000, path(1_000_000, mutableListOf()), onStep = { steps += it })
         assertEquals(listOf(LinkStep(100_000, false, 1), LinkStep(95_000, true, 2), LinkStep(95_000, true, 3)), steps)
+    }
+}
+
+class LinkSearchLowerLimitTest {
+    private fun score(kbps: Int, ok: Boolean) = ProbeScore(
+        kbps, 1000, 1000, if (ok) 1000 else 900, 2000.0, if (ok) 0.0 else 10.0, 0.0, 0.0, 0.0, if (ok) null else ProbeFailure.LOSS,
+    )
+
+    @Test
+    fun aStartThatFailsButALowerRatePassesIsAResultNotAnError() {
+        // The user's case: the 225 Mbps start fails, the link carries about 160: the search reports that rate
+        val result = searchLink(225_000, 3_000_000, { kbps -> score(kbps, kbps <= 160_000) })
+        assertTrue(result is LinkSearchResult.Confirmed)
+        assertEquals(150_000, (result as LinkSearchResult.Confirmed).wireKbps)
+    }
+
+    @Test
+    fun aPassingProbeWithOnlyJitterIsAPassingProbe() {
+        val jittery = { kbps: Int -> score(kbps, true).copy(delayP99Ms = 9.0) }
+        val result = searchLink(225_000, 225_000, jittery) as LinkSearchResult.Confirmed
+        assertTrue(result.score.jitterWarning)
+        assertEquals(210_000, result.wireKbps)
     }
 }

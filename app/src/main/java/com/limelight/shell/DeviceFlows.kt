@@ -158,7 +158,7 @@ class ShellDeviceActions internal constructor(
                     is LinkTestResult.Done -> {
                         linkTests.put(pc.uuid, result.test)
                         feedback.play(Cue.SELECT)
-                        shell.showToast("${transport.label} carries ${mbps(result.test.wireKbps)}", Symbols.CHECK_CIRCLE, kind = ToastKind.SUCCESS)
+                        shell.showToast("${transport.label} carries ${mbps(result.test.wireKbps)}${if (result.jitter) " (a little jitter)" else ""}", Symbols.CHECK_CIRCLE, kind = ToastKind.SUCCESS)
                     }
                     is LinkTestResult.Failed -> {
                         feedback.play(Cue.ERROR)

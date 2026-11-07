@@ -127,19 +127,29 @@ conversion is a port of `pyrowavebandwidth.h` (Nonary/moonlight-qt, identical in
   (integer division) or the answer is rejected. Only exact-size datagrams from the PC (and, with the
   handshake, from the announced port) that start with the token count; duplicates and foreign packets never
   raise delivery. After the response Delos waits 100 ms for late packets.
-- **Scoring** (`scoreProbe`). Arrival times come from `System.nanoTime()` at the receiving thread (the
-  Android socket has no kernel timestamps; the reference client also falls back to read time off Apple
-  platforms). Delay is relative: transit = arrival less the packet's slot `ceil((seq + 1) * 2000 / expected) - 1`
-  ms, so the clocks' offset cancels. A probe passes when **all** hold: every planned packet was sent;
-  aggregate loss <= 0.1 %; loss <= 1 % in each of the 20 sequence windows (100 ms); p99 transit variation
-  (99th percentile less the fastest packet) <= 4 ms; delay growth (mean transit of the last window less the
-  first) <= 2 ms; the host's `elapsedMs` within 2 % of 2000.
+- **Scoring** (`scoreProbe`). Arrival times come from `System.nanoTime()` stamped right after `receive()`
+  returns on a dedicated thread at `THREAD_PRIORITY_URGENT_AUDIO` (the Android socket has no kernel timestamps).
+  Delay is relative: transit = arrival less the packet's slot `ceil((seq + 1) * 2000 / expected) - 1` ms, so the
+  clocks' offset cancels. The rules are the **reference client's**
+  (`pyrowavelinkpolicy.h`, `capacityQualified()`), not the stricter numbers in the host document. A probe passes
+  when: the host sent at least 98 % of the planned packets (and not more); aggregate loss < 2 %; loss < 5 % in each
+  of the 20 sequence windows (100 ms); delay growth (mean transit of the last window less the first) <= 2 ms; the
+  host's `elapsedMs` is within 2 % of 2000. **p99 transit variation above 4 ms is only a warning** ("Stable, a little
+  jitter", shown in the success toast); it never fails a probe. Unsent packets count as lost.
+- **Receiver.** The receive loop allocates nothing, logs nothing and takes no locks: buffer, packet and the
+  score array exist before the first datagram; the receive buffer is requested at 8 MiB and the granted size is
+  recorded (and logged in debug builds); scoring runs after the loop. The loop's busiest datagram handling time and the
+  granted buffer let a loss failure be attributed to this device ("This device could not receive 450 Mbps that
+  fast") when the granted buffer is under 2 MiB or one datagram kept the loop busy for over 5 ms.
+- **Debug log.** Debug builds log one line per probe under the tag `DelosLinkTest`: rate, expected, sent, received,
+  granted rcvbuf, loss, worst 100 ms window, p99, growth, host elapsed, longest loop stall, authenticated packets, and
+  PASS or FAIL with the rule.
 - **Search** (`searchLink`, pure, tested with fake paths). Start at the selected bitrate (the current bitrate
   setting, rounded down to 5 Mbps), bounded by `PyroWaveHostLinkMbps` and 3 Gbps. Grow by x1.25 (rounded down to
   5 Mbps) while probes pass; on a failure, bisect the passing/failing bracket down to 5 Mbps (a failing start
   bisects downwards to the 5 Mbps floor). Take 95 % of the best pass (rounded down to 5 Mbps) and measure it
   twice afresh; if either fails, lower the rate by 20 % and test again (at most 32 attempts, down to 5 Mbps).
-  A rate that never confirms gives no result. Cancelling (B) abandons everything measured. The confirmed rate
+  A rate that never confirms gives no result, and the message then names the last probe's real reason ("Lost 3.0% of the test packets at 450 Mbps", "This device could not receive 450 Mbps that fast", ...) and whether any rate passed once. Cancelling (B) abandons everything measured. The confirmed rate
   is a **total wire allowance**, the same unit as the bitrate setting.
 - **Failure reasons** (all readable, no raw errors): host too old or newer protocol, stream active, pairing
   denied (403), UDP blocked (no packets / handshake timeout), network error, timeout, host error, invalid
@@ -193,20 +203,23 @@ Mbps high.
 - The test measures UDP delivery only. It does not prove sustained smoothness, host encoding speed, frame-burst
   delivery or decoder load ([#19](https://github.com/Meitoncz/Delos/issues/19)).
 
-### Where the Delos implementation follows the host document, not the reference client
+### Where Delos follows the reference client, not the host document
 
-Nonary's current moonlight-qt relaxes the calibration (loss < 2 %, any 100 ms window < 5 %, jitter only a
-warning, 98 % of packets sent enough, search starts at a ceiling bounded by the quality need). Delos uses the host
-document's stricter thresholds and starting point as written (see the scoring list above). Compare results with
-Moonlight's only after accounting for this.
+The host document lists 0.1 % aggregate loss, 1 % per window, p99 <= 4 ms and delay growth <= 2 ms, all as failures.
+Nonary's moonlight-qt (`pyrowavelinkpolicy.h`) uses loss < 2 %, any 100 ms window < 5 %, at least 98 % of planned
+packets sent, delay growth <= 2 ms, and treats p99 > 4 ms as a warning only. Delos first implemented the document's
+numbers; on the Odin a clean 500+ Mbps Wi-Fi 7 link then ended with "too unsteady" (the message for a search whose last
+probe failed on delay). The most likely cause [INFERENCE, no log was captured] is that Android's read-time arrival stamps
+push p99 over 4 ms (and 0.1 % loss is tight for a phone's receive path), so no step passed. Two points of the reference are kept as written: delay growth stays a
+failure (it detects a queue building up), and the search is started at the selected bitrate (the reference starts at
+a ceiling bounded by the quality need, Delos at the setting as the user asked).
 
 ### Open points the documents leave unclear
 
 - The documents do not say how the wire allowance relates to the author's *image* recommendation in the
   bitrate setting: Delos treats the setting and the probe as the same wire unit and compares `recommendedKbps`
   directly (as the app's default bitrate already does). The FEC-inclusive conversion is therefore informational.
-- "All planned packets sent" is read as `sent == expected` (the response never has `sent > expected`);
-  the reference client tolerates 98 %.
+- "All planned packets sent": the host document says all, the reference accepts 98 %; Delos uses 98 %.
 - The host's stream-active refusal is an HTTP 400 with the text "Stop streaming before testing bandwidth"
   (from the host source, not the document); Delos matches the word "streaming". A probe running concurrently
   from another client gets the same answer.

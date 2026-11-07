@@ -1,5 +1,8 @@
 package com.limelight.shell.link
 
+import android.os.Process
+import android.util.Log
+import com.limelight.BuildConfig
 import com.limelight.nvstream.http.HostHttpResponseException
 import com.limelight.nvstream.http.NvHTTP
 import com.limelight.nvstream.http.PyroWaveHostInfo
@@ -13,6 +16,7 @@ import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.SocketTimeoutException
 import java.security.SecureRandom
+import java.util.Locale
 import java.util.concurrent.CancellationException
 
 /** Why a link test could not produce a number, as a reason the screens can say in a sentence. */
@@ -32,16 +36,6 @@ internal fun LinkFailure.text(): String = when (this) {
     LinkFailure.TIMEOUT -> "The PC did not finish the test in time."
     LinkFailure.HOST_ERROR -> "The PC could not run the test."
     LinkFailure.INVALID_RESPONSE -> "The PC sent an unusable test result."
-}
-
-/** The sentence for a search that found no usable rate, from the last probe's failure. */
-internal fun ProbeFailure?.noRateText(): String = when (this) {
-    ProbeFailure.NO_PACKETS -> "No test data arrived. UDP may be blocked on this network."
-    ProbeFailure.NOT_ALL_SENT -> "The PC could not send the test data fast enough."
-    ProbeFailure.SENDER_DURATION -> "The PC's timing was off during the test. Try again."
-    ProbeFailure.LOSS, ProbeFailure.WINDOW_LOSS -> "The link lost packets even at a low rate."
-    ProbeFailure.DELAY_VARIATION, ProbeFailure.DELAY_GROWTH -> "The link was too unsteady for a reliable rate."
-    null -> "No rate passed the test."
 }
 
 /** Stops a running test: the HTTPS request and the UDP receiver are torn down from any thread. */
@@ -94,6 +88,8 @@ internal class LinkProbeClient(
             socket.close()
             throw LinkTestException(LinkFailure.NETWORK, "Could not open the UDP receiver: ${e.message}", e)
         }
+        // The OS may grant less than asked (Android caps it); what it granted decides whether loss can be ours
+        val granted = socket.receiveBufferSize
         val receiver = Receiver(socket, address, token.toByteArray(Charsets.US_ASCII), packetSize, arrivals, handshake)
         receiver.start()
         try {
@@ -110,7 +106,17 @@ internal class LinkProbeClient(
             Thread.sleep(LinkPolicy.DRAIN_MS)
             receiver.finish()
             receiver.error?.let { throw LinkTestException(LinkFailure.NETWORK, "The UDP receiver failed: ${it.message}", it) }
-            return scoreProbe(kbps, expected, response.sent.toInt(), response.elapsedMs, arrivals)
+            val score = scoreProbe(kbps, expected, response.sent.toInt(), response.elapsedMs, arrivals, granted,
+                receiver.maxStallUs / 1000.0)
+            if (BuildConfig.DEBUG) {
+                Log.i(TAG, String.format(Locale.US,
+                    "%d kbps expected=%d sent=%d received=%d rcvbuf=%d loss=%.3f%% window=%.3f%% p99=%.2fms growth=%.2fms " +
+                        "hostElapsed=%.1fms stall=%.2fms authenticated=%d: %s%s",
+                    kbps, expected, score.sent, score.received, granted, score.lossPercent, score.worstWindowLossPercent,
+                    score.delayP99Ms, score.delayGrowthMs, score.senderMs, score.maxStallMs, receiver.authenticated,
+                    if (score.passed) "PASS" else "FAIL ${score.failure}", if (score.receiverSuspect) " (receiver suspect)" else if (score.jitterWarning) " (jitter warning)" else ""))
+            }
+            return score
         } finally {
             receiver.finish()
             socket.close()
@@ -199,7 +205,9 @@ internal class LinkProbeClient(
         private val handshake: Boolean,
     ) : Thread("PyroWave link probe") {
         @Volatile var senderPort = 0
+        /** Published every 256 datagrams and at the end; the hot loop keeps its own plain counter. */
         @Volatile var authenticated = 0
+        @Volatile var maxStallUs = 0L
         @Volatile var error: IOException? = null
         @Volatile private var stopping = false
 
@@ -208,15 +216,24 @@ internal class LinkProbeClient(
             if (isAlive && currentThread() !== this) join(1000)
         }
 
+        // Nothing in the loop allocates, logs or takes a lock: the buffer, the packet and the score array exist before
+        // the first datagram, and arrival is stamped right after receive() returns. Scoring happens after the loop.
         override fun run() {
+            try {
+                Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO)
+            } catch (_: RuntimeException) {
+                // Keep the default priority
+            }
             val payload = packetSize + LinkPolicy.PAYLOAD_EXTRA_BYTES
             val buffer = ByteArray(payload + 64)
             val packet = DatagramPacket(buffer, buffer.size)
             val start = System.nanoTime()
             var nextToken = 0L
+            var count = 0
+            var stall = 0L
             while (!stopping) {
                 val port = senderPort
-                if (handshake && port != 0 && authenticated == 0 && System.nanoTime() >= nextToken) {
+                if (handshake && port != 0 && count == 0 && System.nanoTime() >= nextToken) {
                     try {
                         socket.send(DatagramPacket(token, token.size, address, port))
                     } catch (e: IOException) {
@@ -234,30 +251,37 @@ internal class LinkProbeClient(
                     if (!stopping) error = e
                     return
                 }
-                val arrivalUs = (System.nanoTime() - start) / 1000
+                val now = System.nanoTime()
                 if (packet.length != payload || packet.address != address) continue
                 if (handshake && packet.port != senderPort) continue
                 var matches = true
                 for (i in token.indices) if (buffer[i] != token[i]) { matches = false; break }
                 if (!matches) continue
-                authenticated++
+                count++
+                if (count == 1 || (count and 255) == 0) authenticated = count
                 val seq = ((buffer[32].toInt() and 0xFF) shl 24) or ((buffer[33].toInt() and 0xFF) shl 16) or
                     ((buffer[34].toInt() and 0xFF) shl 8) or (buffer[35].toInt() and 0xFF)
                 // Unique sequence numbers only: duplicates and out-of-range values never inflate the delivery.
-                if (seq >= 0 && seq < arrivals.size && arrivals[seq] < 0) arrivals[seq] = arrivalUs
+                if (seq >= 0 && seq < arrivals.size && arrivals[seq] < 0) arrivals[seq] = (now - start) / 1000
+                // How long this datagram waited for the loop and its own handling took; a spike means our thread was late
+                val busy = System.nanoTime() - now
+                if (busy > stall) { stall = busy; maxStallUs = stall / 1000 }
             }
+            authenticated = count
         }
     }
 
     private companion object {
         const val RECEIVE_POLL_MS = 10
+        const val TAG = "DelosLinkTest"
     }
 }
 
 /** The result of a whole test run. */
 internal sealed interface LinkTestOutcome {
-    data class Done(val test: LinkTest) : LinkTestOutcome
-    data class NoRate(val failure: ProbeFailure?) : LinkTestOutcome
+    /** [jitter]: it passed, with p99 transit variation above 4 ms ("a little jitter"). */
+    data class Done(val test: LinkTest, val jitter: Boolean = false) : LinkTestOutcome
+    data class NoRate(val text: String) : LinkTestOutcome
     data object Cancelled : LinkTestOutcome
 }
 
@@ -287,8 +311,9 @@ internal fun runLinkTest(
     return when (val result = search) {
         is LinkSearchResult.Confirmed -> LinkTestOutcome.Done(
             LinkTest(result.wireKbps, nowMs(), transport, info.criticalFecPercent, LinkPolicy.DEFAULT_PACKET_SIZE),
+            result.score.jitterWarning,
         )
-        is LinkSearchResult.NoRate -> LinkTestOutcome.NoRate(result.last?.failure)
+        is LinkSearchResult.NoRate -> LinkTestOutcome.NoRate(result.noRateText())
         LinkSearchResult.Cancelled -> LinkTestOutcome.Cancelled
     }
 }

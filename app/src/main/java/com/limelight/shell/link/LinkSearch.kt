@@ -7,8 +7,8 @@ internal sealed interface LinkSearchResult {
     /** [wireKbps] passed twice afresh (with the 5 % margin applied); [score] is the last of those probes. */
     data class Confirmed(val wireKbps: Int, val score: ProbeScore) : LinkSearchResult
 
-    /** No tested rate passed, down to the 5 Mbps floor; [last] is the final probe. */
-    data class NoRate(val last: ProbeScore?) : LinkSearchResult
+    /** No rate held: [last] is the final probe, [bestPassKbps] the highest rate that passed once but failed its confirmation (0 = none passed). */
+    data class NoRate(val last: ProbeScore?, val bestPassKbps: Int = 0) : LinkSearchResult
 
     data object Cancelled : LinkSearchResult
 }
@@ -58,7 +58,7 @@ internal fun searchLink(
             next = maxOf(LinkPolicy.MIN_KBPS, roundDown((low + high) / 2.0))
         }
     }
-    if (low == 0) return LinkSearchResult.NoRate(best)
+    if (low == 0) return LinkSearchResult.NoRate(best, 0)
 
     next = maxOf(LinkPolicy.MIN_KBPS, roundDown(low * LinkPolicy.CONFIRM_MARGIN))
     for (attempt in 0 until LinkPolicy.MAX_CONFIRM_ATTEMPTS) {
@@ -76,5 +76,5 @@ internal fun searchLink(
         if (next == LinkPolicy.MIN_KBPS) break
         next = maxOf(LinkPolicy.MIN_KBPS, roundDown(next * LinkPolicy.CONFIRM_BACKOFF))
     }
-    return LinkSearchResult.NoRate(best)
+    return LinkSearchResult.NoRate(best, low)
 }

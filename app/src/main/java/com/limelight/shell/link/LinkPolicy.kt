@@ -44,14 +44,34 @@ internal object LinkPolicy {
     const val REQUEST_TIMEOUT_MS = 6000L
     const val RECEIVE_BUFFER_BYTES = 8 * 1024 * 1024
 
-    // --- A probe passes when ---------------------------------------------------------------------------------------
-    const val MAX_LOSS_PERCENT = 0.1
-    const val MAX_WINDOW_LOSS_PERCENT = 1.0
-    const val MAX_TRANSIT_P99_MS = 4.0
+    // --- A probe passes when (the reference client's rules) --------------------------------------------------------
+    // Source: Nonary/moonlight-qt app/streaming/video/pyrowave/pyrowavelinkpolicy.h (PyroWaveLink::Result::capacityQualified,
+    // the rule the Windows/Qt calibration searches with). The host document's stricter numbers (0.1 % loss, 1 % per window,
+    // p99 <= 4 ms as a failure) made a clean 500 Mbps Wi-Fi 7 link fail on Android, where arrival times are read-time.
+    /** Aggregate loss must stay below this (`lossLimitPercent = 2.0`, compared with `<`). */
+    const val MAX_LOSS_PERCENT = 2.0
+
+    /** Loss in any 100 ms window must stay below this (`windowLossLimitPercent = 5.0`, `<`). */
+    const val MAX_WINDOW_LOSS_PERCENT = 5.0
+
+    /** The host must have sent at least this share of the planned packets (`minimumSentShare = 0.98`). */
+    const val MIN_SENT_SHARE = 0.98
+
+    /** Delay growth, last window less first, must stay at or below this (`delayGrowthMs > 2.0` fails). Still a failure in the reference. */
     const val MAX_DELAY_GROWTH_MS = 2.0
 
-    /** The host's sending duration may differ from [PROBE_DURATION_MS] by this share. */
+    /** p99 transit variation above this is only a warning in the reference (`stable()` vs `capacityQualified()`): "a little jitter". */
+    const val JITTER_WARNING_P99_MS = 4.0
+
+    /** The host's sending duration may differ from [PROBE_DURATION_MS] by this share (`senderMs` within 0.98..1.02 x 2000). */
     const val DURATION_TOLERANCE = 0.02
+
+    // --- Our own receiver (Android) -----------------------------------------------------------------------------------
+    /** A loss with this much time between a datagram arriving and the loop being done with it points at our receive thread. */
+    const val RECEIVER_STALL_MS = 5.0
+
+    /** A receive buffer the OS granted below this cannot hold even a short stall at several hundred Mbps. */
+    const val MIN_GOOD_RCVBUF_BYTES = 2 * 1024 * 1024
 
     // --- Search ----------------------------------------------------------------------------------------------------
     const val GROWTH_FACTOR = 1.25

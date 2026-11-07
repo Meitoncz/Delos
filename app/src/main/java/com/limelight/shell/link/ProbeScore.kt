@@ -2,9 +2,9 @@ package com.limelight.shell.link
 
 import kotlin.math.abs
 
-/** Why a probe did not pass, in the order the host document's thresholds are checked. */
+/** Why a probe did not pass, in the order the reference client checks them. */
 internal enum class ProbeFailure {
-    /** The host could not send every planned packet (it is overloaded, or its send buffer overflowed). */
+    /** The host sent fewer than 98 % of the planned packets (it is overloaded, or its send buffer overflowed). */
     NOT_ALL_SENT,
 
     /** Nothing authenticated arrived (blocked UDP, wrong network, firewall). */
@@ -14,7 +14,6 @@ internal enum class ProbeFailure {
     SENDER_DURATION,
     LOSS,
     WINDOW_LOSS,
-    DELAY_VARIATION,
     DELAY_GROWTH,
 }
 
@@ -32,8 +31,19 @@ internal data class ProbeScore(
     /** Mean transit of the last 100 ms window less that of the first, in ms; infinite when a window is empty. */
     val delayGrowthMs: Double,
     val failure: ProbeFailure?,
+    /** What the OS granted for the receive buffer (0 = unknown) and the longest the receive loop was busy with one datagram. */
+    val rcvBufBytes: Int = 0,
+    val maxStallMs: Double = 0.0,
 ) {
     val passed: Boolean get() = failure == null
+
+    /** p99 transit variation above 4 ms: a warning on a passing probe, never a failure (the reference's rule). */
+    val jitterWarning: Boolean get() = delayP99Ms > LinkPolicy.JITTER_WARNING_P99_MS
+
+    /** A loss failure that our own receiver may have caused: a small granted buffer or a late receive loop. */
+    val receiverSuspect: Boolean
+        get() = (failure == ProbeFailure.LOSS || failure == ProbeFailure.WINDOW_LOSS) &&
+            (maxStallMs > LinkPolicy.RECEIVER_STALL_MS || (rcvBufBytes in 1 until LinkPolicy.MIN_GOOD_RCVBUF_BYTES))
 }
 
 /** Packets a probe of [kbps] plans: the host's `kbps * 2000 / (8 * (packetsize + 134))`, truncated. */
@@ -49,7 +59,10 @@ internal fun expectedProbePackets(kbps: Int, packetSize: Int): Long =
  * Delay is relative: transit is the arrival time less the packet's slot in the host's 1 ms schedule, so the
  * two clocks' offset never enters the grade, only the spread of the transits and their growth do.
  */
-internal fun scoreProbe(requestedKbps: Int, expected: Int, sent: Int, senderMs: Double, arrivalsUs: LongArray): ProbeScore {
+internal fun scoreProbe(
+    requestedKbps: Int, expected: Int, sent: Int, senderMs: Double, arrivalsUs: LongArray,
+    rcvBufBytes: Int = 0, maxStallMs: Double = 0.0,
+): ProbeScore {
     val windows = LinkPolicy.WINDOW_COUNT
     var received = 0
     var worstWindow = 0.0
@@ -86,14 +99,13 @@ internal fun scoreProbe(requestedKbps: Int, expected: Int, sent: Int, senderMs: 
     val growth = if (firstCount > 0 && lastCount > 0) lastSum / lastCount - firstSum / firstCount else Double.POSITIVE_INFINITY
     val duration = LinkPolicy.PROBE_DURATION_MS.toDouble()
     val failure = when {
-        expected <= 0 || sent < expected -> ProbeFailure.NOT_ALL_SENT
+        expected <= 0 || sent > expected || sent < expected * LinkPolicy.MIN_SENT_SHARE -> ProbeFailure.NOT_ALL_SENT
         received == 0 -> ProbeFailure.NO_PACKETS
         !senderMs.isFinite() || abs(senderMs - duration) > duration * LinkPolicy.DURATION_TOLERANCE -> ProbeFailure.SENDER_DURATION
-        loss > LinkPolicy.MAX_LOSS_PERCENT -> ProbeFailure.LOSS
-        worstWindow > LinkPolicy.MAX_WINDOW_LOSS_PERCENT -> ProbeFailure.WINDOW_LOSS
-        p99 > LinkPolicy.MAX_TRANSIT_P99_MS -> ProbeFailure.DELAY_VARIATION
+        loss >= LinkPolicy.MAX_LOSS_PERCENT -> ProbeFailure.LOSS
+        worstWindow >= LinkPolicy.MAX_WINDOW_LOSS_PERCENT -> ProbeFailure.WINDOW_LOSS
         growth > LinkPolicy.MAX_DELAY_GROWTH_MS -> ProbeFailure.DELAY_GROWTH
         else -> null
     }
-    return ProbeScore(requestedKbps, expected, sent, received, senderMs, loss, worstWindow, p99, growth, failure)
+    return ProbeScore(requestedKbps, expected, sent, received, senderMs, loss, worstWindow, p99, growth, failure, rcvBufBytes, maxStallMs)
 }

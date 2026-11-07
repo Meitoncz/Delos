@@ -56,7 +56,7 @@ internal class LinkTestStore(context: Context) {
 
 /** How a link test of the UI ended. */
 internal sealed interface LinkTestResult {
-    data class Done(val test: LinkTest) : LinkTestResult
+    data class Done(val test: LinkTest, val jitter: Boolean = false) : LinkTestResult
     /** [text] says why, in a sentence. */
     data class Failed(val text: String) : LinkTestResult
     data object Cancelled : LinkTestResult
@@ -89,8 +89,8 @@ internal class LinkTester(val context: Context, private val repo: PcRepository) 
                     )
                 }
                 when (val outcome = runLinkTest(http, info, startKbps, currentTransport(context), cancel, onStep = onStep)) {
-                    is LinkTestOutcome.Done -> LinkTestResult.Done(outcome.test)
-                    is LinkTestOutcome.NoRate -> LinkTestResult.Failed(outcome.failure.noRateText())
+                    is LinkTestOutcome.Done -> LinkTestResult.Done(outcome.test, outcome.jitter)
+                    is LinkTestOutcome.NoRate -> LinkTestResult.Failed(outcome.text)
                     LinkTestOutcome.Cancelled -> LinkTestResult.Cancelled
                 }
             } catch (e: CancellationException) {
