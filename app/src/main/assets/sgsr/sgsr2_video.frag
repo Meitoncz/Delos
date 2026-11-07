@@ -287,6 +287,8 @@ void main()
     rectboxmax = min(rectboxmax, boxmax);
     rectboxmin = max(rectboxmin, boxmin);
 
+    bool historyOutsideBox = any(greaterThan(rectboxmin, HistoryColor)) ||
+        any(greaterThan(HistoryColor, rectboxmax));
     vec3 clampedcolor;
     if(qualityMode != 0) {
         vec3 ycHistory=rgbToYCoCg(HistoryColor);
@@ -297,12 +299,18 @@ void main()
             ycMin=min(ycMin,yc);ycMax=max(ycMax,yc);
         }
         vec3 ycExtent=(ycMax-ycMin)*0.5;
-        vec3 ycClamped=clamp(ycHistory,max(ycMin,ycCenter-ycExtent),min(ycMax,ycCenter+ycExtent));
+        vec3 ycLower=max(ycMin,ycCenter-ycExtent);
+        vec3 ycUpper=min(ycMax,ycCenter+ycExtent);
+        vec3 ycClamped=clamp(ycHistory,ycLower,ycUpper);
+        // A history color may fit the RGB box but not the tighter chroma-aware box.
+        // Test the same space we clip, otherwise the blend below restores unclipped history.
+        historyOutsideBox = historyOutsideBox || any(lessThan(ycHistory,ycLower)) ||
+            any(greaterThan(ycHistory,ycUpper));
         clampedcolor=yCoCgToRgb(ycClamped);
     } else clampedcolor = clamp(HistoryColor, rectboxmin, rectboxmax);
     float startLerpValue = minLerpContribution;
     if ((abs(mda.x) + abs(mda.y)) > 0.000001) startLerpValue = 0.0;
-    float lerpcontribution = (any(greaterThan(rectboxmin, HistoryColor)) || any(greaterThan(HistoryColor, rectboxmax))) ? startLerpValue : 1.0f;
+    float lerpcontribution = historyOutsideBox ? startLerpValue : 1.0f;
 
     HistoryColor = mix(clampedcolor, HistoryColor, clamp(lerpcontribution, 0.0, 1.0));
     float basemin = min(basealpha, 0.1f);
