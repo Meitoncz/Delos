@@ -70,7 +70,8 @@ resolution, or a faster renderer); partial frames with a low stall = packets los
 network. In debug builds the same numbers, plus received KB/s, bitrate, chroma mode and the per-stage
 waits (previous frame, swapchain image, submit+present), are logged once a second under the logcat tag
 `DelosPyroDiag`, with a `start:` line (bitrate, chroma requested/negotiated, directSubmit, capability) and
-the swapchain image count and present mode when it is created. The UDP receive buffer is set and
+the swapchain image count, present mode and pre-transform when it is created (with the present modes the surface
+offers), and in the `present=` / `images=` / `preTransform=` part of the per-second line. The UDP receive buffer is set and
 checked inside moonlight-common-c, which logs a warning only when the kernel clamps it; Delos reads the
 grant back itself (see "Stream thread scheduling" below). Suggested A/B: 4:2:0 at 225 Mbps, 4:4:4 at 225,
 4:4:4 at 270, and 4:4:4 at 150.
@@ -524,6 +525,92 @@ suited to 60 FPS streams.
 The two-pass SurfaceTexture/2D approach was also reviewed against linckosz's Moonlight Android
 PR #1567 (`37e7a00ce8cde55b936c9239d8e717336f55da63`); the lifecycle, live controls and P010 HDR output
 here are implemented for Delos rather than copying that bridge's synchronous frame wait.
+
+## Latency (#75)
+
+Status: the optimisations below are implemented; **none of them has been measured on the device yet** (results table at
+the end of this section is empty). Everything marked [INFERENCE] is derived from the source and from Android's
+standard behaviour, not observed on the Odin. The input-to-photon number can only come from the camera test below; the
+in-app stage timestamps never include the controller, network, host or decoding of the host side.
+
+### Latency budget
+
+Typical values in milliseconds, a handheld at 120 FPS on a 120 Hz panel. (doc) = from the SGSR measurements in this document;
+everything else is [INFERENCE].
+
+| Stage | Owner | ms |
+|---|---|---|
+| Controller poll and send | Android input | 1-4 |
+| Host capture and encode | Vibepollo | 2-6 (shown as "PC processing") |
+| Host capture and encode, PyroWave | Vibepollo | about 1-2 |
+| Wi-Fi transit and jitter | network | 1-4 (round trip / 2) |
+| Reassembly and FEC, MediaCodec | moonlight-common-c | below 1 |
+| Decode | MediaCodec, low-latency Qualcomm decoder | 2-5 |
+| Pacing wait | Latency: about 0; Fast V-Sync / Balanced: 0-8.3 by design | |
+| Output stage, MediaCodec direct | codec to SurfaceView | none |
+| Output stage, Sharpen only | listener thread hop, `updateTexImage`, OES copy 0.18 (doc) + sharpen 0.30 (doc) | about 0.7-1 |
+| Output stage, SGSR 2 | 3.3-3.9 ms at 480p/720p to 1080p (doc, headless); 3.9-4.9 in play (doc) | |
+| Output stage, supersampling | spatial about 1.3-2 at 1x (4K target 2.5-4 at 2x); temporal 6.85 at 1x, 10.23 at 2x (doc, headless, over the 8.3 ms frame at 2x) | |
+| PyroWave | Vulkan decode about 3 (doc); receive to present 4-9 (doc) | |
+| Compositor tail | SurfaceFlinger latch plus scan-out | 8-12 on average, up to one frame more when the latch is missed |
+
+The compositor tail is the one a client cannot shorten by much: a buffer queued at time t is latched at the next SurfaceFlinger
+latch point and scanned out at the following panel refresh, 1 to 1.5 frame periods plus half a scan-out for the screen centre.
+If the stream FPS equals the display rate, the phase between frame-ready and refresh is fixed for stretches of a session and
+drifts slowly (host and panel clocks differ by tens of ppm), so a measured latency wanders over a window of about one frame
+period across minutes. Camera runs must be long enough or sample the trigger phase randomly.
+
+### What was changed
+
+One commit each, in the order of the table. None changes the picture, adds a setting or touches moonlight-common-c.
+
+| Change | Where | Expected gain [INFERENCE] |
+|---|---|---|
+| **Newest frame only in the SGSR GL thread.** The frame-available callback runs on its own thread and counts queued frames (`FrameQueue`); a draw consumes every waiting frame with one `updateTexImage()` each and draws only the newest, so a stale frame is never shown while a newer one waits. SGSR 2 sees the newest frame's timestamp, so one skipped frame does not reset its history (it resets only when the gap exceeds its 50 ms limit, about 6 frames at 120 FPS). The callback has to count on its own thread because on the GL thread the callbacks of frames queued behind a long draw are not delivered until that draw is over. | `SgsrRenderer.draw`, `FrameQueue` | About 0 ms while the output keeps up; when the GPU work per frame exceeds the frame interval (SGSR 2 at 1x or 2x at 120 FPS, 4K supersampling) it removes the 1-3 queued frames, 8-25 ms. The depth depends on the codec's buffer count, which was not read. Costs frames per second only in that overloaded state. |
+| **Fast V-Sync aware of the output stage.** The pacer releases a frame earlier by the smoothed frame-available-to-swap time of the SGSR GL thread plus 0.5 ms, capped at half a frame period and never before now; the phase bookkeeping keeps the display target (`SgsrPacing`, `NanoPacer`). Latency mode is untouched. Balanced is not adjusted: its release time is the Choreographer callback, and the SGSR consumer ignores the release timestamp, so there is nothing to move. | `NanoPacer.waitAndDrainLatest`, `SgsrPacing` | 0 to a few ms: avoids a missed latch for a share of the frames (up to 8.3 ms each) with Fast V-Sync and SGSR. On the SDR path the estimate is CPU submit time and underestimates GPU completion; the cap bounds the damage of a wrong estimate. |
+| **HDR output without `glFinish`.** The P010 buffer goes to the SurfaceControl transaction with an `EGL_ANDROID_native_fence_sync` fence, so the GL thread no longer waits for the GPU. Reuse stays protected by the transaction's release fences as before. Without the extension the code falls back to `glFinish`. The GPU time that the figures used to include through `glFinish` (the stat, the pacer input) is the time from the flush to the signal of that fence, read from the fences of earlier frames, and added to the CPU submit time. | `sgsr_hdr_output.cpp` | 0.2-0.5 ms (one wake after the GPU is idle) and the next frame's `updateTexImage` and command recording overlap the previous frame's GPU work. |
+| **GL thread at urgent display priority and a high-priority EGL context** when `EGL_IMG_context_priority` is offered (a refusal falls back to a normal context; the granted level is logged). | `SgsrRenderer` | Below 0.5 ms, only with a contended GPU. |
+| **PyroWave present observability** (logging only): the present modes the surface offers and the chosen one, the swapchain image count and the pre-transform, once when the swapchain is created and in the `DelosPyroDiag` line. | `pyrowave_renderer.cpp` | None by itself; it shows whether MAILBOX is used and whether the compositor rotates. |
+| **Stage timestamps** (below). | `LatencyStages`, `SgsrRenderer`, `sgsr_frame_timestamps.cpp` | None; measurement only. |
+
+Candidates from the investigation that were **not** done: the reactive-mask texture to a single channel (OpenGL ES 3.1 allows only
+`rgba16f`, `r32f`, `rgba8` and a few integer formats for image stores; `r16f` and `r8` need an extension, `r32f` is not filterable
+without `OES_texture_float_linear`, and `rgba8` would quantise the mask and so change the picture, for about 0.1 ms in the Quality
+mode only); the OES-copy fusion; cheaper SGSR 2 flow and a 2x cap (they change the picture, issue #74); ADPF hint sessions
+(power and heat, wants its own decision); front-buffer rendering (risk, only after these are measured).
+
+### Measurement plan
+
+1. **Camera (the only input-to-photon number).** A phone with 240 FPS slow motion pointed at the handheld. A debug-only
+   "latency flash" action in the stream menu is not built yet; until it is, press a controller button that makes a white
+   flash on the host (a trivial full-screen window that turns white on a key, for example) and count camera frames from the
+   physical press, or an LED on the controller, to the screen turning white. At 240 FPS one camera frame is 4.2 ms. Do 30-50 presses at
+   random intervals (so different refresh phases are sampled) and report median and p90. Measure once without the stream (the
+   flash on the client's own screen) to know the camera and display floor. Do each configuration in the same session.
+2. **In-app stages (no pixel reads).** Debug build, statistics overlay on. `adb logcat -s DelosLatency DelosSharpen DelosPyroDiag`:
+   - `DelosLatency` once a second: `decode`, `pacing`, `avail->draw`, `draw`, `avail->gpu`, `avail->latch`, `avail->present`,
+     each as avg/p95/max in ms with the sample count. `decode` is codec submit to codec output, `pacing` is codec output to
+     release, the `avail->` stages count from the SGSR frame-available callback. `avail->present` is the "Render latency" row.
+     SDR: GPU, latch and present come from `eglGetFrameTimestampsANDROID` a few frames after the swap. HDR: GPU from the fence signal
+     time, latch and present from the SurfaceControl transaction statistics. A stage the platform does not give has no
+     entry. Direct MediaCodec has `decode` and `pacing` only.
+   - `DelosSharpen` once a second: `queue pending avg/max`, `age avg/max` and `skipped` (frames skipped because a newer one was
+     waiting). Pending above 1 on average, or skipped above 0, means the output stage cannot keep up.
+   - `DelosPyroDiag` (PyroWave): the existing numbers plus `present=` (MAILBOX or FIFO), `images=` and `preTransform=`.
+3. **No code needed.** `adb shell dumpsys SurfaceFlinger --latency "<layer>"` (layer names from `dumpsys SurfaceFlinger --list`;
+   the HDR child layer is `Delos SGSR HDR`) for per-frame desired and actual present times; a Perfetto trace
+   (`sched freq gfx view` categories, with the frame timeline) for GPU and CPU frequencies and missed refreshes;
+   `dumpsys SurfaceFlinger` for the composition type of the stream layer (device/overlay or client/GPU).
+
+Verify each change with the same measurement before and after, one configuration per row, no change of the stream between
+runs. Sub-millisecond changes cannot be seen by the camera; judge them with `DelosLatency`/`DelosSharpen` and the p95.
+
+### Results
+
+Empty until the device is measured. One row per run.
+
+| Date | Pipeline | Codec / HDR | FPS / Hz | Pacing | Overlay | Change under test | Camera median / p90 (ms) | `avail->present` avg / p95 | `pacing` avg | Skipped /s | Notes |
+|---|---|---|---|---|---|---|---|---|---|---|---|
 
 ## Validation and device acceptance
 
