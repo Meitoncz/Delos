@@ -581,7 +581,7 @@ fun Shell(
                     label = "screen",
                 ) { screen ->
                     when (screen) {
-                        Screen.Home -> HomeScreen(library, appearance, repo, openMetadata)
+                        Screen.Home -> HomeScreen(library, appearance, repo, profileStore, openMetadata)
                         Screen.Settings -> SettingsScreen(appearance, update, startup, startupStore::update, pcs, profileStore)
                         Screen.SettingsSearch -> SettingsScreen(appearance, update, startup, startupStore::update, pcs, profileStore, search = true)
                         Screen.Profile -> ProfileScreen(profiles, profileStore)

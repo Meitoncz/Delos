@@ -47,6 +47,13 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import android.content.SharedPreferences
+import androidx.compose.runtime.collectAsState
+import com.limelight.shell.data.ProfileStore
+import com.limelight.shell.settings.GameSettingsStore
+import com.limelight.shell.ui.accent3OnDark
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.derivedStateOf
@@ -157,7 +164,7 @@ private val FastScroll = tween<Float>(200, easing = CubicBezierEasing(.33f, 1f, 
  * background, in the grid or row layout (Settings → Appearance → Home layout).
  */
 @Composable
-fun HomeScreen(library: Library, appearance: Appearance, repo: PcRepository, onMetadata: (Pc, App) -> Unit) {
+fun HomeScreen(library: Library, appearance: Appearance, repo: PcRepository, profileStore: ProfileStore, onMetadata: (Pc, App) -> Unit) {
     val shell = LocalShell.current
     val hasGames = library is Library.Ready && library.apps.isNotEmpty()
     // Without games there is no game background
@@ -169,7 +176,7 @@ fun HomeScreen(library: Library, appearance: Appearance, repo: PcRepository, onM
         is Library.Ready -> if (hasGames) {
             val metadata = LocalGameMetadata.current
             val apps = library.apps.filter { metadata.filters.matches(it, metadata.entry(library.pc, it).data) }
-            if (apps.isEmpty()) FilteredLibraryEmpty() else GameLibrary(library, apps, appearance, repo, onMetadata)
+            if (apps.isEmpty()) FilteredLibraryEmpty() else GameLibrary(library, apps, appearance, repo, profileStore, onMetadata)
         } else {
             HomeMessage(Symbols.SPORTS_ESPORTS, "No games on ${library.pc.name}", "Add apps in Vibepollo's web UI, they show up here automatically.")
         }
@@ -178,7 +185,7 @@ fun HomeScreen(library: Library, appearance: Appearance, repo: PcRepository, onM
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: Appearance, repo: PcRepository, onMetadata: (Pc, App) -> Unit) {
+private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: Appearance, repo: PcRepository, profileStore: ProfileStore, onMetadata: (Pc, App) -> Unit) {
     val shell = LocalShell.current
     val feedback = LocalFeedback.current
     val stage = LocalStage.current
@@ -287,9 +294,13 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
         }
     }
 
+    // The games with their own settings (docs/GUI.md): read once per change of the library, profile or stored settings, not per tile
+    val customGames = rememberCustomGames(profileStore, pc, library.apps)
+
     val tile: @Composable (Int, App) -> Unit = { index, app ->
         GameTile(
             pc, app, index = index,
+            custom = app.id in customGames,
             badge = when {
                 app.running -> TileBadge.RUNNING
                 index == 0 && library.lastPlayed == app.id -> TileBadge.LAST_PLAYED
@@ -426,6 +437,25 @@ private const val ROW_END_PADDING = 150f - ROW_WIDE * (TILE_FOCUS_SCALE - 1f) + 
 private suspend fun scroll(state: ScrollableState, delta: Float, reducedMotion: Boolean) {
     if (kotlin.math.abs(delta) < 1f) return
     if (reducedMotion) state.scrollBy(delta) else state.animateScrollBy(delta, FastScroll)
+}
+
+/**
+ * The ids of [apps] with custom per-game settings in the current profile ([GameSettingsStore.customAppIds]), recomputed when the
+ * profile switches or any of the profile's stored settings change (the per-game screen writing or resetting an override).
+ */
+@Composable
+private fun rememberCustomGames(profileStore: ProfileStore, pc: Pc, apps: List<App>): Set<Int> {
+    val profiles by profileStore.profiles.collectAsState()
+    var version by remember(pc.uuid, profiles.currentId) { mutableIntStateOf(0) }
+    DisposableEffect(pc.uuid, profiles.currentId) {
+        val base = profileStore.settings()
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> version++ }
+        base.registerOnSharedPreferenceChangeListener(listener)
+        onDispose { base.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
+    return remember(pc.uuid, profiles.currentId, apps, version) {
+        GameSettingsStore.customAppIds(profileStore.settings().all, pc.uuid, apps.map { it.id })
+    }
 }
 
 /** The badge on a cover's top-left corner. */
@@ -625,6 +655,8 @@ private fun GameTile(
     pc: Pc,
     app: App,
     index: Int,
+    /** The game has custom per-game settings: a small icon in the top-right corner. */
+    custom: Boolean,
     badge: TileBadge?,
     hidden: Boolean,
     running: App?,
@@ -722,6 +754,13 @@ private fun GameTile(
                 Modifier.align(Alignment.TopEnd).padding(16.px).size(56.px).clip(CircleShape).background(Color(0x8C050A14)),
                 contentAlignment = Alignment.Center,
             ) { Spinner(32f) }
+        } else if (custom) {
+            // Above the (idle-filtered) art; the busy spinner takes this corner while it shows
+            Box(
+                Modifier.align(Alignment.TopEnd).padding(16.px).size(56.px).clip(CircleShape).background(Color(0x8C050A14))
+                    .semantics { contentDescription = "Custom settings for this game" },
+                contentAlignment = Alignment.Center,
+            ) { Symbol(Symbols.TUNE, 30.tpx, colors.accent3OnDark, filled = true) }
         }
         if (badge != null) {
             Row(

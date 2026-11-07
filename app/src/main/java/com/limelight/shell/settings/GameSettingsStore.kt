@@ -105,6 +105,13 @@ class GameSettingsStore(private val base: SharedPreferences, pc: String, appId: 
         private fun pcPrefix(pc: String) = "ui_game_${UUID.nameUUIDFromBytes(pc.toByteArray(Charsets.UTF_8))}_"
         private fun prefixFor(pc: String, appId: Int) = "${pcPrefix(pc)}${appId}_"
 
+        /**
+         * The ids of [appIds] with at least one real per-game setting (a key of [KEYS], like the settings screen's "N custom
+         * settings") in [all], a profile's stored preferences; the private codec bitrate slots alone do not count.
+         */
+        fun customAppIds(all: Map<String, *>, pc: String, appIds: Collection<Int>): Set<Int> =
+            appIds.filterTo(HashSet()) { id -> prefixFor(pc, id).let { prefix -> KEYS.any { (prefix + it) in all } } }
+
         /** Removes every override of every app on [pc] from [base] (a PC that Delos forgets). */
         fun purge(base: SharedPreferences, pc: String) {
             val prefix = pcPrefix(pc)
