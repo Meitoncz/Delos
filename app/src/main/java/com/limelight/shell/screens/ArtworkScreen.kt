@@ -417,7 +417,7 @@ fun ArtworkScreen(screen: Screen.Artwork) {
         }
 
         // The grid (or why there is none)
-        Box(Modifier.offset(132.px, 324.px).width(1656.px).height(552.px)) {
+        Box(Modifier.offset(100.px, 324.px).width(1720.px).height(552.px)) {
             when (val c = choices) {
                 Choices.Loading -> GridMessage(Symbols.REFRESH, "Looking on SteamGridDB…", null)
                 Choices.NoKey -> GridMessage(Symbols.KEY, "Add your SteamGridDB API key", "Settings → Covers → SteamGridDB API key. It is free on steamgriddb.com (Preferences → API).")
@@ -435,7 +435,7 @@ fun ArtworkScreen(screen: Screen.Artwork) {
                             columns = GridCells.Fixed(tab.columns),
                             state = grid,
                             modifier = Modifier.fillMaxSize().fadeEdges(stage, top = 30f, bottom = 70f),
-                            contentPadding = PaddingValues(start = 18.px, end = 18.px, top = 40.px, bottom = 96.px),
+                            contentPadding = PaddingValues(start = 50.px, end = 50.px, top = 46.px, bottom = 96.px),
                             horizontalArrangement = Arrangement.spacedBy(24.px),
                             verticalArrangement = Arrangement.spacedBy(24.px),
                         ) {
