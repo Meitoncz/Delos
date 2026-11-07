@@ -8,16 +8,16 @@ import com.limelight.shell.LocalLibrary
 import com.limelight.shell.LocalShell
 import com.limelight.shell.data.Library
 import com.limelight.shell.data.Pc
+import com.limelight.shell.link.LinkCodec
 import com.limelight.shell.link.LinkGuidance
 import com.limelight.shell.link.LinkTestStore
 import com.limelight.shell.link.currentTransport
+import com.limelight.shell.link.linkFormat
 import com.limelight.shell.link.linkGuidance
 import com.limelight.shell.link.mbps
 import com.limelight.shell.settings.SettingSpec
-import com.limelight.shell.settings.pyroWaveRecommendedBitrateKbps
 import com.limelight.shell.ui.RowValue
 import com.limelight.shell.ui.Symbols
-import kotlin.math.roundToInt
 
 /** The stored link tests (docs/STREAM_QUALITY.md, "Link guidance"); null where the shell has none (previews). */
 internal val LocalLinkTests = staticCompositionLocalOf<LinkTestStore?> { null }
@@ -36,19 +36,24 @@ internal fun settingsPc(library: Library, pcs: List<Pc>): Pc? =
     } ?: pcs.firstOrNull { it.paired }
 
 /**
- * The guidance for [pc] and the format in [values], or null when the format is not PyroWave or there is no PC
- * (the settings then keep their plain "Recommended: N Mbps" hint). Reads the stored result of the network the
- * device is on now.
+ * The guidance for [pc] and the format in [values], or null when there is no PC (the settings then keep their plain
+ * "Recommended: N Mbps" hint for PyroWave and nothing for the other codecs). Every codec gets it, because the probe
+ * measures the network, not the codec; but an ordinary codec shows it only when the PC can test or a result exists,
+ * so a PC that cannot test adds no noise. Reads the stored result of the network the device is on now.
  */
 @Composable
 internal fun rememberLinkGuidance(pc: Pc?, values: Map<String, *>): LinkGuidance? {
     val tests = LocalLinkTests.current
     val context = LocalContext.current
-    val staticKbps = pyroWaveRecommendedBitrateKbps(values) ?: return null
     if (pc == null) return null
-    val fps = (values["list_fps"] as? String)?.toFloatOrNull()?.roundToInt() ?: 60
+    val format = linkFormat(
+        values["video_format"] as? String, values["list_resolution"] as? String, values["list_fps"] as? String,
+        values["checkbox_enable_hdr"] as? Boolean ?: false, values["list_pyrowave_chroma"] as? String,
+    ) ?: return null
     val tested = tests?.get(pc.uuid, currentTransport(context))
-    return linkGuidance(staticKbps, fps, pc.details.pyroWave, tested)
+    val info = pc.details.pyroWave
+    if (format.codec != LinkCodec.PYROWAVE && !info.supportsLinkTest() && tested == null) return null
+    return linkGuidance(format, info, tested)
 }
 
 /**

@@ -72,9 +72,9 @@ preset keys through `RumblePreferences` (see [RUMBLE.md](RUMBLE.md)) and reads C
   When PyroWave is selected, the bitrate row and live help also show its recommended Mbps for the
   current resolution/FPS/effective chroma/HDR, independently of the chosen bitrate. SDR 4:4:4 uses
   its own regression coefficients; HDR uses the 4:2:0 recommendation even if 4:4:4 remains saved.
-  Other codecs add no recommendation. With a PC known, the hint also carries the reason and the age of the
+  Other codecs show the recommendation only when the PC can test the link or a result exists (docs/STREAM_QUALITY.md, "Ordinary codecs"). With a PC known, the hint also carries the reason and the age of the
   last link test (`Recommended: 225 Mbps · link tested at 340 Mbps`), and two rows follow the bitrate row in the
-  Stream tab, PyroWave only: **Test link** (starts the UDP probe through a cancellable portal; explains it when
+  Stream tab: **Test link** (starts the UDP probe through a cancellable portal; explains it when
   the PC cannot test) and **Use recommended bitrate** (fills the bitrate on the user's press; nothing else ever
   changes it). The PC is the one whose library is open, else the first paired one. The per-game bitrate row carries
   the same hint but no Test link. Method, thresholds and storage: [STREAM_QUALITY.md](STREAM_QUALITY.md#pyrowave-link-guidance-18).

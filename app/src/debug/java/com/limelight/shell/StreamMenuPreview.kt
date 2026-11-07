@@ -133,7 +133,8 @@ internal class FakeStreamMenuHost(initialUpscalerMode: Int = 2) : StreamMenuHost
     override var bitrateResult by mutableStateOf<BitrateResult?>(null)
     // A tested Wi-Fi link that carries less than the 225 Mbps guide, so the Bitrate page shows its recommendation row
     override val linkGuidance: com.limelight.shell.link.LinkGuidance? get() = com.limelight.shell.link.linkGuidance(
-        225_000, 60, com.limelight.nvstream.http.PyroWaveHostInfo.NONE,
+        com.limelight.shell.link.linkFormat(com.limelight.shell.link.LinkCodec.PYROWAVE, 1920, 1080, 60, false, false)!!,
+        com.limelight.nvstream.http.PyroWaveHostInfo.NONE,
         com.limelight.shell.link.LinkTest(180_000, System.currentTimeMillis() - 86_400_000L, com.limelight.shell.link.LinkTransport.WIFI, 50, 1392),
     )
     override fun applyBitrate(requested: Int, accepted: (Int) -> Unit) {

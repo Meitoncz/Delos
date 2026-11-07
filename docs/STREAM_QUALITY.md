@@ -77,18 +77,21 @@ clamps it. Suggested A/B: 4:2:0 at 225 Mbps, 4:4:4 at 225, 4:4:4 at 270, and 4:4
 ## PyroWave link guidance (#18)
 
 PyroWave needs hundreds of Mbps and degrades into blur, not stalls, when the link falls short, so Delos
-tells the user what the link carries instead of guessing. Four parts, all recommendation only: Delos
-never changes the bitrate setting by itself and never sends `pyrowavePaceMbps` or `pyrowaveLinkMbps` to the
-host (no JNI plumbing for them). Everything is PyroWave-only; other codecs show nothing new. Code:
-`app/src/main/java/com/limelight/shell/link/` (pure logic and the probe client), the rows in
-`shell/screens/LinkGuidanceRows.kt`.
+tells the user what the link carries instead of guessing. The **Test link** and the recommendation work for **every
+codec** (H.264, HEVC, AV1, automatic and PyroWave): the probe measures the network, not the codec. Only the passive
+in-stream hint and the Link statistics block are PyroWave-only (see "Passive hint"). Everything is recommendation
+only: Delos never changes the bitrate setting by itself and never sends `pyrowavePaceMbps` or `pyrowaveLinkMbps` to
+the host (no JNI plumbing for them). Code: `app/src/main/java/com/limelight/shell/link/` (pure logic and the probe
+client), the rows in `shell/screens/LinkGuidanceRows.kt`.
 
 1. **Test link** (Settings, Stream tab, under the bitrate row): an active UDP probe against the PC. It runs
    only when the user presses it, never automatically and never during a stream (the host refuses probes
    while a stream session exists, answering HTTP 400 "Stop streaming before testing bandwidth"). A cancellable
    portal says what is being tested ("Testing 250 Mbps · stay on Wi-Fi · B cancels").
 2. **Recommended bitrate with a one-line reason** (Settings bitrate row, per-game bitrate row, stream menu
-   Bitrate page): `Recommended: 225 Mbps · link tested at 340 Mbps`. Settings also offers **Use recommended
+   Bitrate page): `Recommended: 225 Mbps · link carries up to 665 Mbps` (both numbers when the link has headroom; the
+   help panel says it in one sentence: "Tested yesterday on Wi-Fi: carries up to 665 Mbps; 225 Mbps is enough for
+   1080p60 PyroWave 4:2:0."). Settings also offers **Use recommended
    bitrate**, which fills the bitrate on the user's press; the stream menu's row fills the slider on A and
    still needs Apply.
 3. **Passive in-stream hint**: a rolling ~5 s window of the renderer's own counters. When the link drops
@@ -170,10 +173,40 @@ to say how much picture a tested budget carries ("about 102 Mbps of picture afte
 `recommend(...)` = `min(PyroWaveBitrate.recommendedKbps, tested wire budget, PyroWaveHostLinkMbps)`, rounded
 down to 5 Mbps, never under 5 Mbps; the live drop hint can only lower it further. The bitrate setting is a total
 wire allowance (Delos sends it as `configuredBitrateKbps`), as is the probe's rate, so they compare directly.
-Reasons: `not tested on this link`, `link tested at N Mbps` (carries what the format needs or less),
+Reasons: `not tested on this link`, `link carries up to N Mbps` (headroom) or `link carries N Mbps` (not enough),
 `the PC's link is N Mbps`, `drops frames at N Mbps`.
 
-### Passive hint
+### Ordinary codecs (H.264, HEVC, AV1)
+
+Host support is the same check as for PyroWave: the paired `/serverinfo` must advertise `PyroWaveUdpProbeVersion=1`. The
+host source shows the probe handler itself (`getPyroWaveUdpProbe`) asks for nothing but a paired client and no running
+stream, and no PyroWave setting; but the `/serverinfo` fields are only written when the host's PyroWave encoder works on its
+capture adapter, so a host without PyroWave support does not advertise the probe and Delos does not try it (a host
+that does not advertise gets "cannot test the link yet" and, for an ordinary codec, no extra row at all). The stored
+result is a wire budget, independent of the codec, so one test serves every codec.
+
+Recommendation for an ordinary codec: `min(useful maximum, 65 % of the tested budget, 65 % of the PC's link)`, never
+below 5 Mbps; with no test, the app's own default bitrate (Moonlight's table: 20 Mbps at 1080p60, 40 at 1440p60, 80 at
+4K60, shown as before). Constants, in `LinkPolicy` (**judgment, not measurement; verify on the Odin**):
+
+| Constant | Value | Reasoning |
+|---|---|---|
+| `ORDINARY_BUDGET_SHARE` | 0.65 | The test is a clean 2 s burst. A live stream adds FEC (Sunshine default 20 %, configurable higher), audio and control, and its rate control overshoots on scene cuts and keyframes; the 5 % confirmation margin is already in the tested budget. |
+| `H264_CAP_FACTOR` | 3.0 x default | 60 Mbps at 1080p60: H.264 needs about half as much again as HEVC/AV1 for the same picture; the quality knee is around 40-60 Mbps. |
+| `HEVC_CAP_FACTOR`, `AV1_CAP_FACTOR` | 2.0 x default | 40 Mbps at 1080p60, 80 at 1440p60. Automatic assumes this middle value. |
+| `ORDINARY_MAX_KBPS` | 150 Mbps | The knee at 4K60 is about 100-160 Mbps, and hardware decoders (H.264 level 5.2, common HEVC profiles) top out near it. |
+
+Example: HEVC 1080p60 on a link that carries up to 665 Mbps is recommended 40 Mbps (the knee, not 65 % of the link), reason
+`link carries up to 665 Mbps`; H.264 on a link that carries 80 Mbps is recommended 50 Mbps (65 % of 80, below the 60 Mbps
+useful maximum), reason `link carries 80 Mbps`. The stream menu shows the row for an ordinary codec only when a test exists
+(testing is done in Settings, before connecting); Settings shows it when the PC can test or a result exists.
+
+### Passive hint (PyroWave only)
+
+Ordinary codecs show neither this hint nor the Link block: their loss counters are not equivalent. The RTP queue repairs
+loss with FEC and recovers with IDR or reference invalidation, and the frame-loss figure counts only frames dropped
+after all that, while PyroWave's partial and lost frames count every frame that arrived damaged. A threshold calibrated on
+one would be meaningless on the other, so the hint stays PyroWave-only until it is measured for the others.
 
 Every second the PyroWave stats thread feeds `LinkMonitor` (also with the overlay off): frames, partial, lost
 and skipped frames and the app's received rate, with the bitrate in force. The verdict covers the trailing

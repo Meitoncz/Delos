@@ -87,6 +87,29 @@ internal object LinkPolicy {
     const val FRAME_HEADER_BYTES = 8
     const val MAX_FEC_BLOCK_SHARDS = 255
 
+    // --- Ordinary codecs (H.264, HEVC, AV1): a share of the tested budget, capped by what the codec can use ----------------
+    // Judgment, not measurement; calibrate on the Odin (docs/STREAM_QUALITY.md, "Link guidance for ordinary codecs").
+    /**
+     * An ordinary codec is recommended at most this share of the tested wire budget. The test measures a clean 2-second
+     * burst; a live stream also carries FEC (Sunshine's default is 20 %, up to 100 %), audio and control, and its rate
+     * control overshoots on scene cuts and keyframes (several times the average frame), so the stream keeps well clear of
+     * the ceiling. PyroWave is exempt: its budget is the wire allowance the host reserves its own FEC from.
+     */
+    const val ORDINARY_BUDGET_SHARE = 0.65
+
+    /**
+     * The useful maximum is the app's default bitrate for the resolution and rate (Moonlight's table: 20 Mbps at 1080p60,
+     * 40 at 1440p60, 80 at 4K60) times this factor. H.264 needs about half as much again as HEVC and AV1 for the same
+     * picture; the usual picture-quality knee is about 40-60 Mbps at 1080p60 and 100-160 Mbps at 4K60, beyond which the
+     * encoder only adds bits to noise. Automatic is assumed to end up on HEVC or AV1.
+     */
+    const val H264_CAP_FACTOR = 3.0
+    const val HEVC_CAP_FACTOR = 2.0
+    const val AV1_CAP_FACTOR = 2.0
+
+    /** No ordinary codec is recommended more than this; hardware decoders (H.264 level 5.2 and common HEVC profiles) top out near it. */
+    const val ORDINARY_MAX_KBPS = 150_000
+
     // --- Passive hint (Delos's own; calibrate on the Odin) ---------------------------------------------------------
     /** The rolling window of the in-stream verdict. */
     const val HINT_WINDOW_SECONDS = 5f

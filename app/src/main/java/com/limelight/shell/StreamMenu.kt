@@ -28,10 +28,11 @@ import com.limelight.binding.input.KeyboardTranslator
 import com.limelight.nvstream.http.HostHttpResponseException
 import com.limelight.nvstream.http.PyroWaveHostInfo
 import com.limelight.preferences.PreferenceConfiguration
-import com.limelight.preferences.PyroWaveBitrate
+import com.limelight.shell.link.LinkCodec
 import com.limelight.shell.link.LinkGuidance
 import com.limelight.shell.link.LinkTestStore
 import com.limelight.shell.link.currentTransport
+import com.limelight.shell.link.linkFormat
 import com.limelight.shell.link.linkGuidance
 import com.limelight.shell.data.ProfileStore
 import com.limelight.shell.settings.AppearanceStore
@@ -361,15 +362,23 @@ class StreamMenu(private val game: Game) {
         private val linkTests by lazy { LinkTestStore(game) }
         private val pcUuid: String? = game.intent.getStringExtra(Game.EXTRA_PC_UUID)
 
-        // The static guide of the running format, the last link test of this PC on the current kind of network and the
-        // stream's own drop counters. The PC's own link speed is not known here (it is read when testing).
+        // The format asked for, the last link test of this PC on the current kind of network and, for PyroWave, the stream's own
+        // drop counters. The PC's own link speed is not known here (it is read when testing). An ordinary codec shows the row
+        // only once a test exists: testing happens in Settings, before connecting.
         override val linkGuidance: LinkGuidance? get() {
-            if (!game.isPyroWave) return null
-            val hdr = prefs.enableHdr
-            val guide = minOf(PyroWaveBitrate.recommendedKbps(prefs.width, prefs.height, Math.round(prefs.fps),
-                prefs.pyroWaveChroma444 && !hdr, hdr), PreferenceConfiguration.MAX_BITRATE_KBPS)
+            val codec = when {
+                game.isPyroWave -> LinkCodec.PYROWAVE
+                else -> when (prefs.videoFormat) {
+                    PreferenceConfiguration.FormatOption.FORCE_AV1 -> LinkCodec.AV1
+                    PreferenceConfiguration.FormatOption.FORCE_HEVC -> LinkCodec.HEVC
+                    PreferenceConfiguration.FormatOption.FORCE_H264 -> LinkCodec.H264
+                    else -> LinkCodec.AUTO
+                }
+            }
+            val format = linkFormat(codec, prefs.width, prefs.height, Math.round(prefs.fps), prefs.enableHdr, prefs.pyroWaveChroma444) ?: return null
             val tested = pcUuid?.let { linkTests.get(it, currentTransport(game)) }
-            return linkGuidance(guide, Math.round(prefs.fps), PyroWaveHostInfo.NONE, tested, game.linkMonitor?.hint())
+            if (codec != LinkCodec.PYROWAVE && tested == null) return null
+            return linkGuidance(format, PyroWaveHostInfo.NONE, tested, if (codec == LinkCodec.PYROWAVE) game.linkMonitor?.hint() else null)
         }
 
         override val upscalerAvailable get() = game.isPyroWave || com.limelight.binding.video.SgsrRenderer.isSupported(game)
