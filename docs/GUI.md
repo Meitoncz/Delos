@@ -524,9 +524,13 @@ the accent the rest and fainter.
 - **Bitrate page, recommendation row** (PyroWave always; an ordinary codec once a link test exists): a row above Apply, `Recommended: 135 Mbps · drops frames at 225 Mbps` (icon Speed, value **Fill**, a scrolling label like every row), refreshed once a second from the stream's own counters and the last link test. A fills the slider with the recommendation; only Apply sends it. Its help says what the number rests on and, for an untested link, that testing is done in Settings before connecting (the host refuses probes during a stream, so there is no Test link here). An ordinary codec without a test shows only the slider and Apply.
 - **Statistics panel, Link block** (full panel, PyroWave only, after Backlog): **Receiving** (`212 of 225 Mb/s`, the app's whole received rate against the bitrate in force), **Partial / lost** (frames per second) and **Verdict** (`Link keeps up at 225 Mbps`, `Link drops frames at 225 Mbps, try 135 Mbps`, `Device skips frames; the link is fine`, `Measuring`).
 - **Statistics panel, SGSR output rows** (full panel, MediaCodec streams whose output goes through the upscaler or Sharpen only; same label/value style as the other rows):
+  **Upscaling** is the GPU time per frame read from the frame fences (the CPU submit time until the first fence is read).
   **Frame queue** (after Upscaling; `1.0 avg / 1 max waiting · age 0.6 / 1.9 ms · 0.0 skipped /s`) says how many decoder frames were waiting when
   a draw started (1 = the output kept up), how long the newest one had waited, and how many older frames per second were skipped
-  because a newer one was ready (non-zero = the GPU work per frame is longer than the frame interval). **Render latency**
+  because a newer one was ready (non-zero = the output thread cannot keep up with the decoder). When the GPU already had two frames of
+  work in flight, the row ends with `· 30.0 GPU busy /s`: frames per second that waited for it and were replaced by a newer one without
+  being drawn (the GPU work per frame is longer than the frame interval). After two seconds of that, one toast per stream and upscaler
+  mode says "Upscaler is too heavy for this frame rate: lower the supersampling or the frame rate"; no setting changes by itself. **Render latency**
   (before Total latency; `6.1 / 7.9 / 9.3 ms avg/p95/max`) is the time from the frame reaching the output stage to the display presenting it, over the
   last second. It is shown only while the statistics overlay is on and the platform reports the display's present time, and it
   does not include the controller, network, host or decoding, so it is not the delay between a press and the changed picture

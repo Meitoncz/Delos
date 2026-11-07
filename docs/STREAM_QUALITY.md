@@ -568,8 +568,11 @@ One commit each, in the order of the table. None changes the picture, adds a set
 |---|---|---|
 | **Newest frame only in the SGSR GL thread.** The frame-available callback runs on its own thread and counts queued frames (`FrameQueue`); a draw consumes every waiting frame with one `updateTexImage()` each and draws only the newest, so a stale frame is never shown while a newer one waits. SGSR 2 sees the newest frame's timestamp, so one skipped frame does not reset its history (it resets only when the gap exceeds its 50 ms limit, about 6 frames at 120 FPS). The callback has to count on its own thread because on the GL thread the callbacks of frames queued behind a long draw are not delivered until that draw is over. | `SgsrRenderer.draw`, `FrameQueue` | About 0 ms while the output keeps up; when the GPU work per frame exceeds the frame interval (SGSR 2 at 1x or 2x at 120 FPS, 4K supersampling) it removes the 1-3 queued frames, 8-25 ms. The depth depends on the codec's buffer count, which was not read. Costs frames per second only in that overloaded state. |
 | **Fast V-Sync aware of the output stage.** The pacer releases a frame earlier by the smoothed frame-available-to-swap time of the SGSR GL thread plus 0.5 ms, capped at half a frame period and never before now; the phase bookkeeping keeps the display target (`SgsrPacing`, `NanoPacer`). Latency mode is untouched. Balanced is not adjusted: its release time is the Choreographer callback, and the SGSR consumer ignores the release timestamp, so there is nothing to move. | `NanoPacer.waitAndDrainLatest`, `SgsrPacing` | 0 to a few ms: avoids a missed latch for a share of the frames (up to 8.3 ms each) with Fast V-Sync and SGSR. On the SDR path the estimate is CPU submit time and underestimates GPU completion; the cap bounds the damage of a wrong estimate. |
-| **HDR output without `glFinish`.** The P010 buffer goes to the SurfaceControl transaction with an `EGL_ANDROID_native_fence_sync` fence, so the GL thread no longer waits for the GPU. Reuse stays protected by the transaction's release fences as before. Without the extension the code falls back to `glFinish`. The GPU time that the figures used to include through `glFinish` (the stat, the pacer input) is the time from the flush to the signal of that fence, read from the fences of earlier frames, and added to the CPU submit time. | `sgsr_hdr_output.cpp` | 0.2-0.5 ms (one wake after the GPU is idle) and the next frame's `updateTexImage` and command recording overlap the previous frame's GPU work. |
-| **GL thread at urgent display priority and a high-priority EGL context** when `EGL_IMG_context_priority` is offered (a refusal falls back to a normal context; the granted level is logged). | `SgsrRenderer` | Below 0.5 ms, only with a contended GPU. |
+| **HDR output without `glFinish`.** The P010 buffer goes to the SurfaceControl transaction with an `EGL_ANDROID_native_fence_sync` fence, so the GL thread no longer waits for the GPU. Reuse stays protected by the transaction's release fences as before. Without the extension the code falls back to `glFinish`. Every fence descriptor is owned by exactly one place: the transaction takes the one passed to `setBuffer`, the output keeps a `dup` per frame (closed when it signals, when its slot is reused or at teardown) and the present fence of the transaction statistics is closed the same way. | `sgsr_hdr_output.cpp` | 0.2-0.5 ms (one wake after the GPU is idle) and the next frame's `updateTexImage` and command recording overlap the previous frame's GPU work. |
+| **GPU work in flight bounded to two frames** (device finding below). Every frame the GL thread submits gets a native fence (SDR: `eglCreateSyncKHR` with `EGL_SYNC_NATIVE_FENCE_ANDROID` plus a flush, polled with a zero timeout; HDR: the fence of the P010 hand-over). With two frames still running, the draw is not queued: the newest frame stays in the texture and is drawn as soon as the GPU is free (retried every millisecond) or replaced by a newer one, so latency stays at about one to two GPU frames however slow the GPU is, at the cost of frames per second. Two, not one, because the CPU needs 4-6 ms per frame to record while the GPU needs about 10: with one the GPU would idle during every recording. A fence that has not signalled after 250 ms is given up so a hung GPU cannot freeze the picture. Frames dropped this way are the `GPU busy /s` figure of the Frame queue row. Without native fences the GPU is waited for after every frame. SGSR 2 history is unaffected: a dropped frame never reaches it. | `GpuInFlight`, `SgsrRenderer.draw`, `sgsr_frame_timestamps.cpp` | Bounds the 70-140 ms measured with SGSR 2 at 4K to about 20 ms. |
+| **Honest GPU time.** The Upscaling figure and the Fast V-Sync input are now the GPU execution time of a frame from its fences (from the later of its submission and the end of the previous frame to its signal time; queueing behind the previous frame is not counted), not CPU submit time or a backlog-dominated wall time. Until the first fence is read, or without fences, it is the CPU submit time. | `GpuInFlight`, `SgsrRenderer` | None; the numbers mean what they say. |
+| **Overload notice and load governor.** After two consecutive seconds with the GPU time above 90 % of the frame period or more than 20 % of the frames dropped for a busy GPU, one toast per stream and mode says "Upscaler is too heavy for this frame rate: lower the supersampling or the frame rate" (logged under `DelosSharpen`); no setting is changed. In the SGSR 2 modes, while the GPU time is above 70 % of the frame period, every second frame reuses the previous frame's optical flow instead of recomputing it (back to every frame below 45 %), which saves the flow passes (a quarter to a third of the temporal cost) on half the frames; only changing motion can look slightly less sharp, and only under load. | `OverloadDetector`, `FlowGovernor`, `SgsrTemporal.render` | Under load: about 10-15 % less GPU time for SGSR 2. [INFERENCE] |
+| **GL thread at urgent display priority and a high-priority EGL context.** Tried and **reverted**: a high GPU priority lets the SGSR context pre-empt the compositor's and the system UI's GPU work, and with the GPU saturated (below) the whole system stuttered. Do not use `EGL_CONTEXT_PRIORITY_HIGH_IMG` for the stream. The GL thread stays at `THREAD_PRIORITY_DISPLAY`. | `SgsrRenderer` | None. |
 | **PyroWave present observability** (logging only): the present modes the surface offers and the chosen one, the swapchain image count and the pre-transform, once when the swapchain is created and in the `DelosPyroDiag` line. | `pyrowave_renderer.cpp` | None by itself; it shows whether MAILBOX is used and whether the compositor rotates. |
 | **Stage timestamps** (below). | `LatencyStages`, `SgsrRenderer`, `sgsr_frame_timestamps.cpp` | None; measurement only. |
 
@@ -578,6 +581,34 @@ Candidates from the investigation that were **not** done: the reactive-mask text
 without `OES_texture_float_linear`, and `rgba8` would quantise the mask and so change the picture, for about 0.1 ms in the Quality
 mode only); the OES-copy fusion; cheaper SGSR 2 flow and a 2x cap (they change the picture, issue #74); ADPF hint sessions
 (power and heat, wants its own decision); front-buffer rendering (risk, only after these are measured).
+
+### GPU saturation by the temporal modes (device finding, 2026-11-07)
+
+Measured on the Odin with this branch's first version, SGSR2-DV (Normal) at 2x supersampling (a 4K target), 120 FPS: the
+Upscaling figure peaked above 150 ms, `DelosSharpen` showed `queue pending avg=1.0 max=1, skipped=0` (the SurfaceTexture queue
+was not the problem), `draw` 4-6 ms on average (maximum 41-50), and `DelosLatency` showed `avail->gpu` 60-130 ms,
+`avail->latch` 20-60 ms and `avail->present` 70-140 ms (maximum 290). The whole app and the system stuttered.
+
+Reading: the CPU submitted much faster than the Adreno 740 could execute (SGSR2-DV at 4K costs about 10 ms of GPU
+time headless against an 8.3 ms frame), so 8-15 frames of work piled up inside the driver's command queue and the swap
+chain, where neither the SurfaceTexture coalescing nor the pacer could see them. With the GPU saturated, the compositor's and
+the system UI's GPU work waited behind it, which is the system-wide stutter [INFERENCE: the stutter itself was not
+profiled]. A high EGL context priority made this worse by design and is gone.
+
+Consequences, now in the code: the GPU frames in flight are bounded (above), the Upscaling figure is real GPU time, and the
+user is told when the upscaler is too heavy. **A temporal mode at a 4K target (2x supersampling) needs about 10 ms of GPU time
+per frame, so on the Odin it can only hold 60-90 FPS; use 1x, or a 60 FPS stream, for SGSR2-DV at 4K.** What the bound
+cannot do is create GPU time: a saturated GPU stays saturated, and the dropped frames are the price.
+
+Memory traffic is the other candidate for a system-wide slowdown that a longer GPU queue does not explain (the GUI was also
+slow with SGSR2-DV (Quality) at 1x). Per frame the temporal path writes the RGBA16F history at the output size (8 bytes per
+pixel: 71 MB at 4K, 16 MB at 1080p), reads the previous history, and reads it again in the present pass, plus 16 MB
+for the stream-sized RGBA16F reactive mask in Quality mode: about 210 MB per frame at 4K, 25 GB/s at 120 FPS, and about
+50 MB (6 GB/s) at 1080p with Quality, on a memory bus the CPU, display controller and decoder share [INFERENCE from the texture
+formats in `SgsrTemporal`, not measured]. Halving it needs a different history format (an 8-bit history changes the
+picture; `R11G11B10F` has no alpha) or a single-channel mask, so it is left for a decision with a before/after picture
+comparison. The in-flight bound also keeps the GPU from running at 100 % when frames are being dropped anyway, but it does
+not leave headroom on its own; the load governor above lowers the flow work from 70 % of the frame period.
 
 ### Measurement plan
 
@@ -594,8 +625,12 @@ mode only); the OES-copy fusion; cheaper SGSR 2 flow and a 2x cap (they change t
      SDR: GPU, latch and present come from `eglGetFrameTimestampsANDROID` a few frames after the swap. HDR: GPU from the fence signal
      time, latch and present from the SurfaceControl transaction statistics. A stage the platform does not give has no
      entry. Direct MediaCodec has `decode` and `pacing` only.
-   - `DelosSharpen` once a second: `queue pending avg/max`, `age avg/max` and `skipped` (frames skipped because a newer one was
-     waiting). Pending above 1 on average, or skipped above 0, means the output stage cannot keep up.
+   - `DelosSharpen` once a second: `queue pending avg/max`, `age avg/max`, `gpu avg/max` (GPU execution time per frame from the
+     frame fences), `in=` (frames per second from the decoder), `drawn`, `skipped` (frames skipped because a newer one was
+     waiting) and `gpuBusySkipped` (frames that waited for a busy GPU and were replaced). Pending above 1 on average, or
+     skipped above 0, means the CPU side cannot keep up; `gpu avg` above the frame period (8.3 ms at 120 FPS) or
+     `gpuBusySkipped` above 0 means the GPU cannot. Two lines under the same tag say when the overload governor acted
+     (`overload: ...`, `SGSR 2 under load: ...`).
    - `DelosPyroDiag` (PyroWave): the existing numbers plus `present=` (MAILBOX or FIFO), `images=` and `preTransform=`.
 3. **No code needed.** `adb shell dumpsys SurfaceFlinger --latency "<layer>"` (layer names from `dumpsys SurfaceFlinger --list`;
    the HDR child layer is `Delos SGSR HDR`) for per-frame desired and actual present times; a Perfetto trace
