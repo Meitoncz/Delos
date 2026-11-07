@@ -102,6 +102,14 @@ The TV channel uses the same mark; PC shortcut icons remain unchanged.
   extension is a 210×126 bitmap of its own, at most 24 kept) and is rendered only on a cache fill; its cache key carries a composition
   version, so bitmaps of an older layout are never reused. The game's colors are still taken from the plain crop, not the darkened
   composition. The live paths draw the extension from that small bitmap and the band at full resolution with the same fade as a mask.
+- **Frame cost of the home screen** (the render thread, not the main thread, is the bottleneck: every full-screen offscreen layer whose
+  content changes is rendered again on every display frame, and the hero's tilt changes it every frame). With the 120 Hz display the
+  rules are: (1) the game background's opacity is **not** a group layer: it multiplies each draw of the hero
+  (`CompositingStrategy.ModulateAlpha`), and the fade into the theme color (`alpha .9` gradients) is drawn over the hero at its own
+  opacity (the theme color is also what lies under the hero, so the picture is the same); (2) the cross-fade to the next game's
+  background (`HeroCrossfade`, 900 ms) fades both heroes by `ModulateAlpha` instead of `Crossfade`'s two offscreen layers, and the
+  old hero stops its animation at once; (3) the animated background repaints at most 30 times a second while a game background
+  is shown (60 otherwise); (4) a tile's focus glow (the blurred `dropShadow`) exists only while the tile is focused or fading it out.
 - **Artwork page** (game options → Artwork, `ArtworkScreen`; approved prototype variant B): no side column. Header and tab pills
   (`SelectionPillHost`, touch only, L1 / R1) over a toolbar with the **SteamGridDB game chip** (name, year, id, image count of the tab),
   **Search for another name** (X) and **Filter** (Y, with a count badge of the active filters); under it the result line

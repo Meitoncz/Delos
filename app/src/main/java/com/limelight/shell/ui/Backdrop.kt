@@ -5,7 +5,8 @@ import android.graphics.ColorMatrixColorFilter
 import android.graphics.RenderEffect
 import android.graphics.Shader
 import android.os.Build
-import androidx.compose.animation.Crossfade
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.Animatable
@@ -66,6 +67,8 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.limelight.shell.settings.Appearance
 import com.limelight.shell.settings.BackgroundKind
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.cos
 import kotlin.math.roundToInt
@@ -98,16 +101,19 @@ fun Backdrop(appearance: Appearance, colors: DelosColors, hero: GameArt?, modifi
     val heroAlpha by animateFloatAsState(if (heroOn) appearance.heroOpacity / 100f else 0f, tween(800), label = "hero")
     Box(modifier.fillMaxSize().background(colors.bg)) {
         if (heroAlpha > 0f || heroOn) {
-            Box(Modifier.fillMaxSize().graphicsLayer { alpha = heroAlpha }) {
-                Crossfade(hero, animationSpec = tween(900), label = "heroArt") { art ->
-                    if (art != null) HeroArt(art, appearance.heroBlur, tiltReduced, heroOn && art == hero, animate && heroOn && art == hero)
+            // The game background's opacity multiplies each draw of the hero (ModulateAlpha) instead of putting the whole hero into
+            // an offscreen layer, which the tilt would render again on every display frame. The fade into the theme color below is
+            // drawn over it at its own opacity: the theme color is also what lies under the hero, so this is the same picture.
+            Box(Modifier.fillMaxSize().graphicsLayer { alpha = heroAlpha; compositingStrategy = CompositingStrategy.ModulateAlpha }) {
+                HeroCrossfade(hero) { art ->
+                    HeroArt(art, appearance.heroBlur, tiltReduced, heroOn && art == hero, animate && heroOn && art == hero)
                 }
-                // Fade the game background into the theme color at the bottom and on the left (behind the texts)
-                Box(Modifier.fillMaxSize().graphicsLayer { alpha = .9f }.drawBehind {
-                    drawRect(Brush.verticalGradient(0f to Color.Transparent, .42f to Color.Transparent, 1f to colors.bg))
-                    drawRect(Brush.horizontalGradient(0f to colors.bg, .38f to colors.bg.copy(alpha = 0f)))
-                })
             }
+            // Fade the game background into the theme color at the bottom and on the left (behind the texts)
+            Box(Modifier.fillMaxSize().graphicsLayer { alpha = .9f }.drawBehind {
+                drawRect(Brush.verticalGradient(0f to Color.Transparent, .42f to Color.Transparent, 1f to colors.bg))
+                drawRect(Brush.horizontalGradient(0f to colors.bg, .38f to colors.bg.copy(alpha = 0f)))
+            })
         }
         // The animated background takes on the main color of the game's background image (with the setting on)
         val matching = heroOn && appearance.matchGameColors
@@ -120,6 +126,39 @@ fun Backdrop(appearance: Appearance, colors: DelosColors, hero: GameArt?, modifi
             gamePending = matching && !known, heroActive = heroOn,
         )
         Box(Modifier.fillMaxSize().drawBehind { drawVignette(colors.scrim) })
+    }
+}
+
+/** One hero of a [HeroCrossfade] and how visible it is. */
+private class FadingHero(val art: GameArt, val alpha: Animatable<Float, androidx.compose.animation.core.AnimationVector1D>)
+
+/**
+ * Cross-fades the game background when the focus moves to another game: the new hero fades in over 900 ms while the old one
+ * fades out and leaves. Like `Crossfade`, but each hero's opacity multiplies its own draws ([CompositingStrategy.ModulateAlpha])
+ * instead of making every one of them an offscreen layer (a full-screen layer each for the old and the new hero, redone on every
+ * display frame while the tilt moves, for as long as the fade runs).
+ */
+@Composable
+private fun HeroCrossfade(hero: GameArt?, content: @Composable (GameArt) -> Unit) {
+    val heroes = remember { mutableStateListOf<FadingHero>().also { list -> hero?.let { list += FadingHero(it, Animatable(1f)) } } }
+    LaunchedEffect(hero) {
+        if (heroes.lastOrNull()?.art == hero) return@LaunchedEffect
+        val incoming = hero?.let { FadingHero(it, Animatable(0f)) }
+        if (incoming != null) heroes += incoming
+        coroutineScope {
+            heroes.filter { it !== incoming }.forEach { old ->
+                launch {
+                    old.alpha.animateTo(0f, tween(900))
+                    heroes.remove(old)
+                }
+            }
+            if (incoming != null) launch { incoming.alpha.animateTo(1f, tween(900)) }
+        }
+    }
+    heroes.forEach { fading ->
+        key(fading) {
+            Box(Modifier.fillMaxSize().graphicsLayer { alpha = fading.alpha.value; compositingStrategy = CompositingStrategy.ModulateAlpha }) { content(fading.art) }
+        }
     }
 }
 
@@ -376,6 +415,9 @@ private class BackgroundClock {
 
 private const val MIN_REDRAW_NANOS = 15_000_000L
 
+/** With a game background over it the animated background is a faint light under the hero: it repaints at 30 Hz at most (a 4th of the 120 Hz frames). */
+private const val MIN_REDRAW_NANOS_UNDER_HERO = 31_000_000L
+
 /** Per-frame smoothing factor k (the prototype's per-frame lerps at 60 fps) converted to elapsed time. */
 private fun smoothing(k: Float, dt: Float) = 1f - (1f - k).pow(dt * 60f)
 
@@ -385,6 +427,7 @@ private fun AnimatedBackground(appearance: Appearance, colors: DelosColors, game
     val speed by rememberUpdatedState(if (appearance.reducedMotion) .15f else 1f)
     val tintTarget by rememberUpdatedState(gameHues)
     val baseTarget by rememberUpdatedState(if (heroActive) .12f else 1f)
+    val redrawNanos by rememberUpdatedState(if (heroActive) MIN_REDRAW_NANOS_UNDER_HERO else MIN_REDRAW_NANOS)
     LaunchedEffect(Unit) {
         var last = 0L
         var lastDrawn = 0L
@@ -404,7 +447,7 @@ private fun AnimatedBackground(appearance: Appearance, colors: DelosColors, game
                     }
                 }
                 clock.baseAlpha = if (clock.baseAlpha.isNaN()) baseTarget else clock.baseAlpha + (baseTarget - clock.baseAlpha) * smoothing(.05f, dt)
-                if (now - lastDrawn >= MIN_REDRAW_NANOS) {
+                if (now - lastDrawn >= redrawNanos) {
                     lastDrawn = now
                     clock.tick++
                 }

@@ -9,6 +9,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -117,6 +118,8 @@ fun Modifier.focusEffects(
     val ringAlpha by animateFloatAsState(
         if (focused) 1f else 0f, tween(if (focused) 140 else 110, easing = EaseOut), label = "focusRing",
     )
+    // The glow is a blurred shadow layer: only an element that is focused or still fading its glow out has one (read as a flip, not per frame)
+    val glowVisible by remember { derivedStateOf { focused || ringAlpha > 0f } }
     val sweepPos = remember { Animatable(0f) }
     LaunchedEffect(focused) {
         if (focused && sweep) {
@@ -169,13 +172,13 @@ fun Modifier.focusEffects(
                     )
                 }
             }
-            else Modifier.dropShadow(shape) {
+            else if (glowVisible) Modifier.dropShadow(shape) {
                 radius = glow.blur * k
                 spread = glow.spread * k
                 offset = Offset(0f, glow.offsetY * k)
                 color = colors.glow
                 alpha = ringAlpha
-            }
+            } else Modifier
         )
         .drawWithContent {
             drawContent()
