@@ -43,6 +43,12 @@ object AnimatedPlayback {
     /** A hero frame is decoded at half the hero area (2100 px), which the blur hides anyway. */
     const val HERO_WIDTH = 1050
 
+    /** How long a game must stay the focused one before its animated hero starts (the still hero shows meanwhile). */
+    const val HERO_DWELL_MS = 500L
+
+    /** Whether the animated hero may start: playing is allowed ([animate]) and the game has been focused for [HERO_DWELL_MS]. */
+    fun heroMayPlay(animate: Boolean, dwelledMillis: Long): Boolean = animate && dwelledMillis >= HERO_DWELL_MS
+
     /**
      * Whether the animation of a view plays now. [visible]: the view is on screen and not covered; [foreground]: the app's
      * window is resumed; [streaming]: a stream is being started or runs.

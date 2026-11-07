@@ -5,8 +5,6 @@ import android.graphics.ColorMatrixColorFilter
 import android.graphics.RenderEffect
 import android.graphics.Shader
 import android.os.Build
-import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -26,6 +24,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -68,8 +67,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.limelight.shell.settings.Appearance
 import com.limelight.shell.settings.BackgroundKind
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlin.math.cos
 import kotlin.math.roundToInt
@@ -120,8 +118,7 @@ fun Backdrop(appearance: Appearance, colors: DelosColors, hero: GameArt?, modifi
                 val heroArt: @Composable (GameArt) -> Unit = { art ->
                     HeroArt(art, appearance.heroBlur, tiltReduced, heroOn && art == hero && !PerfFlags.has('j'), animate && heroOn && art == hero)
                 }
-                if (PerfFlags.has('b')) Crossfade(hero, animationSpec = tween(900), label = "heroArt") { art -> if (art != null) heroArt(art) }
-                else HeroCrossfade(hero, heroArt)
+                Crossfade(hero, animationSpec = tween(900), label = "heroArt") { art -> if (art != null) heroArt(art) }
                 if (groupLayer) fadeIntoTheme()
             }
             if (!groupLayer) fadeIntoTheme()
@@ -137,39 +134,6 @@ fun Backdrop(appearance: Appearance, colors: DelosColors, hero: GameArt?, modifi
             gamePending = matching && !known, heroActive = heroOn,
         )
         Box(Modifier.fillMaxSize().drawBehind { drawVignette(colors.scrim) })
-    }
-}
-
-/** One hero of a [HeroCrossfade] and how visible it is. */
-private class FadingHero(val art: GameArt, val alpha: Animatable<Float, androidx.compose.animation.core.AnimationVector1D>)
-
-/**
- * Cross-fades the game background when the focus moves to another game: the new hero fades in over 900 ms while the old one
- * fades out and leaves. Like `Crossfade`, but each hero's opacity multiplies its own draws ([CompositingStrategy.ModulateAlpha])
- * instead of making every one of them an offscreen layer (a full-screen layer each for the old and the new hero, redone on every
- * display frame while the tilt moves, for as long as the fade runs).
- */
-@Composable
-private fun HeroCrossfade(hero: GameArt?, content: @Composable (GameArt) -> Unit) {
-    val heroes = remember { mutableStateListOf<FadingHero>().also { list -> hero?.let { list += FadingHero(it, Animatable(1f)) } } }
-    LaunchedEffect(hero) {
-        if (heroes.lastOrNull()?.art == hero) return@LaunchedEffect
-        val incoming = hero?.let { FadingHero(it, Animatable(0f)) }
-        if (incoming != null) heroes += incoming
-        coroutineScope {
-            heroes.filter { it !== incoming }.forEach { old ->
-                launch {
-                    old.alpha.animateTo(0f, tween(900))
-                    heroes.remove(old)
-                }
-            }
-            if (incoming != null) launch { incoming.alpha.animateTo(1f, tween(900)) }
-        }
-    }
-    heroes.forEach { fading ->
-        key(fading) {
-            Box(Modifier.fillMaxSize().graphicsLayer { alpha = fading.alpha.value; compositingStrategy = CompositingStrategy.ModulateAlpha }) { content(fading.art) }
-        }
     }
 }
 
@@ -195,6 +159,16 @@ private fun DrawScope.drawVignette(scrim: Color) {
 private fun HeroArt(art: GameArt, blurPx: Int, reducedMotion: Boolean, active: Boolean, animate: Boolean) {
     val image = art.image
     var live by remember { mutableStateOf(false) }
+    // The animation starts only after the game has stayed in focus for a moment, so holding or tapping the D-pad does not create
+    // and destroy a decoder and its layers per step (the still hero shows meanwhile); losing the focus ends it at once
+    var dwelled by remember { mutableLongStateOf(0L) }
+    LaunchedEffect(animate) {
+        dwelled = 0L
+        if (animate) {
+            delay(AnimatedPlayback.HERO_DWELL_MS)
+            dwelled = AnimatedPlayback.HERO_DWELL_MS
+        }
+    }
     // The still hero leaves once the animation has faded in over it (its soft diagonal edge must not show the first frame)
     val stillAlpha by animateFloatAsState(if (live) 0f else 1f, tween(Motion.FADE, delayMillis = if (live) Motion.FADE else 0), label = "stillHero")
     // Once the animation has faded in over it, the still leaves composition for good (it only held a second tilt clock
@@ -203,8 +177,8 @@ private fun HeroArt(art: GameArt, blurPx: Int, reducedMotion: Boolean, active: B
     Box(Modifier.fillMaxSize()) {
         if (stillOn) Box(Modifier.fillMaxSize().graphicsLayer { alpha = stillAlpha }) { HeroStill(art, blurPx, reducedMotion, active) }
         // The animation needs the live blur (Android 12+); below it the first frame stays
-        if (image != null && art.animated != null && !PerfFlags.has('g') && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            HeroLive(art.id, image, art.animated, blurPx, reducedMotion, active, animate && !reducedMotion) { live = it }
+        if (image != null && art.animated != null && !PerfFlags.has('g') && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && AnimatedPlayback.heroMayPlay(animate, dwelled)) {
+            HeroLive(art.id, image, art.animated, blurPx, reducedMotion, active, !reducedMotion) { live = it }
         }
     }
 }

@@ -18,7 +18,6 @@ import kotlinx.coroutines.withContext
  * the property entirely ([has] is false, the poller returns at once).
  *
  *  - a: the game background's opacity as one full-screen offscreen layer (the old way) instead of `ModulateAlpha`
- *  - b: Compose's `Crossfade` for the game backgrounds instead of `HeroCrossfade`
  *  - c: the animated background repaints at 60 Hz under a game background
  *  - d: every tile has its glow shadow, not only the focused one
  *  - e: no animated background

@@ -107,14 +107,16 @@ The TV channel uses the same mark; PC shortcut icons remain unchanged.
   rules are: (1) the game background's opacity is **not** a group layer: it multiplies each draw of the hero
   (`CompositingStrategy.ModulateAlpha`), and the fade into the theme color (`alpha .9` gradients) is drawn over the hero at its own
   opacity (the theme color is also what lies under the hero, so the picture is the same); (2) the cross-fade to the next game's
-  background (`HeroCrossfade`, 900 ms) fades both heroes by `ModulateAlpha` instead of `Crossfade`'s two offscreen layers, and the
-  old hero stops its animation at once; (3) the animated background repaints at most 30 times a second while a game background
+  background is Compose's `Crossfade` (900 ms), which reuses a hero that comes back (focus moving back and forth between two games;
+  a hand-made cross-fade kept the superseded copy of the same game playing too, one decoder and set of layers per step, and made
+  fast listing janky), and the **animated hero starts only after the game has stayed focused for 500 ms**
+  (`AnimatedPlayback.HERO_DWELL_MS`, the still hero shows meanwhile) and ends at once when the focus leaves; (3) the animated background repaints at most 30 times a second while a game background
   is shown (60 otherwise); (4) a tile's focus glow (the blurred `dropShadow`) exists only while the tile is focused or recently was (it
   stays attached 2.5 s after the focus leaves, so focus moving back and forth between two tiles never attaches and detaches it).
 - **Performance A/B switches (debug builds)** (`ui/PerfFlags.kt`): `adb shell setprop debug.delos.perf <letters>` (re-read once a second,
   no restart, `setprop debug.delos.perf ""` clears it; release builds ignore it) turns one thing off or back to the old way each, to
   bisect the frame cost on the same listing run: **a** hero opacity as one full-screen offscreen layer (instead of `ModulateAlpha`),
-  **b** Compose's `Crossfade` for the heroes (instead of `HeroCrossfade`), **c** animated background at 60 Hz under a hero, **d** glow
+  **c** animated background at 60 Hz under a hero, **d** glow
   shadow on every tile, **e** no animated background, **f** no game background, **g** hero always the still one, **h** no animated
   tiles / logo / game page cover, **i** the live hero's layer at full resolution, **j** no tilt, **k** no focus pulse, glow or sweep.
 - **Artwork page** (game options → Artwork, `ArtworkScreen`; approved prototype variant B): no side column. Header and tab pills

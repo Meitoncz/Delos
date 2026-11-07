@@ -20,6 +20,14 @@ class AnimatedPlaybackTest {
         assertFalse(play(off = true))
     }
 
+    @Test fun theAnimatedHeroStartsOnlyAfterTheGameStayedFocused() {
+        assertFalse(AnimatedPlayback.heroMayPlay(animate = true, dwelledMillis = 0))
+        assertFalse(AnimatedPlayback.heroMayPlay(animate = true, dwelledMillis = AnimatedPlayback.HERO_DWELL_MS - 1))
+        assertTrue(AnimatedPlayback.heroMayPlay(animate = true, dwelledMillis = AnimatedPlayback.HERO_DWELL_MS))
+        // Dwelled long enough does not matter once playing is not allowed (the focus left, a launch began)
+        assertFalse(AnimatedPlayback.heroMayPlay(animate = false, dwelledMillis = AnimatedPlayback.HERO_DWELL_MS))
+    }
+
     @Test fun framesAreDecodedAtTileSizeNeverEnlarged() {
         assertEquals(520 to 300, AnimatedPlayback.decodeSize(1040, 600, 520))
         assertEquals(342 to 482, AnimatedPlayback.decodeSize(342, 482, 520))
