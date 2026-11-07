@@ -85,8 +85,8 @@ The TV channel uses the same mark; PC shortcut icons remain unchanged.
 - Must also run **automatically for all games at once**.
 - When a game is focused on the home screen, its **logo is shown in the top area** (the covers sit a bit lower) and the **background changes to the game's hero image** with a fade in/out and a **blur effect**. The game background covers the whole screen and **fades out diagonally from the top-right to the bottom-left corner**. **Blur amount and opacity are configurable.** The hero image **blends with the dynamic background** – the animated effects (aurora, waves, silk, contour lines…) light it up instead of covering it.
 - The hero image alone uses lens-style shader blur on Android 13+ and a calm, seamless,
-  symmetric 3D tilt around its center: a 25 s loop, 20° amplitude, camera distance 2.2× the longer
-  side (far edge shifts about 134 px at the extreme on the 2100 px hero area), 8.7 % overscan (computed: 1.0711 is
+  symmetric 3D tilt around its center: a 25 s loop, 15° amplitude, camera distance 2.2× the longer
+  side (far edge shifts about 92 px at the extreme on the 2100 px hero area), 2 % overscan (computed: 1.0065 is
   the minimum that keeps all four viewport edges covered) keeps image edges outside the viewport.
   Reduced motion holds the hero still. The foreground animated/procedural background retains
   its existing shader, timing and blending; logos, covers, text and controls do not tilt or blur.
