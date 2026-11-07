@@ -158,6 +158,8 @@ fun Shell(
     // Only the animated background, for glass that is always on (the focused row, the top bar)
     val backdropHaze = rememberHazeState()
     var blurSource by remember { mutableStateOf(false) }
+    // Debug builds: the performance A/B switches (docs/GUI.md, "Performance A/B switches")
+    com.limelight.shell.ui.PerfFlagsPoller()
     LaunchedEffect(shell.layer != null || shell.portal != null) {
         if (shell.layer != null || shell.portal != null) {
             blurSource = true

@@ -9,7 +9,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
+import kotlinx.coroutines.delay
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -118,8 +118,16 @@ fun Modifier.focusEffects(
     val ringAlpha by animateFloatAsState(
         if (focused) 1f else 0f, tween(if (focused) 140 else 110, easing = EaseOut), label = "focusRing",
     )
-    // The glow is a blurred shadow layer: only an element that is focused or still fading its glow out has one (read as a flip, not per frame)
-    val glowVisible by remember { derivedStateOf { focused || ringAlpha > 0f } }
+    // The glow is a blurred shadow layer: only an element that is (or just was) focused has one. It stays attached for a while
+    // after the focus has left, so a focus that moves back and forth between two elements never attaches and detaches it again.
+    var glowHeld by remember { mutableStateOf(false) }
+    LaunchedEffect(focused) {
+        if (focused) glowHeld = true else {
+            delay(GLOW_HOLD_MS)
+            glowHeld = false
+        }
+    }
+    val glowVisible = !PerfFlags.has('k') && (focused || glowHeld || PerfFlags.has('d'))
     val sweepPos = remember { Animatable(0f) }
     LaunchedEffect(focused) {
         if (focused && sweep) {
@@ -183,7 +191,7 @@ fun Modifier.focusEffects(
         .drawWithContent {
             drawContent()
             val r = min(stagePx(corner, stage), size.minDimension / 2f)
-            if (sweep && focused) drawSweep(sweepPos.value, r)
+            if (sweep && focused && !PerfFlags.has('k')) drawSweep(sweepPos.value, r)
             if (plate == null && ring != null && ringAlpha > 0f) drawFocusRing(ring, r, ringAlpha, colors, stage)
         }
         .onGloballyPositioned {
@@ -233,6 +241,9 @@ fun Modifier.focusEffects(
 
 /** A on the gamepad, Enter, numpad Enter and D-pad center activate the focused element. */
 private val ACTIVATE_KEYS = setOf(Key.ButtonA, Key.Enter, Key.NumPadEnter, Key.DirectionCenter)
+
+/** How long an element keeps its glow layer after it lost the focus (its glow has faded out long before). */
+private const val GLOW_HOLD_MS = 2500L
 
 private fun min(a: Float, b: Float) = if (a < b) a else b
 

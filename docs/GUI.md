@@ -109,7 +109,14 @@ The TV channel uses the same mark; PC shortcut icons remain unchanged.
   opacity (the theme color is also what lies under the hero, so the picture is the same); (2) the cross-fade to the next game's
   background (`HeroCrossfade`, 900 ms) fades both heroes by `ModulateAlpha` instead of `Crossfade`'s two offscreen layers, and the
   old hero stops its animation at once; (3) the animated background repaints at most 30 times a second while a game background
-  is shown (60 otherwise); (4) a tile's focus glow (the blurred `dropShadow`) exists only while the tile is focused or fading it out.
+  is shown (60 otherwise); (4) a tile's focus glow (the blurred `dropShadow`) exists only while the tile is focused or recently was (it
+  stays attached 2.5 s after the focus leaves, so focus moving back and forth between two tiles never attaches and detaches it).
+- **Performance A/B switches (debug builds)** (`ui/PerfFlags.kt`): `adb shell setprop debug.delos.perf <letters>` (re-read once a second,
+  no restart, `setprop debug.delos.perf ""` clears it; release builds ignore it) turns one thing off or back to the old way each, to
+  bisect the frame cost on the same listing run: **a** hero opacity as one full-screen offscreen layer (instead of `ModulateAlpha`),
+  **b** Compose's `Crossfade` for the heroes (instead of `HeroCrossfade`), **c** animated background at 60 Hz under a hero, **d** glow
+  shadow on every tile, **e** no animated background, **f** no game background, **g** hero always the still one, **h** no animated
+  tiles / logo / game page cover, **i** the live hero's layer at full resolution, **j** no tilt, **k** no focus pulse, glow or sweep.
 - **Artwork page** (game options → Artwork, `ArtworkScreen`; approved prototype variant B): no side column. Header and tab pills
   (`SelectionPillHost`, touch only, L1 / R1) over a toolbar with the **SteamGridDB game chip** (name, year, id, image count of the tab),
   **Search for another name** (X) and **Filter** (Y, with a count badge of the active filters); under it the result line

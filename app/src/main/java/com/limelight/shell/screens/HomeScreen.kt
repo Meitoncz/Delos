@@ -109,6 +109,7 @@ import com.limelight.shell.ui.staggerEntrance
 import com.limelight.shell.ui.Figtree
 import com.limelight.shell.ui.GameArt
 import com.limelight.shell.ui.IdleCoverFilter
+import com.limelight.shell.ui.PerfFlags
 import com.limelight.shell.ui.AnimatedArtLayer
 import com.limelight.shell.ui.rememberAnimationTicker
 import kotlin.math.roundToInt
@@ -490,7 +491,7 @@ private fun GameInfo(pc: Pc, app: App, modifier: Modifier, reducedMotion: Boolea
                 val artwork = LocalArtwork.current
                 val animatedArt = LocalDashboardArt.current
                 val animation by rememberAnimatedArtwork(artwork, pc, app, ArtKind.LOGO)
-                if (animatedArt != null && animation != null) {
+                if (animatedArt != null && animation != null && !PerfFlags.has('h')) {
                     val k = LocalStage.current.dpPerPx * LocalDensity.current.density
                     AnimatedArtLayer(
                         animation, animatedArt.motionOn, animatedArt.ticker, (900f * k).roundToInt(), (180f * k).roundToInt(),
@@ -679,7 +680,7 @@ private fun GameTile(
                 },
             )
             // The online pulse of the start screen, around the selected game
-            .then(if (focused) Modifier.focusPulse(26f) else Modifier)
+            .then(if (focused && !PerfFlags.has('k')) Modifier.focusPulse(26f) else Modifier)
             .staggerEntrance()
             .size(if (wide) 956.px else 300.px, 450.px)
             .clip(RoundedCornerShape(26.px))
@@ -710,7 +711,7 @@ private fun GameTile(
         val animatedArt = LocalDashboardArt.current
         val animation by rememberAnimatedArtwork(artwork, pc, app, if (wide) ArtKind.WIDE else ArtKind.COVER)
         val playing by remember(animatedArt, app.id) { derivedStateOf { animatedArt?.plays(app.id) == true } }
-        if (animatedArt != null && animation != null && (if (wide) wideCover else cover) != null) {
+        if (animatedArt != null && animation != null && !PerfFlags.has('h') && (if (wide) wideCover else cover) != null) {
             val k = LocalStage.current.dpPerPx * LocalDensity.current.density * TILE_FOCUS_SCALE
             AnimatedArtLayer(
                 animation, playing, animatedArt.ticker, ((if (wide) 956f else 300f) * k).roundToInt(), (450f * k).roundToInt(),
