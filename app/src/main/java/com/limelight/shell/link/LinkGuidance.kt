@@ -25,6 +25,20 @@ internal data class LinkGuidance(
         return "${test.summary(nowMs, zone)}: ${mbps(test.wireKbps)}$picture."
     }
 
+    /**
+     * The stream menu's help for the recommendation row. There is no test here (the host refuses probes during a
+     * stream), so an untested link points to Settings, before connecting.
+     */
+    fun streamHelp(nowMs: Long, zone: TimeZone = TimeZone.getDefault()): String {
+        val state = when {
+            recommendation.reason == LinkReason.DROPPING -> "Link ${recommendation.reasonText}."
+            tested != null -> "${tested.summary(nowMs, zone)}."
+            else -> "Not tested yet."
+        }
+        val test = if (tested == null) " Test the link in Settings before connecting." else ""
+        return "$state A fills the slider, Apply sends it.$test"
+    }
+
     /** What the Test link row says under its label. */
     fun testRowText(nowMs: Long, transport: LinkTransport, zone: TimeZone = TimeZone.getDefault()): String =
         tested?.summary(nowMs, zone) ?: testUnavailable ?: "Not tested on ${transport.label} yet"

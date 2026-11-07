@@ -4047,6 +4047,11 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     }
     public boolean isUpscalingRequested() { return decoderRenderer.isUpscalingRequested(); }
     public boolean isPyroWave() { return decoderRenderer.isPyroWave(); }
+
+    /** Delos: the PyroWave link monitor of the running decoder, null before the decoder exists. */
+    public com.limelight.shell.link.LinkMonitor getLinkMonitor() {
+        return decoderRenderer != null ? decoderRenderer.getLinkMonitor() : null;
+    }
     public void setUpscalingMode(int mode) {
         // The surface first: the renderer is rebuilt on it when the mode changes between scaling and not
         if (decoderRenderer.isUpscalingRequested()) sizeStreamSurfaceForUpscaler(UpscalerMode.fromIndex(mode));

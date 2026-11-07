@@ -52,6 +52,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.limelight.shell.LocalLibrary
 import com.limelight.shell.LocalShell
 import com.limelight.shell.Screen
 import com.limelight.shell.data.Pc
@@ -145,9 +146,10 @@ fun SettingsScreen(
         onDispose { stream.close() }
     }
     val values by stream.values.collectAsStateWithLifecycle()
-    val bitrateHint = remember(values) {
-        pyroWaveRecommendedBitrateKbps(values)?.let { "Recommended: ${it / 1000} Mbps" }
-    }
+    val pc = settingsPc(LocalLibrary.current, pcs)
+    val guidance = rememberLinkGuidance(pc, values)
+    // The PC's own line when the link is known (tested or not), else PyroWave's guide alone
+    val bitrateHint = guidance?.line ?: pyroWaveRecommendedBitrateKbps(values)?.let { "Recommended: ${it / 1000} Mbps" }
     var capabilities by remember(activity) { mutableStateOf<SettingsCapabilities?>(null) }
     LaunchedEffect(activity) {
         if (activity != null) capabilities = withContext(Dispatchers.Default) { SettingsCapabilities.read(activity) }
@@ -180,7 +182,8 @@ fun SettingsScreen(
             detail = SettingsHelp.details(spec.copy(description = description), values, capabilities?.choices(spec, values) ?: spec.choices),
             searchTerms = settingSearchTerms(spec))
     }
-    val all = nativeSettings(appearance, update, startup, updateStartup, pcs, profiles.settings()) + classic
+    val withLink = withLinkRows(classic, guidance, pc, values, profiles.catalog.all.firstOrNull { it.key == "seekbar_bitrate_kbps" }) { spec, kbps -> stream.write(spec, kbps) }
+    val all = nativeSettings(appearance, update, startup, updateStartup, pcs, profiles.settings()) + withLink
     if (search) {
         SettingsSearch(all, appearance.uiScale / 100f)
         return
@@ -269,7 +272,11 @@ fun SettingsScreen(
                                 }
                                 key(row.key) {
                                     SettingsItemRow(row, Modifier.focusedListRow(navigation, row.key),
-                                        hint = if (row.key == "seekbar_bitrate_kbps") bitrateHint else null) { focusedKey = row.key }
+                                        hint = when (row.key) {
+                                            "seekbar_bitrate_kbps" -> bitrateHint
+                                            LINK_TEST_ROW, LINK_USE_ROW -> row.description
+                                            else -> null
+                                        }) { focusedKey = row.key }
                                 }
                             }
                         }

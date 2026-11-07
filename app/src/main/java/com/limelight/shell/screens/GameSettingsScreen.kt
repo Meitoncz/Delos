@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -28,6 +29,7 @@ import androidx.compose.ui.unit.em
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.limelight.shell.ContextMenu
 import com.limelight.shell.LocalShell
+import com.limelight.shell.link.currentTransport
 import com.limelight.shell.MenuItem
 import com.limelight.shell.Screen
 import com.limelight.shell.data.ArtKind
@@ -59,9 +61,9 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
     val stream = remember(game) { StreamSettingsStore(profiles.catalog) { game.preferences } }
     DisposableEffect(stream) { onDispose { stream.close() } }
     val values by stream.values.collectAsStateWithLifecycle()
-    val bitrateHint = remember(values) {
-        pyroWaveRecommendedBitrateKbps(values)?.let { "Recommended: ${it / 1000} Mbps" }
-    }
+    // The same recommendation as the settings, for this game's PC; testing the link is done in Settings
+    val guidance = rememberLinkGuidance(screen.pc, values)
+    val bitrateHint = guidance?.line ?: pyroWaveRecommendedBitrateKbps(values)?.let { "Recommended: ${it / 1000} Mbps" }
     var caps by remember(activity) { mutableStateOf<SettingsCapabilities?>(null) }
     LaunchedEffect(activity) {
         if (activity != null) caps = withContext(Dispatchers.Default) { SettingsCapabilities.read(activity) }
@@ -207,7 +209,11 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
                     )
                 }
             }
-            val detail = focused?.let { SettingsHelp.details(it, values, caps?.choices(it, values) ?: it.choices) }
+            val linkNote = guidance?.help(System.currentTimeMillis(), currentTransport(LocalContext.current))?.let { "$it Test link is in Settings." }
+            val detail = focused?.let {
+                SettingsHelp.details(it, values, caps?.choices(it, values) ?: it.choices) +
+                    if (it.key == "seekbar_bitrate_kbps" && linkNote != null) "\n\n$linkNote" else ""
+            }
             Column(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 6.px),
                 verticalArrangement = Arrangement.spacedBy(6.px)) {
                 BasicText(focused?.label ?: "Your game, your settings", style = TextStyle(color = colors.text,

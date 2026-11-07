@@ -187,7 +187,10 @@ fun Shell(
     }
     val actions = remember(launcher) { ShellGameActions(shell, launcher, feedback, scope) }
     val reducedMotion by rememberUpdatedState(appearance.reducedMotion)
-    val devices = remember { ShellDeviceActions(shell, tracker, repo, setup, startupStore, feedback, scope) { reducedMotion } }
+    val appContext = androidx.compose.ui.platform.LocalContext.current.applicationContext
+    val linkTests = remember { com.limelight.shell.link.LinkTestStore(appContext) }
+    val linkTester = remember { com.limelight.shell.link.LinkTester(appContext, repo) }
+    val devices = remember { ShellDeviceActions(shell, tracker, repo, setup, startupStore, feedback, scope, linkTester, linkTests) { reducedMotion } }
     val profiles by profileStore.profiles.collectAsStateWithLifecycle()
     val startup by startupStore.startup.collectAsStateWithLifecycle()
     val pcs by repo.pcs.collectAsStateWithLifecycle()
@@ -560,6 +563,7 @@ fun Shell(
     CompositionLocalProvider(
         LocalShell provides shell, LocalFocusTracker provides tracker, LocalGameActions provides actions, LocalDeviceActions provides devices,
         LocalBackdropHaze provides backdropHaze, LocalLibrary provides library, LocalImeAvoidance provides imeAvoidance,
+        com.limelight.shell.screens.LocalLinkTests provides linkTests,
     ) {
         Box(Modifier.fillMaxSize()) {
             // The blur source re-records the whole screen every frame, so it is only active while an overlay

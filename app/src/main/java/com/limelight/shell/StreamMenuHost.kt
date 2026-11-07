@@ -1,5 +1,6 @@
 package com.limelight.shell
 
+import com.limelight.shell.link.LinkGuidance
 import com.limelight.shell.settings.SettingChoice
 import com.limelight.utils.RumblePresets
 
@@ -47,6 +48,12 @@ internal interface StreamMenuHost {
     val bitrateBusy: Boolean
     val bitrateResult: BitrateResult?
     fun applyBitrate(requested: Int, accepted: (Int) -> Unit)
+
+    /**
+     * PyroWave only (null for other codecs): the recommended bitrate with its reason, from the last link test and the
+     * running stream's own drop counters. Read while composing; the Bitrate page refreshes it every second.
+     */
+    val linkGuidance: LinkGuidance? get() = null
 
     // Upscaler and supersampling
     val upscalerAvailable: Boolean

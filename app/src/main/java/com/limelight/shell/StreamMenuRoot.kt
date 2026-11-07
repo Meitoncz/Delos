@@ -266,7 +266,9 @@ internal fun StreamMenuRoot(
         BarCircleSpec(BarItem.QUIT, Symbols.POWER_SETTINGS_NEW, "Quit game") { close { host.leave(quit = true) } },
     )
     // A rumble preset the device cannot run, or whose technique failed in the stream, says so in its help line
-    fun helpText(key: String): String = helpLineText(
+    fun helpText(key: String): String = if (key == RECOMMENDED_ROW) {
+        helpLineText(host.linkGuidance?.streamHelp(System.currentTimeMillis()).orEmpty())
+    } else helpLineText(
         streamMenuHelp(key, upscalerStatus, host.upscalerMode, host.mouseMode, host.rememberMouseMode, (host.bitrateResult as? BitrateResult.Failed)?.reason) +
             (StreamMenuHelp.rumblePreset(key)?.let { host.rumbleProblem(it) }?.let { "\nProblem: $it" }.orEmpty())
     )
@@ -430,7 +432,7 @@ private fun pageFocusKeys(host: StreamMenuHost, page: MenuPage, supersamplingMod
             add(MoreRow.RUMBLE)
         }
         MenuPage.BRIGHTNESS -> listOf("Screen brightness")
-        MenuPage.BITRATE -> listOf("Bitrate", "Apply")
+        MenuPage.BITRATE -> listOfNotNull("Bitrate", RECOMMENDED_ROW.takeIf { host.linkGuidance != null }, "Apply")
         MenuPage.UPSCALER -> buildList {
             add("Enabled")
             if (showsSupersamplingQuality(supersamplingMode, host.upscalerMode)) add("Supersampling quality")
@@ -487,6 +489,16 @@ private fun PageRows(
             MenuRow(Symbols.NETWORK_CHECK, "Bitrate",
                 RowValue.Slider(requested, 1000, 1000000, 1000, " Mbps", 1000) { requested = it },
                 Modifier.focusRequester(first), enabled = !host.bitrateBusy)
+            // PyroWave only: the recommendation with its reason, and the stream's own drop hint, refreshed every second.
+            // A fills the slider; nothing is sent until Apply.
+            var linkTick by remember { mutableIntStateOf(0) }
+            LaunchedEffect(Unit) { while (true) { delay(1000); linkTick++ } }
+            @Suppress("UNUSED_EXPRESSION") linkTick
+            host.linkGuidance?.let { guidance ->
+                val recommended = guidance.recommendation.kbps.coerceIn(1000, 1000000)
+                MenuRow(Symbols.SPEED, guidance.line, RowValue.Text("Fill") { requested = recommended },
+                    enabled = !host.bitrateBusy, help = RECOMMENDED_ROW, key = RECOMMENDED_ROW)
+            }
             // The outcome stands on the right of the row; a failure explains itself in the help
             val apply = { host.applyBitrate(requested) { requested = it } }
             val status = bitrateStatusText(host.bitrateBusy, host.bitrateResult)

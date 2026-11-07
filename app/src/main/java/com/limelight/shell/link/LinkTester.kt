@@ -63,7 +63,7 @@ internal sealed interface LinkTestResult {
 }
 
 /** Runs a link test for [pc] from the shell: fresh `/serverinfo`, then the document's search. */
-internal class LinkTester(private val context: Context, private val repo: PcRepository) {
+internal class LinkTester(val context: Context, private val repo: PcRepository) {
     /**
      * Starts at [startKbps] (the selected bitrate). Cancelling the calling coroutine stops the probe and tears
      * down its request and UDP socket. Never applies anything.

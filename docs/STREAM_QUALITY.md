@@ -74,6 +74,154 @@ the swapchain image count and present mode when it is created. The UDP receive b
 checked inside moonlight-common-c and not exposed to the app; it logs a warning only when the kernel
 clamps it. Suggested A/B: 4:2:0 at 225 Mbps, 4:4:4 at 225, 4:4:4 at 270, and 4:4:4 at 150.
 
+## PyroWave link guidance (#18)
+
+PyroWave needs hundreds of Mbps and degrades into blur, not stalls, when the link falls short, so Delos
+tells the user what the link carries instead of guessing. Four parts, all recommendation only: Delos
+never changes the bitrate setting by itself and never sends `pyrowavePaceMbps` or `pyrowaveLinkMbps` to the
+host (no JNI plumbing for them). Everything is PyroWave-only; other codecs show nothing new. Code:
+`app/src/main/java/com/limelight/shell/link/` (pure logic and the probe client), the rows in
+`shell/screens/LinkGuidanceRows.kt`.
+
+1. **Test link** (Settings, Stream tab, under the bitrate row): an active UDP probe against the PC. It runs
+   only when the user presses it, never automatically and never during a stream (the host refuses probes
+   while a stream session exists, answering HTTP 400 "Stop streaming before testing bandwidth"). A cancellable
+   portal says what is being tested ("Testing 250 Mbps · stay on Wi-Fi · B cancels").
+2. **Recommended bitrate with a one-line reason** (Settings bitrate row, per-game bitrate row, stream menu
+   Bitrate page): `Recommended: 225 Mbps · link tested at 340 Mbps`. Settings also offers **Use recommended
+   bitrate**, which fills the bitrate on the user's press; the stream menu's row fills the slider on A and
+   still needs Apply.
+3. **Passive in-stream hint**: a rolling ~5 s window of the renderer's own counters. When the link drops
+   frames the recommendation becomes `Recommended: 135 Mbps · drops frames at 225 Mbps` (same row) and the
+   help line says so.
+4. **Link block** in the full statistics panel: received rate against the target bitrate, partial and lost
+   frames per second, and a one-line verdict.
+
+### The probe, as implemented
+
+Source of truth: Vibepollo `docs/pyrowave-protocol.md` ("Negotiation", "FEC-inclusive recommendations and UDP
+calibration") and the host source (`src/pyrowave_udp_probe.h`, `nvhttp.cpp::getPyroWaveUdpProbe`); the
+conversion is a port of `pyrowavebandwidth.h` (Nonary/moonlight-qt, identical in Vibepollo).
+
+- **Host support.** A paired HTTPS `/serverinfo` must carry `PyroWaveUdpProbeVersion=1` and
+  `PyroWaveWireBudgetVersion=1`, plus `PyroWaveCriticalFecPercentage` (0..255) and `PyroWaveMinParityShards`.
+  `PyroWaveUdpHandshakeVersion=1` selects the handshake; `PyroWaveHostLinkMbps` (the host's routed wired
+  transmit speed, 0 for Wi-Fi/unknown) is read as a ceiling; `PyroWaveBandwidthProbeBytes` is parsed but only
+  the legacy HTTPS download probe uses it, which Delos does not run. `PyroWaveHostInfo` parses them on every poll
+  into `ComputerDetails.pyroWave`; the test re-reads `/serverinfo` fresh. A PC without the fields, or with a
+  newer protocol version than this Delos knows, gets a sentence instead of a test ("This PC's Vibepollo cannot
+  test the link yet. Update it."); the static recommendation is still shown.
+- **Request.** `GET /pyrowave-udp-probe?kbps=<5000..3000000>&port=<receiver port>&packetsize=1392&token=<32
+  lowercase hex>&handshake=1` over the existing pinned, client-certificate HTTPS connection to the PC's
+  address (resolved once, IPv4 preferred; the UDP receiver and the HTTPS peer use the same address). The token
+  is fresh per probe (16 random bytes). Packet size is 1392, the streaming packet size.
+- **Handshake.** The host binds its UDP sender, sends a 32-byte token warm-up, flushes the HTTP headers with
+  `X-PyroWave-Udp-Port`, and keeps the XML body pending. Delos sends the 32-byte token from its receiving
+  socket to that port every 100 ms until the first measured packet arrives; the host waits at most 1500 ms. A
+  host failure after the headers arrives as XML with `status_code=500` (a message containing "handshake" is
+  reported as blocked UDP). Hosts without handshake support get the legacy probe (no `handshake`, source
+  checked by address only).
+- **Probe.** Two seconds, paced in 1 ms groups, every packet charged `packetsize + 134` wire bytes, UDP
+  payload `packetsize + 48`: ASCII token (bytes 0-31), big-endian sequence (32-35), filler. The response XML
+  gives `expected`, `sent`, `elapsedMs`; `expected` must equal `kbps * 2000 / (8 * (packetsize + 134))`
+  (integer division) or the answer is rejected. Only exact-size datagrams from the PC (and, with the
+  handshake, from the announced port) that start with the token count; duplicates and foreign packets never
+  raise delivery. After the response Delos waits 100 ms for late packets.
+- **Scoring** (`scoreProbe`). Arrival times come from `System.nanoTime()` at the receiving thread (the
+  Android socket has no kernel timestamps; the reference client also falls back to read time off Apple
+  platforms). Delay is relative: transit = arrival less the packet's slot `ceil((seq + 1) * 2000 / expected) - 1`
+  ms, so the clocks' offset cancels. A probe passes when **all** hold: every planned packet was sent;
+  aggregate loss <= 0.1 %; loss <= 1 % in each of the 20 sequence windows (100 ms); p99 transit variation
+  (99th percentile less the fastest packet) <= 4 ms; delay growth (mean transit of the last window less the
+  first) <= 2 ms; the host's `elapsedMs` within 2 % of 2000.
+- **Search** (`searchLink`, pure, tested with fake paths). Start at the selected bitrate (the current bitrate
+  setting, rounded down to 5 Mbps), bounded by `PyroWaveHostLinkMbps` and 3 Gbps. Grow by x1.25 (rounded down to
+  5 Mbps) while probes pass; on a failure, bisect the passing/failing bracket down to 5 Mbps (a failing start
+  bisects downwards to the 5 Mbps floor). Take 95 % of the best pass (rounded down to 5 Mbps) and measure it
+  twice afresh; if either fails, lower the rate by 20 % and test again (at most 32 attempts, down to 5 Mbps).
+  A rate that never confirms gives no result. Cancelling (B) abandons everything measured. The confirmed rate
+  is a **total wire allowance**, the same unit as the bitrate setting.
+- **Failure reasons** (all readable, no raw errors): host too old or newer protocol, stream active, pairing
+  denied (403), UDP blocked (no packets / handshake timeout), network error, timeout, host error, invalid
+  result, and the search-level reasons (host could not send fast enough, link lost packets, link too unsteady).
+- **Stored result.** The last confirmed test per PC and kind of network (Wi-Fi / Ethernet / other; an SSID needs
+  a location permission, so the transport is the cheap stand-in) in the `delos_link_tests` preferences, with its
+  date. It is shown with its age ("Tested yesterday on Wi-Fi") and only feeds the recommendation; it is never
+  silently re-applied, and a network that was not tested shows "Not tested on Wi-Fi yet".
+
+### Wire budget and recommendation
+
+The host reserves one maximum feasible critical-FEC block (the largest critical count with
+`critical + max(ceil(critical * fec / 100), minParity) <= 255` shards), packet rounding, IPv6, encryption,
+Ethernet overhead and 3572 kbps for audio and control from every wire allowance. `WireBudget` ports
+`pyrowavebandwidth.h` (`maxCriticalParity`, `imageBytes`, `wireBytes`, `imageKbps`, `totalKbps`) and is only used
+to say how much picture a tested budget carries ("about 102 Mbps of picture after FEC and overhead").
+
+`recommend(...)` = `min(PyroWaveBitrate.recommendedKbps, tested wire budget, PyroWaveHostLinkMbps)`, rounded
+down to 5 Mbps, never under 5 Mbps; the live drop hint can only lower it further. The bitrate setting is a total
+wire allowance (Delos sends it as `configuredBitrateKbps`), as is the probe's rate, so they compare directly.
+Reasons: `not tested on this link`, `link tested at N Mbps` (carries what the format needs or less),
+`the PC's link is N Mbps`, `drops frames at N Mbps`.
+
+### Passive hint
+
+Every second the PyroWave stats thread feeds `LinkMonitor` (also with the overlay off): frames, partial, lost
+and skipped frames and the app's received rate, with the bitrate in force. The verdict covers the trailing
+samples at the current bitrate (a bitrate change starts a fresh reading), at least 3 s and about 5 s:
+
+| Reading | Verdict |
+|---|---|
+| (partial + lost) / frames >= 2 % | **Link drops frames at N Mbps, try M** (M = N less `clamp(4 x share, 10 %, 40 %)`, rounded down to 5 Mbps) |
+| skipped / frames >= 2 % without the above | Device skips frames; the link is fine (no bitrate advice: it is not the network) |
+| otherwise | Link keeps up |
+
+The thresholds are named constants in `LinkPolicy` and are **not yet calibrated**; they are Delos's own
+(`HINT_DROP_SHARE`, `HINT_CUT_PER_SHARE`, `HINT_MIN_CUT`, `HINT_MAX_CUT`, window and minimum seconds). The
+received rate is `TrafficStats` of the whole app (video, audio, control and HTTP together), the same source as
+the existing Bandwidth row but rx only; there is no video-only byte counter in Java. Expect it to read a few
+Mbps high.
+
+### How to read it
+
+- Tested well above the format's need and no drops: leave the bitrate alone.
+- "link tested at 180 Mbps" under a 225 Mbps guide: the format will lose detail on this link; Use recommended
+  bitrate, or lower the resolution or FPS for the full picture.
+- Drops in the stream but a good test: the radio changed (distance, interference, roaming) or the device is the
+  limit; look at the Backlog block (stall and frame age) and at "Device skips frames".
+- A test result is a snapshot of a 2-second burst on a Wi-Fi that swings with RSSI, roaming and power save: repeat
+  it before concluding anything, and expect variance of a few tens of Mbps.
+- The test measures UDP delivery only. It does not prove sustained smoothness, host encoding speed, frame-burst
+  delivery or decoder load ([#19](https://github.com/Meitoncz/Delos/issues/19)).
+
+### Where the Delos implementation follows the host document, not the reference client
+
+Nonary's current moonlight-qt relaxes the calibration (loss < 2 %, any 100 ms window < 5 %, jitter only a
+warning, 98 % of packets sent enough, search starts at a ceiling bounded by the quality need). Delos uses the host
+document's stricter thresholds and starting point as written (see the scoring list above). Compare results with
+Moonlight's only after accounting for this.
+
+### Open points the documents leave unclear
+
+- The documents do not say how the wire allowance relates to the author's *image* recommendation in the
+  bitrate setting: Delos treats the setting and the probe as the same wire unit and compares `recommendedKbps`
+  directly (as the app's default bitrate already does). The FEC-inclusive conversion is therefore informational.
+- "All planned packets sent" is read as `sent == expected` (the response never has `sent > expected`);
+  the reference client tolerates 98 %.
+- The host's stream-active refusal is an HTTP 400 with the text "Stop streaming before testing bandwidth"
+  (from the host source, not the document); Delos matches the word "streaming". A probe running concurrently
+  from another client gets the same answer.
+- `PyroWaveCriticalFecPercentage` is documented 0..255 (reference client accepts 0..100); Delos accepts 0..255.
+- The client's routed wired link speed (`pyrowaveLinkMbps`) is deliberately not measured or sent.
+
+### Results
+
+To be filled after the Odin measurements (issue #18). One row per place and band; run Test link three times and
+record every result to show the variance.
+
+| Date | Place / AP | Band, distance | Run 1 | Run 2 | Run 3 | Static guide | Recommended | Stream check (partial/s at the recommendation) |
+|---|---|---|---|---|---|---|---|---|
+| | | | | | | | | |
+
 ## Snapdragon Game Super Resolution 1
 
 The official Qualcomm SGSR 1 spatial shader works with the final streamed image; temporal SGSR 2

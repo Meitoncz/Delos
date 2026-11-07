@@ -6,6 +6,11 @@ import com.limelight.shell.data.Library
 import com.limelight.shell.data.Pc
 import com.limelight.shell.data.PcRepository
 import com.limelight.shell.data.PcSetup
+import com.limelight.shell.link.LinkTestResult
+import com.limelight.shell.link.LinkTestStore
+import com.limelight.shell.link.LinkTester
+import com.limelight.shell.link.currentTransport
+import com.limelight.shell.link.mbps
 import com.limelight.shell.settings.StartupStore
 import com.limelight.shell.ui.Cue
 import com.limelight.shell.ui.Feedback
@@ -50,7 +55,13 @@ interface DeviceActions {
     /** Searches the local network again. */
     fun rescan()
 
-    /** Cancels a portal that is still waiting (B while a PC wakes up). */
+    /**
+     * Measures what the network carries from [pc] (PyroWave link test), starting at [startKbps]: a cancellable portal says
+     * what is being tested, B stops it, and the result is stored with its date. It never changes a setting.
+     */
+    fun testLink(pc: Pc, startKbps: Int)
+
+    /** Cancels a portal that is still waiting (B while a PC wakes up, or a link test). */
     fun cancelPortal()
 }
 
@@ -63,7 +74,7 @@ private const val WAKE_TIMEOUT_MS = 120_000L
 private const val LIBRARY_TIMEOUT_MS = 5_000L
 
 /** The shell's [DeviceActions]: portal, toasts and dialogs, no confirmation prompts. */
-class ShellDeviceActions(
+class ShellDeviceActions internal constructor(
     private val shell: ShellState,
     private val tracker: FocusTracker,
     private val repo: PcRepository,
@@ -71,6 +82,8 @@ class ShellDeviceActions(
     private val startup: StartupStore,
     private val feedback: Feedback,
     private val scope: CoroutineScope,
+    private val linkTester: LinkTester,
+    private val linkTests: LinkTestStore,
     private val reducedMotion: () -> Boolean,
 ) : DeviceActions {
     private var portals = 0
@@ -116,6 +129,52 @@ class ShellDeviceActions(
                 if (!arrived) {
                     shell.portal = null
                     shell.portalBurst = false
+                }
+            }
+        }
+    }
+
+    override fun testLink(pc: Pc, startKbps: Int) {
+        if (shell.portal != null) return
+        // The portal holds the focus; the row that started the test gets it back afterwards
+        val returnTo = tracker.requester
+        portalJob = scope.launch {
+            val id = ++portals
+            val context = linkTester.context
+            val transport = currentTransport(context)
+            val show = { line: String ->
+                shell.portalBurst = false
+                shell.portal = Portal(id, Symbols.NETWORK_CHECK, "Testing the link to ${pc.name}", line, cancellable = true)
+            }
+            try {
+                feedback.play(Cue.OPEN)
+                show("Stay on ${transport.label} · B cancels")
+                val result = linkTester.run(pc, startKbps) { step ->
+                    scope.launch {
+                        if (shell.portal?.id == id) show("${if (step.confirming) "Confirming" else "Testing"} ${mbps(step.kbps)} · stay on ${transport.label} · B cancels")
+                    }
+                }
+                when (result) {
+                    is LinkTestResult.Done -> {
+                        linkTests.put(pc.uuid, result.test)
+                        feedback.play(Cue.SELECT)
+                        shell.showToast("${transport.label} carries ${mbps(result.test.wireKbps)}", Symbols.CHECK_CIRCLE, kind = ToastKind.SUCCESS)
+                    }
+                    is LinkTestResult.Failed -> {
+                        feedback.play(Cue.ERROR)
+                        shell.showToast(result.text, Symbols.ERROR, kind = ToastKind.ERROR)
+                    }
+                    LinkTestResult.Cancelled -> shell.showToast("Link test stopped", Symbols.INFO)
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                shell.showToast("Link test stopped", Symbols.INFO)
+                throw e
+            } finally {
+                shell.portal = null
+                shell.portalBurst = false
+                returnTo?.let {
+                    feedback.silenceNextFocus()
+                    runCatching { it.requestFocus() }
                 }
             }
         }

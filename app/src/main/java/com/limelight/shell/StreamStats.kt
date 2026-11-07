@@ -29,6 +29,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.em
 import com.limelight.binding.video.PyroWaveBacklog
 import com.limelight.binding.video.SharpenCost
+import com.limelight.shell.link.LinkReading
+import com.limelight.shell.link.oneDecimal
 import com.limelight.shell.data.ProfileStore
 import com.limelight.shell.settings.AppearanceStore
 import com.limelight.shell.ui.Figtree
@@ -52,7 +54,7 @@ enum class StatsPosition(val label: String, val top: Boolean, val start: Boolean
 }
 
 /** The stream's numbers for the Delos statistics panel, filled by the decoder about once a second. */
-class StreamStats(
+class StreamStats @JvmOverloads constructor(
     val width: Int,
     val height: Int,
     val fps: Float,
@@ -83,9 +85,20 @@ class StreamStats(
     val backlog: PyroWaveBacklog? = null,
     /** What the Sharpen only pass cost in the last window; null while that mode is not running. */
     val sharpen: SharpenCost? = null,
+    /** PyroWave only: the rolling reading of the link (null for other codecs and before the first sample); shown in the Link block. */
+    val link: LinkReading? = null,
 ) {
     /** The delay summed up: network round trip, the PC's processing when it reports it, and decoding. */
     val totalMs: Float get() = networkMs + maxOf(hostMs, 0f) + decodeMs + processingMs
+}
+
+/**
+ * The Link block's receive row: the app's received rate against the bitrate asked for ("212 of 225 Mb/s"). The rate is
+ * the whole app's traffic (audio, control and HTTP included), not video alone, so it can read slightly high.
+ */
+internal fun linkReceivingText(link: LinkReading): String {
+    val target = link.targetKbps / 1000
+    return if (link.rxKbps < 0f) "unknown of $target Mb/s" else "${(link.rxKbps / 1000f).toInt()} of $target Mb/s"
 }
 
 /**
@@ -208,6 +221,12 @@ class StreamStatsPanel private constructor(
                     add("Partial frames" to "${format(b.partialPerSecond)} /s")
                     add("Skipped" to "${format(b.skippedPerSecond)} /s")
                     s.sharpen?.let { add("Sharpen pass" to sharpenPassText(it)) }
+                }
+                s.link?.let { l ->
+                    add("Link" to "")
+                    add("Receiving" to linkReceivingText(l))
+                    add("Partial / lost" to "${oneDecimal(l.partialPerSecond)} / ${oneDecimal(l.lostPerSecond)} frames/s")
+                    add("Verdict" to l.text)
                 }
             }
             val label = TextStyle(color = PANEL_TEXT.copy(alpha = .6f), fontFamily = Figtree, fontSize = 17.tpx, lineHeight = 1.5.em)

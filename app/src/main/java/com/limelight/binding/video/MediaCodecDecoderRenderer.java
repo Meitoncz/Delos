@@ -1294,6 +1294,24 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     }
 
     // Delos: data received and sent since the last call in KB, -1 when unknown or on the first call
+    // Delos: the PyroWave link guidance reads the renderer's counters of the last ~5 s (see shell/link/LinkMonitor)
+    private final com.limelight.shell.link.LinkMonitor linkMonitor = new com.limelight.shell.link.LinkMonitor();
+    private long lastRxBytes;
+
+    public com.limelight.shell.link.LinkMonitor getLinkMonitor() {
+        return linkMonitor;
+    }
+
+    // Delos: what the app received since the last call in kbps, -1 when unknown or on the first call. This is the
+    // whole app's traffic, not only video: audio, control and HTTP are in it (a few Mbps at most beside PyroWave).
+    private float measureRxKbps(float seconds) {
+        long rx = TrafficStatsHelper.getPackageRxBytes(Process.myUid());
+        if (rx == TrafficStats.UNSUPPORTED) return -1;
+        float kbps = lastRxBytes != 0 ? (rx - lastRxBytes) * 8f / 1000f / Math.max(seconds, 0.001f) : -1;
+        lastRxBytes = rx;
+        return kbps;
+    }
+
     private float measureNetDataKb() {
         float realtimeNetData = -1;
         if(TrafficStatsHelper.getPackageRxBytes(Process.myUid()) != TrafficStats.UNSUPPORTED){
@@ -1325,6 +1343,10 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                 if (pw == null) return;
                 long[] stats = pw.takeStats();
                 if (stats[PyroWaveRenderer.STAT_RENDERED_FRAMES] > 0) firstFramePresented = true;
+                linkMonitor.add(new com.limelight.shell.link.LinkSample(seconds, prefs.bitrate,
+                        stats[PyroWaveRenderer.STAT_TOTAL_FRAMES], stats[PyroWaveRenderer.STAT_PARTIAL_FRAMES],
+                        stats[PyroWaveRenderer.STAT_LOST_FRAMES], stats[PyroWaveRenderer.STAT_SKIPPED_FRAMES],
+                        measureRxKbps(seconds)));
                 if (prefs.enablePerfOverlay || BuildConfig.DEBUG) {
                     reportPyroWaveStats(stats, seconds);
                 }
@@ -1371,7 +1393,8 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                 hostFrames > 0 ? stats[PyroWaveRenderer.STAT_HOST_LATENCY_MIN] / 10f : -1f,
                 hostFrames > 0 ? stats[PyroWaveRenderer.STAT_HOST_LATENCY_MAX] / 10f : -1f,
                 hostFrames > 0 ? stats[PyroWaveRenderer.STAT_HOST_LATENCY_TOTAL] / 10f / hostFrames : -1f,
-                realtimeNetData, stats[PyroWaveRenderer.STAT_ONE_PERCENT_LOW_FPS_X100] / 100f, backlog, sharpenCost));
+                realtimeNetData, stats[PyroWaveRenderer.STAT_ONE_PERCENT_LOW_FPS_X100] / 100f, backlog, sharpenCost,
+                linkMonitor.reading()));
     }
 
     /** Delos diagnostics: what the stream was asked for, set by Game before the connection starts. */

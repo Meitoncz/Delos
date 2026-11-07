@@ -67,7 +67,7 @@ internal fun suggestedBitrate(targetKbps: Int, dropShare: Double): Int {
  * at an earlier bitrate are ignored once the bitrate changed (after Apply), so the verdict always describes the
  * bitrate in use. Thread-safe: the stats thread adds, the UI reads.
  */
-class LinkMonitor(private val windowSeconds: Float = LinkPolicy.HINT_WINDOW_SECONDS) {
+class LinkMonitor @JvmOverloads constructor(private val windowSeconds: Float = LinkPolicy.HINT_WINDOW_SECONDS) {
     private val samples = ArrayDeque<LinkSample>()
 
     @Synchronized

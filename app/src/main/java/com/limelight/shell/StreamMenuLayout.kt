@@ -397,6 +397,9 @@ internal fun streamMenuHelp(
     else -> StreamMenuHelp.description(key)
 }
 
+/** The Bitrate page's recommendation row (PyroWave): its focus key and help key; its label is the changing recommendation line. */
+internal const val RECOMMENDED_ROW = "Recommended bitrate"
+
 /** What the Apply row of the Bitrate page says on its right: null before anything was applied. */
 internal fun bitrateStatusText(busy: Boolean, result: BitrateResult?): String? = when {
     busy -> "Applying\u2026"

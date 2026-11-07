@@ -468,6 +468,8 @@ internal fun MenuRow(
     confirmation: String? = null,
     enabled: Boolean = true,
     help: String = label,
+    /** The name the page's focus order knows the row by; the label when it never changes. */
+    key: String = label,
 ) {
     val colors = LocalDelosColors.current
     val feedback = LocalFeedback.current
@@ -504,7 +506,7 @@ internal fun MenuRow(
     val iconColor by animateColorAsState(if (focused) colors.accent2 else colors.accent2.copy(alpha = .62f), tween(Motion.FADE, easing = Motion.Ease), label = "rowIcon")
     Row(
         modifier
-            .then(if (navigation != null) Modifier.focusedListRow(navigation, label) else Modifier)
+            .then(if (navigation != null) Modifier.focusedListRow(navigation, key) else Modifier)
             .fillMaxWidth()
             .staggerEntrance()
             .onPreviewKeyEvent { event ->
