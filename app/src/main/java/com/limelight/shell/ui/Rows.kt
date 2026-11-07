@@ -219,7 +219,7 @@ fun SettingRow(
         }
         Row(
             Modifier.fillMaxWidth()
-                .defaultMinSize(minHeight = if (compact) 80.px else 92.px)
+                .defaultMinSize(minHeight = if (compact) 80.px else if (impact != null) IMPACT_ROW_MIN_HEIGHT.px else 92.px)
                 .padding(horizontal = 26.px, vertical = 14.px)
                 .alpha(if (enabled) 1f else .45f),
             verticalAlignment = Alignment.CenterVertically,
@@ -229,13 +229,9 @@ fun SettingRow(
                 RowIcon(icon, focused, calm)
             }
             Column(Modifier.weight(1f).staggerEntrance(entrance)) {
-                val labelStyle = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx)
-                if (impact == null) BasicText(label, style = labelStyle)
-                else Row(verticalAlignment = Alignment.CenterVertically) {
-                    // A long name scrolls like a long value; the chips keep their place and never shrink
-                    MarqueeText(label, style = labelStyle, active = focused, modifier = Modifier.weight(1f, fill = false))
-                    ImpactChips(impact, focused, Modifier.padding(start = 22.px))
-                }
+                // Cost-bearing rows: the chips on their own line above the title, on the same left edge; the title keeps the full width
+                if (impact != null) ImpactChips(impact, focused, Modifier.padding(bottom = 3.px))
+                BasicText(label, style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx))
                 if (override != null) {
                     Row(Modifier.padding(top = 4.px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.px)) {
                         CustomBadge()
@@ -311,6 +307,9 @@ private fun RowResetButton(override: RowOverride, focused: Boolean) {
         }
     }
 }
+
+/** Every cost-bearing row reserves the chips line (about 22 px) on top of the 92 px of a row with a second line, so a list's rows with chips are one height. */
+private const val IMPACT_ROW_MIN_HEIGHT = 112
 
 /** The look of a focused settings row, shared by [SettingRow] and the focus plate of a [SettingRowList]. */
 private const val ROW_CORNER = 24f
