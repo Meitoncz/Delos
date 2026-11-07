@@ -240,6 +240,7 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
                                     description = listOfNotNull("From profile", hint).joinToString(" · ").takeIf { !isCustom },
                                     override = if (isCustom) RowOverride(listOfNotNull(profileLine, hint).joinToString(" · "), touch) { resetRow(spec.key) } else null,
                                     enabled = caps != null && stream.enabled(spec, caps), contextMenu = menu,
+                                    impact = impact(spec.key, values),
                                     onFocused = { focusedKey = spec.key })
                             }
                         }
@@ -260,6 +261,7 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
             currentLabel = focused?.let { profileValueLabel(it, values[it.key] ?: it.default, focusedChoices) },
             profileLabel = focused?.let { profileValueLabel(it, profileValues[it.key] ?: it.default, focusedChoices) },
             detail = detail, streamCustom = streamCustom, displayCustom = displayCustom,
+            showImpactLegend = focused != null && impact(focused.key, values) != null,
         )
     }
 }
@@ -341,6 +343,7 @@ internal fun GameHeader(pc: String, game: String, customCount: Int, modifier: Mo
 internal fun GameSettingsPanel(
     modifier: Modifier, game: String, focused: SettingSpec?, isCustom: Boolean, touch: Boolean,
     currentLabel: String?, profileLabel: String?, detail: String?, streamCustom: Int, displayCustom: Int,
+    showImpactLegend: Boolean = false,
 ) {
     val colors = LocalDelosColors.current
     SettingsPanelFrame(modifier) {
@@ -367,6 +370,7 @@ internal fun GameSettingsPanel(
             BasicText(detail?.takeIf { it.isNotBlank() } ?: "Only $game uses these changes. Everything else follows your profile.",
                 style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 22.tpx, lineHeight = 1.45.em))
         }
+        if (showImpactLegend) ImpactLegend()
         Row(Modifier.padding(top = 10.px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.px)) {
             Symbol(Symbols.CHECK_CIRCLE, 20.tpx, colors.text3)
             BasicText("Saved automatically · applies next stream", style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 17.tpx))
