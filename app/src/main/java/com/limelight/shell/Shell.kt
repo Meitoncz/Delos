@@ -498,6 +498,7 @@ fun Shell(
                         metadata.updateFilters(MetadataFilters())
                     }
                 } else if (shell.screen is Screen.Artwork && shell.layer == null && shell.onArtworkSearch != null) shell.onArtworkSearch?.invoke()
+                else if (shell.screen is Screen.GameSettings && shell.layer == null && shell.onGameReset != null) shell.onGameReset?.invoke()
                 else toggleContext()
                 KeyEvent.KEYCODE_BUTTON_L1 -> if (shell.layer == null) shell.onShoulder?.invoke(-1)
                 KeyEvent.KEYCODE_BUTTON_R1 -> if (shell.layer == null) shell.onShoulder?.invoke(1)
@@ -832,7 +833,8 @@ private fun hints(shell: ShellState, adjustable: Boolean, filterHint: String?): 
             is Screen.Artwork -> if (BundledArtwork.kind(screen.app) != null) listOf(Hint(Glyph.A, "Back"), Hint(Glyph.B, "Back"))
                 else if (shell.artworkSheetOpen) listOf(Hint(Glyph.A, "Choose"), Hint(Glyph.X, "Reset filters"), Hint(Glyph.Y, "Done"), Hint(Glyph.B, "Close"))
                 else listOf(Hint(Glyph.L1, "Previous tab"), Hint(Glyph.R1, "Next tab"), Hint(Glyph.A, "Use image"), Hint(Glyph.X, "Search name"), Hint(Glyph.Y, "Filter"), Hint(Glyph.B, "Back"))
-            is Screen.GameSettings -> adjust + listOf(Hint(Glyph.L1, "Previous tab"), Hint(Glyph.R1, "Next tab"), Hint(Glyph.A, "Change"), Hint(Glyph.MENU_RIGHT, "Options"), Hint(Glyph.B, "Back"))
+            is Screen.GameSettings -> adjust + listOfNotNull(Hint(Glyph.L1, "Previous tab"), Hint(Glyph.R1, "Next tab"), Hint(Glyph.A, "Change"),
+                Hint(Glyph.X, "Reset to profile value").takeIf { shell.onGameReset != null }, Hint(Glyph.MENU_RIGHT, "Options"), Hint(Glyph.B, "Back"))
             Screen.Profile, Screen.Devices -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"), Hint(Glyph.MENU_LEFT, "Menu"))
         }
     }

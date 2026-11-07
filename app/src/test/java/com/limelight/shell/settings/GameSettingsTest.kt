@@ -591,4 +591,43 @@ class GameSettingsTest {
         assertNull(GameSettingsStore.forLaunch(Robolectric.buildActivity(Game::class.java, Intent(context, Game::class.java)).get()))
         assertThrows(IllegalArgumentException::class.java) { game().save(mapOf("ui_profile" to "other")) }
     }
+
+    @Test fun undoOfAResetRestoresWhatItRemovedIncludingCodecSlotsAndKeepsLaterEdits() {
+        val selected = game()
+        val stream = StreamSettingsStore(profiles.catalog) { selected.preferences }
+        stream.write(spec("video_format"), "forceav1")
+        stream.write(spec("seekbar_bitrate_kbps"), 200000)
+        stream.write(spec("video_format"), "forceh265")
+        stream.write(spec("list_resolution"), "1280x720")
+        val before = selected.backup()
+        assertTrue(before.containsKey(codecBitrateKey("forceav1")))
+        selected.reset("seekbar_bitrate_kbps")
+        assertFalse(selected.isCustom("seekbar_bitrate_kbps"))
+        assertFalse(selected.preferences.contains(codecBitrateKey("forceav1")))
+        // Changed again after the reset: the undo must not overwrite it
+        stream.write(spec("list_resolution"), "3840x2160")
+        selected.restoreMissing(before)
+        assertTrue(selected.isCustom("seekbar_bitrate_kbps"))
+        assertEquals(before["seekbar_bitrate_kbps"], selected.backup()["seekbar_bitrate_kbps"])
+        assertEquals(200000, selected.preferences.getInt(codecBitrateKey("forceav1"), -1))
+        assertEquals("3840x2160", selected.overrides()["list_resolution"])
+        stream.close()
+    }
+
+    @Test fun undoOfResetAllBringsBackEveryOverrideOfThatGameOnly() {
+        val selected = game()
+        val other = game(id = 2)
+        selected.save(mapOf("list_resolution" to "1280x720", "checkbox_enable_hdr" to true, "seekbar_sgsr_sharpness" to 70))
+        other.save(mapOf("list_fps" to "120"))
+        val before = selected.backup()
+        selected.resetAll()
+        assertTrue(selected.overrides().isEmpty())
+        selected.restoreMissing(before)
+        assertEquals(mapOf("list_resolution" to "1280x720", "checkbox_enable_hdr" to true, "seekbar_sgsr_sharpness" to 70), selected.overrides())
+        assertEquals(mapOf("list_fps" to "120"), other.overrides())
+        // Nothing foreign is ever written back
+        selected.restoreMissing(mapOf("ui_profile" to "x", "list_fps" to "30"))
+        assertEquals("30", selected.overrides()["list_fps"])
+        assertNull(selected.backup()["ui_profile"])
+    }
 }

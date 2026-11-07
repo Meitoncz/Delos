@@ -36,6 +36,19 @@ class GameSettingsStore(private val base: SharedPreferences, pc: String, appId: 
     }
     fun resetAll() { preferences.edit().clear().apply() }
 
+    /** Everything this game stores (its overrides and its private codec bitrate slots), typed, for [restoreMissing]. */
+    fun backup(): Map<String, Any> = base.all.filterKeys { it.startsWith(prefix) }
+        .mapNotNull { (key, value) -> value?.let { key.removePrefix(prefix) to it } }.toMap()
+
+    /** Undo of a reset: writes the [backup] entries that are absent now. A value the user has set since stays as it is. */
+    fun restoreMissing(backup: Map<String, Any>) {
+        val editor = base.edit()
+        backup.forEach { (key, value) ->
+            if ((key in KEYS || key.startsWith(CODEC_BITRATE_PREFIX)) && !base.contains(prefix + key)) editor.putSetting(prefix + key, value)
+        }
+        editor.apply()
+    }
+
     /** Writes [values] (keys of [KEYS]) as this game's overrides in one write; nothing else is touched. */
     fun save(values: Map<String, Any>) {
         require(values.keys.all { it in KEYS }) { "Not a per-game setting: ${values.keys - KEYS}" }

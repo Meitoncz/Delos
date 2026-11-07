@@ -9,6 +9,7 @@ import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -317,7 +318,7 @@ internal fun ShoulderLabel(label: String) {
  * [DelosColors.text2] when another tab is selected. A tap squeezes the tab for a moment and plays the select cue.
  */
 @Composable
-internal fun TabPill(icon: String, label: String, selected: Boolean, modifier: Modifier, onClick: () -> Unit) {
+internal fun TabPill(icon: String, label: String, selected: Boolean, modifier: Modifier, badge: Int = 0, onClick: () -> Unit) {
     val colors = LocalDelosColors.current
     val reduced = LocalReducedMotion.current
     val feedback = LocalFeedback.current
@@ -349,18 +350,20 @@ internal fun TabPill(icon: String, label: String, selected: Boolean, modifier: M
         Symbol(icon, 30.tpx, contentColor, filled = selected)
         BasicText(label, style = TextStyle(color = contentColor,
             fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 22.tpx))
+        // The count of this tab's custom per-game settings (a quiet accent3 pill; dark on the selected tab's accent pill)
+        if (badge > 0) {
+            val badgeFill by animateColorAsState(if (selected) colors.onAccent.copy(alpha = .16f) else colors.accent3.copy(alpha = .22f), fade, label = "tabBadgeFill")
+            val badgeText by animateColorAsState(if (selected) colors.onAccent else colors.accent3, fade, label = "tabBadgeText")
+            BasicText("$badge", style = TextStyle(color = badgeText, fontFamily = Figtree, fontWeight = FontWeight.Bold, fontSize = 16.tpx),
+                modifier = Modifier.clip(CircleShape).background(badgeFill).padding(horizontal = 9.px, vertical = 2.px))
+        }
     }
 }
 
 @Composable
 private fun DescriptionPanel(tab: SettingsTab, focused: SettingsItem?, modifier: Modifier, appearance: Appearance) {
     val colors = LocalDelosColors.current
-    val shape = RoundedCornerShape(34.px)
-    Column(modifier.clip(shape)
-        // The same gentle frosted glass as the focused row
-        .then(LocalBackdropHaze.current?.let { Modifier.backdropBlur(it, 8f, colors.surface) } ?: Modifier.background(colors.surface))
-        .border(1.px, colors.line, shape).padding(44.px),
-        verticalArrangement = Arrangement.spacedBy(18.px)) {
+    SettingsPanelFrame(modifier) {
         Box(Modifier.size(120.px).clip(CircleShape).background(colors.accent), contentAlignment = Alignment.Center) {
             Symbol(focused?.icon ?: tab.icon, 64.tpx, colors.onAccent, filled = true)
         }
@@ -403,6 +406,18 @@ private fun DescriptionPanel(tab: SettingsTab, focused: SettingsItem?, modifier:
         // What the three chips of the focused row mean
         if (focused?.impact != null) ImpactLegend()
     }
+}
+
+/** The glass panel on the right of the settings screens (520 stage px wide when the caller says so): 34 px corners, 44 px padding. */
+@Composable
+internal fun SettingsPanelFrame(modifier: Modifier, content: @Composable ColumnScope.() -> Unit) {
+    val colors = LocalDelosColors.current
+    val shape = RoundedCornerShape(34.px)
+    Column(modifier.clip(shape)
+        // The same gentle frosted glass as the focused row
+        .then(LocalBackdropHaze.current?.let { Modifier.backdropBlur(it, 8f, colors.surface) } ?: Modifier.background(colors.surface))
+        .border(1.px, colors.line, shape).padding(44.px),
+        verticalArrangement = Arrangement.spacedBy(18.px), content = content)
 }
 
 /** Controller letter picker and typed search share one query and jump to the exact settings row. */

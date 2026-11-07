@@ -259,6 +259,9 @@ class ShellState(initial: Screen) {
     var settingsFocus by mutableStateOf<String?>(null)
     var onSettingsSearch: (() -> Unit)? = null
 
+    /** X on the per-game settings: resets the focused custom row to the profile value. Set only while such a row is focused. */
+    var onGameReset by mutableStateOf<(() -> Unit)?>(null)
+
     /** While set, the next buttons pressed together are recorded (the stream menu shortcut) and passed here. */
     var buttonCapture by mutableStateOf<((Set<Int>) -> Unit)?>(null)
 
