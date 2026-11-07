@@ -59,6 +59,8 @@ import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.em
 import com.limelight.shell.ContextMenu
 import com.limelight.shell.settings.SettingImpact
@@ -230,8 +232,8 @@ fun SettingRow(
             }
             Column(Modifier.weight(1f).staggerEntrance(entrance)) {
                 // Cost-bearing rows: the chips on their own line above the title, on the same left edge; the title keeps the full width
-                if (impact != null) ImpactChips(impact, focused, Modifier.padding(bottom = 3.px))
-                BasicText(label, style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx))
+                if (impact != null) ImpactChips(impact, focused, Modifier.padding(bottom = 2.px))
+                BasicText(label, maxLines = 1, overflow = TextOverflow.Ellipsis, style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx))
                 if (override != null) {
                     Row(Modifier.padding(top = 4.px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.px)) {
                         CustomBadge()
@@ -249,8 +251,20 @@ fun SettingRow(
                 }
             }
             Row(Modifier.staggerEntrance(entrance), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.px)) {
-                if (override != null) RowResetButton(override, focused && enabled)
-                RowValueView(value, focused, choice, calm)
+                // Touch: a round button that is always there and always takes its room (52 px + the gap)
+                if (override != null && override.touch) RowResetButton(override, focused && enabled)
+                Box {
+                    RowValueView(value, focused, choice, calm)
+                    // Controller: the pill takes no room at all. It is drawn over the free space left of the value, only while the row is focused,
+                    // so the title column never changes its width (and never re-wraps) when focus arrives
+                    if (override != null && !override.touch) {
+                        val resetGap = 14.px
+                        Box(Modifier.align(Alignment.CenterStart).layout { measurable, constraints ->
+                            val pill = measurable.measure(constraints.copy(minWidth = 0, maxWidth = Constraints.Infinity))
+                            layout(0, pill.height) { pill.place(-pill.width - resetGap.roundToPx(), 0) }
+                        }) { RowResetButton(override, focused && enabled) }
+                    }
+                }
             }
         }
     }
@@ -302,14 +316,14 @@ private fun RowResetButton(override: RowOverride, focused: Boolean) {
         if (override.touch) Symbol(Symbols.RESET, 28.tpx, tint)
         else {
             Symbol(Symbols.RESET, 24.tpx, tint)
-            BasicText(label, style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.Bold, fontSize = 19.tpx))
+            BasicText("Reset", style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.Bold, fontSize = 19.tpx))
             GlyphButton(Glyph.Letter("X"), 30)
         }
     }
 }
 
-/** Every cost-bearing row reserves the chips line (about 22 px) on top of the 92 px of a row with a second line, so a list's rows with chips are one height. */
-private const val IMPACT_ROW_MIN_HEIGHT = 112
+/** Every cost-bearing row reserves the chips line (about 28 px) on top of the 92 px of a row with a second line, so a list's rows with chips are one height. */
+private const val IMPACT_ROW_MIN_HEIGHT = 120
 
 /** The look of a focused settings row, shared by [SettingRow] and the focus plate of a [SettingRowList]. */
 private const val ROW_CORNER = 24f

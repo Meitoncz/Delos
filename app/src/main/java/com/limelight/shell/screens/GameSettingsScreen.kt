@@ -273,8 +273,8 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
  */
 internal object GameSettingsLayout {
     const val BANNER_HEIGHT = 290f
-    const val HEAD_TOP = 112f
-    const val HEAD_HEIGHT = 80f
+    const val HEAD_TOP = 106f
+    const val HEAD_HEIGHT = 92f
     const val TABS_Y = SettingsLayout.TABS_Y
 
     /** The list's top edge (its top fade is 14 px) and the padding inside it: the first row starts at 326, like the global list's. */
@@ -334,7 +334,7 @@ internal fun GameHeader(pc: String, game: String, customCount: Int, modifier: Mo
             BasicText("GAME SETTINGS · ${pc.uppercase()}", maxLines = 1, overflow = TextOverflow.Ellipsis,
                 style = TextStyle(color = colors.accent2, fontFamily = Figtree, fontWeight = FontWeight.Bold, fontSize = 16.tpx, letterSpacing = .14.em, shadow = shadow))
             BasicText(game, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx, lineHeight = 1.15.em, shadow = shadow))
+                style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx, lineHeight = 1.35.em, shadow = shadow))
         }
         Chip(if (customCount == 0) Symbols.CHECK_CIRCLE else Symbols.TUNE, customSettingsLabel(customCount), if (customCount == 0) null else colors.accent3)
         action()

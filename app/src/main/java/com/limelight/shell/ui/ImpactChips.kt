@@ -48,7 +48,7 @@ internal fun ImpactChips(impact: SettingImpact, focused: Boolean, modifier: Modi
     val description = IMPACT_AXES.indices.joinToString(", ") { "${IMPACT_AXES[it].first} ${impact.levels()[it].name.lowercase()}" }
     Row(
         modifier.clearAndSetSemantics { contentDescription = description },
-        horizontalArrangement = Arrangement.spacedBy(14.px),
+        horizontalArrangement = Arrangement.spacedBy(26.px),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IMPACT_AXES.forEachIndexed { i, (_, glyph) ->
@@ -62,11 +62,11 @@ internal fun ImpactChips(impact: SettingImpact, focused: Boolean, modifier: Modi
 internal fun ImpactChip(glyph: String, level: ImpactLevel, glyphColor: Color, modifier: Modifier = Modifier) {
     val colors = LocalDelosColors.current
     val fill = impactColor(level)
-    Row(modifier.alpha(if (level == ImpactLevel.NONE) .4f else 1f), horizontalArrangement = Arrangement.spacedBy(4.px), verticalAlignment = Alignment.CenterVertically) {
-        Symbol(glyph, 19.tpx, glyphColor)
-        Row(Modifier.size(width = 16.px, height = 15.px), horizontalArrangement = Arrangement.spacedBy(2.px), verticalAlignment = Alignment.Bottom) {
+    Row(modifier.alpha(if (level == ImpactLevel.NONE) .4f else 1f), horizontalArrangement = Arrangement.spacedBy(5.px), verticalAlignment = Alignment.CenterVertically) {
+        Symbol(glyph, 25.tpx, glyphColor)
+        Row(Modifier.size(width = 24.px, height = 21.px), horizontalArrangement = Arrangement.spacedBy(3.px), verticalAlignment = Alignment.Bottom) {
             for (step in 1..3) {
-                Box(Modifier.size(width = 4.px, height = (6 + (step - 1) * 4.5f).px).clip(RoundedCornerShape(2.px))
+                Box(Modifier.size(width = 6.px, height = (9 + (step - 1) * 6).px).clip(RoundedCornerShape(2.px))
                     .background(if (step <= level.ordinal) fill else colors.text3.copy(alpha = .3f)))
             }
         }
