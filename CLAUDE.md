@@ -33,7 +33,7 @@ created with `gh` end with `Created by <agent> via gh as Meitoncz`. Before deleg
 
 ## Remotes
 
-- `origin` – `Meitoncz/Delos` (private)
+- `origin` – `Meitoncz/Delos` (public since 2026-11-07, history cleaned; repo-local git `user.email` is the GitHub noreply address, keep it)
 - `artemis` – `ClassicOldSong/moonlight-android` (`moonlight-noir`)
 - `moonlight` – `moonlight-stream/moonlight-android` (`master`)
 
