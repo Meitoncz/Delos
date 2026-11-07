@@ -32,7 +32,14 @@ import com.limelight.shell.screens.TabPill
 import com.limelight.shell.settings.SettingKind
 import com.limelight.shell.settings.SettingSpec
 import com.limelight.shell.settings.SettingsTab
+import com.limelight.shell.settings.impact
+import com.limelight.shell.system.BatteryStatus
+import com.limelight.shell.system.WifiStatus
 import com.limelight.shell.ui.GameArt
+import com.limelight.shell.ui.LocalStage
+import com.limelight.shell.ui.fadeEdges
+import com.limelight.shell.ui.StatusBar
+import com.limelight.shell.ui.ZoomedBar
 import com.limelight.shell.ui.LocalDelosColors
 import com.limelight.shell.ui.PillButton
 import com.limelight.shell.ui.RowOverride
@@ -63,6 +70,9 @@ internal object GameSettingsPreview {
         return { Preview(touch, auto) }
     }
 
+    private val previewValues = mapOf<String, Any>("list_resolution" to "1920x1080", "list_fps" to "120", "seekbar_bitrate_kbps" to 60000,
+        "video_format" to "forceh265", "checkbox_sgsr" to true, "list_sgsr_quality" to "temporal")
+
     private class Row(val key: String, val label: String, val value: RowValue, val profile: String?, val spec: SettingSpec)
 
     @Composable
@@ -72,10 +82,10 @@ internal object GameSettingsPreview {
             fun spec(key: String, label: String, kind: SettingKind) =
                 SettingSpec(key, label, "The size of the picture the PC renders and encodes.", "c", "s", SettingsTab.STREAM, kind, null)
             listOf(
-                Row("res", "Resolution", RowValue.Choice("1280 × 720", {}), "1920 × 1080", spec("res", "Resolution", SettingKind.CHOICE)),
-                Row("fps", "Frame rate", RowValue.Choice("60 FPS", {}), null, spec("fps", "Frame rate", SettingKind.CHOICE)),
-                Row("br", "Video bitrate", RowValue.Slider(60, 5, 150, 1, " Mbps") {}, "40 Mbps", spec("br", "Video bitrate", SettingKind.SLIDER)),
-                Row("codec", "Video codec", RowValue.Choice("HEVC", {}), null, spec("codec", "Video codec", SettingKind.CHOICE)),
+                Row("res", "Resolution", RowValue.Choice("1280 × 720", {}), "1920 × 1080", spec("list_resolution", "Resolution", SettingKind.CHOICE)),
+                Row("fps", "Frame rate", RowValue.Choice("60 FPS", {}), null, spec("list_fps", "Frame rate", SettingKind.CHOICE)),
+                Row("br", "Video bitrate", RowValue.Slider(60, 5, 150, 1, " Mbps") {}, "40 Mbps", spec("seekbar_bitrate_kbps", "Video bitrate", SettingKind.SLIDER)),
+                Row("codec", "Video codec", RowValue.Choice("HEVC", {}), null, spec("video_format", "Video codec", SettingKind.CHOICE)),
             )
         }
         val navigation = rememberFocusedListNavigation(rows.map { it.key })
@@ -100,17 +110,20 @@ internal object GameSettingsPreview {
                     ShoulderLabel("R1")
                 }
                 SettingRowList(Modifier.padding(start = GameSettingsLayout.LIST_X.px, top = GameSettingsLayout.LIST_TOP.px, bottom = 96.px)
-                    .width(GameSettingsLayout.LIST_WIDTH.px).fillMaxHeight()) {
-                    Column(Modifier.fillMaxSize().focusedListBoundary(navigation).padding(start = 18.px, end = 18.px, top = 14.px),
+                    .width(GameSettingsLayout.LIST_WIDTH.px).fillMaxHeight().fadeEdges(LocalStage.current, top = 14f, bottom = 70f)) {
+                    Column(Modifier.fillMaxSize().focusedListBoundary(navigation).padding(start = 18.px, end = 18.px, top = GameSettingsLayout.LIST_INNER_TOP.px),
                         verticalArrangement = Arrangement.spacedBy(10.px)) {
                         rows.forEachIndexed { i, row ->
                             SettingRow(Symbols.SETTINGS, row.label, row.value, Modifier.focusedListRow(navigation, row.key),
                                 description = "From profile".takeIf { row.profile == null },
                                 override = row.profile?.let { RowOverride("Profile: $it", touch) {} },
+                                impact = impact(row.spec.key, previewValues),
                                 onFocused = { focused = i })
                         }
                     }
                 }
+                // The persistent status bar of the app: the header and the tabs must clear it
+                ZoomedBar(1f) { StatusBar(null, null, false, WifiStatus(3), BatteryStatus(.8f, false), "21:08") }
                 val row = rows[focused]
                 GameSettingsPanel(
                     Modifier.align(Alignment.TopEnd).padding(top = GameSettingsLayout.PANEL_TOP.px, end = SettingsLayout.TITLE_X.px, bottom = 96.px)

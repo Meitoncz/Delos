@@ -216,7 +216,7 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
                     .width(GameSettingsLayout.LIST_WIDTH.px).fillMaxHeight().fadeEdges(stage, top = 14f, bottom = 70f)) {
                     Column(
                         modifier = Modifier.fillMaxSize().focusedListBoundary(navigation).verticalScroll(scroll)
-                            .padding(start = 18.px, end = 18.px, top = 14.px, bottom = 140.px),
+                            .padding(start = 18.px, end = 18.px, top = GameSettingsLayout.LIST_INNER_TOP.px, bottom = 140.px),
                         verticalArrangement = Arrangement.spacedBy(10.px)) {
                         rows.forEach { spec ->
                             key(spec.key) {
@@ -266,16 +266,23 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
     }
 }
 
-/** Where the per-game screen puts its banner, title block, tabs, list and panel (stage px; docs/GUI.md). */
+/**
+ * Where the per-game screen puts its banner, title block, tabs, list and panel (stage px; docs/GUI.md). The persistent status bar
+ * (the DELOS logo at the left, Wi-Fi / battery / clock at the right) owns y 0..104, so nothing of the screen starts above [HEAD_TOP];
+ * the tabs sit where the global settings' tabs sit ([SettingsLayout.TABS_Y]) and the first row where its first row sits.
+ */
 internal object GameSettingsLayout {
-    const val BANNER_HEIGHT = 270f
-    const val HEAD_TOP = 44f
+    const val BANNER_HEIGHT = 290f
+    const val HEAD_TOP = 112f
     const val HEAD_HEIGHT = 80f
-    const val TABS_Y = 140f
-    const val LIST_TOP = 218f
+    const val TABS_Y = SettingsLayout.TABS_Y
+
+    /** The list's top edge (its top fade is 14 px) and the padding inside it: the first row starts at 326, like the global list's. */
+    const val LIST_TOP = 296f
+    const val LIST_INNER_TOP = 30f
     const val LIST_X = 132f
     const val LIST_WIDTH = 1080f
-    const val PANEL_TOP = 232f
+    const val PANEL_TOP = SettingsLayout.LIST_TOP
 }
 
 /**
