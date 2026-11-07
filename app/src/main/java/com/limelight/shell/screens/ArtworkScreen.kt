@@ -97,6 +97,7 @@ import com.limelight.shell.data.NONE
 import com.limelight.shell.data.Pc
 import com.limelight.shell.data.SgdbGame
 import com.limelight.shell.data.SgdbImage
+import com.limelight.shell.data.SgdbRetry
 import com.limelight.shell.data.Thumbnails
 import com.limelight.shell.data.rememberArtworkResult
 import com.limelight.shell.data.rememberBoxArt
@@ -214,7 +215,7 @@ fun ArtworkScreen(screen: Screen.Artwork) {
     LaunchedEffect(store.enabled) {
         if (store.enabled && store.eligible(app) && !store.searched(pc, app)) {
             busy = true
-            runCatching { store.fetch(pc, app) }.onFailure { shell.showToast(it.message ?: "SteamGridDB is not reachable", Symbols.ERROR) }
+            runCatching { SgdbRetry.run { store.fetch(pc, app) } }.onFailure { shell.showToast(it.message ?: "SteamGridDB is not reachable", Symbols.ERROR) }
             busy = false
         }
     }
@@ -242,7 +243,7 @@ fun ArtworkScreen(screen: Screen.Artwork) {
                 if (previous == null || previous.tab != tab || previous.gameId != gameId) choices = Choices.Loading
                 refreshing = true
                 try {
-                    choices = runCatching { store.choices(pc, app, tab.kind, filters.copy(sort = ArtSort.SCORE)) }
+                    choices = runCatching { SgdbRetry.run { store.choices(pc, app, tab.kind, filters.copy(sort = ArtSort.SCORE)) } }
                         .map { list -> loadedLists[key] = list; ready(list) }
                         .getOrElse { Choices.Failed(it.message ?: "SteamGridDB is not reachable") }
                 } finally {
