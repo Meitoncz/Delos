@@ -57,8 +57,6 @@ public final class SgsrRenderer implements AutoCloseable {
     private volatile float gpuTimeMs;
     private volatile boolean firstFramePresented;
     private int highQualityProgram;
-    private int supersampleUpscaleProgram;
-    private int supersampleHighQualityProgram;
     private int temporalPresentProgram;
     private int supersamplePresentProgram;
     private int sharpenProgram;
@@ -97,7 +95,7 @@ public final class SgsrRenderer implements AutoCloseable {
     private volatile String arrivalError;
     private final float[] arrivalPose = new float[LaunchArrival.POSE_FLOATS];
     private ArrivalGlPass arrival;
-    private int arrivalSpatialProgram, arrivalHighProgram, arrivalTemporalProgram, arrivalPresentProgram, arrivalSharpenProgram;
+    private int arrivalTemporalProgram, arrivalPresentProgram, arrivalSharpenProgram;
     private Runnable arrivalCompletionListener;
     private Choreographer choreographer;
     private boolean arrivalFrameScheduled, arrivalReconstructionDirty, hdrFrameAcquired;
@@ -109,7 +107,7 @@ public final class SgsrRenderer implements AutoCloseable {
     // or temporal history and never rebuild its mip pyramid unless that frame changes.
     private int cachedSource, cachedProgram, cachedWidth, cachedHeight;
     private int cachedSampledWidth, cachedSampledHeight, cachedQuality;
-    private boolean cachedSupersampling, cachedReconstruction;
+    private boolean cachedReconstruction;
     private int copyTransformLocation, copySourceLocation;
     private final android.util.SparseArray<ProgramUniforms> programUniforms = new android.util.SparseArray<>();
     private SgsrDimensions.Plan dimensionsPlan;
@@ -239,10 +237,8 @@ public final class SgsrRenderer implements AutoCloseable {
                 }
                 ensureArrival(Math.max(1,w),Math.max(1,h));
                 if (tenBit && !arrivalOnly) {
-                    arrivalRgbProgram(0,false);
-                    arrivalRgbProgram(1,false);
-                    arrivalRgbProgram(2,false);
-                    arrivalRgbProgram(0,true);
+                    arrivalRgbProgram(0);
+                    arrivalRgbProgram(2);
                 }
                 GLES31.glBindFramebuffer(GLES31.GL_FRAMEBUFFER,0);
             } catch (Exception e) { failArrival(e); }
@@ -360,12 +356,8 @@ public final class SgsrRenderer implements AutoCloseable {
         copySourceLocation = GLES31.glGetUniformLocation(copyProgram,"source");
         choreographer = Choreographer.getInstance();
         if (!arrivalOnly) {
-            upscaleProgram = createUpscaleProgram(app,"sgsr/sgsr1.frag");
-            highQualityProgram = createUpscaleProgram(app,"sgsr/sgsr1_high.frag");
-            if (tenBit) {
-                supersampleUpscaleProgram = createUpscaleProgram(app,"sgsr/sgsr1.frag",false);
-                supersampleHighQualityProgram = createUpscaleProgram(app,"sgsr/sgsr1_high.frag",false);
-            }
+            upscaleProgram = createUpscaleProgram(app,"sgsr/sgsr1.frag",false);
+            highQualityProgram = createUpscaleProgram(app,"sgsr/sgsr1_high.frag",false);
             supersamplePresentProgram = createUpscaleProgram(app,"sgsr/supersample_present.frag");
         }
         GLES31.glGetIntegerv(GLES31.GL_MAX_TEXTURE_SIZE,size,0);
@@ -452,7 +444,7 @@ public final class SgsrRenderer implements AutoCloseable {
             final float progress = arrivalProgress;
             final boolean arrivalActive = progress >= 0 && !arrivalComplete;
             if (arrivalOnly) {
-                cacheFrame(colorTexture,0,w,h,width,height,0,false,false);
+                cacheFrame(colorTexture,0,w,h,width,height,0,false);
                 if (arrivalActive) scheduleArrivalTick();
                 return;
             }
@@ -525,13 +517,13 @@ public final class SgsrRenderer implements AutoCloseable {
                     sampledHeight = internalHeight;
                     selectedProgram = temporalPresentProgram;
                 } catch (Exception e) { throw new IllegalStateException("SGSR 2 video",e); }
-            } else if (supersampling) {
+            } else {
+                // Reuse the supersampling target for spatial reconstruction, then sharpen once at
+                // presentation. Fusing here would repeat the full SGSR kernel for every cross tap.
                 ensureSupersampleTarget(internalWidth,internalHeight);
                 GLES31.glBindFramebuffer(GLES31.GL_FRAMEBUFFER,supersampleFramebuffer);
-                int reconstructionProgram = tenBit
-                        ? (quality == 1 ? supersampleHighQualityProgram : supersampleUpscaleProgram)
-                        : selectedProgram;
-                drawProgram(reconstructionProgram,colorTexture,internalWidth,internalHeight,width,height,true);
+                drawProgram(selectedProgram,colorTexture,internalWidth,internalHeight,width,height,
+                        internalWidth>=width && internalHeight>=height);
                 source = supersampleTexture;
                 sampledWidth = internalWidth;
                 sampledHeight = internalHeight;
@@ -542,7 +534,7 @@ public final class SgsrRenderer implements AutoCloseable {
                 LimeLog.info("SGSR output: " + width + "x" + height + " -> " + internalWidth + "x" +
                         internalHeight + " -> " + w + "x" + h + (supersampling ? " (supersampling)" : ""));
             }
-            cacheFrame(source,selectedProgram,w,h,sampledWidth,sampledHeight,quality,supersampling,
+            cacheFrame(source,selectedProgram,w,h,sampledWidth,sampledHeight,quality,
                     sharpenOnly || (w>=width && h>=height));
             if (arrivalActive) {
                 scheduleArrivalTick();
@@ -574,7 +566,7 @@ public final class SgsrRenderer implements AutoCloseable {
     }
 
     private void cacheFrame(int source, int program, int w, int h, int sampledWidth,
-                            int sampledHeight, int quality, boolean supersampled, boolean reconstruct) {
+                            int sampledHeight, int quality, boolean reconstruct) {
         cachedSource = source;
         cachedProgram = program;
         cachedWidth = w;
@@ -582,7 +574,6 @@ public final class SgsrRenderer implements AutoCloseable {
         cachedSampledWidth = sampledWidth;
         cachedSampledHeight = sampledHeight;
         cachedQuality = quality;
-        cachedSupersampling = supersampled;
         cachedReconstruction = reconstruct;
         arrivalReconstructionDirty = true;
     }
@@ -634,7 +625,7 @@ public final class SgsrRenderer implements AutoCloseable {
                     if (arrivalOnly) arrival.copySource(cachedSource);
                     else {
                         int rgbProgram = tenBit
-                                ? arrivalRgbProgram(cachedQuality,cachedSupersampling) : cachedProgram;
+                                ? arrivalRgbProgram(cachedQuality) : cachedProgram;
                         drawProgram(rgbProgram,cachedSource,cachedWidth,cachedHeight,
                                 cachedSampledWidth,cachedSampledHeight,cachedReconstruction);
                     }
@@ -697,7 +688,7 @@ public final class SgsrRenderer implements AutoCloseable {
         arrival.beginReconstruction(w,h);
     }
 
-    private int arrivalRgbProgram(int quality, boolean supersampled) {
+    private int arrivalRgbProgram(int quality) {
         if (quality == SHARPEN_ONLY) {
             if (arrivalSharpenProgram == 0)
                 arrivalSharpenProgram = createArrivalRgbProgram("sgsr/sharpen_only.frag");
@@ -708,19 +699,9 @@ public final class SgsrRenderer implements AutoCloseable {
                 arrivalTemporalProgram = createArrivalRgbProgram("sgsr/temporal_present.frag");
             return arrivalTemporalProgram;
         }
-        if (supersampled) {
-            if (arrivalPresentProgram == 0)
-                arrivalPresentProgram = createArrivalRgbProgram("sgsr/supersample_present.frag");
-            return arrivalPresentProgram;
-        }
-        if (quality == 1) {
-            if (arrivalHighProgram == 0)
-                arrivalHighProgram = createArrivalRgbProgram("sgsr/sgsr1_high.frag");
-            return arrivalHighProgram;
-        }
-        if (arrivalSpatialProgram == 0)
-            arrivalSpatialProgram = createArrivalRgbProgram("sgsr/sgsr1.frag");
-        return arrivalSpatialProgram;
+        if (arrivalPresentProgram == 0)
+            arrivalPresentProgram = createArrivalRgbProgram("sgsr/supersample_present.frag");
+        return arrivalPresentProgram;
     }
 
     private int createArrivalRgbProgram(String asset) {
@@ -771,17 +752,13 @@ public final class SgsrRenderer implements AutoCloseable {
         arrivalStatePending.set(false);
         arrivalReconstructionDirty = true;
         if (arrival != null) { arrival.close(); arrival = null; }
-        programUniforms.remove(arrivalSpatialProgram);
-        programUniforms.remove(arrivalHighProgram);
         programUniforms.remove(arrivalTemporalProgram);
         programUniforms.remove(arrivalPresentProgram);
         programUniforms.remove(arrivalSharpenProgram);
-        if (arrivalSpatialProgram != 0) GLES31.glDeleteProgram(arrivalSpatialProgram);
-        if (arrivalHighProgram != 0) GLES31.glDeleteProgram(arrivalHighProgram);
         if (arrivalTemporalProgram != 0) GLES31.glDeleteProgram(arrivalTemporalProgram);
         if (arrivalPresentProgram != 0) GLES31.glDeleteProgram(arrivalPresentProgram);
         if (arrivalSharpenProgram != 0) GLES31.glDeleteProgram(arrivalSharpenProgram);
-        arrivalSpatialProgram = arrivalHighProgram = arrivalTemporalProgram = arrivalPresentProgram = arrivalSharpenProgram = 0;
+        arrivalTemporalProgram = arrivalPresentProgram = arrivalSharpenProgram = 0;
     }
 
     /** Smoothed wall time of the completed SGSR processing path, excluding decode. */
@@ -881,8 +858,6 @@ public final class SgsrRenderer implements AutoCloseable {
                 if(copyProgram!=0) GLES31.glDeleteProgram(copyProgram);
                 if(upscaleProgram!=0) GLES31.glDeleteProgram(upscaleProgram);
                 if(highQualityProgram!=0) GLES31.glDeleteProgram(highQualityProgram);
-                if(supersampleUpscaleProgram!=0) GLES31.glDeleteProgram(supersampleUpscaleProgram);
-                if(supersampleHighQualityProgram!=0) GLES31.glDeleteProgram(supersampleHighQualityProgram);
                 if(temporalPresentProgram!=0) GLES31.glDeleteProgram(temporalPresentProgram);
                 if(supersamplePresentProgram!=0) GLES31.glDeleteProgram(supersamplePresentProgram);
                 if(sharpenProgram!=0) GLES31.glDeleteProgram(sharpenProgram);

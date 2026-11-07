@@ -102,7 +102,7 @@ object SettingsHelp {
         "checkbox_sgsr" to "Upscales a lower-resolution stream to the display size, or only sharpens it (Mode). Costs GPU time. Menu changes last one session.",
         "list_pyrowave_chroma" to "4:4:4 costs bandwidth and GPU.",
         "list_sgsr_quality" to "Reconstruction method. All add GPU work.",
-        "seekbar_sgsr_sharpness" to "Sharpening strength. 0 is off; high values add artifacts. In Sharpen only it is the whole effect. Menu changes last one session.",
+        "seekbar_sgsr_sharpness" to "Final sharpening. 0 disables it, not SGSR 1 reconstruction. In Sharpen only it is the whole effect. Menu changes last one session.",
         "list_sgsr_supersampling_level" to "Internal size when the stream already matches the display. Menu changes last one session.",
         "list_audio_config" to "Channels the PC sends. Surround needs matching playback.",
         "checkbox_enable_audiofx" to "Lets Android's system equalizer and effects process stream audio. May add delay.",

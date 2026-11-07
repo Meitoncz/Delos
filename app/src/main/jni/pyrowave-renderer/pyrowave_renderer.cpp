@@ -88,7 +88,7 @@ namespace {
     // Push constants of the SGSR present and pack fragment shaders (sgsr_sharpen.glsl)
     struct PresentParams {
         float sharpness;
-        // 1: Sharpen only's contrast-adaptive sharpen; 0: the SGSR modes' bounded presentation filter
+        // 0: SGSR 2 bounded filter; 1: Sharpen only contrast-adaptive filter; 2: SGSR 1 mild bounded filter
         int32_t contrastAdaptive;
     };
 
@@ -2331,7 +2331,8 @@ namespace {
                     vk.CmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, activeLayout, 0, 1,
                                              &activeSet, 0, nullptr);
                     if (sgsrOutput >= 0) {
-                        const PresentParams params = {sgsrAppliedSharpness, sgsrAppliedMode == UPSCALING_SHARPEN_ONLY ? 1 : 0};
+                        const PresentParams params = {sgsrAppliedSharpness, sgsrAppliedMode == UPSCALING_SHARPEN_ONLY ? 1 :
+                                (sgsrAppliedMode == 1 || sgsrAppliedMode == 2 ? 2 : 0)};
                         vk.CmdPushConstants(commandBuffer, activeLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(params), &params);
                     } else {
                         vk.CmdPushConstants(commandBuffer, activeLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(csc), &csc);
@@ -3052,7 +3053,8 @@ namespace {
                 vk.CmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,activeLayout,0,1,&activeSet,0,nullptr);
                 if(!useSgsr)vk.CmdPushConstants(commandBuffer,pipelineLayout,VK_SHADER_STAGE_FRAGMENT_BIT,0,sizeof(CscParams),&csc);
                 else {
-                    const PresentParams params = {sgsrAppliedSharpness, sgsrAppliedMode == UPSCALING_SHARPEN_ONLY ? 1 : 0};
+                    const PresentParams params = {sgsrAppliedSharpness, sgsrAppliedMode == UPSCALING_SHARPEN_ONLY ? 1 :
+                            (sgsrAppliedMode == 1 || sgsrAppliedMode == 2 ? 2 : 0)};
                     vk.CmdPushConstants(commandBuffer, activeLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(params), &params);
                 }
             }

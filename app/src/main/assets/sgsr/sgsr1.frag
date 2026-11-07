@@ -1,5 +1,5 @@
 #version 310 es
-// Delos: ES 3.1 textureGather, edge-direction mode, adjustable sharpness and downscale bypass.
+// Delos: ES 3.1 textureGather, edge-direction mode and downscale bypass.
 // Upstream d926f074, SnapdragonGameStudios/snapdragon-gsr (BSD-3-Clause).
 
 //============================================================================================================
@@ -33,9 +33,8 @@ precision highp int;
 
 #define EdgeThreshold 8.0/255.0
 
-uniform float sgsrStrength;
 uniform int sgsrEnabled;
-#define EdgeSharpness (0.5 + 1.5 * sgsrStrength)
+#define EdgeSharpness 2.0
 
 // #define UseUniformBlock
 

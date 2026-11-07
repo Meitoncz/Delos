@@ -32,7 +32,7 @@ object StreamMenuHelp {
         "Supersampling on" to "Renders at a larger internal size. Costs GPU time.",
         "Supersampling quality" to "For 1080p: 1× renders at 2560 × 1440, 2× at 3840 × 2160 and costs more GPU time and memory.",
         "Mode" to "Applies live. Switching to or from Sharpen only may flicker.",
-        "Sharpness" to "Sharpening strength. 0 turns it off. Works in every mode, Sharpen only included. Lasts for this stream.",
+        "Sharpness" to "Final sharpening. 0 disables it, not SGSR 1 reconstruction. In Sharpen only it is the whole effect. Lasts for this stream.",
         "Save for this game" to "Saves the upscaler state, mode, sharpness and supersampling level for this game's future launches.",
         "More" to "More stream controls: clipboard, host commands, key combinations, zoom, touch and on-screen controls. Actions run at once.",
         "Disconnect" to "Stops streaming and returns to the Delos library. The game keeps running on the PC.",

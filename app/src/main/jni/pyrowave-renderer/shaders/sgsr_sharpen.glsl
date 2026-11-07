@@ -3,9 +3,9 @@
 // to 8 bits.
 layout(push_constant) uniform Presentation {
     float sharpness;
-    // 0: the bounded presentation filter of the SGSR modes (same as assets/sgsr/temporal_present.frag).
-    // 1: Sharpen only's contrast-adaptive sharpen (same as assets/sgsr/sharpen_only.frag; SharpenOnly.java
-    //    is the CPU reference of its steps).
+    // 0: SGSR 2's bounded presentation filter (same as assets/sgsr/temporal_present.frag).
+    // 1: Sharpen only's unchanged contrast-adaptive sharpen (SharpenOnly.java is the CPU reference).
+    // 2: SGSR 1's bounded presentation filter, with half-strength independent sharpening.
     int contrastAdaptive;
 } presentation;
 vec3 contrastAdaptiveColor(vec2 uv) {
@@ -24,9 +24,11 @@ vec3 contrastAdaptiveColor(vec2 uv) {
     return clamp(((b+d+f+h)*w+e)/(1.0+4.0*w),0.0,1.0);
 }
 vec3 presentationColor(vec2 uv) {
-    if(presentation.contrastAdaptive!=0) return contrastAdaptiveColor(uv);
+    if(presentation.contrastAdaptive==1) return contrastAdaptiveColor(uv);
     vec3 center=texture(u_image,uv).rgb;
     float strength=clamp(presentation.sharpness,0.0,1.0);
+    // SGSR 1: total detail gain is .375*s (default s=.5 gives .1875), before unchanged limits.
+    if(presentation.contrastAdaptive==2) strength*=.5;
     if(strength==0.0) return center;
     vec2 stepSize=1.0/vec2(textureSize(u_image,0));
     vec3 left=texture(u_image,uv-vec2(stepSize.x,0)).rgb;

@@ -101,11 +101,11 @@ void main() {
             float low=min(min(left.y,left.z),min(right.x,right.w));
             float high=max(max(left.y,left.z),max(right.x,right.w));
             if(abs(a.y)>1e-8 && (p.mode!=2 || abs(a.w)>1e-8)) {
-                // Intrinsic edge response is fixed; the independent sharpness control is
-                // applied once, after reconstruction, and never enters temporal history.
-                float edgeY=clamp(.5*a.x/a.y,low,high);
+                // Official SGSR 1 reconstruction gain is fixed at 2.0; the independent
+                // sharpness control is applied once, after reconstruction.
+                float edgeY=clamp(2.0*a.x/a.y,low,high);
                 float delta=edgeY-center;
-                if(p.mode==2) delta=.6*edgeY+.4*clamp(.5*a.z/a.w,low,high)-center;
+                if(p.mode==2) delta=.6*edgeY+.4*clamp(2.0*a.z/a.w,low,high)-center;
                 else delta=clamp(delta,-23.0/255.0,23.0/255.0);
                 color=clamp(color+delta,0.0,1.0);
             }

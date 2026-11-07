@@ -10,7 +10,6 @@ precision highp float;
 precision highp int;
 uniform highp vec4 ViewportInfo[1];
 uniform highp sampler2D ps0;
-uniform float sgsrStrength;
 uniform int sgsrEnabled;
 layout(location=0) in highp vec4 in_TEXCOORD0;
 layout(location=0) out vec4 out_Target0;
@@ -105,7 +104,7 @@ void SgsrYuvH(
     vec4 con1){
 
     float edgeThreshold = (4.0/255.0);
-    float edgeSharpness = (0.5+1.5*sgsrStrength);
+    float edgeSharpness = 2.0;
 
         pix.xyzw = SGSRRGBH(uv).xyzw;
 

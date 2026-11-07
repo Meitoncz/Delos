@@ -301,7 +301,7 @@ Local scope: all ten `assets/sgsr/` shaders, `SgsrRenderer`, `SgsrTemporal`,
 scene/presentation/pack/sharpen shaders and HDR output bridge. The native sources are under
 `jni/pyrowave-renderer/`, not under `moonlight-core/`.
 
-### Verified source-level behavior
+### Verified source-level behavior (audit baseline, before the 2026-11-07 gain follow-up)
 
 | Area | Verified result |
 | --- | --- |
@@ -325,6 +325,7 @@ not new measurements. Exact formulas and operation order are source observations
 
 | Difference | Reason/current behavior | Expected effect or limit |
 | --- | --- | --- |
+| Follow-up status (2026-11-07) | The next two rows preserve the pre-change audit baseline. Both pipelines now fix SGSR 1 Standard/HQ reconstruction gain at `2.0` and apply an independent final sharpener; see the dated follow-up below. | The old slider/gain mismatch is no longer the intended behavior. This is not device acceptance. |
 | SGSR 1 reconstruction gain | Official Standard/HQ use `2.0` (documented range 1–2). GLES uses `0.5 + 1.5*sharpness`: 50% means 1.25; 100% reaches 2.0. Native uses a fixed 0.5 and applies its separate presentation sharpener afterwards (`sgsr_spatial.comp`, `sgsr_sharpen.glsl`). | The same slider value is **not** the same spatial reconstruction across renderers. Lower gain attenuates the mean-subtracted reconstruction correction before local clamping; a later bounded sharpener is not mathematically equivalent. This is an evidence-backed softness candidate, not a measured ranking or an automatically corrected tuning defect. |
 | SGSR 1 slider semantics | GLES spatial modes change the reconstruction gain itself. Native and GLES temporal modes use a separate presentation filter. | The general description of an independent final sharpener does not precisely describe GLES SGSR 1. Zero sharpness does not turn off SGSR 1 reconstruction; use Enabled/Off for that comparison. |
 | No engine jitter/depth/object vectors | Video already contains the host's resolved, compressed scene and HUD. Delos substitutes bidirectional Lucas–Kanade flow, confidence, photometric residual and scene heuristics; jitter is zero. | Sound as a conservative video heuristic, **not equivalent** to engine SGSR 2. A static image supplies no new jittered subpixel samples; optical flow cannot infer reliable depth, transparency, occlusion or lost source detail. |
@@ -401,3 +402,67 @@ first-frame EGL/view sizing, driver external-YUV conversion/chroma siting, Surfa
 P010 display colorimetry, real-game flow/occlusion accuracy and sustained latency/power. No Gradle,
 ADB, installation or game launch was performed. Other differences above were documented rather
 than silently retuned; the source audit does not establish one universal cause of perceived softness.
+
+## SGSR 1 fixed-gain follow-up (2026-11-07)
+
+The user approved restoring the official **2.0 reconstruction gain** for SGSR 1 Standard and
+High Quality in both MediaCodec/GLES and PyroWave/Vulkan. This supersedes the two historical
+SGSR 1 gain/slider rows above, without changing their audit evidence or the earlier device results.
+
+| Pipeline / mode | Audit baseline | Follow-up |
+| --- | --- | --- |
+| GLES SGSR 1 Standard and HQ | Reconstruction gain `0.5 + 1.5*s`: `1.25` at 50%, `2.0` at 100%. | Fixed reconstruction gain `2.0` at every slider value; independent bounded final presentation filter. |
+| Native SGSR 1 Standard and HQ | Fixed reconstruction gain `0.5`, then the existing presentation filter. | Fixed reconstruction gain `2.0`; the same SGSR 1-only final-filter mapping as GLES. |
+| SGSR 2 Video / Video Quality | Independent presentation sharpening after reconstruction. | Unchanged reconstruction and slider mapping; sharpened pixels still never enter history. |
+| Sharpen only | Stream-size CAS-style filter, no reconstruction. | Unchanged algorithm, slider mapping and sizing. |
+
+Here `s` is the normalized Sharpness slider (`0..1`, default `0.5`). For **SGSR 1 only**, effective
+presentation strength is `0.5*s`. The existing bounded cross filter's detail coefficient is `0.75`,
+so its pre-limit correction is `detail * (0.375*s)`: coefficient `0.1875` at the default 50% and
+`0.375` at 100%. Each channel's correction remains bounded by `min(0.06, 0.25*localRange)`,
+with the existing local-range/output clamps retained. At 0% the final filter is bypassed, but
+SGSR 1 reconstruction still uses gain 2.0; only Upscaler Off bypasses reconstruction.
+
+This half-strength mapping is deliberately milder than the native baseline's full-strength
+presentation mapping (detail coefficient `0.375` at 50%, `0.75` at 100%), because reconstruction
+now contributes its full official correction. The default is intended to be official SGSR 1 plus
+a mild independent sharpen **[INFERENCE]**, not a measured perceptual equivalence to Qualcomm RCAS.
+The optional official RCAS stage is separate from reconstruction; Delos keeps its existing bounded
+cross filter rather than adding RCAS or retuning SGSR 2/CAS.
+
+GLES reuses the existing supersampling RGB intermediate target for one reconstruction draw followed
+by cross-filter presentation, rather than evaluating five full reconstruction kernels per output
+pixel. No new target type is introduced, but ordinary spatial upscaling now also needs that RGB
+intermediate (including at zero sharpness, where the final resolve skips its cross taps). HDR
+intermediates remain encoded RGB/PQ; conversion
+to P010 belongs to the existing final-output helper, not to the reconstruction target. Native already
+has its compute intermediate and final presentation/pack stage. The added GLES pass, intermediate
+storage and bandwidth cost are **unmeasured**; target reuse is not a claim of zero extra GPU cost.
+
+The lead's device comparison should keep the same scene, source/output sizes, host AA/sharpening
+and bitrate: compare main versus this follow-up at 50% for Standard and HQ in each pipeline,
+then 0/50/100% to isolate final sharpening. Unlike the historical comparison recipe above, all
+three SGSR 1 slider positions now use the official gain. Include SDR/HDR/P010, the launch arrival
+effect, live mode changes, halos, fine text, texture and sustained processing time. Stronger
+reconstruction detail is expected **[INFERENCE]**, but ringing or compression visibility may also
+increase. Device acceptance and performance have not been measured for this follow-up.
+
+Standalone checks for this follow-up: all 13 native shaders compiled with the NDK compiler and
+the embedded SPIR-V header was regenerated; the renderer C++ passed Android ARM64/API 29 syntax
+checking. The changed Java renderer and help Kotlin compiled against real cached Android/project
+APIs. All three GLES shaders passed offline compilation; Standard's existing precision-qualified
+`highp vec2(...)` constructors were normalized only in disposable compiler input because `glslc`
+rejects that driver-specific syntax. No production constructor syntax was changed.
+
+Actual headless GL execution of the GLES final shader and the native shared filter body gave the
+same bounded results on a center `0.5` / cross-neighbor `0.4` fixture:
+
+| Slider | GLES output | Native SGSR 1 filter output |
+| --- | --- | --- |
+| 0% | 0.5 | 0.5 |
+| 50% | 0.51875 | 0.51875 |
+| 100% | 0.525 | 0.525 |
+
+At 100% the local-range limit clamps the correction to `0.025`, as intended. These are filter
+runtime checks, not an Android Vulkan presentation, a physical HDR test, or a reconstruction
+quality/performance comparison. Gradle and ADB were not run.

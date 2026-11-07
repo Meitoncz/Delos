@@ -141,6 +141,32 @@ both renderers and adds it to total latency. MediaCodec uses smoothed wall time 
 SGSR draw; PyroWave uses its Vulkan draw timestamps. This is processing cost, not a claim of complete
 input-to-photon latency.
 
+### SGSR 1 reconstruction gain and Sharpness (2026-11-07 follow-up)
+
+SGSR 1 **Standard and High Quality use the official fixed reconstruction gain of 2.0** in both
+MediaCodec/GLES and PyroWave/Vulkan. Previously GLES used `0.5 + 1.5*s` (`1.25` at the default
+50%), while native used `0.5` plus a separate presentation sharpener. The historical audit is
+preserved in [SGSR2_VIDEO.md](SGSR2_VIDEO.md#sgsr-1-fixed-gain-follow-up-2026-11-07).
+
+Sharpness now controls only an independent final bounded cross filter in both SGSR 1 pipelines.
+For normalized slider `s` (`0..1`, default `0.5`), its effective strength is `0.5*s`; the existing
+detail gain of `0.75` gives a correction coefficient of `0.375*s` (`0.1875` at 50%, `0.375` at
+100%). Each channel's correction limit remains `min(0.06, 0.25*localRange)`, with the existing
+local-range/output clamps. **0 bypasses only the final sharpener: fixed-gain SGSR 1 reconstruction
+remains active.** Upscaler Off bypasses both. The milder final-filter mapping is intended to add
+gentle sharpening to full-gain reconstruction **[INFERENCE]**; it is not RCAS equivalence or device
+acceptance. SGSR 2 Video/Video Quality and Sharpen only's CAS mapping are unchanged.
+
+GLES reuses the existing supersampling RGB target for one reconstruction draw and a separate
+cross-filter presentation draw, avoiding five complete reconstruction evaluations per output
+pixel. Ordinary spatial upscaling therefore also needs the intermediate when final filtering is
+active, although no new target type is added. HDR reconstruction remains encoded RGB/PQ until the
+existing final P010 conversion. Native already uses its compute intermediate and final
+presentation/pack pass. Extra GLES storage, bandwidth and GPU cost have not been measured.
+No build checks or device acceptance are claimed for this follow-up; compare the same scene on
+main and this change at 50% in Standard/HQ for each renderer, including HDR, live switching and
+the launch arrival effect, then compare 0/50/100% and sustained processing time.
+
 ### Sharpen only mode
 
 Issue [#67](https://github.com/Meitoncz/Delos/issues/67). **Sharpen only** is a fifth Upscaler mode (setting value
