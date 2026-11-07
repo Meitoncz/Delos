@@ -595,11 +595,11 @@ object Thumbnails {
     }
 
     /** Animated WebP files of the choices (whole files, bounded), the empty array standing for "known not to be animated". */
-    private val animations = object : LruCache<String, ByteArray>(32 * 1024) {
+    private val animations = object : LruCache<String, ByteArray>(64 * 1024) {
         override fun sizeOf(key: String, value: ByteArray) = maxOf(1, value.size / 1024)
     }
     private const val THUMB_ANIMATION_BYTES = 3 * 1024 * 1024
-    private const val FULL_ANIMATION_BYTES = 4 * 1024 * 1024
+    private const val FULL_ANIMATION_BYTES = 10 * 1024 * 1024
 
     /** The cached animation of [image] (null: not known yet), an empty array when it has none. */
     fun cachedAnimation(image: SgdbImage): ByteArray? = animations.get(image.previewUrl)?.takeIf { it.isNotEmpty() }
@@ -616,7 +616,7 @@ object Thumbnails {
     suspend fun loadAnimation(http: OkHttpClient, image: SgdbImage): ByteArray? = withContext(Dispatchers.IO) {
         if (!image.animated) return@withContext null
         cachedAnimation(image)?.let { return@withContext it }
-        fetchAnimation(http, image.previewUrl, THUMB_ANIMATION_BYTES)
+        fetchAnimation(http, image.previewUrl, if (image.previewUrl == image.url) FULL_ANIMATION_BYTES else THUMB_ANIMATION_BYTES)
             ?: if (image.mime == "image/webp" && image.url != image.previewUrl) fetchAnimation(http, image.url, FULL_ANIMATION_BYTES) else null
     }
 
