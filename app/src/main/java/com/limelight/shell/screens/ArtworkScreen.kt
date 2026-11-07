@@ -119,6 +119,8 @@ import com.limelight.shell.ui.LocalDelosColors
 import com.limelight.shell.ui.LocalFeedback
 import com.limelight.shell.ui.LocalReducedMotion
 import com.limelight.shell.ui.LocalStage
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.layout.fillMaxHeight
 import com.limelight.shell.ui.Motion
 import com.limelight.shell.ui.PillButton
 import com.limelight.shell.ui.PlaceholderArt
@@ -860,6 +862,24 @@ private fun AnimatedTileLayer(image: SgdbImage, playing: Boolean, ticker: Animat
     val source = remember(file) { file?.let { AnimatedSource.OfFile(it) } }
     val drawable = rememberAnimatedDrawable(source, playing, AnimatedPlayback.TILE_WIDTH, ticker)
     if (drawable != null) AnimatedDrawableView(drawable, ticker, Modifier.fillMaxSize())
+    // The animation is a whole file: show how far it is while it downloads
+    if (file == null && playing && !Thumbnails.hasNoAnimation(image)) TileDownloadBar(Thumbnails.progress[image.previewUrl])
+}
+
+/** A slim bar at the foot of a tile: [progress] of its download, a small spinner while the size is not known yet. */
+@Composable
+private fun TileDownloadBar(progress: Float?) {
+    val colors = LocalDelosColors.current
+    Box(Modifier.fillMaxSize()) {
+        if (progress == null) {
+            Box(Modifier.align(Alignment.BottomEnd).padding(12.px)) { Spinner(26f) }
+        } else {
+            val shown by animateFloatAsState(progress, tween(Motion.FADE, easing = Motion.Ease), label = "tileDownload")
+            Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(horizontal = 16.px, vertical = 14.px).height(8.px).clip(CircleShape).background(Color(0x99050A14))) {
+                Box(Modifier.fillMaxWidth(shown.coerceAtLeast(.04f)).fillMaxHeight().clip(CircleShape).background(colors.accent))
+            }
+        }
+    }
 }
 
 /** A choice in the grid: the image in [tab]'s shape, the "In use" badge, an "Animated" badge, a spinner while [loading], an optional caption. */

@@ -201,7 +201,7 @@ class SteamGridDbClient(private val key: String, private val http: OkHttpClient)
 
     companion object {
         const val KEY_REJECTED = "SteamGridDB did not accept the API key"
-        const val MAX_FILE_BYTES = 15L * 1024 * 1024
+        const val MAX_FILE_BYTES = 2048L * 1024 * 1024
         private const val BASE = "https://www.steamgriddb.com/api/v2"
     }
 }
@@ -591,6 +591,11 @@ object Thumbnails {
     /** [url] as a file of at most [MAX_PREVIEW_BYTES] (kept on disk, the oldest files dropped past [DISK_BUDGET_BYTES]); null when it cannot be had. */
     private suspend fun download(http: OkHttpClient, url: String): File? {
         val file = fileFor(url) ?: return null
+        // One download per URL: the still and the animation of a tile ask for the same file
+        return locks.getOrPut(url) { kotlinx.coroutines.sync.Mutex() }.withLock { fetch(http, url, file) }
+    }
+
+    private suspend fun fetch(http: OkHttpClient, url: String, file: File): File? {
         if (file.length() > 0L) {
             file.setLastModified(System.currentTimeMillis())
             return file
@@ -602,6 +607,7 @@ object Thumbnails {
                     val body = response.body
                     if (body.contentLength() > MAX_PREVIEW_BYTES) return@use null
                     val tmp = File(file.path + ".part")
+                    val total = body.contentLength()
                     var written = 0L
                     body.byteStream().use { input ->
                         tmp.outputStream().use { out ->
@@ -610,6 +616,7 @@ object Thumbnails {
                                 val n = input.read(buffer)
                                 if (n < 0) break
                                 written += n
+                                if (total > 0) progress[url] = (written.toFloat() / total).coerceIn(0f, 1f)
                                 if (written > MAX_PREVIEW_BYTES) { tmp.delete(); return@use null }
                                 out.write(buffer, 0, n)
                             }
@@ -619,7 +626,7 @@ object Thumbnails {
                     trimDisk(file.parentFile)
                     file
                 }
-            }.getOrNull()
+            }.getOrNull().also { progress.remove(url) }
         }
     }
 
@@ -649,7 +656,12 @@ object Thumbnails {
     }
 
     /** URLs whose file is known to be (true) or not to be (false) an animated WebP the app can play. */
-    private val animatedKnown = java.util.concurrent.ConcurrentHashMap<String, Boolean>()
+    private val animatedKnown = mutableStateMapOf<String, Boolean>()
+
+    /** Download progress 0..1 of the previews being fetched (absent: not started or its size is unknown). */
+    val progress = mutableStateMapOf<String, Float>()
+
+    private val locks = java.util.concurrent.ConcurrentHashMap<String, kotlinx.coroutines.sync.Mutex>()
 
     /** The playable animation of [image] when it was already fetched (null: not known yet or none). */
     fun cachedAnimation(image: SgdbImage): File? = listOf(image.previewUrl, image.url).firstOrNull { animatedKnown[it] == true }?.let { fileFor(it)?.takeIf { f -> f.length() > 0L } }
