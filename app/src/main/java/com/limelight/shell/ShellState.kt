@@ -250,6 +250,11 @@ class ShellState(initial: Screen) {
 
     /** L1 / R1 handler of the current screen (settings tabs), -1 / +1. */
     var onShoulder: ((Int) -> Unit)? = null
+
+    /** The artwork page's Y (filter sheet) and X (search for another name, or reset filters while the sheet is open), and whether its sheet is open. */
+    var onArtworkFilter: (() -> Unit)? = null
+    var onArtworkSearch: (() -> Unit)? = null
+    var artworkSheetOpen by mutableStateOf(false)
     var settingsTab by mutableStateOf(SettingsTab.STREAM)
     var settingsFocus by mutableStateOf<String?>(null)
     var onSettingsSearch: (() -> Unit)? = null

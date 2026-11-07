@@ -89,6 +89,7 @@ import com.limelight.shell.ui.Spinner
 import com.limelight.shell.ui.HeroBitmaps
 import com.limelight.shell.data.LocalArtwork
 import com.limelight.shell.data.LocalBoxArt
+import com.limelight.shell.data.rememberAnimatedArtwork
 import com.limelight.shell.data.rememberArtwork
 import com.limelight.shell.data.rememberArtworkResult
 import com.limelight.shell.data.Pc
@@ -130,10 +131,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /** Hues and icon of an app's placeholder art, derived from its name. */
-fun appArt(pc: Pc, app: App, image: androidx.compose.ui.graphics.ImageBitmap? = null): GameArt {
+fun appArt(pc: Pc, app: App, image: androidx.compose.ui.graphics.ImageBitmap? = null, animated: java.io.File? = null): GameArt {
     val hue = ((app.name.hashCode() and 0x7fffffff) % 360).toFloat()
     val icon = if (BundledArtwork.kind(app) == BundledArtwork.Kind.DESKTOP) Symbols.DESKTOP_WINDOWS else Symbols.SPORTS_ESPORTS
-    return GameArt("${pc.uuid}/${app.id}", hue, (hue + 35f) % 360f, icon, image)
+    return GameArt("${pc.uuid}/${app.id}", hue, (hue + 35f) % 360f, icon, image, animated)
 }
 
 fun homeKey(pc: Pc, app: App) = "${pc.uuid}/${app.id}"
@@ -189,6 +190,8 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
     val artwork = LocalArtwork.current
     val boxImage by rememberBoxArt(boxArt, pc, focused)
     val heroImage by rememberArtwork(artwork, pc, focused, ArtKind.HERO)
+    // The hero's file when it is an animated WebP: it plays as the game background (heroImage is its first frame)
+    val heroAnimation by rememberAnimatedArtwork(artwork, pc, focused, ArtKind.HERO)
     val coverImage by rememberArtwork(artwork, pc, focused, ArtKind.COVER)
     // The local/built-in hero, else the cover, then the PC's artwork for ordinary games.
     val image = heroImage ?: coverImage ?: boxImage
@@ -198,9 +201,9 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
         coverForColors?.let { cover -> withContext(Dispatchers.Default) { HeroBitmaps.analyzeCover(homeKey(pc, focused), cover) } }
     }
     // The game background follows the focus with a short delay, so it does not flicker while scrolling fast
-    LaunchedEffect(homeKey(pc, focused), image) {
+    LaunchedEffect(homeKey(pc, focused), image, heroAnimation) {
         delay(140)
-        shell.hero = appArt(pc, focused, image)
+        shell.hero = appArt(pc, focused, image, heroAnimation.takeIf { heroImage != null })
     }
 
     val requesters = remember(pc.uuid) { HashMap<Int, FocusRequester>() }

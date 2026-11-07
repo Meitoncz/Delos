@@ -471,8 +471,12 @@ fun Shell(
     DisposableEffect(keys) {
         keys.canUndo = { shell.toast?.action != null && shell.portal == null && shell.launch == null && shell.result == null }
         keys.onUndo = { shell.runToastAction() }
-        keys.canSearch = { shell.screen == Screen.Settings && shell.layer == null && shell.portal == null && shell.launch == null }
-        keys.onSearch = { shell.onSettingsSearch?.invoke() }
+        // Y: settings search, or the artwork page's filter sheet
+        keys.canSearch = {
+            shell.layer == null && shell.portal == null && shell.launch == null &&
+                (shell.screen == Screen.Settings || (shell.screen is Screen.Artwork && shell.onArtworkFilter != null))
+        }
+        keys.onSearch = { if (shell.screen is Screen.Artwork) shell.onArtworkFilter?.invoke() else shell.onSettingsSearch?.invoke() }
         // Y opens the filters over a library with games (and closes them again); nothing else may react to it
         keys.canFilter = {
             shell.screen == Screen.Home && shell.portal == null && shell.launch == null && shell.result == null && (
@@ -490,7 +494,8 @@ fun Shell(
                         feedback.play(Cue.SELECT)
                         metadata.updateFilters(MetadataFilters())
                     }
-                } else toggleContext()
+                } else if (shell.screen is Screen.Artwork && shell.layer == null && shell.onArtworkSearch != null) shell.onArtworkSearch?.invoke()
+                else toggleContext()
                 KeyEvent.KEYCODE_BUTTON_L1 -> if (shell.layer == null) shell.onShoulder?.invoke(-1)
                 KeyEvent.KEYCODE_BUTTON_R1 -> if (shell.layer == null) shell.onShoulder?.invoke(1)
             }
@@ -562,7 +567,7 @@ fun Shell(
             // On in the very frame an overlay appears (its blur would otherwise start empty and clipped)
             Box(Modifier.fillMaxSize().then(if (blurSource || shell.layer != null || shell.portal != null || shell.result != null) Modifier.hazeSource(haze) else Modifier)) {
                 Box(Modifier.fillMaxSize().hazeSource(backdropHaze)) {
-                    Backdrop(appearance, colors, hero = if (shell.screen == Screen.Home) shell.hero else null)
+                    Backdrop(appearance, colors, hero = if (shell.screen == Screen.Home) shell.hero else null, animate = shell.launch == null && shell.portal == null)
                 }
                 AnimatedContent(
                     shell.screen,
@@ -691,7 +696,7 @@ fun Shell(
                     // Opaque flat background at once (it hides the dashboard and is the color the system window showed), the lights fade in over it
                     Box(Modifier.fillMaxSize().graphicsLayer { alpha = cover }.background(colors.bg)) {
                         Box(Modifier.fillMaxSize().graphicsLayer { alpha = lights }) {
-                            Backdrop(appearance, colors, hero = if (appearance.background == BackgroundKind.STILL) shell.hero else null)
+                            Backdrop(appearance, colors, hero = if (appearance.background == BackgroundKind.STILL) shell.hero else null, animate = false)
                         }
                     }
                 }
@@ -821,7 +826,8 @@ private fun hints(shell: ShellState, adjustable: Boolean, filterHint: String?): 
             // Like a stream: nothing over the controls
             Screen.OscPreview -> emptyList()
             is Screen.Artwork -> if (BundledArtwork.kind(screen.app) != null) listOf(Hint(Glyph.A, "Back"), Hint(Glyph.B, "Back"))
-                else listOf(Hint(Glyph.L1, "Previous tab"), Hint(Glyph.R1, "Next tab"), Hint(Glyph.A, "Use"), Hint(Glyph.B, "Back"))
+                else if (shell.artworkSheetOpen) listOf(Hint(Glyph.A, "Choose"), Hint(Glyph.X, "Reset filters"), Hint(Glyph.Y, "Done"), Hint(Glyph.B, "Close"))
+                else listOf(Hint(Glyph.L1, "Previous tab"), Hint(Glyph.R1, "Next tab"), Hint(Glyph.A, "Use image"), Hint(Glyph.X, "Search name"), Hint(Glyph.Y, "Filter"), Hint(Glyph.B, "Back"))
             is Screen.GameSettings -> adjust + listOf(Hint(Glyph.L1, "Previous tab"), Hint(Glyph.R1, "Next tab"), Hint(Glyph.A, "Change"), Hint(Glyph.MENU_RIGHT, "Options"), Hint(Glyph.B, "Back"))
             Screen.Profile, Screen.Devices -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"), Hint(Glyph.MENU_LEFT, "Menu"))
         }

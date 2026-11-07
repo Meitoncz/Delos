@@ -349,7 +349,7 @@ private fun FilterDivider() {
 
 /** A selectable chip: filled with the accent while chosen, glass otherwise; the focus ring marks the cursor. */
 @Composable
-private fun FilterChip(label: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, icon: String? = null, count: Int? = null) {
+internal fun FilterChip(label: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, icon: String? = null, count: Int? = null) {
     val colors = LocalDelosColors.current
     var focused by remember { mutableStateOf(false) }
     val content = if (selected) colors.onAccent else colors.text

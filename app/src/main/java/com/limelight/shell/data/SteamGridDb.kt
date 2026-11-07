@@ -42,8 +42,68 @@ enum class ArtKind(val file: String) { COVER("cover"), WIDE("wide"), HERO("hero"
 /** A game found on SteamGridDB. */
 data class SgdbGame(val id: Int, val name: String, val year: Int?)
 
-/** One image on SteamGridDB: [thumb] for the choices, [url] for the full size. */
-data class SgdbImage(val id: Int, val url: String, val thumb: String, val width: Int, val height: Int)
+/**
+ * One image on SteamGridDB: [thumb] for the choices, [url] for the full size. The rest is what the API tells
+ * about it (null / 0 when it does not): its [style], [score], the [author]'s name, the upload [date] (epoch
+ * seconds) and [mime]. [animated]: it came from an "animated" request (an animated WebP).
+ */
+data class SgdbImage(
+    val id: Int,
+    val url: String,
+    val thumb: String,
+    val width: Int,
+    val height: Int,
+    val style: String? = null,
+    val score: Int = 0,
+    val author: String? = null,
+    val date: Long? = null,
+    val mime: String? = null,
+    val animated: Boolean = false,
+) {
+    /** The file format as the info strip shows it ("WEBP", "JPG", "PNG"), null when unknown. */
+    val format: String?
+        get() = when (val m = mime?.substringAfter('/')?.lowercase()) {
+            null, "" -> null
+            "jpeg" -> "JPG"
+            else -> m.uppercase()
+        }
+
+    companion object {
+        /** The image of one entry of a SteamGridDB list; null when it has no usable URL or is a WebM (the app cannot play it). */
+        fun parse(o: JsonObject, animated: Boolean): SgdbImage? {
+            val id = o.number("id")?.toInt() ?: return null
+            val url = o.text("url") ?: return null
+            val mime = o.text("mime")
+            if (mime == "image/webm" || url.endsWith(".webm", ignoreCase = true)) return null
+            val thumb = o.text("thumb") ?: url
+            // Newer answers may list several styles: the first is shown
+            val style = o.get("style")?.let { e ->
+                if (e.isJsonArray) e.asJsonArray.firstOrNull()?.takeIf { it.isJsonPrimitive }?.asString else e.takeIf { it.isJsonPrimitive }?.asString
+            }?.takeIf { it.isNotEmpty() }
+            return SgdbImage(
+                id, url, thumb, o.number("width")?.toInt() ?: 0, o.number("height")?.toInt() ?: 0,
+                style = style, score = o.number("score")?.toInt() ?: 0,
+                author = (o.get("author") as? JsonObject)?.text("name"),
+                date = parseDate(o.get("date") ?: o.get("created_at")),
+                mime = mime, animated = animated,
+            )
+        }
+
+        /** Epoch seconds from a number (seconds or milliseconds) or an ISO date string; null if it is neither. */
+        internal fun parseDate(e: com.google.gson.JsonElement?): Long? {
+            if (e == null || !e.isJsonPrimitive) return null
+            val p = e.asJsonPrimitive
+            if (p.isNumber) return p.asLong.let { if (it > 100_000_000_000L) it / 1000 else it }
+            val s = p.asString
+            return s.toLongOrNull()?.let { if (it > 100_000_000_000L) it / 1000 else it }
+                ?: runCatching { java.time.Instant.parse(s).epochSecond }.getOrNull()
+                ?: runCatching { java.time.OffsetDateTime.parse(s).toEpochSecond() }.getOrNull()
+        }
+
+        private fun JsonObject.text(name: String): String? = get(name)?.takeIf { it.isJsonPrimitive }?.asString
+        private fun JsonObject.number(name: String): Number? = get(name)?.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isNumber }?.asNumber
+    }
+}
 
 /** [ArtworkStore.chosen] for a kind left empty on purpose (the PC's artwork, or the name instead of a logo). */
 const val NONE = -1
@@ -59,6 +119,7 @@ private data class Match(
     val manual: Boolean = false,
     val chosen: Map<String, Int>? = null,
     val picked: Set<String>? = null,
+    val year: Int? = null,
 )
 
 class SteamGridDbException(message: String) : IOException(message)
@@ -75,30 +136,28 @@ class SteamGridDbClient(private val key: String, private val http: OkHttpClient)
         }.orEmpty()
     }
 
-    /** The still images of [kind] for [gameId], best rated first (SteamGridDB sorts them by votes). */
-    fun images(gameId: Int, kind: ArtKind): List<SgdbImage> {
+    /**
+     * The images of [kind] for [gameId] that match [filters], in the order of [ArtFilters.sort]. The still images
+     * are the default (what the automatic downloads use); the filter sheet asks for both types. NSFW and humor
+     * images are never requested.
+     */
+    fun images(gameId: Int, kind: ArtKind, filters: ArtFilters = ArtFilters(type = ArtType.STATIC)): List<SgdbImage> {
         val path = when (kind) {
             ArtKind.COVER, ArtKind.WIDE -> "grids/game/$gameId"
             ArtKind.HERO -> "heroes/game/$gameId"
             ArtKind.LOGO -> "logos/game/$gameId"
         }
-        val params = buildMap {
-            put("types", "static")
-            put("nsfw", "false")
-            put("humor", "false")
-            put("mimes", if (kind == ArtKind.LOGO) "image/png,image/webp" else "image/png,image/jpeg,image/webp")
-            when (kind) {
-                ArtKind.COVER -> put("dimensions", "600x900,660x930,342x482")
-                ArtKind.WIDE -> put("dimensions", "920x430,460x215")
-                else -> Unit
+        val queries = ArtFilterRules.queries(kind, filters)
+        val lists = queries.map { query ->
+            try {
+                val data = get(path, query.params).getAsJsonArray("data") ?: return@map emptyList()
+                data.mapNotNull { e -> (e as? JsonObject)?.let { SgdbImage.parse(it, query.animated) } }
+            } catch (e: SteamGridDbException) {
+                // Both types asked: the still images are still worth showing when the animated request fails
+                if (queries.size > 1 && query.animated && e.message != KEY_REJECTED) emptyList() else throw e
             }
         }
-        val data = get(path, params).getAsJsonArray("data") ?: return emptyList()
-        return data.mapNotNull { e ->
-            val o = e.asJsonObject
-            val url = o.get("url")?.asString ?: return@mapNotNull null
-            SgdbImage(o.get("id").asInt, url, o.get("thumb")?.asString ?: url, o.get("width")?.asInt ?: 0, o.get("height")?.asInt ?: 0)
-        }
+        return ArtFilterRules.sort(ArtFilterRules.merge(lists), filters.sort)
     }
 
     fun download(url: String, into: File) {
@@ -216,6 +275,18 @@ class ArtworkStore(context: Context) {
         return memory.get(memoryKey(pc, app, kind))
     }
 
+    /**
+     * The chosen image of [kind] as a file when it is an animated WebP the hero (or any live view) may play,
+     * else null (a still image, a missing file, an app with built-in artwork, a canvas over [AnimatedWebp.MAX_PIXELS]).
+     */
+    suspend fun animatedFile(pc: Pc, app: App, kind: ArtKind): File? = withContext(Dispatchers.IO) {
+        if (!eligible(app)) return@withContext null
+        val file = file(pc, app, kind)
+        if (!file.isFile || file.length() == 0L) return@withContext null
+        val header = runCatching { file.inputStream().use { AnimatedWebp.read(it, AnimatedWebp.HEADER_BYTES) } }.getOrNull() ?: return@withContext null
+        file.takeIf { AnimatedWebp.isAnimated(header) && AnimatedWebp.pixels(header) in 1..AnimatedWebp.MAX_PIXELS }
+    }
+
     /** Built-ins ignore old local choices; ordinary apps retain their existing local-image precedence. */
     suspend fun load(pc: Pc, app: App, kind: ArtKind): ImageBitmap? = loadResult(pc, app, kind).image
 
@@ -240,7 +311,7 @@ class ArtworkStore(context: Context) {
     }
 
     /** The SteamGridDB game [app] is matched with, if any. */
-    fun matched(pc: Pc, app: App): SgdbGame? = readMatch(pc, app)?.let { m -> m.id?.let { SgdbGame(it, m.name.orEmpty(), null) } }
+    fun matched(pc: Pc, app: App): SgdbGame? = readMatch(pc, app)?.let { m -> m.id?.let { SgdbGame(it, m.name.orEmpty(), m.year) } }
 
     /** Whether [app] has been looked up on SteamGridDB (found or not). */
     fun searched(pc: Pc, app: App): Boolean = readMatch(pc, app) != null
@@ -251,10 +322,10 @@ class ArtworkStore(context: Context) {
     suspend fun search(term: String): List<SgdbGame> = withContext(Dispatchers.IO) { network.withPermit { client().search(term) } }
 
     /** The images [kind] can be chosen from for [app]'s matched game. */
-    suspend fun choices(pc: Pc, app: App, kind: ArtKind): List<SgdbImage> = withContext(Dispatchers.IO) {
+    suspend fun choices(pc: Pc, app: App, kind: ArtKind, filters: ArtFilters = ArtFilters()): List<SgdbImage> = withContext(Dispatchers.IO) {
         if (!eligible(app)) return@withContext emptyList()
         val id = readMatch(pc, app)?.id ?: return@withContext emptyList()
-        network.withPermit { client().images(id, kind) }
+        network.withPermit { client().images(id, kind, filters) }
     }
 
     /**
@@ -273,7 +344,7 @@ class ArtworkStore(context: Context) {
             var match = readMatch(pc, app)
             if (match == null || (refresh && !match.manual)) {
                 val found = network.withPermit { client.search(app.name) }.firstOrNull()
-                match = if (match != null && found?.id == match.id) match else Match(found?.id, found?.name)
+                match = if (match != null && found?.id == match.id) match else Match(found?.id, found?.name, year = found?.year)
             }
             writeMatch(pc, app, match)
             val id = match.id ?: return@withContext false
@@ -301,7 +372,7 @@ class ArtworkStore(context: Context) {
     suspend fun setGame(pc: Pc, app: App, game: SgdbGame) {
         if (!eligible(app)) return
         withContext(Dispatchers.IO) {
-            lock(pc, app).withLock { writeMatch(pc, app, Match(game.id, game.name, manual = true)) }
+            lock(pc, app).withLock { writeMatch(pc, app, Match(game.id, game.name, manual = true, year = game.year)) }
         }
         fetch(pc, app, refresh = true)
     }
@@ -456,6 +527,15 @@ fun rememberArtworkResult(store: ArtworkStore, pc: Pc, app: App, kind: ArtKind):
     return state
 }
 
+/** The chosen [kind] image as an animated WebP file ([ArtworkStore.animatedFile]), null while unknown or when it is a still image. */
+@Composable
+fun rememberAnimatedArtwork(store: ArtworkStore, pc: Pc, app: App, kind: ArtKind): State<File?> {
+    val version = store.version.intValue
+    val state = remember(store, pc.uuid, app.id, app.name, kind) { mutableStateOf<File?>(null) }
+    LaunchedEffect(state, version) { state.value = store.animatedFile(pc, app, kind) }
+    return state
+}
+
 /** Thumbnails of the choices on the artwork screen, loaded from SteamGridDB and kept in memory. */
 object Thumbnails {
     private val memory = object : LruCache<String, ImageBitmap>(48 * 1024) {
@@ -480,6 +560,49 @@ object Thumbnails {
                 }
             }.getOrNull()
         }?.also { memory.put(url, it) }
+    }
+
+    /** Animated WebP files of the choices (whole files, bounded), the empty array standing for "known not to be animated". */
+    private val animations = object : LruCache<String, ByteArray>(32 * 1024) {
+        override fun sizeOf(key: String, value: ByteArray) = maxOf(1, value.size / 1024)
+    }
+    private const val THUMB_ANIMATION_BYTES = 3 * 1024 * 1024
+    private const val FULL_ANIMATION_BYTES = 4 * 1024 * 1024
+
+    /** The cached animation of [image] (null: not known yet), an empty array when it has none. */
+    fun cachedAnimation(image: SgdbImage): ByteArray? = animations.get(image.thumb)?.takeIf { it.isNotEmpty() }
+        ?: animations.get(image.url)?.takeIf { it.isNotEmpty() }
+
+    /** Whether loading [image]'s animation was tried and found nothing to play (the tile keeps its first frame). */
+    fun hasNoAnimation(image: SgdbImage): Boolean = animations.get(image.thumb)?.isEmpty() == true &&
+        (image.mime != "image/webp" || image.url == image.thumb || animations.get(image.url)?.isEmpty() == true)
+
+    /**
+     * The animated WebP of [image] ([SgdbImage.animated]) to play in its tile: its thumbnail when that is animated,
+     * else the full file when it is a small WebP; null when neither is.
+     */
+    suspend fun loadAnimation(http: OkHttpClient, image: SgdbImage): ByteArray? = withContext(Dispatchers.IO) {
+        if (!image.animated) return@withContext null
+        cachedAnimation(image)?.let { return@withContext it }
+        fetchAnimation(http, image.thumb, THUMB_ANIMATION_BYTES)
+            ?: if (image.mime == "image/webp" && image.url != image.thumb) fetchAnimation(http, image.url, FULL_ANIMATION_BYTES) else null
+    }
+
+    private suspend fun fetchAnimation(http: OkHttpClient, url: String, limit: Int): ByteArray? {
+        animations.get(url)?.let { return it.takeIf { b -> b.isNotEmpty() } }
+        val bytes = network.withPermit {
+            runCatching {
+                http.newCall(Request.Builder().url(url).build()).execute().use { response ->
+                    if (!response.isSuccessful) return@use null
+                    val body = response.body
+                    if (body.contentLength() > limit) return@use ByteArray(0)
+                    AnimatedWebp.read(body.byteStream(), limit + 1).takeIf { it.size <= limit } ?: ByteArray(0)
+                }
+            }.getOrNull()
+        } ?: return null
+        val result = if (AnimatedWebp.isAnimated(bytes) && AnimatedWebp.pixels(bytes) in 1..AnimatedWebp.MAX_PIXELS) bytes else ByteArray(0)
+        animations.put(url, result)
+        return result.takeIf { it.isNotEmpty() }
     }
 }
 

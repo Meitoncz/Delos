@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -118,9 +119,15 @@ fun Spinner(size: Float, modifier: Modifier = Modifier, color: Color = LocalDelo
     }
 }
 
-/** `.btn` (and `.btn.primary`): a pill with an icon and a label. */
+/**
+ * `.btn` (and `.btn.primary`): a pill with an icon and a label. [compact] is the toolbar size (64 px, smaller text); [trailing]
+ * adds what follows the label (a button glyph, a count badge).
+ */
 @Composable
-fun PillButton(label: String, icon: String?, onClick: () -> Unit, modifier: Modifier = Modifier, primary: Boolean = false, clickCue: Cue? = Cue.SELECT) {
+fun PillButton(
+    label: String, icon: String?, onClick: () -> Unit, modifier: Modifier = Modifier, primary: Boolean = false, clickCue: Cue? = Cue.SELECT,
+    compact: Boolean = false, trailing: (@Composable RowScope.() -> Unit)? = null,
+) {
     val colors = LocalDelosColors.current
     var focused by remember { mutableStateOf(false) }
     val content = if (primary) colors.onAccent else colors.text
@@ -132,13 +139,14 @@ fun PillButton(label: String, icon: String?, onClick: () -> Unit, modifier: Modi
             )
             .clip(CircleShape)
             .then(if (primary) Modifier.background(colors.accent) else Modifier.glass(colors.surface).border(1.px, colors.line, CircleShape))
-            .height(76.px)
-            .padding(horizontal = 40.px),
+            .height((if (compact) 64 else 76).px)
+            .padding(horizontal = (if (compact) 28 else 40).px),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.px),
+        horizontalArrangement = Arrangement.spacedBy((if (compact) 12 else 14).px),
     ) {
-        if (icon != null) Symbol(icon, 32.tpx, content, filled = focused)
-        BasicText(label, style = TextStyle(color = content, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx))
+        if (icon != null) Symbol(icon, (if (compact) 30 else 32).tpx, content, filled = focused)
+        BasicText(label, style = TextStyle(color = content, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = (if (compact) 24 else 26).tpx))
+        trailing?.invoke(this)
     }
 }
 

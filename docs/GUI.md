@@ -90,6 +90,43 @@ The TV channel uses the same mark; PC shortcut icons remain unchanged.
   the minimum that keeps all four viewport edges covered) keeps image edges outside the viewport.
   Reduced motion holds the hero still. The foreground animated/procedural background retains
   its existing shader, timing and blending; logos, covers, text and controls do not tilt or blur.
+- **Artwork page** (game options → Artwork, `ArtworkScreen`; approved prototype variant B): no side column. Header and tab pills
+  (`SelectionPillHost`, touch only, L1 / R1) over a toolbar with the **SteamGridDB game chip** (name, year, id, image count of the tab),
+  **Search for another name** (X) and **Filter** (Y, with a count badge of the active filters); under it the result line
+  ("10 of 41 covers", the "of N" only when the unfiltered list is loaded) and the **active filters as removable chips** plus Reset
+  (they share one `RowGlideHost` plate, 520 ms); then the full-width grid (7 covers, 4 wide covers, 3 backgrounds, 5 logos per row;
+  first tile "From your PC" / "Name only"; `focusEffects` tile focus; "In use" badge on the tile in use; a play badge "Animated",
+  icon only on covers) and a strip about the **focused** image (style, Static / Animated, In use, size, file format, score and author,
+  date; only what SteamGridDB sent). Initial focus is the tile in use (the first tile when none is). Grid scroll is `FocusScroller`
+  with the margin bring-into-view, the entrance is the staggered rise of the first eight tiles.
+  **Search** opens the shared text dialog (then the context menu of the games found; choosing one re-matches the artwork).
+  **Filter sheet:** Y or the Filter pill drops it down under the toolbar (`popEnter` / `popExit` from the pill, dimmed page, the
+  grid stays visible and updates live); A sets an option, X resets, B or Y closes and focus returns to where it was (the focus is held
+  inside while it is open). Filters: **Type** (All / Static / Animated; not on logos), **Style** (covers and wide covers: alternate,
+  blurred, white logo, material, no logo; backgrounds: alternate, blurred, material; logos: official, white, black, custom),
+  **Dimensions** (covers 600×900 / 660×930 / 342×482, wide covers 920×430 / 460×215, backgrounds 1920×620 / 3840×1240 / 1600×650;
+  none for logos), **Sort** (highest score, newest, oldest). NSFW and humor images are never requested and never shown. Type, style
+  and dimensions are SteamGridDB query parameters (`types`, `styles`, `dimensions`, `mimes`); "All" is two requests, still plus
+  animated, because the answers do not mark animation; sorting is client side (no per-option counts: they would need extra
+  requests). Filters are kept per tab in memory and reset when the screen is left. Logic: `data/ArtworkFilters.kt`
+  (`ArtFilterRules`, `ArtworkInfo`), parsing: `SgdbImage.parse`.
+- **Animated artwork:** animated SteamGridDB images are **animated WebP only** (WebM and GIF are not requested; a WebM entry is skipped).
+  A chosen animated image is stored like any image; its first frame is what the still paths decode (BitmapFactory), so everything
+  that does not animate keeps working. There is **no setting**:
+  - *Hero:* the home screen's game background plays the chosen animated hero automatically (`GameArt.animated`, `HeroLive` in
+    `ui/Backdrop.kt`) through `ImageDecoder` / `AnimatedImageDrawable` (frames decoded on demand at most 1050 px wide, one frame in
+    memory, file ≤ 15 MB, canvas ≤ 8 million pixels), on Android 12+ (below it the first frame stays). It is drawn live with the
+    platform blur (`RenderEffect`, the sharp-hero path) inside the same crop, diagonal fade and tilt, fading in over the still lens-blurred
+    hero (the lens shader renders a cached bitmap and cannot run per frame), which leaves once the animation is shown. It plays only
+    while the hero is visible and the window is resumed (`repeatOnLifecycle`), and **not** during the launch loader / portal, in the
+    background, in a stream (a separate resumed activity), or with reduced motion or the system's animator scale 0 (then the first
+    frame, like the tilt). Pure rules: `AnimatedPlayback.shouldPlay`.
+  - *Picker tiles:* every **visible** animated tile loops (at most 14 at once, `AnimatedPlayback.tilesToPlay`); its animated
+    thumbnail (else the full file when it is a WebP up to 4 MB) is fetched once into a 32 MB LRU of whole files and decoded at 520 px
+    across; off-screen tiles, all tiles while the filter sheet or a dialog covers the grid, in the background, or with reduced
+    motion show the first frame and hold no decoder. All tiles share **one `AnimationTicker`**: the drawables report new frames, the
+    ticker turns them into one redraw per frame, and it does not run while nothing plays.
+  - Not animated: covers and wide covers on the home screen and the launch screens (first frame only), animated GIF/WebM files.
   Older Android versions retain the supported cached hero rendering.
 - Host artwork synchronization decisions are recorded in [#15](https://github.com/Meitoncz/Delos/issues/15).
 - Desktop, Remote Input, Remote Monitor and Steam Big Picture use fixed bundled cover/wide/hero

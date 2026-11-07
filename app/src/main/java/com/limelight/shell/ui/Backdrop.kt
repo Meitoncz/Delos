@@ -16,7 +16,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -68,9 +70,11 @@ import kotlin.math.sin
 /**
  * Art of a game: two hues and an icon for the procedural placeholder, and the [image] for the game
  * background once it is loaded (the PC's cover for now; SteamGridDB hero images come in step 6.8).
+ * [animated]: the file of the hero when it is an animated WebP; [image] is its first frame, which stays the
+ * still background (and the one the lens blur is cached for) while the animation is off or not loaded.
  */
 @Immutable
-data class GameArt(val id: String, val hue: Float, val hue2: Float, val icon: String, val image: ImageBitmap? = null)
+data class GameArt(val id: String, val hue: Float, val hue2: Float, val icon: String, val image: ImageBitmap? = null, val animated: java.io.File? = null)
 
 /**
  * The layered background of every screen, as in the prototype (#stage, #heroBg, canvas#bg, #vignette):
@@ -79,7 +83,7 @@ data class GameArt(val id: String, val hue: Float, val hue2: Float, val icon: St
  * instead of covering it.
  */
 @Composable
-fun Backdrop(appearance: Appearance, colors: DelosColors, hero: GameArt?, modifier: Modifier = Modifier) {
+fun Backdrop(appearance: Appearance, colors: DelosColors, hero: GameArt?, modifier: Modifier = Modifier, animate: Boolean = true) {
     val heroOn = appearance.heroBackground && hero != null && appearance.heroOpacity > 0
     // The tilt is the still background's only motion; it also stops when the system removes animations.
     val context = LocalContext.current
@@ -89,7 +93,7 @@ fun Backdrop(appearance: Appearance, colors: DelosColors, hero: GameArt?, modifi
         if (heroAlpha > 0f || heroOn) {
             Box(Modifier.fillMaxSize().graphicsLayer { alpha = heroAlpha }) {
                 Crossfade(hero, animationSpec = tween(900), label = "heroArt") { art ->
-                    if (art != null) HeroArt(art, appearance.heroBlur, tiltReduced, heroOn && art == hero)
+                    if (art != null) HeroArt(art, appearance.heroBlur, tiltReduced, heroOn && art == hero, animate && heroOn && art == hero)
                 }
                 // Fade the game background into the theme color at the bottom and on the left (behind the texts)
                 Box(Modifier.fillMaxSize().graphicsLayer { alpha = .9f }.drawBehind {
@@ -125,9 +129,27 @@ private fun DrawScope.drawVignette(scrim: Color) {
     }
 }
 
-/** The hero alone: cached lens blur, then a very slow centered image-plane tilt. */
+/**
+ * The hero alone: cached lens blur, then a very slow centered image-plane tilt. An animated hero plays over its
+ * still first frame ([HeroLive]) while [animate] allows it.
+ */
 @Composable
-private fun HeroArt(art: GameArt, blurPx: Int, reducedMotion: Boolean, active: Boolean) {
+private fun HeroArt(art: GameArt, blurPx: Int, reducedMotion: Boolean, active: Boolean, animate: Boolean) {
+    val image = art.image
+    var live by remember { mutableStateOf(false) }
+    // The still hero leaves once the animation has faded in over it (its soft diagonal edge must not show the first frame)
+    val stillAlpha by animateFloatAsState(if (live) 0f else 1f, tween(Motion.FADE, delayMillis = if (live) Motion.FADE else 0), label = "stillHero")
+    Box(Modifier.fillMaxSize()) {
+        Box(Modifier.fillMaxSize().graphicsLayer { alpha = stillAlpha }) { HeroStill(art, blurPx, reducedMotion, active) }
+        // The animation needs the live blur (Android 12+); below it the first frame stays
+        if (image != null && art.animated != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            HeroLive(art.animated, blurPx, reducedMotion, active, animate && !reducedMotion) { live = it }
+        }
+    }
+}
+
+@Composable
+private fun HeroStill(art: GameArt, blurPx: Int, reducedMotion: Boolean, active: Boolean) {
     val image = art.image
     if (image != null && blurPx > 0) {
         // Only this bounded cache fill uses the GPU lens shader. The orbit scales its result like an
@@ -149,23 +171,7 @@ private fun HeroArt(art: GameArt, blurPx: Int, reducedMotion: Boolean, active: B
     val stage = LocalStage.current
     val density = LocalDensity.current.density
     val effect = remember(blurPx, stage, density, image != null) { if (image != null) heroEffect(blurPx * stage.dpPerPx * density) else null }
-    // Over the whole screen, fading out diagonally from the top-right corner to the bottom-left one
-    Box(
-        Modifier
-            .fillMaxSize()
-            .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
-            .drawWithContent {
-                drawContent()
-                drawRect(
-                    Brush.linearGradient(
-                        0f to Color.Black, .3f to Color.Black, .95f to Color.Transparent,
-                        start = Offset(size.width, 0f), end = Offset(0f, size.height),
-                    ),
-                    blendMode = BlendMode.DstIn,
-                )
-            },
-        contentAlignment = Alignment.Center,
-    ) {
+    Box(Modifier.fillMaxSize().heroFade(), contentAlignment = Alignment.Center) {
         val layer = Modifier.requiredSize(2100.px, 1260.px)
             .then(if (image != null) Modifier.heroTilt(active, reducedMotion) else Modifier)
             .graphicsLayer { renderEffect = effect }
@@ -176,6 +182,48 @@ private fun HeroArt(art: GameArt, blurPx: Int, reducedMotion: Boolean, active: B
         }
     }
 }
+
+/**
+ * The playing animated hero: its frames drawn live through the platform's blur ([heroEffect], saturation included),
+ * the same crop, diagonal fade and tilt as the still hero, over which it fades in once decoded. The lens shader that
+ * blurs the still hero renders a cached bitmap; frames change too often for it, so the animation uses the blur
+ * of the sharp-hero path. It exists only while it plays: paused (hidden, reduced motion, streaming, backgrounded)
+ * the drawable is released and the still hero shows.
+ */
+@Composable
+private fun HeroLive(file: java.io.File, blurPx: Int, reducedMotion: Boolean, active: Boolean, play: Boolean, onLive: (Boolean) -> Unit) {
+    val stage = LocalStage.current
+    val density = LocalDensity.current.density
+    val effect = remember(blurPx, stage, density) { heroEffect(blurPx * stage.dpPerPx * density) }
+    val ticker = rememberAnimationTicker(play)
+    val source = remember(file) { AnimatedSource.OfFile(file) }
+    val drawable = rememberAnimatedDrawable(source, play, AnimatedPlayback.HERO_WIDTH, ticker)
+    DisposableEffect(drawable != null) {
+        onLive(drawable != null)
+        onDispose { onLive(false) }
+    }
+    if (drawable == null) return
+    Box(Modifier.fillMaxSize().heroFade(), contentAlignment = Alignment.Center) {
+        AnimatedDrawableView(
+            drawable, ticker,
+            Modifier.requiredSize(2100.px, 1260.px).heroTilt(active, reducedMotion).graphicsLayer { renderEffect = effect },
+        )
+    }
+}
+
+/** Over the whole screen, fading out diagonally from the top-right corner to the bottom-left one. */
+private fun Modifier.heroFade(): Modifier = this
+    .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+    .drawWithContent {
+        drawContent()
+        drawRect(
+            Brush.linearGradient(
+                0f to Color.Black, .3f to Color.Black, .95f to Color.Transparent,
+                start = Offset(size.width, 0f), end = Offset(0f, size.height),
+            ),
+            blendMode = BlendMode.DstIn,
+        )
+    }
 
 /** The clock exists only for a visible, loaded image, and stops when its Activity is not resumed. */
 @Composable

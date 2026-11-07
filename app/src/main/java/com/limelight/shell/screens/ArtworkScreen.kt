@@ -1,15 +1,26 @@
 package com.limelight.shell.screens
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.focusGroup
+import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,30 +36,35 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.platform.LocalDensity
-import com.limelight.shell.ui.rememberMarginBringIntoView
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -58,77 +74,113 @@ import androidx.compose.ui.unit.em
 import com.limelight.shell.ContextMenu
 import com.limelight.shell.DialogField
 import com.limelight.shell.DialogSpec
+import com.limelight.shell.FocusTracker
 import com.limelight.shell.Layer
 import com.limelight.shell.LocalFocusTracker
 import com.limelight.shell.LocalShell
 import com.limelight.shell.MenuItem
 import com.limelight.shell.Screen
 import com.limelight.shell.ShellState
-import com.limelight.shell.FocusTracker
+import com.limelight.shell.data.ActiveFilter
 import com.limelight.shell.data.App
+import com.limelight.shell.data.ArtFilterRules
+import com.limelight.shell.data.ArtFilters
 import com.limelight.shell.data.ArtKind
+import com.limelight.shell.data.ArtSort
+import com.limelight.shell.data.ArtType
+import com.limelight.shell.data.ArtworkInfo
 import com.limelight.shell.data.ArtworkStore
+import com.limelight.shell.data.BundledArtwork
 import com.limelight.shell.data.LocalArtwork
 import com.limelight.shell.data.LocalBoxArt
 import com.limelight.shell.data.NONE
 import com.limelight.shell.data.Pc
 import com.limelight.shell.data.SgdbGame
 import com.limelight.shell.data.SgdbImage
+import com.limelight.shell.data.Thumbnails
 import com.limelight.shell.data.rememberArtworkResult
-import com.limelight.shell.data.BundledArtwork
 import com.limelight.shell.data.rememberBoxArt
 import com.limelight.shell.data.rememberThumbnail
+import com.limelight.shell.ui.AnimatedDrawableView
+import com.limelight.shell.ui.AnimatedPlayback
+import com.limelight.shell.ui.AnimatedSource
+import com.limelight.shell.ui.AnimationTicker
 import com.limelight.shell.ui.Cue
 import com.limelight.shell.ui.Feedback
 import com.limelight.shell.ui.Figtree
 import com.limelight.shell.ui.FocusGlow
 import com.limelight.shell.ui.FocusRing
+import com.limelight.shell.ui.FocusTransferTarget
+import com.limelight.shell.ui.Glyph
+import com.limelight.shell.ui.GlyphButton
+import com.limelight.shell.ui.HeroMotion
+import com.limelight.shell.ui.InitialFocus
 import com.limelight.shell.ui.LocalDelosColors
 import com.limelight.shell.ui.LocalFeedback
+import com.limelight.shell.ui.LocalReducedMotion
 import com.limelight.shell.ui.LocalStage
+import com.limelight.shell.ui.Motion
 import com.limelight.shell.ui.PillButton
 import com.limelight.shell.ui.PlaceholderArt
+import com.limelight.shell.ui.RowGlideHost
+import com.limelight.shell.ui.SelectionPillHost
 import com.limelight.shell.ui.Spinner
 import com.limelight.shell.ui.Symbol
-import com.limelight.shell.ui.InitialFocus
 import com.limelight.shell.ui.Symbols
-import com.limelight.shell.ui.FocusTransferTarget
 import com.limelight.shell.ui.Unbounded
-import com.limelight.shell.ui.rememberFocusTransfer
 import com.limelight.shell.ui.fadeEdges
 import com.limelight.shell.ui.focusEffects
 import com.limelight.shell.ui.glass
+import com.limelight.shell.ui.popEnter
+import com.limelight.shell.ui.popExit
 import com.limelight.shell.ui.px
+import com.limelight.shell.ui.rememberAnimatedDrawable
+import com.limelight.shell.ui.rememberAnimationTicker
+import com.limelight.shell.ui.rememberFocusTransfer
+import com.limelight.shell.ui.rememberMarginBringIntoView
+import com.limelight.shell.ui.staggerEntrance
 import com.limelight.shell.ui.tpx
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-/** The tab of each kind on the artwork screen, with its grid and the shape of its images. */
-private enum class ArtTab(val kind: ArtKind, val label: String, val icon: String, val columns: Int, val ratio: Float) {
-    COVER(ArtKind.COVER, "Cover", Symbols.IMAGE, 5, 600f / 900f),
-    WIDE(ArtKind.WIDE, "Wide cover", Symbols.ASPECT_RATIO, 3, 920f / 430f),
-    HERO(ArtKind.HERO, "Background", Symbols.WALLPAPER, 2, 1920f / 620f),
-    LOGO(ArtKind.LOGO, "Logo", Symbols.BADGE, 3, 2f),
+/**
+ * The tab of each kind on the artwork screen, with the columns of its grid (the prototype's: 7 covers, 4 wide covers, 3
+ * backgrounds, 5 logos per row) and the shape of its images. [noun] counts them ("41 covers").
+ */
+private enum class ArtTab(val kind: ArtKind, val label: String, val noun: String, val icon: String, val columns: Int, val ratio: Float) {
+    COVER(ArtKind.COVER, "Cover", "cover", Symbols.IMAGE, 7, 600f / 900f),
+    WIDE(ArtKind.WIDE, "Wide cover", "wide cover", Symbols.ASPECT_RATIO, 4, 920f / 430f),
+    HERO(ArtKind.HERO, "Background", "background", Symbols.WALLPAPER, 3, 1920f / 620f),
+    LOGO(ArtKind.LOGO, "Logo", "logo", Symbols.BADGE, 5, 2f),
     ;
 
     fun step(dir: Int) = entries[Math.floorMod(ordinal + dir, entries.size)]
 }
 
-/** What the grid of a tab shows. */
+/** What the grid of a tab shows. [Ready.total] is the unfiltered count when it is known (the unfiltered list was loaded). */
 private sealed interface Choices {
     data object Loading : Choices
     data object NoKey : Choices
     data object NoGame : Choices
     data class Failed(val message: String) : Choices
-    data class Ready(val images: List<SgdbImage>) : Choices
+    data class Ready(val tab: ArtTab, val gameId: Int, val images: List<SgdbImage>, val total: Int?) : Choices
 }
 
+/** Which image the info strip describes: the first choice or one of SteamGridDB's. */
+private sealed interface Described {
+    data object FirstChoice : Described
+    data class Image(val image: SgdbImage) : Described
+}
+
+private val GridItemNone = "none"
+
 /**
- * The artwork of one game (the game's options → Artwork): a tab per kind (cover, wide cover, background,
- * logo, switched with L1 / R1), the image used now on the left and every SteamGridDB image to choose from
- * on the right, the first choice being the built-in/PC fallback (or the name instead of a logo). "Change
- * game" fixes a wrong match. Automatic downloads take the best-rated image of each kind.
+ * The artwork of one game (the game's options → Artwork), prototype variant B: a tab per kind (cover, wide cover, background,
+ * logo, switched with L1 / R1) over a toolbar (the matched SteamGridDB game, search for another name with X, the filter sheet
+ * with Y), the active filters as removable chips, the full-width grid of every SteamGridDB image to choose from (the first
+ * choice being the built-in/PC fallback, or the name instead of a logo) and a strip about the focused image. Animated images
+ * are marked and play in their tiles while they are on screen. Automatic downloads take the best-rated still image of each kind.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -147,6 +199,11 @@ fun ArtworkScreen(screen: Screen.Artwork) {
         return
     }
     var tab by remember { mutableStateOf(ArtTab.COVER) }
+    // Per tab, for as long as this screen is open
+    val filtersByTab = remember { mutableStateMapOf<ArtTab, ArtFilters>() }
+    val filters = ArtFilterRules.normalized(tab.kind, filtersByTab[tab] ?: ArtFilters())
+    var sheetOpen by remember { mutableStateOf(false) }
+    val loadedLists = remember { HashMap<String, List<SgdbImage>>() }
     val version = store.version.intValue
     val match = remember(version) { store.matched(pc, app) }
     var busy by remember { mutableStateOf(false) }
@@ -159,109 +216,265 @@ fun ArtworkScreen(screen: Screen.Artwork) {
             busy = false
         }
     }
-    val choices by produceState<Choices>(Choices.Loading, tab, match?.id, store.enabled, busy) {
-        value = Choices.Loading
-        value = when {
-            !store.enabled -> Choices.NoKey
-            busy -> Choices.Loading
-            match == null -> Choices.NoGame
-            else -> runCatching { Choices.Ready(store.choices(pc, app, tab.kind)) }.getOrElse { Choices.Failed(it.message ?: "SteamGridDB is not reachable") }
+
+    // The grid keeps its images while a filter loads (the new list replaces them); another tab or game starts over
+    var choices by remember { mutableStateOf<Choices>(Choices.Loading) }
+    var refreshing by remember { mutableStateOf(false) }
+    LaunchedEffect(tab, match?.id, store.enabled, busy, filters) {
+        val gameId = match?.id
+        when {
+            !store.enabled -> choices = Choices.NoKey
+            busy -> choices = Choices.Loading
+            gameId == null -> choices = Choices.NoGame
+            else -> {
+                // The sort is applied here to what was loaded, so changing it asks nothing
+                val key = "$gameId|${ArtFilterRules.cacheKey(tab.kind, filters)}"
+                fun total() = loadedLists["$gameId|${ArtFilterRules.cacheKey(tab.kind, ArtFilters())}"]?.size
+                fun ready(list: List<SgdbImage>) = Choices.Ready(tab, gameId, ArtFilterRules.sort(list, filters.sort), total())
+                val cached = loadedLists[key]
+                if (cached != null) {
+                    choices = ready(cached)
+                    return@LaunchedEffect
+                }
+                val previous = choices as? Choices.Ready
+                if (previous == null || previous.tab != tab || previous.gameId != gameId) choices = Choices.Loading
+                refreshing = true
+                try {
+                    choices = runCatching { store.choices(pc, app, tab.kind, filters.copy(sort = ArtSort.SCORE)) }
+                        .map { list -> loadedLists[key] = list; ready(list) }
+                        .getOrElse { Choices.Failed(it.message ?: "SteamGridDB is not reachable") }
+                } finally {
+                    refreshing = false
+                }
+            }
         }
     }
 
     val focusTransfer = rememberFocusTransfer()
     val first = remember { FocusRequester() }
+    val searchRequester = remember { FocusRequester() }
+    val grid = rememberLazyGridState()
     val window = LocalWindowInfo.current
-    LaunchedEffect(tab, choices is Choices.Ready) {
+    val currentChoices by rememberUpdatedState(choices)
+    val chosen = remember(version, tab) { store.chosen(pc, app, tab.kind) }
+    val readyKey = (choices as? Choices.Ready)?.let { "ready:${it.tab}:${it.gameId}" } ?: choices::class.simpleName
+    // Where the focus starts: the image in use (the first choice when none is), after a tab, or a new list
+    LaunchedEffect(tab, readyKey) {
         snapshotFlow { window.isWindowFocused }.first { it }
         withFrameNanos { }
-        feedback.silenceNextFocus()
-        runCatching { first.requestFocus() }
-    }
-    DisposableEffect(shell) {
-        val handler: (Int) -> Unit = { dir ->
-            focusTransfer.request()
-            tab = tab.step(dir)
-            feedback.play(Cue.MOVE)
+        when (val c = currentChoices) {
+            is Choices.Ready -> {
+                val inUse = c.images.indexOfFirst { it.id == chosen }
+                grid.scrollToItem(if (inUse >= 0) inUse + 1 else 0)
+                withFrameNanos { }
+                feedback.silenceNextFocus()
+                runCatching { first.requestFocus() }
+            }
+            is Choices.NoGame, is Choices.Failed -> {
+                feedback.silenceNextFocus()
+                runCatching { searchRequester.requestFocus() }
+            }
+            else -> Unit
         }
-        shell.onShoulder = handler
-        onDispose { if (shell.onShoulder === handler) shell.onShoulder = null }
     }
+
+    var described by remember(tab) { mutableStateOf<Described?>(null) }
+
+    // The focus before the filter sheet opened, to return to it
+    var origin by remember { mutableStateOf<FocusRequester?>(null) }
+    fun restoreFocus() {
+        val target = origin
+        scope.launch {
+            withFrameNanos { }
+            withFrameNanos { }
+            feedback.silenceNextFocus()
+            val ok = target != null && runCatching { target.requestFocus() }.getOrDefault(false)
+            if (!ok) runCatching { first.requestFocus() }
+        }
+    }
+    fun closeSheet() {
+        if (!sheetOpen) return
+        feedback.play(Cue.BACK)
+        sheetOpen = false
+        restoreFocus()
+    }
+    fun openSheet() {
+        if (match == null || !store.enabled || sheetOpen) return
+        feedback.play(Cue.OPEN)
+        origin = tracker.requester
+        sheetOpen = true
+    }
+    fun openSearch() {
+        if (!store.enabled) return
+        searchDialog(scope, shell, tracker, feedback, store, pc, app, match?.name?.ifEmpty { null } ?: app.name)
+    }
+    fun resetFilters() {
+        if (!filters.active) return
+        feedback.play(Cue.SELECT)
+        filtersByTab[tab] = ArtFilters()
+        shell.showToast("Filters reset", Symbols.REFRESH)
+    }
+    fun selectTab(next: ArtTab) {
+        focusTransfer.request()
+        if (sheetOpen) sheetOpen = false
+        tab = next
+    }
+
+    val toggleSheet by rememberUpdatedState({ if (sheetOpen) closeSheet() else openSheet() })
+    val xAction by rememberUpdatedState({ if (sheetOpen) resetFilters() else openSearch() })
+    DisposableEffect(shell) {
+        val shoulder: (Int) -> Unit = { dir ->
+            if (!sheetOpen) {
+                focusTransfer.request()
+                tab = tab.step(dir)
+                feedback.play(Cue.MOVE)
+            }
+        }
+        shell.onShoulder = shoulder
+        shell.onArtworkFilter = { toggleSheet() }
+        shell.onArtworkSearch = { xAction() }
+        onDispose {
+            if (shell.onShoulder === shoulder) shell.onShoulder = null
+            shell.onArtworkFilter = null
+            shell.onArtworkSearch = null
+            shell.artworkSheetOpen = false
+        }
+    }
+    LaunchedEffect(sheetOpen) { shell.artworkSheetOpen = sheetOpen }
+    // B closes the sheet first (registered after the shell's own, so it wins)
+    BackHandler(enabled = sheetOpen) { closeSheet() }
+
+    // Animated tiles play while they are on screen and nothing covers or stops them
+    val context = LocalContext.current
+    val animatorsOff = remember(context) { HeroMotion.animatorsOff(context) }
+    val motion = AnimatedPlayback.shouldPlay(
+        visible = !sheetOpen && shell.layer == null, foreground = true, streaming = shell.launch != null,
+        reducedMotion = LocalReducedMotion.current, animatorsOff = animatorsOff,
+    )
+    val animatedIds = remember(choices) { (choices as? Choices.Ready)?.images?.filter { it.animated }?.map { it.id }?.toSet().orEmpty() }
+    val visibleAnimated by remember(grid, animatedIds) {
+        derivedStateOf { grid.layoutInfo.visibleItemsInfo.mapNotNull { info -> (info.key as? Int)?.takeIf { it in animatedIds } } }
+    }
+    val playing = if (motion) AnimatedPlayback.tilesToPlay(visibleAnimated) else emptySet()
+    val ticker = rememberAnimationTicker(playing.isNotEmpty())
 
     Box(Modifier.fillMaxSize()) {
         FocusTransferTarget(focusTransfer)
-        Column(Modifier.offset(150.px, 92.px).width(1620.px)) {
+        Column(Modifier.offset(150.px, 56.px).width(560.px)) {
             BasicText(
                 "ARTWORK",
                 style = TextStyle(color = colors.accent2, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx, letterSpacing = .14.em),
             )
             BasicText(
                 app.name, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx),
+                style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 40.tpx),
             )
         }
-        com.limelight.shell.ui.SelectionPillHost(Modifier.offset(y = 206.px).fillMaxWidth().height(66.px)) {
+        SelectionPillHost(Modifier.offset(720.px, 58.px).width(1050.px).height(66.px)) {
             ShoulderLabel("L1")
             ArtTab.entries.forEach { next ->
-                TabPill(next.icon, next.label, tab == next, Modifier.padding(horizontal = 5.px)) {
-                    if (next != tab) {
-                        focusTransfer.request()
-                        tab = next
-                    } else runCatching { first.requestFocus() }
+                TabPill(next.icon, next.label, tab == next, Modifier.padding(horizontal = 4.px)) {
+                    if (next != tab) selectTab(next) else runCatching { first.requestFocus() }
                 }
             }
             ShoulderLabel("R1")
         }
+
+        // Toolbar: the matched game, search for another name (X), the filter sheet (Y)
         Row(
-            Modifier.fillMaxSize().padding(start = 150.px, end = 150.px, top = 312.px, bottom = 110.px),
-            horizontalArrangement = Arrangement.spacedBy(56.px),
+            Modifier.offset(150.px, 158.px).width(1620.px).height(64.px),
+            horizontalArrangement = Arrangement.spacedBy(16.px), verticalAlignment = Alignment.CenterVertically,
         ) {
-            CurrentPanel(pc, app, tab, match, busy, Modifier.width(460.px)) {
-                changeGame(scope, shell, tracker, feedback, store, pc, app, app.name)
-            }
-            Box(Modifier.weight(1f).fillMaxSize()) {
-                when (val c = choices) {
-                    Choices.Loading -> GridMessage(Symbols.REFRESH, "Looking on SteamGridDB…", null)
-                    Choices.NoKey -> GridMessage(Symbols.KEY, "Add your SteamGridDB API key", "Settings → Covers → SteamGridDB API key. It is free on steamgriddb.com (Preferences → API).")
-                    Choices.NoGame -> if (store.eligible(app)) GridMessage(Symbols.SEARCH, "${app.name} is not on SteamGridDB", "Change game finds it under another name.")
-                    else GridMessage(Symbols.SEARCH, "Choose what ${app.name} looks like", "Change game: e.g. Windows, Steam or any game whose artwork you like. ${app.name} is not looked up automatically.")
-                    is Choices.Failed -> GridMessage(Symbols.ERROR, "SteamGridDB is not reachable", c.message)
-                    is Choices.Ready -> {
-                        val chosen = remember(version, tab) { store.chosen(pc, app, tab.kind) }
-                        val grid = rememberLazyGridState()
-                        // The focused row keeps clear of the faded edges, like the settings rows
-                        val k = stage.dpPerPx * LocalDensity.current.density
-                        val bringIntoView = rememberMarginBringIntoView(grid, before = 70f * k, after = 110f * k, stagePx = k)
-                        CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
+            GameChip(match, busy, app.name, (choices as? Choices.Ready)?.let { it.total ?: it.images.size.takeIf { _ -> !filters.active } }, tab, Modifier.weight(1f))
+            val searchEnabled = store.enabled
+            PillButton(
+                "Search for another name", Symbols.SEARCH, { openSearch() },
+                Modifier.focusRequester(searchRequester).alpha(if (searchEnabled) 1f else .4f)
+                    .then(if (searchEnabled) Modifier else Modifier.focusProperties { canFocus = false }),
+                clickCue = Cue.OPEN, compact = true, trailing = { GlyphButton(Glyph.X, 32) },
+            )
+            val filterEnabled = store.enabled && match != null
+            PillButton(
+                "Filter", Symbols.TUNE, { openSheet() },
+                Modifier.alpha(if (filterEnabled) 1f else .4f).then(if (filterEnabled) Modifier else Modifier.focusProperties { canFocus = false }),
+                clickCue = null, compact = true,
+                trailing = {
+                    if (filters.active) CountBadge(filters.activeCount)
+                    GlyphButton(Glyph.Y, 32)
+                },
+            )
+        }
+
+        // The result line and the active filters, removable one by one
+        val ready = choices as? Choices.Ready
+        if (ready != null) {
+            FilterStrip(
+                tab, filters, ready, refreshing,
+                onClear = { chip -> filtersByTab[tab] = ArtFilterRules.clear(filters, chip) },
+                onReset = ::resetFilters,
+                modifier = Modifier.offset(150.px, 232.px).width(1620.px).height(48.px),
+            )
+        }
+
+        // The grid (or why there is none)
+        Box(Modifier.offset(132.px, 276.px).width(1656.px).height(590.px)) {
+            when (val c = choices) {
+                Choices.Loading -> GridMessage(Symbols.REFRESH, "Looking on SteamGridDB…", null)
+                Choices.NoKey -> GridMessage(Symbols.KEY, "Add your SteamGridDB API key", "Settings → Covers → SteamGridDB API key. It is free on steamgriddb.com (Preferences → API).")
+                Choices.NoGame -> if (store.eligible(app)) GridMessage(Symbols.SEARCH, "${app.name} is not on SteamGridDB", "Search for another name finds it under the name SteamGridDB knows.")
+                else GridMessage(Symbols.SEARCH, "Choose what ${app.name} looks like", "Search for another name: e.g. Windows, Steam or any game whose artwork you like. ${app.name} is not looked up automatically.")
+                is Choices.Failed -> GridMessage(Symbols.ERROR, "SteamGridDB is not reachable", c.message)
+                is Choices.Ready -> {
+                    // The focused row keeps clear of the faded edges, like the settings rows
+                    val k = stage.dpPerPx * LocalDensity.current.density
+                    val bringIntoView = rememberMarginBringIntoView(grid, before = 70f * k, after = 110f * k, stagePx = k)
+                    val inUse = c.images.indexOfFirst { it.id == chosen }
+                    val noneInUse = chosen == NONE || (chosen == null && c.images.isEmpty() && !filters.active)
+                    CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
                         LazyVerticalGrid(
                             columns = GridCells.Fixed(tab.columns),
                             state = grid,
-                            modifier = Modifier.fillMaxSize().fadeEdges(stage, top = 40f, bottom = 80f),
-                            contentPadding = PaddingValues(start = 18.px, end = 18.px, top = 44.px, bottom = 120.px),
+                            modifier = Modifier.fillMaxSize().fadeEdges(stage, top = 24f, bottom = 70f),
+                            contentPadding = PaddingValues(start = 18.px, end = 18.px, top = 14.px, bottom = 96.px),
                             horizontalArrangement = Arrangement.spacedBy(24.px),
                             verticalArrangement = Arrangement.spacedBy(24.px),
                         ) {
-                            item(key = "none") {
-                                NoneTile(pc, app, tab, inUse = chosen == NONE || chosen == null && match != null && c.images.isEmpty(), store.applying(pc, app, tab.kind) == NONE, Modifier.focusRequester(first)) {
-                                    apply(scope, shell, feedback, store, pc, app, tab, null)
-                                }
+                            item(key = GridItemNone) {
+                                NoneTile(
+                                    pc, app, tab, noneInUse, store.applying(pc, app, tab.kind) == NONE,
+                                    Modifier.staggerEntrance(0).then(if (inUse < 0) Modifier.focusRequester(first) else Modifier),
+                                    onFocused = { described = Described.FirstChoice },
+                                ) { apply(scope, shell, feedback, store, pc, app, tab, null) }
                             }
-                            itemsIndexed(c.images, key = { _, image -> image.id }) { _, image ->
-                                ChoiceTile(image, tab, inUse = image.id == chosen, loading = store.applying(pc, app, tab.kind) == image.id) {
-                                    apply(scope, shell, feedback, store, pc, app, tab, image)
-                                }
+                            itemsIndexed(c.images, key = { _, image -> image.id }) { index, image ->
+                                ChoiceTile(
+                                    image, tab, inUse = image.id == chosen, loading = store.applying(pc, app, tab.kind) == image.id,
+                                    playing = image.id in playing, ticker = ticker,
+                                    modifier = Modifier.staggerEntrance(if (index + 1 < 8) index + 1 else -1)
+                                        .then(if (index == inUse) Modifier.focusRequester(first) else Modifier),
+                                    onFocused = { described = Described.Image(image) },
+                                ) { apply(scope, shell, feedback, store, pc, app, tab, image) }
                             }
                         }
-                        }
-                        if (c.images.isEmpty()) {
-                            Box(Modifier.fillMaxSize().padding(top = 360.px), contentAlignment = Alignment.TopCenter) {
-                                BasicText("SteamGridDB has no ${tab.label.lowercase()} for this game yet.", style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 22.tpx))
-                            }
-                        }
+                    }
+                    if (c.images.isEmpty()) {
+                        NoImages(tab, filters, c, app.name, match, onReset = ::resetFilters, onChange = ::openSheet)
                     }
                 }
             }
         }
+
+        InfoStrip(
+            described ?: Described.FirstChoice, tab, chosen,
+            Modifier.offset(150.px, 880.px).width(1620.px).height(88.px),
+        )
+
+        // The filter sheet drops down from the toolbar over a dimmed page; the grid stays visible underneath
+        FilterSheetLayer(
+            open = sheetOpen, tab = tab, filters = filters, ready = ready, refreshing = refreshing,
+            onChange = { filtersByTab[tab] = it },
+            onReset = ::resetFilters, onClose = ::closeSheet,
+        )
     }
 }
 
@@ -289,70 +502,319 @@ private fun BuiltInArtworkScreen(pc: Pc, app: App) {
     }
 }
 
-/** The image used now for [tab]'s kind ("Currently used"), where it comes from and the matched game. */
+/** The SteamGridDB game the artwork comes from: its name, release year, id and the number of images of this tab. */
 @Composable
-private fun CurrentPanel(pc: Pc, app: App, tab: ArtTab, match: SgdbGame?, busy: Boolean, modifier: Modifier, onChangeGame: () -> Unit) {
+private fun GameChip(match: SgdbGame?, busy: Boolean, appName: String, imageCount: Int?, tab: ArtTab, modifier: Modifier) {
     val colors = LocalDelosColors.current
-    val store = LocalArtwork.current
-    val own by rememberArtworkResult(store, pc, app, tab.kind)
-    val cover by rememberArtworkResult(store, pc, app, ArtKind.COVER)
-    val boxArt by rememberBoxArt(LocalBoxArt.current, pc, app)
-    // What the home screen shows for this kind, in the same order of fallbacks
-    val (image, source) = when {
-        own.image != null -> own.image to if (own.bundledAsset != null) "Built-in" else "From SteamGridDB"
-        tab == ArtTab.LOGO -> null to "The game's name, no logo"
-        tab == ArtTab.HERO && cover.image != null -> cover.image to if (cover.bundledAsset != null) "Built-in" else "The SteamGridDB cover"
-        boxArt != null -> boxArt to "From your PC (Vibepollo)"
-        else -> null to "Placeholder art"
-    }
-    Column(
-        modifier.clip(RoundedCornerShape(30.px)).glass(colors.surface).border(1.px, colors.line, RoundedCornerShape(30.px)).padding(28.px),
-        verticalArrangement = Arrangement.spacedBy(18.px),
+    val shape = RoundedCornerShape(22.px)
+    Row(
+        modifier.height(64.px).clip(shape).glass(colors.surface).border(1.px, colors.line, shape).padding(start = 14.px, end = 22.px),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.px),
     ) {
-        BasicText("CURRENTLY USED", style = TextStyle(color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 18.tpx, letterSpacing = .12.em))
-        Box(
-            Modifier.fillMaxWidth().aspectRatio(if (tab == ArtTab.COVER) 1.1f else tab.ratio).clip(RoundedCornerShape(20.px)).background(colors.surface2),
-            contentAlignment = Alignment.Center,
+        Box(Modifier.size(40.px).clip(CircleShape).background(colors.accent2.copy(alpha = .2f)), contentAlignment = Alignment.Center) {
+            Symbol(Symbols.SPORTS_ESPORTS, 24.tpx, colors.accent2, filled = true)
+        }
+        BasicText(
+            "STEAMGRIDDB GAME",
+            style = TextStyle(color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 14.tpx, letterSpacing = .12.em),
+        )
+        BasicText(
+            when {
+                busy -> "Looking for $appName…"
+                match != null -> match.name.ifEmpty { "Game #${match.id}" }
+                else -> "Not found yet"
+            },
+            maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false),
+            style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 22.tpx),
+        )
+        Spacer(Modifier.weight(1f))
+        if (match != null) {
+            match.year?.let { MetaChip("$it") }
+            MetaChip("#${match.id}")
+            if (imageCount != null) MetaChip("$imageCount ${tab.noun}${if (imageCount == 1) "" else "s"}")
+        }
+    }
+}
+
+@Composable
+private fun MetaChip(text: String) {
+    val colors = LocalDelosColors.current
+    BasicText(
+        text, maxLines = 1,
+        modifier = Modifier.clip(CircleShape).background(colors.surface2).padding(horizontal = 14.px, vertical = 4.px),
+        style = TextStyle(color = colors.text2, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 16.tpx),
+    )
+}
+
+/** The accent count of active filters on the Filter pill. */
+@Composable
+private fun CountBadge(count: Int) {
+    val colors = LocalDelosColors.current
+    Box(Modifier.size(32.px).clip(CircleShape).background(colors.accent), contentAlignment = Alignment.Center) {
+        BasicText("$count", style = TextStyle(color = colors.onAccent, fontFamily = Figtree, fontWeight = FontWeight.Bold, fontSize = 18.tpx))
+    }
+}
+
+/**
+ * "10 of 41 covers" and the active filters as chips (A removes one, Reset removes them all); without a filter, the sort. The
+ * chips share the one gliding focus plate ([RowGlideHost]).
+ */
+@Composable
+private fun FilterStrip(
+    tab: ArtTab, filters: ArtFilters, ready: Choices.Ready, refreshing: Boolean,
+    onClear: (ActiveFilter) -> Unit, onReset: () -> Unit, modifier: Modifier,
+) {
+    val colors = LocalDelosColors.current
+    RowGlideHost(
+        ring = FocusRing(3f, 3f), corner = 999f, focusScale = 1.05f, fill = null, glow = null,
+        modifier = modifier,
+    ) {
+        Row(Modifier.fillMaxSize().padding(horizontal = 3.px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.px)) {
+            val line = ArtFilterRules.resultLine(ready.images.size, ready.total, tab.noun)
+            val tint = if (filters.active) colors.accent else colors.accent2
+            BasicText(
+                if (filters.active) line else "All $line",
+                Modifier.clip(CircleShape).background(tint.copy(alpha = .14f)).border(1.px, tint.copy(alpha = .45f), CircleShape).padding(horizontal = 20.px, vertical = 7.px),
+                style = TextStyle(color = colors.accent3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx),
+            )
+            if (refreshing) Spinner(26f)
+            if (!filters.active) {
+                BasicText("${filters.sort.label} first", style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 21.tpx))
+            } else {
+                ArtFilterRules.chips(filters).forEach { chip ->
+                    FilterStripChip(chip.label, Symbols.CLOSE) { onClear(chip) }
+                }
+                FilterStripChip("Reset", Symbols.REFRESH, onReset)
+            }
+        }
+    }
+}
+
+@Composable
+private fun FilterStripChip(label: String, icon: String, onClick: () -> Unit) {
+    val colors = LocalDelosColors.current
+    Row(
+        Modifier
+            .focusEffects(onClick = onClick, corner = 999f, focusScale = 1.05f, ring = FocusRing(3f, 3f), glow = null, glide = true)
+            .clip(CircleShape).background(colors.surface2).border(1.px, colors.line, CircleShape)
+            .height(44.px).padding(horizontal = 20.px),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.px),
+    ) {
+        BasicText(label, style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx))
+        Symbol(icon, 22.tpx, colors.text2)
+    }
+}
+
+/** No image in the grid: what the filters left, or that SteamGridDB has none; the first choice stays. */
+@Composable
+private fun NoImages(tab: ArtTab, filters: ArtFilters, ready: Choices.Ready, gameName: String, match: SgdbGame?, onReset: () -> Unit, onChange: () -> Unit) {
+    val colors = LocalDelosColors.current
+    Column(
+        Modifier.fillMaxSize().padding(start = 300.px, top = 40.px),
+        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(18.px),
+    ) {
+        if (filters.active) {
+            Symbol(Symbols.SEARCH, 90.tpx, colors.accent, filled = true)
+            BasicText("No ${tab.noun}s match these filters", style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 34.tpx, textAlign = TextAlign.Center))
+            val summary = ArtFilterRules.chips(filters).joinToString(" · ") { it.label }.lowercase()
+            val has = ready.total?.let { "${match?.name?.ifEmpty { null } ?: gameName} has $it ${tab.noun}${if (it == 1) "" else "s"} on SteamGridDB, none of them matches" } ?: "None of the ${tab.noun}s matches"
+            BasicText("$has $summary. Loosen a filter or search under another name.", style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 22.tpx, textAlign = TextAlign.Center), modifier = Modifier.width(820.px))
+            Row(horizontalArrangement = Arrangement.spacedBy(16.px)) {
+                PillButton("Reset filters", Symbols.REFRESH, onReset, compact = true, trailing = { GlyphButton(Glyph.X, 32) })
+                PillButton("Change filters", Symbols.TUNE, onChange, compact = true, clickCue = null, trailing = { GlyphButton(Glyph.Y, 32) })
+            }
+        } else {
+            BasicText("SteamGridDB has no ${tab.label.lowercase()} for this game yet.", style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 22.tpx))
+        }
+    }
+}
+
+/** The strip about the focused image: its style, kind, whether it is in use, and what SteamGridDB tells (size, file, score, date). */
+@Composable
+private fun InfoStrip(item: Described, tab: ArtTab, chosen: Int?, modifier: Modifier) {
+    val colors = LocalDelosColors.current
+    val shape = RoundedCornerShape(26.px)
+    Row(
+        modifier.clip(shape).glass(colors.surface).border(1.px, colors.line, shape).padding(horizontal = 30.px),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(44.px),
+    ) {
+        val title: String
+        val fields: List<Pair<String, String>>
+        var animated = false
+        val inUse: Boolean
+        when (item) {
+            Described.FirstChoice -> {
+                title = if (tab == ArtTab.LOGO) "Name only" else "From your PC"
+                fields = if (tab == ArtTab.LOGO) listOf("SOURCE" to "The game's name", "SHOWS" to "The name instead of a logo")
+                else listOf("SOURCE" to "Your PC (Vibepollo)", "SHOWS" to "Box art from the PC")
+                inUse = chosen == NONE
+            }
+            is Described.Image -> {
+                title = ArtworkInfo.title(item.image, tab.label)
+                fields = ArtworkInfo.fields(item.image)
+                animated = item.image.animated
+                inUse = item.image.id == chosen
+            }
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(4.px)) {
+            BasicText(title, maxLines = 1, style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 24.tpx))
+            if (item is Described.Image) Row(horizontalArrangement = Arrangement.spacedBy(8.px)) {
+                StripBadge(if (animated) "Animated" else "Static", if (animated) Symbols.PLAY_ARROW else null, accent = false)
+                if (inUse) StripBadge("In use", Symbols.CHECK, accent = true)
+            } else if (inUse) StripBadge("In use", Symbols.CHECK, accent = true)
+        }
+        fields.forEach { (label, value) ->
+            Column {
+                BasicText(label, style = TextStyle(color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 13.tpx, letterSpacing = .12.em))
+                BasicText(value, maxLines = 1, style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 22.tpx))
+            }
+        }
+    }
+}
+
+@Composable
+private fun StripBadge(text: String, icon: String?, accent: Boolean) {
+    val colors = LocalDelosColors.current
+    val content = if (accent) colors.onAccent else colors.text2
+    Row(
+        Modifier.clip(CircleShape).background(if (accent) colors.accent else colors.surface2).padding(horizontal = 12.px, vertical = 3.px),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.px),
+    ) {
+        if (icon != null) Symbol(icon, 16.tpx, content, filled = true)
+        BasicText(text, style = TextStyle(color = content, fontFamily = Figtree, fontWeight = FontWeight.Bold, fontSize = 14.tpx))
+    }
+}
+
+/**
+ * The filter sheet (Y or the Filter pill): it grows from the toolbar's Filter pill ([popEnter] / [popExit]) over a dimmed page,
+ * the grid below keeps updating as choices are made. The focus stays inside while it is open and starts on the first row's
+ * selected option; the options share the filter chips' gliding plate ([RowGlideHost]).
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun FilterSheetLayer(
+    open: Boolean, tab: ArtTab, filters: ArtFilters, ready: Choices.Ready?, refreshing: Boolean,
+    onChange: (ArtFilters) -> Unit, onReset: () -> Unit, onClose: () -> Unit,
+) {
+    val colors = LocalDelosColors.current
+    val reduced = LocalReducedMotion.current
+    val shape = RoundedCornerShape(40.px)
+    val kind = tab.kind
+    AnimatedVisibility(open, enter = fadeIn(tween(Motion.EXIT, easing = Motion.Ease)), exit = fadeOut(tween(Motion.EXIT, easing = Motion.Ease))) {
+        Box(Modifier.fillMaxSize().background(Color(0x73050A14)).pointerInput(Unit) { detectTapGestures { onClose() } })
+    }
+    AnimatedVisibility(
+        open,
+        modifier = Modifier.offset(150.px, 232.px),
+        enter = popEnter(TransformOrigin(.92f, 0f), reduced),
+        exit = popExit(TransformOrigin(.92f, 0f), reduced),
+    ) {
+        val requesters = remember { HashMap<String, FocusRequester>() }
+        fun requester(key: String) = requesters.getOrPut(key) { FocusRequester() }
+        var panelFocused by remember { mutableStateOf(false) }
+        // The first row's selected option takes the focus whenever the sheet opens
+        val startKey = if (ArtFilterRules.hasType(kind)) "type:${filters.type}" else "style:${filters.style ?: ""}"
+        if (open) InitialFocus(requester(startKey))
+        // Reset disables itself once nothing is filtered; if it had the focus, the focus goes back to the first option
+        var wasActive by remember { mutableStateOf(filters.active) }
+        LaunchedEffect(filters.active) {
+            if (wasActive && !filters.active) {
+                withFrameNanos { }
+                if (!panelFocused) runCatching { requester(startKey).requestFocus() }
+            }
+            wasActive = filters.active
+        }
+        Column(
+            Modifier
+                .width(1620.px)
+                .clip(shape).glass(colors.surface3).border(1.px, colors.line, shape)
+                .padding(start = 40.px, end = 40.px, top = 26.px, bottom = 22.px)
+                .onFocusChanged { panelFocused = it.hasFocus }
+                .focusProperties { onExit = { if (open) cancelFocusChange() } }
+                .focusGroup(),
+            verticalArrangement = Arrangement.spacedBy(8.px),
         ) {
-            Crossfade(image, animationSpec = tween(300), label = "currentArt") { img ->
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    when {
-                        img != null && tab == ArtTab.COVER -> Image(img, null, Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
-                        img != null && tab == ArtTab.LOGO -> Image(img, null, Modifier.fillMaxSize().padding(24.px), contentScale = ContentScale.Fit)
-                        img != null -> Image(img, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-                        tab == ArtTab.LOGO -> NameAsLogo(app.name)
-                        else -> {
-                            val art = appArt(pc, app)
-                            PlaceholderArt(art.hue, art.hue2, art.icon, Modifier.fillMaxSize(), glyphSize = 160f)
+            Row(Modifier.fillMaxWidth().padding(bottom = 8.px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(24.px)) {
+                BasicText("Filter artwork", style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 34.tpx))
+                if (ready != null) {
+                    BasicText(
+                        ArtFilterRules.resultLine(ready.images.size, ready.total, tab.noun),
+                        Modifier.clip(CircleShape).background(colors.accent.copy(alpha = .16f)).border(1.px, colors.accent.copy(alpha = .45f), CircleShape).padding(horizontal = 22.px, vertical = 8.px),
+                        style = TextStyle(color = colors.accent3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 22.tpx),
+                    )
+                }
+                if (refreshing) Spinner(30f)
+                Spacer(Modifier.weight(1f))
+                val active = filters.active
+                PillButton(
+                    "Reset filters", Symbols.REFRESH, onReset,
+                    Modifier.alpha(if (active) 1f else .4f).then(if (active) Modifier else Modifier.focusProperties { canFocus = false }),
+                    compact = true, clickCue = null, trailing = { GlyphButton(Glyph.X, 32) },
+                )
+                PillButton("Done", Symbols.CHECK, onClose, compact = true, clickCue = Cue.BACK, trailing = { GlyphButton(Glyph.Y, 32) })
+            }
+            RowGlideHost(ring = FocusRing(3f, 3f), corner = 999f, focusScale = 1.05f, fill = null, glow = null) {
+                Column(verticalArrangement = Arrangement.spacedBy(6.px)) {
+                    if (ArtFilterRules.hasType(kind)) {
+                        SheetRow(Symbols.MOVIE, "Type") {
+                            ArtType.entries.forEach { type ->
+                                FilterChip(type.label, filters.type == type, { onChange(filters.copy(type = type)) }, Modifier.focusRequester(requester("type:$type")))
+                            }
+                        }
+                        SheetDivider()
+                    }
+                    SheetRow(Symbols.PALETTE, "Style") {
+                        FilterChip("Any", filters.style == null, { onChange(filters.copy(style = null)) }, Modifier.focusRequester(requester("style:")))
+                        ArtFilterRules.styles(kind).forEach { style ->
+                            FilterChip(ArtFilterRules.styleLabel(style), filters.style == style, { onChange(filters.copy(style = style)) }, Modifier.focusRequester(requester("style:$style")))
+                        }
+                    }
+                    if (ArtFilterRules.dimensions(kind).isNotEmpty()) {
+                        SheetDivider()
+                        SheetRow(Symbols.ASPECT_RATIO, "Dimensions") {
+                            FilterChip("Any", filters.dimensions == null, { onChange(filters.copy(dimensions = null)) })
+                            ArtFilterRules.dimensions(kind).forEach { dimensions ->
+                                FilterChip(ArtFilterRules.dimensionsLabel(dimensions), filters.dimensions == dimensions, { onChange(filters.copy(dimensions = dimensions)) })
+                            }
+                        }
+                    }
+                    SheetDivider()
+                    SheetRow(Symbols.STAR, "Sort") {
+                        ArtSort.entries.forEach { sort ->
+                            FilterChip(sort.label, filters.sort == sort, { onChange(filters.copy(sort = sort)) })
                         }
                     }
                 }
             }
         }
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.px)) {
-            if (store.isBusy(pc, app)) Spinner(26f)
-            BasicText(if (store.isBusy(pc, app)) "Downloading…" else source, style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 21.tpx))
-        }
-        Box(Modifier.fillMaxWidth().height(1.px).background(colors.line))
-        BasicText("STEAMGRIDDB GAME", style = TextStyle(color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 18.tpx, letterSpacing = .12.em))
-        BasicText(
-            when {
-                busy -> "Looking for ${app.name}…"
-                match != null -> match.name.ifEmpty { "Game #${match.id}" }
-                else -> "Not found yet"
-            },
-            maxLines = 2, overflow = TextOverflow.Ellipsis,
-            style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 24.tpx),
-        )
-        if (store.enabled) PillButton("Change game", Symbols.SEARCH, onChangeGame, clickCue = null)
     }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun SheetRow(icon: String, title: String, options: @Composable () -> Unit) {
+    val colors = LocalDelosColors.current
+    Row(Modifier.fillMaxWidth().padding(vertical = 2.px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(30.px)) {
+        Row(Modifier.width(270.px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(18.px)) {
+            Box(Modifier.size(52.px).clip(CircleShape).background(colors.accent.copy(alpha = .18f)), contentAlignment = Alignment.Center) {
+                Symbol(icon, 28.tpx, colors.accent2, filled = true)
+            }
+            BasicText(title, style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx))
+        }
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(14.px), verticalArrangement = Arrangement.spacedBy(10.px)) { options() }
+    }
+}
+
+@Composable
+private fun SheetDivider() {
+    Box(Modifier.fillMaxWidth().height(1.px).background(LocalDelosColors.current.line))
 }
 
 /** The first choice: no SteamGridDB image (the PC's artwork, or the name instead of a logo). */
 @Composable
-private fun NoneTile(pc: Pc, app: App, tab: ArtTab, inUse: Boolean, loading: Boolean, modifier: Modifier, onClick: () -> Unit) {
+private fun NoneTile(pc: Pc, app: App, tab: ArtTab, inUse: Boolean, loading: Boolean, modifier: Modifier, onFocused: () -> Unit, onClick: () -> Unit) {
     val boxArt by rememberBoxArt(LocalBoxArt.current, pc, app)
-    Tile(tab, inUse, loading, if (tab == ArtTab.LOGO) "Name only" else "From your PC", modifier, onClick) {
+    Tile(tab, inUse, loading, if (tab == ArtTab.LOGO) "Name only" else "From your PC", animated = false, modifier, onFocused, onClick) {
         val img = boxArt
         when {
             tab == ArtTab.LOGO -> NameAsLogo(app.name)
@@ -366,10 +828,13 @@ private fun NoneTile(pc: Pc, app: App, tab: ArtTab, inUse: Boolean, loading: Boo
 }
 
 @Composable
-private fun ChoiceTile(image: SgdbImage, tab: ArtTab, inUse: Boolean, loading: Boolean, onClick: () -> Unit) {
+private fun ChoiceTile(
+    image: SgdbImage, tab: ArtTab, inUse: Boolean, loading: Boolean, playing: Boolean, ticker: AnimationTicker,
+    modifier: Modifier, onFocused: () -> Unit, onClick: () -> Unit,
+) {
     val store = LocalArtwork.current
     val thumb by rememberThumbnail(store, image.thumb)
-    Tile(tab, inUse, loading, null, Modifier, onClick) {
+    Tile(tab, inUse, loading, null, image.animated, modifier, onFocused, onClick) {
         Crossfade(thumb, animationSpec = tween(300), label = "thumb") { img ->
             if (img != null) {
                 Image(
@@ -379,17 +844,41 @@ private fun ChoiceTile(image: SgdbImage, tab: ArtTab, inUse: Boolean, loading: B
                 )
             } else Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Spinner(36f, color = LocalDelosColors.current.text3) }
         }
+        if (image.animated) AnimatedTileLayer(image, playing, ticker)
     }
 }
 
-/** A choice in the grid: the image in [tab]'s shape, the "In use" badge, a spinner while [loading], an optional caption. */
+/**
+ * The playing animation of an animated image over its first frame: its animated thumbnail (else the full file when it is a
+ * small WebP) is fetched once and kept in a bounded cache, decoded at tile size while [playing] and released when it stops.
+ * Tiles share one [ticker], so the screen draws once per frame however many play.
+ */
 @Composable
-private fun Tile(tab: ArtTab, inUse: Boolean, loading: Boolean, caption: String?, modifier: Modifier, onClick: () -> Unit, content: @Composable () -> Unit) {
+private fun AnimatedTileLayer(image: SgdbImage, playing: Boolean, ticker: AnimationTicker) {
+    val store = LocalArtwork.current
+    val bytes by produceState(Thumbnails.cachedAnimation(image), image.id, playing) {
+        // Fetched the first time the tile is allowed to play, then kept
+        if (value == null && playing && !Thumbnails.hasNoAnimation(image)) value = Thumbnails.loadAnimation(store.http, image)
+    }
+    val source = remember(bytes) { bytes?.let { AnimatedSource.OfBytes(it) } }
+    val drawable = rememberAnimatedDrawable(source, playing, AnimatedPlayback.TILE_WIDTH, ticker)
+    if (drawable != null) AnimatedDrawableView(drawable, ticker, Modifier.fillMaxSize())
+}
+
+/** A choice in the grid: the image in [tab]'s shape, the "In use" badge, an "Animated" badge, a spinner while [loading], an optional caption. */
+@Composable
+private fun Tile(
+    tab: ArtTab, inUse: Boolean, loading: Boolean, caption: String?, animated: Boolean, modifier: Modifier,
+    onFocused: () -> Unit, onClick: () -> Unit, content: @Composable () -> Unit,
+) {
     val colors = LocalDelosColors.current
     val shape = RoundedCornerShape(20.px)
     Box(
         modifier
-            .focusEffects(onClick, corner = 20f, focusScale = 1.06f, ring = FocusRing(4f, 4f), glow = FocusGlow(18f, 50f, -12f), clickCue = null)
+            .focusEffects(
+                onClick, corner = 20f, focusScale = 1.06f, ring = FocusRing(4f, 4f), glow = FocusGlow(18f, 50f, -12f), clickCue = null,
+                onFocusChange = { if (it) onFocused() },
+            )
             .fillMaxWidth()
             .aspectRatio(tab.ratio)
             .clip(shape)
@@ -409,12 +898,24 @@ private fun Tile(tab: ArtTab, inUse: Boolean, loading: Boolean, caption: String?
         }
         if (inUse) {
             Row(
-                Modifier.padding(12.px).clip(CircleShape).background(colors.accent).padding(horizontal = 12.px, vertical = 4.px),
+                Modifier.align(Alignment.TopStart).padding(12.px).clip(CircleShape).background(colors.accent).padding(horizontal = 12.px, vertical = 4.px),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.px),
             ) {
                 Symbol(Symbols.CHECK, 20.tpx, colors.onAccent)
                 BasicText("In use", style = TextStyle(color = colors.onAccent, fontFamily = Figtree, fontWeight = FontWeight.Bold, fontSize = 16.tpx))
+            }
+        }
+        if (animated) {
+            // Icon only on the narrow covers, where "In use" takes the room
+            val label = tab != ArtTab.COVER
+            Row(
+                Modifier.align(Alignment.TopEnd).padding(12.px).clip(CircleShape).background(Color(0xB3050A14)).padding(horizontal = if (label) 12.px else 6.px, vertical = 4.px),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.px),
+            ) {
+                Symbol(Symbols.PLAY_ARROW, 20.tpx, colors.accent2, filled = true)
+                if (label) BasicText("Animated", style = TextStyle(color = Color.White, fontFamily = Figtree, fontWeight = FontWeight.Bold, fontSize = 16.tpx))
             }
         }
     }
@@ -435,7 +936,7 @@ private fun NameAsLogo(name: String) {
 @Composable
 private fun GridMessage(icon: String, title: String, text: String?) {
     val colors = LocalDelosColors.current
-    Column(Modifier.fillMaxSize().padding(top = 120.px), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(18.px)) {
+    Column(Modifier.fillMaxSize().padding(top = 80.px), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(18.px)) {
         Symbol(icon, 90.tpx, colors.accent, filled = true)
         BasicText(title, style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 34.tpx, textAlign = TextAlign.Center))
         if (text != null) BasicText(text, style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 22.tpx, textAlign = TextAlign.Center), modifier = Modifier.width(820.px))
@@ -455,7 +956,27 @@ private fun apply(scope: CoroutineScope, shell: ShellState, feedback: Feedback, 
     }
 }
 
-/** "Change game": the SteamGridDB games found for [term], and searching under another name. */
+/** "Search for another name": the shared text dialog; the games found for the name come as a menu (see [changeGame]). */
+private fun searchDialog(scope: CoroutineScope, shell: ShellState, tracker: FocusTracker, feedback: Feedback, store: ArtworkStore, pc: Pc, app: App, term: String) {
+    feedback.play(Cue.OPEN)
+    shell.openLayer(
+        Layer.Dialog(
+            DialogSpec(
+                "Search SteamGridDB", "The game's name as SteamGridDB knows it.",
+                listOf(DialogField(Symbols.SEARCH, term, "Game name", maxLength = 80)), "Search",
+            ) { values ->
+                val next = values.first().trim()
+                if (next.isEmpty()) false else {
+                    changeGame(scope, shell, tracker, feedback, store, pc, app, next)
+                    true
+                }
+            }
+        ),
+        tracker,
+    )
+}
+
+/** The SteamGridDB games found for [term], and searching under another name; a chosen game re-matches the artwork. */
 private fun changeGame(scope: CoroutineScope, shell: ShellState, tracker: FocusTracker, feedback: Feedback, store: ArtworkStore, pc: Pc, app: App, term: String) {
     scope.launch {
         shell.showToast("Searching SteamGridDB for $term…", Symbols.SEARCH)
@@ -473,24 +994,7 @@ private fun changeGame(scope: CoroutineScope, shell: ShellState, tracker: FocusT
                         .onFailure { shell.showToast(it.message ?: "The download failed", Symbols.ERROR) }
                 }
             }
-        } + MenuItem(Symbols.EDIT, "Search for another name") {
-            feedback.play(Cue.OPEN)
-            shell.openLayer(
-                Layer.Dialog(
-                    DialogSpec(
-                        "Search SteamGridDB", "The game's name as SteamGridDB knows it.",
-                        listOf(DialogField(Symbols.SEARCH, term, "Game name", maxLength = 80)), "Search",
-                    ) { values ->
-                        val next = values.first().trim()
-                        if (next.isEmpty()) false else {
-                            changeGame(scope, shell, tracker, feedback, store, pc, app, next)
-                            true
-                        }
-                    }
-                ),
-                tracker,
-            )
-        }
+        } + MenuItem(Symbols.EDIT, "Search for another name") { searchDialog(scope, shell, tracker, feedback, store, pc, app, term) }
         feedback.play(Cue.OPEN)
         shell.openLayer(Layer.Context(ContextMenu(if (found.isEmpty()) "Nothing found for $term" else "Choose the game", items), tracker.bounds()), tracker)
     }
