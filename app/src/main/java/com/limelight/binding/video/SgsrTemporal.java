@@ -22,7 +22,7 @@ final class SgsrTemporal implements AutoCloseable {
     private int lumaProgram,flowProgram,sceneProgram,activateProgram,upscaleProgram,framebuffer,sceneTexture,reactiveTexture;
     private int outputWidth,outputHeight,index;
     private long previousTimestamp;
-    private boolean valid,hdr;
+    private boolean valid,hdr,flowComputed;
 
     SgsrTemporal(Context app,int width,int height,int outputWidth,int outputHeight) throws Exception {
         this.width=width;this.height=height;
@@ -52,6 +52,9 @@ final class SgsrTemporal implements AutoCloseable {
     void reset() {valid=false;}
 
     int render(int source,int outputWidth,int outputHeight,long timestamp,boolean hdr,boolean quality) {
+        return render(source,outputWidth,outputHeight,timestamp,hdr,quality,false);
+    }
+    int render(int source,int outputWidth,int outputHeight,long timestamp,boolean hdr,boolean quality,boolean reuseFlow) {
         if(this.outputWidth!=outputWidth||this.outputHeight!=outputHeight) resize(outputWidth,outputHeight);
         boolean reset=!valid||timestamp<=previousTimestamp||timestamp-previousTimestamp>50_000_000L||this.hdr!=hdr;
         this.hdr=hdr;previousTimestamp=timestamp;
@@ -66,8 +69,13 @@ final class SgsrTemporal implements AutoCloseable {
             GLES31.glDrawArrays(GLES31.GL_TRIANGLE_STRIP,0,4);
             GLES31.glBindTexture(GLES31.GL_TEXTURE_2D,luma[1-index]);GLES31.glGenerateMipmap(GLES31.GL_TEXTURE_2D);
         }
-        flow(luma[index],luma[1-index],backward);
-        flow(luma[1-index],luma[index],forward);
+        // Under overload (FlowGovernor) every second frame reuses the previous frame's motion instead of recomputing
+        // it. Never after a reset, and never before the first computation (the textures would be uninitialised).
+        if(!(reuseFlow&&!reset&&flowComputed)) {
+            flow(luma[index],luma[1-index],backward);
+            flow(luma[1-index],luma[index],forward);
+            flowComputed=true;
+        }
         GLES31.glUseProgram(sceneProgram);
         bind(sceneProgram,"currentLuma",0,luma[index]);bind(sceneProgram,"previousLuma",1,luma[1-index]);
         GLES31.glBindImageTexture(0,sceneTexture,0,false,0,GLES31.GL_WRITE_ONLY,GLES31.GL_RGBA16F);

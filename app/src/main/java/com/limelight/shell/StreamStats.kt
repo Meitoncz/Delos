@@ -121,12 +121,14 @@ internal fun sharpenPassText(cost: SharpenCost): String = buildString {
 /**
  * The Frame queue row of the SGSR output stage: how many decoder frames were waiting when a draw started (1 means it
  * kept up), how long the newest had waited, and how many older frames were skipped per second because a newer one was
- * ready ("2.0 skipped /s" means the GPU work per frame is longer than the frame interval).
+ * ready, and, when the GPU had too much work in flight, how many frames per second waited for it and were replaced
+ * without being drawn ("12.0 GPU busy /s" means the GPU work per frame is longer than the frame interval).
  */
 internal fun frameQueueText(queue: FrameQueueStats): String = buildString {
     append(String.format(Locale.US, "%.1f avg / %d max waiting", queue.pendingAvg, queue.pendingMax))
     if (queue.ageAvgMs >= 0f) append(String.format(Locale.US, " · age %.1f / %.1f ms", queue.ageAvgMs, queue.ageMaxMs))
     append(String.format(Locale.US, " · %.1f skipped /s", queue.skippedPerSecond()))
+    if (queue.busySkipped > 0) append(String.format(Locale.US, " · %.1f GPU busy /s", queue.busySkippedPerSecond()))
 }
 
 /**

@@ -62,8 +62,6 @@ public final class SgsrRenderer implements AutoCloseable {
     private Integer drawnQuality;
     private volatile float gpuTimeMs;
     private volatile float frameToSwapMs;
-    // HDR output: smoothed time the GPU worked on a frame after it was submitted, and the scratch for reading it
-    private float hdrGpuTailMs;
     // Stage timestamps for measurement (null while off): what the GL thread records and the display timestamps it waits for
     private volatile LatencyStages latencyStages;
     private final DisplayTimestampTracker displayTimestamps = new DisplayTimestampTracker();
@@ -72,7 +70,27 @@ public final class SgsrRenderer implements AutoCloseable {
             (frameId, out) -> this.hdrOutput != 0 ? nativeHdrFrameTimestamps(this.hdrOutput,(int) frameId,out) : -1;
     private boolean timestampsChecked, sdrTimestamps, statsFrameArmed;
     private long statsFrameArrivalNs;
-    private final long[] hdrGpuTails = new long[16];
+    // The GPU frames in flight and how they are read; the GPU time per frame they measure (the stat and pacer input)
+    private final GpuInFlight gpuInFlight = new GpuInFlight();
+    private final GpuInFlight.Fences sdrFences = new GpuInFlight.Fences() {
+        @Override public long poll(long handle) { return nativeGpuFenceStatus((int) handle); }
+        @Override public void release(long handle) { nativeGpuFenceClose((int) handle); }
+    };
+    private final GpuInFlight.Fences hdrFences = new GpuInFlight.Fences() {
+        @Override public long poll(long handle) { return hdrOutput != 0 ? nativeHdrGpuDone(hdrOutput,(int) handle) : 0; }
+        @Override public void release(long handle) { /* the native output closes its own descriptors */ }
+    };
+    private volatile float gpuWorkMs;
+    private final GpuInFlight.WorkSink gpuWorkSink = ns -> {
+        gpuWorkMs = SgsrPacing.smooth(gpuWorkMs,ns / 1_000_000f);
+        frameQueue.recordGpuWork(ns);
+    };
+    // The newest frame is held back while the GPU is busy; retried every millisecond until it can be drawn
+    private boolean heldFrame, retryPosted;
+    private final Runnable retryTask = () -> { retryPosted = false; draw(); };
+    private final OverloadDetector overloadDetector = new OverloadDetector();
+    private final FlowGovernor flowGovernor = new FlowGovernor();
+    private volatile OverloadListener overloadListener;
     private volatile boolean firstFramePresented;
     private int highQualityProgram;
     private int temporalPresentProgram;
@@ -357,6 +375,7 @@ public final class SgsrRenderer implements AutoCloseable {
     }
 
     private void initialize(Context app, Surface output) throws Exception {
+        System.loadLibrary("moonlight-core");
         diagnosticContext = app.getApplicationContext();
         arrivalOutputSurface = arrivalOnly ? output : null;
         android.view.View streamView = app instanceof com.limelight.Game ?
@@ -463,9 +482,9 @@ public final class SgsrRenderer implements AutoCloseable {
     private void draw() {
         if (closed.get()) return;
         // The frame this draw was posted for may already have been consumed by an earlier draw that took
-        // everything queued at that time: nothing new to show
+        // everything queued at that time: nothing new to show, unless a frame is held back for a busy GPU
         final int pending = frameQueue.pending();
-        if (pending <= 0) return;
+        if (pending <= 0 && !heldFrame) return;
         final long processingStartNs=System.nanoTime();
         try {
             // Everything that queued up while the previous draw ran is consumed, only the newest is drawn: a
@@ -475,6 +494,21 @@ public final class SgsrRenderer implements AutoCloseable {
                 texture.updateTexImage();
                 frameQueue.consumeOne();
             }
+            if (pending > 0 && heldFrame) {
+                // The frame held back for the GPU is replaced by a newer one and will never be shown
+                final FrameQueueStats window=frameQueue.recordBusySkip(processingStartNs);
+                if (window != null) onQueueWindow(window);
+            }
+            // The GPU has as many frames in flight as it may: keep the newest frame (it stays in the texture) and
+            // draw it as soon as the GPU is free, or replace it by a newer one. Latency stays bounded to a frame
+            // or two however slow the GPU is; the arrival animation's producer is not throttled.
+            if (!arrivalOnly && gpuBusy(processingStartNs)) {
+                if (pending > 1) frameQueue.addCoalesced(pending - 1);
+                heldFrame = true;
+                scheduleRetry();
+                return;
+            }
+            heldFrame = false;
             final long drawStartNs=System.nanoTime();
             final long arrivalNs=frameQueue.lastConsumedArrivalNs();
             final LatencyStages stages=latencyStages;
@@ -482,8 +516,9 @@ public final class SgsrRenderer implements AutoCloseable {
                 timestampsChecked = true;
                 sdrTimestamps = enableSdrTimestamps();
             }
-            final FrameQueueStats queueWindow=frameQueue.recordDraw(drawStartNs,pending,drawStartNs-arrivalNs);
-            if (queueWindow!=null && !arrivalOnly) android.util.Log.d(FrameQueue.TAG,queueWindow.describe());
+            // A frame drawn after being held counts as one waiting frame, with the age it reached while it waited
+            final FrameQueueStats queueWindow=frameQueue.recordDraw(drawStartNs,Math.max(pending,1),drawStartNs-arrivalNs);
+            if (queueWindow != null) onQueueWindow(queueWindow);
             texture.getTransformMatrix(transform);
             if (!outputAttached || (arrivalError != null && arrivalOnly)) return;
             GLES31.glBindFramebuffer(GLES31.GL_FRAMEBUFFER,framebuffer);
@@ -532,6 +567,8 @@ public final class SgsrRenderer implements AutoCloseable {
             int quality = mode;
             if (drawnQuality == null || drawnQuality != quality) {
                 drawnQuality = quality;
+                overloadDetector.reset();
+                flowGovernor.reset();
                 if (temporal != null) temporal.reset();
                 LimeLog.info("SGSR quality: " + UpscalerMode.fromIndex(quality).label());
             }
@@ -577,7 +614,8 @@ public final class SgsrRenderer implements AutoCloseable {
                     if (temporal == null) temporal = new SgsrTemporal(diagnosticContext,width,height,internalWidth,internalHeight);
                     if (temporalPresentProgram == 0)
                         temporalPresentProgram = createUpscaleProgram(diagnosticContext,"sgsr/temporal_present.frag");
-                    source = temporal.render(colorTexture,internalWidth,internalHeight,texture.getTimestamp(),hdrActive,quality == 3);
+                    source = temporal.render(colorTexture,internalWidth,internalHeight,texture.getTimestamp(),hdrActive,quality == 3,
+                            flowGovernor.reuseFlowThisFrame());
                     sampledWidth = internalWidth;
                     sampledHeight = internalHeight;
                     selectedProgram = temporalPresentProgram;
@@ -615,14 +653,11 @@ public final class SgsrRenderer implements AutoCloseable {
                 stages.record(LatencyStages.DRAW,swapEndNs-drawStartNs);
                 displayTimestamps.poll(tenBit ? hdrTimestampSource : sdrTimestampSource,stages);
             }
-            if (tenBit && hdrOutput!=0) collectHdrGpuTails();
-            // The HDR swap hands over a native fence instead of waiting for the GPU, so the time the GPU kept
-            // working after the submit (measured from the fences of earlier frames) is added to keep both figures
-            // GPU-inclusive as they were with glFinish
-            final float gpuTailMs=tenBit ? hdrGpuTailMs : 0f;
-            frameToSwapMs=SgsrPacing.smooth(frameToSwapMs,(swapEndNs-frameQueue.lastConsumedArrivalNs())/1_000_000f+gpuTailMs);
+            // GPU time from the fences once there is one; the CPU submit time until then
+            final float cpuMs=(swapEndNs-drawStartNs)/1_000_000f;
+            frameToSwapMs=SgsrPacing.smooth(frameToSwapMs,cpuMs+gpuWorkMs);
             if (sharpenMeter != null) sharpenMeter.tick(swapEndNs,sharpenOnly,sharpenDescription);
-            float elapsedMs=(swapEndNs-processingStartNs)/1_000_000f+gpuTailMs;
+            final float elapsedMs=gpuWorkMs>0f ? gpuWorkMs : (swapEndNs-processingStartNs)/1_000_000f;
             gpuTimeMs=gpuTimeMs==0f?elapsedMs:gpuTimeMs*.8f+elapsedMs*.2f;
             consecutiveDrawFailures=0;
         } catch (RuntimeException e) {
@@ -796,11 +831,23 @@ public final class SgsrRenderer implements AutoCloseable {
         final LatencyStages stages = statsFrameArmed ? latencyStages : null;
         statsFrameArmed = false;
         if (tenBit) {
+            final long submitNs = System.nanoTime();
             int sequence = nativePresentHdr(hdrOutput,hdrActive,hdrMetadata);
             hdrFrameAcquired = false;
-            if (stages != null && sequence > 0) displayTimestamps.add(sequence,statsFrameArrivalNs);
+            if (sequence > 0) {
+                if (!arrivalOnly) gpuInFlight.add(sequence,submitNs,hdrFences);
+                if (stages != null) displayTimestamps.add(sequence,statsFrameArrivalNs);
+            }
         }
         else {
+            // A native fence per frame bounds the GPU work in flight; it also flushes the commands. Without
+            // native fences the GPU is waited for, which bounds the backlog at the price of idle time.
+            if (!arrivalOnly) {
+                final long submitNs = System.nanoTime();
+                int fence = nativeGpuFenceCreate();
+                if (fence >= 0) gpuInFlight.add(fence,submitNs,sdrFences);
+                else if (fence == -1) GLES31.glFinish();
+            }
             long frameId = stages != null && sdrTimestamps ? nativeFrameNextId() : -1;
             EGLExt.eglPresentationTimeANDROID(display,window,System.nanoTime());
             require(EGL14.eglSwapBuffers(display,window),"SGSR swap");
@@ -848,20 +895,56 @@ public final class SgsrRenderer implements AutoCloseable {
         arrivalTemporalProgram = arrivalPresentProgram = arrivalSharpenProgram = 0;
     }
 
-    /** Smoothed wall time of the completed SGSR processing path, excluding decode (HDR: including the GPU tail). */
+    /**
+     * Smoothed GPU execution time per frame, in milliseconds, read from the frame fences (the time queueing behind the
+     * previous frame is not counted), a few frames after the draw. Until the first fence has been read, or when the
+     * driver gives no fences, the CPU time of submitting the frame.
+     */
     public float getGpuTimeMs() { return gpuTimeMs; }
     /**
-     * Smoothed time from the decoder's frame-available callback to the end of the swap call, in milliseconds: the
-     * time a frame spends in the output stage after the pacer released it. On the SDR path the swap only queues the
-     * work, so this is submit time, not GPU completion. The HDR path adds the time the GPU kept working after the
-     * submit, read from the native fences of earlier frames. 0 before the first frame.
+     * Smoothed time a frame spends in the output stage after the pacer released it, in milliseconds: the CPU time of
+     * the draw (draw start to the end of the swap call) plus the GPU execution time. Frames waiting for a busy GPU
+     * are not part of it, the bound keeps that wait to about one frame. 0 before the first frame.
      */
     public float getFrameToSwapMs() { return frameToSwapMs; }
 
-    /** Folds the GPU tails the native output harvested from signalled fences into the smoothed figure. */
-    private void collectHdrGpuTails() {
-        int count = nativeHdrGpuTails(hdrOutput,hdrGpuTails);
-        for (int i=0;i<count;i++) hdrGpuTailMs = SgsrPacing.smooth(hdrGpuTailMs,hdrGpuTails[i]/1_000_000f);
+    /** Called from the GL thread when the upscaler could not keep up with the frame rate for about two seconds. */
+    public interface OverloadListener {
+        void onOverload(int mode, boolean supersampling);
+    }
+
+    public void setOverloadListener(OverloadListener listener) { overloadListener = listener; }
+
+    /** A finished statistics window: log it and let the overload detector look at it. */
+    private void onQueueWindow(FrameQueueStats window) {
+        if (arrivalOnly) return;
+        android.util.Log.d(FrameQueue.TAG,window.describe());
+        if (flowGovernor.onWindow(window))
+            android.util.Log.i(FrameQueue.TAG,flowGovernor.isReduced()
+                    ? "SGSR 2 under load: the optical flow is recomputed every second frame"
+                    : "SGSR 2 load is back to normal: the optical flow is recomputed every frame");
+        if (overloadDetector.onWindow(window)) {
+            android.util.Log.w(FrameQueue.TAG,"overload: GPU " + window.gpuAvgMs + " ms per frame at "
+                    + window.arrivedPerSecond() + " frames/s, " + window.busySkippedPerSecond()
+                    + " frames/s dropped because the GPU was busy, mode " + mode + ", supersampling " + supersampling);
+            OverloadListener listener = overloadListener;
+            if (listener != null) listener.onOverload(mode,supersampling);
+        }
+    }
+
+    /**
+     * Whether the next draw has to wait because the GPU still has the maximum number of frames in flight. Also
+     * collects the finished frames' GPU times.
+     */
+    private boolean gpuBusy(long nowNs) {
+        return gpuInFlight.shouldSkip(tenBit ? hdrFences : sdrFences,nowNs,gpuWorkSink);
+    }
+
+    private void scheduleRetry() {
+        if (!retryPosted) {
+            retryPosted = true;
+            handler.postDelayed(retryTask,1);
+        }
     }
 
     private void ensureSupersampleTarget(int width, int height) {
@@ -941,6 +1024,10 @@ public final class SgsrRenderer implements AutoCloseable {
         }
     }
     private void release() {
+        // Every fence descriptor is closed exactly once: the ones still in flight are released here
+        gpuInFlight.clear(tenBit ? hdrFences : sdrFences);
+        handler.removeCallbacks(retryTask);
+        heldFrame = false;
         stopArrivalTicks();
         handler.removeCallbacks(arrivalStateChange);
         arrivalStatePending.set(false);
@@ -981,7 +1068,10 @@ public final class SgsrRenderer implements AutoCloseable {
     private static native int nativeHdrWidth(long handle);
     private static native int nativeHdrHeight(long handle);
     private static native int nativePresentHdr(long handle,boolean hdr,byte[] metadata);
-    private static native int nativeHdrGpuTails(long handle,long[] out);
+    private static native long nativeHdrGpuDone(long handle,int sequence);
+    private static native int nativeGpuFenceCreate();
+    private static native long nativeGpuFenceStatus(int fd);
+    private static native void nativeGpuFenceClose(int fd);
     private static native int nativeHdrFrameTimestamps(long handle,int sequence,long[] out);
     private static native void nativeDestroyHdr(long handle);
     private static native boolean nativeFrameTimestampsEnable();

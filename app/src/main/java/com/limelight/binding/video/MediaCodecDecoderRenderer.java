@@ -943,7 +943,10 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         if (sgsrFailed && sgsr != null) { sgsr.close(); sgsr = null; }
         // Stage timestamps cost a few stores per frame: only while the overlay shows them or in debug builds
         if ((BuildConfig.DEBUG || prefs.enablePerfOverlay) && latency == null) latency = new LatencyStages();
-        if (sgsr != null) sgsr.setLatencyStages(latency);
+        if (sgsr != null) {
+            sgsr.setLatencyStages(latency);
+            sgsr.setOverloadListener(this::onUpscalerOverload);
+        }
         DirectLaunchArrival arrival = directLaunchArrival;
         // Error publication may race recovery; keep OES until its EGL detach is confirmed.
         boolean continueArrival = arrival != null && arrival.isRedirected()
@@ -1950,6 +1953,24 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     private void recordPacing(long dequeueNs) {
         LatencyStages stages = latency;
         if (stages != null) stages.record(LatencyStages.PACING, System.nanoTime() - dequeueNs);
+    }
+
+    // Upscaler modes (UpscalerMode index) already told about an overload during this stream, one bit each
+    private int overloadNotifiedModes;
+
+    /**
+     * The SGSR output could not keep up with the stream's frame rate for about two seconds: one toast per stream and mode,
+     * nothing is changed automatically. The toast is posted to the UI thread by DelosToast.
+     */
+    private void onUpscalerOverload(int mode, boolean supersampling) {
+        synchronized (this) {
+            int bit = 1 << mode;
+            if ((overloadNotifiedModes & bit) != 0) return;
+            overloadNotifiedModes |= bit;
+        }
+        com.limelight.utils.DelosToast.show(context,
+                "Upscaler is too heavy for this frame rate: lower the supersampling or the frame rate",
+                com.limelight.utils.DelosToast.LONG, com.limelight.utils.ToastKind.WARNING);
     }
     /**
      * Latency mode fast path: drains all decoded frames without blocking and renders only

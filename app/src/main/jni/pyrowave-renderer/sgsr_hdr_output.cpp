@@ -19,9 +19,7 @@
 #include <type_traits>
 #include <algorithm>
 #include <cstring>
-#include <ctime>
-#include <sys/ioctl.h>
-#include <linux/sync_file.h>
+#include "sgsr_sync.h"
 
 namespace {
 struct Api {
@@ -63,29 +61,13 @@ struct Api {
     }
 };
 constexpr int64_t kPending=-2,kUnavailable=-1;
-// The signal time of a sync file's last fence in CLOCK_MONOTONIC ns, 0 when the kernel does not say.
-int64_t fenceSignalNs(int fd) {
-    struct sync_file_info info={};
-    if(ioctl(fd,SYNC_IOC_FILE_INFO,&info)<0||info.num_fences==0) return 0;
-    struct sync_fence_info fences[8];
-    info.num_fences=std::min<uint32_t>(info.num_fences,8);
-    info.sync_fence_info=reinterpret_cast<uint64_t>(fences);
-    if(ioctl(fd,SYNC_IOC_FILE_INFO,&info)<0) return 0;
-    uint64_t latest=0;
-    for(uint32_t i=0;i<info.num_fences;i++) latest=std::max<uint64_t>(latest,fences[i].timestamp_ns);
-    return int64_t(latest);
-}
-int64_t monotonicNs() {
-    timespec now={};clock_gettime(CLOCK_MONOTONIC,&now);
-    return int64_t(now.tv_sec)*1000000000LL+now.tv_nsec;
-}
-bool signalled(int fd) { pollfd poller={fd,POLLIN,0}; return poll(&poller,1,0)>0; }
+using namespace sgsr_sync;
 // The times of one presented frame, all CLOCK_MONOTONIC ns: when the CPU flushed it, when its GPU work finished (the
 // signal time of the native fence), when SurfaceFlinger latched it and when the display presented it (the present
 // fence). kPending until known, kUnavailable when the platform does not give it. Guarded by Pool::lock.
 struct FrameTiming {
     uint32_t seq=0;
-    bool used=false,tailTaken=false;
+    bool used=false;
     int64_t submitNs=0,gpuDoneNs=kPending,latchNs=kPending,presentNs=kPending;
     int gpuFd=-1,presentFd=-1;
     void closeFds(){ if(gpuFd>=0)close(gpuFd); if(presentFd>=0)close(presentFd); gpuFd=presentFd=-1; }
@@ -283,26 +265,16 @@ extern "C" JNIEXPORT jint JNICALL Java_com_limelight_binding_video_SgsrRenderer_
 extern "C" JNIEXPORT jint JNICALL Java_com_limelight_binding_video_SgsrRenderer_nativeHdrHeight(JNIEnv *,jclass,jlong handle){return reinterpret_cast<Output *>(handle)->height;}
 extern "C" JNIEXPORT jint JNICALL Java_com_limelight_binding_video_SgsrRenderer_nativePresentHdr(JNIEnv *env,jclass,jlong handle,jboolean hdr,jbyteArray metadata){return jint(reinterpret_cast<Output *>(handle)->present(env,hdr,metadata));}
 extern "C" JNIEXPORT void JNICALL Java_com_limelight_binding_video_SgsrRenderer_nativeDestroyHdr(JNIEnv *,jclass,jlong handle){delete reinterpret_cast<Output *>(handle);}
-// Copies the GPU tails (fence signal time minus the flush time, ns) of frames that finished since the last call
-extern "C" JNIEXPORT jint JNICALL Java_com_limelight_binding_video_SgsrRenderer_nativeHdrGpuTails(JNIEnv *env,jclass,jlong handle,jlongArray out){
+// Whether the GPU work of presented frame {seq} has finished: -1 while it is still running, otherwise the signal time
+// of its fence (CLOCK_MONOTONIC ns), 0 when it finished but the kernel gives no time or the frame is no longer remembered.
+extern "C" JNIEXPORT jlong JNICALL Java_com_limelight_binding_video_SgsrRenderer_nativeHdrGpuDone(JNIEnv *,jclass,jlong handle,jint seq){
     auto &pool=*reinterpret_cast<Output *>(handle)->pool;
-    const jsize capacity=std::min<jsize>(env->GetArrayLength(out),jsize(Pool::kFrames));
-    jlong tails[Pool::kFrames];
-    int count=0;
-    {
-        std::lock_guard<std::mutex> guard(pool.lock);
-        // Oldest first, so the smoothing on the Java side sees them in presentation order
-        for(uint32_t seq=pool.nextSeq>Pool::kFrames?pool.nextSeq-Pool::kFrames:1;seq<pool.nextSeq&&count<capacity;seq++){
-            FrameTiming &frame=pool.frames[seq%Pool::kFrames];
-            if(!frame.used||frame.seq!=seq) continue;
-            frame.harvest();
-            if(frame.tailTaken||frame.gpuDoneNs<frame.submitNs) continue;
-            frame.tailTaken=true;
-            tails[count++]=frame.gpuDoneNs-frame.submitNs;
-        }
-    }
-    if(count>0)env->SetLongArrayRegion(out,0,count,tails);
-    return count;
+    std::lock_guard<std::mutex> guard(pool.lock);
+    FrameTiming &frame=pool.frames[uint32_t(seq)%Pool::kFrames];
+    if(!frame.used||frame.seq!=uint32_t(seq)) return 0;
+    frame.harvest();
+    if(frame.gpuDoneNs==kPending) return -1;
+    return frame.gpuDoneNs>0?frame.gpuDoneNs:0;
 }
 // The CLOCK_MONOTONIC times (ns) of a presented frame: out[0] GPU done, out[1] SurfaceFlinger latch, out[2] display
 // present, -1 for one the platform does not give. Returns 0 when all are known, 1 while one is still pending and -1

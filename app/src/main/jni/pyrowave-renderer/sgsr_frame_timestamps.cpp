@@ -6,6 +6,9 @@
 #include <EGL/eglext.h>
 #include <android/log.h>
 #include <cstring>
+#include <unistd.h>
+#include <GLES3/gl3.h>
+#include "sgsr_sync.h"
 
 namespace {
 PFNEGLGETNEXTFRAMEIDANDROIDPROC nextFrameId=nullptr;
@@ -60,4 +63,50 @@ extern "C" JNIEXPORT jint JNICALL Java_com_limelight_binding_video_SgsrRenderer_
     }
     env->SetLongArrayRegion(out,0,3,result);
     return 0;
+}
+
+// ---- GPU fences for the SDR path: bounding the frames the GPU has in flight ----------------------------------------
+namespace {
+PFNEGLCREATESYNCKHRPROC createSync=nullptr;
+PFNEGLDESTROYSYNCKHRPROC destroySync=nullptr;
+PFNEGLDUPNATIVEFENCEFDANDROIDPROC dupFence=nullptr;
+bool fencesChecked=false,fencesAvailable=false;
+}
+
+// Flushes the commands queued so far and returns a native fence (a sync file descriptor, owned by the caller, closed
+// with nativeGpuFenceClose) that signals when the GPU has executed them. -2: nothing was pending, the work is already
+// done. -1: the driver cannot make native fences.
+extern "C" JNIEXPORT jint JNICALL Java_com_limelight_binding_video_SgsrRenderer_nativeGpuFenceCreate(JNIEnv *,jclass){
+    EGLDisplay display=eglGetCurrentDisplay();
+    if(display==EGL_NO_DISPLAY) return -1;
+    if(!fencesChecked){
+        fencesChecked=true;
+        const char *extensions=eglQueryString(display,EGL_EXTENSIONS);
+        createSync=reinterpret_cast<PFNEGLCREATESYNCKHRPROC>(eglGetProcAddress("eglCreateSyncKHR"));
+        destroySync=reinterpret_cast<PFNEGLDESTROYSYNCKHRPROC>(eglGetProcAddress("eglDestroySyncKHR"));
+        dupFence=reinterpret_cast<PFNEGLDUPNATIVEFENCEFDANDROIDPROC>(eglGetProcAddress("eglDupNativeFenceFDANDROID"));
+        fencesAvailable=extensions&&strstr(extensions,"EGL_ANDROID_native_fence_sync")&&strstr(extensions,"EGL_KHR_fence_sync")
+                &&createSync&&destroySync&&dupFence;
+        __android_log_print(ANDROID_LOG_INFO,"SGSR","GPU fences for the in-flight bound: %s",fencesAvailable?"native":"unavailable");
+    }
+    if(!fencesAvailable) return -1;
+    const EGLint attributes[]={EGL_SYNC_NATIVE_FENCE_FD_ANDROID,EGL_NO_NATIVE_FENCE_FD_ANDROID,EGL_NONE};
+    EGLSyncKHR sync=createSync(display,EGL_SYNC_NATIVE_FENCE_ANDROID,attributes);
+    if(sync==EGL_NO_SYNC_KHR) return -1;
+    // The native fence exists once the commands are flushed
+    glFlush();
+    const int fd=dupFence(display,sync);
+    destroySync(display,sync);
+    return fd>=0?fd:-2;
+}
+
+// -1 while the fence has not signalled, otherwise its signal time (CLOCK_MONOTONIC ns), 0 when the kernel gives none.
+extern "C" JNIEXPORT jlong JNICALL Java_com_limelight_binding_video_SgsrRenderer_nativeGpuFenceStatus(JNIEnv *,jclass,jint fd){
+    if(!sgsr_sync::signalled(fd)) return -1;
+    const int64_t time=sgsr_sync::fenceSignalNs(fd);
+    return time>0?jlong(time):0;
+}
+
+extern "C" JNIEXPORT void JNICALL Java_com_limelight_binding_video_SgsrRenderer_nativeGpuFenceClose(JNIEnv *,jclass,jint fd){
+    if(fd>=0) close(fd);
 }

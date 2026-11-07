@@ -109,8 +109,47 @@ public class FrameQueueTest {
 
     @Test
     public void aStaleWindowIsNotShown() {
-        FrameQueueStats stats = new FrameQueueStats(1, 0, 1f, 1, 1f, 1f, 0, 1f, 5_000 * MS);
+        FrameQueueStats stats = new FrameQueueStats(1, 0, 0, 1f, 1, 1f, 1f, -1f, -1f, 0, 0, 60, 1f, 5_000 * MS);
         assertTrue(stats.isFresh(7_000 * MS));
         assertFalse(stats.isFresh(8_100 * MS));
+    }
+
+    @Test
+    public void framesHeldForABusyGpuAndReplacedAreCountedApartFromCoalescedOnes() {
+        FrameQueue queue = new FrameQueue();
+        queue.recordBusySkip(1_000 * MS);
+        queue.addCoalesced(2);
+        queue.recordGpuWork(8 * MS);
+        queue.recordGpuWork(12 * MS);
+        queue.recordDraw(1_500 * MS, 1, 1 * MS);
+        FrameQueueStats stats = queue.recordBusySkip(2_000 * MS);
+        assertNotNull(stats);
+        assertEquals(2, stats.busySkipped);
+        assertEquals(2, stats.busySkippedTotal);
+        assertEquals(2, stats.skipped);
+        assertEquals(1, stats.draws);
+        assertEquals(10f, stats.gpuAvgMs, 1e-4f);
+        assertEquals(12f, stats.gpuMaxMs, 1e-4f);
+    }
+
+    @Test
+    public void aWindowOfOnlyBusySkipsHasNoPendingAverageAndNoGpuTimeWithoutFences() {
+        FrameQueue queue = new FrameQueue();
+        queue.recordBusySkip(1_000 * MS);
+        FrameQueueStats stats = queue.recordBusySkip(2_000 * MS);
+        assertNotNull(stats);
+        assertEquals(0f, stats.pendingAvg, 0f);
+        assertEquals(-1f, stats.gpuAvgMs, 0f);
+    }
+
+    @Test
+    public void theWindowCountsTheFramesTheDecoderDelivered() {
+        FrameQueue queue = new FrameQueue();
+        queue.recordDraw(1_000 * MS, 1, 0);
+        for (int i = 0; i < 100; i++) queue.onFrameAvailable(1_000 * MS + i);
+        FrameQueueStats stats = queue.recordDraw(2_000 * MS, 1, 0);
+        assertNotNull(stats);
+        assertEquals(100, stats.arrived);
+        assertEquals(100f, stats.arrivedPerSecond(), 1e-3f);
     }
 }

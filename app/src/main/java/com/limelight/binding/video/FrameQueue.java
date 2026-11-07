@@ -10,6 +10,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  * window. The callback counts a frame only after the codec has queued it, so the count never exceeds what the
  * SurfaceTexture really holds.
  *
+ * The window also counts the frames dropped because the GPU still had too much work in flight
+ * ({@link #recordBusySkip}) and the GPU time per frame ({@link #recordGpuWork}).
+ *
  * Threading: {@code onFrameAvailable} has a single writer thread; everything else runs on the GL thread
  * except {@link #snapshot()}, which any thread may read. Nothing here allocates per frame except the
  * published window (about once a second).
@@ -26,9 +29,10 @@ final class FrameQueue {
     // GL thread only
     private int consumed;
     private long windowStartNs;
-    private int draws, skipped, pendingMax, ageCount;
-    private long pendingSum, skippedTotal;
-    private double ageSumMs, ageMaxMs;
+    private int windowArrivedStart;
+    private int draws, skipped, busySkipped, pendingMax, ageCount, gpuCount;
+    private long pendingSum, skippedTotal, busySkippedTotal;
+    private double ageSumMs, ageMaxMs, gpuSumMs, gpuMaxMs;
     private volatile FrameQueueStats snapshot;
 
     /** Callback thread: a frame was queued by the codec. */
@@ -59,7 +63,7 @@ final class FrameQueue {
      * draw closed one, otherwise null.
      */
     FrameQueueStats recordDraw(long nowNs, int pending, long ageNs) {
-        if (windowStartNs == 0) windowStartNs = nowNs;
+        if (windowStartNs == 0) startWindow(nowNs);
         draws++;
         skipped += pending - 1;
         skippedTotal += pending - 1;
@@ -71,15 +75,51 @@ final class FrameQueue {
             ageMaxMs = Math.max(ageMaxMs, ms);
             ageCount++;
         }
-        if (nowNs - windowStartNs < WINDOW_NS) return null;
-        FrameQueueStats stats = new FrameQueueStats(draws, skipped, (float) pendingSum / draws, pendingMax,
-                ageCount > 0 ? (float) (ageSumMs / ageCount) : -1f, ageCount > 0 ? (float) ageMaxMs : -1f,
-                skippedTotal, (nowNs - windowStartNs) / 1e9f, nowNs);
-        snapshot = stats;
+        return closeWindowIfDue(nowNs);
+    }
+
+    /** Frames consumed together with a newer one and not drawn, when no draw follows (the GPU is busy). */
+    void addCoalesced(int frames) {
+        skipped += frames;
+        skippedTotal += frames;
+    }
+
+    /**
+     * A frame that was held back because the GPU was busy has been replaced by a newer one and will never be drawn.
+     * Returns the finished window when this closed one, otherwise null.
+     */
+    FrameQueueStats recordBusySkip(long nowNs) {
+        if (windowStartNs == 0) startWindow(nowNs);
+        busySkipped++;
+        busySkippedTotal++;
+        return closeWindowIfDue(nowNs);
+    }
+
+    /** One frame's GPU execution time in nanoseconds (from its fences, a few frames after the draw). */
+    void recordGpuWork(long ns) {
+        double ms = ns / 1_000_000.0;
+        gpuSumMs += ms;
+        gpuMaxMs = Math.max(gpuMaxMs, ms);
+        gpuCount++;
+    }
+
+    private void startWindow(long nowNs) {
         windowStartNs = nowNs;
-        draws = skipped = pendingMax = ageCount = 0;
+        windowArrivedStart = arrived.get();
+    }
+
+    private FrameQueueStats closeWindowIfDue(long nowNs) {
+        if (nowNs - windowStartNs < WINDOW_NS) return null;
+        int arrivedNow = arrived.get();
+        FrameQueueStats stats = new FrameQueueStats(draws, skipped, busySkipped, draws > 0 ? (float) pendingSum / draws : 0f,
+                pendingMax, ageCount > 0 ? (float) (ageSumMs / ageCount) : -1f, ageCount > 0 ? (float) ageMaxMs : -1f,
+                gpuCount > 0 ? (float) (gpuSumMs / gpuCount) : -1f, gpuCount > 0 ? (float) gpuMaxMs : -1f,
+                skippedTotal, busySkippedTotal, arrivedNow - windowArrivedStart, (nowNs - windowStartNs) / 1e9f, nowNs);
+        snapshot = stats;
+        startWindow(nowNs);
+        draws = skipped = busySkipped = pendingMax = ageCount = gpuCount = 0;
         pendingSum = 0;
-        ageSumMs = ageMaxMs = 0;
+        ageSumMs = ageMaxMs = gpuSumMs = gpuMaxMs = 0;
         return stats;
     }
 
