@@ -200,6 +200,14 @@ public final class NanoPacer {
     }
 
 
+    /**
+     * Time the output stage spends on a frame after its release (the SGSR GL thread's frame-available to swap time),
+     * in ns; 0 when frames go straight to the display. Fast V-Sync releases the frame that much earlier, see
+     * {@link SgsrPacing}.
+     */
+    public void setRenderWorkNs(long workNs) { renderWorkNs = Math.max(0L, workNs); }
+    private volatile long renderWorkNs = 0L;
+
     // Cooperative nano-pacing: keep draining while waiting to avoid decoder output backpressure.
     // Returns how many extra outputs were drained (and dropped) while waiting.
     public int waitAndDrainLatest(MediaCodec.BufferInfo info, LatestOutput latest, OutputCallbacks cb) {
@@ -211,13 +219,16 @@ public final class NanoPacer {
 
         int drainedExtra = 0;
 
+        final long leadNs = SgsrPacing.leadNs(renderWorkNs, framePeriodNs);
         long targetNs = computeTargetNs(latest.ptsUs, framePeriodNs);
 
         for (;;) {
             if (!oneToOne || Thread.currentThread().isInterrupted()) break;
 
             final long nowNs = clock.getAsLong();
-            final long remainingNs = targetNs - nowNs;
+            // The phase bookkeeping keeps the display target; only the moment of the release moves earlier
+            final long releaseNs = SgsrPacing.releaseTimeNs(targetNs, nowNs, leadNs);
+            final long remainingNs = releaseNs - nowNs;
             if (remainingNs <= 0L) break;
 
             // Drain any ready outputs without blocking, keep only the newest.
@@ -253,7 +264,7 @@ public final class NanoPacer {
                 if (sliceNs > 0L) LockSupport.parkNanos(sliceNs);
             } else {
                 // Final fine spin
-                while (oneToOne && !Thread.currentThread().isInterrupted() && clock.getAsLong() < targetNs) { /* at most 100 us */ }
+                while (oneToOne && !Thread.currentThread().isInterrupted() && clock.getAsLong() < releaseNs) { /* at most 100 us */ }
                 break;
             }
         }

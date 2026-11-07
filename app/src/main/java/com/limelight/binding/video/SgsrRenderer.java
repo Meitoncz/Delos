@@ -61,6 +61,7 @@ public final class SgsrRenderer implements AutoCloseable {
     private volatile int activePresentationWidth, activePresentationHeight;
     private Integer drawnQuality;
     private volatile float gpuTimeMs;
+    private volatile float frameToSwapMs;
     private volatile boolean firstFramePresented;
     private int highQualityProgram;
     private int temporalPresentProgram;
@@ -573,8 +574,10 @@ public final class SgsrRenderer implements AutoCloseable {
                 return;
             }
             presentCachedNormal();
-            if (sharpenMeter != null) sharpenMeter.tick(System.nanoTime(),sharpenOnly,sharpenDescription);
-            float elapsedMs=(System.nanoTime()-processingStartNs)/1_000_000f;
+            final long swapEndNs=System.nanoTime();
+            frameToSwapMs=SgsrPacing.smooth(frameToSwapMs,(swapEndNs-frameQueue.lastConsumedArrivalNs())/1_000_000f);
+            if (sharpenMeter != null) sharpenMeter.tick(swapEndNs,sharpenOnly,sharpenDescription);
+            float elapsedMs=(swapEndNs-processingStartNs)/1_000_000f;
             gpuTimeMs=gpuTimeMs==0f?elapsedMs:gpuTimeMs*.8f+elapsedMs*.2f;
             consecutiveDrawFailures=0;
         } catch (RuntimeException e) {
@@ -796,6 +799,13 @@ public final class SgsrRenderer implements AutoCloseable {
 
     /** Smoothed wall time of the completed SGSR processing path, excluding decode. */
     public float getGpuTimeMs() { return gpuTimeMs; }
+    /**
+     * Smoothed time from the decoder's frame-available callback to the end of the swap call, in milliseconds: the
+     * time a frame spends in the output stage after the pacer released it. On the SDR path the swap only queues the
+     * work, so this is submit time, not GPU completion; the HDR path waits for the GPU inside it. 0 before the
+     * first frame.
+     */
+    public float getFrameToSwapMs() { return frameToSwapMs; }
 
     private void ensureSupersampleTarget(int width, int height) {
         if (supersampleTexture != 0 && supersampleWidth == width && supersampleHeight == height) return;

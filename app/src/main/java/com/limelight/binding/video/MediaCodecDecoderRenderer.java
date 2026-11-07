@@ -1868,6 +1868,11 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
 
                                 if (prefs.framePacing == PreferenceConfiguration.FRAME_PACING_FAST_VSYNC) {
                                     nanoPacer.updatePacingMode(true, refreshRate, activity.getWindowManager().getDefaultDisplay().getRefreshRate());
+                                    // With SGSR the frame is on screen only after the GL thread has processed it: release earlier.
+                                    // Balanced is not adjusted: its release time is the Choreographer callback, and the SGSR
+                                    // consumer ignores the release timestamp.
+                                    SgsrRenderer pacingSgsr = sgsr;
+                                    nanoPacer.setRenderWorkNs(pacingSgsr != null ? (long) (pacingSgsr.getFrameToSwapMs() * 1_000_000f) : 0L);
                                     nanoLatest.index = lastIndex;
                                     nanoLatest.ptsUs = presentationTimeUs;
                                     nanoLatest.dequeueNs = dequeueNs;
