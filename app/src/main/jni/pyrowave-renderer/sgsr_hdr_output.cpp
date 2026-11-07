@@ -17,6 +17,11 @@
 #include <memory>
 #include <mutex>
 #include <type_traits>
+#include <algorithm>
+#include <cstring>
+#include <ctime>
+#include <sys/ioctl.h>
+#include <linux/sync_file.h>
 
 namespace {
 struct Api {
@@ -80,7 +85,20 @@ struct Output {
     GLuint textures[4]={}, framebuffers[4]={};
     int width=0,height=0,parentWidth=0,parentHeight=0,current=-1,previous=-1;
     PFNEGLDESTROYIMAGEKHRPROC destroyImage=nullptr;
+    // Native fence hand-over (EGL_ANDROID_native_fence_sync); without it the frame is finished with glFinish
+    PFNEGLCREATESYNCKHRPROC createSync=nullptr;
+    PFNEGLDESTROYSYNCKHRPROC destroySync=nullptr;
+    PFNEGLDUPNATIVEFENCEFDANDROIDPROC dupFence=nullptr;
+    bool nativeFence=false;
+    // Fences of frames in flight (GL thread only), and the GPU tails harvested since Java last asked
+    struct Timing{int fd=-1;int64_t submitNs=0;};
+    static constexpr int kTimings=8,kTails=16;
+    Timing timings[kTimings];
+    int timingHead=0,timingCount=0;
+    int64_t tails[kTails]={};
+    int tailCount=0;
     ~Output() {
+        for(auto &timing:timings)if(timing.fd>=0)close(timing.fd);
         if(pool->control){
             auto *t=pool->api.transaction();
             pool->api.visible(t,pool->control,ASURFACE_TRANSACTION_VISIBILITY_HIDE);
@@ -109,6 +127,12 @@ struct Output {
         destroyImage=reinterpret_cast<PFNEGLDESTROYIMAGEKHRPROC>(eglGetProcAddress("eglDestroyImageKHR"));
         auto imageTexture=reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(eglGetProcAddress("glEGLImageTargetTexture2DOES"));
         if(!nativeBuffer||!createImage||!destroyImage||!imageTexture)return false;
+        const char *eglExtensions=eglQueryString(display,EGL_EXTENSIONS);
+        createSync=reinterpret_cast<PFNEGLCREATESYNCKHRPROC>(eglGetProcAddress("eglCreateSyncKHR"));
+        destroySync=reinterpret_cast<PFNEGLDESTROYSYNCKHRPROC>(eglGetProcAddress("eglDestroySyncKHR"));
+        dupFence=reinterpret_cast<PFNEGLDUPNATIVEFENCEFDANDROIDPROC>(eglGetProcAddress("eglDupNativeFenceFDANDROID"));
+        nativeFence=eglExtensions&&strstr(eglExtensions,"EGL_ANDROID_native_fence_sync")&&strstr(eglExtensions,"EGL_KHR_fence_sync")
+                &&createSync&&destroySync&&dupFence;
         AHardwareBuffer_Desc desc={};desc.width=width;desc.height=height;desc.layers=1;
         desc.format=AHARDWAREBUFFER_FORMAT_YCbCr_P010;
         desc.usage=AHARDWAREBUFFER_USAGE_GPU_COLOR_OUTPUT|AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE|AHARDWAREBUFFER_USAGE_COMPOSER_OVERLAY;
@@ -140,13 +164,73 @@ struct Output {
         }
         return -1; // Drop instead of reusing a buffer SurfaceFlinger might still be reading.
     }
+    // The signal time of a sync file's last fence in CLOCK_MONOTONIC ns, 0 when the kernel does not say.
+    static int64_t fenceSignalNs(int fd) {
+        struct sync_file_info info={};
+        if(ioctl(fd,SYNC_IOC_FILE_INFO,&info)<0||info.num_fences==0) return 0;
+        struct sync_fence_info fences[8];
+        info.num_fences=std::min<uint32_t>(info.num_fences,8);
+        info.sync_fence_info=reinterpret_cast<uint64_t>(fences);
+        if(ioctl(fd,SYNC_IOC_FILE_INFO,&info)<0) return 0;
+        uint64_t latest=0;
+        for(uint32_t i=0;i<info.num_fences;i++) latest=std::max<uint64_t>(latest,fences[i].timestamp_ns);
+        return int64_t(latest);
+    }
+    static int64_t monotonicNs() {
+        timespec now={};clock_gettime(CLOCK_MONOTONIC,&now);
+        return int64_t(now.tv_sec)*1000000000LL+now.tv_nsec;
+    }
+    // Collects the GPU-completion times of earlier frames whose fences have signalled (in submission order). The
+    // time from the flush to the signal is how long the GPU kept working after the CPU had submitted the frame.
+    void harvest() {
+        while(timingCount>0){
+            Timing &timing=timings[timingHead];
+            pollfd poller={timing.fd,POLLIN,0};
+            if(poll(&poller,1,0)<=0) break;
+            const int64_t done=fenceSignalNs(timing.fd);
+            if(done>=timing.submitNs&&tailCount<kTails) tails[tailCount++]=done-timing.submitNs;
+            close(timing.fd);timing.fd=-1;
+            timingHead=(timingHead+1)%kTimings;timingCount--;
+        }
+    }
+    // Keeps a duplicate of the frame's fence for harvest(); when the ring is full the oldest is dropped.
+    void track(int fd,int64_t submitNs) {
+        if(timingCount==kTimings){close(timings[timingHead].fd);timingHead=(timingHead+1)%kTimings;timingCount--;}
+        Timing &slot=timings[(timingHead+timingCount)%kTimings];
+        slot.fd=fd;slot.submitNs=submitNs;timingCount++;
+    }
+    // Flushes the frame and returns a native fence for it, or -1 when the driver cannot make one and the GPU
+    // had to be waited for instead (glFinish), which is the safe way to hand the buffer over without a fence.
+    int flushWithFence() {
+        if(nativeFence){
+            const EGLint attributes[]={EGL_SYNC_NATIVE_FENCE_FD_ANDROID,EGL_NO_NATIVE_FENCE_FD_ANDROID,EGL_NONE};
+            EGLSyncKHR sync=createSync(display,EGL_SYNC_NATIVE_FENCE_ANDROID,attributes);
+            // The native fence exists once the commands are flushed
+            glFlush();
+            if(sync!=EGL_NO_SYNC_KHR){
+                const int fd=dupFence(display,sync);
+                destroySync(display,sync);
+                if(fd>=0) return fd;
+            }
+        }
+        glFinish();
+        return -1;
+    }
     void present(JNIEnv *env,jboolean hdr,jbyteArray metadata) {
         if(current<0)return;
-        // Synchronize this GPU submission before giving its buffer to SurfaceFlinger. Release fences
-        // separately protect subsequent reuse; no CPU pixel copy or eight-bit intermediate is used.
-        glFinish();
+        harvest();
+        // The buffer goes to SurfaceFlinger with the fence of this frame's GPU work, so it reads the picture only
+        // once it is complete and the GL thread does not wait for the GPU. Release fences separately protect the
+        // reuse of a buffer; no CPU pixel copy or eight-bit intermediate is used.
+        const int64_t submitNs=monotonicNs();
+        const int fence=flushWithFence();
+        if(fence>=0){
+            const int own=dup(fence);
+            if(own>=0) track(own,submitNs);
+        }
         auto &api=pool->api;auto *t=api.transaction();
-        api.buffer(t,pool->control,pool->buffers[current],-1);
+        // The transaction owns the fence descriptor from here on
+        api.buffer(t,pool->control,pool->buffers[current],fence);
         api.dataspace(t,pool->control,hdr?ADATASPACE_BT2020_ITU_PQ:ADATASPACE_BT709);
         const ARect source={0,0,width,height};
         const ARect dest={0,0,parentWidth,parentHeight};
@@ -178,3 +262,11 @@ extern "C" JNIEXPORT jint JNICALL Java_com_limelight_binding_video_SgsrRenderer_
 extern "C" JNIEXPORT jint JNICALL Java_com_limelight_binding_video_SgsrRenderer_nativeHdrHeight(JNIEnv *,jclass,jlong handle){return reinterpret_cast<Output *>(handle)->height;}
 extern "C" JNIEXPORT void JNICALL Java_com_limelight_binding_video_SgsrRenderer_nativePresentHdr(JNIEnv *env,jclass,jlong handle,jboolean hdr,jbyteArray metadata){reinterpret_cast<Output *>(handle)->present(env,hdr,metadata);}
 extern "C" JNIEXPORT void JNICALL Java_com_limelight_binding_video_SgsrRenderer_nativeDestroyHdr(JNIEnv *,jclass,jlong handle){delete reinterpret_cast<Output *>(handle);}
+extern "C" JNIEXPORT jint JNICALL Java_com_limelight_binding_video_SgsrRenderer_nativeHdrGpuTails(JNIEnv *env,jclass,jlong handle,jlongArray out){
+    auto *output=reinterpret_cast<Output *>(handle);
+    const jsize capacity=env->GetArrayLength(out);
+    const int count=std::min<int>(output->tailCount,capacity);
+    if(count>0)env->SetLongArrayRegion(out,0,count,reinterpret_cast<const jlong *>(output->tails));
+    output->tailCount=0;
+    return count;
+}

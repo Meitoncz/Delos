@@ -62,6 +62,9 @@ public final class SgsrRenderer implements AutoCloseable {
     private Integer drawnQuality;
     private volatile float gpuTimeMs;
     private volatile float frameToSwapMs;
+    // HDR output: smoothed time the GPU worked on a frame after it was submitted, and the scratch for reading it
+    private float hdrGpuTailMs;
+    private final long[] hdrGpuTails = new long[16];
     private volatile boolean firstFramePresented;
     private int highQualityProgram;
     private int temporalPresentProgram;
@@ -575,9 +578,14 @@ public final class SgsrRenderer implements AutoCloseable {
             }
             presentCachedNormal();
             final long swapEndNs=System.nanoTime();
-            frameToSwapMs=SgsrPacing.smooth(frameToSwapMs,(swapEndNs-frameQueue.lastConsumedArrivalNs())/1_000_000f);
+            if (tenBit && hdrOutput!=0) collectHdrGpuTails();
+            // The HDR swap hands over a native fence instead of waiting for the GPU, so the time the GPU kept
+            // working after the submit (measured from the fences of earlier frames) is added to keep both figures
+            // GPU-inclusive as they were with glFinish
+            final float gpuTailMs=tenBit ? hdrGpuTailMs : 0f;
+            frameToSwapMs=SgsrPacing.smooth(frameToSwapMs,(swapEndNs-frameQueue.lastConsumedArrivalNs())/1_000_000f+gpuTailMs);
             if (sharpenMeter != null) sharpenMeter.tick(swapEndNs,sharpenOnly,sharpenDescription);
-            float elapsedMs=(swapEndNs-processingStartNs)/1_000_000f;
+            float elapsedMs=(swapEndNs-processingStartNs)/1_000_000f+gpuTailMs;
             gpuTimeMs=gpuTimeMs==0f?elapsedMs:gpuTimeMs*.8f+elapsedMs*.2f;
             consecutiveDrawFailures=0;
         } catch (RuntimeException e) {
@@ -797,15 +805,21 @@ public final class SgsrRenderer implements AutoCloseable {
         arrivalTemporalProgram = arrivalPresentProgram = arrivalSharpenProgram = 0;
     }
 
-    /** Smoothed wall time of the completed SGSR processing path, excluding decode. */
+    /** Smoothed wall time of the completed SGSR processing path, excluding decode (HDR: including the GPU tail). */
     public float getGpuTimeMs() { return gpuTimeMs; }
     /**
      * Smoothed time from the decoder's frame-available callback to the end of the swap call, in milliseconds: the
      * time a frame spends in the output stage after the pacer released it. On the SDR path the swap only queues the
-     * work, so this is submit time, not GPU completion; the HDR path waits for the GPU inside it. 0 before the
-     * first frame.
+     * work, so this is submit time, not GPU completion. The HDR path adds the time the GPU kept working after the
+     * submit, read from the native fences of earlier frames. 0 before the first frame.
      */
     public float getFrameToSwapMs() { return frameToSwapMs; }
+
+    /** Folds the GPU tails the native output harvested from signalled fences into the smoothed figure. */
+    private void collectHdrGpuTails() {
+        int count = nativeHdrGpuTails(hdrOutput,hdrGpuTails);
+        for (int i=0;i<count;i++) hdrGpuTailMs = SgsrPacing.smooth(hdrGpuTailMs,hdrGpuTails[i]/1_000_000f);
+    }
 
     private void ensureSupersampleTarget(int width, int height) {
         if (supersampleTexture != 0 && supersampleWidth == width && supersampleHeight == height) return;
@@ -924,5 +938,6 @@ public final class SgsrRenderer implements AutoCloseable {
     private static native int nativeHdrWidth(long handle);
     private static native int nativeHdrHeight(long handle);
     private static native void nativePresentHdr(long handle,boolean hdr,byte[] metadata);
+    private static native int nativeHdrGpuTails(long handle,long[] out);
     private static native void nativeDestroyHdr(long handle);
 }
