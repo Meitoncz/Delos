@@ -9,7 +9,7 @@ object AnimatedWebp {
     const val HEADER_BYTES = 30
 
     /** The largest canvas that is played (a 3840 × 1240 hero is 4.8 million pixels). */
-    const val MAX_PIXELS = 8_000_000L
+    const val MAX_PIXELS = 100_000_000L
 
     private const val FLAGS = 20
     private const val ANIMATION_FLAG = 0x02

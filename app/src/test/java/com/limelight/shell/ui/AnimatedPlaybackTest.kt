@@ -20,15 +20,6 @@ class AnimatedPlaybackTest {
         assertFalse(play(off = true))
     }
 
-    @Test fun aScreenfulOfVisibleTilesPlaysAndTheRestWaits() {
-        assertEquals(setOf(3, 5, 8), AnimatedPlayback.tilesToPlay(listOf(3, 5, 8)))
-        val many = (1..30).toList()
-        assertEquals(AnimatedPlayback.MAX_TILES, AnimatedPlayback.tilesToPlay(many).size)
-        assertEquals((1..AnimatedPlayback.MAX_TILES).toSet(), AnimatedPlayback.tilesToPlay(many))
-        assertEquals(setOf(1, 2), AnimatedPlayback.tilesToPlay(many, limit = 2))
-        assertTrue(AnimatedPlayback.tilesToPlay(emptyList<Int>()).isEmpty())
-    }
-
     @Test fun framesAreDecodedAtTileSizeNeverEnlarged() {
         assertEquals(520 to 300, AnimatedPlayback.decodeSize(1040, 600, 520))
         assertEquals(342 to 482, AnimatedPlayback.decodeSize(342, 482, 520))

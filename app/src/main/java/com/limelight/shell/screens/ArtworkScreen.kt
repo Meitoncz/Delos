@@ -355,7 +355,7 @@ fun ArtworkScreen(screen: Screen.Artwork) {
     val visibleAnimated by remember(grid, animatedIds) {
         derivedStateOf { grid.layoutInfo.visibleItemsInfo.mapNotNull { info -> (info.key as? Int)?.takeIf { it in animatedIds } } }
     }
-    val playing = if (motion) AnimatedPlayback.tilesToPlay(visibleAnimated) else emptySet()
+    val playing = if (motion) visibleAnimated.toSet() else emptySet()
     val ticker = rememberAnimationTicker(playing.isNotEmpty())
 
     Box(Modifier.fillMaxSize()) {
@@ -853,11 +853,11 @@ private fun ChoiceTile(
 @Composable
 private fun AnimatedTileLayer(image: SgdbImage, playing: Boolean, ticker: AnimationTicker) {
     val store = LocalArtwork.current
-    val bytes by produceState(Thumbnails.cachedAnimation(image), image.id, playing) {
+    val file by produceState(Thumbnails.cachedAnimation(image), image.id, playing) {
         // Fetched the first time the tile is allowed to play, then kept
         if (value == null && playing && !Thumbnails.hasNoAnimation(image)) value = Thumbnails.loadAnimation(store.http, image)
     }
-    val source = remember(bytes) { bytes?.let { AnimatedSource.OfBytes(it) } }
+    val source = remember(file) { file?.let { AnimatedSource.OfFile(it) } }
     val drawable = rememberAnimatedDrawable(source, playing, AnimatedPlayback.TILE_WIDTH, ticker)
     if (drawable != null) AnimatedDrawableView(drawable, ticker, Modifier.fillMaxSize())
 }

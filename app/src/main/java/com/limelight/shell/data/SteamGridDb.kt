@@ -33,6 +33,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
+import java.security.MessageDigest
 import java.io.IOException
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
@@ -215,6 +216,7 @@ class ArtworkStore(context: Context) {
     private val appContext = context.applicationContext
     private val prefs = PreferenceManager.getDefaultSharedPreferences(appContext)
     private val root = File(appContext.filesDir, "artwork")
+    init { Thumbnails.init(appContext.cacheDir) }
     val http: OkHttpClient = OkHttpClient.Builder().connectTimeout(10, TimeUnit.SECONDS).readTimeout(30, TimeUnit.SECONDS).build()
     private val gson = Gson()
     private val memory = object : LruCache<String, ArtworkResult>(MEMORY_KIB) {
@@ -574,67 +576,105 @@ object Thumbnails {
         if (looksRemoved(pixels)) removed[url] = true
     }
 
-    suspend fun load(http: OkHttpClient, url: String): ImageBitmap? = withContext(Dispatchers.IO) {
-        memory.get(url)?.let { return@withContext it }
-        network.withPermit {
+    /** Where downloaded previews are kept: files, so a 100 MB animation never sits in the heap. Set once by [ArtworkStore]. */
+    @Volatile private var dir: File? = null
+
+    internal fun init(cache: File) {
+        dir = File(cache, "sgdb-preview").apply { mkdirs() }
+    }
+
+    private const val MAX_PREVIEW_BYTES = 2048L * 1024 * 1024
+    private const val DISK_BUDGET_BYTES = 2048L * 1024 * 1024
+
+    private fun fileFor(url: String): File? = dir?.let { File(it, MessageDigest.getInstance("SHA-1").digest(url.toByteArray()).joinToString("") { b -> "%02x".format(b) }) }
+
+    /** [url] as a file of at most [MAX_PREVIEW_BYTES] (kept on disk, the oldest files dropped past [DISK_BUDGET_BYTES]); null when it cannot be had. */
+    private suspend fun download(http: OkHttpClient, url: String): File? {
+        val file = fileFor(url) ?: return null
+        if (file.length() > 0L) {
+            file.setLastModified(System.currentTimeMillis())
+            return file
+        }
+        return network.withPermit {
             runCatching {
                 http.newCall(Request.Builder().url(url).build()).execute().use { response ->
                     if (!response.isSuccessful) return@use null
-                    val bytes = response.body.bytes()
-                    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-                    BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
-                    var sample = 1
-                    while (bounds.outWidth / (sample * 2) >= 520) sample *= 2
-                    BitmapFactory.decodeByteArray(bytes, 0, bytes.size, BitmapFactory.Options().apply { inSampleSize = sample })?.asImageBitmap()
+                    val body = response.body
+                    if (body.contentLength() > MAX_PREVIEW_BYTES) return@use null
+                    val tmp = File(file.path + ".part")
+                    var written = 0L
+                    body.byteStream().use { input ->
+                        tmp.outputStream().use { out ->
+                            val buffer = ByteArray(64 * 1024)
+                            while (true) {
+                                val n = input.read(buffer)
+                                if (n < 0) break
+                                written += n
+                                if (written > MAX_PREVIEW_BYTES) { tmp.delete(); return@use null }
+                                out.write(buffer, 0, n)
+                            }
+                        }
+                    }
+                    if (!tmp.renameTo(file)) { tmp.delete(); return@use null }
+                    trimDisk(file.parentFile)
+                    file
                 }
             }.getOrNull()
-        }?.also {
+        }
+    }
+
+    private fun trimDisk(folder: File?) {
+        val files = folder?.listFiles()?.filter { it.isFile } ?: return
+        var total = files.sumOf { it.length() }
+        for (f in files.sortedBy { it.lastModified() }) {
+            if (total <= DISK_BUDGET_BYTES) break
+            total -= f.length()
+            f.delete()
+        }
+    }
+
+    suspend fun load(http: OkHttpClient, url: String): ImageBitmap? = withContext(Dispatchers.IO) {
+        memory.get(url)?.let { return@withContext it }
+        val file = download(http, url) ?: return@withContext null
+        runCatching {
+            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeFile(file.path, bounds)
+            var sample = 1
+            while (bounds.outWidth / (sample * 2) >= 520) sample *= 2
+            BitmapFactory.decodeFile(file.path, BitmapFactory.Options().apply { inSampleSize = sample })?.asImageBitmap()
+        }.getOrNull()?.also {
             memory.put(url, it)
             runCatching { checkRemoved(url, it) }
         }
     }
 
-    /** Animated WebP files of the choices (whole files, bounded), the empty array standing for "known not to be animated". */
-    private val animations = object : LruCache<String, ByteArray>(64 * 1024) {
-        override fun sizeOf(key: String, value: ByteArray) = maxOf(1, value.size / 1024)
-    }
-    private const val THUMB_ANIMATION_BYTES = 3 * 1024 * 1024
-    private const val FULL_ANIMATION_BYTES = 10 * 1024 * 1024
+    /** URLs whose file is known to be (true) or not to be (false) an animated WebP the app can play. */
+    private val animatedKnown = java.util.concurrent.ConcurrentHashMap<String, Boolean>()
 
-    /** The cached animation of [image] (null: not known yet), an empty array when it has none. */
-    fun cachedAnimation(image: SgdbImage): ByteArray? = animations.get(image.previewUrl)?.takeIf { it.isNotEmpty() }
-        ?: animations.get(image.url)?.takeIf { it.isNotEmpty() }
+    /** The playable animation of [image] when it was already fetched (null: not known yet or none). */
+    fun cachedAnimation(image: SgdbImage): File? = listOf(image.previewUrl, image.url).firstOrNull { animatedKnown[it] == true }?.let { fileFor(it)?.takeIf { f -> f.length() > 0L } }
 
-    /** Whether loading [image]'s animation was tried and found nothing to play (the tile keeps its first frame). */
-    fun hasNoAnimation(image: SgdbImage): Boolean = animations.get(image.previewUrl)?.isEmpty() == true &&
-        (image.mime != "image/webp" || image.url == image.previewUrl || animations.get(image.url)?.isEmpty() == true)
+    /** Whether [image]'s animation was tried and found nothing to play (the tile keeps its first frame). */
+    fun hasNoAnimation(image: SgdbImage): Boolean = animatedKnown[image.previewUrl] == false &&
+        (image.mime != "image/webp" || image.url == image.previewUrl || animatedKnown[image.url] == false)
 
     /**
-     * The animated WebP of [image] ([SgdbImage.animated]) to play in its tile: its thumbnail when that is animated,
-     * else the full file when it is a small WebP; null when neither is.
+     * The animated WebP file of [image] ([SgdbImage.animated]) to play in its tile: its preview (the full file when the
+     * thumbnail is a WebM), else the full file when that is a WebP; null when neither is playable.
      */
-    suspend fun loadAnimation(http: OkHttpClient, image: SgdbImage): ByteArray? = withContext(Dispatchers.IO) {
+    suspend fun loadAnimation(http: OkHttpClient, image: SgdbImage): File? = withContext(Dispatchers.IO) {
         if (!image.animated) return@withContext null
         cachedAnimation(image)?.let { return@withContext it }
-        fetchAnimation(http, image.previewUrl, if (image.previewUrl == image.url) FULL_ANIMATION_BYTES else THUMB_ANIMATION_BYTES)
-            ?: if (image.mime == "image/webp" && image.url != image.previewUrl) fetchAnimation(http, image.url, FULL_ANIMATION_BYTES) else null
+        probe(http, image.previewUrl)
+            ?: if (image.mime == "image/webp" && image.url != image.previewUrl) probe(http, image.url) else null
     }
 
-    private suspend fun fetchAnimation(http: OkHttpClient, url: String, limit: Int): ByteArray? {
-        animations.get(url)?.let { return it.takeIf { b -> b.isNotEmpty() } }
-        val bytes = network.withPermit {
-            runCatching {
-                http.newCall(Request.Builder().url(url).build()).execute().use { response ->
-                    if (!response.isSuccessful) return@use null
-                    val body = response.body
-                    if (body.contentLength() > limit) return@use ByteArray(0)
-                    AnimatedWebp.read(body.byteStream(), limit + 1).takeIf { it.size <= limit } ?: ByteArray(0)
-                }
-            }.getOrNull()
-        } ?: return null
-        val result = if (AnimatedWebp.isAnimated(bytes) && AnimatedWebp.pixels(bytes) in 1..AnimatedWebp.MAX_PIXELS) bytes else ByteArray(0)
-        animations.put(url, result)
-        return result.takeIf { it.isNotEmpty() }
+    private suspend fun probe(http: OkHttpClient, url: String): File? {
+        val file = download(http, url) ?: return null
+        val header = runCatching { file.inputStream().use { AnimatedWebp.read(it, AnimatedWebp.HEADER_BYTES) } }.getOrNull() ?: return null
+        val playable = AnimatedWebp.isAnimated(header) && AnimatedWebp.pixels(header) in 1..AnimatedWebp.MAX_PIXELS
+        animatedKnown[url] = playable
+        return file.takeIf { playable }
     }
 }
 

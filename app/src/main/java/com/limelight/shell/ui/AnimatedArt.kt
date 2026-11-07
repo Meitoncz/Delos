@@ -35,9 +35,6 @@ import java.nio.ByteBuffer
  * nothing runs where it cannot be seen.
  */
 object AnimatedPlayback {
-    /** One screenful of picker tiles (7 covers per row, two rows) plays at most. */
-    const val MAX_TILES = 14
-
     /** The most pixels a decoded frame of a picker tile has across. */
     const val TILE_WIDTH = 520
 
@@ -52,8 +49,6 @@ object AnimatedPlayback {
         visible && foreground && !streaming && !reducedMotion && !animatorsOff
 
     /** The keys of the animated tiles that play: those in [visibleAnimated] (in screen order), at most [limit]. */
-    fun <K> tilesToPlay(visibleAnimated: List<K>, limit: Int = MAX_TILES): Set<K> = visibleAnimated.take(limit).toSet()
-
     /** The size a [width] × [height] image is decoded at: [maxWidth] across at most, never enlarged, the shape kept. */
     fun decodeSize(width: Int, height: Int, maxWidth: Int): Pair<Int, Int> {
         if (width <= 0 || height <= 0) return 1 to 1
