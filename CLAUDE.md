@@ -13,6 +13,12 @@ Android client for streaming games from **Vibepollo** (a fork of Apollo/Sunshine
   recurring maintenance. Do not create or maintain Markdown TODOs, roadmaps or local task indexes.
   Technical specifications and dated evidence may remain in Markdown, but never duplicate live
   status or a task queue. Completed/historical work must not become new open issues.
+- **Every new issue is placed in the roadmap immediately** (rule from the user, 2026-11-08): when a new idea or issue is opened,
+  give it a milestone (the roadmap checkpoint: M4 PyroWave extensions and video verification, M6 Code health, M7 More devices and
+  languages, After publication, Research and ideas; milestones that are finished are closed, open a new one only if no existing
+  one fits) and the matching labels (type: feature/idea/research/maintenance/testing/bug; area: ui/controls/pyrowave/quality/host/
+  platform/upstream; state when relevant: needs-decision/blocked/deferred/conditional/recurring). Never leave an open issue
+  without a milestone; check `gh issue list --state open --json number,milestone` for `null` after creating one.
 - Read the latest issue description, comments, Project fields and dependencies before starting.
   Record decisions, exercised checks and the completion commit in English; close only when the
   actual criteria are met. An issue is not automatic approval to implement or redesign.
