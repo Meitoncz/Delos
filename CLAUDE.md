@@ -57,4 +57,4 @@ When merging Moonlight, do each phase in its own branch (`update/common-c`, `upd
 ## Devices
 
 - Test device: **AYN Odin 2 Portal Max** (Android 13, 1920×1080 landscape), wireless ADB – find it with `adb mdns services`, install the `arm64-v8a` APK
-- Testing uses both the Odin and the emulator (AVD `Odin2_Portal_Max`, 1920×1080, start with `emulator -avd Odin2_Portal_Max -gpu host`).
+- Streaming and performance are tested only on the Odin. The emulator (AVD, start with `emulator -avd <name> -gpu host`) is for layout and responsiveness work only: screen shapes, aspect ratios, dual-display devices with the concrete resolution of each display (decision 2026-11-08).
