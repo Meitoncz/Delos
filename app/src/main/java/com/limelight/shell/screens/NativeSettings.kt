@@ -50,7 +50,15 @@ internal data class SettingsItem(
 
 /** The choice names a setting can be found by, besides its own texts. */
 internal fun settingSearchTerms(spec: SettingSpec): String =
-    spec.choices.joinToString(" ") { "${it.label} ${SettingsHelp.choice(spec.key, it.value)}" }
+    (spec.choices.map { "${it.label} ${SettingsHelp.choice(spec.key, it.value)}" } + listOfNotNull(RENAMED_SEARCH_TERMS[spec.key]))
+        .joinToString(" ")
+
+/** The earlier names of renamed rows, so searching for them still finds the row. */
+private val RENAMED_SEARCH_TERMS = mapOf(
+    "checkbox_gamepad_motion_sensors" to "allow use of gamepad motion sensors motion sensor",
+    "checkbox_gamepad_motion_fallback" to "emulate gamepad motion sensor support motion sensors",
+    "checkbox_force_device_motion" to "always use device's motion sensors motion sensors",
+)
 
 /** The settings whose texts contain every word of [query], in any order and case. */
 internal fun searchSettings(items: List<SettingsItem>, query: String): List<SettingsItem> {

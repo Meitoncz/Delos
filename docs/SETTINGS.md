@@ -122,6 +122,23 @@ its on/off, mode, sharpness and supersampling rows return all-`NONE` (dimmed chi
 | Upscaler sharpness | 0 none, else Low | 0 none, else Low | none |
 | Supersampling quality | SGSR2-DV like the mode at that level; SGSR 1: 2x Medium, 1.33x Low | as the mode | none |
 
+## Motion rows and Gyro smoothing (#77)
+
+The motion rows of Controls → Gamepad keep their preference keys (stored values, profiles) and have these names:
+
+| Key | Row |
+|---|---|
+| `checkbox_gamepad_motion_sensors` | External gamepad gyroscope (was *Allow use of gamepad motion sensors*; Android 12+) |
+| `checkbox_gamepad_motion_fallback` | Built-in device gyroscope (was *Emulate gamepad motion sensor support*) |
+| `checkbox_force_device_motion` | Always use built-in device gyroscope (was *Always use device's motion sensors*) |
+| `seekbar_gyro_smoothing` | **Gyro smoothing**, 0 to 100 %, default 0 = off |
+
+Search still finds the rows by their old names (`RENAMED_SEARCH_TERMS` in `screens/NativeSettings.kt`). None of the four
+is a per-game setting. Gyro smoothing is hidden where there is no motion source at all (below Android 12 without an
+accelerometer or gyroscope feature; `SettingsCapabilities.motionHiddenKeys`) and disabled while both the external and the
+built-in source are off (`gyroSourceEnabled`). It is read once per stream (`PreferenceConfiguration.gyroSmoothing`), so a
+change applies to the next stream. How it works and what it costs: [STREAM_QUALITY.md](STREAM_QUALITY.md#gyro-smoothing-77).
+
 ## Hidden phone-oriented and key-layout settings
 
 Delos is handheld-first, so the touch-mouse and on-screen gamepad settings are hidden from the settings
