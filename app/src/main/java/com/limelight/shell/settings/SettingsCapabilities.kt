@@ -93,10 +93,8 @@ data class SettingsCapabilities(
                 hidden += UPSCALER_KEYS
             }
             if (pm.hasSystemFeature("com.nvidia.feature.shield")) hidden += "checkbox_absolute_mouse_mode"
-            if (Build.VERSION.SDK_INT < 31) hidden += "checkbox_gamepad_motion_sensors"
-            if (!pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_ACCELEROMETER) && !pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_GYROSCOPE)) {
-                hidden += setOf("checkbox_force_device_motion", "checkbox_gamepad_motion_fallback")
-            }
+            hidden += motionHiddenKeys(Build.VERSION.SDK_INT,
+                pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_ACCELEROMETER) || pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_GYROSCOPE))
             if (!pm.hasSystemFeature(PackageManager.FEATURE_USB_HOST)) hidden += setOf("checkbox_usb_driver", "checkbox_usb_bind_all")
             if (!pm.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE) || pm.hasSystemFeature("com.amazon.software.fireos")) hidden += "checkbox_enable_pip"
             val vibrator = activity.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
@@ -109,6 +107,16 @@ data class SettingsCapabilities(
                 modes.maxOfOrNull { it.refreshRate } ?: display.refreshRate,
                 hdr10 && main10, PreferenceConfiguration.isShieldAtvFirmwareWithBrokenHdr(), hevc != null, av1 != null, hidden,
                 pyroWave, sgsr)
+        }
+
+        /**
+         * The motion rows that do not apply: an external gamepad's sensors need Android 12, the built-in sensors need
+         * a sensor on the device, and Gyro smoothing needs at least one of the two sources.
+         */
+        internal fun motionHiddenKeys(sdk: Int, hasDeviceSensors: Boolean): Set<String> = buildSet {
+            if (sdk < 31) add("checkbox_gamepad_motion_sensors")
+            if (!hasDeviceSensors) addAll(setOf("checkbox_force_device_motion", "checkbox_gamepad_motion_fallback"))
+            if (sdk < 31 && !hasDeviceSensors) add("seekbar_gyro_smoothing")
         }
 
         private fun addResolution(into: MutableList<SettingChoice>, width: Int, height: Int, prefix: String) {

@@ -1,6 +1,7 @@
 package com.limelight.shell.settings
 
 import android.content.SharedPreferences
+import android.os.Build
 import com.limelight.preferences.PreferenceConfiguration
 import com.limelight.preferences.UpscalerMode
 import com.limelight.utils.RumblePreferences
@@ -45,6 +46,7 @@ class StreamSettingsStore(val catalog: SettingsCatalog, private val settings: ()
         if (spec.key == "list_sgsr_supersampling_level" &&
             UpscalerMode.fromValue(state.value["list_sgsr_quality"] as? String) == UpscalerMode.SHARPEN_ONLY) return false
         if (spec.key == "pref_low_latency_frame_balance" && state.value["frame_pacing"] == "fast-vsync") return false
+        if (spec.key == "seekbar_gyro_smoothing" && !gyroSourceEnabled(Build.VERSION.SDK_INT, state.value)) return false
         fun dependencyEnabled(key: String?, seen: Set<String>): Boolean {
             if (key == null) return true
             if (key in seen) return false
@@ -134,6 +136,14 @@ class StreamSettingsStore(val catalog: SettingsCatalog, private val settings: ()
 }
 
 internal const val CODEC_BITRATE_PREFIX = "ui_codec_bitrate_"
+/**
+ * Whether any gyroscope source is on, which is what Gyro smoothing acts on: an external gamepad's sensors (Android 12+,
+ * on by default except on Android 12 itself) or the built-in device sensors (off by default).
+ */
+internal fun gyroSourceEnabled(sdk: Int, values: Map<String, *>): Boolean =
+    (sdk >= 31 && (values["checkbox_gamepad_motion_sensors"] as? Boolean ?: (sdk != 31))) ||
+        values["checkbox_gamepad_motion_fallback"] as? Boolean ?: false
+
 internal fun codecBitrateKey(codec: String) = CODEC_BITRATE_PREFIX + codec
 internal fun isCodecBitrateStorageKey(key: String) =
     key.startsWith(CODEC_BITRATE_PREFIX) || (key.startsWith("ui_game_") && key.contains("_$CODEC_BITRATE_PREFIX"))

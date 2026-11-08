@@ -99,6 +99,7 @@ data class SettingSpec(
         "checkbox_gamepad_motion_sensors" -> Symbols.MOTION_SENSORS
         "checkbox_gamepad_motion_fallback" -> Symbols.MOTION_FALLBACK
         "checkbox_force_device_motion" -> Symbols.DEVICE_MOTION
+        "seekbar_gyro_smoothing" -> Symbols.TUNE
         "checkbox_enable_joyconfix" -> Symbols.SPORTS_ESPORTS
         "checkbox_gamepad_enable_battery_report" -> Symbols.BATTERY_FULL
         "checkbox_enable_rumble", "list_rumble_feel", "checkbox_vibrate_fallback", "checkbox_vibrate_osc", "checkbox_vibrate_keyboard" -> Symbols.VIBRATION

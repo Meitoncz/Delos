@@ -310,6 +310,15 @@
             android:title="@string/title_checkbox_force_device_motion"
             android:dependency="checkbox_gamepad_motion_fallback"
             app:iconSpaceReserved="false" />
+        <com.limelight.preferences.SeekBarPreference
+            android:defaultValue="0"
+            android:key="seekbar_gyro_smoothing"
+            android:max="100"
+            android:summary="@string/summary_seekbar_gyro_smoothing"
+            android:text="@string/suffix_seekbar_gyro_smoothing"
+            android:title="@string/title_seekbar_gyro_smoothing"
+            app:iconSpaceReserved="false"
+            seekbar:min="0" />
         <CheckBoxPreference
             android:defaultValue="false"
             android:key="checkbox_enable_joyconfix"

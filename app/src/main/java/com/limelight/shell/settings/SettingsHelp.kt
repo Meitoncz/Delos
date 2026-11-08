@@ -118,6 +118,7 @@ object SettingsHelp {
         "checkbox_gamepad_motion_sensors" to "Lets the PC read an external gamepad's gyroscope and accelerometer. Needs Android 12 or newer. Turn off if no game uses motion, to save a little power and traffic.",
         "checkbox_gamepad_motion_fallback" to "Uses this device's own gyroscope and accelerometer when the gamepad has none or Android cannot read them. The PC may then see a PlayStation controller.",
         "checkbox_force_device_motion" to "Uses the built-in sensors even if the external gamepad has working ones. Needs Built-in device gyroscope.",
+        "seekbar_gyro_smoothing" to "Steadies gyro aiming. 0 is off. Higher values remove more jitter but add a little delay to slow movement; fast flicks stay responsive. Applies to the next stream.",
         "checkbox_enable_joyconfix" to "Compatibility path for Joy-Cons with missing or misrecognized buttons. Leave off if they work.",
         "checkbox_gamepad_enable_battery_report" to "Reports gamepad battery status to the host. Turn off if battery polling coincides with touch or mouse stutter.",
         "checkbox_enable_rumble" to "Sends host rumble to supported gamepads. Controller, connection and driver decide which effects work.",

@@ -58,6 +58,7 @@ private val RENAMED_SEARCH_TERMS = mapOf(
     "checkbox_gamepad_motion_sensors" to "allow use of gamepad motion sensors motion sensor",
     "checkbox_gamepad_motion_fallback" to "emulate gamepad motion sensor support motion sensors",
     "checkbox_force_device_motion" to "always use device's motion sensors motion sensors",
+    "seekbar_gyro_smoothing" to "gyroscope stabilisation stabilization motion sensors",
 )
 
 /** The settings whose texts contain every word of [query], in any order and case. */

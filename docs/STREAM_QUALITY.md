@@ -526,6 +526,40 @@ The two-pass SurfaceTexture/2D approach was also reviewed against linckosz's Moo
 PR #1567 (`37e7a00ce8cde55b936c9239d8e717336f55da63`); the lifecycle, live controls and P010 HDR output
 here are implemented for Delos rather than copying that bridge's synchronous frame wait.
 
+## Gyro smoothing (#77)
+
+**Controls → Gamepad → Gyro smoothing** (`seekbar_gyro_smoothing`, 0..100, default 0) steadies the gyroscope before it is
+sent to the host. 0 is off and the sensor path is then unchanged (the filter is never created). It acts on the gyroscope
+only, never on the accelerometer, for both the external gamepad's sensors and the built-in device sensors
+(`ControllerHandler.createSensorListener`). The value is read once per stream; a change applies to the next stream.
+
+**Filter** (`binding/input/GyroSmoother.java`, pure and unit-tested): a One Euro filter per axis, one instance per sensor
+listener (so per controller and per report rate; a new report rate starts a fresh filter), no allocation per sample. The
+cut-off is `minCutoff + beta * |d|`, with `d` the rate of change of the angular velocity, itself low-passed at a fixed 1 Hz.
+At rest and in slow aiming the cut-off stays near `minCutoff` and removes jitter; in a flick `|d|` grows, the cut-off opens
+and the lag almost vanishes. It runs on the raw reading converted to deg/s (the unit the host receives, so `beta` is in Hz
+per deg/s per second), before the display-rotation axis remapping, so a rotation never mixes the state of two axes. Samples
+are timed with the sensor's own timestamps; the same timestamp repeats the last output, a gap above 250 ms or a timestamp
+going backwards restarts the filter from the new sample.
+
+**Mapping** (`t = slider / 100`): `minCutoff = 8 Hz * 0.025^t`, `beta = 0.02 * 0.25^t`.
+
+| Slider | minCutoff | beta | Group delay at rest | Noise variance (rest, vs raw) | Lag of a slow 0.5 Hz, 30 deg/s sway | Lag of a 3 Hz, 300 deg/s flick | 0 to 300 deg/s in 100 ms reaches |
+|---|---|---|---|---|---|---|---|
+| 0 | off | off | 0 | 100 % | 0 | 0 | 300 |
+| 1 | 7.71 Hz | 0.0197 | 21 ms | 10.9 % | 15 ms | 5 ms | 292 |
+| 10 | 5.53 Hz | 0.0174 | 29 ms | 8.1 % | 15 ms | 5 ms | 291 |
+| 25 | 3.18 Hz | 0.0141 | 50 ms | 4.9 % | 20 ms | 5 ms | 289 |
+| 50 | 1.26 Hz | 0.0100 | 126 ms | 2.1 % | 30 ms | 10 ms | 286 |
+| 75 | 0.50 Hz | 0.0071 | 316 ms | 1.0 % | 35 ms | 10 ms | 283 |
+| 100 | 0.20 Hz | 0.0050 | 796 ms | 0.47 % | 45 ms | 10 ms | 278 |
+
+Numbers come from `GyroSmootherTest` (200 Hz samples, white noise of 0.5 deg/s sigma, lag resolution 5 ms): the group delay
+at rest is `1 / (2 pi minCutoff)`, which only matters for the first moments after a still hand starts to move; the
+latency a player feels is the sway and flick columns. These are filter numbers, not measured input-to-photon latency.
+Unverified without a real game on a handheld: how it feels in a game, and whether the host (Steam Input, emulators) already
+smooths the data, which would make 0 the right choice.
+
 ## Latency (#75)
 
 Status: the optimisations below are implemented; **none of them has been measured on the device yet** (results table at

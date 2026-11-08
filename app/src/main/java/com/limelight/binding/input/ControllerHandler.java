@@ -2405,21 +2405,35 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
     private SensorEventListener createSensorListener(final short controllerNumber, final byte motionType, final boolean needsDeviceOrientationCorrection) {
         return new SensorEventListener() {
             private float[] lastValues = new float[3];
+            // Gyro smoothing (settings: Gyro smoothing). Null when off or for the accelerometer, which keeps
+            // the original path below unchanged. One filter per listener, so per controller and report rate.
+            private final GyroSmoother smoother = motionType == MoonBridge.LI_MOTION_TYPE_GYRO && GyroSmoother.isActive(prefConfig.gyroSmoothing)
+                    ? new GyroSmoother(prefConfig.gyroSmoothing) : null;
+            private final float[] smoothed = new float[3];
 
             @Override
             public void onSensorChanged(SensorEvent sensorEvent) {
+                float[] values = sensorEvent.values;
+                if (smoother != null) {
+                    // Filter the raw reading in the host's units (deg/s) on the sensor's own axes, before the
+                    // axis remapping below, so a display rotation never mixes filter state between axes.
+                    smoother.filter(sensorEvent.timestamp,
+                            values[0] * 57.2957795f, values[1] * 57.2957795f, values[2] * 57.2957795f, smoothed);
+                    values = smoothed;
+                }
+
                 // Android will invoke our callback any time we get a new reading,
                 // even if the values are the same as last time. Don't report a
                 // duplicate set of values to save bandwidth.
-                if (sensorEvent.values[0] == lastValues[0] &&
-                        sensorEvent.values[1] == lastValues[1] &&
-                        sensorEvent.values[2] == lastValues[2]) {
+                if (values[0] == lastValues[0] &&
+                        values[1] == lastValues[1] &&
+                        values[2] == lastValues[2]) {
                     return;
                 }
                 else {
-                    lastValues[0] = sensorEvent.values[0];
-                    lastValues[1] = sensorEvent.values[1];
-                    lastValues[2] = sensorEvent.values[2];
+                    lastValues[0] = values[0];
+                    lastValues[1] = values[1];
+                    lastValues[2] = values[2];
                 }
 
                 int x = 0;
@@ -2463,7 +2477,15 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
                     }
                 }
 
-                if (motionType == MoonBridge.LI_MOTION_TYPE_GYRO) {
+                if (smoother != null) {
+                    // Already in deg/s
+                    conn.sendControllerMotionEvent((byte) controllerNumber,
+                            motionType,
+                            values[x] * xFactor,
+                            values[y] * yFactor,
+                            values[z] * zFactor);
+                }
+                else if (motionType == MoonBridge.LI_MOTION_TYPE_GYRO) {
                     // Convert from rad/s to deg/s
                     conn.sendControllerMotionEvent((byte) controllerNumber,
                             motionType,

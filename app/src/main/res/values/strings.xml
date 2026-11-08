@@ -134,6 +134,9 @@
     <string name="summary_checkbox_gamepad_motion_fallback">Uses this device\'s own gyroscope and accelerometer (a handheld\'s built-in sensors) when the connected gamepad has none or your Android version cannot read them.\nNote: the PC may then see your gamepad as a PlayStation controller.</string>
     <string name="title_checkbox_force_device_motion">Always use built-in device gyroscope</string>
     <string name="summary_checkbox_force_device_motion">Uses the device\'s own sensors even if the external gamepad reports working ones.</string>
+    <string name="title_seekbar_gyro_smoothing">Gyro smoothing</string>
+    <string name="summary_seekbar_gyro_smoothing">Steadies the gyroscope before it is sent to the PC. 0 is off; higher values remove more jitter but add a little delay to slow aiming. Fast flicks stay responsive. Applies to the next stream.</string>
+    <string name="suffix_seekbar_gyro_smoothing">%</string>
     <string name="title_enable_rumble">Enable Rumble</string>
     <string name="title_rumble_feel" translatable="false">Rumble feel</string>
     <string name="summary_rumble_feel" translatable="false">How game rumble feels on this device\'s vibration motor.</string>
