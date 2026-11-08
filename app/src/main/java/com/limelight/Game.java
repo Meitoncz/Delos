@@ -109,11 +109,8 @@ import androidx.preference.PreferenceManager;
 import android.os.Looper;
 import java.util.Objects;
 
-import java.io.ByteArrayInputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
@@ -178,9 +175,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     private boolean surfaceCreated = false;
     private boolean attemptedConnection = false;
     private int suppressPipRefCount = 0;
-    private String pcName;
-    private String appName;
-    private NvApp app;
     private float desiredRefreshRate;
 
     private InputCaptureProvider inputCaptureProvider;
@@ -253,16 +247,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     public static final String EXTRA_SERVER_COMMANDS = "ServerCommands";
     public static final String EXTRA_DISPLAY_ID = "DisplayID";
 
-    private String appUUID;
-    private String host;
-    private int port;
-    private int httpsPort;
-    private int appId;
-    private String uniqueId;
-    private X509Certificate serverCert;
-    private boolean vDisplay;
-    private ArrayList<String> serverCommands;
-
+    private StreamIntentParams launch;
     private ViewParent rootView;
     private StreamClipboardSync clipboardSync;
 
@@ -517,34 +502,10 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         // Make sure Wi-Fi is fully powered up
         wifiLocks.acquire(this);
 
-        appName = Game.this.getIntent().getStringExtra(EXTRA_APP_NAME);
-        pcName = Game.this.getIntent().getStringExtra(EXTRA_PC_NAME);
+        launch = StreamIntentParams.fromIntent(getIntent());
+        httpConn = launch.createHttp(this);
 
-        host = Game.this.getIntent().getStringExtra(EXTRA_HOST);
-        port = Game.this.getIntent().getIntExtra(EXTRA_PORT, NvHTTP.DEFAULT_HTTP_PORT);
-        httpsPort = Game.this.getIntent().getIntExtra(EXTRA_HTTPS_PORT, 0); // 0 is treated as unknown
-        appUUID = Game.this.getIntent().getStringExtra(EXTRA_APP_UUID);
-        appId = Game.this.getIntent().getIntExtra(EXTRA_APP_ID, StreamConfiguration.INVALID_APP_ID);
-        uniqueId = Game.this.getIntent().getStringExtra(EXTRA_UNIQUEID);
-        vDisplay = Game.this.getIntent().getBooleanExtra(EXTRA_VDISPLAY, false);
-        serverCommands = Game.this.getIntent().getStringArrayListExtra(EXTRA_SERVER_COMMANDS);
-        boolean appSupportsHdr = Game.this.getIntent().getBooleanExtra(EXTRA_APP_HDR, false);
-        byte[] derCertData = Game.this.getIntent().getByteArrayExtra(EXTRA_SERVER_CERT);
-
-        app = new NvApp(appName != null ? appName : "app", appUUID, appId, appSupportsHdr);
-
-        try {
-            if (derCertData != null) {
-                serverCert = (X509Certificate) CertificateFactory.getInstance("X.509")
-                        .generateCertificate(new ByteArrayInputStream(derCertData));
-
-                httpConn = new NvHTTP(new ComputerDetails.AddressTuple(host, port), httpsPort, uniqueId, serverCert, PlatformBinding.getCryptoProvider(this));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        if (appId == StreamConfiguration.INVALID_APP_ID) {
+        if (!launch.hasValidApp()) {
             finish();
             return;
         }
@@ -731,9 +692,9 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                 )
                 .setLaunchRefreshRate(prefConfig.fps)
                 .setRefreshRate(chosenFrameRate)
-                .setVirtualDisplay(vDisplay)
+                .setVirtualDisplay(launch.vDisplay)
                 .setResolutionScaleFactor(prefConfig.resolutionScaleFactor)
-                .setApp(app)
+                .setApp(launch.app)
                 .setEnableUltraLowLatency(prefConfig.enableUltraLowLatency)
                 .setBitrate(isMetered ? prefConfig.meteredBitrate: prefConfig.bitrate)
                 .setEnableSops(false) // Delos: GFE only, Vibepollo / Apollo / Sunshine ignore it
@@ -753,9 +714,9 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
         // Initialize the connection
         conn = new NvConnection(getApplicationContext(),
-                new ComputerDetails.AddressTuple(host, port),
-                httpsPort, uniqueId, config,
-                PlatformBinding.getCryptoProvider(this), serverCert);
+                new ComputerDetails.AddressTuple(launch.host, launch.port),
+                launch.httpsPort, launch.uniqueId, config,
+                PlatformBinding.getCryptoProvider(this), launch.serverCert);
         controllerHandler = new ControllerHandler(this, conn, this, prefConfig);
         keyboardTranslator = new KeyboardTranslator(prefConfig);
 
@@ -767,7 +728,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             trackpadContextMap[i] = new TrackpadContext(conn, i, prefConfig.trackpadSwapAxis, prefConfig.trackpadSensitivityX, prefConfig.trackpadSensitivityY);
         }
 
-        if (Objects.equals(appUUID, NvApp.REMOTE_INPUT_UUID)) {
+        if (Objects.equals(launch.appUUID, NvApp.REMOTE_INPUT_UUID)) {
             // Force trackpad mode since we won't see anything on the screen
             allowChangeMouseMode = false;
             applyMouseMode(2);
@@ -1099,14 +1060,14 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (appName != null) {
-                builder.setTitle(appName);
-                if (pcName != null) {
-                    builder.setSubtitle(pcName);
+            if (launch.appName != null) {
+                builder.setTitle(launch.appName);
+                if (launch.pcName != null) {
+                    builder.setSubtitle(launch.pcName);
                 }
             }
-            else if (pcName != null) {
-                builder.setTitle(pcName);
+            else if (launch.pcName != null) {
+                builder.setTitle(launch.pcName);
             }
         }
 
@@ -3081,7 +3042,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                         // ("Another stream operation is still running", cancel = 0), so it is repeated until it is accepted.
                         // The toasts use the application context: this activity is already gone.
                         final android.content.Context app = getApplicationContext();
-                        final String quitName = appName;
+                        final String quitName = launch.appName;
                         String failure = null;
                         boolean quit = false;
                         for (int attempt = 0; attempt < 12 && !quit; attempt++) {
@@ -3263,13 +3224,13 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
         // Report this shortcut being used (off the main thread to prevent ANRs)
         ComputerDetails computer = new ComputerDetails();
-        computer.name = pcName;
+        computer.name = launch.pcName;
         computer.uuid = Game.this.getIntent().getStringExtra(EXTRA_PC_UUID);
         ShortcutHelper shortcutHelper = new ShortcutHelper(this);
         shortcutHelper.reportComputerShortcutUsed(computer);
-        if (appName != null) {
+        if (launch.appName != null) {
             // This may be null if launched from the "Resume Session" PC context menu item
-            shortcutHelper.reportGameLaunched(computer, app);
+            shortcutHelper.reportGameLaunched(computer, launch.app);
         }
     }
 
@@ -3549,7 +3510,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     }
 
     public ArrayList<String> getServerCmds() {
-        return serverCommands;
+        return launch.serverCommands;
     }
 
     public boolean isZoomModeEnabled() {
