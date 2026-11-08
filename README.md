@@ -16,6 +16,10 @@ Follow [Mac setup](docs/MAC_SETUP.md) or [Windows setup](docs/WINDOWS_SETUP.md) 
 
 The ARM64 debug APK is `app/build/outputs/apk/debug/app-arm64-v8a-debug.apk`. The application ID is `io.github.meitoncz.delos` (debug builds add `.debug`), so Delos installs alongside Artemis and Moonlight.
 
+## Contributing and bug reports
+
+Found a problem or have an idea? Open an issue with one of the [issue forms](https://github.com/Meitoncz/Delos/issues/new/choose). Code contributions are welcome too: see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## License
 
 Delos is licensed under the [GNU General Public License v3.0](LICENSE.txt), the same license as Moonlight and Artemis.
