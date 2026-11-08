@@ -21,8 +21,8 @@ internal object ContextMenuLayout {
     /** The caret keeps this far from the card's corners. */
     const val CARET_INSET = StreamMenuLayout.CARET_MIN_INSET
 
-    /** The air between the element's edge and the caret's tip: the tip nearly touches the focused tile's ring (the prototype's is 16 beyond it). */
-    const val TIP_GAP = 14f
+    /** The caret's tip relative to the element's edge: negative = the tip reaches INTO the element (half the caret's depth, the user's wish: the menu sits right at its cover). */
+    const val TIP_GAP = -12f
 
     /** The card keeps the stream popover's margin from the top and bottom of the stage, and a smaller one from its sides. */
     const val MARGIN_Y = StreamMenuLayout.POPOVER_MARGIN
