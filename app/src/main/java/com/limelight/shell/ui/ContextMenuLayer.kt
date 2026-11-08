@@ -8,6 +8,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -47,6 +48,8 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
@@ -76,13 +79,34 @@ import com.limelight.shell.MenuHeader
 import com.limelight.shell.MenuItem
 import com.limelight.shell.drawBoxShadow
 import com.limelight.shell.shadowRadius
+import dev.chrisbanes.haze.HazeInput
 import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.blur.HazeBlurStyle
+import dev.chrisbanes.haze.blur.HazeColorEffect
+import dev.chrisbanes.haze.blur.hazeBlur
 import kotlin.math.min
 import kotlin.math.roundToInt
 import com.limelight.shell.ui.ContextMenuLayout as L
 
-/** The glass of the stream menu's popover: this tint over the blurred screen, a white sheen at the top. */
+/** The glass of the stream menu's popover and of the prototype's card: this tint (50 %) over the blurred screen. */
 private val CardTint = Color(34, 44, 84)
+
+/** The prototype's `backdrop-filter: blur(46px) saturate(1.6)` under the tint (rgba 34, 44, 84, .50). */
+@Composable
+private fun Modifier.menuGlass(haze: HazeState): Modifier {
+    val radius = 46f.px
+    val saturate = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(1.6f) })
+    val tint = CardTint.copy(alpha = .50f)
+    return hazeBlur(
+        HazeInput.Sources(haze),
+        style = HazeBlurStyle {
+            blurRadius(radius)
+            noiseFactor(0f)
+            colorEffects(listOf(HazeColorEffect.colorFilter(saturate), HazeColorEffect.tint(tint)))
+            fallbackColorEffect(HazeColorEffect.tint(tint.copy(alpha = .92f)))
+        },
+    )
+}
 
 /** Red of a destructive row and of its plate (the prototype's `--danger`). */
 internal val MenuDanger = Color(0xFFFF8F86)
@@ -133,53 +157,76 @@ private class MenuPlaceState(initial: MenuPlacement) {
         version // the draw phase redraws with a new placement
         val s = shape
         if (s != null && s.k == k && s.size == size && s.placement == placement) return s
-        return PathShape(menuCardPath(placement.side, placement.caret, size.width / k - 2 * L.CARET_DEPTH, size.height / k - 2 * L.CARET_DEPTH, k), k, size, placement)
-            .also { shape = it }
+        val outline = menuCardPath(placement.side, placement.caret, size.width / k - 2 * L.CARET_DEPTH, size.height / k - 2 * L.CARET_DEPTH, k)
+        return PathShape(outline, k, size, placement).also { shape = it }
     }
 }
 
 private const val StageWidth = 1920f
 private const val StageHeight = 1080f
 
-private class PathShape(val path: Path, val k: Float, val size: Size, val placement: MenuPlacement) : Shape {
+private class PathShape(outline: MenuOutline, val k: Float, val size: Size, val placement: MenuPlacement) : Shape {
+    val path = outline.card
+
+    /** The caret's curve, lit like the rim of the stream popover's card. */
+    val caretEdge = outline.caretEdge
+
+    /** The card moved down 1.5 px: what the card has and this has not is the lit crescent along its top edge. */
+    val lower = Path().apply { addPath(outline.card, Offset(0f, 1.5f * k)) }
+
     override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline = Outline.Generic(path)
 }
+
+/** The card with its caret as one filled path, and the caret's curve alone (null without a caret). */
+internal class MenuOutline(val card: Path, val caretEdge: Path?)
 
 /**
  * The card's outline as ONE path: a rounded rectangle [w] x [h] (stage pixels) with the caret on [side] centered at [caret]
  * along that edge. The path lies in a box [ContextMenuLayout.CARET_DEPTH] larger than the card on every side (the room of
- * the caret); [k] is pixels per stage pixel. The caret has the stream popover's shape.
+ * the caret); [k] is pixels per stage pixel. The caret is the prototype's (`a.css`, `.cm-caret.left`: 60 wide, 24 out of the
+ * card, a rounded tip), turned to its [side].
  */
-internal fun menuCardPath(side: CaretSide, caret: Float, w: Float, h: Float, k: Float): Path {
+internal fun menuCardPath(side: CaretSide, caret: Float, w: Float, h: Float, k: Float): MenuOutline {
     val d = L.CARET_DEPTH * k
     val card = Path().apply {
         addRoundRect(androidx.compose.ui.geometry.RoundRect(d, d, d + w * k, d + h * k, CornerRadius(min(L.CORNER * k, min(w, h) * k / 2f))))
     }
-    if (side == CaretSide.None) return card
-    val a = L.CARET_WIDTH * k / 2f
-    val b = L.CARET_WIDTH * k / 6f
+    if (side == CaretSide.None) return MenuOutline(card, null)
     val c = caret * k
-    // (u, v): u along the edge from the caret's center, v out of the card
-    fun x(u: Float, v: Float) = when (side) {
-        CaretSide.Left -> d - v
-        CaretSide.Right -> d + w * k + v
-        else -> d + c + u
+    // (u, v) in stage pixels: u along the edge from the caret's center, v out of the card
+    fun x(u: Float, v: Float) = k * when (side) {
+        CaretSide.Left -> -v
+        CaretSide.Right -> v
+        else -> u
+    } + when (side) {
+        CaretSide.Left -> d
+        CaretSide.Right -> d + w * k
+        else -> d + c
     }
-    fun y(u: Float, v: Float) = when (side) {
-        CaretSide.Top -> d - v
-        CaretSide.Bottom -> d + h * k + v
-        else -> d + c + u
+    fun y(u: Float, v: Float) = k * when (side) {
+        CaretSide.Top -> -v
+        CaretSide.Bottom -> v
+        else -> u
+    } + when (side) {
+        CaretSide.Top -> d
+        CaretSide.Bottom -> d + h * k
+        else -> d + c
     }
+    fun Path.curve() {
+        moveTo(x(-30f, 0f), y(-30f, 0f))
+        cubicTo(x(-18f, 0f), y(-18f, 0f), x(-11f, 4f), y(-11f, 4f), x(-6f, 13f), y(-6f, 13f))
+        quadraticTo(x(0f, 35f), y(0f, 35f), x(6f, 13f), y(6f, 13f))
+        cubicTo(x(11f, 4f), y(11f, 4f), x(18f, 0f), y(18f, 0f), x(30f, 0f), y(30f, 0f))
+    }
+    val edge = Path().apply { curve() }
     val tip = Path().apply {
-        moveTo(x(-a, -2f), y(-a, -2f))
-        lineTo(x(-a, 0f), y(-a, 0f))
-        lineTo(x(-b, d * .78f), y(-b, d * .78f))
-        quadraticTo(x(0f, d * 1.22f), y(0f, d * 1.22f), x(b, d * .78f), y(b, d * .78f))
-        lineTo(x(a, 0f), y(a, 0f))
-        lineTo(x(a, -2f), y(a, -2f))
+        curve()
+        // Back into the card under its edge, so the union has no seam
+        lineTo(x(30f, -2f), y(30f, -2f))
+        lineTo(x(-30f, -2f), y(-30f, -2f))
         close()
     }
-    return Path.combine(PathOperation.Union, card, tip)
+    return MenuOutline(Path.combine(PathOperation.Union, card, tip), edge)
 }
 
 /**
@@ -297,7 +344,8 @@ private fun MenuCard(
     Box {
         // The shadow in a layer of its own, so the plate's frames do not redraw it
         Box(Modifier.matchParentSize().graphicsLayer { compositingStrategy = CompositingStrategy.ModulateAlpha }.drawBehind { drawCardShadow(k) })
-        // The glass: the blurred screen under a tint, clipped to the card with its caret
+        // The glass (the prototype's `.cm-glass`): the screen under it blurred 46 and saturated 1.6, a tint (34, 44, 84 at 50 %),
+        // a white sheen from the top (13 % fading out at 52 %), a 1 px rim (11 %) and a 1.5 px lit top edge (26 %)
         Box(
             Modifier
                 .matchParentSize()
@@ -305,15 +353,17 @@ private fun MenuCard(
                     shape = state.outline(k, size)
                     clip = true
                 }
-                .backdropBlur(haze, 24f, CardTint.copy(alpha = .50f))
+                .menuGlass(haze)
                 .drawBehind {
-                    val sheen = colors.accent2
-                    drawRect(Brush.verticalGradient(0f to sheen.copy(alpha = .20f), .52f to Color.Transparent, 1f to Color.Transparent))
-                    drawRect(Brush.verticalGradient(0f to Color.Transparent, 1f to Color.White.copy(alpha = .14f), startY = size.height - 150f * k, endY = size.height))
-                    val rim = state.outline(k, size)
-                    if (rim is PathShape) {
+                    drawRect(Brush.verticalGradient(0f to Color.White.copy(alpha = .13f), .52f to Color.Transparent, 1f to Color.Transparent))
+                    val lit = state.outline(k, size)
+                    if (lit is PathShape) {
                         // The rim is the inside half of a double-width stroke: the outline clips it
-                        clipPath(rim.path) { drawPath(rim.path, Color.White.copy(alpha = .11f), style = Stroke(2f * k)) }
+                        clipPath(lit.path) {
+                            drawPath(lit.path, Color.White.copy(alpha = .11f), style = Stroke(2f * k))
+                            clipPath(lit.lower, androidx.compose.ui.graphics.ClipOp.Difference) { drawRect(Color.White.copy(alpha = .26f)) }
+                            lit.caretEdge?.let { drawPath(it, Color.White.copy(alpha = .30f), style = Stroke(3f * k)) }
+                        }
                     }
                 },
         )
@@ -369,7 +419,7 @@ private fun MenuCard(
 /** The card's soft shadow (`0 40px 90px -20px`), a layer of its own so the plate's frames do not redraw it. */
 private fun DrawScope.drawCardShadow(k: Float) {
     val room = L.CARET_DEPTH * k
-    drawBoxShadow(Rect(room, room, size.width - room, size.height - room), L.CORNER * k, 40f * k, 90f * k, -20f * k, Color.Black.copy(alpha = .62f))
+    drawBoxShadow(Rect(room, room, size.width - room, size.height - room), L.CORNER * k, 40f * k, 90f * k, -20f * k, Color.Black.copy(alpha = .66f))
 }
 
 /** Cover or back chip, status line, title and meta line of the card. */
@@ -392,7 +442,7 @@ private fun Header(menu: ContextMenu, parent: MenuItem?, submenu: Boolean, onBac
                     contentAlignment = Alignment.Center,
                 ) { Symbol(Symbols.CHEVRON_LEFT, 28.tpx, colors.text) }
             } else header?.cover?.let { cover ->
-                Box(Modifier.size(width = 52.px, height = 78.px).clip(RoundedCornerShape(14.px))) {
+                Box(Modifier.size(width = 52.px, height = 78.px).clip(RoundedCornerShape(14.px)).border(1.px, Color.White.copy(alpha = .16f), RoundedCornerShape(14.px))) {
                     if (cover.image != null) Image(cover.image, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
                     else PlaceholderArt(cover.hue, cover.hue2, cover.icon, Modifier.fillMaxSize(), glyphSize = 76f, glyphRight = -10f, glyphTop = .3f, glyphAlpha = .22f)
                 }

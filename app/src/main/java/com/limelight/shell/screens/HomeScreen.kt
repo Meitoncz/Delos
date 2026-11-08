@@ -117,7 +117,7 @@ import com.limelight.shell.ui.Motion
 import com.limelight.shell.ui.staggerEntrance
 import com.limelight.shell.ui.Figtree
 import com.limelight.shell.ui.GameArt
-import com.limelight.shell.ui.IdleCoverFilter
+import com.limelight.shell.ui.menuDimCoverFilter
 import com.limelight.shell.ui.AnimatedArtLayer
 import com.limelight.shell.ui.rememberAnimationTicker
 import kotlin.math.roundToInt
@@ -319,9 +319,11 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
     // The covers of the first screenful enter one after the other (docs/GUI.md, "Motion"); the ones a scroll brings in later are just there
     val intro = remember(pc.uuid, row) { EntranceStagger(enabled = true, cap = Motion.STAGGER_CAP, lateAfterMs = Motion.STAGGER_WINDOW) }
     CompositionLocalProvider(LocalDashboardArt provides dashboardArt) { Box(Modifier.fillMaxSize()) {
+        // Behind an open context menu the info block dims to 40 %
+        val infoDim by animateFloatAsState(if (shell.layer is Layer.Context) .4f else 1f, tween(Motion.FADE, easing = Motion.Ease), label = "infoDim")
         GameInfo(pc, focused,
             // The block (logo, GAME INFO label and pill row) sits high enough that the pills clear the focused cover
-            modifier = Modifier.padding(start = 150.px, top = if (row) 150.px else 100.px), reducedMotion = appearance.reducedMotion,
+            modifier = Modifier.graphicsLayer { alpha = infoDim }.padding(start = 150.px, top = if (row) 150.px else 100.px), reducedMotion = appearance.reducedMotion,
             // The same condition as the animated background's: the genre takes the game's colors only while it does
             matchGameColors = appearance.matchGameColors && !appearance.materialYou)
         CompositionLocalProvider(LocalBringIntoViewSpec provides NoAutoScroll, LocalEntranceStagger provides intro) {
@@ -712,6 +714,8 @@ private fun GameTile(
         )
     }
     var focused by remember { mutableStateOf(false) }
+    // The covers beside an open context menu dim (the prototype's `.menu-open`); the focused one keeps its colors
+    val menuDim by animateFloatAsState(if (shell.layer is Layer.Context) 1f else 0f, tween(Motion.FADE, easing = Motion.Ease), label = "menuDim")
     // A starts (or resumes) the game; while another game runs on the PC it offers the choices instead
     val activate = {
         if (running != null && running.id != app.id) {
@@ -744,7 +748,7 @@ private fun GameTile(
             if (img != null) {
                 Image(
                     img, contentDescription = app.name, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(),
-                    colorFilter = if (focused) null else IdleCoverFilter,
+                    colorFilter = if (focused) null else menuDimCoverFilter(menuDim),
                 )
             } else {
                 PlaceholderArt(
@@ -769,7 +773,7 @@ private fun GameTile(
             val k = LocalStage.current.dpPerPx * LocalDensity.current.density * TILE_FOCUS_SCALE
             AnimatedArtLayer(
                 animation, playing, animatedArt.ticker, ((if (wide) 956f else 300f) * k).roundToInt(), (450f * k).roundToInt(),
-                Modifier.fillMaxSize(), colorFilter = if (focused) null else IdleCoverFilter, stamp = artwork.version.intValue,
+                Modifier.fillMaxSize(), colorFilter = if (focused) null else menuDimCoverFilter(menuDim), stamp = artwork.version.intValue,
             )
         }
         if (artwork.isBusy(pc, app)) {

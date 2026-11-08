@@ -66,6 +66,22 @@ val IdleCoverFilter: ColorFilter = ColorFilter.colorMatrix(
 )
 
 /**
+ * The covers behind an open context menu (the prototype's `.menu-open .gt:not(.sel)`: saturate(.6) brightness(.5)):
+ * [IdleCoverFilter] when [open] is 0, the dimmed look at 1.
+ */
+fun menuDimCoverFilter(open: Float): ColorFilter {
+    if (open <= 0f) return IdleCoverFilter
+    val saturation = .86f + (.6f - .86f) * open
+    val brightness = .92f + (.5f - .92f) * open
+    return ColorFilter.colorMatrix(
+        ColorMatrix().apply {
+            setToSaturation(saturation)
+            timesAssign(ColorMatrix(floatArrayOf(brightness, 0f, 0f, 0f, 0f, 0f, brightness, 0f, 0f, 0f, 0f, 0f, brightness, 0f, 0f, 0f, 0f, 0f, 1f, 0f)))
+        }
+    )
+}
+
+/**
  * The focus ring: an accent band of [width] stage pixels, [gap] pixels outside the element (the gap
  * is filled with the background color). Tiles use 5 / 5, list rows 3 / 0.
  */
