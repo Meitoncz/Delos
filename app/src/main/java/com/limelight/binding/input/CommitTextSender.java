@@ -59,9 +59,11 @@ public final class CommitTextSender {
         if (text == null || text.isEmpty()) {
             return;
         }
+        // Kick off flushing if not already scheduled: a pending flush keeps going while the
+        // queue is not empty, so only an empty queue needs a new one
+        boolean idle = queue.isEmpty();
         queue.addAll(splitUtf8(text));
-        // Kick off flushing if not already scheduled
-        if (queue.size() == 1) {
+        if (idle) {
             handler.post(flushQueue);
         }
     }

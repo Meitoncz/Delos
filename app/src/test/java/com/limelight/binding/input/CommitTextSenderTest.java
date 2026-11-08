@@ -11,6 +11,7 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -159,5 +160,32 @@ public class CommitTextSenderTest {
         String down = "8:" + KeyboardPacket.KEY_DOWN;
         String up = "8:" + KeyboardPacket.KEY_UP;
         assertEquals(List.of(down, up, down, up), keys);
+    }
+
+    @Test
+    public void longText_ontoAnEmptyQueue_isFullySent_andLaterTextsStillFlow() {
+        List<String> sent = new ArrayList<>();
+        CommitTextSender sender = new CommitTextSender(new Handler(Looper.getMainLooper()), sent::add, (k, d) -> { });
+        String longText = repeat("a", MAX * 2 + 10);
+        sender.enqueue(longText);
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(1));
+        assertEquals(3, sent.size());
+        assertEquals(longText, String.join("", sent));
+
+        sent.clear();
+        sender.enqueue("later");
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(1));
+        assertEquals(List.of("later"), sent);
+    }
+
+    @Test
+    public void textEnqueuedWhileFlushing_followsInOrder() {
+        List<String> sent = new ArrayList<>();
+        CommitTextSender sender = new CommitTextSender(new Handler(Looper.getMainLooper()), sent::add, (k, d) -> { });
+        sender.enqueue(repeat("a", MAX + 1));
+        shadowOf(Looper.getMainLooper()).idle(); // sends the first chunk, the second is pending
+        sender.enqueue("b");
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(1));
+        assertEquals(List.of(repeat("a", MAX), "a", "b"), sent);
     }
 }
