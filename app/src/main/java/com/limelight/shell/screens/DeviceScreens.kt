@@ -101,7 +101,8 @@ fun StartScreen(profiles: Profiles, store: ProfileStore, pcs: List<Pc>, startup:
 
 private fun startMenu(pc: Pc, default: Boolean, actions: DeviceActions) = ContextMenu(
     pc.name,
-    listOfNotNull(
+    below = true,
+    items = listOfNotNull(
         MenuItem(Symbols.LOGIN, "Connect") { actions.connect(pc) },
         if (default) MenuItem(Symbols.STAR, "Don't start with this PC") { actions.setDefault(null) }
         else MenuItem(Symbols.STAR, "Start Delos with this PC") { actions.setDefault(pc) },
@@ -190,11 +191,12 @@ fun DevicesScreen(pcs: List<Pc>, activeUuid: String?) {
 
 private fun deviceMenu(pc: Pc, active: Boolean, actions: DeviceActions) = ContextMenu(
     pc.name,
-    listOfNotNull(
+    below = true,
+    items = listOfNotNull(
         MenuItem(Symbols.LOGIN, if (active) "Open its games" else "Connect") { actions.connect(pc) },
         MenuItem(Symbols.EDIT, "Rename") { actions.rename(pc) },
         if (!pc.online && pc.canWake) MenuItem(Symbols.POWER, "Wake the PC") { actions.wake(pc) } else null,
         if (pc.online) MenuItem(Symbols.LINK_OFF, "Unpair") { actions.unpair(pc) } else null,
-        MenuItem(Symbols.DELETE, "Remove from Delos") { actions.remove(pc) },
+        MenuItem(Symbols.DELETE, "Remove from Delos", danger = true) { actions.remove(pc) },
     ),
 )

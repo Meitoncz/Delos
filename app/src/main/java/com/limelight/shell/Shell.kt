@@ -644,12 +644,12 @@ fun Shell(
 
             // Overlays sit on their own glass: controls in them must not blur the background through it
             CompositionLocalProvider(LocalBackdropHaze provides null) {
-                Scrim(shell.layer != null, haze) {
+                Scrim(shell.layer != null, light = shell.layer is Layer.Context, haze) {
                     feedback.play(Cue.BACK)
                     shell.closeLayer()
                 }
                 val context = shell.layer as? Layer.Context
-                ContextMenuLayer(context?.menu, context?.anchor, context?.below == true, haze) { shell.closeLayer() }
+                ContextMenuLayer(context?.menu, context?.anchor, shell.menuPath, { shell.menuPath = it }, haze) { shell.closeLayer() }
                 SideMenuLayer(
                     shell.layer == Layer.Side,
                     haze,
@@ -814,7 +814,7 @@ private fun hints(shell: ShellState, adjustable: Boolean, filterHint: String?): 
     shell.portal?.let { return if (it.cancellable) listOf(Hint(Glyph.B, "Cancel")) else emptyList() }
     if (shell.result != null) return listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back to library"))
     return when (shell.layer) {
-        is Layer.Context -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Close"))
+        is Layer.Context -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, if (shell.menuPath.isEmpty()) "Close" else "Back"))
         Layer.Side -> adjust + listOf(Hint(Glyph.A, "Change"), Hint(Glyph.B, "Close"))
         Layer.Filters -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.X, "Reset"), Hint(Glyph.Y, "Close"), Hint(Glyph.B, "Close"))
         is Layer.Dialog -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Cancel"))

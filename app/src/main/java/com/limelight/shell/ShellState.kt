@@ -16,6 +16,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import com.limelight.shell.data.App
 import com.limelight.shell.data.Pc
 import com.limelight.shell.settings.SettingsTab
+import com.limelight.shell.ui.MenuPath
 import com.limelight.shell.ui.ToastTiming
 import com.limelight.shell.ui.GameArt
 import com.limelight.shell.ui.toastKindFor
@@ -88,17 +89,42 @@ sealed interface Screen {
 /** A one-time PIN and passphrase created in the Vibepollo web UI. */
 data class Otp(val pin: String, val passphrase: String)
 
+/**
+ * A row of a context menu. A [danger] row (Quit, Remove) is red and its focus plate turns red: choosing it is the
+ * confirmation, there is no dialog. An item with [children] opens them inside the same card (B goes back one level)
+ * and has no [action].
+ */
 @Immutable
-data class MenuItem(val icon: String, val label: String, val action: () -> Unit)
+data class MenuItem(
+    val icon: String,
+    val label: String,
+    val danger: Boolean = false,
+    val children: List<MenuItem>? = null,
+    val action: () -> Unit = {},
+)
 
-/** A context menu (right menu button / Start) for the focused element. */
+/** The small cover in a menu header: the game's [image], or its placeholder art ([hue], [hue2], [icon]) while there is none. */
 @Immutable
-data class ContextMenu(val title: String, val items: List<MenuItem>)
+data class MenuCover(val image: ImageBitmap?, val hue: Float, val hue2: Float, val icon: String)
+
+/**
+ * What a menu says about its subject above the [ContextMenu.title]: a small [cover], a [status] line (a green dot
+ * before it while [running]) and one line of [meta]. Menus without a header show just the title.
+ */
+@Immutable
+data class MenuHeader(val status: String, val cover: MenuCover? = null, val running: Boolean = false, val meta: String? = null)
+
+/**
+ * A context menu (right menu button / Start) for the focused element. With [below] the card opens under the
+ * element with its caret on top (a menu that belongs to a PC or a button) instead of beside it.
+ */
+@Immutable
+data class ContextMenu(val title: String, val items: List<MenuItem>, val header: MenuHeader? = null, val below: Boolean = false)
 
 /** Overlays above the current screen. */
 sealed interface Layer {
     /** [anchor]: bounds of the element the menu belongs to, in root pixels. */
-    data class Context(val menu: ContextMenu, val anchor: Rect?, val below: Boolean = false) : Layer
+    data class Context(val menu: ContextMenu, val anchor: Rect?) : Layer
     data object Side : Layer
     /** The library filter modal (Y on the home screen). */
     data object Filters : Layer
@@ -219,6 +245,9 @@ class ShellState(initial: Screen) {
     var toast by mutableStateOf<Toast?>(null)
         private set
 
+    /** The submenus of the open context menu, as the index of the opened item at each level (empty: the menu itself). */
+    var menuPath by mutableStateOf<List<Int>>(emptyList())
+
     /** Counts the presses of a toast's action (Y or a tap), so the toast can squeeze its chip before it leaves. */
     var toastPress by mutableIntStateOf(0)
         private set
@@ -277,6 +306,7 @@ class ShellState(initial: Screen) {
 
     fun navigate(to: Screen) {
         layer = null
+        menuPath = emptyList()
         returnFocus = null
         screen = to
     }
@@ -284,7 +314,9 @@ class ShellState(initial: Screen) {
     /** B / Back: closes the layer, then goes to the screen's [Screen.back]. Returns false at the root (the system handles it). */
     fun back(): Boolean {
         if (layer != null) {
-            closeLayer()
+            // A submenu of the context menu goes back to its parent first
+            if (layer is Layer.Context && menuPath.isNotEmpty()) menuPath = MenuPath.back(menuPath)
+            else closeLayer()
             return true
         }
         val to = screen.back ?: return false
@@ -296,10 +328,12 @@ class ShellState(initial: Screen) {
         // Switching from one layer to another (also right after closing one) keeps the original return focus
         if (layer == null && returnFocus == null) returnFocus = tracker.requester
         layer = next
+        menuPath = emptyList()
     }
 
     fun closeLayer() {
         layer = null
+        menuPath = emptyList()
     }
 
     /** The focus goes to [target] instead of where it was when the layer closes (a dialog that finishes a step moves on to the next one). */

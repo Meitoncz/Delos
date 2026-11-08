@@ -102,7 +102,8 @@ fun PairPcScreen(screen: Screen.PairPc, pcs: List<Pc>) {
                     pulse = pc.online && !pc.paired,
                     contextMenu = if (pc.paired) null else ContextMenu(
                         pc.name,
-                        listOf(
+                        below = true,
+                        items = listOf(
                             MenuItem(Symbols.DIALPAD, "Pair with a PIN") { actions.pair(pc, screen) },
                             MenuItem(Symbols.PASSWORD, "Pair with a one-time code") { actions.pairWithCode(pc, screen) },
                         ),

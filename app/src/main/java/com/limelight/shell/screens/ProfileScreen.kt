@@ -114,7 +114,8 @@ fun profilesMenu(shell: ShellState, profiles: Profiles, store: ProfileStore, fro
     val current = profiles.current?.id
     return ContextMenu(
         "Profiles",
-        profiles.all.map { p ->
+        below = true,
+        items = profiles.all.map { p ->
             MenuItem(if (p.id == current) Symbols.CHECK else Symbols.ACCOUNT_CIRCLE, p.name) {
                 if (p.id != current) {
                     store.switchTo(p.id)
@@ -128,7 +129,7 @@ fun profilesMenu(shell: ShellState, profiles: Profiles, store: ProfileStore, fro
 /** Opens [profilesMenu] at the focused element. */
 fun openProfilesMenu(shell: ShellState, tracker: FocusTracker, feedback: Feedback, profiles: Profiles, store: ProfileStore, from: Screen) {
     feedback.play(Cue.OPEN)
-    shell.openLayer(Layer.Context(profilesMenu(shell, profiles, store, from), tracker.bounds(), below = true), tracker)
+    shell.openLayer(Layer.Context(profilesMenu(shell, profiles, store, from), tracker.bounds()), tracker)
 }
 
 private fun renameProfile(shell: ShellState, tracker: FocusTracker, store: ProfileStore, feedback: Feedback, id: String, name: String) {

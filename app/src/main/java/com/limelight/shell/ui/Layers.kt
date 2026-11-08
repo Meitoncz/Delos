@@ -1,7 +1,6 @@
 package com.limelight.shell.ui
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -17,21 +16,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -43,22 +36,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.foundation.focusGroup
 import androidx.compose.ui.focus.focusProperties
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.layout.layout
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.em
-import com.limelight.shell.ContextMenu
 import dev.chrisbanes.haze.HazeInput
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.blur.HazeBlurStyle
@@ -94,19 +80,27 @@ fun Modifier.backdropBlur(haze: HazeState, radius: Float, tint: Color): Modifier
 fun Modifier.glass(tint: Color): Modifier =
     LocalBackdropHaze.current?.let { backdropBlur(it, 8f, tint) } ?: background(tint)
 
-/** Dims and slightly blurs the screen under a menu (`#scrim`); a tap outside closes the menu. */
+/**
+ * Dims and slightly blurs the screen under a menu (`#scrim`); a tap outside closes the menu. The [light] scrim of the
+ * context menu only dims (26 %, no blur): the tiles beside its card stay readable.
+ */
 @Composable
-fun Scrim(visible: Boolean, haze: HazeState, onDismiss: () -> Unit) {
+fun Scrim(visible: Boolean, light: Boolean, haze: HazeState, onDismiss: () -> Unit) {
     val colors = LocalDelosColors.current
+    // The scrim that fades out is the one that faded in
+    var shownLight by remember { mutableStateOf(light) }
+    if (visible) shownLight = light
     AnimatedVisibility(visible, enter = fadeIn(tween(Motion.SCRIM, easing = Motion.Ease)), exit = fadeOut(tween(Motion.EXIT, easing = Motion.Ease))) {
         Box(
             Modifier
                 .fillMaxSize()
-                .backdropBlur(haze, 6f, colors.scrim)
+                .then(if (shownLight) Modifier.background(LightScrim) else Modifier.backdropBlur(haze, 6f, colors.scrim))
                 .pointerInput(Unit) { detectTapGestures { onDismiss() } },
         )
     }
 }
+
+private val LightScrim = Color(4, 8, 16).copy(alpha = .26f)
 
 /**
  * Keeps the focus inside an open layer: D-pad moves cannot leave it while [active]. Once the layer
@@ -116,138 +110,6 @@ fun Scrim(visible: Boolean, haze: HazeState, onDismiss: () -> Unit) {
 internal fun Modifier.focusTrap(active: Boolean): Modifier {
     val current by rememberUpdatedState(active)
     return focusProperties { onExit = { if (current) cancelFocusChange() } }.focusGroup()
-}
-
-/**
- * The context menu (right menu button / Start), placed at the focused element like in the prototype:
- * slightly inside its top-left corner, kept on screen. With [below] it opens centered under the
- * element instead (a menu that belongs to a button, like the start screen's profile).
- */
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun ContextMenuLayer(menu: ContextMenu?, anchor: Rect?, below: Boolean, haze: HazeState, onDismiss: () -> Unit) {
-    val colors = LocalDelosColors.current
-    val stage = LocalStage.current
-    val density = LocalDensity.current.density
-    val reduced = LocalReducedMotion.current
-    // Keep the last menu while animating out
-    var shown by remember { mutableStateOf(menu) }
-    var shownAnchor by remember { mutableStateOf(anchor) }
-    var shownBelow by remember { mutableStateOf(below) }
-    if (menu != null) {
-        shown = menu
-        shownAnchor = anchor
-        shownBelow = below
-    }
-    val k = stage.dpPerPx * density
-    val a = shownAnchor
-    val centered = shownBelow && a != null
-    var x = 760f
-    var y = 300f
-    if (a != null) {
-        if (centered) {
-            x = a.center.x / k
-            y = a.bottom / k + 18f
-        } else {
-            x = a.left / k + minOf(60f, a.width / k / 2f)
-            y = a.top / k + minOf(80f, a.height / k / 2f)
-        }
-    }
-    if (!centered) x = x.coerceIn(40f, 1920f - 420f)
-    y = y.coerceIn(if (centered) 40f else 110f, (1080f - 120f - 72f * (shown?.items?.size ?: 0)).coerceAtLeast(110f))
-    // The animated layer covers the whole screen and grows from the menu's corner (or its top center):
-    // a layer only as big as the menu would cut off the part of the menu that is moved down into place
-    val origin = TransformOrigin(x / 1920f, y / 1080f)
-    Box(Modifier.fillMaxSize()) {
-        AnimatedVisibility(
-            menu != null,
-            modifier = Modifier.fillMaxSize(),
-            enter = popEnter(origin, reduced),
-            exit = popExit(origin, reduced),
-        ) {
-            val m = shown ?: return@AnimatedVisibility
-            val keys = remember(m.items.size) { m.items.indices.toList() }
-            val navigation = rememberFocusedListNavigation(keys, allowUpExit = false)
-            val first = keys.firstOrNull()?.let(navigation::requester) ?: remember { FocusRequester() }
-            val scroll = remember(m) { androidx.compose.foundation.ScrollState(0) }
-            val bringIntoView = rememberMarginBringIntoView(scroll, before = 12f * k, after = 12f * k, stagePx = k)
-            InitialFocus(first, m)
-            Column(
-                Modifier
-                    .then(
-                        if (!centered) Modifier.wrapContentSize(Alignment.TopStart).offset(x.px, y.px)
-                        // Centered on x once its width is known, kept 40 stage pixels from the screen edges
-                        else Modifier.layout { measurable, constraints ->
-                            val placeable = measurable.measure(constraints.copy(minWidth = 0, minHeight = 0))
-                            layout(constraints.maxWidth, constraints.maxHeight) {
-                                val left = (x * k - placeable.width / 2f).coerceIn(40f * k, constraints.maxWidth - placeable.width - 40f * k)
-                                placeable.place(left.toInt(), (y * k).toInt())
-                            }
-                        }
-                    )
-                    .focusTrap(menu != null)
-                    // As wide as the longest item (the items fill that width), at least 380
-                    .width(IntrinsicSize.Max)
-                    .widthIn(min = 380.px)
-                    .heightIn(max = (1080f - y - 40f).px)
-                    .clip(RoundedCornerShape(30.px))
-                    .backdropBlur(haze, 24f, colors.surface3)
-                    .border(1.px, colors.line, RoundedCornerShape(30.px))
-                    .padding(12.px),
-            ) {
-                BasicText(
-                    m.title.uppercase(),
-                    style = TextStyle(color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 18.tpx, letterSpacing = .12.em),
-                    modifier = Modifier.staggerEntrance(0, Motion.MENU_DELAY).padding(start = 24.px, end = 24.px, top = 14.px, bottom = 10.px),
-                )
-                RowGlideHost(
-                    ring = null,
-                    corner = 20f,
-                    focusScale = 1f,
-                    modifier = Modifier.weight(1f, fill = false).clipToBounds(),
-                    fill = colors.accent,
-                    glow = null,
-                ) {
-                    CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
-                        Column(
-                            Modifier.fillMaxWidth()
-                                .focusedListBoundary(navigation)
-                                .verticalScroll(scroll),
-                        ) {
-                            m.items.forEachIndexed { i, item ->
-                                MenuItemView(item.icon, item.label, i + 1, Modifier.focusedListRow(navigation, i)) {
-                                    onDismiss()
-                                    item.action()
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun MenuItemView(icon: String, label: String, index: Int, modifier: Modifier, onClick: () -> Unit) {
-    val colors = LocalDelosColors.current
-    var focused by remember { mutableStateOf(false) }
-    val iconTint by animateColorAsState(if (focused) colors.onAccent else colors.text3, tween(Motion.FADE, easing = Motion.Ease), label = "menuItemIcon")
-    val labelTint by animateColorAsState(if (focused) colors.onAccent else colors.text, tween(Motion.FADE, easing = Motion.Ease), label = "menuItemLabel")
-    Row(
-        modifier
-            .staggerEntrance(minOf(index, Motion.STAGGER_CAP), Motion.MENU_DELAY)
-            .focusEffects(onClick = onClick, corner = 20f, focusScale = 1f, ring = null, glow = null, glide = true, onFocusChange = { focused = it })
-            .fillMaxWidth()
-            .height(72.px)
-            .clip(RoundedCornerShape(20.px))
-            .padding(horizontal = 24.px),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(18.px),
-    ) {
-        Symbol(icon, 30.tpx, iconTint, filled = focused)
-        BasicText(label, style = TextStyle(color = labelTint, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 24.tpx))
-    }
 }
 
 /**

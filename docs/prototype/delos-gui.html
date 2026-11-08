@@ -300,13 +300,36 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
 .layer.open { opacity: 1; pointer-events: auto; }
 #scrim { position: absolute; inset: 0; z-index: 35; background: var(--scrim); opacity: 0; pointer-events: none; transition: opacity .35s ease; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
 #scrim.open { opacity: 1; }
-#ctxmenu { min-width: 380px; padding: 12px; border-radius: 30px; background: var(--surface-3); border: 1px solid var(--line); box-shadow: 0 30px 80px -20px rgba(0, 0, 0, .6); transform: scale(.9); transform-origin: top left; backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+/* Context menu (variant A, approved 2026-11-08): an anchored glass card with a caret pointing at the focused element */
+#scrim.light { background: rgba(4, 8, 16, .26); backdrop-filter: none; -webkit-backdrop-filter: none; }
+#ctxmenu { width: max-content; min-width: 470px; max-width: 640px; padding: 14px; box-sizing: border-box; border-radius: 34px; background: var(--card-fill); transform: scale(.86); transform-origin: var(--ox, 0) var(--oy, 0);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .11), inset 0 1.5px 0 rgba(255, 255, 255, .26), var(--card-shadow); backdrop-filter: blur(46px) saturate(1.6); -webkit-backdrop-filter: blur(46px) saturate(1.6);
+  transition: opacity .3s ease, transform .56s var(--ease-spring); }
 #ctxmenu.open { transform: none; }
-.menu-item { display: flex; align-items: center; gap: 18px; height: 72px; padding: 0 24px; border-radius: 20px; font-weight: 600; font-size: calc(24px * var(--ts)); }
-.menu-item .ms { font-size: calc(30px * var(--ts)); color: var(--text-3); }
-.menu-item.is-focus { background: var(--accent); color: var(--on-accent); }
-.menu-item.is-focus .ms { color: var(--on-accent); }
-.menu-title { padding: 14px 24px 10px; font-size: calc(18px * var(--ts)); font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3); }
+.ctx-caret { position: absolute; pointer-events: none; background: var(--card-tint); backdrop-filter: blur(46px) saturate(1.6); -webkit-backdrop-filter: blur(46px) saturate(1.6); }
+.ctx-caret.left, .ctx-caret.right { width: 24px; height: 60px; }
+.ctx-caret.top, .ctx-caret.bottom { width: 60px; height: 24px; }
+.ctx-caret.left { left: -23px; clip-path: path("M24 0 C24 12 21 19 13 24 Q-4 30 13 36 C21 41 24 48 24 60 Z"); }
+.ctx-caret.right { right: -23px; clip-path: path("M0 0 C0 12 3 19 11 24 Q28 30 11 36 C3 41 0 48 0 60 Z"); }
+.ctx-caret.top { top: -23px; clip-path: path("M0 24 C12 24 19 21 24 13 Q30 -4 36 13 C41 21 48 24 60 24 Z"); }
+.ctx-caret.bottom { bottom: -23px; clip-path: path("M0 0 C12 0 19 3 24 11 Q30 28 36 11 C41 3 48 0 60 0 Z"); }
+.menu-head { display: flex; align-items: center; gap: 18px; padding: 8px 16px 14px 10px; margin-bottom: 4px; border-bottom: 1px solid rgba(255, 255, 255, .10); }
+.menu-head .tx { min-width: 0; flex: 1; }
+.menu-head .ey { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 16px; letter-spacing: .13em; text-transform: uppercase; color: var(--text-3); white-space: nowrap; }
+.menu-head .ey .dot { width: 10px; height: 10px; border-radius: 50%; background: #3ddc84; box-shadow: 0 0 10px #3ddc84; }
+.menu-head .nm { font-family: var(--font-display); font-weight: 600; font-size: 25px; line-height: 1.2; margin: 3px 0 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.menu-head .meta { color: var(--text-2); font-size: 19px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.menu-head .ctx-thumb { position: relative; flex: none; width: 52px; height: 78px; border-radius: 14px; overflow: hidden; }
+.menu-head .ctx-thumb .art { position: absolute; inset: 0; }
+.menu-head .ctx-thumb .art-title { display: none; }
+/* Rows: icon and label (a chevron for a submenu), no button glyph; the hints stay in the hint strip */
+.menu-item { display: flex; align-items: center; gap: 18px; height: 64px; margin-bottom: 4px; padding: 0 22px 0 24px; border-radius: 28px; font-weight: 600; font-size: 23px; transition: background-color .52s ease, box-shadow .52s ease, color .52s ease; }
+.menu-item .ms { font-size: 30px; color: var(--text-2); }
+.menu-item.is-focus { background: color-mix(in srgb, var(--accent) 17%, transparent); box-shadow: inset 0 0 0 3px var(--accent), 0 0 20px -6px var(--glow); }
+.menu-item.is-focus .ms { color: var(--accent); }
+/* Destructive rows (Quit, Remove) are red, and so is their plate: choosing one is the confirmation, there is no dialog */
+.menu-item.danger, .menu-item.danger .ms, .menu-item.danger.is-focus .ms { color: #ff8f86; }
+.menu-item.danger.is-focus { background: color-mix(in srgb, #ff8f86 16%, transparent); box-shadow: inset 0 0 0 3px #ff8f86, 0 0 20px -6px rgba(255, 143, 134, .45); }
 #sidemenu { top: 0; left: 0; bottom: 0; width: 620px; padding: 48px 40px; box-sizing: border-box; background: var(--surface-3); border-right: 1px solid var(--line); transform: translateX(-60px); display: flex; flex-direction: column; gap: 10px; backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px); }
 #sidemenu.open { transform: none; }
 .side-head { display: flex; align-items: center; gap: 20px; padding: 0 12px 24px; border-bottom: 1px solid var(--line); margin-bottom: 14px; }
@@ -1284,9 +1307,9 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
     const ctx = el && el.dataset.ctx;
     if (ctx === "game") {
       const g = GAMES.find(x => x.id === el.dataset.game);
-      return { title: g.title, items: [["play_arrow", "Start game", "ctx:launch"], ["download", "Download covers", "ctx:cover"], ["star", "Add to favorites", "ctx:fav"], ["visibility_off", "Hide game", "ctx:hide"], ["info", "Game details", "ctx:details"]] };
+      return { title: g.title, game: g, eyebrow: "Game", meta: g.played, items: [["play_arrow", "Start game", "ctx:launch"], ["photo_library", "Artwork", "ctx:cover"], ["star", "Add to favorites", "ctx:fav"], ["visibility_off", "Hide game", "ctx:hide"], ["info", "Game details", "ctx:details"]] };
     }
-    if (ctx === "device") return { title: state.pcName, items: [["edit", "Rename", "ctx:rename"], ["power", "Wake the PC", "ctx:wake"], ["link_off", "Unpair", "ctx:unpair"]] };
+    if (ctx === "device") return { title: state.pcName, below: true, items: [["edit", "Rename", "ctx:rename"], ["power", "Wake the PC", "ctx:wake"], ["link_off", "Unpair", "ctx:unpair"], ["delete", "Remove from Delos", "ctx:unpair", true]] };
     if (ctx === "row") return { title: "Setting", items: [["restart_alt", "Reset to default", "ctx:reset"], ["help", "What does this do?", "ctx:help"]] };
     return { title: "Delos", items: [["menu", "Side menu", "ctx:side"], ["keyboard", "Controls help", "ctx:keys"]] };
   }
@@ -1295,17 +1318,34 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
     ctxSource = focused;
     const m = ctxItems(focused);
     const menu = $("#ctxmenu");
-    menu.innerHTML = `<div class="menu-title">${escapeHtml(m.title)}</div>` + m.items.map((it, i) =>
-      `<div class="menu-item f" tabindex="-1" data-action="${it[2]}" data-id="ctx-${i}"><span class="ms" data-icon="${it[0]}"></span>${it[1]}</div>`).join("");
+    const head = (m.game ? `<span class="ctx-thumb">${artHtml(m.game, {})}</span>` : "") +
+      `<div class="tx">${m.eyebrow ? `<div class="ey">${escapeHtml(m.eyebrow)}</div>` : ""}<div class="nm">${escapeHtml(m.title)}</div>${m.meta ? `<div class="meta">${escapeHtml(m.meta)}</div>` : ""}</div>`;
+    menu.innerHTML = `<div class="ctx-caret" id="ctxcaret"></div><div class="menu-head">${head}</div>` + m.items.map((it, i) =>
+      `<div class="menu-item f${it[3] ? " danger" : ""}" tabindex="-1" data-action="${it[2]}" data-id="ctx-${i}"><span class="ms" data-icon="${it[0]}"></span>${it[1]}</div>`).join("");
     const s = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--s")) || 1;
     const sr = stage.getBoundingClientRect();
-    let x = 760, y = 300;
+    const w = menu.offsetWidth, h = Math.min(menu.offsetHeight, 840), caret = $("#ctxcaret");
+    let x = 760, y = 300, side = "", along = 0, ox = 0, oy = 0;
     if (focused) {
       const r = focused.getBoundingClientRect();
-      x = (r.left - sr.left) / s + Math.min(60, r.width / s / 2); y = (r.top - sr.top) / s + Math.min(80, r.height / s / 2);
+      const a = { l: (r.left - sr.left) / s, t: (r.top - sr.top) / s, w: r.width / s, h: r.height / s };
+      const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+      if (m.below) {
+        // Under the element, centered, caret on top
+        x = clamp(a.l + a.w / 2 - w / 2, 60, 1860 - w); y = a.t + a.h + 44; side = "top";
+        along = clamp(a.l + a.w / 2 - x, 72, w - 72); ox = along; oy = -24;
+      } else {
+        // Beside the element (flips to its left near the screen edge), centered on it, kept 120 px from the top and bottom
+        side = "left"; x = a.l + a.w + 44;
+        if (x + w > 1860) { side = "right"; x = a.l - 44 - w; }
+        y = clamp(a.t + a.h / 2 - h / 2, 120, 960 - h);
+        along = clamp(a.t + a.h / 2 - y, 72, h - 72); ox = side === "left" ? -24 : w + 24; oy = along;
+      }
     }
-    x = Math.max(40, Math.min(1920 - 420, x)); y = Math.max(110, Math.min(1080 - 120 - 72 * m.items.length, y));
+    caret.className = "ctx-caret " + side;
+    if (side === "top") caret.style.left = along - 30 + "px"; else caret.style.top = along - 30 + "px";
     menu.style.left = x + "px"; menu.style.top = y + "px";
+    menu.style.setProperty("--ox", ox + "px"); menu.style.setProperty("--oy", oy + "px");
     openLayer("ctxmenu");
   }
   function ctxAction(a) {
@@ -1334,6 +1374,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
     layers.push(id);
     el.classList.add("open");
     $("#scrim").classList.toggle("open", id !== "quickmenu" && id !== "qmpop");
+    $("#scrim").classList.toggle("light", id === "ctxmenu");
     blip("open");
     const first = focusables()[0];
     if (first) focusEl(first, { silent: true });

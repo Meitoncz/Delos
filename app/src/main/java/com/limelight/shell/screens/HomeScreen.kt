@@ -88,6 +88,8 @@ import com.limelight.shell.Layer
 import com.limelight.shell.LocalFocusTracker
 import com.limelight.shell.LocalGameActions
 import com.limelight.shell.LocalShell
+import com.limelight.shell.MenuCover
+import com.limelight.shell.MenuHeader
 import com.limelight.shell.MenuItem
 import com.limelight.shell.data.App
 import com.limelight.shell.data.Library
@@ -471,6 +473,9 @@ enum class TileBadge(val icon: String, val label: String) {
  */
 private fun gameMenu(
     pc: Pc, app: App, hidden: Boolean, running: App?, image: ImageBitmap?, actions: GameActions, onHide: (App, Boolean) -> Unit,
+    /** The facts the header states under the game's name. */
+    lastPlayed: Boolean,
+    custom: Boolean,
     /** Opens the artwork screen. */
     onArtwork: () -> Unit,
     onSettings: () -> Unit,
@@ -478,29 +483,47 @@ private fun gameMenu(
 ) =
     ContextMenu(
         app.name,
-        buildList {
+        header = gameMenuHeader(pc, app, hidden, running, image, lastPlayed, custom),
+        items = buildList {
             when {
                 app.running -> {
                     add(MenuItem(Symbols.RESUME, "Resume") { actions.start(pc, app, image) })
-                    add(MenuItem(Symbols.POWER_SETTINGS_NEW, "Quit game") { actions.quit(pc, app) })
+                    add(MenuItem(Symbols.POWER_SETTINGS_NEW, "Quit game", danger = true) { actions.quit(pc, app) })
                 }
                 running != null -> {
-                    add(MenuItem(Symbols.SWAP_HORIZ, "Quit ${running.name} and start") { actions.quitAndStart(pc, running, app, image) })
+                    add(MenuItem(Symbols.SWAP_HORIZ, "Quit ${running.name} and start", danger = true) { actions.quitAndStart(pc, running, app, image) })
                     add(MenuItem(Symbols.RESUME, "Resume ${running.name}") { actions.start(pc, running, null) })
                 }
                 else -> add(MenuItem(Symbols.PLAY_ARROW, "Start game") { actions.start(pc, app, image) })
             }
             if (BundledArtwork.kind(app) == null) {
-                add(MenuItem(Symbols.PHOTO_LIBRARY, "Artwork", onArtwork))
-                add(MenuItem(Symbols.SEARCH, "Metadata", onMetadata))
+                add(MenuItem(Symbols.PHOTO_LIBRARY, "Artwork", action = onArtwork))
+                add(MenuItem(Symbols.SEARCH, "Metadata", action = onMetadata))
             }
-            add(MenuItem(Symbols.SETTINGS, "Game settings", onSettings))
+            add(MenuItem(Symbols.SETTINGS, "Game settings", action = onSettings))
             add(
                 if (hidden) MenuItem(Symbols.VISIBILITY, "Show game") { onHide(app, false) }
                 else MenuItem(Symbols.VISIBILITY_OFF, "Hide game") { onHide(app, true) }
             )
         },
     )
+
+/** The game menu's header: its cover, whether it runs, and what else is worth a line (last played, custom settings, another game running, hidden). */
+private fun gameMenuHeader(pc: Pc, app: App, hidden: Boolean, running: App?, image: ImageBitmap?, lastPlayed: Boolean, custom: Boolean): MenuHeader {
+    val art = appArt(pc, app)
+    val other = running?.takeIf { it.id != app.id }
+    return MenuHeader(
+        status = if (app.running) "Running" else "Game",
+        cover = MenuCover(image, art.hue, art.hue2, art.icon),
+        running = app.running,
+        meta = listOfNotNull(
+            "Last played".takeIf { lastPlayed },
+            "${other?.name} is running".takeIf { other != null },
+            "Custom settings".takeIf { custom },
+            "Hidden".takeIf { hidden },
+        ).joinToString(" · ").ifEmpty { null },
+    )
+}
 
 @Composable
 private fun GameInfo(pc: Pc, app: App, modifier: Modifier, reducedMotion: Boolean, matchGameColors: Boolean) {
@@ -681,9 +704,9 @@ private fun GameTile(
     val image = cover ?: boxImage
     val shown = if (wide) wideCover ?: boxImage else image
     val onArtwork = { shell.navigate(Screen.Artwork(pc, app)) }
-    val menu = remember(pc, app, hidden, running, image, onMetadata) {
+    val menu = remember(pc, app, hidden, running, image, onMetadata, badge, custom) {
         gameMenu(
-            pc, app, hidden, running, image, actions, onHide, onArtwork,
+            pc, app, hidden, running, image, actions, onHide, lastPlayed = badge == TileBadge.LAST_PLAYED, custom = custom, onArtwork = onArtwork,
             onSettings = { shell.navigate(Screen.GameSettings(pc, app)) },
             onMetadata = { onMetadata(pc, app) },
         )
