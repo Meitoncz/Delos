@@ -839,3 +839,11 @@ These preserve implementation/design context from the removed UI plan, not phase
 - Virtual controls use `OscStyle`: thin glass outlines, Figtree capitals, filled pressed state,
   circular face/stick buttons, shoulder/menu pills and a chevron D-pad. The stick-button overlap is
   intentional. Debug info provides a preview without starting a stream.
+- **`Game` structure** ([#29](https://github.com/Meitoncz/Delos/issues/29)). `Game` is the streaming
+  activity and keeps the lifecycle, the `onCreate` orchestration and thin delegates for its external
+  callers (`StreamMenu`, `StreamLoader`, `StreamContainer`, `ExternalDisplayControlActivity`,
+  `KeyboardAccessibilityService`). Self-contained parts live in helpers it creates: `StreamIntentParams`
+  (launch intent extras, certificate, `NvHTTP` creation; the `EXTRA_*` keys stay on `Game`),
+  `binding/input/CommitTextSender` (IME commit text in ≤512-byte UTF-8 chunks, Backspace for deleted
+  text), `utils/StreamClipboardSync` (smart and manual clipboard sync) and `utils/WifiLockHolder`
+  (high-performance and low-latency Wi-Fi locks for the stream's lifetime).
