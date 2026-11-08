@@ -18,7 +18,9 @@ Android client for streaming games from **Vibepollo** (a fork of Apollo/Sunshine
   languages, After publication, Research and ideas; milestones that are finished are closed, open a new one only if no existing
   one fits) and the matching labels (type: feature/idea/research/maintenance/testing/bug; area: ui/controls/pyrowave/quality/host/
   platform/upstream; state when relevant: needs-decision/blocked/deferred/conditional/recurring). Never leave an open issue
-  without a milestone; check `gh issue list --state open --json number,milestone` for `null` after creating one.
+  without a milestone while the roadmap is unfinished; check `gh issue list --state open --json number,milestone` for `null`
+  after creating one. Exception (user, 2026-11-08): once every roadmap milestone is finished (no open roadmap issues left),
+  new issues may be created without a milestone.
 - Read the latest issue description, comments, Project fields and dependencies before starting.
   Record decisions, exercised checks and the completion commit in English; close only when the
   actual criteria are met. An issue is not automatic approval to implement or redesign.
