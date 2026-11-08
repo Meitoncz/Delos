@@ -126,7 +126,7 @@ private fun ProfileChip(profiles: Profiles, store: ProfileStore, modifier: Modif
             .focusEffects(
                 onClick = { openProfilesMenu(shell, tracker, feedback, profiles, store, Screen.Start) },
                 corner = 999f, focusScale = 1.06f, ring = FocusRing(4f, 4f), glow = FocusGlow(14f, 40f, -12f),
-                clickCue = null, contextMenu = menu, onFocusChange = { focused = it },
+                clickCue = null, contextMenu = menu, onLookChange = { focused = it },
             )
             .clip(CircleShape)
             .glass(colors.surface)

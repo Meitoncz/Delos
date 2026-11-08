@@ -191,10 +191,8 @@ fun SettingRow(
                 adjustable = adjust != null && enabled,
                 controllerAdjust = controllerAdjust,
                 focusMillis = if (glide != null) Motion.ROW_FOCUS else Motion.FOCUS,
-                onFocusChange = {
-                    focused = it
-                    if (it) onFocused?.invoke()
-                },
+                onFocusChange = { if (it) onFocused?.invoke() },
+                onLookChange = { focused = it },
             )
             .clip(shape),
     ) {

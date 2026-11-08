@@ -115,6 +115,11 @@ fun Modifier.focusEffects(
     adjustable: Boolean = false,
     controllerAdjust: ((direction: Int, repeatCount: Int) -> Unit)? = null,
     onFocusChange: ((Boolean) -> Unit)? = null,
+    /**
+     * Whether the element LOOKS focused: it has the focus, or its context menu is open ([com.limelight.shell.FocusTracker.hold]).
+     * For what a caller draws itself (a cover's colors, a label, a pulse); [onFocusChange] stays the focus itself (sounds, hero, info).
+     */
+    onLookChange: ((Boolean) -> Unit)? = null,
     /** What a press squeezes the element to for a moment ([Motion.PRESS_SCALE]); 1 for an element that has no press feedback of its own kind. */
     pressScale: Float = Motion.PRESS_SCALE,
     /** How long the focus spring of the scale takes ([Motion.FOCUS]). */
@@ -128,31 +133,35 @@ fun Modifier.focusEffects(
     val tracker = LocalFocusTracker.current
     val plate = if (glide) LocalRowGlide.current else null
     var focused by remember { mutableStateOf(false) }
+    val requester = remember { FocusRequester() }
+    // While its context menu is open the focus is in the menu, but the element keeps its focus look (ring, scale, glow, plate)
+    val look = focused || tracker.holds(requester)
+    val currentLookChange by rememberUpdatedState(onLookChange)
+    LaunchedEffect(look) { currentLookChange?.invoke(look) }
     val pulse = rememberPressPulse()
-    val scale by animateFocusScale(focused, pulse.pressed, focusScale, pressScale, focusMillis = if (plate != null) Motion.ROW_FOCUS else focusMillis)
+    val scale by animateFocusScale(look, pulse.pressed, focusScale, pressScale, focusMillis = if (plate != null) Motion.ROW_FOCUS else focusMillis)
     // Hosted rows never draw an independent ring or glow.
     val ringAlpha by animateFloatAsState(
-        if (focused) 1f else 0f, tween(if (focused) 140 else 110, easing = EaseOut), label = "focusRing",
+        if (look) 1f else 0f, tween(if (look) 140 else 110, easing = EaseOut), label = "focusRing",
     )
     // The glow is a blurred shadow layer: only an element that is (or just was) focused has one. It stays attached for a while
     // after the focus has left, so a focus that moves back and forth between two elements never attaches and detaches it again.
     var glowHeld by remember { mutableStateOf(false) }
-    LaunchedEffect(focused) {
-        if (focused) glowHeld = true else {
+    LaunchedEffect(look) {
+        if (look) glowHeld = true else {
             delay(GLOW_HOLD_MS)
             glowHeld = false
         }
     }
-    val glowVisible = focused || glowHeld
+    val glowVisible = look || glowHeld
     val sweepPos = remember { Animatable(0f) }
-    LaunchedEffect(focused) {
-        if (focused && sweep) {
+    LaunchedEffect(look) {
+        if (look && sweep) {
             sweepPos.snapTo(0f)
             sweepPos.animateTo(1f, tween(1250, delayMillis = 80, easing = EaseOut))
         }
     }
     val interaction = remember { MutableInteractionSource() }
-    val requester = remember { FocusRequester() }
     val position = remember { arrayOfNulls<LayoutCoordinates>(1) }
     val activate = {
         clickCue?.let(feedback::play)
@@ -167,9 +176,9 @@ fun Modifier.focusEffects(
     // The animated values (scale, glow and ring alpha) are only read while drawing, never while composing:
     // a focus change would otherwise rebuild both affected elements on every frame of the animation
     this
-        .then(if (plate != null) Modifier.rowGlideTarget(focused) else Modifier)
+        .then(if (plate != null) Modifier.rowGlideTarget(look) else Modifier)
         // The focused element is drawn above its neighbours, so its ring and scale are never covered
-        .zIndex(if (focused) 1f else 0f)
+        .zIndex(if (look) 1f else 0f)
         .graphicsLayer {
             scaleX = scale
             scaleY = scale
@@ -207,7 +216,7 @@ fun Modifier.focusEffects(
         .drawWithContent {
             drawContent()
             val r = min(stagePx(corner, stage), size.minDimension / 2f)
-            if (sweep && focused) drawSweep(sweepPos.value, r)
+            if (sweep && look) drawSweep(sweepPos.value, r)
             if (plate == null && ring != null && ringAlpha > 0f) drawFocusRing(ring, r, ringAlpha, colors, stage)
         }
         .onGloballyPositioned {

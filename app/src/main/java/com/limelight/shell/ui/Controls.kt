@@ -238,7 +238,7 @@ fun CircleItem(
                     .glideTarget(focused)
                     .focusEffects(
                         onClick = onClick, corner = 999f, focusScale = 1.16f, ring = if (glide != null) null else FocusRing(5f, 5f), glow = FocusGlow(26f, 70f, -16f),
-                        contextMenu = contextMenu, onFocusChange = { focused = it },
+                        contextMenu = contextMenu, onLookChange = { focused = it },
                         glide = rowPlate != null,
                     )
                     .size(side.px)

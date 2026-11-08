@@ -550,6 +550,9 @@ fun Shell(
         feedback.silenceNextFocus()
         val restored = runCatching { previous.requestFocus() }.getOrDefault(false)
         if (!restored) runCatching { shell.restoreScreenFocus?.invoke() }
+        // The held element has the focus again by now (it let go of its hold then); otherwise the hold must not outlive the menu
+        delay(150)
+        tracker.release()
     }
 
     val profile = profiles.current

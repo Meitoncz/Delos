@@ -202,6 +202,13 @@ class FocusTracker {
         private set
     var adjustable by mutableStateOf(false)
         private set
+
+    /**
+     * The element whose context menu is open: it keeps its focus look (ring, scale, glow) while the focus is in the menu, so
+     * the menu points at a lit cover ([holds]). Set when the menu opens ([hold]), cleared when the element has the focus again
+     * (the menu closed) or by [release].
+     */
+    private var held by mutableStateOf<FocusRequester?>(null)
     private var coordinates: LayoutCoordinates? = null
     private var activate: (() -> Unit)? = null
     private var adjust: ((direction: Int, repeatCount: Int) -> Unit)? = null
@@ -214,6 +221,7 @@ class FocusTracker {
         activate: (() -> Unit)? = null,
         adjust: ((direction: Int, repeatCount: Int) -> Unit)? = null,
     ) {
+        if (requester == held) held = null
         this.requester = requester
         this.coordinates = coordinates
         this.contextMenu = contextMenu
@@ -221,6 +229,18 @@ class FocusTracker {
         this.activate = activate
         this.adjust = adjust
     }
+
+    /** The focused element keeps its focus look until [release] or until it has the focus again. */
+    fun hold() {
+        held = requester
+    }
+
+    fun release() {
+        held = null
+    }
+
+    /** Whether [requester] is the held element (reads state: the look follows it). */
+    fun holds(requester: FocusRequester): Boolean = held == requester
 
     fun moved(requester: FocusRequester, coordinates: LayoutCoordinates) {
         if (requester == this.requester) this.coordinates = coordinates
@@ -326,7 +346,11 @@ class ShellState(initial: Screen) {
 
     fun openLayer(next: Layer, tracker: FocusTracker) {
         // Switching from one layer to another (also right after closing one) keeps the original return focus
-        if (layer == null && returnFocus == null) returnFocus = tracker.requester
+        if (layer == null && returnFocus == null) {
+            returnFocus = tracker.requester
+            // The element a context menu belongs to stays lit behind it
+            if (next is Layer.Context) tracker.hold()
+        }
         layer = next
         menuPath = emptyList()
     }

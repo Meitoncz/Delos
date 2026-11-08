@@ -732,10 +732,9 @@ private fun GameTile(
                 onClick = activate, corner = 26f, sweep = true, contextMenu = menu,
                 clickCue = if (running != null && running.id != app.id) null else Cue.SELECT,
                 origin = if (wide) TransformOrigin(1f, .5f) else TransformOrigin.Center,
-                onFocusChange = {
-                    focused = it
-                    if (it) onFocused(index, app)
-                },
+                onFocusChange = { if (it) onFocused(index, app) },
+                // The cover stays lit (ring, scale, colors, pulse) while its context menu is open
+                onLookChange = { focused = it },
             )
             // The online pulse of the start screen, around the selected game
             .then(if (focused) Modifier.focusPulse(26f) else Modifier)
