@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Host problems (Vibepollo)
+    url: https://github.com/Nonary/Vibepollo/issues
+    about: Problems that happen on the PC side (capture, encoder, host UI) belong to the host project.
+  - name: Host problems (Apollo)
+    url: https://github.com/ClassicOldSong/Apollo/issues
+    about: Problems that happen on the PC side (capture, encoder, host UI) belong to the host project.
+  - name: Host problems (Sunshine)
+    url: https://github.com/LizardByte/Sunshine/issues
+    about: Problems that happen on the PC side (capture, encoder, host UI) belong to the host project.
+  - name: Read the README
+    url: https://github.com/Meitoncz/Delos#readme
+    about: What Delos is, how to build it and who it builds on.

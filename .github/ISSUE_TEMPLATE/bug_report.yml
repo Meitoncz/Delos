@@ -1,0 +1,104 @@
+name: Bug report
+description: Something in Delos does not work as expected
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. Delos is in active development and has no releases yet, so rough edges are expected.
+
+        If the problem is on the PC side (capture, encoder, host settings), please report it to Vibepollo, Apollo or Sunshine instead.
+
+        **Before posting, remove personal data** from text and screenshots: IP addresses, PC and account names, anything private.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched existing issues and did not find this one.
+          required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you see, and what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open ...
+        2. Press ...
+        3. See ...
+    validations:
+      required: true
+  - type: dropdown
+    id: frequency
+    attributes:
+      label: How often does it happen?
+      options:
+        - Always
+        - Often
+        - Sometimes
+        - Once so far
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Stream video
+        - Stream input/controller
+        - Audio
+        - Settings/UI
+        - Library/artwork/metadata
+        - Pairing/connection
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and Android version
+      placeholder: "Device model, Android version"
+    validations:
+      required: true
+  - type: input
+    id: host
+    attributes:
+      label: Host software and version
+      description: Vibepollo, Apollo or Sunshine, and which version.
+    validations:
+      required: true
+  - type: input
+    id: gpu
+    attributes:
+      label: PC GPU
+      placeholder: "GPU model"
+  - type: input
+    id: stream-settings
+    attributes:
+      label: Stream settings (if streaming)
+      description: Codec, resolution, frame rate, HDR on or off, upscaler mode.
+      placeholder: "e.g. HEVC, 1920x1080, 60 fps, HDR off, Sharpen"
+  - type: input
+    id: build
+    attributes:
+      label: Delos build
+      description: Commit or version, shown on the About page in Delos.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs and screenshots
+      description: |
+        Helpful but optional. With a debug build, run this right after the problem happens:
+
+        `adb logcat -d -s DelosPyroDiag DelosSharpen DelosLatency DelosLinkTest DelosThreads`
+
+        For stream problems, also attach a screenshot of the "Full" statistics panel. Remove IP addresses, names and other personal data first.
+      render: text
