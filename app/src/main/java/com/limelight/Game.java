@@ -70,7 +70,6 @@ import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.graphics.Outline;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.hardware.display.DisplayManager;
@@ -98,7 +97,6 @@ import android.view.View;
 import android.view.View.OnGenericMotionListener;
 import android.view.View.OnSystemUiVisibilityChangeListener;
 import android.view.View.OnTouchListener;
-import android.view.ViewOutlineProvider;
 import android.view.ViewParent;
 import android.view.Window;
 import android.view.WindowManager;
@@ -107,7 +105,6 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
 import com.limelight.utils.DelosToast;
 import com.limelight.utils.ToastKind;
-import android.widget.ImageButton;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceManager;
@@ -285,9 +282,8 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     // Delos: the stream menu of the new UI
     private com.limelight.shell.StreamMenu streamMenu;
 
-    public boolean isInputOnly = true;
     public boolean allowChangeMouseMode = true;
-    private boolean onExternelDisplay = false;
+    private boolean onExternalDisplay = false;
 
     // Queue for batching commitText payloads
     private static final int UTF8_CHUNK_SIZE = 512;
@@ -384,12 +380,12 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             currentDisplay = getWindowManager().getDefaultDisplay();
         }
 
-        onExternelDisplay = currentDisplay.getDisplayId() != Display.DEFAULT_DISPLAY;
+        onExternalDisplay = currentDisplay.getDisplayId() != Display.DEFAULT_DISPLAY;
 
         boolean shouldInvertDecoderResolution = false;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-                && onExternelDisplay
+                && onExternalDisplay
         ) {
             // StreamConfiguration and the SurfaceView aspect ratio use these fields. They must stay
             // at the profile/per-game stream size; the Display object already carries the TV canvas.
@@ -581,7 +577,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         // Check if the user has enabled HDR
         boolean willStreamHdr = false;
         if (prefConfig.enableHdr) {
-            if (onExternelDisplay) {
+            if (onExternalDisplay) {
                 // Enforce HDR on unsupported hardware can still enable 10bit streaming for better quality
                 willStreamHdr = true;
             } else {
@@ -794,11 +790,10 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
         if (Objects.equals(appUUID, NvApp.REMOTE_INPUT_UUID)) {
             // Force trackpad mode since we won't see anything on the screen
-            isInputOnly = true;
             allowChangeMouseMode = false;
             applyMouseMode(2);
         } else {
-            if (prefConfig.enableFullExDisplay && onExternelDisplay) {
+            if (prefConfig.enableFullExDisplay && onExternalDisplay) {
                 requestFocusToExternalDisplayControl(this);
                 listenForExternalDisplayRemoval();
             }
@@ -838,10 +833,10 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                 LimeLog.info("Surface is available, starting connection...");
                 attemptedConnection = true;
 
-                // Der Decoder erhält die jeweils aktive Oberfläche vom Container
+                // The decoder gets the container's currently active surface
                 decoderRenderer.setRenderTarget(streamContainer.getSurface());
 
-                // Starten Sie die NvConnection
+                // Start the NvConnection
                 conn.start(new AndroidAudioRenderer(Game.this, prefConfig.playHostAudio),
                         decoderRenderer, Game.this);
             }
@@ -889,7 +884,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                     if (streamMenu != null) {
                         streamMenu.closeForDisplayRemoval();
                     }
-                    handleDisplayRemoved();
+                    closeExternalDisplayControl();
                     finish();
                 }
             }
@@ -899,10 +894,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             }
         };
         displayManager.registerDisplayListener(externalDisplayListener, null);
-    }
-
-    private void handleDisplayRemoved() {
-        closeExternalDisplayControl();
     }
 
 
@@ -940,15 +931,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         keyBoardLayoutController.setViewCallbacks(visible -> onFullKeyboardVisibilityChanged());
         keyBoardLayoutController.refreshLayout();
         keyBoardLayoutController.show();
-    }
-
-    // Show/hide the virtual special keys
-    public void toggleKeyboardController(){
-        if (keyBoardController==null) {
-            initKeyboardController();
-            return;
-        }
-        keyBoardController.toggleVisibility();
     }
 
     public void toggleFullKeyboard() {
@@ -1283,7 +1265,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     }
 
     public boolean isOnExternalDisplay() {
-        return onExternelDisplay;
+        return onExternalDisplay;
     }
 
     private float prepareDisplayForRendering(Display currentDisplay) {
@@ -1547,7 +1529,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         ActiveKeyboardInput.unregister(this);
         timerHandler.removeCallbacksAndMessages(null);
 
-        if (prefConfig.enableFullExDisplay) handleDisplayRemoved();
+        if (prefConfig.enableFullExDisplay) closeExternalDisplayControl();
 
         if (controllerHandler != null) {
             controllerHandler.destroy();
@@ -3755,16 +3737,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         }
     }
 
-    public void rotateScreen() {
-        if (currentOrientation == Configuration.ORIENTATION_LANDSCAPE) {
-            currentOrientation = Configuration.ORIENTATION_PORTRAIT;
-            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT);
-        } else {
-            currentOrientation = Configuration.ORIENTATION_LANDSCAPE;
-            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE);
-        }
-    }
-
     /**
      * Initializes and applies the appropriate mouse mode based on user preferences
      * and whether the app is running in secondary display mode (such as Samsung DeX).
@@ -4149,24 +4121,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         }
     }
 
-
-    // Rounded SurfaceView corners: setSurfaceviewCorner(UiHelper.dpToPx(this,24));
-    private void setSurfaceviewCorner(final float radius) {
-
-        streamContainer.setOutlineProvider(new ViewOutlineProvider() {
-            @Override
-            public void getOutline(View view, Outline outline) {
-                Rect rect = new Rect();
-                view.getGlobalVisibleRect(rect);
-                int leftMargin = 0;
-                int topMargin = 0;
-                Rect selfRect = new Rect(leftMargin, topMargin, rect.right - rect.left - leftMargin, rect.bottom - rect.top - topMargin);
-                outline.setRoundRect(selfRect, radius);
-            }
-        });
-        streamContainer.setClipToOutline(true);
-    }
-
     @Override
     public boolean handleCommitText(CharSequence text) {
         if (!prefConfig.enableCommitText || conn == null) {
@@ -4214,7 +4168,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         }
     }
 
-    /** Helper ricorsivo per trovare la prima SurfaceView nel layout corrente */
+    /** Recursive helper that finds the first SurfaceView in the current layout */
     private SurfaceView findFirstSurfaceViewFrom(View v) {
         if (v instanceof SurfaceView) return (SurfaceView) v;
         if (v instanceof ViewGroup) {
