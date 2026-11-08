@@ -349,7 +349,7 @@ private fun MenuCard(
         // The shadow in a layer of its own, so the plate's frames do not redraw it
         Box(Modifier.matchParentSize().graphicsLayer { compositingStrategy = CompositingStrategy.ModulateAlpha }.drawBehind { drawCardShadow(k) })
         // The glass (the prototype's `.cm-glass`): the screen under it blurred 46 and saturated 1.6, a tint (34, 44, 84 at 50 %),
-        // a white sheen from the top (13 % fading out at 52 %), a 1 px rim (11 %) and a 1.5 px lit top edge (26 %)
+        // a white sheen from the top (13 % fading out at 52 %), a 1 px rim (11 %) all around the card and its caret (the caret is just part of the glass, like the stream popover's) and a 1.5 px lit top edge (26 %)
         Box(
             Modifier
                 .matchParentSize()
@@ -366,7 +366,6 @@ private fun MenuCard(
                         clipPath(lit.path) {
                             drawPath(lit.path, Color.White.copy(alpha = .11f), style = Stroke(2f * k))
                             clipPath(lit.lower, androidx.compose.ui.graphics.ClipOp.Difference) { drawRect(Color.White.copy(alpha = .26f)) }
-                            lit.caretEdge?.let { drawPath(it, Color.White.copy(alpha = .30f), style = Stroke(3f * k)) }
                         }
                     }
                 },
