@@ -70,24 +70,21 @@ Up/Down as before; Left/Right adjust the focused row.
 - Advanced custom resolution/FPS definitions remain in the profile; their choices are available here.
 - Audio, controls, appearance and other global options continue to come from the user profile.
 
-## Saving the live upscaler
+## The menu keeps the live upscaler for the game
 
-Stream menu → Upscaler ends with **Save for this game** (icon: floppy disk; description "Applies to
-future launches of this game"). It is an ordinary row, so a controller reaches it with the D-pad and
-A, and it never asks for confirmation. A press writes the four upscaler values the menu shows now
-(upscaling on/off, mode, sharpness, supersampling quality) as this game's overrides, in the active
-user's profile for this PC and host app ID, then the row shows a check and "Saved for <game>" for
-a moment. Nothing else is written: no bitrate, no other display setting, no profile value, no other game.
-No profile is activated. The values then show as **Custom for this game** in Game settings → Display,
-and X / Reset to profile value / Reset all remove them like any override.
+There is no save button. In the stream menu → Upscaler every change (on/off, mode, sharpness, supersampling quality)
+applies live and is written automatically as this game's overrides of the four upscaler keys, in the active user's profile
+for this PC and host app ID (`MenuAutoSave`, `GameSettingsStore.save`). A slider drag or held D-pad writes once, 500 ms
+after the last change; closing the menu or ending the stream writes at once, so the last value set wins. Opening the menu
+writes nothing, and nothing else is written: no bitrate, no other display setting, no profile value, no other game, no
+profile is activated. No toast is shown. The values then show as **Custom for this game** in Game settings → Display (and
+the game's cover badge), and X / Reset to profile value / Reset all remove them like any override.
 
-Ordinary live changes stay session-only. The saved values apply to future launches only; the running
-stream keeps its own (the launch snapshot is fixed). The row is hidden when the stream was started
-without its launch identity (no snapshot, PC or app ID in the intent), and is dimmed where the upscaler
-is unavailable. Both renderers (MediaCodec SGSR and PyroWave) read the same live values, so the row
-works for both. The supersampling level saved is the one in effect, so a 2x that PyroWave already
-fell back from is saved as 1x. The mode is saved by its stored value, so Sharpen only (`sharpen`) is saved and
-restored like the four SGSR modes; the level is still written, but Sharpen only ignores it.
+The saved values apply to future launches only; the running stream keeps its own (the launch snapshot is fixed). A stream
+started without its launch identity (no snapshot, PC or app ID in the intent) has no per-game store and stays
+session-only. Both renderers (MediaCodec SGSR and PyroWave) read the same live values. The supersampling level saved is the
+one in effect, so a 2x that PyroWave already fell back from is saved as 1x. The mode is saved by its stored value, so Sharpen
+only (`sharpen`) is saved and restored like the four SGSR modes; the level is still written, but Sharpen only ignores it.
 
 `GameSettingsStore` stores sparse, typed values under `ui_game_<PC hash>_<app ID>_<setting key>` in
 the user's `ui_profile_<UUID>` preferences. PC UUID plus host app ID distinguishes libraries; titles
@@ -118,12 +115,12 @@ Moonlight X; see the preserved [feature provenance](../README.md#feature-provena
 `GameSettingsTest` covers live inheritance, PC/game/user isolation, copying and deleting users, forgetting a
 PC, persistence across store recreation, resetting one/all overrides, PyroWave bitrate guidance, the actual
 `PreferenceConfiguration` stream reader, wrapped contexts and external-display intent forwarding. It also
-covers Save for this game: exactly the four upscaler overrides are written for that game only, a later
+covers the menu's automatic save: exactly the four upscaler overrides (`upscalerSaveValues`) are written for that game only, a later
 launch of it (and not of another game) reads them, including supersampling level 2, resets remove them,
 an unknown stored level reads as 1x, the clamping of the saved values, and which launches can save. The
 Undo of a reset (`backup` / `restoreMissing`) is covered too: it restores the removed values and codec
 bitrate slots, keeps a value changed since, never writes a foreign key and touches no other game.
-`GameSettingsLabelTest` covers the pure screen rules (chip text, per-tab custom counts, the panel
+`MenuAutoSaveTest` covers the debounce with an injected clock (one write after the last change, flush, nothing on open, per-setting merge). `GameSettingsLabelTest` covers the pure screen rules (chip text, per-tab custom counts, the panel
 summary, the "Profile: …" value labels). Debug preview of the look with fixed data:
 `--es preview_screen game_settings [--ez preview_touch true] [--ez preview_auto true]`.
 
@@ -137,11 +134,11 @@ custom settings, tab switches after scrolling, one feedback event per switch, to
 adjustment, help scrolling and focus returning to the dashboard. The user drives the
 Odin; agents do not launch games or send navigation input.
 
-Device acceptance for Save for this game: in a stream, open Stream menu → Upscaler, switch the upscaler
-on, change mode, sharpness and supersampling quality, and press Save for this game with a controller
-(the row shows a check and "Saved for <game>"). End the stream and open Game settings → Display: the
-four rows say Custom for this game. Start the game again and check the upscaler comes up as saved
-(status line, statistics); another game keeps the profile values. Reset all returns it.
+Device acceptance for the menu's automatic save: in a stream, open Stream menu → Upscaler, switch the upscaler
+on and change mode, sharpness and supersampling quality; close the menu (no save button, no toast). End the stream and
+open Game settings → Display: the four rows say Custom for this game (the profile's Display settings unchanged). Start
+the game again and check the upscaler comes up as set last (status line, statistics); another game keeps the profile
+values. Opening the menu alone must not make any row custom. Reset all returns it.
 
 2026-10-25: all 51 unit tests passed, including seven new per-game tests. Debug build and Android
 lint passed (zero errors, 380 warnings). The ARM64 build was installed on the Odin. The user confirmed

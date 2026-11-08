@@ -38,6 +38,8 @@ import com.limelight.shell.data.ProfileStore
 import com.limelight.shell.settings.AppearanceStore
 import com.limelight.shell.settings.GameSettingsStore
 import com.limelight.shell.settings.StreamMenuSettings
+import com.limelight.shell.settings.MenuAutoSave
+import com.limelight.shell.settings.MenuSavedSetting
 import com.limelight.shell.settings.upscalerSaveValues
 import com.limelight.shell.ui.Feedback
 import com.limelight.shell.ui.LocalDelosColors
@@ -219,6 +221,7 @@ class StreamMenu(private val game: Game) {
             analogNavigation.reset()
             menuReady = false
             dialog = null
+            flushAutoSave()
         }
         dialog = d
         d.show()
@@ -320,10 +323,41 @@ class StreamMenu(private val game: Game) {
         }
     }
 
+    /**
+     * The game's per-game store, from the launch identity in its intent. A stream started without one (no snapshot, PC or
+     * app ID) has no game to keep settings for: menu changes stay session-only there, as before.
+     */
+    private val saveTarget by lazy { GameSettingsStore.forLaunch(game) }
+    private val autoSaveHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val autoSaveTick = Runnable { autoSave.tick(); scheduleAutoSave() }
+    private val autoSave = MenuAutoSave(MenuAutoSave.DELAY_MS, android.os.SystemClock::uptimeMillis, ::liveValues) { saveTarget?.save(it) }
+
+    /** The live value of [setting] as the stream has it now (read when written, so the last change wins). */
+    private fun liveValues(setting: MenuSavedSetting): Map<String, Any> = when (setting) {
+        MenuSavedSetting.UPSCALER -> upscalerSaveValues(game.isUpscalingRequested, game.prefConfig.sgsrMode.index(), game.prefConfig.sgsrSharpness, game.supersamplingLevel)
+    }
+
+    /** Called only by a user's change of a menu row (never while the menu opens). */
+    private fun menuSettingChanged(setting: MenuSavedSetting) {
+        if (saveTarget == null) return
+        autoSave.changed(setting)
+        scheduleAutoSave()
+    }
+
+    private fun scheduleAutoSave() {
+        autoSaveHandler.removeCallbacks(autoSaveTick)
+        autoSave.nextDelay()?.let { autoSaveHandler.postDelayed(autoSaveTick, it) }
+    }
+
+    /** Writes the pending menu changes now: the menu closed or the stream ends. */
+    fun flushAutoSave() {
+        autoSaveHandler.removeCallbacks(autoSaveTick)
+        autoSave.flush()
+    }
+
     /** What the menu's composables read from and do to the stream: the live [Game], with [menu] as the menu's own window. */
     private inner class GameHost(private val menu: ComponentDialog) : StreamMenuHost {
         private val prefs get() = game.prefConfig
-        private val saveTarget by lazy { GameSettingsStore.forLaunch(game) }
         private val classic get() = game.gameMenuCallbacks
 
         override val gameName: String = game.intent.getStringExtra(Game.EXTRA_APP_NAME) ?: "Stream"
@@ -388,14 +422,12 @@ class StreamMenu(private val game: Game) {
         override val supersamplingLevel get() = game.supersamplingLevel
         override val upscalerMode get() = prefs.sgsrMode.index()
         override val upscalerSharpness get() = prefs.sgsrSharpness
-        override fun setUpscalingEnabled(on: Boolean) { game.setUpscalingEnabled(on) }
-        override fun setUpscalingMode(mode: Int) { game.setUpscalingMode(mode) }
-        override fun setUpscalingSharpness(percent: Int) { game.setUpscalingSharpness(percent) }
-        override fun setSupersamplingLevel(level: Int) { game.setSupersamplingLevel(level) }
-        override val canSaveUpscaler get() = saveTarget != null
-        override fun saveUpscaler() {
-            saveTarget?.save(upscalerSaveValues(game.isUpscalingRequested, upscalerMode, prefs.sgsrSharpness, game.supersamplingLevel))
-        }
+        // Every change applies live and is kept for this game (MenuAutoSave); the profile is never written from the menu
+        override fun setUpscalingEnabled(on: Boolean) { game.setUpscalingEnabled(on); upscalerChanged() }
+        override fun setUpscalingMode(mode: Int) { game.setUpscalingMode(mode); upscalerChanged() }
+        override fun setUpscalingSharpness(percent: Int) { game.setUpscalingSharpness(percent); upscalerChanged() }
+        override fun setSupersamplingLevel(level: Int) { game.setSupersamplingLevel(level); upscalerChanged() }
+        private fun upscalerChanged() = this@StreamMenu.menuSettingChanged(MenuSavedSetting.UPSCALER)
 
         override fun sendClipboard() { game.sendClipboard(true) }
         override fun getClipboard() { game.getClipboard(0) }

@@ -1462,6 +1462,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         }
         if (streamMenu != null) {
             streamMenu.closeForDisplayRemoval();
+            streamMenu.flushAutoSave();
         }
         super.onDestroy();
 

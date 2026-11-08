@@ -517,7 +517,7 @@ the accent the rest and fainter.
   (a fallback from 2× to 1× corrects the row afterwards).
 - Rows of the Upscaler page: **Enabled** (the on/off toggle for the upscaler and Sharpen only alike), **Supersampling
   quality** (only while the stream matches the display and the mode scales), **Mode** (SGSR 1 (Normal), SGSR 1 High
-  Quality, SGSR2-DV, SGSR2-DV (Quality), **Sharpen only**), **Sharpness** and Save for this game. In
+  Quality, SGSR2-DV, SGSR2-DV (Quality), **Sharpen only**), and **Sharpness**. In
   **Sharpen only** the Supersampling quality row is hidden (nothing is scaled, so it has no meaning), the page is
   titled Upscaler and the Sharpness slider is the whole effect; the tile's status reads "On: Sharpen only" in the help.
   Mode and Sharpness change live. Switching Mode to or from Sharpen only rebuilds the output stage the way the Enabled
@@ -536,9 +536,10 @@ the accent the rest and fainter.
   last second. It is shown only while the statistics overlay is on and the platform reports the display's present time, and it
   does not include the controller, network, host or decoding, so it is not the delay between a press and the changed picture
   (see [Latency](STREAM_QUALITY.md#latency-75)).
-- Its last row, **Save for this game**, saves the live on/off, mode, sharpness and supersampling quality
-  as this game's overrides for future launches, with a check and "Saved" on the row (for 2.5 seconds) and no
-  confirmation dialog. It is hidden for a stream without its launch identity.
+- There is no save button: every change on the page applies live and is kept for this game automatically (about 500 ms
+  after the last change, or when the menu closes or the stream ends; `MenuAutoSave`), as that game's overrides of the four
+  upscaler settings. The profile is never written from the menu, nothing is written while the menu merely opens, there is no
+  toast, and a stream without its launch identity stays session-only.
 
 ### Stream menu
 

@@ -439,7 +439,6 @@ private fun pageFocusKeys(host: StreamMenuHost, page: MenuPage, supersamplingMod
             if (showsSupersamplingQuality(supersamplingMode, host.upscalerMode)) add("Supersampling quality")
             add("Mode")
             add("Sharpness")
-            if (host.canSaveUpscaler) add("Save for this game")
         }
         MenuPage.MOUSE -> listOf("Touchscreen mode", "Local mouse cursor")
         MenuPage.RUMBLE -> RumblePresets.values().map { it.label }
@@ -537,16 +536,6 @@ private fun PageRows(
                 host.setUpscalingSharpness(it)
                 changesTick()
             }, enabled = available)
-            // The one way a menu change outlives the session: the live values become this game's own settings.
-            // A stream started without its launch identity has no game to save for, so the row is not offered.
-            if (host.canSaveUpscaler) {
-                var savedTick by remember { mutableIntStateOf(0) }
-                LaunchedEffect(savedTick) { if (savedTick > 0) { delay(2500); savedTick = 0 } }
-                MenuRow(Symbols.REMEMBER, "Save for this game", RowValue.Action {
-                    host.saveUpscaler()
-                    savedTick++
-                }, confirmation = if (savedTick > 0) "Saved" else null, enabled = available)
-            }
         }
         MenuPage.MOUSE -> {
             val modes = remember { host.mouseModes() }

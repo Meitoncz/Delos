@@ -167,7 +167,7 @@ class StreamMenuLayoutTest {
 
     @Test
     fun everyPageKeepsItsNaturalHeightUpToOneSharedLimitAndTheRowsScrollBeyondIt() {
-        // The Upscaler page with supersampling (toggle, quality, mode, sharpness, Save for this game) is 601.6 tall at
+        // A five-row page (the Upscaler page had one more row once) is 601.6 tall at
         // text scale 1.0 and fits the limit without scrolling, also at 1.15 (610.8); at 1.3 the three-line help
         // makes it scroll
         assertEquals(601.6f, popoverCardHeight(5, 1f), .01f)
@@ -275,7 +275,7 @@ class StreamMenuLayoutTest {
             MenuPage.COMMANDS to listOf("Commands", "Command: Restart the game", "Command: " + "C".repeat(80)),
             MenuPage.BRIGHTNESS to listOf("Screen brightness"),
             MenuPage.BITRATE to listOf("Bitrate", "Apply bitrate"),
-            MenuPage.UPSCALER to listOf("Upscaling", "Supersampling on", "Supersampling quality", "Mode", "Sharpness", "Save for this game"),
+            MenuPage.UPSCALER to listOf("Upscaling", "Supersampling on", "Supersampling quality", "Mode", "Sharpness"),
             MenuPage.MOUSE to listOf("Touchscreen mode", "Local mouse cursor"),
             // Rumble feel page
             MenuPage.RUMBLE to listOf("Rumble feel") + RumblePresets.values().map { StreamMenuHelp.rumbleKey(it) },

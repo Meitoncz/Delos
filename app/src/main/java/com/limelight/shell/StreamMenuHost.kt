@@ -70,9 +70,6 @@ internal interface StreamMenuHost {
     fun setUpscalingSharpness(percent: Int)
     fun setSupersamplingLevel(level: Int)
 
-    /** False for a stream without its launch identity: there is no game to save the upscaler for. */
-    val canSaveUpscaler: Boolean
-    fun saveUpscaler()
 
     // More
     fun sendClipboard()

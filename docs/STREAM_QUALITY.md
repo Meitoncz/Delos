@@ -381,12 +381,12 @@ presentation parameters without restarting either decoder. Live changes are sess
 defaults remain in Display settings and may be overridden per game. Initialization/runtime failures
 fall back to direct rendering and are exposed in the menu/logs; HDR is not silently converted to SDR.
 
-The page's last row, **Save for this game**, is the one way to keep live changes: it writes the current
-upscaler on/off, mode, sharpness and supersampling level as that game's per-game overrides (see
-[PER_GAME_SETTINGS.md](PER_GAME_SETTINGS.md#saving-the-live-upscaler)) and applies from its next
-launch. It saves nothing else (no bitrate, no other display setting) and changes neither the profile
-nor other games; the running stream keeps its live values. It is hidden for a stream started without
-its launch identity.
+Every change on this page is also kept for the running game, automatically: it applies live and, about 500 ms after the
+last change (a slider drag or held D-pad writes once; the menu closing or the stream ending writes at once), the current
+upscaler on/off, mode, sharpness and supersampling level are written as that game's per-game overrides (see
+[PER_GAME_SETTINGS.md](PER_GAME_SETTINGS.md#the-menu-keeps-the-live-upscaler-for-the-game)) and apply from its next
+launch. Nothing else is written (no bitrate, no other display setting) and neither the profile nor other games change; the
+running stream keeps its live values. A stream started without its launch identity stays session-only.
 
 Both renderers implement SGSR 1 (Normal), SGSR 1 (Quality), SGSR2-DV and SGSR2-DV (Quality), and
 the [Sharpen only mode](#sharpen-only-mode).

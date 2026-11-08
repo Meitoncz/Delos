@@ -4,7 +4,7 @@ import com.limelight.preferences.UpscalerMode
 
 /**
  * The upscaler's settings. They follow the upscaler's availability (OpenGL ES 3.1 for MediaCodec codecs,
- * or PyroWave's own Vulkan decoder), and the stream menu's Save row writes exactly these for a game.
+ * or PyroWave's own Vulkan decoder), and the stream menu keeps exactly these for the running game as they are changed (MenuAutoSave).
  */
 val UPSCALER_KEYS = listOf("checkbox_sgsr", "list_sgsr_quality", "seekbar_sgsr_sharpness", "list_sgsr_supersampling_level")
 

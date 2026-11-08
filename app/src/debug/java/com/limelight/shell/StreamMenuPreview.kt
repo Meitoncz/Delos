@@ -163,8 +163,6 @@ internal class FakeStreamMenuHost(initialUpscalerMode: Int = 2) : StreamMenuHost
     override fun setUpscalingMode(mode: Int) { upscalerMode = mode }
     override fun setUpscalingSharpness(percent: Int) { upscalerSharpness = percent }
     override fun setSupersamplingLevel(level: Int) { this.level = level }
-    override val canSaveUpscaler = true
-    override fun saveUpscaler() = Unit
 
     override fun sendClipboard() = Unit
     override fun getClipboard() = Unit
