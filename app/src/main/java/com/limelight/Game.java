@@ -10,6 +10,7 @@ import static com.limelight.utils.ServerHelper.getSecondaryDisplay;
 import com.limelight.binding.PlatformBinding;
 import com.limelight.binding.audio.AndroidAudioRenderer;
 import com.limelight.binding.input.ActiveKeyboardInput;
+import com.limelight.binding.input.CommitTextSender;
 import com.limelight.binding.input.ControllerHandler;
 import com.limelight.binding.input.KeyboardTranslator;
 import com.limelight.binding.input.capture.InputCaptureManager;
@@ -110,10 +111,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceManager;
 
 import android.os.Looper;
-import java.nio.charset.StandardCharsets;
 import java.util.Objects;
-import java.util.Queue;
-import java.util.ArrayDeque;
 
 import java.io.ByteArrayInputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -285,26 +283,15 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     public boolean allowChangeMouseMode = true;
     private boolean onExternalDisplay = false;
 
-    // Queue for batching commitText payloads
-    private static final int UTF8_CHUNK_SIZE = 512;
-    private final Queue<String> commitTextQueue = new ArrayDeque<>();
-    private final Handler commitTextHandler = new Handler(Looper.getMainLooper());
-
-    private final Runnable flushCommitTextQueue = new Runnable() {
-        @Override
-        public void run() {
-            if (commitTextQueue.isEmpty()) {
-                return;
-            }
-            String chunk = commitTextQueue.poll();
-            if (conn != null) {
-                conn.sendUtf8Text(chunk);
-            }
-            if (!commitTextQueue.isEmpty()) {
-                commitTextHandler.postDelayed(this, 15);
-            }
-        }
-    };
+    // IME commit text, sent in UTF-8 chunks on the main thread
+    private final CommitTextSender commitTextSender = new CommitTextSender(
+            new Handler(Looper.getMainLooper()),
+            text -> {
+                if (conn != null) {
+                    conn.sendUtf8Text(text);
+                }
+            },
+            (keyCode, keyDirection) -> conn.sendKeyboardInput(keyCode, keyDirection, (byte) 0, (byte) 0));
 
     private final Runnable backgroundPing = () -> {
         if (connected) {
@@ -4126,7 +4113,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         if (!prefConfig.enableCommitText || conn == null) {
             return false;
         }
-        enqueueCommitText(text.toString());
+        commitTextSender.enqueue(text.toString());
         return true;
     }
 
@@ -4137,35 +4124,9 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         }
         // Send backspace events for deleted preceding characters
         if (beforeLength > 0) {
-            short backspaceCode = keyboardTranslator.translate(KeyEvent.KEYCODE_DEL, 0, -1);
-            for (int i = 0; i < beforeLength; i++) {
-                conn.sendKeyboardInput(backspaceCode, com.limelight.nvstream.input.KeyboardPacket.KEY_DOWN, (byte)0, (byte)0);
-                conn.sendKeyboardInput(backspaceCode, com.limelight.nvstream.input.KeyboardPacket.KEY_UP, (byte)0, (byte)0);
-            }
+            commitTextSender.sendBackspaces(keyboardTranslator.translate(KeyEvent.KEYCODE_DEL, 0, -1), beforeLength);
         }
         return true;
-    }
-
-    private void enqueueCommitText(String text) {
-        if (text == null || text.isEmpty()) {
-            return;
-        }
-        byte[] utf8 = text.getBytes(StandardCharsets.UTF_8);
-        int offset = 0;
-        while (offset < utf8.length) {
-            int end = Math.min(offset + UTF8_CHUNK_SIZE, utf8.length);
-            // Ensure we don't cut inside a multi-byte sequence
-            while (end < utf8.length && (utf8[end] & 0xC0) == 0x80) {
-                end--; // step back until we are at start of code point
-            }
-            String chunk = new String(utf8, offset, end - offset, StandardCharsets.UTF_8);
-            commitTextQueue.add(chunk);
-            offset = end;
-        }
-        // Kick off flushing if not already scheduled
-        if (commitTextQueue.size() == 1) {
-            commitTextHandler.post(flushCommitTextQueue);
-        }
     }
 
     /** Recursive helper that finds the first SurfaceView in the current layout */
