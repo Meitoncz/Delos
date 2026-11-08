@@ -74,7 +74,6 @@ import android.hardware.display.DisplayManager;
 import android.hardware.input.InputManager;
 import android.media.AudioManager;
 import android.net.ConnectivityManager;
-import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -103,6 +102,7 @@ import android.widget.TextView;
 import com.limelight.utils.DelosToast;
 import com.limelight.utils.StreamClipboardSync;
 import com.limelight.utils.ToastKind;
+import com.limelight.utils.WifiLockHolder;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceManager;
 
@@ -219,8 +219,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     private MediaCodecDecoderRenderer decoderRenderer;
     private boolean reportedCrash;
 
-    private WifiManager.WifiLock highPerfWifiLock;
-    private WifiManager.WifiLock lowLatencyWifiLock;
+    private final WifiLockHolder wifiLocks = new WifiLockHolder();
 
     private boolean connectedToUsbDriverService = false;
     private ServiceConnection usbDriverServiceConnection = new ServiceConnection() {
@@ -516,22 +515,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         }
 
         // Make sure Wi-Fi is fully powered up
-        WifiManager wifiMgr = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        try {
-            highPerfWifiLock = wifiMgr.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "Moonlight High Perf Lock");
-            highPerfWifiLock.setReferenceCounted(false);
-            highPerfWifiLock.acquire();
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                lowLatencyWifiLock = wifiMgr.createWifiLock(WifiManager.WIFI_MODE_FULL_LOW_LATENCY, "Moonlight Low Latency Lock");
-                lowLatencyWifiLock.setReferenceCounted(false);
-                lowLatencyWifiLock.acquire();
-            }
-        } catch (SecurityException e) {
-            // Some Samsung Galaxy S10+/S10e devices throw a SecurityException from
-            // WifiLock.acquire() even though we have android.permission.WAKE_LOCK in our manifest.
-            e.printStackTrace();
-        }
+        wifiLocks.acquire(this);
 
         appName = Game.this.getIntent().getStringExtra(EXTRA_APP_NAME);
         pcName = Game.this.getIntent().getStringExtra(EXTRA_PC_NAME);
@@ -1534,12 +1518,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             inputManager.unregisterInputDeviceListener(keyboardTranslator);
         }
 
-        if (lowLatencyWifiLock != null) {
-            lowLatencyWifiLock.release();
-        }
-        if (highPerfWifiLock != null) {
-            highPerfWifiLock.release();
-        }
+        wifiLocks.release();
 
         // Save zoom/pan before other cleanup
         if (prefConfig != null && prefConfig.rememberZoomPan && panZoomHandler != null) {
