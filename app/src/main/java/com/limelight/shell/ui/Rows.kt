@@ -73,7 +73,9 @@ sealed interface RowValue {
     /** Left/right (or A) cycles through the options. */
     data class Choice(val label: String, val onStep: (Int) -> Unit, val swatch: Color? = null) : RowValue
 
-    data class Slider(val value: Int, val min: Int, val max: Int, val step: Int, val unit: String, val divisor: Int = 1, val onChange: (Int) -> Unit) : RowValue
+    data class Slider(val value: Int, val min: Int, val max: Int, val step: Int, val unit: String, val divisor: Int = 1,
+        /** What the value reads at [min] instead of the number and unit (a slider whose lowest value means off). */
+        val minText: String? = null, val onChange: (Int) -> Unit) : RowValue
 
     data class Text(val text: String, val onClick: () -> Unit) : RowValue
 
@@ -413,7 +415,7 @@ private fun RowValueView(value: RowValue, focused: Boolean, choice: ChoiceMotion
                 }
             }
             val label = if (number % value.divisor == 0) (number / value.divisor).toString() else String.format(java.util.Locale.US, "%.1f", number.toDouble() / value.divisor)
-            BasicText("$label${value.unit}", style = text.copy(textAlign = TextAlign.End), maxLines = 1, modifier = Modifier.width(160.px))
+            BasicText(if (number == value.min && value.minText != null) value.minText else "$label${value.unit}", style = text.copy(textAlign = TextAlign.End), maxLines = 1, modifier = Modifier.width(160.px))
         }
         is RowValue.Action -> Symbol(Symbols.CHEVRON_RIGHT, 30.tpx, if (calm) arrowColor.value else staticArrows)
         is RowValue.Text -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.px)) {

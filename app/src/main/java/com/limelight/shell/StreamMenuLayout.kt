@@ -48,7 +48,20 @@ internal object MoreRow {
 
     /** The More row that opens the live rumble feel page. */
     const val RUMBLE = "Rumble feel"
+
+    /** The More slider row for the live gyro smoothing strength (shown where the Settings row is). */
+    const val GYRO = "Gyro smoothing"
+
+    /** The help key of [GYRO] while no gyroscope source is on: it says why the row does nothing. */
+    const val GYRO_DISABLED = "Gyro smoothing (disabled)"
 }
+
+/** The More page's Gyro smoothing row: shown where the motion settings are, usable while a gyroscope source is on. */
+internal fun gyroSmoothingShown(sdk: Int, hasDeviceSensors: Boolean): Boolean =
+    com.limelight.shell.settings.SettingsCapabilities.motionHiddenKeys(sdk, hasDeviceSensors).let { "seekbar_gyro_smoothing" !in it }
+
+/** The help key of the Gyro smoothing row. */
+internal fun gyroSmoothingHelpKey(enabled: Boolean): String = if (enabled) MoreRow.GYRO else MoreRow.GYRO_DISABLED
 
 /** The row of the parent page that opened this page (by its label), or null when the dock's tile did. */
 internal fun MenuPage.openedByRow(): String? = when (this) {

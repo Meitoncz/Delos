@@ -104,6 +104,15 @@ internal interface StreamMenuHost {
     /** Saves [preset] like the laboratory does and applies it to the running stream at once; no sample is played. */
     fun selectRumblePreset(preset: RumblePresets)
 
+    // Gyro smoothing (More page): applies at once, saved in the current profile like the Settings slider
+    /** False where the Settings row is hidden too (no gyroscope source on this device). */
+    val gyroSmoothingAvailable: Boolean get() = false
+
+    /** False while neither the external nor the built-in gyroscope is on: the row shows but cannot be used. */
+    val gyroSmoothingEnabled: Boolean get() = false
+    val gyroSmoothing: Int get() = 0
+    fun setGyroSmoothing(percent: Int) {}
+
     // Mouse mode
     val allowChangeMouseMode: Boolean
     val mouseMode: Int

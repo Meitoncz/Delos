@@ -24,7 +24,14 @@ package com.limelight.binding.input;
  * Slider 0 never creates a filter: callers bypass it and the values are sent untouched. docs/SETTINGS.md lists the
  * resulting numbers, and {@code GyroSmootherTest} measures lag and noise reduction.
  *
- * <p>No allocation per sample; not thread safe (one sensor callback thread per listener).
+ * <p><b>Live strength.</b> The strength can change while the stream runs ({@link #setStrength}): the menu writes the
+ * new value into a {@code volatile} field of the preferences, and the sensor callback, which is the only thread that
+ * ever touches the filter, reads that field once per sample and passes it to {@code setStrength} when it changed. So
+ * there is no lock and no hand-over of the filter state between threads. Going from 0 to a positive strength starts a
+ * fresh filter; going to 0 makes {@link #filter} an exact bypass (it returns false and the caller sends the untouched
+ * input) and forgets the state; changing between positive strengths keeps the state and so does not jump.
+ *
+ * <p>No allocation per sample; not thread safe (call every method from one thread, the sensor callback).
  */
 public final class GyroSmoother {
     public static final int OFF = 0;
@@ -40,17 +47,39 @@ public final class GyroSmoother {
     private static final double TWO_PI = 2.0 * Math.PI;
     private static final double NS = 1e-9;
 
-    private final double minCutoffHz;
-    private final double beta;
+    private int strength = -1; // -1: not set yet
+    private double minCutoffHz;
+    private double beta;
     private final double[] value = new double[3];
     private final double[] rate = new double[3];
     private long lastTimestampNs;
     private boolean primed;
 
-    /** @param slider 1..100; use {@link #isActive} first, 0 means "do not filter". */
+    /** @param slider the strength 0..100 to start with; 0 means "do not filter" until {@link #setStrength}. */
     public GyroSmoother(int slider) {
-        this.minCutoffHz = minCutoffHz(slider);
-        this.beta = beta(slider);
+        setStrength(slider);
+    }
+
+    /** The strength in use, 0..100. */
+    public int strength() {
+        return strength;
+    }
+
+    /**
+     * Changes the strength (clamped to 0..100). Crossing 0 in either direction forgets the state; between positive
+     * strengths the state is kept and only the cut-off and beta change. Same thread as {@link #filter}.
+     */
+    public void setStrength(int slider) {
+        int clamped = Math.min(MAX_SLIDER, Math.max(OFF, slider));
+        if (clamped == strength) {
+            return;
+        }
+        if (clamped == OFF || strength == OFF) {
+            primed = false;
+        }
+        strength = clamped;
+        minCutoffHz = minCutoffHz(clamped);
+        beta = beta(clamped);
     }
 
     public static boolean isActive(int slider) {
@@ -80,8 +109,12 @@ public final class GyroSmoother {
      * Filters one sample into {@code out[0..2]}. {@code out} may be the array the input came from.
      *
      * @param timestampNs the sensor event timestamp in nanoseconds
+     * @return false when the strength is 0: nothing is written to {@code out}, the caller uses the input untouched
      */
-    public void filter(long timestampNs, float x, float y, float z, float[] out) {
+    public boolean filter(long timestampNs, float x, float y, float z, float[] out) {
+        if (strength == OFF) {
+            return false;
+        }
         long dtNs = timestampNs - lastTimestampNs;
         if (!primed || dtNs > MAX_GAP_NS || dtNs < 0) {
             value[0] = x;
@@ -101,6 +134,7 @@ public final class GyroSmoother {
         out[0] = (float) value[0];
         out[1] = (float) value[1];
         out[2] = (float) value[2];
+        return true;
     }
 
     private void step(int axis, float sample, double dt, double derivativeAlpha) {

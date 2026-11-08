@@ -174,7 +174,8 @@ fun SettingsScreen(
                 })
             }
             SettingKind.SLIDER -> RowValue.Slider((current as? Number)?.toInt() ?: spec.min, spec.min, spec.max, spec.step, spec.unit,
-                divisor = spec.divisor, onChange = { stream.write(spec, it) })
+                divisor = spec.divisor,
+                minText = if (spec.key == "seekbar_gyro_smoothing") "0 % (off)" else null, onChange = { stream.write(spec, it) })
             SettingKind.TEXT -> RowValue.Text(current?.toString().orEmpty()) { act(spec) }
             SettingKind.ACTION -> RowValue.Action { act(spec) }
         }

@@ -353,8 +353,8 @@ public class PreferenceConfiguration {
     public boolean gamepadTouchpadAsMouse;
     public boolean gamepadMotionSensorsFallbackToDevice;
     public boolean forceMotionSensorsFallbackToDevice;
-    /** Gyro smoothing strength 0..100; 0 = off (the gyro values are sent untouched). Read once per stream. */
-    public int gyroSmoothing;
+    /** Gyro smoothing strength 0..100; 0 = off (the gyro values are sent untouched). Volatile: the stream menu changes it live, the sensor threads read it. */
+    public volatile int gyroSmoothing;
     public boolean enableRumble;
     // Volatile because the stream menu switches the rumble preset while ControllerHandler
     // reads these on the native rumble thread. Remove with the live preset page once a preset is chosen.

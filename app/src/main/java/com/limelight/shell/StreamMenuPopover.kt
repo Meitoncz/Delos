@@ -585,7 +585,7 @@ private fun RowValueView(value: RowValue, focused: Boolean, confirmation: String
             val number = MenuSlider(value, focused)
             val label = if (number % value.divisor == 0) (number / value.divisor).toString() else String.format(java.util.Locale.US, "%.1f", number.toDouble() / value.divisor)
             BasicText(
-                "$label${value.unit}",
+                if (number == value.min && value.minText != null) value.minText else "$label${value.unit}",
                 style = text.copy(color = colors.text, textAlign = TextAlign.End),
                 maxLines = 1,
                 modifier = Modifier.width((L.NUMBER_MIN_WIDTH * ts).px),

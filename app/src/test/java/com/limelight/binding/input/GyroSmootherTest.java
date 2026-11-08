@@ -218,4 +218,49 @@ public class GyroSmootherTest {
         smoother.reset();
         assertEquals(20f, run(smoother, 100 * STEP_NS, 20f), 0f);
     }
+
+    @Test
+    public void theStrengthChangesLiveAndZeroIsAnExactBypass() {
+        GyroSmoother smoother = new GyroSmoother(0);
+        assertEquals(0, smoother.strength());
+        out[0] = out[1] = out[2] = -1f;
+        assertTrue(!smoother.filter(0, 5f, 6f, 7f, out));
+        assertEquals(-1f, out[0], 0f); // untouched: the caller sends its input
+        smoother.setStrength(50);
+        assertEquals(50, smoother.strength());
+        assertTrue(smoother.filter(10 * STEP_NS, 5f, 6f, 7f, out));
+        assertEquals(5f, out[0], 0f); // fresh filter: the first sample passes through
+        smoother.filter(11 * STEP_NS, 105f, 6f, 7f, out);
+        assertTrue(out[0] > 5f && out[0] < 105f);
+        smoother.setStrength(0);
+        assertTrue(!smoother.filter(12 * STEP_NS, 105f, 6f, 7f, out));
+        smoother.setStrength(50); // the state was forgotten: starts again from the sample
+        smoother.filter(13 * STEP_NS, 40f, 0f, 0f, out);
+        assertEquals(40f, out[0], 0f);
+    }
+
+    @Test
+    public void changingBetweenPositiveStrengthsKeepsTheStateAndOnlyRetunesTheFilter() {
+        GyroSmoother steady = new GyroSmoother(25);
+        GyroSmoother retuned = new GyroSmoother(25);
+        float[] a = new float[3];
+        float[] b = new float[3];
+        for (int i = 0; i < 100; i++) {
+            steady.filter(i * STEP_NS, 10f, 10f, 10f, a);
+            retuned.filter(i * STEP_NS, 10f, 10f, 10f, b);
+        }
+        retuned.setStrength(75);
+        assertEquals(75, retuned.strength());
+        retuned.filter(100 * STEP_NS, 10f, 10f, 10f, b);
+        steady.filter(100 * STEP_NS, 10f, 10f, 10f, a);
+        assertEquals(a[0], b[0], 1e-3f); // no jump on a constant input
+        // and the new, stronger setting smooths a step more than the old one
+        retuned.filter(101 * STEP_NS, 60f, 60f, 60f, b);
+        steady.filter(101 * STEP_NS, 60f, 60f, 60f, a);
+        assertTrue(b[0] < a[0]);
+        retuned.setStrength(999);
+        assertEquals(100, retuned.strength());
+        retuned.setStrength(-4);
+        assertEquals(0, retuned.strength());
+    }
 }

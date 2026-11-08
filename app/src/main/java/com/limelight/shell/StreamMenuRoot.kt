@@ -430,6 +430,7 @@ private fun pageFocusKeys(host: StreamMenuHost, page: MenuPage, supersamplingMod
             add(MoreRow.ANDROID_KEYBOARD)
             add("Touch sensitivity")
             add(MoreRow.RUMBLE)
+            if (host.gyroSmoothingAvailable) add(MoreRow.GYRO)
         }
         MenuPage.BRIGHTNESS -> listOf("Screen brightness")
         MenuPage.BITRATE -> listOfNotNull("Bitrate", RECOMMENDED_ROW.takeIf { host.linkGuidance != null }, "Apply")
@@ -478,6 +479,13 @@ private fun PageRows(
             MenuRow(Symbols.KEYBOARD, MoreRow.ANDROID_KEYBOARD, RowValue.Action { close { host.toggleSystemKeyboard() } })
             MenuRow(Symbols.TOUCH_APP, "Touch sensitivity", RowValue.Toggle(host.touchSensitivityOn) { toggle { host.toggleTouchSensitivity() } })
             MenuRow(Symbols.VIBRATION, MoreRow.RUMBLE, RowValue.Text(host.rumblePreset?.label ?: "Custom") { openPage(MenuPage.RUMBLE) }, entry(MoreRow.RUMBLE))
+            if (host.gyroSmoothingAvailable) {
+                // Applies at once and is saved (the Settings slider shows the same value); changesTick recomposes the value
+                MenuRow(Symbols.TUNE, MoreRow.GYRO, RowValue.Slider(host.gyroSmoothing, 0, 100, 5, " %", minText = "0 % (off)") {
+                    host.setGyroSmoothing(it)
+                    changesTick()
+                }, enabled = host.gyroSmoothingEnabled, help = gyroSmoothingHelpKey(host.gyroSmoothingEnabled))
+            }
         }
         MenuPage.BRIGHTNESS -> MenuRow(
             Symbols.BRIGHTNESS_MEDIUM, "Screen brightness",

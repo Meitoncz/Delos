@@ -136,8 +136,9 @@ The motion rows of Controls → Gamepad keep their preference keys (stored value
 Search still finds the rows by their old names (`RENAMED_SEARCH_TERMS` in `screens/NativeSettings.kt`). None of the four
 is a per-game setting. Gyro smoothing is hidden where there is no motion source at all (below Android 12 without an
 accelerometer or gyroscope feature; `SettingsCapabilities.motionHiddenKeys`) and disabled while both the external and the
-built-in source are off (`gyroSourceEnabled`). It is read once per stream (`PreferenceConfiguration.gyroSmoothing`), so a
-change applies to the next stream. How it works and what it costs: [STREAM_QUALITY.md](STREAM_QUALITY.md#gyro-smoothing-77).
+built-in source are off (`gyroSourceEnabled`). The Settings screen is not open during a stream, so a change made there applies to the next stream. The stream menu's
+More page has the same slider and applies at once (`PreferenceConfiguration.gyroSmoothing` is volatile and read by the
+sensor threads) and writes the same `seekbar_gyro_smoothing` key to the current profile, so both stay in sync. How it works and what it costs: [STREAM_QUALITY.md](STREAM_QUALITY.md#gyro-smoothing-77).
 
 ## Hidden phone-oriented and key-layout settings
 

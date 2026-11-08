@@ -423,6 +423,22 @@ class StreamMenu(private val game: Game) {
             prefs.rumbleTranslatorEnabled = preset.enabled
         }
 
+        // Gyro smoothing: the sensor threads read the volatile prefs.gyroSmoothing at every sample, so the new strength
+        // is used by the next one, including by listeners that already run and by controllers that connect later.
+        override val gyroSmoothingAvailable get() = gyroSmoothingShown(android.os.Build.VERSION.SDK_INT, game.packageManager.let {
+            it.hasSystemFeature(android.content.pm.PackageManager.FEATURE_SENSOR_ACCELEROMETER) ||
+                it.hasSystemFeature(android.content.pm.PackageManager.FEATURE_SENSOR_GYROSCOPE)
+        })
+        override val gyroSmoothingEnabled get() = com.limelight.shell.settings.gyroSourceEnabled(android.os.Build.VERSION.SDK_INT,
+            mapOf("checkbox_gamepad_motion_sensors" to prefs.gamepadMotionSensors,
+                "checkbox_gamepad_motion_fallback" to prefs.gamepadMotionSensorsFallbackToDevice))
+        override val gyroSmoothing get() = prefs.gyroSmoothing
+        override fun setGyroSmoothing(percent: Int) {
+            val strength = percent.coerceIn(0, 100)
+            prefs.gyroSmoothing = strength
+            rumbleSettings.edit().putInt(PreferenceConfiguration.GYRO_SMOOTHING_PREF_STRING, strength).apply()
+        }
+
         override val allowChangeMouseMode get() = game.allowChangeMouseMode
         override val mouseMode get() = game.activeMouseMode
         override val rememberMouseMode get() = prefs.rememberMouseMode
