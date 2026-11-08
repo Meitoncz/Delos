@@ -41,7 +41,13 @@ Up/Down as before; Left/Right adjust the focused row.
 
 ## Scope and inheritance
 
-- Stream: resolution, FPS, bitrate, codec and frame pacing.
+- Stream: resolution, FPS, bitrate, codec and frame pacing, then the gyroscope rows: External gamepad gyroscope
+  (`checkbox_gamepad_motion_sensors`), Built-in device gyroscope (`checkbox_gamepad_motion_fallback`), Always use built-in
+  device gyroscope (`checkbox_force_device_motion`) and Gyro smoothing (`seekbar_gyro_smoothing`). They are hidden where
+  motion is unavailable, and Gyro smoothing is disabled while neither source is on in this game's effective values. A
+  launch reads them through the snapshot like the other keys (sensor setup and the live `gyroSmoothing` included).
+  Stream menu → More → Gyro smoothing applies live and, like the upscaler (next section), is kept for this game
+  automatically as its `seekbar_gyro_smoothing` override; the profile is never written from the menu.
 - Display: HDR, full color range, scaling mode, resolution scale, virtual display, enforced display
   mode and the upscaler (on/off `checkbox_sgsr`, mode `list_sgsr_quality`, sharpness
   `seekbar_sgsr_sharpness` and supersampling quality `list_sgsr_supersampling_level`, 1 = 1x, 2 = 2x;
@@ -68,11 +74,12 @@ Up/Down as before; Left/Right adjust the focused row.
   An unknown stored supersampling level is read as 1x; a saved 2x that does not fit falls back to 1x
   like the live choice.
 - Advanced custom resolution/FPS definitions remain in the profile; their choices are available here.
-- Audio, controls, appearance and other global options continue to come from the user profile.
+- Audio, other controls, appearance and other global options continue to come from the user profile.
 
-## The menu keeps the live upscaler for the game
+## The menu keeps the live upscaler and gyro smoothing for the game
 
-There is no save button. In the stream menu → Upscaler every change (on/off, mode, sharpness, supersampling quality)
+There is no save button. The same applies to More → Gyro smoothing, which writes only `seekbar_gyro_smoothing`
+(`gyroSmoothingSaveValues`; the external/built-in gyroscope toggles are not in the menu). In the stream menu → Upscaler every change (on/off, mode, sharpness, supersampling quality)
 applies live and is written automatically as this game's overrides of the four upscaler keys, in the active user's profile
 for this PC and host app ID (`MenuAutoSave`, `GameSettingsStore.save`). A slider drag or held D-pad writes once, 500 ms
 after the last change; closing the menu or ending the stream writes at once, so the last value set wins. Opening the menu

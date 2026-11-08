@@ -531,11 +531,10 @@ here are implemented for Delos rather than copying that bridge's synchronous fra
 **Controls → Gamepad → Gyro smoothing** (`seekbar_gyro_smoothing`, 0..100, default 0) steadies the gyroscope before it is
 sent to the host. 0 is off and the sensor path is then unchanged (the filter is never created). It acts on the gyroscope
 only, never on the accelerometer, for both the external gamepad's sensors and the built-in device sensors
-(`ControllerHandler.createSensorListener`). The stream menu (More → Gyro smoothing, steps of 5) changes it live and saves it in the current profile; the Settings slider
-applies to the next stream, because Settings is not open during a stream.
+(`ControllerHandler.createSensorListener`). The stream menu (More → Gyro smoothing, steps of 5) changes it live and keeps it for this game as its per-game override (the profile is not written; the Settings slider sets the profile value and applies to the next stream, because Settings is not open during a stream).
 
 **Live change and threads**: the menu writes the new strength into `PreferenceConfiguration.gyroSmoothing` (`volatile`) and
-the profile preference. Each gyro sensor listener reads that field once per sample (a volatile read, never
+nothing else (no profile write). Each gyro sensor listener reads that field once per sample (a volatile read, never
 `SharedPreferences`) and, when it differs from the filter's, calls `GyroSmoother.setStrength` on the sensor thread, which is the
 only thread that ever touches the filter: no lock and no state hand-over. 0 to positive starts a fresh filter, positive to 0 is
 an exact bypass (`filter` returns false and the original unfiltered code path sends the sample) and forgets the state, and a

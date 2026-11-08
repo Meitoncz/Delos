@@ -49,7 +49,7 @@ object StreamMenuHelp {
         "Touch sensitivity" to "Toggles extra touchscreen sensitivity scaling, configured in settings.",
         // Rumble feel row and page
         // Gyro smoothing row (More)
-        "Gyro smoothing" to "Steadies gyro aiming at once, saved. 0 is off. More smoothing removes jitter but adds a little delay to slow movement.",
+        "Gyro smoothing" to "Steadies gyro aiming at once, kept for this game. 0 is off. More smoothing adds a little delay to slow movement.",
         "Gyro smoothing (disabled)" to "Needs External gamepad gyroscope or Built-in device gyroscope turned on in Settings; applies from the next stream.",
         "Rumble feel" to "Picks how host rumble feels, at once and saved. Stays open: pick again to compare. B goes back.",
     )

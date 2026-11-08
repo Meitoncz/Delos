@@ -101,7 +101,8 @@ internal interface StreamMenuHost {
     /** Saves [preset] like the laboratory does and applies it to the running stream at once; no sample is played. */
     fun selectRumblePreset(preset: RumblePresets)
 
-    // Gyro smoothing (More page): applies at once, saved in the current profile like the Settings slider
+    // Gyro smoothing (More page): applies at once and is kept for this game automatically like the upscaler (MenuAutoSave);
+    // the profile value is the Settings slider's
     /** False where the Settings row is hidden too (no gyroscope source on this device). */
     val gyroSmoothingAvailable: Boolean get() = false
 

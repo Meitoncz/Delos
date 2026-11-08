@@ -133,12 +133,13 @@ The motion rows of Controls → Gamepad keep their preference keys (stored value
 | `checkbox_force_device_motion` | Always use built-in device gyroscope (was *Always use device's motion sensors*) |
 | `seekbar_gyro_smoothing` | **Gyro smoothing**, 0 to 100 %, default 0 = off |
 
-Search still finds the rows by their old names (`RENAMED_SEARCH_TERMS` in `screens/NativeSettings.kt`). None of the four
-is a per-game setting. Gyro smoothing is hidden where there is no motion source at all (below Android 12 without an
+Search still finds the rows by their old names (`RENAMED_SEARCH_TERMS` in `screens/NativeSettings.kt`). All four
+are per-game settings (Game settings, Stream tab, after the codec rows; `GameSettingsStore.GYRO_KEYS`), with the same hiding and
+enabling rules evaluated on the game's effective values. Gyro smoothing is hidden where there is no motion source at all (below Android 12 without an
 accelerometer or gyroscope feature; `SettingsCapabilities.motionHiddenKeys`) and disabled while both the external and the
 built-in source are off (`gyroSourceEnabled`). The Settings screen is not open during a stream, so a change made there applies to the next stream. The stream menu's
 More page has the same slider and applies at once (`PreferenceConfiguration.gyroSmoothing` is volatile and read by the
-sensor threads) and writes the same `seekbar_gyro_smoothing` key to the current profile, so both stay in sync. How it works and what it costs: [STREAM_QUALITY.md](STREAM_QUALITY.md#gyro-smoothing-77).
+sensor threads) for this stream and keeps it as this game's `seekbar_gyro_smoothing` override automatically (`MenuAutoSave`, like the upscaler: about 500 ms after the last change, or when the menu closes or the stream ends). The menu never writes the profile; the Settings slider is the way to change the profile default. How it works and what it costs: [STREAM_QUALITY.md](STREAM_QUALITY.md#gyro-smoothing-77).
 
 ## Hidden phone-oriented and key-layout settings
 

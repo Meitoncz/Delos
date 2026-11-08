@@ -479,7 +479,7 @@ private fun PageRows(
             MenuRow(Symbols.TOUCH_APP, "Touch sensitivity", RowValue.Toggle(host.touchSensitivityOn) { toggle { host.toggleTouchSensitivity() } })
             MenuRow(Symbols.VIBRATION, MoreRow.RUMBLE, RowValue.Text(host.rumblePreset?.label ?: "Custom") { openPage(MenuPage.RUMBLE) }, entry(MoreRow.RUMBLE))
             if (host.gyroSmoothingAvailable) {
-                // Applies at once and is saved (the Settings slider shows the same value); changesTick recomposes the value
+                // Applies at once and is kept for this game (never the profile, which is the Settings slider's); changesTick recomposes the value
                 MenuRow(Symbols.TUNE, MoreRow.GYRO, RowValue.Slider(host.gyroSmoothing, 0, 100, 5, " %", minText = "0 % (off)") {
                     host.setGyroSmoothing(it)
                     changesTick()

@@ -40,6 +40,7 @@ import com.limelight.shell.settings.GameSettingsStore
 import com.limelight.shell.settings.StreamMenuSettings
 import com.limelight.shell.settings.MenuAutoSave
 import com.limelight.shell.settings.MenuSavedSetting
+import com.limelight.shell.settings.gyroSmoothingSaveValues
 import com.limelight.shell.settings.upscalerSaveValues
 import com.limelight.shell.ui.Feedback
 import com.limelight.shell.ui.LocalDelosColors
@@ -335,6 +336,7 @@ class StreamMenu(private val game: Game) {
     /** The live value of [setting] as the stream has it now (read when written, so the last change wins). */
     private fun liveValues(setting: MenuSavedSetting): Map<String, Any> = when (setting) {
         MenuSavedSetting.UPSCALER -> upscalerSaveValues(game.isUpscalingRequested, game.prefConfig.sgsrMode.index(), game.prefConfig.sgsrSharpness, game.supersamplingLevel)
+        MenuSavedSetting.GYRO_SMOOTHING -> gyroSmoothingSaveValues(game.prefConfig.gyroSmoothing)
     }
 
     /** Called only by a user's change of a menu row (never while the menu opens). */
@@ -465,10 +467,10 @@ class StreamMenu(private val game: Game) {
             mapOf("checkbox_gamepad_motion_sensors" to prefs.gamepadMotionSensors,
                 "checkbox_gamepad_motion_fallback" to prefs.gamepadMotionSensorsFallbackToDevice))
         override val gyroSmoothing get() = prefs.gyroSmoothing
+        // Applies live and is kept for this game like the upscaler (MenuAutoSave); the profile value is the Settings slider's
         override fun setGyroSmoothing(percent: Int) {
-            val strength = percent.coerceIn(0, 100)
-            prefs.gyroSmoothing = strength
-            rumbleSettings.edit().putInt(PreferenceConfiguration.GYRO_SMOOTHING_PREF_STRING, strength).apply()
+            prefs.gyroSmoothing = percent.coerceIn(0, 100)
+            this@StreamMenu.menuSettingChanged(MenuSavedSetting.GYRO_SMOOTHING)
         }
 
         override val allowChangeMouseMode get() = game.allowChangeMouseMode

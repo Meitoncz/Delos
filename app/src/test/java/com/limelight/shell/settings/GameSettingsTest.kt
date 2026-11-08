@@ -553,6 +553,57 @@ class GameSettingsTest {
         assertEquals("1", game(id = 2).preferences.getString("list_sgsr_supersampling_level", "1"))
     }
 
+    @Test fun gyroRowsAreOverridableResetAndCountedOnTheStreamTab() {
+        val gyro = GameSettingsStore.GYRO_KEYS
+        gyro.forEach { assertFalse(it, game().isCustom(it)) }
+        game().preferences.edit().putInt("seekbar_gyro_smoothing", 40).putBoolean("checkbox_gamepad_motion_fallback", true).commit()
+        assertTrue(game().isCustom("seekbar_gyro_smoothing"))
+        assertTrue(game().isCustom("checkbox_gamepad_motion_fallback"))
+        assertFalse(game(id = 2).isCustom("seekbar_gyro_smoothing"))
+        assertEquals(setOf(1), GameSettingsStore.customAppIds(profiles.settings().all, "pc-a", listOf(1, 2)))
+        assertEquals(2, com.limelight.shell.screens.customCount(game().overrides().keys, GameSettingsStore.STREAM_KEYS))
+        assertEquals(0, com.limelight.shell.screens.customCount(game().overrides().keys, GameSettingsStore.DISPLAY_KEYS))
+        game().reset("seekbar_gyro_smoothing")
+        assertFalse(game().isCustom("seekbar_gyro_smoothing"))
+        game().resetAll()
+        gyro.forEach { assertFalse(it, game().isCustom(it)) }
+    }
+
+    @Test fun aLaunchReadsTheGamesGyroOverrideElseTheProfile() {
+        profiles.settings().edit().putInt("seekbar_gyro_smoothing", 20).putBoolean("checkbox_gamepad_motion_fallback", false).commit()
+        val inherited = PreferenceConfiguration.readPreferences(launched())
+        assertEquals(20, inherited.gyroSmoothing)
+        assertFalse(inherited.gamepadMotionSensorsFallbackToDevice)
+        game().preferences.edit().putInt("seekbar_gyro_smoothing", 75).putBoolean("checkbox_gamepad_motion_fallback", true)
+            .putBoolean("checkbox_force_device_motion", true).putBoolean("checkbox_gamepad_motion_sensors", false).commit()
+        val config = PreferenceConfiguration.readPreferences(launched())
+        assertEquals(75, config.gyroSmoothing)
+        assertTrue(config.gamepadMotionSensorsFallbackToDevice)
+        assertTrue(config.forceMotionSensorsFallbackToDevice)
+        assertFalse(config.gamepadMotionSensors)
+        assertEquals(20, PreferenceConfiguration.readPreferences(launched(id = 2)).gyroSmoothing)
+        assertEquals(20, PreferenceConfiguration.readPreferences(context).gyroSmoothing)
+        // The menu's automatic save: only this game's override changes, never the profile
+        GameSettingsStore.forLaunch(launched())!!.save(gyroSmoothingSaveValues(10))
+        assertEquals(10, PreferenceConfiguration.readPreferences(launched()).gyroSmoothing)
+        assertEquals(20, profiles.settings().getInt("seekbar_gyro_smoothing", -1))
+    }
+
+    @Test fun gyroSmoothingEnablementUsesTheGamesEffectiveSources() {
+        val smoothing = spec("seekbar_gyro_smoothing")
+        val selected = game()
+        val stream = StreamSettingsStore(profiles.catalog) { selected.preferences }
+        assertTrue(stream.enabled(smoothing, null))
+        // The profile has the external gyroscope on; this game turns it off and the built-in one stays off
+        selected.preferences.edit().putBoolean("checkbox_gamepad_motion_sensors", false).commit()
+        assertFalse(stream.enabled(smoothing, null))
+        selected.preferences.edit().putBoolean("checkbox_gamepad_motion_fallback", true).commit()
+        assertTrue(stream.enabled(smoothing, null))
+        // Another game follows the profile (external gyroscope on)
+        assertTrue(StreamSettingsStore(profiles.catalog) { game(id = 2).preferences }.enabled(smoothing, null))
+        stream.close()
+    }
+
     @Test fun anUnknownStoredSupersamplingLevelFallsBackToOne() {
         assertEquals(1, PreferenceConfiguration.readPreferences(context).sgsrSupersamplingLevel)
         listOf("3", "0", "-1", "", "two", "2.0").forEach {

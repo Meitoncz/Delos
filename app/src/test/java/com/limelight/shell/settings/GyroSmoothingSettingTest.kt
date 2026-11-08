@@ -66,9 +66,18 @@ class GyroSmoothingSettingTest {
         assertEquals(100, PreferenceConfiguration.readPreferences(context).gyroSmoothing)
     }
 
-    @Test fun itFollowsTheMotionRowsWhichAreNotPerGameSettings() {
-        assertTrue(motionKeys.none { it in GameSettingsStore.KEYS })
+    @Test fun itAndTheMotionRowsArePerGameSettingsOnTheStreamTabWithoutImpactChips() {
+        assertTrue(motionKeys.all { it in GameSettingsStore.KEYS })
+        assertEquals(motionKeys, GameSettingsStore.GYRO_KEYS)
+        assertTrue(motionKeys.all { it in GameSettingsStore.STREAM_KEYS })
         assertNull(impact(key, mapOf(key to 50)))
+    }
+
+    @Test fun theMenusSaveRowWritesOnlyTheClampedStrengthAsTheGamesOverride() {
+        assertEquals(mapOf(key to 45), gyroSmoothingSaveValues(45))
+        assertEquals(mapOf(key to 0), gyroSmoothingSaveValues(-5))
+        assertEquals(mapOf(key to 100), gyroSmoothingSaveValues(250))
+        assertTrue(gyroSmoothingSaveValues(10).keys.all { it in GameSettingsStore.KEYS })
     }
 
     @Test fun theRowIsHiddenOnlyWhenNeitherMotionSourceExists() {

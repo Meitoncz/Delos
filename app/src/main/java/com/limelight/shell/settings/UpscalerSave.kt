@@ -20,3 +20,6 @@ fun upscalerSaveValues(enabled: Boolean, mode: Int, sharpness: Int, level: Int):
     "seekbar_sgsr_sharpness" to sharpness.coerceIn(0, 100),
     "list_sgsr_supersampling_level" to if (level >= 2) "2" else "1",
 )
+
+/** The per-game override that keeps the live gyro smoothing strength (kept by the stream menu): only this key, clamped to 0..100. */
+fun gyroSmoothingSaveValues(percent: Int): Map<String, Any> = mapOf("seekbar_gyro_smoothing" to percent.coerceIn(0, 100))

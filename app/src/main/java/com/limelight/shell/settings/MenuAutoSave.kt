@@ -1,7 +1,7 @@
 package com.limelight.shell.settings
 
 /** The stream menu's settings that are kept for the running game as the user sets them (their last value wins). */
-enum class MenuSavedSetting { UPSCALER }
+enum class MenuSavedSetting { UPSCALER, GYRO_SMOOTHING }
 
 /**
  * Keeps what the stream menu sets as the game's own per-game overrides: a change only marks the setting, and its
