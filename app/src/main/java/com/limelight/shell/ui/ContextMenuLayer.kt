@@ -94,13 +94,13 @@ private val CardTint = Color(34, 44, 84)
 /**
  * The prototype's glass: blur 46 under a navy tint. The prototype sat over a dark backdrop where tint .50 and saturate 1.6 gave a calm navy;
  * over the real, brighter and more colourful dashboard that came out pink-violet (measured: card header (105, 65, 126) against the
- * prototype's (61, 61, 89)), so the tint is denser (.72) and the backdrop is hardly saturated (1.15): the same navy on any background.
+ * prototype's (61, 61, 89)), so the tint is denser (.80) and the backdrop is hardly saturated (1.15): the same navy on any background.
  */
 @Composable
 private fun Modifier.menuGlass(haze: HazeState): Modifier {
     val radius = 46f.px
     val saturate = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(1.15f) })
-    val tint = CardTint.copy(alpha = .72f)
+    val tint = CardTint.copy(alpha = .80f)
     return hazeBlur(
         HazeInput.Sources(haze),
         style = HazeBlurStyle {
