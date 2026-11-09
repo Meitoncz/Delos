@@ -88,7 +88,6 @@ import com.limelight.shell.Layer
 import com.limelight.shell.LocalFocusTracker
 import com.limelight.shell.LocalGameActions
 import com.limelight.shell.LocalShell
-import com.limelight.shell.MenuCover
 import com.limelight.shell.MenuHeader
 import com.limelight.shell.MenuItem
 import com.limelight.shell.data.App
@@ -310,6 +309,7 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
             },
             hidden = app.id in library.hidden,
             running = running,
+            matchGameColors = appearance.matchGameColors && !appearance.materialYou,
             requester = requester(app),
             onFocused = onTileFocused, onHide = onHide,
             onMetadata = onMetadata,
@@ -483,6 +483,8 @@ private fun gameMenu(
     /** The facts the header states under the game's name. */
     lastPlayed: Boolean,
     custom: Boolean,
+    /** The icon color of the header: the game's main color. */
+    tint: Color?,
     /** Opens the artwork screen. */
     onArtwork: () -> Unit,
     onSettings: () -> Unit,
@@ -490,7 +492,7 @@ private fun gameMenu(
 ) =
     ContextMenu(
         app.name,
-        header = gameMenuHeader(pc, app, hidden, running, image, lastPlayed, custom),
+        header = gameMenuHeader(app, hidden, running, tint, lastPlayed, custom),
         items = buildList {
             when {
                 app.running -> {
@@ -515,13 +517,12 @@ private fun gameMenu(
         },
     )
 
-/** The game menu's header: its cover, whether it runs, and what else is worth a line (last played, custom settings, another game running, hidden). */
-private fun gameMenuHeader(pc: Pc, app: App, hidden: Boolean, running: App?, image: ImageBitmap?, lastPlayed: Boolean, custom: Boolean): MenuHeader {
-    val art = appArt(pc, app)
+/** The game menu's header: an icon in the game's main color, whether it runs, and what else is worth a line (last played, custom settings, another game running, hidden). */
+private fun gameMenuHeader(app: App, hidden: Boolean, running: App?, tint: Color?, lastPlayed: Boolean, custom: Boolean): MenuHeader {
     val other = running?.takeIf { it.id != app.id }
     return MenuHeader(
         status = if (app.running) "Running" else "Game",
-        cover = MenuCover(image, art.hue, art.hue2, art.icon),
+        tint = tint,
         running = app.running,
         meta = listOfNotNull(
             "Last played".takeIf { lastPlayed },
@@ -690,6 +691,7 @@ private fun GameTile(
     badge: TileBadge?,
     hidden: Boolean,
     running: App?,
+    matchGameColors: Boolean,
     requester: FocusRequester,
     onFocused: (Int, App) -> Unit,
     onHide: (App, Boolean) -> Unit,
@@ -711,9 +713,22 @@ private fun GameTile(
     val image = cover ?: boxImage
     val shown = if (wide) wideCover ?: boxImage else image
     val onArtwork = { shell.navigate(Screen.Artwork(pc, app)) }
-    val menu = remember(pc, app, hidden, running, image, onMetadata, badge, custom) {
+    // The menu header's icon takes the game's main color, found the way the info block and the background find it: the cover's, the
+    // game background's while those are unknown; the placeholder art's hue while the game has no artwork; else the theme's accent
+    val key = homeKey(pc, app)
+    val gameColors = when {
+        !matchGameColors -> null
+        HeroBitmaps.coverKnown(key) -> HeroBitmaps.coverHues(key)
+        else -> HeroBitmaps.hues(key)
+    }
+    val tint = when {
+        gameColors != null -> hsl(gameColors.hues.first(), gameColors.saturations.first() * 80f, 52f)
+        matchGameColors && image == null -> hsl(art.hue, 70f, 52f)
+        else -> null
+    }
+    val menu = remember(pc, app, hidden, running, image, onMetadata, badge, custom, tint) {
         gameMenu(
-            pc, app, hidden, running, image, actions, onHide, lastPlayed = badge == TileBadge.LAST_PLAYED, custom = custom, onArtwork = onArtwork,
+            pc, app, hidden, running, image, actions, onHide, lastPlayed = badge == TileBadge.LAST_PLAYED, custom = custom, tint = tint, onArtwork = onArtwork,
             onSettings = { shell.navigate(Screen.GameSettings(pc, app)) },
             onMetadata = { onMetadata(pc, app) },
         )

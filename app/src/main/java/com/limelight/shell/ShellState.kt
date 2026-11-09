@@ -11,6 +11,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.text.input.KeyboardType
 import com.limelight.shell.data.App
@@ -103,16 +104,12 @@ data class MenuItem(
     val action: () -> Unit = {},
 )
 
-/** The small cover in a menu header: the game's [image], or its placeholder art ([hue], [hue2], [icon]) while there is none. */
-@Immutable
-data class MenuCover(val image: ImageBitmap?, val hue: Float, val hue2: Float, val icon: String)
-
 /**
- * What a menu says about its subject above the [ContextMenu.title]: a small [cover], a [status] line (a green dot
+ * What a menu says about its subject above the [ContextMenu.title]: an icon tile in the game's main color ([tint], the theme's accent when null), a [status] line (a green dot
  * before it while [running]) and one line of [meta]. Menus without a header show just the title.
  */
 @Immutable
-data class MenuHeader(val status: String, val cover: MenuCover? = null, val running: Boolean = false, val meta: String? = null)
+data class MenuHeader(val status: String, val tint: Color? = null, val running: Boolean = false, val meta: String? = null)
 
 /**
  * A context menu (right menu button / Start) for the focused element. With [below] the card opens under the

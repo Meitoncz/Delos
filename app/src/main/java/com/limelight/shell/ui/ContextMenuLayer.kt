@@ -6,7 +6,6 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
@@ -58,6 +57,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
@@ -65,7 +65,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -111,6 +110,9 @@ private fun Modifier.menuGlass(haze: HazeState): Modifier {
         },
     )
 }
+
+/** The glyph color on a [fill]: near black on a light one, white on a dark one. */
+internal fun onColor(fill: Color): Color = if (fill.luminance() > .42f) Color(0xFF14110A) else Color.White
 
 /** Red of a destructive row and of its plate (the prototype's `--danger`). */
 internal val MenuDanger = Color(0xFFFF8F86)
@@ -235,7 +237,7 @@ internal fun menuCardPath(side: CaretSide, caret: Float, w: Float, h: Float, k: 
 
 /**
  * The context menu (right menu button / Start): an anchored glass card with a caret pointing at the focused element, a
- * header (cover, status, title), rows in the shared gliding plate, and submenus that swap inside the same card ([path];
+ * header (an icon in the game's color, status, title), rows in the shared gliding plate, and submenus that swap inside the same card ([path];
  * B goes back through [onPath]). It grows from the caret's tip ([popEnter] / [popExit]).
  */
 @OptIn(ExperimentalFoundationApi::class)
@@ -444,11 +446,17 @@ private fun Header(menu: ContextMenu, parent: MenuItem?, submenu: Boolean, onBac
                         .pointerInput(Unit) { detectTapGestures { onBack() } },
                     contentAlignment = Alignment.Center,
                 ) { Symbol(Symbols.CHEVRON_LEFT, 28.tpx, colors.text) }
-            } else header?.cover?.let { cover ->
-                Box(Modifier.size(width = 52.px, height = 78.px).clip(RoundedCornerShape(14.px)).border(1.px, Color.White.copy(alpha = .16f), RoundedCornerShape(14.px))) {
-                    if (cover.image != null) Image(cover.image, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-                    else PlaceholderArt(cover.hue, cover.hue2, cover.icon, Modifier.fillMaxSize(), glyphSize = 76f, glyphRight = -10f, glyphTop = .3f, glyphAlpha = .22f)
-                }
+            } else if (header != null) {
+                // The game's main color with a controller on it (the dark or the white glyph, whichever reads better)
+                val fill = header.tint ?: colors.accent
+                val shape = RoundedCornerShape(14.px)
+                Box(
+                    Modifier.size(width = 52.px, height = 78.px).clip(shape)
+                        .background(fill.copy(alpha = .85f))
+                        .background(Brush.verticalGradient(0f to Color.White.copy(alpha = .22f), .6f to Color.Transparent))
+                        .border(1.px, Color.White.copy(alpha = .16f), shape),
+                    contentAlignment = Alignment.Center,
+                ) { Symbol(Symbols.SPORTS_ESPORTS, 34.tpx, onColor(fill), filled = true) }
             }
             Column(Modifier.weight(1f)) {
                 if (eyebrow != null) {

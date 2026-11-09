@@ -70,7 +70,7 @@ internal object ContextMenuPreview {
 
     private fun buildMenu(state: String): ContextMenu {
         val tile = if (state == "running") Tile("Returnal", 176f, 150f, Symbols.PUBLIC) else TILES[0]
-        val cover = MenuCover(null, tile.hue, tile.hue2, tile.icon)
+        val cover = com.limelight.shell.ui.hsl(tile.hue, 70f, 52f)
         val common = listOf(
             MenuItem(Symbols.PHOTO_LIBRARY, "Artwork") {}, MenuItem(Symbols.SEARCH, "Metadata") {},
             MenuItem(Symbols.SETTINGS, "Game settings") {}, MenuItem(Symbols.VISIBILITY_OFF, "Hide game") {},
