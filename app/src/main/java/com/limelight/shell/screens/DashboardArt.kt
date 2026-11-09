@@ -9,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
+import com.limelight.shell.Layer
 import com.limelight.shell.LocalShell
 import com.limelight.shell.Screen
 import com.limelight.shell.ui.AnimatedPlayback
@@ -31,8 +32,14 @@ internal class DashboardArt(val ticker: AnimationTicker, private val motion: Sta
 internal val LocalDashboardArt = staticCompositionLocalOf<DashboardArt?> { null }
 
 /**
+ * Whether [layer] stops the dashboard's animated artwork: a dialog, the side menu or the filter sheet covers the screen. A
+ * context menu does not: the covers stay visible beside its card (only dimmed), so they keep playing, without a restart.
+ */
+internal fun layerStopsDashboardArt(layer: Layer?): Boolean = layer != null && layer !is Layer.Context
+
+/**
  * Whether animated artwork plays on the screen that [onScreen] recognizes ([AnimatedPlayback.shouldPlay]): the screen is
- * the one shown and nothing covers it (a menu, a dialog, the launch loader, the stream exit or its result), no stream is
+ * the one shown and nothing covers it (a dialog, the side menu, the filter sheet, the launch loader, the stream exit or its result), no stream is
  * being started, and motion is allowed (reduced motion and the system's animations off stop it). A resumed window is
  * required by the decoders themselves (`rememberAnimatedDrawable` only runs while the lifecycle is resumed). Read as a
  * state, so only the views that play recompose when it changes.
@@ -48,7 +55,7 @@ internal fun rememberArtworkMotion(onScreen: (Screen) -> Boolean): State<Boolean
     return remember(shell) {
         derivedStateOf {
             AnimatedPlayback.shouldPlay(
-                visible = current(shell.screen) && shell.layer == null && shell.portal == null && !shell.exitCover && shell.result == null,
+                visible = current(shell.screen) && !layerStopsDashboardArt(shell.layer) && shell.portal == null && !shell.exitCover && shell.result == null,
                 foreground = true, streaming = shell.launch != null, reducedMotion = reducedNow, animatorsOff = animatorsOff,
             )
         }
