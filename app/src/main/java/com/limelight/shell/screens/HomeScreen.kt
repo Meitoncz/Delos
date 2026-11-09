@@ -392,7 +392,7 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
                     // At the end the last cover (focused) is as far from the right edge as the first game (focused) is
                     // from the left one
                     contentPadding = PaddingValues(start = 150.px, end = ROW_END_PADDING.px, top = 90.px, bottom = 90.px),
-                    horizontalArrangement = Arrangement.spacedBy(28.px),
+                    horizontalArrangement = Arrangement.spacedBy(ROW_GAP.px),
                 ) {
                     itemsIndexed(apps, key = { _, app -> app.id }) { i, app -> tile(i, app) }
                 }
@@ -405,9 +405,9 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
                         .padding(top = 292.px)
                         // The top fade starts below the info chips; the bottom fade runs under the hint bar
                         .fadeMask(stage, vertical = true, startClear = 34f, startSolid = 90f, endSolid = 230f, endClear = 10f),
-                    contentPadding = PaddingValues(start = 154.px, end = 154.px, top = 98.px, bottom = 260.px),
-                    horizontalArrangement = Arrangement.spacedBy(28.px),
-                    verticalArrangement = Arrangement.spacedBy(28.px),
+                    contentPadding = PaddingValues(start = GRID_SIDE_PADDING.px, end = GRID_SIDE_PADDING.px, top = 98.px, bottom = 260.px),
+                    horizontalArrangement = Arrangement.spacedBy(ROW_GAP.px),
+                    verticalArrangement = Arrangement.spacedBy(ROW_GAP.px),
                 ) {
                     itemsIndexed(apps, key = { _, app -> app.id }, span = { i, _ -> GridItemSpan(if (i == 0) 3 else 1) }) { i, app -> tile(i, app) }
                 }
@@ -417,9 +417,14 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
 }
 
 /** Row layout: the wide first cover, the others and the gap between them, in stage pixels. */
-private const val ROW_WIDE = 956f
 private const val ROW_TILE = 300f
-private const val ROW_GAP = 28f
+private const val ROW_GAP = 44f
+
+/** The wide first cover is as wide as three covers and the two gaps between them (the grid spans it over 3 columns). */
+private const val ROW_WIDE = 3 * ROW_TILE + 2 * ROW_GAP
+
+/** The grid mode centres five covers and four gaps in the 1920 px stage. */
+private const val GRID_SIDE_PADDING = (1920f - 5 * ROW_TILE - 4 * ROW_GAP) / 2f
 
 /** Where item [index] starts in the row, from the start of its content (stage pixels). */
 private fun rowItemStart(index: Int): Float = if (index == 0) 0f else ROW_WIDE + ROW_GAP + (index - 1) * (ROW_TILE + ROW_GAP)
@@ -739,7 +744,7 @@ private fun GameTile(
             // The online pulse of the start screen, around the selected game
             .then(if (focused) Modifier.focusPulse(26f) else Modifier)
             .staggerEntrance()
-            .size(if (wide) 956.px else 300.px, 450.px)
+            .size(if (wide) ROW_WIDE.px else ROW_TILE.px, 450.px)
             .clip(RoundedCornerShape(26.px))
             .background(colors.surface2),
     ) {
@@ -771,7 +776,7 @@ private fun GameTile(
         if (animatedArt != null && animation != null && (if (wide) wideCover else cover) != null) {
             val k = LocalStage.current.dpPerPx * LocalDensity.current.density * TILE_FOCUS_SCALE
             AnimatedArtLayer(
-                animation, playing, animatedArt.ticker, ((if (wide) 956f else 300f) * k).roundToInt(), (450f * k).roundToInt(),
+                animation, playing, animatedArt.ticker, ((if (wide) ROW_WIDE else ROW_TILE) * k).roundToInt(), (450f * k).roundToInt(),
                 Modifier.fillMaxSize(), colorFilter = if (focused) null else menuDimCoverFilter(menuDim), stamp = artwork.version.intValue,
             )
         }

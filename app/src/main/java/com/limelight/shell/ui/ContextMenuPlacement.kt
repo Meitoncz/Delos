@@ -15,14 +15,19 @@ internal object ContextMenuLayout {
     const val MAX_WIDTH = 640f
 
     /** The caret: [CARET_WIDTH] along the card's edge, [CARET_DEPTH] out of it (its tip). Same shape as the stream popover's. */
-    const val CARET_WIDTH = 60f
-    const val CARET_DEPTH = 24f
+    const val CARET_WIDTH = 72f
+    const val CARET_DEPTH = 30f
 
     /** The caret keeps this far from the card's corners. */
     const val CARET_INSET = StreamMenuLayout.CARET_MIN_INSET
 
-    /** The caret's tip relative to the element's edge: negative = the tip reaches INTO the element (half the caret's depth, the user's wish: the menu sits right at its cover). */
-    const val TIP_GAP = -12f
+    /**
+     * The caret's tip relative to the element's edge (the bounds already contain the focus scale: a centre-origin cover grows on all sides, the wide
+     * first cover only to the left, its right edge stays): negative = the tip reaches INTO the element. The focus ring adds 10 stage px outside the
+     * cover (5 ring + 5 gap), and the caret should sit half (CARET_DEPTH / 2 = 15) over the cover with its ring: 10 - 15 = -5. Measured on the Odin
+     * with the old -12 and depth 24: the card edge lay exactly on the ring's outer edge and the whole caret over the cover.
+     */
+    const val TIP_GAP = -5f
 
     /** The card keeps the stream popover's margin from the top and bottom of the stage, and a smaller one from its sides. */
     const val MARGIN_Y = StreamMenuLayout.POPOVER_MARGIN
