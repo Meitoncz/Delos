@@ -105,6 +105,7 @@ private fun BootLogo(modifier: Modifier = Modifier) {
  */
 @Composable
 fun CreateProfileScreen(editing: Boolean, initial: Profile?, onDone: (name: String, avatar: Int) -> Unit) {
+    val res = com.limelight.shell.ui.textResources()
     val shell = LocalShell.current
     val feedback = LocalFeedback.current
     val tracker = LocalFocusTracker.current
@@ -116,7 +117,7 @@ fun CreateProfileScreen(editing: Boolean, initial: Profile?, onDone: (name: Stri
     InitialFocus(avatarFocus[avatar.coerceIn(AVATARS.indices)])
     // The name is typed in the same dialog as Rename profile; when it is accepted the page shows it and the focus goes on to Create / Save
     val askName = {
-        openProfileNameDialog(shell, tracker, feedback, "Profile name", name) { entered ->
+        openProfileNameDialog(res, shell, tracker, feedback, "Profile name", name) { entered ->
             name = entered
             shell.returnFocusTo(create)
         }

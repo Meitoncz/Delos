@@ -53,7 +53,8 @@ preset keys through `RumblePreferences` (see [RUMBLE.md](RUMBLE.md)) and reads C
 
 - `shell/settings/SettingsCatalog.kt` reads titles, summaries, defaults, dependencies, choices, types,
   ranges, units and action URLs directly from the existing XML. It uses English resources while the
-  shell is English-only. `list_languages` remains available for the stream/classic interface.
+  shell is English-only. `list_languages` remains available for the stream/classic interface. How the
+  catalog and the help texts become locale-aware: [LOCALIZATION.md](LOCALIZATION.md).
 - `SettingsCapabilities.kt` contains the display, codec, HDR, sensors, USB, vibration, PiP and
   touchscreen rules ported from `StreamSettings`. Native and custom resolutions/frame rates are
   added to the original choices. Explicitly unavailable codec choices are omitted.

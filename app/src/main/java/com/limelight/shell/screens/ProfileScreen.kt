@@ -1,5 +1,6 @@
 package com.limelight.shell.screens
 
+import android.content.res.Resources
 import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -44,11 +45,16 @@ import com.limelight.shell.ui.LocalStage
 import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.Unbounded
 import com.limelight.shell.ui.px
+import com.limelight.shell.ui.textResources
 import com.limelight.shell.ui.tpx
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import com.limelight.R
 
 /** `#scr-profile`: the current profile with its avatar, and changing, renaming, switching or adding one. */
 @Composable
 fun ProfileScreen(profiles: Profiles, store: ProfileStore) {
+    val res = textResources()
     val colors = LocalDelosColors.current
     val stage = LocalStage.current
     val density = LocalDensity.current.density
@@ -74,16 +80,16 @@ fun ProfileScreen(profiles: Profiles, store: ProfileStore) {
             BasicText(profile.name, style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 64.tpx, letterSpacing = (-.01).em))
             val count = profiles.all.size
             BasicText(
-                "Signed in on this ${Build.MODEL} · $count ${if (count == 1) "profile" else "profiles"}",
+                pluralStringResource(R.plurals.profile_signed_in, count, Build.MODEL, count),
                 style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 26.tpx),
             )
         }
         Circles {
-            CircleItem(Symbols.FACE, "Change avatar", { shell.navigate(Screen.CreateProfile(editing = true, back = Screen.Profile)) }, Modifier.focusRequester(first))
-            CircleItem(Symbols.EDIT, "Rename", { renameProfile(shell, tracker, store, feedback, profile.id, profile.name) })
-            CircleItem(Symbols.SWITCH_ACCOUNT, "Switch profile", { openProfilesMenu(shell, tracker, feedback, profiles, store, Screen.Profile) })
-            CircleItem(Symbols.PERSON_ADD, "Add profile", { shell.navigate(Screen.CreateProfile(editing = false, back = Screen.Profile)) })
-            CircleItem(Symbols.DELETE, "Delete profile", { deleteProfile(shell, store, profile.id, profile.name) })
+            CircleItem(Symbols.FACE, stringResource(R.string.profile_change_avatar), { shell.navigate(Screen.CreateProfile(editing = true, back = Screen.Profile)) }, Modifier.focusRequester(first))
+            CircleItem(Symbols.EDIT, stringResource(R.string.profile_rename), { renameProfile(res, shell, tracker, store, feedback, profile.id, profile.name) })
+            CircleItem(Symbols.SWITCH_ACCOUNT, stringResource(R.string.profile_switch), { openProfilesMenu(res, shell, tracker, feedback, profiles, store, Screen.Profile) })
+            CircleItem(Symbols.PERSON_ADD, stringResource(R.string.profile_add), { shell.navigate(Screen.CreateProfile(editing = false, back = Screen.Profile)) })
+            CircleItem(Symbols.DELETE, stringResource(R.string.profile_delete), { deleteProfile(res, shell, store, profile.id, profile.name) })
         }
     }
 }
@@ -94,48 +100,48 @@ fun ProfileScreen(profiles: Profiles, store: ProfileStore) {
  * so the toast can undo it with Y or a tap. The next profile takes over; without one, the first launch
  * starts again (and Undo still brings the profile back).
  */
-private fun deleteProfile(shell: ShellState, store: ProfileStore, id: String, name: String) {
+private fun deleteProfile(res: Resources, shell: ShellState, store: ProfileStore, id: String, name: String) {
     val another = store.delete(id)
-    val undo = ToastAction("Undo") {
+    val undo = ToastAction(res.getString(R.string.profile_undo)) {
         if (store.undoDelete(id)) {
-            shell.showToast("$name is back", Symbols.CHECK_CIRCLE)
+            shell.showToast(res.getString(R.string.profile_restored, name), Symbols.CHECK_CIRCLE)
             // The first launch screens make no sense with a profile again
             if (shell.screen is Screen.Boot || shell.screen is Screen.CreateProfile) shell.navigate(Screen.Start)
         } else {
-            shell.showToast("$name could not be restored", Symbols.ERROR)
+            shell.showToast(res.getString(R.string.profile_restore_failed, name), Symbols.ERROR)
         }
     }
-    shell.showToast("$name was deleted", Symbols.DELETE, undo)
+    shell.showToast(res.getString(R.string.profile_deleted, name), Symbols.DELETE, undo)
     shell.navigate(if (another) Screen.Start else Screen.Boot())
 }
 
 /** The profiles to switch to (the current one marked), and a new one; [from] is where creating returns to. */
-fun profilesMenu(shell: ShellState, profiles: Profiles, store: ProfileStore, from: Screen): ContextMenu {
+fun profilesMenu(res: Resources, shell: ShellState, profiles: Profiles, store: ProfileStore, from: Screen): ContextMenu {
     val current = profiles.current?.id
     return ContextMenu(
-        "Profiles",
+        res.getString(R.string.profile_menu_title),
         below = true,
         items = profiles.all.map { p ->
             MenuItem(if (p.id == current) Symbols.CHECK else Symbols.ACCOUNT_CIRCLE, p.name) {
                 if (p.id != current) {
                     store.switchTo(p.id)
-                    shell.showToast("Playing as ${p.name}", Symbols.ACCOUNT_CIRCLE)
+                    shell.showToast(res.getString(R.string.profile_playing_as, p.name), Symbols.ACCOUNT_CIRCLE)
                 }
             }
-        } + MenuItem(Symbols.PERSON_ADD, "New profile") { shell.navigate(Screen.CreateProfile(editing = false, back = from)) },
+        } + MenuItem(Symbols.PERSON_ADD, res.getString(R.string.profile_new)) { shell.navigate(Screen.CreateProfile(editing = false, back = from)) },
     )
 }
 
 /** Opens [profilesMenu] at the focused element. */
-fun openProfilesMenu(shell: ShellState, tracker: FocusTracker, feedback: Feedback, profiles: Profiles, store: ProfileStore, from: Screen) {
+fun openProfilesMenu(res: Resources, shell: ShellState, tracker: FocusTracker, feedback: Feedback, profiles: Profiles, store: ProfileStore, from: Screen) {
     feedback.play(Cue.OPEN)
-    shell.openLayer(Layer.Context(profilesMenu(shell, profiles, store, from), tracker.bounds()), tracker)
+    shell.openLayer(Layer.Context(profilesMenu(res, shell, profiles, store, from), tracker.bounds()), tracker)
 }
 
-private fun renameProfile(shell: ShellState, tracker: FocusTracker, store: ProfileStore, feedback: Feedback, id: String, name: String) {
-    openProfileNameDialog(shell, tracker, feedback, "Rename profile", name) { value ->
+private fun renameProfile(res: Resources, shell: ShellState, tracker: FocusTracker, store: ProfileStore, feedback: Feedback, id: String, name: String) {
+    openProfileNameDialog(res, shell, tracker, feedback, res.getString(R.string.profile_rename_title), name) { value ->
         store.update(id) { it.copy(name = value) }
-        shell.showToast("Profile renamed", Symbols.CHECK_CIRCLE)
+        shell.showToast(res.getString(R.string.profile_renamed), Symbols.CHECK_CIRCLE)
     }
 }
 
@@ -143,17 +149,17 @@ private fun renameProfile(shell: ShellState, tracker: FocusTracker, store: Profi
  * The one dialog a profile's name is typed in: Rename on the profile screen and "Change name" on the new / edit profile pages. A blank
  * name is refused with the same toast; [onName] gets the trimmed name when it is accepted and the dialog closes.
  */
-fun openProfileNameDialog(shell: ShellState, tracker: FocusTracker, feedback: Feedback, title: String, initial: String, onName: (String) -> Unit) {
+fun openProfileNameDialog(res: Resources, shell: ShellState, tracker: FocusTracker, feedback: Feedback, title: String, initial: String, onName: (String) -> Unit) {
     feedback.play(Cue.OPEN)
     shell.openLayer(
         Layer.Dialog(
             DialogSpec(
-                title, "Shown on the start screen and in the side menu.",
-                listOf(DialogField(Symbols.BADGE, initial = initial, maxLength = 20)), "Save",
+                title, res.getString(R.string.profile_name_note),
+                listOf(DialogField(Symbols.BADGE, initial = initial, maxLength = 20)), res.getString(R.string.profile_name_save),
             ) { (value) ->
                 if (value.isBlank()) {
                     feedback.play(Cue.ERROR)
-                    shell.showToast("Enter a name for your profile", Symbols.BADGE)
+                    shell.showToast(res.getString(R.string.profile_name_required), Symbols.BADGE)
                     false
                 } else {
                     onName(value.trim())

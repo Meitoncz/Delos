@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Profile screen, profile menu and the profile name dialog -->
+    <plurals name="profile_signed_in">
+        <!-- %1$s: device model, %2$d: number of profiles -->
+        <item quantity="one">Signed in on this %1$s · %2$d profile</item>
+        <item quantity="other">Signed in on this %1$s · %2$d profiles</item>
+    </plurals>
+    <string name="profile_change_avatar">Change avatar</string>
+    <string name="profile_rename">Rename</string>
+    <string name="profile_switch">Switch profile</string>
+    <string name="profile_add">Add profile</string>
+    <string name="profile_delete">Delete profile</string>
+    <string name="profile_undo">Undo</string>
+    <!-- %1$s: profile name -->
+    <string name="profile_restored">%1$s is back</string>
+    <!-- %1$s: profile name -->
+    <string name="profile_restore_failed">%1$s could not be restored</string>
+    <!-- %1$s: profile name -->
+    <string name="profile_deleted">%1$s was deleted</string>
+    <string name="profile_menu_title">Profiles</string>
+    <!-- %1$s: profile name -->
+    <string name="profile_playing_as">Playing as %1$s</string>
+    <string name="profile_new">New profile</string>
+    <string name="profile_rename_title">Rename profile</string>
+    <string name="profile_renamed">Profile renamed</string>
+    <string name="profile_name_note">Shown on the start screen and in the side menu.</string>
+    <string name="profile_name_save">Save</string>
+    <string name="profile_name_required">Enter a name for your profile</string>
+</resources>

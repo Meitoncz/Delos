@@ -113,6 +113,7 @@ private fun startMenu(pc: Pc, default: Boolean, actions: DeviceActions) = Contex
 /** The current profile in the top-left corner of the start screen; A opens the profiles. */
 @Composable
 private fun ProfileChip(profiles: Profiles, store: ProfileStore, modifier: Modifier) {
+    val res = com.limelight.shell.ui.textResources()
     val colors = LocalDelosColors.current
     val shell = LocalShell.current
     val tracker = LocalFocusTracker.current
@@ -122,7 +123,7 @@ private fun ProfileChip(profiles: Profiles, store: ProfileStore, modifier: Modif
     Row(
         modifier
             .focusEffects(
-                onClick = { openProfilesMenu(shell, tracker, feedback, profiles, store, Screen.Start) },
+                onClick = { openProfilesMenu(res, shell, tracker, feedback, profiles, store, Screen.Start) },
                 corner = 999f, focusScale = 1.06f, ring = FocusRing(4f, 4f), glow = FocusGlow(14f, 40f, -12f),
                 clickCue = null, onLookChange = { focused = it },
             )

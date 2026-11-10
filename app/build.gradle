@@ -70,6 +70,9 @@ android {
     }
 
     lint {
+        // English is the fallback while languages are being filled in (docs/LOCALIZATION.md); StringResourcesTest enforces
+        // keys, placeholders, plurals and the Delos rules of every translation file that exists. ExtraTranslation, MissingQuantity and
+        // StringFormat* stay at their default (error) severity.
         disable 'MissingTranslation'
         lintConfig = file('lint.xml')
     }
