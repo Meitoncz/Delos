@@ -1,0 +1,426 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shortcut strings -->
+    <string name="scut_pc_not_found">PCが見つかりません</string>
+    <string name="scut_invalid_uuid">指定されたPCは無効です</string>
+    <string name="scut_invalid_app_id">指定されたアプリは無効です</string>
+    <string name="scut_game_running">%1$sはすでに実行中です · 先に Delosで終了してください</string>
+    <string name="scut_other_game_running">別のゲームがすでに実行中です · 先に Delosで終了してください</string>
+
+    <string name="configuration_mode_move_buttons">ボタン移動モード</string>
+    <string name="configuration_mode_resize_buttons">ボタンサイズ変更モード</string>
+    <string name="configuration_mode_disable_enable_buttons">ボタン有効/無効モード</string>
+    <string name="configuration_mode_exiting">設定モードを終了しています</string>
+    <string name="help_loading_title">ヘルプビューア</string>
+    <string name="help_loading_msg">ヘルプページを読み込み中…</string>
+
+    <!-- Alignments -->
+    <string name="align_left">左揃え</string>
+    <string name="align_center">中央揃え</string>
+    <string name="align_right">右揃え</string>
+
+    <!-- Network test strings -->
+    <string name="nettest_title_waiting">ネットワーク接続をテスト中</string>
+    <string name="nettest_text_waiting">必要なポートがブロックされていないか、Delosがネットワーク接続をテストしています。\n\n数秒かかる場合があります…</string>
+    <string name="nettest_title_done">ネットワークテスト完了</string>
+    <string name="nettest_text_success">ネットワークは Delosをブロックしていないようです。それでも接続できない場合は、PCのファイアウォール設定を確認してください。\n\nインターネット経由でストリーミングする場合は、PCにMoonlight Internet Hosting Toolをインストールし、付属のInternet Streaming Testerを実行して、PCのインターネット接続を確認してください。</string>
+    <string name="nettest_text_inconclusive">Delosの接続テストサーバーにどれも到達できなかったため、ネットワークテストを実行できませんでした。インターネット接続を確認するか、後でもう一度お試しください。</string>
+    <string name="nettest_text_failure">お使いの端末の現在のネットワーク接続は、Delosをブロックしているようです。このネットワークに接続している間は、インターネット経由のストリーミングが動作しない可能性があります。\n\n次のネットワークポートがブロックされていました：\n</string>
+
+    <!-- Pair messages -->
+    <string name="pair_pc_offline">PCはオフラインです</string>
+
+    <!-- Errors -->
+    <string name="error_unknown_host">ホストを解決できませんでした</string>
+    <string name="error_404">GFEがHTTP 404エラーを返しました。PCに対応するGPUが搭載されていることを確認してください。リモートデスクトップソフトの使用もこのエラーの原因になります。PCを再起動するか、GFEを再インストールしてください。</string>
+    <string name="title_decoding_error">ビデオデコーダーがクラッシュしました</string>
+    <string name="message_decoding_error">この端末のビデオデコーダーとの非互換により、Delosがクラッシュしました。クラッシュが続く場合は、ストリーミング設定を調整してください。</string>
+    <string name="title_decoding_reset">ビデオ設定をリセットしました</string>
+    <string name="message_decoding_reset">選択したストリーミング設定では、端末のビデオデコーダーがクラッシュし続けます。ストリーミング設定を初期値にリセットしました。</string>
+    <string name="error_usb_prohibited">端末の管理者によってUSBアクセスが禁止されています。KnoxまたはMDMの設定を確認してください。</string>
+
+    <!-- Start application messages -->
+    <string name="conn_metered">警告：現在のネットワーク接続は従量制です。</string>
+    <string name="conn_starting">開始中</string>
+
+    <!-- General strings -->
+    <string name="yes">はい</string>
+    <string name="no">いいえ</string>
+    <string name="help">ヘルプ</string>
+    <string name="slow_connection_msg">PCとの接続が低速です\nビットレートを下げてください</string>
+    <string name="poor_connection_msg">PCとの接続状態が悪いです</string>
+    <string name="perf_overlay_streamdetails">ビデオストリーム：%1$s %2$.2f FPS</string>
+    <string name="perf_overlay_decoder">デコーダー：%1$s</string>
+    <string name="perf_overlay_incomingfps">ネットワークからの受信フレームレート：%1$.2f FPS</string>
+    <string name="perf_overlay_renderingfps">レンダリングフレームレート：%1$.2f FPS</string>
+    <string name="perf_overlay_hostprocessinglatency">ホスト処理遅延 最小/最大/平均：%1$.1f/%2$.1f/%3$.1f ms</string>
+    <string name="perf_overlay_netdrops">ネットワーク接続で破棄されたフレーム：%1$.2f%%</string>
+    <string name="perf_overlay_netlatency">平均ネットワーク遅延：%1$d ms（ばらつき：%2$d ms）</string>
+    <string name="perf_overlay_dectime">平均デコード時間：%1$.2f ms</string>
+
+    <!-- AppList activity -->
+    <string name="applist_quit_app">終了中</string>
+    <string name="applist_quit_success">終了しました</string>
+    <string name="applist_quit_fail">終了できませんでした</string>
+
+    <!-- Preferences -->
+    <string name="category_general_settings">一般設定</string>
+    <string name="category_video_settings">ビデオ設定</string>
+    <string name="title_resolution_list">ビデオ解像度</string>
+    <string name="summary_resolution_list">上げると映像が鮮明になります。下げると、低性能の端末や低速なネットワークで動作が改善します。</string>
+    <string name="title_fps_list">ビデオフレームレート</string>
+    <string name="summary_fps_list">上げると映像がより滑らかになります。下げると、低性能の端末で動作が改善します。</string>
+    <string name="title_seekbar_bitrate">ビデオビットレート</string>
+    <string name="summary_seekbar_bitrate">上げると画質が向上します。下げると、低速な接続で動作が改善します。</string>
+    <string name="title_seekbar_metered_bitrate">従量制ネットワークでのビデオビットレート</string>
+    <string name="summary_seekbar_metered_bitrate">ビットレートが高いほどデータ通信量が増え、低いほど従量制ネットワークでの滑らかさが向上します。\n0に設定すると、上記ビットレート設定の¼になります。</string>
+    <string name="suffix_seekbar_bitrate_mbps">Mbps</string>
+    <string name="title_resolution_scale_factor">解像度スケール係数</string>
+    <string name="summary_resolution_scale_factor">サーバー側が要求する仮想画面の解像度に、この係数を掛けます。ストリーミング解像度は変わりません。\n例：120%にすると2000x1000が2400x1200になります。\n係数を高くすると、一部のゲームで画質が向上します。\n有効にするにはApolloが必要です。</string>
+    <string name="title_checkbox_auto_invert_video_resolution">解像度の自動反転</string>
+    <string name="summary_checkbox_auto_invert_video_resolution">縦向きのとき、ビデオストリームの幅と高さを自動で入れ替えます。\n例：1920x1080は1080x1920になります。</string>
+    <string name="title_video_scale_mode">ビデオ拡大縮小モード</string>
+    <string name="summary_video_scale_mode">フィット、フィル、ストレッチから選択します</string>
+    <string name="video_scale_mode_fit">フィット</string>
+    <string name="video_scale_mode_fill">フィル</string>
+    <string name="video_scale_mode_stretch">ストレッチ</string>
+
+    <string name="category_audio_settings">オーディオ設定</string>
+    <string name="title_audio_config_list">サラウンドサウンド構成</string>
+    <string name="summary_audio_config_list">ホームシアターシステム向けに5.1または7.1サラウンドサウンドを有効にします</string>
+    <string name="title_checkbox_enable_audiofx">システムイコライザーのサポートを有効にする</string>
+    <string name="summary_checkbox_enable_audiofx">ストリーミング中もオーディオエフェクトを使えますが、音声の遅延が増える場合があります</string>
+
+    <string name="category_gamepad_settings">コントローラー設定</string>
+    <string name="title_checkbox_multi_controller">コントローラーの自動検出</string>
+    <string name="summary_checkbox_multi_controller">オフにすると、コントローラーが常に接続されているものとして扱います</string>
+    <string name="title_checkbox_vibrate_fallback">端末の振動で振動機能をエミュレート</string>
+    <string name="summary_checkbox_vibrate_fallback">コントローラーが振動に対応していない場合、端末を振動させてエミュレートします</string>
+    <string name="title_seekbar_vibrate_fallback_strength">エミュレート振動の強さを調整</string>
+    <string name="summary_seekbar_vibrate_fallback_strength">端末の振動の強さを強めたり弱めたりします</string>
+    <string name="suffix_seekbar_vibrate_fallback_strength">%</string>
+    <string name="title_seekbar_deadzone">アナログスティックのデッドゾーンを調整</string>
+    <string name="summary_seekbar_deadzone">正の値は通常のデッドゾーンを設定し、負の値はデッドゾーン補正を適用します。デッドゾーン補正を使う場合は、コントローラー側でデッドゾーンを調整できることを確認してください。そうでないと中央に合わせにくくなります。</string>
+    <string name="suffix_seekbar_deadzone">%</string>
+    <string name="title_checkbox_xb1_driver">Xbox 360/One/Nintendo Pro USBコントローラードライバー</string>
+    <string name="summary_checkbox_xb1_driver">Xbox/Nintendo Proコントローラーにネイティブ対応していない端末向けに、内蔵USBドライバーを有効にします</string>
+    <string name="title_checkbox_usb_bind_all">ネイティブXboxコントローラー対応を上書き</string>
+    <string name="summary_checkbox_usb_bind_all">Xbox/Nintendo Proコントローラーのネイティブ対応があっても、対応するすべてのコントローラーで DelosのUSBドライバーを使用します</string>
+    <string name="title_checkbox_mouse_emulation">コントローラーでマウスをエミュレート</string>
+    <string name="summary_checkbox_mouse_emulation">Startボタンを長押しすると、コントローラーモードとマウスモードを切り替えます</string>
+    <string name="title_checkbox_remember_mouse_mode">マウスモードを記憶</string>
+    <string name="summary_checkbox_remember_mouse_mode">ストリーム中に選んだマウスモードを記憶します。オフの場合、ストリーム中に変更したマウスモードは一時的なものになります。</string>
+    <string name="title_checkbox_flip_face_buttons">フェイスボタンを入れ替え</string>
+    <string name="summary_checkbox_flip_face_buttons">コントローラーと画面上のコントロールで、フェイスボタンのA/BとX/Yを入れ替えます</string>
+    <string name="title_checkbox_gamepad_touchpad_as_mouse">常にタッチパッドでマウスを操作</string>
+    <string name="summary_checkbox_gamepad_touchpad_as_mouse">タッチパッド付きコントローラーをエミュレートしている場合でも、コントローラーのタッチパッド入力でホストのマウスを操作します。</string>
+    <string name="title_checkbox_gamepad_motion_sensors">外部コントローラーのジャイロ</string>
+    <string name="summary_checkbox_gamepad_motion_sensors">接続した外部コントローラーにジャイロスコープと加速度センサーがある場合、PCがそれを読み取れるようにします。Android 12以降が必要です。モーション操作を使うゲームがない場合は、オフにすると消費電力と通信量を少し節約できます。</string>
+    <string name="title_checkbox_gamepad_motion_fallback">端末内蔵のジャイロ</string>
+    <string name="summary_checkbox_gamepad_motion_fallback">接続したコントローラーにセンサーがない場合や、お使いのAndroidのバージョンで読み取れない場合に、この端末自身のジャイロスコープと加速度センサー（携帯ゲーム機の内蔵センサー）を使います。\n注意：PCからコントローラーがPlayStationコントローラーとして認識される場合があります。</string>
+    <string name="title_checkbox_force_device_motion">常に端末内蔵のジャイロを使用</string>
+    <string name="summary_checkbox_force_device_motion">外部コントローラーが動作するセンサーを報告していても、端末自身のセンサーを使います。</string>
+    <string name="title_seekbar_gyro_smoothing">ジャイロスムージング</string>
+    <string name="summary_seekbar_gyro_smoothing">PCに送る前にジャイロを安定させます。0でオフ。値を上げるとブレが減りますが、ゆっくりした照準操作にわずかな遅れが出ます。素早い動きはそのまま反応します。次回のストリームから適用され、ストリームメニュー（その他）ではリアルタイムに変更できます。</string>
+    <string name="suffix_seekbar_gyro_smoothing">%</string>
+    <string name="title_enable_rumble">振動を有効にする</string>
+    <string name="summary_enable_rumble">対応するコントローラーで振動フィードバックを有効にします。</string>
+    <string name="category_input_settings">入力設定</string>
+    <string name="title_checkbox_absolute_mouse_mode">リモートデスクトップ用マウスモード</string>
+    <string name="summary_checkbox_absolute_mouse_mode">リモートデスクトップの利用時にマウス加速がより自然になりますが、多くのゲームとは互換性がありません。</string>
+    <string name="title_checkbox_mouse_nav_buttons">マウスの進む/戻るボタンを有効にする</string>
+    <string name="summary_checkbox_mouse_nav_buttons">一部の不具合のある端末では、右クリックが効かなくなる場合があります</string>
+
+    <string name="category_on_screen_controls_settings">画面上のコントロール設定</string>
+    <string name="title_checkbox_show_onscreen_controls">画面上のコントロールを表示</string>
+    <string name="summary_checkbox_show_onscreen_controls">タッチスクリーンに仮想コントローラーを重ねて表示します</string>
+    <string name="title_hide_osc_when_has_gamepad">コントローラー使用時はOSCを隠す</string>
+    <string name="summary_hide_osc_when_has_gamepad">物理コントローラーが接続されているときはOSCを隠します</string>
+    <string name="title_checkbox_vibrate_osc">振動を有効にする</string>
+    <string name="summary_checkbox_vibrate_osc">画面上のコントロールで、端末を振動させて振動機能をエミュレートします</string>
+    <string name="title_only_l3r3">L3とR3のみ表示</string>
+    <string name="summary_only_l3r3">L3とR3以外の仮想ボタンをすべて隠します</string>
+    <string name="title_show_guide_button">ガイドボタンを表示</string>
+    <string name="summary_show_guide_button">ガイドボタンを画面に表示します</string>
+    <string name="title_reset_osc">保存した画面上のコントロールのレイアウトを消去</string>
+    <string name="summary_reset_osc">画面上のコントロールをすべて初期のサイズと位置に戻します</string>
+    <string name="dialog_title_reset_osc">レイアウトをリセット</string>
+    <string name="dialog_text_reset_osc">保存した画面上のコントロールのレイアウトを削除しますか？</string>
+    <string name="summary_osc_opacity">画面上のコントロールの透明度を調整します</string>
+    <string name="dialog_title_osc_opacity">不透明度を変更</string>
+    <string name="suffix_osc_opacity">%</string>
+
+    <string name="category_ui_settings">UI設定</string>
+    <string name="title_checkbox_enable_pip">ピクチャーインピクチャーの観戦モードを有効にする</string>
+    <string name="summary_checkbox_enable_pip">マルチタスク中に、ストリームを表示できます（操作はできません）</string>
+    <string name="title_language_list">言語</string>
+    <string name="summary_language_list">Delosで使用する言語</string>
+
+    <string name="category_host_settings">ホスト設定</string>
+    <string name="title_checkbox_host_audio">PCで音声を再生</string>
+    <string name="summary_checkbox_host_audio">PCとこの端末の両方で音声を再生します</string>
+
+    <string name="category_advanced_settings">詳細設定</string>
+    <string name="title_unlock_fps">すべてのフレームレートを解放</string>
+    <string name="summary_unlock_fps">90または120 FPSでのストリーミングは、高性能な端末では遅延を減らせますが、非対応の端末ではラグや不安定になる場合があります</string>
+    <string name="title_checkbox_reduce_refresh_rate">リフレッシュレートの低下を許可</string>
+    <string name="summary_checkbox_reduce_refresh_rate">ディスプレイのリフレッシュレートを下げると省電力になりますが、映像の遅延が少し増えます</string>
+    <string name="title_checkbox_disable_warnings">警告メッセージを無効にする</string>
+    <string name="summary_checkbox_disable_warnings">ストリーミング中の画面上の接続警告メッセージを無効にします</string>
+    <string name="title_video_format">ビデオコーデック</string>
+    <string name="summary_video_format">端末が対応していれば、新しいコーデックでビデオの必要帯域を減らせます。ホストソフトウェアやGPUが対応していない場合、コーデックの選択は無視されることがあります。</string>
+    <string name="title_enable_hdr">HDRを有効にする</string>
+    <string name="summary_enable_hdr">ゲームとPCのGPUが対応している場合にHDRでストリーミングします。HDRにはHEVC Main 10エンコードに対応したGPUが必要です。HDRの見え方はこの端末のディスプレイによって異なります。</string>
+    <string name="title_full_range">フルレンジビデオを強制</string>
+    <string name="summary_full_range">端末がフルレンジのビデオを正しく表示できない場合、明部と暗部のディテールが失われます。</string>
+    <string name="title_prevent_packet_loss">Wi-Fiキープアライブ</string>
+    <string name="summary_prevent_packet_loss">ストリーミング中に小さなパケットを送り、Wi-Fiが省電力モードに入らないようにします。原因不明のパケットロスがある端末で効果があるかもしれません。</string>
+    <string name="title_enable_perf_overlay">ストリーミング中にパフォーマンス統計を表示</string>
+    <string name="summary_enable_perf_overlay">ストリーミング中に、リアルタイムのストリーム性能情報を表示します</string>
+
+    <string name="title_special_key_help">カスタムキーのヘルプ</string>
+    <string name="summary_special_key_help">カスタム特殊キーの設定方法の説明</string>
+
+    <!-- Toasts -->
+    <string name="toast_controller_type_changed">モーションセンサーのエミュレートにより、コントローラーの種類が変わる場合があります</string>
+
+    <!-- Array strings -->
+    <string name="resolution_360p">360p</string>
+    <string name="resolution_480p">480p</string>
+    <string name="resolution_720p">720p</string>
+    <string name="resolution_1080p">1080p</string>
+    <string name="resolution_1440p">1440p</string>
+    <string name="resolution_4k">4K</string>
+
+    <string name="fps_30">30 FPS</string>
+    <string name="fps_60">60 FPS</string>
+    <string name="fps_90">90 FPS</string>
+    <string name="fps_120">120 FPS</string>
+
+    <string name="audioconf_stereo">ステレオ</string>
+    <string name="audioconf_51surround">5.1サラウンドサウンド</string>
+    <string name="audioconf_71surround">7.1サラウンドサウンド</string>
+
+    <string name="videoformat_auto">自動</string>
+    <string name="videoformat_av1always">AV1</string>
+    <string name="videoformat_hevcalways">HEVC (H.265)</string>
+    <string name="videoformat_h264always">H.264</string>
+    <string name="videoformat_pyrowave">PyroWave</string>
+    <string name="title_pyrowave_chroma">PyroWaveクロマ</string>
+    <string name="summary_pyrowave_chroma">PyroWaveビデオのクロマ解像度です。4:4:4は色のディテールを完全に保ちますが、帯域とGPU時間が増え、対応するホストが必要です。非対応の場合は4:2:0になります。HDRでは選択できません。</string>
+    <string name="pyrowave_chroma_420">4:2:0（初期値）</string>
+    <string name="pyrowave_chroma_444">4:4:4</string>
+
+    <string name="title_frame_pacing">ビデオフレームペーシング</string>
+    <string name="summary_frame_pacing">ビデオの遅延と滑らかさのバランスを指定します。Warp DriveとWarp 2はすべての端末で動作するとは限りません。</string>
+    <string name="pacing_warp">Warp Drive</string>
+    <string name="pacing_warp2">Warp 2</string>
+    <string name="pacing_latency">最小遅延</string>
+    <string name="pacing_balanced">バランス</string>
+    <string name="pacing_balanced_alt">バランス（FPS制限付き）</string>
+    <string name="pacing_smoothness">最も滑らかな映像</string>
+    <string name="pacing_fast_vsync">高速V-Sync（Nano Pacer）</string>
+
+    <string name="title_async_decode">非同期デコード</string>
+    <string name="summary_async_decode">MediaCodecが、ポーリングではなくコールバックで準備済みのバッファーを渡します。H.264、HEVC、AV1向けで、次回のストリームから適用されます。デコーダーが不安定な場合はオフにしてください。</string>
+    <string name="title_sgsr">Snapdragon Game Super Resolution</string>
+    <string name="summary_sgsr">SGSR 1で低解像度のビデオをアップスケールします。OpenGL ES 3.1が必要です。HDRは、対応環境では10ビットのP010出力を使います。ストリームメニューでリアルタイムに切り替えられます。PyroWaveは独自のレンダラーを使います。ストリーム解像度は、ディスプレイ解像度より低いものを選んでください。</string>
+    <string name="title_sgsr_quality">アップスケーラーモード</string>
+    <string name="summary_sgsr_quality">SGSR 1（Qualcomm）は現在のフレームをフィルター処理します。SGSR2-DVは、ビデオ向けの Delos版SGSR 2で、オプティカルフローで動きを検出し、過去のフレームのディテールを再利用します。シャープのみは、ストリームのサイズでシャープ化するだけです。HDRとリアルタイム切り替えは、どのモードでも使えます。</string>
+    <string name="title_sgsr_sharpness">アップスケーラーのシャープネス</string>
+    <string name="summary_sgsr_sharpness">シャープ化の強さを0〜100で指定します。0でシャープ化は無効です。SGSRモードでは、再構築結果を変えない独立した最終処理になり、シャープのみではそれが効果のすべてです。リアルタイムに調整できます。</string>
+    <string name="title_sgsr_supersampling_level">スーパーサンプリング品質</string>
+    <string name="summary_sgsr_supersampling_level">ストリームがすでにディスプレイと同じ解像度のときの内部サイズです。1080pのストリームから2560 x 1440（1.33倍）または3840 x 2160（2倍）にします。2倍はGPU時間とメモリがより多く必要で、収まらない場合は1.33倍に切り替わります。ストリームメニューでリアルタイムに変更できます。</string>
+    <string name="sgsr_supersampling_level_1">1.33×（1440p）</string>
+    <string name="sgsr_supersampling_level_2">2×（2160p）</string>
+    <string name="sgsr_quality_standard">SGSR 1（標準）</string>
+    <string name="sgsr_quality_high">SGSR 1（高品質）</string>
+    <string name="sgsr_quality_temporal">SGSR2-DV（標準）</string>
+    <string name="sgsr_quality_temporal_quality">SGSR2-DV（高品質）</string>
+    <string name="sgsr_quality_sharpen">シャープのみ</string>
+
+    <string name="keyboard_service_label">Delos物理キーボード</string>
+    <string name="accessibility_description_text">物理キーボードのショートカットがシステムに横取りされたときにのみ使用します。一部のシステムではAndroidがいくつかのキーボードショートカットを定義して使用しているため、ホストPCにそのまま渡せないことがあります。Delosが入力内容を見たり、パスワードやクレジットカード番号などの個人情報を収集したりすることはありません。</string>
+
+    <string name="game_menu_send_keys_esc">ESC</string>
+    <string name="game_menu_send_keys_f11">F11</string>
+    <string name="game_menu_send_keys_alt_f4">Alt + F4</string>
+    <string name="game_menu_send_keys_ctrl_v">Ctrl + V</string>
+    <string name="game_menu_send_keys_win">Win (Meta)</string>
+    <string name="game_menu_send_keys_win_d">Win + D</string>
+    <string name="game_menu_send_keys_alt_b">ALT + B</string>
+    <string name="game_menu_send_keys_win_g">Win + G (Xbox Game Bar)</string>
+    <string name="game_menu_send_keys_ctrl_alt_tab">Ctrl + Alt + Tab</string>
+    <string name="game_menu_send_keys_shift_tab">Shift + Tab（Steamオーバーレイ）</string>
+    <string name="game_menu_send_keys_alt_enter">Alt + Enter</string>
+    <string name="game_menu_send_keys_win_shift_left">Win + Shift + 左（アプリをデスクトップ間で移動）</string>
+    <string name="game_menu_send_keys_ctrl_alt_shift_f1">Ctrl+Alt+Shift+F1（モニター切り替え）</string>
+    <string name="game_menu_send_keys_ctrl_alt_shift_f12">Ctrl+Alt+Shift+F12（モニター切り替え）</string>
+
+    <string name="pan_zoom_mode_enabled">パン/ズームモードをオンにしました</string>
+    <string name="pan_zoom_mode_disabled">パン/ズームモードをオフにしました</string>
+
+    <string name="title_analog_scrolling">アナログスティックでスクロール</string>
+    <string name="summary_analog_scrolling">マウスエミュレートモードで、スクロールに使うアナログスティックを選びます</string>
+    <string name="analogscroll_none">なし（両方のスティックでマウスを動かす）</string>
+    <string name="analogscroll_right">右アナログスティック</string>
+    <string name="analogscroll_left">左アナログスティック</string>
+
+    <string name="perf_overlay_lite_net">%1$dms</string>
+    <string name="perf_overlay_lite_dectime">%1$.2fms</string>
+    <string name="perf_overlay_lite_netdrops">%1$.2f%%</string>
+    <string name="perf_overlay_lite_fps">%1$.2f</string>
+    <string name="title_import_keyboard_layout">キーボードレイアウトをインポート</string>
+    <string name="title_export_keyboard_layout">キーボードレイアウトをエクスポート</string>
+    <string name="summary_import_keyboard_layout">現在のレイアウトを上書きします。</string>
+    <string name="summary_export_keyboard_layout">現在のキーボードレイアウトをエクスポートします</string>
+    <string name="title_manual_enter_bitrate">カスタムビットレート</string>
+    <string name="summary_manual_enter_bitrate">ビットレートを手動で入力します。\nスライダーの最大範囲を超える値も指定できます。</string>
+    <string name="dialog_manual_enter_bitrate">ビットレートをMbpsで入力してください。0.5単位に丸められます。</string>
+    <string name="title_custom_refresh_rate">カスタムリフレッシュレート</string>
+    <string name="summary_custom_refresh_rate">リフレッシュレートを手動で入力します。Apolloのみ対応です。</string>
+    <string name="dialog_custom_refresh_rate">リフレッシュレートをHzで入力してください。小数も指定できます。</string>
+    <string name="title_touchscreen_mode">タッチスクリーンモード</string>
+    <string name="summary_touchscreen_mode">マルチタッチ/シングルタッチ/トラックパッド/無効から選びます。\n無効でもペン/スタイラスは使えます。\n外部ディスプレイ使用時は、トラックパッド（ナチュラル）モードに固定されます。</string>
+    <string name="title_checkbox_mouse_local_cursor">ローカルのマウスカーソルを使用</string>
+    <string name="summary_checkbox_mouse_local_cursor">既定では外部の物理マウスのカーソルがキャプチャされます。このオプションでAndroidシステムのカーソルを表示できます</string>
+    <string name="title_checkbox_multi_touch_gestures">マルチタッチジェスチャーを有効にする</string>
+    <string name="summary_checkbox_multi_touch_gestures">マルチタッチモードで、3本指タップでキーボード、4本指タップでフルキーボード、5本指タップでクイックメニューを開きます。</string>
+    <string name="title_checkbox_enable_perf_overlay_lite">コンパクトモード</string>
+    <string name="summary_checkbox_enable_perf_overlay_lite">上部中央に1行で表示します：FPS、帯域、ネットワークとデコードの遅延、欠落フレーム。ストリームメニューのオーバーレイボタンで、フル、コンパクト、オフを切り替えられます。</string>
+    <string name="title_virtual_trackpad_settings">仮想トラックパッド設定</string>
+    <string name="dialog_custom_resolution">解像度を設定し、設定ページを閉じると反映されます！</string>
+    <string name="summary_custom_resolution">カスタム解像度をxで区切って追加します。極端な解像度は動作しない場合があります。\n例：1920x1080\nネイティブ以外の解像度では、既定でノッチ領域まで表示されないことがあります。縦横比が同じ場合は、手動でストレッチして全画面に合わせられます</string>
+    <string name="title_custom_resolution">カスタム解像度</string>
+    <string name="title_auto_orientation">自動画面回転</string>
+    <string name="summary_auto_orientation">ストリーム開始時の端末の向きに合わせて、ストリーミング画面を表示します。</string>
+    <string name="title_import_special_button">カスタムキーをインポート</string>
+    <string name="summary_import_special_button">戻るメニューと特殊キーで使えます。\n注意：インポートすると現在の設定が上書きされます。必要に応じてバックアップしてください。</string>
+    <string name="title_special_key_layout">特殊キーレイアウト</string>
+    <string name="title_show_virtual_key">仮想キーを画面に表示</string>
+    <string name="summary_show_virtual_key">タッチスクリーンに仮想の特殊キーのレイヤーを表示します。\nキーの不透明度は、上の仮想コントローラーと共通です。</string>
+    <string name="title_default_layout_scheme">既定のレイアウトプロフィール</string>
+    <string name="summary_default_layout_scheme">各レイアウトプロフィールは最初は同じ内容です（keyboards.jsonファイルから生成）。削除や調整は自由にできます</string>
+    <string name="summary_vibrate_keyboard">画面上のボタンをタップすると、端末のモーターが振動します。このオプションは仮想コントローラーのボタンにも使えます。</string>
+    <string name="title_square_buttons">通常のボタンを四角にする</string>
+    <string name="summary_square_buttons">仮想ボタンの形を四角にします。既定では丸です。</string>
+    <string name="title_reset_keyboard_layout">仮想キーボードレイアウトをリセット</string>
+    <string name="summary_reset_keyboard_layout">特殊キーのレイアウトを初期化します（選択中の既定レイアウトをリセット）</string>
+    <string name="title_joyconfix">Switch Joy-Con互換</string>
+    <string name="summary_joyconfix">Joy-Conが使えない場合やキーの認識に問題がある場合は、この機能を有効にしてみてください。Android 10以降に対応しています</string>
+    <string name="title_keyboard_opacity">仮想フルキーボードの不透明度</string>
+    <string name="title_onscreen_keyboard_autofit">仮想フルキーボードの自動調整を無効化</string>
+    <string name="title_onscreen_keyboard_height">仮想フルキーボードの高さ</string>
+    <string name="title_onscreen_keyboard_width">仮想フルキーボードの幅</string>
+    <string name="title_onscreen_keyboard_align_mode">仮想フルキーボードの配置モード</string>
+    <string name="summary_onscreen_keyboard_height">仮想フルキーボードの高さを調整します</string>
+    <string name="summary_onscreen_keyboard_autofit">キーボードのサイズと位置を自動で調整せず、カスタムサイズを使えるようにします</string>
+    <string name="summary_onscreen_keyboard_width">仮想フルキーボードの幅を調整します</string>
+    <string name="summary_onscreen_keyboard_align_mode">仮想フルキーボードをビューポートのどこに配置するかを選びます</string>
+    <string name="title_free_analog_stick">フリーアナログスティック</string>
+    <string name="summary_free_analog_stick">仮想コントローラーの左右スティックの中心位置が固定されず、一定の移動範囲内で自由に動かせます。</string>
+    <string name="summary_free_analog_stick_opacity">既定では、スティックを動かしたときだけ背景が表示されます。気になる場合は、不透明度を調整できます。</string>
+    <string name="title_free_analog_stick_opacity">フリーアナログスティック背景の不透明度</string>
+    <string name="title_fullexdisplay_mode">完全外部ディスプレイモード</string>
+    <string name="summary_fullexdisplay_mode">リフレッシュレートと解像度を自動で合わせた、没入型のセカンダリ画面モードを使えるようにします。このモードでは手動設定は適用されません。すべての端末やディスプレイで動作するとは限りません。</string>
+    <string name="title_top_center_display">上部中央に表示</string>
+    <string name="summary_top_center_display">解像度がネイティブでない場合、ストリーミング映像を中央ではなく画面の上部に揃えて表示します。</string>
+    <string name="title_touch_sensitivity">タッチスクリーン感度</string>
+    <string name="summary_touch_sensitivity">有効にすると、タッチ感度を手動で調整できます。</string>
+    <string name="title_global_touch_sensitivity">タッチスクリーン感度を全体に適用</string>
+    <string name="summary_global_touch_sensitivity">既定ではオフで、画面の右半分でのみ有効です（原神のプレイに適しています）。オンにすると画面全体で有効になります。</string>
+    <string name="title_auto_touch_sensitivity">タッチ座標が境界を超えたら自動で画面中央に戻す</string>
+    <string name="summary_auto_touch_sensitivity">感度が高いと、少し滑らせただけで境界を超えて動かせなくなることがあります。そのような場合はこのオプションを選んでください。</string>
+    <string name="title_touch_sensitivity_x">画面感度の調整（X軸）</string>
+    <string name="summary_touch_sensitivity_x">マルチタッチモードでは、ゲームによっては感度が合わない場合があります。このオプションで視点の感度を変更できます。</string>
+    <string name="title_touch_sensitivity_y">画面感度の調整（Y軸）</string>
+    <string name="summary_touch_sensitivity_y">マルチタッチモードでは、ゲームによっては感度が合わない場合があります。このオプションで視点の感度を変更できます。</string>
+    <string name="title_debug_info">デバッグ情報</string>
+    <string name="summary_debug_info">コントローラーの振動テストなどを行います。</string>
+    <string name="title_touchpad_sensitivity_x">タッチパッド感度（X軸）</string>
+    <string name="summary_touchpad_sensitivity_x">マウスのタッチパッドモードと、仮想特殊ボタンのタッチパッド操作用です。\n両者は感度の値を共有しますが、感度の効き方は異なる場合があります。\n両方を一緒に使う人はいるのでしょうか？</string>
+    <string name="title_touchpad_sensitivity_y">タッチパッド感度（Y軸）</string>
+    <string name="summary_touchpad_sensitivity_y">マウスのタッチパッドモードと、仮想特殊ボタンのタッチパッド操作用です。\n両者は感度の値を共有しますが、感度の効き方は異なる場合があります。\n両方を一緒に使う人はいるのでしょうか？</string>
+    <string name="title_device_rumble">端末の振動を強制</string>
+    <string name="summary_device_rumble">接続したコントローラーの振動に満足できない場合は、このオプションを有効にしてください。\n内蔵の Delos USBドライバーを強制的に使用している場合は無効です</string>
+    <string name="title_clear_default_special_button">既定の特殊キーを無効にする</string>
+    <string name="summary_clear_default_special_button">戻るメニューの内蔵コマンドが不要なら、無効にしてインポートしたものを使えます。</string>
+    <string name="title_trackpad_sensitivity_x">トラックパッド感度（X）</string>
+    <string name="summary_trackpad_sensitivity_x">トラックパッドのX軸感度です。負の値で方向が反転します</string>
+    <string name="title_trackpad_sensitivity_y">トラックパッド感度（Y）</string>
+    <string name="summary_trackpad_sensitivity_y">トラックパッドのY軸感度です。負の値で方向が反転します</string>
+    <string name="title_trackpad_drag_drop_vibration">トラックパッドでのドラッグ＆ドロップ振動を有効にする</string>
+    <string name="summary_trackpad_drag_drop_vibration">Samsungのトラックパッド搭載端末で、ドラッグ＆ドロップ操作の振動フィードバックを有効にします。</string>
+    <string name="title_trackpad_drag_drop_threshold">トラックパッドでドラッグ＆ドロップを開始する長押し時間</string>
+    <string name="summary_trackpad_drag_drop_threshold">Samsung端末で、ドラッグ＆ドロップが始まるまでトラックパッドを押し続ける時間を設定します。</string>
+    <string name="title_trackpad_swap_axis">トラックパッド入力のXとY軸を入れ替える</string>
+    <string name="summary_trackpad_swap_axis">一部の端末では、トラックパッドの入力軸が回転していることがあります。このオプションで改善する場合があります。</string>
+    <string name="title_checkbox_force_qwerty">QWERTYレイアウトを強制</string>
+    <string name="summary_checkbox_force_qwerty">QWERTYキーボードレイアウトを強制的に使用します。\nGFEで必要です。\n別のキーボードレイアウトを使いたい場合はオフにしてください。</string>
+    <string name="title_checkbox_right_alt_as_meta">右AltをCommandとして使用（Mac）</string>
+    <string name="summary_right_alt_as_meta">Macへのストリーミング用に、右AltをCommandキーに割り当てます。右Alt+キーの組み合わせはCommand+キーになります。左Altには影響しません。</string>
+    <string name="title_checkbox_ignore_synth_events">合成イベントを無視</string>
+    <string name="summary_ignore_synth_events">Androidシステムが送る合成イベントを無視します。一部の端末で、マウスクリックが意図しない別のキーを押してしまう問題が解消する場合があります。\nこのオプションを有効にすると、システムのソフトキーボードが動作しなくなります。</string>
+    <string name="title_smart_clipboard_sync">スマートクリップボード同期</string>
+    <string name="summary_smart_clipboard_sync">ストリームの開始/再開時にクリップボードの内容を自動でサーバーにアップロードし、フォーカスを失ったときにサーバーからクリップボードをダウンロードします（VibepolloまたはApolloが必要）</string>
+    <string name="title_smart_clipboard_sync_toast">クリップボード同期のトースト</string>
+    <string name="summary_smart_clipboard_sync_toast">クリップボード同期の結果をトーストで表示します</string>
+    <string name="title_hide_clipboard_content">クリップボードの内容を隠す</string>
+    <string name="summary_hide_clipboard_content">リモートのクリップボードを機密情報としてマークします</string>
+    <string name="title_settings_misc">その他</string>
+    <string name="perf_overlay_lite_bandwidth">帯域</string>
+    <string name="perf_overlay_lite_network_decoding_delay">ネットワーク/デコード遅延</string>
+    <string name="perf_overlay_lite_packet_loss">パケットロス</string>
+    <string name="wrong_import_format">インポート形式が正しくありません。確認してください。</string>
+    <string name="title_checkbox_gamepad_enable_battery_report">コントローラーのバッテリー状態を報告する</string>
+    <string name="summary_checkbox_gamepad_enable_battery_report">可能な場合、コントローラーのバッテリー状態を報告します。\nタッチスクリーン/タッチパッド/スタイラス/マウスの入力で時々カクつく場合は、オフにすると改善することがあります。</string>
+    <string name="title_checkbox_enforce_display_mode">ディスプレイモードを強制</string>
+    <string name="summary_checkbox_enforce_display_mode">サーフェスに最適なディスプレイモードを強制的に使わせます。\nリフレッシュレートや解像度を正しく設定するために、一部のシステム（ColorOSなど）で必要です。\n不具合の原因になるため、ChromeCast 4Kでは有効にしないでください。</string>
+    <string name="title_checkbox_ultra_low_latency">超低遅延</string>
+    <string name="summary_checkbox_ultra_low_latency">Snapdragon 8 Gen 2、8(s) Gen 3、8 Elite、およびMediaTek搭載端末でのみ動作します。</string>
+    <string name="title_checkbox_use_virtual_display">仮想ディスプレイを使用</string>
+    <string name="summary_checkbox_use_virtual_display">既定で仮想ディスプレイを使用します。\n仮想ディスプレイは、クライアント側の解像度とフレームレートの設定に自動で合わせられるため、シームレスなストリーミングを楽しめます。\nホストのストリーミングソフトウェアとしてApolloが必要です。</string>
+    <string name="title_checkbox_enable_sticky_modifier_key_virtual_keyboard">スティッキー修飾キー</string>
+    <string name="summary_checkbox_enable_sticky_modifier_key_virtual_keyboard">仮想フルキーボードとカスタム画面キーボードで、スティッキー修飾キーを使います。</string>
+    <string name="mouse_mode_multi_touch">マルチタッチ</string>
+    <string name="mouse_mode_absolute_touch">絶対タッチ</string>
+    <string name="mouse_mode_track_pad_natural">トラックパッド（ナチュラル/ダブルタップでドラッグ）</string>
+    <string name="mouse_mode_track_pad_gaming">トラックパッド（ゲーミング/長押しでドラッグ）</string>
+    <string name="mouse_mode_disabled">無効</string>
+    <string name="mouse_mode_absolute_touch_swapped">絶対タッチ（左右クリック入れ替え）</string>
+    <string name="keyboard_layout_set_1">プロフィール1</string>
+    <string name="vdisplay_not_ready">サーバーの仮想ディスプレイドライバーが準備できていません。SudoVDAドライバーがインストールされ、有効になっていることを確認してください。</string>
+    <string name="vdisplay_not_supported"><![CDATA[このサーバーは仮想ディスプレイに対応していません。ホストのストリーミングソフトウェアとして<a href=\"https://github.com/Nonary/Vibepollo\">Vibepollo</a>または<a href=\"https://github.com/ClassicOldSong/Apollo\">Apollo</a>を使用してください。]]></string>
+    <string name="clipboard_sync_unsupported">このサーバーはクリップボード同期に対応していません。サーバーを最新版のApolloにインストールまたはアップグレードしてください。</string>
+    <string name="send_clipboard_failed">クリップボードを送信できませんでした：</string>
+    <string name="external_display_info">外部ディスプレイを接続しました：%1$dx%2$d、%3$.1fHz</string>
+    <string name="no_external_display">外部ディスプレイが検出されません</string>
+    <string name="no_game_instance">利用可能なゲームインスタンスがありません</string>
+    <string name="get_clipboard_failed">クリップボードを取得できませんでした：</string>
+    <string name="send_clipboard_success">クリップボードを送信しました</string>
+    <string name="get_clipboard_success">クリップボードを取得しました</string>
+    <string name="proceed">続行</string>
+    <string name="cancel">キャンセル</string>
+    <string name="unlocking_or_starting">サーバーが起動中、またはPCのロックを解除中です。しばらくお待ちください…</string>
+
+    <!-- Keyboard -->
+    <string name="keyboard_clear_all">すべてクリア</string>
+    <string name="keyboard_clear_all_restore">元に戻す</string>
+    <string name="keyboard_add_keys">キーを追加</string>
+    <string name="keyboard_select_keys">追加するキーを選択</string>
+    <string name="keyboard_keys_added">%d個のキーを追加しました</string>
+    <string name="keyboard_duplicates_skipped">%d個の重複をスキップしました</string>
+    <string name="keyboard_configure_movable">設定ボタンを移動できるようになりました。</string>
+    <string name="keyboard_load_error">キーボード設定の読み込みエラー：%s</string>
+    <string name="keyboard_add">追加</string>
+    <string name="keyboard_key_custom">%s（カスタム）</string>
+
+    <string name="title_enable_commit_text">確定テキスト入力を有効にする（スワイプ/音声）</string>
+    <string name="summary_enable_commit_text">ソフトキーボードの複数文字のテキスト（ジェスチャー入力、予測変換、音声入力）をそのまま転送します。1キーずつの入力に依存するゲームでは問題が出る場合があります。</string>
+    <string name="title_checkbox_remember_zoom_pan">ズーム&amp;パンを記憶</string>
+    <string name="summary_checkbox_remember_zoom_pan">ズームとパン位置の変更をセッション間で保存します</string>
+    <string name="profile_manager_failed_to_load">プロフィールを読み込めませんでした。詳細はlogcatを確認してください。</string>
+    <string name="title_low_latency_frame_balance">LFR</string>
+    <string name="summary_low_latency_frame_balance">キューに溜まったフレームを破棄して遅延を最小限にします。すべての端末で動作するとは限りません。</string>
+    <string name="category_perf_monitor_settings">パフォーマンスモニター</string>
+</resources>

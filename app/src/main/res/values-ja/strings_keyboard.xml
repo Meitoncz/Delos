@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="keyboard_hint_press">押す</string>
+    <string name="keyboard_hint_close">閉じる</string>
+    <string name="keyboard_hint_shift">Shift</string>
+    <string name="keyboard_hint_delete">削除</string>
+    <string name="keyboard_hint_space">スペース</string>
+    <string name="keyboard_title">オンスクリーンキーボード</string>
+</resources>

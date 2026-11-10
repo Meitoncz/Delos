@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shell_report_saved">ログをダウンロードフォルダに%1$sとして保存しました。Issueに添付してください。</string>
+    <string name="shell_report_save_failed">ログを保存できませんでした。設定 → バージョン情報 → デバッグ情報から共有してください。</string>
+    <string name="shell_report_no_browser">利用できるブラウザがありません</string>
+    <string name="shell_retry_unreachable">%1$sに接続できません</string>
+    <string name="shell_retry_game_missing">%1$sは%2$sで利用できません</string>
+    <string name="shell_retry_game_missing_unnamed">このゲームは%1$sで利用できません</string>
+    <string name="shell_profile_updated">プロフィールを更新しました</string>
+    <string name="shell_welcome">ようこそ、%1$sさん</string>
+    <string name="shell_game_unreachable">%1$sに接続できません</string>
+    <string name="shell_game_virtual_display_missing">%1$sで仮想ディスプレイの準備ができていません · メインディスプレイをストリーミングします</string>
+    <string name="shell_game_quitting">%1$sを終了中…</string>
+</resources>

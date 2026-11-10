@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stream_menu_hint_select">選択</string>
+    <string name="stream_menu_hint_back">戻る</string>
+
+    <string name="stream_menu_tile_resume">再開</string>
+    <string name="stream_menu_tile_keyboard">キーボード</string>
+    <string name="stream_menu_tile_overlay">オーバーレイ</string>
+    <string name="stream_menu_tile_brightness">明るさ</string>
+    <string name="stream_menu_tile_bitrate">ビットレート</string>
+    <string name="stream_menu_tile_upscaler">アップスケーラー</string>
+    <string name="stream_menu_tile_supersampling">スーパーサンプリング</string>
+    <string name="stream_menu_tile_more">その他</string>
+    <string name="stream_menu_tile_disconnect">切断</string>
+    <string name="stream_menu_tile_quit">ゲーム終了</string>
+    <string name="stream_menu_overlay_compact">コンパクト</string>
+
+    <string name="stream_menu_title_more">その他</string>
+    <string name="stream_menu_title_keys">キーを送信</string>
+    <string name="stream_menu_title_commands">サーバーコマンド</string>
+    <string name="stream_menu_title_brightness">明るさ</string>
+    <string name="stream_menu_title_bitrate">ストリームのビットレート</string>
+    <string name="stream_menu_title_supersampling">スーパーサンプリング</string>
+    <string name="stream_menu_title_upscaler">アップスケーラー</string>
+    <string name="stream_menu_title_mouse">マウスとタッチ</string>
+    <string name="stream_menu_title_rumble">振動の感触</string>
+
+    <string name="stream_menu_row_send_keys">キーを送信</string>
+    <string name="stream_menu_row_send_clipboard">クリップボードを送信</string>
+    <string name="stream_menu_row_get_clipboard">クリップボードを取得</string>
+    <string name="stream_menu_row_commands">コマンド</string>
+    <string name="stream_menu_row_task_manager">タスクマネージャー</string>
+    <string name="stream_menu_row_zoom">ズーム</string>
+    <string name="stream_menu_row_mouse_mode">マウスモード</string>
+    <string name="stream_menu_row_onscreen_controls">画面上のコントロール</string>
+    <string name="stream_menu_row_android_keyboard">Androidキーボードを開く</string>
+    <string name="stream_menu_row_touch_sensitivity">タッチ感度</string>
+    <string name="stream_menu_row_rumble_feel">振動の感触</string>
+    <string name="stream_menu_row_gyro_smoothing">ジャイロスムージング</string>
+    <string name="stream_menu_gyro_off">%1$d %%（オフ）</string>
+    <string name="stream_menu_rumble_custom">カスタム</string>
+
+    <string name="stream_menu_row_screen_brightness">画面の明るさ</string>
+    <string name="stream_menu_row_bitrate">ビットレート</string>
+    <string name="stream_menu_row_apply">適用</string>
+    <string name="stream_menu_row_enabled">有効</string>
+    <string name="stream_menu_row_supersampling_quality">スーパーサンプリング品質</string>
+    <string name="stream_menu_row_mode">モード</string>
+    <string name="stream_menu_row_sharpness">シャープネス</string>
+    <string name="stream_menu_row_touchscreen_mode">タッチスクリーンモード</string>
+    <string name="stream_menu_row_local_cursor">ローカルのマウスカーソル</string>
+    <string name="stream_menu_not_set">未設定</string>
+    <string name="stream_menu_no_commands">PCにコマンドが設定されていません。VibepolloのWeb UIで追加できます。</string>
+
+    <string name="stream_menu_rumble_problem_word">問題あり</string>
+    <string name="stream_menu_rumble_active">使用中</string>
+    <string name="stream_menu_rumble_problem">問題：%1$s</string>
+
+    <string name="stream_menu_mouse_applies_saved">すぐに適用され、保存されます。</string>
+    <string name="stream_menu_mouse_applies_stream">すぐに適用されます。このストリームのみです。</string>
+
+    <string name="stream_menu_bitrate_fill">入力</string>
+    <string name="stream_menu_bitrate_applying">適用中…</string>
+    <string name="stream_menu_bitrate_accepted">%1$d Mbpsが受け入れられました</string>
+    <string name="stream_menu_bitrate_limited">ホストにより%1$d Mbpsに制限されました</string>
+    <string name="stream_menu_bitrate_failed">失敗</string>
+    <string name="stream_menu_bitrate_not_connected">ストリームが接続されていないため、ビットレートを変更できません。</string>
+    <string name="stream_menu_bitrate_unsupported">ホストがビットレートのリアルタイム変更に対応していないか、ストリームが終了しています。</string>
+    <string name="stream_menu_bitrate_denied">ホストがこの変更を許可しませんでした。</string>
+    <string name="stream_menu_bitrate_unconfirmed">ビットレートを確認できませんでした。接続を確認して、もう一度お試しください。</string>
+    <string name="stream_menu_bitrate_rejected">ホストが変更を適用できませんでした。</string>
+    <string name="stream_menu_bitrate_rejected_detail">ホストが変更を適用できませんでした：%1$s</string>
+
+    <string name="stream_stats_top_left">左上</string>
+    <string name="stream_stats_top_right">右上</string>
+    <string name="stream_stats_bottom_left">左下</string>
+    <string name="stream_stats_bottom_right">右下</string>
+    <string name="stream_stats_compact_low">下位1%% %1$d</string>
+    <string name="stream_stats_compact_tail">ネットワーク %1$d ms  ·  デコード %2$s ms  ·  合計 %3$s ms  ·  欠落 %4$s %%</string>
+    <string name="stream_stats_decoder">デコーダー</string>
+    <string name="stream_stats_incoming">受信</string>
+    <string name="stream_stats_rendering">レンダリング</string>
+    <string name="stream_stats_one_percent_low">下位%1$d%%</string>
+    <string name="stream_stats_network">ネットワーク</string>
+    <string name="stream_stats_pc_processing">PC処理</string>
+    <string name="stream_stats_decoding">デコード</string>
+    <string name="stream_stats_upscaling">アップスケーリング</string>
+    <string name="stream_stats_frame_queue">フレームキュー</string>
+    <string name="stream_stats_sharpen_pass">シャープ処理</string>
+    <string name="stream_stats_render_latency">レンダリング遅延</string>
+    <string name="stream_stats_total_latency">合計遅延</string>
+    <string name="stream_stats_bandwidth">帯域</string>
+    <string name="stream_stats_lost_frames">欠落フレーム</string>
+    <string name="stream_stats_backlog">滞留</string>
+    <string name="stream_stats_stall">停滞（受信スレッド）</string>
+    <string name="stream_stats_frame_age">送信時のフレーム経過時間</string>
+    <string name="stream_stats_receive_to_present">受信から表示まで</string>
+    <string name="stream_stats_partial_frames">部分フレーム</string>
+    <string name="stream_stats_skipped">スキップ</string>
+    <string name="stream_stats_link">回線</string>
+    <string name="stream_stats_receiving">受信中</string>
+    <string name="stream_stats_partial_lost">部分 / 欠落</string>
+    <string name="stream_stats_verdict">判定</string>
+
+    <string name="stream_loader_greeting">%1$sを呼び出し中</string>
+    <string name="stream_loader_codec_auto">自動</string>
+    <string-array name="stream_loader_lines_platform">
+        <item>スプラインを再構築中</item>
+        <item>腕まくりをしています</item>
+        <item>ゲームの前にストレッチ中</item>
+    </string-array>
+    <string-array name="stream_loader_lines_name_resolution">
+        <item>%1$sの居場所をルーターに聞いています</item>
+        <item>ネットワークで%1$sを探しています</item>
+        <item>ソファの下に%1$sがいないか確認中</item>
+    </string-array>
+    <string-array name="stream_loader_lines_rtsp">
+        <item>%1$sとピクセルとフレームレートを値切り交渉中</item>
+        <item>%1$sとストリーム契約を結んでいます</item>
+        <item>%1$sと画質のシャープさをすり合わせ中</item>
+    </string-array>
+    <string-array name="stream_loader_lines_control_stream">
+        <item>%1$sと握手しています</item>
+        <item>%1$sまで見えないケーブルを引いています</item>
+        <item>秘密の合言葉を交換中</item>
+    </string-array>
+    <string-array name="stream_loader_lines_video_stream">
+        <item>ピクセルを温めています</item>
+        <item>ピクセルをピカピカに磨いています</item>
+        <item>ピクセルをきれいに整列中</item>
+    </string-array>
+    <string-array name="stream_loader_lines_audio_stream">
+        <item>スピーカーを調律中</item>
+        <item>音の波をほぐしています</item>
+        <item>のどの調子を整えています</item>
+    </string-array>
+    <string-array name="stream_loader_lines_input_stream">
+        <item>ボタンを配線中</item>
+        <item>ボタンに誰がボスか教えています</item>
+        <item>見えないコントローラーを接続中</item>
+    </string-array>
+    <string-array name="stream_loader_lines_unlocking">
+        <item>%1$sはまだ起きている最中です。少々お待ちください</item>
+        <item>%1$sが目をこすっています。少々お待ちください</item>
+    </string-array>
+
+    <string name="stream_exit_disconnecting">切断中</string>
+    <string name="stream_exit_quitting">%1$sを終了中</string>
+    <string name="stream_exit_quitting_game">ゲームを終了中</string>
+
+    <string name="stream_result_default_pc">PC</string>
+    <string name="stream_result_try_again">再試行</string>
+    <string name="stream_result_back_to_library">ライブラリへ戻る</string>
+    <string name="stream_result_details">詳細</string>
+    <string name="stream_result_start_title">ストリームを開始できませんでした</string>
+    <string name="stream_result_lost_title">接続が切断されました</string>
+    <string name="stream_result_closed_title">PCがストリームを終了しました</string>
+    <string name="stream_result_host_closed">PCがストリームを終了しました</string>
+    <string name="stream_result_blocked_hint">お使いの端末の現在のネットワーク接続は、Delosをブロックしています。このネットワークに接続している間は、インターネット経由のストリーミングが動作しない可能性があります。</string>
+    <string name="stream_result_ports_hint">次のポートについて、ファイアウォールとポート転送の設定を確認してください：</string>
+    <string name="stream_result_failed_stage">%1$sを開始できませんでした（エラー%2$d）</string>
+    <string name="stream_result_denied">PCが Delosによるアプリの起動を許可しませんでした。</string>
+    <string name="stream_result_denied_details">権限がありません（アプリの起動）</string>
+    <string name="stream_result_timeout">PCが時間内に応答しませんでした。</string>
+    <string name="stream_result_timeout_details">接続がタイムアウトしました</string>
+    <string name="stream_result_blocked">このネットワークは Delosをブロックしているようです。</string>
+    <string name="stream_result_decoder">この端末はビデオデコーダーを開始できませんでした。</string>
+    <string name="stream_result_decoder_details">ビデオデコーダーの初期化に失敗しました。端末が選択した解像度またはフレームレートに対応していない可能性があります。</string>
+    <string name="stream_result_connecting">PCへの接続中に問題が発生しました。</string>
+    <string name="stream_result_no_video">PCから映像が届きませんでした。</string>
+    <string name="stream_result_no_video_details">ホストから映像を受信できませんでした。</string>
+    <string name="stream_result_slow">ネットワーク接続が追いついていません。</string>
+    <string name="stream_result_slow_details">ネットワーク接続の状態が良くありません。ビデオビットレートの設定を下げるか、より高速な接続をお試しください。</string>
+    <string name="stream_result_host_error">ストリームの開始中に、PCで問題が発生しました。</string>
+    <string name="stream_result_host_error_details">ストリームの開始中に、ホストPCで問題が発生しました。\n\nホストPCでDRM保護されたコンテンツを開いていないか確認してください。ホストPCを再起動してみるのも有効です。</string>
+    <string name="stream_result_encoding">PCがビデオエンコードエラーを報告しました。</string>
+    <string name="stream_result_encoding_details">ホストPCが致命的なビデオエンコードエラーを報告しました。\n\nHDRモードをオフにする、ストリーミング解像度を変更する、またはホストPCのディスプレイ解像度を変更してみてください。</string>
+    <string name="stream_result_ended">PCとの接続が予期せず終了しました。</string>
+    <string name="stream_result_terminated_details">接続が終了しました。\n\nエラーコード：%1$s</string>
+    <string name="stream_result_no_h264">この端末ではストリームを再生できません。</string>
+    <string name="stream_result_no_h264_details">この端末またはROMは、ハードウェアアクセラレーションによるH.264再生に対応していません。</string>
+    <string name="stream_result_offline">%1$sはオフラインです。</string>
+    <string name="stream_result_offline_details">PCはオフラインです</string>
+    <string name="stream_result_unpaired">%1$sはこの端末とペアリングされていません。</string>
+    <string name="stream_result_unpaired_details">PCがペアリングされていません</string>
+</resources>

@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="debug_title">デバッグ情報</string>
+    <string name="debug_panel_default">この端末とコントローラーの情報、診断ログ、振動テストです。</string>
+
+    <string name="debug_section_device">端末</string>
+    <string name="debug_section_diagnostics">診断</string>
+    <string name="debug_section_haptics">端末の触覚機能</string>
+    <string name="debug_section_vibration_test">振動テスト</string>
+    <string name="debug_section_rumble_lab">振動ラボ</string>
+    <string name="debug_section_rumble_patterns">振動パターン</string>
+    <string name="debug_section_rumble_advanced">振動の詳細設定</string>
+    <string name="debug_section_osc">画面上のコントロール</string>
+    <string name="debug_section_controllers">コントローラー</string>
+
+    <string name="debug_yes">はい</string>
+    <string name="debug_no">いいえ</string>
+    <string name="debug_none">なし</string>
+    <string name="debug_stopped">停止中</string>
+
+    <string name="debug_share_no_app_toast">ログを共有できるアプリがありません</string>
+    <string name="debug_summary_copied_toast">診断サマリーをコピーしました</string>
+    <string name="debug_logs_cleared_toast">診断ログを消去しました</string>
+    <string name="debug_no_motor_toast">この端末には振動モーターがありません</string>
+    <string name="debug_pad_no_vibration_toast">%1$sは振動できません</string>
+
+    <string name="debug_android_description">この端末のAndroidバージョンとAPIレベルです。</string>
+    <string name="debug_kernel_label">カーネル</string>
+    <string name="debug_kernel_description">Linuxカーネルのバージョンです。</string>
+    <string name="debug_model_label">端末</string>
+    <string name="debug_model_description">メーカーとモデルです。</string>
+    <string name="debug_model_details">ボード：%1$s\nハードウェア：%2$s\nSoC：%3$s\nビルド：%4$s</string>
+    <string name="debug_soc_unknown">不明</string>
+    <string name="debug_motor_label">振動モーター</string>
+    <string name="debug_motor_yes_description">この端末は振動できます。</string>
+    <string name="debug_motor_no_description">この端末には振動モーターがありません。</string>
+
+    <string name="debug_log_label">診断ログ</string>
+    <plurals name="debug_log_size">
+        <item quantity="other">%1$s、ログ%2$s行</item>
+    </plurals>
+    <string name="debug_log_reading">読み込み中…</string>
+    <string name="debug_log_off">オフ</string>
+    <string name="debug_log_description">Delosがこの端末に保存したイベントとエラーです。アドレスと名前は削除されています。「共有」で送信されるのはこの内容です。</string>
+    <string name="debug_log_preview_reading">ログを読み込み中…</string>
+    <string name="debug_share_label">診断ログを共有</string>
+    <string name="debug_share_description">プレビューに表示されているテキストで、Androidの共有シートを開きます。アプリを選ぶまで何も送信されません。</string>
+    <string name="debug_copy_label">診断サマリーをコピー</string>
+    <string name="debug_copy_description">端末情報と直近100行のログをコピーします。Issueにそのまま貼り付けられます。同じように名前とアドレスは削除されます。</string>
+    <string name="debug_clear_label">診断ログを消去</string>
+    <string name="debug_clear_description">この端末のログを削除します。「診断ログを保存」をオフにしていなければ、新しいイベントは再び記録されます（設定 → バージョン情報）。</string>
+
+    <string name="debug_vibrators_label">バイブレーター</string>
+    <string name="debug_vibrators_single">1（単一）</string>
+    <string name="debug_vibrators_description">システムが報告するバイブレーターの数です。1の場合、すべてのプリセットが同じモーターを動かします。</string>
+    <string name="debug_amplitude_label">振幅の制御</string>
+    <string name="debug_amplitude_description">バイブレーターが強さを変更できるかどうかです。</string>
+    <string name="debug_last_problem_label">直近の問題</string>
+    <string name="debug_last_problem_description">最後に再生したプリセットが本来の方式を使えず、通常の振幅方式で再生した場合に、その理由を表示します。</string>
+
+    <string name="debug_vibrate_once_label">1回振動</string>
+    <string name="debug_vibrate_once_description">最大の強さで1秒間振動します。</string>
+    <string name="debug_continuous_label">連続振動</string>
+    <string name="debug_continuous_description">オフにするか、この画面を離れるまで、下の強さで振動し続けます。</string>
+    <string name="debug_strength_label">強さ</string>
+    <string name="debug_strength_description">端末とコントローラーの連続振動の強さです（1〜255）。</string>
+
+    <string name="debug_preset_custom">カスタム</string>
+    <string name="debug_mode_translator_on">%1$s · トランスレーターオン</string>
+    <string name="debug_mode_translator_off">%1$s · トランスレーターオフ</string>
+    <string name="debug_preset_label">現在のプリセット</string>
+    <string name="debug_preset_description">下のプリセットを選ぶと保存され、すぐにテストサンプルを再生します。</string>
+    <string name="debug_preset_details">モード：%1$s\n詳細設定の編集は、値がプリセットと同じでもカスタムとして保存されます。</string>
+    <string name="debug_preset_problem">問題あり</string>
+    <string name="debug_preset_problem_description">%1$s 問題：%2$s。</string>
+    <string name="debug_preset_active">使用中</string>
+    <string name="debug_preset_select">選択</string>
+    <string name="debug_live_amplitude_label">リアルタイム振幅 · %1$s</string>
+    <string name="debug_live_amplitude_description">開始時のキックと平滑化が落ち着く様子を含めた、端末の振幅のリアルタイム計算値です。</string>
+    <string name="debug_live_amplitude_details">モード：%1$s\nパターン：%2$s\nホストの両方のモーターに、表示された入力割合が送られます。最終的な出力割合ではありません。</string>
+    <string name="debug_stop_label">振動を停止</string>
+    <string name="debug_stop_description">ラボのパターンと、端末/コントローラーの連続振動テストをすべて停止します。</string>
+    <string name="debug_replay_label">テストサンプルを再生</string>
+
+    <string name="debug_pattern_details">リアルタイム振幅：%1$d / 255\nモード：%2$s\n再生中：%3$s\n入力値はホストモーターの割合で、端末の最終出力ではありません。別のパターンを選ぶと置き換わります。または「振動を停止」を使ってください。</string>
+    <string name="debug_pattern_test_label">テスト</string>
+    <string name="debug_pattern_test_description">短いタップ、1秒間の一定の振動、徐々に強まる振動、減衰する爆発です。</string>
+    <string name="debug_pattern_steady_25_label">一定 25% · 静かなエンジン</string>
+    <string name="debug_pattern_steady_25_description">ホストの両方のモーターを25%にした、弱いエンジン振動を2秒間続けます。</string>
+    <string name="debug_pattern_steady_50_label">一定 50% · 巡航エンジン</string>
+    <string name="debug_pattern_steady_50_description">ホストの両方のモーターを50%にした、中程度のエンジン振動を2秒間続けます。</string>
+    <string name="debug_pattern_steady_75_label">一定 75% · 悪路</string>
+    <string name="debug_pattern_steady_75_description">ホストの両方のモーターを75%にした、強い路面振動を2秒間続けます。</string>
+    <string name="debug_pattern_steady_100_label">一定 100% · 最大出力</string>
+    <string name="debug_pattern_steady_100_description">ホストの両方のモーターを100%にした、最大の振動を2秒間続けます。</string>
+    <string name="debug_pattern_ramp_label">漸増 · 加速</string>
+    <string name="debug_pattern_ramp_description">ホストの両方のモーターが、無振動から最大入力まで2秒かけて上がります。</string>
+    <string name="debug_pattern_tap_30_label">30 msタップ · 軽い衝撃</string>
+    <string name="debug_pattern_tap_30_description">最大入力の30 msのタップを、250 msの間隔を空けて4回行います。</string>
+    <string name="debug_pattern_tap_60_label">60 msタップ · 武器の発射</string>
+    <string name="debug_pattern_tap_60_description">最大入力の60 msのタップを、250 msの間隔を空けて4回行います。</string>
+    <string name="debug_pattern_tap_100_label">100 msタップ · 重い衝撃</string>
+    <string name="debug_pattern_tap_100_description">最大入力の100 msのタップを、250 msの間隔を空けて4回行います。</string>
+    <string name="debug_pattern_heartbeat_label">心拍 · 二連パルス</string>
+    <string name="debug_pattern_heartbeat_description">70 ms / 100 msの最大入力パルスの組を、心臓の鼓動のように4回繰り返します。</string>
+    <string name="debug_pattern_explosion_label">爆発 · 減衰する衝撃</string>
+    <string name="debug_pattern_explosion_description">最大入力の衝撃が、2秒かけて無振動まで減衰します。</string>
+    <string name="debug_pattern_flutter_label">フラッター · 高速な機械音</string>
+    <string name="debug_pattern_flutter_description">最大入力の20 msパルスを、40 msの間隔を空けて20回行います。</string>
+
+    <string name="debug_advanced_label">詳細設定</string>
+    <string name="debug_advanced_description">手動の設定項目を表示します。値を編集するとプリセットがカスタムになり、現在のパターンが停止します。</string>
+    <string name="debug_enabled_label">振動トランスレーターを有効にする</string>
+    <string name="debug_enabled_description">オフではオリジナルの変換を使います。オンにすると、これらのパラメーターをストリーミング中の振動とラボのパターンに適用します。</string>
+    <string name="debug_gain_label">ゲイン</string>
+    <string name="debug_gain_description">振動全体の倍率です（50〜300%）。パラメーターを変更すると現在のパターンが停止します。</string>
+    <string name="debug_curve_label">カーブ</string>
+    <string name="debug_curve_description">応答の指数です。%1$d%%未満だと弱い振動が強まり、%1$d%%を超えると和らぎます。</string>
+    <string name="debug_min_label">最小振幅</string>
+    <string name="debug_min_description">ホストから0以外の要求があったときの最小出力です。入力が0のときは振動しません。</string>
+    <string name="debug_kick_label">開始キック</string>
+    <string name="debug_kick_description">無振動から最大の強さでキックして始まり、その後、変換された振幅に落ち着きます。</string>
+    <string name="debug_low_label">低域モーターの重み</string>
+    <string name="debug_low_description">端末の単一バイブレーターに対する、ホストの低周波モーターの寄与です。オリジナル：80%。</string>
+    <string name="debug_high_label">高域モーターの重み</string>
+    <string name="debug_high_description">端末の単一バイブレーターに対する、ホストの高周波モーターの寄与です。オリジナル：33%。</string>
+    <string name="debug_smoothing_label">平滑化</string>
+    <string name="debug_smoothing_description">急な振幅の変化を抑えます。0なら即座に反応し、値が大きいほどゆっくり落ち着きます。</string>
+    <string name="debug_reset_label">パラメーターをオリジナルにリセット</string>
+    <string name="debug_reset_description">オリジナルのパラメーターをカスタムとして復元します。有効のスイッチは変わりません。</string>
+
+    <string name="debug_osc_label">画面上のコントロールをプレビュー</string>
+    <string name="debug_osc_description">ストリームなしで画面上のコントロールを試せます。すべてのボタン、十字キー、スティックを試せますが、何も送信されません。隅の歯車で、ストリーム中と同様にレイアウトを編集できます。</string>
+
+    <string name="debug_no_pads_label">コントローラーが接続されていません</string>
+    <string name="debug_no_pads_description">コントローラーを接続すると、すぐにここに表示されます。携帯ゲーム機の内蔵コントロールは1台として扱われます。</string>
+    <string name="debug_pad_description_vibrates">ベンダー/プロダクトID：%1$s（%2$s）。モーションセンサー：%3$s。振動：対応。選択してテストできます。</string>
+    <string name="debug_pad_description_silent">ベンダー/プロダクトID：%1$s（%2$s）。モーションセンサー：%3$s。振動：非対応。</string>
+    <string name="debug_sensors_unknown">Android 12未満では不明</string>
+    <string name="debug_sensors_none">報告なし</string>
+    <string name="debug_sensors_accelerometer">加速度センサー</string>
+    <string name="debug_sensors_gyroscope">ジャイロスコープ</string>
+    <string name="debug_sensors_both">加速度センサー、ジャイロスコープ</string>
+    <string name="debug_pads_continuous_label">コントローラーの連続振動</string>
+    <string name="debug_pads_continuous_description">振動できるすべてのコントローラーが、上の強さで振動し続けます。</string>
+</resources>

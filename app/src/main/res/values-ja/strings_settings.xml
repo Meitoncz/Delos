@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_tab_stream">ストリーム</string>
+    <string name="settings_tab_stream_description">PCから届く映像の品質と遅延です。</string>
+    <string name="settings_tab_display">表示</string>
+    <string name="settings_tab_display_description">ストリームが画面を埋める方法と、プレイ中に表示する情報です。</string>
+    <string name="settings_tab_audio">オーディオ</string>
+    <string name="settings_tab_audio_description">PCの音声と、Delosのインターフェース音です。</string>
+    <string name="settings_tab_controls">操作</string>
+    <string name="settings_tab_controls_description">コントローラー、マウス、タッチ、キーボード、画面上のコントロールです。</string>
+    <string name="settings_tab_appearance">外観</string>
+    <string name="settings_tab_appearance_description">テーマ、色、アニメーション背景です。変更はすぐに反映されます。</string>
+    <string name="settings_tab_covers">カバー</string>
+    <string name="settings_tab_covers_description">PCまたはSteamGridDBのカバー、ワイドカバー、背景、ロゴです。</string>
+    <string name="settings_tab_devices">デバイス</string>
+    <string name="settings_tab_devices_description">ペアリング済みのPCと、Delos起動時の動作です。</string>
+    <string name="settings_tab_about">バージョン情報</string>
+    <string name="settings_tab_about_description">DelosはArtemisとMoonlightのフォークで、GPLv3でライセンスされています。</string>
+
+    <string name="settings_option_background_aurora">オーロラ</string>
+    <string name="settings_option_background_tide">潮流</string>
+    <string name="settings_option_background_silk">シルク</string>
+    <string name="settings_option_background_contour">等高線</string>
+    <string name="settings_option_background_nebula">星雲</string>
+    <string name="settings_option_background_plasma">プラズマ</string>
+    <string name="settings_option_background_lava">溶岩</string>
+    <string name="settings_option_background_caustics">コースティクス</string>
+    <string name="settings_option_background_bokeh">ボケ</string>
+    <string name="settings_option_background_orbit">軌道</string>
+    <string name="settings_option_background_still">静止</string>
+
+    <string name="settings_option_home_layout_grid">グリッド</string>
+    <string name="settings_option_home_layout_row">横一列</string>
+
+    <string name="settings_option_palette_delos">Delos</string>
+    <string name="settings_option_palette_lagoon">ラグーン</string>
+    <string name="settings_option_palette_dusk">夕暮れ</string>
+    <string name="settings_option_palette_ember">熾火</string>
+    <string name="settings_option_palette_moss">苔</string>
+    <string name="settings_option_palette_iris">アイリス</string>
+    <string name="settings_option_palette_rose">ローズ</string>
+    <string name="settings_option_palette_sunset">サンセット</string>
+    <string name="settings_option_palette_mint">ミント</string>
+    <string name="settings_option_palette_gold">ゴールド</string>
+
+    <string name="settings_option_clock_system">システム</string>
+    <string name="settings_option_clock_12">12時間表示</string>
+    <string name="settings_option_clock_24">24時間表示</string>
+
+    <string name="settings_resolution_native">ネイティブ（%1$s）</string>
+    <string name="settings_resolution_native_portrait">ネイティブ縦向き（%1$s）</string>
+    <string name="settings_resolution_native_fullscreen">ネイティブ全画面（%1$s）</string>
+    <string name="settings_resolution_native_fullscreen_portrait">ネイティブ全画面縦向き（%1$s）</string>
+    <string name="settings_resolution_custom">カスタム（%1$s）</string>
+    <string name="settings_fps_native">ネイティブ（%1$d FPS）</string>
+    <string name="settings_fps_custom">カスタム（%1$s FPS）</string>
+    <string name="settings_choice_custom">カスタム</string>
+    <string name="settings_layout_number">レイアウト%1$d</string>
+    <string name="settings_choice_unavailable">%1$s（利用不可）</string>
+
+    <string name="settings_error_resolution_format">幅x高さの形式で入力してください（例：1920x1080）</string>
+    <string name="settings_error_fps_range">0より大きく1000以下のフレームレートを入力してください</string>
+    <string name="settings_error_bitrate_range">0より大きく9999 Mbps以下のビットレートを入力してください</string>
+</resources>

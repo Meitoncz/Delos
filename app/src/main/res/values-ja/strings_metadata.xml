@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="metadata_hdr_unverified">HDR/SDR未確認</string>
+
+    <string name="metadata_filtered_title">これらのフィルターに一致するゲームはありません</string>
+    <string name="metadata_filtered_note">%1$sを押してフィルターを変更するか、下のボタンでリセットしてください。</string>
+    <string name="metadata_filtered_reset">ライブラリのフィルターをリセット</string>
+
+    <string name="metadata_error_unavailable">このビルドではゲームのメタデータを利用できません</string>
+    <string name="metadata_error_update">ゲーム情報を更新できませんでした。メタデータを開いて更新するか、一致するゲームを選んでください。</string>
+    <string name="metadata_error_partial">一部のゲーム情報を利用できません。メタデータを開いて更新してください。</string>
+
+    <string name="metadata_menu_title">メタデータ · %1$s</string>
+    <string name="metadata_menu_search">IGDBを検索 / 一致を変更</string>
+    <string name="metadata_menu_refresh">メタデータを更新</string>
+    <string name="metadata_menu_reset">メタデータの一致をリセット</string>
+    <string name="metadata_refreshed_toast">メタデータを更新しました</string>
+    <string name="metadata_reset_toast">メタデータの一致をリセットしました</string>
+    <string name="metadata_no_match_toast">IGDBで一致するものが見つかりません。「IGDBを検索 / 一致を変更」を使ってください。</string>
+    <string name="metadata_update_failed_toast">メタデータを更新できませんでした</string>
+
+    <string name="metadata_searching_toast">IGDBで%1$sを検索中…</string>
+    <string name="metadata_search_unavailable_toast">IGDB検索を利用できません</string>
+    <string name="metadata_matched_toast">メタデータを%1$sと一致させました</string>
+    <string name="metadata_match_save_failed_toast">メタデータの一致を保存できませんでした</string>
+    <string name="metadata_candidate_with_year">%1$s（%2$d）</string>
+    <string name="metadata_matches_previous">前の候補</string>
+    <string name="metadata_matches_more">さらに候補を表示</string>
+    <string name="metadata_search_other">別の名前で検索</string>
+    <string name="metadata_search_title">IGDBを検索</string>
+    <string name="metadata_search_note">SteamGridDBのアートワークとは別に、メタデータを選択します。</string>
+    <string name="metadata_search_hint">ゲーム名</string>
+    <string name="metadata_search_action">検索</string>
+    <string name="metadata_matches_none">%1$sに一致するものがIGDBにありません</string>
+    <string name="metadata_matches_title">一致するメタデータを選択</string>
+
+    <plurals name="metadata_hltb_minutes">
+        <item quantity="other">%1$d分</item>
+    </plurals>
+    <plurals name="metadata_hltb_hours">
+        <item quantity="other">%1$s時間</item>
+    </plurals>
+</resources>

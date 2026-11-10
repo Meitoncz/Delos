@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pairing_pc_title">PCをペアリング</string>
+    <string name="pairing_pc_searching">ローカルネットワークを検索中…</string>
+    <string name="pairing_pc_none">PCがまだ見つかりません。PCでVibepolloを起動するか、アドレスを入力してください。</string>
+    <plurals name="pairing_pc_found">
+        <item quantity="other">Delosがネットワーク上で%1$d台のPCを見つけました。</item>
+    </plurals>
+    <string name="pairing_pc_paired_online">ペアリング済み · オンライン</string>
+    <string name="pairing_pc_paired_offline">ペアリング済み · オフライン</string>
+    <string name="pairing_pc_ready">オンライン · ペアリング可能</string>
+    <string name="pairing_pc_offline">オフライン</string>
+    <string name="pairing_pc_with_pin">PINでペアリング</string>
+    <string name="pairing_pc_with_code">ワンタイムコードでペアリング</string>
+    <string name="pairing_pc_address">アドレスを入力</string>
+    <string name="pairing_pc_address_hint">IPまたはホスト名</string>
+    <string name="pairing_pc_search_again">もう一度検索</string>
+    <string name="pairing_pc_network">ローカルネットワーク</string>
+    <string name="pairing_pin_title">%1$sでこのPINを入力してください</string>
+    <string name="pairing_pin_note">PCでVibepolloのWeb UIを開き、「PIN」でコードを入力してください。</string>
+    <string name="pairing_code_title">%1$sとペアリング中</string>
+    <string name="pairing_code_note">Vibepolloのワンタイムコードを使用しています。</string>
+    <string name="pairing_pin_waiting">Vibepolloを待機中…</string>
+    <string name="pairing_pin_accepted">PINが承認されました</string>
+    <string name="pairing_code_accepted">コードが承認されました</string>
+    <string name="pairing_cancel">キャンセル</string>
+
+    <string name="pairing_failed_offline">%1$sはオフラインです</string>
+    <string name="pairing_failed_pin_wrong">PINが違います。もう一度お試しください</string>
+    <string name="pairing_failed_code_wrong">コードまたはパスフレーズが違います</string>
+    <string name="pairing_failed_busy">%1$sは別のデバイスとペアリング中です</string>
+    <string name="pairing_failed_game_running">先に%1$sのゲームを終了してから、もう一度ペアリングしてください</string>
+    <string name="pairing_failed_not_found">%1$sが見つかりません</string>
+    <string name="pairing_failed_unsupported">%1$sはペアリングに対応していません</string>
+    <string name="pairing_failed">%1$sとのペアリングに失敗しました</string>
+
+    <string name="pairing_otp_title">ワンタイムコードでペアリング</string>
+    <string name="pairing_otp_note">VibepolloのWeb UIでパスフレーズ付きのワンタイムPINを作成し、両方をここに入力してください。</string>
+    <string name="pairing_otp_pin_hint">PIN</string>
+    <string name="pairing_otp_passphrase_hint">パスフレーズ</string>
+    <string name="pairing_otp_action">ペアリング</string>
+    <string name="pairing_otp_pin_error">PINは4桁です</string>
+    <string name="pairing_otp_passphrase_error">パスフレーズは4文字以上です</string>
+</resources>

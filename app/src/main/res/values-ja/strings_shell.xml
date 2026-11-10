@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shell_link_pair_title">%1$sとペアリングしますか？</string>
+    <string name="shell_link_pair_message">リンクにより、DelosがPCとペアリングするよう求められています。ご自身で開いた場合のみ続行してください。</string>
+    <string name="shell_link_pair_action">ペアリング</string>
+    <string name="shell_link_start_title">%1$sを開始しますか？</string>
+    <string name="shell_link_start_title_unnamed">ゲームを開始しますか？</string>
+    <string name="shell_link_start_message">リンクにより、Delosが%2$sで%1$sを開始するよう求められています。ご自身で開いた場合のみ続行してください。</string>
+    <string name="shell_link_start_message_game">リンクにより、DelosがPCで%1$sを開始するよう求められています。ご自身で開いた場合のみ続行してください。</string>
+    <string name="shell_link_start_message_host">リンクにより、Delosが%1$sでゲームを開始するよう求められています。ご自身で開いた場合のみ続行してください。</string>
+    <string name="shell_link_start_message_unnamed">リンクにより、DelosがPCでゲームを開始するよう求められています。ご自身で開いた場合のみ続行してください。</string>
+    <string name="shell_link_start_action">開始</string>
+
+    <string name="shell_nav_settings">設定</string>
+    <string name="shell_nav_profile">プロフィール</string>
+    <string name="shell_nav_devices">デバイス</string>
+    <string name="shell_default_profile_name">プレイヤー</string>
+
+    <string name="shell_side_not_connected">未接続</string>
+    <string name="shell_side_connected">%1$sに接続中</string>
+    <string name="shell_side_offline">%1$sはオフラインです</string>
+    <string name="shell_side_show_hidden">非表示のゲームを表示</string>
+    <string name="shell_side_hidden_on">%2$sで%1$d本が非表示</string>
+    <string name="shell_side_hidden_on_this_pc">このPCで%1$d本が非表示</string>
+    <string name="shell_side_theme">テーマ</string>
+    <string name="shell_side_theme_dark">ダーク</string>
+    <string name="shell_side_theme_light">ライト</string>
+    <string name="shell_side_material_you">Material You</string>
+    <string name="shell_side_background">背景</string>
+    <string name="shell_side_home_layout">ホームのレイアウト</string>
+    <string name="shell_side_sounds">インターフェース音</string>
+    <string name="shell_side_haptics">ハプティクス</string>
+    <string name="shell_side_all_settings">すべての設定</string>
+
+    <string name="shell_progress_artwork">アートワークをダウンロード中</string>
+    <string name="shell_progress_metadata">メタデータをダウンロード中</string>
+    <string name="shell_progress_count">%2$d件中%1$d件</string>
+
+    <plurals name="shell_home_apps_on_pc">
+        <item quantity="other">%2$sに%1$d個のアプリ</item>
+    </plurals>
+    <plurals name="shell_home_apps_filtered">
+        <item quantity="other">%3$sの%2$d個中%1$d個のアプリ</item>
+    </plurals>
+    <string name="shell_hint_library_label">ライブラリ</string>
+
+    <string name="shell_hint_select">選択</string>
+    <string name="shell_hint_back">戻る</string>
+    <string name="shell_hint_close">閉じる</string>
+    <string name="shell_hint_cancel">キャンセル</string>
+    <string name="shell_hint_change">変更</string>
+    <string name="shell_hint_reset">リセット</string>
+    <string name="shell_hint_start">スタート</string>
+    <string name="shell_hint_menu">メニュー</string>
+    <string name="shell_hint_options">オプション</string>
+    <string name="shell_hint_adjust">調整</string>
+    <string name="shell_hint_back_to_library">ライブラリへ戻る</string>
+    <string name="shell_hint_previous_tab">前のタブ</string>
+    <string name="shell_hint_next_tab">次のタブ</string>
+    <string name="shell_hint_search">検索</string>
+    <string name="shell_hint_connect">接続</string>
+    <string name="shell_hint_choose">選ぶ</string>
+    <string name="shell_hint_reset_filters">フィルターをリセット</string>
+    <string name="shell_hint_done">完了</string>
+    <string name="shell_hint_use_image">画像を使用</string>
+    <string name="shell_hint_search_name">名前で検索</string>
+    <string name="shell_hint_filter">フィルター</string>
+    <string name="shell_hint_reset_to_profile">プロフィールの値に戻す</string>
+
+    <string name="shell_problem_title_stream">ストリームを実行できませんでした</string>
+    <string name="shell_problem_title_generic">Delosで問題が発生しました</string>
+    <string name="shell_problem_note">自動で送信されるものはありません。「報告」を押すと、ブラウザでGitHubが開いて確認用の下書きが表示され、添付用に整理済みのログファイルがダウンロードフォルダに保存されます。</string>
+    <string name="shell_problem_report">この問題を報告</string>
+    <string name="shell_problem_dismiss">閉じる</string>
+
+    <string name="shell_button_capture_title">ストリームメニューのボタンを押してください</string>
+    <string name="shell_button_capture_note">同時に押し、そのまま離してください。背面ボタンなど、1つのボタンでも設定できます。キャンセルするには、待つかタップしてください。</string>
+
+    <string name="row_reset_to_profile">プロフィールの値に戻す</string>
+    <string name="row_reset">リセット</string>
+    <string name="row_not_set">未設定</string>
+
+    <string name="impact_axis_gpu">GPU</string>
+    <string name="impact_axis_latency">遅延</string>
+    <string name="impact_axis_network">ネットワーク</string>
+    <string name="impact_level_none">なし</string>
+    <string name="impact_level_low">低</string>
+    <string name="impact_level_medium">中</string>
+    <string name="impact_level_high">高</string>
+    <string name="impact_axis_level">%1$s %2$s</string>
+    <string name="impact_legend">現在の値の負荷：1本＝低、2本＝中、3本＝高</string>
+    <string name="impact_axes_joined">%1$s、%2$s、%3$s</string>
+</resources>

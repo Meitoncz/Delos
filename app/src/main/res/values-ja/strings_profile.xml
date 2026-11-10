@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="profile_signed_in">
+        <item quantity="other">この%1$sでサインイン中 · プロフィール%2$d件</item>
+    </plurals>
+    <string name="profile_change_avatar">アバターを変更</string>
+    <string name="profile_rename">名前を変更</string>
+    <string name="profile_switch">プロフィールを切り替え</string>
+    <string name="profile_add">プロフィールを追加</string>
+    <string name="profile_delete">プロフィールを削除</string>
+    <string name="profile_undo">元に戻す</string>
+    <string name="profile_restored">%1$sを復元しました</string>
+    <string name="profile_restore_failed">%1$sを復元できませんでした</string>
+    <string name="profile_deleted">%1$sを削除しました</string>
+    <string name="profile_menu_title">プロフィール</string>
+    <string name="profile_playing_as">%1$sとしてプレイ中</string>
+    <string name="profile_new">新しいプロフィール</string>
+    <string name="profile_rename_title">プロフィール名を変更</string>
+    <string name="profile_renamed">プロフィール名を変更しました</string>
+    <string name="profile_name_note">スタート画面とサイドメニューに表示されます。</string>
+    <string name="profile_name_save">保存</string>
+    <string name="profile_name_required">プロフィールの名前を入力してください</string>
+</resources>
