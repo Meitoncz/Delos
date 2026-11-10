@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shell_report_saved">Log salvo em Downloads como %1$s. Anexe-o ao relato.</string>
+    <string name="shell_report_save_failed">Não foi possível salvar o log. Compartilhe-o em Configurações → Sobre → Informações de depuração.</string>
+    <string name="shell_report_no_browser">Nenhum navegador disponível</string>
+    <string name="shell_retry_unreachable">Não foi possível acessar %1$s</string>
+    <string name="shell_retry_game_missing">%1$s não está disponível em %2$s</string>
+    <string name="shell_retry_game_missing_unnamed">O jogo não está disponível em %1$s</string>
+    <string name="shell_profile_updated">Perfil atualizado</string>
+    <string name="shell_welcome">Bem-vindo, %1$s</string>
+    <string name="shell_game_unreachable">Não foi possível acessar %1$s</string>
+    <string name="shell_game_virtual_display_missing">A tela virtual não está pronta em %1$s · transmitindo a tela principal</string>
+    <string name="shell_game_quitting">Saindo de %1$s…</string>
+</resources>

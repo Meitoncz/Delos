@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tags_genre_point_and_click">Point-and-click</string>
+    <string name="tags_genre_fighting">Luta</string>
+    <string name="tags_genre_shooter">Tiro</string>
+    <string name="tags_genre_music">Música</string>
+    <string name="tags_genre_platform">Plataforma</string>
+    <string name="tags_genre_puzzle">Quebra-cabeça</string>
+    <string name="tags_genre_racing">Corrida</string>
+    <string name="tags_genre_real_time_strategy">Estratégia em tempo real (RTS)</string>
+    <string name="tags_genre_role_playing">RPG</string>
+    <string name="tags_genre_simulator">Simulador</string>
+    <string name="tags_genre_sport">Esporte</string>
+    <string name="tags_genre_strategy">Estratégia</string>
+    <string name="tags_genre_turn_based_strategy">Estratégia por turnos (TBS)</string>
+    <string name="tags_genre_tactical">Tático</string>
+    <string name="tags_genre_hack_and_slash">Hack and slash/Beat \'em up</string>
+    <string name="tags_genre_quiz">Quiz/Trivia</string>
+    <string name="tags_genre_pinball">Pinball</string>
+    <string name="tags_genre_adventure">Aventura</string>
+    <string name="tags_genre_indie">Indie</string>
+    <string name="tags_genre_arcade">Arcade</string>
+    <string name="tags_genre_visual_novel">Visual novel</string>
+    <string name="tags_genre_card_and_board">Cartas e tabuleiro</string>
+    <string name="tags_genre_moba">MOBA</string>
+
+    <string name="tags_theme_action">Ação</string>
+    <string name="tags_theme_fantasy">Fantasia</string>
+    <string name="tags_theme_science_fiction">Ficção científica</string>
+    <string name="tags_theme_horror">Terror</string>
+    <string name="tags_theme_thriller">Suspense</string>
+    <string name="tags_theme_survival">Sobrevivência</string>
+    <string name="tags_theme_historical">Histórico</string>
+    <string name="tags_theme_stealth">Furtivo</string>
+    <string name="tags_theme_comedy">Comédia</string>
+    <string name="tags_theme_business">Negócios</string>
+    <string name="tags_theme_drama">Drama</string>
+    <string name="tags_theme_non_fiction">Não ficção</string>
+    <string name="tags_theme_sandbox">Sandbox</string>
+    <string name="tags_theme_educational">Educativo</string>
+    <string name="tags_theme_kids">Infantil</string>
+    <string name="tags_theme_open_world">Mundo aberto</string>
+    <string name="tags_theme_warfare">Guerra</string>
+    <string name="tags_theme_party">Festa</string>
+    <string name="tags_theme_four_x">4X (explorar, expandir, explorar recursos e exterminar)</string>
+    <string name="tags_theme_erotic">Erótico</string>
+    <string name="tags_theme_mystery">Mistério</string>
+    <string name="tags_theme_romance">Romance</string>
+</resources>

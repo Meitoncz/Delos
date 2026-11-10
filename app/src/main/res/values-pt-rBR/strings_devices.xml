@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="devices_start_greeting">Olá, %1$s</string>
+    <string name="devices_start_welcome">Bem-vindo</string>
+    <string name="devices_start_pair_note">Pareie um PC para começar a jogar.</string>
+    <string name="devices_start_choose_note">Escolha o PC para jogar.</string>
+    <string name="devices_status_online">Online</string>
+    <string name="devices_status_asleep">Em repouso</string>
+    <string name="devices_status_asleep_wakes">Em repouso · será ativado</string>
+    <string name="devices_status_offline">Offline</string>
+    <string name="devices_status_connected">Conectado</string>
+    <string name="devices_status_default">Padrão</string>
+    <string name="devices_status_with_default">%1$s · %2$s</string>
+    <string name="devices_pair_new">Parear um novo PC</string>
+    <string name="devices_pair_new_meta">Vibepollo, Apollo ou Sunshine</string>
+    <string name="devices_title">Dispositivos</string>
+    <string name="devices_note">PCs pareados com o app Delos. Os nomes definidos aqui ficam só neste dispositivo.</string>
+
+    <string name="devices_menu_default_off">Não iniciar com este PC</string>
+    <string name="devices_menu_default_on">Iniciar o app Delos com este PC</string>
+    <string name="devices_menu_wake">Ativar o PC</string>
+    <string name="devices_menu_rename">Renomear</string>
+    <string name="devices_menu_open_games">Abrir os jogos dele</string>
+    <string name="devices_menu_connect">Conectar</string>
+    <string name="devices_menu_unpair">Desparear</string>
+    <string name="devices_menu_remove">Remover do app Delos</string>
+
+    <string name="devices_portal_waking_title">Ativando %1$s</string>
+    <string name="devices_portal_waiting_title">Aguardando %1$s</string>
+    <string name="devices_portal_waking_note">Sinal de ativação enviado · %1$s cancela</string>
+    <string name="devices_portal_waiting_note">Ligue o PC · %1$s cancela</string>
+    <string name="devices_wake_timeout_toast">%1$s não foi ativado</string>
+    <string name="devices_portal_connecting_title">Conectando a %1$s</string>
+    <string name="devices_portal_connecting_note">Vibepollo · pareado</string>
+
+    <string name="devices_link_portal_title">Testando o link com %1$s</string>
+    <string name="devices_link_portal_start">Fique em %1$s · %2$s cancela</string>
+    <string name="devices_link_portal_testing">Testando %1$s · fique em %2$s · %3$s cancela</string>
+    <string name="devices_link_portal_confirming">Confirmando %1$s · fique em %2$s · %3$s cancela</string>
+    <string name="devices_link_done">%1$s suporta %2$s</string>
+    <string name="devices_link_done_jitter">%1$s suporta %2$s (um pouco de jitter)</string>
+    <string name="devices_link_stopped">Teste de link interrompido</string>
+
+    <string name="devices_address_title">Digite o endereço do PC</string>
+    <string name="devices_address_note">O endereço IP ou nome do host do PC que executa o Vibepollo, opcionalmente com uma porta.</string>
+    <string name="devices_address_action">Adicionar PC</string>
+    <string name="devices_address_required">Digite um endereço</string>
+    <string name="devices_address_looking">Procurando %1$s…</string>
+    <string name="devices_address_not_added">%1$s respondeu, mas não pôde ser adicionado</string>
+    <string name="devices_add_not_an_address">“%1$s” não é um endereço</string>
+    <string name="devices_add_no_answer">Nenhum PC respondeu em %1$s</string>
+
+    <string name="devices_rename_title">Renomear PC</string>
+    <string name="devices_rename_note">O novo nome é usado apenas no app Delos neste dispositivo. Deixe vazio para usar o nome do próprio PC (%1$s).</string>
+    <string name="devices_rename_action">Salvar</string>
+    <string name="devices_rename_reset_toast">Voltou para %1$s</string>
+    <string name="devices_rename_done_toast">Renomeado para %1$s</string>
+
+    <string name="devices_wake_sent_toast">Sinal de ativação enviado a %1$s</string>
+    <string name="devices_wake_unsupported">%1$s não pode ser ativado por aqui</string>
+    <string name="devices_wake_failed">Não foi possível enviar o sinal de ativação</string>
+    <string name="devices_removed_toast">%1$s foi removido</string>
+    <string name="devices_default_set_toast">O app Delos inicia com %1$s</string>
+    <string name="devices_default_cleared_toast">Nenhum dispositivo padrão</string>
+    <string name="devices_unpaired">Despareado de %1$s</string>
+    <string name="devices_unpair_offline">%1$s precisa estar online para desparear</string>
+    <string name="devices_unpair_not_paired">%1$s não está pareado</string>
+    <string name="devices_unpair_failed">Não foi possível desparear %1$s</string>
+    <string name="devices_unreachable">Não foi possível acessar %1$s</string>
+    <string name="devices_starting">O app Delos ainda está iniciando, tente novamente</string>
+</resources>
