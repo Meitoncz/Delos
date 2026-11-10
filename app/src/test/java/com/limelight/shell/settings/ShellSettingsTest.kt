@@ -575,7 +575,7 @@ class ShellSettingsTest {
 
     private fun spec(key: String) = catalog.all.first { it.key == key }
 
-    private fun search(query: String) = searchSettings(catalog.all.map {
-        SettingsItem(it.key, it.tab, it.section, it.icon, it.label, it.description, RowValue.Info(""), searchTerms = settingSearchTerms(it))
+    private fun search(query: String) = searchSettings(context.resources, catalog.all.map {
+        SettingsItem(it.key, it.tab, it.section, it.icon, it.label, it.description, RowValue.Info(""), searchTerms = settingSearchTerms(context.resources, it))
     }, query).map { it.key }
 }
