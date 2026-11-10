@@ -223,6 +223,8 @@ tags do not fit beside the facts they move to the next line as a whole and the d
   genres only when fewer than two strong genres exist, and Action/Superhero -> the Action theme only when the
   game has no other theme (the rule IGDB's Action theme follows too). When Steam gives one entry the second
   slot is filled from IGDB's ranking (below) with the first entry not shown yet; Indie and Action never fill.
+  The names shown come from `res/values/strings_tags.xml` by IGDB id (`genreName`, `themeName`), so they follow the app
+  language; the Steam tag names and the ranking stay English data (see `docs/LOCALIZATION.md`).
 - **IGDB ladder** is used when a game has no Steam id, the Steam fetch failed or the store lists no mappable
   tag. Genres are ordered by this ladder, and the pill shows the first two: Shooter, Fighting, Racing,
   Role-playing, Real Time Strategy, Turn-based strategy, Tactical, Hack and slash/Beat 'em up, Platform,
