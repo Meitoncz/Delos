@@ -144,6 +144,28 @@ android {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
+        // The optimised build for the test device: what release does to the code (R8, not debuggable), with the debug build's
+        // identity and signature, so it installs over the debug app and keeps its data. Compose in a debuggable build is several
+        // times slower (measured on the Odin: 7 % of the frames janky while moving along the game row, 1.2 % in this build), so
+        // this is the one to judge smoothness with and to use daily. It has no debug previews and no instrumentation checks
+        // (src/release/java stands in for src/debug/java), and it can be profiled from the shell (src/perf/AndroidManifest.xml).
+        perf {
+            applicationIdSuffix ".debug"
+            signingConfig signingConfigs.debug
+            resValue "string", "app_label", "Delos Debug"
+            resValue "string", "app_label_root", "Delos Debug (Root)"
+            resValue "string", "app_label_game", "Delos Debug (Game)"
+
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    sourceSets {
+        perf {
+            java.srcDir 'src/release/java'
+            kotlin.srcDir 'src/release/java'
+        }
     }
 
     externalNativeBuild {
