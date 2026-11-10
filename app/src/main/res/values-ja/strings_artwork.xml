@@ -62,11 +62,13 @@
     <plurals name="artwork_count_of_cover">
         <item quantity="other">カバー%2$d枚中%1$d枚</item>
     </plurals>
+    <!-- Under the sentence when filters hide every image. %1$s: the active filters (their own labels, separated by a middle dot) -->
+    <string name="artwork_filtered_active">フィルター：%1$s</string>
     <string name="artwork_filtered_none_cover">これらのフィルターに一致するカバーはありません</string>
     <plurals name="artwork_filtered_has_cover">
-        <item quantity="other">SteamGridDBには%1$sのカバーが%2$d枚ありますが、%3$sに一致するものはありません。フィルターを緩めるか、別の名前で検索してください。</item>
+        <item quantity="other">SteamGridDBには%1$sのカバーが%2$d枚ありますが、フィルターに一致するものはありません。フィルターを緩めるか、別の名前で検索してください。</item>
     </plurals>
-    <string name="artwork_filtered_unknown_cover">%1$sに一致するカバーはありません。フィルターを緩めるか、別の名前で検索してください。</string>
+    <string name="artwork_filtered_unknown_cover">フィルターに一致するカバーはありません。フィルターを緩めるか、別の名前で検索してください。</string>
     <string name="artwork_empty_cover">SteamGridDBには、このゲームのカバーがまだありません。</string>
     <string name="artwork_downloading_cover">カバーをダウンロード中…</string>
     <string name="artwork_updated_cover">カバーを更新しました</string>
@@ -83,9 +85,9 @@
     </plurals>
     <string name="artwork_filtered_none_wide">これらのフィルターに一致するワイドカバーはありません</string>
     <plurals name="artwork_filtered_has_wide">
-        <item quantity="other">SteamGridDBには%1$sのワイドカバーが%2$d枚ありますが、%3$sに一致するものはありません。フィルターを緩めるか、別の名前で検索してください。</item>
+        <item quantity="other">SteamGridDBには%1$sのワイドカバーが%2$d枚ありますが、フィルターに一致するものはありません。フィルターを緩めるか、別の名前で検索してください。</item>
     </plurals>
-    <string name="artwork_filtered_unknown_wide">%1$sに一致するワイドカバーはありません。フィルターを緩めるか、別の名前で検索してください。</string>
+    <string name="artwork_filtered_unknown_wide">フィルターに一致するワイドカバーはありません。フィルターを緩めるか、別の名前で検索してください。</string>
     <string name="artwork_empty_wide">SteamGridDBには、このゲームのワイドカバーがまだありません。</string>
     <string name="artwork_downloading_wide">ワイドカバーをダウンロード中…</string>
     <string name="artwork_updated_wide">ワイドカバーを更新しました</string>
@@ -102,9 +104,9 @@
     </plurals>
     <string name="artwork_filtered_none_hero">これらのフィルターに一致する背景はありません</string>
     <plurals name="artwork_filtered_has_hero">
-        <item quantity="other">SteamGridDBには%1$sの背景が%2$d枚ありますが、%3$sに一致するものはありません。フィルターを緩めるか、別の名前で検索してください。</item>
+        <item quantity="other">SteamGridDBには%1$sの背景が%2$d枚ありますが、フィルターに一致するものはありません。フィルターを緩めるか、別の名前で検索してください。</item>
     </plurals>
-    <string name="artwork_filtered_unknown_hero">%1$sに一致する背景はありません。フィルターを緩めるか、別の名前で検索してください。</string>
+    <string name="artwork_filtered_unknown_hero">フィルターに一致する背景はありません。フィルターを緩めるか、別の名前で検索してください。</string>
     <string name="artwork_empty_hero">SteamGridDBには、このゲームの背景がまだありません。</string>
     <string name="artwork_downloading_hero">背景をダウンロード中…</string>
     <string name="artwork_updated_hero">背景を更新しました</string>
@@ -121,9 +123,9 @@
     </plurals>
     <string name="artwork_filtered_none_logo">これらのフィルターに一致するロゴはありません</string>
     <plurals name="artwork_filtered_has_logo">
-        <item quantity="other">SteamGridDBには%1$sのロゴが%2$d個ありますが、%3$sに一致するものはありません。フィルターを緩めるか、別の名前で検索してください。</item>
+        <item quantity="other">SteamGridDBには%1$sのロゴが%2$d個ありますが、フィルターに一致するものはありません。フィルターを緩めるか、別の名前で検索してください。</item>
     </plurals>
-    <string name="artwork_filtered_unknown_logo">%1$sに一致するロゴはありません。フィルターを緩めるか、別の名前で検索してください。</string>
+    <string name="artwork_filtered_unknown_logo">フィルターに一致するロゴはありません。フィルターを緩めるか、別の名前で検索してください。</string>
     <string name="artwork_empty_logo">SteamGridDBには、このゲームのロゴがまだありません。</string>
     <string name="artwork_downloading_logo">ロゴをダウンロード中…</string>
     <string name="artwork_updated_logo">ロゴを更新しました</string>

@@ -80,14 +80,15 @@
         <item quantity="one">%1$d of %2$d cover</item>
         <item quantity="other">%1$d of %2$d covers</item>
     </plurals>
+    <!-- Under the sentence when filters hide every image. %1$s: the active filters (their own labels, separated by a middle dot) -->
+    <string name="artwork_filtered_active">Filters: %1$s</string>
     <string name="artwork_filtered_none_cover">No covers match these filters</string>
     <plurals name="artwork_filtered_has_cover">
-        <!-- %1$s: game name, %2$d: how many covers it has (the quantity), %3$s: the active filters, joined by a middle dot -->
-        <item quantity="one">%1$s has %2$d cover on SteamGridDB, none of them matches %3$s. Loosen a filter or search under another name.</item>
-        <item quantity="other">%1$s has %2$d covers on SteamGridDB, none of them matches %3$s. Loosen a filter or search under another name.</item>
+        <!-- %1$s: game name, %2$d: how many covers it has (the quantity) -->
+        <item quantity="one">%1$s has %2$d cover on SteamGridDB, none of them matches your filters. Loosen a filter or search under another name.</item>
+        <item quantity="other">%1$s has %2$d covers on SteamGridDB, none of them matches your filters. Loosen a filter or search under another name.</item>
     </plurals>
-    <!-- %1$s: the active filters, joined by a middle dot -->
-    <string name="artwork_filtered_unknown_cover">None of the covers matches %1$s. Loosen a filter or search under another name.</string>
+    <string name="artwork_filtered_unknown_cover">None of the covers matches your filters. Loosen a filter or search under another name.</string>
     <string name="artwork_empty_cover">SteamGridDB has no cover for this game yet.</string>
     <string name="artwork_downloading_cover">Downloading the cover…</string>
     <string name="artwork_updated_cover">Cover updated</string>
@@ -109,12 +110,11 @@
     </plurals>
     <string name="artwork_filtered_none_wide">No wide covers match these filters</string>
     <plurals name="artwork_filtered_has_wide">
-        <!-- %1$s: game name, %2$d: how many wide covers it has (the quantity), %3$s: the active filters, joined by a middle dot -->
-        <item quantity="one">%1$s has %2$d wide cover on SteamGridDB, none of them matches %3$s. Loosen a filter or search under another name.</item>
-        <item quantity="other">%1$s has %2$d wide covers on SteamGridDB, none of them matches %3$s. Loosen a filter or search under another name.</item>
+        <!-- %1$s: game name, %2$d: how many wide covers it has (the quantity) -->
+        <item quantity="one">%1$s has %2$d wide cover on SteamGridDB, none of them matches your filters. Loosen a filter or search under another name.</item>
+        <item quantity="other">%1$s has %2$d wide covers on SteamGridDB, none of them matches your filters. Loosen a filter or search under another name.</item>
     </plurals>
-    <!-- %1$s: the active filters, joined by a middle dot -->
-    <string name="artwork_filtered_unknown_wide">None of the wide covers matches %1$s. Loosen a filter or search under another name.</string>
+    <string name="artwork_filtered_unknown_wide">None of the wide covers matches your filters. Loosen a filter or search under another name.</string>
     <string name="artwork_empty_wide">SteamGridDB has no wide cover for this game yet.</string>
     <string name="artwork_downloading_wide">Downloading the wide cover…</string>
     <string name="artwork_updated_wide">Wide cover updated</string>
@@ -136,12 +136,11 @@
     </plurals>
     <string name="artwork_filtered_none_hero">No backgrounds match these filters</string>
     <plurals name="artwork_filtered_has_hero">
-        <!-- %1$s: game name, %2$d: how many backgrounds it has (the quantity), %3$s: the active filters, joined by a middle dot -->
-        <item quantity="one">%1$s has %2$d background on SteamGridDB, none of them matches %3$s. Loosen a filter or search under another name.</item>
-        <item quantity="other">%1$s has %2$d backgrounds on SteamGridDB, none of them matches %3$s. Loosen a filter or search under another name.</item>
+        <!-- %1$s: game name, %2$d: how many backgrounds it has (the quantity) -->
+        <item quantity="one">%1$s has %2$d background on SteamGridDB, none of them matches your filters. Loosen a filter or search under another name.</item>
+        <item quantity="other">%1$s has %2$d backgrounds on SteamGridDB, none of them matches your filters. Loosen a filter or search under another name.</item>
     </plurals>
-    <!-- %1$s: the active filters, joined by a middle dot -->
-    <string name="artwork_filtered_unknown_hero">None of the backgrounds matches %1$s. Loosen a filter or search under another name.</string>
+    <string name="artwork_filtered_unknown_hero">None of the backgrounds matches your filters. Loosen a filter or search under another name.</string>
     <string name="artwork_empty_hero">SteamGridDB has no background for this game yet.</string>
     <string name="artwork_downloading_hero">Downloading the background…</string>
     <string name="artwork_updated_hero">Background updated</string>
@@ -163,12 +162,11 @@
     </plurals>
     <string name="artwork_filtered_none_logo">No logos match these filters</string>
     <plurals name="artwork_filtered_has_logo">
-        <!-- %1$s: game name, %2$d: how many logos it has (the quantity), %3$s: the active filters, joined by a middle dot -->
-        <item quantity="one">%1$s has %2$d logo on SteamGridDB, none of them matches %3$s. Loosen a filter or search under another name.</item>
-        <item quantity="other">%1$s has %2$d logos on SteamGridDB, none of them matches %3$s. Loosen a filter or search under another name.</item>
+        <!-- %1$s: game name, %2$d: how many logos it has (the quantity) -->
+        <item quantity="one">%1$s has %2$d logo on SteamGridDB, none of them matches your filters. Loosen a filter or search under another name.</item>
+        <item quantity="other">%1$s has %2$d logos on SteamGridDB, none of them matches your filters. Loosen a filter or search under another name.</item>
     </plurals>
-    <!-- %1$s: the active filters, joined by a middle dot -->
-    <string name="artwork_filtered_unknown_logo">None of the logos matches %1$s. Loosen a filter or search under another name.</string>
+    <string name="artwork_filtered_unknown_logo">None of the logos matches your filters. Loosen a filter or search under another name.</string>
     <string name="artwork_empty_logo">SteamGridDB has no logo for this game yet.</string>
     <string name="artwork_downloading_logo">Downloading the logo…</string>
     <string name="artwork_updated_logo">Logo updated</string>

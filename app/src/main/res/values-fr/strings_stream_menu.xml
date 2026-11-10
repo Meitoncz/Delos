@@ -63,10 +63,6 @@
     <string name="stream_menu_bitrate_unconfirmed">Le débit n’a pas été confirmé. Vérifie la connexion et réessaie.</string>
     <string name="stream_menu_bitrate_rejected">Le PC n’a pas pu appliquer le changement.</string>
     <string name="stream_menu_bitrate_rejected_detail">Le PC n’a pas pu appliquer le changement : %1$s</string>
-    <string name="stream_stats_top_left">En haut à gauche</string>
-    <string name="stream_stats_top_right">En haut à droite</string>
-    <string name="stream_stats_bottom_left">En bas à gauche</string>
-    <string name="stream_stats_bottom_right">En bas à droite</string>
     <string name="stream_stats_compact_low">1 %% bas %1$d</string>
     <string name="stream_stats_compact_tail">Réseau %1$d ms  ·  Décodage %2$s ms  ·  Total %3$s ms  ·  Perdues %4$s %%</string>
     <string name="stream_stats_decoder">Décodeur</string>

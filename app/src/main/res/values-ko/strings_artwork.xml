@@ -61,11 +61,13 @@
     <plurals name="artwork_count_of_cover">
         <item quantity="other">커버 %2$d개 중 %1$d개</item>
     </plurals>
+    <!-- Under the sentence when filters hide every image. %1$s: the active filters (their own labels, separated by a middle dot) -->
+    <string name="artwork_filtered_active">필터: %1$s</string>
     <string name="artwork_filtered_none_cover">필터에 맞는 커버가 없어요</string>
     <plurals name="artwork_filtered_has_cover">
-        <item quantity="other">%1$s에는 SteamGridDB에 커버 %2$d개가 있지만 %3$s에 맞는 것이 없어요. 필터를 완화하거나 다른 이름으로 검색해 보세요.</item>
+        <item quantity="other">%1$s에는 SteamGridDB에 커버 %2$d개가 있지만 필터에 맞는 것이 없어요. 필터를 완화하거나 다른 이름으로 검색해 보세요.</item>
     </plurals>
-    <string name="artwork_filtered_unknown_cover">%1$s에 맞는 커버가 없어요. 필터를 완화하거나 다른 이름으로 검색해 보세요.</string>
+    <string name="artwork_filtered_unknown_cover">필터에 맞는 커버가 없어요. 필터를 완화하거나 다른 이름으로 검색해 보세요.</string>
     <string name="artwork_empty_cover">SteamGridDB에 이 게임의 커버가 아직 없어요.</string>
     <string name="artwork_downloading_cover">커버 다운로드 중…</string>
     <string name="artwork_updated_cover">커버를 업데이트했어요</string>
@@ -81,9 +83,9 @@
     </plurals>
     <string name="artwork_filtered_none_wide">필터에 맞는 와이드 커버가 없어요</string>
     <plurals name="artwork_filtered_has_wide">
-        <item quantity="other">%1$s에는 SteamGridDB에 와이드 커버 %2$d개가 있지만 %3$s에 맞는 것이 없어요. 필터를 완화하거나 다른 이름으로 검색해 보세요.</item>
+        <item quantity="other">%1$s에는 SteamGridDB에 와이드 커버 %2$d개가 있지만 필터에 맞는 것이 없어요. 필터를 완화하거나 다른 이름으로 검색해 보세요.</item>
     </plurals>
-    <string name="artwork_filtered_unknown_wide">%1$s에 맞는 와이드 커버가 없어요. 필터를 완화하거나 다른 이름으로 검색해 보세요.</string>
+    <string name="artwork_filtered_unknown_wide">필터에 맞는 와이드 커버가 없어요. 필터를 완화하거나 다른 이름으로 검색해 보세요.</string>
     <string name="artwork_empty_wide">SteamGridDB에 이 게임의 와이드 커버가 아직 없어요.</string>
     <string name="artwork_downloading_wide">와이드 커버 다운로드 중…</string>
     <string name="artwork_updated_wide">와이드 커버를 업데이트했어요</string>
@@ -99,9 +101,9 @@
     </plurals>
     <string name="artwork_filtered_none_hero">필터에 맞는 배경이 없어요</string>
     <plurals name="artwork_filtered_has_hero">
-        <item quantity="other">%1$s에는 SteamGridDB에 배경 %2$d개가 있지만 %3$s에 맞는 것이 없어요. 필터를 완화하거나 다른 이름으로 검색해 보세요.</item>
+        <item quantity="other">%1$s에는 SteamGridDB에 배경 %2$d개가 있지만 필터에 맞는 것이 없어요. 필터를 완화하거나 다른 이름으로 검색해 보세요.</item>
     </plurals>
-    <string name="artwork_filtered_unknown_hero">%1$s에 맞는 배경이 없어요. 필터를 완화하거나 다른 이름으로 검색해 보세요.</string>
+    <string name="artwork_filtered_unknown_hero">필터에 맞는 배경이 없어요. 필터를 완화하거나 다른 이름으로 검색해 보세요.</string>
     <string name="artwork_empty_hero">SteamGridDB에 이 게임의 배경이 아직 없어요.</string>
     <string name="artwork_downloading_hero">배경 다운로드 중…</string>
     <string name="artwork_updated_hero">배경을 업데이트했어요</string>
@@ -117,9 +119,9 @@
     </plurals>
     <string name="artwork_filtered_none_logo">필터에 맞는 로고가 없어요</string>
     <plurals name="artwork_filtered_has_logo">
-        <item quantity="other">%1$s에는 SteamGridDB에 로고 %2$d개가 있지만 %3$s에 맞는 것이 없어요. 필터를 완화하거나 다른 이름으로 검색해 보세요.</item>
+        <item quantity="other">%1$s에는 SteamGridDB에 로고 %2$d개가 있지만 필터에 맞는 것이 없어요. 필터를 완화하거나 다른 이름으로 검색해 보세요.</item>
     </plurals>
-    <string name="artwork_filtered_unknown_logo">%1$s에 맞는 로고가 없어요. 필터를 완화하거나 다른 이름으로 검색해 보세요.</string>
+    <string name="artwork_filtered_unknown_logo">필터에 맞는 로고가 없어요. 필터를 완화하거나 다른 이름으로 검색해 보세요.</string>
     <string name="artwork_empty_logo">SteamGridDB에 이 게임의 로고가 아직 없어요.</string>
     <string name="artwork_downloading_logo">로고 다운로드 중…</string>
     <string name="artwork_updated_logo">로고를 업데이트했어요</string>

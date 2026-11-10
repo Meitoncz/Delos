@@ -71,10 +71,6 @@
     <string name="stream_menu_bitrate_rejected">호스트가 변경을 적용하지 못했어요.</string>
     <string name="stream_menu_bitrate_rejected_detail">호스트가 변경을 적용하지 못했어요: %1$s</string>
 
-    <string name="stream_stats_top_left">왼쪽 위</string>
-    <string name="stream_stats_top_right">오른쪽 위</string>
-    <string name="stream_stats_bottom_left">왼쪽 아래</string>
-    <string name="stream_stats_bottom_right">오른쪽 아래</string>
     <string name="stream_stats_compact_low">하위 1%% %1$d</string>
     <string name="stream_stats_compact_tail">네트워크 %1$d ms  ·  디코딩 %2$s ms  ·  전체 %3$s ms  ·  손실 %4$s %%</string>
     <string name="stream_stats_decoder">디코더</string>

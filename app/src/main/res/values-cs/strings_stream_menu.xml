@@ -80,10 +80,6 @@
     <string name="stream_menu_bitrate_rejected_detail">PC změnu nemohlo použít: %1$s</string>
 
     <!-- Statistics panel -->
-    <string name="stream_stats_top_left">Vlevo nahoře</string>
-    <string name="stream_stats_top_right">Vpravo nahoře</string>
-    <string name="stream_stats_bottom_left">Vlevo dole</string>
-    <string name="stream_stats_bottom_right">Vpravo dole</string>
     <string name="stream_stats_compact_low">1%% low %1$d</string>
     <string name="stream_stats_compact_tail">Síť %1$d ms  ·  Dekódování %2$s ms  ·  Celkem %3$s ms  ·  Ztraceno %4$s %%</string>
     <string name="stream_stats_decoder">Dekodér</string>

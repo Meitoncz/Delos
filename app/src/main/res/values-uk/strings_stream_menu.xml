@@ -71,10 +71,6 @@
     <string name="stream_menu_bitrate_rejected">Хост не зміг застосувати зміну.</string>
     <string name="stream_menu_bitrate_rejected_detail">Хост не зміг застосувати зміну: %1$s</string>
 
-    <string name="stream_stats_top_left">Угорі ліворуч</string>
-    <string name="stream_stats_top_right">Угорі праворуч</string>
-    <string name="stream_stats_bottom_left">Унизу ліворуч</string>
-    <string name="stream_stats_bottom_right">Унизу праворуч</string>
     <string name="stream_stats_compact_low">1%% найгірших %1$d</string>
     <string name="stream_stats_compact_tail">Мережа %1$d ms  ·  Декодування %2$s ms  ·  Усього %3$s ms  ·  Втрачено %4$s %%</string>
     <string name="stream_stats_decoder">Декодер</string>

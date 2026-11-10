@@ -87,11 +87,6 @@
     <!-- %1$s: the host's own error text, cut to fit -->
     <string name="stream_menu_bitrate_rejected_detail">The host could not apply the change: %1$s</string>
 
-    <!-- Statistics panel: where it sits (Settings → Display) -->
-    <string name="stream_stats_top_left">Top left</string>
-    <string name="stream_stats_top_right">Top right</string>
-    <string name="stream_stats_bottom_left">Bottom left</string>
-    <string name="stream_stats_bottom_right">Bottom right</string>
     <!-- The compact one-line panel. %1$d: the frame rate of the slowest 1% of frames -->
     <string name="stream_stats_compact_low">1%% low %1$d</string>
     <!-- %1$d: network delay in ms, %2$s: decode time in ms, %3$s: total latency in ms, %4$s: lost frames in percent (numbers formatted in code) -->

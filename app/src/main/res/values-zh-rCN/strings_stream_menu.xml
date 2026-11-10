@@ -71,10 +71,6 @@
     <string name="stream_menu_bitrate_rejected">电脑无法应用此更改。</string>
     <string name="stream_menu_bitrate_rejected_detail">电脑无法应用此更改：%1$s</string>
 
-    <string name="stream_stats_top_left">左上</string>
-    <string name="stream_stats_top_right">右上</string>
-    <string name="stream_stats_bottom_left">左下</string>
-    <string name="stream_stats_bottom_right">右下</string>
     <string name="stream_stats_compact_low">1%% 低帧 %1$d</string>
     <string name="stream_stats_compact_tail">网络 %1$d ms  ·  解码 %2$s ms  ·  总计 %3$s ms  ·  丢失 %4$s %%</string>
     <string name="stream_stats_decoder">解码器</string>

@@ -71,10 +71,6 @@
     <string name="stream_menu_bitrate_rejected">O PC não conseguiu aplicar a alteração.</string>
     <string name="stream_menu_bitrate_rejected_detail">O PC não conseguiu aplicar a alteração: %1$s</string>
 
-    <string name="stream_stats_top_left">Superior esquerdo</string>
-    <string name="stream_stats_top_right">Superior direito</string>
-    <string name="stream_stats_bottom_left">Inferior esquerdo</string>
-    <string name="stream_stats_bottom_right">Inferior direito</string>
     <string name="stream_stats_compact_low">1%% mín. %1$d</string>
     <string name="stream_stats_compact_tail">Rede %1$d ms  ·  Decodif. %2$s ms  ·  Total %3$s ms  ·  Perdidos %4$s %%</string>
     <string name="stream_stats_decoder">Decodificador</string>

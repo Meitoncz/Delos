@@ -151,7 +151,7 @@ internal fun nativeSettings(
         tab = SettingsTab.CONTROLS, section = streamMenuSection)
     val statsPosition = StatsPosition.read(settings)
     row("ui_stats_position", Symbols.STATS_POSITION, res.getString(R.string.settings_native_stats_position_title),
-        RowValue.Choice(res.getString(statsPositionLabel(statsPosition)), { dir ->
+        RowValue.Choice(res.getString(statsPosition.labelRes), { dir ->
             settings.edit().putString(StatsPosition.KEY, statsPosition.step(dir).name).apply()
         }), res.getString(R.string.settings_native_stats_position_description), tab = SettingsTab.DISPLAY,
         section = res.getString(R.string.settings_native_section_statistics), choiceHelp = NativeSettingsHelp.choice(res, "ui_stats_position", statsPosition.name))
@@ -236,11 +236,4 @@ internal fun nativeSettings(
         RowValue.Action { providerWebsite("https://howlongtobeat.com/") },
         res.getString(R.string.settings_native_hltb_description), tab = SettingsTab.ABOUT, section = gameDataSection)
     return list
-}
-
-private fun statsPositionLabel(position: StatsPosition): Int = when (position) {
-    StatsPosition.TOP_LEFT -> R.string.settings_native_stats_top_left
-    StatsPosition.TOP_RIGHT -> R.string.settings_native_stats_top_right
-    StatsPosition.BOTTOM_LEFT -> R.string.settings_native_stats_bottom_left
-    StatsPosition.BOTTOM_RIGHT -> R.string.settings_native_stats_bottom_right
 }

@@ -51,8 +51,8 @@ import java.util.Locale
  * settings help is keyed by, [labelRes] the text the player reads.
  */
 enum class StatsPosition(val label: String, @StringRes val labelRes: Int, val top: Boolean, val start: Boolean) {
-    TOP_LEFT("Top left", R.string.stream_stats_top_left, true, true), TOP_RIGHT("Top right", R.string.stream_stats_top_right, true, false), // l10n-ignore
-    BOTTOM_LEFT("Bottom left", R.string.stream_stats_bottom_left, false, true), BOTTOM_RIGHT("Bottom right", R.string.stream_stats_bottom_right, false, false); // l10n-ignore
+    TOP_LEFT("Top left", R.string.settings_native_stats_top_left, true, true), TOP_RIGHT("Top right", R.string.settings_native_stats_top_right, true, false), // l10n-ignore
+    BOTTOM_LEFT("Bottom left", R.string.settings_native_stats_bottom_left, false, true), BOTTOM_RIGHT("Bottom right", R.string.settings_native_stats_bottom_right, false, false); // l10n-ignore
 
     companion object {
         const val KEY = "ui_stats_position"

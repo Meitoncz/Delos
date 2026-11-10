@@ -71,10 +71,6 @@
     <string name="stream_menu_bitrate_rejected">El host no ha podido aplicar el cambio.</string>
     <string name="stream_menu_bitrate_rejected_detail">El host no ha podido aplicar el cambio: %1$s</string>
 
-    <string name="stream_stats_top_left">Arriba a la izquierda</string>
-    <string name="stream_stats_top_right">Arriba a la derecha</string>
-    <string name="stream_stats_bottom_left">Abajo a la izquierda</string>
-    <string name="stream_stats_bottom_right">Abajo a la derecha</string>
     <string name="stream_stats_compact_low">1%% bajo %1$d</string>
     <string name="stream_stats_compact_tail">Red %1$d ms  ·  Decodif. %2$s ms  ·  Total %3$s ms  ·  Perdidos %4$s %%</string>
     <string name="stream_stats_decoder">Decodificador</string>

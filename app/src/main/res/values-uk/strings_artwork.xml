@@ -70,14 +70,16 @@
         <item quantity="many">%1$d із %2$d обкладинок</item>
         <item quantity="other">%1$d із %2$d обкладинки</item>
     </plurals>
+    <!-- Under the sentence when filters hide every image. %1$s: the active filters (their own labels, separated by a middle dot) -->
+    <string name="artwork_filtered_active">Фільтри: %1$s</string>
     <string name="artwork_filtered_none_cover">Жодна обкладинка не відповідає цим фільтрам</string>
     <plurals name="artwork_filtered_has_cover">
-        <item quantity="one">На SteamGridDB для %1$s є %2$d обкладинка, жодна не відповідає %3$s. Послаб фільтр або пошукай за іншою назвою.</item>
-        <item quantity="few">На SteamGridDB для %1$s є %2$d обкладинки, жодна не відповідає %3$s. Послаб фільтр або пошукай за іншою назвою.</item>
-        <item quantity="many">На SteamGridDB для %1$s є %2$d обкладинок, жодна не відповідає %3$s. Послаб фільтр або пошукай за іншою назвою.</item>
-        <item quantity="other">На SteamGridDB для %1$s є %2$d обкладинки, жодна не відповідає %3$s. Послаб фільтр або пошукай за іншою назвою.</item>
+        <item quantity="one">На SteamGridDB для %1$s є %2$d обкладинка, жодна не відповідає фільтрам. Послаб фільтр або пошукай за іншою назвою.</item>
+        <item quantity="few">На SteamGridDB для %1$s є %2$d обкладинки, жодна не відповідає фільтрам. Послаб фільтр або пошукай за іншою назвою.</item>
+        <item quantity="many">На SteamGridDB для %1$s є %2$d обкладинок, жодна не відповідає фільтрам. Послаб фільтр або пошукай за іншою назвою.</item>
+        <item quantity="other">На SteamGridDB для %1$s є %2$d обкладинки, жодна не відповідає фільтрам. Послаб фільтр або пошукай за іншою назвою.</item>
     </plurals>
-    <string name="artwork_filtered_unknown_cover">Жодна з обкладинок не відповідає %1$s. Послаб фільтр або пошукай за іншою назвою.</string>
+    <string name="artwork_filtered_unknown_cover">Жодна з обкладинок не відповідає фільтрам. Послаб фільтр або пошукай за іншою назвою.</string>
     <string name="artwork_empty_cover">На SteamGridDB для цієї гри ще немає обкладинки.</string>
     <string name="artwork_downloading_cover">Завантаження обкладинки…</string>
     <string name="artwork_updated_cover">Обкладинку оновлено</string>
@@ -102,12 +104,12 @@
     </plurals>
     <string name="artwork_filtered_none_wide">Жодна широка обкладинка не відповідає цим фільтрам</string>
     <plurals name="artwork_filtered_has_wide">
-        <item quantity="one">На SteamGridDB для %1$s є %2$d широка обкладинка, жодна не відповідає %3$s. Послаб фільтр або пошукай за іншою назвою.</item>
-        <item quantity="few">На SteamGridDB для %1$s є %2$d широкі обкладинки, жодна не відповідає %3$s. Послаб фільтр або пошукай за іншою назвою.</item>
-        <item quantity="many">На SteamGridDB для %1$s є %2$d широких обкладинок, жодна не відповідає %3$s. Послаб фільтр або пошукай за іншою назвою.</item>
-        <item quantity="other">На SteamGridDB для %1$s є %2$d широкої обкладинки, жодна не відповідає %3$s. Послаб фільтр або пошукай за іншою назвою.</item>
+        <item quantity="one">На SteamGridDB для %1$s є %2$d широка обкладинка, жодна не відповідає фільтрам. Послаб фільтр або пошукай за іншою назвою.</item>
+        <item quantity="few">На SteamGridDB для %1$s є %2$d широкі обкладинки, жодна не відповідає фільтрам. Послаб фільтр або пошукай за іншою назвою.</item>
+        <item quantity="many">На SteamGridDB для %1$s є %2$d широких обкладинок, жодна не відповідає фільтрам. Послаб фільтр або пошукай за іншою назвою.</item>
+        <item quantity="other">На SteamGridDB для %1$s є %2$d широкої обкладинки, жодна не відповідає фільтрам. Послаб фільтр або пошукай за іншою назвою.</item>
     </plurals>
-    <string name="artwork_filtered_unknown_wide">Жодна з широких обкладинок не відповідає %1$s. Послаб фільтр або пошукай за іншою назвою.</string>
+    <string name="artwork_filtered_unknown_wide">Жодна з широких обкладинок не відповідає фільтрам. Послаб фільтр або пошукай за іншою назвою.</string>
     <string name="artwork_empty_wide">На SteamGridDB для цієї гри ще немає широкої обкладинки.</string>
     <string name="artwork_downloading_wide">Завантаження широкої обкладинки…</string>
     <string name="artwork_updated_wide">Широку обкладинку оновлено</string>
@@ -132,12 +134,12 @@
     </plurals>
     <string name="artwork_filtered_none_hero">Жодне тло не відповідає цим фільтрам</string>
     <plurals name="artwork_filtered_has_hero">
-        <item quantity="one">На SteamGridDB для %1$s є %2$d тло, жодне не відповідає %3$s. Послаб фільтр або пошукай за іншою назвою.</item>
-        <item quantity="few">На SteamGridDB для %1$s є %2$d тла, жодне не відповідає %3$s. Послаб фільтр або пошукай за іншою назвою.</item>
-        <item quantity="many">На SteamGridDB для %1$s є %2$d тл, жодне не відповідає %3$s. Послаб фільтр або пошукай за іншою назвою.</item>
-        <item quantity="other">На SteamGridDB для %1$s є %2$d тла, жодне не відповідає %3$s. Послаб фільтр або пошукай за іншою назвою.</item>
+        <item quantity="one">На SteamGridDB для %1$s є %2$d тло, жодне не відповідає фільтрам. Послаб фільтр або пошукай за іншою назвою.</item>
+        <item quantity="few">На SteamGridDB для %1$s є %2$d тла, жодне не відповідає фільтрам. Послаб фільтр або пошукай за іншою назвою.</item>
+        <item quantity="many">На SteamGridDB для %1$s є %2$d тл, жодне не відповідає фільтрам. Послаб фільтр або пошукай за іншою назвою.</item>
+        <item quantity="other">На SteamGridDB для %1$s є %2$d тла, жодне не відповідає фільтрам. Послаб фільтр або пошукай за іншою назвою.</item>
     </plurals>
-    <string name="artwork_filtered_unknown_hero">Жодне з тл не відповідає %1$s. Послаб фільтр або пошукай за іншою назвою.</string>
+    <string name="artwork_filtered_unknown_hero">Жодне з тл не відповідає фільтрам. Послаб фільтр або пошукай за іншою назвою.</string>
     <string name="artwork_empty_hero">На SteamGridDB для цієї гри ще немає тла.</string>
     <string name="artwork_downloading_hero">Завантаження тла…</string>
     <string name="artwork_updated_hero">Тло оновлено</string>
@@ -162,12 +164,12 @@
     </plurals>
     <string name="artwork_filtered_none_logo">Жоден логотип не відповідає цим фільтрам</string>
     <plurals name="artwork_filtered_has_logo">
-        <item quantity="one">На SteamGridDB для %1$s є %2$d логотип, жоден не відповідає %3$s. Послаб фільтр або пошукай за іншою назвою.</item>
-        <item quantity="few">На SteamGridDB для %1$s є %2$d логотипи, жоден не відповідає %3$s. Послаб фільтр або пошукай за іншою назвою.</item>
-        <item quantity="many">На SteamGridDB для %1$s є %2$d логотипів, жоден не відповідає %3$s. Послаб фільтр або пошукай за іншою назвою.</item>
-        <item quantity="other">На SteamGridDB для %1$s є %2$d логотипа, жоден не відповідає %3$s. Послаб фільтр або пошукай за іншою назвою.</item>
+        <item quantity="one">На SteamGridDB для %1$s є %2$d логотип, жоден не відповідає фільтрам. Послаб фільтр або пошукай за іншою назвою.</item>
+        <item quantity="few">На SteamGridDB для %1$s є %2$d логотипи, жоден не відповідає фільтрам. Послаб фільтр або пошукай за іншою назвою.</item>
+        <item quantity="many">На SteamGridDB для %1$s є %2$d логотипів, жоден не відповідає фільтрам. Послаб фільтр або пошукай за іншою назвою.</item>
+        <item quantity="other">На SteamGridDB для %1$s є %2$d логотипа, жоден не відповідає фільтрам. Послаб фільтр або пошукай за іншою назвою.</item>
     </plurals>
-    <string name="artwork_filtered_unknown_logo">Жоден із логотипів не відповідає %1$s. Послаб фільтр або пошукай за іншою назвою.</string>
+    <string name="artwork_filtered_unknown_logo">Жоден із логотипів не відповідає фільтрам. Послаб фільтр або пошукай за іншою назвою.</string>
     <string name="artwork_empty_logo">На SteamGridDB для цієї гри ще немає логотипа.</string>
     <string name="artwork_downloading_logo">Завантаження логотипа…</string>
     <string name="artwork_updated_logo">Логотип оновлено</string>

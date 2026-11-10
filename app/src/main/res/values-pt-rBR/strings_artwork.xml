@@ -67,13 +67,15 @@
         <item quantity="many">%1$d de %2$d capas</item>
         <item quantity="other">%1$d de %2$d capas</item>
     </plurals>
+    <!-- Under the sentence when filters hide every image. %1$s: the active filters (their own labels, separated by a middle dot) -->
+    <string name="artwork_filtered_active">Filtros: %1$s</string>
     <string name="artwork_filtered_none_cover">Nenhuma capa corresponde a estes filtros</string>
     <plurals name="artwork_filtered_has_cover">
-        <item quantity="one">%1$s tem %2$d capa no SteamGridDB, nenhuma corresponde a %3$s. Afrouxe um filtro ou busque por outro nome.</item>
-        <item quantity="many">%1$s tem %2$d capas no SteamGridDB, nenhuma delas corresponde a %3$s. Afrouxe um filtro ou busque por outro nome.</item>
-        <item quantity="other">%1$s tem %2$d capas no SteamGridDB, nenhuma delas corresponde a %3$s. Afrouxe um filtro ou busque por outro nome.</item>
+        <item quantity="one">%1$s tem %2$d capa no SteamGridDB, nenhuma corresponde aos seus filtros. Afrouxe um filtro ou busque por outro nome.</item>
+        <item quantity="many">%1$s tem %2$d capas no SteamGridDB, nenhuma delas corresponde aos seus filtros. Afrouxe um filtro ou busque por outro nome.</item>
+        <item quantity="other">%1$s tem %2$d capas no SteamGridDB, nenhuma delas corresponde aos seus filtros. Afrouxe um filtro ou busque por outro nome.</item>
     </plurals>
-    <string name="artwork_filtered_unknown_cover">Nenhuma das capas corresponde a %1$s. Afrouxe um filtro ou busque por outro nome.</string>
+    <string name="artwork_filtered_unknown_cover">Nenhuma das capas corresponde aos seus filtros. Afrouxe um filtro ou busque por outro nome.</string>
     <string name="artwork_empty_cover">O SteamGridDB ainda não tem capa para este jogo.</string>
     <string name="artwork_downloading_cover">Baixando a capa…</string>
     <string name="artwork_updated_cover">Capa atualizada</string>
@@ -95,11 +97,11 @@
     </plurals>
     <string name="artwork_filtered_none_wide">Nenhuma capa larga corresponde a estes filtros</string>
     <plurals name="artwork_filtered_has_wide">
-        <item quantity="one">%1$s tem %2$d capa larga no SteamGridDB, nenhuma corresponde a %3$s. Afrouxe um filtro ou busque por outro nome.</item>
-        <item quantity="many">%1$s tem %2$d capas largas no SteamGridDB, nenhuma delas corresponde a %3$s. Afrouxe um filtro ou busque por outro nome.</item>
-        <item quantity="other">%1$s tem %2$d capas largas no SteamGridDB, nenhuma delas corresponde a %3$s. Afrouxe um filtro ou busque por outro nome.</item>
+        <item quantity="one">%1$s tem %2$d capa larga no SteamGridDB, nenhuma corresponde aos seus filtros. Afrouxe um filtro ou busque por outro nome.</item>
+        <item quantity="many">%1$s tem %2$d capas largas no SteamGridDB, nenhuma delas corresponde aos seus filtros. Afrouxe um filtro ou busque por outro nome.</item>
+        <item quantity="other">%1$s tem %2$d capas largas no SteamGridDB, nenhuma delas corresponde aos seus filtros. Afrouxe um filtro ou busque por outro nome.</item>
     </plurals>
-    <string name="artwork_filtered_unknown_wide">Nenhuma das capas largas corresponde a %1$s. Afrouxe um filtro ou busque por outro nome.</string>
+    <string name="artwork_filtered_unknown_wide">Nenhuma das capas largas corresponde aos seus filtros. Afrouxe um filtro ou busque por outro nome.</string>
     <string name="artwork_empty_wide">O SteamGridDB ainda não tem capa larga para este jogo.</string>
     <string name="artwork_downloading_wide">Baixando a capa larga…</string>
     <string name="artwork_updated_wide">Capa larga atualizada</string>
@@ -121,11 +123,11 @@
     </plurals>
     <string name="artwork_filtered_none_hero">Nenhum plano de fundo corresponde a estes filtros</string>
     <plurals name="artwork_filtered_has_hero">
-        <item quantity="one">%1$s tem %2$d plano de fundo no SteamGridDB, nenhum corresponde a %3$s. Afrouxe um filtro ou busque por outro nome.</item>
-        <item quantity="many">%1$s tem %2$d planos de fundo no SteamGridDB, nenhum deles corresponde a %3$s. Afrouxe um filtro ou busque por outro nome.</item>
-        <item quantity="other">%1$s tem %2$d planos de fundo no SteamGridDB, nenhum deles corresponde a %3$s. Afrouxe um filtro ou busque por outro nome.</item>
+        <item quantity="one">%1$s tem %2$d plano de fundo no SteamGridDB, nenhum corresponde aos seus filtros. Afrouxe um filtro ou busque por outro nome.</item>
+        <item quantity="many">%1$s tem %2$d planos de fundo no SteamGridDB, nenhum deles corresponde aos seus filtros. Afrouxe um filtro ou busque por outro nome.</item>
+        <item quantity="other">%1$s tem %2$d planos de fundo no SteamGridDB, nenhum deles corresponde aos seus filtros. Afrouxe um filtro ou busque por outro nome.</item>
     </plurals>
-    <string name="artwork_filtered_unknown_hero">Nenhum dos planos de fundo corresponde a %1$s. Afrouxe um filtro ou busque por outro nome.</string>
+    <string name="artwork_filtered_unknown_hero">Nenhum dos planos de fundo corresponde aos seus filtros. Afrouxe um filtro ou busque por outro nome.</string>
     <string name="artwork_empty_hero">O SteamGridDB ainda não tem plano de fundo para este jogo.</string>
     <string name="artwork_downloading_hero">Baixando o plano de fundo…</string>
     <string name="artwork_updated_hero">Plano de fundo atualizado</string>
@@ -147,11 +149,11 @@
     </plurals>
     <string name="artwork_filtered_none_logo">Nenhum logo corresponde a estes filtros</string>
     <plurals name="artwork_filtered_has_logo">
-        <item quantity="one">%1$s tem %2$d logo no SteamGridDB, nenhum corresponde a %3$s. Afrouxe um filtro ou busque por outro nome.</item>
-        <item quantity="many">%1$s tem %2$d logos no SteamGridDB, nenhum deles corresponde a %3$s. Afrouxe um filtro ou busque por outro nome.</item>
-        <item quantity="other">%1$s tem %2$d logos no SteamGridDB, nenhum deles corresponde a %3$s. Afrouxe um filtro ou busque por outro nome.</item>
+        <item quantity="one">%1$s tem %2$d logo no SteamGridDB, nenhum corresponde aos seus filtros. Afrouxe um filtro ou busque por outro nome.</item>
+        <item quantity="many">%1$s tem %2$d logos no SteamGridDB, nenhum deles corresponde aos seus filtros. Afrouxe um filtro ou busque por outro nome.</item>
+        <item quantity="other">%1$s tem %2$d logos no SteamGridDB, nenhum deles corresponde aos seus filtros. Afrouxe um filtro ou busque por outro nome.</item>
     </plurals>
-    <string name="artwork_filtered_unknown_logo">Nenhum dos logos corresponde a %1$s. Afrouxe um filtro ou busque por outro nome.</string>
+    <string name="artwork_filtered_unknown_logo">Nenhum dos logos corresponde aos seus filtros. Afrouxe um filtro ou busque por outro nome.</string>
     <string name="artwork_empty_logo">O SteamGridDB ainda não tem logo para este jogo.</string>
     <string name="artwork_downloading_logo">Baixando o logo…</string>
     <string name="artwork_updated_logo">Logo atualizado</string>

@@ -61,11 +61,13 @@
     <plurals name="artwork_count_of_cover">
         <item quantity="other">%2$d 个封面中的 %1$d 个</item>
     </plurals>
+    <!-- Under the sentence when filters hide every image. %1$s: the active filters (their own labels, separated by a middle dot) -->
+    <string name="artwork_filtered_active">筛选条件：%1$s</string>
     <string name="artwork_filtered_none_cover">没有符合这些筛选条件的封面</string>
     <plurals name="artwork_filtered_has_cover">
-        <item quantity="other">%1$s 在 SteamGridDB 上有 %2$d 个封面，但没有一个符合 %3$s。请放宽筛选条件，或换个名称搜索。</item>
+        <item quantity="other">%1$s 在 SteamGridDB 上有 %2$d 个封面，但没有一个符合筛选条件。请放宽筛选条件，或换个名称搜索。</item>
     </plurals>
-    <string name="artwork_filtered_unknown_cover">没有符合 %1$s 的封面。请放宽筛选条件，或换个名称搜索。</string>
+    <string name="artwork_filtered_unknown_cover">没有符合筛选条件 的封面。请放宽筛选条件，或换个名称搜索。</string>
     <string name="artwork_empty_cover">SteamGridDB 上暂无此游戏的封面。</string>
     <string name="artwork_downloading_cover">正在下载封面…</string>
     <string name="artwork_updated_cover">封面已更新</string>
@@ -81,9 +83,9 @@
     </plurals>
     <string name="artwork_filtered_none_wide">没有符合这些筛选条件的宽封面</string>
     <plurals name="artwork_filtered_has_wide">
-        <item quantity="other">%1$s 在 SteamGridDB 上有 %2$d 个宽封面，但没有一个符合 %3$s。请放宽筛选条件，或换个名称搜索。</item>
+        <item quantity="other">%1$s 在 SteamGridDB 上有 %2$d 个宽封面，但没有一个符合筛选条件。请放宽筛选条件，或换个名称搜索。</item>
     </plurals>
-    <string name="artwork_filtered_unknown_wide">没有符合 %1$s 的宽封面。请放宽筛选条件，或换个名称搜索。</string>
+    <string name="artwork_filtered_unknown_wide">没有符合筛选条件 的宽封面。请放宽筛选条件，或换个名称搜索。</string>
     <string name="artwork_empty_wide">SteamGridDB 上暂无此游戏的宽封面。</string>
     <string name="artwork_downloading_wide">正在下载宽封面…</string>
     <string name="artwork_updated_wide">宽封面已更新</string>
@@ -99,9 +101,9 @@
     </plurals>
     <string name="artwork_filtered_none_hero">没有符合这些筛选条件的背景图</string>
     <plurals name="artwork_filtered_has_hero">
-        <item quantity="other">%1$s 在 SteamGridDB 上有 %2$d 个背景图，但没有一个符合 %3$s。请放宽筛选条件，或换个名称搜索。</item>
+        <item quantity="other">%1$s 在 SteamGridDB 上有 %2$d 个背景图，但没有一个符合筛选条件。请放宽筛选条件，或换个名称搜索。</item>
     </plurals>
-    <string name="artwork_filtered_unknown_hero">没有符合 %1$s 的背景图。请放宽筛选条件，或换个名称搜索。</string>
+    <string name="artwork_filtered_unknown_hero">没有符合筛选条件 的背景图。请放宽筛选条件，或换个名称搜索。</string>
     <string name="artwork_empty_hero">SteamGridDB 上暂无此游戏的背景图。</string>
     <string name="artwork_downloading_hero">正在下载背景图…</string>
     <string name="artwork_updated_hero">背景图已更新</string>
@@ -117,9 +119,9 @@
     </plurals>
     <string name="artwork_filtered_none_logo">没有符合这些筛选条件的标志</string>
     <plurals name="artwork_filtered_has_logo">
-        <item quantity="other">%1$s 在 SteamGridDB 上有 %2$d 个标志，但没有一个符合 %3$s。请放宽筛选条件，或换个名称搜索。</item>
+        <item quantity="other">%1$s 在 SteamGridDB 上有 %2$d 个标志，但没有一个符合筛选条件。请放宽筛选条件，或换个名称搜索。</item>
     </plurals>
-    <string name="artwork_filtered_unknown_logo">没有符合 %1$s 的标志。请放宽筛选条件，或换个名称搜索。</string>
+    <string name="artwork_filtered_unknown_logo">没有符合筛选条件 的标志。请放宽筛选条件，或换个名称搜索。</string>
     <string name="artwork_empty_logo">SteamGridDB 上暂无此游戏的标志。</string>
     <string name="artwork_downloading_logo">正在下载标志…</string>
     <string name="artwork_updated_logo">标志已更新</string>

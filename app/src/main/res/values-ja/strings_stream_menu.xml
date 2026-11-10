@@ -71,10 +71,6 @@
     <string name="stream_menu_bitrate_rejected">ホストが変更を適用できませんでした。</string>
     <string name="stream_menu_bitrate_rejected_detail">ホストが変更を適用できませんでした：%1$s</string>
 
-    <string name="stream_stats_top_left">左上</string>
-    <string name="stream_stats_top_right">右上</string>
-    <string name="stream_stats_bottom_left">左下</string>
-    <string name="stream_stats_bottom_right">右下</string>
     <string name="stream_stats_compact_low">下位1%% %1$d</string>
     <string name="stream_stats_compact_tail">ネットワーク %1$d ms  ·  デコード %2$s ms  ·  合計 %3$s ms  ·  欠落 %4$s %%</string>
     <string name="stream_stats_decoder">デコーダー</string>

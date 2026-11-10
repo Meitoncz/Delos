@@ -659,10 +659,10 @@ private fun NoImages(tab: ArtTab, filters: ArtFilters, ready: Choices.Ready, gam
         if (filters.active) {
             Symbol(Symbols.SEARCH, 90.tpx, colors.accent, filled = true)
             BasicText(stringResource(tab.none), style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 34.tpx, textAlign = TextAlign.Center))
-            val locale = res.configuration.locales[0]
-            val summary = ArtFilterRules.chips(filters).joinToString(" · ") { it.label(res).lowercase(locale) }
-            val explanation = ready.total?.let { pluralStringResource(tab.has, it, match?.name?.ifEmpty { null } ?: gameName, it, summary) } ?: stringResource(tab.unknown, summary)
+            val summary = ArtFilterRules.chips(filters).joinToString(" · ") { it.label(res) }
+            val explanation = ready.total?.let { pluralStringResource(tab.has, it, match?.name?.ifEmpty { null } ?: gameName, it) } ?: stringResource(tab.unknown)
             BasicText(explanation, style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 22.tpx, textAlign = TextAlign.Center), modifier = Modifier.width(820.px))
+            BasicText(stringResource(R.string.artwork_filtered_active, summary), style = TextStyle(color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx, textAlign = TextAlign.Center), modifier = Modifier.width(820.px))
             Row(horizontalArrangement = Arrangement.spacedBy(16.px)) {
                 PillButton(stringResource(R.string.filters_art_reset), Symbols.RESET, onReset, compact = true, trailing = { GlyphButton(Glyph.X, 32) })
                 PillButton(stringResource(R.string.filters_art_change), Symbols.FILTER, onChange, compact = true, clickCue = null, trailing = { GlyphButton(Glyph.Y, 32) })

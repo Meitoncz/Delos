@@ -67,13 +67,15 @@
         <item quantity="many">%1$d sur %2$d de jaquettes</item>
         <item quantity="other">%1$d sur %2$d jaquettes</item>
     </plurals>
+    <!-- Under the sentence when filters hide every image. %1$s: the active filters (their own labels, separated by a middle dot) -->
+    <string name="artwork_filtered_active">Filtres : %1$s</string>
     <string name="artwork_filtered_none_cover">Aucune jaquette ne correspond à ces filtres</string>
     <plurals name="artwork_filtered_has_cover">
-        <item quantity="one">%1$s a %2$d jaquette sur SteamGridDB, mais aucune ne correspond à %3$s. Assouplis un filtre ou cherche sous un autre nom.</item>
-        <item quantity="many">%1$s a %2$d de jaquettes sur SteamGridDB, mais aucune ne correspond à %3$s. Assouplis un filtre ou cherche sous un autre nom.</item>
-        <item quantity="other">%1$s a %2$d jaquettes sur SteamGridDB, mais aucune ne correspond à %3$s. Assouplis un filtre ou cherche sous un autre nom.</item>
+        <item quantity="one">%1$s a %2$d jaquette sur SteamGridDB, mais aucune ne correspond à tes filtres. Assouplis un filtre ou cherche sous un autre nom.</item>
+        <item quantity="many">%1$s a %2$d de jaquettes sur SteamGridDB, mais aucune ne correspond à tes filtres. Assouplis un filtre ou cherche sous un autre nom.</item>
+        <item quantity="other">%1$s a %2$d jaquettes sur SteamGridDB, mais aucune ne correspond à tes filtres. Assouplis un filtre ou cherche sous un autre nom.</item>
     </plurals>
-    <string name="artwork_filtered_unknown_cover">Aucune des jaquettes ne correspond à %1$s. Assouplis un filtre ou cherche sous un autre nom.</string>
+    <string name="artwork_filtered_unknown_cover">Aucune des jaquettes ne correspond à tes filtres. Assouplis un filtre ou cherche sous un autre nom.</string>
     <string name="artwork_empty_cover">SteamGridDB n’a pas encore de jaquette pour ce jeu.</string>
     <string name="artwork_downloading_cover">Téléchargement de la jaquette…</string>
     <string name="artwork_updated_cover">Jaquette mise à jour</string>
@@ -95,11 +97,11 @@
     </plurals>
     <string name="artwork_filtered_none_wide">Aucune jaquette large ne correspond à ces filtres</string>
     <plurals name="artwork_filtered_has_wide">
-        <item quantity="one">%1$s a %2$d jaquette large sur SteamGridDB, mais aucune ne correspond à %3$s. Assouplis un filtre ou cherche sous un autre nom.</item>
-        <item quantity="many">%1$s a %2$d de jaquettes larges sur SteamGridDB, mais aucune ne correspond à %3$s. Assouplis un filtre ou cherche sous un autre nom.</item>
-        <item quantity="other">%1$s a %2$d jaquettes larges sur SteamGridDB, mais aucune ne correspond à %3$s. Assouplis un filtre ou cherche sous un autre nom.</item>
+        <item quantity="one">%1$s a %2$d jaquette large sur SteamGridDB, mais aucune ne correspond à tes filtres. Assouplis un filtre ou cherche sous un autre nom.</item>
+        <item quantity="many">%1$s a %2$d de jaquettes larges sur SteamGridDB, mais aucune ne correspond à tes filtres. Assouplis un filtre ou cherche sous un autre nom.</item>
+        <item quantity="other">%1$s a %2$d jaquettes larges sur SteamGridDB, mais aucune ne correspond à tes filtres. Assouplis un filtre ou cherche sous un autre nom.</item>
     </plurals>
-    <string name="artwork_filtered_unknown_wide">Aucune des jaquettes larges ne correspond à %1$s. Assouplis un filtre ou cherche sous un autre nom.</string>
+    <string name="artwork_filtered_unknown_wide">Aucune des jaquettes larges ne correspond à tes filtres. Assouplis un filtre ou cherche sous un autre nom.</string>
     <string name="artwork_empty_wide">SteamGridDB n’a pas encore de jaquette large pour ce jeu.</string>
     <string name="artwork_downloading_wide">Téléchargement de la jaquette large…</string>
     <string name="artwork_updated_wide">Jaquette large mise à jour</string>
@@ -121,11 +123,11 @@
     </plurals>
     <string name="artwork_filtered_none_hero">Aucun arrière-plan ne correspond à ces filtres</string>
     <plurals name="artwork_filtered_has_hero">
-        <item quantity="one">%1$s a %2$d arrière-plan sur SteamGridDB, mais aucune ne correspond à %3$s. Assouplis un filtre ou cherche sous un autre nom.</item>
-        <item quantity="many">%1$s a %2$d d’arrière-plans sur SteamGridDB, mais aucune ne correspond à %3$s. Assouplis un filtre ou cherche sous un autre nom.</item>
-        <item quantity="other">%1$s a %2$d arrière-plans sur SteamGridDB, mais aucune ne correspond à %3$s. Assouplis un filtre ou cherche sous un autre nom.</item>
+        <item quantity="one">%1$s a %2$d arrière-plan sur SteamGridDB, mais aucune ne correspond à tes filtres. Assouplis un filtre ou cherche sous un autre nom.</item>
+        <item quantity="many">%1$s a %2$d d’arrière-plans sur SteamGridDB, mais aucune ne correspond à tes filtres. Assouplis un filtre ou cherche sous un autre nom.</item>
+        <item quantity="other">%1$s a %2$d arrière-plans sur SteamGridDB, mais aucune ne correspond à tes filtres. Assouplis un filtre ou cherche sous un autre nom.</item>
     </plurals>
-    <string name="artwork_filtered_unknown_hero">Aucun des arrière-plans ne correspond à %1$s. Assouplis un filtre ou cherche sous un autre nom.</string>
+    <string name="artwork_filtered_unknown_hero">Aucun des arrière-plans ne correspond à tes filtres. Assouplis un filtre ou cherche sous un autre nom.</string>
     <string name="artwork_empty_hero">SteamGridDB n’a pas encore d’arrière-plan pour ce jeu.</string>
     <string name="artwork_downloading_hero">Téléchargement de l’arrière-plan…</string>
     <string name="artwork_updated_hero">Arrière-plan mis à jour</string>
@@ -147,11 +149,11 @@
     </plurals>
     <string name="artwork_filtered_none_logo">Aucun logo ne correspond à ces filtres</string>
     <plurals name="artwork_filtered_has_logo">
-        <item quantity="one">%1$s a %2$d logo sur SteamGridDB, mais aucune ne correspond à %3$s. Assouplis un filtre ou cherche sous un autre nom.</item>
-        <item quantity="many">%1$s a %2$d de logos sur SteamGridDB, mais aucune ne correspond à %3$s. Assouplis un filtre ou cherche sous un autre nom.</item>
-        <item quantity="other">%1$s a %2$d logos sur SteamGridDB, mais aucune ne correspond à %3$s. Assouplis un filtre ou cherche sous un autre nom.</item>
+        <item quantity="one">%1$s a %2$d logo sur SteamGridDB, mais aucune ne correspond à tes filtres. Assouplis un filtre ou cherche sous un autre nom.</item>
+        <item quantity="many">%1$s a %2$d de logos sur SteamGridDB, mais aucune ne correspond à tes filtres. Assouplis un filtre ou cherche sous un autre nom.</item>
+        <item quantity="other">%1$s a %2$d logos sur SteamGridDB, mais aucune ne correspond à tes filtres. Assouplis un filtre ou cherche sous un autre nom.</item>
     </plurals>
-    <string name="artwork_filtered_unknown_logo">Aucun des logos ne correspond à %1$s. Assouplis un filtre ou cherche sous un autre nom.</string>
+    <string name="artwork_filtered_unknown_logo">Aucun des logos ne correspond à tes filtres. Assouplis un filtre ou cherche sous un autre nom.</string>
     <string name="artwork_empty_logo">SteamGridDB n’a pas encore de logo pour ce jeu.</string>
     <string name="artwork_downloading_logo">Téléchargement du logo…</string>
     <string name="artwork_updated_logo">Logo mis à jour</string>
