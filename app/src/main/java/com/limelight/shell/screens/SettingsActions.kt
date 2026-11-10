@@ -1,6 +1,8 @@
 package com.limelight.shell.screens
 
 import android.content.Intent
+import androidx.annotation.StringRes
+import com.limelight.R
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -24,6 +26,7 @@ import com.limelight.shell.settings.SettingSpec
 import com.limelight.shell.settings.StreamSettingsStore
 import com.limelight.shell.settings.ProfileLayouts
 import com.limelight.shell.ui.Symbols
+import com.limelight.shell.ui.textResources
 import com.limelight.utils.ToastKind
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -31,10 +34,14 @@ import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 
+/** An import that failed for a reason the user can act on; [text] is the string that says why. */
+private class LayoutFileException(@StringRes val text: Int) : Exception()
+
 /** Existing reset, import, export and help actions, exposed without the old settings activity. */
 @Composable
 internal fun settingsActions(profiles: ProfileStore, stream: StreamSettingsStore): (SettingSpec) -> Unit {
     val context = LocalContext.current
+    val res = textResources()
     val shell = LocalShell.current
     val tracker = LocalFocusTracker.current
     val scope = rememberCoroutineScope()
@@ -55,13 +62,13 @@ internal fun settingsActions(profiles: ProfileStore, stream: StreamSettingsStore
                         }
                         output.toByteArray()
                     }
-                        ?: error("The file could not be opened")
-                    require(bytes.size <= 1_048_576) { "The file is too large" }
+                        ?: throw LayoutFileException(R.string.settings_actions_file_open_failed)
+                    if (bytes.size > 1_048_576) throw LayoutFileException(R.string.settings_actions_file_too_large)
                     val json = JSONObject(bytes.toString(Charsets.UTF_8))
                     if (importing == "import_keyboard_file") {
                         val values = json.keys().asSequence().associateWith { key ->
                             val value = json.get(key)
-                            require(value is String) { "The layout must contain text values" }
+                            if (value !is String) throw LayoutFileException(R.string.settings_actions_layout_not_text)
                             value
                         }
                         ProfileLayouts.preferences(context, layout).edit().apply {
@@ -69,59 +76,59 @@ internal fun settingsActions(profiles: ProfileStore, stream: StreamSettingsStore
                             values.forEach { (key, value) -> putString(key, value) }
                         }.apply()
                     } else {
-                        require(json.optJSONArray("data") != null) { "The file has no shortcut data" }
+                        if (json.optJSONArray("data") == null) throw LayoutFileException(R.string.settings_actions_no_shortcut_data)
                         ProfileLayouts.preferences(context, GameMenu.PREF_NAME).edit()
                             .putString(GameMenu.KEY_NAME, json.toString()).apply()
                     }
                 }
             }
-            shell.showToast(result.fold({ "Imported" }, { it.message ?: "Import failed" }), if (result.isSuccess) Symbols.CHECK_CIRCLE else Symbols.ERROR)
+            shell.showToast(res.getString(result.exceptionOrNull()?.let { (it as? LayoutFileException)?.text ?: R.string.settings_actions_import_failed } ?: R.string.settings_actions_imported), if (result.isSuccess) Symbols.CHECK_CIRCLE else Symbols.ERROR)
         }
     }
     val exportFile = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         if (uri != null) scope.launch {
             val result = withContext(Dispatchers.IO) {
                 runCatching {
-                    val output = context.contentResolver.openOutputStream(uri) ?: error("The file could not be opened")
+                    val output = context.contentResolver.openOutputStream(uri) ?: error("The file could not be opened") // l10n-ignore: never shown, any failure reads "Export failed"
                     output.bufferedWriter().use { it.write(exported) }
                 }
             }
-            shell.showToast(if (result.isSuccess) "Layout exported" else "Export failed", if (result.isSuccess) Symbols.CHECK_CIRCLE else Symbols.ERROR)
+            shell.showToast(res.getString(if (result.isSuccess) R.string.settings_actions_exported else R.string.settings_actions_export_failed), if (result.isSuccess) Symbols.CHECK_CIRCLE else Symbols.ERROR)
         }
     }
     return { spec ->
         when (spec.key) {
             "option_reset_osc_preference" -> {
                 ProfileLayouts.preferences(context, VirtualControllerConfigurationLoader.OSC_PREFERENCE).edit().clear().apply()
-                shell.showToast("On-screen controls reset", Symbols.RESET, kind = ToastKind.SUCCESS)
+                shell.showToast(res.getString(R.string.settings_actions_osc_reset), Symbols.RESET, kind = ToastKind.SUCCESS)
             }
             "option_reset_osc" -> {
                 val name = profiles.settings().getString("keyboard_axi_list", "OSC_Keyboard")!!
                 ProfileLayouts.preferences(context, name).edit().clear().apply()
-                shell.showToast("Keyboard layout reset", Symbols.RESET, kind = ToastKind.SUCCESS)
+                shell.showToast(res.getString(R.string.settings_actions_keyboard_reset), Symbols.RESET, kind = ToastKind.SUCCESS)
             }
             "import_keyboard_file", "import_special_button_file" -> {
                 importing = spec.key
                 layout = profiles.settings().getString("keyboard_axi_list", "OSC_Keyboard")!!
                 runCatching { importFile.launch(arrayOf("application/json", "text/plain")) }
-                    .onFailure { shell.showToast("No file picker available", Symbols.ERROR) }
+                    .onFailure { shell.showToast(res.getString(R.string.settings_actions_no_file_picker), Symbols.ERROR) }
             }
             "export_keyboard_file" -> {
                 val name = profiles.settings().getString("keyboard_axi_list", "OSC_Keyboard")!!
                 exported = JSONObject(ProfileLayouts.preferences(context, name).all).toString(2)
-                runCatching { exportFile.launch("$name.json") }.onFailure { shell.showToast("No file picker available", Symbols.ERROR) }
+                runCatching { exportFile.launch("$name.json") }.onFailure { shell.showToast(res.getString(R.string.settings_actions_no_file_picker), Symbols.ERROR) }
             }
             "pref_debug_info" -> shell.navigate(Screen.DebugInfo)
             else -> if (spec.url != null) {
                 runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(spec.url))) }
-                    .onFailure { shell.showToast("No app can open this link", Symbols.ERROR) }
+                    .onFailure { shell.showToast(res.getString(R.string.settings_actions_no_app_for_link), Symbols.ERROR) }
             } else {
                 shell.openLayer(Layer.Dialog(DialogSpec(
                     spec.label, spec.description,
                     listOf(DialogField(spec.icon, initial = stream.value(spec)?.toString() ?: "", maxLength = 32)),
-                    "Save",
+                    res.getString(R.string.settings_actions_save),
                 ) { (text) ->
-                    val error = stream.writeText(spec, text)
+                    val error = stream.writeText(res, spec, text)
                     if (error != null) shell.showToast(error, Symbols.ERROR)
                     error == null
                 }), tracker)
