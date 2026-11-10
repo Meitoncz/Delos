@@ -1,5 +1,7 @@
 # Delos semantic name = Phosphor icon name (Regular and Fill, MIT).
 # Source: https://github.com/phosphor-icons/web/tree/v2.1.2
+# `name = tabler:<glyph>` takes the glyph from Tabler Icons 3.51.0 (MIT, https://github.com/tabler/tabler-icons)
+# instead; only where no Phosphor glyph fits the meaning (docs/ICONS.md, docs/ICON_AUDIT.md).
 # Keep semantic names stable; run subset_fonts.py --icons-only after editing.
 
 # Status bar
@@ -78,7 +80,7 @@ waving_hand = hand-waving
 download = download-simple
 fast_forward = fast-forward
 group = users-three
-hdr_on = sparkle
+hdr_on = tabler:hdr
 high_quality = high-definition
 image = image
 photo_library = images
@@ -118,6 +120,7 @@ surround_sound = speaker-hifi
 timer = timer
 tune = sliders-horizontal
 vibration = vibrate
+vibration_motor = tabler:circuit-motor
 view_carousel = cards-three
 view_compact = squares-four
 
@@ -168,7 +171,7 @@ analog_scroll = mouse-scroll
 gamepad_buttons = circles-four
 touchpad = hand-pointing
 touch_gestures = hand-swipe-left
-motion_sensors = compass
+motion_sensors = tabler:rotate-3d
 motion_fallback = navigation-arrow
 device_motion = device-mobile
 cursor = cursor
@@ -221,7 +224,7 @@ hdr_unknown = seal-question
 smoothing = bezier-curve
 joycon_fix = wrench
 preset = playlist
-device_vibration = device-mobile-speaker
+device_vibration = tabler:device-mobile-vibration
 device_force = hand-fist
 strength = faders
 haptics = bell-ringing

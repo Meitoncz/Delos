@@ -239,7 +239,7 @@ fun DebugInfoScreen() {
             "The Linux kernel version.", System.getProperty("os.version")))
         add(DebugRow("model", "Device", Symbols.DEVICE_MODEL, "Device", RowValue.Info("${DeviceUtils.getManufacturer()} ${DeviceUtils.getModel()}"),
             "The manufacturer and model.", "Board: ${Build.BOARD}\nHardware: ${Build.HARDWARE}\nSoC: ${if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) "${Build.SOC_MANUFACTURER} ${Build.SOC_MODEL}" else "unknown"}\nBuild: ${Build.DISPLAY}"))
-        add(DebugRow("motor", "Device", Symbols.VIBRATION, "Vibration motor", RowValue.Info(if (hasMotor) "Yes" else "No"),
+        add(DebugRow("motor", "Device", Symbols.VIBRATION_MOTOR, "Vibration motor", RowValue.Info(if (hasMotor) "Yes" else "No"),
             if (hasMotor) "This device can vibrate." else "This device has no vibration motor."))
         // Why an experimental preset is unavailable
         add(DebugRow("cap_vibrators", "Device haptic capabilities", Symbols.VIBRATORS, "Vibrators",
