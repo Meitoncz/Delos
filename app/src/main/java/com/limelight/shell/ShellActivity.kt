@@ -1,6 +1,8 @@
 package com.limelight.shell
 
 import android.content.Intent
+import android.content.Context
+import android.content.SharedPreferences
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.KeyEvent
@@ -31,6 +33,7 @@ import com.limelight.shell.data.PcSetup
 import com.limelight.shell.data.ProfileStore
 import com.limelight.shell.settings.Appearance
 import com.limelight.shell.settings.AppearanceStore
+import com.limelight.shell.settings.AppLanguage
 import com.limelight.shell.settings.StartupStore
 import com.limelight.shell.ui.Feedback
 import com.limelight.shell.ui.LocalDelosColors
@@ -57,11 +60,22 @@ class ShellActivity : ComponentActivity() {
     private lateinit var profiles: ProfileStore
     private val keys = GlobalKeys()
 
+    /** The Language row's preference (the current profile's). The app locale is the truth; the row mirrors it ([AppLanguage]). */
+    private var languageSettings: SharedPreferences? = null
+    private val languageListener = SharedPreferences.OnSharedPreferenceChangeListener { prefs, key ->
+        AppLanguage.onPreferenceChanged(this, prefs, key)
+    }
+
     /** A link or shortcut the shell still has to handle (from the intent that started or reached it). */
     private val links = MutableStateFlow<ShellLink?>(null)
 
     /** The result of a stream that ended on its own, which the shell still has to show (once). */
     private val results = MutableStateFlow<StreamResult?>(null)
+
+    // Android 10-12: puts the saved app language on this activity's resources (a no-op on Android 13+, where the system does it)
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(AppLanguage.wrap(newBase))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -73,6 +87,7 @@ class ShellActivity : ComponentActivity() {
         feedback = Feedback(this)
         // Everything below reads the current profile's settings
         profiles = ProfileStore(this)
+        bindLanguage()
         appearance = AppearanceStore(this, profiles::settings)
         repo = PcRepository(this, profiles::settings)
         val shell = ShellState(if (profiles.profiles.value.all.isEmpty()) Screen.Boot() else Screen.Start)
@@ -81,6 +96,7 @@ class ShellActivity : ComponentActivity() {
         val startup = StartupStore(profiles::settings)
         profiles.onSettingsChanged {
             appearance.reload()
+            bindLanguage()
             startup.reload()
             metadata.reloadFilters()
             repo.profileChanged()
@@ -121,7 +137,17 @@ class ShellActivity : ComponentActivity() {
     @SuppressLint("RestrictedApi")
     override fun dispatchKeyEvent(event: KeyEvent): Boolean = keys.dispatch(event) || super.dispatchKeyEvent(event)
 
+    /** Follows the current profile's settings for the Language row: it shows the app language, and choosing there sets it. */
+    private fun bindLanguage() {
+        languageSettings?.unregisterOnSharedPreferenceChangeListener(languageListener)
+        val settings = profiles.settings()
+        languageSettings = settings
+        AppLanguage.mirror(this, settings)
+        settings.registerOnSharedPreferenceChangeListener(languageListener)
+    }
+
     override fun onDestroy() {
+        languageSettings?.unregisterOnSharedPreferenceChangeListener(languageListener)
         profiles.streamProfiles.close()
         repo.unbind()
         feedback.release()
@@ -130,6 +156,7 @@ class ShellActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        languageSettings?.let { AppLanguage.mirror(this, it) }
         profiles.streamProfiles.resume()
     }
 

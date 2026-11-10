@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.GameManager;
 import android.app.GameState;
-import android.app.LocaleManager;
 import android.app.UiModeManager;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -12,7 +11,6 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Insets;
 import android.os.Build;
-import android.os.LocaleList;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
 import android.util.TypedValue;
@@ -26,8 +24,6 @@ import com.limelight.LimeLog;
 import com.limelight.R;
 import com.limelight.nvstream.http.ComputerDetails;
 import com.limelight.preferences.PreferenceConfiguration;
-
-import java.util.Locale;
 
 public class UiHelper {
 
@@ -71,37 +67,6 @@ public class UiHelper {
 
     public static void notifyStreamEnded(Context context) {
         setGameModeStatus(context, false, false);
-    }
-
-    public static void setLocale(Activity activity)
-    {
-        String locale = PreferenceConfiguration.readPreferences(activity).language;
-        Configuration config = new Configuration(activity.getResources().getConfiguration());
-        if (locale.equals(PreferenceConfiguration.DEFAULT_LANGUAGE)) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                // On Android 13, migrate this non-default language setting into the OS native API
-                LocaleManager localeManager = activity.getSystemService(LocaleManager.class);
-                LocaleList systemLocales = localeManager.getSystemLocales();
-                if (!systemLocales.isEmpty()) {
-                    config.locale = systemLocales.get(0);
-                }
-            }
-        } else {
-            // We're handling some nasty non-standard devices which cannot set locale using system config correctly
-            // Some locales include both language and country which must be separated
-            // before calling the Locale constructor.
-            if (locale.contains("-"))
-            {
-                config.locale = new Locale(locale.substring(0, locale.indexOf('-')),
-                        locale.substring(locale.indexOf('-') + 1));
-            }
-            else
-            {
-                config.locale = new Locale(locale);
-            }
-        }
-
-        activity.getResources().updateConfiguration(config, activity.getResources().getDisplayMetrics());
     }
 
     public static void applyStatusBarPadding(View view) {

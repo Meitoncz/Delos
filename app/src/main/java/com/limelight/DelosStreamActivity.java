@@ -224,6 +224,12 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
         }
     };
 
+    // Android 10-12: puts the saved app language on this activity's resources (a no-op on Android 13+, where the system does it)
+    @Override
+    protected void attachBaseContext(android.content.Context newBase) {
+        super.attachBaseContext(com.limelight.shell.settings.AppLanguage.wrap(newBase));
+    }
+
     @SuppressLint({"MissingInflatedId", "ClickableViewAccessibility"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -243,8 +249,6 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
         instance = this;
         ActiveKeyboardInput.register(this);
         timerHandler = new Handler(Looper.getMainLooper());
-
-        UiHelper.setLocale(this);
 
         // We don't want a title bar
         requestWindowFeature(Window.FEATURE_NO_TITLE);
