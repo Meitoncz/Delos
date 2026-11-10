@@ -86,13 +86,18 @@ public class StreamSurfaceControllerTest {
 
     @Test
     public void liveUpscalerResizeFollowsModeOnlyOnEightBitOutput() {
-        assertEquals(Resize.LAYOUT, StreamSurfaceController.resizeForUpscaler(SDR, UpscalerMode.STANDARD));
-        assertEquals(Resize.LAYOUT, StreamSurfaceController.resizeForUpscaler(SDR, UpscalerMode.VIDEO_QUALITY));
-        assertEquals(Resize.STREAM, StreamSurfaceController.resizeForUpscaler(SDR, UpscalerMode.SHARPEN_ONLY));
-        assertEquals(Resize.STREAM, StreamSurfaceController.resizeForUpscaler(0, UpscalerMode.SHARPEN_ONLY));
-        assertEquals(Resize.NONE, StreamSurfaceController.resizeForUpscaler(HDR, UpscalerMode.STANDARD));
-        assertEquals(Resize.NONE, StreamSurfaceController.resizeForUpscaler(HDR, UpscalerMode.SHARPEN_ONLY));
-        assertEquals(Resize.NONE, StreamSurfaceController.resizeForUpscaler(MoonBridge.VIDEO_FORMAT_AV1_MAIN10, UpscalerMode.HIGH));
+        assertEquals(Resize.LAYOUT, StreamSurfaceController.resizeForUpscaler(SDR, true, UpscalerMode.STANDARD));
+        assertEquals(Resize.LAYOUT, StreamSurfaceController.resizeForUpscaler(SDR, true, UpscalerMode.VIDEO_QUALITY));
+        assertEquals(Resize.STREAM, StreamSurfaceController.resizeForUpscaler(SDR, true, UpscalerMode.SHARPEN_ONLY));
+        assertEquals(Resize.STREAM, StreamSurfaceController.resizeForUpscaler(0, true, UpscalerMode.SHARPEN_ONLY));
+        assertEquals(Resize.NONE, StreamSurfaceController.resizeForUpscaler(HDR, true, UpscalerMode.STANDARD));
+        assertEquals(Resize.NONE, StreamSurfaceController.resizeForUpscaler(HDR, true, UpscalerMode.SHARPEN_ONLY));
+        assertEquals(Resize.NONE, StreamSurfaceController.resizeForUpscaler(MoonBridge.VIDEO_FORMAT_AV1_MAIN10, true, UpscalerMode.HIGH));
+        // Off: back to the stream's size whatever the mode, except on 10-bit output
+        for (UpscalerMode mode : UpscalerMode.values()) {
+            assertEquals(mode.toString(), Resize.STREAM, StreamSurfaceController.resizeForUpscaler(SDR, false, mode));
+            assertEquals(mode.toString(), Resize.NONE, StreamSurfaceController.resizeForUpscaler(HDR, false, mode));
+        }
     }
 
     @Test
@@ -127,14 +132,24 @@ public class StreamSurfaceControllerTest {
     }
 
     @Test
-    public void disablingTheUpscalerOrTenBitOutputLeavesTheSurfaceAlone() {
+    public void disablingAScalingModeSetsTheSurfaceBackToTheStreamSizeBeforeTheDecoder() {
+        when(decoder.getActiveVideoFormat()).thenReturn(SDR);
+        controller.setUpscalingEnabled(true);
         controller.setUpscalingEnabled(false);
-        verify(decoder).setUpscalingEnabled(false);
-        verifyNoInteractions(view);
+        InOrder order = inOrder(holder, decoder);
+        order.verify(holder).setSizeFromLayout();
+        order.verify(decoder).setUpscalingEnabled(true);
+        order.verify(holder).setFixedSize(1280, 720);
+        order.verify(decoder).setUpscalingEnabled(false);
+    }
 
+    @Test
+    public void tenBitOutputLeavesTheSurfaceAlone() {
         when(decoder.getActiveVideoFormat()).thenReturn(HDR);
         controller.setUpscalingEnabled(true);
+        controller.setUpscalingEnabled(false);
         verify(decoder).setUpscalingEnabled(true);
+        verify(decoder).setUpscalingEnabled(false);
         verifyNoInteractions(holder);
     }
 

@@ -57,7 +57,7 @@ public final class StreamSurfaceController implements StreamSurfaceHost {
         NONE,
         /** A scaling mode draws into window-sized buffers. */
         LAYOUT,
-        /** Sharpen only draws at the stream's own size. */
+        /** Sharpen only, and the decoder without an upscaler, draw at the stream's own size. */
         STREAM
     }
 
@@ -85,9 +85,9 @@ public final class StreamSurfaceController implements StreamSurfaceHost {
         return upscalerEnabled && mode.scales() && !hdrRequested;
     }
 
-    static Resize resizeForUpscaler(int activeVideoFormat, UpscalerMode mode) {
+    static Resize resizeForUpscaler(int activeVideoFormat, boolean enabled, UpscalerMode mode) {
         if ((activeVideoFormat & MoonBridge.VIDEO_FORMAT_MASK_10BIT) != 0) return Resize.NONE;
-        return mode.scales() ? Resize.LAYOUT : Resize.STREAM;
+        return enabled && mode.scales() ? Resize.LAYOUT : Resize.STREAM;
     }
 
     /** The stream's own size as the SurfaceView's buffer size, or the display's when the preferences have none. */
@@ -241,11 +241,12 @@ public final class StreamSurfaceController implements StreamSurfaceHost {
 
     // Delos: an upscaler on 8-bit output draws into window-sized buffers, so a scaling mode needs the surface at
     // the layout's size, but Sharpen only draws at the stream's own size and must not enlarge it (the pass would
-    // then cost the display's pixels instead of the stream's). 10-bit output has its own layer and is unaffected.
-    private void sizeStreamSurfaceForUpscaler(UpscalerMode mode) {
+    // then cost the display's pixels instead of the stream's). Without an upscaler the surface goes back to the
+    // stream's size, the size it starts with. 10-bit output has its own layer and is unaffected.
+    private void sizeStreamSurfaceForUpscaler(boolean enabled, UpscalerMode mode) {
         SurfaceView view = host.streamSurfaceView();
         if (view == null) return;
-        switch (resizeForUpscaler(decoder.getActiveVideoFormat(), mode)) {
+        switch (resizeForUpscaler(decoder.getActiveVideoFormat(), enabled, mode)) {
             case LAYOUT:
                 view.getHolder().setSizeFromLayout();
                 break;
@@ -259,7 +260,8 @@ public final class StreamSurfaceController implements StreamSurfaceHost {
 
     // Delos: live stream-menu controls; only the local decoder changes output, not the connection.
     public void setUpscalingEnabled(boolean enabled) {
-        if (enabled) sizeStreamSurfaceForUpscaler(prefConfig.sgsrMode);
+        // The surface first, as for a mode change: the decoder rebuilds its output stage on it
+        sizeStreamSurfaceForUpscaler(enabled, prefConfig.sgsrMode);
         decoder.setUpscalingEnabled(enabled);
     }
     public boolean isUpscalingRequested() { return decoder.isUpscalingRequested(); }
@@ -272,7 +274,7 @@ public final class StreamSurfaceController implements StreamSurfaceHost {
     }
     public void setUpscalingMode(int mode) {
         // The surface first: the renderer is rebuilt on it when the mode changes between scaling and not
-        if (decoder.isUpscalingRequested()) sizeStreamSurfaceForUpscaler(UpscalerMode.fromIndex(mode));
+        if (decoder.isUpscalingRequested()) sizeStreamSurfaceForUpscaler(true, UpscalerMode.fromIndex(mode));
         decoder.setUpscalingMode(mode);
     }
     public String getUpscalingStatus() { return decoder.getUpscalingStatus(); }
