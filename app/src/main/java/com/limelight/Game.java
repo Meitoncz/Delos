@@ -47,6 +47,7 @@ import com.limelight.profiles.ProfilesManager;
 import com.limelight.ui.ExternalControllerView;
 import com.limelight.ui.GameGestures;
 import com.limelight.ui.StreamContainer;
+import com.limelight.ui.StreamWindowController;
 import com.limelight.utils.ExternalDisplayControlActivity;
 import com.limelight.utils.PanZoomHandler;
 import com.limelight.utils.ServerHelper;
@@ -59,17 +60,14 @@ import com.limelight.utils.UiHelper;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
-import android.app.PictureInPictureParams;
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.graphics.Rect;
 import android.hardware.display.DisplayManager;
 import android.hardware.input.InputManager;
 import android.media.AudioManager;
@@ -80,7 +78,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
-import android.util.Rational;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.InputDevice;
@@ -91,7 +88,6 @@ import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.View.OnGenericMotionListener;
-import android.view.View.OnSystemUiVisibilityChangeListener;
 import android.view.View.OnTouchListener;
 import android.view.ViewParent;
 import android.view.Window;
@@ -122,7 +118,7 @@ import android.view.ViewGroup;
 
 public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         OnGenericMotionListener, OnTouchListener, NvConnectionListener, EvdevListener,
-        OnSystemUiVisibilityChangeListener, GameGestures, StreamContainer.InputCallbacks,
+        GameGestures, StreamContainer.InputCallbacks,
         ExternalControllerView.InputCallbacks,
         PerfOverlayListener, UsbDriverService.UsbDriverStateListener, ActiveKeyboardInput.Target {
     public static Game instance;
@@ -165,17 +161,14 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
     private int displayWidth;
     private int displayHeight;
-    private int currentOrientation;
 
     public NvConnection conn;
     private StreamLoader spinner;
     private boolean endedWithResult = false;
     private boolean connecting = false;
     public boolean connected = false;
-    private boolean autoEnterPip = false;
     private boolean surfaceCreated = false;
     private boolean attemptedConnection = false;
-    private int suppressPipRefCount = 0;
     private float desiredRefreshRate;
 
     private InputCaptureProvider inputCaptureProvider;
@@ -200,9 +193,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     private float lastAbsTouchDownX, lastAbsTouchDownY;
 
     private boolean quitOnStop = false;
-    private boolean isHidingOverlays;
     private TextView notificationOverlayView;
-    private int requestedNotificationOverlayVisibility = View.GONE;
     private View performanceOverlayView;
 
     private TextView performanceOverlayLite;
@@ -251,6 +242,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     private StreamIntentParams launch;
     private ViewParent rootView;
     private StreamClipboardSync clipboardSync;
+    private StreamWindowController windowController;
 
     private NvHTTP httpConn;
 
@@ -306,6 +298,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         // Read the stream preferences
         prefConfig = PreferenceConfiguration.readPreferences(this);
         tombstonePrefs = Game.this.getSharedPreferences("DecoderTombstone", 0);
+        windowController = new StreamWindowController(this, prefConfig, new WindowHost());
 
         // Delos: always full screen (immersive), the option is gone
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -320,7 +313,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);
 
         // Listen for UI visibility events
-        getWindow().getDecorView().setOnSystemUiVisibilityChangeListener(this);
+        getWindow().getDecorView().setOnSystemUiVisibilityChangeListener(windowController);
 
         // Change volume button behavior
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
@@ -347,7 +340,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
         // The loader of the new UI (the stream's half of the launch scene), with the system bars hidden from
         // the first frame, as in the new UI
-        hideSystemUi.run();
+        windowController.hideSystemUiNow();
         spinner = StreamLoader.show(this, prefConfig);
 
         Display currentDisplay = null;
@@ -372,23 +365,16 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             displayWidth = prefConfig.width;
             displayHeight = prefConfig.height;
             prefConfig.enablePip = false;
-            currentOrientation = Configuration.ORIENTATION_LANDSCAPE;
-            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE);
+            windowController.lockLandscape();
         } else {
-            if (prefConfig.autoOrientation) {
-                currentOrientation = getResources().getConfiguration().orientation;
-            } else {
-                currentOrientation = Configuration.ORIENTATION_LANDSCAPE;
-            }
-
-            boolean portraitMode = currentOrientation == Configuration.ORIENTATION_PORTRAIT;
+            boolean portraitMode = windowController.chooseOrientation() == Configuration.ORIENTATION_PORTRAIT;
             shouldInvertDecoderResolution = portraitMode && prefConfig.autoInvertVideoResolution;
 
             displayWidth = shouldInvertDecoderResolution ? prefConfig.height : prefConfig.width;
             displayHeight = shouldInvertDecoderResolution ? prefConfig.width : prefConfig.height;
 
             // Enter landscape unless we're on a square screen
-            setPreferredOrientationForActivity();
+            windowController.applyPreferredOrientation();
         }
 
 
@@ -881,187 +867,133 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         prefConfig.onscreenController= virtualController.switchShowHide() != 0;
     }
 
-    private void setPreferredOrientationForActivity() {
-        Display display = getActiveDisplay(Game.this, prefConfig);
-
-        // For semi-square displays, we use more complex logic to determine which orientation to use (if any)
-        if (PreferenceConfiguration.isSquarishScreen(display)) {
-            int desiredOrientation = Configuration.ORIENTATION_UNDEFINED;
-
-            // OSC doesn't properly support portrait displays, so don't use it in portrait mode by default
-            if (prefConfig.onscreenController) {
-                desiredOrientation = Configuration.ORIENTATION_LANDSCAPE;
-            }
-
-            // For native resolution, we will lock the orientation to the one that matches the specified resolution
-            if (PreferenceConfiguration.isNativeResolution(prefConfig.width, prefConfig.height)) {
-                if (displayWidth > displayHeight) {
-                    desiredOrientation = Configuration.ORIENTATION_LANDSCAPE;
-                }
-                else {
-                    desiredOrientation = Configuration.ORIENTATION_PORTRAIT;
-                }
-            }
-
-            if (desiredOrientation == Configuration.ORIENTATION_LANDSCAPE) {
-                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE);
-            }
-            else if (desiredOrientation == Configuration.ORIENTATION_PORTRAIT) {
-                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT);
-            }
-            else {
-                // If we don't have a reason to lock to portrait or landscape, allow any orientation
-                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_USER);
-            }
-        }
-        else {
-            // Lock to current orientation
-            if (currentOrientation == Configuration.ORIENTATION_LANDSCAPE) {
-                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE);
-            } else {
-                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT);
-            }
-        }
-    }
-
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-
-        // Set requested orientation for possible new screen size
-        setPreferredOrientationForActivity();
-
-        if (virtualController != null) {
-            // Refresh layout of OSC for possible new screen size
-            virtualController.refreshLayout();
-        }
-
-        if(keyBoardController != null){
-            keyBoardController.refreshLayout();
-        }
-
-        if(keyBoardLayoutController != null){
-            keyBoardLayoutController.refreshLayout();
-        }
-
-        // Hide on-screen overlays in PiP mode
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (isInPictureInPictureMode()) {
-                isHidingOverlays = true;
-
-                if (virtualController != null) {
-                    virtualController.hide(true);
-                }
-
-                if (keyBoardController != null && keyBoardController.shown) {
-                    keyBoardController.hide(true);
-                }
-
-                if (keyBoardLayoutController!=null && keyBoardLayoutController.shown) {
-                    keyBoardLayoutController.hide(true);
-                }
-
-                hideGameMenu();
-
-                performanceOverlayView.setVisibility(View.GONE);
-                notificationOverlayView.setVisibility(View.GONE);
-
-                // Disable sensors while in PiP mode
-                controllerHandler.disableSensors();
-
-                // Update GameManager state to indicate we're in PiP (still gaming, but interruptible)
-                UiHelper.notifyStreamEnteringPiP(this);
-            }
-            else {
-                isHidingOverlays = false;
-
-                // Restore overlays to previous state when leaving PiP
-
-                if (virtualController != null && virtualController.shown) {
-                    virtualController.show();
-                }
-
-                if (keyBoardController != null && keyBoardController.shown) {
-                    keyBoardController.show();
-                }
-
-                if(keyBoardLayoutController!=null && keyBoardLayoutController.shown){
-                    keyBoardLayoutController.show();
-                }
-
-                if (prefConfig.enablePerfOverlay) {
-                    performanceOverlayView.setVisibility(View.VISIBLE);
-                }
-
-                notificationOverlayView.setVisibility(requestedNotificationOverlayVisibility);
-
-                // Enable sensors again after exiting PiP
-                controllerHandler.enableSensors();
-
-                // Update GameManager state to indicate we're out of PiP (gaming, non-interruptible)
-                UiHelper.notifyStreamExitingPiP(this);
-            }
-        }
+        windowController.onConfigurationChanged();
     }
 
-    @TargetApi(Build.VERSION_CODES.O)
-    private PictureInPictureParams getPictureInPictureParams(boolean autoEnter) {
-        View view;
-        Rect hint;
-        if (prefConfig.videoScaleMode == PreferenceConfiguration.ScaleMode.FIT && streamContainer.getScaleX() == 1) {
-            view = streamContainer;
-        } else {
-            view = (View)rootView;
-        }
-
-        int[] viewLocation = new int[2];
-
-        view.getLocationOnScreen(viewLocation);
-
-        int left = viewLocation[0];
-        int top = viewLocation[1];
-        int width = view.getWidth();
-        int height = view.getHeight();
-        Rational aspectRatio = new Rational(width, height);
-        hint = new Rect(left, top, left + width, top + height);
-
-        PictureInPictureParams.Builder builder =
-                new PictureInPictureParams.Builder()
-                        .setAspectRatio(aspectRatio)
-                        .setSourceRectHint(hint);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            builder.setAutoEnterEnabled(autoEnter);
-            builder.setSeamlessResizeEnabled(true);
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (launch.appName != null) {
-                builder.setTitle(launch.appName);
-                if (launch.pcName != null) {
-                    builder.setSubtitle(launch.pcName);
-                }
-            }
-            else if (launch.pcName != null) {
-                builder.setTitle(launch.pcName);
-            }
-        }
-
-        return builder.build();
-    }
-
+    // Also called by PanZoomHandler when a zoom ends
     public void updatePipAutoEnter() {
-        if (!prefConfig.enablePip || isOnExternalDisplay()) {
-            return;
+        windowController.updatePipAutoEnter();
+    }
+
+    /** What StreamWindowController needs from the stream: sizes, views, and the controls to hide in PiP. */
+    private final class WindowHost implements StreamWindowController.Host {
+        @Override
+        public boolean isConnected() {
+            return connected;
         }
 
-        boolean autoEnter = connected && suppressPipRefCount == 0;
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            setPictureInPictureParams(getPictureInPictureParams(autoEnter));
+        @Override
+        public boolean isOnExternalDisplay() {
+            return Game.this.isOnExternalDisplay();
         }
-        else {
-            autoEnterPip = autoEnter;
+
+        @Override
+        public int videoWidth() {
+            return displayWidth;
+        }
+
+        @Override
+        public int videoHeight() {
+            return displayHeight;
+        }
+
+        @Override
+        public StreamContainer streamContainer() {
+            return streamContainer;
+        }
+
+        @Override
+        public View streamRoot() {
+            return (View) rootView;
+        }
+
+        @Override
+        public View performanceOverlay() {
+            return performanceOverlayView;
+        }
+
+        @Override
+        public View notificationOverlay() {
+            return notificationOverlayView;
+        }
+
+        @Override
+        public String appName() {
+            return launch.appName;
+        }
+
+        @Override
+        public String pcName() {
+            return launch.pcName;
+        }
+
+        @Override
+        public void refreshControlLayouts() {
+            if (virtualController != null) {
+                // Refresh layout of OSC for possible new screen size
+                virtualController.refreshLayout();
+            }
+
+            if(keyBoardController != null){
+                keyBoardController.refreshLayout();
+            }
+
+            if(keyBoardLayoutController != null){
+                keyBoardLayoutController.refreshLayout();
+            }
+        }
+
+        @Override
+        public void hideControlsForPip() {
+            if (virtualController != null) {
+                virtualController.hide(true);
+            }
+
+            if (keyBoardController != null && keyBoardController.shown) {
+                keyBoardController.hide(true);
+            }
+
+            if (keyBoardLayoutController!=null && keyBoardLayoutController.shown) {
+                keyBoardLayoutController.hide(true);
+            }
+
+            hideGameMenu();
+        }
+
+        @Override
+        public void restoreControlsAfterPip() {
+            if (virtualController != null && virtualController.shown) {
+                virtualController.show();
+            }
+
+            if (keyBoardController != null && keyBoardController.shown) {
+                keyBoardController.show();
+            }
+
+            if(keyBoardLayoutController!=null && keyBoardLayoutController.shown){
+                keyBoardLayoutController.show();
+            }
+        }
+
+        @Override
+        public void setControllerSensorsEnabled(boolean enabled) {
+            if (enabled) {
+                controllerHandler.enableSensors();
+            } else {
+                controllerHandler.disableSensors();
+            }
+        }
+
+        @Override
+        public void setVideoBackground(boolean background) {
+            if (background) {
+                decoderRenderer.notifyVideoBackground();
+            } else {
+                decoderRenderer.notifyVideoForeground();
+            }
         }
     }
 
@@ -1104,30 +1036,13 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     @Override
     public void onUserLeaveHint() {
         super.onUserLeaveHint();
-
-        // PiP is only supported on Oreo and later, and we don't need to manually enter PiP on
-        // Android S and later. On Android R, we will use onPictureInPictureRequested() instead.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-            if (autoEnterPip && !isOnExternalDisplay()) {
-                try {
-                    // This has thrown all sorts of weird exceptions on Samsung devices
-                    // running Oreo. Just eat them and close gracefully on leave, rather
-                    // than crashing.
-                    enterPictureInPictureMode(getPictureInPictureParams(false));
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }
+        windowController.onUserLeaveHint();
     }
 
     @Override
     @TargetApi(Build.VERSION_CODES.R)
     public boolean onPictureInPictureRequested() {
-        // Enter PiP when requested unless we're on Android 12 which supports auto-enter.
-        if (autoEnterPip && Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-            enterPictureInPictureMode(getPictureInPictureParams(false));
-        }
+        windowController.onPictureInPictureRequested();
         return true;
     }
 
@@ -1218,60 +1133,10 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         return plan;
     }
 
-    @SuppressLint("InlinedApi")
-    private final Runnable hideSystemUi = new Runnable() {
-        @Override
-        public void run() {
-            // TODO: Do we want to use WindowInsetsController here on R+ instead of
-            // SYSTEM_UI_FLAG_IMMERSIVE_STICKY? They seem to do the same thing as of S...
-
-            // In multi-window mode on N+, we need to drop our layout flags or we'll
-            // be drawing underneath the system UI.
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isInMultiWindowMode()) {
-                Game.this.getWindow().getDecorView().setSystemUiVisibility(
-                        View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
-            }
-            else {
-                // Use immersive mode
-                Game.this.getWindow().getDecorView().setSystemUiVisibility(
-                        View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
-                                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION |
-                                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
-                                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
-                                View.SYSTEM_UI_FLAG_FULLSCREEN |
-                                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-            }
-        }
-    };
-
-    private void hideSystemUi(int delay) {
-        Handler h = getWindow().getDecorView().getHandler();
-        if (h != null) {
-            h.removeCallbacks(hideSystemUi);
-            h.postDelayed(hideSystemUi, delay);
-        }
-    }
-
     @Override
-    @TargetApi(Build.VERSION_CODES.N)
     public void onMultiWindowModeChanged(boolean isInMultiWindowMode) {
         super.onMultiWindowModeChanged(isInMultiWindowMode);
-
-        // In multi-window, we don't want to use the full-screen layout
-        // flag. It will cause us to collide with the system UI.
-        // This function will also be called for PiP so we can cover
-        // that case here too.
-        if (isInMultiWindowMode) {
-            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-            decoderRenderer.notifyVideoBackground();
-        }
-        else {
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-            decoderRenderer.notifyVideoForeground();
-        }
-
-        // Correct the system UI visibility flags
-        hideSystemUi(50);
+        windowController.onMultiWindowModeChanged(isInMultiWindowMode);
     }
 
     @Override
@@ -2843,7 +2708,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     private void stopConnection() {
         if (connecting || connected) {
             connecting = connected = false;
-            updatePipAutoEnter();
+            windowController.updatePipAutoEnter();
 
             controllerHandler.stop();
 
@@ -2981,15 +2846,13 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                         notificationOverlayView.setText(getResources().getString(R.string.poor_connection_msg));
                     }
 
-                    requestedNotificationOverlayVisibility = View.VISIBLE;
+                    windowController.requestNotificationOverlayVisibility(View.VISIBLE);
                 }
                 else if (connectionStatus == MoonBridge.CONN_STATUS_OKAY) {
-                    requestedNotificationOverlayVisibility = View.GONE;
+                    windowController.requestNotificationOverlayVisibility(View.GONE);
                 }
 
-                if (!isHidingOverlays) {
-                    notificationOverlayView.setVisibility(requestedNotificationOverlayVisibility);
-                }
+                windowController.applyNotificationOverlayVisibility();
             }
         });
     }
@@ -3006,7 +2869,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
                 connected = true;
                 connecting = false;
-                updatePipAutoEnter();
+                windowController.updatePipAutoEnter();
 
                 // Hide the mouse cursor now after a short delay.
                 // Doing it before dismissing the spinner seems to be undone
@@ -3029,7 +2892,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                 // Sync local clipboard to host
                 handleFocusChange(true);
 
-                hideSystemUi(1000);
+                windowController.hideSystemUi(1000);
 
                 if (prefConfig.preventPacketLoss) {
                     timerHandler.postDelayed(backgroundPing, 1000);
@@ -3120,7 +2983,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (!isInPictureInPictureMode()) {
-                updatePipAutoEnter();
+                windowController.updatePipAutoEnter();
             }
         }
     }
@@ -3241,22 +3104,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     }
 
     @Override
-    public void onSystemUiVisibilityChange(int visibility) {
-        // Don't do anything if we're not connected
-        if (!connected) {
-            return;
-        }
-
-        // This flag is set for all devices
-        if ((visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) {
-            hideSystemUi(2000);
-        }
-        else if ((visibility & View.SYSTEM_UI_FLAG_HIDE_NAVIGATION) == 0) {
-            hideSystemUi(2000);
-        }
-    }
-
-    @Override
     public void onPerfStats(com.limelight.shell.StreamStats stats) {
         if (statsPanel != null) {
             statsPanel.update(stats);
@@ -3279,16 +3126,12 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
     @Override
     public void onUsbPermissionPromptStarting() {
-        // Disable PiP auto-enter while the USB permission prompt is on-screen. This prevents
-        // us from entering PiP while the user is interacting with the OS permission dialog.
-        suppressPipRefCount++;
-        updatePipAutoEnter();
+        windowController.beginPipSuppression();
     }
 
     @Override
     public void onUsbPermissionPromptCompleted() {
-        suppressPipRefCount--;
-        updatePipAutoEnter();
+        windowController.endPipSuppression();
     }
 
     @Override
