@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pairing_pc_title">Emparejar un PC</string>
+    <string name="pairing_pc_searching">Buscando en la red local…</string>
+    <string name="pairing_pc_none">Aún no se ha encontrado ningún PC. Inicia Vibepollo en tu PC o introduce su dirección.</string>
+    <plurals name="pairing_pc_found">
+        <item quantity="one">Delos ha encontrado %1$d PC en tu red.</item>
+        <item quantity="many">Delos ha encontrado %1$d PC en tu red.</item>
+        <item quantity="other">Delos ha encontrado %1$d PC en tu red.</item>
+    </plurals>
+    <string name="pairing_pc_paired_online">Emparejado · En línea</string>
+    <string name="pairing_pc_paired_offline">Emparejado · Sin conexión</string>
+    <string name="pairing_pc_ready">En línea · listo para emparejar</string>
+    <string name="pairing_pc_offline">Sin conexión</string>
+    <string name="pairing_pc_with_pin">Emparejar con PIN</string>
+    <string name="pairing_pc_with_code">Emparejar con un código de un solo uso</string>
+    <string name="pairing_pc_address">Introducir dirección</string>
+    <string name="pairing_pc_address_hint">IP o nombre de host</string>
+    <string name="pairing_pc_search_again">Buscar de nuevo</string>
+    <string name="pairing_pc_network">Red local</string>
+    <string name="pairing_pin_title">Introduce este PIN en %1$s</string>
+    <string name="pairing_pin_note">Abre la interfaz web de Vibepollo en tu PC, ve a PIN y escribe el código.</string>
+    <string name="pairing_code_title">Emparejando con %1$s</string>
+    <string name="pairing_code_note">Con el código de un solo uso de Vibepollo.</string>
+    <string name="pairing_pin_waiting">Esperando a Vibepollo…</string>
+    <string name="pairing_pin_accepted">PIN aceptado</string>
+    <string name="pairing_code_accepted">Código aceptado</string>
+    <string name="pairing_cancel">Cancelar</string>
+
+    <string name="pairing_failed_offline">%1$s está sin conexión</string>
+    <string name="pairing_failed_pin_wrong">El PIN era incorrecto, inténtalo de nuevo</string>
+    <string name="pairing_failed_code_wrong">El código o la frase de contraseña eran incorrectos</string>
+    <string name="pairing_failed_busy">%1$s ya se está emparejando con otro dispositivo</string>
+    <string name="pairing_failed_game_running">Cierra primero el juego en %1$s y vuelve a emparejar</string>
+    <string name="pairing_failed_not_found">No se encuentra %1$s</string>
+    <string name="pairing_failed_unsupported">%1$s no admite el emparejamiento</string>
+    <string name="pairing_failed">Error al emparejar con %1$s</string>
+
+    <string name="pairing_otp_title">Emparejar con un código de un solo uso</string>
+    <string name="pairing_otp_note">En la interfaz web de Vibepollo, crea un PIN de un solo uso con una frase de contraseña y escribe ambos aquí.</string>
+    <string name="pairing_otp_pin_hint">PIN</string>
+    <string name="pairing_otp_passphrase_hint">Frase de contraseña</string>
+    <string name="pairing_otp_action">Emparejar</string>
+    <string name="pairing_otp_pin_error">El PIN tiene 4 dígitos</string>
+    <string name="pairing_otp_passphrase_error">La frase de contraseña tiene al menos 4 caracteres</string>
+</resources>

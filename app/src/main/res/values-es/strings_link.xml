@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="link_transport_other">esta red</string>
+
+    <string name="link_age_just_now">ahora mismo</string>
+    <plurals name="link_age_minutes">
+        <item quantity="one">hace %d min</item>
+        <item quantity="many">hace %d min</item>
+        <item quantity="other">hace %d min</item>
+    </plurals>
+    <plurals name="link_age_hours">
+        <item quantity="one">hace %d h</item>
+        <item quantity="many">hace %d h</item>
+        <item quantity="other">hace %d h</item>
+    </plurals>
+    <string name="link_age_yesterday">ayer</string>
+    <plurals name="link_age_days">
+        <item quantity="one">hace %d día</item>
+        <item quantity="many">hace %d días</item>
+        <item quantity="other">hace %d días</item>
+    </plurals>
+    <plurals name="link_age_weeks">
+        <item quantity="one">hace %d semana</item>
+        <item quantity="many">hace %d semanas</item>
+        <item quantity="other">hace %d semanas</item>
+    </plurals>
+    <plurals name="link_age_months">
+        <item quantity="one">hace %d mes</item>
+        <item quantity="many">hace %d meses</item>
+        <item quantity="other">hace %d meses</item>
+    </plurals>
+    <string name="link_tested_summary">Probado %1$s en %2$s</string>
+
+    <string name="link_reason_untested">sin probar en este enlace</string>
+    <string name="link_reason_tested_ok">el enlace soporta hasta %1$s</string>
+    <string name="link_reason_tested_limited">el enlace soporta %1$s</string>
+    <string name="link_reason_host_limited">el enlace del PC es de %1$s</string>
+    <string name="link_reason_dropping">pierde fotogramas a %1$s</string>
+    <string name="link_recommended_line">Recomendado: %1$s · %2$s</string>
+    <string name="link_value_reason">%1$s · %2$s</string>
+    <string name="link_recommended_plain">Recomendado: %1$d Mbps</string>
+
+    <string name="link_test_action">Probar enlace</string>
+    <string name="link_test_row_untested">Aún sin probar en %1$s</string>
+    <string name="link_help_untested">Sin probar en %1$s. Probar enlace mide lo que soporta.</string>
+    <string name="link_help_joined">%1$s: %2$s</string>
+    <string name="link_help_tested_ok">soporta hasta %1$s; %2$s basta para %3$s.</string>
+    <string name="link_help_host_limited">soporta %1$s; el enlace del propio PC es el límite para %2$s.</string>
+    <string name="link_help_limited">soporta %1$s; %2$s necesita %3$s.</string>
+    <string name="link_help_limited_picture">soporta %1$s; %2$s necesita %3$s, unos %4$s de imagen tras FEC y sobrecarga.</string>
+    <string name="link_pc_offline_toast">%1$s está sin conexión</string>
+    <string name="link_test_detail">Mide lo que soporta esta red desde %1$s: tráfico de prueba durante unos 2 segundos por paso, a hasta varios cientos de Mbps. Quédate en %2$s, sin nada más en marcha.</string>
+    <string name="link_use_action">Usar el bitrate recomendado</string>
+    <string name="link_use_done_toast">Bitrate establecido en %1$s</string>
+    <string name="link_use_detail">Rellena el bitrate con %1$s: %2$s. Delos nunca cambia el bitrate por su cuenta.</string>
+
+    <string name="link_unavailable_newer_delos">Este PC necesita una versión más reciente de Delos para probar el enlace.</string>
+    <string name="link_unavailable_host_outdated">El Vibepollo de este PC aún no puede probar el enlace. Actualízalo.</string>
+
+    <string name="link_stream_help_dropping">El enlace pierde fotogramas a %1$s. A rellena el control deslizante, Aplicar lo envía.</string>
+    <string name="link_stream_help_dropping_untested">El enlace pierde fotogramas a %1$s. A rellena el control deslizante, Aplicar lo envía. Prueba el enlace en Ajustes antes de conectar.</string>
+    <string name="link_stream_help_tested">%1$s. A rellena el control deslizante, Aplicar lo envía.</string>
+    <string name="link_stream_help_untested">Aún sin probar. A rellena el control deslizante, Aplicar lo envía. Prueba el enlace en Ajustes antes de conectar.</string>
+
+    <string name="link_reading_measuring">Midiendo</string>
+    <string name="link_reading_keeps_up">El enlace aguanta a %1$s</string>
+    <string name="link_reading_drops">El enlace pierde fotogramas a %1$s, prueba %2$s</string>
+    <string name="link_reading_device_behind">El dispositivo omite fotogramas; el enlace va bien</string>
+
+    <string name="link_failure_host_unsupported">El Vibepollo de este PC no puede probar el enlace. Actualízalo.</string>
+    <string name="link_failure_stream_active">El PC está transmitiendo. Detén el stream y vuelve a probar.</string>
+    <string name="link_failure_denied">El PC no ha permitido la prueba. Vuelve a emparejar este dispositivo.</string>
+    <string name="link_failure_udp_blocked">No han llegado datos de prueba. Puede que UDP esté bloqueado en esta red.</string>
+    <string name="link_failure_network">Delos no ha podido conectar con el PC.</string>
+    <string name="link_failure_timeout">El PC no ha terminado la prueba a tiempo.</string>
+    <string name="link_failure_host_error">El PC no ha podido ejecutar la prueba.</string>
+    <string name="link_failure_invalid_response">El PC ha enviado un resultado de prueba inutilizable.</string>
+    <string name="link_failure_not_connected">Delos aún se está conectando a %1$s.</string>
+
+    <string name="link_verdict_receiver_suspect">Este dispositivo no pudo recibir %1$s a esa velocidad</string>
+    <string name="link_verdict_loss">Se perdió el %1$.1f%% de los paquetes de prueba a %2$s</string>
+    <string name="link_verdict_window_loss">Se perdió hasta el %1$.1f%% de los paquetes en 100 ms a %2$s</string>
+    <string name="link_verdict_delay_growth">El retardo no dejó de crecer a %1$s (el enlace hace cola)</string>
+    <string name="link_verdict_no_packets">No han llegado datos de prueba. Puede que UDP esté bloqueado en esta red</string>
+    <string name="link_verdict_not_all_sent">El PC envió solo el %1$.1f%% de los datos de prueba a %2$s</string>
+    <string name="link_verdict_sender_duration">La sincronización del PC falló durante la prueba</string>
+    <string name="link_verdict_passed">Superado a %1$s</string>
+    <string name="link_verdict_stable">Estable</string>
+    <string name="link_verdict_stable_jitter">Estable, con algo de jitter</string>
+    <string name="link_verdict_no_rate_tested">No se pudo probar ninguna velocidad</string>
+    <string name="link_no_rate_passed_once">%1$s. %2$s se superó una vez, pero no se mantuvo.</string>
+    <string name="link_no_rate_nothing_passed">%1$s. No se superó nada, ni siquiera %2$s.</string>
+    <string name="link_no_rate_plain">%1$s.</string>
+</resources>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shell_report_saved">Registro guardado en Descargas como %1$s. Adjúntalo a la incidencia.</string>
+    <string name="shell_report_save_failed">No se pudo guardar el registro. Compártelo desde Ajustes → Acerca de → Información de depuración.</string>
+    <string name="shell_report_no_browser">No hay ningún navegador disponible</string>
+    <string name="shell_retry_unreachable">No se puede acceder a %1$s</string>
+    <string name="shell_retry_game_missing">%1$s no está disponible en %2$s</string>
+    <string name="shell_retry_game_missing_unnamed">El juego no está disponible en %1$s</string>
+    <string name="shell_profile_updated">Perfil actualizado</string>
+    <string name="shell_welcome">Te damos la bienvenida, %1$s</string>
+    <string name="shell_game_unreachable">No se puede acceder a %1$s</string>
+    <string name="shell_game_virtual_display_missing">La pantalla virtual no está lista en %1$s · se transmite la pantalla principal</string>
+    <string name="shell_game_quitting">Cerrando %1$s…</string>
+</resources>

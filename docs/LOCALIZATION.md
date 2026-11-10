@@ -417,3 +417,28 @@ in `ui/SteamTags.kt`, which stage 1 decides on separately, and some developer me
 | `screens/OscPreviewScreen.kt` | 1 |
 | `ui/DialogLayer.kt` | 1 |
 | **Total** | **1605** |
+
+## Terminology: Spanish
+
+Neutral Spanish (Spain and Latin America), informal *tú*, infinitive for buttons, "vídeo" with accent as in the RAE.
+
+| English | Spanish |
+|---|---|
+| PC / host | PC (host only in technical error texts) |
+| stream (noun/verb) | stream / transmitir |
+| pair / unpair / pairing | emparejar / desemparejar / emparejamiento |
+| settings | ajustes |
+| library | biblioteca |
+| controller / gamepad | mando |
+| rumble / haptics | vibración / vibración háptica |
+| artwork / cover / wide cover / background | ilustraciones / portada / portada panorámica / fondo |
+| profile | perfil |
+| game quit / resume | cerrar juego / reanudar |
+| wake (a PC) | reactivar |
+| offline / online | sin conexión / en línea |
+| upscaler / supersampling / sharpness | escalador / supermuestreo / nitidez |
+| codec / bitrate / frame pacing | códec / bitrate / frame pacing |
+| Reset / Cancel / Done / Back | Restablecer / Cancelar / Hecho / Atrás |
+| Link test | Probar enlace / prueba de enlace |
+| Custom / Default | Personalizado / Predeterminado |
+| Debug info | Información de depuración |

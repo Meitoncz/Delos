@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stream_menu_hint_select">Seleccionar</string>
+    <string name="stream_menu_hint_back">Atrás</string>
+
+    <string name="stream_menu_tile_resume">Reanudar</string>
+    <string name="stream_menu_tile_keyboard">Teclado</string>
+    <string name="stream_menu_tile_overlay">Superposición</string>
+    <string name="stream_menu_tile_brightness">Brillo</string>
+    <string name="stream_menu_tile_bitrate">Bitrate</string>
+    <string name="stream_menu_tile_upscaler">Escalador</string>
+    <string name="stream_menu_tile_supersampling">Supermuestreo</string>
+    <string name="stream_menu_tile_more">Más</string>
+    <string name="stream_menu_tile_disconnect">Desconectar</string>
+    <string name="stream_menu_tile_quit">Cerrar juego</string>
+    <string name="stream_menu_overlay_compact">Compacta</string>
+
+    <string name="stream_menu_title_more">Más</string>
+    <string name="stream_menu_title_keys">Enviar teclas</string>
+    <string name="stream_menu_title_commands">Comandos del servidor</string>
+    <string name="stream_menu_title_brightness">Brillo</string>
+    <string name="stream_menu_title_bitrate">Bitrate del stream</string>
+    <string name="stream_menu_title_supersampling">Supermuestreo</string>
+    <string name="stream_menu_title_upscaler">Escalador</string>
+    <string name="stream_menu_title_mouse">Ratón y táctil</string>
+    <string name="stream_menu_title_rumble">Sensación de vibración</string>
+
+    <string name="stream_menu_row_send_keys">Enviar teclas</string>
+    <string name="stream_menu_row_send_clipboard">Enviar portapapeles</string>
+    <string name="stream_menu_row_get_clipboard">Obtener portapapeles</string>
+    <string name="stream_menu_row_commands">Comandos</string>
+    <string name="stream_menu_row_task_manager">Administrador de tareas</string>
+    <string name="stream_menu_row_zoom">Zoom</string>
+    <string name="stream_menu_row_mouse_mode">Modo de ratón</string>
+    <string name="stream_menu_row_onscreen_controls">Controles en pantalla</string>
+    <string name="stream_menu_row_android_keyboard">Abrir teclado de Android</string>
+    <string name="stream_menu_row_touch_sensitivity">Sensibilidad táctil</string>
+    <string name="stream_menu_row_rumble_feel">Sensación de vibración</string>
+    <string name="stream_menu_row_gyro_smoothing">Suavizado del giroscopio</string>
+    <string name="stream_menu_gyro_off">%1$d %% (desactivado)</string>
+    <string name="stream_menu_rumble_custom">Personalizada</string>
+
+    <string name="stream_menu_row_screen_brightness">Brillo de pantalla</string>
+    <string name="stream_menu_row_bitrate">Bitrate</string>
+    <string name="stream_menu_row_apply">Aplicar</string>
+    <string name="stream_menu_row_enabled">Activado</string>
+    <string name="stream_menu_row_supersampling_quality">Calidad del supermuestreo</string>
+    <string name="stream_menu_row_mode">Modo</string>
+    <string name="stream_menu_row_sharpness">Nitidez</string>
+    <string name="stream_menu_row_touchscreen_mode">Modo de pantalla táctil</string>
+    <string name="stream_menu_row_local_cursor">Cursor de ratón local</string>
+    <string name="stream_menu_not_set">Sin definir</string>
+    <string name="stream_menu_no_commands">No hay comandos configurados en el PC. Vibepollo puede añadirlos en su interfaz web.</string>
+
+    <string name="stream_menu_rumble_problem_word">Problema</string>
+    <string name="stream_menu_rumble_active">Activa</string>
+    <string name="stream_menu_rumble_problem">Problema: %1$s</string>
+
+    <string name="stream_menu_mouse_applies_saved">Se aplica ahora y se guarda.</string>
+    <string name="stream_menu_mouse_applies_stream">Se aplica ahora; solo en este stream.</string>
+
+    <string name="stream_menu_bitrate_fill">Rellenar</string>
+    <string name="stream_menu_bitrate_applying">Aplicando…</string>
+    <string name="stream_menu_bitrate_accepted">Aceptados %1$d Mbps</string>
+    <string name="stream_menu_bitrate_limited">Limitado por el host a %1$d Mbps</string>
+    <string name="stream_menu_bitrate_failed">Error</string>
+    <string name="stream_menu_bitrate_not_connected">El stream no está conectado, así que no se puede cambiar el bitrate.</string>
+    <string name="stream_menu_bitrate_unsupported">El host no admite cambios de bitrate en directo, o el stream ha terminado.</string>
+    <string name="stream_menu_bitrate_denied">El host no ha permitido este cambio.</string>
+    <string name="stream_menu_bitrate_unconfirmed">No se confirmó el bitrate. Revisa la conexión e inténtalo de nuevo.</string>
+    <string name="stream_menu_bitrate_rejected">El host no ha podido aplicar el cambio.</string>
+    <string name="stream_menu_bitrate_rejected_detail">El host no ha podido aplicar el cambio: %1$s</string>
+
+    <string name="stream_stats_top_left">Arriba a la izquierda</string>
+    <string name="stream_stats_top_right">Arriba a la derecha</string>
+    <string name="stream_stats_bottom_left">Abajo a la izquierda</string>
+    <string name="stream_stats_bottom_right">Abajo a la derecha</string>
+    <string name="stream_stats_compact_low">1%% bajo %1$d</string>
+    <string name="stream_stats_compact_tail">Red %1$d ms  ·  Decodif. %2$s ms  ·  Total %3$s ms  ·  Perdidos %4$s %%</string>
+    <string name="stream_stats_decoder">Decodificador</string>
+    <string name="stream_stats_incoming">Entrada</string>
+    <string name="stream_stats_rendering">Renderizado</string>
+    <string name="stream_stats_one_percent_low">%1$d%% bajo</string>
+    <string name="stream_stats_network">Red</string>
+    <string name="stream_stats_pc_processing">Procesado en el PC</string>
+    <string name="stream_stats_decoding">Decodificación</string>
+    <string name="stream_stats_upscaling">Escalado</string>
+    <string name="stream_stats_frame_queue">Cola de fotogramas</string>
+    <string name="stream_stats_sharpen_pass">Paso de nitidez</string>
+    <string name="stream_stats_render_latency">Latencia de renderizado</string>
+    <string name="stream_stats_total_latency">Latencia total</string>
+    <string name="stream_stats_bandwidth">Ancho de banda</string>
+    <string name="stream_stats_lost_frames">Fotogramas perdidos</string>
+    <string name="stream_stats_backlog">Acumulado</string>
+    <string name="stream_stats_stall">Bloqueo (hilo de recepción)</string>
+    <string name="stream_stats_frame_age">Antigüedad al enviar</string>
+    <string name="stream_stats_receive_to_present">De recepción a pantalla</string>
+    <string name="stream_stats_partial_frames">Fotogramas parciales</string>
+    <string name="stream_stats_skipped">Omitidos</string>
+    <string name="stream_stats_link">Enlace</string>
+    <string name="stream_stats_receiving">Recepción</string>
+    <string name="stream_stats_partial_lost">Parciales / perdidos</string>
+    <string name="stream_stats_verdict">Veredicto</string>
+
+    <string name="stream_loader_greeting">Llamando a %1$s</string>
+    <string name="stream_loader_codec_auto">Auto</string>
+    <string-array name="stream_loader_lines_platform">
+        <item>Reticulando estrías</item>
+        <item>Remangándonos</item>
+        <item>Calentando antes de jugar</item>
+    </string-array>
+    <string-array name="stream_loader_lines_name_resolution">
+        <item>Preguntando al router dónde vive %1$s</item>
+        <item>Buscando a %1$s en la red</item>
+        <item>Mirando debajo del sofá por si está %1$s</item>
+    </string-array>
+    <string-array name="stream_loader_lines_rtsp">
+        <item>Regateando con %1$s por píxeles y fotogramas</item>
+        <item>Firmando el contrato del stream con %1$s</item>
+        <item>Poniéndonos de acuerdo con %1$s sobre la nitidez</item>
+    </string-array>
+    <string-array name="stream_loader_lines_control_stream">
+        <item>Dándole la mano a %1$s</item>
+        <item>Tendiendo un cable invisible hasta %1$s</item>
+        <item>Intercambiando saludos secretos</item>
+    </string-array>
+    <string-array name="stream_loader_lines_video_stream">
+        <item>Calentando los píxeles</item>
+        <item>Sacándole brillo a los píxeles</item>
+        <item>Poniendo los píxeles en fila</item>
+    </string-array>
+    <string-array name="stream_loader_lines_audio_stream">
+        <item>Afinando los altavoces</item>
+        <item>Desenredando las ondas de sonido</item>
+        <item>Aclarándonos la garganta</item>
+    </string-array>
+    <string-array name="stream_loader_lines_input_stream">
+        <item>Conectando los botones</item>
+        <item>Enseñando a los botones quién manda</item>
+        <item>Enchufando un mando invisible</item>
+    </string-array>
+    <string-array name="stream_loader_lines_unlocking">
+        <item>%1$s aún se está despertando, espera un poco</item>
+        <item>%1$s se está frotando los ojos, un momento</item>
+    </string-array>
+
+    <string name="stream_exit_disconnecting">Desconectando</string>
+    <string name="stream_exit_quitting">Cerrando %1$s</string>
+    <string name="stream_exit_quitting_game">Cerrando el juego</string>
+
+    <string name="stream_result_default_pc">el PC</string>
+    <string name="stream_result_try_again">Reintentar</string>
+    <string name="stream_result_back_to_library">Volver a la biblioteca</string>
+    <string name="stream_result_details">Detalles</string>
+    <string name="stream_result_start_title">No se pudo iniciar el stream</string>
+    <string name="stream_result_lost_title">Conexión perdida</string>
+    <string name="stream_result_closed_title">El PC ha cerrado el stream</string>
+    <string name="stream_result_host_closed">El PC ha terminado el stream</string>
+    <string name="stream_result_blocked_hint">La conexión de red actual de tu dispositivo está bloqueando Delos. Puede que el streaming por Internet no funcione mientras estés conectado a esta red.</string>
+    <string name="stream_result_ports_hint">Revisa tu firewall y las reglas de reenvío de puertos para los puertos:</string>
+    <string name="stream_result_failed_stage">Error al iniciar %1$s (error %2$d)</string>
+    <string name="stream_result_denied">El PC no ha permitido que Delos inicie la aplicación.</string>
+    <string name="stream_result_denied_details">Permiso denegado (iniciar aplicaciones)</string>
+    <string name="stream_result_timeout">El PC no ha respondido a tiempo.</string>
+    <string name="stream_result_timeout_details">Tiempo de conexión agotado</string>
+    <string name="stream_result_blocked">Parece que esta red bloquea Delos.</string>
+    <string name="stream_result_decoder">Este dispositivo no ha podido iniciar el decodificador de vídeo.</string>
+    <string name="stream_result_decoder_details">No se pudo inicializar el decodificador de vídeo. Puede que tu dispositivo no admita la resolución o la tasa de fotogramas elegidas.</string>
+    <string name="stream_result_connecting">Algo ha fallado al conectar con el PC.</string>
+    <string name="stream_result_no_video">No ha llegado vídeo del PC.</string>
+    <string name="stream_result_no_video_details">No se ha recibido vídeo del host.</string>
+    <string name="stream_result_slow">La conexión de red no da abasto.</string>
+    <string name="stream_result_slow_details">Tu conexión de red no rinde bien. Reduce el bitrate del vídeo en los ajustes o prueba una conexión más rápida.</string>
+    <string name="stream_result_host_error">Algo ha fallado en el PC al iniciar el stream.</string>
+    <string name="stream_result_host_error_details">Algo ha fallado en tu PC host al iniciar el stream.\n\nAsegúrate de no tener abierto contenido protegido con DRM en el PC host. También puedes probar a reiniciarlo.</string>
+    <string name="stream_result_encoding">El PC ha informado de un error de codificación de vídeo.</string>
+    <string name="stream_result_encoding_details">El PC host ha informado de un error grave de codificación de vídeo.\n\nPrueba a desactivar el modo HDR, a cambiar la resolución del stream o a cambiar la resolución de pantalla del PC host.</string>
+    <string name="stream_result_ended">La conexión con el PC ha terminado de forma inesperada.</string>
+    <string name="stream_result_terminated_details">La conexión se ha terminado.\n\nCódigo de error: %1$s</string>
+    <string name="stream_result_no_h264">Este dispositivo no puede reproducir el stream.</string>
+    <string name="stream_result_no_h264_details">Este dispositivo o ROM no admite la reproducción de H.264 con aceleración por hardware.</string>
+    <string name="stream_result_offline">%1$s está sin conexión.</string>
+    <string name="stream_result_offline_details">El equipo está sin conexión</string>
+    <string name="stream_result_unpaired">%1$s no está emparejado con este dispositivo.</string>
+    <string name="stream_result_unpaired_details">PC sin emparejar</string>
+</resources>

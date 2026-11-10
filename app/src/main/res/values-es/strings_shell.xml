@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shell_link_pair_title">¿Emparejar con %1$s?</string>
+    <string name="shell_link_pair_message">Un enlace pide a Delos que se empareje con este PC. Continúa solo si lo has abierto tú.</string>
+    <string name="shell_link_pair_action">Emparejar</string>
+    <string name="shell_link_start_title">¿Iniciar %1$s?</string>
+    <string name="shell_link_start_title_unnamed">¿Iniciar un juego?</string>
+    <string name="shell_link_start_message">Un enlace pide a Delos que inicie %1$s en %2$s. Continúa solo si lo has abierto tú.</string>
+    <string name="shell_link_start_message_game">Un enlace pide a Delos que inicie %1$s en un PC. Continúa solo si lo has abierto tú.</string>
+    <string name="shell_link_start_message_host">Un enlace pide a Delos que inicie un juego en %1$s. Continúa solo si lo has abierto tú.</string>
+    <string name="shell_link_start_message_unnamed">Un enlace pide a Delos que inicie un juego en un PC. Continúa solo si lo has abierto tú.</string>
+    <string name="shell_link_start_action">Iniciar</string>
+
+    <string name="shell_nav_settings">Ajustes</string>
+    <string name="shell_nav_profile">Perfil</string>
+    <string name="shell_nav_devices">Dispositivos</string>
+    <string name="shell_default_profile_name">Jugador</string>
+
+    <string name="shell_side_not_connected">Sin conexión</string>
+    <string name="shell_side_connected">Conectado a %1$s</string>
+    <string name="shell_side_offline">%1$s está sin conexión</string>
+    <string name="shell_side_show_hidden">Mostrar juegos ocultos</string>
+    <string name="shell_side_hidden_on">%1$d ocultos en %2$s</string>
+    <string name="shell_side_hidden_on_this_pc">%1$d ocultos en este PC</string>
+    <string name="shell_side_theme">Tema</string>
+    <string name="shell_side_theme_dark">Oscuro</string>
+    <string name="shell_side_theme_light">Claro</string>
+    <string name="shell_side_material_you">Material You</string>
+    <string name="shell_side_background">Fondo</string>
+    <string name="shell_side_home_layout">Diseño del inicio</string>
+    <string name="shell_side_sounds">Sonidos de la interfaz</string>
+    <string name="shell_side_haptics">Vibración háptica</string>
+    <string name="shell_side_all_settings">Todos los ajustes</string>
+
+    <string name="shell_progress_artwork">Descargando ilustraciones</string>
+    <string name="shell_progress_metadata">Descargando metadatos</string>
+    <string name="shell_progress_count">%1$d de %2$d</string>
+
+    <plurals name="shell_home_apps_on_pc">
+        <item quantity="one">%1$d app en %2$s</item>
+        <item quantity="many">%1$d apps en %2$s</item>
+        <item quantity="other">%1$d apps en %2$s</item>
+    </plurals>
+    <plurals name="shell_home_apps_filtered">
+        <item quantity="one">%1$d de %2$d app en %3$s</item>
+        <item quantity="many">%1$d de %2$d apps en %3$s</item>
+        <item quantity="other">%1$d de %2$d apps en %3$s</item>
+    </plurals>
+    <string name="shell_hint_library_label">BIBLIOTECA</string>
+
+    <string name="shell_hint_select">Seleccionar</string>
+    <string name="shell_hint_back">Atrás</string>
+    <string name="shell_hint_close">Cerrar</string>
+    <string name="shell_hint_cancel">Cancelar</string>
+    <string name="shell_hint_change">Cambiar</string>
+    <string name="shell_hint_reset">Restablecer</string>
+    <string name="shell_hint_start">Iniciar</string>
+    <string name="shell_hint_menu">Menú</string>
+    <string name="shell_hint_options">Opciones</string>
+    <string name="shell_hint_adjust">Ajustar</string>
+    <string name="shell_hint_back_to_library">Volver a la biblioteca</string>
+    <string name="shell_hint_previous_tab">Pestaña anterior</string>
+    <string name="shell_hint_next_tab">Pestaña siguiente</string>
+    <string name="shell_hint_search">Buscar</string>
+    <string name="shell_hint_connect">Conectar</string>
+    <string name="shell_hint_choose">Elegir</string>
+    <string name="shell_hint_reset_filters">Restablecer filtros</string>
+    <string name="shell_hint_done">Hecho</string>
+    <string name="shell_hint_use_image">Usar imagen</string>
+    <string name="shell_hint_search_name">Buscar nombre</string>
+    <string name="shell_hint_filter">Filtrar</string>
+    <string name="shell_hint_reset_to_profile">Restablecer al valor del perfil</string>
+
+    <string name="shell_problem_title_stream">No se pudo iniciar un stream</string>
+    <string name="shell_problem_title_generic">Delos ha tenido un problema</string>
+    <string name="shell_problem_note">No se envía nada automáticamente. Informar abre GitHub en tu navegador con un borrador para que lo revises y guarda en Descargas un archivo de registro limpio para que lo adjuntes.</string>
+    <string name="shell_problem_report">Informar de este problema</string>
+    <string name="shell_problem_dismiss">Descartar</string>
+
+    <string name="shell_button_capture_title">Pulsa los botones del menú del stream</string>
+    <string name="shell_button_capture_note">Mantenlos pulsados a la vez y suéltalos. También vale un solo botón, p. ej. uno trasero. Espera o toca para cancelar.</string>
+
+    <string name="row_reset_to_profile">Restablecer al valor del perfil</string>
+    <string name="row_reset">Restablecer</string>
+    <string name="row_not_set">Sin definir</string>
+
+    <string name="impact_axis_gpu">GPU</string>
+    <string name="impact_axis_latency">Latencia</string>
+    <string name="impact_axis_network">Red</string>
+    <string name="impact_level_none">ninguno</string>
+    <string name="impact_level_low">bajo</string>
+    <string name="impact_level_medium">medio</string>
+    <string name="impact_level_high">alto</string>
+    <string name="impact_axis_level">%1$s %2$s</string>
+    <string name="impact_legend">Coste del valor actual: 1 barra bajo, 2 medio, 3 alto</string>
+    <string name="impact_axes_joined">%1$s, %2$s, %3$s</string>
+</resources>

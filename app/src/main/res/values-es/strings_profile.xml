@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="profile_signed_in">
+        <item quantity="one">Sesión iniciada en este %1$s · %2$d perfil</item>
+        <item quantity="many">Sesión iniciada en este %1$s · %2$d perfiles</item>
+        <item quantity="other">Sesión iniciada en este %1$s · %2$d perfiles</item>
+    </plurals>
+    <string name="profile_change_avatar">Cambiar avatar</string>
+    <string name="profile_rename">Renombrar</string>
+    <string name="profile_switch">Cambiar de perfil</string>
+    <string name="profile_add">Añadir perfil</string>
+    <string name="profile_delete">Eliminar perfil</string>
+    <string name="profile_undo">Deshacer</string>
+    <string name="profile_restored">%1$s ha vuelto</string>
+    <string name="profile_restore_failed">No se pudo restaurar %1$s</string>
+    <string name="profile_deleted">%1$s se ha eliminado</string>
+    <string name="profile_menu_title">Perfiles</string>
+    <string name="profile_playing_as">Jugando como %1$s</string>
+    <string name="profile_new">Perfil nuevo</string>
+    <string name="profile_rename_title">Renombrar perfil</string>
+    <string name="profile_renamed">Perfil renombrado</string>
+    <string name="profile_name_note">Se muestra en la pantalla de inicio y en el menú lateral.</string>
+    <string name="profile_name_save">Guardar</string>
+    <string name="profile_name_required">Escribe un nombre para tu perfil</string>
+</resources>

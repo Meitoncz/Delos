@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="debug_title">Información de depuración</string>
+    <string name="debug_panel_default">Información sobre este dispositivo y sus mandos, el registro de diagnóstico y una prueba de vibración.</string>
+
+    <string name="debug_section_device">Dispositivo</string>
+    <string name="debug_section_diagnostics">Diagnóstico</string>
+    <string name="debug_section_haptics">Capacidades hápticas del dispositivo</string>
+    <string name="debug_section_vibration_test">Prueba de vibración</string>
+    <string name="debug_section_rumble_lab">Laboratorio de vibración</string>
+    <string name="debug_section_rumble_patterns">Patrones de vibración</string>
+    <string name="debug_section_rumble_advanced">Vibración avanzada</string>
+    <string name="debug_section_osc">Controles en pantalla</string>
+    <string name="debug_section_controllers">Mandos</string>
+
+    <string name="debug_yes">Sí</string>
+    <string name="debug_no">No</string>
+    <string name="debug_none">Ninguno</string>
+    <string name="debug_stopped">Detenido</string>
+
+    <string name="debug_share_no_app_toast">Ninguna app puede compartir el registro</string>
+    <string name="debug_summary_copied_toast">Resumen de diagnóstico copiado</string>
+    <string name="debug_logs_cleared_toast">Registros de diagnóstico borrados</string>
+    <string name="debug_no_motor_toast">Este dispositivo no tiene motor de vibración</string>
+    <string name="debug_pad_no_vibration_toast">%1$s no puede vibrar</string>
+
+    <string name="debug_android_description">La versión de Android de este dispositivo y su nivel de API.</string>
+    <string name="debug_kernel_label">Kernel</string>
+    <string name="debug_kernel_description">La versión del kernel de Linux.</string>
+    <string name="debug_model_label">Dispositivo</string>
+    <string name="debug_model_description">El fabricante y el modelo.</string>
+    <string name="debug_model_details">Placa: %1$s\nHardware: %2$s\nSoC: %3$s\nCompilación: %4$s</string>
+    <string name="debug_soc_unknown">desconocido</string>
+    <string name="debug_motor_label">Motor de vibración</string>
+    <string name="debug_motor_yes_description">Este dispositivo puede vibrar.</string>
+    <string name="debug_motor_no_description">Este dispositivo no tiene motor de vibración.</string>
+
+    <string name="debug_log_label">Registro de diagnóstico</string>
+    <plurals name="debug_log_size">
+        <item quantity="one">%1$s, %2$s línea de registro</item>
+        <item quantity="many">%1$s, %2$s líneas de registro</item>
+        <item quantity="other">%1$s, %2$s líneas de registro</item>
+    </plurals>
+    <string name="debug_log_reading">Leyendo…</string>
+    <string name="debug_log_off">Desactivado</string>
+    <string name="debug_log_description">Eventos y errores que Delos ha guardado en este dispositivo, sin direcciones ni nombres. Esto es lo que envía Compartir.</string>
+    <string name="debug_log_preview_reading">Leyendo el registro…</string>
+    <string name="debug_share_label">Compartir registro de diagnóstico</string>
+    <string name="debug_share_description">Abre el menú de compartir de Android con el texto de la vista previa. No se envía nada hasta que elijas una app.</string>
+    <string name="debug_copy_label">Copiar resumen de diagnóstico</string>
+    <string name="debug_copy_description">Copia el bloque del dispositivo y las últimas 100 líneas del registro, listo para pegar en una incidencia. Se quitan los mismos nombres y direcciones.</string>
+    <string name="debug_clear_label">Borrar registros de diagnóstico</string>
+    <string name="debug_clear_description">Elimina el registro de este dispositivo. Los eventos nuevos se vuelven a registrar salvo que Conservar registros de diagnóstico esté desactivado (Ajustes → Acerca de).</string>
+
+    <string name="debug_vibrators_label">Vibradores</string>
+    <string name="debug_vibrators_single">1 (único)</string>
+    <string name="debug_vibrators_description">Cuántos vibradores indica el sistema. Uno significa que todos los ajustes preestablecidos usan el mismo motor.</string>
+    <string name="debug_amplitude_label">Control de amplitud</string>
+    <string name="debug_amplitude_description">Si el vibrador puede cambiar su intensidad.</string>
+    <string name="debug_last_problem_label">Último problema</string>
+    <string name="debug_last_problem_description">Indica cuándo el último ajuste preestablecido no pudo usar su técnica y reprodujo la amplitud simple en su lugar, y por qué.</string>
+
+    <string name="debug_vibrate_once_label">Vibrar una vez</string>
+    <string name="debug_vibrate_once_description">Un segundo a máxima intensidad.</string>
+    <string name="debug_continuous_label">Vibración continua</string>
+    <string name="debug_continuous_description">Sigue vibrando con la intensidad de abajo hasta que lo desactives o salgas de esta pantalla.</string>
+    <string name="debug_strength_label">Intensidad</string>
+    <string name="debug_strength_description">La intensidad de la vibración continua, de 1 a 255, para el dispositivo y los mandos.</string>
+
+    <string name="debug_preset_custom">Personalizado</string>
+    <string name="debug_mode_translator_on">%1$s · traductor activado</string>
+    <string name="debug_mode_translator_off">%1$s · traductor desactivado</string>
+    <string name="debug_preset_label">Ajuste preestablecido actual</string>
+    <string name="debug_preset_description">Elige un ajuste preestablecido abajo para guardarlo y reproducir al instante la muestra de prueba.</string>
+    <string name="debug_preset_details">Modo: %1$s\nLas ediciones avanzadas se guardan como Personalizado, aunque los valores coincidan con un ajuste preestablecido.</string>
+    <string name="debug_preset_problem">Problema</string>
+    <string name="debug_preset_problem_description">%1$s Problema: %2$s.</string>
+    <string name="debug_preset_active">Activo</string>
+    <string name="debug_preset_select">Seleccionar</string>
+    <string name="debug_live_amplitude_label">Amplitud en vivo · %1$s</string>
+    <string name="debug_live_amplitude_description">Amplitud del dispositivo calculada en vivo, incluidos el impulso inicial y el suavizado mientras se estabilizan.</string>
+    <string name="debug_live_amplitude_details">Modo: %1$s\nPatrón: %2$s\nLos dos motores del host reciben el porcentaje de entrada indicado; no es el porcentaje de salida final.</string>
+    <string name="debug_stop_label">Detener vibración</string>
+    <string name="debug_stop_description">Detiene el patrón del laboratorio y todas las pruebas de vibración continua del dispositivo y los mandos.</string>
+    <string name="debug_replay_label">Repetir muestra de prueba</string>
+
+    <string name="debug_pattern_details">Amplitud en vivo: %1$d / 255\nModo: %2$s\nReproduciendo: %3$s\nLas entradas son porcentajes de los motores del host, no la salida final del dispositivo. Elige otro patrón para sustituir este o usa Detener vibración.</string>
+    <string name="debug_pattern_test_label">Prueba</string>
+    <string name="debug_pattern_test_description">Un toque corto, un segundo de vibración constante, una rampa ascendente y una explosión que se apaga.</string>
+    <string name="debug_pattern_steady_25_label">Constante 25% · motor tranquilo</string>
+    <string name="debug_pattern_steady_25_description">Dos segundos de vibración suave de motor, con los dos motores del host al 25%.</string>
+    <string name="debug_pattern_steady_50_label">Constante 50% · motor de crucero</string>
+    <string name="debug_pattern_steady_50_description">Dos segundos de vibración media de motor, con los dos motores del host al 50%.</string>
+    <string name="debug_pattern_steady_75_label">Constante 75% · terreno irregular</string>
+    <string name="debug_pattern_steady_75_description">Dos segundos de vibración fuerte de terreno, con los dos motores del host al 75%.</string>
+    <string name="debug_pattern_steady_100_label">Constante 100% · fuerza máxima</string>
+    <string name="debug_pattern_steady_100_description">Dos segundos de vibración máxima del host, con los dos motores al 100%.</string>
+    <string name="debug_pattern_ramp_label">Rampa ascendente · aceleración</string>
+    <string name="debug_pattern_ramp_description">Los dos motores del host suben del silencio a la entrada máxima en dos segundos.</string>
+    <string name="debug_pattern_tap_30_label">Toques de 30 ms · impactos ligeros</string>
+    <string name="debug_pattern_tap_30_description">Cuatro toques de 30 ms a entrada máxima separados por 250 ms de silencio.</string>
+    <string name="debug_pattern_tap_60_label">Toques de 60 ms · disparos</string>
+    <string name="debug_pattern_tap_60_description">Cuatro toques de 60 ms a entrada máxima separados por 250 ms de silencio.</string>
+    <string name="debug_pattern_tap_100_label">Toques de 100 ms · impactos fuertes</string>
+    <string name="debug_pattern_tap_100_description">Cuatro toques de 100 ms a entrada máxima separados por 250 ms de silencio.</string>
+    <string name="debug_pattern_heartbeat_label">Latido · pulsos en pareja</string>
+    <string name="debug_pattern_heartbeat_description">Cuatro pares de pulsos de 70 ms / 100 ms a entrada máxima, como un latido.</string>
+    <string name="debug_pattern_explosion_label">Explosión · estallido que se apaga</string>
+    <string name="debug_pattern_explosion_description">Un estallido a entrada máxima que se apaga hasta el silencio en dos segundos.</string>
+    <string name="debug_pattern_flutter_label">Aleteo · maquinaria rápida</string>
+    <string name="debug_pattern_flutter_description">Veinte pulsos de 20 ms a entrada máxima, cada uno seguido de 40 ms de silencio.</string>
+
+    <string name="debug_advanced_label">Avanzado</string>
+    <string name="debug_advanced_description">Muestra los controles manuales. Editar un valor marca el ajuste preestablecido como Personalizado y detiene el patrón actual.</string>
+    <string name="debug_enabled_label">Activar traductor de vibración</string>
+    <string name="debug_enabled_description">Desactivado usa la traducción Original. Activado aplica estos parámetros a la vibración del stream y a los patrones del laboratorio.</string>
+    <string name="debug_gain_label">Ganancia</string>
+    <string name="debug_gain_description">Multiplicador global de la vibración, del 50 al 300%. Cambiar un parámetro detiene el patrón actual.</string>
+    <string name="debug_curve_label">Curva</string>
+    <string name="debug_curve_description">Exponente de respuesta: por debajo del %1$d%% refuerza la vibración débil; por encima del %1$d%% la suaviza.</string>
+    <string name="debug_min_label">Amplitud mínima</string>
+    <string name="debug_min_description">Salida mínima para una petición del host distinta de cero. La entrada cero sigue en silencio.</string>
+    <string name="debug_kick_label">Impulso inicial</string>
+    <string name="debug_kick_description">Arranca desde el silencio con un impulso a plena intensidad y luego se estabiliza en la amplitud traducida.</string>
+    <string name="debug_low_label">Peso del motor grave</string>
+    <string name="debug_low_description">Aportación del motor de baja frecuencia del host al único vibrador del dispositivo. Original: 80%.</string>
+    <string name="debug_high_label">Peso del motor agudo</string>
+    <string name="debug_high_description">Aportación del motor de alta frecuencia del host al único vibrador del dispositivo. Original: 33%.</string>
+    <string name="debug_smoothing_label">Suavizado</string>
+    <string name="debug_smoothing_description">Limita los cambios bruscos de amplitud. Cero responde al instante; los valores más altos se estabilizan más despacio.</string>
+    <string name="debug_reset_label">Restablecer parámetros a Original</string>
+    <string name="debug_reset_description">Restaura los parámetros Original como Personalizado. El interruptor de activación no cambia.</string>
+
+    <string name="debug_osc_label">Vista previa de los controles en pantalla</string>
+    <string name="debug_osc_description">Tus controles en pantalla sin un stream: prueba cada botón, la cruceta y los sticks; no se envía nada. El engranaje de la esquina edita la distribución, como en un stream.</string>
+
+    <string name="debug_no_pads_label">Ningún mando conectado</string>
+    <string name="debug_no_pads_description">Conecta un mando y aparecerá aquí al instante. Los controles integrados de una consola portátil cuentan como uno.</string>
+    <string name="debug_pad_description_vibrates">ID de fabricante y producto %1$s (%2$s). Sensores de movimiento: %3$s. Vibración: compatible, selecciónalo para probar.</string>
+    <string name="debug_pad_description_silent">ID de fabricante y producto %1$s (%2$s). Sensores de movimiento: %3$s. Vibración: no compatible.</string>
+    <string name="debug_sensors_unknown">desconocido en versiones anteriores a Android 12</string>
+    <string name="debug_sensors_none">ninguno indicado</string>
+    <string name="debug_sensors_accelerometer">acelerómetro</string>
+    <string name="debug_sensors_gyroscope">giroscopio</string>
+    <string name="debug_sensors_both">acelerómetro, giroscopio</string>
+    <string name="debug_pads_continuous_label">Vibración continua en los mandos</string>
+    <string name="debug_pads_continuous_description">Todos los mandos que pueden vibrar siguen vibrando con la intensidad de arriba.</string>
+</resources>

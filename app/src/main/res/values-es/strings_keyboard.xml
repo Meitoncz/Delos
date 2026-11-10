@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="keyboard_hint_press">Pulsar</string>
+    <string name="keyboard_hint_close">Cerrar</string>
+    <string name="keyboard_hint_shift">Mayús</string>
+    <string name="keyboard_hint_delete">Borrar</string>
+    <string name="keyboard_hint_space">Espacio</string>
+    <string name="keyboard_title">TECLADO EN PANTALLA</string>
+</resources>

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="devices_start_greeting">Hola, %1$s</string>
+    <string name="devices_start_welcome">Te damos la bienvenida</string>
+    <string name="devices_start_pair_note">Empareja un PC para empezar a jugar.</string>
+    <string name="devices_start_choose_note">Elige el PC en el que jugar.</string>
+    <string name="devices_status_online">En línea</string>
+    <string name="devices_status_asleep">Suspendido</string>
+    <string name="devices_status_asleep_wakes">Suspendido · se reactivará</string>
+    <string name="devices_status_offline">Sin conexión</string>
+    <string name="devices_status_connected">Conectado</string>
+    <string name="devices_status_default">Predeterminado</string>
+    <string name="devices_status_with_default">%1$s · %2$s</string>
+    <string name="devices_pair_new">Emparejar un PC nuevo</string>
+    <string name="devices_pair_new_meta">Vibepollo, Apollo o Sunshine</string>
+    <string name="devices_title">Dispositivos</string>
+    <string name="devices_note">PC emparejados con Delos. Los nombres que pongas aquí solo se guardan en este dispositivo.</string>
+
+    <string name="devices_menu_default_off">No iniciar con este PC</string>
+    <string name="devices_menu_default_on">Iniciar Delos con este PC</string>
+    <string name="devices_menu_wake">Reactivar el PC</string>
+    <string name="devices_menu_rename">Renombrar</string>
+    <string name="devices_menu_open_games">Abrir sus juegos</string>
+    <string name="devices_menu_connect">Conectar</string>
+    <string name="devices_menu_unpair">Desemparejar</string>
+    <string name="devices_menu_remove">Quitar de Delos</string>
+
+    <string name="devices_portal_waking_title">Reactivando %1$s</string>
+    <string name="devices_portal_waiting_title">Esperando a %1$s</string>
+    <string name="devices_portal_waking_note">Señal de activación enviada · %1$s cancela</string>
+    <string name="devices_portal_waiting_note">Enciende el PC · %1$s cancela</string>
+    <string name="devices_wake_timeout_toast">%1$s no se ha reactivado</string>
+    <string name="devices_portal_connecting_title">Conectando con %1$s</string>
+    <string name="devices_portal_connecting_note">Vibepollo · emparejado</string>
+
+    <string name="devices_link_portal_title">Probando el enlace con %1$s</string>
+    <string name="devices_link_portal_start">Quédate en %1$s · %2$s cancela</string>
+    <string name="devices_link_portal_testing">Probando %1$s · quédate en %2$s · %3$s cancela</string>
+    <string name="devices_link_portal_confirming">Confirmando %1$s · quédate en %2$s · %3$s cancela</string>
+    <string name="devices_link_done">Capacidad de %1$s: %2$s</string>
+    <string name="devices_link_done_jitter">Capacidad de %1$s: %2$s (con algo de jitter)</string>
+    <string name="devices_link_stopped">Prueba de enlace detenida</string>
+
+    <string name="devices_address_title">Introduce la dirección del PC</string>
+    <string name="devices_address_note">La dirección IP o el nombre de host del PC que ejecuta Vibepollo, opcionalmente con un puerto.</string>
+    <string name="devices_address_action">Añadir PC</string>
+    <string name="devices_address_required">Introduce una dirección</string>
+    <string name="devices_address_looking">Buscando %1$s…</string>
+    <string name="devices_address_not_added">%1$s ha respondido, pero no se pudo añadir</string>
+    <string name="devices_add_not_an_address">“%1$s” no es una dirección</string>
+    <string name="devices_add_no_answer">Ningún PC ha respondido en %1$s</string>
+
+    <string name="devices_rename_title">Renombrar PC</string>
+    <string name="devices_rename_note">El nombre nuevo solo se usa en Delos en este dispositivo. Déjalo vacío para usar el nombre del propio PC (%1$s).</string>
+    <string name="devices_rename_action">Guardar</string>
+    <string name="devices_rename_reset_toast">Se ha vuelto a %1$s</string>
+    <string name="devices_rename_done_toast">Renombrado a %1$s</string>
+
+    <string name="devices_wake_sent_toast">Señal de activación enviada a %1$s</string>
+    <string name="devices_wake_unsupported">%1$s no se puede reactivar desde aquí</string>
+    <string name="devices_wake_failed">No se pudo enviar la señal de activación</string>
+    <string name="devices_removed_toast">%1$s se ha quitado</string>
+    <string name="devices_default_set_toast">Delos se inicia con %1$s</string>
+    <string name="devices_default_cleared_toast">Sin dispositivo predeterminado</string>
+    <string name="devices_unpaired">Desemparejado de %1$s</string>
+    <string name="devices_unpair_offline">%1$s debe estar en línea para desemparejar</string>
+    <string name="devices_unpair_not_paired">%1$s no está emparejado</string>
+    <string name="devices_unpair_failed">No se pudo desemparejar %1$s</string>
+    <string name="devices_unreachable">No se puede acceder a %1$s</string>
+    <string name="devices_starting">Delos aún se está iniciando, inténtalo de nuevo</string>
+</resources>
