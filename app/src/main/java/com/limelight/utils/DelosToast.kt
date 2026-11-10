@@ -2,6 +2,7 @@ package com.limelight.utils
 
 import android.app.Activity
 import android.content.Context
+import com.limelight.diag.DiagLog
 import android.content.ContextWrapper
 import android.os.Handler
 import android.os.Looper
@@ -52,6 +53,7 @@ object DelosToast {
             val activity = source.activity()
             val host = routing.select { it.activity === activity }
             val text = message(source)
+            DiagLog.logToast(kind, text)
             if (host != null) host.show(text, toastDurationMs(duration), kind)
             else android.widget.Toast.makeText(app, text, duration).show()
         }

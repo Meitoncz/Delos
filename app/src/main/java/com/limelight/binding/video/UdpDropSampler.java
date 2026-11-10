@@ -2,6 +2,8 @@ package com.limelight.binding.video;
 
 import android.util.Log;
 
+import com.limelight.diag.DiagLog;
+
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -94,27 +96,33 @@ final class UdpDropSampler {
         return counters;
     }
 
+    /** Logcat as before, and the app's diagnostic log: packet drops are exactly what a stream report needs. */
+    private static void info(String message) {
+        Log.i(TAG, message);
+        DiagLog.i(TAG, message);
+    }
+
     private static void run() {
         Counters previous;
         try {
             previous = read();
         } catch (Exception e) {
-            Log.i(TAG, "udp drop counters are not readable by the app (" + e + "); not sampled");
+            info("udp drop counters are not readable by the app (" + e + "); not sampled");
             return;
         }
-        Log.i(TAG, "udp drop counters readable: receive buffer full " + previous.rcvbufErrors
+        info("udp drop counters readable: receive buffer full " + previous.rcvbufErrors
                 + ", input errors " + previous.inErrors + " (system-wide totals; only increases are logged)");
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 Thread.sleep(PERIOD_MS);
                 Counters now = read();
                 String increase = describeIncrease(previous, now);
-                if (increase != null) Log.i(TAG, increase);
+                if (increase != null) info(increase);
                 previous = now;
             } catch (InterruptedException e) {
                 return;
             } catch (Exception e) {
-                Log.i(TAG, "udp drop counters stopped: " + e);
+                info("udp drop counters stopped: " + e);
                 return;
             }
         }

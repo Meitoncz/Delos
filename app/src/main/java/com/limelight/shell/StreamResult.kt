@@ -7,6 +7,7 @@ import android.os.Build
 import android.view.Display
 import androidx.compose.runtime.Immutable
 import com.limelight.DelosStreamActivity
+import com.limelight.diag.DiagLog
 import com.limelight.nvstream.jni.MoonBridge
 
 /** How a stream that was not ended by the player ended (see docs/GUI.md, "Stream exits"). */
@@ -227,6 +228,8 @@ object StreamOutcome {
      * and the shell opens on the device's own screen.
      */
     private fun show(activity: Activity, result: StreamResult) {
+        val summary = "Stream ended: ${result.kind} \"${result.title}\"${result.details?.let { " ($it)" }.orEmpty()}"
+        if (result.kind == StreamResultKind.HOST_CLOSED) DiagLog.i("Stream", summary) else DiagLog.e("Stream", summary)
         val home = Intent().setClassName(activity, "com.limelight.shell.ShellActivity")
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         result.putInto(home)

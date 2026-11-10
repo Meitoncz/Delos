@@ -7,6 +7,7 @@ import android.opengl.*;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.view.Choreographer;
+import com.limelight.diag.DiagLog;
 import android.view.Surface;
 import com.limelight.LimeLog;
 import com.limelight.preferences.UpscalerMode;
@@ -918,14 +919,19 @@ public final class SgsrRenderer implements AutoCloseable {
     private void onQueueWindow(FrameQueueStats window) {
         if (arrivalOnly) return;
         android.util.Log.d(FrameQueue.TAG,window.describe());
-        if (flowGovernor.onWindow(window))
-            android.util.Log.i(FrameQueue.TAG,flowGovernor.isReduced()
+        if (flowGovernor.onWindow(window)) {
+            String governed = flowGovernor.isReduced()
                     ? "SGSR 2 under load: the optical flow is recomputed every second frame"
-                    : "SGSR 2 load is back to normal: the optical flow is recomputed every frame");
+                    : "SGSR 2 load is back to normal: the optical flow is recomputed every frame";
+            android.util.Log.i(FrameQueue.TAG,governed);
+            DiagLog.i(FrameQueue.TAG,governed);
+        }
         if (overloadDetector.onWindow(window)) {
-            android.util.Log.w(FrameQueue.TAG,"overload: GPU " + window.gpuAvgMs + " ms per frame at "
+            String overload = "overload: GPU " + window.gpuAvgMs + " ms per frame at "
                     + window.arrivedPerSecond() + " frames/s, " + window.busySkippedPerSecond()
-                    + " frames/s dropped because the GPU was busy, mode " + mode + ", supersampling " + supersampling);
+                    + " frames/s dropped because the GPU was busy, mode " + mode + ", supersampling " + supersampling;
+            android.util.Log.w(FrameQueue.TAG,overload);
+            DiagLog.w(FrameQueue.TAG,overload);
             OverloadListener listener = overloadListener;
             if (listener != null) listener.onOverload(mode,supersampling);
         }

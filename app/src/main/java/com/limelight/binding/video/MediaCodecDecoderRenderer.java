@@ -17,6 +17,8 @@ import org.jcodec.codecs.h264.io.model.VUIParameters;
 import com.limelight.BuildConfig;
 import com.limelight.LimeLog;
 import com.limelight.R;
+import com.limelight.diag.DiagLog;
+import com.limelight.diag.StreamEvents;
 import com.limelight.nvstream.av.video.VideoDecoderRenderer;
 import com.limelight.nvstream.jni.MoonBridge;
 import com.limelight.preferences.PreferenceConfiguration;
@@ -1154,6 +1156,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         this.initialHeight = invertResolution ? width : height;
         this.videoFormat = format;
         this.refreshRate = redrawRate;
+        DiagLog.i("Stream", StreamEvents.INSTANCE.negotiated(format, width, height, targetFps, prefs.bitrate));
 
         // Delos: PyroWave frames go from moonlight-common-c straight to the native renderer
         if ((format & MoonBridge.VIDEO_FORMAT_MASK_PYROWAVE) != 0) {
@@ -1369,9 +1372,8 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                         stats[PyroWaveRenderer.STAT_TOTAL_FRAMES], stats[PyroWaveRenderer.STAT_PARTIAL_FRAMES],
                         stats[PyroWaveRenderer.STAT_LOST_FRAMES], stats[PyroWaveRenderer.STAT_SKIPPED_FRAMES],
                         measureRxKbps(seconds)));
-                if (prefs.enablePerfOverlay || BuildConfig.DEBUG) {
-                    reportPyroWaveStats(stats, seconds);
-                }
+                // Also without the overlay: the diagnostic log gets one DelosPyroDiag line every 30 s (logPyroWaveDiag)
+                reportPyroWaveStats(stats, seconds);
             }
         }, "PyroWave stats");
         pyroWaveStatsThread.start();
@@ -1436,21 +1438,28 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     }
 
     private void logPyroWaveStreamStart() {
-        if (!BuildConfig.DEBUG) return;
         // The UDP receive buffer is sized and read back inside moonlight-common-c (VideoStream.c logs "video
         // receive buffer is N KB of M KB requested" only when clamped) and is not exposed to the app.
-        android.util.Log.i(DIAG_TAG, String.format(java.util.Locale.US,
+        String line = String.format(java.util.Locale.US,
                 "start: bitrate=%d kbps (metered=%b) chroma requested=%s negotiated=%s videoFormat=0x%X "
                         + "%dx%d@%d directSubmit=%b pyroWaveCapable=%b hdr10=%b rcvbuf=not exposed by common-c",
                 diagBitrateKbps, diagMetered, diagChroma444Requested ? "4:4:4" : "4:2:0", diagChromaNegotiated(),
                 videoFormat, initialWidth, initialHeight, targetFps, directSubmit, PyroWaveRenderer.isAvailable(),
-                (videoFormat & MoonBridge.VIDEO_FORMAT_MASK_10BIT) != 0));
+                (videoFormat & MoonBridge.VIDEO_FORMAT_MASK_10BIT) != 0);
+        if (BuildConfig.DEBUG) android.util.Log.i(DIAG_TAG, line);
+        DiagLog.i(DIAG_TAG, line);
     }
+
+    /** The diagnostic log (docs/DIAGNOSTICS.md) gets the periodic line this often; logcat of a debug build gets every one. */
+    private static final long DIAG_LOG_INTERVAL_MS = 30_000;
+    private long diagLogLastMs = -DIAG_LOG_INTERVAL_MS;
 
     private void logPyroWaveDiag(long[] stats, PyroWaveBacklog b, float seconds, float receivedFps,
                                  float renderedFps, float netKb) {
-        if (!BuildConfig.DEBUG) return;
-        android.util.Log.i(DIAG_TAG, String.format(java.util.Locale.US,
+        long nowMs = SystemClock.elapsedRealtime();
+        boolean toDiagLog = nowMs - diagLogLastMs >= DIAG_LOG_INTERVAL_MS;
+        if (!BuildConfig.DEBUG && !toDiagLog) return;
+        String line = String.format(java.util.Locale.US,
                 "in=%.1f out=%.1f fps rx=%.0f KB/s bitrate=%d kbps chroma=%s | stall avg/max %.2f/%.2f ms | "
                         + "age@submit avg/max %.2f/%.2f ms | recv->present avg/max %.2f/%.2f ms | "
                         + "partial %.1f/s skipped %.1f/s lostFrames %d | waits prevFrame %.2f acquire %.2f "
@@ -1462,7 +1471,12 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                 stats[PyroWaveRenderer.STAT_GPU_DECODE_FRAMES] > 0
                         ? stats[PyroWaveRenderer.STAT_GPU_DECODE_TOTAL_US] / 1000f
                                 / stats[PyroWaveRenderer.STAT_GPU_DECODE_FRAMES] : 0f,
-                diagSharpen(stats), PyroWavePresentInfo.describe(stats)));
+                diagSharpen(stats), PyroWavePresentInfo.describe(stats));
+        if (BuildConfig.DEBUG) android.util.Log.i(DIAG_TAG, line);
+        if (toDiagLog) {
+            diagLogLastMs = nowMs;
+            DiagLog.i(DIAG_TAG, line);
+        }
     }
 
     /** The Sharpen only part of the diagnostics line: the pass's GPU time and the conversion before it. */

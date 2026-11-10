@@ -38,6 +38,7 @@ import com.limelight.nvstream.http.NvApp;
 import com.limelight.nvstream.http.NvHTTP;
 import com.limelight.nvstream.input.MouseButtonPacket;
 import com.limelight.nvstream.jni.MoonBridge;
+import com.limelight.diag.DiagLog;
 import com.limelight.preferences.GlPreferences;
 import com.limelight.preferences.PreferenceConfiguration;
 import com.limelight.ui.ExternalControllerView;
@@ -522,6 +523,8 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
                         // We must use commit because the app will crash when we return from this function
                         tombstonePrefs.edit().putInt("CrashCount", tombstonePrefs.getInt("CrashCount", 0) + 1).commit();
                         reportedCrash = true;
+                        DiagLog.e("Decoder", "The video decoder crashed and takes the app down", e);
+                        DiagLog.flush();
                     }
                 },
                 tombstonePrefs.getInt("CrashCount", 0),
@@ -1476,6 +1479,7 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
 
     @Override
     public void stageStarting(final String stage) {
+        DiagLog.i("Stream", "Connection stage: " + stage);
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -1492,6 +1496,7 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
 
     private void stopConnection() {
         if (connecting || connected) {
+            DiagLog.i("Stream", "Stream stopped");
             connecting = connected = false;
             windowController.updatePipAutoEnter();
 
@@ -1616,6 +1621,7 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
 
     @Override
     public void connectionStatusUpdate(final int connectionStatus) {
+        DiagLog.i("Stream", "Connection quality: " + (connectionStatus == MoonBridge.CONN_STATUS_POOR ? "poor" : "okay"));
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -1644,6 +1650,7 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
 
     @Override
     public void connectionStarted() {
+        DiagLog.i("Stream", "Stream started");
         runOnUiThread(new Runnable() {
             @Override
             public void run() {

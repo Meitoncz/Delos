@@ -14,6 +14,7 @@ import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.text.input.KeyboardType
+import com.limelight.diag.DiagLog
 import com.limelight.shell.data.App
 import com.limelight.shell.data.Pc
 import com.limelight.shell.settings.SettingsTab
@@ -394,7 +395,9 @@ class ShellState(initial: Screen) {
         durationMs: Long = if (action != null) ToastTiming.ACTION_MS else ToastTiming.SHELL_MS,
         kind: ToastKind? = null,
     ) {
-        toast = Toast(text, icon, ++toastCounter, action, durationMs, toastKindFor(kind, icon, action != null))
+        val shown = toastKindFor(kind, icon, action != null)
+        DiagLog.logToast(shown, text)
+        toast = Toast(text, icon, ++toastCounter, action, durationMs, shown)
     }
 
     fun hideToast(id: Int) {
