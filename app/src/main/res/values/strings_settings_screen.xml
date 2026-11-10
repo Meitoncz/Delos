@@ -21,7 +21,7 @@
     <string name="settings_screen_search_placeholder">Search all settings</string>
     <!--
         The keys of the on-screen letter picker: the alphabet of the language, then the digits. Each character once. Nine keys to a
-        row; a language with more than 54 keys gets more, slightly smaller keys so that six rows are enough (Czech has 52).
+        row; a language with more than 54 keys gets more, slightly smaller keys so that six rows are enough (Czech has 51).
         The search compares letters as typed, so a language whose titles are not written in its picker letters says how here:
         Japanese: the 46 basic hiragana in gojuon order, then the digits. Katakana titles are found through hiragana (the search
         folds katakana to hiragana and ignores dakuten, small kana and the long-vowel mark) and kanji titles through a built-in

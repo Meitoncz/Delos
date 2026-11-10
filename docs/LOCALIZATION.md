@@ -27,7 +27,7 @@ when a `values-<lang>` folder exists for an unsupported language). Adding a lang
 ## How English text lives in the code
 
 1. **Every user-facing string is a resource** in `res/values/strings_<area>.xml`. No new literal goes into Kotlin or Java.
-   `tools/l10n/find_literals.py` lists what is still hardcoded in the shell (appendix).
+   `tools/l10n/find_literals.py` lists what is still hardcoded in the shell (it reports none today; keep it at zero).
 2. **Inside composition** use the Compose resource functions directly:
    `stringResource(R.string.profile_rename)`, `stringResource(R.string.profile_restored, name)`,
    `pluralStringResource(R.plurals.profile_signed_in, count, model, count)`.
@@ -57,7 +57,7 @@ One source of truth: the **Android per-app locale**, wrapped by `shell/settings/
   Compose recomposes because `LocalConfiguration` is replaced, and `stringResource` / `textResources()` read the activity's own
   `Resources`, which the system updated. `Locale.getDefault()` (number and date formatting, Han glyph forms) follows too.
 * **Android 10-12** (minSdk 29): there is no platform per-app locale. The tag is kept in the `app_language` preference file and applied
-  by `AppLanguage.wrap` in `attachBaseContext` of the shell and stream activities and by `AppLanguage.initApplication` for the
+  by `AppLanguage.wrap` in `attachBaseContext` of every activity (shell, stream, help, shortcut trampoline, external display control) and by `AppLanguage.initApplication` for the
   application context; choosing a language recreates the foreground activity (the shell returns to its start screen, because its
   navigation state is not restored). `AppCompatDelegate.setApplicationLocales` and its `AppLocalesMetadataHolderService` were
   considered and not used: they need an `AppCompatActivity` with an AppCompat theme, and the shell is a `ComponentActivity`.
@@ -90,7 +90,7 @@ more). The help texts are string resources too:
   letters and digits becomes `_`, so `fast-vsync` is `help_frame_pacing_fast_vsync`). `SettingsHelp.description(res, key, fallback)`
   and `SettingsHelp.choice(res, key, value)` find them with `getIdentifier` and fall back to the XML summary or to the dynamic
   texts (`help_dynamic_*`, formats with a positional argument). The stream menu help is `stream_help_<slug of the item key>`
-  (`StreamMenuHelp.description(res, key)`; the keys stay the English item names, which are identifiers). Because lint cannot see
+  (`StreamMenuHelp.description(res, key)`; the keys stay the English item names, which are identifiers: `MenuKey` / `MoreRow` constants and the rumble preset enum name, never shown; `StreamMenuLayoutTest` fails when a menu key has no `stream_help_*` string). Because lint cannot see
   `getIdentifier` uses, `res/raw/keep.xml` keeps `help_*` and `stream_help_*`. These strings are always formatted, so a literal
   percent sign is written `%%` there.
 * Settings tabs (`SettingsTab.label(res)` / `description(res)`), appearance choices (`Palette`, `BackgroundKind`, `HomeLayout`,
@@ -124,7 +124,8 @@ needs the keys, but identical names keep diffs reviewable.
 | `strings_common.xml` | words shared by several areas: OK, Cancel, Save, Undo, Back, On, Off, units |
 | `strings_home.xml` | start screen, side menu, dashboard, first run (boot, welcome) |
 | `strings_library.xml` | game list, game detail, tags, sorting |
-| `strings_stream_menu.xml` | in-stream menu, its help, loader, stream result and statistics labels |
+| `strings_stream_menu.xml` | in-stream menu, its help, loader, stream result and statistics labels, upscaler status, controller button names |
+| `strings_rumble.xml` | rumble feel names and the sentences about a rumble technique that cannot run |
 | `strings_devices.xml` | PCs, add/remove/wake, device setup, status |
 | `strings_pairing.xml` | pairing dialogs and PIN flow |
 | `strings_profile.xml` | profiles, avatars, profile dialogs (**reference**) |
@@ -134,12 +135,15 @@ needs the keys, but identical names keep diffs reviewable.
 | `strings_metadata.xml` | game metadata, tags, genres, sources |
 | `strings_tags.xml` | genre and theme names of the game card and filter (`tags_*`) |
 | `strings_artwork.xml` | artwork picker and progress |
-| `strings_toasts.xml` | toasts that belong to no single screen |
+| `strings_toasts.xml` | toasts that belong to no single screen, the kind words (INFO, DONE …) and the toast screen-reader text |
 | `strings_dialogs.xml` | generic dialogs, security prompts |
 | `strings_debug.xml` | debug info screen (user-visible) |
 | `strings_keyboard.xml` | on-screen keyboard labels and its settings |
-| `strings_diagnostics.xml` | log export, crash report offer |
+| `strings_diagnostics.xml` | log export, the problem report card (typed `Problem` → sentences), log preview note |
 | `strings_link.xml` | link test and guidance |
+| `strings_shell.xml` | top bar, side menu, hint bar, link prompts |
+| `strings_firstrun.xml` | first run: avatar and profile creation |
+| `strings_settings_screen.xml` | native settings screens: titles, descriptions, search, letter picker |
 
 Add an area file (and a row here) rather than overloading an unrelated one.
 
@@ -175,7 +179,7 @@ Add an area file (and a row here) rather than overloading an unrelated one.
   index, so each language can inflect.
 * **Numbers and dates in text** go through the format arguments (`%d`, `%1$.1f`), which use the app locale (decimal comma in
   Czech). Dates and times use `java.text.DateFormat` / `DateTimeFormatter.ofLocalizedDate`, not an English pattern or an
-  `Locale.ENGLISH` formatter (`ArtworkFilters`, `DeviceStatus`, `LinkResult` and `DiagnosticReport` still do or say English; stage 1 fixes them).
+  `Locale.ENGLISH` formatter. Technical readouts and developer-facing text (log files, report bodies, e-mail subject) stay English on purpose.
 * **Typography**: use the real characters `…`, `·`, `×`, `–`, `’` in the English source; escape an apostrophe as `\'` or write
   `’`; `\n` only for a deliberate line break. No HTML, no markup in strings. No trailing space, no leading space (a separator
   belongs in the format).
@@ -328,7 +332,7 @@ What changes for non-Latin text, and what to look at on a device (not verified h
 ## Tooling
 
 * `tools/l10n/find_literals.py`: hardcoded user-facing English literals in `app/src/main/java/com/limelight/shell/**/*.kt`.
-  `--list [files…]` prints every literal with line numbers; `--markdown` prints the table below. It is a heuristic (uppercase start,
+  `--list [files…]` prints every literal with line numbers; `--markdown` prints a per-file count table. It is a heuristic (uppercase start,
   a space or more than 3 characters; logs, keys, identifiers, regexes and format keys skipped); a line with a trailing
   `// l10n-ignore` is skipped. Python 3.9, standard library only.
 * `app/src/test/java/com/limelight/l10n/StringResourcesTest.kt`: for every `values-<lang>/strings*.xml`: same keys as the English
@@ -368,85 +372,52 @@ Informal *ty* everywhere (imperatives: „Vyber“, „Zkus“); no feminine/mas
 | tabs Stream / Display / Audio / Controls / Appearance / Covers / Devices / About | Stream / Obraz / Zvuk / Ovládání / Vzhled / Obaly / Zařízení / O aplikaci | |
 | UI theme / game theme tag | motiv / téma | |
 
-The on-screen letter picker of the settings search (`settings_screen_search_letters`) holds the whole Czech alphabet with diacritics (42 letters) and the digits: 52 keys, six rows of nine, because the search is diacritic-sensitive.
+The on-screen letter picker of the settings search (`settings_screen_search_letters`) holds the whole Czech alphabet with diacritics (41 letters) and the digits: 51 keys, six rows of nine, because the search is diacritic-sensitive.
 
-## Appendix: hardcoded literals still in the shell
+## Settings search: aliases and the letter pickers
 
-Output of `python3 tools/l10n/find_literals.py --markdown` (a heuristic; it over-counts data tables such as the Steam tag names
-in `ui/SteamTags.kt`, which stage 1 decides on separately, and some developer messages, and under-counts text assembled from parts).
+* **Aliases.** A row is found by its localized title, section, tab, description and by extra synonyms. The English synonyms (the old
+  names of the motion and link rows) are always searched; `SearchAliases` (`shell/screens/SettingsSearchAliases.kt`) adds the
+  `settings_search_alias_*` string of the current language, so a translator may add words that people of that language would type.
+* **Letter picker** (`settings_screen_search_letters`, the alphabet of the language and the digits, nine keys to a row; more than 54
+  keys switch to smaller keys so that six rows are enough). The query is compared as typed, so a language whose titles are not written
+  in its picker letters has its own matching rule (`SettingsSearchText.kt`, tested by `SettingsSearchTextTest`):
+  * **ja**: the 46 basic hiragana in gojūon order. The query and the title are folded to a kana skeleton (katakana become hiragana;
+    dakuten, small kana and ー are dropped), so `ひつとれと` finds ビットレート. Kanji are read through a built-in table of readings
+    (`JapaneseReadings`); a test fails when a ja title gains a kanji the table lacks.
+  * **ko**: the 14 initial consonants (choseong) then A–Z and the digits; every Hangul syllable of a title is reduced to its initial
+    consonant (`ㅎㅅㄷ` finds 해상도).
+  * **zh-CN**: A–Z and the digits; besides Latin text the letters match the pinyin initials of the title (`sz` finds 设置) from a
+    built-in table of the characters the titles use (`PinyinInitials`; a test fails when a title gains an uncovered character).
+  * Descriptions are matched as plain text only. Other languages are unchanged.
 
-| File (under `shell/`) | Literals |
-|---|---:|
-| `ui/SteamTags.kt` | 275 |
-| `settings/SettingsHelp.kt` | 167 |
-| `screens/DebugInfoScreen.kt` | 142 |
-| `screens/NativeSettings.kt` | 107 |
-| `Shell.kt` | 97 |
-| `screens/ArtworkScreen.kt` | 68 |
-| `settings/StreamMenuHelp.kt` | 65 |
-| `StreamMenuRoot.kt` | 51 |
-| `StreamStats.kt` | 49 |
-| `StreamMenuLayout.kt` | 42 |
-| `screens/NativeSettingsHelp.kt` | 37 |
-| `screens/HomeScreen.kt` | 32 |
-| `DeviceFlows.kt` | 30 |
-| `StreamResult.kt` | 29 |
-| `screens/DeviceScreens.kt` | 28 |
-| `StreamLoader.kt` | 25 |
-| `screens/MetadataUi.kt` | 24 |
-| `screens/PairScreens.kt` | 23 |
-| `settings/AppearanceStore.kt` | 23 |
-| `data/PcSetup.kt` | 20 |
-| `screens/GameSettingsScreen.kt` | 19 |
-| `settings/SettingsCatalog.kt` | 17 |
-| `screens/SettingsScreen.kt` | 16 |
-| `link/LinkProbeClient.kt` | 15 |
-| `screens/FirstRunScreens.kt` | 14 |
-| `link/LinkVerdictText.kt` | 13 |
-| `screens/FilterModal.kt` | 13 |
-| `data/Profiles.kt` | 11 |
-| `keyboard/FullKeyboard.kt` | 10 |
-| `screens/SettingsActions.kt` | 10 |
-| `settings/SettingsCapabilities.kt` | 10 |
-| `data/ArtworkFilters.kt` | 8 |
-| `link/LinkGuidance.kt` | 8 |
-| `keyboard/FullKeyboardKeys.kt` | 7 |
-| `link/LinkResult.kt` | 7 |
-| `screens/LinkGuidanceRows.kt` | 7 |
-| `data/GameLauncher.kt` | 6 |
-| `data/SteamGridDb.kt` | 6 |
-| `data/HowLongToBeatClient.kt` | 5 |
-| `link/LinkMonitor.kt` | 5 |
-| `screens/GameSettingsLogic.kt` | 4 |
-| `settings/StreamProfileStore.kt` | 4 |
-| `ui/HeroLensShader.kt` | 4 |
-| `ui/ProblemOfferCard.kt` | 4 |
-| `data/GameMetadataStore.kt` | 3 |
-| `data/PcGamingWikiClient.kt` | 3 |
-| `settings/StreamMenuSettings.kt` | 3 |
-| `settings/StreamSettingsStore.kt` | 3 |
-| `ui/ImpactChips.kt` | 3 |
-| `ui/Rows.kt` | 3 |
-| `ui/StreamResultLayer.kt` | 3 |
-| `StreamExit.kt` | 2 |
-| `StreamMenuBar.kt` | 2 |
-| `data/AvatarImages.kt` | 2 |
-| `link/LinkTester.kt` | 2 |
-| `ui/ArtworkProgressBar.kt` | 2 |
-| `ui/BackgroundShaders.kt` | 2 |
-| `ui/ButtonCapture.kt` | 2 |
-| `ui/HeroBitmap.kt` | 2 |
-| `ui/LaunchStageQueue.kt` | 2 |
-| `StreamMenuPopover.kt` | 1 |
-| `data/BoxArt.kt` | 1 |
-| `data/IgdbMetadataClient.kt` | 1 |
-| `data/PcRepository.kt` | 1 |
-| `data/SteamTagsClient.kt` | 1 |
-| `link/LinkFormats.kt` | 1 |
-| `link/LinkRecommendation.kt` | 1 |
-| `screens/OscPreviewScreen.kt` | 1 |
-| `ui/DialogLayer.kt` | 1 |
-| **Total** | **1605** |
+## What stays English on purpose
+
+* Brands, codec and protocol names, key names (`Ctrl`, `F11`), the controller letters **A/B/X/Y** and **L1/R1/L2/R2/L3/R3** (they are
+  printed on the pad; prompts take them as arguments: `Press %1$s`), the technique code `PULSE`, exception text shown as data.
+* Technical readouts: statistics units and numbers (`ms`, `Mbps`, `KB`, resolutions), formatted with the app locale only where a
+  decimal separator matters.
+* Developer-facing text: `DiagLog`, the report and crash files, the e-mail subject and report headings, the debug-only
+  "Trigger test crash" row, service labels in the manifest (not shown to the user), Steam tag names (data matched against the store).
+* Where Start / Select / Home have no common local name (es, fr, de, cs, pt-BR) the printed legend is kept.
+
+## Status
+
+Every language (cs, es, pt-BR, fr, de, ja, ko, zh-CN, uk) covers every string; `find_literals.py` reports no hardcoded literal in the
+shell. Text produced outside the UI is typed and mapped to resources: rumble presets and problems (`RumblePresets`, `RumbleProblem`,
+`RumbleText.kt`), the upscaler status (`UpscalerStatus`), the problem report card (`Problem` fields → `diag_problem_*`), toast kinds
+(`ToastKind.wordRes`). The artwork "none of them matches" sentences no longer contain the filter labels: the active filters are listed
+on their own line (`artwork_filtered_active`). The statistics position names are shared with the settings strings
+(`settings_native_stats_*`).
+
+## Text-fit check
+
+`TextFitTest` flags, for cs, es, pt-BR, fr, de and uk, a translation of a short UI slot (tab, chip, hint bar, side menu, button, menu
+row, option; found by key prefix and suffix, English at most 28 characters) that is more than twice the English length and longer
+than 12 characters. A label with no shorter natural wording is listed in `ACCEPTED` with the reason; the test also fails when an
+accepted entry stops being flagged. Review of this pass: 29 flagged before (cs 1, es 5, pt-BR 5, fr 10, de 4, uk 4), 17 accepted after
+(es 3, pt-BR 4, fr 7, de 1, uk 2) with the worst offenders (over 2.4 times) shortened: Odpárovat, Háptica, Crépuscule,
+Mise en page, Haptique, Entkoppeln, Abendrot, Fehler, З’єднати, Роз’єднати, Recentes.
 
 ## Terminology: Spanish
 
