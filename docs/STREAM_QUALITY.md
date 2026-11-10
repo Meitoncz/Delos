@@ -464,7 +464,7 @@ sampled at their own size) and SDR, HDR10 swapchain and the HDR P010 bridge.
 
 **Surface size.** Sharpen only must not enlarge anything, so the cost stays that of the stream's own pixels. SDR
 MediaCodec output keeps the stream-sized SurfaceView buffers (`StreamSurfaceController.sizeStreamSurfaceForUpscaler`: a scaling mode
-asks for the layout size, Sharpen only for the stream's fixed size) and the HDR child layer is created at the
+asks for the layout size, Sharpen only and turning the upscaler off for the stream's fixed size) and the HDR child layer is created at the
 stream's size, not the display's; SurfaceFlinger scales the result to the view as it does for direct output.
 PyroWave presents at the stream's size in this mode (`sgsrPresentationWidth/Height` = stream size, no supersampling
 candidate). Because these sizes differ from the scaling modes', switching Mode to or from Sharpen only (or enabling

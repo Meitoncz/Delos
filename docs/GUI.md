@@ -878,7 +878,8 @@ These preserve implementation/design context from the removed UI plan, not phase
   `DelosStreamActivity.getSurfaceController()`). The renderers reach the surface through the narrow
   `StreamSurfaceHost` interface, not the activity. Input lives in `binding/input`:
   `StreamKeyHandler` routes keys (the stream menu, the Full keyboard and gamepad buttons first, then
-  the keyboard), tracks the modifiers (cleared when the window focus changes), runs the client-side
+  the keyboard), tracks the modifiers and the keys it has down on the host (released there when the
+  window the keys come from loses focus; the modifier state is cleared on focus gain too), runs the client-side
   Ctrl+Alt+Shift+Z/Q/C combos once every modifier is up and sends the menus' special-key
   combinations (`GameMenu` and `StreamMenu` call it via `DelosStreamActivity.getKeyHandler()`).
   `StreamPointerHandler` handles the pointer sources left after `DelosStreamActivity`'s gamepad passthrough: mice
