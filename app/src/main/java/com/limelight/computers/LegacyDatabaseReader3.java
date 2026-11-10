@@ -107,6 +107,11 @@ public class LegacyDatabaseReader3 {
     }
 
     public static List<ComputerDetails> migrateAllComputers(Context c) {
+        // Nothing to migrate on almost every install; opening a missing file makes the framework log an exception stack
+        if (!c.getDatabasePath(COMPUTER_DB_NAME).exists()) {
+            return new LinkedList<ComputerDetails>();
+        }
+
         try (final SQLiteDatabase computerDb = SQLiteDatabase.openDatabase(
                 c.getDatabasePath(COMPUTER_DB_NAME).getPath(),
                 null, SQLiteDatabase.OPEN_READONLY)
