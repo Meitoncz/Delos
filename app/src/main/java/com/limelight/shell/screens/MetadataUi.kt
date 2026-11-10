@@ -10,6 +10,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.ui.res.stringResource
+import android.content.res.Resources
+import androidx.annotation.StringRes
+import com.limelight.R
+import com.limelight.shell.data.MetadataProblem
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -98,19 +103,42 @@ internal fun FilteredLibraryEmpty() {
     }
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(Modifier.widthIn(max = 900.px), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(22.px)) {
-            BasicText("No games match these filters", style = TextStyle(color = colors.text, fontFamily = Figtree, fontSize = 38.tpx))
-            BasicText("Press Y to change the filters, or reset them below.", style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 24.tpx))
+            BasicText(stringResource(R.string.metadata_filtered_title), style = TextStyle(color = colors.text, fontFamily = Figtree, fontSize = 38.tpx))
+            BasicText(stringResource(R.string.metadata_filtered_note, "Y"), style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 24.tpx))
             SettingRow(
-                Symbols.RESET, "Reset library filters", RowValue.Action { metadata.updateFilters(MetadataFilters()) },
+                Symbols.RESET, stringResource(R.string.metadata_filtered_reset), RowValue.Action { metadata.updateFilters(MetadataFilters()) },
                 Modifier.focusRequester(first), compact = true,
             )
         }
     }
 }
 
-internal fun openMetadataMenu(scope: CoroutineScope, shell: ShellState, tracker: FocusTracker, store: GameMetadataStore, pc: Pc, app: App) {
+/** The sentence for why a game's information is missing or stale. */
+internal fun MetadataProblem.text(res: Resources): String = res.getString(
+    when (this) {
+        MetadataProblem.UNAVAILABLE -> R.string.metadata_error_unavailable
+        MetadataProblem.UPDATE_FAILED -> R.string.metadata_error_update
+        MetadataProblem.PARTIAL -> R.string.metadata_error_partial
+    }
+)
+
+/**
+ * How long a game takes, rounded like HowLongToBeat's website: minutes below an hour, half hours up to 100 hours, whole hours
+ * beyond ("45 Mins", "3½ Hours").
+ */
+internal fun completionText(res: Resources, seconds: Long): String {
+    if (seconds < 3600) {
+        val minutes = ((seconds + 30) / 60).toInt()
+        return res.getQuantityString(R.plurals.metadata_hltb_minutes, minutes, minutes)
+    }
+    val halves = if (seconds >= 100 * 3600L) ((seconds + 1800) / 3600) * 2 else (seconds + 900) / 1800
+    val hours = "${halves / 2}${if (halves % 2 == 1L) "\u00bd" else ""}"
+    return res.getQuantityString(R.plurals.metadata_hltb_hours, ((halves + 1) / 2).toInt(), hours)
+}
+
+internal fun openMetadataMenu(res: Resources, scope: CoroutineScope, shell: ShellState, tracker: FocusTracker, store: GameMetadataStore, pc: Pc, app: App) {
     if (BundledArtwork.kind(app) != null) return
-    fun operation(success: String, block: suspend () -> Unit) {
+    fun operation(@StringRes success: Int, block: suspend () -> Unit) {
         scope.launch {
             try {
                 block()
@@ -118,72 +146,72 @@ internal fun openMetadataMenu(scope: CoroutineScope, shell: ShellState, tracker:
                 val error = state.error
                 // A finished refresh/reset that found no IGDB match is not a success.
                 if (error == null && state.data?.candidate == null) {
-                    shell.showToast("No IGDB match found. Use Search IGDB / change match.", Symbols.SEARCH)
+                    shell.showToast(res.getString(R.string.metadata_no_match_toast), Symbols.SEARCH)
                 } else {
-                    shell.showToast(error ?: success, if (error == null) Symbols.CHECK_CIRCLE else Symbols.ERROR)
+                    shell.showToast(error?.text(res) ?: res.getString(success), if (error == null) Symbols.CHECK_CIRCLE else Symbols.ERROR)
                 }
             } catch (error: CancellationException) {
                 throw error
             } catch (_: Exception) {
-                shell.showToast("Metadata could not be updated", Symbols.ERROR)
+                shell.showToast(res.getString(R.string.metadata_update_failed_toast), Symbols.ERROR)
             }
         }
     }
     shell.openLayer(
         Layer.Context(
-            ContextMenu("Metadata · ${app.name}", listOf(
-                MenuItem(Symbols.SEARCH, "Search IGDB / change match") { searchMetadata(scope, shell, tracker, store, pc, app, app.name) },
-                MenuItem(Symbols.REFRESH, "Refresh metadata") { operation("Metadata refreshed") { store.ensure(pc, app, force = true) } },
-                MenuItem(Symbols.RESET, "Reset metadata match") { operation("Metadata match reset") { store.reset(pc, app) } },
+            ContextMenu(res.getString(R.string.metadata_menu_title, app.name), listOf(
+                MenuItem(Symbols.SEARCH, res.getString(R.string.metadata_menu_search)) { searchMetadata(res, scope, shell, tracker, store, pc, app, app.name) },
+                MenuItem(Symbols.REFRESH, res.getString(R.string.metadata_menu_refresh)) { operation(R.string.metadata_refreshed_toast) { store.ensure(pc, app, force = true) } },
+                MenuItem(Symbols.RESET, res.getString(R.string.metadata_menu_reset)) { operation(R.string.metadata_reset_toast) { store.reset(pc, app) } },
             )), tracker.bounds(),
         ), tracker,
     )
 }
 
-private fun searchMetadata(scope: CoroutineScope, shell: ShellState, tracker: FocusTracker, store: GameMetadataStore, pc: Pc, app: App, term: String) {
+private fun searchMetadata(res: Resources, scope: CoroutineScope, shell: ShellState, tracker: FocusTracker, store: GameMetadataStore, pc: Pc, app: App, term: String) {
     scope.launch {
-        shell.showToast("Searching IGDB for $term…", Symbols.SEARCH)
+        shell.showToast(res.getString(R.string.metadata_searching_toast, term), Symbols.SEARCH)
         val found = try {
             store.search(term)
         } catch (error: CancellationException) {
             throw error
         } catch (_: Exception) {
-            shell.showToast("IGDB search is unavailable", Symbols.ERROR)
+            shell.showToast(res.getString(R.string.metadata_search_unavailable_toast), Symbols.ERROR)
             return@launch
         }
         fun showPage(page: Int) {
         val items = found.drop(page * 6).take(6).map { candidate ->
-            MenuItem(Symbols.SPORTS_ESPORTS, candidate.name + (candidate.year?.let { " ($it)" } ?: "")) {
+            MenuItem(Symbols.SPORTS_ESPORTS, candidate.year?.let { res.getString(R.string.metadata_candidate_with_year, candidate.name, it) } ?: candidate.name) {
                 scope.launch {
                     try {
                         store.select(pc, app, candidate)
                         val error = store.entry(pc, app).error
-                        shell.showToast(error ?: "Metadata matched with ${candidate.name}", if (error == null) Symbols.CHECK_CIRCLE else Symbols.ERROR)
+                        shell.showToast(error?.text(res) ?: res.getString(R.string.metadata_matched_toast, candidate.name), if (error == null) Symbols.CHECK_CIRCLE else Symbols.ERROR)
                     } catch (error: CancellationException) {
                         throw error
                     } catch (_: Exception) {
-                        shell.showToast("Metadata match could not be saved", Symbols.ERROR)
+                        shell.showToast(res.getString(R.string.metadata_match_save_failed_toast), Symbols.ERROR)
                     }
                 }
             }
         } + buildList {
-            if (page > 0) add(MenuItem(Symbols.ARROW_BACK, "Previous matches") { showPage(page - 1) })
-            if ((page + 1) * 6 < found.size) add(MenuItem(Symbols.ARROW_FORWARD, "More matches") { showPage(page + 1) })
-        } + MenuItem(Symbols.SEARCH_NAME, "Search for another name") {
+            if (page > 0) add(MenuItem(Symbols.ARROW_BACK, res.getString(R.string.metadata_matches_previous)) { showPage(page - 1) })
+            if ((page + 1) * 6 < found.size) add(MenuItem(Symbols.ARROW_FORWARD, res.getString(R.string.metadata_matches_more)) { showPage(page + 1) })
+        } + MenuItem(Symbols.SEARCH_NAME, res.getString(R.string.metadata_search_other)) {
             shell.openLayer(
                 Layer.Dialog(DialogSpec(
-                    "Search IGDB", "Choose metadata independently of SteamGridDB artwork.",
-                    listOf(DialogField(Symbols.SEARCH, term, "Game name", maxLength = 100)), "Search",
+                    res.getString(R.string.metadata_search_title), res.getString(R.string.metadata_search_note),
+                    listOf(DialogField(Symbols.SEARCH, term, res.getString(R.string.metadata_search_hint), maxLength = 100)), res.getString(R.string.metadata_search_action),
                 ) { values ->
                     val next = values.firstOrNull()?.trim().orEmpty()
                     if (next.isEmpty()) false else {
-                        searchMetadata(scope, shell, tracker, store, pc, app, next)
+                        searchMetadata(res, scope, shell, tracker, store, pc, app, next)
                         true
                     }
                 }), tracker,
             )
         }
-        shell.openLayer(Layer.Context(ContextMenu(if (found.isEmpty()) "No IGDB match for $term" else "Choose metadata match", items), tracker.bounds()), tracker)
+        shell.openLayer(Layer.Context(ContextMenu(if (found.isEmpty()) res.getString(R.string.metadata_matches_none, term) else res.getString(R.string.metadata_matches_title), items), tracker.bounds()), tracker)
         }
         showPage(0)
     }

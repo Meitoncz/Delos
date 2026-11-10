@@ -32,9 +32,9 @@ enum class NativeHdr { HDR, SDR, UNKNOWN }
 @Immutable
 data class HdrEvidence(val support: NativeHdr, val page: String? = null, val notes: String? = null)
 
-/** HLTB's headline comp_all, not Main Story or a detailed-table arithmetic average. */
+/** HLTB's comp_all ([seconds]), not Main Story or a detailed-table arithmetic average. */
 @Immutable
-data class CompletionTime(val id: Long, val name: String, val seconds: Long, val url: String, val headline: String)
+data class CompletionTime(val id: Long, val name: String, val seconds: Long, val url: String)
 
 @Immutable
 data class GameMetadata(
@@ -53,12 +53,15 @@ data class GameMetadata(
     val steamTags: List<String> = emptyList(),
 )
 
+/** Why a game's information is missing or stale; the screens turn it into a sentence. */
+enum class MetadataProblem { UNAVAILABLE, UPDATE_FAILED, PARTIAL }
+
 @Immutable
 data class GameMetadataState(
     val data: GameMetadata? = null,
     val loading: Boolean = false,
     val resolved: Boolean = false,
-    val error: String? = null,
+    val error: MetadataProblem? = null,
 )
 
 enum class HdrFilter { ANY, HDR, SDR, UNKNOWN }

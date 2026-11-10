@@ -15,7 +15,7 @@ class MetadataFiltersTest {
             themes = themes.map { GameGenre(it, "Theme $it") },
         ),
         hdr = HdrEvidence(hdr),
-        completion = seconds?.let { CompletionTime(30, "Game", it, "https://howlongtobeat.com/game/30", "10 Hours") },
+        completion = seconds?.let { CompletionTime(30, "Game", it, "https://howlongtobeat.com/game/30") },
     )
 
     @Test fun confirmedSdrDoesNotIncludeUnmatchedOrUnknownGames() {

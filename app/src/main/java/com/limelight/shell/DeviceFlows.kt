@@ -1,5 +1,8 @@
 package com.limelight.shell
 
+import android.content.Context
+import android.content.res.Resources
+import com.limelight.R
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.text.input.KeyboardType
 import com.limelight.shell.data.Library
@@ -73,8 +76,15 @@ private const val WAKE_TIMEOUT_MS = 120_000L
 /** How long the portal waits at most for the PC's games before it opens home anyway. */
 private const val LIBRARY_TIMEOUT_MS = 5_000L
 
-/** The shell's [DeviceActions]: portal, toasts and dialogs, no confirmation prompts. */
+/** The Back button's name in prompts such as "B cancels" (the pads are labelled like an Xbox pad throughout the UI). */
+private const val BACK_BUTTON = "B"
+
+/**
+ * The shell's [DeviceActions]: portal, toasts and dialogs, no confirmation prompts. Texts are resolved when they are shown, from
+ * [context]'s resources (the activity's, so they follow the app language).
+ */
 class ShellDeviceActions internal constructor(
+    private val context: Context,
     private val shell: ShellState,
     private val tracker: FocusTracker,
     private val repo: PcRepository,
@@ -86,6 +96,7 @@ class ShellDeviceActions internal constructor(
     private val linkTests: LinkTestStore,
     private val reducedMotion: () -> Boolean,
 ) : DeviceActions {
+    private val res: Resources get() = context.resources
     private var portals = 0
     private var portalJob: Job? = null
 
@@ -98,21 +109,21 @@ class ShellDeviceActions internal constructor(
             try {
                 feedback.play(Cue.OPEN)
                 if (!pc.online) {
-                    val error = setup.wake(pc)
+                    val error = setup.wake(pc).errorText(res, pc.name)
                     shell.portal = Portal(
                         id, Symbols.WAKE,
-                        if (error == null) "Waking up ${pc.name}" else "Waiting for ${pc.name}",
-                        if (error == null) "Wake-up signal sent · B cancels" else "Turn the PC on · B cancels",
+                        res.getString(if (error == null) R.string.devices_portal_waking_title else R.string.devices_portal_waiting_title, pc.name),
+                        res.getString(if (error == null) R.string.devices_portal_waking_note else R.string.devices_portal_waiting_note, BACK_BUTTON),
                         cancellable = true,
                     )
                     if (repo.awaitPc(pc.uuid, WAKE_TIMEOUT_MS) { it.online } == null) {
                         feedback.play(Cue.ERROR)
-                        shell.showToast("${pc.name} did not wake up", Symbols.WAKE, kind = ToastKind.ERROR)
+                        shell.showToast(res.getString(R.string.devices_wake_timeout_toast, pc.name), Symbols.WAKE, kind = ToastKind.ERROR)
                         return@launch
                     }
                 }
                 shell.portalBurst = false
-                shell.portal = Portal(id, Symbols.DESKTOP_WINDOWS, "Connecting to ${pc.name}", "Vibepollo · paired", cancellable = false)
+                shell.portal = Portal(id, Symbols.DESKTOP_WINDOWS, res.getString(R.string.devices_portal_connecting_title, pc.name), res.getString(R.string.devices_portal_connecting_note), cancellable = false)
                 // The prototype's 2.1 s in the portal, and the PC's games ready by then if possible
                 val minimum = async { delay(if (reducedMotion()) 600L else 2100L) }
                 withTimeoutOrNull(LIBRARY_TIMEOUT_MS) { repo.library.first { it is Library.Ready && it.pc.uuid == pc.uuid } }
@@ -144,30 +155,30 @@ class ShellDeviceActions internal constructor(
             val transport = currentTransport(context)
             val show = { line: String ->
                 shell.portalBurst = false
-                shell.portal = Portal(id, Symbols.LINK_TEST, "Testing the link to ${pc.name}", line, cancellable = true)
+                shell.portal = Portal(id, Symbols.LINK_TEST, res.getString(R.string.devices_link_portal_title, pc.name), line, cancellable = true)
             }
             try {
                 feedback.play(Cue.OPEN)
-                show("Stay on ${transport.label} · B cancels")
+                show(res.getString(R.string.devices_link_portal_start, transport.label, BACK_BUTTON))
                 val result = linkTester.run(pc, startKbps) { step ->
                     scope.launch {
-                        if (shell.portal?.id == id) show("${if (step.confirming) "Confirming" else "Testing"} ${mbps(step.kbps)} · stay on ${transport.label} · B cancels")
+                        if (shell.portal?.id == id) show(res.getString(if (step.confirming) R.string.devices_link_portal_confirming else R.string.devices_link_portal_testing, mbps(step.kbps), transport.label, BACK_BUTTON))
                     }
                 }
                 when (result) {
                     is LinkTestResult.Done -> {
                         linkTests.put(pc.uuid, result.test)
                         feedback.play(Cue.SELECT)
-                        shell.showToast("${transport.label} carries ${mbps(result.test.wireKbps)}${if (result.jitter) " (a little jitter)" else ""}", Symbols.CHECK_CIRCLE, kind = ToastKind.SUCCESS)
+                        shell.showToast(res.getString(if (result.jitter) R.string.devices_link_done_jitter else R.string.devices_link_done, transport.label, mbps(result.test.wireKbps)), Symbols.CHECK_CIRCLE, kind = ToastKind.SUCCESS)
                     }
                     is LinkTestResult.Failed -> {
                         feedback.play(Cue.ERROR)
                         shell.showToast(result.text, Symbols.ERROR, kind = ToastKind.ERROR)
                     }
-                    LinkTestResult.Cancelled -> shell.showToast("Link test stopped", Symbols.INFO)
+                    LinkTestResult.Cancelled -> shell.showToast(res.getString(R.string.devices_link_stopped), Symbols.INFO)
                 }
             } catch (e: kotlinx.coroutines.CancellationException) {
-                shell.showToast("Link test stopped", Symbols.INFO)
+                shell.showToast(res.getString(R.string.devices_link_stopped), Symbols.INFO)
                 throw e
             } finally {
                 shell.portal = null
@@ -193,17 +204,17 @@ class ShellDeviceActions internal constructor(
     override fun pairWithCode(pc: Pc, from: Screen) {
         openDialog(
             DialogSpec(
-                "Pair with a one-time code",
-                "In the Vibepollo web UI, create a one-time PIN with a passphrase, then enter both here.",
+                res.getString(R.string.pairing_otp_title),
+                res.getString(R.string.pairing_otp_note),
                 listOf(
-                    DialogField(Symbols.DIALPAD, placeholder = "PIN", keyboard = KeyboardType.NumberPassword, maxLength = 4),
-                    DialogField(Symbols.PASSWORD, placeholder = "Passphrase", password = true, maxLength = 64),
+                    DialogField(Symbols.DIALPAD, placeholder = res.getString(R.string.pairing_otp_pin_hint), keyboard = KeyboardType.NumberPassword, maxLength = 4),
+                    DialogField(Symbols.PASSWORD, placeholder = res.getString(R.string.pairing_otp_passphrase_hint), password = true, maxLength = 64),
                 ),
-                "Pair",
+                res.getString(R.string.pairing_otp_action),
             ) { (pin, passphrase) ->
                 when {
-                    pin.length != 4 -> error("The PIN has 4 digits")
-                    passphrase.length < 4 -> error("The passphrase has at least 4 characters")
+                    pin.length != 4 -> error(res.getString(R.string.pairing_otp_pin_error))
+                    passphrase.length < 4 -> error(res.getString(R.string.pairing_otp_passphrase_error))
                     else -> {
                         shell.navigate(Screen.Pin(pc.uuid, pc.name, Otp(pin, passphrase), from))
                         true
@@ -216,12 +227,12 @@ class ShellDeviceActions internal constructor(
     override fun addByAddress(from: Screen) {
         openDialog(
             DialogSpec(
-                "Enter the PC address",
-                "The IP address or host name of the PC running Vibepollo, optionally with a port.",
+                res.getString(R.string.devices_address_title),
+                res.getString(R.string.devices_address_note),
                 listOf(DialogField(Symbols.MAP_PIN, placeholder = "192.168.1.20", keyboard = KeyboardType.Uri, maxLength = 64)),
-                "Add PC",
+                res.getString(R.string.devices_address_action),
             ) { (address) ->
-                if (address.isBlank()) return@DialogSpec error("Enter an address")
+                if (address.isBlank()) return@DialogSpec error(res.getString(R.string.devices_address_required))
                 addAndPair(address.trim(), null, from)
                 true
             }
@@ -230,18 +241,18 @@ class ShellDeviceActions internal constructor(
 
     override fun addAndPair(address: String, otp: Otp?, from: Screen) {
         scope.launch {
-            shell.showToast("Looking for $address…", Symbols.SEARCH)
-            setup.add(address).fold(
-                onSuccess = { uuid ->
-                    val pc = repo.awaitPc(uuid, 5_000) { true }
+            shell.showToast(res.getString(R.string.devices_address_looking, address), Symbols.SEARCH)
+            when (val added = setup.add(address)) {
+                is PcSetup.AddResult.Added -> {
+                    val pc = repo.awaitPc(added.uuid, 5_000) { true }
                     when {
-                        pc == null -> error("$address answered, but could not be added")
+                        pc == null -> error(res.getString(R.string.devices_address_not_added, address))
                         pc.paired -> connect(pc)
                         else -> shell.navigate(Screen.Pin(pc.uuid, pc.name, otp, from))
                     }
-                },
-                onFailure = { error(it.message ?: "No PC answered at $address") },
-            )
+                }
+                else -> error(added.errorText(res, address) ?: res.getString(R.string.devices_add_no_answer, address))
+            }
         }
     }
 
@@ -256,14 +267,14 @@ class ShellDeviceActions internal constructor(
     override fun rename(pc: Pc) {
         openDialog(
             DialogSpec(
-                "Rename PC",
-                "The new name is only used in Delos on this device. Leave it empty for the PC's own name (${pc.serverName}).",
+                res.getString(R.string.devices_rename_title),
+                res.getString(R.string.devices_rename_note, pc.serverName),
                 listOf(DialogField(Symbols.EDIT, initial = pc.name, maxLength = 24)),
-                "Save",
+                res.getString(R.string.devices_rename_action),
             ) { (name) ->
                 repo.rename(pc.uuid, name)
                 feedback.play(Cue.SELECT)
-                shell.showToast(if (name.isBlank()) "Back to ${pc.serverName}" else "Renamed to ${name.trim()}", Symbols.CHECK_CIRCLE)
+                shell.showToast(if (name.isBlank()) res.getString(R.string.devices_rename_reset_toast, pc.serverName) else res.getString(R.string.devices_rename_done_toast, name.trim()), Symbols.CHECK_CIRCLE)
                 true
             }
         )
@@ -271,29 +282,29 @@ class ShellDeviceActions internal constructor(
 
     override fun wake(pc: Pc) {
         scope.launch {
-            val error = setup.wake(pc)
+            val error = setup.wake(pc).errorText(res, pc.name)
             if (error != null) feedback.play(Cue.ERROR)
-            shell.showToast(error ?: "Wake-up signal sent to ${pc.name}", Symbols.WAKE, kind = if (error != null) ToastKind.ERROR else ToastKind.INFO)
+            shell.showToast(error ?: res.getString(R.string.devices_wake_sent_toast, pc.name), Symbols.WAKE, kind = if (error != null) ToastKind.ERROR else ToastKind.INFO)
         }
     }
 
     override fun unpair(pc: Pc) {
         scope.launch {
-            val (ok, message) = setup.unpair(pc)
-            if (!ok) feedback.play(Cue.ERROR)
-            shell.showToast(message, if (ok) Symbols.LINK_OFF else Symbols.ERROR, kind = if (ok) ToastKind.SUCCESS else ToastKind.ERROR)
+            val result = setup.unpair(pc)
+            if (!result.success) feedback.play(Cue.ERROR)
+            shell.showToast(result.text(res, pc.name), if (result.success) Symbols.LINK_OFF else Symbols.ERROR, kind = if (result.success) ToastKind.SUCCESS else ToastKind.ERROR)
         }
     }
 
     override fun remove(pc: Pc) {
         setup.remove(pc)
         if (startup.startup.value.defaultPc == pc.uuid) startup.update { it.copy(defaultPc = null, skipStart = false) }
-        shell.showToast("${pc.name} was removed", Symbols.DELETE)
+        shell.showToast(res.getString(R.string.devices_removed_toast, pc.name), Symbols.DELETE)
     }
 
     override fun setDefault(pc: Pc?) {
         startup.update { it.copy(defaultPc = pc?.uuid, skipStart = pc != null && it.skipStart) }
-        shell.showToast(if (pc != null) "Delos starts with ${pc.name}" else "No default device", Symbols.STAR)
+        shell.showToast(if (pc != null) res.getString(R.string.devices_default_set_toast, pc.name) else res.getString(R.string.devices_default_cleared_toast), Symbols.STAR)
     }
 
     override fun rescan() {

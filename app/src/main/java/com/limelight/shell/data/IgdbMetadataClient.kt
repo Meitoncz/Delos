@@ -43,7 +43,7 @@ class IgdbMetadataClient internal constructor(
         val url = MetadataProxy.url(baseUrl, "v1/igdb/games", parameter)
             ?: throw IgdbMetadataException("IGDB metadata service is not configured")
         pacer.await()
-        val request = Request.Builder().url(url).header("Accept", "application/json").get().build()
+        val request = Request.Builder().url(url).header("Accept", "application/json").get().build() // l10n-ignore
         http.newCall(request).execute().use { response ->
             if (!response.isSuccessful) throw IgdbMetadataException("IGDB HTTP ${response.code}")
             return try {

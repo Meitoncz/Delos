@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- First launch: the boot screen and the new / edit profile page -->
+    <string name="firstrun_boot_tagline">Your PC games, streamed from Vibepollo to your hands</string>
+    <string name="firstrun_boot_begin">Get started</string>
+    <string name="firstrun_boot_skip">Skip to home</string>
+    <string name="firstrun_create_new_title">Who\'s playing?</string>
+    <string name="firstrun_create_new_note">Pick an avatar and a name for your profile.</string>
+    <string name="firstrun_create_edit_title">Choose your avatar</string>
+    <string name="firstrun_create_edit_note">And a new name, if you like.</string>
+    <!-- Dialog title and label of the profile name on the new / edit profile page -->
+    <string name="firstrun_create_name_title">Profile name</string>
+    <string name="firstrun_create_name_label">Profile name</string>
+    <string name="firstrun_create_name_placeholder">Your name</string>
+    <!-- The name a new profile starts with until the user types one -->
+    <string name="firstrun_create_default_name">Player</string>
+    <string name="firstrun_create_change_name">Change name</string>
+    <string name="firstrun_create_save">Save</string>
+    <string name="firstrun_create_create">Create profile</string>
+    <!-- Names of the avatars in the picker -->
+    <string name="firstrun_avatar_sailor">Sailor</string>
+    <string name="firstrun_avatar_voyager">Voyager</string>
+    <string name="firstrun_avatar_player">Player</string>
+    <string name="firstrun_avatar_fox">Fox</string>
+    <string name="firstrun_avatar_spark">Spark</string>
+    <string name="firstrun_avatar_calm">Calm</string>
+    <string name="firstrun_avatar_knight">Knight</string>
+    <string name="firstrun_avatar_robot">Robot</string>
+    <string name="firstrun_avatar_cat">Cat</string>
+    <string name="firstrun_avatar_wizard">Wizard</string>
+    <string name="firstrun_avatar_racer">Racer</string>
+    <string name="firstrun_avatar_ghost">Ghost</string>
+</resources>

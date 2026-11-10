@@ -1,13 +1,23 @@
 package com.limelight.shell.data
 
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import com.google.gson.JsonParser
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import java.util.Locale
 
+@Config(sdk = [33])
+@RunWith(RobolectricTestRunner::class)
 class ArtworkFiltersTest {
+    private val res = ApplicationProvider.getApplicationContext<Context>().resources
+
     private fun image(id: Int, score: Int = 0, date: Long? = null, animated: Boolean = false) =
         SgdbImage(id, "u$id", "t$id", 600, 900, score = score, date = date, animated = animated)
 
@@ -90,16 +100,15 @@ class ArtworkFiltersTest {
     @Test fun chipsListActiveFiltersAndClearOneEach() {
         val f = ArtFilters(type = ArtType.STATIC, style = "white_logo", dimensions = "660x930", sort = ArtSort.NEWEST)
         val chips = ArtFilterRules.chips(f)
-        assertEquals(listOf("Static", "White logo", "660 × 930", "Sort: Newest"), chips.map { it.label })
+        assertEquals(listOf("Static", "White logo", "660 × 930", "Sort: Newest"), chips.map { it.label(res) })
         assertEquals(f.copy(style = null), ArtFilterRules.clear(f, chips[1]))
         assertEquals(ArtFilters(), chips.fold(f) { acc, chip -> ArtFilterRules.clear(acc, chip) })
     }
 
-    @Test fun resultLineCountsAgainstTheKnownTotal() {
-        assertEquals("10 of 41 covers", ArtFilterRules.resultLine(10, 41, "cover"))
-        assertEquals("41 covers", ArtFilterRules.resultLine(41, 41, "cover"))
-        assertEquals("1 cover", ArtFilterRules.resultLine(1, null, "cover"))
-        assertEquals("3 wide covers", ArtFilterRules.resultLine(3, null, "wide cover"))
+    @Test fun stylesAreWordsAndAnUnknownOneIsShownAsItsIdentifier() {
+        assertEquals("No logo", ArtFilterRules.styleLabel(res, "no_logo"))
+        assertEquals("Official", ArtFilterRules.styleLabel(res, "official"))
+        assertEquals("Future style", ArtFilterRules.styleLabel(res, "future_style"))
     }
 
     @Test fun parsingReadsWhatTheApiTellsAndKeepsTheRestEmpty() {
@@ -140,14 +149,22 @@ class ArtworkFiltersTest {
 
     @Test fun infoStripShowsOnlyKnownFacts() {
         val full = SgdbImage(1, "u", "t", 600, 900, style = "white_logo", score = 113, author = "Dewdrop", date = 1750636800L, mime = "image/webp")
-        assertEquals("White logo", ArtworkInfo.title(full, "Cover"))
+        assertEquals("White logo", ArtworkInfo.title(res, full, "Cover"))
         assertEquals(
-            listOf("SIZE" to "600 × 900 px", "FILE" to "WEBP", "SCORE" to "113 · by Dewdrop", "ADDED" to "23 Jun 2025"),
-            ArtworkInfo.fields(full),
+            listOf(ArtworkFact.Size(600, 900), ArtworkFact.File("WEBP"), ArtworkFact.Score(113, "Dewdrop"), ArtworkFact.Added(1750636800L)),
+            ArtworkInfo.facts(full),
         )
         val bare = SgdbImage(2, "u", "t", 0, 0)
-        assertEquals("Cover", ArtworkInfo.title(bare, "Cover"))
-        assertTrue(ArtworkInfo.fields(bare).isEmpty())
-        assertEquals(listOf("SCORE" to "by Ann"), ArtworkInfo.fields(bare.copy(author = "Ann")))
+        assertEquals("Cover", ArtworkInfo.title(res, bare, "Cover"))
+        assertTrue(ArtworkInfo.facts(bare).isEmpty())
+        assertEquals(listOf(ArtworkFact.Score(null, "Ann")), ArtworkInfo.facts(bare.copy(author = "Ann")))
+    }
+
+    @Test fun theDateFollowsTheLanguageAndStaysInUtc() {
+        assertEquals("Jun 23, 2025", ArtworkInfo.date(1750636800L, Locale.US))
+        assertEquals("23 Jun 2025", ArtworkInfo.date(1750636800L, Locale.UK))
+        assertEquals("23. 6. 2025", ArtworkInfo.date(1750636800L, Locale("cs", "CZ")))
+        // Late on the 22nd in UTC is still the 22nd, whatever the device's zone
+        assertEquals("Jun 22, 2025", ArtworkInfo.date(1750636800L - 1, Locale.US))
     }
 }

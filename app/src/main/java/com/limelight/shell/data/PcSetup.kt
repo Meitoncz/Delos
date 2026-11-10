@@ -1,7 +1,9 @@
 package com.limelight.shell.data
 
 import android.content.Context
+import android.content.res.Resources
 import android.net.Uri
+import com.limelight.R
 import com.limelight.binding.PlatformBinding
 import com.limelight.nvstream.http.ComputerDetails
 import com.limelight.nvstream.http.NvHTTP
@@ -23,9 +25,71 @@ import java.net.UnknownHostException
 class PcSetup(context: Context, private val repo: PcRepository, private val profiles: ProfileStore) {
     private val app = context.applicationContext
 
+    /** Why a pairing did not happen; [PairResult.Failed.text] turns it into the sentence to show. */
+    enum class PairFailure { STARTING, OFFLINE, PIN_WRONG, CODE_WRONG, BUSY, GAME_RUNNING, NOT_FOUND, UNSUPPORTED, FAILED }
+
     sealed interface PairResult {
         data object Paired : PairResult
-        data class Failed(val message: String) : PairResult
+
+        /** [detail] is the backend's own message of an unexpected [PairFailure.FAILED] (English, shown as it is). */
+        data class Failed(val reason: PairFailure, val detail: String? = null) : PairResult {
+            fun text(res: Resources, pcName: String): String = when (reason) {
+                PairFailure.STARTING -> res.getString(R.string.devices_starting)
+                PairFailure.OFFLINE -> res.getString(R.string.pairing_failed_offline, pcName)
+                PairFailure.PIN_WRONG -> res.getString(R.string.pairing_failed_pin_wrong)
+                PairFailure.CODE_WRONG -> res.getString(R.string.pairing_failed_code_wrong)
+                PairFailure.BUSY -> res.getString(R.string.pairing_failed_busy, pcName)
+                PairFailure.GAME_RUNNING -> res.getString(R.string.pairing_failed_game_running, pcName)
+                PairFailure.NOT_FOUND -> res.getString(R.string.pairing_failed_not_found, pcName)
+                PairFailure.UNSUPPORTED -> res.getString(R.string.pairing_failed_unsupported, pcName)
+                PairFailure.FAILED -> detail ?: res.getString(R.string.pairing_failed, pcName)
+            }
+        }
+    }
+
+    /** What adding a PC by address came to. */
+    sealed interface AddResult {
+        /** The new PC's uuid. */
+        data class Added(val uuid: String) : AddResult
+        data object Starting : AddResult
+        data object NotAnAddress : AddResult
+        data object NoAnswer : AddResult
+
+        /** The sentence to show when nothing was added; null once [Added]. */
+        fun errorText(res: Resources, address: String): String? = when (this) {
+            is Added -> null
+            Starting -> res.getString(R.string.devices_starting)
+            NotAnAddress -> res.getString(R.string.devices_add_not_an_address, address)
+            NoAnswer -> res.getString(R.string.devices_add_no_answer, address)
+        }
+    }
+
+    /** What waking a PC came to. */
+    enum class WakeResult {
+        SENT, NO_MAC, FAILED;
+
+        /** The sentence to show when the signal was not sent; null once [SENT]. */
+        fun errorText(res: Resources, pcName: String): String? = when (this) {
+            SENT -> null
+            NO_MAC -> res.getString(R.string.devices_wake_unsupported, pcName)
+            FAILED -> res.getString(R.string.devices_wake_failed)
+        }
+    }
+
+    /** What unpairing a PC came to; [text] is the sentence to show. */
+    enum class UnpairResult {
+        UNPAIRED, STARTING, OFFLINE, NOT_PAIRED, FAILED, UNREACHABLE;
+
+        val success: Boolean get() = this == UNPAIRED
+
+        fun text(res: Resources, pcName: String): String = when (this) {
+            UNPAIRED -> res.getString(R.string.devices_unpaired, pcName)
+            STARTING -> res.getString(R.string.devices_starting)
+            OFFLINE -> res.getString(R.string.devices_unpair_offline, pcName)
+            NOT_PAIRED -> res.getString(R.string.devices_unpair_not_paired, pcName)
+            FAILED -> res.getString(R.string.devices_unpair_failed, pcName)
+            UNREACHABLE -> res.getString(R.string.devices_unreachable, pcName)
+        }
     }
 
     /** A new PIN for the user to type on the PC. */
@@ -36,10 +100,10 @@ class PcSetup(context: Context, private val repo: PcRepository, private val prof
      * Blocks until the PIN is entered on the PC; cancelling the coroutine abandons the attempt.
      */
     suspend fun pair(pc: Pc, pin: String, passphrase: String?): PairResult {
-        val binder = repo.binder ?: return PairResult.Failed("Delos is still starting, try again")
+        val binder = repo.binder ?: return PairResult.Failed(PairFailure.STARTING)
         val details = binder.getComputer(pc.uuid) ?: pc.details
         if (details.state != ComputerDetails.State.ONLINE || details.activeAddress == null) {
-            return PairResult.Failed("${pc.name} is offline")
+            return PairResult.Failed(PairFailure.OFFLINE)
         }
         repo.pausePolling()
         try {
@@ -55,21 +119,18 @@ class PcSetup(context: Context, private val repo: PcRepository, private val prof
                             binder.invalidateStateForComputer(pc.uuid)
                             PairResult.Paired
                         }
-                        PairState.PIN_WRONG -> PairResult.Failed(if (passphrase == null) "The PIN was wrong, try again" else "The code or passphrase was wrong")
-                        PairState.ALREADY_IN_PROGRESS -> PairResult.Failed("${pc.name} is already pairing with another device")
-                        else -> PairResult.Failed(
-                            if (details.runningGameId != 0) "Quit the game on ${pc.name} first, then pair again"
-                            else "Pairing with ${pc.name} failed"
-                        )
+                        PairState.PIN_WRONG -> PairResult.Failed(if (passphrase == null) PairFailure.PIN_WRONG else PairFailure.CODE_WRONG)
+                        PairState.ALREADY_IN_PROGRESS -> PairResult.Failed(PairFailure.BUSY)
+                        else -> PairResult.Failed(if (details.runningGameId != 0) PairFailure.GAME_RUNNING else PairFailure.FAILED)
                     }
                 } catch (e: UnknownHostException) {
-                    PairResult.Failed("${pc.name} cannot be found")
+                    PairResult.Failed(PairFailure.NOT_FOUND)
                 } catch (e: FileNotFoundException) {
-                    PairResult.Failed("${pc.name} does not support pairing")
+                    PairResult.Failed(PairFailure.UNSUPPORTED)
                 } catch (e: InterruptedException) {
                     throw e
                 } catch (e: Exception) {
-                    PairResult.Failed(e.message ?: "Pairing with ${pc.name} failed")
+                    PairResult.Failed(PairFailure.FAILED, e.message)
                 }
             }
         } finally {
@@ -77,58 +138,55 @@ class PcSetup(context: Context, private val repo: PcRepository, private val prof
         }
     }
 
-    /**
-     * Adds the PC at [address] (host or IP, optionally with a port). Returns the new PC's uuid, or the
-     * message to show when it cannot be reached.
-     */
-    suspend fun add(address: String): Result<String> = withContext(Dispatchers.IO) {
-        val binder = repo.binder ?: return@withContext Result.failure(Exception("Delos is still starting, try again"))
-        val uri = parseAddress(address.trim()) ?: return@withContext Result.failure(Exception("“$address” is not an address"))
+    /** Adds the PC at [address] (host or IP, optionally with a port). */
+    suspend fun add(address: String): AddResult = withContext(Dispatchers.IO) {
+        val binder = repo.binder ?: return@withContext AddResult.Starting
+        val uri = parseAddress(address.trim()) ?: return@withContext AddResult.NotAnAddress
         val details = ComputerDetails()
         details.manualAddress = ComputerDetails.AddressTuple(uri.host, if (uri.port == -1) NvHTTP.DEFAULT_HTTP_PORT else uri.port)
         val added = try {
             binder.addComputerBlocking(details)
         } catch (e: IllegalArgumentException) {
             // OkHttp cannot canonicalize the host name
-            return@withContext Result.failure(Exception("“$address” is not an address"))
+            return@withContext AddResult.NotAnAddress
         }
         val uuid = details.uuid
         if (added && uuid != null) {
             repo.remember(uuid)
-            Result.success(uuid)
+            AddResult.Added(uuid)
         } else {
-            Result.failure(Exception("No PC answered at $address"))
+            AddResult.NoAnswer
         }
     }
 
-    /** Sends the Wake-on-LAN packet; returns the error to show, or null. */
-    suspend fun wake(pc: Pc): String? = withContext(Dispatchers.IO) {
+    /** Sends the Wake-on-LAN packet. */
+    suspend fun wake(pc: Pc): WakeResult = withContext(Dispatchers.IO) {
         val details = repo.binder?.getComputer(pc.uuid) ?: pc.details
-        if (details.macAddress == null) return@withContext "${pc.name} cannot be woken up from here"
+        if (details.macAddress == null) return@withContext WakeResult.NO_MAC
         try {
             WakeOnLanSender.sendWolPacket(details)
-            null
+            WakeResult.SENT
         } catch (e: Exception) {
-            "The wake-up signal could not be sent"
+            WakeResult.FAILED
         }
     }
 
-    /** Unpairs [pc] on the PC itself; returns the message to show. */
-    suspend fun unpair(pc: Pc): Pair<Boolean, String> = withContext(Dispatchers.IO) {
-        val binder = repo.binder ?: return@withContext false to "Delos is still starting, try again"
+    /** Unpairs [pc] on the PC itself. */
+    suspend fun unpair(pc: Pc): UnpairResult = withContext(Dispatchers.IO) {
+        val binder = repo.binder ?: return@withContext UnpairResult.STARTING
         val details = binder.getComputer(pc.uuid) ?: pc.details
         if (details.state != ComputerDetails.State.ONLINE || details.activeAddress == null) {
-            return@withContext false to "${pc.name} has to be online to unpair"
+            return@withContext UnpairResult.OFFLINE
         }
         try {
             val http = http(details, binder.uniqueId)
-            if (http.pairState != PairState.PAIRED) return@withContext false to "${pc.name} is not paired"
+            if (http.pairState != PairState.PAIRED) return@withContext UnpairResult.NOT_PAIRED
             http.unpair()
             val ok = http.pairState == PairState.NOT_PAIRED
             if (ok) binder.invalidateStateForComputer(pc.uuid)
-            ok to if (ok) "Unpaired from ${pc.name}" else "${pc.name} could not be unpaired"
+            if (ok) UnpairResult.UNPAIRED else UnpairResult.FAILED
         } catch (e: Exception) {
-            false to "${pc.name} cannot be reached"
+            UnpairResult.UNREACHABLE
         }
     }
 

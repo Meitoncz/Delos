@@ -16,18 +16,18 @@ class SteamGridDbRetryTest {
     @Test fun networkAndServerTroubleAreWorthRetryingButARejectedKeyIsNot() {
         assertTrue(SgdbRetry.isTransient(SocketTimeoutException("timeout")))
         assertTrue(SgdbRetry.isTransient(IOException("connection reset")))
-        assertTrue(SgdbRetry.isTransient(SteamGridDbException("SteamGridDB answered 503")))
-        assertTrue(SgdbRetry.isTransient(SteamGridDbException("SteamGridDB answered 429")))
-        assertFalse(SgdbRetry.isTransient(SteamGridDbException(SteamGridDbClient.KEY_REJECTED)))
-        assertFalse(SgdbRetry.isTransient(SteamGridDbException("SteamGridDB answered 400")))
-        assertFalse(SgdbRetry.isTransient(SteamGridDbException("image too large")))
+        assertTrue(SgdbRetry.isTransient(SteamGridDbException(SgdbFailure.API_HTTP, 503)))
+        assertTrue(SgdbRetry.isTransient(SteamGridDbException(SgdbFailure.API_HTTP, 429)))
+        assertFalse(SgdbRetry.isTransient(SteamGridDbException(SgdbFailure.KEY_REJECTED)))
+        assertFalse(SgdbRetry.isTransient(SteamGridDbException(SgdbFailure.API_HTTP, 400)))
+        assertFalse(SgdbRetry.isTransient(SteamGridDbException(SgdbFailure.IMAGE_TOO_LARGE)))
         assertFalse(SgdbRetry.isTransient(IllegalStateException("bug")))
     }
 
     @Test fun aCallThatRecoversReturnsItsResultAfterTheWaits() {
         val waits = mutableListOf<Long>()
         var calls = 0
-        val result = run(waits) { if (++calls < 3) throw SteamGridDbException("SteamGridDB answered 502") else "ok" }
+        val result = run(waits) { if (++calls < 3) throw SteamGridDbException(SgdbFailure.API_HTTP, 502) else "ok" }
         assertEquals("ok", result)
         assertEquals(3, calls)
         assertEquals(listOf(500L, 1200L), waits)
@@ -50,10 +50,10 @@ class SteamGridDbRetryTest {
         val waits = mutableListOf<Long>()
         var calls = 0
         try {
-            run(waits) { calls++; throw SteamGridDbException(SteamGridDbClient.KEY_REJECTED) }
+            run(waits) { calls++; throw SteamGridDbException(SgdbFailure.KEY_REJECTED) }
             fail("expected the failure")
         } catch (e: SteamGridDbException) {
-            assertEquals(SteamGridDbClient.KEY_REJECTED, e.message)
+            assertEquals(SgdbFailure.KEY_REJECTED, e.failure)
         }
         assertEquals(1, calls)
         assertTrue(waits.isEmpty())

@@ -832,6 +832,6 @@ class GameMetadataStoreTest {
         val store = newStore(providers)
         store.ensure(pc, game)
         assertEquals(0, providers.searchCalls.get())
-        assertEquals("Game metadata is not available in this build", store.entry(pc, game).error)
+        assertEquals(MetadataProblem.UNAVAILABLE, store.entry(pc, game).error)
     }
 }

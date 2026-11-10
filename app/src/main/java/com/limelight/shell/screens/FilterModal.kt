@@ -1,6 +1,11 @@
 package com.limelight.shell.screens
 
 import androidx.compose.animation.AnimatedVisibility
+import android.content.res.Resources
+import androidx.annotation.StringRes
+import androidx.compose.ui.res.stringResource
+import com.limelight.R
+import com.limelight.shell.ui.textResources
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
@@ -109,29 +114,30 @@ internal fun themeCounts(games: List<GameMetadata?>): Map<Int, Int> =
     countGames(games) { it.candidate?.themes.orEmpty() }
 
 /** The live result line of the filter modal: "27 of 55 games", or "All 55 games" without a filter. */
-internal fun filterResultLine(shown: Int, total: Int, active: Boolean): String {
-    val games = if (total == 1) "game" else "games"
-    return if (active) "$shown of $total $games" else "All $total $games"
-}
+internal fun filterResultLine(res: Resources, shown: Int, total: Int, active: Boolean): String =
+    if (active) res.getQuantityString(R.plurals.filters_result_active, total, shown, total)
+    else res.getQuantityString(R.plurals.filters_result_all, total, total)
 
 /** The home hint bar's label for Y: "Filter", with the number of narrowing criteria while any is set. */
-internal fun filterHintLabel(filters: MetadataFilters): String =
-    if (filters.active) "Filter • ${filters.activeCount} active" else "Filter"
+internal fun filterHintLabel(res: Resources, filters: MetadataFilters): String =
+    if (filters.active) res.getQuantityString(R.plurals.filters_hint_active, filters.activeCount, filters.activeCount) else res.getString(R.string.filters_hint)
 
-internal fun hdrFilterLabel(filter: HdrFilter): String = when (filter) {
-    HdrFilter.ANY -> "All"
-    HdrFilter.HDR -> "Native HDR"
-    HdrFilter.SDR -> "SDR"
-    HdrFilter.UNKNOWN -> UNVERIFIED_HDR_LABEL
+@StringRes
+internal fun hdrFilterLabel(filter: HdrFilter): Int = when (filter) {
+    HdrFilter.ANY -> R.string.filters_hdr_any
+    HdrFilter.HDR -> R.string.filters_hdr_hdr
+    HdrFilter.SDR -> R.string.filters_hdr_sdr
+    HdrFilter.UNKNOWN -> R.string.metadata_hdr_unverified
 }
 
-internal fun lengthFilterLabel(filter: LengthFilter): String = when (filter) {
-    LengthFilter.ANY -> "Any"
-    LengthFilter.UNDER_10 -> "<10 h"
-    LengthFilter.FROM_10_TO_30 -> "10–30 h"
-    LengthFilter.FROM_30_TO_60 -> "30–60 h"
-    LengthFilter.OVER_60 -> "60+ h"
-    LengthFilter.UNKNOWN -> "Unknown"
+@StringRes
+internal fun lengthFilterLabel(filter: LengthFilter): Int = when (filter) {
+    LengthFilter.ANY -> R.string.filters_length_any
+    LengthFilter.UNDER_10 -> R.string.filters_length_under_10
+    LengthFilter.FROM_10_TO_30 -> R.string.filters_length_10_30
+    LengthFilter.FROM_30_TO_60 -> R.string.filters_length_30_60
+    LengthFilter.OVER_60 -> R.string.filters_length_over_60
+    LengthFilter.UNKNOWN -> R.string.filters_length_unknown
 }
 
 /** The icons of the home badges (sparkle, dim sun and sealed question mark), so a filter and its badge look alike. */
@@ -225,9 +231,9 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
             .focusGroup(),
     ) {
         Row(Modifier.fillMaxWidth().padding(start = 12.px, end = 12.px, bottom = 26.px), verticalAlignment = Alignment.CenterVertically) {
-            BasicText("Filter library", style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 40.tpx))
+            BasicText(stringResource(R.string.filters_title), style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 40.tpx))
             Spacer(Modifier.weight(1f))
-            val result = filterResultLine(matching, apps.size, filters.active)
+            val result = filterResultLine(textResources(), matching, apps.size, filters.active)
             BasicText(
                 result,
                 Modifier
@@ -252,10 +258,10 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
                 .padding(start = 12.px, end = 12.px, top = 24.px, bottom = 48.px),
             verticalArrangement = Arrangement.spacedBy(34.px),
         ) {
-            FilterSection(Symbols.GENRE_UNKNOWN, "Genre") {
+            FilterSection(Symbols.GENRE_UNKNOWN, stringResource(R.string.filters_section_genre)) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(14.px), verticalArrangement = Arrangement.spacedBy(14.px)) {
                     FilterChip(
-                        "All", filters.genreId == null, { metadata.updateFilters(metadata.filters.copy(genreId = null)) },
+                        stringResource(R.string.filters_all), filters.genreId == null, { metadata.updateFilters(metadata.filters.copy(genreId = null)) },
                         Modifier.focusRequester(genreRequester(null)), count = apps.size,
                     )
                     genres.forEach { genre ->
@@ -271,10 +277,10 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
             FilterDivider()
             // Without any theme in the library there is nothing to choose (a theme that was chosen stays visible)
             if (themes.isNotEmpty() || filters.themeId != null) {
-                FilterSection(Symbols.THEMES, "Theme") {
+                FilterSection(Symbols.THEMES, stringResource(R.string.filters_section_theme)) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(14.px), verticalArrangement = Arrangement.spacedBy(14.px)) {
                         FilterChip(
-                            "All", filters.themeId == null, { metadata.updateFilters(metadata.filters.copy(themeId = null)) },
+                            stringResource(R.string.filters_all), filters.themeId == null, { metadata.updateFilters(metadata.filters.copy(themeId = null)) },
                             count = apps.size,
                         )
                         themes.forEach { theme ->
@@ -289,22 +295,22 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
                 }
                 FilterDivider()
             }
-            FilterSection(Symbols.HDR_ON, "HDR support") {
+            FilterSection(Symbols.HDR_ON, stringResource(R.string.filters_section_hdr)) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(14.px), verticalArrangement = Arrangement.spacedBy(14.px)) {
                     HdrFilter.entries.forEach { option ->
                         FilterChip(
-                            hdrFilterLabel(option), filters.hdr == option, { metadata.updateFilters(metadata.filters.copy(hdr = option)) },
+                            stringResource(hdrFilterLabel(option)), filters.hdr == option, { metadata.updateFilters(metadata.filters.copy(hdr = option)) },
                             icon = hdrFilterIcon(option),
                         )
                     }
                 }
             }
             FilterDivider()
-            FilterSection(Symbols.COMPLETION_TIME, "Duration (HowLongToBeat)") {
+            FilterSection(Symbols.COMPLETION_TIME, stringResource(R.string.filters_section_duration)) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(14.px), verticalArrangement = Arrangement.spacedBy(14.px)) {
                     LengthFilter.entries.forEach { option ->
                         FilterChip(
-                            lengthFilterLabel(option), filters.length == option, { metadata.updateFilters(metadata.filters.copy(length = option)) },
+                            stringResource(lengthFilterLabel(option)), filters.length == option, { metadata.updateFilters(metadata.filters.copy(length = option)) },
                         )
                     }
                 }
@@ -319,10 +325,10 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
         ) {
             val active = filters.active
             PillButton(
-                "Reset", Symbols.RESET, { if (metadata.filters.active) metadata.updateFilters(MetadataFilters()) },
+                stringResource(R.string.filters_reset), Symbols.RESET, { if (metadata.filters.active) metadata.updateFilters(MetadataFilters()) },
                 Modifier.alpha(if (active) 1f else .4f).then(if (active) Modifier else Modifier.focusProperties { canFocus = false }),
             )
-            PillButton("Done", Symbols.CHECK, onClose, primary = true, clickCue = Cue.BACK)
+            PillButton(stringResource(R.string.filters_done), Symbols.CHECK, onClose, primary = true, clickCue = Cue.BACK)
         }
     }
 }

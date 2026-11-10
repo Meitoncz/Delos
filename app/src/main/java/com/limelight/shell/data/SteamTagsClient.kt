@@ -29,7 +29,7 @@ class SteamTagsClient internal constructor(
         val url = MetadataProxy.url(baseUrl, "v1/steam/tags", "app" to appId.toString())
             ?: throw SteamTagsException("Steam tags service is not configured")
         pacer.await()
-        val request = Request.Builder().url(url).header("Accept", "application/json").get().build()
+        val request = Request.Builder().url(url).header("Accept", "application/json").get().build() // l10n-ignore
         http.newCall(request).execute().use { response ->
             if (!response.isSuccessful) throw SteamTagsException("Steam tags HTTP ${response.code}")
             return try {

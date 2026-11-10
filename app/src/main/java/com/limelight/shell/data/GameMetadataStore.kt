@@ -130,7 +130,7 @@ class GameMetadataStore internal constructor(
             val previous = loadLocked(pc, app)
             if (!force && !refreshDue(previous.data, clock())) return false
             if (!providers.proxyAvailable) {
-                publish(key, previous.copy(resolved = true, error = "Game metadata is not available in this build"))
+                publish(key, previous.copy(resolved = true, error = MetadataProblem.UNAVAILABLE))
                 return false
             }
             if (batch == null) {
@@ -304,9 +304,9 @@ class GameMetadataStore internal constructor(
         publish(key(pc, app), GameMetadataState(data = failed, resolved = true, error = errorFor(failed)))
     }
 
-    private fun errorFor(data: GameMetadata): String? = when {
-        data.igdbFailedAt > 0 -> "Game information could not be updated. Open Metadata to refresh or choose a match."
-        data.pcgwFailedAt > 0 || data.hltbFailedAt > 0 -> "Some game information is unavailable. Open Metadata to refresh."
+    private fun errorFor(data: GameMetadata): MetadataProblem? = when {
+        data.igdbFailedAt > 0 -> MetadataProblem.UPDATE_FAILED
+        data.pcgwFailedAt > 0 || data.hltbFailedAt > 0 -> MetadataProblem.PARTIAL
         else -> null
     }
 
