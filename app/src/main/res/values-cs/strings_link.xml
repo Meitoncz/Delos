@@ -70,10 +70,10 @@
     <string name="link_unavailable_host_outdated">Vibepollo v tomto PC zatím neumí test spojení. Aktualizuj ho.</string>
 
     <!-- Stream menu help for the recommendation row -->
-    <string name="link_stream_help_dropping">Spojení zahazuje snímky při %1$s. A doplní posuvník, Použít ho odešle.</string>
-    <string name="link_stream_help_dropping_untested">Spojení zahazuje snímky při %1$s. A doplní posuvník, Použít ho odešle. Před připojením otestuj spojení v Nastavení.</string>
-    <string name="link_stream_help_tested">%1$s. A doplní posuvník, Použít ho odešle.</string>
-    <string name="link_stream_help_untested">Zatím netestováno. A doplní posuvník, Použít ho odešle. Před připojením otestuj spojení v Nastavení.</string>
+    <string name="link_stream_help_dropping">Spojení zahazuje snímky při %1$s. A doplní posuvník, tlačítko Použít ho odešle.</string>
+    <string name="link_stream_help_dropping_untested">Spojení zahazuje snímky při %1$s. A doplní posuvník, tlačítko Použít ho odešle. Před připojením otestuj spojení v Nastavení.</string>
+    <string name="link_stream_help_tested">%1$s. A doplní posuvník, tlačítko Použít ho odešle.</string>
+    <string name="link_stream_help_untested">Zatím netestováno. A doplní posuvník, tlačítko Použít ho odešle. Před připojením otestuj spojení v Nastavení.</string>
 
     <!-- The live reading of a running stream -->
     <string name="link_reading_measuring">Měřím</string>

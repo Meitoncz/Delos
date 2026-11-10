@@ -340,6 +340,36 @@ What changes for non-Latin text, and what to look at on a device (not verified h
 * Lint: `MissingTranslation` is disabled while English is the fallback; `ExtraTranslation`, `MissingQuantity`, `StringFormat*`
   and `UnusedResources` are active.
 
+## Terminology: Czech
+
+Informal *ty* everywhere (imperatives: „Vyber“, „Zkus“); no feminine/masculine self-reference („Pokračuj, jen pokud odkaz pochází od tebe“). Czech plural forms: `one` (1), `few` (2-4), `many` (fractions, genitive singular), `other` (0, 5+). Setting titles that a sentence has to inflect are quoted as „Název“ instead of being declined.
+
+| English | Czech | Note |
+|---|---|---|
+| stream | stream (noun), streamování (verb noun) | menu streamu, „stream“ stays |
+| PC / host | PC | host software is „PC“, „server“ for Apollo/Vibepollo |
+| gamepad / controller | gamepad | deliberately not „ovladač“: that word is the Czech for a software **driver** (USB ovladač) |
+| driver | ovladač | |
+| pair / unpair | spárovat / zrušit spárování | |
+| rumble / vibration | vibrace | „Charakter vibrací“ = rumble feel |
+| library | knihovna | home layout = „Rozložení knihovny“ |
+| cover / wide cover / background / logo | obal / široký obal / pozadí / logo | artwork = „obrázky“ |
+| link (device ↔ PC) | spojení | „Otestovat spojení“; „na této síti“ (locative, so `link_transport_other` = „této síti“, used after „na“) |
+| refresh rate / frame rate | obnovovací frekvence / snímková frekvence | FPS kept |
+| opacity | neprůhlednost | |
+| on-screen controls / OSC | ovládání na obrazovce | |
+| special / custom keys | speciální / vlastní klávesy | „Odeslat klávesy“ = Send keys |
+| overlay (statistics) | Overlay | stream menu tile name kept |
+| Undo / Back / Reset | Vrátit zpět / Zpět / Resetovat | |
+| On / Off | Zapnuto / Vypnuto | |
+| gyro / gyroscope | gyro (smoothing) / gyroskop | |
+| upscaler, supersampling, bitrate, frame pacing, codec | upscaler, supersampling, bitrate, frame pacing, kodek | |
+| sharpness / sharpen only | ostrost / Jen zostření | |
+| tabs Stream / Display / Audio / Controls / Appearance / Covers / Devices / About | Stream / Obraz / Zvuk / Ovládání / Vzhled / Obaly / Zařízení / O aplikaci | |
+| UI theme / game theme tag | motiv / téma | |
+
+The on-screen letter picker of the settings search (`settings_screen_search_letters`) holds the whole Czech alphabet with diacritics (42 letters) and the digits: 52 keys, six rows of nine, because the search is diacritic-sensitive.
+
 ## Appendix: hardcoded literals still in the shell
 
 Output of `python3 tools/l10n/find_literals.py --markdown` (a heuristic; it over-counts data tables such as the Steam tag names

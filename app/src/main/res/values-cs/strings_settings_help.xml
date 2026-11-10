@@ -11,13 +11,13 @@
     <string name="help_checkbox_ultra_low_latency">Další volby MediaCodec pro nízkou latenci. Přínos závisí na čipu a ovladači. Vypni, pokud je video nestabilní.</string>
     <string name="help_checkbox_use_virtual_display">Požádá Vibepollo nebo Apollo o virtuální displej PC s požadovaným rozlišením a FPS. Vyžaduje podporu v PC.</string>
     <string name="help_checkbox_auto_orientation">Spustí stream v aktuální orientaci zařízení na výšku nebo na šířku. Plocha PC se neotáčí.</string>
-    <string name="help_checkbox_auto_invert_video_resolution">Prohodí šířku a výšku u streamu na výšku (1080 × 1920). Vyžaduje Automatickou orientaci a podporu v PC.</string>
+    <string name="help_checkbox_auto_invert_video_resolution">Prohodí šířku a výšku u streamu na výšku (1080 × 1920). Vyžaduje volbu „Automatická orientace“ a podporu v PC.</string>
     <string name="help_checkbox_enable_view_top_center">Stream, který nevyplní obrazovku, zarovná nahoru na střed místo doprostřed.</string>
     <string name="help_seekbar_resolution_scale_factor">Změní měřítko virtuálního displeje PC: při 150 %% se 1920 × 1080 vykreslí v PC jako 2880 × 1620. Stojí výkon GPU v PC.</string>
     <string name="help_list_video_scale_mode">Týká se jen přizpůsobení obrazu na tomto zařízení.</string>
-    <string name="help_edit_diy_w_h">Přidá rozlišení do Rozlišení videa: zadej šířku x výšku (1920x1080) a pak ho tam vyber.</string>
+    <string name="help_edit_diy_w_h">Přidá rozlišení do volby „Rozlišení videa“: zadej šířku x výšku (1920x1080) a pak ho tam vyber.</string>
     <string name="help_edit_diy_bitrate">Nastaví bitrate v Mbps; povolena jsou desetinná čísla i hodnoty nad rozsahem posuvníku. Aktualizuje také Bitrate videa.</string>
-    <string name="help_custom_refresh_rate">Přidá vlastní FPS (povolena jsou desetinná čísla) do Snímkové frekvence videa; vyber ji tam. Výsledek omezuje PC, hra i displej.</string>
+    <string name="help_custom_refresh_rate">Přidá vlastní FPS (povolena jsou desetinná čísla) do volby „Snímková frekvence videa“; vyber ji tam. Výsledek omezuje PC, hra i displej.</string>
     <string name="help_checkbox_enforce_display_mode">Důrazně požádá Android, aby použil zvolený režim displeje. Pomáhá, když se žádosti o obnovovací frekvenci ignorují; na některých firmwarech může způsobit potíže.</string>
     <string name="help_checkbox_enable_hdr">Požádá o HDR video. Vyžaduje podporu hry, grafické karty v PC, dekodéru i displeje (10bitové HEVC, AV1 nebo PyroWave).</string>
     <string name="help_checkbox_enable_fullexdisplay">Zobrazí stream a menu na připojeném monitoru nebo televizi v nastaveném rozlišení a FPS. Menu ovládáš handheldem.</string>
@@ -39,7 +39,7 @@
     <string name="help_checkbox_gamepad_touchpad_as_mouse">Touchpad gamepadu vždy slouží jako myš v PC. Když je vypnuto, podporovaná PC mohou přijímat nativní vstup z touchpadu.</string>
     <string name="help_checkbox_gamepad_motion_sensors">Umožní PC číst gyroskop a akcelerometr externího gamepadu. Vyžaduje Android 12 nebo novější. Pokud žádná hra pohyb nepoužívá, vypni – ušetříš trochu energie a provozu.</string>
     <string name="help_checkbox_gamepad_motion_fallback">Použije vlastní gyroskop a akcelerometr zařízení, když je gamepad nemá nebo je Android neumí číst. PC pak může vidět gamepad PlayStation.</string>
-    <string name="help_checkbox_force_device_motion">Použije vestavěné senzory, i když externí gamepad má funkční vlastní. Vyžaduje Vestavěný gyroskop zařízení.</string>
+    <string name="help_checkbox_force_device_motion">Použije vestavěné senzory, i když externí gamepad má funkční vlastní. Vyžaduje volbu „Vestavěný gyroskop zařízení“.</string>
     <string name="help_seekbar_gyro_smoothing">Stabilizuje míření gyrem. 0 je vypnuto. Vyšší hodnoty odstraní víc chvění, ale lehce zpozdí pomalý pohyb; rychlé švihy zůstávají citlivé. Platí od příštího streamu; v menu streamu (Více) to jde měnit za chodu.</string>
     <string name="help_checkbox_enable_joyconfix">Režim kompatibility pro Joy-Cony s chybějícími nebo špatně rozpoznanými tlačítky. Pokud fungují, nech vypnuto.</string>
     <string name="help_checkbox_gamepad_enable_battery_report">Hlásí PC stav baterie gamepadu. Vypni, pokud dotazování na baterii vyvolává sekání dotyku nebo myši.</string>
@@ -85,7 +85,7 @@
     <string name="help_seekbar_osc_free_analog_stick_opacity">Viditelnost pozadí volného virtuálního sticku v klidu. Nízká hodnota nechává obraz čistší; vysoká se snáz hledá.</string>
     <string name="help_option_reset_osc_preference">Okamžitě vrátí virtuální gamepad tohoto profilu na výchozí velikosti a pozice. Ostatní profily zůstanou.</string>
     <string name="help_checkbox_enable_keyboard">Zobrazí přes stream vrstvu vlastních speciálních kláves podle rozložení vybraného níže. Nezávislé na plné klávesnici.</string>
-    <string name="help_checkbox_enable_clear_default_special_button">Skryje vestavěné kombinace kláves z Odeslání kláves v menu streamu a nechá jen tvoje importované příkazy.</string>
+    <string name="help_checkbox_enable_clear_default_special_button">Skryje vestavěné kombinace kláves z nabídky „Odeslat klávesy“ v menu streamu a nechá jen tvoje importované příkazy.</string>
     <string name="help_checkbox_vibrate_keyboard">Místní vibrace při klepnutí na vlastní tlačítka klávesnice na obrazovce; ne vibrace ze hry. Vyžaduje vibrační motor.</string>
     <string name="help_keyboard_axi_list">Aktivní z pěti rozložení speciálních kláves tohoto profilu.</string>
     <string name="help_checkbox_enable_keyboard_square">Vykreslí vlastní tlačítka speciálních kláves jako čtverce místo kruhů. Odesílané klávesy se nemění.</string>
@@ -107,10 +107,10 @@
     <string name="help_checkbox_full_range">Požádá o video s plným rozsahem úrovní místo omezeného. Zapni jen když se PC i displej shodnou, jinak se zahltí černé a světlé oblasti.</string>
     <string name="help_checkbox_prevent_packet_loss">Posílá malý řídicí paket zhruba každých 20 ms, aby odradil Wi-Fi od úsporného režimu. Může pomoct při ztrátách specifických pro zařízení.</string>
     <string name="help_list_languages">Jazyk rozhraní, jeho nápovědy a zpráv streamu.</string>
-    <string name="help_import_special_button_file">Importuje vlastní kombinace kláves pro Odeslání kláves a ovládací prvky speciálních kláves a nahradí vlastní příkazy tohoto profilu.</string>
-    <string name="help_option_help_custom_keys">Otevře návod k formátu souboru vlastních kláves. Výsledný soubor načti pomocí Importovat vlastní klávesy.</string>
+    <string name="help_import_special_button_file">Importuje vlastní kombinace kláves pro nabídku „Odeslat klávesy“ a ovládací prvky speciálních kláves a nahradí vlastní příkazy tohoto profilu.</string>
+    <string name="help_option_help_custom_keys">Otevře návod k formátu souboru vlastních kláves. Výsledný soubor načti volbou „Importovat vlastní klávesy“.</string>
     <string name="help_pref_debug_info">Otevře diagnostiku zařízení a gamepadů bez streamu: údaje o zařízení, ID a senzory gamepadů, test vibrací, náhled ovládání.</string>
-    <string name="help_about_diag_logs">Uchovává na tomto zařízení průběžný záznam událostí a chyb (nejvýš 2 MB). Nic z něj neopustí zařízení, dokud ho nesdílíš z Informací pro ladění, a to s odstraněnými jmény a adresami. Vypnutím se přestanou ukládat nové řádky.</string>
+    <string name="help_about_diag_logs">Uchovává na tomto zařízení průběžný záznam událostí a chyb (nejvýš 2 MB). Nic z něj neopustí zařízení, dokud ho nesdílíš z obrazovky „Informace pro ladění“, a to s odstraněnými jmény a adresami. Vypnutím se přestanou ukládat nové řádky.</string>
     <string name="help_ui_match_game_colors">Vezme pro animované pozadí tři barvy z obalu vybrané hry; jinak použije obrázky z PC. Vyžaduje vypnuté Material You.</string>
 
     <!-- Explanations of one choice -->
@@ -175,7 +175,7 @@
     <string name="help_note_needs_pyrowave">Vyžaduje kodek PyroWave.</string>
     <string name="help_note_hdr_420">HDR je zapnuto: používá se 4:2:0.</string>
     <string name="help_note_pyrowave_modes">PyroWave nabízí všech pět režimů</string>
-    <string name="help_note_sharpen_only">Režim Jen zostření to nepoužívá.</string>
+    <string name="help_note_sharpen_only">Režim „Jen zostření“ to nepoužívá.</string>
 
     <!-- Stream menu help -->
     <string name="stream_help_resume">Zavře toto menu a pokračuje ve streamu.</string>
@@ -195,19 +195,19 @@
     <string name="stream_help_more">Další ovládání streamu: schránka, příkazy PC, kombinace kláves, přiblížení, dotyk a ovládání na obrazovce. Akce se provedou hned.</string>
     <string name="stream_help_disconnect">Zastaví streamování a vrátí se do knihovny aplikace Delos. Hra na PC dál běží.</string>
     <string name="stream_help_quit_game">Požádá PC o ukončení běžící aplikace a pak se odpojí. Provede se hned, takže nejdřív ulož.</string>
-    <string name="stream_help_send_keys">Jednou pošle do PC vestavěnou nebo importovanou kombinaci kláves; menu se zavře. Vlastní importuj v Ovládání.</string>
+    <string name="stream_help_send_keys">Jednou pošle do PC vestavěnou nebo importovanou kombinaci kláves; menu se zavře. Vlastní naimportuješ na záložce Ovládání.</string>
     <string name="stream_help_send_clipboard">Jednou zkopíruje schránku tohoto zařízení do PC. Vyžaduje podporu schránky ve Vibepollo nebo Apollo.</string>
     <string name="stream_help_get_clipboard">Jednou stáhne schránku z PC do tohoto zařízení. Vyžaduje podporu schránky ve Vibepollo nebo Apollo.</string>
     <string name="stream_help_commands">Vypíše příkazy serveru nastavené ve Vibepollo nebo Apollo. Co který udělá, určuje PC.</string>
     <string name="stream_help_task_manager">Pošle do PC Ctrl + Shift + Esc, což ve Windows otevře Správce úloh.</string>
-    <string name="stream_help_zoom">Přepíná ovládání přiblížení a posunu streamu. Jen místní zobrazení; jestli se uloží, rozhoduje Pamatovat si přiblížení a posun.</string>
-    <string name="stream_help_mouse_mode">Vybere, jak dotyk ovládá PC: přímý dotyk, trackpad, nebo vypnuto. Jestli se uloží, rozhoduje Pamatovat si režim myši.</string>
+    <string name="stream_help_zoom">Přepíná ovládání přiblížení a posunu streamu. Jen místní zobrazení; jestli se uloží, rozhoduje volba „Pamatovat si přiblížení a posun“.</string>
+    <string name="stream_help_mouse_mode">Vybere, jak dotyk ovládá PC: přímý dotyk, trackpad, nebo vypnuto. Jestli se uloží, rozhoduje volba „Pamatovat si režim myši“.</string>
     <string name="stream_help_local_mouse_cursor">Zobrazí nebo skryje ukazatel Androidu pro fyzickou myš během tohoto streamu. Nejde o kurzor PC ve videu.</string>
-    <string name="stream_help_on_screen_controls">Zobrazí nebo skryje virtuální gamepad během tohoto streamu. Neprůhlednost a rozložení se nastavují v Ovládání.</string>
+    <string name="stream_help_on_screen_controls">Zobrazí nebo skryje virtuální gamepad během tohoto streamu. Neprůhlednost a rozložení se nastavují na záložce Ovládání.</string>
     <string name="stream_help_open_android_keyboard">Po zavření tohoto menu otevře nebo zavře systémovou klávesnici Androidu. Ne klávesnici aplikace Delos (dlaždice Klávesnice).</string>
     <string name="stream_help_touch_sensitivity">Přepíná další škálování citlivosti dotykové obrazovky, nastavené v nastavení.</string>
     <string name="stream_help_gyro_smoothing">Hned stabilizuje míření gyrem a uloží se pro tuto hru. 0 je vypnuto. Víc vyhlazení lehce zpozdí pomalý pohyb.</string>
-    <string name="stream_help_gyro_smoothing_disabled">Vyžaduje zapnutý Gyroskop externího gamepadu nebo Vestavěný gyroskop zařízení v Nastavení; platí od příštího streamu.</string>
+    <string name="stream_help_gyro_smoothing_disabled">Vyžaduje zapnutou volbu „Gyroskop externího gamepadu“ nebo „Vestavěný gyroskop zařízení“ v Nastavení; platí od příštího streamu.</string>
     <string name="stream_help_rumble_feel">Vybere, jak se cítí vibrace z PC, hned a s uložením. Zůstane otevřené: vyber znovu a porovnej. B vrací zpět.</string>
     <string name="stream_help_format_keys">Jednou pošle do PC %1$s a vrátí se do streamu.</string>
     <string name="stream_help_format_command">Hned spustí v PC příkaz %1$s definovaný v PC. Nastavuje se ve Vibepollo nebo Apollo.</string>

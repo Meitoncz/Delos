@@ -56,7 +56,7 @@
     <string name="debug_copy_label">Zkopírovat diagnostické shrnutí</string>
     <string name="debug_copy_description">Zkopíruje blok o zařízení a posledních 100 řádků záznamu, připravené k vložení do issue. Stejná jména a adresy jsou odstraněna.</string>
     <string name="debug_clear_label">Smazat diagnostické záznamy</string>
-    <string name="debug_clear_description">Smaže záznam na tomto zařízení. Nové události se zase zaznamenávají, pokud není vypnuto Ukládat diagnostické záznamy (Nastavení → O aplikaci).</string>
+    <string name="debug_clear_description">Smaže záznam na tomto zařízení. Nové události se zase zaznamenávají, pokud není vypnutá volba „Ukládat diagnostické záznamy“ (Nastavení → O aplikaci).</string>
 
     <!-- Device haptic capabilities -->
     <string name="debug_vibrators_label">Vibrační motory</string>
