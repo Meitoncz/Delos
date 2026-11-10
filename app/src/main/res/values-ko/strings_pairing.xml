@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pairing_pc_title">PC 페어링</string>
+    <string name="pairing_pc_searching">로컬 네트워크 검색 중…</string>
+    <string name="pairing_pc_none">아직 PC를 찾지 못했어요. PC에서 Vibepollo를 실행하거나 주소를 직접 입력해 주세요.</string>
+    <plurals name="pairing_pc_found">
+        <item quantity="other">Delos가 네트워크에서 PC %1$d대를 찾았어요.</item>
+    </plurals>
+    <string name="pairing_pc_paired_online">페어링됨 · 온라인</string>
+    <string name="pairing_pc_paired_offline">페어링됨 · 오프라인</string>
+    <string name="pairing_pc_ready">온라인 · 페어링 가능</string>
+    <string name="pairing_pc_offline">오프라인</string>
+    <string name="pairing_pc_with_pin">PIN으로 페어링</string>
+    <string name="pairing_pc_with_code">일회용 코드로 페어링</string>
+    <string name="pairing_pc_address">주소 입력</string>
+    <string name="pairing_pc_address_hint">IP 또는 호스트 이름</string>
+    <string name="pairing_pc_search_again">다시 검색</string>
+    <string name="pairing_pc_network">로컬 네트워크</string>
+    <string name="pairing_pin_title">%1$s에서 이 PIN을 입력하세요</string>
+    <string name="pairing_pin_note">PC에서 Vibepollo 웹 UI를 열고 PIN 메뉴에서 코드를 입력해 주세요.</string>
+    <string name="pairing_code_title">%1$s와(과) 페어링 중</string>
+    <string name="pairing_code_note">Vibepollo의 일회용 코드를 사용해요.</string>
+    <string name="pairing_pin_waiting">Vibepollo 대기 중…</string>
+    <string name="pairing_pin_accepted">PIN 확인됨</string>
+    <string name="pairing_code_accepted">코드 확인됨</string>
+    <string name="pairing_cancel">취소</string>
+
+    <string name="pairing_failed_offline">%1$s 오프라인</string>
+    <string name="pairing_failed_pin_wrong">PIN이 맞지 않아요. 다시 시도해 주세요</string>
+    <string name="pairing_failed_code_wrong">코드 또는 암호가 맞지 않아요</string>
+    <string name="pairing_failed_busy">%1$s이(가) 이미 다른 기기와 페어링 중이에요</string>
+    <string name="pairing_failed_game_running">%1$s의 게임을 먼저 종료한 뒤 다시 페어링해 주세요</string>
+    <string name="pairing_failed_not_found">%1$s을(를) 찾을 수 없어요</string>
+    <string name="pairing_failed_unsupported">%1$s은(는) 페어링을 지원하지 않아요</string>
+    <string name="pairing_failed">%1$s와(과) 페어링하지 못했어요</string>
+
+    <string name="pairing_otp_title">일회용 코드로 페어링</string>
+    <string name="pairing_otp_note">Vibepollo 웹 UI에서 암호가 포함된 일회용 PIN을 만든 뒤 둘 다 여기에 입력해 주세요.</string>
+    <string name="pairing_otp_pin_hint">PIN</string>
+    <string name="pairing_otp_passphrase_hint">암호</string>
+    <string name="pairing_otp_action">페어링</string>
+    <string name="pairing_otp_pin_error">PIN은 4자리예요</string>
+    <string name="pairing_otp_passphrase_error">암호는 4자 이상이어야 해요</string>
+</resources>

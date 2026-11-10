@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="keyboard_hint_press">누르기</string>
+    <string name="keyboard_hint_close">닫기</string>
+    <string name="keyboard_hint_shift">Shift</string>
+    <string name="keyboard_hint_delete">삭제</string>
+    <string name="keyboard_hint_space">스페이스</string>
+    <string name="keyboard_title">화면 키보드</string>
+</resources>

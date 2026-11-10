@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="filters_title">라이브러리 필터</string>
+    <plurals name="filters_result_active">
+        <item quantity="other">게임 %2$d개 중 %1$d개</item>
+    </plurals>
+    <plurals name="filters_result_all">
+        <item quantity="other">게임 전체 %1$d개</item>
+    </plurals>
+    <string name="filters_hint">필터</string>
+    <plurals name="filters_hint_active">
+        <item quantity="other">필터 • %1$d개 적용 중</item>
+    </plurals>
+    <string name="filters_section_genre">장르</string>
+    <string name="filters_section_theme">테마</string>
+    <string name="filters_section_hdr">HDR 지원</string>
+    <string name="filters_section_duration">플레이 시간 (HowLongToBeat)</string>
+    <string name="filters_all">전체</string>
+    <string name="filters_hdr_any">전체</string>
+    <string name="filters_hdr_hdr">네이티브 HDR</string>
+    <string name="filters_length_any">상관없음</string>
+    <string name="filters_length_under_10">&lt;10시간</string>
+    <string name="filters_length_10_30">10–30시간</string>
+    <string name="filters_length_30_60">30–60시간</string>
+    <string name="filters_length_over_60">60시간 이상</string>
+    <string name="filters_length_unknown">알 수 없음</string>
+    <string name="filters_reset">초기화</string>
+    <string name="filters_done">완료</string>
+
+    <string name="filters_art_title">아트워크 필터</string>
+    <string name="filters_art_reset">필터 초기화</string>
+    <string name="filters_art_done">완료</string>
+    <string name="filters_art_row_type">유형</string>
+    <string name="filters_art_row_style">스타일</string>
+    <string name="filters_art_row_dimensions">크기</string>
+    <string name="filters_art_row_sort">정렬</string>
+    <string name="filters_art_any">상관없음</string>
+    <string name="filters_art_type_all">전체</string>
+    <string name="filters_art_type_static">정지 이미지</string>
+    <string name="filters_art_type_animated">애니메이션</string>
+    <string name="filters_art_sort_score">높은 점수순</string>
+    <string name="filters_art_sort_newest">최신순</string>
+    <string name="filters_art_sort_oldest">오래된순</string>
+    <string name="filters_art_sort_score_chip">정렬: 높은 점수순</string>
+    <string name="filters_art_sort_newest_chip">정렬: 최신순</string>
+    <string name="filters_art_sort_oldest_chip">정렬: 오래된순</string>
+    <string name="filters_art_sort_score_first">높은 점수 우선</string>
+    <string name="filters_art_sort_newest_first">최신 우선</string>
+    <string name="filters_art_sort_oldest_first">오래된 것 우선</string>
+    <string name="filters_art_style_alternate">대체</string>
+    <string name="filters_art_style_blurred">블러</string>
+    <string name="filters_art_style_white_logo">흰색 로고</string>
+    <string name="filters_art_style_material">머티리얼</string>
+    <string name="filters_art_style_no_logo">로고 없음</string>
+    <string name="filters_art_style_official">공식</string>
+    <string name="filters_art_style_white">흰색</string>
+    <string name="filters_art_style_black">검은색</string>
+    <string name="filters_art_style_custom">사용자 지정</string>
+    <string name="filters_art_chips_reset">초기화</string>
+    <string name="filters_art_reset_toast">필터를 초기화했어요</string>
+    <string name="filters_art_change">필터 변경</string>
+</resources>

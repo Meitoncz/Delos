@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="profile_signed_in">
+        <item quantity="other">이 %1$s에 로그인됨 · 프로필 %2$d개</item>
+    </plurals>
+    <string name="profile_change_avatar">아바타 변경</string>
+    <string name="profile_rename">이름 변경</string>
+    <string name="profile_switch">프로필 전환</string>
+    <string name="profile_add">프로필 추가</string>
+    <string name="profile_delete">프로필 삭제</string>
+    <string name="profile_undo">실행 취소</string>
+    <string name="profile_restored">%1$s 복구됨</string>
+    <string name="profile_restore_failed">%1$s을(를) 복구하지 못했어요</string>
+    <string name="profile_deleted">%1$s 삭제됨</string>
+    <string name="profile_menu_title">프로필</string>
+    <string name="profile_playing_as">%1$s(으)로 플레이 중</string>
+    <string name="profile_new">새 프로필</string>
+    <string name="profile_rename_title">프로필 이름 변경</string>
+    <string name="profile_renamed">프로필 이름을 바꿨어요</string>
+    <string name="profile_name_note">시작 화면과 사이드 메뉴에 표시돼요.</string>
+    <string name="profile_name_save">저장</string>
+    <string name="profile_name_required">프로필 이름을 입력해 주세요</string>
+</resources>

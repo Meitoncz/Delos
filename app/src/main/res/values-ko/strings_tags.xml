@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tags_genre_point_and_click">포인트 앤 클릭</string>
+    <string name="tags_genre_fighting">격투</string>
+    <string name="tags_genre_shooter">슈팅</string>
+    <string name="tags_genre_music">음악</string>
+    <string name="tags_genre_platform">플랫폼</string>
+    <string name="tags_genre_puzzle">퍼즐</string>
+    <string name="tags_genre_racing">레이싱</string>
+    <string name="tags_genre_real_time_strategy">실시간 전략 (RTS)</string>
+    <string name="tags_genre_role_playing">롤플레잉 (RPG)</string>
+    <string name="tags_genre_simulator">시뮬레이션</string>
+    <string name="tags_genre_sport">스포츠</string>
+    <string name="tags_genre_strategy">전략</string>
+    <string name="tags_genre_turn_based_strategy">턴제 전략 (TBS)</string>
+    <string name="tags_genre_tactical">전술</string>
+    <string name="tags_genre_hack_and_slash">핵 앤 슬래시/벨트스크롤</string>
+    <string name="tags_genre_quiz">퀴즈/상식</string>
+    <string name="tags_genre_pinball">핀볼</string>
+    <string name="tags_genre_adventure">어드벤처</string>
+    <string name="tags_genre_indie">인디</string>
+    <string name="tags_genre_arcade">아케이드</string>
+    <string name="tags_genre_visual_novel">비주얼 노벨</string>
+    <string name="tags_genre_card_and_board">카드 &amp; 보드 게임</string>
+    <string name="tags_genre_moba">MOBA</string>
+
+    <string name="tags_theme_action">액션</string>
+    <string name="tags_theme_fantasy">판타지</string>
+    <string name="tags_theme_science_fiction">SF</string>
+    <string name="tags_theme_horror">공포</string>
+    <string name="tags_theme_thriller">스릴러</string>
+    <string name="tags_theme_survival">생존</string>
+    <string name="tags_theme_historical">역사</string>
+    <string name="tags_theme_stealth">잠입</string>
+    <string name="tags_theme_comedy">코미디</string>
+    <string name="tags_theme_business">경영</string>
+    <string name="tags_theme_drama">드라마</string>
+    <string name="tags_theme_non_fiction">논픽션</string>
+    <string name="tags_theme_sandbox">샌드박스</string>
+    <string name="tags_theme_educational">교육</string>
+    <string name="tags_theme_kids">어린이</string>
+    <string name="tags_theme_open_world">오픈 월드</string>
+    <string name="tags_theme_warfare">전쟁</string>
+    <string name="tags_theme_party">파티</string>
+    <string name="tags_theme_four_x">4X (탐험, 확장, 개발, 섬멸)</string>
+    <string name="tags_theme_erotic">성인</string>
+    <string name="tags_theme_mystery">미스터리</string>
+    <string name="tags_theme_romance">로맨스</string>
+</resources>

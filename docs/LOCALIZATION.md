@@ -536,3 +536,28 @@ Polite です/ます in sentences, plain noun/verb phrases on labels and buttons
 | stream menu | ストリームメニュー |
 | Apply / Resume / Quit game | 適用 / 再開 / ゲームを終了 |
 | keep diagnostic logs | 診断ログを保存 |
+## Terminology: Korean
+
+Polite 해요체 in sentences; buttons, tabs and labels as noun or verb stem. Particles on variable names use the 은(는) / 이(가) / 을(를) / 과(와) / (으)로 forms; `Delos` takes particles directly.
+
+| English | Korean |
+|---|---|
+| stream | 스트림 / 스트리밍 |
+| pair / unpair | 페어링 / 페어링 해제 |
+| library | 라이브러리 |
+| profile | 프로필 |
+| settings (tabs: Stream, Display, Audio, Controls, Appearance, Covers, Devices, About) | 설정 (스트림, 디스플레이, 오디오, 컨트롤, 외관, 커버, 기기, 정보) |
+| cover / wide cover / background / logo | 커버 / 와이드 커버 / 배경 / 로고 |
+| artwork / metadata | 아트워크 / 메타데이터 |
+| gamepad / controller | 게임패드 / 컨트롤러 |
+| rumble / vibration / haptics | 럼블 / 진동 / 햅틱 |
+| gyroscope | 자이로스코프 (자이로) |
+| bitrate / codec / frame rate | 비트레이트 / 코덱 / 프레임 레이트 |
+| upscaler / supersampling / sharpness | 업스케일러 / 슈퍼샘플링 / 선명도 |
+| frame pacing | 프레임 페이싱 |
+| on-screen controls | 화면 컨트롤 |
+| stream menu | 스트림 메뉴 |
+| Cancel / Save / Done / Reset / Undo | 취소 / 저장 / 완료 / 초기화 / 실행 취소 |
+| On / Off | 켜짐 / 꺼짐 |
+| offline / online | 오프라인 / 온라인 |
+| Debug info | 디버그 정보 |

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="devices_start_greeting">%1$s님, 안녕하세요</string>
+    <string name="devices_start_welcome">환영해요</string>
+    <string name="devices_start_pair_note">PC를 페어링하면 플레이를 시작할 수 있어요.</string>
+    <string name="devices_start_choose_note">플레이할 PC를 선택해 주세요.</string>
+    <string name="devices_status_online">온라인</string>
+    <string name="devices_status_asleep">절전 중</string>
+    <string name="devices_status_asleep_wakes">절전 중 · 깨울 수 있음</string>
+    <string name="devices_status_offline">오프라인</string>
+    <string name="devices_status_connected">연결됨</string>
+    <string name="devices_status_default">기본</string>
+    <string name="devices_status_with_default">%1$s · %2$s</string>
+    <string name="devices_pair_new">새 PC 페어링</string>
+    <string name="devices_pair_new_meta">Vibepollo, Apollo 또는 Sunshine</string>
+    <string name="devices_title">기기</string>
+    <string name="devices_note">Delos와 페어링된 PC예요. 여기서 정한 이름은 이 기기에만 적용돼요.</string>
+
+    <string name="devices_menu_default_off">이 PC로 시작하지 않기</string>
+    <string name="devices_menu_default_on">이 PC로 Delos 시작</string>
+    <string name="devices_menu_wake">PC 깨우기</string>
+    <string name="devices_menu_rename">이름 변경</string>
+    <string name="devices_menu_open_games">게임 열기</string>
+    <string name="devices_menu_connect">연결</string>
+    <string name="devices_menu_unpair">페어링 해제</string>
+    <string name="devices_menu_remove">Delos에서 제거</string>
+
+    <string name="devices_portal_waking_title">%1$s 깨우는 중</string>
+    <string name="devices_portal_waiting_title">%1$s 대기 중</string>
+    <string name="devices_portal_waking_note">깨우기 신호 전송됨 · %1$s: 취소</string>
+    <string name="devices_portal_waiting_note">PC를 켜 주세요 · %1$s: 취소</string>
+    <string name="devices_wake_timeout_toast">%1$s이(가) 깨어나지 않았어요</string>
+    <string name="devices_portal_connecting_title">%1$s에 연결 중</string>
+    <string name="devices_portal_connecting_note">Vibepollo · 페어링됨</string>
+
+    <string name="devices_link_portal_title">%1$s 연결 상태 테스트 중</string>
+    <string name="devices_link_portal_start">%1$s 연결 유지 · %2$s: 취소</string>
+    <string name="devices_link_portal_testing">%1$s 테스트 중 · %2$s 연결 유지 · %3$s: 취소</string>
+    <string name="devices_link_portal_confirming">%1$s 확인 중 · %2$s 연결 유지 · %3$s: 취소</string>
+    <string name="devices_link_done">%1$s: %2$s 전송 가능</string>
+    <string name="devices_link_done_jitter">%1$s: %2$s 전송 가능 (지터 약간)</string>
+    <string name="devices_link_stopped">연결 테스트를 중단했어요</string>
+
+    <string name="devices_address_title">PC 주소 입력</string>
+    <string name="devices_address_note">Vibepollo를 실행 중인 PC의 IP 주소 또는 호스트 이름이에요. 포트는 선택 사항이에요.</string>
+    <string name="devices_address_action">PC 추가</string>
+    <string name="devices_address_required">주소를 입력해 주세요</string>
+    <string name="devices_address_looking">%1$s 찾는 중…</string>
+    <string name="devices_address_not_added">%1$s이(가) 응답했지만 추가하지 못했어요</string>
+    <string name="devices_add_not_an_address">“%1$s”은(는) 올바른 주소가 아니에요</string>
+    <string name="devices_add_no_answer">%1$s에서 응답하는 PC가 없어요</string>
+
+    <string name="devices_rename_title">PC 이름 변경</string>
+    <string name="devices_rename_note">새 이름은 이 기기의 Delos에서만 사용돼요. 비워 두면 PC 원래 이름(%1$s)을 사용해요.</string>
+    <string name="devices_rename_action">저장</string>
+    <string name="devices_rename_reset_toast">%1$s(으)로 되돌렸어요</string>
+    <string name="devices_rename_done_toast">%1$s(으)로 이름을 바꿨어요</string>
+
+    <string name="devices_wake_sent_toast">%1$s에 깨우기 신호를 보냈어요</string>
+    <string name="devices_wake_unsupported">여기서는 %1$s을(를) 깨울 수 없어요</string>
+    <string name="devices_wake_failed">깨우기 신호를 보내지 못했어요</string>
+    <string name="devices_removed_toast">%1$s 제거됨</string>
+    <string name="devices_default_set_toast">Delos가 %1$s로 시작해요</string>
+    <string name="devices_default_cleared_toast">기본 기기 없음</string>
+    <string name="devices_unpaired">%1$s 페어링을 해제했어요</string>
+    <string name="devices_unpair_offline">페어링을 해제하려면 %1$s이(가) 온라인이어야 해요</string>
+    <string name="devices_unpair_not_paired">%1$s은(는) 페어링되어 있지 않아요</string>
+    <string name="devices_unpair_failed">%1$s 페어링을 해제하지 못했어요</string>
+    <string name="devices_unreachable">%1$s에 연결할 수 없어요</string>
+    <string name="devices_starting">Delos가 아직 시작 중이에요. 다시 시도해 주세요</string>
+</resources>

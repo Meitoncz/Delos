@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shell_link_pair_title">%1$s와(과) 페어링할까요?</string>
+    <string name="shell_link_pair_message">링크가 Delos에 이 PC와 페어링하도록 요청하고 있어요. 직접 연 링크일 때만 계속해 주세요.</string>
+    <string name="shell_link_pair_action">페어링</string>
+    <string name="shell_link_start_title">%1$s을(를) 시작할까요?</string>
+    <string name="shell_link_start_title_unnamed">게임을 시작할까요?</string>
+    <string name="shell_link_start_message">링크가 Delos에 %2$s에서 %1$s을(를) 시작하도록 요청하고 있어요. 직접 연 링크일 때만 계속해 주세요.</string>
+    <string name="shell_link_start_message_game">링크가 Delos에 PC에서 %1$s을(를) 시작하도록 요청하고 있어요. 직접 연 링크일 때만 계속해 주세요.</string>
+    <string name="shell_link_start_message_host">링크가 Delos에 %1$s에서 게임을 시작하도록 요청하고 있어요. 직접 연 링크일 때만 계속해 주세요.</string>
+    <string name="shell_link_start_message_unnamed">링크가 Delos에 PC에서 게임을 시작하도록 요청하고 있어요. 직접 연 링크일 때만 계속해 주세요.</string>
+    <string name="shell_link_start_action">시작</string>
+
+    <string name="shell_nav_settings">설정</string>
+    <string name="shell_nav_profile">프로필</string>
+    <string name="shell_nav_devices">기기</string>
+    <string name="shell_default_profile_name">플레이어</string>
+
+    <string name="shell_side_not_connected">연결 안 됨</string>
+    <string name="shell_side_connected">%1$s에 연결됨</string>
+    <string name="shell_side_offline">%1$s 오프라인</string>
+    <string name="shell_side_show_hidden">숨긴 게임 표시</string>
+    <string name="shell_side_hidden_on">%2$s에서 %1$d개 숨김</string>
+    <string name="shell_side_hidden_on_this_pc">이 PC에서 %1$d개 숨김</string>
+    <string name="shell_side_theme">테마</string>
+    <string name="shell_side_theme_dark">다크</string>
+    <string name="shell_side_theme_light">라이트</string>
+    <string name="shell_side_material_you">Material You</string>
+    <string name="shell_side_background">배경</string>
+    <string name="shell_side_home_layout">홈 레이아웃</string>
+    <string name="shell_side_sounds">인터페이스 효과음</string>
+    <string name="shell_side_haptics">햅틱</string>
+    <string name="shell_side_all_settings">전체 설정</string>
+
+    <string name="shell_progress_artwork">아트워크 다운로드 중</string>
+    <string name="shell_progress_metadata">메타데이터 다운로드 중</string>
+    <string name="shell_progress_count">%1$d/%2$d</string>
+
+    <plurals name="shell_home_apps_on_pc">
+        <item quantity="other">%2$s의 앱 %1$d개</item>
+    </plurals>
+    <plurals name="shell_home_apps_filtered">
+        <item quantity="other">%3$s의 앱 %2$d개 중 %1$d개</item>
+    </plurals>
+    <string name="shell_hint_library_label">라이브러리</string>
+
+    <string name="shell_hint_select">선택</string>
+    <string name="shell_hint_back">뒤로</string>
+    <string name="shell_hint_close">닫기</string>
+    <string name="shell_hint_cancel">취소</string>
+    <string name="shell_hint_change">변경</string>
+    <string name="shell_hint_reset">초기화</string>
+    <string name="shell_hint_start">시작</string>
+    <string name="shell_hint_menu">메뉴</string>
+    <string name="shell_hint_options">옵션</string>
+    <string name="shell_hint_adjust">조절</string>
+    <string name="shell_hint_back_to_library">라이브러리로</string>
+    <string name="shell_hint_previous_tab">이전 탭</string>
+    <string name="shell_hint_next_tab">다음 탭</string>
+    <string name="shell_hint_search">검색</string>
+    <string name="shell_hint_connect">연결</string>
+    <string name="shell_hint_choose">선택</string>
+    <string name="shell_hint_reset_filters">필터 초기화</string>
+    <string name="shell_hint_done">완료</string>
+    <string name="shell_hint_use_image">이미지 사용</string>
+    <string name="shell_hint_search_name">이름 검색</string>
+    <string name="shell_hint_filter">필터</string>
+    <string name="shell_hint_reset_to_profile">프로필 값으로 초기화</string>
+
+    <string name="shell_problem_title_stream">스트림을 실행하지 못했어요</string>
+    <string name="shell_problem_title_generic">Delos에 문제가 생겼어요</string>
+    <string name="shell_problem_note">자동으로 전송되는 정보는 없어요. 신고를 누르면 브라우저에서 GitHub가 열리고 확인할 수 있는 초안이 표시돼요. 첨부할 수 있도록 정리된 로그 파일도 다운로드 폴더에 저장돼요.</string>
+    <string name="shell_problem_report">이 문제 신고</string>
+    <string name="shell_problem_dismiss">닫기</string>
+
+    <string name="shell_button_capture_title">스트림 메뉴 버튼을 누르세요</string>
+    <string name="shell_button_capture_note">버튼을 함께 누르고 있다가 놓으세요. 뒷면 버튼처럼 버튼 하나만 써도 돼요. 취소하려면 기다리거나 탭하세요.</string>
+
+    <string name="row_reset_to_profile">프로필 값으로 초기화</string>
+    <string name="row_reset">초기화</string>
+    <string name="row_not_set">설정 안 됨</string>
+
+    <string name="impact_axis_gpu">GPU</string>
+    <string name="impact_axis_latency">지연</string>
+    <string name="impact_axis_network">네트워크</string>
+    <string name="impact_level_none">없음</string>
+    <string name="impact_level_low">낮음</string>
+    <string name="impact_level_medium">보통</string>
+    <string name="impact_level_high">높음</string>
+    <string name="impact_axis_level">%1$s %2$s</string>
+    <string name="impact_legend">현재 값의 부담: 막대 1개 낮음, 2개 보통, 3개 높음</string>
+    <string name="impact_axes_joined">%1$s, %2$s, %3$s</string>
+</resources>

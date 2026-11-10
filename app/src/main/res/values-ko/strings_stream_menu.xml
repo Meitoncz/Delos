@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stream_menu_hint_select">선택</string>
+    <string name="stream_menu_hint_back">뒤로</string>
+
+    <string name="stream_menu_tile_resume">이어하기</string>
+    <string name="stream_menu_tile_keyboard">키보드</string>
+    <string name="stream_menu_tile_overlay">오버레이</string>
+    <string name="stream_menu_tile_brightness">밝기</string>
+    <string name="stream_menu_tile_bitrate">비트레이트</string>
+    <string name="stream_menu_tile_upscaler">업스케일러</string>
+    <string name="stream_menu_tile_supersampling">슈퍼샘플링</string>
+    <string name="stream_menu_tile_more">더보기</string>
+    <string name="stream_menu_tile_disconnect">연결 끊기</string>
+    <string name="stream_menu_tile_quit">게임 종료</string>
+    <string name="stream_menu_overlay_compact">간단</string>
+
+    <string name="stream_menu_title_more">더보기</string>
+    <string name="stream_menu_title_keys">키 보내기</string>
+    <string name="stream_menu_title_commands">서버 명령</string>
+    <string name="stream_menu_title_brightness">밝기</string>
+    <string name="stream_menu_title_bitrate">스트림 비트레이트</string>
+    <string name="stream_menu_title_supersampling">슈퍼샘플링</string>
+    <string name="stream_menu_title_upscaler">업스케일러</string>
+    <string name="stream_menu_title_mouse">마우스와 터치</string>
+    <string name="stream_menu_title_rumble">럼블 느낌</string>
+
+    <string name="stream_menu_row_send_keys">키 보내기</string>
+    <string name="stream_menu_row_send_clipboard">클립보드 보내기</string>
+    <string name="stream_menu_row_get_clipboard">클립보드 가져오기</string>
+    <string name="stream_menu_row_commands">명령</string>
+    <string name="stream_menu_row_task_manager">작업 관리자</string>
+    <string name="stream_menu_row_zoom">확대</string>
+    <string name="stream_menu_row_mouse_mode">마우스 모드</string>
+    <string name="stream_menu_row_onscreen_controls">화면 컨트롤</string>
+    <string name="stream_menu_row_android_keyboard">Android 키보드 열기</string>
+    <string name="stream_menu_row_touch_sensitivity">터치 감도</string>
+    <string name="stream_menu_row_rumble_feel">럼블 느낌</string>
+    <string name="stream_menu_row_gyro_smoothing">자이로 스무딩</string>
+    <string name="stream_menu_gyro_off">%1$d %% (꺼짐)</string>
+    <string name="stream_menu_rumble_custom">사용자 지정</string>
+
+    <string name="stream_menu_row_screen_brightness">화면 밝기</string>
+    <string name="stream_menu_row_bitrate">비트레이트</string>
+    <string name="stream_menu_row_apply">적용</string>
+    <string name="stream_menu_row_enabled">사용</string>
+    <string name="stream_menu_row_supersampling_quality">슈퍼샘플링 품질</string>
+    <string name="stream_menu_row_mode">모드</string>
+    <string name="stream_menu_row_sharpness">선명도</string>
+    <string name="stream_menu_row_touchscreen_mode">터치스크린 모드</string>
+    <string name="stream_menu_row_local_cursor">로컬 마우스 커서</string>
+    <string name="stream_menu_not_set">설정 안 됨</string>
+    <string name="stream_menu_no_commands">PC에 설정된 명령이 없어요. Vibepollo 웹 UI에서 추가할 수 있어요.</string>
+
+    <string name="stream_menu_rumble_problem_word">문제</string>
+    <string name="stream_menu_rumble_active">사용 중</string>
+    <string name="stream_menu_rumble_problem">문제: %1$s</string>
+
+    <string name="stream_menu_mouse_applies_saved">바로 적용되고 저장돼요.</string>
+    <string name="stream_menu_mouse_applies_stream">바로 적용되며 이번 스트림에서만 유지돼요.</string>
+
+    <string name="stream_menu_bitrate_fill">채우기</string>
+    <string name="stream_menu_bitrate_applying">적용하는 중…</string>
+    <string name="stream_menu_bitrate_accepted">%1$d Mbps 적용됨</string>
+    <string name="stream_menu_bitrate_limited">호스트가 %1$d Mbps로 제한했어요</string>
+    <string name="stream_menu_bitrate_failed">실패</string>
+    <string name="stream_menu_bitrate_not_connected">스트림이 연결되어 있지 않아서 비트레이트를 바꿀 수 없어요.</string>
+    <string name="stream_menu_bitrate_unsupported">호스트가 실시간 비트레이트 변경을 지원하지 않거나 스트림이 끝났어요.</string>
+    <string name="stream_menu_bitrate_denied">호스트가 이 변경을 허용하지 않았어요.</string>
+    <string name="stream_menu_bitrate_unconfirmed">비트레이트가 확인되지 않았어요. 연결을 확인하고 다시 시도해 주세요.</string>
+    <string name="stream_menu_bitrate_rejected">호스트가 변경을 적용하지 못했어요.</string>
+    <string name="stream_menu_bitrate_rejected_detail">호스트가 변경을 적용하지 못했어요: %1$s</string>
+
+    <string name="stream_stats_top_left">왼쪽 위</string>
+    <string name="stream_stats_top_right">오른쪽 위</string>
+    <string name="stream_stats_bottom_left">왼쪽 아래</string>
+    <string name="stream_stats_bottom_right">오른쪽 아래</string>
+    <string name="stream_stats_compact_low">하위 1%% %1$d</string>
+    <string name="stream_stats_compact_tail">네트워크 %1$d ms  ·  디코딩 %2$s ms  ·  전체 %3$s ms  ·  손실 %4$s %%</string>
+    <string name="stream_stats_decoder">디코더</string>
+    <string name="stream_stats_incoming">수신</string>
+    <string name="stream_stats_rendering">렌더링</string>
+    <string name="stream_stats_one_percent_low">하위 %1$d%%</string>
+    <string name="stream_stats_network">네트워크</string>
+    <string name="stream_stats_pc_processing">PC 처리</string>
+    <string name="stream_stats_decoding">디코딩</string>
+    <string name="stream_stats_upscaling">업스케일링</string>
+    <string name="stream_stats_frame_queue">프레임 큐</string>
+    <string name="stream_stats_sharpen_pass">선명화 패스</string>
+    <string name="stream_stats_render_latency">렌더 지연</string>
+    <string name="stream_stats_total_latency">전체 지연</string>
+    <string name="stream_stats_bandwidth">대역폭</string>
+    <string name="stream_stats_lost_frames">손실 프레임</string>
+    <string name="stream_stats_backlog">적체</string>
+    <string name="stream_stats_stall">정체 (수신 스레드)</string>
+    <string name="stream_stats_frame_age">제출 시 프레임 경과</string>
+    <string name="stream_stats_receive_to_present">수신부터 표시까지</string>
+    <string name="stream_stats_partial_frames">불완전 프레임</string>
+    <string name="stream_stats_skipped">건너뜀</string>
+    <string name="stream_stats_link">연결</string>
+    <string name="stream_stats_receiving">수신 중</string>
+    <string name="stream_stats_partial_lost">불완전 / 손실</string>
+    <string name="stream_stats_verdict">판정</string>
+
+    <string name="stream_loader_greeting">%1$s에 전화 거는 중</string>
+    <string name="stream_loader_codec_auto">자동</string>
+    <string-array name="stream_loader_lines_platform">
+        <item>스플라인을 재구성하는 중</item>
+        <item>소매를 걷어붙이는 중</item>
+        <item>게임 전에 스트레칭하는 중</item>
+    </string-array>
+    <string-array name="stream_loader_lines_name_resolution">
+        <item>공유기에 %1$s의 집 주소를 묻는 중</item>
+        <item>네트워크에서 %1$s을(를) 찾는 중</item>
+        <item>소파 밑에서 %1$s을(를) 찾아보는 중</item>
+    </string-array>
+    <string-array name="stream_loader_lines_rtsp">
+        <item>%1$s과(와) 픽셀 수와 프레임 레이트를 흥정하는 중</item>
+        <item>%1$s과(와) 스트림 계약서에 서명하는 중</item>
+        <item>%1$s과(와) 화면을 얼마나 선명하게 할지 합의하는 중</item>
+    </string-array>
+    <string-array name="stream_loader_lines_control_stream">
+        <item>%1$s과(와) 악수하는 중</item>
+        <item>%1$s까지 보이지 않는 케이블을 까는 중</item>
+        <item>비밀 악수를 나누는 중</item>
+    </string-array>
+    <string-array name="stream_loader_lines_video_stream">
+        <item>픽셀을 예열하는 중</item>
+        <item>픽셀을 반짝반짝 닦는 중</item>
+        <item>픽셀을 줄 세우는 중</item>
+    </string-array>
+    <string-array name="stream_loader_lines_audio_stream">
+        <item>스피커를 조율하는 중</item>
+        <item>엉킨 음파를 푸는 중</item>
+        <item>목을 가다듬는 중</item>
+    </string-array>
+    <string-array name="stream_loader_lines_input_stream">
+        <item>버튼을 연결하는 중</item>
+        <item>버튼에게 누가 대장인지 가르치는 중</item>
+        <item>보이지 않는 컨트롤러를 꽂는 중</item>
+    </string-array>
+    <string-array name="stream_loader_lines_unlocking">
+        <item>%1$s이(가) 아직 깨어나는 중이에요, 잠시만요</item>
+        <item>%1$s이(가) 눈을 비비는 중이에요, 잠시만요</item>
+    </string-array>
+
+    <string name="stream_exit_disconnecting">연결을 끊는 중</string>
+    <string name="stream_exit_quitting">%1$s 종료하는 중</string>
+    <string name="stream_exit_quitting_game">게임을 종료하는 중</string>
+
+    <string name="stream_result_default_pc">PC</string>
+    <string name="stream_result_try_again">다시 시도</string>
+    <string name="stream_result_back_to_library">라이브러리로</string>
+    <string name="stream_result_details">자세히</string>
+    <string name="stream_result_start_title">스트림을 시작하지 못했어요</string>
+    <string name="stream_result_lost_title">연결이 끊어졌어요</string>
+    <string name="stream_result_closed_title">PC가 스트림을 종료했어요</string>
+    <string name="stream_result_host_closed">PC가 스트림을 종료했어요</string>
+    <string name="stream_result_blocked_hint">현재 기기의 네트워크 연결이 Delos를 차단하고 있어요. 이 네트워크에 연결된 동안에는 인터넷 스트리밍이 작동하지 않을 수 있어요.</string>
+    <string name="stream_result_ports_hint">다음 포트의 방화벽과 포트 포워딩 규칙을 확인해 주세요:</string>
+    <string name="stream_result_failed_stage">%1$s 시작 실패 (오류 %2$d)</string>
+    <string name="stream_result_denied">PC가 Delos의 앱 시작을 허용하지 않았어요.</string>
+    <string name="stream_result_denied_details">권한 거부됨 (앱 실행)</string>
+    <string name="stream_result_timeout">PC가 제때 응답하지 않았어요.</string>
+    <string name="stream_result_timeout_details">연결 시간 초과</string>
+    <string name="stream_result_blocked">이 네트워크가 Delos를 차단하는 것 같아요.</string>
+    <string name="stream_result_decoder">이 기기에서 비디오 디코더를 시작하지 못했어요.</string>
+    <string name="stream_result_decoder_details">비디오 디코더를 초기화하지 못했어요. 기기가 선택한 해상도나 프레임 레이트를 지원하지 않을 수 있어요.</string>
+    <string name="stream_result_connecting">PC에 연결하는 중 문제가 생겼어요.</string>
+    <string name="stream_result_no_video">PC에서 영상이 오지 않았어요.</string>
+    <string name="stream_result_no_video_details">호스트에서 비디오를 받지 못했어요.</string>
+    <string name="stream_result_slow">네트워크 연결이 따라가지 못하고 있어요.</string>
+    <string name="stream_result_slow_details">네트워크 연결 상태가 좋지 않아요. 비디오 비트레이트 설정을 낮추거나 더 빠른 연결을 사용해 보세요.</string>
+    <string name="stream_result_host_error">스트림을 시작하는 중 PC에서 문제가 생겼어요.</string>
+    <string name="stream_result_host_error_details">스트림을 시작하는 중 호스트 PC에서 문제가 생겼어요.\n\n호스트 PC에 DRM으로 보호된 콘텐츠가 열려 있지 않은지 확인해 주세요. 호스트 PC를 다시 시작해 볼 수도 있어요.</string>
+    <string name="stream_result_encoding">PC에서 비디오 인코딩 오류가 보고되었어요.</string>
+    <string name="stream_result_encoding_details">호스트 PC에서 치명적인 비디오 인코딩 오류가 보고되었어요.\n\nHDR 모드를 끄거나, 스트리밍 해상도를 바꾸거나, 호스트 PC의 디스플레이 해상도를 바꿔 보세요.</string>
+    <string name="stream_result_ended">PC와의 연결이 예기치 않게 끊어졌어요.</string>
+    <string name="stream_result_terminated_details">연결이 종료되었어요.\n\n오류 코드: %1$s</string>
+    <string name="stream_result_no_h264">이 기기에서는 스트림을 재생할 수 없어요.</string>
+    <string name="stream_result_no_h264_details">이 기기 또는 ROM은 하드웨어 가속 H.264 재생을 지원하지 않아요.</string>
+    <string name="stream_result_offline">%1$s 오프라인이에요.</string>
+    <string name="stream_result_offline_details">컴퓨터가 오프라인이에요</string>
+    <string name="stream_result_unpaired">%1$s이(가) 이 기기와 페어링되어 있지 않아요.</string>
+    <string name="stream_result_unpaired_details">PC가 페어링되지 않았어요</string>
+</resources>

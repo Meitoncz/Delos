@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_tab_stream">스트림</string>
+    <string name="settings_tab_stream_description">PC에서 전송되는 영상의 화질과 지연 시간을 설정해요.</string>
+    <string name="settings_tab_display">디스플레이</string>
+    <string name="settings_tab_display_description">스트림이 화면을 채우는 방식과 플레이 중 표시할 정보를 설정해요.</string>
+    <string name="settings_tab_audio">오디오</string>
+    <string name="settings_tab_audio_description">PC 소리와 Delos 인터페이스 효과음을 설정해요.</string>
+    <string name="settings_tab_controls">컨트롤</string>
+    <string name="settings_tab_controls_description">게임패드, 마우스, 터치, 키보드, 화면 컨트롤을 설정해요.</string>
+    <string name="settings_tab_appearance">외관</string>
+    <string name="settings_tab_appearance_description">테마, 색상, 움직이는 배경을 설정해요. 변경 사항은 바로 적용돼요.</string>
+    <string name="settings_tab_covers">커버</string>
+    <string name="settings_tab_covers_description">PC 또는 SteamGridDB의 커버, 와이드 커버, 배경, 로고를 설정해요.</string>
+    <string name="settings_tab_devices">기기</string>
+    <string name="settings_tab_devices_description">페어링된 PC와 Delos 시작 시 동작을 설정해요.</string>
+    <string name="settings_tab_about">정보</string>
+    <string name="settings_tab_about_description">Delos는 Artemis와 Moonlight의 포크이며 GPLv3 라이선스를 따라요.</string>
+
+    <string name="settings_option_background_aurora">오로라</string>
+    <string name="settings_option_background_tide">조수</string>
+    <string name="settings_option_background_silk">실크</string>
+    <string name="settings_option_background_contour">등고선</string>
+    <string name="settings_option_background_nebula">성운</string>
+    <string name="settings_option_background_plasma">플라즈마</string>
+    <string name="settings_option_background_lava">용암</string>
+    <string name="settings_option_background_caustics">코스틱</string>
+    <string name="settings_option_background_bokeh">보케</string>
+    <string name="settings_option_background_orbit">궤도</string>
+    <string name="settings_option_background_still">정지</string>
+
+    <string name="settings_option_home_layout_grid">격자</string>
+    <string name="settings_option_home_layout_row">가로 한 줄</string>
+
+    <string name="settings_option_palette_delos">Delos</string>
+    <string name="settings_option_palette_lagoon">라군</string>
+    <string name="settings_option_palette_dusk">황혼</string>
+    <string name="settings_option_palette_ember">잉걸불</string>
+    <string name="settings_option_palette_moss">이끼</string>
+    <string name="settings_option_palette_iris">아이리스</string>
+    <string name="settings_option_palette_rose">로즈</string>
+    <string name="settings_option_palette_sunset">석양</string>
+    <string name="settings_option_palette_mint">민트</string>
+    <string name="settings_option_palette_gold">골드</string>
+
+    <string name="settings_option_clock_system">시스템</string>
+    <string name="settings_option_clock_12">12시간제</string>
+    <string name="settings_option_clock_24">24시간제</string>
+
+    <string name="settings_resolution_native">기본 (%1$s)</string>
+    <string name="settings_resolution_native_portrait">기본 세로 (%1$s)</string>
+    <string name="settings_resolution_native_fullscreen">기본 전체 화면 (%1$s)</string>
+    <string name="settings_resolution_native_fullscreen_portrait">기본 전체 화면 세로 (%1$s)</string>
+    <string name="settings_resolution_custom">사용자 지정 (%1$s)</string>
+    <string name="settings_fps_native">기본 (%1$d FPS)</string>
+    <string name="settings_fps_custom">사용자 지정 (%1$s FPS)</string>
+    <string name="settings_choice_custom">사용자 지정</string>
+    <string name="settings_layout_number">레이아웃 %1$d</string>
+    <string name="settings_choice_unavailable">%1$s (사용할 수 없음)</string>
+
+    <string name="settings_error_resolution_format">가로 x 세로 형식으로 입력해 주세요. 예: 1920x1080</string>
+    <string name="settings_error_fps_range">0보다 크고 1000 이하인 프레임 레이트를 입력해 주세요</string>
+    <string name="settings_error_bitrate_range">0보다 크고 9999 Mbps 이하인 비트레이트를 입력해 주세요</string>
+</resources>

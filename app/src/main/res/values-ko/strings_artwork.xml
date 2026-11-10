@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="artwork_header">아트워크</string>
+    <string name="artwork_search_other">다른 이름으로 검색</string>
+    <string name="artwork_filter">필터</string>
+    <string name="artwork_loading">SteamGridDB에서 찾는 중…</string>
+    <string name="artwork_no_key_title">SteamGridDB API 키를 추가해 주세요</string>
+    <string name="artwork_no_key_note">설정 → 커버 → SteamGridDB API 키. steamgriddb.com에서 무료로 받을 수 있어요 (Preferences → API).</string>
+    <string name="artwork_no_game_title">%1$s은(는) SteamGridDB에 없어요</string>
+    <string name="artwork_no_game_note">다른 이름으로 검색하면 SteamGridDB에 등록된 이름으로 찾을 수 있어요.</string>
+    <string name="artwork_choose_title">%1$s의 모습을 선택하세요</string>
+    <string name="artwork_choose_note">다른 이름으로 검색해 보세요. 예: Windows, Steam 또는 아트워크가 마음에 드는 아무 게임. %1$s은(는) 자동으로 검색하지 않아요.</string>
+    <string name="artwork_unreachable">SteamGridDB에 연결할 수 없어요</string>
+    <string name="artwork_download_failed">다운로드하지 못했어요</string>
+    <string name="artwork_builtin_note">기본 제공 아트워크 - 이 앱의 아트워크는 바꿀 수 없어요</string>
+    <string name="artwork_builtin_back">뒤로</string>
+    <string name="artwork_chip_looking">%1$s 찾는 중…</string>
+    <string name="artwork_chip_game_id">게임 #%1$d</string>
+    <string name="artwork_chip_not_found">아직 찾지 못함</string>
+    <string name="artwork_in_use">사용 중</string>
+    <string name="artwork_animated">애니메이션</string>
+    <string name="artwork_static">정지 이미지</string>
+    <string name="artwork_first_name_only">이름만</string>
+    <string name="artwork_first_from_pc">내 PC에서</string>
+    <string name="artwork_fact_source">출처</string>
+    <string name="artwork_fact_shows">표시</string>
+    <string name="artwork_fact_name_source">게임 이름</string>
+    <string name="artwork_fact_name_shows">로고 대신 이름</string>
+    <string name="artwork_fact_pc_source">내 PC (Vibepollo)</string>
+    <string name="artwork_fact_pc_shows">PC의 박스 아트</string>
+    <string name="artwork_fact_size">크기</string>
+    <string name="artwork_fact_file">파일</string>
+    <string name="artwork_fact_score">점수</string>
+    <string name="artwork_fact_added">추가일</string>
+    <string name="artwork_fact_size_value">%1$d × %2$d px</string>
+    <string name="artwork_fact_score_by">%1$d · %2$s</string>
+    <string name="artwork_fact_score_only">%1$d</string>
+    <string name="artwork_fact_by_only">제작: %1$s</string>
+    <string name="artwork_search_title">SteamGridDB 검색</string>
+    <string name="artwork_search_note">SteamGridDB에 등록된 게임 이름이에요.</string>
+    <string name="artwork_search_hint">게임 이름</string>
+    <string name="artwork_search_action">검색</string>
+    <string name="artwork_searching_toast">SteamGridDB에서 %1$s 검색 중…</string>
+    <string name="artwork_game_with_year">%1$s (%2$d)</string>
+    <string name="artwork_downloading_game_toast">%1$s 아트워크 다운로드 중…</string>
+    <string name="artwork_matched_toast">%1$s과(와) 연결했어요</string>
+    <string name="artwork_found_none">%1$s 검색 결과가 없어요</string>
+    <string name="artwork_found_title">게임 선택</string>
+    <string name="artwork_error_no_key">먼저 SteamGridDB API 키를 추가해 주세요</string>
+    <string name="artwork_error_key_rejected">SteamGridDB가 API 키를 받아들이지 않았어요</string>
+    <string name="artwork_error_api_http">SteamGridDB 응답 코드 %1$d</string>
+    <string name="artwork_error_too_large">이미지가 너무 커요</string>
+    <string name="artwork_error_save_failed">이미지를 저장하지 못했어요</string>
+    <string name="artwork_tab_cover">커버</string>
+    <plurals name="artwork_count_cover">
+        <item quantity="other">커버 %1$d개</item>
+    </plurals>
+    <plurals name="artwork_count_all_cover">
+        <item quantity="other">커버 전체 %1$d개</item>
+    </plurals>
+    <plurals name="artwork_count_of_cover">
+        <item quantity="other">커버 %2$d개 중 %1$d개</item>
+    </plurals>
+    <string name="artwork_filtered_none_cover">필터에 맞는 커버가 없어요</string>
+    <plurals name="artwork_filtered_has_cover">
+        <item quantity="other">%1$s에는 SteamGridDB에 커버 %2$d개가 있지만 %3$s에 맞는 것이 없어요. 필터를 완화하거나 다른 이름으로 검색해 보세요.</item>
+    </plurals>
+    <string name="artwork_filtered_unknown_cover">%1$s에 맞는 커버가 없어요. 필터를 완화하거나 다른 이름으로 검색해 보세요.</string>
+    <string name="artwork_empty_cover">SteamGridDB에 이 게임의 커버가 아직 없어요.</string>
+    <string name="artwork_downloading_cover">커버 다운로드 중…</string>
+    <string name="artwork_updated_cover">커버를 업데이트했어요</string>
+    <string name="artwork_tab_wide">와이드 커버</string>
+    <plurals name="artwork_count_wide">
+        <item quantity="other">와이드 커버 %1$d개</item>
+    </plurals>
+    <plurals name="artwork_count_all_wide">
+        <item quantity="other">와이드 커버 전체 %1$d개</item>
+    </plurals>
+    <plurals name="artwork_count_of_wide">
+        <item quantity="other">와이드 커버 %2$d개 중 %1$d개</item>
+    </plurals>
+    <string name="artwork_filtered_none_wide">필터에 맞는 와이드 커버가 없어요</string>
+    <plurals name="artwork_filtered_has_wide">
+        <item quantity="other">%1$s에는 SteamGridDB에 와이드 커버 %2$d개가 있지만 %3$s에 맞는 것이 없어요. 필터를 완화하거나 다른 이름으로 검색해 보세요.</item>
+    </plurals>
+    <string name="artwork_filtered_unknown_wide">%1$s에 맞는 와이드 커버가 없어요. 필터를 완화하거나 다른 이름으로 검색해 보세요.</string>
+    <string name="artwork_empty_wide">SteamGridDB에 이 게임의 와이드 커버가 아직 없어요.</string>
+    <string name="artwork_downloading_wide">와이드 커버 다운로드 중…</string>
+    <string name="artwork_updated_wide">와이드 커버를 업데이트했어요</string>
+    <string name="artwork_tab_hero">배경</string>
+    <plurals name="artwork_count_hero">
+        <item quantity="other">배경 %1$d개</item>
+    </plurals>
+    <plurals name="artwork_count_all_hero">
+        <item quantity="other">배경 전체 %1$d개</item>
+    </plurals>
+    <plurals name="artwork_count_of_hero">
+        <item quantity="other">배경 %2$d개 중 %1$d개</item>
+    </plurals>
+    <string name="artwork_filtered_none_hero">필터에 맞는 배경이 없어요</string>
+    <plurals name="artwork_filtered_has_hero">
+        <item quantity="other">%1$s에는 SteamGridDB에 배경 %2$d개가 있지만 %3$s에 맞는 것이 없어요. 필터를 완화하거나 다른 이름으로 검색해 보세요.</item>
+    </plurals>
+    <string name="artwork_filtered_unknown_hero">%1$s에 맞는 배경이 없어요. 필터를 완화하거나 다른 이름으로 검색해 보세요.</string>
+    <string name="artwork_empty_hero">SteamGridDB에 이 게임의 배경이 아직 없어요.</string>
+    <string name="artwork_downloading_hero">배경 다운로드 중…</string>
+    <string name="artwork_updated_hero">배경을 업데이트했어요</string>
+    <string name="artwork_tab_logo">로고</string>
+    <plurals name="artwork_count_logo">
+        <item quantity="other">로고 %1$d개</item>
+    </plurals>
+    <plurals name="artwork_count_all_logo">
+        <item quantity="other">로고 전체 %1$d개</item>
+    </plurals>
+    <plurals name="artwork_count_of_logo">
+        <item quantity="other">로고 %2$d개 중 %1$d개</item>
+    </plurals>
+    <string name="artwork_filtered_none_logo">필터에 맞는 로고가 없어요</string>
+    <plurals name="artwork_filtered_has_logo">
+        <item quantity="other">%1$s에는 SteamGridDB에 로고 %2$d개가 있지만 %3$s에 맞는 것이 없어요. 필터를 완화하거나 다른 이름으로 검색해 보세요.</item>
+    </plurals>
+    <string name="artwork_filtered_unknown_logo">%1$s에 맞는 로고가 없어요. 필터를 완화하거나 다른 이름으로 검색해 보세요.</string>
+    <string name="artwork_empty_logo">SteamGridDB에 이 게임의 로고가 아직 없어요.</string>
+    <string name="artwork_downloading_logo">로고 다운로드 중…</string>
+    <string name="artwork_updated_logo">로고를 업데이트했어요</string>
+</resources>
