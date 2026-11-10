@@ -9,7 +9,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
-import kotlinx.coroutines.delay
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -19,7 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -49,7 +47,11 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalGraphicsContext
+import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.limelight.shell.ContextMenu
 import com.limelight.shell.LocalFocusTracker
@@ -144,16 +146,14 @@ fun Modifier.focusEffects(
     val ringAlpha by animateFloatAsState(
         if (look) 1f else 0f, tween(if (look) 140 else 110, easing = EaseOut), label = "focusRing",
     )
-    // The glow is a blurred shadow layer: only an element that is (or just was) focused has one. It stays attached for a while
-    // after the focus has left, so a focus that moves back and forth between two elements never attaches and detaches it again.
-    var glowHeld by remember { mutableStateOf(false) }
-    LaunchedEffect(look) {
-        if (look) glowHeld = true else {
-            delay(GLOW_HOLD_MS)
-            glowHeld = false
-        }
+    val k = stage.dpPerPx * LocalDensity.current.density
+    val shape = RoundedCornerShape(corner.px)
+    // The glow of a rounded box: CSS box-shadow 0 offsetY blur spread in the glow color (a round element and a row on a plate draw theirs differently)
+    val shadows = LocalGraphicsContext.current.shadowContext
+    val glowPainter = if (plate != null || glow == null || corner >= 500f) null else {
+        val shadow = Shadow(radius = glow.blur.px, color = colors.glow, spread = glow.spread.px, offset = DpOffset(0.dp, glow.offsetY.px))
+        remember(shadows, shape, shadow) { shadows.createDropShadowPainter(shape, shadow) }
     }
-    val glowVisible = look || glowHeld
     val sweepPos = remember { Animatable(0f) }
     LaunchedEffect(look) {
         if (look && sweep) {
@@ -170,8 +170,6 @@ fun Modifier.focusEffects(
     }
     val currentActivate by rememberUpdatedState(activate)
     val currentAdjust by rememberUpdatedState(controllerAdjust)
-    val shape = RoundedCornerShape(corner.px)
-    val k = stage.dpPerPx * LocalDensity.current.density
 
     // The animated values (scale, glow and ring alpha) are only read while drawing, never while composing:
     // a focus change would otherwise rebuild both affected elements on every frame of the animation
@@ -205,12 +203,11 @@ fun Modifier.focusEffects(
                     )
                 }
             }
-            else if (glowVisible) Modifier.dropShadow(shape) {
-                radius = glow.blur * k
-                spread = glow.spread * k
-                offset = Offset(0f, glow.offsetY * k)
-                color = colors.glow
-                alpha = ringAlpha
+            // The blurred shadow is rendered once per shape and size (the shadow context shares it between elements) and only
+            // its opacity follows the focus: a shadow whose own alpha is animated is blurred again, in software, on every frame
+            else if (glowPainter != null) Modifier.drawBehind {
+                val a = ringAlpha
+                if (a > 0f) with(glowPainter) { draw(size, alpha = a) }
             } else Modifier
         )
         .drawWithContent {
@@ -266,9 +263,6 @@ fun Modifier.focusEffects(
 
 /** A on the gamepad, Enter, numpad Enter and D-pad center activate the focused element. */
 private val ACTIVATE_KEYS = setOf(Key.ButtonA, Key.Enter, Key.NumPadEnter, Key.DirectionCenter)
-
-/** How long an element keeps its glow layer after it lost the focus (its glow has faded out long before). */
-private const val GLOW_HOLD_MS = 2500L
 
 private fun min(a: Float, b: Float) = if (a < b) a else b
 
