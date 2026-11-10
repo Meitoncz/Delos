@@ -237,6 +237,11 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     private static final int CR_FLAG_ALL = CR_FLAG_INPUT_THREAD | CR_FLAG_RENDER_THREAD | CR_FLAG_CHOREOGRAPHER;
     private int codecRecoveryThreadQuiescedFlags = 0;
     private int codecRecoveryAttempts = 0;
+    // Delos: why the pending codec recovery was asked for. Only for the log: a restart Delos asks for itself (new
+    // HDR metadata from the host, an upscaler switch) must not read like a decoder failure.
+    private volatile String codecRecoveryReason = "unknown";
+    // Delos: SystemClock.uptimeMillis() of the host's last HDR mode message, 0 before the first
+    private volatile long lastHdrModeChangeMs;
 
     private MediaFormat inputFormat;
     private MediaFormat outputFormat;
@@ -792,6 +797,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                     || !arrival.isRedirected()) return;
             // Only exceptional failed handovers use the existing quiesced reset protocol.
             // Its final owner disconnects EGL outside this monitor before reconfiguration.
+            codecRecoveryReason = "stream arrival output failed";
             codecRecoveryType.set(CR_RECOVERY_TYPE_RESET);
         }
     }
@@ -939,7 +945,9 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                 }
                 sgsrFailed = true;
                 sgsrRequested = false;
-                codecRecoveryType.compareAndSet(CR_RECOVERY_TYPE_NONE, CR_RECOVERY_TYPE_RESET);
+                if (codecRecoveryType.compareAndSet(CR_RECOVERY_TYPE_NONE, CR_RECOVERY_TYPE_RESET)) {
+                    codecRecoveryReason = "SGSR output failed";
+                }
             });
             if (sgsr == null) { sgsrFailed = true; sgsrRequested = false; }
         }
@@ -1214,6 +1222,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
             sgsrFailed = false;
             prefs.sgsrEnabled = enabled;
             codecRecoveryAttempts = 0;
+            codecRecoveryReason = enabled ? "upscaler output stage requested" : "upscaler output stage removed";
             codecRecoveryType.set(CR_RECOVERY_TYPE_RESET);
         }
     }
@@ -1522,6 +1531,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                         if (useAsyncCodec) { asyncCodec.resumeAfterFlush(); videoDecoder.start(); }
                         codecRecoveryType.set(CR_RECOVERY_TYPE_NONE);
                     } catch (IllegalStateException e) {
+                        LimeLog.warning(describeDecoderFailure("flush for codec recovery", e));
                         e.printStackTrace();
 
                         // Something went wrong during the restart, let's use a bigger hammer
@@ -1533,12 +1543,13 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                 // We don't count flushes as codec recovery attempts
                 if (codecRecoveryType.get() != CR_RECOVERY_TYPE_NONE) {
                     codecRecoveryAttempts++;
-                    LimeLog.info("Codec recovery attempt: "+codecRecoveryAttempts);
+                    LimeLog.info("Codec recovery attempt: "+codecRecoveryAttempts+" ("+codecRecoveryReason+")");
                 }
 
-                // For "recoverable" exceptions, we can just stop, reconfigure, and restart.
+                // For "recoverable" exceptions, and for a restart Delos asked for (see codecRecoveryReason),
+                // we can just stop, reconfigure, and restart.
                 if (codecRecoveryType.get() == CR_RECOVERY_TYPE_RESTART) {
-                    LimeLog.warning("Trying to restart decoder after CodecException");
+                    LimeLog.warning("Trying to restart decoder: "+codecRecoveryReason);
                     try {
                         detachAsyncCodec();
                         decoderStarted = false;
@@ -1552,6 +1563,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                         stopping = true;
                         codecRecoveryType.set(CR_RECOVERY_TYPE_NONE);
                     } catch (IllegalStateException e) {
+                        LimeLog.warning(describeDecoderFailure("restart for codec recovery", e));
                         e.printStackTrace();
 
                         // Something went wrong during the restart, let's use a bigger hammer
@@ -1563,7 +1575,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                 // For "non-recoverable" exceptions on L+, we can call reset() to recover
                 // without having to recreate the entire decoder again.
                 if (codecRecoveryType.get() == CR_RECOVERY_TYPE_RESET) {
-                    LimeLog.warning("Trying to reset decoder after CodecException");
+                    LimeLog.warning("Trying to reset decoder: "+codecRecoveryReason);
                     try {
                         detachAsyncCodec();
                         decoderStarted = false;
@@ -1577,6 +1589,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                         stopping = true;
                         codecRecoveryType.set(CR_RECOVERY_TYPE_NONE);
                     } catch (IllegalStateException e) {
+                        LimeLog.warning(describeDecoderFailure("reset for codec recovery", e));
                         e.printStackTrace();
 
                         // Something went wrong during the reset, we'll have to resort to
@@ -1587,7 +1600,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                 // If we _still_ haven't managed to recover, go for the nuclear option and just
                 // throw away the old decoder and reinitialize a new one from scratch.
                 if (codecRecoveryType.get() == CR_RECOVERY_TYPE_RESET) {
-                    LimeLog.warning("Trying to recreate decoder after CodecException");
+                    LimeLog.warning("Trying to recreate decoder: "+codecRecoveryReason);
                     detachAsyncCodec();
                     decoderStarted = false;
                     videoDecoder.release();
@@ -1640,8 +1653,68 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         return true;
     }
 
-    // Returns true if the exception is transient
-    private boolean handleDecoderException(IllegalStateException e) {
+    private static String recoveryTypeName(int type) {
+        switch (type) {
+            case CR_RECOVERY_TYPE_NONE: return "none";
+            case CR_RECOVERY_TYPE_FLUSH: return "flush";
+            case CR_RECOVERY_TYPE_RESTART: return "restart";
+            case CR_RECOVERY_TYPE_RESET: return "reset";
+            default: return String.valueOf(type);
+        }
+    }
+
+    /**
+     * Delos: one log line with everything known about a decoder failure: the exception (for a CodecException its
+     * diagnostic info, error code and whether it is transient or recoverable), the codec call it came from, and
+     * what the decoder and its output were doing at that moment (issue #80).
+     */
+    private String describeDecoderFailure(String during, IllegalStateException e) {
+        StringBuilder line = new StringBuilder(384);
+        if (e instanceof CodecException) {
+            CodecException codecExc = (CodecException) e;
+            line.append("CodecException during ").append(during)
+                    .append(": diagnosticInfo=").append(codecExc.getDiagnosticInfo())
+                    .append(", errorCode=").append(codecExc.getErrorCode())
+                    .append(", transient=").append(codecExc.isTransient())
+                    .append(", recoverable=").append(codecExc.isRecoverable())
+                    .append(", message=").append(codecExc.getMessage());
+        }
+        else {
+            line.append(e.getClass().getSimpleName()).append(" during ").append(during)
+                    .append(": ").append(e.getMessage());
+        }
+
+        String decoderName;
+        try {
+            MediaCodec decoder = videoDecoder;
+            decoderName = decoder != null ? decoder.getName() : "<none>";
+        } catch (RuntimeException nameUnavailable) {
+            decoderName = "<unavailable>";
+        }
+        DirectLaunchArrival arrival = directLaunchArrival;
+        long hdrModeChangeMs = lastHdrModeChangeMs;
+        line.append(" | decoder=").append(decoderName)
+                .append(", videoFormat=0x").append(Integer.toHexString(videoFormat))
+                .append(", ").append(initialWidth).append('x').append(initialHeight).append('@').append(refreshRate)
+                .append(", started=").append(decoderStarted)
+                .append(", asyncCodec=").append(useAsyncCodec)
+                .append(", output=").append(sgsr != null ? "SGSR" :
+                        arrival != null && arrival.isRedirected() ? "stream arrival" : "direct")
+                .append(", hdrMode=").append(sgsrHdrActive)
+                .append(", hdrMetadata=").append(currentHdrMetadata != null)
+                .append(", lastHdrModeChange=").append(hdrModeChangeMs != 0 ?
+                        (SystemClock.uptimeMillis() - hdrModeChangeMs) + " ms ago" : "never")
+                .append(", pendingRecovery=").append(recoveryTypeName(codecRecoveryType.get()))
+                .append(" (").append(codecRecoveryReason).append(')')
+                .append(", recoveryAttempts=").append(codecRecoveryAttempts)
+                .append(", framesIn=").append(numFramesIn)
+                .append(", framesOut=").append(numFramesOut)
+                .append(", lastInputPtsUs=").append(lastTimestampUs);
+        return line.toString();
+    }
+
+    // Returns true if the exception is transient. 'during' names the codec call that threw, for the log.
+    private boolean handleDecoderException(String during, IllegalStateException e) {
         // Eat decoder exceptions if we're in the process of stopping
         if (stopping) {
             return false;
@@ -1652,14 +1725,15 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
 
             if (codecExc.isTransient()) {
                 // We'll let transient exceptions go
-                LimeLog.warning(codecExc.getDiagnosticInfo());
+                LimeLog.warning(describeDecoderFailure(during, e));
                 return true;
             }
 
-            LimeLog.severe(codecExc.getDiagnosticInfo());
+            LimeLog.severe(describeDecoderFailure(during, e));
 
             // We can attempt a recovery or reset at this stage to try to start decoding again
             if (codecRecoveryAttempts < CR_MAX_TRIES) {
+                codecRecoveryReason = "CodecException during " + during;
                 // If the exception is non-recoverable or we already require a reset, perform a reset.
                 // If we have no prior unrecoverable failure, we will try a restart instead.
                 if (codecExc.isRecoverable()) {
@@ -1702,7 +1776,9 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
             // Recovery from this requires a full decoder reset.
             //
             // NB: CodecException is an IllegalStateException, so we must check for it first.
+            LimeLog.severe(describeDecoderFailure(during, e));
             if (codecRecoveryAttempts < CR_MAX_TRIES) {
+                codecRecoveryReason = "IllegalStateException during " + during;
                 if (codecRecoveryType.compareAndSet(CR_RECOVERY_TYPE_NONE, CR_RECOVERY_TYPE_RESET)) {
                     LimeLog.info("Decoder requires reset for IllegalStateException");
                     e.printStackTrace();
@@ -1793,7 +1869,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                     } catch (IllegalStateException e) {
                         // This will leak nextOutputBuffer, but there's really nothing else we can do
                         e.printStackTrace();
-                        handleDecoderException(e);
+                        handleDecoderException("releaseOutputBuffer (Choreographer frame)", e);
                     }
                 }
             }
@@ -1940,7 +2016,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                             handleOutputFormatChanged();
                         }
                     } catch (IllegalStateException e) {
-                        handleDecoderException(e);
+                        handleDecoderException("the renderer thread's output loop", e);
                     } finally {
                         doCodecRecoveryIfRequired(CR_FLAG_RENDER_THREAD);
                     }
@@ -2048,7 +2124,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                 }
             }
         } catch (IllegalStateException e) {
-            handleDecoderException(e);
+            handleDecoderException("dequeueInputBuffer", e);
             return false;
         } finally {
             codecRecovered = doCodecRecoveryIfRequired(CR_FLAG_INPUT_THREAD);
@@ -2205,6 +2281,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
 
     @Override
     public void setHdrMode(boolean enabled, byte[] hdrMetadata) {
+        lastHdrModeChangeMs = SystemClock.uptimeMillis();
         sgsrHdrActive = enabled;
         DirectLaunchArrival arrival = directLaunchArrival;
         if (arrival != null) arrival.setHdrMode(enabled, enabled ? hdrMetadata : null);
@@ -2233,9 +2310,16 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
             // If we reach this point, we need to restart the MediaCodec instance to
             // pick up the HDR metadata change. This will happen on the next input
             // or output buffer.
+            //
+            // Delos: this is why a stream that enters HDR restarts its decoder once right after it started
+            // (issue #80). The host's HDR mode and mastering metadata arrive on the control stream when the
+            // stream is already running, after setup() configured the codec without them, and
+            // KEY_HDR_STATIC_INFO is a configure()-time key. No decoder error is involved.
 
             // HACK: Reset codec recovery attempt counter, since this is an expected "recovery"
             codecRecoveryAttempts = 0;
+            codecRecoveryReason = currentHdrMetadata != null ? "HDR metadata from the host changed" :
+                    "HDR metadata from the host removed";
 
             // Promote None/Flush to Restart and leave Reset alone
             if (!codecRecoveryType.compareAndSet(CR_RECOVERY_TYPE_NONE, CR_RECOVERY_TYPE_RESTART)) {
@@ -2259,7 +2343,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
             nextInputBufferIndex = -1;
             nextInputBuffer = null;
         } catch (IllegalStateException e) {
-            if (handleDecoderException(e)) {
+            if (handleDecoderException("queueInputBuffer", e)) {
                 // We encountered a transient error. In this case, just hold onto the buffer
                 // (to avoid leaking it), clear it, and keep it for the next frame. We'll return
                 // false to trigger an IDR frame to recover.
