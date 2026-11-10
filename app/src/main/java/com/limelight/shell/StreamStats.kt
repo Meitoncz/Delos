@@ -42,6 +42,7 @@ import com.limelight.shell.ui.Figtree
 import com.limelight.shell.ui.LocalStage
 import com.limelight.shell.ui.StageMetrics
 import com.limelight.shell.ui.px
+import com.limelight.shell.ui.textResources
 import com.limelight.shell.ui.tpx
 import java.util.Locale
 
@@ -233,6 +234,7 @@ class StreamStatsPanel private constructor(
                         fontSize = 17.tpx, fontFeatureSettings = "tnum"),
                 )
             }
+            val res = textResources()
             val rows = buildList {
                 add(stringResource(R.string.stream_stats_decoder) to s.decoder)
                 add(stringResource(R.string.stream_stats_incoming) to "${format(s.incomingFps)} FPS") // l10n-ignore
@@ -262,7 +264,7 @@ class StreamStatsPanel private constructor(
                     add(stringResource(R.string.stream_stats_link) to "")
                     add(stringResource(R.string.stream_stats_receiving) to linkReceivingText(l))
                     add(stringResource(R.string.stream_stats_partial_lost) to "${oneDecimal(l.partialPerSecond)} / ${oneDecimal(l.lostPerSecond)} frames/s") // l10n-ignore
-                    add(stringResource(R.string.stream_stats_verdict) to l.text)
+                    add(stringResource(R.string.stream_stats_verdict) to l.text(res))
                 }
             }
             val label = TextStyle(color = PANEL_TEXT.copy(alpha = .6f), fontFamily = Figtree, fontSize = 17.tpx, lineHeight = 1.5.em)

@@ -23,7 +23,6 @@ import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.Locale
 import kotlin.math.roundToInt
 
 /** Battery of the handheld: [level] 0–1. */
@@ -95,7 +94,7 @@ private fun bars(wifi: WifiManager?, rssi: Int): Int {
 }
 
 /**
- * The current time as a 24 or 12 hour clock with AM / PM ([format]; System follows Android), updated on
+ * The current time as a 24 or 12 hour clock in the app language ([format]; System follows Android), updated on
  * every minute.
  */
 @Composable
@@ -106,10 +105,13 @@ fun rememberClock(format: ClockFormat): State<String> {
         ClockFormat.H12 -> false
         ClockFormat.H24 -> true
     }
-    // AM / PM in English like the rest of the interface, whatever the device language
-    fun now() = SimpleDateFormat(if (h24) "HH:mm" else "h:mm a", Locale.US).format(Date())
-    val state = remember(h24) { mutableStateOf(now()) }
-    LaunchedEffect(context, h24) {
+    // The pattern and the AM / PM text follow the app language; the key re-reads them when it changes
+    val locale = androidx.compose.ui.platform.LocalConfiguration.current.locales[0]
+    // ICU 72 puts U+202F before AM / PM; the shell fonts have no glyph for it
+    val pattern = remember(h24, locale) { DateFormat.getBestDateTimePattern(locale, if (h24) "Hm" else "hm").replace('\u202f', ' ') }
+    fun now() = SimpleDateFormat(pattern, locale).format(Date())
+    val state = remember(pattern) { mutableStateOf(now()) }
+    LaunchedEffect(context, pattern) {
         while (true) {
             state.value = now()
             delay(60_000L - System.currentTimeMillis() % 60_000L)

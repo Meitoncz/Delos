@@ -29,6 +29,7 @@ import com.limelight.shell.settings.SettingsTab
 import com.limelight.shell.ui.LocalDelosColors
 import com.limelight.shell.ui.SelectionPillHost
 import com.limelight.shell.ui.px
+import com.limelight.shell.ui.textResources
 import kotlinx.coroutines.delay
 
 /**
@@ -72,7 +73,7 @@ internal object SettingsTabsPreview {
             SelectionPillHost(Modifier.offset(y = 206.px).fillMaxWidth().height(66.px)) {
                 ShoulderLabel("L1")
                 tabs.forEachIndexed { i, tab ->
-                    TabPill(tab.icon, tab.label, i == index, Modifier.padding(horizontal = 5.px)) { index = i }
+                    TabPill(tab.icon, tab.label(textResources()), i == index, Modifier.padding(horizontal = 5.px)) { index = i }
                 }
                 ShoulderLabel("R1")
             }

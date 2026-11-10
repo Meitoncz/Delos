@@ -76,7 +76,7 @@ object AppLanguage {
             val candidate = Locale.forLanguageTag(entry)
             candidate.language == locale.language && (
                 candidate.country.isEmpty() || candidate.country == locale.country ||
-                    (locale.country.isEmpty() && locale.script != "Hant")
+                    (locale.country.isEmpty() && locale.script != "Hant") // l10n-ignore: script code
                 )
         }
     }

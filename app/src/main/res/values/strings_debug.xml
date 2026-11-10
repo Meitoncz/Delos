@@ -44,6 +44,11 @@
 
     <!-- Diagnostics -->
     <string name="debug_log_label">Diagnostic log</string>
+    <!-- Detail line of the log row. %1$s: the size such as 123 KB; %2$s: the number of log lines -->
+    <plurals name="debug_log_size">
+        <item quantity="one">%1$s, %2$s log line</item>
+        <item quantity="other">%1$s, %2$s log lines</item>
+    </plurals>
     <string name="debug_log_reading">Reading…</string>
     <string name="debug_log_off">Off</string>
     <string name="debug_log_description">Events and errors Delos kept on this device, with addresses and names removed. This is what Share sends.</string>

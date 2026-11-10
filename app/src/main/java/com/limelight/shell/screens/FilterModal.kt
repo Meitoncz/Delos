@@ -86,6 +86,8 @@ import com.limelight.shell.ui.RowGlideHost
 import com.limelight.shell.ui.Symbol
 import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.genreIcon
+import com.limelight.shell.ui.genreName
+import com.limelight.shell.ui.themeName
 import com.limelight.shell.ui.themeIcon
 import com.limelight.shell.ui.Unbounded
 import com.limelight.shell.ui.backdropBlur
@@ -185,8 +187,11 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
 
     // Reading the entries here makes the counts follow the metadata as it arrives
     val games = apps.map { metadata.entry(ready.pc, it).data }
-    val genres = remember(games) { metadata.genres(ready.pc, apps) }
-    val themes = remember(games) { metadata.themes(ready.pc, apps) }
+    // Names follow the language, so the chips are ordered by the translated name (the store sorts by IGDB's English one)
+    val res = textResources()
+    val locale = androidx.compose.ui.platform.LocalConfiguration.current
+    val genres = remember(games, locale) { val by = java.text.Collator.getInstance(res.configuration.locales[0]); metadata.genres(ready.pc, apps).sortedWith(compareBy(by) { genreName(res, it) }) }
+    val themes = remember(games, locale) { val by = java.text.Collator.getInstance(res.configuration.locales[0]); metadata.themes(ready.pc, apps).sortedWith(compareBy(by) { themeName(res, it) }) }
     val counts = remember(games) { genreCounts(games) }
     val themeCount = remember(games) { themeCounts(games) }
     val matching = games.indices.count { filters.matches(apps[it], games[it]) }
@@ -267,7 +272,7 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
                     genres.forEach { genre ->
                         key(genre.id) {
                             FilterChip(
-                                genre.name, filters.genreId == genre.id, { metadata.updateFilters(metadata.filters.copy(genreId = genre.id)) },
+                                genreName(res, genre), filters.genreId == genre.id, { metadata.updateFilters(metadata.filters.copy(genreId = genre.id)) },
                                 Modifier.focusRequester(genreRequester(genre.id)), icon = genreIcon(genre.id), count = counts[genre.id] ?: 0,
                             )
                         }
@@ -286,7 +291,7 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
                         themes.forEach { theme ->
                             key(theme.id) {
                                 FilterChip(
-                                    theme.name, filters.themeId == theme.id, { metadata.updateFilters(metadata.filters.copy(themeId = theme.id)) },
+                                    themeName(res, theme), filters.themeId == theme.id, { metadata.updateFilters(metadata.filters.copy(themeId = theme.id)) },
                                     icon = themeIcon(theme.id), count = themeCount[theme.id] ?: 0,
                                 )
                             }

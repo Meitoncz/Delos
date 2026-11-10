@@ -438,13 +438,13 @@ internal fun streamMenuHelp(
     bitrateFailure: String? = null,
 ): String = when (key) {
     // A failed Apply explains itself where the help is
-    MenuKey.APPLY_BITRATE -> bitrateFailure ?: StreamMenuHelp.description(key)
-    MenuKey.TOUCHSCREEN_MODE -> SettingsHelp.choice("mouse_mode_list", mouseMode.toString()) +
+    MenuKey.APPLY_BITRATE -> bitrateFailure ?: StreamMenuHelp.description(res, key)
+    MenuKey.TOUCHSCREEN_MODE -> SettingsHelp.choice(res, "mouse_mode_list", mouseMode.toString()) +
         "\n\n" + res.getString(if (rememberMouseMode) R.string.stream_menu_mouse_applies_saved else R.string.stream_menu_mouse_applies_stream)
-    MenuKey.MODE -> SettingsHelp.choice("list_sgsr_quality", UpscalerMode.fromIndex(upscalerMode).value()) +
-        "\n\n" + StreamMenuHelp.description(key)
-    MenuKey.UPSCALER, MenuKey.UPSCALING, MenuKey.SUPERSAMPLING, MenuKey.SUPERSAMPLING_ON -> "$upscalerStatus\n\n${StreamMenuHelp.description(key)}"
-    else -> StreamMenuHelp.description(key)
+    MenuKey.MODE -> SettingsHelp.choice(res, "list_sgsr_quality", UpscalerMode.fromIndex(upscalerMode).value()) +
+        "\n\n" + StreamMenuHelp.description(res, key)
+    MenuKey.UPSCALER, MenuKey.UPSCALING, MenuKey.SUPERSAMPLING, MenuKey.SUPERSAMPLING_ON -> "$upscalerStatus\n\n${StreamMenuHelp.description(res, key)}"
+    else -> StreamMenuHelp.description(res, key)
 }
 
 /** The Bitrate page's recommendation row (PyroWave): its focus key and help key; its label is the changing recommendation line. */

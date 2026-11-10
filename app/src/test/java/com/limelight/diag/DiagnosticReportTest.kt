@@ -51,7 +51,6 @@ class DiagnosticReportTest {
 
     @Test fun theSizeAndLineCountShowAsOneLabel() {
         val report = DiagnosticReports.build(info, log, scrubber, "now")
-        assertTrue(report.sizeLabel(), Regex("""\d+ KB, 300 log lines""").matches(report.sizeLabel()))
         assertEquals("512 B", DiagnosticReport.sizeText(512))
         assertEquals("1.5 KB", DiagnosticReport.sizeText(1536))
         assertEquals("1.2 MB", DiagnosticReport.sizeText(1_300_000))

@@ -1,13 +1,18 @@
 package com.limelight.diag
 
+import android.content.res.Resources
+import com.limelight.R
 import java.util.Locale
 
 /** A finished report: exactly the text that is shared, copied or saved. */
 class DiagnosticReport(val text: String, val logLines: Int) {
     val bytes: Int = text.toByteArray(Charsets.UTF_8).size
 
-    /** "123 KB, 1,204 log lines" for the detail line of a row. */
-    fun sizeLabel(): String = "${sizeText(bytes)}, ${String.format(Locale.US, "%,d", logLines)} log lines"
+    /** "123 KB, 1,204 log lines" for the detail line of a row, in the language of [res]. */
+    fun sizeLabel(res: Resources): String {
+        val locale = res.configuration.locales[0]
+        return res.getQuantityString(R.plurals.debug_log_size, logLines, sizeText(bytes, locale), String.format(locale, "%,d", logLines))
+    }
 
     /**
      * The first part (the header and the device block) and the last [tailLines] lines of the log, for the preview panel; the
@@ -27,11 +32,11 @@ class DiagnosticReport(val text: String, val logLines: Int) {
         const val LOG_HEADING = "== Log"
         const val PREVIEW_TAIL_LINES = 40
 
-        fun sizeText(bytes: Int): String = when {
+        fun sizeText(bytes: Int, locale: Locale = Locale.US): String = when {
             bytes < 1024 -> "$bytes B"
-            bytes < 10 * 1024 -> String.format(Locale.US, "%.1f KB", bytes / 1024.0)
-            bytes < 1024 * 1024 -> "${bytes / 1024} KB"
-            else -> String.format(Locale.US, "%.1f MB", bytes / 1024.0 / 1024.0)
+            bytes < 10 * 1024 -> String.format(locale, "%.1f KB", bytes / 1024.0)
+            bytes < 1024 * 1024 -> String.format(locale, "%d KB", bytes / 1024)
+            else -> String.format(locale, "%.1f MB", bytes / 1024.0 / 1024.0)
         }
     }
 }

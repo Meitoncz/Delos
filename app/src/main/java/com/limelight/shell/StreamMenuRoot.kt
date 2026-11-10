@@ -273,7 +273,7 @@ internal fun StreamMenuRoot(
     )
     // A rumble preset the device cannot run, or whose technique failed in the stream, says so in its help line
     fun helpText(key: String): String = if (key == RECOMMENDED_ROW) {
-        helpLineText(host.linkGuidance?.streamHelp(System.currentTimeMillis()).orEmpty())
+        helpLineText(host.linkGuidance?.streamHelp(res, System.currentTimeMillis()).orEmpty())
     } else helpLineText(
         streamMenuHelp(res, key, upscalerStatus, host.upscalerMode, host.mouseMode, host.rememberMouseMode, (host.bitrateResult as? BitrateResult.Failed)?.reason?.text(res)) +
             (StreamMenuHelp.rumblePreset(key)?.let { host.rumbleProblem(it) }?.let { "\n" + res.getString(R.string.stream_menu_rumble_problem, it) }.orEmpty())
@@ -522,7 +522,7 @@ private fun PageRows(
             @Suppress("UNUSED_EXPRESSION") linkTick
             host.linkGuidance?.let { guidance ->
                 val recommended = guidance.recommendation.kbps.coerceIn(1000, 1000000)
-                MenuRow(Symbols.RECOMMEND, guidance.line, RowValue.Text(stringResource(R.string.stream_menu_bitrate_fill)) { requested = recommended },
+                MenuRow(Symbols.RECOMMEND, guidance.line(res), RowValue.Text(stringResource(R.string.stream_menu_bitrate_fill)) { requested = recommended },
                     enabled = !host.bitrateBusy, help = RECOMMENDED_ROW, key = RECOMMENDED_ROW)
             }
             // The outcome stands on the right of the row; a failure explains itself in the help

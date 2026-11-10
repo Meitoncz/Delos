@@ -197,10 +197,11 @@ fun Shell(
     }
     val actions = remember(launcher, res) { ShellGameActions(res, shell, launcher, feedback, scope) }
     val reducedMotion by rememberUpdatedState(appearance.reducedMotion)
+    val activityContext = androidx.compose.ui.platform.LocalContext.current
     val appContext = androidx.compose.ui.platform.LocalContext.current.applicationContext
     val linkTests = remember { com.limelight.shell.link.LinkTestStore(appContext) }
     val linkTester = remember { com.limelight.shell.link.LinkTester(appContext, repo) }
-    val devices = remember { ShellDeviceActions(shell, tracker, repo, setup, startupStore, feedback, scope, linkTester, linkTests) { reducedMotion } }
+    val devices = remember { ShellDeviceActions(activityContext, shell, tracker, repo, setup, startupStore, feedback, scope, linkTester, linkTests) { reducedMotion } }
     val profiles by profileStore.profiles.collectAsStateWithLifecycle()
     val startup by startupStore.startup.collectAsStateWithLifecycle()
     val pcs by repo.pcs.collectAsStateWithLifecycle()
@@ -452,7 +453,7 @@ fun Shell(
     val library by repo.library.collectAsStateWithLifecycle()
     val metadata = LocalGameMetadata.current
     val openMetadata: (Pc, App) -> Unit = remember(scope, shell, tracker, metadata) {
-        { selectedPc, app -> openMetadataMenu(scope, shell, tracker, metadata, selectedPc, app) }
+        { selectedPc, app -> openMetadataMenu(res, scope, shell, tracker, metadata, selectedPc, app) }
     }
     LaunchedEffect(metadata, profiles.current?.id, (library as? Library.Ready)?.let { it.pc.uuid to it.apps.map { app -> app.id to app.name } }) {
         val ready = library as? Library.Ready ?: return@LaunchedEffect
@@ -463,7 +464,7 @@ fun Shell(
     LaunchedEffect((library as? Library.Ready)?.let { it.pc.uuid to it.apps.map { a -> a.id } }, artwork.enabled, artwork.automatic) {
         val ready = library as? Library.Ready ?: return@LaunchedEffect
         if (!artwork.enabled || !artwork.automatic) return@LaunchedEffect
-        artwork.downloadAll(ready.pc, ready.apps, refresh = false) { shell.showToast(it, Symbols.ERROR) }
+        artwork.downloadAll(ready.pc, ready.apps, refresh = false) { shell.showToast(it.text(res), Symbols.ERROR) }
     }
     val showHidden by repo.showHidden.collectAsStateWithLifecycle()
     val uiScale = appearance.uiScale / 100f
@@ -781,7 +782,7 @@ fun Shell(
                 else res.getQuantityString(R.plurals.shell_home_apps_filtered, ready.apps.size, shown, ready.apps.size, ready.pc.name)
             }
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
-                val filterHint = (library as? Library.Ready)?.takeIf { it.apps.isNotEmpty() }?.let { filterHintLabel(metadata.filters) }
+                val filterHint = (library as? Library.Ready)?.takeIf { it.apps.isNotEmpty() }?.let { filterHintLabel(res, metadata.filters) }
                 ZoomedBar(uiScale) { HintBar(hints(res, shell, tracker.adjustable, tracker.hasContextMenu, filterHint), note = note, noteLabel = if (note != null) res.getString(R.string.shell_hint_library_label) else null) }
             }
             val launch = shell.launch
@@ -811,10 +812,11 @@ private fun SideMenuRows(
     firstModifier: Modifier,
     openSettings: () -> Unit,
 ) {
+    val res = textResources()
     SettingRow(Symbols.DARK_MODE, stringResource(R.string.shell_side_theme), RowValue.Choice(stringResource(if (appearance.dark) R.string.shell_side_theme_dark else R.string.shell_side_theme_light), { update { it.copy(dark = !it.dark) } }), firstModifier.focusedListRow(navigation, "theme"), compact = true)
     SettingRow(Symbols.SYSTEM_COLORS, stringResource(R.string.shell_side_material_you), RowValue.Toggle(appearance.materialYou) { on -> update { it.copy(materialYou = on) } }, Modifier.focusedListRow(navigation, "material-you"), compact = true)
-    SettingRow(Symbols.ANIMATION, stringResource(R.string.shell_side_background), RowValue.Choice(appearance.background.label, { dir -> update { it.copy(background = it.background.step(dir)) } }), Modifier.focusedListRow(navigation, "background"), compact = true)
-    SettingRow(Symbols.VIEW_CAROUSEL, stringResource(R.string.shell_side_home_layout), RowValue.Choice(appearance.homeLayout.label, { dir -> update { it.copy(homeLayout = it.homeLayout.step(dir)) } }), Modifier.focusedListRow(navigation, "home-layout"), compact = true)
+    SettingRow(Symbols.ANIMATION, stringResource(R.string.shell_side_background), RowValue.Choice(appearance.background.label(res), { dir -> update { it.copy(background = it.background.step(dir)) } }), Modifier.focusedListRow(navigation, "background"), compact = true)
+    SettingRow(Symbols.VIEW_CAROUSEL, stringResource(R.string.shell_side_home_layout), RowValue.Choice(appearance.homeLayout.label(res), { dir -> update { it.copy(homeLayout = it.homeLayout.step(dir)) } }), Modifier.focusedListRow(navigation, "home-layout"), compact = true)
     SettingRow(Symbols.MUSIC_NOTE, stringResource(R.string.shell_side_sounds), RowValue.Toggle(appearance.sounds) { on -> update { it.copy(sounds = on) } }, Modifier.focusedListRow(navigation, "sounds"), compact = true)
     SettingRow(Symbols.HAPTICS, stringResource(R.string.shell_side_haptics), RowValue.Toggle(appearance.haptics) { on -> update { it.copy(haptics = on) } }, Modifier.focusedListRow(navigation, "haptics"), compact = true)
     SettingRow(Symbols.SETTINGS, stringResource(R.string.shell_side_all_settings), RowValue.Action(openSettings), Modifier.focusedListRow(navigation, "settings"), compact = true)
@@ -848,7 +850,7 @@ private class ShellGameActions(
     override fun quit(pc: Pc, app: App) {
         scope.launch {
             shell.showToast(res.getString(R.string.shell_game_quitting, app.name), Symbols.POWER_SETTINGS_NEW)
-            report(launcher.quit(pc, app))
+            report(launcher.quit(pc, app), pc, app)
         }
     }
 
@@ -856,13 +858,13 @@ private class ShellGameActions(
         scope.launch {
             shell.showToast(res.getString(R.string.shell_game_quitting, running.name), Symbols.POWER_SETTINGS_NEW)
             val result = launcher.quit(pc, running)
-            if (result.success) start(pc, app, image) else report(result)
+            if (result.success) start(pc, app, image) else report(result, pc, running)
         }
     }
 
-    private fun report(result: GameLauncher.QuitResult) {
+    private fun report(result: GameLauncher.QuitResult, pc: Pc, app: App) {
         if (!result.success) feedback.play(Cue.ERROR)
-        shell.showToast(result.message, if (result.success) Symbols.CHECK_CIRCLE else Symbols.ERROR)
+        shell.showToast(result.text(res, pc.name, app.name), if (result.success) Symbols.CHECK_CIRCLE else Symbols.ERROR)
     }
 }
 

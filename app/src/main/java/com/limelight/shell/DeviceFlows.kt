@@ -159,21 +159,21 @@ class ShellDeviceActions internal constructor(
             }
             try {
                 feedback.play(Cue.OPEN)
-                show(res.getString(R.string.devices_link_portal_start, transport.label, BACK_BUTTON))
+                show(res.getString(R.string.devices_link_portal_start, transport.label(res), BACK_BUTTON))
                 val result = linkTester.run(pc, startKbps) { step ->
                     scope.launch {
-                        if (shell.portal?.id == id) show(res.getString(if (step.confirming) R.string.devices_link_portal_confirming else R.string.devices_link_portal_testing, mbps(step.kbps), transport.label, BACK_BUTTON))
+                        if (shell.portal?.id == id) show(res.getString(if (step.confirming) R.string.devices_link_portal_confirming else R.string.devices_link_portal_testing, mbps(step.kbps), transport.label(res), BACK_BUTTON))
                     }
                 }
                 when (result) {
                     is LinkTestResult.Done -> {
                         linkTests.put(pc.uuid, result.test)
                         feedback.play(Cue.SELECT)
-                        shell.showToast(res.getString(if (result.jitter) R.string.devices_link_done_jitter else R.string.devices_link_done, transport.label, mbps(result.test.wireKbps)), Symbols.CHECK_CIRCLE, kind = ToastKind.SUCCESS)
+                        shell.showToast(res.getString(if (result.jitter) R.string.devices_link_done_jitter else R.string.devices_link_done, transport.label(res), mbps(result.test.wireKbps)), Symbols.CHECK_CIRCLE, kind = ToastKind.SUCCESS)
                     }
                     is LinkTestResult.Failed -> {
                         feedback.play(Cue.ERROR)
-                        shell.showToast(result.text, Symbols.ERROR, kind = ToastKind.ERROR)
+                        shell.showToast(result.text(res), Symbols.ERROR, kind = ToastKind.ERROR)
                     }
                     LinkTestResult.Cancelled -> shell.showToast(res.getString(R.string.devices_link_stopped), Symbols.INFO)
                 }

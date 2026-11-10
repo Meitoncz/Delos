@@ -21,6 +21,9 @@ import com.limelight.shell.ui.GameColors
 import com.limelight.shell.ui.LocalDelosColors
 import com.limelight.shell.ui.glass
 import com.limelight.shell.ui.genreIcon
+import com.limelight.shell.ui.genreName
+import com.limelight.shell.ui.textResources
+import com.limelight.shell.ui.themeName
 import com.limelight.shell.ui.hsl
 import com.limelight.shell.ui.px
 import com.limelight.shell.ui.themeIcon
@@ -116,12 +119,13 @@ private fun genreTint(hue: Float, saturation: Float, dark: Boolean): GenreTint {
  */
 @Composable
 internal fun GenrePill(genres: List<GameGenre>, gameColors: GameColors?) {
+    val res = textResources()
     val colors = LocalDelosColors.current
     val hue = gameColors?.hues?.firstOrNull() ?: colors.accentHue
     // How vivid the game's color is (1 = as the palette's) sets the pill's saturation; the accent's is 1
     val vividness = gameColors?.saturations?.firstOrNull() ?: 1f
     val tint = genreTint(hue, vividness * 80f, colors.dark)
-    Pill(genres.map { PillEntry(genreIcon(it.id), it.name) }, tint.content, tint.content, Modifier.glass(colors.surface).background(tint.fill), tint.border)
+    Pill(genres.map { PillEntry(genreIcon(it.id), genreName(res, it)) }, tint.content, tint.content, Modifier.glass(colors.surface).background(tint.fill), tint.border)
 }
 
 /** How far the theme's hue lies from the genre's when the game has no second color. */
@@ -141,11 +145,12 @@ private fun themeTint(hue: Float, saturation: Float, dark: Boolean): GenreTint {
  */
 @Composable
 internal fun ThemePill(themes: List<GameGenre>, gameColors: GameColors?) {
+    val res = textResources()
     val colors = LocalDelosColors.current
     val hues = gameColors?.hues.orEmpty()
     val hue = hues.getOrNull(1) ?: if (hues.isEmpty()) colors.accent3Hue else hues[0] + THEME_HUE_SHIFT
     val saturations = gameColors?.saturations.orEmpty()
     val vividness = saturations.getOrNull(1) ?: saturations.firstOrNull() ?: 1f
     val tint = themeTint(hue, vividness * 80f * .7f, colors.dark)
-    Pill(themes.map { PillEntry(themeIcon(it.id), it.name) }, tint.content, tint.content, Modifier.glass(colors.surface).background(tint.fill), tint.border)
+    Pill(themes.map { PillEntry(themeIcon(it.id), themeName(res, it)) }, tint.content, tint.content, Modifier.glass(colors.surface).background(tint.fill), tint.border)
 }

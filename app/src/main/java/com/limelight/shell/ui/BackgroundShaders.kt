@@ -41,7 +41,7 @@ internal object BackgroundShaders {
         return try {
             RuntimeShader(PRELUDE + source).also { cache[kind] = it }
         } catch (e: IllegalArgumentException) {
-            com.limelight.LimeLog.warning("Background ${kind.label} does not compile: ${e.message}") // l10n-ignore
+            com.limelight.LimeLog.warning("Background ${kind.name} does not compile: ${e.message}") // l10n-ignore
             broken += kind
             null
         }
@@ -49,7 +49,7 @@ internal object BackgroundShaders {
 
     /** Compiles every background once and logs the ones that fail (debug builds, at start). */
     fun verify() {
-        SOURCES.keys.forEach { kind -> if (shader(kind) != null) com.limelight.LimeLog.info("Background ${kind.label} compiles") } // l10n-ignore
+        SOURCES.keys.forEach { kind -> if (shader(kind) != null) com.limelight.LimeLog.info("Background ${kind.name} compiles") } // l10n-ignore
     }
 
     private const val PRELUDE = """

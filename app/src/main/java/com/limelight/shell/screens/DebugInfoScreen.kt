@@ -306,7 +306,7 @@ fun DebugInfoScreen() {
         val logValue = when {
             report == null -> res.getString(R.string.debug_log_reading)
             !DiagLog.enabled && report?.logLines == 0 -> res.getString(R.string.debug_log_off)
-            else -> report!!.sizeLabel()
+            else -> report!!.sizeLabel(res)
         }
         add(DebugRow("diag_log", DebugSection.DIAGNOSTICS, Symbols.DIAGNOSTIC_LOGS, res.getString(R.string.debug_log_label), RowValue.Info(logValue),
             res.getString(R.string.debug_log_description),

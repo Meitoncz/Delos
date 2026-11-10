@@ -196,7 +196,7 @@ internal fun nativeSettings(
             var failed = false
             val found = artwork.downloadAll(ready.pc, ready.apps, refresh) {
                 failed = true
-                shell.showToast(it, Symbols.ERROR)
+                shell.showToast(it.text(res), Symbols.ERROR)
             }
             if (!failed) shell.showToast(
                 if (found == 0 && !refresh) res.getString(R.string.settings_native_artwork_complete_toast) else res.getQuantityString(R.plurals.settings_native_artwork_ready_toast, found, found),

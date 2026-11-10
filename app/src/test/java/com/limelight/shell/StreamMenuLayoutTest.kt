@@ -311,15 +311,15 @@ class StreamMenuLayoutTest {
         }
         assertTrue(BitrateFailure.rejected("x".repeat(500)).text(res).length < 100)
         // Without a failure the row has its own help
-        assertEquals(StreamMenuHelp.description("Apply bitrate"), streamMenuHelp(res, "Apply bitrate", "On", 0, 0, false))
+        assertEquals(StreamMenuHelp.description(res, "Apply bitrate"), streamMenuHelp(res, "Apply bitrate", "On", 0, 0, false))
     }
 
     @Test
     fun aVeryLongCommandNameIsCutInItsHelp() {
-        val help = StreamMenuHelp.description("Command: " + "C".repeat(80))
+        val help = StreamMenuHelp.description(res, "Command: " + "C".repeat(80))
         assertTrue(help, help.contains("C".repeat(35) + "\u2026"))
         assertTrue(help, !help.contains("C".repeat(36)))
-        assertTrue(StreamMenuHelp.description("Command: Sleep the PC").contains("Sleep the PC on the PC"))
+        assertTrue(StreamMenuHelp.description(res, "Command: Sleep the PC").contains("Sleep the PC on the PC"))
     }
 
     @Test
@@ -356,8 +356,8 @@ class StreamMenuLayoutTest {
         assertFalse(gyroSmoothingShown(30, hasDeviceSensors = false))
         assertEquals(MoreRow.GYRO, gyroSmoothingHelpKey(true))
         assertEquals(MoreRow.GYRO_DISABLED, gyroSmoothingHelpKey(false))
-        assertNotEquals("", StreamMenuHelp.description(MoreRow.GYRO))
-        assertTrue(StreamMenuHelp.description(MoreRow.GYRO_DISABLED).contains("Settings"))
+        assertNotEquals("", StreamMenuHelp.description(res, MoreRow.GYRO))
+        assertTrue(StreamMenuHelp.description(res, MoreRow.GYRO_DISABLED).contains("Settings"))
     }
 
     @Test
@@ -366,7 +366,7 @@ class StreamMenuLayoutTest {
         // The mouse page's help comes from the settings catalog (the active mode), not from StreamMenuHelp
         val pages = MenuPage.entries.filter { it != MenuPage.MOUSE }.map { pageHelpKey(it) }
         for (key in circles + pages) {
-            assertNotEquals("no help for $key", "", StreamMenuHelp.description(key))
+            assertNotEquals("no help for $key", "", StreamMenuHelp.description(res, key))
         }
     }
 

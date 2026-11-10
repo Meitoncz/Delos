@@ -113,7 +113,7 @@
     <string name="help_checkbox_reduce_refresh_rate">Lets Android choose a lower display refresh rate when suitable. Saves power but can slow presentation.</string>
     <string name="help_checkbox_full_range">Requests full-range video levels instead of limited range. Enable only if host and display agree, or blacks and highlights crush.</string>
     <string name="help_checkbox_prevent_packet_loss">Sends a small control packet about every 20 ms to discourage Wi-Fi power saving. May help device-specific loss.</string>
-    <string name="help_list_languages">Language of stream messages and system screens. The Delos shell and its help stay English.</string>
+    <string name="help_list_languages">Language of the shell, its help and the stream messages.</string>
     <string name="help_import_special_button_file">Imports custom key combinations for Send keys and the special-key controls, replacing this profile\'s custom commands.</string>
     <string name="help_option_help_custom_keys">Opens instructions for the custom-key file format. Load the resulting file with Import Custom Keys.</string>
     <string name="help_pref_debug_info">Opens device and controller diagnostics without a stream: device details, controller IDs and sensors, vibration test, control preview.</string>
