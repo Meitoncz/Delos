@@ -21,7 +21,7 @@ import org.junit.Test;
 
 /**
  * The display planner's decisions. Most are characterisation tests of what DelosStreamActivity did before the
- * planner was extracted; the expected refresh rate was changed since (#80).
+ * planner was extracted; the expected refresh rate and the NTSC-style rate matches were changed since (#80).
  */
 public class StreamDisplayPlannerTest {
     private static final int LATENCY = PreferenceConfiguration.FRAME_PACING_MIN_LATENCY;
@@ -59,8 +59,11 @@ public class StreamDisplayPlannerTest {
         assertTrue(StreamDisplayPlanner.isRefreshRateEqualMatch(63f, 60f));
         assertFalse(StreamDisplayPlanner.isRefreshRateEqualMatch(63.5f, 60f));
         assertFalse(StreamDisplayPlanner.isRefreshRateEqualMatch(120f, 60f));
-        // Below the FPS is never a match, not even 59.94 Hz for 60 FPS
-        assertFalse(StreamDisplayPlanner.isRefreshRateEqualMatch(59.94f, 60f));
+        // The NTSC-style rate just below the FPS is the FPS
+        assertTrue(StreamDisplayPlanner.isRefreshRateEqualMatch(59.94f, 60f));
+        assertTrue(StreamDisplayPlanner.isRefreshRateEqualMatch(119.88f, 120f));
+        assertFalse(StreamDisplayPlanner.isRefreshRateEqualMatch(50f, 60f));
+        assertFalse(StreamDisplayPlanner.isRefreshRateEqualMatch(59f, 60f));
     }
 
     @Test
@@ -74,8 +77,40 @@ public class StreamDisplayPlannerTest {
         assertFalse(StreamDisplayPlanner.isRefreshRateGoodMatch(90f, 60f));
         assertFalse(StreamDisplayPlanner.isRefreshRateGoodMatch(144f, 60f));
         assertFalse(StreamDisplayPlanner.isRefreshRateGoodMatch(144f, 120f));
-        assertFalse(StreamDisplayPlanner.isRefreshRateGoodMatch(59.94f, 60f));
+        assertTrue(StreamDisplayPlanner.isRefreshRateGoodMatch(59.94f, 60f));
+        assertTrue(StreamDisplayPlanner.isRefreshRateGoodMatch(59.94f, 30f));
+        assertFalse(StreamDisplayPlanner.isRefreshRateGoodMatch(50f, 60f));
         assertFalse(StreamDisplayPlanner.isRefreshRateGoodMatch(60f, 90f));
+    }
+
+    @Test
+    public void ntscStyleRatesReachTheIntegerFps() {
+        assertTrue(StreamDisplayPlanner.reachesFps(23.976f, 24f));
+        assertTrue(StreamDisplayPlanner.reachesFps(29.97f, 30f));
+        assertTrue(StreamDisplayPlanner.reachesFps(59.94f, 60f));
+        assertTrue(StreamDisplayPlanner.reachesFps(119.88f, 120f));
+        assertTrue(StreamDisplayPlanner.reachesFps(60f, 60f));
+        assertTrue(StreamDisplayPlanner.reachesFps(144f, 120f));
+        // Further below than the NTSC fraction is too slow
+        assertFalse(StreamDisplayPlanner.reachesFps(59.5f, 60f));
+        assertFalse(StreamDisplayPlanner.reachesFps(50f, 60f));
+        assertFalse(StreamDisplayPlanner.reachesFps(25f, 30f));
+        assertFalse(StreamDisplayPlanner.reachesFps(100f, 120f));
+        assertFalse(StreamDisplayPlanner.reachesFps(119f, 120f));
+    }
+
+    @Test
+    public void aSixtyFpsStreamStaysOnAMatching5994HzModeWhenReducing() {
+        Mode ntsc = new Mode(1, 1920, 1080, 59.94f);
+        Mode hz50 = new Mode(2, 1920, 1080, 50f);
+        Plan plan = plan(input(ntsc, 60).display(ntsc, Arrays.asList(hz50, ntsc, HZ120), 59.94f).pacing(BALANCED, true, 0));
+        // 59.94 Hz is the match for 60 FPS, so the rate is not raised to 120 Hz
+        assertSame(ntsc, plan.bestMode);
+        assertEquals(ModeSwitch.NONE, plan.modeSwitch);
+
+        // From 50 Hz the 59.94 Hz mode is the lowest match
+        Plan from50 = plan(input(hz50, 60).display(hz50, Arrays.asList(hz50, ntsc, HZ120), 50f).pacing(BALANCED, true, 0));
+        assertSame(ntsc, from50.bestMode);
     }
 
     @Test
@@ -442,6 +477,8 @@ public class StreamDisplayPlannerTest {
         assertEquals(60f, StreamDisplayPlanner.surfaceFrameRate(120f, 60f, SMOOTHNESS, false), 0f);
         // No matching rate (50 Hz for 60 FPS): the true FPS
         assertEquals(60f, StreamDisplayPlanner.surfaceFrameRate(50f, 60f, BALANCED, false), 0f);
+        // 59.94 Hz is the match for 60 FPS and is requested as chosen
+        assertEquals(59.94f, StreamDisplayPlanner.surfaceFrameRate(59.94f, 60f, BALANCED, false), 0f);
     }
 
     @Test

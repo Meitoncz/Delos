@@ -376,14 +376,22 @@ public final class StreamDisplayPlanner {
 
     /** The refresh rate is the stream FPS or up to 3 Hz above it. */
     static boolean isRefreshRateEqualMatch(float refreshRate, float fps) {
-        return refreshRate >= fps &&
+        return reachesFps(refreshRate, fps) &&
                 refreshRate <= fps + 3;
     }
 
     /** The refresh rate is at least the stream FPS and (rounded) a multiple of it, within 3 Hz. */
     static boolean isRefreshRateGoodMatch(float refreshRate, float fps) {
-        return refreshRate >= fps &&
+        return reachesFps(refreshRate, fps) &&
                 Math.round(refreshRate) % fps <= 3;
+    }
+
+    /**
+     * The refresh rate is at least the stream FPS. The NTSC-style rates (1000/1001 of the integer rate: 23.976,
+     * 29.97, 59.94 and 119.88 Hz) count as the integer FPS they stand for; 50 Hz does not reach 60 FPS.
+     */
+    static boolean reachesFps(float refreshRate, float fps) {
+        return refreshRate + RATE_TOLERANCE >= fps * (1000f / 1001f);
     }
 
     /** The pacing mode prefers the lowest matching refresh rate over the highest. */
@@ -438,7 +446,7 @@ public final class StreamDisplayPlanner {
         // FPS value if there's no suitable matching refresh rate. In that case, Android could try to
         // select a lower refresh rate that avoids uneven pull-down (ex: 30 Hz for a 60 FPS stream on
         // a display that maxes out at 50 Hz).
-        if (mayReduceRefreshRate(framePacing, reduceRefreshRate) || desiredRefreshRate < fps) {
+        if (mayReduceRefreshRate(framePacing, reduceRefreshRate) || !reachesFps(desiredRefreshRate, fps)) {
             return fps;
         }
         else {
