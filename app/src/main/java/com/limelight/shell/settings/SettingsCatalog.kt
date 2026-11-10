@@ -135,7 +135,7 @@ fun settingIcon(key: String): String? = when (key) {
     "seekbar_trackpad_drag_drop_threshold" -> Symbols.HOLD_DURATION
     "checkbox_force_qwerty" -> Symbols.FORCE_QWERTY
     "keyboard_axi_list" -> Symbols.KEY_LAYOUT
-    "checkbox_right_alt_as_meta" -> Symbols.META_KEY
+    "checkbox_right_alt_as_meta" -> Symbols.KEYBOARD_COMMAND_KEY
     "checkbox_ignore_synth_events" -> Symbols.SYNTHETIC_INPUT
     "checkbox_enable_commit_text" -> Symbols.TEXT_INPUT
     "checkbox_smart_clipboard_sync" -> Symbols.CLIPBOARD_SYNC

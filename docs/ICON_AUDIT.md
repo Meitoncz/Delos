@@ -193,7 +193,7 @@ only the Windows, Steam and Android logos exist). Nothing needed a font from ano
 | Item | Was | Now | Verdict | Why |
 |---|---|---|---|---|
 | Force QWERTY | `grid-nine` | `text-t` | **replace** | the grid is the keyboard layout scheme row |
-| Right Alt as Meta | `command` | `windows-logo` | **replace** | the Windows logo is the Meta key; the command key is the stream menu "Send keys" |
+| Right Alt as Meta | `command` | `command` | keep | the row is labelled "Right Alt as Command (Mac)", so the Command glyph is the right one (the same glyph names the stream menu "Send keys" row, a different screen). The Windows logo glyph was tried and reverted |
 | Ignore synthetic events | `shield-check` | `shield-check` | keep |  |
 | Commit text | `chat-text` | `chat-text` | keep |  |
 | Smart clipboard sync | `clipboard-text` | `clipboard-text` | keep |  |
