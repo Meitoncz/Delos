@@ -1,5 +1,7 @@
 package com.limelight.shell.keyboard
 
+import androidx.compose.ui.res.stringResource
+import com.limelight.R
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
@@ -468,10 +470,10 @@ private fun legendStyle(size: Float, color: Color, weight: FontWeight, spacing: 
 
 /** The arrows are strokes (the icon font has no up and down arrows): 24-unit paths drawn with a 2.4 unit round line. */
 private val ArrowPaths = mapOf(
-    Arrow.UP to "M12 19V5M5.5 11.5 12 5l6.5 6.5",
-    Arrow.DOWN to "M12 5v14M5.5 12.5 12 19l6.5-6.5",
-    Arrow.LEFT to "M19 12H5M11.5 5.5 5 12l6.5 6.5",
-    Arrow.RIGHT to "M5 12h14M12.5 5.5 19 12l-6.5 6.5",
+    Arrow.UP to "M12 19V5M5.5 11.5 12 5l6.5 6.5", // l10n-ignore
+    Arrow.DOWN to "M12 5v14M5.5 12.5 12 19l6.5-6.5", // l10n-ignore
+    Arrow.LEFT to "M19 12H5M11.5 5.5 5 12l6.5 6.5", // l10n-ignore
+    Arrow.RIGHT to "M5 12h14M12.5 5.5 19 12l-6.5 6.5", // l10n-ignore
 )
 
 @Composable
@@ -548,19 +550,19 @@ private fun HintStrip(state: FullKeyboardState, palette: KeyboardPalette, bodyWi
             .graphicsLayer { alpha = visible },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Hint("A", "Press", palette)
+        Hint("A", stringResource(R.string.keyboard_hint_press), palette)
         Spacer(Modifier.width(30f.px))
-        Hint("B", "Close", palette)
+        Hint("B", stringResource(R.string.keyboard_hint_close), palette)
         Spacer(Modifier.width(30f.px))
-        Hint("L3", "Shift", palette)
+        Hint("L3", stringResource(R.string.keyboard_hint_shift), palette)
         Spacer(Modifier.width(30f.px))
-        Hint("X", "Delete", palette)
+        Hint("X", stringResource(R.string.keyboard_hint_delete), palette)
         Spacer(Modifier.width(30f.px))
-        Hint("Y", "Space", palette)
+        Hint("Y", stringResource(R.string.keyboard_hint_space), palette)
         Spacer(Modifier.weight(1f))
         // The five hints take about 720 px: on a narrower keyboard the title goes, so the strip stays one line
         if (bodyWidth >= TITLE_MIN_WIDTH) {
-            BasicText("ON-SCREEN KEYBOARD", style = legendStyle(17f, palette.text3, FontWeight.SemiBold, .14.em), maxLines = 1, softWrap = false)
+            BasicText(stringResource(R.string.keyboard_title), style = legendStyle(17f, palette.text3, FontWeight.SemiBold, .14.em), maxLines = 1, softWrap = false)
         }
     }
 }

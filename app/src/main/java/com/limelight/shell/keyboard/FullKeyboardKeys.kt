@@ -131,7 +131,7 @@ object FullKeyboardKeys {
             keyOf(KeyEvent.KEYCODE_7, "7", 100), keyOf(KeyEvent.KEYCODE_8, "8", 100), keyOf(KeyEvent.KEYCODE_9, "9", 100),
             keyOf(KeyEvent.KEYCODE_0, "0", 100),
             keyOf(KeyEvent.KEYCODE_MINUS, "_-", 100), keyOf(KeyEvent.KEYCODE_EQUALS, "+=", 100),
-            keyOf(KeyEvent.KEYCODE_DEL, "Back", 150),
+            keyOf(KeyEvent.KEYCODE_DEL, "Back", 150), // l10n-ignore
         ),
         listOf(
             keyOf(KeyEvent.KEYCODE_TAB, "Tab", 140),
@@ -143,26 +143,26 @@ object FullKeyboardKeys {
             keyOf(KeyEvent.KEYCODE_BACKSLASH, "|\\", 100),
         ),
         listOf(
-            keyOf(KeyEvent.KEYCODE_CAPS_LOCK, "Caps", 160),
+            keyOf(KeyEvent.KEYCODE_CAPS_LOCK, "Caps", 160), // l10n-ignore
             keyOf(KeyEvent.KEYCODE_A, "A", 100), keyOf(KeyEvent.KEYCODE_S, "S", 100), keyOf(KeyEvent.KEYCODE_D, "D", 100),
             keyOf(KeyEvent.KEYCODE_F, "F", 100), keyOf(KeyEvent.KEYCODE_G, "G", 100), keyOf(KeyEvent.KEYCODE_H, "H", 100),
             keyOf(KeyEvent.KEYCODE_J, "J", 100), keyOf(KeyEvent.KEYCODE_K, "K", 100), keyOf(KeyEvent.KEYCODE_L, "L", 100),
             keyOf(KeyEvent.KEYCODE_SEMICOLON, ":;", 100), keyOf(KeyEvent.KEYCODE_APOSTROPHE, "\"'", 100),
-            keyOf(KeyEvent.KEYCODE_ENTER, "Enter", 160),
+            keyOf(KeyEvent.KEYCODE_ENTER, "Enter", 160), // l10n-ignore
         ),
         listOf(
-            keyOf(KeyEvent.KEYCODE_SHIFT_LEFT, "Shift", 160),
+            keyOf(KeyEvent.KEYCODE_SHIFT_LEFT, "Shift", 160), // l10n-ignore
             keyOf(KeyEvent.KEYCODE_Z, "Z", 100), keyOf(KeyEvent.KEYCODE_X, "X", 100), keyOf(KeyEvent.KEYCODE_C, "C", 100),
             keyOf(KeyEvent.KEYCODE_V, "V", 100), keyOf(KeyEvent.KEYCODE_B, "B", 100), keyOf(KeyEvent.KEYCODE_N, "N", 100),
             keyOf(KeyEvent.KEYCODE_M, "M", 100),
             keyOf(KeyEvent.KEYCODE_COMMA, "<,", 100), keyOf(KeyEvent.KEYCODE_PERIOD, ">.", 100), keyOf(KeyEvent.KEYCODE_SLASH, "?/", 100),
             keyOf(KeyEvent.KEYCODE_DPAD_UP, "\u2191", 103),
-            keyOf(HIDE_CODE, "Hide", 103),
+            keyOf(HIDE_CODE, "Hide", 103), // l10n-ignore
         ),
         listOf(
-            keyOf(KeyEvent.KEYCODE_CTRL_LEFT, "Ctrl", 105), keyOf(KeyEvent.KEYCODE_META_LEFT, "Win", 105), keyOf(KeyEvent.KEYCODE_ALT_LEFT, "Alt", 105),
+            keyOf(KeyEvent.KEYCODE_CTRL_LEFT, "Ctrl", 105), keyOf(KeyEvent.KEYCODE_META_LEFT, "Win", 105), keyOf(KeyEvent.KEYCODE_ALT_LEFT, "Alt", 105), // l10n-ignore
             keyOf(KeyEvent.KEYCODE_SPACE, "___", 310, marginStart = true, marginEnd = true),
-            keyOf(KeyEvent.KEYCODE_MOVE_HOME, "Home", 98, small = true), keyOf(KeyEvent.KEYCODE_MOVE_END, "End", 98, small = true),
+            keyOf(KeyEvent.KEYCODE_MOVE_HOME, "Home", 98, small = true), keyOf(KeyEvent.KEYCODE_MOVE_END, "End", 98, small = true), // l10n-ignore
             keyOf(KeyEvent.KEYCODE_PAGE_UP, "PgUp", 98, small = true), keyOf(KeyEvent.KEYCODE_PAGE_DOWN, "PgDn", 98, small = true),
             keyOf(KeyEvent.KEYCODE_DPAD_LEFT, "\u2190", 100), keyOf(KeyEvent.KEYCODE_DPAD_DOWN, "\u2193", 100), keyOf(KeyEvent.KEYCODE_DPAD_RIGHT, "\u2192", 100),
         ),

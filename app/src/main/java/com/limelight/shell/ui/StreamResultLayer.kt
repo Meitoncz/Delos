@@ -1,5 +1,7 @@
 package com.limelight.shell.ui
 
+import androidx.compose.ui.res.stringResource
+import com.limelight.R
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -90,8 +92,8 @@ fun StreamResultLayer(result: StreamResult?, haze: HazeState, reducedMotion: Boo
                     modifier = Modifier.widthIn(max = 1000.px),
                 )
                 Row(Modifier.padding(top = 12.px), horizontalArrangement = Arrangement.spacedBy(24.px)) {
-                    PillButton("Try again", Symbols.REFRESH, onRetry, Modifier.focusRequester(retry), primary = true)
-                    PillButton("Back to library", Symbols.LIBRARY, onBack, clickCue = Cue.BACK)
+                    PillButton(stringResource(R.string.stream_result_try_again), Symbols.REFRESH, onRetry, Modifier.focusRequester(retry), primary = true)
+                    PillButton(stringResource(R.string.stream_result_back_to_library), Symbols.LIBRARY, onBack, clickCue = Cue.BACK)
                 }
                 r.details?.takeIf { it.isNotBlank() }?.let { details ->
                     DetailsToggle(expanded) { expanded = !expanded }
@@ -160,7 +162,7 @@ private fun DetailsToggle(expanded: Boolean, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.px),
     ) {
-        BasicText("Details", style = TextStyle(color = colors.text2, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 22.tpx))
+        BasicText(stringResource(R.string.stream_result_details), style = TextStyle(color = colors.text2, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 22.tpx))
         Symbol(if (expanded) Symbols.EXPAND_LESS else Symbols.EXPAND_MORE, 26.tpx, colors.text2)
     }
 }

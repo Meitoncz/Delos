@@ -1,5 +1,8 @@
 package com.limelight.shell.ui
 
+import androidx.annotation.StringRes
+import androidx.compose.ui.res.stringResource
+import com.limelight.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,7 +24,15 @@ import com.limelight.shell.settings.ImpactLevel
 import com.limelight.shell.settings.SettingImpact
 
 /** The three impact axes in the order the chips and the legend show them: label, glyph. */
-internal val IMPACT_AXES = listOf("GPU" to Symbols.GPU, "Latency" to Symbols.TIMER, "Network" to Symbols.WIFI)
+internal val IMPACT_AXES: List<Pair<Int, String>> = listOf(R.string.impact_axis_gpu to Symbols.GPU, R.string.impact_axis_latency to Symbols.TIMER, R.string.impact_axis_network to Symbols.WIFI)
+
+@StringRes
+private fun impactLevelWord(level: ImpactLevel): Int = when (level) {
+    ImpactLevel.NONE -> R.string.impact_level_none
+    ImpactLevel.LOW -> R.string.impact_level_low
+    ImpactLevel.MEDIUM -> R.string.impact_level_medium
+    ImpactLevel.HIGH -> R.string.impact_level_high
+}
 
 internal fun SettingImpact.levels(): List<ImpactLevel> = listOf(gpu, latency, network)
 
@@ -45,7 +56,10 @@ internal fun impactColor(level: ImpactLevel): Color {
 @Composable
 internal fun ImpactChips(impact: SettingImpact, focused: Boolean, modifier: Modifier = Modifier) {
     val colors = LocalDelosColors.current
-    val description = IMPACT_AXES.indices.joinToString(", ") { "${IMPACT_AXES[it].first} ${impact.levels()[it].name.lowercase()}" }
+    val axes = IMPACT_AXES.indices.map {
+        stringResource(R.string.impact_axis_level, stringResource(IMPACT_AXES[it].first), stringResource(impactLevelWord(impact.levels()[it])))
+    }
+    val description = stringResource(R.string.impact_axes_joined, axes[0], axes[1], axes[2])
     Row(
         modifier.clearAndSetSemantics { contentDescription = description },
         horizontalArrangement = Arrangement.spacedBy(26.px),
@@ -83,10 +97,10 @@ internal fun ImpactLegend(modifier: Modifier = Modifier) {
             IMPACT_AXES.forEach { (name, glyph) ->
                 Row(horizontalArrangement = Arrangement.spacedBy(6.px), verticalAlignment = Alignment.CenterVertically) {
                     Symbol(glyph, 22.tpx, colors.text2)
-                    BasicText(name, style = small)
+                    BasicText(stringResource(name), style = small)
                 }
             }
         }
-        BasicText("Cost of the current value: 1 bar low, 2 medium, 3 high", style = small)
+        BasicText(stringResource(R.string.impact_legend), style = small)
     }
 }

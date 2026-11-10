@@ -1,5 +1,8 @@
 package com.limelight.shell.ui
 
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.stringResource
+import com.limelight.R
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.animateColorAsState
@@ -300,7 +303,7 @@ private fun RowResetButton(override: RowOverride, focused: Boolean) {
     val pop by animateFloatAsState(if (visible) 1f else 0f, if (reduced) snap() else tween(Motion.PILL_POP, easing = EaseSpring), label = "rowResetPop")
     val reset by rememberUpdatedState(override.onReset)
     val tint = colors.accent3
-    val label = "Reset to profile value"
+    val label = stringResource(R.string.row_reset_to_profile)
     Row(
         Modifier.graphicsLayer { alpha = shown; (.9f + .1f * pop).let { if (reduced) 1f else it }.let { scaleX = it; scaleY = it } }
             .clip(CircleShape).background(tint.copy(alpha = .22f)).border(1.px, tint.copy(alpha = .5f), CircleShape)
@@ -316,7 +319,7 @@ private fun RowResetButton(override: RowOverride, focused: Boolean) {
         if (override.touch) Symbol(Symbols.RESET, 28.tpx, tint)
         else {
             Symbol(Symbols.RESET, 24.tpx, tint)
-            BasicText("Reset", style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.Bold, fontSize = 19.tpx))
+            BasicText(stringResource(R.string.row_reset), style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.Bold, fontSize = 19.tpx))
             GlyphButton(Glyph.Letter("X"), 30)
         }
     }
@@ -412,12 +415,12 @@ private fun RowValueView(value: RowValue, focused: Boolean, choice: ChoiceMotion
                     Box(Modifier.fillMaxHeight().fillMaxWidth(fraction).clip(CircleShape).background(Brush.horizontalGradient(listOf(colors.accent, colors.accent2))))
                 }
             }
-            val label = if (number % value.divisor == 0) (number / value.divisor).toString() else String.format(java.util.Locale.US, "%.1f", number.toDouble() / value.divisor)
+            val label = if (number % value.divisor == 0) (number / value.divisor).toString() else String.format(LocalConfiguration.current.locales[0], "%.1f", number.toDouble() / value.divisor)
             BasicText(if (number == value.min && value.minText != null) value.minText else "$label${value.unit}", style = text.copy(textAlign = TextAlign.End), maxLines = 1, modifier = Modifier.width(160.px))
         }
         is RowValue.Action -> Symbol(Symbols.CHEVRON_RIGHT, 30.tpx, if (calm) arrowColor.value else staticArrows)
         is RowValue.Text -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.px)) {
-            MarqueeText(value.text.ifEmpty { "Not set" }, style = text, active = focused, modifier = Modifier.widthIn(max = 220.px))
+            MarqueeText(value.text.ifEmpty { stringResource(R.string.row_not_set) }, style = text, active = focused, modifier = Modifier.widthIn(max = 220.px))
             Symbol(Symbols.CHEVRON_RIGHT, 30.tpx, if (calm) arrowColor.value else staticArrows)
         }
         is RowValue.Info -> BasicText(value.text, style = text)

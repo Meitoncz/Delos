@@ -1,5 +1,7 @@
 package com.limelight.shell.ui
 
+import androidx.compose.ui.res.stringResource
+import com.limelight.R
 import android.view.KeyEvent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -89,9 +91,9 @@ fun ButtonCaptureLayer(visible: Boolean, keys: GlobalKeys, onDone: (Set<Int>?) -
                 verticalArrangement = Arrangement.spacedBy(26.px),
             ) {
                 Symbol(Symbols.SPORTS_ESPORTS, 72.tpx, colors.accent, filled = true)
-                BasicText("Press the stream menu buttons", style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 36.tpx, textAlign = TextAlign.Center))
+                BasicText(stringResource(R.string.shell_button_capture_title), style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 36.tpx, textAlign = TextAlign.Center))
                 BasicText(
-                    "Hold them together, then let go. One button works too, e.g. a rear button. Wait or tap to cancel.",
+                    stringResource(R.string.shell_button_capture_note),
                     style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 24.tpx, lineHeight = 1.4.em, textAlign = TextAlign.Center),
                 )
                 Row(Modifier.height(64.px), horizontalArrangement = Arrangement.spacedBy(14.px), verticalAlignment = Alignment.CenterVertically) {
