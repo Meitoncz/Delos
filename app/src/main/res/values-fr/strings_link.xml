@@ -52,10 +52,10 @@
     <string name="link_use_detail">Règle le débit sur %1$s : %2$s. Delos ne change jamais le débit tout seul.</string>
     <string name="link_unavailable_newer_delos">Ce PC a besoin d’une version plus récente de Delos pour tester la liaison.</string>
     <string name="link_unavailable_host_outdated">Le Vibepollo de ce PC ne peut pas encore tester la liaison. Mets-le à jour.</string>
-    <string name="link_stream_help_dropping">La liaison perd des images à %1$s. A remplit le curseur, Appliquer l’envoie.</string>
-    <string name="link_stream_help_dropping_untested">La liaison perd des images à %1$s. A remplit le curseur, Appliquer l’envoie. Teste la liaison dans les Réglages avant de te connecter.</string>
-    <string name="link_stream_help_tested">%1$s. A remplit le curseur, Appliquer l’envoie.</string>
-    <string name="link_stream_help_untested">Pas encore testé. A remplit le curseur, Appliquer l’envoie. Teste la liaison dans les Réglages avant de te connecter.</string>
+    <string name="link_stream_help_dropping">La liaison perd des images à %1$s. %2$s remplit le curseur, Appliquer l’envoie.</string>
+    <string name="link_stream_help_dropping_untested">La liaison perd des images à %1$s. %2$s remplit le curseur, Appliquer l’envoie. Teste la liaison dans les Réglages avant de te connecter.</string>
+    <string name="link_stream_help_tested">%1$s. %2$s remplit le curseur, Appliquer l’envoie.</string>
+    <string name="link_stream_help_untested">Pas encore testé. %1$s remplit le curseur, Appliquer l’envoie. Teste la liaison dans les Réglages avant de te connecter.</string>
     <string name="link_reading_measuring">Mesure en cours</string>
     <string name="link_reading_keeps_up">La liaison tient à %1$s</string>
     <string name="link_reading_drops">La liaison perd des images à %1$s, essaie %2$s</string>

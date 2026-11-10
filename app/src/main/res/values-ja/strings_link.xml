@@ -47,10 +47,10 @@
     <string name="link_unavailable_newer_delos">このPCで回線テストを行うには、より新しい Delosが必要です。</string>
     <string name="link_unavailable_host_outdated">このPCのVibepolloはまだ回線テストに対応していません。アップデートしてください。</string>
 
-    <string name="link_stream_help_dropping">この回線では%1$sでフレームが欠落します。Aでスライダーに入力し、適用で送信します。</string>
-    <string name="link_stream_help_dropping_untested">この回線では%1$sでフレームが欠落します。Aでスライダーに入力し、適用で送信します。接続前に、設定で回線をテストしてください。</string>
-    <string name="link_stream_help_tested">%1$s。Aでスライダーに入力し、適用で送信します。</string>
-    <string name="link_stream_help_untested">未テストです。Aでスライダーに入力し、適用で送信します。接続前に、設定で回線をテストしてください。</string>
+    <string name="link_stream_help_dropping">この回線では%1$sでフレームが欠落します。%2$sでスライダーに入力し、適用で送信します。</string>
+    <string name="link_stream_help_dropping_untested">この回線では%1$sでフレームが欠落します。%2$sでスライダーに入力し、適用で送信します。接続前に、設定で回線をテストしてください。</string>
+    <string name="link_stream_help_tested">%1$s。%2$sでスライダーに入力し、適用で送信します。</string>
+    <string name="link_stream_help_untested">未テストです。%1$sでスライダーに入力し、適用で送信します。接続前に、設定で回線をテストしてください。</string>
 
     <string name="link_reading_measuring">測定中</string>
     <string name="link_reading_keeps_up">回線は%1$sで問題ありません</string>

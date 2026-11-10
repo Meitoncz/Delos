@@ -79,13 +79,14 @@
     <string name="link_unavailable_host_outdated">This PC\'s Vibepollo cannot test the link yet. Update it.</string>
 
     <!-- Stream menu help for the recommendation row (no test can run during a stream) -->
-    <!-- %1$s: the rate the stream drops frames at -->
-    <string name="link_stream_help_dropping">Link drops frames at %1$s. A fills the slider, Apply sends it.</string>
-    <!-- %1$s: the rate the stream drops frames at -->
-    <string name="link_stream_help_dropping_untested">Link drops frames at %1$s. A fills the slider, Apply sends it. Test the link in Settings before connecting.</string>
-    <!-- %1$s: "Tested yesterday on Wi-Fi" -->
-    <string name="link_stream_help_tested">%1$s. A fills the slider, Apply sends it.</string>
-    <string name="link_stream_help_untested">Not tested yet. A fills the slider, Apply sends it. Test the link in Settings before connecting.</string>
+    <!-- %1$s: the rate the stream drops frames at, %2$s: the name of the confirm button (A) -->
+    <string name="link_stream_help_dropping">Link drops frames at %1$s. %2$s fills the slider, Apply sends it.</string>
+    <!-- %1$s: the rate the stream drops frames at, %2$s: the name of the confirm button (A) -->
+    <string name="link_stream_help_dropping_untested">Link drops frames at %1$s. %2$s fills the slider, Apply sends it. Test the link in Settings before connecting.</string>
+    <!-- %1$s: "Tested yesterday on Wi-Fi", %2$s: the name of the confirm button (A) -->
+    <string name="link_stream_help_tested">%1$s. %2$s fills the slider, Apply sends it.</string>
+    <!-- %1$s: the name of the confirm button (A) -->
+    <string name="link_stream_help_untested">Not tested yet. %1$s fills the slider, Apply sends it. Test the link in Settings before connecting.</string>
 
     <!-- The live reading of a running stream. %1$s: a rate -->
     <string name="link_reading_measuring">Measuring</string>

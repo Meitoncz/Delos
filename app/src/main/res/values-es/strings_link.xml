@@ -57,10 +57,10 @@
     <string name="link_unavailable_newer_delos">Este PC necesita una versión más reciente de Delos para probar el enlace.</string>
     <string name="link_unavailable_host_outdated">El Vibepollo de este PC aún no puede probar el enlace. Actualízalo.</string>
 
-    <string name="link_stream_help_dropping">El enlace pierde fotogramas a %1$s. A rellena el control deslizante, Aplicar lo envía.</string>
-    <string name="link_stream_help_dropping_untested">El enlace pierde fotogramas a %1$s. A rellena el control deslizante, Aplicar lo envía. Prueba el enlace en Ajustes antes de conectar.</string>
-    <string name="link_stream_help_tested">%1$s. A rellena el control deslizante, Aplicar lo envía.</string>
-    <string name="link_stream_help_untested">Aún sin probar. A rellena el control deslizante, Aplicar lo envía. Prueba el enlace en Ajustes antes de conectar.</string>
+    <string name="link_stream_help_dropping">El enlace pierde fotogramas a %1$s. %2$s rellena el control deslizante, Aplicar lo envía.</string>
+    <string name="link_stream_help_dropping_untested">El enlace pierde fotogramas a %1$s. %2$s rellena el control deslizante, Aplicar lo envía. Prueba el enlace en Ajustes antes de conectar.</string>
+    <string name="link_stream_help_tested">%1$s. %2$s rellena el control deslizante, Aplicar lo envía.</string>
+    <string name="link_stream_help_untested">Aún sin probar. %1$s rellena el control deslizante, Aplicar lo envía. Prueba el enlace en Ajustes antes de conectar.</string>
 
     <string name="link_reading_measuring">Midiendo</string>
     <string name="link_reading_keeps_up">El enlace aguanta a %1$s</string>

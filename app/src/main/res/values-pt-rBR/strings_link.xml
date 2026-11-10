@@ -57,10 +57,10 @@
     <string name="link_unavailable_newer_delos">Este PC precisa de uma versão mais nova do app Delos para o teste de link.</string>
     <string name="link_unavailable_host_outdated">O Vibepollo deste PC ainda não consegue testar o link. Atualize-o.</string>
 
-    <string name="link_stream_help_dropping">O link perde quadros a %1$s. A preenche o controle deslizante, Aplicar o envia.</string>
-    <string name="link_stream_help_dropping_untested">O link perde quadros a %1$s. A preenche o controle deslizante, Aplicar o envia. Teste o link em Configurações antes de conectar.</string>
-    <string name="link_stream_help_tested">%1$s. A preenche o controle deslizante, Aplicar o envia.</string>
-    <string name="link_stream_help_untested">Ainda não testado. A preenche o controle deslizante, Aplicar o envia. Teste o link em Configurações antes de conectar.</string>
+    <string name="link_stream_help_dropping">O link perde quadros a %1$s. %2$s preenche o controle deslizante, Aplicar o envia.</string>
+    <string name="link_stream_help_dropping_untested">O link perde quadros a %1$s. %2$s preenche o controle deslizante, Aplicar o envia. Teste o link em Configurações antes de conectar.</string>
+    <string name="link_stream_help_tested">%1$s. %2$s preenche o controle deslizante, Aplicar o envia.</string>
+    <string name="link_stream_help_untested">Ainda não testado. %1$s preenche o controle deslizante, Aplicar o envia. Teste o link em Configurações antes de conectar.</string>
 
     <string name="link_reading_measuring">Medindo</string>
     <string name="link_reading_keeps_up">O link aguenta %1$s</string>

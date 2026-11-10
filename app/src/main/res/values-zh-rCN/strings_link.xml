@@ -42,10 +42,10 @@
     <string name="link_use_detail">将码率填为 %1$s：%2$s。Delos 绝不会自行更改码率。</string>
     <string name="link_unavailable_newer_delos">此 PC 需要更新版本的 Delos 才能进行链路测试。</string>
     <string name="link_unavailable_host_outdated">此 PC 上的 Vibepollo 暂不支持链路测试。请更新。</string>
-    <string name="link_stream_help_dropping">链路在 %1$s 时丢帧。按 A 填入滑块，点击“应用”发送。</string>
-    <string name="link_stream_help_dropping_untested">链路在 %1$s 时丢帧。按 A 填入滑块，点击“应用”发送。连接前请先在设置中测试链路。</string>
-    <string name="link_stream_help_tested">%1$s。按 A 填入滑块，点击“应用”发送。</string>
-    <string name="link_stream_help_untested">尚未测试。按 A 填入滑块，点击“应用”发送。连接前请先在设置中测试链路。</string>
+    <string name="link_stream_help_dropping">链路在 %1$s 时丢帧。%2$s A 填入滑块，点击“应用”发送。</string>
+    <string name="link_stream_help_dropping_untested">链路在 %1$s 时丢帧。%2$s A 填入滑块，点击“应用”发送。连接前请先在设置中测试链路。</string>
+    <string name="link_stream_help_tested">%1$s。%2$s A 填入滑块，点击“应用”发送。</string>
+    <string name="link_stream_help_untested">尚未测试。%1$s A 填入滑块，点击“应用”发送。连接前请先在设置中测试链路。</string>
     <string name="link_reading_measuring">测量中</string>
     <string name="link_reading_keeps_up">链路可稳定承载 %1$s</string>
     <string name="link_reading_drops">链路在 %1$s 时丢帧，建议尝试 %2$s</string>

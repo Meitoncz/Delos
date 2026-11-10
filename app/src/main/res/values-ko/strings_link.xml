@@ -47,10 +47,10 @@
     <string name="link_unavailable_newer_delos">이 PC에서 연결 테스트를 하려면 더 최신 버전의 Delos가 필요해요.</string>
     <string name="link_unavailable_host_outdated">이 PC의 Vibepollo는 아직 연결 테스트를 지원하지 않아요. 업데이트해 주세요.</string>
 
-    <string name="link_stream_help_dropping">%1$s에서 프레임 드롭이 발생해요. A로 슬라이더를 채우고 적용으로 전송해요.</string>
-    <string name="link_stream_help_dropping_untested">%1$s에서 프레임 드롭이 발생해요. A로 슬라이더를 채우고 적용으로 전송해요. 연결하기 전에 설정에서 연결 테스트를 해 보세요.</string>
-    <string name="link_stream_help_tested">%1$s. A로 슬라이더를 채우고 적용으로 전송해요.</string>
-    <string name="link_stream_help_untested">아직 테스트하지 않았어요. A로 슬라이더를 채우고 적용으로 전송해요. 연결하기 전에 설정에서 연결 테스트를 해 보세요.</string>
+    <string name="link_stream_help_dropping">%1$s에서 프레임 드롭이 발생해요. %2$s로 슬라이더를 채우고 적용으로 전송해요.</string>
+    <string name="link_stream_help_dropping_untested">%1$s에서 프레임 드롭이 발생해요. %2$s로 슬라이더를 채우고 적용으로 전송해요. 연결하기 전에 설정에서 연결 테스트를 해 보세요.</string>
+    <string name="link_stream_help_tested">%1$s. %2$s로 슬라이더를 채우고 적용으로 전송해요.</string>
+    <string name="link_stream_help_untested">아직 테스트하지 않았어요. %1$s로 슬라이더를 채우고 적용으로 전송해요. 연결하기 전에 설정에서 연결 테스트를 해 보세요.</string>
 
     <string name="link_reading_measuring">측정 중</string>
     <string name="link_reading_keeps_up">%1$s까지 연결 충분</string>

@@ -78,12 +78,12 @@
 
     <!-- Stream menu help for the recommendation row (no test can run during a stream) -->
     <!-- %1$s: the rate the stream drops frames at -->
-    <string name="link_stream_help_dropping">Bei %1$s fallen Bilder aus. A füllt den Regler, Anwenden sendet ihn.</string>
+    <string name="link_stream_help_dropping">Bei %1$s fallen Bilder aus. %2$s füllt den Regler, Anwenden sendet ihn.</string>
     <!-- %1$s: the rate the stream drops frames at -->
-    <string name="link_stream_help_dropping_untested">Bei %1$s fallen Bilder aus. A füllt den Regler, Anwenden sendet ihn. Teste die Verbindung in den Einstellungen, bevor du dich verbindest.</string>
+    <string name="link_stream_help_dropping_untested">Bei %1$s fallen Bilder aus. %2$s füllt den Regler, Anwenden sendet ihn. Teste die Verbindung in den Einstellungen, bevor du dich verbindest.</string>
     <!-- %1$s: "Tested yesterday on Wi-Fi" -->
-    <string name="link_stream_help_tested">%1$s. A füllt den Regler, Anwenden sendet ihn.</string>
-    <string name="link_stream_help_untested">Noch nicht getestet. A füllt den Regler, Anwenden sendet ihn. Teste die Verbindung in den Einstellungen, bevor du dich verbindest.</string>
+    <string name="link_stream_help_tested">%1$s. %2$s füllt den Regler, Anwenden sendet ihn.</string>
+    <string name="link_stream_help_untested">Noch nicht getestet. %1$s füllt den Regler, Anwenden sendet ihn. Teste die Verbindung in den Einstellungen, bevor du dich verbindest.</string>
 
     <!-- The live reading of a running stream. %1$s: a rate -->
     <string name="link_reading_measuring">Messe</string>

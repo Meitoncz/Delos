@@ -62,10 +62,10 @@
     <string name="link_unavailable_newer_delos">Для перевірки каналу цьому ПК потрібна новіша версія Delos.</string>
     <string name="link_unavailable_host_outdated">Vibepollo на цьому ПК ще не вміє перевіряти канал. Онови його.</string>
 
-    <string name="link_stream_help_dropping">Канал втрачає кадри на %1$s. A заповнює повзунок, «Застосувати» надсилає.</string>
-    <string name="link_stream_help_dropping_untested">Канал втрачає кадри на %1$s. A заповнює повзунок, «Застосувати» надсилає. Перевір канал у налаштуваннях до підключення.</string>
-    <string name="link_stream_help_tested">%1$s. A заповнює повзунок, «Застосувати» надсилає.</string>
-    <string name="link_stream_help_untested">Ще не перевірено. A заповнює повзунок, «Застосувати» надсилає. Перевір канал у налаштуваннях до підключення.</string>
+    <string name="link_stream_help_dropping">Канал втрачає кадри на %1$s. %2$s заповнює повзунок, «Застосувати» надсилає.</string>
+    <string name="link_stream_help_dropping_untested">Канал втрачає кадри на %1$s. %2$s заповнює повзунок, «Застосувати» надсилає. Перевір канал у налаштуваннях до підключення.</string>
+    <string name="link_stream_help_tested">%1$s. %2$s заповнює повзунок, «Застосувати» надсилає.</string>
+    <string name="link_stream_help_untested">Ще не перевірено. %1$s заповнює повзунок, «Застосувати» надсилає. Перевір канал у налаштуваннях до підключення.</string>
 
     <string name="link_reading_measuring">Вимірювання</string>
     <string name="link_reading_keeps_up">Канал справляється на %1$s</string>

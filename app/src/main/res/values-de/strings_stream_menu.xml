@@ -87,7 +87,7 @@
     <string name="stream_menu_bitrate_accepted">%1$d Mbps akzeptiert</string>
     <!-- %1$d: megabits per second the host allowed -->
     <string name="stream_menu_bitrate_limited">Vom Host auf %1$d Mbps begrenzt</string>
-    <string name="stream_menu_bitrate_failed">Fehlgeschlagen</string>
+    <string name="stream_menu_bitrate_failed">Fehler</string>
     <string name="stream_menu_bitrate_not_connected">Der Stream ist nicht verbunden, daher lässt sich die Bitrate nicht ändern.</string>
     <string name="stream_menu_bitrate_unsupported">Der Host unterstützt keine Bitratenänderung im laufenden Stream, oder der Stream ist beendet.</string>
     <string name="stream_menu_bitrate_denied">Der Host hat diese Änderung nicht erlaubt.</string>

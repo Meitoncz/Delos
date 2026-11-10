@@ -1,8 +1,10 @@
 package com.limelight.shell.link
 
 import android.content.res.Resources
+import android.view.KeyEvent
 import com.limelight.R
 import com.limelight.nvstream.http.PyroWaveHostInfo
+import com.limelight.shell.settings.StreamMenuSettings
 import java.util.TimeZone
 
 /** Why the PC cannot run the link test, for [LinkGuidance.testUnavailable]. */
@@ -60,11 +62,12 @@ internal data class LinkGuidance(
     fun streamHelp(res: Resources, nowMs: Long, zone: TimeZone = TimeZone.getDefault()): String {
         val dropping = recommendation.reason == LinkReason.DROPPING
         val dropped = mbps(recommendation.droppedAtKbps)
+        val confirm = StreamMenuSettings.buttonName(res, KeyEvent.KEYCODE_BUTTON_A)
         return when {
-            dropping && tested != null -> res.getString(R.string.link_stream_help_dropping, dropped)
-            dropping -> res.getString(R.string.link_stream_help_dropping_untested, dropped)
-            tested != null -> res.getString(R.string.link_stream_help_tested, tested.summary(res, nowMs, zone))
-            else -> res.getString(R.string.link_stream_help_untested)
+            dropping && tested != null -> res.getString(R.string.link_stream_help_dropping, dropped, confirm)
+            dropping -> res.getString(R.string.link_stream_help_dropping_untested, dropped, confirm)
+            tested != null -> res.getString(R.string.link_stream_help_tested, tested.summary(res, nowMs, zone), confirm)
+            else -> res.getString(R.string.link_stream_help_untested, confirm)
         }
     }
 
