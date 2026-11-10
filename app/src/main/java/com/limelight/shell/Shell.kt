@@ -118,6 +118,9 @@ import com.limelight.shell.ui.ButtonCaptureLayer
 import com.limelight.shell.ui.DialogLayer
 import com.limelight.shell.ui.PortalOverlay
 import com.limelight.shell.ui.StreamResultLayer
+import com.limelight.shell.ui.ProblemOfferCard
+import com.limelight.diag.ProblemMonitor
+import com.limelight.diag.ProblemReporter
 import com.limelight.shell.ui.LocalImeAvoidance
 import com.limelight.shell.ui.rememberImeAvoidance
 import com.limelight.shell.data.LocalArtwork
@@ -262,6 +265,41 @@ fun Shell(
         feedback.play(Cue.OPEN)
         results.value = null
         shell.result = r
+        // A failed stream is also a problem the user may report: the card follows once the result has been answered
+        ProblemMonitor.streamFailed(appContext, r.title, r.details)?.let { if (shell.problem == null) shell.problem = it }
+    }
+
+    // A crash, ANR or unclean exit of the last run: one card offers the report, once per problem (docs/DIAGNOSTICS.md)
+    LaunchedEffect(Unit) {
+        val found = withContext(Dispatchers.IO) { ProblemMonitor.detectAtStart(appContext) }
+        if (found != null && shell.problem == null) shell.problem = found
+    }
+    fun dismissProblem() {
+        val p = shell.problem ?: return
+        shell.problem = null
+        ProblemMonitor.resolve(p)
+        scope.launch {
+            delay(400)
+            feedback.silenceNextFocus()
+            runCatching { shell.restoreScreenFocus?.invoke() }
+        }
+    }
+    // Report: save the cleaned log to Downloads, then open the prefilled GitHub issue in the browser; the user attaches the file
+    fun reportProblem() {
+        val p = shell.problem ?: return
+        shell.problem = null
+        scope.launch {
+            val prepared = ProblemReporter.prepare(appContext, p)
+            val saved = ProblemReporter.saveToDownloads(appContext, prepared.report, prepared.fileName)
+            ProblemMonitor.resolve(p)
+            if (saved != null) shell.showToast("Log saved to Downloads as ${prepared.fileName}. Attach it to the issue.", Symbols.CHECK_CIRCLE, durationMs = 6_500)
+            else shell.showToast("The log could not be saved. Share it from Settings → About → Debug info.", Symbols.WARNING, durationMs = 6_500)
+            delay(900)
+            if (!ProblemReporter.openIssue(appContext, prepared.url)) {
+                feedback.play(Cue.ERROR)
+                shell.showToast("No browser is available", Symbols.ERROR)
+            }
+        }
     }
     fun dismissResult() {
         shell.result = null
@@ -528,6 +566,11 @@ fun Shell(
         feedback.play(Cue.BACK)
         dismissResult()
     }
+    // B on the report card is Dismiss, wherever the focus is while the card shows
+    BackHandler(enabled = shell.offerShown) {
+        feedback.play(Cue.BACK)
+        dismissProblem()
+    }
 
     // The filter modal belongs to a ready library: a PC that goes offline takes it down with it
     LaunchedEffect(shell.layer, library is Library.Ready) {
@@ -736,6 +779,7 @@ fun Shell(
                 appearance.reducedMotion,
                 instantExit = launchExitInstant.value,
             )
+            ProblemOfferCard(if (shell.offerShown) shell.problem else null, appearance.reducedMotion, onReport = ::reportProblem, onDismiss = ::dismissProblem)
             ToastHost(shell.toast, onHidden = { shell.hideToast(it) }, onAction = { shell.runToastAction() }, actionPress = shell.toastPress)
         }
     }

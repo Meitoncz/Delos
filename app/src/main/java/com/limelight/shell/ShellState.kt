@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.text.input.KeyboardType
 import com.limelight.diag.DiagLog
+import com.limelight.diag.Problem
 import com.limelight.shell.data.App
 import com.limelight.shell.data.Pc
 import com.limelight.shell.settings.SettingsTab
@@ -312,6 +313,16 @@ class ShellState(initial: Screen) {
 
     /** The result overlay of a stream that failed or lost its connection (docs/GUI.md, "Stream exits"), until it is answered. */
     var result by mutableStateOf<StreamResult?>(null)
+
+    /** A problem of an earlier run (or a failed stream) to offer a report for; it stays until the user reports or dismisses it. */
+    var problem by mutableStateOf<Problem?>(null)
+
+    /**
+     * Whether the report card shows: on the start screen and the home screen only, and never over a layer, the portal, the launch
+     * loader or the stream result, which come first. It is read in composition.
+     */
+    val offerShown: Boolean
+        get() = problem != null && (screen == Screen.Home || screen == Screen.Start) && layer == null && portal == null && launch == null && result == null
 
     /** L1 / R1 handler of the current screen (settings tabs), -1 / +1. */
     var onShoulder: ((Int) -> Unit)? = null

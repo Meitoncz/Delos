@@ -56,6 +56,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
+import com.limelight.BuildConfig
 import com.limelight.diag.DiagExport
 import com.limelight.diag.DiagLog
 import com.limelight.diag.DiagnosticReport
@@ -294,6 +295,12 @@ fun DebugInfoScreen() {
             "Copies the device block and the last 100 log lines, ready to paste into an issue. The same names and addresses are removed."))
         add(DebugRow("diag_clear", "Diagnostics", Symbols.DELETE, "Clear diagnostic logs", RowValue.Action { clearLogs() },
             "Deletes the log on this device. New events are logged again unless Keep diagnostic logs is off (Settings → About)."))
+        // Debug builds only (the row is never added in a release build): the way to see the crash capture and the report card work
+        if (BuildConfig.DEBUG) {
+            add(DebugRow("diag_test_crash", "Diagnostics", Symbols.TEST_CRASH, "Trigger test crash", RowValue.Action {
+                throw IllegalStateException("Test crash from Debug info")
+            }, "Debug builds only. Crashes Delos on purpose; the next start offers the problem report, once."))
+        }
         // Why an experimental preset is unavailable
         add(DebugRow("cap_vibrators", "Device haptic capabilities", Symbols.VIBRATORS, "Vibrators",
             RowValue.Info(if (capabilities.vibratorCount == 1) "1 (single)" else "${capabilities.vibratorCount}"),
