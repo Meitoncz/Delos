@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="keyboard_hint_press">Appuyer</string>
+    <string name="keyboard_hint_close">Fermer</string>
+    <string name="keyboard_hint_shift">Maj</string>
+    <string name="keyboard_hint_delete">Suppr.</string>
+    <string name="keyboard_hint_space">Espace</string>
+    <string name="keyboard_title">CLAVIER À L’ÉCRAN</string>
+</resources>

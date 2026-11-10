@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pairing_pc_title">Associer un PC</string>
+    <string name="pairing_pc_searching">Recherche sur le réseau local…</string>
+    <string name="pairing_pc_none">Aucun PC trouvé pour l’instant. Lance Vibepollo sur ton PC, ou saisis son adresse.</string>
+    <plurals name="pairing_pc_found">
+        <item quantity="one">Delos a trouvé %1$d PC sur ton réseau.</item>
+        <item quantity="many">Delos a trouvé %1$d de PC sur ton réseau.</item>
+        <item quantity="other">Delos a trouvé %1$d PC sur ton réseau.</item>
+    </plurals>
+    <string name="pairing_pc_paired_online">Associé · En ligne</string>
+    <string name="pairing_pc_paired_offline">Associé · Hors ligne</string>
+    <string name="pairing_pc_ready">En ligne · prêt à associer</string>
+    <string name="pairing_pc_offline">Hors ligne</string>
+    <string name="pairing_pc_with_pin">Associer avec un PIN</string>
+    <string name="pairing_pc_with_code">Associer avec un code à usage unique</string>
+    <string name="pairing_pc_address">Saisir l’adresse</string>
+    <string name="pairing_pc_address_hint">IP ou nom d’hôte</string>
+    <string name="pairing_pc_search_again">Rechercher à nouveau</string>
+    <string name="pairing_pc_network">Réseau local</string>
+    <string name="pairing_pin_title">Saisis ce PIN sur %1$s</string>
+    <string name="pairing_pin_note">Ouvre l’interface web de Vibepollo sur ton PC, va dans PIN et saisis le code.</string>
+    <string name="pairing_code_title">Association avec %1$s</string>
+    <string name="pairing_code_note">Avec le code à usage unique de Vibepollo.</string>
+    <string name="pairing_pin_waiting">En attente de Vibepollo…</string>
+    <string name="pairing_pin_accepted">PIN accepté</string>
+    <string name="pairing_code_accepted">Code accepté</string>
+    <string name="pairing_cancel">Annuler</string>
+    <string name="pairing_failed_offline">%1$s est hors ligne</string>
+    <string name="pairing_failed_pin_wrong">Le PIN était incorrect, réessaie</string>
+    <string name="pairing_failed_code_wrong">Le code ou la phrase secrète était incorrect</string>
+    <string name="pairing_failed_busy">%1$s s’associe déjà avec un autre appareil</string>
+    <string name="pairing_failed_game_running">Quitte d’abord le jeu sur %1$s, puis associe à nouveau</string>
+    <string name="pairing_failed_not_found">%1$s est introuvable</string>
+    <string name="pairing_failed_unsupported">%1$s ne gère pas l’association</string>
+    <string name="pairing_failed">Échec de l’association avec %1$s</string>
+    <string name="pairing_otp_title">Associer avec un code à usage unique</string>
+    <string name="pairing_otp_note">Dans l’interface web de Vibepollo, crée un PIN à usage unique avec une phrase secrète, puis saisis les deux ici.</string>
+    <string name="pairing_otp_pin_hint">PIN</string>
+    <string name="pairing_otp_passphrase_hint">Phrase secrète</string>
+    <string name="pairing_otp_action">Associer</string>
+    <string name="pairing_otp_pin_error">Le PIN comporte 4 chiffres</string>
+    <string name="pairing_otp_passphrase_error">La phrase secrète comporte au moins 4 caractères</string>
+</resources>

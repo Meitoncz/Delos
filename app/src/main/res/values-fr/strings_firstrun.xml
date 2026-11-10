@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="firstrun_boot_tagline">Tes jeux PC, streamés de Vibepollo jusqu’entre tes mains</string>
+    <string name="firstrun_boot_begin">Commencer</string>
+    <string name="firstrun_boot_skip">Aller à l’accueil</string>
+    <string name="firstrun_create_new_title">Qui joue ?</string>
+    <string name="firstrun_create_new_note">Choisis un avatar et un nom pour ton profil.</string>
+    <string name="firstrun_create_edit_title">Choisis ton avatar</string>
+    <string name="firstrun_create_edit_note">Et un nouveau nom, si tu veux.</string>
+    <string name="firstrun_create_name_title">Nom du profil</string>
+    <string name="firstrun_create_name_label">Nom du profil</string>
+    <string name="firstrun_create_name_placeholder">Ton nom</string>
+    <string name="firstrun_create_default_name">Joueur</string>
+    <string name="firstrun_create_change_name">Changer le nom</string>
+    <string name="firstrun_create_save">Enregistrer</string>
+    <string name="firstrun_create_create">Créer le profil</string>
+    <string name="firstrun_avatar_sailor">Marin</string>
+    <string name="firstrun_avatar_voyager">Voyageur</string>
+    <string name="firstrun_avatar_player">Joueur</string>
+    <string name="firstrun_avatar_fox">Renard</string>
+    <string name="firstrun_avatar_spark">Étincelle</string>
+    <string name="firstrun_avatar_calm">Calme</string>
+    <string name="firstrun_avatar_knight">Chevalier</string>
+    <string name="firstrun_avatar_robot">Robot</string>
+    <string name="firstrun_avatar_cat">Chat</string>
+    <string name="firstrun_avatar_wizard">Magicien</string>
+    <string name="firstrun_avatar_racer">Pilote</string>
+    <string name="firstrun_avatar_ghost">Fantôme</string>
+</resources>

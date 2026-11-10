@@ -417,3 +417,28 @@ in `ui/SteamTags.kt`, which stage 1 decides on separately, and some developer me
 | `screens/OscPreviewScreen.kt` | 1 |
 | `ui/DialogLayer.kt` | 1 |
 | **Total** | **1605** |
+
+## Terminology: French
+
+Register: informal *tu*; buttons and menu items in the infinitive; U+00A0 before `: ; ! ? %` and inside « ».
+
+| English | French |
+|---|---|
+| stream (noun/verb) | stream / streamer |
+| host / PC | PC (technical error texts: hôte) |
+| pair / unpair | associer / dissocier |
+| bitrate | débit |
+| frame rate / refresh rate | fréquence d’images / fréquence d’écran |
+| gamepad, controller | manette |
+| rumble | vibration |
+| cover / wide cover / hero (background) | jaquette / jaquette large / arrière-plan |
+| artwork | visuels |
+| library | bibliothèque |
+| profile | profil |
+| settings | réglages |
+| sharpness / Sharpen only | netteté / Netteté seule |
+| upscaler, supersampling, frame pacing, overlay | kept in English |
+| on-screen controls | commandes à l’écran |
+| clipboard | presse-papiers |
+| link (network path) / Test link | liaison / Tester la liaison |
+| Back (button) | Retour |
