@@ -1150,7 +1150,7 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
         PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
         boolean powerSaveMode = powerManager != null && powerManager.isPowerSaveMode();
         // From critical on, Android holds the display at its low refresh rate
-        boolean thermalThrottling = powerManager != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+        boolean thermalThrottling = powerManager != null &&
                 powerManager.getCurrentThermalStatus() >= PowerManager.THERMAL_STATUS_CRITICAL;
         float peakSetting = 0;
         float minSetting = 0;
