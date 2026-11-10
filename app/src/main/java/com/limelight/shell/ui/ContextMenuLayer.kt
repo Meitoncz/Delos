@@ -47,12 +47,13 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathOperation
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -69,6 +70,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.em
 import com.limelight.shell.ContextMenu
 import com.limelight.shell.HeaderTint
@@ -165,28 +168,30 @@ private class MenuPlaceState(initial: MenuPlacement, initialWidth: Float, initia
     }
 
     /** The outline of the card with its caret inside the layer's [size] (card plus the room around it for the caret), [k] pixels per stage pixel. */
-    fun outline(k: Float, size: Size): PathShape {
+    fun outline(k: Float, size: Size): Shape {
         version // the draw phase redraws with a new placement
         val s = shape
         if (s != null && s.k == k && s.size == size && s.placement == placement) return s
         val outline = menuCardPath(placement.side, placement.caret, size.width / k - 2 * L.CARET_DEPTH, size.height / k - 2 * L.CARET_DEPTH, k)
         return PathShape(outline, k, size, placement).also { shape = it }
+/** Stage pixels around the card (and its caret) that the card's fade layer keeps for the shadow (`0 40px 90px -20px` reaches 110 below, 70 beside). */
+private const val SHADOW_ROOM = 160f
     }
 }
 
-/** Stage pixels around the card (and its caret) that the card's fade layer keeps for the shadow (`0 40px 90px -20px` reaches 110 below, 70 beside). */
-private const val SHADOW_ROOM = 160f
 private const val StageWidth = 1920f
 private const val StageHeight = 1080f
 
-private class PathShape(outline: MenuOutline, val k: Float, val size: Size, val placement: MenuPlacement) {
+private class PathShape(outline: MenuOutline, val k: Float, val size: Size, val placement: MenuPlacement) : Shape {
     val path = outline.card
 
     /** The caret's curve, lit like the rim of the stream popover's card. */
     val caretEdge = outline.caretEdge
 
-    /** The lit crescent along the card's top edge: the card minus itself moved down 1.5 px. */
-    val crescent = Path.combine(PathOperation.Difference, outline.card, Path().apply { addPath(outline.card, Offset(0f, 1.5f * k)) })
+    /** The card moved down 1.5 px: what the card has and this has not is the lit crescent along its top edge. */
+    val lower = Path().apply { addPath(outline.card, Offset(0f, 1.5f * k)) }
+
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline = Outline.Generic(path)
 }
 
 /** The card with its caret as one filled path, and the caret's curve alone (null without a caret). */
@@ -364,16 +369,21 @@ private fun MenuCard(
         Box(
             Modifier
                 .matchParentSize()
-                // One card-sized layer the outline masks at the end (DstIn); an outline clip of the layer and two path clips cost three of them
-                .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+                .graphicsLayer {
+                    shape = state.outline(k, size)
+                    clip = true
+                }
                 .menuGlass(haze)
                 .drawBehind {
                     drawRect(Brush.verticalGradient(0f to Color.White.copy(alpha = .13f), .52f to Color.Transparent, 1f to Color.Transparent))
                     val lit = state.outline(k, size)
-                    // The rim is the inside half of a double-width stroke: the mask below cuts the outside half off
-                    drawPath(lit.path, Color.White.copy(alpha = .11f), style = Stroke(2f * k))
-                    drawPath(lit.crescent, Color.White.copy(alpha = .26f))
-                    drawPath(lit.path, Color.Black, blendMode = BlendMode.DstIn)
+                    if (lit is PathShape) {
+                        // The rim is the inside half of a double-width stroke: the outline clips it
+                        clipPath(lit.path) {
+                            drawPath(lit.path, Color.White.copy(alpha = .11f), style = Stroke(2f * k))
+                            clipPath(lit.lower, androidx.compose.ui.graphics.ClipOp.Difference) { drawRect(Color.White.copy(alpha = .26f)) }
+                        }
+                    }
                 },
         )
         Column(
