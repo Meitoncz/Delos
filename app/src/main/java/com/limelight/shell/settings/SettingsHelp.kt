@@ -1,5 +1,6 @@
 package com.limelight.shell.settings
 
+import android.annotation.SuppressLint
 import android.content.res.Resources
 import com.limelight.R
 import com.limelight.preferences.PreferenceConfiguration
@@ -95,6 +96,7 @@ private val NOT_ALPHANUMERIC = Regex("[^a-z0-9]+")
  * The text of the string resource [name] (a `help_*` or `stream_help_*` key), or null when there is none. It goes through
  * the formatter, so a literal percent sign is written `%%` in the XML.
  */
+@SuppressLint("DiscouragedApi") // the help keys are built from setting keys; res/raw/keep.xml keeps the resources
 internal fun lookup(res: Resources, name: String, vararg args: Any): String? {
     val id = res.getIdentifier(name, "string", res.getResourcePackageName(R.string.help_dynamic_fps))
     return if (id == 0) null else res.getString(id, *args)
