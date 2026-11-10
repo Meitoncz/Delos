@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pairing_pc_title">配对 PC</string>
+    <string name="pairing_pc_searching">正在搜索本地网络…</string>
+    <string name="pairing_pc_none">尚未发现 PC。请在 PC 上启动 Vibepollo，或输入其地址。</string>
+    <plurals name="pairing_pc_found">
+        <item quantity="other">Delos 在你的网络中发现了 %1$d 台 PC。</item>
+    </plurals>
+    <string name="pairing_pc_paired_online">已配对 · 在线</string>
+    <string name="pairing_pc_paired_offline">已配对 · 离线</string>
+    <string name="pairing_pc_ready">在线 · 可配对</string>
+    <string name="pairing_pc_offline">离线</string>
+    <string name="pairing_pc_with_pin">使用 PIN 配对</string>
+    <string name="pairing_pc_with_code">使用一次性代码配对</string>
+    <string name="pairing_pc_address">输入地址</string>
+    <string name="pairing_pc_address_hint">IP 或主机名</string>
+    <string name="pairing_pc_search_again">重新搜索</string>
+    <string name="pairing_pc_network">本地网络</string>
+    <string name="pairing_pin_title">在 %1$s 上输入此 PIN</string>
+    <string name="pairing_pin_note">在 PC 上打开 Vibepollo 网页界面，进入 PIN 页面并输入此代码。</string>
+    <string name="pairing_code_title">正在与 %1$s 配对</string>
+    <string name="pairing_code_note">使用来自 Vibepollo 的一次性代码。</string>
+    <string name="pairing_pin_waiting">正在等待 Vibepollo…</string>
+    <string name="pairing_pin_accepted">PIN 已接受</string>
+    <string name="pairing_code_accepted">代码已接受</string>
+    <string name="pairing_cancel">取消</string>
+
+    <string name="pairing_failed_offline">%1$s 已离线</string>
+    <string name="pairing_failed_pin_wrong">PIN 错误，请重试</string>
+    <string name="pairing_failed_code_wrong">代码或口令错误</string>
+    <string name="pairing_failed_busy">%1$s 正在与另一台设备配对</string>
+    <string name="pairing_failed_game_running">请先退出 %1$s 上的游戏，然后重新配对</string>
+    <string name="pairing_failed_not_found">找不到 %1$s</string>
+    <string name="pairing_failed_unsupported">%1$s 不支持配对</string>
+    <string name="pairing_failed">与 %1$s 配对失败</string>
+
+    <string name="pairing_otp_title">使用一次性代码配对</string>
+    <string name="pairing_otp_note">在 Vibepollo 网页界面中创建带口令的一次性 PIN，然后在此输入两者。</string>
+    <string name="pairing_otp_pin_hint">PIN</string>
+    <string name="pairing_otp_passphrase_hint">口令</string>
+    <string name="pairing_otp_action">配对</string>
+    <string name="pairing_otp_pin_error">PIN 为 4 位数字</string>
+    <string name="pairing_otp_passphrase_error">口令至少需要 4 个字符</string>
+</resources>

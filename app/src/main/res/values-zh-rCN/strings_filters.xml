@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="filters_title">筛选游戏库</string>
+    <plurals name="filters_result_active">
+        <item quantity="other">%1$d / %2$d 个游戏</item>
+    </plurals>
+    <plurals name="filters_result_all">
+        <item quantity="other">全部 %1$d 个游戏</item>
+    </plurals>
+    <string name="filters_hint">筛选</string>
+    <plurals name="filters_hint_active">
+        <item quantity="other">筛选 • 已启用 %1$d 项</item>
+    </plurals>
+    <string name="filters_section_genre">类型</string>
+    <string name="filters_section_theme">主题</string>
+    <string name="filters_section_hdr">HDR 支持</string>
+    <string name="filters_section_duration">时长（HowLongToBeat）</string>
+    <string name="filters_all">全部</string>
+    <string name="filters_hdr_any">全部</string>
+    <string name="filters_hdr_hdr">原生 HDR</string>
+    <string name="filters_length_any">不限</string>
+    <string name="filters_length_under_10">&lt;10 小时</string>
+    <string name="filters_length_10_30">10–30 小时</string>
+    <string name="filters_length_30_60">30–60 小时</string>
+    <string name="filters_length_over_60">60+ 小时</string>
+    <string name="filters_length_unknown">未知</string>
+    <string name="filters_reset">重置</string>
+    <string name="filters_done">完成</string>
+
+    <string name="filters_art_title">筛选图片素材</string>
+    <string name="filters_art_reset">重置筛选</string>
+    <string name="filters_art_done">完成</string>
+    <string name="filters_art_row_type">类型</string>
+    <string name="filters_art_row_style">风格</string>
+    <string name="filters_art_row_dimensions">尺寸</string>
+    <string name="filters_art_row_sort">排序</string>
+    <string name="filters_art_any">不限</string>
+    <string name="filters_art_type_all">全部</string>
+    <string name="filters_art_type_static">静态</string>
+    <string name="filters_art_type_animated">动态</string>
+    <string name="filters_art_sort_score">评分最高</string>
+    <string name="filters_art_sort_newest">最新</string>
+    <string name="filters_art_sort_oldest">最早</string>
+    <string name="filters_art_sort_score_chip">排序：评分最高</string>
+    <string name="filters_art_sort_newest_chip">排序：最新</string>
+    <string name="filters_art_sort_oldest_chip">排序：最早</string>
+    <string name="filters_art_sort_score_first">评分最高优先</string>
+    <string name="filters_art_sort_newest_first">最新优先</string>
+    <string name="filters_art_sort_oldest_first">最早优先</string>
+    <string name="filters_art_style_alternate">备选</string>
+    <string name="filters_art_style_blurred">模糊</string>
+    <string name="filters_art_style_white_logo">白色标志</string>
+    <string name="filters_art_style_material">Material</string>
+    <string name="filters_art_style_no_logo">无标志</string>
+    <string name="filters_art_style_official">官方</string>
+    <string name="filters_art_style_white">白色</string>
+    <string name="filters_art_style_black">黑色</string>
+    <string name="filters_art_style_custom">自定义</string>
+    <string name="filters_art_chips_reset">重置</string>
+    <string name="filters_art_reset_toast">筛选已重置</string>
+    <string name="filters_art_change">更改筛选</string>
+</resources>

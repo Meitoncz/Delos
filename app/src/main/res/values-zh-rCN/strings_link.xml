@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="link_transport_other">此网络</string>
+    <string name="link_age_just_now">刚刚</string>
+    <plurals name="link_age_minutes">
+        <item quantity="other">%d 分钟前</item>
+    </plurals>
+    <plurals name="link_age_hours">
+        <item quantity="other">%d 小时前</item>
+    </plurals>
+    <string name="link_age_yesterday">昨天</string>
+    <plurals name="link_age_days">
+        <item quantity="other">%d 天前</item>
+    </plurals>
+    <plurals name="link_age_weeks">
+        <item quantity="other">%d 周前</item>
+    </plurals>
+    <plurals name="link_age_months">
+        <item quantity="other">%d 个月前</item>
+    </plurals>
+    <string name="link_tested_summary">%1$s在 %2$s 上测试</string>
+    <string name="link_reason_untested">尚未在此链路上测试</string>
+    <string name="link_reason_tested_ok">链路最高可承载 %1$s</string>
+    <string name="link_reason_tested_limited">链路可承载 %1$s</string>
+    <string name="link_reason_host_limited">PC 的链路为 %1$s</string>
+    <string name="link_reason_dropping">在 %1$s 时丢帧</string>
+    <string name="link_recommended_line">推荐：%1$s · %2$s</string>
+    <string name="link_value_reason">%1$s · %2$s</string>
+    <string name="link_recommended_plain">推荐：%1$d Mbps</string>
+    <string name="link_test_action">链路测试</string>
+    <string name="link_test_row_untested">尚未在 %1$s 上测试</string>
+    <string name="link_help_untested">尚未在 %1$s 上测试。链路测试会测量其承载能力。</string>
+    <string name="link_help_joined">%1$s：%2$s</string>
+    <string name="link_help_tested_ok">最高可承载 %1$s；%2$s 足以满足 %3$s。</string>
+    <string name="link_help_host_limited">可承载 %1$s；%2$s 的瓶颈在 PC 自身的链路。</string>
+    <string name="link_help_limited">可承载 %1$s；%2$s 需要 %3$s。</string>
+    <string name="link_help_limited_picture">可承载 %1$s；%2$s 需要 %3$s，扣除 FEC 和开销后画面约为 %4$s。</string>
+    <string name="link_pc_offline_toast">%1$s 已离线</string>
+    <string name="link_test_detail">测量此网络从 %1$s 可承载的速率：每一步发送约 2 秒测试流量，最高可达数百 Mbps。请保持连接 %2$s，并且不要运行其他程序。</string>
+    <string name="link_use_action">使用推荐码率</string>
+    <string name="link_use_done_toast">码率已设为 %1$s</string>
+    <string name="link_use_detail">将码率填为 %1$s：%2$s。Delos 绝不会自行更改码率。</string>
+    <string name="link_unavailable_newer_delos">此 PC 需要更新版本的 Delos 才能进行链路测试。</string>
+    <string name="link_unavailable_host_outdated">此 PC 上的 Vibepollo 暂不支持链路测试。请更新。</string>
+    <string name="link_stream_help_dropping">链路在 %1$s 时丢帧。按 A 填入滑块，点击“应用”发送。</string>
+    <string name="link_stream_help_dropping_untested">链路在 %1$s 时丢帧。按 A 填入滑块，点击“应用”发送。连接前请先在设置中测试链路。</string>
+    <string name="link_stream_help_tested">%1$s。按 A 填入滑块，点击“应用”发送。</string>
+    <string name="link_stream_help_untested">尚未测试。按 A 填入滑块，点击“应用”发送。连接前请先在设置中测试链路。</string>
+    <string name="link_reading_measuring">测量中</string>
+    <string name="link_reading_keeps_up">链路可稳定承载 %1$s</string>
+    <string name="link_reading_drops">链路在 %1$s 时丢帧，建议尝试 %2$s</string>
+    <string name="link_reading_device_behind">设备跳帧，链路正常</string>
+    <string name="link_failure_host_unsupported">此 PC 上的 Vibepollo 不支持链路测试。请更新。</string>
+    <string name="link_failure_stream_active">PC 正在串流。请停止串流后重新测试。</string>
+    <string name="link_failure_denied">PC 不允许进行测试。请重新配对此设备。</string>
+    <string name="link_failure_udp_blocked">未收到测试数据。此网络可能屏蔽了 UDP。</string>
+    <string name="link_failure_network">Delos 无法连接到 PC。</string>
+    <string name="link_failure_timeout">PC 未能在规定时间内完成测试。</string>
+    <string name="link_failure_host_error">PC 无法运行测试。</string>
+    <string name="link_failure_invalid_response">PC 发回了无法使用的测试结果。</string>
+    <string name="link_failure_not_connected">Delos 仍在连接 %1$s。</string>
+    <string name="link_verdict_receiver_suspect">此设备无法以 %1$s 的速率接收</string>
+    <string name="link_verdict_loss">在 %2$s 时测试数据包丢失 %1$.1f%%</string>
+    <string name="link_verdict_window_loss">在 %2$s 时，100 ms 内数据包最多丢失 %1$.1f%%</string>
+    <string name="link_verdict_delay_growth">在 %1$s 时延迟持续增长（链路排队）</string>
+    <string name="link_verdict_no_packets">未收到测试数据。此网络可能屏蔽了 UDP</string>
+    <string name="link_verdict_not_all_sent">在 %2$s 时，PC 只发送了 %1$.1f%% 的测试数据</string>
+    <string name="link_verdict_sender_duration">测试期间 PC 的计时出现偏差</string>
+    <string name="link_verdict_passed">%1$s 通过</string>
+    <string name="link_verdict_stable">稳定</string>
+    <string name="link_verdict_stable_jitter">稳定，略有抖动</string>
+    <string name="link_verdict_no_rate_tested">没有可测试的速率</string>
+    <string name="link_no_rate_passed_once">%1$s。%2$s 通过了一次，但未能保持。</string>
+    <string name="link_no_rate_nothing_passed">%1$s。直到 %2$s 都没有通过。</string>
+    <string name="link_no_rate_plain">%1$s。</string>
+</resources>

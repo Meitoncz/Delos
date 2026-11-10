@@ -417,3 +417,29 @@ in `ui/SteamTags.kt`, which stage 1 decides on separately, and some developer me
 | `screens/OscPreviewScreen.kt` | 1 |
 | `ui/DialogLayer.kt` | 1 |
 | **Total** | **1605** |
+
+## Terminology: Simplified Chinese
+
+Neutral register, no 您, full-width punctuation, no spaces between CJK and Latin. Latin tokens (brands, codecs, units, key and button names) stay as written.
+
+| English | zh-CN |
+|---|---|
+| stream | 串流 |
+| host | 电脑 / PC |
+| pair / unpair | 配对 / 取消配对 |
+| bitrate, frame rate, refresh rate | 码率, 帧率, 刷新率 |
+| resolution, latency, packet loss | 分辨率, 延迟, 丢包 |
+| codec, decoder | 编解码器, 解码器 |
+| upscaler, supersampling, sharpness | 超分, 超采样, 锐度 |
+| frame pacing | 帧节奏 |
+| controller / gamepad | 手柄 |
+| gyroscope, rumble, deadzone | 陀螺仪, 震动, 死区 |
+| analog stick, trackpad | 摇杆, 触控板 |
+| on-screen controls | 屏幕按键 |
+| library, cover, hero | 游戏库, 封面, 主视觉图 |
+| profile, avatar | 个人资料, 头像 |
+| overlay, statistics | 浮层, 统计信息 |
+| clipboard, log | 剪贴板, 日志 |
+| Fit / Fill / Stretch | 适应 / 填充 / 拉伸 |
+
+Arrows and ≈ ≤ ≥ ¼ are not in the allowed character set: menu paths use `>`, ranges use 至, ¼ is written 1/4.

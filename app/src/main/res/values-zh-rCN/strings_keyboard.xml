@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="keyboard_hint_press">按下</string>
+    <string name="keyboard_hint_close">关闭</string>
+    <string name="keyboard_hint_shift">Shift</string>
+    <string name="keyboard_hint_delete">删除</string>
+    <string name="keyboard_hint_space">空格</string>
+    <string name="keyboard_title">屏幕键盘</string>
+</resources>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="profile_signed_in">
+        <item quantity="other">已在此 %1$s 上登录 · %2$d 个个人资料</item>
+    </plurals>
+    <string name="profile_change_avatar">更换头像</string>
+    <string name="profile_rename">重命名</string>
+    <string name="profile_switch">切换个人资料</string>
+    <string name="profile_add">添加个人资料</string>
+    <string name="profile_delete">删除个人资料</string>
+    <string name="profile_undo">撤销</string>
+    <string name="profile_restored">%1$s 已恢复</string>
+    <string name="profile_restore_failed">无法恢复 %1$s</string>
+    <string name="profile_deleted">已删除 %1$s</string>
+    <string name="profile_menu_title">个人资料</string>
+    <string name="profile_playing_as">当前玩家：%1$s</string>
+    <string name="profile_new">新建个人资料</string>
+    <string name="profile_rename_title">重命名个人资料</string>
+    <string name="profile_renamed">个人资料已重命名</string>
+    <string name="profile_name_note">显示在开始界面和侧边菜单中。</string>
+    <string name="profile_name_save">保存</string>
+    <string name="profile_name_required">请输入个人资料名称</string>
+</resources>

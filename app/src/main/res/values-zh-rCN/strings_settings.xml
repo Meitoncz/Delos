@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_tab_stream">串流</string>
+    <string name="settings_tab_stream_description">来自电脑的视频画质与延迟。</string>
+    <string name="settings_tab_display">显示</string>
+    <string name="settings_tab_display_description">串流画面如何铺满屏幕，以及游戏时显示哪些信息。</string>
+    <string name="settings_tab_audio">音频</string>
+    <string name="settings_tab_audio_description">来自电脑的声音和 Delos 界面的音效。</string>
+    <string name="settings_tab_controls">控制</string>
+    <string name="settings_tab_controls_description">手柄、鼠标、触摸、键盘和屏幕按键。</string>
+    <string name="settings_tab_appearance">外观</string>
+    <string name="settings_tab_appearance_description">主题、颜色和动态背景。更改立即生效。</string>
+    <string name="settings_tab_covers">封面</string>
+    <string name="settings_tab_covers_description">来自电脑或 SteamGridDB 的封面、横版封面、背景和标志。</string>
+    <string name="settings_tab_devices">设备</string>
+    <string name="settings_tab_devices_description">已配对的电脑，以及 Delos 启动时的行为。</string>
+    <string name="settings_tab_about">关于</string>
+    <string name="settings_tab_about_description">Delos 是 Artemis 和 Moonlight 的分支，采用 GPLv3 许可。</string>
+
+    <string name="settings_option_background_aurora">极光</string>
+    <string name="settings_option_background_tide">潮汐</string>
+    <string name="settings_option_background_silk">丝绸</string>
+    <string name="settings_option_background_contour">等高线</string>
+    <string name="settings_option_background_nebula">星云</string>
+    <string name="settings_option_background_plasma">等离子</string>
+    <string name="settings_option_background_lava">熔岩</string>
+    <string name="settings_option_background_caustics">焦散</string>
+    <string name="settings_option_background_bokeh">焦外光斑</string>
+    <string name="settings_option_background_orbit">轨道</string>
+    <string name="settings_option_background_still">静态</string>
+
+    <string name="settings_option_home_layout_grid">网格</string>
+    <string name="settings_option_home_layout_row">单行</string>
+
+    <string name="settings_option_palette_delos">Delos</string>
+    <string name="settings_option_palette_lagoon">潟湖</string>
+    <string name="settings_option_palette_dusk">暮色</string>
+    <string name="settings_option_palette_ember">余烬</string>
+    <string name="settings_option_palette_moss">苔藓</string>
+    <string name="settings_option_palette_iris">鸢尾</string>
+    <string name="settings_option_palette_rose">玫瑰</string>
+    <string name="settings_option_palette_sunset">日落</string>
+    <string name="settings_option_palette_mint">薄荷</string>
+    <string name="settings_option_palette_gold">金色</string>
+
+    <string name="settings_option_clock_system">跟随系统</string>
+    <string name="settings_option_clock_12">12 小时制</string>
+    <string name="settings_option_clock_24">24 小时制</string>
+
+    <string name="settings_resolution_native">原生（%1$s）</string>
+    <string name="settings_resolution_native_portrait">原生竖屏（%1$s）</string>
+    <string name="settings_resolution_native_fullscreen">原生全屏（%1$s）</string>
+    <string name="settings_resolution_native_fullscreen_portrait">原生全屏竖屏（%1$s）</string>
+    <string name="settings_resolution_custom">自定义（%1$s）</string>
+    <string name="settings_fps_native">原生（%1$d FPS）</string>
+    <string name="settings_fps_custom">自定义（%1$s FPS）</string>
+    <string name="settings_choice_custom">自定义</string>
+    <string name="settings_layout_number">布局 %1$d</string>
+    <string name="settings_choice_unavailable">%1$s（不可用）</string>
+
+    <string name="settings_error_resolution_format">请使用 宽 x 高 的格式，例如 1920x1080</string>
+    <string name="settings_error_fps_range">请输入大于 0 且不超过 1000 的帧率</string>
+    <string name="settings_error_bitrate_range">请输入大于 0 且不超过 9999 Mbps 的码率</string>
+</resources>

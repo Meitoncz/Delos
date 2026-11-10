@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="artwork_header">图片素材</string>
+    <string name="artwork_search_other">搜索其他名称</string>
+    <string name="artwork_filter">筛选</string>
+    <string name="artwork_loading">正在 SteamGridDB 上查找…</string>
+    <string name="artwork_no_key_title">添加你的 SteamGridDB API 密钥</string>
+    <string name="artwork_no_key_note">设置 &gt; 封面 &gt; SteamGridDB API 密钥。可在 steamgriddb.com 免费获取（Preferences &gt; API）。</string>
+    <string name="artwork_no_game_title">SteamGridDB 上没有 %1$s</string>
+    <string name="artwork_no_game_note">搜索其他名称，即可找到 SteamGridDB 收录的对应名称。</string>
+    <string name="artwork_choose_title">选择 %1$s 的外观</string>
+    <string name="artwork_choose_note">搜索其他名称：例如 Windows、Steam，或任何你喜欢其图片素材的游戏。不会自动查找 %1$s。</string>
+    <string name="artwork_unreachable">无法连接 SteamGridDB</string>
+    <string name="artwork_download_failed">下载失败</string>
+    <string name="artwork_builtin_note">内置图片素材：此应用的图片素材无法更改</string>
+    <string name="artwork_builtin_back">返回</string>
+    <string name="artwork_chip_looking">正在查找 %1$s…</string>
+    <string name="artwork_chip_game_id">游戏 #%1$d</string>
+    <string name="artwork_chip_not_found">尚未找到</string>
+    <string name="artwork_in_use">使用中</string>
+    <string name="artwork_animated">动态</string>
+    <string name="artwork_static">静态</string>
+    <string name="artwork_first_name_only">仅名称</string>
+    <string name="artwork_first_from_pc">来自你的 PC</string>
+    <string name="artwork_fact_source">来源</string>
+    <string name="artwork_fact_shows">显示</string>
+    <string name="artwork_fact_name_source">游戏名称</string>
+    <string name="artwork_fact_name_shows">显示名称而非标志</string>
+    <string name="artwork_fact_pc_source">你的 PC（Vibepollo）</string>
+    <string name="artwork_fact_pc_shows">来自 PC 的封面图</string>
+    <string name="artwork_fact_size">尺寸</string>
+    <string name="artwork_fact_file">文件</string>
+    <string name="artwork_fact_score">评分</string>
+    <string name="artwork_fact_added">添加时间</string>
+    <string name="artwork_fact_size_value">%1$d × %2$d px</string>
+    <string name="artwork_fact_score_by">%1$d · 作者：%2$s</string>
+    <string name="artwork_fact_score_only">%1$d</string>
+    <string name="artwork_fact_by_only">作者：%1$s</string>
+    <string name="artwork_search_title">搜索 SteamGridDB</string>
+    <string name="artwork_search_note">SteamGridDB 收录的游戏名称。</string>
+    <string name="artwork_search_hint">游戏名称</string>
+    <string name="artwork_search_action">搜索</string>
+    <string name="artwork_searching_toast">正在 SteamGridDB 上搜索 %1$s…</string>
+    <string name="artwork_game_with_year">%1$s（%2$d）</string>
+    <string name="artwork_downloading_game_toast">正在下载 %1$s 的图片素材…</string>
+    <string name="artwork_matched_toast">已匹配 %1$s</string>
+    <string name="artwork_found_none">未找到 %1$s 的结果</string>
+    <string name="artwork_found_title">选择游戏</string>
+    <string name="artwork_error_no_key">请先添加 SteamGridDB API 密钥</string>
+    <string name="artwork_error_key_rejected">SteamGridDB 不接受该 API 密钥</string>
+    <string name="artwork_error_api_http">SteamGridDB 返回 %1$d</string>
+    <string name="artwork_error_too_large">图片过大</string>
+    <string name="artwork_error_save_failed">无法保存图片</string>
+    <string name="artwork_tab_cover">封面</string>
+    <plurals name="artwork_count_cover">
+        <item quantity="other">%1$d 个封面</item>
+    </plurals>
+    <plurals name="artwork_count_all_cover">
+        <item quantity="other">全部 %1$d 个封面</item>
+    </plurals>
+    <plurals name="artwork_count_of_cover">
+        <item quantity="other">%2$d 个封面中的 %1$d 个</item>
+    </plurals>
+    <string name="artwork_filtered_none_cover">没有符合这些筛选条件的封面</string>
+    <plurals name="artwork_filtered_has_cover">
+        <item quantity="other">%1$s 在 SteamGridDB 上有 %2$d 个封面，但没有一个符合 %3$s。请放宽筛选条件，或换个名称搜索。</item>
+    </plurals>
+    <string name="artwork_filtered_unknown_cover">没有符合 %1$s 的封面。请放宽筛选条件，或换个名称搜索。</string>
+    <string name="artwork_empty_cover">SteamGridDB 上暂无此游戏的封面。</string>
+    <string name="artwork_downloading_cover">正在下载封面…</string>
+    <string name="artwork_updated_cover">封面已更新</string>
+    <string name="artwork_tab_wide">宽封面</string>
+    <plurals name="artwork_count_wide">
+        <item quantity="other">%1$d 个宽封面</item>
+    </plurals>
+    <plurals name="artwork_count_all_wide">
+        <item quantity="other">全部 %1$d 个宽封面</item>
+    </plurals>
+    <plurals name="artwork_count_of_wide">
+        <item quantity="other">%2$d 个宽封面中的 %1$d 个</item>
+    </plurals>
+    <string name="artwork_filtered_none_wide">没有符合这些筛选条件的宽封面</string>
+    <plurals name="artwork_filtered_has_wide">
+        <item quantity="other">%1$s 在 SteamGridDB 上有 %2$d 个宽封面，但没有一个符合 %3$s。请放宽筛选条件，或换个名称搜索。</item>
+    </plurals>
+    <string name="artwork_filtered_unknown_wide">没有符合 %1$s 的宽封面。请放宽筛选条件，或换个名称搜索。</string>
+    <string name="artwork_empty_wide">SteamGridDB 上暂无此游戏的宽封面。</string>
+    <string name="artwork_downloading_wide">正在下载宽封面…</string>
+    <string name="artwork_updated_wide">宽封面已更新</string>
+    <string name="artwork_tab_hero">背景图</string>
+    <plurals name="artwork_count_hero">
+        <item quantity="other">%1$d 个背景图</item>
+    </plurals>
+    <plurals name="artwork_count_all_hero">
+        <item quantity="other">全部 %1$d 个背景图</item>
+    </plurals>
+    <plurals name="artwork_count_of_hero">
+        <item quantity="other">%2$d 个背景图中的 %1$d 个</item>
+    </plurals>
+    <string name="artwork_filtered_none_hero">没有符合这些筛选条件的背景图</string>
+    <plurals name="artwork_filtered_has_hero">
+        <item quantity="other">%1$s 在 SteamGridDB 上有 %2$d 个背景图，但没有一个符合 %3$s。请放宽筛选条件，或换个名称搜索。</item>
+    </plurals>
+    <string name="artwork_filtered_unknown_hero">没有符合 %1$s 的背景图。请放宽筛选条件，或换个名称搜索。</string>
+    <string name="artwork_empty_hero">SteamGridDB 上暂无此游戏的背景图。</string>
+    <string name="artwork_downloading_hero">正在下载背景图…</string>
+    <string name="artwork_updated_hero">背景图已更新</string>
+    <string name="artwork_tab_logo">标志</string>
+    <plurals name="artwork_count_logo">
+        <item quantity="other">%1$d 个标志</item>
+    </plurals>
+    <plurals name="artwork_count_all_logo">
+        <item quantity="other">全部 %1$d 个标志</item>
+    </plurals>
+    <plurals name="artwork_count_of_logo">
+        <item quantity="other">%2$d 个标志中的 %1$d 个</item>
+    </plurals>
+    <string name="artwork_filtered_none_logo">没有符合这些筛选条件的标志</string>
+    <plurals name="artwork_filtered_has_logo">
+        <item quantity="other">%1$s 在 SteamGridDB 上有 %2$d 个标志，但没有一个符合 %3$s。请放宽筛选条件，或换个名称搜索。</item>
+    </plurals>
+    <string name="artwork_filtered_unknown_logo">没有符合 %1$s 的标志。请放宽筛选条件，或换个名称搜索。</string>
+    <string name="artwork_empty_logo">SteamGridDB 上暂无此游戏的标志。</string>
+    <string name="artwork_downloading_logo">正在下载标志…</string>
+    <string name="artwork_updated_logo">标志已更新</string>
+</resources>
