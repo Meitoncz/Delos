@@ -338,6 +338,27 @@ class ArtworkStore(context: Context) {
         result
     }
 
+    /** Whether a background lookup is expected to produce artwork for [app]: SteamGridDB is on, automatic and the game is not built in. */
+    fun lookupExpected(app: App): Boolean = enabled && automatic && eligible(app)
+
+    private val settledGames = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
+
+    /** [settled] when it is already known without reading a file. */
+    fun lookupSettledCached(pc: Pc, app: App): Boolean = "${pc.uuid}/${app.id}" in settledGames
+
+    /**
+     * Whether the lookup of [app] has finished: the game was matched and all its images stored (or the game was not found), so the
+     * images on disk are final. Reads a file the first time.
+     */
+    fun lookupSettled(pc: Pc, app: App): Boolean {
+        val key = "${pc.uuid}/${app.id}"
+        if (key in settledGames) return true
+        val match = readMatch(pc, app) ?: return false
+        if (match.id != null && match.chosen == null) return false
+        settledGames.add(key)
+        return true
+    }
+
     /** The SteamGridDB game [app] is matched with, if any. */
     fun matched(pc: Pc, app: App): SgdbGame? = readMatch(pc, app)?.let { m -> m.id?.let { SgdbGame(it, m.name.orEmpty(), m.year) } }
 
@@ -460,7 +481,8 @@ class ArtworkStore(context: Context) {
         val limit = if (kind == ArtKind.HERO) 1280 else 1000
         var sample = 1
         while (bounds.outWidth / (sample * 2) >= limit) sample *= 2
-        BitmapFactory.decodeFile(file.path, BitmapFactory.Options().apply { inSampleSize = sample })?.asImageBitmap()
+        // Uploaded to the GPU here (off the main thread) rather than on the tile's first draw
+        BitmapFactory.decodeFile(file.path, BitmapFactory.Options().apply { inSampleSize = sample })?.also { it.prepareToDraw() }?.asImageBitmap()
     }.getOrNull()
 
     /**
@@ -556,6 +578,43 @@ fun rememberArtwork(store: ArtworkStore, pc: Pc, app: App, kind: ArtKind): State
     val result = rememberArtworkResult(store, pc, app, kind)
     return remember(result) { derivedStateOf { result.value.image } }
 }
+
+/** Which image a game tile shows, see [tileArtSource]. */
+enum class TileArtSource { COVER, PLACEHOLDER, BOX_ART }
+
+/**
+ * What a game tile shows. The SteamGridDB [cover] when it exists; else, while a background lookup is [lookupExpected] and not yet
+ * [lookupResolved], the placeholder (so the host's box art is never shown just to be replaced by the cover); else the host's box art.
+ */
+fun tileArtSource(lookupExpected: Boolean, lookupResolved: Boolean, coverFound: Boolean): TileArtSource = when {
+    coverFound -> TileArtSource.COVER
+    lookupExpected && !lookupResolved -> TileArtSource.PLACEHOLDER
+    else -> TileArtSource.BOX_ART
+}
+
+/**
+ * Whether the lookup of [app] has finished ([ArtworkStore.lookupSettled]); true at once when none is expected or it is known to be
+ * done. A lookup that never finishes (offline, failed) stops counting after [LOOKUP_GIVE_UP_MS], so the box art shows then.
+ */
+@Composable
+fun rememberLookupResolved(store: ArtworkStore, pc: Pc, app: App): State<Boolean> {
+    val version = store.version.intValue
+    val expected = store.lookupExpected(app)
+    val state = remember(store, pc.uuid, app.id, app.name, expected) {
+        mutableStateOf(!expected || store.lookupSettledCached(pc, app))
+    }
+    LaunchedEffect(state, version) {
+        if (state.value) return@LaunchedEffect
+        state.value = withContext(Dispatchers.IO) { store.lookupSettled(pc, app) }
+        if (!state.value) {
+            kotlinx.coroutines.delay(LOOKUP_GIVE_UP_MS)
+            state.value = true
+        }
+    }
+    return state
+}
+
+private const val LOOKUP_GIVE_UP_MS = 20_000L
 
 /** An unresolved lookup must not be treated as a confirmed missing image. */
 data class ArtworkResult(val image: ImageBitmap?, val resolved: Boolean, val bundledAsset: String? = null)

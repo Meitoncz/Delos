@@ -104,7 +104,10 @@ import com.limelight.shell.data.rememberArtwork
 import com.limelight.shell.data.rememberArtworkResult
 import com.limelight.shell.data.Pc
 import com.limelight.shell.data.PcRepository
+import com.limelight.shell.data.TileArtSource
 import com.limelight.shell.data.rememberBoxArt
+import com.limelight.shell.data.rememberLookupResolved
+import com.limelight.shell.data.tileArtSource
 import com.limelight.shell.data.LocalGameMetadata
 import com.limelight.shell.data.NativeHdr
 import com.limelight.shell.data.BundledArtwork
@@ -209,14 +212,16 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
     val metadata = LocalGameMetadata.current
     LaunchedEffect(metadata, pc.uuid, focused.id, focused.name) { metadata.ensure(pc, focused) }
     val artwork = LocalArtwork.current
-    val boxImage by rememberBoxArt(boxArt, pc, focused)
     val heroImage by rememberArtwork(artwork, pc, focused, ArtKind.HERO)
     // The hero's file when it is an animated WebP: it plays as the game background (heroImage is its first frame)
     val heroAnimation by rememberAnimatedArtwork(artwork, pc, focused, ArtKind.HERO)
     // The game's colors come from its cover, which its tile hands to HeroBitmaps.analyzeCover
     val coverImage by rememberArtwork(artwork, pc, focused, ArtKind.COVER)
     // The local/built-in hero, else the cover, then the PC's artwork for ordinary games.
-    val image = heroImage ?: coverImage ?: boxImage
+    val focusedResolved by rememberLookupResolved(artwork, pc, focused)
+    val boxSource = tileArtSource(artwork.lookupExpected(focused), focusedResolved, coverImage != null) == TileArtSource.BOX_ART
+    val boxImage by rememberBoxArt(boxArt, pc, focused, load = boxSource)
+    val image = heroImage ?: coverImage ?: boxImage.takeIf { boxSource }
     // The game background follows the focus with a short delay, so it does not flicker while scrolling fast
     LaunchedEffect(homeKey(pc, focused), image, heroAnimation) {
         delay(140)
@@ -704,14 +709,20 @@ private fun GameTile(
     val tracker = LocalFocusTracker.current
     val feedback = LocalFeedback.current
     val artwork = LocalArtwork.current
-    val boxImage by rememberBoxArt(boxArt, pc, app)
     val cover by rememberArtwork(artwork, pc, app, ArtKind.COVER)
     val wideCover by rememberArtwork(artwork, pc, app, ArtKind.WIDE)
     val art = appArt(pc, app)
     val wide = index == 0
+    // While SteamGridDB's lookup of the game is pending the tile shows its placeholder, not the host's box art (which would be
+    // replaced by the cover a moment later); box art is loaded only when no cover exists or no lookup is expected
+    val lookupResolved by rememberLookupResolved(artwork, pc, app)
+    val source = tileArtSource(artwork.lookupExpected(app), lookupResolved, (if (wide) wideCover else cover) != null)
+    val boxImage by rememberBoxArt(boxArt, pc, app, load = source == TileArtSource.BOX_ART)
+    val box = boxImage.takeIf { source == TileArtSource.BOX_ART }
+    val pending = source == TileArtSource.PLACEHOLDER
     // The launch scene shows the portrait cover; the wide first tile its own wide cover
-    val image = cover ?: boxImage
-    val shown = if (wide) wideCover ?: boxImage else image
+    val image = cover ?: box
+    val shown = if (wide) wideCover ?: box else image
     val onArtwork = { shell.navigate(Screen.Artwork(pc, app)) }
     // The menu header's icon takes the game's main color: its cover's, worked out here as soon as the cover is decoded (not when
     // the game is focused or the menu opens), so it is there from the menu's first frame; the placeholder art's hue while the
@@ -720,10 +731,10 @@ private fun GameTile(
     LaunchedEffect(key, image) {
         image?.let { withContext(Dispatchers.Default) { HeroBitmaps.analyzeCover(key, it) } }
     }
-    val menu = remember(pc, app, hidden, running, image, onMetadata, badge, custom, matchGameColors) {
+    val menu = remember(pc, app, hidden, running, image, pending, onMetadata, badge, custom, matchGameColors) {
         gameMenu(
             pc, app, hidden, running, image, actions, onHide, lastPlayed = badge == TileBadge.LAST_PLAYED, custom = custom,
-            tint = { gameHeaderTint(matchGameColors, image != null, HeroBitmaps.coverKnown(key), HeroBitmaps.coverHues(key), art.hue) },
+            tint = { gameHeaderTint(matchGameColors, image != null || pending, HeroBitmaps.coverKnown(key), HeroBitmaps.coverHues(key), art.hue) },
             onArtwork = onArtwork,
             onSettings = { shell.navigate(Screen.GameSettings(pc, app)) },
             onMetadata = { onMetadata(pc, app) },

@@ -45,7 +45,7 @@ class BoxArtCache(context: Context, private val uniqueId: () -> String?) {
 
     private fun decode(file: File): ImageBitmap? {
         if (!file.exists() || file.length() == 0L || file.length() > MAX_FILE_BYTES) return null
-        return runCatching { BitmapFactory.decodeFile(file.path)?.asImageBitmap() }.getOrNull()
+        return runCatching { BitmapFactory.decodeFile(file.path)?.also { it.prepareToDraw() }?.asImageBitmap() }.getOrNull()
     }
 
     private suspend fun download(pc: Pc, app: App, file: File): ImageBitmap? = network.withPermit {
@@ -82,15 +82,16 @@ val LocalBoxArt = staticCompositionLocalOf<BoxArtCache> { error("BoxArtCache not
 /**
  * The cover of [app], loaded in the background; null until it is there (or if the PC has none).
  * The state is keyed by the app, so a caller that switches apps never sees the previous app's cover.
+ * With [load] false nothing is fetched or decoded (a memory-cached image still shows).
  */
 @Composable
-fun rememberBoxArt(cache: BoxArtCache, pc: Pc, app: App): State<ImageBitmap?> {
+fun rememberBoxArt(cache: BoxArtCache, pc: Pc, app: App, load: Boolean = true): State<ImageBitmap?> {
     val builtin = BundledArtwork.kind(app) != null
     val state = remember(pc.uuid, app.id, builtin) {
         mutableStateOf(if (builtin) null else cache.cached(pc, app))
     }
-    LaunchedEffect(state) {
-        if (!builtin && state.value == null) state.value = cache.load(pc, app)
+    LaunchedEffect(state, load) {
+        if (load && !builtin && state.value == null) state.value = cache.load(pc, app)
     }
     return state
 }
