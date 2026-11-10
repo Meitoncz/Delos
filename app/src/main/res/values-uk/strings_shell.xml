@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shell_link_pair_title">Створити пару з %1$s?</string>
+    <string name="shell_link_pair_message">Посилання просить Delos створити пару з цим ПК. Продовжуй, лише якщо відкрив його сам.</string>
+    <string name="shell_link_pair_action">Створити пару</string>
+    <string name="shell_link_start_title">Запустити %1$s?</string>
+    <string name="shell_link_start_title_unnamed">Запустити гру?</string>
+    <string name="shell_link_start_message">Посилання просить Delos запустити %1$s на %2$s. Продовжуй, лише якщо відкрив його сам.</string>
+    <string name="shell_link_start_message_game">Посилання просить Delos запустити %1$s на ПК. Продовжуй, лише якщо відкрив його сам.</string>
+    <string name="shell_link_start_message_host">Посилання просить Delos запустити гру на %1$s. Продовжуй, лише якщо відкрив його сам.</string>
+    <string name="shell_link_start_message_unnamed">Посилання просить Delos запустити гру на ПК. Продовжуй, лише якщо відкрив його сам.</string>
+    <string name="shell_link_start_action">Запустити</string>
+
+    <string name="shell_nav_settings">Налаштування</string>
+    <string name="shell_nav_profile">Профіль</string>
+    <string name="shell_nav_devices">Пристрої</string>
+    <string name="shell_default_profile_name">Гравець</string>
+
+    <string name="shell_side_not_connected">Не підключено</string>
+    <string name="shell_side_connected">Підключено до %1$s</string>
+    <string name="shell_side_offline">%1$s не в мережі</string>
+    <string name="shell_side_show_hidden">Показати приховані ігри</string>
+    <string name="shell_side_hidden_on">Прихованих на %2$s: %1$d</string>
+    <string name="shell_side_hidden_on_this_pc">Прихованих на цьому ПК: %1$d</string>
+    <string name="shell_side_theme">Тема</string>
+    <string name="shell_side_theme_dark">Темна</string>
+    <string name="shell_side_theme_light">Світла</string>
+    <string name="shell_side_material_you">Material You</string>
+    <string name="shell_side_background">Тло</string>
+    <string name="shell_side_home_layout">Розкладка головної</string>
+    <string name="shell_side_sounds">Звуки інтерфейсу</string>
+    <string name="shell_side_haptics">Вібровідгук</string>
+    <string name="shell_side_all_settings">Усі налаштування</string>
+
+    <string name="shell_progress_artwork">Завантаження ілюстрацій</string>
+    <string name="shell_progress_metadata">Завантаження метаданих</string>
+    <string name="shell_progress_count">%1$d із %2$d</string>
+
+    <plurals name="shell_home_apps_on_pc">
+        <item quantity="one">%1$d гра на %2$s</item>
+        <item quantity="few">%1$d гри на %2$s</item>
+        <item quantity="many">%1$d ігор на %2$s</item>
+        <item quantity="other">%1$d гри на %2$s</item>
+    </plurals>
+    <plurals name="shell_home_apps_filtered">
+        <item quantity="one">%1$d із %2$d гри на %3$s</item>
+        <item quantity="few">%1$d із %2$d ігор на %3$s</item>
+        <item quantity="many">%1$d із %2$d ігор на %3$s</item>
+        <item quantity="other">%1$d із %2$d гри на %3$s</item>
+    </plurals>
+    <string name="shell_hint_library_label">БІБЛІОТЕКА</string>
+
+    <string name="shell_hint_select">Обрати</string>
+    <string name="shell_hint_back">Назад</string>
+    <string name="shell_hint_close">Закрити</string>
+    <string name="shell_hint_cancel">Скасувати</string>
+    <string name="shell_hint_change">Змінити</string>
+    <string name="shell_hint_reset">Скинути</string>
+    <string name="shell_hint_start">Запустити</string>
+    <string name="shell_hint_menu">Меню</string>
+    <string name="shell_hint_options">Опції</string>
+    <string name="shell_hint_adjust">Налаштувати</string>
+    <string name="shell_hint_back_to_library">До бібліотеки</string>
+    <string name="shell_hint_previous_tab">Попередня вкладка</string>
+    <string name="shell_hint_next_tab">Наступна вкладка</string>
+    <string name="shell_hint_search">Пошук</string>
+    <string name="shell_hint_connect">Підключити</string>
+    <string name="shell_hint_choose">Обрати</string>
+    <string name="shell_hint_reset_filters">Скинути фільтри</string>
+    <string name="shell_hint_done">Готово</string>
+    <string name="shell_hint_use_image">Взяти зображення</string>
+    <string name="shell_hint_search_name">Шукати назву</string>
+    <string name="shell_hint_filter">Фільтр</string>
+    <string name="shell_hint_reset_to_profile">Значення профілю</string>
+
+    <string name="shell_problem_title_stream">Стрім не вдалося запустити</string>
+    <string name="shell_problem_title_generic">У Delos сталася проблема</string>
+    <string name="shell_problem_note">Нічого не надсилається автоматично. «Повідомити» відкриє GitHub у браузері з чернеткою для перевірки та збереже очищений файл журналу в Завантаження, щоб ти його додав.</string>
+    <string name="shell_problem_report">Повідомити про проблему</string>
+    <string name="shell_problem_dismiss">Закрити</string>
+
+    <string name="shell_button_capture_title">Натисни кнопки меню стріму</string>
+    <string name="shell_button_capture_note">Утримуй їх разом, потім відпусти. Підійде й одна кнопка, наприклад задня. Зачекай або торкнись, щоб скасувати.</string>
+
+    <string name="row_reset_to_profile">Значення профілю</string>
+    <string name="row_reset">Скинути</string>
+    <string name="row_not_set">Не задано</string>
+
+    <string name="impact_axis_gpu">GPU</string>
+    <string name="impact_axis_latency">Затримка</string>
+    <string name="impact_axis_network">Мережа</string>
+    <string name="impact_level_none">немає</string>
+    <string name="impact_level_low">низька</string>
+    <string name="impact_level_medium">середня</string>
+    <string name="impact_level_high">висока</string>
+    <string name="impact_axis_level">%1$s: %2$s</string>
+    <string name="impact_legend">Вартість поточного значення: 1 смужка — низька, 2 — середня, 3 — висока</string>
+    <string name="impact_axes_joined">%1$s, %2$s, %3$s</string>
+</resources>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shell_report_saved">Журнал збережено в Downloads як %1$s. Додай його до звернення.</string>
+    <string name="shell_report_save_failed">Не вдалося зберегти журнал. Поділися ним у Налаштування → Про застосунок → Налагодження.</string>
+    <string name="shell_report_no_browser">Немає доступного браузера</string>
+    <string name="shell_retry_unreachable">%1$s недоступний</string>
+    <string name="shell_retry_game_missing">%1$s немає на %2$s</string>
+    <string name="shell_retry_game_missing_unnamed">Гри немає на %1$s</string>
+    <string name="shell_profile_updated">Профіль оновлено</string>
+    <string name="shell_welcome">Вітаємо, %1$s</string>
+    <string name="shell_game_unreachable">%1$s недоступний</string>
+    <string name="shell_game_virtual_display_missing">Віртуальний екран на %1$s не готовий · стрімимо основний екран</string>
+    <string name="shell_game_quitting">Закриваємо %1$s…</string>
+</resources>

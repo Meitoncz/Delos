@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pairing_pc_title">Створення пари з ПК</string>
+    <string name="pairing_pc_searching">Шукаємо в локальній мережі…</string>
+    <string name="pairing_pc_none">ПК ще не знайдено. Запусти Vibepollo на ПК або введи його адресу.</string>
+    <plurals name="pairing_pc_found">
+        <item quantity="one">Delos знайшов у твоїй мережі ПК: %1$d.</item>
+        <item quantity="few">Delos знайшов у твоїй мережі ПК: %1$d.</item>
+        <item quantity="many">Delos знайшов у твоїй мережі ПК: %1$d.</item>
+        <item quantity="other">Delos знайшов у твоїй мережі ПК: %1$d.</item>
+    </plurals>
+    <string name="pairing_pc_paired_online">Спарено · в мережі</string>
+    <string name="pairing_pc_paired_offline">Спарено · не в мережі</string>
+    <string name="pairing_pc_ready">В мережі · готовий до створення пари</string>
+    <string name="pairing_pc_offline">Не в мережі</string>
+    <string name="pairing_pc_with_pin">Створити пару через PIN</string>
+    <string name="pairing_pc_with_code">Створити пару через одноразовий код</string>
+    <string name="pairing_pc_address">Ввести адресу</string>
+    <string name="pairing_pc_address_hint">IP або ім’я хоста</string>
+    <string name="pairing_pc_search_again">Шукати знову</string>
+    <string name="pairing_pc_network">Локальна мережа</string>
+    <string name="pairing_pin_title">Введи цей PIN на %1$s</string>
+    <string name="pairing_pin_note">Відкрий вебінтерфейс Vibepollo на ПК, перейди до PIN і введи код.</string>
+    <string name="pairing_code_title">Створення пари з %1$s</string>
+    <string name="pairing_code_note">Використовується одноразовий код із Vibepollo.</string>
+    <string name="pairing_pin_waiting">Чекаємо на Vibepollo…</string>
+    <string name="pairing_pin_accepted">PIN прийнято</string>
+    <string name="pairing_code_accepted">Код прийнято</string>
+    <string name="pairing_cancel">Скасувати</string>
+
+    <string name="pairing_failed_offline">%1$s не в мережі</string>
+    <string name="pairing_failed_pin_wrong">Хибний PIN, спробуй ще раз</string>
+    <string name="pairing_failed_code_wrong">Хибний код або парольна фраза</string>
+    <string name="pairing_failed_busy">%1$s уже створює пару з іншим пристроєм</string>
+    <string name="pairing_failed_game_running">Спершу закрий гру на %1$s, потім спробуй ще раз</string>
+    <string name="pairing_failed_not_found">%1$s не знайдено</string>
+    <string name="pairing_failed_unsupported">%1$s не підтримує створення пари</string>
+    <string name="pairing_failed">Не вдалося створити пару з %1$s</string>
+
+    <string name="pairing_otp_title">Пара через одноразовий код</string>
+    <string name="pairing_otp_note">У вебінтерфейсі Vibepollo створи одноразовий PIN із парольною фразою, потім введи обидва тут.</string>
+    <string name="pairing_otp_pin_hint">PIN</string>
+    <string name="pairing_otp_passphrase_hint">Парольна фраза</string>
+    <string name="pairing_otp_action">З’єднати</string>
+    <string name="pairing_otp_pin_error">PIN складається з 4 цифр</string>
+    <string name="pairing_otp_passphrase_error">Парольна фраза має містити щонайменше 4 символи</string>
+</resources>

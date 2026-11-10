@@ -417,3 +417,22 @@ in `ui/SteamTags.kt`, which stage 1 decides on separately, and some developer me
 | `screens/OscPreviewScreen.kt` | 1 |
 | `ui/DialogLayer.kt` | 1 |
 | **Total** | **1605** |
+
+## Terminology: Ukrainian
+
+Informal *ти*; buttons are short infinitives or nouns. Apostrophe is always `’`. Setting titles quoted in help texts match `values-uk/strings.xml`.
+
+| English | Ukrainian |
+|---|---|
+| app | застосунок (never „додаток“) |
+| PC / host | ПК |
+| stream | стрім (never „потік“) |
+| pair / pairing / paired | створити пару (button: З’єднати) / створення пари / спарений |
+| settings / setting | налаштування / параметр |
+| controller, gyro, rumble | контролер, гіроскоп, вібрація |
+| library, cover, background, logo | бібліотека, обкладинка, тло, логотип |
+| bitrate, codec, upscaler, supersampling, sharpness | бітрейт, кодек, апскейлер, суперсемплінг, різкість |
+| frame pacing | frame pacing |
+| Stream / Display / About tabs | Стрім / Екран / Про застосунок |
+| Quit game, Resume, Start | Закрити гру, Продовжити, Запустити |
+| arrows `→` in menu paths | `>` (the arrow is not in the Unbounded font) |

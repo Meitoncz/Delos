@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="firstrun_boot_tagline">Твої ігри з ПК, які стрімить Vibepollo, просто в руках</string>
+    <string name="firstrun_boot_begin">Почати</string>
+    <string name="firstrun_boot_skip">Перейти на головну</string>
+    <string name="firstrun_create_new_title">Хто грає?</string>
+    <string name="firstrun_create_new_note">Обери аватар та ім’я для свого профілю.</string>
+    <string name="firstrun_create_edit_title">Обери свій аватар</string>
+    <string name="firstrun_create_edit_note">І нове ім’я, якщо хочеш.</string>
+    <string name="firstrun_create_name_title">Ім’я профілю</string>
+    <string name="firstrun_create_name_label">Ім’я профілю</string>
+    <string name="firstrun_create_name_placeholder">Твоє ім’я</string>
+    <string name="firstrun_create_default_name">Гравець</string>
+    <string name="firstrun_create_change_name">Змінити ім’я</string>
+    <string name="firstrun_create_save">Зберегти</string>
+    <string name="firstrun_create_create">Створити профіль</string>
+    <string name="firstrun_avatar_sailor">Моряк</string>
+    <string name="firstrun_avatar_voyager">Мандрівник</string>
+    <string name="firstrun_avatar_player">Гравець</string>
+    <string name="firstrun_avatar_fox">Лис</string>
+    <string name="firstrun_avatar_spark">Іскра</string>
+    <string name="firstrun_avatar_calm">Спокій</string>
+    <string name="firstrun_avatar_knight">Лицар</string>
+    <string name="firstrun_avatar_robot">Робот</string>
+    <string name="firstrun_avatar_cat">Кіт</string>
+    <string name="firstrun_avatar_wizard">Чарівник</string>
+    <string name="firstrun_avatar_racer">Гонщик</string>
+    <string name="firstrun_avatar_ghost">Привид</string>
+</resources>

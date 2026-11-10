@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="devices_start_greeting">Привіт, %1$s</string>
+    <string name="devices_start_welcome">Ласкаво просимо</string>
+    <string name="devices_start_pair_note">Створи пару з ПК, щоб почати грати.</string>
+    <string name="devices_start_choose_note">Обери ПК, на якому гратимеш.</string>
+    <string name="devices_status_online">В мережі</string>
+    <string name="devices_status_asleep">Спить</string>
+    <string name="devices_status_asleep_wakes">Спить · прокидається</string>
+    <string name="devices_status_offline">Не в мережі</string>
+    <string name="devices_status_connected">Підключено</string>
+    <string name="devices_status_default">Типовий</string>
+    <string name="devices_status_with_default">%1$s · %2$s</string>
+    <string name="devices_pair_new">Створити пару з новим ПК</string>
+    <string name="devices_pair_new_meta">Vibepollo, Apollo або Sunshine</string>
+    <string name="devices_title">Пристрої</string>
+    <string name="devices_note">ПК, спарені з Delos. Імена, які ти задаєш тут, діють лише на цьому пристрої.</string>
+
+    <string name="devices_menu_default_off">Не запускати з цим ПК</string>
+    <string name="devices_menu_default_on">Запускати Delos з цим ПК</string>
+    <string name="devices_menu_wake">Розбудити ПК</string>
+    <string name="devices_menu_rename">Перейменувати</string>
+    <string name="devices_menu_open_games">Відкрити його ігри</string>
+    <string name="devices_menu_connect">Підключитися</string>
+    <string name="devices_menu_unpair">Розірвати пару</string>
+    <string name="devices_menu_remove">Прибрати з Delos</string>
+
+    <string name="devices_portal_waking_title">Будимо %1$s</string>
+    <string name="devices_portal_waiting_title">Чекаємо на %1$s</string>
+    <string name="devices_portal_waking_note">Сигнал пробудження надіслано · %1$s скасовує</string>
+    <string name="devices_portal_waiting_note">Увімкни ПК · %1$s скасовує</string>
+    <string name="devices_wake_timeout_toast">%1$s не прокинувся</string>
+    <string name="devices_portal_connecting_title">Підключення до %1$s</string>
+    <string name="devices_portal_connecting_note">Vibepollo · спарено</string>
+
+    <string name="devices_link_portal_title">Перевірка зв’язку з %1$s</string>
+    <string name="devices_link_portal_start">Залишайся на %1$s · %2$s скасовує</string>
+    <string name="devices_link_portal_testing">Перевірка %1$s · залишайся на %2$s · %3$s скасовує</string>
+    <string name="devices_link_portal_confirming">Підтвердження %1$s · залишайся на %2$s · %3$s скасовує</string>
+    <string name="devices_link_done">%1$s тягне %2$s</string>
+    <string name="devices_link_done_jitter">%1$s тягне %2$s (невеликий джитер)</string>
+    <string name="devices_link_stopped">Перевірку зв’язку зупинено</string>
+
+    <string name="devices_address_title">Введи адресу ПК</string>
+    <string name="devices_address_note">IP-адреса або ім’я хоста ПК із Vibepollo, за потреби з портом.</string>
+    <string name="devices_address_action">Додати ПК</string>
+    <string name="devices_address_required">Введи адресу</string>
+    <string name="devices_address_looking">Шукаємо %1$s…</string>
+    <string name="devices_address_not_added">%1$s відповів, але його не вдалося додати</string>
+    <string name="devices_add_not_an_address">«%1$s» не є адресою</string>
+    <string name="devices_add_no_answer">За адресою %1$s жоден ПК не відповів</string>
+
+    <string name="devices_rename_title">Перейменувати ПК</string>
+    <string name="devices_rename_note">Нове ім’я діє лише в Delos на цьому пристрої. Залиш поле порожнім, щоб використати власне ім’я ПК (%1$s).</string>
+    <string name="devices_rename_action">Зберегти</string>
+    <string name="devices_rename_reset_toast">Повернуто ім’я %1$s</string>
+    <string name="devices_rename_done_toast">Перейменовано на %1$s</string>
+
+    <string name="devices_wake_sent_toast">Сигнал пробудження надіслано на %1$s</string>
+    <string name="devices_wake_unsupported">%1$s не можна розбудити звідси</string>
+    <string name="devices_wake_failed">Не вдалося надіслати сигнал пробудження</string>
+    <string name="devices_removed_toast">%1$s прибрано</string>
+    <string name="devices_default_set_toast">Delos запускається з %1$s</string>
+    <string name="devices_default_cleared_toast">Типового пристрою немає</string>
+    <string name="devices_unpaired">Пару з %1$s розірвано</string>
+    <string name="devices_unpair_offline">Щоб розірвати пару, %1$s має бути в мережі</string>
+    <string name="devices_unpair_not_paired">З %1$s немає пари</string>
+    <string name="devices_unpair_failed">Не вдалося розірвати пару з %1$s</string>
+    <string name="devices_unreachable">%1$s недоступний</string>
+    <string name="devices_starting">Delos ще запускається, спробуй ще раз</string>
+</resources>

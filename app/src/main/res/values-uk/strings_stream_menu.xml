@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stream_menu_hint_select">Вибрати</string>
+    <string name="stream_menu_hint_back">Назад</string>
+
+    <string name="stream_menu_tile_resume">Продовжити</string>
+    <string name="stream_menu_tile_keyboard">Клавіатура</string>
+    <string name="stream_menu_tile_overlay">Накладка</string>
+    <string name="stream_menu_tile_brightness">Яскравість</string>
+    <string name="stream_menu_tile_bitrate">Бітрейт</string>
+    <string name="stream_menu_tile_upscaler">Апскейлер</string>
+    <string name="stream_menu_tile_supersampling">Суперсемплінг</string>
+    <string name="stream_menu_tile_more">Ще</string>
+    <string name="stream_menu_tile_disconnect">Відключитись</string>
+    <string name="stream_menu_tile_quit">Закрити гру</string>
+    <string name="stream_menu_overlay_compact">Компактна</string>
+
+    <string name="stream_menu_title_more">Ще</string>
+    <string name="stream_menu_title_keys">Надіслати клавіші</string>
+    <string name="stream_menu_title_commands">Команди сервера</string>
+    <string name="stream_menu_title_brightness">Яскравість</string>
+    <string name="stream_menu_title_bitrate">Бітрейт стріму</string>
+    <string name="stream_menu_title_supersampling">Суперсемплінг</string>
+    <string name="stream_menu_title_upscaler">Апскейлер</string>
+    <string name="stream_menu_title_mouse">Миша й сенсор</string>
+    <string name="stream_menu_title_rumble">Відчуття вібрації</string>
+
+    <string name="stream_menu_row_send_keys">Надіслати клавіші</string>
+    <string name="stream_menu_row_send_clipboard">Надіслати буфер обміну</string>
+    <string name="stream_menu_row_get_clipboard">Отримати буфер обміну</string>
+    <string name="stream_menu_row_commands">Команди</string>
+    <string name="stream_menu_row_task_manager">Диспетчер завдань</string>
+    <string name="stream_menu_row_zoom">Масштаб</string>
+    <string name="stream_menu_row_mouse_mode">Режим миші</string>
+    <string name="stream_menu_row_onscreen_controls">Екранні елементи керування</string>
+    <string name="stream_menu_row_android_keyboard">Відкрити клавіатуру Android</string>
+    <string name="stream_menu_row_touch_sensitivity">Чутливість сенсора</string>
+    <string name="stream_menu_row_rumble_feel">Відчуття вібрації</string>
+    <string name="stream_menu_row_gyro_smoothing">Згладжування гіроскопа</string>
+    <string name="stream_menu_gyro_off">%1$d %% (вимк.)</string>
+    <string name="stream_menu_rumble_custom">Власний</string>
+
+    <string name="stream_menu_row_screen_brightness">Яскравість екрана</string>
+    <string name="stream_menu_row_bitrate">Бітрейт</string>
+    <string name="stream_menu_row_apply">Застосувати</string>
+    <string name="stream_menu_row_enabled">Увімкнено</string>
+    <string name="stream_menu_row_supersampling_quality">Якість суперсемплінгу</string>
+    <string name="stream_menu_row_mode">Режим</string>
+    <string name="stream_menu_row_sharpness">Різкість</string>
+    <string name="stream_menu_row_touchscreen_mode">Режим сенсорного екрана</string>
+    <string name="stream_menu_row_local_cursor">Локальний курсор миші</string>
+    <string name="stream_menu_not_set">Не задано</string>
+    <string name="stream_menu_no_commands">На ПК не налаштовано жодних команд. Vibepollo може додати їх у веб-інтерфейсі.</string>
+
+    <string name="stream_menu_rumble_problem_word">Проблема</string>
+    <string name="stream_menu_rumble_active">Активно</string>
+    <string name="stream_menu_rumble_problem">Проблема: %1$s</string>
+
+    <string name="stream_menu_mouse_applies_saved">Застосовується одразу й зберігається.</string>
+    <string name="stream_menu_mouse_applies_stream">Застосовується одразу; лише для цього стріму.</string>
+
+    <string name="stream_menu_bitrate_fill">Вставити</string>
+    <string name="stream_menu_bitrate_applying">Застосовуємо…</string>
+    <string name="stream_menu_bitrate_accepted">Прийнято %1$d Mbps</string>
+    <string name="stream_menu_bitrate_limited">Хост обмежив до %1$d Mbps</string>
+    <string name="stream_menu_bitrate_failed">Не вдалося</string>
+    <string name="stream_menu_bitrate_not_connected">Стрім не підключено, тож бітрейт змінити не можна.</string>
+    <string name="stream_menu_bitrate_unsupported">Хост не підтримує зміну бітрейту наживо, або стрім завершився.</string>
+    <string name="stream_menu_bitrate_denied">Хост не дозволив цю зміну.</string>
+    <string name="stream_menu_bitrate_unconfirmed">Бітрейт не підтверджено. Перевір з’єднання й спробуй ще раз.</string>
+    <string name="stream_menu_bitrate_rejected">Хост не зміг застосувати зміну.</string>
+    <string name="stream_menu_bitrate_rejected_detail">Хост не зміг застосувати зміну: %1$s</string>
+
+    <string name="stream_stats_top_left">Угорі ліворуч</string>
+    <string name="stream_stats_top_right">Угорі праворуч</string>
+    <string name="stream_stats_bottom_left">Унизу ліворуч</string>
+    <string name="stream_stats_bottom_right">Унизу праворуч</string>
+    <string name="stream_stats_compact_low">1%% найгірших %1$d</string>
+    <string name="stream_stats_compact_tail">Мережа %1$d ms  ·  Декодування %2$s ms  ·  Усього %3$s ms  ·  Втрачено %4$s %%</string>
+    <string name="stream_stats_decoder">Декодер</string>
+    <string name="stream_stats_incoming">Вхідний</string>
+    <string name="stream_stats_rendering">Рендеринг</string>
+    <string name="stream_stats_one_percent_low">%1$d%% найгірших</string>
+    <string name="stream_stats_network">Мережа</string>
+    <string name="stream_stats_pc_processing">Обробка на ПК</string>
+    <string name="stream_stats_decoding">Декодування</string>
+    <string name="stream_stats_upscaling">Апскейлінг</string>
+    <string name="stream_stats_frame_queue">Черга кадрів</string>
+    <string name="stream_stats_sharpen_pass">Прохід різкості</string>
+    <string name="stream_stats_render_latency">Затримка рендерингу</string>
+    <string name="stream_stats_total_latency">Загальна затримка</string>
+    <string name="stream_stats_bandwidth">Пропускна здатність</string>
+    <string name="stream_stats_lost_frames">Втрачені кадри</string>
+    <string name="stream_stats_backlog">Черга</string>
+    <string name="stream_stats_stall">Зависання (recv thread)</string>
+    <string name="stream_stats_frame_age">Вік кадру при поданні</string>
+    <string name="stream_stats_receive_to_present">Від отримання до показу</string>
+    <string name="stream_stats_partial_frames">Часткові кадри</string>
+    <string name="stream_stats_skipped">Пропущено</string>
+    <string name="stream_stats_link">Зв’язок</string>
+    <string name="stream_stats_receiving">Отримання</string>
+    <string name="stream_stats_partial_lost">Часткові / втрачені</string>
+    <string name="stream_stats_verdict">Висновок</string>
+
+    <string name="stream_loader_greeting">Набираємо %1$s</string>
+    <string name="stream_loader_codec_auto">Авто</string>
+    <string-array name="stream_loader_lines_platform">
+        <item>Розплутуємо сплайни</item>
+        <item>Засукуємо рукави</item>
+        <item>Розминаємось перед грою</item>
+    </string-array>
+    <string-array name="stream_loader_lines_name_resolution">
+        <item>Питаємо роутер, де живе %1$s</item>
+        <item>Шукаємо %1$s у мережі</item>
+        <item>Дивимось під диваном, чи нема там %1$s</item>
+    </string-array>
+    <string-array name="stream_loader_lines_rtsp">
+        <item>Торгуємось із %1$s за пікселі й частоту кадрів</item>
+        <item>Підписуємо договір про стрім із %1$s</item>
+        <item>Домовляємось із %1$s, наскільки різко це має виглядати</item>
+    </string-array>
+    <string-array name="stream_loader_lines_control_stream">
+        <item>Тиснемо руку %1$s</item>
+        <item>Тягнемо невидимий кабель до %1$s</item>
+        <item>Обмінюємось таємними рукостисканнями</item>
+    </string-array>
+    <string-array name="stream_loader_lines_video_stream">
+        <item>Розігріваємо пікселі</item>
+        <item>Поліруємо пікселі</item>
+        <item>Вишиковуємо пікселі</item>
+    </string-array>
+    <string-array name="stream_loader_lines_audio_stream">
+        <item>Налаштовуємо колонки</item>
+        <item>Розплутуємо звукові хвилі</item>
+        <item>Прочищаємо горло</item>
+    </string-array>
+    <string-array name="stream_loader_lines_input_stream">
+        <item>Підключаємо кнопки</item>
+        <item>Пояснюємо кнопкам, хто тут головний</item>
+        <item>Підключаємо невидимий контролер</item>
+    </string-array>
+    <string-array name="stream_loader_lines_unlocking">
+        <item>%1$s ще прокидається, зачекай</item>
+        <item>%1$s протирає очі, одну хвилинку</item>
+    </string-array>
+
+    <string name="stream_exit_disconnecting">Відключаємось</string>
+    <string name="stream_exit_quitting">Закриваємо %1$s</string>
+    <string name="stream_exit_quitting_game">Закриваємо гру</string>
+
+    <string name="stream_result_default_pc">ПК</string>
+    <string name="stream_result_try_again">Спробувати ще раз</string>
+    <string name="stream_result_back_to_library">До бібліотеки</string>
+    <string name="stream_result_details">Подробиці</string>
+    <string name="stream_result_start_title">Не вдалося запустити стрім</string>
+    <string name="stream_result_lost_title">З’єднання втрачено</string>
+    <string name="stream_result_closed_title">ПК закрив стрім</string>
+    <string name="stream_result_host_closed">ПК завершив стрім</string>
+    <string name="stream_result_blocked_hint">Поточне мережеве з’єднання твого пристрою блокує Delos. Стрімінг через інтернет може не працювати, поки ти в цій мережі.</string>
+    <string name="stream_result_ports_hint">Перевір брандмауер і правила переадресації портів для порту(ів):</string>
+    <string name="stream_result_failed_stage">Не вдалося запустити %1$s (помилка %2$d)</string>
+    <string name="stream_result_denied">ПК не дозволив Delos запустити застосунок.</string>
+    <string name="stream_result_denied_details">Доступ заборонено (запуск застосунків)</string>
+    <string name="stream_result_timeout">ПК не відповів вчасно.</string>
+    <string name="stream_result_timeout_details">Час очікування з’єднання вичерпано</string>
+    <string name="stream_result_blocked">Схоже, ця мережа блокує Delos.</string>
+    <string name="stream_result_decoder">Цей пристрій не зміг запустити відеодекодер.</string>
+    <string name="stream_result_decoder_details">Не вдалося ініціалізувати відеодекодер. Можливо, пристрій не підтримує вибрану роздільну здатність або частоту кадрів.</string>
+    <string name="stream_result_connecting">Щось пішло не так під час підключення до ПК.</string>
+    <string name="stream_result_no_video">Від ПК не надійшло відео.</string>
+    <string name="stream_result_no_video_details">Від хоста не отримано відео.</string>
+    <string name="stream_result_slow">Мережеве з’єднання не встигає.</string>
+    <string name="stream_result_slow_details">Мережеве з’єднання працює погано. Зменш бітрейт відео в налаштуваннях або спробуй швидше з’єднання.</string>
+    <string name="stream_result_host_error">Щось пішло не так на ПК під час запуску стріму.</string>
+    <string name="stream_result_host_error_details">Щось пішло не так на твоєму ПК-хості під час запуску стріму.\n\nПереконайся, що на ПК-хості не відкрито вміст із захистом DRM. Також можеш спробувати перезапустити ПК-хост.</string>
+    <string name="stream_result_encoding">ПК повідомив про помилку кодування відео.</string>
+    <string name="stream_result_encoding_details">ПК-хост повідомив про критичну помилку кодування відео.\n\nСпробуй вимкнути режим HDR, змінити роздільну здатність стріму або роздільну здатність екрана ПК-хоста.</string>
+    <string name="stream_result_ended">З’єднання з ПК несподівано обірвалося.</string>
+    <string name="stream_result_terminated_details">З’єднання розірвано.\n\nКод помилки: %1$s</string>
+    <string name="stream_result_no_h264">Цей пристрій не може відтворити стрім.</string>
+    <string name="stream_result_no_h264_details">Цей пристрій або ROM не підтримує апаратно прискорене відтворення H.264.</string>
+    <string name="stream_result_offline">%1$s не в мережі.</string>
+    <string name="stream_result_offline_details">Комп’ютер не в мережі</string>
+    <string name="stream_result_unpaired">%1$s не спарений із цим пристроєм.</string>
+    <string name="stream_result_unpaired_details">ПК не спарений</string>
+</resources>
