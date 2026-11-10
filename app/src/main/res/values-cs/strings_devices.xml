@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Start screen, devices screen, PC menus and the flows behind them (connect, wake, rename, remove, link test) -->
+    <string name="devices_start_greeting">Ahoj, %1$s</string>
+    <string name="devices_start_welcome">Vítej</string>
+    <string name="devices_start_pair_note">Spáruj PC a můžeš začít hrát.</string>
+    <string name="devices_start_choose_note">Vyber PC, na kterém chceš hrát.</string>
+    <string name="devices_status_online">Online</string>
+    <string name="devices_status_asleep">Spí</string>
+    <string name="devices_status_asleep_wakes">Spí · probudí se</string>
+    <string name="devices_status_offline">Offline</string>
+    <string name="devices_status_connected">Připojeno</string>
+    <string name="devices_status_default">Výchozí</string>
+    <string name="devices_status_with_default">%1$s · %2$s</string>
+    <string name="devices_pair_new">Spárovat nové PC</string>
+    <string name="devices_pair_new_meta">Vibepollo, Apollo nebo Sunshine</string>
+    <string name="devices_title">Zařízení</string>
+    <string name="devices_note">PC spárovaná s aplikací Delos. Názvy, které tu nastavíš, zůstávají jen na tomto zařízení.</string>
+
+    <!-- PC menus -->
+    <string name="devices_menu_default_off">Nespouštět Delos s tímto PC</string>
+    <string name="devices_menu_default_on">Spouštět Delos s tímto PC</string>
+    <string name="devices_menu_wake">Probudit PC</string>
+    <string name="devices_menu_rename">Přejmenovat</string>
+    <string name="devices_menu_open_games">Otevřít jeho hry</string>
+    <string name="devices_menu_connect">Připojit</string>
+    <string name="devices_menu_unpair">Zrušit spárování</string>
+    <string name="devices_menu_remove">Odebrat z aplikace Delos</string>
+
+    <!-- Connecting: the portal -->
+    <string name="devices_portal_waking_title">Probouzím %1$s</string>
+    <string name="devices_portal_waiting_title">Čekám na %1$s</string>
+    <string name="devices_portal_waking_note">Signál probuzení odeslán · %1$s zruší</string>
+    <string name="devices_portal_waiting_note">Zapni PC · %1$s zruší</string>
+    <string name="devices_wake_timeout_toast">%1$s se neprobudilo</string>
+    <string name="devices_portal_connecting_title">Připojuji se k %1$s</string>
+    <string name="devices_portal_connecting_note">Vibepollo · spárováno</string>
+
+    <!-- Link test -->
+    <string name="devices_link_portal_title">Testuji spojení s %1$s</string>
+    <string name="devices_link_portal_start">Zůstaň na %1$s · %2$s zruší</string>
+    <string name="devices_link_portal_testing">Testuji %1$s · zůstaň na %2$s · %3$s zruší</string>
+    <string name="devices_link_portal_confirming">Ověřuji %1$s · zůstaň na %2$s · %3$s zruší</string>
+    <string name="devices_link_done">Na %1$s projde %2$s</string>
+    <string name="devices_link_done_jitter">Na %1$s projde %2$s (malý jitter)</string>
+    <string name="devices_link_stopped">Test spojení zastaven</string>
+
+    <!-- Entering the address of a PC -->
+    <string name="devices_address_title">Zadej adresu PC</string>
+    <string name="devices_address_note">IP adresa nebo název PC s Vibepollo, případně i s portem.</string>
+    <string name="devices_address_action">Přidat PC</string>
+    <string name="devices_address_required">Zadej adresu</string>
+    <string name="devices_address_looking">Hledám %1$s…</string>
+    <string name="devices_address_not_added">%1$s odpovědělo, ale nepodařilo se ho přidat</string>
+    <string name="devices_add_not_an_address">„%1$s“ není adresa</string>
+    <string name="devices_add_no_answer">Na adrese %1$s neodpovědělo žádné PC</string>
+
+    <!-- Renaming a PC -->
+    <string name="devices_rename_title">Přejmenovat PC</string>
+    <string name="devices_rename_note">Nový název se používá jen v aplikaci Delos na tomto zařízení. Prázdné pole vrátí vlastní název PC (%1$s).</string>
+    <string name="devices_rename_action">Uložit</string>
+    <string name="devices_rename_reset_toast">Zpět na %1$s</string>
+    <string name="devices_rename_done_toast">Přejmenováno na %1$s</string>
+
+    <!-- Toasts -->
+    <string name="devices_wake_sent_toast">Signál probuzení odeslán do %1$s</string>
+    <string name="devices_wake_unsupported">%1$s nelze odsud probudit</string>
+    <string name="devices_wake_failed">Signál probuzení se nepodařilo odeslat</string>
+    <string name="devices_removed_toast">Odebráno: %1$s</string>
+    <string name="devices_default_set_toast">Aplikace Delos se spouští s %1$s</string>
+    <string name="devices_default_cleared_toast">Žádné výchozí zařízení</string>
+    <string name="devices_unpaired">Spárování s %1$s zrušeno</string>
+    <string name="devices_unpair_offline">%1$s musí být online, aby šlo zrušit spárování</string>
+    <string name="devices_unpair_not_paired">%1$s není spárováno</string>
+    <string name="devices_unpair_failed">Spárování s %1$s se nepodařilo zrušit</string>
+    <string name="devices_unreachable">%1$s není dostupné</string>
+    <string name="devices_starting">Aplikace Delos se ještě spouští, zkus to znovu</string>
+</resources>

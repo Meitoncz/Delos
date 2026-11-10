@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Library filter (Y on the home screen) -->
+    <string name="filters_title">Filtr knihovny</string>
+    <plurals name="filters_result_active">
+        <item quantity="one">%1$d z %2$d hry</item>
+        <item quantity="few">%1$d z %2$d her</item>
+        <item quantity="many">%1$d z %2$d hry</item>
+        <item quantity="other">%1$d z %2$d her</item>
+    </plurals>
+    <plurals name="filters_result_all">
+        <item quantity="one">Celkem %1$d hra</item>
+        <item quantity="few">Celkem %1$d hry</item>
+        <item quantity="many">Celkem %1$d hry</item>
+        <item quantity="other">Celkem %1$d her</item>
+    </plurals>
+    <string name="filters_hint">Filtr</string>
+    <plurals name="filters_hint_active">
+        <item quantity="one">Filtr • aktivní: %1$d</item>
+        <item quantity="few">Filtr • aktivní: %1$d</item>
+        <item quantity="many">Filtr • aktivní: %1$d</item>
+        <item quantity="other">Filtr • aktivní: %1$d</item>
+    </plurals>
+    <string name="filters_section_genre">Žánr</string>
+    <string name="filters_section_theme">Téma</string>
+    <string name="filters_section_hdr">Podpora HDR</string>
+    <string name="filters_section_duration">Délka (HowLongToBeat)</string>
+    <string name="filters_all">Vše</string>
+    <string name="filters_hdr_any">Vše</string>
+    <string name="filters_hdr_hdr">Nativní HDR</string>
+    <string name="filters_length_any">Libovolná</string>
+    <string name="filters_length_under_10">&lt;10 h</string>
+    <string name="filters_length_10_30">10–30 h</string>
+    <string name="filters_length_30_60">30–60 h</string>
+    <string name="filters_length_over_60">60+ h</string>
+    <string name="filters_length_unknown">Neznámá</string>
+    <string name="filters_reset">Resetovat</string>
+    <string name="filters_done">Hotovo</string>
+
+    <!-- Artwork filter sheet (Y on the artwork screen) -->
+    <string name="filters_art_title">Filtr obrázků</string>
+    <string name="filters_art_reset">Resetovat filtry</string>
+    <string name="filters_art_done">Hotovo</string>
+    <string name="filters_art_row_type">Typ</string>
+    <string name="filters_art_row_style">Styl</string>
+    <string name="filters_art_row_dimensions">Rozměry</string>
+    <string name="filters_art_row_sort">Řazení</string>
+    <string name="filters_art_any">Libovolné</string>
+    <string name="filters_art_type_all">Všechny</string>
+    <string name="filters_art_type_static">Statické</string>
+    <string name="filters_art_type_animated">Animované</string>
+    <string name="filters_art_sort_score">Nejvyšší skóre</string>
+    <string name="filters_art_sort_newest">Nejnovější</string>
+    <string name="filters_art_sort_oldest">Nejstarší</string>
+    <string name="filters_art_sort_score_chip">Řazení: Nejvyšší skóre</string>
+    <string name="filters_art_sort_newest_chip">Řazení: Nejnovější</string>
+    <string name="filters_art_sort_oldest_chip">Řazení: Nejstarší</string>
+    <string name="filters_art_sort_score_first">Nejvyšší skóre první</string>
+    <string name="filters_art_sort_newest_first">Nejnovější první</string>
+    <string name="filters_art_sort_oldest_first">Nejstarší první</string>
+    <string name="filters_art_style_alternate">Alternativní</string>
+    <string name="filters_art_style_blurred">Rozmazaný</string>
+    <string name="filters_art_style_white_logo">Bílé logo</string>
+    <string name="filters_art_style_material">Materiál</string>
+    <string name="filters_art_style_no_logo">Bez loga</string>
+    <string name="filters_art_style_official">Oficiální</string>
+    <string name="filters_art_style_white">Bílý</string>
+    <string name="filters_art_style_black">Černý</string>
+    <string name="filters_art_style_custom">Vlastní</string>
+    <string name="filters_art_chips_reset">Resetovat</string>
+    <string name="filters_art_reset_toast">Filtry resetovány</string>
+    <string name="filters_art_change">Změnit filtry</string>
+</resources>

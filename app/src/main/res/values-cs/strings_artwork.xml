@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Artwork screen (the game's options → Artwork): tabs, toolbar, grid messages, info strip and download toasts -->
+    <string name="artwork_header">OBRÁZKY</string>
+    <string name="artwork_search_other">Hledat pod jiným názvem</string>
+    <string name="artwork_filter">Filtr</string>
+    <string name="artwork_loading">Hledám na SteamGridDB…</string>
+    <string name="artwork_no_key_title">Přidej svůj klíč API SteamGridDB</string>
+    <string name="artwork_no_key_note">Nastavení → Obaly → Klíč API SteamGridDB. Je zdarma na steamgriddb.com (Preferences → API).</string>
+    <string name="artwork_no_game_title">%1$s není na SteamGridDB</string>
+    <string name="artwork_no_game_note">Hledání pod jiným názvem ji najde pod jménem, které zná SteamGridDB.</string>
+    <string name="artwork_choose_title">Vyber, jak má vypadat %1$s</string>
+    <string name="artwork_choose_note">Hledej pod jiným názvem: např. Windows, Steam nebo jakoukoli hru, jejíž obrázky se ti líbí. %1$s se automaticky nehledá.</string>
+    <string name="artwork_unreachable">SteamGridDB není dostupný</string>
+    <string name="artwork_download_failed">Stahování se nezdařilo</string>
+    <string name="artwork_builtin_note">Vestavěné obrázky – obrázky této aplikace nejde změnit</string>
+    <string name="artwork_builtin_back">Zpět</string>
+    <string name="artwork_chip_looking">Hledám %1$s…</string>
+    <string name="artwork_chip_game_id">Hra č. %1$d</string>
+    <string name="artwork_chip_not_found">Zatím nenalezeno</string>
+    <string name="artwork_in_use">Používá se</string>
+    <string name="artwork_animated">Animovaný</string>
+    <string name="artwork_static">Statický</string>
+    <string name="artwork_first_name_only">Jen název</string>
+    <string name="artwork_first_from_pc">Z tvého PC</string>
+    <string name="artwork_fact_source">ZDROJ</string>
+    <string name="artwork_fact_shows">ZOBRAZÍ</string>
+    <string name="artwork_fact_name_source">Název hry</string>
+    <string name="artwork_fact_name_shows">Název místo loga</string>
+    <string name="artwork_fact_pc_source">Tvoje PC (Vibepollo)</string>
+    <string name="artwork_fact_pc_shows">Obal krabice z PC</string>
+    <string name="artwork_fact_size">VELIKOST</string>
+    <string name="artwork_fact_file">SOUBOR</string>
+    <string name="artwork_fact_score">SKÓRE</string>
+    <string name="artwork_fact_added">PŘIDÁNO</string>
+    <string name="artwork_fact_size_value">%1$d × %2$d px</string>
+    <string name="artwork_fact_score_by">%1$d · od %2$s</string>
+    <string name="artwork_fact_score_only">%1$d</string>
+    <string name="artwork_fact_by_only">od %1$s</string>
+    <string name="artwork_search_title">Hledat na SteamGridDB</string>
+    <string name="artwork_search_note">Název hry, jak ho zná SteamGridDB.</string>
+    <string name="artwork_search_hint">Název hry</string>
+    <string name="artwork_search_action">Hledat</string>
+    <string name="artwork_searching_toast">Hledám na SteamGridDB: %1$s…</string>
+    <string name="artwork_game_with_year">%1$s (%2$d)</string>
+    <string name="artwork_downloading_game_toast">Stahuji obrázky ke hře %1$s…</string>
+    <string name="artwork_matched_toast">Přiřazeno k: %1$s</string>
+    <string name="artwork_found_none">Pro %1$s nebylo nic nalezeno</string>
+    <string name="artwork_found_title">Vyber hru</string>
+    <string name="artwork_error_no_key">Nejdřív přidej svůj klíč API SteamGridDB</string>
+    <string name="artwork_error_key_rejected">SteamGridDB klíč API nepřijal</string>
+    <string name="artwork_error_api_http">SteamGridDB odpověděl %1$d</string>
+    <string name="artwork_error_too_large">obrázek je příliš velký</string>
+    <string name="artwork_error_save_failed">obrázek se nepodařilo uložit</string>
+    <!-- Cover -->
+    <string name="artwork_tab_cover">Obal</string>
+    <plurals name="artwork_count_cover">
+        <item quantity="one">%1$d obal</item>
+        <item quantity="few">%1$d obaly</item>
+        <item quantity="many">%1$d obalu</item>
+        <item quantity="other">%1$d obalů</item>
+    </plurals>
+    <plurals name="artwork_count_all_cover">
+        <item quantity="one">Celkem %1$d obal</item>
+        <item quantity="few">Celkem %1$d obaly</item>
+        <item quantity="many">Celkem %1$d obalu</item>
+        <item quantity="other">Celkem %1$d obalů</item>
+    </plurals>
+    <plurals name="artwork_count_of_cover">
+        <item quantity="one">%1$d z %2$d obalu</item>
+        <item quantity="few">%1$d z %2$d obalů</item>
+        <item quantity="many">%1$d z %2$d obalu</item>
+        <item quantity="other">%1$d z %2$d obalů</item>
+    </plurals>
+    <string name="artwork_filtered_none_cover">Těmto filtrům neodpovídá žádný obal</string>
+    <plurals name="artwork_filtered_has_cover">
+        <item quantity="one">%1$s: na SteamGridDB je %2$d obal, ale žádný neodpovídá filtrům (%3$s). Uvolni nějaký filtr nebo hledej pod jiným názvem.</item>
+        <item quantity="few">%1$s: na SteamGridDB jsou %2$d obaly, ale žádný neodpovídá filtrům (%3$s). Uvolni nějaký filtr nebo hledej pod jiným názvem.</item>
+        <item quantity="many">%1$s: na SteamGridDB je %2$d obalu, ale žádný neodpovídá filtrům (%3$s). Uvolni nějaký filtr nebo hledej pod jiným názvem.</item>
+        <item quantity="other">%1$s: na SteamGridDB je %2$d obalů, ale žádný neodpovídá filtrům (%3$s). Uvolni nějaký filtr nebo hledej pod jiným názvem.</item>
+    </plurals>
+    <string name="artwork_filtered_unknown_cover">Žádný z obalů neodpovídá filtrům (%1$s). Uvolni nějaký filtr nebo hledej pod jiným názvem.</string>
+    <string name="artwork_empty_cover">SteamGridDB zatím nemá pro tuto hru žádný obal.</string>
+    <string name="artwork_downloading_cover">Stahuji obal…</string>
+    <string name="artwork_updated_cover">Obal aktualizován</string>
+    <!-- Wide cover -->
+    <string name="artwork_tab_wide">Široký obal</string>
+    <plurals name="artwork_count_wide">
+        <item quantity="one">%1$d široký obal</item>
+        <item quantity="few">%1$d široké obaly</item>
+        <item quantity="many">%1$d širokého obalu</item>
+        <item quantity="other">%1$d širokých obalů</item>
+    </plurals>
+    <plurals name="artwork_count_all_wide">
+        <item quantity="one">Celkem %1$d široký obal</item>
+        <item quantity="few">Celkem %1$d široké obaly</item>
+        <item quantity="many">Celkem %1$d širokého obalu</item>
+        <item quantity="other">Celkem %1$d širokých obalů</item>
+    </plurals>
+    <plurals name="artwork_count_of_wide">
+        <item quantity="one">%1$d z %2$d širokého obalu</item>
+        <item quantity="few">%1$d z %2$d širokých obalů</item>
+        <item quantity="many">%1$d z %2$d širokého obalu</item>
+        <item quantity="other">%1$d z %2$d širokých obalů</item>
+    </plurals>
+    <string name="artwork_filtered_none_wide">Těmto filtrům neodpovídá žádný široký obal</string>
+    <plurals name="artwork_filtered_has_wide">
+        <item quantity="one">%1$s: na SteamGridDB je %2$d široký obal, ale žádný neodpovídá filtrům (%3$s). Uvolni nějaký filtr nebo hledej pod jiným názvem.</item>
+        <item quantity="few">%1$s: na SteamGridDB jsou %2$d široké obaly, ale žádný neodpovídá filtrům (%3$s). Uvolni nějaký filtr nebo hledej pod jiným názvem.</item>
+        <item quantity="many">%1$s: na SteamGridDB je %2$d širokého obalu, ale žádný neodpovídá filtrům (%3$s). Uvolni nějaký filtr nebo hledej pod jiným názvem.</item>
+        <item quantity="other">%1$s: na SteamGridDB je %2$d širokých obalů, ale žádný neodpovídá filtrům (%3$s). Uvolni nějaký filtr nebo hledej pod jiným názvem.</item>
+    </plurals>
+    <string name="artwork_filtered_unknown_wide">Žádný z širokých obalů neodpovídá filtrům (%1$s). Uvolni nějaký filtr nebo hledej pod jiným názvem.</string>
+    <string name="artwork_empty_wide">SteamGridDB zatím nemá pro tuto hru žádný široký obal.</string>
+    <string name="artwork_downloading_wide">Stahuji široký obal…</string>
+    <string name="artwork_updated_wide">Široký obal aktualizován</string>
+    <!-- Background -->
+    <string name="artwork_tab_hero">Pozadí</string>
+    <plurals name="artwork_count_hero">
+        <item quantity="one">%1$d pozadí</item>
+        <item quantity="few">%1$d pozadí</item>
+        <item quantity="many">%1$d pozadí</item>
+        <item quantity="other">%1$d pozadí</item>
+    </plurals>
+    <plurals name="artwork_count_all_hero">
+        <item quantity="one">Celkem %1$d pozadí</item>
+        <item quantity="few">Celkem %1$d pozadí</item>
+        <item quantity="many">Celkem %1$d pozadí</item>
+        <item quantity="other">Celkem %1$d pozadí</item>
+    </plurals>
+    <plurals name="artwork_count_of_hero">
+        <item quantity="one">%1$d z %2$d pozadí</item>
+        <item quantity="few">%1$d z %2$d pozadí</item>
+        <item quantity="many">%1$d z %2$d pozadí</item>
+        <item quantity="other">%1$d z %2$d pozadí</item>
+    </plurals>
+    <string name="artwork_filtered_none_hero">Těmto filtrům neodpovídá žádné pozadí</string>
+    <plurals name="artwork_filtered_has_hero">
+        <item quantity="one">%1$s: na SteamGridDB je %2$d pozadí, ale žádné neodpovídá filtrům (%3$s). Uvolni nějaký filtr nebo hledej pod jiným názvem.</item>
+        <item quantity="few">%1$s: na SteamGridDB jsou %2$d pozadí, ale žádné neodpovídá filtrům (%3$s). Uvolni nějaký filtr nebo hledej pod jiným názvem.</item>
+        <item quantity="many">%1$s: na SteamGridDB je %2$d pozadí, ale žádné neodpovídá filtrům (%3$s). Uvolni nějaký filtr nebo hledej pod jiným názvem.</item>
+        <item quantity="other">%1$s: na SteamGridDB je %2$d pozadí, ale žádné neodpovídá filtrům (%3$s). Uvolni nějaký filtr nebo hledej pod jiným názvem.</item>
+    </plurals>
+    <string name="artwork_filtered_unknown_hero">Žádné z pozadí neodpovídá filtrům (%1$s). Uvolni nějaký filtr nebo hledej pod jiným názvem.</string>
+    <string name="artwork_empty_hero">SteamGridDB zatím nemá pro tuto hru žádné pozadí.</string>
+    <string name="artwork_downloading_hero">Stahuji pozadí…</string>
+    <string name="artwork_updated_hero">Pozadí aktualizováno</string>
+    <!-- Logo -->
+    <string name="artwork_tab_logo">Logo</string>
+    <plurals name="artwork_count_logo">
+        <item quantity="one">%1$d logo</item>
+        <item quantity="few">%1$d loga</item>
+        <item quantity="many">%1$d loga</item>
+        <item quantity="other">%1$d log</item>
+    </plurals>
+    <plurals name="artwork_count_all_logo">
+        <item quantity="one">Celkem %1$d logo</item>
+        <item quantity="few">Celkem %1$d loga</item>
+        <item quantity="many">Celkem %1$d loga</item>
+        <item quantity="other">Celkem %1$d log</item>
+    </plurals>
+    <plurals name="artwork_count_of_logo">
+        <item quantity="one">%1$d z %2$d loga</item>
+        <item quantity="few">%1$d z %2$d log</item>
+        <item quantity="many">%1$d z %2$d loga</item>
+        <item quantity="other">%1$d z %2$d log</item>
+    </plurals>
+    <string name="artwork_filtered_none_logo">Těmto filtrům neodpovídá žádné logo</string>
+    <plurals name="artwork_filtered_has_logo">
+        <item quantity="one">%1$s: na SteamGridDB je %2$d logo, ale žádné neodpovídá filtrům (%3$s). Uvolni nějaký filtr nebo hledej pod jiným názvem.</item>
+        <item quantity="few">%1$s: na SteamGridDB jsou %2$d loga, ale žádné neodpovídá filtrům (%3$s). Uvolni nějaký filtr nebo hledej pod jiným názvem.</item>
+        <item quantity="many">%1$s: na SteamGridDB je %2$d loga, ale žádné neodpovídá filtrům (%3$s). Uvolni nějaký filtr nebo hledej pod jiným názvem.</item>
+        <item quantity="other">%1$s: na SteamGridDB je %2$d log, ale žádné neodpovídá filtrům (%3$s). Uvolni nějaký filtr nebo hledej pod jiným názvem.</item>
+    </plurals>
+    <string name="artwork_filtered_unknown_logo">Žádné z log neodpovídá filtrům (%1$s). Uvolni nějaký filtr nebo hledej pod jiným názvem.</string>
+    <string name="artwork_empty_logo">SteamGridDB zatím nemá pro tuto hru žádné logo.</string>
+    <string name="artwork_downloading_logo">Stahuji logo…</string>
+    <string name="artwork_updated_logo">Logo aktualizováno</string>
+</resources>

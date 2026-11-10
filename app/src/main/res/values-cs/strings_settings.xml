@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Settings tabs: the tab name and the line shown when no row is focused -->
+    <string name="settings_tab_stream">Stream</string>
+    <string name="settings_tab_stream_description">Kvalita a latence videa z tvého PC.</string>
+    <string name="settings_tab_display">Obraz</string>
+    <string name="settings_tab_display_description">Jak stream vyplní obrazovku a které informace se při hraní zobrazují.</string>
+    <string name="settings_tab_audio">Zvuk</string>
+    <string name="settings_tab_audio_description">Zvuk z PC a zvuky rozhraní aplikace Delos.</string>
+    <string name="settings_tab_controls">Ovládání</string>
+    <string name="settings_tab_controls_description">Gamepady, myš, dotyk, klávesnice a ovládání na obrazovce.</string>
+    <string name="settings_tab_appearance">Vzhled</string>
+    <string name="settings_tab_appearance_description">Motiv, barvy a animované pozadí. Změny se projeví okamžitě.</string>
+    <string name="settings_tab_covers">Obaly</string>
+    <string name="settings_tab_covers_description">Obaly, široké obaly, pozadí a loga z tvého PC nebo ze SteamGridDB.</string>
+    <string name="settings_tab_devices">Zařízení</string>
+    <string name="settings_tab_devices_description">Spárovaná PC a co se stane při spuštění aplikace Delos.</string>
+    <string name="settings_tab_about">O aplikaci</string>
+    <string name="settings_tab_about_description">Delos je fork aplikací Artemis a Moonlight, licencovaný pod GPLv3.</string>
+
+    <!-- Appearance choices: the animated background (names of the effects) -->
+    <string name="settings_option_background_aurora">Aurora</string>
+    <string name="settings_option_background_tide">Příliv</string>
+    <string name="settings_option_background_silk">Hedvábí</string>
+    <string name="settings_option_background_contour">Vrstevnice</string>
+    <string name="settings_option_background_nebula">Mlhovina</string>
+    <string name="settings_option_background_plasma">Plazma</string>
+    <string name="settings_option_background_lava">Láva</string>
+    <string name="settings_option_background_caustics">Kaustiky</string>
+    <string name="settings_option_background_bokeh">Bokeh</string>
+    <string name="settings_option_background_orbit">Oběžná dráha</string>
+    <string name="settings_option_background_still">Statické</string>
+
+    <!-- Appearance choices: how the library is laid out on the start screen -->
+    <string name="settings_option_home_layout_grid">Mřížka</string>
+    <string name="settings_option_home_layout_row">Řádek</string>
+
+    <!-- Appearance choices: color palettes -->
+    <string name="settings_option_palette_delos">Delos</string>
+    <string name="settings_option_palette_lagoon">Laguna</string>
+    <string name="settings_option_palette_dusk">Soumrak</string>
+    <string name="settings_option_palette_ember">Žár</string>
+    <string name="settings_option_palette_moss">Mech</string>
+    <string name="settings_option_palette_iris">Kosatec</string>
+    <string name="settings_option_palette_rose">Růže</string>
+    <string name="settings_option_palette_sunset">Západ slunce</string>
+    <string name="settings_option_palette_mint">Máta</string>
+    <string name="settings_option_palette_gold">Zlato</string>
+
+    <!-- Appearance choices: the clock in the status bar -->
+    <string name="settings_option_clock_system">Systémové</string>
+    <string name="settings_option_clock_12">12hodinové</string>
+    <string name="settings_option_clock_24">24hodinové</string>
+
+    <!-- Resolutions of this display, offered next to the fixed ones -->
+    <string name="settings_resolution_native">Nativní (%1$s)</string>
+    <string name="settings_resolution_native_portrait">Nativní na výšku (%1$s)</string>
+    <string name="settings_resolution_native_fullscreen">Nativní na celou obrazovku (%1$s)</string>
+    <string name="settings_resolution_native_fullscreen_portrait">Nativní na celou obrazovku na výšku (%1$s)</string>
+    <string name="settings_resolution_custom">Vlastní (%1$s)</string>
+    <string name="settings_fps_native">Nativní (%1$d FPS)</string>
+    <string name="settings_fps_custom">Vlastní (%1$s FPS)</string>
+    <string name="settings_choice_custom">Vlastní</string>
+    <string name="settings_layout_number">Rozložení %1$d</string>
+    <string name="settings_choice_unavailable">%1$s (nedostupné)</string>
+
+    <!-- Errors of the settings that take typed text -->
+    <string name="settings_error_resolution_format">Zadej šířku x výšku, například 1920x1080</string>
+    <string name="settings_error_fps_range">Zadej snímkovou frekvenci větší než 0 a nejvýše 1000</string>
+    <string name="settings_error_bitrate_range">Zadej bitrate větší než 0 a nejvýše 9999 Mbps</string>
+</resources>

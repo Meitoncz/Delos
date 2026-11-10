@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Debug info screen (Settings → About → Debug info). Raw technical values (ids, kernel, build) are shown as they are. -->
+    <string name="debug_title">Informace pro ladění</string>
+    <string name="debug_panel_default">Informace o tomto zařízení a jeho gamepadech, diagnostický záznam a test vibrací.</string>
+
+    <!-- Group headings; shown in capitals -->
+    <string name="debug_section_device">Zařízení</string>
+    <string name="debug_section_diagnostics">Diagnostika</string>
+    <string name="debug_section_haptics">Haptické schopnosti zařízení</string>
+    <string name="debug_section_vibration_test">Test vibrací</string>
+    <string name="debug_section_rumble_lab">Laboratoř vibrací</string>
+    <string name="debug_section_rumble_patterns">Vzory vibrací</string>
+    <string name="debug_section_rumble_advanced">Vibrace – pokročilé</string>
+    <string name="debug_section_osc">Ovládání na obrazovce</string>
+    <string name="debug_section_controllers">Gamepady</string>
+
+    <string name="debug_yes">Ano</string>
+    <string name="debug_no">Ne</string>
+    <string name="debug_none">Žádné</string>
+    <string name="debug_stopped">Zastaveno</string>
+
+    <!-- Toasts -->
+    <string name="debug_share_no_app_toast">Žádná aplikace nemůže záznam sdílet</string>
+    <string name="debug_summary_copied_toast">Diagnostické shrnutí zkopírováno</string>
+    <string name="debug_logs_cleared_toast">Diagnostické záznamy smazány</string>
+    <string name="debug_no_motor_toast">Toto zařízení nemá vibrační motor</string>
+    <string name="debug_pad_no_vibration_toast">%1$s nemůže vibrovat</string>
+
+    <!-- Device -->
+    <string name="debug_android_description">Verze Androidu tohoto zařízení a úroveň API.</string>
+    <string name="debug_kernel_label">Jádro</string>
+    <string name="debug_kernel_description">Verze jádra Linuxu.</string>
+    <string name="debug_model_label">Zařízení</string>
+    <string name="debug_model_description">Výrobce a model.</string>
+    <string name="debug_model_details">Deska: %1$s\nHardware: %2$s\nSoC: %3$s\nSestavení: %4$s</string>
+    <string name="debug_soc_unknown">neznámý</string>
+    <string name="debug_motor_label">Vibrační motor</string>
+    <string name="debug_motor_yes_description">Toto zařízení umí vibrovat.</string>
+    <string name="debug_motor_no_description">Toto zařízení nemá vibrační motor.</string>
+
+    <!-- Diagnostics -->
+    <string name="debug_log_label">Diagnostický záznam</string>
+    <plurals name="debug_log_size">
+        <item quantity="one">%1$s, %2$s řádek záznamu</item>
+        <item quantity="few">%1$s, %2$s řádky záznamu</item>
+        <item quantity="many">%1$s, %2$s řádku záznamu</item>
+        <item quantity="other">%1$s, %2$s řádků záznamu</item>
+    </plurals>
+    <string name="debug_log_reading">Čtu…</string>
+    <string name="debug_log_off">Vypnuto</string>
+    <string name="debug_log_description">Události a chyby, které si aplikace Delos uložila na tomto zařízení, s odstraněnými adresami a jmény. Přesně tohle odešle Sdílet.</string>
+    <string name="debug_log_preview_reading">Čtu záznam…</string>
+    <string name="debug_share_label">Sdílet diagnostický záznam</string>
+    <string name="debug_share_description">Otevře sdílecí nabídku Androidu s textem zobrazeným v náhledu. Nic se neodešle, dokud nevybereš aplikaci.</string>
+    <string name="debug_copy_label">Zkopírovat diagnostické shrnutí</string>
+    <string name="debug_copy_description">Zkopíruje blok o zařízení a posledních 100 řádků záznamu, připravené k vložení do issue. Stejná jména a adresy jsou odstraněna.</string>
+    <string name="debug_clear_label">Smazat diagnostické záznamy</string>
+    <string name="debug_clear_description">Smaže záznam na tomto zařízení. Nové události se zase zaznamenávají, pokud není vypnutá volba „Ukládat diagnostické záznamy“ (Nastavení → O aplikaci).</string>
+
+    <!-- Device haptic capabilities -->
+    <string name="debug_vibrators_label">Vibrační motory</string>
+    <string name="debug_vibrators_single">1 (jeden)</string>
+    <string name="debug_vibrators_description">Kolik vibračních motorů systém hlásí. Jeden znamená, že všechny předvolby řídí stejný motor.</string>
+    <string name="debug_amplitude_label">Řízení amplitudy</string>
+    <string name="debug_amplitude_description">Zda vibrační motor umí měnit svou sílu.</string>
+    <string name="debug_last_problem_label">Poslední problém</string>
+    <string name="debug_last_problem_description">Ukáže, kdy poslední přehraná předvolba nemohla použít svou techniku a přehrála místo ní prostou amplitudu, a proč.</string>
+
+    <!-- Vibration test -->
+    <string name="debug_vibrate_once_label">Jedno zavibrování</string>
+    <string name="debug_vibrate_once_description">Jedna sekunda na plnou sílu.</string>
+    <string name="debug_continuous_label">Nepřetržité vibrace</string>
+    <string name="debug_continuous_description">Vibruje silou nastavenou níže, dokud je nevypneš nebo neopustíš tuto obrazovku.</string>
+    <string name="debug_strength_label">Síla</string>
+    <string name="debug_strength_description">Síla nepřetržitých vibrací, 1–255, pro zařízení i gamepady.</string>
+
+    <!-- Rumble laboratory -->
+    <string name="debug_preset_custom">Vlastní</string>
+    <string name="debug_mode_translator_on">%1$s · překladač zapnut</string>
+    <string name="debug_mode_translator_off">%1$s · překladač vypnut</string>
+    <string name="debug_preset_label">Aktuální předvolba</string>
+    <string name="debug_preset_description">Vyber níže předvolbu, tím se uloží a hned se přehraje ukázka Test.</string>
+    <string name="debug_preset_details">Režim: %1$s\nPokročilé úpravy se ukládají jako Vlastní, i když hodnoty odpovídají předvolbě.</string>
+    <string name="debug_preset_problem">Problém</string>
+    <string name="debug_preset_problem_description">%1$s Problém: %2$s.</string>
+    <string name="debug_preset_active">Aktivní</string>
+    <string name="debug_preset_select">Vybrat</string>
+    <string name="debug_live_amplitude_label">Živá amplituda · %1$s</string>
+    <string name="debug_live_amplitude_description">Živě vypočtená amplituda zařízení včetně úvodního nárazu a vyhlazení, jak se ustalují.</string>
+    <string name="debug_live_amplitude_details">Režim: %1$s\nVzor: %2$s\nOba motory v PC dostávají uvedené procento vstupu; není to konečné procento výstupu.</string>
+    <string name="debug_stop_label">Zastavit vibrace</string>
+    <string name="debug_stop_description">Zastaví vzor z laboratoře a všechny nepřetržité testy vibrací zařízení i gamepadů.</string>
+    <string name="debug_replay_label">Znovu přehrát ukázku Test</string>
+
+    <!-- Rumble patterns -->
+    <string name="debug_pattern_details">Živá amplituda: %1$d / 255\nRežim: %2$s\nPřehrává se: %3$s\nVstupy jsou procenta motorů v PC, ne konečný výstup zařízení. Vyber jiný vzor, který nahradí tento, nebo použij Zastavit vibrace.</string>
+    <string name="debug_pattern_test_label">Test</string>
+    <string name="debug_pattern_test_description">Krátké klepnutí, sekunda stálých vibrací, narůstající rampa a doznívající exploze.</string>
+    <string name="debug_pattern_steady_25_label">Stálých 25 % · tichý motor</string>
+    <string name="debug_pattern_steady_25_description">Dvě sekundy slabého hučení motoru, oba motory v PC na 25 %.</string>
+    <string name="debug_pattern_steady_50_label">Stálých 50 % · motor za jízdy</string>
+    <string name="debug_pattern_steady_50_description">Dvě sekundy středně silného hučení motoru, oba motory v PC na 50 %.</string>
+    <string name="debug_pattern_steady_75_label">Stálých 75 % · hrubý terén</string>
+    <string name="debug_pattern_steady_75_description">Dvě sekundy silného třesu terénu, oba motory v PC na 75 %.</string>
+    <string name="debug_pattern_steady_100_label">Stálých 100 % · maximální síla</string>
+    <string name="debug_pattern_steady_100_description">Dvě sekundy maximálních vibrací z PC, oba motory v PC na 100 %.</string>
+    <string name="debug_pattern_ramp_label">Náběh · zrychlení</string>
+    <string name="debug_pattern_ramp_description">Oba motory v PC během dvou sekund narostou z ticha na plný vstup.</string>
+    <string name="debug_pattern_tap_30_label">Údery 30 ms · lehké nárazy</string>
+    <string name="debug_pattern_tap_30_description">Čtyři údery 30 ms na plný vstup oddělené 250 ms ticha.</string>
+    <string name="debug_pattern_tap_60_label">Údery 60 ms · střelba</string>
+    <string name="debug_pattern_tap_60_description">Čtyři údery 60 ms na plný vstup oddělené 250 ms ticha.</string>
+    <string name="debug_pattern_tap_100_label">Údery 100 ms · těžké nárazy</string>
+    <string name="debug_pattern_tap_100_description">Čtyři údery 100 ms na plný vstup oddělené 250 ms ticha.</string>
+    <string name="debug_pattern_heartbeat_label">Tlukot srdce · dvojité pulzy</string>
+    <string name="debug_pattern_heartbeat_description">Čtyři dvojice pulzů 70 ms / 100 ms na plný vstup, jako tlukot srdce.</string>
+    <string name="debug_pattern_explosion_label">Exploze · doznívající výbuch</string>
+    <string name="debug_pattern_explosion_description">Výbuch na plný vstup, který během dvou sekund doznívá do ticha.</string>
+    <string name="debug_pattern_flutter_label">Chvění · rychlý stroj</string>
+    <string name="debug_pattern_flutter_description">Dvacet pulzů 20 ms na plný vstup, za každým následuje 40 ms ticha.</string>
+
+    <!-- Rumble advanced -->
+    <string name="debug_advanced_label">Pokročilé</string>
+    <string name="debug_advanced_description">Zobrazí ruční ovládání. Úprava hodnoty označí předvolbu jako Vlastní a zastaví aktuální vzor.</string>
+    <string name="debug_enabled_label">Zapnout překladač vibrací</string>
+    <string name="debug_enabled_description">Vypnuto používá překlad Původní. Zapnuto uplatní tyto parametry na vibrace ve streamu i na vzory z laboratoře.</string>
+    <string name="debug_gain_label">Zesílení</string>
+    <string name="debug_gain_description">Celkový násobitel vibrací, 50–300 %. Změna parametru zastaví aktuální vzor.</string>
+    <string name="debug_curve_label">Křivka</string>
+    <string name="debug_curve_description">Exponent odezvy: pod %1$d%% zesiluje slabé vibrace; nad %1$d%% je zjemňuje.</string>
+    <string name="debug_min_label">Minimální amplituda</string>
+    <string name="debug_min_description">Minimální výstup pro nenulový požadavek z PC. Nulový vstup zůstává tichý.</string>
+    <string name="debug_kick_label">Úvodní náraz</string>
+    <string name="debug_kick_description">Začne z ticha nárazem plnou silou a pak se ustálí na přeložené amplitudě.</string>
+    <string name="debug_low_label">Váha nízkého motoru</string>
+    <string name="debug_low_description">Podíl nízkofrekvenčního motoru v PC na jediném vibračním motoru zařízení. Původní: 80 %.</string>
+    <string name="debug_high_label">Váha vysokého motoru</string>
+    <string name="debug_high_description">Podíl vysokofrekvenčního motoru v PC na jediném vibračním motoru zařízení. Původní: 33 %.</string>
+    <string name="debug_smoothing_label">Vyhlazení</string>
+    <string name="debug_smoothing_description">Omezí rychlé změny amplitudy. Nula reaguje okamžitě; vyšší hodnoty se ustalují pomaleji.</string>
+    <string name="debug_reset_label">Vrátit parametry na Původní</string>
+    <string name="debug_reset_description">Obnoví původní parametry jako Vlastní. Přepínač zapnutí se nemění.</string>
+
+    <!-- On-screen controls -->
+    <string name="debug_osc_label">Náhled ovládání na obrazovce</string>
+    <string name="debug_osc_description">Tvoje ovládání na obrazovce bez streamu: vyzkoušej každé tlačítko, D-pad i sticky, nic se neodesílá. Ozubené kolo v rohu upravuje rozložení stejně jako ve streamu.</string>
+
+    <!-- Controllers -->
+    <string name="debug_no_pads_label">Není připojen žádný gamepad</string>
+    <string name="debug_no_pads_description">Připoj gamepad a hned se tady objeví. Vestavěné ovládání handheldu se počítá jako jeden.</string>
+    <string name="debug_pad_description_vibrates">ID výrobce a produktu %1$s (%2$s). Pohybové senzory: %3$s. Vibrace: podporovány, vyber pro test.</string>
+    <string name="debug_pad_description_silent">ID výrobce a produktu %1$s (%2$s). Pohybové senzory: %3$s. Vibrace: nepodporovány.</string>
+    <string name="debug_sensors_unknown">neznámé před Androidem 12</string>
+    <string name="debug_sensors_none">žádné nehlášeny</string>
+    <string name="debug_sensors_accelerometer">akcelerometr</string>
+    <string name="debug_sensors_gyroscope">gyroskop</string>
+    <string name="debug_sensors_both">akcelerometr, gyroskop</string>
+    <string name="debug_pads_continuous_label">Nepřetržité vibrace gamepadů</string>
+    <string name="debug_pads_continuous_description">Každý gamepad, který umí vibrovat, vibruje dál silou nastavenou výše.</string>
+</resources>

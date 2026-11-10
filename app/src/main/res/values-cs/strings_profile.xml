@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Profile screen, profile menu and the profile name dialog -->
+    <plurals name="profile_signed_in">
+        <item quantity="one">Přihlášeno na tomto zařízení (%1$s) · %2$d profil</item>
+        <item quantity="few">Přihlášeno na tomto zařízení (%1$s) · %2$d profily</item>
+        <item quantity="many">Přihlášeno na tomto zařízení (%1$s) · %2$d profilu</item>
+        <item quantity="other">Přihlášeno na tomto zařízení (%1$s) · %2$d profilů</item>
+    </plurals>
+    <string name="profile_change_avatar">Změnit avatar</string>
+    <string name="profile_rename">Přejmenovat</string>
+    <string name="profile_switch">Přepnout profil</string>
+    <string name="profile_add">Přidat profil</string>
+    <string name="profile_delete">Smazat profil</string>
+    <string name="profile_undo">Vrátit zpět</string>
+    <string name="profile_restored">Profil %1$s je zpět</string>
+    <string name="profile_restore_failed">Profil %1$s se nepodařilo obnovit</string>
+    <string name="profile_deleted">Profil %1$s byl smazán</string>
+    <string name="profile_menu_title">Profily</string>
+    <string name="profile_playing_as">Hraješ jako %1$s</string>
+    <string name="profile_new">Nový profil</string>
+    <string name="profile_rename_title">Přejmenovat profil</string>
+    <string name="profile_renamed">Profil přejmenován</string>
+    <string name="profile_name_note">Zobrazuje se na úvodní obrazovce a v bočním menu.</string>
+    <string name="profile_name_save">Uložit</string>
+    <string name="profile_name_required">Zadej jméno svého profilu</string>
+</resources>

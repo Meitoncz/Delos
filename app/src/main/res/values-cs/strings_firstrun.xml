@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- First launch: the boot screen and the new / edit profile page -->
+    <string name="firstrun_boot_tagline">Tvoje PC hry, streamované z Vibepollo přímo do tvých rukou</string>
+    <string name="firstrun_boot_begin">Začít</string>
+    <string name="firstrun_boot_skip">Přeskočit na úvod</string>
+    <string name="firstrun_create_new_title">Kdo hraje?</string>
+    <string name="firstrun_create_new_note">Vyber si avatar a jméno pro svůj profil.</string>
+    <string name="firstrun_create_edit_title">Vyber si avatar</string>
+    <string name="firstrun_create_edit_note">A případně nové jméno.</string>
+    <string name="firstrun_create_name_title">Jméno profilu</string>
+    <string name="firstrun_create_name_label">Jméno profilu</string>
+    <string name="firstrun_create_name_placeholder">Tvoje jméno</string>
+    <string name="firstrun_create_default_name">Hráč</string>
+    <string name="firstrun_create_change_name">Změnit jméno</string>
+    <string name="firstrun_create_save">Uložit</string>
+    <string name="firstrun_create_create">Vytvořit profil</string>
+    <!-- Names of the avatars in the picker -->
+    <string name="firstrun_avatar_sailor">Námořník</string>
+    <string name="firstrun_avatar_voyager">Cestovatel</string>
+    <string name="firstrun_avatar_player">Hráč</string>
+    <string name="firstrun_avatar_fox">Liška</string>
+    <string name="firstrun_avatar_spark">Jiskra</string>
+    <string name="firstrun_avatar_calm">Klid</string>
+    <string name="firstrun_avatar_knight">Rytíř</string>
+    <string name="firstrun_avatar_robot">Robot</string>
+    <string name="firstrun_avatar_cat">Kočka</string>
+    <string name="firstrun_avatar_wizard">Čaroděj</string>
+    <string name="firstrun_avatar_racer">Závodník</string>
+    <string name="firstrun_avatar_ghost">Duch</string>
+</resources>
