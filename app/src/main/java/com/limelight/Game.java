@@ -30,6 +30,7 @@ import com.limelight.binding.video.MediaCodecHelper;
 import com.limelight.binding.video.PerfOverlayListener;
 import com.limelight.binding.video.PyroWaveFormats;
 import com.limelight.binding.video.PyroWaveRenderer;
+import com.limelight.binding.video.StreamDisplayPlanner;
 import com.limelight.nvstream.NvConnection;
 import com.limelight.nvstream.NvConnectionListener;
 import com.limelight.nvstream.StreamConfiguration;
@@ -68,7 +69,6 @@ import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.graphics.Point;
 import android.graphics.Rect;
 import android.hardware.display.DisplayManager;
 import android.hardware.input.InputManager;
@@ -113,6 +113,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import android.view.SurfaceView;
@@ -655,35 +656,10 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             gamepadMask |= 1;
         }
 
-        // Set to the optimal mode for streaming
-        float displayRefreshRate = prepareDisplayForRendering(currentDisplay);
-        LimeLog.info("Display refresh rate: "+displayRefreshRate);
-
-        // If the user requested frame pacing using a capped FPS, we will need to change our
-        // desired FPS setting here in accordance with the active display refresh rate.
-        int roundedRefreshRate = Math.round(displayRefreshRate);
-        float chosenFrameRate = prefConfig.fps;
-        if (prefConfig.framePacing == PreferenceConfiguration.FRAME_PACING_CAP_FPS) {
-            if (prefConfig.fps >= roundedRefreshRate) {
-                if (prefConfig.fps > roundedRefreshRate + 3) {
-                    // Use frame drops when rendering above the screen frame rate
-                    prefConfig.framePacing = PreferenceConfiguration.FRAME_PACING_BALANCED;
-                    LimeLog.info("Using drop mode for FPS > Hz");
-                } else if (roundedRefreshRate <= 49) {
-                    // Let's avoid clearly bogus refresh rates and fall back to legacy rendering
-                    prefConfig.framePacing = PreferenceConfiguration.FRAME_PACING_BALANCED;
-                    LimeLog.info("Bogus refresh rate: " + roundedRefreshRate);
-                }
-                else {
-                    chosenFrameRate = roundedRefreshRate - 1;
-                    LimeLog.info("Adjusting FPS target for screen to " + chosenFrameRate);
-                }
-            }
-        }
-
-        if (prefConfig.framePacingWarpFactor > 0) {
-            chosenFrameRate *= prefConfig.framePacingWarpFactor;
-        }
+        // Set to the optimal mode for streaming, and fit the frame pacing to the refresh rate
+        StreamDisplayPlanner.Plan displayPlan = prepareDisplayForRendering(currentDisplay);
+        float displayRefreshRate = displayPlan.displayRefreshRate;
+        float chosenFrameRate = displayPlan.streamFrameRate;
 
         StreamConfiguration config = new StreamConfiguration.Builder()
                 .setResolution(
@@ -1168,234 +1144,78 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         inputCaptureProvider.onWindowFocusChanged(hasFocus);
     }
 
-    private boolean isRefreshRateEqualMatch(float refreshRate) {
-        return refreshRate >= prefConfig.fps &&
-                refreshRate <= prefConfig.fps + 3;
-    }
-
-    private boolean isRefreshRateGoodMatch(float refreshRate) {
-        return refreshRate >= prefConfig.fps &&
-                Math.round(refreshRate) % prefConfig.fps <= 3;
-    }
-
     private boolean shouldIgnoreInsetsForResolution(int width, int height) {
-        // Never ignore insets for non-native resolutions
-        if (!PreferenceConfiguration.isNativeResolution(width, height)) {
-            return false;
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            Display display = getActiveDisplay(Game.this, prefConfig);
-            for (Display.Mode candidate : display.getSupportedModes()) {
-                // Ignore insets if this is an exact match for the display resolution
-                if ((width == candidate.getPhysicalWidth() && height == candidate.getPhysicalHeight()) ||
-                        (height == candidate.getPhysicalWidth() && width == candidate.getPhysicalHeight())) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    private boolean mayReduceRefreshRate() {
-        return prefConfig.framePacing == PreferenceConfiguration.FRAME_PACING_CAP_FPS ||
-                prefConfig.framePacing == PreferenceConfiguration.FRAME_PACING_MAX_SMOOTHNESS ||
-                (prefConfig.framePacing == PreferenceConfiguration.FRAME_PACING_BALANCED && prefConfig.reduceRefreshRate);
+        return StreamDisplayPlanner.shouldIgnoreInsets(width, height,
+                StreamDisplayPlanner.Mode.of(getActiveDisplay(Game.this, prefConfig).getSupportedModes()));
     }
 
     public boolean isOnExternalDisplay() {
         return onExternalDisplay;
     }
 
-    private float prepareDisplayForRendering(Display currentDisplay) {
-        WindowManager.LayoutParams windowLayoutParams = getWindow().getAttributes();
-        float displayRefreshRate;
+    // Applies the display plan: the display mode, the stream container's aspect ratio and the frame pacing.
+    private StreamDisplayPlanner.Plan prepareDisplayForRendering(Display currentDisplay) {
+        List<StreamDisplayPlanner.Mode> supportedModes = StreamDisplayPlanner.Mode.of(currentDisplay.getSupportedModes());
+        StreamDisplayPlanner.Plan plan = StreamDisplayPlanner.plan(new StreamDisplayPlanner.Input()
+                .display(StreamDisplayPlanner.Mode.of(currentDisplay.getMode()), supportedModes, currentDisplay.getRefreshRate())
+                .stream(prefConfig.width, prefConfig.height, prefConfig.fps)
+                .video(displayWidth, displayHeight, prefConfig.videoScaleMode)
+                .pacing(prefConfig.framePacing, prefConfig.reduceRefreshRate, prefConfig.framePacingWarpFactor)
+                .enforceDisplayMode(prefConfig.enforceDisplayMode)
+                .sdkInt(Build.VERSION.SDK_INT)
+                .television(getPackageManager().hasSystemFeature(PackageManager.FEATURE_TELEVISION) ||
+                        getPackageManager().hasSystemFeature(PackageManager.FEATURE_LEANBACK))
+                .externalDisplay(isOnExternalDisplay()));
 
-        // On M, we can explicitly set the optimal display mode
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            Display.Mode bestMode = currentDisplay.getMode();
-            boolean isNativeResolutionStream = PreferenceConfiguration.isNativeResolution(prefConfig.width, prefConfig.height);
-            boolean refreshRateIsGood = isRefreshRateGoodMatch(bestMode.getRefreshRate());
-            boolean refreshRateIsEqual = isRefreshRateEqualMatch(bestMode.getRefreshRate());
+        LimeLog.info("Current display mode: "+plan.currentMode);
+        for (StreamDisplayPlanner.Mode candidate : supportedModes) {
+            LimeLog.info("Examining display mode: "+candidate);
+        }
+        LimeLog.info("Best display mode: "+plan.bestMode);
 
-            LimeLog.info("Current display mode: "+bestMode.getPhysicalWidth()+"x"+
-                    bestMode.getPhysicalHeight()+"x"+bestMode.getRefreshRate());
-
-            for (Display.Mode candidate : currentDisplay.getSupportedModes()) {
-                boolean refreshRateReduced = candidate.getRefreshRate() < bestMode.getRefreshRate();
-                boolean resolutionReduced = candidate.getPhysicalWidth() < bestMode.getPhysicalWidth() ||
-                        candidate.getPhysicalHeight() < bestMode.getPhysicalHeight();
-                boolean resolutionFitsStream = candidate.getPhysicalWidth() >= prefConfig.width &&
-                        candidate.getPhysicalHeight() >= prefConfig.height;
-
-                LimeLog.info("Examining display mode: "+candidate.getPhysicalWidth()+"x"+
-                        candidate.getPhysicalHeight()+"x"+candidate.getRefreshRate());
-
-                if (candidate.getPhysicalWidth() > 4096 && prefConfig.width <= 4096) {
-                    // Avoid resolutions options above 4K to be safe
-                    continue;
-                }
-
-                // On non-4K streams, we force the resolution to never change unless it's above
-                // 60 FPS, which may require a resolution reduction due to HDMI bandwidth limitations,
-                // or it's a native resolution stream.
-                if (prefConfig.width < 3840 && prefConfig.fps <= 60 && !isNativeResolutionStream) {
-                    if (currentDisplay.getMode().getPhysicalWidth() != candidate.getPhysicalWidth() ||
-                            currentDisplay.getMode().getPhysicalHeight() != candidate.getPhysicalHeight()) {
-                        continue;
-                    }
-                }
-
-                // Make sure the resolution doesn't regress unless if it's over 60 FPS
-                // where we may need to reduce resolution to achieve the desired refresh rate.
-                if (resolutionReduced && !(prefConfig.fps > 60 && resolutionFitsStream)) {
-                    continue;
-                }
-
-                if (mayReduceRefreshRate() && refreshRateIsEqual && !isRefreshRateEqualMatch(candidate.getRefreshRate())) {
-                    // If we had an equal refresh rate and this one is not, skip it. In min latency
-                    // mode, we want to always prefer the highest frame rate even though it may cause
-                    // microstuttering.
-                    continue;
-                }
-                else if (refreshRateIsGood) {
-                    // We've already got a good match, so if this one isn't also good, it's not
-                    // worth considering at all.
-                    if (!isRefreshRateGoodMatch(candidate.getRefreshRate())) {
-                        continue;
-                    }
-
-                    if (mayReduceRefreshRate()) {
-                        // User asked for the lowest possible refresh rate, so don't raise it if we
-                        // have a good match already
-                        if (candidate.getRefreshRate() > bestMode.getRefreshRate()) {
-                            continue;
-                        }
-                    }
-                    else {
-                        // User asked for the highest possible refresh rate, so don't reduce it if we
-                        // have a good match already
-                        if (refreshRateReduced) {
-                            continue;
-                        }
-                    }
-                }
-                else if (!isRefreshRateGoodMatch(candidate.getRefreshRate())) {
-                    // We didn't have a good match and this match isn't good either, so just don't
-                    // reduce the refresh rate.
-                    if (refreshRateReduced) {
-                        continue;
-                    }
-                } else {
-                    // We didn't have a good match and this match is good. Prefer this refresh rate
-                    // even if it reduces the refresh rate. Lowering the refresh rate can be beneficial
-                    // when streaming a 60 FPS stream on a 90 Hz device. We want to select 60 Hz to
-                    // match the frame rate even if the active display mode is 90 Hz.
-                }
-
-                bestMode = candidate;
-                refreshRateIsGood = isRefreshRateGoodMatch(candidate.getRefreshRate());
-                refreshRateIsEqual = isRefreshRateEqualMatch(candidate.getRefreshRate());
-            }
-
-            LimeLog.info("Best display mode: "+bestMode.getPhysicalWidth()+"x"+
-                    bestMode.getPhysicalHeight()+"x"+bestMode.getRefreshRate());
-
-            // Only apply new window layout parameters if we've actually changed the display mode
-            if (currentDisplay.getMode().getModeId() != bestMode.getModeId()) {
-                // If we only changed refresh rate and we're on an OS that supports Surface.setFrameRate()
-                // use that instead of using preferredDisplayModeId to avoid the possibility of triggering
-                // bugs that can cause the system to switch from 4K60 to 4K24 on Chromecast 4K.
-                if (prefConfig.enforceDisplayMode ||
-                        Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
-                        currentDisplay.getMode().getPhysicalWidth() != bestMode.getPhysicalWidth() ||
-                        currentDisplay.getMode().getPhysicalHeight() != bestMode.getPhysicalHeight()) {
-                    // Apply the display mode change
-                    windowLayoutParams.preferredDisplayModeId = bestMode.getModeId();
-                    getWindow().setAttributes(windowLayoutParams);
-                }
-                else {
-                    LimeLog.info("Using setFrameRate() instead of preferredDisplayModeId due to matching resolution");
-                }
-            }
-            else {
+        switch (plan.modeSwitch) {
+            case PREFERRED_MODE_ID:
+                // Apply the display mode change
+                WindowManager.LayoutParams windowLayoutParams = getWindow().getAttributes();
+                windowLayoutParams.preferredDisplayModeId = plan.bestMode.id;
+                getWindow().setAttributes(windowLayoutParams);
+                break;
+            case SET_FRAME_RATE:
+                LimeLog.info("Using setFrameRate() instead of preferredDisplayModeId due to matching resolution");
+                break;
+            case NONE:
                 LimeLog.info("Current display mode is already the best display mode");
-            }
-
-            displayRefreshRate = bestMode.getRefreshRate();
-        }
-        // On L, we can at least tell the OS that we want a refresh rate
-        else {
-            float bestRefreshRate = currentDisplay.getRefreshRate();
-            for (float candidate : currentDisplay.getSupportedRefreshRates()) {
-                LimeLog.info("Examining refresh rate: "+candidate);
-
-                if (candidate > bestRefreshRate) {
-                    // Ensure the frame rate stays around 60 Hz for <= 60 FPS streams
-                    if (prefConfig.fps <= 60) {
-                        if (candidate >= 63) {
-                            continue;
-                        }
-                    }
-
-                    bestRefreshRate = candidate;
-                }
-            }
-
-            LimeLog.info("Selected refresh rate: "+bestRefreshRate);
-            windowLayoutParams.preferredRefreshRate = bestRefreshRate;
-            displayRefreshRate = bestRefreshRate;
-
-            // Apply the refresh rate change
-            getWindow().setAttributes(windowLayoutParams);
+                break;
         }
 
-        // Until Marshmallow, we can't ask for a 4K display mode, so we'll
-        // need to hint the OS to provide one.
-        boolean aspectRatioMatch = false;
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            // We'll calculate whether we need to scale by aspect ratio. If not, we'll use
-            // setFixedSize so we can handle 4K properly. The only known devices that have
-            // >= 4K screens have exactly 4K screens, so we'll be able to hit this good path
-            // on these devices. On Marshmallow, we can start changing to 4K manually but no
-            // 4K devices run 6.0 at the moment.
-            Point screenSize = new Point(0, 0);
-            currentDisplay.getSize(screenSize);
-
-            double screenAspectRatio = ((double)screenSize.y) / screenSize.x;
-            double streamAspectRatio = ((double)displayHeight) / displayWidth;
-            if (Math.abs(screenAspectRatio - streamAspectRatio) < 0.001|| isOnExternalDisplay()) {
-                LimeLog.info("Stream has compatible aspect ratio with output display");
-                aspectRatioMatch = true;
-            }
-        }
-
-        // Don't do setFixedSize since it might not update the view dimensions correctly when entering PiP mode
-        if (!(prefConfig.videoScaleMode == PreferenceConfiguration.ScaleMode.STRETCH || aspectRatioMatch)) {
+        if (plan.applyAspectRatio) {
             // Set the surface to scale based on the aspect ratio of the stream
-            streamContainer.setDesiredAspectRatio((double)displayWidth / (double)displayHeight);
-            streamContainer.setFillDisplay(prefConfig.videoScaleMode == PreferenceConfiguration.ScaleMode.FILL);
-            LimeLog.info("surfaceChanged-->"+(double)displayWidth / (double)displayHeight);
+            streamContainer.setDesiredAspectRatio(plan.aspectRatio);
+            streamContainer.setFillDisplay(plan.fillDisplay);
+            LimeLog.info("surfaceChanged-->"+plan.aspectRatio);
             LimeLog.info("scaleMode-->"+prefConfig.videoScaleMode);
         }
 
         // Set the desired refresh rate that will get passed into setFrameRate() later
-        desiredRefreshRate = displayRefreshRate;
+        desiredRefreshRate = plan.desiredRefreshRate;
 
-        if (getPackageManager().hasSystemFeature(PackageManager.FEATURE_TELEVISION) ||
-                getPackageManager().hasSystemFeature(PackageManager.FEATURE_LEANBACK)
-                || isOnExternalDisplay()) {// TVs may take a few moments to switch refresh rates, and we can probably assume
-            // it will be eventually activated.
-            // external displays cant be compared with displaymanager currents display refreshrate
-            // TODO: Improve this
-            return displayRefreshRate;
+        LimeLog.info("Display refresh rate: "+plan.displayRefreshRate);
+
+        prefConfig.framePacing = plan.framePacing;
+        switch (plan.pacingChange) {
+            case DROP_FRAMES_ABOVE_REFRESH_RATE:
+                LimeLog.info("Using drop mode for FPS > Hz");
+                break;
+            case BOGUS_REFRESH_RATE:
+                LimeLog.info("Bogus refresh rate: " + plan.roundedRefreshRate);
+                break;
+            case CAPPED_BELOW_REFRESH_RATE:
+                LimeLog.info("Adjusting FPS target for screen to " + plan.pacedFrameRate);
+                break;
+            case NONE:
+                break;
         }
-        else {
-            // Use the lower of the current refresh rate and the selected refresh rate.
-            // The preferred refresh rate may not actually be applied (ex: Battery Saver mode).
-            return Math.min(currentDisplay.getRefreshRate(), displayRefreshRate);
-        }
+        return plan;
     }
 
     @SuppressLint("InlinedApi")
@@ -3307,24 +3127,10 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
-        float desiredFrameRate;
-
         surfaceCreated = true;
 
-        // Android will pick the lowest matching refresh rate for a given frame rate value, so we want
-        // to report the true FPS value if refresh rate reduction is enabled. We also report the true
-        // FPS value if there's no suitable matching refresh rate. In that case, Android could try to
-        // select a lower refresh rate that avoids uneven pull-down (ex: 30 Hz for a 60 FPS stream on
-        // a display that maxes out at 50 Hz).
-        if (mayReduceRefreshRate() || desiredRefreshRate < prefConfig.fps) {
-            desiredFrameRate = prefConfig.fps;
-        }
-        else {
-            // Otherwise, we will pretend that our frame rate matches the refresh rate we picked in
-            // prepareDisplayForRendering(). This will usually be the highest refresh rate that our
-            // frame rate evenly divides into, which ensures the lowest possible display latency.
-            desiredFrameRate = desiredRefreshRate;
-        }
+        float desiredFrameRate = StreamDisplayPlanner.surfaceFrameRate(desiredRefreshRate, prefConfig.fps,
+                prefConfig.framePacing, prefConfig.reduceRefreshRate);
 
         // Tell the OS about our frame rate to allow it to adapt the display refresh rate appropriately
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {

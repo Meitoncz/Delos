@@ -862,5 +862,9 @@ These preserve implementation/design context from the removed UI plan, not phase
   `KeyboardAccessibilityService`). Self-contained parts live in helpers it creates: `StreamIntentParams`
   (launch intent extras, certificate, `NvHTTP` creation; the `EXTRA_*` keys stay on `Game`),
   `binding/input/CommitTextSender` (IME commit text in ≤512-byte UTF-8 chunks, Backspace for deleted
-  text), `utils/StreamClipboardSync` (smart and manual clipboard sync) and `utils/WifiLockHolder`
-  (high-performance and low-latency Wi-Fi locks for the stream's lifetime).
+  text), `utils/StreamClipboardSync` (smart and manual clipboard sync), `utils/WifiLockHolder`
+  (high-performance and low-latency Wi-Fi locks for the stream's lifetime) and
+  `binding/video/StreamDisplayPlanner` (pure: display mode, refresh rate, Cap FPS pacing adjustment,
+  aspect ratio and the surface frame rate from plain display and preference data; `Game` reads the
+  `Display` before the `StreamConfiguration` is built and applies the plan to the window and
+  `StreamContainer`).
