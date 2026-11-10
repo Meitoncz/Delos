@@ -1,5 +1,8 @@
 package com.limelight.shell
 
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.stringResource
+import com.limelight.R
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
@@ -583,7 +586,7 @@ private fun RowValueView(value: RowValue, focused: Boolean, confirmation: String
         }
         value is RowValue.Slider -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.px)) {
             val number = MenuSlider(value, focused)
-            val label = if (number % value.divisor == 0) (number / value.divisor).toString() else String.format(java.util.Locale.US, "%.1f", number.toDouble() / value.divisor)
+            val label = if (number % value.divisor == 0) (number / value.divisor).toString() else String.format(LocalConfiguration.current.locales[0], "%.1f", number.toDouble() / value.divisor)
             BasicText(
                 if (number == value.min && value.minText != null) value.minText else "$label${value.unit}",
                 style = text.copy(color = colors.text, textAlign = TextAlign.End),
@@ -593,7 +596,7 @@ private fun RowValueView(value: RowValue, focused: Boolean, confirmation: String
         }
         value is RowValue.Action -> Symbol(Symbols.CHEVRON_RIGHT, 28.fsp, chevronColor)
         value is RowValue.Text -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.px)) {
-            MarqueeText(value.text.ifEmpty { "Not set" }, style = text, active = focused, modifier = Modifier.widthIn(max = 420.px))
+            MarqueeText(value.text.ifEmpty { stringResource(R.string.stream_menu_not_set) }, style = text, active = focused, modifier = Modifier.widthIn(max = 420.px))
             Symbol(Symbols.CHEVRON_RIGHT, 28.fsp, chevronColor)
         }
         value is RowValue.Info -> BasicText(value.text, style = text)

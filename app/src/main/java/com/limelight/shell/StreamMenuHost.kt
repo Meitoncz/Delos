@@ -8,7 +8,7 @@ import com.limelight.utils.RumblePresets
 internal sealed interface BitrateResult {
     data class Accepted(val kbps: Int) : BitrateResult
     data class Limited(val kbps: Int) : BitrateResult
-    data class Failed(val reason: String) : BitrateResult
+    data class Failed(val reason: BitrateFailure) : BitrateResult
 }
 
 /**

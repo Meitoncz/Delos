@@ -1,5 +1,7 @@
 package com.limelight.shell
 
+import androidx.compose.ui.res.stringResource
+import com.limelight.R
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.RepeatMode
@@ -210,8 +212,8 @@ private fun DockHead(title: String, enter: () -> Float, exit: () -> Float, modif
             modifier = Modifier.widthIn(max = L.TITLE_MAX_WIDTH.px),
         )
         Column(verticalArrangement = Arrangement.spacedBy(L.HINTS_GAP.px)) {
-            DockHint(Glyph.A, "Select", shadow)
-            DockHint(Glyph.B, "Back", shadow)
+            DockHint(Glyph.A, stringResource(R.string.stream_menu_hint_select), shadow)
+            DockHint(Glyph.B, stringResource(R.string.stream_menu_hint_back), shadow)
         }
     }
 }
@@ -445,7 +447,7 @@ private fun TileCell(
                     filled = focused, fadeMillis = Motion.FADE,
                 )
                 if (spec.on != null && spec.showState) {
-                    TilePill(spec.state ?: if (on) "On" else "Off", on, Modifier.align(Alignment.TopEnd).offset((-L.PILL_RIGHT).px, L.PILL_TOP.px))
+                    TilePill(spec.state ?: stringResource(if (on) R.string.common_on else R.string.common_off), on, Modifier.align(Alignment.TopEnd).offset((-L.PILL_RIGHT).px, L.PILL_TOP.px))
                 }
             }
         }

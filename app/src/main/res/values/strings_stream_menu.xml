@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The in-stream menu: dock tiles, popover pages and rows, bitrate messages -->
+    <string name="stream_menu_hint_select">Select</string>
+    <string name="stream_menu_hint_back">Back</string>
+
+    <!-- Tiles of the dock (one short word each) -->
+    <string name="stream_menu_tile_resume">Resume</string>
+    <string name="stream_menu_tile_keyboard">Keyboard</string>
+    <string name="stream_menu_tile_overlay">Overlay</string>
+    <string name="stream_menu_tile_brightness">Brightness</string>
+    <string name="stream_menu_tile_bitrate">Bitrate</string>
+    <string name="stream_menu_tile_upscaler">Upscaler</string>
+    <string name="stream_menu_tile_supersampling">Supersampling</string>
+    <string name="stream_menu_tile_more">More</string>
+    <string name="stream_menu_tile_disconnect">Disconnect</string>
+    <string name="stream_menu_tile_quit">Quit game</string>
+    <!-- State pill of the Overlay tile: the statistics are shown as one line -->
+    <string name="stream_menu_overlay_compact">Compact</string>
+
+    <!-- Headings of the popover pages -->
+    <string name="stream_menu_title_more">More</string>
+    <string name="stream_menu_title_keys">Send keys</string>
+    <string name="stream_menu_title_commands">Server commands</string>
+    <string name="stream_menu_title_brightness">Brightness</string>
+    <string name="stream_menu_title_bitrate">Stream bitrate</string>
+    <string name="stream_menu_title_supersampling">Supersampling</string>
+    <string name="stream_menu_title_upscaler">Upscaler</string>
+    <string name="stream_menu_title_mouse">Mouse and touch</string>
+    <string name="stream_menu_title_rumble">Rumble feel</string>
+
+    <!-- Rows of the More page -->
+    <string name="stream_menu_row_send_keys">Send keys</string>
+    <string name="stream_menu_row_send_clipboard">Send clipboard</string>
+    <string name="stream_menu_row_get_clipboard">Get clipboard</string>
+    <string name="stream_menu_row_commands">Commands</string>
+    <string name="stream_menu_row_task_manager">Task manager</string>
+    <string name="stream_menu_row_zoom">Zoom</string>
+    <string name="stream_menu_row_mouse_mode">Mouse mode</string>
+    <string name="stream_menu_row_onscreen_controls">On-screen controls</string>
+    <string name="stream_menu_row_android_keyboard">Open Android keyboard</string>
+    <string name="stream_menu_row_touch_sensitivity">Touch sensitivity</string>
+    <string name="stream_menu_row_rumble_feel">Rumble feel</string>
+    <string name="stream_menu_row_gyro_smoothing">Gyro smoothing</string>
+    <!-- Shown on the right of the Gyro smoothing slider at its lowest value. %1$d: 0 -->
+    <string name="stream_menu_gyro_off">%1$d %% (off)</string>
+    <!-- Value of the Rumble feel row while the settings match none of the presets -->
+    <string name="stream_menu_rumble_custom">Custom</string>
+
+    <!-- Rows of the other pages -->
+    <string name="stream_menu_row_screen_brightness">Screen brightness</string>
+    <string name="stream_menu_row_bitrate">Bitrate</string>
+    <string name="stream_menu_row_apply">Apply</string>
+    <string name="stream_menu_row_enabled">Enabled</string>
+    <string name="stream_menu_row_supersampling_quality">Supersampling quality</string>
+    <string name="stream_menu_row_mode">Mode</string>
+    <string name="stream_menu_row_sharpness">Sharpness</string>
+    <string name="stream_menu_row_touchscreen_mode">Touchscreen mode</string>
+    <string name="stream_menu_row_local_cursor">Local mouse cursor</string>
+    <string name="stream_menu_not_set">Not set</string>
+    <string name="stream_menu_no_commands">No commands are set up on the PC. Vibepollo can add them in its web UI.</string>
+
+    <!-- Rumble presets: the right side of a row that cannot run, or that is the active preset -->
+    <string name="stream_menu_rumble_problem_word">Problem</string>
+    <string name="stream_menu_rumble_active">Active</string>
+    <!-- Added to the help of a rumble preset that failed. %1$s: the reason -->
+    <string name="stream_menu_rumble_problem">Problem: %1$s</string>
+
+    <!-- Help line of the Touchscreen mode row, after the description of the selected mode -->
+    <string name="stream_menu_mouse_applies_saved">Applies now and is saved.</string>
+    <string name="stream_menu_mouse_applies_stream">Applies now; this stream only.</string>
+
+    <!-- Bitrate page -->
+    <!-- Button on the right of the recommended bitrate row: copy the recommendation into the slider -->
+    <string name="stream_menu_bitrate_fill">Fill</string>
+    <string name="stream_menu_bitrate_applying">Applying…</string>
+    <!-- %1$d: megabits per second -->
+    <string name="stream_menu_bitrate_accepted">Accepted %1$d Mbps</string>
+    <!-- %1$d: megabits per second the host allowed -->
+    <string name="stream_menu_bitrate_limited">Limited by the host to %1$d Mbps</string>
+    <string name="stream_menu_bitrate_failed">Failed</string>
+    <string name="stream_menu_bitrate_not_connected">The stream is not connected, so the bitrate cannot be changed.</string>
+    <string name="stream_menu_bitrate_unsupported">The host does not support live bitrate changes, or the stream has ended.</string>
+    <string name="stream_menu_bitrate_denied">The host did not allow this change.</string>
+    <string name="stream_menu_bitrate_unconfirmed">The bitrate was not confirmed. Check the connection and try again.</string>
+    <string name="stream_menu_bitrate_rejected">The host could not apply the change.</string>
+    <!-- %1$s: the host's own error text, cut to fit -->
+    <string name="stream_menu_bitrate_rejected_detail">The host could not apply the change: %1$s</string>
+
+    <!-- Statistics panel: where it sits (Settings → Display) -->
+    <string name="stream_stats_top_left">Top left</string>
+    <string name="stream_stats_top_right">Top right</string>
+    <string name="stream_stats_bottom_left">Bottom left</string>
+    <string name="stream_stats_bottom_right">Bottom right</string>
+    <!-- The compact one-line panel. %1$d: the frame rate of the slowest 1% of frames -->
+    <string name="stream_stats_compact_low">1%% low %1$d</string>
+    <!-- %1$d: network delay in ms, %2$s: decode time in ms, %3$s: total latency in ms, %4$s: lost frames in percent (numbers formatted in code) -->
+    <string name="stream_stats_compact_tail">Network %1$d ms  ·  Decode %2$s ms  ·  Total %3$s ms  ·  Lost %4$s %%</string>
+    <!-- Row labels of the full panel -->
+    <string name="stream_stats_decoder">Decoder</string>
+    <string name="stream_stats_incoming">Incoming</string>
+    <string name="stream_stats_rendering">Rendering</string>
+    <!-- %1$d: 1 (the slowest percent of frames) -->
+    <string name="stream_stats_one_percent_low">%1$d%% low</string>
+    <string name="stream_stats_network">Network</string>
+    <string name="stream_stats_pc_processing">PC processing</string>
+    <string name="stream_stats_decoding">Decoding</string>
+    <string name="stream_stats_upscaling">Upscaling</string>
+    <string name="stream_stats_frame_queue">Frame queue</string>
+    <string name="stream_stats_sharpen_pass">Sharpen pass</string>
+    <string name="stream_stats_render_latency">Render latency</string>
+    <string name="stream_stats_total_latency">Total latency</string>
+    <string name="stream_stats_bandwidth">Bandwidth</string>
+    <string name="stream_stats_lost_frames">Lost frames</string>
+    <string name="stream_stats_backlog">Backlog</string>
+    <string name="stream_stats_stall">Stall (recv thread)</string>
+    <string name="stream_stats_frame_age">Frame age at submit</string>
+    <string name="stream_stats_receive_to_present">Receive to present</string>
+    <string name="stream_stats_partial_frames">Partial frames</string>
+    <string name="stream_stats_skipped">Skipped</string>
+    <string name="stream_stats_link">Link</string>
+    <string name="stream_stats_receiving">Receiving</string>
+    <string name="stream_stats_partial_lost">Partial / lost</string>
+    <string name="stream_stats_verdict">Verdict</string>
+
+    <!-- Loader shown while the stream connects -->
+    <!-- %1$s: PC name -->
+    <string name="stream_loader_greeting">Calling up %1$s</string>
+    <!-- The codec chosen automatically (shown with the resolution and frame rate) -->
+    <string name="stream_loader_codec_auto">Auto</string>
+    <!-- Funny status lines, one is picked per connection stage. %1$s: PC name (not every line uses it). Keep them short. -->
+    <string-array name="stream_loader_lines_platform">
+        <item>Reticulating splines</item>
+        <item>Rolling up the sleeves</item>
+        <item>Stretching before the game</item>
+    </string-array>
+    <string-array name="stream_loader_lines_name_resolution">
+        <item>Asking the router where %1$s lives</item>
+        <item>Looking for %1$s on the network</item>
+        <item>Checking under the couch for %1$s</item>
+    </string-array>
+    <string-array name="stream_loader_lines_rtsp">
+        <item>Haggling with %1$s over pixels and frame rate</item>
+        <item>Signing the stream contract with %1$s</item>
+        <item>Agreeing with %1$s on how sharp it should look</item>
+    </string-array>
+    <string-array name="stream_loader_lines_control_stream">
+        <item>Shaking hands with %1$s</item>
+        <item>Running an invisible cable to %1$s</item>
+        <item>Exchanging secret handshakes</item>
+    </string-array>
+    <string-array name="stream_loader_lines_video_stream">
+        <item>Warming up the pixels</item>
+        <item>Polishing the pixels</item>
+        <item>Lining the pixels up</item>
+    </string-array>
+    <string-array name="stream_loader_lines_audio_stream">
+        <item>Tuning the speakers</item>
+        <item>Untangling the sound waves</item>
+        <item>Clearing the throat</item>
+    </string-array>
+    <string-array name="stream_loader_lines_input_stream">
+        <item>Wiring up the buttons</item>
+        <item>Teaching the buttons who is the boss</item>
+        <item>Plugging in an invisible controller</item>
+    </string-array>
+    <string-array name="stream_loader_lines_unlocking">
+        <item>%1$s is still waking up, hang on</item>
+        <item>%1$s is rubbing its eyes, one moment</item>
+    </string-array>
+
+    <!-- Portal shown while the stream window closes -->
+    <string name="stream_exit_disconnecting">Disconnecting</string>
+    <!-- %1$s: game name -->
+    <string name="stream_exit_quitting">Quitting %1$s</string>
+    <string name="stream_exit_quitting_game">Quitting the game</string>
+
+    <!-- Stream result overlay (a stream that ended on its own) -->
+    <!-- Used when the PC's name is not known -->
+    <string name="stream_result_default_pc">the PC</string>
+    <string name="stream_result_try_again">Try again</string>
+    <string name="stream_result_back_to_library">Back to library</string>
+    <string name="stream_result_details">Details</string>
+    <string name="stream_result_start_title">Couldn\'t start the stream</string>
+    <string name="stream_result_lost_title">Connection lost</string>
+    <string name="stream_result_closed_title">The PC closed the stream</string>
+    <string name="stream_result_host_closed">The PC ended the stream</string>
+    <string name="stream_result_blocked_hint">Your device\'s current network connection is blocking Delos. Streaming over the Internet may not work while connected to this network.</string>
+    <string name="stream_result_ports_hint">Check your firewall and port forwarding rules for port(s):</string>
+    <!-- %1$s: the connection stage that failed (a technical name such as "RTSP handshake"), %2$d: error code -->
+    <string name="stream_result_failed_stage">Failed to start %1$s (error %2$d)</string>
+    <string name="stream_result_denied">The PC didn\'t allow Delos to start the app.</string>
+    <string name="stream_result_denied_details">Permission Denied (Launch Apps)</string>
+    <string name="stream_result_timeout">The PC didn\'t answer in time.</string>
+    <string name="stream_result_timeout_details">Connection Timeout</string>
+    <string name="stream_result_blocked">This network seems to block Delos.</string>
+    <string name="stream_result_decoder">This device couldn\'t start the video decoder.</string>
+    <string name="stream_result_decoder_details">Video decoder failed to initialize. Your device may not support the selected resolution or frame rate.</string>
+    <string name="stream_result_connecting">Something went wrong while connecting to the PC.</string>
+    <string name="stream_result_no_video">No video arrived from the PC.</string>
+    <string name="stream_result_no_video_details">No video received from host.</string>
+    <string name="stream_result_slow">The network connection isn\'t keeping up.</string>
+    <string name="stream_result_slow_details">Your network connection isn\'t performing well. Reduce your video bitrate setting or try a faster connection.</string>
+    <string name="stream_result_host_error">Something went wrong on the PC while starting the stream.</string>
+    <string name="stream_result_host_error_details">Something went wrong on your host PC when starting the stream.\n\nMake sure you don\'t have any DRM-protected content open on your host PC. You can also try restarting your host PC.</string>
+    <string name="stream_result_encoding">The PC reported a video encoding error.</string>
+    <string name="stream_result_encoding_details">The host PC reported a fatal video encoding error.\n\nTry disabling HDR mode, changing the streaming resolution, or changing your host PC\'s display resolution.</string>
+    <string name="stream_result_ended">The connection to the PC ended unexpectedly.</string>
+    <!-- %1$s: the error code (decimal, or hexadecimal for large codes) -->
+    <string name="stream_result_terminated_details">The connection was terminated.\n\nError code: %1$s</string>
+    <string name="stream_result_no_h264">This device can\'t play the stream.</string>
+    <string name="stream_result_no_h264_details">This device or ROM doesn\'t support hardware accelerated H.264 playback.</string>
+    <!-- %1$s: PC name -->
+    <string name="stream_result_offline">%1$s is offline.</string>
+    <string name="stream_result_offline_details">Computer is offline</string>
+    <!-- %1$s: PC name -->
+    <string name="stream_result_unpaired">%1$s isn\'t paired with this device.</string>
+    <string name="stream_result_unpaired_details">PC not paired</string>
+</resources>

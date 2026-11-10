@@ -1,5 +1,8 @@
 package com.limelight.shell
 
+import androidx.annotation.StringRes
+import androidx.compose.ui.res.stringResource
+import com.limelight.R
 import android.app.Activity
 import android.view.ViewGroup
 import android.widget.LinearLayout
@@ -42,10 +45,13 @@ import com.limelight.shell.ui.px
 import com.limelight.shell.ui.tpx
 import java.util.Locale
 
-/** Where the statistics panel sits (Settings → Display → Statistics position); kept with the profile. */
-enum class StatsPosition(val label: String, val top: Boolean, val start: Boolean) {
-    TOP_LEFT("Top left", true, true), TOP_RIGHT("Top right", true, false),
-    BOTTOM_LEFT("Bottom left", false, true), BOTTOM_RIGHT("Bottom right", false, false);
+/**
+ * Where the statistics panel sits (Settings → Display → Statistics position); kept with the profile. [label] is the English name the
+ * settings help is keyed by, [labelRes] the text the player reads.
+ */
+enum class StatsPosition(val label: String, @StringRes val labelRes: Int, val top: Boolean, val start: Boolean) {
+    TOP_LEFT("Top left", R.string.stream_stats_top_left, true, true), TOP_RIGHT("Top right", R.string.stream_stats_top_right, true, false), // l10n-ignore
+    BOTTOM_LEFT("Bottom left", R.string.stream_stats_bottom_left, false, true), BOTTOM_RIGHT("Bottom right", R.string.stream_stats_bottom_right, false, false); // l10n-ignore
 
     companion object {
         const val KEY = "ui_stats_position"
@@ -104,7 +110,7 @@ class StreamStats @JvmOverloads constructor(
  */
 internal fun linkReceivingText(link: LinkReading): String {
     val target = link.targetKbps / 1000
-    return if (link.rxKbps < 0f) "unknown of $target Mb/s" else "${(link.rxKbps / 1000f).toInt()} of $target Mb/s"
+    return if (link.rxKbps < 0f) "unknown of $target Mb/s" else "${(link.rxKbps / 1000f).toInt()} of $target Mb/s" // l10n-ignore
 }
 
 /**
@@ -199,10 +205,10 @@ class StreamStatsPanel private constructor(
     private fun CompactLine(s: StreamStats, modifier: Modifier) {
         BasicText(
             buildAnnotatedString {
-                withStyle(SpanStyle(color = FPS_GREEN, fontWeight = FontWeight.SemiBold)) { append("${s.fps.toInt()} FPS") }
-                if (s.onePercentLowFps >= 0f) append("  ·  1% low ${s.onePercentLowFps.toInt()}")
+                withStyle(SpanStyle(color = FPS_GREEN, fontWeight = FontWeight.SemiBold)) { append("${s.fps.toInt()} FPS") } // l10n-ignore
+                if (s.onePercentLowFps >= 0f) append("  ·  " + stringResource(R.string.stream_stats_compact_low, s.onePercentLowFps.toInt()))
                 if (s.bandwidthKb >= 0f) append("  ·  ${bandwidth(s.bandwidthKb)}")
-                append("  ·  Network ${s.networkMs} ms  ·  Decode ${format(s.decodeMs)} ms  ·  Total ${format(s.totalMs)} ms  ·  Lost ${format(s.lossPercent)} %")
+                append("  ·  " + stringResource(R.string.stream_stats_compact_tail, s.networkMs, format(s.decodeMs), format(s.totalMs), format(s.lossPercent)))
             },
             modifier.padding(horizontal = 24.px, vertical = StreamMenuLayout.STATS_COMPACT_PADDING_Y.px),
             style = TextStyle(color = PANEL_TEXT, fontFamily = Figtree, fontSize = StreamMenuLayout.STATS_COMPACT_TEXT_SIZE.tpx, lineHeight = StreamMenuLayout.STATS_COMPACT_LINE_HEIGHT.em, fontFeatureSettings = "tnum"),
@@ -215,7 +221,7 @@ class StreamStatsPanel private constructor(
             BasicText(
                 buildAnnotatedString {
                     append("${s.width} × ${s.height} · ")
-                    withStyle(SpanStyle(color = FPS_GREEN, fontWeight = FontWeight.SemiBold)) { append("${format(s.fps)} FPS") }
+                    withStyle(SpanStyle(color = FPS_GREEN, fontWeight = FontWeight.SemiBold)) { append("${format(s.fps)} FPS") } // l10n-ignore
                     append(" · ${s.codec}${if (s.hdr) " HDR" else ""}")
                 },
                 style = TextStyle(color = PANEL_TEXT, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx, fontFeatureSettings = "tnum"),
@@ -228,35 +234,35 @@ class StreamStatsPanel private constructor(
                 )
             }
             val rows = buildList {
-                add("Decoder" to s.decoder)
-                add("Incoming" to "${format(s.incomingFps)} FPS")
-                add("Rendering" to "${format(s.renderingFps)} FPS")
-                if (s.onePercentLowFps >= 0f) add("1% low" to "${format(s.onePercentLowFps)} FPS")
-                add("Network" to "${s.networkMs} ms ± ${s.networkVarianceMs} ms")
-                if (s.hostMs >= 0f) add("PC processing" to "${format(s.hostMs)} ms (${format(s.hostMinMs)}–${format(s.hostMaxMs)})")
-                add("Decoding" to "${format(s.decodeMs, 2)} ms")
-                if (s.processingMs > 0f) add("Upscaling" to "${format(s.processingMs, 2)} ms")
-                s.frameQueue?.let { add("Frame queue" to frameQueueText(it)) }
+                add(stringResource(R.string.stream_stats_decoder) to s.decoder)
+                add(stringResource(R.string.stream_stats_incoming) to "${format(s.incomingFps)} FPS") // l10n-ignore
+                add(stringResource(R.string.stream_stats_rendering) to "${format(s.renderingFps)} FPS") // l10n-ignore
+                if (s.onePercentLowFps >= 0f) add(stringResource(R.string.stream_stats_one_percent_low, 1) to "${format(s.onePercentLowFps)} FPS") // l10n-ignore
+                add(stringResource(R.string.stream_stats_network) to "${s.networkMs} ms ± ${s.networkVarianceMs} ms") // l10n-ignore
+                if (s.hostMs >= 0f) add(stringResource(R.string.stream_stats_pc_processing) to "${format(s.hostMs)} ms (${format(s.hostMinMs)}–${format(s.hostMaxMs)})") // l10n-ignore
+                add(stringResource(R.string.stream_stats_decoding) to "${format(s.decodeMs, 2)} ms") // l10n-ignore
+                if (s.processingMs > 0f) add(stringResource(R.string.stream_stats_upscaling) to "${format(s.processingMs, 2)} ms") // l10n-ignore
+                s.frameQueue?.let { add(stringResource(R.string.stream_stats_frame_queue) to frameQueueText(it)) }
                 // PyroWave shows the pass with its backlog, the others next to the other post-processing
-                if (s.backlog == null) s.sharpen?.let { add("Sharpen pass" to sharpenPassText(it)) }
-                s.renderLatency?.let { add("Render latency" to renderLatencyText(it)) }
-                add("Total latency" to "${format(s.totalMs)} ms")
-                if (s.bandwidthKb >= 0f) add("Bandwidth" to bandwidth(s.bandwidthKb))
-                add("Lost frames" to "${format(s.lossPercent, 2)} %")
+                if (s.backlog == null) s.sharpen?.let { add(stringResource(R.string.stream_stats_sharpen_pass) to sharpenPassText(it)) }
+                s.renderLatency?.let { add(stringResource(R.string.stream_stats_render_latency) to renderLatencyText(it)) }
+                add(stringResource(R.string.stream_stats_total_latency) to "${format(s.totalMs)} ms") // l10n-ignore
+                if (s.bandwidthKb >= 0f) add(stringResource(R.string.stream_stats_bandwidth) to bandwidth(s.bandwidthKb))
+                add(stringResource(R.string.stream_stats_lost_frames) to "${format(s.lossPercent, 2)} %")
                 s.backlog?.let { b ->
-                    add("Backlog" to "")
-                    add("Stall (recv thread)" to "${format(b.stallAvgMs)} / ${format(b.stallMaxMs)} ms avg/max")
-                    add("Frame age at submit" to "${format(b.submitAgeAvgMs)} / ${format(b.submitAgeMaxMs)} ms avg/max")
-                    add("Receive to present" to "${format(b.presentAgeAvgMs)} / ${format(b.presentAgeMaxMs)} ms avg/max")
-                    add("Partial frames" to "${format(b.partialPerSecond)} /s")
-                    add("Skipped" to "${format(b.skippedPerSecond)} /s")
-                    s.sharpen?.let { add("Sharpen pass" to sharpenPassText(it)) }
+                    add(stringResource(R.string.stream_stats_backlog) to "")
+                    add(stringResource(R.string.stream_stats_stall) to "${format(b.stallAvgMs)} / ${format(b.stallMaxMs)} ms avg/max") // l10n-ignore
+                    add(stringResource(R.string.stream_stats_frame_age) to "${format(b.submitAgeAvgMs)} / ${format(b.submitAgeMaxMs)} ms avg/max") // l10n-ignore
+                    add(stringResource(R.string.stream_stats_receive_to_present) to "${format(b.presentAgeAvgMs)} / ${format(b.presentAgeMaxMs)} ms avg/max") // l10n-ignore
+                    add(stringResource(R.string.stream_stats_partial_frames) to "${format(b.partialPerSecond)} /s") // l10n-ignore
+                    add(stringResource(R.string.stream_stats_skipped) to "${format(b.skippedPerSecond)} /s") // l10n-ignore
+                    s.sharpen?.let { add(stringResource(R.string.stream_stats_sharpen_pass) to sharpenPassText(it)) }
                 }
                 s.link?.let { l ->
-                    add("Link" to "")
-                    add("Receiving" to linkReceivingText(l))
-                    add("Partial / lost" to "${oneDecimal(l.partialPerSecond)} / ${oneDecimal(l.lostPerSecond)} frames/s")
-                    add("Verdict" to l.text)
+                    add(stringResource(R.string.stream_stats_link) to "")
+                    add(stringResource(R.string.stream_stats_receiving) to linkReceivingText(l))
+                    add(stringResource(R.string.stream_stats_partial_lost) to "${oneDecimal(l.partialPerSecond)} / ${oneDecimal(l.lostPerSecond)} frames/s") // l10n-ignore
+                    add(stringResource(R.string.stream_stats_verdict) to l.text)
                 }
             }
             val label = TextStyle(color = PANEL_TEXT.copy(alpha = .6f), fontFamily = Figtree, fontSize = 17.tpx, lineHeight = 1.5.em)
@@ -293,8 +299,8 @@ class StreamStatsPanel private constructor(
         // Bytes like the classic overlay, and bits like bitrate settings (the KB are KiB)
         private fun bandwidth(kb: Float): String {
             val megabits = kb * 1024f * 8f / 1_000_000f
-            val bytes = if (kb >= 1000f) "${format(kb / 1024f)} MB/s" else "${kb.toInt()} KB/s"
-            val bits = if (megabits >= 100f) "${megabits.toInt()} Mb/s" else "${format(megabits)} Mb/s"
+            val bytes = if (kb >= 1000f) "${format(kb / 1024f)} MB/s" else "${kb.toInt()} KB/s" // l10n-ignore
+            val bits = if (megabits >= 100f) "${megabits.toInt()} Mb/s" else "${format(megabits)} Mb/s" // l10n-ignore
             return "$bytes · $bits"
         }
 

@@ -6,8 +6,16 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [33])
 class SharpenOnlyMenuTest {
+    private val res = ApplicationProvider.getApplicationContext<Context>().resources
     private val sharpenOnly = UpscalerMode.SHARPEN_ONLY.index()
 
     @Test fun theModeRowCyclesThroughEveryModeInBothDirectionsAndWraps() {
@@ -31,10 +39,10 @@ class SharpenOnlyMenuTest {
     }
 
     @Test fun theModeRowHelpNamesTheSelectedModeAndSharpenOnlyHasItsOwn() {
-        val help = streamMenuHelp("Mode", "On: Sharpen only", sharpenOnly, 0, false)
+        val help = streamMenuHelp(res, "Mode", "On: Sharpen only", sharpenOnly, 0, false)
         assertTrue(help.contains("No scaling"))
         assertTrue(help.contains("Applies live."))
-        assertFalse(streamMenuHelp("Mode", "On", 0, 0, false).contains("No scaling"))
+        assertFalse(streamMenuHelp(res, "Mode", "On", 0, 0, false).contains("No scaling"))
     }
 
     @Test fun theSharpenPassRowShowsAverageWorstAndThePreparation() {

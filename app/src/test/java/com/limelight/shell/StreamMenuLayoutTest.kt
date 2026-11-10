@@ -10,8 +10,16 @@ import org.junit.Assert.assertNull
 import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [33])
 class StreamMenuLayoutTest {
+    private val res = ApplicationProvider.getApplicationContext<Context>().resources
     private val c = StreamMenuLayout
 
     @Test
@@ -260,7 +268,7 @@ class StreamMenuLayoutTest {
             val chars = captionLineChars(scale)
             for (item in BarItem.entries) for (supersampling in listOf(false, true)) for (status in statuses) {
                 val key = circleHelpKey(item, supersampling)
-                assertFits("tile $key ($status) at $scale", streamMenuHelp(key, status, 0, 0, false), chars, c.CAPTION_LINES)
+                assertFits("tile $key ($status) at $scale", streamMenuHelp(res, key, status, 0, 0, false), chars, c.CAPTION_LINES)
             }
         }
     }
@@ -285,9 +293,9 @@ class StreamMenuLayoutTest {
             val chars = popoverHelpLineChars(page, scale)
             val lines = helpLines(scale)
             for (key in keys) for (status in statuses) for (mode in 0..4) for (mouse in 0..5) for (remember in listOf(false, true)) {
-                assertFits("$page/$key ($status, mode $mode, mouse $mouse) at $scale", streamMenuHelp(key, status, mode, mouse, remember), chars, lines)
+                assertFits("$page/$key ($status, mode $mode, mouse $mouse) at $scale", streamMenuHelp(res, key, status, mode, mouse, remember), chars, lines)
             }
-            assertFits("$page default at $scale", streamMenuHelp(pageHelpKey(page), statuses.last(), 0, 0, false), chars, lines)
+            assertFits("$page default at $scale", streamMenuHelp(res, pageHelpKey(page), statuses.last(), 0, 0, false), chars, lines)
         }
     }
 
@@ -296,14 +304,14 @@ class StreamMenuLayoutTest {
         val reasons = listOf(
             BitrateFailure.NOT_CONNECTED, BitrateFailure.UNSUPPORTED, BitrateFailure.DENIED, BitrateFailure.UNCONFIRMED,
             BitrateFailure.rejected(null), BitrateFailure.rejected("x".repeat(500)),
-        )
+        ).map { it.text(res) }
         for (scale in listOf(1f, 1.15f, c.MAX_TEXT_SCALE)) for (reason in reasons) {
-            assertEquals(reason, streamMenuHelp("Apply bitrate", "On", 0, 0, false, reason))
+            assertEquals(reason, streamMenuHelp(res, "Apply bitrate", "On", 0, 0, false, reason))
             assertFits("bitrate failure at $scale", reason, popoverHelpLineChars(MenuPage.BITRATE, scale), helpLines(scale))
         }
-        assertTrue(BitrateFailure.rejected("x".repeat(500)).length < 100)
+        assertTrue(BitrateFailure.rejected("x".repeat(500)).text(res).length < 100)
         // Without a failure the row has its own help
-        assertEquals(StreamMenuHelp.description("Apply bitrate"), streamMenuHelp("Apply bitrate", "On", 0, 0, false))
+        assertEquals(StreamMenuHelp.description("Apply bitrate"), streamMenuHelp(res, "Apply bitrate", "On", 0, 0, false))
     }
 
     @Test
@@ -316,12 +324,12 @@ class StreamMenuLayoutTest {
 
     @Test
     fun theApplyRowSaysWhatTheHostAnsweredOnTheRight() {
-        assertNull(bitrateStatusText(false, null))
-        assertEquals("Applying\u2026", bitrateStatusText(true, null))
-        assertEquals("Applying\u2026", bitrateStatusText(true, BitrateResult.Accepted(50000)))
-        assertEquals("Accepted 50 Mbps", bitrateStatusText(false, BitrateResult.Accepted(50000)))
-        assertEquals("Limited by the host to 80 Mbps", bitrateStatusText(false, BitrateResult.Limited(80000)))
-        assertEquals("Failed", bitrateStatusText(false, BitrateResult.Failed("x")))
+        assertNull(bitrateStatusText(res, false, null))
+        assertEquals("Applying\u2026", bitrateStatusText(res, true, null))
+        assertEquals("Applying\u2026", bitrateStatusText(res, true, BitrateResult.Accepted(50000)))
+        assertEquals("Accepted 50 Mbps", bitrateStatusText(res, false, BitrateResult.Accepted(50000)))
+        assertEquals("Limited by the host to 80 Mbps", bitrateStatusText(res, false, BitrateResult.Limited(80000)))
+        assertEquals("Failed", bitrateStatusText(res, false, BitrateResult.Failed(BitrateFailure.DENIED)))
     }
 
     @Test
@@ -365,13 +373,13 @@ class StreamMenuLayoutTest {
     @Test
     fun everyPageHasATitleAndTheRowsOfMoreThatOpenPagesAreNamed() {
         for (page in MenuPage.entries.filter { it != MenuPage.MAIN }) {
-            assertNotEquals("$page", "", pageTitle(page, supersampling = false))
+            assertNotEquals("$page", "", pageTitle(res, page, supersampling = false))
         }
         // The header is the tile's label
-        assertEquals("Supersampling", pageTitle(MenuPage.UPSCALER, supersampling = true))
-        assertEquals("Upscaler", pageTitle(MenuPage.UPSCALER, supersampling = false))
+        assertEquals("Supersampling", pageTitle(res, MenuPage.UPSCALER, supersampling = true))
+        assertEquals("Upscaler", pageTitle(res, MenuPage.UPSCALER, supersampling = false))
         for (supersampling in listOf(false, true)) {
-            assertEquals(circleHelpKey(BarItem.UPSCALER, supersampling), pageTitle(MenuPage.UPSCALER, supersampling))
+            assertEquals(circleHelpKey(BarItem.UPSCALER, supersampling), pageTitle(res, MenuPage.UPSCALER, supersampling))
         }
         for (page in MenuPage.entries.filter { it.parent() == MenuPage.MORE }) {
             assertTrue("$page has no row in More", page.openedByRow() != null)
