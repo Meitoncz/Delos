@@ -6,11 +6,6 @@
   back to system fonts for other scripts.
 - Phosphor Regular and Fill 2.1.2, MIT, subset to the semantic mappings in tools/fonts/icons.txt.
   Android and the HTML prototype share the same two fonts and code points.
-- Tabler Icons 3.51.0 (second pack, MIT): only the glyphs that icons.txt marks `tabler:<name>`, where no Phosphor
-  glyph fits the meaning. They are imported into the same two fonts, scaled to the Phosphor em box, at code points
-  from U+F000 (above Phosphor's range). Regular gets the 300 weight (1.5 px stroke on the 24 px grid, the same
-  stroke ratio as Phosphor Regular's 16/256); Fill gets the 400 weight, a heavier outline (Tabler has no filled
-  variant of the glyphs in use).
 
 Also writes the code point constants to app/src/main/java/com/limelight/shell/ui/Symbols.kt and copies
 the licences to app/src/main/assets/licenses/.
@@ -19,7 +14,7 @@ Usage (needs fontTools: pip install fonttools):
     python tools/fonts/subset_fonts.py [--work DIR] [--icons-only]
 
 Source fonts are downloaded from the official Google (pinned to a google/fonts commit) and Phosphor
-(versioned) repositories and the Tabler Icons npm package (versioned) into the work directory (a fresh temporary directory by default). Every download
+(versioned) repositories into the work directory (a fresh temporary directory by default). Every download
 is checked against a SHA-256 digest.
 """
 
@@ -32,8 +27,6 @@ import urllib.request
 from pathlib import Path
 
 from fontTools import subset
-from fontTools.pens.transformPen import TransformPen
-from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import TTFont
 from fontTools.varLib import instancer
 
@@ -49,8 +42,6 @@ GOOGLE_FONTS_COMMIT = "e7db6ca603fd4862010383ff17ffd6cc4ffac1c0"
 GOOGLE_FONTS = f"https://raw.githubusercontent.com/google/fonts/{GOOGLE_FONTS_COMMIT}/ofl"
 PHOSPHOR_VERSION = "2.1.2"
 PHOSPHOR = f"https://raw.githubusercontent.com/phosphor-icons/web/v{PHOSPHOR_VERSION}"
-TABLER_VERSION = "3.51.0"
-TABLER = f"https://unpkg.com/@tabler/icons-webfont@{TABLER_VERSION}"
 SOURCES = {
     "Unbounded.ttf": (f"{GOOGLE_FONTS}/unbounded/Unbounded%5Bwght%5D.ttf", "323b511be380c8d474ef030686b71aedde501f8d9cd46da558b7c40454372c3f"),
     "Unbounded-OFL.txt": (f"{GOOGLE_FONTS}/unbounded/OFL.txt", "31e5d4e83955e7103c34570dd49b0570ef490800bd65b42923c0dd02445263b3"),
@@ -62,17 +53,7 @@ ICON_SOURCES = {
     "Phosphor-Fill.ttf": (f"{PHOSPHOR}/src/fill/Phosphor-Fill.ttf", "a53f5d2630cab5e3b7536ecb9d69d71519a2190298c22b1f8d770dd37bc2940a"),
     "regular.css": (f"{PHOSPHOR}/src/regular/style.css", "873761b8711147dc516b6102936e9ad005f3a3015349efcde1a496f0326f1051"),
     "Phosphor-LICENSE.txt": (f"{PHOSPHOR}/LICENSE", "687fbe52d0eb5c2353eca27a4037e889145ee0b584d3b1abf67581c4a4a4e47c"),
-    "Tabler-300.ttf": (f"{TABLER}/dist/fonts/tabler-icons-300.ttf", "c19e294c29f3fe6e495c3ec5908c219eceff9e558f0f0589d5f9ac3bbde2b18e"),
-    "Tabler-400.ttf": (f"{TABLER}/dist/fonts/tabler-icons.ttf", "050228e487993da1a1f2a5320ed20dc52c3f26eb8eecace4285ade89c1e21ec6"),
-    "Tabler-LICENSE.txt": (f"{TABLER}/LICENSE", "b740a1d46122672da62833e97f7e7c8a13fa85cbc7445b584b297cc00dde93db"),
 }
-
-# Tabler glyphs get code points from here up; Phosphor's end at U+EE74, so the two packs cannot collide.
-TABLER_FIRST_CODEPOINT = 0xF000
-# Tabler draws on a 24 unit grid in a 1000 unit em whose box runs from -100 to 900; Phosphor's em is 1024 units
-# from -64 to 960. Scaling by 1024/1000 and shifting the box keeps size and centring.
-TABLER_SCALE = 1024 / 1000
-TABLER_SHIFT_Y = round(100 * TABLER_SCALE - 64)
 
 # Latin, Latin-1, Latin Extended A/B, IPA schwa, spacing modifiers, combining marks, Cyrillic,
 # Latin Extended Additional, general punctuation, currency, letterlike symbols, arrows, math minus
@@ -129,41 +110,17 @@ def subset_font(src: Path, dst: Path, unicodes: list[int], keep_layout: bool, we
     print(f"{dst.relative_to(REPO)}: {dst.stat().st_size / 1024:.0f} KiB")
 
 
-def read_icons() -> dict[str, tuple[str, str]]:
-    """Semantic name -> (pack, glyph name); the pack is "phosphor" unless the line says `tabler:<name>`."""
+def read_icons() -> dict[str, str]:
     names = {}
     for number, line in enumerate(ICONS_TXT.read_text(encoding="utf-8").splitlines(), 1):
         line = line.split("#", 1)[0].strip()
         if not line:
             continue
-        match = re.fullmatch(r"([a-z][a-z0-9_]*)\s*=\s*(?:(tabler):)?([a-z0-9][a-z0-9-]*)", line)
+        match = re.fullmatch(r"([a-z][a-z0-9_]*)\s*=\s*([a-z][a-z0-9-]*)", line)
         if not match or match[1] in names:
             raise SystemExit(f"invalid or duplicate mapping at icons.txt:{number}: {line}")
-        names[match[1]] = (match[2] or "phosphor", match[3])
+        names[match[1]] = match[2]
     return names
-
-
-def import_tabler(dst: Path, src: Path, glyphs: dict[str, int]) -> None:
-    """Adds the Tabler glyphs (name -> code point) of `src` to the subset `dst`, scaled to its em box."""
-    font = TTFont(dst)
-    source = TTFont(src)
-    source_glyphs = source.getGlyphSet()
-    glyf, hmtx = font["glyf"], font["hmtx"]
-    order = font.getGlyphOrder()
-    for name, cp in glyphs.items():
-        pen = TTGlyphPen(None)
-        source_glyphs[name].draw(TransformPen(pen, (TABLER_SCALE, 0, 0, TABLER_SCALE, 0, TABLER_SHIFT_Y)))
-        glyph = pen.glyph()
-        glyph.recalcBounds(glyf)
-        glyph_name = "tabler_" + name.replace("-", "_")
-        order.append(glyph_name)
-        glyf[glyph_name] = glyph
-        hmtx[glyph_name] = (font["head"].unitsPerEm, glyph.xMin)
-        for table in font["cmap"].tables:
-            table.cmap[cp] = glyph_name
-    font.setGlyphOrder(order)
-    font.save(dst)
-    print(f"{dst.relative_to(REPO)}: {dst.stat().st_size / 1024:.0f} KiB with {len(glyphs)} Tabler glyphs")
 
 
 def kotlin_literal(cp: int) -> str:
@@ -180,7 +137,7 @@ def write_symbols(icons: dict[str, int]) -> None:
         "",
         "// Generated by tools/fonts/subset_fonts.py from tools/fonts/icons.txt - do not edit by hand.",
         "",
-        f"/** Phosphor {PHOSPHOR_VERSION} and Tabler {TABLER_VERSION} code points shared by the bundled Regular and Fill subsets. */",
+        f"/** Phosphor {PHOSPHOR_VERSION} code points shared by the bundled Regular and Fill subsets. */",
         "object Symbols {",
     ]
     for name, cp in icons.items():
@@ -193,7 +150,7 @@ def write_symbols(icons: dict[str, int]) -> None:
 
 def write_prototype_css(icons: dict[str, int]) -> None:
     lines = [
-        "/* Generated by tools/fonts/subset_fonts.py. Phosphor 2.1.2 and Tabler 3.51.0, MIT. */",
+        "/* Generated by tools/fonts/subset_fonts.py. Phosphor 2.1.2, MIT. */",
         "/* The prototype uses the exact same offline subsets as the Android app. */",
     ]
     for weight in ("regular", "fill"):
@@ -217,31 +174,15 @@ def build_icons(work: Path) -> None:
                                    (work / "regular.css").read_text(encoding="utf-8"))
     }
     names = read_icons()
-    missing = {glyph for pack, glyph in names.values() if pack == "phosphor"} - codepoints.keys()
+    missing = set(names.values()) - codepoints.keys()
     if missing:
         raise SystemExit(f"unknown Phosphor icon names in icons.txt: {', '.join(sorted(missing))}")
-    tabler_regular, tabler_heavy = TTFont(work / "Tabler-300.ttf"), TTFont(work / "Tabler-400.ttf")
-    tabler_names = sorted({glyph for pack, glyph in names.values() if pack == "tabler"})
-    missing = [n for n in tabler_names if n not in tabler_regular.getGlyphOrder() or n not in tabler_heavy.getGlyphOrder()]
-    if missing:
-        raise SystemExit(f"unknown Tabler icon names in icons.txt: {', '.join(missing)}")
-    tabler_codepoints = {n: TABLER_FIRST_CODEPOINT + i for i, n in enumerate(tabler_names)}
-    if tabler_codepoints and TABLER_FIRST_CODEPOINT <= max(codepoints.values()):
-        raise SystemExit("Tabler code points would collide with Phosphor's")
-    icons = {
-        name: codepoints[glyph] if pack == "phosphor" else tabler_codepoints[glyph]
-        for name, (pack, glyph) in names.items()
-    }
-    phosphor_unicodes = sorted({cp for name, cp in icons.items() if names[name][0] == "phosphor"})
-    for source, tabler, target in (("Phosphor.ttf", "Tabler-300.ttf", "phosphor_regular.ttf"),
-                                   ("Phosphor-Fill.ttf", "Tabler-400.ttf", "phosphor_fill.ttf")):
-        subset_font(work / source, RES_FONT / target, phosphor_unicodes, keep_layout=False)
-        if tabler_codepoints:
-            import_tabler(RES_FONT / target, work / tabler, tabler_codepoints)
+    icons = {name: codepoints[phosphor] for name, phosphor in names.items()}
+    for source, target in (("Phosphor.ttf", "phosphor_regular.ttf"), ("Phosphor-Fill.ttf", "phosphor_fill.ttf")):
+        subset_font(work / source, RES_FONT / target, sorted(set(icons.values())), keep_layout=False)
     write_symbols(icons)
     write_prototype_css(icons)
-    for name in ("Phosphor-LICENSE.txt", "Tabler-LICENSE.txt"):
-        shutil.copyfile(work / name, LICENSES / name)
+    shutil.copyfile(work / "Phosphor-LICENSE.txt", LICENSES / "Phosphor-LICENSE.txt")
 
 
 def main() -> None:

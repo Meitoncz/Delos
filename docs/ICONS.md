@@ -11,7 +11,7 @@ Palette adjustment. The completed feature branch was deleted; the push used `[sk
 ## Sources and generation
 
 - Official source: [phosphor-icons/web v2.1.2](https://github.com/phosphor-icons/web/tree/v2.1.2).
-- License: MIT, included in `app/src/main/assets/licenses/Phosphor-LICENSE.txt` (Tabler: see below).
+- License: MIT, included in `app/src/main/assets/licenses/Phosphor-LICENSE.txt`.
 - `tools/fonts/icons.txt` maps stable Delos semantic names to Phosphor names. Existing callers do
   not need to know the source family's names. New entries describe their actual action or setting.
 - `tools/fonts/subset_fonts.py` downloads the versioned Regular and Fill TTFs, the code-point CSS
@@ -31,32 +31,6 @@ python tools/fonts/subset_fonts.py --icons-only --work build/phosphor-icons
 
 Without `--icons-only`, the existing Unbounded/Figtree generation also runs. A normal Gradle
 build uses the committed subsets and needs neither Python nor a font download.
-
-## Second pack: Tabler Icons
-
-Phosphor stays the primary pack. [Tabler Icons](https://github.com/tabler/tabler-icons) 3.51.0 (MIT, licence in
-`app/src/main/assets/licenses/Tabler-LICENSE.txt`) is a second pack used **only** where no Phosphor glyph fits the
-meaning 100 % (HDR, gyroscope, the phone buzzing, the vibration motor; the full lookup including the meanings that
-still have no glyph is in [ICON_AUDIT.md](ICON_AUDIT.md)). Never replace a Phosphor glyph that already fits.
-
-- It is an implementation detail of the catalogue: callers keep using `Symbols.X`. A line `name = tabler:<glyph>` in
-  `tools/fonts/icons.txt` selects Tabler, using the glyph names of the Tabler package (for example `hdr`); a plain
-  `name = <phosphor-name>` stays Phosphor.
-- The glyphs are imported into the same two fonts (`phosphor_regular.ttf`, `phosphor_fill.ttf`), so `Symbol()`, the
-  Regular/Fill crossfade and the prototype CSS need no change. Tabler code points start at U+F000, above Phosphor's
-  range (the generator checks that they cannot collide).
-- Weight: Tabler draws a 2 px stroke on a 24 px grid; its 300 weight is 1.5 px, which is Phosphor Regular's 16/256
-  stroke ratio, so the Regular font gets Tabler 300. Tabler has no filled variant of the glyphs in use, so the Fill
-  font gets the 400 weight (a heavier outline) and the focus transition is a thickening instead of a fill. If a
-  future Tabler glyph has a filled variant, that is a generator change to make then.
-- Outlines are scaled by 1024/1000 and shifted so that the Tabler em box (-100..900) lands on Phosphor's (-64..960):
-  same advance (1024), same size and vertical centring.
-- Sources are pinned: `tools/fonts/subset_fonts.py` downloads `tabler-icons-300.ttf`, `tabler-icons.ttf` and the licence
-  from `unpkg.com/@tabler/icons-webfont@3.51.0` into the work directory with SHA-256 checks, like the Phosphor files.
-- To add one: find the glyph name in the package (`dist/tabler-icons.css`, class `ti-<name>`), add
-  `semantic_name = tabler:<name>` to `icons.txt`, record the row in ICON_AUDIT.md (and why no Phosphor glyph fits),
-  run the generator, commit the fonts, `Symbols.kt`, the prototype CSS and the docs. Keep the per-tab uniqueness rule.
-- The generator needs Python 3.10+ (`pip install fonttools`).
 
 ## Choosing icons
 

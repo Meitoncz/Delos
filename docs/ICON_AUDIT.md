@@ -2,7 +2,7 @@
 
 Every icon of the app, screen by screen, with what it means and whether it was kept or replaced by the audit
 (this branch). Rules: [ICONS.md](ICONS.md). Glyph names are Phosphor 2.1.2 (Regular, with the Fill twin used on
-focus), or `tabler:<name>` for the few Tabler Icons 3.51.0 glyphs of the second pack (see "Second icon pack" below); the semantic names (`Symbols.X`) are in `tools/fonts/icons.txt`. The Settings rows are tested
+focus); the semantic names (`Symbols.X`) are in `tools/fonts/icons.txt`. The Settings rows are tested
 (`SettingIconsTest`): every catalogue row has its own entry in `settingIcon()`, no two rows of one tab share a
 glyph (except the named repeats below) and no row reuses the glyph of a tab pill.
 
@@ -12,13 +12,11 @@ glyph (except the named repeats below) and no row reuses the glyph of a tab pill
    menu tile and its settings row, a chip and its filter section); different concepts never share a glyph.
 2. The icon font holds every Phosphor glyph the generator is asked for: adding one is a new line in
    `tools/fonts/icons.txt` and a run of `tools/fonts/subset_fonts.py --icons-only` against the cached sources (no
-   download was needed). Phosphor is the primary pack, with one weight and the Regular/Fill pairing used everywhere;
-   the few Tabler glyphs (rule 5) sit in the same two fonts.
+   download was needed; nothing in the fonts was swapped for another family). The same family, weight and
+   Regular/Fill pairing are used everywhere.
 3. Not changed: the controller letters (A/B/X/Y glyph buttons), the Delos logo and the battery body (custom
    drawing), the toast kind rules (`toastKindFor` still reads ERROR, WIFI_OFF, LINK_OFF, CHECK_CIRCLE, CHECK, WARNING).
 4. Layout, sizes, colours and motion are untouched. Only the glyph a call site names changed.
-5. Tabler Icons (second pack) only where no Phosphor glyph fits the meaning, and only after the table in
-   "Glyphs wanted but not available" says so; see [ICONS.md](ICONS.md).
 
 ## Intentional repeats
 
@@ -34,11 +32,11 @@ glyph (except the named repeats below) and no row reuses the glyph of a tab pill
 | `sliders-horizontal` (custom) | custom-settings badge, "N custom settings" chip, per-game "Custom for this game" | a value that differs from the profile |
 | `bezier-curve` (smoothing) | Gyro smoothing, stream menu gyro row, Debug smoothing | smoothing |
 | `boot` (kick) | Kick-start preset, Debug Start kick | the start kick |
-| `vibrate` | Enable rumble, More > Rumble | rumble |
-| `tabler:device-mobile-vibration` | Emulate rumble with vibration, Debug Vibrate once | the phone buzzing |
+| `vibrate` | Enable rumble, More > Rumble, Debug Vibration motor | rumble / the vibration motor |
+| `device-mobile-speaker` | Emulate rumble with vibration, Debug Vibrate once | the phone buzzing |
 | `faders` | Vibration strength, Debug Strength | strength |
 | `clock-countdown` | HLTB chip, HowLongToBeat provider row, Duration filter | completion time |
-| `tabler:hdr` | HDR setting, native HDR chip, HDR filter chip and section, metadata badge | HDR |
+| `sparkle` | HDR setting, native HDR chip, HDR filter chip and section, metadata badge | HDR |
 | `game-controller` | Controls tab, button-capture dialog, Debug controllers, Player avatar, and a game's placeholder tile and candidate lists | a controller; a game without artwork has nothing but its controller to show |
 | `play` | Start game, right menu button hint on the AYN (a physical button printed with that triangle) | the hint copies the hardware |
 | `list` / `square` / `copy` | menu button hints | hardware glyphs, not features |
@@ -50,28 +48,12 @@ glyph (except the named repeats below) and no row reuses the glyph of a tab pill
 
 ## Glyphs wanted but not available
 
-Phosphor has no dedicated glyph for these. They were looked up in the second pack, Tabler Icons 3.51.0 (MIT; names
-from the package's own glyph list, rendered next to the Phosphor glyph in the font weights the app uses; comparison
-sheet `.gradle-agent/tabler-compare.png`, not committed). Tabler is used only where its glyph fits the meaning;
-otherwise the Phosphor stand-in stays and the entry says why.
-
-| Wanted meaning | Phosphor stand-in | Tabler glyph | Result |
-|---|---|---|---|
-| HDR | `sparkle` | `hdr` | **used**: the letters HDR (setting, native HDR chip, HDR filter chip and section, metadata badge) |
-| Gyroscope / motion sensors | `compass` | `rotate-3d` | **used**: Motion sensors row |
-| Phone buzzing (vibration emulation) | `device-mobile-speaker` | `device-mobile-vibration` | **used**: Emulate rumble with vibration, Debug Vibrate once |
-| Rumble motor | `vibrate` | `circuit-motor` | **used**: Debug Vibration motor (new semantic name `VIBRATION_MOTOR`) |
-| Haptic feedback | `bell-ringing` | none | Tabler's closest, `device-mobile-vibration`, is the phone buzzing above and `vibrate` is the same idea; the bell stays |
-| Sharpness / unsharp mask | `aperture` | none | `focus-2` repeats the crosshair of the Debug 60 ms taps, `focus-centered` repeats the Upscaler's frame corners, `blur` means the opposite; the aperture stays |
-| Bitrate | `gauge` | none | Tabler's `gauge` and `dashboard` are the same speedometer; nothing says data rate |
-| Video codec | `file-video` | none | `file-code`, `file-digit` and `binary` read as source code or binary data, not a codec; the video file stays |
-| Frame pacing | `metronome` | none needed | Phosphor's `metronome` is already a metronome (Tabler's is the same drawing) |
-| Supersampling | `high-definition` | none | `resize`, `grid-scan`, `zoom-scan` and `dimensions` mean resizing or scanning, not rendering above the output resolution |
-| Metered connection | `cell-signal-full` | none | `cloud-data-connection`, `chart-donut-3` and `coins` do not say a limited data plan |
-| PlayStation / Xbox Guide button | `disc` | none | `brand-xbox` is Xbox-only (the row covers every controller); neither pack has a PlayStation mark |
-| IGDB / HowLongToBeat / PCGamingWiki marks | `database`, `clock-countdown`, `article` | none | Tabler has no marks for these three services (`brand-wikipedia` would be the wrong brand) |
-
-Nothing needed a font from a third family.
+Phosphor has no dedicated glyph for these; the closest one is used and named in the table:
+HDR (a sparkle stands in), sharpness / unsharp mask (aperture), bitrate (gauge), video codec (video file),
+gyroscope (compass), frame pacing (metronome), supersampling (high definition), haptic feedback and rumble motor
+(a bell and three wave shapes next to the generic vibrate glyph), metered connection (cell-signal), a PlayStation
+or Xbox Guide button (a plain disc), IGDB / HowLongToBeat / PCGamingWiki logos (database, countdown clock, article;
+only the Windows, Steam and Android logos exist). Nothing needed a font from another family.
 
 ## Device checklist (eyeball on the Odin)
 
@@ -79,26 +61,14 @@ Nothing needed a font from a third family.
    differ from every row, Controls is the longest list (about 65 rows).
 2. Per-game settings: the same rows on Stream/Display, the custom badge and reset glyphs.
 3. Side menu rows and the status bar (haptics bell, battery bolt, wifi).
-   Tabler glyphs: see "Second icon pack" below.
 4. Home: the context menu (Resume, Quit, Quit and start, Artwork, Metadata, Game settings, Hide), the game info chips
    (Running, HDR, SDR, unverified HDR, HLTB, Virtual display), genre and theme pills, bundled tiles (Desktop, Remote
    input, Remote monitor, Steam Big Picture) while their artwork loads.
 5. Filter modal: four sections and the HDR chips; metadata and artwork screens (tabs, sheet rows, badges, loading).
 6. Devices / Start / Pair PC / Profile screens, dialogs (PIN, passphrase, address, rename), toasts (wake, link test).
 7. Stream menu: bar tiles, More page rows, Bitrate and Upscaler pages, Rumble presets, Mouse page.
-8. Debug info (Vibration motor and Vibrate once rows carry Tabler glyphs): every section (device, haptics, rumble laboratory presets and patterns, advanced rows, controllers).
+8. Debug info: every section (device, haptics, rumble laboratory presets and patterns, advanced rows, controllers).
 9. Stream result (failure face, Try again, Back to library) and the exit/connect portals.
-
-## Second icon pack (Tabler)
-
-The Tabler glyphs in the app, with every screen they appear on (check them on the Odin, Regular and focused):
-
-| Semantic name | Tabler glyph | Where |
-|---|---|---|
-| `HDR_ON` | `hdr` | Settings > Display "HDR" row (also per-game settings); Home game info chip (native HDR); Filter modal "HDR support" section and its HDR chip; metadata badge on cover/metadata screens |
-| `MOTION_SENSORS` | `rotate-3d` | Settings > Controls "Motion sensors" (also per-game) |
-| `DEVICE_VIBRATION` | `device-mobile-vibration` | Settings > Controls "Emulate rumble with vibration"; Debug info "Vibrate once" |
-| `VIBRATION_MOTOR` | `circuit-motor` | Debug info > Device "Vibration motor" |
 
 ## Inventory
 
@@ -154,7 +124,7 @@ The Tabler glyphs in the app, with every screen they appear on (check them on th
 | Resolution scale | `arrows-out` | `arrows-out` | keep | the interface scale had the same glyph |
 | Video scale mode | `resize` | `resize` | keep |  |
 | Enforce display mode | `scan` | `scan` | keep |  |
-| HDR | `sun` | `tabler:hdr` | **replace** | the letters HDR everywhere HDR is meant (setting, native HDR badge, filter); was a sun on the setting and a sparkle on the badge, then the sparkle as a stand-in |
+| HDR | `sun` | `sparkle` | **replace** | sparkle everywhere HDR is meant (setting, native HDR badge, filter); was a sun on the setting and a sparkle on the badge |
 | External display | `monitor-arrow-up` | `monitor-arrow-up` | keep |  |
 | Performance overlay | `chart-bar` | `chart-bar` | keep | same as the stream menu tile |
 | Compact overlay | `list-bullets` | `list-bullets` | keep |  |
@@ -183,7 +153,7 @@ The Tabler glyphs in the app, with every screen they appear on (check them on th
 | Analog scrolling | `mouse-scroll` | `mouse-scroll` | keep |  |
 | Flip face buttons | `circles-four` | `circles-four` | keep |  |
 | Gamepad touchpad as mouse | `hand-pointing` | `hand-pointing` | keep |  |
-| Motion sensors | `compass` | `tabler:rotate-3d` | **replace** | rotation in three axes = gyroscope; the compass was a navigation stand-in (and also stood for the Adventure genre) |
+| Motion sensors | `compass` | `compass` | keep | the compass also stood for the Adventure genre |
 | Motion fallback | `navigation-arrow` | `navigation-arrow` | keep |  |
 | Force device motion | `device-mobile` | `device-mobile` | keep |  |
 | Gyro smoothing | `sliders-horizontal` | `bezier-curve` | **replace** | bezier curve = smoothing (also the stream menu gyro row and the Debug smoothing row) |
@@ -191,7 +161,7 @@ The Tabler glyphs in the app, with every screen they appear on (check them on th
 | Controller battery report | `battery-full` | `battery-full` | keep |  |
 | Enable rumble | `vibrate` | `vibrate` | keep | the vibrate glyph is rumble; the haptics rows have their own |
 | Rumble feel | `vibrate` | `playlist` | **replace** | playlist = a chosen preset (same as the Debug current preset) |
-| Emulate rumble with vibration | `vibrate` | `tabler:device-mobile-vibration` | **replace** | the phone buzzing (same as Debug "Vibrate once"); Tabler's phone with vibration marks instead of Phosphor's speaker phone |
+| Emulate rumble with vibration | `vibrate` | `device-mobile-speaker` | **replace** | the phone buzzing (same as Debug "Vibrate once") |
 | Force vibration on device | `vibrate` | `hand-fist` | **replace** | it was the same Phosphor glyph as the plain vibrate; the fist = forced |
 | Vibration strength | `waveform` | `faders` | **replace** | faders = strength (same as the Debug strength row) |
 
@@ -318,11 +288,11 @@ The Tabler glyphs in the app, with every screen they appear on (check them on th
 | Android | `cube` | `android-logo` | **replace** | brand glyph |
 | Kernel | `cpu` | `cpu` | keep |  |
 | Device | `devices` | `device-tablet` | **replace** | the model; the devices glyph is Manage devices |
-| Vibration motor | `vibrate` | `tabler:circuit-motor` | **replace** | an electric motor symbol = the motor itself (Enable rumble keeps `vibrate`) |
+| Vibration motor | `vibrate` | `vibrate` | keep |  |
 | Vibrators | `vibrate` | `list-numbers` | **replace** | a count |
 | Amplitude control | `sliders-horizontal` | `chart-line` | **replace** | chart line |
 | Last problem | `info` | `warning` | **replace** | a problem is a warning (info is the toast and About tab glyph) |
-| Vibrate once | `vibrate` | `tabler:device-mobile-vibration` | **replace** | same meaning as Emulate rumble with vibration |
+| Vibrate once | `vibrate` | `device-mobile-speaker` | **replace** | same meaning as Emulate rumble with vibration |
 | Continuous vibration | `waveform` | `infinity` | **replace** | infinity |
 | Strength | `sliders-horizontal` | `faders` | **replace** | same as the vibration strength setting |
 | Current preset | `vibrate` | `playlist` | **replace** | same as Rumble feel |
@@ -430,7 +400,7 @@ The Tabler glyphs in the app, with every screen they appear on (check them on th
 | Context: Hide game / Show game | `eye-slash` / `eye` | `eye-slash` / `eye` | keep |  |
 | Custom settings badge / chip | `sliders-horizontal` | `sliders-horizontal` | keep | custom = adjusted; also the per-game "Custom for this game" box |
 | Info chip: Running on PC | `play` | `pulse` | **replace** | see Running section |
-| Info chip: HDR | `sparkle` | `tabler:hdr` | **replace** | the letters HDR everywhere |
+| Info chip: HDR | `sparkle` | `sparkle` | keep | sparkle = HDR everywhere |
 | Info chip: SDR | `sun` | `sun-dim` | **replace** | dim sun |
 | Info chip: unverified HDR | `question` | `seal-question` | **replace** | sealed question mark (help is a question mark) |
 | Info chip: HLTB | `clock-counter-clockwise` | `clock-countdown` | **replace** | countdown clock; history is Last played |
@@ -478,9 +448,9 @@ The Tabler glyphs in the app, with every screen they appear on (check them on th
 |---|---|---|---|---|
 | Section Genre | `game-controller` | `tag` | **replace** | the genre tag |
 | Section Theme | `mask-happy` | `shapes` | **replace** | shapes (the drama mask is a chip) |
-| Section HDR support | `sun` | `tabler:hdr` | **replace** | same as the HDR setting |
+| Section HDR support | `sun` | `sparkle` | **replace** |  |
 | Section Duration | `clock-counter-clockwise` | `clock-countdown` | **replace** | same as the HLTB chip |
-| Chip HDR / SDR / Unknown | `sparkle` / `sun` / `question` | `tabler:hdr` / `sun-dim` / `seal-question` | **replace** | same as the info chips |
+| Chip HDR / SDR / Unknown | `sparkle` / `sun` / `question` | `sparkle` / `sun-dim` / `seal-question` | **replace** | same as the info chips |
 | Reset | `arrows-clockwise` | `arrow-u-up-left` | **replace** | it is a reset |
 | Done | `check` | `check` | keep |  |
 
