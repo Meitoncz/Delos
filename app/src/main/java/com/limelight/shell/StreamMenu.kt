@@ -436,7 +436,7 @@ class StreamMenu(private val game: Game) {
 
         override fun sendClipboard() { game.sendClipboard(true) }
         override fun getClipboard() { game.getClipboard(0) }
-        override fun sendTaskManager() { game.sendKeys(shortArrayOf(KeyboardTranslator.VK_LCONTROL.toShort(), KeyboardTranslator.VK_LSHIFT.toShort(), KeyboardTranslator.VK_ESCAPE.toShort())) }
+        override fun sendTaskManager() { game.keyHandler.sendKeys(shortArrayOf(KeyboardTranslator.VK_LCONTROL.toShort(), KeyboardTranslator.VK_LSHIFT.toShort(), KeyboardTranslator.VK_ESCAPE.toShort())) }
         override val zoomOn get() = game.isZoomModeEnabled
         override fun toggleZoom() { game.toggleZoomMode() }
         override val onscreenControlsOn get() = game.isVirtualControllerShown

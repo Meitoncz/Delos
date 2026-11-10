@@ -876,4 +876,10 @@ These preserve implementation/design context from the removed UI plan, not phase
   arrival's decoder link; `Game` forwards the `StreamContainer` callbacks and starts and stops the
   connection through its `Host`; `StreamMenu`, `StreamLoader` and `StreamExit` call it via
   `Game.getSurfaceController()`). The renderers reach the surface through the narrow
-  `StreamSurfaceHost` interface, not the activity.
+  `StreamSurfaceHost` interface, not the activity. Input lives in `binding/input`:
+  `StreamKeyHandler` routes keys (the stream menu, the Full keyboard and gamepad buttons first, then
+  the keyboard), tracks the modifiers (cleared when the window focus changes), runs the client-side
+  Ctrl+Alt+Shift+Z/Q/C combos once every modifier is up and sends the menus' special-key
+  combinations (`GameMenu` and `StreamMenu` call it via `Game.getKeyHandler()`). `Game` keeps the
+  Activity and stream view key callbacks as one-line delegates, the input grab and the controller
+  wiring, and reaches each handler through a small `Host` it implements.

@@ -17,8 +17,6 @@ import java.util.List;
 /** Special-key actions shared by the Delos stream menu and virtual keyboard configuration. */
 public class GameMenu {
 
-    public static final long KEY_UP_DELAY = 25;
-
     public static final String PREF_NAME = "specialPrefs"; // SharedPreferences name
 
     public static final String KEY_NAME = "special_key"; // Key of the stored value
@@ -52,7 +50,7 @@ public class GameMenu {
 
 
     private void sendKeys(short[] keys) {
-        game.sendKeys(keys);
+        game.getKeyHandler().sendKeys(keys);
     }
 
     public void run(MenuOption option) {
