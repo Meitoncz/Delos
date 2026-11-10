@@ -72,6 +72,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.PowerManager;
+import android.provider.Settings;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.InputDevice;
@@ -1137,9 +1139,31 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
         return onExternalDisplay;
     }
 
+    // The highest refresh rate the system is expected to grant this app right now
+    private float refreshRateCeiling(Display display) {
+        PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        boolean powerSaveMode = powerManager != null && powerManager.isPowerSaveMode();
+        // From critical on, Android holds the display at its low refresh rate
+        boolean thermalThrottling = powerManager != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+                powerManager.getCurrentThermalStatus() >= PowerManager.THERMAL_STATUS_CRITICAL;
+        float peakSetting = 0;
+        float minSetting = 0;
+        try {
+            // Settings.System.PEAK_REFRESH_RATE and MIN_REFRESH_RATE: hidden constants, readable values. Unset
+            // on devices that do not use them; a vendor may also refuse to let an app read them.
+            peakSetting = Settings.System.getFloat(getContentResolver(), "peak_refresh_rate", 0);
+            minSetting = Settings.System.getFloat(getContentResolver(), "min_refresh_rate", 0);
+        } catch (RuntimeException e) {
+            LimeLog.info("Refresh rate settings are not readable: " + e);
+        }
+        return StreamDisplayPlanner.refreshRateCeiling(powerSaveMode, thermalThrottling, display.getRefreshRate(),
+                peakSetting, minSetting);
+    }
+
     // Applies the display plan: the display mode, the stream container's aspect ratio and the frame pacing.
     private StreamDisplayPlanner.Plan prepareDisplayForRendering(Display currentDisplay) {
         List<StreamDisplayPlanner.Mode> supportedModes = StreamDisplayPlanner.Mode.of(currentDisplay.getSupportedModes());
+        float refreshRateCeiling = refreshRateCeiling(currentDisplay);
         StreamDisplayPlanner.Plan plan = StreamDisplayPlanner.plan(new StreamDisplayPlanner.Input()
                 .display(StreamDisplayPlanner.Mode.of(currentDisplay.getMode()), supportedModes, currentDisplay.getRefreshRate())
                 .stream(prefConfig.width, prefConfig.height, prefConfig.fps)
@@ -1149,7 +1173,8 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
                 .sdkInt(Build.VERSION.SDK_INT)
                 .television(getPackageManager().hasSystemFeature(PackageManager.FEATURE_TELEVISION) ||
                         getPackageManager().hasSystemFeature(PackageManager.FEATURE_LEANBACK))
-                .externalDisplay(isOnExternalDisplay()));
+                .externalDisplay(isOnExternalDisplay())
+                .refreshRateCeiling(refreshRateCeiling));
 
         LimeLog.info("Current display mode: "+plan.currentMode);
         for (StreamDisplayPlanner.Mode candidate : supportedModes) {
@@ -1183,7 +1208,8 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
         // Set the desired refresh rate that will get passed into setFrameRate() later
         desiredRefreshRate = plan.desiredRefreshRate;
 
-        LimeLog.info("Display refresh rate: "+plan.displayRefreshRate);
+        LimeLog.info("Display refresh rate: "+plan.displayRefreshRate+" (running "+currentDisplay.getRefreshRate()+
+                ", ceiling "+refreshRateCeiling+")");
 
         prefConfig.framePacing = plan.framePacing;
         switch (plan.pacingChange) {

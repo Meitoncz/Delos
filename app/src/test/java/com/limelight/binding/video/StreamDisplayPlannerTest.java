@@ -19,7 +19,10 @@ import java.util.List;
 
 import org.junit.Test;
 
-/** Characterisation tests: the decisions DelosStreamActivity made before the planner was extracted. */
+/**
+ * The display planner's decisions. Most are characterisation tests of what DelosStreamActivity did before the
+ * planner was extracted; the expected refresh rate was changed since (#80).
+ */
 public class StreamDisplayPlannerTest {
     private static final int LATENCY = PreferenceConfiguration.FRAME_PACING_MIN_LATENCY;
     private static final int BALANCED = PreferenceConfiguration.FRAME_PACING_BALANCED;
@@ -93,8 +96,8 @@ public class StreamDisplayPlannerTest {
         assertSame(HZ120, plan.bestMode);
         assertEquals(ModeSwitch.SET_FRAME_RATE, plan.modeSwitch);
         assertEquals(120f, plan.desiredRefreshRate, 0f);
-        // The display still runs 60 Hz until the switch, and the lower rate is reported
-        assertEquals(60f, plan.displayRefreshRate, 0f);
+        // The display is expected to run 120 Hz once the switch is applied
+        assertEquals(120f, plan.displayRefreshRate, 0f);
         assertEquals(60f, plan.streamFrameRate, 0f);
     }
 
@@ -142,8 +145,7 @@ public class StreamDisplayPlannerTest {
         Plan plan = plan(input(HZ60, 90));
         assertSame(HZ90, plan.bestMode);
         assertEquals(90f, plan.desiredRefreshRate, 0f);
-        // Not a TV: the lower of the current rate (60) and the chosen one
-        assertEquals(60f, plan.displayRefreshRate, 0f);
+        assertEquals(90f, plan.displayRefreshRate, 0f);
     }
 
     @Test
@@ -251,17 +253,60 @@ public class StreamDisplayPlannerTest {
         assertEquals(ModeSwitch.PREFERRED_MODE_ID, plan.modeSwitch);
     }
 
-    // --- Reported refresh rate: TV and external displays trust the chosen mode
+    // --- Expected refresh rate: the mode the display runs after the planned switch
 
     @Test
-    public void reportedRateIsTheLowerOfCurrentAndChosenExceptOnTvAndExternalDisplays() {
-        assertEquals(60f, plan(input(HZ60, 60)).displayRefreshRate, 0f);
-        assertEquals(120f, plan(input(HZ60, 60).television(true)).displayRefreshRate, 0f);
-        assertEquals(120f, plan(input(HZ60, 60).externalDisplay(true)).displayRefreshRate, 0f);
-        // Battery saver: the current mode says 120 Hz, the display runs 60 Hz
-        Plan saver = plan(input(HZ120, 60).display(HZ120, PANEL, 60f));
-        assertEquals(120f, saver.desiredRefreshRate, 0f);
-        assertEquals(60f, saver.displayRefreshRate, 0f);
+    public void aPlannedSwitchIsExpectedToApply() {
+        assertEquals(120f, plan(input(HZ60, 60)).displayRefreshRate, 0f);
+        assertEquals(90f, plan(input(HZ60, 90)).displayRefreshRate, 0f);
+        // Downwards too
+        assertEquals(60f, plan(input(HZ120, 60).pacing(BALANCED, true, 0)).displayRefreshRate, 0f);
+        // The mode's rate as the system reports it (60.000004 Hz) is not an override
+        Mode noisy = new Mode(1, 1920, 1080, 60.000004f);
+        Plan fromNoisy = plan(input(noisy, 120).display(noisy, Arrays.asList(noisy, HZ120), 60f));
+        assertEquals(120f, fromNoisy.displayRefreshRate, 0f);
+    }
+
+    @Test
+    public void aSwitchTheSystemIsKnownToRefuseKeepsTheCurrentRate() {
+        // Battery saver, thermal throttling or a 60 Hz peak setting: nothing above 60 Hz is granted
+        Plan capped = plan(input(HZ60, 60).refreshRateCeiling(60f));
+        assertSame(HZ120, capped.bestMode);
+        assertEquals(120f, capped.desiredRefreshRate, 0f);
+        assertEquals(60f, capped.displayRefreshRate, 0f);
+        assertEquals(60f, plan(input(HZ60, 120).refreshRateCeiling(90f)).displayRefreshRate, 0f);
+        // A mode at the ceiling is granted
+        assertEquals(90f, plan(input(HZ60, 90).refreshRateCeiling(90f)).displayRefreshRate, 0f);
+        // TVs and external displays trust the chosen mode whatever the ceiling
+        assertEquals(120f, plan(input(HZ60, 60).refreshRateCeiling(60f).television(true)).displayRefreshRate, 0f);
+        assertEquals(120f, plan(input(HZ60, 60).refreshRateCeiling(60f).externalDisplay(true)).displayRefreshRate, 0f);
+    }
+
+    @Test
+    public void aDisplayRunningBelowItsModesRateIsNotExpectedToRise() {
+        // The current mode says 120 Hz, the display runs 60 Hz (a refresh rate override, e.g. battery saver)
+        Plan noSwitch = plan(input(HZ120, 60).display(HZ120, PANEL, 60f));
+        assertEquals(ModeSwitch.NONE, noSwitch.modeSwitch);
+        assertEquals(120f, noSwitch.desiredRefreshRate, 0f);
+        assertEquals(60f, noSwitch.displayRefreshRate, 0f);
+
+        Plan withSwitch = plan(input(HZ90, 60).display(HZ90, PANEL, 60f));
+        assertSame(HZ120, withSwitch.bestMode);
+        assertEquals(60f, withSwitch.displayRefreshRate, 0f);
+    }
+
+    @Test
+    public void refreshRateCeilingComesFromBatterySaverThermalThrottlingAndThePeakSetting() {
+        float unlimited = Float.POSITIVE_INFINITY;
+        assertEquals(unlimited, StreamDisplayPlanner.refreshRateCeiling(false, false, 60f, 0f, 0f), 0f);
+        // Battery saver and thermal throttling: no rise above the current rate
+        assertEquals(60f, StreamDisplayPlanner.refreshRateCeiling(true, false, 60f, 120f, 0f), 0f);
+        assertEquals(60f, StreamDisplayPlanner.refreshRateCeiling(false, true, 60f, 0f, 0f), 0f);
+        // The user's peak refresh rate, or the minimum when that is higher
+        assertEquals(60f, StreamDisplayPlanner.refreshRateCeiling(false, false, 120f, 60f, 0f), 0f);
+        assertEquals(90f, StreamDisplayPlanner.refreshRateCeiling(false, false, 60f, 60f, 90f), 0f);
+        // Android 14 stores infinity for "the highest rate"
+        assertEquals(unlimited, StreamDisplayPlanner.refreshRateCeiling(false, false, 60f, unlimited, 0f), 0f);
     }
 
     // --- Cap FPS pacing adjustment
@@ -301,9 +346,20 @@ public class StreamDisplayPlannerTest {
     }
 
     @Test
-    public void capFpsAboveTheRefreshRateDropsFramesInBalanced() {
-        // 120 FPS from a 60 Hz mode: 120 Hz is chosen, but the display still reports 60 Hz
+    public void capFpsFollowsTheModeTheDisplaySwitchesTo() {
+        // 120 FPS from a 60 Hz mode: 120 Hz is chosen and expected, so the stream is capped just below it
         Plan plan = plan(input(HZ60, 120).pacing(CAP_FPS, false, 0));
+        assertSame(HZ120, plan.bestMode);
+        assertEquals(120f, plan.displayRefreshRate, 0f);
+        assertEquals(CAP_FPS, plan.framePacing);
+        assertEquals(PacingChange.CAPPED_BELOW_REFRESH_RATE, plan.pacingChange);
+        assertEquals(119f, plan.streamFrameRate, 0f);
+    }
+
+    @Test
+    public void capFpsAboveTheRefreshRateDropsFramesInBalanced() {
+        // 120 FPS from a 60 Hz mode the system keeps (e.g. battery saver): 120 Hz is chosen, the display stays at 60 Hz
+        Plan plan = plan(input(HZ60, 120).pacing(CAP_FPS, false, 0).refreshRateCeiling(60f));
         assertSame(HZ120, plan.bestMode);
         assertEquals(60f, plan.displayRefreshRate, 0f);
         assertEquals(BALANCED, plan.framePacing);
@@ -390,8 +446,9 @@ public class StreamDisplayPlannerTest {
 
     @Test
     public void capFpsDroppedToBalancedReportsTheChosenRateToTheSurface() {
-        // The surface sees the pacing after the Cap FPS adjustment
-        Plan plan = plan(input(HZ60, 120).pacing(CAP_FPS, false, 0));
+        // The surface sees the pacing after the Cap FPS adjustment (here: the system keeps the display at 60 Hz)
+        Plan plan = plan(input(HZ60, 120).pacing(CAP_FPS, false, 0).refreshRateCeiling(60f));
+        assertEquals(BALANCED, plan.framePacing);
         assertEquals(120f, StreamDisplayPlanner.surfaceFrameRate(plan.desiredRefreshRate, 120f, plan.framePacing, false), 0f);
     }
 

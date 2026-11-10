@@ -15,6 +15,9 @@ import java.util.List;
  * the stream container's aspect ratio, {@code Surface.setFrameRate}).
  */
 public final class StreamDisplayPlanner {
+    /** Slack for comparing refresh rates the system reports as floats (60.000004 Hz is 60 Hz). */
+    private static final float RATE_TOLERANCE = 0.1f;
+
     private StreamDisplayPlanner() {
     }
 
@@ -90,6 +93,7 @@ public final class StreamDisplayPlanner {
         int sdkInt = Build.VERSION_CODES.S;
         boolean television;
         boolean externalDisplay;
+        float refreshRateCeiling = Float.POSITIVE_INFINITY;
 
         /**
          * The output display: its active mode, its supported modes in the order the system lists them, and
@@ -145,6 +149,15 @@ public final class StreamDisplayPlanner {
             this.externalDisplay = externalDisplay;
             return this;
         }
+
+        /**
+         * The highest refresh rate the system is expected to grant the app right now (see
+         * {@link StreamDisplayPlanner#refreshRateCeiling}); infinity, the default, when nothing is known to limit it.
+         */
+        public Input refreshRateCeiling(float refreshRateCeiling) {
+            this.refreshRateCeiling = refreshRateCeiling;
+            return this;
+        }
     }
 
     /** The planner's decisions. */
@@ -154,7 +167,10 @@ public final class StreamDisplayPlanner {
         public final ModeSwitch modeSwitch;
         /** The best mode's refresh rate; {@link #surfaceFrameRate} starts from it once the surface exists. */
         public final float desiredRefreshRate;
-        /** The refresh rate the stream is planned for: reported to the host and used by Cap FPS pacing. */
+        /**
+         * The refresh rate the display is expected to run during the stream: reported to the host and used by
+         * Cap FPS pacing.
+         */
         public final float displayRefreshRate;
         /** The frame pacing mode after the Cap FPS adjustment. */
         public final int framePacing;
@@ -220,6 +236,14 @@ public final class StreamDisplayPlanner {
             // TVs may take a few moments to switch refresh rates, and we can probably assume
             // it will be eventually activated.
             // External displays can't be compared with the DisplayManager's current display refresh rate.
+            displayRefreshRate = desiredRefreshRate;
+        }
+        else if (modeSwitch != ModeSwitch.NONE &&
+                in.currentRefreshRate >= current.refreshRate - RATE_TOLERANCE &&
+                desiredRefreshRate <= in.refreshRateCeiling + RATE_TOLERANCE) {
+            // A switch is planned, the display runs its mode's own rate (nothing overrides it) and the
+            // system is not known to cap the rate below the chosen one: plan for the mode the display
+            // will run after the switch, not for the one it is leaving.
             displayRefreshRate = desiredRefreshRate;
         }
         else {
@@ -388,6 +412,23 @@ public final class StreamDisplayPlanner {
         }
 
         return false;
+    }
+
+    /**
+     * The highest refresh rate the system is expected to grant an app's request for, from what an app can see
+     * of the limits Android puts above app requests. Battery saver and thermal throttling hold the display at its
+     * low rate, so no rise above the current rate is expected; the user's peak refresh rate setting caps it at
+     * the higher of the peak and the minimum setting (0 when unset or unreadable). Infinity when nothing limits it.
+     */
+    public static float refreshRateCeiling(boolean powerSaveMode, boolean thermalThrottling, float currentRefreshRate,
+                                           float peakRefreshRateSetting, float minRefreshRateSetting) {
+        if (powerSaveMode || thermalThrottling) {
+            return currentRefreshRate;
+        }
+        if (peakRefreshRateSetting > 0) {
+            return Math.max(peakRefreshRateSetting, minRefreshRateSetting);
+        }
+        return Float.POSITIVE_INFINITY;
     }
 
     /** The frame rate passed to {@code Surface.setFrameRate()} once the stream surface exists. */
