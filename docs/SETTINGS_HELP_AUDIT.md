@@ -9,7 +9,7 @@ This is a feature-surface and help audit, not a new line-by-line security review
 every device-specific option. The approved [prototype](prototype/delos-gui.html) supplies the
 settings layout: controls on the left and explanatory content in the right-hand panel.
 
-Current coverage: **105 XML settings**, **29 native shell rows**, all choices within those settings,
+Current coverage: **105 XML settings**, **30 native shell rows**, all choices within those settings,
 dynamic resolution/FPS choices, the per-game subset, and all stream-menu actions and controls.
 The old 116-setting count in the Phase 6.7 document was a historical count, not today's coverage.
 

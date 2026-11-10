@@ -280,11 +280,19 @@ only the Windows, Steam and Android logos exist). Nothing needed a font from ano
 | Completion times · HowLongToBeat | `game-controller` | `clock-countdown` | **replace** | countdown clock (also the HLTB chip and the Duration filter) |
 | Language | `translate` | `translate` | keep |  |
 | Debug info | `bug` | `bug` | keep |  |
+| Keep diagnostic logs | - | `notebook` | **new** | the log (About tab, Diagnostics section; also the Debug info Diagnostic log row) |
 
 # Debug info
 
 | Item | Was | Now | Verdict | Why |
 |---|---|---|---|---|
+| Diagnostic log | - | `notebook` | **new** | the log (same as the Keep diagnostic logs row) |
+| Share diagnostic log | - | `share-network` | **new** | sharing |
+| Copy diagnostic summary | - | `copy-simple` | **new** | copying |
+| Clear diagnostic logs | - | `trash` | **new** | delete (the same action as elsewhere) |
+| Trigger test crash (debug builds) | - | `warning-octagon` | **new** | a deliberate crash |
+| Problem report card: Report this problem | - | `github-logo` | **new** | opens the GitHub issue |
+| Problem report card: Dismiss | - | `x` | **new** | close (the shared close glyph) |
 | Android | `cube` | `android-logo` | **replace** | brand glyph |
 | Kernel | `cpu` | `cpu` | keep |  |
 | Device | `devices` | `device-tablet` | **replace** | the model; the devices glyph is Manage devices |

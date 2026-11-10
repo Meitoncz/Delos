@@ -2,7 +2,7 @@
 
 The new shell edits the same keys and value types as `app/src/main/res/xml/preferences.xml`.
 The XML originally contained **116 controls in 13 categories** at step 6.7. After the deliberate
-cleanup and feature additions it contains **105 controls**, plus **29 native shell rows**.
+cleanup and feature additions it contains **105 controls**, plus **30 native shell rows**.
 The earlier count of 126 included ten category keys; category keys are headings, not ten additional
 options.
 
@@ -36,6 +36,11 @@ selection resets it to the top.
 Y opens search from settings; the hint bar also shows this shortcut. Search accepts typed text or
 letters selected with the controller. Results span all tabs and selecting
 one scrolls to and focuses the actual setting, including disabled dependencies.
+
+**About → Diagnostics → Keep diagnostic logs** (native row `about_diag_logs`, Phosphor `notebook`, default on) switches the rolling on-device
+log and the crash file on or off for this device (not per profile; stored as `diag_logs_enabled` in the default preferences, applied at once).
+It is not a catalogue setting and has no per-game override. What is logged, how it is scrubbed and shared: [DIAGNOSTICS.md](DIAGNOSTICS.md).
+The Debug info screen has the matching Diagnostics section (preview, Share, Copy summary, Clear).
 
 The **About → Debug info** screen also contains an opt-in [rumble laboratory](RUMBLE.md)
 with profile-scoped translation parameters, fixed test patterns and a live amplitude readout.

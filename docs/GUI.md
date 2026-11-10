@@ -486,6 +486,28 @@ white game frame; it has **no blur** (the stream is a `SurfaceView`).
   shows the toast on the drawn game scene (`double`: a second toast 350 ms later, to watch the hand-over; `long`: a message that needs the ellipsis); a tap on the scene or `Y` shows it
   again, and `Y` is Undo on the `action` toast.
 
+### Problem report card
+
+After a crash, an ANR, an unclean exit or a failed stream, Delos offers a report once (logic, markers and privacy rules: [DIAGNOSTICS.md](DIAGNOSTICS.md)).
+`ui/ProblemOfferCard.kt` is a **glass card** (corner 34, the shared `glass` fill, a 1 px `line` border, 36 px padding, 780 px wide) in the **top right
+corner** of the start screen and the home screen, 230 px from the top and 64 px from the right edge (under the toast's place). It shows an accent disc with
+the bug icon, a title (Unbounded 28: *Delos had a problem*, or *A stream could not run*), one sentence for the kind of problem (Figtree 22), the one-line
+technical summary (18, at most two lines, ellipsis) and the note that **nothing is sent automatically** and what Report does (20). Two `PillButton`s
+(compact): **Report this problem** (primary, GitHub logo, an **A** glyph) and **Dismiss** (close icon, a **B** glyph).
+
+- **Not a dialog:** no scrim, no blur of the screen, no confirmation. It shows only while no layer, portal, launch loader or stream result is up and the
+  shell is on Start or Home (`ShellState.offerShown`), so the result screen of a failed stream comes first and the card follows it.
+- **Controller:** the focus starts on Report this problem (silently, like a layer); A activates the focused button, left/right moves between the two,
+  **B is Dismiss from anywhere** while the card shows (a back handler registered after the layers'), and the D-pad can leave the card for the dashboard.
+  Dismiss returns the focus to the screen. Touch: tap either button.
+- **Motion:** `popEnter` / `popExit` from the top right corner (`Motion.POP_IN` with the overshooting spring, `Motion.EXIT` out; reduced motion: fades).
+- **Report** saves the cleaned log to Downloads, shows a toast (`Log saved to Downloads as ... Attach it to the issue.`) and opens the prefilled GitHub
+  issue in the browser 0.9 s later.
+
+**Debug info → Diagnostics** (the first section after the device rows, `DebugInfoScreen`): *Diagnostic log* (an info row with the size and line count of
+what Share sends; its panel previews the scrubbed text), *Share diagnostic log*, *Copy diagnostic summary*, *Clear diagnostic logs* and, in debug builds
+only, *Trigger test crash*. **Settings → About → Diagnostics → Keep diagnostic logs** is the on/off switch (native row, `about_diag_logs`).
+
 ## Color roles
 
 Color is a seasoning, not a coating: the neutral text and surfaces carry the screen and the palette's three colors split

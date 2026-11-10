@@ -6,7 +6,7 @@ Thanks for your interest. Delos is in active development, has no releases yet, a
 
 Use the issue forms: pick "Bug report" or "Feature request" when opening a [new issue](https://github.com/Meitoncz/Delos/issues/new/choose). Search existing issues first. For bugs, the form asks for your device, host software and Delos build (shown on the About page), and explains how to collect logs.
 
-Please remove personal data (IP addresses, PC and account names) from logs and screenshots before posting.
+Please remove personal data (IP addresses, PC and account names) from logs and screenshots before posting. The diagnostic log that Delos shares from Settings → About → Debug info, or saves for you after a crash ("Report this problem"), is cleaned automatically (addresses, PC and account names, ids and keys are removed); attach that file to the issue. How it works: [docs/DIAGNOSTICS.md](docs/DIAGNOSTICS.md).
 
 Problems on the PC side belong to [Vibepollo](https://github.com/Nonary/Vibepollo), [Apollo](https://github.com/ClassicOldSong/Apollo) or [Sunshine](https://github.com/LizardByte/Sunshine).
 

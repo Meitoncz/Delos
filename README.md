@@ -20,6 +20,8 @@ The ARM64 debug APK is `app/build/outputs/apk/debug/app-arm64-v8a-debug.apk`. Th
 
 Found a problem or have an idea? Open an issue with one of the [issue forms](https://github.com/Meitoncz/Delos/issues/new/choose). Code contributions are welcome too: see [CONTRIBUTING.md](CONTRIBUTING.md).
 
+Delos keeps a small diagnostic log on your device (never uploaded). After a crash it offers to open a prefilled bug report for you to check and submit, and Settings → About → Debug info can share a cleaned log. Details and privacy: [docs/DIAGNOSTICS.md](docs/DIAGNOSTICS.md).
+
 ## License
 
 Delos is licensed under the [GNU General Public License v3.0](LICENSE.txt), the same license as Moonlight and Artemis.

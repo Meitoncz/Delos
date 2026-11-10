@@ -20,8 +20,8 @@ Palette adjustment. The completed feature branch was deleted; the push used `[sk
   and `docs/prototype/phosphor-icons.css`. Commit these along with mapping/generator changes.
 - The prototype reads the Android fonts through relative paths; icon rendering needs no CDN.
   Its `data-icon` names use the generated CSS and the same Regular/Fill crossfade.
-- The Regular subset is 97,364 bytes and Fill is 84,324 bytes (181,688 bytes combined, 336 semantic
-  names after the icon audit), replacing the 299,768-byte Material Symbols subset. No new runtime library is needed.
+- The Regular subset is 98,688 bytes and Fill is 85,268 bytes (183,956 bytes combined, 341 semantic
+  names after the icon audit and the diagnostics icons of #71), replacing the 299,768-byte Material Symbols subset. No new runtime library is needed.
 
 Rebuild icons on Windows (Python with `fonttools` installed):
 

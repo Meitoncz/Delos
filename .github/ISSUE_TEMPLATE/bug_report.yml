@@ -10,6 +10,8 @@ body:
         If the problem is on the PC side (capture, encoder, host settings), please report it to Vibepollo, Apollo or Sunshine instead.
 
         **Before posting, remove personal data** from text and screenshots: IP addresses, PC and account names, anything private.
+
+        Came here from **Report this problem** in Delos? The form is filled in for you. Check it, add what you were doing, and attach the diagnostic file Delos saved to your Downloads folder (drag it into the "What happened?" box; the log box at the end cannot take files).
   - type: checkboxes
     id: checks
     attributes:
@@ -101,4 +103,6 @@ body:
         `adb logcat -d -s DelosPyroDiag DelosSharpen DelosLatency DelosLinkTest DelosThreads`
 
         For stream problems, also attach a screenshot of the "Full" statistics panel. Remove IP addresses, names and other personal data first.
+
+        In Delos, Settings > About > Debug info can also share a cleaned diagnostic log (addresses and names removed) or copy a short summary.
       render: text
