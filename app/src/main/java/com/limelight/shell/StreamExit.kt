@@ -27,6 +27,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
 import com.limelight.DelosStreamActivity
+import com.limelight.R
 import com.limelight.shell.data.ProfileStore
 import com.limelight.shell.settings.AppearanceStore
 import com.limelight.shell.ui.Cue
@@ -72,9 +73,13 @@ object StreamExit {
     /** Plays the portal over [game], then brings the new UI back and runs [end] (disconnect or quit). */
     @JvmStatic
     fun play(game: DelosStreamActivity, quit: Boolean, end: Runnable) {
-        val title = game.intent.getStringExtra(DelosStreamActivity.EXTRA_APP_NAME) ?: "the game"
+        val title = game.intent.getStringExtra(DelosStreamActivity.EXTRA_APP_NAME)
         val pcName = game.intent.getStringExtra(DelosStreamActivity.EXTRA_PC_NAME) ?: ""
-        val label = if (quit) "Quitting $title" else "Disconnecting"
+        val label = when {
+            !quit -> game.getString(R.string.stream_exit_disconnecting)
+            title != null -> game.getString(R.string.stream_exit_quitting, title)
+            else -> game.getString(R.string.stream_exit_quitting_game)
+        }
         val appearance = AppearanceStore(game) { ProfileStore.currentSettings(game) }.appearance.value
         val colors = delosColors(appearance, systemAccentHue(game))
         val portal = Portal((System.nanoTime() and 0x7fffffff).toInt(), if (quit) Symbols.POWER_SETTINGS_NEW else Symbols.HOME, label, pcName, cancellable = false)

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Words shared by several areas -->
+    <string name="common_on">On</string>
+    <string name="common_off">Off</string>
+    <string name="common_cancel">Cancel</string>
+</resources>

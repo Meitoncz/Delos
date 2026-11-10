@@ -677,7 +677,7 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
 
         if (!decoderRenderer.isAvcSupported()) {
             // If we can't find an AVC decoder, we can't proceed
-            StreamOutcome.failed(this, StreamResultKind.FAILED_TO_START, StreamResultKt.describeNoH264Decoder());
+            StreamOutcome.failed(this, StreamResultKind.FAILED_TO_START, StreamResultKt.describeNoH264Decoder(getResources()));
             return;
         }
 
@@ -1570,7 +1570,7 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
 
                     // Delos: the shell shows what happened (docs/GUI.md, "Stream exits")
                     StreamOutcome.failed(DelosStreamActivity.this, StreamResultKind.FAILED_TO_START,
-                            StreamResultKt.describeStreamFailure(stage, errorCode, ports, portsBlocked, decoderFailed));
+                            StreamResultKt.describeStreamFailure(getResources(), stage, errorCode, ports, portsBlocked, decoderFailed));
                 }
             }
         });
@@ -1609,7 +1609,7 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
                         String ports = portFlags != 0 ? MoonBridge.stringifyPortFlags(portFlags, "\n") : null;
                         boolean portsBlocked = portTestResult != MoonBridge.ML_TEST_RESULT_INCONCLUSIVE && portTestResult != 0;
                         StreamOutcome.failed(DelosStreamActivity.this, StreamResultKind.CONNECTION_LOST,
-                                StreamResultKt.describeStreamFailure(null, errorCode, ports, portsBlocked, false));
+                                StreamResultKt.describeStreamFailure(getResources(), null, errorCode, ports, portsBlocked, false));
                     }
                     else {
                         StreamOutcome.hostClosed(DelosStreamActivity.this);
@@ -2008,7 +2008,7 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
                 ? decoderRenderer.getStreamWidth() : prefConfig.width;
         int height = decoderRenderer != null && decoderRenderer.getStreamHeight() > 0
                 ? decoderRenderer.getStreamHeight() : prefConfig.height;
-        return StreamLoader.parameters(prefConfig, format, width, height);
+        return StreamLoader.parameters(getResources(), prefConfig, format, width, height);
     }
 
     public boolean isStreamMenuOpen() {

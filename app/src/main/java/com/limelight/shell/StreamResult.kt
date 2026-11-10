@@ -1,6 +1,8 @@
 package com.limelight.shell
 
 import android.app.ActivityOptions
+import android.content.res.Resources
+import com.limelight.R
 import android.app.Activity
 import android.content.Intent
 import android.os.Build
@@ -68,7 +70,7 @@ data class StreamResult(
                 intent.getStringExtra(SENTENCE) ?: "",
                 intent.getStringExtra(DETAILS),
                 intent.getStringExtra(PC_UUID) ?: return null,
-                intent.getStringExtra(PC_NAME) ?: "the PC",
+                intent.getStringExtra(PC_NAME) ?: "",
                 intent.getIntExtra(APP_ID, -1),
                 intent.getStringExtra(APP_NAME) ?: "",
             )
@@ -88,13 +90,6 @@ data class StreamResult(
 /** The words of a result overlay: [details] is the technical text (stage, error code, hints) behind Details. */
 data class ResultText(val title: String, val sentence: String, val details: String)
 
-private const val START_TITLE = "Couldn't start the stream"
-private const val LOST_TITLE = "Connection lost"
-private const val CLOSED_TITLE = "The PC closed the stream"
-
-private const val PORTS_HINT = "Check your firewall and port forwarding rules for port(s):"
-private const val BLOCKED_HINT = "Your device's current network connection is blocking Delos. Streaming over the Internet may not work while connected to this network."
-
 /**
  * What the player reads when a stream failed: one calm [ResultText.sentence] and the technical
  * [ResultText.details] (the long hints of the former error dialogs).
@@ -104,88 +99,87 @@ private const val BLOCKED_HINT = "Your device's current network connection is bl
  * check ([MoonBridge.stringifyPortFlags], null when none), [portsBlocked] says the connection test found
  * this network blocking Delos, and [decoderFailed] that the video decoder could not start.
  */
-fun describeStreamFailure(stage: String?, errorCode: Int, ports: String?, portsBlocked: Boolean, decoderFailed: Boolean = false): ResultText {
+fun describeStreamFailure(res: Resources, stage: String?, errorCode: Int, ports: String?, portsBlocked: Boolean, decoderFailed: Boolean = false): ResultText {
+    val blockedHint = res.getString(R.string.stream_result_blocked_hint)
     val title: String
     val sentence: String
     var details: String
     if (stage != null) {
-        title = START_TITLE
-        details = "Failed to start $stage (error $errorCode)"
+        title = res.getString(R.string.stream_result_start_title)
+        details = res.getString(R.string.stream_result_failed_stage, stage, errorCode)
         when {
             errorCode == 403 -> {
-                sentence = "The PC didn't allow Delos to start the app."
-                details += "\n\nPermission Denied (Launch Apps)"
+                sentence = res.getString(R.string.stream_result_denied)
+                details += "\n\n" + res.getString(R.string.stream_result_denied_details)
             }
             errorCode == -408 -> {
-                sentence = "The PC didn't answer in time."
-                details += "\n\nConnection Timeout"
+                sentence = res.getString(R.string.stream_result_timeout)
+                details += "\n\n" + res.getString(R.string.stream_result_timeout_details)
             }
-            portsBlocked -> sentence = "This network seems to block Delos."
+            portsBlocked -> sentence = res.getString(R.string.stream_result_blocked)
             decoderFailed -> {
-                sentence = "This device couldn't start the video decoder."
-                details += "\n\nVideo decoder failed to initialize. Your device may not support the selected resolution or frame rate."
+                sentence = res.getString(R.string.stream_result_decoder)
+                details += "\n\n" + res.getString(R.string.stream_result_decoder_details)
             }
-            else -> sentence = "Something went wrong while connecting to the PC."
+            else -> sentence = res.getString(R.string.stream_result_connecting)
         }
     } else if (portsBlocked) {
         // A blocked network supersedes any other explanation
-        title = LOST_TITLE
-        sentence = "This network seems to block Delos."
-        details = BLOCKED_HINT
+        title = res.getString(R.string.stream_result_lost_title)
+        sentence = res.getString(R.string.stream_result_blocked)
+        details = blockedHint
     } else {
         when (errorCode) {
             MoonBridge.ML_ERROR_NO_VIDEO_TRAFFIC -> {
-                title = LOST_TITLE
-                sentence = "No video arrived from the PC."
-                details = "No video received from host."
+                title = res.getString(R.string.stream_result_lost_title)
+                sentence = res.getString(R.string.stream_result_no_video)
+                details = res.getString(R.string.stream_result_no_video_details)
             }
             MoonBridge.ML_ERROR_NO_VIDEO_FRAME -> {
-                title = LOST_TITLE
-                sentence = "The network connection isn't keeping up."
-                details = "Your network connection isn't performing well. Reduce your video bitrate setting or try a faster connection."
+                title = res.getString(R.string.stream_result_lost_title)
+                sentence = res.getString(R.string.stream_result_slow)
+                details = res.getString(R.string.stream_result_slow_details)
             }
             MoonBridge.ML_ERROR_UNEXPECTED_EARLY_TERMINATION, MoonBridge.ML_ERROR_PROTECTED_CONTENT -> {
-                title = CLOSED_TITLE
-                sentence = "Something went wrong on the PC while starting the stream."
-                details = "Something went wrong on your host PC when starting the stream.\n\n" +
-                    "Make sure you don't have any DRM-protected content open on your host PC. You can also try restarting your host PC."
+                title = res.getString(R.string.stream_result_closed_title)
+                sentence = res.getString(R.string.stream_result_host_error)
+                details = res.getString(R.string.stream_result_host_error_details)
             }
             MoonBridge.ML_ERROR_FRAME_CONVERSION -> {
-                title = CLOSED_TITLE
-                sentence = "The PC reported a video encoding error."
-                details = "The host PC reported a fatal video encoding error.\n\n" +
-                    "Try disabling HDR mode, changing the streaming resolution, or changing your host PC's display resolution."
+                title = res.getString(R.string.stream_result_closed_title)
+                sentence = res.getString(R.string.stream_result_encoding)
+                details = res.getString(R.string.stream_result_encoding_details)
             }
             else -> {
-                title = LOST_TITLE
-                sentence = "The connection to the PC ended unexpectedly."
+                title = res.getString(R.string.stream_result_lost_title)
+                sentence = res.getString(R.string.stream_result_ended)
                 // Large codes are hex values
                 val code = if (Math.abs(errorCode) > 1000) Integer.toHexString(errorCode) else errorCode.toString()
-                details = "The connection was terminated.\n\nError code: $code"
+                details = res.getString(R.string.stream_result_terminated_details, code)
             }
         }
     }
-    if (stage != null && portsBlocked) details += "\n\n$BLOCKED_HINT"
-    if (!ports.isNullOrEmpty()) details += "\n\n$PORTS_HINT\n$ports"
+    if (stage != null && portsBlocked) details += "\n\n$blockedHint"
+    if (!ports.isNullOrEmpty()) details += "\n\n" + res.getString(R.string.stream_result_ports_hint) + "\n" + ports
     return ResultText(title, sentence, details)
 }
 
 /** A device that cannot decode H.264 in hardware cannot stream at all. */
-fun describeNoH264Decoder(): ResultText = ResultText(
-    START_TITLE, "This device can't play the stream.",
-    "This device or ROM doesn't support hardware accelerated H.264 playback.",
+fun describeNoH264Decoder(res: Resources): ResultText = ResultText(
+    res.getString(R.string.stream_result_start_title), res.getString(R.string.stream_result_no_h264),
+    res.getString(R.string.stream_result_no_h264_details),
 )
 
 /** Why a shortcut or link could not start its game although it named a known PC. */
 enum class ShortcutFailure { OFFLINE, NOT_PAIRED }
 
-fun describeShortcutFailure(pcName: String, failure: ShortcutFailure): ResultText = when (failure) {
-    ShortcutFailure.OFFLINE -> ResultText(START_TITLE, "$pcName is offline.", "Computer is offline")
-    ShortcutFailure.NOT_PAIRED -> ResultText(START_TITLE, "$pcName isn't paired with this device.", "PC not paired")
+fun describeShortcutFailure(res: Resources, pcName: String, failure: ShortcutFailure): ResultText = when (failure) {
+    ShortcutFailure.OFFLINE -> ResultText(res.getString(R.string.stream_result_start_title), res.getString(R.string.stream_result_offline, pcName), res.getString(R.string.stream_result_offline_details))
+    ShortcutFailure.NOT_PAIRED -> ResultText(res.getString(R.string.stream_result_start_title), res.getString(R.string.stream_result_unpaired, pcName), res.getString(R.string.stream_result_unpaired_details))
 }
 
 /** The shown text of the PC ending the stream normally. */
-const val HOST_CLOSED_TOAST = "The PC ended the stream"
+fun hostClosedToast(res: Resources): String = res.getString(R.string.stream_result_host_closed)
 
 /**
  * Where a stream that ended on its own goes: the shell (Home of the PC) with the [StreamResult], where a
@@ -195,7 +189,7 @@ object StreamOutcome {
     /** The stream (or the shortcut that wanted to start one) failed: Delos shows [kind] with [text]. */
     @JvmStatic
     fun failed(activity: Activity, kind: StreamResultKind, text: ResultText, pcUuid: String?, pcName: String?, appId: Int, appName: String?) {
-        show(activity, StreamResult(kind, text.title, text.sentence, text.details, pcUuid ?: "", pcName ?: "the PC", appId, appName ?: ""))
+        show(activity, StreamResult(kind, text.title, text.sentence, text.details, pcUuid ?: "", pcName ?: activity.getString(R.string.stream_result_default_pc), appId, appName ?: ""))
     }
 
     /** The PC ended the session normally. */
@@ -205,8 +199,8 @@ object StreamOutcome {
         show(
             game,
             StreamResult(
-                StreamResultKind.HOST_CLOSED, HOST_CLOSED_TOAST, "", null,
-                intent.getStringExtra(DelosStreamActivity.EXTRA_PC_UUID) ?: "", intent.getStringExtra(DelosStreamActivity.EXTRA_PC_NAME) ?: "the PC",
+                StreamResultKind.HOST_CLOSED, hostClosedToast(game.resources), "", null,
+                intent.getStringExtra(DelosStreamActivity.EXTRA_PC_UUID) ?: "", intent.getStringExtra(DelosStreamActivity.EXTRA_PC_NAME) ?: game.getString(R.string.stream_result_default_pc),
                 intent.getIntExtra(DelosStreamActivity.EXTRA_APP_ID, -1), intent.getStringExtra(DelosStreamActivity.EXTRA_APP_NAME) ?: "",
             ),
         )
@@ -228,7 +222,7 @@ object StreamOutcome {
      * and the shell opens on the device's own screen.
      */
     private fun show(activity: Activity, result: StreamResult) {
-        val summary = "Stream ended: ${result.kind} \"${result.title}\"${result.details?.let { " ($it)" }.orEmpty()}"
+        val summary = "Stream ended: ${result.kind} \"${result.title}\"${result.details?.let { " ($it)" }.orEmpty()}" // l10n-ignore
         if (result.kind == StreamResultKind.HOST_CLOSED) DiagLog.i("Stream", summary) else DiagLog.e("Stream", summary)
         val home = Intent().setClassName(activity, "com.limelight.shell.ShellActivity")
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)

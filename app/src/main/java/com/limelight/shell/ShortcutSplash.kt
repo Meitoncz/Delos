@@ -31,7 +31,7 @@ object ShortcutSplash {
     /** Shows the launch scene for [appName] on [pcName] (either may be unknown) over the whole [activity]. */
     @JvmStatic
     fun show(activity: AppCompatActivity, appName: String?, pcName: String?, pcUuid: String?, appId: Int) {
-        val pc = pcName?.takeIf { it.isNotEmpty() } ?: "the PC"
+        val pc = pcName?.takeIf { it.isNotEmpty() } ?: activity.getString(com.limelight.R.string.stream_result_default_pc)
         val title = appName?.takeIf { it.isNotEmpty() } ?: pc
         // The colors and scale of the profile that the stream will use
         val appearance = AppearanceStore(activity) { ProfileStore.currentSettings(activity) }.appearance.value
@@ -39,7 +39,7 @@ object ShortcutSplash {
         val hue = ((title.hashCode() and 0x7fffffff) % 360).toFloat()
         val cover = if (pcUuid != null && appId >= 0) StreamLoader.loadCover(activity, pcUuid, appId) else null
         StreamLoader.resetLines()
-        val firstLine = StreamLoader.firstLine(pc)
+        val firstLine = StreamLoader.firstLine(activity.resources, pc)
         val logo = null
         val parameters = StreamLoader.parametersFor(activity, pcUuid, appId)
         val card = LaunchCard(
