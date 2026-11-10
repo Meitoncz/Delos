@@ -159,11 +159,11 @@
     <string name="stream_result_blocked_hint">お使いの端末の現在のネットワーク接続は、Delosをブロックしています。このネットワークに接続している間は、インターネット経由のストリーミングが動作しない可能性があります。</string>
     <string name="stream_result_ports_hint">次のポートについて、ファイアウォールとポート転送の設定を確認してください：</string>
     <string name="stream_result_failed_stage">%1$sを開始できませんでした（エラー%2$d）</string>
-    <string name="stream_result_denied">PCがDelosによるアプリの起動を許可しませんでした。</string>
+    <string name="stream_result_denied">PCが Delosによるアプリの起動を許可しませんでした。</string>
     <string name="stream_result_denied_details">権限がありません（アプリの起動）</string>
     <string name="stream_result_timeout">PCが時間内に応答しませんでした。</string>
     <string name="stream_result_timeout_details">接続がタイムアウトしました</string>
-    <string name="stream_result_blocked">このネットワークはDelosをブロックしているようです。</string>
+    <string name="stream_result_blocked">このネットワークは Delosをブロックしているようです。</string>
     <string name="stream_result_decoder">この端末はビデオデコーダーを開始できませんでした。</string>
     <string name="stream_result_decoder_details">ビデオデコーダーの初期化に失敗しました。端末が選択した解像度またはフレームレートに対応していない可能性があります。</string>
     <string name="stream_result_connecting">PCへの接続中に問題が発生しました。</string>

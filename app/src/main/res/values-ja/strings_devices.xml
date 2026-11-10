@@ -17,7 +17,7 @@
     <string name="devices_note">Delosとペアリング済みのPCです。ここで付けた名前は、この端末にのみ保存されます。</string>
 
     <string name="devices_menu_default_off">このPCで起動しない</string>
-    <string name="devices_menu_default_on">このPCでDelosを起動</string>
+    <string name="devices_menu_default_on">このPCで Delosを起動</string>
     <string name="devices_menu_wake">PCを起動</string>
     <string name="devices_menu_rename">名前を変更</string>
     <string name="devices_menu_open_games">ゲームを開く</string>
@@ -51,7 +51,7 @@
     <string name="devices_add_no_answer">%1$sのPCから応答がありません</string>
 
     <string name="devices_rename_title">PCの名前を変更</string>
-    <string name="devices_rename_note">新しい名前は、この端末のDelosでのみ使われます。空欄にすると、PC本来の名前（%1$s）になります。</string>
+    <string name="devices_rename_note">新しい名前は、この端末の Delosでのみ使われます。空欄にすると、PC本来の名前（%1$s）になります。</string>
     <string name="devices_rename_action">保存</string>
     <string name="devices_rename_reset_toast">%1$sに戻しました</string>
     <string name="devices_rename_done_toast">%1$sに変更しました</string>

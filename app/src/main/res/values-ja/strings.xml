@@ -4,8 +4,8 @@
     <string name="scut_pc_not_found">PCが見つかりません</string>
     <string name="scut_invalid_uuid">指定されたPCは無効です</string>
     <string name="scut_invalid_app_id">指定されたアプリは無効です</string>
-    <string name="scut_game_running">%1$sはすでに実行中です · 先にDelosで終了してください</string>
-    <string name="scut_other_game_running">別のゲームがすでに実行中です · 先にDelosで終了してください</string>
+    <string name="scut_game_running">%1$sはすでに実行中です · 先に Delosで終了してください</string>
+    <string name="scut_other_game_running">別のゲームがすでに実行中です · 先に Delosで終了してください</string>
 
     <string name="configuration_mode_move_buttons">ボタン移動モード</string>
     <string name="configuration_mode_resize_buttons">ボタンサイズ変更モード</string>
@@ -23,7 +23,7 @@
     <string name="nettest_title_waiting">ネットワーク接続をテスト中</string>
     <string name="nettest_text_waiting">必要なポートがブロックされていないか、Delosがネットワーク接続をテストしています。\n\n数秒かかる場合があります…</string>
     <string name="nettest_title_done">ネットワークテスト完了</string>
-    <string name="nettest_text_success">ネットワークはDelosをブロックしていないようです。それでも接続できない場合は、PCのファイアウォール設定を確認してください。\n\nインターネット経由でストリーミングする場合は、PCにMoonlight Internet Hosting Toolをインストールし、付属のInternet Streaming Testerを実行して、PCのインターネット接続を確認してください。</string>
+    <string name="nettest_text_success">ネットワークは Delosをブロックしていないようです。それでも接続できない場合は、PCのファイアウォール設定を確認してください。\n\nインターネット経由でストリーミングする場合は、PCにMoonlight Internet Hosting Toolをインストールし、付属のInternet Streaming Testerを実行して、PCのインターネット接続を確認してください。</string>
     <string name="nettest_text_inconclusive">Delosの接続テストサーバーにどれも到達できなかったため、ネットワークテストを実行できませんでした。インターネット接続を確認するか、後でもう一度お試しください。</string>
     <string name="nettest_text_failure">お使いの端末の現在のネットワーク接続は、Delosをブロックしているようです。このネットワークに接続している間は、インターネット経由のストリーミングが動作しない可能性があります。\n\n次のネットワークポートがブロックされていました：\n</string>
 
@@ -105,7 +105,7 @@
     <string name="title_checkbox_xb1_driver">Xbox 360/One/Nintendo Pro USBコントローラードライバー</string>
     <string name="summary_checkbox_xb1_driver">Xbox/Nintendo Proコントローラーにネイティブ対応していない端末向けに、内蔵USBドライバーを有効にします</string>
     <string name="title_checkbox_usb_bind_all">ネイティブXboxコントローラー対応を上書き</string>
-    <string name="summary_checkbox_usb_bind_all">Xbox/Nintendo Proコントローラーのネイティブ対応があっても、対応するすべてのコントローラーでDelosのUSBドライバーを使用します</string>
+    <string name="summary_checkbox_usb_bind_all">Xbox/Nintendo Proコントローラーのネイティブ対応があっても、対応するすべてのコントローラーで DelosのUSBドライバーを使用します</string>
     <string name="title_checkbox_mouse_emulation">コントローラーでマウスをエミュレート</string>
     <string name="summary_checkbox_mouse_emulation">Startボタンを長押しすると、コントローラーモードとマウスモードを切り替えます</string>
     <string name="title_checkbox_remember_mouse_mode">マウスモードを記憶</string>
@@ -226,7 +226,7 @@
     <string name="title_sgsr">Snapdragon Game Super Resolution</string>
     <string name="summary_sgsr">SGSR 1で低解像度のビデオをアップスケールします。OpenGL ES 3.1が必要です。HDRは、対応環境では10ビットのP010出力を使います。ストリームメニューでリアルタイムに切り替えられます。PyroWaveは独自のレンダラーを使います。ストリーム解像度は、ディスプレイ解像度より低いものを選んでください。</string>
     <string name="title_sgsr_quality">アップスケーラーモード</string>
-    <string name="summary_sgsr_quality">SGSR 1（Qualcomm）は現在のフレームをフィルター処理します。SGSR2-DVは、ビデオ向けのDelos版SGSR 2で、オプティカルフローで動きを検出し、過去のフレームのディテールを再利用します。シャープのみは、ストリームのサイズでシャープ化するだけです。HDRとリアルタイム切り替えは、どのモードでも使えます。</string>
+    <string name="summary_sgsr_quality">SGSR 1（Qualcomm）は現在のフレームをフィルター処理します。SGSR2-DVは、ビデオ向けの Delos版SGSR 2で、オプティカルフローで動きを検出し、過去のフレームのディテールを再利用します。シャープのみは、ストリームのサイズでシャープ化するだけです。HDRとリアルタイム切り替えは、どのモードでも使えます。</string>
     <string name="title_sgsr_sharpness">アップスケーラーのシャープネス</string>
     <string name="summary_sgsr_sharpness">シャープ化の強さを0〜100で指定します。0でシャープ化は無効です。SGSRモードでは、再構築結果を変えない独立した最終処理になり、シャープのみではそれが効果のすべてです。リアルタイムに調整できます。</string>
     <string name="title_sgsr_supersampling_level">スーパーサンプリング品質</string>
@@ -342,7 +342,7 @@
     <string name="title_touchpad_sensitivity_y">タッチパッド感度（Y軸）</string>
     <string name="summary_touchpad_sensitivity_y">マウスのタッチパッドモードと、仮想特殊ボタンのタッチパッド操作用です。\n両者は感度の値を共有しますが、感度の効き方は異なる場合があります。\n両方を一緒に使う人はいるのでしょうか？</string>
     <string name="title_device_rumble">端末の振動を強制</string>
-    <string name="summary_device_rumble">接続したコントローラーの振動に満足できない場合は、このオプションを有効にしてください。\n内蔵のDelos USBドライバーを強制的に使用している場合は無効です</string>
+    <string name="summary_device_rumble">接続したコントローラーの振動に満足できない場合は、このオプションを有効にしてください。\n内蔵の Delos USBドライバーを強制的に使用している場合は無効です</string>
     <string name="title_clear_default_special_button">既定の特殊キーを無効にする</string>
     <string name="summary_clear_default_special_button">戻るメニューの内蔵コマンドが不要なら、無効にしてインポートしたものを使えます。</string>
     <string name="title_trackpad_sensitivity_x">トラックパッド感度（X）</string>

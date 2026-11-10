@@ -2,9 +2,9 @@
 <resources>
     <string name="home_loading">PCを検索中…</string>
     <string name="home_no_pc_title">ペアリング済みのPCがありません</string>
-    <string name="home_no_pc_note">今のところ、PCのペアリングはクラシック版Delosアプリで行ってください。\n新しいUIでのペアリングはステップ6.6で対応します。</string>
+    <string name="home_no_pc_note">今のところ、PCのペアリングはクラシック版 Delosアプリで行ってください。\n新しいUIでのペアリングはステップ6.6で対応します。</string>
     <string name="home_offline_title">%1$sはオフラインです</string>
-    <string name="home_offline_note">PCを起動するか、クラシック版Delosアプリから起動してください。\nここからの起動はステップ6.6で対応します。</string>
+    <string name="home_offline_note">PCを起動するか、クラシック版 Delosアプリから起動してください。\nここからの起動はステップ6.6で対応します。</string>
     <string name="home_empty_title">%1$sにゲームがありません</string>
     <string name="home_empty_note">VibepolloのWeb UIでアプリを追加すると、ここに自動で表示されます。</string>
     <string name="home_hidden_toast">%1$sを非表示にしました · サイドメニューで非表示のゲームを表示できます</string>

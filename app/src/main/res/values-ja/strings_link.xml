@@ -44,7 +44,7 @@
     <string name="link_use_done_toast">ビットレートを%1$sに設定しました</string>
     <string name="link_use_detail">ビットレートを%1$sに設定します（%2$s）。Delosがビットレートを自動で変更することはありません。</string>
 
-    <string name="link_unavailable_newer_delos">このPCで回線テストを行うには、より新しいDelosが必要です。</string>
+    <string name="link_unavailable_newer_delos">このPCで回線テストを行うには、より新しい Delosが必要です。</string>
     <string name="link_unavailable_host_outdated">このPCのVibepolloはまだ回線テストに対応していません。アップデートしてください。</string>
 
     <string name="link_stream_help_dropping">この回線では%1$sでフレームが欠落します。Aでスライダーに入力し、適用で送信します。</string>

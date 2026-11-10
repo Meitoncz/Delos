@@ -417,3 +417,26 @@ in `ui/SteamTags.kt`, which stage 1 decides on separately, and some developer me
 | `screens/OscPreviewScreen.kt` | 1 |
 | `ui/DialogLayer.kt` | 1 |
 | **Total** | **1605** |
+
+## Terminology: Japanese
+
+Polite です/ます in sentences, plain noun/verb phrases on labels and buttons, full-width punctuation. `Delos` is preceded by a half-width space after a Japanese character (the test requires a non-letter before the token) and followed by a particle (`Delos を`-style spacing is not needed).
+
+| English | 日本語 |
+|---|---|
+| stream / streaming | ストリーム / ストリーミング |
+| host, PC | PC (ホスト where protocol-level) |
+| gamepad, controller | コントローラー |
+| pair / unpair | ペアリング / ペアリング解除 |
+| bitrate, frame rate, resolution | ビットレート, フレームレート, 解像度 |
+| latency, bandwidth, packet loss | 遅延, 帯域, パケットロス |
+| upscaler, supersampling, sharpness | アップスケーラー, スーパーサンプリング, シャープネス |
+| frame pacing | フレームペーシング |
+| rumble / vibration | 振動 |
+| on-screen controls (OSC) | 画面上のコントロール (OSC kept where English abbreviates) |
+| library, profile | ライブラリ, プロフィール |
+| cover / wide cover / background / logo | カバー / ワイドカバー / 背景 / ロゴ |
+| settings / About / Debug info | 設定 / バージョン情報 / デバッグ情報 |
+| stream menu | ストリームメニュー |
+| Apply / Resume / Quit game | 適用 / 再開 / ゲームを終了 |
+| keep diagnostic logs | 診断ログを保存 |

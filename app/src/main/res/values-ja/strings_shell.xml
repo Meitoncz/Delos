@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="shell_link_pair_title">%1$sとペアリングしますか？</string>
-    <string name="shell_link_pair_message">リンクから、このPCとのペアリングが要求されています。ご自身で開いた場合のみ続行してください。</string>
+    <string name="shell_link_pair_message">リンクにより、DelosがPCとペアリングするよう求められています。ご自身で開いた場合のみ続行してください。</string>
     <string name="shell_link_pair_action">ペアリング</string>
     <string name="shell_link_start_title">%1$sを開始しますか？</string>
     <string name="shell_link_start_title_unnamed">ゲームを開始しますか？</string>
-    <string name="shell_link_start_message">リンクから、%2$sで%1$sの開始が要求されています。ご自身で開いた場合のみ続行してください。</string>
-    <string name="shell_link_start_message_game">リンクから、PCで%1$sの開始が要求されています。ご自身で開いた場合のみ続行してください。</string>
-    <string name="shell_link_start_message_host">リンクから、%1$sでのゲーム開始が要求されています。ご自身で開いた場合のみ続行してください。</string>
-    <string name="shell_link_start_message_unnamed">リンクから、PCでのゲーム開始が要求されています。ご自身で開いた場合のみ続行してください。</string>
+    <string name="shell_link_start_message">リンクにより、Delosが%2$sで%1$sを開始するよう求められています。ご自身で開いた場合のみ続行してください。</string>
+    <string name="shell_link_start_message_game">リンクにより、DelosがPCで%1$sを開始するよう求められています。ご自身で開いた場合のみ続行してください。</string>
+    <string name="shell_link_start_message_host">リンクにより、Delosが%1$sでゲームを開始するよう求められています。ご自身で開いた場合のみ続行してください。</string>
+    <string name="shell_link_start_message_unnamed">リンクにより、DelosがPCでゲームを開始するよう求められています。ご自身で開いた場合のみ続行してください。</string>
     <string name="shell_link_start_action">開始</string>
 
     <string name="shell_nav_settings">設定</string>
