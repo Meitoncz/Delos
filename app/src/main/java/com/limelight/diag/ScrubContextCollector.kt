@@ -1,5 +1,6 @@
 package com.limelight.diag
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.provider.Settings
 import androidx.preference.PreferenceManager
@@ -13,6 +14,8 @@ import org.json.JSONArray
  * export time, on a worker thread, so a PC added or renamed a minute ago is covered.
  */
 object ScrubContextCollector {
+    // The Android id is read only to be removed from reports (the scrubber replaces it), never stored or sent
+    @SuppressLint("HardwareIds")
     fun collect(context: Context): ScrubContext {
         val app = context.applicationContext
         val pcNames = LinkedHashSet<String>()

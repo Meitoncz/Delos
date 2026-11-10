@@ -5,6 +5,7 @@ import android.app.ApplicationExitInfo
 import android.content.Context
 import android.os.Build
 import android.os.Process
+import androidx.annotation.RequiresApi
 
 /**
  * Reads what the last run left and decides, once per problem, whether to offer a report (the state machine itself is
@@ -62,6 +63,7 @@ object ProblemMonitor {
     }
 
     /** The system's own words for the exit ("signal 11 (SIGSEGV)", "user request after error: Input dispatching timed out"). */
+    @RequiresApi(ProblemDetector.EXIT_REASONS_SDK)
     private fun describe(info: ApplicationExitInfo): String {
         val text = info.description?.toString().orEmpty()
         return if (info.reason == ApplicationExitInfo.REASON_CRASH_NATIVE && !text.contains("signal")) "signal ${info.status} $text".trim() else text
