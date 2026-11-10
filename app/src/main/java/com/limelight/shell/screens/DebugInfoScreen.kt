@@ -56,6 +56,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
+import com.limelight.diag.DiagExport
+import com.limelight.diag.DiagLog
+import com.limelight.diag.DiagnosticReport
 import com.limelight.shell.LocalShell
 import com.limelight.shell.Screen
 import com.limelight.shell.data.ProfileStore
@@ -86,11 +89,13 @@ import com.limelight.utils.RumblePlayback
 import com.limelight.utils.RumblePreferences
 import com.limelight.utils.RumblePresets
 import com.limelight.utils.RumbleTranslator
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Locale
 import kotlin.math.roundToInt
 
@@ -107,7 +112,8 @@ private data class DebugRow(
 
 /**
  * Debug info (Settings → About → Debug info), in the style of the settings: the device (Android, kernel,
- * model, vibration motor), a vibration test with its strength, and every connected controller with its
+ * model, vibration motor), the diagnostic log (a preview of exactly what a problem report contains, Share, Copy
+ * summary and Clear; docs/DIAGNOSTICS.md), a vibration test with its strength, and every connected controller with its
  * ids, motion sensors and vibration; the panel on the right shows the focused row's details. Controllers
  * are listed again whenever one connects or disconnects.
  */
@@ -139,6 +145,38 @@ fun DebugInfoScreen() {
     var amplitude by remember { mutableIntStateOf(0) }
     val capabilities = remember { RumbleCapabilities.get(context) }
     var problem by remember { mutableStateOf<String?>(null) }
+    // The diagnostic report exactly as it would be shared now (built off the main thread); null while it is being built
+    var report by remember { mutableStateOf<DiagnosticReport?>(null) }
+    var reportRun by remember { mutableIntStateOf(0) }
+    LaunchedEffect(reportRun) { report = DiagExport.report(context) }
+
+    fun shareLog() {
+        scope.launch {
+            val ready = report ?: DiagExport.report(context)
+            val uri = DiagExport.writeForSharing(context, ready)
+            runCatching { context.startActivity(DiagExport.shareIntent(uri)) }
+                .onFailure { shell.showToast("No app can share the log", Symbols.ERROR) }
+        }
+    }
+
+    fun copySummary() {
+        scope.launch {
+            DiagExport.copyToClipboard(context, DiagExport.summary(context))
+            shell.showToast("Diagnostic summary copied", Symbols.CHECK_CIRCLE)
+        }
+    }
+
+    fun clearLogs() {
+        scope.launch {
+            withContext(Dispatchers.IO) {
+                DiagLog.clear()
+                DiagExport.clearShared(context)
+            }
+            report = null
+            reportRun++
+            shell.showToast("Diagnostic logs cleared", Symbols.CHECK_CIRCLE)
+        }
+    }
 
     fun stopLab() {
         patternRun++
@@ -241,6 +279,21 @@ fun DebugInfoScreen() {
             "The manufacturer and model.", "Board: ${Build.BOARD}\nHardware: ${Build.HARDWARE}\nSoC: ${if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) "${Build.SOC_MANUFACTURER} ${Build.SOC_MODEL}" else "unknown"}\nBuild: ${Build.DISPLAY}"))
         add(DebugRow("motor", "Device", Symbols.VIBRATION, "Vibration motor", RowValue.Info(if (hasMotor) "Yes" else "No"),
             if (hasMotor) "This device can vibrate." else "This device has no vibration motor."))
+        // What a problem report would contain; the panel on the right previews exactly that text
+        val logValue = when {
+            report == null -> "Reading…"
+            !DiagLog.enabled && report?.logLines == 0 -> "Off"
+            else -> report!!.sizeLabel()
+        }
+        add(DebugRow("diag_log", "Diagnostics", Symbols.DIAGNOSTIC_LOGS, "Diagnostic log", RowValue.Info(logValue),
+            "Events and errors Delos kept on this device, with addresses and names removed. This is what Share sends.",
+            report?.preview() ?: "Reading the log…"))
+        add(DebugRow("diag_share", "Diagnostics", Symbols.SHARE_LOG, "Share diagnostic log", RowValue.Action { shareLog() },
+            "Opens Android's share sheet with the text shown in the preview. Nothing is sent until you pick an app."))
+        add(DebugRow("diag_copy", "Diagnostics", Symbols.COPY_SUMMARY, "Copy diagnostic summary", RowValue.Action { copySummary() },
+            "Copies the device block and the last 100 log lines, ready to paste into an issue. The same names and addresses are removed."))
+        add(DebugRow("diag_clear", "Diagnostics", Symbols.DELETE, "Clear diagnostic logs", RowValue.Action { clearLogs() },
+            "Deletes the log on this device. New events are logged again unless Keep diagnostic logs is off (Settings → About)."))
         // Why an experimental preset is unavailable
         add(DebugRow("cap_vibrators", "Device haptic capabilities", Symbols.VIBRATORS, "Vibrators",
             RowValue.Info(if (capabilities.vibratorCount == 1) "1 (single)" else "${capabilities.vibratorCount}"),
@@ -428,7 +481,7 @@ private fun DetailsPanel(row: DebugRow?, modifier: Modifier) {
             Symbol(row?.icon ?: Symbols.INFO, 64.tpx, colors.onAccent, filled = true)
         }
         BasicText(row?.label ?: "Debug info", style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 30.tpx), modifier = Modifier.padding(top = 8.px))
-        BasicText(row?.description ?: "Information about this device and its controllers, and a vibration test.",
+        BasicText(row?.description ?: "Information about this device and its controllers, the diagnostic log and a vibration test.",
             style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 22.tpx, lineHeight = 1.45.em))
         row?.details?.let {
             BasicText(it, style = TextStyle(color = colors.text3, fontFamily = FontFamily.Monospace, fontSize = 16.tpx, lineHeight = 1.4.em))

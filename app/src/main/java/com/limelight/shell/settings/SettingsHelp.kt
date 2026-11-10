@@ -188,6 +188,7 @@ object SettingsHelp {
         "import_special_button_file" to "Imports custom key combinations for Send keys and the special-key controls, replacing this profile's custom commands.",
         "option_help_custom_keys" to "Opens instructions for the custom-key file format. Load the resulting file with Import Custom Keys.",
         "pref_debug_info" to "Opens device and controller diagnostics without a stream: device details, controller IDs and sensors, vibration test, control preview.",
+        "about_diag_logs" to "Keeps a rolling log (2 MB at most) of events and errors on this device. Nothing leaves it unless you share it from Debug info, with names and addresses removed. Off stops new lines.",
         "ui_match_game_colors" to "Takes three colors from the selected game's cover for the animated background; falls back to PC artwork. Needs Material You off.",
     )
 

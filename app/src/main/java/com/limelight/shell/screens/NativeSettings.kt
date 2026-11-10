@@ -5,9 +5,13 @@ import android.net.Uri
 import android.content.SharedPreferences
 import java.util.Locale
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import com.limelight.BuildConfig
+import com.limelight.diag.DiagLog
 import com.limelight.shell.DialogField
 import com.limelight.shell.DialogSpec
 import com.limelight.shell.Layer
@@ -175,6 +179,12 @@ internal fun nativeSettings(
     row("about_version", Symbols.VERSION, "Version", RowValue.Info(BuildConfig.VERSION_NAME), "Delos for Android.", tab = SettingsTab.ABOUT, section = "Delos")
     row("about_based", Symbols.ACCOUNT_TREE, "Based on", RowValue.Info("Artemis · Moonlight"), "Open source game streaming, licensed under the GPLv3.", tab = SettingsTab.ABOUT, section = "Delos")
     row("about_welcome", Symbols.REPLAY, "Replay the welcome", RowValue.Action { shell.navigate(Screen.Boot(back = Screen.Settings)) }, "Opens the welcome screen again. Profiles and paired PCs are kept.", tab = SettingsTab.ABOUT, section = "Delos")
+    var diagnosticLogs by remember { mutableStateOf(DiagLog.enabled) }
+    row("about_diag_logs", Symbols.DIAGNOSTIC_LOGS, "Keep diagnostic logs", RowValue.Toggle(diagnosticLogs) { on ->
+        diagnosticLogs = on
+        DiagLog.setEnabled(context, on)
+    }, "Keeps a small log of what Delos did, for a problem report. Stays on this device unless you share it.",
+        tab = SettingsTab.ABOUT, section = "Diagnostics")
     row("about_igdb", Symbols.PROVIDER_IGDB, "Game metadata · IGDB",
         RowValue.Action { providerWebsite("https://www.igdb.com/") },
         "Game information and genres provided by IGDB.", tab = SettingsTab.ABOUT, section = "Game data")

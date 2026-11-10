@@ -122,7 +122,7 @@ class SettingsHelpFitTest {
             val help = NativeSettingsHelp.choice(key, it)
             assertFits("$key/$it", (if (help.isBlank()) it else "$it\n$help") + "\n\n${SettingsHelp.description(key, "")}")
         } }
-        listOf("ui_match_game_colors", "pref_debug_info", "import_special_button_file").forEach {
+        listOf("ui_match_game_colors", "pref_debug_info", "import_special_button_file", "about_diag_logs").forEach {
             assertFits(it, SettingsHelp.description(it, ""))
         }
         listOf(

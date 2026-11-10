@@ -50,6 +50,11 @@ object DiagExport {
         FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
     }
 
+    /** Removes the file of an earlier share from the cache. */
+    fun clearShared(context: Context) {
+        File(context.cacheDir, SHARE_DIR).listFiles()?.forEach { it.delete() }
+    }
+
     /** The Android share sheet for the file at [uri]; the receiving app gets read access to that one file only. */
     fun shareIntent(uri: Uri, title: String = "Share diagnostic log"): Intent {
         val send = Intent(Intent.ACTION_SEND).apply {
