@@ -12,12 +12,10 @@ object SgdbRetry {
     /** Waits before the 2nd, 3rd and 4th attempt: four attempts in about four seconds of waiting. */
     val DELAYS_MS = longArrayOf(500, 1200, 2500)
 
-    private val serverTrouble = Regex("answered (429|5\\d\\d)")
-
     /** Whether trying again can help: a network failure or an overloaded/failing server, never a rejected key or a bad file. */
     fun isTransient(error: Throwable): Boolean = when (error) {
         is CancellationException -> false
-        is SteamGridDbException -> error.message?.let { serverTrouble.containsMatchIn(it) } == true
+        is SteamGridDbException -> error.failure == SgdbFailure.API_HTTP && (error.code == 429 || error.code in 500..599)
         is IOException -> true
         else -> false
     }

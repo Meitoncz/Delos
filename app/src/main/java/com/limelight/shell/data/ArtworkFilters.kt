@@ -1,10 +1,28 @@
 package com.limelight.shell.data
 
-/** Which images the artwork page lists: still ones, animated ones or both. */
-enum class ArtType(val label: String) { ALL("All"), STATIC("Static"), ANIMATED("Animated") }
+import android.content.res.Resources
+import androidx.annotation.StringRes
+import com.limelight.R
+import java.time.Instant
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+import java.util.Locale
 
-/** The order of the artwork page's grid. SteamGridDB has no sort parameter, so it is applied to what was loaded. */
-enum class ArtSort(val label: String) { SCORE("Highest score"), NEWEST("Newest"), OLDEST("Oldest") }
+/** Which images the artwork page lists: still ones, animated ones or both. */
+enum class ArtType(@StringRes val label: Int) {
+    ALL(R.string.filters_art_type_all), STATIC(R.string.filters_art_type_static), ANIMATED(R.string.filters_art_type_animated)
+}
+
+/**
+ * The order of the artwork page's grid. SteamGridDB has no sort parameter, so it is applied to what was loaded. [label] is
+ * the option in the filter sheet, [chip] the removable chip of a non-default order and [first] the note under the toolbar.
+ */
+enum class ArtSort(@StringRes val label: Int, @StringRes val chip: Int, @StringRes val first: Int) {
+    SCORE(R.string.filters_art_sort_score, R.string.filters_art_sort_score_chip, R.string.filters_art_sort_score_first),
+    NEWEST(R.string.filters_art_sort_newest, R.string.filters_art_sort_newest_chip, R.string.filters_art_sort_newest_first),
+    OLDEST(R.string.filters_art_sort_oldest, R.string.filters_art_sort_oldest_chip, R.string.filters_art_sort_oldest_first),
+}
 
 /**
  * The filters of one artwork tab (the filter sheet on the artwork screen). NSFW and humor images are never
@@ -45,9 +63,24 @@ object ArtFilterRules {
         ArtKind.LOGO -> emptyList()
     }
 
-    /** "white_logo" → "White logo", "600x900" → "600 × 900". */
-    fun styleLabel(style: String): String = style.replace('_', ' ').replaceFirstChar { it.uppercase() }
+    /**
+     * "white_logo" → "White logo". SteamGridDB's styles are a closed list of identifiers; one this version does not know
+     * shows its identifier in words, in English.
+     */
+    fun styleLabel(res: Resources, style: String): String = when (style) {
+        "alternate" -> res.getString(R.string.filters_art_style_alternate)
+        "blurred" -> res.getString(R.string.filters_art_style_blurred)
+        "white_logo" -> res.getString(R.string.filters_art_style_white_logo)
+        "material" -> res.getString(R.string.filters_art_style_material)
+        "no_logo" -> res.getString(R.string.filters_art_style_no_logo)
+        "official" -> res.getString(R.string.filters_art_style_official)
+        "white" -> res.getString(R.string.filters_art_style_white)
+        "black" -> res.getString(R.string.filters_art_style_black)
+        "custom" -> res.getString(R.string.filters_art_style_custom)
+        else -> style.replace('_', ' ').replaceFirstChar { it.uppercase() }
+    }
 
+    /** "600x900" → "600 × 900" (a technical readout, the same in every language). */
     fun dimensionsLabel(dimensions: String): String = dimensions.replace("x", " × ")
 
     /** Drops what [kind] cannot filter by, so a stale value never reaches a request. */
@@ -106,10 +139,10 @@ object ArtFilterRules {
 
     /** The removable chips under the toolbar, in order. */
     fun chips(filters: ArtFilters): List<ActiveFilter> = buildList {
-        if (filters.type != ArtType.ALL) add(ActiveFilter.Type(filters.type.label))
-        filters.style?.let { add(ActiveFilter.Style(styleLabel(it))) }
-        filters.dimensions?.let { add(ActiveFilter.Dimensions(dimensionsLabel(it))) }
-        if (filters.sort != ArtSort.SCORE) add(ActiveFilter.Sort("Sort: ${filters.sort.label}"))
+        if (filters.type != ArtType.ALL) add(ActiveFilter.Type(filters.type))
+        filters.style?.let { add(ActiveFilter.Style(it)) }
+        filters.dimensions?.let { add(ActiveFilter.Dimensions(it)) }
+        if (filters.sort != ArtSort.SCORE) add(ActiveFilter.Sort(filters.sort))
     }
 
     fun clear(filters: ArtFilters, chip: ActiveFilter): ArtFilters = when (chip) {
@@ -118,41 +151,56 @@ object ArtFilterRules {
         is ActiveFilter.Dimensions -> filters.copy(dimensions = null)
         is ActiveFilter.Sort -> filters.copy(sort = ArtSort.SCORE)
     }
+}
 
-    /** The result line: "10 of 41 covers", or "41 covers" when the unfiltered total is not known. */
-    fun resultLine(shown: Int, total: Int?, noun: String): String {
-        val name = if (shown == 1) noun else noun + "s"
-        return if (total != null && total != shown) "$shown of $total ${noun}s" else "$shown $name"
+/** An active filter as a chip; each kind clears one field. [label] is the chip's text. */
+sealed interface ActiveFilter {
+    fun label(res: Resources): String
+
+    data class Type(val type: ArtType) : ActiveFilter {
+        override fun label(res: Resources) = res.getString(type.label)
+    }
+
+    data class Style(val style: String) : ActiveFilter {
+        override fun label(res: Resources) = ArtFilterRules.styleLabel(res, style)
+    }
+
+    data class Dimensions(val dimensions: String) : ActiveFilter {
+        override fun label(res: Resources) = ArtFilterRules.dimensionsLabel(dimensions)
+    }
+
+    data class Sort(val sort: ArtSort) : ActiveFilter {
+        override fun label(res: Resources) = res.getString(sort.chip)
     }
 }
 
-/** An active filter as a chip (its [label]); each kind clears one field. */
-sealed interface ActiveFilter {
-    val label: String
-    data class Type(override val label: String) : ActiveFilter
-    data class Style(override val label: String) : ActiveFilter
-    data class Dimensions(override val label: String) : ActiveFilter
-    data class Sort(override val label: String) : ActiveFilter
+/** A fact the info strip tells about the focused image; [ArtworkInfo.facts] lists only what SteamGridDB's answer contained. */
+sealed interface ArtworkFact {
+    data class Size(val width: Int, val height: Int) : ArtworkFact
+    data class File(val format: String) : ArtworkFact
+
+    /** [score] is null when the image has none; [author] is null when unknown. */
+    data class Score(val score: Int?, val author: String?) : ArtworkFact
+    data class Added(val epochSeconds: Long) : ArtworkFact
 }
 
 /** What the info strip tells about the focused image: only what SteamGridDB's answer contained. */
 object ArtworkInfo {
-    /** The strip's title: the image's style ("White logo"), else the kind's own name. */
-    fun title(image: SgdbImage, fallback: String): String = image.style?.let(ArtFilterRules::styleLabel) ?: fallback
+    /** The strip's title: the image's style ("White logo"), else the kind's own name ([fallback]). */
+    fun title(res: Resources, image: SgdbImage, fallback: String): String =
+        image.style?.let { ArtFilterRules.styleLabel(res, it) } ?: fallback
 
-    /** Label / value pairs in the order of the strip; a missing fact is left out. */
-    fun fields(image: SgdbImage): List<Pair<String, String>> = buildList {
-        if (image.width > 0 && image.height > 0) add("SIZE" to "${image.width} × ${image.height} px")
-        image.format?.let { add("FILE" to it) }
+    /** The facts in the order of the strip; a missing fact is left out. */
+    fun facts(image: SgdbImage): List<ArtworkFact> = buildList {
+        if (image.width > 0 && image.height > 0) add(ArtworkFact.Size(image.width, image.height))
+        image.format?.let { add(ArtworkFact.File(it)) }
         val by = image.author?.takeIf { it.isNotBlank() }
-        if (image.score != 0 || by != null) {
-            add("SCORE" to listOfNotNull(image.score.takeIf { it != 0 }?.toString(), by?.let { "by $it" }).joinToString(" · "))
-        }
-        image.date?.let { add("ADDED" to date(it)) }
+        if (image.score != 0 || by != null) add(ArtworkFact.Score(image.score.takeIf { it != 0 }, by))
+        image.date?.let { add(ArtworkFact.Added(it)) }
     }
 
-    /** "23 Jun 2025", in UTC, whatever the language of the device. */
-    fun date(epochSeconds: Long): String =
-        java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy", java.util.Locale.ENGLISH)
-            .withZone(java.time.ZoneOffset.UTC).format(java.time.Instant.ofEpochSecond(epochSeconds))
+    /** The day an image was added in [locale]'s medium date style ("Jun 23, 2025"), in UTC whatever the time zone of the device. */
+    fun date(epochSeconds: Long, locale: Locale): String =
+        DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale)
+            .withZone(ZoneOffset.UTC).format(Instant.ofEpochSecond(epochSeconds))
 }

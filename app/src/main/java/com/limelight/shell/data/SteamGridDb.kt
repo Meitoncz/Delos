@@ -1,6 +1,9 @@
 package com.limelight.shell.data
 
 import android.content.Context
+import android.content.res.Resources
+import androidx.annotation.StringRes
+import com.limelight.R
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.LruCache
@@ -132,7 +135,33 @@ private data class Match(
     val year: Int? = null,
 )
 
-class SteamGridDbException(message: String) : IOException(message)
+/** Why a SteamGridDB call failed; [SteamGridDbException.text] is the sentence for the user. */
+enum class SgdbFailure { NO_KEY, KEY_REJECTED, API_HTTP, DOWNLOAD_HTTP, IMAGE_TOO_LARGE, SAVE_FAILED }
+
+/** [code] is the HTTP status for [SgdbFailure.API_HTTP] and [SgdbFailure.DOWNLOAD_HTTP]. The exception's own message is English, for logs. */
+class SteamGridDbException(val failure: SgdbFailure, val code: Int = 0) : IOException(
+    when (failure) {
+        SgdbFailure.NO_KEY -> "no SteamGridDB API key" // l10n-ignore
+        SgdbFailure.KEY_REJECTED -> "SteamGridDB did not accept the API key" // l10n-ignore
+        SgdbFailure.API_HTTP -> "SteamGridDB answered $code" // l10n-ignore
+        SgdbFailure.DOWNLOAD_HTTP -> "HTTP $code" // l10n-ignore
+        SgdbFailure.IMAGE_TOO_LARGE -> "image too large" // l10n-ignore
+        SgdbFailure.SAVE_FAILED -> "could not save the image" // l10n-ignore
+    }
+) {
+    fun text(res: Resources): String = when (failure) {
+        SgdbFailure.NO_KEY -> res.getString(R.string.artwork_error_no_key)
+        SgdbFailure.KEY_REJECTED -> res.getString(R.string.artwork_error_key_rejected)
+        SgdbFailure.API_HTTP -> res.getString(R.string.artwork_error_api_http, code)
+        SgdbFailure.DOWNLOAD_HTTP -> res.getString(R.string.artwork_error_download_http, code)
+        SgdbFailure.IMAGE_TOO_LARGE -> res.getString(R.string.artwork_error_too_large)
+        SgdbFailure.SAVE_FAILED -> res.getString(R.string.artwork_error_save_failed)
+    }
+}
+
+/** The sentence for a failed SteamGridDB call: its own when [error] is one, else [fallback] (a network failure and the like). */
+fun sgdbErrorText(res: Resources, error: Throwable, @StringRes fallback: Int): String =
+    (error as? SteamGridDbException)?.text(res) ?: res.getString(fallback)
 
 /** The SteamGridDB API (v2) with the user's own key. Blocking calls, run them off the main thread. */
 class SteamGridDbClient(private val key: String, private val http: OkHttpClient) {
@@ -164,7 +193,7 @@ class SteamGridDbClient(private val key: String, private val http: OkHttpClient)
                 data.mapNotNull { e -> (e as? JsonObject)?.let { SgdbImage.parse(it, query.animated) } }
             } catch (e: SteamGridDbException) {
                 // Both types asked: the still images are still worth showing when the animated request fails
-                if (queries.size > 1 && query.animated && e.message != KEY_REJECTED) emptyList() else throw e
+                if (queries.size > 1 && query.animated && e.failure != SgdbFailure.KEY_REJECTED) emptyList() else throw e
             }
         }
         return ArtFilterRules.sort(ArtFilterRules.merge(lists), filters.sort)
@@ -172,17 +201,17 @@ class SteamGridDbClient(private val key: String, private val http: OkHttpClient)
 
     fun download(url: String, into: File) {
         http.newCall(Request.Builder().url(url).build()).execute().use { response ->
-            if (!response.isSuccessful) throw SteamGridDbException("HTTP ${response.code}")
+            if (!response.isSuccessful) throw SteamGridDbException(SgdbFailure.DOWNLOAD_HTTP, response.code)
             val body = response.body
-            if (body.contentLength() > MAX_FILE_BYTES) throw SteamGridDbException("image too large")
+            if (body.contentLength() > MAX_FILE_BYTES) throw SteamGridDbException(SgdbFailure.IMAGE_TOO_LARGE)
             val tmp = File(into.path + ".part")
             body.byteStream().use { input -> tmp.outputStream().use { input.copyTo(it) } }
             if (tmp.length() > MAX_FILE_BYTES) {
                 tmp.delete()
-                throw SteamGridDbException("image too large")
+                throw SteamGridDbException(SgdbFailure.IMAGE_TOO_LARGE)
             }
             into.delete()
-            if (!tmp.renameTo(into)) throw SteamGridDbException("could not save the image")
+            if (!tmp.renameTo(into)) throw SteamGridDbException(SgdbFailure.SAVE_FAILED)
         }
     }
 
@@ -190,19 +219,18 @@ class SteamGridDbClient(private val key: String, private val http: OkHttpClient)
         val url = "$BASE/".toHttpUrl().newBuilder().addPathSegments(path).apply {
             params.forEach { (k, v) -> addQueryParameter(k, v) }
         }.build()
-        val request = Request.Builder().url(url).header("Authorization", "Bearer $key").build()
+        val request = Request.Builder().url(url).header("Authorization", "Bearer $key").build() // l10n-ignore
         http.newCall(request).execute().use { response ->
             when (response.code) {
-                401, 403 -> throw SteamGridDbException(KEY_REJECTED)
+                401, 403 -> throw SteamGridDbException(SgdbFailure.KEY_REJECTED)
                 404 -> return JsonObject()
             }
-            if (!response.isSuccessful) throw SteamGridDbException("SteamGridDB answered ${response.code}")
+            if (!response.isSuccessful) throw SteamGridDbException(SgdbFailure.API_HTTP, response.code)
             return JsonParser.parseString(response.body.string()).asJsonObject
         }
     }
 
     companion object {
-        const val KEY_REJECTED = "SteamGridDB did not accept the API key"
         const val MAX_FILE_BYTES = 2048L * 1024 * 1024
         private const val BASE = "https://www.steamgriddb.com/api/v2"
     }
@@ -325,7 +353,7 @@ class ArtworkStore(context: Context) {
             val key = "bundled:$asset"
             memory.get(key)?.let { return@withContext it }
             val image = appContext.assets.open(asset).use { input ->
-                checkNotNull(BitmapFactory.decodeStream(input)) { "Invalid bundled artwork: $asset" }.asImageBitmap()
+                checkNotNull(BitmapFactory.decodeStream(input)) { "Invalid bundled artwork: $asset" }.asImageBitmap() // l10n-ignore
             }
             return@withContext ArtworkResult(image, resolved = true, bundledAsset = asset).also { memory.put(key, it) }
         }
@@ -407,8 +435,8 @@ class ArtworkStore(context: Context) {
                     store(pc, app, kind, image, client)
                     chosen[kind.file] = image?.id ?: NONE
                 } catch (e: SteamGridDbException) {
-                    if (e.message == SteamGridDbClient.KEY_REJECTED) throw e
-                    LimeLog.info("SteamGridDB: no ${kind.file} for ${app.name}: ${e.message}")
+                    if (e.failure == SgdbFailure.KEY_REJECTED) throw e
+                    LimeLog.info("SteamGridDB: no ${kind.file} for ${app.name}: ${e.message}") // l10n-ignore
                 }
             }
             writeMatch(pc, app, match.copy(chosen = chosen))
@@ -469,7 +497,7 @@ class ArtworkStore(context: Context) {
     private suspend fun changed() = withContext(Dispatchers.Main) { version.intValue++ }
 
     private fun client(): SteamGridDbClient {
-        val key = apiKey.ifEmpty { throw SteamGridDbException("Add your SteamGridDB API key first") }
+        val key = apiKey.ifEmpty { throw SteamGridDbException(SgdbFailure.NO_KEY) }
         return SteamGridDbClient(key, http)
     }
 
@@ -529,12 +557,12 @@ class ArtworkStore(context: Context) {
  * with [refresh] (hand-picked images stay). Stops at the first error that concerns every game (no key, a
  * rejected key) and reports it with [onError]. Returns how many games were found on SteamGridDB.
  */
-suspend fun ArtworkStore.downloadAll(pc: Pc, apps: List<App>, refresh: Boolean, onError: (String) -> Unit): Int {
+suspend fun ArtworkStore.downloadAll(pc: Pc, apps: List<App>, refresh: Boolean, onError: (SteamGridDbException) -> Unit): Int {
     val todo = if (refresh) apps.filter { eligible(it) } else missing(pc, apps)
     if (todo.isEmpty() || progress.value != null) return 0
     var found = 0
     var done = 0
-    var failed: String? = null
+    var failed: SteamGridDbException? = null
     val games = Semaphore(2)
     progress.value = ArtworkProgress(0, todo.size)
     try {
@@ -546,9 +574,9 @@ suspend fun ArtworkStore.downloadAll(pc: Pc, apps: List<App>, refresh: Boolean, 
                         try {
                             if (fetch(pc, app, refresh)) found++
                         } catch (e: SteamGridDbException) {
-                            failed = e.message ?: "SteamGridDB is not reachable"
+                            failed = e
                         } catch (e: IOException) {
-                            LimeLog.info("SteamGridDB: ${app.name}: $e")
+                            LimeLog.info("SteamGridDB: ${app.name}: $e") // l10n-ignore
                         }
                         done++
                         progress.value = ArtworkProgress(done, todo.size)
