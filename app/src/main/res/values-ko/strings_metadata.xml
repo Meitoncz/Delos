@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="metadata_hdr_unverified">HDR/SDR 미확인</string>
+
+    <string name="metadata_filtered_title">필터에 맞는 게임이 없어요</string>
+    <string name="metadata_filtered_note">%1$s 버튼으로 필터를 바꾸거나 아래에서 초기화해 주세요.</string>
+    <string name="metadata_filtered_reset">라이브러리 필터 초기화</string>
+
+    <string name="metadata_error_unavailable">이 빌드에서는 게임 메타데이터를 사용할 수 없어요</string>
+    <string name="metadata_error_update">게임 정보를 업데이트하지 못했어요. 메타데이터에서 새로고침하거나 일치 항목을 선택해 주세요.</string>
+    <string name="metadata_error_partial">일부 게임 정보를 가져올 수 없어요. 메타데이터에서 새로고침해 주세요.</string>
+
+    <string name="metadata_menu_title">메타데이터 · %1$s</string>
+    <string name="metadata_menu_search">IGDB 검색 / 일치 항목 변경</string>
+    <string name="metadata_menu_refresh">메타데이터 새로고침</string>
+    <string name="metadata_menu_reset">메타데이터 일치 초기화</string>
+    <string name="metadata_refreshed_toast">메타데이터를 새로고침했어요</string>
+    <string name="metadata_reset_toast">메타데이터 일치를 초기화했어요</string>
+    <string name="metadata_no_match_toast">일치하는 IGDB 항목이 없어요. IGDB 검색 / 일치 항목 변경을 이용해 주세요.</string>
+    <string name="metadata_update_failed_toast">메타데이터를 업데이트하지 못했어요</string>
+
+    <string name="metadata_searching_toast">IGDB에서 %1$s 검색 중…</string>
+    <string name="metadata_search_unavailable_toast">IGDB 검색을 사용할 수 없어요</string>
+    <string name="metadata_matched_toast">메타데이터를 %1$s과(와) 연결했어요</string>
+    <string name="metadata_match_save_failed_toast">메타데이터 일치를 저장하지 못했어요</string>
+    <string name="metadata_candidate_with_year">%1$s (%2$d)</string>
+    <string name="metadata_matches_previous">이전 일치 항목</string>
+    <string name="metadata_matches_more">일치 항목 더 보기</string>
+    <string name="metadata_search_other">다른 이름으로 검색</string>
+    <string name="metadata_search_title">IGDB 검색</string>
+    <string name="metadata_search_note">SteamGridDB 아트워크와 별개로 메타데이터를 선택해요.</string>
+    <string name="metadata_search_hint">게임 이름</string>
+    <string name="metadata_search_action">검색</string>
+    <string name="metadata_matches_none">%1$s에 일치하는 IGDB 항목이 없어요</string>
+    <string name="metadata_matches_title">메타데이터 일치 항목 선택</string>
+
+    <plurals name="metadata_hltb_minutes">
+        <item quantity="other">%1$d분</item>
+    </plurals>
+    <plurals name="metadata_hltb_hours">
+        <item quantity="other">%1$s시간</item>
+    </plurals>
+</resources>

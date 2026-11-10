@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="link_transport_other">이 네트워크</string>
+
+    <string name="link_age_just_now">방금</string>
+    <plurals name="link_age_minutes">
+        <item quantity="other">%d분 전</item>
+    </plurals>
+    <plurals name="link_age_hours">
+        <item quantity="other">%d시간 전</item>
+    </plurals>
+    <string name="link_age_yesterday">어제</string>
+    <plurals name="link_age_days">
+        <item quantity="other">%d일 전</item>
+    </plurals>
+    <plurals name="link_age_weeks">
+        <item quantity="other">%d주 전</item>
+    </plurals>
+    <plurals name="link_age_months">
+        <item quantity="other">%d개월 전</item>
+    </plurals>
+    <string name="link_tested_summary">%2$s에서 %1$s 테스트함</string>
+
+    <string name="link_reason_untested">이 연결에서 테스트 안 함</string>
+    <string name="link_reason_tested_ok">연결이 최대 %1$s까지 가능</string>
+    <string name="link_reason_tested_limited">연결 속도 %1$s</string>
+    <string name="link_reason_host_limited">PC 연결 속도 %1$s</string>
+    <string name="link_reason_dropping">%1$s에서 프레임 드롭 발생</string>
+    <string name="link_recommended_line">권장: %1$s · %2$s</string>
+    <string name="link_value_reason">%1$s · %2$s</string>
+    <string name="link_recommended_plain">권장: %1$d Mbps</string>
+
+    <string name="link_test_action">연결 테스트</string>
+    <string name="link_test_row_untested">%1$s에서 아직 테스트 안 함</string>
+    <string name="link_help_untested">%1$s에서 테스트하지 않았어요. 연결 테스트로 전송 가능한 속도를 측정해 보세요.</string>
+    <string name="link_help_joined">%1$s: %2$s</string>
+    <string name="link_help_tested_ok">최대 %1$s까지 전송할 수 있어요. %3$s에는 %2$s이면 충분해요.</string>
+    <string name="link_help_host_limited">%1$s까지 전송할 수 있어요. %2$s에서는 PC 자체의 연결 속도가 한계예요.</string>
+    <string name="link_help_limited">%1$s까지 전송할 수 있어요. %2$s에는 %3$s이 필요해요.</string>
+    <string name="link_help_limited_picture">%1$s까지 전송할 수 있어요. %2$s에는 %3$s이 필요하고, FEC와 오버헤드를 빼면 영상에 쓸 수 있는 속도는 약 %4$s예요.</string>
+    <string name="link_pc_offline_toast">%1$s 오프라인</string>
+    <string name="link_test_detail">%1$s에서 이 네트워크가 전송할 수 있는 속도를 측정해요. 단계마다 약 2초 동안 최대 수백 Mbps의 테스트 트래픽을 보내요. %2$s에 연결한 상태로 다른 작업은 하지 마세요.</string>
+    <string name="link_use_action">권장 비트레이트 사용</string>
+    <string name="link_use_done_toast">비트레이트를 %1$s(으)로 설정했어요</string>
+    <string name="link_use_detail">비트레이트를 %1$s(으)로 채워요: %2$s. Delos는 비트레이트를 스스로 바꾸지 않아요.</string>
+
+    <string name="link_unavailable_newer_delos">이 PC에서 연결 테스트를 하려면 더 최신 버전의 Delos가 필요해요.</string>
+    <string name="link_unavailable_host_outdated">이 PC의 Vibepollo는 아직 연결 테스트를 지원하지 않아요. 업데이트해 주세요.</string>
+
+    <string name="link_stream_help_dropping">%1$s에서 프레임 드롭이 발생해요. A로 슬라이더를 채우고 적용으로 전송해요.</string>
+    <string name="link_stream_help_dropping_untested">%1$s에서 프레임 드롭이 발생해요. A로 슬라이더를 채우고 적용으로 전송해요. 연결하기 전에 설정에서 연결 테스트를 해 보세요.</string>
+    <string name="link_stream_help_tested">%1$s. A로 슬라이더를 채우고 적용으로 전송해요.</string>
+    <string name="link_stream_help_untested">아직 테스트하지 않았어요. A로 슬라이더를 채우고 적용으로 전송해요. 연결하기 전에 설정에서 연결 테스트를 해 보세요.</string>
+
+    <string name="link_reading_measuring">측정 중</string>
+    <string name="link_reading_keeps_up">%1$s까지 연결 충분</string>
+    <string name="link_reading_drops">%1$s에서 프레임 드롭 발생, %2$s 시도 권장</string>
+    <string name="link_reading_device_behind">기기에서 프레임을 건너뜀, 연결은 정상</string>
+
+    <string name="link_failure_host_unsupported">이 PC의 Vibepollo는 연결 테스트를 지원하지 않아요. 업데이트해 주세요.</string>
+    <string name="link_failure_stream_active">PC가 스트리밍 중이에요. 스트림을 중단한 뒤 다시 테스트해 주세요.</string>
+    <string name="link_failure_denied">PC가 테스트를 허용하지 않았어요. 이 기기를 다시 페어링해 주세요.</string>
+    <string name="link_failure_udp_blocked">테스트 데이터가 도착하지 않았어요. 이 네트워크에서 UDP가 차단되었을 수 있어요.</string>
+    <string name="link_failure_network">Delos가 PC에 연결하지 못했어요.</string>
+    <string name="link_failure_timeout">PC가 제때 테스트를 끝내지 못했어요.</string>
+    <string name="link_failure_host_error">PC에서 테스트를 실행하지 못했어요.</string>
+    <string name="link_failure_invalid_response">PC가 사용할 수 없는 테스트 결과를 보냈어요.</string>
+    <string name="link_failure_not_connected">Delos가 아직 %1$s에 연결하는 중이에요.</string>
+
+    <string name="link_verdict_receiver_suspect">이 기기는 %1$s의 속도로 수신하지 못했어요</string>
+    <string name="link_verdict_loss">%2$s에서 테스트 패킷 %1$.1f%% 손실</string>
+    <string name="link_verdict_window_loss">%2$s에서 100ms 구간 내 패킷 최대 %1$.1f%% 손실</string>
+    <string name="link_verdict_delay_growth">%1$s에서 지연이 계속 늘었어요 (연결에 대기열이 쌓임)</string>
+    <string name="link_verdict_no_packets">테스트 데이터가 도착하지 않았어요. 이 네트워크에서 UDP가 차단되었을 수 있어요</string>
+    <string name="link_verdict_not_all_sent">%2$s에서 PC가 테스트 데이터의 %1$.1f%%만 보냈어요</string>
+    <string name="link_verdict_sender_duration">테스트 중 PC의 타이밍이 어긋났어요</string>
+    <string name="link_verdict_passed">%1$s 통과</string>
+    <string name="link_verdict_stable">안정적</string>
+    <string name="link_verdict_stable_jitter">안정적, 지터 약간</string>
+    <string name="link_verdict_no_rate_tested">테스트할 수 있는 속도가 없었어요</string>
+    <string name="link_no_rate_passed_once">%1$s. %2$s은 한 번 통과했지만 유지되지 않았어요.</string>
+    <string name="link_no_rate_nothing_passed">%1$s. %2$s까지 내려가도 통과한 속도가 없었어요.</string>
+    <string name="link_no_rate_plain">%1$s.</string>
+</resources>

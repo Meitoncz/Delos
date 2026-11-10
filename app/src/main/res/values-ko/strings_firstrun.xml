@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="firstrun_boot_tagline">Vibepollo에서 내 손안으로 스트리밍되는 PC 게임</string>
+    <string name="firstrun_boot_begin">시작하기</string>
+    <string name="firstrun_boot_skip">홈으로 건너뛰기</string>
+    <string name="firstrun_create_new_title">누가 플레이하나요?</string>
+    <string name="firstrun_create_new_note">프로필 아바타와 이름을 골라 주세요.</string>
+    <string name="firstrun_create_edit_title">아바타 선택</string>
+    <string name="firstrun_create_edit_note">원하면 이름도 바꿔 보세요.</string>
+    <string name="firstrun_create_name_title">프로필 이름</string>
+    <string name="firstrun_create_name_label">프로필 이름</string>
+    <string name="firstrun_create_name_placeholder">내 이름</string>
+    <string name="firstrun_create_default_name">플레이어</string>
+    <string name="firstrun_create_change_name">이름 변경</string>
+    <string name="firstrun_create_save">저장</string>
+    <string name="firstrun_create_create">프로필 만들기</string>
+    <string name="firstrun_avatar_sailor">선원</string>
+    <string name="firstrun_avatar_voyager">항해자</string>
+    <string name="firstrun_avatar_player">플레이어</string>
+    <string name="firstrun_avatar_fox">여우</string>
+    <string name="firstrun_avatar_spark">불꽃</string>
+    <string name="firstrun_avatar_calm">평온</string>
+    <string name="firstrun_avatar_knight">기사</string>
+    <string name="firstrun_avatar_robot">로봇</string>
+    <string name="firstrun_avatar_cat">고양이</string>
+    <string name="firstrun_avatar_wizard">마법사</string>
+    <string name="firstrun_avatar_racer">레이서</string>
+    <string name="firstrun_avatar_ghost">유령</string>
+</resources>
