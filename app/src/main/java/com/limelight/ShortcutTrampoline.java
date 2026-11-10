@@ -17,12 +17,11 @@ import com.limelight.utils.ToastKind;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.limelight.computers.ComputerDatabaseManager;
-import com.limelight.computers.ComputerManagerListener;
+import com.limelight.computers.ShortcutPcPlan;
 import com.limelight.computers.ComputerManagerService;
 import com.limelight.nvstream.http.ComputerDetails;
 import com.limelight.nvstream.http.NvApp;
 import com.limelight.nvstream.http.NvHTTP;
-import com.limelight.nvstream.http.PairingManager;
 import com.limelight.nvstream.wol.WakeOnLanSender;
 import com.limelight.shell.data.GameLauncher;
 import com.limelight.utils.CacheHelper;
@@ -58,10 +57,16 @@ public class ShortcutTrampoline extends AppCompatActivity {
 
     private ArrayList<Intent> intentStack = new ArrayList<>();
 
-    private int wakeHostTries = 10;
-    private ComputerDetails computer;
+    // The PC is looked up through the service's poll-now call, not through startPolling: the polling and its
+    // listener are shared with the Delos UI (which stops them when this activity covers it), so waiting on
+    // them could wait for a round nobody runs any more.
+    private static final long WAKE_RETRY_DELAY_MS = 3000;
+    private static final long POLL_RETRY_DELAY_MS = 1000;
 
-    private ComputerManagerService.ComputerManagerBinder managerBinder;
+    private volatile ComputerManagerService.ComputerManagerBinder managerBinder;
+    private volatile Thread lookupThread;
+    // Only touched on the main thread
+    private boolean serviceBound;
 
     private static final String TAG = "ShortcutTrampoline";
 
@@ -71,122 +76,136 @@ public class ShortcutTrampoline extends AppCompatActivity {
                     ((ComputerManagerService.ComputerManagerBinder)binder);
 
             // Wait in a separate thread to avoid stalling the UI
-            new Thread() {
-                @Override
-                public void run() {
-                    // Wait for the binder to be ready
-                    localBinder.waitForReady();
-
-                    // Now make the binder visible
-                    managerBinder = localBinder;
-
-                    // Get the computer object
-                    computer = managerBinder.getComputer(uuidString);
-
-                    if (computer == null) {
-                        reject(R.string.scut_pc_not_found);
-
-                        if (managerBinder != null) {
-                            unbindService(serviceConnection);
-                            managerBinder = null;
-                        }
-
-                        return;
-                    }
-
-                    // Force CMS to repoll this machine
-                    managerBinder.invalidateStateForComputer(computer.uuid);
-
-                    // Start polling
-                    managerBinder.startPolling(new ComputerManagerListener() {
-                        @Override
-                        public void notifyComputerUpdated(final ComputerDetails details) {
-                            // Don't care about other computers
-                            if (!details.uuid.equalsIgnoreCase(uuidString)) {
-                                return;
-                            }
-
-                            // Try to wake the target PC if it's not online (up to some retry limit)
-                            if (details.state != ComputerDetails.State.ONLINE && details.macAddress != null && --wakeHostTries >= 0) {
-                                try {
-                                    // Make a best effort attempt to wake the target PC
-                                    WakeOnLanSender.sendWolPacket(computer);
-
-                                    // If we sent at least one WoL packet, reset the computer state
-                                    // to force ComputerManager to poll it again.
-                                    managerBinder.invalidateStateForComputer(computer.uuid);
-                                    return;
-                                } catch (IOException e) {
-                                    // If we got an exception, we couldn't send a single WoL packet,
-                                    // so fallthrough into the offline error path.
-                                    e.printStackTrace();
-                                }
-                            }
-
-                            if (details.state != ComputerDetails.State.UNKNOWN) {
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        // If the managerBinder was destroyed before this callback,
-                                        // just finish the activity.
-                                        if (managerBinder == null) {
-                                            finish();
-                                            return;
-                                        }
-
-                                        if (details.state == ComputerDetails.State.ONLINE && details.pairState == PairingManager.PairState.PAIRED) {
-                                            
-                                            // Launch game if provided app ID, otherwise launch app view
-                                            if (app != null) {
-                                                if (details.runningGameId == 0 || details.runningGameId == app.getAppId() || Objects.equals(details.runningGameUUID, app.getAppUUID())) {
-                                                    intentStack.add(GameLauncher.startIntent(ShortcutTrampoline.this, managerBinder, details, app).getIntent());
-
-                                                    // Close this activity; the stream's loader goes on from the launch scene
-                                                    finish();
-
-                                                    // Now start the activities
-                                                    startActivities(intentStack.toArray(new Intent[]{}));
-                                                } else {
-                                                    // Another game is running on the PC. Delos never quits it without an explicit
-                                                    // choice in its own menu ("Quit X and start"), and this activity cannot tell a
-                                                    // pinned shortcut from another app's intent, so nothing is quit here and no
-                                                    // dialog asks: open the PC's games in Delos, where the running game is marked
-                                                    // and the menu of the chosen game offers to quit it and start.
-                                                    DelosToast.show(getApplicationContext(), getRunningGameMessage(details), DelosToast.LONG);
-
-                                                    openPcInDelos();
-                                                }
-                                            } else {
-                                                openPcInDelos();
-                                            }
-                                            
-                                        }
-                                        else if (details.state == ComputerDetails.State.OFFLINE) {
-                                            failStart(details, ShortcutFailure.OFFLINE);
-                                        } else if (details.pairState != PairingManager.PairState.PAIRED) {
-                                            failStart(details, ShortcutFailure.NOT_PAIRED);
-                                        }
-
-                                        // We don't want any more callbacks from now on, so go ahead
-                                        // and unbind from the service
-                                        if (managerBinder != null) {
-                                            managerBinder.stopPolling();
-                                            unbindService(serviceConnection);
-                                            managerBinder = null;
-                                        }
-                                    }
-                                });
-                            }
-                        }
-                    });
-                }
-            }.start();
+            Thread thread = new Thread(() -> lookUpPc(localBinder), "ShortcutTrampoline PC lookup");
+            lookupThread = thread;
+            thread.start();
         }
 
         public void onServiceDisconnected(ComponentName className) {
             managerBinder = null;
         }
     };
+
+    /**
+     * Brings the PC's state up to date and decides what the shortcut does (see {@link ShortcutPcPlan}): a state
+     * the service polled a moment ago is used as it is, otherwise the PC is polled right away. An offline PC
+     * is woken (Wake-on-LAN) and polled until it answers or the tries run out. Runs on its own thread.
+     */
+    private void lookUpPc(ComputerManagerService.ComputerManagerBinder binder) {
+        boolean discovering = false;
+        try {
+            // Wait for the binder to be ready
+            binder.waitForReady();
+            if (Thread.currentThread().isInterrupted()) {
+                return;
+            }
+
+            // Now make the binder visible
+            managerBinder = binder;
+
+            int failedPolls = 0;
+            int wakesSent = 0;
+            ComputerDetails details = binder.pollComputerNow(uuidString, ShortcutPcPlan.FRESH_STATE_MS);
+            while (true) {
+                if (details == null) {
+                    reject(R.string.scut_pc_not_found);
+                    return;
+                }
+                if (details.state != ComputerDetails.State.ONLINE) {
+                    failedPolls++;
+                }
+
+                ShortcutPcPlan.Step step = ShortcutPcPlan.afterPoll(details.state, details.pairState,
+                        failedPolls, details.macAddress != null, wakesSent);
+                if (step != ShortcutPcPlan.Step.POLL && step != ShortcutPcPlan.Step.WAKE_THEN_POLL) {
+                    complete(details, step);
+                    return;
+                }
+
+                // Not online yet. The PC may have a new address: look for it on the network meanwhile.
+                if (!discovering) {
+                    binder.startDiscovery();
+                    discovering = true;
+                }
+
+                if (step == ShortcutPcPlan.Step.WAKE_THEN_POLL) {
+                    try {
+                        // Make a best effort attempt to wake the target PC
+                        WakeOnLanSender.sendWolPacket(details);
+                        wakesSent++;
+                    } catch (IOException e) {
+                        // We couldn't send a single WoL packet, so this is the offline error path.
+                        Log.w(TAG, "Wake-on-LAN failed", e);
+                        complete(details, ShortcutPcPlan.Step.FAIL_OFFLINE);
+                        return;
+                    }
+                }
+
+                Thread.sleep(step == ShortcutPcPlan.Step.WAKE_THEN_POLL ? WAKE_RETRY_DELAY_MS : POLL_RETRY_DELAY_MS);
+                details = binder.pollComputerNow(uuidString, -1);
+            }
+        } catch (InterruptedException e) {
+            // The activity went away; nothing left to start
+            Thread.currentThread().interrupt();
+        } finally {
+            if (discovering) {
+                binder.stopDiscovery();
+            }
+        }
+    }
+
+    /** Acts on the PC's final state on the main thread: the game, the PC's games, or the failure of the start. */
+    private void complete(ComputerDetails details, ShortcutPcPlan.Step step) {
+        runOnUiThread(() -> {
+            // If the activity was stopped before this, there is nothing left to start
+            if (managerBinder == null || isFinishing()) {
+                finish();
+                return;
+            }
+
+            if (step == ShortcutPcPlan.Step.START) {
+                // Launch game if provided app ID, otherwise launch app view
+                if (app != null) {
+                    if (details.runningGameId == 0 || details.runningGameId == app.getAppId() || Objects.equals(details.runningGameUUID, app.getAppUUID())) {
+                        intentStack.add(GameLauncher.startIntent(ShortcutTrampoline.this, managerBinder, details, app).getIntent());
+
+                        // Close this activity; the stream's loader goes on from the launch scene
+                        finish();
+
+                        // Now start the activities
+                        startActivities(intentStack.toArray(new Intent[]{}));
+                    } else {
+                        // Another game is running on the PC. Delos never quits it without an explicit
+                        // choice in its own menu ("Quit X and start"), and this activity cannot tell a
+                        // pinned shortcut from another app's intent, so nothing is quit here and no
+                        // dialog asks: open the PC's games in Delos, where the running game is marked
+                        // and the menu of the chosen game offers to quit it and start.
+                        DelosToast.show(getApplicationContext(), getRunningGameMessage(details), DelosToast.LONG);
+
+                        openPcInDelos();
+                    }
+                } else {
+                    openPcInDelos();
+                }
+            } else if (step == ShortcutPcPlan.Step.FAIL_OFFLINE) {
+                failStart(details, ShortcutFailure.OFFLINE);
+            } else {
+                failStart(details, ShortcutFailure.NOT_PAIRED);
+            }
+
+            // Nothing more is needed from the service
+            releaseService();
+        });
+    }
+
+    /** Unbinds from the computer manager service (once). Main thread. */
+    private void releaseService() {
+        managerBinder = null;
+        if (serviceBound) {
+            serviceBound = false;
+            unbindService(serviceConnection);
+        }
+    }
 
     /** A shortcut that names nothing Delos can start (no known PC to show a result for): a toast, then this activity ends. */
     private void reject(String message) {
@@ -476,7 +495,7 @@ public class ShortcutTrampoline extends AppCompatActivity {
         }
 
         // Bind to the computer manager service
-        bindService(new Intent(this, ComputerManagerService.class), serviceConnection,
+        serviceBound = bindService(new Intent(this, ComputerManagerService.class), serviceConnection,
                 Service.BIND_AUTO_CREATE);
 
         // Delos: the launch scene of the new UI while the PC is looked up (no classic spinner dialog); the
@@ -493,11 +512,12 @@ public class ShortcutTrampoline extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
 
-        if (managerBinder != null) {
-            managerBinder.stopPolling();
-            unbindService(serviceConnection);
-            managerBinder = null;
+        // The activity is gone for good (noHistory): end a lookup that is still waiting for the PC
+        Thread thread = lookupThread;
+        if (thread != null) {
+            thread.interrupt();
         }
+        releaseService();
 
         finish();
     }

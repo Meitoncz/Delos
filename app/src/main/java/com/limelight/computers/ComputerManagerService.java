@@ -279,30 +279,75 @@ public class ComputerManagerService extends Service {
         }
 
         public ComputerDetails getComputer(String uuid) {
-            synchronized (pollingTuples) {
-                for (PollingTuple tuple : pollingTuples) {
-                    if (uuid.equals(tuple.computer.uuid)) {
-                        return tuple.computer;
-                    }
-                }
-            }
-
-            return null;
+            PollingTuple tuple = findTuple(uuid);
+            return tuple != null ? tuple.computer : null;
         }
 
         public void invalidateStateForComputer(String uuid) {
-            synchronized (pollingTuples) {
-                for (PollingTuple tuple : pollingTuples) {
-                    if (uuid.equals(tuple.computer.uuid)) {
-                        // We need the network lock to prevent a concurrent poll
-                        // from wiping this change out
-                        synchronized (tuple.networkLock) {
-                            tuple.computer.state = ComputerDetails.State.UNKNOWN;
-                        }
-                    }
+            // Look the PC up first: the lock of the polling tuples must not be held while waiting for a
+            // poll in flight (stopPolling and the polling threads' callbacks need it)
+            PollingTuple tuple = findTuple(uuid);
+            if (tuple != null) {
+                // We need the network lock to prevent a concurrent poll
+                // from wiping this change out
+                synchronized (tuple.networkLock) {
+                    tuple.computer.state = ComputerDetails.State.UNKNOWN;
                 }
             }
         }
+
+        /**
+         * The state of the PC as of now, for a caller that cannot wait for the polling thread's next round
+         * (a shortcut or link that starts a game). Blocks, so never call it on the main thread. Independent of
+         * startPolling/stopPolling: it works while nothing is polling and is not cut short when another
+         * client stops the polling.
+         *
+         * @param maxCachedAgeMs a state that is ONLINE and was polled at most this long ago is returned without
+         *                       a poll; negative always polls
+         * @return the service's live details of the PC, or null when the PC is unknown (or was removed meanwhile)
+         */
+        public ComputerDetails pollComputerNow(String uuid, long maxCachedAgeMs) throws InterruptedException {
+            PollingTuple tuple = findTuple(uuid);
+            if (tuple == null) {
+                return null;
+            }
+
+            // The lock of the polling thread: one request to the PC at a time. A poll in flight is waited for,
+            // and what it learned may already be enough.
+            synchronized (tuple.networkLock) {
+                long ageMs = tuple.lastSuccessfulPollMs == 0 ? -1 : SystemClock.elapsedRealtime() - tuple.lastSuccessfulPollMs;
+                if (ShortcutPcPlan.canUseCachedState(tuple.computer.state, ageMs, maxCachedAgeMs)) {
+                    return tuple.computer;
+                }
+
+                // An offline count that ends the retries: a failed poll is reported as offline right away
+                if (!runPoll(tuple.computer, false, Integer.MAX_VALUE)) {
+                    return null;
+                }
+                tuple.lastSuccessfulPollMs = SystemClock.elapsedRealtime();
+            }
+            return tuple.computer;
+        }
+
+        /** Looks for PCs on the local network (mDNS), for a PC that changed its address; stopDiscovery ends it. */
+        public void startDiscovery() {
+            discoveryBinder.startDiscovery(MDNS_QUERY_PERIOD_MS);
+        }
+
+        public void stopDiscovery() {
+            discoveryBinder.stopDiscovery();
+        }
+    }
+
+    private PollingTuple findTuple(String uuid) {
+        synchronized (pollingTuples) {
+            for (PollingTuple tuple : pollingTuples) {
+                if (uuid.equals(tuple.computer.uuid)) {
+                    return tuple;
+                }
+            }
+        }
+        return null;
     }
 
     @Override
@@ -949,7 +994,7 @@ class PollingTuple {
     public Thread thread;
     public final ComputerDetails computer;
     public final Object networkLock;
-    public long lastSuccessfulPollMs;
+    public volatile long lastSuccessfulPollMs;
 
     public PollingTuple(ComputerDetails computer, Thread thread) {
         this.computer = computer;
