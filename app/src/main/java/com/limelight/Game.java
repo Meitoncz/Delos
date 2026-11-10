@@ -2047,14 +2047,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         int eventSource = event.getSource();
         int deviceSources = event.getDevice() != null ? event.getDevice().getSources() : 0;
         if ((eventSource & InputDevice.SOURCE_CLASS_JOYSTICK) != 0) {
-            // Delos: see handleKeyDown()
-            KeyBoardLayoutController fullKeyboard = visibleFullKeyboard();
-            if (fullKeyboard != null) {
-                return fullKeyboard.onControllerMotion(event);
-            }
-            if (controllerHandler.handleMotionEvent(event)) {
-                return true;
-            }
+            return handleControllerMotionEvent(event);
         }
         else if ((deviceSources & InputDevice.SOURCE_CLASS_JOYSTICK) != 0 && controllerHandler.tryHandleTouchpadEvent(event)) {
             return true;
@@ -2063,344 +2056,372 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                 (eventSource & InputDevice.SOURCE_CLASS_POSITION) != 0 ||
                 eventSource == InputDevice.SOURCE_MOUSE_RELATIVE)
         {
-            boolean hasActionButton = Build.VERSION.SDK_INT < Build.VERSION_CODES.M || (event.getActionButton() != 0);
-            // This case is for mice and non-finger touch devices
-            if (
-                    eventSource == InputDevice.SOURCE_MOUSE ||
-                            ((eventSource & InputDevice.SOURCE_CLASS_POSITION) != 0 && hasActionButton) || // SOURCE_TOUCHPAD
-                            (eventSource == InputDevice.SOURCE_MOUSE_RELATIVE ||
-                                    (event.getPointerCount() >= 1 &&
-                                            (event.getToolType(0) == MotionEvent.TOOL_TYPE_MOUSE ||
-                                                    event.getToolType(0) == MotionEvent.TOOL_TYPE_STYLUS ||
-                                                    event.getToolType(0) == MotionEvent.TOOL_TYPE_ERASER)) ||
-                                    eventSource == 12290) // 12290 = Samsung DeX mode desktop mouse
-            ) {
-                int buttonState = event.getButtonState();
-                int changedButtons = buttonState ^ lastButtonState;
-
-                // Two finger click
-                if ((eventSource & InputDevice.SOURCE_CLASS_POSITION) != 0 &&
-                        event.getPointerCount() == 2 &&
-                        (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && event.getActionButton() == MotionEvent.BUTTON_PRIMARY)) {
-                    if (event.getActionMasked() == MotionEvent.ACTION_BUTTON_PRESS) {
-                        buttonState |= MotionEvent.BUTTON_SECONDARY;
-                    }
-                    else if (event.getActionMasked() == MotionEvent.ACTION_BUTTON_RELEASE) {
-                        buttonState &= ~MotionEvent.BUTTON_SECONDARY;
-                    }
-                    // We may not pressing the primary button down from a previous event,
-                    // so be sure to clear that bit out the button state.
-                    buttonState &= ~MotionEvent.BUTTON_PRIMARY;
-                    buttonState |= (lastButtonState & MotionEvent.BUTTON_PRIMARY);
-
-                    changedButtons = buttonState ^ lastButtonState;
-                }
-
-                // Ignore mouse input if we're not capturing from our input source
-                if (!inputCaptureProvider.isCapturingActive()) {
-                    // We return true here because otherwise the events may end up causing
-                    // Android to synthesize d-pad events.
-                    return true;
-                }
-
-                // Always update the position before sending any button events. If we're
-                // dealing with a stylus without hover support, our position might be
-                // significantly different than before.
-                if (inputCaptureProvider.eventHasRelativeMouseAxes(event)) {
-                    // Send the deltas straight from the motion event
-                    short deltaX = (short)inputCaptureProvider.getRelativeAxisX(event);
-                    short deltaY = (short)inputCaptureProvider.getRelativeAxisY(event);
-
-                    if (deltaX != 0 || deltaY != 0) {
-                        if (prefConfig.absoluteMouseMode) {
-                            // NB: view may be null, but we can unconditionally use streamView because we don't need to adjust
-                            // relative axis deltas for the position of the streamView within the parent's coordinate system.
-                            conn.sendMouseMoveAsMousePosition(deltaX, deltaY, (short) streamContainer.getWidth(), (short) streamContainer.getHeight());
-                        }
-                        else {
-                            conn.sendMouseMove(deltaX, deltaY);
-                        }
-                    }
-                }
-                else if ((eventSource & InputDevice.SOURCE_CLASS_POSITION) != 0) {
-                    // If this input device is not associated with the view itself (like a trackpad),
-                    // we'll convert the device-specific coordinates to use to send the cursor position.
-                    // This really isn't ideal but it's probably better than nothing.
-                    //
-                    // Trackpad on newer versions of Android (Oreo and later) should be caught by the
-                    // relative axes case above. If we get here, we're on an older version that doesn't
-                    // support pointer capture.
-                    InputDevice device = event.getDevice();
-                    if (device != null) {
-                        InputDevice.MotionRange xRange = device.getMotionRange(MotionEvent.AXIS_X, eventSource);
-                        InputDevice.MotionRange yRange = device.getMotionRange(MotionEvent.AXIS_Y, eventSource);
-
-                        // All touchpads coordinate planes should start at (0, 0)
-                        if (xRange != null && yRange != null && xRange.getMin() == 0 && yRange.getMin() == 0) {
-                            int xMax = (int)xRange.getMax();
-                            int yMax = (int)yRange.getMax();
-
-                            // Touchpads must be smaller than (65535, 65535)
-                            if (xMax <= Short.MAX_VALUE && yMax <= Short.MAX_VALUE) {
-                                conn.sendMousePosition((short)event.getX(), (short)event.getY(),
-                                        (short)xMax, (short)yMax);
-                            }
-                        }
-                    }
-                }
-                else if (view != null && trySendPenEvent(view, event)) {
-                    // If our host supports pen events, send it directly
-                    return true;
-                }
-                else if (view != null) {
-                    if (event.getToolType(0) == MotionEvent.TOOL_TYPE_FINGER) {
-                        // Handle trackpad two finger swipes when pointer is not captured by synthesizing a trackpad movement
-                        // Android emulates trackpad  two finger swipes as one finger swipe on the screen
-                        int eventAction = event.getActionMasked();
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && event.getClassification() == MotionEvent.CLASSIFICATION_TWO_FINGER_SWIPE) {
-                            if (!pointerSwiping) {
-                                pointerSwiping = true;
-                                handleTouchInput(event, trackpadContextMap, false, prefConfig.trackpadSwapAxis, MotionEvent.ACTION_POINTER_DOWN, 1, 2);
-                            }
-                            return handleTouchInput(event, trackpadContextMap, false, prefConfig.trackpadSwapAxis, MotionEvent.ACTION_MOVE, 1, 2);
-                        } else if (pointerSwiping && eventAction == MotionEvent.ACTION_UP) {
-                            pointerSwiping = false;
-                            synthClickPending = false;
-                            handleTouchInput(event, trackpadContextMap, false, prefConfig.trackpadSwapAxis, MotionEvent.ACTION_POINTER_UP, 1, 2);
-                            return true;
-                        }
-
-                        // Press & Hold / Double-Tap & Hold for Selection or Drag & Drop
-                        double positionDelta = Math.sqrt(
-                                Math.pow(event.getX() - lastTouchDownX, 2) +
-                                        Math.pow(event.getY() - lastTouchDownY, 2)
-                        );
-
-                        if (synthClickPending &&
-                                event.getEventTime() - synthTouchDownTime >= prefConfig.trackpadDragDropThreshold) {
-                            if (positionDelta > 50) {
-                                pendingDrag = false;
-                            } else if (pendingDrag) {
-                                pendingDrag = false;
-                                isDragging = true;
-                                if (prefConfig.trackpadDragDropVibration) {
-                                    Vibrator vibrator = ((Vibrator) getSystemService(Context.VIBRATOR_SERVICE));
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                        vibrator.vibrate(VibrationEffect.createOneShot(20, 127));
-                                    } else {
-                                        vibrator.vibrate(20);
-                                    }
-                                }
-                                conn.sendMouseButtonDown(MouseButtonPacket.BUTTON_LEFT);
-                                return true;
-                            }
-                        }
-
-                        switch (eventAction) {
-                            case MotionEvent.ACTION_HOVER_MOVE:
-                            case MotionEvent.ACTION_MOVE:
-                                updateMousePosition(view, event);
-                                return true;
-                            case MotionEvent.ACTION_HOVER_EXIT:
-                            case MotionEvent.ACTION_DOWN:
-                                pendingDrag = true;
-                                synthClickPending = true;
-                                lastTouchDownX = event.getX();
-                                lastTouchDownY = event.getY();
-                                synthTouchDownTime = event.getEventTime();
-                                return true;
-                            case MotionEvent.ACTION_HOVER_ENTER:
-                            case MotionEvent.ACTION_UP:
-                                if (synthClickPending) {
-                                    long timeDiff = event.getEventTime() - synthTouchDownTime;
-
-                                    if (eventSource == 12290) {
-                                        // Special handle for DeX
-                                        // DeX reports button secondary when tapping with two fingers
-                                        // So there's no need to distinguish left/right click by time difference
-                                        if (timeDiff < 120) {
-                                            conn.sendMouseButtonDown(MouseButtonPacket.BUTTON_LEFT);
-                                            conn.sendMouseButtonUp(MouseButtonPacket.BUTTON_LEFT);
-                                        }
-                                    } else {
-                                        if (timeDiff < 20) {
-                                            conn.sendMouseButtonDown(MouseButtonPacket.BUTTON_LEFT);
-                                            conn.sendMouseButtonUp(MouseButtonPacket.BUTTON_LEFT);
-                                        } else if (timeDiff < 120) {
-                                            conn.sendMouseButtonDown(MouseButtonPacket.BUTTON_RIGHT);
-                                            conn.sendMouseButtonUp(MouseButtonPacket.BUTTON_RIGHT);
-                                        }
-                                    }
-                                    if (isDragging) {
-                                        isDragging = false;
-                                        conn.sendMouseButtonUp(MouseButtonPacket.BUTTON_LEFT);
-                                    }
-                                    pendingDrag = false;
-                                    synthClickPending = false;
-                                }
-                                return true;
-                            case MotionEvent.ACTION_BUTTON_PRESS:
-                            case MotionEvent.ACTION_BUTTON_RELEASE:
-                                synthClickPending = false;
-                            default:
-                                break;
-                        }
-                    } else {
-                        updateMousePosition(view, event);
-                    }
-                }
-
-                if (event.getActionMasked() == MotionEvent.ACTION_SCROLL) {
-                    // Send the vertical scroll packet
-                    conn.sendMouseHighResScroll((short)(event.getAxisValue(MotionEvent.AXIS_VSCROLL) * 120));
-                    conn.sendMouseHighResHScroll((short)(event.getAxisValue(MotionEvent.AXIS_HSCROLL) * 120));
-                }
-
-                if ((changedButtons & MotionEvent.BUTTON_PRIMARY) != 0) {
-                    if ((buttonState & MotionEvent.BUTTON_PRIMARY) != 0) {
-                        conn.sendMouseButtonDown(MouseButtonPacket.BUTTON_LEFT);
-                    }
-                    else {
-                        conn.sendMouseButtonUp(MouseButtonPacket.BUTTON_LEFT);
-                    }
-                }
-
-                // Mouse secondary or stylus primary is right click (stylus down is left click)
-                if ((changedButtons & (MotionEvent.BUTTON_SECONDARY | MotionEvent.BUTTON_STYLUS_PRIMARY)) != 0) {
-                    if ((buttonState & (MotionEvent.BUTTON_SECONDARY | MotionEvent.BUTTON_STYLUS_PRIMARY)) != 0) {
-                        conn.sendMouseButtonDown(MouseButtonPacket.BUTTON_RIGHT);
-                    }
-                    else {
-                        conn.sendMouseButtonUp(MouseButtonPacket.BUTTON_RIGHT);
-                    }
-                }
-
-                // Mouse tertiary or stylus secondary is middle click
-                if ((changedButtons & (MotionEvent.BUTTON_TERTIARY | MotionEvent.BUTTON_STYLUS_SECONDARY)) != 0) {
-                    if ((buttonState & (MotionEvent.BUTTON_TERTIARY | MotionEvent.BUTTON_STYLUS_SECONDARY)) != 0) {
-                        conn.sendMouseButtonDown(MouseButtonPacket.BUTTON_MIDDLE);
-                    }
-                    else {
-                        conn.sendMouseButtonUp(MouseButtonPacket.BUTTON_MIDDLE);
-                    }
-                }
-
-                if (prefConfig.mouseNavButtons) {
-                    if ((changedButtons & MotionEvent.BUTTON_BACK) != 0) {
-                        if ((buttonState & MotionEvent.BUTTON_BACK) != 0) {
-                            conn.sendMouseButtonDown(MouseButtonPacket.BUTTON_X1);
-                        }
-                        else {
-                            conn.sendMouseButtonUp(MouseButtonPacket.BUTTON_X1);
-                        }
-                    }
-
-                    if ((changedButtons & MotionEvent.BUTTON_FORWARD) != 0) {
-                        if ((buttonState & MotionEvent.BUTTON_FORWARD) != 0) {
-                            conn.sendMouseButtonDown(MouseButtonPacket.BUTTON_X2);
-                        }
-                        else {
-                            conn.sendMouseButtonUp(MouseButtonPacket.BUTTON_X2);
-                        }
-                    }
-                }
-
-                // Handle stylus presses
-                if (event.getPointerCount() == 1 && event.getActionIndex() == 0) {
-                    if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
-                        if (event.getToolType(0) == MotionEvent.TOOL_TYPE_STYLUS) {
-                            lastAbsTouchDownTime = event.getEventTime();
-                            lastAbsTouchDownX = event.getX(0);
-                            lastAbsTouchDownY = event.getY(0);
-
-                            // Stylus is left click
-                            conn.sendMouseButtonDown(MouseButtonPacket.BUTTON_LEFT);
-                        } else if (event.getToolType(0) == MotionEvent.TOOL_TYPE_ERASER) {
-                            lastAbsTouchDownTime = event.getEventTime();
-                            lastAbsTouchDownX = event.getX(0);
-                            lastAbsTouchDownY = event.getY(0);
-
-                            // Eraser is right click
-                            conn.sendMouseButtonDown(MouseButtonPacket.BUTTON_RIGHT);
-                        }
-                    }
-                    else if (event.getActionMasked() == MotionEvent.ACTION_UP || event.getActionMasked() == MotionEvent.ACTION_CANCEL) {
-                        if (event.getToolType(0) == MotionEvent.TOOL_TYPE_STYLUS) {
-                            lastAbsTouchUpTime = event.getEventTime();
-                            lastAbsTouchUpX = event.getX(0);
-                            lastAbsTouchUpY = event.getY(0);
-
-                            // Stylus is left click
-                            conn.sendMouseButtonUp(MouseButtonPacket.BUTTON_LEFT);
-                        } else if (event.getToolType(0) == MotionEvent.TOOL_TYPE_ERASER) {
-                            lastAbsTouchUpTime = event.getEventTime();
-                            lastAbsTouchUpX = event.getX(0);
-                            lastAbsTouchUpY = event.getY(0);
-
-                            // Eraser is right click
-                            conn.sendMouseButtonUp(MouseButtonPacket.BUTTON_RIGHT);
-                        }
-                    }
-                }
-
-                lastButtonState = buttonState;
+            if (isMouseLikeEvent(event, eventSource)) {
+                // This case is for mice and non-finger touch devices
+                return handleMouseEvent(view, event, eventSource);
             }
             // This case is for fingers
-            else {
-                if (eventSource == InputDevice.SOURCE_TOUCHPAD) {
-                    return handleTouchInput(event, trackpadContextMap, false);
-                } else {
-                    if (virtualController != null &&
-                            (virtualController.getControllerMode() == VirtualController.ControllerMode.MoveButtons ||
-                                    virtualController.getControllerMode() == VirtualController.ControllerMode.ResizeButtons)) {
-                        // Ignore presses when the virtual controller is being configured
-                        return true;
-                    }
-
-                    if (isPanZoomMode) {
-                        // panning the streamView
-                        panZoomHandler.handleTouchEvent(event);
-                        return true;
-                    }
-
-                    // If touch is disabled or not initialized, we'll try panning the streamView
-                    if (touchContextMap[0] == null) {
-                        return true;
-                    }
-
-                    if (prefConfig.enableMultiTouchGestures || !prefConfig.enableMultiTouchScreen) {
-                        int pointerCount = event.getPointerCount();
-                        if (pointerCount > 2) {
-                            int eventAction = event.getActionMasked();
-                            if (
-                                    (
-                                            eventAction == MotionEvent.ACTION_POINTER_DOWN
-                                                    || eventAction == MotionEvent.ACTION_POINTER_UP
-                                                    || eventAction == MotionEvent.ACTION_UP
-                                    )
-                                            && handleMultiTouchGesture(event, eventAction, pointerCount, view)
-                            ) {
-                                return true;
-                            }
-                        }
-                    }
-
-                    if (prefConfig.enableMultiTouchScreen && !prefConfig.touchscreenTrackpad && trySendTouchEvent(view, event)) {
-                        // If this host supports touch events and absolute touch is enabled,
-                        // send it directly as a touch event.
-                        return true;
-                    }
-
-                    return handleTouchInput(event, touchContextMap, true);
-                }
-            }
-
-            // Handled a known source
-            return true;
+            return handleFingerEvent(view, event, eventSource);
         }
 
         // Unknown class
         return false;
+    }
+
+    // Gamepad sticks and triggers: the Full keyboard while it is up, otherwise the controller handler
+    private boolean handleControllerMotionEvent(MotionEvent event) {
+        // Delos: see handleKeyDown()
+        KeyBoardLayoutController fullKeyboard = visibleFullKeyboard();
+        if (fullKeyboard != null) {
+            return fullKeyboard.onControllerMotion(event);
+        }
+        return controllerHandler.handleMotionEvent(event);
+    }
+
+    // Mice, styluses, erasers and touchpads with buttons take the mouse path; fingers take the touch path
+    private static boolean isMouseLikeEvent(MotionEvent event, int eventSource) {
+        boolean hasActionButton = Build.VERSION.SDK_INT < Build.VERSION_CODES.M || (event.getActionButton() != 0);
+        return eventSource == InputDevice.SOURCE_MOUSE ||
+                ((eventSource & InputDevice.SOURCE_CLASS_POSITION) != 0 && hasActionButton) || // SOURCE_TOUCHPAD
+                (eventSource == InputDevice.SOURCE_MOUSE_RELATIVE ||
+                        (event.getPointerCount() >= 1 &&
+                                (event.getToolType(0) == MotionEvent.TOOL_TYPE_MOUSE ||
+                                        event.getToolType(0) == MotionEvent.TOOL_TYPE_STYLUS ||
+                                        event.getToolType(0) == MotionEvent.TOOL_TYPE_ERASER)) ||
+                        eventSource == 12290); // 12290 = Samsung DeX mode desktop mouse
+    }
+
+    // Mice and non-finger touch devices
+    private boolean handleMouseEvent(View view, MotionEvent event, int eventSource) {
+        int buttonState = event.getButtonState();
+        int changedButtons = buttonState ^ lastButtonState;
+
+        // Two finger click
+        if ((eventSource & InputDevice.SOURCE_CLASS_POSITION) != 0 &&
+                event.getPointerCount() == 2 &&
+                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && event.getActionButton() == MotionEvent.BUTTON_PRIMARY)) {
+            if (event.getActionMasked() == MotionEvent.ACTION_BUTTON_PRESS) {
+                buttonState |= MotionEvent.BUTTON_SECONDARY;
+            }
+            else if (event.getActionMasked() == MotionEvent.ACTION_BUTTON_RELEASE) {
+                buttonState &= ~MotionEvent.BUTTON_SECONDARY;
+            }
+            // We may not pressing the primary button down from a previous event,
+            // so be sure to clear that bit out the button state.
+            buttonState &= ~MotionEvent.BUTTON_PRIMARY;
+            buttonState |= (lastButtonState & MotionEvent.BUTTON_PRIMARY);
+
+            changedButtons = buttonState ^ lastButtonState;
+        }
+
+        // Ignore mouse input if we're not capturing from our input source
+        if (!inputCaptureProvider.isCapturingActive()) {
+            // We return true here because otherwise the events may end up causing
+            // Android to synthesize d-pad events.
+            return true;
+        }
+
+        // Always update the position before sending any button events. If we're
+        // dealing with a stylus without hover support, our position might be
+        // significantly different than before.
+        if (inputCaptureProvider.eventHasRelativeMouseAxes(event)) {
+            // Send the deltas straight from the motion event
+            short deltaX = (short)inputCaptureProvider.getRelativeAxisX(event);
+            short deltaY = (short)inputCaptureProvider.getRelativeAxisY(event);
+
+            if (deltaX != 0 || deltaY != 0) {
+                if (prefConfig.absoluteMouseMode) {
+                    // NB: view may be null, but we can unconditionally use streamView because we don't need to adjust
+                    // relative axis deltas for the position of the streamView within the parent's coordinate system.
+                    conn.sendMouseMoveAsMousePosition(deltaX, deltaY, (short) streamContainer.getWidth(), (short) streamContainer.getHeight());
+                }
+                else {
+                    conn.sendMouseMove(deltaX, deltaY);
+                }
+            }
+        }
+        else if ((eventSource & InputDevice.SOURCE_CLASS_POSITION) != 0) {
+            // If this input device is not associated with the view itself (like a trackpad),
+            // we'll convert the device-specific coordinates to use to send the cursor position.
+            // This really isn't ideal but it's probably better than nothing.
+            //
+            // Trackpad on newer versions of Android (Oreo and later) should be caught by the
+            // relative axes case above. If we get here, we're on an older version that doesn't
+            // support pointer capture.
+            InputDevice device = event.getDevice();
+            if (device != null) {
+                InputDevice.MotionRange xRange = device.getMotionRange(MotionEvent.AXIS_X, eventSource);
+                InputDevice.MotionRange yRange = device.getMotionRange(MotionEvent.AXIS_Y, eventSource);
+
+                // All touchpads coordinate planes should start at (0, 0)
+                if (xRange != null && yRange != null && xRange.getMin() == 0 && yRange.getMin() == 0) {
+                    int xMax = (int)xRange.getMax();
+                    int yMax = (int)yRange.getMax();
+
+                    // Touchpads must be smaller than (65535, 65535)
+                    if (xMax <= Short.MAX_VALUE && yMax <= Short.MAX_VALUE) {
+                        conn.sendMousePosition((short)event.getX(), (short)event.getY(),
+                                (short)xMax, (short)yMax);
+                    }
+                }
+            }
+        }
+        else if (view != null && trySendPenEvent(view, event)) {
+            // If our host supports pen events, send it directly
+            return true;
+        }
+        else if (view != null) {
+            if (event.getToolType(0) == MotionEvent.TOOL_TYPE_FINGER) {
+                // Handle trackpad two finger swipes when pointer is not captured by synthesizing a trackpad movement
+                // Android emulates trackpad  two finger swipes as one finger swipe on the screen
+                int eventAction = event.getActionMasked();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && event.getClassification() == MotionEvent.CLASSIFICATION_TWO_FINGER_SWIPE) {
+                    if (!pointerSwiping) {
+                        pointerSwiping = true;
+                        handleTouchInput(event, trackpadContextMap, false, prefConfig.trackpadSwapAxis, MotionEvent.ACTION_POINTER_DOWN, 1, 2);
+                    }
+                    return handleTouchInput(event, trackpadContextMap, false, prefConfig.trackpadSwapAxis, MotionEvent.ACTION_MOVE, 1, 2);
+                } else if (pointerSwiping && eventAction == MotionEvent.ACTION_UP) {
+                    pointerSwiping = false;
+                    synthClickPending = false;
+                    handleTouchInput(event, trackpadContextMap, false, prefConfig.trackpadSwapAxis, MotionEvent.ACTION_POINTER_UP, 1, 2);
+                    return true;
+                }
+
+                // Press & Hold / Double-Tap & Hold for Selection or Drag & Drop
+                double positionDelta = Math.sqrt(
+                        Math.pow(event.getX() - lastTouchDownX, 2) +
+                                Math.pow(event.getY() - lastTouchDownY, 2)
+                );
+
+                if (synthClickPending &&
+                        event.getEventTime() - synthTouchDownTime >= prefConfig.trackpadDragDropThreshold) {
+                    if (positionDelta > 50) {
+                        pendingDrag = false;
+                    } else if (pendingDrag) {
+                        pendingDrag = false;
+                        isDragging = true;
+                        if (prefConfig.trackpadDragDropVibration) {
+                            Vibrator vibrator = ((Vibrator) getSystemService(Context.VIBRATOR_SERVICE));
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                vibrator.vibrate(VibrationEffect.createOneShot(20, 127));
+                            } else {
+                                vibrator.vibrate(20);
+                            }
+                        }
+                        conn.sendMouseButtonDown(MouseButtonPacket.BUTTON_LEFT);
+                        return true;
+                    }
+                }
+
+                switch (eventAction) {
+                    case MotionEvent.ACTION_HOVER_MOVE:
+                    case MotionEvent.ACTION_MOVE:
+                        updateMousePosition(view, event);
+                        return true;
+                    case MotionEvent.ACTION_HOVER_EXIT:
+                    case MotionEvent.ACTION_DOWN:
+                        pendingDrag = true;
+                        synthClickPending = true;
+                        lastTouchDownX = event.getX();
+                        lastTouchDownY = event.getY();
+                        synthTouchDownTime = event.getEventTime();
+                        return true;
+                    case MotionEvent.ACTION_HOVER_ENTER:
+                    case MotionEvent.ACTION_UP:
+                        if (synthClickPending) {
+                            long timeDiff = event.getEventTime() - synthTouchDownTime;
+
+                            if (eventSource == 12290) {
+                                // Special handle for DeX
+                                // DeX reports button secondary when tapping with two fingers
+                                // So there's no need to distinguish left/right click by time difference
+                                if (timeDiff < 120) {
+                                    conn.sendMouseButtonDown(MouseButtonPacket.BUTTON_LEFT);
+                                    conn.sendMouseButtonUp(MouseButtonPacket.BUTTON_LEFT);
+                                }
+                            } else {
+                                if (timeDiff < 20) {
+                                    conn.sendMouseButtonDown(MouseButtonPacket.BUTTON_LEFT);
+                                    conn.sendMouseButtonUp(MouseButtonPacket.BUTTON_LEFT);
+                                } else if (timeDiff < 120) {
+                                    conn.sendMouseButtonDown(MouseButtonPacket.BUTTON_RIGHT);
+                                    conn.sendMouseButtonUp(MouseButtonPacket.BUTTON_RIGHT);
+                                }
+                            }
+                            if (isDragging) {
+                                isDragging = false;
+                                conn.sendMouseButtonUp(MouseButtonPacket.BUTTON_LEFT);
+                            }
+                            pendingDrag = false;
+                            synthClickPending = false;
+                        }
+                        return true;
+                    case MotionEvent.ACTION_BUTTON_PRESS:
+                    case MotionEvent.ACTION_BUTTON_RELEASE:
+                        synthClickPending = false;
+                    default:
+                        break;
+                }
+            } else {
+                updateMousePosition(view, event);
+            }
+        }
+
+        if (event.getActionMasked() == MotionEvent.ACTION_SCROLL) {
+            // Send the vertical scroll packet
+            conn.sendMouseHighResScroll((short)(event.getAxisValue(MotionEvent.AXIS_VSCROLL) * 120));
+            conn.sendMouseHighResHScroll((short)(event.getAxisValue(MotionEvent.AXIS_HSCROLL) * 120));
+        }
+
+        sendMouseButtonChanges(buttonState, changedButtons);
+        handleStylusPress(event);
+
+        lastButtonState = buttonState;
+
+        // Handled a known source
+        return true;
+    }
+
+    private void sendMouseButtonChanges(int buttonState, int changedButtons) {
+        if ((changedButtons & MotionEvent.BUTTON_PRIMARY) != 0) {
+            if ((buttonState & MotionEvent.BUTTON_PRIMARY) != 0) {
+                conn.sendMouseButtonDown(MouseButtonPacket.BUTTON_LEFT);
+            }
+            else {
+                conn.sendMouseButtonUp(MouseButtonPacket.BUTTON_LEFT);
+            }
+        }
+
+        // Mouse secondary or stylus primary is right click (stylus down is left click)
+        if ((changedButtons & (MotionEvent.BUTTON_SECONDARY | MotionEvent.BUTTON_STYLUS_PRIMARY)) != 0) {
+            if ((buttonState & (MotionEvent.BUTTON_SECONDARY | MotionEvent.BUTTON_STYLUS_PRIMARY)) != 0) {
+                conn.sendMouseButtonDown(MouseButtonPacket.BUTTON_RIGHT);
+            }
+            else {
+                conn.sendMouseButtonUp(MouseButtonPacket.BUTTON_RIGHT);
+            }
+        }
+
+        // Mouse tertiary or stylus secondary is middle click
+        if ((changedButtons & (MotionEvent.BUTTON_TERTIARY | MotionEvent.BUTTON_STYLUS_SECONDARY)) != 0) {
+            if ((buttonState & (MotionEvent.BUTTON_TERTIARY | MotionEvent.BUTTON_STYLUS_SECONDARY)) != 0) {
+                conn.sendMouseButtonDown(MouseButtonPacket.BUTTON_MIDDLE);
+            }
+            else {
+                conn.sendMouseButtonUp(MouseButtonPacket.BUTTON_MIDDLE);
+            }
+        }
+
+        if (prefConfig.mouseNavButtons) {
+            if ((changedButtons & MotionEvent.BUTTON_BACK) != 0) {
+                if ((buttonState & MotionEvent.BUTTON_BACK) != 0) {
+                    conn.sendMouseButtonDown(MouseButtonPacket.BUTTON_X1);
+                }
+                else {
+                    conn.sendMouseButtonUp(MouseButtonPacket.BUTTON_X1);
+                }
+            }
+
+            if ((changedButtons & MotionEvent.BUTTON_FORWARD) != 0) {
+                if ((buttonState & MotionEvent.BUTTON_FORWARD) != 0) {
+                    conn.sendMouseButtonDown(MouseButtonPacket.BUTTON_X2);
+                }
+                else {
+                    conn.sendMouseButtonUp(MouseButtonPacket.BUTTON_X2);
+                }
+            }
+        }
+    }
+
+    // Handle stylus presses: the stylus tip is a left click, the eraser a right click
+    private void handleStylusPress(MotionEvent event) {
+        if (event.getPointerCount() == 1 && event.getActionIndex() == 0) {
+            if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+                if (event.getToolType(0) == MotionEvent.TOOL_TYPE_STYLUS) {
+                    lastAbsTouchDownTime = event.getEventTime();
+                    lastAbsTouchDownX = event.getX(0);
+                    lastAbsTouchDownY = event.getY(0);
+
+                    // Stylus is left click
+                    conn.sendMouseButtonDown(MouseButtonPacket.BUTTON_LEFT);
+                } else if (event.getToolType(0) == MotionEvent.TOOL_TYPE_ERASER) {
+                    lastAbsTouchDownTime = event.getEventTime();
+                    lastAbsTouchDownX = event.getX(0);
+                    lastAbsTouchDownY = event.getY(0);
+
+                    // Eraser is right click
+                    conn.sendMouseButtonDown(MouseButtonPacket.BUTTON_RIGHT);
+                }
+            }
+            else if (event.getActionMasked() == MotionEvent.ACTION_UP || event.getActionMasked() == MotionEvent.ACTION_CANCEL) {
+                if (event.getToolType(0) == MotionEvent.TOOL_TYPE_STYLUS) {
+                    lastAbsTouchUpTime = event.getEventTime();
+                    lastAbsTouchUpX = event.getX(0);
+                    lastAbsTouchUpY = event.getY(0);
+
+                    // Stylus is left click
+                    conn.sendMouseButtonUp(MouseButtonPacket.BUTTON_LEFT);
+                } else if (event.getToolType(0) == MotionEvent.TOOL_TYPE_ERASER) {
+                    lastAbsTouchUpTime = event.getEventTime();
+                    lastAbsTouchUpX = event.getX(0);
+                    lastAbsTouchUpY = event.getY(0);
+
+                    // Eraser is right click
+                    conn.sendMouseButtonUp(MouseButtonPacket.BUTTON_RIGHT);
+                }
+            }
+        }
+    }
+
+    // Fingers on the touchscreen, or on a touchpad without buttons
+    private boolean handleFingerEvent(View view, MotionEvent event, int eventSource) {
+        if (eventSource == InputDevice.SOURCE_TOUCHPAD) {
+            return handleTouchInput(event, trackpadContextMap, false);
+        }
+
+        if (virtualController != null &&
+                (virtualController.getControllerMode() == VirtualController.ControllerMode.MoveButtons ||
+                        virtualController.getControllerMode() == VirtualController.ControllerMode.ResizeButtons)) {
+            // Ignore presses when the virtual controller is being configured
+            return true;
+        }
+
+        if (isPanZoomMode) {
+            // panning the streamView
+            panZoomHandler.handleTouchEvent(event);
+            return true;
+        }
+
+        // If touch is disabled or not initialized, we'll try panning the streamView
+        if (touchContextMap[0] == null) {
+            return true;
+        }
+
+        if (prefConfig.enableMultiTouchGestures || !prefConfig.enableMultiTouchScreen) {
+            int pointerCount = event.getPointerCount();
+            if (pointerCount > 2) {
+                int eventAction = event.getActionMasked();
+                if (
+                        (
+                                eventAction == MotionEvent.ACTION_POINTER_DOWN
+                                        || eventAction == MotionEvent.ACTION_POINTER_UP
+                                        || eventAction == MotionEvent.ACTION_UP
+                        )
+                                && handleMultiTouchGesture(event, eventAction, pointerCount, view)
+                ) {
+                    return true;
+                }
+            }
+        }
+
+        if (prefConfig.enableMultiTouchScreen && !prefConfig.touchscreenTrackpad && trySendTouchEvent(view, event)) {
+            // If this host supports touch events and absolute touch is enabled,
+            // send it directly as a touch event.
+            return true;
+        }
+
+        return handleTouchInput(event, touchContextMap, true);
     }
 
     private boolean handleTouchInput(MotionEvent event, TouchContext[] inputContextMap, boolean isTouchScreen) {
