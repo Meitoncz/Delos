@@ -3,10 +3,12 @@ package com.limelight.shell.settings
 import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
+import android.content.res.Resources
 import android.media.MediaCodecInfo
 import android.os.Build
 import android.os.Vibrator
 import android.view.Display
+import com.limelight.R
 import com.limelight.binding.video.MediaCodecHelper
 import com.limelight.binding.video.PyroWaveRenderer
 import com.limelight.binding.video.SgsrRenderer
@@ -16,9 +18,24 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 
+/**
+ * A resolution of this display offered next to the catalog's fixed ones. Only the numbers are kept: the label is built
+ * when the choices are listed, so it follows the language.
+ */
+data class NativeResolution(val width: Int, val height: Int, val fullscreen: Boolean = false, val portrait: Boolean = false) {
+    val value: String get() = "${width}x$height"
+
+    fun label(res: Resources): String = res.getString(when {
+        fullscreen && portrait -> R.string.settings_resolution_native_fullscreen_portrait
+        fullscreen -> R.string.settings_resolution_native_fullscreen
+        portrait -> R.string.settings_resolution_native_portrait
+        else -> R.string.settings_resolution_native
+    }, value)
+}
+
 /** Device rules ported from StreamSettings, separate from rendering and persistence. */
 data class SettingsCapabilities(
-    val resolutions: List<SettingChoice>,
+    val resolutions: List<NativeResolution>,
     val maxResolution: Int,
     val maxFps: Float,
     val hdr: Boolean,
@@ -31,17 +48,18 @@ data class SettingsCapabilities(
     // Delos: whether MediaCodec streams can use the SGSR upscaler (OpenGL ES 3.1)
     val sgsr: Boolean = true,
 ) {
-    fun choices(spec: SettingSpec, values: Map<String, *>): List<SettingChoice> = when (spec.key) {
+    fun choices(res: Resources, spec: SettingSpec, values: Map<String, *>): List<SettingChoice> = when (spec.key) {
         "list_resolution" -> {
             val base = spec.choices.filter { (it.value.substringBefore('x').toIntOrNull() ?: 0) <= maxResolution }
             val custom = (values["edit_diy_w_h"] as? String)?.takeIf { it.matches(Regex("[1-9][0-9]*x[1-9][0-9]*")) }
-            (base + resolutions + listOfNotNull(custom?.let { SettingChoice("Custom ($it)", it) })).distinctBy { it.value }
+            (base + resolutions.map { SettingChoice(it.label(res), it.value) } +
+                listOfNotNull(custom?.let { SettingChoice(res.getString(R.string.settings_resolution_custom, it), it) })).distinctBy { it.value }
         }
         "list_fps" -> {
             val base = spec.choices.filter { values["checkbox_unlock_fps"] == true || (it.value.toFloatOrNull() ?: 0f) <= max(60f, maxFps + 2f) }
-            val native = SettingChoice("Native (${maxFps.roundToInt()} FPS)", maxFps.roundToInt().toString())
+            val native = SettingChoice(res.getString(R.string.settings_fps_native, maxFps.roundToInt()), maxFps.roundToInt().toString())
             val custom = (values["custom_refresh_rate"] as? String)?.takeIf { it.toFloatOrNull()?.let { f -> f.isFinite() && f > 0 } == true }
-            (base + native + listOfNotNull(custom?.let { SettingChoice("Custom ($it FPS)", it) })).distinctBy { it.value }
+            (base + native + listOfNotNull(custom?.let { SettingChoice(res.getString(R.string.settings_fps_custom, it), it) })).distinctBy { it.value }
         }
         "video_format" -> spec.choices.filter {
             (it.value != "forceh265" || hevc) && (it.value != "forceav1" || av1) && (it.value != "pyrowave" || pyroWave)
@@ -49,8 +67,8 @@ data class SettingsCapabilities(
         "frame_pacing" -> if (values["video_format"] == "pyrowave") spec.choices.filter { it.value != "fast-vsync" } else spec.choices
         // The classic array repeats a formatted label; make the five stored layouts distinguishable.
         // A selection that matches no preset (Advanced edits in the Debug lab) stays visible instead of looking unset
-        "list_rumble_feel" -> if (values[spec.key] == "CUSTOM") spec.choices + SettingChoice("Custom", "CUSTOM") else spec.choices
-        "keyboard_axi_list" -> spec.choices.mapIndexed { i, choice -> choice.copy(label = "Layout ${i + 1}") }
+        "list_rumble_feel" -> if (values[spec.key] == "CUSTOM") spec.choices + SettingChoice(res.getString(R.string.settings_choice_custom), "CUSTOM") else spec.choices
+        "keyboard_axi_list" -> spec.choices.mapIndexed { i, choice -> choice.copy(label = res.getString(R.string.settings_layout_number, i + 1)) }
         else -> spec.choices
     }
 
@@ -59,20 +77,20 @@ data class SettingsCapabilities(
             val pm = activity.packageManager
             val display = activity.windowManager.defaultDisplay
             val modes = display.supportedModes.toList()
-            val native = mutableListOf<SettingChoice>()
+            val native = mutableListOf<NativeResolution>()
             val cutout = display.cutout
             if (cutout != null) {
                 val mode = display.mode
                 val width = mode.physicalWidth - cutout.safeInsetLeft - cutout.safeInsetRight
                 val height = mode.physicalHeight - cutout.safeInsetTop - cutout.safeInsetBottom
-                addResolution(native, max(width, height), min(width, height), "Native")
+                addResolution(native, max(width, height), min(width, height), fullscreen = false)
             }
             var maxWidth = 1280
             modes.forEach { mode ->
                 val w = max(mode.physicalWidth, mode.physicalHeight)
                 val h = min(mode.physicalWidth, mode.physicalHeight)
                 if (!pm.hasSystemFeature(PackageManager.FEATURE_TELEVISION) || w > 3840 || h > 2160) {
-                    addResolution(native, w, h, if (cutout != null) "Native fullscreen" else "Native")
+                    addResolution(native, w, h, fullscreen = cutout != null)
                 }
                 maxWidth = max(maxWidth, when { w >= 3840 || h >= 2160 -> 3840; w >= 2560 || h >= 1440 -> 2560; w >= 1920 || h >= 1080 -> 1920; else -> 1280 })
             }
@@ -119,9 +137,9 @@ data class SettingsCapabilities(
             if (sdk < 31 && !hasDeviceSensors) add("seekbar_gyro_smoothing")
         }
 
-        private fun addResolution(into: MutableList<SettingChoice>, width: Int, height: Int, prefix: String) {
-            if (PreferenceConfiguration.isSquarishScreen(width, height)) into += SettingChoice("$prefix portrait (${height}x$width)", "${height}x$width")
-            into += SettingChoice("$prefix (${width}x$height)", "${width}x$height")
+        private fun addResolution(into: MutableList<NativeResolution>, width: Int, height: Int, fullscreen: Boolean) {
+            if (PreferenceConfiguration.isSquarishScreen(width, height)) into += NativeResolution(height, width, fullscreen, portrait = true)
+            into += NativeResolution(width, height, fullscreen)
         }
     }
 }

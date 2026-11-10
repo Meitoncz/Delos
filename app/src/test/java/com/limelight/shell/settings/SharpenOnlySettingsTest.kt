@@ -17,7 +17,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [33], shadows = [ShadowMoonBridge::class, ShadowGameManager::class])
+@Config(sdk = [33], qualifiers = "en", shadows = [ShadowMoonBridge::class, ShadowGameManager::class])
 class SharpenOnlySettingsTest {
     private lateinit var context: Context
     private lateinit var catalog: SettingsCatalog
@@ -48,16 +48,16 @@ class SharpenOnlySettingsTest {
 
     @Test fun theSupersamplingQualityExplainsWhyItIsOff() {
         val values = mapOf<String, Any>("list_sgsr_quality" to "sharpen")
-        val help = SettingsHelp.details(spec("list_sgsr_supersampling_level"), values)
+        val help = SettingsHelp.details(context.resources, spec("list_sgsr_supersampling_level"), values)
         assertTrue(help, help.contains("Not used by Sharpen only."))
-        assertFalse(SettingsHelp.details(spec("list_sgsr_supersampling_level"), mapOf<String, Any>("list_sgsr_quality" to "high"))
+        assertFalse(SettingsHelp.details(context.resources, spec("list_sgsr_supersampling_level"), mapOf<String, Any>("list_sgsr_quality" to "high"))
             .contains("Not used by"))
     }
 
     @Test fun theModeIsDescribedWithWhatItDoesAndItsCost() {
-        val help = SettingsHelp.choice("list_sgsr_quality", "sharpen")
+        val help = SettingsHelp.choice(context.resources, "list_sgsr_quality", "sharpen")
         assertTrue(help.contains("No scaling"))
         assertTrue(help.contains("GPU"))
-        assertTrue(SettingsHelp.description("seekbar_sgsr_sharpness", "").contains("Sharpen only"))
+        assertTrue(SettingsHelp.description(context.resources, "seekbar_sgsr_sharpness", "").contains("Sharpen only"))
     }
 }

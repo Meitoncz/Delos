@@ -23,12 +23,14 @@ import org.robolectric.annotation.Config
  * has to scroll; every violation is reported at once.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [33], shadows = [ShadowMoonBridge::class, ShadowGameManager::class])
+@Config(sdk = [33], qualifiers = "en", shadows = [ShadowMoonBridge::class, ShadowGameManager::class])
 class SettingsHelpFitTest {
+    private lateinit var context: Context
     private lateinit var catalog: SettingsCatalog
+    private val res get() = context.resources
 
     @Before fun setUp() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        context = ApplicationProvider.getApplicationContext()
         PreferenceManager.getDefaultSharedPreferences(context).edit().clear().commit()
         ProfilesManager::class.java.getDeclaredField("instance").apply { isAccessible = true }.set(null, null)
         ProfilesManager.getInstance().load(context)
@@ -72,14 +74,14 @@ class SettingsHelpFitTest {
             contexts.forEach { context ->
                 selectable.forEach { value ->
                     val values = if (value == null) context else context + (spec.key to value)
-                    assertFits("${spec.key}=$value with $context", SettingsHelp.details(spec, values))
+                    assertFits("${spec.key}=$value with $context", SettingsHelp.details(res, spec, values))
                 }
             }
             // A stored choice the device cannot offer still shows its own help, plus the notice
             spec.choices.firstOrNull()?.let { first ->
                 val rest = spec.choices.drop(1)
                 if (rest.isNotEmpty()) assertFits("${spec.key} unavailable ${first.value}",
-                    SettingsHelp.details(spec, mapOf(spec.key to first.value), rest))
+                    SettingsHelp.details(res, spec, mapOf(spec.key to first.value), rest))
             }
         }
     }
@@ -87,7 +89,7 @@ class SettingsHelpFitTest {
     @Test fun valueHelpAddsToTheSettingDescription() {
         catalog.all.forEach { spec ->
             spec.choices.forEach { choice ->
-                val help = SettingsHelp.choice(spec.key, choice.value)
+                val help = SettingsHelp.choice(res, spec.key, choice.value)
                 assertFalse("${spec.key}/${choice.value} repeats its description",
                     help.equals(spec.description, ignoreCase = true) ||
                         spec.description.contains(help, ignoreCase = true) ||
@@ -98,21 +100,21 @@ class SettingsHelpFitTest {
 
     @Test fun dynamicResolutionsFramerateAndLanguagesFit() {
         listOf("640x360", "1280x720", "2560x1600", "7680x4320", "1234x567").forEach {
-            assertFits("resolution $it", SettingsHelp.choice("list_resolution", it))
+            assertFits("resolution $it", SettingsHelp.choice(res, "list_resolution", it))
         }
         listOf("24", "59.94", "60", "119.88", "240", "360").forEach {
-            assertFits("fps $it", SettingsHelp.choice("list_fps", it))
+            assertFits("fps $it", SettingsHelp.choice(res, "list_fps", it))
         }
-        listOf("default", "en", "cs").forEach { assertFits("language $it", SettingsHelp.choice("list_languages", it)) }
-        assertFits("keyboard layout", SettingsHelp.choice("keyboard_axi_list", "3"))
+        listOf("default", "en", "cs").forEach { assertFits("language $it", SettingsHelp.choice(res, "list_languages", it)) }
+        assertFits("keyboard layout", SettingsHelp.choice(res, "keyboard_axi_list", "3"))
     }
 
     @Test fun nativeShellAndStreamMenuHelpFit() {
         val native = mapOf(
-            "ui_palette" to Palette.entries.map { it.label },
-            "ui_background" to BackgroundKind.entries.map { it.label },
-            "ui_clock" to ClockFormat.entries.map { it.label },
-            "ui_home_layout" to HomeLayout.entries.map { it.label },
+            "ui_palette" to Palette.entries.map { it.label(res) },
+            "ui_background" to BackgroundKind.entries.map { it.label(res) },
+            "ui_clock" to ClockFormat.entries.map { it.label(res) },
+            "ui_home_layout" to HomeLayout.entries.map { it.label(res) },
             "ui_dark" to listOf("Dark", "Light"),
             "ui_reduced_motion" to listOf("Full", "Reduced"),
             "ui_stats_position" to StatsPosition.entries.map { it.label },
@@ -120,10 +122,10 @@ class SettingsHelpFitTest {
         )
         native.forEach { (key, labels) -> labels.forEach {
             val help = NativeSettingsHelp.choice(key, it)
-            assertFits("$key/$it", (if (help.isBlank()) it else "$it\n$help") + "\n\n${SettingsHelp.description(key, "")}")
+            assertFits("$key/$it", (if (help.isBlank()) it else "$it\n$help") + "\n\n${SettingsHelp.description(res, key, "")}")
         } }
         listOf("ui_match_game_colors", "pref_debug_info", "import_special_button_file", "about_diag_logs").forEach {
-            assertFits(it, SettingsHelp.description(it, ""))
+            assertFits(it, SettingsHelp.description(res, it, ""))
         }
         listOf(
             "Resume", "Keyboard", "Overlay", "Brightness", "Screen brightness", "Bitrate", "Apply bitrate", "Upscaler",
@@ -131,17 +133,17 @@ class SettingsHelpFitTest {
             "Send keys", "Send clipboard", "Get clipboard", "Commands", "Task manager", "Zoom", "Mouse mode",
             "Local mouse cursor", "On-screen controls", "Open Android keyboard", "Touch sensitivity",
             "Keys: Ctrl + Alt + Delete", "Command: Restart the game",
-        ).forEach { assertFits("stream menu $it", StreamMenuHelp.description(it)) }
+        ).forEach { assertFits("stream menu $it", StreamMenuHelp.description(res, it)) }
         // Mode help adds the selected method and the upscaler pages add their status line
         listOf("standard", "high", "temporal", "temporal-quality", "sharpen").forEach {
-            assertFits("stream menu Mode/$it", SettingsHelp.choice("list_sgsr_quality", it) + "\n\n" + StreamMenuHelp.description("Mode"))
+            assertFits("stream menu Mode/$it", SettingsHelp.choice(res, "list_sgsr_quality", it) + "\n\n" + StreamMenuHelp.description(res, "Mode"))
         }
         // The page's status line (a long one: "Upscaled to: 1920 x 1080") precedes the help of the page and its on/off row
         listOf("Upscaler", "Upscaling", "Supersampling").forEach {
-            assertFits("stream menu $it with status", "Upscaled to: 1920 x 1080\n\n" + StreamMenuHelp.description(it))
+            assertFits("stream menu $it with status", "Upscaled to: 1920 x 1080\n\n" + StreamMenuHelp.description(res, it))
         }
         listOf("0", "1", "2", "3", "4", "5").forEach {
-            assertFits("stream menu mouse mode $it", SettingsHelp.choice("mouse_mode_list", it) +
+            assertFits("stream menu mouse mode $it", SettingsHelp.choice(res, "mouse_mode_list", it) +
                 "\n\nApplies now; this stream only.")
         }
     }

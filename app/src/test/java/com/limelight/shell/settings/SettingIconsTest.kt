@@ -17,10 +17,11 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33], shadows = [ShadowMoonBridge::class, ShadowGameManager::class])
 class SettingIconsTest {
+    private lateinit var context: Context
     private lateinit var rows: List<SettingSpec>
 
     @Before fun setUp() {
-        val context: Context = ApplicationProvider.getApplicationContext()
+        context = ApplicationProvider.getApplicationContext()
         rows = SettingsCatalog(context).all
     }
 
@@ -46,7 +47,7 @@ class SettingIconsTest {
     }
 
     @Test fun noRowRepeatsTheGlyphOfATabPill() {
-        val tabGlyphs = SettingsTab.entries.associate { it.icon to it.label }
+        val tabGlyphs = SettingsTab.entries.associate { it.icon to it.label(context.resources) }
         val clashes = rows.filter { it.icon in tabGlyphs }.map { it.key }
         assertTrue("rows that reuse a tab icon: $clashes", clashes.isEmpty())
         assertEquals("the eight tabs keep eight glyphs", SettingsTab.entries.size, tabGlyphs.size)

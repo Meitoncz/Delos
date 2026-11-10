@@ -1,7 +1,9 @@
 package com.limelight.shell.settings
 
 import android.content.SharedPreferences
+import android.content.res.Resources
 import android.os.Build
+import com.limelight.R
 import com.limelight.preferences.PreferenceConfiguration
 import com.limelight.preferences.UpscalerMode
 import com.limelight.utils.RumblePreferences
@@ -93,22 +95,22 @@ class StreamSettingsStore(val catalog: SettingsCatalog, private val settings: ()
     }
 
     /** Returns a short validation error, or null after applying the value. No confirmation dialogs. */
-    fun writeText(spec: SettingSpec, input: String): String? {
+    fun writeText(res: Resources, spec: SettingSpec, input: String): String? {
         val value = input.trim().lowercase(Locale.ROOT)
         when (spec.key) {
             "edit_diy_w_h" -> {
                 val parts = value.split('x').map { it.toIntOrNull() }
-                if (parts.size != 2 || parts.any { it == null || it !in 1..32768 }) return "Use width x height, for example 1920x1080"
+                if (parts.size != 2 || parts.any { it == null || it !in 1..32768 }) return res.getString(R.string.settings_error_resolution_format)
                 write(spec, "${parts[0]}x${parts[1]}")
             }
             "custom_refresh_rate" -> {
                 val fps = value.toFloatOrNull()
-                if (fps == null || !fps.isFinite() || fps <= 0f || fps > 1000f) return "Enter a frame rate above 0 and up to 1000"
+                if (fps == null || !fps.isFinite() || fps <= 0f || fps > 1000f) return res.getString(R.string.settings_error_fps_range)
                 write(spec, String.format(Locale.US, "%.3f", fps).trimEnd('0').trimEnd('.'))
             }
             "edit_diy_bitrate" -> {
                 val mbps = value.toFloatOrNull()
-                if (mbps == null || !mbps.isFinite() || mbps <= 0 || mbps > 9999) return "Enter a bitrate above 0 and up to 9999 Mbps"
+                if (mbps == null || !mbps.isFinite() || mbps <= 0 || mbps > 9999) return res.getString(R.string.settings_error_bitrate_range)
                 val prefs = settings()
                 prefs.edit().putString(spec.key, value).putInt("seekbar_bitrate_kbps", (mbps * 1000).roundToInt()).apply()
             }
@@ -117,12 +119,14 @@ class StreamSettingsStore(val catalog: SettingsCatalog, private val settings: ()
         return null
     }
 
-
-    /** Match the classic screen's fallback when device rules remove the selected resolution or FPS. */
-    fun normalize(caps: SettingsCapabilities) {
+    /**
+     * Match the classic screen's fallback when device rules remove the selected resolution or FPS. [res] only labels the
+     * choices that are compared; the stored values do not depend on the language.
+     */
+    fun normalize(res: Resources, caps: SettingsCapabilities) {
         listOf("list_resolution", "list_fps", "video_format").forEach { key ->
             val spec = catalog.all.first { it.key == key }
-            val choices = caps.choices(spec, state.value)
+            val choices = caps.choices(res, spec, state.value)
             if (choices.isNotEmpty() && choices.none { it.value == value(spec) }) {
                 val fallback = if (key == "list_resolution") choices.lastOrNull { it in spec.choices } ?: choices.first()
                     else choices.firstOrNull { it.value == if (key == "list_fps") "60" else "auto" } ?: choices.first()

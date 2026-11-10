@@ -38,9 +38,9 @@ object StreamMenuSettings {
         KeyEvent.KEYCODE_BUTTON_R1 -> "R1"
         KeyEvent.KEYCODE_BUTTON_L2 -> "L2"
         KeyEvent.KEYCODE_BUTTON_R2 -> "R2"
-        KeyEvent.KEYCODE_BUTTON_START -> "Start"
-        KeyEvent.KEYCODE_BUTTON_SELECT -> "Select"
-        KeyEvent.KEYCODE_BUTTON_MODE -> "Home"
+        KeyEvent.KEYCODE_BUTTON_START -> "Start" // l10n-ignore: controller legend
+        KeyEvent.KEYCODE_BUTTON_SELECT -> "Select" // l10n-ignore: controller legend
+        KeyEvent.KEYCODE_BUTTON_MODE -> "Home" // l10n-ignore: controller legend
         KeyEvent.KEYCODE_BUTTON_A -> "A"
         KeyEvent.KEYCODE_BUTTON_B -> "B"
         KeyEvent.KEYCODE_BUTTON_X -> "X"

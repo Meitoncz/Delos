@@ -1,24 +1,29 @@
 package com.limelight.shell.settings
 
 import android.content.Context
-import android.content.res.Configuration
+import android.content.res.Resources
+import android.os.LocaleList
 import android.util.AttributeSet
 import android.util.Xml
+import androidx.annotation.StringRes
 import com.limelight.R
 import com.limelight.shell.ui.Symbols
 import org.xmlpull.v1.XmlPullParser
-import java.util.Locale
 
 /** The prototype's eight tabs. The classic categories remain as section headings within them. */
-enum class SettingsTab(val label: String, val icon: String, val description: String) {
-    STREAM("Stream", Symbols.CAST, "Quality and latency of the video coming from your PC."),
-    DISPLAY("Display", Symbols.MONITOR, "How the stream fills the screen and which information is shown while you play."),
-    AUDIO("Audio", Symbols.GRAPHIC_EQ, "Sound from the PC and the sounds of the Delos interface."),
-    CONTROLS("Controls", Symbols.SPORTS_ESPORTS, "Gamepads, mouse, touch, keyboard and on-screen controls."),
-    APPEARANCE("Appearance", Symbols.APPEARANCE, "Theme, colors and the animated background. Changes apply immediately."),
-    COVERS("Covers", Symbols.PHOTO_LIBRARY, "Covers, wide covers, backgrounds and logos from your PC or SteamGridDB."),
-    DEVICES("Devices", Symbols.DESKTOP_WINDOWS, "Paired PCs and what happens when Delos starts."),
-    ABOUT("About", Symbols.INFO, "Delos is a fork of Artemis and Moonlight, licensed under the GPLv3."),
+enum class SettingsTab(@StringRes val labelRes: Int, val icon: String, @StringRes val descriptionRes: Int) {
+    STREAM(R.string.settings_tab_stream, Symbols.CAST, R.string.settings_tab_stream_description),
+    DISPLAY(R.string.settings_tab_display, Symbols.MONITOR, R.string.settings_tab_display_description),
+    AUDIO(R.string.settings_tab_audio, Symbols.GRAPHIC_EQ, R.string.settings_tab_audio_description),
+    CONTROLS(R.string.settings_tab_controls, Symbols.SPORTS_ESPORTS, R.string.settings_tab_controls_description),
+    APPEARANCE(R.string.settings_tab_appearance, Symbols.APPEARANCE, R.string.settings_tab_appearance_description),
+    COVERS(R.string.settings_tab_covers, Symbols.PHOTO_LIBRARY, R.string.settings_tab_covers_description),
+    DEVICES(R.string.settings_tab_devices, Symbols.DESKTOP_WINDOWS, R.string.settings_tab_devices_description),
+    ABOUT(R.string.settings_tab_about, Symbols.INFO, R.string.settings_tab_about_description);
+
+    fun label(res: Resources): String = res.getString(labelRes)
+
+    fun description(res: Resources): String = res.getString(descriptionRes)
 }
 
 enum class SettingKind { TOGGLE, CHOICE, SLIDER, TEXT, ACTION }
@@ -26,9 +31,9 @@ enum class SettingKind { TOGGLE, CHOICE, SLIDER, TEXT, ACTION }
 data class SettingChoice(val label: String, val value: String)
 
 /** Keep an unavailable stored choice visible rather than displaying a different value as selected. */
-fun SettingSpec.choiceLabel(value: Any?, available: List<SettingChoice>): String =
+fun SettingSpec.choiceLabel(res: Resources, value: Any?, available: List<SettingChoice>): String =
     available.firstOrNull { it.value == value }?.label
-        ?: "${choices.firstOrNull { it.value == value }?.label ?: value.toString()} (unavailable)"
+        ?: res.getString(R.string.settings_choice_unavailable, choices.firstOrNull { it.value == value }?.label ?: value.toString())
 
 fun nextSettingChoice(value: Any?, available: List<SettingChoice>, direction: Int): SettingChoice? {
     if (available.isEmpty()) return null
@@ -171,74 +176,93 @@ fun settingIcon(key: String): String? = when (key) {
 }
 
 /**
- * Reads the existing XML rather than maintaining another list of keys, types, ranges and choices.
- * English resources are used while the new shell is English-only. No Preference views are inflated.
+ * Reads the existing XML rather than maintaining another list of keys, types, ranges and choices. Titles, summaries,
+ * entries and dialog messages come from the legacy string resources in the language of the resources the rows were built
+ * from. The language can change while the app runs: a screen that shows labels calls [refresh] with its resources
+ * (`textResources()`) before it reads [all] or [visible], and the rows are rebuilt when the locale differs. Keys, kinds,
+ * defaults and ranges do not depend on the language, so stores may keep using the catalog without refreshing it.
+ * No Preference views are inflated.
  */
 class SettingsCatalog(context: Context) {
-    private val resources = context.createConfigurationContext(Configuration(context.resources.configuration).apply {
-        setLocale(Locale.ENGLISH)
-    }).resources
+    private class Rows(val locales: LocaleList, val all: List<SettingSpec>, val visible: List<SettingSpec>)
 
-    val all: List<SettingSpec> = resources.getXml(R.xml.preferences).use { parser ->
-        val rows = mutableListOf<SettingSpec>()
-        var category = ""
-        var section = ""
-        while (parser.next() != XmlPullParser.END_DOCUMENT) {
-            if (parser.eventType != XmlPullParser.START_TAG) continue
-            val attrs = Xml.asAttributeSet(parser)
-            if (parser.name == "PreferenceCategory") {
-                category = attrs.getAttributeValue(ANDROID, "key") ?: attrs.getAttributeResourceValue(ANDROID, "title", 0)
-                    .takeIf { it != 0 }?.let(resources::getResourceEntryName) ?: ""
-                section = text(attrs, "title")
-                continue
-            }
-            if (parser.name == "PreferenceScreen") continue
-            val key = attrs.getAttributeValue(ANDROID, "key") ?: continue
-            val kind = when {
-                parser.name.endsWith("CheckBoxPreference", ignoreCase = true) -> SettingKind.TOGGLE
-                parser.name.endsWith("ListPreference") || parser.name.endsWith("LanguagePreference") -> SettingKind.CHOICE
-                parser.name.endsWith("SeekBarPreference") -> SettingKind.SLIDER
-                parser.name.endsWith("EditTextPreference") -> SettingKind.TEXT
-                else -> SettingKind.ACTION
-            }
-            val defaultText = attrs.getAttributeValue(ANDROID, "defaultValue")
-            val default: Any? = when (kind) {
-                SettingKind.TOGGLE -> defaultText?.toBoolean() ?: false
-                SettingKind.SLIDER -> defaultText?.toIntOrNull()
-                SettingKind.CHOICE, SettingKind.TEXT -> defaultText ?: ""
-                SettingKind.ACTION -> null
-            }
-            val labels = array(attrs, "entries")
-            val values = array(attrs, "entryValues")
-            val tab = tabFor(category, key)
-            rows += SettingSpec(
-                key, text(attrs, "title"), SettingsHelp.description(key, text(attrs, "summary").ifEmpty { text(attrs, "dialogMessage") }),
-                category, section, tab, kind, default,
-                values.mapIndexed { i, value -> SettingChoice(labels.getOrElse(i) { value }, value) },
-                attrs.getAttributeIntValue(SEEKBAR, "min", 1), attrs.getAttributeIntValue(ANDROID, "max", 100),
-                attrs.getAttributeIntValue(SEEKBAR, "step", 1),
-                attrs.getAttributeIntValue(SEEKBAR, "divisor", 1), text(attrs, "text").let { if (it.length > 1 && !it.startsWith(" ")) " $it" else it },
-                attrs.getAttributeValue(ANDROID, "dependency"),
-                attrs.getAttributeValue(null, "url")?.let { raw ->
-                    val id = attrs.getAttributeResourceValue(null, "url", 0)
-                    if (id != 0) resources.getString(id) else raw
-                },
-            )
-        }
-        rows.toList()
-    }
+    @Volatile private var rows = build(context.resources)
+
+    /** Every row of the XML catalogue, in the language of the last build. */
+    val all: List<SettingSpec> get() = rows.all
 
     /** What the settings list and search show: [all] without the [PhoneOnlySettings] items. */
-    val visible: List<SettingSpec> = all.filterNot { PhoneOnlySettings.isHidden(it.key) }
+    val visible: List<SettingSpec> get() = rows.visible
 
-    private fun text(attrs: AttributeSet, name: String): String {
-        val id = attrs.getAttributeResourceValue(ANDROID, name, 0)
-        return if (id != 0) resources.getText(id).toString() else attrs.getAttributeValue(ANDROID, name) ?: ""
+    /** Rebuilds the rows for the language of [resources] when it differs from the one they were built for. */
+    fun refresh(resources: Resources) {
+        if (rows.locales != resources.configuration.locales) rows = build(resources)
     }
 
-    private fun array(attrs: AttributeSet, name: String): List<String> {
-        val id = attrs.getAttributeResourceValue(ANDROID, name, 0)
-        return if (id != 0) resources.getStringArray(id).toList() else emptyList()
+    private fun build(resources: Resources): Rows {
+        val all = read(resources)
+        return Rows(resources.configuration.locales, all, all.filterNot { PhoneOnlySettings.isHidden(it.key) })
+    }
+
+    private fun read(resources: Resources): List<SettingSpec> {
+        fun text(attrs: AttributeSet, name: String): String {
+            val id = attrs.getAttributeResourceValue(ANDROID, name, 0)
+            return if (id != 0) resources.getText(id).toString() else attrs.getAttributeValue(ANDROID, name) ?: ""
+        }
+
+        fun array(attrs: AttributeSet, name: String): List<String> {
+            val id = attrs.getAttributeResourceValue(ANDROID, name, 0)
+            return if (id != 0) resources.getStringArray(id).toList() else emptyList()
+        }
+
+        return resources.getXml(R.xml.preferences).use { parser ->
+            val specs = mutableListOf<SettingSpec>()
+            var category = ""
+            var section = ""
+            while (parser.next() != XmlPullParser.END_DOCUMENT) {
+                if (parser.eventType != XmlPullParser.START_TAG) continue
+                val attrs = Xml.asAttributeSet(parser)
+                if (parser.name == "PreferenceCategory") {
+                    category = attrs.getAttributeValue(ANDROID, "key") ?: attrs.getAttributeResourceValue(ANDROID, "title", 0)
+                        .takeIf { it != 0 }?.let(resources::getResourceEntryName) ?: ""
+                    section = text(attrs, "title")
+                    continue
+                }
+                if (parser.name == "PreferenceScreen") continue
+                val key = attrs.getAttributeValue(ANDROID, "key") ?: continue
+                val kind = when {
+                    parser.name.endsWith("CheckBoxPreference", ignoreCase = true) -> SettingKind.TOGGLE
+                    parser.name.endsWith("ListPreference") || parser.name.endsWith("LanguagePreference") -> SettingKind.CHOICE
+                    parser.name.endsWith("SeekBarPreference") -> SettingKind.SLIDER
+                    parser.name.endsWith("EditTextPreference") -> SettingKind.TEXT
+                    else -> SettingKind.ACTION
+                }
+                val defaultText = attrs.getAttributeValue(ANDROID, "defaultValue")
+                val default: Any? = when (kind) {
+                    SettingKind.TOGGLE -> defaultText?.toBoolean() ?: false
+                    SettingKind.SLIDER -> defaultText?.toIntOrNull()
+                    SettingKind.CHOICE, SettingKind.TEXT -> defaultText ?: ""
+                    SettingKind.ACTION -> null
+                }
+                val labels = array(attrs, "entries")
+                val values = array(attrs, "entryValues")
+                val tab = tabFor(category, key)
+                specs += SettingSpec(
+                    key, text(attrs, "title"), SettingsHelp.description(resources, key, text(attrs, "summary").ifEmpty { text(attrs, "dialogMessage") }),
+                    category, section, tab, kind, default,
+                    values.mapIndexed { i, value -> SettingChoice(labels.getOrElse(i) { value }, value) },
+                    attrs.getAttributeIntValue(SEEKBAR, "min", 1), attrs.getAttributeIntValue(ANDROID, "max", 100),
+                    attrs.getAttributeIntValue(SEEKBAR, "step", 1),
+                    attrs.getAttributeIntValue(SEEKBAR, "divisor", 1), text(attrs, "text").let { if (it.length > 1 && !it.startsWith(" ")) " $it" else it },
+                    attrs.getAttributeValue(ANDROID, "dependency"),
+                    attrs.getAttributeValue(null, "url")?.let { raw ->
+                        val id = attrs.getAttributeResourceValue(null, "url", 0)
+                        if (id != 0) resources.getString(id) else raw
+                    },
+                )
+            }
+            specs.toList()
+        }
     }
 
     companion object {

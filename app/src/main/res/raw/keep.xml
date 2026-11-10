@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The settings help texts are looked up by name (SettingsHelp, StreamMenuHelp: Resources.getIdentifier), which lint cannot see. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@string/help_*,@string/stream_help_*" />
