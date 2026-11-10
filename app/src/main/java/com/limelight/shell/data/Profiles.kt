@@ -1,5 +1,6 @@
 package com.limelight.shell.data
 
+import androidx.annotation.StringRes
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
@@ -7,6 +8,7 @@ import android.content.SharedPreferences
 import androidx.compose.runtime.Immutable
 import androidx.preference.PreferenceManager
 import com.limelight.LimeLog
+import com.limelight.R
 import com.limelight.shell.ui.Symbols
 import com.limelight.shell.settings.SettingsCatalog
 import com.limelight.shell.settings.GameSettingsStore
@@ -21,27 +23,28 @@ import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
- * An avatar to choose from (the prototype's `AVATARS`): its name and color, the illustration [asset]
+ * An avatar to choose from (the prototype's `AVATARS`): its [name] (a language independent identifier, never shown),
+ * the displayed [label] (a string resource), its color, the illustration [asset]
  * (a file under `assets/avatars`, drawn over the color) and the font [icon] shown until the image is
  * loaded or when it is missing. A profile stores the avatar's index, so the order must never change:
  * new avatars are only appended.
  */
 @Immutable
-data class Avatar(val icon: String, val name: String, val hue: Float, val asset: String?)
+data class Avatar(val icon: String, val name: String, val hue: Float, val asset: String?, @StringRes val label: Int)
 
 val AVATARS = listOf(
-    Avatar(Symbols.SAILING, "Sailor", 205f, "sailor.webp"),
-    Avatar(Symbols.ROCKET_LAUNCH, "Voyager", 262f, "voyager.webp"),
-    Avatar(Symbols.SPORTS_ESPORTS, "Player", 330f, "player.webp"),
-    Avatar(Symbols.PETS, "Fox", 24f, "fox.webp"),
-    Avatar(Symbols.SPARK, "Spark", 48f, "spark.webp"),
-    Avatar(Symbols.SPA, "Calm", 150f, "calm.webp"),
-    Avatar(Symbols.SWORDS, "Knight", 232f, "knight.webp"),
-    Avatar(Symbols.ROBOT, "Robot", 182f, "robot.webp"),
-    Avatar(Symbols.CAT, "Cat", 84f, "cat.webp"),
-    Avatar(Symbols.MAGIC_WAND, "Wizard", 292f, "wizard.webp"),
-    Avatar(Symbols.SPEED, "Racer", 356f, "racer.webp"),
-    Avatar(Symbols.GHOST, "Ghost", 118f, "ghost.webp"),
+    Avatar(Symbols.SAILING, "Sailor", 205f, "sailor.webp", R.string.firstrun_avatar_sailor), // l10n-ignore
+    Avatar(Symbols.ROCKET_LAUNCH, "Voyager", 262f, "voyager.webp", R.string.firstrun_avatar_voyager), // l10n-ignore
+    Avatar(Symbols.SPORTS_ESPORTS, "Player", 330f, "player.webp", R.string.firstrun_avatar_player), // l10n-ignore
+    Avatar(Symbols.PETS, "Fox", 24f, "fox.webp", R.string.firstrun_avatar_fox), // l10n-ignore
+    Avatar(Symbols.SPARK, "Spark", 48f, "spark.webp", R.string.firstrun_avatar_spark), // l10n-ignore
+    Avatar(Symbols.SPA, "Calm", 150f, "calm.webp", R.string.firstrun_avatar_calm), // l10n-ignore
+    Avatar(Symbols.SWORDS, "Knight", 232f, "knight.webp", R.string.firstrun_avatar_knight), // l10n-ignore
+    Avatar(Symbols.ROBOT, "Robot", 182f, "robot.webp", R.string.firstrun_avatar_robot), // l10n-ignore
+    Avatar(Symbols.CAT, "Cat", 84f, "cat.webp", R.string.firstrun_avatar_cat), // l10n-ignore
+    Avatar(Symbols.MAGIC_WAND, "Wizard", 292f, "wizard.webp", R.string.firstrun_avatar_wizard), // l10n-ignore
+    Avatar(Symbols.SPEED, "Racer", 356f, "racer.webp", R.string.firstrun_avatar_racer), // l10n-ignore
+    Avatar(Symbols.GHOST, "Ghost", 118f, "ghost.webp", R.string.firstrun_avatar_ghost), // l10n-ignore
 )
 
 /** A user profile of the new UI: identity and a complete, independent set of preferences. */
@@ -220,7 +223,7 @@ class ProfileStore(context: Context, private val later: (Long, () -> Unit) -> Un
                 Profile(o.getString("id"), o.getString("name"), o.optInt("avatar", 0))
             }
         }.getOrElse {
-            LimeLog.warning("New UI: unreadable profiles: $it")
+            LimeLog.warning("New UI: unreadable profiles: $it") // l10n-ignore
             emptyList()
         }
         return Profiles(all, prefs.getString(KEY_CURRENT, null))

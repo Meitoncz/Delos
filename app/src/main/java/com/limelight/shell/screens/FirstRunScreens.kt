@@ -30,6 +30,8 @@ import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
+import androidx.compose.ui.res.stringResource
+import com.limelight.R
 import com.limelight.shell.LocalFocusTracker
 import com.limelight.shell.LocalShell
 import com.limelight.shell.data.AVATARS
@@ -67,10 +69,10 @@ fun BootScreen(onBegin: () -> Unit, onSkip: (() -> Unit)?) {
             style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 132.tpx, letterSpacing = .24.em),
             modifier = Modifier.padding(start = 30.px),
         )
-        BasicText("Your PC games, streamed from Vibepollo to your hands", style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 28.tpx))
+        BasicText(stringResource(R.string.firstrun_boot_tagline), style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 28.tpx))
         Row(Modifier.padding(top = 26.px), horizontalArrangement = Arrangement.spacedBy(24.px)) {
-            PillButton("Get started", Symbols.ARROW_FORWARD, onBegin, Modifier.focusRequester(begin), primary = true)
-            if (onSkip != null) PillButton("Skip to home", Symbols.FAST_FORWARD, onSkip)
+            PillButton(stringResource(R.string.firstrun_boot_begin), Symbols.ARROW_FORWARD, onBegin, Modifier.focusRequester(begin), primary = true)
+            if (onSkip != null) PillButton(stringResource(R.string.firstrun_boot_skip), Symbols.FAST_FORWARD, onSkip)
         }
     }
 }
@@ -110,14 +112,16 @@ fun CreateProfileScreen(editing: Boolean, initial: Profile?, onDone: (name: Stri
     val feedback = LocalFeedback.current
     val tracker = LocalFocusTracker.current
     var avatar by remember { mutableIntStateOf((initial?.avatar ?: 0).coerceIn(AVATARS.indices)) }
-    var name by remember { mutableStateOf(initial?.name ?: "Player") }
+    val defaultName = stringResource(R.string.firstrun_create_default_name)
+    val nameTitle = stringResource(R.string.firstrun_create_name_title)
+    var name by remember { mutableStateOf(initial?.name ?: defaultName) }
     val avatarFocus = remember { List(AVATARS.size) { FocusRequester() } }
     val changeName = remember { FocusRequester() }
     val create = remember { FocusRequester() }
     InitialFocus(avatarFocus[avatar.coerceIn(AVATARS.indices)])
     // The name is typed in the same dialog as Rename profile; when it is accepted the page shows it and the focus goes on to Create / Save
     val askName = {
-        openProfileNameDialog(res, shell, tracker, feedback, "Profile name", name) { entered ->
+        openProfileNameDialog(res, shell, tracker, feedback, nameTitle, name) { entered ->
             name = entered
             shell.returnFocusTo(create)
         }
@@ -126,8 +130,8 @@ fun CreateProfileScreen(editing: Boolean, initial: Profile?, onDone: (name: Stri
     val submit = { if (name.isBlank()) askName() else onDone(name.trim(), avatar) }
     CenterColumn(gap = 40f) {
         Heading(
-            if (editing) "Choose your avatar" else "Who's playing?",
-            if (editing) "And a new name, if you like." else "Pick an avatar and a name for your profile.",
+            stringResource(if (editing) R.string.firstrun_create_edit_title else R.string.firstrun_create_new_title),
+            stringResource(if (editing) R.string.firstrun_create_edit_note else R.string.firstrun_create_new_note),
         )
         // All avatars in rows of AVATAR_COLUMNS. Up and down move spatially; left at the start of a row and
         // right at its end continue in the previous and the next row (and wrap from the first to the last).
@@ -144,7 +148,7 @@ fun CreateProfileScreen(editing: Boolean, initial: Profile?, onDone: (name: Stri
                             if (i % AVATAR_COLUMNS == AVATAR_COLUMNS - 1 || i == AVATARS.lastIndex) right = avatarFocus[(i + 1) % AVATARS.size]
                         }
                         CircleItem(
-                            a.icon, a.name,
+                            a.icon, stringResource(a.label),
                             onClick = {
                                 avatar = i
                                 if (!editing) runCatching { changeName.requestFocus() }
@@ -162,10 +166,10 @@ fun CreateProfileScreen(editing: Boolean, initial: Profile?, onDone: (name: Stri
         }
         // The name as it is (not an input) and the button that opens the dialog; D-pad: avatars, Change name, Create / Save
         Row(horizontalArrangement = Arrangement.spacedBy(24.px), verticalAlignment = Alignment.CenterVertically) {
-            ValuePill("Profile name", name, Symbols.BADGE, placeholder = "Your name")
-            PillButton("Change name", Symbols.EDIT, askName, Modifier.focusRequester(changeName))
+            ValuePill(stringResource(R.string.firstrun_create_name_label), name, Symbols.BADGE, placeholder = stringResource(R.string.firstrun_create_name_placeholder))
+            PillButton(stringResource(R.string.firstrun_create_change_name), Symbols.EDIT, askName, Modifier.focusRequester(changeName))
         }
-        PillButton(if (editing) "Save" else "Create profile", Symbols.CHECK, submit, Modifier.focusRequester(create), primary = true)
+        PillButton(stringResource(if (editing) R.string.firstrun_create_save else R.string.firstrun_create_create), Symbols.CHECK, submit, Modifier.focusRequester(create), primary = true)
     }
 }
 

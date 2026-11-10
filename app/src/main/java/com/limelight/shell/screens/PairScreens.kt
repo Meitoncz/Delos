@@ -41,6 +41,10 @@ import com.limelight.shell.data.PcSetup
 import com.limelight.shell.ui.CenterColumn
 import com.limelight.shell.ui.CircleItem
 import com.limelight.shell.ui.Circles
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import com.limelight.R
+import com.limelight.shell.ui.textResources
 import com.limelight.shell.ui.Cue
 import com.limelight.shell.ui.EaseSpring
 import com.limelight.shell.ui.Figtree
@@ -78,11 +82,11 @@ fun PairPcScreen(screen: Screen.PairPc, pcs: List<Pc>) {
     val shown = pcs.sortedWith(compareBy({ it.paired }, { !it.online }, { it.name.lowercase() })).take(5)
     CenterColumn(gap = 48f) {
         Heading(
-            "Pair a PC",
+            stringResource(R.string.pairing_pc_title),
             when {
-                searching -> "Searching the local network…"
-                pcs.isEmpty() -> "No PC found yet. Start Vibepollo on your PC, or enter its address."
-                else -> "Delos found ${pcs.size} ${if (pcs.size == 1) "PC" else "PCs"} on your network."
+                searching -> stringResource(R.string.pairing_pc_searching)
+                pcs.isEmpty() -> stringResource(R.string.pairing_pc_none)
+                else -> pluralStringResource(R.plurals.pairing_pc_found, pcs.size, pcs.size)
             },
         )
         Circles {
@@ -92,9 +96,9 @@ fun PairPcScreen(screen: Screen.PairPc, pcs: List<Pc>) {
                     onClick = { if (pc.paired) actions.connect(pc) else actions.pair(pc, screen) },
                     modifier = if (i == 0) Modifier.focusRequester(first) else Modifier,
                     meta = when {
-                        pc.paired -> if (pc.online) "Paired · Online" else "Paired · Offline"
-                        pc.online -> "Online · ready to pair"
-                        else -> "Offline"
+                        pc.paired -> stringResource(if (pc.online) R.string.pairing_pc_paired_online else R.string.pairing_pc_paired_offline)
+                        pc.online -> stringResource(R.string.pairing_pc_ready)
+                        else -> stringResource(R.string.pairing_pc_offline)
                     },
                     metaDot = if (pc.online) OnlineGreen else null,
                     big = true,
@@ -104,24 +108,24 @@ fun PairPcScreen(screen: Screen.PairPc, pcs: List<Pc>) {
                         pc.name,
                         below = true,
                         items = listOf(
-                            MenuItem(Symbols.DIALPAD, "Pair with a PIN") { actions.pair(pc, screen) },
-                            MenuItem(Symbols.PASSWORD, "Pair with a one-time code") { actions.pairWithCode(pc, screen) },
+                            MenuItem(Symbols.DIALPAD, stringResource(R.string.pairing_pc_with_pin)) { actions.pair(pc, screen) },
+                            MenuItem(Symbols.PASSWORD, stringResource(R.string.pairing_pc_with_code)) { actions.pairWithCode(pc, screen) },
                         ),
                     ),
                 )
             }
             CircleItem(
-                Symbols.ADD_ADDRESS, "Enter address", onClick = { actions.addByAddress(screen) },
+                Symbols.ADD_ADDRESS, stringResource(R.string.pairing_pc_address), onClick = { actions.addByAddress(screen) },
                 modifier = if (shown.isEmpty()) Modifier.focusRequester(first) else Modifier,
-                meta = "IP or host name", big = true,
+                meta = stringResource(R.string.pairing_pc_address_hint), big = true,
             )
             CircleItem(
-                Symbols.REFRESH, "Search again",
+                Symbols.REFRESH, stringResource(R.string.pairing_pc_search_again),
                 onClick = {
                     searching = true
                     actions.rescan()
                 },
-                meta = "Local network", big = true,
+                meta = stringResource(R.string.pairing_pc_network), big = true,
             )
         }
     }
@@ -133,6 +137,7 @@ fun PairPcScreen(screen: Screen.PairPc, pcs: List<Pc>) {
  */
 @Composable
 fun PinScreen(screen: Screen.Pin, repo: PcRepository, setup: PcSetup, onFailed: (String) -> Unit, onCancel: () -> Unit) {
+    val res = textResources()
     val colors = LocalDelosColors.current
     val feedback = LocalFeedback.current
     val actions = LocalDeviceActions.current
@@ -142,7 +147,7 @@ fun PinScreen(screen: Screen.Pin, repo: PcRepository, setup: PcSetup, onFailed: 
         // A PC that was just added may take a moment to show up
         val pc = repo.awaitPc(screen.pcUuid, 5_000) { true }
         if (pc == null) {
-            onFailed("${screen.pcName} cannot be found")
+            onFailed(res.getString(R.string.pairing_failed_not_found, screen.pcName))
             return@LaunchedEffect
         }
         when (val result = setup.pair(pc, pin, screen.otp?.passphrase)) {
@@ -152,26 +157,26 @@ fun PinScreen(screen: Screen.Pin, repo: PcRepository, setup: PcSetup, onFailed: 
                 delay(900)
                 actions.paired(pc.uuid)
             }
-            is PcSetup.PairResult.Failed -> onFailed(result.message)
+            is PcSetup.PairResult.Failed -> onFailed(result.text(res, pc.name))
         }
     }
     val cancel = remember { FocusRequester() }
     InitialFocus(cancel)
     CenterColumn(gap = 44f) {
         if (screen.otp == null) {
-            Heading("Enter this PIN on ${screen.pcName}", "Open the Vibepollo web UI on your PC, go to PIN and type the code.")
+            Heading(stringResource(R.string.pairing_pin_title, screen.pcName), stringResource(R.string.pairing_pin_note))
             PinDigits(pin)
         } else {
-            Heading("Pairing with ${screen.pcName}", "Using the one-time code from Vibepollo.")
+            Heading(stringResource(R.string.pairing_code_title, screen.pcName), stringResource(R.string.pairing_code_note))
         }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.px)) {
             if (!accepted) Spinner()
             BasicText(
-                if (accepted) (if (screen.otp == null) "PIN accepted" else "Code accepted") else "Waiting for Vibepollo…",
+                stringResource(if (accepted) (if (screen.otp == null) R.string.pairing_pin_accepted else R.string.pairing_code_accepted) else R.string.pairing_pin_waiting),
                 style = TextStyle(color = if (accepted) OnlineGreen else colors.text2, fontFamily = Figtree, fontSize = 26.tpx),
             )
         }
-        PillButton("Cancel", Symbols.CLOSE, onCancel, Modifier.focusRequester(cancel), clickCue = Cue.BACK)
+        PillButton(stringResource(R.string.pairing_cancel), Symbols.CLOSE, onCancel, Modifier.focusRequester(cancel), clickCue = Cue.BACK)
     }
 }
 

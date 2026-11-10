@@ -22,6 +22,10 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import android.content.res.Resources
+import androidx.compose.ui.res.stringResource
+import com.limelight.R
+import com.limelight.shell.ui.textResources
 import com.limelight.shell.ContextMenu
 import com.limelight.shell.DeviceActions
 import com.limelight.shell.Layer
@@ -60,6 +64,7 @@ import com.limelight.shell.ui.tpx
  */
 @Composable
 fun StartScreen(profiles: Profiles, store: ProfileStore, pcs: List<Pc>, startup: Startup) {
+    val res = textResources()
     val actions = LocalDeviceActions.current
     val shell = LocalShell.current
     val paired = pcs.filter { it.paired }.sortedBy { it.name.lowercase() }
@@ -71,8 +76,8 @@ fun StartScreen(profiles: Profiles, store: ProfileStore, pcs: List<Pc>, startup:
         CenterColumn(gap = 48f) {
             val name = profiles.current?.name
             Heading(
-                if (name != null) "Hi, $name" else "Welcome",
-                if (paired.isEmpty()) "Pair a PC to start playing." else "Choose the PC to play on.",
+                if (name != null) stringResource(R.string.devices_start_greeting, name) else stringResource(R.string.devices_start_welcome),
+                stringResource(if (paired.isEmpty()) R.string.devices_start_pair_note else R.string.devices_start_choose_note),
             )
             Circles {
                 paired.take(5).forEach { pc ->
@@ -81,32 +86,39 @@ fun StartScreen(profiles: Profiles, store: ProfileStore, pcs: List<Pc>, startup:
                         Symbols.DESKTOP_WINDOWS, pc.name,
                         onClick = { actions.connect(pc) },
                         modifier = if (pc == focusPc) Modifier.focusRequester(first) else Modifier,
-                        meta = listOfNotNull(if (pc.online) "Online" else if (pc.canWake) "Asleep · wakes up" else "Offline", "Default".takeIf { default }).joinToString(" · "),
+                        meta = pcStatus(pc, default),
                         metaDot = if (pc.online) OnlineGreen else null,
                         big = true,
                         selected = default,
                         pulse = pc.online,
-                        contextMenu = startMenu(pc, default, actions),
+                        contextMenu = startMenu(res, pc, default, actions),
                     )
                 }
                 CircleItem(
-                    Symbols.ADD_LINK, "Pair a new PC", { shell.navigate(Screen.PairPc(back = Screen.Start)) },
+                    Symbols.ADD_LINK, stringResource(R.string.devices_pair_new), { shell.navigate(Screen.PairPc(back = Screen.Start)) },
                     modifier = if (focusPc == null) Modifier.focusRequester(first) else Modifier,
-                    meta = "Vibepollo, Apollo or Sunshine", big = true,
+                    meta = stringResource(R.string.devices_pair_new_meta), big = true,
                 )
             }
         }
     }
 }
 
-private fun startMenu(pc: Pc, default: Boolean, actions: DeviceActions) = ContextMenu(
+/** The status line under a PC on the start screen: online, asleep or offline, and whether it is the default one. */
+@Composable
+private fun pcStatus(pc: Pc, default: Boolean): String {
+    val status = stringResource(if (pc.online) R.string.devices_status_online else if (pc.canWake) R.string.devices_status_asleep_wakes else R.string.devices_status_offline)
+    return if (default) stringResource(R.string.devices_status_with_default, status, stringResource(R.string.devices_status_default)) else status
+}
+
+private fun startMenu(res: Resources, pc: Pc, default: Boolean, actions: DeviceActions) = ContextMenu(
     pc.name,
     below = true,
     items = listOfNotNull(
-        if (default) MenuItem(Symbols.STAR, "Don't start with this PC") { actions.setDefault(null) }
-        else MenuItem(Symbols.STAR, "Start Delos with this PC") { actions.setDefault(pc) },
-        if (!pc.online && pc.canWake) MenuItem(Symbols.WAKE, "Wake the PC") { actions.wake(pc) } else null,
-        MenuItem(Symbols.EDIT, "Rename") { actions.rename(pc) },
+        if (default) MenuItem(Symbols.STAR, res.getString(R.string.devices_menu_default_off)) { actions.setDefault(null) }
+        else MenuItem(Symbols.STAR, res.getString(R.string.devices_menu_default_on)) { actions.setDefault(pc) },
+        if (!pc.online && pc.canWake) MenuItem(Symbols.WAKE, res.getString(R.string.devices_menu_wake)) { actions.wake(pc) } else null,
+        MenuItem(Symbols.EDIT, res.getString(R.string.devices_menu_rename)) { actions.rename(pc) },
     ),
 )
 
@@ -147,6 +159,7 @@ private fun ProfileChip(profiles: Profiles, store: ProfileStore, modifier: Modif
  */
 @Composable
 fun DevicesScreen(pcs: List<Pc>, activeUuid: String?) {
+    val res = textResources()
     val actions = LocalDeviceActions.current
     val shell = LocalShell.current
     val tracker = LocalFocusTracker.current
@@ -155,11 +168,11 @@ fun DevicesScreen(pcs: List<Pc>, activeUuid: String?) {
     val first = remember { FocusRequester() }
     InitialFocus(first)
     CenterColumn(gap = 48f) {
-        Heading("Devices", "PCs paired with Delos. Names you set here stay on this device only.")
+        Heading(stringResource(R.string.devices_title), stringResource(R.string.devices_note))
         Circles {
             paired.take(5).forEachIndexed { i, pc ->
                 val active = pc.uuid == activeUuid
-                val menu = deviceMenu(pc, active, actions)
+                val menu = deviceMenu(res, pc, active, actions)
                 CircleItem(
                     Symbols.DESKTOP_WINDOWS, pc.name,
                     onClick = {
@@ -168,10 +181,10 @@ fun DevicesScreen(pcs: List<Pc>, activeUuid: String?) {
                     },
                     modifier = if (i == 0) Modifier.focusRequester(first) else Modifier,
                     meta = when {
-                        active && pc.online -> "Connected"
-                        pc.online -> "Online"
-                        pc.canWake -> "Asleep"
-                        else -> "Offline"
+                        active && pc.online -> stringResource(R.string.devices_status_connected)
+                        pc.online -> stringResource(R.string.devices_status_online)
+                        pc.canWake -> stringResource(R.string.devices_status_asleep)
+                        else -> stringResource(R.string.devices_status_offline)
                     },
                     metaDot = if (pc.online) OnlineGreen else null,
                     big = true,
@@ -179,22 +192,22 @@ fun DevicesScreen(pcs: List<Pc>, activeUuid: String?) {
                 )
             }
             CircleItem(
-                Symbols.ADD_LINK, "Pair a new PC", { shell.navigate(Screen.PairPc(back = Screen.Devices)) },
+                Symbols.ADD_LINK, stringResource(R.string.devices_pair_new), { shell.navigate(Screen.PairPc(back = Screen.Devices)) },
                 modifier = if (paired.isEmpty()) Modifier.focusRequester(first) else Modifier,
-                meta = "Vibepollo, Apollo or Sunshine", big = true,
+                meta = stringResource(R.string.devices_pair_new_meta), big = true,
             )
         }
     }
 }
 
-private fun deviceMenu(pc: Pc, active: Boolean, actions: DeviceActions) = ContextMenu(
+private fun deviceMenu(res: Resources, pc: Pc, active: Boolean, actions: DeviceActions) = ContextMenu(
     pc.name,
     below = true,
     items = listOfNotNull(
-        MenuItem(Symbols.LOGIN, if (active) "Open its games" else "Connect") { actions.connect(pc) },
-        MenuItem(Symbols.EDIT, "Rename") { actions.rename(pc) },
-        if (!pc.online && pc.canWake) MenuItem(Symbols.WAKE, "Wake the PC") { actions.wake(pc) } else null,
-        if (pc.online) MenuItem(Symbols.LINK_OFF, "Unpair") { actions.unpair(pc) } else null,
-        MenuItem(Symbols.DELETE, "Remove from Delos", danger = true) { actions.remove(pc) },
+        MenuItem(Symbols.LOGIN, res.getString(if (active) R.string.devices_menu_open_games else R.string.devices_menu_connect)) { actions.connect(pc) },
+        MenuItem(Symbols.EDIT, res.getString(R.string.devices_menu_rename)) { actions.rename(pc) },
+        if (!pc.online && pc.canWake) MenuItem(Symbols.WAKE, res.getString(R.string.devices_menu_wake)) { actions.wake(pc) } else null,
+        if (pc.online) MenuItem(Symbols.LINK_OFF, res.getString(R.string.devices_menu_unpair)) { actions.unpair(pc) } else null,
+        MenuItem(Symbols.DELETE, res.getString(R.string.devices_menu_remove), danger = true) { actions.remove(pc) },
     ),
 )

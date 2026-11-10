@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Pair a PC screen (discovered PCs, address, search) and the PIN screen -->
+    <string name="pairing_pc_title">Pair a PC</string>
+    <string name="pairing_pc_searching">Searching the local network…</string>
+    <string name="pairing_pc_none">No PC found yet. Start Vibepollo on your PC, or enter its address.</string>
+    <plurals name="pairing_pc_found">
+        <!-- %1$d: number of PCs found on the local network -->
+        <item quantity="one">Delos found %1$d PC on your network.</item>
+        <item quantity="other">Delos found %1$d PCs on your network.</item>
+    </plurals>
+    <string name="pairing_pc_paired_online">Paired · Online</string>
+    <string name="pairing_pc_paired_offline">Paired · Offline</string>
+    <string name="pairing_pc_ready">Online · ready to pair</string>
+    <string name="pairing_pc_offline">Offline</string>
+    <string name="pairing_pc_with_pin">Pair with a PIN</string>
+    <string name="pairing_pc_with_code">Pair with a one-time code</string>
+    <string name="pairing_pc_address">Enter address</string>
+    <string name="pairing_pc_address_hint">IP or host name</string>
+    <string name="pairing_pc_search_again">Search again</string>
+    <string name="pairing_pc_network">Local network</string>
+    <!-- %1$s: PC name -->
+    <string name="pairing_pin_title">Enter this PIN on %1$s</string>
+    <string name="pairing_pin_note">Open the Vibepollo web UI on your PC, go to PIN and type the code.</string>
+    <!-- %1$s: PC name -->
+    <string name="pairing_code_title">Pairing with %1$s</string>
+    <string name="pairing_code_note">Using the one-time code from Vibepollo.</string>
+    <string name="pairing_pin_waiting">Waiting for Vibepollo…</string>
+    <string name="pairing_pin_accepted">PIN accepted</string>
+    <string name="pairing_code_accepted">Code accepted</string>
+    <string name="pairing_cancel">Cancel</string>
+
+    <!-- Why pairing failed (shown as a toast). %1$s: PC name -->
+    <string name="pairing_failed_offline">%1$s is offline</string>
+    <string name="pairing_failed_pin_wrong">The PIN was wrong, try again</string>
+    <string name="pairing_failed_code_wrong">The code or passphrase was wrong</string>
+    <string name="pairing_failed_busy">%1$s is already pairing with another device</string>
+    <string name="pairing_failed_game_running">Quit the game on %1$s first, then pair again</string>
+    <string name="pairing_failed_not_found">%1$s cannot be found</string>
+    <string name="pairing_failed_unsupported">%1$s does not support pairing</string>
+    <string name="pairing_failed">Pairing with %1$s failed</string>
+
+    <!-- The dialog that pairs with a one-time code from the Vibepollo web UI -->
+    <string name="pairing_otp_title">Pair with a one-time code</string>
+    <string name="pairing_otp_note">In the Vibepollo web UI, create a one-time PIN with a passphrase, then enter both here.</string>
+    <string name="pairing_otp_pin_hint">PIN</string>
+    <string name="pairing_otp_passphrase_hint">Passphrase</string>
+    <string name="pairing_otp_action">Pair</string>
+    <string name="pairing_otp_pin_error">The PIN has 4 digits</string>
+    <string name="pairing_otp_passphrase_error">The passphrase has at least 4 characters</string>
+</resources>
