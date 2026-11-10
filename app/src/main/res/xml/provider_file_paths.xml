@@ -4,4 +4,8 @@
     <external-cache-path
         name="export_settings"
         path="export_settings/" />
+    <!-- The sanitized diagnostic log the user shares from Debug info (docs/DIAGNOSTICS.md) -->
+    <cache-path
+        name="diagnostics"
+        path="diagnostics/" />
 </paths>
