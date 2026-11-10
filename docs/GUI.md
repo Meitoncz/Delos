@@ -397,7 +397,7 @@ in assets.
 ## Controls
 
 - Primary input: **D-pad or left stick + A, B, X, Y**.
-- The **two menu buttons at the top left and top right** of the handheld are used in the UI: the **left one (View/Select)** slides the **side menu** in from the left, the **right one (Start)** opens the **context menu** for the focused item. The hints show the buttons as they look on the device: on AYN handhelds (Odin, Thor) a square (left) and a play arrow (right).
+- The **two menu buttons at the top left and top right** of the handheld are used in the UI: the **left one (View/Select)** slides the **side menu** in from the left, the **right one (Start)** opens the **context menu** for the focused item. Only elements with something to offer have one (game tiles, unpaired PCs on the pairing screen, PC circles on the start screen, customised rows in game settings); there is no generic fallback menu, and the **Options** hint shows only while the focused element has a menu. Where A already opens the same menu (the profile chip, PC circles on Devices) Options does nothing. The hints show the buttons as they look on the device: on AYN handhelds (Odin, Thor) a square (left) and a play arrow (right).
 - Navigation must be **intuitive and direct**: pressing a direction takes you where you want to go, ideally in **one press** – never left, down, down just to reach something.
 
 ### Text input
@@ -786,7 +786,7 @@ These preserve implementation/design context from the removed UI plan, not phase
 - `Stage` provides the prototype's 1920×1080 design coordinates and interface scale. The reusable
   focus modifier applies to touch as well as controller elements. `GlobalKeys` handles input before
   focus dispatch; left/right adjust choice/slider rows. A/Enter/D-pad center activate, B goes back,
-  Select opens the side menu, Start/X opens context actions, L1/R1 go to the screen and Y opens search.
+  Select opens the side menu, Start/X opens the focused element's context menu (if it has one), L1/R1 go to the screen and Y opens search.
   System HOME/BACK/APP_SWITCH remain Android functions.
 - The Odin's built-in controller identifies as Xbox Wireless Controller, vendor `0x2020`, product
   `0x0112`. AYN hints use the square/play-arrow menu glyphs. Rumble-only devices use the established

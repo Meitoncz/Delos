@@ -103,7 +103,6 @@ private fun startMenu(pc: Pc, default: Boolean, actions: DeviceActions) = Contex
     pc.name,
     below = true,
     items = listOfNotNull(
-        MenuItem(Symbols.LOGIN, "Connect") { actions.connect(pc) },
         if (default) MenuItem(Symbols.STAR, "Don't start with this PC") { actions.setDefault(null) }
         else MenuItem(Symbols.STAR, "Start Delos with this PC") { actions.setDefault(pc) },
         if (!pc.online && pc.canWake) MenuItem(Symbols.POWER, "Wake the PC") { actions.wake(pc) } else null,
@@ -120,13 +119,12 @@ private fun ProfileChip(profiles: Profiles, store: ProfileStore, modifier: Modif
     val feedback = LocalFeedback.current
     val profile = profiles.current ?: return
     var focused by remember { mutableStateOf(false) }
-    val menu = profilesMenu(shell, profiles, store, Screen.Start)
     Row(
         modifier
             .focusEffects(
                 onClick = { openProfilesMenu(shell, tracker, feedback, profiles, store, Screen.Start) },
                 corner = 999f, focusScale = 1.06f, ring = FocusRing(4f, 4f), glow = FocusGlow(14f, 40f, -12f),
-                clickCue = null, contextMenu = menu, onLookChange = { focused = it },
+                clickCue = null, onLookChange = { focused = it },
             )
             .clip(CircleShape)
             .glass(colors.surface)
@@ -177,7 +175,6 @@ fun DevicesScreen(pcs: List<Pc>, activeUuid: String?) {
                     metaDot = if (pc.online) OnlineGreen else null,
                     big = true,
                     selected = active,
-                    contextMenu = menu,
                 )
             }
             CircleItem(

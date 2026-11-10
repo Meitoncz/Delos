@@ -446,16 +446,6 @@ fun Shell(
         }
     }
 
-    val defaultMenu = remember {
-        ContextMenu(
-            "Delos",
-            listOf(
-                MenuItem(Symbols.MENU, "Side menu") { shell.openLayer(Layer.Side, tracker) },
-                MenuItem(Symbols.SETTINGS, "All settings") { shell.navigate(Screen.Settings) },
-            ),
-        )
-    }
-
     fun toggleContext() {
         when (shell.layer) {
             is Layer.Context -> {
@@ -463,7 +453,7 @@ fun Shell(
                 shell.closeLayer()
             }
             null -> {
-                val menu = tracker.contextMenu ?: defaultMenu.takeIf { sideMenu } ?: return
+                val menu = tracker.contextMenu ?: return
                 feedback.play(Cue.OPEN)
                 shell.openLayer(Layer.Context(menu, tracker.bounds()), tracker)
             }
@@ -729,7 +719,7 @@ fun Shell(
             }
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
                 val filterHint = (library as? Library.Ready)?.takeIf { it.apps.isNotEmpty() }?.let { filterHintLabel(metadata.filters) }
-                ZoomedBar(uiScale) { HintBar(hints(shell, tracker.adjustable, filterHint), note = note, noteLabel = if (note != null) "LIBRARY" else null) }
+                ZoomedBar(uiScale) { HintBar(hints(shell, tracker.adjustable, tracker.hasContextMenu, filterHint), note = note, noteLabel = if (note != null) "LIBRARY" else null) }
             }
             val launch = shell.launch
             val launchLogo = launch?.let { rememberArtwork(artwork, it.pc, it.app, ArtKind.LOGO).value }
@@ -812,7 +802,8 @@ private class ShellGameActions(
 }
 
 /** Button hints for the current screen and layer (the prototype's updateHints). */
-private fun hints(shell: ShellState, adjustable: Boolean, filterHint: String?): List<Hint> {
+private fun hints(shell: ShellState, adjustable: Boolean, options: Boolean, filterHint: String?): List<Hint> {
+    val optionsHint = Hint(Glyph.MENU_RIGHT, "Options").takeIf { options }
     val adjust = if (adjustable) listOf(Hint(Glyph.ADJUST, "Adjust")) else emptyList()
     shell.portal?.let { return if (it.cancellable) listOf(Hint(Glyph.B, "Cancel")) else emptyList() }
     if (shell.result != null) return listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back to library"))
@@ -822,13 +813,13 @@ private fun hints(shell: ShellState, adjustable: Boolean, filterHint: String?): 
         Layer.Filters -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.X, "Reset"), Hint(Glyph.Y, "Close"), Hint(Glyph.B, "Close"))
         is Layer.Dialog -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Cancel"))
         null -> when (val screen = shell.screen) {
-            Screen.Home -> listOfNotNull(Hint(Glyph.A, "Start"), filterHint?.let { Hint(Glyph.Y, it) }, Hint(Glyph.MENU_LEFT, "Menu"), Hint(Glyph.MENU_RIGHT, "Options"))
+            Screen.Home -> listOfNotNull(Hint(Glyph.A, "Start"), filterHint?.let { Hint(Glyph.Y, it) }, Hint(Glyph.MENU_LEFT, "Menu"), optionsHint)
             Screen.Settings -> adjust + listOf(Hint(Glyph.L1, "Previous tab"), Hint(Glyph.R1, "Next tab"), Hint(Glyph.Y, "Search"), Hint(Glyph.A, "Change"), Hint(Glyph.B, "Back"))
             Screen.SettingsSearch -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"))
-            Screen.Start -> listOf(Hint(Glyph.A, "Connect"), Hint(Glyph.MENU_LEFT, "Menu"), Hint(Glyph.MENU_RIGHT, "Options"))
+            Screen.Start -> listOfNotNull(Hint(Glyph.A, "Connect"), Hint(Glyph.MENU_LEFT, "Menu"), optionsHint)
             is Screen.Boot -> listOfNotNull(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back").takeIf { screen.back != null })
             is Screen.CreateProfile -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"))
-            is Screen.PairPc -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"), Hint(Glyph.MENU_RIGHT, "Options"))
+            is Screen.PairPc -> listOfNotNull(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"), optionsHint)
             is Screen.Pin -> listOf(Hint(Glyph.B, "Cancel"))
             Screen.DebugInfo -> adjust + listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"))
             // Like a stream: nothing over the controls
@@ -837,7 +828,7 @@ private fun hints(shell: ShellState, adjustable: Boolean, filterHint: String?): 
                 else if (shell.artworkSheetOpen) listOf(Hint(Glyph.A, "Choose"), Hint(Glyph.X, "Reset filters"), Hint(Glyph.Y, "Done"), Hint(Glyph.B, "Close"))
                 else listOf(Hint(Glyph.L1, "Previous tab"), Hint(Glyph.R1, "Next tab"), Hint(Glyph.A, "Use image"), Hint(Glyph.X, "Search name"), Hint(Glyph.Y, "Filter"), Hint(Glyph.B, "Back"))
             is Screen.GameSettings -> adjust + listOfNotNull(Hint(Glyph.L1, "Previous tab"), Hint(Glyph.R1, "Next tab"), Hint(Glyph.A, "Change"),
-                Hint(Glyph.X, "Reset to profile value").takeIf { shell.onGameReset != null }, Hint(Glyph.MENU_RIGHT, "Options"), Hint(Glyph.B, "Back"))
+                Hint(Glyph.X, "Reset to profile value").takeIf { shell.onGameReset != null }, optionsHint, Hint(Glyph.B, "Back"))
             Screen.Profile, Screen.Devices -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"), Hint(Glyph.MENU_LEFT, "Menu"))
         }
     }

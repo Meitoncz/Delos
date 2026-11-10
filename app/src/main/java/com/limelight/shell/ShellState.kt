@@ -213,6 +213,10 @@ class FocusTracker {
     var adjustable by mutableStateOf(false)
         private set
 
+    /** Whether the focused element has a context menu (the Options hint shows only then); a mirror of [contextMenu] that is read in composition. */
+    var hasContextMenu by mutableStateOf(false)
+        private set
+
     /**
      * The element whose context menu is open: it keeps its focus look (ring, scale, glow) while the focus is in the menu, so
      * the menu points at a lit cover ([holds]). Set when the menu opens ([hold]), cleared when the element has the focus again
@@ -235,6 +239,7 @@ class FocusTracker {
         this.requester = requester
         this.coordinates = coordinates
         this.contextMenu = contextMenu
+        hasContextMenu = contextMenu != null
         this.adjustable = adjustable
         this.activate = activate
         this.adjust = adjust
