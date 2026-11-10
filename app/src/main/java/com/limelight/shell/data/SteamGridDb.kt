@@ -1,6 +1,7 @@
 package com.limelight.shell.data
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.LruCache
 import androidx.compose.runtime.Composable
@@ -33,6 +34,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
+import kotlin.math.roundToInt
 import java.security.MessageDigest
 import java.io.IOException
 import java.util.Calendar
@@ -451,14 +453,29 @@ class ArtworkStore(context: Context) {
     }
 
     private fun decode(file: File, kind: ArtKind) = runCatching {
-        // The game background is blurred and small anyway; covers and logos keep about their size
+        // The game background is blurred and small anyway; covers keep about their size, logos only their display box
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         BitmapFactory.decodeFile(file.path, bounds)
+        if (kind == ArtKind.LOGO) return@runCatching decodeLogo(file, bounds.outWidth, bounds.outHeight)
         val limit = if (kind == ArtKind.HERO) 1280 else 1000
         var sample = 1
         while (bounds.outWidth / (sample * 2) >= limit) sample *= 2
         BitmapFactory.decodeFile(file.path, BitmapFactory.Options().apply { inSampleSize = sample })?.asImageBitmap()
     }.getOrNull()
+
+    /**
+     * A logo is drawn at most [LOGO_BOX_WIDTH] x [LOGO_BOX_HEIGHT] stage pixels (the home screen's title box; the launch card's is smaller), so it
+     * is decoded to that box at this display's scale, aspect kept. A tall 1796 x 2161 logo is not kept as a 15 MB bitmap.
+     */
+    private fun decodeLogo(file: File, width: Int, height: Int): ImageBitmap? {
+        val metrics = appContext.resources.displayMetrics
+        val k = minOf(maxOf(metrics.widthPixels, metrics.heightPixels) / 1920f, minOf(metrics.widthPixels, metrics.heightPixels) / 1080f)
+        val target = logoSize(width, height, LOGO_BOX_WIDTH * k * INTERFACE_SCALE_MAX, LOGO_BOX_HEIGHT * k * INTERFACE_SCALE_MAX)
+        val options = BitmapFactory.Options().apply { inSampleSize = target?.let { sampleSize(width, height, it.first, it.second) } ?: 1 }
+        val bitmap = BitmapFactory.decodeFile(file.path, options) ?: return null
+        if (target == null || (bitmap.width == target.first && bitmap.height == target.second)) return bitmap.asImageBitmap()
+        return Bitmap.createScaledBitmap(bitmap, target.first, target.second, true).also { if (it !== bitmap) bitmap.recycle() }.asImageBitmap()
+    }
 
     private fun dir(pc: Pc, app: App) = File(root, "${pc.uuid}/${app.id}")
     private fun file(pc: Pc, app: App, kind: ArtKind) = File(dir(pc, app).apply { mkdirs() }, kind.file)
@@ -713,4 +730,26 @@ fun rememberThumbnail(store: ArtworkStore, url: String): State<ImageBitmap?> {
     val state = remember(url) { mutableStateOf(Thumbnails.cached(url)) }
     LaunchedEffect(state) { if (state.value == null) state.value = Thumbnails.load(store.http, url) }
     return state
+}
+
+/** The largest area a logo is drawn in, stage pixels (the home screen's title box). */
+private const val LOGO_BOX_WIDTH = 900f
+private const val LOGO_BOX_HEIGHT = 180f
+
+/** The largest interface scale (130 %): the logo keeps its sharpness there. */
+private const val INTERFACE_SCALE_MAX = 1.3f
+
+/** The size an image of [width] x [height] is kept at to fit in [boxWidth] x [boxHeight], aspect kept; null when it already fits. */
+internal fun logoSize(width: Int, height: Int, boxWidth: Float, boxHeight: Float): Pair<Int, Int>? {
+    if (width <= 0 || height <= 0) return null
+    val scale = minOf(boxWidth / width, boxHeight / height)
+    if (scale >= 1f) return null
+    return maxOf(1, (width * scale).roundToInt()) to maxOf(1, (height * scale).roundToInt())
+}
+
+/** The largest power-of-two decode subsampling that still leaves an image of [width] x [height] at least [targetWidth] x [targetHeight]. */
+internal fun sampleSize(width: Int, height: Int, targetWidth: Int, targetHeight: Int): Int {
+    var sample = 1
+    while (width / (sample * 2) >= targetWidth && height / (sample * 2) >= targetHeight) sample *= 2
+    return sample
 }
