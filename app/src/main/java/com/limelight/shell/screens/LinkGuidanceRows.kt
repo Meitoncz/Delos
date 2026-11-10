@@ -3,6 +3,7 @@ package com.limelight.shell.screens
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
+import com.limelight.R
 import com.limelight.shell.LocalDeviceActions
 import com.limelight.shell.LocalLibrary
 import com.limelight.shell.LocalShell
@@ -18,6 +19,7 @@ import com.limelight.shell.link.mbps
 import com.limelight.shell.settings.SettingSpec
 import com.limelight.shell.ui.RowValue
 import com.limelight.shell.ui.Symbols
+import com.limelight.shell.ui.textResources
 
 /** The stored link tests (docs/STREAM_QUALITY.md, "Link guidance"); null where the shell has none (previews). */
 internal val LocalLinkTests = staticCompositionLocalOf<LinkTestStore?> { null }
@@ -74,6 +76,7 @@ internal fun withLinkRows(
     val shell = LocalShell.current
     val devices = LocalDeviceActions.current
     val context = LocalContext.current
+    val res = textResources()
     val transport = currentTransport(context)
     val now = System.currentTimeMillis()
     val recommended = guidance.recommendation
@@ -81,33 +84,30 @@ internal fun withLinkRows(
     return items.flatMap { item ->
         if (item.key != BITRATE_ROW) return@flatMap listOf(item)
         val test = SettingsItem(
-            LINK_TEST_ROW, item.tab, item.section, Symbols.LINK_TEST, "Test link",
-            guidance.testRowText(now, transport),
+            LINK_TEST_ROW, item.tab, item.section, Symbols.LINK_TEST, res.getString(R.string.link_test_action),
+            guidance.testRowText(res, now, transport),
             RowValue.Action {
                 when {
-                    !pc.online -> shell.showToast("${pc.name} is offline", Symbols.WIFI_OFF)
-                    guidance.testUnavailable != null -> shell.showToast(guidance.testUnavailable, Symbols.INFO)
+                    !pc.online -> shell.showToast(res.getString(R.string.link_pc_offline_toast, pc.name), Symbols.WIFI_OFF)
+                    guidance.testUnavailable != null -> shell.showToast(guidance.testUnavailable.text(res), Symbols.INFO)
                     else -> devices.testLink(pc, current)
                 }
             },
             enabled = true,
-            detail = "Measures what this network carries from ${pc.name}: test traffic for about 2 seconds per step, " +
-                "at up to several hundred Mbps. Stay on ${transport.label}, with nothing else running.\n\n" +
-                guidance.help(now, transport),
+            detail = res.getString(R.string.link_test_detail, pc.name, transport.label(res)) + "\n\n" + guidance.help(res, now, transport),
             searchTerms = "bandwidth probe measure speed network wifi",
         )
         val use = SettingsItem(
-            LINK_USE_ROW, item.tab, item.section, Symbols.RECOMMEND, "Use recommended bitrate",
-            "${mbps(recommended.kbps)} · ${recommended.reasonText}",
+            LINK_USE_ROW, item.tab, item.section, Symbols.RECOMMEND, res.getString(R.string.link_use_action),
+            recommended.valueText(res),
             RowValue.Action {
                 setBitrate(bitrateSpec, recommended.kbps)
-                shell.showToast("Bitrate set to ${mbps(recommended.kbps)}", Symbols.CHECK_CIRCLE)
+                shell.showToast(res.getString(R.string.link_use_done_toast, mbps(recommended.kbps)), Symbols.CHECK_CIRCLE)
             },
             enabled = current != recommended.kbps,
-            detail = "Fills the bitrate with ${mbps(recommended.kbps)}: ${recommended.reasonText}. " +
-                "Delos never changes the bitrate by itself.",
+            detail = res.getString(R.string.link_use_detail, mbps(recommended.kbps), recommended.reasonText(res)),
             searchTerms = "recommended bitrate link",
         )
-        listOf(item.copy(detail = item.detail + "\n\n" + guidance.help(now, transport)), test, use)
+        listOf(item.copy(detail = item.detail + "\n\n" + guidance.help(res, now, transport)), test, use)
     }
 }

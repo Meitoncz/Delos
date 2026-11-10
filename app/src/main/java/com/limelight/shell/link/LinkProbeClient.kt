@@ -1,8 +1,10 @@
 package com.limelight.shell.link
 
+import android.content.res.Resources
 import android.os.Process
 import android.util.Log
 import com.limelight.BuildConfig
+import com.limelight.R
 import com.limelight.nvstream.http.HostHttpResponseException
 import com.limelight.nvstream.http.NvHTTP
 import com.limelight.nvstream.http.PyroWaveHostInfo
@@ -22,21 +24,28 @@ import java.util.concurrent.CancellationException
 /** Why a link test could not produce a number, as a reason the screens can say in a sentence. */
 internal enum class LinkFailure {
     HOST_UNSUPPORTED, STREAM_ACTIVE, DENIED, UDP_BLOCKED, NETWORK, TIMEOUT, HOST_ERROR, INVALID_RESPONSE,
+
+    /** Only reported by [LinkTester]; [LinkTestResult.Failed.text] words NOT_CONNECTED and NO_RATE itself, [text] is their fallback. */
+    NOT_CONNECTED, NEEDS_NEWER_DELOS, NO_RATE,
 }
 
 internal class LinkTestException(val failure: LinkFailure, message: String, cause: Throwable? = null) : Exception(message, cause)
 
 /** One sentence for a failed test ("Delos could not reach the PC"), without technical detail. */
-internal fun LinkFailure.text(): String = when (this) {
-    LinkFailure.HOST_UNSUPPORTED -> "This PC's Vibepollo cannot test the link. Update it."
-    LinkFailure.STREAM_ACTIVE -> "The PC is streaming. Stop the stream, then test again."
-    LinkFailure.DENIED -> "The PC did not allow the test. Pair this device again."
-    LinkFailure.UDP_BLOCKED -> "No test data arrived. UDP may be blocked on this network."
-    LinkFailure.NETWORK -> "Delos could not reach the PC."
-    LinkFailure.TIMEOUT -> "The PC did not finish the test in time."
-    LinkFailure.HOST_ERROR -> "The PC could not run the test."
-    LinkFailure.INVALID_RESPONSE -> "The PC sent an unusable test result."
-}
+internal fun LinkFailure.text(res: Resources): String = res.getString(
+    when (this) {
+        LinkFailure.HOST_UNSUPPORTED -> R.string.link_failure_host_unsupported
+        LinkFailure.STREAM_ACTIVE -> R.string.link_failure_stream_active
+        LinkFailure.DENIED -> R.string.link_failure_denied
+        LinkFailure.UDP_BLOCKED -> R.string.link_failure_udp_blocked
+        LinkFailure.NETWORK -> R.string.link_failure_network
+        LinkFailure.TIMEOUT -> R.string.link_failure_timeout
+        LinkFailure.HOST_ERROR -> R.string.link_failure_host_error
+        LinkFailure.INVALID_RESPONSE -> R.string.link_failure_invalid_response
+        LinkFailure.NEEDS_NEWER_DELOS -> R.string.link_unavailable_newer_delos
+        LinkFailure.NOT_CONNECTED, LinkFailure.NO_RATE -> R.string.link_failure_network
+    },
+)
 
 /** Stops a running test: the HTTPS request and the UDP receiver are torn down from any thread. */
 internal class LinkCancel {
@@ -114,7 +123,7 @@ internal class LinkProbeClient(
                         "hostElapsed=%.1fms stall=%.2fms authenticated=%d: %s%s",
                     kbps, expected, score.sent, score.received, granted, score.lossPercent, score.worstWindowLossPercent,
                     score.delayP99Ms, score.delayGrowthMs, score.senderMs, score.maxStallMs, receiver.authenticated,
-                    if (score.passed) "PASS" else "FAIL ${score.failure}", if (score.receiverSuspect) " (receiver suspect)" else if (score.jitterWarning) " (jitter warning)" else ""))
+                    if (score.passed) "PASS" else "FAIL ${score.failure}", if (score.receiverSuspect) " (receiver suspect)" else if (score.jitterWarning) " (jitter warning)" else "")) // l10n-ignore: developer message
             }
             return score
         } finally {
@@ -156,8 +165,8 @@ internal class LinkProbeClient(
             if (cancel.cancelled) throw CancellationException("Link test cancelled")
             if (e is SocketTimeoutException) {
                 throw if (receiver.authenticated == 0) {
-                    LinkTestException(LinkFailure.UDP_BLOCKED, "No UDP packets arrived before the test timed out", e)
-                } else LinkTestException(LinkFailure.TIMEOUT, "The test did not complete in time", e)
+                    LinkTestException(LinkFailure.UDP_BLOCKED, "No UDP packets arrived before the test timed out", e) // l10n-ignore: developer message
+                } else LinkTestException(LinkFailure.TIMEOUT, "The test did not complete in time", e) // l10n-ignore: developer message
             }
             throw LinkTestException(LinkFailure.NETWORK, e.message.orEmpty(), e)
         }
@@ -166,11 +175,11 @@ internal class LinkProbeClient(
     private fun failure(code: Int, text: String): LinkTestException {
         val message = text.trim().take(200)
         return when {
-            code == 403 -> LinkTestException(LinkFailure.DENIED, message.ifEmpty { "Forbidden" })
-            code == 404 -> LinkTestException(LinkFailure.HOST_UNSUPPORTED, "The host has no /pyrowave-udp-probe")
+            code == 403 -> LinkTestException(LinkFailure.DENIED, message.ifEmpty { "Forbidden" }) // l10n-ignore: developer message
+            code == 404 -> LinkTestException(LinkFailure.HOST_UNSUPPORTED, "The host has no /pyrowave-udp-probe") // l10n-ignore: developer message
             // Vibepollo answers 400 "Stop streaming before testing bandwidth" while a stream session exists or another probe runs.
             code == 400 && message.contains("streaming", ignoreCase = true) -> LinkTestException(LinkFailure.STREAM_ACTIVE, message)
-            else -> LinkTestException(LinkFailure.HOST_ERROR, "HTTP $code: $message")
+            else -> LinkTestException(LinkFailure.HOST_ERROR, "HTTP $code: $message") // l10n-ignore: developer message
         }
     }
 
@@ -203,7 +212,7 @@ internal class LinkProbeClient(
         private val packetSize: Int,
         private val arrivals: LongArray,
         private val handshake: Boolean,
-    ) : Thread("PyroWave link probe") {
+    ) : Thread("PyroWave link probe") { // l10n-ignore: developer message
         @Volatile var senderPort = 0
         /** Published every 256 datagrams and at the end; the hot loop keeps its own plain counter. */
         @Volatile var authenticated = 0
@@ -281,7 +290,7 @@ internal class LinkProbeClient(
 internal sealed interface LinkTestOutcome {
     /** [jitter]: it passed, with p99 transit variation above 4 ms ("a little jitter"). */
     data class Done(val test: LinkTest, val jitter: Boolean = false) : LinkTestOutcome
-    data class NoRate(val text: String) : LinkTestOutcome
+    data class NoRate(val result: LinkSearchResult.NoRate) : LinkTestOutcome
     data object Cancelled : LinkTestOutcome
 }
 
@@ -313,7 +322,7 @@ internal fun runLinkTest(
             LinkTest(result.wireKbps, nowMs(), transport, info.criticalFecPercent, LinkPolicy.DEFAULT_PACKET_SIZE),
             result.score.jitterWarning,
         )
-        is LinkSearchResult.NoRate -> LinkTestOutcome.NoRate(result.noRateText())
+        is LinkSearchResult.NoRate -> LinkTestOutcome.NoRate(result)
         LinkSearchResult.Cancelled -> LinkTestOutcome.Cancelled
     }
 }

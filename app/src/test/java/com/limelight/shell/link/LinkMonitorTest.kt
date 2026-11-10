@@ -4,8 +4,16 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
+import org.robolectric.annotation.Config
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [33])
 class LinkMonitorTest {
+    private val res = RuntimeEnvironment.getApplication().resources
+
     private fun sample(
         target: Int = 225_000, total: Long = 60, partial: Long = 0, lost: Long = 0, skipped: Long = 0,
         rx: Float = 28_000f, seconds: Float = 1f,
@@ -26,7 +34,7 @@ class LinkMonitorTest {
     fun framesThatArriveWholeKeepUp() {
         val reading = monitor(*Array(5) { sample() }).reading()!!
         assertEquals(LinkVerdict.KEEPING_UP, reading.verdict)
-        assertEquals("Link keeps up at 225 Mbps", reading.text)
+        assertEquals("Link keeps up at 225 Mbps", reading.text(res))
         assertEquals(0.0, reading.dropShare, 0.0)
     }
 
@@ -48,7 +56,7 @@ class LinkMonitorTest {
     fun theHintNamesTheBitrateAndASuggestedLowerOne() {
         // 6 partial a second: 10 % -> cut 40 % (capped), 225 -> 135 Mbps
         val reading = monitor(*Array(4) { sample(partial = 6) }).reading()!!
-        assertEquals("Link drops frames at 225 Mbps, try 135 Mbps", reading.text)
+        assertEquals("Link drops frames at 225 Mbps, try 135 Mbps", reading.text(res))
         assertEquals(135_000, reading.suggestedKbps)
         // A mild 3 %: 4 x 3 % = 12 % -> 198 Mbps rounded down to 195
         assertEquals(195_000, monitor(*Array(4) { sample(total = 100, partial = 3) }).reading()!!.suggestedKbps)

@@ -1,11 +1,13 @@
 package com.limelight.shell.link
 
 import android.content.Context
+import android.content.res.Resources
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
+import com.limelight.R
 import com.limelight.binding.PlatformBinding
 import com.limelight.nvstream.http.HostHttpResponseException
 import com.limelight.nvstream.http.NvHTTP
@@ -57,8 +59,17 @@ internal class LinkTestStore(context: Context) {
 /** How a link test of the UI ended. */
 internal sealed interface LinkTestResult {
     data class Done(val test: LinkTest, val jitter: Boolean = false) : LinkTestResult
-    /** [text] says why, in a sentence. */
-    data class Failed(val text: String) : LinkTestResult
+    /**
+     * Why it failed: [failure], plus [noRate] when the search found no rate that holds and [pcName] when Delos was not connected to the PC
+     * yet. [text] words it in a sentence.
+     */
+    data class Failed(val failure: LinkFailure, val noRate: LinkSearchResult.NoRate? = null, val pcName: String = "") : LinkTestResult {
+        fun text(res: Resources): String = when {
+            noRate != null -> noRate.noRateText(res)
+            failure == LinkFailure.NOT_CONNECTED -> res.getString(R.string.link_failure_not_connected, pcName)
+            else -> failure.text(res)
+        }
+    }
     data object Cancelled : LinkTestResult
 }
 
@@ -74,9 +85,9 @@ internal class LinkTester(val context: Context, private val repo: PcRepository) 
             // The probe blocks; cancelling the job runs the watcher's finally, which tears the request and socket down
             val watcher = launch { try { awaitCancellation() } finally { cancel.cancel() } }
             try {
-                val binder = repo.binder ?: return@coroutine LinkTestResult.Failed("Delos is still connecting to ${pc.name}.")
+                val binder = repo.binder ?: return@coroutine LinkTestResult.Failed(LinkFailure.NOT_CONNECTED, pcName = pc.name)
                 val details = binder.getComputer(pc.uuid) ?: pc.details
-                if (details.activeAddress == null) return@coroutine LinkTestResult.Failed(LinkFailure.NETWORK.text())
+                if (details.activeAddress == null) return@coroutine LinkTestResult.Failed(LinkFailure.NETWORK)
                 val http = NvHTTP(
                     ServerHelper.getCurrentAddressFromComputer(details), details.httpsPort, binder.uniqueId, details.serverCert,
                     PlatformBinding.getCryptoProvider(context),
@@ -84,23 +95,22 @@ internal class LinkTester(val context: Context, private val repo: PcRepository) 
                 val info = PyroWaveHostInfo.parse(http.getServerInfo(true))
                 if (!info.supportsLinkTest()) {
                     return@coroutine LinkTestResult.Failed(
-                        if (info.linkTestNeedsNewerClient()) "This PC needs a newer Delos for the link test."
-                        else LinkFailure.HOST_UNSUPPORTED.text(),
+                        if (info.linkTestNeedsNewerClient()) LinkFailure.NEEDS_NEWER_DELOS else LinkFailure.HOST_UNSUPPORTED,
                     )
                 }
                 when (val outcome = runLinkTest(http, info, startKbps, currentTransport(context), cancel, onStep = onStep)) {
                     is LinkTestOutcome.Done -> LinkTestResult.Done(outcome.test, outcome.jitter)
-                    is LinkTestOutcome.NoRate -> LinkTestResult.Failed(outcome.text)
+                    is LinkTestOutcome.NoRate -> LinkTestResult.Failed(LinkFailure.NO_RATE, noRate = outcome.result)
                     LinkTestOutcome.Cancelled -> LinkTestResult.Cancelled
                 }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: LinkTestException) {
-                LinkTestResult.Failed(e.failure.text())
+                LinkTestResult.Failed(e.failure)
             } catch (e: HostHttpResponseException) {
-                LinkTestResult.Failed(if (e.errorCode == 403) LinkFailure.DENIED.text() else LinkFailure.HOST_ERROR.text())
+                LinkTestResult.Failed(if (e.errorCode == 403) LinkFailure.DENIED else LinkFailure.HOST_ERROR)
             } catch (e: Exception) {
-                LinkTestResult.Failed(LinkFailure.NETWORK.text())
+                LinkTestResult.Failed(LinkFailure.NETWORK)
             } finally {
                 watcher.cancel()
             }

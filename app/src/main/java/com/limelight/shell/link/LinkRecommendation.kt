@@ -1,5 +1,8 @@
 package com.limelight.shell.link
 
+import android.content.res.Resources
+import com.limelight.R
+
 /** What the recommended bitrate rests on. */
 internal enum class LinkReason {
     /** Only PyroWave's own guide for this format; the link was never tested. */
@@ -19,20 +22,34 @@ internal enum class LinkReason {
 }
 
 /**
- * [kbps] is the bitrate to offer; [reason] is the one line that says why. [wantedKbps] is what the format would use if the
+ * [kbps] is the bitrate to offer; [reason] says why, and [reasonText] words it from the numbers below. [wantedKbps] is what the format would use if the
  * link allowed (PyroWave's guide, or an ordinary codec's useful maximum). [pictureKbps] is what a tested PyroWave budget
  * leaves for the image after FEC and overhead, or -1. [testedKbps] is the raw tested ceiling the reason names, or 0.
+ * [hostLinkKbps] is the PC's own link when that is the limit, [droppedAtKbps] the bitrate a running stream drops frames at.
  */
 internal data class LinkRecommendation(
     val kbps: Int,
     val reason: LinkReason,
-    val reasonText: String,
     val pictureKbps: Int = -1,
     val wantedKbps: Int = 0,
     val testedKbps: Int = 0,
+    val hostLinkKbps: Int = 0,
+    val droppedAtKbps: Int = 0,
 ) {
+    /** The clause that says why ("link carries up to 665 Mbps"). */
+    fun reasonText(res: Resources): String = when (reason) {
+        LinkReason.UNTESTED -> res.getString(R.string.link_reason_untested)
+        LinkReason.TESTED_OK -> res.getString(R.string.link_reason_tested_ok, mbps(testedKbps))
+        LinkReason.TESTED_LIMITED -> res.getString(R.string.link_reason_tested_limited, mbps(testedKbps))
+        LinkReason.HOST_LINK_LIMITED -> res.getString(R.string.link_reason_host_limited, mbps(hostLinkKbps))
+        LinkReason.DROPPING -> res.getString(R.string.link_reason_dropping, mbps(droppedAtKbps))
+    }
+
     /** "Recommended: 225 Mbps · link carries up to 665 Mbps". */
-    val line: String get() = "Recommended: ${mbps(kbps)} · $reasonText"
+    fun line(res: Resources): String = res.getString(R.string.link_recommended_line, mbps(kbps), reasonText(res))
+
+    /** "225 Mbps · link carries up to 665 Mbps", the value under Use recommended bitrate. */
+    fun valueText(res: Resources): String = res.getString(R.string.link_value_reason, mbps(kbps), reasonText(res))
 }
 
 /** The most an ordinary codec is worth at [defaultKbps] (the app's default for the size and rate): a multiple of it, capped. */
@@ -81,19 +98,19 @@ internal fun recommend(
     val picture = if (tested != null && fps > 0 && transport != null && share == 1.0) {
         WireBudget.imageKbps(tested.toDouble(), fps, transport).toInt()
     } else -1
-    fun make(reason: LinkReason, text: String) = LinkRecommendation(kbps, reason, text, picture, staticKbps, tested ?: 0)
+    fun make(reason: LinkReason) = LinkRecommendation(kbps, reason, picture, staticKbps, tested ?: 0, ceiling ?: 0)
     var result = when {
-        budget == null || (tested == null && budget >= base) -> make(LinkReason.UNTESTED, "not tested on this link")
+        budget == null || (tested == null && budget >= base) -> make(LinkReason.UNTESTED)
         testedBudget != null && testedBudget >= staticKbps && (ceilingBudget == null || ceilingBudget >= staticKbps) ->
-            make(LinkReason.TESTED_OK, "link carries up to ${mbps(tested!!)}")
+            make(LinkReason.TESTED_OK)
         testedBudget != null && (ceilingBudget == null || testedBudget <= ceilingBudget) ->
-            make(LinkReason.TESTED_LIMITED, "link carries ${mbps(tested!!)}")
-        else -> make(LinkReason.HOST_LINK_LIMITED, "the PC's link is ${mbps(ceiling!!)}")
+            make(LinkReason.TESTED_LIMITED)
+        else -> make(LinkReason.HOST_LINK_LIMITED)
     }
     if (live != null && live.verdict == LinkVerdict.DROPPING && live.suggestedKbps < result.kbps) {
         result = result.copy(
             kbps = maxOf(LinkPolicy.MIN_KBPS, live.suggestedKbps),
-            reason = LinkReason.DROPPING, reasonText = "drops frames at ${mbps(live.targetKbps)}",
+            reason = LinkReason.DROPPING, droppedAtKbps = live.targetKbps,
         )
     }
     return result
