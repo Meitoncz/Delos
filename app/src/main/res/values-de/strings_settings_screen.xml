@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Settings screen (title, search, actions), the native settings rows (Appearance, Devices, Covers, About) and the per-game settings -->
+
+    <!-- Settings screen -->
+    <string name="settings_screen_title">Einstellungen</string>
+    <string name="settings_screen_search">Suchen</string>
+    <string name="settings_screen_unavailable">Mit den aktuellen Einstellungen oder auf diesem Gerät nicht verfügbar.</string>
+    <string name="settings_screen_palette_main">Haupt</string>
+    <string name="settings_screen_palette_secondary">Zweit</string>
+    <string name="settings_screen_palette_accent">Akzent</string>
+    <!-- %1$d: always 0; the text of the lowest position of the gyro smoothing slider -->
+    <string name="settings_screen_gyro_off">%1$d %% (aus)</string>
+    <string name="settings_screen_hdr_firmware">Aktualisiere die Firmware deines NVIDIA SHIELD Android TV, um HDR zu aktivieren.</string>
+    <!-- Two parts joined by a middle dot: %1$s · %2$s -->
+    <string name="settings_screen_dot_join">%1$s · %2$s</string>
+
+    <!-- Settings search -->
+    <string name="settings_screen_search_title">Einstellung finden</string>
+    <string name="settings_screen_search_hint">Wähle Buchstaben mit dem Controller oder wähle das Feld zum Tippen</string>
+    <string name="settings_screen_search_placeholder">Alle Einstellungen durchsuchen</string>
+    <!-- The keys of the on-screen letter picker, nine to a row: the alphabet of the language, then the digits. Each character once. -->
+    <string name="settings_screen_search_letters">ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789</string>
+    <string name="settings_screen_search_space">Leerzeichen</string>
+    <string name="settings_screen_search_delete">Löschen</string>
+    <string name="settings_screen_search_clear">Leeren</string>
+    <plurals name="settings_screen_search_count">
+        <item quantity="one">%d Einstellung</item>
+        <item quantity="other">%d Einstellungen</item>
+    </plurals>
+    <string name="settings_screen_search_none">Keine passenden Einstellungen</string>
+
+    <!-- Settings actions (import, export, reset) -->
+    <string name="settings_actions_imported">Importiert</string>
+    <string name="settings_actions_import_failed">Import fehlgeschlagen</string>
+    <string name="settings_actions_file_open_failed">Die Datei konnte nicht geöffnet werden</string>
+    <string name="settings_actions_file_too_large">Die Datei ist zu groß</string>
+    <string name="settings_actions_layout_not_text">Das Layout muss Textwerte enthalten</string>
+    <string name="settings_actions_no_shortcut_data">Die Datei enthält keine Shortcut-Daten</string>
+    <string name="settings_actions_exported">Layout exportiert</string>
+    <string name="settings_actions_export_failed">Export fehlgeschlagen</string>
+    <string name="settings_actions_osc_reset">Bildschirmsteuerung zurückgesetzt</string>
+    <string name="settings_actions_keyboard_reset">Tastaturlayout zurückgesetzt</string>
+    <string name="settings_actions_no_file_picker">Keine Dateiauswahl verfügbar</string>
+    <string name="settings_actions_no_app_for_link">Keine App kann diesen Link öffnen</string>
+    <string name="settings_actions_save">Speichern</string>
+
+    <!-- On-screen controls preview (Debug info) -->
+    <string name="settings_osc_preview_note">Vorschau der Bildschirmsteuerung · es wird nichts an einen PC gesendet · B zum Zurückgehen</string>
+
+    <!-- Native settings: section headings -->
+    <string name="settings_native_section_interface">Oberfläche</string>
+    <string name="settings_native_section_stream_menu">Stream-Menü</string>
+    <string name="settings_native_section_statistics">Statistik</string>
+    <string name="settings_native_section_startup">Start</string>
+    <string name="settings_native_section_paired_pcs">Gekoppelte PCs</string>
+    <string name="settings_native_section_diagnostics">Diagnose</string>
+    <string name="settings_native_section_game_data">Spieldaten</string>
+    <string name="settings_native_no_browser_toast">Kein Browser verfügbar</string>
+
+    <!-- Native settings: Appearance -->
+    <string name="settings_native_theme_title">Theme</string>
+    <string name="settings_native_theme_dark">Dunkel</string>
+    <string name="settings_native_theme_light">Hell</string>
+    <string name="settings_native_theme_description">Dunkle oder helle Oberfläche.</string>
+    <string name="settings_native_material_you_title">Material-You-Farben</string>
+    <string name="settings_native_material_you_description">Nutzt nur die Farben deines Hintergrundbilds. Zum Wählen einer Palette ausschalten.</string>
+    <!-- %1$s: the name of the fallback palette ("Lagoon") -->
+    <string name="settings_native_material_you_fallback_description">Dieses Gerät hat keine Hintergrundbild-Palette, daher werden die Farben von %1$s genutzt. Zum Wählen einer Palette ausschalten.</string>
+    <string name="settings_native_palette_title">Farbpalette</string>
+    <string name="settings_native_palette_description">Farben der Oberfläche und der animierten Hintergründe.</string>
+    <string name="settings_native_needs_material_you_off">Erfordert ausgeschaltete Material-You-Farben.</string>
+    <string name="settings_native_match_colors_title">Farben des Spiels übernehmen</string>
+    <string name="settings_native_match_colors_description">Der animierte Hintergrund übernimmt die Hauptfarbe des Hintergrundbilds des gewählten Spiels.</string>
+    <string name="settings_native_clock_title">Uhr</string>
+    <string name="settings_native_clock_description">Zeitformat in der Statusleiste.</string>
+    <string name="settings_native_background_title">Animierter Hintergrund</string>
+    <string name="settings_native_background_description">Animierter Shader-Hintergrund (ab Android 13) oder ein statischer.</string>
+    <string name="settings_native_home_layout_title">Startseiten-Layout</string>
+    <string name="settings_native_home_layout_description">Bibliothek als scrollendes Raster oder einzelne Reihe.</string>
+    <string name="settings_native_hero_background_title">Spiel-Hintergrund</string>
+    <string name="settings_native_hero_background_description">Zeigt den Hintergrund des gewählten Spiels auf der Startseite.</string>
+    <string name="settings_native_hero_blur_title">Unschärfe des Spiel-Hintergrunds</string>
+    <string name="settings_native_hero_blur_description">Verwischt den Spiel-Hintergrund hinter der Bibliothek. Erfordert Spiel-Hintergrund.</string>
+    <string name="settings_native_hero_opacity_title">Deckkraft des Spiel-Hintergrunds</string>
+    <string name="settings_native_hero_opacity_description">Wie stark das Spiel-Artwork durch den animierten Hintergrund scheint. Erfordert Spiel-Hintergrund.</string>
+    <string name="settings_native_scale_title">Oberflächengröße</string>
+    <string name="settings_native_scale_description">Größe von Text, Statusleiste und Tastenhinweisen.</string>
+    <string name="settings_native_animations_title">Animationen</string>
+    <string name="settings_native_animations_reduced">Reduziert</string>
+    <string name="settings_native_animations_full">Voll</string>
+    <string name="settings_native_animations_description">Nur Bewegungen der Oberfläche.</string>
+    <string name="settings_native_haptics_title">Haptik der Oberfläche</string>
+    <string name="settings_native_haptics_description">Vibration beim Bewegen und Auswählen.</string>
+    <string name="settings_native_sounds_title">UI-Sounds</string>
+    <string name="settings_native_sounds_description">Sanfte Klicks beim Navigieren durch Menüs.</string>
+
+    <!-- Native settings: Controls, Display, Devices -->
+    <string name="settings_native_menu_buttons_title">Tasten fürs Stream-Menü</string>
+    <string name="settings_native_menu_buttons_description">Tasten, die im Stream gemeinsam gedrückt werden, um das Stream-Menü zu öffnen oder zu schließen. Auswählen, um andere aufzuzeichnen, z. B. eine Rückseitentaste.</string>
+    <string name="settings_native_menu_swipe_title">Nach oben wischen öffnet das Menü</string>
+    <string name="settings_native_menu_swipe_description">Ein Wischen vom unteren Rand nach oben öffnet ebenfalls das Stream-Menü. Berührungen, die dort beginnen, erreichen das Spiel nicht.</string>
+    <string name="settings_native_stats_position_title">Position der Statistik</string>
+    <string name="settings_native_stats_position_description">Ecke des vollständigen Statistik-Panels beim Streamen. Der Kompaktmodus ist immer oben mittig.</string>
+    <string name="settings_native_stats_top_left">Oben links</string>
+    <string name="settings_native_stats_top_right">Oben rechts</string>
+    <string name="settings_native_stats_bottom_left">Unten links</string>
+    <string name="settings_native_stats_bottom_right">Unten rechts</string>
+    <string name="settings_native_default_pc_title">Standardgerät</string>
+    <string name="settings_native_default_pc_none">Keins</string>
+    <string name="settings_native_default_pc_description">Bevorzugter PC, auf dem Startbildschirm markiert.</string>
+    <string name="settings_native_skip_start_title">Startbildschirm überspringen</string>
+    <string name="settings_native_skip_start_description">Verbindet beim Start direkt mit dem Standardgerät.</string>
+    <string name="settings_native_manage_devices_title">Geräte verwalten</string>
+    <string name="settings_native_manage_devices_description">Einen PC verbinden, umbenennen, aufwecken, entkoppeln oder entfernen.</string>
+    <string name="settings_native_pair_title">Neuen PC koppeln</string>
+    <string name="settings_native_pair_description">Findet einen PC, auf dem Vibepollo, Apollo oder Sunshine läuft.</string>
+
+    <!-- Native settings: Covers (SteamGridDB) -->
+    <string name="settings_native_sgdb_key_title">SteamGridDB-API-Schlüssel</string>
+    <string name="settings_native_sgdb_key_added">Hinzugefügt</string>
+    <string name="settings_native_sgdb_key_not_set">Nicht gesetzt</string>
+    <string name="settings_native_sgdb_key_note">Kostenlos auf steamgriddb.com: anmelden, dann Preferences → API. Leer lassen, um SteamGridDB nicht mehr zu nutzen.</string>
+    <string name="settings_native_sgdb_key_placeholder">API-Schlüssel</string>
+    <string name="settings_native_sgdb_key_save">Speichern</string>
+    <string name="settings_native_sgdb_key_saved_toast">API-Schlüssel gespeichert</string>
+    <string name="settings_native_sgdb_off_toast">SteamGridDB ist aus</string>
+    <string name="settings_native_sgdb_key_description">Mit deinem eigenen Schlüssel kann Delos Cover, breite Cover, Hintergründe und Logos von SteamGridDB laden. Wird für alle Profile auf diesem Gerät gespeichert.</string>
+    <string name="settings_native_sgdb_auto_title">Automatisch laden</string>
+    <string name="settings_native_sgdb_auto_description">Lädt beim Laden der Bibliothek für neue Spiele das bestbewertete Cover, breite Cover, Hintergrund und Logo von SteamGridDB.</string>
+    <string name="settings_native_connect_first_toast">Verbinde dich zuerst mit einem PC</string>
+    <!-- %1$s: PC name -->
+    <string name="settings_native_downloading_toast">Artwork der Spiele von %1$s wird geladen…</string>
+    <string name="settings_native_artwork_complete_toast">Alle Spiele haben bereits Artwork</string>
+    <plurals name="settings_native_artwork_ready_toast">
+        <item quantity="one">Artwork für %d Spiel bereit</item>
+        <item quantity="other">Artwork für %d Spiele bereit</item>
+    </plurals>
+    <string name="settings_native_missing_artwork_title">Fehlendes Artwork laden</string>
+    <!-- %1$s: PC name -->
+    <string name="settings_native_missing_artwork_description">Lädt Artwork für die Spiele von %1$s, die keins haben.</string>
+    <!-- Used while no PC library is open -->
+    <string name="settings_native_missing_artwork_description_current">Lädt Artwork für die Spiele des aktuellen PCs, die keins haben.</string>
+    <string name="settings_native_refresh_artwork_title">Gesamtes Artwork neu laden</string>
+    <string name="settings_native_refresh_artwork_description">Sucht jedes Spiel erneut und nimmt die bestbewerteten Bilder; von dir gewählte bleiben.</string>
+    <string name="settings_native_choose_artwork_title">Artwork für ein Spiel wählen</string>
+    <string name="settings_native_choose_artwork_value">Spieloptionen</string>
+    <string name="settings_native_choose_artwork_description">Startseite: rechte Menütaste bei einem Spiel → Artwork. Wähle ein beliebiges Cover, breites Cover, einen Hintergrund oder ein Logo.</string>
+
+    <!-- Native settings: About -->
+    <string name="settings_native_version_title">Version</string>
+    <string name="settings_native_version_description">Delos für Android.</string>
+    <string name="settings_native_based_title">Basiert auf</string>
+    <string name="settings_native_based_description">Open-Source-Spielestreaming unter der GPLv3.</string>
+    <string name="settings_native_welcome_title">Willkommen erneut ansehen</string>
+    <string name="settings_native_welcome_description">Öffnet den Willkommensbildschirm erneut. Profile und gekoppelte PCs bleiben erhalten.</string>
+    <string name="settings_native_diag_logs_title">Diagnoseprotokolle behalten</string>
+    <string name="settings_native_diag_logs_description">Führt ein kleines Protokoll darüber, was Delos getan hat, für einen Problembericht. Bleibt auf diesem Gerät, außer du teilst es.</string>
+    <string name="settings_native_igdb_title">Spiel-Metadaten · IGDB</string>
+    <string name="settings_native_igdb_description">Spielinfos und Genres von IGDB.</string>
+    <string name="settings_native_pcgw_title">Technische Daten · PCGamingWiki</string>
+    <string name="settings_native_pcgw_description">Belege für natives HDR von PCGamingWiki (CC BY-NC-SA 3.0); der abgeleitete Status ist eine Interpretation von Delos.</string>
+    <string name="settings_native_steam_title">Genre- und Theme-Tags · Steam-Store</string>
+    <string name="settings_native_steam_description">Genres und Themes der Karten stammen aus den öffentlichen Nutzer-Tags von Steam, wenn ein Spiel eine Steam-Seite hat, und werden über den Delos-Metadatendienst von der Store-Seite gelesen. Inoffiziell und kann sich ändern; sonst wird IGDB genutzt.</string>
+    <string name="settings_native_hltb_title">Spielzeiten · HowLongToBeat</string>
+    <string name="settings_native_hltb_description">Die Hauptzeit von HowLongToBeat. Inoffizieller Client, angepasst von howlongtobeatpy (MIT, © 2018 Michele).</string>
+
+    <!-- Help for the selected choice of a native row, shown under its name in the description panel -->
+    <string name="settings_native_help_theme_dark">Dunkle Flächen mit hellem Text.</string>
+    <string name="settings_native_help_theme_light">Helle Flächen mit dunklem Text.</string>
+    <string name="settings_native_help_clock_system">Folgt der 12/24-Stunden-Einstellung von Android.</string>
+    <string name="settings_native_help_clock_12">12-Stunden-Uhr mit AM oder PM.</string>
+    <string name="settings_native_help_clock_24">24-Stunden-Uhr.</string>
+    <string name="settings_native_help_layout_grid">Mehrere Reihen Cover; scrollt vertikal.</string>
+    <string name="settings_native_help_layout_row">Eine Reihe Cover; laufende und zuletzt gespielte Spiele stehen vorn.</string>
+    <string name="settings_native_help_motion_reduced">Weniger Bewegung in der Oberfläche. Die Spiel-FPS bleiben unverändert.</string>
+    <string name="settings_native_help_motion_full">Volle Übergänge und Fokus-Animationen.</string>
+    <string name="settings_native_help_default_pc_none">Kein bevorzugter PC; „Startbildschirm überspringen“ ist nicht verfügbar.</string>
+    <string name="settings_native_help_default_pc_set">Wird von „Startbildschirm überspringen“ genutzt. Muss gekoppelt und erreichbar sein.</string>
+    <string name="settings_native_help_stats_top_left">Vollständiges Statistik-Panel in der oberen linken Ecke.</string>
+    <string name="settings_native_help_stats_top_right">Vollständiges Statistik-Panel in der oberen rechten Ecke.</string>
+    <string name="settings_native_help_stats_bottom_left">Vollständiges Statistik-Panel in der unteren linken Ecke.</string>
+    <string name="settings_native_help_stats_bottom_right">Vollständiges Statistik-Panel in der unteren rechten Ecke.</string>
+    <string name="settings_native_help_background_aurora">Weiche, wandernde Farbbänder wie ein Polarlicht.</string>
+    <string name="settings_native_help_background_tide">Eine breite Farbwelle über der unteren Bildschirmhälfte.</string>
+    <string name="settings_native_help_background_silk">Langsam fließende Farbfalten wie Stoff.</string>
+    <string name="settings_native_help_background_contour">Sanft bewegte Konturlinien in den gewählten Farben.</string>
+    <string name="settings_native_help_background_nebula">Wolkenartige Farbfelder wie im Weltraum.</string>
+    <string name="settings_native_help_background_plasma">Fließende Farbwellen wie Plasma.</string>
+    <string name="settings_native_help_background_lava">Langsam wandernde, verschmelzende Farbformen.</string>
+    <string name="settings_native_help_background_caustics">Wandernde Lichtmuster wie Reflexionen unter Wasser.</string>
+    <string name="settings_native_help_background_bokeh">Weiche, unscharfe Lichtkreise.</string>
+    <string name="settings_native_help_background_orbit">Bewegte Farbformen auf Umlaufbahnen.</string>
+    <string name="settings_native_help_background_still">Ein statischer Hintergrund ohne Animation.</string>
+
+    <!-- Per-game settings -->
+    <string name="settings_game_follows_profile">Folgt deinem Profil</string>
+    <plurals name="settings_game_custom_count">
+        <item quantity="one">%d eigene Einstellung</item>
+        <item quantity="other">%d eigene Einstellungen</item>
+    </plurals>
+    <string name="settings_game_summary_none">Ändere eine Zeile, und sie gilt nur für dieses Spiel.</string>
+    <!-- %1$d and %2$d: how many custom settings are on the Stream and on the Display tab -->
+    <string name="settings_game_summary">%1$d bei Stream · %2$d bei Anzeige</string>
+    <string name="settings_game_value_on">An</string>
+    <string name="settings_game_value_off">Aus</string>
+    <string name="settings_game_undo">Rückgängig</string>
+    <string name="settings_game_reset_row_toast">Zurück zum Profilwert</string>
+    <string name="settings_game_reset_all_toast">Alle Einstellungen folgen wieder dem Profil</string>
+    <string name="settings_game_reset_all">Alle zurücksetzen</string>
+    <string name="settings_game_reset_menu">Auf Profilwert zurücksetzen</string>
+    <string name="settings_game_from_profile">Aus Profil</string>
+    <!-- %1$s: the profile's value of the setting ("Profile: 1080p") -->
+    <string name="settings_game_profile_line">Profil: %1$s</string>
+    <!-- %1$s: the link guidance of the PC (a sentence ending in a full stop) -->
+    <string name="settings_game_link_note">%1$s „Verbindung testen“ findest du in den Einstellungen.</string>
+    <!-- %1$s: PC name; the whole text is shown in capitals -->
+    <string name="settings_game_eyebrow">Spieleinstellungen · %1$s</string>
+    <string name="settings_game_panel_title">Dein Spiel, deine Einstellungen</string>
+    <string name="settings_game_custom_title">Eigene für dieses Spiel</string>
+    <!-- %1$s: the profile's value, shown in bold. "X" is the controller's X button -->
+    <string name="settings_game_profile_value_button">Profilwert: %1$s · mit X zurückkehren</string>
+    <!-- %1$s: the profile's value, shown in bold -->
+    <string name="settings_game_profile_value_touch">Profilwert: %1$s · mit Zurücksetzen zurückkehren</string>
+    <!-- %1$s: the value the setting has now, shown in bold -->
+    <string name="settings_game_currently">Aktuell %1$s. Ändere es, um einen Wert nur für dieses Spiel festzulegen.</string>
+    <!-- %1$s: game name -->
+    <string name="settings_game_only_this_game">Nur %1$s nutzt diese Änderungen. Alles andere folgt deinem Profil.</string>
+    <string name="settings_game_saved_note">Automatisch gespeichert · gilt ab dem nächsten Stream</string>
+</resources>
