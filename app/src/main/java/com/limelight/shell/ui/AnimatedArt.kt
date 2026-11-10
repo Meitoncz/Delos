@@ -16,6 +16,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
+import kotlin.math.roundToInt
 import androidx.compose.ui.graphics.asAndroidColorFilter
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
@@ -173,19 +179,41 @@ fun rememberAnimatedDrawable(
 }
 
 /**
+ * [image] cropped to fill its box, drawn with [colorFilter] read while drawing (like `Image(contentScale = Crop)`, but a filter that
+ * animates, the covers dimming behind a menu, redraws the cover without recomposing it).
+ */
+@Composable
+fun CoverImage(image: ImageBitmap, contentDescription: String?, modifier: Modifier = Modifier, colorFilter: () -> ColorFilter?) {
+    Canvas(modifier.semantics { this.contentDescription = contentDescription.orEmpty() }) {
+        val scale = maxOf(size.width / image.width, size.height / image.height)
+        val srcWidth = (size.width / scale).roundToInt().coerceIn(1, image.width)
+        val srcHeight = (size.height / scale).roundToInt().coerceIn(1, image.height)
+        drawImage(
+            image,
+            srcOffset = IntOffset((image.width - srcWidth) / 2, (image.height - srcHeight) / 2),
+            srcSize = IntSize(srcWidth, srcHeight),
+            dstSize = IntSize(size.width.roundToInt(), size.height.roundToInt()),
+            colorFilter = colorFilter(),
+        )
+    }
+}
+
+/**
  * Draws [drawable] over the whole [modifier] area, cropped to fill it or ([fit]) whole, fading in over the still image
  * underneath. The current frame is drawn whenever [ticker] has a new one, with no recomposition. [colorFilter] is the
- * one the still image underneath is drawn with, so both look alike; [alignX] (0 start, .5 center) where a fitted image
+ * one the still image underneath is drawn with (read while drawing), so both look alike; [alignX] (0 start, .5 center) where a fitted image
  * sits horizontally.
  */
 @Composable
 fun AnimatedDrawableView(
     drawable: AnimatedImageDrawable, ticker: AnimationTicker, modifier: Modifier = Modifier, fit: Boolean = false,
-    colorFilter: ColorFilter? = null, alignX: Float = .5f,
+    colorFilter: (() -> ColorFilter?)? = null, alignX: Float = .5f,
 ) {
     val shown = remember(drawable) { Animatable(0f) }
     LaunchedEffect(shown) { shown.animateTo(1f, tween(Motion.FADE, easing = Motion.Ease)) }
-    val filter = remember(colorFilter) { colorFilter?.asAndroidColorFilter() }
+    // The android filter of the last compose filter: the idle one is the same object every frame
+    var lastFilter: ColorFilter? = remember { null }
+    var lastNative: android.graphics.ColorFilter? = remember { null }
     Canvas(modifier.graphicsLayer { alpha = shown.value }) {
         // Reading the frame is what redraws this view for the next image
         if (ticker.frame.intValue == Int.MIN_VALUE) return@Canvas
@@ -196,12 +224,17 @@ fun AnimatedDrawableView(
         val h = ih * scale
         val left = ((size.width - w) * alignX).toInt()
         val top = ((size.height - h) / 2f).toInt()
+        val wanted = colorFilter?.invoke()
+        if (wanted !== lastFilter) {
+            lastFilter = wanted
+            lastNative = wanted?.asAndroidColorFilter()
+        }
         drawIntoCanvas { canvas ->
             val c = canvas.nativeCanvas
             c.save()
             c.clipRect(0f, 0f, size.width, size.height)
             drawable.setBounds(left, top, left + w.toInt(), top + h.toInt())
-            drawable.colorFilter = filter
+            drawable.colorFilter = lastNative
             drawable.draw(c)
             c.restore()
         }
@@ -217,7 +250,7 @@ fun AnimatedDrawableView(
 @Composable
 fun AnimatedArtLayer(
     file: File?, playing: Boolean, ticker: AnimationTicker, width: Int, height: Int, modifier: Modifier = Modifier,
-    fit: Boolean = false, colorFilter: ColorFilter? = null, alignX: Float = .5f, stamp: Int = 0,
+    fit: Boolean = false, colorFilter: (() -> ColorFilter?)? = null, alignX: Float = .5f, stamp: Int = 0,
 ) {
     val source = remember(file, stamp) { file?.let { AnimatedSource.OfFile(it) } }
     val drawable = rememberAnimatedDrawable(source, playing, width, ticker, height, fit)

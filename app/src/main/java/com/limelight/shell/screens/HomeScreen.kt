@@ -118,6 +118,7 @@ import com.limelight.shell.ui.staggerEntrance
 import com.limelight.shell.ui.Figtree
 import com.limelight.shell.ui.GameArt
 import com.limelight.shell.ui.menuDimCoverFilter
+import com.limelight.shell.ui.CoverImage
 import com.limelight.shell.ui.AnimatedArtLayer
 import com.limelight.shell.ui.rememberAnimationTicker
 import kotlin.math.roundToInt
@@ -724,7 +725,9 @@ private fun GameTile(
     }
     var focused by remember { mutableStateOf(false) }
     // The covers beside an open context menu dim (the prototype's `.menu-open`); the focused one keeps its colors
-    val menuDim by animateFloatAsState(if (shell.layer is Layer.Context) 1f else 0f, tween(Motion.FADE, easing = Motion.Ease), label = "menuDim")
+    val menuDim = animateFloatAsState(if (shell.layer is Layer.Context) 1f else 0f, tween(Motion.FADE, easing = Motion.Ease), label = "menuDim")
+    // Read while drawing: the dimming animation redraws the cover, it does not recompose the tile
+    val coverFilter = { if (focused) null else menuDimCoverFilter(menuDim.value) }
     // A starts (or resumes) the game; while another game runs on the PC it offers the choices instead
     val activate = {
         if (running != null && running.id != app.id) {
@@ -754,10 +757,7 @@ private fun GameTile(
     ) {
         Crossfade(shown, animationSpec = tween(400), label = "cover") { img ->
             if (img != null) {
-                Image(
-                    img, contentDescription = app.name, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(),
-                    colorFilter = if (focused) null else menuDimCoverFilter(menuDim),
-                )
+                CoverImage(img, app.name, Modifier.fillMaxSize(), coverFilter)
             } else {
                 PlaceholderArt(
                     art.hue, art.hue2, art.icon,
@@ -781,7 +781,7 @@ private fun GameTile(
             val k = LocalStage.current.dpPerPx * LocalDensity.current.density * TILE_FOCUS_SCALE
             AnimatedArtLayer(
                 animation, playing, animatedArt.ticker, ((if (wide) ROW_WIDE else ROW_TILE) * k).roundToInt(), (450f * k).roundToInt(),
-                Modifier.fillMaxSize(), colorFilter = if (focused) null else menuDimCoverFilter(menuDim), stamp = artwork.version.intValue,
+                Modifier.fillMaxSize(), colorFilter = coverFilter, stamp = artwork.version.intValue,
             )
         }
         if (artwork.isBusy(pc, app)) {
