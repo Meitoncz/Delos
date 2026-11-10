@@ -39,7 +39,7 @@ object DiagExport {
         DiagnosticReports.summary(DeviceInfoCollector.collect(app), DiagLog.readAll(), LogScrubber(ScrubContextCollector.collect(app)), generated())
     }
 
-    private fun generated(): String = ZonedDateTime.now(ZoneId.systemDefault()).format(stamp) + " (device time)"
+    fun generated(): String = ZonedDateTime.now(ZoneId.systemDefault()).format(stamp) + " (device time)"
 
     /** Writes [report] into the app's cache and returns its content URI for the share sheet; older shared files are removed. */
     suspend fun writeForSharing(context: Context, report: DiagnosticReport): Uri = withContext(Dispatchers.IO) {
