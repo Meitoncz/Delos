@@ -192,6 +192,11 @@
 .ms[data-icon="export"] { --phosphor-glyph: "\e61e"; }
 .ms[data-icon="language"] { --phosphor-glyph: "\e4a2"; }
 .ms[data-icon="debug"] { --phosphor-glyph: "\e5f4"; }
+.ms[data-icon="diagnostic_logs"] { --phosphor-glyph: "\e34e"; }
+.ms[data-icon="share_log"] { --phosphor-glyph: "\e408"; }
+.ms[data-icon="copy_summary"] { --phosphor-glyph: "\e1cc"; }
+.ms[data-icon="test_crash"] { --phosphor-glyph: "\e4e4"; }
+.ms[data-icon="report_issue"] { --phosphor-glyph: "\e576"; }
 .ms[data-icon="overlay"] { --phosphor-glyph: "\e150"; }
 .ms[data-icon="overlay_compact"] { --phosphor-glyph: "\e2f2"; }
 .ms[data-icon="task_manager"] { --phosphor-glyph: "\eadc"; }
