@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!--
+        Settings help (the right box of Settings and the per-game screen). help_<setting key> describes a setting,
+        help_<setting key>_<value> explains one choice (value lower-cased, other characters replaced by _).
+        SettingsHelp finds them with getIdentifier (res/raw/keep.xml keeps them from lint). The English text is held to
+        SettingsHelp.LINE_CHARS x MAX_LINES; translations may run longer, the box scrolls.
+    -->
+
+    <!-- Setting descriptions -->
+    <string name="help_list_resolution">Auflösung, die der PC sendet. Mehr Pixel bedeuten mehr Details und mehr Last.</string>
+    <string name="help_list_fps">Bilder pro Sekunde, die der PC sendet. Passe sie an dein Display an.</string>
+    <string name="help_seekbar_bitrate_kbps">Video-Bitrate in Mbps. Zu hoch ruckelt auf einer schwachen Verbindung. Stream-Menü → Bitrate: nur für diesen Stream.</string>
+    <string name="help_seekbar_metered_bitrate_kbps">Bitrate in einem getakteten Netzwerk (Mobilfunk, manche Hotspots). 0 nutzt ein Viertel der normalen Bitrate.</string>
+    <string name="help_frame_pacing">Warp-Modi funktionieren nicht auf jedem Gerät.</string>
+    <string name="help_checkbox_async_decode">MediaCodec-Callbacks statt Polling. Nur H.264, HEVC und AV1. Ausschalten, wenn das Decodieren instabil ist.</string>
+    <string name="help_pref_low_latency_frame_balance">Ausgewogenes Pacing, das den Decoder öfter abfragt. Überschreibt anderes MediaCodec-Pacing außer Schnelles V-Sync. Geräteabhängig.</string>
+    <string name="help_checkbox_ultra_low_latency">Zusätzliche MediaCodec-Optionen für niedrige Latenz. Der Gewinn hängt von Chip und Treiber ab. Ausschalten, wenn das Video instabil ist.</string>
+    <string name="help_checkbox_use_virtual_display">Fordert bei Vibepollo oder Apollo ein virtuelles PC-Display mit der gewünschten Auflösung und FPS an. Erfordert Host-Unterstützung.</string>
+    <string name="help_checkbox_auto_orientation">Startet den Stream in der aktuellen Hoch- oder Querausrichtung des Geräts. Der PC-Desktop wird nicht gedreht.</string>
+    <string name="help_checkbox_auto_invert_video_resolution">Tauscht Breite und Höhe für einen Hochformat-Stream (1080 × 1920). Erfordert Automatische Ausrichtung und Host-Unterstützung.</string>
+    <string name="help_checkbox_enable_view_top_center">Richtet einen Stream, der den Bildschirm nicht füllt, oben mittig statt in der Mitte aus.</string>
+    <string name="help_seekbar_resolution_scale_factor">Skaliert das virtuelle Host-Display: Bei 150%% wird 1920 × 1080 auf dem PC als 2880 × 1620 gerendert. Kostet GPU-Leistung am PC.</string>
+    <string name="help_list_video_scale_mode">Nur die lokale Bildanpassung.</string>
+    <string name="help_edit_diy_w_h">Fügt der Videoauflösung eine Auflösung hinzu: Gib Breite x Höhe ein (1920x1080) und wähle sie dann dort aus.</string>
+    <string name="help_edit_diy_bitrate">Setzt die Bitrate in Mbps; Dezimalstellen und Werte über dem Reglerbereich sind erlaubt. Aktualisiert auch die Video-Bitrate.</string>
+    <string name="help_custom_refresh_rate">Fügt der Video-Bildrate eine eigene FPS hinzu (Dezimalstellen erlaubt); wähle sie dort aus. Host, Spiel und Display begrenzen das Ergebnis.</string>
+    <string name="help_checkbox_enforce_display_mode">Fordert Android nachdrücklich auf, den gewählten Display-Modus zu nutzen. Hilft, wenn Bildwiederholraten-Anfragen ignoriert werden; kann auf mancher Firmware Probleme machen.</string>
+    <string name="help_checkbox_enable_hdr">Fordert HDR-Video an. Erfordert Unterstützung durch Spiel, Host-GPU, Decoder und Display (10-Bit-HEVC, AV1 oder PyroWave).</string>
+    <string name="help_checkbox_enable_fullexdisplay">Zeigt Stream und Menü auf einem angeschlossenen Monitor oder TV mit der eingestellten Auflösung und FPS. Der Handheld steuert das Menü.</string>
+    <string name="help_checkbox_sgsr">Skaliert einen Stream mit niedrigerer Auflösung auf die Display-Größe hoch oder schärft ihn nur (Modus). Kostet GPU-Zeit. Änderungen im Menü gelten eine Sitzung lang.</string>
+    <string name="help_list_pyrowave_chroma">4:4:4 kostet Bandbreite und GPU.</string>
+    <string name="help_list_sgsr_quality">Rekonstruktionsmethode. Alle verursachen GPU-Arbeit.</string>
+    <string name="help_seekbar_sgsr_sharpness">Abschließende Schärfung. 0 deaktiviert sie, nicht die SGSR-1-Rekonstruktion. Bei „Nur schärfen“ ist sie der gesamte Effekt. Änderungen im Menü gelten eine Sitzung lang.</string>
+    <string name="help_list_sgsr_supersampling_level">Interne Größe, wenn der Stream bereits zum Display passt. Änderungen im Menü gelten eine Sitzung lang.</string>
+    <string name="help_list_audio_config">Kanäle, die der PC sendet. Surround erfordert passende Wiedergabe.</string>
+    <string name="help_checkbox_enable_audiofx">Lässt den System-Equalizer und die Effekte von Android den Stream-Ton verarbeiten. Kann Verzögerung verursachen.</string>
+    <string name="help_checkbox_host_audio">Gibt den Spielton auf dem PC und hier wieder. Ausschalten, damit die PC-Lautsprecher still bleiben.</string>
+    <string name="help_seekbar_deadzone">Positive Werte ignorieren kleine Stick-Bewegungen nahe der Mitte (Drift). Negative Werte gleichen die eigene Deadzone eines Controllers aus.</string>
+    <string name="help_checkbox_multi_controller">Meldet Gamepads beim Verbinden oder Trennen. Ist es aus, bleibt immer ein Gamepad vorhanden, für Spiele, die beim Start eines brauchen.</string>
+    <string name="help_checkbox_usb_driver">Nutzt den Delos-USB-Treiber für Xbox- und Nintendo-Pro-Controller, die Android nicht nativ unterstützt. Fragt evtl. nach USB-Berechtigung.</string>
+    <string name="help_checkbox_usb_bind_all">Lässt den USB-Treiber auch Controller übernehmen, die Android nativ unterstützt. Erfordert den USB-Treiber. Eine Notlösung.</string>
+    <string name="help_checkbox_mouse_emulation">Halte im Stream Start gedrückt, um das Gamepad zwischen Spieleingabe und Mausemulation umzuschalten.</string>
+    <string name="help_analog_scrolling">Stick, der im Gamepad-Mausmodus scrollt.</string>
+    <string name="help_checkbox_flip_face_buttons">Vertauscht A/B und X/Y bei Gamepad-Eingabe und Bildschirmsteuerung (Nintendo-Layout). Nicht für die Navigation in Delos.</string>
+    <string name="help_checkbox_gamepad_touchpad_as_mouse">Nutzt das Touchpad eines Controllers immer als PC-Maus. Aus lässt unterstützte Hosts native Touchpad-Eingaben empfangen.</string>
+    <string name="help_checkbox_gamepad_motion_sensors">Lässt den PC Gyroskop und Beschleunigungssensor eines externen Gamepads lesen. Erfordert Android 12 oder neuer. Ausschalten, wenn kein Spiel Bewegung nutzt, um etwas Strom und Datenverkehr zu sparen.</string>
+    <string name="help_checkbox_gamepad_motion_fallback">Nutzt Gyroskop und Beschleunigungssensor dieses Geräts, wenn das Gamepad keine hat oder Android sie nicht lesen kann. Der PC sieht dann evtl. einen PlayStation-Controller.</string>
+    <string name="help_checkbox_force_device_motion">Nutzt die eingebauten Sensoren, auch wenn das externe Gamepad funktionierende hat. Erfordert Eingebautes Gyroskop des Geräts.</string>
+    <string name="help_seekbar_gyro_smoothing">Beruhigt das Gyro-Zielen. 0 ist aus. Höhere Werte entfernen mehr Zittern, bringen aber eine kleine Verzögerung bei langsamer Bewegung; schnelle Schwenks bleiben direkt. Gilt für den nächsten Stream; das Stream-Menü (Mehr) ändert es live.</string>
+    <string name="help_checkbox_enable_joyconfix">Kompatibilitätspfad für Joy-Cons mit fehlenden oder falsch erkannten Tasten. Aus lassen, wenn sie funktionieren.</string>
+    <string name="help_checkbox_gamepad_enable_battery_report">Meldet den Akkustand des Gamepads an den Host. Ausschalten, wenn die Akkuabfrage mit Touch- oder Maus-Rucklern zusammenfällt.</string>
+    <string name="help_checkbox_enable_rumble">Sendet Host-Rumble an unterstützte Gamepads. Controller, Verbindung und Treiber bestimmen, welche Effekte funktionieren.</string>
+    <string name="help_list_rumble_feel">Wie sich Spiel-Rumble anfühlt. Ab dem nächsten Stream.</string>
+    <string name="help_checkbox_vibrate_fallback">Nutzt den Vibrationsmotor des Handhelds für Spiel-Rumble, wenn das Gamepad es nicht kann. Erfordert einen Vibrationsmotor.</string>
+    <string name="help_checkbox_enable_device_rumble">Nutzt den Vibrationsmotor des Handhelds auch dann, wenn ein Controller Rumble unterstützt. Nicht für den eingebauten USB-Treiber.</string>
+    <string name="help_seekbar_vibrate_fallback_strength">Stärke der Vibration dieses Geräts für Spiel-Rumble. Erfordert Amplitudensteuerung. Nicht die Haptik der Oberfläche.</string>
+    <string name="help_mouse_mode_list">Wie Touch zur PC-Eingabe wird. Stream-Menü: nur für diese Sitzung.</string>
+    <string name="help_checkbox_remember_mouse_mode">Speichert im Stream vorgenommene Mausmodus-Änderungen. Ist es aus, gelten sie nur für diesen Stream.</string>
+    <string name="help_checkbox_mouse_local_cursor">Zeigt den Android-Zeiger für eine physische Maus an, statt ihn auszublenden. Nicht der Cursor, den der PC ins Video zeichnet.</string>
+    <string name="help_checkbox_multi_touch_gestures">Im Multitouch-Modus: drei Finger öffnen die Systemtastatur, vier die Volltastatur, fünf das Stream-Menü.</string>
+    <string name="help_checkbox_mouse_nav_buttons">Leitet die Zurück- und Vor-Tasten einer physischen Maus an den PC weiter. Ausschalten, wenn Rechtsklick oder Navigation Probleme machen.</string>
+    <string name="help_checkbox_absolute_mouse_mode">Absolute Positionierung statt relativer Spielbewegung. Passt zu Remote-Desktop; viele Spiele brauchen relative Eingabe.</string>
+    <string name="help_seekbar_trackpad_sensitivity_x">Horizontale Empfindlichkeit eines physischen Trackpads. Größer bewegt weiter; negativ kehrt um.</string>
+    <string name="help_seekbar_trackpad_sensitivity_y">Vertikale Empfindlichkeit eines physischen Trackpads. Größer bewegt weiter; negativ kehrt um.</string>
+    <string name="help_checkbox_trackpad_drag_drop_vibration">Vibriert, wenn langes Halten Drag-and-drop auf unterstützten Samsung-Trackpads startet. Nicht für normale Klicks.</string>
+    <string name="help_seekbar_trackpad_drag_drop_threshold">Haltezeit auf einem unterstützten Samsung-Trackpad, bevor ein Ziehen beginnt. Kürzer kann unerwünschtes Ziehen auslösen.</string>
+    <string name="help_checkbox_trackpad_swap_axis">Tauscht horizontale und vertikale Trackpad-Eingabe bei Geräten, die ein gedrehtes Trackpad melden. Aus lassen, wenn die Bewegung stimmt.</string>
+    <string name="help_checkbox_force_qwerty">Nutzt QWERTY-Tastenübersetzung für die Stream-Eingabe. Für ein anderes Layout mit kompatiblem Host ausschalten.</string>
+    <string name="help_checkbox_right_alt_as_meta">Sendet das rechte Alt als Mac-Command-Taste, auch in Kombinationen. Das linke Alt bleibt unverändert. Zum Streamen eines Macs.</string>
+    <string name="help_checkbox_ignore_synth_events">Ignoriert synthetische Android-Eingabeereignisse. Stoppt Fehltasten durch fehlerhafte Treiber, blockiert aber die Eingabe per Bildschirmtastatur.</string>
+    <string name="help_checkbox_enable_commit_text">Leitet Text aus Wischtippen und Diktat in Blöcken weiter. Gut am Desktop; manche Spiele erwarten einzelne Tastendrücke.</string>
+    <string name="help_checkbox_smart_clipboard_sync">Lädt die Zwischenablage dieses Geräts hoch, wenn der Stream startet oder den Fokus zurückerhält; holt die des PCs, wenn er den Fokus verliert. Erfordert Vibepollo oder Apollo.</string>
+    <string name="help_checkbox_smart_clipboard_sync_toast">Zeigt eine kurze Meldung, wenn die automatische Übertragung der Zwischenablage gelingt oder fehlschlägt. Aktiviert den Abgleich nicht.</string>
+    <string name="help_checkbox_hide_clipboard_content">Markiert Zwischenablage-Inhalte vom PC als vertraulich, damit Android die Vorschau ausblendet. Verschlüsselt oder deaktiviert die Übertragung nicht.</string>
+    <string name="help_seekbar_keyboard_axi_opacity">Deckkraft der Volltastatur auf dem Bildschirm. Getrennt von der Deckkraft des virtuellen Gamepads.</string>
+    <string name="help_onscreen_keyboard_autofit">Schaltet das automatische Einpassen der Volltastatur aus, damit die gespeicherte Breite, Höhe und Ausrichtung gelten.</string>
+    <string name="help_seekbar_onscreen_keyboard_height">Höhe der Volltastatur auf dem Bildschirm bei ausgeschaltetem Einpassen. Höher: größere Tasten, mehr vom Spiel verdeckt.</string>
+    <string name="help_seekbar_onscreen_keyboard_width">Breite der Volltastatur auf dem Bildschirm bei ausgeschaltetem Einpassen. Halte sie auf deinem Bildschirm erreichbar.</string>
+    <string name="help_list_onscreen_keyboard_align_mode">Horizontale Verankerung der manuell dimensionierten Volltastatur.</string>
+    <string name="help_checkbox_enable_sticky_modifier_key_virtual_keyboard">Lässt virtuelle Modifikatoren wie Shift, Ctrl, Alt nach einem Tippen aktiv, damit Kombinationen Taste für Taste getippt werden können.</string>
+    <string name="help_checkbox_disable_warnings">Blendet Warnungen zur Verbindungsqualität beim Streamen aus. Die Statistik bleibt.</string>
+    <string name="help_checkbox_remember_zoom_pan">Speichert Zoom und Schwenk des Streams für spätere Sitzungen. Ist es aus, gelten Anpassungen nur für diesen Stream.</string>
+    <string name="help_checkbox_enable_pip">Hält den Stream beim Multitasking im Bild-in-Bild-Modus. Nur ansehen: keine Spielsteuerung im kleinen Fenster.</string>
+    <string name="help_checkbox_show_onscreen_controls">Zeigt das virtuelle Gamepad über dem Stream für Touch-Spiel. Das Stream-Menü schaltet es für die Sitzung um.</string>
+    <string name="help_checkbox_hide_osc_when_has_gamepad">Blendet das virtuelle Gamepad aus, solange Android einen physischen Controller erkennt; es kehrt zurück, wenn der Controller getrennt wird.</string>
+    <string name="help_checkbox_vibrate_osc">Lokale Vibration beim Drücken virtueller Gamepad-Tasten. Touch-Feedback, kein Spiel-Rumble. Erfordert einen Vibrationsmotor.</string>
+    <string name="help_checkbox_only_show_L3R3">Zeigt statt des ganzen Gamepads nur die virtuellen Stick-Klick-Tasten L3 und R3.</string>
+    <string name="help_checkbox_show_guide_button">Fügt dem virtuellen Gamepad die Guide-/Home-Taste hinzu; ihre Aktion hängt von Host und Plattform ab.</string>
+    <string name="help_seekbar_osc_opacity">Deckkraft des virtuellen Gamepads und der eigenen Sondertasten. Getrennt von der Deckkraft der Volltastatur.</string>
+    <string name="help_checkbox_enable_analog_stick_new">Lässt die Mittelpunkte virtueller Sticks innerhalb ihres Bedienbereichs wandern, statt fest zu bleiben.</string>
+    <string name="help_seekbar_osc_free_analog_stick_opacity">Sichtbarkeit des Hintergrunds des freien virtuellen Sticks im Ruhezustand. Niedrig hält das Bild klarer; hoch ist leichter zu finden.</string>
+    <string name="help_option_reset_osc_preference">Stellt das virtuelle Gamepad dieses Profils sofort auf Standardgrößen und -positionen zurück. Andere Profile bleiben erhalten.</string>
+    <string name="help_checkbox_enable_keyboard">Zeigt die eigene Sondertasten-Ebene über dem Stream mit dem unten gewählten Layout. Getrennt von der Volltastatur.</string>
+    <string name="help_checkbox_enable_clear_default_special_button">Blendet die eingebauten Tastenkombinationen aus „Tasten senden“ im Stream-Menü aus und lässt deine importierten Befehle übrig.</string>
+    <string name="help_checkbox_vibrate_keyboard">Lokale Vibration beim Tippen auf eigene Bildschirmtastatur-Tasten; kein Spiel-Rumble. Erfordert einen Vibrationsmotor.</string>
+    <string name="help_keyboard_axi_list">Aktiviert eines der fünf Sondertasten-Layouts dieses Profils.</string>
+    <string name="help_checkbox_enable_keyboard_square">Zeichnet eigene Sondertasten als Quadrate statt als Kreise. Die gesendeten Tasten bleiben gleich.</string>
+    <string name="help_option_reset_osc">Stellt das gewählte Sondertasten-Layout sofort auf Standard zurück. Andere Layouts und Profile bleiben erhalten.</string>
+    <string name="help_import_keyboard_file">Ersetzt das gewählte Sondertasten-Layout durch eine Datei aus der Android-Auswahl. Exportiere vorher für ein Backup.</string>
+    <string name="help_export_keyboard_file">Speichert das gewählte Sondertasten-Layout in einer Datei, als Backup oder für ein anderes Gerät.</string>
+    <string name="help_checkbox_enable_touch_sensitivity">Zusätzliche Empfindlichkeitsskalierung für Touchscreen-Spieleingaben, eingestellt über die Achsenregler unten. Das Stream-Menü schaltet sie live um.</string>
+    <string name="help_checkbox_enable_global_touch_sensitivity">Wendet die Touch-Empfindlichkeit auf den ganzen Bildschirm an; ist es aus, nur auf die rechte Hälfte, damit die linke für Bewegungssteuerung frei bleibt.</string>
+    <string name="help_checkbox_enable_touch_sensitivity_rotation_auto">Zentriert skalierte Touch-Koordinaten neu, die über den Bildschirmrand laufen, damit Wischbewegungen mit hoher Empfindlichkeit weitergehen können.</string>
+    <string name="help_seekbar_touch_sensitivity_opacity_x">Horizontale Empfindlichkeit der Multitouch-Spieleingabe; höher macht aus kleiner Fingerbewegung größere Bewegung im Spiel.</string>
+    <string name="help_seekbar_touch_sensitivity_opacity_y">Vertikale Empfindlichkeit der Multitouch-Spieleingabe; höher macht aus kleiner Fingerbewegung größere Bewegung im Spiel.</string>
+    <string name="help_seekbar_touchpad_sensitivity_opacity">Horizontale Zeigerempfindlichkeit für den Touchscreen-Trackpad-Modus und eigene virtuelle Touchpads.</string>
+    <string name="help_seekbar_touchpad_sensitivity_y_opacity">Vertikale Zeigerempfindlichkeit für den Touchscreen-Trackpad-Modus und eigene virtuelle Touchpads.</string>
+    <string name="help_checkbox_enable_perf_overlay">Zeigt FPS, 1%% Low FPS, Bitrate, Paketverlust und Latenz. Die Gesamtlatenz ist nicht Taste-bis-Bildschirm. Das Stream-Menü wechselt zwischen voll, kompakt, aus.</string>
+    <string name="help_checkbox_enable_perf_overlay_lite">Zeigt statt des vollen Panels eine kompakte Statistikzeile oben mittig. Das Stream-Menü wechselt zwischen voll, kompakt, aus.</string>
+    <string name="help_video_format">Codec, mit dem der PC kodiert; Host und Decoder müssen ihn unterstützen.</string>
+    <string name="help_checkbox_unlock_fps">Zeigt Bildraten oberhalb der erkannten Fähigkeit des Displays. Erhöht die Host-Last; die Bildwiederholrate bleibt gleich.</string>
+    <string name="help_checkbox_reduce_refresh_rate">Lässt Android bei Bedarf eine niedrigere Bildwiederholrate wählen. Spart Strom, kann aber die Darstellung verlangsamen.</string>
+    <string name="help_checkbox_full_range">Fordert Full-Range-Videopegel statt Limited Range an. Nur aktivieren, wenn Host und Display einverstanden sind, sonst saufen Schwarz und Lichter ab.</string>
+    <string name="help_checkbox_prevent_packet_loss">Sendet etwa alle 20 ms ein kleines Steuerpaket, um Wi-Fi-Energiesparen zu verhindern. Kann bei gerätespezifischem Verlust helfen.</string>
+    <string name="help_list_languages">Sprache der Oberfläche, ihrer Hilfe und der Stream-Meldungen.</string>
+    <string name="help_import_special_button_file">Importiert eigene Tastenkombinationen für „Tasten senden“ und die Sondertasten-Steuerung und ersetzt die eigenen Befehle dieses Profils.</string>
+    <string name="help_option_help_custom_keys">Öffnet die Anleitung zum Dateiformat eigener Tasten. Lade die erzeugte Datei mit „Eigene Tasten importieren“.</string>
+    <string name="help_pref_debug_info">Öffnet Geräte- und Controller-Diagnose ohne Stream: Gerätedetails, Controller-IDs und Sensoren, Vibrationstest, Steuerungsvorschau.</string>
+    <string name="help_about_diag_logs">Führt ein fortlaufendes Protokoll (höchstens 2 MB) von Ereignissen und Fehlern auf diesem Gerät. Nichts verlässt es, außer du teilst es über Debug-Info, mit entfernten Namen und Adressen. Aus stoppt neue Zeilen.</string>
+    <string name="help_ui_match_game_colors">Übernimmt drei Farben vom Cover des gewählten Spiels für den animierten Hintergrund; sonst das PC-Artwork. Erfordert ausgeschaltetes Material You.</string>
+
+    <!-- Explanations of one choice -->
+    <string name="help_frame_pacing_latency">Zeigt sofort das neueste Bild; kann ruckeln.</string>
+    <string name="help_frame_pacing_balanced">Passt Frames mit einer kleinen Warteschlange an die Display-Wiederholrate an.</string>
+    <string name="help_frame_pacing_cap_fps">Ausgewogen; fordert vom Host nahe der Wiederholrate weniger Frames an.</string>
+    <string name="help_frame_pacing_smoothness">Gleichmäßige Lieferung; erhöht Pufferung und Latenz.</string>
+    <string name="help_frame_pacing_warp">Fordert doppelte FPS an (60 → 120); zeigt das neueste Bild.</string>
+    <string name="help_frame_pacing_warp2">Fordert vierfache FPS an (60 → 240).</string>
+    <string name="help_frame_pacing_fast_vsync">Synchronisiert auf den niedrigeren Wert aus FPS und Wiederholrate. Nur MediaCodec.</string>
+    <string name="help_video_format_auto">Wählt H.264 oder HEVC. AV1 und PyroWave müssen gewählt werden.</string>
+    <string name="help_video_format_forceav1">Effizient bei niedrigen Bitraten. Erfordert AV1-Encoding am Host und Decoding hier.</string>
+    <string name="help_video_format_forceh265">Weniger Bandbreite als H.264; unterstützt 10-Bit-HDR. Kann zurückfallen.</string>
+    <string name="help_video_format_neverh265">Breiteste Kompatibilität; braucht mehr Bandbreite. Kein HDR.</string>
+    <string name="help_video_format_pyrowave">GPU-Wavelet-Codec mit eigenem Vulkan-Decoder. Erfordert eine schnelle Verbindung und deutlich höhere Bitrate.</string>
+    <string name="help_list_pyrowave_chroma_420">Farbe in halber Auflösung. Am günstigsten.</string>
+    <string name="help_list_pyrowave_chroma_444">Volle Farbe. Nutzt 4:2:0, wenn der Host es nicht kann.</string>
+    <string name="help_list_sgsr_quality_standard">Kantenrekonstruktion aus dem aktuellen Frame. Am günstigsten.</string>
+    <string name="help_list_sgsr_quality_high">Ein stärkerer räumlicher Filter auf dem aktuellen Frame.</string>
+    <string name="help_list_sgsr_quality_temporal">Delos-SGSR 2 für Video: Bewegung per Optical Flow.</string>
+    <string name="help_list_sgsr_quality_temporal_quality">SGSR2-DV plus eine Maske, die veraltete Details verwirft. Meiste GPU-Last.</string>
+    <string name="help_list_sgsr_quality_sharpen">Keine Skalierung; schärft in Stream-Größe. Kostet wenig GPU.</string>
+    <string name="help_list_sgsr_supersampling_level_1">Rendert 1080p mit 2560 × 1440.</string>
+    <string name="help_list_sgsr_supersampling_level_2">Rendert 1080p mit 3840 × 2160. Kostet mehr GPU-Zeit und Speicher.</string>
+    <string name="help_list_video_scale_mode_fit">Ganzes Bild; schwarze Balken, wenn die Seitenverhältnisse abweichen.</string>
+    <string name="help_list_video_scale_mode_fill">Füllt den Bildschirm; beschneidet, wenn die Seitenverhältnisse abweichen.</string>
+    <string name="help_list_video_scale_mode_stretch">Füllt den Bildschirm ohne Beschnitt; das Bild verzerrt.</string>
+    <string name="help_list_audio_config_2">Zwei Kanäle für Handheld-Lautsprecher und die meisten Kopfhörer.</string>
+    <string name="help_list_audio_config_51">Sechs Kanäle. Erfordert eine 5.1-Wiedergabe.</string>
+    <string name="help_list_audio_config_71">Acht Kanäle. Nutze Stereo, wenn Kanäle fehlen.</string>
+    <string name="help_list_rumble_feel_original">Das Rumble des Spiels genau so, wie es gesendet wird.</string>
+    <string name="help_list_rumble_feel_gentle">Ein schwächeres, abgerundetes Rumble.</string>
+    <string name="help_list_rumble_feel_kick_only">Ein kräftiger kurzer Kick zu Beginn jedes Rumbles, dann die normale Stärke.</string>
+    <string name="help_list_rumble_feel_pulse_25">Ein langsam pulsierendes Rumble, das sich tiefer anfühlt.</string>
+    <string name="help_list_rumble_feel_custom">Werte, die unter Über → Debug-Info bearbeitet wurden.</string>
+    <string name="help_analog_scrolling_none">Kein Stick scrollt.</string>
+    <string name="help_analog_scrolling_right">Der rechte Stick scrollt.</string>
+    <string name="help_analog_scrolling_left">Der linke Stick scrollt.</string>
+    <string name="help_mouse_mode_list_0">Direktes Multitouch; der Host muss Touch unterstützen.</string>
+    <string name="help_mouse_mode_list_1">Berühre einen Punkt, um dorthin zu zeigen oder zu klicken.</string>
+    <string name="help_mouse_mode_list_2">Relative Zeigerbewegung; für externe Displays.</string>
+    <string name="help_mouse_mode_list_3">Relative Bewegung für Spiele im Mausstil.</string>
+    <string name="help_mouse_mode_list_4">Keine Touch-Eingabe; Stylus und Randwischen funktionieren weiter.</string>
+    <string name="help_mouse_mode_list_5">Direktes Touch mit vertauschten Maustasten.</string>
+    <string name="help_list_onscreen_keyboard_align_mode_left">Am linken Rand verankert.</string>
+    <string name="help_list_onscreen_keyboard_align_mode_center">Horizontal zentriert.</string>
+    <string name="help_list_onscreen_keyboard_align_mode_right">Am rechten Rand verankert.</string>
+
+    <!-- Explanations of choices that are not fixed -->
+    <!-- %1$s: a resolution such as 2560 × 1600 -->
+    <string name="help_dynamic_resolution">Fordert einen Stream mit %1$s an.</string>
+    <!-- %1$s: a frame rate such as 59.94 -->
+    <string name="help_dynamic_fps">Fordert %1$s FPS an. Warp-Modi vervielfachen sie.</string>
+    <string name="help_list_languages_default">Folgt der Android-Sprache.</string>
+    <string name="help_dynamic_language">Nutzt diese Sprache, wo Übersetzungen vorhanden sind.</string>
+    <string name="help_dynamic_keyboard_layout">Import, Export und Zurücksetzen betreffen dieses Layout.</string>
+
+    <!-- Notes added to the help of the selected value -->
+    <string name="help_note_unavailable">Die gespeicherte Auswahl ist nicht verfügbar</string>
+    <!-- %1$d: megabits per second -->
+    <string name="help_note_pyrowave_recommends">PyroWave empfiehlt hier %1$d Mbps.</string>
+    <!-- LFR: the Low-latency Frame Balance setting; Balanced: a frame pacing choice -->
+    <string name="help_note_lfr_balanced">LFR ist aktiv: Ausgewogen wird genutzt.</string>
+    <string name="help_note_fast_vsync_lfr">Schnelles V-Sync überschreibt LFR.</string>
+    <string name="help_note_not_with_pyrowave">Wird mit PyroWave nicht genutzt.</string>
+    <string name="help_note_needs_pyrowave">Erfordert den PyroWave-Codec.</string>
+    <string name="help_note_hdr_420">HDR ist an: 4:2:0 wird genutzt.</string>
+    <string name="help_note_pyrowave_modes">PyroWave bietet alle fünf Modi</string>
+    <!-- Sharpen only: an upscaler mode -->
+    <string name="help_note_sharpen_only">Wird von „Nur schärfen“ nicht genutzt.</string>
+
+    <!-- Stream menu help: stream_help_<slug of the item key>. The keys are the English item names the menu uses as identifiers. -->
+    <string name="stream_help_resume">Schließt dieses Menü und setzt den Stream fort.</string>
+    <string name="stream_help_keyboard">Öffnet oder schließt die Delos-Bildschirmtastatur: Steuerkreuz bewegt, A tippt, B schließt. Nicht die Android-Systemtastatur (Mehr).</string>
+    <string name="stream_help_overlay">Wechselt zwischen voller Statistik, kompakter Statistik und aus. 1%% Low FPS umfasst die langsamsten Frames der letzten etwa zehn Sekunden.</string>
+    <string name="stream_help_brightness">Passt die Helligkeit dieses Geräts für diesen Stream an; danach gilt wieder die Systemeinstellung.</string>
+    <string name="stream_help_screen_brightness">Ändert die Bildschirmhelligkeit dieses Geräts sofort; danach gilt wieder die Systemeinstellung. Nicht die von PC oder Monitor.</string>
+    <string name="stream_help_bitrate">Fordert eine neue Video-Bitrate ohne erneutes Verbinden an. Erfordert Vibepollo; der Host kann sie begrenzen. Gilt für diesen Stream.</string>
+    <string name="stream_help_apply_bitrate">Sendet die gewünschte Bitrate an Vibepollo. Der akzeptierte Wert kann niedriger sein. Gespeicherte Standardwerte bleiben unverändert.</string>
+    <string name="stream_help_upscaler">Skaliert einen Stream mit niedriger Auflösung hoch oder supersampelt einen nativen. Kostet GPU-Zeit; gilt live und wird für dieses Spiel gemerkt.</string>
+    <string name="stream_help_upscaling">Schaltet den Upscaler oder „Nur schärfen“ für diesen Stream ein oder aus; das Bild kann flackern.</string>
+    <string name="stream_help_supersampling">Rendert einen Stream in nativer Auflösung größer und verkleinert ihn dann. Kostet GPU-Zeit; gilt für diesen Stream.</string>
+    <string name="stream_help_supersampling_on">Rendert mit größerer interner Größe. Kostet GPU-Zeit.</string>
+    <string name="stream_help_supersampling_quality">Für 1080p: 1,33× rendert mit 2560 × 1440, 2× mit 3840 × 2160 und kostet mehr GPU-Zeit und Speicher.</string>
+    <string name="stream_help_mode">Gilt live. Das Umschalten von oder zu „Nur schärfen“ kann flackern.</string>
+    <string name="stream_help_sharpness">Abschließende Schärfung. 0 deaktiviert sie, nicht die SGSR-1-Rekonstruktion. Bei „Nur schärfen“ ist sie der gesamte Effekt. Gilt für diesen Stream.</string>
+    <string name="stream_help_more">Weitere Stream-Steuerung: Zwischenablage, Host-Befehle, Tastenkombinationen, Zoom, Touch und Bildschirmsteuerung. Aktionen laufen sofort.</string>
+    <string name="stream_help_disconnect">Beendet das Streamen und kehrt zur Delos-Bibliothek zurück. Das Spiel läuft auf dem PC weiter.</string>
+    <string name="stream_help_quit_game">Bittet den Host, die laufende Anwendung zu beenden, und trennt dann die Verbindung. Läuft sofort, speichere also vorher.</string>
+    <string name="stream_help_send_keys">Sendet einmalig eine eingebaute oder importierte Tastenkombination an den PC; das Menü schließt sich. Eigene importierst du unter Steuerung.</string>
+    <string name="stream_help_send_clipboard">Kopiert einmalig die Zwischenablage dieses Geräts auf den PC. Erfordert Zwischenablage-Unterstützung von Vibepollo oder Apollo.</string>
+    <string name="stream_help_get_clipboard">Holt einmalig die Zwischenablage des PCs auf dieses Gerät. Erfordert Zwischenablage-Unterstützung von Vibepollo oder Apollo.</string>
+    <string name="stream_help_commands">Listet Serverbefehle, die in Vibepollo oder Apollo eingerichtet sind. Der Host entscheidet, was jeder tut.</string>
+    <string name="stream_help_task_manager">Sendet Ctrl + Shift + Esc an den PC, was unter Windows den Task-Manager öffnet.</string>
+    <string name="stream_help_zoom">Schaltet die Zoom- und Schwenksteuerung des Streams um. Nur lokale Ansicht; „Zoom&amp;Schwenk merken“ entscheidet, ob sie bleibt.</string>
+    <string name="stream_help_mouse_mode">Wählt, wie Touch den PC steuert: direktes Touch, Trackpad oder aus. „Mausmodus merken“ entscheidet, ob es bleibt.</string>
+    <string name="stream_help_local_mouse_cursor">Zeigt oder verbirgt den Android-Zeiger für eine physische Maus in diesem Stream. Nicht der PC-Cursor im Video.</string>
+    <string name="stream_help_on_screen_controls">Zeigt oder verbirgt das virtuelle Gamepad in diesem Stream. Deckkraft und Layout stellst du unter Steuerung ein.</string>
+    <string name="stream_help_open_android_keyboard">Öffnet oder schließt die Android-Systemtastatur, nachdem dieses Menü geschlossen wurde. Nicht die Delos-Tastatur (die Kachel Tastatur).</string>
+    <string name="stream_help_touch_sensitivity">Schaltet die zusätzliche Empfindlichkeitsskalierung des Touchscreens um, in den Einstellungen konfiguriert.</string>
+    <string name="stream_help_gyro_smoothing">Beruhigt das Gyro-Zielen sofort, für dieses Spiel gemerkt. 0 ist aus. Mehr Glättung bringt eine kleine Verzögerung bei langsamer Bewegung.</string>
+    <string name="stream_help_gyro_smoothing_disabled">Erfordert, dass „Gyroskop des externen Gamepads“ oder „Eingebautes Gyroskop des Geräts“ in den Einstellungen aktiviert ist; gilt ab dem nächsten Stream.</string>
+    <string name="stream_help_rumble_feel">Wählt, wie sich Host-Rumble anfühlt, sofort und gespeichert. Bleibt offen: Wähle erneut, um zu vergleichen. B geht zurück.</string>
+    <!-- %1$s: a key combination such as Ctrl + Alt + Delete -->
+    <string name="stream_help_format_keys">Sendet %1$s einmalig an den PC und kehrt dann zum Stream zurück.</string>
+    <!-- %1$s: the command name, cut to 35 characters -->
+    <string name="stream_help_format_command">Führt den vom Host definierten Befehl %1$s sofort auf dem PC aus. Eingerichtet in Vibepollo oder Apollo.</string>
+</resources>
