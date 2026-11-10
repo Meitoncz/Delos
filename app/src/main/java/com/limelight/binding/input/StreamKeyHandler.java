@@ -120,6 +120,23 @@ public final class StreamKeyHandler {
         host.conn().sendKeyboardInput(key, down ? KeyboardPacket.KEY_DOWN : KeyboardPacket.KEY_UP, modifiers, flags);
     }
 
+    /**
+     * Whether a key goes to the host: any key while the stream grabs input, and otherwise only the key-up of a
+     * key that is down there. The grab can be turned off while a key is held (Ctrl+Alt+Shift+Z acts a moment
+     * later); without its key-up the host would keep the key pressed.
+     */
+    private boolean reachesHost(short key, boolean down) {
+        if (host.isInputGrabbed()) {
+            return true;
+        }
+        if (down) {
+            return false;
+        }
+        synchronized (heldKeys) {
+            return heldKeys.containsKey(key);
+        }
+    }
+
     // Returns true if the key stroke was consumed
     boolean handleSpecialKeys(int androidKeyCode, boolean down) {
         int modifierMask = 0;
@@ -142,7 +159,7 @@ public final class StreamKeyHandler {
                 } else {
                     modifierFlags &= ~KeyboardPacket.MODIFIER_META;
                 }
-                if (!host.isInputGrabbed()) {
+                if (!reachesHost((short) KeyboardTranslator.VK_LWIN, down)) {
                     // Not consumed: like every other key it stays with Android while we're not grabbing
                     return false;
                 }
@@ -432,13 +449,14 @@ public final class StreamKeyHandler {
                 return true;
             }
 
-            // Pass through keyboard input if we're not grabbing
-            if (!host.isInputGrabbed()) {
+            KeyboardTranslator keyboardTranslator = host.keyboardTranslator();
+            short translated = keyboardTranslator.translate(event.getKeyCode(), event.getScanCode(), deviceId);
+
+            // Pass through keyboard input if we're not grabbing, except the key-up of a key we have down on the host
+            if (!reachesHost(translated, false)) {
                 return false;
             }
 
-            KeyboardTranslator keyboardTranslator = host.keyboardTranslator();
-            short translated = keyboardTranslator.translate(event.getKeyCode(), event.getScanCode(), deviceId);
             if (translated == 0) {
                 // If we sent this event as UTF-8 on key down, also report that it was handled
                 // when we get the key up event for it.
@@ -479,8 +497,9 @@ public final class StreamKeyHandler {
                 return;
             }
 
-            // Like handleKeyDown() and handleKeyUp(): the keyboard is not the host's while we're not grabbing
-            if (!host.isInputGrabbed()) {
+            // Like handleKeyDown() and handleKeyUp(): the keyboard is not the host's while we're not grabbing,
+            // except for the key-up of a key we have down on the host
+            if (!reachesHost(keyMap, buttonDown)) {
                 return;
             }
 

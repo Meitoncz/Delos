@@ -251,6 +251,56 @@ public class StreamKeyHandlerTest {
         verifyNoMoreInteractions(conn);
     }
 
+    // --- The grab is turned off while a key is held: its key-up still reaches the host
+
+    @Test
+    public void aKeyHeldWhenTheGrabGoesOffIsStillReleasedOnTheHost() {
+        assertTrue(handler.handleKeyDown(key(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_A)));
+        host.grabbed = false;
+        clearInvocations(conn);
+
+        assertTrue("consumed like its key down", handler.handleKeyUp(key(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_A)));
+
+        verify(conn).sendKeyboardInput(vk(KeyEvent.KEYCODE_A), UP, NONE, RAW);
+        assertNothingHeld();
+        // A key that went down without the grab stays with Android in both directions
+        assertFalse(handler.handleKeyDown(key(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_A)));
+        assertFalse(handler.handleKeyUp(key(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_A)));
+        verifyNoMoreInteractions(conn);
+    }
+
+    @Test
+    public void anEvdevKeyHeldWhenTheGrabGoesOffIsStillReleasedOnTheHost() {
+        handler.keyboardEvent(true, (short) KeyEvent.KEYCODE_S);
+        host.grabbed = false;
+        clearInvocations(conn);
+
+        handler.keyboardEvent(false, (short) KeyEvent.KEYCODE_S);
+
+        verify(conn).sendKeyboardInput(vk(KeyEvent.KEYCODE_S), UP, NONE, NONE);
+        assertNothingHeld();
+    }
+
+    @Test
+    public void theRemappedRightAltHeldWhenTheGrabGoesOffIsStillReleasedOnTheHost() {
+        prefs.rightAltAsMeta = true;
+        assertTrue(down(KeyEvent.KEYCODE_ALT_RIGHT));
+        host.grabbed = false;
+        clearInvocations(conn);
+
+        assertTrue(up(KeyEvent.KEYCODE_ALT_RIGHT));
+
+        verify(conn).sendKeyboardInput((short) KeyboardTranslator.VK_LWIN, UP, NONE, NONE);
+        assertNothingHeld();
+    }
+
+    /** The held set is empty when a focus loss has no key left to release. */
+    private void assertNothingHeld() {
+        clearInvocations(conn);
+        handler.releaseHeldKeys();
+        verifyNoMoreInteractions(conn);
+    }
+
     @Test
     public void thePlusKeyNeedsShiftOnTheHost() {
         assertEquals(SHIFT, handler.getModifierState(KeyEvent.KEYCODE_PLUS));
