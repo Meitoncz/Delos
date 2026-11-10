@@ -277,10 +277,30 @@ public class StreamSurfaceControllerTest {
     @Test
     public void handshakeGivesUpAfterTheBoundedWait() {
         long start = System.nanoTime();
-        StreamSurfaceController.runAndAwait(task -> { }, () -> { }, 100);
+        assertFalse(StreamSurfaceController.runAndAwait(task -> { }, () -> { }, 100));
         long elapsedMs = (System.nanoTime() - start) / 1_000_000;
         assertTrue("waited " + elapsedMs, elapsedMs >= 90 && elapsedMs < 2000);
         assertEquals(1000, StreamSurfaceController.RESIZE_WAIT_MS);
+    }
+
+    @Test
+    public void aMissedHandshakeStillResizesWhenTheUiThreadGetsToIt() {
+        List<Runnable> posted = new ArrayList<>();
+        AtomicBoolean resized = new AtomicBoolean();
+
+        // The UI thread is busy for longer than the decoder waits
+        assertFalse(StreamSurfaceController.runAndAwait(posted::add, () -> resized.set(true), 50));
+        assertFalse(resized.get());
+
+        // The request was not withdrawn: it applies as soon as the UI thread runs it
+        assertEquals(1, posted.size());
+        posted.get(0).run();
+        assertTrue(resized.get());
+    }
+
+    @Test
+    public void handshakeInTimeReportsTheResize() {
+        assertTrue(StreamSurfaceController.runAndAwait(Runnable::run, () -> { }, 5000));
     }
 
     @Test
@@ -294,7 +314,7 @@ public class StreamSurfaceControllerTest {
     @Test
     public void interruptEndsTheWaitAndStaysSet() {
         Thread.currentThread().interrupt();
-        StreamSurfaceController.runAndAwait(task -> { }, () -> { }, 5000);
+        assertFalse(StreamSurfaceController.runAndAwait(task -> { }, () -> { }, 5000));
         assertTrue(Thread.interrupted());
     }
 

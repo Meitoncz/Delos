@@ -15,7 +15,8 @@ public interface StreamSurfaceHost {
 
     /**
      * Lets the surface's buffers follow the layout's size. Called from the decoder's setup thread; it returns once
-     * the UI thread has resized the surface (or after a short wait).
+     * the UI thread has asked for the new size, or after a short wait. The resize may land after it returns (the
+     * request is never withdrawn), so a renderer on the surface has to follow the surface's size as it draws.
      */
     void useLayoutSizedStreamSurface();
 }

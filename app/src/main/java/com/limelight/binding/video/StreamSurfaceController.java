@@ -18,6 +18,7 @@ import com.limelight.shell.link.LinkMonitor;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * The stream's surface and the live upscaler controls: the SurfaceView's buffer size for the upscaler, the
@@ -200,24 +201,36 @@ public final class StreamSurfaceController implements StreamSurfaceHost {
 
     // Delos: SGSR on 8-bit output draws into window-sized buffers, while onCreate sized the surface for the
     // requested HDR. The decoder calls this from its setup thread when the host settled on 8-bit, before it
-    // creates the SGSR stage; it returns once the surface has its new size (or after a short wait).
+    // creates the SGSR stage; it returns once the UI thread has asked for the new size, or after a short wait.
+    // A missed wait loses nothing: the request stays queued and is applied when the UI thread gets to it, and the
+    // 8-bit SGSR stage reads its window surface's size on every frame (SgsrRenderer), so an output stage built in
+    // the meantime moves to the new size with the first frame after the resize.
     @Override
     public void useLayoutSizedStreamSurface() {
-        runAndAwait(uiThread, () -> {
+        boolean resized = runAndAwait(uiThread, () -> {
             SurfaceView view = host.streamSurfaceView();
             if (view != null) view.getHolder().setSizeFromLayout();
         }, RESIZE_WAIT_MS);
+        if (!resized) {
+            LimeLog.warning("Stream surface resize is still pending after " + RESIZE_WAIT_MS +
+                    " ms; the upscaler starts at the old size and follows the resize when it lands");
+        }
     }
 
     /**
-     * Runs {@code action} on {@code executor} and waits up to {@code timeoutMs} for it to finish. A failure of the
-     * action is logged; an interrupt ends the wait and stays set on the calling thread.
+     * Runs {@code action} on {@code executor} and waits up to {@code timeoutMs} for it to finish; true when it
+     * finished in that time. The action is never withdrawn: after a missed wait it still runs when the executor
+     * gets to it. A failure of the action is logged; an interrupt ends the wait and stays set on the calling thread.
      */
-    static void runAndAwait(Executor executor, Runnable action, long timeoutMs) {
+    static boolean runAndAwait(Executor executor, Runnable action, long timeoutMs) {
         final CountDownLatch resized = new CountDownLatch(1);
+        final AtomicBoolean waitMissed = new AtomicBoolean();
         executor.execute(() -> {
             try {
                 action.run();
+                if (waitMissed.get()) {
+                    LimeLog.info("Stream surface resize applied after the decoder stopped waiting for it");
+                }
             } catch (Throwable t) {
                 LimeLog.warning("SurfaceView setSizeFromLayout failed: " + t);
             } finally {
@@ -225,10 +238,14 @@ public final class StreamSurfaceController implements StreamSurfaceHost {
             }
         });
         try {
-            resized.await(timeoutMs, TimeUnit.MILLISECONDS);
+            if (resized.await(timeoutMs, TimeUnit.MILLISECONDS)) {
+                return true;
+            }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+        waitMissed.set(true);
+        return false;
     }
 
     private int streamSurfaceWidth() {
