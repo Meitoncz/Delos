@@ -143,6 +143,8 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
 
     private Context context;
     private Activity activity;
+    // The stream's surface owner; null when the decoder runs without one
+    private final StreamSurfaceHost surfaceHost;
     private volatile MediaCodec videoDecoder;
     private Thread rendererThread;
     // Delos: the callback adapter is adapted from Starwire/Artemide (GPL-3.0).
@@ -424,7 +426,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         }
     }
 
-    public MediaCodecDecoderRenderer(Activity activity, PreferenceConfiguration prefs,
+    public MediaCodecDecoderRenderer(Activity activity, StreamSurfaceHost surfaceHost, PreferenceConfiguration prefs,
                                      CrashListener crashListener, int consecutiveCrashCount,
                                      boolean meteredData, boolean requestedHdr, boolean invertResolution,
                                      String glRenderer, PerfOverlayListener perfListener) {
@@ -432,6 +434,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
 
         this.context = activity;
         this.activity = activity;
+        this.surfaceHost = surfaceHost;
         this.prefs = prefs;
         sgsrRequested = prefs.sgsrEnabled;
         sgsrHdrActive = prefs.enableHdr;
@@ -920,7 +923,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         // Delos: an explicit codec reset changes output locally; the network session stays connected.
         if ((!sgsrRequested || sgsrFailed || sgsrOutputMismatch()) && sgsr != null) { sgsr.close(); sgsr = null; }
         if (sgsr == null && !sgsrFailed && sgsrRequested) {
-            sgsr = SgsrRenderer.create(context, renderTarget, initialWidth, initialHeight, prefs.sgsrSharpness,
+            sgsr = SgsrRenderer.create(context, surfaceHost, renderTarget, initialWidth, initialHeight, prefs.sgsrSharpness,
                     prefs.sgsrMode.index(),
                     prefs.sgsrSupersamplingLevel,
                     (videoFormat & MoonBridge.VIDEO_FORMAT_MASK_10BIT) != 0, sgsrHdrActive, currentHdrMetadata, () -> {
@@ -1173,8 +1176,8 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         // Delos: SGSR on SDR output draws into window-sized buffers; the surface was sized for the
         // requested HDR, so size it again if the host settled on 8-bit. Sharpen only draws at the stream's size.
         if (sgsrRequested && prefs.sgsrMode.scales() && prefs.enableHdr && (format & MoonBridge.VIDEO_FORMAT_MASK_10BIT) == 0 &&
-                context instanceof com.limelight.Game) {
-            ((com.limelight.Game) context).useLayoutSizedStreamSurface();
+                surfaceHost != null) {
+            surfaceHost.useLayoutSizedStreamSurface();
         }
 
         return initializeDecoder(false);
@@ -1297,8 +1300,8 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         if (pw != null) return pw.isSupersampling();
         SgsrRenderer current = sgsr;
         if (current != null && current.isSupersampling()) return true;
-        if (!(context instanceof com.limelight.Game)) return false;
-        android.view.View view = ((com.limelight.Game) context).getStreamSurface();
+        if (surfaceHost == null) return false;
+        android.view.View view = surfaceHost.getStreamSurface();
         return view != null && view.getWidth() > 0 && view.getHeight() > 0 &&
                 SgsrDimensions.isNativeInput(initialWidth, initialHeight, view.getWidth(), view.getHeight());
     }

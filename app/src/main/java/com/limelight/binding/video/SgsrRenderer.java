@@ -169,14 +169,14 @@ public final class SgsrRenderer implements AutoCloseable {
         return manager != null && manager.getDeviceConfigurationInfo().reqGlEsVersion >= 0x30001;
     }
 
-    public static SgsrRenderer create(Context app, Surface output, int width, int height,
+    public static SgsrRenderer create(Context app, StreamSurfaceHost surfaceHost, Surface output, int width, int height,
                                       int sharpness, int mode, int supersamplingLevel, boolean tenBit,
                                       boolean hdrActive, byte[] hdrMetadata, Runnable failure) {
         if (!isSupported(app)) return null;
         SgsrRenderer renderer = new SgsrRenderer(width, height, sharpness, mode, supersamplingLevel,
                 tenBit, hdrActive, hdrMetadata, failure, false);
         FutureTask<Void> initialize = new FutureTask<>(() -> {
-            renderer.initialize(app, output);
+            renderer.initialize(app, surfaceHost, output);
             return null;
         });
         renderer.handler.post(initialize);
@@ -197,7 +197,7 @@ public final class SgsrRenderer implements AutoCloseable {
         if (!isSupported(app)) throw new IllegalStateException("Stream arrival requires GLES 3.1");
         if (hdrActive && !tenBit) throw new IllegalStateException("HDR arrival requires ten-bit FP16/P010 output");
         SgsrRenderer renderer = new SgsrRenderer(width,height,0,0,1,tenBit,hdrActive,hdrMetadata,failure,true);
-        FutureTask<Void> initialize = new FutureTask<>(() -> { renderer.initialize(app,output); return null; });
+        FutureTask<Void> initialize = new FutureTask<>(() -> { renderer.initialize(app,null,output); return null; });
         renderer.handler.post(initialize);
         try {
             initialize.get(8,TimeUnit.SECONDS);
@@ -374,12 +374,11 @@ public final class SgsrRenderer implements AutoCloseable {
         }
     }
 
-    private void initialize(Context app, Surface output) throws Exception {
+    private void initialize(Context app, StreamSurfaceHost surfaceHost, Surface output) throws Exception {
         System.loadLibrary("moonlight-core");
         diagnosticContext = app.getApplicationContext();
         arrivalOutputSurface = arrivalOnly ? output : null;
-        android.view.View streamView = app instanceof com.limelight.Game ?
-                ((com.limelight.Game)app).getStreamSurface() : null;
+        android.view.View streamView = surfaceHost != null ? surfaceHost.getStreamSurface() : null;
         hdrTargetWidth = streamView != null ? streamView.getWidth() : 0;
         hdrTargetHeight = streamView != null ? streamView.getHeight() : 0;
         if (sharpenGeometry) {

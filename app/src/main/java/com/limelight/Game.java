@@ -31,6 +31,7 @@ import com.limelight.binding.video.PerfOverlayListener;
 import com.limelight.binding.video.PyroWaveFormats;
 import com.limelight.binding.video.PyroWaveRenderer;
 import com.limelight.binding.video.StreamDisplayPlanner;
+import com.limelight.binding.video.StreamSurfaceController;
 import com.limelight.nvstream.NvConnection;
 import com.limelight.nvstream.NvConnectionListener;
 import com.limelight.nvstream.StreamConfiguration;
@@ -42,7 +43,6 @@ import com.limelight.nvstream.input.MouseButtonPacket;
 import com.limelight.nvstream.jni.MoonBridge;
 import com.limelight.preferences.GlPreferences;
 import com.limelight.preferences.PreferenceConfiguration;
-import com.limelight.preferences.UpscalerMode;
 import com.limelight.profiles.ProfilesManager;
 import com.limelight.ui.ExternalControllerView;
 import com.limelight.ui.GameGestures;
@@ -113,7 +113,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import android.view.SurfaceView;
-import android.view.ViewGroup;
 
 
 public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
@@ -167,8 +166,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     private boolean endedWithResult = false;
     private boolean connecting = false;
     public boolean connected = false;
-    private boolean surfaceCreated = false;
-    private boolean attemptedConnection = false;
     private float desiredRefreshRate;
 
     private InputCaptureProvider inputCaptureProvider;
@@ -243,6 +240,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     private ViewParent rootView;
     private StreamClipboardSync clipboardSync;
     private StreamWindowController windowController;
+    private StreamSurfaceController surfaceController;
 
     private NvHTTP httpConn;
 
@@ -299,6 +297,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         prefConfig = PreferenceConfiguration.readPreferences(this);
         tombstonePrefs = Game.this.getSharedPreferences("DecoderTombstone", 0);
         windowController = new StreamWindowController(this, prefConfig, new WindowHost());
+        surfaceController = new StreamSurfaceController(this::runOnUiThread, prefConfig, new SurfaceHost());
 
         // Delos: always full screen (immersive), the option is gone
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -559,6 +558,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
         decoderRenderer = new MediaCodecDecoderRenderer(
                 this,
+                surfaceController,
                 prefConfig,
                 new CrashListener() {
                     @Override
@@ -577,6 +577,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                 shouldInvertDecoderResolution,
                 glPrefs.glRenderer,
                 this);
+        surfaceController.setDecoder(decoderRenderer);
         // Warm arrival resources without taking the video surface away from the decoder yet.
         decoderRenderer.prepareLaunchArrival(spinner == null || spinner.getReducedMotion());
 
@@ -730,45 +731,12 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         // The connection will be started when the surface gets created
         //streamContainer.getHolder().addCallback(this);
 
-        streamContainer.setOnSurfaceAvailable(() -> {
-            if (!attemptedConnection) {
-                LimeLog.info("Surface is available, starting connection...");
-                attemptedConnection = true;
-
-                // The decoder gets the container's currently active surface
-                decoderRenderer.setRenderTarget(streamContainer.getSurface());
-
-                // Start the NvConnection
-                conn.start(new AndroidAudioRenderer(Game.this, prefConfig.playHostAudio),
-                        decoderRenderer, Game.this);
-            }
-        });
+        streamContainer.setOnSurfaceAvailable(surfaceController::onSurfaceAvailable);
 
         gameMenuCallbacks = new GameMenu(this);
         streamMenu = new com.limelight.shell.StreamMenu(this);
 
-        // Fixed stream surface size and z-order (the frame rate is set on the Surface by the decoder)
-        try {
-            View root = findViewById(android.R.id.content);
-            // No getIdentifier(): find the first SurfaceView in the layout
-            SurfaceView streamSurfaceView = findFirstSurfaceViewFrom(root);
-
-            if (streamSurfaceView != null) {
-                // Avoid resizes/glitches that break the compositor
-                int vw = streamSurfaceWidth();
-                int vh = streamSurfaceHeight();
-                try {
-                    // SDR SGSR owns the window buffers. HDR SGSR uses a display-sized child layer,
-                    // so keep its parent's source-sized coordinate space stable across live toggles.
-                    // Sharpen only never enlarges anything: its window buffers have the stream's size.
-                    if (prefConfig.sgsrEnabled && prefConfig.sgsrMode.scales() && !prefConfig.enableHdr)
-                        streamSurfaceView.getHolder().setSizeFromLayout();
-                    else streamSurfaceView.getHolder().setFixedSize(vw, vh);
-                } catch (Throwable t) { LimeLog.warning("SurfaceView setFixedSize failed: " + t); }
-                try { streamSurfaceView.setZOrderOnTop(false); } catch (Throwable t) { LimeLog.warning("SurfaceView setZOrderOnTop failed: " + t); }
-                try { streamSurfaceView.setZOrderMediaOverlay(false); } catch (Throwable t) { LimeLog.warning("SurfaceView setZOrderMediaOverlay failed: " + t); }
-            }
-        } catch (Throwable t) { LimeLog.warning("Stream surface setup failed: " + t); }
+        surfaceController.configureStreamSurface(findViewById(android.R.id.content));
     }
 
     private DisplayManager.DisplayListener externalDisplayListener;
@@ -995,6 +963,50 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                 decoderRenderer.notifyVideoForeground();
             }
         }
+    }
+
+    /** What StreamSurfaceController needs from the stream: the surface, the display size and the connection. */
+    private final class SurfaceHost implements StreamSurfaceController.Host {
+        @Override
+        public SurfaceView streamSurfaceView() {
+            return streamContainer != null ? streamContainer.getSurfaceView() : null;
+        }
+
+        @Override
+        public Surface activeSurface() {
+            return streamContainer.getSurface();
+        }
+
+        @Override
+        public int displayWidth() {
+            return displayWidth;
+        }
+
+        @Override
+        public int displayHeight() {
+            return displayHeight;
+        }
+
+        @Override
+        public boolean isConnected() {
+            return connected;
+        }
+
+        @Override
+        public void startConnection() {
+            conn.start(new AndroidAudioRenderer(Game.this, prefConfig.playHostAudio),
+                    decoderRenderer, Game.this);
+        }
+
+        @Override
+        public void stopConnection() {
+            Game.this.stopConnection();
+        }
+    }
+
+    /** The stream surface and the live upscaler controls (the stream menu's and the launch arrival's facade). */
+    public StreamSurfaceController getSurfaceController() {
+        return surfaceController;
     }
 
     public void setMetaKeyCaptureState(boolean enabled) {
@@ -2957,8 +2969,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
     @Override
     public void setHdrMode(boolean enabled, byte[] hdrMetadata) {
-        LimeLog.info("Display HDR mode: " + (enabled ? "enabled" : "disabled"));
-        decoderRenderer.setHdrMode(enabled, hdrMetadata);
+        surfaceController.setHdrMode(enabled, hdrMetadata);
     }
 
     @Override
@@ -2973,11 +2984,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-        if (!surfaceCreated) {
-            throw new IllegalStateException("Surface changed before creation!");
-        }
-
-        LimeLog.info("surfaceChanged-->"+width+" x "+height + "----"+displayWidth+" x "+displayHeight);
+        surfaceController.onSurfaceChanged(width, height);
 
         panZoomHandler.handleSurfaceChange();
 
@@ -2990,45 +2997,13 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
-        surfaceCreated = true;
-
-        float desiredFrameRate = StreamDisplayPlanner.surfaceFrameRate(desiredRefreshRate, prefConfig.fps,
-                prefConfig.framePacing, prefConfig.reduceRefreshRate);
-
-        // Tell the OS about our frame rate to allow it to adapt the display refresh rate appropriately
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            // We want to change frame rate even if it's not seamless, since prepareDisplayForRendering()
-            // will not set the display mode on S+ if it only differs by the refresh rate. It depends
-            // on us to trigger the frame rate switch here.
-            holder.getSurface().setFrameRate(desiredFrameRate,
-                    Surface.FRAME_RATE_COMPATIBILITY_FIXED_SOURCE,
-                    Surface.CHANGE_FRAME_RATE_ALWAYS);
-        }
-        else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            holder.getSurface().setFrameRate(desiredFrameRate,
-                    Surface.FRAME_RATE_COMPATIBILITY_FIXED_SOURCE);
-        }
-
-        // Disable producer throttling on the underlying surface for reduced latency
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN) {
-            holder.getSurface().setProducerThrottlingEnabled(false);
-        }
+        surfaceController.onSurfaceCreated(holder, StreamDisplayPlanner.surfaceFrameRate(desiredRefreshRate,
+                prefConfig.fps, prefConfig.framePacing, prefConfig.reduceRefreshRate));
     }
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
-        if (!surfaceCreated) {
-            throw new IllegalStateException("Surface destroyed before creation!");
-        }
-
-        if (attemptedConnection) {
-            // Let the decoder know immediately that the surface is gone
-            decoderRenderer.prepareForStop();
-
-            if (connected) {
-                stopConnection();
-            }
-        }
+        surfaceController.onSurfaceDestroyed();
     }
 
     @Override
@@ -3403,83 +3378,9 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         inputBlocked = true;
     }
 
-    // Delos: the stream's picture, which the portal back into the new UI zooms into a little
-    public View getStreamSurface() {
-        return streamContainer != null ? streamContainer.getSurfaceView() : null;
-    }
-
     // Delos: the stream menu shows which of its toggles are on
     public PreferenceConfiguration getPrefConfig() {
         return prefConfig;
-    }
-
-    // Delos: SGSR on 8-bit output draws into window-sized buffers, while onCreate sized the surface for the
-    // requested HDR. The decoder calls this from its setup thread when the host settled on 8-bit, before it
-    // creates the SGSR stage; it returns once the surface has its new size (or after a short wait).
-    public void useLayoutSizedStreamSurface() {
-        final java.util.concurrent.CountDownLatch resized = new java.util.concurrent.CountDownLatch(1);
-        runOnUiThread(() -> {
-            try {
-                if (streamContainer != null) streamContainer.getSurfaceView().getHolder().setSizeFromLayout();
-            } catch (Throwable t) {
-                LimeLog.warning("SurfaceView setSizeFromLayout failed: " + t);
-            } finally {
-                resized.countDown();
-            }
-        });
-        try {
-            resized.await(1, java.util.concurrent.TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-    }
-
-    // Delos: the stream's own size as the SurfaceView's buffer size
-    private int streamSurfaceWidth() {
-        return (prefConfig != null && prefConfig.width > 0) ? prefConfig.width : displayWidth;
-    }
-
-    private int streamSurfaceHeight() {
-        return (prefConfig != null && prefConfig.height > 0) ? prefConfig.height : displayHeight;
-    }
-
-    // Delos: an upscaler on 8-bit output draws into window-sized buffers, so a scaling mode needs the surface at
-    // the layout's size, but Sharpen only draws at the stream's own size and must not enlarge it (the pass would
-    // then cost the display's pixels instead of the stream's). 10-bit output has its own layer and is unaffected.
-    private void sizeStreamSurfaceForUpscaler(UpscalerMode mode) {
-        if (streamContainer == null ||
-                (decoderRenderer.getActiveVideoFormat() & MoonBridge.VIDEO_FORMAT_MASK_10BIT) != 0) return;
-        SurfaceHolder holder = streamContainer.getSurfaceView().getHolder();
-        if (mode.scales()) holder.setSizeFromLayout();
-        else holder.setFixedSize(streamSurfaceWidth(), streamSurfaceHeight());
-    }
-
-    // Delos: live stream-menu controls; only the local decoder changes output, not the connection.
-    public void setUpscalingEnabled(boolean enabled) {
-        if (enabled) sizeStreamSurfaceForUpscaler(prefConfig.sgsrMode);
-        decoderRenderer.setUpscalingEnabled(enabled);
-    }
-    public boolean isUpscalingRequested() { return decoderRenderer.isUpscalingRequested(); }
-    public boolean isPyroWave() { return decoderRenderer.isPyroWave(); }
-
-    /** Delos: the PyroWave link monitor of the running decoder, null before the decoder exists. */
-    public com.limelight.shell.link.LinkMonitor getLinkMonitor() {
-        return decoderRenderer != null ? decoderRenderer.getLinkMonitor() : null;
-    }
-    public void setUpscalingMode(int mode) {
-        // The surface first: the renderer is rebuilt on it when the mode changes between scaling and not
-        if (decoderRenderer.isUpscalingRequested()) sizeStreamSurfaceForUpscaler(UpscalerMode.fromIndex(mode));
-        decoderRenderer.setUpscalingMode(mode);
-    }
-    public String getUpscalingStatus() { return decoderRenderer.getUpscalingStatus(); }
-    public void setUpscalingSharpness(int value) { decoderRenderer.setUpscalingSharpness(value); }
-    public boolean isSupersamplingMode() { return decoderRenderer.isSupersamplingMode(); }
-    public int getSupersamplingLevel() { return decoderRenderer.getSupersamplingLevel(); }
-    public void setSupersamplingLevel(int level) { decoderRenderer.setSupersamplingLevel(level); }
-
-    /** Actual frame presentation, not merely completion of the network handshake. */
-    public boolean isLaunchFrameReady() {
-        return decoderRenderer != null && decoderRenderer.hasPresentedFrame();
     }
 
     public String getLaunchStreamParameters() {
@@ -3489,28 +3390,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         int height = decoderRenderer != null && decoderRenderer.getStreamHeight() > 0
                 ? decoderRenderer.getStreamHeight() : prefConfig.height;
         return StreamLoader.parameters(prefConfig, format, width, height);
-    }
-
-    public void setLaunchArrivalProgress(float progress) {
-        if (decoderRenderer != null) decoderRenderer.setLaunchArrivalProgress(progress);
-    }
-
-    public boolean isLaunchArrivalReady() {
-        return decoderRenderer != null && decoderRenderer.isLaunchArrivalReady();
-    }
-
-    public boolean isLaunchArrivalComplete() {
-        return decoderRenderer == null || decoderRenderer.isLaunchArrivalComplete();
-    }
-
-    public String getLaunchArrivalError() {
-        return decoderRenderer != null ? decoderRenderer.getLaunchArrivalError() : null;
-    }
-
-    /** Preserve the live game on a graphics-path failure, but never hide a missing arrival effect. */
-    public void reportLaunchArrivalError(String error) {
-        LimeLog.warning("Launch image effect unavailable: " + error);
-        setLaunchArrivalProgress(-1f);
     }
 
     public boolean isStreamMenuOpen() {
@@ -3582,19 +3461,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             commitTextSender.sendBackspaces(keyboardTranslator.translate(KeyEvent.KEYCODE_DEL, 0, -1), beforeLength);
         }
         return true;
-    }
-
-    /** Recursive helper that finds the first SurfaceView in the current layout */
-    private SurfaceView findFirstSurfaceViewFrom(View v) {
-        if (v instanceof SurfaceView) return (SurfaceView) v;
-        if (v instanceof ViewGroup) {
-            ViewGroup g = (ViewGroup) v;
-            for (int i = 0; i < g.getChildCount(); i++) {
-                SurfaceView found = findFirstSurfaceViewFrom(g.getChildAt(i));
-                if (found != null) return found;
-            }
-        }
-        return null;
     }
 
 }

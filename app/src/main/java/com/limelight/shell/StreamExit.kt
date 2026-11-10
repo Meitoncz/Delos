@@ -147,7 +147,7 @@ object StreamExit {
         shown.value = portal
         feedback.play(Cue.OPEN)
         // The stream behind zooms in a little, fast at first and then easing out
-        if (!appearance.reducedMotion) game.streamSurface?.let { s ->
+        if (!appearance.reducedMotion) game.surfaceController.streamSurface?.let { s ->
             s.pivotX = s.width / 2f
             s.pivotY = s.height / 2f
             s.animate().scaleX(s.scaleX * ZOOM).scaleY(s.scaleY * ZOOM).setDuration(2400).setInterpolator(PathInterpolator(.16f, 1f, .3f, 1f)).start()

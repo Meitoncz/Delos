@@ -333,9 +333,12 @@ class StreamMenu(private val game: Game) {
     private val autoSaveTick = Runnable { autoSave.tick(); scheduleAutoSave() }
     private val autoSave = MenuAutoSave(MenuAutoSave.DELAY_MS, android.os.SystemClock::uptimeMillis, ::liveValues) { saveTarget?.save(it) }
 
+    /** The live upscaler and supersampling controls of the running stream. */
+    private val upscaler get() = game.surfaceController
+
     /** The live value of [setting] as the stream has it now (read when written, so the last change wins). */
     private fun liveValues(setting: MenuSavedSetting): Map<String, Any> = when (setting) {
-        MenuSavedSetting.UPSCALER -> upscalerSaveValues(game.isUpscalingRequested, game.prefConfig.sgsrMode.index(), game.prefConfig.sgsrSharpness, game.supersamplingLevel)
+        MenuSavedSetting.UPSCALER -> upscalerSaveValues(upscaler.isUpscalingRequested, game.prefConfig.sgsrMode.index(), game.prefConfig.sgsrSharpness, upscaler.supersamplingLevel)
         MenuSavedSetting.GYRO_SMOOTHING -> gyroSmoothingSaveValues(game.prefConfig.gyroSmoothing)
     }
 
@@ -403,7 +406,7 @@ class StreamMenu(private val game: Game) {
         // only once a test exists: testing happens in Settings, before connecting.
         override val linkGuidance: LinkGuidance? get() {
             val codec = when {
-                game.isPyroWave -> LinkCodec.PYROWAVE
+                upscaler.isPyroWave -> LinkCodec.PYROWAVE
                 else -> when (prefs.videoFormat) {
                     PreferenceConfiguration.FormatOption.FORCE_AV1 -> LinkCodec.AV1
                     PreferenceConfiguration.FormatOption.FORCE_HEVC -> LinkCodec.HEVC
@@ -414,21 +417,21 @@ class StreamMenu(private val game: Game) {
             val format = linkFormat(codec, prefs.width, prefs.height, Math.round(prefs.fps), prefs.enableHdr, prefs.pyroWaveChroma444) ?: return null
             val tested = pcUuid?.let { linkTests.get(it, currentTransport(game)) }
             if (codec != LinkCodec.PYROWAVE && tested == null) return null
-            return linkGuidance(format, PyroWaveHostInfo.NONE, tested, if (codec == LinkCodec.PYROWAVE) game.linkMonitor?.hint() else null)
+            return linkGuidance(format, PyroWaveHostInfo.NONE, tested, if (codec == LinkCodec.PYROWAVE) upscaler.linkMonitor?.hint() else null)
         }
 
-        override val upscalerAvailable get() = game.isPyroWave || com.limelight.binding.video.SgsrRenderer.isSupported(game)
-        override val upscalerRequested get() = game.isUpscalingRequested
-        override val upscalerStatus get() = game.upscalingStatus
-        override val supersamplingMode get() = game.isSupersamplingMode
-        override val supersamplingLevel get() = game.supersamplingLevel
+        override val upscalerAvailable get() = upscaler.isPyroWave || com.limelight.binding.video.SgsrRenderer.isSupported(game)
+        override val upscalerRequested get() = upscaler.isUpscalingRequested
+        override val upscalerStatus get() = upscaler.upscalingStatus
+        override val supersamplingMode get() = upscaler.isSupersamplingMode
+        override val supersamplingLevel get() = upscaler.supersamplingLevel
         override val upscalerMode get() = prefs.sgsrMode.index()
         override val upscalerSharpness get() = prefs.sgsrSharpness
         // Every change applies live and is kept for this game (MenuAutoSave); the profile is never written from the menu
-        override fun setUpscalingEnabled(on: Boolean) { game.setUpscalingEnabled(on); upscalerChanged() }
-        override fun setUpscalingMode(mode: Int) { game.setUpscalingMode(mode); upscalerChanged() }
-        override fun setUpscalingSharpness(percent: Int) { game.setUpscalingSharpness(percent); upscalerChanged() }
-        override fun setSupersamplingLevel(level: Int) { game.setSupersamplingLevel(level); upscalerChanged() }
+        override fun setUpscalingEnabled(on: Boolean) { upscaler.setUpscalingEnabled(on); upscalerChanged() }
+        override fun setUpscalingMode(mode: Int) { upscaler.setUpscalingMode(mode); upscalerChanged() }
+        override fun setUpscalingSharpness(percent: Int) { upscaler.setUpscalingSharpness(percent); upscalerChanged() }
+        override fun setSupersamplingLevel(level: Int) { upscaler.setSupersamplingLevel(level); upscalerChanged() }
         private fun upscalerChanged() = this@StreamMenu.menuSettingChanged(MenuSavedSetting.UPSCALER)
 
         override fun sendClipboard() { game.sendClipboard(true) }

@@ -64,6 +64,8 @@ class StreamLoader private constructor(
     private val changes = Channel<Unit>(Channel.CONFLATED)
     private val target = mutableFloatStateOf(LaunchHandoff.progress)
     private val streaming = mutableStateOf(false)
+    /** The decoder side of the launch arrival. */
+    private val arrival get() = activity.surfaceController
     private val parameters = mutableStateOf(initialParameters)
     private val origin = LaunchHandoff.startedAt
     private var removed = false
@@ -92,7 +94,7 @@ class StreamLoader private constructor(
         if (removed) return
         removed = true
         changes.close()
-        activity.setLaunchArrivalProgress(-1f)
+        arrival.setLaunchArrivalProgress(-1f)
         // One launch, one handoff: nothing of it may start the next launch (a shortcut launch has no shell overlay)
         if (LaunchHandoff.startedAt == origin) LaunchHandoff.reset()
     }
@@ -235,7 +237,7 @@ class StreamLoader private constructor(
                 if (!streaming || !drained) return@LaunchedEffect
                 // Bounded: a decoder that never reports a rendered frame must not leave the tunnel up for ever
                 withTimeoutOrNull(FRAME_WAIT_MS) {
-                    while (!loader.activity.isFinishing && !loader.activity.isLaunchFrameReady) delay(16)
+                    while (!loader.activity.isFinishing && !loader.arrival.isLaunchFrameReady) delay(16)
                 }
                 if (loader.activity.isFinishing) return@LaunchedEffect
                 loader.parameters.value = loader.activity.launchStreamParameters
@@ -245,17 +247,17 @@ class StreamLoader private constructor(
                 opening.animateTo(LaunchArrival.READY_CHECK_AT,
                     tween(if (reducedMotion) (HyperspaceConfig.REDUCED_OPENING_MS * LaunchArrival.READY_CHECK_AT).toInt() else firstLegMs,
                         easing = LinearEasing)) {
-                    if (effectAvailable && LaunchArrival.shouldActivate(value)) loader.activity.setLaunchArrivalProgress(value)
+                    if (effectAvailable && LaunchArrival.shouldActivate(value)) loader.arrival.setLaunchArrivalProgress(value)
                 }
                 if (effectAvailable) {
                     val ready = withTimeoutOrNull(LaunchArrival.READY_WAIT_MS) {
-                        while (!loader.activity.isFinishing && !loader.activity.isLaunchArrivalReady &&
-                            loader.activity.launchArrivalError == null) delay(16)
-                        !loader.activity.isFinishing && loader.activity.isLaunchArrivalReady
+                        while (!loader.activity.isFinishing && !loader.arrival.isLaunchArrivalReady &&
+                            loader.arrival.launchArrivalError == null) delay(16)
+                        !loader.activity.isFinishing && loader.arrival.isLaunchArrivalReady
                     } == true
                     if (loader.activity.isFinishing) return@LaunchedEffect
                     if (!ready) {
-                        loader.activity.reportLaunchArrivalError(loader.activity.launchArrivalError ?: "Arrival preparation timed out")
+                        loader.arrival.reportLaunchArrivalError(loader.arrival.launchArrivalError ?: "Arrival preparation timed out")
                         effectAvailable = false
                     }
                 }
@@ -263,17 +265,17 @@ class StreamLoader private constructor(
                     tween(if (reducedMotion) HyperspaceConfig.REDUCED_OPENING_MS -
                         (HyperspaceConfig.REDUCED_OPENING_MS * LaunchArrival.READY_CHECK_AT).toInt()
                         else HyperspaceConfig.OPENING_MS - firstLegMs, easing = LinearEasing)) {
-                    if (effectAvailable) loader.activity.setLaunchArrivalProgress(value)
+                    if (effectAvailable) loader.arrival.setLaunchArrivalProgress(value)
                 }
                 if (effectAvailable) {
-                    loader.activity.setLaunchArrivalProgress(1f)
+                    loader.arrival.setLaunchArrivalProgress(1f)
                     val complete = withTimeoutOrNull(LaunchArrival.COMPLETE_WAIT_MS) {
-                        while (!loader.activity.isFinishing && !loader.activity.isLaunchArrivalComplete &&
-                            loader.activity.launchArrivalError == null) delay(16)
-                        !loader.activity.isFinishing && loader.activity.isLaunchArrivalComplete
+                        while (!loader.activity.isFinishing && !loader.arrival.isLaunchArrivalComplete &&
+                            loader.arrival.launchArrivalError == null) delay(16)
+                        !loader.activity.isFinishing && loader.arrival.isLaunchArrivalComplete
                     } == true
                     if (!complete && !loader.activity.isFinishing) {
-                        loader.activity.reportLaunchArrivalError(loader.activity.launchArrivalError ?: "Arrival handover timed out")
+                        loader.arrival.reportLaunchArrivalError(loader.arrival.launchArrivalError ?: "Arrival handover timed out")
                     }
                 }
                 loader.remove()

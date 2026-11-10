@@ -867,7 +867,13 @@ These preserve implementation/design context from the removed UI plan, not phase
   `binding/video/StreamDisplayPlanner` (pure: display mode, refresh rate, Cap FPS pacing adjustment,
   aspect ratio and the surface frame rate from plain display and preference data; `Game` reads the
   `Display` before the `StreamConfiguration` is built and applies the plan to the window and
-  `StreamContainer`) and `ui/StreamWindowController` (requested orientation, picture-in-picture
+  `StreamContainer`), `ui/StreamWindowController` (requested orientation, picture-in-picture
   auto-enter and parameters, hiding the overlays and sensors in PiP, multi-window and the immersive
   system UI; `Game` forwards the Activity callbacks and the USB permission prompt's PiP suppression
-  to it and provides a `Host` with the views and on-screen controls).
+  to it and provides a `Host` with the views and on-screen controls) and
+  `binding/video/StreamSurfaceController` (the stream surface's buffer size for the upscaler, the
+  decoder side of the surface callbacks, the live upscaler and supersampling controls and the launch
+  arrival's decoder link; `Game` forwards the `StreamContainer` callbacks and starts and stops the
+  connection through its `Host`; `StreamMenu`, `StreamLoader` and `StreamExit` call it via
+  `Game.getSurfaceController()`). The renderers reach the surface through the narrow
+  `StreamSurfaceHost` interface, not the activity.
