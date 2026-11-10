@@ -247,7 +247,7 @@ class PcRepository(context: Context, private val settings: () -> SharedPreferenc
             parsedApps = NvHTTP.getAppListByReader(StringReader(raw))
             rawApps = raw
         } catch (e: Exception) {
-            LimeLog.warning("New UI: unreadable app list: $e")
+            LimeLog.warning("New UI: unreadable app list: $e") // l10n-ignore
         }
     }
 

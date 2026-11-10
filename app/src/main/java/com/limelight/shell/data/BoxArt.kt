@@ -62,7 +62,7 @@ class BoxArtCache(context: Context, private val uniqueId: () -> String?) {
             }
             decode(file)
         } catch (e: Exception) {
-            LimeLog.info("New UI: no box art for ${app.name}: $e")
+            LimeLog.info("New UI: no box art for ${app.name}: $e") // l10n-ignore
             file.delete()
             null
         }

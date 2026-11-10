@@ -42,7 +42,7 @@ internal object AvatarImages {
             val bitmap = context.assets.open("$DIRECTORY/$asset").use { BitmapFactory.decodeStream(it) }
             bitmap?.asImageBitmap()?.also { memory.put(asset, it) }
         } catch (e: Exception) {
-            LimeLog.warning("New UI: no avatar image $asset: $e")
+            LimeLog.warning("New UI: no avatar image $asset: $e") // l10n-ignore
             null
         }
     }
@@ -108,7 +108,7 @@ internal object AvatarGradients {
             val result = try {
                 parse(context.assets.open(FILE).use { it.readBytes().toString(Charsets.UTF_8) })
             } catch (e: Exception) {
-                LimeLog.warning("New UI: no avatar colors: $e")
+                LimeLog.warning("New UI: no avatar colors: $e") // l10n-ignore
                 emptyMap()
             }
             loaded = result

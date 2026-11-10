@@ -112,8 +112,8 @@ class PcGamingWikiClient internal constructor(
         // One Steam ID can point at several pages/editions. Never arbitrarily take the first.
         return try {
             rows.map { it.asJsonObject.getAsJsonObject("title") }
-                .filter { !withoutSteamId || it.get("Steam")?.takeIf { steam -> steam.isJsonPrimitive }?.asString.isNullOrBlank() }
-                .map { it.get("Page").asString }.distinct()
+                .filter { !withoutSteamId || it.get("Steam")?.takeIf { steam -> steam.isJsonPrimitive }?.asString.isNullOrBlank() } // l10n-ignore
+                .map { it.get("Page").asString }.distinct() // l10n-ignore
         } catch (_: RuntimeException) {
             throw PcGamingWikiException("PCGamingWiki returned invalid Cargo rows")
         }
@@ -123,7 +123,7 @@ class PcGamingWikiClient internal constructor(
         val url = MetadataProxy.url(baseUrl, path, *parameters)
             ?: throw PcGamingWikiException("PCGamingWiki metadata service is not configured")
         pacer.await()
-        val request = Request.Builder().url(url).header("Accept", "application/json").get().build()
+        val request = Request.Builder().url(url).header("Accept", "application/json").get().build() // l10n-ignore
         http.newCall(request).execute().use { response ->
             if (!response.isSuccessful) throw PcGamingWikiException("PCGamingWiki HTTP ${response.code}")
             val json = try {
