@@ -161,7 +161,7 @@
     <string name="dialog_title_osc_opacity">Deckkraft ändern</string>
     <string name="suffix_osc_opacity">%</string>
 
-    <string name="category_ui_settings">Oberflächeneinstellungen</string>
+    <string name="category_ui_settings">UI-Einstellungen</string>
     <string name="title_checkbox_enable_pip">Bild-in-Bild-Beobachtermodus aktivieren</string>
     <string name="summary_checkbox_enable_pip">Erlaubt es, den Stream beim Multitasking anzusehen (aber nicht zu steuern)</string>
     <string name="title_language_list">Sprache</string>

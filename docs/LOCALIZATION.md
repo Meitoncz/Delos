@@ -417,3 +417,28 @@ in `ui/SteamTags.kt`, which stage 1 decides on separately, and some developer me
 | `screens/OscPreviewScreen.kt` | 1 |
 | `ui/DialogLayer.kt` | 1 |
 | **Total** | **1605** |
+
+## Terminology: German
+
+Informal *du*; nouns capitalized; hyphenated compounds with brands (*Delos-App*, *Vibepollo-Weboberfläche*). English gamer terms stay where the glossary says so.
+
+| English | German |
+|---|---|
+| pair / unpair | koppeln / Kopplung aufheben |
+| stream (noun) | Stream |
+| library | Bibliothek |
+| profile | Profil |
+| gamepad / controller | Gamepad (legacy settings) / Controller |
+| rumble | Rumble (technical settings), Vibration (UI) |
+| cover / wide cover / background | Cover / breites Cover / Hintergrund |
+| artwork, metadata | Artwork, Metadaten |
+| settings, device(s) | Einstellungen, Gerät(e) |
+| appearance (tab) | Design |
+| about (tab) | Über |
+| on-screen controls | Bildschirmsteuerung |
+| metered network | getaktetes Netzwerk |
+| link (network) / link test | Verbindung / Verbindungstest |
+| sharpness / sharpen only | Schärfe / Nur schärfen |
+| Apply / Resume / Disconnect | Anwenden / Fortsetzen / Trennen |
+| custom | Eigene(r/s) |
+| web UI | Weboberfläche |

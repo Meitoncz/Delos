@@ -123,7 +123,7 @@
     <string name="settings_native_sgdb_key_note">Kostenlos auf steamgriddb.com: anmelden, dann Preferences → API. Leer lassen, um SteamGridDB nicht mehr zu nutzen.</string>
     <string name="settings_native_sgdb_key_placeholder">API-Schlüssel</string>
     <string name="settings_native_sgdb_key_save">Speichern</string>
-    <string name="settings_native_sgdb_key_saved_toast">API-Schlüssel gespeichert</string>
+    <string name="settings_native_sgdb_key_saved_toast">Schlüssel gespeichert</string>
     <string name="settings_native_sgdb_off_toast">SteamGridDB ist aus</string>
     <string name="settings_native_sgdb_key_description">Mit deinem eigenen Schlüssel kann Delos Cover, breite Cover, Hintergründe und Logos von SteamGridDB laden. Wird für alle Profile auf diesem Gerät gespeichert.</string>
     <string name="settings_native_sgdb_auto_title">Automatisch laden</string>
