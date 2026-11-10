@@ -11,4 +11,15 @@
     <string name="shell_game_unreachable">Não foi possível acessar %1$s</string>
     <string name="shell_game_virtual_display_missing">A tela virtual não está pronta em %1$s · transmitindo a tela principal</string>
     <string name="shell_game_quitting">Saindo de %1$s…</string>
+
+    <!-- The small word above a toast: the kind of the message. Written in capitals where the script has them -->
+    <string name="toast_kind_info">INFO</string>
+    <string name="toast_kind_success">PRONTO</string>
+    <string name="toast_kind_warning">AVISO</string>
+    <string name="toast_kind_error">ERRO</string>
+    <string name="toast_kind_action">DESFAZER</string>
+    <!-- Screen-reader text of a toast. %1$s: the kind word, %2$s: the message -->
+    <string name="toast_description">%1$s. %2$s</string>
+    <!-- %1$s: the kind word, %2$s: the message, %3$s: the label of the toast's action button -->
+    <string name="toast_description_action">%1$s. %2$s. %3$s</string>
 </resources>

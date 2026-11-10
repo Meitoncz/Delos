@@ -1,5 +1,6 @@
 package com.limelight.shell.ui
 
+import com.limelight.R
 import com.limelight.utils.ToastKind
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -31,7 +32,10 @@ class ToastLogicTest {
 
     @Test
     fun everyKindHasItsOwnWordAndIcon() {
-        assertEquals(listOf("INFO", "DONE", "WARNING", "ERROR", "UNDO"), ToastKind.entries.map { it.word })
+        assertEquals(
+            listOf(R.string.toast_kind_info, R.string.toast_kind_success, R.string.toast_kind_warning, R.string.toast_kind_error, R.string.toast_kind_action),
+            ToastKind.entries.map { it.wordRes },
+        )
         assertEquals(ToastKind.entries.size, ToastKind.entries.map { it.defaultIcon }.toSet().size)
     }
 

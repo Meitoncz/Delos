@@ -11,4 +11,15 @@
     <string name="shell_game_unreachable">无法连接到 %1$s</string>
     <string name="shell_game_virtual_display_missing">%1$s 上的虚拟显示器尚未就绪 · 正在串流主显示器</string>
     <string name="shell_game_quitting">正在退出 %1$s…</string>
+
+    <!-- The small word above a toast: the kind of the message. Written in capitals where the script has them -->
+    <string name="toast_kind_info">提示</string>
+    <string name="toast_kind_success">完成</string>
+    <string name="toast_kind_warning">警告</string>
+    <string name="toast_kind_error">错误</string>
+    <string name="toast_kind_action">撤销</string>
+    <!-- Screen-reader text of a toast. %1$s: the kind word, %2$s: the message -->
+    <string name="toast_description">%1$s。%2$s</string>
+    <!-- %1$s: the kind word, %2$s: the message, %3$s: the label of the toast's action button -->
+    <string name="toast_description_action">%1$s。%2$s。%3$s</string>
 </resources>

@@ -1,5 +1,7 @@
 package com.limelight.shell.ui
 
+import androidx.annotation.StringRes
+import com.limelight.R
 import com.limelight.utils.ToastKind
 import kotlin.math.cos
 import kotlin.math.exp
@@ -10,14 +12,14 @@ import kotlin.math.sqrt
 /** A toast shows at most this many lines of text, then an ellipsis (no marquee: a toast is never focused). */
 const val TOAST_MAX_LINES = 2
 
-/** The word above the text of the toast. */
-val ToastKind.word: String
-    get() = when (this) {
-        ToastKind.INFO -> "INFO"
-        ToastKind.SUCCESS -> "DONE"
-        ToastKind.WARNING -> "WARNING"
-        ToastKind.ERROR -> "ERROR"
-        ToastKind.ACTION -> "UNDO"
+/** The string of the word above the text of the toast. */
+val ToastKind.wordRes: Int
+    @StringRes get() = when (this) {
+        ToastKind.INFO -> R.string.toast_kind_info
+        ToastKind.SUCCESS -> R.string.toast_kind_success
+        ToastKind.WARNING -> R.string.toast_kind_warning
+        ToastKind.ERROR -> R.string.toast_kind_error
+        ToastKind.ACTION -> R.string.toast_kind_action
     }
 
 /** The icon of a toast that brings none of its own. */

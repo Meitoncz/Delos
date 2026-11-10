@@ -62,6 +62,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.limelight.R
 import com.limelight.shell.Toast
 import com.limelight.utils.ToastKind
 import kotlinx.coroutines.delay
@@ -230,7 +232,9 @@ private fun ToastCard(
     fun leaving(): Float = Motion.progress((clock.longValue - slot.exitMs).toFloat(), 0, Motion.EXIT, Motion.In)
     fun opacity(age: Float): Float = Motion.progress(age, 0, Motion.FADE, Motion.Ease) * (1f - leaving())
 
-    val description = remember(toast) { "${kind.word.lowercase()}. ${toast.text}" + (action?.let { ". ${it.label}" } ?: "") }
+    val kindWord = stringResource(kind.wordRes)
+    val description = action?.let { stringResource(R.string.toast_description_action, kindWord, toast.text, it.label) }
+        ?: stringResource(R.string.toast_description, kindWord, toast.text)
     val live = if (kind == ToastKind.ERROR) LiveRegionMode.Assertive else LiveRegionMode.Polite
 
     Box(
@@ -326,7 +330,7 @@ private fun ToastCard(
                 horizontalArrangement = Arrangement.spacedBy(m.dp(22f)),
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(m.dp(3f))) {
-                    BasicText(kind.word, style = eyebrowStyle, modifier = Modifier.rising(slot, clock, m, reduced, ToastTiming.ROW_AT))
+                    BasicText(kindWord, style = eyebrowStyle, modifier = Modifier.rising(slot, clock, m, reduced, ToastTiming.ROW_AT))
                     BasicText(
                         toast.text, style = textStyle,
                         modifier = Modifier.width(with(density) { textWidthPx.toDp() }).rising(slot, clock, m, reduced, ToastTiming.ROW_AT + Motion.STAGGER_ROW),
