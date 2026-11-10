@@ -74,6 +74,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.em
 import com.limelight.shell.ContextMenu
+import com.limelight.shell.HeaderTint
 import com.limelight.shell.MenuHeader
 import com.limelight.shell.MenuItem
 import com.limelight.shell.drawBoxShadow
@@ -447,16 +448,29 @@ private fun Header(menu: ContextMenu, parent: MenuItem?, submenu: Boolean, onBac
                     contentAlignment = Alignment.Center,
                 ) { Symbol(Symbols.CHEVRON_LEFT, 28.tpx, colors.text) }
             } else if (header != null) {
-                // The game's main color with a controller on it (the dark or the white glyph, whichever reads better)
-                val fill = header.tint ?: colors.accent
+                // The game's main color with a controller on it (the dark or the white glyph, whichever reads better). A color still
+                // being worked out shows the neutral chip and fades in once; a known one is there from the first frame
+                val tint = header.tint()
+                val known = when (tint) {
+                    is HeaderTint.Game -> tint.color
+                    HeaderTint.Accent -> colors.accent
+                    HeaderTint.Pending -> null
+                }
+                // A cover that arrives while the menu is open keeps the placeholder's color until its own is worked out
+                val held = remember { mutableStateOf(known) }
+                SideEffect { if (known != null) held.value = known }
+                val solid = known ?: held.value
+                val fade = tween<Color>(Motion.FADE, easing = Motion.Ease)
+                val fill by animateColorAsState(solid?.copy(alpha = .85f) ?: Color.White.copy(alpha = .10f), fade, label = "headerTint")
+                val glyph by animateColorAsState(solid?.let(::onColor) ?: colors.text, fade, label = "headerGlyph")
                 val shape = RoundedCornerShape(14.px)
                 Box(
                     Modifier.size(width = 52.px, height = 78.px).clip(shape)
-                        .background(fill.copy(alpha = .85f))
+                        .background(fill)
                         .background(Brush.verticalGradient(0f to Color.White.copy(alpha = .22f), .6f to Color.Transparent))
                         .border(1.px, Color.White.copy(alpha = .16f), shape),
                     contentAlignment = Alignment.Center,
-                ) { Symbol(Symbols.SPORTS_ESPORTS, 34.tpx, onColor(fill), filled = true) }
+                ) { Symbol(Symbols.SPORTS_ESPORTS, 34.tpx, glyph, filled = true) }
             }
             Column(Modifier.weight(1f)) {
                 if (eyebrow != null) {

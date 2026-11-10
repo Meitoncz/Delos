@@ -118,7 +118,7 @@ fun Backdrop(appearance: Appearance, colors: DelosColors, hero: GameArt?, modifi
         val matching = heroOn && appearance.matchGameColors
         // The game's colors come from its cover (the game background's while the cover's are unknown)
         val known = matching && (HeroBitmaps.coverKnown(hero.id) || HeroBitmaps.huesKnown(hero.id))
-        val gameHues = if (!matching) null else if (HeroBitmaps.coverKnown(hero.id)) HeroBitmaps.coverHues(hero.id) else HeroBitmaps.hues(hero.id)
+        val gameHues = if (matching) HeroBitmaps.gameColors(hero.id) else null
         AnimatedBackground(
             appearance, colors, gameHues = gameHues,
             // A game whose colors are not worked out yet keeps the previous game's, so nothing flashes in between

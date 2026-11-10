@@ -143,27 +143,34 @@ object HeroBitmaps {
     /** Whether [key]'s colors have been worked out yet (they may be null: a grey image). */
     fun huesKnown(key: String): Boolean = key in hues
 
-    /** The three main hues of each game's cover, for the animated background (null: grey). */
-    private val coverHues = mutableStateMapOf<String, GameColors?>()
-    private val coverSources = HashMap<String, Int>()
+    /** The three main hues of each game's cover (null: grey), from every cover the dashboard has decoded. */
+    private val covers = CoverColorCache()
 
     /** The three main hues of [key]'s cover (main, secondary, accent); null while unknown or grey. */
-    fun coverHues(key: String): GameColors? = coverHues[key]
+    fun coverHues(key: String): GameColors? = covers.get(key)
 
-    fun coverKnown(key: String): Boolean = key in coverHues
+    fun coverKnown(key: String): Boolean = covers.known(key)
 
-    /** Works out the main hues of [key]'s [cover] (once per image); call off the main thread. */
+    /** The colors the interface takes from [key]: its cover's, the game background's while those are unknown; null while unknown or grey. */
+    fun gameColors(key: String): GameColors? = if (covers.known(key)) covers.get(key) else hues[key]
+
+    /**
+     * Works out the main hues of [key]'s [cover] (once per image); call off the main thread, as soon as the cover is decoded,
+     * so the colors are there before anything asks for them.
+     */
     fun analyzeCover(key: String, cover: ImageBitmap) {
         val sourceId = System.identityHashCode(cover)
-        if (synchronized(coverSources) { coverSources.put(key, sourceId) == sourceId }) return
-        val src = cover.asAndroidBitmap()
-        val readable = if (src.config == Bitmap.Config.HARDWARE) src.copy(Bitmap.Config.ARGB_8888, false) else src
-        val small = Bitmap.createScaledBitmap(readable, 120, (120f * src.height / src.width.coerceAtLeast(1)).toInt().coerceIn(1, 360), true)
-        val pixels = IntArray(small.width * small.height)
-        small.getPixels(pixels, 0, small.width, 0, 0, small.width, small.height)
+        if (!covers.claim(key, sourceId)) return
         // A failure here only costs the game its colors (the palette's stay), never the app
-        val result = runCatching { dominantHues(pixels) }.onFailure { com.limelight.LimeLog.warning("Cover colors $key: $it") }.getOrNull()
-        android.os.Handler(android.os.Looper.getMainLooper()).post { coverHues[key] = result }
+        val result = runCatching {
+            val src = cover.asAndroidBitmap()
+            val readable = if (src.config == Bitmap.Config.HARDWARE) src.copy(Bitmap.Config.ARGB_8888, false) else src
+            val small = Bitmap.createScaledBitmap(readable, 120, (120f * src.height / src.width.coerceAtLeast(1)).toInt().coerceIn(1, 360), true)
+            val pixels = IntArray(small.width * small.height)
+            small.getPixels(pixels, 0, small.width, 0, 0, small.width, small.height)
+            dominantHues(pixels)
+        }.onFailure { com.limelight.LimeLog.warning("Cover colors $key: $it") }.getOrNull()
+        android.os.Handler(android.os.Looper.getMainLooper()).post { covers.store(key, sourceId, result) }
     }
 
     /** The background rendered last for [key] (whatever the blur), e.g. for the launch scene. */

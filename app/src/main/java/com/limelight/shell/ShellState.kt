@@ -104,12 +104,25 @@ data class MenuItem(
     val action: () -> Unit = {},
 )
 
+/** The color of a menu header's icon tile. */
+sealed interface HeaderTint {
+    /** The theme's accent. */
+    data object Accent : HeaderTint
+
+    /** The game's main color is still being worked out: a neutral tile, which takes the color when it arrives. */
+    data object Pending : HeaderTint
+
+    /** The game's main [color]. */
+    data class Game(val color: Color) : HeaderTint
+}
+
 /**
- * What a menu says about its subject above the [ContextMenu.title]: an icon tile in the game's main color ([tint], the theme's accent when null), a [status] line (a green dot
+ * What a menu says about its subject above the [ContextMenu.title]: an icon tile in the game's main color ([tint], read while
+ * the menu is shown, so a color worked out after it opened still reaches it), a [status] line (a green dot
  * before it while [running]) and one line of [meta]. Menus without a header show just the title.
  */
 @Immutable
-data class MenuHeader(val status: String, val tint: Color? = null, val running: Boolean = false, val meta: String? = null)
+data class MenuHeader(val status: String, val tint: () -> HeaderTint = { HeaderTint.Accent }, val running: Boolean = false, val meta: String? = null)
 
 /**
  * A context menu (right menu button / Start) for the focused element. With [below] the card opens under the
