@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Profile screen, profile menu and the profile name dialog -->
+    <plurals name="profile_signed_in">
+        <!-- %1$s: device model, %2$d: number of profiles -->
+        <item quantity="one">Auf diesem %1$s angemeldet · %2$d Profil</item>
+        <item quantity="other">Auf diesem %1$s angemeldet · %2$d Profile</item>
+    </plurals>
+    <string name="profile_change_avatar">Avatar ändern</string>
+    <string name="profile_rename">Umbenennen</string>
+    <string name="profile_switch">Profil wechseln</string>
+    <string name="profile_add">Profil hinzufügen</string>
+    <string name="profile_delete">Profil löschen</string>
+    <string name="profile_undo">Rückgängig</string>
+    <!-- %1$s: profile name -->
+    <string name="profile_restored">%1$s ist zurück</string>
+    <!-- %1$s: profile name -->
+    <string name="profile_restore_failed">%1$s konnte nicht wiederhergestellt werden</string>
+    <!-- %1$s: profile name -->
+    <string name="profile_deleted">%1$s wurde gelöscht</string>
+    <string name="profile_menu_title">Profile</string>
+    <!-- %1$s: profile name -->
+    <string name="profile_playing_as">Spielt als %1$s</string>
+    <string name="profile_new">Neues Profil</string>
+    <string name="profile_rename_title">Profil umbenennen</string>
+    <string name="profile_renamed">Profil umbenannt</string>
+    <string name="profile_name_note">Wird auf dem Startbildschirm und im Seitenmenü angezeigt.</string>
+    <string name="profile_name_save">Speichern</string>
+    <string name="profile_name_required">Gib einen Namen für dein Profil ein</string>
+</resources>

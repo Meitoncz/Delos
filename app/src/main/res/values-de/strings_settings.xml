@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Settings tabs: the tab name and the line shown when no row is focused -->
+    <string name="settings_tab_stream">Stream</string>
+    <string name="settings_tab_stream_description">Qualität und Latenz des Videos von deinem PC.</string>
+    <string name="settings_tab_display">Anzeige</string>
+    <string name="settings_tab_display_description">Wie der Stream den Bildschirm füllt und welche Infos beim Spielen angezeigt werden.</string>
+    <string name="settings_tab_audio">Audio</string>
+    <string name="settings_tab_audio_description">Ton vom PC und die Klänge der Delos-Oberfläche.</string>
+    <string name="settings_tab_controls">Steuerung</string>
+    <string name="settings_tab_controls_description">Gamepads, Maus, Touch, Tastatur und Bildschirmsteuerung.</string>
+    <string name="settings_tab_appearance">Design</string>
+    <string name="settings_tab_appearance_description">Theme, Farben und animierter Hintergrund. Änderungen gelten sofort.</string>
+    <string name="settings_tab_covers">Cover</string>
+    <string name="settings_tab_covers_description">Cover, breite Cover, Hintergründe und Logos von deinem PC oder SteamGridDB.</string>
+    <string name="settings_tab_devices">Geräte</string>
+    <string name="settings_tab_devices_description">Gekoppelte PCs und was beim Start von Delos passiert.</string>
+    <string name="settings_tab_about">Über</string>
+    <string name="settings_tab_about_description">Delos ist ein Fork von Artemis und Moonlight unter der GPLv3.</string>
+
+    <!-- Appearance choices: the animated background (names of the effects) -->
+    <string name="settings_option_background_aurora">Aurora</string>
+    <string name="settings_option_background_tide">Gezeiten</string>
+    <string name="settings_option_background_silk">Seide</string>
+    <string name="settings_option_background_contour">Kontur</string>
+    <string name="settings_option_background_nebula">Nebel</string>
+    <string name="settings_option_background_plasma">Plasma</string>
+    <string name="settings_option_background_lava">Lava</string>
+    <string name="settings_option_background_caustics">Kaustik</string>
+    <string name="settings_option_background_bokeh">Bokeh</string>
+    <string name="settings_option_background_orbit">Orbit</string>
+    <!-- A still background without animation -->
+    <string name="settings_option_background_still">Statisch</string>
+
+    <!-- Appearance choices: how the library is laid out on the start screen -->
+    <string name="settings_option_home_layout_grid">Raster</string>
+    <string name="settings_option_home_layout_row">Reihe</string>
+
+    <!-- Appearance choices: color palettes (names; Delos is the app's own palette and keeps its name) -->
+    <string name="settings_option_palette_delos">Delos</string>
+    <string name="settings_option_palette_lagoon">Lagune</string>
+    <string name="settings_option_palette_dusk">Dämmerung</string>
+    <string name="settings_option_palette_ember">Glut</string>
+    <string name="settings_option_palette_moss">Moos</string>
+    <string name="settings_option_palette_iris">Iris</string>
+    <string name="settings_option_palette_rose">Rose</string>
+    <string name="settings_option_palette_sunset">Sonnenuntergang</string>
+    <string name="settings_option_palette_mint">Minze</string>
+    <string name="settings_option_palette_gold">Gold</string>
+
+    <!-- Appearance choices: the clock in the status bar -->
+    <!-- Follows the system's 12 or 24 hour setting -->
+    <string name="settings_option_clock_system">System</string>
+    <string name="settings_option_clock_12">12 Stunden</string>
+    <string name="settings_option_clock_24">24 Stunden</string>
+
+    <!-- Resolutions of this display, offered next to the fixed ones; %1$s: width and height such as 2400x1080 -->
+    <string name="settings_resolution_native">Nativ (%1$s)</string>
+    <string name="settings_resolution_native_portrait">Nativ, Hochformat (%1$s)</string>
+    <!-- The display has a cutout: the size without it -->
+    <string name="settings_resolution_native_fullscreen">Nativ, Vollbild (%1$s)</string>
+    <string name="settings_resolution_native_fullscreen_portrait">Nativ, Vollbild-Hochformat (%1$s)</string>
+    <!-- The resolution the user typed; %1$s: width and height such as 1920x1080 -->
+    <string name="settings_resolution_custom">Eigene (%1$s)</string>
+    <!-- The display's own refresh rate; %1$d: frames per second -->
+    <string name="settings_fps_native">Nativ (%1$d FPS)</string>
+    <!-- The frame rate the user typed; %1$s: frames per second, may have decimals -->
+    <string name="settings_fps_custom">Eigene (%1$s FPS)</string>
+    <!-- A rumble feel that matches no preset (edited in the Debug lab) -->
+    <string name="settings_choice_custom">Eigene</string>
+    <!-- One of the five special-key layouts; %1$d: 1 to 5 -->
+    <string name="settings_layout_number">Layout %1$d</string>
+    <!-- A stored choice the device no longer offers; %1$s: its label -->
+    <string name="settings_choice_unavailable">%1$s (nicht verfügbar)</string>
+
+    <!-- Errors of the settings that take typed text -->
+    <string name="settings_error_resolution_format">Nutze Breite x Höhe, zum Beispiel 1920x1080</string>
+    <string name="settings_error_fps_range">Gib eine Bildrate über 0 und bis 1000 ein</string>
+    <string name="settings_error_bitrate_range">Gib eine Bitrate über 0 und bis 9999 Mbps ein</string>
+</resources>

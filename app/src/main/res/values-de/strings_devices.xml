@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Start screen, devices screen, PC menus and the flows behind them (connect, wake, rename, remove, link test) -->
+    <!-- %1$s: profile name -->
+    <string name="devices_start_greeting">Hi, %1$s</string>
+    <string name="devices_start_welcome">Willkommen</string>
+    <string name="devices_start_pair_note">Koppel einen PC, um loszuspielen.</string>
+    <string name="devices_start_choose_note">Wähle den PC, auf dem du spielen willst.</string>
+    <string name="devices_status_online">Online</string>
+    <string name="devices_status_asleep">Im Ruhezustand</string>
+    <string name="devices_status_asleep_wakes">Im Ruhezustand · wird geweckt</string>
+    <string name="devices_status_offline">Offline</string>
+    <string name="devices_status_connected">Verbunden</string>
+    <string name="devices_status_default">Standard</string>
+    <!-- Two facts under a PC: %1$s: its status (Online, Offline ...), %2$s: the word Default -->
+    <string name="devices_status_with_default">%1$s · %2$s</string>
+    <string name="devices_pair_new">Neuen PC koppeln</string>
+    <string name="devices_pair_new_meta">Vibepollo, Apollo oder Sunshine</string>
+    <string name="devices_title">Geräte</string>
+    <string name="devices_note">Mit Delos gekoppelte PCs. Namen, die du hier vergibst, gelten nur auf diesem Gerät.</string>
+
+    <!-- PC menus -->
+    <string name="devices_menu_default_off">Nicht mit diesem PC starten</string>
+    <string name="devices_menu_default_on">Delos mit diesem PC starten</string>
+    <string name="devices_menu_wake">PC aufwecken</string>
+    <string name="devices_menu_rename">Umbenennen</string>
+    <string name="devices_menu_open_games">Spiele öffnen</string>
+    <string name="devices_menu_connect">Verbinden</string>
+    <string name="devices_menu_unpair">Kopplung aufheben</string>
+    <string name="devices_menu_remove">Aus Delos entfernen</string>
+
+    <!-- Connecting: the portal -->
+    <!-- %1$s: PC name -->
+    <string name="devices_portal_waking_title">%1$s wird geweckt</string>
+    <string name="devices_portal_waiting_title">Warte auf %1$s</string>
+    <!-- %1$s: the name of the Back button (B) -->
+    <string name="devices_portal_waking_note">Wecksignal gesendet · %1$s bricht ab</string>
+    <string name="devices_portal_waiting_note">Schalte den PC ein · %1$s bricht ab</string>
+    <!-- %1$s: PC name -->
+    <string name="devices_wake_timeout_toast">%1$s ist nicht aufgewacht</string>
+    <string name="devices_portal_connecting_title">Verbinde mit %1$s</string>
+    <string name="devices_portal_connecting_note">Vibepollo · gekoppelt</string>
+
+    <!-- Link test. %1$s: PC name, %2$s: network type (Wi-Fi ...), %3$s: speed, %4$s: the name of the Back button (B) -->
+    <string name="devices_link_portal_title">Verbindung zu %1$s wird getestet</string>
+    <string name="devices_link_portal_start">Bleib auf %1$s · %2$s bricht ab</string>
+    <string name="devices_link_portal_testing">Teste %1$s · bleib auf %2$s · %3$s bricht ab</string>
+    <string name="devices_link_portal_confirming">Bestätige %1$s · bleib auf %2$s · %3$s bricht ab</string>
+    <!-- %1$s: network type (Wi-Fi ...), %2$s: speed -->
+    <string name="devices_link_done">Mit %1$s sind %2$s möglich</string>
+    <string name="devices_link_done_jitter">Mit %1$s sind %2$s möglich (leichter Jitter)</string>
+    <string name="devices_link_stopped">Verbindungstest gestoppt</string>
+
+    <!-- Entering the address of a PC -->
+    <string name="devices_address_title">PC-Adresse eingeben</string>
+    <string name="devices_address_note">IP-Adresse oder Hostname des PCs, auf dem Vibepollo läuft, optional mit Port.</string>
+    <string name="devices_address_action">PC hinzufügen</string>
+    <string name="devices_address_required">Gib eine Adresse ein</string>
+    <!-- %1$s: the address that was typed -->
+    <string name="devices_address_looking">Suche nach %1$s…</string>
+    <string name="devices_address_not_added">%1$s hat geantwortet, konnte aber nicht hinzugefügt werden</string>
+    <string name="devices_add_not_an_address">„%1$s“ ist keine Adresse</string>
+    <string name="devices_add_no_answer">Unter %1$s hat kein PC geantwortet</string>
+
+    <!-- Renaming a PC. %1$s: the PC's own name / the new name -->
+    <string name="devices_rename_title">PC umbenennen</string>
+    <string name="devices_rename_note">Der neue Name gilt nur in Delos auf diesem Gerät. Lass das Feld leer, um den eigenen Namen des PCs (%1$s) zu verwenden.</string>
+    <string name="devices_rename_action">Speichern</string>
+    <string name="devices_rename_reset_toast">Zurück zu %1$s</string>
+    <string name="devices_rename_done_toast">Umbenannt in %1$s</string>
+
+    <!-- Toasts. %1$s: PC name -->
+    <string name="devices_wake_sent_toast">Wecksignal an %1$s gesendet</string>
+    <string name="devices_wake_unsupported">%1$s kann von hier nicht geweckt werden</string>
+    <string name="devices_wake_failed">Das Wecksignal konnte nicht gesendet werden</string>
+    <string name="devices_removed_toast">%1$s wurde entfernt</string>
+    <string name="devices_default_set_toast">Delos startet mit %1$s</string>
+    <string name="devices_default_cleared_toast">Kein Standardgerät</string>
+    <string name="devices_unpaired">Kopplung mit %1$s aufgehoben</string>
+    <string name="devices_unpair_offline">%1$s muss online sein, um die Kopplung aufzuheben</string>
+    <string name="devices_unpair_not_paired">%1$s ist nicht gekoppelt</string>
+    <string name="devices_unpair_failed">Kopplung mit %1$s konnte nicht aufgehoben werden</string>
+    <string name="devices_unreachable">%1$s ist nicht erreichbar</string>
+    <string name="devices_starting">Delos startet noch, versuch es erneut</string>
+</resources>

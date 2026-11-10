@@ -490,3 +490,27 @@ Register: informal *tu*; buttons and menu items in the infinitive; U+00A0 before
 | clipboard | presse-papiers |
 | link (network path) / Test link | liaison / Tester la liaison |
 | Back (button) | Retour |
+## Terminology: German
+
+Informal *du*; nouns capitalized; hyphenated compounds with brands (*Delos-App*, *Vibepollo-Weboberfläche*). English gamer terms stay where the glossary says so.
+
+| English | German |
+|---|---|
+| pair / unpair | koppeln / Kopplung aufheben |
+| stream (noun) | Stream |
+| library | Bibliothek |
+| profile | Profil |
+| gamepad / controller | Gamepad (legacy settings) / Controller |
+| rumble | Rumble (technical settings), Vibration (UI) |
+| cover / wide cover / background | Cover / breites Cover / Hintergrund |
+| artwork, metadata | Artwork, Metadaten |
+| settings, device(s) | Einstellungen, Gerät(e) |
+| appearance (tab) | Design |
+| about (tab) | Über |
+| on-screen controls | Bildschirmsteuerung |
+| metered network | getaktetes Netzwerk |
+| link (network) / link test | Verbindung / Verbindungstest |
+| sharpness / sharpen only | Schärfe / Nur schärfen |
+| Apply / Resume / Disconnect | Anwenden / Fortsetzen / Trennen |
+| custom | Eigene(r/s) |
+| web UI | Weboberfläche |

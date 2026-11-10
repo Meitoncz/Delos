@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- First launch: the boot screen and the new / edit profile page -->
+    <string name="firstrun_boot_tagline">Deine PC-Spiele, per Vibepollo direkt in deine Hände gestreamt</string>
+    <string name="firstrun_boot_begin">Los geht’s</string>
+    <string name="firstrun_boot_skip">Weiter zur Startseite</string>
+    <string name="firstrun_create_new_title">Wer spielt?</string>
+    <string name="firstrun_create_new_note">Wähle einen Avatar und einen Namen für dein Profil.</string>
+    <string name="firstrun_create_edit_title">Wähle deinen Avatar</string>
+    <string name="firstrun_create_edit_note">Und einen neuen Namen, wenn du magst.</string>
+    <!-- Dialog title and label of the profile name on the new / edit profile page -->
+    <string name="firstrun_create_name_title">Profilname</string>
+    <string name="firstrun_create_name_label">Profilname</string>
+    <string name="firstrun_create_name_placeholder">Dein Name</string>
+    <!-- The name a new profile starts with until the user types one -->
+    <string name="firstrun_create_default_name">Spieler</string>
+    <string name="firstrun_create_change_name">Name ändern</string>
+    <string name="firstrun_create_save">Speichern</string>
+    <string name="firstrun_create_create">Profil erstellen</string>
+    <!-- Names of the avatars in the picker -->
+    <string name="firstrun_avatar_sailor">Matrose</string>
+    <string name="firstrun_avatar_voyager">Entdecker</string>
+    <string name="firstrun_avatar_player">Spieler</string>
+    <string name="firstrun_avatar_fox">Fuchs</string>
+    <string name="firstrun_avatar_spark">Funke</string>
+    <string name="firstrun_avatar_calm">Ruhe</string>
+    <string name="firstrun_avatar_knight">Ritter</string>
+    <string name="firstrun_avatar_robot">Roboter</string>
+    <string name="firstrun_avatar_cat">Katze</string>
+    <string name="firstrun_avatar_wizard">Zauberer</string>
+    <string name="firstrun_avatar_racer">Rennfahrer</string>
+    <string name="firstrun_avatar_ghost">Geist</string>
+</resources>
