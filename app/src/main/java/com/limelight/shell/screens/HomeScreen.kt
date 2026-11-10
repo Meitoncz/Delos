@@ -4,6 +4,12 @@ import androidx.compose.animation.core.spring
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.animation.core.Animatable
 import androidx.compose.ui.platform.LocalDensity
+import android.content.res.Resources
+import androidx.annotation.StringRes
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.stringResource
+import com.limelight.R
+import com.limelight.shell.ui.textResources
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -183,15 +189,15 @@ fun HomeScreen(library: Library, appearance: Appearance, repo: PcRepository, pro
     // Without games there is no game background
     LaunchedEffect(hasGames) { if (!hasGames) shell.hero = null }
     when (library) {
-        Library.Loading -> HomeMessage(Symbols.LOADING, "Looking for your PCs…", null)
-        Library.NoPc -> HomeMessage(Symbols.DEVICES, "No PC paired yet", "For now, pair a PC in the classic Delos app.\nPairing in the new UI comes in step 6.6.")
-        is Library.Offline -> HomeMessage(Symbols.WIFI_OFF, "${library.pc.name} is offline", "Start the PC, or wake it from the classic Delos app.\nWaking it from here comes in step 6.6.")
+        Library.Loading -> HomeMessage(Symbols.LOADING, stringResource(R.string.home_loading), null)
+        Library.NoPc -> HomeMessage(Symbols.DEVICES, stringResource(R.string.home_no_pc_title), stringResource(R.string.home_no_pc_note))
+        is Library.Offline -> HomeMessage(Symbols.WIFI_OFF, stringResource(R.string.home_offline_title, library.pc.name), stringResource(R.string.home_offline_note))
         is Library.Ready -> if (hasGames) {
             val metadata = LocalGameMetadata.current
             val apps = library.apps.filter { metadata.filters.matches(it, metadata.entry(library.pc, it).data) }
             if (apps.isEmpty()) FilteredLibraryEmpty() else GameLibrary(library, apps, appearance, repo, profileStore, onMetadata)
         } else {
-            HomeMessage(Symbols.SPORTS_ESPORTS, "No games on ${library.pc.name}", "Add apps in Vibepollo's web UI, they show up here automatically.")
+            HomeMessage(Symbols.SPORTS_ESPORTS, stringResource(R.string.home_empty_title, library.pc.name), stringResource(R.string.home_empty_note))
         }
     }
 }
@@ -200,6 +206,9 @@ fun HomeScreen(library: Library, appearance: Appearance, repo: PcRepository, pro
 @Composable
 private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: Appearance, repo: PcRepository, profileStore: ProfileStore, onMetadata: (Pc, App) -> Unit) {
     val shell = LocalShell.current
+    val res = textResources()
+    // The remembered tile callbacks below outlive a language change
+    val currentRes by rememberUpdatedState(res)
     val feedback = LocalFeedback.current
     val stage = LocalStage.current
     val boxArt = LocalBoxArt.current
@@ -301,7 +310,7 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
     val onHide: (App, Boolean) -> Unit = remember(pc.uuid) {
         { app, hide ->
             repo.setHidden(pc.uuid, app.id, hide)
-            if (hide) shell.showToast("${app.name} is hidden · the side menu shows hidden games", Symbols.VISIBILITY_OFF)
+            if (hide) shell.showToast(currentRes.getString(R.string.home_hidden_toast, app.name), Symbols.VISIBILITY_OFF)
         }
     }
 
@@ -478,9 +487,9 @@ private fun rememberCustomGames(profileStore: ProfileStore, pc: Pc, apps: List<A
 }
 
 /** The badge on a cover's top-left corner. */
-enum class TileBadge(val icon: String, val label: String) {
-    RUNNING(Symbols.RUNNING, "Running"),
-    LAST_PLAYED(Symbols.HISTORY, "Last played"),
+enum class TileBadge(val icon: String, @StringRes val label: Int) {
+    RUNNING(Symbols.RUNNING, R.string.home_badge_running),
+    LAST_PLAYED(Symbols.HISTORY, R.string.home_badge_last_played),
 }
 
 /**
@@ -489,6 +498,7 @@ enum class TileBadge(val icon: String, val label: String) {
  * dialogs: choosing "Quit" in this menu is the confirmation.
  */
 private fun gameMenu(
+    res: Resources,
     pc: Pc, app: App, hidden: Boolean, running: App?, image: ImageBitmap?, actions: GameActions, onHide: (App, Boolean) -> Unit,
     /** The facts the header states under the game's name. */
     lastPlayed: Boolean,
@@ -502,44 +512,44 @@ private fun gameMenu(
 ) =
     ContextMenu(
         app.name,
-        header = gameMenuHeader(app, hidden, running, tint, lastPlayed, custom),
+        header = gameMenuHeader(res, app, hidden, running, tint, lastPlayed, custom),
         items = buildList {
             when {
                 app.running -> {
-                    add(MenuItem(Symbols.RESUME, "Resume") { actions.start(pc, app, image) })
-                    add(MenuItem(Symbols.POWER_SETTINGS_NEW, "Quit game", danger = true) { actions.quit(pc, app) })
+                    add(MenuItem(Symbols.RESUME, res.getString(R.string.home_menu_resume)) { actions.start(pc, app, image) })
+                    add(MenuItem(Symbols.POWER_SETTINGS_NEW, res.getString(R.string.home_menu_quit), danger = true) { actions.quit(pc, app) })
                 }
                 running != null -> {
-                    add(MenuItem(Symbols.SWAP_GAME, "Quit ${running.name} and start", danger = true) { actions.quitAndStart(pc, running, app, image) })
-                    add(MenuItem(Symbols.RESUME, "Resume ${running.name}") { actions.start(pc, running, null) })
+                    add(MenuItem(Symbols.SWAP_GAME, res.getString(R.string.home_menu_quit_and_start, running.name), danger = true) { actions.quitAndStart(pc, running, app, image) })
+                    add(MenuItem(Symbols.RESUME, res.getString(R.string.home_menu_resume_other, running.name)) { actions.start(pc, running, null) })
                 }
-                else -> add(MenuItem(Symbols.PLAY_ARROW, "Start game") { actions.start(pc, app, image) })
+                else -> add(MenuItem(Symbols.PLAY_ARROW, res.getString(R.string.home_menu_start)) { actions.start(pc, app, image) })
             }
             if (BundledArtwork.kind(app) == null) {
-                add(MenuItem(Symbols.PHOTO_LIBRARY, "Artwork", action = onArtwork))
-                add(MenuItem(Symbols.METADATA, "Metadata", action = onMetadata))
+                add(MenuItem(Symbols.PHOTO_LIBRARY, res.getString(R.string.home_menu_artwork), action = onArtwork))
+                add(MenuItem(Symbols.METADATA, res.getString(R.string.home_menu_metadata), action = onMetadata))
             }
-            add(MenuItem(Symbols.SETTINGS, "Game settings", action = onSettings))
+            add(MenuItem(Symbols.SETTINGS, res.getString(R.string.home_menu_settings), action = onSettings))
             add(
-                if (hidden) MenuItem(Symbols.VISIBILITY, "Show game") { onHide(app, false) }
-                else MenuItem(Symbols.VISIBILITY_OFF, "Hide game") { onHide(app, true) }
+                if (hidden) MenuItem(Symbols.VISIBILITY, res.getString(R.string.home_menu_show)) { onHide(app, false) }
+                else MenuItem(Symbols.VISIBILITY_OFF, res.getString(R.string.home_menu_hide)) { onHide(app, true) }
             )
         },
     )
 
 /** The game menu's header: an icon in the game's main color, whether it runs, and what else is worth a line (last played, custom settings, another game running, hidden). */
-private fun gameMenuHeader(app: App, hidden: Boolean, running: App?, tint: () -> HeaderTint, lastPlayed: Boolean, custom: Boolean): MenuHeader {
+private fun gameMenuHeader(res: Resources, app: App, hidden: Boolean, running: App?, tint: () -> HeaderTint, lastPlayed: Boolean, custom: Boolean): MenuHeader {
     val other = running?.takeIf { it.id != app.id }
     return MenuHeader(
-        status = if (app.running) "Running" else "Game",
+        status = res.getString(if (app.running) R.string.home_header_running else R.string.home_header_game),
         tint = tint,
         running = app.running,
         meta = listOfNotNull(
-            "Last played".takeIf { lastPlayed },
-            "${other?.name} is running".takeIf { other != null },
-            "Custom settings".takeIf { custom },
-            "Hidden".takeIf { hidden },
-        ).joinToString(" · ").ifEmpty { null },
+            res.getString(R.string.home_header_last_played).takeIf { lastPlayed },
+            other?.let { res.getString(R.string.home_header_other_running, it.name) },
+            res.getString(R.string.home_header_custom).takeIf { custom },
+            res.getString(R.string.home_header_hidden).takeIf { hidden },
+        ).reduceOrNull { facts, next -> res.getString(R.string.home_meta_join, facts, next) },
     )
 }
 
@@ -605,7 +615,7 @@ private fun GameInfo(pc: Pc, app: App, modifier: Modifier, reducedMotion: Boolea
         // The title above the pills is shown only while there is at least one pill under it
         val showLabel = hasTags || app.running || hdrKind != null || completion != null || virtualDisplay
         if (showLabel) BasicText(
-            if (BundledArtwork.kind(app) != null) "APP INFO" else "GAME INFO",
+            stringResource(if (BundledArtwork.kind(app) != null) R.string.home_info_app else R.string.home_info_game),
             modifier = Modifier.padding(top = 10.px),
             style = TextStyle(
                 color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold,
@@ -620,15 +630,15 @@ private fun GameInfo(pc: Pc, app: App, modifier: Modifier, reducedMotion: Boolea
                 if (themes.isNotEmpty()) ThemePill(themes, gameColors)
             },
         ) {
-            if (app.running) Chip(Symbols.RUNNING, "Running on ${pc.name}")
+            if (app.running) Chip(Symbols.RUNNING, stringResource(R.string.home_chip_running_on, pc.name))
             when (hdrKind) {
                 NativeHdr.HDR -> NativeHdrChip()
                 NativeHdr.SDR -> Chip(Symbols.SDR, "SDR")
-                NativeHdr.UNKNOWN -> Chip(Symbols.HDR_UNKNOWN, UNVERIFIED_HDR_LABEL)
+                NativeHdr.UNKNOWN -> Chip(Symbols.HDR_UNKNOWN, stringResource(R.string.metadata_hdr_unverified))
                 null -> Unit
             }
-            if (completion != null) Chip(Symbols.COMPLETION_TIME, "HLTB ${completion.headline}")
-            if (virtualDisplay) Chip(Symbols.SCREEN_SHARE, "Virtual display")
+            if (completion != null) Chip(Symbols.COMPLETION_TIME, stringResource(R.string.home_chip_hltb, completionText(textResources(), completion.seconds)))
+            if (virtualDisplay) Chip(Symbols.SCREEN_SHARE, stringResource(R.string.home_chip_virtual_display))
         }
     }
 }
@@ -702,6 +712,9 @@ private fun GameTile(
     onHide: (App, Boolean) -> Unit,
     onMetadata: (Pc, App) -> Unit,
 ) {
+    val res = textResources()
+    val locales = LocalConfiguration.current.locales
+    val customDescription = stringResource(R.string.home_tile_custom_description)
     val colors = LocalDelosColors.current
     val boxArt = LocalBoxArt.current
     val actions = LocalGameActions.current
@@ -731,8 +744,9 @@ private fun GameTile(
     LaunchedEffect(key, image) {
         image?.let { withContext(Dispatchers.Default) { HeroBitmaps.analyzeCover(key, it) } }
     }
-    val menu = remember(pc, app, hidden, running, image, pending, onMetadata, badge, custom, matchGameColors) {
+    val menu = remember(pc, app, hidden, running, image, pending, onMetadata, badge, custom, matchGameColors, locales) {
         gameMenu(
+            res,
             pc, app, hidden, running, image, actions, onHide, lastPlayed = badge == TileBadge.LAST_PLAYED, custom = custom,
             tint = { gameHeaderTint(matchGameColors, image != null || pending, HeroBitmaps.coverKnown(key), HeroBitmaps.coverHues(key), art.hue) },
             onArtwork = onArtwork,
@@ -812,7 +826,7 @@ private fun GameTile(
             Box(
                 Modifier.align(Alignment.TopEnd).padding(18.px).clip(CircleShape).background(Color(0x8C050A14))
                     .padding(horizontal = 14.px, vertical = 6.px)
-                    .semantics { contentDescription = "Custom settings for this game" },
+                    .semantics { contentDescription = customDescription },
                 contentAlignment = Alignment.Center,
             ) { Symbol(Symbols.TUNE, 22.tpx, Color.White, filled = true) }
         }
@@ -827,7 +841,7 @@ private fun GameTile(
                 horizontalArrangement = Arrangement.spacedBy(8.px),
             ) {
                 Symbol(badge.icon, 22.tpx, Color.White, filled = true)
-                BasicText(badge.label, style = TextStyle(color = Color.White, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 18.tpx))
+                BasicText(stringResource(badge.label), style = TextStyle(color = Color.White, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 18.tpx))
             }
         }
     }

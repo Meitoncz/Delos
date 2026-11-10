@@ -3,6 +3,8 @@ package com.limelight.shell.data
 import android.app.Activity
 import android.content.Intent
 import com.limelight.DelosStreamActivity
+import android.content.res.Resources
+import com.limelight.R
 import com.limelight.binding.PlatformBinding
 import com.limelight.computers.ComputerManagerService
 import com.limelight.nvstream.http.ComputerDetails
@@ -46,27 +48,39 @@ class GameLauncher(private val activity: Activity, private val repo: PcRepositor
         return start
     }
 
-    /** Quits the running game on the PC; returns the message to show. */
+    /** Quits the running game on the PC; [QuitResult.text] is the message to show. */
     suspend fun quit(pc: Pc, app: App): QuitResult = withContext(Dispatchers.IO) {
-        val binder = repo.binder ?: return@withContext QuitResult(false, "Delos is still connecting to ${pc.name}")
+        val binder = repo.binder ?: return@withContext QuitResult(QuitOutcome.STARTING)
         val details = binder.getComputer(pc.uuid) ?: pc.details
         try {
             val http = NvHTTP(
                 ServerHelper.getCurrentAddressFromComputer(details), details.httpsPort, binder.uniqueId, details.serverCert,
                 PlatformBinding.getCryptoProvider(activity),
             )
-            if (http.quitApp()) QuitResult(true, "${app.name} was quit") else QuitResult(false, "${app.name} could not be quit")
+            if (http.quitApp()) QuitResult(QuitOutcome.QUIT) else QuitResult(QuitOutcome.NOT_QUIT)
         } catch (e: HostHttpResponseException) {
-            if (e.errorCode == 599) QuitResult(false, "Another device started ${app.name}; quit it there or on the PC")
-            else QuitResult(false, e.message ?: "${app.name} could not be quit")
+            if (e.errorCode == 599) QuitResult(QuitOutcome.OTHER_DEVICE) else QuitResult(QuitOutcome.NOT_QUIT, e.message)
         } catch (e: Exception) {
-            QuitResult(false, "${pc.name} cannot be reached")
+            QuitResult(QuitOutcome.UNREACHABLE)
         } finally {
             repo.refresh()
         }
     }
 
-    data class QuitResult(val success: Boolean, val message: String)
+    enum class QuitOutcome { QUIT, STARTING, NOT_QUIT, OTHER_DEVICE, UNREACHABLE }
+
+    /** [detail] is the PC's own message when it refused to quit the game (English, shown as it is). */
+    data class QuitResult(val outcome: QuitOutcome, val detail: String? = null) {
+        val success: Boolean get() = outcome == QuitOutcome.QUIT
+
+        fun text(res: Resources, pcName: String, appName: String): String = when (outcome) {
+            QuitOutcome.QUIT -> res.getString(R.string.home_quit_done, appName)
+            QuitOutcome.STARTING -> res.getString(R.string.home_quit_starting, pcName)
+            QuitOutcome.NOT_QUIT -> detail ?: res.getString(R.string.home_quit_failed, appName)
+            QuitOutcome.OTHER_DEVICE -> res.getString(R.string.home_quit_other_device, appName)
+            QuitOutcome.UNREACHABLE -> res.getString(R.string.devices_unreachable, pcName)
+        }
+    }
 
     companion object {
         /**
