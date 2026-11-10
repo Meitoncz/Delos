@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="metadata_hdr_unverified">HDR/SDR не перевірено</string>
+
+    <string name="metadata_filtered_title">Жодна гра не підходить під ці фільтри</string>
+    <string name="metadata_filtered_note">Натисни %1$s, щоб змінити фільтри, або скинь їх нижче.</string>
+    <string name="metadata_filtered_reset">Скинути фільтри бібліотеки</string>
+
+    <string name="metadata_error_unavailable">Метадані ігор недоступні в цій збірці</string>
+    <string name="metadata_error_update">Не вдалося оновити інформацію про гру. Відкрий «Метадані», щоб оновити або обрати збіг.</string>
+    <string name="metadata_error_partial">Частина інформації про гру недоступна. Відкрий «Метадані», щоб оновити.</string>
+
+    <string name="metadata_menu_title">Метадані · %1$s</string>
+    <string name="metadata_menu_search">Пошук в IGDB / змінити збіг</string>
+    <string name="metadata_menu_refresh">Оновити метадані</string>
+    <string name="metadata_menu_reset">Скинути збіг метаданих</string>
+    <string name="metadata_refreshed_toast">Метадані оновлено</string>
+    <string name="metadata_reset_toast">Збіг метаданих скинуто</string>
+    <string name="metadata_no_match_toast">У IGDB збігів не знайдено. Скористайся пошуком в IGDB / зміною збігу.</string>
+    <string name="metadata_update_failed_toast">Не вдалося оновити метадані</string>
+
+    <string name="metadata_searching_toast">Шукаємо в IGDB: %1$s…</string>
+    <string name="metadata_search_unavailable_toast">Пошук в IGDB недоступний</string>
+    <string name="metadata_matched_toast">Метадані зіставлено з %1$s</string>
+    <string name="metadata_match_save_failed_toast">Не вдалося зберегти збіг метаданих</string>
+    <string name="metadata_candidate_with_year">%1$s (%2$d)</string>
+    <string name="metadata_matches_previous">Попередні збіги</string>
+    <string name="metadata_matches_more">Більше збігів</string>
+    <string name="metadata_search_other">Шукати іншу назву</string>
+    <string name="metadata_search_title">Пошук в IGDB</string>
+    <string name="metadata_search_note">Обери метадані незалежно від ілюстрацій SteamGridDB.</string>
+    <string name="metadata_search_hint">Назва гри</string>
+    <string name="metadata_search_action">Шукати</string>
+    <string name="metadata_matches_none">У IGDB немає збігів для %1$s</string>
+    <string name="metadata_matches_title">Обери збіг метаданих</string>
+
+    <plurals name="metadata_hltb_minutes">
+        <item quantity="one">%1$d хв</item>
+        <item quantity="few">%1$d хв</item>
+        <item quantity="many">%1$d хв</item>
+        <item quantity="other">%1$d хв</item>
+    </plurals>
+    <plurals name="metadata_hltb_hours">
+        <item quantity="one">%1$s год</item>
+        <item quantity="few">%1$s год</item>
+        <item quantity="many">%1$s год</item>
+        <item quantity="other">%1$s год</item>
+    </plurals>
+</resources>

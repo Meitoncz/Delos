@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="debug_title">Налагодження</string>
+    <string name="debug_panel_default">Відомості про цей пристрій і його контролери, журнал діагностики та тест вібрації.</string>
+
+    <string name="debug_section_device">Пристрій</string>
+    <string name="debug_section_diagnostics">Діагностика</string>
+    <string name="debug_section_haptics">Можливості вібрації пристрою</string>
+    <string name="debug_section_vibration_test">Тест вібрації</string>
+    <string name="debug_section_rumble_lab">Лабораторія вібрації</string>
+    <string name="debug_section_rumble_patterns">Шаблони вібрації</string>
+    <string name="debug_section_rumble_advanced">Вібрація: додатково</string>
+    <string name="debug_section_osc">Екранні елементи керування</string>
+    <string name="debug_section_controllers">Контролери</string>
+
+    <string name="debug_yes">Так</string>
+    <string name="debug_no">Ні</string>
+    <string name="debug_none">Немає</string>
+    <string name="debug_stopped">Зупинено</string>
+
+    <string name="debug_share_no_app_toast">Немає застосунку, щоб поділитися журналом</string>
+    <string name="debug_summary_copied_toast">Підсумок діагностики скопійовано</string>
+    <string name="debug_logs_cleared_toast">Журнали діагностики очищено</string>
+    <string name="debug_no_motor_toast">У цьому пристрої немає мотора вібрації</string>
+    <string name="debug_pad_no_vibration_toast">%1$s не вміє вібрувати</string>
+
+    <string name="debug_android_description">Версія Android цього пристрою та рівень API.</string>
+    <string name="debug_kernel_label">Ядро</string>
+    <string name="debug_kernel_description">Версія ядра Linux.</string>
+    <string name="debug_model_label">Пристрій</string>
+    <string name="debug_model_description">Виробник і модель.</string>
+    <string name="debug_model_details">Плата: %1$s\nАпаратна частина: %2$s\nSoC: %3$s\nЗбірка: %4$s</string>
+    <string name="debug_soc_unknown">невідомо</string>
+    <string name="debug_motor_label">Мотор вібрації</string>
+    <string name="debug_motor_yes_description">Цей пристрій вміє вібрувати.</string>
+    <string name="debug_motor_no_description">У цьому пристрої немає мотора вібрації.</string>
+
+    <string name="debug_log_label">Журнал діагностики</string>
+    <plurals name="debug_log_size">
+        <item quantity="one">%1$s, %2$s рядок журналу</item>
+        <item quantity="few">%1$s, %2$s рядки журналу</item>
+        <item quantity="many">%1$s, %2$s рядків журналу</item>
+        <item quantity="other">%1$s, %2$s рядка журналу</item>
+    </plurals>
+    <string name="debug_log_reading">Читання…</string>
+    <string name="debug_log_off">Вимкнено</string>
+    <string name="debug_log_description">Події та помилки, які Delos зберіг на цьому пристрої, без адрес і імен. Саме це надсилає «Поділитися».</string>
+    <string name="debug_log_preview_reading">Читання журналу…</string>
+    <string name="debug_share_label">Поділитися журналом діагностики</string>
+    <string name="debug_share_description">Відкриває системне меню «Поділитися» з текстом із попереднього перегляду. Нічого не надсилається, доки ти не обереш застосунок.</string>
+    <string name="debug_copy_label">Копіювати підсумок діагностики</string>
+    <string name="debug_copy_description">Копіює блок про пристрій і останні 100 рядків журналу, щоб вставити в issue. Ті самі імена й адреси прибрано.</string>
+    <string name="debug_clear_label">Очистити журнали діагностики</string>
+    <string name="debug_clear_description">Видаляє журнал на цьому пристрої. Нові події знову записуються, якщо не вимкнено «Вести журнали діагностики» (Налаштування &gt; Про застосунок).</string>
+
+    <string name="debug_vibrators_label">Вібромотори</string>
+    <string name="debug_vibrators_single">1 (один)</string>
+    <string name="debug_vibrators_description">Скільки вібромоторів повідомляє система. Один означає, що всі пресети керують одним мотором.</string>
+    <string name="debug_amplitude_label">Керування амплітудою</string>
+    <string name="debug_amplitude_description">Чи може мотор змінювати силу вібрації.</string>
+    <string name="debug_last_problem_label">Остання проблема</string>
+    <string name="debug_last_problem_description">Показує, коли останній відтворений пресет не зміг застосувати свою техніку й відтворився звичайною амплітудою, та чому.</string>
+
+    <string name="debug_vibrate_once_label">Вібрувати раз</string>
+    <string name="debug_vibrate_once_description">Одна секунда на повну силу.</string>
+    <string name="debug_continuous_label">Безперервна вібрація</string>
+    <string name="debug_continuous_description">Вібрує з силою нижче, доки її не вимкнено або ти не залишиш цей екран.</string>
+    <string name="debug_strength_label">Сила</string>
+    <string name="debug_strength_description">Сила безперервної вібрації, 1–255, для пристрою та контролерів.</string>
+
+    <string name="debug_preset_custom">Власний</string>
+    <string name="debug_mode_translator_on">%1$s · транслятор увімкнено</string>
+    <string name="debug_mode_translator_off">%1$s · транслятор вимкнено</string>
+    <string name="debug_preset_label">Поточний пресет</string>
+    <string name="debug_preset_description">Обери пресет нижче, щоб зберегти його й одразу відтворити зразок Test.</string>
+    <string name="debug_preset_details">Режим: %1$s\nЗміни в розширених параметрах зберігаються як «Власний», навіть якщо значення збігаються з пресетом.</string>
+    <string name="debug_preset_problem">Проблема</string>
+    <string name="debug_preset_problem_description">%1$s Проблема: %2$s.</string>
+    <string name="debug_preset_active">Активний</string>
+    <string name="debug_preset_select">Обрати</string>
+    <string name="debug_live_amplitude_label">Поточна амплітуда · %1$s</string>
+    <string name="debug_live_amplitude_description">Амплітуда пристрою в реальному часі, враховуючи стартовий поштовх і згладжування в міру стабілізації.</string>
+    <string name="debug_live_amplitude_details">Режим: %1$s\nШаблон: %2$s\nОбидва мотори ПК отримують зазначений відсоток вхідного сигналу; це не кінцевий відсоток виходу.</string>
+    <string name="debug_stop_label">Зупинити вібрацію</string>
+    <string name="debug_stop_description">Зупиняє шаблон лабораторії та всі тести безперервної вібрації пристрою й контролерів.</string>
+    <string name="debug_replay_label">Повторити зразок Test</string>
+
+    <string name="debug_pattern_details">Поточна амплітуда: %1$d / 255\nРежим: %2$s\nВідтворюється: %3$s\nВхідні значення — відсотки моторів ПК, а не кінцевий вихід пристрою. Обери інший шаблон, щоб замінити цей, або натисни «Зупинити вібрацію».</string>
+    <string name="debug_pattern_test_label">Test</string>
+    <string name="debug_pattern_test_description">Короткий поштовх, секунда рівної вібрації, наростання та згасальний вибух.</string>
+    <string name="debug_pattern_steady_25_label">Рівно 25% · тихий двигун</string>
+    <string name="debug_pattern_steady_25_description">Дві секунди тихого гуркоту двигуна, обидва мотори ПК на 25%.</string>
+    <string name="debug_pattern_steady_50_label">Рівно 50% · двигун на ходу</string>
+    <string name="debug_pattern_steady_50_description">Дві секунди помірного гуркоту двигуна, обидва мотори ПК на 50%.</string>
+    <string name="debug_pattern_steady_75_label">Рівно 75% · бездоріжжя</string>
+    <string name="debug_pattern_steady_75_description">Дві секунди сильної вібрації бездоріжжя, обидва мотори ПК на 75%.</string>
+    <string name="debug_pattern_steady_100_label">Рівно 100% · максимальна сила</string>
+    <string name="debug_pattern_steady_100_description">Дві секунди максимальної вібрації ПК, обидва мотори на 100%.</string>
+    <string name="debug_pattern_ramp_label">Наростання · розгін</string>
+    <string name="debug_pattern_ramp_description">Обидва мотори ПК за дві секунди зростають від тиші до повного сигналу.</string>
+    <string name="debug_pattern_tap_30_label">Поштовхи 30 мс · легкі удари</string>
+    <string name="debug_pattern_tap_30_description">Чотири поштовхи по 30 мс на повний сигнал із паузою 250 мс між ними.</string>
+    <string name="debug_pattern_tap_60_label">Поштовхи 60 мс · постріли</string>
+    <string name="debug_pattern_tap_60_description">Чотири поштовхи по 60 мс на повний сигнал із паузою 250 мс між ними.</string>
+    <string name="debug_pattern_tap_100_label">Поштовхи 100 мс · важкі удари</string>
+    <string name="debug_pattern_tap_100_description">Чотири поштовхи по 100 мс на повний сигнал із паузою 250 мс між ними.</string>
+    <string name="debug_pattern_heartbeat_label">Серцебиття · парні імпульси</string>
+    <string name="debug_pattern_heartbeat_description">Чотири пари імпульсів 70 мс / 100 мс на повний сигнал, як серцебиття.</string>
+    <string name="debug_pattern_explosion_label">Вибух · згасальна хвиля</string>
+    <string name="debug_pattern_explosion_description">Вибух на повний сигнал, що згасає до тиші за дві секунди.</string>
+    <string name="debug_pattern_flutter_label">Тремтіння · швидкий механізм</string>
+    <string name="debug_pattern_flutter_description">Двадцять імпульсів по 20 мс на повний сигнал, після кожного пауза 40 мс.</string>
+
+    <string name="debug_advanced_label">Додатково</string>
+    <string name="debug_advanced_description">Показати ручні параметри. Зміна значення позначає пресет як «Власний» і зупиняє поточний шаблон.</string>
+    <string name="debug_enabled_label">Увімкнути транслятор вібрації</string>
+    <string name="debug_enabled_description">Вимкнено — оригінальна трансляція. Увімкнено — ці параметри застосовуються до вібрації стріму та шаблонів лабораторії.</string>
+    <string name="debug_gain_label">Підсилення</string>
+    <string name="debug_gain_description">Загальний множник вібрації, 50–300%. Зміна параметра зупиняє поточний шаблон.</string>
+    <string name="debug_curve_label">Крива</string>
+    <string name="debug_curve_description">Показник відгуку: нижче %1$d%% підсилює слабку вібрацію; вище %1$d%% пом’якшує її.</string>
+    <string name="debug_min_label">Мінімальна амплітуда</string>
+    <string name="debug_min_description">Мінімальний вихід для ненульового запиту від ПК. Нульовий вхід лишається тишею.</string>
+    <string name="debug_kick_label">Стартовий поштовх</string>
+    <string name="debug_kick_description">Старт із тиші з поштовхом на повну силу, потім перехід до перетвореної амплітуди.</string>
+    <string name="debug_low_label">Вага низького мотора</string>
+    <string name="debug_low_description">Внесок низькочастотного мотора ПК в єдиний мотор пристрою. Оригінал: 80%.</string>
+    <string name="debug_high_label">Вага високого мотора</string>
+    <string name="debug_high_description">Внесок високочастотного мотора ПК в єдиний мотор пристрою. Оригінал: 33%.</string>
+    <string name="debug_smoothing_label">Згладжування</string>
+    <string name="debug_smoothing_description">Обмежує різкі зміни амплітуди. Нуль — миттєвий відгук; більші значення стабілізуються повільніше.</string>
+    <string name="debug_reset_label">Скинути параметри до Оригіналу</string>
+    <string name="debug_reset_description">Відновлює оригінальні параметри як «Власний». Перемикач увімкнення не змінюється.</string>
+
+    <string name="debug_osc_label">Перегляд екранних елементів керування</string>
+    <string name="debug_osc_description">Твої екранні елементи керування без стріму: пробуй кожну кнопку, D-pad і стіки, нічого не надсилається. Шестерня в кутку змінює розкладку, як у стрімі.</string>
+
+    <string name="debug_no_pads_label">Контролер не підключено</string>
+    <string name="debug_no_pads_description">Підключи контролер, і він одразу з’явиться тут. Вбудовані елементи керування портативної консолі рахуються за один.</string>
+    <string name="debug_pad_description_vibrates">ID виробника й продукту %1$s (%2$s). Датчики руху: %3$s. Вібрація: підтримується, обери для тесту.</string>
+    <string name="debug_pad_description_silent">ID виробника й продукту %1$s (%2$s). Датчики руху: %3$s. Вібрація: не підтримується.</string>
+    <string name="debug_sensors_unknown">невідомо до Android 12</string>
+    <string name="debug_sensors_none">не повідомлено</string>
+    <string name="debug_sensors_accelerometer">акселерометр</string>
+    <string name="debug_sensors_gyroscope">гіроскоп</string>
+    <string name="debug_sensors_both">акселерометр, гіроскоп</string>
+    <string name="debug_pads_continuous_label">Безперервна вібрація на контролерах</string>
+    <string name="debug_pads_continuous_description">Кожен контролер, що вміє вібрувати, вібрує із силою вище.</string>
+</resources>

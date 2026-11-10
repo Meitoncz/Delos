@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="filters_title">Фільтр бібліотеки</string>
+    <plurals name="filters_result_active">
+        <item quantity="one">%1$d із %2$d гри</item>
+        <item quantity="few">%1$d із %2$d ігор</item>
+        <item quantity="many">%1$d із %2$d ігор</item>
+        <item quantity="other">%1$d із %2$d ігор</item>
+    </plurals>
+    <plurals name="filters_result_all">
+        <item quantity="one">Усього ігор: %1$d</item>
+        <item quantity="few">Усього ігор: %1$d</item>
+        <item quantity="many">Усього ігор: %1$d</item>
+        <item quantity="other">Усього ігор: %1$d</item>
+    </plurals>
+    <string name="filters_hint">Фільтр</string>
+    <plurals name="filters_hint_active">
+        <item quantity="one">Фільтр · активно: %1$d</item>
+        <item quantity="few">Фільтр · активно: %1$d</item>
+        <item quantity="many">Фільтр · активно: %1$d</item>
+        <item quantity="other">Фільтр · активно: %1$d</item>
+    </plurals>
+    <string name="filters_section_genre">Жанр</string>
+    <string name="filters_section_theme">Тема</string>
+    <string name="filters_section_hdr">Підтримка HDR</string>
+    <string name="filters_section_duration">Тривалість (HowLongToBeat)</string>
+    <string name="filters_all">Усі</string>
+    <string name="filters_hdr_any">Усі</string>
+    <string name="filters_hdr_hdr">Рідний HDR</string>
+    <string name="filters_length_any">Будь-яка</string>
+    <string name="filters_length_under_10">&lt;10 год</string>
+    <string name="filters_length_10_30">10–30 год</string>
+    <string name="filters_length_30_60">30–60 год</string>
+    <string name="filters_length_over_60">60+ год</string>
+    <string name="filters_length_unknown">Невідомо</string>
+    <string name="filters_reset">Скинути</string>
+    <string name="filters_done">Готово</string>
+
+    <string name="filters_art_title">Фільтр ілюстрацій</string>
+    <string name="filters_art_reset">Скинути фільтри</string>
+    <string name="filters_art_done">Готово</string>
+    <string name="filters_art_row_type">Тип</string>
+    <string name="filters_art_row_style">Стиль</string>
+    <string name="filters_art_row_dimensions">Розміри</string>
+    <string name="filters_art_row_sort">Сортування</string>
+    <string name="filters_art_any">Будь-який</string>
+    <string name="filters_art_type_all">Усі</string>
+    <string name="filters_art_type_static">Статичні</string>
+    <string name="filters_art_type_animated">Анімовані</string>
+    <string name="filters_art_sort_score">Найвищий рейтинг</string>
+    <string name="filters_art_sort_newest">Найновіші</string>
+    <string name="filters_art_sort_oldest">Найстаріші</string>
+    <string name="filters_art_sort_score_chip">Сортування: найвищий рейтинг</string>
+    <string name="filters_art_sort_newest_chip">Сортування: найновіші</string>
+    <string name="filters_art_sort_oldest_chip">Сортування: найстаріші</string>
+    <string name="filters_art_sort_score_first">Спершу найвищий рейтинг</string>
+    <string name="filters_art_sort_newest_first">Спершу найновіші</string>
+    <string name="filters_art_sort_oldest_first">Спершу найстаріші</string>
+    <string name="filters_art_style_alternate">Альтернативний</string>
+    <string name="filters_art_style_blurred">Розмитий</string>
+    <string name="filters_art_style_white_logo">Білий логотип</string>
+    <string name="filters_art_style_material">Material</string>
+    <string name="filters_art_style_no_logo">Без логотипа</string>
+    <string name="filters_art_style_official">Офіційний</string>
+    <string name="filters_art_style_white">Білий</string>
+    <string name="filters_art_style_black">Чорний</string>
+    <string name="filters_art_style_custom">Власний</string>
+    <string name="filters_art_chips_reset">Скинути</string>
+    <string name="filters_art_reset_toast">Фільтри скинуто</string>
+    <string name="filters_art_change">Змінити фільтри</string>
+</resources>

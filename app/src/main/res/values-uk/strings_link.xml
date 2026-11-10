@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="link_transport_other">ця мережа</string>
+
+    <string name="link_age_just_now">щойно</string>
+    <plurals name="link_age_minutes">
+        <item quantity="one">%d хв тому</item>
+        <item quantity="few">%d хв тому</item>
+        <item quantity="many">%d хв тому</item>
+        <item quantity="other">%d хв тому</item>
+    </plurals>
+    <plurals name="link_age_hours">
+        <item quantity="one">%d год тому</item>
+        <item quantity="few">%d год тому</item>
+        <item quantity="many">%d год тому</item>
+        <item quantity="other">%d год тому</item>
+    </plurals>
+    <string name="link_age_yesterday">учора</string>
+    <plurals name="link_age_days">
+        <item quantity="one">%d день тому</item>
+        <item quantity="few">%d дні тому</item>
+        <item quantity="many">%d днів тому</item>
+        <item quantity="other">%d дня тому</item>
+    </plurals>
+    <plurals name="link_age_weeks">
+        <item quantity="one">%d тиждень тому</item>
+        <item quantity="few">%d тижні тому</item>
+        <item quantity="many">%d тижнів тому</item>
+        <item quantity="other">%d тижня тому</item>
+    </plurals>
+    <plurals name="link_age_months">
+        <item quantity="one">%d місяць тому</item>
+        <item quantity="few">%d місяці тому</item>
+        <item quantity="many">%d місяців тому</item>
+        <item quantity="other">%d місяця тому</item>
+    </plurals>
+    <string name="link_tested_summary">Перевірено %1$s (%2$s)</string>
+
+    <string name="link_reason_untested">канал не перевірено</string>
+    <string name="link_reason_tested_ok">канал тягне до %1$s</string>
+    <string name="link_reason_tested_limited">канал тягне %1$s</string>
+    <string name="link_reason_host_limited">канал ПК — %1$s</string>
+    <string name="link_reason_dropping">втрата кадрів на %1$s</string>
+    <string name="link_recommended_line">Рекомендовано: %1$s · %2$s</string>
+    <string name="link_value_reason">%1$s · %2$s</string>
+    <string name="link_recommended_plain">Рекомендовано: %1$d Mbps</string>
+
+    <string name="link_test_action">Перевірити канал</string>
+    <string name="link_test_row_untested">Канал ще не перевірено (%1$s)</string>
+    <string name="link_help_untested">Канал не перевірено (%1$s). «Перевірити канал» вимірює його пропускну здатність.</string>
+    <string name="link_help_joined">%1$s: %2$s</string>
+    <string name="link_help_tested_ok">тягне до %1$s; %2$s вистачає для %3$s.</string>
+    <string name="link_help_host_limited">тягне %1$s; для %2$s межа — власний канал ПК.</string>
+    <string name="link_help_limited">тягне %1$s; для %2$s потрібно %3$s.</string>
+    <string name="link_help_limited_picture">тягне %1$s; для %2$s потрібно %3$s, на зображення лишається близько %4$s після FEC і службових даних.</string>
+    <string name="link_pc_offline_toast">%1$s не в мережі</string>
+    <string name="link_test_detail">Вимірює, що ця мережа тягне від %1$s: тестовий трафік приблизно 2 секунди на крок, до кількох сотень Mbps. Лишайся в мережі (%2$s) і нічого більше не запускай.</string>
+    <string name="link_use_action">Використати рекомендований бітрейт</string>
+    <string name="link_use_done_toast">Бітрейт встановлено: %1$s</string>
+    <string name="link_use_detail">Заповнює бітрейт значенням %1$s: %2$s. Delos ніколи не змінює бітрейт сам.</string>
+
+    <string name="link_unavailable_newer_delos">Для перевірки каналу цьому ПК потрібна новіша версія Delos.</string>
+    <string name="link_unavailable_host_outdated">Vibepollo на цьому ПК ще не вміє перевіряти канал. Онови його.</string>
+
+    <string name="link_stream_help_dropping">Канал втрачає кадри на %1$s. A заповнює повзунок, «Застосувати» надсилає.</string>
+    <string name="link_stream_help_dropping_untested">Канал втрачає кадри на %1$s. A заповнює повзунок, «Застосувати» надсилає. Перевір канал у налаштуваннях до підключення.</string>
+    <string name="link_stream_help_tested">%1$s. A заповнює повзунок, «Застосувати» надсилає.</string>
+    <string name="link_stream_help_untested">Ще не перевірено. A заповнює повзунок, «Застосувати» надсилає. Перевір канал у налаштуваннях до підключення.</string>
+
+    <string name="link_reading_measuring">Вимірювання</string>
+    <string name="link_reading_keeps_up">Канал справляється на %1$s</string>
+    <string name="link_reading_drops">Канал втрачає кадри на %1$s, спробуй %2$s</string>
+    <string name="link_reading_device_behind">Пристрій пропускає кадри; канал у порядку</string>
+
+    <string name="link_failure_host_unsupported">Vibepollo на цьому ПК не вміє перевіряти канал. Онови його.</string>
+    <string name="link_failure_stream_active">ПК стрімить. Зупини стрім і повтори перевірку.</string>
+    <string name="link_failure_denied">ПК не дозволив перевірку. Створи пару з цим пристроєм ще раз.</string>
+    <string name="link_failure_udp_blocked">Тестові дані не надійшли. Можливо, UDP заблоковано в цій мережі.</string>
+    <string name="link_failure_network">Delos не зміг підключитися до ПК.</string>
+    <string name="link_failure_timeout">ПК не завершив перевірку вчасно.</string>
+    <string name="link_failure_host_error">ПК не зміг виконати перевірку.</string>
+    <string name="link_failure_invalid_response">ПК надіслав непридатний результат перевірки.</string>
+    <string name="link_failure_not_connected">Delos ще підключається до %1$s.</string>
+
+    <string name="link_verdict_receiver_suspect">Цей пристрій не зміг прийняти %1$s так швидко</string>
+    <string name="link_verdict_loss">Втрачено %1$.1f%% тестових пакетів на %2$s</string>
+    <string name="link_verdict_window_loss">Втрачено до %1$.1f%% пакетів за 100 мс на %2$s</string>
+    <string name="link_verdict_delay_growth">Затримка постійно зростала на %1$s (у каналі черга)</string>
+    <string name="link_verdict_no_packets">Тестові дані не надійшли. Можливо, UDP заблоковано в цій мережі</string>
+    <string name="link_verdict_not_all_sent">ПК надіслав лише %1$.1f%% тестових даних на %2$s</string>
+    <string name="link_verdict_sender_duration">Під час тесту в ПК збився таймінг</string>
+    <string name="link_verdict_passed">Пройдено на %1$s</string>
+    <string name="link_verdict_stable">Стабільно</string>
+    <string name="link_verdict_stable_jitter">Стабільно, невеликий джитер</string>
+    <string name="link_verdict_no_rate_tested">Не вдалося перевірити жодну швидкість</string>
+    <string name="link_no_rate_passed_once">%1$s. %2$s пройдено один раз, але не втрималося.</string>
+    <string name="link_no_rate_nothing_passed">%1$s. Нічого не пройдено, аж до %2$s.</string>
+    <string name="link_no_rate_plain">%1$s.</string>
+</resources>

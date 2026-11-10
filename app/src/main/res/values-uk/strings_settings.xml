@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_tab_stream">Стрім</string>
+    <string name="settings_tab_stream_description">Якість і затримка відео з твого ПК.</string>
+    <string name="settings_tab_display">Екран</string>
+    <string name="settings_tab_display_description">Як стрім заповнює екран і яка інформація показується під час гри.</string>
+    <string name="settings_tab_audio">Звук</string>
+    <string name="settings_tab_audio_description">Звук з ПК і звуки інтерфейсу Delos.</string>
+    <string name="settings_tab_controls">Керування</string>
+    <string name="settings_tab_controls_description">Контролери, миша, сенсор, клавіатура й екранні елементи керування.</string>
+    <string name="settings_tab_appearance">Вигляд</string>
+    <string name="settings_tab_appearance_description">Тема, кольори й анімоване тло. Зміни застосовуються одразу.</string>
+    <string name="settings_tab_covers">Обкладинки</string>
+    <string name="settings_tab_covers_description">Обкладинки, широкі обкладинки, тло й логотипи з твого ПК або SteamGridDB.</string>
+    <string name="settings_tab_devices">Пристрої</string>
+    <string name="settings_tab_devices_description">Спарені ПК і що відбувається під час запуску Delos.</string>
+    <string name="settings_tab_about">Про застосунок</string>
+    <string name="settings_tab_about_description">Delos — форк Artemis і Moonlight з ліцензією GPLv3.</string>
+
+    <string name="settings_option_background_aurora">Аврора</string>
+    <string name="settings_option_background_tide">Приплив</string>
+    <string name="settings_option_background_silk">Шовк</string>
+    <string name="settings_option_background_contour">Контур</string>
+    <string name="settings_option_background_nebula">Туманність</string>
+    <string name="settings_option_background_plasma">Плазма</string>
+    <string name="settings_option_background_lava">Лава</string>
+    <string name="settings_option_background_caustics">Каустика</string>
+    <string name="settings_option_background_bokeh">Боке</string>
+    <string name="settings_option_background_orbit">Орбіта</string>
+    <string name="settings_option_background_still">Без анімації</string>
+
+    <string name="settings_option_home_layout_grid">Сітка</string>
+    <string name="settings_option_home_layout_row">Рядок</string>
+
+    <string name="settings_option_palette_delos">Delos</string>
+    <string name="settings_option_palette_lagoon">Лагуна</string>
+    <string name="settings_option_palette_dusk">Сутінки</string>
+    <string name="settings_option_palette_ember">Жар</string>
+    <string name="settings_option_palette_moss">Мох</string>
+    <string name="settings_option_palette_iris">Ірис</string>
+    <string name="settings_option_palette_rose">Троянда</string>
+    <string name="settings_option_palette_sunset">Захід сонця</string>
+    <string name="settings_option_palette_mint">М’ята</string>
+    <string name="settings_option_palette_gold">Золото</string>
+
+    <string name="settings_option_clock_system">Системний</string>
+    <string name="settings_option_clock_12">12-годинний</string>
+    <string name="settings_option_clock_24">24-годинний</string>
+
+    <string name="settings_resolution_native">Рідна (%1$s)</string>
+    <string name="settings_resolution_native_portrait">Рідна портретна (%1$s)</string>
+    <string name="settings_resolution_native_fullscreen">Рідна повноекранна (%1$s)</string>
+    <string name="settings_resolution_native_fullscreen_portrait">Рідна повноекранна портретна (%1$s)</string>
+    <string name="settings_resolution_custom">Власна (%1$s)</string>
+    <string name="settings_fps_native">Рідна (%1$d FPS)</string>
+    <string name="settings_fps_custom">Власна (%1$s FPS)</string>
+    <string name="settings_choice_custom">Власна</string>
+    <string name="settings_layout_number">Розкладка %1$d</string>
+    <string name="settings_choice_unavailable">%1$s (недоступно)</string>
+
+    <string name="settings_error_resolution_format">Вкажи ширина x висота, наприклад 1920x1080</string>
+    <string name="settings_error_fps_range">Введи частоту кадрів більше 0 і до 1000</string>
+    <string name="settings_error_bitrate_range">Введи бітрейт більше 0 і до 9999 Mbps</string>
+</resources>

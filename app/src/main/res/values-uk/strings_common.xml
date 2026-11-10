@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="common_on">Увімкнено</string>
+    <string name="common_off">Вимкнено</string>
+    <string name="common_cancel">Скасувати</string>
+</resources>

@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="artwork_header">ІЛЮСТРАЦІЇ</string>
+    <string name="artwork_search_other">Шукати за іншою назвою</string>
+    <string name="artwork_filter">Фільтр</string>
+    <string name="artwork_loading">Пошук на SteamGridDB…</string>
+    <string name="artwork_no_key_title">Додай свій ключ API SteamGridDB</string>
+    <string name="artwork_no_key_note">Налаштування &gt; Обкладинки &gt; Ключ API SteamGridDB. Він безкоштовний на steamgriddb.com (Preferences &gt; API).</string>
+    <string name="artwork_no_game_title">%1$s немає на SteamGridDB</string>
+    <string name="artwork_no_game_note">«Шукати за іншою назвою» знайде її під назвою, яку знає SteamGridDB.</string>
+    <string name="artwork_choose_title">Обери вигляд для %1$s</string>
+    <string name="artwork_choose_note">«Шукати за іншою назвою»: наприклад, Windows, Steam або будь-яка гра, чиї ілюстрації тобі подобаються. %1$s автоматично не шукається.</string>
+    <string name="artwork_unreachable">SteamGridDB недоступний</string>
+    <string name="artwork_download_failed">Не вдалося завантажити</string>
+    <string name="artwork_builtin_note">Вбудовані ілюстрації: ілюстрації цього застосунку змінити не можна</string>
+    <string name="artwork_builtin_back">Назад</string>
+    <string name="artwork_chip_looking">Пошук %1$s…</string>
+    <string name="artwork_chip_game_id">Гра #%1$d</string>
+    <string name="artwork_chip_not_found">Ще не знайдено</string>
+    <string name="artwork_in_use">Використовується</string>
+    <string name="artwork_animated">Анімоване</string>
+    <string name="artwork_static">Статичне</string>
+    <string name="artwork_first_name_only">Лише назва</string>
+    <string name="artwork_first_from_pc">З твого ПК</string>
+    <string name="artwork_fact_source">ДЖЕРЕЛО</string>
+    <string name="artwork_fact_shows">ПОКАЗУЄ</string>
+    <string name="artwork_fact_name_source">Назва гри</string>
+    <string name="artwork_fact_name_shows">Назву замість логотипа</string>
+    <string name="artwork_fact_pc_source">Твій ПК (Vibepollo)</string>
+    <string name="artwork_fact_pc_shows">Обкладинку з ПК</string>
+    <string name="artwork_fact_size">РОЗМІР</string>
+    <string name="artwork_fact_file">ФАЙЛ</string>
+    <string name="artwork_fact_score">ОЦІНКА</string>
+    <string name="artwork_fact_added">ДОДАНО</string>
+    <string name="artwork_fact_size_value">%1$d × %2$d px</string>
+    <string name="artwork_fact_score_by">%1$d · від %2$s</string>
+    <string name="artwork_fact_score_only">%1$d</string>
+    <string name="artwork_fact_by_only">від %1$s</string>
+    <string name="artwork_search_title">Пошук на SteamGridDB</string>
+    <string name="artwork_search_note">Назва гри так, як її знає SteamGridDB.</string>
+    <string name="artwork_search_hint">Назва гри</string>
+    <string name="artwork_search_action">Шукати</string>
+    <string name="artwork_searching_toast">Пошук %1$s на SteamGridDB…</string>
+    <string name="artwork_game_with_year">%1$s (%2$d)</string>
+    <string name="artwork_downloading_game_toast">Завантаження ілюстрацій для %1$s…</string>
+    <string name="artwork_matched_toast">Зіставлено з %1$s</string>
+    <string name="artwork_found_none">Для %1$s нічого не знайдено</string>
+    <string name="artwork_found_title">Обери гру</string>
+    <string name="artwork_error_no_key">Спершу додай свій ключ API SteamGridDB</string>
+    <string name="artwork_error_key_rejected">SteamGridDB не прийняв ключ API</string>
+    <string name="artwork_error_api_http">SteamGridDB відповів %1$d</string>
+    <string name="artwork_error_too_large">зображення завелике</string>
+    <string name="artwork_error_save_failed">не вдалося зберегти зображення</string>
+    <string name="artwork_tab_cover">Обкладинка</string>
+    <plurals name="artwork_count_cover">
+        <item quantity="one">%1$d обкладинка</item>
+        <item quantity="few">%1$d обкладинки</item>
+        <item quantity="many">%1$d обкладинок</item>
+        <item quantity="other">%1$d обкладинки</item>
+    </plurals>
+    <plurals name="artwork_count_all_cover">
+        <item quantity="one">Усього: %1$d обкладинка</item>
+        <item quantity="few">Усього: %1$d обкладинки</item>
+        <item quantity="many">Усього: %1$d обкладинок</item>
+        <item quantity="other">Усього: %1$d обкладинки</item>
+    </plurals>
+    <plurals name="artwork_count_of_cover">
+        <item quantity="one">%1$d із %2$d обкладинки</item>
+        <item quantity="few">%1$d із %2$d обкладинок</item>
+        <item quantity="many">%1$d із %2$d обкладинок</item>
+        <item quantity="other">%1$d із %2$d обкладинки</item>
+    </plurals>
+    <string name="artwork_filtered_none_cover">Жодна обкладинка не відповідає цим фільтрам</string>
+    <plurals name="artwork_filtered_has_cover">
+        <item quantity="one">На SteamGridDB для %1$s є %2$d обкладинка, жодна не відповідає %3$s. Послаб фільтр або пошукай за іншою назвою.</item>
+        <item quantity="few">На SteamGridDB для %1$s є %2$d обкладинки, жодна не відповідає %3$s. Послаб фільтр або пошукай за іншою назвою.</item>
+        <item quantity="many">На SteamGridDB для %1$s є %2$d обкладинок, жодна не відповідає %3$s. Послаб фільтр або пошукай за іншою назвою.</item>
+        <item quantity="other">На SteamGridDB для %1$s є %2$d обкладинки, жодна не відповідає %3$s. Послаб фільтр або пошукай за іншою назвою.</item>
+    </plurals>
+    <string name="artwork_filtered_unknown_cover">Жодна з обкладинок не відповідає %1$s. Послаб фільтр або пошукай за іншою назвою.</string>
+    <string name="artwork_empty_cover">На SteamGridDB для цієї гри ще немає обкладинки.</string>
+    <string name="artwork_downloading_cover">Завантаження обкладинки…</string>
+    <string name="artwork_updated_cover">Обкладинку оновлено</string>
+    <string name="artwork_tab_wide">Широка обкладинка</string>
+    <plurals name="artwork_count_wide">
+        <item quantity="one">%1$d широка обкладинка</item>
+        <item quantity="few">%1$d широкі обкладинки</item>
+        <item quantity="many">%1$d широких обкладинок</item>
+        <item quantity="other">%1$d широкої обкладинки</item>
+    </plurals>
+    <plurals name="artwork_count_all_wide">
+        <item quantity="one">Усього: %1$d широка обкладинка</item>
+        <item quantity="few">Усього: %1$d широкі обкладинки</item>
+        <item quantity="many">Усього: %1$d широких обкладинок</item>
+        <item quantity="other">Усього: %1$d широкої обкладинки</item>
+    </plurals>
+    <plurals name="artwork_count_of_wide">
+        <item quantity="one">%1$d із %2$d широкої обкладинки</item>
+        <item quantity="few">%1$d із %2$d широких обкладинок</item>
+        <item quantity="many">%1$d із %2$d широких обкладинок</item>
+        <item quantity="other">%1$d із %2$d широкої обкладинки</item>
+    </plurals>
+    <string name="artwork_filtered_none_wide">Жодна широка обкладинка не відповідає цим фільтрам</string>
+    <plurals name="artwork_filtered_has_wide">
+        <item quantity="one">На SteamGridDB для %1$s є %2$d широка обкладинка, жодна не відповідає %3$s. Послаб фільтр або пошукай за іншою назвою.</item>
+        <item quantity="few">На SteamGridDB для %1$s є %2$d широкі обкладинки, жодна не відповідає %3$s. Послаб фільтр або пошукай за іншою назвою.</item>
+        <item quantity="many">На SteamGridDB для %1$s є %2$d широких обкладинок, жодна не відповідає %3$s. Послаб фільтр або пошукай за іншою назвою.</item>
+        <item quantity="other">На SteamGridDB для %1$s є %2$d широкої обкладинки, жодна не відповідає %3$s. Послаб фільтр або пошукай за іншою назвою.</item>
+    </plurals>
+    <string name="artwork_filtered_unknown_wide">Жодна з широких обкладинок не відповідає %1$s. Послаб фільтр або пошукай за іншою назвою.</string>
+    <string name="artwork_empty_wide">На SteamGridDB для цієї гри ще немає широкої обкладинки.</string>
+    <string name="artwork_downloading_wide">Завантаження широкої обкладинки…</string>
+    <string name="artwork_updated_wide">Широку обкладинку оновлено</string>
+    <string name="artwork_tab_hero">Тло</string>
+    <plurals name="artwork_count_hero">
+        <item quantity="one">%1$d тло</item>
+        <item quantity="few">%1$d тла</item>
+        <item quantity="many">%1$d тл</item>
+        <item quantity="other">%1$d тла</item>
+    </plurals>
+    <plurals name="artwork_count_all_hero">
+        <item quantity="one">Усього: %1$d тло</item>
+        <item quantity="few">Усього: %1$d тла</item>
+        <item quantity="many">Усього: %1$d тл</item>
+        <item quantity="other">Усього: %1$d тла</item>
+    </plurals>
+    <plurals name="artwork_count_of_hero">
+        <item quantity="one">%1$d із %2$d тла</item>
+        <item quantity="few">%1$d із %2$d тл</item>
+        <item quantity="many">%1$d із %2$d тл</item>
+        <item quantity="other">%1$d із %2$d тла</item>
+    </plurals>
+    <string name="artwork_filtered_none_hero">Жодне тло не відповідає цим фільтрам</string>
+    <plurals name="artwork_filtered_has_hero">
+        <item quantity="one">На SteamGridDB для %1$s є %2$d тло, жодне не відповідає %3$s. Послаб фільтр або пошукай за іншою назвою.</item>
+        <item quantity="few">На SteamGridDB для %1$s є %2$d тла, жодне не відповідає %3$s. Послаб фільтр або пошукай за іншою назвою.</item>
+        <item quantity="many">На SteamGridDB для %1$s є %2$d тл, жодне не відповідає %3$s. Послаб фільтр або пошукай за іншою назвою.</item>
+        <item quantity="other">На SteamGridDB для %1$s є %2$d тла, жодне не відповідає %3$s. Послаб фільтр або пошукай за іншою назвою.</item>
+    </plurals>
+    <string name="artwork_filtered_unknown_hero">Жодне з тл не відповідає %1$s. Послаб фільтр або пошукай за іншою назвою.</string>
+    <string name="artwork_empty_hero">На SteamGridDB для цієї гри ще немає тла.</string>
+    <string name="artwork_downloading_hero">Завантаження тла…</string>
+    <string name="artwork_updated_hero">Тло оновлено</string>
+    <string name="artwork_tab_logo">Логотип</string>
+    <plurals name="artwork_count_logo">
+        <item quantity="one">%1$d логотип</item>
+        <item quantity="few">%1$d логотипи</item>
+        <item quantity="many">%1$d логотипів</item>
+        <item quantity="other">%1$d логотипа</item>
+    </plurals>
+    <plurals name="artwork_count_all_logo">
+        <item quantity="one">Усього: %1$d логотип</item>
+        <item quantity="few">Усього: %1$d логотипи</item>
+        <item quantity="many">Усього: %1$d логотипів</item>
+        <item quantity="other">Усього: %1$d логотипа</item>
+    </plurals>
+    <plurals name="artwork_count_of_logo">
+        <item quantity="one">%1$d із %2$d логотипа</item>
+        <item quantity="few">%1$d із %2$d логотипів</item>
+        <item quantity="many">%1$d із %2$d логотипів</item>
+        <item quantity="other">%1$d із %2$d логотипа</item>
+    </plurals>
+    <string name="artwork_filtered_none_logo">Жоден логотип не відповідає цим фільтрам</string>
+    <plurals name="artwork_filtered_has_logo">
+        <item quantity="one">На SteamGridDB для %1$s є %2$d логотип, жоден не відповідає %3$s. Послаб фільтр або пошукай за іншою назвою.</item>
+        <item quantity="few">На SteamGridDB для %1$s є %2$d логотипи, жоден не відповідає %3$s. Послаб фільтр або пошукай за іншою назвою.</item>
+        <item quantity="many">На SteamGridDB для %1$s є %2$d логотипів, жоден не відповідає %3$s. Послаб фільтр або пошукай за іншою назвою.</item>
+        <item quantity="other">На SteamGridDB для %1$s є %2$d логотипа, жоден не відповідає %3$s. Послаб фільтр або пошукай за іншою назвою.</item>
+    </plurals>
+    <string name="artwork_filtered_unknown_logo">Жоден із логотипів не відповідає %1$s. Послаб фільтр або пошукай за іншою назвою.</string>
+    <string name="artwork_empty_logo">На SteamGridDB для цієї гри ще немає логотипа.</string>
+    <string name="artwork_downloading_logo">Завантаження логотипа…</string>
+    <string name="artwork_updated_logo">Логотип оновлено</string>
+</resources>

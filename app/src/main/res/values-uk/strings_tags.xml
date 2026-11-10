@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tags_genre_point_and_click">Point-and-click</string>
+    <string name="tags_genre_fighting">Файтинг</string>
+    <string name="tags_genre_shooter">Шутер</string>
+    <string name="tags_genre_music">Музична</string>
+    <string name="tags_genre_platform">Платформер</string>
+    <string name="tags_genre_puzzle">Головоломка</string>
+    <string name="tags_genre_racing">Перегони</string>
+    <string name="tags_genre_real_time_strategy">Стратегія в реальному часі (RTS)</string>
+    <string name="tags_genre_role_playing">Рольова (RPG)</string>
+    <string name="tags_genre_simulator">Симулятор</string>
+    <string name="tags_genre_sport">Спорт</string>
+    <string name="tags_genre_strategy">Стратегія</string>
+    <string name="tags_genre_turn_based_strategy">Покрокова стратегія (TBS)</string>
+    <string name="tags_genre_tactical">Тактична</string>
+    <string name="tags_genre_hack_and_slash">Hack and slash / Beat ’em up</string>
+    <string name="tags_genre_quiz">Вікторина</string>
+    <string name="tags_genre_pinball">Пінбол</string>
+    <string name="tags_genre_adventure">Пригодницька</string>
+    <string name="tags_genre_indie">Інді</string>
+    <string name="tags_genre_arcade">Аркада</string>
+    <string name="tags_genre_visual_novel">Візуальна новела</string>
+    <string name="tags_genre_card_and_board">Карткові й настільні</string>
+    <string name="tags_genre_moba">MOBA</string>
+
+    <string name="tags_theme_action">Екшен</string>
+    <string name="tags_theme_fantasy">Фентезі</string>
+    <string name="tags_theme_science_fiction">Наукова фантастика</string>
+    <string name="tags_theme_horror">Жахи</string>
+    <string name="tags_theme_thriller">Трилер</string>
+    <string name="tags_theme_survival">Виживання</string>
+    <string name="tags_theme_historical">Історична</string>
+    <string name="tags_theme_stealth">Стелс</string>
+    <string name="tags_theme_comedy">Комедія</string>
+    <string name="tags_theme_business">Бізнес</string>
+    <string name="tags_theme_drama">Драма</string>
+    <string name="tags_theme_non_fiction">Нон-фікшн</string>
+    <string name="tags_theme_sandbox">Пісочниця</string>
+    <string name="tags_theme_educational">Освітня</string>
+    <string name="tags_theme_kids">Дитяча</string>
+    <string name="tags_theme_open_world">Відкритий світ</string>
+    <string name="tags_theme_warfare">Війна</string>
+    <string name="tags_theme_party">Вечірка</string>
+    <string name="tags_theme_four_x">4X (досліджуй, розширюй, експлуатуй, знищуй)</string>
+    <string name="tags_theme_erotic">Еротика</string>
+    <string name="tags_theme_mystery">Детектив</string>
+    <string name="tags_theme_romance">Романтика</string>
+</resources>

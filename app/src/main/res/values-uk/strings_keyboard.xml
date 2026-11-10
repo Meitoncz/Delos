@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="keyboard_hint_press">Натиснути</string>
+    <string name="keyboard_hint_close">Закрити</string>
+    <string name="keyboard_hint_shift">Shift</string>
+    <string name="keyboard_hint_delete">Видалити</string>
+    <string name="keyboard_hint_space">Пробіл</string>
+    <string name="keyboard_title">ЕКРАННА КЛАВІАТУРА</string>
+</resources>
