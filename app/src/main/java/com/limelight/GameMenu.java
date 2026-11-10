@@ -37,10 +37,10 @@ public class GameMenu {
 
     }
 
-    private final Game game;
+    private final DelosStreamActivity game;
 
 
-    public GameMenu(Game game) {
+    public GameMenu(DelosStreamActivity game) {
         this.game = game;
     }
 

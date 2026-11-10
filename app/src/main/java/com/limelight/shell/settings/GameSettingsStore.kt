@@ -6,7 +6,7 @@ import android.content.ContextWrapper
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
-import com.limelight.Game
+import com.limelight.DelosStreamActivity
 import com.limelight.nvstream.StreamConfiguration
 import com.limelight.shell.data.ProfileStore
 import com.limelight.utils.ExternalDisplayControlActivity
@@ -125,15 +125,15 @@ class GameSettingsStore(private val base: SharedPreferences, pc: String, appId: 
          * The store of the game this stream Activity was launched for, from the identity its launch intent
          * carries. Null when the intent has no launch snapshot or no PC and app id (an old or foreign intent).
          */
-        @JvmStatic fun forLaunch(game: Game): GameSettingsStore? {
+        @JvmStatic fun forLaunch(game: DelosStreamActivity): GameSettingsStore? {
             val intent = game.intent ?: return null
-            val pc = intent.getStringExtra(Game.EXTRA_PC_UUID)?.takeIf { it.isNotEmpty() } ?: return null
-            val appId = intent.getIntExtra(Game.EXTRA_APP_ID, StreamConfiguration.INVALID_APP_ID)
+            val pc = intent.getStringExtra(DelosStreamActivity.EXTRA_PC_UUID)?.takeIf { it.isNotEmpty() } ?: return null
+            val appId = intent.getIntExtra(DelosStreamActivity.EXTRA_APP_ID, StreamConfiguration.INVALID_APP_ID)
             if (appId == StreamConfiguration.INVALID_APP_ID || !intent.hasExtra(EXTRA)) return null
             return GameSettingsStore(ProfileStore.currentSettings(game), pc, appId)
         }
 
-        /** External-display launches wrap the actual Game intent; attach the snapshot to that inner intent. */
+        /** External-display launches wrap the actual DelosStreamActivity intent; attach the snapshot to that inner intent. */
         fun attach(intent: Intent, snapshot: Bundle) {
             @Suppress("DEPRECATION")
             val nested = intent.getParcelableExtra<Intent>(ExternalDisplayControlActivity.EXTRA_LAUNCH_INTENT)
@@ -151,7 +151,7 @@ class GameSettingsStore(private val base: SharedPreferences, pc: String, appId: 
                 if (next === current) break
                 current = next
             }
-            val game = current as? Game ?: return base
+            val game = current as? DelosStreamActivity ?: return base
             val snapshot = game.intent?.getBundleExtra(EXTRA) ?: return base
             @Suppress("DEPRECATION")
             val values = KEYS.mapNotNull { key ->

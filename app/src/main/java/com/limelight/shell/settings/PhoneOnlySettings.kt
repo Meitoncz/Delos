@@ -6,7 +6,7 @@ package com.limelight.shell.settings
  * the on-screen gamepad; issue #65), and the settings that exist only for the key-layout overlay
  * (`KeyBoardController`, the custom special-key layout that the stream menu no longer offers). Only the UI
  * hides them: the XML entries, stored values, defaults and everything that reads them
- * (`PreferenceConfiguration`, `Game`, profiles, the stream menu) are untouched, so existing values keep
+ * (`PreferenceConfiguration`, `DelosStreamActivity`, profiles, the stream menu) are untouched, so existing values keep
  * applying. [SettingsCatalog.all] still lists every key; [SettingsCatalog.visible] is what the settings
  * screens show.
  *

@@ -10,7 +10,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.Display;
 
-import com.limelight.Game;
+import com.limelight.DelosStreamActivity;
 
 /**
  * Moves focus between the stream (on the external display) and the controller activity on the
@@ -41,10 +41,10 @@ public final class ExternalDisplayFocus {
 
         isTimeoutActive = true;
 
-        if (Game.instance != null) {
-            ActivityManager am = (ActivityManager) Game.instance.getSystemService(Context.ACTIVITY_SERVICE);
+        if (DelosStreamActivity.instance != null) {
+            ActivityManager am = (ActivityManager) DelosStreamActivity.instance.getSystemService(Context.ACTIVITY_SERVICE);
             if (am != null) {
-                am.moveTaskToFront(Game.instance.getTaskId(), 0);
+                am.moveTaskToFront(DelosStreamActivity.instance.getTaskId(), 0);
             }
         }
 

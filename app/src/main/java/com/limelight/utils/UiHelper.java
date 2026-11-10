@@ -21,7 +21,7 @@ import android.view.WindowInsets;
 import android.view.WindowManager;
 import android.widget.TextView;
 
-import com.limelight.Game;
+import com.limelight.DelosStreamActivity;
 import com.limelight.LimeLog;
 import com.limelight.R;
 import com.limelight.nvstream.http.ComputerDetails;
@@ -132,7 +132,7 @@ public class UiHelper {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             // Allow this non-streaming activity to layout under notches.
             //
-            // We should NOT do this for the Game activity unless
+            // We should NOT do this for the DelosStreamActivity unless
             // the user specifically opts in, because it can obscure
             // parts of the streaming surface.
             activity.getWindow().getAttributes().layoutInDisplayCutoutMode =

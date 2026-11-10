@@ -19,7 +19,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-/** Characterisation tests: the decisions Game made before the planner was extracted. */
+/** Characterisation tests: the decisions DelosStreamActivity made before the planner was extracted. */
 public class StreamDisplayPlannerTest {
     private static final int LATENCY = PreferenceConfiguration.FRAME_PACING_MIN_LATENCY;
     private static final int BALANCED = PreferenceConfiguration.FRAME_PACING_BALANCED;

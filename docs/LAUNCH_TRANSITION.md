@@ -37,7 +37,7 @@ The normal exit clock is 2200 ms; pose values match the approved reference: init
 
 The two linear animation legs add up to the same nominal exit duration; the readiness checkpoint normally finds the late-started backend already ready. Extra waiting occurs only when a required output frame is late. Neither connection nor decoder initialization waits for an animation timer.
 
-On preparation/identity/direct timeout or graphics capability failure, `Game.reportLaunchArrivalError()` logs the reason and requests cancellation; it does not show a long cosmetic toast or kill the live game. The native/controller paths recover direct presentation. This is an explicit failure path, not a claim that an unsupported effect combination rendered successfully. HDR is never quietly converted to SDR to make the transition work.
+On preparation/identity/direct timeout or graphics capability failure, `StreamSurfaceController.reportLaunchArrivalError()` logs the reason and requests cancellation; it does not show a long cosmetic toast or kill the live game. The native/controller paths recover direct presentation. This is an explicit failure path, not a claim that an unsupported effect combination rendered successfully. HDR is never quietly converted to SDR to make the transition work.
 
 ## Surface ownership and lifecycle
 

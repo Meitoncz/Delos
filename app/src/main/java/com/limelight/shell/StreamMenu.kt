@@ -23,7 +23,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
-import com.limelight.Game
+import com.limelight.DelosStreamActivity
 import com.limelight.binding.input.KeyboardTranslator
 import com.limelight.nvstream.http.HostHttpResponseException
 import com.limelight.nvstream.http.PyroWaveHostInfo
@@ -67,9 +67,9 @@ import java.io.FileNotFoundException
  * the buttons set in Delos (L3 + R3 by default), a swipe up from the bottom edge (unless turned off) and every
  * way the classic menu opened. It is its own window, so the controller does not reach the game while it is
  * open. This class is that window and the bridge to the stream ([GameHost]); what is drawn is [StreamMenuRoot].
- * Created by Game (a small "Delos:" hook).
+ * Created by DelosStreamActivity (a small "Delos:" hook).
  */
-class StreamMenu(private val game: Game) {
+class StreamMenu(private val game: DelosStreamActivity) {
     private val swipe = StreamMenuSettings.swipe(game)
 
     /**
@@ -360,12 +360,12 @@ class StreamMenu(private val game: Game) {
         autoSave.flush()
     }
 
-    /** What the menu's composables read from and do to the stream: the live [Game], with [menu] as the menu's own window. */
+    /** What the menu's composables read from and do to the stream: the live [DelosStreamActivity], with [menu] as the menu's own window. */
     private inner class GameHost(private val menu: ComponentDialog) : StreamMenuHost {
         private val prefs get() = game.prefConfig
         private val classic get() = game.gameMenuCallbacks
 
-        override val gameName: String = game.intent.getStringExtra(Game.EXTRA_APP_NAME) ?: "Stream"
+        override val gameName: String = game.intent.getStringExtra(DelosStreamActivity.EXTRA_APP_NAME) ?: "Stream"
         override fun dismiss() { menu.dismiss() }
 
         // The whole stream behind the menu is blurred (the way leaving a stream does it): a window can only blur what lies
@@ -399,7 +399,7 @@ class StreamMenu(private val game: Game) {
         override fun applyBitrate(requested: Int, accepted: (Int) -> Unit) = this@StreamMenu.applyBitrate(requested, accepted)
 
         private val linkTests by lazy { LinkTestStore(game) }
-        private val pcUuid: String? = game.intent.getStringExtra(Game.EXTRA_PC_UUID)
+        private val pcUuid: String? = game.intent.getStringExtra(DelosStreamActivity.EXTRA_PC_UUID)
 
         // The format asked for, the last link test of this PC on the current kind of network and, for PyroWave, the stream's own
         // drop counters. The PC's own link speed is not known here (it is read when testing). An ordinary codec shows the row

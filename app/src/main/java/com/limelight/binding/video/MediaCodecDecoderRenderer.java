@@ -56,7 +56,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
     private final long[] enqueueNsOfPts = new long[ENQUEUE_TRACK_CAP];
     private int enqueueCount; // guarded by enqueuePtsUs
 
-    // Output dequeue timeout in microseconds (Game sets 500 with LFR, 2000 otherwise)
+    // Output dequeue timeout in microseconds (DelosStreamActivity sets 500 with LFR, 2000 otherwise)
     private volatile int preferLowerDelaysTimeoutUs = 2000;
     public void setPreferLowerDelaysTimeoutUs(int us) { this.preferLowerDelaysTimeoutUs = Math.max(0, us); }
 
@@ -1410,7 +1410,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                 linkMonitor.reading()));
     }
 
-    /** Delos diagnostics: what the stream was asked for, set by Game before the connection starts. */
+    /** Delos diagnostics: what the stream was asked for, set by DelosStreamActivity before the connection starts. */
     public void setStreamDiagnostics(int bitrateKbps, boolean metered, boolean chroma444Requested) {
         diagBitrateKbps = bitrateKbps;
         diagMetered = metered;

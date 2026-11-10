@@ -11,7 +11,7 @@ import com.limelight.utils.DelosToast;
 import androidx.annotation.RequiresApi;
 
 import com.limelight.ShortcutTrampoline;
-import com.limelight.Game;
+import com.limelight.DelosStreamActivity;
 import com.limelight.LimeLog;
 import com.limelight.R;
 import com.limelight.binding.PlatformBinding;
@@ -53,10 +53,10 @@ public class ServerHelper {
         Intent i = new Intent(parent, ShortcutTrampoline.class);
         i.putExtra(ShortcutTrampoline.NAME_EXTRA, computer.name);
         i.putExtra(ShortcutTrampoline.UUID_EXTRA, computer.uuid);
-        i.putExtra(Game.EXTRA_APP_NAME, app.getAppName());
-        i.putExtra(Game.EXTRA_APP_UUID, app.getAppUUID());
-        i.putExtra(Game.EXTRA_APP_ID, ""+app.getAppId());
-        i.putExtra(Game.EXTRA_APP_HDR, app.isHdrSupported());
+        i.putExtra(DelosStreamActivity.EXTRA_APP_NAME, app.getAppName());
+        i.putExtra(DelosStreamActivity.EXTRA_APP_UUID, app.getAppUUID());
+        i.putExtra(DelosStreamActivity.EXTRA_APP_ID, ""+app.getAppId());
+        i.putExtra(DelosStreamActivity.EXTRA_APP_HDR, app.isHdrSupported());
         i.setAction(Intent.ACTION_DEFAULT);
         return i;
     }
@@ -89,7 +89,7 @@ public class ServerHelper {
         return display;
     }
 
-    /** Returns the Game intent, unwrapping the external-display controller when present. */
+    /** Returns the DelosStreamActivity intent, unwrapping the external-display controller when present. */
     public static Intent getStreamIntent(Intent launchIntent) {
         if (launchIntent == null) {
             return null;
@@ -114,26 +114,26 @@ public class ServerHelper {
         // Try to add secondary DisplayContext if supported and connected
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && prefConfig.enableFullExDisplay && getSecondaryDisplay(parent) != null) {
             Context displayContext = parent.createDisplayContext(getSecondaryDisplay(parent)); // use secondary display
-            gameIntent = new Intent(displayContext, Game.class);
+            gameIntent = new Intent(displayContext, DelosStreamActivity.class);
             gameIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         }
-        if(gameIntent == null) gameIntent = new Intent(parent, Game.class);
-        gameIntent.putExtra(Game.EXTRA_HOST, computer.activeAddress.address);
-        gameIntent.putExtra(Game.EXTRA_PORT, computer.activeAddress.port);
-        gameIntent.putExtra(Game.EXTRA_HTTPS_PORT, computer.httpsPort);
-        gameIntent.putExtra(Game.EXTRA_APP_NAME, app.getAppName());
-        gameIntent.putExtra(Game.EXTRA_APP_UUID, app.getAppUUID());
-        gameIntent.putExtra(Game.EXTRA_APP_ID, app.getAppId());
-        gameIntent.putExtra(Game.EXTRA_APP_HDR, app.isHdrSupported());
-        gameIntent.putExtra(Game.EXTRA_UNIQUEID, managerBinder.getUniqueId());
-        gameIntent.putExtra(Game.EXTRA_PC_UUID, computer.uuid);
-        gameIntent.putExtra(Game.EXTRA_PC_NAME, computer.name);
-        gameIntent.putExtra(Game.EXTRA_VDISPLAY, withVDisplay);
-        gameIntent.putExtra(Game.EXTRA_SERVER_COMMANDS, (ArrayList<String>) computer.serverCommands);
+        if(gameIntent == null) gameIntent = new Intent(parent, DelosStreamActivity.class);
+        gameIntent.putExtra(DelosStreamActivity.EXTRA_HOST, computer.activeAddress.address);
+        gameIntent.putExtra(DelosStreamActivity.EXTRA_PORT, computer.activeAddress.port);
+        gameIntent.putExtra(DelosStreamActivity.EXTRA_HTTPS_PORT, computer.httpsPort);
+        gameIntent.putExtra(DelosStreamActivity.EXTRA_APP_NAME, app.getAppName());
+        gameIntent.putExtra(DelosStreamActivity.EXTRA_APP_UUID, app.getAppUUID());
+        gameIntent.putExtra(DelosStreamActivity.EXTRA_APP_ID, app.getAppId());
+        gameIntent.putExtra(DelosStreamActivity.EXTRA_APP_HDR, app.isHdrSupported());
+        gameIntent.putExtra(DelosStreamActivity.EXTRA_UNIQUEID, managerBinder.getUniqueId());
+        gameIntent.putExtra(DelosStreamActivity.EXTRA_PC_UUID, computer.uuid);
+        gameIntent.putExtra(DelosStreamActivity.EXTRA_PC_NAME, computer.name);
+        gameIntent.putExtra(DelosStreamActivity.EXTRA_VDISPLAY, withVDisplay);
+        gameIntent.putExtra(DelosStreamActivity.EXTRA_SERVER_COMMANDS, (ArrayList<String>) computer.serverCommands);
 
         try {
             if (computer.serverCert != null) {
-                gameIntent.putExtra(Game.EXTRA_SERVER_CERT, computer.serverCert.getEncoded());
+                gameIntent.putExtra(DelosStreamActivity.EXTRA_SERVER_CERT, computer.serverCert.getEncoded());
             }
         } catch (CertificateEncodingException e) {
             e.printStackTrace();
@@ -143,7 +143,7 @@ public class ServerHelper {
             Display secondaryDisplay = getSecondaryDisplay(parent);
             if (secondaryDisplay != null) {
                 int secondaryDisplayId = secondaryDisplay.getDisplayId();
-                gameIntent.putExtra(Game.EXTRA_DISPLAY_ID, secondaryDisplayId);
+                gameIntent.putExtra(DelosStreamActivity.EXTRA_DISPLAY_ID, secondaryDisplayId);
                 Intent touchpadIntent = new Intent(parent, ExternalDisplayControlActivity.class);
                 touchpadIntent.putExtra(ExternalDisplayControlActivity.EXTRA_LAUNCH_INTENT, gameIntent);
                 return touchpadIntent;

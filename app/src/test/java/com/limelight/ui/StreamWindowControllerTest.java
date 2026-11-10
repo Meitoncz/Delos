@@ -12,7 +12,7 @@ import com.limelight.preferences.PreferenceConfiguration.ScaleMode;
 
 import org.junit.Test;
 
-/** The window decisions Game made before StreamWindowController was extracted. */
+/** The window decisions DelosStreamActivity made before StreamWindowController was extracted. */
 public class StreamWindowControllerTest {
     private static final int LANDSCAPE = Configuration.ORIENTATION_LANDSCAPE;
     private static final int PORTRAIT = Configuration.ORIENTATION_PORTRAIT;

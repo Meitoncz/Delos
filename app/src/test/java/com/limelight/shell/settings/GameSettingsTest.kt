@@ -6,7 +6,7 @@ import android.content.ContextWrapper
 import android.content.Intent
 import androidx.preference.PreferenceManager
 import androidx.test.core.app.ApplicationProvider
-import com.limelight.Game
+import com.limelight.DelosStreamActivity
 import com.limelight.preferences.PreferenceConfiguration
 import com.limelight.preferences.UpscalerMode
 import com.limelight.preferences.PyroWaveBitrate
@@ -367,9 +367,9 @@ class GameSettingsTest {
         selected.preferences.edit().putString("list_pyrowave_chroma", "444").commit()
         for (hdr in listOf(false, true)) {
             selected.preferences.edit().putBoolean("checkbox_enable_hdr", hdr).commit()
-            val intent = Intent(context, Game::class.java)
+            val intent = Intent(context, DelosStreamActivity::class.java)
             GameSettingsStore.attach(intent, selected.snapshot())
-            val activity = Robolectric.buildActivity(Game::class.java, intent).get()
+            val activity = Robolectric.buildActivity(DelosStreamActivity::class.java, intent).get()
             assertEquals(PyroWaveBitrate.recommendedKbps(1920, 1080, 60, !hdr, hdr),
                 PreferenceConfiguration.readPreferences(activity).bitrate)
         }
@@ -381,9 +381,9 @@ class GameSettingsTest {
         val a = game()
         a.preferences.edit().putString("list_resolution", "1280x720").putInt("seekbar_bitrate_kbps", 17000)
             .putBoolean("checkbox_use_virtual_display", false).commit()
-        val intent = Intent(context, Game::class.java)
+        val intent = Intent(context, DelosStreamActivity::class.java)
         GameSettingsStore.attach(intent, a.snapshot())
-        val activity = Robolectric.buildActivity(Game::class.java, intent).get()
+        val activity = Robolectric.buildActivity(DelosStreamActivity::class.java, intent).get()
         val config = PreferenceConfiguration.readPreferences(activity)
         assertEquals(1280, config.width)
         assertEquals(720, config.height)
@@ -394,28 +394,28 @@ class GameSettingsTest {
         assertEquals(1920, PreferenceConfiguration.readPreferences(context).width)
         val otherActivity = Robolectric.buildActivity(Activity::class.java, intent).get()
         assertEquals(1920, PreferenceConfiguration.readPreferences(otherActivity).width)
-        val nextIntent = Intent(context, Game::class.java)
+        val nextIntent = Intent(context, DelosStreamActivity::class.java)
         GameSettingsStore.attach(nextIntent, game(id = 2).snapshot())
-        val next = Robolectric.buildActivity(Game::class.java, nextIntent).get()
+        val next = Robolectric.buildActivity(DelosStreamActivity::class.java, nextIntent).get()
         assertEquals(1920, PreferenceConfiguration.readPreferences(next).width)
     }
 
     @Test fun externalDisplayWrapperCarriesSnapshotToInnerStreamIntent() {
         game().preferences.edit().putString("list_resolution", "1280x720").commit()
-        val inner = Intent(context, Game::class.java)
+        val inner = Intent(context, DelosStreamActivity::class.java)
         val outer = Intent(context, ExternalDisplayControlActivity::class.java)
             .putExtra(ExternalDisplayControlActivity.EXTRA_LAUNCH_INTENT, inner)
         GameSettingsStore.attach(outer, game().snapshot())
         @Suppress("DEPRECATION")
         val stream = outer.getParcelableExtra<Intent>(ExternalDisplayControlActivity.EXTRA_LAUNCH_INTENT)!!
-        assertEquals(1280, PreferenceConfiguration.readPreferences(Robolectric.buildActivity(Game::class.java, stream).get()).width)
+        assertEquals(1280, PreferenceConfiguration.readPreferences(Robolectric.buildActivity(DelosStreamActivity::class.java, stream).get()).width)
 
         val unwrapped = ServerHelper.getStreamIntent(outer)
-        unwrapped.putExtra(Game.EXTRA_PC_NAME, "Living room")
+        unwrapped.putExtra(DelosStreamActivity.EXTRA_PC_NAME, "Living room")
         outer.putExtra(ExternalDisplayControlActivity.EXTRA_LAUNCH_INTENT, unwrapped)
         @Suppress("DEPRECATION")
         val configured = outer.getParcelableExtra<Intent>(ExternalDisplayControlActivity.EXTRA_LAUNCH_INTENT)!!
-        assertEquals("Living room", configured.getStringExtra(Game.EXTRA_PC_NAME))
+        assertEquals("Living room", configured.getStringExtra(DelosStreamActivity.EXTRA_PC_NAME))
         assertSame(configured, ServerHelper.getStreamIntent(configured))
     }
 
@@ -426,9 +426,9 @@ class GameSettingsTest {
         store.write(spec("checkbox_sgsr"), true)
         store.write(spec("list_sgsr_quality"), "high")
         store.write(spec("seekbar_sgsr_sharpness"), 75)
-        val intent = Intent(context, Game::class.java)
+        val intent = Intent(context, DelosStreamActivity::class.java)
         GameSettingsStore.attach(intent, a.snapshot())
-        val activity = Robolectric.buildActivity(Game::class.java, intent).get()
+        val activity = Robolectric.buildActivity(DelosStreamActivity::class.java, intent).get()
         val config = PreferenceConfiguration.readPreferences(activity)
         assertTrue(config.enableHdr)
         assertTrue(config.sgsrEnabled)
@@ -450,9 +450,9 @@ class GameSettingsTest {
     @Test fun temporalVideoModeIsScopedToTheGameAndUnknownModesFallBackToStandard() {
         game().preferences.edit().putBoolean("checkbox_sgsr",true)
             .putBoolean("checkbox_enable_hdr",true).putString("list_sgsr_quality","temporal").commit()
-        val intent=Intent(context,Game::class.java)
+        val intent=Intent(context,DelosStreamActivity::class.java)
         GameSettingsStore.attach(intent,game().snapshot())
-        val config=PreferenceConfiguration.readPreferences(Robolectric.buildActivity(Game::class.java,intent).get())
+        val config=PreferenceConfiguration.readPreferences(Robolectric.buildActivity(DelosStreamActivity::class.java,intent).get())
         assertTrue(config.sgsrEnabled)
         assertTrue(config.enableHdr)
         assertEquals(UpscalerMode.VIDEO, config.sgsrMode)
@@ -481,10 +481,10 @@ class GameSettingsTest {
         assertEquals(UpscalerMode.STANDARD, PreferenceConfiguration.readPreferences(launched(id = 2)).sgsrMode)
     }
 
-    private fun launched(pc: String = "pc-a", id: Int = 1, snapshot: Boolean = true): Game {
-        val intent = Intent(context, Game::class.java).putExtra(Game.EXTRA_PC_UUID, pc).putExtra(Game.EXTRA_APP_ID, id)
+    private fun launched(pc: String = "pc-a", id: Int = 1, snapshot: Boolean = true): DelosStreamActivity {
+        val intent = Intent(context, DelosStreamActivity::class.java).putExtra(DelosStreamActivity.EXTRA_PC_UUID, pc).putExtra(DelosStreamActivity.EXTRA_APP_ID, id)
         if (snapshot) GameSettingsStore.attach(intent, game(pc, id).snapshot())
-        return Robolectric.buildActivity(Game::class.java, intent).get()
+        return Robolectric.buildActivity(DelosStreamActivity::class.java, intent).get()
     }
 
     private fun profileValues() = profiles.settings().all.filterKeys { !it.startsWith("ui_game_") }
@@ -639,7 +639,7 @@ class GameSettingsTest {
         assertNull(GameSettingsStore.forLaunch(launched(snapshot = false)))
         assertNull(GameSettingsStore.forLaunch(launched(id = 0)))
         assertNull(GameSettingsStore.forLaunch(launched(pc = "")))
-        assertNull(GameSettingsStore.forLaunch(Robolectric.buildActivity(Game::class.java, Intent(context, Game::class.java)).get()))
+        assertNull(GameSettingsStore.forLaunch(Robolectric.buildActivity(DelosStreamActivity::class.java, Intent(context, DelosStreamActivity::class.java)).get()))
         assertThrows(IllegalArgumentException::class.java) { game().save(mapOf("ui_profile" to "other")) }
     }
 

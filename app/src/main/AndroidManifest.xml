@@ -92,7 +92,7 @@
              in each activity even though it is implied by targeting API 24+ -->
 
         <!-- The Delos UI: the launcher on phones, TVs and in multi-window, and art:// pairing links. Its own
-             task affinity keeps it apart from the stream (Game), which runs in a task of its own. -->
+             task affinity keeps it apart from the stream (DelosStreamActivity), which runs in a task of its own. -->
         <activity
             android:name=".shell.ShellActivity"
             android:exported="true"
@@ -150,7 +150,7 @@
             android:taskAffinity=""
             android:theme="@style/ExternalDisplayControllerTheme"/>
         <activity
-            android:name=".Game"
+            android:name=".DelosStreamActivity"
             android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize|layoutDirection"
             android:noHistory="true"
             android:supportsPictureInPicture="true"

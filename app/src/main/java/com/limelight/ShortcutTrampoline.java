@@ -380,13 +380,13 @@ public class ShortcutTrampoline extends AppCompatActivity {
 
             // App arguments, all optional, but one must be provided in order to start an app
             if (appUUID == null) {
-                appUUID = getIntent().getStringExtra(Game.EXTRA_APP_UUID);
+                appUUID = getIntent().getStringExtra(DelosStreamActivity.EXTRA_APP_UUID);
             }
             if (appIDStr == null) {
-                appIDStr = getIntent().getStringExtra(Game.EXTRA_APP_ID);
+                appIDStr = getIntent().getStringExtra(DelosStreamActivity.EXTRA_APP_ID);
             }
             if (appName == null) {
-                appName = getIntent().getStringExtra(Game.EXTRA_APP_NAME);
+                appName = getIntent().getStringExtra(DelosStreamActivity.EXTRA_APP_NAME);
             }
         }
 
@@ -420,13 +420,13 @@ public class ShortcutTrampoline extends AppCompatActivity {
                 app = new NvApp(appName, // appName can be null if only UUID is provided
                         appUUID,
                         -1, // App ID is not strictly needed if UUID is present
-                        getIntent().getBooleanExtra(Game.EXTRA_APP_HDR, false)); // HDR info still from intent
+                        getIntent().getBooleanExtra(DelosStreamActivity.EXTRA_APP_HDR, false)); // HDR info still from intent
             } else if (appIDStr != null && !appIDStr.isEmpty()) {
                 int appID = Integer.parseInt(appIDStr);
                 app = new NvApp(appName, // appName can be null if only App ID is provided
                         null,
                         appID,
-                        getIntent().getBooleanExtra(Game.EXTRA_APP_HDR, false)); // HDR info still from intent
+                        getIntent().getBooleanExtra(DelosStreamActivity.EXTRA_APP_HDR, false)); // HDR info still from intent
             } else if (appName != null && !appName.isEmpty()) {
                 // Use appNameString (from .art file or intent extra) to find the corresponding AppId and AppUUID
                 try {
@@ -455,17 +455,17 @@ public class ShortcutTrampoline extends AppCompatActivity {
                     }
                     // Update intent with found app ID and UUID if they weren't originally there
                     Intent currentIntent = getIntent();
-                    if (currentIntent.getStringExtra(Game.EXTRA_APP_ID) == null && appID != -1) {
-                        currentIntent.putExtra(Game.EXTRA_APP_ID, String.valueOf(appID));
+                    if (currentIntent.getStringExtra(DelosStreamActivity.EXTRA_APP_ID) == null && appID != -1) {
+                        currentIntent.putExtra(DelosStreamActivity.EXTRA_APP_ID, String.valueOf(appID));
                     }
-                    if (currentIntent.getStringExtra(Game.EXTRA_APP_UUID) == null && appUuidFromFile != null) {
-                        currentIntent.putExtra(Game.EXTRA_APP_UUID, appUuidFromFile);
+                    if (currentIntent.getStringExtra(DelosStreamActivity.EXTRA_APP_UUID) == null && appUuidFromFile != null) {
+                        currentIntent.putExtra(DelosStreamActivity.EXTRA_APP_UUID, appUuidFromFile);
                     }
                     app = new NvApp(
                             appName,
                             appUuidFromFile,
                             appID,
-                            getIntent().getBooleanExtra(Game.EXTRA_APP_HDR, false));
+                            getIntent().getBooleanExtra(DelosStreamActivity.EXTRA_APP_HDR, false));
                 } catch (IOException | XmlPullParserException e) {
                     Log.e(TAG, "Error processing app list from cache", e);
                     reject(getString(R.string.scut_invalid_app_id) + " (error parsing applist cache)");

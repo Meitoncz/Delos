@@ -12,7 +12,7 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.widget.FrameLayout;
 
-import com.limelight.Game;
+import com.limelight.DelosStreamActivity;
 import com.limelight.preferences.PreferenceConfiguration;
 
 /**
@@ -29,7 +29,7 @@ public class StreamContainer extends FrameLayout implements SurfaceHolder.Callba
         boolean handleFocusChange(boolean hasWindowFocus);
     }
 
-    private Game game;
+    private DelosStreamActivity game;
 
     private SurfaceView mSurfaceView;
     private Surface mCurrentSurface;
@@ -49,7 +49,7 @@ public class StreamContainer extends FrameLayout implements SurfaceHolder.Callba
         setFocusableInTouchMode(true);
     }
 
-    public void init(Game game, PreferenceConfiguration prefConfig) {
+    public void init(DelosStreamActivity game, PreferenceConfiguration prefConfig) {
         if (this.game != null) {
             return;
         }

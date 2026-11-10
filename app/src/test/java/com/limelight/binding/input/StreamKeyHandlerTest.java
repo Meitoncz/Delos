@@ -21,7 +21,7 @@ import org.robolectric.annotation.Config;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Characterisation tests: the modifier state and the client-side Ctrl+Alt+Shift combos Game handled before the extraction. */
+/** Characterisation tests: the modifier state and the client-side Ctrl+Alt+Shift combos DelosStreamActivity handled before the extraction. */
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = {33})
 public class StreamKeyHandlerTest {

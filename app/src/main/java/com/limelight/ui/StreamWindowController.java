@@ -22,7 +22,7 @@ import com.limelight.utils.UiHelper;
 
 /**
  * The stream activity's window: requested orientation, picture-in-picture (auto-enter, parameters, hiding
- * the overlays while in PiP), multi-window and the immersive system UI. {@code Game} forwards the Activity
+ * the overlays while in PiP), multi-window and the immersive system UI. {@code DelosStreamActivity} forwards the Activity
  * callbacks it receives; the controller reaches the rest of the stream through {@link Host}.
  */
 public final class StreamWindowController implements View.OnSystemUiVisibilityChangeListener {

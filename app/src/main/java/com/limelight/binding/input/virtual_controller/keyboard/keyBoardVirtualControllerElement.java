@@ -15,7 +15,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
 
-import com.limelight.Game;
+import com.limelight.DelosStreamActivity;
 import com.limelight.binding.input.virtual_controller.VirtualController;
 
 import org.json.JSONException;

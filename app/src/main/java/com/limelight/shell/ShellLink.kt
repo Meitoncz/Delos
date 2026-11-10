@@ -3,7 +3,7 @@ package com.limelight.shell
 import android.content.Context
 import android.content.Intent
 import com.limelight.ShortcutTrampoline
-import com.limelight.Game
+import com.limelight.DelosStreamActivity
 
 /**
  * What a link, another app or a shortcut asks the Delos UI to do: art:// links (as the classic
@@ -29,9 +29,9 @@ sealed interface ShellLink {
                         .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
                         .putExtra(ShortcutTrampoline.UUID_EXTRA, data.getQueryParameter("host_uuid"))
                         .putExtra(ShortcutTrampoline.NAME_EXTRA, data.getQueryParameter("host_name"))
-                        .putExtra(Game.EXTRA_APP_UUID, data.getQueryParameter("app_uuid"))
-                        .putExtra(Game.EXTRA_APP_NAME, data.getQueryParameter("app_name"))
-                        .putExtra(Game.EXTRA_APP_ID, data.getQueryParameter("app_id"))
+                        .putExtra(DelosStreamActivity.EXTRA_APP_UUID, data.getQueryParameter("app_uuid"))
+                        .putExtra(DelosStreamActivity.EXTRA_APP_NAME, data.getQueryParameter("app_name"))
+                        .putExtra(DelosStreamActivity.EXTRA_APP_ID, data.getQueryParameter("app_id"))
                     return Launch(launch, data.getQueryParameter("app_name"), data.getQueryParameter("host_name"))
                 }
                 val address = data.authority?.takeIf { it.isNotEmpty() } ?: return null

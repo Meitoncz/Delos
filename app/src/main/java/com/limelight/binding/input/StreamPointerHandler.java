@@ -31,7 +31,7 @@ import java.util.Map;
 /**
  * The stream's pointer input: mice (captured or not), styluses and erasers, touchpads and the touchscreen in every
  * mouse mode (direct touch, mouse, trackpad), the 3/4/5-finger taps, the touch sensitivity and the pan and zoom mode.
- * {@code Game} sends it the pointer events left over after the controller passthrough; {@link MouseModeController}
+ * {@code DelosStreamActivity} sends it the pointer events left over after the controller passthrough; {@link MouseModeController}
  * fills its touch contexts.
  */
 public final class StreamPointerHandler {

@@ -11,7 +11,7 @@ import java.util.List;
 
 /**
  * Chooses the display mode, refresh rate and frame pacing of a stream from plain display and preference
- * data. Pure: {@code Game} reads the {@link Display}, then applies the {@link Plan} (window attributes,
+ * data. Pure: {@code DelosStreamActivity} reads the {@link Display}, then applies the {@link Plan} (window attributes,
  * the stream container's aspect ratio, {@code Surface.setFrameRate}).
  */
 public final class StreamDisplayPlanner {

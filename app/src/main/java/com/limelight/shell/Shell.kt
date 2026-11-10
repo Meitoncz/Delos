@@ -312,7 +312,7 @@ fun Shell(
         shell.diving = true
         // Only a game that really opens counts as last played (not one cancelled in the loader)
         repo.setLastPlayed(launch.pc.uuid, launch.app.id)
-        // The stream (Game, launchMode singleTask) opens in its own task, where the system ignores custom
+        // The stream (DelosStreamActivity, launchMode singleTask) opens in its own task, where the system ignores custom
         // activity animations and slides the new window in. A scale-up is honoured for new tasks; from the
         // whole screen it only fades the stream window in over this one (a clip reveal also shifts it up a
         // little), and that starts with the same scene.

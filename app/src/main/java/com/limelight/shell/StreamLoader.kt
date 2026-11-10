@@ -22,7 +22,7 @@ import kotlinx.coroutines.withContext
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.ComposeView
-import com.limelight.Game
+import com.limelight.DelosStreamActivity
 import com.limelight.binding.video.LaunchArrival
 import com.limelight.nvstream.jni.MoonBridge
 import com.limelight.preferences.PreferenceConfiguration
@@ -54,7 +54,7 @@ import kotlin.random.Random
 
 /** Continues the shell's tunnel and real stage queue, revealing only a presented video frame. */
 class StreamLoader private constructor(
-    private val activity: Game,
+    private val activity: DelosStreamActivity,
     private val view: ComposeView,
     private val pcName: String,
     initialParameters: String,
@@ -167,7 +167,7 @@ class StreamLoader private constructor(
             val game = if (pcUuid != null && appId >= 0) GameSettingsStore(base, pcUuid, appId) else null
             val prefs = launchParameterPreferences(base, game?.preferences ?: base, game?.overrides().orEmpty())
             val config = PreferenceConfiguration.readPreferences(context, prefs)
-            // readPreferences' legacy codec reader reads the context; this shell context is not Game.
+            // readPreferences' legacy codec reader reads the context; this shell context is not DelosStreamActivity.
             config.videoFormat = when (prefs.getString("video_format", "auto")) {
                 "forceav1" -> PreferenceConfiguration.FormatOption.FORCE_AV1
                 "forceh265" -> PreferenceConfiguration.FormatOption.FORCE_HEVC
@@ -178,12 +178,12 @@ class StreamLoader private constructor(
             return parameters(config, 0, config.width, config.height)
         }
 
-        @JvmStatic fun show(activity: Game, config: PreferenceConfiguration): StreamLoader {
+        @JvmStatic fun show(activity: DelosStreamActivity, config: PreferenceConfiguration): StreamLoader {
             val intent = activity.intent
-            val title = intent.getStringExtra(Game.EXTRA_APP_NAME).orEmpty()
-            val pcName = intent.getStringExtra(Game.EXTRA_PC_NAME) ?: "the PC"
-            val pcUuid = intent.getStringExtra(Game.EXTRA_PC_UUID)
-            val appId = intent.getIntExtra(Game.EXTRA_APP_ID, 0)
+            val title = intent.getStringExtra(DelosStreamActivity.EXTRA_APP_NAME).orEmpty()
+            val pcName = intent.getStringExtra(DelosStreamActivity.EXTRA_PC_NAME) ?: "the PC"
+            val pcUuid = intent.getStringExtra(DelosStreamActivity.EXTRA_PC_UUID)
+            val appId = intent.getIntExtra(DelosStreamActivity.EXTRA_APP_ID, 0)
             val cover = if (Build.VERSION.SDK_INT < 33) pcUuid?.let { loadCover(activity, it, appId) } else null
             val logo = LaunchHandoff.logo
             val hue = ((title.hashCode() and 0x7fffffff) % 360).toFloat()
@@ -212,8 +212,8 @@ class StreamLoader private constructor(
             val target = loader.target.floatValue
             var line by remember { mutableStateOf(loader.stages.currentLine) }
             var drained by remember { mutableStateOf(false) }
-            val logo by rememberLogo(loader.activity, loader.activity.intent.getStringExtra(Game.EXTRA_PC_UUID),
-                loader.activity.intent.getIntExtra(Game.EXTRA_APP_ID, 0), card.logo)
+            val logo by rememberLogo(loader.activity, loader.activity.intent.getStringExtra(DelosStreamActivity.EXTRA_PC_UUID),
+                loader.activity.intent.getIntExtra(DelosStreamActivity.EXTRA_APP_ID, 0), card.logo)
             DisposableEffect(loader) { onDispose { loader.dispose() } }
             LaunchedEffect(target) { progress.animateTo(target, tween(600, easing = EaseOut)) }
             LaunchedEffect(loader) {

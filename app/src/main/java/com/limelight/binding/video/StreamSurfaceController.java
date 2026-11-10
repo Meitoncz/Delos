@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * The stream's surface and the live upscaler controls: the SurfaceView's buffer size for the upscaler, the
  * surface callbacks' decoder side (render target, stop on loss), the stream menu's upscaler and supersampling
- * controls and the launch arrival's link to the decoder. {@code Game} forwards the {@code StreamContainer}
+ * controls and the launch arrival's link to the decoder. {@code DelosStreamActivity} forwards the {@code StreamContainer}
  * callbacks and owns the connection, which the controller starts and stops through {@link Host}.
  */
 public final class StreamSurfaceController implements StreamSurfaceHost {

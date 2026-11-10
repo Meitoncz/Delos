@@ -117,7 +117,7 @@ public class StreamView extends SurfaceView {
     public void onWindowFocusChanged(boolean hasWindowFocus) {
         super.onWindowFocusChanged(hasWindowFocus);
         if (inputCallbacks != null && !inputCallbacks.isOnExternalDisplay()) {
-            // We don't handle focus change on the Game activity when external display controller presents
+            // We don't handle focus change on the DelosStreamActivity when external display controller presents
             inputCallbacks.handleFocusChange(hasWindowFocus);
         }
     }

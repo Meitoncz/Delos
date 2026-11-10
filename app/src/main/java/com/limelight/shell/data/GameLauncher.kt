@@ -2,7 +2,7 @@ package com.limelight.shell.data
 
 import android.app.Activity
 import android.content.Intent
-import com.limelight.Game
+import com.limelight.DelosStreamActivity
 import com.limelight.binding.PlatformBinding
 import com.limelight.computers.ComputerManagerService
 import com.limelight.nvstream.http.ComputerDetails
@@ -17,7 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * Starts and quits games from the new UI. The stream itself is the classic `Game` activity, started
+ * Starts and quits games from the new UI. The stream itself is the classic `DelosStreamActivity`, started
  * exactly like the classic AppView does (ServerHelper.createStartIntent).
  */
 class GameLauncher(private val activity: Activity, private val repo: PcRepository) {
@@ -38,8 +38,8 @@ class GameLauncher(private val activity: Activity, private val repo: PcRepositor
         val intent = start.intent
         val streamIntent = ServerHelper.getStreamIntent(intent)
         // The PC's name as set in Delos goes to the stream's loader (the new UI's half of the launch scene).
-        // External-display launches wrap Game in a controller Activity, so it belongs to the inner stream intent.
-        streamIntent.putExtra(Game.EXTRA_PC_NAME, pc.name)
+        // External-display launches wrap DelosStreamActivity in a controller Activity, so it belongs to the inner stream intent.
+        streamIntent.putExtra(DelosStreamActivity.EXTRA_PC_NAME, pc.name)
         if (streamIntent !== intent) {
             intent.putExtra(ExternalDisplayControlActivity.EXTRA_LAUNCH_INTENT, streamIntent)
         }

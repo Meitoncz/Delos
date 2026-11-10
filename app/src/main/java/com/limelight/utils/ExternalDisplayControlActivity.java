@@ -34,7 +34,7 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
-import com.limelight.Game;
+import com.limelight.DelosStreamActivity;
 import com.limelight.LimeLog;
 import com.limelight.R;
 import com.limelight.binding.input.virtual_controller.keyboard.KeyBoardLayoutController;
@@ -91,14 +91,14 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
         return instance != null && instance.keyBoardLayoutController != null && instance.keyBoardLayoutController.shown;
     }
 
-    /** The full keyboard of this screen, or null before it was first shown (Game hands the controller to it while it is up). */
+    /** The full keyboard of this screen, or null before it was first shown (DelosStreamActivity hands the controller to it while it is up). */
     public static KeyBoardLayoutController getFullKeyboard() {
         return instance != null ? instance.keyBoardLayoutController : null;
     }
 
     public static void toggleGameMenu() {
-        if (Game.instance != null) {
-            Game.instance.showStreamMenu();
+        if (DelosStreamActivity.instance != null) {
+            DelosStreamActivity.instance.showStreamMenu();
         }
     }
 
@@ -137,7 +137,7 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
             } else {
                 Display secondaryDisplay = getSecondaryDisplay(this);
                 if (secondaryDisplay != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    // The shell and loader are one continuous scene. This nested Game task must not
+                    // The shell and loader are one continuous scene. This nested DelosStreamActivity task must not
                     // get Android's default side-slide (custom animations are ignored for this task).
                     gameIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                     ActivityOptions options = ActivityOptions.makeBasic();
@@ -161,7 +161,7 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
     }
 
     private void initViews() {
-        if (Game.instance == null) {
+        if (DelosStreamActivity.instance == null) {
             if (failCount > 10) {
                 DelosToast.show(this, getString(R.string.no_game_instance), DelosToast.LONG, ToastKind.ERROR);
                 finish();
@@ -201,8 +201,8 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
         // Intercept touch events on root layout
         rootLayout.setOnTouchListener((v, event) -> {
             handleUserActivity();
-            if (Game.instance != null) {
-                Game.instance.handleMotionEvent(v, event);
+            if (DelosStreamActivity.instance != null) {
+                DelosStreamActivity.instance.handleMotionEvent(v, event);
             }
             return true;
         });
@@ -229,16 +229,16 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
         super.onDestroy();
         instance = null;
         // Its full keyboard goes with it: the controller is the game's again
-        if (Game.instance != null) {
-            Game.instance.onFullKeyboardVisibilityChanged();
+        if (DelosStreamActivity.instance != null) {
+            DelosStreamActivity.instance.onFullKeyboardVisibilityChanged();
         }
     }
 
     @Override
     public void onKeyboardControllerVisibilityChange(boolean visible) {
         updateKeyboardVisibility(visible);
-        if (Game.instance != null) {
-            Game.instance.onFullKeyboardVisibilityChanged();
+        if (DelosStreamActivity.instance != null) {
+            DelosStreamActivity.instance.onFullKeyboardVisibilityChanged();
         }
     }
 
@@ -309,20 +309,20 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
         if (isGameInstanceAvailable()) {
-            Game.instance.handleFocusChange(hasFocus);
+            DelosStreamActivity.instance.handleFocusChange(hasFocus);
         } else {
             finish();
         }
     }
 
-    @SuppressWarnings("deprecation") // Game handles back itself via onBackPressed()
+    @SuppressWarnings("deprecation") // DelosStreamActivity handles back itself via onBackPressed()
     private void handleBack(OnBackPressedCallback callback) {
-        if (Game.instance != null && Game.instance.isKeyboardLayoutVisible()) {
+        if (DelosStreamActivity.instance != null && DelosStreamActivity.instance.isKeyboardLayoutVisible()) {
             toggleFullKeyboard();
-        } else if (Game.instance != null && Game.instance.isStreamMenuOpen()) {
-            Game.instance.hideGameMenu();
-        } else if (Game.instance != null) {
-            Game.instance.onBackPressed();
+        } else if (DelosStreamActivity.instance != null && DelosStreamActivity.instance.isStreamMenuOpen()) {
+            DelosStreamActivity.instance.hideGameMenu();
+        } else if (DelosStreamActivity.instance != null) {
+            DelosStreamActivity.instance.onBackPressed();
         } else {
             // Default behavior: let the system finish this activity
             callback.setEnabled(false);
@@ -334,24 +334,24 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
     // --- Initialization and UI Creation ---
 
     /**
-     * Checks if the static Game.instance is alive. If not, finishes this Activity.
+     * Checks if the static DelosStreamActivity.instance is alive. If not, finishes this Activity.
      */
     private boolean isGameInstanceAvailable() {
-        return Game.instance != null;
+        return DelosStreamActivity.instance != null;
     }
 
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
-        if (Game.instance != null) {
-            Game.instance.onConfigurationChanged(newConfig);
+        if (DelosStreamActivity.instance != null) {
+            DelosStreamActivity.instance.onConfigurationChanged(newConfig);
         }
         super.onConfigurationChanged(newConfig);
     }
 
     @Override
     public boolean onGenericMotionEvent(MotionEvent event) {
-        if (Game.instance != null) {
-            return Game.instance.handleExternalDisplayMotionEvent(event);
+        if (DelosStreamActivity.instance != null) {
+            return DelosStreamActivity.instance.handleExternalDisplayMotionEvent(event);
         }
         return false;
     }
@@ -362,8 +362,8 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
     }
 
     private boolean routeKeyEvent(KeyEvent event) {
-        if (Game.instance == null) return false;
-        return Game.instance.handleExternalDisplayKeyEvent(event);
+        if (DelosStreamActivity.instance == null) return false;
+        return DelosStreamActivity.instance.handleExternalDisplayKeyEvent(event);
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -377,7 +377,7 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
             rootLayout.setFocusedByDefault(true);
         }
 
-        rootLayout.setInputCallbacks(Game.instance);
+        rootLayout.setInputCallbacks(DelosStreamActivity.instance);
         rootLayout.setPreImeKeyHandler(this::routeKeyEvent);
         rootLayout.setCommitTextEnabled(prefConfig.enableCommitText);
 
@@ -387,7 +387,7 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
         LinearLayout topLeftButtons = createButtonContainer(Gravity.TOP | Gravity.START);
         topLeftButtons.setFocusable(false);
         zoomButton = createImageButton(R.drawable.ic_zoom_toggle, v -> toggleZoomMode(true));
-        if (Game.instance != null && Game.instance.getPointerHandler().isZoomModeEnabled()) {
+        if (DelosStreamActivity.instance != null && DelosStreamActivity.instance.getPointerHandler().isZoomModeEnabled()) {
             zoomButton.setAlpha(1.0f);
         } else {
             zoomButton.setAlpha(0.5f);
@@ -454,11 +454,11 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
     }
 
     public void toggleZoomMode(boolean callGame) {
-        if (Game.instance != null) {
+        if (DelosStreamActivity.instance != null) {
             if (callGame) {
-                Game.instance.getPointerHandler().toggleZoomMode();
+                DelosStreamActivity.instance.getPointerHandler().toggleZoomMode();
             } else {
-                if (Game.instance.getPointerHandler().isZoomModeEnabled()) {
+                if (DelosStreamActivity.instance.getPointerHandler().isZoomModeEnabled()) {
                     zoomButton.setAlpha(1.0f);
                 } else {
                     zoomButton.setAlpha(0.5f);
@@ -470,8 +470,8 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
     // --- Public methods to interact with the Delos stream menu ---
 
     public void showGameMenu() {
-        if (Game.instance != null) {
-            Game.instance.showStreamMenu();
+        if (DelosStreamActivity.instance != null) {
+            DelosStreamActivity.instance.showStreamMenu();
         }
     }
 

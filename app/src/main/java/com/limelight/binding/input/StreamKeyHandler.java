@@ -20,7 +20,7 @@ import com.limelight.preferences.PreferenceConfiguration;
 /**
  * The stream's key input: routes key events (the stream menu, the Full keyboard and gamepad buttons come first, then
  * the physical or soft keyboard), tracks the modifier state and runs the client-side combos Ctrl+Alt+Shift+Z (toggle
- * the input grab), +Q (quit) and +C (toggle the local cursor), which fire once every modifier is up again. {@code Game}
+ * the input grab), +Q (quit) and +C (toggle the local cursor), which fire once every modifier is up again. {@code DelosStreamActivity}
  * forwards the Activity's and the stream view's key callbacks to it and clears the modifiers when focus is lost.
  */
 public final class StreamKeyHandler {

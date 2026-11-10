@@ -34,18 +34,18 @@ public class StreamIntentParamsTest {
             + "LBBahhd0rjAOcahagayJ/a31IbvMAiEA1+v9mZfq7SmqcEl2M6aNmsWyDPrUEMITybwcu74QR5g=";
 
     private static Intent launchIntent() {
-        Intent intent = new Intent(ApplicationProvider.getApplicationContext(), Game.class);
-        intent.putExtra(Game.EXTRA_HOST, "192.0.2.10");
-        intent.putExtra(Game.EXTRA_PORT, 47999);
-        intent.putExtra(Game.EXTRA_HTTPS_PORT, 47984);
-        intent.putExtra(Game.EXTRA_APP_ID, 12345);
-        intent.putExtra(Game.EXTRA_APP_UUID, "APP-UUID");
-        intent.putExtra(Game.EXTRA_APP_NAME, "Test Game");
-        intent.putExtra(Game.EXTRA_PC_NAME, "Test PC");
-        intent.putExtra(Game.EXTRA_UNIQUEID, "0123456789ABCDEF");
-        intent.putExtra(Game.EXTRA_VDISPLAY, true);
-        intent.putExtra(Game.EXTRA_APP_HDR, true);
-        intent.putStringArrayListExtra(Game.EXTRA_SERVER_COMMANDS, new ArrayList<>(List.of("cmd1", "cmd2")));
+        Intent intent = new Intent(ApplicationProvider.getApplicationContext(), DelosStreamActivity.class);
+        intent.putExtra(DelosStreamActivity.EXTRA_HOST, "192.0.2.10");
+        intent.putExtra(DelosStreamActivity.EXTRA_PORT, 47999);
+        intent.putExtra(DelosStreamActivity.EXTRA_HTTPS_PORT, 47984);
+        intent.putExtra(DelosStreamActivity.EXTRA_APP_ID, 12345);
+        intent.putExtra(DelosStreamActivity.EXTRA_APP_UUID, "APP-UUID");
+        intent.putExtra(DelosStreamActivity.EXTRA_APP_NAME, "Test Game");
+        intent.putExtra(DelosStreamActivity.EXTRA_PC_NAME, "Test PC");
+        intent.putExtra(DelosStreamActivity.EXTRA_UNIQUEID, "0123456789ABCDEF");
+        intent.putExtra(DelosStreamActivity.EXTRA_VDISPLAY, true);
+        intent.putExtra(DelosStreamActivity.EXTRA_APP_HDR, true);
+        intent.putStringArrayListExtra(DelosStreamActivity.EXTRA_SERVER_COMMANDS, new ArrayList<>(List.of("cmd1", "cmd2")));
         return intent;
     }
 
@@ -73,7 +73,7 @@ public class StreamIntentParamsTest {
     @Test
     public void missingOptionalExtras_useTheDefaults() {
         Intent intent = new Intent();
-        intent.putExtra(Game.EXTRA_APP_ID, 1);
+        intent.putExtra(DelosStreamActivity.EXTRA_APP_ID, 1);
         StreamIntentParams p = StreamIntentParams.fromIntent(intent);
         assertNull(p.host);
         assertEquals(NvHTTP.DEFAULT_HTTP_PORT, p.port);
@@ -87,7 +87,7 @@ public class StreamIntentParamsTest {
     @Test
     public void resumeSession_withoutAppName_namesTheAppGenerically() {
         Intent intent = launchIntent();
-        intent.removeExtra(Game.EXTRA_APP_NAME);
+        intent.removeExtra(DelosStreamActivity.EXTRA_APP_NAME);
         StreamIntentParams p = StreamIntentParams.fromIntent(intent);
         assertNull(p.appName);
         assertEquals("app", p.app.getAppName());
@@ -97,7 +97,7 @@ public class StreamIntentParamsTest {
     @Test
     public void missingAppId_isInvalid() {
         Intent intent = launchIntent();
-        intent.removeExtra(Game.EXTRA_APP_ID);
+        intent.removeExtra(DelosStreamActivity.EXTRA_APP_ID);
         StreamIntentParams p = StreamIntentParams.fromIntent(intent);
         assertEquals(StreamConfiguration.INVALID_APP_ID, p.appId);
         assertFalse(p.hasValidApp());
@@ -106,14 +106,14 @@ public class StreamIntentParamsTest {
     @Test
     public void explicitInvalidAppId_isInvalid() {
         Intent intent = launchIntent();
-        intent.putExtra(Game.EXTRA_APP_ID, StreamConfiguration.INVALID_APP_ID);
+        intent.putExtra(DelosStreamActivity.EXTRA_APP_ID, StreamConfiguration.INVALID_APP_ID);
         assertFalse(StreamIntentParams.fromIntent(intent).hasValidApp());
     }
 
     @Test
     public void serverCert_isDecoded() {
         Intent intent = launchIntent();
-        intent.putExtra(Game.EXTRA_SERVER_CERT, Base64.decode(TEST_CERT_DER_BASE64, Base64.DEFAULT));
+        intent.putExtra(DelosStreamActivity.EXTRA_SERVER_CERT, Base64.decode(TEST_CERT_DER_BASE64, Base64.DEFAULT));
         StreamIntentParams p = StreamIntentParams.fromIntent(intent);
         assertNotNull(p.serverCert);
         assertTrue(p.serverCert.getSubjectX500Principal().getName().contains("CN=Delos Test"));
@@ -122,7 +122,7 @@ public class StreamIntentParamsTest {
     @Test
     public void brokenServerCert_isIgnored() {
         Intent intent = launchIntent();
-        intent.putExtra(Game.EXTRA_SERVER_CERT, new byte[]{1, 2, 3, 4});
+        intent.putExtra(DelosStreamActivity.EXTRA_SERVER_CERT, new byte[]{1, 2, 3, 4});
         StreamIntentParams p = StreamIntentParams.fromIntent(intent);
         assertNull(p.serverCert);
         assertNull(p.createHttp(ApplicationProvider.getApplicationContext()));

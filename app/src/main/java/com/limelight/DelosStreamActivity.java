@@ -105,12 +105,12 @@ import java.util.Locale;
 import android.view.SurfaceView;
 
 
-public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
+public class DelosStreamActivity extends AppCompatActivity implements SurfaceHolder.Callback,
         OnGenericMotionListener, OnTouchListener, NvConnectionListener, EvdevListener,
         GameGestures, StreamContainer.InputCallbacks,
         ExternalControllerView.InputCallbacks,
         PerfOverlayListener, UsbDriverService.UsbDriverStateListener, ActiveKeyboardInput.Target {
-    public static Game instance;
+    public static DelosStreamActivity instance;
 
     private Handler timerHandler;
 
@@ -161,7 +161,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
             UsbDriverService.UsbDriverBinder binder = (UsbDriverService.UsbDriverBinder) iBinder;
             binder.setListener(controllerHandler);
-            binder.setStateListener(Game.this);
+            binder.setStateListener(DelosStreamActivity.this);
             binder.start();
             connectedToUsbDriverService = true;
         }
@@ -216,7 +216,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
     private final Runnable backgroundPing = () -> {
         if (connected) {
-            timerHandler.postDelayed(Game.this.backgroundPing, 20);
+            timerHandler.postDelayed(DelosStreamActivity.this.backgroundPing, 20);
             MoonBridge.sendEmptyPayload();
         }
     };
@@ -227,7 +227,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         super.onCreate(savedInstanceState);
         com.limelight.shell.DelosToastOverlay.attach(this);
 
-        // External-display Game runs as a separate task. Android otherwise applies its default
+        // External-display DelosStreamActivity runs as a separate task. Android otherwise applies its default
         // side-slide even though the Delos loader is a continuation of the shell's launch scene.
         if (getIntent().getIntExtra(EXTRA_DISPLAY_ID, Display.DEFAULT_DISPLAY) != Display.DEFAULT_DISPLAY) {
             // Keep the external window on Delos's near-black stage color until the first Compose
@@ -248,7 +248,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
         // Read the stream preferences
         prefConfig = PreferenceConfiguration.readPreferences(this);
-        tombstonePrefs = Game.this.getSharedPreferences("DecoderTombstone", 0);
+        tombstonePrefs = DelosStreamActivity.this.getSharedPreferences("DecoderTombstone", 0);
         windowController = new StreamWindowController(this, prefConfig, new WindowHost());
         surfaceController = new StreamSurfaceController(this::runOnUiThread, prefConfig, new SurfaceHost());
         keyHandler = new StreamKeyHandler(prefConfig, new KeyHost());
@@ -287,7 +287,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
             @Override
             public void showToast(String text, ToastKind kind) {
-                runOnUiThread(() -> DelosToast.show(Game.this, text, DelosToast.SHORT, kind));
+                runOnUiThread(() -> DelosToast.show(DelosStreamActivity.this, text, DelosToast.SHORT, kind));
             }
         });
 
@@ -798,7 +798,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
         @Override
         public boolean isOnExternalDisplay() {
-            return Game.this.isOnExternalDisplay();
+            return DelosStreamActivity.this.isOnExternalDisplay();
         }
 
         @Override
@@ -937,13 +937,13 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
         @Override
         public void startConnection() {
-            conn.start(new AndroidAudioRenderer(Game.this, prefConfig.playHostAudio),
-                    decoderRenderer, Game.this);
+            conn.start(new AndroidAudioRenderer(DelosStreamActivity.this, prefConfig.playHostAudio),
+                    decoderRenderer, DelosStreamActivity.this);
         }
 
         @Override
         public void stopConnection() {
-            Game.this.stopConnection();
+            DelosStreamActivity.this.stopConnection();
         }
     }
 
@@ -971,12 +971,12 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
         @Override
         public boolean streamMenuTakesKey(KeyEvent event) {
-            return Game.this.streamMenuTakesKey(event);
+            return DelosStreamActivity.this.streamMenuTakesKey(event);
         }
 
         @Override
         public KeyBoardLayoutController visibleFullKeyboard() {
-            return Game.this.visibleFullKeyboard();
+            return DelosStreamActivity.this.visibleFullKeyboard();
         }
 
         @Override
@@ -1019,17 +1019,17 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
         @Override
         public void toggleKeyboard() {
-            Game.this.toggleKeyboard();
+            DelosStreamActivity.this.toggleKeyboard();
         }
 
         @Override
         public void toggleFullKeyboard() {
-            Game.this.toggleFullKeyboard();
+            DelosStreamActivity.this.toggleFullKeyboard();
         }
 
         @Override
         public void showGameMenu() {
-            Game.this.showGameMenu();
+            DelosStreamActivity.this.showGameMenu();
         }
     }
 
@@ -1042,7 +1042,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
         @Override
         public boolean isOnExternalDisplay() {
-            return Game.this.isOnExternalDisplay();
+            return DelosStreamActivity.this.isOnExternalDisplay();
         }
     }
 
@@ -1130,7 +1130,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
     private boolean shouldIgnoreInsetsForResolution(int width, int height) {
         return StreamDisplayPlanner.shouldIgnoreInsets(width, height,
-                StreamDisplayPlanner.Mode.of(getActiveDisplay(Game.this, prefConfig).getSupportedModes()));
+                StreamDisplayPlanner.Mode.of(getActiveDisplay(DelosStreamActivity.this, prefConfig).getSupportedModes()));
     }
 
     public boolean isOnExternalDisplay() {
@@ -1528,7 +1528,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                     boolean portsBlocked = portTestResult != MoonBridge.ML_TEST_RESULT_INCONCLUSIVE && portTestResult != 0;
 
                     // Delos: the shell shows what happened (docs/GUI.md, "Stream exits")
-                    StreamOutcome.failed(Game.this, StreamResultKind.FAILED_TO_START,
+                    StreamOutcome.failed(DelosStreamActivity.this, StreamResultKind.FAILED_TO_START,
                             StreamResultKt.describeStreamFailure(stage, errorCode, ports, portsBlocked, decoderFailed));
                 }
             }
@@ -1567,11 +1567,11 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                     if (errorCode != MoonBridge.ML_ERROR_GRACEFUL_TERMINATION) {
                         String ports = portFlags != 0 ? MoonBridge.stringifyPortFlags(portFlags, "\n") : null;
                         boolean portsBlocked = portTestResult != MoonBridge.ML_TEST_RESULT_INCONCLUSIVE && portTestResult != 0;
-                        StreamOutcome.failed(Game.this, StreamResultKind.CONNECTION_LOST,
+                        StreamOutcome.failed(DelosStreamActivity.this, StreamResultKind.CONNECTION_LOST,
                                 StreamResultKt.describeStreamFailure(null, errorCode, ports, portsBlocked, false));
                     }
                     else {
-                        StreamOutcome.hostClosed(Game.this);
+                        StreamOutcome.hostClosed(DelosStreamActivity.this);
                     }
                 }
             }
@@ -1636,7 +1636,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
                 getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
                 // Update GameManager state to indicate we're in game
-                UiHelper.notifyStreamConnected(Game.this);
+                UiHelper.notifyStreamConnected(DelosStreamActivity.this);
 
                 // Sync local clipboard to host
                 handleFocusChange(true);
@@ -1658,7 +1658,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         // Report this shortcut being used (off the main thread to prevent ANRs)
         ComputerDetails computer = new ComputerDetails();
         computer.name = launch.pcName;
-        computer.uuid = Game.this.getIntent().getStringExtra(EXTRA_PC_UUID);
+        computer.uuid = DelosStreamActivity.this.getIntent().getStringExtra(EXTRA_PC_UUID);
         ShortcutHelper shortcutHelper = new ShortcutHelper(this);
         shortcutHelper.reportComputerShortcutUsed(computer);
         if (launch.appName != null) {
@@ -1672,7 +1672,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                DelosToast.show(Game.this, message, DelosToast.LONG);
+                DelosToast.show(DelosStreamActivity.this, message, DelosToast.LONG);
             }
         });
     }
@@ -1683,7 +1683,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    DelosToast.show(Game.this, message, DelosToast.LONG, ToastKind.WARNING);
+                    DelosToast.show(DelosStreamActivity.this, message, DelosToast.LONG, ToastKind.WARNING);
                 }
             });
         }

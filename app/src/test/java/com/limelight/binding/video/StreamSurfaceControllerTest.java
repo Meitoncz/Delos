@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/** Characterisation tests: the surface and upscaler decisions Game made before the controller was extracted. */
+/** Characterisation tests: the surface and upscaler decisions DelosStreamActivity made before the controller was extracted. */
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = {33})
 public class StreamSurfaceControllerTest {

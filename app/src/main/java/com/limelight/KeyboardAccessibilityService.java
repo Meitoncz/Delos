@@ -25,7 +25,7 @@ public class KeyboardAccessibilityService extends AccessibilityService {
 
     @Override
     public boolean onKeyEvent(KeyEvent event) {
-        Game game = Game.instance;
+        DelosStreamActivity game = DelosStreamActivity.instance;
         if (game == null || !game.connected || !isStreamFocused(game) ||
                 PASSTHROUGH_KEYS.contains(event.getKeyCode())) {
             return super.onKeyEvent(event);
@@ -53,7 +53,7 @@ public class KeyboardAccessibilityService extends AccessibilityService {
      * has focus - never while Delos is in the background or in picture-in-picture,
      * so typing in other apps never reaches the host.
      */
-    private static boolean isStreamFocused(Game game) {
+    private static boolean isStreamFocused(DelosStreamActivity game) {
         if (game.hasWindowFocus()) {
             return true;
         }

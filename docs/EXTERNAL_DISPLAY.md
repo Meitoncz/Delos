@@ -15,19 +15,19 @@ Implemented and accepted on the AYN Odin 2 Portal Max on 2026-10-27.
 
 ## Input architecture
 
-Android treats gamepads and keyboards as untargeted input. On a normal multi-display device they go to the globally focused display, which is the Odin screen in this layout, while the stream menu is rendered by the `Game` activity on the TV. Android does not dynamically route the built-in controller to that second display.
+Android treats gamepads and keyboards as untargeted input. On a normal multi-display device they go to the globally focused display, which is the Odin screen in this layout, while the stream menu is rendered by the `DelosStreamActivity` activity on the TV. Android does not dynamically route the built-in controller to that second display.
 
 `ExternalDisplayControlActivity` is therefore the single bridge for external-display input:
 
 1. Normal controller keys enter its `dispatchKeyEvent()` path.
 2. Keys claimed by an IME enter the supported `ExternalControllerView.onKeyPreIme()` path first. A key that route leaves unhandled continues to the IME and then to `dispatchKeyEvent()`; `onKeyPreIme()` does not hand keys to the stream itself.
-3. Both paths call `Game.handleExternalDisplayKeyEvent()`; a key it handles is not routed again.
+3. Both paths call `DelosStreamActivity.handleExternalDisplayKeyEvent()`; a key it handles is not routed again.
 4. With the menu closed, the original `KeyEvent` or `MotionEvent` continues to the existing stream input handlers unchanged.
 5. With the menu open, `StreamMenu` owns every key event, keyboard and controller alike, and nothing reaches the stream. It emits semantic UI actions: move focus, activate, back (B, Back or Esc), or adjust the focused control. It does not inject fabricated D-pad events into the TV window.
 
 `FocusTracker` exposes the focused control's current activation and adjustment callbacks to this route. Analog navigation has an explicit edge and repeat policy. The original `InputConnection` and `commitText` behavior remain enabled for the Android keyboard and future controller UI.
 
-The accessibility keyboard service uses the same routes: the controller activity's router when the external controller activity has focus, and `Game.dispatchKeyEvent()` (menu shortcut first) when the stream window on the device has focus, so enabling it can never bypass the menu.
+The accessibility keyboard service uses the same routes: the controller activity's router when the external controller activity has focus, and `DelosStreamActivity.dispatchKeyEvent()` (menu shortcut first) when the stream window on the device has focus, so enabling it can never bypass the menu.
 
 ## Verification
 

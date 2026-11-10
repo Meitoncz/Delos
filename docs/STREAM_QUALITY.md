@@ -363,7 +363,7 @@ a first pass resolves its transform/crop to a 2D image, then SGSR reconstructs a
 SDR uses an RGBA8 intermediate and the final SurfaceView. The SurfaceView retains aspect-ratio and
 input geometry, while interface/statistics/virtual-controls overlays remain outside the filter.
 The surface is sized when the stream starts from the requested HDR; if the host then settles on 8-bit
-video, the decoder asks `Game` to give the surface its layout size before creating the SGSR stage.
+video, the decoder asks `DelosStreamActivity` to give the surface its layout size before creating the SGSR stage.
 
 Ten-bit video uses an RGBA16F intermediate and **P010 AHardwareBuffer** output, via a child
 SurfaceControl. This is required on the Odin: labelling an RGB layer as HDR is insufficient on its
@@ -463,7 +463,7 @@ Both are GPU-only and keep FP16 intermediates, the P010/PQ HDR output and the la
 sampled at their own size) and SDR, HDR10 swapchain and the HDR P010 bridge.
 
 **Surface size.** Sharpen only must not enlarge anything, so the cost stays that of the stream's own pixels. SDR
-MediaCodec output keeps the stream-sized SurfaceView buffers (`Game.sizeStreamSurfaceForUpscaler`: a scaling mode
+MediaCodec output keeps the stream-sized SurfaceView buffers (`StreamSurfaceController.sizeStreamSurfaceForUpscaler`: a scaling mode
 asks for the layout size, Sharpen only for the stream's fixed size) and the HDR child layer is created at the
 stream's size, not the display's; SurfaceFlinger scales the result to the view as it does for direct output.
 PyroWave presents at the stream's size in this mode (`sgsrPresentationWidth/Height` = stream size, no supersampling

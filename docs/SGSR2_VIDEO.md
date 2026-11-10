@@ -296,7 +296,7 @@ The two video renderers are not interchangeable implementations of an unchanged 
   explicit `texelFetch` reconstruction taps already bypass texture filtering.
 
 Local scope: all ten `assets/sgsr/` shaders, `SgsrRenderer`, `SgsrTemporal`,
-`MediaCodecDecoderRenderer`, `SgsrDimensions`, `Game` surface sizing, and
+`MediaCodecDecoderRenderer`, `SgsrDimensions`, `DelosStreamActivity` surface sizing, and
 `jni/pyrowave-renderer/pyrowave_renderer.cpp`, its SGSR source/spatial/flow/activation/upscale/
 scene/presentation/pack/sharpen shaders and HDR output bridge. The native sources are under
 `jni/pyrowave-renderer/`, not under `moonlight-core/`.

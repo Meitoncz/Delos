@@ -25,7 +25,7 @@ import org.robolectric.util.ReflectionHelpers;
 import org.robolectric.util.ReflectionHelpers.ClassParameter;
 import org.robolectric.annotation.Config;
 
-/** Characterisation tests: the touch event mapping, the contact-area maths and the touch sensitivity Game used before the extraction. */
+/** Characterisation tests: the touch event mapping, the contact-area maths and the touch sensitivity DelosStreamActivity used before the extraction. */
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = {33})
 public class StreamPointerHandlerTest {

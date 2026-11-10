@@ -6,7 +6,7 @@ import android.content.Intent
 import android.os.Build
 import android.view.Display
 import androidx.compose.runtime.Immutable
-import com.limelight.Game
+import com.limelight.DelosStreamActivity
 import com.limelight.nvstream.jni.MoonBridge
 
 /** How a stream that was not ended by the player ended (see docs/GUI.md, "Stream exits"). */
@@ -199,25 +199,25 @@ object StreamOutcome {
 
     /** The PC ended the session normally. */
     @JvmStatic
-    fun hostClosed(game: Game) {
+    fun hostClosed(game: DelosStreamActivity) {
         val intent = game.intent
         show(
             game,
             StreamResult(
                 StreamResultKind.HOST_CLOSED, HOST_CLOSED_TOAST, "", null,
-                intent.getStringExtra(Game.EXTRA_PC_UUID) ?: "", intent.getStringExtra(Game.EXTRA_PC_NAME) ?: "the PC",
-                intent.getIntExtra(Game.EXTRA_APP_ID, -1), intent.getStringExtra(Game.EXTRA_APP_NAME) ?: "",
+                intent.getStringExtra(DelosStreamActivity.EXTRA_PC_UUID) ?: "", intent.getStringExtra(DelosStreamActivity.EXTRA_PC_NAME) ?: "the PC",
+                intent.getIntExtra(DelosStreamActivity.EXTRA_APP_ID, -1), intent.getStringExtra(DelosStreamActivity.EXTRA_APP_NAME) ?: "",
             ),
         )
     }
 
     /** The stream failed or was terminated; its own intent says which game on which PC. */
     @JvmStatic
-    fun failed(game: Game, kind: StreamResultKind, text: ResultText) {
+    fun failed(game: DelosStreamActivity, kind: StreamResultKind, text: ResultText) {
         val intent = game.intent
         failed(
-            game, kind, text, intent.getStringExtra(Game.EXTRA_PC_UUID), intent.getStringExtra(Game.EXTRA_PC_NAME),
-            intent.getIntExtra(Game.EXTRA_APP_ID, -1), intent.getStringExtra(Game.EXTRA_APP_NAME),
+            game, kind, text, intent.getStringExtra(DelosStreamActivity.EXTRA_PC_UUID), intent.getStringExtra(DelosStreamActivity.EXTRA_PC_NAME),
+            intent.getIntExtra(DelosStreamActivity.EXTRA_APP_ID, -1), intent.getStringExtra(DelosStreamActivity.EXTRA_APP_NAME),
         )
     }
 
@@ -230,7 +230,7 @@ object StreamOutcome {
         val home = Intent().setClassName(activity, "com.limelight.shell.ShellActivity")
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         result.putInto(home)
-        val options = if (activity is Game && activity.isOnExternalDisplay && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val options = if (activity is DelosStreamActivity && activity.isOnExternalDisplay && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             ActivityOptions.makeBasic().setLaunchDisplayId(Display.DEFAULT_DISPLAY)
         } else {
             val root = activity.window.decorView

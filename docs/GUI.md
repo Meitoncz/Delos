@@ -554,7 +554,7 @@ numbers and the pure geometry live in `StreamMenuLayout` (the CSS variables of `
 easings in the shared `Motion` (the dock's own delays in `StreamMenuMotion`), the dock in `StreamMenuBar`, the popover and its rows in
 `StreamMenuPopover`, the whole
 menu in one composable (`StreamMenuRoot`, so a window of its own can host it), the stream behind it in `StreamMenuHost`
-(`StreamMenu` implements it with the live `Game`, the debug preview with fake state). The prototype's `#quickmenu` /
+(`StreamMenu` implements it with the live `DelosStreamActivity`, the debug preview with fake state). The prototype's `#quickmenu` /
 `#qmpop` show the same design; `build/streammenu-proto/b.html` with its screenshots is the specification.
 
 The focus on the dock **wraps** (Right on the last tile goes to the first, Left on the first to the last; the ring glides across the bar like any move); the popover's rows do not wrap.
@@ -653,7 +653,7 @@ The on-screen keyboard over the stream (stream menu → the Keyboard tile, a fou
 display's control screen) is the approved **Flat console** prototype (`build/fullkeyboard-proto/b.html`, local scratch, with
 its screenshots): a solid bar docked to the bottom edge, flat keys, a hint strip under them. It is one Compose
 layer (`shell/keyboard`: `FullKeyboard`, `FullKeyboardState`, the key table in `FullKeyboardKeys`, the pure logic in
-`FullKeyboardInput`) inside a `ComposeView` that `KeyBoardLayoutController` (still the class `Game` and
+`FullKeyboardInput`) inside a `ComposeView` that `KeyBoardLayoutController` (still the class `DelosStreamActivity` and
 `ExternalDisplayControlActivity` use: `show`, `hide`, `toggleVisibility`, `refreshLayout`, `isKeyboardVisible`, `shown`)
 adds to the stream's layout, bottom-docked and as wide as the layout. It never takes the focus. Where nothing of it is
 drawn nothing is touchable: a finger on the game area goes to the stream even while a key is held.
@@ -714,9 +714,9 @@ drawn nothing is touchable: a finger on the game area goes to the stream even wh
   controllers hold (a neutral packet each) when the keyboard opens and again when it closes, and sends nothing in between (also
   from the USB driver path); keys the keyboard itself holds are released when it is hidden, and so is **every latched
   modifier** (Shift, Ctrl, Alt, Win: each gets its key up and the latch is cleared, `ModifierLatch.releaseAll`), whichever way the
-  keyboard closes (B, Hide, the menu toggle, PiP), so nothing stays down on the PC. The interception is `Game.handleKeyDown/handleKeyUp/handleMotionEvent` (`visibleFullKeyboard()`), for
+  keyboard closes (B, Hide, the menu toggle, PiP), so nothing stays down on the PC. The interception is `DelosStreamActivity.handleKeyDown/handleKeyUp/handleMotionEvent` (`visibleFullKeyboard()`), for
   controller sources only. On the external display the same hooks work, because `ExternalDisplayControlActivity` already routes
-  the controller's events to `Game`; the keyboard there is the activity's own `KeyBoardLayoutController`.
+  the controller's events to `DelosStreamActivity`; the keyboard there is the activity's own `KeyBoardLayoutController`.
 - **Motion** (all from `Motion.kt` / `MotionKit.kt`, like the stream menu): the rows **rise** 18 px and fade in, the first after 120 ms,
   then 46 ms apart, 420 ms each (ease-out); the bar's glass fades in over 336 ms; everything **leaves** in 240 ms (ease-in,
   no stagger). **Focus** is not a scale here: one **gliding ring** (`GlideRingHost`, 560 ms with the slight overshoot) moves between the
@@ -724,7 +724,7 @@ drawn nothing is touchable: a finger on the game area goes to the stream even wh
   keys (their neighbours lie closer than the ring is wide: `inFront`) and squeezes with the key under it. **Press** squeezes the key to
   .97 in 120 ms and holds it 130 ms (a tap is always seen); colors and opacities take 280 ms; the popup settles with the
   spring in 120 ms. At the keyboard's edge the ring bumps 7 px and returns (the choices' chevron nudge). Reduced motion: only fades.
-- **Visibility** rules are unchanged: the state is kept across rotation and PiP (`hide(true)` / `show()`), `Game.isFullKeyboardShown()` feeds the stream
+- **Visibility** rules are unchanged: the state is kept across rotation and PiP (`hide(true)` / `show()`), `DelosStreamActivity.isFullKeyboardShown()` feeds the stream
   menu's Keyboard tile (the tile is the Delos keyboard; Android's system keyboard is the More row **Open Android keyboard**); a rotation only re-reads the settings (`refreshLayout`), it does not rebuild the keyboard.
 
 #### Full keyboard preview (debug builds)
@@ -779,7 +779,7 @@ These preserve implementation/design context from the removed UI plan, not phase
   Compose implement the shell. Existing Java/backend behavior is reused rather than rewritten:
   `ComputerManagerService`, `NvHTTP` / `PairingManager`, `PreferenceConfiguration`, `ProfilesManager`,
   `ShortcutHelper` and `ServerHelper`. Streams still start through `ServerHelper.createStartIntent()`
-  into `Game`, wrapped by `GameLauncher.startIntent` (shared with launcher shortcuts) to attach per-game settings. Keep upstream-shared changes small.
+  into `DelosStreamActivity`, wrapped by `GameLauncher.startIntent` (shared with launcher shortcuts) to attach per-game settings. Keep upstream-shared changes small.
 - Use Compose foundation/ui/animation and the Delos design system, not Material components. The
   shell owns its small navigation stack, animated transitions and overlay focus. Fonts are bundled
   Unbounded/Figtree (OFL); Phosphor icon generation/licensing is documented in [ICONS.md](ICONS.md).
@@ -809,7 +809,7 @@ These preserve implementation/design context from the removed UI plan, not phase
   cycle; `StreamExit` owns the accepted normal exit scene. No ordinary-flow confirmation dialogs;
   legitimate security prompts for external input remain. Further layout changes need user agreement.
 - **Stream exits.** The player's own Disconnect / Quit game keeps the `StreamExit` portal. A stream that
-  ends by itself goes through `StreamOutcome` (no classic error dialog): `Game` ends, opens
+  ends by itself goes through `StreamOutcome` (no classic error dialog): `DelosStreamActivity` ends, opens
   `ShellActivity` on the stream's PC (Home, with the PC selected) with a `StreamResult` in the intent
   extras, and the shell takes it once (`StreamResult.take` removes the extras, so a recreated or
   resumed activity never shows it again; external-display streams open the shell on the device's own
@@ -856,39 +856,39 @@ These preserve implementation/design context from the removed UI plan, not phase
 - Virtual controls use `OscStyle`: thin glass outlines, Figtree capitals, filled pressed state,
   circular face/stick buttons, shoulder/menu pills and a chevron D-pad. The stick-button overlap is
   intentional. Debug info provides a preview without starting a stream.
-- **`Game` structure** ([#29](https://github.com/Meitoncz/Delos/issues/29)). `Game` is the streaming
+- **`DelosStreamActivity` structure** ([#29](https://github.com/Meitoncz/Delos/issues/29)). `DelosStreamActivity` is the streaming
   activity and keeps the lifecycle, the `onCreate` orchestration and thin delegates for its external
   callers (`StreamMenu`, `StreamLoader`, `StreamContainer`, `ExternalDisplayControlActivity`,
   `KeyboardAccessibilityService`). Self-contained parts live in helpers it creates: `StreamIntentParams`
-  (launch intent extras, certificate, `NvHTTP` creation; the `EXTRA_*` keys stay on `Game`),
+  (launch intent extras, certificate, `NvHTTP` creation; the `EXTRA_*` keys stay on `DelosStreamActivity`),
   `binding/input/CommitTextSender` (IME commit text in ≤512-byte UTF-8 chunks, Backspace for deleted
   text), `utils/StreamClipboardSync` (smart and manual clipboard sync), `utils/WifiLockHolder`
   (high-performance and low-latency Wi-Fi locks for the stream's lifetime),
   `binding/video/StreamDisplayPlanner` (pure: display mode, refresh rate, Cap FPS pacing adjustment,
-  aspect ratio and the surface frame rate from plain display and preference data; `Game` reads the
+  aspect ratio and the surface frame rate from plain display and preference data; `DelosStreamActivity` reads the
   `Display` before the `StreamConfiguration` is built and applies the plan to the window and
   `StreamContainer`), `ui/StreamWindowController` (requested orientation, picture-in-picture
   auto-enter and parameters, hiding the overlays and sensors in PiP, multi-window and the immersive
-  system UI; `Game` forwards the Activity callbacks and the USB permission prompt's PiP suppression
+  system UI; `DelosStreamActivity` forwards the Activity callbacks and the USB permission prompt's PiP suppression
   to it and provides a `Host` with the views and on-screen controls) and
   `binding/video/StreamSurfaceController` (the stream surface's buffer size for the upscaler, the
   decoder side of the surface callbacks, the live upscaler and supersampling controls and the launch
-  arrival's decoder link; `Game` forwards the `StreamContainer` callbacks and starts and stops the
+  arrival's decoder link; `DelosStreamActivity` forwards the `StreamContainer` callbacks and starts and stops the
   connection through its `Host`; `StreamMenu`, `StreamLoader` and `StreamExit` call it via
-  `Game.getSurfaceController()`). The renderers reach the surface through the narrow
+  `DelosStreamActivity.getSurfaceController()`). The renderers reach the surface through the narrow
   `StreamSurfaceHost` interface, not the activity. Input lives in `binding/input`:
   `StreamKeyHandler` routes keys (the stream menu, the Full keyboard and gamepad buttons first, then
   the keyboard), tracks the modifiers (cleared when the window focus changes), runs the client-side
   Ctrl+Alt+Shift+Z/Q/C combos once every modifier is up and sends the menus' special-key
-  combinations (`GameMenu` and `StreamMenu` call it via `Game.getKeyHandler()`).
-  `StreamPointerHandler` handles the pointer sources left after `Game`'s gamepad passthrough: mice
+  combinations (`GameMenu` and `StreamMenu` call it via `DelosStreamActivity.getKeyHandler()`).
+  `StreamPointerHandler` handles the pointer sources left after `DelosStreamActivity`'s gamepad passthrough: mice
   (captured or not), styluses and erasers, touchpads and the touchscreen with its touch contexts,
   the 3/4/5-finger taps, the touch sensitivity and the pan and zoom mode (it owns the
   `PanZoomHandler`; `StreamMenu` and `ExternalDisplayControlActivity` call it via
-  `Game.getPointerHandler()`). `MouseModeController` picks the touchscreen's mouse mode (the
+  `DelosStreamActivity.getPointerHandler()`). `MouseModeController` picks the touchscreen's mouse mode (the
   profile's mode, the external display's trackpad override, remote input's forced trackpad, the
   stream menu's switch and its optional persistence) and installs the matching touch contexts in
-  the pointer handler (`StreamMenu` calls it via `Game.getMouseModeController()`). `Game` keeps the
+  the pointer handler (`StreamMenu` calls it via `DelosStreamActivity.getMouseModeController()`). `DelosStreamActivity` keeps the
   Activity and view input callbacks as one-line delegates, the input grab and local cursor, the
   evdev mouse callbacks and the controller wiring, and reaches each handler through a small `Host`
   it implements.

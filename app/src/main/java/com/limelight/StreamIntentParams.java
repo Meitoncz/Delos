@@ -16,7 +16,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 
-/** The stream launch parameters carried by the {@link Game} intent (the {@code Game.EXTRA_*} extras). */
+/** The stream launch parameters carried by the {@link DelosStreamActivity} intent (the {@code DelosStreamActivity.EXTRA_*} extras). */
 public final class StreamIntentParams {
     public final String host;
     public final int port;
@@ -35,19 +35,19 @@ public final class StreamIntentParams {
     public final NvApp app;
 
     private StreamIntentParams(Intent intent) {
-        appName = intent.getStringExtra(Game.EXTRA_APP_NAME);
-        pcName = intent.getStringExtra(Game.EXTRA_PC_NAME);
+        appName = intent.getStringExtra(DelosStreamActivity.EXTRA_APP_NAME);
+        pcName = intent.getStringExtra(DelosStreamActivity.EXTRA_PC_NAME);
 
-        host = intent.getStringExtra(Game.EXTRA_HOST);
-        port = intent.getIntExtra(Game.EXTRA_PORT, NvHTTP.DEFAULT_HTTP_PORT);
-        httpsPort = intent.getIntExtra(Game.EXTRA_HTTPS_PORT, 0); // 0 is treated as unknown
-        appUUID = intent.getStringExtra(Game.EXTRA_APP_UUID);
-        appId = intent.getIntExtra(Game.EXTRA_APP_ID, StreamConfiguration.INVALID_APP_ID);
-        uniqueId = intent.getStringExtra(Game.EXTRA_UNIQUEID);
-        vDisplay = intent.getBooleanExtra(Game.EXTRA_VDISPLAY, false);
-        serverCommands = intent.getStringArrayListExtra(Game.EXTRA_SERVER_COMMANDS);
-        boolean appSupportsHdr = intent.getBooleanExtra(Game.EXTRA_APP_HDR, false);
-        serverCert = decodeCert(intent.getByteArrayExtra(Game.EXTRA_SERVER_CERT));
+        host = intent.getStringExtra(DelosStreamActivity.EXTRA_HOST);
+        port = intent.getIntExtra(DelosStreamActivity.EXTRA_PORT, NvHTTP.DEFAULT_HTTP_PORT);
+        httpsPort = intent.getIntExtra(DelosStreamActivity.EXTRA_HTTPS_PORT, 0); // 0 is treated as unknown
+        appUUID = intent.getStringExtra(DelosStreamActivity.EXTRA_APP_UUID);
+        appId = intent.getIntExtra(DelosStreamActivity.EXTRA_APP_ID, StreamConfiguration.INVALID_APP_ID);
+        uniqueId = intent.getStringExtra(DelosStreamActivity.EXTRA_UNIQUEID);
+        vDisplay = intent.getBooleanExtra(DelosStreamActivity.EXTRA_VDISPLAY, false);
+        serverCommands = intent.getStringArrayListExtra(DelosStreamActivity.EXTRA_SERVER_COMMANDS);
+        boolean appSupportsHdr = intent.getBooleanExtra(DelosStreamActivity.EXTRA_APP_HDR, false);
+        serverCert = decodeCert(intent.getByteArrayExtra(DelosStreamActivity.EXTRA_SERVER_CERT));
 
         app = new NvApp(appName != null ? appName : "app", appUUID, appId, appSupportsHdr);
     }

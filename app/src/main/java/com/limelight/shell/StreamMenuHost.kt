@@ -13,7 +13,7 @@ internal sealed interface BitrateResult {
 
 /**
  * Everything the stream menu's composables read from and do to the running stream. [StreamMenu] implements it
- * with the live [com.limelight.Game]; the debug build's preview (docs/GUI.md, "Stream menu preview") implements
+ * with the live [com.limelight.DelosStreamActivity]; the debug build's preview (docs/GUI.md, "Stream menu preview") implements
  * it with fake state, so the real menu can be drawn without a stream. The getters are read while composing and
  * again after every change the menu makes, so they may simply return the current value.
  */

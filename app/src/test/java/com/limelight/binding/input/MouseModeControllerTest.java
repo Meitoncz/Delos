@@ -26,7 +26,7 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 
-/** Characterisation tests: what each mouse mode sets and installs, as Game did before the extraction. */
+/** Characterisation tests: what each mouse mode sets and installs, as DelosStreamActivity did before the extraction. */
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = {33})
 public class MouseModeControllerTest {
