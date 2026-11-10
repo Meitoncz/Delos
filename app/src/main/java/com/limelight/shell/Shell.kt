@@ -4,6 +4,7 @@ import androidx.compose.animation.core.snap
 import android.app.ActivityOptions
 import android.content.res.Resources
 import androidx.annotation.StringRes
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import com.limelight.R
 import com.limelight.shell.ui.textResources
@@ -607,7 +608,8 @@ fun Shell(
     }
 
     val profile = profiles.current
-    val nav = remember(shell, shell.screen) {
+    val configuration = LocalConfiguration.current
+    val nav = remember(shell, shell.screen, configuration) {
         listOf(
             NavButton(Symbols.SETTINGS, res.getString(R.string.shell_nav_settings), shell.screen == Screen.Settings) { shell.navigate(Screen.Settings) },
             NavButton(Symbols.ACCOUNT_CIRCLE, res.getString(R.string.shell_nav_profile), shell.screen == Screen.Profile) { shell.navigate(Screen.Profile) },
