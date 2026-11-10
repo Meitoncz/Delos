@@ -2,7 +2,6 @@ package com.limelight.utils;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.content.ActivityNotFoundException;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Intent;
@@ -36,30 +35,6 @@ public class TvChannelHelper {
 
     public TvChannelHelper(Activity context) {
         this.context = context;
-    }
-
-    void requestChannelOnHomeScreen(ComputerDetails computer) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (!isAndroidTV()) {
-                return;
-            }
-
-            Long channelId = getChannelId(computer.uuid);
-            if (channelId == null) {
-                return;
-            }
-
-            Intent intent = new Intent(TvContract.ACTION_REQUEST_CHANNEL_BROWSABLE);
-            intent.putExtra(TvContract.EXTRA_CHANNEL_ID, getChannelId(computer.uuid));
-            try {
-                context.startActivityForResult(intent, 0);
-            } catch (Exception ignored) {
-                // ActivityNotFoundException is the only officially documented
-                // exception that can result from this call. However some buggy
-                // devices throw others.
-                // See https://github.com/moonlight-stream/moonlight-android/issues/1302
-            }
-        }
     }
 
     void createTvChannel(ComputerDetails computer) {
@@ -169,42 +144,6 @@ public class TvChannelHelper {
             }
 
             TvContract.requestChannelBrowsable(context, channelId);
-        }
-    }
-
-    void deleteChannel(ComputerDetails computer) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (!isAndroidTV()) {
-                return;
-            }
-
-            Long channelId = getChannelId(computer.uuid);
-            if (channelId == null) {
-                return;
-            }
-
-            context.getContentResolver().delete(TvContract.buildChannelUri(channelId), null, null);
-        }
-    }
-
-    void deleteProgram(ComputerDetails computer, NvApp app) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (!isAndroidTV()) {
-                return;
-            }
-
-            Long channelId = getChannelId(computer.uuid);
-            if (channelId == null) {
-                return;
-            }
-
-
-            Long programId = getProgramId(channelId, ""+app.getAppId());
-            if (programId == null) {
-                return;
-            }
-
-            context.getContentResolver().delete(TvContract.buildPreviewProgramUri(programId), null, null);
         }
     }
 

@@ -1655,15 +1655,13 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
                     usbDriverServiceConnection, Service.BIND_AUTO_CREATE);
         }
 
-        // Report this shortcut being used (off the main thread to prevent ANRs)
+        // Add the launched game to the Android TV channel
         ComputerDetails computer = new ComputerDetails();
         computer.name = launch.pcName;
         computer.uuid = DelosStreamActivity.this.getIntent().getStringExtra(EXTRA_PC_UUID);
-        ShortcutHelper shortcutHelper = new ShortcutHelper(this);
-        shortcutHelper.reportComputerShortcutUsed(computer);
         if (launch.appName != null) {
             // This may be null if launched from the "Resume Session" PC context menu item
-            shortcutHelper.reportGameLaunched(computer, launch.app);
+            new ShortcutHelper(this).reportGameLaunched(computer, launch.app);
         }
     }
 
