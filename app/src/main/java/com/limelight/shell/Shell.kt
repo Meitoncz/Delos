@@ -79,6 +79,7 @@ import com.limelight.shell.system.rememberBatteryStatus
 import com.limelight.shell.system.rememberClock
 import com.limelight.shell.system.rememberWifiStatus
 import com.limelight.shell.ui.Backdrop
+import com.limelight.shell.ui.DelosColors
 import com.limelight.shell.ui.ContextMenuLayer
 import com.limelight.shell.ui.Cue
 import com.limelight.shell.ui.EaseOut
@@ -546,11 +547,13 @@ fun Shell(
     }
 
     val profile = profiles.current
-    val nav = listOf(
-        NavButton(Symbols.SETTINGS, "Settings", shell.screen == Screen.Settings) { shell.navigate(Screen.Settings) },
-        NavButton(Symbols.ACCOUNT_CIRCLE, "Profile", shell.screen == Screen.Profile) { shell.navigate(Screen.Profile) },
-        NavButton(Symbols.DEVICES, "Devices", shell.screen == Screen.Devices) { shell.navigate(Screen.Devices) },
-    )
+    val nav = remember(shell, shell.screen) {
+        listOf(
+            NavButton(Symbols.SETTINGS, "Settings", shell.screen == Screen.Settings) { shell.navigate(Screen.Settings) },
+            NavButton(Symbols.ACCOUNT_CIRCLE, "Profile", shell.screen == Screen.Profile) { shell.navigate(Screen.Profile) },
+            NavButton(Symbols.DEVICES, "Devices", shell.screen == Screen.Devices) { shell.navigate(Screen.Devices) },
+        )
+    }
 
     // The keyboard never covers the text field being edited: the dialog or the page content that holds it moves up (docs/GUI.md, "Text input")
     val imeAvoidance = rememberImeAvoidance()
@@ -565,7 +568,7 @@ fun Shell(
             // On in the very frame an overlay appears (its blur would otherwise start empty and clipped)
             Box(Modifier.fillMaxSize().then(if (blurSource || shell.layer != null || shell.portal != null || shell.result != null) Modifier.hazeSource(haze) else Modifier)) {
                 Box(Modifier.fillMaxSize().hazeSource(backdropHaze)) {
-                    Backdrop(appearance, colors, hero = if (shell.screen == Screen.Home) shell.hero else null, animate = shell.launch == null && shell.portal == null)
+                    ShellBackdrop(shell, appearance, colors, heroShown = shell.screen == Screen.Home, animate = shell.launch == null && shell.portal == null)
                 }
                 AnimatedContent(
                     shell.screen,
@@ -694,7 +697,7 @@ fun Shell(
                     // Opaque flat background at once (it hides the dashboard and is the color the system window showed), the lights fade in over it
                     Box(Modifier.fillMaxSize().graphicsLayer { alpha = cover }.background(colors.bg)) {
                         Box(Modifier.fillMaxSize().graphicsLayer { alpha = lights }) {
-                            Backdrop(appearance, colors, hero = if (appearance.background == BackgroundKind.STILL) shell.hero else null, animate = false)
+                            ShellBackdrop(shell, appearance, colors, heroShown = appearance.background == BackgroundKind.STILL, animate = false)
                         }
                     }
                 }
@@ -799,6 +802,15 @@ private class ShellGameActions(
         if (!result.success) feedback.play(Cue.ERROR)
         shell.showToast(result.message, if (result.success) Symbols.CHECK_CIRCLE else Symbols.ERROR)
     }
+}
+
+/**
+ * The animated background with the focused game's hero. It reads [ShellState.hero] itself, so a new hero (every focus move on the home
+ * screen) recomposes just this, not the whole shell.
+ */
+@Composable
+private fun ShellBackdrop(shell: ShellState, appearance: Appearance, colors: DelosColors, heroShown: Boolean, animate: Boolean) {
+    Backdrop(appearance, colors, hero = if (heroShown) shell.hero else null, animate = animate)
 }
 
 /** Button hints for the current screen and layer (the prototype's updateHints). */
