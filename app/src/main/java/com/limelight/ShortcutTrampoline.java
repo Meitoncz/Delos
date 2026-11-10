@@ -237,7 +237,7 @@ public class ShortcutTrampoline extends AppCompatActivity {
      * starts the game again); a shortcut that asked for no game gets a toast and the PC's games.
      */
     private void failStart(ComputerDetails details, ShortcutFailure failure) {
-        ResultText text = StreamResultKt.describeShortcutFailure(details.name, failure);
+        ResultText text = StreamResultKt.describeShortcutFailure(getResources(), details.name, failure);
         if (app == null) {
             DelosToast.show(getApplicationContext(), text.getSentence(), DelosToast.LONG, ToastKind.ERROR);
             openPcInDelos();

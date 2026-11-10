@@ -31,7 +31,7 @@ internal object HeroLensShader {
             // Match the old Gaussian's apparent strength: a disk's per-axis sigma is radius / 2.
             setFloatUniform("radius", blurPx.coerceIn(0, 40) * (source.width / 2100f) * 2f)
         }
-        val node = RenderNode("Delos hero lens").apply {
+        val node = RenderNode("Delos hero lens").apply { // l10n-ignore
             setPosition(0, 0, source.width, source.height)
         }
         val canvas = node.beginRecording()
@@ -55,11 +55,11 @@ internal object HeroLensShader {
             gpu.setOpaque(false)
             val status = gpu.createRenderRequest().setWaitForPresent(true).syncAndDraw()
             check(status and (HardwareRenderer.SYNC_LOST_SURFACE_REWARD_IF_FOUND or HardwareRenderer.SYNC_CONTEXT_IS_STOPPED) == 0) {
-                "Hero lens GPU render failed: $status"
+                "Hero lens GPU render failed: $status" // l10n-ignore
             }
-            val image = checkNotNull(reader.acquireNextImage()) { "Hero lens GPU image unavailable" }
+            val image = checkNotNull(reader.acquireNextImage()) { "Hero lens GPU image unavailable" } // l10n-ignore
             image.use {
-                val buffer = checkNotNull(image.hardwareBuffer) { "Hero lens hardware buffer unavailable" }
+                val buffer = checkNotNull(image.hardwareBuffer) { "Hero lens hardware buffer unavailable" } // l10n-ignore
                 buffer.use {
                     val bitmap = checkNotNull(Bitmap.wrapHardwareBuffer(buffer, ColorSpace.get(ColorSpace.Named.SRGB)))
                     try {

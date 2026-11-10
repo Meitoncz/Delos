@@ -1,5 +1,7 @@
 package com.limelight.shell.ui
 
+import androidx.compose.ui.res.stringResource
+import com.limelight.R
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -37,7 +39,7 @@ import com.limelight.shell.data.ArtworkProgress
  * of every screen, above the button hints.
  */
 @Composable
-fun ArtworkProgressBar(progress: ArtworkProgress?, label: String = "Downloading artwork") {
+fun ArtworkProgressBar(progress: ArtworkProgress?, label: String) {
     val colors = LocalDelosColors.current
     val last = remember { arrayOfNulls<ArtworkProgress>(1) }
     val lastLabel = remember { arrayOf(label) }
@@ -64,7 +66,7 @@ fun ArtworkProgressBar(progress: ArtworkProgress?, label: String = "Downloading 
                         lastLabel[0], modifier = Modifier.weight(1f),
                         style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 22.tpx),
                     )
-                    BasicText("${p.done} of ${p.total}", style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 22.tpx, fontFeatureSettings = "tnum"))
+                    BasicText(stringResource(R.string.shell_progress_count, p.done, p.total), style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 22.tpx, fontFeatureSettings = "tnum"))
                 }
                 Box(Modifier.fillMaxWidth().height(8.px).clip(CircleShape).background(colors.surface2)) {
                     Box(Modifier.fillMaxWidth(fraction).fillMaxHeight().clip(CircleShape).background(Brush.horizontalGradient(listOf(colors.accent, colors.accent2))))

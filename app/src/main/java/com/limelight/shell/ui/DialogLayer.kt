@@ -1,5 +1,7 @@
 package com.limelight.shell.ui
 
+import androidx.compose.ui.res.stringResource
+import com.limelight.R
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -107,7 +109,7 @@ fun DialogLayer(spec: DialogSpec?, haze: HazeState, onDismiss: () -> Unit) {
                 Row(Modifier.staggerEntrance(d.fields.size + 2, Motion.MENU_DELAY).padding(top = 8.px), horizontalArrangement = Arrangement.spacedBy(24.px)) {
                     // A dialog without fields (a question) starts on its button
                     PillButton(d.confirm, Symbols.CHECK, confirm, if (d.fields.isEmpty()) Modifier.focusRequester(first) else Modifier, primary = true)
-                    PillButton("Cancel", null, onDismiss, clickCue = Cue.BACK)
+                    PillButton(stringResource(R.string.common_cancel), null, onDismiss, clickCue = Cue.BACK)
                 }
             }
         }

@@ -1,5 +1,7 @@
 package com.limelight.shell.ui
 
+import androidx.compose.ui.res.stringResource
+import com.limelight.R
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -33,14 +35,8 @@ import androidx.compose.ui.unit.em
 import com.limelight.diag.Problem
 import com.limelight.diag.ProblemKind
 
-/** What the card says about a [ProblemKind]: the title and the sentence under it. */
-internal fun offerTitle(kind: ProblemKind): String = when (kind) {
-    ProblemKind.STREAM_FAILED -> "A stream could not run"
-    else -> "Delos had a problem"
-}
-
-internal const val OFFER_NOTE = "Nothing is sent automatically. Report opens GitHub in your browser with a draft for you to check, " +
-    "and saves a cleaned log file to Downloads for you to attach."
+@Composable
+internal fun offerTitle(kind: ProblemKind): String = stringResource(if (kind == ProblemKind.STREAM_FAILED) R.string.shell_problem_title_stream else R.string.shell_problem_title_generic)
 
 /**
  * The offer after a problem (docs/DIAGNOSTICS.md, docs/GUI.md "Problem report card"): a glass card in the top right corner of the
@@ -78,11 +74,11 @@ fun ProblemOfferCard(problem: Problem?, reducedMotion: Boolean, onReport: () -> 
                     style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 18.tpx, lineHeight = 1.35.em),
                     maxLines = 2, overflow = TextOverflow.Ellipsis,
                 )
-                BasicText(OFFER_NOTE, style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 20.tpx, lineHeight = 1.4.em))
+                BasicText(stringResource(R.string.shell_problem_note), style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 20.tpx, lineHeight = 1.4.em))
                 Row(Modifier.padding(top = 6.px), horizontalArrangement = Arrangement.spacedBy(18.px)) {
-                    PillButton("Report this problem", Symbols.REPORT_ISSUE, onReport, Modifier.focusRequester(report), primary = true, compact = true,
+                    PillButton(stringResource(R.string.shell_problem_report), Symbols.REPORT_ISSUE, onReport, Modifier.focusRequester(report), primary = true, compact = true,
                         trailing = { GlyphButton(Glyph.A, 34) })
-                    PillButton("Dismiss", Symbols.CLOSE, onDismiss, compact = true, clickCue = Cue.BACK, trailing = { GlyphButton(Glyph.B, 34) })
+                    PillButton(stringResource(R.string.shell_problem_dismiss), Symbols.CLOSE, onDismiss, compact = true, clickCue = Cue.BACK, trailing = { GlyphButton(Glyph.B, 34) })
                 }
             }
         }

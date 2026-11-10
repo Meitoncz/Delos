@@ -2,6 +2,11 @@ package com.limelight.shell
 
 import androidx.compose.animation.core.snap
 import android.app.ActivityOptions
+import android.content.res.Resources
+import androidx.annotation.StringRes
+import androidx.compose.ui.res.stringResource
+import com.limelight.R
+import com.limelight.shell.ui.textResources
 import android.view.KeyEvent
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
@@ -155,6 +160,7 @@ fun Shell(
     results: MutableStateFlow<StreamResult?>,
     shell: ShellState,
 ) {
+    val res = textResources()
     val colors = LocalDelosColors.current
     val feedback = LocalFeedback.current
     val tracker = remember { FocusTracker() }
@@ -189,7 +195,7 @@ fun Shell(
             activity?.setTaskDescription(android.app.ActivityManager.TaskDescription.Builder().setBackgroundColor(taskBackground).build())
         }
     }
-    val actions = remember(launcher) { ShellGameActions(shell, launcher, feedback, scope) }
+    val actions = remember(launcher, res) { ShellGameActions(res, shell, launcher, feedback, scope) }
     val reducedMotion by rememberUpdatedState(appearance.reducedMotion)
     val appContext = androidx.compose.ui.platform.LocalContext.current.applicationContext
     val linkTests = remember { com.limelight.shell.link.LinkTestStore(appContext) }
@@ -221,7 +227,7 @@ fun Shell(
                 val who = l.name?.let { "$it (${l.address})" } ?: l.address
                 shell.openLayer(
                     Layer.Dialog(
-                        DialogSpec("Pair with $who?", "A link asks Delos to pair with this PC. Continue only if you opened it yourself.", emptyList(), "Pair") {
+                        DialogSpec(res.getString(R.string.shell_link_pair_title, who), res.getString(R.string.shell_link_pair_message), emptyList(), res.getString(R.string.shell_link_pair_action)) {
                             devices.addAndPair(l.address, l.otp, Screen.Start)
                             true
                         }
@@ -231,11 +237,18 @@ fun Shell(
             }
             is ShellLink.Launch -> {
                 feedback.play(Cue.OPEN)
-                val game = l.appName?.takeIf { it.isNotEmpty() } ?: "a game"
-                val host = l.hostName?.takeIf { it.isNotEmpty() } ?: "a PC"
+                val game = l.appName?.takeIf { it.isNotEmpty() }
+                val host = l.hostName?.takeIf { it.isNotEmpty() }
+                val title = if (game != null) res.getString(R.string.shell_link_start_title, game) else res.getString(R.string.shell_link_start_title_unnamed)
+                val message = when {
+                    game != null && host != null -> res.getString(R.string.shell_link_start_message, game, host)
+                    game != null -> res.getString(R.string.shell_link_start_message_game, game)
+                    host != null -> res.getString(R.string.shell_link_start_message_host, host)
+                    else -> res.getString(R.string.shell_link_start_message_unnamed)
+                }
                 shell.openLayer(
                     Layer.Dialog(
-                        DialogSpec("Start $game?", "A link asks Delos to start $game on $host. Continue only if you opened it yourself.", emptyList(), "Start") {
+                        DialogSpec(title, message, emptyList(), res.getString(R.string.shell_link_start_action)) {
                             activity?.startActivity(l.intent)
                             true
                         }
@@ -292,12 +305,12 @@ fun Shell(
             val prepared = ProblemReporter.prepare(appContext, p)
             val saved = ProblemReporter.saveToDownloads(appContext, prepared.report, prepared.fileName)
             ProblemMonitor.resolve(p)
-            if (saved != null) shell.showToast("Log saved to Downloads as ${prepared.fileName}. Attach it to the issue.", Symbols.CHECK_CIRCLE, durationMs = 6_500)
-            else shell.showToast("The log could not be saved. Share it from Settings → About → Debug info.", Symbols.WARNING, durationMs = 6_500)
+            if (saved != null) shell.showToast(res.getString(R.string.shell_report_saved, prepared.fileName), Symbols.CHECK_CIRCLE, durationMs = 6_500)
+            else shell.showToast(res.getString(R.string.shell_report_save_failed), Symbols.WARNING, durationMs = 6_500)
             delay(900)
             if (!ProblemReporter.openIssue(appContext, prepared.url)) {
                 feedback.play(Cue.ERROR)
-                shell.showToast("No browser is available", Symbols.ERROR)
+                shell.showToast(res.getString(R.string.shell_report_no_browser), Symbols.ERROR)
             }
         }
     }
@@ -317,7 +330,7 @@ fun Shell(
             val target = if (r.pcUuid.isEmpty()) null else repo.awaitPc(r.pcUuid, 4_000) { it.paired && it.online }
             if (target == null) {
                 feedback.play(Cue.ERROR)
-                shell.showToast("${r.pcName} cannot be reached", Symbols.WIFI_OFF)
+                shell.showToast(res.getString(R.string.shell_retry_unreachable, r.pcName), Symbols.WIFI_OFF)
                 return@launch
             }
             repo.selectPc(target.uuid)
@@ -325,7 +338,10 @@ fun Shell(
             val app = ready?.apps?.let { apps -> apps.firstOrNull { it.id == r.appId } ?: apps.firstOrNull { it.name == r.appName } }
             if (app == null) {
                 feedback.play(Cue.ERROR)
-                shell.showToast("${r.appName.ifEmpty { "The game" }} is not available on ${target.name}", Symbols.ERROR)
+                shell.showToast(
+                    if (r.appName.isEmpty()) res.getString(R.string.shell_retry_game_missing_unnamed, target.name) else res.getString(R.string.shell_retry_game_missing, r.appName, target.name),
+                    Symbols.ERROR,
+                )
                 return@launch
             }
             val cover = activity?.let { withContext(Dispatchers.IO) { StreamLoader.loadCover(it, target.uuid, app.id) } }
@@ -346,7 +362,7 @@ fun Shell(
         StreamLoader.resetLines()
         launchLine.value = null
         delay(if (appearance.reducedMotion) 150 else 350)
-        launchLine.value = StreamLoader.firstLine(launch.pc.name)
+        launchLine.value = StreamLoader.firstLine(res, launch.pc.name)
         delay(if (appearance.reducedMotion) 150 else 350)
         shell.diving = true
         // Only a game that really opens counts as last played (not one cancelled in the loader)
@@ -592,9 +608,9 @@ fun Shell(
     val profile = profiles.current
     val nav = remember(shell, shell.screen) {
         listOf(
-            NavButton(Symbols.SETTINGS, "Settings", shell.screen == Screen.Settings) { shell.navigate(Screen.Settings) },
-            NavButton(Symbols.ACCOUNT_CIRCLE, "Profile", shell.screen == Screen.Profile) { shell.navigate(Screen.Profile) },
-            NavButton(Symbols.DEVICES, "Devices", shell.screen == Screen.Devices) { shell.navigate(Screen.Devices) },
+            NavButton(Symbols.SETTINGS, res.getString(R.string.shell_nav_settings), shell.screen == Screen.Settings) { shell.navigate(Screen.Settings) },
+            NavButton(Symbols.ACCOUNT_CIRCLE, res.getString(R.string.shell_nav_profile), shell.screen == Screen.Profile) { shell.navigate(Screen.Profile) },
+            NavButton(Symbols.DEVICES, res.getString(R.string.shell_nav_devices), shell.screen == Screen.Devices) { shell.navigate(Screen.Devices) },
         )
     }
 
@@ -632,7 +648,7 @@ fun Shell(
                             onSkip = pcs.filter { it.paired }.let { paired ->
                                 if (paired.isEmpty()) null else {
                                     {
-                                        profileStore.create("Player", AVATARS.indexOfFirst { it.name == "Player" }.coerceAtLeast(0))
+                                        profileStore.create(res.getString(R.string.shell_default_profile_name), AVATARS.indexOfFirst { it.name == "Player" }.coerceAtLeast(0)) // l10n-ignore
                                         devices.connect(paired.firstOrNull { it.online } ?: paired.first())
                                     }
                                 }
@@ -641,11 +657,11 @@ fun Shell(
                         is Screen.CreateProfile -> CreateProfileScreen(screen.editing, profile.takeIf { screen.editing }) { name, avatar ->
                             if (screen.editing) {
                                 profile?.let { p -> profileStore.update(p.id) { it.copy(name = name, avatar = avatar) } }
-                                shell.showToast("Profile updated", Symbols.CHECK_CIRCLE)
+                                shell.showToast(res.getString(R.string.shell_profile_updated), Symbols.CHECK_CIRCLE)
                                 shell.navigate(screen.back ?: Screen.Profile)
                             } else {
                                 profileStore.create(name, avatar)
-                                shell.showToast("Welcome, $name", Symbols.WAVING_HAND, kind = ToastKind.SUCCESS)
+                                shell.showToast(res.getString(R.string.shell_welcome, name), Symbols.WAVING_HAND, kind = ToastKind.SUCCESS)
                                 // The first launch goes on to pairing, unless PCs are paired already
                                 shell.navigate(
                                     when {
@@ -695,11 +711,11 @@ fun Shell(
                     header = {
                         SideMenuHeader(
                             avatar = { profile?.let { AvatarBadge(it.look, 72f, 40f) } },
-                            name = profile?.name ?: "Delos",
+                            name = profile?.name ?: "Delos", // l10n-ignore
                             status = when {
-                                pc == null -> "Not connected"
-                                pc.online -> "Connected to ${pc.name}"
-                                else -> "${pc.name} is offline"
+                                pc == null -> res.getString(R.string.shell_side_not_connected)
+                                pc.online -> res.getString(R.string.shell_side_connected, pc.name)
+                                else -> res.getString(R.string.shell_side_offline, pc.name)
                             },
                         )
                     },
@@ -715,9 +731,9 @@ fun Shell(
                         SideMenuRows(appearance, update, navigation, Modifier.focusRequester(first)) { shell.navigate(Screen.Settings) }
                         if (hiddenRow) {
                             SettingRow(
-                                Symbols.VISIBILITY, "Show hidden games", RowValue.Toggle(showHidden) { repo.setShowHidden(it) },
+                                Symbols.VISIBILITY, res.getString(R.string.shell_side_show_hidden), RowValue.Toggle(showHidden) { repo.setShowHidden(it) },
                                 Modifier.focusedListRow(navigation, "show-hidden"),
-                                description = "$hiddenCount hidden on ${pc?.name ?: "this PC"}", compact = true,
+                                description = pc?.let { res.getString(R.string.shell_side_hidden_on, hiddenCount, it.name) } ?: res.getString(R.string.shell_side_hidden_on_this_pc, hiddenCount), compact = true,
                             )
                         }
                     }
@@ -758,14 +774,15 @@ fun Shell(
 
             val artworkProgress = artwork.progress.value
             ArtworkProgressBar(artworkProgress ?: metadata.progress.value,
-                label = if (artworkProgress != null) "Downloading artwork" else "Downloading metadata")
+                label = res.getString(if (artworkProgress != null) R.string.shell_progress_artwork else R.string.shell_progress_metadata))
             val note = (library as? Library.Ready)?.takeIf { shell.screen == Screen.Home && shell.layer == null }?.let { ready ->
                 val shown = if (metadata.filters.active) ready.apps.count { metadata.filters.matches(it, metadata.entry(ready.pc, it).data) } else ready.apps.size
-                if (shown == ready.apps.size) "$shown apps on ${ready.pc.name}" else "$shown of ${ready.apps.size} apps on ${ready.pc.name}"
+                if (shown == ready.apps.size) res.getQuantityString(R.plurals.shell_home_apps_on_pc, shown, shown, ready.pc.name)
+                else res.getQuantityString(R.plurals.shell_home_apps_filtered, ready.apps.size, shown, ready.apps.size, ready.pc.name)
             }
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
                 val filterHint = (library as? Library.Ready)?.takeIf { it.apps.isNotEmpty() }?.let { filterHintLabel(metadata.filters) }
-                ZoomedBar(uiScale) { HintBar(hints(shell, tracker.adjustable, tracker.hasContextMenu, filterHint), note = note, noteLabel = if (note != null) "LIBRARY" else null) }
+                ZoomedBar(uiScale) { HintBar(hints(res, shell, tracker.adjustable, tracker.hasContextMenu, filterHint), note = note, noteLabel = if (note != null) res.getString(R.string.shell_hint_library_label) else null) }
             }
             val launch = shell.launch
             val launchLogo = launch?.let { rememberArtwork(artwork, it.pc, it.app, ArtKind.LOGO).value }
@@ -774,7 +791,7 @@ fun Shell(
                 value = launch?.let { item -> activity?.let { withContext(Dispatchers.IO) { StreamLoader.parametersFor(it, item.pc.uuid, item.app.id) } } }.orEmpty()
             }
             LaunchOverlay(
-                launch?.let { LaunchCard(it.id, it.app.name, launchLine.value ?: StreamLoader.greeting(it.pc.name),
+                launch?.let { LaunchCard(it.id, it.app.name, launchLine.value ?: StreamLoader.greeting(res, it.pc.name),
                     appArt(it.pc, it.app, it.image), it.background, launchLogo, launchParameters) },
                 appearance.reducedMotion,
                 instantExit = launchExitInstant.value,
@@ -794,17 +811,18 @@ private fun SideMenuRows(
     firstModifier: Modifier,
     openSettings: () -> Unit,
 ) {
-    SettingRow(Symbols.DARK_MODE, "Theme", RowValue.Choice(if (appearance.dark) "Dark" else "Light", { update { it.copy(dark = !it.dark) } }), firstModifier.focusedListRow(navigation, "theme"), compact = true)
-    SettingRow(Symbols.SYSTEM_COLORS, "Material You", RowValue.Toggle(appearance.materialYou) { on -> update { it.copy(materialYou = on) } }, Modifier.focusedListRow(navigation, "material-you"), compact = true)
-    SettingRow(Symbols.ANIMATION, "Background", RowValue.Choice(appearance.background.label, { dir -> update { it.copy(background = it.background.step(dir)) } }), Modifier.focusedListRow(navigation, "background"), compact = true)
-    SettingRow(Symbols.VIEW_CAROUSEL, "Home layout", RowValue.Choice(appearance.homeLayout.label, { dir -> update { it.copy(homeLayout = it.homeLayout.step(dir)) } }), Modifier.focusedListRow(navigation, "home-layout"), compact = true)
-    SettingRow(Symbols.MUSIC_NOTE, "Interface sounds", RowValue.Toggle(appearance.sounds) { on -> update { it.copy(sounds = on) } }, Modifier.focusedListRow(navigation, "sounds"), compact = true)
-    SettingRow(Symbols.HAPTICS, "Haptics", RowValue.Toggle(appearance.haptics) { on -> update { it.copy(haptics = on) } }, Modifier.focusedListRow(navigation, "haptics"), compact = true)
-    SettingRow(Symbols.SETTINGS, "All settings", RowValue.Action(openSettings), Modifier.focusedListRow(navigation, "settings"), compact = true)
+    SettingRow(Symbols.DARK_MODE, stringResource(R.string.shell_side_theme), RowValue.Choice(stringResource(if (appearance.dark) R.string.shell_side_theme_dark else R.string.shell_side_theme_light), { update { it.copy(dark = !it.dark) } }), firstModifier.focusedListRow(navigation, "theme"), compact = true)
+    SettingRow(Symbols.SYSTEM_COLORS, stringResource(R.string.shell_side_material_you), RowValue.Toggle(appearance.materialYou) { on -> update { it.copy(materialYou = on) } }, Modifier.focusedListRow(navigation, "material-you"), compact = true)
+    SettingRow(Symbols.ANIMATION, stringResource(R.string.shell_side_background), RowValue.Choice(appearance.background.label, { dir -> update { it.copy(background = it.background.step(dir)) } }), Modifier.focusedListRow(navigation, "background"), compact = true)
+    SettingRow(Symbols.VIEW_CAROUSEL, stringResource(R.string.shell_side_home_layout), RowValue.Choice(appearance.homeLayout.label, { dir -> update { it.copy(homeLayout = it.homeLayout.step(dir)) } }), Modifier.focusedListRow(navigation, "home-layout"), compact = true)
+    SettingRow(Symbols.MUSIC_NOTE, stringResource(R.string.shell_side_sounds), RowValue.Toggle(appearance.sounds) { on -> update { it.copy(sounds = on) } }, Modifier.focusedListRow(navigation, "sounds"), compact = true)
+    SettingRow(Symbols.HAPTICS, stringResource(R.string.shell_side_haptics), RowValue.Toggle(appearance.haptics) { on -> update { it.copy(haptics = on) } }, Modifier.focusedListRow(navigation, "haptics"), compact = true)
+    SettingRow(Symbols.SETTINGS, stringResource(R.string.shell_side_all_settings), RowValue.Action(openSettings), Modifier.focusedListRow(navigation, "settings"), compact = true)
 }
 
 /** The game actions of the shell: start with the launch animation, quit with toasts, no dialogs. */
 private class ShellGameActions(
+    private val res: Resources,
     private val shell: ShellState,
     private val launcher: GameLauncher,
     private val feedback: Feedback,
@@ -817,11 +835,11 @@ private class ShellGameActions(
         val start = launcher.prepare(pc, app)
         if (start == null) {
             feedback.play(Cue.ERROR)
-            shell.showToast("${pc.name} cannot be reached", Symbols.WIFI_OFF)
+            shell.showToast(res.getString(R.string.shell_game_unreachable, pc.name), Symbols.WIFI_OFF)
             return
         }
         if (start.virtualDisplayUnavailable) {
-            shell.showToast("The virtual display is not ready on ${pc.name} · streaming the main display", Symbols.MONITOR, kind = ToastKind.WARNING)
+            shell.showToast(res.getString(R.string.shell_game_virtual_display_missing, pc.name), Symbols.MONITOR, kind = ToastKind.WARNING)
         }
         shell.diving = false
         shell.launch = LaunchRequest(++launches, pc, app, start.intent, image, HeroBitmaps.latest("${pc.uuid}/${app.id}"))
@@ -829,14 +847,14 @@ private class ShellGameActions(
 
     override fun quit(pc: Pc, app: App) {
         scope.launch {
-            shell.showToast("Quitting ${app.name}…", Symbols.POWER_SETTINGS_NEW)
+            shell.showToast(res.getString(R.string.shell_game_quitting, app.name), Symbols.POWER_SETTINGS_NEW)
             report(launcher.quit(pc, app))
         }
     }
 
     override fun quitAndStart(pc: Pc, running: App, app: App, image: ImageBitmap?) {
         scope.launch {
-            shell.showToast("Quitting ${running.name}…", Symbols.POWER_SETTINGS_NEW)
+            shell.showToast(res.getString(R.string.shell_game_quitting, running.name), Symbols.POWER_SETTINGS_NEW)
             val result = launcher.quit(pc, running)
             if (result.success) start(pc, app, image) else report(result)
         }
@@ -858,34 +876,35 @@ private fun ShellBackdrop(shell: ShellState, appearance: Appearance, colors: Del
 }
 
 /** Button hints for the current screen and layer (the prototype's updateHints). */
-private fun hints(shell: ShellState, adjustable: Boolean, options: Boolean, filterHint: String?): List<Hint> {
-    val optionsHint = Hint(Glyph.MENU_RIGHT, "Options").takeIf { options }
-    val adjust = if (adjustable) listOf(Hint(Glyph.ADJUST, "Adjust")) else emptyList()
-    shell.portal?.let { return if (it.cancellable) listOf(Hint(Glyph.B, "Cancel")) else emptyList() }
-    if (shell.result != null) return listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back to library"))
+private fun hints(res: Resources, shell: ShellState, adjustable: Boolean, options: Boolean, filterHint: String?): List<Hint> {
+    fun hint(glyph: Glyph, @StringRes label: Int) = Hint(glyph, res.getString(label))
+    val optionsHint = hint(Glyph.MENU_RIGHT, R.string.shell_hint_options).takeIf { options }
+    val adjust = if (adjustable) listOf(hint(Glyph.ADJUST, R.string.shell_hint_adjust)) else emptyList()
+    shell.portal?.let { return if (it.cancellable) listOf(hint(Glyph.B, R.string.shell_hint_cancel)) else emptyList() }
+    if (shell.result != null) return listOf(hint(Glyph.A, R.string.shell_hint_select), hint(Glyph.B, R.string.shell_hint_back_to_library))
     return when (shell.layer) {
-        is Layer.Context -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, if (shell.menuPath.isEmpty()) "Close" else "Back"))
-        Layer.Side -> adjust + listOf(Hint(Glyph.A, "Change"), Hint(Glyph.B, "Close"))
-        Layer.Filters -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.X, "Reset"), Hint(Glyph.Y, "Close"), Hint(Glyph.B, "Close"))
-        is Layer.Dialog -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Cancel"))
+        is Layer.Context -> listOf(hint(Glyph.A, R.string.shell_hint_select), hint(Glyph.B, if (shell.menuPath.isEmpty()) R.string.shell_hint_close else R.string.shell_hint_back))
+        Layer.Side -> adjust + listOf(hint(Glyph.A, R.string.shell_hint_change), hint(Glyph.B, R.string.shell_hint_close))
+        Layer.Filters -> listOf(hint(Glyph.A, R.string.shell_hint_select), hint(Glyph.X, R.string.shell_hint_reset), hint(Glyph.Y, R.string.shell_hint_close), hint(Glyph.B, R.string.shell_hint_close))
+        is Layer.Dialog -> listOf(hint(Glyph.A, R.string.shell_hint_select), hint(Glyph.B, R.string.shell_hint_cancel))
         null -> when (val screen = shell.screen) {
-            Screen.Home -> listOfNotNull(Hint(Glyph.A, "Start"), filterHint?.let { Hint(Glyph.Y, it) }, Hint(Glyph.MENU_LEFT, "Menu"), optionsHint)
-            Screen.Settings -> adjust + listOf(Hint(Glyph.L1, "Previous tab"), Hint(Glyph.R1, "Next tab"), Hint(Glyph.Y, "Search"), Hint(Glyph.A, "Change"), Hint(Glyph.B, "Back"))
-            Screen.SettingsSearch -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"))
-            Screen.Start -> listOfNotNull(Hint(Glyph.A, "Connect"), Hint(Glyph.MENU_LEFT, "Menu"), optionsHint)
-            is Screen.Boot -> listOfNotNull(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back").takeIf { screen.back != null })
-            is Screen.CreateProfile -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"))
-            is Screen.PairPc -> listOfNotNull(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"), optionsHint)
-            is Screen.Pin -> listOf(Hint(Glyph.B, "Cancel"))
-            Screen.DebugInfo -> adjust + listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"))
+            Screen.Home -> listOfNotNull(hint(Glyph.A, R.string.shell_hint_start), filterHint?.let { Hint(Glyph.Y, it) }, hint(Glyph.MENU_LEFT, R.string.shell_hint_menu), optionsHint)
+            Screen.Settings -> adjust + listOf(hint(Glyph.L1, R.string.shell_hint_previous_tab), hint(Glyph.R1, R.string.shell_hint_next_tab), hint(Glyph.Y, R.string.shell_hint_search), hint(Glyph.A, R.string.shell_hint_change), hint(Glyph.B, R.string.shell_hint_back))
+            Screen.SettingsSearch -> listOf(hint(Glyph.A, R.string.shell_hint_select), hint(Glyph.B, R.string.shell_hint_back))
+            Screen.Start -> listOfNotNull(hint(Glyph.A, R.string.shell_hint_connect), hint(Glyph.MENU_LEFT, R.string.shell_hint_menu), optionsHint)
+            is Screen.Boot -> listOfNotNull(hint(Glyph.A, R.string.shell_hint_select), hint(Glyph.B, R.string.shell_hint_back).takeIf { screen.back != null })
+            is Screen.CreateProfile -> listOf(hint(Glyph.A, R.string.shell_hint_select), hint(Glyph.B, R.string.shell_hint_back))
+            is Screen.PairPc -> listOfNotNull(hint(Glyph.A, R.string.shell_hint_select), hint(Glyph.B, R.string.shell_hint_back), optionsHint)
+            is Screen.Pin -> listOf(hint(Glyph.B, R.string.shell_hint_cancel))
+            Screen.DebugInfo -> adjust + listOf(hint(Glyph.A, R.string.shell_hint_select), hint(Glyph.B, R.string.shell_hint_back))
             // Like a stream: nothing over the controls
             Screen.OscPreview -> emptyList()
-            is Screen.Artwork -> if (BundledArtwork.kind(screen.app) != null) listOf(Hint(Glyph.A, "Back"), Hint(Glyph.B, "Back"))
-                else if (shell.artworkSheetOpen) listOf(Hint(Glyph.A, "Choose"), Hint(Glyph.X, "Reset filters"), Hint(Glyph.Y, "Done"), Hint(Glyph.B, "Close"))
-                else listOf(Hint(Glyph.L1, "Previous tab"), Hint(Glyph.R1, "Next tab"), Hint(Glyph.A, "Use image"), Hint(Glyph.X, "Search name"), Hint(Glyph.Y, "Filter"), Hint(Glyph.B, "Back"))
-            is Screen.GameSettings -> adjust + listOfNotNull(Hint(Glyph.L1, "Previous tab"), Hint(Glyph.R1, "Next tab"), Hint(Glyph.A, "Change"),
-                Hint(Glyph.X, "Reset to profile value").takeIf { shell.onGameReset != null }, optionsHint, Hint(Glyph.B, "Back"))
-            Screen.Profile, Screen.Devices -> listOf(Hint(Glyph.A, "Select"), Hint(Glyph.B, "Back"), Hint(Glyph.MENU_LEFT, "Menu"))
+            is Screen.Artwork -> if (BundledArtwork.kind(screen.app) != null) listOf(hint(Glyph.A, R.string.shell_hint_back), hint(Glyph.B, R.string.shell_hint_back))
+                else if (shell.artworkSheetOpen) listOf(hint(Glyph.A, R.string.shell_hint_choose), hint(Glyph.X, R.string.shell_hint_reset_filters), hint(Glyph.Y, R.string.shell_hint_done), hint(Glyph.B, R.string.shell_hint_close))
+                else listOf(hint(Glyph.L1, R.string.shell_hint_previous_tab), hint(Glyph.R1, R.string.shell_hint_next_tab), hint(Glyph.A, R.string.shell_hint_use_image), hint(Glyph.X, R.string.shell_hint_search_name), hint(Glyph.Y, R.string.shell_hint_filter), hint(Glyph.B, R.string.shell_hint_back))
+            is Screen.GameSettings -> adjust + listOfNotNull(hint(Glyph.L1, R.string.shell_hint_previous_tab), hint(Glyph.R1, R.string.shell_hint_next_tab), hint(Glyph.A, R.string.shell_hint_change),
+                hint(Glyph.X, R.string.shell_hint_reset_to_profile).takeIf { shell.onGameReset != null }, optionsHint, hint(Glyph.B, R.string.shell_hint_back))
+            Screen.Profile, Screen.Devices -> listOf(hint(Glyph.A, R.string.shell_hint_select), hint(Glyph.B, R.string.shell_hint_back), hint(Glyph.MENU_LEFT, R.string.shell_hint_menu))
         }
     }
 }

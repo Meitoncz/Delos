@@ -1,6 +1,8 @@
 package com.limelight.shell
 
+import android.content.Context
 import android.content.Intent
+import androidx.test.core.app.ApplicationProvider
 import com.limelight.nvstream.jni.MoonBridge
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -12,11 +14,15 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [33])
 class StreamFailureTextTest {
-    private fun start(code: Int, ports: String? = null, blocked: Boolean = false, decoder: Boolean = false, stage: String = "RTSP handshake") =
-        describeStreamFailure(stage, code, ports, blocked, decoder)
+    private val res = ApplicationProvider.getApplicationContext<Context>().resources
 
-    private fun lost(code: Int, ports: String? = null, blocked: Boolean = false) = describeStreamFailure(null, code, ports, blocked)
+    private fun start(code: Int, ports: String? = null, blocked: Boolean = false, decoder: Boolean = false, stage: String = "RTSP handshake") =
+        describeStreamFailure(res, stage, code, ports, blocked, decoder)
+
+    private fun lost(code: Int, ports: String? = null, blocked: Boolean = false) = describeStreamFailure(res, null, code, ports, blocked)
 
     @Test
     fun aFailedStageNamesTheStageAndCodeInTheDetailsOnly() {
@@ -106,14 +112,14 @@ class StreamFailureTextTest {
 
     @Test
     fun noH264DecoderAndShortcutFailuresHaveTheirOwnWords() {
-        val decoder = describeNoH264Decoder()
+        val decoder = describeNoH264Decoder(res)
         assertEquals("Couldn't start the stream", decoder.title)
         assertTrue("H.264" in decoder.details)
 
-        val offline = describeShortcutFailure("Desk", ShortcutFailure.OFFLINE)
+        val offline = describeShortcutFailure(res, "Desk", ShortcutFailure.OFFLINE)
         assertEquals("Desk is offline.", offline.sentence)
         assertEquals("Computer is offline", offline.details)
-        val unpaired = describeShortcutFailure("Desk", ShortcutFailure.NOT_PAIRED)
+        val unpaired = describeShortcutFailure(res, "Desk", ShortcutFailure.NOT_PAIRED)
         assertEquals("Desk isn't paired with this device.", unpaired.sentence)
         assertEquals("PC not paired", unpaired.details)
     }
@@ -146,7 +152,7 @@ class StreamResultIntentTest {
 
     @Test
     fun aResultWithoutDetailsKeepsThemNull() {
-        val closed = StreamResult(StreamResultKind.HOST_CLOSED, HOST_CLOSED_TOAST, "", null, "pc-uuid", "Desk", -1, "")
+        val closed = StreamResult(StreamResultKind.HOST_CLOSED, hostClosedToast(ApplicationProvider.getApplicationContext<Context>().resources), "", null, "pc-uuid", "Desk", -1, "")
         val taken = StreamResult.take(closed.putInto(Intent()))!!
         assertEquals(StreamResultKind.HOST_CLOSED, taken.kind)
         assertNull(taken.details)

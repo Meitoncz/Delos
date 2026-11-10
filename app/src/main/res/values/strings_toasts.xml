@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Toasts and short messages that belong to no single screen -->
+    <!-- %1$s: file name -->
+    <string name="shell_report_saved">Log saved to Downloads as %1$s. Attach it to the issue.</string>
+    <string name="shell_report_save_failed">The log could not be saved. Share it from Settings → About → Debug info.</string>
+    <string name="shell_report_no_browser">No browser is available</string>
+    <!-- %1$s: PC name -->
+    <string name="shell_retry_unreachable">%1$s cannot be reached</string>
+    <!-- %1$s: game name, %2$s: PC name -->
+    <string name="shell_retry_game_missing">%1$s is not available on %2$s</string>
+    <!-- %1$s: PC name; the game name is not known -->
+    <string name="shell_retry_game_missing_unnamed">The game is not available on %1$s</string>
+    <string name="shell_profile_updated">Profile updated</string>
+    <!-- %1$s: profile name -->
+    <string name="shell_welcome">Welcome, %1$s</string>
+    <!-- %1$s: PC name -->
+    <string name="shell_game_unreachable">%1$s cannot be reached</string>
+    <!-- %1$s: PC name -->
+    <string name="shell_game_virtual_display_missing">The virtual display is not ready on %1$s · streaming the main display</string>
+    <!-- %1$s: game name -->
+    <string name="shell_game_quitting">Quitting %1$s…</string>
+</resources>

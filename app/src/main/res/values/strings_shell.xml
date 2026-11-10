@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The shell: links from outside, the side menu, the bottom hint bar, the report card, button capture, row widgets -->
+
+    <!-- Security prompt for a pairing link opened from another app or a web page. %1$s: the PC (name and address, or just the address) -->
+    <string name="shell_link_pair_title">Pair with %1$s?</string>
+    <string name="shell_link_pair_message">A link asks Delos to pair with this PC. Continue only if you opened it yourself.</string>
+    <string name="shell_link_pair_action">Pair</string>
+    <!-- Security prompt for a link that starts a game. %1$s: game name, %2$s: PC name; the variants cover a missing name -->
+    <string name="shell_link_start_title">Start %1$s?</string>
+    <string name="shell_link_start_title_unnamed">Start a game?</string>
+    <string name="shell_link_start_message">A link asks Delos to start %1$s on %2$s. Continue only if you opened it yourself.</string>
+    <string name="shell_link_start_message_game">A link asks Delos to start %1$s on a PC. Continue only if you opened it yourself.</string>
+    <!-- %1$s: PC name; the game name is not known -->
+    <string name="shell_link_start_message_host">A link asks Delos to start a game on %1$s. Continue only if you opened it yourself.</string>
+    <string name="shell_link_start_message_unnamed">A link asks Delos to start a game on a PC. Continue only if you opened it yourself.</string>
+    <string name="shell_link_start_action">Start</string>
+
+    <!-- The three buttons of the top bar -->
+    <string name="shell_nav_settings">Settings</string>
+    <string name="shell_nav_profile">Profile</string>
+    <string name="shell_nav_devices">Devices</string>
+    <!-- The name of the profile created for a user who skips the first-run steps -->
+    <string name="shell_default_profile_name">Player</string>
+
+    <!-- Side menu -->
+    <string name="shell_side_not_connected">Not connected</string>
+    <!-- %1$s: PC name -->
+    <string name="shell_side_connected">Connected to %1$s</string>
+    <!-- %1$s: PC name -->
+    <string name="shell_side_offline">%1$s is offline</string>
+    <string name="shell_side_show_hidden">Show hidden games</string>
+    <!-- %1$d: number of hidden games, %2$s: PC name -->
+    <string name="shell_side_hidden_on">%1$d hidden on %2$s</string>
+    <!-- %1$d: number of hidden games; no PC is selected -->
+    <string name="shell_side_hidden_on_this_pc">%1$d hidden on this PC</string>
+    <string name="shell_side_theme">Theme</string>
+    <string name="shell_side_theme_dark">Dark</string>
+    <string name="shell_side_theme_light">Light</string>
+    <string name="shell_side_material_you">Material You</string>
+    <string name="shell_side_background">Background</string>
+    <string name="shell_side_home_layout">Home layout</string>
+    <string name="shell_side_sounds">Interface sounds</string>
+    <string name="shell_side_haptics">Haptics</string>
+    <string name="shell_side_all_settings">All settings</string>
+
+    <!-- Progress pill above the hint bar -->
+    <string name="shell_progress_artwork">Downloading artwork</string>
+    <string name="shell_progress_metadata">Downloading metadata</string>
+    <!-- %1$d: finished, %2$d: total -->
+    <string name="shell_progress_count">%1$d of %2$d</string>
+
+    <!-- Note on the left of the hint bar on the home screen. %1$d: apps shown, %2$s: PC name -->
+    <plurals name="shell_home_apps_on_pc">
+        <item quantity="one">%1$d app on %2$s</item>
+        <item quantity="other">%1$d apps on %2$s</item>
+    </plurals>
+    <!-- A filter is active. %1$d: apps shown, %2$d: apps in the library (the quantity), %3$s: PC name -->
+    <plurals name="shell_home_apps_filtered">
+        <item quantity="one">%1$d of %2$d app on %3$s</item>
+        <item quantity="other">%1$d of %2$d apps on %3$s</item>
+    </plurals>
+    <!-- Small caps label before the note; keep it short -->
+    <string name="shell_hint_library_label">LIBRARY</string>
+
+    <!-- Button hints in the bottom bar: the word next to the controller button -->
+    <string name="shell_hint_select">Select</string>
+    <string name="shell_hint_back">Back</string>
+    <string name="shell_hint_close">Close</string>
+    <string name="shell_hint_cancel">Cancel</string>
+    <string name="shell_hint_change">Change</string>
+    <string name="shell_hint_reset">Reset</string>
+    <string name="shell_hint_start">Start</string>
+    <string name="shell_hint_menu">Menu</string>
+    <string name="shell_hint_options">Options</string>
+    <string name="shell_hint_adjust">Adjust</string>
+    <string name="shell_hint_back_to_library">Back to library</string>
+    <string name="shell_hint_previous_tab">Previous tab</string>
+    <string name="shell_hint_next_tab">Next tab</string>
+    <string name="shell_hint_search">Search</string>
+    <string name="shell_hint_connect">Connect</string>
+    <string name="shell_hint_choose">Choose</string>
+    <string name="shell_hint_reset_filters">Reset filters</string>
+    <string name="shell_hint_done">Done</string>
+    <string name="shell_hint_use_image">Use image</string>
+    <string name="shell_hint_search_name">Search name</string>
+    <string name="shell_hint_filter">Filter</string>
+    <string name="shell_hint_reset_to_profile">Reset to profile value</string>
+
+    <!-- The card offering a problem report -->
+    <string name="shell_problem_title_stream">A stream could not run</string>
+    <string name="shell_problem_title_generic">Delos had a problem</string>
+    <string name="shell_problem_note">Nothing is sent automatically. Report opens GitHub in your browser with a draft for you to check, and saves a cleaned log file to Downloads for you to attach.</string>
+    <string name="shell_problem_report">Report this problem</string>
+    <string name="shell_problem_dismiss">Dismiss</string>
+
+    <!-- Capturing the buttons that open the stream menu -->
+    <string name="shell_button_capture_title">Press the stream menu buttons</string>
+    <string name="shell_button_capture_note">Hold them together, then let go. One button works too, e.g. a rear button. Wait or tap to cancel.</string>
+
+    <!-- Settings rows: the reset pill and an empty value -->
+    <string name="row_reset_to_profile">Reset to profile value</string>
+    <string name="row_reset">Reset</string>
+    <string name="row_not_set">Not set</string>
+
+    <!-- Impact chips of a setting: what the three glyphs mean -->
+    <string name="impact_axis_gpu">GPU</string>
+    <string name="impact_axis_latency">Latency</string>
+    <string name="impact_axis_network">Network</string>
+    <string name="impact_level_none">none</string>
+    <string name="impact_level_low">low</string>
+    <string name="impact_level_medium">medium</string>
+    <string name="impact_level_high">high</string>
+    <!-- Spoken description of one chip. %1$s: the axis (GPU, Latency, Network), %2$s: the level (none, low, medium, high) -->
+    <string name="impact_axis_level">%1$s %2$s</string>
+    <string name="impact_legend">Cost of the current value: 1 bar low, 2 medium, 3 high</string>
+    <!-- The three spoken chip descriptions in one line. %1$s: GPU, %2$s: Latency, %3$s: Network -->
+    <string name="impact_axes_joined">%1$s, %2$s, %3$s</string>
+</resources>

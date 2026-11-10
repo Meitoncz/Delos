@@ -1,6 +1,8 @@
 package com.limelight.shell
 
 import android.content.Context
+import android.content.res.Resources
+import com.limelight.R
 import android.graphics.BitmapFactory
 import android.os.Build
 import android.view.ViewGroup
@@ -73,7 +75,7 @@ class StreamLoader private constructor(
     override fun setMessage(message: String) {
         activity.runOnUiThread {
             if (!removed) {
-                stages.enqueue(lineFor(message, pcName))
+                stages.enqueue(lineFor(activity.resources, message, pcName))
                 target.floatValue = (target.floatValue + .08f).coerceAtMost(.92f)
                 changes.trySend(Unit)
             }
@@ -117,34 +119,35 @@ class StreamLoader private constructor(
             LaunchHandoff.lineAt = 0L
         }
 
-        @JvmStatic fun firstLine(pcName: String): String = lineFor("platform", pcName).also {
+        @JvmStatic fun firstLine(res: Resources, pcName: String): String = lineFor(res, "platform", pcName).also {
             LaunchHandoff.line = it
             LaunchHandoff.lineAt = System.nanoTime()
         }
 
-        private fun lineFor(message: String, pcName: String): String {
+        private fun lineFor(res: Resources, message: String, pcName: String): String {
             val m = message.lowercase()
             val key = STAGE_LINES.keys.firstOrNull { it in m } ?: return message
-            val options = STAGE_LINES.getValue(key)
+            val options = res.getStringArray(STAGE_LINES.getValue(key))
             val n = synchronized(told) { (told[key] ?: Random.nextInt(options.size)).also { told[key] = it + 1 } }
-            return options[n % options.size].replace("%pc", pcName)
+            return String.format(res.configuration.locales[0], options[n % options.size], pcName)
         }
 
+        /** The funny line told for each connection stage (matched against the native stage message): arrays of sentences with the PC name as %1$s. */
         private val STAGE_LINES = linkedMapOf(
-            "platform" to listOf("Reticulating splines", "Rolling up the sleeves", "Stretching before the game"),
-            "name resolution" to listOf("Asking the router where %pc lives", "Looking for %pc on the network", "Checking under the couch for %pc"),
-            "rtsp" to listOf("Haggling with %pc over pixels and frame rate", "Signing the stream contract with %pc", "Agreeing with %pc on how sharp it should look"),
-            "control stream" to listOf("Shaking hands with %pc", "Running an invisible cable to %pc", "Exchanging secret handshakes"),
-            "video stream" to listOf("Warming up the pixels", "Polishing the pixels", "Lining the pixels up"),
-            "audio stream" to listOf("Tuning the speakers", "Untangling the sound waves", "Clearing the throat"),
-            "input stream" to listOf("Wiring up the buttons", "Teaching the buttons who is the boss", "Plugging in an invisible controller"),
-            "unlocking" to listOf("%pc is still waking up, hang on", "%pc is rubbing its eyes, one moment"),
+            "platform" to R.array.stream_loader_lines_platform,
+            "name resolution" to R.array.stream_loader_lines_name_resolution,
+            "rtsp" to R.array.stream_loader_lines_rtsp,
+            "control stream" to R.array.stream_loader_lines_control_stream,
+            "video stream" to R.array.stream_loader_lines_video_stream,
+            "audio stream" to R.array.stream_loader_lines_audio_stream,
+            "input stream" to R.array.stream_loader_lines_input_stream,
+            "unlocking" to R.array.stream_loader_lines_unlocking,
         )
 
-        @JvmStatic fun greeting(pcName: String): String = "Calling up $pcName"
+        @JvmStatic fun greeting(res: Resources, pcName: String): String = res.getString(R.string.stream_loader_greeting, pcName)
 
         /** Before negotiation show the selected policy honestly; after setup use the active codec. */
-        @JvmStatic fun parameters(config: PreferenceConfiguration, activeFormat: Int, width: Int, height: Int): String {
+        @JvmStatic fun parameters(res: Resources, config: PreferenceConfiguration, activeFormat: Int, width: Int, height: Int): String {
             val codec = when {
                 activeFormat and MoonBridge.VIDEO_FORMAT_MASK_PYROWAVE != 0 -> "PyroWave"
                 activeFormat and MoonBridge.VIDEO_FORMAT_MASK_AV1 != 0 -> "AV1"
@@ -155,7 +158,7 @@ class StreamLoader private constructor(
                     PreferenceConfiguration.FormatOption.FORCE_HEVC -> "HEVC"
                     PreferenceConfiguration.FormatOption.FORCE_H264 -> "H.264"
                     PreferenceConfiguration.FormatOption.PYROWAVE -> "PyroWave"
-                    else -> "Auto"
+                    else -> res.getString(R.string.stream_loader_codec_auto)
                 }
             }
             return formatLaunchStreamParameters(width, height, codec, config.fps)
@@ -175,20 +178,20 @@ class StreamLoader private constructor(
                 "pyrowave" -> PreferenceConfiguration.FormatOption.PYROWAVE
                 else -> PreferenceConfiguration.FormatOption.AUTO
             }
-            return parameters(config, 0, config.width, config.height)
+            return parameters(context.resources, config, 0, config.width, config.height)
         }
 
         @JvmStatic fun show(activity: DelosStreamActivity, config: PreferenceConfiguration): StreamLoader {
             val intent = activity.intent
             val title = intent.getStringExtra(DelosStreamActivity.EXTRA_APP_NAME).orEmpty()
-            val pcName = intent.getStringExtra(DelosStreamActivity.EXTRA_PC_NAME) ?: "the PC"
+            val pcName = intent.getStringExtra(DelosStreamActivity.EXTRA_PC_NAME) ?: activity.getString(R.string.stream_result_default_pc)
             val pcUuid = intent.getStringExtra(DelosStreamActivity.EXTRA_PC_UUID)
             val appId = intent.getIntExtra(DelosStreamActivity.EXTRA_APP_ID, 0)
             val cover = if (Build.VERSION.SDK_INT < 33) pcUuid?.let { loadCover(activity, it, appId) } else null
             val logo = LaunchHandoff.logo
             val hue = ((title.hashCode() and 0x7fffffff) % 360).toFloat()
-            val info = parameters(config, 0, config.width, config.height)
-            val card = LaunchCard(0, title, greeting(pcName),
+            val info = parameters(activity.resources, config, 0, config.width, config.height)
+            val card = LaunchCard(0, title, greeting(activity.resources, pcName),
                 GameArt("$pcUuid/$appId", hue, (hue + 35f) % 360f, Symbols.SPORTS_ESPORTS, cover),
                 LaunchHandoff.background, logo, info)
             val view = ComposeView(activity)
@@ -257,7 +260,7 @@ class StreamLoader private constructor(
                     } == true
                     if (loader.activity.isFinishing) return@LaunchedEffect
                     if (!ready) {
-                        loader.arrival.reportLaunchArrivalError(loader.arrival.launchArrivalError ?: "Arrival preparation timed out")
+                        loader.arrival.reportLaunchArrivalError(loader.arrival.launchArrivalError ?: "Arrival preparation timed out") // l10n-ignore
                         effectAvailable = false
                     }
                 }
@@ -275,7 +278,7 @@ class StreamLoader private constructor(
                         !loader.activity.isFinishing && loader.arrival.isLaunchArrivalComplete
                     } == true
                     if (!complete && !loader.activity.isFinishing) {
-                        loader.arrival.reportLaunchArrivalError(loader.arrival.launchArrivalError ?: "Arrival handover timed out")
+                        loader.arrival.reportLaunchArrivalError(loader.arrival.launchArrivalError ?: "Arrival handover timed out") // l10n-ignore
                     }
                 }
                 loader.remove()

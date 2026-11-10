@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- On-screen keyboard: the button hints shown while a controller drives it (the key legends are key names and stay as they are) -->
+    <!-- A is the controller button that presses the focused key -->
+    <string name="keyboard_hint_press">Press</string>
+    <string name="keyboard_hint_close">Close</string>
+    <!-- L3 is the left stick click; it holds Shift for the next key -->
+    <string name="keyboard_hint_shift">Shift</string>
+    <string name="keyboard_hint_delete">Delete</string>
+    <string name="keyboard_hint_space">Space</string>
+    <!-- Small caps title at the right end of the hint strip -->
+    <string name="keyboard_title">ON-SCREEN KEYBOARD</string>
+</resources>

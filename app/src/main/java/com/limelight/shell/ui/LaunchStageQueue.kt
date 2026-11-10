@@ -39,7 +39,7 @@ internal class LaunchStageQueue(
 
 /** Displays effective stream settings as supplied by the caller, without guessing codec negotiation. */
 internal fun formatLaunchStreamParameters(width: Int, height: Int, codec: String, fps: Int): String =
-    "$width × $height · $codec · $fps FPS"
+    "$width × $height · $codec · $fps FPS"  // l10n-ignore
 
 internal fun formatLaunchStreamParameters(width: Int, height: Int, codec: String, fps: Float): String =
-    "$width × $height · $codec · ${fps.toString().removeSuffix(".0")} FPS"
+    "$width × $height · $codec · ${fps.toString().removeSuffix(".0")} FPS"  // l10n-ignore

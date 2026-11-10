@@ -1,5 +1,7 @@
 package com.limelight.shell
 
+import android.content.res.Resources
+import com.limelight.R
 import com.limelight.preferences.UpscalerMode
 import com.limelight.shell.settings.SettingsHelp
 import com.limelight.shell.settings.StreamMenuHelp
@@ -54,6 +56,40 @@ internal object MoreRow {
 
     /** The help key of [GYRO] while no gyroscope source is on: it says why the row does nothing. */
     const val GYRO_DISABLED = "Gyro smoothing (disabled)"
+}
+
+/**
+ * The names the stream menu's tiles and rows are known by: the focus order, the help lookup ([StreamMenuHelp]) and the tests
+ * use them. They are identifiers, not text: the words on screen come from the string resources.
+ */
+internal object MenuKey {
+    const val RESUME = "Resume"
+    const val KEYBOARD = "Keyboard"
+    const val OVERLAY = "Overlay"
+    const val BRIGHTNESS = "Brightness"
+    const val BITRATE = "Bitrate"
+    const val UPSCALER = "Upscaler"
+    const val UPSCALING = "Upscaling"
+    const val SUPERSAMPLING = "Supersampling"
+    const val SUPERSAMPLING_ON = "Supersampling on"
+    const val MORE = "More"
+    const val DISCONNECT = "Disconnect"
+    const val QUIT_GAME = "Quit game"
+    const val SCREEN_BRIGHTNESS = "Screen brightness"
+    const val TOUCHSCREEN_MODE = "Touchscreen mode"
+    const val APPLY_BITRATE = "Apply bitrate"
+    const val APPLY = "Apply"
+    const val ENABLED = "Enabled"
+    const val MODE = "Mode"
+    const val SUPERSAMPLING_QUALITY = "Supersampling quality"
+    const val SHARPNESS = "Sharpness"
+    const val LOCAL_MOUSE_CURSOR = "Local mouse cursor"
+    const val SEND_CLIPBOARD = "Send clipboard"
+    const val GET_CLIPBOARD = "Get clipboard"
+    const val TASK_MANAGER = "Task manager"
+    const val ZOOM = "Zoom"
+    const val ONSCREEN_CONTROLS = "On-screen controls"
+    const val TOUCH_SENSITIVITY = "Touch sensitivity"
 }
 
 /** The More page's Gyro smoothing row: shown where the motion settings are, usable while a gyroscope source is on. */
@@ -339,42 +375,42 @@ internal fun wrappedLineCount(text: String, lineChars: Int): Int {
 }
 
 /** The heading of a popover. */
-internal fun pageTitle(page: MenuPage, supersampling: Boolean): String = when (page) {
+internal fun pageTitle(res: Resources, page: MenuPage, supersampling: Boolean): String = when (page) {
     MenuPage.MAIN -> ""
-    MenuPage.MORE -> "More"
-    MenuPage.KEYS -> "Send keys"
-    MenuPage.COMMANDS -> "Server commands"
-    MenuPage.BRIGHTNESS -> "Brightness"
-    MenuPage.BITRATE -> "Stream bitrate"
-    MenuPage.UPSCALER -> if (supersampling) "Supersampling" else "Upscaler"
-    MenuPage.MOUSE -> "Mouse and touch"
-    MenuPage.RUMBLE -> "Rumble feel"
+    MenuPage.MORE -> res.getString(R.string.stream_menu_title_more)
+    MenuPage.KEYS -> res.getString(R.string.stream_menu_title_keys)
+    MenuPage.COMMANDS -> res.getString(R.string.stream_menu_title_commands)
+    MenuPage.BRIGHTNESS -> res.getString(R.string.stream_menu_title_brightness)
+    MenuPage.BITRATE -> res.getString(R.string.stream_menu_title_bitrate)
+    MenuPage.UPSCALER -> res.getString(if (supersampling) R.string.stream_menu_title_supersampling else R.string.stream_menu_title_upscaler)
+    MenuPage.MOUSE -> res.getString(R.string.stream_menu_title_mouse)
+    MenuPage.RUMBLE -> res.getString(R.string.stream_menu_title_rumble)
 }
 
 /** The help key of the tile (or the page's first row) that shows before anything inside a page is focused. */
 internal fun pageHelpKey(page: MenuPage): String = when (page) {
-    MenuPage.MAIN -> "Resume"
-    MenuPage.MORE -> "Send keys"
-    MenuPage.KEYS -> "Send keys"
-    MenuPage.COMMANDS -> "Commands"
-    MenuPage.BRIGHTNESS -> "Screen brightness"
-    MenuPage.BITRATE -> "Bitrate"
-    MenuPage.UPSCALER -> "Upscaling"
-    MenuPage.MOUSE -> "Touchscreen mode"
-    MenuPage.RUMBLE -> "Rumble feel"
+    MenuPage.MAIN -> MenuKey.RESUME
+    MenuPage.MORE -> MoreRow.KEYS
+    MenuPage.KEYS -> MoreRow.KEYS
+    MenuPage.COMMANDS -> MoreRow.COMMANDS
+    MenuPage.BRIGHTNESS -> MenuKey.SCREEN_BRIGHTNESS
+    MenuPage.BITRATE -> MenuKey.BITRATE
+    MenuPage.UPSCALER -> MenuKey.UPSCALING
+    MenuPage.MOUSE -> MenuKey.TOUCHSCREEN_MODE
+    MenuPage.RUMBLE -> MoreRow.RUMBLE
 }
 
 /** The help key of a tile: the upscaler's tile is called Supersampling when the stream is supersampled. */
 internal fun circleHelpKey(item: BarItem, supersampling: Boolean): String = when (item) {
-    BarItem.RESUME -> "Resume"
-    BarItem.KEYBOARD -> "Keyboard"
-    BarItem.OVERLAY -> "Overlay"
-    BarItem.BRIGHTNESS -> "Brightness"
-    BarItem.BITRATE -> "Bitrate"
-    BarItem.UPSCALER -> if (supersampling) "Supersampling" else "Upscaler"
-    BarItem.MORE -> "More"
-    BarItem.DISCONNECT -> "Disconnect"
-    BarItem.QUIT -> "Quit game"
+    BarItem.RESUME -> MenuKey.RESUME
+    BarItem.KEYBOARD -> MenuKey.KEYBOARD
+    BarItem.OVERLAY -> MenuKey.OVERLAY
+    BarItem.BRIGHTNESS -> MenuKey.BRIGHTNESS
+    BarItem.BITRATE -> MenuKey.BITRATE
+    BarItem.UPSCALER -> if (supersampling) MenuKey.SUPERSAMPLING else MenuKey.UPSCALER
+    BarItem.MORE -> MenuKey.MORE
+    BarItem.DISCONNECT -> MenuKey.DISCONNECT
+    BarItem.QUIT -> MenuKey.QUIT_GAME
 }
 
 /** The mode the Mode row shows after a press in [direction] (-1 or +1): the list wraps around. */
@@ -393,6 +429,7 @@ internal fun showsSupersamplingQuality(supersamplingMode: Boolean, mode: Int): B
  * the upscaler's toggles start with the renderer's status.
  */
 internal fun streamMenuHelp(
+    res: Resources,
     key: String,
     upscalerStatus: String,
     upscalerMode: Int,
@@ -401,12 +438,12 @@ internal fun streamMenuHelp(
     bitrateFailure: String? = null,
 ): String = when (key) {
     // A failed Apply explains itself where the help is
-    "Apply bitrate" -> bitrateFailure ?: StreamMenuHelp.description(key)
-    "Touchscreen mode" -> SettingsHelp.choice("mouse_mode_list", mouseMode.toString()) +
-        "\n\n" + if (rememberMouseMode) "Applies now and is saved." else "Applies now; this stream only."
-    "Mode" -> SettingsHelp.choice("list_sgsr_quality", UpscalerMode.fromIndex(upscalerMode).value()) +
+    MenuKey.APPLY_BITRATE -> bitrateFailure ?: StreamMenuHelp.description(key)
+    MenuKey.TOUCHSCREEN_MODE -> SettingsHelp.choice("mouse_mode_list", mouseMode.toString()) +
+        "\n\n" + res.getString(if (rememberMouseMode) R.string.stream_menu_mouse_applies_saved else R.string.stream_menu_mouse_applies_stream)
+    MenuKey.MODE -> SettingsHelp.choice("list_sgsr_quality", UpscalerMode.fromIndex(upscalerMode).value()) +
         "\n\n" + StreamMenuHelp.description(key)
-    "Upscaler", "Upscaling", "Supersampling", "Supersampling on" -> "$upscalerStatus\n\n${StreamMenuHelp.description(key)}"
+    MenuKey.UPSCALER, MenuKey.UPSCALING, MenuKey.SUPERSAMPLING, MenuKey.SUPERSAMPLING_ON -> "$upscalerStatus\n\n${StreamMenuHelp.description(key)}"
     else -> StreamMenuHelp.description(key)
 }
 
@@ -414,25 +451,31 @@ internal fun streamMenuHelp(
 internal const val RECOMMENDED_ROW = "Recommended bitrate"
 
 /** What the Apply row of the Bitrate page says on its right: null before anything was applied. */
-internal fun bitrateStatusText(busy: Boolean, result: BitrateResult?): String? = when {
-    busy -> "Applying\u2026"
-    result is BitrateResult.Accepted -> "Accepted ${result.kbps / 1000} Mbps"
-    result is BitrateResult.Limited -> "Limited by the host to ${result.kbps / 1000} Mbps"
-    result is BitrateResult.Failed -> "Failed"
+internal fun bitrateStatusText(res: Resources, busy: Boolean, result: BitrateResult?): String? = when {
+    busy -> res.getString(R.string.stream_menu_bitrate_applying)
+    result is BitrateResult.Accepted -> res.getString(R.string.stream_menu_bitrate_accepted, result.kbps / 1000)
+    result is BitrateResult.Limited -> res.getString(R.string.stream_menu_bitrate_limited, result.kbps / 1000)
+    result is BitrateResult.Failed -> res.getString(R.string.stream_menu_bitrate_failed)
     else -> null
 }
 
 /** The reasons a bitrate change can fail, as the help says them (all short enough for it). */
-internal object BitrateFailure {
-    const val NOT_CONNECTED = "The stream is not connected, so the bitrate cannot be changed."
-    const val UNSUPPORTED = "The host does not support live bitrate changes, or the stream has ended."
-    const val DENIED = "The host did not allow this change."
-    const val UNCONFIRMED = "The bitrate was not confirmed. Check the connection and try again."
+internal class BitrateFailure private constructor(private val message: Int, private val detail: String? = null) {
+    /** The sentence the help shows, in the language of [res]. */
+    fun text(res: Resources): String = if (detail == null) res.getString(message) else res.getString(message, detail)
 
-    /** The host answered with an error of its own; its [detail] is cut so the sentence still fits. */
-    fun rejected(detail: String?): String {
-        val clean = detail?.trim().orEmpty().replace('\n', ' ')
-        return "The host could not apply the change" + if (clean.isEmpty()) "." else ": " + (if (clean.length > 60) clean.take(59) + "\u2026" else clean)
+    companion object {
+        val NOT_CONNECTED = BitrateFailure(R.string.stream_menu_bitrate_not_connected)
+        val UNSUPPORTED = BitrateFailure(R.string.stream_menu_bitrate_unsupported)
+        val DENIED = BitrateFailure(R.string.stream_menu_bitrate_denied)
+        val UNCONFIRMED = BitrateFailure(R.string.stream_menu_bitrate_unconfirmed)
+
+        /** The host answered with an error of its own; its [detail] is cut so the sentence still fits. */
+        fun rejected(detail: String?): BitrateFailure {
+            val clean = detail?.trim().orEmpty().replace('\n', ' ')
+            if (clean.isEmpty()) return BitrateFailure(R.string.stream_menu_bitrate_rejected)
+            return BitrateFailure(R.string.stream_menu_bitrate_rejected_detail, if (clean.length > 60) clean.take(59) + "\u2026" else clean)
+        }
     }
 }
 
@@ -450,7 +493,7 @@ internal fun helpLineText(text: String): String {
         when {
             line.isEmpty() -> next
             line.last() in ".!?" -> "$line $next"
-            else -> "$line \u00B7 $next"
+            else -> "$line \u00B7 $next" // l10n-ignore
         }
     }
 }

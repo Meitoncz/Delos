@@ -124,7 +124,7 @@ object HeroBitmaps {
                 HeroLensShader.render(input, blurPx).asImageBitmap()
             } catch (e: RuntimeException) {
                 // An unsupported GPU must retain the supported bitmap path, not crash the home screen.
-                com.limelight.LimeLog.warning("Hero lens $key unavailable: ${e.message}")
+                com.limelight.LimeLog.warning("Hero lens $key unavailable: ${e.message}") // l10n-ignore
                 snapshot
             }
         } finally {
@@ -169,7 +169,7 @@ object HeroBitmaps {
             val pixels = IntArray(small.width * small.height)
             small.getPixels(pixels, 0, small.width, 0, 0, small.width, small.height)
             dominantHues(pixels)
-        }.onFailure { com.limelight.LimeLog.warning("Cover colors $key: $it") }.getOrNull()
+        }.onFailure { com.limelight.LimeLog.warning("Cover colors $key: $it") }.getOrNull() // l10n-ignore
         android.os.Handler(android.os.Looper.getMainLooper()).post { covers.store(key, sourceId, result) }
     }
 
