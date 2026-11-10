@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="diag_problem_java_crash">O app Delos parou inesperadamente da última vez.</string>
+    <string name="diag_problem_native_crash">O app Delos falhou no código nativo da última vez.</string>
+    <string name="diag_problem_anr">O app Delos parou de responder da última vez.</string>
+    <string name="diag_problem_unclean_exit">O app Delos não foi fechado normalmente da última vez.</string>
+    <string name="diag_problem_stream_failed">Não foi possível executar o último stream.</string>
+    <string name="diag_problem_summary_crash">Falha</string>
+    <string name="diag_problem_summary_crash_with">Falha: %1$s</string>
+    <string name="diag_problem_summary_native_crash">Falha no código nativo</string>
+    <string name="diag_problem_summary_native_crash_with">Falha no código nativo: %1$s</string>
+    <string name="diag_problem_summary_anr">Não está respondendo (ANR)</string>
+    <string name="diag_problem_summary_anr_with">Não está respondendo (ANR): %1$s</string>
+    <string name="diag_problem_summary_unclean_exit">O app estava em primeiro plano quando seu processo terminou</string>
+    <plurals name="diag_preview_hidden_lines">
+        <item quantity="one">… %d linha anterior está no arquivo …</item>
+        <item quantity="many">… %d de linhas anteriores estão no arquivo …</item>
+        <item quantity="other">… %d linhas anteriores estão no arquivo …</item>
+    </plurals>
+</resources>

@@ -1,5 +1,6 @@
 package com.limelight.shell.ui
 
+import android.content.res.Resources
 import androidx.compose.ui.res.stringResource
 import com.limelight.R
 import androidx.compose.animation.AnimatedVisibility
@@ -38,6 +39,39 @@ import com.limelight.diag.ProblemKind
 @Composable
 internal fun offerTitle(kind: ProblemKind): String = stringResource(if (kind == ProblemKind.STREAM_FAILED) R.string.shell_problem_title_stream else R.string.shell_problem_title_generic)
 
+/** The sentence under the title: what happened the last time, by [kind]. */
+internal fun problemSentence(res: Resources, kind: ProblemKind): String = res.getString(
+    when (kind) {
+        ProblemKind.JAVA_CRASH -> R.string.diag_problem_java_crash
+        ProblemKind.NATIVE_CRASH -> R.string.diag_problem_native_crash
+        ProblemKind.ANR -> R.string.diag_problem_anr
+        ProblemKind.UNCLEAN_EXIT -> R.string.diag_problem_unclean_exit
+        ProblemKind.STREAM_FAILED -> R.string.diag_problem_stream_failed
+    },
+)
+
+/**
+ * The line with the facts under the sentence: the kind and the technical subject (exception, signal, system description or
+ * the title of the failed stream). The subject is data and stays as the system or the stream reported it.
+ */
+internal fun problemSummary(res: Resources, problem: Problem): String {
+    val subject = problem.subject.take(Problem.SUMMARY_MAX)
+    return when (problem.kind) {
+        ProblemKind.JAVA_CRASH ->
+            if (!problem.viaExitRecord) subject
+            else if (subject.isBlank()) res.getString(R.string.diag_problem_summary_crash)
+            else res.getString(R.string.diag_problem_summary_crash_with, subject)
+        ProblemKind.NATIVE_CRASH ->
+            if (subject.isBlank()) res.getString(R.string.diag_problem_summary_native_crash)
+            else res.getString(R.string.diag_problem_summary_native_crash_with, subject)
+        ProblemKind.ANR ->
+            if (subject.isBlank()) res.getString(R.string.diag_problem_summary_anr)
+            else res.getString(R.string.diag_problem_summary_anr_with, subject)
+        ProblemKind.UNCLEAN_EXIT -> res.getString(R.string.diag_problem_summary_unclean_exit)
+        ProblemKind.STREAM_FAILED -> subject
+    }
+}
+
 /**
  * The offer after a problem (docs/DIAGNOSTICS.md, docs/GUI.md "Problem report card"): a glass card in the top right corner of the
  * start screen and the home screen, in the toast's place but with two actions. It is not a dialog: nothing is dimmed, the
@@ -56,6 +90,7 @@ fun ProblemOfferCard(problem: Problem?, reducedMotion: Boolean, onReport: () -> 
             val report = remember { FocusRequester() }
             InitialFocus(report, p.id)
             val shape = RoundedCornerShape(34.px)
+            val res = textResources()
             Column(
                 Modifier.width(780.px).clip(shape).glass(colors.surface).border(1.px, colors.line, shape).padding(36.px).focusGroup(),
                 verticalArrangement = Arrangement.spacedBy(18.px),
@@ -66,11 +101,11 @@ fun ProblemOfferCard(problem: Problem?, reducedMotion: Boolean, onReport: () -> 
                     }
                     Column(verticalArrangement = Arrangement.spacedBy(6.px)) {
                         BasicText(offerTitle(p.kind), style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 28.tpx))
-                        BasicText(p.kind.sentence, style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 22.tpx, lineHeight = 1.35.em))
+                        BasicText(problemSentence(res, p.kind), style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 22.tpx, lineHeight = 1.35.em))
                     }
                 }
                 BasicText(
-                    p.summary,
+                    problemSummary(res, p),
                     style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 18.tpx, lineHeight = 1.35.em),
                     maxLines = 2, overflow = TextOverflow.Ellipsis,
                 )

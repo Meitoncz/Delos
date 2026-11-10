@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="diag_problem_java_crash">Застосунок Delos минулого разу несподівано зупинився.</string>
+    <string name="diag_problem_native_crash">Застосунок Delos минулого разу аварійно завершився в нативному коді.</string>
+    <string name="diag_problem_anr">Застосунок Delos минулого разу перестав відповідати.</string>
+    <string name="diag_problem_unclean_exit">Застосунок Delos минулого разу закрився не належним чином.</string>
+    <string name="diag_problem_stream_failed">Останній стрім не вдалося запустити.</string>
+    <string name="diag_problem_summary_crash">Збій</string>
+    <string name="diag_problem_summary_crash_with">Збій: %1$s</string>
+    <string name="diag_problem_summary_native_crash">Збій у нативному коді</string>
+    <string name="diag_problem_summary_native_crash_with">Збій у нативному коді: %1$s</string>
+    <string name="diag_problem_summary_anr">Не відповідає (ANR)</string>
+    <string name="diag_problem_summary_anr_with">Не відповідає (ANR): %1$s</string>
+    <string name="diag_problem_summary_unclean_exit">Застосунок був на передньому плані, коли його процес завершився</string>
+    <plurals name="diag_preview_hidden_lines">
+        <item quantity="one">… %d попередній рядок є у файлі …</item>
+        <item quantity="few">… %d попередні рядки є у файлі …</item>
+        <item quantity="many">… %d попередніх рядків є у файлі …</item>
+        <item quantity="other">… %d попереднього рядка є у файлі …</item>
+    </plurals>
+</resources>

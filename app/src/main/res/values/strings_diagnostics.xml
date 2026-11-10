@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The problem report card (crash, ANR, unclean exit, failed stream). The title and the buttons are in strings_shell.xml. -->
+    <!-- The card offering a problem report: what happened the last time Delos ran (the sentence under the title) -->
+    <string name="diag_problem_java_crash">Delos stopped unexpectedly the last time.</string>
+    <string name="diag_problem_native_crash">Delos crashed in its native code the last time.</string>
+    <string name="diag_problem_anr">Delos stopped responding the last time.</string>
+    <string name="diag_problem_unclean_exit">Delos did not close normally the last time.</string>
+    <string name="diag_problem_stream_failed">The last stream could not run.</string>
+    <!-- The facts line of the problem card. The plain form is used when the system gave no description; the _with form takes it as %1$s (a technical text such as "signal 11 (SIGSEGV)", shown as it is). A crash with a stack trace shows the exception instead. -->
+    <string name="diag_problem_summary_crash">Crash</string>
+    <string name="diag_problem_summary_crash_with">Crash: %1$s</string>
+    <string name="diag_problem_summary_native_crash">Native crash</string>
+    <string name="diag_problem_summary_native_crash_with">Native crash: %1$s</string>
+    <string name="diag_problem_summary_anr">Not responding (ANR)</string>
+    <string name="diag_problem_summary_anr_with">Not responding (ANR): %1$s</string>
+    <!-- The facts line when the previous process ended while the app was in the foreground and nothing else is known -->
+    <string name="diag_problem_summary_unclean_exit">The app was in the foreground when its process ended</string>
+    <!-- The note between the head and the tail of the log preview. %d: how many lines are only in the shared file -->
+    <plurals name="diag_preview_hidden_lines">
+        <item quantity="one">… %d earlier line is in the file …</item>
+        <item quantity="other">… %d earlier lines are in the file …</item>
+    </plurals>
+</resources>

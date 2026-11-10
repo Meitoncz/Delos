@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="diag_problem_java_crash">Delos wurde beim letzten Mal unerwartet beendet.</string>
+    <string name="diag_problem_native_crash">Delos ist beim letzten Mal im nativen Code abgestürzt.</string>
+    <string name="diag_problem_anr">Delos hat beim letzten Mal nicht mehr reagiert.</string>
+    <string name="diag_problem_unclean_exit">Delos wurde beim letzten Mal nicht normal beendet.</string>
+    <string name="diag_problem_stream_failed">Der letzte Stream konnte nicht gestartet werden.</string>
+    <string name="diag_problem_summary_crash">Absturz</string>
+    <string name="diag_problem_summary_crash_with">Absturz: %1$s</string>
+    <string name="diag_problem_summary_native_crash">Absturz im nativen Code</string>
+    <string name="diag_problem_summary_native_crash_with">Absturz im nativen Code: %1$s</string>
+    <string name="diag_problem_summary_anr">Reagiert nicht (ANR)</string>
+    <string name="diag_problem_summary_anr_with">Reagiert nicht (ANR): %1$s</string>
+    <string name="diag_problem_summary_unclean_exit">Die App war im Vordergrund, als ihr Prozess endete</string>
+    <plurals name="diag_preview_hidden_lines">
+        <item quantity="one">… %d frühere Zeile steht in der Datei …</item>
+        <item quantity="other">… %d frühere Zeilen stehen in der Datei …</item>
+    </plurals>
+</resources>

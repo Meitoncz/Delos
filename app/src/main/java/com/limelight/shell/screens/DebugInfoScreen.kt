@@ -174,7 +174,7 @@ fun DebugInfoScreen() {
         scope.launch {
             val ready = report ?: DiagExport.report(context)
             val uri = DiagExport.writeForSharing(context, ready)
-            runCatching { context.startActivity(DiagExport.shareIntent(uri)) }
+            runCatching { context.startActivity(DiagExport.shareIntent(uri, res.getString(R.string.debug_share_label))) }
                 .onFailure { shell.showToast(res.getString(R.string.debug_share_no_app_toast), Symbols.ERROR) }
         }
     }
@@ -310,7 +310,7 @@ fun DebugInfoScreen() {
         }
         add(DebugRow("diag_log", DebugSection.DIAGNOSTICS, Symbols.DIAGNOSTIC_LOGS, res.getString(R.string.debug_log_label), RowValue.Info(logValue),
             res.getString(R.string.debug_log_description),
-            report?.preview() ?: res.getString(R.string.debug_log_preview_reading)))
+            report?.preview(res) ?: res.getString(R.string.debug_log_preview_reading)))
         add(DebugRow("diag_share", DebugSection.DIAGNOSTICS, Symbols.SHARE_LOG, res.getString(R.string.debug_share_label), RowValue.Action { shareLog() },
             res.getString(R.string.debug_share_description)))
         add(DebugRow("diag_copy", DebugSection.DIAGNOSTICS, Symbols.COPY_SUMMARY, res.getString(R.string.debug_copy_label), RowValue.Action { copySummary() },

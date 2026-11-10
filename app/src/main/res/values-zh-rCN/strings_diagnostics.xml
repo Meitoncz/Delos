@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="diag_problem_java_crash">Delos 上次意外停止了。</string>
+    <string name="diag_problem_native_crash">Delos 上次在原生代码中崩溃了。</string>
+    <string name="diag_problem_anr">Delos 上次停止响应了。</string>
+    <string name="diag_problem_unclean_exit">Delos 上次没有正常关闭。</string>
+    <string name="diag_problem_stream_failed">上一次串流无法运行。</string>
+    <string name="diag_problem_summary_crash">崩溃</string>
+    <string name="diag_problem_summary_crash_with">崩溃：%1$s</string>
+    <string name="diag_problem_summary_native_crash">原生代码崩溃</string>
+    <string name="diag_problem_summary_native_crash_with">原生代码崩溃：%1$s</string>
+    <string name="diag_problem_summary_anr">无响应 (ANR)</string>
+    <string name="diag_problem_summary_anr_with">无响应 (ANR)：%1$s</string>
+    <string name="diag_problem_summary_unclean_exit">进程结束时应用在前台</string>
+    <plurals name="diag_preview_hidden_lines">
+        <item quantity="other">… 文件中还有更早的 %d 行 …</item>
+    </plurals>
+</resources>

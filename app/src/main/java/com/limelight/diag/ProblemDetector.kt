@@ -1,7 +1,11 @@
 package com.limelight.diag
 
-/** What went wrong, in the order the detector prefers when several happened since the last start. */
-enum class ProblemKind(val sentence: String) {
+/**
+ * What went wrong, in the order the detector prefers when several happened since the last start. The sentence the user reads
+ * is built by the UI from string resources (`shell/ui/ProblemOfferCard.kt`); [issueSentence] is the English line of the
+ * prefilled GitHub issue, which stays English because the developers read it.
+ */
+enum class ProblemKind(val issueSentence: String) {
     JAVA_CRASH("Delos stopped unexpectedly the last time."),
     NATIVE_CRASH("Delos crashed in its native code the last time."),
     ANR("Delos stopped responding the last time."),
@@ -31,8 +35,37 @@ data class SessionRecord(val pid: Int, val startedAtMs: Long, val updatedAtMs: L
     }
 }
 
-/** A problem to offer a report for. [detail] is the stack trace or the system's description; it is scrubbed before use. */
-data class Problem(val id: String, val kind: ProblemKind, val atMs: Long, val summary: String, val detail: String)
+/**
+ * A problem to offer a report for, as typed facts: the [kind], the [subject] (the exception summary of a crash file, the
+ * system's description of an exit, the title of a failed stream; blank when there is none) and [detail] (the stack trace or the
+ * system's description; it is scrubbed before use). [viaExitRecord] is true for a crash that only the system's exit record
+ * told about. The UI builds the localized card text from these; [summary] is the English line for logs, the issue and the report.
+ */
+data class Problem(
+    val id: String,
+    val kind: ProblemKind,
+    val atMs: Long,
+    val subject: String,
+    val detail: String,
+    val viaExitRecord: Boolean = false,
+) {
+    /** The English one-liner for developer-facing places (DiagLog, issue draft, report section). Never shown on the card. */
+    val summary: String
+        get() = when (kind) {
+            ProblemKind.JAVA_CRASH -> if (viaExitRecord) withSubject("Crash") else subject
+            ProblemKind.NATIVE_CRASH -> withSubject("Native crash")
+            ProblemKind.ANR -> withSubject("Not responding (ANR)")
+            ProblemKind.UNCLEAN_EXIT -> "The app was in the foreground when its process ended"
+            ProblemKind.STREAM_FAILED -> subject
+        }
+
+    private fun withSubject(what: String) = if (subject.isBlank()) what else "$what: $subject".take(SUMMARY_MAX)
+
+    companion object {
+        /** The longest summary line; longer subjects are cut (the detail keeps everything). */
+        const val SUMMARY_MAX = 180
+    }
+}
 
 /** What was already offered: one number per source, so nothing is offered twice. Stored by [ProblemMonitor]. */
 data class ProblemLedger(val crashMs: Long = 0, val exitMs: Long = 0, val sessionMs: Long = 0, val streamOfferMs: Long = 0)
@@ -84,13 +117,7 @@ object ProblemDetector {
                 ExitKind.CRASH, ExitKind.INITIALIZATION_FAILURE -> if (signals.crash?.pid == exit.pid) null else ProblemKind.JAVA_CRASH
                 ExitKind.OTHER -> null
             } ?: continue
-            val what = when (kind) {
-                ProblemKind.NATIVE_CRASH -> "Native crash"
-                ProblemKind.ANR -> "Not responding (ANR)"
-                else -> "Crash"
-            }
-            candidates += Problem("exit-${exit.timestamp}", kind, exit.timestamp,
-                if (exit.description.isBlank()) what else "$what: ${exit.description}".take(180), exit.description)
+            candidates += Problem("exit-${exit.timestamp}", kind, exit.timestamp, exit.description, exit.description, viaExitRecord = true)
         }
 
         val session = signals.previousSession
@@ -98,8 +125,7 @@ object ProblemDetector {
         if (useSession && session != null && session.inForeground && session.pid != signals.currentPid &&
             session.startedAtMs > ledger.sessionMs && fresh(session.updatedAtMs) && signals.crash?.pid != session.pid
         ) {
-            candidates += Problem("session-${session.startedAtMs}", ProblemKind.UNCLEAN_EXIT, session.updatedAtMs,
-                "The app was in the foreground when its process ended", "")
+            candidates += Problem("session-${session.startedAtMs}", ProblemKind.UNCLEAN_EXIT, session.updatedAtMs, "", "")
         }
 
         val next = ledger.copy(
@@ -115,7 +141,7 @@ object ProblemDetector {
     /** A stream that failed (the secondary entry): offered unless one was offered within the cooldown. */
     fun streamFailed(ledger: ProblemLedger, nowMs: Long, title: String, details: String?): Detection {
         if (nowMs - ledger.streamOfferMs < STREAM_OFFER_COOLDOWN_MS) return Detection(null, ledger)
-        val problem = Problem("stream-$nowMs", ProblemKind.STREAM_FAILED, nowMs, title.take(180), details.orEmpty())
+        val problem = Problem("stream-$nowMs", ProblemKind.STREAM_FAILED, nowMs, title.take(Problem.SUMMARY_MAX), details.orEmpty())
         return Detection(problem, ledger.copy(streamOfferMs = nowMs))
     }
 }

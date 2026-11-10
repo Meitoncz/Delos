@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="diag_problem_java_crash">Delos가 지난번에 예기치 않게 중지됐어요.</string>
+    <string name="diag_problem_native_crash">Delos가 지난번에 네이티브 코드에서 충돌했어요.</string>
+    <string name="diag_problem_anr">Delos가 지난번에 응답하지 않았어요.</string>
+    <string name="diag_problem_unclean_exit">Delos가 지난번에 정상적으로 종료되지 않았어요.</string>
+    <string name="diag_problem_stream_failed">마지막 스트림을 실행하지 못했어요.</string>
+    <string name="diag_problem_summary_crash">충돌</string>
+    <string name="diag_problem_summary_crash_with">충돌: %1$s</string>
+    <string name="diag_problem_summary_native_crash">네이티브 코드 충돌</string>
+    <string name="diag_problem_summary_native_crash_with">네이티브 코드 충돌: %1$s</string>
+    <string name="diag_problem_summary_anr">응답 없음 (ANR)</string>
+    <string name="diag_problem_summary_anr_with">응답 없음 (ANR): %1$s</string>
+    <string name="diag_problem_summary_unclean_exit">프로세스가 끝났을 때 앱이 포그라운드에 있었어요</string>
+    <plurals name="diag_preview_hidden_lines">
+        <item quantity="other">… 이전 %d줄은 파일에 있어요 …</item>
+    </plurals>
+</resources>

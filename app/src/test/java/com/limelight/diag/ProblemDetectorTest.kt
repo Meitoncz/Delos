@@ -79,6 +79,9 @@ class ProblemDetectorTest {
     @Test fun aCrashExitWithoutACrashFileIsStillReported() {
         val result = ProblemDetector.atStart(signals(exits = listOf(exit(ExitKind.CRASH, text = "crash"))), ProblemLedger())
         assertEquals(ProblemKind.JAVA_CRASH, result.problem!!.kind)
+        assertEquals("crash", result.problem!!.subject)
+        assertTrue(result.problem!!.viaExitRecord)
+        assertEquals("Crash: crash", result.problem!!.summary)
         val init = ProblemDetector.atStart(signals(exits = listOf(exit(ExitKind.INITIALIZATION_FAILURE, at = now - 5 * minute))), ProblemLedger())
         assertEquals(ProblemKind.JAVA_CRASH, init.problem!!.kind)
     }

@@ -4,14 +4,14 @@ package com.limelight.diag
 object ProblemIssue {
     fun draft(problem: Problem, info: DeviceInfo, fileName: String): IssueDraft {
         val title = when (problem.kind) {
-            ProblemKind.JAVA_CRASH -> "Crash: ${problem.summary}"
-            ProblemKind.NATIVE_CRASH -> "Native crash: ${problem.summary.removePrefix("Native crash: ")}"
-            ProblemKind.ANR -> "Not responding: ${problem.summary.removePrefix("Not responding (ANR): ")}"
+            ProblemKind.JAVA_CRASH -> if (problem.viaExitRecord) titled("Crash", problem.subject) else "Crash: ${problem.subject}"
+            ProblemKind.NATIVE_CRASH -> titled("Native crash", problem.subject)
+            ProblemKind.ANR -> titled("Not responding", problem.subject)
             ProblemKind.UNCLEAN_EXIT -> "Delos stopped without closing normally"
-            ProblemKind.STREAM_FAILED -> "Stream failed: ${problem.summary}"
+            ProblemKind.STREAM_FAILED -> "Stream failed: ${problem.subject}"
         }
         val what = buildString {
-            appendLine(problem.kind.sentence)
+            appendLine(problem.kind.issueSentence)
             appendLine()
             appendLine("(Created from the problem report in Delos. Please add what you were doing just before.)")
             appendLine()
@@ -28,6 +28,8 @@ object ProblemIssue {
             area = if (problem.kind == ProblemKind.STREAM_FAILED) "Pairing/connection" else "Other",
         )
     }
+
+    private fun titled(what: String, subject: String) = if (subject.isBlank()) what else "$what: $subject"
 
     /** The summary and the head of the stack trace (or the system's description): what fits an address; the file has the rest. */
     fun logsText(problem: Problem): String {

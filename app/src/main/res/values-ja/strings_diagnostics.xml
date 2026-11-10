@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="diag_problem_java_crash">Delosは前回、予期せず停止しました。</string>
+    <string name="diag_problem_native_crash">Delosは前回、ネイティブコードでクラッシュしました。</string>
+    <string name="diag_problem_anr">Delosは前回、応答しなくなりました。</string>
+    <string name="diag_problem_unclean_exit">Delosは前回、正常に終了しませんでした。</string>
+    <string name="diag_problem_stream_failed">前回のストリームを実行できませんでした。</string>
+    <string name="diag_problem_summary_crash">クラッシュ</string>
+    <string name="diag_problem_summary_crash_with">クラッシュ：%1$s</string>
+    <string name="diag_problem_summary_native_crash">ネイティブコードでのクラッシュ</string>
+    <string name="diag_problem_summary_native_crash_with">ネイティブコードでのクラッシュ：%1$s</string>
+    <string name="diag_problem_summary_anr">応答なし (ANR)</string>
+    <string name="diag_problem_summary_anr_with">応答なし (ANR)：%1$s</string>
+    <string name="diag_problem_summary_unclean_exit">プロセスが終了したとき、アプリはフォアグラウンドにありました</string>
+    <plurals name="diag_preview_hidden_lines">
+        <item quantity="other">… 以前の%d行はファイルにあります …</item>
+    </plurals>
+</resources>

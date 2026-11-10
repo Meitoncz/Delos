@@ -4,8 +4,15 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
+import org.robolectric.annotation.Config
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [33])
 class DiagnosticReportTest {
+    private val res = RuntimeEnvironment.getApplication().resources
     private val info = DeviceInfo(
         delosVersion = "0.1.0", buildType = "release", versionCode = 100, manufacturer = "AYN", model = "Odin2 Portal", device = "odin2portal",
         androidRelease = "13", sdk = 33, securityPatch = "2026-09-05", buildId = "TKQ1.230101", soc = "QTI SM8550", abi = "arm64-v8a",
@@ -58,17 +65,22 @@ class DiagnosticReportTest {
 
     @Test fun thePreviewShowsTheHeaderAndTheLastLinesAndSaysWhatIsHidden() {
         val report = DiagnosticReports.build(info, log, scrubber, "now")
-        val preview = report.preview(tailLines = 10)
+        val preview = report.preview(res, tailLines = 10)
         assertTrue(preview.startsWith("Delos diagnostic report"))
         assertTrue(preview.contains("== Device =="))
-        assertTrue(preview.contains("earlier lines are in the file"))
+        assertTrue(preview.contains("… 290 earlier lines are in the file …"))
         assertTrue(preview.trimEnd().endsWith("line 300 for <pc-1> at <ip-1>"))
         assertTrue(preview.lines().size < 60)
     }
 
+    @Test fun theHiddenLinesNoteUsesTheSingularForOneLine() {
+        val report = DiagnosticReports.build(info, (1..11).joinToString("\n") { "2026-11-10 12:00:00.000 I/A [m] line $it" } + "\n", scrubber, "now")
+        assertTrue(report.preview(res, tailLines = 10).contains("… 1 earlier line is in the file …"))
+    }
+
     @Test fun aShortReportIsPreviewedWhole() {
         val report = DiagnosticReports.build(info, "2026-11-10 12:00:00.000 I/A [m] only\n", scrubber, "now")
-        assertEquals(report.text.trimEnd(), report.preview().trimEnd())
+        assertEquals(report.text.trimEnd(), report.preview(res).trimEnd())
     }
 
     @Test fun extraSectionsComeBeforeTheLog() {

@@ -55,8 +55,11 @@ object DiagExport {
         File(context.cacheDir, SHARE_DIR).listFiles()?.forEach { it.delete() }
     }
 
-    /** The Android share sheet for the file at [uri]; the receiving app gets read access to that one file only. */
-    fun shareIntent(uri: Uri, title: String = "Share diagnostic log"): Intent {
+    /**
+     * The Android share sheet for the file at [uri], titled [title] (in the user's language); the receiving app gets read
+     * access to that one file only. The subject and the clip label stay English: the receiver is a developer.
+     */
+    fun shareIntent(uri: Uri, title: String): Intent {
         val send = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
             putExtra(Intent.EXTRA_STREAM, uri)

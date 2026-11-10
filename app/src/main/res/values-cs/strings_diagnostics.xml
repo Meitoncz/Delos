@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="diag_problem_java_crash">Aplikace Delos se minule neočekávaně zastavila.</string>
+    <string name="diag_problem_native_crash">Aplikace Delos minule spadla v nativním kódu.</string>
+    <string name="diag_problem_anr">Aplikace Delos minule přestala reagovat.</string>
+    <string name="diag_problem_unclean_exit">Aplikace Delos se minule neukončila normálně.</string>
+    <string name="diag_problem_stream_failed">Poslední stream se nepodařilo spustit.</string>
+    <string name="diag_problem_summary_crash">Pád</string>
+    <string name="diag_problem_summary_crash_with">Pád: %1$s</string>
+    <string name="diag_problem_summary_native_crash">Pád v nativním kódu</string>
+    <string name="diag_problem_summary_native_crash_with">Pád v nativním kódu: %1$s</string>
+    <string name="diag_problem_summary_anr">Neodpovídá (ANR)</string>
+    <string name="diag_problem_summary_anr_with">Neodpovídá (ANR): %1$s</string>
+    <string name="diag_problem_summary_unclean_exit">Aplikace byla v popředí, když její proces skončil</string>
+    <plurals name="diag_preview_hidden_lines">
+        <item quantity="one">… %d starší řádek je v souboru …</item>
+        <item quantity="few">… %d starší řádky jsou v souboru …</item>
+        <item quantity="many">… %d staršího řádku je v souboru …</item>
+        <item quantity="other">… %d starších řádků je v souboru …</item>
+    </plurals>
+</resources>

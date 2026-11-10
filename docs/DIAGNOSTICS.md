@@ -115,7 +115,9 @@ is stored at detection, so a problem is never offered again, whether it was repo
 portal, launch loader or stream result is up. It says what happened in one sentence, the one-line summary and: *Nothing is sent automatically.
 Report opens GitHub in your browser with a draft for you to check, and saves a cleaned log file to Downloads for you to attach.* Focus starts on
 **Report this problem** (A); left/right moves to **Dismiss**; **B dismisses** from anywhere while the card shows. Touch works too. There is no scrim
-and no confirmation: the rest of the screen stays usable.
+and no confirmation: the rest of the screen stays usable. `Problem` carries typed facts (kind, subject, detail, whether only the exit record told of it);
+the card text is built in the user's language from `diag_problem_*` (`problemSentence`, `problemSummary` in `ProblemOfferCard.kt`), the subject (exception,
+signal, system description) shown as it is. `Problem.summary`, the issue draft and the report stay English for the developers.
 
 **Report this problem:**
 

@@ -41,10 +41,13 @@ class ProblemIssueTest {
     }
 
     @Test fun anAnrAndANativeCrashKeepTheirOwnWords() {
-        val anr = ProblemIssue.draft(Problem("e", ProblemKind.ANR, 1, "Not responding (ANR): Input dispatching timed out", "Input dispatching timed out"), info, "f.txt")
+        val anr = ProblemIssue.draft(Problem("e", ProblemKind.ANR, 1, "Input dispatching timed out", "Input dispatching timed out", viaExitRecord = true), info, "f.txt")
         assertEquals("Not responding: Input dispatching timed out", anr.title)
-        val native = ProblemIssue.draft(Problem("n", ProblemKind.NATIVE_CRASH, 1, "Native crash: signal 11 (SIGSEGV)", "signal 11 (SIGSEGV)"), info, "f.txt")
+        val native = ProblemIssue.draft(Problem("n", ProblemKind.NATIVE_CRASH, 1, "signal 11 (SIGSEGV)", "signal 11 (SIGSEGV)", viaExitRecord = true), info, "f.txt")
         assertEquals("Native crash: signal 11 (SIGSEGV)", native.title)
+        assertEquals("Not responding (ANR): Input dispatching timed out", anr.logs.lines().first())
+        val bare = ProblemIssue.draft(Problem("b", ProblemKind.NATIVE_CRASH, 1, "", "", viaExitRecord = true), info, "f.txt")
+        assertEquals("Native crash", bare.title)
     }
 
     @Test fun theWholeFlowGivesAnAddressWithoutPersonalData() {

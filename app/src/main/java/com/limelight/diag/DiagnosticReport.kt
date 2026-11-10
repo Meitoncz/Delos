@@ -16,16 +16,16 @@ class DiagnosticReport(val text: String, val logLines: Int) {
 
     /**
      * The first part (the header and the device block) and the last [tailLines] lines of the log, for the preview panel; the
-     * whole file is what is shared.
+     * whole file is what is shared. The note about the hidden lines is in the language of [res]; the report itself stays English.
      */
-    fun preview(tailLines: Int = PREVIEW_TAIL_LINES): String {
+    fun preview(res: Resources, tailLines: Int = PREVIEW_TAIL_LINES): String {
         val lines = text.trimEnd().lines()
         val logStart = lines.indexOfFirst { it.startsWith(LOG_HEADING) }
         if (logStart < 0 || lines.size - logStart <= tailLines + 1) return text
         val head = lines.subList(0, logStart + 1)
         val tail = lines.takeLast(tailLines)
         val hidden = lines.size - head.size - tail.size
-        return (head + "… $hidden earlier lines are in the file …" + tail).joinToString("\n")
+        return (head + res.getQuantityString(R.plurals.diag_preview_hidden_lines, hidden, hidden) + tail).joinToString("\n")
     }
 
     companion object {
