@@ -1,6 +1,10 @@
 package com.limelight.shell.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterExitState
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -36,6 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.foundation.focusGroup
 import androidx.compose.ui.focus.focusProperties
@@ -82,7 +87,8 @@ fun Modifier.glass(tint: Color): Modifier =
 
 /**
  * Dims and slightly blurs the screen under a menu (`#scrim`); a tap outside closes the menu. The [light] scrim of the
- * context menu only dims (26 %, no blur): the tiles beside its card stay readable.
+ * context menu only dims (26 %, no blur): the tiles beside its card stay readable. It fades by drawing its color with the
+ * animated alpha, not as a full-screen alpha layer of its own (that layer cost 16 MB of offscreen texture while the menu opened and closed).
  */
 @Composable
 fun Scrim(visible: Boolean, light: Boolean, haze: HazeState, onDismiss: () -> Unit) {
@@ -90,11 +96,20 @@ fun Scrim(visible: Boolean, light: Boolean, haze: HazeState, onDismiss: () -> Un
     // The scrim that fades out is the one that faded in
     var shownLight by remember { mutableStateOf(light) }
     if (visible) shownLight = light
-    AnimatedVisibility(visible, enter = fadeIn(tween(Motion.SCRIM, easing = Motion.Ease)), exit = fadeOut(tween(Motion.EXIT, easing = Motion.Ease))) {
+    AnimatedVisibility(
+        visible,
+        enter = if (shownLight) EnterTransition.None else fadeIn(tween(Motion.SCRIM, easing = Motion.Ease)),
+        exit = if (shownLight) ExitTransition.None else fadeOut(tween(Motion.EXIT, easing = Motion.Ease)),
+    ) {
+        // The animation in the content keeps it composed until it has faded out
+        val fade = transition.animateFloat(
+            transitionSpec = { tween(if (targetState == EnterExitState.Visible) Motion.SCRIM else Motion.EXIT, easing = Motion.Ease) },
+            label = "scrimFade",
+        ) { if (it == EnterExitState.Visible) 1f else 0f }
         Box(
             Modifier
                 .fillMaxSize()
-                .then(if (shownLight) Modifier.background(LightScrim) else Modifier.backdropBlur(haze, 6f, colors.scrim))
+                .then(if (shownLight) Modifier.drawBehind { drawRect(LightScrim, alpha = fade.value) } else Modifier.backdropBlur(haze, 6f, colors.scrim))
                 .pointerInput(Unit) { detectTapGestures { onDismiss() } },
         )
     }

@@ -126,12 +126,12 @@ private val OnlineDot = Color(0xFF3DDC84)
  * recomposing; [resolved] flips once so the composition can swap the estimated opening point for the real one.
  */
 @Stable
-private class MenuPlaceState(initial: MenuPlacement) {
+private class MenuPlaceState(initial: MenuPlacement, initialWidth: Float, initialHeight: Float) {
     var placement: MenuPlacement = initial
         private set
-    var cardWidth = 0f
+    var cardWidth = initialWidth
         private set
-    var cardHeight = 0f
+    var cardHeight = initialHeight
         private set
     var version by mutableIntStateOf(0)
         private set
@@ -154,10 +154,18 @@ private class MenuPlaceState(initial: MenuPlacement) {
         }
     }
 
-    /** The point the card grows from and shrinks to: the caret's tip. */
-    fun origin(): TransformOrigin = TransformOrigin(
-        (placement.tipX / StageWidth).coerceIn(0f, 1f), (placement.tipY / StageHeight).coerceIn(0f, 1f),
-    )
+    /**
+     * The point the card grows from and shrinks to, the caret's tip, as a fraction of the fading box: the card, the room of its caret
+     * and [SHADOW_ROOM] of its shadow on every side.
+     */
+    fun origin(): TransformOrigin {
+        val room = L.CARET_DEPTH + SHADOW_ROOM
+        val left = placement.x - room
+        val top = placement.y - room
+        return TransformOrigin(
+            ((placement.tipX - left) / (cardWidth + 2 * room)).coerceIn(0f, 1f), ((placement.tipY - top) / (cardHeight + 2 * room)).coerceIn(0f, 1f),
+        )
+    }
 
     /** The outline of the card with its caret inside the layer's [size] (card plus the room around it for the caret), [k] pixels per stage pixel. */
     fun outline(k: Float, size: Size): Shape {
@@ -166,6 +174,8 @@ private class MenuPlaceState(initial: MenuPlacement) {
         if (s != null && s.k == k && s.size == size && s.placement == placement) return s
         val outline = menuCardPath(placement.side, placement.caret, size.width / k - 2 * L.CARET_DEPTH, size.height / k - 2 * L.CARET_DEPTH, k)
         return PathShape(outline, k, size, placement).also { shape = it }
+/** Stage pixels around the card (and its caret) that the card's fade layer keeps for the shadow (`0 40px 90px -20px` reaches 110 below, 70 beside). */
+private const val SHADOW_ROOM = 160f
     }
 }
 
@@ -266,21 +276,19 @@ fun ContextMenuLayer(
     val stageAnchor = shownAnchor?.let { Rect(it.left / k, it.top / k, it.right / k, it.bottom / k) }
     // The card is placed once its size is known; until then the estimated one gives the opening point
     val state = remember(m, stageAnchor) {
-        MenuPlaceState(placeContextMenu(stageAnchor, L.MIN_WIDTH, estimatedHeight(m), m?.below == true))
+        val height = estimatedHeight(m)
+        MenuPlaceState(placeContextMenu(stageAnchor, L.MIN_WIDTH, height, m?.below == true), L.MIN_WIDTH, height)
     }
     val resolved = state.resolved
-    val origin = remember(state, resolved) { state.origin() }
+    // Worked out again when the menu closes, so the card shrinks to the tip of the card as it is then (a submenu may have resized it)
+    val origin = remember(state, resolved, menu != null) { state.origin() }
     val cameFrom = remember { arrayOfNulls<Pair<ContextMenu, List<Int>>>(1) }
     if (menu == null) cameFrom[0] = null
-    Box(Modifier.fillMaxSize()) {
-        AnimatedVisibility(
-            menu != null,
-            modifier = Modifier.fillMaxSize(),
-            enter = popEnter(origin, reduced),
-            exit = popExit(origin, reduced),
-        ) {
+    // The fade and the pop are a layer of the card's size (plus its shadow), not of the whole screen
+    CardPlacer(state, stageAnchor, m?.below == true, k) {
+        AnimatedVisibility(menu != null, enter = popEnter(origin, reduced), exit = popExit(origin, reduced)) {
             if (m == null) return@AnimatedVisibility
-            CardPlacer(state, stageAnchor, m.below, k) {
+            Box(Modifier.padding(SHADOW_ROOM.px)) {
                 // Switching level (or menu) is a new card content: its rows stagger in again and the plate starts on its first row
                 key(m, shownPath) { MenuCard(m, shownPath, cameFrom, onPath, state, haze, k, active = menu != null, onDismiss) }
             }
@@ -298,16 +306,21 @@ private fun estimatedHeight(menu: ContextMenu?): Float {
 @Composable
 private fun CardPlacer(state: MenuPlaceState, anchor: Rect?, below: Boolean, k: Float, content: @Composable () -> Unit) {
     Layout(content, Modifier.fillMaxSize()) { measurables, constraints ->
-        val room = L.CARET_DEPTH * k
-        val child = measurables.first().measure(
-            Constraints(maxWidth = ((L.MAX_WIDTH + 2 * L.CARET_DEPTH) * k).roundToInt(), maxHeight = ((L.MAX_HEIGHT + 2 * L.CARET_DEPTH) * k).roundToInt()),
+        val room = (L.CARET_DEPTH + SHADOW_ROOM) * k
+        val child = measurables.firstOrNull()?.measure(
+            Constraints(
+                maxWidth = ((L.MAX_WIDTH + 2 * L.CARET_DEPTH + 2 * SHADOW_ROOM) * k).roundToInt(),
+                maxHeight = ((L.MAX_HEIGHT + 2 * L.CARET_DEPTH + 2 * SHADOW_ROOM) * k).roundToInt(),
+            ),
         )
-        val w = child.width / k - 2 * L.CARET_DEPTH
-        val h = child.height / k - 2 * L.CARET_DEPTH
-        val placement = placeContextMenu(anchor, w, h, below)
-        state.place(placement, w, h)
+        // Nothing to place once the card has faded out
+        val placement = if (child == null || child.width == 0 || child.height == 0) null else {
+            val w = child.width / k - 2 * (L.CARET_DEPTH + SHADOW_ROOM)
+            val h = child.height / k - 2 * (L.CARET_DEPTH + SHADOW_ROOM)
+            placeContextMenu(anchor, w, h, below).also { state.place(it, w, h) }
+        }
         layout(constraints.maxWidth, constraints.maxHeight) {
-            child.place((placement.x * k - room).roundToInt(), (placement.y * k - room).roundToInt())
+            if (child != null && placement != null) child.place((placement.x * k - room).roundToInt(), (placement.y * k - room).roundToInt())
         }
     }
 }
