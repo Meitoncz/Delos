@@ -196,12 +196,12 @@ public class StreamSurfaceControllerTest {
     public void readsComeFromTheDecoder() {
         when(decoder.isUpscalingRequested()).thenReturn(true);
         when(decoder.isPyroWave()).thenReturn(true);
-        when(decoder.getUpscalingStatus()).thenReturn("On");
+        when(decoder.getUpscalingStatus()).thenReturn(UpscalerStatus.ON);
         when(decoder.isSupersamplingMode()).thenReturn(true);
         when(decoder.getSupersamplingLevel()).thenReturn(2);
         assertTrue(controller.isUpscalingRequested());
         assertTrue(controller.isPyroWave());
-        assertEquals("On", controller.getUpscalingStatus());
+        assertEquals(UpscalerStatus.ON, controller.getUpscalingStatus());
         assertTrue(controller.isSupersamplingMode());
         assertEquals(2, controller.getSupersamplingLevel());
         assertSame(view, controller.getStreamSurface());

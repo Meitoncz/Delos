@@ -1,6 +1,7 @@
 package com.limelight.shell
 
 import com.limelight.binding.video.SharpenCost
+import com.limelight.binding.video.UpscalerStatus
 import com.limelight.preferences.UpscalerMode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -39,10 +40,10 @@ class SharpenOnlyMenuTest {
     }
 
     @Test fun theModeRowHelpNamesTheSelectedModeAndSharpenOnlyHasItsOwn() {
-        val help = streamMenuHelp(res, "Mode", "On: Sharpen only", sharpenOnly, 0, false)
+        val help = streamMenuHelp(res, "Mode", UpscalerStatus.on(UpscalerMode.SHARPEN_ONLY), sharpenOnly, 0, false)
         assertTrue(help.contains("No scaling"))
         assertTrue(help.contains("Applies live."))
-        assertFalse(streamMenuHelp(res, "Mode", "On", 0, 0, false).contains("No scaling"))
+        assertFalse(streamMenuHelp(res, "Mode", UpscalerStatus.ON, 0, 0, false).contains("No scaling"))
     }
 
     @Test fun theSharpenPassRowShowsAverageWorstAndThePreparation() {

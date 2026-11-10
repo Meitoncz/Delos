@@ -174,7 +174,7 @@
     <string name="help_note_sharpen_only">「シャープのみ」では使用されません。</string>
 
     <string name="stream_help_resume">このメニューを閉じて、ストリームを続けます。</string>
-    <string name="stream_help_keyboard">Delosの画面キーボードを開閉します：十字キーで移動、Aで入力、Bで閉じます。Androidのシステムキーボードではありません（その他）。</string>
+    <string name="stream_help_keyboard">Delosの画面キーボードを開閉します：十字キーで移動、%1$sで入力、%2$sで閉じます。Androidのシステムキーボードではありません（その他）。</string>
     <string name="stream_help_overlay">フル統計、コンパクト統計、オフを順に切り替えます。下位1%%のFPSは、約10秒間で最も遅いフレームが対象です。</string>
     <string name="stream_help_brightness">このストリームの間、この端末の明るさを調整します。終了後はシステム設定に戻ります。</string>
     <string name="stream_help_screen_brightness">この端末の画面の明るさをすぐに変更します。終了後はシステム設定に戻ります。PCやモニターには影響しません。</string>
@@ -203,7 +203,7 @@
     <string name="stream_help_touch_sensitivity">設定で指定した、タッチスクリーンの追加の感度スケーリングを切り替えます。</string>
     <string name="stream_help_gyro_smoothing">ジャイロ照準をすぐに安定させ、このゲームに保存します。0でオフ。スムージングを強めると、ゆっくりした動きにわずかな遅れが出ます。</string>
     <string name="stream_help_gyro_smoothing_disabled">設定で「外部コントローラーのジャイロ」または「端末内蔵のジャイロ」をオンにする必要があります。次回のストリームから適用されます。</string>
-    <string name="stream_help_rumble_feel">ホストの振動の感触を選びます。すぐに反映され、保存されます。開いたままなので、選び直して比較できます。Bで戻ります。</string>
+    <string name="stream_help_rumble_feel">ホストの振動の感触を選びます。すぐに反映され、保存されます。開いたままなので、選び直して比較できます。%1$sで戻ります。</string>
     <string name="stream_help_format_keys">%1$sをPCに1回送信してから、ストリームに戻ります。</string>
     <string name="stream_help_format_command">ホストで定義されたコマンド%1$sを、PCですぐに実行します。VibepolloまたはApolloで設定します。</string>
 </resources>

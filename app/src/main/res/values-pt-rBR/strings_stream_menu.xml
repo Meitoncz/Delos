@@ -56,6 +56,15 @@
     <string name="stream_menu_rumble_active">Ativo</string>
     <string name="stream_menu_rumble_problem">Problema: %1$s</string>
 
+    <string name="stream_menu_upscaler_starting">Iniciando</string>
+    <string name="stream_menu_upscaler_stopping">Parando</string>
+    <string name="stream_menu_upscaler_unavailable">Indisponível</string>
+    <string name="stream_menu_upscaler_on_mode">Ativado: %1$s</string>
+    <string name="stream_menu_upscaler_unavailable_status">Indisponível; a renderização direta está ativa</string>
+    <string name="stream_menu_button_start">Start</string>
+    <string name="stream_menu_button_select">Select</string>
+    <string name="stream_menu_button_home">Início</string>
+
     <string name="stream_menu_mouse_applies_saved">Aplica agora e fica salvo.</string>
     <string name="stream_menu_mouse_applies_stream">Aplica agora; só neste stream.</string>
 

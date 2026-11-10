@@ -14,10 +14,11 @@ public class RumblePresetsTest {
         RumblePresets[] all = RumblePresets.values();
         assertArrayEquals(new RumblePresets[] {RumblePresets.ORIGINAL, RumblePresets.GENTLE,
                 RumblePresets.KICK_ONLY, RumblePresets.PULSE_25}, all);
-        assertEquals("Original", RumblePresets.ORIGINAL.label);
-        assertEquals("Soft", RumblePresets.GENTLE.label);
-        assertEquals("Kick-start", RumblePresets.KICK_ONLY.label);
-        assertEquals("Pulsing", RumblePresets.PULSE_25.label);
+        // The saved identities: profiles store these names
+        assertEquals("ORIGINAL", RumblePresets.ORIGINAL.name());
+        assertEquals("GENTLE", RumblePresets.GENTLE.name());
+        assertEquals("KICK_ONLY", RumblePresets.KICK_ONLY.name());
+        assertEquals("PULSE_25", RumblePresets.PULSE_25.name());
         assertFalse(RumblePresets.ORIGINAL.enabled);
         assertProfile(RumblePresets.GENTLE, .7f, 1.3f, 0, 0, RumbleTechnique.AMPLITUDE, 0, 0);
         assertProfile(RumblePresets.KICK_ONLY, 1f, 1f, 0, 100, RumbleTechnique.AMPLITUDE, 0, 0);

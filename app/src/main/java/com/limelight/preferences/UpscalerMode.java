@@ -1,31 +1,35 @@
 package com.limelight.preferences;
 
+import androidx.annotation.StringRes;
+
+import com.limelight.R;
+
 /**
  * The modes of the upscaler (setting {@code list_sgsr_quality}). One definition for the stored value, the
  * stream menu's Mode row and the renderers: the declaration order is the stream menu's row order and the
  * {@link #index()} the renderers' mode number, so new modes are only ever appended.
  */
 public enum UpscalerMode {
-    STANDARD("standard", "SGSR 1 (Normal)"),
-    HIGH("high", "SGSR 1 (Quality)"),
-    VIDEO("temporal", "SGSR2-DV (Normal)"),
-    VIDEO_QUALITY("temporal-quality", "SGSR2-DV (Quality)"),
+    STANDARD("standard", R.string.sgsr_quality_standard),
+    HIGH("high", R.string.sgsr_quality_high),
+    VIDEO("temporal", R.string.sgsr_quality_temporal),
+    VIDEO_QUALITY("temporal-quality", R.string.sgsr_quality_temporal_quality),
     /** No scaling: the stream keeps its resolution and only a contrast-adaptive sharpen pass runs. */
-    SHARPEN_ONLY("sharpen", "Sharpen only");
+    SHARPEN_ONLY("sharpen", R.string.sgsr_quality_sharpen);
 
     private final String value;
-    private final String label;
+    private final int labelRes;
 
-    UpscalerMode(String value, String label) {
+    UpscalerMode(String value, @StringRes int labelRes) {
         this.value = value;
-        this.label = label;
+        this.labelRes = labelRes;
     }
 
     /** The string stored in the settings. */
     public String value() { return value; }
 
-    /** The name the stream menu shows. */
-    public String label() { return label; }
+    /** The string resource of the name the stream menu and the Settings list show (the same text in both). */
+    @StringRes public int labelRes() { return labelRes; }
 
     /** The position in the stream menu's Mode row; also the renderers' mode number. */
     public int index() { return ordinal(); }

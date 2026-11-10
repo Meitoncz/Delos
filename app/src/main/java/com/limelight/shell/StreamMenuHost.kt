@@ -1,8 +1,13 @@
 package com.limelight.shell
 
+import android.content.res.Resources
+import com.limelight.binding.video.UpscalerStatus
 import com.limelight.shell.link.LinkGuidance
 import com.limelight.shell.settings.SettingChoice
+import com.limelight.shell.ui.text
+import com.limelight.utils.RumbleCapabilities
 import com.limelight.utils.RumblePresets
+import com.limelight.utils.RumbleProblem
 
 /** What the host answered to the last Apply on the Bitrate page. */
 internal sealed interface BitrateResult {
@@ -58,7 +63,7 @@ internal interface StreamMenuHost {
     // Upscaler and supersampling
     val upscalerAvailable: Boolean
     val upscalerRequested: Boolean
-    val upscalerStatus: String
+    val upscalerStatus: UpscalerStatus
     val supersamplingMode: Boolean
     val supersamplingLevel: Int
 
@@ -89,14 +94,18 @@ internal interface StreamMenuHost {
     val rumblePreset: RumblePresets?
 
     /** Why [preset] cannot run on this device (an experimental technique the hardware lacks), or null when it can. */
-    fun rumbleUnavailable(preset: RumblePresets): String? = null
+    fun rumbleUnavailable(preset: RumblePresets): RumbleCapabilities.Unavailable? = null
 
     /** Why the running stream could not use the technique of the active preset (plain amplitude is used instead), or null. */
-    val rumbleRuntimeProblem: String? get() = null
+    val rumbleRuntimeProblem: RumbleProblem? get() = null
 
     /** Why [preset] shows a problem: the device cannot run it, or it is active and its technique failed in the stream. */
-    fun rumbleProblem(preset: RumblePresets): String? =
-        rumbleUnavailable(preset) ?: if (preset == rumblePreset) rumbleRuntimeProblem else null
+    fun rumbleHasProblem(preset: RumblePresets): Boolean =
+        rumbleUnavailable(preset) != null || (preset == rumblePreset && rumbleRuntimeProblem != null)
+
+    /** The sentence for [rumbleHasProblem], in the language of [res]; null when there is none. */
+    fun rumbleProblemText(res: Resources, preset: RumblePresets): String? =
+        rumbleUnavailable(preset)?.text(res) ?: if (preset == rumblePreset) rumbleRuntimeProblem?.text(res) else null
 
     /** Saves [preset] like the laboratory does and applies it to the running stream at once; no sample is played. */
     fun selectRumblePreset(preset: RumblePresets)

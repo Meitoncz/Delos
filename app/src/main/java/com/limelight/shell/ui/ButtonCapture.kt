@@ -49,6 +49,7 @@ private const val IDLE_MS = 10_000L
 @Composable
 fun ButtonCaptureLayer(visible: Boolean, keys: GlobalKeys, onDone: (Set<Int>?) -> Unit) {
     val colors = LocalDelosColors.current
+    val res = textResources()
     AnimatedVisibility(visible, enter = fadeIn(tween(250)), exit = fadeOut(tween(250))) {
         val combo = remember { mutableStateListOf<Int>() }
         DisposableEffect(keys) {
@@ -99,7 +100,7 @@ fun ButtonCaptureLayer(visible: Boolean, keys: GlobalKeys, onDone: (Set<Int>?) -
                 Row(Modifier.height(64.px), horizontalArrangement = Arrangement.spacedBy(14.px), verticalAlignment = Alignment.CenterVertically) {
                     combo.forEach { code ->
                         BasicText(
-                            StreamMenuSettings.buttonName(code),
+                            StreamMenuSettings.buttonName(res, code),
                             style = TextStyle(color = colors.onAccent, fontFamily = Figtree, fontWeight = FontWeight.Bold, fontSize = 26.tpx),
                             modifier = Modifier.clip(CircleShape).background(colors.accent).padding(horizontal = 26.px, vertical = 12.px),
                         )

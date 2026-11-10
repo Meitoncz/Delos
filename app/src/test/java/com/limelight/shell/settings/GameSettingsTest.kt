@@ -437,7 +437,7 @@ class GameSettingsTest {
         assertEquals(SettingsTab.DISPLAY, spec("list_sgsr_quality").tab)
         assertEquals(listOf("standard", "high", "temporal", "temporal-quality", "sharpen"), spec("list_sgsr_quality").choices.map { it.value })
         // The Settings list and the stream menu name every mode alike
-        assertEquals(UpscalerMode.values().map { it.label() }, spec("list_sgsr_quality").choices.map { it.label })
+        assertEquals(UpscalerMode.values().map { context.getString(it.labelRes()) }, spec("list_sgsr_quality").choices.map { it.label })
         assertEquals("standard", game(id = 2).preferences.getString("list_sgsr_quality", "standard"))
         store.close()
     }

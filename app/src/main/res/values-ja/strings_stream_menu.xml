@@ -56,6 +56,15 @@
     <string name="stream_menu_rumble_active">使用中</string>
     <string name="stream_menu_rumble_problem">問題：%1$s</string>
 
+    <string name="stream_menu_upscaler_starting">開始中</string>
+    <string name="stream_menu_upscaler_stopping">停止中</string>
+    <string name="stream_menu_upscaler_unavailable">利用不可</string>
+    <string name="stream_menu_upscaler_on_mode">オン：%1$s</string>
+    <string name="stream_menu_upscaler_unavailable_status">利用不可。直接レンダリングが有効です</string>
+    <string name="stream_menu_button_start">スタート</string>
+    <string name="stream_menu_button_select">セレクト</string>
+    <string name="stream_menu_button_home">ホーム</string>
+
     <string name="stream_menu_mouse_applies_saved">すぐに適用され、保存されます。</string>
     <string name="stream_menu_mouse_applies_stream">すぐに適用されます。このストリームのみです。</string>
 

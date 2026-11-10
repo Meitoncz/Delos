@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rumble_preset_original">オリジナル</string>
+    <string name="rumble_preset_soft">ソフト</string>
+    <string name="rumble_preset_kick_start">キックスタート</string>
+    <string name="rumble_preset_pulsing">パルス</string>
+
+    <string name="rumble_unavailable_no_amplitude">この振動モーターは振幅を制御できません</string>
+
+    <string name="rumble_problem_no_amplitude">この振動モーターは振幅を制御できません。通常の振幅を使います</string>
+    <string name="rumble_problem_single_vibrator">%1$sは単一の振動モーターでのみ動作します。通常の振幅を使います</string>
+    <string name="rumble_problem_failed">%1$sが失敗しました：%2$s。通常の振幅を使います</string>
+</resources>

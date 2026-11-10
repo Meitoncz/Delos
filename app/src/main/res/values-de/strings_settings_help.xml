@@ -191,7 +191,7 @@
 
     <!-- Stream menu help: stream_help_<slug of the item key>. The keys are the English item names the menu uses as identifiers. -->
     <string name="stream_help_resume">Schließt dieses Menü und setzt den Stream fort.</string>
-    <string name="stream_help_keyboard">Öffnet oder schließt die Delos-Bildschirmtastatur: Steuerkreuz bewegt, A tippt, B schließt. Nicht die Android-Systemtastatur (Mehr).</string>
+    <string name="stream_help_keyboard">Öffnet oder schließt die Delos-Bildschirmtastatur: Steuerkreuz bewegt, %1$s tippt, %2$s schließt. Nicht die Android-Systemtastatur (Mehr).</string>
     <string name="stream_help_overlay">Wechselt zwischen voller Statistik, kompakter Statistik und aus. 1%% Low FPS umfasst die langsamsten Frames der letzten etwa zehn Sekunden.</string>
     <string name="stream_help_brightness">Passt die Helligkeit dieses Geräts für diesen Stream an; danach gilt wieder die Systemeinstellung.</string>
     <string name="stream_help_screen_brightness">Ändert die Bildschirmhelligkeit dieses Geräts sofort; danach gilt wieder die Systemeinstellung. Nicht die von PC oder Monitor.</string>
@@ -220,7 +220,7 @@
     <string name="stream_help_touch_sensitivity">Schaltet die zusätzliche Empfindlichkeitsskalierung des Touchscreens um, in den Einstellungen konfiguriert.</string>
     <string name="stream_help_gyro_smoothing">Beruhigt das Gyro-Zielen sofort, für dieses Spiel gemerkt. 0 ist aus. Mehr Glättung bringt eine kleine Verzögerung bei langsamer Bewegung.</string>
     <string name="stream_help_gyro_smoothing_disabled">Erfordert, dass „Gyroskop des externen Gamepads“ oder „Eingebautes Gyroskop des Geräts“ in den Einstellungen aktiviert ist; gilt ab dem nächsten Stream.</string>
-    <string name="stream_help_rumble_feel">Wählt, wie sich Host-Rumble anfühlt, sofort und gespeichert. Bleibt offen: Wähle erneut, um zu vergleichen. B geht zurück.</string>
+    <string name="stream_help_rumble_feel">Wählt, wie sich Host-Rumble anfühlt, sofort und gespeichert. Bleibt offen: Wähle erneut, um zu vergleichen. %1$s geht zurück.</string>
     <!-- %1$s: a key combination such as Ctrl + Alt + Delete -->
     <string name="stream_help_format_keys">Sendet %1$s einmalig an den PC und kehrt dann zum Stream zurück.</string>
     <!-- %1$s: the command name, cut to 35 characters -->

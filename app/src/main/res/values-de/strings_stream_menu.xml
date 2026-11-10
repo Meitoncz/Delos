@@ -66,6 +66,15 @@
     <!-- Added to the help of a rumble preset that failed. %1$s: the reason -->
     <string name="stream_menu_rumble_problem">Problem: %1$s</string>
 
+    <string name="stream_menu_upscaler_starting">Startet</string>
+    <string name="stream_menu_upscaler_stopping">Stoppt</string>
+    <string name="stream_menu_upscaler_unavailable">Nicht verfügbar</string>
+    <string name="stream_menu_upscaler_on_mode">An: %1$s</string>
+    <string name="stream_menu_upscaler_unavailable_status">Nicht verfügbar; direktes Rendering ist aktiv</string>
+    <string name="stream_menu_button_start">Start</string>
+    <string name="stream_menu_button_select">Select</string>
+    <string name="stream_menu_button_home">Home</string>
+
     <!-- Help line of the Touchscreen mode row, after the description of the selected mode -->
     <string name="stream_menu_mouse_applies_saved">Gilt sofort und wird gespeichert.</string>
     <string name="stream_menu_mouse_applies_stream">Gilt sofort, nur für diesen Stream.</string>

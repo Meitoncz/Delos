@@ -31,7 +31,7 @@ public final class RumblePlayback {
     private boolean stopped;
     private volatile int lastAmplitude;
     // Why the selected technique could not run (the plain amplitude path is used instead), or null.
-    private volatile String problem;
+    private volatile RumbleProblem problem;
 
     public RumblePlayback(RumbleTranslator.Profile profile) {
         this.profile = profile;
@@ -54,7 +54,7 @@ public final class RumblePlayback {
     }
 
     /** Null while the profile's technique runs; otherwise why it could not and amplitude is used. */
-    public String getProblem() {
+    public RumbleProblem getProblem() {
         return problem;
     }
 
@@ -222,15 +222,14 @@ public final class RumblePlayback {
             amplitudeControl = vibrator.hasAmplitudeControl();
             technique = profile.technique;
             if (technique != RumbleTechnique.AMPLITUDE) {
-                String reason = RumbleCapabilities.unavailableReason(technique, amplitudeControl);
-                if (reason != null) {
-                    fallBack(reason);
+                if (RumbleCapabilities.unavailableReason(technique, amplitudeControl) != null) {
+                    fallBack(RumbleProblem.noAmplitudeControl(technique));
                 }
             }
         }
 
-        private void fallBack(String reason) {
-            problem = reason + "; plain amplitude is used";
+        private void fallBack(RumbleProblem reason) {
+            problem = reason;
             technique = RumbleTechnique.AMPLITUDE;
         }
 
@@ -244,7 +243,7 @@ public final class RumblePlayback {
                 }
                 catch (RuntimeException e) {
                     vibrator.cancel();
-                    fallBack(technique + " failed: " + e);
+                    fallBack(RumbleProblem.failed(technique, e));
                 }
             }
             if (!hostEvent && amplitude == maximum) {
@@ -327,7 +326,7 @@ public final class RumblePlayback {
             this.manager = manager;
             ids = manager.getVibratorIds();
             if (profile.technique != RumbleTechnique.AMPLITUDE) {
-                problem = profile.technique + " runs on a single vibrator only; plain amplitude is used";
+                problem = RumbleProblem.singleVibratorOnly(profile.technique);
             }
         }
 

@@ -86,6 +86,9 @@ import com.limelight.shell.ui.fadeEdges
 import com.limelight.shell.ui.focusEffects
 import com.limelight.shell.ui.glass
 import com.limelight.shell.ui.px
+import com.limelight.shell.ui.description
+import com.limelight.shell.ui.label
+import com.limelight.shell.ui.text
 import com.limelight.shell.ui.textResources
 import com.limelight.shell.ui.tpx
 import com.limelight.utils.DeviceUtils
@@ -94,6 +97,7 @@ import com.limelight.utils.RumbleCapabilities
 import com.limelight.utils.RumblePlayback
 import com.limelight.utils.RumblePreferences
 import com.limelight.utils.RumblePresets
+import com.limelight.utils.RumbleProblem
 import com.limelight.utils.RumbleTranslator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -164,7 +168,7 @@ fun DebugInfoScreen() {
     var patternRun by remember { mutableIntStateOf(0) }
     var amplitude by remember { mutableIntStateOf(0) }
     val capabilities = remember { RumbleCapabilities.get(context) }
-    var problem by remember { mutableStateOf<String?>(null) }
+    var problem by remember { mutableStateOf<RumbleProblem?>(null) }
     // The diagnostic report exactly as it would be shared now (built off the main thread); null while it is being built
     var report by remember { mutableStateOf<DiagnosticReport?>(null) }
     var reportRun by remember { mutableIntStateOf(0) }
@@ -288,7 +292,8 @@ fun DebugInfoScreen() {
     }
 
     val hasMotor = device?.hasVibrator() == true
-    val presetName = activePreset?.label ?: res.getString(R.string.debug_preset_custom)
+    val presetName = activePreset?.label(res) ?: res.getString(R.string.debug_preset_custom)
+    val problemText = problem?.text(res)
     val modeName = res.getString(if (translatorEnabled) R.string.debug_mode_translator_on else R.string.debug_mode_translator_off, presetName)
     val stopped = res.getString(R.string.debug_stopped)
     val playingName = playing?.let { res.getString(it.label) } ?: stopped
@@ -330,7 +335,7 @@ fun DebugInfoScreen() {
         add(DebugRow("cap_amplitude", DebugSection.HAPTICS, Symbols.AMPLITUDE_SUPPORT, res.getString(R.string.debug_amplitude_label),
             RowValue.Info(res.getString(if (capabilities.amplitudeControl) R.string.debug_yes else R.string.debug_no)), res.getString(R.string.debug_amplitude_description)))
         add(DebugRow("cap_problem", DebugSection.HAPTICS, Symbols.WARNING, res.getString(R.string.debug_last_problem_label),
-            RowValue.Info(problem ?: res.getString(R.string.debug_none)),
+            RowValue.Info(problemText ?: res.getString(R.string.debug_none)),
             res.getString(R.string.debug_last_problem_description)))
         add(DebugRow("vibrate_once", DebugSection.VIBRATION_TEST, Symbols.DEVICE_VIBRATION, res.getString(R.string.debug_vibrate_once_label), RowValue.Action {
             stopAll()
@@ -347,13 +352,13 @@ fun DebugInfoScreen() {
             res.getString(R.string.debug_preset_description),
             res.getString(R.string.debug_preset_details, modeName)))
         RumblePresets.values().forEach { preset ->
-            val unavailable = capabilities.unavailableReason(preset.profile.technique)
+            val unavailable = capabilities.unavailableReason(preset.profile.technique)?.text(res)
             if (unavailable != null) {
-                add(DebugRow("rumble_preset_${preset.name}", DebugSection.RUMBLE_LAB, preset.icon(), preset.label,
-                    RowValue.Info(res.getString(R.string.debug_preset_problem)), res.getString(R.string.debug_preset_problem_description, preset.description, unavailable), unavailable))
+                add(DebugRow("rumble_preset_${preset.name}", DebugSection.RUMBLE_LAB, preset.icon(), preset.label(res),
+                    RowValue.Info(res.getString(R.string.debug_preset_problem)), res.getString(R.string.debug_preset_problem_description, preset.description(res), unavailable), unavailable))
                 return@forEach
             }
-            add(DebugRow("rumble_preset_${preset.name}", DebugSection.RUMBLE_LAB, preset.icon(), preset.label,
+            add(DebugRow("rumble_preset_${preset.name}", DebugSection.RUMBLE_LAB, preset.icon(), preset.label(res),
                 RowValue.Text(res.getString(if (activePreset == preset) R.string.debug_preset_active else R.string.debug_preset_select)) {
                     RumblePreferences.applyPreset(preferences, preset)
                     profile = preset.profile
@@ -361,7 +366,7 @@ fun DebugInfoScreen() {
                     activePreset = preset
                     // Pass the selection explicitly: this click still owns the previous composition's callbacks.
                     playPattern(RumblePattern.TEST, if (preset.enabled) preset.profile else RumbleTranslator.ORIGINAL)
-                }, if (activePreset == preset && problem != null) res.getString(R.string.debug_preset_problem_description, preset.description, problem) else preset.description))
+                }, if (activePreset == preset && problemText != null) res.getString(R.string.debug_preset_problem_description, preset.description(res), problemText) else preset.description(res)))
         }
         add(DebugRow("rumble_amplitude", DebugSection.RUMBLE_LAB, Symbols.LIVE_AMPLITUDE, res.getString(R.string.debug_live_amplitude_label, presetName), RowValue.Info("$amplitude / 255"),
             res.getString(R.string.debug_live_amplitude_description),

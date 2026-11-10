@@ -1915,7 +1915,7 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
     public boolean isLocalMouseCursorVisible() { return cursorVisible; }
 
     /** Why the running rumble preset could not use its technique, or null. */
-    public String getRumbleProblem() { return controllerHandler == null ? null : controllerHandler.getRumbleProblem(); }
+    public com.limelight.utils.RumbleProblem getRumbleProblem() { return controllerHandler == null ? null : controllerHandler.getRumbleProblem(); }
 
     /** Delos: the statistics overlay container, which the stream menu lifts above its blurred backdrop while it is open. */
     public android.view.ViewGroup getPerformanceOverlayContainer() {

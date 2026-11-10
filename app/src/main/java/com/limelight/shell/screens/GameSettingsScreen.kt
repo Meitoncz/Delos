@@ -369,7 +369,8 @@ internal fun GameSettingsPanel(
         // The sentence with [value] set in bold: the string is formatted around a marker that the value then replaces
         fun bold(@androidx.annotation.StringRes sentence: Int, value: String): AnnotatedString = buildAnnotatedString {
             val marker = "\u0001"
-            val text = res.getString(sentence, marker)
+            // %2$s is the name of the X button (settings_game_profile_value_button); the touch sentence has no second argument
+            val text = res.getString(sentence, marker, StreamMenuSettings.buttonName(res, android.view.KeyEvent.KEYCODE_BUTTON_X))
             val at = text.indexOf(marker)
             append(text.substring(0, at))
             withStyle(SpanStyle(color = colors.text, fontWeight = FontWeight.Bold)) { append(value) }

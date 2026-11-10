@@ -1230,22 +1230,22 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
         }
     }
     public boolean isUpscalingRequested() { return sgsrRequested; }
-    public String getUpscalingStatus() {
+    public UpscalerStatus getUpscalingStatus() {
         PyroWaveRenderer pw = pyroWave;
         if (pw != null) {
             switch (pw.getUpscalingMode()) {
-                case PyroWaveRenderer.UPSCALING_SGSR1_STANDARD: return "On: SGSR 1 (Normal)";
-                case PyroWaveRenderer.UPSCALING_SGSR1_HIGH: return "On: SGSR 1 (Quality)";
-                case PyroWaveRenderer.UPSCALING_SGSR2_VIDEO: return "On: SGSR2-DV (Normal)";
-                case PyroWaveRenderer.UPSCALING_SGSR2_VIDEO_QUALITY: return "On: SGSR2-DV (Quality)";
-                case PyroWaveRenderer.UPSCALING_SHARPEN_ONLY: return "On: Sharpen only";
-                default: return sgsrRequested ? "Unavailable; direct rendering is active" : "Off";
+                case PyroWaveRenderer.UPSCALING_SGSR1_STANDARD: return UpscalerStatus.on(UpscalerMode.STANDARD);
+                case PyroWaveRenderer.UPSCALING_SGSR1_HIGH: return UpscalerStatus.on(UpscalerMode.HIGH);
+                case PyroWaveRenderer.UPSCALING_SGSR2_VIDEO: return UpscalerStatus.on(UpscalerMode.VIDEO);
+                case PyroWaveRenderer.UPSCALING_SGSR2_VIDEO_QUALITY: return UpscalerStatus.on(UpscalerMode.VIDEO_QUALITY);
+                case PyroWaveRenderer.UPSCALING_SHARPEN_ONLY: return UpscalerStatus.on(UpscalerMode.SHARPEN_ONLY);
+                default: return sgsrRequested ? UpscalerStatus.UNAVAILABLE : UpscalerStatus.OFF;
             }
         }
-        if (sgsrFailed) return "Unavailable; direct rendering is active";
-        if (sgsrRequested && sgsr == null) return "Starting";
-        if (!sgsrRequested && sgsr != null) return "Stopping";
-        return sgsr != null ? "On" : "Off";
+        if (sgsrFailed) return UpscalerStatus.UNAVAILABLE;
+        if (sgsrRequested && sgsr == null) return UpscalerStatus.STARTING;
+        if (!sgsrRequested && sgsr != null) return UpscalerStatus.STOPPING;
+        return sgsr != null ? UpscalerStatus.ON : UpscalerStatus.OFF;
     }
     public void setUpscalingSharpness(int value) {
         prefs.sgsrSharpness = Math.max(0, Math.min(100, value));

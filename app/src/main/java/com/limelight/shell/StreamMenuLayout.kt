@@ -2,6 +2,7 @@ package com.limelight.shell
 
 import android.content.res.Resources
 import com.limelight.R
+import com.limelight.binding.video.UpscalerStatus
 import com.limelight.preferences.UpscalerMode
 import com.limelight.shell.settings.SettingsHelp
 import com.limelight.shell.settings.StreamMenuHelp
@@ -431,7 +432,7 @@ internal fun showsSupersamplingQuality(supersamplingMode: Boolean, mode: Int): B
 internal fun streamMenuHelp(
     res: Resources,
     key: String,
-    upscalerStatus: String,
+    upscalerStatus: UpscalerStatus,
     upscalerMode: Int,
     mouseMode: Int,
     rememberMouseMode: Boolean,
@@ -443,7 +444,7 @@ internal fun streamMenuHelp(
         "\n\n" + res.getString(if (rememberMouseMode) R.string.stream_menu_mouse_applies_saved else R.string.stream_menu_mouse_applies_stream)
     MenuKey.MODE -> SettingsHelp.choice(res, "list_sgsr_quality", UpscalerMode.fromIndex(upscalerMode).value()) +
         "\n\n" + StreamMenuHelp.description(res, key)
-    MenuKey.UPSCALER, MenuKey.UPSCALING, MenuKey.SUPERSAMPLING, MenuKey.SUPERSAMPLING_ON -> "$upscalerStatus\n\n${StreamMenuHelp.description(res, key)}"
+    MenuKey.UPSCALER, MenuKey.UPSCALING, MenuKey.SUPERSAMPLING, MenuKey.SUPERSAMPLING_ON -> "${upscalerStatus.statusText(res)}\n\n${StreamMenuHelp.description(res, key)}"
     else -> StreamMenuHelp.description(res, key)
 }
 
@@ -480,11 +481,25 @@ internal class BitrateFailure private constructor(private val message: Int, priv
 }
 
 /**
- * The few words that fit in the pill of the upscaler's tile, from the renderer's status ("On: SGSR2-DV (Normal)" -> "On",
- * "Unavailable; direct rendering is active" -> "Unavailable"). The full status stays in the help.
+ * The renderer's status as the help of the upscaler's tile and page says it first: "On: SGSR2-DV (Normal)", "Starting",
+ * "Unavailable; direct rendering is active".
  */
-internal fun upscalerCircleState(status: String): String =
-    status.substringBefore(':').substringBefore(';').trim()
+internal fun UpscalerStatus.statusText(res: Resources): String = when (state) {
+    UpscalerStatus.State.OFF -> res.getString(R.string.common_off)
+    UpscalerStatus.State.STARTING -> res.getString(R.string.stream_menu_upscaler_starting)
+    UpscalerStatus.State.STOPPING -> res.getString(R.string.stream_menu_upscaler_stopping)
+    UpscalerStatus.State.ON -> mode?.let { res.getString(R.string.stream_menu_upscaler_on_mode, res.getString(it.labelRes())) } ?: res.getString(R.string.common_on)
+    UpscalerStatus.State.UNAVAILABLE -> res.getString(R.string.stream_menu_upscaler_unavailable_status)
+}
+
+/** The one word that fits in the pill of the upscaler's tile ("On", "Off", "Starting", "Unavailable"). The full status stays in the help. */
+internal fun UpscalerStatus.pillText(res: Resources): String = res.getString(when (state) {
+    UpscalerStatus.State.OFF -> R.string.common_off
+    UpscalerStatus.State.STARTING -> R.string.stream_menu_upscaler_starting
+    UpscalerStatus.State.STOPPING -> R.string.stream_menu_upscaler_stopping
+    UpscalerStatus.State.ON -> R.string.common_on
+    UpscalerStatus.State.UNAVAILABLE -> R.string.stream_menu_upscaler_unavailable
+})
 
 /** The help's text: its paragraphs as one flowing text, each joined to the next with a space or a middle dot. */
 internal fun helpLineText(text: String): String {

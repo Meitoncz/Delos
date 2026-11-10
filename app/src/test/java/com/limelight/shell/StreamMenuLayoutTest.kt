@@ -1,5 +1,7 @@
 package com.limelight.shell
 
+import com.limelight.binding.video.UpscalerStatus
+import com.limelight.preferences.UpscalerMode
 import com.limelight.shell.ui.Motion
 import com.limelight.shell.settings.StreamMenuHelp
 import com.limelight.utils.RumblePresets
@@ -243,10 +245,8 @@ class StreamMenuLayoutTest {
         }
     }
 
-    private val statuses = listOf(
-        "Off", "On", "On: SGSR 1 (Normal)", "On: SGSR 1 (Quality)", "On: SGSR2-DV (Normal)", "On: SGSR2-DV (Quality)", "On: Sharpen only",
-        "Starting", "Stopping", "Unavailable; direct rendering is active",
-    )
+    private val statuses = listOf(UpscalerStatus.OFF, UpscalerStatus.ON) + UpscalerMode.values().map { UpscalerStatus.on(it) } +
+        listOf(UpscalerStatus.STARTING, UpscalerStatus.STOPPING, UpscalerStatus.UNAVAILABLE)
 
     private val problems = mutableListOf<String>()
 
@@ -306,12 +306,12 @@ class StreamMenuLayoutTest {
             BitrateFailure.rejected(null), BitrateFailure.rejected("x".repeat(500)),
         ).map { it.text(res) }
         for (scale in listOf(1f, 1.15f, c.MAX_TEXT_SCALE)) for (reason in reasons) {
-            assertEquals(reason, streamMenuHelp(res, "Apply bitrate", "On", 0, 0, false, reason))
+            assertEquals(reason, streamMenuHelp(res, "Apply bitrate", UpscalerStatus.ON, 0, 0, false, reason))
             assertFits("bitrate failure at $scale", reason, popoverHelpLineChars(MenuPage.BITRATE, scale), helpLines(scale))
         }
         assertTrue(BitrateFailure.rejected("x".repeat(500)).text(res).length < 100)
         // Without a failure the row has its own help
-        assertEquals(StreamMenuHelp.description(res, "Apply bitrate"), streamMenuHelp(res, "Apply bitrate", "On", 0, 0, false))
+        assertEquals(StreamMenuHelp.description(res, "Apply bitrate"), streamMenuHelp(res, "Apply bitrate", UpscalerStatus.ON, 0, 0, false))
     }
 
     @Test
@@ -334,11 +334,61 @@ class StreamMenuLayoutTest {
 
     @Test
     fun theUpscalerTileShowsOneWordOfTheRenderersStatus() {
-        assertEquals("On", upscalerCircleState("On: SGSR2-DV (Quality)"))
-        assertEquals("On", upscalerCircleState("On"))
-        assertEquals("Off", upscalerCircleState("Off"))
-        assertEquals("Starting", upscalerCircleState("Starting"))
-        assertEquals("Unavailable", upscalerCircleState("Unavailable; direct rendering is active"))
+        assertEquals("On", UpscalerStatus.on(UpscalerMode.VIDEO_QUALITY).pillText(res))
+        assertEquals("On", UpscalerStatus.ON.pillText(res))
+        assertEquals("Off", UpscalerStatus.OFF.pillText(res))
+        assertEquals("Starting", UpscalerStatus.STARTING.pillText(res))
+        assertEquals("Stopping", UpscalerStatus.STOPPING.pillText(res))
+        assertEquals("Unavailable", UpscalerStatus.UNAVAILABLE.pillText(res))
+    }
+
+    @Test
+    fun theUpscalerStatusReadsAsTheRendererUsedToSayIt() {
+        assertEquals("Off", UpscalerStatus.OFF.statusText(res))
+        assertEquals("On", UpscalerStatus.ON.statusText(res))
+        assertEquals("On: SGSR 1 (Normal)", UpscalerStatus.on(UpscalerMode.STANDARD).statusText(res))
+        assertEquals("On: SGSR 1 (Quality)", UpscalerStatus.on(UpscalerMode.HIGH).statusText(res))
+        assertEquals("On: SGSR2-DV (Normal)", UpscalerStatus.on(UpscalerMode.VIDEO).statusText(res))
+        assertEquals("On: SGSR2-DV (Quality)", UpscalerStatus.on(UpscalerMode.VIDEO_QUALITY).statusText(res))
+        assertEquals("On: Sharpen only", UpscalerStatus.on(UpscalerMode.SHARPEN_ONLY).statusText(res))
+        assertEquals("Starting", UpscalerStatus.STARTING.statusText(res))
+        assertEquals("Stopping", UpscalerStatus.STOPPING.statusText(res))
+        assertEquals("Unavailable; direct rendering is active", UpscalerStatus.UNAVAILABLE.statusText(res))
+    }
+
+    @Test
+    fun theOnOffSwitchWaitsOnlyWhileTheOutputStageIsRebuilt() {
+        assertTrue(UpscalerStatus.STARTING.isChanging)
+        assertTrue(UpscalerStatus.STOPPING.isChanging)
+        for (status in listOf(UpscalerStatus.OFF, UpscalerStatus.ON, UpscalerStatus.UNAVAILABLE) + UpscalerMode.values().map { UpscalerStatus.on(it) }) {
+            assertFalse(status.toString(), status.isChanging)
+        }
+        assertEquals(UpscalerStatus.on(UpscalerMode.HIGH), UpscalerStatus.on(UpscalerMode.HIGH))
+        assertNotEquals(UpscalerStatus.on(UpscalerMode.HIGH), UpscalerStatus.on(UpscalerMode.VIDEO))
+        assertEquals(UpscalerStatus.ON, UpscalerStatus.on(null))
+    }
+
+    @Test
+    fun everyKeyOfTheMenuHasHelpUnlessItsHelpComesFromElsewhere() {
+        // These rows show help of another source: the Mouse mode row the catalog's choice, the Bitrate recommendation row
+        // the link guidance, and Apply / Enabled use the help of the row they stand for (MenuKey.APPLY_BITRATE, UPSCALING)
+        val elsewhere = setOf(MenuKey.TOUCHSCREEN_MODE, MenuKey.APPLY, MenuKey.ENABLED, RECOMMENDED_ROW)
+        val keys = (MenuKey::class.java.declaredFields + MoreRow::class.java.declaredFields)
+            .filter { java.lang.reflect.Modifier.isStatic(it.modifiers) && it.type == String::class.java }
+            .map { it.also { f -> f.isAccessible = true }.get(null) as String }
+            .filter { it !in elsewhere } + RumblePresets.values().map { StreamMenuHelp.rumbleKey(it) }
+        // the tiles and rows are known by 25 or more keys: a failing reflection would make the loop below vacuous
+        assertTrue(keys.size >= 25)
+        for (key in keys) {
+            assertNotEquals("no help string for the menu key \"$key\" (stream_help_${com.limelight.shell.settings.slug(key)})", "", StreamMenuHelp.description(res, key))
+        }
+    }
+
+    @Test
+    fun theKeyboardAndRumbleHelpPlaceTheButtonNamesWhereTheTextSaysThem() {
+        val keyboard = StreamMenuHelp.description(res, MenuKey.KEYBOARD)
+        assertTrue(keyboard, keyboard.contains("A types, B closes"))
+        assertTrue(StreamMenuHelp.description(res, MoreRow.RUMBLE).endsWith("B goes back."))
     }
 
     @Test

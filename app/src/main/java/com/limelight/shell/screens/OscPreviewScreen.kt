@@ -1,5 +1,6 @@
 package com.limelight.shell.screens
 
+import android.view.KeyEvent
 import android.widget.FrameLayout
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -20,7 +21,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.viewinterop.AndroidView
 import com.limelight.R
 import com.limelight.binding.input.virtual_controller.VirtualController
+import com.limelight.shell.settings.StreamMenuSettings
 import com.limelight.shell.ui.Figtree
+import com.limelight.shell.ui.textResources
 import com.limelight.shell.ui.px
 import com.limelight.shell.ui.tpx
 
@@ -48,7 +51,7 @@ fun OscPreviewScreen() {
         ),
     ) {
         BasicText(
-            stringResource(R.string.settings_osc_preview_note),
+            stringResource(R.string.settings_osc_preview_note, StreamMenuSettings.buttonName(textResources(), KeyEvent.KEYCODE_BUTTON_B)),
             style = TextStyle(color = Color.White.copy(alpha = .45f), fontFamily = Figtree, fontSize = 20.tpx, textAlign = TextAlign.Center),
             modifier = Modifier.align(Alignment.TopCenter).padding(top = 40.px),
         )

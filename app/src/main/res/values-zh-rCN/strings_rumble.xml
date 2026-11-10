@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rumble_preset_original">原始</string>
+    <string name="rumble_preset_soft">柔和</string>
+    <string name="rumble_preset_kick_start">启动冲击</string>
+    <string name="rumble_preset_pulsing">脉冲</string>
+
+    <string name="rumble_unavailable_no_amplitude">此振动马达不支持振幅控制</string>
+
+    <string name="rumble_problem_no_amplitude">此振动马达不支持振幅控制；改用普通振幅</string>
+    <string name="rumble_problem_single_vibrator">%1$s 仅支持单个振动马达；改用普通振幅</string>
+    <string name="rumble_problem_failed">%1$s 失败：%2$s；改用普通振幅</string>
+</resources>

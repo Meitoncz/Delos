@@ -191,7 +191,7 @@
 
     <!-- Stream menu help: stream_help_<slug of the item key>. The keys are the English item names the menu uses as identifiers. -->
     <string name="stream_help_resume">Closes this menu and continues the stream.</string>
-    <string name="stream_help_keyboard">Opens or closes the Delos on-screen keyboard: D-pad moves, A types, B closes. Not Android\'s system keyboard (More).</string>
+    <string name="stream_help_keyboard">Opens or closes the Delos on-screen keyboard: D-pad moves, %1$s types, %2$s closes. Not Android\'s system keyboard (More).</string>
     <string name="stream_help_overlay">Cycles full statistics, compact statistics, off. 1%% low FPS covers the slowest frames of about ten seconds.</string>
     <string name="stream_help_brightness">Adjusts this device\'s brightness for this stream; the system setting returns afterwards.</string>
     <string name="stream_help_screen_brightness">Changes this device\'s screen brightness now; the system setting returns afterwards. Not the PC or a monitor.</string>
@@ -220,7 +220,7 @@
     <string name="stream_help_touch_sensitivity">Toggles extra touchscreen sensitivity scaling, configured in settings.</string>
     <string name="stream_help_gyro_smoothing">Steadies gyro aiming at once, kept for this game. 0 is off. More smoothing adds a little delay to slow movement.</string>
     <string name="stream_help_gyro_smoothing_disabled">Needs External gamepad gyroscope or Built-in device gyroscope turned on in Settings; applies from the next stream.</string>
-    <string name="stream_help_rumble_feel">Picks how host rumble feels, at once and saved. Stays open: pick again to compare. B goes back.</string>
+    <string name="stream_help_rumble_feel">Picks how host rumble feels, at once and saved. Stays open: pick again to compare. %1$s goes back.</string>
     <!-- %1$s: a key combination such as Ctrl + Alt + Delete -->
     <string name="stream_help_format_keys">Sends %1$s to the PC once, then returns to the stream.</string>
     <!-- %1$s: the command name, cut to 35 characters -->

@@ -174,7 +174,7 @@
     <string name="help_note_sharpen_only">Não usado por Só nitidez.</string>
 
     <string name="stream_help_resume">Fecha este menu e continua o stream.</string>
-    <string name="stream_help_keyboard">Abre ou fecha o teclado na tela do Delos: o direcional move, A digita, B fecha. Não é o teclado do sistema Android (Mais).</string>
+    <string name="stream_help_keyboard">Abre ou fecha o teclado na tela do Delos: o direcional move, %1$s digita, %2$s fecha. Não é o teclado do sistema Android (Mais).</string>
     <string name="stream_help_overlay">Alterna entre estatísticas completas, estatísticas compactas e desativado. FPS 1%% inferior cobre os quadros mais lentos de cerca de dez segundos.</string>
     <string name="stream_help_brightness">Ajusta o brilho deste dispositivo neste stream; a configuração do sistema volta depois.</string>
     <string name="stream_help_screen_brightness">Muda agora o brilho da tela deste dispositivo; a configuração do sistema volta depois. Não afeta o PC nem um monitor.</string>
@@ -203,7 +203,7 @@
     <string name="stream_help_touch_sensitivity">Alterna a escala extra de sensibilidade da tela touch, configurada em Configurações.</string>
     <string name="stream_help_gyro_smoothing">Estabiliza na hora a mira com giroscópio, mantido neste jogo. 0 é desativado. Mais suavização adiciona um pouco de atraso em movimentos lentos.</string>
     <string name="stream_help_gyro_smoothing_disabled">Requer Giroscópio do controle externo ou Giroscópio integrado do dispositivo ativado em Configurações; vale a partir do próximo stream.</string>
-    <string name="stream_help_rumble_feel">Escolhe como a vibração do PC é sentida, na hora e salvo. Continua aberto: escolha de novo para comparar. B volta.</string>
+    <string name="stream_help_rumble_feel">Escolhe como a vibração do PC é sentida, na hora e salvo. Continua aberto: escolha de novo para comparar. %1$s volta.</string>
     <string name="stream_help_format_keys">Envia %1$s ao PC uma vez e volta ao stream.</string>
     <string name="stream_help_format_command">Executa na hora no PC o comando %1$s definido pelo PC. Configurado no Vibepollo ou Apollo.</string>
 </resources>

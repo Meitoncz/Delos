@@ -18,14 +18,20 @@ public final class RumbleCapabilities {
         this.amplitudeControl = amplitudeControl;
     }
 
+    /** Why a technique cannot run on a device; the screens turn it into a sentence (see {@code RumbleText.kt}). */
+    public enum Unavailable {
+        /** The vibrator has no amplitude control, which the pulse technique needs. */
+        NO_AMPLITUDE_CONTROL
+    }
+
     /** Why [technique] cannot run here, or null when it can. */
-    public String unavailableReason(RumbleTechnique technique) {
+    public Unavailable unavailableReason(RumbleTechnique technique) {
         return unavailableReason(technique, amplitudeControl);
     }
 
     /** Why [technique] cannot run on a vibrator with or without amplitude control, or null when it can. */
-    static String unavailableReason(RumbleTechnique technique, boolean amplitudeControl) {
-        return technique.isPulse() && !amplitudeControl ? "This vibrator has no amplitude control" : null;
+    static Unavailable unavailableReason(RumbleTechnique technique, boolean amplitudeControl) {
+        return technique.isPulse() && !amplitudeControl ? Unavailable.NO_AMPLITUDE_CONTROL : null;
     }
 
     public static synchronized RumbleCapabilities get(Context context) {

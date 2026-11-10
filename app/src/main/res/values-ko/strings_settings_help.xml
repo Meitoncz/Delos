@@ -174,7 +174,7 @@
     <string name="help_note_sharpen_only">선명화만 모드에서는 사용하지 않아요.</string>
 
     <string name="stream_help_resume">이 메뉴를 닫고 스트림을 이어서 진행해요.</string>
-    <string name="stream_help_keyboard">Delos 화면 키보드를 열거나 닫아요. 방향 패드로 이동, A로 입력, B로 닫기예요. Android 시스템 키보드(더보기)와는 달라요.</string>
+    <string name="stream_help_keyboard">Delos 화면 키보드를 열거나 닫아요. 방향 패드로 이동, %1$s로 입력, %2$s로 닫기예요. Android 시스템 키보드(더보기)와는 달라요.</string>
     <string name="stream_help_overlay">전체 통계, 간단 통계, 끄기를 순환해요. 하위 1%% FPS는 약 10초 동안 가장 느린 프레임을 기준으로 해요.</string>
     <string name="stream_help_brightness">이번 스트림 동안 이 기기의 밝기를 조절해요. 끝나면 시스템 설정으로 돌아가요.</string>
     <string name="stream_help_screen_brightness">이 기기의 화면 밝기를 바로 바꿔요. 끝나면 시스템 설정으로 돌아가요. PC나 모니터에는 적용되지 않아요.</string>
@@ -203,7 +203,7 @@
     <string name="stream_help_touch_sensitivity">설정에서 구성한 터치스크린 추가 감도 배율을 켜고 꺼요.</string>
     <string name="stream_help_gyro_smoothing">자이로 조준을 바로 안정시키고 이 게임에 저장해요. 0은 꺼짐이에요. 스무딩이 강할수록 느린 움직임에 약간의 지연이 생겨요.</string>
     <string name="stream_help_gyro_smoothing_disabled">설정에서 외장 게임패드 자이로스코프 또는 기기 내장 자이로스코프를 켜야 해요. 다음 스트림부터 적용돼요.</string>
-    <string name="stream_help_rumble_feel">호스트 럼블의 느낌을 바로 고르고 저장해요. 열린 상태로 유지되니 다시 골라 비교해 보세요. B로 뒤로 가요.</string>
+    <string name="stream_help_rumble_feel">호스트 럼블의 느낌을 바로 고르고 저장해요. 열린 상태로 유지되니 다시 골라 비교해 보세요. %1$s로 뒤로 가요.</string>
     <string name="stream_help_format_keys">%1$s을(를) PC로 한 번 보낸 뒤 스트림으로 돌아가요.</string>
     <string name="stream_help_format_command">호스트에 정의된 명령 %1$s을(를) PC에서 바로 실행해요. Vibepollo 또는 Apollo에서 설정해요.</string>
 </resources>

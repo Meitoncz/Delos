@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Rumble feels (RumblePresets): their names in the Settings list, the Debug laboratory and the stream menu. The ids that are saved do not change -->
+    <string name="rumble_preset_original">Original</string>
+    <string name="rumble_preset_soft">Soft</string>
+    <string name="rumble_preset_kick_start">Kick-start</string>
+    <string name="rumble_preset_pulsing">Pulsing</string>
+
+    <!-- Why a rumble feel cannot run on this device (Debug laboratory, stream menu) -->
+    <string name="rumble_unavailable_no_amplitude">This vibrator has no amplitude control</string>
+
+    <!-- Why the running rumble could not use the technique of its feel: plain amplitude (the original path) is used instead -->
+    <string name="rumble_problem_no_amplitude">This vibrator has no amplitude control; plain amplitude is used</string>
+    <!-- %1$s: the technique's code name (PULSE); keep it as it is -->
+    <string name="rumble_problem_single_vibrator">%1$s runs on a single vibrator only; plain amplitude is used</string>
+    <!-- %1$s: the technique's code name (PULSE); keep it as it is. %2$s: the error text from Android (English) -->
+    <string name="rumble_problem_failed">%1$s failed: %2$s; plain amplitude is used</string>
+</resources>

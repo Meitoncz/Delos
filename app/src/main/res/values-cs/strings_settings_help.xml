@@ -179,7 +179,7 @@
 
     <!-- Stream menu help -->
     <string name="stream_help_resume">Zavře toto menu a pokračuje ve streamu.</string>
-    <string name="stream_help_keyboard">Otevře nebo zavře klávesnici na obrazovce aplikace Delos: D-pad se pohybuje, A píše, B zavírá. Ne systémovou klávesnici Androidu (Více).</string>
+    <string name="stream_help_keyboard">Otevře nebo zavře klávesnici na obrazovce aplikace Delos: D-pad se pohybuje, %1$s píše, %2$s zavírá. Ne systémovou klávesnici Androidu (Více).</string>
     <string name="stream_help_overlay">Přepíná plné statistiky, kompaktní statistiky, vypnuto. FPS dolního 1 %% pokrývá nejpomalejší snímky za zhruba deset sekund.</string>
     <string name="stream_help_brightness">Upraví jas tohoto zařízení pro tento stream; systémové nastavení se poté vrátí.</string>
     <string name="stream_help_screen_brightness">Hned změní jas obrazovky tohoto zařízení; systémové nastavení se poté vrátí. Netýká se PC ani monitoru.</string>
@@ -208,7 +208,7 @@
     <string name="stream_help_touch_sensitivity">Přepíná další škálování citlivosti dotykové obrazovky, nastavené v nastavení.</string>
     <string name="stream_help_gyro_smoothing">Hned stabilizuje míření gyrem a uloží se pro tuto hru. 0 je vypnuto. Víc vyhlazení lehce zpozdí pomalý pohyb.</string>
     <string name="stream_help_gyro_smoothing_disabled">Vyžaduje zapnutou volbu „Gyroskop externího gamepadu“ nebo „Vestavěný gyroskop zařízení“ v Nastavení; platí od příštího streamu.</string>
-    <string name="stream_help_rumble_feel">Vybere, jak se cítí vibrace z PC, hned a s uložením. Zůstane otevřené: vyber znovu a porovnej. B vrací zpět.</string>
+    <string name="stream_help_rumble_feel">Vybere, jak se cítí vibrace z PC, hned a s uložením. Zůstane otevřené: vyber znovu a porovnej. %1$s vrací zpět.</string>
     <string name="stream_help_format_keys">Jednou pošle do PC %1$s a vrátí se do streamu.</string>
     <string name="stream_help_format_command">Hned spustí v PC příkaz %1$s definovaný v PC. Nastavuje se ve Vibepollo nebo Apollo.</string>
 </resources>

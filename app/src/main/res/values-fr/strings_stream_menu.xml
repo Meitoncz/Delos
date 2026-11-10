@@ -50,6 +50,15 @@
     <string name="stream_menu_rumble_problem_word">Problème</string>
     <string name="stream_menu_rumble_active">Actif</string>
     <string name="stream_menu_rumble_problem">Problème : %1$s</string>
+
+    <string name="stream_menu_upscaler_starting">Démarrage</string>
+    <string name="stream_menu_upscaler_stopping">Arrêt</string>
+    <string name="stream_menu_upscaler_unavailable">Indisponible</string>
+    <string name="stream_menu_upscaler_on_mode">Activé : %1$s</string>
+    <string name="stream_menu_upscaler_unavailable_status">Indisponible ; le rendu direct est actif</string>
+    <string name="stream_menu_button_start">Start</string>
+    <string name="stream_menu_button_select">Select</string>
+    <string name="stream_menu_button_home">Accueil</string>
     <string name="stream_menu_mouse_applies_saved">S’applique tout de suite et est enregistré.</string>
     <string name="stream_menu_mouse_applies_stream">S’applique tout de suite ; pour ce stream seulement.</string>
     <string name="stream_menu_bitrate_fill">Remplir</string>

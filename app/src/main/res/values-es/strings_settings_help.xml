@@ -174,7 +174,7 @@
     <string name="help_note_sharpen_only">No lo usa Solo nitidez.</string>
 
     <string name="stream_help_resume">Cierra este menú y continúa el stream.</string>
-    <string name="stream_help_keyboard">Abre o cierra el teclado en pantalla de Delos: la cruceta mueve, A escribe, B cierra. No es el teclado del sistema Android (Más).</string>
+    <string name="stream_help_keyboard">Abre o cierra el teclado en pantalla de Delos: la cruceta mueve, %1$s escribe, %2$s cierra. No es el teclado del sistema Android (Más).</string>
     <string name="stream_help_overlay">Alterna entre estadísticas completas, estadísticas compactas y desactivadas. El 1%% más bajo de FPS abarca los fotogramas más lentos de unos diez segundos.</string>
     <string name="stream_help_brightness">Ajusta el brillo de este dispositivo para este stream; después vuelve el ajuste del sistema.</string>
     <string name="stream_help_screen_brightness">Cambia ahora el brillo de pantalla de este dispositivo; después vuelve el ajuste del sistema. No el del PC ni el de un monitor.</string>
@@ -203,7 +203,7 @@
     <string name="stream_help_touch_sensitivity">Activa o desactiva el escalado extra de sensibilidad táctil, configurado en los ajustes.</string>
     <string name="stream_help_gyro_smoothing">Estabiliza al instante la puntería con giroscopio y se conserva para este juego. 0 es desactivado. Más suavizado añade un poco de retardo al moverse despacio.</string>
     <string name="stream_help_gyro_smoothing_disabled">Requiere activar Giroscopio del mando externo o Giroscopio integrado del dispositivo en Ajustes; se aplica desde el próximo stream.</string>
-    <string name="stream_help_rumble_feel">Elige cómo se siente la vibración del host, al instante y guardado. Se queda abierto: elige de nuevo para comparar. B vuelve atrás.</string>
+    <string name="stream_help_rumble_feel">Elige cómo se siente la vibración del host, al instante y guardado. Se queda abierto: elige de nuevo para comparar. %1$s vuelve atrás.</string>
     <string name="stream_help_format_keys">Envía %1$s al PC una vez y vuelve al stream.</string>
     <string name="stream_help_format_command">Ejecuta al instante en el PC el comando %1$s definido por el host. Se configura en Vibepollo o Apollo.</string>
 </resources>

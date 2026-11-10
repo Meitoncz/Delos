@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rumble_preset_original">Оригінал</string>
+    <string name="rumble_preset_soft">М’яка</string>
+    <string name="rumble_preset_kick_start">Різкий старт</string>
+    <string name="rumble_preset_pulsing">Пульсація</string>
+
+    <string name="rumble_unavailable_no_amplitude">Цей вібромотор не має керування амплітудою</string>
+
+    <string name="rumble_problem_no_amplitude">Цей вібромотор не має керування амплітудою; використовується проста амплітуда</string>
+    <string name="rumble_problem_single_vibrator">%1$s працює лише з одним вібромотором; використовується проста амплітуда</string>
+    <string name="rumble_problem_failed">%1$s завершився помилкою: %2$s; використовується проста амплітуда</string>
+</resources>

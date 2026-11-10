@@ -570,7 +570,7 @@ public final class SgsrRenderer implements AutoCloseable {
                 overloadDetector.reset();
                 flowGovernor.reset();
                 if (temporal != null) temporal.reset();
-                LimeLog.info("SGSR quality: " + UpscalerMode.fromIndex(quality).label());
+                LimeLog.info("SGSR quality: " + UpscalerMode.fromIndex(quality).value());
             }
             final boolean sharpenOnly = quality == SHARPEN_ONLY;
             int internalWidth, internalHeight;

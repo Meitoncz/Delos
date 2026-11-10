@@ -294,7 +294,7 @@ public final class StreamSurfaceController implements StreamSurfaceHost {
         if (decoder.isUpscalingRequested()) sizeStreamSurfaceForUpscaler(true, UpscalerMode.fromIndex(mode));
         decoder.setUpscalingMode(mode);
     }
-    public String getUpscalingStatus() { return decoder.getUpscalingStatus(); }
+    public UpscalerStatus getUpscalingStatus() { return decoder.getUpscalingStatus(); }
     public void setUpscalingSharpness(int value) { decoder.setUpscalingSharpness(value); }
     public boolean isSupersamplingMode() { return decoder.isSupersamplingMode(); }
     public int getSupersamplingLevel() { return decoder.getSupersamplingLevel(); }

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rumble_preset_original">Původní</string>
+    <string name="rumble_preset_soft">Jemné</string>
+    <string name="rumble_preset_kick_start">Silný start</string>
+    <string name="rumble_preset_pulsing">Pulzující</string>
+
+    <string name="rumble_unavailable_no_amplitude">Tento vibrační motor nemá řízení amplitudy</string>
+
+    <string name="rumble_problem_no_amplitude">Tento vibrační motor nemá řízení amplitudy; použije se prostá amplituda</string>
+    <string name="rumble_problem_single_vibrator">%1$s běží jen na jediném vibračním motoru; použije se prostá amplituda</string>
+    <string name="rumble_problem_failed">%1$s selhalo: %2$s; použije se prostá amplituda</string>
+</resources>

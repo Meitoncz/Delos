@@ -325,7 +325,7 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
     }
 
     /** Why the running rumble preset could not use its technique, or null. */
-    public String getRumbleProblem() {
+    public com.limelight.utils.RumbleProblem getRumbleProblem() {
         ActiveRumble active = activeRumble;
         return active == null ? null : active.playback.getProblem();
     }

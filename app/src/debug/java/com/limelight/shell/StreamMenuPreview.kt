@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.input.pointer.pointerInput
+import com.limelight.binding.video.UpscalerStatus
 import com.limelight.preferences.UpscalerMode
 import com.limelight.shell.settings.SettingChoice
 import com.limelight.utils.RumblePresets
@@ -152,7 +153,7 @@ internal class FakeStreamMenuHost(initialUpscalerMode: Int = 2) : StreamMenuHost
 
     override val upscalerAvailable = true
     override var upscalerRequested = true
-    override val upscalerStatus get() = if (upscalerRequested) "On: " + UpscalerMode.fromIndex(upscalerMode).label() else "Off"
+    override val upscalerStatus get() = if (upscalerRequested) UpscalerStatus.on(UpscalerMode.fromIndex(upscalerMode)) else UpscalerStatus.OFF
     // Like the renderer: a mode that does not scale has nothing to supersample
     override val supersamplingMode get() = UpscalerMode.fromIndex(upscalerMode).scales()
     private var level = 1

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rumble_preset_original">Original</string>
+    <string name="rumble_preset_soft">Doux</string>
+    <string name="rumble_preset_kick_start">Coup de départ</string>
+    <string name="rumble_preset_pulsing">Pulsé</string>
+
+    <string name="rumble_unavailable_no_amplitude">Ce moteur de vibration n’a pas de contrôle d’amplitude</string>
+
+    <string name="rumble_problem_no_amplitude">Ce moteur de vibration n’a pas de contrôle d’amplitude ; l’amplitude simple est utilisée</string>
+    <string name="rumble_problem_single_vibrator">%1$s ne fonctionne qu’avec un seul moteur de vibration ; l’amplitude simple est utilisée</string>
+    <string name="rumble_problem_failed">%1$s a échoué : %2$s ; l’amplitude simple est utilisée</string>
+</resources>

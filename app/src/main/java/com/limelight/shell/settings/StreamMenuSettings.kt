@@ -2,7 +2,9 @@ package com.limelight.shell.settings
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.content.res.Resources
 import android.view.KeyEvent
+import com.limelight.R
 import com.limelight.shell.data.ProfileStore
 
 /**
@@ -28,23 +30,24 @@ object StreamMenuSettings {
 
     @JvmStatic fun swipe(context: Context): Boolean = swipe(ProfileStore.currentSettings(context))
 
-    /** "L3 + R3", "Start + Select", … */
-    fun label(buttons: Set<Int>): String = buttons.sorted().joinToString(" + ") { buttonName(it) }
+    /** "L3 + R3", "Start + Select", … (a pad's own legends: the letters, L1/R1/L3/R3 stay as printed, Start/Select/Home are words). */
+    fun label(res: Resources, buttons: Set<Int>): String = buttons.sorted().joinToString(" + ") { buttonName(res, it) }
 
-    fun buttonName(code: Int): String = when (code) {
+    fun buttonName(res: Resources, code: Int): String = when (code) {
         KeyEvent.KEYCODE_BUTTON_THUMBL -> "L3"
         KeyEvent.KEYCODE_BUTTON_THUMBR -> "R3"
         KeyEvent.KEYCODE_BUTTON_L1 -> "L1"
         KeyEvent.KEYCODE_BUTTON_R1 -> "R1"
         KeyEvent.KEYCODE_BUTTON_L2 -> "L2"
         KeyEvent.KEYCODE_BUTTON_R2 -> "R2"
-        KeyEvent.KEYCODE_BUTTON_START -> "Start" // l10n-ignore: controller legend
-        KeyEvent.KEYCODE_BUTTON_SELECT -> "Select" // l10n-ignore: controller legend
-        KeyEvent.KEYCODE_BUTTON_MODE -> "Home" // l10n-ignore: controller legend
+        KeyEvent.KEYCODE_BUTTON_START -> res.getString(R.string.stream_menu_button_start)
+        KeyEvent.KEYCODE_BUTTON_SELECT -> res.getString(R.string.stream_menu_button_select)
+        KeyEvent.KEYCODE_BUTTON_MODE -> res.getString(R.string.stream_menu_button_home)
         KeyEvent.KEYCODE_BUTTON_A -> "A"
         KeyEvent.KEYCODE_BUTTON_B -> "B"
         KeyEvent.KEYCODE_BUTTON_X -> "X"
         KeyEvent.KEYCODE_BUTTON_Y -> "Y"
+        // A button with no legend of its own: the platform's constant name (a technical readout)
         else -> KeyEvent.keyCodeToString(code).removePrefix("KEYCODE_").removePrefix("BUTTON_").replace('_', ' ')
             .lowercase().replaceFirstChar { it.uppercase() }
     }

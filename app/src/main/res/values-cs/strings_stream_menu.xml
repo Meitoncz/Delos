@@ -62,6 +62,15 @@
     <string name="stream_menu_rumble_active">Aktivní</string>
     <string name="stream_menu_rumble_problem">Problém: %1$s</string>
 
+    <string name="stream_menu_upscaler_starting">Spouštění</string>
+    <string name="stream_menu_upscaler_stopping">Zastavování</string>
+    <string name="stream_menu_upscaler_unavailable">Nedostupné</string>
+    <string name="stream_menu_upscaler_on_mode">Zapnuto: %1$s</string>
+    <string name="stream_menu_upscaler_unavailable_status">Nedostupné; používá se přímé vykreslování</string>
+    <string name="stream_menu_button_start">Start</string>
+    <string name="stream_menu_button_select">Select</string>
+    <string name="stream_menu_button_home">Domů</string>
+
     <!-- Help line of the Touchscreen mode row -->
     <string name="stream_menu_mouse_applies_saved">Platí hned a ukládá se.</string>
     <string name="stream_menu_mouse_applies_stream">Platí hned; jen pro tento stream.</string>

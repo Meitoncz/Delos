@@ -4,6 +4,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.limelight.R;
+
 import org.junit.Test;
 
 public class UpscalerModeTest {
@@ -60,6 +62,6 @@ public class UpscalerModeTest {
         assertFalse(UpscalerMode.STANDARD.isTemporal());
         assertTrue(UpscalerMode.VIDEO.isTemporal());
         assertTrue(UpscalerMode.VIDEO_QUALITY.isTemporal());
-        assertEquals("Sharpen only", UpscalerMode.SHARPEN_ONLY.label());
+        assertEquals(R.string.sgsr_quality_sharpen, UpscalerMode.SHARPEN_ONLY.labelRes());
     }
 }

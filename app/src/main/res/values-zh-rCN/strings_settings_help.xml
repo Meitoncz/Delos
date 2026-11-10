@@ -185,7 +185,7 @@
 
     <!-- Stream menu help: stream_help_<slug of the item key>. The keys are the English item names the menu uses as identifiers. -->
     <string name="stream_help_resume">关闭此菜单并继续串流。</string>
-    <string name="stream_help_keyboard">打开或关闭 Delos 屏幕键盘：方向键移动，A 输入，B 关闭。不是 Android 系统键盘（更多）。</string>
+    <string name="stream_help_keyboard">打开或关闭 Delos 屏幕键盘：方向键移动，%1$s 输入，%2$s 关闭。不是 Android 系统键盘（更多）。</string>
     <string name="stream_help_overlay">在完整统计、精简统计、关闭之间循环切换。1%% Low FPS 涵盖约十秒内最慢的那些帧。</string>
     <string name="stream_help_brightness">调节本设备在本次串流中的亮度；之后会恢复系统设置。</string>
     <string name="stream_help_screen_brightness">立即更改本设备的屏幕亮度；之后会恢复系统设置。不影响 PC 或显示器。</string>
@@ -214,7 +214,7 @@
     <string name="stream_help_touch_sensitivity">切换额外的触摸屏灵敏度缩放，在设置中配置。</string>
     <string name="stream_help_gyro_smoothing">立即稳定陀螺仪瞄准，并为此游戏保留。0 表示关闭。平滑越强，缓慢移动的延迟越多。</string>
     <string name="stream_help_gyro_smoothing_disabled">需要在设置中开启外接手柄陀螺仪或内置设备陀螺仪；从下次串流起生效。</string>
-    <string name="stream_help_rumble_feel">选择电脑端震动的手感，立即生效并保存。菜单保持打开：可再次选择以对比。B 返回。</string>
+    <string name="stream_help_rumble_feel">选择电脑端震动的手感，立即生效并保存。菜单保持打开：可再次选择以对比。%1$s 返回。</string>
     <!-- %1$s: a key combination such as Ctrl + Alt + Delete -->
     <string name="stream_help_format_keys">向 PC 发送一次 %1$s，然后返回串流。</string>
     <!-- %1$s: the command name, cut to 35 characters -->

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rumble_preset_original">원본</string>
+    <string name="rumble_preset_soft">부드러움</string>
+    <string name="rumble_preset_kick_start">킥 스타트</string>
+    <string name="rumble_preset_pulsing">펄스</string>
+
+    <string name="rumble_unavailable_no_amplitude">이 진동 모터는 진폭을 제어할 수 없어요</string>
+
+    <string name="rumble_problem_no_amplitude">이 진동 모터는 진폭을 제어할 수 없어요. 일반 진폭을 사용해요</string>
+    <string name="rumble_problem_single_vibrator">%1$s 방식은 진동 모터가 하나일 때만 동작해요. 일반 진폭을 사용해요</string>
+    <string name="rumble_problem_failed">%1$s 실패: %2$s. 일반 진폭을 사용해요</string>
+</resources>

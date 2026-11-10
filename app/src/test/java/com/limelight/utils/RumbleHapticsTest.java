@@ -30,7 +30,7 @@ public class RumbleHapticsTest {
     public void pulsesNeedAmplitudeControlAndNothingElseDoes() {
         RumbleCapabilities weak = new RumbleCapabilities(1, false);
         assertNull(weak.unavailableReason(RumbleTechnique.AMPLITUDE));
-        assertNotNull(weak.unavailableReason(RumbleTechnique.PULSE));
+        assertEquals(RumbleCapabilities.Unavailable.NO_AMPLITUDE_CONTROL, weak.unavailableReason(RumbleTechnique.PULSE));
         RumbleCapabilities odin = new RumbleCapabilities(1, true);
         for (RumbleTechnique technique : RumbleTechnique.values()) {
             assertNull(odin.unavailableReason(technique));

@@ -38,8 +38,10 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
+import com.limelight.binding.video.UpscalerStatus
 import com.limelight.preferences.UpscalerMode
 import com.limelight.shell.settings.StreamMenuHelp
+import com.limelight.shell.ui.label
 import com.limelight.utils.RumblePresets
 import com.limelight.shell.StreamMenuLayout as L
 import com.limelight.shell.StreamMenuMotion as M
@@ -266,7 +268,7 @@ internal fun StreamMenuRoot(
         BarCircleSpec(BarItem.BRIGHTNESS, Symbols.BRIGHTNESS_MEDIUM, res.getString(R.string.stream_menu_tile_brightness), opensPage = true) { openPage(MenuPage.BRIGHTNESS) },
         BarCircleSpec(BarItem.BITRATE, Symbols.NETWORK_CHECK, res.getString(R.string.stream_menu_tile_bitrate), opensPage = true) { openPage(MenuPage.BITRATE) },
         BarCircleSpec(BarItem.UPSCALER, Symbols.UPSCALER, res.getString(if (supersamplingMode) R.string.stream_menu_tile_supersampling else R.string.stream_menu_tile_upscaler),
-            on = host.upscalerRequested, state = upscalerCircleState(upscalerStatus), opensPage = true) { openPage(MenuPage.UPSCALER) },
+            on = host.upscalerRequested, state = upscalerStatus.pillText(res), opensPage = true) { openPage(MenuPage.UPSCALER) },
         BarCircleSpec(BarItem.MORE, Symbols.MORE_HORIZ, res.getString(R.string.stream_menu_tile_more), opensPage = true) { openPage(MenuPage.MORE) },
         BarCircleSpec(BarItem.DISCONNECT, Symbols.LOGOUT, res.getString(R.string.stream_menu_tile_disconnect)) { close { host.leave(quit = false) } },
         BarCircleSpec(BarItem.QUIT, Symbols.POWER_SETTINGS_NEW, res.getString(R.string.stream_menu_tile_quit)) { close { host.leave(quit = true) } },
@@ -276,7 +278,7 @@ internal fun StreamMenuRoot(
         helpLineText(host.linkGuidance?.streamHelp(res, System.currentTimeMillis()).orEmpty())
     } else helpLineText(
         streamMenuHelp(res, key, upscalerStatus, host.upscalerMode, host.mouseMode, host.rememberMouseMode, (host.bitrateResult as? BitrateResult.Failed)?.reason?.text(res)) +
-            (StreamMenuHelp.rumblePreset(key)?.let { host.rumbleProblem(it) }?.let { "\n" + res.getString(R.string.stream_menu_rumble_problem, it) }.orEmpty())
+            (StreamMenuHelp.rumblePreset(key)?.let { host.rumbleProblemText(res, it) }?.let { "\n" + res.getString(R.string.stream_menu_rumble_problem, it) }.orEmpty())
     )
     val barHelpKey = circleHelpKey(barHelpItem, supersamplingMode)
 
@@ -447,7 +449,7 @@ private fun pageFocusKeys(host: StreamMenuHost, page: MenuPage, supersamplingMod
             add(MenuKey.SHARPNESS)
         }
         MenuPage.MOUSE -> listOf(MenuKey.TOUCHSCREEN_MODE, MenuKey.LOCAL_MOUSE_CURSOR)
-        MenuPage.RUMBLE -> RumblePresets.values().map { it.label }
+        MenuPage.RUMBLE -> RumblePresets.values().map { StreamMenuHelp.rumbleKey(it) }
     }
 
 /** A row of a page: [key] names it for the focus order and the help lookup, [label] is the text on screen. */
@@ -471,7 +473,7 @@ private fun PageRows(
     entryRow: String?,
     supersamplingMode: Boolean,
     supersamplingLevel: Int,
-    upscalerStatus: String,
+    upscalerStatus: UpscalerStatus,
     tick: Int,
     openPage: (MenuPage) -> Unit,
     close: (() -> Unit) -> Unit,
@@ -496,7 +498,7 @@ private fun PageRows(
             KeyedRow(Symbols.JOYSTICK, R.string.stream_menu_row_onscreen_controls, MenuKey.ONSCREEN_CONTROLS, RowValue.Toggle(host.onscreenControlsOn) { toggle { host.toggleOnscreenControls() } })
             KeyedRow(Symbols.ANDROID_KEYBOARD, R.string.stream_menu_row_android_keyboard, MoreRow.ANDROID_KEYBOARD, RowValue.Action { close { host.toggleSystemKeyboard() } })
             KeyedRow(Symbols.TOUCH_SENSITIVITY, R.string.stream_menu_row_touch_sensitivity, MenuKey.TOUCH_SENSITIVITY, RowValue.Toggle(host.touchSensitivityOn) { toggle { host.toggleTouchSensitivity() } })
-            KeyedRow(Symbols.VIBRATION, R.string.stream_menu_row_rumble_feel, MoreRow.RUMBLE, RowValue.Text(host.rumblePreset?.label ?: stringResource(R.string.stream_menu_rumble_custom)) { openPage(MenuPage.RUMBLE) }, entry(MoreRow.RUMBLE))
+            KeyedRow(Symbols.VIBRATION, R.string.stream_menu_row_rumble_feel, MoreRow.RUMBLE, RowValue.Text(host.rumblePreset?.label(res) ?: stringResource(R.string.stream_menu_rumble_custom)) { openPage(MenuPage.RUMBLE) }, entry(MoreRow.RUMBLE))
             if (host.gyroSmoothingAvailable) {
                 // Applies at once and is kept for this game (never the profile, which is the Settings slider's); changesTick recomposes the value
                 KeyedRow(Symbols.SMOOTHING, R.string.stream_menu_row_gyro_smoothing, MoreRow.GYRO, RowValue.Slider(host.gyroSmoothing, 0, 100, 5, " %", minText = stringResource(R.string.stream_menu_gyro_off, 0)) {
@@ -536,7 +538,7 @@ private fun PageRows(
             KeyedRow(Symbols.UPSCALER, R.string.stream_menu_row_enabled, MenuKey.ENABLED, RowValue.Toggle(host.upscalerRequested) {
                 host.setUpscalingEnabled(it)
                 changesTick()
-            }, Modifier.focusRequester(first), enabled = available && upscalerStatus !in listOf("Starting", "Stopping"), // l10n-ignore
+            }, Modifier.focusRequester(first), enabled = available && !upscalerStatus.isChanging,
                 help = if (supersamplingMode) MenuKey.SUPERSAMPLING_ON else MenuKey.UPSCALING)
             if (showsSupersamplingQuality(supersamplingMode, host.upscalerMode)) {
                 val level = supersamplingLevel.coerceIn(1, 2)
@@ -547,7 +549,7 @@ private fun PageRows(
                     }), enabled = available)
             }
             val upscalerMode = host.upscalerMode
-            KeyedRow(Symbols.UPSCALER_MODE, R.string.stream_menu_row_mode, MenuKey.MODE, RowValue.Choice(UpscalerMode.fromIndex(upscalerMode).label(), { direction ->
+            KeyedRow(Symbols.UPSCALER_MODE, R.string.stream_menu_row_mode, MenuKey.MODE, RowValue.Choice(res.getString(UpscalerMode.fromIndex(upscalerMode).labelRes()), { direction ->
                 host.setUpscalingMode(nextUpscalerMode(upscalerMode, direction))
                 changesTick()
             }), enabled = available)
@@ -591,10 +593,11 @@ private fun PageRows(
             val start = remember { host.rumblePreset ?: presets.first() }
             presets.forEach { preset ->
                 MenuRow(
-                    preset.icon(), preset.label, RowValue.Action { toggle { host.selectRumblePreset(preset) } },
+                    preset.icon(), preset.label(res), RowValue.Action { toggle { host.selectRumblePreset(preset) } },
                     if (preset == start) Modifier.focusRequester(first) else Modifier,
-                    confirmation = if (host.rumbleProblem(preset) != null) stringResource(R.string.stream_menu_rumble_problem_word) else if (preset == active) stringResource(R.string.stream_menu_rumble_active) else null,
+                    confirmation = if (host.rumbleHasProblem(preset)) stringResource(R.string.stream_menu_rumble_problem_word) else if (preset == active) stringResource(R.string.stream_menu_rumble_active) else null,
                     help = StreamMenuHelp.rumbleKey(preset),
+                    key = StreamMenuHelp.rumbleKey(preset),
                 )
             }
         }

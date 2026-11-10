@@ -66,11 +66,11 @@
     </string-array>
 
     <!-- Mirrors RumblePresets; the values are its enum names, which are saved in the user's preferences -->
-    <string-array name="rumble_feel_names" translatable="false">
-        <item>Original</item>
-        <item>Soft</item>
-        <item>Kick-start</item>
-        <item>Pulsing</item>
+    <string-array name="rumble_feel_names">
+        <item>@string/rumble_preset_original</item>
+        <item>@string/rumble_preset_soft</item>
+        <item>@string/rumble_preset_kick_start</item>
+        <item>@string/rumble_preset_pulsing</item>
     </string-array>
     <string-array name="rumble_feel_values" translatable="false">
         <item>ORIGINAL</item>

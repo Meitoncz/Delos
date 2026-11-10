@@ -170,7 +170,7 @@
     <string name="help_note_pyrowave_modes">PyroWave propose les cinq modes</string>
     <string name="help_note_sharpen_only">Non utilisé par Netteté seule.</string>
     <string name="stream_help_resume">Ferme ce menu et reprend le stream.</string>
-    <string name="stream_help_keyboard">Ouvre ou ferme le clavier à l’écran de Delos : la croix directionnelle déplace, A saisit, B ferme. Pas le clavier système d’Android (Plus).</string>
+    <string name="stream_help_keyboard">Ouvre ou ferme le clavier à l’écran de Delos : la croix directionnelle déplace, %1$s saisit, %2$s ferme. Pas le clavier système d’Android (Plus).</string>
     <string name="stream_help_overlay">Alterne statistiques complètes, statistiques compactes, désactivé. Le 1 %% bas des FPS couvre les images les plus lentes sur environ dix secondes.</string>
     <string name="stream_help_brightness">Ajuste la luminosité de cet appareil pour ce stream ; le réglage système revient ensuite.</string>
     <string name="stream_help_screen_brightness">Change tout de suite la luminosité de l’écran de cet appareil ; le réglage système revient ensuite. Pas celle du PC ni d’un moniteur.</string>
@@ -199,7 +199,7 @@
     <string name="stream_help_touch_sensitivity">Active ou désactive la mise à l’échelle de sensibilité tactile supplémentaire, configurée dans les réglages.</string>
     <string name="stream_help_gyro_smoothing">Stabilise aussitôt la visée au gyroscope, conservé pour ce jeu. 0 = désactivé. Plus de lissage ajoute un léger retard aux mouvements lents.</string>
     <string name="stream_help_gyro_smoothing_disabled">Nécessite d’activer Gyroscope de manette externe ou Gyroscope intégré de l’appareil dans les Réglages ; s’applique dès le prochain stream.</string>
-    <string name="stream_help_rumble_feel">Choisit le ressenti des vibrations du PC, aussitôt et enregistré. Reste ouvert : choisis à nouveau pour comparer. B revient en arrière.</string>
+    <string name="stream_help_rumble_feel">Choisit le ressenti des vibrations du PC, aussitôt et enregistré. Reste ouvert : choisis à nouveau pour comparer. %1$s revient en arrière.</string>
     <string name="stream_help_format_keys">Envoie %1$s une fois au PC, puis revient au stream.</string>
     <string name="stream_help_format_command">Exécute aussitôt sur le PC la commande %1$s définie par le PC. À configurer dans Vibepollo ou Apollo.</string>
 </resources>

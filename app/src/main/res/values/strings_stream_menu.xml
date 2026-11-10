@@ -66,6 +66,18 @@
     <!-- Added to the help of a rumble preset that failed. %1$s: the reason -->
     <string name="stream_menu_rumble_problem">Problem: %1$s</string>
 
+    <!-- State of the upscaler: the pill of its tile and the first line of its help -->
+    <string name="stream_menu_upscaler_starting">Starting</string>
+    <string name="stream_menu_upscaler_stopping">Stopping</string>
+    <string name="stream_menu_upscaler_unavailable">Unavailable</string>
+    <!-- %1$s: the method that runs, such as "SGSR 1 (Normal)" -->
+    <string name="stream_menu_upscaler_on_mode">On: %1$s</string>
+    <string name="stream_menu_upscaler_unavailable_status">Unavailable; direct rendering is active</string>
+    <!-- Controller buttons in the stream menu shortcut. The letters (A B X Y), L1 R1 L2 R2 L3 R3 are printed on the pad and are not translated -->
+    <string name="stream_menu_button_start">Start</string>
+    <string name="stream_menu_button_select">Select</string>
+    <string name="stream_menu_button_home">Home</string>
+
     <!-- Help line of the Touchscreen mode row, after the description of the selected mode -->
     <string name="stream_menu_mouse_applies_saved">Applies now and is saved.</string>
     <string name="stream_menu_mouse_applies_stream">Applies now; this stream only.</string>
