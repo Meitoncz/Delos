@@ -93,7 +93,6 @@ import com.limelight.utils.StreamClipboardSync;
 import com.limelight.utils.ToastKind;
 import com.limelight.utils.WifiLockHolder;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.preference.PreferenceManager;
 
 import android.os.Looper;
 import java.util.Objects;

@@ -6,7 +6,6 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 
-import com.limelight.LimeLog;
 import com.limelight.preferences.PreferenceConfiguration;
 
 public class PanZoomHandler {
