@@ -4,8 +4,16 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
+import org.robolectric.annotation.Config
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [33])
 class ProbeScoreTest {
+    private val res = RuntimeEnvironment.getApplication().resources
+
     private val expected = 20_000
 
     /** Every packet arrives in its sender slot plus a constant transit (the clocks' offset is irrelevant). */
@@ -68,10 +76,10 @@ class ProbeScoreTest {
         assertNull(result.failure)
         assertTrue(result.passed)
         assertTrue(result.jitterWarning)
-        assertEquals("Stable, a little jitter", result.verdictText())
+        assertEquals("Stable, a little jitter", result.verdictText(res))
         // 4 ms exactly and a clean probe carry no warning
         assertEquals(false, score(perfect { seq -> if (seq % 50 == 0) 4.0 else 0.0 }).jitterWarning)
-        assertEquals("Stable", score(perfect()).verdictText())
+        assertEquals("Stable", score(perfect()).verdictText(res))
     }
 
     @Test
@@ -116,28 +124,32 @@ class ProbeScoreTest {
     }
 }
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [33])
 class ProbeVerdictTextTest {
+    private val res = RuntimeEnvironment.getApplication().resources
+
     private fun failed(kbps: Int, failure: ProbeFailure, loss: Double = 0.0, window: Double = 0.0, rcvBuf: Int = 0, stall: Double = 0.0) =
         ProbeScore(kbps, 1000, 1000, 900, 2000.0, loss, window, 0.0, 0.0, failure, rcvBuf, stall)
 
     @Test
     fun theReasonNamesTheRealCauseAndTheRate() {
-        assertEquals("Lost 3.0% of the test packets at 450 Mbps", failed(450_000, ProbeFailure.LOSS, loss = 3.0).reasonText())
+        assertEquals("Lost 3.0% of the test packets at 450 Mbps", failed(450_000, ProbeFailure.LOSS, loss = 3.0).reasonText(res))
         assertEquals("Lost up to 7.5% of the packets within 100 ms at 450 Mbps",
-            failed(450_000, ProbeFailure.WINDOW_LOSS, window = 7.5).reasonText())
-        assertEquals("The delay kept growing at 225 Mbps (the link queues up)", failed(225_000, ProbeFailure.DELAY_GROWTH).reasonText())
-        assertEquals("No test data arrived. UDP may be blocked on this network", failed(5_000, ProbeFailure.NO_PACKETS).reasonText())
+            failed(450_000, ProbeFailure.WINDOW_LOSS, window = 7.5).reasonText(res))
+        assertEquals("The delay kept growing at 225 Mbps (the link queues up)", failed(225_000, ProbeFailure.DELAY_GROWTH).reasonText(res))
+        assertEquals("No test data arrived. UDP may be blocked on this network", failed(5_000, ProbeFailure.NO_PACKETS).reasonText(res))
         assertEquals("The PC sent only 90.0% of the test data at 500 Mbps",
-            ProbeScore(500_000, 1000, 900, 900, 2000.0, 10.0, 0.0, 0.0, 0.0, ProbeFailure.NOT_ALL_SENT).reasonText())
+            ProbeScore(500_000, 1000, 900, 900, 2000.0, 10.0, 0.0, 0.0, 0.0, ProbeFailure.NOT_ALL_SENT).reasonText(res))
     }
 
     @Test
     fun aLossOurOwnReceiverMayHaveCausedIsSaidSo() {
         val small = failed(450_000, ProbeFailure.LOSS, loss = 3.0, rcvBuf = 212_992)
         assertTrue(small.receiverSuspect)
-        assertEquals("This device could not receive 450 Mbps that fast", small.reasonText())
+        assertEquals("This device could not receive 450 Mbps that fast", small.reasonText(res))
         val late = failed(450_000, ProbeFailure.WINDOW_LOSS, window = 9.0, rcvBuf = 8 * 1024 * 1024, stall = 12.0)
-        assertEquals("This device could not receive 450 Mbps that fast", late.reasonText())
+        assertEquals("This device could not receive 450 Mbps that fast", late.reasonText(res))
         // A big buffer and a quick loop: the loss is the network's
         assertEquals(false, failed(450_000, ProbeFailure.LOSS, loss = 3.0, rcvBuf = 8 * 1024 * 1024, stall = 0.2).receiverSuspect)
         // Unknown buffer size is not a suspicion by itself
@@ -148,9 +160,9 @@ class ProbeVerdictTextTest {
     fun noRateSaysWhatFailedAndWhetherAnythingPassed() {
         val last = failed(5_000, ProbeFailure.LOSS, loss = 4.0)
         assertEquals("Lost 4.0% of the test packets at 5 Mbps. Nothing passed, down to 5 Mbps.",
-            LinkSearchResult.NoRate(last, 0).noRateText())
+            LinkSearchResult.NoRate(last, 0).noRateText(res))
         assertEquals("Lost 4.0% of the test packets at 5 Mbps. 300 Mbps passed once but did not hold.",
-            LinkSearchResult.NoRate(last, 300_000).noRateText())
-        assertEquals("No rate could be tested.", LinkSearchResult.NoRate(null).noRateText())
+            LinkSearchResult.NoRate(last, 300_000).noRateText(res))
+        assertEquals("No rate could be tested.", LinkSearchResult.NoRate(null).noRateText(res))
     }
 }

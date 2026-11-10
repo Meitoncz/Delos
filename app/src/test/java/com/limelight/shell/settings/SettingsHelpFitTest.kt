@@ -110,19 +110,20 @@ class SettingsHelpFitTest {
     }
 
     @Test fun nativeShellAndStreamMenuHelpFit() {
+        // Native rows: the choice ids NativeSettingsHelp keys its texts by, with the label the row shows for them
         val native = mapOf(
-            "ui_palette" to Palette.entries.map { it.label(res) },
-            "ui_background" to BackgroundKind.entries.map { it.label(res) },
-            "ui_clock" to ClockFormat.entries.map { it.label(res) },
-            "ui_home_layout" to HomeLayout.entries.map { it.label(res) },
-            "ui_dark" to listOf("Dark", "Light"),
-            "ui_reduced_motion" to listOf("Full", "Reduced"),
-            "ui_stats_position" to StatsPosition.entries.map { it.label },
-            "ui_default_pc" to listOf("None", "Living room PC with a long name"),
+            "ui_palette" to Palette.entries.map { it.name to it.label(res) },
+            "ui_background" to BackgroundKind.entries.map { it.name to it.label(res) },
+            "ui_clock" to ClockFormat.entries.map { it.name to it.label(res) },
+            "ui_home_layout" to HomeLayout.entries.map { it.name to it.label(res) },
+            "ui_dark" to listOf("dark" to "Dark", "light" to "Light"),
+            "ui_reduced_motion" to listOf("full" to "Full", "reduced" to "Reduced"),
+            "ui_stats_position" to StatsPosition.entries.map { it.name to it.label },
+            "ui_default_pc" to listOf("none" to "None", "pc" to "Living room PC with a long name"),
         )
-        native.forEach { (key, labels) -> labels.forEach {
-            val help = NativeSettingsHelp.choice(key, it)
-            assertFits("$key/$it", (if (help.isBlank()) it else "$it\n$help") + "\n\n${SettingsHelp.description(res, key, "")}")
+        native.forEach { (key, choices) -> choices.forEach { (id, label) ->
+            val help = NativeSettingsHelp.choice(res, key, id)
+            assertFits("$key/$id", (if (help.isBlank()) label else "$label\n$help") + "\n\n${SettingsHelp.description(res, key, "")}")
         } }
         listOf("ui_match_game_colors", "pref_debug_info", "import_special_button_file", "about_diag_logs").forEach {
             assertFits(it, SettingsHelp.description(res, it, ""))

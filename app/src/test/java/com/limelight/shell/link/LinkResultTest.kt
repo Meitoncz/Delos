@@ -3,9 +3,17 @@ package com.limelight.shell.link
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
+import org.robolectric.annotation.Config
 import java.util.TimeZone
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [33])
 class LinkResultTest {
+    private val res = RuntimeEnvironment.getApplication().resources
+
     private val utc = TimeZone.getTimeZone("UTC")
     private val prague = TimeZone.getTimeZone("Europe/Prague")
     private val min = 60_000L
@@ -17,43 +25,43 @@ class LinkResultTest {
 
     @Test
     fun recentResultsReadInMinutesAndHours() {
-        assertEquals("just now", ageText(now, now, utc))
-        assertEquals("just now", ageText(now, now - 59_000, utc))
-        assertEquals("1 min ago", ageText(now, now - min, utc))
-        assertEquals("45 min ago", ageText(now, now - 45 * min, utc))
-        assertEquals("3 h ago", ageText(now, now - 3 * hour, utc))
+        assertEquals("just now", ageText(res, now, now, utc))
+        assertEquals("just now", ageText(res, now, now - 59_000, utc))
+        assertEquals("1 min ago", ageText(res, now, now - min, utc))
+        assertEquals("45 min ago", ageText(res, now, now - 45 * min, utc))
+        assertEquals("3 h ago", ageText(res, now, now - 3 * hour, utc))
     }
 
     @Test
     fun olderResultsReadInCalendarDays() {
-        assertEquals("yesterday", ageText(now, now - 13 * hour, utc))
-        assertEquals("yesterday", ageText(now, now - day, utc))
-        assertEquals("2 days ago", ageText(now, now - 2 * day, utc))
-        assertEquals("6 days ago", ageText(now, now - 6 * day, utc))
-        assertEquals("1 week ago", ageText(now, now - 7 * day, utc))
-        assertEquals("2 weeks ago", ageText(now, now - 15 * day, utc))
-        assertEquals("1 month ago", ageText(now, now - 30 * day, utc))
-        assertEquals("3 months ago", ageText(now, now - 100 * day, utc))
+        assertEquals("yesterday", ageText(res, now, now - 13 * hour, utc))
+        assertEquals("yesterday", ageText(res, now, now - day, utc))
+        assertEquals("2 days ago", ageText(res, now, now - 2 * day, utc))
+        assertEquals("6 days ago", ageText(res, now, now - 6 * day, utc))
+        assertEquals("1 week ago", ageText(res, now, now - 7 * day, utc))
+        assertEquals("2 weeks ago", ageText(res, now, now - 15 * day, utc))
+        assertEquals("1 month ago", ageText(res, now, now - 30 * day, utc))
+        assertEquals("3 months ago", ageText(res, now, now - 100 * day, utc))
     }
 
     @Test
     fun daysAreCountedByTheLocalCalendarNotBy24HourSpans() {
         // 23:30 local the evening before is "yesterday" at 00:10 local, although only 40 minutes passed
         val midnightPrague = 1_794_092_400_000L // 2026-11-08 00:00 CET
-        assertEquals("yesterday", ageText(midnightPrague + 10 * min, midnightPrague - 30 * min, prague))
-        assertEquals("40 min ago", ageText(midnightPrague + 10 * min, midnightPrague - 30 * min, utc))
+        assertEquals("yesterday", ageText(res, midnightPrague + 10 * min, midnightPrague - 30 * min, prague))
+        assertEquals("40 min ago", ageText(res, midnightPrague + 10 * min, midnightPrague - 30 * min, utc))
     }
 
     @Test
     fun aTimestampInTheFutureReadsJustNow() {
-        assertEquals("just now", ageText(now, now + 5 * day, utc))
+        assertEquals("just now", ageText(res, now, now + 5 * day, utc))
     }
 
     @Test
     fun theSummaryNamesTheAgeAndTheNetwork() {
         val test = LinkTest(340_000, now - day, LinkTransport.WIFI, 50, 1392)
-        assertEquals("Tested yesterday on Wi-Fi", test.summary(now, utc))
-        assertEquals("Tested 2 h ago on Ethernet", test.copy(testedAtMs = now - 2 * hour, transport = LinkTransport.ETHERNET).summary(now, utc))
+        assertEquals("Tested yesterday on Wi-Fi", test.summary(res, now, utc))
+        assertEquals("Tested 2 h ago on Ethernet", test.copy(testedAtMs = now - 2 * hour, transport = LinkTransport.ETHERNET).summary(res, now, utc))
     }
 
     @Test

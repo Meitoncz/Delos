@@ -114,6 +114,10 @@ import com.limelight.shell.ui.Unbounded
 import com.limelight.shell.ui.fadeEdges
 import com.limelight.shell.ui.focusEffects
 import com.limelight.shell.ui.px
+import com.limelight.shell.ui.textResources
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import com.limelight.R
 import com.limelight.shell.ui.tpx
 import java.util.Locale
 import kotlinx.coroutines.Dispatchers
@@ -139,6 +143,9 @@ fun SettingsScreen(
     search: Boolean = false,
 ) {
     val shell = LocalShell.current
+    val res = textResources()
+    // The catalog is read in the language of these resources
+    profiles.catalog.refresh(res)
     val feedback = LocalFeedback.current
     val colors = LocalDelosColors.current
     val activity = LocalActivity.current
@@ -152,12 +159,12 @@ fun SettingsScreen(
     val pc = settingsPc(LocalLibrary.current, pcs)
     val guidance = rememberLinkGuidance(pc, values)
     // The PC's own line when the link is known (tested or not), else PyroWave's guide alone
-    val bitrateHint = guidance?.line ?: pyroWaveRecommendedBitrateKbps(values)?.let { "Recommended: ${it / 1000} Mbps" }
+    val bitrateHint = guidance?.line(res) ?: pyroWaveRecommendedBitrateKbps(values)?.let { res.getString(R.string.link_recommended_plain, it / 1000) }
     var capabilities by remember(activity) { mutableStateOf<SettingsCapabilities?>(null) }
     LaunchedEffect(activity) {
         if (activity != null) capabilities = withContext(Dispatchers.Default) { SettingsCapabilities.read(activity) }
     }
-    LaunchedEffect(capabilities, profile.currentId, values["checkbox_unlock_fps"]) { capabilities?.let(stream::normalize) }
+    LaunchedEffect(capabilities, profile.currentId, values["checkbox_unlock_fps"]) { capabilities?.let { stream.normalize(res, it) } }
     val act = settingsActions(profiles, stream)
     val classic = profiles.catalog.visible.filter { spec ->
         spec.key !in (capabilities?.hidden ?: emptySet()) &&
@@ -168,23 +175,23 @@ fun SettingsScreen(
         val row = when (spec.kind) {
             SettingKind.TOGGLE -> RowValue.Toggle(current as? Boolean ?: false) { stream.write(spec, it) }
             SettingKind.CHOICE -> {
-                val choices = capabilities?.choices(spec, values) ?: spec.choices
-                RowValue.Choice(spec.choiceLabel(current, choices), { dir ->
+                val choices = capabilities?.choices(res, spec, values) ?: spec.choices
+                RowValue.Choice(spec.choiceLabel(res, current, choices), { dir ->
                     nextSettingChoice(current, choices, dir)?.let { stream.write(spec, it.value) }
                 })
             }
             SettingKind.SLIDER -> RowValue.Slider((current as? Number)?.toInt() ?: spec.min, spec.min, spec.max, spec.step, spec.unit,
                 divisor = spec.divisor,
-                minText = if (spec.key == "seekbar_gyro_smoothing") "0 % (off)" else null, onChange = { stream.write(spec, it) })
+                minText = if (spec.key == "seekbar_gyro_smoothing") res.getString(R.string.settings_screen_gyro_off, 0) else null, onChange = { stream.write(spec, it) })
             SettingKind.TEXT -> RowValue.Text(current?.toString().orEmpty()) { act(spec) }
             SettingKind.ACTION -> RowValue.Action { act(spec) }
         }
         val description = if (spec.key == "checkbox_enable_hdr" && capabilities?.brokenHdr == true)
-            "Update the firmware on your NVIDIA SHIELD Android TV to enable HDR." else spec.description
+            res.getString(R.string.settings_screen_hdr_firmware) else spec.description
         SettingsItem(spec.key, spec.tab, spec.section, spec.icon, spec.label,
             description, row, stream.enabled(spec, capabilities),
-            detail = SettingsHelp.details(spec.copy(description = description), values, capabilities?.choices(spec, values) ?: spec.choices),
-            searchTerms = settingSearchTerms(spec), impact = impact(spec.key, values))
+            detail = SettingsHelp.details(res, spec.copy(description = description), values, capabilities?.choices(res, spec, values) ?: spec.choices),
+            searchTerms = settingSearchTerms(res, spec), impact = impact(spec.key, values))
     }
     val withLink = withLinkRows(classic, guidance, pc, values, profiles.catalog.all.firstOrNull { it.key == "seekbar_bitrate_kbps" }) { spec, kbps -> stream.write(spec, kbps) }
     val all = nativeSettings(appearance, update, startup, updateStartup, pcs, profiles.settings()) + withLink
@@ -240,13 +247,13 @@ fun SettingsScreen(
     }
     Box(Modifier.fillMaxSize()) {
         FocusTransferTarget(focusTransfer)
-        BasicText("Settings", style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx),
+        BasicText(stringResource(R.string.settings_screen_title), style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx),
             modifier = Modifier.offset(SettingsLayout.TITLE_X.px, SettingsLayout.TITLE_Y.px))
-        PillButton("Search", Symbols.SEARCH, { shell.onSettingsSearch?.invoke() }, Modifier.offset(1530.px, 122.px), clickCue = null)
+        PillButton(stringResource(R.string.settings_screen_search), Symbols.SEARCH, { shell.onSettingsSearch?.invoke() }, Modifier.offset(1530.px, 122.px), clickCue = null)
         com.limelight.shell.ui.SelectionPillHost(Modifier.offset(y = SettingsLayout.TABS_Y.px).fillMaxWidth().height(SettingsLayout.TABS_HEIGHT.px)) {
             ShoulderLabel("L1")
             SettingsTab.entries.forEach { next ->
-                TabPill(next.icon, next.label, tab == next, Modifier.padding(horizontal = 5.px)) {
+                TabPill(next.icon, next.label(res), tab == next, Modifier.padding(horizontal = 5.px)) {
                     if (next != tab) {
                         focusTransfer.request()
                         shell.settingsFocus = null
@@ -364,25 +371,26 @@ internal fun TabPill(icon: String, label: String, selected: Boolean, modifier: M
 @Composable
 private fun DescriptionPanel(tab: SettingsTab, focused: SettingsItem?, modifier: Modifier, appearance: Appearance) {
     val colors = LocalDelosColors.current
+    val res = textResources()
     SettingsPanelFrame(modifier) {
         Box(Modifier.size(120.px).clip(CircleShape).background(colors.accent), contentAlignment = Alignment.Center) {
             Symbol(focused?.icon ?: tab.icon, 64.tpx, colors.onAccent, filled = true)
         }
-        BasicText(focused?.label ?: tab.label, style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 30.tpx), modifier = Modifier.padding(top = 8.px))
+        BasicText(focused?.label ?: tab.label(res), style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 30.tpx), modifier = Modifier.padding(top = 8.px))
         AutoScrollingHelp(focused?.key to focused?.detail, Modifier.weight(1f)) {
-            BasicText(focused?.detail?.takeIf { it.isNotBlank() } ?: tab.description,
+            BasicText(focused?.detail?.takeIf { it.isNotBlank() } ?: tab.description(res),
                 style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 22.tpx, lineHeight = 1.45.em))
-            if (focused?.enabled == false) BasicText("Unavailable with the current settings or on this device.", style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 18.tpx))
+            if (focused?.enabled == false) BasicText(stringResource(R.string.settings_screen_unavailable), style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 18.tpx))
             val rowValue = focused?.value
             if (rowValue is RowValue.Text) BasicText(rowValue.text,
                 style = TextStyle(color = colors.accent, fontFamily = Figtree, fontSize = 22.tpx, lineHeight = 1.3.em))
             // The palette's three colors, only for the palette row
             if (focused?.key == "ui_palette") {
                 Row(horizontalArrangement = Arrangement.spacedBy(16.px)) {
-                    listOf(colors.accent to "Main", colors.accent2 to "Secondary", colors.accent3 to "Accent").forEach { (color, name) ->
+                    listOf(colors.accent to R.string.settings_screen_palette_main, colors.accent2 to R.string.settings_screen_palette_secondary, colors.accent3 to R.string.settings_screen_palette_accent).forEach { (color, name) ->
                         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.px)) {
                             Box(Modifier.size(width = 120.px, height = 72.px).clip(RoundedCornerShape(18.px)).background(color).border(1.px, colors.line, RoundedCornerShape(18.px)))
-                            BasicText(name, style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 18.tpx))
+                            BasicText(stringResource(name), style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 18.tpx))
                         }
                     }
                 }
@@ -400,7 +408,7 @@ private fun DescriptionPanel(tab: SettingsTab, focused: SettingsItem?, modifier:
                             else PlaceholderArt(hero.hue, hero.hue2, hero.icon, Modifier.fillMaxSize(), glyphSize = 100f)
                         }
                     }
-                    BasicText("Game background", style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx))
+                    BasicText(stringResource(R.string.settings_native_hero_background_title), style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx))
                 }
             }
         }
@@ -426,20 +434,21 @@ internal fun SettingsPanelFrame(modifier: Modifier, content: @Composable ColumnS
 @Composable
 private fun SettingsSearch(all: List<SettingsItem>, scale: Float) {
     val shell = LocalShell.current
+    val res = textResources()
     val colors = LocalDelosColors.current
     val field = rememberTextFieldState()
     val query = field.text.toString()
     val first = remember { FocusRequester() }
     InitialFocus(first)
-    val results = searchSettings(all, query)
+    val results = searchSettings(res, all, query)
     Column(Modifier.fillMaxSize().padding(start = 150.px, end = 150.px, top = 130.px, bottom = (96f * scale).px)) {
-        BasicText("Find a setting", style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx))
-        BasicText("Pick letters with the controller, or select the field to type", style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 22.tpx), modifier = Modifier.padding(top = 14.px, bottom = 32.px))
+        BasicText(stringResource(R.string.settings_screen_search_title), style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx))
+        BasicText(stringResource(R.string.settings_screen_search_hint), style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 22.tpx), modifier = Modifier.padding(top = 14.px, bottom = 32.px))
         Row(horizontalArrangement = Arrangement.spacedBy(70.px), modifier = Modifier.weight(1f)) {
             Column(Modifier.width(820.px), verticalArrangement = Arrangement.spacedBy(18.px)) {
-                TextFieldPill(field, Symbols.SEARCH, placeholder = "Search all settings", maxLength = 80, width = 790f)
+                TextFieldPill(field, Symbols.SEARCH, placeholder = stringResource(R.string.settings_screen_search_placeholder), maxLength = 80, width = 790f)
                 Column(Modifier.padding(top = 16.px), verticalArrangement = Arrangement.spacedBy(12.px)) {
-                    "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".chunked(9).forEachIndexed { row, letters ->
+                    stringResource(R.string.settings_screen_search_letters).chunked(9).forEachIndexed { row, letters ->
                         Row(horizontalArrangement = Arrangement.spacedBy(12.px)) {
                             letters.forEachIndexed { col, letter ->
                                 LetterKey(letter.toString(), if (row == 0 && col == 0) Modifier.focusRequester(first) else Modifier) { field.setTextAndPlaceCursorAtEnd((query + letter.lowercaseChar()).take(80)) }
@@ -448,14 +457,14 @@ private fun SettingsSearch(all: List<SettingsItem>, scale: Float) {
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(14.px)) {
-                    PillButton("Space", null, { field.setTextAndPlaceCursorAtEnd((query + " ").take(80)) })
-                    PillButton("Delete", Symbols.BACKSPACE, { field.setTextAndPlaceCursorAtEnd(query.dropLast(1)) })
-                    PillButton("Clear", Symbols.CLEAR, { field.clearText() })
+                    PillButton(stringResource(R.string.settings_screen_search_space), null, { field.setTextAndPlaceCursorAtEnd((query + " ").take(80)) })
+                    PillButton(stringResource(R.string.settings_screen_search_delete), Symbols.BACKSPACE, { field.setTextAndPlaceCursorAtEnd(query.dropLast(1)) })
+                    PillButton(stringResource(R.string.settings_screen_search_clear), Symbols.CLEAR, { field.clearText() })
                 }
             }
             Column(Modifier.weight(1f)) {
-                BasicText("${results.size} ${if (results.size == 1) "setting" else "settings"}", style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 22.tpx), modifier = Modifier.padding(bottom = 16.px))
-                if (results.isEmpty()) BasicText("No matching settings", style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 26.tpx))
+                BasicText(pluralStringResource(R.plurals.settings_screen_search_count, results.size, results.size), style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 22.tpx), modifier = Modifier.padding(bottom = 16.px))
+                if (results.isEmpty()) BasicText(stringResource(R.string.settings_screen_search_none), style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 26.tpx))
                 key(query) {
                     // At most 110 entries (77 visible catalog rows + 33 native rows): keep
                     // every neighbour composed while the animated scroll catches up.
@@ -478,7 +487,7 @@ private fun SettingsSearch(all: List<SettingsItem>, scale: Float) {
                                             shell.settingsFocus = item.key
                                             shell.navigate(Screen.Settings)
                                         }, Modifier.focusedListRow(navigation, item.key),
-                                            description = "${item.tab.label} · ${item.section}")
+                                            description = dotJoin(res, item.tab.label(res), item.section))
                                     }
                                 }
                             }

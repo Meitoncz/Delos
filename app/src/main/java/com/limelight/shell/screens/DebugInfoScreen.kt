@@ -1,6 +1,7 @@
 package com.limelight.shell.screens
 
 import android.content.Context
+import android.content.res.Resources
 import android.hardware.Sensor
 import android.hardware.input.InputManager
 import android.os.Build
@@ -52,11 +53,14 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
+import androidx.annotation.StringRes
 import com.limelight.BuildConfig
+import com.limelight.R
 import com.limelight.diag.DiagExport
 import com.limelight.diag.DiagLog
 import com.limelight.diag.DiagnosticReport
@@ -82,6 +86,7 @@ import com.limelight.shell.ui.fadeEdges
 import com.limelight.shell.ui.focusEffects
 import com.limelight.shell.ui.glass
 import com.limelight.shell.ui.px
+import com.limelight.shell.ui.textResources
 import com.limelight.shell.ui.tpx
 import com.limelight.utils.DeviceUtils
 import com.limelight.utils.DeviceVibrator
@@ -100,10 +105,23 @@ import kotlinx.coroutines.withContext
 import java.util.Locale
 import kotlin.math.roundToInt
 
+/** The groups of the debug screen, in the order their rows appear. */
+private enum class DebugSection(@StringRes val title: Int) {
+    DEVICE(R.string.debug_section_device),
+    DIAGNOSTICS(R.string.debug_section_diagnostics),
+    HAPTICS(R.string.debug_section_haptics),
+    VIBRATION_TEST(R.string.debug_section_vibration_test),
+    RUMBLE_LAB(R.string.debug_section_rumble_lab),
+    RUMBLE_PATTERNS(R.string.debug_section_rumble_patterns),
+    RUMBLE_ADVANCED(R.string.debug_section_rumble_advanced),
+    ON_SCREEN_CONTROLS(R.string.debug_section_osc),
+    CONTROLLERS(R.string.debug_section_controllers),
+}
+
 /** A row of the debug screen; [details] fill the panel on the right while it is focused. */
 private data class DebugRow(
     val key: String,
-    val section: String,
+    val section: DebugSection,
     val icon: String,
     val label: String,
     val value: RowValue,
@@ -122,6 +140,7 @@ private data class DebugRow(
 @Composable
 fun DebugInfoScreen() {
     val context = LocalContext.current
+    val res = textResources()
     val colors = LocalDelosColors.current
     val stage = LocalStage.current
     val shell = LocalShell.current
@@ -141,7 +160,7 @@ fun DebugInfoScreen() {
     var playback by playbackState
     val scope = rememberCoroutineScope()
     var patternJob by remember { mutableStateOf<Job?>(null) }
-    var patternName by remember { mutableStateOf<String?>(null) }
+    var playing by remember { mutableStateOf<RumblePattern?>(null) }
     var patternRun by remember { mutableIntStateOf(0) }
     var amplitude by remember { mutableIntStateOf(0) }
     val capabilities = remember { RumbleCapabilities.get(context) }
@@ -156,14 +175,14 @@ fun DebugInfoScreen() {
             val ready = report ?: DiagExport.report(context)
             val uri = DiagExport.writeForSharing(context, ready)
             runCatching { context.startActivity(DiagExport.shareIntent(uri)) }
-                .onFailure { shell.showToast("No app can share the log", Symbols.ERROR) }
+                .onFailure { shell.showToast(res.getString(R.string.debug_share_no_app_toast), Symbols.ERROR) }
         }
     }
 
     fun copySummary() {
         scope.launch {
             DiagExport.copyToClipboard(context, DiagExport.summary(context))
-            shell.showToast("Diagnostic summary copied", Symbols.CHECK_CIRCLE)
+            shell.showToast(res.getString(R.string.debug_summary_copied_toast), Symbols.CHECK_CIRCLE)
         }
     }
 
@@ -175,7 +194,7 @@ fun DebugInfoScreen() {
             }
             report = null
             reportRun++
-            shell.showToast("Diagnostic logs cleared", Symbols.CHECK_CIRCLE)
+            shell.showToast(res.getString(R.string.debug_logs_cleared_toast), Symbols.CHECK_CIRCLE)
         }
     }
 
@@ -183,7 +202,7 @@ fun DebugInfoScreen() {
         patternRun++
         patternJob?.cancel()
         patternJob = null
-        patternName = null
+        playing = null
         playback?.stop()
         playback = null
         amplitude = 0
@@ -210,13 +229,13 @@ fun DebugInfoScreen() {
         stopAll()
         val vibrator = device?.takeIf { it.hasVibrator() }
         if (vibrator == null) {
-            shell.showToast("This device has no vibration motor", Symbols.INFO)
+            shell.showToast(res.getString(R.string.debug_no_motor_toast), Symbols.INFO)
             return
         }
         val run = patternRun
         val runPlayback = RumblePlayback(selectedProfile)
         playback = runPlayback
-        patternName = pattern.label
+        playing = pattern
         patternJob = scope.launch {
             try {
                 playRumblePattern(pattern, runPlayback, vibrator)
@@ -225,7 +244,7 @@ fun DebugInfoScreen() {
                 if (patternRun == run) {
                     runPlayback.stop()
                     playback = null
-                    patternName = null
+                    playing = null
                     amplitude = 0
                     patternJob = null
                 }
@@ -269,149 +288,152 @@ fun DebugInfoScreen() {
     }
 
     val hasMotor = device?.hasVibrator() == true
-    val presetName = activePreset?.label ?: "Custom"
-    val modeName = "$presetName · translator ${if (translatorEnabled) "on" else "off"}"
+    val presetName = activePreset?.label ?: res.getString(R.string.debug_preset_custom)
+    val modeName = res.getString(if (translatorEnabled) R.string.debug_mode_translator_on else R.string.debug_mode_translator_off, presetName)
+    val stopped = res.getString(R.string.debug_stopped)
+    val playingName = playing?.let { res.getString(it.label) } ?: stopped
     val rows = buildList {
-        add(DebugRow("android", "Device", Symbols.ANDROID_LOGO, "Android", RowValue.Info("${DeviceUtils.getSDKVersionName()} · API ${Build.VERSION.SDK_INT}"),
-            "The Android version of this device and its API level."))
-        add(DebugRow("kernel", "Device", Symbols.MEMORY, "Kernel", RowValue.Info(System.getProperty("os.version").orEmpty().substringBefore('-')),
-            "The Linux kernel version.", System.getProperty("os.version")))
-        add(DebugRow("model", "Device", Symbols.DEVICE_MODEL, "Device", RowValue.Info("${DeviceUtils.getManufacturer()} ${DeviceUtils.getModel()}"),
-            "The manufacturer and model.", "Board: ${Build.BOARD}\nHardware: ${Build.HARDWARE}\nSoC: ${if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) "${Build.SOC_MANUFACTURER} ${Build.SOC_MODEL}" else "unknown"}\nBuild: ${Build.DISPLAY}"))
-        add(DebugRow("motor", "Device", Symbols.VIBRATION, "Vibration motor", RowValue.Info(if (hasMotor) "Yes" else "No"),
-            if (hasMotor) "This device can vibrate." else "This device has no vibration motor."))
+        add(DebugRow("android", DebugSection.DEVICE, Symbols.ANDROID_LOGO, "Android", RowValue.Info("${DeviceUtils.getSDKVersionName()} · API ${Build.VERSION.SDK_INT}"), // l10n-ignore
+            res.getString(R.string.debug_android_description)))
+        add(DebugRow("kernel", DebugSection.DEVICE, Symbols.MEMORY, res.getString(R.string.debug_kernel_label), RowValue.Info(System.getProperty("os.version").orEmpty().substringBefore('-')),
+            res.getString(R.string.debug_kernel_description), System.getProperty("os.version")))
+        val soc = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) "${Build.SOC_MANUFACTURER} ${Build.SOC_MODEL}" else res.getString(R.string.debug_soc_unknown)
+        add(DebugRow("model", DebugSection.DEVICE, Symbols.DEVICE_MODEL, res.getString(R.string.debug_model_label), RowValue.Info("${DeviceUtils.getManufacturer()} ${DeviceUtils.getModel()}"),
+            res.getString(R.string.debug_model_description), res.getString(R.string.debug_model_details, Build.BOARD, Build.HARDWARE, soc, Build.DISPLAY)))
+        add(DebugRow("motor", DebugSection.DEVICE, Symbols.VIBRATION, res.getString(R.string.debug_motor_label), RowValue.Info(res.getString(if (hasMotor) R.string.debug_yes else R.string.debug_no)),
+            res.getString(if (hasMotor) R.string.debug_motor_yes_description else R.string.debug_motor_no_description)))
         // What a problem report would contain; the panel on the right previews exactly that text
         val logValue = when {
-            report == null -> "Reading…"
-            !DiagLog.enabled && report?.logLines == 0 -> "Off"
+            report == null -> res.getString(R.string.debug_log_reading)
+            !DiagLog.enabled && report?.logLines == 0 -> res.getString(R.string.debug_log_off)
             else -> report!!.sizeLabel()
         }
-        add(DebugRow("diag_log", "Diagnostics", Symbols.DIAGNOSTIC_LOGS, "Diagnostic log", RowValue.Info(logValue),
-            "Events and errors Delos kept on this device, with addresses and names removed. This is what Share sends.",
-            report?.preview() ?: "Reading the log…"))
-        add(DebugRow("diag_share", "Diagnostics", Symbols.SHARE_LOG, "Share diagnostic log", RowValue.Action { shareLog() },
-            "Opens Android's share sheet with the text shown in the preview. Nothing is sent until you pick an app."))
-        add(DebugRow("diag_copy", "Diagnostics", Symbols.COPY_SUMMARY, "Copy diagnostic summary", RowValue.Action { copySummary() },
-            "Copies the device block and the last 100 log lines, ready to paste into an issue. The same names and addresses are removed."))
-        add(DebugRow("diag_clear", "Diagnostics", Symbols.DELETE, "Clear diagnostic logs", RowValue.Action { clearLogs() },
-            "Deletes the log on this device. New events are logged again unless Keep diagnostic logs is off (Settings → About)."))
+        add(DebugRow("diag_log", DebugSection.DIAGNOSTICS, Symbols.DIAGNOSTIC_LOGS, res.getString(R.string.debug_log_label), RowValue.Info(logValue),
+            res.getString(R.string.debug_log_description),
+            report?.preview() ?: res.getString(R.string.debug_log_preview_reading)))
+        add(DebugRow("diag_share", DebugSection.DIAGNOSTICS, Symbols.SHARE_LOG, res.getString(R.string.debug_share_label), RowValue.Action { shareLog() },
+            res.getString(R.string.debug_share_description)))
+        add(DebugRow("diag_copy", DebugSection.DIAGNOSTICS, Symbols.COPY_SUMMARY, res.getString(R.string.debug_copy_label), RowValue.Action { copySummary() },
+            res.getString(R.string.debug_copy_description)))
+        add(DebugRow("diag_clear", DebugSection.DIAGNOSTICS, Symbols.DELETE, res.getString(R.string.debug_clear_label), RowValue.Action { clearLogs() },
+            res.getString(R.string.debug_clear_description)))
         // Debug builds only (the row is never added in a release build): the way to see the crash capture and the report card work
         if (BuildConfig.DEBUG) {
-            add(DebugRow("diag_test_crash", "Diagnostics", Symbols.TEST_CRASH, "Trigger test crash", RowValue.Action {
-                throw IllegalStateException("Test crash from Debug info")
-            }, "Debug builds only. Crashes Delos on purpose; the next start offers the problem report, once."))
+            add(DebugRow("diag_test_crash", DebugSection.DIAGNOSTICS, Symbols.TEST_CRASH, "Trigger test crash", RowValue.Action { // l10n-ignore: debug builds only
+                throw IllegalStateException("Test crash from Debug info") // l10n-ignore
+            }, "Debug builds only. Crashes Delos on purpose; the next start offers the problem report, once.")) // l10n-ignore
         }
         // Why an experimental preset is unavailable
-        add(DebugRow("cap_vibrators", "Device haptic capabilities", Symbols.VIBRATORS, "Vibrators",
-            RowValue.Info(if (capabilities.vibratorCount == 1) "1 (single)" else "${capabilities.vibratorCount}"),
-            "How many vibrators the system reports. One means every preset drives the same motor."))
-        add(DebugRow("cap_amplitude", "Device haptic capabilities", Symbols.AMPLITUDE_SUPPORT, "Amplitude control",
-            RowValue.Info(if (capabilities.amplitudeControl) "Yes" else "No"), "Whether the vibrator can change its strength."))
-        add(DebugRow("cap_problem", "Device haptic capabilities", Symbols.WARNING, "Last problem",
-            RowValue.Info(problem ?: "None"),
-            "Shows when the last played preset could not use its technique and played the plain amplitude path instead, and why."))
-        add(DebugRow("vibrate_once", "Vibration test", Symbols.DEVICE_VIBRATION, "Vibrate once", RowValue.Action {
+        add(DebugRow("cap_vibrators", DebugSection.HAPTICS, Symbols.VIBRATORS, res.getString(R.string.debug_vibrators_label),
+            RowValue.Info(if (capabilities.vibratorCount == 1) res.getString(R.string.debug_vibrators_single) else "${capabilities.vibratorCount}"),
+            res.getString(R.string.debug_vibrators_description)))
+        add(DebugRow("cap_amplitude", DebugSection.HAPTICS, Symbols.AMPLITUDE_SUPPORT, res.getString(R.string.debug_amplitude_label),
+            RowValue.Info(res.getString(if (capabilities.amplitudeControl) R.string.debug_yes else R.string.debug_no)), res.getString(R.string.debug_amplitude_description)))
+        add(DebugRow("cap_problem", DebugSection.HAPTICS, Symbols.WARNING, res.getString(R.string.debug_last_problem_label),
+            RowValue.Info(problem ?: res.getString(R.string.debug_none)),
+            res.getString(R.string.debug_last_problem_description)))
+        add(DebugRow("vibrate_once", DebugSection.VIBRATION_TEST, Symbols.DEVICE_VIBRATION, res.getString(R.string.debug_vibrate_once_label), RowValue.Action {
             stopAll()
             device?.let { DeviceVibrator.vibrateOnce(it, 1000) }
-        }, "One second at full strength.").let { if (hasMotor) it else it.copy(description = "This device has no vibration motor.") })
-        add(DebugRow("vibrate_continuous", "Vibration test", Symbols.CONTINUOUS, "Continuous vibration", RowValue.Toggle(deviceContinuous) {
+        }, res.getString(R.string.debug_vibrate_once_description)).let { if (hasMotor) it else it.copy(description = res.getString(R.string.debug_motor_no_description)) })
+        add(DebugRow("vibrate_continuous", DebugSection.VIBRATION_TEST, Symbols.CONTINUOUS, res.getString(R.string.debug_continuous_label), RowValue.Toggle(deviceContinuous) {
             stopAll()
             deviceContinuous = it
         },
-            "Keeps vibrating at the strength below until it is turned off or you leave this screen."))
-        add(DebugRow("strength", "Vibration test", Symbols.STRENGTH, "Strength", RowValue.Slider(strength, 5, 255, 5, "") { strength = it },
-            "The strength of continuous vibration, 1–255, for the device and the controllers."))
-        add(DebugRow("rumble_preset", "Rumble laboratory", Symbols.PRESET, "Current preset", RowValue.Info(presetName),
-            "Select a preset below to save it and immediately play the Test sample.",
-            "Mode: $modeName\nAdvanced edits are saved as Custom, even if the values match a preset."))
+            res.getString(R.string.debug_continuous_description)))
+        add(DebugRow("strength", DebugSection.VIBRATION_TEST, Symbols.STRENGTH, res.getString(R.string.debug_strength_label), RowValue.Slider(strength, 5, 255, 5, "") { strength = it },
+            res.getString(R.string.debug_strength_description)))
+        add(DebugRow("rumble_preset", DebugSection.RUMBLE_LAB, Symbols.PRESET, res.getString(R.string.debug_preset_label), RowValue.Info(presetName),
+            res.getString(R.string.debug_preset_description),
+            res.getString(R.string.debug_preset_details, modeName)))
         RumblePresets.values().forEach { preset ->
             val unavailable = capabilities.unavailableReason(preset.profile.technique)
             if (unavailable != null) {
-                add(DebugRow("rumble_preset_${preset.name}", "Rumble laboratory", preset.icon(), preset.label,
-                    RowValue.Info("Problem"), "${preset.description} Problem: $unavailable.", unavailable))
+                add(DebugRow("rumble_preset_${preset.name}", DebugSection.RUMBLE_LAB, preset.icon(), preset.label,
+                    RowValue.Info(res.getString(R.string.debug_preset_problem)), res.getString(R.string.debug_preset_problem_description, preset.description, unavailable), unavailable))
                 return@forEach
             }
-            add(DebugRow("rumble_preset_${preset.name}", "Rumble laboratory", preset.icon(), preset.label,
-                RowValue.Text(if (activePreset == preset) "Active" else "Select") {
+            add(DebugRow("rumble_preset_${preset.name}", DebugSection.RUMBLE_LAB, preset.icon(), preset.label,
+                RowValue.Text(res.getString(if (activePreset == preset) R.string.debug_preset_active else R.string.debug_preset_select)) {
                     RumblePreferences.applyPreset(preferences, preset)
                     profile = preset.profile
                     translatorEnabled = preset.enabled
                     activePreset = preset
                     // Pass the selection explicitly: this click still owns the previous composition's callbacks.
                     playPattern(RumblePattern.TEST, if (preset.enabled) preset.profile else RumbleTranslator.ORIGINAL)
-                }, if (activePreset == preset && problem != null) "${preset.description} Problem: $problem." else preset.description))
+                }, if (activePreset == preset && problem != null) res.getString(R.string.debug_preset_problem_description, preset.description, problem) else preset.description))
         }
-        add(DebugRow("rumble_amplitude", "Rumble laboratory", Symbols.LIVE_AMPLITUDE, "Live amplitude · $presetName", RowValue.Info("$amplitude / 255"),
-            "Live computed device amplitude, including the start kick and smoothing as they settle.",
-            "Mode: $modeName\nPattern: ${patternName ?: "Stopped"}\nBoth host motors receive the labelled input percentage; this is not the final output percentage."))
-        add(DebugRow("rumble_stop", "Rumble laboratory", Symbols.STOP, "Stop vibration", RowValue.Action { stopAll() },
-            "Stop the laboratory pattern and all continuous device/controller vibration tests."))
-        add(DebugRow("rumble_test", "Rumble laboratory", Symbols.REPLAY, "Replay Test sample", RowValue.Action {
+        add(DebugRow("rumble_amplitude", DebugSection.RUMBLE_LAB, Symbols.LIVE_AMPLITUDE, res.getString(R.string.debug_live_amplitude_label, presetName), RowValue.Info("$amplitude / 255"),
+            res.getString(R.string.debug_live_amplitude_description),
+            res.getString(R.string.debug_live_amplitude_details, modeName, playingName)))
+        add(DebugRow("rumble_stop", DebugSection.RUMBLE_LAB, Symbols.STOP, res.getString(R.string.debug_stop_label), RowValue.Action { stopAll() },
+            res.getString(R.string.debug_stop_description)))
+        add(DebugRow("rumble_test", DebugSection.RUMBLE_LAB, Symbols.REPLAY, res.getString(R.string.debug_replay_label), RowValue.Action {
             playPattern(RumblePattern.TEST, if (translatorEnabled) profile else RumbleTranslator.ORIGINAL)
-        }, RumblePattern.TEST.description))
+        }, res.getString(RumblePattern.TEST.description)))
         RumblePattern.entries.filter { it != RumblePattern.TEST }.forEach { pattern ->
-            add(DebugRow("rumble_pattern_${pattern.name}", "Rumble patterns", pattern.icon, pattern.label,
-                RowValue.Action { playPattern(pattern, if (translatorEnabled) profile else RumbleTranslator.ORIGINAL) }, pattern.description,
-                "Live amplitude: $amplitude / 255\nMode: $modeName\nPlaying: ${patternName ?: "Stopped"}\nInputs are host motor percentages, not final device output. Select another pattern to replace this one, or use Stop vibration."))
+            add(DebugRow("rumble_pattern_${pattern.name}", DebugSection.RUMBLE_PATTERNS, pattern.icon, res.getString(pattern.label),
+                RowValue.Action { playPattern(pattern, if (translatorEnabled) profile else RumbleTranslator.ORIGINAL) }, res.getString(pattern.description),
+                res.getString(R.string.debug_pattern_details, amplitude, modeName, playingName)))
         }
-        add(DebugRow("rumble_advanced", "Rumble advanced", Symbols.ADVANCED, "Advanced", RowValue.Toggle(advancedExpanded) {
+        add(DebugRow("rumble_advanced", DebugSection.RUMBLE_ADVANCED, Symbols.ADVANCED, res.getString(R.string.debug_advanced_label), RowValue.Toggle(advancedExpanded) {
             advancedExpanded = it
-        }, "Show manual controls. Editing a value marks the preset as Custom and stops the current pattern."))
+        }, res.getString(R.string.debug_advanced_description)))
         if (advancedExpanded) {
-            add(DebugRow("rumble_enabled", "Rumble advanced", Symbols.TRANSLATOR, "Enable rumble translator", RowValue.Toggle(translatorEnabled) {
+            add(DebugRow("rumble_enabled", DebugSection.RUMBLE_ADVANCED, Symbols.TRANSLATOR, res.getString(R.string.debug_enabled_label), RowValue.Toggle(translatorEnabled) {
                 stopLab()
                 translatorEnabled = it
                 activePreset = null
                 RumblePreferences.saveCustom(preferences, profile, it)
-            }, "Off uses Original translation. On applies these parameters to streaming rumble and lab patterns."))
-            add(DebugRow("rumble_gain", "Rumble advanced", Symbols.GAIN, "Gain", RowValue.Slider((profile.gain * 100).roundToInt(), 50, 300, 1, "%") {
+            }, res.getString(R.string.debug_enabled_description)))
+            add(DebugRow("rumble_gain", DebugSection.RUMBLE_ADVANCED, Symbols.GAIN, res.getString(R.string.debug_gain_label), RowValue.Slider((profile.gain * 100).roundToInt(), 50, 300, 1, "%") {
                 updateProfile(RumbleTranslator.Profile(it / 100f, profile.curve, profile.minAmplitude, profile.kickMs, profile.lowWeight, profile.highWeight, profile.smoothing))
-            }, "Overall rumble multiplier, 50–300%. Changing a parameter stops the current pattern."))
-            add(DebugRow("rumble_curve", "Rumble advanced", Symbols.CURVE, "Curve", RowValue.Slider((profile.curve * 100).roundToInt(), 50, 300, 1, "%") {
+            }, res.getString(R.string.debug_gain_description)))
+            add(DebugRow("rumble_curve", DebugSection.RUMBLE_ADVANCED, Symbols.CURVE, res.getString(R.string.debug_curve_label), RowValue.Slider((profile.curve * 100).roundToInt(), 50, 300, 1, "%") {
                 updateProfile(RumbleTranslator.Profile(profile.gain, it / 100f, profile.minAmplitude, profile.kickMs, profile.lowWeight, profile.highWeight, profile.smoothing))
-            }, "Response exponent: below 100% boosts weak rumble; above 100% softens it."))
-            add(DebugRow("rumble_min", "Rumble advanced", Symbols.MIN_AMPLITUDE, "Minimum amplitude", RowValue.Slider(profile.minAmplitude, 0, 255, 1, "") {
+            }, res.getString(R.string.debug_curve_description, 100)))
+            add(DebugRow("rumble_min", DebugSection.RUMBLE_ADVANCED, Symbols.MIN_AMPLITUDE, res.getString(R.string.debug_min_label), RowValue.Slider(profile.minAmplitude, 0, 255, 1, "") {
                 updateProfile(RumbleTranslator.Profile(profile.gain, profile.curve, it, profile.kickMs, profile.lowWeight, profile.highWeight, profile.smoothing))
-            }, "Minimum output for a nonzero host request. Zero input remains silent."))
-            add(DebugRow("rumble_kick", "Rumble advanced", Symbols.PRESET_KICK, "Start kick", RowValue.Slider(profile.kickMs, 0, 120, 1, " ms") {
+            }, res.getString(R.string.debug_min_description)))
+            add(DebugRow("rumble_kick", DebugSection.RUMBLE_ADVANCED, Symbols.PRESET_KICK, res.getString(R.string.debug_kick_label), RowValue.Slider(profile.kickMs, 0, 120, 1, " ms") {
                 updateProfile(RumbleTranslator.Profile(profile.gain, profile.curve, profile.minAmplitude, it, profile.lowWeight, profile.highWeight, profile.smoothing))
-            }, "Start from silence with a full-strength kick, then settle to the translated amplitude."))
-            add(DebugRow("rumble_low", "Rumble advanced", Symbols.LOW_WEIGHT, "Low motor weight", RowValue.Slider((profile.lowWeight * 100).roundToInt(), 0, 100, 1, "%") {
+            }, res.getString(R.string.debug_kick_description)))
+            add(DebugRow("rumble_low", DebugSection.RUMBLE_ADVANCED, Symbols.LOW_WEIGHT, res.getString(R.string.debug_low_label), RowValue.Slider((profile.lowWeight * 100).roundToInt(), 0, 100, 1, "%") {
                 updateProfile(RumbleTranslator.Profile(profile.gain, profile.curve, profile.minAmplitude, profile.kickMs, it / 100f, profile.highWeight, profile.smoothing))
-            }, "Low-frequency host motor contribution to the single device vibrator. Original: 80%."))
-            add(DebugRow("rumble_high", "Rumble advanced", Symbols.HIGH_WEIGHT, "High motor weight", RowValue.Slider((profile.highWeight * 100).roundToInt(), 0, 100, 1, "%") {
+            }, res.getString(R.string.debug_low_description)))
+            add(DebugRow("rumble_high", DebugSection.RUMBLE_ADVANCED, Symbols.HIGH_WEIGHT, res.getString(R.string.debug_high_label), RowValue.Slider((profile.highWeight * 100).roundToInt(), 0, 100, 1, "%") {
                 updateProfile(RumbleTranslator.Profile(profile.gain, profile.curve, profile.minAmplitude, profile.kickMs, profile.lowWeight, it / 100f, profile.smoothing))
-            }, "High-frequency host motor contribution to the single device vibrator. Original: 33%."))
-            add(DebugRow("rumble_smoothing", "Rumble advanced", Symbols.SMOOTHING, "Smoothing", RowValue.Slider((profile.smoothing * 100).roundToInt(), 0, 100, 1, "%") {
+            }, res.getString(R.string.debug_high_description)))
+            add(DebugRow("rumble_smoothing", DebugSection.RUMBLE_ADVANCED, Symbols.SMOOTHING, res.getString(R.string.debug_smoothing_label), RowValue.Slider((profile.smoothing * 100).roundToInt(), 0, 100, 1, "%") {
                 updateProfile(RumbleTranslator.Profile(profile.gain, profile.curve, profile.minAmplitude, profile.kickMs, profile.lowWeight, profile.highWeight, it / 100f))
-            }, "Limit rapid amplitude changes. Zero responds immediately; higher values settle more slowly."))
-            add(DebugRow("rumble_reset", "Rumble advanced", Symbols.RESET, "Reset parameters to Original", RowValue.Action {
+            }, res.getString(R.string.debug_smoothing_description)))
+            add(DebugRow("rumble_reset", DebugSection.RUMBLE_ADVANCED, Symbols.RESET, res.getString(R.string.debug_reset_label), RowValue.Action {
                 updateProfile(RumbleTranslator.ORIGINAL)
-            }, "Restore Original parameters as Custom. The enable switch is unchanged."))
+            }, res.getString(R.string.debug_reset_description)))
         }
-        add(DebugRow("osc_preview", "On-screen controls", Symbols.JOYSTICK, "Preview on-screen controls", RowValue.Action { shell.navigate(Screen.OscPreview) },
-            "Your on-screen controls without a stream: try every button, the D-pad and the sticks, nothing is sent. The gear in the corner edits the layout, as in a stream."))
+        add(DebugRow("osc_preview", DebugSection.ON_SCREEN_CONTROLS, Symbols.JOYSTICK, res.getString(R.string.debug_osc_label), RowValue.Action { shell.navigate(Screen.OscPreview) },
+            res.getString(R.string.debug_osc_description)))
         if (pads.isEmpty()) {
-            add(DebugRow("no_pads", "Controllers", Symbols.SPORTS_ESPORTS, "No controller connected", RowValue.Info(""),
-                "Connect a controller and it shows up here at once. The built-in controls of a handheld count as one."))
+            add(DebugRow("no_pads", DebugSection.CONTROLLERS, Symbols.SPORTS_ESPORTS, res.getString(R.string.debug_no_pads_label), RowValue.Info(""),
+                res.getString(R.string.debug_no_pads_description)))
         } else {
             pads.forEach { pad ->
                 val vibrator = DeviceVibrator.get(pad)
                 val vibrates = vibrator?.hasVibrator() == true
-                val sensors = sensors(pad)
+                val sensors = sensors(res, pad)
                 val ids = String.format(Locale.ROOT, "%04x:%04x", pad.vendorId, pad.productId)
-                add(DebugRow("pad_${pad.id}", "Controllers", Symbols.SPORTS_ESPORTS, pad.name, RowValue.Text(ids) {
+                add(DebugRow("pad_${pad.id}", DebugSection.CONTROLLERS, Symbols.SPORTS_ESPORTS, pad.name, RowValue.Text(ids) {
                     stopAll()
-                    if (vibrates) DeviceVibrator.vibrateOnce(vibrator, 1000) else shell.showToast("${pad.name} cannot vibrate", Symbols.INFO)
+                    if (vibrates) DeviceVibrator.vibrateOnce(vibrator, 1000) else shell.showToast(res.getString(R.string.debug_pad_no_vibration_toast, pad.name), Symbols.INFO)
                 },
-                    "Vendor and product id $ids (${pad.vendorId}_${pad.productId}). Motion sensors: $sensors. Vibration: ${if (vibrates) "supported, select to test" else "not supported"}.",
+                    res.getString(if (vibrates) R.string.debug_pad_description_vibrates else R.string.debug_pad_description_silent, ids, "${pad.vendorId}_${pad.productId}", sensors),
                     pad.toString()))
             }
-            add(DebugRow("pads_continuous", "Controllers", Symbols.PADS_CONTINUOUS, "Continuous vibration on controllers", RowValue.Toggle(padsContinuous) {
+            add(DebugRow("pads_continuous", DebugSection.CONTROLLERS, Symbols.PADS_CONTINUOUS, res.getString(R.string.debug_pads_continuous_label), RowValue.Toggle(padsContinuous) {
                 stopAll()
                 padsContinuous = it
             },
-                "Every controller that can vibrate keeps vibrating at the strength above."))
+                res.getString(R.string.debug_pads_continuous_description)))
         }
     }
 
@@ -429,7 +451,7 @@ fun DebugInfoScreen() {
     val bringIntoView = rememberMarginBringIntoView(listState, before = 72f * k, after = 110f * k, stagePx = k)
 
     Box(Modifier.fillMaxSize()) {
-        BasicText("Debug info", style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx),
+        BasicText(stringResource(R.string.debug_title), style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx),
             modifier = Modifier.offset(150.px, 124.px))
         Row(Modifier.fillMaxSize().padding(start = 150.px, end = 150.px, top = 230.px, bottom = 110.px), horizontalArrangement = Arrangement.spacedBy(56.px)) {
             CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView, com.limelight.shell.ui.LocalEntranceStagger provides com.limelight.shell.ui.rememberEntranceStagger()) {
@@ -440,12 +462,12 @@ fun DebugInfoScreen() {
                             .padding(start = 18.px, end = 18.px, top = 14.px, bottom = 140.px),
                         verticalArrangement = Arrangement.spacedBy(10.px),
                     ) {
-                        var previous = ""
+                        var previous: DebugSection? = null
                         rows.forEach { row ->
                             if (row.section != previous) {
                                 val section = row.section
-                                key("section-$section") {
-                                    BasicText(section.uppercase(Locale.ROOT), style = TextStyle(color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 16.tpx, letterSpacing = .08.em),
+                                key("section-${section.name}") {
+                                    BasicText(stringResource(section.title).uppercase(Locale.ROOT), style = TextStyle(color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 16.tpx, letterSpacing = .08.em),
                                         modifier = Modifier.padding(start = 26.px, top = 10.px, bottom = 2.px))
                                 }
                                 previous = section
@@ -487,8 +509,8 @@ private fun DetailsPanel(row: DebugRow?, modifier: Modifier) {
         Box(Modifier.size(120.px).clip(CircleShape).background(colors.accent), contentAlignment = Alignment.Center) {
             Symbol(row?.icon ?: Symbols.INFO, 64.tpx, colors.onAccent, filled = true)
         }
-        BasicText(row?.label ?: "Debug info", style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 30.tpx), modifier = Modifier.padding(top = 8.px))
-        BasicText(row?.description ?: "Information about this device and its controllers, the diagnostic log and a vibration test.",
+        BasicText(row?.label ?: stringResource(R.string.debug_title), style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 30.tpx), modifier = Modifier.padding(top = 8.px))
+        BasicText(row?.description ?: stringResource(R.string.debug_panel_default),
             style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 22.tpx, lineHeight = 1.45.em))
         row?.details?.let {
             BasicText(it, style = TextStyle(color = colors.text3, fontFamily = FontFamily.Monospace, fontSize = 16.tpx, lineHeight = 1.4.em))
@@ -506,13 +528,18 @@ private fun gamepads(): List<InputDevice> = InputDevice.getDeviceIds().toList().
 private fun axis(dev: InputDevice, axis: Int) =
     dev.getMotionRange(axis, InputDevice.SOURCE_JOYSTICK) != null || dev.getMotionRange(axis, InputDevice.SOURCE_GAMEPAD) != null
 
-private fun sensors(dev: InputDevice): String {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return "unknown below Android 12"
-    val found = buildList {
-        if (dev.sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null) add("accelerometer")
-        if (dev.sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE) != null) add("gyroscope")
-    }
-    return found.joinToString(", ").ifEmpty { "none reported" }
+private fun sensors(res: Resources, dev: InputDevice): String {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return res.getString(R.string.debug_sensors_unknown)
+    val accelerometer = dev.sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null
+    val gyroscope = dev.sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE) != null
+    return res.getString(
+        when {
+            accelerometer && gyroscope -> R.string.debug_sensors_both
+            accelerometer -> R.string.debug_sensors_accelerometer
+            gyroscope -> R.string.debug_sensors_gyroscope
+            else -> R.string.debug_sensors_none
+        },
+    )
 }
 
 private fun rumble(vibrator: Vibrator, strength: Int) {
@@ -520,19 +547,19 @@ private fun rumble(vibrator: Vibrator, strength: Int) {
 }
 
 /** Fixed host-motor inputs; the shared playback path owns kick and smoothing timing. */
-private enum class RumblePattern(val icon: String, val label: String, val description: String) {
-    TEST(Symbols.REPLAY, "Test", "A short tap, one second of steady rumble, a rising ramp and a decaying explosion."),
-    STEADY_25(Symbols.PATTERN_STEADY_25, "Steady 25% · quiet engine", "Two seconds of low engine rumble, both host motors at 25%."),
-    STEADY_50(Symbols.PATTERN_STEADY_50, "Steady 50% · cruising engine", "Two seconds of medium engine rumble, both host motors at 50%."),
-    STEADY_75(Symbols.PATTERN_STEADY_75, "Steady 75% · rough terrain", "Two seconds of strong terrain rumble, both host motors at 75%."),
-    STEADY_100(Symbols.PATTERN_STEADY_100, "Steady 100% · maximum force", "Two seconds of maximum host rumble, both host motors at 100%."),
-    RAMP(Symbols.PATTERN_RAMP, "Ramp up · acceleration", "Both host motors rise from silence to full input over two seconds."),
-    TAP_30(Symbols.PATTERN_TAP_30, "30 ms taps · light impacts", "Four full-input 30 ms taps separated by 250 ms of silence."),
-    TAP_60(Symbols.PATTERN_TAP_60, "60 ms taps · weapon fire", "Four full-input 60 ms taps separated by 250 ms of silence."),
-    TAP_100(Symbols.PATTERN_TAP_100, "100 ms taps · heavy impacts", "Four full-input 100 ms taps separated by 250 ms of silence."),
-    HEARTBEAT(Symbols.PATTERN_HEARTBEAT, "Heartbeat · paired pulses", "Four pairs of 70 ms / 100 ms full-input pulses, like a heartbeat."),
-    EXPLOSION(Symbols.PATTERN_EXPLOSION, "Explosion · decaying blast", "A full-input blast that decays to silence over two seconds."),
-    FLUTTER(Symbols.PATTERN_FLUTTER, "Flutter · rapid machinery", "Twenty full-input 20 ms pulses, each followed by 40 ms of silence."),
+private enum class RumblePattern(val icon: String, @StringRes val label: Int, @StringRes val description: Int) {
+    TEST(Symbols.REPLAY, R.string.debug_pattern_test_label, R.string.debug_pattern_test_description),
+    STEADY_25(Symbols.PATTERN_STEADY_25, R.string.debug_pattern_steady_25_label, R.string.debug_pattern_steady_25_description),
+    STEADY_50(Symbols.PATTERN_STEADY_50, R.string.debug_pattern_steady_50_label, R.string.debug_pattern_steady_50_description),
+    STEADY_75(Symbols.PATTERN_STEADY_75, R.string.debug_pattern_steady_75_label, R.string.debug_pattern_steady_75_description),
+    STEADY_100(Symbols.PATTERN_STEADY_100, R.string.debug_pattern_steady_100_label, R.string.debug_pattern_steady_100_description),
+    RAMP(Symbols.PATTERN_RAMP, R.string.debug_pattern_ramp_label, R.string.debug_pattern_ramp_description),
+    TAP_30(Symbols.PATTERN_TAP_30, R.string.debug_pattern_tap_30_label, R.string.debug_pattern_tap_30_description),
+    TAP_60(Symbols.PATTERN_TAP_60, R.string.debug_pattern_tap_60_label, R.string.debug_pattern_tap_60_description),
+    TAP_100(Symbols.PATTERN_TAP_100, R.string.debug_pattern_tap_100_label, R.string.debug_pattern_tap_100_description),
+    HEARTBEAT(Symbols.PATTERN_HEARTBEAT, R.string.debug_pattern_heartbeat_label, R.string.debug_pattern_heartbeat_description),
+    EXPLOSION(Symbols.PATTERN_EXPLOSION, R.string.debug_pattern_explosion_label, R.string.debug_pattern_explosion_description),
+    FLUTTER(Symbols.PATTERN_FLUTTER, R.string.debug_pattern_flutter_label, R.string.debug_pattern_flutter_description),
 }
 
 private suspend fun playRumblePattern(pattern: RumblePattern, playback: RumblePlayback, vibrator: Vibrator) {

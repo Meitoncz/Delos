@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Debug info screen (Settings → About → Debug info). Raw technical values (ids, kernel, build) are shown as they are. -->
+    <string name="debug_title">Debug info</string>
+    <string name="debug_panel_default">Information about this device and its controllers, the diagnostic log and a vibration test.</string>
+
+    <!-- Group headings; shown in capitals -->
+    <string name="debug_section_device">Device</string>
+    <string name="debug_section_diagnostics">Diagnostics</string>
+    <string name="debug_section_haptics">Device haptic capabilities</string>
+    <string name="debug_section_vibration_test">Vibration test</string>
+    <string name="debug_section_rumble_lab">Rumble laboratory</string>
+    <string name="debug_section_rumble_patterns">Rumble patterns</string>
+    <string name="debug_section_rumble_advanced">Rumble advanced</string>
+    <string name="debug_section_osc">On-screen controls</string>
+    <string name="debug_section_controllers">Controllers</string>
+
+    <string name="debug_yes">Yes</string>
+    <string name="debug_no">No</string>
+    <string name="debug_none">None</string>
+    <string name="debug_stopped">Stopped</string>
+
+    <!-- Toasts -->
+    <string name="debug_share_no_app_toast">No app can share the log</string>
+    <string name="debug_summary_copied_toast">Diagnostic summary copied</string>
+    <string name="debug_logs_cleared_toast">Diagnostic logs cleared</string>
+    <string name="debug_no_motor_toast">This device has no vibration motor</string>
+    <!-- %1$s: controller name -->
+    <string name="debug_pad_no_vibration_toast">%1$s cannot vibrate</string>
+
+    <!-- Device -->
+    <string name="debug_android_description">The Android version of this device and its API level.</string>
+    <string name="debug_kernel_label">Kernel</string>
+    <string name="debug_kernel_description">The Linux kernel version.</string>
+    <string name="debug_model_label">Device</string>
+    <string name="debug_model_description">The manufacturer and model.</string>
+    <!-- Technical details lines. %1$s: board, %2$s: hardware, %3$s: chip (SoC), %4$s: build id -->
+    <string name="debug_model_details">Board: %1$s\nHardware: %2$s\nSoC: %3$s\nBuild: %4$s</string>
+    <!-- The chip of a device that does not report it -->
+    <string name="debug_soc_unknown">unknown</string>
+    <string name="debug_motor_label">Vibration motor</string>
+    <string name="debug_motor_yes_description">This device can vibrate.</string>
+    <string name="debug_motor_no_description">This device has no vibration motor.</string>
+
+    <!-- Diagnostics -->
+    <string name="debug_log_label">Diagnostic log</string>
+    <string name="debug_log_reading">Reading…</string>
+    <string name="debug_log_off">Off</string>
+    <string name="debug_log_description">Events and errors Delos kept on this device, with addresses and names removed. This is what Share sends.</string>
+    <string name="debug_log_preview_reading">Reading the log…</string>
+    <string name="debug_share_label">Share diagnostic log</string>
+    <string name="debug_share_description">Opens Android\'s share sheet with the text shown in the preview. Nothing is sent until you pick an app.</string>
+    <string name="debug_copy_label">Copy diagnostic summary</string>
+    <string name="debug_copy_description">Copies the device block and the last 100 log lines, ready to paste into an issue. The same names and addresses are removed.</string>
+    <string name="debug_clear_label">Clear diagnostic logs</string>
+    <string name="debug_clear_description">Deletes the log on this device. New events are logged again unless Keep diagnostic logs is off (Settings → About).</string>
+
+    <!-- Device haptic capabilities -->
+    <string name="debug_vibrators_label">Vibrators</string>
+    <string name="debug_vibrators_single">1 (single)</string>
+    <string name="debug_vibrators_description">How many vibrators the system reports. One means every preset drives the same motor.</string>
+    <string name="debug_amplitude_label">Amplitude control</string>
+    <string name="debug_amplitude_description">Whether the vibrator can change its strength.</string>
+    <string name="debug_last_problem_label">Last problem</string>
+    <string name="debug_last_problem_description">Shows when the last played preset could not use its technique and played the plain amplitude path instead, and why.</string>
+
+    <!-- Vibration test -->
+    <string name="debug_vibrate_once_label">Vibrate once</string>
+    <string name="debug_vibrate_once_description">One second at full strength.</string>
+    <string name="debug_continuous_label">Continuous vibration</string>
+    <string name="debug_continuous_description">Keeps vibrating at the strength below until it is turned off or you leave this screen.</string>
+    <string name="debug_strength_label">Strength</string>
+    <string name="debug_strength_description">The strength of continuous vibration, 1–255, for the device and the controllers.</string>
+
+    <!-- Rumble laboratory -->
+    <string name="debug_preset_custom">Custom</string>
+    <!-- %1$s: the preset name -->
+    <string name="debug_mode_translator_on">%1$s · translator on</string>
+    <!-- %1$s: the preset name -->
+    <string name="debug_mode_translator_off">%1$s · translator off</string>
+    <string name="debug_preset_label">Current preset</string>
+    <string name="debug_preset_description">Select a preset below to save it and immediately play the Test sample.</string>
+    <!-- %1$s: the mode ("Custom · translator on") -->
+    <string name="debug_preset_details">Mode: %1$s\nAdvanced edits are saved as Custom, even if the values match a preset.</string>
+    <!-- Shown as the value of a preset that this device cannot run -->
+    <string name="debug_preset_problem">Problem</string>
+    <!-- %1$s: the preset description (a sentence ending in a full stop), %2$s: why it does not work -->
+    <string name="debug_preset_problem_description">%1$s Problem: %2$s.</string>
+    <string name="debug_preset_active">Active</string>
+    <string name="debug_preset_select">Select</string>
+    <!-- %1$s: the preset name -->
+    <string name="debug_live_amplitude_label">Live amplitude · %1$s</string>
+    <string name="debug_live_amplitude_description">Live computed device amplitude, including the start kick and smoothing as they settle.</string>
+    <!-- %1$s: the mode, %2$s: the pattern being played (or "Stopped") -->
+    <string name="debug_live_amplitude_details">Mode: %1$s\nPattern: %2$s\nBoth host motors receive the labelled input percentage; this is not the final output percentage.</string>
+    <string name="debug_stop_label">Stop vibration</string>
+    <string name="debug_stop_description">Stop the laboratory pattern and all continuous device/controller vibration tests.</string>
+    <string name="debug_replay_label">Replay Test sample</string>
+
+    <!-- Rumble patterns -->
+    <!-- %1$d: live amplitude 0-255, %2$s: the mode, %3$s: the pattern being played (or "Stopped") -->
+    <string name="debug_pattern_details">Live amplitude: %1$d / 255\nMode: %2$s\nPlaying: %3$s\nInputs are host motor percentages, not final device output. Select another pattern to replace this one, or use Stop vibration.</string>
+    <string name="debug_pattern_test_label">Test</string>
+    <string name="debug_pattern_test_description">A short tap, one second of steady rumble, a rising ramp and a decaying explosion.</string>
+    <string name="debug_pattern_steady_25_label">Steady 25% · quiet engine</string>
+    <string name="debug_pattern_steady_25_description">Two seconds of low engine rumble, both host motors at 25%.</string>
+    <string name="debug_pattern_steady_50_label">Steady 50% · cruising engine</string>
+    <string name="debug_pattern_steady_50_description">Two seconds of medium engine rumble, both host motors at 50%.</string>
+    <string name="debug_pattern_steady_75_label">Steady 75% · rough terrain</string>
+    <string name="debug_pattern_steady_75_description">Two seconds of strong terrain rumble, both host motors at 75%.</string>
+    <string name="debug_pattern_steady_100_label">Steady 100% · maximum force</string>
+    <string name="debug_pattern_steady_100_description">Two seconds of maximum host rumble, both host motors at 100%.</string>
+    <string name="debug_pattern_ramp_label">Ramp up · acceleration</string>
+    <string name="debug_pattern_ramp_description">Both host motors rise from silence to full input over two seconds.</string>
+    <string name="debug_pattern_tap_30_label">30 ms taps · light impacts</string>
+    <string name="debug_pattern_tap_30_description">Four full-input 30 ms taps separated by 250 ms of silence.</string>
+    <string name="debug_pattern_tap_60_label">60 ms taps · weapon fire</string>
+    <string name="debug_pattern_tap_60_description">Four full-input 60 ms taps separated by 250 ms of silence.</string>
+    <string name="debug_pattern_tap_100_label">100 ms taps · heavy impacts</string>
+    <string name="debug_pattern_tap_100_description">Four full-input 100 ms taps separated by 250 ms of silence.</string>
+    <string name="debug_pattern_heartbeat_label">Heartbeat · paired pulses</string>
+    <string name="debug_pattern_heartbeat_description">Four pairs of 70 ms / 100 ms full-input pulses, like a heartbeat.</string>
+    <string name="debug_pattern_explosion_label">Explosion · decaying blast</string>
+    <string name="debug_pattern_explosion_description">A full-input blast that decays to silence over two seconds.</string>
+    <string name="debug_pattern_flutter_label">Flutter · rapid machinery</string>
+    <string name="debug_pattern_flutter_description">Twenty full-input 20 ms pulses, each followed by 40 ms of silence.</string>
+
+    <!-- Rumble advanced -->
+    <string name="debug_advanced_label">Advanced</string>
+    <string name="debug_advanced_description">Show manual controls. Editing a value marks the preset as Custom and stops the current pattern.</string>
+    <string name="debug_enabled_label">Enable rumble translator</string>
+    <string name="debug_enabled_description">Off uses Original translation. On applies these parameters to streaming rumble and lab patterns.</string>
+    <string name="debug_gain_label">Gain</string>
+    <string name="debug_gain_description">Overall rumble multiplier, 50–300%. Changing a parameter stops the current pattern.</string>
+    <string name="debug_curve_label">Curve</string>
+    <!-- %1$d: the neutral value, 100 -->
+    <string name="debug_curve_description">Response exponent: below %1$d%% boosts weak rumble; above %1$d%% softens it.</string>
+    <string name="debug_min_label">Minimum amplitude</string>
+    <string name="debug_min_description">Minimum output for a nonzero host request. Zero input remains silent.</string>
+    <string name="debug_kick_label">Start kick</string>
+    <string name="debug_kick_description">Start from silence with a full-strength kick, then settle to the translated amplitude.</string>
+    <string name="debug_low_label">Low motor weight</string>
+    <string name="debug_low_description">Low-frequency host motor contribution to the single device vibrator. Original: 80%.</string>
+    <string name="debug_high_label">High motor weight</string>
+    <string name="debug_high_description">High-frequency host motor contribution to the single device vibrator. Original: 33%.</string>
+    <string name="debug_smoothing_label">Smoothing</string>
+    <string name="debug_smoothing_description">Limit rapid amplitude changes. Zero responds immediately; higher values settle more slowly.</string>
+    <string name="debug_reset_label">Reset parameters to Original</string>
+    <string name="debug_reset_description">Restore Original parameters as Custom. The enable switch is unchanged.</string>
+
+    <!-- On-screen controls -->
+    <string name="debug_osc_label">Preview on-screen controls</string>
+    <string name="debug_osc_description">Your on-screen controls without a stream: try every button, the D-pad and the sticks, nothing is sent. The gear in the corner edits the layout, as in a stream.</string>
+
+    <!-- Controllers -->
+    <string name="debug_no_pads_label">No controller connected</string>
+    <string name="debug_no_pads_description">Connect a controller and it shows up here at once. The built-in controls of a handheld count as one.</string>
+    <!-- %1$s: vendor and product id in hex ("045e:028e"), %2$s: the same in decimal ("1118_654"), %3$s: the motion sensors (debug_sensors_*) -->
+    <string name="debug_pad_description_vibrates">Vendor and product id %1$s (%2$s). Motion sensors: %3$s. Vibration: supported, select to test.</string>
+    <!-- %1$s: vendor and product id in hex, %2$s: the same in decimal, %3$s: the motion sensors -->
+    <string name="debug_pad_description_silent">Vendor and product id %1$s (%2$s). Motion sensors: %3$s. Vibration: not supported.</string>
+    <string name="debug_sensors_unknown">unknown below Android 12</string>
+    <string name="debug_sensors_none">none reported</string>
+    <string name="debug_sensors_accelerometer">accelerometer</string>
+    <string name="debug_sensors_gyroscope">gyroscope</string>
+    <string name="debug_sensors_both">accelerometer, gyroscope</string>
+    <string name="debug_pads_continuous_label">Continuous vibration on controllers</string>
+    <string name="debug_pads_continuous_description">Every controller that can vibrate keeps vibrating at the strength above.</string>
+</resources>

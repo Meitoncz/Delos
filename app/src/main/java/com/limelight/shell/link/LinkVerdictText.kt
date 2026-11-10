@@ -1,35 +1,34 @@
 package com.limelight.shell.link
 
-import java.util.Locale
-
-private fun percent(value: Double) = String.format(Locale.US, "%.1f", value)
+import android.content.res.Resources
+import com.limelight.R
 
 /** The real reason a probe failed, in plain words, with its rate ("Lost 3.0% of the test packets at 450 Mbps"). */
-internal fun ProbeScore.reasonText(): String {
+internal fun ProbeScore.reasonText(res: Resources): String {
     val rate = mbps(requestedKbps)
     return when {
-        receiverSuspect -> "This device could not receive $rate that fast"
-        failure == ProbeFailure.LOSS -> "Lost ${percent(lossPercent)}% of the test packets at $rate"
-        failure == ProbeFailure.WINDOW_LOSS -> "Lost up to ${percent(worstWindowLossPercent)}% of the packets within 100 ms at $rate"
-        failure == ProbeFailure.DELAY_GROWTH -> "The delay kept growing at $rate (the link queues up)"
-        failure == ProbeFailure.NO_PACKETS -> "No test data arrived. UDP may be blocked on this network"
+        receiverSuspect -> res.getString(R.string.link_verdict_receiver_suspect, rate)
+        failure == ProbeFailure.LOSS -> res.getString(R.string.link_verdict_loss, lossPercent, rate)
+        failure == ProbeFailure.WINDOW_LOSS -> res.getString(R.string.link_verdict_window_loss, worstWindowLossPercent, rate)
+        failure == ProbeFailure.DELAY_GROWTH -> res.getString(R.string.link_verdict_delay_growth, rate)
+        failure == ProbeFailure.NO_PACKETS -> res.getString(R.string.link_verdict_no_packets)
         failure == ProbeFailure.NOT_ALL_SENT ->
-            "The PC sent only ${percent(if (expected > 0) 100.0 * sent / expected else 0.0)}% of the test data at $rate"
-        failure == ProbeFailure.SENDER_DURATION -> "The PC's timing was off during the test"
-        else -> "Passed at $rate"
+            res.getString(R.string.link_verdict_not_all_sent, if (expected > 0) 100.0 * sent / expected else 0.0, rate)
+        failure == ProbeFailure.SENDER_DURATION -> res.getString(R.string.link_verdict_sender_duration)
+        else -> res.getString(R.string.link_verdict_passed, rate)
     }
 }
 
 /** The sentence for a search that found no rate: the last probe's real reason, and whether anything passed at all. */
-internal fun LinkSearchResult.NoRate.noRateText(): String {
-    val reason = last?.reasonText() ?: "No rate could be tested"
+internal fun LinkSearchResult.NoRate.noRateText(res: Resources): String {
+    val reason = last?.reasonText(res) ?: res.getString(R.string.link_verdict_no_rate_tested)
     return when {
-        bestPassKbps > 0 -> "$reason. ${mbps(bestPassKbps)} passed once but did not hold."
-        last != null -> "$reason. Nothing passed, down to ${mbps(last.requestedKbps)}."
-        else -> "$reason."
+        bestPassKbps > 0 -> res.getString(R.string.link_no_rate_passed_once, reason, mbps(bestPassKbps))
+        last != null -> res.getString(R.string.link_no_rate_nothing_passed, reason, mbps(last.requestedKbps))
+        else -> res.getString(R.string.link_no_rate_plain, reason)
     }
 }
 
 /** The verdict of a passing probe: "Stable" or "Stable, a little jitter". */
-internal fun ProbeScore.verdictText(): String =
-    if (!passed) reasonText() else if (jitterWarning) "Stable, a little jitter" else "Stable"
+internal fun ProbeScore.verdictText(res: Resources): String =
+    if (!passed) reasonText(res) else res.getString(if (jitterWarning) R.string.link_verdict_stable_jitter else R.string.link_verdict_stable)

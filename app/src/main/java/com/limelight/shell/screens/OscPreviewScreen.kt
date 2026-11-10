@@ -14,9 +14,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.viewinterop.AndroidView
+import com.limelight.R
 import com.limelight.binding.input.virtual_controller.VirtualController
 import com.limelight.shell.ui.Figtree
 import com.limelight.shell.ui.px
@@ -46,7 +48,7 @@ fun OscPreviewScreen() {
         ),
     ) {
         BasicText(
-            "On-screen controls preview · nothing is sent to a PC · B to go back",
+            stringResource(R.string.settings_osc_preview_note),
             style = TextStyle(color = Color.White.copy(alpha = .45f), fontFamily = Figtree, fontSize = 20.tpx, textAlign = TextAlign.Center),
             modifier = Modifier.align(Alignment.TopCenter).padding(top = 40.px),
         )

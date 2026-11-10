@@ -41,7 +41,7 @@ internal fun linkFormat(codec: LinkCodec, width: Int, height: Int, fps: Int, hdr
     val base = "${resolutionLabel(height)}$fps${if (hdr) " HDR" else ""}"
     return if (codec == LinkCodec.PYROWAVE) {
         val full = chroma444 && !hdr
-        LinkFormat(codec, "$base PyroWave ${if (full) "4:4:4" else "4:2:0"}", fps,
+        LinkFormat(codec, "$base PyroWave ${if (full) "4:4:4" else "4:2:0"}", fps, // l10n-ignore: format name
             minOf(PyroWaveBitrate.recommendedKbps(width, height, fps, full, hdr), PreferenceConfiguration.MAX_BITRATE_KBPS))
     } else {
         LinkFormat(codec, if (codec == LinkCodec.AUTO) base else "$base ${codec.label}", fps,

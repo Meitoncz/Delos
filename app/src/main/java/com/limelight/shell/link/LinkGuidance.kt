@@ -1,7 +1,25 @@
 package com.limelight.shell.link
 
+import android.content.res.Resources
+import com.limelight.R
 import com.limelight.nvstream.http.PyroWaveHostInfo
 import java.util.TimeZone
+
+/** Why the PC cannot run the link test, for [LinkGuidance.testUnavailable]. */
+internal enum class LinkUnavailable {
+    /** The PC speaks a newer probe protocol than this Delos knows. */
+    NEEDS_NEWER_DELOS,
+
+    /** An older Vibepollo, or a host without PyroWave support. */
+    HOST_OUTDATED;
+
+    fun text(res: Resources): String = res.getString(
+        when (this) {
+            NEEDS_NEWER_DELOS -> R.string.link_unavailable_newer_delos
+            HOST_OUTDATED -> R.string.link_unavailable_host_outdated
+        },
+    )
+}
 
 /**
  * What the screens show about the link for one stream format: the recommendation with its reason, the last test (if
@@ -13,44 +31,46 @@ internal data class LinkGuidance(
     val recommendation: LinkRecommendation,
     val tested: LinkTest?,
     /** Set when the PC cannot run the test (older Vibepollo, a host without PyroWave support, or a newer protocol than this Delos knows). */
-    val testUnavailable: String?,
+    val testUnavailable: LinkUnavailable?,
 ) {
     /** The `Recommended: N Mbps · reason` line of the bitrate row. */
-    val line: String get() = recommendation.line
+    fun line(res: Resources): String = recommendation.line(res)
 
     /**
      * The long text of the help panel: the test with its age and the one sentence that names both numbers ("Wi-Fi carries up
      * to 665 Mbps; 225 Mbps is enough for 1080p60 PyroWave 4:2:0."), or why there is no test.
      */
-    fun help(nowMs: Long, transport: LinkTransport, zone: TimeZone = TimeZone.getDefault()): String {
-        val test = tested ?: return testUnavailable ?: "Not tested on ${transport.label}. Test link measures what it carries."
+    fun help(res: Resources, nowMs: Long, transport: LinkTransport, zone: TimeZone = TimeZone.getDefault()): String {
+        val test = tested ?: return testUnavailable?.text(res) ?: res.getString(R.string.link_help_untested, transport.label(res))
         val r = recommendation
-        val sentence = when (r.reason) {
-            LinkReason.TESTED_OK -> "carries up to ${mbps(test.wireKbps)}; ${mbps(r.kbps)} is enough for ${format.label}."
-            LinkReason.HOST_LINK_LIMITED -> "carries ${mbps(test.wireKbps)}; the PC's own link is the limit for ${format.label}."
-            else -> "carries ${mbps(test.wireKbps)}; ${format.label} wants ${mbps(r.wantedKbps)}" +
-                (r.pictureKbps.takeIf { it > 0 }?.let { ", about ${mbps(it)} of picture after FEC and overhead" }.orEmpty()) + "."
+        val wire = mbps(test.wireKbps)
+        val sentence = when {
+            r.reason == LinkReason.TESTED_OK -> res.getString(R.string.link_help_tested_ok, wire, mbps(r.kbps), format.label)
+            r.reason == LinkReason.HOST_LINK_LIMITED -> res.getString(R.string.link_help_host_limited, wire, format.label)
+            r.pictureKbps > 0 -> res.getString(R.string.link_help_limited_picture, wire, format.label, mbps(r.wantedKbps), mbps(r.pictureKbps))
+            else -> res.getString(R.string.link_help_limited, wire, format.label, mbps(r.wantedKbps))
         }
-        return "${test.summary(nowMs, zone)}: $sentence"
+        return res.getString(R.string.link_help_joined, test.summary(res, nowMs, zone), sentence)
     }
 
     /**
      * The stream menu's help for the recommendation row. There is no test here (the host refuses probes during a
      * stream), so an untested link points to Settings, before connecting.
      */
-    fun streamHelp(nowMs: Long, zone: TimeZone = TimeZone.getDefault()): String {
-        val state = when {
-            recommendation.reason == LinkReason.DROPPING -> "Link ${recommendation.reasonText}."
-            tested != null -> "${tested.summary(nowMs, zone)}."
-            else -> "Not tested yet."
+    fun streamHelp(res: Resources, nowMs: Long, zone: TimeZone = TimeZone.getDefault()): String {
+        val dropping = recommendation.reason == LinkReason.DROPPING
+        val dropped = mbps(recommendation.droppedAtKbps)
+        return when {
+            dropping && tested != null -> res.getString(R.string.link_stream_help_dropping, dropped)
+            dropping -> res.getString(R.string.link_stream_help_dropping_untested, dropped)
+            tested != null -> res.getString(R.string.link_stream_help_tested, tested.summary(res, nowMs, zone))
+            else -> res.getString(R.string.link_stream_help_untested)
         }
-        val test = if (tested == null) " Test the link in Settings before connecting." else ""
-        return "$state A fills the slider, Apply sends it.$test"
     }
 
     /** What the Test link row says under its label. */
-    fun testRowText(nowMs: Long, transport: LinkTransport, zone: TimeZone = TimeZone.getDefault()): String =
-        tested?.summary(nowMs, zone) ?: testUnavailable ?: "Not tested on ${transport.label} yet"
+    fun testRowText(res: Resources, nowMs: Long, transport: LinkTransport, zone: TimeZone = TimeZone.getDefault()): String =
+        tested?.summary(res, nowMs, zone) ?: testUnavailable?.text(res) ?: res.getString(R.string.link_test_row_untested, transport.label(res))
 }
 
 /**
@@ -67,9 +87,9 @@ internal fun linkGuidance(
     val transport = tested?.let { WireTransport(it.packetSize, it.criticalFecPercent) }
     val unavailable = when {
         info.supportsLinkTest() -> null
-        info.linkTestNeedsNewerClient() -> "This PC needs a newer Delos for the link test."
+        info.linkTestNeedsNewerClient() -> LinkUnavailable.NEEDS_NEWER_DELOS
         // NONE is also what an unpolled PC has: it only says the PC cannot test once it answered /serverinfo
-        else -> "This PC's Vibepollo cannot test the link yet. Update it."
+        else -> LinkUnavailable.HOST_OUTDATED
     }
     val hostLink = info.hostLinkMbps * 1000
     val recommendation = if (format.codec == LinkCodec.PYROWAVE) {

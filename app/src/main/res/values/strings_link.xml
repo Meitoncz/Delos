@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Link test and link guidance (bitrate recommendation, test rows, stream menu help). Rates such as "225 Mbps" are
+         passed in as %s arguments; they are technical readouts. -->
+
+    <!-- The kind of network a test was measured on, used inside sentences: "Tested yesterday on Wi-Fi" -->
+    <string name="link_transport_wifi" translatable="false">Wi-Fi</string>
+    <string name="link_transport_ethernet" translatable="false">Ethernet</string>
+    <!-- Any other network; it follows "on" / "Stay on" in sentences, and starts one in "%1$s carries 225 Mbps" -->
+    <string name="link_transport_other">this network</string>
+
+    <!-- How long ago a test was made; each is inserted into link_tested_summary -->
+    <string name="link_age_just_now">just now</string>
+    <plurals name="link_age_minutes">
+        <item quantity="one">%d min ago</item>
+        <item quantity="other">%d min ago</item>
+    </plurals>
+    <plurals name="link_age_hours">
+        <item quantity="one">%d h ago</item>
+        <item quantity="other">%d h ago</item>
+    </plurals>
+    <string name="link_age_yesterday">yesterday</string>
+    <plurals name="link_age_days">
+        <item quantity="one">%d day ago</item>
+        <item quantity="other">%d days ago</item>
+    </plurals>
+    <plurals name="link_age_weeks">
+        <item quantity="one">%d week ago</item>
+        <item quantity="other">%d weeks ago</item>
+    </plurals>
+    <plurals name="link_age_months">
+        <item quantity="one">%d month ago</item>
+        <item quantity="other">%d months ago</item>
+    </plurals>
+    <!-- %1$s: how long ago ("yesterday", "3 h ago"), %2$s: the network ("Wi-Fi") -->
+    <string name="link_tested_summary">Tested %1$s on %2$s</string>
+
+    <!-- Why the recommendation is what it is; each is the end of link_recommended_line / link_value_reason, so it starts lowercase in English. %1$s: a rate -->
+    <string name="link_reason_untested">not tested on this link</string>
+    <string name="link_reason_tested_ok">link carries up to %1$s</string>
+    <string name="link_reason_tested_limited">link carries %1$s</string>
+    <string name="link_reason_host_limited">the PC\'s link is %1$s</string>
+    <string name="link_reason_dropping">drops frames at %1$s</string>
+    <!-- %1$s: the recommended rate, %2$s: the reason clause above -->
+    <string name="link_recommended_line">Recommended: %1$s · %2$s</string>
+    <!-- %1$s: the recommended rate, %2$s: the reason clause above -->
+    <string name="link_value_reason">%1$s · %2$s</string>
+    <!-- %1$d: the recommended rate in Mbps, when no link test exists -->
+    <string name="link_recommended_plain">Recommended: %1$d Mbps</string>
+
+    <!-- Test link row and help panel -->
+    <string name="link_test_action">Test link</string>
+    <!-- %1$s: the network ("Wi-Fi", or "this network") -->
+    <string name="link_test_row_untested">Not tested on %1$s yet</string>
+    <!-- %1$s: the network -->
+    <string name="link_help_untested">Not tested on %1$s. Test link measures what it carries.</string>
+    <!-- The test summary and the explanation: %1$s: "Tested yesterday on Wi-Fi", %2$s: one of the sentences below -->
+    <string name="link_help_joined">%1$s: %2$s</string>
+    <!-- %1$s: what the network carries, %2$s: the recommended rate, %3$s: the stream format ("1080p60 PyroWave 4:2:0") -->
+    <string name="link_help_tested_ok">carries up to %1$s; %2$s is enough for %3$s.</string>
+    <!-- %1$s: what the network carries, %2$s: the stream format -->
+    <string name="link_help_host_limited">carries %1$s; the PC\'s own link is the limit for %2$s.</string>
+    <!-- %1$s: what the network carries, %2$s: the stream format, %3$s: the rate the format wants -->
+    <string name="link_help_limited">carries %1$s; %2$s wants %3$s.</string>
+    <!-- %1$s: what the network carries, %2$s: the stream format, %3$s: the rate the format wants, %4$s: the picture rate left after error correction (FEC) -->
+    <string name="link_help_limited_picture">carries %1$s; %2$s wants %3$s, about %4$s of picture after FEC and overhead.</string>
+    <!-- %1$s: PC name -->
+    <string name="link_pc_offline_toast">%1$s is offline</string>
+    <!-- %1$s: PC name, %2$s: the network ("Wi-Fi", or "this network") -->
+    <string name="link_test_detail">Measures what this network carries from %1$s: test traffic for about 2 seconds per step, at up to several hundred Mbps. Stay on %2$s, with nothing else running.</string>
+    <string name="link_use_action">Use recommended bitrate</string>
+    <!-- %1$s: the rate -->
+    <string name="link_use_done_toast">Bitrate set to %1$s</string>
+    <!-- %1$s: the rate, %2$s: the reason clause (link_reason_*) -->
+    <string name="link_use_detail">Fills the bitrate with %1$s: %2$s. Delos never changes the bitrate by itself.</string>
+
+    <!-- Why the PC cannot run the test -->
+    <string name="link_unavailable_newer_delos">This PC needs a newer Delos for the link test.</string>
+    <string name="link_unavailable_host_outdated">This PC\'s Vibepollo cannot test the link yet. Update it.</string>
+
+    <!-- Stream menu help for the recommendation row (no test can run during a stream) -->
+    <!-- %1$s: the rate the stream drops frames at -->
+    <string name="link_stream_help_dropping">Link drops frames at %1$s. A fills the slider, Apply sends it.</string>
+    <!-- %1$s: the rate the stream drops frames at -->
+    <string name="link_stream_help_dropping_untested">Link drops frames at %1$s. A fills the slider, Apply sends it. Test the link in Settings before connecting.</string>
+    <!-- %1$s: "Tested yesterday on Wi-Fi" -->
+    <string name="link_stream_help_tested">%1$s. A fills the slider, Apply sends it.</string>
+    <string name="link_stream_help_untested">Not tested yet. A fills the slider, Apply sends it. Test the link in Settings before connecting.</string>
+
+    <!-- The live reading of a running stream. %1$s: a rate -->
+    <string name="link_reading_measuring">Measuring</string>
+    <string name="link_reading_keeps_up">Link keeps up at %1$s</string>
+    <!-- %1$s: the rate in use, %2$s: the rate to try -->
+    <string name="link_reading_drops">Link drops frames at %1$s, try %2$s</string>
+    <string name="link_reading_device_behind">Device skips frames; the link is fine</string>
+
+    <!-- Why a link test failed -->
+    <string name="link_failure_host_unsupported">This PC\'s Vibepollo cannot test the link. Update it.</string>
+    <string name="link_failure_stream_active">The PC is streaming. Stop the stream, then test again.</string>
+    <string name="link_failure_denied">The PC did not allow the test. Pair this device again.</string>
+    <string name="link_failure_udp_blocked">No test data arrived. UDP may be blocked on this network.</string>
+    <string name="link_failure_network">Delos could not reach the PC.</string>
+    <string name="link_failure_timeout">The PC did not finish the test in time.</string>
+    <string name="link_failure_host_error">The PC could not run the test.</string>
+    <string name="link_failure_invalid_response">The PC sent an unusable test result.</string>
+    <!-- %1$s: PC name -->
+    <string name="link_failure_not_connected">Delos is still connecting to %1$s.</string>
+
+    <!-- The verdict of one probe; rates read like "450 Mbps" -->
+    <!-- %1$s: rate -->
+    <string name="link_verdict_receiver_suspect">This device could not receive %1$s that fast</string>
+    <!-- %1$.1f: percent of the test packets lost, %2$s: rate -->
+    <string name="link_verdict_loss">Lost %1$.1f%% of the test packets at %2$s</string>
+    <!-- %1$.1f: worst percent lost within a 100 ms window, %2$s: rate -->
+    <string name="link_verdict_window_loss">Lost up to %1$.1f%% of the packets within 100 ms at %2$s</string>
+    <!-- %1$s: rate -->
+    <string name="link_verdict_delay_growth">The delay kept growing at %1$s (the link queues up)</string>
+    <string name="link_verdict_no_packets">No test data arrived. UDP may be blocked on this network</string>
+    <!-- %1$.1f: percent of the test data the PC sent, %2$s: rate -->
+    <string name="link_verdict_not_all_sent">The PC sent only %1$.1f%% of the test data at %2$s</string>
+    <string name="link_verdict_sender_duration">The PC\'s timing was off during the test</string>
+    <!-- %1$s: rate -->
+    <string name="link_verdict_passed">Passed at %1$s</string>
+    <string name="link_verdict_stable">Stable</string>
+    <string name="link_verdict_stable_jitter">Stable, a little jitter</string>
+    <string name="link_verdict_no_rate_tested">No rate could be tested</string>
+    <!-- A search that found no rate. %1$s: the verdict of the last probe (link_verdict_*), %2$s: a rate -->
+    <string name="link_no_rate_passed_once">%1$s. %2$s passed once but did not hold.</string>
+    <!-- %1$s: the verdict of the last probe, %2$s: the lowest rate tried -->
+    <string name="link_no_rate_nothing_passed">%1$s. Nothing passed, down to %2$s.</string>
+    <!-- %1$s: the verdict of the last probe -->
+    <string name="link_no_rate_plain">%1$s.</string>
+</resources>

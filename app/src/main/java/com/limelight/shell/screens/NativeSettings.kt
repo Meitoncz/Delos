@@ -3,6 +3,7 @@ package com.limelight.shell.screens
 import android.content.Intent
 import android.net.Uri
 import android.content.SharedPreferences
+import android.content.res.Resources
 import java.util.Locale
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -11,6 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import com.limelight.BuildConfig
+import com.limelight.R
 import com.limelight.diag.DiagLog
 import com.limelight.shell.DialogField
 import com.limelight.shell.DialogSpec
@@ -27,6 +29,7 @@ import com.limelight.shell.Screen
 import com.limelight.shell.StatsPosition
 import com.limelight.shell.data.Pc
 import com.limelight.shell.settings.Appearance
+import com.limelight.shell.settings.Palette
 import com.limelight.shell.settings.SettingImpact
 import com.limelight.shell.settings.SettingSpec
 import com.limelight.shell.settings.SettingsTab
@@ -37,6 +40,7 @@ import com.limelight.shell.ui.RowValue
 import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.hsl
 import com.limelight.shell.ui.systemAccentHue
+import com.limelight.shell.ui.textResources
 
 internal data class SettingsItem(
     val key: String,
@@ -53,8 +57,8 @@ internal data class SettingsItem(
 )
 
 /** The choice names a setting can be found by, besides its own texts. */
-internal fun settingSearchTerms(spec: SettingSpec): String =
-    (spec.choices.map { "${it.label} ${SettingsHelp.choice(spec.key, it.value)}" } + listOfNotNull(RENAMED_SEARCH_TERMS[spec.key]))
+internal fun settingSearchTerms(res: Resources, spec: SettingSpec): String =
+    (spec.choices.map { "${it.label} ${SettingsHelp.choice(res, spec.key, it.value)}" } + listOfNotNull(RENAMED_SEARCH_TERMS[spec.key]))
         .joinToString(" ")
 
 /** The earlier names of renamed rows, so searching for them still finds the row. */
@@ -66,10 +70,10 @@ private val RENAMED_SEARCH_TERMS = mapOf(
 )
 
 /** The settings whose texts contain every word of [query], in any order and case. */
-internal fun searchSettings(items: List<SettingsItem>, query: String): List<SettingsItem> {
+internal fun searchSettings(res: Resources, items: List<SettingsItem>, query: String): List<SettingsItem> {
     val words = query.trim().lowercase(Locale.ROOT).split(Regex("\\s+"))
     return items.filter { item ->
-        val text = "${item.label} ${item.description} ${item.detail} ${item.searchTerms} ${item.section} ${item.tab.label}".lowercase(Locale.ROOT)
+        val text = "${item.label} ${item.description} ${item.detail} ${item.searchTerms} ${item.section} ${item.tab.label(res)}".lowercase(Locale.ROOT)
         words.all { text.contains(it) }
     }
 }
@@ -83,119 +87,160 @@ internal fun nativeSettings(
     settings: SharedPreferences,
 ): List<SettingsItem> {
     val context = LocalContext.current
+    val res = textResources()
     val shell = LocalShell.current
     fun providerWebsite(url: String) {
         runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }
-            .onFailure { shell.showToast("No browser is available", Symbols.ERROR) }
+            .onFailure { shell.showToast(res.getString(R.string.settings_native_no_browser_toast), Symbols.ERROR) }
     }
     val systemHue = remember { systemAccentHue(context) }
     val list = mutableListOf<SettingsItem>()
+    val interfaceSection = res.getString(R.string.settings_native_section_interface)
+    val streamMenuSection = res.getString(R.string.settings_native_section_stream_menu)
+    val startupSection = res.getString(R.string.settings_native_section_startup)
+    val pairedSection = res.getString(R.string.settings_native_section_paired_pcs)
+    val sgdbSection = res.getString(R.string.settings_native_section_steamgriddb)
+    val delosSection = res.getString(R.string.settings_native_section_delos)
+    val gameDataSection = res.getString(R.string.settings_native_section_game_data)
+    /** [choiceHelp] explains the selected choice of a choice row (see [NativeSettingsHelp.choice]). */
     fun row(key: String, icon: String, title: String, value: RowValue, description: String, enabled: Boolean = true,
-            tab: SettingsTab = SettingsTab.APPEARANCE, section: String = "Interface") {
-        val help = SettingsHelp.description(key, description)
+            tab: SettingsTab = SettingsTab.APPEARANCE, section: String = interfaceSection, choiceHelp: String = "") {
+        val help = SettingsHelp.description(res, key, description)
         list += SettingsItem(key, tab, section, icon, title, help, value, enabled,
-            NativeSettingsHelp.details(key, help, value))
+            NativeSettingsHelp.details(help, value, choiceHelp))
     }
-    row("ui_dark", Symbols.DARK_MODE, "Theme", RowValue.Choice(if (a.dark) "Dark" else "Light", { update { it.copy(dark = !it.dark) } }), "Dark or light interface.")
-    row("ui_material_you", Symbols.SYSTEM_COLORS, "Material You colors", RowValue.Toggle(a.materialYou) { on -> update { it.copy(materialYou = on) } },
-        if (systemHue != null) "Uses only your wallpaper colors. Turn off to choose a palette."
-        else "No wallpaper palette on this device, so Lagoon's colors are used. Turn off to choose a palette.")
-    row("ui_palette", Symbols.PALETTE, "Color palette", RowValue.Choice(a.palette.label, { dir -> update { it.copy(palette = it.palette.step(dir)) } }, hsl(a.palette.accent, 90f, 60f)),
-        if (a.materialYou) "Needs Material You colors off." else "Colors of the interface and animated backgrounds.", !a.materialYou)
-    row("ui_match_game_colors", Symbols.MATCH_COLORS, "Match the game's colors", RowValue.Toggle(a.matchGameColors) { on -> update { it.copy(matchGameColors = on) } },
-        if (a.materialYou) "Needs Material You colors off." else "The animated background takes the main color of the selected game's background image.", !a.materialYou)
-    row("ui_clock", Symbols.SCHEDULE, "Clock", RowValue.Choice(a.clock.label, { dir -> update { it.copy(clock = it.clock.step(dir)) } }),
-        "Time format in the status bar.")
-    row("ui_background", Symbols.ANIMATION, "Animated background", RowValue.Choice(a.background.label, { dir -> update { it.copy(background = it.background.step(dir)) } }), "Animated shader background (Android 13 or later), or a still one.")
-    row("ui_home_layout", Symbols.VIEW_CAROUSEL, "Home layout", RowValue.Choice(a.homeLayout.label, { dir -> update { it.copy(homeLayout = it.homeLayout.step(dir)) } }), "Library as a scrolling grid or a single row.")
-    row("ui_hero_background", Symbols.WALLPAPER, "Game background", RowValue.Toggle(a.heroBackground) { on -> update { it.copy(heroBackground = on) } }, "Shows the selected game's background on the home screen.")
-    row("ui_hero_blur", Symbols.BLUR_ON, "Game background blur", RowValue.Slider(a.heroBlur, 0, 40, 5, " px") { v -> update { it.copy(heroBlur = v) } }, "Blurs the game background behind the library. Needs Game background.", a.heroBackground)
-    row("ui_hero_opacity", Symbols.OPACITY, "Game background opacity", RowValue.Slider(a.heroOpacity, 0, 100, 5, " %") { v -> update { it.copy(heroOpacity = v) } }, "How strongly the game artwork shows through the animated background. Needs Game background.", a.heroBackground)
-    row("ui_scale", Symbols.FORMAT_SIZE, "Interface scale", RowValue.Slider(a.uiScale, 100, 130, 5, " %") { v -> update { it.copy(uiScale = v) } }, "Size of text, status bar and button hints.")
-    row("ui_reduced_motion", Symbols.REDUCED_MOTION, "Animations", RowValue.Choice(if (a.reducedMotion) "Reduced" else "Full", { update { it.copy(reducedMotion = !it.reducedMotion) } }), "Interface movement only.")
-    row("ui_haptics", Symbols.HAPTICS, "Interface haptics", RowValue.Toggle(a.haptics) { on -> update { it.copy(haptics = on) } }, "Vibration when moving and selecting.", tab = SettingsTab.CONTROLS)
-    row("ui_sounds", Symbols.MUSIC_NOTE, "Interface sounds", RowValue.Toggle(a.sounds) { on -> update { it.copy(sounds = on) } }, "Soft clicks when moving through menus.", tab = SettingsTab.AUDIO)
+    row("ui_dark", Symbols.DARK_MODE, res.getString(R.string.settings_native_theme_title),
+        RowValue.Choice(res.getString(if (a.dark) R.string.settings_native_theme_dark else R.string.settings_native_theme_light), { update { it.copy(dark = !it.dark) } }),
+        res.getString(R.string.settings_native_theme_description), choiceHelp = NativeSettingsHelp.choice(res, "ui_dark", if (a.dark) "dark" else "light"))
+    row("ui_material_you", Symbols.SYSTEM_COLORS, res.getString(R.string.settings_native_material_you_title), RowValue.Toggle(a.materialYou) { on -> update { it.copy(materialYou = on) } },
+        if (systemHue != null) res.getString(R.string.settings_native_material_you_description)
+        else res.getString(R.string.settings_native_material_you_fallback_description, Palette.LAGOON.label(res)))
+    row("ui_palette", Symbols.PALETTE, res.getString(R.string.settings_native_palette_title), RowValue.Choice(a.palette.label(res), { dir -> update { it.copy(palette = it.palette.step(dir)) } }, hsl(a.palette.accent, 90f, 60f)),
+        if (a.materialYou) res.getString(R.string.settings_native_needs_material_you_off) else res.getString(R.string.settings_native_palette_description), !a.materialYou)
+    row("ui_match_game_colors", Symbols.MATCH_COLORS, res.getString(R.string.settings_native_match_colors_title), RowValue.Toggle(a.matchGameColors) { on -> update { it.copy(matchGameColors = on) } },
+        if (a.materialYou) res.getString(R.string.settings_native_needs_material_you_off) else res.getString(R.string.settings_native_match_colors_description), !a.materialYou)
+    row("ui_clock", Symbols.SCHEDULE, res.getString(R.string.settings_native_clock_title), RowValue.Choice(a.clock.label(res), { dir -> update { it.copy(clock = it.clock.step(dir)) } }),
+        res.getString(R.string.settings_native_clock_description), choiceHelp = NativeSettingsHelp.choice(res, "ui_clock", a.clock.name))
+    row("ui_background", Symbols.ANIMATION, res.getString(R.string.settings_native_background_title), RowValue.Choice(a.background.label(res), { dir -> update { it.copy(background = it.background.step(dir)) } }),
+        res.getString(R.string.settings_native_background_description), choiceHelp = NativeSettingsHelp.choice(res, "ui_background", a.background.name))
+    row("ui_home_layout", Symbols.VIEW_CAROUSEL, res.getString(R.string.settings_native_home_layout_title), RowValue.Choice(a.homeLayout.label(res), { dir -> update { it.copy(homeLayout = it.homeLayout.step(dir)) } }),
+        res.getString(R.string.settings_native_home_layout_description), choiceHelp = NativeSettingsHelp.choice(res, "ui_home_layout", a.homeLayout.name))
+    row("ui_hero_background", Symbols.WALLPAPER, res.getString(R.string.settings_native_hero_background_title), RowValue.Toggle(a.heroBackground) { on -> update { it.copy(heroBackground = on) } },
+        res.getString(R.string.settings_native_hero_background_description))
+    row("ui_hero_blur", Symbols.BLUR_ON, res.getString(R.string.settings_native_hero_blur_title), RowValue.Slider(a.heroBlur, 0, 40, 5, " px") { v -> update { it.copy(heroBlur = v) } },
+        res.getString(R.string.settings_native_hero_blur_description), a.heroBackground)
+    row("ui_hero_opacity", Symbols.OPACITY, res.getString(R.string.settings_native_hero_opacity_title), RowValue.Slider(a.heroOpacity, 0, 100, 5, " %") { v -> update { it.copy(heroOpacity = v) } },
+        res.getString(R.string.settings_native_hero_opacity_description), a.heroBackground)
+    row("ui_scale", Symbols.FORMAT_SIZE, res.getString(R.string.settings_native_scale_title), RowValue.Slider(a.uiScale, 100, 130, 5, " %") { v -> update { it.copy(uiScale = v) } },
+        res.getString(R.string.settings_native_scale_description))
+    row("ui_reduced_motion", Symbols.REDUCED_MOTION, res.getString(R.string.settings_native_animations_title),
+        RowValue.Choice(res.getString(if (a.reducedMotion) R.string.settings_native_animations_reduced else R.string.settings_native_animations_full), { update { it.copy(reducedMotion = !it.reducedMotion) } }),
+        res.getString(R.string.settings_native_animations_description), choiceHelp = NativeSettingsHelp.choice(res, "ui_reduced_motion", if (a.reducedMotion) "reduced" else "full"))
+    row("ui_haptics", Symbols.HAPTICS, res.getString(R.string.settings_native_haptics_title), RowValue.Toggle(a.haptics) { on -> update { it.copy(haptics = on) } },
+        res.getString(R.string.settings_native_haptics_description), tab = SettingsTab.CONTROLS)
+    row("ui_sounds", Symbols.MUSIC_NOTE, res.getString(R.string.settings_native_sounds_title), RowValue.Toggle(a.sounds) { on -> update { it.copy(sounds = on) } },
+        res.getString(R.string.settings_native_sounds_description), tab = SettingsTab.AUDIO)
     val menuButtons = StreamMenuSettings.buttons(settings)
-    row("ui_stream_menu_buttons", Symbols.STREAM_MENU_BUTTONS, "Stream menu buttons", RowValue.Text(StreamMenuSettings.label(menuButtons)) {
+    row("ui_stream_menu_buttons", Symbols.STREAM_MENU_BUTTONS, res.getString(R.string.settings_native_menu_buttons_title), RowValue.Text(StreamMenuSettings.label(menuButtons)) {
         shell.buttonCapture = { buttons -> StreamMenuSettings.setButtons(settings, buttons) }
-    }, "Buttons pressed together during a stream to open or close the stream menu. Select to record others, e.g. a rear button.",
-        tab = SettingsTab.CONTROLS, section = "Stream menu")
-    row("ui_stream_menu_swipe", Symbols.SWIPE_UP, "Swipe up to open the menu", RowValue.Toggle(StreamMenuSettings.swipe(settings)) { on ->
+    }, res.getString(R.string.settings_native_menu_buttons_description),
+        tab = SettingsTab.CONTROLS, section = streamMenuSection)
+    row("ui_stream_menu_swipe", Symbols.SWIPE_UP, res.getString(R.string.settings_native_menu_swipe_title), RowValue.Toggle(StreamMenuSettings.swipe(settings)) { on ->
         settings.edit().putBoolean(StreamMenuSettings.KEY_SWIPE, on).apply()
-    }, "A swipe up from the bottom edge also opens the stream menu. Touches starting there do not reach the game.",
-        tab = SettingsTab.CONTROLS, section = "Stream menu")
+    }, res.getString(R.string.settings_native_menu_swipe_description),
+        tab = SettingsTab.CONTROLS, section = streamMenuSection)
     val statsPosition = StatsPosition.read(settings)
-    row("ui_stats_position", Symbols.STATS_POSITION, "Statistics position", RowValue.Choice(statsPosition.label, { dir ->
-        settings.edit().putString(StatsPosition.KEY, statsPosition.step(dir).name).apply()
-    }), "Corner of the full statistics panel while streaming. Compact mode is always top center.", tab = SettingsTab.DISPLAY, section = "Statistics")
+    row("ui_stats_position", Symbols.STATS_POSITION, res.getString(R.string.settings_native_stats_position_title),
+        RowValue.Choice(res.getString(statsPositionLabel(statsPosition)), { dir ->
+            settings.edit().putString(StatsPosition.KEY, statsPosition.step(dir).name).apply()
+        }), res.getString(R.string.settings_native_stats_position_description), tab = SettingsTab.DISPLAY,
+        section = res.getString(R.string.settings_native_section_statistics), choiceHelp = NativeSettingsHelp.choice(res, "ui_stats_position", statsPosition.name))
     val choices = listOf<Pc?>(null) + pcs.filter { it.paired }.sortedBy { it.name.lowercase() }
     val index = choices.indexOfFirst { it?.uuid == startup.defaultPc }.coerceAtLeast(0)
-    row("ui_default_pc", Symbols.STAR, "Default device", RowValue.Choice(choices[index]?.name ?: "None", { dir ->
+    row("ui_default_pc", Symbols.STAR, res.getString(R.string.settings_native_default_pc_title), RowValue.Choice(choices[index]?.name ?: res.getString(R.string.settings_native_default_pc_none), { dir ->
         val next = choices[Math.floorMod(index + dir, choices.size)]
         updateStartup { it.copy(defaultPc = next?.uuid, skipStart = next != null && it.skipStart) }
-    }), "Preferred PC, marked on the start screen.", choices.size > 1, SettingsTab.DEVICES, "Startup")
-    row("ui_skip_start", Symbols.FAST_FORWARD, "Skip the start screen", RowValue.Toggle(startup.skipStart) { on -> updateStartup { it.copy(skipStart = on) } },
-        "Connects straight to the default device at startup.", startup.defaultPc != null, SettingsTab.DEVICES, "Startup")
-    row("devices_manage", Symbols.DEVICES, "Manage devices", RowValue.Action { shell.navigate(Screen.Devices) }, "Connect, rename, wake, unpair or remove a PC.", tab = SettingsTab.DEVICES, section = "Paired PCs")
-    row("devices_pair", Symbols.ADD_LINK, "Pair a new PC", RowValue.Action { shell.navigate(Screen.PairPc(Screen.Settings)) }, "Finds a PC running Vibepollo, Apollo or Sunshine.", tab = SettingsTab.DEVICES, section = "Paired PCs")
+    }), res.getString(R.string.settings_native_default_pc_description), choices.size > 1, SettingsTab.DEVICES, startupSection,
+        NativeSettingsHelp.choice(res, "ui_default_pc", if (choices[index] == null) "none" else "pc"))
+    row("ui_skip_start", Symbols.FAST_FORWARD, res.getString(R.string.settings_native_skip_start_title), RowValue.Toggle(startup.skipStart) { on -> updateStartup { it.copy(skipStart = on) } },
+        res.getString(R.string.settings_native_skip_start_description), startup.defaultPc != null, SettingsTab.DEVICES, startupSection)
+    row("devices_manage", Symbols.DEVICES, res.getString(R.string.settings_native_manage_devices_title), RowValue.Action { shell.navigate(Screen.Devices) },
+        res.getString(R.string.settings_native_manage_devices_description), tab = SettingsTab.DEVICES, section = pairedSection)
+    row("devices_pair", Symbols.ADD_LINK, res.getString(R.string.settings_native_pair_title), RowValue.Action { shell.navigate(Screen.PairPc(Screen.Settings)) },
+        res.getString(R.string.settings_native_pair_description), tab = SettingsTab.DEVICES, section = pairedSection)
     val artwork = LocalArtwork.current
     val tracker = LocalFocusTracker.current
     val library = LocalLibrary.current as? Library.Ready
     val scope = rememberCoroutineScope()
-    row("covers_sgdb_key", Symbols.KEY, "SteamGridDB API key", RowValue.Text(if (artwork.enabled) "Added" else "Not set") {
+    row("covers_sgdb_key", Symbols.KEY, res.getString(R.string.settings_native_sgdb_key_title),
+        RowValue.Text(res.getString(if (artwork.enabled) R.string.settings_native_sgdb_key_added else R.string.settings_native_sgdb_key_not_set)) {
         shell.openLayer(Layer.Dialog(DialogSpec(
-            "SteamGridDB API key",
-            "Free on steamgriddb.com: sign in, then Preferences → API. Leave it empty to stop using SteamGridDB.",
-            listOf(DialogField(Symbols.KEY, artwork.apiKey, "API key", password = true, maxLength = 64)), "Save",
+            res.getString(R.string.settings_native_sgdb_key_title),
+            res.getString(R.string.settings_native_sgdb_key_note),
+            listOf(DialogField(Symbols.KEY, artwork.apiKey, res.getString(R.string.settings_native_sgdb_key_placeholder), password = true, maxLength = 64)),
+            res.getString(R.string.settings_native_sgdb_key_save),
         ) { values ->
             artwork.apiKey = values.first()
-            shell.showToast(if (artwork.enabled) "API key saved" else "SteamGridDB is off", Symbols.CHECK_CIRCLE)
+            shell.showToast(res.getString(if (artwork.enabled) R.string.settings_native_sgdb_key_saved_toast else R.string.settings_native_sgdb_off_toast), Symbols.CHECK_CIRCLE)
             true
         }), tracker)
-    }, "Your own key lets Delos download covers, wide covers, backgrounds and logos from SteamGridDB. Kept on this device for every profile.",
-        tab = SettingsTab.COVERS, section = "SteamGridDB")
-    row("covers_sgdb_auto", Symbols.CLOUD_DOWNLOAD, "Download automatically", RowValue.Toggle(artwork.automatic) { on -> artwork.automatic = on },
-        "Fetches SteamGridDB's best-rated cover, wide cover, background and logo for new games when the library loads.",
-        artwork.enabled, SettingsTab.COVERS, "SteamGridDB")
+    }, res.getString(R.string.settings_native_sgdb_key_description),
+        tab = SettingsTab.COVERS, section = sgdbSection)
+    row("covers_sgdb_auto", Symbols.CLOUD_DOWNLOAD, res.getString(R.string.settings_native_sgdb_auto_title), RowValue.Toggle(artwork.automatic) { on -> artwork.automatic = on },
+        res.getString(R.string.settings_native_sgdb_auto_description),
+        artwork.enabled, SettingsTab.COVERS, sgdbSection)
     fun downloadAll(refresh: Boolean) {
-        val ready = library ?: return shell.showToast("Connect to a PC first", Symbols.ERROR)
+        val ready = library ?: return shell.showToast(res.getString(R.string.settings_native_connect_first_toast), Symbols.ERROR)
         scope.launch {
-            shell.showToast("Downloading the artwork of ${ready.pc.name}'s games…", Symbols.DOWNLOAD)
+            shell.showToast(res.getString(R.string.settings_native_downloading_toast, ready.pc.name), Symbols.DOWNLOAD)
             var failed = false
             val found = artwork.downloadAll(ready.pc, ready.apps, refresh) {
                 failed = true
                 shell.showToast(it, Symbols.ERROR)
             }
-            if (!failed) shell.showToast(if (found == 0 && !refresh) "All games have their artwork already" else "Artwork ready for $found games", Symbols.CHECK_CIRCLE)
+            if (!failed) shell.showToast(
+                if (found == 0 && !refresh) res.getString(R.string.settings_native_artwork_complete_toast) else res.getQuantityString(R.plurals.settings_native_artwork_ready_toast, found, found),
+                Symbols.CHECK_CIRCLE,
+            )
         }
     }
-    row("covers_sgdb_missing", Symbols.DOWNLOAD, "Download missing artwork", RowValue.Action { downloadAll(refresh = false) },
-        "Fetches artwork for the games of ${library?.pc?.name ?: "the current PC"} that have none.", artwork.enabled, SettingsTab.COVERS, "SteamGridDB")
-    row("covers_sgdb_refresh", Symbols.REFRESH, "Download all artwork again", RowValue.Action { downloadAll(refresh = true) },
-        "Looks up every game again and takes the best-rated images; ones you picked stay.", artwork.enabled, SettingsTab.COVERS, "SteamGridDB")
-    row("covers_sgdb_choose", Symbols.IMAGE_CHOOSE, "Choose artwork for one game", RowValue.Info("Game options"),
-        "Home screen: right menu button on a game → Artwork. Pick any cover, wide cover, background or logo.",
-        tab = SettingsTab.COVERS, section = "SteamGridDB")
-    row("about_version", Symbols.VERSION, "Version", RowValue.Info(BuildConfig.VERSION_NAME), "Delos for Android.", tab = SettingsTab.ABOUT, section = "Delos")
-    row("about_based", Symbols.ACCOUNT_TREE, "Based on", RowValue.Info("Artemis · Moonlight"), "Open source game streaming, licensed under the GPLv3.", tab = SettingsTab.ABOUT, section = "Delos")
-    row("about_welcome", Symbols.REPLAY, "Replay the welcome", RowValue.Action { shell.navigate(Screen.Boot(back = Screen.Settings)) }, "Opens the welcome screen again. Profiles and paired PCs are kept.", tab = SettingsTab.ABOUT, section = "Delos")
+    row("covers_sgdb_missing", Symbols.DOWNLOAD, res.getString(R.string.settings_native_missing_artwork_title), RowValue.Action { downloadAll(refresh = false) },
+        library?.pc?.name?.let { res.getString(R.string.settings_native_missing_artwork_description, it) } ?: res.getString(R.string.settings_native_missing_artwork_description_current),
+        artwork.enabled, SettingsTab.COVERS, sgdbSection)
+    row("covers_sgdb_refresh", Symbols.REFRESH, res.getString(R.string.settings_native_refresh_artwork_title), RowValue.Action { downloadAll(refresh = true) },
+        res.getString(R.string.settings_native_refresh_artwork_description), artwork.enabled, SettingsTab.COVERS, sgdbSection)
+    row("covers_sgdb_choose", Symbols.IMAGE_CHOOSE, res.getString(R.string.settings_native_choose_artwork_title), RowValue.Info(res.getString(R.string.settings_native_choose_artwork_value)),
+        res.getString(R.string.settings_native_choose_artwork_description),
+        tab = SettingsTab.COVERS, section = sgdbSection)
+    row("about_version", Symbols.VERSION, res.getString(R.string.settings_native_version_title), RowValue.Info(BuildConfig.VERSION_NAME), res.getString(R.string.settings_native_version_description), tab = SettingsTab.ABOUT, section = delosSection)
+    row("about_based", Symbols.ACCOUNT_TREE, res.getString(R.string.settings_native_based_title), RowValue.Info("Artemis · Moonlight"), // l10n-ignore: product names
+        res.getString(R.string.settings_native_based_description), tab = SettingsTab.ABOUT, section = delosSection)
+    row("about_welcome", Symbols.REPLAY, res.getString(R.string.settings_native_welcome_title), RowValue.Action { shell.navigate(Screen.Boot(back = Screen.Settings)) },
+        res.getString(R.string.settings_native_welcome_description), tab = SettingsTab.ABOUT, section = delosSection)
     var diagnosticLogs by remember { mutableStateOf(DiagLog.enabled) }
-    row("about_diag_logs", Symbols.DIAGNOSTIC_LOGS, "Keep diagnostic logs", RowValue.Toggle(diagnosticLogs) { on ->
+    row("about_diag_logs", Symbols.DIAGNOSTIC_LOGS, res.getString(R.string.settings_native_diag_logs_title), RowValue.Toggle(diagnosticLogs) { on ->
         diagnosticLogs = on
         DiagLog.setEnabled(context, on)
-    }, "Keeps a small log of what Delos did, for a problem report. Stays on this device unless you share it.",
-        tab = SettingsTab.ABOUT, section = "Diagnostics")
-    row("about_igdb", Symbols.PROVIDER_IGDB, "Game metadata · IGDB",
+    }, res.getString(R.string.settings_native_diag_logs_description),
+        tab = SettingsTab.ABOUT, section = res.getString(R.string.settings_native_section_diagnostics))
+    row("about_igdb", Symbols.PROVIDER_IGDB, res.getString(R.string.settings_native_igdb_title),
         RowValue.Action { providerWebsite("https://www.igdb.com/") },
-        "Game information and genres provided by IGDB.", tab = SettingsTab.ABOUT, section = "Game data")
-    row("about_pcgw", Symbols.PROVIDER_PCGW, "Technical data · PCGamingWiki",
+        res.getString(R.string.settings_native_igdb_description), tab = SettingsTab.ABOUT, section = gameDataSection)
+    row("about_pcgw", Symbols.PROVIDER_PCGW, res.getString(R.string.settings_native_pcgw_title),
         RowValue.Action { providerWebsite("https://www.pcgamingwiki.com/wiki/PCGamingWiki:Copyrights") },
-        "Native HDR evidence from PCGamingWiki (CC BY-NC-SA 3.0); the derived status is Delos's interpretation.", tab = SettingsTab.ABOUT, section = "Game data")
-    row("about_steam", Symbols.STEAM, "Genre and theme tags · Steam store",
+        res.getString(R.string.settings_native_pcgw_description), tab = SettingsTab.ABOUT, section = gameDataSection)
+    row("about_steam", Symbols.STEAM, res.getString(R.string.settings_native_steam_title),
         RowValue.Action { providerWebsite("https://store.steampowered.com/") },
-        "Card genres and themes come from Steam's public user tags where a game has a Steam page, read from the store page through the Delos metadata service. Unofficial and may change; IGDB is used otherwise.", tab = SettingsTab.ABOUT, section = "Game data")
-    row("about_hltb", Symbols.COMPLETION_TIME, "Completion times · HowLongToBeat",
+        res.getString(R.string.settings_native_steam_description), tab = SettingsTab.ABOUT, section = gameDataSection)
+    row("about_hltb", Symbols.COMPLETION_TIME, res.getString(R.string.settings_native_hltb_title),
         RowValue.Action { providerWebsite("https://howlongtobeat.com/") },
-        "HowLongToBeat's headline time. Unofficial client adapted from howlongtobeatpy (MIT, © 2018 Michele).", tab = SettingsTab.ABOUT, section = "Game data")
+        res.getString(R.string.settings_native_hltb_description), tab = SettingsTab.ABOUT, section = gameDataSection)
     return list
+}
+
+private fun statsPositionLabel(position: StatsPosition): Int = when (position) {
+    StatsPosition.TOP_LEFT -> R.string.settings_native_stats_top_left
+    StatsPosition.TOP_RIGHT -> R.string.settings_native_stats_top_right
+    StatsPosition.BOTTOM_LEFT -> R.string.settings_native_stats_bottom_left
+    StatsPosition.BOTTOM_RIGHT -> R.string.settings_native_stats_bottom_right
 }

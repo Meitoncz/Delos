@@ -1,5 +1,7 @@
 package com.limelight.shell.link
 
+import android.content.res.Resources
+import com.limelight.R
 import java.util.Locale
 
 /** One second of the PyroWave renderer's counters, taken at the stream's [targetKbps] (the live bitrate setting). */
@@ -45,15 +47,15 @@ data class LinkReading(
     val suggestedKbps: Int,
 ) {
     /** "Link drops frames at 220 Mbps, try 170", or the one-line state otherwise. */
-    val text: String get() = when (verdict) {
-        LinkVerdict.MEASURING -> "Measuring"
-        LinkVerdict.KEEPING_UP -> "Link keeps up at ${mbps(targetKbps)}"
-        LinkVerdict.DROPPING -> "Link drops frames at ${mbps(targetKbps)}, try ${mbps(suggestedKbps)}"
-        LinkVerdict.DEVICE_BEHIND -> "Device skips frames; the link is fine"
+    fun text(res: Resources): String = when (verdict) {
+        LinkVerdict.MEASURING -> res.getString(R.string.link_reading_measuring)
+        LinkVerdict.KEEPING_UP -> res.getString(R.string.link_reading_keeps_up, mbps(targetKbps))
+        LinkVerdict.DROPPING -> res.getString(R.string.link_reading_drops, mbps(targetKbps), mbps(suggestedKbps))
+        LinkVerdict.DEVICE_BEHIND -> res.getString(R.string.link_reading_device_behind)
     }
 }
 
-internal fun mbps(kbps: Int): String = "${kbps / 1000} Mbps"
+internal fun mbps(kbps: Int): String = "${kbps / 1000} Mbps" // l10n-ignore: technical readout
 
 /** The suggested bitrate for a link that drops [dropShare] of the frames at [targetKbps]; a pure function of the observed degradation. */
 internal fun suggestedBitrate(targetKbps: Int, dropShare: Double): Int {

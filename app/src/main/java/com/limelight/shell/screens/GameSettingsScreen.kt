@@ -1,6 +1,7 @@
 package com.limelight.shell.screens
 
 import android.content.SharedPreferences
+import com.limelight.R
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -38,6 +39,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -75,6 +77,9 @@ import kotlinx.coroutines.withContext
 @Composable
 fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appearance: Appearance) {
     val shell = LocalShell.current
+    val res = textResources()
+    // The catalog is read in the language of these resources
+    profiles.catalog.refresh(res)
     val feedback = LocalFeedback.current
     val activity = LocalActivity.current
     val profile by profiles.profiles.collectAsStateWithLifecycle()
@@ -90,7 +95,7 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
     val profileValues by profileStream.values.collectAsStateWithLifecycle()
     // The same recommendation as the settings, for this game's PC; testing the link is done in Settings
     val guidance = rememberLinkGuidance(screen.pc, values)
-    val bitrateHint = guidance?.line ?: pyroWaveRecommendedBitrateKbps(values)?.let { "Recommended: ${it / 1000} Mbps" }
+    val bitrateHint = guidance?.line(res) ?: pyroWaveRecommendedBitrateKbps(values)?.let { res.getString(R.string.link_recommended_plain, it / 1000) }
     var caps by remember(activity) { mutableStateOf<SettingsCapabilities?>(null) }
     LaunchedEffect(activity) {
         if (activity != null) caps = withContext(Dispatchers.Default) { SettingsCapabilities.read(activity) }
@@ -148,14 +153,14 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
     val resetRow = { key: String ->
         val before = game.backup()
         game.reset(key)
-        shell.showToast("Back to the profile value", Symbols.RESET, ToastAction("Undo") { game.restoreMissing(before) })
+        shell.showToast(res.getString(R.string.settings_game_reset_row_toast), Symbols.RESET, ToastAction(res.getString(R.string.settings_game_undo)) { game.restoreMissing(before) })
     }
     val resetRowNow by rememberUpdatedState(resetRow)
     val resetAll = {
         if (custom.isNotEmpty()) {
             val before = game.backup()
             game.resetAll()
-            shell.showToast("All settings follow the profile again", Symbols.RESET, ToastAction("Undo") { game.restoreMissing(before) })
+            shell.showToast(res.getString(R.string.settings_game_reset_all_toast), Symbols.RESET, ToastAction(res.getString(R.string.settings_game_undo)) { game.restoreMissing(before) })
             // The pill dims now that nothing is custom: the focus goes back to the list, where it was
             (focusedKey?.takeIf { key -> rows.any { it.key == key } } ?: rows.firstOrNull()?.key)?.let { navigation.requester(it).requestFocus() }
         }
@@ -192,7 +197,7 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
         // The eyebrow, the game's name, the custom-settings chip and Reset all, on the banner
         GameHeader(screen.pc.name, screen.app.name, custom.size, Modifier.offset(SettingsLayout.TITLE_X.px, GameSettingsLayout.HEAD_TOP.px)
             .width((1920f - 2 * SettingsLayout.TITLE_X).px).height(GameSettingsLayout.HEAD_HEIGHT.px)) {
-            PillButton("Reset all", Symbols.RESET, resetAll,
+            PillButton(stringResource(R.string.settings_game_reset_all), Symbols.RESET, resetAll,
                 Modifier.alpha(if (custom.isEmpty()) .4f else 1f)
                     .onFocusChanged { onBanner = it.hasFocus }
                     // Nothing to reset: dimmed and skipped. Down returns to the row last focused, not the nearest one
@@ -205,8 +210,8 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
         }
         com.limelight.shell.ui.SelectionPillHost(Modifier.offset(y = GameSettingsLayout.TABS_Y.px).fillMaxWidth().height(SettingsLayout.TABS_HEIGHT.px)) {
             ShoulderLabel("L1")
-            TabPill(Symbols.CAST, "Stream", tab == 0, Modifier.padding(horizontal = 5.px), streamCustom) { changeTab(0) }
-            TabPill(Symbols.MONITOR, "Display", tab == 1, Modifier.padding(horizontal = 5.px), displayCustom) { changeTab(1) }
+            TabPill(Symbols.CAST, SettingsTab.STREAM.label(res), tab == 0, Modifier.padding(horizontal = 5.px), streamCustom) { changeTab(0) }
+            TabPill(Symbols.MONITOR, SettingsTab.DISPLAY.label(res), tab == 1, Modifier.padding(horizontal = 5.px), displayCustom) { changeTab(1) }
             ShoulderLabel("R1")
         }
         CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView, LocalEntranceStagger provides rememberEntranceStagger(tab to game)) {
@@ -221,10 +226,10 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
                         rows.forEach { spec ->
                             key(spec.key) {
                                 val current = values[spec.key] ?: spec.default
-                                val choices = if (spec.kind == SettingKind.CHOICE) caps?.choices(spec, values) ?: spec.choices else spec.choices
+                                val choices = if (spec.kind == SettingKind.CHOICE) caps?.choices(res, spec, values) ?: spec.choices else spec.choices
                                 val value = when (spec.kind) {
                                     SettingKind.TOGGLE -> RowValue.Toggle(current as? Boolean ?: false) { stream.write(spec, it) }
-                                    SettingKind.CHOICE -> RowValue.Choice(spec.choiceLabel(current, choices), { dir ->
+                                    SettingKind.CHOICE -> RowValue.Choice(spec.choiceLabel(res, current, choices), { dir ->
                                         nextSettingChoice(current, choices, dir)?.let { stream.write(spec, it.value) }
                                     })
                                     SettingKind.SLIDER -> RowValue.Slider((current as? Number)?.toInt() ?: spec.min,
@@ -233,12 +238,12 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
                                 }
                                 val isCustom = spec.key in custom
                                 val hint = bitrateHint.takeIf { spec.key == "seekbar_bitrate_kbps" }
-                                val profileLine = "Profile: " + profileValueLabel(spec, profileValues[spec.key] ?: spec.default, choices)
+                                val profileLine = res.getString(R.string.settings_game_profile_line, profileValueLabel(res, spec, profileValues[spec.key] ?: spec.default, choices))
                                 // The START menu keeps the reset of a custom row; X resets it directly
-                                val menu = if (isCustom) ContextMenu(spec.label, listOf(MenuItem(Symbols.RESET, "Reset to profile value") { resetRow(spec.key) })) else null
+                                val menu = if (isCustom) ContextMenu(spec.label, listOf(MenuItem(Symbols.RESET, res.getString(R.string.settings_game_reset_menu)) { resetRow(spec.key) })) else null
                                 SettingRow(spec.icon, spec.label, value, Modifier.focusedListRow(navigation, spec.key),
-                                    description = listOfNotNull("From profile", hint).joinToString(" · ").takeIf { !isCustom },
-                                    override = if (isCustom) RowOverride(listOfNotNull(profileLine, hint).joinToString(" · "), touch) { resetRow(spec.key) } else null,
+                                    description = dotJoin(res, res.getString(R.string.settings_game_from_profile), hint).takeIf { !isCustom },
+                                    override = if (isCustom) RowOverride(dotJoin(res, profileLine, hint), touch) { resetRow(spec.key) } else null,
                                     enabled = caps != null && stream.enabled(spec, caps), contextMenu = menu,
                                     impact = impact(spec.key, values),
                                     onFocused = { focusedKey = spec.key })
@@ -248,18 +253,18 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
                 }
             }
         }
-        val linkNote = guidance?.help(System.currentTimeMillis(), currentTransport(LocalContext.current))?.let { "$it Test link is in Settings." }
+        val linkNote = guidance?.help(res, System.currentTimeMillis(), currentTransport(LocalContext.current))?.let { res.getString(R.string.settings_game_link_note, it) }
         val detail = focused?.let {
-            SettingsHelp.details(it, values, caps?.choices(it, values) ?: it.choices) +
+            SettingsHelp.details(res, it, values, caps?.choices(res, it, values) ?: it.choices) +
                 if (it.key == "seekbar_bitrate_kbps" && linkNote != null) "\n\n$linkNote" else ""
         }
-        val focusedChoices = focused?.let { caps?.choices(it, values) ?: it.choices }.orEmpty()
+        val focusedChoices = focused?.let { caps?.choices(res, it, values) ?: it.choices }.orEmpty()
         GameSettingsPanel(
             Modifier.align(Alignment.TopEnd).padding(top = GameSettingsLayout.PANEL_TOP.px, end = SettingsLayout.TITLE_X.px, bottom = bottom.px)
                 .width(520.px).fillMaxHeight(),
             game = screen.app.name, focused = focused, isCustom = focused?.key in custom, touch = touch,
-            currentLabel = focused?.let { profileValueLabel(it, values[it.key] ?: it.default, focusedChoices) },
-            profileLabel = focused?.let { profileValueLabel(it, profileValues[it.key] ?: it.default, focusedChoices) },
+            currentLabel = focused?.let { profileValueLabel(res, it, values[it.key] ?: it.default, focusedChoices) },
+            profileLabel = focused?.let { profileValueLabel(res, it, profileValues[it.key] ?: it.default, focusedChoices) },
             detail = detail, streamCustom = streamCustom, displayCustom = displayCustom,
             showImpactLegend = focused != null && impact(focused.key, values) != null,
         )
@@ -326,17 +331,18 @@ internal fun GameBanner(art: GameArt, image: ImageBitmap?, blurPx: Int) {
 @Composable
 internal fun GameHeader(pc: String, game: String, customCount: Int, modifier: Modifier, action: @Composable () -> Unit) {
     val colors = LocalDelosColors.current
+    val res = textResources()
     val k = stageUnit()
     // The prototype's text shadows (0 2 10 and 0 4 24) keep the text legible on a bright hero
     val shadow = if (colors.dark) Shadow(Color.Black.copy(alpha = .5f), Offset(0f, 3f * k), 12f * k) else null
     Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.px)) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.px)) {
-            BasicText("GAME SETTINGS · ${pc.uppercase()}", maxLines = 1, overflow = TextOverflow.Ellipsis,
+            BasicText(stringResource(R.string.settings_game_eyebrow, pc).uppercase(), maxLines = 1, overflow = TextOverflow.Ellipsis,
                 style = TextStyle(color = colors.accent2, fontFamily = Figtree, fontWeight = FontWeight.Bold, fontSize = 16.tpx, letterSpacing = .14.em, shadow = shadow))
             BasicText(game, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx, lineHeight = 1.35.em, shadow = shadow))
         }
-        Chip(if (customCount == 0) Symbols.CHECK_CIRCLE else Symbols.TUNE, customSettingsLabel(customCount), if (customCount == 0) null else colors.accent3)
+        Chip(if (customCount == 0) Symbols.CHECK_CIRCLE else Symbols.TUNE, customSettingsLabel(res, customCount), if (customCount == 0) null else colors.accent3)
         action()
     }
 }
@@ -353,34 +359,39 @@ internal fun GameSettingsPanel(
     showImpactLegend: Boolean = false,
 ) {
     val colors = LocalDelosColors.current
+    val res = textResources()
     SettingsPanelFrame(modifier) {
         Box(Modifier.size(120.px).clip(androidx.compose.foundation.shape.CircleShape).background(colors.accent), contentAlignment = Alignment.Center) {
             Symbol(focused?.icon ?: Symbols.TUNE, 64.tpx, colors.onAccent, filled = true)
         }
-        BasicText(focused?.label ?: "Your game, your settings", style = TextStyle(color = colors.text, fontFamily = Unbounded,
+        BasicText(focused?.label ?: stringResource(R.string.settings_game_panel_title), style = TextStyle(color = colors.text, fontFamily = Unbounded,
             fontWeight = FontWeight.SemiBold, fontSize = 30.tpx), modifier = Modifier.padding(top = 8.px))
-        fun bold(prefix: String, value: String, suffix: String): AnnotatedString = buildAnnotatedString {
-            append(prefix)
+        // The sentence with [value] set in bold: the string is formatted around a marker that the value then replaces
+        fun bold(@androidx.annotation.StringRes sentence: Int, value: String): AnnotatedString = buildAnnotatedString {
+            val marker = "\u0001"
+            val text = res.getString(sentence, marker)
+            val at = text.indexOf(marker)
+            append(text.substring(0, at))
             withStyle(SpanStyle(color = colors.text, fontWeight = FontWeight.Bold)) { append(value) }
-            append(suffix)
+            append(text.substring(at + marker.length))
         }
         val total = streamCustom + displayCustom
         when {
-            focused == null -> SourceBox(total > 0, if (total > 0) Symbols.TUNE else Symbols.CHECK_CIRCLE, customSettingsLabel(total),
-                AnnotatedString(customSummary(streamCustom, displayCustom)))
-            isCustom -> SourceBox(true, Symbols.TUNE, "Custom for this game",
-                bold("Profile value: ", profileLabel.orEmpty(), if (touch) " · tap Reset to go back to it" else " · press X to go back to it"))
-            else -> SourceBox(false, Symbols.ACCOUNT_CIRCLE, "From profile",
-                bold("Currently ", currentLabel.orEmpty(), ". Change it to set a value for this game only."))
+            focused == null -> SourceBox(total > 0, if (total > 0) Symbols.TUNE else Symbols.CHECK_CIRCLE, customSettingsLabel(res, total),
+                AnnotatedString(customSummary(res, streamCustom, displayCustom)))
+            isCustom -> SourceBox(true, Symbols.TUNE, stringResource(R.string.settings_game_custom_title),
+                bold(if (touch) R.string.settings_game_profile_value_touch else R.string.settings_game_profile_value_button, profileLabel.orEmpty()))
+            else -> SourceBox(false, Symbols.ACCOUNT_CIRCLE, stringResource(R.string.settings_game_from_profile),
+                bold(R.string.settings_game_currently, currentLabel.orEmpty()))
         }
         AutoScrollingHelp(focused?.key to detail, Modifier.weight(1f)) {
-            BasicText(detail?.takeIf { it.isNotBlank() } ?: "Only $game uses these changes. Everything else follows your profile.",
+            BasicText(detail?.takeIf { it.isNotBlank() } ?: stringResource(R.string.settings_game_only_this_game, game),
                 style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 22.tpx, lineHeight = 1.45.em))
         }
         if (showImpactLegend) ImpactLegend()
         Row(Modifier.padding(top = 10.px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.px)) {
             Symbol(Symbols.CHECK_CIRCLE, 20.tpx, colors.text3)
-            BasicText("Saved automatically · applies next stream", style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 17.tpx))
+            BasicText(stringResource(R.string.settings_game_saved_note), style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 17.tpx))
         }
     }
 }
