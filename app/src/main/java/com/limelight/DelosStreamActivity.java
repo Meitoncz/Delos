@@ -1121,9 +1121,15 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
 
-        // We can't guarantee the state of modifiers keys which may have
-        // lifted while focus was not on us. Clear the modifier state.
-        keyHandler.clearModifierState();
+        if (hasFocus) {
+            // We can't guarantee the state of modifiers keys which may have
+            // lifted while focus was not on us. Clear the modifier state.
+            keyHandler.clearModifierState();
+        }
+        else {
+            // Keys lifted from now on never reach us: release what is down on the host
+            keyHandler.releaseHeldKeys();
+        }
 
         // With Android native pointer capture, capture is lost when focus is lost,
         // so it must be requested again when focus is regained.
@@ -1381,7 +1387,11 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
         return keyHandler.handleKeyMultiple(event) || super.onKeyMultiple(keyCode, repeatCount, event);
     }
 
+    // The window the stream's input comes from (this one, or the external display's control) lost or gained focus
     public boolean handleFocusChange(boolean hasFocus) {
+        if (!hasFocus) {
+            keyHandler.releaseHeldKeys();
+        }
         return clipboardSync.handleFocusChange(hasFocus);
     }
 

@@ -3,25 +3,33 @@ package com.limelight.binding.input;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import android.view.KeyEvent;
 
 import com.limelight.binding.input.virtual_controller.keyboard.KeyBoardLayoutController;
 import com.limelight.nvstream.NvConnection;
 import com.limelight.nvstream.input.KeyboardPacket;
+import com.limelight.nvstream.jni.MoonBridge;
 import com.limelight.preferences.PreferenceConfiguration;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.InOrder;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/** Characterisation tests: the modifier state and the client-side Ctrl+Alt+Shift combos DelosStreamActivity handled before the extraction. */
+/**
+ * The modifier state and the client-side Ctrl+Alt+Shift combos as DelosStreamActivity handled them before the
+ * extraction (characterisation tests), and the keys released on the host when focus is lost.
+ */
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = {33})
 public class StreamKeyHandlerTest {
@@ -29,9 +37,15 @@ public class StreamKeyHandlerTest {
     private static final byte SHIFT = KeyboardPacket.MODIFIER_SHIFT;
     private static final byte ALT = KeyboardPacket.MODIFIER_ALT;
     private static final byte META = KeyboardPacket.MODIFIER_META;
+    private static final byte UP = KeyboardPacket.KEY_UP;
+    private static final byte NONE = 0;
+    // KeyEvents built in a test come from no keyboard the translator has a layout for
+    private static final byte RAW = MoonBridge.SS_KBE_FLAG_NON_NORMALIZED;
 
     private final PreferenceConfiguration prefs = new PreferenceConfiguration();
     private final NvConnection conn = mock(NvConnection.class);
+    private final KeyboardTranslator translator = new KeyboardTranslator(prefs);
+    private final ControllerHandler controllers = mock(ControllerHandler.class);
     private final FakeHost host = new FakeHost();
     private final StreamKeyHandler handler = new StreamKeyHandler(prefs, host);
 
@@ -39,8 +53,8 @@ public class StreamKeyHandlerTest {
         final List<String> actions = new ArrayList<>();
 
         @Override public NvConnection conn() { return conn; }
-        @Override public KeyboardTranslator keyboardTranslator() { return null; }
-        @Override public ControllerHandler controllerHandler() { return null; }
+        @Override public KeyboardTranslator keyboardTranslator() { return translator; }
+        @Override public ControllerHandler controllerHandler() { return controllers; }
         @Override public boolean isInputGrabbed() { return true; }
         @Override public boolean streamMenuTakesKey(KeyEvent event) { return false; }
         @Override public KeyBoardLayoutController visibleFullKeyboard() { return null; }
@@ -55,6 +69,15 @@ public class StreamKeyHandlerTest {
 
     private boolean up(int keyCode) {
         return handler.handleSpecialKeys(keyCode, false);
+    }
+
+    private static KeyEvent key(int action, int keyCode) {
+        return new KeyEvent(action, keyCode);
+    }
+
+    /** The host's virtual key for an Android key code. */
+    private short vk(int keyCode) {
+        return translator.translate(keyCode, 0, -1);
     }
 
     private void pressCtrlAltShift() {
@@ -80,13 +103,60 @@ public class StreamKeyHandlerTest {
     }
 
     @Test
-    public void focusLossClearsTheModifiers() {
+    public void focusGainClearsTheModifiers() {
         down(KeyEvent.KEYCODE_CTRL_LEFT);
         down(KeyEvent.KEYCODE_ALT_LEFT);
 
         handler.clearModifierState();
 
         assertEquals(0, handler.getModifierState());
+    }
+
+    @Test
+    public void focusLossReleasesEveryHeldKeyOnTheHostLastPressedFirst() {
+        assertTrue(handler.handleKeyDown(key(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_CTRL_LEFT)));
+        assertTrue(handler.handleKeyDown(key(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ALT_LEFT)));
+        assertTrue(handler.handleKeyDown(key(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_TAB)));
+        // Pressed and lifted before focus is lost: not held
+        assertTrue(handler.handleKeyDown(key(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_B)));
+        assertTrue(handler.handleKeyUp(key(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_B)));
+        assertEquals(CTRL | ALT, handler.getModifierState());
+        clearInvocations(conn);
+
+        handler.releaseHeldKeys();
+
+        InOrder order = inOrder(conn);
+        order.verify(conn).sendKeyboardInput(vk(KeyEvent.KEYCODE_TAB), UP, NONE, RAW);
+        order.verify(conn).sendKeyboardInput(vk(KeyEvent.KEYCODE_ALT_LEFT), UP, NONE, RAW);
+        order.verify(conn).sendKeyboardInput(vk(KeyEvent.KEYCODE_CTRL_LEFT), UP, NONE, RAW);
+        verifyNoMoreInteractions(conn);
+        assertEquals(0, handler.getModifierState());
+
+        // Everything is up now: a second focus loss sends nothing
+        handler.releaseHeldKeys();
+        verifyNoMoreInteractions(conn);
+    }
+
+    @Test
+    public void focusLossReleasesEvdevKeysAndTheRemappedRightAlt() {
+        prefs.rightAltAsMeta = true;
+        handler.keyboardEvent(true, (short) KeyEvent.KEYCODE_ALT_RIGHT);
+        handler.keyboardEvent(true, (short) KeyEvent.KEYCODE_S);
+        clearInvocations(conn);
+
+        handler.releaseHeldKeys();
+
+        InOrder order = inOrder(conn);
+        order.verify(conn).sendKeyboardInput(vk(KeyEvent.KEYCODE_S), UP, NONE, NONE);
+        order.verify(conn).sendKeyboardInput((short) KeyboardTranslator.VK_LWIN, UP, NONE, NONE);
+        verifyNoMoreInteractions(conn);
+        assertEquals(0, handler.getModifierState());
+    }
+
+    @Test
+    public void focusLossWithNothingHeldSendsNothing() {
+        handler.releaseHeldKeys();
+        verifyNoMoreInteractions(conn);
     }
 
     @Test

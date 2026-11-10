@@ -17,11 +17,15 @@ import com.limelight.nvstream.input.MouseButtonPacket;
 import com.limelight.nvstream.jni.MoonBridge;
 import com.limelight.preferences.PreferenceConfiguration;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 /**
  * The stream's key input: routes key events (the stream menu, the Full keyboard and gamepad buttons come first, then
  * the physical or soft keyboard), tracks the modifier state and runs the client-side combos Ctrl+Alt+Shift+Z (toggle
  * the input grab), +Q (quit) and +C (toggle the local cursor), which fire once every modifier is up again. {@code DelosStreamActivity}
- * forwards the Activity's and the stream view's key callbacks to it and clears the modifiers when focus is lost.
+ * forwards the Activity's and the stream view's key callbacks to it; when focus is lost it releases the keys that
+ * are down on the host.
  */
 public final class StreamKeyHandler {
     /** How long {@link #sendKeys} holds a key combination before releasing it. */
@@ -62,6 +66,10 @@ public final class StreamKeyHandler {
     private boolean waitingForAllModifiersUp = false;
     private int specialKeyCode = KeyEvent.KEYCODE_UNKNOWN;
 
+    // The keys this handler pressed on the host and has not released yet, in press order: the host's virtual key
+    // and the flags it was sent with. Guarded by itself: the evdev reader calls in from its own thread.
+    private final Map<Short, Byte> heldKeys = new LinkedHashMap<>();
+
     public StreamKeyHandler(PreferenceConfiguration prefConfig, Host host) {
         this.prefConfig = prefConfig;
         this.host = host;
@@ -69,10 +77,47 @@ public final class StreamKeyHandler {
 
     /**
      * We can't guarantee the state of modifiers keys which may have lifted while focus was not on us, so the
-     * modifier state is cleared when the window loses or regains focus.
+     * modifier state is cleared when the window regains focus; losing it goes through {@link #releaseHeldKeys}.
      */
     public void clearModifierState() {
         this.modifierFlags = 0;
+    }
+
+    /**
+     * The window the keys come from lost focus. A key lifted while focus is elsewhere never reaches us, so every
+     * key that is down on the host (modifiers included) is released there, last pressed first, and the modifier
+     * state is cleared. Without this a held Ctrl or Alt stays pressed on the host.
+     */
+    public void releaseHeldKeys() {
+        short[] keys;
+        byte[] flags;
+        synchronized (heldKeys) {
+            keys = new short[heldKeys.size()];
+            flags = new byte[keys.length];
+            int next = 0;
+            for (Map.Entry<Short, Byte> held : heldKeys.entrySet()) {
+                keys[next] = held.getKey();
+                flags[next++] = held.getValue();
+            }
+            heldKeys.clear();
+        }
+
+        modifierFlags = 0;
+        for (int i = keys.length - 1; i >= 0; i--) {
+            host.conn().sendKeyboardInput(keys[i], KeyboardPacket.KEY_UP, (byte) 0, flags[i]);
+        }
+    }
+
+    /** Sends a key to the host and remembers it while it is down there. */
+    private void sendKey(short key, boolean down, byte modifiers, byte flags) {
+        synchronized (heldKeys) {
+            if (down) {
+                heldKeys.put(key, flags);
+            } else {
+                heldKeys.remove(key);
+            }
+        }
+        host.conn().sendKeyboardInput(key, down ? KeyboardPacket.KEY_DOWN : KeyboardPacket.KEY_UP, modifiers, flags);
     }
 
     // Returns true if the key stroke was consumed
@@ -97,9 +142,7 @@ public final class StreamKeyHandler {
                 } else {
                     modifierFlags &= ~KeyboardPacket.MODIFIER_META;
                 }
-                host.conn().sendKeyboardInput((short) KeyboardTranslator.VK_LWIN,
-                        down ? KeyboardPacket.KEY_DOWN : KeyboardPacket.KEY_UP,
-                        (byte) modifierFlags, (byte) 0);
+                sendKey((short) KeyboardTranslator.VK_LWIN, down, (byte) modifierFlags, (byte) 0);
                 return true;
             }
             modifierMask = KeyboardPacket.MODIFIER_ALT;
@@ -324,7 +367,7 @@ public final class StreamKeyHandler {
                 return true;
             }
 
-            host.conn().sendKeyboardInput(translated, KeyboardPacket.KEY_DOWN, getModifierState(event),
+            sendKey(translated, true, getModifierState(event),
                     keyboardTranslator.hasNormalizedMapping(event.getKeyCode(), deviceId) ? 0 : MoonBridge.SS_KBE_FLAG_NON_NORMALIZED);
         }
 
@@ -399,7 +442,7 @@ public final class StreamKeyHandler {
                 return (unicodeChar & KeyCharacterMap.COMBINING_ACCENT) == 0 && (unicodeChar & KeyCharacterMap.COMBINING_ACCENT_MASK) != 0;
             }
 
-            host.conn().sendKeyboardInput(translated, KeyboardPacket.KEY_UP, getModifierState(event),
+            sendKey(translated, false, getModifierState(event),
                     keyboardTranslator.hasNormalizedMapping(event.getKeyCode(), deviceId) ? 0 : MoonBridge.SS_KBE_FLAG_NON_NORMALIZED);
         }
 
@@ -432,12 +475,7 @@ public final class StreamKeyHandler {
                 return;
             }
 
-            if (buttonDown) {
-                host.conn().sendKeyboardInput(keyMap, KeyboardPacket.KEY_DOWN, getModifierState(keyCode), (byte)0);
-            }
-            else {
-                host.conn().sendKeyboardInput(keyMap, KeyboardPacket.KEY_UP, getModifierState(keyCode), (byte)0);
-            }
+            sendKey(keyMap, buttonDown, getModifierState(keyCode), (byte) 0);
         }
     }
 
