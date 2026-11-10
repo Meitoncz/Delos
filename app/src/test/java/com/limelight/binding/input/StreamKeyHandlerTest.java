@@ -51,11 +51,12 @@ public class StreamKeyHandlerTest {
 
     private final class FakeHost implements StreamKeyHandler.Host {
         final List<String> actions = new ArrayList<>();
+        boolean grabbed = true;
 
         @Override public NvConnection conn() { return conn; }
         @Override public KeyboardTranslator keyboardTranslator() { return translator; }
         @Override public ControllerHandler controllerHandler() { return controllers; }
-        @Override public boolean isInputGrabbed() { return true; }
+        @Override public boolean isInputGrabbed() { return grabbed; }
         @Override public boolean streamMenuTakesKey(KeyEvent event) { return false; }
         @Override public KeyBoardLayoutController visibleFullKeyboard() { return null; }
         @Override public void toggleInputGrabLater() { actions.add("grab"); }
@@ -199,6 +200,38 @@ public class StreamKeyHandlerTest {
         assertTrue(up(KeyEvent.KEYCODE_ALT_RIGHT));
         verify(conn).sendKeyboardInput((short) KeyboardTranslator.VK_LWIN, KeyboardPacket.KEY_UP, (byte) 0, (byte) 0);
         assertEquals(0, handler.getModifierState());
+    }
+
+    @Test
+    public void evdevKeysGoToTheHostOnlyWhileInputIsGrabbed() {
+        handler.keyboardEvent(true, (short) KeyEvent.KEYCODE_A);
+        handler.keyboardEvent(false, (short) KeyEvent.KEYCODE_A);
+        verify(conn).sendKeyboardInput(vk(KeyEvent.KEYCODE_A), KeyboardPacket.KEY_DOWN, NONE, NONE);
+        verify(conn).sendKeyboardInput(vk(KeyEvent.KEYCODE_A), UP, NONE, NONE);
+
+        host.grabbed = false;
+        handler.keyboardEvent(true, (short) KeyEvent.KEYCODE_A);
+        handler.keyboardEvent(false, (short) KeyEvent.KEYCODE_A);
+        handler.keyboardEvent(true, (short) KeyEvent.KEYCODE_CTRL_LEFT);
+        verifyNoMoreInteractions(conn);
+        // The modifiers are still tracked, so the combo that grabs input again keeps working
+        assertEquals(CTRL, handler.getModifierState());
+    }
+
+    @Test
+    public void evdevKeysCanGrabInputAgainWithCtrlAltShiftZ() {
+        host.grabbed = false;
+        for (int keyCode : new int[] { KeyEvent.KEYCODE_CTRL_LEFT, KeyEvent.KEYCODE_ALT_LEFT,
+                KeyEvent.KEYCODE_SHIFT_LEFT, KeyEvent.KEYCODE_Z }) {
+            handler.keyboardEvent(true, (short) keyCode);
+        }
+        for (int keyCode : new int[] { KeyEvent.KEYCODE_Z, KeyEvent.KEYCODE_SHIFT_LEFT,
+                KeyEvent.KEYCODE_ALT_LEFT, KeyEvent.KEYCODE_CTRL_LEFT }) {
+            handler.keyboardEvent(false, (short) keyCode);
+        }
+
+        assertEquals(List.of("grab"), host.actions);
+        verifyNoMoreInteractions(conn);
     }
 
     @Test

@@ -475,6 +475,11 @@ public final class StreamKeyHandler {
                 return;
             }
 
+            // Like handleKeyDown() and handleKeyUp(): the keyboard is not the host's while we're not grabbing
+            if (!host.isInputGrabbed()) {
+                return;
+            }
+
             sendKey(keyMap, buttonDown, getModifierState(keyCode), (byte) 0);
         }
     }
