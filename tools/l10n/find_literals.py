@@ -56,11 +56,15 @@ def literals(source):
             line += source.count("\n", i, end)
             i = end
         elif c == "'":
-            # char literal, e.g. '"' or '\n'
+            # char literal, e.g. '"', '\n', '\'' or '\u2018'
             j = i + 1
             if j < n and source[j] == "\\":
-                j += 1
-            i = min(n, j + 2)
+                j += 2
+                while j < n and source[j] != "'" and source[j] != "\n":
+                    j += 1
+                i = min(n, j + 1)
+            else:
+                i = min(n, j + 2)
         elif c == '"':
             j, depth, start = i + 1, 0, i + 1
             while j < n:

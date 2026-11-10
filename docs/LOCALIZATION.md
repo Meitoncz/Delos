@@ -83,6 +83,17 @@ the legacy English strings, through a configuration context forced to `Locale.EN
   Translations are not held to them (see "Text fit"); the box scrolls.
 * The legacy summaries that the catalog reads also appear in the classic UI; they are the same resources, so there is one text.
 
+### Genre and theme names
+
+The genre and theme names on the game card and in the Y filter are resources in `res/values/strings_tags.xml`
+(`tags_genre_*`, `tags_theme_*`), looked up by IGDB's fixed ids, not by text: `genreName(res, genre)` / `themeName(res, theme)` in
+`shell/ui/GenreIcons.kt` return the translated name at draw time (`textResources()` in composition) and IGDB's English `name`
+for an id that has no string yet. Genre and theme ids overlap numerically, so the two lookups are separate. The ranking, the
+filters and the Steam mapping (`shell/ui/SteamTags.kt`, `GameTags.kt`) keep the ids and the English names as **data**; the Steam
+tag names are matched against what the store returns (always English) and are never shown or translated, which is why those
+table lines carry `// l10n-ignore`. A new genre or theme needs its id in `IGDB_*_NAMES`, `genreNameRes`/`themeNameRes`, the icon
+functions and a string; `TagNamesTest` fails when they disagree or the English text differs from IGDB's name.
+
 ## File layout
 
 One file per area, so that parallel agents and translators touch different files and merge conflicts stay rare. The same file
@@ -103,6 +114,7 @@ needs the keys, but identical names keep diffs reviewable.
 | `strings_settings_help.xml` | settings help texts (`help_*`) |
 | `strings_filters.xml` | artwork and library filters |
 | `strings_metadata.xml` | game metadata, tags, genres, sources |
+| `strings_tags.xml` | genre and theme names of the game card and filter (`tags_*`) |
 | `strings_artwork.xml` | artwork picker and progress |
 | `strings_toasts.xml` | toasts that belong to no single screen |
 | `strings_dialogs.xml` | generic dialogs, security prompts |
