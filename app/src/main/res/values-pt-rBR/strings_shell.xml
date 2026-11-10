@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shell_link_pair_title">Parear com %1$s?</string>
+    <string name="shell_link_pair_message">Um link pede ao app Delos para parear com este PC. Continue só se você mesmo o abriu.</string>
+    <string name="shell_link_pair_action">Parear</string>
+    <string name="shell_link_start_title">Iniciar %1$s?</string>
+    <string name="shell_link_start_title_unnamed">Iniciar um jogo?</string>
+    <string name="shell_link_start_message">Um link pede ao app Delos para iniciar %1$s em %2$s. Continue só se você mesmo o abriu.</string>
+    <string name="shell_link_start_message_game">Um link pede ao app Delos para iniciar %1$s em um PC. Continue só se você mesmo o abriu.</string>
+    <string name="shell_link_start_message_host">Um link pede ao app Delos para iniciar um jogo em %1$s. Continue só se você mesmo o abriu.</string>
+    <string name="shell_link_start_message_unnamed">Um link pede ao app Delos para iniciar um jogo em um PC. Continue só se você mesmo o abriu.</string>
+    <string name="shell_link_start_action">Iniciar</string>
+
+    <string name="shell_nav_settings">Configurações</string>
+    <string name="shell_nav_profile">Perfil</string>
+    <string name="shell_nav_devices">Dispositivos</string>
+    <string name="shell_default_profile_name">Jogador</string>
+
+    <string name="shell_side_not_connected">Não conectado</string>
+    <string name="shell_side_connected">Conectado a %1$s</string>
+    <string name="shell_side_offline">%1$s está offline</string>
+    <string name="shell_side_show_hidden">Mostrar jogos ocultos</string>
+    <string name="shell_side_hidden_on">Ocultos em %2$s: %1$d</string>
+    <string name="shell_side_hidden_on_this_pc">Ocultos neste PC: %1$d</string>
+    <string name="shell_side_theme">Tema</string>
+    <string name="shell_side_theme_dark">Escuro</string>
+    <string name="shell_side_theme_light">Claro</string>
+    <string name="shell_side_material_you">Material You</string>
+    <string name="shell_side_background">Plano de fundo</string>
+    <string name="shell_side_home_layout">Layout do início</string>
+    <string name="shell_side_sounds">Sons da interface</string>
+    <string name="shell_side_haptics">Resposta tátil</string>
+    <string name="shell_side_all_settings">Todas as configurações</string>
+
+    <string name="shell_progress_artwork">Baixando arte</string>
+    <string name="shell_progress_metadata">Baixando metadados</string>
+    <string name="shell_progress_count">%1$d de %2$d</string>
+
+    <plurals name="shell_home_apps_on_pc">
+        <item quantity="one">%1$d app em %2$s</item>
+        <item quantity="many">%1$d apps em %2$s</item>
+        <item quantity="other">%1$d apps em %2$s</item>
+    </plurals>
+    <plurals name="shell_home_apps_filtered">
+        <item quantity="one">%1$d de %2$d app em %3$s</item>
+        <item quantity="many">%1$d de %2$d apps em %3$s</item>
+        <item quantity="other">%1$d de %2$d apps em %3$s</item>
+    </plurals>
+    <string name="shell_hint_library_label">BIBLIOTECA</string>
+
+    <string name="shell_hint_select">Selecionar</string>
+    <string name="shell_hint_back">Voltar</string>
+    <string name="shell_hint_close">Fechar</string>
+    <string name="shell_hint_cancel">Cancelar</string>
+    <string name="shell_hint_change">Alterar</string>
+    <string name="shell_hint_reset">Redefinir</string>
+    <string name="shell_hint_start">Start</string>
+    <string name="shell_hint_menu">Menu</string>
+    <string name="shell_hint_options">Opções</string>
+    <string name="shell_hint_adjust">Ajustar</string>
+    <string name="shell_hint_back_to_library">Voltar à biblioteca</string>
+    <string name="shell_hint_previous_tab">Aba anterior</string>
+    <string name="shell_hint_next_tab">Próxima aba</string>
+    <string name="shell_hint_search">Buscar</string>
+    <string name="shell_hint_connect">Conectar</string>
+    <string name="shell_hint_choose">Escolher</string>
+    <string name="shell_hint_reset_filters">Redefinir filtros</string>
+    <string name="shell_hint_done">Concluir</string>
+    <string name="shell_hint_use_image">Usar imagem</string>
+    <string name="shell_hint_search_name">Buscar nome</string>
+    <string name="shell_hint_filter">Filtro</string>
+    <string name="shell_hint_reset_to_profile">Redefinir para o valor do perfil</string>
+
+    <string name="shell_problem_title_stream">Não foi possível executar um stream</string>
+    <string name="shell_problem_title_generic">O app Delos teve um problema</string>
+    <string name="shell_problem_note">Nada é enviado automaticamente. Relatar abre o GitHub no navegador com um rascunho para você conferir e salva um arquivo de log limpo em Downloads para você anexar.</string>
+    <string name="shell_problem_report">Relatar este problema</string>
+    <string name="shell_problem_dismiss">Dispensar</string>
+
+    <string name="shell_button_capture_title">Pressione os botões do menu do stream</string>
+    <string name="shell_button_capture_note">Segure-os juntos e solte. Um único botão também funciona, por exemplo um botão traseiro. Aguarde ou toque para cancelar.</string>
+
+    <string name="row_reset_to_profile">Redefinir para o valor do perfil</string>
+    <string name="row_reset">Redefinir</string>
+    <string name="row_not_set">Não definido</string>
+
+    <string name="impact_axis_gpu">GPU</string>
+    <string name="impact_axis_latency">Latência</string>
+    <string name="impact_axis_network">Rede</string>
+    <string name="impact_level_none">nenhum</string>
+    <string name="impact_level_low">baixo</string>
+    <string name="impact_level_medium">médio</string>
+    <string name="impact_level_high">alto</string>
+    <string name="impact_axis_level">%1$s %2$s</string>
+    <string name="impact_legend">Custo do valor atual: 1 barra baixo, 2 médio, 3 alto</string>
+    <string name="impact_axes_joined">%1$s, %2$s, %3$s</string>
+</resources>

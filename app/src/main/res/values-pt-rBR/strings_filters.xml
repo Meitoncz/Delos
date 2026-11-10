@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="filters_title">Filtrar biblioteca</string>
+    <plurals name="filters_result_active">
+        <item quantity="one">%1$d de %2$d jogo</item>
+        <item quantity="many">%1$d de %2$d jogos</item>
+        <item quantity="other">%1$d de %2$d jogos</item>
+    </plurals>
+    <plurals name="filters_result_all">
+        <item quantity="one">Todos os %1$d jogo</item>
+        <item quantity="many">Todos os %1$d jogos</item>
+        <item quantity="other">Todos os %1$d jogos</item>
+    </plurals>
+    <string name="filters_hint">Filtro</string>
+    <plurals name="filters_hint_active">
+        <item quantity="one">Filtro • %1$d ativo</item>
+        <item quantity="many">Filtro • %1$d ativos</item>
+        <item quantity="other">Filtro • %1$d ativos</item>
+    </plurals>
+    <string name="filters_section_genre">Gênero</string>
+    <string name="filters_section_theme">Tema</string>
+    <string name="filters_section_hdr">Suporte a HDR</string>
+    <string name="filters_section_duration">Duração (HowLongToBeat)</string>
+    <string name="filters_all">Todos</string>
+    <string name="filters_hdr_any">Todos</string>
+    <string name="filters_hdr_hdr">HDR nativo</string>
+    <string name="filters_length_any">Qualquer</string>
+    <string name="filters_length_under_10">&lt;10 h</string>
+    <string name="filters_length_10_30">10–30 h</string>
+    <string name="filters_length_30_60">30–60 h</string>
+    <string name="filters_length_over_60">60+ h</string>
+    <string name="filters_length_unknown">Desconhecida</string>
+    <string name="filters_reset">Redefinir</string>
+    <string name="filters_done">Concluir</string>
+
+    <string name="filters_art_title">Filtrar artes</string>
+    <string name="filters_art_reset">Redefinir filtros</string>
+    <string name="filters_art_done">Concluir</string>
+    <string name="filters_art_row_type">Tipo</string>
+    <string name="filters_art_row_style">Estilo</string>
+    <string name="filters_art_row_dimensions">Dimensões</string>
+    <string name="filters_art_row_sort">Ordenar</string>
+    <string name="filters_art_any">Qualquer</string>
+    <string name="filters_art_type_all">Todos</string>
+    <string name="filters_art_type_static">Estáticas</string>
+    <string name="filters_art_type_animated">Animadas</string>
+    <string name="filters_art_sort_score">Maior pontuação</string>
+    <string name="filters_art_sort_newest">Mais recentes</string>
+    <string name="filters_art_sort_oldest">Mais antigas</string>
+    <string name="filters_art_sort_score_chip">Ordem: maior pontuação</string>
+    <string name="filters_art_sort_newest_chip">Ordem: mais recentes</string>
+    <string name="filters_art_sort_oldest_chip">Ordem: mais antigas</string>
+    <string name="filters_art_sort_score_first">Maior pontuação primeiro</string>
+    <string name="filters_art_sort_newest_first">Mais recentes primeiro</string>
+    <string name="filters_art_sort_oldest_first">Mais antigas primeiro</string>
+    <string name="filters_art_style_alternate">Alternativo</string>
+    <string name="filters_art_style_blurred">Desfocado</string>
+    <string name="filters_art_style_white_logo">Logo branco</string>
+    <string name="filters_art_style_material">Material</string>
+    <string name="filters_art_style_no_logo">Sem logo</string>
+    <string name="filters_art_style_official">Oficial</string>
+    <string name="filters_art_style_white">Branco</string>
+    <string name="filters_art_style_black">Preto</string>
+    <string name="filters_art_style_custom">Personalizado</string>
+    <string name="filters_art_chips_reset">Redefinir</string>
+    <string name="filters_art_reset_toast">Filtros redefinidos</string>
+    <string name="filters_art_change">Alterar filtros</string>
+</resources>

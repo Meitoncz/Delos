@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="profile_signed_in">
+        <item quantity="one">Conectado neste %1$s · %2$d perfil</item>
+        <item quantity="many">Conectado neste %1$s · %2$d perfis</item>
+        <item quantity="other">Conectado neste %1$s · %2$d perfis</item>
+    </plurals>
+    <string name="profile_change_avatar">Alterar avatar</string>
+    <string name="profile_rename">Renomear</string>
+    <string name="profile_switch">Trocar de perfil</string>
+    <string name="profile_add">Adicionar perfil</string>
+    <string name="profile_delete">Excluir perfil</string>
+    <string name="profile_undo">Desfazer</string>
+    <string name="profile_restored">%1$s voltou</string>
+    <string name="profile_restore_failed">Não foi possível restaurar %1$s</string>
+    <string name="profile_deleted">%1$s foi excluído</string>
+    <string name="profile_menu_title">Perfis</string>
+    <string name="profile_playing_as">Jogando como %1$s</string>
+    <string name="profile_new">Novo perfil</string>
+    <string name="profile_rename_title">Renomear perfil</string>
+    <string name="profile_renamed">Perfil renomeado</string>
+    <string name="profile_name_note">Exibido na tela inicial e no menu lateral.</string>
+    <string name="profile_name_save">Salvar</string>
+    <string name="profile_name_required">Digite um nome para o seu perfil</string>
+</resources>

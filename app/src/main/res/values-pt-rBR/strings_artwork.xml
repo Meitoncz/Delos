@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="artwork_header">ARTE</string>
+    <string name="artwork_search_other">Buscar por outro nome</string>
+    <string name="artwork_filter">Filtro</string>
+    <string name="artwork_loading">Buscando no SteamGridDB…</string>
+    <string name="artwork_no_key_title">Adicione sua chave de API do SteamGridDB</string>
+    <string name="artwork_no_key_note">Configurações → Capas → Chave de API do SteamGridDB. É grátis em steamgriddb.com (Preferences → API).</string>
+    <string name="artwork_no_game_title">%1$s não está no SteamGridDB</string>
+    <string name="artwork_no_game_note">Buscar por outro nome o encontra pelo nome que o SteamGridDB conhece.</string>
+    <string name="artwork_choose_title">Escolha a aparência de %1$s</string>
+    <string name="artwork_choose_note">Buscar por outro nome: por exemplo Windows, Steam ou qualquer jogo cuja arte você goste. %1$s não é buscado automaticamente.</string>
+    <string name="artwork_unreachable">Não foi possível acessar o SteamGridDB</string>
+    <string name="artwork_download_failed">Falha no download</string>
+    <string name="artwork_builtin_note">Arte integrada - a arte deste app não pode ser alterada</string>
+    <string name="artwork_builtin_back">Voltar</string>
+    <string name="artwork_chip_looking">Procurando %1$s…</string>
+    <string name="artwork_chip_game_id">Jogo #%1$d</string>
+    <string name="artwork_chip_not_found">Ainda não encontrado</string>
+    <string name="artwork_in_use">Em uso</string>
+    <string name="artwork_animated">Animada</string>
+    <string name="artwork_static">Estática</string>
+    <string name="artwork_first_name_only">Só o nome</string>
+    <string name="artwork_first_from_pc">Do seu PC</string>
+    <string name="artwork_fact_source">ORIGEM</string>
+    <string name="artwork_fact_shows">EXIBE</string>
+    <string name="artwork_fact_name_source">O nome do jogo</string>
+    <string name="artwork_fact_name_shows">O nome no lugar de um logo</string>
+    <string name="artwork_fact_pc_source">Seu PC (Vibepollo)</string>
+    <string name="artwork_fact_pc_shows">Capa da caixa do PC</string>
+    <string name="artwork_fact_size">TAMANHO</string>
+    <string name="artwork_fact_file">ARQUIVO</string>
+    <string name="artwork_fact_score">PONTUAÇÃO</string>
+    <string name="artwork_fact_added">ADICIONADA</string>
+    <string name="artwork_fact_size_value">%1$d × %2$d px</string>
+    <string name="artwork_fact_score_by">%1$d · por %2$s</string>
+    <string name="artwork_fact_score_only">%1$d</string>
+    <string name="artwork_fact_by_only">por %1$s</string>
+    <string name="artwork_search_title">Buscar no SteamGridDB</string>
+    <string name="artwork_search_note">O nome do jogo como o SteamGridDB o conhece.</string>
+    <string name="artwork_search_hint">Nome do jogo</string>
+    <string name="artwork_search_action">Buscar</string>
+    <string name="artwork_searching_toast">Buscando %1$s no SteamGridDB…</string>
+    <string name="artwork_game_with_year">%1$s (%2$d)</string>
+    <string name="artwork_downloading_game_toast">Baixando a arte de %1$s…</string>
+    <string name="artwork_matched_toast">Associado a %1$s</string>
+    <string name="artwork_found_none">Nada encontrado para %1$s</string>
+    <string name="artwork_found_title">Escolha o jogo</string>
+    <string name="artwork_error_no_key">Adicione primeiro sua chave de API do SteamGridDB</string>
+    <string name="artwork_error_key_rejected">O SteamGridDB não aceitou a chave de API</string>
+    <string name="artwork_error_api_http">O SteamGridDB respondeu %1$d</string>
+    <string name="artwork_error_too_large">imagem grande demais</string>
+    <string name="artwork_error_save_failed">não foi possível salvar a imagem</string>
+    <string name="artwork_tab_cover">Capa</string>
+    <plurals name="artwork_count_cover">
+        <item quantity="one">%1$d capa</item>
+        <item quantity="many">%1$d capas</item>
+        <item quantity="other">%1$d capas</item>
+    </plurals>
+    <plurals name="artwork_count_all_cover">
+        <item quantity="one">Todas as %1$d capa</item>
+        <item quantity="many">Todas as %1$d capas</item>
+        <item quantity="other">Todas as %1$d capas</item>
+    </plurals>
+    <plurals name="artwork_count_of_cover">
+        <item quantity="one">%1$d de %2$d capa</item>
+        <item quantity="many">%1$d de %2$d capas</item>
+        <item quantity="other">%1$d de %2$d capas</item>
+    </plurals>
+    <string name="artwork_filtered_none_cover">Nenhuma capa corresponde a estes filtros</string>
+    <plurals name="artwork_filtered_has_cover">
+        <item quantity="one">%1$s tem %2$d capa no SteamGridDB, nenhuma corresponde a %3$s. Afrouxe um filtro ou busque por outro nome.</item>
+        <item quantity="many">%1$s tem %2$d capas no SteamGridDB, nenhuma delas corresponde a %3$s. Afrouxe um filtro ou busque por outro nome.</item>
+        <item quantity="other">%1$s tem %2$d capas no SteamGridDB, nenhuma delas corresponde a %3$s. Afrouxe um filtro ou busque por outro nome.</item>
+    </plurals>
+    <string name="artwork_filtered_unknown_cover">Nenhuma das capas corresponde a %1$s. Afrouxe um filtro ou busque por outro nome.</string>
+    <string name="artwork_empty_cover">O SteamGridDB ainda não tem capa para este jogo.</string>
+    <string name="artwork_downloading_cover">Baixando a capa…</string>
+    <string name="artwork_updated_cover">Capa atualizada</string>
+    <string name="artwork_tab_wide">Capa larga</string>
+    <plurals name="artwork_count_wide">
+        <item quantity="one">%1$d capa larga</item>
+        <item quantity="many">%1$d capas largas</item>
+        <item quantity="other">%1$d capas largas</item>
+    </plurals>
+    <plurals name="artwork_count_all_wide">
+        <item quantity="one">Todas as %1$d capa larga</item>
+        <item quantity="many">Todas as %1$d capas largas</item>
+        <item quantity="other">Todas as %1$d capas largas</item>
+    </plurals>
+    <plurals name="artwork_count_of_wide">
+        <item quantity="one">%1$d de %2$d capa larga</item>
+        <item quantity="many">%1$d de %2$d capas largas</item>
+        <item quantity="other">%1$d de %2$d capas largas</item>
+    </plurals>
+    <string name="artwork_filtered_none_wide">Nenhuma capa larga corresponde a estes filtros</string>
+    <plurals name="artwork_filtered_has_wide">
+        <item quantity="one">%1$s tem %2$d capa larga no SteamGridDB, nenhuma corresponde a %3$s. Afrouxe um filtro ou busque por outro nome.</item>
+        <item quantity="many">%1$s tem %2$d capas largas no SteamGridDB, nenhuma delas corresponde a %3$s. Afrouxe um filtro ou busque por outro nome.</item>
+        <item quantity="other">%1$s tem %2$d capas largas no SteamGridDB, nenhuma delas corresponde a %3$s. Afrouxe um filtro ou busque por outro nome.</item>
+    </plurals>
+    <string name="artwork_filtered_unknown_wide">Nenhuma das capas largas corresponde a %1$s. Afrouxe um filtro ou busque por outro nome.</string>
+    <string name="artwork_empty_wide">O SteamGridDB ainda não tem capa larga para este jogo.</string>
+    <string name="artwork_downloading_wide">Baixando a capa larga…</string>
+    <string name="artwork_updated_wide">Capa larga atualizada</string>
+    <string name="artwork_tab_hero">Plano de fundo</string>
+    <plurals name="artwork_count_hero">
+        <item quantity="one">%1$d plano de fundo</item>
+        <item quantity="many">%1$d planos de fundo</item>
+        <item quantity="other">%1$d planos de fundo</item>
+    </plurals>
+    <plurals name="artwork_count_all_hero">
+        <item quantity="one">Todos os %1$d plano de fundo</item>
+        <item quantity="many">Todos os %1$d planos de fundo</item>
+        <item quantity="other">Todos os %1$d planos de fundo</item>
+    </plurals>
+    <plurals name="artwork_count_of_hero">
+        <item quantity="one">%1$d de %2$d plano de fundo</item>
+        <item quantity="many">%1$d de %2$d planos de fundo</item>
+        <item quantity="other">%1$d de %2$d planos de fundo</item>
+    </plurals>
+    <string name="artwork_filtered_none_hero">Nenhum plano de fundo corresponde a estes filtros</string>
+    <plurals name="artwork_filtered_has_hero">
+        <item quantity="one">%1$s tem %2$d plano de fundo no SteamGridDB, nenhum corresponde a %3$s. Afrouxe um filtro ou busque por outro nome.</item>
+        <item quantity="many">%1$s tem %2$d planos de fundo no SteamGridDB, nenhum deles corresponde a %3$s. Afrouxe um filtro ou busque por outro nome.</item>
+        <item quantity="other">%1$s tem %2$d planos de fundo no SteamGridDB, nenhum deles corresponde a %3$s. Afrouxe um filtro ou busque por outro nome.</item>
+    </plurals>
+    <string name="artwork_filtered_unknown_hero">Nenhum dos planos de fundo corresponde a %1$s. Afrouxe um filtro ou busque por outro nome.</string>
+    <string name="artwork_empty_hero">O SteamGridDB ainda não tem plano de fundo para este jogo.</string>
+    <string name="artwork_downloading_hero">Baixando o plano de fundo…</string>
+    <string name="artwork_updated_hero">Plano de fundo atualizado</string>
+    <string name="artwork_tab_logo">Logo</string>
+    <plurals name="artwork_count_logo">
+        <item quantity="one">%1$d logo</item>
+        <item quantity="many">%1$d logos</item>
+        <item quantity="other">%1$d logos</item>
+    </plurals>
+    <plurals name="artwork_count_all_logo">
+        <item quantity="one">Todos os %1$d logo</item>
+        <item quantity="many">Todos os %1$d logos</item>
+        <item quantity="other">Todos os %1$d logos</item>
+    </plurals>
+    <plurals name="artwork_count_of_logo">
+        <item quantity="one">%1$d de %2$d logo</item>
+        <item quantity="many">%1$d de %2$d logos</item>
+        <item quantity="other">%1$d de %2$d logos</item>
+    </plurals>
+    <string name="artwork_filtered_none_logo">Nenhum logo corresponde a estes filtros</string>
+    <plurals name="artwork_filtered_has_logo">
+        <item quantity="one">%1$s tem %2$d logo no SteamGridDB, nenhum corresponde a %3$s. Afrouxe um filtro ou busque por outro nome.</item>
+        <item quantity="many">%1$s tem %2$d logos no SteamGridDB, nenhum deles corresponde a %3$s. Afrouxe um filtro ou busque por outro nome.</item>
+        <item quantity="other">%1$s tem %2$d logos no SteamGridDB, nenhum deles corresponde a %3$s. Afrouxe um filtro ou busque por outro nome.</item>
+    </plurals>
+    <string name="artwork_filtered_unknown_logo">Nenhum dos logos corresponde a %1$s. Afrouxe um filtro ou busque por outro nome.</string>
+    <string name="artwork_empty_logo">O SteamGridDB ainda não tem logo para este jogo.</string>
+    <string name="artwork_downloading_logo">Baixando o logo…</string>
+    <string name="artwork_updated_logo">Logo atualizado</string>
+</resources>

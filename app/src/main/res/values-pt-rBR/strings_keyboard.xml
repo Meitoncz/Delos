@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="keyboard_hint_press">Pressionar</string>
+    <string name="keyboard_hint_close">Fechar</string>
+    <string name="keyboard_hint_shift">Shift</string>
+    <string name="keyboard_hint_delete">Excluir</string>
+    <string name="keyboard_hint_space">Espaço</string>
+    <string name="keyboard_title">TECLADO NA TELA</string>
+</resources>

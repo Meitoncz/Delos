@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_tab_stream">Stream</string>
+    <string name="settings_tab_stream_description">Qualidade e latência do vídeo que vem do seu PC.</string>
+    <string name="settings_tab_display">Tela</string>
+    <string name="settings_tab_display_description">Como o stream preenche a tela e quais informações aparecem durante o jogo.</string>
+    <string name="settings_tab_audio">Áudio</string>
+    <string name="settings_tab_audio_description">Som do PC e sons da interface do Delos.</string>
+    <string name="settings_tab_controls">Controles</string>
+    <string name="settings_tab_controls_description">Controles, mouse, toque, teclado e controles na tela.</string>
+    <string name="settings_tab_appearance">Aparência</string>
+    <string name="settings_tab_appearance_description">Tema, cores e plano de fundo animado. As mudanças valem na hora.</string>
+    <string name="settings_tab_covers">Capas</string>
+    <string name="settings_tab_covers_description">Capas, capas largas, fundos e logos do seu PC ou do SteamGridDB.</string>
+    <string name="settings_tab_devices">Dispositivos</string>
+    <string name="settings_tab_devices_description">PCs pareados e o que acontece quando o app Delos inicia.</string>
+    <string name="settings_tab_about">Sobre</string>
+    <string name="settings_tab_about_description">O Delos é um fork do Artemis e do Moonlight, licenciado sob a GPLv3.</string>
+
+    <string name="settings_option_background_aurora">Aurora</string>
+    <string name="settings_option_background_tide">Maré</string>
+    <string name="settings_option_background_silk">Seda</string>
+    <string name="settings_option_background_contour">Contorno</string>
+    <string name="settings_option_background_nebula">Nebulosa</string>
+    <string name="settings_option_background_plasma">Plasma</string>
+    <string name="settings_option_background_lava">Lava</string>
+    <string name="settings_option_background_caustics">Cáusticas</string>
+    <string name="settings_option_background_bokeh">Bokeh</string>
+    <string name="settings_option_background_orbit">Órbita</string>
+    <string name="settings_option_background_still">Estático</string>
+
+    <string name="settings_option_home_layout_grid">Grade</string>
+    <string name="settings_option_home_layout_row">Linha</string>
+
+    <string name="settings_option_palette_delos">Delos</string>
+    <string name="settings_option_palette_lagoon">Lagoa</string>
+    <string name="settings_option_palette_dusk">Crepúsculo</string>
+    <string name="settings_option_palette_ember">Brasa</string>
+    <string name="settings_option_palette_moss">Musgo</string>
+    <string name="settings_option_palette_iris">Íris</string>
+    <string name="settings_option_palette_rose">Rosa</string>
+    <string name="settings_option_palette_sunset">Pôr do sol</string>
+    <string name="settings_option_palette_mint">Menta</string>
+    <string name="settings_option_palette_gold">Ouro</string>
+
+    <string name="settings_option_clock_system">Sistema</string>
+    <string name="settings_option_clock_12">12 horas</string>
+    <string name="settings_option_clock_24">24 horas</string>
+
+    <string name="settings_resolution_native">Nativa (%1$s)</string>
+    <string name="settings_resolution_native_portrait">Retrato nativo (%1$s)</string>
+    <string name="settings_resolution_native_fullscreen">Tela cheia nativa (%1$s)</string>
+    <string name="settings_resolution_native_fullscreen_portrait">Retrato em tela cheia nativo (%1$s)</string>
+    <string name="settings_resolution_custom">Personalizada (%1$s)</string>
+    <string name="settings_fps_native">Nativa (%1$d FPS)</string>
+    <string name="settings_fps_custom">Personalizada (%1$s FPS)</string>
+    <string name="settings_choice_custom">Personalizado</string>
+    <string name="settings_layout_number">Layout %1$d</string>
+    <string name="settings_choice_unavailable">%1$s (indisponível)</string>
+
+    <string name="settings_error_resolution_format">Use largura x altura, por exemplo 1920x1080</string>
+    <string name="settings_error_fps_range">Informe uma taxa de quadros acima de 0 e até 1000</string>
+    <string name="settings_error_bitrate_range">Informe um bitrate acima de 0 e até 9999 Mbps</string>
+</resources>

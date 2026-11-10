@@ -442,3 +442,27 @@ Neutral Spanish (Spain and Latin America), informal *tú*, infinitive for button
 | Link test | Probar enlace / prueba de enlace |
 | Custom / Default | Personalizado / Predeterminado |
 | Debug info | Información de depuración |
+## Terminology: Portuguese (Brazil)
+
+Register: *você*, Brazilian vocabulary; buttons and labels in the infinitive (Salvar, Cancelar), notes in plain *você* phrasing.
+Delos is always written as „o app Delos“ / „do app Delos“.
+
+| English | pt-BR |
+|---|---|
+| stream (noun) / to stream | stream / transmitir, transmissão |
+| gamepad, controller | controle |
+| host (PC), server | PC, servidor |
+| pair / pairing | parear / pareamento |
+| library, profile | biblioteca, perfil |
+| settings | configurações |
+| Cancel, Save, Back, Delete, Remove, Add | Cancelar, Salvar, Voltar, Excluir, Remover, Adicionar |
+| Quit, Resume, Wake | Sair, Retomar, Ativar (Wake-on-LAN kept) |
+| On / Off, Enable / Disable | Ativado / Desativado, Ativar / Desativar |
+| on-screen controls, touchscreen | controles na tela, tela touch |
+| frame rate, refresh rate, latency | taxa de quadros, taxa de atualização, latência |
+| bandwidth, packet loss | largura de banda, perda de pacotes |
+| rumble, gyro | vibração, giroscópio |
+| sharpness, upscaler, supersampling, frame pacing, bitrate, codec | nitidez, upscaler, supersampling, frame pacing, bitrate, codec |
+| cover, hero, artwork | capa, hero (banner), arte |
+| clipboard, stylus, deadzone, stick | área de transferência, caneta, zona morta, analógico |
+| toast | aviso |
