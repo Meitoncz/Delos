@@ -31,8 +31,8 @@ import java.util.Map;
 /**
  * The stream's pointer input: mice (captured or not), styluses and erasers, touchpads and the touchscreen in every
  * mouse mode (direct touch, mouse, trackpad), the 3/4/5-finger taps, the touch sensitivity and the pan and zoom mode.
- * {@code Game} sends it the pointer events left over after the controller passthrough; the mouse mode fills its
- * touch contexts.
+ * {@code Game} sends it the pointer events left over after the controller passthrough; {@link MouseModeController}
+ * fills its touch contexts.
  */
 public final class StreamPointerHandler {
     private static final int STYLUS_DOWN_DEAD_ZONE_DELAY = 100;
@@ -108,7 +108,7 @@ public final class StreamPointerHandler {
     }
 
     /** The touchscreen's contexts, one per supported pointer; the mouse mode replaces them. */
-    public TouchContext[] touchContexts() {
+    TouchContext[] touchContexts() {
         return touchContextMap;
     }
 
@@ -165,7 +165,7 @@ public final class StreamPointerHandler {
     }
 
     /** Leaves the pan and zoom mode without a toast (a new mouse mode always does). */
-    public void exitZoomMode() {
+    void exitZoomMode() {
         isPanZoomMode = false;
     }
 

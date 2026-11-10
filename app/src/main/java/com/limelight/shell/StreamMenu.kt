@@ -476,12 +476,12 @@ class StreamMenu(private val game: Game) {
             this@StreamMenu.menuSettingChanged(MenuSavedSetting.GYRO_SMOOTHING)
         }
 
-        override val allowChangeMouseMode get() = game.allowChangeMouseMode
-        override val mouseMode get() = game.activeMouseMode
+        override val allowChangeMouseMode get() = game.mouseModeController.isChangeAllowed
+        override val mouseMode get() = game.mouseModeController.activeMouseMode
         override val rememberMouseMode get() = prefs.rememberMouseMode
         override fun mouseModes() = com.limelight.shell.settings.SettingsCatalog(game).all.first { it.key == "mouse_mode_list" }.choices
             .filter { !game.isOnExternalDisplay || it.value in setOf("2", "3", "4") }
-        override fun setMouseMode(mode: Int) { game.setStreamMouseMode(mode) }
+        override fun setMouseMode(mode: Int) { game.mouseModeController.setStreamMouseMode(mode) }
         override val localMouseCursorVisible get() = game.isLocalMouseCursorVisible
         override fun toggleLocalMouseCursor() { game.toggleMouseLocalCursor() }
 

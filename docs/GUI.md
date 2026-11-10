@@ -885,6 +885,10 @@ These preserve implementation/design context from the removed UI plan, not phase
   (captured or not), styluses and erasers, touchpads and the touchscreen with its touch contexts,
   the 3/4/5-finger taps, the touch sensitivity and the pan and zoom mode (it owns the
   `PanZoomHandler`; `StreamMenu` and `ExternalDisplayControlActivity` call it via
-  `Game.getPointerHandler()`). `Game` keeps the Activity and view input callbacks as one-line
-  delegates, the input grab and local cursor, the evdev mouse callbacks and the controller wiring,
-  and reaches each handler through a small `Host` it implements.
+  `Game.getPointerHandler()`). `MouseModeController` picks the touchscreen's mouse mode (the
+  profile's mode, the external display's trackpad override, remote input's forced trackpad, the
+  stream menu's switch and its optional persistence) and installs the matching touch contexts in
+  the pointer handler (`StreamMenu` calls it via `Game.getMouseModeController()`). `Game` keeps the
+  Activity and view input callbacks as one-line delegates, the input grab and local cursor, the
+  evdev mouse callbacks and the controller wiring, and reaches each handler through a small `Host`
+  it implements.

@@ -12,16 +12,13 @@ import com.limelight.binding.input.ActiveKeyboardInput;
 import com.limelight.binding.input.CommitTextSender;
 import com.limelight.binding.input.ControllerHandler;
 import com.limelight.binding.input.KeyboardTranslator;
+import com.limelight.binding.input.MouseModeController;
 import com.limelight.binding.input.StreamKeyHandler;
 import com.limelight.binding.input.StreamPointerHandler;
 import com.limelight.binding.input.capture.InputCaptureManager;
 import com.limelight.binding.input.capture.InputCaptureProvider;
-import com.limelight.binding.input.touch.AbsoluteTouchContext;
-import com.limelight.binding.input.touch.RelativeTouchContext;
 import com.limelight.binding.input.driver.UsbDriverService;
 import com.limelight.binding.input.evdev.EvdevListener;
-import com.limelight.binding.input.touch.TouchContext;
-import com.limelight.binding.input.touch.TrackpadContext;
 import com.limelight.binding.input.virtual_controller.VirtualController;
 import com.limelight.binding.input.virtual_controller.keyboard.KeyBoardController;
 import com.limelight.binding.input.virtual_controller.keyboard.KeyBoardLayoutController;
@@ -43,7 +40,6 @@ import com.limelight.nvstream.input.MouseButtonPacket;
 import com.limelight.nvstream.jni.MoonBridge;
 import com.limelight.preferences.GlPreferences;
 import com.limelight.preferences.PreferenceConfiguration;
-import com.limelight.profiles.ProfilesManager;
 import com.limelight.ui.ExternalControllerView;
 import com.limelight.ui.GameGestures;
 import com.limelight.ui.StreamContainer;
@@ -116,9 +112,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         ExternalControllerView.InputCallbacks,
         PerfOverlayListener, UsbDriverService.UsbDriverStateListener, ActiveKeyboardInput.Target {
     public static Game instance;
-
-    private static final int REFERENCE_HORIZ_RES = 1280;
-    private static final int REFERENCE_VERT_RES = 720;
 
     private Handler timerHandler;
 
@@ -202,6 +195,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     private StreamSurfaceController surfaceController;
     private StreamKeyHandler keyHandler;
     private StreamPointerHandler pointerHandler;
+    private MouseModeController mouseModeController;
 
     private NvHTTP httpConn;
 
@@ -209,7 +203,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     // Delos: the stream menu of the new UI
     private com.limelight.shell.StreamMenu streamMenu;
 
-    public boolean allowChangeMouseMode = true;
     private boolean onExternalDisplay = false;
 
     // IME commit text, sent in UTF-8 chunks on the main thread
@@ -393,6 +386,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
         // Restore previous zoom & pan if enabled and saved
         pointerHandler.restoreZoomAndPan();
+        mouseModeController = new MouseModeController(this, prefConfig, streamContainer, pointerHandler, new MouseModeHost());
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             // Request unbuffered input event dispatching for all input classes we handle here.
@@ -649,8 +643,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
         if (Objects.equals(launch.appUUID, NvApp.REMOTE_INPUT_UUID)) {
             // Force trackpad mode since we won't see anything on the screen
-            allowChangeMouseMode = false;
-            applyMouseMode(2);
+            mouseModeController.forceTrackpad();
         } else {
             if (prefConfig.enableFullExDisplay && onExternalDisplay) {
                 requestFocusToExternalDisplayControl(this);
@@ -659,7 +652,7 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
 
             // Initialize touch contexts based on preferences
             // The mouse mode preference is also read in PreferenceConfiguration to set the boolean flags
-            initMouseMode();
+            mouseModeController.initMouseMode();
         }
 
         if (prefConfig.onscreenController) {
@@ -1041,6 +1034,19 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         }
     }
 
+    /** What MouseModeController needs from the stream: the connection the touch contexts send to. */
+    private final class MouseModeHost implements MouseModeController.Host {
+        @Override
+        public NvConnection conn() {
+            return conn;
+        }
+
+        @Override
+        public boolean isOnExternalDisplay() {
+            return Game.this.isOnExternalDisplay();
+        }
+    }
+
     /** The stream surface and the live upscaler controls (the stream menu's and the launch arrival's facade). */
     public StreamSurfaceController getSurfaceController() {
         return surfaceController;
@@ -1054,6 +1060,11 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
     /** The pointer input: mouse, stylus, touchpad and touchscreen, the touch sensitivity and the pan and zoom mode. */
     public StreamPointerHandler getPointerHandler() {
         return pointerHandler;
+    }
+
+    /** The touchscreen's mouse mode, which the stream menu reads and switches. */
+    public MouseModeController getMouseModeController() {
+        return mouseModeController;
     }
 
     public void setMetaKeyCaptureState(boolean enabled) {
@@ -1843,67 +1854,6 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         return launch.serverCommands;
     }
 
-    /**
-     * Initializes and applies the appropriate mouse mode based on user preferences
-     * and whether the app is running in secondary display mode (such as Samsung DeX).
-     *
-     * Behavior:
-     * - If the app is in secondary display mode:
-     *   - Applies the user's saved mouse mode if it's one of the supported modes:
-     *     "Trackpad Natural", "Trackpad Gaming", or "Disabled".
-     *   - Otherwise, defaults to applying the "Trackpad Natural" mode.
-     *
-     * - If the app is not in secondary display mode:
-     *   - Applies the user's saved mouse mode as is.
-     *
-     * This ensures the correct input mode is applied depending on the environment,
-     * improving compatibility with desktop-like multi-display modes.
-     */
-    private void initMouseMode() {
-        String[] mouseModes = getResources().getStringArray(R.array.mouse_mode_names);
-
-        String savedMouseModeIndexStr = ProfilesManager.getInstance()
-                .getOverlayingSharedPreferences(this)
-                .getString("mouse_mode_list", "0");
-
-        int savedMouseModeIndex;
-        try {
-            savedMouseModeIndex = Integer.parseInt(savedMouseModeIndexStr);
-        } catch (NumberFormatException e) {
-            savedMouseModeIndex = 0;
-        }
-
-        String savedMouseModeString = (savedMouseModeIndex >= 0 && savedMouseModeIndex < mouseModes.length)
-                ? mouseModes[savedMouseModeIndex]
-                : null;
-
-        String natural = getString(R.string.mouse_mode_track_pad_natural);
-        String gaming = getString(R.string.mouse_mode_track_pad_gaming);
-        String disabled = getString(R.string.mouse_mode_disabled);
-
-        int naturalIndex = 2; //fallback natural mode for secondary screen
-        for (int i = 0; i < mouseModes.length; i++) {
-            if (mouseModes[i].equals(natural)) {
-                naturalIndex = i;
-                break;
-            }
-        }
-        // We only want to temporary override the mouse mode to work with external, but not store it
-        if (isOnExternalDisplay()) {
-            if (savedMouseModeString != null &&
-                    (savedMouseModeString.equals(natural) ||
-                            savedMouseModeString.equals(gaming) ||
-                            savedMouseModeString.equals(disabled))) {
-                applyMouseMode(savedMouseModeIndex);
-            } else {
-                applyMouseMode(naturalIndex);
-            }
-        } else {
-            applyMouseMode(savedMouseModeIndex);
-        }
-    }
-
-
     // Toggle the local mouse cursor
     public void toggleMouseLocalCursor(){
         if (!grabbedInput) {
@@ -1918,66 +1868,10 @@ public class Game extends AppCompatActivity implements SurfaceHolder.Callback,
         }
     }
 
-    private int activeMouseMode;
-
-    public int getActiveMouseMode() { return activeMouseMode; }
     public boolean isLocalMouseCursorVisible() { return cursorVisible; }
 
     /** Why the running rumble preset could not use its technique, or null. */
     public String getRumbleProblem() { return controllerHandler == null ? null : controllerHandler.getRumbleProblem(); }
-
-    /** Delos: the native stream menu reuses the same mode and persistence rules as the old chooser. */
-    public void setStreamMouseMode(int mode) {
-        if (mode < 0 || mode > 5 || (isOnExternalDisplay() && mode != 2 && mode != 3 && mode != 4)) return;
-        applyMouseMode(mode);
-        if (prefConfig.rememberMouseMode) {
-            ProfilesManager.getInstance().getOverlayingSharedPreferences(this).edit()
-                    .putString("mouse_mode_list", String.valueOf(mode)).apply();
-        }
-    }
-
-    private void applyMouseMode(int mode) {
-        activeMouseMode = mode;
-        switch (mode) {
-            case 0: // Multi-touch
-                prefConfig.enableMultiTouchScreen = true;
-                prefConfig.touchscreenTrackpad = false;
-                break;
-            case 1: // Normal mouse
-            case 5: // Normal mouse with swapped buttons
-                prefConfig.enableMultiTouchScreen = false;
-                prefConfig.touchscreenTrackpad = false;
-                break;
-            case 2: // Trackpad (natural)
-            case 3: // Trackpad (gaming)
-                prefConfig.enableMultiTouchScreen = false;
-                prefConfig.touchscreenTrackpad = true;
-                break;
-            case 4: // Touch mouse disabled
-                break;
-            default:
-                break;
-        }
-
-        //Initialize touch contexts
-        TouchContext[] touchContextMap = pointerHandler.touchContexts();
-        for (int i = 0; i < touchContextMap.length; i++) {
-            if (touchContextMap[i] != null) touchContextMap[i].cancelTouch();
-            if (mode == 4) {
-                // Touch mouse disabled
-                touchContextMap[i] = null;
-            } else if (!prefConfig.touchscreenTrackpad) {
-                touchContextMap[i] = new AbsoluteTouchContext(conn, i, streamContainer, mode == 5);
-            } else if (mode == 3) {
-                touchContextMap[i] = new RelativeTouchContext(conn, i, REFERENCE_HORIZ_RES, REFERENCE_VERT_RES, streamContainer, prefConfig);
-            } else {
-                touchContextMap[i] = new TrackpadContext(conn, i);
-            }
-        }
-
-        // Always exit zoom mode if mouse mode has changed
-        pointerHandler.exitZoomMode();
-    }
 
     /** Delos: the statistics overlay container, which the stream menu lifts above its blurred backdrop while it is open. */
     public android.view.ViewGroup getPerformanceOverlayContainer() {
