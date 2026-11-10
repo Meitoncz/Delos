@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_loading">正在查找你的 PC…</string>
+    <string name="home_no_pc_title">尚未配对 PC</string>
+    <string name="home_no_pc_note">目前请在经典版 Delos 应用中配对 PC。\n新界面的配对将在第 6.6 步推出。</string>
+    <string name="home_offline_title">%1$s 已离线</string>
+    <string name="home_offline_note">请开启 PC，或在经典版 Delos 应用中唤醒。\n在此处唤醒将在第 6.6 步推出。</string>
+    <string name="home_empty_title">%1$s 上没有游戏</string>
+    <string name="home_empty_note">在 Vibepollo 的网页界面中添加应用，它们会自动显示在这里。</string>
+    <string name="home_hidden_toast">%1$s 已隐藏 · 侧边菜单可显示已隐藏的游戏</string>
+
+    <string name="home_badge_running">运行中</string>
+    <string name="home_badge_last_played">上次游玩</string>
+    <string name="home_tile_custom_description">此游戏的自定义设置</string>
+
+    <string name="home_menu_resume">继续</string>
+    <string name="home_menu_quit">退出游戏</string>
+    <string name="home_menu_quit_and_start">退出 %1$s 并启动</string>
+    <string name="home_menu_resume_other">继续 %1$s</string>
+    <string name="home_menu_start">启动游戏</string>
+    <string name="home_menu_artwork">图片素材</string>
+    <string name="home_menu_metadata">元数据</string>
+    <string name="home_menu_settings">游戏设置</string>
+    <string name="home_menu_show">显示游戏</string>
+    <string name="home_menu_hide">隐藏游戏</string>
+
+    <string name="home_header_running">运行中</string>
+    <string name="home_header_game">游戏</string>
+    <string name="home_header_last_played">上次游玩</string>
+    <string name="home_header_other_running">%1$s 正在运行</string>
+    <string name="home_header_custom">自定义设置</string>
+    <string name="home_header_hidden">已隐藏</string>
+    <string name="home_meta_join">%1$s · %2$s</string>
+
+    <string name="home_info_app">应用信息</string>
+    <string name="home_info_game">游戏信息</string>
+    <string name="home_chip_running_on">运行于 %1$s</string>
+    <string name="home_chip_hltb">HLTB %1$s</string>
+    <string name="home_chip_virtual_display">虚拟显示器</string>
+
+    <string name="home_quit_done">已退出 %1$s</string>
+    <string name="home_quit_starting">Delos 仍在连接 %1$s</string>
+    <string name="home_quit_failed">无法退出 %1$s</string>
+    <string name="home_quit_other_device">另一台设备启动了 %1$s；请在该设备或 PC 上退出</string>
+</resources>

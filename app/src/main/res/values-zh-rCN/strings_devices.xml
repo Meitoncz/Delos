@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="devices_start_greeting">你好，%1$s</string>
+    <string name="devices_start_welcome">欢迎</string>
+    <string name="devices_start_pair_note">配对一台 PC，开始游戏。</string>
+    <string name="devices_start_choose_note">选择要游玩的 PC。</string>
+    <string name="devices_status_online">在线</string>
+    <string name="devices_status_asleep">睡眠中</string>
+    <string name="devices_status_asleep_wakes">睡眠中 · 可唤醒</string>
+    <string name="devices_status_offline">离线</string>
+    <string name="devices_status_connected">已连接</string>
+    <string name="devices_status_default">默认</string>
+    <string name="devices_status_with_default">%1$s · %2$s</string>
+    <string name="devices_pair_new">配对新 PC</string>
+    <string name="devices_pair_new_meta">Vibepollo、Apollo 或 Sunshine</string>
+    <string name="devices_title">设备</string>
+    <string name="devices_note">已与 Delos 配对的 PC。在此设置的名称仅保存在本设备上。</string>
+
+    <string name="devices_menu_default_off">不随此 PC 启动</string>
+    <string name="devices_menu_default_on">随此 PC 启动 Delos</string>
+    <string name="devices_menu_wake">唤醒 PC</string>
+    <string name="devices_menu_rename">重命名</string>
+    <string name="devices_menu_open_games">打开其游戏库</string>
+    <string name="devices_menu_connect">连接</string>
+    <string name="devices_menu_unpair">取消配对</string>
+    <string name="devices_menu_remove">从 Delos 中删除</string>
+
+    <string name="devices_portal_waking_title">正在唤醒 %1$s</string>
+    <string name="devices_portal_waiting_title">正在等待 %1$s</string>
+    <string name="devices_portal_waking_note">唤醒信号已发送 · %1$s 取消</string>
+    <string name="devices_portal_waiting_note">请开启 PC · %1$s 取消</string>
+    <string name="devices_wake_timeout_toast">%1$s 未能唤醒</string>
+    <string name="devices_portal_connecting_title">正在连接 %1$s</string>
+    <string name="devices_portal_connecting_note">Vibepollo · 已配对</string>
+
+    <string name="devices_link_portal_title">正在测试与 %1$s 的链路</string>
+    <string name="devices_link_portal_start">请停留在 %1$s · %2$s 取消</string>
+    <string name="devices_link_portal_testing">正在测试 %1$s · 请停留在 %2$s · %3$s 取消</string>
+    <string name="devices_link_portal_confirming">正在确认 %1$s · 请停留在 %2$s · %3$s 取消</string>
+    <string name="devices_link_done">%1$s 可承载 %2$s</string>
+    <string name="devices_link_done_jitter">%1$s 可承载 %2$s（略有抖动）</string>
+    <string name="devices_link_stopped">链路测试已停止</string>
+
+    <string name="devices_address_title">输入 PC 地址</string>
+    <string name="devices_address_note">运行 Vibepollo 的 PC 的 IP 地址或主机名，可附带端口。</string>
+    <string name="devices_address_action">添加 PC</string>
+    <string name="devices_address_required">请输入地址</string>
+    <string name="devices_address_looking">正在查找 %1$s…</string>
+    <string name="devices_address_not_added">%1$s 已响应，但无法添加</string>
+    <string name="devices_add_not_an_address">“%1$s”不是有效地址</string>
+    <string name="devices_add_no_answer">%1$s 处没有 PC 响应</string>
+
+    <string name="devices_rename_title">重命名 PC</string>
+    <string name="devices_rename_note">新名称仅在本设备的 Delos 中使用。留空则使用 PC 自身的名称（%1$s）。</string>
+    <string name="devices_rename_action">保存</string>
+    <string name="devices_rename_reset_toast">已恢复为 %1$s</string>
+    <string name="devices_rename_done_toast">已重命名为 %1$s</string>
+
+    <string name="devices_wake_sent_toast">已向 %1$s 发送唤醒信号</string>
+    <string name="devices_wake_unsupported">无法从此处唤醒 %1$s</string>
+    <string name="devices_wake_failed">无法发送唤醒信号</string>
+    <string name="devices_removed_toast">已删除 %1$s</string>
+    <string name="devices_default_set_toast">Delos 将随 %1$s 启动</string>
+    <string name="devices_default_cleared_toast">没有默认设备</string>
+    <string name="devices_unpaired">已取消与 %1$s 的配对</string>
+    <string name="devices_unpair_offline">%1$s 须在线才能取消配对</string>
+    <string name="devices_unpair_not_paired">%1$s 未配对</string>
+    <string name="devices_unpair_failed">无法取消与 %1$s 的配对</string>
+    <string name="devices_unreachable">无法连接 %1$s</string>
+    <string name="devices_starting">Delos 仍在启动，请重试</string>
+</resources>

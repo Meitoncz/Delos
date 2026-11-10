@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shell_report_saved">日志已以 %1$s 为文件名保存到“下载”文件夹，请将其附在问题反馈中。</string>
+    <string name="shell_report_save_failed">无法保存日志。请在 设置 > 关于 > 调试信息 中分享。</string>
+    <string name="shell_report_no_browser">没有可用的浏览器</string>
+    <string name="shell_retry_unreachable">无法连接到 %1$s</string>
+    <string name="shell_retry_game_missing">%2$s 上没有 %1$s</string>
+    <string name="shell_retry_game_missing_unnamed">%1$s 上没有该游戏</string>
+    <string name="shell_profile_updated">个人资料已更新</string>
+    <string name="shell_welcome">欢迎，%1$s</string>
+    <string name="shell_game_unreachable">无法连接到 %1$s</string>
+    <string name="shell_game_virtual_display_missing">%1$s 上的虚拟显示器尚未就绪 · 正在串流主显示器</string>
+    <string name="shell_game_quitting">正在退出 %1$s…</string>
+</resources>

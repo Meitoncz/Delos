@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="metadata_hdr_unverified">HDR/SDR 未验证</string>
+
+    <string name="metadata_filtered_title">没有符合这些筛选条件的游戏</string>
+    <string name="metadata_filtered_note">按 %1$s 更改筛选条件，或在下方重置。</string>
+    <string name="metadata_filtered_reset">重置游戏库筛选</string>
+
+    <string name="metadata_error_unavailable">此版本不支持游戏元数据</string>
+    <string name="metadata_error_update">无法更新游戏信息。请打开元数据以刷新或选择匹配项。</string>
+    <string name="metadata_error_partial">部分游戏信息不可用。请打开元数据以刷新。</string>
+
+    <string name="metadata_menu_title">元数据 · %1$s</string>
+    <string name="metadata_menu_search">搜索 IGDB / 更改匹配</string>
+    <string name="metadata_menu_refresh">刷新元数据</string>
+    <string name="metadata_menu_reset">重置元数据匹配</string>
+    <string name="metadata_refreshed_toast">元数据已刷新</string>
+    <string name="metadata_reset_toast">元数据匹配已重置</string>
+    <string name="metadata_no_match_toast">未找到 IGDB 匹配项。请使用“搜索 IGDB / 更改匹配”。</string>
+    <string name="metadata_update_failed_toast">无法更新元数据</string>
+
+    <string name="metadata_searching_toast">正在 IGDB 中搜索 %1$s…</string>
+    <string name="metadata_search_unavailable_toast">IGDB 搜索不可用</string>
+    <string name="metadata_matched_toast">元数据已匹配为 %1$s</string>
+    <string name="metadata_match_save_failed_toast">无法保存元数据匹配</string>
+    <string name="metadata_candidate_with_year">%1$s（%2$d）</string>
+    <string name="metadata_matches_previous">之前的匹配项</string>
+    <string name="metadata_matches_more">更多匹配项</string>
+    <string name="metadata_search_other">搜索其他名称</string>
+    <string name="metadata_search_title">搜索 IGDB</string>
+    <string name="metadata_search_note">元数据的选择独立于 SteamGridDB 图片素材。</string>
+    <string name="metadata_search_hint">游戏名称</string>
+    <string name="metadata_search_action">搜索</string>
+    <string name="metadata_matches_none">IGDB 中没有 %1$s 的匹配项</string>
+    <string name="metadata_matches_title">选择元数据匹配项</string>
+
+    <plurals name="metadata_hltb_minutes">
+        <item quantity="other">%1$d 分钟</item>
+    </plurals>
+    <plurals name="metadata_hltb_hours">
+        <item quantity="other">%1$s 小时</item>
+    </plurals>
+</resources>
