@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shell_report_saved">Journal enregistré dans Téléchargements sous %1$s. Joins-le au ticket.</string>
+    <string name="shell_report_save_failed">Impossible d’enregistrer le journal. Partage-le depuis Réglages → À propos → Infos de débogage.</string>
+    <string name="shell_report_no_browser">Aucun navigateur disponible</string>
+    <string name="shell_retry_unreachable">%1$s est injoignable</string>
+    <string name="shell_retry_game_missing">%1$s n’est pas disponible sur %2$s</string>
+    <string name="shell_retry_game_missing_unnamed">Le jeu n’est pas disponible sur %1$s</string>
+    <string name="shell_profile_updated">Profil mis à jour</string>
+    <string name="shell_welcome">Bienvenue, %1$s</string>
+    <string name="shell_game_unreachable">%1$s est injoignable</string>
+    <string name="shell_game_virtual_display_missing">L’écran virtuel n’est pas prêt sur %1$s · stream de l’écran principal</string>
+    <string name="shell_game_quitting">Fermeture de %1$s…</string>
+</resources>

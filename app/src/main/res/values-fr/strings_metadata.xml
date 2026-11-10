@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="metadata_hdr_unverified">HDR/SDR non vérifié</string>
+    <string name="metadata_filtered_title">Aucun jeu ne correspond à ces filtres</string>
+    <string name="metadata_filtered_note">Appuie sur %1$s pour modifier les filtres, ou réinitialise-les ci-dessous.</string>
+    <string name="metadata_filtered_reset">Réinitialiser les filtres de la bibliothèque</string>
+    <string name="metadata_error_unavailable">Les métadonnées des jeux ne sont pas disponibles dans cette version</string>
+    <string name="metadata_error_update">Impossible de mettre à jour les infos du jeu. Ouvre Métadonnées pour actualiser ou choisir une correspondance.</string>
+    <string name="metadata_error_partial">Certaines infos du jeu sont indisponibles. Ouvre Métadonnées pour actualiser.</string>
+    <string name="metadata_menu_title">Métadonnées · %1$s</string>
+    <string name="metadata_menu_search">Chercher sur IGDB / changer de correspondance</string>
+    <string name="metadata_menu_refresh">Actualiser les métadonnées</string>
+    <string name="metadata_menu_reset">Réinitialiser la correspondance</string>
+    <string name="metadata_refreshed_toast">Métadonnées actualisées</string>
+    <string name="metadata_reset_toast">Correspondance réinitialisée</string>
+    <string name="metadata_no_match_toast">Aucune correspondance IGDB. Utilise Chercher sur IGDB / changer de correspondance.</string>
+    <string name="metadata_update_failed_toast">Impossible de mettre à jour les métadonnées</string>
+    <string name="metadata_searching_toast">Recherche de %1$s sur IGDB…</string>
+    <string name="metadata_search_unavailable_toast">La recherche IGDB est indisponible</string>
+    <string name="metadata_matched_toast">Métadonnées associées à %1$s</string>
+    <string name="metadata_match_save_failed_toast">Impossible d’enregistrer la correspondance</string>
+    <string name="metadata_candidate_with_year">%1$s (%2$d)</string>
+    <string name="metadata_matches_previous">Correspondances précédentes</string>
+    <string name="metadata_matches_more">Plus de correspondances</string>
+    <string name="metadata_search_other">Chercher un autre nom</string>
+    <string name="metadata_search_title">Chercher sur IGDB</string>
+    <string name="metadata_search_note">Choisis les métadonnées indépendamment des visuels SteamGridDB.</string>
+    <string name="metadata_search_hint">Nom du jeu</string>
+    <string name="metadata_search_action">Chercher</string>
+    <string name="metadata_matches_none">Aucune correspondance IGDB pour %1$s</string>
+    <string name="metadata_matches_title">Choisir la correspondance</string>
+    <plurals name="metadata_hltb_minutes">
+        <item quantity="one">%1$d min</item>
+        <item quantity="many">%1$d min</item>
+        <item quantity="other">%1$d min</item>
+    </plurals>
+    <plurals name="metadata_hltb_hours">
+        <item quantity="one">%1$s h</item>
+        <item quantity="many">%1$s h</item>
+        <item quantity="other">%1$s h</item>
+    </plurals>
+</resources>

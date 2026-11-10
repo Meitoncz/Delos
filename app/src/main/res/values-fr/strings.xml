@@ -1,0 +1,420 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="scut_pc_not_found">PC introuvable</string>
+    <string name="scut_invalid_uuid">Le PC indiqué n’est pas valide</string>
+    <string name="scut_invalid_app_id">L’application indiquée n’est pas valide</string>
+    <string name="scut_game_running">%1$s est déjà lancé · quitte-le d’abord depuis Delos</string>
+    <string name="scut_other_game_running">Un autre jeu est déjà lancé · quitte-le d’abord depuis Delos</string>
+
+    <string name="configuration_mode_move_buttons">Mode déplacement des boutons</string>
+    <string name="configuration_mode_resize_buttons">Mode redimensionnement des boutons</string>
+    <string name="configuration_mode_disable_enable_buttons">Mode activation/désactivation des boutons</string>
+    <string name="configuration_mode_exiting">Sortie du mode configuration</string>
+    <string name="help_loading_title">Visionneuse d’aide</string>
+    <string name="help_loading_msg">Chargement de la page d’aide…</string>
+
+    <string name="align_left">Aligner à gauche</string>
+    <string name="align_center">Centrer</string>
+    <string name="align_right">Aligner à droite</string>
+
+    <string name="nettest_title_waiting">Test de la connexion réseau</string>
+    <string name="nettest_text_waiting">Delos teste ta connexion réseau pour savoir si des ports nécessaires sont bloqués.\n\nCela peut prendre quelques secondes…</string>
+    <string name="nettest_title_done">Test réseau terminé</string>
+    <string name="nettest_text_success">Ton réseau ne semble pas bloquer Delos. Si tu as encore du mal à te connecter, vérifie les réglages du pare-feu de ton PC.\n\nPour jouer via Internet, installe le Moonlight Internet Hosting Tool sur ton PC et lance l’Internet Streaming Tester inclus pour vérifier la connexion Internet de ton PC.</string>
+    <string name="nettest_text_inconclusive">Le test réseau n’a pas pu être effectué, car aucun des serveurs de test de connexion de Delos n’était joignable. Vérifie ta connexion Internet ou réessaie plus tard.</string>
+    <string name="nettest_text_failure">La connexion réseau actuelle de ton appareil semble bloquer Delos. Le streaming via Internet peut ne pas fonctionner sur ce réseau.\n\nLes ports réseau suivants étaient bloqués :\n</string>
+
+    <string name="pair_pc_offline">L’ordinateur est hors ligne</string>
+
+    <string name="error_unknown_host">Impossible de résoudre l’hôte</string>
+    <string name="error_404">GFE a renvoyé une erreur HTTP 404. Vérifie que ton PC dispose d’un GPU compatible.
+	    L’utilisation d’un logiciel de bureau à distance peut aussi provoquer cette erreur. Essaie de redémarrer ta machine ou de réinstaller GFE.
+    </string>
+    <string name="title_decoding_error">Plantage du décodeur vidéo</string>
+    <string name="message_decoding_error">Delos a planté à cause d’une incompatibilité avec le décodeur vidéo de cet appareil. Si les plantages continuent, essaie d’ajuster les réglages de streaming.</string>
+    <string name="title_decoding_reset">Réglages vidéo réinitialisés</string>
+    <string name="message_decoding_reset">Le décodeur vidéo de ton appareil continue de planter avec les réglages de streaming choisis. Tes réglages de streaming ont été remis par défaut.</string>
+    <string name="error_usb_prohibited">L’accès USB est interdit par l’administrateur de ton appareil. Vérifie tes réglages Knox ou MDM.</string>
+
+    <string name="conn_metered">Attention : ta connexion réseau active est limitée !</string>
+    <string name="conn_starting">Démarrage</string>
+
+    <string name="yes">Oui</string>
+    <string name="no">Non</string>
+    <string name="help">Aide</string>
+    <string name="slow_connection_msg">Connexion lente vers le PC\nRéduis ton débit</string>
+    <string name="poor_connection_msg">Mauvaise connexion vers le PC</string>
+    <string name="perf_overlay_streamdetails">Flux vidéo : %1$s %2$.2f FPS</string>
+    <string name="perf_overlay_decoder">Décodeur : %1$s</string>
+    <string name="perf_overlay_incomingfps">Fréquence d’images reçue du réseau : %1$.2f FPS</string>
+    <string name="perf_overlay_renderingfps">Fréquence d’images d’affichage : %1$.2f FPS</string>
+    <string name="perf_overlay_hostprocessinglatency">Latence de traitement du PC min/max/moy. : %1$.1f/%2$.1f/%3$.1f ms</string>
+    <string name="perf_overlay_netdrops">Images perdues par le réseau : %1$.2f%%</string>
+    <string name="perf_overlay_netlatency">Latence réseau moyenne : %1$d ms (variation : %2$d ms)</string>
+    <string name="perf_overlay_dectime">Temps de décodage moyen : %1$.2f ms</string>
+
+    <string name="applist_quit_app">Fermeture en cours</string>
+    <string name="applist_quit_success">Fermeture réussie</string>
+    <string name="applist_quit_fail">Échec de la fermeture</string>
+
+    <string name="category_general_settings">Réglages généraux</string>
+    <string name="category_video_settings">Réglages vidéo</string>
+    <string name="title_resolution_list">Résolution vidéo</string>
+    <string name="summary_resolution_list">Augmente pour une image plus nette. Diminue pour de meilleures performances sur les appareils modestes et les réseaux lents.</string>
+    <string name="title_fps_list">Fréquence d’images vidéo</string>
+    <string name="summary_fps_list">Augmente pour une vidéo plus fluide. Diminue pour de meilleures performances sur les appareils modestes.</string>
+    <string name="title_seekbar_bitrate">Débit vidéo</string>
+    <string name="summary_seekbar_bitrate">Augmente pour une meilleure qualité d’image. Diminue pour de meilleures performances sur les connexions lentes.</string>
+    <string name="title_seekbar_metered_bitrate">Débit vidéo sur réseau limité</string>
+    <string name="summary_seekbar_metered_bitrate">Un débit élevé consomme plus de données ; un débit plus bas améliore la fluidité sur les réseaux limités.\nMets 0 pour ¼ du débit réglé ci-dessus.</string>
+    <string name="suffix_seekbar_bitrate_mbps">Mbps</string>
+    <string name="title_resolution_scale_factor">Facteur d’échelle de la résolution</string>
+    <string name="summary_resolution_scale_factor">La résolution d’écran virtuel demandée côté serveur sera multipliée par ce facteur. La résolution du stream n’est pas modifiée.\nEx. : 120 % transforme 2000x1000 en 2400x1200.\nUn facteur plus élevé améliore la qualité d’image dans certains jeux.\nNécessite Apollo.</string>
+    <string name="title_checkbox_auto_invert_video_resolution">Inversion auto de la résolution</string>
+    <string name="summary_checkbox_auto_invert_video_resolution">Inverse automatiquement la largeur et la hauteur du flux vidéo en mode portrait.\nPar exemple : 1920x1080 devient 1080x1920.</string>
+    <string name="title_video_scale_mode">Mode de mise à l’échelle vidéo</string>
+    <string name="summary_video_scale_mode">Choisis entre Ajuster, Remplir et Étirer</string>
+    <string name="video_scale_mode_fit">Ajuster</string>
+    <string name="video_scale_mode_fill">Remplir</string>
+    <string name="video_scale_mode_stretch">Étirer</string>
+
+    <string name="category_audio_settings">Réglages audio</string>
+    <string name="title_audio_config_list">Configuration du son surround</string>
+    <string name="summary_audio_config_list">Active le son surround 5.1 ou 7.1 pour les systèmes home cinéma</string>
+    <string name="title_checkbox_enable_audiofx">Activer la prise en charge de l’égaliseur système</string>
+    <string name="summary_checkbox_enable_audiofx">Permet aux effets audio de fonctionner pendant le stream, mais peut augmenter la latence audio</string>
+
+    <string name="category_gamepad_settings">Réglages de la manette</string>
+    <string name="title_checkbox_multi_controller">Détection automatique de la manette</string>
+    <string name="summary_checkbox_multi_controller">Si tu décoches cette option, une manette est toujours considérée comme présente</string>
+    <string name="title_checkbox_vibrate_fallback">Simuler la vibration avec l’appareil</string>
+    <string name="summary_checkbox_vibrate_fallback">Fait vibrer ton appareil pour simuler la vibration si ta manette ne la gère pas</string>
+    <string name="title_seekbar_vibrate_fallback_strength">Intensité de la vibration simulée</string>
+    <string name="summary_seekbar_vibrate_fallback_strength">Amplifie ou réduit l’intensité de la vibration de ton appareil</string>
+    <string name="suffix_seekbar_vibrate_fallback_strength">%</string>
+    <string name="title_seekbar_deadzone">Zone morte des sticks analogiques</string>
+    <string name="summary_seekbar_deadzone">Les valeurs positives définissent une zone morte normale, les valeurs négatives appliquent une compensation de zone morte. Vérifie que ta manette peut régler les zones mortes avant d’utiliser la compensation, sinon le centrage peut être difficile.</string>
+    <string name="suffix_seekbar_deadzone">%</string>
+    <string name="title_checkbox_xb1_driver">Pilote USB manette Xbox 360/One/Nintendo Pro</string>
+    <string name="summary_checkbox_xb1_driver">Active un pilote USB intégré pour les appareils sans prise en charge native des manettes Xbox/Nintendo Pro</string>
+    <string name="title_checkbox_usb_bind_all">Remplacer la prise en charge native des manettes Xbox</string>
+    <string name="summary_checkbox_usb_bind_all">Utilise le pilote USB de Delos pour toutes les manettes compatibles, même si la prise en charge native des manettes Xbox/Nintendo Pro est présente</string>
+    <string name="title_checkbox_mouse_emulation">Émulation de souris avec la manette</string>
+    <string name="summary_checkbox_mouse_emulation">Appui long sur Start pour basculer entre le mode manette et le mode souris</string>
+    <string name="title_checkbox_remember_mouse_mode">Mémoriser le mode souris</string>
+    <string name="summary_checkbox_remember_mouse_mode">Mémorise le mode souris choisi pendant le stream. Désactivé, le mode souris changé pendant le stream reste temporaire.</string>
+    <string name="title_checkbox_flip_face_buttons">Inverser les boutons de façade</string>
+    <string name="summary_checkbox_flip_face_buttons">Échange les boutons A/B et X/Y des manettes et des commandes à l’écran</string>
+    <string name="title_checkbox_gamepad_touchpad_as_mouse">Toujours contrôler la souris avec le pavé tactile</string>
+    <string name="summary_checkbox_gamepad_touchpad_as_mouse">Force le pavé tactile de la manette à contrôler la souris du PC, même en émulant une manette avec pavé tactile.</string>
+    <string name="title_checkbox_gamepad_motion_sensors">Gyroscope de manette externe</string>
+    <string name="summary_checkbox_gamepad_motion_sensors">Permet au PC de lire le gyroscope et l’accéléromètre d’une manette externe connectée qui en possède. Nécessite Android 12 ou plus récent. Désactive si aucun jeu n’utilise le mouvement, pour économiser un peu d’énergie et de réseau.</string>
+    <string name="title_checkbox_gamepad_motion_fallback">Gyroscope intégré de l’appareil</string>
+    <string name="summary_checkbox_gamepad_motion_fallback">Utilise le gyroscope et l’accéléromètre de cet appareil (les capteurs intégrés d’une console portable) quand la manette connectée n’en a pas ou que ta version d’Android ne peut pas les lire.\nNote : le PC peut alors voir ta manette comme une manette PlayStation.</string>
+    <string name="title_checkbox_force_device_motion">Toujours utiliser le gyroscope intégré</string>
+    <string name="summary_checkbox_force_device_motion">Utilise les capteurs de l’appareil même si la manette externe en signale qui fonctionnent.</string>
+    <string name="title_seekbar_gyro_smoothing">Lissage du gyroscope</string>
+    <string name="summary_seekbar_gyro_smoothing">Stabilise le gyroscope avant son envoi au PC. 0 = désactivé ; plus la valeur est haute, moins il y a de tremblements, mais la visée lente prend un léger retard. Les mouvements rapides restent réactifs. S’applique au prochain stream ; le menu du stream (Plus) le modifie en direct.</string>
+    <string name="suffix_seekbar_gyro_smoothing">%</string>
+    <string name="title_enable_rumble">Activer la vibration</string>
+    <string name="summary_enable_rumble">Active le retour de vibration sur les manettes compatibles.</string>
+    <string name="category_input_settings">Réglages des entrées</string>
+    <string name="title_checkbox_absolute_mouse_mode">Mode souris bureau à distance</string>
+    <string name="summary_checkbox_absolute_mouse_mode">Peut rendre l’accélération de la souris plus naturelle pour le bureau à distance, mais est incompatible avec de nombreux jeux.</string>
+    <string name="title_checkbox_mouse_nav_buttons">Activer les boutons souris précédent/suivant</string>
+    <string name="summary_checkbox_mouse_nav_buttons">Activer cette option peut empêcher le clic droit sur certains appareils défectueux</string>
+
+    <string name="category_on_screen_controls_settings">Réglages des commandes à l’écran</string>
+    <string name="title_checkbox_show_onscreen_controls">Afficher les commandes à l’écran</string>
+    <string name="summary_checkbox_show_onscreen_controls">Affiche la manette virtuelle sur l’écran tactile</string>
+    <string name="title_hide_osc_when_has_gamepad">Masquer l’OSC avec une manette</string>
+    <string name="summary_hide_osc_when_has_gamepad">Masque l’OSC quand une manette physique est connectée</string>
+    <string name="title_checkbox_vibrate_osc">Activer la vibration</string>
+    <string name="summary_checkbox_vibrate_osc">Fait vibrer ton appareil pour simuler la vibration des commandes à l’écran</string>
+    <string name="title_only_l3r3">Afficher seulement L3 et R3</string>
+    <string name="summary_only_l3r3">Masque tous les boutons virtuels sauf L3 et R3</string>
+    <string name="title_show_guide_button">Afficher le bouton Guide</string>
+    <string name="summary_show_guide_button">Affiche le bouton Guide à l’écran</string>
+    <string name="title_reset_osc">Effacer la disposition enregistrée des commandes</string>
+    <string name="summary_reset_osc">Remet toutes les commandes à l’écran à leur taille et position par défaut</string>
+    <string name="dialog_title_reset_osc">Réinitialiser la disposition</string>
+    <string name="dialog_text_reset_osc">Veux-tu vraiment supprimer ta disposition enregistrée des commandes à l’écran ?</string>
+    <string name="summary_osc_opacity">Rend les commandes à l’écran plus ou moins transparentes</string>
+    <string name="dialog_title_osc_opacity">Changer l’opacité</string>
+    <string name="suffix_osc_opacity">%</string>
+
+    <string name="category_ui_settings">Réglages de l’interface</string>
+    <string name="title_checkbox_enable_pip">Activer le mode observateur Picture-in-Picture</string>
+    <string name="summary_checkbox_enable_pip">Permet de voir le stream (sans le contrôler) en multitâche</string>
+    <string name="title_language_list">Langue</string>
+    <string name="summary_language_list">Langue utilisée par Delos</string>
+
+    <string name="category_host_settings">Réglages du PC</string>
+    <string name="title_checkbox_host_audio">Jouer le son sur le PC</string>
+    <string name="summary_checkbox_host_audio">Joue le son sur l’ordinateur et sur cet appareil</string>
+
+    <string name="category_advanced_settings">Réglages avancés</string>
+    <string name="title_unlock_fps">Débloquer toutes les fréquences d’images</string>
+    <string name="summary_unlock_fps">Streamer à 90 ou 120 FPS peut réduire la latence sur les appareils haut de gamme, mais causer des saccades ou de l’instabilité sur ceux qui ne le gèrent pas</string>
+    <string name="title_checkbox_reduce_refresh_rate">Autoriser la baisse de fréquence d’écran</string>
+    <string name="summary_checkbox_reduce_refresh_rate">Une fréquence d’écran plus basse économise de l’énergie, au prix d’un peu de latence vidéo</string>
+    <string name="title_checkbox_disable_warnings">Désactiver les messages d’avertissement</string>
+    <string name="summary_checkbox_disable_warnings">Désactive les avertissements de connexion à l’écran pendant le stream</string>
+    <string name="title_video_format">Codec vidéo</string>
+    <string name="summary_video_format">Les codecs récents peuvent réduire la bande passante vidéo si ton appareil les gère. Le choix du codec peut être ignoré si le logiciel hôte ou le GPU ne le gère pas.</string>
+    <string name="title_enable_hdr">Activer HDR</string>
+    <string name="summary_enable_hdr">Stream en HDR quand le jeu et le GPU du PC le gèrent. Le HDR exige un GPU capable d’encoder en HEVC Main 10. Le rendu HDR dépend de l’écran de cet appareil.</string>
+    <string name="title_full_range">Forcer la vidéo en plage complète</string>
+    <string name="summary_full_range">Cela fait perdre du détail dans les zones claires et sombres si ton appareil n’affiche pas correctement la vidéo en plage complète.</string>
+    <string name="title_prevent_packet_loss">Wi-Fi keep-alive</string>
+    <string name="summary_prevent_packet_loss">Envoie de petits paquets pendant le stream pour éviter que le Wi-Fi passe en économie d’énergie. Peut aider sur les appareils avec des pertes de paquets inexpliquées.</string>
+    <string name="title_enable_perf_overlay">Afficher les stats de performance pendant le stream</string>
+    <string name="summary_enable_perf_overlay">Affiche en temps réel les performances du stream pendant la partie</string>
+
+    <string name="title_special_key_help">Aide des touches personnalisées</string>
+    <string name="summary_special_key_help">Instructions pour configurer des touches spéciales personnalisées</string>
+
+    <string name="toast_controller_type_changed">Le type de manette peut changer à cause de l’émulation des capteurs de mouvement</string>
+
+    <string name="resolution_360p">360p</string>
+    <string name="resolution_480p">480p</string>
+    <string name="resolution_720p">720p</string>
+    <string name="resolution_1080p">1080p</string>
+    <string name="resolution_1440p">1440p</string>
+    <string name="resolution_4k">4K</string>
+
+    <string name="fps_30">30 FPS</string>
+    <string name="fps_60">60 FPS</string>
+    <string name="fps_90">90 FPS</string>
+    <string name="fps_120">120 FPS</string>
+
+    <string name="audioconf_stereo">Stéréo</string>
+    <string name="audioconf_51surround">Son surround 5.1</string>
+    <string name="audioconf_71surround">Son surround 7.1</string>
+
+    <string name="videoformat_auto">Automatique</string>
+    <string name="videoformat_av1always">AV1</string>
+    <string name="videoformat_hevcalways">HEVC (H.265)</string>
+    <string name="videoformat_h264always">H.264</string>
+    <string name="videoformat_pyrowave">PyroWave</string>
+    <string name="title_pyrowave_chroma">Chroma PyroWave</string>
+    <string name="summary_pyrowave_chroma">Résolution chroma de la vidéo PyroWave. 4:4:4 garde tous les détails de couleur mais demande plus de bande passante et de temps GPU, et un PC compatible ; sinon le stream utilise 4:2:0. Non proposé avec HDR.</string>
+    <string name="pyrowave_chroma_420">4:2:0 (par défaut)</string>
+    <string name="pyrowave_chroma_444">4:4:4</string>
+
+    <string name="title_frame_pacing">Frame pacing vidéo</string>
+    <string name="summary_frame_pacing">Définit l’équilibre entre latence et fluidité de la vidéo. Warp Drive et Warp 2 peuvent ne pas fonctionner sur tous les appareils.</string>
+    <string name="pacing_warp">Warp Drive</string>
+    <string name="pacing_warp2">Warp 2</string>
+    <string name="pacing_latency">Latence minimale</string>
+    <string name="pacing_balanced">Équilibré</string>
+    <string name="pacing_balanced_alt">Équilibré avec limite FPS</string>
+    <string name="pacing_smoothness">Vidéo la plus fluide</string>
+    <string name="pacing_fast_vsync">V-Sync rapide (Nano Pacer)</string>
+
+    <string name="title_async_decode">Décodage asynchrone</string>
+    <string name="summary_async_decode">MediaCodec fournit les tampons prêts par rappels au lieu d’une interrogation permanente. Pour H.264, HEVC et AV1 ; s’applique au prochain stream. Désactive si ton décodeur est moins stable.</string>
+    <string name="title_sgsr">Snapdragon Game Super Resolution</string>
+    <string name="summary_sgsr">Upscale la vidéo en basse résolution avec SGSR 1. Nécessite OpenGL ES 3.1 ; HDR utilise une sortie P010 10 bits quand elle est prise en charge. Active-le en direct dans le menu du stream. PyroWave utilise son propre rendu. Choisis une résolution de stream inférieure à celle de l’écran.</string>
+    <string name="title_sgsr_quality">Mode d’upscaler</string>
+    <string name="summary_sgsr_quality">SGSR 1 (Qualcomm) filtre l’image courante. SGSR2-DV est la version Delos de SGSR 2 pour la vidéo : elle détecte le mouvement par flux optique et réutilise les détails des images précédentes. Netteté seule n’affine qu’à la taille du stream. HDR et le changement en direct fonctionnent dans tous les modes.</string>
+    <string name="title_sgsr_sharpness">Netteté de l’upscaler</string>
+    <string name="summary_sgsr_sharpness">Force de l’accentuation, de 0 à 100. Zéro la désactive. Avec les modes SGSR, c’est une passe finale séparée qui ne change pas la reconstruction ; avec Netteté seule, c’est tout l’effet. Réglable en direct.</string>
+    <string name="title_sgsr_supersampling_level">Qualité du supersampling</string>
+    <string name="summary_sgsr_supersampling_level">Taille interne quand le stream correspond déjà à l’écran : 2560 x 1440 (1,33x) ou 3840 x 2160 (2x), depuis un stream 1080p. 2x demande plus de temps GPU et de mémoire, et repasse à 1,33x si ça ne tient pas. Modifiable en direct dans le menu du stream.</string>
+    <string name="sgsr_supersampling_level_1">1,33× (1440p)</string>
+    <string name="sgsr_supersampling_level_2">2× (2160p)</string>
+    <string name="sgsr_quality_standard">SGSR 1 (Normal)</string>
+    <string name="sgsr_quality_high">SGSR 1 (Qualité)</string>
+    <string name="sgsr_quality_temporal">SGSR2-DV (Normal)</string>
+    <string name="sgsr_quality_temporal_quality">SGSR2-DV (Qualité)</string>
+    <string name="sgsr_quality_sharpen">Netteté seule</string>
+
+
+    <string name="keyboard_service_label">Clavier physique Delos</string>
+    <string name="accessibility_description_text">Utilisé uniquement quand des raccourcis du clavier physique sont interceptés par le système. Sur certains systèmes, plusieurs raccourcis clavier sont définis et utilisés par Android, ce qui les empêche d’être transmis au PC. Delos ne surveille pas ce que tu saisis et ne collecte ni ton mot de passe, ni ton numéro de carte bancaire, ni aucune autre information privée.</string>
+
+
+    <string name="game_menu_send_keys_esc">ESC</string>
+    <string name="game_menu_send_keys_f11">F11</string>
+    <string name="game_menu_send_keys_alt_f4">Alt + F4</string>
+    <string name="game_menu_send_keys_ctrl_v">Ctrl + V</string>
+    <string name="game_menu_send_keys_win">Win (Meta)</string>
+    <string name="game_menu_send_keys_win_d">Win + D</string>
+    <string name="game_menu_send_keys_alt_b">ALT + B</string>
+    <string name="game_menu_send_keys_win_g">Win + G (Xbox Game Bar)</string>
+    <string name="game_menu_send_keys_ctrl_alt_tab">Ctrl + Alt + Tab</string>
+    <string name="game_menu_send_keys_shift_tab">Shift + Tab (Steam Overlay)</string>
+    <string name="game_menu_send_keys_alt_enter">Alt + Enter</string>
+    <string name="game_menu_send_keys_win_shift_left">Win + Maj + gauche (déplacer l’app entre bureaux)</string>
+    <string name="game_menu_send_keys_ctrl_alt_shift_f1">Ctrl+Alt+Shift+F1 (changer d’écran)</string>
+    <string name="game_menu_send_keys_ctrl_alt_shift_f12">Ctrl+Alt+Shift+F12 (changer d’écran)</string>
+
+    <string name="pan_zoom_mode_enabled">Mode panoramique/zoom activé</string>
+    <string name="pan_zoom_mode_disabled">Mode panoramique/zoom désactivé</string>
+
+    <string name="title_analog_scrolling">Défiler avec un stick analogique</string>
+    <string name="summary_analog_scrolling">Choisis un stick analogique pour défiler en mode émulation de souris</string>
+    <string name="analogscroll_none">Aucun (les deux sticks déplacent la souris)</string>
+    <string name="analogscroll_right">Stick analogique droit</string>
+    <string name="analogscroll_left">Stick analogique gauche</string>
+
+    <string name="perf_overlay_lite_net">%1$dms</string>
+    <string name="perf_overlay_lite_dectime">%1$.2fms</string>
+    <string name="perf_overlay_lite_netdrops">%1$.2f%%</string>
+    <string name="perf_overlay_lite_fps">%1$.2f</string>
+    <string name="title_import_keyboard_layout">Importer une disposition de clavier</string>
+    <string name="title_export_keyboard_layout">Exporter la disposition du clavier</string>
+    <string name="summary_import_keyboard_layout">Cela écrasera la disposition actuelle.</string>
+    <string name="summary_export_keyboard_layout">Exporte la disposition actuelle du clavier</string>
+    <string name="title_manual_enter_bitrate">Débit personnalisé</string>
+    <string name="summary_manual_enter_bitrate">Saisis le débit manuellement.\nPeut dépasser la plage maximale du curseur.</string>
+    <string name="dialog_manual_enter_bitrate">Saisis le débit en Mbps. Arrondi à 0,5.</string>
+    <string name="title_custom_refresh_rate">Fréquence d’écran personnalisée</string>
+    <string name="summary_custom_refresh_rate">Saisis la fréquence d’écran manuellement. Uniquement avec Apollo.</string>
+    <string name="dialog_custom_refresh_rate">Saisis la fréquence en Hz. Peut être fractionnaire.</string>
+    <string name="title_touchscreen_mode">Mode écran tactile</string>
+    <string name="summary_touchscreen_mode">Choisis entre les modes multitouch, monotouch, trackpad ou désactivé.\nLe stylet reste utilisable quand Désactivé est choisi.\nForcé en mode trackpad (naturel) avec un écran externe.</string>
+    <string name="title_checkbox_mouse_local_cursor">Utiliser le curseur de souris local</string>
+    <string name="summary_checkbox_mouse_local_cursor">Par défaut, le curseur de la souris physique externe est capturé ; cette option permet d’afficher le curseur système d’Android</string>
+    <string name="title_checkbox_multi_touch_gestures">Activer les gestes multitouch</string>
+    <string name="summary_checkbox_multi_touch_gestures">En mode multitouch : toucher à 3 doigts pour le clavier, à 4 doigts pour le clavier complet, à 5 doigts pour le menu rapide.</string>
+    <string name="title_checkbox_enable_perf_overlay_lite">Mode compact</string>
+    <string name="summary_checkbox_enable_perf_overlay_lite">Une ligne en haut au centre : FPS, bande passante, délai réseau et décodage, images perdues. Le bouton Overlay du menu du stream alterne entre complet, compact et désactivé.</string>
+    <string name="title_virtual_trackpad_settings">Réglages du trackpad virtuel</string>
+    <string name="dialog_custom_resolution">Définis la résolution et quitte la page des réglages pour l’appliquer !</string>
+    <string name="summary_custom_resolution">Ajoute une résolution personnalisée, séparée par x ; les résolutions inhabituelles peuvent ne pas fonctionner.\nPar exemple : 1920x1080\nSi la résolution n’est pas native, elle peut ne pas remplir la zone de l’encoche par défaut. Si le format d’image est le même, tu peux régler manuellement l’étirement pour remplir tout l’écran</string>
+    <string name="title_custom_resolution">Résolution personnalisée</string>
+    <string name="title_auto_orientation">Orientation automatique</string>
+    <string name="summary_auto_orientation">L’écran de stream s’affiche selon l’orientation de l’appareil au début du stream.</string>
+    <string name="title_import_special_button">Importer des touches personnalisées</string>
+    <string name="summary_import_special_button">Disponible dans le menu Retour et les touches spéciales.\nNote : l’importation écrase la configuration actuelle, pense à sauvegarder.</string>
+    <string name="title_special_key_layout">Disposition des touches spéciales</string>
+    <string name="title_show_virtual_key">Afficher les touches virtuelles à l’écran</string>
+    <string name="summary_show_virtual_key">Affiche une couche de touches spéciales virtuelles sur l’écran tactile.\nL’opacité des touches est partagée avec la manette virtuelle ci-dessus.</string>
+    <string name="title_default_layout_scheme">Profil de disposition par défaut</string>
+    <string name="summary_default_layout_scheme">Chaque profil de disposition est identique au départ (généré à partir du fichier keyboards.json), tu peux le supprimer et l’ajuster toi-même</string>
+    <string name="summary_vibrate_keyboard">Quand tu touches un bouton à l’écran, le moteur de vibration du téléphone se déclenche. Cette option s’applique aussi aux boutons de la manette virtuelle.</string>
+    <string name="title_square_buttons">Boutons normaux carrés</string>
+    <string name="summary_square_buttons">Les boutons virtuels sont carrés ; ils sont ronds par défaut.</string>
+    <string name="title_reset_keyboard_layout">Réinitialiser le clavier virtuel</string>
+    <string name="summary_reset_keyboard_layout">Initialise la disposition des touches spéciales (réinitialise le schéma de disposition sélectionné par défaut)</string>
+    <string name="title_joyconfix">Compatible Switch JoyCon</string>
+    <string name="summary_joyconfix">Si ton JoyCon ne fonctionne pas ou si ses touches sont mal reconnues, essaie d’activer cette option. Adapté à Android 10 et plus</string>
+    <string name="title_keyboard_opacity">Opacité du clavier complet virtuel</string>
+    <string name="title_onscreen_keyboard_autofit">Désactiver l’ajustement auto du clavier complet virtuel</string>
+    <string name="title_onscreen_keyboard_height">Hauteur du clavier complet virtuel</string>
+    <string name="title_onscreen_keyboard_width">Largeur du clavier complet virtuel</string>
+    <string name="title_onscreen_keyboard_align_mode">Alignement du clavier complet virtuel</string>
+    <string name="summary_onscreen_keyboard_height">Règle la hauteur du clavier complet virtuel</string>
+    <string name="summary_onscreen_keyboard_autofit">N’ajuste pas automatiquement la taille et la position du clavier et permet une taille personnalisée</string>
+    <string name="summary_onscreen_keyboard_width">Règle la largeur du clavier complet virtuel</string>
+    <string name="summary_onscreen_keyboard_align_mode">Comment le clavier complet virtuel s’aligne sur la zone d’affichage</string>
+    <string name="title_free_analog_stick">Stick analogique libre</string>
+    <string name="summary_free_analog_stick">Le centre des sticks gauche et droit de la manette virtuelle n’est pas fixe ; il peut bouger librement dans une certaine plage.</string>
+    <string name="summary_free_analog_stick_opacity">Par défaut, l’arrière-plan ne s’affiche que lorsque le stick bouge. Si tu n’aimes pas ça, tu peux régler l’opacité.</string>
+    <string name="title_free_analog_stick_opacity">Opacité de l’arrière-plan du stick libre</string>
+    <string name="title_fullexdisplay_mode">Mode écran externe complet</string>
+    <string name="summary_fullexdisplay_mode">Active un mode immersif complet sur le second écran, avec fréquence et résolution ajustées automatiquement. Les réglages manuels ne s’appliquent pas dans ce mode. Peut ne pas fonctionner avec tous les appareils ou écrans.</string>
+    <string name="title_top_center_display">Afficher en haut au centre</string>
+    <string name="summary_top_center_display">L’image du stream est alignée en haut de l’écran au lieu d’être centrée quand la résolution n’est pas native.</string>
+    <string name="title_touch_sensitivity">Sensibilité de l’écran tactile</string>
+    <string name="summary_touch_sensitivity">Une fois activé, tu peux régler la sensibilité tactile manuellement.</string>
+    <string name="title_global_touch_sensitivity">Sensibilité tactile sur tout l’écran</string>
+    <string name="summary_global_touch_sensitivity">Par défaut non cochée : n’agit que sur la moitié droite de l’écran (adapté à Genshin Impact) ; cochée : agit sur tout l’écran.</string>
+    <string name="title_auto_touch_sensitivity">Retour auto au centre quand les coordonnées tactiles sortent des limites</string>
+    <string name="summary_auto_touch_sensitivity">Avec une sensibilité normalement élevée, un petit glissement dépasse les limites et empêche tout mouvement ; tu peux alors cocher cette option.</string>
+    <string name="title_touch_sensitivity_x">Réglage de sensibilité de l’écran, axe X</string>
+    <string name="summary_touch_sensitivity_x">En mode multitouch, certains jeux ne répondent pas aux besoins de sensibilité ; tu peux utiliser cette option pour modifier la sensibilité du champ de vision.</string>
+    <string name="title_touch_sensitivity_y">Réglage de sensibilité de l’écran, axe Y</string>
+    <string name="summary_touch_sensitivity_y">En mode multitouch, certains jeux ne répondent pas aux besoins de sensibilité ; tu peux utiliser cette option pour modifier la sensibilité du champ de vision.</string>
+    <string name="title_debug_info">Infos de débogage</string>
+    <string name="summary_debug_info">Teste la vibration de la manette et d’autres choses.</string>
+    <string name="title_touchpad_sensitivity_x">Sensibilité du pavé tactile, axe X</string>
+    <string name="summary_touchpad_sensitivity_x">Pour le mode pavé tactile de la souris et le contrôle par pavé tactile des boutons spéciaux virtuels ;\nLes deux partagent une même valeur, mais la sensibilité peut différer.\nQuelqu’un utilise-t-il les deux ensemble ?</string>
+    <string name="title_touchpad_sensitivity_y">Sensibilité du pavé tactile, axe Y</string>
+    <string name="summary_touchpad_sensitivity_y">Pour le mode pavé tactile de la souris et le contrôle par pavé tactile des boutons spéciaux virtuels ;\nLes deux partagent une même valeur, mais la sensibilité peut différer.\nQuelqu’un utilise-t-il les deux ensemble ?</string>
+    <string name="title_device_rumble">Forcer la vibration de l’appareil</string>
+    <string name="summary_device_rumble">Si la vibration de la manette connectée ne te satisfait pas, tu peux activer cette option.\nSans effet si le pilote USB intégré de Delos est forcé</string>
+    <string name="title_clear_default_special_button">Désactiver les touches spéciales par défaut</string>
+    <string name="summary_clear_default_special_button">Si les commandes intégrées du menu Retour ne te servent pas, tu peux les désactiver et utiliser celles que tu as importées.</string>
+    <string name="title_trackpad_sensitivity_x">Sensibilité du trackpad X</string>
+    <string name="summary_trackpad_sensitivity_x">Sensibilité de l’axe X du trackpad ; une valeur négative inverse le sens</string>
+    <string name="title_trackpad_sensitivity_y">Sensibilité du trackpad Y</string>
+    <string name="summary_trackpad_sensitivity_y">Sensibilité de l’axe Y du trackpad ; une valeur négative inverse le sens</string>
+    <string name="title_trackpad_drag_drop_vibration">Vibration du glisser-déposer sur le trackpad</string>
+    <string name="summary_trackpad_drag_drop_vibration">Active le retour de vibration pour le glisser-déposer sur les appareils Samsung à trackpad.</string>
+    <string name="title_trackpad_drag_drop_threshold">Durée d’appui pour activer le glisser-déposer sur le trackpad</string>
+    <string name="summary_trackpad_drag_drop_threshold">Définit la durée d’appui sur le trackpad avant d’activer le glisser-déposer sur les appareils Samsung.</string>
+    <string name="title_trackpad_swap_axis">Échanger les axes X et Y du trackpad</string>
+    <string name="summary_trackpad_swap_axis">Sur certains appareils, les axes du trackpad peuvent être pivotés. Activer cette option peut aider.</string>
+    <string name="title_checkbox_force_qwerty">Forcer la disposition QWERTY</string>
+    <string name="summary_checkbox_force_qwerty">Force l’utilisation de la disposition QWERTY.\nRequis par GFE.\nDésactive si tu veux utiliser une autre disposition.</string>
+    <string name="title_checkbox_right_alt_as_meta">Alt droit comme Command (Mac)</string>
+    <string name="summary_right_alt_as_meta">Remappe Alt droit sur la touche Command pour streamer un Mac. Toute combinaison Alt droit+touche devient Command+touche. Alt gauche n’est pas affecté.</string>
+    <string name="title_checkbox_ignore_synth_events">Ignorer les événements synthétiques</string>
+    <string name="summary_ignore_synth_events">Ignore les événements synthétiques envoyés par Android. Cela peut résoudre les cas où un clic de souris déclenche d’autres touches inattendues sur certains appareils.\nActiver cette option arrête le clavier virtuel du système.</string>
+    <string name="title_smart_clipboard_sync">Synchro intelligente du presse-papiers</string>
+    <string name="summary_smart_clipboard_sync">Envoie automatiquement le contenu du presse-papiers au serveur au début/à la reprise du stream, et récupère celui du serveur quand le focus est perdu (nécessite Vibepollo ou Apollo)</string>
+    <string name="title_smart_clipboard_sync_toast">Message de synchro du presse-papiers</string>
+    <string name="summary_smart_clipboard_sync_toast">Affiche un message pour le résultat de la synchro du presse-papiers</string>
+    <string name="title_hide_clipboard_content">Masquer le contenu du presse-papiers</string>
+    <string name="summary_hide_clipboard_content">Marque le presse-papiers distant comme information sensible</string>
+    <string name="title_settings_misc">DIVERS</string>
+    <string name="perf_overlay_lite_bandwidth">Bande passante</string>
+    <string name="perf_overlay_lite_network_decoding_delay">Délai réseau/décodage</string>
+    <string name="perf_overlay_lite_packet_loss">Perte de paquets</string>
+    <string name="wrong_import_format">Format d’importation incorrect, vérifie !</string>
+    <string name="title_checkbox_gamepad_enable_battery_report">Rapport d’état de la batterie de la manette</string>
+    <string name="summary_checkbox_gamepad_enable_battery_report">Signale l’état de la batterie de la manette quand c’est possible.\nDésactiver cette option peut aider si tu constates des saccades occasionnelles avec l’écran tactile, le pavé tactile, le stylet ou la souris.</string>
+    <string name="title_checkbox_enforce_display_mode">Imposer le mode d’affichage</string>
+    <string name="summary_checkbox_enforce_display_mode">Force la surface à utiliser le mode d’affichage optimal.\nRequis par certains systèmes (comme ColorOS) pour régler correctement fréquence/résolution.\nNe l’active pas sur ChromeCast 4K : cela peut causer des bugs.</string>
+    <string name="title_checkbox_ultra_low_latency">Latence ultra faible</string>
+    <string name="summary_checkbox_ultra_low_latency">Fonctionne uniquement sur Snapdragon 8 Gen 2, 8(s) Gen 3, 8 Elite et les appareils MediaTek.</string>
+    <string name="title_checkbox_use_virtual_display">Utiliser l’écran virtuel</string>
+    <string name="summary_checkbox_use_virtual_display">Utilise l’écran virtuel par défaut.\nL’écran virtuel peut adapter automatiquement la résolution et la fréquence d’images à tes réglages côté client, pour un streaming fluide.\nNécessite Apollo comme logiciel de streaming hôte.</string>
+    <string name="title_checkbox_enable_sticky_modifier_key_virtual_keyboard">Touches de modification persistantes</string>
+    <string name="summary_checkbox_enable_sticky_modifier_key_virtual_keyboard">Utilise des touches de modification persistantes sur le clavier complet virtuel et le clavier personnalisé à l’écran.</string>
+    <string name="mouse_mode_multi_touch">Multitouch</string>
+    <string name="mouse_mode_absolute_touch">Toucher absolu</string>
+    <string name="mouse_mode_track_pad_natural">Trackpad (naturel/double toucher pour glisser)</string>
+    <string name="mouse_mode_track_pad_gaming">Trackpad (jeu/appui long pour glisser)</string>
+    <string name="mouse_mode_disabled">Désactivé</string>
+    <string name="mouse_mode_absolute_touch_swapped">Toucher absolu (clic gauche/droit inversés)</string>
+    <string name="keyboard_layout_set_1">Profil 1</string>
+    <string name="vdisplay_not_ready">Le pilote d’écran virtuel n’est pas prêt sur le serveur. Vérifie que le pilote SudoVDA est installé et activé.</string>
+    <string name="vdisplay_not_supported"><![CDATA[L’écran virtuel n’est pas pris en charge par ce serveur. Utilise <a href=\"https://github.com/Nonary/Vibepollo\">Vibepollo</a> ou <a href=\"https://github.com/ClassicOldSong/Apollo\">Apollo</a> comme logiciel de streaming hôte.]]></string>
+    <string name="clipboard_sync_unsupported">Ce serveur ne gère pas la synchro du presse-papiers. Installe ou mets à jour ton serveur avec la dernière version d’Apollo.</string>
+    <string name="send_clipboard_failed">Échec de l’envoi du presse-papiers : </string>
+    <string name="external_display_info">Écran externe connecté : %1$dx%2$d à %3$.1f Hz</string>
+    <string name="no_external_display">Aucun écran externe détecté</string>
+    <string name="no_game_instance">Aucune instance de jeu disponible</string>
+    <string name="get_clipboard_failed">Échec de la récupération du presse-papiers : </string>
+    <string name="send_clipboard_success">Presse-papiers envoyé</string>
+    <string name="get_clipboard_success">Presse-papiers récupéré</string>
+    <string name="proceed">Continuer</string>
+    <string name="cancel">Annuler</string>
+    <string name="unlocking_or_starting">Le serveur démarre ou l’ordinateur se déverrouille, patiente…</string>
+
+
+    <string name="keyboard_clear_all">Tout effacer</string>
+    <string name="keyboard_clear_all_restore">Restaurer</string>
+    <string name="keyboard_add_keys">Ajouter des touches</string>
+    <string name="keyboard_select_keys">Choisir les touches à ajouter</string>
+    <string name="keyboard_keys_added">%d touches ajoutées</string>
+    <string name="keyboard_duplicates_skipped">%d doublons ignorés</string>
+    <string name="keyboard_configure_movable">Tu peux maintenant déplacer le bouton des réglages.</string>
+    <string name="keyboard_load_error">Erreur de chargement de la configuration du clavier : %s</string>
+    <string name="keyboard_add">Ajouter</string>
+    <string name="keyboard_key_custom">%s (perso)</string>
+
+    <string name="title_enable_commit_text">Activer la saisie par commit-text (glisser/voix)</string>
+    <string name="summary_enable_commit_text">Transmet le texte de plusieurs caractères des claviers virtuels (saisie gestuelle, prédictions, dictée vocale). Peut gêner les jeux qui attendent une saisie touche par touche.</string>
+    <string name="title_checkbox_remember_zoom_pan">Mémoriser zoom et panoramique</string>
+    <string name="summary_checkbox_remember_zoom_pan">Conserve la position du zoom et du panoramique d’une session à l’autre</string>
+    <string name="profile_manager_failed_to_load">Échec du chargement des profils. Consulte logcat pour les détails.</string>
+    <string name="title_low_latency_frame_balance">LFR</string>
+    <string name="summary_low_latency_frame_balance">Réduit le délai en supprimant les images en file d’attente. Peut ne pas fonctionner sur tous les appareils.</string>
+    <string name="category_perf_monitor_settings">Moniteur de performances</string>
+
+</resources>

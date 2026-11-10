@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="artwork_header">VISUELS</string>
+    <string name="artwork_search_other">Chercher un autre nom</string>
+    <string name="artwork_filter">Filtre</string>
+    <string name="artwork_loading">Recherche sur SteamGridDB…</string>
+    <string name="artwork_no_key_title">Ajoute ta clé API SteamGridDB</string>
+    <string name="artwork_no_key_note">Réglages → Jaquettes → Clé API SteamGridDB. Elle est gratuite sur steamgriddb.com (Preferences → API).</string>
+    <string name="artwork_no_game_title">%1$s n’est pas sur SteamGridDB</string>
+    <string name="artwork_no_game_note">Chercher un autre nom le trouve sous le nom que SteamGridDB connaît.</string>
+    <string name="artwork_choose_title">Choisis l’apparence de %1$s</string>
+    <string name="artwork_choose_note">Chercher un autre nom : par ex. Windows, Steam ou n’importe quel jeu dont tu aimes les visuels. %1$s n’est pas recherché automatiquement.</string>
+    <string name="artwork_unreachable">SteamGridDB est injoignable</string>
+    <string name="artwork_download_failed">Le téléchargement a échoué</string>
+    <string name="artwork_builtin_note">Visuels intégrés - les visuels de cette appli ne peuvent pas être changés</string>
+    <string name="artwork_builtin_back">Retour</string>
+    <string name="artwork_chip_looking">Recherche de %1$s…</string>
+    <string name="artwork_chip_game_id">Jeu n° %1$d</string>
+    <string name="artwork_chip_not_found">Pas encore trouvé</string>
+    <string name="artwork_in_use">Utilisé</string>
+    <string name="artwork_animated">Animé</string>
+    <string name="artwork_static">Statique</string>
+    <string name="artwork_first_name_only">Nom seul</string>
+    <string name="artwork_first_from_pc">Depuis ton PC</string>
+    <string name="artwork_fact_source">SOURCE</string>
+    <string name="artwork_fact_shows">AFFICHE</string>
+    <string name="artwork_fact_name_source">Le nom du jeu</string>
+    <string name="artwork_fact_name_shows">Le nom à la place d’un logo</string>
+    <string name="artwork_fact_pc_source">Ton PC (Vibepollo)</string>
+    <string name="artwork_fact_pc_shows">La jaquette du PC</string>
+    <string name="artwork_fact_size">TAILLE</string>
+    <string name="artwork_fact_file">FICHIER</string>
+    <string name="artwork_fact_score">NOTE</string>
+    <string name="artwork_fact_added">AJOUTÉ</string>
+    <string name="artwork_fact_size_value">%1$d × %2$d px</string>
+    <string name="artwork_fact_score_by">%1$d · par %2$s</string>
+    <string name="artwork_fact_score_only">%1$d</string>
+    <string name="artwork_fact_by_only">par %1$s</string>
+    <string name="artwork_search_title">Chercher sur SteamGridDB</string>
+    <string name="artwork_search_note">Le nom du jeu tel que SteamGridDB le connaît.</string>
+    <string name="artwork_search_hint">Nom du jeu</string>
+    <string name="artwork_search_action">Chercher</string>
+    <string name="artwork_searching_toast">Recherche de %1$s sur SteamGridDB…</string>
+    <string name="artwork_game_with_year">%1$s (%2$d)</string>
+    <string name="artwork_downloading_game_toast">Téléchargement des visuels de %1$s…</string>
+    <string name="artwork_matched_toast">Associé à %1$s</string>
+    <string name="artwork_found_none">Rien trouvé pour %1$s</string>
+    <string name="artwork_found_title">Choisis le jeu</string>
+    <string name="artwork_error_no_key">Ajoute d’abord ta clé API SteamGridDB</string>
+    <string name="artwork_error_key_rejected">SteamGridDB n’a pas accepté la clé API</string>
+    <string name="artwork_error_api_http">SteamGridDB a répondu %1$d</string>
+    <string name="artwork_error_too_large">image trop grande</string>
+    <string name="artwork_error_save_failed">impossible d’enregistrer l’image</string>
+    <string name="artwork_tab_cover">Jaquette</string>
+    <plurals name="artwork_count_cover">
+        <item quantity="one">%1$d jaquette</item>
+        <item quantity="many">%1$d de jaquettes</item>
+        <item quantity="other">%1$d jaquettes</item>
+    </plurals>
+    <plurals name="artwork_count_all_cover">
+        <item quantity="one">%1$d jaquette au total</item>
+        <item quantity="many">%1$d de jaquettes au total</item>
+        <item quantity="other">%1$d jaquettes au total</item>
+    </plurals>
+    <plurals name="artwork_count_of_cover">
+        <item quantity="one">%1$d sur %2$d jaquette</item>
+        <item quantity="many">%1$d sur %2$d de jaquettes</item>
+        <item quantity="other">%1$d sur %2$d jaquettes</item>
+    </plurals>
+    <string name="artwork_filtered_none_cover">Aucune jaquette ne correspond à ces filtres</string>
+    <plurals name="artwork_filtered_has_cover">
+        <item quantity="one">%1$s a %2$d jaquette sur SteamGridDB, mais aucune ne correspond à %3$s. Assouplis un filtre ou cherche sous un autre nom.</item>
+        <item quantity="many">%1$s a %2$d de jaquettes sur SteamGridDB, mais aucune ne correspond à %3$s. Assouplis un filtre ou cherche sous un autre nom.</item>
+        <item quantity="other">%1$s a %2$d jaquettes sur SteamGridDB, mais aucune ne correspond à %3$s. Assouplis un filtre ou cherche sous un autre nom.</item>
+    </plurals>
+    <string name="artwork_filtered_unknown_cover">Aucune des jaquettes ne correspond à %1$s. Assouplis un filtre ou cherche sous un autre nom.</string>
+    <string name="artwork_empty_cover">SteamGridDB n’a pas encore de jaquette pour ce jeu.</string>
+    <string name="artwork_downloading_cover">Téléchargement de la jaquette…</string>
+    <string name="artwork_updated_cover">Jaquette mise à jour</string>
+    <string name="artwork_tab_wide">Jaquette large</string>
+    <plurals name="artwork_count_wide">
+        <item quantity="one">%1$d jaquette large</item>
+        <item quantity="many">%1$d de jaquettes larges</item>
+        <item quantity="other">%1$d jaquettes larges</item>
+    </plurals>
+    <plurals name="artwork_count_all_wide">
+        <item quantity="one">%1$d jaquette large au total</item>
+        <item quantity="many">%1$d de jaquettes larges au total</item>
+        <item quantity="other">%1$d jaquettes larges au total</item>
+    </plurals>
+    <plurals name="artwork_count_of_wide">
+        <item quantity="one">%1$d sur %2$d jaquette large</item>
+        <item quantity="many">%1$d sur %2$d de jaquettes larges</item>
+        <item quantity="other">%1$d sur %2$d jaquettes larges</item>
+    </plurals>
+    <string name="artwork_filtered_none_wide">Aucune jaquette large ne correspond à ces filtres</string>
+    <plurals name="artwork_filtered_has_wide">
+        <item quantity="one">%1$s a %2$d jaquette large sur SteamGridDB, mais aucune ne correspond à %3$s. Assouplis un filtre ou cherche sous un autre nom.</item>
+        <item quantity="many">%1$s a %2$d de jaquettes larges sur SteamGridDB, mais aucune ne correspond à %3$s. Assouplis un filtre ou cherche sous un autre nom.</item>
+        <item quantity="other">%1$s a %2$d jaquettes larges sur SteamGridDB, mais aucune ne correspond à %3$s. Assouplis un filtre ou cherche sous un autre nom.</item>
+    </plurals>
+    <string name="artwork_filtered_unknown_wide">Aucune des jaquettes larges ne correspond à %1$s. Assouplis un filtre ou cherche sous un autre nom.</string>
+    <string name="artwork_empty_wide">SteamGridDB n’a pas encore de jaquette large pour ce jeu.</string>
+    <string name="artwork_downloading_wide">Téléchargement de la jaquette large…</string>
+    <string name="artwork_updated_wide">Jaquette large mise à jour</string>
+    <string name="artwork_tab_hero">Arrière-plan</string>
+    <plurals name="artwork_count_hero">
+        <item quantity="one">%1$d arrière-plan</item>
+        <item quantity="many">%1$d d’arrière-plans</item>
+        <item quantity="other">%1$d arrière-plans</item>
+    </plurals>
+    <plurals name="artwork_count_all_hero">
+        <item quantity="one">%1$d arrière-plan au total</item>
+        <item quantity="many">%1$d d’arrière-plans au total</item>
+        <item quantity="other">%1$d arrière-plans au total</item>
+    </plurals>
+    <plurals name="artwork_count_of_hero">
+        <item quantity="one">%1$d sur %2$d arrière-plan</item>
+        <item quantity="many">%1$d sur %2$d d’arrière-plans</item>
+        <item quantity="other">%1$d sur %2$d arrière-plans</item>
+    </plurals>
+    <string name="artwork_filtered_none_hero">Aucun arrière-plan ne correspond à ces filtres</string>
+    <plurals name="artwork_filtered_has_hero">
+        <item quantity="one">%1$s a %2$d arrière-plan sur SteamGridDB, mais aucune ne correspond à %3$s. Assouplis un filtre ou cherche sous un autre nom.</item>
+        <item quantity="many">%1$s a %2$d d’arrière-plans sur SteamGridDB, mais aucune ne correspond à %3$s. Assouplis un filtre ou cherche sous un autre nom.</item>
+        <item quantity="other">%1$s a %2$d arrière-plans sur SteamGridDB, mais aucune ne correspond à %3$s. Assouplis un filtre ou cherche sous un autre nom.</item>
+    </plurals>
+    <string name="artwork_filtered_unknown_hero">Aucun des arrière-plans ne correspond à %1$s. Assouplis un filtre ou cherche sous un autre nom.</string>
+    <string name="artwork_empty_hero">SteamGridDB n’a pas encore d’arrière-plan pour ce jeu.</string>
+    <string name="artwork_downloading_hero">Téléchargement de l’arrière-plan…</string>
+    <string name="artwork_updated_hero">Arrière-plan mis à jour</string>
+    <string name="artwork_tab_logo">Logo</string>
+    <plurals name="artwork_count_logo">
+        <item quantity="one">%1$d logo</item>
+        <item quantity="many">%1$d de logos</item>
+        <item quantity="other">%1$d logos</item>
+    </plurals>
+    <plurals name="artwork_count_all_logo">
+        <item quantity="one">%1$d logo au total</item>
+        <item quantity="many">%1$d de logos au total</item>
+        <item quantity="other">%1$d logos au total</item>
+    </plurals>
+    <plurals name="artwork_count_of_logo">
+        <item quantity="one">%1$d sur %2$d logo</item>
+        <item quantity="many">%1$d sur %2$d de logos</item>
+        <item quantity="other">%1$d sur %2$d logos</item>
+    </plurals>
+    <string name="artwork_filtered_none_logo">Aucun logo ne correspond à ces filtres</string>
+    <plurals name="artwork_filtered_has_logo">
+        <item quantity="one">%1$s a %2$d logo sur SteamGridDB, mais aucune ne correspond à %3$s. Assouplis un filtre ou cherche sous un autre nom.</item>
+        <item quantity="many">%1$s a %2$d de logos sur SteamGridDB, mais aucune ne correspond à %3$s. Assouplis un filtre ou cherche sous un autre nom.</item>
+        <item quantity="other">%1$s a %2$d logos sur SteamGridDB, mais aucune ne correspond à %3$s. Assouplis un filtre ou cherche sous un autre nom.</item>
+    </plurals>
+    <string name="artwork_filtered_unknown_logo">Aucun des logos ne correspond à %1$s. Assouplis un filtre ou cherche sous un autre nom.</string>
+    <string name="artwork_empty_logo">SteamGridDB n’a pas encore de logo pour ce jeu.</string>
+    <string name="artwork_downloading_logo">Téléchargement du logo…</string>
+    <string name="artwork_updated_logo">Logo mis à jour</string>
+</resources>

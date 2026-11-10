@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="link_transport_other">ce réseau</string>
+    <string name="link_age_just_now">à l’instant</string>
+    <plurals name="link_age_minutes">
+        <item quantity="one">il y a %d min</item>
+        <item quantity="many">il y a %d min</item>
+        <item quantity="other">il y a %d min</item>
+    </plurals>
+    <plurals name="link_age_hours">
+        <item quantity="one">il y a %d h</item>
+        <item quantity="many">il y a %d h</item>
+        <item quantity="other">il y a %d h</item>
+    </plurals>
+    <string name="link_age_yesterday">hier</string>
+    <plurals name="link_age_days">
+        <item quantity="one">il y a %d jour</item>
+        <item quantity="many">il y a %d jours</item>
+        <item quantity="other">il y a %d jours</item>
+    </plurals>
+    <plurals name="link_age_weeks">
+        <item quantity="one">il y a %d semaine</item>
+        <item quantity="many">il y a %d semaines</item>
+        <item quantity="other">il y a %d semaines</item>
+    </plurals>
+    <plurals name="link_age_months">
+        <item quantity="one">il y a %d mois</item>
+        <item quantity="many">il y a %d mois</item>
+        <item quantity="other">il y a %d mois</item>
+    </plurals>
+    <string name="link_tested_summary">Testé %1$s sur %2$s</string>
+    <string name="link_reason_untested">pas testé sur cette liaison</string>
+    <string name="link_reason_tested_ok">la liaison supporte jusqu’à %1$s</string>
+    <string name="link_reason_tested_limited">la liaison supporte %1$s</string>
+    <string name="link_reason_host_limited">la liaison du PC est de %1$s</string>
+    <string name="link_reason_dropping">perd des images à %1$s</string>
+    <string name="link_recommended_line">Recommandé : %1$s · %2$s</string>
+    <string name="link_value_reason">%1$s · %2$s</string>
+    <string name="link_recommended_plain">Recommandé : %1$d Mbps</string>
+    <string name="link_test_action">Tester la liaison</string>
+    <string name="link_test_row_untested">Pas encore testé sur %1$s</string>
+    <string name="link_help_untested">Pas testé sur %1$s. Tester la liaison mesure ce qu’elle supporte.</string>
+    <string name="link_help_joined">%1$s : %2$s</string>
+    <string name="link_help_tested_ok">supporte jusqu’à %1$s ; %2$s suffit pour %3$s.</string>
+    <string name="link_help_host_limited">supporte %1$s ; la liaison du PC lui-même est la limite pour %2$s.</string>
+    <string name="link_help_limited">supporte %1$s ; %2$s demande %3$s.</string>
+    <string name="link_help_limited_picture">supporte %1$s ; %2$s demande %3$s, soit environ %4$s d’image après FEC et surcharge.</string>
+    <string name="link_pc_offline_toast">%1$s est hors ligne</string>
+    <string name="link_test_detail">Mesure ce que ce réseau supporte depuis %1$s : trafic de test pendant environ 2 secondes par étape, jusqu’à plusieurs centaines de Mbps. Reste sur %2$s, sans rien lancer d’autre.</string>
+    <string name="link_use_action">Utiliser le débit recommandé</string>
+    <string name="link_use_done_toast">Débit réglé sur %1$s</string>
+    <string name="link_use_detail">Règle le débit sur %1$s : %2$s. Delos ne change jamais le débit tout seul.</string>
+    <string name="link_unavailable_newer_delos">Ce PC a besoin d’une version plus récente de Delos pour tester la liaison.</string>
+    <string name="link_unavailable_host_outdated">Le Vibepollo de ce PC ne peut pas encore tester la liaison. Mets-le à jour.</string>
+    <string name="link_stream_help_dropping">La liaison perd des images à %1$s. A remplit le curseur, Appliquer l’envoie.</string>
+    <string name="link_stream_help_dropping_untested">La liaison perd des images à %1$s. A remplit le curseur, Appliquer l’envoie. Teste la liaison dans les Réglages avant de te connecter.</string>
+    <string name="link_stream_help_tested">%1$s. A remplit le curseur, Appliquer l’envoie.</string>
+    <string name="link_stream_help_untested">Pas encore testé. A remplit le curseur, Appliquer l’envoie. Teste la liaison dans les Réglages avant de te connecter.</string>
+    <string name="link_reading_measuring">Mesure en cours</string>
+    <string name="link_reading_keeps_up">La liaison tient à %1$s</string>
+    <string name="link_reading_drops">La liaison perd des images à %1$s, essaie %2$s</string>
+    <string name="link_reading_device_behind">L’appareil saute des images ; la liaison est bonne</string>
+    <string name="link_failure_host_unsupported">Le Vibepollo de ce PC ne peut pas tester la liaison. Mets-le à jour.</string>
+    <string name="link_failure_stream_active">Le PC est en train de streamer. Arrête le stream, puis teste à nouveau.</string>
+    <string name="link_failure_denied">Le PC n’a pas autorisé le test. Associe à nouveau cet appareil.</string>
+    <string name="link_failure_udp_blocked">Aucune donnée de test reçue. L’UDP est peut-être bloqué sur ce réseau.</string>
+    <string name="link_failure_network">Delos n’a pas pu joindre le PC.</string>
+    <string name="link_failure_timeout">Le PC n’a pas terminé le test à temps.</string>
+    <string name="link_failure_host_error">Le PC n’a pas pu exécuter le test.</string>
+    <string name="link_failure_invalid_response">Le PC a envoyé un résultat de test inutilisable.</string>
+    <string name="link_failure_not_connected">Delos se connecte encore à %1$s.</string>
+    <string name="link_verdict_receiver_suspect">Cet appareil n’a pas pu recevoir %1$s aussi vite</string>
+    <string name="link_verdict_loss">%1$.1f %% des paquets de test perdus à %2$s</string>
+    <string name="link_verdict_window_loss">Jusqu’à %1$.1f %% des paquets perdus en 100 ms à %2$s</string>
+    <string name="link_verdict_delay_growth">Le délai n’a cessé de croître à %1$s (la liaison fait la queue)</string>
+    <string name="link_verdict_no_packets">Aucune donnée de test reçue. L’UDP est peut-être bloqué sur ce réseau</string>
+    <string name="link_verdict_not_all_sent">Le PC n’a envoyé que %1$.1f %% des données de test à %2$s</string>
+    <string name="link_verdict_sender_duration">Le rythme du PC était irrégulier pendant le test</string>
+    <string name="link_verdict_passed">Réussi à %1$s</string>
+    <string name="link_verdict_stable">Stable</string>
+    <string name="link_verdict_stable_jitter">Stable, un peu de gigue</string>
+    <string name="link_verdict_no_rate_tested">Aucun débit n’a pu être testé</string>
+    <string name="link_no_rate_passed_once">%1$s. %2$s a réussi une fois mais n’a pas tenu.</string>
+    <string name="link_no_rate_nothing_passed">%1$s. Rien n’a réussi, jusqu’à %2$s.</string>
+    <string name="link_no_rate_plain">%1$s.</string>
+</resources>

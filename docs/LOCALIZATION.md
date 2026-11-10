@@ -466,3 +466,27 @@ Delos is always written as „o app Delos“ / „do app Delos“.
 | cover, hero, artwork | capa, hero (banner), arte |
 | clipboard, stylus, deadzone, stick | área de transferência, caneta, zona morta, analógico |
 | toast | aviso |
+## Terminology: French
+
+Register: informal *tu*; buttons and menu items in the infinitive; U+00A0 before `: ; ! ? %` and inside « ».
+
+| English | French |
+|---|---|
+| stream (noun/verb) | stream / streamer |
+| host / PC | PC (technical error texts: hôte) |
+| pair / unpair | associer / dissocier |
+| bitrate | débit |
+| frame rate / refresh rate | fréquence d’images / fréquence d’écran |
+| gamepad, controller | manette |
+| rumble | vibration |
+| cover / wide cover / hero (background) | jaquette / jaquette large / arrière-plan |
+| artwork | visuels |
+| library | bibliothèque |
+| profile | profil |
+| settings | réglages |
+| sharpness / Sharpen only | netteté / Netteté seule |
+| upscaler, supersampling, frame pacing, overlay | kept in English |
+| on-screen controls | commandes à l’écran |
+| clipboard | presse-papiers |
+| link (network path) / Test link | liaison / Tester la liaison |
+| Back (button) | Retour |
