@@ -244,7 +244,7 @@ class StringResourcesTest {
         val SUPPORTED_TAGS = listOf("en", "cs", "es", "pt-BR", "fr", "de", "ja", "ko", "zh-CN", "uk")
         val SUPPORTED_FOLDERS = listOf("cs", "es", "pt-rBR", "fr", "de", "ja", "ko", "zh-rCN", "uk")
         val LANGUAGE_FOLDER = Regex("""values-([a-z]{2,3}(-r[A-Z]{2})?|b\+.+)""")
-        val PLACEHOLDER = Regex("""%(?:(\d+)\$)?([-#+ 0,(]*\d*(?:\.\d+)?)([a-zA-Z%])""")
+        val PLACEHOLDER = Regex("""%(?:(\d+)\$)?([-#+0,(]*\d*(?:\.\d+)?)([a-zA-Z%])""")
         val POSITIONAL_ONLY = Regex("""%\d+\$""")
 
         /** Delos followed by a Latin letter (case ending) or a possessive 's; hyphens, spaces and CJK particles are fine. */
