@@ -93,12 +93,12 @@ internal fun settingsActions(profiles: ProfileStore, stream: StreamSettingsStore
         when (spec.key) {
             "option_reset_osc_preference" -> {
                 ProfileLayouts.preferences(context, VirtualControllerConfigurationLoader.OSC_PREFERENCE).edit().clear().apply()
-                shell.showToast("On-screen controls reset", Symbols.RESTART_ALT, kind = ToastKind.SUCCESS)
+                shell.showToast("On-screen controls reset", Symbols.RESET, kind = ToastKind.SUCCESS)
             }
             "option_reset_osc" -> {
                 val name = profiles.settings().getString("keyboard_axi_list", "OSC_Keyboard")!!
                 ProfileLayouts.preferences(context, name).edit().clear().apply()
-                shell.showToast("Keyboard layout reset", Symbols.RESTART_ALT, kind = ToastKind.SUCCESS)
+                shell.showToast("Keyboard layout reset", Symbols.RESET, kind = ToastKind.SUCCESS)
             }
             "import_keyboard_file", "import_special_button_file" -> {
                 importing = spec.key

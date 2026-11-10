@@ -15,9 +15,9 @@ enum class SettingsTab(val label: String, val icon: String, val description: Str
     DISPLAY("Display", Symbols.MONITOR, "How the stream fills the screen and which information is shown while you play."),
     AUDIO("Audio", Symbols.GRAPHIC_EQ, "Sound from the PC and the sounds of the Delos interface."),
     CONTROLS("Controls", Symbols.SPORTS_ESPORTS, "Gamepads, mouse, touch, keyboard and on-screen controls."),
-    APPEARANCE("Appearance", Symbols.PALETTE, "Theme, colors and the animated background. Changes apply immediately."),
+    APPEARANCE("Appearance", Symbols.APPEARANCE, "Theme, colors and the animated background. Changes apply immediately."),
     COVERS("Covers", Symbols.PHOTO_LIBRARY, "Covers, wide covers, backgrounds and logos from your PC or SteamGridDB."),
-    DEVICES("Devices", Symbols.COMPUTER, "Paired PCs and what happens when Delos starts."),
+    DEVICES("Devices", Symbols.DESKTOP_WINDOWS, "Paired PCs and what happens when Delos starts."),
     ABOUT("About", Symbols.INFO, "Delos is a fork of Artemis and Moonlight, licensed under the GPLv3."),
 }
 
@@ -56,106 +56,118 @@ data class SettingSpec(
     val dependency: String? = null,
     val url: String? = null,
 ) {
-    val icon: String get() = when (key) {
-        "list_resolution" -> Symbols.ASPECT_RATIO
-        "edit_diy_w_h" -> Symbols.CUSTOM_RESOLUTION
-        "list_fps", "checkbox_unlock_fps" -> Symbols.SPEED
-        "custom_refresh_rate" -> Symbols.CUSTOM_REFRESH
-        "seekbar_bitrate_kbps", "edit_diy_bitrate" -> Symbols.NETWORK_CHECK
-        "seekbar_metered_bitrate_kbps" -> Symbols.METERED_NETWORK
-        "frame_pacing" -> Symbols.TIMER
-        "checkbox_async_decode" -> Symbols.ASYNC_DECODE
-        "checkbox_sgsr" -> Symbols.UPSCALER
-        "list_sgsr_quality" -> Symbols.UPSCALER_MODE
-        "seekbar_sgsr_sharpness" -> Symbols.SHARPNESS
-        "list_sgsr_supersampling_level" -> Symbols.HIGH_QUALITY
-        "video_format" -> Symbols.MOVIE
-        "list_pyrowave_chroma" -> Symbols.PALETTE
-        "checkbox_enable_hdr" -> Symbols.HDR_ON
-        "checkbox_ultra_low_latency" -> Symbols.BOLT
-        "pref_low_latency_frame_balance" -> Symbols.TUNE
-        "checkbox_use_virtual_display" -> Symbols.SCREEN_SHARE
-        "checkbox_auto_orientation" -> Symbols.SCREEN_ROTATION
-        "checkbox_auto_invert_video_resolution", "checkbox_trackpad_swap_axis" -> Symbols.AXIS_SWAP
-        "checkbox_enable_view_top_center" -> Symbols.DISPLAY_TOP
-        "seekbar_resolution_scale_factor" -> Symbols.SCALE
-        "list_video_scale_mode" -> Symbols.SCALE_MODE
-        "checkbox_enforce_display_mode" -> Symbols.DISPLAY_MODE
-        "checkbox_enable_fullexdisplay" -> Symbols.EXTERNAL_DISPLAY
-        "checkbox_reduce_refresh_rate" -> Symbols.SCHEDULE
-        "checkbox_full_range" -> Symbols.FULL_RANGE
-        "checkbox_prevent_packet_loss" -> Symbols.WIFI_KEEPALIVE
-        "list_audio_config" -> Symbols.SURROUND_SOUND
-        "checkbox_enable_audiofx" -> Symbols.EQUALIZER
-        "checkbox_host_audio" -> Symbols.SPEAKER
-        "seekbar_deadzone" -> Symbols.STICK_DEADZONE
-        "checkbox_multi_controller" -> Symbols.GAMEPAD_DETECT
-        "checkbox_usb_driver" -> Symbols.USB
-        "checkbox_usb_bind_all" -> Symbols.USB_OVERRIDE
-        "checkbox_mouse_emulation" -> Symbols.MOUSE
-        "analog_scrolling" -> Symbols.ANALOG_SCROLL
-        "checkbox_flip_face_buttons" -> Symbols.GAMEPAD_BUTTONS
-        "checkbox_gamepad_touchpad_as_mouse" -> Symbols.TOUCHPAD
-        "checkbox_gamepad_motion_sensors" -> Symbols.MOTION_SENSORS
-        "checkbox_gamepad_motion_fallback" -> Symbols.MOTION_FALLBACK
-        "checkbox_force_device_motion" -> Symbols.DEVICE_MOTION
-        "seekbar_gyro_smoothing" -> Symbols.TUNE
-        "checkbox_enable_joyconfix" -> Symbols.SPORTS_ESPORTS
-        "checkbox_gamepad_enable_battery_report" -> Symbols.BATTERY_FULL
-        "checkbox_enable_rumble", "list_rumble_feel", "checkbox_vibrate_fallback", "checkbox_vibrate_osc", "checkbox_vibrate_keyboard" -> Symbols.VIBRATION
-        "checkbox_enable_device_rumble" -> Symbols.MOBILE_VIBRATE
-        "seekbar_vibrate_fallback_strength" -> Symbols.GRAPHIC_EQ
-        "mouse_mode_list", "checkbox_enable_touch_sensitivity" -> Symbols.TOUCH_APP
-        "checkbox_remember_mouse_mode", "checkbox_remember_zoom_pan" -> Symbols.REMEMBER
-        "checkbox_mouse_local_cursor", "checkbox_absolute_mouse_mode" -> Symbols.CURSOR
-        "checkbox_multi_touch_gestures" -> Symbols.TOUCH_GESTURES
-        "checkbox_mouse_nav_buttons" -> Symbols.SWAP_HORIZ
-        "seekbar_trackpad_sensitivity_x", "seekbar_touch_sensitivity_opacity_x", "seekbar_touchpad_sensitivity_opacity" -> Symbols.AXIS_X
-        "seekbar_trackpad_sensitivity_y", "seekbar_touch_sensitivity_opacity_y", "seekbar_touchpad_sensitivity_y_opacity" -> Symbols.AXIS_Y
-        "checkbox_trackpad_drag_drop_vibration" -> Symbols.DRAG_DROP
-        "seekbar_trackpad_drag_drop_threshold" -> Symbols.HOLD_DURATION
-        "checkbox_force_qwerty", "keyboard_axi_list" -> Symbols.KEY_LAYOUT
-        "checkbox_right_alt_as_meta" -> Symbols.KEYBOARD_COMMAND_KEY
-        "checkbox_ignore_synth_events" -> Symbols.SYNTHETIC_INPUT
-        "checkbox_enable_commit_text" -> Symbols.TEXT_INPUT
-        "checkbox_smart_clipboard_sync" -> Symbols.CLIPBOARD_SYNC
-        "checkbox_smart_clipboard_sync_toast" -> Symbols.NOTIFICATIONS
-        "checkbox_hide_clipboard_content" -> Symbols.CLIPBOARD_PRIVACY
-        "seekbar_keyboard_axi_opacity", "seekbar_osc_opacity", "seekbar_osc_free_analog_stick_opacity" -> Symbols.OPACITY
-        "onscreen_keyboard_autofit" -> Symbols.FIT_SCREEN
-        "seekbar_onscreen_keyboard_height" -> Symbols.HEIGHT
-        "seekbar_onscreen_keyboard_width" -> Symbols.WIDTH
-        "list_onscreen_keyboard_align_mode" -> Symbols.ALIGNMENT
-        "checkbox_enable_sticky_modifier_key_virtual_keyboard" -> Symbols.STICKY_KEYS
-        "checkbox_disable_warnings" -> Symbols.WARNING
-        "checkbox_enable_pip" -> Symbols.PICTURE_IN_PICTURE
-        "checkbox_show_onscreen_controls" -> Symbols.JOYSTICK
-        "checkbox_hide_osc_when_has_gamepad" -> Symbols.VISIBILITY_OFF
-        "checkbox_only_show_L3R3" -> Symbols.STICK_DEADZONE
-        "checkbox_show_guide_button" -> Symbols.HOME
-        "checkbox_enable_analog_stick_new" -> Symbols.FREE_STICK
-        "option_reset_osc_preference", "option_reset_osc" -> Symbols.RESET
-        "checkbox_enable_keyboard" -> Symbols.KEYBOARD
-        "checkbox_enable_clear_default_special_button" -> Symbols.KEY
-        "checkbox_enable_keyboard_square" -> Symbols.SQUARE
-        "import_keyboard_file", "import_special_button_file" -> Symbols.IMPORT
-        "export_keyboard_file" -> Symbols.EXPORT
-        "checkbox_enable_global_touch_sensitivity" -> Symbols.PUBLIC
-        "checkbox_enable_touch_sensitivity_rotation_auto" -> Symbols.STICK_DEADZONE
-        "checkbox_enable_perf_overlay" -> Symbols.OVERLAY
-        "checkbox_enable_perf_overlay_lite" -> Symbols.OVERLAY_COMPACT
-        "list_languages" -> Symbols.LANGUAGE
-        "option_help_custom_keys" -> Symbols.HELP
-        "pref_debug_info" -> Symbols.DEBUG
-        else -> when (category) {
-            "category_gamepad_settings" -> if (key.contains("vibrat") || key.contains("rumble")) Symbols.VIBRATION else Symbols.SPORTS_ESPORTS
-            "category_input_settings", "category_virtual_trackpad_settings" -> Symbols.MOUSE
-            "category_special_key_layout" -> Symbols.KEYBOARD
-            "category_onscreen_controls" -> Symbols.JOYSTICK
-            "category_perf_monitor_settings" -> Symbols.MONITORING
-            else -> tab.icon
-        }
-    }
+    val icon: String get() = settingIcon(key) ?: tab.icon
+}
+
+/**
+ * The icon of a settings row. Every row of the XML catalogue has its own entry here (the rule is tested by
+ * `SettingIconsTest`); a glyph is shared only by rows with the same meaning. See docs/ICON_AUDIT.md.
+ */
+fun settingIcon(key: String): String? = when (key) {
+    "list_resolution" -> Symbols.RESOLUTION
+    "edit_diy_w_h" -> Symbols.CUSTOM_RESOLUTION
+    "list_fps" -> Symbols.FRAME_RATE
+    "checkbox_unlock_fps" -> Symbols.UNLOCK_FPS
+    "custom_refresh_rate" -> Symbols.CUSTOM_REFRESH
+    "seekbar_bitrate_kbps" -> Symbols.NETWORK_CHECK
+    "edit_diy_bitrate" -> Symbols.MANUAL_BITRATE
+    "seekbar_metered_bitrate_kbps" -> Symbols.METERED_NETWORK
+    "frame_pacing" -> Symbols.FRAME_PACING
+    "checkbox_async_decode" -> Symbols.ASYNC_DECODE
+    "checkbox_sgsr" -> Symbols.UPSCALER
+    "list_sgsr_quality" -> Symbols.UPSCALER_MODE
+    "seekbar_sgsr_sharpness" -> Symbols.SHARPNESS
+    "list_sgsr_supersampling_level" -> Symbols.HIGH_QUALITY
+    "video_format" -> Symbols.CODEC
+    "list_pyrowave_chroma" -> Symbols.CHROMA
+    "checkbox_enable_hdr" -> Symbols.HDR_ON
+    "checkbox_ultra_low_latency" -> Symbols.TIMER
+    "pref_low_latency_frame_balance" -> Symbols.FRAME_BALANCE
+    "checkbox_use_virtual_display" -> Symbols.SCREEN_SHARE
+    "checkbox_auto_orientation" -> Symbols.SCREEN_ROTATION
+    "checkbox_auto_invert_video_resolution", "checkbox_trackpad_swap_axis" -> Symbols.AXIS_SWAP
+    "checkbox_enable_view_top_center" -> Symbols.DISPLAY_TOP
+    "seekbar_resolution_scale_factor" -> Symbols.SCALE
+    "list_video_scale_mode" -> Symbols.SCALE_MODE
+    "checkbox_enforce_display_mode" -> Symbols.DISPLAY_MODE
+    "checkbox_enable_fullexdisplay" -> Symbols.EXTERNAL_DISPLAY
+    "checkbox_reduce_refresh_rate" -> Symbols.REDUCE_REFRESH
+    "checkbox_full_range" -> Symbols.FULL_RANGE
+    "checkbox_prevent_packet_loss" -> Symbols.WIFI_KEEPALIVE
+    "list_audio_config" -> Symbols.SURROUND_SOUND
+    "checkbox_enable_audiofx" -> Symbols.EQUALIZER
+    "checkbox_host_audio" -> Symbols.SPEAKER
+    "seekbar_deadzone" -> Symbols.STICK_DEADZONE
+    "checkbox_multi_controller" -> Symbols.GAMEPAD_DETECT
+    "checkbox_usb_driver" -> Symbols.USB
+    "checkbox_usb_bind_all" -> Symbols.USB_OVERRIDE
+    "checkbox_mouse_emulation" -> Symbols.MOUSE
+    "analog_scrolling" -> Symbols.ANALOG_SCROLL
+    "checkbox_flip_face_buttons" -> Symbols.GAMEPAD_BUTTONS
+    "checkbox_gamepad_touchpad_as_mouse" -> Symbols.TOUCHPAD
+    "checkbox_gamepad_motion_sensors" -> Symbols.MOTION_SENSORS
+    "checkbox_gamepad_motion_fallback" -> Symbols.MOTION_FALLBACK
+    "checkbox_force_device_motion" -> Symbols.DEVICE_MOTION
+    "seekbar_gyro_smoothing" -> Symbols.SMOOTHING
+    "checkbox_enable_joyconfix" -> Symbols.JOYCON_FIX
+    "checkbox_gamepad_enable_battery_report" -> Symbols.BATTERY_FULL
+    "checkbox_enable_rumble" -> Symbols.VIBRATION
+    "list_rumble_feel" -> Symbols.PRESET
+    "checkbox_vibrate_fallback" -> Symbols.DEVICE_VIBRATION
+    "checkbox_vibrate_osc" -> Symbols.OSC_HAPTICS
+    "checkbox_vibrate_keyboard" -> Symbols.KEYBOARD_HAPTICS
+    "checkbox_enable_device_rumble" -> Symbols.DEVICE_FORCE
+    "seekbar_vibrate_fallback_strength" -> Symbols.STRENGTH
+    "mouse_mode_list" -> Symbols.TOUCH_APP
+    "checkbox_enable_touch_sensitivity" -> Symbols.TOUCH_SENSITIVITY
+    "checkbox_remember_mouse_mode", "checkbox_remember_zoom_pan" -> Symbols.REMEMBER
+    "checkbox_mouse_local_cursor" -> Symbols.CURSOR
+    "checkbox_absolute_mouse_mode" -> Symbols.ABSOLUTE_MOUSE
+    "checkbox_multi_touch_gestures" -> Symbols.TOUCH_GESTURES
+    "checkbox_mouse_nav_buttons" -> Symbols.MOUSE_NAV_BUTTONS
+    "seekbar_trackpad_sensitivity_x" -> Symbols.AXIS_X
+    "seekbar_touch_sensitivity_opacity_x" -> Symbols.TOUCH_AXIS_X
+    "seekbar_touchpad_sensitivity_opacity" -> Symbols.TOUCHPAD_AXIS_X
+    "seekbar_trackpad_sensitivity_y" -> Symbols.AXIS_Y
+    "seekbar_touch_sensitivity_opacity_y" -> Symbols.TOUCH_AXIS_Y
+    "seekbar_touchpad_sensitivity_y_opacity" -> Symbols.TOUCHPAD_AXIS_Y
+    "checkbox_trackpad_drag_drop_vibration" -> Symbols.DRAG_DROP
+    "seekbar_trackpad_drag_drop_threshold" -> Symbols.HOLD_DURATION
+    "checkbox_force_qwerty" -> Symbols.FORCE_QWERTY
+    "keyboard_axi_list" -> Symbols.KEY_LAYOUT
+    "checkbox_right_alt_as_meta" -> Symbols.META_KEY
+    "checkbox_ignore_synth_events" -> Symbols.SYNTHETIC_INPUT
+    "checkbox_enable_commit_text" -> Symbols.TEXT_INPUT
+    "checkbox_smart_clipboard_sync" -> Symbols.CLIPBOARD_SYNC
+    "checkbox_smart_clipboard_sync_toast" -> Symbols.NOTIFICATIONS
+    "checkbox_hide_clipboard_content" -> Symbols.CLIPBOARD_PRIVACY
+    "seekbar_keyboard_axi_opacity", "seekbar_osc_opacity", "seekbar_osc_free_analog_stick_opacity" -> Symbols.OPACITY
+    "onscreen_keyboard_autofit" -> Symbols.FIT_SCREEN
+    "seekbar_onscreen_keyboard_height" -> Symbols.HEIGHT
+    "seekbar_onscreen_keyboard_width" -> Symbols.WIDTH
+    "list_onscreen_keyboard_align_mode" -> Symbols.ALIGNMENT
+    "checkbox_enable_sticky_modifier_key_virtual_keyboard" -> Symbols.STICKY_KEYS
+    "checkbox_disable_warnings" -> Symbols.WARNING
+    "checkbox_enable_pip" -> Symbols.PICTURE_IN_PICTURE
+    "checkbox_show_onscreen_controls" -> Symbols.JOYSTICK
+    "checkbox_hide_osc_when_has_gamepad" -> Symbols.VISIBILITY_OFF
+    "checkbox_only_show_L3R3" -> Symbols.BUTTON_L3R3
+    "checkbox_show_guide_button" -> Symbols.GUIDE_BUTTON
+    "checkbox_enable_analog_stick_new" -> Symbols.FREE_STICK
+    "option_reset_osc_preference", "option_reset_osc" -> Symbols.RESET
+    "checkbox_enable_keyboard" -> Symbols.KEYBOARD
+    "checkbox_enable_clear_default_special_button" -> Symbols.CLEAR_DEFAULTS
+    "checkbox_enable_keyboard_square" -> Symbols.SQUARE_BUTTONS
+    "import_keyboard_file", "import_special_button_file" -> Symbols.IMPORT
+    "export_keyboard_file" -> Symbols.EXPORT
+    "checkbox_enable_global_touch_sensitivity" -> Symbols.PUBLIC
+    "checkbox_enable_touch_sensitivity_rotation_auto" -> Symbols.AUTO_SENSITIVITY
+    "checkbox_enable_perf_overlay" -> Symbols.OVERLAY
+    "checkbox_enable_perf_overlay_lite" -> Symbols.OVERLAY_COMPACT
+    "list_languages" -> Symbols.LANGUAGE
+    "option_help_custom_keys" -> Symbols.HELP
+    "pref_debug_info" -> Symbols.DEBUG
+    else -> null
 }
 
 /**

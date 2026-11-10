@@ -270,7 +270,7 @@ do not qualify as native game HDR.
 **Y** on the home screen opens the **Filter library** modal (Y or B closes it; Done as well). It is a
 centered glass panel with the title, a live result line as a pill (`27 of 55 games`, or `All 55 games` without a filter)
 and four sections of chips, each with a large Unbounded heading and its icon in an accent-tinted circle, separated by thin dividers: **Genre** (`All` plus every genre any game in the downloaded metadata lists, each with its icon and number of games), **Theme** (the same for IGDB themes, single-select, shown while the library has any theme), **HDR
-support** (`All`, `Native HDR`, `SDR`, `HDR/SDR unverified`, with the sparkle, sun and question-mark icons of
+support** (`All`, `Native HDR`, `SDR`, `HDR/SDR unverified`, with the sparkle, dim-sun and sealed-question-mark icons of
 the home badges) and **Duration** from HowLongToBeat (Any, <10 h, 10–30 h, 30–60 h, 60+ h, Unknown). The chosen chip is
 filled with the accent; a choice applies at once (no confirmation) and the library behind the modal
 updates with it. D-pad up/down moves between the sections and the buttons, left/right within a row; a
@@ -523,7 +523,7 @@ the accent the rest and fainter.
   titled Upscaler and the Sharpness slider is the whole effect; the tile's status reads "On: Sharpen only" in the help.
   Mode and Sharpness change live. Switching Mode to or from Sharpen only rebuilds the output stage the way the Enabled
   toggle does (the picture may flicker once), because Sharpen only draws at the stream's size.
-- **Bitrate page, recommendation row** (PyroWave always; an ordinary codec once a link test exists): a row above Apply, `Recommended: 135 Mbps · drops frames at 225 Mbps` (icon Speed, value **Fill**, a scrolling label like every row), refreshed once a second from the stream's own counters and the last link test. A fills the slider with the recommendation; only Apply sends it. Its help says what the number rests on and, for an untested link, that testing is done in Settings before connecting (the host refuses probes during a stream, so there is no Test link here). An ordinary codec without a test shows only the slider and Apply.
+- **Bitrate page, recommendation row** (PyroWave always; an ordinary codec once a link test exists): a row above Apply, `Recommended: 135 Mbps · drops frames at 225 Mbps` (icon thumbs up, the glyph of every "recommended" row; value **Fill**, a scrolling label like every row), refreshed once a second from the stream's own counters and the last link test. A fills the slider with the recommendation; only Apply sends it. Its help says what the number rests on and, for an untested link, that testing is done in Settings before connecting (the host refuses probes during a stream, so there is no Test link here). An ordinary codec without a test shows only the slider and Apply.
 - **Statistics panel, Link block** (full panel, PyroWave only, after Backlog): **Receiving** (`212 of 225 Mb/s`, the app's whole received rate against the bitrate in force), **Partial / lost** (frames per second) and **Verdict** (`Link keeps up at 225 Mbps`, `Link drops frames at 225 Mbps, try 135 Mbps`, `Device skips frames; the link is fine`, `Measuring`).
 - **Statistics panel, SGSR output rows** (full panel, MediaCodec streams whose output goes through the upscaler or Sharpen only; same label/value style as the other rows):
   **Upscaling** is the GPU time per frame read from the frame fences (the CPU submit time until the first fence is read).
@@ -580,7 +580,7 @@ controller window ownership keep their existing paths.
 - **Tiles**: 150 px glass, corner 42, gap 40 (9 × 150 + 8 × 40 = 1670, 125 on each side), the top edge at y 628, icon 64
   (Phosphor, filled on focus), label 24 SemiBold 24 below the tile. Resume, Keyboard, Overlay, Brightness, Bitrate,
   Upscaler (Supersampling), More, Disconnect, Quit game. The **Keyboard** tile is the Delos Full keyboard (A closes the menu,
-  then toggles it) with the plain keyboard icon (`Symbols.KEYBOARD`, the one of the Settings > Controls rows); it turns accent
+  then toggles it) with the plain keyboard icon (`Symbols.KEYBOARD`, the one of the Settings > Controls virtual-keys row; Android's system keyboard in the More page has its own text-cursor icon); it turns accent
   while the keyboard is up but has **no On / Off pill**. Android's system keyboard is the More row Open Android keyboard.
   The other toggles (Overlay, Upscaler) have an **On / Off pill**
   (18 bold, 34 high) at the tile's top right corner (right −12, top −14; Overlay says Compact, the Upscaler its status

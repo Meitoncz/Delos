@@ -81,7 +81,7 @@ internal fun withLinkRows(
     return items.flatMap { item ->
         if (item.key != BITRATE_ROW) return@flatMap listOf(item)
         val test = SettingsItem(
-            LINK_TEST_ROW, item.tab, item.section, Symbols.WIFI, "Test link",
+            LINK_TEST_ROW, item.tab, item.section, Symbols.LINK_TEST, "Test link",
             guidance.testRowText(now, transport),
             RowValue.Action {
                 when {
@@ -97,7 +97,7 @@ internal fun withLinkRows(
             searchTerms = "bandwidth probe measure speed network wifi",
         )
         val use = SettingsItem(
-            LINK_USE_ROW, item.tab, item.section, Symbols.SPEED, "Use recommended bitrate",
+            LINK_USE_ROW, item.tab, item.section, Symbols.RECOMMEND, "Use recommended bitrate",
             "${mbps(recommended.kbps)} · ${recommended.reasonText}",
             RowValue.Action {
                 setBitrate(bitrateSpec, recommended.kbps)

@@ -50,6 +50,7 @@ import com.limelight.shell.ui.LocalEntranceStagger
 import com.limelight.shell.ui.Motion
 import com.limelight.shell.ui.RowValue
 import com.limelight.shell.ui.Symbols
+import com.limelight.shell.ui.icon
 import com.limelight.shell.ui.px
 import com.limelight.shell.ui.tpx
 import kotlinx.coroutines.CoroutineStart
@@ -468,19 +469,19 @@ private fun PageRows(
         MenuPage.MORE -> {
             fun entry(label: String) = if (label == (entryRow ?: MoreRow.KEYS)) Modifier.focusRequester(first) else Modifier
             MenuRow(Symbols.KEYBOARD_COMMAND_KEY, MoreRow.KEYS, RowValue.Action { openPage(MenuPage.KEYS) }, entry(MoreRow.KEYS))
-            MenuRow(Symbols.UPLOAD, "Send clipboard", RowValue.Action { close { host.sendClipboard() } })
-            MenuRow(Symbols.DOWNLOAD, "Get clipboard", RowValue.Action { close { host.getClipboard() } })
+            MenuRow(Symbols.SEND, "Send clipboard", RowValue.Action { close { host.sendClipboard() } })
+            MenuRow(Symbols.RECEIVE, "Get clipboard", RowValue.Action { close { host.getClipboard() } })
             MenuRow(Symbols.TERMINAL, MoreRow.COMMANDS, RowValue.Action { openPage(MenuPage.COMMANDS) }, entry(MoreRow.COMMANDS))
             MenuRow(Symbols.TASK_MANAGER, "Task manager", RowValue.Action { close { host.sendTaskManager() } })
             MenuRow(Symbols.ZOOM_IN, "Zoom", RowValue.Toggle(host.zoomOn) { toggle { host.toggleZoom() } })
             if (host.allowChangeMouseMode) MenuRow(Symbols.MOUSE, MoreRow.MOUSE, RowValue.Action { openPage(MenuPage.MOUSE) }, entry(MoreRow.MOUSE))
             MenuRow(Symbols.JOYSTICK, "On-screen controls", RowValue.Toggle(host.onscreenControlsOn) { toggle { host.toggleOnscreenControls() } })
-            MenuRow(Symbols.KEYBOARD, MoreRow.ANDROID_KEYBOARD, RowValue.Action { close { host.toggleSystemKeyboard() } })
-            MenuRow(Symbols.TOUCH_APP, "Touch sensitivity", RowValue.Toggle(host.touchSensitivityOn) { toggle { host.toggleTouchSensitivity() } })
+            MenuRow(Symbols.ANDROID_KEYBOARD, MoreRow.ANDROID_KEYBOARD, RowValue.Action { close { host.toggleSystemKeyboard() } })
+            MenuRow(Symbols.TOUCH_SENSITIVITY, "Touch sensitivity", RowValue.Toggle(host.touchSensitivityOn) { toggle { host.toggleTouchSensitivity() } })
             MenuRow(Symbols.VIBRATION, MoreRow.RUMBLE, RowValue.Text(host.rumblePreset?.label ?: "Custom") { openPage(MenuPage.RUMBLE) }, entry(MoreRow.RUMBLE))
             if (host.gyroSmoothingAvailable) {
                 // Applies at once and is kept for this game (never the profile, which is the Settings slider's); changesTick recomposes the value
-                MenuRow(Symbols.TUNE, MoreRow.GYRO, RowValue.Slider(host.gyroSmoothing, 0, 100, 5, " %", minText = "0 % (off)") {
+                MenuRow(Symbols.SMOOTHING, MoreRow.GYRO, RowValue.Slider(host.gyroSmoothing, 0, 100, 5, " %", minText = "0 % (off)") {
                     host.setGyroSmoothing(it)
                     changesTick()
                 }, enabled = host.gyroSmoothingEnabled, help = gyroSmoothingHelpKey(host.gyroSmoothingEnabled))
@@ -503,7 +504,7 @@ private fun PageRows(
             @Suppress("UNUSED_EXPRESSION") linkTick
             host.linkGuidance?.let { guidance ->
                 val recommended = guidance.recommendation.kbps.coerceIn(1000, 1000000)
-                MenuRow(Symbols.SPEED, guidance.line, RowValue.Text("Fill") { requested = recommended },
+                MenuRow(Symbols.RECOMMEND, guidance.line, RowValue.Text("Fill") { requested = recommended },
                     enabled = !host.bitrateBusy, help = RECOMMENDED_ROW, key = RECOMMENDED_ROW)
             }
             // The outcome stands on the right of the row; a failure explains itself in the help
@@ -572,7 +573,7 @@ private fun PageRows(
             val start = remember { host.rumblePreset ?: presets.first() }
             presets.forEach { preset ->
                 MenuRow(
-                    Symbols.VIBRATION, preset.label, RowValue.Action { toggle { host.selectRumblePreset(preset) } },
+                    preset.icon(), preset.label, RowValue.Action { toggle { host.selectRumblePreset(preset) } },
                     if (preset == start) Modifier.focusRequester(first) else Modifier,
                     confirmation = if (host.rumbleProblem(preset) != null) "Problem" else if (preset == active) "Active" else null,
                     help = StreamMenuHelp.rumbleKey(preset),

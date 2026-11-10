@@ -104,15 +104,15 @@ internal fun nativeSettings(
         "Time format in the status bar.")
     row("ui_background", Symbols.ANIMATION, "Animated background", RowValue.Choice(a.background.label, { dir -> update { it.copy(background = it.background.step(dir)) } }), "Animated shader background (Android 13 or later), or a still one.")
     row("ui_home_layout", Symbols.VIEW_CAROUSEL, "Home layout", RowValue.Choice(a.homeLayout.label, { dir -> update { it.copy(homeLayout = it.homeLayout.step(dir)) } }), "Library as a scrolling grid or a single row.")
-    row("ui_hero_background", Symbols.IMAGE, "Game background", RowValue.Toggle(a.heroBackground) { on -> update { it.copy(heroBackground = on) } }, "Shows the selected game's background on the home screen.")
+    row("ui_hero_background", Symbols.WALLPAPER, "Game background", RowValue.Toggle(a.heroBackground) { on -> update { it.copy(heroBackground = on) } }, "Shows the selected game's background on the home screen.")
     row("ui_hero_blur", Symbols.BLUR_ON, "Game background blur", RowValue.Slider(a.heroBlur, 0, 40, 5, " px") { v -> update { it.copy(heroBlur = v) } }, "Blurs the game background behind the library. Needs Game background.", a.heroBackground)
     row("ui_hero_opacity", Symbols.OPACITY, "Game background opacity", RowValue.Slider(a.heroOpacity, 0, 100, 5, " %") { v -> update { it.copy(heroOpacity = v) } }, "How strongly the game artwork shows through the animated background. Needs Game background.", a.heroBackground)
-    row("ui_scale", Symbols.SCALE, "Interface scale", RowValue.Slider(a.uiScale, 100, 130, 5, " %") { v -> update { it.copy(uiScale = v) } }, "Size of text, status bar and button hints.")
-    row("ui_reduced_motion", Symbols.MOTION_PHOTOS_ON, "Animations", RowValue.Choice(if (a.reducedMotion) "Reduced" else "Full", { update { it.copy(reducedMotion = !it.reducedMotion) } }), "Interface movement only.")
-    row("ui_haptics", Symbols.VIBRATION, "Interface haptics", RowValue.Toggle(a.haptics) { on -> update { it.copy(haptics = on) } }, "Vibration when moving and selecting.", tab = SettingsTab.CONTROLS)
+    row("ui_scale", Symbols.FORMAT_SIZE, "Interface scale", RowValue.Slider(a.uiScale, 100, 130, 5, " %") { v -> update { it.copy(uiScale = v) } }, "Size of text, status bar and button hints.")
+    row("ui_reduced_motion", Symbols.REDUCED_MOTION, "Animations", RowValue.Choice(if (a.reducedMotion) "Reduced" else "Full", { update { it.copy(reducedMotion = !it.reducedMotion) } }), "Interface movement only.")
+    row("ui_haptics", Symbols.HAPTICS, "Interface haptics", RowValue.Toggle(a.haptics) { on -> update { it.copy(haptics = on) } }, "Vibration when moving and selecting.", tab = SettingsTab.CONTROLS)
     row("ui_sounds", Symbols.MUSIC_NOTE, "Interface sounds", RowValue.Toggle(a.sounds) { on -> update { it.copy(sounds = on) } }, "Soft clicks when moving through menus.", tab = SettingsTab.AUDIO)
     val menuButtons = StreamMenuSettings.buttons(settings)
-    row("ui_stream_menu_buttons", Symbols.SPORTS_ESPORTS, "Stream menu buttons", RowValue.Text(StreamMenuSettings.label(menuButtons)) {
+    row("ui_stream_menu_buttons", Symbols.STREAM_MENU_BUTTONS, "Stream menu buttons", RowValue.Text(StreamMenuSettings.label(menuButtons)) {
         shell.buttonCapture = { buttons -> StreamMenuSettings.setButtons(settings, buttons) }
     }, "Buttons pressed together during a stream to open or close the stream menu. Select to record others, e.g. a rear button.",
         tab = SettingsTab.CONTROLS, section = "Stream menu")
@@ -150,7 +150,7 @@ internal fun nativeSettings(
         }), tracker)
     }, "Your own key lets Delos download covers, wide covers, backgrounds and logos from SteamGridDB. Kept on this device for every profile.",
         tab = SettingsTab.COVERS, section = "SteamGridDB")
-    row("covers_sgdb_auto", Symbols.AUTORENEW, "Download automatically", RowValue.Toggle(artwork.automatic) { on -> artwork.automatic = on },
+    row("covers_sgdb_auto", Symbols.CLOUD_DOWNLOAD, "Download automatically", RowValue.Toggle(artwork.automatic) { on -> artwork.automatic = on },
         "Fetches SteamGridDB's best-rated cover, wide cover, background and logo for new games when the library loads.",
         artwork.enabled, SettingsTab.COVERS, "SteamGridDB")
     fun downloadAll(refresh: Boolean) {
@@ -169,22 +169,22 @@ internal fun nativeSettings(
         "Fetches artwork for the games of ${library?.pc?.name ?: "the current PC"} that have none.", artwork.enabled, SettingsTab.COVERS, "SteamGridDB")
     row("covers_sgdb_refresh", Symbols.REFRESH, "Download all artwork again", RowValue.Action { downloadAll(refresh = true) },
         "Looks up every game again and takes the best-rated images; ones you picked stay.", artwork.enabled, SettingsTab.COVERS, "SteamGridDB")
-    row("covers_sgdb_choose", Symbols.PHOTO_LIBRARY, "Choose artwork for one game", RowValue.Info("Game options"),
+    row("covers_sgdb_choose", Symbols.IMAGE_CHOOSE, "Choose artwork for one game", RowValue.Info("Game options"),
         "Home screen: right menu button on a game → Artwork. Pick any cover, wide cover, background or logo.",
         tab = SettingsTab.COVERS, section = "SteamGridDB")
-    row("about_version", Symbols.DEPLOYED_CODE, "Version", RowValue.Info(BuildConfig.VERSION_NAME), "Delos for Android.", tab = SettingsTab.ABOUT, section = "Delos")
+    row("about_version", Symbols.VERSION, "Version", RowValue.Info(BuildConfig.VERSION_NAME), "Delos for Android.", tab = SettingsTab.ABOUT, section = "Delos")
     row("about_based", Symbols.ACCOUNT_TREE, "Based on", RowValue.Info("Artemis · Moonlight"), "Open source game streaming, licensed under the GPLv3.", tab = SettingsTab.ABOUT, section = "Delos")
     row("about_welcome", Symbols.REPLAY, "Replay the welcome", RowValue.Action { shell.navigate(Screen.Boot(back = Screen.Settings)) }, "Opens the welcome screen again. Profiles and paired PCs are kept.", tab = SettingsTab.ABOUT, section = "Delos")
-    row("about_igdb", Symbols.SPORTS_ESPORTS, "Game metadata · IGDB",
+    row("about_igdb", Symbols.PROVIDER_IGDB, "Game metadata · IGDB",
         RowValue.Action { providerWebsite("https://www.igdb.com/") },
         "Game information and genres provided by IGDB.", tab = SettingsTab.ABOUT, section = "Game data")
-    row("about_pcgw", Symbols.HDR_ON, "Technical data · PCGamingWiki",
+    row("about_pcgw", Symbols.PROVIDER_PCGW, "Technical data · PCGamingWiki",
         RowValue.Action { providerWebsite("https://www.pcgamingwiki.com/wiki/PCGamingWiki:Copyrights") },
         "Native HDR evidence from PCGamingWiki (CC BY-NC-SA 3.0); the derived status is Delos's interpretation.", tab = SettingsTab.ABOUT, section = "Game data")
-    row("about_steam", Symbols.GENRE_UNKNOWN, "Genre and theme tags · Steam store",
+    row("about_steam", Symbols.STEAM, "Genre and theme tags · Steam store",
         RowValue.Action { providerWebsite("https://store.steampowered.com/") },
         "Card genres and themes come from Steam's public user tags where a game has a Steam page, read from the store page through the Delos metadata service. Unofficial and may change; IGDB is used otherwise.", tab = SettingsTab.ABOUT, section = "Game data")
-    row("about_hltb", Symbols.SPORTS_ESPORTS, "Completion times · HowLongToBeat",
+    row("about_hltb", Symbols.COMPLETION_TIME, "Completion times · HowLongToBeat",
         RowValue.Action { providerWebsite("https://howlongtobeat.com/") },
         "HowLongToBeat's headline time. Unofficial client adapted from howlongtobeatpy (MIT, © 2018 Michele).", tab = SettingsTab.ABOUT, section = "Game data")
     return list

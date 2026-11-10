@@ -30,7 +30,7 @@ public final class IconFontInstrumentation extends Instrumentation {
         try {
             int[] fonts = {R.font.phosphor_regular, R.font.phosphor_fill};
             String[] names = {"Regular", "Fill"};
-            String[] icons = {Symbols.ADD, Symbols.SETTINGS, Symbols.COMPUTER, Symbols.ACCOUNT_CIRCLE};
+            String[] icons = {Symbols.CLOSE, Symbols.SETTINGS, Symbols.DESKTOP_WINDOWS, Symbols.ACCOUNT_CIRCLE};
             Canvas preview = new Canvas(sheet);
             preview.drawColor(Color.rgb(18, 25, 30));
             Paint guide = new Paint(Paint.ANTI_ALIAS_FLAG);

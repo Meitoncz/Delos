@@ -49,7 +49,7 @@ class ToastStateTest {
         assertEquals(ToastKind.INFO, state.toast!!.kind)
         state.showToast("Failed", Symbols.WIFI_OFF)
         assertEquals(ToastKind.ERROR, state.toast!!.kind)
-        state.showToast("Reset", Symbols.RESTART_ALT, kind = ToastKind.SUCCESS)
+        state.showToast("Reset", Symbols.RESET, kind = ToastKind.SUCCESS)
         assertEquals(ToastKind.SUCCESS, state.toast!!.kind)
         state.showToast("Deleted", Symbols.DELETE, ToastAction("Undo") {})
         assertEquals(ToastKind.ACTION, state.toast!!.kind)

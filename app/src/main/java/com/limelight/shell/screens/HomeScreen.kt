@@ -148,7 +148,13 @@ import kotlinx.coroutines.launch
 /** Hues and icon of an app's placeholder art, derived from its name. */
 fun appArt(pc: Pc, app: App, image: androidx.compose.ui.graphics.ImageBitmap? = null, animated: java.io.File? = null): GameArt {
     val hue = ((app.name.hashCode() and 0x7fffffff) % 360).toFloat()
-    val icon = if (BundledArtwork.kind(app) == BundledArtwork.Kind.DESKTOP) Symbols.DESKTOP_WINDOWS else Symbols.SPORTS_ESPORTS
+    val icon = when (BundledArtwork.kind(app)) {
+        BundledArtwork.Kind.DESKTOP -> Symbols.DESKTOP_APP
+        BundledArtwork.Kind.REMOTE_INPUT -> Symbols.REMOTE_INPUT
+        BundledArtwork.Kind.REMOTE_MONITOR -> Symbols.REMOTE_MONITOR
+        BundledArtwork.Kind.STEAM_BIG_PICTURE -> Symbols.STEAM
+        null -> Symbols.SPORTS_ESPORTS
+    }
     return GameArt("${pc.uuid}/${app.id}", hue, (hue + 35f) % 360f, icon, image, animated)
 }
 
@@ -174,9 +180,9 @@ fun HomeScreen(library: Library, appearance: Appearance, repo: PcRepository, pro
     // Without games there is no game background
     LaunchedEffect(hasGames) { if (!hasGames) shell.hero = null }
     when (library) {
-        Library.Loading -> HomeMessage(Symbols.REFRESH, "Looking for your PCs…", null)
+        Library.Loading -> HomeMessage(Symbols.LOADING, "Looking for your PCs…", null)
         Library.NoPc -> HomeMessage(Symbols.DEVICES, "No PC paired yet", "For now, pair a PC in the classic Delos app.\nPairing in the new UI comes in step 6.6.")
-        is Library.Offline -> HomeMessage(Symbols.POWER, "${library.pc.name} is offline", "Start the PC, or wake it from the classic Delos app.\nWaking it from here comes in step 6.6.")
+        is Library.Offline -> HomeMessage(Symbols.WIFI_OFF, "${library.pc.name} is offline", "Start the PC, or wake it from the classic Delos app.\nWaking it from here comes in step 6.6.")
         is Library.Ready -> if (hasGames) {
             val metadata = LocalGameMetadata.current
             val apps = library.apps.filter { metadata.filters.matches(it, metadata.entry(library.pc, it).data) }
@@ -468,7 +474,7 @@ private fun rememberCustomGames(profileStore: ProfileStore, pc: Pc, apps: List<A
 
 /** The badge on a cover's top-left corner. */
 enum class TileBadge(val icon: String, val label: String) {
-    RUNNING(Symbols.PLAY_ARROW, "Running"),
+    RUNNING(Symbols.RUNNING, "Running"),
     LAST_PLAYED(Symbols.HISTORY, "Last played"),
 }
 
@@ -499,14 +505,14 @@ private fun gameMenu(
                     add(MenuItem(Symbols.POWER_SETTINGS_NEW, "Quit game", danger = true) { actions.quit(pc, app) })
                 }
                 running != null -> {
-                    add(MenuItem(Symbols.SWAP_HORIZ, "Quit ${running.name} and start", danger = true) { actions.quitAndStart(pc, running, app, image) })
+                    add(MenuItem(Symbols.SWAP_GAME, "Quit ${running.name} and start", danger = true) { actions.quitAndStart(pc, running, app, image) })
                     add(MenuItem(Symbols.RESUME, "Resume ${running.name}") { actions.start(pc, running, null) })
                 }
                 else -> add(MenuItem(Symbols.PLAY_ARROW, "Start game") { actions.start(pc, app, image) })
             }
             if (BundledArtwork.kind(app) == null) {
                 add(MenuItem(Symbols.PHOTO_LIBRARY, "Artwork", action = onArtwork))
-                add(MenuItem(Symbols.SEARCH, "Metadata", action = onMetadata))
+                add(MenuItem(Symbols.METADATA, "Metadata", action = onMetadata))
             }
             add(MenuItem(Symbols.SETTINGS, "Game settings", action = onSettings))
             add(
@@ -589,7 +595,7 @@ private fun GameInfo(pc: Pc, app: App, modifier: Modifier, reducedMotion: Boolea
         val gameColors = if (matchGameColors) HeroBitmaps.gameColors(homeKey(pc, app)) else null
         val hdrKind = hdrBadgeKind(metadata)
         val completion = metadata?.completion?.takeIf { it.seconds > 0 }
-        val virtualDisplay = art.icon == Symbols.DESKTOP_WINDOWS && pc.details.vDisplaySupported
+        val virtualDisplay = BundledArtwork.kind(app) == BundledArtwork.Kind.DESKTOP && pc.details.vDisplaySupported
         val hasTags = genres.isNotEmpty() || themes.isNotEmpty()
         // The title above the pills is shown only while there is at least one pill under it
         val showLabel = hasTags || app.running || hdrKind != null || completion != null || virtualDisplay
@@ -609,14 +615,14 @@ private fun GameInfo(pc: Pc, app: App, modifier: Modifier, reducedMotion: Boolea
                 if (themes.isNotEmpty()) ThemePill(themes, gameColors)
             },
         ) {
-            if (app.running) Chip(Symbols.PLAY_ARROW, "Running on ${pc.name}")
+            if (app.running) Chip(Symbols.RUNNING, "Running on ${pc.name}")
             when (hdrKind) {
                 NativeHdr.HDR -> NativeHdrChip()
-                NativeHdr.SDR -> Chip(Symbols.HDR_ON, "SDR")
-                NativeHdr.UNKNOWN -> Chip(Symbols.HELP, UNVERIFIED_HDR_LABEL)
+                NativeHdr.SDR -> Chip(Symbols.SDR, "SDR")
+                NativeHdr.UNKNOWN -> Chip(Symbols.HDR_UNKNOWN, UNVERIFIED_HDR_LABEL)
                 null -> Unit
             }
-            if (completion != null) Chip(Symbols.HISTORY, "HLTB ${completion.headline}")
+            if (completion != null) Chip(Symbols.COMPLETION_TIME, "HLTB ${completion.headline}")
             if (virtualDisplay) Chip(Symbols.SCREEN_SHARE, "Virtual display")
         }
     }

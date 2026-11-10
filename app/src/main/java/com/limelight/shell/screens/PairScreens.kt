@@ -111,7 +111,7 @@ fun PairPcScreen(screen: Screen.PairPc, pcs: List<Pc>) {
                 )
             }
             CircleItem(
-                Symbols.ADD, "Enter address", onClick = { actions.addByAddress(screen) },
+                Symbols.ADD_ADDRESS, "Enter address", onClick = { actions.addByAddress(screen) },
                 modifier = if (shown.isEmpty()) Modifier.focusRequester(first) else Modifier,
                 meta = "IP or host name", big = true,
             )

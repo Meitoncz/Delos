@@ -77,7 +77,7 @@ internal fun NativeHdrChip() {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.px),
     ) {
-        Symbol(Symbols.ANIMATION, 22.tpx, Color.White)
+        Symbol(Symbols.HDR_ON, 22.tpx, Color.White)
         BasicText("HDR", style = TextStyle(color = Color.White, fontFamily = Figtree, fontSize = 19.tpx))
     }
 }
@@ -101,7 +101,7 @@ internal fun FilteredLibraryEmpty() {
             BasicText("No games match these filters", style = TextStyle(color = colors.text, fontFamily = Figtree, fontSize = 38.tpx))
             BasicText("Press Y to change the filters, or reset them below.", style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 24.tpx))
             SettingRow(
-                Symbols.REFRESH, "Reset library filters", RowValue.Action { metadata.updateFilters(MetadataFilters()) },
+                Symbols.RESET, "Reset library filters", RowValue.Action { metadata.updateFilters(MetadataFilters()) },
                 Modifier.focusRequester(first), compact = true,
             )
         }
@@ -134,7 +134,7 @@ internal fun openMetadataMenu(scope: CoroutineScope, shell: ShellState, tracker:
             ContextMenu("Metadata · ${app.name}", listOf(
                 MenuItem(Symbols.SEARCH, "Search IGDB / change match") { searchMetadata(scope, shell, tracker, store, pc, app, app.name) },
                 MenuItem(Symbols.REFRESH, "Refresh metadata") { operation("Metadata refreshed") { store.ensure(pc, app, force = true) } },
-                MenuItem(Symbols.REFRESH, "Reset metadata match") { operation("Metadata match reset") { store.reset(pc, app) } },
+                MenuItem(Symbols.RESET, "Reset metadata match") { operation("Metadata match reset") { store.reset(pc, app) } },
             )), tracker.bounds(),
         ), tracker,
     )
@@ -167,9 +167,9 @@ private fun searchMetadata(scope: CoroutineScope, shell: ShellState, tracker: Fo
                 }
             }
         } + buildList {
-            if (page > 0) add(MenuItem(Symbols.SEARCH, "Previous matches") { showPage(page - 1) })
-            if ((page + 1) * 6 < found.size) add(MenuItem(Symbols.SEARCH, "More matches") { showPage(page + 1) })
-        } + MenuItem(Symbols.EDIT, "Search for another name") {
+            if (page > 0) add(MenuItem(Symbols.ARROW_BACK, "Previous matches") { showPage(page - 1) })
+            if ((page + 1) * 6 < found.size) add(MenuItem(Symbols.ARROW_FORWARD, "More matches") { showPage(page + 1) })
+        } + MenuItem(Symbols.SEARCH_NAME, "Search for another name") {
             shell.openLayer(
                 Layer.Dialog(DialogSpec(
                     "Search IGDB", "Choose metadata independently of SteamGridDB artwork.",

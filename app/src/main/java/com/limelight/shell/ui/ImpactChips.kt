@@ -21,7 +21,7 @@ import com.limelight.shell.settings.ImpactLevel
 import com.limelight.shell.settings.SettingImpact
 
 /** The three impact axes in the order the chips and the legend show them: label, glyph. */
-internal val IMPACT_AXES = listOf("GPU" to Symbols.MEMORY, "Latency" to Symbols.TIMER, "Network" to Symbols.WIFI)
+internal val IMPACT_AXES = listOf("GPU" to Symbols.GPU, "Latency" to Symbols.TIMER, "Network" to Symbols.WIFI)
 
 internal fun SettingImpact.levels(): List<ImpactLevel> = listOf(gpu, latency, network)
 

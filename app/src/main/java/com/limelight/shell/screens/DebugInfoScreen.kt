@@ -71,6 +71,7 @@ import com.limelight.shell.ui.SettingRow
 import com.limelight.shell.ui.SettingRowList
 import com.limelight.shell.ui.Symbol
 import com.limelight.shell.ui.Symbols
+import com.limelight.shell.ui.icon
 import com.limelight.shell.ui.Figtree
 import com.limelight.shell.ui.Unbounded
 import com.limelight.shell.ui.fadeEdges
@@ -232,45 +233,45 @@ fun DebugInfoScreen() {
     val presetName = activePreset?.label ?: "Custom"
     val modeName = "$presetName · translator ${if (translatorEnabled) "on" else "off"}"
     val rows = buildList {
-        add(DebugRow("android", "Device", Symbols.DEPLOYED_CODE, "Android", RowValue.Info("${DeviceUtils.getSDKVersionName()} · API ${Build.VERSION.SDK_INT}"),
+        add(DebugRow("android", "Device", Symbols.ANDROID_LOGO, "Android", RowValue.Info("${DeviceUtils.getSDKVersionName()} · API ${Build.VERSION.SDK_INT}"),
             "The Android version of this device and its API level."))
         add(DebugRow("kernel", "Device", Symbols.MEMORY, "Kernel", RowValue.Info(System.getProperty("os.version").orEmpty().substringBefore('-')),
             "The Linux kernel version.", System.getProperty("os.version")))
-        add(DebugRow("model", "Device", Symbols.DEVICES, "Device", RowValue.Info("${DeviceUtils.getManufacturer()} ${DeviceUtils.getModel()}"),
+        add(DebugRow("model", "Device", Symbols.DEVICE_MODEL, "Device", RowValue.Info("${DeviceUtils.getManufacturer()} ${DeviceUtils.getModel()}"),
             "The manufacturer and model.", "Board: ${Build.BOARD}\nHardware: ${Build.HARDWARE}\nSoC: ${if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) "${Build.SOC_MANUFACTURER} ${Build.SOC_MODEL}" else "unknown"}\nBuild: ${Build.DISPLAY}"))
         add(DebugRow("motor", "Device", Symbols.VIBRATION, "Vibration motor", RowValue.Info(if (hasMotor) "Yes" else "No"),
             if (hasMotor) "This device can vibrate." else "This device has no vibration motor."))
         // Why an experimental preset is unavailable
-        add(DebugRow("cap_vibrators", "Device haptic capabilities", Symbols.VIBRATION, "Vibrators",
+        add(DebugRow("cap_vibrators", "Device haptic capabilities", Symbols.VIBRATORS, "Vibrators",
             RowValue.Info(if (capabilities.vibratorCount == 1) "1 (single)" else "${capabilities.vibratorCount}"),
             "How many vibrators the system reports. One means every preset drives the same motor."))
-        add(DebugRow("cap_amplitude", "Device haptic capabilities", Symbols.TUNE, "Amplitude control",
+        add(DebugRow("cap_amplitude", "Device haptic capabilities", Symbols.AMPLITUDE_SUPPORT, "Amplitude control",
             RowValue.Info(if (capabilities.amplitudeControl) "Yes" else "No"), "Whether the vibrator can change its strength."))
-        add(DebugRow("cap_problem", "Device haptic capabilities", Symbols.INFO, "Last problem",
+        add(DebugRow("cap_problem", "Device haptic capabilities", Symbols.WARNING, "Last problem",
             RowValue.Info(problem ?: "None"),
             "Shows when the last played preset could not use its technique and played the plain amplitude path instead, and why."))
-        add(DebugRow("vibrate_once", "Vibration test", Symbols.MOBILE_VIBRATE, "Vibrate once", RowValue.Action {
+        add(DebugRow("vibrate_once", "Vibration test", Symbols.DEVICE_VIBRATION, "Vibrate once", RowValue.Action {
             stopAll()
             device?.let { DeviceVibrator.vibrateOnce(it, 1000) }
         }, "One second at full strength.").let { if (hasMotor) it else it.copy(description = "This device has no vibration motor.") })
-        add(DebugRow("vibrate_continuous", "Vibration test", Symbols.GRAPHIC_EQ, "Continuous vibration", RowValue.Toggle(deviceContinuous) {
+        add(DebugRow("vibrate_continuous", "Vibration test", Symbols.CONTINUOUS, "Continuous vibration", RowValue.Toggle(deviceContinuous) {
             stopAll()
             deviceContinuous = it
         },
             "Keeps vibrating at the strength below until it is turned off or you leave this screen."))
-        add(DebugRow("strength", "Vibration test", Symbols.TUNE, "Strength", RowValue.Slider(strength, 5, 255, 5, "") { strength = it },
+        add(DebugRow("strength", "Vibration test", Symbols.STRENGTH, "Strength", RowValue.Slider(strength, 5, 255, 5, "") { strength = it },
             "The strength of continuous vibration, 1–255, for the device and the controllers."))
-        add(DebugRow("rumble_preset", "Rumble laboratory", Symbols.VIBRATION, "Current preset", RowValue.Info(presetName),
+        add(DebugRow("rumble_preset", "Rumble laboratory", Symbols.PRESET, "Current preset", RowValue.Info(presetName),
             "Select a preset below to save it and immediately play the Test sample.",
             "Mode: $modeName\nAdvanced edits are saved as Custom, even if the values match a preset."))
         RumblePresets.values().forEach { preset ->
             val unavailable = capabilities.unavailableReason(preset.profile.technique)
             if (unavailable != null) {
-                add(DebugRow("rumble_preset_${preset.name}", "Rumble laboratory", Symbols.VIBRATION, preset.label,
+                add(DebugRow("rumble_preset_${preset.name}", "Rumble laboratory", preset.icon(), preset.label,
                     RowValue.Info("Problem"), "${preset.description} Problem: $unavailable.", unavailable))
                 return@forEach
             }
-            add(DebugRow("rumble_preset_${preset.name}", "Rumble laboratory", Symbols.VIBRATION, preset.label,
+            add(DebugRow("rumble_preset_${preset.name}", "Rumble laboratory", preset.icon(), preset.label,
                 RowValue.Text(if (activePreset == preset) "Active" else "Select") {
                     RumblePreferences.applyPreset(preferences, preset)
                     profile = preset.profile
@@ -280,51 +281,51 @@ fun DebugInfoScreen() {
                     playPattern(RumblePattern.TEST, if (preset.enabled) preset.profile else RumbleTranslator.ORIGINAL)
                 }, if (activePreset == preset && problem != null) "${preset.description} Problem: $problem." else preset.description))
         }
-        add(DebugRow("rumble_amplitude", "Rumble laboratory", Symbols.GRAPHIC_EQ, "Live amplitude · $presetName", RowValue.Info("$amplitude / 255"),
+        add(DebugRow("rumble_amplitude", "Rumble laboratory", Symbols.LIVE_AMPLITUDE, "Live amplitude · $presetName", RowValue.Info("$amplitude / 255"),
             "Live computed device amplitude, including the start kick and smoothing as they settle.",
             "Mode: $modeName\nPattern: ${patternName ?: "Stopped"}\nBoth host motors receive the labelled input percentage; this is not the final output percentage."))
-        add(DebugRow("rumble_stop", "Rumble laboratory", Symbols.VIBRATION, "Stop vibration", RowValue.Action { stopAll() },
+        add(DebugRow("rumble_stop", "Rumble laboratory", Symbols.STOP, "Stop vibration", RowValue.Action { stopAll() },
             "Stop the laboratory pattern and all continuous device/controller vibration tests."))
-        add(DebugRow("rumble_test", "Rumble laboratory", Symbols.MOBILE_VIBRATE, "Replay Test sample", RowValue.Action {
+        add(DebugRow("rumble_test", "Rumble laboratory", Symbols.REPLAY, "Replay Test sample", RowValue.Action {
             playPattern(RumblePattern.TEST, if (translatorEnabled) profile else RumbleTranslator.ORIGINAL)
         }, RumblePattern.TEST.description))
         RumblePattern.entries.filter { it != RumblePattern.TEST }.forEach { pattern ->
-            add(DebugRow("rumble_pattern_${pattern.name}", "Rumble patterns", Symbols.MOBILE_VIBRATE, pattern.label,
+            add(DebugRow("rumble_pattern_${pattern.name}", "Rumble patterns", pattern.icon, pattern.label,
                 RowValue.Action { playPattern(pattern, if (translatorEnabled) profile else RumbleTranslator.ORIGINAL) }, pattern.description,
                 "Live amplitude: $amplitude / 255\nMode: $modeName\nPlaying: ${patternName ?: "Stopped"}\nInputs are host motor percentages, not final device output. Select another pattern to replace this one, or use Stop vibration."))
         }
-        add(DebugRow("rumble_advanced", "Rumble advanced", Symbols.TUNE, "Advanced", RowValue.Toggle(advancedExpanded) {
+        add(DebugRow("rumble_advanced", "Rumble advanced", Symbols.ADVANCED, "Advanced", RowValue.Toggle(advancedExpanded) {
             advancedExpanded = it
         }, "Show manual controls. Editing a value marks the preset as Custom and stops the current pattern."))
         if (advancedExpanded) {
-            add(DebugRow("rumble_enabled", "Rumble advanced", Symbols.VIBRATION, "Enable rumble translator", RowValue.Toggle(translatorEnabled) {
+            add(DebugRow("rumble_enabled", "Rumble advanced", Symbols.TRANSLATOR, "Enable rumble translator", RowValue.Toggle(translatorEnabled) {
                 stopLab()
                 translatorEnabled = it
                 activePreset = null
                 RumblePreferences.saveCustom(preferences, profile, it)
             }, "Off uses Original translation. On applies these parameters to streaming rumble and lab patterns."))
-            add(DebugRow("rumble_gain", "Rumble advanced", Symbols.TUNE, "Gain", RowValue.Slider((profile.gain * 100).roundToInt(), 50, 300, 1, "%") {
+            add(DebugRow("rumble_gain", "Rumble advanced", Symbols.GAIN, "Gain", RowValue.Slider((profile.gain * 100).roundToInt(), 50, 300, 1, "%") {
                 updateProfile(RumbleTranslator.Profile(it / 100f, profile.curve, profile.minAmplitude, profile.kickMs, profile.lowWeight, profile.highWeight, profile.smoothing))
             }, "Overall rumble multiplier, 50–300%. Changing a parameter stops the current pattern."))
-            add(DebugRow("rumble_curve", "Rumble advanced", Symbols.TUNE, "Curve", RowValue.Slider((profile.curve * 100).roundToInt(), 50, 300, 1, "%") {
+            add(DebugRow("rumble_curve", "Rumble advanced", Symbols.CURVE, "Curve", RowValue.Slider((profile.curve * 100).roundToInt(), 50, 300, 1, "%") {
                 updateProfile(RumbleTranslator.Profile(profile.gain, it / 100f, profile.minAmplitude, profile.kickMs, profile.lowWeight, profile.highWeight, profile.smoothing))
             }, "Response exponent: below 100% boosts weak rumble; above 100% softens it."))
-            add(DebugRow("rumble_min", "Rumble advanced", Symbols.TUNE, "Minimum amplitude", RowValue.Slider(profile.minAmplitude, 0, 255, 1, "") {
+            add(DebugRow("rumble_min", "Rumble advanced", Symbols.MIN_AMPLITUDE, "Minimum amplitude", RowValue.Slider(profile.minAmplitude, 0, 255, 1, "") {
                 updateProfile(RumbleTranslator.Profile(profile.gain, profile.curve, it, profile.kickMs, profile.lowWeight, profile.highWeight, profile.smoothing))
             }, "Minimum output for a nonzero host request. Zero input remains silent."))
-            add(DebugRow("rumble_kick", "Rumble advanced", Symbols.TUNE, "Start kick", RowValue.Slider(profile.kickMs, 0, 120, 1, " ms") {
+            add(DebugRow("rumble_kick", "Rumble advanced", Symbols.PRESET_KICK, "Start kick", RowValue.Slider(profile.kickMs, 0, 120, 1, " ms") {
                 updateProfile(RumbleTranslator.Profile(profile.gain, profile.curve, profile.minAmplitude, it, profile.lowWeight, profile.highWeight, profile.smoothing))
             }, "Start from silence with a full-strength kick, then settle to the translated amplitude."))
-            add(DebugRow("rumble_low", "Rumble advanced", Symbols.TUNE, "Low motor weight", RowValue.Slider((profile.lowWeight * 100).roundToInt(), 0, 100, 1, "%") {
+            add(DebugRow("rumble_low", "Rumble advanced", Symbols.LOW_WEIGHT, "Low motor weight", RowValue.Slider((profile.lowWeight * 100).roundToInt(), 0, 100, 1, "%") {
                 updateProfile(RumbleTranslator.Profile(profile.gain, profile.curve, profile.minAmplitude, profile.kickMs, it / 100f, profile.highWeight, profile.smoothing))
             }, "Low-frequency host motor contribution to the single device vibrator. Original: 80%."))
-            add(DebugRow("rumble_high", "Rumble advanced", Symbols.TUNE, "High motor weight", RowValue.Slider((profile.highWeight * 100).roundToInt(), 0, 100, 1, "%") {
+            add(DebugRow("rumble_high", "Rumble advanced", Symbols.HIGH_WEIGHT, "High motor weight", RowValue.Slider((profile.highWeight * 100).roundToInt(), 0, 100, 1, "%") {
                 updateProfile(RumbleTranslator.Profile(profile.gain, profile.curve, profile.minAmplitude, profile.kickMs, profile.lowWeight, it / 100f, profile.smoothing))
             }, "High-frequency host motor contribution to the single device vibrator. Original: 33%."))
-            add(DebugRow("rumble_smoothing", "Rumble advanced", Symbols.TUNE, "Smoothing", RowValue.Slider((profile.smoothing * 100).roundToInt(), 0, 100, 1, "%") {
+            add(DebugRow("rumble_smoothing", "Rumble advanced", Symbols.SMOOTHING, "Smoothing", RowValue.Slider((profile.smoothing * 100).roundToInt(), 0, 100, 1, "%") {
                 updateProfile(RumbleTranslator.Profile(profile.gain, profile.curve, profile.minAmplitude, profile.kickMs, profile.lowWeight, profile.highWeight, it / 100f))
             }, "Limit rapid amplitude changes. Zero responds immediately; higher values settle more slowly."))
-            add(DebugRow("rumble_reset", "Rumble advanced", Symbols.TUNE, "Reset parameters to Original", RowValue.Action {
+            add(DebugRow("rumble_reset", "Rumble advanced", Symbols.RESET, "Reset parameters to Original", RowValue.Action {
                 updateProfile(RumbleTranslator.ORIGINAL)
             }, "Restore Original parameters as Custom. The enable switch is unchanged."))
         }
@@ -346,7 +347,7 @@ fun DebugInfoScreen() {
                     "Vendor and product id $ids (${pad.vendorId}_${pad.productId}). Motion sensors: $sensors. Vibration: ${if (vibrates) "supported, select to test" else "not supported"}.",
                     pad.toString()))
             }
-            add(DebugRow("pads_continuous", "Controllers", Symbols.GRAPHIC_EQ, "Continuous vibration on controllers", RowValue.Toggle(padsContinuous) {
+            add(DebugRow("pads_continuous", "Controllers", Symbols.PADS_CONTINUOUS, "Continuous vibration on controllers", RowValue.Toggle(padsContinuous) {
                 stopAll()
                 padsContinuous = it
             },
@@ -459,19 +460,19 @@ private fun rumble(vibrator: Vibrator, strength: Int) {
 }
 
 /** Fixed host-motor inputs; the shared playback path owns kick and smoothing timing. */
-private enum class RumblePattern(val label: String, val description: String) {
-    TEST("Test", "A short tap, one second of steady rumble, a rising ramp and a decaying explosion."),
-    STEADY_25("Steady 25% · quiet engine", "Two seconds of low engine rumble, both host motors at 25%."),
-    STEADY_50("Steady 50% · cruising engine", "Two seconds of medium engine rumble, both host motors at 50%."),
-    STEADY_75("Steady 75% · rough terrain", "Two seconds of strong terrain rumble, both host motors at 75%."),
-    STEADY_100("Steady 100% · maximum force", "Two seconds of maximum host rumble, both host motors at 100%."),
-    RAMP("Ramp up · acceleration", "Both host motors rise from silence to full input over two seconds."),
-    TAP_30("30 ms taps · light impacts", "Four full-input 30 ms taps separated by 250 ms of silence."),
-    TAP_60("60 ms taps · weapon fire", "Four full-input 60 ms taps separated by 250 ms of silence."),
-    TAP_100("100 ms taps · heavy impacts", "Four full-input 100 ms taps separated by 250 ms of silence."),
-    HEARTBEAT("Heartbeat · paired pulses", "Four pairs of 70 ms / 100 ms full-input pulses, like a heartbeat."),
-    EXPLOSION("Explosion · decaying blast", "A full-input blast that decays to silence over two seconds."),
-    FLUTTER("Flutter · rapid machinery", "Twenty full-input 20 ms pulses, each followed by 40 ms of silence."),
+private enum class RumblePattern(val icon: String, val label: String, val description: String) {
+    TEST(Symbols.REPLAY, "Test", "A short tap, one second of steady rumble, a rising ramp and a decaying explosion."),
+    STEADY_25(Symbols.PATTERN_STEADY_25, "Steady 25% · quiet engine", "Two seconds of low engine rumble, both host motors at 25%."),
+    STEADY_50(Symbols.PATTERN_STEADY_50, "Steady 50% · cruising engine", "Two seconds of medium engine rumble, both host motors at 50%."),
+    STEADY_75(Symbols.PATTERN_STEADY_75, "Steady 75% · rough terrain", "Two seconds of strong terrain rumble, both host motors at 75%."),
+    STEADY_100(Symbols.PATTERN_STEADY_100, "Steady 100% · maximum force", "Two seconds of maximum host rumble, both host motors at 100%."),
+    RAMP(Symbols.PATTERN_RAMP, "Ramp up · acceleration", "Both host motors rise from silence to full input over two seconds."),
+    TAP_30(Symbols.PATTERN_TAP_30, "30 ms taps · light impacts", "Four full-input 30 ms taps separated by 250 ms of silence."),
+    TAP_60(Symbols.PATTERN_TAP_60, "60 ms taps · weapon fire", "Four full-input 60 ms taps separated by 250 ms of silence."),
+    TAP_100(Symbols.PATTERN_TAP_100, "100 ms taps · heavy impacts", "Four full-input 100 ms taps separated by 250 ms of silence."),
+    HEARTBEAT(Symbols.PATTERN_HEARTBEAT, "Heartbeat · paired pulses", "Four pairs of 70 ms / 100 ms full-input pulses, like a heartbeat."),
+    EXPLOSION(Symbols.PATTERN_EXPLOSION, "Explosion · decaying blast", "A full-input blast that decays to silence over two seconds."),
+    FLUTTER(Symbols.PATTERN_FLUTTER, "Flutter · rapid machinery", "Twenty full-input 20 ms pulses, each followed by 40 ms of silence."),
 }
 
 private suspend fun playRumblePattern(pattern: RumblePattern, playback: RumblePlayback, vibrator: Vibrator) {

@@ -155,7 +155,7 @@ private enum class ArtTab(val kind: ArtKind, val label: String, val noun: String
     COVER(ArtKind.COVER, "Cover", "cover", Symbols.IMAGE, 7, 600f / 900f),
     WIDE(ArtKind.WIDE, "Wide cover", "wide cover", Symbols.ASPECT_RATIO, 4, 920f / 430f),
     HERO(ArtKind.HERO, "Background", "background", Symbols.WALLPAPER, 3, 1920f / 620f),
-    LOGO(ArtKind.LOGO, "Logo", "logo", Symbols.BADGE, 5, 2f),
+    LOGO(ArtKind.LOGO, "Logo", "logo", Symbols.LOGO, 5, 2f),
     ;
 
     fun step(dir: Int) = entries[Math.floorMod(ordinal + dir, entries.size)]
@@ -315,7 +315,7 @@ fun ArtworkScreen(screen: Screen.Artwork) {
         if (!filters.active) return
         feedback.play(Cue.SELECT)
         filtersByTab[tab] = ArtFilters()
-        shell.showToast("Filters reset", Symbols.REFRESH)
+        shell.showToast("Filters reset", Symbols.RESET)
     }
     fun selectTab(next: ArtTab) {
         focusTransfer.request()
@@ -391,14 +391,14 @@ fun ArtworkScreen(screen: Screen.Artwork) {
             GameChip(match, busy, app.name, (choices as? Choices.Ready)?.let { it.total ?: it.images.size.takeIf { _ -> !filters.active } }, tab, Modifier.weight(1f))
             val searchEnabled = store.enabled
             PillButton(
-                "Search for another name", Symbols.SEARCH, { openSearch() },
+                "Search for another name", Symbols.SEARCH_NAME, { openSearch() },
                 Modifier.focusRequester(searchRequester).alpha(if (searchEnabled) 1f else .4f)
                     .then(if (searchEnabled) Modifier else Modifier.focusProperties { canFocus = false }),
                 clickCue = Cue.OPEN, compact = true, trailing = { GlyphButton(Glyph.X, 32) },
             )
             val filterEnabled = store.enabled && match != null
             PillButton(
-                "Filter", Symbols.TUNE, { openSheet() },
+                "Filter", Symbols.FILTER, { openSheet() },
                 Modifier.alpha(if (filterEnabled) 1f else .4f).then(if (filterEnabled) Modifier else Modifier.focusProperties { canFocus = false }),
                 clickCue = null, compact = true,
                 trailing = {
@@ -422,7 +422,7 @@ fun ArtworkScreen(screen: Screen.Artwork) {
         // The grid (or why there is none)
         Box(Modifier.offset(100.px, 324.px).width(1720.px).height(552.px)) {
             when (val c = choices) {
-                Choices.Loading -> GridMessage(Symbols.REFRESH, "Looking on SteamGridDB…", null)
+                Choices.Loading -> GridMessage(Symbols.LOADING, "Looking on SteamGridDB…", null)
                 Choices.NoKey -> GridMessage(Symbols.KEY, "Add your SteamGridDB API key", "Settings → Covers → SteamGridDB API key. It is free on steamgriddb.com (Preferences → API).")
                 Choices.NoGame -> if (store.eligible(app)) GridMessage(Symbols.SEARCH, "${app.name} is not on SteamGridDB", "Search for another name finds it under the name SteamGridDB knows.")
                 else GridMessage(Symbols.SEARCH, "Choose what ${app.name} looks like", "Search for another name: e.g. Windows, Steam or any game whose artwork you like. ${app.name} is not looked up automatically.")
@@ -584,7 +584,7 @@ private fun FilterStrip(
                 ArtFilterRules.chips(filters).forEach { chip ->
                     FilterStripChip(chip.label, Symbols.CLOSE) { onClear(chip) }
                 }
-                FilterStripChip("Reset", Symbols.REFRESH, onReset)
+                FilterStripChip("Reset", Symbols.RESET, onReset)
             }
         }
     }
@@ -620,8 +620,8 @@ private fun NoImages(tab: ArtTab, filters: ArtFilters, ready: Choices.Ready, gam
             val has = ready.total?.let { "${match?.name?.ifEmpty { null } ?: gameName} has $it ${tab.noun}${if (it == 1) "" else "s"} on SteamGridDB, none of them matches" } ?: "None of the ${tab.noun}s matches"
             BasicText("$has $summary. Loosen a filter or search under another name.", style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 22.tpx, textAlign = TextAlign.Center), modifier = Modifier.width(820.px))
             Row(horizontalArrangement = Arrangement.spacedBy(16.px)) {
-                PillButton("Reset filters", Symbols.REFRESH, onReset, compact = true, trailing = { GlyphButton(Glyph.X, 32) })
-                PillButton("Change filters", Symbols.TUNE, onChange, compact = true, clickCue = null, trailing = { GlyphButton(Glyph.Y, 32) })
+                PillButton("Reset filters", Symbols.RESET, onReset, compact = true, trailing = { GlyphButton(Glyph.X, 32) })
+                PillButton("Change filters", Symbols.FILTER, onChange, compact = true, clickCue = null, trailing = { GlyphButton(Glyph.Y, 32) })
             }
         } else {
             BasicText("SteamGridDB has no ${tab.label.lowercase()} for this game yet.", style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 22.tpx))
@@ -659,7 +659,7 @@ private fun InfoStrip(item: Described, tab: ArtTab, chosen: Int?, modifier: Modi
         Column(verticalArrangement = Arrangement.spacedBy(4.px)) {
             BasicText(title, maxLines = 1, style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 24.tpx))
             if (item is Described.Image) Row(horizontalArrangement = Arrangement.spacedBy(8.px)) {
-                StripBadge(if (animated) "Animated" else "Static", if (animated) Symbols.PLAY_ARROW else null, accent = false)
+                StripBadge(if (animated) "Animated" else "Static", if (animated) Symbols.ANIMATED else null, accent = false)
                 if (inUse) StripBadge("In use", Symbols.CHECK, accent = true)
             } else if (inUse) StripBadge("In use", Symbols.CHECK, accent = true)
         }
@@ -747,7 +747,7 @@ private fun FilterSheetLayer(
                 Spacer(Modifier.weight(1f))
                 val active = filters.active
                 PillButton(
-                    "Reset filters", Symbols.REFRESH, onReset,
+                    "Reset filters", Symbols.RESET, onReset,
                     Modifier.alpha(if (active) 1f else .4f).then(if (active) Modifier else Modifier.focusProperties { canFocus = false }),
                     compact = true, clickCue = null, trailing = { GlyphButton(Glyph.X, 32) },
                 )
@@ -763,7 +763,7 @@ private fun FilterSheetLayer(
                         }
                         SheetDivider()
                     }
-                    SheetRow(Symbols.PALETTE, "Style") {
+                    SheetRow(Symbols.STYLE, "Style") {
                         FilterChip("Any", filters.style == null, { onChange(filters.copy(style = null)) }, Modifier.focusRequester(requester("style:")))
                         ArtFilterRules.styles(kind).forEach { style ->
                             FilterChip(ArtFilterRules.styleLabel(style), filters.style == style, { onChange(filters.copy(style = style)) }, Modifier.focusRequester(requester("style:$style")))
@@ -771,7 +771,7 @@ private fun FilterSheetLayer(
                     }
                     if (ArtFilterRules.dimensions(kind).isNotEmpty()) {
                         SheetDivider()
-                        SheetRow(Symbols.ASPECT_RATIO, "Dimensions") {
+                        SheetRow(Symbols.DIMENSIONS, "Dimensions") {
                             FilterChip("Any", filters.dimensions == null, { onChange(filters.copy(dimensions = null)) })
                             ArtFilterRules.dimensions(kind).forEach { dimensions ->
                                 FilterChip(ArtFilterRules.dimensionsLabel(dimensions), filters.dimensions == dimensions, { onChange(filters.copy(dimensions = dimensions)) })
@@ -779,7 +779,7 @@ private fun FilterSheetLayer(
                         }
                     }
                     SheetDivider()
-                    SheetRow(Symbols.STAR, "Sort") {
+                    SheetRow(Symbols.SORT, "Sort") {
                         ArtSort.entries.forEach { sort ->
                             FilterChip(sort.label, filters.sort == sort, { onChange(filters.copy(sort = sort)) })
                         }
@@ -932,7 +932,7 @@ private fun Tile(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.px),
             ) {
-                Symbol(Symbols.PLAY_ARROW, 20.tpx, colors.accent2, filled = true)
+                Symbol(Symbols.ANIMATED, 20.tpx, colors.accent2, filled = true)
                 if (label) BasicText("Animated", style = TextStyle(color = Color.White, fontFamily = Figtree, fontWeight = FontWeight.Bold, fontSize = 16.tpx))
             }
         }
@@ -1012,7 +1012,7 @@ private fun changeGame(scope: CoroutineScope, shell: ShellState, tracker: FocusT
                         .onFailure { shell.showToast(it.message ?: "The download failed", Symbols.ERROR) }
                 }
             }
-        } + MenuItem(Symbols.EDIT, "Search for another name") { searchDialog(scope, shell, tracker, feedback, store, pc, app, term) }
+        } + MenuItem(Symbols.SEARCH_NAME, "Search for another name") { searchDialog(scope, shell, tracker, feedback, store, pc, app, term) }
         feedback.play(Cue.OPEN)
         shell.openLayer(Layer.Context(ContextMenu(if (found.isEmpty()) "Nothing found for $term" else "Choose the game", items), tracker.bounds()), tracker)
     }

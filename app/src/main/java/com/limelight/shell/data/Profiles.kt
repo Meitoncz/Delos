@@ -34,14 +34,14 @@ val AVATARS = listOf(
     Avatar(Symbols.ROCKET_LAUNCH, "Voyager", 262f, "voyager.webp"),
     Avatar(Symbols.SPORTS_ESPORTS, "Player", 330f, "player.webp"),
     Avatar(Symbols.PETS, "Fox", 24f, "fox.webp"),
-    Avatar(Symbols.BOLT, "Spark", 48f, "spark.webp"),
+    Avatar(Symbols.SPARK, "Spark", 48f, "spark.webp"),
     Avatar(Symbols.SPA, "Calm", 150f, "calm.webp"),
     Avatar(Symbols.SWORDS, "Knight", 232f, "knight.webp"),
-    Avatar(Symbols.MEMORY, "Robot", 182f, "robot.webp"),
-    Avatar(Symbols.PETS, "Cat", 84f, "cat.webp"),
-    Avatar(Symbols.STAR, "Wizard", 292f, "wizard.webp"),
+    Avatar(Symbols.ROBOT, "Robot", 182f, "robot.webp"),
+    Avatar(Symbols.CAT, "Cat", 84f, "cat.webp"),
+    Avatar(Symbols.MAGIC_WAND, "Wizard", 292f, "wizard.webp"),
     Avatar(Symbols.SPEED, "Racer", 356f, "racer.webp"),
-    Avatar(Symbols.FACE, "Ghost", 118f, "ghost.webp"),
+    Avatar(Symbols.GHOST, "Ghost", 118f, "ghost.webp"),
 )
 
 /** A user profile of the new UI: identity and a complete, independent set of preferences. */

@@ -100,14 +100,14 @@ class ShellDeviceActions internal constructor(
                 if (!pc.online) {
                     val error = setup.wake(pc)
                     shell.portal = Portal(
-                        id, Symbols.POWER,
+                        id, Symbols.WAKE,
                         if (error == null) "Waking up ${pc.name}" else "Waiting for ${pc.name}",
                         if (error == null) "Wake-up signal sent · B cancels" else "Turn the PC on · B cancels",
                         cancellable = true,
                     )
                     if (repo.awaitPc(pc.uuid, WAKE_TIMEOUT_MS) { it.online } == null) {
                         feedback.play(Cue.ERROR)
-                        shell.showToast("${pc.name} did not wake up", Symbols.POWER, kind = ToastKind.ERROR)
+                        shell.showToast("${pc.name} did not wake up", Symbols.WAKE, kind = ToastKind.ERROR)
                         return@launch
                     }
                 }
@@ -144,7 +144,7 @@ class ShellDeviceActions internal constructor(
             val transport = currentTransport(context)
             val show = { line: String ->
                 shell.portalBurst = false
-                shell.portal = Portal(id, Symbols.NETWORK_CHECK, "Testing the link to ${pc.name}", line, cancellable = true)
+                shell.portal = Portal(id, Symbols.LINK_TEST, "Testing the link to ${pc.name}", line, cancellable = true)
             }
             try {
                 feedback.play(Cue.OPEN)
@@ -218,7 +218,7 @@ class ShellDeviceActions internal constructor(
             DialogSpec(
                 "Enter the PC address",
                 "The IP address or host name of the PC running Vibepollo, optionally with a port.",
-                listOf(DialogField(Symbols.LAN, placeholder = "192.168.1.20", keyboard = KeyboardType.Uri, maxLength = 64)),
+                listOf(DialogField(Symbols.MAP_PIN, placeholder = "192.168.1.20", keyboard = KeyboardType.Uri, maxLength = 64)),
                 "Add PC",
             ) { (address) ->
                 if (address.isBlank()) return@DialogSpec error("Enter an address")
@@ -273,7 +273,7 @@ class ShellDeviceActions internal constructor(
         scope.launch {
             val error = setup.wake(pc)
             if (error != null) feedback.play(Cue.ERROR)
-            shell.showToast(error ?: "Wake-up signal sent to ${pc.name}", Symbols.POWER, kind = if (error != null) ToastKind.ERROR else ToastKind.INFO)
+            shell.showToast(error ?: "Wake-up signal sent to ${pc.name}", Symbols.WAKE, kind = if (error != null) ToastKind.ERROR else ToastKind.INFO)
         }
     }
 

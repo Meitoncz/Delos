@@ -90,8 +90,8 @@ fun StreamResultLayer(result: StreamResult?, haze: HazeState, reducedMotion: Boo
                     modifier = Modifier.widthIn(max = 1000.px),
                 )
                 Row(Modifier.padding(top = 12.px), horizontalArrangement = Arrangement.spacedBy(24.px)) {
-                    PillButton("Try again", Symbols.RESTART_ALT, onRetry, Modifier.focusRequester(retry), primary = true)
-                    PillButton("Back to library", Symbols.PHOTO_LIBRARY, onBack, clickCue = Cue.BACK)
+                    PillButton("Try again", Symbols.REFRESH, onRetry, Modifier.focusRequester(retry), primary = true)
+                    PillButton("Back to library", Symbols.LIBRARY, onBack, clickCue = Cue.BACK)
                 }
                 r.details?.takeIf { it.isNotBlank() }?.let { details ->
                     DetailsToggle(expanded) { expanded = !expanded }

@@ -20,8 +20,8 @@ Palette adjustment. The completed feature branch was deleted; the push used `[sk
   and `docs/prototype/phosphor-icons.css`. Commit these along with mapping/generator changes.
 - The prototype reads the Android fonts through relative paths; icon rendering needs no CDN.
   Its `data-icon` names use the generated CSS and the same Regular/Fill crossfade.
-- The Regular subset is 53,928 bytes and Fill is 46,636 bytes (100,564 bytes combined), replacing
-  the 299,768-byte Material Symbols subset. No new runtime library is needed.
+- The Regular subset is 97,364 bytes and Fill is 84,324 bytes (181,688 bytes combined, 336 semantic
+  names after the icon audit), replacing the 299,768-byte Material Symbols subset. No new runtime library is needed.
 
 Rebuild icons on Windows (Python with `fonttools` installed):
 
@@ -35,6 +35,11 @@ build uses the committed subsets and needs neither Python nor a font download.
 ## Choosing icons
 
 Settings use an icon for their meaning rather than inheriting one icon for a whole category.
+Every icon of the app is listed in [ICON_AUDIT.md](ICON_AUDIT.md) with its meaning; the rule is
+one glyph per meaning (a glyph is repeated only where the meaning is really identical, and the
+allowed repeats are named there) and no two rows of one settings tab share a glyph
+(`SettingIconsTest`). Add a glyph by giving it its own semantic name in `tools/fonts/icons.txt`
+and re-running the generator; any Phosphor 2.1.2 icon is available, not only the bundled subset.
 Examples include USB, motion sensors, cursor, gestures, horizontal/vertical sensitivity, key layout,
 import/export, clipboard privacy, asynchronous decoding, upscaler mode and sharpness.
 
@@ -78,7 +83,9 @@ actual application screen. No game was launched or controller/menu navigation in
 
 Current checkpoint (2026-10-28): ARM64 build installed on the Odin and accepted by the user.
 The final requested adjustment uses the Palette icon for the color-palette selector in both
-the app and prototype; it applies consistently while cycling through individual palettes. The final
+the app and prototype; it applies consistently while cycling through individual palettes.
+(The icon audit later gave the Appearance tab its own brush, so the palette stands for the
+palette selector only.) The final
 APK containing that adjustment was rebuilt and installed after checking that no stream was active.
 Local build and all 80 unit tests pass. Lint reports zero errors and 387 pre-existing warnings.
 All 105 catalog settings have explicit icon mappings. All 200 semantic mappings resolve to nonempty

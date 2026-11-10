@@ -633,7 +633,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
                 <div class="circle-meta"><span class="status-dot"></span>Online · Vibepollo</div>
               </div>
               <div class="circle-item big">
-                <div class="circle f" tabindex="-1" data-action="toast:Type the PC address – not part of this prototype" data-id="pair-manual"><span class="ms" data-icon="add"></span></div>
+                <div class="circle f" tabindex="-1" data-action="toast:Type the PC address – not part of this prototype" data-id="pair-manual"><span class="ms" data-icon="add_address"></span></div>
                 <div class="circle-label">Enter address</div>
                 <div class="circle-meta">IP or host name</div>
               </div>
@@ -1042,7 +1042,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
   const TABS = [
     { name: "Stream", icon: "cast", desc: "Quality and latency of the video coming from your PC. Delos picks safe defaults; change them when you know your network.", rows: [
       { id: "resolution", icon: "aspect_ratio", label: "Resolution", desc: "Matches the Odin 2 Portal Max screen", type: "choice", options: ["1280 × 720", "1920 × 1080", "2560 × 1440", "3840 × 2160"] },
-      { id: "fps", icon: "speed", label: "Frame rate", type: "choice", options: ["60 FPS", "90 FPS", "120 FPS"] },
+      { id: "fps", icon: "frame_rate", label: "Frame rate", type: "choice", options: ["60 FPS", "90 FPS", "120 FPS"] },
       { id: "bitrate", icon: "network_check", label: "Bitrate", desc: "Higher looks sharper but needs a stronger Wi-Fi", type: "slider", min: 5, max: 150, step: 5, unit: " Mbps" },
       { id: "pacing", icon: "timer", label: "Frame pacing", desc: "Warp modes request 2× / 4× the frame rate for fresher frames", type: "choice", options: ["Lowest latency", "Balanced", "Balanced with FPS limit", "Smoothest", "Warp Drive", "Warp 2"] },
       { id: "codec", icon: "movie", label: "Video codec", type: "choice", options: ["Automatic", "H.264", "HEVC", "AV1"] },
@@ -1052,7 +1052,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
     ]},
     { name: "Display", icon: "monitor", desc: "How the stream fills the screen and which information is shown while you play.", rows: [
       { id: "scale", icon: "fit_screen", label: "Video scale", type: "choice", options: ["Fit", "Fill", "Stretch"] },
-      { id: "perfOverlay", icon: "monitoring", label: "Performance overlay", desc: "Frame rate, latency and decoder statistics", type: "toggle", ref: "state" },
+      { id: "perfOverlay", icon: "overlay", label: "Performance overlay", desc: "Frame rate, latency and decoder statistics", type: "toggle", ref: "state" },
       { id: "overlayStyle", icon: "view_compact", label: "Overlay style", type: "choice", options: ["Full", "Lite"] },
       { id: "virtualDisplay", icon: "screen_share", label: "Virtual display", desc: "Vibepollo creates a screen that matches this device", type: "toggle" }
     ]},
@@ -1063,7 +1063,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
     ]},
     { name: "Controls", icon: "sports_esports", desc: "Built-in controls of the handheld and connected gamepads.", rows: [
       { id: "rumble", icon: "vibration", label: "Rumble", type: "toggle" },
-      { id: "emuRumble", icon: "mobile_vibrate", label: "Rumble with the device motor", desc: "For built-in controls without their own rumble", type: "toggle" },
+      { id: "emuRumble", icon: "device_vibration", label: "Rumble with the device motor", desc: "For built-in controls without their own rumble", type: "toggle" },
       { id: "rumbleStrength", icon: "tune", label: "Rumble strength", type: "slider", min: 0, max: 200, step: 10, unit: " %" },
       { id: "deadzone", icon: "joystick", label: "Stick deadzone", type: "slider", min: 0, max: 20, step: 1, unit: " %" },
       { id: "flip", icon: "swap_horiz", label: "Swap A/B and X/Y", type: "toggle" },
@@ -1079,22 +1079,22 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
       { id: "heroBlur", icon: "blur_on", label: "Game background blur", type: "slider", min: 0, max: 40, step: 2, unit: " px", ref: "state" },
       { id: "heroOpacity", icon: "opacity", label: "Game background opacity", type: "slider", min: 0, max: 100, step: 5, unit: " %", ref: "state" },
       { id: "uiScale", icon: "format_size", label: "Interface scale", desc: "Text size, status bar and button hints", type: "slider", min: 100, max: 130, step: 5, unit: " %", ref: "state" },
-      { id: "motion", icon: "motion_photos_on", label: "Animations", type: "choice", options: ["Full", "Reduced"], ref: "state" }
+      { id: "motion", icon: "reduced_motion", label: "Animations", type: "choice", options: ["Full", "Reduced"], ref: "state" }
     ]},
     { name: "Covers", icon: "photo_library", desc: "Images come from SteamGridDB with your own API key: a portrait cover, a wide cover, a large background and a logo for every game.", rows: [
       { id: "gridKey", icon: "key", label: "SteamGridDB API key", desc: "steamgriddb.com → Preferences → API", type: "text" },
       { id: "coverStyle", icon: "view_carousel", label: "Images to download", type: "choice", options: ["Covers, background and logo", "Covers only"] },
-      { id: "autoCovers", icon: "autorenew", label: "Download images for new games", type: "toggle" },
+      { id: "autoCovers", icon: "cloud_download", label: "Download images for new games", type: "toggle" },
       { id: "fetchCovers", icon: "download", label: "Download images for all games", desc: "17 games on Meiton-PC · 4 images each", type: "progress" },
-      { id: "syncInfo", icon: "sync", label: "Use covers from Vibepollo", desc: "Open question: sync with the covers set on the PC", type: "info", value: "Planned" }
+      { id: "syncInfo", icon: "refresh", label: "Use covers from Vibepollo", desc: "Open question: sync with the covers set on the PC", type: "info", value: "Planned" }
     ]},
-    { name: "Devices", icon: "computer", desc: "PCs paired with Delos. Renaming only changes the name on this device.", rows: [
+    { name: "Devices", icon: "desktop_windows", desc: "PCs paired with Delos. Renaming only changes the name on this device.", rows: [
       { id: "renamePc", icon: "edit", label: "Rename", descFn: () => state.pcName, type: "action" },
-      { id: "wakePc", icon: "power", label: "Wake the PC", desc: "Wake-on-LAN", type: "action" },
+      { id: "wakePc", icon: "wake", label: "Wake the PC", desc: "Wake-on-LAN", type: "action" },
       { id: "pairPc", icon: "add_link", label: "Pair a new PC", type: "action" }
     ]},
     { name: "About", icon: "info", desc: "Delos is a fork of Artemis and Moonlight, licensed under the GPLv3.", rows: [
-      { id: "version", icon: "deployed_code", label: "Version", type: "info", value: "0.1.0" },
+      { id: "version", icon: "version", label: "Version", type: "info", value: "0.1.0" },
       { id: "based", icon: "account_tree", label: "Based on", type: "info", value: "Moonlight 12.2 · Artemis 20.2.6" },
       { id: "replay", icon: "replay", label: "Replay the first launch", desc: "Shows the welcome, profile and pairing steps again", type: "action" }
     ]}
@@ -1118,7 +1118,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
     ]},
     more: { title: "More", rows: [
       { id: "qmKeys", icon: "keyboard_command_key", label: "Send keys", type: "action", toast: "Key combinations are not part of this prototype", help: "Sends a built-in or imported key combination to the PC once; the menu closes. Import custom ones under Controls." },
-      { id: "qmSendClip", icon: "upload", label: "Send clipboard", type: "action", toast: "Clipboard sent to the PC", help: "Copies this device's clipboard to the PC once. Needs Vibepollo or Apollo clipboard support." },
+      { id: "qmSendClip", icon: "send", label: "Send clipboard", type: "action", toast: "Clipboard sent to the PC", help: "Copies this device's clipboard to the PC once. Needs Vibepollo or Apollo clipboard support." },
       { id: "qmGetClip", icon: "download", label: "Get clipboard", type: "action", toast: "Clipboard received from the PC", help: "Fetches the PC clipboard to this device once. Needs Vibepollo or Apollo clipboard support." },
       { id: "qmCmds", icon: "terminal", label: "Commands", type: "action", toast: "Server commands are not part of this prototype", help: "Lists server commands configured in Vibepollo or Apollo. The host decides what each does." },
       { id: "qmTasks", icon: "task_manager", label: "Task manager", type: "action", toast: "Ctrl + Shift + Esc sent", help: "Sends Ctrl + Shift + Esc to the PC, which opens Task Manager on Windows." },
@@ -1240,7 +1240,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
     if (r.type === "text") { openRename("gridKey"); return; }
     if (r.type === "progress") { fetchCovers(); return; }
     if (id === "renamePc") { openRename("pc"); return; }
-    if (id === "wakePc") { toast(`Magic packet sent to ${state.pcName}`, "power"); blip("select"); return; }
+    if (id === "wakePc") { toast(`Magic packet sent to ${state.pcName}`, "wake"); blip("select"); return; }
     if (id === "pairPc") { goScreen("pair"); return; }
     if (id === "replay") { replayFirstRun(); return; }
     if (id === "openSettings") { closeAllLayers(); goScreen("settings"); return; }
@@ -1309,8 +1309,8 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
       const g = GAMES.find(x => x.id === el.dataset.game);
       return { title: g.title, game: g, eyebrow: "Game", meta: g.played, items: [["play_arrow", "Start game", "ctx:launch"], ["photo_library", "Artwork", "ctx:cover"], ["star", "Add to favorites", "ctx:fav"], ["visibility_off", "Hide game", "ctx:hide"], ["info", "Game details", "ctx:details"]] };
     }
-    if (ctx === "device") return { title: state.pcName, below: true, items: [["edit", "Rename", "ctx:rename"], ["power", "Wake the PC", "ctx:wake"], ["link_off", "Unpair", "ctx:unpair"], ["delete", "Remove from Delos", "ctx:unpair", true]] };
-    if (ctx === "row") return { title: "Setting", items: [["restart_alt", "Reset to default", "ctx:reset"], ["help", "What does this do?", "ctx:help"]] };
+    if (ctx === "device") return { title: state.pcName, below: true, items: [["edit", "Rename", "ctx:rename"], ["wake", "Wake the PC", "ctx:wake"], ["link_off", "Unpair", "ctx:unpair"], ["delete", "Remove from Delos", "ctx:unpair", true]] };
+    if (ctx === "row") return { title: "Setting", items: [["reset", "Reset to default", "ctx:reset"], ["help", "What does this do?", "ctx:help"]] };
     return { title: "Delos", items: [["menu", "Side menu", "ctx:side"], ["keyboard", "Controls help", "ctx:keys"]] };
   }
   let ctxSource = null;
@@ -1357,9 +1357,9 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
     if (a === "hide") { toast("Hidden games: Settings → Library (later)", "visibility_off"); return; }
     if (a === "details") { toast("Game details come with the real library", "info"); return; }
     if (a === "rename") { openRename("pc"); return; }
-    if (a === "wake") { toast(`Magic packet sent to ${state.pcName}`, "power"); return; }
+    if (a === "wake") { toast(`Magic packet sent to ${state.pcName}`, "wake"); return; }
     if (a === "unpair") { toast("Unpairing is disabled in the prototype", "link_off"); return; }
-    if (a === "reset") { toast("Reset to default", "restart_alt"); return; }
+    if (a === "reset") { toast("Reset to default", "reset"); return; }
     if (a === "help") { toast("Help texts come with the real settings", "help"); return; }
     if (a === "side") { openSide(); return; }
     if (a === "keys") { openLayer("help"); return; }
@@ -1800,7 +1800,7 @@ body { background: var(--page-bg); color: var(--page-fg); overflow: hidden; font
     if (QM_PAGES[a]) { qmOpenPage(a, el); return; }
     if (a === "resume") { closeLayer(); return; }
     if (a === "keyboard") { closeLayer(); toast("On-screen keyboard (later)", "keyboard"); return; }
-    if (a === "perf") { state.perfOverlay = !state.perfOverlay; $("#perf").hidden = !state.perfOverlay; qmSync(true); toast(state.perfOverlay ? "Performance overlay on" : "Performance overlay off", "speed"); return; }
+    if (a === "perf") { state.perfOverlay = !state.perfOverlay; $("#perf").hidden = !state.perfOverlay; qmSync(true); toast(state.perfOverlay ? "Performance overlay on" : "Performance overlay off", "overlay"); return; }
     if (a === "disconnect" || a === "quit") {
       closeLayer();
       portalTo("home", { icon: "home", label: a === "quit" ? `Closing ${state.currentGame.title}` : "Back to Delos", sub: state.pcName, focusId: "game-" + state.currentGame.id });

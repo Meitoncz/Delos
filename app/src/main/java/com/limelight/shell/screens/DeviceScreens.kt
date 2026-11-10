@@ -105,7 +105,7 @@ private fun startMenu(pc: Pc, default: Boolean, actions: DeviceActions) = Contex
     items = listOfNotNull(
         if (default) MenuItem(Symbols.STAR, "Don't start with this PC") { actions.setDefault(null) }
         else MenuItem(Symbols.STAR, "Start Delos with this PC") { actions.setDefault(pc) },
-        if (!pc.online && pc.canWake) MenuItem(Symbols.POWER, "Wake the PC") { actions.wake(pc) } else null,
+        if (!pc.online && pc.canWake) MenuItem(Symbols.WAKE, "Wake the PC") { actions.wake(pc) } else null,
         MenuItem(Symbols.EDIT, "Rename") { actions.rename(pc) },
     ),
 )
@@ -192,7 +192,7 @@ private fun deviceMenu(pc: Pc, active: Boolean, actions: DeviceActions) = Contex
     items = listOfNotNull(
         MenuItem(Symbols.LOGIN, if (active) "Open its games" else "Connect") { actions.connect(pc) },
         MenuItem(Symbols.EDIT, "Rename") { actions.rename(pc) },
-        if (!pc.online && pc.canWake) MenuItem(Symbols.POWER, "Wake the PC") { actions.wake(pc) } else null,
+        if (!pc.online && pc.canWake) MenuItem(Symbols.WAKE, "Wake the PC") { actions.wake(pc) } else null,
         if (pc.online) MenuItem(Symbols.LINK_OFF, "Unpair") { actions.unpair(pc) } else null,
         MenuItem(Symbols.DELETE, "Remove from Delos", danger = true) { actions.remove(pc) },
     ),

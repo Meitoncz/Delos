@@ -134,12 +134,12 @@ internal fun lengthFilterLabel(filter: LengthFilter): String = when (filter) {
     LengthFilter.UNKNOWN -> "Unknown"
 }
 
-/** The icons of the home badges (sparkle, sun and question mark), so a filter and its badge look alike. */
+/** The icons of the home badges (sparkle, dim sun and sealed question mark), so a filter and its badge look alike. */
 private fun hdrFilterIcon(filter: HdrFilter): String? = when (filter) {
     HdrFilter.ANY -> null
-    HdrFilter.HDR -> Symbols.ANIMATION
-    HdrFilter.SDR -> Symbols.HDR_ON
-    HdrFilter.UNKNOWN -> Symbols.HELP
+    HdrFilter.HDR -> Symbols.HDR_ON
+    HdrFilter.SDR -> Symbols.SDR
+    HdrFilter.UNKNOWN -> Symbols.HDR_UNKNOWN
 }
 
 /**
@@ -252,7 +252,7 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
                 .padding(start = 12.px, end = 12.px, top = 24.px, bottom = 48.px),
             verticalArrangement = Arrangement.spacedBy(34.px),
         ) {
-            FilterSection(Symbols.SPORTS_ESPORTS, "Genre") {
+            FilterSection(Symbols.GENRE_UNKNOWN, "Genre") {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(14.px), verticalArrangement = Arrangement.spacedBy(14.px)) {
                     FilterChip(
                         "All", filters.genreId == null, { metadata.updateFilters(metadata.filters.copy(genreId = null)) },
@@ -271,7 +271,7 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
             FilterDivider()
             // Without any theme in the library there is nothing to choose (a theme that was chosen stays visible)
             if (themes.isNotEmpty() || filters.themeId != null) {
-                FilterSection(Symbols.THEME_DRAMA, "Theme") {
+                FilterSection(Symbols.THEMES, "Theme") {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(14.px), verticalArrangement = Arrangement.spacedBy(14.px)) {
                         FilterChip(
                             "All", filters.themeId == null, { metadata.updateFilters(metadata.filters.copy(themeId = null)) },
@@ -300,7 +300,7 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
                 }
             }
             FilterDivider()
-            FilterSection(Symbols.HISTORY, "Duration (HowLongToBeat)") {
+            FilterSection(Symbols.COMPLETION_TIME, "Duration (HowLongToBeat)") {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(14.px), verticalArrangement = Arrangement.spacedBy(14.px)) {
                     LengthFilter.entries.forEach { option ->
                         FilterChip(
@@ -319,7 +319,7 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
         ) {
             val active = filters.active
             PillButton(
-                "Reset", Symbols.REFRESH, { if (metadata.filters.active) metadata.updateFilters(MetadataFilters()) },
+                "Reset", Symbols.RESET, { if (metadata.filters.active) metadata.updateFilters(MetadataFilters()) },
                 Modifier.alpha(if (active) 1f else .4f).then(if (active) Modifier else Modifier.focusProperties { canFocus = false }),
             )
             PillButton("Done", Symbols.CHECK, onClose, primary = true, clickCue = Cue.BACK)

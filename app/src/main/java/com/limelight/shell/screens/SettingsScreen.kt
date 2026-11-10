@@ -449,8 +449,8 @@ private fun SettingsSearch(all: List<SettingsItem>, scale: Float) {
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(14.px)) {
                     PillButton("Space", null, { field.setTextAndPlaceCursorAtEnd((query + " ").take(80)) })
-                    PillButton("Delete", Symbols.ARROW_BACK, { field.setTextAndPlaceCursorAtEnd(query.dropLast(1)) })
-                    PillButton("Clear", Symbols.CLOSE, { field.clearText() })
+                    PillButton("Delete", Symbols.BACKSPACE, { field.setTextAndPlaceCursorAtEnd(query.dropLast(1)) })
+                    PillButton("Clear", Symbols.CLEAR, { field.clearText() })
                 }
             }
             Column(Modifier.weight(1f)) {
