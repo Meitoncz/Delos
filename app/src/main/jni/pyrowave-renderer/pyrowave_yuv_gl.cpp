@@ -6,9 +6,12 @@
 
 #include <cstring>
 
+#include "../moonlight-core/diag_log.h"
+
 #define LOG_TAG "PyroWave"
+// Failures also go to the app's diagnostic log (docs/DIAGNOSTICS.md)
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
-#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+#define LOGE(...) DELOS_LOG(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 
 namespace {
     // One triangle covering the target

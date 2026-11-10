@@ -1,4 +1,5 @@
 #include <jni.h>
+#include <stdbool.h>
 
 #include <pthread.h>
 #include <string.h>
@@ -11,6 +12,12 @@
 #include <cpu-features.h>
 
 #include "latency_threads.h"
+#include "diag_log.h"
+
+#include <stdarg.h>
+#include <stdatomic.h>
+#include <stdio.h>
+#include <time.h>
 
 static OpusMSDecoder* Decoder;
 static OPUS_MULTISTREAM_CONFIGURATION OpusConfig;
@@ -40,6 +47,7 @@ static jmethodID BridgeClSetHdrModeMethod;
 static jmethodID BridgeClRumbleTriggersMethod;
 static jmethodID BridgeClSetMotionEventStateMethod;
 static jmethodID BridgeClSetControllerLEDMethod;
+static jmethodID BridgeNativeLogMethod;
 static jbyteArray DecodedFrameBuffer;
 static jshortArray DecodedAudioBuffer;
 
@@ -104,6 +112,7 @@ Java_com_limelight_nvstream_jni_MoonBridge_init(JNIEnv *env, jclass clazz) {
     BridgeClRumbleTriggersMethod = (*env)->GetStaticMethodID(env, clazz, "bridgeClRumbleTriggers", "(SSS)V");
     BridgeClSetMotionEventStateMethod = (*env)->GetStaticMethodID(env, clazz, "bridgeClSetMotionEventState", "(SBS)V");
     BridgeClSetControllerLEDMethod = (*env)->GetStaticMethodID(env, clazz, "bridgeClSetControllerLED", "(SBBB)V");
+    BridgeNativeLogMethod = (*env)->GetStaticMethodID(env, clazz, "bridgeNativeLog", "(ILjava/lang/String;[B)V");
     LatencyThreadsInit(env);
 }
 
@@ -420,11 +429,55 @@ void BridgeClSetControllerLED(uint16_t controllerNumber, uint8_t r, uint8_t g, u
     }
 }
 
+// At most this many lines a second reach the diagnostic log; a flood stays in logcat only
+#define DIAG_LOG_LINES_PER_SECOND 60
+
+static bool DiagLogAllowed(void) {
+    static _Atomic long window;
+    static _Atomic int count;
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    if (atomic_exchange(&window, (long)now.tv_sec) != (long)now.tv_sec) {
+        atomic_store(&count, 0);
+    }
+    return atomic_fetch_add(&count, 1) < DIAG_LOG_LINES_PER_SECOND;
+}
+
+void DelosDiagLog(int priority, const char* tag, const char* message) {
+    if (JVM == NULL || BridgeNativeLogMethod == NULL || message == NULL || !DiagLogAllowed()) {
+        return;
+    }
+
+    JNIEnv* env = GetThreadEnv();
+    if (env == NULL) {
+        return;
+    }
+
+    // The text may hold bytes that are not valid (modified) UTF-8, which NewStringUTF must never see: pass the bytes
+    // and let Java decode them. The tag is one of our own constants.
+    jsize length = (jsize)strlen(message);
+    jbyteArray bytes = (*env)->NewByteArray(env, length);
+    jstring jtag = (*env)->NewStringUTF(env, tag != NULL ? tag : "native");
+    if (bytes != NULL && jtag != NULL) {
+        (*env)->SetByteArrayRegion(env, bytes, 0, length, (const jbyte*)message);
+        (*env)->CallStaticVoidMethod(env, GlobalBridgeClass, BridgeNativeLogMethod, priority, jtag, bytes);
+    }
+    if ((*env)->ExceptionCheck(env)) {
+        // Diagnostics must never become a problem of their own
+        (*env)->ExceptionClear(env);
+    }
+    if (bytes != NULL) (*env)->DeleteLocalRef(env, bytes);
+    if (jtag != NULL) (*env)->DeleteLocalRef(env, jtag);
+}
+
 void BridgeClLogMessage(const char* format, ...) {
     va_list va;
     va_start(va, format);
-    __android_log_vprint(ANDROID_LOG_INFO, "moonlight-common-c", format, va);
+    char message[1024];
+    vsnprintf(message, sizeof(message), format, va);
     va_end(va);
+    __android_log_write(ANDROID_LOG_INFO, "moonlight-common-c", message);
+    DelosDiagLog(ANDROID_LOG_INFO, "moonlight-common-c", message);
 }
 
 static DECODER_RENDERER_CALLBACKS BridgeVideoRendererCallbacks = {

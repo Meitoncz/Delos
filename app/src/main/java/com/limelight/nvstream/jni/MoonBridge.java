@@ -1,5 +1,6 @@
 package com.limelight.nvstream.jni;
 
+import com.limelight.diag.DiagLog;
 import com.limelight.nvstream.NvConnectionListener;
 import com.limelight.nvstream.av.audio.AudioRenderer;
 import com.limelight.nvstream.av.video.VideoDecoderRenderer;
@@ -280,6 +281,12 @@ public class MoonBridge {
         if (connectionListener != null) {
             connectionListener.stageComplete(getStageName(stage));
         }
+    }
+
+    // Delos: native log lines (moonlight-common-c, the PyroWave renderer) join the app's diagnostic log. The text
+    // arrives as bytes because native code can not promise valid modified UTF-8 (diag_log.h).
+    public static void bridgeNativeLog(int priority, String tag, byte[] message) {
+        DiagLog.nativeLog(priority, tag, new String(message, java.nio.charset.StandardCharsets.UTF_8));
     }
 
     public static void bridgeClStageFailed(int stage, int errorCode) {

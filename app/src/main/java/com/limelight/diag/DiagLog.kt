@@ -3,6 +3,7 @@ package com.limelight.diag
 import android.content.Context
 import androidx.preference.PreferenceManager
 import com.limelight.BuildConfig
+import com.limelight.utils.ToastKind
 import java.io.File
 import java.time.Instant
 import java.time.ZoneId
@@ -85,6 +86,16 @@ object DiagLog {
         sink.offer(DiagLine.format(now, zone, level, tag, Thread.currentThread().name, message ?: "null"))
     }
 
+    /** A toast that tells the user about a problem (warnings and errors only; the rest is not diagnostic). */
+    @JvmStatic
+    fun logToast(kind: ToastKind, text: String) {
+        when (kind) {
+            ToastKind.ERROR -> e("Toast", text)
+            ToastKind.WARNING -> w("Toast", text)
+            else -> Unit
+        }
+    }
+
     /** Called from native code (MoonBridge.bridgeNativeLog): [priority] is an android.util.Log priority. */
     @JvmStatic
     fun nativeLog(priority: Int, tag: String, message: String) {
@@ -94,7 +105,7 @@ object DiagLog {
             priority == android.util.Log.INFO -> DiagLevel.INFO
             else -> DiagLevel.DEBUG
         }
-        log(level, tag, message)
+        log(level, tag, message.trimEnd('\n', '\r'))
     }
 
     /** The whole log as written, oldest line first; empty before [init]. */

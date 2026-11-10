@@ -52,6 +52,7 @@
 #include "shaders_spv.h"
 #include "pyrowaveframing.h"
 #include "pyrowave_yuv_gl.h"
+#include "../moonlight-core/diag_log.h"
 
 extern "C" {
 #include "Limelight.h"
@@ -61,9 +62,18 @@ extern "C" uint64_t PltGetMicroseconds(void);
 }
 
 #define LOG_TAG "PyroWave"
-#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
-#define LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
-#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+// Every line also goes to the app's diagnostic log (docs/DIAGNOSTICS.md); the statistics every few seconds use LOGS,
+// which reaches the diagnostic log only now and then
+#define LOGI(...) DELOS_LOG(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+#define LOGW(...) DELOS_LOG(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
+#define LOGE(...) DELOS_LOG(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+#define LOGS(toDiagLog, ...) do { \
+        if (toDiagLog) { \
+            DELOS_LOG(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__); \
+        } else { \
+            __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__); \
+        } \
+    } while (0)
 
 namespace {
     // Results of Renderer::submit
@@ -1731,7 +1741,7 @@ namespace {
                     offered += offered.empty() ? "" : ", ";
                     offered += presentModeName(mode);
                 }
-                __android_log_print(ANDROID_LOG_INFO, DIAG_TAG, "Present modes offered: %s; chosen %s", offered.c_str(),
+                DELOS_LOG(ANDROID_LOG_INFO, DIAG_TAG, "Present modes offered: %s; chosen %s", offered.c_str(),
                                     presentModeName(presentMode));
             }
 
@@ -1784,7 +1794,7 @@ namespace {
             diagPresentMode.store(int(presentMode), std::memory_order_relaxed);
             diagSwapchainImages.store(int(count), std::memory_order_relaxed);
             diagPreTransform.store(int(info.preTransform), std::memory_order_relaxed);
-            __android_log_print(ANDROID_LOG_INFO, DIAG_TAG,
+            DELOS_LOG(ANDROID_LOG_INFO, DIAG_TAG,
                                 "Swapchain: %u images (minImageCount asked %u, surface min %u max %u), present mode %s, "
                                 "%ux%u, preTransform %s (surface current %s)",
                                 count, imageCount, caps.minImageCount, caps.maxImageCount, presentModeName(presentMode),
@@ -3433,6 +3443,9 @@ namespace {
         // after the reconstruction stage, so 1..3 is Sharpen only's colour conversion and 3..2 its sharpen pass.
         static constexpr uint32_t QUERY_COUNT = 4;
         static constexpr uint64_t STATS_INTERVAL_US = 5'000'000;
+        // The statistics line reaches the app's diagnostic log this often (logcat gets every one)
+        static constexpr uint64_t DIAG_LOG_INTERVAL_US = 30'000'000;
+        uint64_t lastDiagLogUs = 0;
         VkCommandBuffer decodeCommandBuffer = VK_NULL_HANDLE;
         VkQueryPool queryPool = VK_NULL_HANDLE;
         bool timestampsSupported = false;
@@ -3512,20 +3525,24 @@ namespace {
             if (now - stats.startUs < STATS_INTERVAL_US || stats.frames == 0) {
                 return;
             }
+            const bool toDiagLog = lastDiagLogUs == 0 || now - lastDiagLogUs >= DIAG_LOG_INTERVAL_US;
+            if (toDiagLog) {
+                lastDiagLogUs = now;
+            }
             const double seconds = double(now - stats.startUs) / 1e6;
             const double gpuFrames = stats.gpuSamples ? double(stats.gpuSamples) : 1.0;
-            LOGI("%.1f fps: GPU decode %.2f ms, GPU draw %.2f ms, wait previous frame %.2f ms, "
+            LOGS(toDiagLog, "%.1f fps: GPU decode %.2f ms, GPU draw %.2f ms, wait previous frame %.2f ms, "
                  "wait swapchain image %.2f ms, submit+present %.2f ms (%s)",
                  stats.frames / seconds, stats.gpuDecodeUs / gpuFrames / 1000.0, stats.gpuDrawUs / gpuFrames / 1000.0,
                  stats.fenceWaitUs / double(stats.frames) / 1000.0, stats.acquireWaitUs / double(stats.frames) / 1000.0,
                  stats.presentUs / double(stats.frames) / 1000.0, presentModeName(presentMode));
             if (stats.sharpenSamples) {
-                LOGI("Sharpen only: GPU sharpen pass %.2f ms, colour conversion %.2f ms (%u frames)",
+                LOGS(toDiagLog, "Sharpen only: GPU sharpen pass %.2f ms, colour conversion %.2f ms (%u frames)",
                      stats.sharpenUs / double(stats.sharpenSamples) / 1000.0,
                      stats.sharpenPrepareUs / double(stats.sharpenSamples) / 1000.0, stats.sharpenSamples);
             }
             if (yuvOutput) {
-                LOGI("P010 output (%s): %u frames skipped for want of a buffer, %u buffers reused without a release",
+                LOGS(toDiagLog, "P010 output (%s): %u frames skipped for want of a buffer, %u buffers reused without a release",
                      yuvCpu ? "CPU" : "GPU", yuvSkipped, yuvForcedReleases);
                 yuvSkipped = 0;
             }
@@ -3534,7 +3551,7 @@ namespace {
 
             // PyroWave's own per-pass GPU timings, to see which stage dominates decode.
             pyrowave_device_report_performance_stats(pyroDevice, [](void *, const char *msg) {
-                LOGI("PyroWave pass: %s", msg);
+                __android_log_print(ANDROID_LOG_INFO, LOG_TAG, "PyroWave pass: %s", msg);
             }, nullptr, true);
         }
     };

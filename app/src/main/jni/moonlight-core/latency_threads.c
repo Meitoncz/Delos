@@ -19,9 +19,11 @@
 #include <android/log.h>
 
 #include "latency_threads.h"
+#include "diag_log.h"
 
 #define LOG_TAG "DelosThreads"
-#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+// Each of these lines happens once per stream, so they go to the diagnostic log too
+#define LOGI(...) DELOS_LOG(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 // The tag of the stream diagnostics (DelosPyroDiag in MediaCodecDecoderRenderer)
 #define DIAG_TAG "DelosPyroDiag"
 
@@ -116,7 +118,7 @@ static void logUdpReceiveBuffers(void) {
         snprintf(sockets + used, sizeof(sockets) - used, "%sport %d %d KB", used > 0 ? ", " : "", port, kb);
     }
     closedir(dir);
-    __android_log_print(ANDROID_LOG_INFO, DIAG_TAG,
+    DELOS_LOG(ANDROID_LOG_INFO, DIAG_TAG,
             "UDP receive buffers (SO_RCVBUF as the kernel reports it, double the granted size): %s | largest %d KB = the video "
             "socket; common-c requests about 2900 KB (11500 KB for PyroWave), so about 5800 KB (23000 KB) here is a full grant and less is clamped",
             sockets[0] != '\0' ? sockets : "no UDP sockets found", largestKb);
