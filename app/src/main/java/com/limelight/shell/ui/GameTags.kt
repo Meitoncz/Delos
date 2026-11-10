@@ -107,19 +107,36 @@ private fun top(steam: List<GameGenre>, ranked: List<GameGenre>, limit: Int, eli
 }
 
 /**
+ * The answers of [topGenres] and [topThemes] per game data: moving the focus over the home screen asks again for games it has
+ * already ranked, and ranking sorts and matches the Steam tags against the tag tables each time.
+ */
+private class TagMemo {
+    private val answers = object : LinkedHashMap<List<Any>, List<GameGenre>>(32, .75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<List<Any>, List<GameGenre>>) = size > 128
+    }
+
+    @Synchronized
+    fun get(key: List<Any>, compute: () -> List<GameGenre>): List<GameGenre> = answers[key] ?: compute().also { answers[key] = it }
+}
+
+private val genreMemo = TagMemo()
+private val themeMemo = TagMemo()
+
+/**
  * The genres shown on the card, at most [limit]: those Steam's user tags give ([steamGenres], vote order), the
  * next ones from IGDB's ranking when Steam gives fewer, or IGDB's ranking alone when Steam gives none (or the
- * game has no Steam tags). Never a duplicate; Indie only when nothing else exists.
+ * game has no Steam tags). Never a duplicate; Indie only when nothing else exists. Answers are kept per game data.
  */
 fun topGenres(igdbGenres: List<GameGenre>, steamTags: List<String>, limit: Int = 2): List<GameGenre> =
-    top(steamGenres(steamTags), rankedGenres(igdbGenres), limit) { it.id != INDIE }
+    genreMemo.get(listOf(igdbGenres, steamTags, limit)) { top(steamGenres(steamTags), rankedGenres(igdbGenres), limit) { it.id != INDIE } }
 
 /**
  * The themes shown on the card, at most [limit], chosen like [topGenres]. Action (IGDB's genre in disguise) only
  * counts when it is the one usable theme, whichever provider lists it.
  */
-fun topThemes(igdbThemes: List<GameGenre>, steamTags: List<String>, limit: Int = 2): List<GameGenre> {
-    val steam = steamThemes(steamTags)
-    val chosen = top(steam.filter { it.id != ACTION }, rankedThemes(igdbThemes), limit) { it.id != ACTION }
-    return chosen.ifEmpty { steam.take(limit) }
-}
+fun topThemes(igdbThemes: List<GameGenre>, steamTags: List<String>, limit: Int = 2): List<GameGenre> =
+    themeMemo.get(listOf(igdbThemes, steamTags, limit)) {
+        val steam = steamThemes(steamTags)
+        val chosen = top(steam.filter { it.id != ACTION }, rankedThemes(igdbThemes), limit) { it.id != ACTION }
+        chosen.ifEmpty { steam.take(limit) }
+    }
