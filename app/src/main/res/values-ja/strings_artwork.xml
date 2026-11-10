@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="artwork_header">アートワーク</string>
+    <string name="artwork_search_other">別の名前で検索</string>
+    <string name="artwork_filter">フィルター</string>
+    <string name="artwork_loading">SteamGridDBで検索中…</string>
+    <string name="artwork_no_key_title">SteamGridDBのAPIキーを追加してください</string>
+    <string name="artwork_no_key_note">設定 → カバー → SteamGridDB APIキー。steamgriddb.comで無料で取得できます（Preferences → API）。</string>
+    <string name="artwork_no_game_title">%1$sはSteamGridDBにありません</string>
+    <string name="artwork_no_game_note">「別の名前で検索」で、SteamGridDBに登録されている名前から探せます。</string>
+    <string name="artwork_choose_title">%1$sの見た目を選択</string>
+    <string name="artwork_choose_note">「別の名前で検索」で、WindowsやSteam、好きなアートワークのゲームなどを探せます。%1$sは自動では検索されません。</string>
+    <string name="artwork_unreachable">SteamGridDBに接続できません</string>
+    <string name="artwork_download_failed">ダウンロードに失敗しました</string>
+    <string name="artwork_builtin_note">内蔵アートワーク - このアプリのアートワークは変更できません</string>
+    <string name="artwork_builtin_back">戻る</string>
+    <string name="artwork_chip_looking">%1$sを検索中…</string>
+    <string name="artwork_chip_game_id">ゲーム #%1$d</string>
+    <string name="artwork_chip_not_found">未検出</string>
+    <string name="artwork_in_use">使用中</string>
+    <string name="artwork_animated">アニメーション</string>
+    <string name="artwork_static">静止画</string>
+    <string name="artwork_first_name_only">名前のみ</string>
+    <string name="artwork_first_from_pc">PCから</string>
+    <string name="artwork_fact_source">取得元</string>
+    <string name="artwork_fact_shows">表示内容</string>
+    <string name="artwork_fact_name_source">ゲームの名前</string>
+    <string name="artwork_fact_name_shows">ロゴの代わりに名前を表示</string>
+    <string name="artwork_fact_pc_source">お使いのPC（Vibepollo）</string>
+    <string name="artwork_fact_pc_shows">PCのボックスアート</string>
+    <string name="artwork_fact_size">サイズ</string>
+    <string name="artwork_fact_file">ファイル</string>
+    <string name="artwork_fact_score">スコア</string>
+    <string name="artwork_fact_added">追加日</string>
+    <string name="artwork_fact_size_value">%1$d × %2$d px</string>
+    <string name="artwork_fact_score_by">%1$d · 作者：%2$s</string>
+    <string name="artwork_fact_score_only">%1$d</string>
+    <string name="artwork_fact_by_only">作者：%1$s</string>
+    <string name="artwork_search_title">SteamGridDBを検索</string>
+    <string name="artwork_search_note">SteamGridDBに登録されているゲーム名を入力してください。</string>
+    <string name="artwork_search_hint">ゲーム名</string>
+    <string name="artwork_search_action">検索</string>
+    <string name="artwork_searching_toast">SteamGridDBで%1$sを検索中…</string>
+    <string name="artwork_game_with_year">%1$s（%2$d）</string>
+    <string name="artwork_downloading_game_toast">%1$sのアートワークをダウンロード中…</string>
+    <string name="artwork_matched_toast">%1$sと一致しました</string>
+    <string name="artwork_found_none">%1$sは見つかりませんでした</string>
+    <string name="artwork_found_title">ゲームを選択</string>
+    <string name="artwork_error_no_key">先にSteamGridDBのAPIキーを追加してください</string>
+    <string name="artwork_error_key_rejected">SteamGridDBがAPIキーを受け付けませんでした</string>
+    <string name="artwork_error_api_http">SteamGridDBの応答：%1$d</string>
+    <string name="artwork_error_too_large">画像が大きすぎます</string>
+    <string name="artwork_error_save_failed">画像を保存できませんでした</string>
+    <!-- Cover -->
+    <string name="artwork_tab_cover">カバー</string>
+    <plurals name="artwork_count_cover">
+        <item quantity="other">カバー%1$d枚</item>
+    </plurals>
+    <plurals name="artwork_count_all_cover">
+        <item quantity="other">カバー全%1$d枚</item>
+    </plurals>
+    <plurals name="artwork_count_of_cover">
+        <item quantity="other">カバー%2$d枚中%1$d枚</item>
+    </plurals>
+    <string name="artwork_filtered_none_cover">これらのフィルターに一致するカバーはありません</string>
+    <plurals name="artwork_filtered_has_cover">
+        <item quantity="other">SteamGridDBには%1$sのカバーが%2$d枚ありますが、%3$sに一致するものはありません。フィルターを緩めるか、別の名前で検索してください。</item>
+    </plurals>
+    <string name="artwork_filtered_unknown_cover">%1$sに一致するカバーはありません。フィルターを緩めるか、別の名前で検索してください。</string>
+    <string name="artwork_empty_cover">SteamGridDBには、このゲームのカバーがまだありません。</string>
+    <string name="artwork_downloading_cover">カバーをダウンロード中…</string>
+    <string name="artwork_updated_cover">カバーを更新しました</string>
+    <!-- Wide cover -->
+    <string name="artwork_tab_wide">ワイドカバー</string>
+    <plurals name="artwork_count_wide">
+        <item quantity="other">ワイドカバー%1$d枚</item>
+    </plurals>
+    <plurals name="artwork_count_all_wide">
+        <item quantity="other">ワイドカバー全%1$d枚</item>
+    </plurals>
+    <plurals name="artwork_count_of_wide">
+        <item quantity="other">ワイドカバー%2$d枚中%1$d枚</item>
+    </plurals>
+    <string name="artwork_filtered_none_wide">これらのフィルターに一致するワイドカバーはありません</string>
+    <plurals name="artwork_filtered_has_wide">
+        <item quantity="other">SteamGridDBには%1$sのワイドカバーが%2$d枚ありますが、%3$sに一致するものはありません。フィルターを緩めるか、別の名前で検索してください。</item>
+    </plurals>
+    <string name="artwork_filtered_unknown_wide">%1$sに一致するワイドカバーはありません。フィルターを緩めるか、別の名前で検索してください。</string>
+    <string name="artwork_empty_wide">SteamGridDBには、このゲームのワイドカバーがまだありません。</string>
+    <string name="artwork_downloading_wide">ワイドカバーをダウンロード中…</string>
+    <string name="artwork_updated_wide">ワイドカバーを更新しました</string>
+    <!-- Background -->
+    <string name="artwork_tab_hero">背景</string>
+    <plurals name="artwork_count_hero">
+        <item quantity="other">背景%1$d枚</item>
+    </plurals>
+    <plurals name="artwork_count_all_hero">
+        <item quantity="other">背景全%1$d枚</item>
+    </plurals>
+    <plurals name="artwork_count_of_hero">
+        <item quantity="other">背景%2$d枚中%1$d枚</item>
+    </plurals>
+    <string name="artwork_filtered_none_hero">これらのフィルターに一致する背景はありません</string>
+    <plurals name="artwork_filtered_has_hero">
+        <item quantity="other">SteamGridDBには%1$sの背景が%2$d枚ありますが、%3$sに一致するものはありません。フィルターを緩めるか、別の名前で検索してください。</item>
+    </plurals>
+    <string name="artwork_filtered_unknown_hero">%1$sに一致する背景はありません。フィルターを緩めるか、別の名前で検索してください。</string>
+    <string name="artwork_empty_hero">SteamGridDBには、このゲームの背景がまだありません。</string>
+    <string name="artwork_downloading_hero">背景をダウンロード中…</string>
+    <string name="artwork_updated_hero">背景を更新しました</string>
+    <!-- Logo -->
+    <string name="artwork_tab_logo">ロゴ</string>
+    <plurals name="artwork_count_logo">
+        <item quantity="other">ロゴ%1$d個</item>
+    </plurals>
+    <plurals name="artwork_count_all_logo">
+        <item quantity="other">ロゴ全%1$d個</item>
+    </plurals>
+    <plurals name="artwork_count_of_logo">
+        <item quantity="other">ロゴ%2$d個中%1$d個</item>
+    </plurals>
+    <string name="artwork_filtered_none_logo">これらのフィルターに一致するロゴはありません</string>
+    <plurals name="artwork_filtered_has_logo">
+        <item quantity="other">SteamGridDBには%1$sのロゴが%2$d個ありますが、%3$sに一致するものはありません。フィルターを緩めるか、別の名前で検索してください。</item>
+    </plurals>
+    <string name="artwork_filtered_unknown_logo">%1$sに一致するロゴはありません。フィルターを緩めるか、別の名前で検索してください。</string>
+    <string name="artwork_empty_logo">SteamGridDBには、このゲームのロゴがまだありません。</string>
+    <string name="artwork_downloading_logo">ロゴをダウンロード中…</string>
+    <string name="artwork_updated_logo">ロゴを更新しました</string>
+</resources>

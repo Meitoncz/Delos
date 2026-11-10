@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="devices_start_greeting">こんにちは、%1$sさん</string>
+    <string name="devices_start_welcome">ようこそ</string>
+    <string name="devices_start_pair_note">PCをペアリングして、プレイを始めましょう。</string>
+    <string name="devices_start_choose_note">プレイするPCを選んでください。</string>
+    <string name="devices_status_online">オンライン</string>
+    <string name="devices_status_asleep">スリープ中</string>
+    <string name="devices_status_asleep_wakes">スリープ中 · 起動します</string>
+    <string name="devices_status_offline">オフライン</string>
+    <string name="devices_status_connected">接続済み</string>
+    <string name="devices_status_default">既定</string>
+    <string name="devices_status_with_default">%1$s · %2$s</string>
+    <string name="devices_pair_new">新しいPCをペアリング</string>
+    <string name="devices_pair_new_meta">Vibepollo、Apollo、Sunshine</string>
+    <string name="devices_title">デバイス</string>
+    <string name="devices_note">Delosとペアリング済みのPCです。ここで付けた名前は、この端末にのみ保存されます。</string>
+
+    <string name="devices_menu_default_off">このPCで起動しない</string>
+    <string name="devices_menu_default_on">このPCでDelosを起動</string>
+    <string name="devices_menu_wake">PCを起動</string>
+    <string name="devices_menu_rename">名前を変更</string>
+    <string name="devices_menu_open_games">ゲームを開く</string>
+    <string name="devices_menu_connect">接続</string>
+    <string name="devices_menu_unpair">ペアリング解除</string>
+    <string name="devices_menu_remove">Delosから削除</string>
+
+    <string name="devices_portal_waking_title">%1$sを起動中</string>
+    <string name="devices_portal_waiting_title">%1$sを待機中</string>
+    <string name="devices_portal_waking_note">起動信号を送信しました · %1$sでキャンセル</string>
+    <string name="devices_portal_waiting_note">PCの電源を入れてください · %1$sでキャンセル</string>
+    <string name="devices_wake_timeout_toast">%1$sは起動しませんでした</string>
+    <string name="devices_portal_connecting_title">%1$sに接続中</string>
+    <string name="devices_portal_connecting_note">Vibepollo · ペアリング済み</string>
+
+    <string name="devices_link_portal_title">%1$sとの回線をテスト中</string>
+    <string name="devices_link_portal_start">%1$sのままにしてください · %2$sでキャンセル</string>
+    <string name="devices_link_portal_testing">%1$sをテスト中 · %2$sのままにしてください · %3$sでキャンセル</string>
+    <string name="devices_link_portal_confirming">%1$sを確認中 · %2$sのままにしてください · %3$sでキャンセル</string>
+    <string name="devices_link_done">%1$sの通信速度は%2$sです</string>
+    <string name="devices_link_done_jitter">%1$sの通信速度は%2$sです（ゆらぎが少しあります）</string>
+    <string name="devices_link_stopped">回線テストを中止しました</string>
+
+    <string name="devices_address_title">PCのアドレスを入力</string>
+    <string name="devices_address_note">Vibepolloを実行するPCのIPアドレスまたはホスト名です。ポートも指定できます。</string>
+    <string name="devices_address_action">PCを追加</string>
+    <string name="devices_address_required">アドレスを入力してください</string>
+    <string name="devices_address_looking">%1$sを検索中…</string>
+    <string name="devices_address_not_added">%1$sから応答がありましたが、追加できませんでした</string>
+    <string name="devices_add_not_an_address">「%1$s」はアドレスではありません</string>
+    <string name="devices_add_no_answer">%1$sのPCから応答がありません</string>
+
+    <string name="devices_rename_title">PCの名前を変更</string>
+    <string name="devices_rename_note">新しい名前は、この端末のDelosでのみ使われます。空欄にすると、PC本来の名前（%1$s）になります。</string>
+    <string name="devices_rename_action">保存</string>
+    <string name="devices_rename_reset_toast">%1$sに戻しました</string>
+    <string name="devices_rename_done_toast">%1$sに変更しました</string>
+
+    <string name="devices_wake_sent_toast">%1$sに起動信号を送信しました</string>
+    <string name="devices_wake_unsupported">%1$sはここから起動できません</string>
+    <string name="devices_wake_failed">起動信号を送信できませんでした</string>
+    <string name="devices_removed_toast">%1$sを削除しました</string>
+    <string name="devices_default_set_toast">Delosを%1$sで起動します</string>
+    <string name="devices_default_cleared_toast">既定のデバイスはありません</string>
+    <string name="devices_unpaired">%1$sとのペアリングを解除しました</string>
+    <string name="devices_unpair_offline">ペアリングを解除するには、%1$sがオンラインである必要があります</string>
+    <string name="devices_unpair_not_paired">%1$sはペアリングされていません</string>
+    <string name="devices_unpair_failed">%1$sのペアリングを解除できませんでした</string>
+    <string name="devices_unreachable">%1$sに接続できません</string>
+    <string name="devices_starting">Delosはまだ起動中です。もう一度お試しください</string>
+</resources>

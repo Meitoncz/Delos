@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="link_transport_other">このネットワーク</string>
+
+    <string name="link_age_just_now">たった今</string>
+    <plurals name="link_age_minutes">
+        <item quantity="other">%d分前</item>
+    </plurals>
+    <plurals name="link_age_hours">
+        <item quantity="other">%d時間前</item>
+    </plurals>
+    <string name="link_age_yesterday">昨日</string>
+    <plurals name="link_age_days">
+        <item quantity="other">%d日前</item>
+    </plurals>
+    <plurals name="link_age_weeks">
+        <item quantity="other">%d週間前</item>
+    </plurals>
+    <plurals name="link_age_months">
+        <item quantity="other">%dか月前</item>
+    </plurals>
+    <string name="link_tested_summary">%2$sでテスト済み（%1$s）</string>
+
+    <string name="link_reason_untested">この回線では未テスト</string>
+    <string name="link_reason_tested_ok">回線は最大%1$sまで対応</string>
+    <string name="link_reason_tested_limited">回線の通信速度は%1$s</string>
+    <string name="link_reason_host_limited">PC側の回線は%1$s</string>
+    <string name="link_reason_dropping">%1$sでフレームが欠落</string>
+    <string name="link_recommended_line">推奨：%1$s · %2$s</string>
+    <string name="link_value_reason">%1$s · %2$s</string>
+    <string name="link_recommended_plain">推奨：%1$d Mbps</string>
+
+    <string name="link_test_action">回線をテスト</string>
+    <string name="link_test_row_untested">%1$sではまだテストしていません</string>
+    <string name="link_help_untested">%1$sでは未テストです。「回線をテスト」で通信速度を測定します。</string>
+    <string name="link_help_joined">%1$s：%2$s</string>
+    <string name="link_help_tested_ok">最大%1$sまで対応しており、%3$sには%2$sで十分です。</string>
+    <string name="link_help_host_limited">通信速度は%1$sで、%2$sの上限はPC自身の回線です。</string>
+    <string name="link_help_limited">通信速度は%1$sですが、%2$sには%3$sが必要です。</string>
+    <string name="link_help_limited_picture">通信速度は%1$sですが、%2$sには%3$sが必要です。FECとオーバーヘッドを除くと、映像に使えるのは約%4$sです。</string>
+    <string name="link_pc_offline_toast">%1$sはオフラインです</string>
+    <string name="link_test_detail">このネットワークで%1$sから転送できる速度を測定します。1ステップにつき約2秒、最大数百Mbpsのテストトラフィックを流します。%2$sのまま、ほかの通信は止めてください。</string>
+    <string name="link_use_action">推奨ビットレートを使用</string>
+    <string name="link_use_done_toast">ビットレートを%1$sに設定しました</string>
+    <string name="link_use_detail">ビットレートを%1$sに設定します（%2$s）。Delosがビットレートを自動で変更することはありません。</string>
+
+    <string name="link_unavailable_newer_delos">このPCで回線テストを行うには、より新しいDelosが必要です。</string>
+    <string name="link_unavailable_host_outdated">このPCのVibepolloはまだ回線テストに対応していません。アップデートしてください。</string>
+
+    <string name="link_stream_help_dropping">この回線では%1$sでフレームが欠落します。Aでスライダーに入力し、適用で送信します。</string>
+    <string name="link_stream_help_dropping_untested">この回線では%1$sでフレームが欠落します。Aでスライダーに入力し、適用で送信します。接続前に、設定で回線をテストしてください。</string>
+    <string name="link_stream_help_tested">%1$s。Aでスライダーに入力し、適用で送信します。</string>
+    <string name="link_stream_help_untested">未テストです。Aでスライダーに入力し、適用で送信します。接続前に、設定で回線をテストしてください。</string>
+
+    <string name="link_reading_measuring">測定中</string>
+    <string name="link_reading_keeps_up">回線は%1$sで問題ありません</string>
+    <string name="link_reading_drops">回線は%1$sでフレームが欠落します。%2$sを試してください</string>
+    <string name="link_reading_device_behind">端末側でフレームを飛ばしています。回線は問題ありません</string>
+
+    <string name="link_failure_host_unsupported">このPCのVibepolloは回線テストに対応していません。アップデートしてください。</string>
+    <string name="link_failure_stream_active">PCがストリーミング中です。ストリームを停止してから、もう一度テストしてください。</string>
+    <string name="link_failure_denied">PCがテストを許可しませんでした。この端末をもう一度ペアリングしてください。</string>
+    <string name="link_failure_udp_blocked">テストデータが届きませんでした。このネットワークでUDPがブロックされている可能性があります。</string>
+    <string name="link_failure_network">DelosがPCに接続できませんでした。</string>
+    <string name="link_failure_timeout">PCが時間内にテストを完了しませんでした。</string>
+    <string name="link_failure_host_error">PCがテストを実行できませんでした。</string>
+    <string name="link_failure_invalid_response">PCから使用できないテスト結果が送られてきました。</string>
+    <string name="link_failure_not_connected">Delosはまだ%1$sに接続中です。</string>
+
+    <string name="link_verdict_receiver_suspect">この端末は%1$sの速度では受信できませんでした</string>
+    <string name="link_verdict_loss">%2$sでテストパケットの%1$.1f%%が失われました</string>
+    <string name="link_verdict_window_loss">%2$sで100ミリ秒間に最大%1$.1f%%のパケットが失われました</string>
+    <string name="link_verdict_delay_growth">%1$sで遅延が増え続けました（回線に滞留が発生）</string>
+    <string name="link_verdict_no_packets">テストデータが届きませんでした。このネットワークでUDPがブロックされている可能性があります</string>
+    <string name="link_verdict_not_all_sent">%2$sでPCが送ったテストデータは%1$.1f%%だけでした</string>
+    <string name="link_verdict_sender_duration">テスト中のPC側のタイミングがずれていました</string>
+    <string name="link_verdict_passed">%1$sで合格</string>
+    <string name="link_verdict_stable">安定</string>
+    <string name="link_verdict_stable_jitter">安定（ゆらぎが少しあります）</string>
+    <string name="link_verdict_no_rate_tested">テストできる速度がありませんでした</string>
+    <string name="link_no_rate_passed_once">%1$s。%2$sは一度合格しましたが、維持できませんでした。</string>
+    <string name="link_no_rate_nothing_passed">%1$s。%2$sまで下げても合格しませんでした。</string>
+    <string name="link_no_rate_plain">%1$s。</string>
+</resources>

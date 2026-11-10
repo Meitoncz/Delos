@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="firstrun_boot_tagline">VibepolloからあなたのPCゲームを、手元にストリーミング</string>
+    <string name="firstrun_boot_begin">はじめる</string>
+    <string name="firstrun_boot_skip">ホームへスキップ</string>
+    <string name="firstrun_create_new_title">だれがプレイしますか？</string>
+    <string name="firstrun_create_new_note">プロフィールのアバターと名前を選んでください。</string>
+    <string name="firstrun_create_edit_title">アバターを選択</string>
+    <string name="firstrun_create_edit_note">名前も変更できます。</string>
+    <string name="firstrun_create_name_title">プロフィール名</string>
+    <string name="firstrun_create_name_label">プロフィール名</string>
+    <string name="firstrun_create_name_placeholder">あなたの名前</string>
+    <string name="firstrun_create_default_name">プレイヤー</string>
+    <string name="firstrun_create_change_name">名前を変更</string>
+    <string name="firstrun_create_save">保存</string>
+    <string name="firstrun_create_create">プロフィールを作成</string>
+    <string name="firstrun_avatar_sailor">セーラー</string>
+    <string name="firstrun_avatar_voyager">ボイジャー</string>
+    <string name="firstrun_avatar_player">プレイヤー</string>
+    <string name="firstrun_avatar_fox">キツネ</string>
+    <string name="firstrun_avatar_spark">スパーク</string>
+    <string name="firstrun_avatar_calm">おだやか</string>
+    <string name="firstrun_avatar_knight">ナイト</string>
+    <string name="firstrun_avatar_robot">ロボット</string>
+    <string name="firstrun_avatar_cat">ネコ</string>
+    <string name="firstrun_avatar_wizard">ウィザード</string>
+    <string name="firstrun_avatar_racer">レーサー</string>
+    <string name="firstrun_avatar_ghost">ゴースト</string>
+</resources>

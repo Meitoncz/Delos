@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="filters_title">ライブラリをフィルター</string>
+    <plurals name="filters_result_active">
+        <item quantity="other">%2$d本中%1$d本</item>
+    </plurals>
+    <plurals name="filters_result_all">
+        <item quantity="other">全%1$d本</item>
+    </plurals>
+    <string name="filters_hint">フィルター</string>
+    <plurals name="filters_hint_active">
+        <item quantity="other">フィルター • %1$d件適用中</item>
+    </plurals>
+    <string name="filters_section_genre">ジャンル</string>
+    <string name="filters_section_theme">テーマ</string>
+    <string name="filters_section_hdr">HDR対応</string>
+    <string name="filters_section_duration">プレイ時間（HowLongToBeat）</string>
+    <string name="filters_all">すべて</string>
+    <string name="filters_hdr_any">すべて</string>
+    <string name="filters_hdr_hdr">ネイティブHDR</string>
+    <string name="filters_length_any">指定なし</string>
+    <string name="filters_length_under_10">&lt;10時間</string>
+    <string name="filters_length_10_30">10〜30時間</string>
+    <string name="filters_length_30_60">30〜60時間</string>
+    <string name="filters_length_over_60">60時間以上</string>
+    <string name="filters_length_unknown">不明</string>
+    <string name="filters_reset">リセット</string>
+    <string name="filters_done">完了</string>
+
+    <string name="filters_art_title">アートワークをフィルター</string>
+    <string name="filters_art_reset">フィルターをリセット</string>
+    <string name="filters_art_done">完了</string>
+    <string name="filters_art_row_type">種類</string>
+    <string name="filters_art_row_style">スタイル</string>
+    <string name="filters_art_row_dimensions">サイズ</string>
+    <string name="filters_art_row_sort">並べ替え</string>
+    <string name="filters_art_any">指定なし</string>
+    <string name="filters_art_type_all">すべて</string>
+    <string name="filters_art_type_static">静止画</string>
+    <string name="filters_art_type_animated">アニメーション</string>
+    <string name="filters_art_sort_score">スコア順</string>
+    <string name="filters_art_sort_newest">新しい順</string>
+    <string name="filters_art_sort_oldest">古い順</string>
+    <string name="filters_art_sort_score_chip">並べ替え：スコア順</string>
+    <string name="filters_art_sort_newest_chip">並べ替え：新しい順</string>
+    <string name="filters_art_sort_oldest_chip">並べ替え：古い順</string>
+    <string name="filters_art_sort_score_first">スコアの高い順</string>
+    <string name="filters_art_sort_newest_first">新しいものから</string>
+    <string name="filters_art_sort_oldest_first">古いものから</string>
+    <string name="filters_art_style_alternate">別バージョン</string>
+    <string name="filters_art_style_blurred">ぼかし</string>
+    <string name="filters_art_style_white_logo">白いロゴ</string>
+    <string name="filters_art_style_material">マテリアル</string>
+    <string name="filters_art_style_no_logo">ロゴなし</string>
+    <string name="filters_art_style_official">公式</string>
+    <string name="filters_art_style_white">白</string>
+    <string name="filters_art_style_black">黒</string>
+    <string name="filters_art_style_custom">カスタム</string>
+    <string name="filters_art_chips_reset">リセット</string>
+    <string name="filters_art_reset_toast">フィルターをリセットしました</string>
+    <string name="filters_art_change">フィルターを変更</string>
+</resources>
