@@ -391,7 +391,7 @@ fun DebugInfoScreen() {
             }, res.getString(R.string.debug_gain_description)))
             add(DebugRow("rumble_curve", DebugSection.RUMBLE_ADVANCED, Symbols.CURVE, res.getString(R.string.debug_curve_label), RowValue.Slider((profile.curve * 100).roundToInt(), 50, 300, 1, "%") {
                 updateProfile(RumbleTranslator.Profile(profile.gain, it / 100f, profile.minAmplitude, profile.kickMs, profile.lowWeight, profile.highWeight, profile.smoothing))
-            }, res.getString(R.string.debug_curve_description)))
+            }, res.getString(R.string.debug_curve_description, 100)))
             add(DebugRow("rumble_min", DebugSection.RUMBLE_ADVANCED, Symbols.MIN_AMPLITUDE, res.getString(R.string.debug_min_label), RowValue.Slider(profile.minAmplitude, 0, 255, 1, "") {
                 updateProfile(RumbleTranslator.Profile(profile.gain, profile.curve, it, profile.kickMs, profile.lowWeight, profile.highWeight, profile.smoothing))
             }, res.getString(R.string.debug_min_description)))

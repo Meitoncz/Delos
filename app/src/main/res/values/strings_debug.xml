@@ -133,7 +133,8 @@
     <string name="debug_gain_label">Gain</string>
     <string name="debug_gain_description">Overall rumble multiplier, 50–300%. Changing a parameter stops the current pattern.</string>
     <string name="debug_curve_label">Curve</string>
-    <string name="debug_curve_description">Response exponent: below 100% boosts weak rumble; above 100% softens it.</string>
+    <!-- %1$d: the neutral value, 100 -->
+    <string name="debug_curve_description">Response exponent: below %1$d%% boosts weak rumble; above %1$d%% softens it.</string>
     <string name="debug_min_label">Minimum amplitude</string>
     <string name="debug_min_description">Minimum output for a nonzero host request. Zero input remains silent.</string>
     <string name="debug_kick_label">Start kick</string>
