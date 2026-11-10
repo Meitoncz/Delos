@@ -240,7 +240,9 @@ public final class StreamPointerHandler {
         // Not in global mode and the touch is not on the right half: leave it unchanged. The pointer's offset is
         // forgotten, so that it starts afresh when it comes back instead of jumping by the way it went meanwhile.
         if(!sensitiveSide){
-            sensitivityMap.remove(String.valueOf(event.getPointerId(pointerIndex)));
+            if(!sensitivityMap.isEmpty()){
+                sensitivityMap.remove(String.valueOf(event.getPointerId(pointerIndex)));
+            }
             return normalized;
         }
         if (event.getActionMasked() == MotionEvent.ACTION_MOVE) {
