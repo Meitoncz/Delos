@@ -9,6 +9,8 @@ import static org.mockito.Mockito.mock;
 
 import android.content.Context;
 
+import androidx.preference.PreferenceManager;
+
 import com.limelight.binding.input.capture.InputCaptureProvider;
 import com.limelight.binding.input.touch.AbsoluteTouchContext;
 import com.limelight.binding.input.touch.RelativeTouchContext;
@@ -147,5 +149,41 @@ public class MouseModeControllerTest {
         assertFalse(modes.isChangeAllowed());
         assertEquals(2, modes.getActiveMouseMode());
         assertContexts(TrackpadContext.class);
+    }
+
+    @Test
+    public void aSavedValueThatIsNoModeIsTheDefaultMode() {
+        for (int mode = 0; mode <= 5; mode++) {
+            assertEquals(mode, MouseModeController.savedMouseMode(String.valueOf(mode)));
+        }
+        assertEquals(MouseModeController.DEFAULT_MOUSE_MODE, MouseModeController.savedMouseMode("6"));
+        assertEquals(MouseModeController.DEFAULT_MOUSE_MODE, MouseModeController.savedMouseMode("-1"));
+        assertEquals(MouseModeController.DEFAULT_MOUSE_MODE, MouseModeController.savedMouseMode("trackpad"));
+        assertEquals(MouseModeController.DEFAULT_MOUSE_MODE, MouseModeController.savedMouseMode(""));
+    }
+
+    @Test
+    public void anOutOfRangeSavedModeStartsTheStreamInTheDefaultMode() {
+        PreferenceManager.getDefaultSharedPreferences(context).edit().putString("mouse_mode_list", "9").commit();
+        // What the preferences left behind must not decide the touch contexts
+        prefs.enableMultiTouchScreen = false;
+        prefs.touchscreenTrackpad = true;
+
+        modes.initMouseMode();
+
+        assertEquals(MouseModeController.DEFAULT_MOUSE_MODE, modes.getActiveMouseMode());
+        assertTrue(prefs.enableMultiTouchScreen);
+        assertFalse(prefs.touchscreenTrackpad);
+        assertContexts(AbsoluteTouchContext.class);
+    }
+
+    @Test
+    public void aSavedModeStartsTheStream() {
+        PreferenceManager.getDefaultSharedPreferences(context).edit().putString("mouse_mode_list", "3").commit();
+
+        modes.initMouseMode();
+
+        assertEquals(3, modes.getActiveMouseMode());
+        assertContexts(RelativeTouchContext.class);
     }
 }

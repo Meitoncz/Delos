@@ -22,6 +22,10 @@ public final class MouseModeController {
     private static final int REFERENCE_HORIZ_RES = 1280;
     private static final int REFERENCE_VERT_RES = 720;
 
+    /** Multi-touch, the default of the {@code mouse_mode_list} preference. */
+    static final int DEFAULT_MOUSE_MODE = 0;
+    private static final int LAST_MOUSE_MODE = 5;
+
     /** What the mouse mode needs from the stream activity. */
     public interface Host {
         NvConnection conn();
@@ -86,12 +90,7 @@ public final class MouseModeController {
                 .getOverlayingSharedPreferences(context)
                 .getString("mouse_mode_list", "0");
 
-        int savedMouseModeIndex;
-        try {
-            savedMouseModeIndex = Integer.parseInt(savedMouseModeIndexStr);
-        } catch (NumberFormatException e) {
-            savedMouseModeIndex = 0;
-        }
+        int savedMouseModeIndex = savedMouseMode(savedMouseModeIndexStr);
 
         String savedMouseModeString = (savedMouseModeIndex >= 0 && savedMouseModeIndex < mouseModes.length)
                 ? mouseModes[savedMouseModeIndex]
@@ -123,9 +122,28 @@ public final class MouseModeController {
         }
     }
 
+    /**
+     * The mode a saved {@code mouse_mode_list} value stands for. A value that is no mode (a damaged or imported
+     * profile) is the default mode: applied as it is, it would leave the touch contexts on whatever flags the
+     * last mode set.
+     */
+    static int savedMouseMode(String saved) {
+        int mode;
+        try {
+            mode = Integer.parseInt(saved);
+        } catch (NumberFormatException e) {
+            return DEFAULT_MOUSE_MODE;
+        }
+        return isKnownMode(mode) ? mode : DEFAULT_MOUSE_MODE;
+    }
+
+    private static boolean isKnownMode(int mode) {
+        return mode >= 0 && mode <= LAST_MOUSE_MODE;
+    }
+
     /** Delos: the native stream menu reuses the same mode and persistence rules as the old chooser. */
     public void setStreamMouseMode(int mode) {
-        if (mode < 0 || mode > 5 || (host.isOnExternalDisplay() && mode != 2 && mode != 3 && mode != 4)) return;
+        if (!isKnownMode(mode) || (host.isOnExternalDisplay() && mode != 2 && mode != 3 && mode != 4)) return;
         applyMouseMode(mode);
         if (prefConfig.rememberMouseMode) {
             ProfilesManager.getInstance().getOverlayingSharedPreferences(context).edit()
