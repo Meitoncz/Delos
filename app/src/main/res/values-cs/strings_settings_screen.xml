@@ -29,6 +29,12 @@
     </plurals>
     <string name="settings_screen_search_none">Žádné odpovídající nastavení</string>
 
+    <!-- Další hledaná slova (synonyma) k nastavení, oddělená mezerami; nezobrazují se -->
+    <string name="settings_search_alias_motion_sensors">pohybové senzory gyroskop</string>
+    <string name="settings_search_alias_gyro_smoothing">gyroskop stabilizace vyhlazení</string>
+    <string name="settings_search_alias_link_test">test rychlosti propustnost šířka pásma síť</string>
+    <string name="settings_search_alias_link_use">doporučený bitrate spojení</string>
+
     <!-- Settings actions (import, export, reset) -->
     <string name="settings_actions_imported">Importováno</string>
     <string name="settings_actions_import_failed">Import se nezdařil</string>
@@ -45,7 +51,7 @@
     <string name="settings_actions_save">Uložit</string>
 
     <!-- On-screen controls preview (Debug info) -->
-    <string name="settings_osc_preview_note">Náhled ovládání na obrazovce · nic se neodesílá do PC · B = zpět</string>
+    <string name="settings_osc_preview_note">Náhled ovládání na obrazovce · nic se neodesílá do PC · %1$s = zpět</string>
 
     <!-- Native settings: section headings -->
     <string name="settings_native_section_interface">Rozhraní</string>
@@ -213,7 +219,7 @@
     <string name="settings_game_eyebrow">Nastavení hry · %1$s</string>
     <string name="settings_game_panel_title">Tvoje hra, tvoje nastavení</string>
     <string name="settings_game_custom_title">Vlastní pro tuto hru</string>
-    <string name="settings_game_profile_value_button">Hodnota z profilu: %1$s · stiskni X pro návrat k ní</string>
+    <string name="settings_game_profile_value_button">Hodnota z profilu: %1$s · stiskni %2$s pro návrat k ní</string>
     <string name="settings_game_profile_value_touch">Hodnota z profilu: %1$s · klepni na Resetovat pro návrat k ní</string>
     <string name="settings_game_currently">Aktuálně %1$s. Změnou nastavíš hodnotu jen pro tuto hru.</string>
     <string name="settings_game_only_this_game">Tyto změny platí jen pro hru %1$s. Všechno ostatní se řídí tvým profilem.</string>

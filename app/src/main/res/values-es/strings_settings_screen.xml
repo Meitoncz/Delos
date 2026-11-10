@@ -24,6 +24,12 @@
     </plurals>
     <string name="settings_screen_search_none">Ningún ajuste coincide</string>
 
+    <!-- Palabras de búsqueda adicionales (sinónimos) de un ajuste, separadas por espacios; nunca se muestran -->
+    <string name="settings_search_alias_motion_sensors">sensores de movimiento giroscopio</string>
+    <string name="settings_search_alias_gyro_smoothing">giroscopio estabilización suavizado</string>
+    <string name="settings_search_alias_link_test">prueba de velocidad rendimiento ancho de banda red</string>
+    <string name="settings_search_alias_link_use">bitrate recomendado conexión</string>
+
     <string name="settings_actions_imported">Importado</string>
     <string name="settings_actions_import_failed">Error al importar</string>
     <string name="settings_actions_file_open_failed">No se pudo abrir el archivo</string>
@@ -38,7 +44,7 @@
     <string name="settings_actions_no_app_for_link">Ninguna app puede abrir este enlace</string>
     <string name="settings_actions_save">Guardar</string>
 
-    <string name="settings_osc_preview_note">Vista previa de los controles en pantalla · no se envía nada a un PC · B para volver</string>
+    <string name="settings_osc_preview_note">Vista previa de los controles en pantalla · no se envía nada a un PC · %1$s para volver</string>
 
     <string name="settings_native_section_interface">Interfaz</string>
     <string name="settings_native_section_stream_menu">Menú del stream</string>
@@ -197,7 +203,7 @@
     <string name="settings_game_eyebrow">Ajustes del juego · %1$s</string>
     <string name="settings_game_panel_title">Tu juego, tus ajustes</string>
     <string name="settings_game_custom_title">Personalizado para este juego</string>
-    <string name="settings_game_profile_value_button">Valor del perfil: %1$s · pulsa X para volver a él</string>
+    <string name="settings_game_profile_value_button">Valor del perfil: %1$s · pulsa %2$s para volver a él</string>
     <string name="settings_game_profile_value_touch">Valor del perfil: %1$s · toca Restablecer para volver a él</string>
     <string name="settings_game_currently">Ahora es %1$s. Cámbialo para fijar un valor solo para este juego.</string>
     <string name="settings_game_only_this_game">Solo %1$s usa estos cambios. Todo lo demás sigue tu perfil.</string>

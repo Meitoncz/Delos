@@ -140,7 +140,7 @@ The motion rows of Controls → Gamepad keep their preference keys (stored value
 | `checkbox_force_device_motion` | Always use built-in device gyroscope (was *Always use device's motion sensors*) |
 | `seekbar_gyro_smoothing` | **Gyro smoothing**, 0 to 100 %, default 0 = off |
 
-Search still finds the rows by their old names (`RENAMED_SEARCH_TERMS` in `screens/NativeSettings.kt`). All four
+Search still finds the rows by their old names (the English aliases in `SearchAliases`, `screens/SettingsSearchAliases.kt`, next to the localized `settings_search_alias_*` synonyms). All four
 are per-game settings (Game settings, Stream tab, after the codec rows; `GameSettingsStore.GYRO_KEYS`), with the same hiding and
 enabling rules evaluated on the game's effective values. Gyro smoothing is hidden where there is no motion source at all (below Android 12 without an
 accelerometer or gyroscope feature; `SettingsCapabilities.motionHiddenKeys`) and disabled while both the external and the

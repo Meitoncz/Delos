@@ -25,6 +25,12 @@
     </plurals>
     <string name="settings_screen_search_none">Нічого не знайдено</string>
 
+    <!-- Додаткові слова для пошуку (синоніми) налаштування, розділені пробілами; вони ніколи не показуються -->
+    <string name="settings_search_alias_motion_sensors">датчики руху гіроскоп</string>
+    <string name="settings_search_alias_gyro_smoothing">гіроскоп стабілізація згладжування</string>
+    <string name="settings_search_alias_link_test">тест швидкості пропускна здатність мережа</string>
+    <string name="settings_search_alias_link_use">рекомендований бітрейт з’єднання</string>
+
     <string name="settings_actions_imported">Імпортовано</string>
     <string name="settings_actions_import_failed">Не вдалося імпортувати</string>
     <string name="settings_actions_file_open_failed">Не вдалося відкрити файл</string>
@@ -39,7 +45,7 @@
     <string name="settings_actions_no_app_for_link">Жоден застосунок не може відкрити це посилання</string>
     <string name="settings_actions_save">Зберегти</string>
 
-    <string name="settings_osc_preview_note">Перегляд екранних елементів керування · на ПК нічого не надсилається · B, щоб вийти</string>
+    <string name="settings_osc_preview_note">Перегляд екранних елементів керування · на ПК нічого не надсилається · %1$s, щоб вийти</string>
 
     <string name="settings_native_section_interface">Інтерфейс</string>
     <string name="settings_native_section_stream_menu">Меню стріму</string>
@@ -200,7 +206,7 @@
     <string name="settings_game_eyebrow">Налаштування гри · %1$s</string>
     <string name="settings_game_panel_title">Твоя гра, твої налаштування</string>
     <string name="settings_game_custom_title">Власні для цієї гри</string>
-    <string name="settings_game_profile_value_button">Значення профілю: %1$s · натисни X, щоб повернути</string>
+    <string name="settings_game_profile_value_button">Значення профілю: %1$s · натисни %2$s, щоб повернути</string>
     <string name="settings_game_profile_value_touch">Значення профілю: %1$s · торкнись Скинути, щоб повернути</string>
     <string name="settings_game_currently">Зараз %1$s. Зміни, щоб задати значення лише для цієї гри.</string>
     <string name="settings_game_only_this_game">Ці зміни стосуються лише %1$s. Усе інше — як у профілі.</string>

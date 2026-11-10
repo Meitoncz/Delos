@@ -30,6 +30,12 @@
     </plurals>
     <string name="settings_screen_search_none">Keine passenden Einstellungen</string>
 
+    <!-- Zusätzliche Suchwörter (Synonyme) einer Einstellung, durch Leerzeichen getrennt; sie werden nie angezeigt -->
+    <string name="settings_search_alias_motion_sensors">Bewegungssensoren Gyroskop</string>
+    <string name="settings_search_alias_gyro_smoothing">Gyroskop Stabilisierung Glättung</string>
+    <string name="settings_search_alias_link_test">Geschwindigkeitstest Durchsatz Bandbreite Netzwerk</string>
+    <string name="settings_search_alias_link_use">empfohlene Bitrate Verbindung</string>
+
     <!-- Settings actions (import, export, reset) -->
     <string name="settings_actions_imported">Importiert</string>
     <string name="settings_actions_import_failed">Import fehlgeschlagen</string>
@@ -46,7 +52,7 @@
     <string name="settings_actions_save">Speichern</string>
 
     <!-- On-screen controls preview (Debug info) -->
-    <string name="settings_osc_preview_note">Vorschau der Bildschirmsteuerung · es wird nichts an einen PC gesendet · B zum Zurückgehen</string>
+    <string name="settings_osc_preview_note">Vorschau der Bildschirmsteuerung · es wird nichts an einen PC gesendet · %1$s zum Zurückgehen</string>
 
     <!-- Native settings: section headings -->
     <string name="settings_native_section_interface">Oberfläche</string>
@@ -219,7 +225,7 @@
     <string name="settings_game_panel_title">Dein Spiel, deine Einstellungen</string>
     <string name="settings_game_custom_title">Eigene für dieses Spiel</string>
     <!-- %1$s: the profile's value, shown in bold. "X" is the controller's X button -->
-    <string name="settings_game_profile_value_button">Profilwert: %1$s · mit X zurückkehren</string>
+    <string name="settings_game_profile_value_button">Profilwert: %1$s · mit %2$s zurückkehren</string>
     <!-- %1$s: the profile's value, shown in bold -->
     <string name="settings_game_profile_value_touch">Profilwert: %1$s · mit Zurücksetzen zurückkehren</string>
     <!-- %1$s: the value the setting has now, shown in bold -->

@@ -19,7 +19,17 @@
     <string name="settings_screen_search_title">Find a setting</string>
     <string name="settings_screen_search_hint">Pick letters with the controller, or select the field to type</string>
     <string name="settings_screen_search_placeholder">Search all settings</string>
-    <!-- The keys of the on-screen letter picker, nine to a row: the alphabet of the language, then the digits. Each character once. -->
+    <!--
+        The keys of the on-screen letter picker: the alphabet of the language, then the digits. Each character once. Nine keys to a
+        row; a language with more than 54 keys gets more, slightly smaller keys so that six rows are enough (Czech has 52).
+        The search compares letters as typed, so a language whose titles are not written in its picker letters says how here:
+        Japanese: the 46 basic hiragana in gojuon order, then the digits. Katakana titles are found through hiragana (the search
+        folds katakana to hiragana and ignores dakuten, small kana and the long-vowel mark) and kanji titles through a built-in
+        table of readings.
+        Korean: the 14 initial consonants (choseong) ㄱ ㄴ ㄷ ㄹ ㅁ ㅂ ㅅ ㅇ ㅈ ㅊ ㅋ ㅌ ㅍ ㅎ, then A-Z and the digits. A query of them finds
+        the titles whose syllables start with those consonants in that order (ㅎㅅㄷ finds 해상도).
+        Simplified Chinese: A-Z and the digits. Besides Latin text, the letters match the pinyin initials of the title (sz finds 设置).
+    -->
     <string name="settings_screen_search_letters">ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789</string>
     <string name="settings_screen_search_space">Space</string>
     <string name="settings_screen_search_delete">Delete</string>
@@ -29,6 +39,12 @@
         <item quantity="other">%d settings</item>
     </plurals>
     <string name="settings_screen_search_none">No matching settings</string>
+
+    <!-- Extra search words (synonyms) of a settings row, separated by spaces; they are never shown. The English synonyms stay searchable in every language, so write the words a player of your language would type. -->
+    <string name="settings_search_alias_motion_sensors">motion sensors gyroscope</string>
+    <string name="settings_search_alias_gyro_smoothing">gyroscope stabilization smoothing</string>
+    <string name="settings_search_alias_link_test">speed test throughput bandwidth network</string>
+    <string name="settings_search_alias_link_use">recommended bitrate connection</string>
 
     <!-- Settings actions (import, export, reset) -->
     <string name="settings_actions_imported">Imported</string>
@@ -46,7 +62,8 @@
     <string name="settings_actions_save">Save</string>
 
     <!-- On-screen controls preview (Debug info) -->
-    <string name="settings_osc_preview_note">On-screen controls preview · nothing is sent to a PC · B to go back</string>
+    <!-- %1$s: the name of the controller's B button -->
+    <string name="settings_osc_preview_note">On-screen controls preview · nothing is sent to a PC · %1$s to go back</string>
 
     <!-- Native settings: section headings -->
     <string name="settings_native_section_interface">Interface</string>
@@ -220,8 +237,8 @@
     <string name="settings_game_eyebrow">Game settings · %1$s</string>
     <string name="settings_game_panel_title">Your game, your settings</string>
     <string name="settings_game_custom_title">Custom for this game</string>
-    <!-- %1$s: the profile's value, shown in bold. "X" is the controller's X button -->
-    <string name="settings_game_profile_value_button">Profile value: %1$s · press X to go back to it</string>
+    <!-- %1$s: the profile's value, shown in bold. %2$s: the name of the controller's X button -->
+    <string name="settings_game_profile_value_button">Profile value: %1$s · press %2$s to go back to it</string>
     <!-- %1$s: the profile's value, shown in bold -->
     <string name="settings_game_profile_value_touch">Profile value: %1$s · tap Reset to go back to it</string>
     <!-- %1$s: the value the setting has now, shown in bold -->

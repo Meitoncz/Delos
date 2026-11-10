@@ -56,25 +56,23 @@ internal data class SettingsItem(
     val impact: SettingImpact? = null,
 )
 
-/** The choice names a setting can be found by, besides its own texts. */
+/** The choice names and the alias words (English and localized, see [SearchAliases]) a setting can be found by, besides its own texts. */
 internal fun settingSearchTerms(res: Resources, spec: SettingSpec): String =
-    (spec.choices.map { "${it.label} ${SettingsHelp.choice(res, spec.key, it.value)}" } + listOfNotNull(RENAMED_SEARCH_TERMS[spec.key]))
+    (spec.choices.map { "${it.label} ${SettingsHelp.choice(res, spec.key, it.value)}" } + listOfNotNull(SearchAliases.terms(res, spec.key).ifEmpty { null }))
         .joinToString(" ")
 
-/** The earlier names of renamed rows, so searching for them still finds the row. */
-private val RENAMED_SEARCH_TERMS = mapOf(
-    "checkbox_gamepad_motion_sensors" to "allow use of gamepad motion sensors motion sensor",
-    "checkbox_gamepad_motion_fallback" to "emulate gamepad motion sensor support motion sensors",
-    "checkbox_force_device_motion" to "always use device's motion sensors motion sensors",
-    "seekbar_gyro_smoothing" to "gyroscope stabilisation stabilization motion sensors",
-)
-
-/** The settings whose texts contain every word of [query], in any order and case. */
+/**
+ * The settings whose texts contain every word of [query], in any order and case. Kana, Hangul initials and pinyin initials
+ * match too, so the letter picker of Japanese, Korean and Chinese reaches every title (see [SearchText]).
+ */
 internal fun searchSettings(res: Resources, items: List<SettingsItem>, query: String): List<SettingsItem> {
     val words = query.trim().lowercase(Locale.ROOT).split(Regex("\\s+"))
+    val language = res.configuration.locales.get(0).language
     return items.filter { item ->
-        val text = "${item.label} ${item.description} ${item.detail} ${item.searchTerms} ${item.section} ${item.tab.label(res)}".lowercase(Locale.ROOT)
-        words.all { text.contains(it) }
+        val tab = item.tab.label(res)
+        val text = "${item.label} ${item.description} ${item.detail} ${item.searchTerms} ${item.section} $tab"
+        val matcher = SearchText.matcher(text, "${item.label} ${item.section} $tab", language)
+        words.all { matcher.matches(it) }
     }
 }
 
@@ -141,7 +139,7 @@ internal fun nativeSettings(
     row("ui_sounds", Symbols.MUSIC_NOTE, res.getString(R.string.settings_native_sounds_title), RowValue.Toggle(a.sounds) { on -> update { it.copy(sounds = on) } },
         res.getString(R.string.settings_native_sounds_description), tab = SettingsTab.AUDIO)
     val menuButtons = StreamMenuSettings.buttons(settings)
-    row("ui_stream_menu_buttons", Symbols.STREAM_MENU_BUTTONS, res.getString(R.string.settings_native_menu_buttons_title), RowValue.Text(StreamMenuSettings.label(menuButtons)) {
+    row("ui_stream_menu_buttons", Symbols.STREAM_MENU_BUTTONS, res.getString(R.string.settings_native_menu_buttons_title), RowValue.Text(StreamMenuSettings.label(res, menuButtons)) {
         shell.buttonCapture = { buttons -> StreamMenuSettings.setButtons(settings, buttons) }
     }, res.getString(R.string.settings_native_menu_buttons_description),
         tab = SettingsTab.CONTROLS, section = streamMenuSection)

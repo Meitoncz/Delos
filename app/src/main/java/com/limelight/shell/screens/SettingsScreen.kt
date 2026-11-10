@@ -447,11 +447,14 @@ private fun SettingsSearch(all: List<SettingsItem>, scale: Float) {
         Row(horizontalArrangement = Arrangement.spacedBy(70.px), modifier = Modifier.weight(1f)) {
             Column(Modifier.width(820.px), verticalArrangement = Arrangement.spacedBy(18.px)) {
                 TextFieldPill(field, Symbols.SEARCH, placeholder = stringResource(R.string.settings_screen_search_placeholder), maxLength = 80, width = 790f)
-                Column(Modifier.padding(top = 16.px), verticalArrangement = Arrangement.spacedBy(12.px)) {
-                    stringResource(R.string.settings_screen_search_letters).chunked(9).forEachIndexed { row, letters ->
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.px)) {
+                Column(Modifier.padding(top = 16.px), verticalArrangement = Arrangement.spacedBy(LetterPicker.GAP.px)) {
+                    // Nine keys to a row; a language with more than six rows of keys (Japanese kana) gets more, slightly smaller ones
+                    val keys = stringResource(R.string.settings_screen_search_letters)
+                    val columns = LetterPicker.columns(keys.length)
+                    keys.chunked(columns).forEachIndexed { row, letters ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(LetterPicker.GAP.px)) {
                             letters.forEachIndexed { col, letter ->
-                                LetterKey(letter.toString(), if (row == 0 && col == 0) Modifier.focusRequester(first) else Modifier) { field.setTextAndPlaceCursorAtEnd((query + letter.lowercaseChar()).take(80)) }
+                                LetterKey(letter.toString(), LetterPicker.keySize(columns), if (row == 0 && col == 0) Modifier.focusRequester(first) else Modifier) { field.setTextAndPlaceCursorAtEnd((query + letter.lowercaseChar()).take(80)) }
                             }
                         }
                     }
@@ -500,10 +503,10 @@ private fun SettingsSearch(all: List<SettingsItem>, scale: Float) {
 }
 
 @Composable
-private fun LetterKey(letter: String, modifier: Modifier, click: () -> Unit) {
+private fun LetterKey(letter: String, size: Int, modifier: Modifier, click: () -> Unit) {
     val colors = LocalDelosColors.current
     var focused by remember { mutableStateOf(false) }
-    Box(modifier.size(74.px).focusEffects(click, corner = 18f, focusScale = 1.06f, onFocusChange = { focused = it })
+    Box(modifier.size(size.px).focusEffects(click, corner = 18f, focusScale = 1.06f, onFocusChange = { focused = it })
         .clip(RoundedCornerShape(18.px)).background(if (focused) colors.surface2 else colors.surface), contentAlignment = Alignment.Center) {
         BasicText(letter, style = TextStyle(color = if (focused) colors.accent else colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 28.tpx))
     }

@@ -13,7 +13,8 @@
     <string name="settings_screen_search_title">설정 찾기</string>
     <string name="settings_screen_search_hint">컨트롤러로 글자를 고르거나, 입력란을 선택해 직접 입력하세요</string>
     <string name="settings_screen_search_placeholder">모든 설정 검색</string>
-    <string name="settings_screen_search_letters">ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789</string>
+    <!-- 초성 14개(ㄱ~ㅎ)와 A-Z, 숫자. 초성 검색: ㅎㅅㄷ은 해상도를 찾아요. -->
+    <string name="settings_screen_search_letters">ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789</string>
     <string name="settings_screen_search_space">스페이스</string>
     <string name="settings_screen_search_delete">삭제</string>
     <string name="settings_screen_search_clear">지우기</string>
@@ -21,6 +22,12 @@
         <item quantity="other">설정 %d개</item>
     </plurals>
     <string name="settings_screen_search_none">일치하는 설정이 없어요</string>
+
+    <!-- 설정의 추가 검색어(동의어). 공백으로 구분하며 화면에는 표시되지 않아요 -->
+    <string name="settings_search_alias_motion_sensors">모션 센서 자이로</string>
+    <string name="settings_search_alias_gyro_smoothing">자이로 안정화 스무딩</string>
+    <string name="settings_search_alias_link_test">속도 테스트 처리량 대역폭 네트워크</string>
+    <string name="settings_search_alias_link_use">권장 비트레이트 연결</string>
 
     <string name="settings_actions_imported">가져왔어요</string>
     <string name="settings_actions_import_failed">가져오지 못했어요</string>
@@ -36,7 +43,7 @@
     <string name="settings_actions_no_app_for_link">이 링크를 열 수 있는 앱이 없어요</string>
     <string name="settings_actions_save">저장</string>
 
-    <string name="settings_osc_preview_note">화면 컨트롤 미리보기 · PC로 아무것도 전송되지 않아요 · B로 뒤로 가기</string>
+    <string name="settings_osc_preview_note">화면 컨트롤 미리보기 · PC로 아무것도 전송되지 않아요 · %1$s로 뒤로 가기</string>
 
     <string name="settings_native_section_interface">인터페이스</string>
     <string name="settings_native_section_stream_menu">스트림 메뉴</string>
@@ -191,7 +198,7 @@
     <string name="settings_game_eyebrow">게임 설정 · %1$s</string>
     <string name="settings_game_panel_title">내 게임, 내 설정</string>
     <string name="settings_game_custom_title">이 게임 전용</string>
-    <string name="settings_game_profile_value_button">프로필 값: %1$s · X를 누르면 되돌려요</string>
+    <string name="settings_game_profile_value_button">프로필 값: %1$s · %2$s를 누르면 되돌려요</string>
     <string name="settings_game_profile_value_touch">프로필 값: %1$s · 초기화를 탭하면 되돌려요</string>
     <string name="settings_game_currently">현재 %1$s. 바꾸면 이 게임에만 값이 적용돼요.</string>
     <string name="settings_game_only_this_game">%1$s에서만 이 변경 사항을 사용해요. 나머지는 모두 프로필을 따라요.</string>

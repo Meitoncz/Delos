@@ -95,7 +95,7 @@ internal fun withLinkRows(
             },
             enabled = true,
             detail = res.getString(R.string.link_test_detail, pc.name, transport.label(res)) + "\n\n" + guidance.help(res, now, transport),
-            searchTerms = "bandwidth probe measure speed network wifi",
+            searchTerms = SearchAliases.terms(res, LINK_TEST_ROW),
         )
         val use = SettingsItem(
             LINK_USE_ROW, item.tab, item.section, Symbols.RECOMMEND, res.getString(R.string.link_use_action),
@@ -106,7 +106,7 @@ internal fun withLinkRows(
             },
             enabled = current != recommended.kbps,
             detail = res.getString(R.string.link_use_detail, mbps(recommended.kbps), recommended.reasonText(res)),
-            searchTerms = "recommended bitrate link",
+            searchTerms = SearchAliases.terms(res, LINK_USE_ROW),
         )
         listOf(item.copy(detail = item.detail + "\n\n" + guidance.help(res, now, transport)), test, use)
     }

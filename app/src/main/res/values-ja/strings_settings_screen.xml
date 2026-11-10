@@ -13,7 +13,8 @@
     <string name="settings_screen_search_title">設定を検索</string>
     <string name="settings_screen_search_hint">コントローラーで文字を選ぶか、欄を選んで入力してください</string>
     <string name="settings_screen_search_placeholder">すべての設定を検索</string>
-    <string name="settings_screen_search_letters">ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789</string>
+    <!-- 基本のひらがな46字（五十音順）と数字。カタカナの題名はひらがなに読み替えて、漢字の題名は内蔵の読み表で検索されます。 -->
+    <string name="settings_screen_search_letters">あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん0123456789</string>
     <string name="settings_screen_search_space">スペース</string>
     <string name="settings_screen_search_delete">削除</string>
     <string name="settings_screen_search_clear">クリア</string>
@@ -21,6 +22,12 @@
         <item quantity="other">%d件の設定</item>
     </plurals>
     <string name="settings_screen_search_none">一致する設定はありません</string>
+
+    <!-- 設定の追加の検索語（同義語）。空白で区切り、画面には表示されません -->
+    <string name="settings_search_alias_motion_sensors">モーションセンサー ジャイロ</string>
+    <string name="settings_search_alias_gyro_smoothing">ジャイロ 安定化 平滑化</string>
+    <string name="settings_search_alias_link_test">速度テスト スループット 帯域 ネットワーク</string>
+    <string name="settings_search_alias_link_use">推奨 ビットレート 接続</string>
 
     <string name="settings_actions_imported">インポートしました</string>
     <string name="settings_actions_import_failed">インポートに失敗しました</string>
@@ -36,7 +43,7 @@
     <string name="settings_actions_no_app_for_link">このリンクを開けるアプリがありません</string>
     <string name="settings_actions_save">保存</string>
 
-    <string name="settings_osc_preview_note">画面上のコントロールのプレビュー · PCには何も送信されません · Bで戻る</string>
+    <string name="settings_osc_preview_note">画面上のコントロールのプレビュー · PCには何も送信されません · %1$sで戻る</string>
 
     <string name="settings_native_section_interface">インターフェース</string>
     <string name="settings_native_section_stream_menu">ストリームメニュー</string>
@@ -191,7 +198,7 @@
     <string name="settings_game_eyebrow">ゲーム設定 · %1$s</string>
     <string name="settings_game_panel_title">ゲームごとに、自分好みの設定を</string>
     <string name="settings_game_custom_title">このゲーム専用</string>
-    <string name="settings_game_profile_value_button">プロフィールの値：%1$s · Xを押すと戻します</string>
+    <string name="settings_game_profile_value_button">プロフィールの値：%1$s · %2$sを押すと戻します</string>
     <string name="settings_game_profile_value_touch">プロフィールの値：%1$s · 「リセット」をタップすると戻します</string>
     <string name="settings_game_currently">現在の値：%1$s。変更すると、このゲームだけの値になります。</string>
     <string name="settings_game_only_this_game">この変更は%1$sだけに適用されます。ほかはすべてプロフィールに従います。</string>

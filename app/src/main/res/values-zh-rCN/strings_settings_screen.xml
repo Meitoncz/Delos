@@ -13,6 +13,7 @@
     <string name="settings_screen_search_title">查找设置项</string>
     <string name="settings_screen_search_hint">用手柄选择字母，或选中输入框直接输入</string>
     <string name="settings_screen_search_placeholder">搜索所有设置</string>
+    <!-- A-Z 和数字；字母既匹配英文文本，也匹配标题的拼音首字母（sz 可找到“设置”）。 -->
     <string name="settings_screen_search_letters">ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789</string>
     <string name="settings_screen_search_space">空格</string>
     <string name="settings_screen_search_delete">删除</string>
@@ -21,6 +22,12 @@
         <item quantity="other">%d 个设置项</item>
     </plurals>
     <string name="settings_screen_search_none">没有匹配的设置项</string>
+
+    <!-- 设置项的额外搜索词（同义词），用空格分隔，不会显示出来 -->
+    <string name="settings_search_alias_motion_sensors">运动传感器 陀螺仪</string>
+    <string name="settings_search_alias_gyro_smoothing">陀螺仪 稳定 平滑</string>
+    <string name="settings_search_alias_link_test">测速 吞吐量 带宽 网络</string>
+    <string name="settings_search_alias_link_use">推荐 码率 连接</string>
 
     <string name="settings_actions_imported">已导入</string>
     <string name="settings_actions_import_failed">导入失败</string>
@@ -36,7 +43,7 @@
     <string name="settings_actions_no_app_for_link">没有可打开此链接的应用</string>
     <string name="settings_actions_save">保存</string>
 
-    <string name="settings_osc_preview_note">屏幕按键预览 · 不会向 PC 发送任何内容 · 按 B 返回</string>
+    <string name="settings_osc_preview_note">屏幕按键预览 · 不会向 PC 发送任何内容 · 按 %1$s 返回</string>
 
     <string name="settings_native_section_interface">界面</string>
     <string name="settings_native_section_stream_menu">串流菜单</string>
@@ -191,7 +198,7 @@
     <string name="settings_game_eyebrow">游戏设置 · %1$s</string>
     <string name="settings_game_panel_title">你的游戏，你的设置</string>
     <string name="settings_game_custom_title">此游戏的自定义设置</string>
-    <string name="settings_game_profile_value_button">个人资料的值：%1$s · 按 X 恢复</string>
+    <string name="settings_game_profile_value_button">个人资料的值：%1$s · 按 %2$s 恢复</string>
     <string name="settings_game_profile_value_touch">个人资料的值：%1$s · 点按“重置”恢复</string>
     <string name="settings_game_currently">当前为 %1$s。更改后即可仅为此游戏设定值。</string>
     <string name="settings_game_only_this_game">这些更改仅对 %1$s 生效，其余游戏都跟随你的个人资料。</string>
