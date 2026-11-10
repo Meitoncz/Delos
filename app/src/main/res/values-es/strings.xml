@@ -67,7 +67,7 @@
     <string name="summary_seekbar_metered_bitrate">Los bitrates altos consumen más datos; los bajos mejoran la fluidez en redes de datos limitados.\nIndica 0 para usar ¼ del bitrate anterior.</string>
     <string name="suffix_seekbar_bitrate_mbps">Mbps</string>
     <string name="title_resolution_scale_factor">Factor de escala de resolución</string>
-    <string name="summary_resolution_scale_factor">La resolución de pantalla virtual solicitada al servidor se multiplicará por este factor. La resolución del streaming no se ve afectada.\nP. ej., 120% convierte 2000x1000 en 2400x1200.\nUn factor de escala mayor mejorará la calidad de imagen en algunos juegos.\nRequiere Apollo para surtir efecto.</string>
+    <string name="summary_resolution_scale_factor">La resolución de pantalla virtual solicitada al servidor se multiplicará por este factor. La resolución del streaming no se ve afectada.\nP. ej., un factor de ×1,2 convierte 2000x1000 en 2400x1200.\nUn factor de escala mayor mejorará la calidad de imagen en algunos juegos.\nRequiere Apollo para surtir efecto.</string>
     <string name="title_checkbox_auto_invert_video_resolution">Invertir resolución automáticamente</string>
     <string name="summary_checkbox_auto_invert_video_resolution">Invierte automáticamente el ancho y el alto del vídeo en modo vertical.\nPor ejemplo: 1920x1080 pasará a ser 1080x1920.</string>
     <string name="title_video_scale_mode">Modo de escala del vídeo</string>
