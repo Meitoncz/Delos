@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Genre and theme names on the game card and in the Y filter; each sits in a small pill next to an icon -->
+    <string name="tags_genre_point_and_click">Point-and-click</string>
+    <string name="tags_genre_fighting">Bojovka</string>
+    <string name="tags_genre_shooter">Střílečka</string>
+    <string name="tags_genre_music">Hudební</string>
+    <string name="tags_genre_platform">Plošinovka</string>
+    <string name="tags_genre_puzzle">Logická</string>
+    <string name="tags_genre_racing">Závodní</string>
+    <string name="tags_genre_real_time_strategy">Strategie v reálném čase (RTS)</string>
+    <string name="tags_genre_role_playing">Hra na hrdiny (RPG)</string>
+    <string name="tags_genre_simulator">Simulátor</string>
+    <string name="tags_genre_sport">Sportovní</string>
+    <string name="tags_genre_strategy">Strategie</string>
+    <string name="tags_genre_turn_based_strategy">Tahová strategie (TBS)</string>
+    <string name="tags_genre_tactical">Taktická</string>
+    <string name="tags_genre_hack_and_slash">Hack and slash / Beat \'em up</string>
+    <string name="tags_genre_quiz">Kvíz / Vědomostní</string>
+    <string name="tags_genre_pinball">Pinball</string>
+    <string name="tags_genre_adventure">Adventura</string>
+    <string name="tags_genre_indie">Indie</string>
+    <string name="tags_genre_arcade">Arkáda</string>
+    <string name="tags_genre_visual_novel">Vizuální novela</string>
+    <string name="tags_genre_card_and_board">Karetní a desková hra</string>
+    <string name="tags_genre_moba">MOBA</string>
+
+    <string name="tags_theme_action">Akční</string>
+    <string name="tags_theme_fantasy">Fantasy</string>
+    <string name="tags_theme_science_fiction">Science fiction</string>
+    <string name="tags_theme_horror">Horor</string>
+    <string name="tags_theme_thriller">Thriller</string>
+    <string name="tags_theme_survival">Přežití</string>
+    <string name="tags_theme_historical">Historická</string>
+    <string name="tags_theme_stealth">Stealth</string>
+    <string name="tags_theme_comedy">Komedie</string>
+    <string name="tags_theme_business">Byznys</string>
+    <string name="tags_theme_drama">Drama</string>
+    <string name="tags_theme_non_fiction">Faktografická</string>
+    <string name="tags_theme_sandbox">Sandbox</string>
+    <string name="tags_theme_educational">Vzdělávací</string>
+    <string name="tags_theme_kids">Pro děti</string>
+    <string name="tags_theme_open_world">Otevřený svět</string>
+    <string name="tags_theme_warfare">Válečná</string>
+    <string name="tags_theme_party">Párty</string>
+    <string name="tags_theme_four_x">4X (objevuj, expanduj, využívej, vyhlazuj)</string>
+    <string name="tags_theme_erotic">Erotická</string>
+    <string name="tags_theme_mystery">Záhadná</string>
+    <string name="tags_theme_romance">Romantická</string>
+</resources>

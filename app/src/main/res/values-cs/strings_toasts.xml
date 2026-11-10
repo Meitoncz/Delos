@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Toasts and short messages that belong to no single screen -->
+    <string name="shell_report_saved">Záznam uložen do Stažených jako %1$s. Přilož ho k issue.</string>
+    <string name="shell_report_save_failed">Záznam se nepodařilo uložit. Sdílej ho v Nastavení → O aplikaci → Informace pro ladění.</string>
+    <string name="shell_report_no_browser">Není k dispozici žádný prohlížeč</string>
+    <string name="shell_retry_unreachable">%1$s není dostupné</string>
+    <string name="shell_retry_game_missing">Hra %1$s není na %2$s k dispozici</string>
+    <string name="shell_retry_game_missing_unnamed">Hra není na %1$s k dispozici</string>
+    <string name="shell_profile_updated">Profil aktualizován</string>
+    <string name="shell_welcome">Vítej, %1$s</string>
+    <string name="shell_game_unreachable">%1$s není dostupné</string>
+    <string name="shell_game_virtual_display_missing">Virtuální displej na %1$s není připraven · streamuje se hlavní displej</string>
+    <string name="shell_game_quitting">Ukončuji %1$s…</string>
+</resources>

@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Link test and link guidance. Rates such as "225 Mbps" are passed in as %s arguments. -->
+
+    <!-- The kind of network, used after "na": "Testováno včera na Wi-Fi", "na této síti" -->
+    <string name="link_transport_other">této síti</string>
+
+    <!-- How long ago a test was made; each is inserted into link_tested_summary -->
+    <string name="link_age_just_now">právě teď</string>
+    <plurals name="link_age_minutes">
+        <item quantity="one">před %d min</item>
+        <item quantity="few">před %d min</item>
+        <item quantity="many">před %d min</item>
+        <item quantity="other">před %d min</item>
+    </plurals>
+    <plurals name="link_age_hours">
+        <item quantity="one">před %d h</item>
+        <item quantity="few">před %d h</item>
+        <item quantity="many">před %d h</item>
+        <item quantity="other">před %d h</item>
+    </plurals>
+    <string name="link_age_yesterday">včera</string>
+    <plurals name="link_age_days">
+        <item quantity="one">před %d dnem</item>
+        <item quantity="few">před %d dny</item>
+        <item quantity="many">před %d dne</item>
+        <item quantity="other">před %d dny</item>
+    </plurals>
+    <plurals name="link_age_weeks">
+        <item quantity="one">před %d týdnem</item>
+        <item quantity="few">před %d týdny</item>
+        <item quantity="many">před %d týdne</item>
+        <item quantity="other">před %d týdny</item>
+    </plurals>
+    <plurals name="link_age_months">
+        <item quantity="one">před %d měsícem</item>
+        <item quantity="few">před %d měsíci</item>
+        <item quantity="many">před %d měsíce</item>
+        <item quantity="other">před %d měsíci</item>
+    </plurals>
+    <string name="link_tested_summary">Testováno %1$s na %2$s</string>
+
+    <!-- Why the recommendation is what it is; the end of link_recommended_line / link_value_reason -->
+    <string name="link_reason_untested">na tomto spojení netestováno</string>
+    <string name="link_reason_tested_ok">spojení zvládne až %1$s</string>
+    <string name="link_reason_tested_limited">spojení zvládne %1$s</string>
+    <string name="link_reason_host_limited">spojení PC zvládne %1$s</string>
+    <string name="link_reason_dropping">při %1$s zahazuje snímky</string>
+    <string name="link_recommended_line">Doporučeno: %1$s · %2$s</string>
+    <string name="link_value_reason">%1$s · %2$s</string>
+    <string name="link_recommended_plain">Doporučeno: %1$d Mbps</string>
+
+    <!-- Test link row and help panel -->
+    <string name="link_test_action">Otestovat spojení</string>
+    <string name="link_test_row_untested">Na %1$s zatím netestováno</string>
+    <string name="link_help_untested">Na %1$s netestováno. Otestovat spojení změří, co zvládne.</string>
+    <string name="link_help_joined">%1$s: %2$s</string>
+    <string name="link_help_tested_ok">zvládne až %1$s; %2$s stačí pro %3$s.</string>
+    <string name="link_help_host_limited">zvládne %1$s; pro %2$s je limitem vlastní spojení PC.</string>
+    <string name="link_help_limited">zvládne %1$s; %2$s chce %3$s.</string>
+    <string name="link_help_limited_picture">zvládne %1$s; %2$s chce %3$s, po FEC a režii zbývá asi %4$s na obraz.</string>
+    <string name="link_pc_offline_toast">%1$s je offline</string>
+    <string name="link_test_detail">Změří, co z PC %1$s přenese tato síť: testovací provoz asi 2 sekundy na každý krok, až několik set Mbps. Zůstaň na %2$s a nic dalšího nespouštěj.</string>
+    <string name="link_use_action">Použít doporučený bitrate</string>
+    <string name="link_use_done_toast">Bitrate nastaven na %1$s</string>
+    <string name="link_use_detail">Doplní bitrate hodnotou %1$s: %2$s. Aplikace Delos nikdy nemění bitrate sama.</string>
+
+    <!-- Why the PC cannot run the test -->
+    <string name="link_unavailable_newer_delos">Toto PC vyžaduje pro test spojení novější aplikaci Delos.</string>
+    <string name="link_unavailable_host_outdated">Vibepollo v tomto PC zatím neumí test spojení. Aktualizuj ho.</string>
+
+    <!-- Stream menu help for the recommendation row -->
+    <string name="link_stream_help_dropping">Spojení zahazuje snímky při %1$s. A doplní posuvník, Použít ho odešle.</string>
+    <string name="link_stream_help_dropping_untested">Spojení zahazuje snímky při %1$s. A doplní posuvník, Použít ho odešle. Před připojením otestuj spojení v Nastavení.</string>
+    <string name="link_stream_help_tested">%1$s. A doplní posuvník, Použít ho odešle.</string>
+    <string name="link_stream_help_untested">Zatím netestováno. A doplní posuvník, Použít ho odešle. Před připojením otestuj spojení v Nastavení.</string>
+
+    <!-- The live reading of a running stream -->
+    <string name="link_reading_measuring">Měřím</string>
+    <string name="link_reading_keeps_up">Spojení stíhá při %1$s</string>
+    <string name="link_reading_drops">Spojení zahazuje snímky při %1$s, zkus %2$s</string>
+    <string name="link_reading_device_behind">Zařízení přeskakuje snímky; spojení je v pořádku</string>
+
+    <!-- Why a link test failed -->
+    <string name="link_failure_host_unsupported">Vibepollo v tomto PC neumí test spojení. Aktualizuj ho.</string>
+    <string name="link_failure_stream_active">PC právě streamuje. Zastav stream a test zopakuj.</string>
+    <string name="link_failure_denied">PC test nepovolilo. Spáruj toto zařízení znovu.</string>
+    <string name="link_failure_udp_blocked">Nepřišla žádná testovací data. Na této síti může být zablokovaný UDP.</string>
+    <string name="link_failure_network">Aplikace Delos se nedokázala spojit s PC.</string>
+    <string name="link_failure_timeout">PC nedokončilo test včas.</string>
+    <string name="link_failure_host_error">PC test nemohlo spustit.</string>
+    <string name="link_failure_invalid_response">PC poslalo nepoužitelný výsledek testu.</string>
+    <string name="link_failure_not_connected">Aplikace Delos se stále připojuje k %1$s.</string>
+
+    <!-- The verdict of one probe -->
+    <string name="link_verdict_receiver_suspect">Toto zařízení nedokázalo přijímat %1$s tak rychle</string>
+    <string name="link_verdict_loss">Ztraceno %1$.1f%% testovacích paketů při %2$s</string>
+    <string name="link_verdict_window_loss">Ztraceno až %1$.1f%% paketů během 100 ms při %2$s</string>
+    <string name="link_verdict_delay_growth">Zpoždění při %1$s stále narůstalo (spojení se zahlcuje)</string>
+    <string name="link_verdict_no_packets">Nepřišla žádná testovací data. Na této síti může být zablokovaný UDP</string>
+    <string name="link_verdict_not_all_sent">PC při %2$s odeslalo jen %1$.1f%% testovacích dat</string>
+    <string name="link_verdict_sender_duration">Časování PC během testu nesedělo</string>
+    <string name="link_verdict_passed">Prošlo při %1$s</string>
+    <string name="link_verdict_stable">Stabilní</string>
+    <string name="link_verdict_stable_jitter">Stabilní, malý jitter</string>
+    <string name="link_verdict_no_rate_tested">Nešlo otestovat žádnou rychlost</string>
+    <string name="link_no_rate_passed_once">%1$s. %2$s jednou prošlo, ale neudrželo se.</string>
+    <string name="link_no_rate_nothing_passed">%1$s. Neprošlo nic, ani při %2$s.</string>
+    <string name="link_no_rate_plain">%1$s.</string>
+</resources>

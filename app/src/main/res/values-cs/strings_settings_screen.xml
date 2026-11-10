@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Settings screen (title, search, actions), the native settings rows (Appearance, Devices, Covers, About) and the per-game settings -->
+
+    <!-- Settings screen -->
+    <string name="settings_screen_title">Nastavení</string>
+    <string name="settings_screen_search">Hledat</string>
+    <string name="settings_screen_unavailable">Nedostupné s aktuálním nastavením nebo na tomto zařízení.</string>
+    <string name="settings_screen_palette_main">Hlavní</string>
+    <string name="settings_screen_palette_secondary">Vedlejší</string>
+    <string name="settings_screen_palette_accent">Akcent</string>
+    <string name="settings_screen_gyro_off">%1$d %% (vypnuto)</string>
+    <string name="settings_screen_hdr_firmware">Pro zapnutí HDR aktualizuj firmware na svém NVIDIA SHIELD Android TV.</string>
+    <string name="settings_screen_dot_join">%1$s · %2$s</string>
+
+    <!-- Settings search -->
+    <string name="settings_screen_search_title">Najít nastavení</string>
+    <string name="settings_screen_search_hint">Vyber písmena gamepadem, nebo vyber pole a piš</string>
+    <string name="settings_screen_search_placeholder">Hledat ve všech nastaveních</string>
+    <string name="settings_screen_search_letters">AÁBCČDĎEÉĚFGHIÍJKLMNŇOÓPQRŘSŠTŤUÚŮVWXYÝZŽ0123456789</string>
+    <string name="settings_screen_search_space">Mezera</string>
+    <string name="settings_screen_search_delete">Smazat</string>
+    <string name="settings_screen_search_clear">Vymazat</string>
+    <plurals name="settings_screen_search_count">
+        <item quantity="one">%d nastavení</item>
+        <item quantity="few">%d nastavení</item>
+        <item quantity="many">%d nastavení</item>
+        <item quantity="other">%d nastavení</item>
+    </plurals>
+    <string name="settings_screen_search_none">Žádné odpovídající nastavení</string>
+
+    <!-- Settings actions (import, export, reset) -->
+    <string name="settings_actions_imported">Importováno</string>
+    <string name="settings_actions_import_failed">Import se nezdařil</string>
+    <string name="settings_actions_file_open_failed">Soubor se nepodařilo otevřít</string>
+    <string name="settings_actions_file_too_large">Soubor je příliš velký</string>
+    <string name="settings_actions_layout_not_text">Rozložení musí obsahovat textové hodnoty</string>
+    <string name="settings_actions_no_shortcut_data">Soubor neobsahuje data zkratek</string>
+    <string name="settings_actions_exported">Rozložení exportováno</string>
+    <string name="settings_actions_export_failed">Export se nezdařil</string>
+    <string name="settings_actions_osc_reset">Ovládání na obrazovce obnoveno</string>
+    <string name="settings_actions_keyboard_reset">Rozložení klávesnice obnoveno</string>
+    <string name="settings_actions_no_file_picker">Není k dispozici výběr souborů</string>
+    <string name="settings_actions_no_app_for_link">Žádná aplikace tento odkaz neotevře</string>
+    <string name="settings_actions_save">Uložit</string>
+
+    <!-- On-screen controls preview (Debug info) -->
+    <string name="settings_osc_preview_note">Náhled ovládání na obrazovce · nic se neodesílá do PC · B = zpět</string>
+
+    <!-- Native settings: section headings -->
+    <string name="settings_native_section_interface">Rozhraní</string>
+    <string name="settings_native_section_stream_menu">Menu streamu</string>
+    <string name="settings_native_section_statistics">Statistiky</string>
+    <string name="settings_native_section_startup">Spouštění</string>
+    <string name="settings_native_section_paired_pcs">Spárovaná PC</string>
+    <string name="settings_native_section_diagnostics">Diagnostika</string>
+    <string name="settings_native_section_game_data">Data her</string>
+    <string name="settings_native_no_browser_toast">Není k dispozici žádný prohlížeč</string>
+
+    <!-- Native settings: Appearance -->
+    <string name="settings_native_theme_title">Motiv</string>
+    <string name="settings_native_theme_dark">Tmavý</string>
+    <string name="settings_native_theme_light">Světlý</string>
+    <string name="settings_native_theme_description">Tmavé nebo světlé rozhraní.</string>
+    <string name="settings_native_material_you_title">Barvy Material You</string>
+    <string name="settings_native_material_you_description">Používá jen barvy tvé tapety. Pro výběr palety vypni.</string>
+    <string name="settings_native_material_you_fallback_description">Na tomto zařízení není paleta z tapety, proto se použijí barvy palety %1$s. Pro výběr palety vypni.</string>
+    <string name="settings_native_palette_title">Barevná paleta</string>
+    <string name="settings_native_palette_description">Barvy rozhraní a animovaných pozadí.</string>
+    <string name="settings_native_needs_material_you_off">Vyžaduje vypnuté barvy Material You.</string>
+    <string name="settings_native_match_colors_title">Přizpůsobit barvy hře</string>
+    <string name="settings_native_match_colors_description">Animované pozadí převezme hlavní barvu obrázku pozadí vybrané hry.</string>
+    <string name="settings_native_clock_title">Hodiny</string>
+    <string name="settings_native_clock_description">Formát času ve stavovém řádku.</string>
+    <string name="settings_native_background_title">Animované pozadí</string>
+    <string name="settings_native_background_description">Animované shaderové pozadí (Android 13 nebo novější), nebo statické.</string>
+    <string name="settings_native_home_layout_title">Rozložení úvodní obrazovky</string>
+    <string name="settings_native_home_layout_description">Knihovna jako posouvací mřížka, nebo jeden řádek.</string>
+    <string name="settings_native_hero_background_title">Pozadí hry</string>
+    <string name="settings_native_hero_background_description">Zobrazí na úvodní obrazovce pozadí vybrané hry.</string>
+    <string name="settings_native_hero_blur_title">Rozostření pozadí hry</string>
+    <string name="settings_native_hero_blur_description">Rozostří pozadí hry za knihovnou. Vyžaduje Pozadí hry.</string>
+    <string name="settings_native_hero_opacity_title">Neprůhlednost pozadí hry</string>
+    <string name="settings_native_hero_opacity_description">Jak silně grafika hry prosvítá skrz animované pozadí. Vyžaduje Pozadí hry.</string>
+    <string name="settings_native_scale_title">Velikost rozhraní</string>
+    <string name="settings_native_scale_description">Velikost textu, stavového řádku a nápověd k tlačítkům.</string>
+    <string name="settings_native_animations_title">Animace</string>
+    <string name="settings_native_animations_reduced">Omezené</string>
+    <string name="settings_native_animations_full">Plné</string>
+    <string name="settings_native_animations_description">Jen pohyb rozhraní.</string>
+    <string name="settings_native_haptics_title">Haptika rozhraní</string>
+    <string name="settings_native_haptics_description">Vibrace při pohybu a výběru.</string>
+    <string name="settings_native_sounds_title">Zvuky rozhraní</string>
+    <string name="settings_native_sounds_description">Jemná cvaknutí při pohybu v menu.</string>
+
+    <!-- Native settings: Controls, Display, Devices -->
+    <string name="settings_native_menu_buttons_title">Tlačítka menu streamu</string>
+    <string name="settings_native_menu_buttons_description">Tlačítka, která se během streamu stisknou společně pro otevření nebo zavření menu streamu. Výběrem nahraješ jiná, třeba zadní tlačítko.</string>
+    <string name="settings_native_menu_swipe_title">Přejetí nahoru otevře menu</string>
+    <string name="settings_native_menu_swipe_description">Přejetí nahoru od spodního okraje také otevře menu streamu. Dotyky začínající tam se do hry nedostanou.</string>
+    <string name="settings_native_stats_position_title">Pozice statistik</string>
+    <string name="settings_native_stats_position_description">Roh panelu s plnými statistikami při streamování. Kompaktní režim je vždy nahoře uprostřed.</string>
+    <string name="settings_native_stats_top_left">Vlevo nahoře</string>
+    <string name="settings_native_stats_top_right">Vpravo nahoře</string>
+    <string name="settings_native_stats_bottom_left">Vlevo dole</string>
+    <string name="settings_native_stats_bottom_right">Vpravo dole</string>
+    <string name="settings_native_default_pc_title">Výchozí zařízení</string>
+    <string name="settings_native_default_pc_none">Žádné</string>
+    <string name="settings_native_default_pc_description">Preferované PC, označené na úvodní obrazovce.</string>
+    <string name="settings_native_skip_start_title">Přeskočit úvodní obrazovku</string>
+    <string name="settings_native_skip_start_description">Při spuštění se rovnou připojí k výchozímu zařízení.</string>
+    <string name="settings_native_manage_devices_title">Správa zařízení</string>
+    <string name="settings_native_manage_devices_description">Připojení, přejmenování, probuzení, zrušení spárování nebo odebrání PC.</string>
+    <string name="settings_native_pair_title">Spárovat nové PC</string>
+    <string name="settings_native_pair_description">Najde PC s Vibepollo, Apollo nebo Sunshine.</string>
+
+    <!-- Native settings: Covers (SteamGridDB) -->
+    <string name="settings_native_sgdb_key_title">Klíč API SteamGridDB</string>
+    <string name="settings_native_sgdb_key_added">Přidán</string>
+    <string name="settings_native_sgdb_key_not_set">Nenastaven</string>
+    <string name="settings_native_sgdb_key_note">Zdarma na steamgriddb.com: přihlas se a pak Preferences → API. Nech prázdné, pokud nechceš SteamGridDB používat.</string>
+    <string name="settings_native_sgdb_key_placeholder">Klíč API</string>
+    <string name="settings_native_sgdb_key_save">Uložit</string>
+    <string name="settings_native_sgdb_key_saved_toast">Klíč API uložen</string>
+    <string name="settings_native_sgdb_off_toast">SteamGridDB je vypnuto</string>
+    <string name="settings_native_sgdb_key_description">Díky vlastnímu klíči může aplikace Delos stahovat ze SteamGridDB obaly, široké obaly, pozadí a loga. Klíč zůstává na tomto zařízení pro všechny profily.</string>
+    <string name="settings_native_sgdb_auto_title">Stahovat automaticky</string>
+    <string name="settings_native_sgdb_auto_description">Při načtení knihovny stáhne u nových her nejlépe hodnocený obal, široký obal, pozadí a logo ze SteamGridDB.</string>
+    <string name="settings_native_connect_first_toast">Nejdřív se připoj k PC</string>
+    <string name="settings_native_downloading_toast">Stahuji obrázky her z PC %1$s…</string>
+    <string name="settings_native_artwork_complete_toast">Všechny hry už mají obrázky</string>
+    <plurals name="settings_native_artwork_ready_toast">
+        <item quantity="one">Obrázky připraveny pro %d hru</item>
+        <item quantity="few">Obrázky připraveny pro %d hry</item>
+        <item quantity="many">Obrázky připraveny pro %d hry</item>
+        <item quantity="other">Obrázky připraveny pro %d her</item>
+    </plurals>
+    <string name="settings_native_missing_artwork_title">Stáhnout chybějící obrázky</string>
+    <string name="settings_native_missing_artwork_description">Stáhne obrázky pro hry z PC %1$s, které je nemají.</string>
+    <string name="settings_native_missing_artwork_description_current">Stáhne obrázky pro hry z aktuálního PC, které je nemají.</string>
+    <string name="settings_native_refresh_artwork_title">Stáhnout všechny obrázky znovu</string>
+    <string name="settings_native_refresh_artwork_description">Znovu vyhledá každou hru a vezme nejlépe hodnocené obrázky; ručně vybrané obrázky zůstanou.</string>
+    <string name="settings_native_choose_artwork_title">Vybrat obrázky pro jednu hru</string>
+    <string name="settings_native_choose_artwork_value">Možnosti hry</string>
+    <string name="settings_native_choose_artwork_description">Úvodní obrazovka: pravé tlačítko menu u hry → Obrázky. Vyber libovolný obal, široký obal, pozadí nebo logo.</string>
+
+    <!-- Native settings: About -->
+    <string name="settings_native_version_title">Verze</string>
+    <string name="settings_native_version_description">Aplikace Delos pro Android.</string>
+    <string name="settings_native_based_title">Vychází z</string>
+    <string name="settings_native_based_description">Open source streamování her, licencováno pod GPLv3.</string>
+    <string name="settings_native_welcome_title">Zopakovat uvítání</string>
+    <string name="settings_native_welcome_description">Znovu otevře uvítací obrazovku. Profily a spárovaná PC zůstanou zachovány.</string>
+    <string name="settings_native_diag_logs_title">Ukládat diagnostické záznamy</string>
+    <string name="settings_native_diag_logs_description">Uchovává malý záznam toho, co aplikace Delos dělala, pro hlášení problému. Zůstává na tomto zařízení, dokud ho nesdílíš.</string>
+    <string name="settings_native_igdb_title">Metadata her · IGDB</string>
+    <string name="settings_native_igdb_description">Informace o hrách a žánry poskytuje IGDB.</string>
+    <string name="settings_native_pcgw_title">Technická data · PCGamingWiki</string>
+    <string name="settings_native_pcgw_description">Doklady o nativním HDR z PCGamingWiki (CC BY-NC-SA 3.0); odvozený stav je interpretace aplikace Delos.</string>
+    <string name="settings_native_steam_title">Štítky žánrů a témat · obchod Steam</string>
+    <string name="settings_native_steam_description">Žánry a témata na kartách pocházejí z veřejných uživatelských štítků Steamu, pokud má hra stránku na Steamu; čtou se ze stránky obchodu přes metadatovou službu aplikace Delos. Neoficiální a může se změnit; jinak se použije IGDB.</string>
+    <string name="settings_native_hltb_title">Doba dohrání · HowLongToBeat</string>
+    <string name="settings_native_hltb_description">Hlavní údaj z HowLongToBeat. Neoficiální klient upravený z howlongtobeatpy (MIT, © 2018 Michele).</string>
+
+    <!-- Help for the selected choice of a native row, shown under its name in the description panel -->
+    <string name="settings_native_help_theme_dark">Tmavé plochy se světlým textem.</string>
+    <string name="settings_native_help_theme_light">Světlé plochy s tmavým textem.</string>
+    <string name="settings_native_help_clock_system">Řídí se nastavením 12/24 hodin v Androidu.</string>
+    <string name="settings_native_help_clock_12">12hodinový čas s AM nebo PM.</string>
+    <string name="settings_native_help_clock_24">24hodinový čas.</string>
+    <string name="settings_native_help_layout_grid">Několik řad obalů; posouvá se svisle.</string>
+    <string name="settings_native_help_layout_row">Jedna řada obalů; běžící a nedávné hry jsou první.</string>
+    <string name="settings_native_help_motion_reduced">Méně pohybu v rozhraní. FPS her se nemění.</string>
+    <string name="settings_native_help_motion_full">Plné přechody a animace zaostření.</string>
+    <string name="settings_native_help_default_pc_none">Žádné preferované PC; Přeskočit úvodní obrazovku není k dispozici.</string>
+    <string name="settings_native_help_default_pc_set">Používá se pro Přeskočit úvodní obrazovku. Musí být spárované a dosažitelné.</string>
+    <string name="settings_native_help_stats_top_left">Panel s plnými statistikami v levém horním rohu.</string>
+    <string name="settings_native_help_stats_top_right">Panel s plnými statistikami v pravém horním rohu.</string>
+    <string name="settings_native_help_stats_bottom_left">Panel s plnými statistikami v levém dolním rohu.</string>
+    <string name="settings_native_help_stats_bottom_right">Panel s plnými statistikami v pravém dolním rohu.</string>
+    <string name="settings_native_help_background_aurora">Jemné pohyblivé pásy barev jako polární záře.</string>
+    <string name="settings_native_help_background_tide">Široký příliv barev přes spodní část obrazovky.</string>
+    <string name="settings_native_help_background_silk">Pomalu plynoucí záhyby barev jako látka.</string>
+    <string name="settings_native_help_background_contour">Plynulé pohyblivé vrstevnice ve zvolených barvách.</string>
+    <string name="settings_native_help_background_nebula">Mračna barev jako ve vesmíru.</string>
+    <string name="settings_native_help_background_plasma">Plynoucí vlny barev jako plazma.</string>
+    <string name="settings_native_help_background_lava">Pomalu se pohybující, splývající barevné tvary.</string>
+    <string name="settings_native_help_background_caustics">Proměnlivé světelné vzory jako odlesky pod vodou.</string>
+    <string name="settings_native_help_background_bokeh">Jemné rozostřené kruhy světla.</string>
+    <string name="settings_native_help_background_orbit">Pohybující se barevné tvary po oběžné dráze.</string>
+    <string name="settings_native_help_background_still">Statické pozadí bez animace.</string>
+
+    <!-- Per-game settings -->
+    <string name="settings_game_follows_profile">Podle profilu</string>
+    <plurals name="settings_game_custom_count">
+        <item quantity="one">%d vlastní nastavení</item>
+        <item quantity="few">%d vlastní nastavení</item>
+        <item quantity="many">%d vlastní nastavení</item>
+        <item quantity="other">%d vlastní nastavení</item>
+    </plurals>
+    <string name="settings_game_summary_none">Změň řádek a pro tuto hru bude vlastní.</string>
+    <string name="settings_game_summary">Stream: %1$d · Obraz: %2$d</string>
+    <string name="settings_game_value_on">Zapnuto</string>
+    <string name="settings_game_value_off">Vypnuto</string>
+    <string name="settings_game_undo">Vrátit zpět</string>
+    <string name="settings_game_reset_row_toast">Zpět na hodnotu z profilu</string>
+    <string name="settings_game_reset_all_toast">Všechna nastavení se znovu řídí profilem</string>
+    <string name="settings_game_reset_all">Resetovat vše</string>
+    <string name="settings_game_reset_menu">Vrátit hodnotu z profilu</string>
+    <string name="settings_game_from_profile">Z profilu</string>
+    <string name="settings_game_profile_line">Profil: %1$s</string>
+    <string name="settings_game_link_note">%1$s Možnost Otestovat spojení najdeš v Nastavení.</string>
+    <string name="settings_game_eyebrow">Nastavení hry · %1$s</string>
+    <string name="settings_game_panel_title">Tvoje hra, tvoje nastavení</string>
+    <string name="settings_game_custom_title">Vlastní pro tuto hru</string>
+    <string name="settings_game_profile_value_button">Hodnota z profilu: %1$s · stiskni X pro návrat k ní</string>
+    <string name="settings_game_profile_value_touch">Hodnota z profilu: %1$s · klepni na Resetovat pro návrat k ní</string>
+    <string name="settings_game_currently">Aktuálně %1$s. Změnou nastavíš hodnotu jen pro tuto hru.</string>
+    <string name="settings_game_only_this_game">Tyto změny platí jen pro hru %1$s. Všechno ostatní se řídí tvým profilem.</string>
+    <string name="settings_game_saved_note">Ukládá se automaticky · platí od příštího streamu</string>
+</resources>

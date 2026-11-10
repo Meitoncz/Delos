@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The shell: links from outside, the side menu, the bottom hint bar, the report card, button capture, row widgets -->
+
+    <string name="shell_link_pair_title">Spárovat s %1$s?</string>
+    <string name="shell_link_pair_message">Odkaz žádá aplikaci Delos o spárování s tímto PC. Pokračuj jen v případě, že tento odkaz pochází od tebe.</string>
+    <string name="shell_link_pair_action">Spárovat</string>
+    <string name="shell_link_start_title">Spustit %1$s?</string>
+    <string name="shell_link_start_title_unnamed">Spustit hru?</string>
+    <string name="shell_link_start_message">Odkaz žádá aplikaci Delos o spuštění %1$s na %2$s. Pokračuj jen v případě, že tento odkaz pochází od tebe.</string>
+    <string name="shell_link_start_message_game">Odkaz žádá aplikaci Delos o spuštění %1$s na PC. Pokračuj jen v případě, že tento odkaz pochází od tebe.</string>
+    <string name="shell_link_start_message_host">Odkaz žádá aplikaci Delos o spuštění hry na %1$s. Pokračuj jen v případě, že tento odkaz pochází od tebe.</string>
+    <string name="shell_link_start_message_unnamed">Odkaz žádá aplikaci Delos o spuštění hry na PC. Pokračuj jen v případě, že tento odkaz pochází od tebe.</string>
+    <string name="shell_link_start_action">Spustit</string>
+
+    <!-- The three buttons of the top bar -->
+    <string name="shell_nav_settings">Nastavení</string>
+    <string name="shell_nav_profile">Profil</string>
+    <string name="shell_nav_devices">Zařízení</string>
+    <string name="shell_default_profile_name">Hráč</string>
+
+    <!-- Side menu -->
+    <string name="shell_side_not_connected">Nepřipojeno</string>
+    <string name="shell_side_connected">Připojeno k %1$s</string>
+    <string name="shell_side_offline">%1$s je offline</string>
+    <string name="shell_side_show_hidden">Zobrazit skryté hry</string>
+    <string name="shell_side_hidden_on">Skryté: %1$d · %2$s</string>
+    <string name="shell_side_hidden_on_this_pc">Skryté: %1$d na tomto PC</string>
+    <string name="shell_side_theme">Motiv</string>
+    <string name="shell_side_theme_dark">Tmavý</string>
+    <string name="shell_side_theme_light">Světlý</string>
+    <string name="shell_side_material_you">Material You</string>
+    <string name="shell_side_background">Pozadí</string>
+    <string name="shell_side_home_layout">Rozložení úvodní obrazovky</string>
+    <string name="shell_side_sounds">Zvuky rozhraní</string>
+    <string name="shell_side_haptics">Haptika</string>
+    <string name="shell_side_all_settings">Všechna nastavení</string>
+
+    <!-- Progress pill above the hint bar -->
+    <string name="shell_progress_artwork">Stahování obrázků</string>
+    <string name="shell_progress_metadata">Stahování metadat</string>
+    <string name="shell_progress_count">%1$d z %2$d</string>
+
+    <!-- Note on the left of the hint bar on the home screen -->
+    <plurals name="shell_home_apps_on_pc">
+        <item quantity="one">%1$d aplikace · %2$s</item>
+        <item quantity="few">%1$d aplikace · %2$s</item>
+        <item quantity="many">%1$d aplikace · %2$s</item>
+        <item quantity="other">%1$d aplikací · %2$s</item>
+    </plurals>
+    <plurals name="shell_home_apps_filtered">
+        <item quantity="one">%1$d z %2$d aplikace · %3$s</item>
+        <item quantity="few">%1$d z %2$d aplikací · %3$s</item>
+        <item quantity="many">%1$d z %2$d aplikace · %3$s</item>
+        <item quantity="other">%1$d z %2$d aplikací · %3$s</item>
+    </plurals>
+    <string name="shell_hint_library_label">KNIHOVNA</string>
+
+    <!-- Button hints in the bottom bar -->
+    <string name="shell_hint_select">Vybrat</string>
+    <string name="shell_hint_back">Zpět</string>
+    <string name="shell_hint_close">Zavřít</string>
+    <string name="shell_hint_cancel">Zrušit</string>
+    <string name="shell_hint_change">Změnit</string>
+    <string name="shell_hint_reset">Resetovat</string>
+    <string name="shell_hint_start">Spustit</string>
+    <string name="shell_hint_menu">Menu</string>
+    <string name="shell_hint_options">Možnosti</string>
+    <string name="shell_hint_adjust">Upravit</string>
+    <string name="shell_hint_back_to_library">Zpět do knihovny</string>
+    <string name="shell_hint_previous_tab">Předchozí záložka</string>
+    <string name="shell_hint_next_tab">Další záložka</string>
+    <string name="shell_hint_search">Hledat</string>
+    <string name="shell_hint_connect">Připojit</string>
+    <string name="shell_hint_choose">Zvolit</string>
+    <string name="shell_hint_reset_filters">Resetovat filtry</string>
+    <string name="shell_hint_done">Hotovo</string>
+    <string name="shell_hint_use_image">Použít obrázek</string>
+    <string name="shell_hint_search_name">Hledat název</string>
+    <string name="shell_hint_filter">Filtr</string>
+    <string name="shell_hint_reset_to_profile">Vrátit hodnotu z profilu</string>
+
+    <!-- The card offering a problem report -->
+    <string name="shell_problem_title_stream">Stream selhal</string>
+    <string name="shell_problem_title_generic">Aplikace Delos narazila na problém</string>
+    <string name="shell_problem_note">Nic se neodesílá automaticky. Nahlásit otevře v prohlížeči GitHub s konceptem ke kontrole a uloží do Stažených souborů vyčištěný soubor záznamu, který přiložíš.</string>
+    <string name="shell_problem_report">Nahlásit problém</string>
+    <string name="shell_problem_dismiss">Zavřít</string>
+
+    <!-- Capturing the buttons that open the stream menu -->
+    <string name="shell_button_capture_title">Stiskni tlačítka menu streamu</string>
+    <string name="shell_button_capture_note">Podrž je společně a pak pusť. Funguje i jedno tlačítko, třeba zadní. Počkáním nebo klepnutím zrušíš.</string>
+
+    <!-- Settings rows: the reset pill and an empty value -->
+    <string name="row_reset_to_profile">Vrátit hodnotu z profilu</string>
+    <string name="row_reset">Resetovat</string>
+    <string name="row_not_set">Nenastaveno</string>
+
+    <!-- Impact chips of a setting -->
+    <string name="impact_axis_gpu">GPU</string>
+    <string name="impact_axis_latency">Latence</string>
+    <string name="impact_axis_network">Síť</string>
+    <string name="impact_level_none">žádná</string>
+    <string name="impact_level_low">nízká</string>
+    <string name="impact_level_medium">střední</string>
+    <string name="impact_level_high">vysoká</string>
+    <string name="impact_axis_level">%1$s %2$s</string>
+    <string name="impact_legend">Náročnost aktuální hodnoty: 1 pruh nízká, 2 střední, 3 vysoká</string>
+    <string name="impact_axes_joined">%1$s, %2$s, %3$s</string>
+</resources>

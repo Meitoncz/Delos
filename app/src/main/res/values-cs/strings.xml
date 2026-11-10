@@ -1,0 +1,431 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shortcut strings -->
+    <string name="scut_pc_not_found">PC nebylo nalezeno</string>
+    <string name="scut_invalid_uuid">Zadané PC není platné</string>
+    <string name="scut_invalid_app_id">Zadaná aplikace není platná</string>
+    <string name="scut_game_running">Hra %1$s už běží · nejdřív ji ukonči v aplikaci Delos</string>
+    <string name="scut_other_game_running">Už běží jiná hra · nejdřív ji ukonči v aplikaci Delos</string>
+
+    <string name="configuration_mode_move_buttons">Režim přesouvání tlačítek</string>
+    <string name="configuration_mode_resize_buttons">Režim změny velikosti tlačítek</string>
+    <string name="configuration_mode_disable_enable_buttons">Režim zapínání a vypínání tlačítek</string>
+    <string name="configuration_mode_exiting">Ukončuji režim úprav</string>
+    <string name="help_loading_title">Nápověda</string>
+    <string name="help_loading_msg">Načítám nápovědu…</string>
+
+    <!-- Alignments -->
+    <string name="align_left">Zarovnat vlevo</string>
+    <string name="align_center">Zarovnat na střed</string>
+    <string name="align_right">Zarovnat vpravo</string>
+
+    <!-- Network test strings -->
+    <string name="nettest_title_waiting">Testování síťového připojení</string>
+    <string name="nettest_text_waiting">Aplikace Delos testuje tvé síťové připojení a zjišťuje, jestli nejsou zablokované potřebné porty.\n\nMůže to chvíli trvat…</string>
+    <string name="nettest_title_done">Test sítě dokončen</string>
+    <string name="nettest_text_success">Vypadá to, že tvá síť aplikaci Delos neblokuje. Pokud se přesto nemůžeš připojit, zkontroluj nastavení firewallu na svém PC.\n\nPokud chceš streamovat přes internet, nainstaluj na PC nástroj Moonlight Internet Hosting Tool a pomocí přiloženého Internet Streaming Testeru zkontroluj internetové připojení svého PC.</string>
+    <string name="nettest_text_inconclusive">Test sítě se nepodařilo provést, protože žádný z testovacích serverů aplikace Delos nebyl dostupný. Zkontroluj připojení k internetu nebo to zkus později.</string>
+    <string name="nettest_text_failure">Aktuální síťové připojení tvého zařízení pravděpodobně blokuje aplikaci Delos. Streamování přes internet nemusí na této síti fungovat.\n\nZablokované síťové porty:\n</string>
+
+    <!-- Pair messages -->
+    <string name="pair_pc_offline">PC je offline</string>
+
+    <!-- Errors -->
+    <string name="error_unknown_host">Nepodařilo se přeložit adresu PC</string>
+    <string name="error_404">GFE vrátilo chybu HTTP 404. Ověř, že tvé PC má podporovanou grafickou kartu. Tuto chybu může způsobit i software pro vzdálenou plochu. Zkus PC restartovat nebo přeinstalovat GFE.</string>
+    <string name="title_decoding_error">Selhání video dekodéru</string>
+    <string name="message_decoding_error">Aplikace Delos spadla kvůli nekompatibilitě s video dekodérem tohoto zařízení. Pokud pády pokračují, zkus upravit nastavení streamu.</string>
+    <string name="title_decoding_reset">Obnovení nastavení videa</string>
+    <string name="message_decoding_reset">Video dekodér tvého zařízení při zvoleném nastavení streamu stále padá. Nastavení streamu bylo obnoveno na výchozí hodnoty.</string>
+    <string name="error_usb_prohibited">Přístup přes USB zakázal správce zařízení. Zkontroluj nastavení Knox nebo MDM.</string>
+
+    <!-- Start application messages -->
+    <string name="conn_metered">Upozornění: aktivní síťové připojení je měřené!</string>
+    <string name="conn_starting">Spouštění</string>
+
+    <!-- General strings -->
+    <string name="yes">Ano</string>
+    <string name="no">Ne</string>
+    <string name="help">Nápověda</string>
+    <string name="slow_connection_msg">Pomalé připojení k PC\nSniž bitrate</string>
+    <string name="poor_connection_msg">Špatné připojení k PC</string>
+    <string name="perf_overlay_streamdetails">Video stream: %1$s %2$.2f FPS</string>
+    <string name="perf_overlay_decoder">Dekodér: %1$s</string>
+    <string name="perf_overlay_incomingfps">Příchozí snímková frekvence ze sítě: %1$.2f FPS</string>
+    <string name="perf_overlay_renderingfps">Snímková frekvence vykreslování: %1$.2f FPS</string>
+    <string name="perf_overlay_hostprocessinglatency">Latence zpracování v PC min/max/průměr: %1$.1f/%2$.1f/%3$.1f ms</string>
+    <string name="perf_overlay_netdrops">Snímky zahozené sítí: %1$.2f%%</string>
+    <string name="perf_overlay_netlatency">Průměrná latence sítě: %1$d ms (rozptyl: %2$d ms)</string>
+    <string name="perf_overlay_dectime">Průměrná doba dekódování: %1$.2f ms</string>
+
+    <!-- AppList activity -->
+    <string name="applist_quit_app">Ukončování</string>
+    <string name="applist_quit_success">Úspěšně ukončeno</string>
+    <string name="applist_quit_fail">Ukončení se nezdařilo</string>
+
+    <!-- Preferences -->
+    <string name="category_general_settings">Obecné nastavení</string>
+    <string name="category_video_settings">Nastavení videa</string>
+    <string name="title_resolution_list">Rozlišení videa</string>
+    <string name="summary_resolution_list">Zvyš pro ostřejší obraz. Sniž pro lepší výkon na slabších zařízeních a pomalejších sítích.</string>
+    <string name="title_fps_list">Snímková frekvence videa</string>
+    <string name="summary_fps_list">Zvyš pro plynulejší video. Sniž pro lepší výkon na slabších zařízeních.</string>
+    <string name="title_seekbar_bitrate">Bitrate videa</string>
+    <string name="summary_seekbar_bitrate">Zvyš pro lepší kvalitu obrazu. Sniž pro lepší výkon na pomalejších připojeních.</string>
+    <string name="title_seekbar_metered_bitrate">Bitrate videa v měřených sítích</string>
+    <string name="summary_seekbar_metered_bitrate">Vysoký bitrate spotřebuje víc dat, nižší bitrate zlepší plynulost v měřených sítích.\nHodnota 0 znamená ¼ výše nastaveného bitrate.</string>
+    <string name="suffix_seekbar_bitrate_mbps">Mbps</string>
+    <string name="title_resolution_scale_factor">Měřítko rozlišení</string>
+    <string name="summary_resolution_scale_factor">Virtuální rozlišení obrazovky požadované serverem se vynásobí tímto činitelem. Rozlišení streamu to neovlivní.\nNapř. 120 % změní 2000x1000 na 2400x1200.\nVyšší měřítko zlepší kvalitu obrazu v některých hrách.\nK projevení vyžaduje Apollo.</string>
+    <string name="title_checkbox_auto_invert_video_resolution">Automaticky prohodit rozlišení</string>
+    <string name="summary_checkbox_auto_invert_video_resolution">V režimu na výšku automaticky prohodí šířku a výšku videa.\nNapříklad: 1920x1080 se změní na 1080x1920.</string>
+    <string name="title_video_scale_mode">Zobrazení videa</string>
+    <string name="summary_video_scale_mode">Vyber mezi režimy Přizpůsobit, Vyplnit a Roztáhnout</string>
+    <string name="video_scale_mode_fit">Přizpůsobit</string>
+    <string name="video_scale_mode_fill">Vyplnit</string>
+    <string name="video_scale_mode_stretch">Roztáhnout</string>
+
+    <string name="category_audio_settings">Nastavení zvuku</string>
+    <string name="title_audio_config_list">Konfigurace prostorového zvuku</string>
+    <string name="summary_audio_config_list">Zapne prostorový zvuk 5.1 nebo 7.1 pro domácí kina</string>
+    <string name="title_checkbox_enable_audiofx">Zapnout podporu systémového ekvalizéru</string>
+    <string name="summary_checkbox_enable_audiofx">Umožní zvukovým efektům fungovat při streamování, ale může zvýšit latenci zvuku</string>
+
+    <string name="category_gamepad_settings">Nastavení gamepadu</string>
+    <string name="title_checkbox_multi_controller">Automatická detekce přítomnosti gamepadu</string>
+    <string name="summary_checkbox_multi_controller">Když to vypneš, bude gamepad hlášen jako připojený vždy</string>
+    <string name="title_checkbox_vibrate_fallback">Nahradit vibrace gamepadu vibrací zařízení</string>
+    <string name="summary_checkbox_vibrate_fallback">Pokud tvůj gamepad vibrace nepodporuje, zavibruje místo něj zařízení</string>
+    <string name="title_seekbar_vibrate_fallback_strength">Síla náhradních vibrací</string>
+    <string name="summary_seekbar_vibrate_fallback_strength">Zesílí nebo zeslabí vibrace tvého zařízení</string>
+    <string name="suffix_seekbar_vibrate_fallback_strength">%</string>
+    <string name="title_seekbar_deadzone">Mrtvá zóna analogových sticků</string>
+    <string name="summary_seekbar_deadzone">Kladné hodnoty nastaví běžnou mrtvou zónu, záporné hodnoty zapnou kompenzaci mrtvé zóny. Při kompenzaci se ujisti, že tvůj gamepad umí mrtvé zóny upravovat, jinak může být centrování obtížné.</string>
+    <string name="suffix_seekbar_deadzone">%</string>
+    <string name="title_checkbox_xb1_driver">USB ovladač pro gamepady Xbox 360/One/Nintendo Pro</string>
+    <string name="summary_checkbox_xb1_driver">Zapne vestavěný USB ovladač pro zařízení bez nativní podpory gamepadů Xbox/Nintendo Pro</string>
+    <string name="title_checkbox_usb_bind_all">Přebít nativní podporu gamepadů Xbox</string>
+    <string name="summary_checkbox_usb_bind_all">Použije USB ovladač aplikace Delos pro všechny podporované gamepady, i když je nativní podpora gamepadů Xbox/Nintendo Pro dostupná</string>
+    <string name="title_checkbox_mouse_emulation">Emulace myši přes gamepad</string>
+    <string name="summary_checkbox_mouse_emulation">Dlouhým stiskem tlačítka Start přepneš mezi režimem gamepadu a myši</string>
+    <string name="title_checkbox_remember_mouse_mode">Pamatovat si režim myši</string>
+    <string name="summary_checkbox_remember_mouse_mode">Zapamatuje si režim myši zvolený během streamu. Když je vypnuto, změna režimu myši během streamu bude jen dočasná.</string>
+    <string name="title_checkbox_flip_face_buttons">Prohodit čelní tlačítka</string>
+    <string name="summary_checkbox_flip_face_buttons">Prohodí tlačítka A/B a X/Y u gamepadů i u ovládání na obrazovce</string>
+    <string name="title_checkbox_gamepad_touchpad_as_mouse">Myš vždy ovládat touchpadem</string>
+    <string name="summary_checkbox_gamepad_touchpad_as_mouse">Vstup z touchpadu gamepadu vždy ovládá myš v PC, i když se emuluje gamepad s touchpadem.</string>
+    <string name="title_checkbox_gamepad_motion_sensors">Gyroskop externího gamepadu</string>
+    <string name="summary_checkbox_gamepad_motion_sensors">Umožní PC číst gyroskop a akcelerometr připojeného externího gamepadu, pokud je má. Vyžaduje Android 12 nebo novější. Pokud žádná hra pohyb nepoužívá, vypni to – ušetříš trochu energie a síťového provozu.</string>
+    <string name="title_checkbox_gamepad_motion_fallback">Vestavěný gyroskop zařízení</string>
+    <string name="summary_checkbox_gamepad_motion_fallback">Použije vlastní gyroskop a akcelerometr tohoto zařízení (vestavěné senzory handheldu), když připojený gamepad žádné nemá nebo je tvoje verze Androidu neumí číst.\nPoznámka: PC pak může tvůj gamepad vidět jako gamepad PlayStation.</string>
+    <string name="title_checkbox_force_device_motion">Vždy použít vestavěný gyroskop zařízení</string>
+    <string name="summary_checkbox_force_device_motion">Použije senzory zařízení, i když externí gamepad hlásí funkční vlastní.</string>
+    <string name="title_seekbar_gyro_smoothing">Vyhlazení gyra</string>
+    <string name="summary_seekbar_gyro_smoothing">Stabilizuje gyroskop před odesláním do PC. 0 je vypnuto; vyšší hodnoty odstraní víc chvění, ale lehce zpozdí pomalé míření. Rychlé švihy zůstávají citlivé. Platí od příštího streamu; v menu streamu (Více) to jde měnit za chodu.</string>
+    <string name="suffix_seekbar_gyro_smoothing">%</string>
+    <string name="title_enable_rumble">Zapnout vibrace</string>
+    <string name="summary_enable_rumble">Zapne vibrační odezvu na podporovaných gamepadech.</string>
+    <string name="category_input_settings">Nastavení vstupu</string>
+    <string name="title_checkbox_absolute_mouse_mode">Režim myši pro vzdálenou plochu</string>
+    <string name="summary_checkbox_absolute_mouse_mode">Díky tomu se zrychlení myši chová přirozeněji při práci na vzdálené ploše, ale není kompatibilní s mnoha hrami.</string>
+    <string name="title_checkbox_mouse_nav_buttons">Zapnout tlačítka myši vpřed/zpět</string>
+    <string name="summary_checkbox_mouse_nav_buttons">Zapnutí může na některých vadných zařízeních rozbít pravé tlačítko myši</string>
+
+    <string name="category_on_screen_controls_settings">Nastavení ovládání na obrazovce</string>
+    <string name="title_checkbox_show_onscreen_controls">Zobrazit ovládání na obrazovce</string>
+    <string name="summary_checkbox_show_onscreen_controls">Zobrazí virtuální gamepad přes dotykovou obrazovku</string>
+    <string name="title_hide_osc_when_has_gamepad">Skrýt ovládání na obrazovce při použití gamepadu</string>
+    <string name="summary_hide_osc_when_has_gamepad">Skryje ovládání na obrazovce, když je připojený fyzický gamepad</string>
+    <string name="title_checkbox_vibrate_osc">Zapnout vibrace</string>
+    <string name="summary_checkbox_vibrate_osc">Zařízení zavibruje jako náhrada vibrací u ovládání na obrazovce</string>
+    <string name="title_only_l3r3">Zobrazit jen L3 a R3</string>
+    <string name="summary_only_l3r3">Skryje všechna virtuální tlačítka kromě L3 a R3</string>
+    <string name="title_show_guide_button">Zobrazit tlačítko Guide</string>
+    <string name="summary_show_guide_button">Zobrazí tlačítko Guide na obrazovce</string>
+    <string name="title_reset_osc">Smazat uložené rozložení ovládání na obrazovce</string>
+    <string name="summary_reset_osc">Vrátí všechny prvky ovládání na obrazovce na výchozí velikost a pozici</string>
+    <string name="dialog_title_reset_osc">Obnovit rozložení</string>
+    <string name="dialog_text_reset_osc">Opravdu chceš smazat uložené rozložení ovládání na obrazovce?</string>
+    <string name="summary_osc_opacity">Udělá ovládání na obrazovce víc nebo míň průhledné</string>
+    <string name="dialog_title_osc_opacity">Změnit neprůhlednost</string>
+    <string name="suffix_osc_opacity">%</string>
+
+    <string name="category_ui_settings">Nastavení rozhraní</string>
+    <string name="title_checkbox_enable_pip">Zapnout pozorovací režim Obraz v obraze</string>
+    <string name="summary_checkbox_enable_pip">Umožní sledovat stream (ale ne ovládat ho) při práci s více aplikacemi</string>
+    <string name="title_language_list">Jazyk</string>
+    <string name="summary_language_list">Jazyk aplikace Delos</string>
+
+    <string name="category_host_settings">Nastavení PC</string>
+    <string name="title_checkbox_host_audio">Přehrávat zvuk na PC</string>
+    <string name="summary_checkbox_host_audio">Přehrává zvuk z počítače i z tohoto zařízení</string>
+
+    <string name="category_advanced_settings">Pokročilé nastavení</string>
+    <string name="title_unlock_fps">Odemknout všechny možné snímkové frekvence</string>
+    <string name="summary_unlock_fps">Streamování při 90 nebo 120 FPS může na výkonných zařízeních snížit latenci, ale na zařízeních, která to nezvládají, může způsobit sekání nebo nestabilitu</string>
+    <string name="title_checkbox_reduce_refresh_rate">Povolit snížení obnovovací frekvence</string>
+    <string name="summary_checkbox_reduce_refresh_rate">Nižší obnovovací frekvence displeje může ušetřit energii za cenu mírně vyšší latence videa</string>
+    <string name="title_checkbox_disable_warnings">Vypnout varovné zprávy</string>
+    <string name="summary_checkbox_disable_warnings">Vypne varování o připojení zobrazovaná na obrazovce při streamování</string>
+    <string name="title_video_format">Video kodek</string>
+    <string name="summary_video_format">Novější kodeky mohou snížit nároky videa na přenosovou rychlost, pokud je tvoje zařízení podporuje. Volba kodeku může být ignorována, pokud ji nepodporuje software nebo grafická karta v PC.</string>
+    <string name="title_enable_hdr">Zapnout HDR</string>
+    <string name="summary_enable_hdr">Streamuje HDR, pokud ho podporuje hra i grafická karta v PC. HDR vyžaduje grafickou kartu s podporou kódování HEVC Main 10. Jak HDR vypadá, závisí na displeji tohoto zařízení.</string>
+    <string name="title_full_range">Vynutit video s plným rozsahem</string>
+    <string name="summary_full_range">Pokud zařízení nezobrazuje video s plným rozsahem správně, ztratí se detaily ve světlých a tmavých oblastech.</string>
+    <string name="title_prevent_packet_loss">Wi-Fi keep-alive</string>
+    <string name="summary_prevent_packet_loss">Při streamování posílá malé pakety, aby Wi-Fi nepřecházela do úsporného režimu. Může pomoct na zařízeních s nevysvětlitelnou ztrátou paketů.</string>
+    <string name="title_enable_perf_overlay">Zobrazovat statistiky výkonu při streamování</string>
+    <string name="summary_enable_perf_overlay">Při streamování zobrazuje informace o výkonu streamu v reálném čase</string>
+
+    <string name="title_special_key_help">Nápověda k vlastním klávesám</string>
+    <string name="summary_special_key_help">Návod, jak nastavit vlastní speciální klávesy</string>
+
+    <!-- Toasts -->
+    <string name="toast_controller_type_changed">Typ gamepadu se může kvůli emulaci pohybových senzorů změnit</string>
+
+    <!-- Array strings -->
+    <string name="resolution_360p">360p</string>
+    <string name="resolution_480p">480p</string>
+    <string name="resolution_720p">720p</string>
+    <string name="resolution_1080p">1080p</string>
+    <string name="resolution_1440p">1440p</string>
+    <string name="resolution_4k">4K</string>
+
+    <string name="fps_30">30 FPS</string>
+    <string name="fps_60">60 FPS</string>
+    <string name="fps_90">90 FPS</string>
+    <string name="fps_120">120 FPS</string>
+
+    <string name="audioconf_stereo">Stereo</string>
+    <string name="audioconf_51surround">Prostorový zvuk 5.1</string>
+    <string name="audioconf_71surround">Prostorový zvuk 7.1</string>
+
+    <string name="videoformat_auto">Automaticky</string>
+    <string name="videoformat_av1always">AV1</string>
+    <string name="videoformat_hevcalways">HEVC (H.265)</string>
+    <string name="videoformat_h264always">H.264</string>
+    <string name="videoformat_pyrowave">PyroWave</string>
+    <string name="title_pyrowave_chroma">Chroma PyroWave</string>
+    <string name="summary_pyrowave_chroma">Rozlišení barevné složky (chroma) videa PyroWave. 4:4:4 zachová plné barevné detaily, ale potřebuje větší šířku pásma, víc času GPU a PC, které to podporuje; jinak stream použije 4:2:0. Nenabízí se s HDR.</string>
+    <string name="pyrowave_chroma_420">4:2:0 (výchozí)</string>
+    <string name="pyrowave_chroma_444">4:4:4</string>
+
+    <string name="title_frame_pacing">Frame pacing videa</string>
+    <string name="summary_frame_pacing">Určuje, jak vyvážit latenci a plynulost videa. Warp Drive a Warp 2 nemusí fungovat na každém zařízení.</string>
+    <string name="pacing_warp">Warp Drive</string>
+    <string name="pacing_warp2">Warp 2</string>
+    <string name="pacing_latency">Nejnižší latence</string>
+    <string name="pacing_balanced">Vyvážený</string>
+    <string name="pacing_balanced_alt">Vyvážený s limitem FPS</string>
+    <string name="pacing_smoothness">Nejplynulejší video</string>
+    <string name="pacing_fast_vsync">Fast V-Sync (Nano Pacer)</string>
+
+    <string name="title_async_decode">Asynchronní dekódování</string>
+    <string name="summary_async_decode">MediaCodec předává hotové vyrovnávací paměti přes zpětná volání místo opakovaného dotazování. Pro H.264, HEVC a AV1; platí od příštího streamu. Vypni, pokud je tvůj dekodér méně stabilní.</string>
+    <string name="title_sgsr">Snapdragon Game Super Resolution</string>
+    <string name="summary_sgsr">Zvětší video s nižším rozlišením pomocí SGSR 1. Vyžaduje OpenGL ES 3.1; HDR používá desetibitový výstup P010, kde je podporován. Dá se přepínat za chodu v menu streamu. PyroWave používá vlastní renderer. Zvol rozlišení streamu nižší, než je rozlišení displeje.</string>
+    <string name="title_sgsr_quality">Režim upscaleru</string>
+    <string name="summary_sgsr_quality">SGSR 1 (Qualcomm) filtruje aktuální snímek. SGSR2-DV je verze SGSR 2 pro video, kterou vytvořila aplikace Delos: hledá pohyb pomocí optického toku a znovu využívá detaily z dřívějších snímků. Jen zostření zostřuje pouze ve velikosti streamu. HDR a přepínání za chodu fungují ve všech režimech.</string>
+    <string name="title_sgsr_sharpness">Ostrost upscaleru</string>
+    <string name="summary_sgsr_sharpness">Síla zostření od 0 do 100. Nula zostření vypne. V režimech SGSR jde o samostatný závěrečný průchod, který nemění rekonstrukci; v režimu Jen zostření je to celý efekt. Dá se upravovat za chodu.</string>
+    <string name="title_sgsr_supersampling_level">Kvalita supersamplingu</string>
+    <string name="summary_sgsr_supersampling_level">Vnitřní velikost, když stream už odpovídá displeji: 2560 × 1440 (1,33×) nebo 3840 × 2160 (2×), ze streamu 1080p. 2× potřebuje víc času GPU a paměti a když se nevejde, vrátí se na 1,33×. Dá se měnit za chodu v menu streamu.</string>
+    <string name="sgsr_supersampling_level_1">1,33× (1440p)</string>
+    <string name="sgsr_supersampling_level_2">2× (2160p)</string>
+    <string name="sgsr_quality_standard">SGSR 1 (Normální)</string>
+    <string name="sgsr_quality_high">SGSR 1 (Kvalita)</string>
+    <string name="sgsr_quality_temporal">SGSR2-DV (Normální)</string>
+    <string name="sgsr_quality_temporal_quality">SGSR2-DV (Kvalita)</string>
+    <string name="sgsr_quality_sharpen">Jen zostření</string>
+
+
+    <string name="keyboard_service_label">Fyzická klávesnice Delos</string>
+    <string name="accessibility_description_text">Používá se jen tehdy, když systém zachytí zkratky fyzické klávesnice. V některých systémech Android definuje a používá několik klávesových zkratek, takže je nejde předat do PC. Aplikace Delos neprohlíží tvůj vstup ani nesbírá hesla, čísla platebních karet nebo jiné soukromé údaje.</string>
+
+
+    <!-- In Game menu -->
+    <string name="game_menu_send_keys_esc">ESC</string>
+    <string name="game_menu_send_keys_f11">F11</string>
+    <string name="game_menu_send_keys_alt_f4">Alt + F4</string>
+    <string name="game_menu_send_keys_ctrl_v">Ctrl + V</string>
+    <string name="game_menu_send_keys_win">Win (Meta)</string>
+    <string name="game_menu_send_keys_win_d">Win + D</string>
+    <string name="game_menu_send_keys_alt_b">ALT + B</string>
+    <string name="game_menu_send_keys_win_g">Win + G (Xbox Game Bar)</string>
+    <string name="game_menu_send_keys_ctrl_alt_tab">Ctrl + Alt + Tab</string>
+    <string name="game_menu_send_keys_shift_tab">Shift + Tab (Steam Overlay)</string>
+    <string name="game_menu_send_keys_alt_enter">Alt + Enter</string>
+    <string name="game_menu_send_keys_win_shift_left">Win + Shift + šipka vlevo (přesun aplikace mezi plochami)</string>
+    <string name="game_menu_send_keys_ctrl_alt_shift_f1">Ctrl+Alt+Shift+F1 (přepnutí monitoru)</string>
+    <string name="game_menu_send_keys_ctrl_alt_shift_f12">Ctrl+Alt+Shift+F12 (přepnutí monitoru)</string>
+
+    <string name="pan_zoom_mode_enabled">Režim posunu a přiblížení zapnut</string>
+    <string name="pan_zoom_mode_disabled">Režim posunu a přiblížení vypnut</string>
+
+    <string name="title_analog_scrolling">Posouvání analogovým stickem</string>
+    <string name="summary_analog_scrolling">Vyber analogový stick pro posouvání v režimu emulace myši</string>
+    <string name="analogscroll_none">Žádný (oba sticky hýbou myší)</string>
+    <string name="analogscroll_right">Pravý analogový stick</string>
+    <string name="analogscroll_left">Levý analogový stick</string>
+
+    <string name="perf_overlay_lite_net">%1$dms</string>
+    <string name="perf_overlay_lite_dectime">%1$.2fms</string>
+    <string name="perf_overlay_lite_netdrops">%1$.2f%%</string>
+    <string name="perf_overlay_lite_fps">%1$.2f</string>
+    <string name="title_import_keyboard_layout">Importovat rozložení klávesnice</string>
+    <string name="title_export_keyboard_layout">Exportovat rozložení klávesnice</string>
+    <string name="summary_import_keyboard_layout">Přepíše aktuální rozložení.</string>
+    <string name="summary_export_keyboard_layout">Exportuje aktuální rozložení klávesnice</string>
+    <string name="title_manual_enter_bitrate">Vlastní bitrate</string>
+    <string name="summary_manual_enter_bitrate">Zadej bitrate ručně.\nMůže překročit maximální rozsah posuvníku.</string>
+    <string name="dialog_manual_enter_bitrate">Zadej bitrate v Mbps, zaokrouhlený na 0,5.</string>
+    <string name="title_custom_refresh_rate">Vlastní obnovovací frekvence</string>
+    <string name="summary_custom_refresh_rate">Zadej obnovovací frekvenci ručně. Podporuje jen Apollo.</string>
+    <string name="dialog_custom_refresh_rate">Zadej obnovovací frekvenci v Hz. Může být desetinná.</string>
+    <string name="title_touchscreen_mode">Režim dotykové obrazovky</string>
+    <string name="summary_touchscreen_mode">Vyber mezi režimy Multitouch/Jeden dotyk/Trackpad/Vypnuto.\nPero a stylus jdou používat i při vypnutém režimu.\nPři použití externího displeje se vynutí režim Trackpad (přirozený).</string>
+    <string name="title_checkbox_mouse_local_cursor">Použít místní kurzor myši</string>
+    <string name="summary_checkbox_mouse_local_cursor">Výchozí kurzor externí fyzické myši bude zachycen; tato volba může zobrazit systémový kurzor Androidu</string>
+    <string name="title_checkbox_multi_touch_gestures">Zapnout multitouch gesta</string>
+    <string name="summary_checkbox_multi_touch_gestures">V režimu multitouch: klepnutí třemi prsty otevře klávesnici, čtyřmi prsty plnou klávesnici a pěti prsty rychlé menu.</string>
+    <string name="title_checkbox_enable_perf_overlay_lite">Kompaktní režim</string>
+    <string name="summary_checkbox_enable_perf_overlay_lite">Jeden řádek uprostřed nahoře: FPS, šířka pásma, zpoždění sítě a dekódování, ztracené snímky. Tlačítko Overlay v menu streamu přepíná mezi plným, kompaktním a vypnutým zobrazením.</string>
+    <string name="title_virtual_trackpad_settings">Nastavení virtuálního trackpadu</string>
+    <string name="dialog_custom_resolution">Nastav rozlišení a zavři stránku nastavení, aby se projevilo!</string>
+    <string name="summary_custom_resolution">Přidej vlastní rozlišení oddělené znakem x; neobvyklá rozlišení nemusí fungovat.\nPříklad: 1920x1080\nPokud rozlišení není nativní, nemusí se ve výchozím stavu vyplnit oblast výřezu displeje. Při stejném poměru stran můžeš ručně nastavit roztažení, aby obraz vyplnil celou obrazovku</string>
+    <string name="title_custom_resolution">Vlastní rozlišení</string>
+    <string name="title_auto_orientation">Automatická orientace</string>
+    <string name="summary_auto_orientation">Obraz streamu se zobrazí podle orientace zařízení v okamžiku zahájení streamu.</string>
+    <string name="title_import_special_button">Importovat vlastní klávesy</string>
+    <string name="summary_import_special_button">Dostupné v menu Zpět a ve speciálních klávesách.\nPoznámka: Import přepíše aktuální konfiguraci, případně ji předtím zálohuj.</string>
+    <string name="title_special_key_layout">Rozložení speciálních kláves</string>
+    <string name="title_show_virtual_key">Zobrazit virtuální klávesy na obrazovce</string>
+    <string name="summary_show_virtual_key">Zobrazí vrstvu virtuálních speciálních kláves na dotykové obrazovce.\nNeprůhlednost kláves je společná s virtuálním gamepadem výše.</string>
+    <string name="title_default_layout_scheme">Výchozí profil rozložení</string>
+    <string name="summary_default_layout_scheme">Každý profil rozložení je zpočátku stejný (vygenerovaný ze souboru keyboards.json), můžeš ho smazat a upravit podle sebe</string>
+    <string name="summary_vibrate_keyboard">Po klepnutí na tlačítko na obrazovce zavibruje motor telefonu. Tuto volbu lze použít i pro tlačítka virtuálního gamepadu.</string>
+    <string name="title_square_buttons">Běžná tlačítka jsou čtvercová</string>
+    <string name="summary_square_buttons">Virtuální tlačítka mají čtvercový tvar, ve výchozím stavu jsou kulatá.</string>
+    <string name="title_reset_keyboard_layout">Obnovit rozložení virtuální klávesnice</string>
+    <string name="summary_reset_keyboard_layout">Inicializuje rozložení speciálních kláves (obnoví výchozí vybrané schéma rozložení)</string>
+    <string name="title_joyconfix">Kompatibilita s Switch JoyCon</string>
+    <string name="summary_joyconfix">Pokud tvůj JoyCon nefunguje nebo má potíže s rozpoznáním kláves, zkus tuto funkci zapnout. Určeno pro Android 10 a novější</string>
+    <string name="title_keyboard_opacity">Neprůhlednost plné virtuální klávesnice</string>
+    <string name="title_onscreen_keyboard_autofit">Vypnout automatické přizpůsobení plné virtuální klávesnice</string>
+    <string name="title_onscreen_keyboard_height">Výška plné virtuální klávesnice</string>
+    <string name="title_onscreen_keyboard_width">Šířka plné virtuální klávesnice</string>
+    <string name="title_onscreen_keyboard_align_mode">Zarovnání plné virtuální klávesnice</string>
+    <string name="summary_onscreen_keyboard_height">Upraví výšku plné virtuální klávesnice</string>
+    <string name="summary_onscreen_keyboard_autofit">Nepřizpůsobovat velikost a polohu klávesnice automaticky a povolit vlastní velikost</string>
+    <string name="summary_onscreen_keyboard_width">Upraví šířku plné virtuální klávesnice</string>
+    <string name="summary_onscreen_keyboard_align_mode">Jak se plná virtuální klávesnice zarovná k oblasti zobrazení</string>
+    <string name="title_free_analog_stick">Volný analogový stick</string>
+    <string name="summary_free_analog_stick">Středy levého a pravého virtuálního sticku nejsou pevně dané a lze je volně posouvat v určitém rozsahu pohybu.</string>
+    <string name="summary_free_analog_stick_opacity">Ve výchozím stavu se pozadí zobrazí jen při pohybu sticku. Pokud se ti to nelíbí, můžeš upravit neprůhlednost.</string>
+    <string name="title_free_analog_stick_opacity">Neprůhlednost pozadí volného analogového sticku</string>
+    <string name="title_fullexdisplay_mode">Režim plného externího displeje</string>
+    <string name="summary_fullexdisplay_mode">Umožní plný imerzivní režim na druhé obrazovce s automaticky přizpůsobenou obnovovací frekvencí a rozlišením. V tomto režimu se ruční nastavení neuplatní. Nemusí fungovat na každém zařízení nebo displeji.</string>
+    <string name="title_top_center_display">Zobrazit nahoře uprostřed</string>
+    <string name="summary_top_center_display">Obraz streamu se při nenativním rozlišení zarovná k hornímu okraji obrazovky místo na střed.</string>
+    <string name="title_touch_sensitivity">Citlivost dotykové obrazovky</string>
+    <string name="summary_touch_sensitivity">Když je zapnuto, můžeš citlivost dotyku nastavit ručně.</string>
+    <string name="title_global_touch_sensitivity">Citlivost dotykové obrazovky na celé ploše</string>
+    <string name="summary_global_touch_sensitivity">Ve výchozím stavu vypnuto: platí jen pro pravou polovinu obrazovky (vhodné pro hraní Genshin Impact). Po zapnutí platí na celé obrazovce.</string>
+    <string name="title_auto_touch_sensitivity">Automaticky se vrátit do středu obrazovky, když souřadnice dotyku překročí hranici</string>
+    <string name="summary_auto_touch_sensitivity">Při vysoké citlivosti se malým pohybem prstu snadno překročí hranice a nejde se dál pohybovat. V takovém případě tuto možnost zapni.</string>
+    <string name="title_touch_sensitivity_x">Úprava citlivosti obrazovky, osa X</string>
+    <string name="summary_touch_sensitivity_x">V režimu multitouch nemusí některým hrám vyhovovat standardní citlivost; touto volbou můžeš upravit citlivost zorného pole.</string>
+    <string name="title_touch_sensitivity_y">Úprava citlivosti obrazovky, osa Y</string>
+    <string name="summary_touch_sensitivity_y">V režimu multitouch nemusí některým hrám vyhovovat standardní citlivost; touto volbou můžeš upravit citlivost zorného pole.</string>
+    <string name="title_debug_info">Informace pro ladění</string>
+    <string name="summary_debug_info">Test vibrací gamepadu a další věci.</string>
+    <string name="title_touchpad_sensitivity_x">Citlivost touchpadu, osa X</string>
+    <string name="summary_touchpad_sensitivity_x">Pro režim touchpadu myši a ovládání touchpadem pomocí virtuálních speciálních tlačítek;\nOba sdílejí jednu hodnotu citlivosti, ale chování citlivosti se může lišit.\nPoužívá někdo obojí zároveň?</string>
+    <string name="title_touchpad_sensitivity_y">Citlivost touchpadu, osa Y</string>
+    <string name="summary_touchpad_sensitivity_y">Pro režim touchpadu myši a ovládání touchpadem pomocí virtuálních speciálních tlačítek;\nOba sdílejí jednu hodnotu citlivosti, ale chování citlivosti se může lišit.\nPoužívá někdo obojí zároveň?</string>
+    <string name="title_device_rumble">Vynutit vibrace zařízení</string>
+    <string name="summary_device_rumble">Pokud ti nevyhovují vibrace připojeného gamepadu, můžeš tuto volbu zapnout.\nNeplatí při vynuceném použití vestavěného USB ovladače aplikace Delos</string>
+    <string name="title_clear_default_special_button">Vypnout výchozí speciální klávesy</string>
+    <string name="summary_clear_default_special_button">Pokud ti vestavěné příkazy v menu Zpět nejsou k ničemu, můžeš je vypnout a používat ty, které sis naimportoval.</string>
+    <string name="title_trackpad_sensitivity_x">Citlivost trackpadu X</string>
+    <string name="summary_trackpad_sensitivity_x">Citlivost trackpadu na ose X, záporná hodnota obrátí směr</string>
+    <string name="title_trackpad_sensitivity_y">Citlivost trackpadu Y</string>
+    <string name="summary_trackpad_sensitivity_y">Citlivost trackpadu na ose Y, záporná hodnota obrátí směr</string>
+    <string name="title_trackpad_drag_drop_vibration">Vibrace při přetahování na trackpadu</string>
+    <string name="summary_trackpad_drag_drop_vibration">Zapne vibrační odezvu při přetahování na zařízeních s trackpadem Samsung.</string>
+    <string name="title_trackpad_drag_drop_threshold">Doba podržení pro aktivaci přetahování na trackpadu</string>
+    <string name="summary_trackpad_drag_drop_threshold">Nastav, jak dlouho držet prst na trackpadu, než se na zařízeních Samsung aktivuje přetahování.</string>
+    <string name="title_trackpad_swap_axis">Prohodit osy X a Y vstupu z trackpadu</string>
+    <string name="summary_trackpad_swap_axis">Na některých zařízeních může být vstup z trackpadu otočený. Může pomoct tuto možnost zapnout.</string>
+    <string name="title_checkbox_force_qwerty">Vynutit rozložení QWERTY</string>
+    <string name="summary_checkbox_force_qwerty">Vynutí rozložení klávesnice QWERTY.\nVyžaduje GFE.\nVypni, pokud chceš použít jiné rozložení klávesnice.</string>
+    <string name="title_checkbox_right_alt_as_meta">Pravý Alt jako Command (Mac)</string>
+    <string name="summary_right_alt_as_meta">Přemapuje pravý Alt na klávesu Command pro streamování z Macu. Každá kombinace pravý Alt + klávesa se změní na Command + klávesa. Levý Alt zůstává beze změny.</string>
+    <string name="title_checkbox_ignore_synth_events">Ignorovat syntetické události</string>
+    <string name="summary_ignore_synth_events">Ignoruje syntetické události, které posílá systém Android. Může vyřešit potíže, kdy kliknutí myší na některých zařízeních vyvolá jiné nechtěné klávesy.\nPo zapnutí přestane fungovat softwarová klávesnice systému.</string>
+    <string name="title_smart_clipboard_sync">Chytrá synchronizace schránky</string>
+    <string name="summary_smart_clipboard_sync">Při spuštění nebo obnovení streamu automaticky nahraje obsah schránky na server a při ztrátě fokusu stáhne schránku ze serveru (vyžaduje Vibepollo nebo Apollo)</string>
+    <string name="title_smart_clipboard_sync_toast">Zpráva o synchronizaci schránky</string>
+    <string name="summary_smart_clipboard_sync_toast">Zobrazí krátkou zprávu s výsledkem synchronizace schránky</string>
+    <string name="title_hide_clipboard_content">Skrýt obsah schránky</string>
+    <string name="summary_hide_clipboard_content">Označí schránku z PC jako citlivou informaci</string>
+    <string name="title_settings_misc">RŮZNÉ</string>
+    <string name="perf_overlay_lite_bandwidth">Šířka pásma</string>
+    <string name="perf_overlay_lite_network_decoding_delay">Zpoždění sítě/dekódování</string>
+    <string name="perf_overlay_lite_packet_loss">Ztráta paketů</string>
+    <string name="wrong_import_format">Chybný formát importu, zkontroluj to!</string>
+    <string name="title_checkbox_gamepad_enable_battery_report">Hlásit stav baterie gamepadu</string>
+    <string name="summary_checkbox_gamepad_enable_battery_report">Hlásí stav baterie gamepadu, pokud je to možné.\nPokud občas zaznamenáš sekání při vstupu z dotykové obrazovky, touchpadu, stylusu nebo myši, může pomoct tuto volbu vypnout.</string>
+    <string name="title_checkbox_enforce_display_mode">Vynutit režim displeje</string>
+    <string name="summary_checkbox_enforce_display_mode">Vynutí, aby plocha vykreslování používala optimální režim displeje.\nVyžadují to některé systémy (například ColorOS), aby správně nastavily obnovovací frekvenci a rozlišení.\nNezapínej na ChromeCast 4K, mohlo by to vést k chybám.</string>
+    <string name="title_checkbox_ultra_low_latency">Ultra nízká latence</string>
+    <string name="summary_checkbox_ultra_low_latency">Funguje jen na zařízeních se Snapdragon 8 Gen 2, 8(s) Gen 3, 8 Elite a na zařízeních s MediaTek.</string>
+    <string name="title_checkbox_use_virtual_display">Použít virtuální displej</string>
+    <string name="summary_checkbox_use_virtual_display">Ve výchozím stavu používat virtuální displej.\nVirtuální displej se umí automaticky přizpůsobit rozlišení a snímkové frekvenci nastaveným na klientovi, takže streamování je plynulé.\nVyžaduje Apollo jako streamovací software v PC.</string>
+    <string name="title_checkbox_enable_sticky_modifier_key_virtual_keyboard">Trvalé modifikační klávesy</string>
+    <string name="summary_checkbox_enable_sticky_modifier_key_virtual_keyboard">Používá trvalé modifikační klávesy na plné virtuální klávesnici a na vlastní klávesnici na obrazovce.</string>
+    <string name="mouse_mode_multi_touch">Multitouch</string>
+    <string name="mouse_mode_absolute_touch">Absolutní dotyk</string>
+    <string name="mouse_mode_track_pad_natural">Trackpad (přirozený / dvojklepnutí pro tažení)</string>
+    <string name="mouse_mode_track_pad_gaming">Trackpad (herní / dlouhý stisk pro tažení)</string>
+    <string name="mouse_mode_disabled">Vypnuto</string>
+    <string name="mouse_mode_absolute_touch_swapped">Absolutní dotyk (levé a pravé tlačítko prohozeno)</string>
+    <string name="keyboard_layout_set_1">Profil 1</string>
+    <string name="vdisplay_not_ready">Ovladač virtuálního displeje na serveru není připraven. Ověř, že je nainstalovaný a zapnutý ovladač SudoVDA.</string>
+    <string name="vdisplay_not_supported"><![CDATA[Tento server virtuální displej nepodporuje. Jako streamovací software v PC použij <a href=\"https://github.com/Nonary/Vibepollo\">Vibepollo</a> nebo <a href=\"https://github.com/ClassicOldSong/Apollo\">Apollo</a>.]]></string>
+    <string name="clipboard_sync_unsupported">Tento server nepodporuje synchronizaci schránky. Nainstaluj nebo aktualizuj server na nejnovější verzi Apollo.</string>
+    <string name="send_clipboard_failed">Odeslání schránky se nezdařilo: </string>
+    <string name="external_display_info">Externí displej připojen: %1$dx%2$d, %3$.1f Hz</string>
+    <string name="no_external_display">Nebyl zjištěn žádný externí displej</string>
+    <string name="no_game_instance">Není dostupná žádná instance hry</string>
+    <string name="get_clipboard_failed">Získání schránky se nezdařilo: </string>
+    <string name="send_clipboard_success">Schránka byla úspěšně odeslána</string>
+    <string name="get_clipboard_success">Schránka byla úspěšně získána</string>
+    <string name="proceed">Pokračovat</string>
+    <string name="cancel">Zrušit</string>
+    <string name="unlocking_or_starting">Server se spouští nebo se PC odemyká, počkej prosím…</string>
+
+
+    <!-- Keyboard -->
+    <string name="keyboard_clear_all">Smazat vše</string>
+    <string name="keyboard_clear_all_restore">Obnovit</string>
+    <string name="keyboard_add_keys">Přidat klávesy</string>
+    <string name="keyboard_select_keys">Vyber klávesy k přidání</string>
+    <string name="keyboard_keys_added">Počet úspěšně přidaných kláves: %d</string>
+    <string name="keyboard_duplicates_skipped">Počet přeskočených duplicit: %d</string>
+    <string name="keyboard_configure_movable">Teď můžeš přesunout tlačítko nastavení.</string>
+    <string name="keyboard_load_error">Chyba při načítání konfigurace klávesnice: %s</string>
+    <string name="keyboard_add">Přidat</string>
+    <string name="keyboard_key_custom">%s (vlastní)</string>
+
+    <string name="title_enable_commit_text">Zapnout vstup celého textu (psaní tahem a hlasem)</string>
+    <string name="summary_enable_commit_text">Předává víceznakový text ze softwarových klávesnic (psaní gesty, návrhy slov, hlasové diktování). Může rozbít hry, které spoléhají na vstup po jednotlivých klávesách.</string>
+    <string name="title_checkbox_remember_zoom_pan">Pamatovat si přiblížení a posun</string>
+    <string name="summary_checkbox_remember_zoom_pan">Ukládá změny přiblížení a pozice posunu mezi relacemi</string>
+    <string name="profile_manager_failed_to_load">Profily se nepodařilo načíst. Podrobnosti najdeš v logcatu.</string>
+    <string name="title_low_latency_frame_balance">LFR</string>
+    <string name="summary_low_latency_frame_balance">Minimalizuje zpoždění zahazováním snímků ve frontě. Nemusí fungovat na každém zařízení.</string>
+    <string name="category_perf_monitor_settings">Sledování výkonu</string>
+
+</resources>

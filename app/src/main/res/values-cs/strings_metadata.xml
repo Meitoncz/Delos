@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Game metadata: the HDR badge, the empty filtered library, the metadata menu and IGDB search -->
+    <string name="metadata_hdr_unverified">HDR/SDR neověřeno</string>
+
+    <!-- No game matches the library filter. %1$s: the name of the Y button -->
+    <string name="metadata_filtered_title">Těmto filtrům neodpovídá žádná hra</string>
+    <string name="metadata_filtered_note">Stiskni %1$s pro změnu filtrů, nebo je resetuj níže.</string>
+    <string name="metadata_filtered_reset">Resetovat filtry knihovny</string>
+
+    <!-- Why the game information is incomplete -->
+    <string name="metadata_error_unavailable">Metadata her nejsou v tomto sestavení dostupná</string>
+    <string name="metadata_error_update">Informace o hře se nepodařilo aktualizovat. Otevři Metadata a obnov je, nebo vyber shodu.</string>
+    <string name="metadata_error_partial">Některé informace o hře nejsou dostupné. Otevři Metadata a obnov je.</string>
+
+    <string name="metadata_menu_title">Metadata · %1$s</string>
+    <string name="metadata_menu_search">Hledat na IGDB / změnit shodu</string>
+    <string name="metadata_menu_refresh">Obnovit metadata</string>
+    <string name="metadata_menu_reset">Zrušit shodu metadat</string>
+    <string name="metadata_refreshed_toast">Metadata obnovena</string>
+    <string name="metadata_reset_toast">Shoda metadat zrušena</string>
+    <string name="metadata_no_match_toast">Na IGDB nebyla nalezena žádná shoda. Použij Hledat na IGDB / změnit shodu.</string>
+    <string name="metadata_update_failed_toast">Metadata se nepodařilo aktualizovat</string>
+
+    <!-- IGDB search -->
+    <string name="metadata_searching_toast">Hledám na IGDB: %1$s…</string>
+    <string name="metadata_search_unavailable_toast">Hledání na IGDB není dostupné</string>
+    <string name="metadata_matched_toast">Metadata přiřazena k: %1$s</string>
+    <string name="metadata_match_save_failed_toast">Shodu metadat se nepodařilo uložit</string>
+    <string name="metadata_candidate_with_year">%1$s (%2$d)</string>
+    <string name="metadata_matches_previous">Předchozí shody</string>
+    <string name="metadata_matches_more">Další shody</string>
+    <string name="metadata_search_other">Hledat pod jiným názvem</string>
+    <string name="metadata_search_title">Hledat na IGDB</string>
+    <string name="metadata_search_note">Vyber metadata nezávisle na obrázcích ze SteamGridDB.</string>
+    <string name="metadata_search_hint">Název hry</string>
+    <string name="metadata_search_action">Hledat</string>
+    <string name="metadata_matches_none">Na IGDB nic pro %1$s</string>
+    <string name="metadata_matches_title">Vyber shodu metadat</string>
+
+    <!-- How long a game takes (HowLongToBeat), as the home screen chip shows it -->
+    <plurals name="metadata_hltb_minutes">
+        <item quantity="one">%1$d min</item>
+        <item quantity="few">%1$d min</item>
+        <item quantity="many">%1$d min</item>
+        <item quantity="other">%1$d min</item>
+    </plurals>
+    <plurals name="metadata_hltb_hours">
+        <item quantity="one">%1$s h</item>
+        <item quantity="few">%1$s h</item>
+        <item quantity="many">%1$s h</item>
+        <item quantity="other">%1$s h</item>
+    </plurals>
+</resources>

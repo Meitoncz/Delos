@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- On-screen keyboard: the button hints shown while a controller drives it -->
+    <string name="keyboard_hint_press">Stisknout</string>
+    <string name="keyboard_hint_close">Zavřít</string>
+    <string name="keyboard_hint_shift">Shift</string>
+    <string name="keyboard_hint_delete">Smazat</string>
+    <string name="keyboard_hint_space">Mezerník</string>
+    <string name="keyboard_title">KLÁVESNICE NA OBRAZOVCE</string>
+</resources>

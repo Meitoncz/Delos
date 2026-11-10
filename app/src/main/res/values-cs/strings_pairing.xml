@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Pair a PC screen (discovered PCs, address, search) and the PIN screen -->
+    <string name="pairing_pc_title">Spárovat PC</string>
+    <string name="pairing_pc_searching">Hledám v místní síti…</string>
+    <string name="pairing_pc_none">Zatím nebylo nalezeno žádné PC. Spusť Vibepollo na svém PC, nebo zadej jeho adresu.</string>
+    <plurals name="pairing_pc_found">
+        <item quantity="one">Aplikace Delos našla ve tvé síti %1$d PC.</item>
+        <item quantity="few">Aplikace Delos našla ve tvé síti %1$d PC.</item>
+        <item quantity="many">Aplikace Delos našla ve tvé síti %1$d PC.</item>
+        <item quantity="other">Aplikace Delos našla ve tvé síti %1$d PC.</item>
+    </plurals>
+    <string name="pairing_pc_paired_online">Spárováno · Online</string>
+    <string name="pairing_pc_paired_offline">Spárováno · Offline</string>
+    <string name="pairing_pc_ready">Online · připraveno ke spárování</string>
+    <string name="pairing_pc_offline">Offline</string>
+    <string name="pairing_pc_with_pin">Spárovat pomocí PIN</string>
+    <string name="pairing_pc_with_code">Spárovat jednorázovým kódem</string>
+    <string name="pairing_pc_address">Zadat adresu</string>
+    <string name="pairing_pc_address_hint">IP nebo název PC</string>
+    <string name="pairing_pc_search_again">Hledat znovu</string>
+    <string name="pairing_pc_network">Místní síť</string>
+    <string name="pairing_pin_title">Zadej tento PIN na %1$s</string>
+    <string name="pairing_pin_note">Otevři v PC webové rozhraní Vibepollo, přejdi na PIN a napiš kód.</string>
+    <string name="pairing_code_title">Párování s %1$s</string>
+    <string name="pairing_code_note">Pomocí jednorázového kódu z Vibepollo.</string>
+    <string name="pairing_pin_waiting">Čekám na Vibepollo…</string>
+    <string name="pairing_pin_accepted">PIN přijat</string>
+    <string name="pairing_code_accepted">Kód přijat</string>
+    <string name="pairing_cancel">Zrušit</string>
+
+    <!-- Why pairing failed (shown as a toast) -->
+    <string name="pairing_failed_offline">%1$s je offline</string>
+    <string name="pairing_failed_pin_wrong">PIN byl špatně, zkus to znovu</string>
+    <string name="pairing_failed_code_wrong">Kód nebo heslo byly špatně</string>
+    <string name="pairing_failed_busy">%1$s se právě páruje s jiným zařízením</string>
+    <string name="pairing_failed_game_running">Nejdřív ukonči hru na %1$s, pak spáruj znovu</string>
+    <string name="pairing_failed_not_found">%1$s se nepodařilo najít</string>
+    <string name="pairing_failed_unsupported">%1$s párování nepodporuje</string>
+    <string name="pairing_failed">Párování s %1$s selhalo</string>
+
+    <!-- The dialog that pairs with a one-time code from the Vibepollo web UI -->
+    <string name="pairing_otp_title">Spárovat jednorázovým kódem</string>
+    <string name="pairing_otp_note">Ve webovém rozhraní Vibepollo vytvoř jednorázový PIN s heslem a pak oboje zadej tady.</string>
+    <string name="pairing_otp_pin_hint">PIN</string>
+    <string name="pairing_otp_passphrase_hint">Heslo</string>
+    <string name="pairing_otp_action">Spárovat</string>
+    <string name="pairing_otp_pin_error">PIN má 4 číslice</string>
+    <string name="pairing_otp_passphrase_error">Heslo má alespoň 4 znaky</string>
+</resources>
