@@ -5,8 +5,9 @@ import android.graphics.ColorMatrixColorFilter
 import android.graphics.RenderEffect
 import android.graphics.Shader
 import android.os.Build
-import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.updateTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.Canvas
@@ -26,6 +27,8 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
@@ -104,15 +107,21 @@ fun Backdrop(appearance: Appearance, colors: DelosColors, hero: GameArt?, modifi
             // an offscreen layer, which the tilt would render again on every display frame. The fade into the theme color below is
             // drawn over it at its own opacity: the theme color is also what lies under the hero, so this is the same picture.
             Box(Modifier.fillMaxSize().graphicsLayer { alpha = heroAlpha; compositingStrategy = CompositingStrategy.ModulateAlpha }) {
-                Crossfade(hero, animationSpec = tween(900), label = "heroArt") { art ->
+                HeroCrossfade(hero) { art ->
                     if (art != null) HeroArt(art, appearance.heroBlur, tiltReduced, heroOn && art == hero, animate && heroOn && art == hero)
                 }
             }
-            // Fade the game background into the theme color at the bottom and on the left (behind the texts)
-            Box(Modifier.fillMaxSize().graphicsLayer { alpha = .9f }.drawBehind {
-                drawRect(Brush.verticalGradient(0f to Color.Transparent, .42f to Color.Transparent, 1f to colors.bg))
-                drawRect(Brush.horizontalGradient(0f to colors.bg, .38f to colors.bg.copy(alpha = 0f)))
-            })
+            // Fade the game background into the theme color at the bottom and on the left (behind the texts), at 90 %. The two
+            // fades are composed in one shader and drawn once: the picture an offscreen layer of both at 90 % would hold, without
+            // the full-screen layer (and its extra render pass on every frame, in every glass pill that blurs the background too)
+            val fade = remember(colors.bg) {
+                Brush.composite(
+                    Brush.verticalGradient(0f to Color.Transparent, .42f to Color.Transparent, 1f to colors.bg),
+                    Brush.horizontalGradient(0f to colors.bg, .38f to colors.bg.copy(alpha = 0f)),
+                    BlendMode.SrcOver,
+                )
+            }
+            Box(Modifier.fillMaxSize().drawBehind { drawRect(fade, alpha = .9f) })
         }
         // The animated background takes on the main color of the game's background image (with the setting on)
         val matching = heroOn && appearance.matchGameColors
@@ -126,6 +135,44 @@ fun Backdrop(appearance: Appearance, colors: DelosColors, hero: GameArt?, modifi
         )
         Box(Modifier.fillMaxSize().drawBehind { drawVignette(colors.scrim) })
     }
+}
+
+/**
+ * Compose's `Crossfade` (the same states, opacities and 900 ms) for the game background, whose two pictures are full-screen:
+ * `Crossfade` gives each an offscreen layer while it fades, 8 MB of render target apiece on a 1080p screen, which together
+ * with an opening menu filled the renderer's texture budget, so it dropped the covers' textures and uploaded them again on
+ * every frame (measured on the Odin). A still background is one image, so its opacity can multiply that one draw instead
+ * (ModulateAlpha), which is the same picture. An animated one draws its still frame and the animation over each other and
+ * keeps the layer.
+ */
+@Composable
+private fun HeroCrossfade(hero: GameArt?, content: @Composable (GameArt?) -> Unit) {
+    val transition = updateTransition(hero, "heroArt")
+    val visible = remember { mutableStateListOf<GameArt?>().apply { add(transition.currentState) } }
+    val contents = remember { HashMap<GameArt?, @Composable () -> Unit>() }
+    if (transition.currentState == transition.targetState) {
+        // Not animating: only the current background stays
+        if (visible.size != 1 || visible[0] != transition.targetState) {
+            visible.removeAll { it != transition.targetState }
+            contents.clear()
+        }
+    }
+    if (transition.targetState !in contents) {
+        if (transition.targetState !in visible) visible.add(transition.targetState)
+        contents.clear()
+        visible.forEach { art ->
+            contents[art] = {
+                val alpha by transition.animateFloat(transitionSpec = { tween(900) }, label = "heroArtAlpha") { if (it == art) 1f else 0f }
+                Box(
+                    Modifier.graphicsLayer {
+                        this.alpha = alpha
+                        compositingStrategy = if (art?.animated == null) CompositingStrategy.ModulateAlpha else CompositingStrategy.Auto
+                    },
+                ) { content(art) }
+            }
+        }
+    }
+    Box { visible.forEach { art -> key(art) { contents[art]?.invoke() } } }
 }
 
 /** radial-gradient(120% 90% at 50% 40%, transparent 55%, scrim 100%) */
