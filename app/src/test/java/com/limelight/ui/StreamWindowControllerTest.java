@@ -1,5 +1,6 @@
 package com.limelight.ui;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -63,6 +64,28 @@ public class StreamWindowControllerTest {
         assertFalse(StreamWindowController.pipFromStreamContainer(ScaleMode.FIT, 1.5f));
         assertFalse(StreamWindowController.pipFromStreamContainer(ScaleMode.FILL, 1f));
         assertFalse(StreamWindowController.pipFromStreamContainer(ScaleMode.STRETCH, 1f));
+    }
+
+    @Test
+    public void pipAspectRatioIsClampedToTheRangeAndroidAccepts() {
+        assertArrayEquals(new int[] { 1920, 1080 }, StreamWindowController.pipAspectRatio(1920, 1080));
+        assertArrayEquals(new int[] { 1080, 1920 }, StreamWindowController.pipAspectRatio(1080, 1920));
+        // The limits themselves pass unchanged
+        assertArrayEquals(new int[] { 2390, 1000 }, StreamWindowController.pipAspectRatio(2390, 1000));
+        assertArrayEquals(new int[] { 1000, 2390 }, StreamWindowController.pipAspectRatio(1000, 2390));
+        // 21:9 (2.33) still fits; 32:9 and a very tall stream do not
+        assertArrayEquals(new int[] { 2560, 1097 }, StreamWindowController.pipAspectRatio(2560, 1097));
+        assertArrayEquals(new int[] { 239, 100 }, StreamWindowController.pipAspectRatio(2391, 1000));
+        assertArrayEquals(new int[] { 239, 100 }, StreamWindowController.pipAspectRatio(3840, 1080));
+        assertArrayEquals(new int[] { 100, 239 }, StreamWindowController.pipAspectRatio(1000, 2391));
+        assertArrayEquals(new int[] { 100, 239 }, StreamWindowController.pipAspectRatio(1080, 3840));
+    }
+
+    @Test
+    public void pipHasNoAspectRatioBeforeTheViewIsLaidOut() {
+        assertNull(StreamWindowController.pipAspectRatio(0, 0));
+        assertNull(StreamWindowController.pipAspectRatio(1920, 0));
+        assertNull(StreamWindowController.pipAspectRatio(0, 1080));
     }
 
     @Test

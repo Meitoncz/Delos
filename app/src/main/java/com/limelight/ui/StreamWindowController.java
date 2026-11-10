@@ -68,6 +68,10 @@ public final class StreamWindowController implements View.OnSystemUiVisibilityCh
         void setVideoBackground(boolean background);
     }
 
+    // The platform's config_pictureInPictureMaxAspectRatio (2.39:1); the minimum is its inverse
+    private static final int PIP_RATIO_LIMIT_NUMERATOR = 239;
+    private static final int PIP_RATIO_LIMIT_DENOMINATOR = 100;
+
     private final Activity activity;
     private final PreferenceConfiguration prefConfig;
     private final Host host;
@@ -231,13 +235,16 @@ public final class StreamWindowController implements View.OnSystemUiVisibilityCh
         int top = viewLocation[1];
         int width = view.getWidth();
         int height = view.getHeight();
-        Rational aspectRatio = new Rational(width, height);
         hint = new Rect(left, top, left + width, top + height);
 
         PictureInPictureParams.Builder builder =
                 new PictureInPictureParams.Builder()
-                        .setAspectRatio(aspectRatio)
                         .setSourceRectHint(hint);
+
+        int[] aspectRatio = pipAspectRatio(width, height);
+        if (aspectRatio != null) {
+            builder.setAspectRatio(new Rational(aspectRatio[0], aspectRatio[1]));
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             builder.setAutoEnterEnabled(autoEnter);
@@ -258,6 +265,25 @@ public final class StreamWindowController implements View.OnSystemUiVisibilityCh
         }
 
         return builder.build();
+    }
+
+    /**
+     * The PiP window's aspect ratio as {numerator, denominator}: the source view's, clamped to the 1:2.39 to
+     * 2.39:1 range Android accepts (it throws IllegalArgumentException for anything outside, e.g. a 32:9
+     * stream). Null before the view is laid out, so that no ratio is set.
+     */
+    @Nullable
+    static int[] pipAspectRatio(int width, int height) {
+        if (width <= 0 || height <= 0) {
+            return null;
+        }
+        if ((long) width * PIP_RATIO_LIMIT_DENOMINATOR > (long) height * PIP_RATIO_LIMIT_NUMERATOR) {
+            return new int[] { PIP_RATIO_LIMIT_NUMERATOR, PIP_RATIO_LIMIT_DENOMINATOR };
+        }
+        if ((long) height * PIP_RATIO_LIMIT_DENOMINATOR > (long) width * PIP_RATIO_LIMIT_NUMERATOR) {
+            return new int[] { PIP_RATIO_LIMIT_DENOMINATOR, PIP_RATIO_LIMIT_NUMERATOR };
+        }
+        return new int[] { width, height };
     }
 
     /** The PiP source is the stream view itself only when it fits the screen unzoomed. */
