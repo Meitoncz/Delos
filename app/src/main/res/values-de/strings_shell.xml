@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The shell: links from outside, the side menu, the bottom hint bar, the report card, button capture, row widgets -->
+
+    <!-- Security prompt for a pairing link opened from another app or a web page. %1$s: the PC (name and address, or just the address) -->
+    <string name="shell_link_pair_title">Mit %1$s koppeln?</string>
+    <string name="shell_link_pair_message">Ein Link fordert Delos auf, mit diesem PC zu koppeln. Fahr nur fort, wenn du ihn selbst geöffnet hast.</string>
+    <string name="shell_link_pair_action">Koppeln</string>
+    <!-- Security prompt for a link that starts a game. %1$s: game name, %2$s: PC name; the variants cover a missing name -->
+    <string name="shell_link_start_title">%1$s starten?</string>
+    <string name="shell_link_start_title_unnamed">Spiel starten?</string>
+    <string name="shell_link_start_message">Ein Link fordert Delos auf, %1$s auf %2$s zu starten. Fahr nur fort, wenn du ihn selbst geöffnet hast.</string>
+    <string name="shell_link_start_message_game">Ein Link fordert Delos auf, %1$s auf einem PC zu starten. Fahr nur fort, wenn du ihn selbst geöffnet hast.</string>
+    <!-- %1$s: PC name; the game name is not known -->
+    <string name="shell_link_start_message_host">Ein Link fordert Delos auf, ein Spiel auf %1$s zu starten. Fahr nur fort, wenn du ihn selbst geöffnet hast.</string>
+    <string name="shell_link_start_message_unnamed">Ein Link fordert Delos auf, ein Spiel auf einem PC zu starten. Fahr nur fort, wenn du ihn selbst geöffnet hast.</string>
+    <string name="shell_link_start_action">Starten</string>
+
+    <!-- The three buttons of the top bar -->
+    <string name="shell_nav_settings">Einstellungen</string>
+    <string name="shell_nav_profile">Profil</string>
+    <string name="shell_nav_devices">Geräte</string>
+    <!-- The name of the profile created for a user who skips the first-run steps -->
+    <string name="shell_default_profile_name">Spieler</string>
+
+    <!-- Side menu -->
+    <string name="shell_side_not_connected">Nicht verbunden</string>
+    <!-- %1$s: PC name -->
+    <string name="shell_side_connected">Verbunden mit %1$s</string>
+    <!-- %1$s: PC name -->
+    <string name="shell_side_offline">%1$s ist offline</string>
+    <string name="shell_side_show_hidden">Ausgeblendete Spiele zeigen</string>
+    <!-- %1$d: number of hidden games, %2$s: PC name -->
+    <string name="shell_side_hidden_on">%1$d ausgeblendet auf %2$s</string>
+    <!-- %1$d: number of hidden games; no PC is selected -->
+    <string name="shell_side_hidden_on_this_pc">%1$d ausgeblendet auf diesem PC</string>
+    <string name="shell_side_theme">Theme</string>
+    <string name="shell_side_theme_dark">Dunkel</string>
+    <string name="shell_side_theme_light">Hell</string>
+    <string name="shell_side_material_you">Material You</string>
+    <string name="shell_side_background">Hintergrund</string>
+    <string name="shell_side_home_layout">Startseiten-Layout</string>
+    <string name="shell_side_sounds">UI-Sounds</string>
+    <string name="shell_side_haptics">Haptik</string>
+    <string name="shell_side_all_settings">Alle Einstellungen</string>
+
+    <!-- Progress pill above the hint bar -->
+    <string name="shell_progress_artwork">Artwork wird geladen</string>
+    <string name="shell_progress_metadata">Metadaten werden geladen</string>
+    <!-- %1$d: finished, %2$d: total -->
+    <string name="shell_progress_count">%1$d von %2$d</string>
+
+    <!-- Note on the left of the hint bar on the home screen. %1$d: apps shown, %2$s: PC name -->
+    <plurals name="shell_home_apps_on_pc">
+        <item quantity="one">%1$d App auf %2$s</item>
+        <item quantity="other">%1$d Apps auf %2$s</item>
+    </plurals>
+    <!-- A filter is active. %1$d: apps shown, %2$d: apps in the library (the quantity), %3$s: PC name -->
+    <plurals name="shell_home_apps_filtered">
+        <item quantity="one">%1$d von %2$d App auf %3$s</item>
+        <item quantity="other">%1$d von %2$d Apps auf %3$s</item>
+    </plurals>
+    <!-- Small caps label before the note; keep it short -->
+    <string name="shell_hint_library_label">BIBLIOTHEK</string>
+
+    <!-- Button hints in the bottom bar: the word next to the controller button -->
+    <string name="shell_hint_select">Auswählen</string>
+    <string name="shell_hint_back">Zurück</string>
+    <string name="shell_hint_close">Schließen</string>
+    <string name="shell_hint_cancel">Abbrechen</string>
+    <string name="shell_hint_change">Ändern</string>
+    <string name="shell_hint_reset">Zurücksetzen</string>
+    <string name="shell_hint_start">Start</string>
+    <string name="shell_hint_menu">Menü</string>
+    <string name="shell_hint_options">Optionen</string>
+    <string name="shell_hint_adjust">Anpassen</string>
+    <string name="shell_hint_back_to_library">Zurück zur Bibliothek</string>
+    <string name="shell_hint_previous_tab">Vorheriger Tab</string>
+    <string name="shell_hint_next_tab">Nächster Tab</string>
+    <string name="shell_hint_search">Suchen</string>
+    <string name="shell_hint_connect">Verbinden</string>
+    <string name="shell_hint_choose">Wählen</string>
+    <string name="shell_hint_reset_filters">Filter zurücksetzen</string>
+    <string name="shell_hint_done">Fertig</string>
+    <string name="shell_hint_use_image">Bild verwenden</string>
+    <string name="shell_hint_search_name">Name suchen</string>
+    <string name="shell_hint_filter">Filter</string>
+    <string name="shell_hint_reset_to_profile">Auf Profilwert zurücksetzen</string>
+
+    <!-- The card offering a problem report -->
+    <string name="shell_problem_title_stream">Ein Stream konnte nicht laufen</string>
+    <string name="shell_problem_title_generic">Bei Delos ist ein Problem aufgetreten</string>
+    <string name="shell_problem_note">Es wird nichts automatisch gesendet. „Melden“ öffnet GitHub im Browser mit einem Entwurf zur Prüfung und speichert eine bereinigte Protokolldatei in Downloads zum Anhängen.</string>
+    <string name="shell_problem_report">Problem melden</string>
+    <string name="shell_problem_dismiss">Schließen</string>
+
+    <!-- Capturing the buttons that open the stream menu -->
+    <string name="shell_button_capture_title">Drücke die Tasten für das Stream-Menü</string>
+    <string name="shell_button_capture_note">Halte sie gleichzeitig gedrückt und lass dann los. Eine einzelne Taste geht auch, z. B. eine Rückseitentaste. Warte oder tippe zum Abbrechen.</string>
+
+    <!-- Settings rows: the reset pill and an empty value -->
+    <string name="row_reset_to_profile">Auf Profilwert zurücksetzen</string>
+    <string name="row_reset">Zurücksetzen</string>
+    <string name="row_not_set">Nicht gesetzt</string>
+
+    <!-- Impact chips of a setting: what the three glyphs mean -->
+    <string name="impact_axis_gpu">GPU</string>
+    <string name="impact_axis_latency">Latenz</string>
+    <string name="impact_axis_network">Netzwerk</string>
+    <string name="impact_level_none">keine</string>
+    <string name="impact_level_low">gering</string>
+    <string name="impact_level_medium">mittel</string>
+    <string name="impact_level_high">hoch</string>
+    <!-- Spoken description of one chip. %1$s: the axis (GPU, Latency, Network), %2$s: the level (none, low, medium, high) -->
+    <string name="impact_axis_level">%1$s: %2$s</string>
+    <string name="impact_legend">Kosten des aktuellen Werts: 1 Balken gering, 2 mittel, 3 hoch</string>
+    <!-- The three spoken chip descriptions in one line. %1$s: GPU, %2$s: Latency, %3$s: Network -->
+    <string name="impact_axes_joined">%1$s, %2$s, %3$s</string>
+</resources>

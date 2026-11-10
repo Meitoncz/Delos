@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Genre and theme names on the game card and in the Y filter. Keyed by IGDB's fixed genre / theme ids (tags_genre_* and
+        tags_theme_*, see GenreIcons.kt); genre and theme ids overlap numerically, so the two groups are separate. Steam user tags
+        are matched in English and mapped to these entries; the Steam tag names themselves are never shown. Keep each one short:
+        it sits in a small pill next to an icon.
+    -->
+    <string name="tags_genre_point_and_click">Point-and-click</string>
+    <string name="tags_genre_fighting">Kampfspiel</string>
+    <string name="tags_genre_shooter">Shooter</string>
+    <string name="tags_genre_music">Musik</string>
+    <string name="tags_genre_platform">Plattformer</string>
+    <string name="tags_genre_puzzle">Puzzle</string>
+    <string name="tags_genre_racing">Rennspiel</string>
+    <!-- RTS is the usual abbreviation of real-time strategy games; keep it in the translation if players know it -->
+    <string name="tags_genre_real_time_strategy">Echtzeitstrategie (RTS)</string>
+    <!-- RPG is the usual abbreviation of role-playing games; keep it in the translation if players know it -->
+    <string name="tags_genre_role_playing">Rollenspiel (RPG)</string>
+    <string name="tags_genre_simulator">Simulation</string>
+    <string name="tags_genre_sport">Sport</string>
+    <string name="tags_genre_strategy">Strategie</string>
+    <!-- TBS is the usual abbreviation of turn-based strategy games -->
+    <string name="tags_genre_turn_based_strategy">Rundenstrategie (TBS)</string>
+    <string name="tags_genre_tactical">Taktik</string>
+    <!-- Action games built around melee combat against many enemies (hack and slash, beat 'em up) -->
+    <string name="tags_genre_hack_and_slash">Hack and Slash/Beat ’em up</string>
+    <string name="tags_genre_quiz">Quiz/Wissen</string>
+    <string name="tags_genre_pinball">Flipper</string>
+    <string name="tags_genre_adventure">Adventure</string>
+    <!-- Games from small independent studios; a business model rather than a genre -->
+    <string name="tags_genre_indie">Indie</string>
+    <string name="tags_genre_arcade">Arcade</string>
+    <string name="tags_genre_visual_novel">Visual Novel</string>
+    <string name="tags_genre_card_and_board">Karten- &amp; Brettspiel</string>
+    <!-- Multiplayer online battle arena; the abbreviation MOBA is the name players know -->
+    <string name="tags_genre_moba">MOBA</string>
+
+    <string name="tags_theme_action">Action</string>
+    <string name="tags_theme_fantasy">Fantasy</string>
+    <string name="tags_theme_science_fiction">Science-Fiction</string>
+    <string name="tags_theme_horror">Horror</string>
+    <string name="tags_theme_thriller">Thriller</string>
+    <string name="tags_theme_survival">Survival</string>
+    <string name="tags_theme_historical">Historisch</string>
+    <string name="tags_theme_stealth">Stealth</string>
+    <string name="tags_theme_comedy">Komödie</string>
+    <string name="tags_theme_business">Wirtschaft</string>
+    <string name="tags_theme_drama">Drama</string>
+    <string name="tags_theme_non_fiction">Sachlich</string>
+    <string name="tags_theme_sandbox">Sandbox</string>
+    <string name="tags_theme_educational">Lehrreich</string>
+    <string name="tags_theme_kids">Kinder</string>
+    <string name="tags_theme_open_world">Open World</string>
+    <string name="tags_theme_warfare">Krieg</string>
+    <string name="tags_theme_party">Party</string>
+    <!-- Strategy games about exploring, expanding, exploiting and exterminating; "4X" is the name of the category -->
+    <string name="tags_theme_four_x">4X (erkunden, expandieren, ausbeuten, auslöschen)</string>
+    <!-- Never shown on a card; may appear as a filter entry -->
+    <string name="tags_theme_erotic">Erotik</string>
+    <string name="tags_theme_mystery">Mystery</string>
+    <string name="tags_theme_romance">Romantik</string>
+</resources>

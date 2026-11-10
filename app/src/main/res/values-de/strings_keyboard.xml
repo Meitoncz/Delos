@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- On-screen keyboard: the button hints shown while a controller drives it (the key legends are key names and stay as they are) -->
+    <!-- A is the controller button that presses the focused key -->
+    <string name="keyboard_hint_press">Drücken</string>
+    <string name="keyboard_hint_close">Schließen</string>
+    <!-- L3 is the left stick click; it holds Shift for the next key -->
+    <string name="keyboard_hint_shift">Umschalt</string>
+    <string name="keyboard_hint_delete">Löschen</string>
+    <string name="keyboard_hint_space">Leertaste</string>
+    <!-- Small caps title at the right end of the hint strip -->
+    <string name="keyboard_title">BILDSCHIRMTASTATUR</string>
+</resources>

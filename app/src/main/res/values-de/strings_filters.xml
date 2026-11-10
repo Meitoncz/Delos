@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Library filter (Y on the home screen) -->
+    <string name="filters_title">Bibliothek filtern</string>
+    <plurals name="filters_result_active">
+        <!-- %1$d: games that match, %2$d: games in the library (the quantity) -->
+        <item quantity="one">%1$d von %2$d Spiel</item>
+        <item quantity="other">%1$d von %2$d Spielen</item>
+    </plurals>
+    <plurals name="filters_result_all">
+        <!-- %1$d: games in the library (the quantity) -->
+        <item quantity="one">Alle %1$d Spiel</item>
+        <item quantity="other">Alle %1$d Spiele</item>
+    </plurals>
+    <!-- The hint bar label of Y -->
+    <string name="filters_hint">Filter</string>
+    <plurals name="filters_hint_active">
+        <!-- %1$d: number of criteria that narrow the library -->
+        <item quantity="one">Filter • %1$d aktiv</item>
+        <item quantity="other">Filter • %1$d aktiv</item>
+    </plurals>
+    <string name="filters_section_genre">Genre</string>
+    <string name="filters_section_theme">Thema</string>
+    <string name="filters_section_hdr">HDR-Unterstützung</string>
+    <string name="filters_section_duration">Dauer (HowLongToBeat)</string>
+    <!-- The chip that clears the genre / theme filter -->
+    <string name="filters_all">Alle</string>
+    <string name="filters_hdr_any">Alle</string>
+    <string name="filters_hdr_hdr">Natives HDR</string>
+    <string name="filters_length_any">Beliebig</string>
+    <!-- Length of a game in hours; h = hours -->
+    <string name="filters_length_under_10">&lt;10 Std</string>
+    <string name="filters_length_10_30">10–30 Std</string>
+    <string name="filters_length_30_60">30–60 Std</string>
+    <string name="filters_length_over_60">60+ Std</string>
+    <string name="filters_length_unknown">Unbekannt</string>
+    <string name="filters_reset">Zurücksetzen</string>
+    <string name="filters_done">Fertig</string>
+
+    <!-- Artwork filter sheet (Y on the artwork screen) -->
+    <string name="filters_art_title">Artwork filtern</string>
+    <string name="filters_art_reset">Filter zurücksetzen</string>
+    <string name="filters_art_done">Fertig</string>
+    <string name="filters_art_row_type">Typ</string>
+    <string name="filters_art_row_style">Stil</string>
+    <string name="filters_art_row_dimensions">Abmessungen</string>
+    <string name="filters_art_row_sort">Sortierung</string>
+    <string name="filters_art_any">Beliebig</string>
+    <string name="filters_art_type_all">Alle</string>
+    <string name="filters_art_type_static">Statisch</string>
+    <string name="filters_art_type_animated">Animiert</string>
+    <!-- Sort options, the chip of a non-default order and the note under the toolbar -->
+    <string name="filters_art_sort_score">Beste Bewertung</string>
+    <string name="filters_art_sort_newest">Neueste</string>
+    <string name="filters_art_sort_oldest">Älteste</string>
+    <string name="filters_art_sort_score_chip">Sortierung: Beste Bewertung</string>
+    <string name="filters_art_sort_newest_chip">Sortierung: Neueste</string>
+    <string name="filters_art_sort_oldest_chip">Sortierung: Älteste</string>
+    <string name="filters_art_sort_score_first">Beste Bewertung zuerst</string>
+    <string name="filters_art_sort_newest_first">Neueste zuerst</string>
+    <string name="filters_art_sort_oldest_first">Älteste zuerst</string>
+    <!-- Styles of SteamGridDB images -->
+    <string name="filters_art_style_alternate">Alternativ</string>
+    <string name="filters_art_style_blurred">Unscharf</string>
+    <string name="filters_art_style_white_logo">Weißes Logo</string>
+    <string name="filters_art_style_material">Material</string>
+    <string name="filters_art_style_no_logo">Ohne Logo</string>
+    <string name="filters_art_style_official">Offiziell</string>
+    <string name="filters_art_style_white">Weiß</string>
+    <string name="filters_art_style_black">Schwarz</string>
+    <string name="filters_art_style_custom">Eigene</string>
+    <!-- The strip under the toolbar -->
+    <string name="filters_art_chips_reset">Zurücksetzen</string>
+    <string name="filters_art_reset_toast">Filter zurückgesetzt</string>
+    <string name="filters_art_change">Filter ändern</string>
+</resources>
