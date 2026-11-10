@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Game metadata: the HDR badge, the empty filtered library, the metadata menu and IGDB search -->
+    <string name="metadata_hdr_unverified">HDR/SDR unverified</string>
+
+    <!-- No game matches the library filter. %1$s: the name of the Y button -->
+    <string name="metadata_filtered_title">No games match these filters</string>
+    <string name="metadata_filtered_note">Press %1$s to change the filters, or reset them below.</string>
+    <string name="metadata_filtered_reset">Reset library filters</string>
+
+    <!-- Why the game information is incomplete (shown as a toast after a refresh) -->
+    <string name="metadata_error_unavailable">Game metadata is not available in this build</string>
+    <string name="metadata_error_update">Game information could not be updated. Open Metadata to refresh or choose a match.</string>
+    <string name="metadata_error_partial">Some game information is unavailable. Open Metadata to refresh.</string>
+
+    <!-- %1$s: game name -->
+    <string name="metadata_menu_title">Metadata · %1$s</string>
+    <string name="metadata_menu_search">Search IGDB / change match</string>
+    <string name="metadata_menu_refresh">Refresh metadata</string>
+    <string name="metadata_menu_reset">Reset metadata match</string>
+    <string name="metadata_refreshed_toast">Metadata refreshed</string>
+    <string name="metadata_reset_toast">Metadata match reset</string>
+    <string name="metadata_no_match_toast">No IGDB match found. Use Search IGDB / change match.</string>
+    <string name="metadata_update_failed_toast">Metadata could not be updated</string>
+
+    <!-- IGDB search. %1$s: the name searched for / the game chosen -->
+    <string name="metadata_searching_toast">Searching IGDB for %1$s…</string>
+    <string name="metadata_search_unavailable_toast">IGDB search is unavailable</string>
+    <string name="metadata_matched_toast">Metadata matched with %1$s</string>
+    <string name="metadata_match_save_failed_toast">Metadata match could not be saved</string>
+    <!-- A game in the list of matches. %1$s: game name, %2$d: release year -->
+    <string name="metadata_candidate_with_year">%1$s (%2$d)</string>
+    <string name="metadata_matches_previous">Previous matches</string>
+    <string name="metadata_matches_more">More matches</string>
+    <string name="metadata_search_other">Search for another name</string>
+    <string name="metadata_search_title">Search IGDB</string>
+    <string name="metadata_search_note">Choose metadata independently of SteamGridDB artwork.</string>
+    <string name="metadata_search_hint">Game name</string>
+    <string name="metadata_search_action">Search</string>
+    <!-- %1$s: the name searched for -->
+    <string name="metadata_matches_none">No IGDB match for %1$s</string>
+    <string name="metadata_matches_title">Choose metadata match</string>
+
+    <!-- How long a game takes (HowLongToBeat), as the home screen chip shows it -->
+    <plurals name="metadata_hltb_minutes">
+        <!-- %1$d: minutes -->
+        <item quantity="one">%1$d Min</item>
+        <item quantity="other">%1$d Mins</item>
+    </plurals>
+    <plurals name="metadata_hltb_hours">
+        <!-- %1$s: hours, in whole or half hours (12 or 12½); the quantity is the hours rounded up -->
+        <item quantity="one">%1$s Hour</item>
+        <item quantity="other">%1$s Hours</item>
+    </plurals>
+</resources>

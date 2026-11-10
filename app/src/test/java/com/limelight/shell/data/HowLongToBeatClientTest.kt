@@ -25,27 +25,25 @@ class HowLongToBeatClientTest {
             "\"comp_all\":237341,\"comp_all_count\":10805,\"comp_main\":94177,\"comp_all_avg\":253582")),
             listOf(search(1, 1, 2127L to "Cyberpunk 2077")))
         val result = fixture.client.lookup("Cyberpunk 2077", listOf(1091500L))
-        assertEquals(CompletionTime(2127, "Cyberpunk 2077", 237341, "https://howlongtobeat.com/game/2127", "66 Hours"), result)
+        assertEquals(CompletionTime(2127, "Cyberpunk 2077", 237341, "https://howlongtobeat.com/game/2127"), result)
         assertEquals(listOf("/game/2127"), fixture.requests.map { it.url.encodedPath }.filter { it.startsWith("/game/") })
     }
 
-    @Test fun fractionalHeadlineKeepsTheWebsiteValueInsteadOfRoundingToWholeHours() {
+    @Test fun theCombinedTimeIsTakenFromTheDataNotTheBanner() {
         val fixture = Fixture(mapOf(86015L to detail(86015, "Alba: A Wildlife Adventure", 1337010,
-            "\"comp_all\":12772,\"comp_all_count\":100", headline = "3½ Hours")),
+            "\"comp_all\":12772,\"comp_all_count\":100")),
             listOf(search(1, 1, 86015L to "Alba: A Wildlife Adventure")))
         val result = fixture.client.lookup("Alba: A Wildlife Adventure", listOf(1337010L))
         assertEquals(12772L, result?.seconds)
-        assertEquals("3½ Hours", result?.headline)
     }
 
-    @Test fun pageWithoutTheHeadlineBannerStillYieldsTheCombinedTimeInTheWebsitesRounding() {
+    @Test fun pageWithoutTheHeadlineBannerStillYieldsTheCombinedTime() {
         // Co-op titles such as Overcooked! All You Can Eat render only the per-style table next to a valid comp_all.
-        for ((seconds, headline) in listOf(12772L to "3½ Hours", 80_713L to "22½ Hours", 469_657L to "130 Hours")) {
+        for (seconds in listOf(12772L, 80_713L, 469_657L)) {
             val page = detail(1, "Game", 7, "\"comp_all\":$seconds,\"comp_all_count\":100").replace("<h4>HowLongToBeat</h4><h5>66 Hours</h5>", "")
             val fixture = Fixture(mapOf(1L to page), listOf(search(1, 1, 1L to "Game")))
             val result = fixture.client.lookup("Game", listOf(7L))
             assertEquals(seconds, result?.seconds)
-            assertEquals(headline, result?.headline)
         }
     }
 
@@ -293,8 +291,8 @@ class HowLongToBeatClientTest {
     companion object {
         private val gson = Gson()
 
-        private fun detail(id: Long, name: String, steam: Long, stats: String = "\"comp_all\":237341,\"comp_all_count\":10805", headline: String = "66 Hours"): String =
-            "<h4>HowLongToBeat</h4><h5>$headline</h5>" +
+        private fun detail(id: Long, name: String, steam: Long, stats: String = "\"comp_all\":237341,\"comp_all_count\":10805"): String =
+            "<h4>HowLongToBeat</h4><h5>66 Hours</h5>" +
                 "<script type='application/json' id='__NEXT_DATA__'>{\"props\":{\"pageProps\":{\"game\":{\"data\":{\"game\":[" +
                 "{\"game_id\":$id,\"game_name\":${gson.toJson(name)},\"profile_steam\":$steam,$stats}]}}}}}</script>"
 

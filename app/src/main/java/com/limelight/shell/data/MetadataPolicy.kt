@@ -55,7 +55,7 @@ internal fun GameMetadata.validated(): GameMetadata? {
         if (nullable(evidence.support) == null) evidence.copy(support = NativeHdr.UNKNOWN) else evidence
     } ?: HdrEvidence(NativeHdr.UNKNOWN)
     val checkedCompletion = nullable(completion)?.takeIf {
-        nullable(it.name) != null && nullable(it.url) != null && nullable(it.headline) != null
+        nullable(it.name) != null && nullable(it.url) != null
     }
     return copy(
         candidate = checkedCandidate, hdr = checkedHdr, completion = checkedCompletion,

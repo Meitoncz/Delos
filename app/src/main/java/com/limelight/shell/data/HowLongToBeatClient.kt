@@ -140,12 +140,9 @@ class HowLongToBeatClient internal constructor(
         val seconds = integer(entry, "comp_all")
         val count = integer(entry, "comp_all_count")
         if ((seconds != null && seconds < 0) || (count != null && count < 0)) changed("completion time")
+        // The text shown for the time is made from comp_all by the screens (the website's rounding, in the app language)
         val completion = if (seconds != null && seconds > 0 && count != null && count > 0) {
-            // Some pages (for example co-op titles) omit the banner and show only the per-style table, although
-            // comp_all is present; the headline is then written the way the website writes it from the same value.
-            val headline = HEADLINE.find(html)?.groupValues?.get(1)?.trim()?.takeIf { it.isNotEmpty() }
-                ?: headlineText(seconds)
-            CompletionTime(id, name, seconds, "$BASE/game/$id", headline)
+            CompletionTime(id, name, seconds, "$BASE/game/$id")
         } else null
         return DetailGame(name, steamIds, completion)
     }
@@ -221,7 +218,7 @@ class HowLongToBeatClient internal constructor(
         pacer.await()
         val url = "$BASE$path".toHttpUrl()
         val builder = Request.Builder().url(url).header("User-Agent", "Delos/1.0")
-            .header("Referer", "$BASE/").header("Origin", BASE).header("Accept", "*/*")
+            .header("Referer", "$BASE/").header("Origin", BASE).header("Accept", "*/*") // l10n-ignore
         if (payload != null) builder.post(payload.toRequestBody(JSON_TYPE))
         if (auth != null) {
             builder.header("x-auth-token", auth.token)
@@ -273,14 +270,6 @@ class HowLongToBeatClient internal constructor(
     private fun changed(context: String): Nothing =
         throw HowLongToBeatException("HowLongToBeat changed or blocked its $context data")
 
-    /** The website's rounding: minutes below an hour, half hours up to 100 hours, whole hours beyond. */
-    private fun headlineText(seconds: Long): String {
-        if (seconds < 3600) return "${(seconds + 30) / 60} Mins"
-        val halves = if (seconds >= 100 * 3600L) ((seconds + 1800) / 3600) * 2 else (seconds + 900) / 1800
-        val hours = "${halves / 2}${if (halves % 2 == 1L) "\u00bd" else ""}"
-        return if (hours == "1") "1 Hour" else "$hours Hours"
-    }
-
     private data class SearchAuth(val token: String, val key: String?, val value: String?)
     private data class SearchGame(val id: Long, val name: String)
     private data class DetailGame(val name: String, val steamIds: Set<Long>, val completion: CompletionTime?)
@@ -297,7 +286,6 @@ class HowLongToBeatClient internal constructor(
         private val EDITION_TAIL = Regex("\\s+(?:\\S+\\s+)?edition$")
         private val SCRIPT_SOURCE = Regex("""<script\b[^>]*\bsrc\s*=\s*["']([^"']+)["'][^>]*>""", RegexOption.IGNORE_CASE)
         private val NEXT_DATA = Regex("""<script\b[^>]*\bid\s*=\s*["']__NEXT_DATA__["'][^>]*>(.*?)</script\s*>""", setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
-        private val HEADLINE = Regex("""<h4\b[^>]*>\s*HowLongToBeat\s*</h4>\s*<h5\b[^>]*>([^<]+)</h5>""", RegexOption.IGNORE_CASE)
         // The path must itself say "search": any other chunk POST (login, submit) must never be trusted as the search API.
         private val SEARCH_POST = Regex("""fetch\s*\(\s*["'](/api/[a-zA-Z0-9_/]*search[a-zA-Z0-9_/]*)[^"']*["']\s*,\s*\{[^}]*method:\s*["']POST["'][^}]*\}""", setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
     }
