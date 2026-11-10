@@ -21,6 +21,12 @@ public class HelpActivity extends AppCompatActivity {
     private boolean backCallbackRegistered;
     private OnBackInvokedCallback onBackInvokedCallback;
 
+    // Android 10-12: puts the saved app language on this activity's resources (a no-op on Android 13+, where the system does it)
+    @Override
+    protected void attachBaseContext(android.content.Context newBase) {
+        super.attachBaseContext(com.limelight.shell.settings.AppLanguage.wrap(newBase));
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
