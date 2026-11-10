@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Settings tabs: the tab name and the line shown when no row is focused -->
+    <string name="settings_tab_stream">Stream</string>
+    <string name="settings_tab_stream_description">Quality and latency of the video coming from your PC.</string>
+    <string name="settings_tab_display">Display</string>
+    <string name="settings_tab_display_description">How the stream fills the screen and which information is shown while you play.</string>
+    <string name="settings_tab_audio">Audio</string>
+    <string name="settings_tab_audio_description">Sound from the PC and the sounds of the Delos interface.</string>
+    <string name="settings_tab_controls">Controls</string>
+    <string name="settings_tab_controls_description">Gamepads, mouse, touch, keyboard and on-screen controls.</string>
+    <string name="settings_tab_appearance">Appearance</string>
+    <string name="settings_tab_appearance_description">Theme, colors and the animated background. Changes apply immediately.</string>
+    <string name="settings_tab_covers">Covers</string>
+    <string name="settings_tab_covers_description">Covers, wide covers, backgrounds and logos from your PC or SteamGridDB.</string>
+    <string name="settings_tab_devices">Devices</string>
+    <string name="settings_tab_devices_description">Paired PCs and what happens when Delos starts.</string>
+    <string name="settings_tab_about">About</string>
+    <string name="settings_tab_about_description">Delos is a fork of Artemis and Moonlight, licensed under the GPLv3.</string>
+
+    <!-- Appearance choices: the animated background (names of the effects) -->
+    <string name="settings_option_background_aurora">Aurora</string>
+    <string name="settings_option_background_tide">Tide</string>
+    <string name="settings_option_background_silk">Silk</string>
+    <string name="settings_option_background_contour">Contour</string>
+    <string name="settings_option_background_nebula">Nebula</string>
+    <string name="settings_option_background_plasma">Plasma</string>
+    <string name="settings_option_background_lava">Lava</string>
+    <string name="settings_option_background_caustics">Caustics</string>
+    <string name="settings_option_background_bokeh">Bokeh</string>
+    <string name="settings_option_background_orbit">Orbit</string>
+    <!-- A still background without animation -->
+    <string name="settings_option_background_still">Still</string>
+
+    <!-- Appearance choices: how the library is laid out on the start screen -->
+    <string name="settings_option_home_layout_grid">Grid</string>
+    <string name="settings_option_home_layout_row">Row</string>
+
+    <!-- Appearance choices: color palettes (names; Delos is the app's own palette and keeps its name) -->
+    <string name="settings_option_palette_delos">Delos</string>
+    <string name="settings_option_palette_lagoon">Lagoon</string>
+    <string name="settings_option_palette_dusk">Dusk</string>
+    <string name="settings_option_palette_ember">Ember</string>
+    <string name="settings_option_palette_moss">Moss</string>
+    <string name="settings_option_palette_iris">Iris</string>
+    <string name="settings_option_palette_rose">Rose</string>
+    <string name="settings_option_palette_sunset">Sunset</string>
+    <string name="settings_option_palette_mint">Mint</string>
+    <string name="settings_option_palette_gold">Gold</string>
+
+    <!-- Appearance choices: the clock in the status bar -->
+    <!-- Follows the system's 12 or 24 hour setting -->
+    <string name="settings_option_clock_system">System</string>
+    <string name="settings_option_clock_12">12-hour</string>
+    <string name="settings_option_clock_24">24-hour</string>
+
+    <!-- Resolutions of this display, offered next to the fixed ones; %1$s: width and height such as 2400x1080 -->
+    <string name="settings_resolution_native">Native (%1$s)</string>
+    <string name="settings_resolution_native_portrait">Native portrait (%1$s)</string>
+    <!-- The display has a cutout: the size without it -->
+    <string name="settings_resolution_native_fullscreen">Native fullscreen (%1$s)</string>
+    <string name="settings_resolution_native_fullscreen_portrait">Native fullscreen portrait (%1$s)</string>
+    <!-- The resolution the user typed; %1$s: width and height such as 1920x1080 -->
+    <string name="settings_resolution_custom">Custom (%1$s)</string>
+    <!-- The display's own refresh rate; %1$d: frames per second -->
+    <string name="settings_fps_native">Native (%1$d FPS)</string>
+    <!-- The frame rate the user typed; %1$s: frames per second, may have decimals -->
+    <string name="settings_fps_custom">Custom (%1$s FPS)</string>
+    <!-- A rumble feel that matches no preset (edited in the Debug lab) -->
+    <string name="settings_choice_custom">Custom</string>
+    <!-- One of the five special-key layouts; %1$d: 1 to 5 -->
+    <string name="settings_layout_number">Layout %1$d</string>
+    <!-- A stored choice the device no longer offers; %1$s: its label -->
+    <string name="settings_choice_unavailable">%1$s (unavailable)</string>
+
+    <!-- Errors of the settings that take typed text -->
+    <string name="settings_error_resolution_format">Use width x height, for example 1920x1080</string>
+    <string name="settings_error_fps_range">Enter a frame rate above 0 and up to 1000</string>
+    <string name="settings_error_bitrate_range">Enter a bitrate above 0 and up to 9999 Mbps</string>
+</resources>

@@ -3,18 +3,35 @@ package com.limelight.shell.settings
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.res.Configuration
+import android.content.res.Resources
+import androidx.annotation.StringRes
+import com.limelight.R
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-enum class BackgroundKind(val label: String) {
-    AURORA("Aurora"), TIDE("Tide"), SILK("Silk"), CONTOUR("Contour"),
+enum class BackgroundKind(@StringRes val labelRes: Int) {
+    AURORA(R.string.settings_option_background_aurora),
+    TIDE(R.string.settings_option_background_tide),
+    SILK(R.string.settings_option_background_silk),
+    CONTOUR(R.string.settings_option_background_contour),
     // Shaders, Android 13 and later (Aurora below)
-    NEBULA("Nebula"), PLASMA("Plasma"), LAVA("Lava"), CAUSTICS("Caustics"), BOKEH("Bokeh"), ORBIT("Orbit"),
-    STILL("Still"),
+    NEBULA(R.string.settings_option_background_nebula),
+    PLASMA(R.string.settings_option_background_plasma),
+    LAVA(R.string.settings_option_background_lava),
+    CAUSTICS(R.string.settings_option_background_caustics),
+    BOKEH(R.string.settings_option_background_bokeh),
+    ORBIT(R.string.settings_option_background_orbit),
+    STILL(R.string.settings_option_background_still);
+
+    fun label(res: Resources): String = res.getString(labelRes)
 }
 
-enum class HomeLayout(val label: String) { GRID("Grid"), ROW("Row") }
+enum class HomeLayout(@StringRes val labelRes: Int) {
+    GRID(R.string.settings_option_home_layout_grid), ROW(R.string.settings_option_home_layout_row);
+
+    fun label(res: Resources): String = res.getString(labelRes)
+}
 
 /**
  * Color palettes used while Material You is off (with it on, the system's wallpaper colors are used):
@@ -22,21 +39,27 @@ enum class HomeLayout(val label: String) { GRID("Grid"), ROW("Row") }
  * ([accent2]: rings, pulses, gradients) and accent ([accent3]: small highlights and a third light in the
  * animated backgrounds). Delos is the prototype's own palette.
  */
-enum class Palette(val label: String, val base: Float, val accent: Float, val accent2: Float, val accent3: Float) {
-    DELOS("Delos", 222f, 40f, 190f, 250f),
-    LAGOON("Lagoon", 190f, 176f, 228f, 18f),
-    DUSK("Dusk", 262f, 268f, 320f, 200f),
-    EMBER("Ember", 14f, 14f, 40f, 330f),
-    MOSS("Moss", 110f, 96f, 150f, 45f),
-    IRIS("Iris", 232f, 226f, 280f, 180f),
-    ROSE("Rose", 330f, 340f, 20f, 270f),
-    SUNSET("Sunset", 285f, 24f, 330f, 48f),
-    MINT("Mint", 165f, 158f, 205f, 330f),
-    GOLD("Gold", 35f, 45f, 195f, 345f),
+enum class Palette(@StringRes val labelRes: Int, val base: Float, val accent: Float, val accent2: Float, val accent3: Float) {
+    DELOS(R.string.settings_option_palette_delos, 222f, 40f, 190f, 250f),
+    LAGOON(R.string.settings_option_palette_lagoon, 190f, 176f, 228f, 18f),
+    DUSK(R.string.settings_option_palette_dusk, 262f, 268f, 320f, 200f),
+    EMBER(R.string.settings_option_palette_ember, 14f, 14f, 40f, 330f),
+    MOSS(R.string.settings_option_palette_moss, 110f, 96f, 150f, 45f),
+    IRIS(R.string.settings_option_palette_iris, 232f, 226f, 280f, 180f),
+    ROSE(R.string.settings_option_palette_rose, 330f, 340f, 20f, 270f),
+    SUNSET(R.string.settings_option_palette_sunset, 285f, 24f, 330f, 48f),
+    MINT(R.string.settings_option_palette_mint, 165f, 158f, 205f, 330f),
+    GOLD(R.string.settings_option_palette_gold, 35f, 45f, 195f, 345f);
+
+    fun label(res: Resources): String = res.getString(labelRes)
 }
 
 /** How the status bar shows the time. */
-enum class ClockFormat(val label: String) { SYSTEM("System"), H12("12-hour"), H24("24-hour") }
+enum class ClockFormat(@StringRes val labelRes: Int) {
+    SYSTEM(R.string.settings_option_clock_system), H12(R.string.settings_option_clock_12), H24(R.string.settings_option_clock_24);
+
+    fun label(res: Resources): String = res.getString(labelRes)
+}
 
 /** Settings → Appearance of the native UI (docs/GUI.md). Defaults follow the prototype. */
 data class Appearance(

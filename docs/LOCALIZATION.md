@@ -77,20 +77,28 @@ One source of truth: the **Android per-app locale**, wrapped by `shell/settings/
 
 ### Settings catalog and settings help
 
-`SettingsCatalog` reads titles, summaries, entries and dialog messages from `res/xml/preferences.xml` and `arrays.xml`, i.e. from
-the legacy English strings, through a configuration context forced to `Locale.ENGLISH`, and `SettingsHelp` /
-`NativeSettingsHelp` / `StreamMenuHelp` hold English literals in Kotlin maps. To make them locale-aware:
+`SettingsCatalog` reads titles, summaries, entries and dialog messages from `res/xml/preferences.xml` and `arrays.xml` through the
+resources it was given, so they come from the legacy strings of the current language (there is no `Locale.ENGLISH` override any
+more). The help texts are string resources too:
 
-* Drop the `Locale.ENGLISH` override in `SettingsCatalog` and read through `context.resources`; build the catalog with
-  `remember(LocalConfiguration.current.locales)` so it is rebuilt when the language changes (it is cheap, no views are inflated).
-  Titles and choices then come from the language folders for free, because the catalog already reads resource ids.
-* Move the help texts to `res/values/strings_settings_help.xml`, key `help_<setting key>` for the description and
-  `help_<setting key>_<value>` for the per-choice explanation (`help_list_fps_60` ...). `SettingsHelp.description(key)` looks the
-  resource up with `resources.getIdentifier("help_$key", "string", packageName)` and falls back to the XML summary. Because
-  lint cannot see `getIdentifier` uses, add `res/raw/keep.xml` with `tools:keep="@string/help_*"` so UnusedResources stays
-  quiet. Dynamic help (`"Requests a ${value} stream."`) becomes a format string with a positional argument.
-* `SettingsHelp.LINE_CHARS` / `MAX_LINES` and the tests that check help length describe the **English** text in the 432 px box.
-  Translations are not held to them (see "Text fit"); the box scrolls.
+* The catalog rebuilds itself when the language changes: a screen that shows labels calls
+  `profiles.catalog.refresh(textResources())` before it reads `all` / `visible` (the screen already recomposes on a language change
+  because `textResources()` reads the configuration). Keys, kinds, defaults and ranges do not depend on the language, so stores
+  (`StreamSettingsStore`, `StreamProfileStore`) keep using the shared catalog without refreshing it.
+* Help texts live in `res/values/strings_settings_help.xml`: `help_<setting key>` is the description and
+  `help_<setting key>_<value>` the per-choice explanation (`help_list_fps_60`; the value is lower-cased and every character but
+  letters and digits becomes `_`, so `fast-vsync` is `help_frame_pacing_fast_vsync`). `SettingsHelp.description(res, key, fallback)`
+  and `SettingsHelp.choice(res, key, value)` find them with `getIdentifier` and fall back to the XML summary or to the dynamic
+  texts (`help_dynamic_*`, formats with a positional argument). The stream menu help is `stream_help_<slug of the item key>`
+  (`StreamMenuHelp.description(res, key)`; the keys stay the English item names, which are identifiers). Because lint cannot see
+  `getIdentifier` uses, `res/raw/keep.xml` keeps `help_*` and `stream_help_*`. These strings are always formatted, so a literal
+  percent sign is written `%%` there.
+* Settings tabs (`SettingsTab.label(res)` / `description(res)`), appearance choices (`Palette`, `BackgroundKind`, `HomeLayout`,
+  `ClockFormat`: `label(res)`), the labels `SettingsCapabilities.choices(res, spec, values)` adds (native resolutions, custom
+  values, layouts) and the typed-text errors of `StreamSettingsStore.writeText(res, …)` are in `res/values/strings_settings.xml`.
+* `SettingsHelp.LINE_CHARS` / `MAX_LINES` and the tests that check help length describe the **English** text in the 432 px box
+  and run against the base `values/` resources (`qualifiers = "en"`). Translations are not held to them (see "Text fit"); the box
+  scrolls.
 * The legacy summaries that the catalog reads also appear in the classic UI; they are the same resources, so there is one text.
 
 ### Genre and theme names

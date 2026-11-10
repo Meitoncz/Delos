@@ -62,7 +62,7 @@ class StreamProfileStore(private val context: Context, val catalog: SettingsCata
 
     fun rename(profile: Profile) {
         manager.profiles.firstOrNull { it.uuid.toString() == profile.id }?.let {
-            it.name = "Delos · ${profile.name}"
+            it.name = "Delos · ${profile.name}" // l10n-ignore: stored name of the linked Artemis settings profile
             manager.update(it)
         }
         if (current?.id == profile.id) current = profile
@@ -87,10 +87,10 @@ class StreamProfileStore(private val context: Context, val catalog: SettingsCata
         val existing = manager.profiles.firstOrNull { it.uuid == id }
         val now = System.currentTimeMillis()
         if (existing == null) {
-            manager.add(SettingsProfile(id, "Delos · ${profile.name}", now, now, options))
-        } else if (existing.options != options || existing.name != "Delos · ${profile.name}") {
+            manager.add(SettingsProfile(id, "Delos · ${profile.name}", now, now, options)) // l10n-ignore: stored name
+        } else if (existing.options != options || existing.name != "Delos · ${profile.name}") { // l10n-ignore: stored name
             existing.options = options
-            existing.name = "Delos · ${profile.name}"
+            existing.name = "Delos · ${profile.name}" // l10n-ignore: stored name
             existing.modifiedUtc = now
             manager.update(existing)
         }

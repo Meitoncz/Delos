@@ -25,7 +25,7 @@ import com.limelight.shell.screens.settingSearchTerms
 import com.limelight.shell.ui.RowValue
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [33], shadows = [ShadowMoonBridge::class, ShadowGameManager::class])
+@Config(sdk = [33], qualifiers = "en", shadows = [ShadowMoonBridge::class, ShadowGameManager::class])
 class ShellSettingsTest {
     private lateinit var context: Context
     private lateinit var catalog: SettingsCatalog
@@ -73,9 +73,9 @@ class ShellSettingsTest {
 
     @Test fun everyCatalogSettingAndChoiceHasSpecificHelp() {
         catalog.all.forEach { spec ->
-            assertTrue("Missing help for ${spec.key}", SettingsHelp.description(spec.key, "").isNotBlank())
+            assertTrue("Missing help for ${spec.key}", SettingsHelp.description(context.resources, spec.key, "").isNotBlank())
             spec.choices.forEach { choice ->
-                assertTrue("Missing help for ${spec.key}/${choice.value}", SettingsHelp.choice(spec.key, choice.value).isNotBlank())
+                assertTrue("Missing help for ${spec.key}/${choice.value}", SettingsHelp.choice(context.resources, spec.key, choice.value).isNotBlank())
             }
         }
         // A choice name finds its setting, and the words of a query match in any order
@@ -83,19 +83,19 @@ class ShellSettingsTest {
         assertTrue("frame_pacing" in search("warp pacing"))
         assertTrue("frame_pacing" in search("pacing warp"))
         assertTrue(search("no such setting anywhere").isEmpty())
-        assertTrue(SettingsHelp.choice("list_resolution", "2560x1600").contains("2560 × 1600"))
-        assertTrue(SettingsHelp.choice("list_fps", "119.88").contains("119.88"))
+        assertTrue(SettingsHelp.choice(context.resources, "list_resolution", "2560x1600").contains("2560 × 1600"))
+        assertTrue(SettingsHelp.choice(context.resources, "list_fps", "119.88").contains("119.88"))
     }
 
     @Test fun helpFollowsSelectedPacingAndExplainsLfrPrecedence() {
         val pacing = spec("frame_pacing")
         val values = mutableMapOf<String, Any>("frame_pacing" to "warp2", "pref_low_latency_frame_balance" to true)
-        val warp = SettingsHelp.details(pacing, values)
+        val warp = SettingsHelp.details(context.resources, pacing, values)
         assertTrue(warp.startsWith("Warp 2\n"))
         assertTrue(warp.contains("four times"))
         assertTrue(warp.contains("LFR is enabled"))
         values["frame_pacing"] = "fast-vsync"
-        val nano = SettingsHelp.details(pacing, values)
+        val nano = SettingsHelp.details(context.resources, pacing, values)
         assertTrue(nano.startsWith("Fast V-Sync"))
         assertFalse(nano.contains("four times"))
         assertFalse(nano.contains("LFR is enabled"))
@@ -112,7 +112,7 @@ class ShellSettingsTest {
         listOf("checkbox_async_decode", "checkbox_ultra_low_latency", "pref_low_latency_frame_balance").forEach {
             assertFalse("Should not apply to PyroWave: $it", stream.enabled(spec(it), null))
         }
-        assertTrue(SettingsHelp.details(spec("list_sgsr_quality"), prefs.all).contains("all five modes"))
+        assertTrue(SettingsHelp.details(context.resources, spec("list_sgsr_quality"), prefs.all).contains("all five modes"))
         prefs.edit().putBoolean("checkbox_sgsr", false).commit()
         assertFalse(stream.enabled(spec("list_sgsr_quality"), null))
         prefs.edit().putString("video_format", "forceav1").putBoolean("checkbox_sgsr", true).commit()
@@ -124,11 +124,11 @@ class ShellSettingsTest {
     @Test fun unavailableStoredChoiceIsNotShownAsAnotherMode() {
         val pacing = spec("frame_pacing")
         val supported = pacing.choices.filter { it.value != "fast-vsync" }
-        assertEquals("Fast V-Sync (Nano Pacer) (unavailable)", pacing.choiceLabel("fast-vsync", supported))
+        assertEquals("Fast V-Sync (Nano Pacer) (unavailable)", pacing.choiceLabel(context.resources, "fast-vsync", supported))
         assertEquals(supported.first(), nextSettingChoice("fast-vsync", supported, 1))
         assertEquals(supported.last(), nextSettingChoice("fast-vsync", supported, -1))
         assertNull(nextSettingChoice("fast-vsync", emptyList(), 1))
-        val help = SettingsHelp.details(pacing, mapOf("frame_pacing" to "fast-vsync"), supported)
+        val help = SettingsHelp.details(context.resources, pacing, mapOf("frame_pacing" to "fast-vsync"), supported)
         assertTrue(help.startsWith("Fast V-Sync"))
         assertTrue(help.contains("saved choice is unavailable"))
     }
@@ -294,7 +294,7 @@ class ShellSettingsTest {
         stream.write(spec("seekbar_bitrate_kbps"), 80000)
         stream.write(spec("video_format"), "pyrowave")
         assertEquals(530000, prefs.getInt("seekbar_bitrate_kbps", -1))
-        assertNull(stream.writeText(spec("edit_diy_bitrate"), "528"))
+        assertNull(stream.writeText(context.resources, spec("edit_diy_bitrate"), "528"))
         stream.write(spec("video_format"), "forceav1")
         assertEquals(200000, prefs.getInt("seekbar_bitrate_kbps", -1))
         stream.write(spec("video_format"), "pyrowave")
@@ -410,7 +410,7 @@ class ShellSettingsTest {
         stream.write(spec("seekbar_bitrate_kbps"), 205000)
         stream.write(spec("video_format"), "forceav1")
         assertEquals(205000, prefs.getInt("seekbar_bitrate_kbps", -1))
-        assertNull(stream.writeText(spec("edit_diy_bitrate"), "206"))
+        assertNull(stream.writeText(context.resources, spec("edit_diy_bitrate"), "206"))
         assertEquals(200000, prefs.getInt(codecBitrateKey("forceav1"), -1))
         stream.write(spec("video_format"), "forceh265")
         assertEquals(80000, prefs.getInt("seekbar_bitrate_kbps", -1))
@@ -511,14 +511,14 @@ class ShellSettingsTest {
         val prefs = context.getSharedPreferences("test-validation", Context.MODE_PRIVATE)
         val stream = StreamSettingsStore(catalog) { prefs }
         listOf("NaN", "Infinity", "-1", "0", "oops").forEach {
-            assertNotNull(stream.writeText(spec("custom_refresh_rate"), it))
-            assertNotNull(stream.writeText(spec("edit_diy_bitrate"), it))
+            assertNotNull(stream.writeText(context.resources, spec("custom_refresh_rate"), it))
+            assertNotNull(stream.writeText(context.resources, spec("edit_diy_bitrate"), it))
         }
-        assertNotNull(stream.writeText(spec("edit_diy_w_h"), "1920x0"))
+        assertNotNull(stream.writeText(context.resources, spec("edit_diy_w_h"), "1920x0"))
         assertTrue(prefs.all.isEmpty())
-        assertNull(stream.writeText(spec("custom_refresh_rate"), "59.940"))
+        assertNull(stream.writeText(context.resources, spec("custom_refresh_rate"), "59.940"))
         assertEquals("59.94", prefs.getString("custom_refresh_rate", null))
-        assertNull(stream.writeText(spec("edit_diy_bitrate"), "10.25"))
+        assertNull(stream.writeText(context.resources, spec("edit_diy_bitrate"), "10.25"))
         assertEquals(10250, prefs.getInt("seekbar_bitrate_kbps", -1))
         stream.close()
     }
@@ -552,25 +552,25 @@ class ShellSettingsTest {
         com.limelight.utils.RumblePreferences.saveCustom(prefs, com.limelight.utils.RumblePresets.PULSE_25.profile, true)
         assertEquals("CUSTOM", stream.value(feel))
         val caps = SettingsCapabilities(emptyList(), 1920, 60f, false, false, false, false, emptySet())
-        assertEquals("CUSTOM", caps.choices(feel, stream.values.value).last().value)
-        assertEquals(4, caps.choices(feel, mapOf("list_rumble_feel" to "GENTLE")).size)
+        assertEquals("CUSTOM", caps.choices(context.resources, feel, stream.values.value).last().value)
+        assertEquals(4, caps.choices(context.resources, feel, mapOf("list_rumble_feel" to "GENTLE")).size)
         stream.write(feel, "CUSTOM")
         assertEquals("CUSTOM", stream.value(feel))
         stream.close()
     }
 
     @Test fun deviceChoicesRetainNativeAndCustomValuesAndFilterUnsupportedCodecs() {
-        val caps = SettingsCapabilities(listOf(SettingChoice("Native", "2400x1080")), 1920, 60f, false, false, false, false, emptySet())
+        val caps = SettingsCapabilities(listOf(NativeResolution(2400, 1080)), 1920, 60f, false, false, false, false, emptySet())
         val values = mapOf("edit_diy_w_h" to "2560x1600", "custom_refresh_rate" to "59.94")
-        val resolution = caps.choices(spec("list_resolution"), values).map { it.value }
+        val resolution = caps.choices(context.resources, spec("list_resolution"), values).map { it.value }
         assertTrue("2400x1080" in resolution)
         assertTrue("2560x1600" in resolution)
         assertFalse("3840x2160" in resolution)
-        assertTrue("59.94" in caps.choices(spec("list_fps"), values).map { it.value })
-        assertFalse("120" in caps.choices(spec("list_fps"), values).map { it.value })
-        assertTrue("120" in caps.choices(spec("list_fps"), values + ("checkbox_unlock_fps" to true)).map { it.value })
-        assertEquals(setOf("auto", "neverh265"), caps.choices(spec("video_format"), values).map { it.value }.toSet())
-        assertTrue("pyrowave" in caps.copy(pyroWave = true).choices(spec("video_format"), values).map { it.value })
+        assertTrue("59.94" in caps.choices(context.resources, spec("list_fps"), values).map { it.value })
+        assertFalse("120" in caps.choices(context.resources, spec("list_fps"), values).map { it.value })
+        assertTrue("120" in caps.choices(context.resources, spec("list_fps"), values + ("checkbox_unlock_fps" to true)).map { it.value })
+        assertEquals(setOf("auto", "neverh265"), caps.choices(context.resources, spec("video_format"), values).map { it.value }.toSet())
+        assertTrue("pyrowave" in caps.copy(pyroWave = true).choices(context.resources, spec("video_format"), values).map { it.value })
     }
 
     private fun spec(key: String) = catalog.all.first { it.key == key }
