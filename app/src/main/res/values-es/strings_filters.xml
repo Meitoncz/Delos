@@ -45,7 +45,7 @@
     <string name="filters_art_type_static">Estáticas</string>
     <string name="filters_art_type_animated">Animadas</string>
     <string name="filters_art_sort_score">Mejor puntuación</string>
-    <string name="filters_art_sort_newest">Más recientes</string>
+    <string name="filters_art_sort_newest">Recientes</string>
     <string name="filters_art_sort_oldest">Más antiguas</string>
     <string name="filters_art_sort_score_chip">Orden: Mejor puntuación</string>
     <string name="filters_art_sort_newest_chip">Orden: Más recientes</string>

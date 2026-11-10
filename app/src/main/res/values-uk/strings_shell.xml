@@ -2,7 +2,7 @@
 <resources>
     <string name="shell_link_pair_title">Створити пару з %1$s?</string>
     <string name="shell_link_pair_message">Посилання просить Delos створити пару з цим ПК. Продовжуй, лише якщо відкрив його сам.</string>
-    <string name="shell_link_pair_action">Створити пару</string>
+    <string name="shell_link_pair_action">З’єднати</string>
     <string name="shell_link_start_title">Запустити %1$s?</string>
     <string name="shell_link_start_title_unnamed">Запустити гру?</string>
     <string name="shell_link_start_message">Посилання просить Delos запустити %1$s на %2$s. Продовжуй, лише якщо відкрив його сам.</string>

@@ -25,9 +25,9 @@
     <string name="shell_side_theme_light">Clair</string>
     <string name="shell_side_material_you">Material You</string>
     <string name="shell_side_background">Arrière-plan</string>
-    <string name="shell_side_home_layout">Disposition de l’accueil</string>
+    <string name="shell_side_home_layout">Mise en page</string>
     <string name="shell_side_sounds">Sons de l’interface</string>
-    <string name="shell_side_haptics">Retour haptique</string>
+    <string name="shell_side_haptics">Haptique</string>
     <string name="shell_side_all_settings">Tous les réglages</string>
     <string name="shell_progress_artwork">Téléchargement des visuels</string>
     <string name="shell_progress_metadata">Téléchargement des métadonnées</string>

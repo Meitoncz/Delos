@@ -29,7 +29,7 @@
     <string name="shell_side_background">Fondo</string>
     <string name="shell_side_home_layout">Diseño del inicio</string>
     <string name="shell_side_sounds">Sonidos de la interfaz</string>
-    <string name="shell_side_haptics">Vibración háptica</string>
+    <string name="shell_side_haptics">Háptica</string>
     <string name="shell_side_all_settings">Todos los ajustes</string>
 
     <string name="shell_progress_artwork">Descargando ilustraciones</string>
