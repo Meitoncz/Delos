@@ -96,8 +96,9 @@ public final class StreamPointerHandler {
 
     // Per-pointer sensitivity state, so multiple fingers are supported
     private Map<String,SensitivityBean> sensitivityMap=new HashMap<>();
+    private final int[] windowLocation = new int[2];
 
-    /** {@code context} is the stream activity (vibration, the display width, toasts and saved zoom and pan). */
+    /** {@code context} is the stream activity (vibration, toasts and saved zoom and pan). */
     public StreamPointerHandler(Context context, PreferenceConfiguration prefConfig, StreamContainer streamContainer,
                                 PanZoomHandler panZoomHandler, Host host) {
         this.context = context;
@@ -225,14 +226,21 @@ public final class StreamPointerHandler {
         }
     }
 
-    // Adjust touch sensitivity by scaling the movement distance; by default only on the right half of the screen
-    float[] getStreamViewRelativeSensitivityXY(MotionEvent event,float normalizedX,float normalizedY,int pointerIndex){
+    // Adjust touch sensitivity by scaling the movement distance; by default only on the right half of the screen.
+    // sensitiveSide: the pointer is where the sensitivity applies (anywhere, or on the right half; see the caller).
+    float[] getStreamViewRelativeSensitivityXY(MotionEvent event,float normalizedX,float normalizedY,int pointerIndex,boolean sensitiveSide){
         float[] normalized=new float[2];
         normalized[0]=normalizedX;
         normalized[1]=normalizedY;
 
-        // Not in global mode and the touch is not on the right half: leave it unchanged
-        if(!prefConfig.touchSensitivityGlobal&&normalizedX<context.getResources().getDisplayMetrics().widthPixels/2){
+        // A pointer that just went down starts afresh, whatever an earlier touch with its id left behind
+        if (event.getActionMasked() == MotionEvent.ACTION_DOWN||event.getActionMasked() == MotionEvent.ACTION_POINTER_DOWN) {
+            sensitivityMap.remove(String.valueOf(event.getPointerId(pointerIndex)));
+        }
+        // Not in global mode and the touch is not on the right half: leave it unchanged. The pointer's offset is
+        // forgotten, so that it starts afresh when it comes back instead of jumping by the way it went meanwhile.
+        if(!sensitiveSide){
+            sensitivityMap.remove(String.valueOf(event.getPointerId(pointerIndex)));
             return normalized;
         }
         if (event.getActionMasked() == MotionEvent.ACTION_MOVE) {
@@ -271,13 +279,29 @@ public final class StreamPointerHandler {
         return normalized;
     }
 
+    /**
+     * Whether a pointer at {@code screenX} is on the right half of the window it touches. Both are screen
+     * coordinates, so the answer does not depend on which view got the event: a view's own coordinates start at its
+     * left edge, which is not the screen's for a letterboxed, zoomed or panned stream.
+     */
+    static boolean isOnRightHalf(float screenX, int windowLeft, int windowWidth) {
+        return screenX >= windowLeft + windowWidth / 2f;
+    }
+
+    private boolean isOnRightHalfOfScreen(View view, MotionEvent event, int pointerIndex) {
+        // NB: view may be null; the stream container is in the same full-screen window then
+        View window = (view != null ? view : streamContainer).getRootView();
+        window.getLocationOnScreen(windowLocation);
+        return isOnRightHalf(event.getRawX(pointerIndex), windowLocation[0], window.getWidth());
+    }
 
     private float[] getStreamViewRelativeNormalizedXY(View view, MotionEvent event, int pointerIndex) {
         float normalizedX = event.getX(pointerIndex);
         float normalizedY = event.getY(pointerIndex);
         // Custom touch sensitivity enabled and not 100%
         if(prefConfig.enableTouchSensitivity&&(prefConfig.touchSensitivityX !=100||prefConfig.touchSensitivityY!=100)){
-            float[] normalized=getStreamViewRelativeSensitivityXY(event,normalizedX,normalizedY,pointerIndex);
+            float[] normalized=getStreamViewRelativeSensitivityXY(event,normalizedX,normalizedY,pointerIndex,
+                    prefConfig.touchSensitivityGlobal||isOnRightHalfOfScreen(view,event,pointerIndex));
             normalizedX=normalized[0];
             normalizedY=normalized[1];
         }
@@ -529,6 +553,11 @@ public final class StreamPointerHandler {
      * NB: View is only present if called from a view callback
      */
     public boolean handlePointerEvent(View view, MotionEvent event) {
+        if (event.getActionMasked() == MotionEvent.ACTION_CANCEL) {
+            // The gesture is over for all of its pointers, and none of them gets an ACTION_UP any more
+            sensitivityMap.clear();
+        }
+
         int eventSource = event.getSource();
         if ((eventSource & InputDevice.SOURCE_CLASS_POINTER) != 0 ||
                 (eventSource & InputDevice.SOURCE_CLASS_POSITION) != 0 ||
