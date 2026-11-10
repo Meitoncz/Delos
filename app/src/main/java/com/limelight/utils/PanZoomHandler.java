@@ -6,14 +6,14 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 
-import com.limelight.Game;
 import com.limelight.LimeLog;
 import com.limelight.preferences.PreferenceConfiguration;
 
 public class PanZoomHandler {
     static private final float MAX_SCALE = 10.0f;
 
-    private final Game game;
+    // Runs when a pinch zoom ends (the stream refreshes its picture-in-picture parameters)
+    private final Runnable onZoomEnd;
     private final View streamView;
     private final PreferenceConfiguration prefConfig;
     private final boolean isTopMode;
@@ -25,8 +25,8 @@ public class PanZoomHandler {
     private float parentWidth, parentHeight = 0;
     private float childWidth, childHeight = 0;
 
-    public PanZoomHandler(Context context, Game game, View streamView, View parent, PreferenceConfiguration prefConfig) {
-        this.game = game;
+    public PanZoomHandler(Context context, Runnable onZoomEnd, View streamView, View parent, PreferenceConfiguration prefConfig) {
+        this.onZoomEnd = onZoomEnd;
         this.streamView = streamView;
         this.parent = parent;
         this.prefConfig = prefConfig;
@@ -138,7 +138,7 @@ public class PanZoomHandler {
 
         @Override
         public void onScaleEnd(ScaleGestureDetector detector) {
-            game.updatePipAutoEnter();
+            onZoomEnd.run();
         }
     }
 

@@ -387,7 +387,7 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
         LinearLayout topLeftButtons = createButtonContainer(Gravity.TOP | Gravity.START);
         topLeftButtons.setFocusable(false);
         zoomButton = createImageButton(R.drawable.ic_zoom_toggle, v -> toggleZoomMode(true));
-        if (Game.instance != null && Game.instance.isZoomModeEnabled()) {
+        if (Game.instance != null && Game.instance.getPointerHandler().isZoomModeEnabled()) {
             zoomButton.setAlpha(1.0f);
         } else {
             zoomButton.setAlpha(0.5f);
@@ -456,9 +456,9 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
     public void toggleZoomMode(boolean callGame) {
         if (Game.instance != null) {
             if (callGame) {
-                Game.instance.toggleZoomMode();
+                Game.instance.getPointerHandler().toggleZoomMode();
             } else {
-                if (Game.instance.isZoomModeEnabled()) {
+                if (Game.instance.getPointerHandler().isZoomModeEnabled()) {
                     zoomButton.setAlpha(1.0f);
                 } else {
                     zoomButton.setAlpha(0.5f);

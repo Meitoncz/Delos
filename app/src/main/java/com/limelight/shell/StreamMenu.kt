@@ -437,14 +437,14 @@ class StreamMenu(private val game: Game) {
         override fun sendClipboard() { game.sendClipboard(true) }
         override fun getClipboard() { game.getClipboard(0) }
         override fun sendTaskManager() { game.keyHandler.sendKeys(shortArrayOf(KeyboardTranslator.VK_LCONTROL.toShort(), KeyboardTranslator.VK_LSHIFT.toShort(), KeyboardTranslator.VK_ESCAPE.toShort())) }
-        override val zoomOn get() = game.isZoomModeEnabled
-        override fun toggleZoom() { game.toggleZoomMode() }
+        override val zoomOn get() = game.pointerHandler.isZoomModeEnabled
+        override fun toggleZoom() { game.pointerHandler.toggleZoomMode() }
         override val onscreenControlsOn get() = game.isVirtualControllerShown
         override fun toggleOnscreenControls() { game.toggleVirtualController() }
         override val fullKeyboardOn get() = game.isFullKeyboardShown
         override fun toggleFullKeyboard() { game.toggleFullKeyboard() }
         override val touchSensitivityOn get() = prefs.enableTouchSensitivity
-        override fun toggleTouchSensitivity() { game.switchTouchSensitivity() }
+        override fun toggleTouchSensitivity() { game.pointerHandler.switchTouchSensitivity() }
 
         // The laboratory's preset logic, live. RumblePreferences saves the whole preset in one edit; the
         // stream's ControllerHandler reads prefConfig at every rumble event, so the next event uses the new preset.

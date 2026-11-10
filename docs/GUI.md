@@ -880,6 +880,11 @@ These preserve implementation/design context from the removed UI plan, not phase
   `StreamKeyHandler` routes keys (the stream menu, the Full keyboard and gamepad buttons first, then
   the keyboard), tracks the modifiers (cleared when the window focus changes), runs the client-side
   Ctrl+Alt+Shift+Z/Q/C combos once every modifier is up and sends the menus' special-key
-  combinations (`GameMenu` and `StreamMenu` call it via `Game.getKeyHandler()`). `Game` keeps the
-  Activity and stream view key callbacks as one-line delegates, the input grab and the controller
-  wiring, and reaches each handler through a small `Host` it implements.
+  combinations (`GameMenu` and `StreamMenu` call it via `Game.getKeyHandler()`).
+  `StreamPointerHandler` handles the pointer sources left after `Game`'s gamepad passthrough: mice
+  (captured or not), styluses and erasers, touchpads and the touchscreen with its touch contexts,
+  the 3/4/5-finger taps, the touch sensitivity and the pan and zoom mode (it owns the
+  `PanZoomHandler`; `StreamMenu` and `ExternalDisplayControlActivity` call it via
+  `Game.getPointerHandler()`). `Game` keeps the Activity and view input callbacks as one-line
+  delegates, the input grab and local cursor, the evdev mouse callbacks and the controller wiring,
+  and reaches each handler through a small `Host` it implements.
