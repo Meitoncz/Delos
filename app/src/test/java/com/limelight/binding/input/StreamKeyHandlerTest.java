@@ -203,6 +203,23 @@ public class StreamKeyHandlerTest {
     }
 
     @Test
+    public void rightAltAsMetaStaysOffTheHostWhileInputIsNotGrabbed() {
+        prefs.rightAltAsMeta = true;
+        host.grabbed = false;
+
+        assertFalse("passes through to Android", handler.handleKeyDown(key(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ALT_RIGHT)));
+        assertFalse(handler.handleKeyUp(key(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ALT_RIGHT)));
+        handler.keyboardEvent(true, (short) KeyEvent.KEYCODE_ALT_RIGHT);
+        handler.keyboardEvent(false, (short) KeyEvent.KEYCODE_ALT_RIGHT);
+        verifyNoMoreInteractions(conn);
+
+        // Grabbed again, the key is the host's Windows key
+        host.grabbed = true;
+        assertTrue(handler.handleKeyDown(key(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ALT_RIGHT)));
+        verify(conn).sendKeyboardInput((short) KeyboardTranslator.VK_LWIN, KeyboardPacket.KEY_DOWN, META, NONE);
+    }
+
+    @Test
     public void evdevKeysGoToTheHostOnlyWhileInputIsGrabbed() {
         handler.keyboardEvent(true, (short) KeyEvent.KEYCODE_A);
         handler.keyboardEvent(false, (short) KeyEvent.KEYCODE_A);

@@ -142,6 +142,10 @@ public final class StreamKeyHandler {
                 } else {
                     modifierFlags &= ~KeyboardPacket.MODIFIER_META;
                 }
+                if (!host.isInputGrabbed()) {
+                    // Not consumed: like every other key it stays with Android while we're not grabbing
+                    return false;
+                }
                 sendKey((short) KeyboardTranslator.VK_LWIN, down, (byte) modifierFlags, (byte) 0);
                 return true;
             }
