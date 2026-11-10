@@ -48,19 +48,29 @@ when a `values-<lang>` folder exists for an unsupported language). Adding a lang
 
 ### The Language setting and per-app locales
 
-* `AndroidManifest.xml` declares `android:localeConfig="@xml/locales_config"`: on Android 13+ the system's per-app language
-  picker lists exactly the ten languages.
-* The in-app **Language** row (`list_languages`, values from `language_values`; `default` follows the system) is stored in
-  preferences. The classic stream activity applies it in `UiHelper.setLocale` by overriding the configuration. **The Compose
-  shell does not apply it yet** (`ShellActivity` is a `ComponentActivity`, and nothing calls `AppCompatDelegate` or
-  `LocaleManager`).
-* Target design (to implement before the translations are verified on a device): one source of truth, the Android per-app
-  locale. Choosing a language calls `AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(tag))`
-  (`default` passes an empty list). On Android 13+ this delegates to `LocaleManager` and recreates the activities; for API 29-32
-  it needs the AppCompat `AppLocalesMetadataHolderService` (`autoStoreLocales`) and an `AppCompatActivity` or an
-  `attachBaseContext` wrapper for `ShellActivity` and the stream activity. After that `UiHelper.setLocale` and the manual
-  `Configuration` override can go, and the preference becomes a mirror of the system choice (so a change made in system settings
-  shows in the row). Compose then follows automatically: `stringResource` and `textResources()` read the activity's resources.
+One source of truth: the **Android per-app locale**, wrapped by `shell/settings/AppLanguage.kt`. The in-app **Language** row
+(`list_languages`; `default` follows the system) and the system's per-app language picker (Android 13+, which lists exactly
+`locales_config.xml`) change the same value, so they always agree. `UiHelper.setLocale` and the manual `Configuration` override are gone.
+
+* **Android 13+**: `AppLanguage.choose` calls `LocaleManager.setApplicationLocales`. The system updates the process and every
+  activity; `ShellActivity` and `DelosStreamActivity` declare `locale` in `configChanges`, so they change in place, with no restart:
+  Compose recomposes because `LocalConfiguration` is replaced, and `stringResource` / `textResources()` read the activity's own
+  `Resources`, which the system updated. `Locale.getDefault()` (number and date formatting, Han glyph forms) follows too.
+* **Android 10-12** (minSdk 29): there is no platform per-app locale. The tag is kept in the `app_language` preference file and applied
+  by `AppLanguage.wrap` in `attachBaseContext` of the shell and stream activities and by `AppLanguage.initApplication` for the
+  application context; choosing a language recreates the foreground activity (the shell returns to its start screen, because its
+  navigation state is not restored). `AppCompatDelegate.setApplicationLocales` and its `AppLocalesMetadataHolderService` were
+  considered and not used: they need an `AppCompatActivity` with an AppCompat theme, and the shell is a `ComponentActivity`.
+* **Default**: no app locale set = follow the system language; the resource system then picks the app's translation of the first
+  system language that has one, else English (`AppLanguage.effectiveTag` models this for the UI). `pt` resolves to `pt-BR` and `zh`
+  / `zh-Hans` to `zh-CN`; `pt-PT` and `zh-TW` have no translation and show English.
+* **The row is a mirror.** `ShellActivity` keeps the current profile's `list_languages` equal to the app locale
+  (`AppLanguage.mirror` when it binds and on resume, so a change made in system settings shows in the row) and turns a change of that
+  preference into `AppLanguage.choose` (`onPreferenceChanged`). The language is therefore app-wide, never per profile. A language
+  stored in the old, stream-only preference is adopted once at first start (`initApplication`) if no app locale is set.
+* **Callers**: nothing else needs to apply the language. New activities call `AppLanguage.wrap` in `attachBaseContext` (needed on
+  Android 10-12 only) and declare `locale` in `configChanges` if they should not restart. Code that must re-read the language
+  reads `LocalConfiguration.current` (that is what `textResources()` does).
 * Fallback: an Android locale without a `values-<lang>` folder, or a key missing from one, shows the English text. This is
   intentional while languages are being filled in (lint `MissingTranslation` is off; `StringResourcesTest` enforces coverage
   rules on every folder that exists).
@@ -145,7 +155,7 @@ Add an area file (and a row here) rather than overloading an unrelated one.
   index, so each language can inflect.
 * **Numbers and dates in text** go through the format arguments (`%d`, `%1$.1f`), which use the app locale (decimal comma in
   Czech). Dates and times use `java.text.DateFormat` / `DateTimeFormatter.ofLocalizedDate`, not an English pattern or an
-  `Locale.ENGLISH` formatter (`ArtworkFilters`, `DeviceStatus` still do; stage 1 fixes them).
+  `Locale.ENGLISH` formatter (`ArtworkFilters`, `DeviceStatus`, `LinkResult` and `DiagnosticReport` still do or say English; stage 1 fixes them).
 * **Typography**: use the real characters `…`, `·`, `×`, `–`, `’` in the English source; escape an apostrophe as `\'` or write
   `’`; `\n` only for a deliberate line break. No HTML, no markup in strings. No trailing space, no leading space (a separator
   belongs in the format).
@@ -181,7 +191,7 @@ toasts have them (as the English does).
 | Czech | informal *ty* (imperative: „Vyber“, „Zkus“) | no vykání; gender-neutral phrasing where possible; Czech plurals one/few/many/other |
 | Spanish | informal *tú* | neutral Latin-American-friendly vocabulary („ordenador“ vs „computadora“: use **PC**); infinitive for buttons |
 | Portuguese (BR) | *você* | Brazilian spelling and vocabulary („tela“, „arquivo“, „controle“); infinitive or imperative for buttons, consistently |
-| French | informal *tu* | space before `: ; ! ?` is a non-breaking space (U+00202F or U+00A0); „Annuler“, „Enregistrer“; infinitive for buttons |
+| French | informal *tu* | space before `: ; ! ?` is a **no-break space U+00A0** (not U+202F: the bundled fonts lack it, see "Fonts and scripts"); „Annuler“, „Enregistrer“; infinitive for buttons |
 | German | informal *du* | compounds can be very long: hyphenate with „-“ (*Delos-Server*), prefer short words; capitalize nouns |
 | Japanese | polite です/ます; buttons as plain noun/verb („保存“, „開く“) | no spaces between words, no `Delos` declension (use の, を, が), full-width punctuation 、。; katakana for loanwords per convention („コントローラー“) |
 | Korean | polite 해요체 („저장해요“ in sentences); buttons as noun/verb stems („저장“) | spaces between words; particles attach to `Delos` after a space or directly („Delos를“): no change to the token |
@@ -231,8 +241,51 @@ The per-language cells are proposals for the reviewer, not final. "Keep" rows mu
 * CJK text has no spaces: line breaking happens between any two characters, so never insert manual breaks or rely on word
   count; do not add spaces around `Delos` in ja/zh unless the language needs them for readability.
 * The English budgets in code (`SettingsHelp.LINE_CHARS`, `MAX_LINES`, toast width tests) describe English only.
-* Fonts: Figtree and Unbounded are Latin(-extended) display fonts; check Cyrillic (uk) coverage and that Japanese, Korean and
-  Chinese fall back to a system CJK font without changing line heights. This is part of stage 3 (per-language device check).
+* Fonts: see "Fonts and scripts" below (Cyrillic and CJK are drawn by the system fallback fonts; line heights are fixed only where
+  the style sets `lineHeight`).
+
+## Fonts and scripts
+
+Findings from the shipped files (`res/font`, read with fontTools; `FontCoverageTest` re-reads their `cmap` and fails if this
+table stops being true):
+
+| Script | Figtree (body, variable 400-800) | Unbounded (titles, variable 400-700) | Drawn by |
+|---|---|---|---|
+| Basic Latin, Latin-1 | yes (no soft hyphen) | yes (no µ) | bundled |
+| Latin Extended-A (cs, es, pt, fr, de letters) | yes (19 of the 128 are missing, letters no language here uses: Ĕ Ĩ Ĭ Ŏ Ţ Ŧ Ũ ĸ Ŀ ŉ ſ …) | all 128 | bundled |
+| Typography `… · × – — ’ ‘ “ ” „ « » ° U+00A0` | yes | yes | bundled |
+| `≈ ≤ ≥ ✓ ✕ ● ★`, U+202F, U+2009, U+200B | no | no | system fallback (avoid in text) |
+| Ukrainian Cyrillic (А-Я, ґ є і ї, `ʼ`) | **no** (U+2019 `’` yes, U+02BC no) | **yes** (68 of 68 letters) | titles: Unbounded; body: system sans (Roboto) |
+| Japanese kana and kanji, CJK punctuation | no | no | system CJK font |
+| Korean Hangul | no | no | system CJK font |
+| Simplified Chinese hanzi | no | no | system CJK font |
+| Phosphor icons (`phosphor_regular`, `phosphor_fill`) | private-use code points U+E000-U+EE74, nothing else | | bundled |
+
+**Decision: no per-language `FontFamily`, no extra font files.** `Figtree` and `Unbounded` (`shell/ui/Type.kt`) are built from
+`Font(R.font…)`; Compose turns these into platform typefaces (`Typeface.Builder` / `createFromResources`), and a typeface built from
+a font file ends in the system default fallback chain (checked in the Android 13 source: `Typeface.Builder.build` goes through
+`CustomFallbackBuilder`, whose `build()` appends `getSystemDefaultTypeface`; API 29 and up). So a character the bundled font lacks is
+drawn, glyph by glyph, by the system sans (Roboto or the OEM font, which has Cyrillic) or the system CJK font; Latin text is
+untouched: same fonts, same metrics, which keeps English and the Latin translations pixel-identical. Han characters take their
+Japanese / Korean / Simplified Chinese forms from the app locale (the process default locale: the platform sets it from the app locale on
+Android 13+, `AppLanguage` on 10-12), so a Japanese app on an English phone still draws Japanese kanji. A per-language family was rejected: Compose cannot
+fall back per glyph between two of its own families, so it would replace Figtree for the whole run and make Latin brand names and numbers in
+a Ukrainian or Japanese sentence a different font from the rest of the app.
+
+What changes for non-Latin text, and what to look at on a device (not verified here: no device was used):
+
+* A line that contains fallback glyphs is as tall as the taller font (Noto Sans CJK is about 1.45 em tall, Figtree 1.2 em; the
+  system sans is 1.17 em). Every style with an explicit `lineHeight` (most multi-line text, the stream menu, toasts, the icon style
+  in `Type.kt`) keeps its height exactly; single-line labels without one grow slightly in ja/ko/zh and stay centered in their boxes.
+* The system fonts have their own weights: Medium, SemiBold and Bold map to the nearest weight the fallback font offers.
+* Tracking: styles with positive `letterSpacing` (the small caption labels, .14 em) also space out CJK glyphs; they should not be
+  uppercased or tracked in translations that have no case. A visible gap is a bug to fix in that style, not by changing the font.
+* Mixed Ukrainian text shows Cyrillic in the system sans and Latin brand names, digits and units in Figtree; titles in Unbounded are
+  one font. Latin-only ASCII and punctuation (`…`, `·`, `×`, `’`) is always Figtree.
+* French uses U+00A0 before `: ; ! ?` and inside `« »`; U+202F would be drawn by a fallback font with a different width.
+* `FontCoverageTest` also scans every `strings*.xml` of the base and of each language folder: Latin languages must stay inside
+  Figtree's characters, Ukrainian Cyrillic inside Unbounded's, Japanese / Korean / Chinese may add CJK blocks. A translation that uses
+  anything else (a stray `≈`, U+202F, a zero-width space) fails the test and should be rewritten or discussed.
 
 ## Workflow: adding or changing a string
 

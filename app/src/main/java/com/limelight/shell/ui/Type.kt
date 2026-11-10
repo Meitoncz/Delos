@@ -22,6 +22,17 @@ private fun variableFamily(resId: Int, weights: List<Int>) = FontFamily(
     weights.map { w -> Font(resId, FontWeight(w), variationSettings = FontVariation.Settings(FontVariation.weight(w))) }
 )
 
+/*
+ * Scripts (docs/LOCALIZATION.md, "Fonts and scripts"; FontCoverageTest pins it to the shipped files). Both families are Latin fonts:
+ * Figtree has Latin and Latin Extended-A (all of cs/es/pt/fr/de) and no Cyrillic, kana, Hangul or Han; Unbounded also has the
+ * Ukrainian letters, but no kana, Hangul or Han. No per-language family is needed or wanted: the families are built from
+ * `Typeface.Builder`, whose result always ends in the system fallback chain, so Android draws every character these fonts lack
+ * (Ukrainian body text, Japanese, Korean, Chinese) with the system sans / CJK font, glyph by glyph, and picks Japanese / Korean /
+ * Chinese Han forms from the app locale (the process default locale: set by the platform, by AppLanguage on Android 10-12). Latin text is
+ * not touched: same fonts, same metrics. A line that contains fallback glyphs is as tall as the taller font, as usual on Android;
+ * every style with an explicit `lineHeight` keeps its height exactly, the icon style below always does.
+ */
+
 /** Display font (titles, logo, wordmark). */
 val Unbounded = variableFamily(R.font.unbounded, listOf(400, 500, 600, 700))
 
