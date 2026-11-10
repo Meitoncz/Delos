@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Artwork screen (the game's options → Artwork): tabs, toolbar, grid messages, info strip and download toasts -->
+    <string name="artwork_header">ARTWORK</string>
+    <string name="artwork_search_other">Nach anderem Namen suchen</string>
+    <string name="artwork_filter">Filter</string>
+    <string name="artwork_loading">Suche auf SteamGridDB…</string>
+    <string name="artwork_no_key_title">Füge deinen SteamGridDB-API-Schlüssel hinzu</string>
+    <string name="artwork_no_key_note">Einstellungen → Cover → SteamGridDB-API-Schlüssel. Er ist kostenlos auf steamgriddb.com (Preferences → API).</string>
+    <!-- %1$s: game name -->
+    <string name="artwork_no_game_title">%1$s ist nicht auf SteamGridDB</string>
+    <string name="artwork_no_game_note">Mit „Nach anderem Namen suchen“ findest du es unter dem Namen, den SteamGridDB kennt.</string>
+    <string name="artwork_choose_title">Wähle, wie %1$s aussieht</string>
+    <string name="artwork_choose_note">Nach anderem Namen suchen: z. B. Windows, Steam oder ein beliebiges Spiel, dessen Artwork dir gefällt. %1$s wird nicht automatisch gesucht.</string>
+    <string name="artwork_unreachable">SteamGridDB ist nicht erreichbar</string>
+    <string name="artwork_download_failed">Der Download ist fehlgeschlagen</string>
+    <string name="artwork_builtin_note">Integriertes Artwork - das Artwork dieser App lässt sich nicht ändern</string>
+    <string name="artwork_builtin_back">Zurück</string>
+    <!-- The matched game in the toolbar. %1$s: game name, %2$d: SteamGridDB id -->
+    <string name="artwork_chip_looking">Suche nach %1$s…</string>
+    <string name="artwork_chip_game_id">Spiel #%1$d</string>
+    <string name="artwork_chip_not_found">Noch nicht gefunden</string>
+    <string name="artwork_in_use">In Verwendung</string>
+    <string name="artwork_animated">Animiert</string>
+    <string name="artwork_static">Statisch</string>
+    <!-- The first choice in the grid and its description in the info strip -->
+    <string name="artwork_first_name_only">Nur Name</string>
+    <string name="artwork_first_from_pc">Von deinem PC</string>
+    <string name="artwork_fact_source">QUELLE</string>
+    <string name="artwork_fact_shows">ZEIGT</string>
+    <string name="artwork_fact_name_source">Der Name des Spiels</string>
+    <string name="artwork_fact_name_shows">Den Namen statt eines Logos</string>
+    <string name="artwork_fact_pc_source">Dein PC (Vibepollo)</string>
+    <string name="artwork_fact_pc_shows">Boxart vom PC</string>
+    <!-- Facts about the focused image -->
+    <string name="artwork_fact_size">GRÖSSE</string>
+    <string name="artwork_fact_file">DATEI</string>
+    <string name="artwork_fact_score">BEWERTUNG</string>
+    <string name="artwork_fact_added">HINZUGEFÜGT</string>
+    <!-- %1$d: width, %2$d: height, in pixels -->
+    <string name="artwork_fact_size_value">%1$d × %2$d px</string>
+    <!-- %1$d: score, %2$s: name of the author -->
+    <string name="artwork_fact_score_by">%1$d · von %2$s</string>
+    <string name="artwork_fact_score_only">%1$d</string>
+    <string name="artwork_fact_by_only">von %1$s</string>
+    <!-- Search dialogs and the games found -->
+    <string name="artwork_search_title">SteamGridDB durchsuchen</string>
+    <string name="artwork_search_note">Der Name des Spiels, wie SteamGridDB ihn kennt.</string>
+    <string name="artwork_search_hint">Spielname</string>
+    <string name="artwork_search_action">Suchen</string>
+    <!-- %1$s: the name searched for / the game found -->
+    <string name="artwork_searching_toast">Suche auf SteamGridDB nach %1$s…</string>
+    <string name="artwork_game_with_year">%1$s (%2$d)</string>
+    <string name="artwork_downloading_game_toast">Artwork von %1$s wird geladen…</string>
+    <string name="artwork_matched_toast">Mit %1$s verknüpft</string>
+    <string name="artwork_found_none">Nichts gefunden für %1$s</string>
+    <string name="artwork_found_title">Wähle das Spiel</string>
+    <!-- Why a SteamGridDB call failed -->
+    <string name="artwork_error_no_key">Füge zuerst deinen SteamGridDB-API-Schlüssel hinzu</string>
+    <string name="artwork_error_key_rejected">SteamGridDB hat den API-Schlüssel nicht akzeptiert</string>
+    <!-- %1$d: HTTP status code -->
+    <string name="artwork_error_api_http">SteamGridDB antwortete mit %1$d</string>
+    <string name="artwork_error_too_large">Bild zu groß</string>
+    <string name="artwork_error_save_failed">Bild konnte nicht gespeichert werden</string>
+    <!-- One group per kind of image: the tab, how many there are, filtered lists, empty states and the download toasts -->
+    <!-- Cover -->
+    <string name="artwork_tab_cover">Cover</string>
+    <plurals name="artwork_count_cover">
+        <!-- %1$d: number of covers -->
+        <item quantity="one">%1$d Cover</item>
+        <item quantity="other">%1$d Cover</item>
+    </plurals>
+    <plurals name="artwork_count_all_cover">
+        <item quantity="one">Alle %1$d Cover</item>
+        <item quantity="other">Alle %1$d Cover</item>
+    </plurals>
+    <plurals name="artwork_count_of_cover">
+        <!-- %1$d: shown, %2$d: in all (the quantity) -->
+        <item quantity="one">%1$d von %2$d Cover</item>
+        <item quantity="other">%1$d von %2$d Cover</item>
+    </plurals>
+    <string name="artwork_filtered_none_cover">Keine Cover passen zu diesen Filtern</string>
+    <plurals name="artwork_filtered_has_cover">
+        <!-- %1$s: game name, %2$d: how many covers it has (the quantity), %3$s: the active filters, joined by a middle dot -->
+        <item quantity="one">%1$s hat %2$d Cover auf SteamGridDB, das nicht zu %3$s passt. Lockere einen Filter oder such unter einem anderen Namen.</item>
+        <item quantity="other">%1$s hat %2$d Cover auf SteamGridDB, keines passt zu %3$s. Lockere einen Filter oder such unter einem anderen Namen.</item>
+    </plurals>
+    <!-- %1$s: the active filters, joined by a middle dot -->
+    <string name="artwork_filtered_unknown_cover">Kein Cover passt zu %1$s. Lockere einen Filter oder such unter einem anderen Namen.</string>
+    <string name="artwork_empty_cover">SteamGridDB hat noch kein Cover für dieses Spiel.</string>
+    <string name="artwork_downloading_cover">Cover wird geladen…</string>
+    <string name="artwork_updated_cover">Cover aktualisiert</string>
+    <!-- Wide cover -->
+    <string name="artwork_tab_wide">Breites Cover</string>
+    <plurals name="artwork_count_wide">
+        <!-- %1$d: number of wide covers -->
+        <item quantity="one">%1$d breites Cover</item>
+        <item quantity="other">%1$d breite Cover</item>
+    </plurals>
+    <plurals name="artwork_count_all_wide">
+        <item quantity="one">Alle %1$d breiten Cover</item>
+        <item quantity="other">Alle %1$d breiten Cover</item>
+    </plurals>
+    <plurals name="artwork_count_of_wide">
+        <!-- %1$d: shown, %2$d: in all (the quantity) -->
+        <item quantity="one">%1$d von %2$d breiten Cover</item>
+        <item quantity="other">%1$d von %2$d breiten Cover</item>
+    </plurals>
+    <string name="artwork_filtered_none_wide">Keine breiten Cover passen zu diesen Filtern</string>
+    <plurals name="artwork_filtered_has_wide">
+        <!-- %1$s: game name, %2$d: how many wide covers it has (the quantity), %3$s: the active filters, joined by a middle dot -->
+        <item quantity="one">%1$s hat %2$d breites Cover auf SteamGridDB, das nicht zu %3$s passt. Lockere einen Filter oder such unter einem anderen Namen.</item>
+        <item quantity="other">%1$s hat %2$d breite Cover auf SteamGridDB, keines passt zu %3$s. Lockere einen Filter oder such unter einem anderen Namen.</item>
+    </plurals>
+    <!-- %1$s: the active filters, joined by a middle dot -->
+    <string name="artwork_filtered_unknown_wide">Kein breites Cover passt zu %1$s. Lockere einen Filter oder such unter einem anderen Namen.</string>
+    <string name="artwork_empty_wide">SteamGridDB hat noch kein breites Cover für dieses Spiel.</string>
+    <string name="artwork_downloading_wide">Breites Cover wird geladen…</string>
+    <string name="artwork_updated_wide">Breites Cover aktualisiert</string>
+    <!-- Background -->
+    <string name="artwork_tab_hero">Hintergrund</string>
+    <plurals name="artwork_count_hero">
+        <!-- %1$d: number of backgrounds -->
+        <item quantity="one">%1$d Hintergrund</item>
+        <item quantity="other">%1$d Hintergründe</item>
+    </plurals>
+    <plurals name="artwork_count_all_hero">
+        <item quantity="one">Alle %1$d Hintergrund</item>
+        <item quantity="other">Alle %1$d Hintergründe</item>
+    </plurals>
+    <plurals name="artwork_count_of_hero">
+        <!-- %1$d: shown, %2$d: in all (the quantity) -->
+        <item quantity="one">%1$d von %2$d Hintergrund</item>
+        <item quantity="other">%1$d von %2$d Hintergründen</item>
+    </plurals>
+    <string name="artwork_filtered_none_hero">Keine Hintergründe passen zu diesen Filtern</string>
+    <plurals name="artwork_filtered_has_hero">
+        <!-- %1$s: game name, %2$d: how many backgrounds it has (the quantity), %3$s: the active filters, joined by a middle dot -->
+        <item quantity="one">%1$s hat %2$d Hintergrund auf SteamGridDB, der nicht zu %3$s passt. Lockere einen Filter oder such unter einem anderen Namen.</item>
+        <item quantity="other">%1$s hat %2$d Hintergründe auf SteamGridDB, keiner passt zu %3$s. Lockere einen Filter oder such unter einem anderen Namen.</item>
+    </plurals>
+    <!-- %1$s: the active filters, joined by a middle dot -->
+    <string name="artwork_filtered_unknown_hero">Kein Hintergrund passt zu %1$s. Lockere einen Filter oder such unter einem anderen Namen.</string>
+    <string name="artwork_empty_hero">SteamGridDB hat noch keinen Hintergrund für dieses Spiel.</string>
+    <string name="artwork_downloading_hero">Hintergrund wird geladen…</string>
+    <string name="artwork_updated_hero">Hintergrund aktualisiert</string>
+    <!-- Logo -->
+    <string name="artwork_tab_logo">Logo</string>
+    <plurals name="artwork_count_logo">
+        <!-- %1$d: number of logos -->
+        <item quantity="one">%1$d Logo</item>
+        <item quantity="other">%1$d Logos</item>
+    </plurals>
+    <plurals name="artwork_count_all_logo">
+        <item quantity="one">Alle %1$d Logo</item>
+        <item quantity="other">Alle %1$d Logos</item>
+    </plurals>
+    <plurals name="artwork_count_of_logo">
+        <!-- %1$d: shown, %2$d: in all (the quantity) -->
+        <item quantity="one">%1$d von %2$d Logo</item>
+        <item quantity="other">%1$d von %2$d Logos</item>
+    </plurals>
+    <string name="artwork_filtered_none_logo">Keine Logos passen zu diesen Filtern</string>
+    <plurals name="artwork_filtered_has_logo">
+        <!-- %1$s: game name, %2$d: how many logos it has (the quantity), %3$s: the active filters, joined by a middle dot -->
+        <item quantity="one">%1$s hat %2$d Logo auf SteamGridDB, das nicht zu %3$s passt. Lockere einen Filter oder such unter einem anderen Namen.</item>
+        <item quantity="other">%1$s hat %2$d Logos auf SteamGridDB, keines passt zu %3$s. Lockere einen Filter oder such unter einem anderen Namen.</item>
+    </plurals>
+    <!-- %1$s: the active filters, joined by a middle dot -->
+    <string name="artwork_filtered_unknown_logo">Kein Logo passt zu %1$s. Lockere einen Filter oder such unter einem anderen Namen.</string>
+    <string name="artwork_empty_logo">SteamGridDB hat noch kein Logo für dieses Spiel.</string>
+    <string name="artwork_downloading_logo">Logo wird geladen…</string>
+    <string name="artwork_updated_logo">Logo aktualisiert</string>
+</resources>
