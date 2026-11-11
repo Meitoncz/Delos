@@ -32,6 +32,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.text.style.TextAlign
+import com.limelight.shell.ui.fadeMask
+import com.limelight.shell.ui.focusRoom
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
@@ -576,70 +582,45 @@ private fun SettingsSearch(all: List<SettingsItem>, scale: Float) {
     val shell = LocalShell.current
     val res = textResources()
     val colors = LocalDelosColors.current
+    val stage = LocalStage.current
     val field = rememberTextFieldState()
     val query = field.text.toString()
     val first = remember { FocusRequester() }
     InitialFocus(first)
     val results = searchSettings(res, all, query)
-    val compact = LocalStage.current.shape == StageShape.COMPACT
+    val compact = stage.shape == StageShape.COMPACT
     val keys = stringResource(R.string.settings_screen_search_letters)
-    val columns = LetterPicker.columns(keys.length)
-    // Compact: the picker is a column of smaller keys (60 px, 6 px apart) so the results keep room beside it
-    val keySize = if (compact) 60 else LetterPicker.keySize(columns)
-    val keyGap = if (compact) 6 else LetterPicker.GAP
-    val pickerWidth = if (compact) columns * keySize + (columns - 1) * keyGap else 820
-    val margin = SettingsLayout.margin(LocalStage.current)
-    Column(Modifier.fillMaxSize().padding(start = (if (compact) margin else 150f).px, end = (if (compact) margin else 150f).px, top = (if (compact) 112f else 130f).px, bottom = (96f * scale).px)) {
-        BasicText(stringResource(R.string.settings_screen_search_title), style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = (if (compact) 34 else 46).tpx))
-        if (!compact) BasicText(stringResource(R.string.settings_screen_search_hint), style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 22.tpx), modifier = Modifier.padding(top = 14.px, bottom = 32.px))
-        else Spacer(Modifier.height(12.px))
-        Row(horizontalArrangement = Arrangement.spacedBy((if (compact) 28 else 70).px), modifier = Modifier.weight(1f)) {
-            Column(Modifier.width(pickerWidth.px), verticalArrangement = Arrangement.spacedBy((if (compact) 12 else 18).px)) {
-                TextFieldPill(field, Symbols.SEARCH, placeholder = stringResource(R.string.settings_screen_search_placeholder), maxLength = 80, width = (pickerWidth - 30).toFloat())
-                Column(Modifier.padding(top = (if (compact) 4 else 16).px), verticalArrangement = Arrangement.spacedBy(keyGap.px)) {
-                    // Nine keys to a row; a language with more than six rows of keys (Japanese kana) gets more, slightly smaller ones
-                    keys.chunked(columns).forEachIndexed { row, letters ->
-                        Row(horizontalArrangement = Arrangement.spacedBy(keyGap.px)) {
-                            letters.forEachIndexed { col, letter ->
-                                LetterKey(letter.toString(), keySize, if (row == 0 && col == 0) Modifier.focusRequester(first) else Modifier) { field.setTextAndPlaceCursorAtEnd((query + letter.lowercaseChar()).take(80)) }
-                            }
-                        }
-                    }
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy((if (compact) 8 else 14).px)) {
-                    PillButton(stringResource(R.string.settings_screen_search_space), null, { field.setTextAndPlaceCursorAtEnd((query + " ").take(80)) }, compact = compact)
-                    PillButton(stringResource(R.string.settings_screen_search_delete), Symbols.BACKSPACE, { field.setTextAndPlaceCursorAtEnd(query.dropLast(1)) }, compact = compact)
-                    PillButton(stringResource(R.string.settings_screen_search_clear), Symbols.CLEAR, { field.clearText() }, compact = compact)
-                }
-            }
-            Column(Modifier.weight(1f)) {
-                BasicText(pluralStringResource(R.plurals.settings_screen_search_count, results.size, results.size), style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 22.tpx), modifier = Modifier.padding(bottom = (if (compact) 8 else 16).px))
-                if (results.isEmpty()) BasicText(stringResource(R.string.settings_screen_search_none), style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 26.tpx))
-                key(query) {
-                    // At most 110 entries (77 visible catalog rows + 33 native rows): keep
-                    // every neighbour composed while the animated scroll catches up.
-                    val navigation = rememberFocusedListNavigation(results.map { it.key }, allowUpExit = false)
-                    val scroll = remember { ScrollState(0) }
-                    val stage = LocalStage.current
-                    val k = stage.dpPerPx * LocalDensity.current.density
-                    val bringIntoView = rememberMarginBringIntoView(scroll, before = 72f * k, after = 110f * k, stagePx = k)
-                    CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
-                        com.limelight.shell.ui.SettingRowList(Modifier.fillMaxSize().settingListViewport(stage, scroll, 14f, 40f)) {
-                            Column(
-                                Modifier.fillMaxSize().focusedListBoundary(navigation).verticalScroll(scroll)
-                                    .padding(start = (18f + SETTING_LIST_ROOM).px, end = (18f + SETTING_LIST_ROOM).px, top = 14.px, bottom = 48.px),
-                                verticalArrangement = Arrangement.spacedBy(10.px),
-                            ) {
-                                results.forEach { item ->
-                                    key(item.key) {
-                                        SettingRow(item.icon, item.label, RowValue.Action {
-                                            shell.settingsTab = item.tab
-                                            shell.settingsFocus = item.key
-                                            shell.navigate(Screen.Settings)
-                                        }, Modifier.focusedListRow(navigation, item.key),
-                                            description = dotJoin(res, item.tab.label(res), item.section))
-                                    }
-                                }
+    val type: (Char) -> Unit = { letter -> field.setTextAndPlaceCursorAtEnd((query + letter.lowercaseChar()).take(80)) }
+    val space = { field.setTextAndPlaceCursorAtEnd((query + " ").take(80)) }
+    val delete = { field.setTextAndPlaceCursorAtEnd(query.dropLast(1)) }
+    val clear = { field.clearText() }
+    val countStyle = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 22.tpx)
+    val count = pluralStringResource(R.plurals.settings_screen_search_count, results.size, results.size)
+    // The results: on the compact stage they are under the picker, so Up from the first one goes back to it
+    val list: @Composable () -> Unit = {
+        if (results.isEmpty()) BasicText(stringResource(R.string.settings_screen_search_none), style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 26.tpx))
+        key(query) {
+            // At most 110 entries (77 visible catalog rows + 33 native rows): keep
+            // every neighbour composed while the animated scroll catches up.
+            val navigation = rememberFocusedListNavigation(results.map { it.key }, allowUpExit = compact)
+            val scroll = remember { ScrollState(0) }
+            val k = stage.dpPerPx * LocalDensity.current.density
+            val bringIntoView = rememberMarginBringIntoView(scroll, before = 72f * k, after = (if (compact) SettingsLayout.COMPACT_LIST_AFTER else 110f) * k, stagePx = k)
+            CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
+                com.limelight.shell.ui.SettingRowList(Modifier.fillMaxSize().settingListViewport(stage, scroll, if (compact) SettingsLayout.COMPACT_LIST_FADE_TOP else 14f, 40f)) {
+                    Column(
+                        Modifier.fillMaxSize().focusedListBoundary(navigation).verticalScroll(scroll)
+                            .padding(start = (18f + SETTING_LIST_ROOM).px, end = (18f + SETTING_LIST_ROOM).px, top = 14.px, bottom = 48.px),
+                        verticalArrangement = Arrangement.spacedBy(10.px),
+                    ) {
+                        results.forEach { item ->
+                            key(item.key) {
+                                SettingRow(item.icon, item.label, RowValue.Action {
+                                    shell.settingsTab = item.tab
+                                    shell.settingsFocus = item.key
+                                    shell.navigate(Screen.Settings)
+                                }, Modifier.focusedListRow(navigation, item.key),
+                                    description = dotJoin(res, item.tab.label(res), item.section))
                             }
                         }
                     }
@@ -647,15 +628,116 @@ private fun SettingsSearch(all: List<SettingsItem>, scale: Float) {
             }
         }
     }
+    if (compact) {
+        // Compact: no title and no squeezed grid. The field with the count beside it, the letters as two rows of full-size keys that scroll
+        // sideways together (Delete and Clear stay put at their right), and the results under them at the full width
+        val margin = SettingsLayout.margin(stage)
+        Column(Modifier.fillMaxSize().padding(start = margin.px, end = margin.px, top = SettingsLayout.COMPACT_TABS_Y.px, bottom = (96f * scale).px)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                TextFieldPill(field, Symbols.SEARCH, placeholder = stringResource(R.string.settings_screen_search_placeholder), maxLength = 80,
+                    width = stage.stageWidth - 2 * margin - SettingsLayout.SEARCH_COUNT_ROOM)
+                BasicText(count, maxLines = 1, style = countStyle.copy(textAlign = TextAlign.End), modifier = Modifier.weight(1f))
+            }
+            Spacer(Modifier.height(LetterPicker.COMPACT_GAP.px))
+            CompactLetterPicker(keys, first, type, space, delete, clear)
+            // The list's own 14 px above its first row make 24 px under the keys
+            Spacer(Modifier.height(10.px))
+            Column(Modifier.weight(1f)) { list() }
+        }
+        return
+    }
+    val columns = LetterPicker.columns(keys.length)
+    val keySize = LetterPicker.keySize(columns)
+    Column(Modifier.fillMaxSize().padding(start = 150.px, end = 150.px, top = 130.px, bottom = (96f * scale).px)) {
+        BasicText(stringResource(R.string.settings_screen_search_title), style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx))
+        BasicText(stringResource(R.string.settings_screen_search_hint), style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 22.tpx), modifier = Modifier.padding(top = 14.px, bottom = 32.px))
+        Row(horizontalArrangement = Arrangement.spacedBy(70.px), modifier = Modifier.weight(1f)) {
+            Column(Modifier.width(820.px), verticalArrangement = Arrangement.spacedBy(18.px)) {
+                TextFieldPill(field, Symbols.SEARCH, placeholder = stringResource(R.string.settings_screen_search_placeholder), maxLength = 80, width = 790f)
+                Column(Modifier.padding(top = 16.px), verticalArrangement = Arrangement.spacedBy(LetterPicker.GAP.px)) {
+                    // Nine keys to a row; a language with more than six rows of keys (Japanese kana) gets more, slightly smaller ones
+                    keys.chunked(columns).forEachIndexed { row, letters ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(LetterPicker.GAP.px)) {
+                            letters.forEachIndexed { col, letter ->
+                                LetterKey(letter.toString(), keySize, if (row == 0 && col == 0) Modifier.focusRequester(first) else Modifier) { type(letter) }
+                            }
+                        }
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(14.px)) {
+                    PillButton(stringResource(R.string.settings_screen_search_space), null, space)
+                    PillButton(stringResource(R.string.settings_screen_search_delete), Symbols.BACKSPACE, delete)
+                    PillButton(stringResource(R.string.settings_screen_search_clear), Symbols.CLEAR, clear)
+                }
+            }
+            Column(Modifier.weight(1f)) {
+                BasicText(count, style = countStyle, modifier = Modifier.padding(bottom = 16.px))
+                list()
+            }
+        }
+    }
 }
 
+/**
+ * The compact stage's letter picker. The rule is to scroll, never to squeeze: the keys keep the 64 px target and the room a focused key
+ * grows into ([LetterPicker.COMPACT_GAP]), stand in two rows (the alphabet runs on from the first into the second) and scroll sideways
+ * together, fading at the ends; Space is the last key of the second row. Delete and Clear are two circles that stay at the right.
+ */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun LetterKey(letter: String, size: Int, modifier: Modifier, click: () -> Unit) {
+private fun CompactLetterPicker(keys: String, first: FocusRequester, type: (Char) -> Unit, space: () -> Unit, delete: () -> Unit, clear: () -> Unit) {
+    val stage = LocalStage.current
+    val scroll = rememberScrollState()
+    val k = stage.dpPerPx * LocalDensity.current.density
+    val edge = LetterPicker.COMPACT_EDGE
+    // The focused key stays out of the faded ends, with a part of the next one in view
+    val bringIntoView = rememberMarginBringIntoView(scroll, before = (edge + 40f) * k, after = (edge + 40f) * k, stagePx = k)
+    val rows = keys.chunked(LetterPicker.compactColumns(keys.length))
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(LetterPicker.COMPACT_GAP.px), verticalAlignment = Alignment.CenterVertically) {
+        CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
+            Column(
+                // The scrolling layer is wider and taller than the keys by the faded ends and by the ring's room: the first key still starts
+                // at the margin, and neither the fade nor the layer's edge touches a focused key's ring
+                // (on the right the layer ends where the keys' column does, so its fade ends a whole gap before the circles)
+                Modifier.weight(1f).padding(end = edge.px).focusRoom(horizontal = edge.px, vertical = LetterPicker.COMPACT_RING_ROOM.px)
+                    .fadeMask(stage, vertical = false, startClear = 0f, startSolid = edge, endSolid = edge, endClear = 0f)
+                    .horizontalScroll(scroll)
+                    .padding(horizontal = edge.px, vertical = LetterPicker.COMPACT_RING_ROOM.px),
+                verticalArrangement = Arrangement.spacedBy(LetterPicker.COMPACT_GAP.px),
+            ) {
+                rows.forEachIndexed { row, letters ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(LetterPicker.COMPACT_GAP.px)) {
+                        letters.forEachIndexed { col, letter ->
+                            LetterKey(letter.toString(), LetterPicker.COMPACT_KEY, if (row == 0 && col == 0) Modifier.focusRequester(first) else Modifier, hosted = true) { type(letter) }
+                        }
+                        if (row == rows.lastIndex) LetterKey(stringResource(R.string.settings_screen_search_space), LetterPicker.COMPACT_KEY, Modifier, hosted = true, wide = true, click = space)
+                    }
+                }
+            }
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(LetterPicker.COMPACT_GAP.px)) {
+            CircleIconButton(Symbols.BACKSPACE, stringResource(R.string.settings_screen_search_delete), Modifier.size(LetterPicker.COMPACT_KEY.px), clickCue = Cue.SELECT, click = delete)
+            CircleIconButton(Symbols.CLEAR, stringResource(R.string.settings_screen_search_clear), Modifier.size(LetterPicker.COMPACT_KEY.px), clickCue = Cue.SELECT, click = clear)
+        }
+    }
+}
+
+/**
+ * A key of the letter picker, [size] px square ([wide]: as wide as its word needs). [hosted]: a key inside the compact picker's scrolling
+ * layer has the chips' ring and no glow, which that layer would cut.
+ */
+@Composable
+private fun LetterKey(letter: String, size: Int, modifier: Modifier, hosted: Boolean = false, wide: Boolean = false, click: () -> Unit) {
     val colors = LocalDelosColors.current
     var focused by remember { mutableStateOf(false) }
-    Box(modifier.size(size.px).focusEffects(click, corner = 18f, focusScale = 1.06f, onFocusChange = { focused = it })
-        .clip(RoundedCornerShape(18.px)).background(if (focused) colors.surface2 else colors.surface), contentAlignment = Alignment.Center) {
-        BasicText(letter, style = TextStyle(color = if (focused) colors.accent else colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 28.tpx))
+    Box(modifier.then(if (wide) Modifier.height(size.px).widthIn(min = size.px) else Modifier.size(size.px))
+        .then(
+            if (hosted) Modifier.focusEffects(click, corner = 18f, focusScale = 1.06f, ring = FocusRing(4f, 4f), glow = null, onFocusChange = { focused = it })
+            else Modifier.focusEffects(click, corner = 18f, focusScale = 1.06f, onFocusChange = { focused = it })
+        )
+        .clip(RoundedCornerShape(18.px)).background(if (focused) colors.surface2 else colors.surface)
+        .then(if (wide) Modifier.padding(horizontal = 24.px) else Modifier), contentAlignment = Alignment.Center) {
+        BasicText(letter, maxLines = 1, style = TextStyle(color = if (focused) colors.accent else colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 28.tpx))
     }
 }
 
@@ -690,6 +772,9 @@ internal object SettingsLayout {
 
     /** Between the R1 badge and the compact search circle: the circle's focus growth (64 × 0.08), its ring (8) and 12 px. */
     const val SEARCH_GAP = 26f
+
+    /** What the compact search keeps at the right of its field for the count of the results: a focused field grows 28 px towards it. */
+    const val SEARCH_COUNT_ROOM = 300f
 
     /** The compact search circle: the tab row's height scaled, a 64 px target at least. */
     fun searchSize(stage: StageMetrics): Float = maxOf(TABS_HEIGHT * stage.compactScale, 64f)

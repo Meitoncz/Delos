@@ -114,6 +114,22 @@ class SettingsSearchTextTest {
         }
     }
 
+    /** The compact stage never squeezes the keys: two rows of the 64 px target that scroll, with the room a focused key grows into. */
+    @Test fun theCompactPickerKeepsFullKeysInTwoRows() {
+        assertEquals(18, LetterPicker.compactColumns(36))
+        assertEquals(26, LetterPicker.compactColumns(51))
+        assertEquals(28, LetterPicker.compactColumns(56))
+        for (keys in 1..120) {
+            val columns = LetterPicker.compactColumns(keys)
+            assertTrue((keys + columns - 1) / columns <= LetterPicker.COMPACT_ROWS)
+        }
+        assertTrue(LetterPicker.COMPACT_KEY >= 64)
+        // The focused key (6 % larger, a ring of 8 px drawn with it) keeps 12 px to its neighbours and stays inside the scrolling layer
+        val reach = LetterPicker.COMPACT_KEY * .03f + 8f * 1.06f
+        assertTrue(reach + 12f <= LetterPicker.COMPACT_GAP)
+        assertTrue(reach <= LetterPicker.COMPACT_RING_ROOM)
+    }
+
     // ---- the real resources ----
 
     private fun res(): File = listOf(File("src/main/res"), File("app/src/main/res")).first { it.isDirectory }

@@ -153,7 +153,7 @@ fun Modifier.focusRoom(horizontal: Dp = 0.dp, vertical: Dp = 0.dp): Modifier = l
     val h = horizontal.roundToPx()
     val v = vertical.roundToPx()
     val placeable = measurable.measure(constraints.offset(2 * h, 2 * v))
-    layout(placeable.width - 2 * h, placeable.height - 2 * v) { placeable.place(-h, -v) }
+    layout((placeable.width - 2 * h).coerceAtLeast(0), (placeable.height - 2 * v).coerceAtLeast(0)) { placeable.place(-h, -v) }
 }
 
 /**
