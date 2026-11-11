@@ -196,7 +196,7 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
         GameBanner(art, heroImage ?: coverImage ?: boxImage, appearance.heroBlur)
         // The eyebrow, the game's name, the custom-settings chip and Reset all, on the banner
         GameHeader(screen.pc.name, screen.app.name, custom.size, Modifier.offset(SettingsLayout.TITLE_X.px, GameSettingsLayout.HEAD_TOP.px)
-            .width((1920f - 2 * SettingsLayout.TITLE_X).px).height(GameSettingsLayout.HEAD_HEIGHT.px)) {
+            .width((stage.stageWidth - 2 * SettingsLayout.TITLE_X).px).height(GameSettingsLayout.HEAD_HEIGHT.px)) {
             PillButton(stringResource(R.string.settings_game_reset_all), Symbols.RESET, resetAll,
                 Modifier.alpha(if (custom.isEmpty()) .4f else 1f)
                     .onFocusChanged { onBanner = it.hasFocus }
@@ -218,7 +218,7 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
             key(tab, game) {
                 // One ring glides between the rows; the host carries the list's size and faded edges, so the ring fades with the rows
                 SettingRowList(Modifier.padding(start = GameSettingsLayout.LIST_X.px, top = GameSettingsLayout.LIST_TOP.px, bottom = bottom.px)
-                    .width(GameSettingsLayout.LIST_WIDTH.px).fillMaxHeight().fadeEdges(stage, top = 14f, bottom = 70f)) {
+                    .width((stage.stageWidth - GameSettingsLayout.LIST_WIDTH_LESS).px).fillMaxHeight().fadeEdges(stage, top = 14f, bottom = 70f)) {
                     Column(
                         modifier = Modifier.fillMaxSize().focusedListBoundary(navigation).verticalScroll(scroll)
                             .padding(start = 18.px, end = 18.px, top = GameSettingsLayout.LIST_INNER_TOP.px, bottom = 140.px),
@@ -286,7 +286,12 @@ internal object GameSettingsLayout {
     const val LIST_TOP = 296f
     const val LIST_INNER_TOP = 30f
     const val LIST_X = 132f
-    const val LIST_WIDTH = 1080f
+
+    /**
+     * The list spans from [LIST_X] to the panel's left edge (38 px short of it): its width is the stage width less this, 1080 at 1920.
+     * It is the panel's 520 px plus the right margin of 150, the gap of 38 and [LIST_X].
+     */
+    const val LIST_WIDTH_LESS = 840f
     const val PANEL_TOP = SettingsLayout.LIST_TOP
 }
 
