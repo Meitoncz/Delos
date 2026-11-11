@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
@@ -307,12 +309,13 @@ fun CircleItem(
     }
 }
 
-/** `.circles`: a centered row of circle items. */
+/** `.circles`: a centered row of circle items; it wraps into more centered rows when the stage is too narrow for them (as many PCs as fit in 1920 stay on one). */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun Circles(content: @Composable () -> Unit) {
     // One ring glides between the circles (docs/GUI.md, "Motion") instead of every circle fading its own
     GlideRingHost(FocusRing(5f, 5f), corner = 999f, focusScale = 1.16f) {
-        Row(horizontalArrangement = Arrangement.spacedBy(56.px), verticalAlignment = Alignment.Top) { content() }
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(56.px, Alignment.CenterHorizontally), verticalArrangement = Arrangement.spacedBy(48.px)) { content() }
     }
 }
 
