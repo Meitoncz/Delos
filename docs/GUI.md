@@ -795,6 +795,52 @@ The menu starts already open at that page without its entrance; `--ez preview_an
 screenshot after about 1.4 s shows the settled result. No profile is needed. Resume or B close the menu; a tap on the
 scene opens it again.
 
+## Screen shapes
+
+Issue #9. The shell is **landscape only** (`sensorLandscape` on `ShellActivity` and on `ShortcutTrampoline`, which shows the launch scene; the stream
+activity keeps its own orientation logic) and supports windows from 1:1 up to 21:9. The 16:9 1080p look of the prototype stays pixel-identical.
+
+- **Stage planner** (`ui/StagePlanner.kt`, `StagePlannerTest`): `Stage()` hands the window size in dp to `StagePlanner.plan`, which returns the
+  dp per stage pixel, the stage size in stage pixels and a `StageShape`; `LocalStage` (`StageMetrics`) carries `stageWidth`, `stageHeight`, `shape`
+  and the cutout `safe` insets next to `dpPerPx`. The scale is today's `min(w / 1920, h / 1080)` **unless** that would be under the **legibility
+  floor of 0.43 dp per stage px**: the AYN Odin 2 Portal (1920 × 1080 at the 369 dpi it reports = 832.5 × 468.3 dp) has 0.4336 dp per stage px,
+  the floor sits 0.8 % below it, so text is never physically smaller than there. Under the floor the scale stays at 0.43 and the **stage shrinks**
+  (fewer stage pixels across), which is reflow, not scaling. So every 16:9 window of 826 dp width or more (the Odin, the Thor's top panel, every
+  1080p panel at or below about 372 dpi) gets exactly 1920 × 1080 and the same `dpPerPx` as before; 4:3 is 1920 × 1440 and 21:9 is 2520 × 1080 as before.
+- **Classes** (`StageShape`): *Standard* is 16:9 within 3 %; *Wide* is wider; *Tall* is narrower down to 4:3 (about 1.29 with the tolerance);
+  *Compact* is a stage under **1500 stage px wide** (small panels, split-screen halves) or squarish (narrower than 4:3, 1:1). A shrunk stage can be
+  Standard in aspect with fewer than 1920 stage px: screens drawn for 1920 × 1080 do not fit it until they are made adaptive.
+  Existing screens still read `px` / `tpx` as before; the Wide, Tall and Compact layouts are later phases.
+- **Safe area**: backgrounds still draw edge to edge, the status bar and the hint bar are padded by the display cutout (`WindowInsets.displayCutout`
+  in stage pixels, `StageMetrics.safe`; zero on the Odin, so nothing moves there). Other edge-anchored content can read `LocalStage.current.safe`.
+- **Shape simulator** (debug builds, `ShapeSimulator` in `src/debug`): `--es preview_shape <W>x<H>@<dpi>` draws the whole shell, or any `preview_screen`,
+  in a centered box of that pixel size (scaled down uniformly when it does not fit; the density is scaled with it, so the dp maths is the panel's)
+  with `LocalDensity` set to the simulated density. Outside the box it is black; a caption at the bottom-left names the size, dpi, dp size, stage and
+  class. `--es preview_cutout <L>,<T>,<R>,<B>` adds a display cutout (insets in simulated pixels, drawn as a notch). It combines with `preview_screen`
+  and `preview_state`:
+
+  ```
+  adb shell am start -S -n io.github.meitoncz.delos.debug/com.limelight.shell.ShellActivity --es preview_shape 1240x1080@420 \
+    --es preview_screen home --es preview_state row
+  ```
+
+- **Screen previews with fake data** (debug builds, `ScreenPreviews` in `src/debug`, no PC or network): `--es preview_screen <home|artwork|devices|start|pair|filter|dialog|loader|result>`,
+  `home` with `--es preview_state <row|grid>`; they run next to the older previews (`context_menu`, `top_menu`, `settings_tabs`, `settings_list`,
+  `game_settings`, `stream_menu`, `full_keyboard`, `toast`).
+- **Contact sheets** (`tools/layout/`): `shapes.txt` lists the shapes (names, `W x H @ dpi`, optional cutout), `screens.txt` the previews. `sheets.sh` needs the
+  fail-closed adb wrapper and the stream gate helper:
+
+  ```
+  tools/layout/sheets.sh --adb <adb wrapper> --gate <stream gate> shapes <label>     # every screen in every shape -> build/layout-sheets/<label>/
+  tools/layout/sheets.sh --adb <adb wrapper> --gate <stream gate> baseline [label]   # every screen natively (today's 16:9), for the identity check
+  tools/layout/sheets.sh compare <labelA> <labelB>                                   # pixel diff of two runs; exit 1 when a screen differs
+  ```
+
+  It takes a screenshot first and refuses to run when the gate reports a stream (asked again before every launch); it starts previews by intent only,
+  never presses anything, and starts the normal shell again at the end. Contact sheets land in `<label>/sheets/by-screen/` and `by-shape/`.
+  `compare` ignores the status bar's Wi-Fi, battery and clock by default (`--mask none` compares everything, `--tolerance N` allows small differences).
+- The displays of the target handhelds and the class each gets: [HANDHELD_DEVICES.md](HANDHELD_DEVICES.md).
+
 ## Native shell architecture and design constraints
 
 These preserve implementation/design context from the removed UI plan, not phase checklists.
@@ -807,7 +853,7 @@ These preserve implementation/design context from the removed UI plan, not phase
 - Use Compose foundation/ui/animation and the Delos design system, not Material components. The
   shell owns its small navigation stack, animated transitions and overlay focus. Fonts are bundled
   Unbounded/Figtree (OFL); Phosphor icon generation/licensing is documented in [ICONS.md](ICONS.md).
-- `Stage` provides the prototype's 1920×1080 design coordinates and interface scale. The reusable
+- `Stage` provides the prototype's 1920×1080 design coordinates (planned per window, see "Screen shapes") and interface scale. The reusable
   focus modifier applies to touch as well as controller elements. `GlobalKeys` handles input before
   focus dispatch; left/right adjust choice/slider rows. A/Enter/D-pad center activate, B goes back,
   Select opens the side menu, Start/X opens the focused element's context menu (if it has one), L1/R1 go to the screen and Y opens search.
