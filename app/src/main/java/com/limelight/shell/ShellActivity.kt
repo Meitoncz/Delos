@@ -114,8 +114,8 @@ class ShellActivity : ComponentActivity() {
             links.value = ShellLink.from(this, intent)
             results.value = StreamResult.take(intent)
         }
-        // Debug builds only: the stream menu, the Full keyboard or a toast with fake state instead of the shell (docs/GUI.md, "Stream menu preview", "Full keyboard", "Toasts")
-        val preview = StreamMenuPreview.from(intent) ?: FullKeyboardPreview.from(intent) ?: ToastPreview.from(intent, shell) ?: SettingsTabsPreview.from(intent) ?: SettingsListPreview.from(intent) ?: GameSettingsPreview.from(intent) ?: TopMenuPreview.from(intent) ?: ContextMenuPreview.from(intent)
+        // Debug builds only: the stream menu, the Full keyboard, a toast or a screen with fake state instead of the shell (docs/GUI.md, "Stream menu preview", "Full keyboard", "Toasts", "Screen shapes")
+        val preview = StreamMenuPreview.from(intent) ?: FullKeyboardPreview.from(intent) ?: ToastPreview.from(intent, shell) ?: SettingsTabsPreview.from(intent) ?: SettingsListPreview.from(intent) ?: GameSettingsPreview.from(intent) ?: TopMenuPreview.from(intent) ?: ContextMenuPreview.from(intent) ?: ScreenPreviews.from(intent, shell)
         // Debug builds only: draws all of it in a box of another panel's size and density (`preview_shape`)
         val simulator = ShapeSimulator.from(intent)
         setContent {

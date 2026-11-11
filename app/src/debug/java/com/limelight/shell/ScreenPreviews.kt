@@ -1,0 +1,154 @@
+package com.limelight.shell
+
+import android.content.Intent
+import androidx.activity.compose.LocalActivity
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.limelight.R
+import com.limelight.shell.data.LocalArtwork
+import com.limelight.shell.data.LocalBoxArt
+import com.limelight.shell.data.LocalGameMetadata
+import com.limelight.shell.screens.appArt
+import com.limelight.shell.settings.Appearance
+import com.limelight.shell.settings.HomeLayout
+import com.limelight.shell.ui.Backdrop
+import com.limelight.shell.ui.DelosColors
+import com.limelight.shell.ui.HANDOFF_PROGRESS
+import com.limelight.shell.ui.LaunchCard
+import com.limelight.shell.ui.LaunchScene
+import com.limelight.shell.ui.LocalDelosColors
+import com.limelight.shell.ui.LocalReducedMotion
+import com.limelight.shell.ui.LocalStage
+import com.limelight.shell.ui.StreamResultLayer
+import com.limelight.shell.ui.delosColors
+import com.limelight.shell.ui.textResources
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
+import kotlin.math.roundToInt
+
+/**
+ * Debug builds only: the app's screens with fixed fake data (no network, no paired PC, nothing written to the user's profile data), for the
+ * layout script that screenshots every screen in many window shapes. Started with
+ * `adb shell am start -n io.github.meitoncz.delos.debug/com.limelight.shell.ShellActivity --es preview_screen <name> [--es preview_state <variant>]`
+ * where `<name>` is one of:
+ * - `home` (`--es preview_state <row|grid>`, default `row`): the real shell on Home, with 12 fake games of GAMING-PC (one running, one last
+ *   played, two more hidden) whose covers are the placeholder art; the Home layout is forced to the variant in the preview's own memory
+ *   preferences, never in the user's settings.
+ * - `artwork`: the Artwork screen of Hades, with fixed choices for every kind.
+ * - `devices`: the Devices screen with GAMING-PC (online, connected), LIVING-ROOM-PC (asleep) and a PC with a very long name (online); the
+ *   fourth fake PC, STUDY-LAPTOP, is unpaired and therefore not in this list.
+ * - `start`: the start screen with three profiles and GAMING-PC as the default PC.
+ * - `pair`: the pairing screen of STUDY-LAPTOP showing the PIN 4826 and waiting for it to be entered.
+ * - `filter`: the filter modal open over Home, with the genres and themes of the fake library.
+ * - `dialog`: a dialog layer (title, message, Pair and Cancel) over Home.
+ * - `loader`: the stream launch scene of Hades at a fixed progress and a fixed scene time (no launch).
+ * - `result`: the stream result card of a stream that could not start, over the plain background.
+ * All of them but `loader` and `result` run the real `Shell` in a [PreviewWorld] (docs/GUI.md, "Screen previews"); `loader` and `result`
+ * draw `LaunchScene` and `StreamResultLayer` alone. Any other name is not handled here.
+ */
+internal object ScreenPreviews {
+    fun from(intent: Intent, @Suppress("UNUSED_PARAMETER") shell: ShellState): (@Composable () -> Unit)? {
+        val state = intent.getStringExtra("preview_state")
+        return when (intent.getStringExtra("preview_screen")) {
+            "home" -> shellPreview(ShellRoute(if (state == "grid") HomeLayout.GRID else HomeLayout.ROW) { Screen.Home })
+            "artwork" -> shellPreview(ShellRoute { world -> Screen.Artwork(world.library.pc, world.library.apps.first { it.name == ARTWORK_GAME }) })
+            "devices" -> shellPreview(ShellRoute { Screen.Devices })
+            "start" -> shellPreview(ShellRoute { Screen.Start })
+            "pair" -> shellPreview(ShellRoute { Screen.Pin(PreviewFixtures.STUDY_PC, PreviewFixtures.host(PreviewFixtures.STUDY_PC).name, null, Screen.Start) })
+            "filter" -> shellPreview(ShellRoute(layer = Layer.Filters) { Screen.Home })
+            "dialog" -> shellPreview(ShellRoute(layer = Layer.Dialog(DIALOG)) { Screen.Home })
+            "loader" -> loaderPreview
+            "result" -> resultPreview
+            else -> null
+        }
+    }
+
+    private const val ARTWORK_GAME = "Hades"
+
+    private val DIALOG = DialogSpec(
+        "Pair with GAMING-PC?",
+        "Delos will ask GAMING-PC to start pairing. Enter the PIN that Delos shows on that PC to finish.",
+        emptyList(), "Pair",
+    ) { true }
+
+    private fun shellPreview(route: ShellRoute): @Composable () -> Unit = { ShellPreview(route) }
+
+    private val loaderPreview: @Composable () -> Unit = { LoaderPreview() }
+    private val resultPreview: @Composable () -> Unit = { ResultPreview() }
+
+    /** The scene time of the launch scene: where its tunnel has settled into the cruise. */
+    private const val LOADER_SECONDS = 3f
+
+    /** The real shell, fed by a [PreviewWorld]: its repository, stores, appearance and profiles, and a [ShellState] that starts on the route. */
+    @Composable
+    private fun ShellPreview(route: ShellRoute) {
+        val base = LocalContext.current
+        val activity = LocalActivity.current ?: return
+        val textScale = LocalStage.current.textScale
+        val world = remember(route) { PreviewWorld(base, activity, route, textScale) }
+        DisposableEffect(world) { onDispose { world.close() } }
+        val appearance by world.appearanceStore.appearance.collectAsStateWithLifecycle()
+        val colors = remember(appearance) { delosColors(appearance, null) }
+        CompositionLocalProvider(
+            LocalContext provides world.context, LocalDelosColors provides colors, LocalReducedMotion provides appearance.reducedMotion,
+            LocalBoxArt provides world.boxArt, LocalArtwork provides world.artwork, LocalGameMetadata provides world.metadata,
+        ) {
+            Shell(
+                appearance, world.appearanceStore::update, world.keys, world.repo, world.launcher, world.profiles, world.startupStore,
+                world.setup, world.links, world.results, world.shell, previewProfiles = world.previewProfiles,
+            )
+        }
+    }
+
+    /** The defaults, dark, at the interface scale of the window, and the palette they give: what the previews without a world draw in. */
+    @Composable
+    private fun PreviewTheme(content: @Composable (Appearance, DelosColors) -> Unit) {
+        val textScale = LocalStage.current.textScale
+        val appearance = remember(textScale) { Appearance(dark = true, uiScale = (textScale * 100f).roundToInt().coerceIn(100, 130)) }
+        val colors = remember(appearance) { delosColors(appearance, null) }
+        CompositionLocalProvider(
+            LocalDelosColors provides colors, LocalReducedMotion provides false, LocalFocusTracker provides remember { FocusTracker() },
+        ) { content(appearance, colors) }
+    }
+
+    @Composable
+    private fun LoaderPreview() = PreviewTheme { _, colors ->
+        val res = textResources()
+        val pc = remember { PreviewFixtures.pc(PreviewFixtures.host(PreviewFixtures.ACTIVE_PC)) }
+        val app = remember { PreviewFixtures.app(PreviewFixtures.game(ARTWORK_GAME)) }
+        val card = remember(res) {
+            LaunchCard(1, app.name, StreamLoader.greeting(res, pc.name), appArt(pc, app), null, null, "3840 × 2160 · 60 FPS · HEVC · HDR · 80 Mbps")
+        }
+        Box(Modifier.fillMaxSize().background(colors.bg)) {
+            LaunchScene(card, stage = null, progress = { HANDOFF_PROGRESS }, opening = { 0f }, clock = { LOADER_SECONDS })
+        }
+    }
+
+    @Composable
+    private fun ResultPreview() = PreviewTheme { appearance, colors ->
+        val res = textResources()
+        val haze = rememberHazeState()
+        val host = remember { PreviewFixtures.host(PreviewFixtures.ACTIVE_PC) }
+        val result = remember(res) {
+            StreamResult(
+                StreamResultKind.FAILED_TO_START, res.getString(R.string.stream_result_start_title), res.getString(R.string.stream_result_timeout),
+                res.getString(R.string.stream_result_failed_stage, "video stream", 5003) + "\n\n" + res.getString(R.string.stream_result_timeout_details),
+                host.uuid, host.name, PreviewFixtures.game(ARTWORK_GAME).id, ARTWORK_GAME, id = 1L,
+            )
+        }
+        Box(Modifier.fillMaxSize()) {
+            Box(Modifier.fillMaxSize().hazeSource(haze)) { Backdrop(appearance, colors, hero = null, animate = false) }
+            // The face's float is the one motion that never settles: the preview holds it still, as with reduced motion
+            StreamResultLayer(result, haze, reducedMotion = true, onRetry = {}, onBack = {})
+        }
+    }
+}

@@ -171,7 +171,7 @@ class PcRepository(context: Context, private val settings: () -> SharedPreferenc
         binder?.stopPolling()
     }
 
-    private fun onComputerUpdated(details: ComputerDetails) = synchronized(this) {
+    internal fun onComputerUpdated(details: ComputerDetails) = synchronized(this) {
         val uuid = details.uuid ?: return@synchronized
         // A PC removed in the meantime may still report once from its polling thread
         if (uuid in forgotten) return@synchronized

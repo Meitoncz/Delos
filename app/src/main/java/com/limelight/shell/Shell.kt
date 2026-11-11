@@ -160,6 +160,8 @@ fun Shell(
     links: MutableStateFlow<ShellLink?>,
     results: MutableStateFlow<StreamResult?>,
     shell: ShellState,
+    /** Debug screen previews only: the profiles the screens show instead of the store's (the store is never given any, see `ScreenPreviews`). */
+    previewProfiles: com.limelight.shell.data.Profiles? = null,
 ) {
     val res = textResources()
     val colors = LocalDelosColors.current
@@ -203,7 +205,8 @@ fun Shell(
     val linkTests = remember { com.limelight.shell.link.LinkTestStore(appContext) }
     val linkTester = remember { com.limelight.shell.link.LinkTester(appContext, repo) }
     val devices = remember { ShellDeviceActions(activityContext, shell, tracker, repo, setup, startupStore, feedback, scope, linkTester, linkTests) { reducedMotion } }
-    val profiles by profileStore.profiles.collectAsStateWithLifecycle()
+    val storedProfiles by profileStore.profiles.collectAsStateWithLifecycle()
+    val profiles = previewProfiles ?: storedProfiles
     val startup by startupStore.startup.collectAsStateWithLifecycle()
     val pcs by repo.pcs.collectAsStateWithLifecycle()
 

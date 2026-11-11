@@ -22,7 +22,7 @@ import java.net.UnknownHostException
  * the classic PcView and AddComputerManually. Every call runs off the main thread and reports what to
  * show instead of opening dialogs.
  */
-class PcSetup(context: Context, private val repo: PcRepository, private val profiles: ProfileStore) {
+open class PcSetup(context: Context, private val repo: PcRepository, private val profiles: ProfileStore) {
     private val app = context.applicationContext
 
     /** Why a pairing did not happen; [PairResult.Failed.text] turns it into the sentence to show. */
@@ -93,13 +93,13 @@ class PcSetup(context: Context, private val repo: PcRepository, private val prof
     }
 
     /** A new PIN for the user to type on the PC. */
-    fun newPin(): String = PairingManager.generatePinString()
+    open fun newPin(): String = PairingManager.generatePinString()
 
     /**
      * Pairs [pc] with [pin] (shown to the user, or the PIN of a one-time code with its [passphrase]).
      * Blocks until the PIN is entered on the PC; cancelling the coroutine abandons the attempt.
      */
-    suspend fun pair(pc: Pc, pin: String, passphrase: String?): PairResult {
+    open suspend fun pair(pc: Pc, pin: String, passphrase: String?): PairResult {
         val binder = repo.binder ?: return PairResult.Failed(PairFailure.STARTING)
         val details = binder.getComputer(pc.uuid) ?: pc.details
         if (details.state != ComputerDetails.State.ONLINE || details.activeAddress == null) {

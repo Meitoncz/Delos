@@ -242,7 +242,7 @@ class SteamGridDbClient(private val key: String, private val http: OkHttpClient)
  * wide cover, hero and logo. The API key and "download automatically" are the same for every profile on
  * this device. [version] changes whenever images change, so the screens load them again.
  */
-class ArtworkStore(context: Context) {
+open class ArtworkStore(context: Context) {
     private val appContext = context.applicationContext
     private val prefs = PreferenceManager.getDefaultSharedPreferences(appContext)
     private val root = File(appContext.filesDir, "artwork")
@@ -388,18 +388,18 @@ class ArtworkStore(context: Context) {
     }
 
     /** The SteamGridDB game [app] is matched with, if any. */
-    fun matched(pc: Pc, app: App): SgdbGame? = readMatch(pc, app)?.let { m -> m.id?.let { SgdbGame(it, m.name.orEmpty(), m.year) } }
+    open fun matched(pc: Pc, app: App): SgdbGame? = readMatch(pc, app)?.let { m -> m.id?.let { SgdbGame(it, m.name.orEmpty(), m.year) } }
 
     /** Whether [app] has been looked up on SteamGridDB (found or not). */
-    fun searched(pc: Pc, app: App): Boolean = readMatch(pc, app) != null
+    open fun searched(pc: Pc, app: App): Boolean = readMatch(pc, app) != null
 
     /** The SteamGridDB image used for [kind] (its id), [NONE] when left empty on purpose, null if never set. */
-    fun chosen(pc: Pc, app: App, kind: ArtKind): Int? = readMatch(pc, app)?.chosen?.get(kind.file)
+    open fun chosen(pc: Pc, app: App, kind: ArtKind): Int? = readMatch(pc, app)?.chosen?.get(kind.file)
 
-    suspend fun search(term: String): List<SgdbGame> = withContext(Dispatchers.IO) { network.withPermit { client().search(term) } }
+    open suspend fun search(term: String): List<SgdbGame> = withContext(Dispatchers.IO) { network.withPermit { client().search(term) } }
 
     /** The images [kind] can be chosen from for [app]'s matched game. */
-    suspend fun choices(pc: Pc, app: App, kind: ArtKind, filters: ArtFilters = ArtFilters()): List<SgdbImage> = withContext(Dispatchers.IO) {
+    open suspend fun choices(pc: Pc, app: App, kind: ArtKind, filters: ArtFilters = ArtFilters()): List<SgdbImage> = withContext(Dispatchers.IO) {
         if (!eligible(app)) return@withContext emptyList()
         val id = readMatch(pc, app)?.id ?: return@withContext emptyList()
         network.withPermit { client().images(id, kind, filters) }
@@ -410,7 +410,7 @@ class ArtworkStore(context: Context) {
      * images already there are kept unless [refresh], which fetches all but the hand-picked ones again.
      * Returns whether a game was found.
      */
-    suspend fun fetch(pc: Pc, app: App, refresh: Boolean = false): Boolean {
+    open suspend fun fetch(pc: Pc, app: App, refresh: Boolean = false): Boolean {
         if (!eligible(app)) return false
         return busy(pc, app) { fetchNow(pc, app, refresh) }
     }
@@ -446,7 +446,7 @@ class ArtworkStore(context: Context) {
     }
 
     /** Matches [app] with [game] by hand and downloads its best-rated images (hand-picked ones start over). */
-    suspend fun setGame(pc: Pc, app: App, game: SgdbGame) {
+    open suspend fun setGame(pc: Pc, app: App, game: SgdbGame) {
         if (!eligible(app)) return
         withContext(Dispatchers.IO) {
             lock(pc, app).withLock { writeMatch(pc, app, Match(game.id, game.name, manual = true, year = game.year)) }
@@ -455,7 +455,7 @@ class ArtworkStore(context: Context) {
     }
 
     /** Uses [image] for [kind] (null: none, so the PC's artwork or the game's name), picked by hand. */
-    suspend fun apply(pc: Pc, app: App, kind: ArtKind, image: SgdbImage?) {
+    open suspend fun apply(pc: Pc, app: App, kind: ArtKind, image: SgdbImage?) {
         if (!eligible(app)) return
         val key = memoryKey(pc, app, kind)
         withContext(Dispatchers.Main) { busyKinds[key] = image?.id ?: NONE }
