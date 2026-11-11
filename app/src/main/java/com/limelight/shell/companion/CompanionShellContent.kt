@@ -59,8 +59,8 @@ private fun IdleContent() {
     val colors = LocalDelosColors.current
     Box(Modifier.fillMaxSize().padding(horizontal = 48.px), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(26.px)) {
-            // The padding keeps the moon, which sits outside the ring's box, inside the dimmed layer
-            Box(Modifier.padding(14.px)) { LogoMark(size = 96f) }
+            // The padding keeps the moon, which sits outside the ring's box (about 18 px at this size), inside the dimmed layer
+            Box(Modifier.padding(24.px)) { LogoMark(size = 96f) }
             Body(stringResource(R.string.companion_idle_hint), color = colors.text2, maxLines = 3, align = androidx.compose.ui.text.style.TextAlign.Center)
         }
     }

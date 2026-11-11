@@ -195,13 +195,13 @@ private fun BatteryIndicator(battery: BatteryStatus) {
     }
 }
 
-/** The Delos ring with its small moon (`.logo-mark`). */
+/** The Delos ring with its small moon (`.logo-mark`): drawn for 40 stage px; at another [size] the stroke and the moon scale with it, so the mark keeps the look of the launcher icon. */
 @Composable
 fun LogoMark(size: Float = 40f) {
     val colors = LocalDelosColors.current
     val stage = LocalStage.current
     Box(Modifier.size(size.px).drawBehind {
-        val k = stage.dpPerPx * density
+        val k = stage.dpPerPx * density * (size / 40f)
         val stroke = 3f * k
         drawCircle(colors.accent, radius = this.size.minDimension / 2f - stroke / 2f, style = Stroke(stroke))
         val moon = Offset(this.size.width - 1.5f * k, 7.5f * k)
