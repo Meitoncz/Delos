@@ -1,0 +1,22 @@
+# Debug previews the layout sheets drive (all start `io.github.meitoncz.delos.debug/com.limelight.shell.ShellActivity` by intent only).
+# One per line:  <id> | <extras passed to am start> | <seconds to wait before the screenshot>
+# Previews are deterministic and finite; the entrance animations and the delays of the preview itself (context menu 700 ms,
+# toast 400 ms) must have finished by then. Blank lines and # comments are ignored.
+home-row       | --es preview_screen home --es preview_state row    | 5
+home-grid      | --es preview_screen home --es preview_state grid   | 5
+artwork        | --es preview_screen artwork                        | 5
+devices        | --es preview_screen devices                        | 4
+start          | --es preview_screen start                          | 4
+pair           | --es preview_screen pair                           | 4
+filter         | --es preview_screen filter                         | 5
+dialog         | --es preview_screen dialog                         | 4
+loader         | --es preview_screen loader                         | 4
+result         | --es preview_screen result                         | 4
+context-menu   | --es preview_screen context_menu                   | 3
+top-menu       | --es preview_screen top_menu                       | 3
+settings-tabs  | --es preview_screen settings_tabs                  | 3
+settings-list  | --es preview_screen settings_list                  | 3
+game-settings  | --es preview_screen game_settings                  | 4
+stream-menu    | --es preview_screen stream_menu --es preview_page main | 4
+full-keyboard  | --es preview_screen full_keyboard                  | 3
+toast          | --es preview_screen toast                          | 3

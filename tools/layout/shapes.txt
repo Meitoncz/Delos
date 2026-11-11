@@ -1,0 +1,17 @@
+# Screen shapes the layout sheets are taken in (issue #9). One per line:  <name> <W>x<H>@<dpi> [<cutoutL>,<T>,<R>,<B>]
+# W x H and dpi are the simulated panel's pixels and the density Android would report; they feed `--es preview_shape` of the debug
+# shell (docs/GUI.md, "Screen shapes"). dpi is the reference's reported 369 where the shape belongs to no device, otherwise the
+# computed ppi rounded to 10 (see docs/HANDHELD_DEVICES.md). Blank lines and # comments are ignored.
+odin          1920x1080@369    # AYN Odin 2 Portal: the reference, 16:9, must stay identical to the native screen
+thor-top      1920x1080@370    # AYN Thor top 6.0 in, 16:9
+thor-bottom   1240x1080@420    # AYN Thor bottom 3.92 in, 31:27
+dds-top       1200x720@300     # Anbernic RG DDS top 4.7 in, 5:3
+dds-bottom    960x720@300      # Anbernic RG DDS bottom 4 in, 4:3
+16x10         1920x1200@369    # 16:10 tablet-like handheld
+3x2           1620x1080@369    # 3:2
+4x3           1440x1080@369    # 4:3
+1x1           720x720@255      # squarish panel (RG Cube class, 4 in)
+20x9          2400x1080@369    # phone in a grip
+21x9          2520x1080@369    # phone in a grip, ultra-wide
+20x9-cutout   2400x1080@369 96,0,0,0   # 20:9 with a camera cutout on the left edge (96 px), to check the safe area
+split-half    960x1080@369     # half of the Odin in split-screen
