@@ -1,7 +1,7 @@
 package com.limelight.utils;
 
 import static com.limelight.utils.ExternalDisplayFocus.requestFocusToGameActivity;
-import static com.limelight.utils.ServerHelper.getSecondaryDisplay;
+import static com.limelight.utils.ServerHelper.getExternalDisplay;
 
 import android.annotation.SuppressLint;
 import android.app.ActivityOptions;
@@ -141,7 +141,7 @@ public class ExternalDisplayControlActivity extends AppCompatActivity implements
             if (gameIntent == null) {
                 finish();
             } else {
-                Display secondaryDisplay = getSecondaryDisplay(this);
+                Display secondaryDisplay = getExternalDisplay(this);
                 if (secondaryDisplay != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                     // The shell and loader are one continuous scene. This nested DelosStreamActivity task must not
                     // get Android's default side-slide (custom animations are ignored for this task).

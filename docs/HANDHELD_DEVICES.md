@@ -82,6 +82,7 @@ Notes:
 - Three different dual-screen layouts exist: a top panel of 16:9 with a 31:27 bottom (Thor), 16:9 over 4:3 (Pocket DS), and 5:3 over 4:3 (RG DDS). The Retroid add-on pairs a fixed 16:9 panel with whatever the host has.
 - Single-panel clamshells (Retroid Pocket Flip 2) are not dual-screen. See the Retroid table above.
 - Out of scope but seen: Retroid Pocket Duo and Duo Lite (announced Sep 2026; [Retro Handhelds](https://retrohandhelds.gg/retroid-pocket-duo-recieves-its-first-announcement/)). Not researched further.
+- How Delos tells a built-in second panel from an external monitor, and how to override it: [DUAL_SCREEN.md](DUAL_SCREEN.md). The Retroid add-on is attached over USB-C, so Android should list it as an external display and Delos should classify it as external (not verified on hardware); "Part of the device" in Settings > Display > Second display changes that.
 
 ## Phone in a grip (class, not a device list)
 

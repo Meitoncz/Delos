@@ -27,6 +27,7 @@ Sources, all into the same sink:
 | stream events | stage starting, stream started and stopped, **negotiated codec / chroma / HDR, size, rate and bitrate** (`StreamEvents`), connection quality changes, the stream result (`Stream ended: ...`) |
 | `DelosPyroDiag` | the PyroWave start line and **one periodic line every 30 s** (logcat of a debug build still gets every one), UDP drop counters, SGSR overload and optical-flow governor events, the native swapchain and present-mode lines |
 | toasts | every **warning and error** toast of the shell and of the stream window (tag `Toast`) |
+| displays | one line per Android display at process start and one per display added, changed or removed (tag `Display`; `DisplayInventory`): id, name, size, density, refresh rate, state, flags and Delos's classification with its reason. The name is the system's device name ("Built-in Screen", "HDMI Screen", "Overlay #1"); a wireless display's name is replaced by "wireless display". See docs/DUAL_SCREEN.md |
 | crashes | the uncaught exception with its stack trace (tag `Crash`), a decoder crash that takes the app down, the `Problem` lines of the offer |
 
 ## What the scrubber removes

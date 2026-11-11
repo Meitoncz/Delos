@@ -2,6 +2,8 @@
 
 Implemented and accepted on the AYN Odin 2 Portal Max on 2026-10-27.
 
+Only a display that Delos classifies as **external** (a monitor, a TV or a wireless display) is a target of this mode. A second panel that is part of the device (a dual-screen handheld), an overlay display and a virtual display are never chosen; the classification, its signals and the manual override are in [DUAL_SCREEN.md](DUAL_SCREEN.md).
+
 ## Behavior
 
 - The Delos launch scene continues onto the external display without the legacy Moonlight loading UI or Android's side transition.

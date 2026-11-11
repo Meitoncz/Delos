@@ -246,4 +246,14 @@
     <!-- %1$s: game name -->
     <string name="settings_game_only_this_game">Only %1$s uses these changes. Everything else follows your profile.</string>
     <string name="settings_game_saved_note">Saved automatically · applies next stream</string>
+    <string name="settings_native_section_displays">Displays</string>
+    <!-- Settings > Display > Second display: manual override of how a second screen is classified (docs/DUAL_SCREEN.md) -->
+    <string name="settings_native_second_display_title">Second display</string>
+    <string name="settings_native_second_display_description">The kind of a second screen. Change it when Debug info lists it wrongly.</string>
+    <string name="settings_native_second_display_automatic">Automatic</string>
+    <string name="settings_native_second_display_external">External display</string>
+    <string name="settings_native_second_display_built_in">Part of the device</string>
+    <string name="settings_native_help_second_display_automatic">Delos tells a monitor or TV from a panel built into the device.</string>
+    <string name="settings_native_help_second_display_external">Treated as a monitor or TV: the external display mode may stream to it.</string>
+    <string name="settings_native_help_second_display_built_in">Treated as part of the device: never a stream target.</string>
 </resources>

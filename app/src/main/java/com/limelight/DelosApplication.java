@@ -2,6 +2,7 @@ package com.limelight;
 
 import android.app.Application;
 import com.limelight.shell.settings.AppLanguage;
+import com.limelight.display.DisplayInventory;
 import com.limelight.diag.CrashReporter;
 import com.limelight.diag.DiagLog;
 import com.limelight.utils.DelosToast;
@@ -15,6 +16,8 @@ public class DelosApplication extends Application {
         super.onCreate();
         // The diagnostic log starts first, so everything that follows can be in it (docs/DIAGNOSTICS.md)
         DiagLog.init(this);
+        // One diagnostic-log line per display now and per display change (docs/DUAL_SCREEN.md)
+        DisplayInventory.startLogging(this);
         CrashReporter.INSTANCE.install(this);
         // The app language before anything shows text (Android 10-12: onto the application context; every version: adopts the old Language preference once)
         AppLanguage.initApplication(this);

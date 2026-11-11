@@ -145,4 +145,13 @@
     <string name="debug_sensors_both">acelerómetro, giroscopio</string>
     <string name="debug_pads_continuous_label">Vibración continua en los mandos</string>
     <string name="debug_pads_continuous_description">Todos los mandos que pueden vibrar siguen vibrando con la intensidad de arriba.</string>
+    <string name="debug_section_displays">Pantallas</string>
+    <string name="debug_display_role_main">Principal</string>
+    <string name="debug_display_role_built_in">Integrada</string>
+    <string name="debug_display_role_external">Externa</string>
+    <string name="debug_display_role_virtual">Virtual</string>
+    <string name="debug_display_main_description">La pantalla predeterminada. La interfaz de Delos y, salvo que el modo de pantalla externa lo mueva, el stream la usan.</string>
+    <string name="debug_display_built_in_description">Un segundo panel que forma parte de este dispositivo. Delos nunca hace stream a él como a una pantalla externa. ¿Mal? Cambia «Segunda pantalla» en los ajustes de pantalla.</string>
+    <string name="debug_display_external_description">Un monitor o TV conectado a este dispositivo. El modo de pantalla externa puede hacer stream a él. ¿Mal? Cambia «Segunda pantalla» en los ajustes de pantalla.</string>
+    <string name="debug_display_virtual_description">Una pantalla superpuesta, virtual o privada. Delos nunca pone el stream en ella.</string>
 </resources>

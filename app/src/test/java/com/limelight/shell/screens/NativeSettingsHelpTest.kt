@@ -1,6 +1,7 @@
 package com.limelight.shell.screens
 
 import androidx.test.core.app.ApplicationProvider
+import com.limelight.display.SecondDisplayOverride
 import com.limelight.shell.StatsPosition
 import com.limelight.shell.settings.BackgroundKind
 import com.limelight.shell.settings.ClockFormat
@@ -25,6 +26,7 @@ class NativeSettingsHelpTest {
             "ui_reduced_motion" to listOf("full", "reduced"),
             "ui_stats_position" to StatsPosition.entries.map { it.name },
             "ui_default_pc" to listOf("none", "pc"),
+            SecondDisplayOverride.KEY to SecondDisplayOverride.entries.map { it.name },
         )
         choices.forEach { (key, ids) -> ids.forEach {
             assertTrue("Missing help for $key/$it", NativeSettingsHelp.choice(res, key, it).isNotBlank())

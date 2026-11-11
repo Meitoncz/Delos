@@ -143,4 +143,13 @@
     <string name="debug_sensors_both">加速度计、陀螺仪</string>
     <string name="debug_pads_continuous_label">手柄持续震动</string>
     <string name="debug_pads_continuous_description">所有支持震动的手柄都会按上方强度持续震动。</string>
+    <string name="debug_section_displays">显示器</string>
+    <string name="debug_display_role_main">主屏</string>
+    <string name="debug_display_role_built_in">内置</string>
+    <string name="debug_display_role_external">外接</string>
+    <string name="debug_display_role_virtual">虚拟</string>
+    <string name="debug_display_main_description">默认显示屏。Delos 界面以及（除非外接显示器模式将其移走）串流都使用它。</string>
+    <string name="debug_display_built_in_description">属于本设备的第二块面板。Delos 绝不会像对待外接显示器那样向它串流。有误请在显示设置中更改“副屏”。</string>
+    <string name="debug_display_external_description">连接到本设备的显示器或电视。外接显示器模式可以向它串流。有误请在显示设置中更改“副屏”。</string>
+    <string name="debug_display_virtual_description">叠加层、虚拟或私有显示屏。Delos 绝不会把串流放到上面。</string>
 </resources>

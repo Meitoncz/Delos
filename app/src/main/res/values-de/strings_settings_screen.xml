@@ -233,4 +233,13 @@
     <!-- %1$s: game name -->
     <string name="settings_game_only_this_game">Nur %1$s nutzt diese Änderungen. Alles andere folgt deinem Profil.</string>
     <string name="settings_game_saved_note">Automatisch gespeichert · gilt ab dem nächsten Stream</string>
+    <string name="settings_native_section_displays">Displays</string>
+    <string name="settings_native_second_display_title">Zweites Display</string>
+    <string name="settings_native_second_display_description">Die Art eines zweiten Bildschirms. Ändere sie, wenn Debug-Info sie falsch anzeigt.</string>
+    <string name="settings_native_second_display_automatic">Automatisch</string>
+    <string name="settings_native_second_display_external">Externes Display</string>
+    <string name="settings_native_second_display_built_in">Teil des Geräts</string>
+    <string name="settings_native_help_second_display_automatic">Delos unterscheidet einen Monitor oder TV von einem im Gerät verbauten Panel.</string>
+    <string name="settings_native_help_second_display_external">Gilt als Monitor oder TV: Der Modus für externe Displays darf darauf streamen.</string>
+    <string name="settings_native_help_second_display_built_in">Gilt als Teil des Geräts: nie ein Stream-Ziel.</string>
 </resources>

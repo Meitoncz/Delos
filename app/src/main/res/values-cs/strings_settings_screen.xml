@@ -224,4 +224,13 @@
     <string name="settings_game_currently">Aktuálně %1$s. Změnou nastavíš hodnotu jen pro tuto hru.</string>
     <string name="settings_game_only_this_game">Tyto změny platí jen pro hru %1$s. Všechno ostatní se řídí tvým profilem.</string>
     <string name="settings_game_saved_note">Ukládá se automaticky · platí od příštího streamu</string>
+    <string name="settings_native_section_displays">Displeje</string>
+    <string name="settings_native_second_display_title">Druhý displej</string>
+    <string name="settings_native_second_display_description">Typ druhé obrazovky. Změň ho, když ho „Informace pro ladění“ uvádějí špatně.</string>
+    <string name="settings_native_second_display_automatic">Automaticky</string>
+    <string name="settings_native_second_display_external">Externí displej</string>
+    <string name="settings_native_second_display_built_in">Součást zařízení</string>
+    <string name="settings_native_help_second_display_automatic">Delos rozliší monitor nebo TV od panelu zabudovaného v zařízení.</string>
+    <string name="settings_native_help_second_display_external">Bere se jako monitor nebo TV: režim externího displeje na něj smí streamovat.</string>
+    <string name="settings_native_help_second_display_built_in">Bere se jako součást zařízení: nikdy cíl streamu.</string>
 </resources>

@@ -59,6 +59,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
 import androidx.annotation.StringRes
+import com.limelight.display.DisplayInventory
+import com.limelight.display.DisplayRole
+import android.hardware.display.DisplayManager
 import com.limelight.BuildConfig
 import com.limelight.R
 import com.limelight.diag.DiagExport
@@ -112,6 +115,7 @@ import kotlin.math.roundToInt
 /** The groups of the debug screen, in the order their rows appear. */
 private enum class DebugSection(@StringRes val title: Int) {
     DEVICE(R.string.debug_section_device),
+    DISPLAYS(R.string.debug_section_displays),
     DIAGNOSTICS(R.string.debug_section_diagnostics),
     HAPTICS(R.string.debug_section_haptics),
     VIBRATION_TEST(R.string.debug_section_vibration_test),
@@ -270,6 +274,19 @@ fun DebugInfoScreen() {
         }
     }
 
+    // Displays that come and go (a monitor plugged in, an overlay display switched on) and their classification
+    var displayChanges by remember { mutableIntStateOf(0) }
+    val displays = remember(displayChanges) { DisplayInventory.list(context) }
+    DisposableEffect(Unit) {
+        val manager = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
+        val listener = object : DisplayManager.DisplayListener {
+            override fun onDisplayAdded(displayId: Int) { displayChanges++ }
+            override fun onDisplayRemoved(displayId: Int) { displayChanges++ }
+            override fun onDisplayChanged(displayId: Int) { displayChanges++ }
+        }
+        manager.registerDisplayListener(listener, Handler(Looper.getMainLooper()))
+        onDispose { manager.unregisterDisplayListener(listener) }
+    }
     // Connected and disconnected controllers show up at once
     DisposableEffect(Unit) {
         val input = context.getSystemService(Context.INPUT_SERVICE) as InputManager
@@ -307,6 +324,10 @@ fun DebugInfoScreen() {
             res.getString(R.string.debug_model_description), res.getString(R.string.debug_model_details, Build.BOARD, Build.HARDWARE, soc, Build.DISPLAY)))
         add(DebugRow("motor", DebugSection.DEVICE, Symbols.VIBRATION, res.getString(R.string.debug_motor_label), RowValue.Info(res.getString(if (hasMotor) R.string.debug_yes else R.string.debug_no)),
             res.getString(if (hasMotor) R.string.debug_motor_yes_description else R.string.debug_motor_no_description)))
+        displays.forEach { entry ->
+            add(DebugRow("display_${entry.facts.id}", DebugSection.DISPLAYS, Symbols.MONITOR, entry.shownName(),
+                RowValue.Info(res.getString(entry.role.labelRes())), res.getString(entry.role.descriptionRes()), entry.details()))
+        }
         // What a problem report would contain; the panel on the right previews exactly that text
         val logValue = when {
             report == null -> res.getString(R.string.debug_log_reading)
@@ -532,6 +553,20 @@ private fun gamepads(): List<InputDevice> = InputDevice.getDeviceIds().toList().
 
 private fun axis(dev: InputDevice, axis: Int) =
     dev.getMotionRange(axis, InputDevice.SOURCE_JOYSTICK) != null || dev.getMotionRange(axis, InputDevice.SOURCE_GAMEPAD) != null
+
+private fun DisplayRole.labelRes() = when (this) {
+    DisplayRole.MAIN -> R.string.debug_display_role_main
+    DisplayRole.BUILT_IN_COMPANION -> R.string.debug_display_role_built_in
+    DisplayRole.EXTERNAL -> R.string.debug_display_role_external
+    DisplayRole.VIRTUAL -> R.string.debug_display_role_virtual
+}
+
+private fun DisplayRole.descriptionRes() = when (this) {
+    DisplayRole.MAIN -> R.string.debug_display_main_description
+    DisplayRole.BUILT_IN_COMPANION -> R.string.debug_display_built_in_description
+    DisplayRole.EXTERNAL -> R.string.debug_display_external_description
+    DisplayRole.VIRTUAL -> R.string.debug_display_virtual_description
+}
 
 private fun sensors(res: Resources, dev: InputDevice): String {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return res.getString(R.string.debug_sensors_unknown)

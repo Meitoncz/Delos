@@ -208,4 +208,13 @@
     <string name="settings_game_currently">Ahora es %1$s. Cámbialo para fijar un valor solo para este juego.</string>
     <string name="settings_game_only_this_game">Solo %1$s usa estos cambios. Todo lo demás sigue tu perfil.</string>
     <string name="settings_game_saved_note">Guardado automáticamente · se aplica en el próximo stream</string>
+    <string name="settings_native_section_displays">Pantallas</string>
+    <string name="settings_native_second_display_title">Segunda pantalla</string>
+    <string name="settings_native_second_display_description">El tipo de una segunda pantalla. Cámbialo si Información de depuración lo muestra mal.</string>
+    <string name="settings_native_second_display_automatic">Automático</string>
+    <string name="settings_native_second_display_external">Pantalla externa</string>
+    <string name="settings_native_second_display_built_in">Parte del dispositivo</string>
+    <string name="settings_native_help_second_display_automatic">Delos distingue un monitor o TV de un panel integrado en el dispositivo.</string>
+    <string name="settings_native_help_second_display_external">Se trata como monitor o TV: el modo de pantalla externa puede usarla para el stream.</string>
+    <string name="settings_native_help_second_display_built_in">Se trata como parte del dispositivo: nunca es destino del stream.</string>
 </resources>

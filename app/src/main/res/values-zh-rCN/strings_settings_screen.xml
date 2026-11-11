@@ -203,4 +203,13 @@
     <string name="settings_game_currently">当前为 %1$s。更改后即可仅为此游戏设定值。</string>
     <string name="settings_game_only_this_game">这些更改仅对 %1$s 生效，其余游戏都跟随你的个人资料。</string>
     <string name="settings_game_saved_note">自动保存 · 下次串流时生效</string>
+    <string name="settings_native_section_displays">显示器</string>
+    <string name="settings_native_second_display_title">副屏</string>
+    <string name="settings_native_second_display_description">副屏的类型。如果调试信息里显示有误，可在此更改。</string>
+    <string name="settings_native_second_display_automatic">自动</string>
+    <string name="settings_native_second_display_external">外接显示器</string>
+    <string name="settings_native_second_display_built_in">设备的一部分</string>
+    <string name="settings_native_help_second_display_automatic">Delos 会区分外接的显示器或电视与设备内置的面板。</string>
+    <string name="settings_native_help_second_display_external">视为显示器或电视：外接显示器模式可以向它串流。</string>
+    <string name="settings_native_help_second_display_built_in">视为设备的一部分：绝不作为串流目标。</string>
 </resources>
