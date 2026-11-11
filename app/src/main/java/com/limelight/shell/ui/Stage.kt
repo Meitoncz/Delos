@@ -4,6 +4,8 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.BringIntoViewSpec
 import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -21,18 +23,20 @@ import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.withFrameNanos
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import kotlin.math.min
 
 /**
- * The new UI is laid out on a 1920×1080 "stage", like the prototype (docs/prototype/delos-gui.html),
- * so sizes can be taken from it 1:1. One stage pixel scales with the screen.
+ * The new UI is laid out on a "stage" of 1920×1080 stage pixels at 16:9, like the prototype (docs/prototype/delos-gui.html),
+ * so sizes can be taken from it 1:1. One stage pixel scales with the screen. Other window shapes get a stage that holds more
+ * stage pixels along one axis, or fewer when the legibility floor applies: [StagePlanner] decides.
  */
 @Immutable
 data class StageMetrics(
@@ -40,9 +44,22 @@ data class StageMetrics(
     val dpPerPx: Float,
     /** Extra factor for text: Settings → Appearance → Interface scale. */
     val textScale: Float = 1f,
+    /** Width and height of the window in stage pixels (1920 × 1080 at 16:9 while nothing is floored). */
+    val stageWidth: Float = StagePlanner.STAGE_WIDTH,
+    val stageHeight: Float = StagePlanner.STAGE_HEIGHT,
+    /** The layout family of this window shape. */
+    val shape: StageShape = StageShape.STANDARD,
+    /** The display cutout in stage pixels on each edge; zero where the screen has none. */
+    val safe: StageInsets = StageInsets.None,
 )
 
 val LocalStage = staticCompositionLocalOf { StageMetrics(dpPerPx = 1f) }
+
+/**
+ * Debug builds only: the display cutout (insets in pixels of the density in force, left/top/right/bottom) that [Stage] uses
+ * instead of the window's own, for the shape simulator whose box is not the window. `null`: read the window.
+ */
+val LocalCutoutPx = staticCompositionLocalOf<IntRect?> { null }
 
 /** Stage pixels → Dp. */
 val Number.px: Dp
@@ -175,12 +192,26 @@ fun rememberMarginBringIntoView(state: ScrollableState, before: Float, after: Fl
     }
 }
 
-/** Fits the 1920×1080 stage into the available space and provides [LocalStage]. */
+/** Plans the stage for the available space ([StagePlanner]) and provides [LocalStage]. */
 @Composable
 fun Stage(textScale: Float, content: @Composable () -> Unit) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        val dpPerPx = min(maxWidth.value / 1920f, maxHeight.value / 1080f)
-        CompositionLocalProvider(LocalStage provides StageMetrics(dpPerPx, textScale)) {
+        val plan = StagePlanner.plan(maxWidth.value, maxHeight.value)
+        val density = LocalDensity.current
+        val direction = LocalLayoutDirection.current
+        val cutout = LocalCutoutPx.current
+        val cutoutInsets = WindowInsets.displayCutout
+        fun toStage(pixels: Int) = StagePlanner.insetToStage(pixels, density.density, plan.dpPerPx)
+        val safe = if (cutout != null) {
+            StageInsets(toStage(cutout.left), toStage(cutout.top), toStage(cutout.right), toStage(cutout.bottom))
+        } else {
+            StageInsets(
+                toStage(cutoutInsets.getLeft(density, direction)), toStage(cutoutInsets.getTop(density)),
+                toStage(cutoutInsets.getRight(density, direction)), toStage(cutoutInsets.getBottom(density)),
+            )
+        }
+        val metrics = StageMetrics(plan.dpPerPx, textScale, plan.stageWidth, plan.stageHeight, plan.shape, safe)
+        CompositionLocalProvider(LocalStage provides metrics) {
             content()
         }
     }
