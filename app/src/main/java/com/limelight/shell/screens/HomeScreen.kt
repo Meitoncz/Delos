@@ -90,6 +90,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.em
 import com.limelight.shell.ContextMenu
 import com.limelight.shell.GameActions
+import com.limelight.shell.companion.PublishCompanionGame
 import com.limelight.shell.Layer
 import com.limelight.shell.LocalFocusTracker
 import com.limelight.shell.LocalGameActions
@@ -310,6 +311,8 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
         }
     }
     val running = library.apps.firstOrNull { it.running }
+    // The companion screen of a dual-screen device shows the focused game and its buttons
+    PublishCompanionGame(pc, focused, image, running, profileStore)
     val onHide: (App, Boolean) -> Unit = remember(pc.uuid) {
         { app, hide ->
             repo.setHidden(pc.uuid, app.id, hide)

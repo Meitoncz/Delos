@@ -8,6 +8,14 @@ import android.content.SharedPreferences
 import android.hardware.display.DisplayManager
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
+import android.view.KeyEvent
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import com.limelight.binding.input.virtual_controller.keyboard.KeyBoardLayoutController
+import com.limelight.shell.StreamMenu
+import com.limelight.shell.StreamStats
 import androidx.preference.PreferenceManager
 import com.limelight.diag.DiagLog
 import com.limelight.display.DualScreen
@@ -29,10 +37,10 @@ import kotlinx.coroutines.flow.StateFlow
  * away, starts it again when it returns or the choice changes. The window is kept until `onStop`, not `onPause`, and handed from
  * one owner to the next without closing ([CompanionSession]): when the shell hands over to the stream the stream resumes first.
  *
- * [state] is read inside composition; hold the state in Compose snapshot state and the window follows it. [appearance] is the
+ * A stream's host also carries the stream's live data ([onStats], [bindStream]); [forStream] builds it. [state] is read inside composition; hold the state in Compose snapshot state and the window follows it. [appearance] is the
  * profile's appearance (colors, interface scale), read live.
  */
-class CompanionHost(
+internal class CompanionHost(
     private val activity: Activity,
     appearance: StateFlow<Appearance>,
     state: () -> CompanionState,
@@ -43,6 +51,9 @@ class CompanionHost(
     private val prefs: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity.applicationContext)
     private var started = false
 
+    /** The live data of a stream's companion; null for the shell's host. */
+    private var stream: StreamFeed? = null
+
     private val displayListener = object : DisplayManager.DisplayListener {
         override fun onDisplayAdded(displayId: Int) = reconcile()
         override fun onDisplayRemoved(displayId: Int) = reconcile()
@@ -50,6 +61,19 @@ class CompanionHost(
     }
     private val prefListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         if (key == SecondDisplayOverride.KEY || key == MainScreenChoice.KEY) reconcile()
+    }
+
+    /**
+     * From the decoder's thread: a statistics snapshot of the running stream. It is dropped here, before it can cost the main thread
+     * anything, while no companion window shows and when it comes sooner than 2 Hz after the last one ([StatsThrottle]).
+     */
+    fun onStats(stats: StreamStats) {
+        stream?.onStats(stats)
+    }
+
+    /** From the stream activity once its menu exists: the companion's tiles run the menu's own handlers from now on. */
+    fun bindStream(menu: StreamMenu) {
+        stream?.commands = StreamCommands(menu.companionMenu(), ::sendKey)
     }
 
     /** From `onResume`: take over the companion and start its window if there is a companion display. Safe to call again. */
@@ -108,9 +132,36 @@ class CompanionHost(
     companion object {
         internal const val TAG = "Companion"
 
-        /** The host of a stream activity (Java): the PC it streams from is shown, the colors are the current profile's. */
+        /**
+         * The host of a stream activity (Java): the PC and game it streams are shown, the colors are the current profile's. Call
+         * [bindStream] once the stream menu exists and [onStats] with every statistics snapshot.
+         */
         @JvmStatic
-        fun forStream(activity: Activity, pcName: String?): CompanionHost =
-            CompanionHost(activity, AppearanceStore(activity) { ProfileStore.currentSettings(activity) }.appearance) { CompanionState.Stream(pcName) }
+        fun forStream(activity: Activity, pcName: String?, gameName: String?): CompanionHost {
+            val feed = StreamFeed()
+            val appearance = AppearanceStore(activity) { ProfileStore.currentSettings(activity) }.appearance
+            return CompanionHost(activity, appearance) { CompanionState.Stream(pcName, gameName, feed.stats, feed.commands) }.also { it.stream = feed }
+        }
+
+        /** A key of the companion keyboard into the stream: the path of the Full keyboard (`KeyBoardLayoutController.sendKey`). */
+        private fun sendKey(code: Int, down: Boolean) {
+            val event = KeyEvent(if (down) KeyEvent.ACTION_DOWN else KeyEvent.ACTION_UP, code)
+            event.source = 0
+            KeyBoardLayoutController.sendKeyEvent(event)
+        }
+    }
+}
+
+/** The stream data the companion shows, held in snapshot state so the window follows it. */
+private class StreamFeed {
+    var stats by mutableStateOf<StreamStats?>(null)
+    var commands by mutableStateOf<StreamCommands?>(null)
+    private val throttle = StatsThrottle()
+    private val handler = Handler(Looper.getMainLooper())
+
+    /** Decoder thread. */
+    fun onStats(next: StreamStats) {
+        if (CompanionSession.window == null || !throttle.accept(SystemClock.elapsedRealtime())) return
+        handler.post { stats = next }
     }
 }

@@ -1,4 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="companion_streaming">正在串流</string>
+    <string name="companion_idle_hint">在主屏幕上选择游戏</string>
+    <string name="companion_focused_label">主屏幕上已聚焦</string>
+    <string name="companion_hdr_native">原生 HDR</string>
+    <string name="companion_shell_hint">手柄仍用于主屏幕。</string>
+    <string name="companion_menu_heading">串流菜单</string>
+    <string name="companion_menu_unavailable">串流菜单尚未就绪。</string>
+    <string name="companion_back_to_main">返回主屏幕</string>
+    <string name="companion_back_hint">触控菜单已收起。</string>
+    <string name="companion_open_menu">打开串流菜单</string>
+    <string name="companion_close">关闭</string>
+    <string name="companion_typing_menu">串流菜单</string>
+    <string name="companion_typing_sent">正在输入到串流</string>
+    <string name="companion_typing_hint">点按按键，输入会发送到电脑。</string>
+    <string name="companion_typing_clear">清除</string>
 </resources>

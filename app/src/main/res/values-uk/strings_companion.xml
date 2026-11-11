@@ -1,4 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="companion_streaming">Триває стрім</string>
+    <string name="companion_idle_hint">Обери гру на головному екрані</string>
+    <string name="companion_focused_label">Вибрано на головному екрані</string>
+    <string name="companion_hdr_native">Нативний HDR</string>
+    <string name="companion_shell_hint">Контролер залишається на головному екрані.</string>
+    <string name="companion_menu_heading">Меню стріму</string>
+    <string name="companion_menu_unavailable">Меню стріму ще не готове.</string>
+    <string name="companion_back_to_main">Назад на головний екран</string>
+    <string name="companion_back_hint">Сенсорне меню згорнуте.</string>
+    <string name="companion_open_menu">Відкрити меню стріму</string>
+    <string name="companion_close">Закрити</string>
+    <string name="companion_typing_menu">Меню стріму</string>
+    <string name="companion_typing_sent">Введення в стрім</string>
+    <string name="companion_typing_hint">Торкайся клавіш: вони йдуть на ПК.</string>
+    <string name="companion_typing_clear">Очистити</string>
 </resources>

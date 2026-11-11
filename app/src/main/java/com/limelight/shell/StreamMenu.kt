@@ -360,13 +360,21 @@ class StreamMenu(private val game: DelosStreamActivity) {
         autoSave.flush()
     }
 
-    /** What the menu's composables read from and do to the stream: the live [DelosStreamActivity], with [menu] as the menu's own window. */
-    private inner class GameHost(private val menu: ComponentDialog) : StreamMenuHost {
+    /**
+     * The same handlers without a menu window, for the companion screen on the other panel (docs/DUAL_SCREEN.md): its tiles call
+     * exactly what the tiles of the menu on the main panel call. There is no window to dismiss or blur; brightness applies to the stream's.
+     */
+    internal fun companionMenu(): StreamMenuHost = companionHost
+
+    private val companionHost by lazy { GameHost(null) }
+
+    /** What the menu's composables read from and do to the stream: the live [DelosStreamActivity], with [menu] as the menu's own window (null: none, see [companionMenu]). */
+    private inner class GameHost(private val menu: ComponentDialog?) : StreamMenuHost {
         private val prefs get() = game.prefConfig
         private val classic get() = game.gameMenuCallbacks
 
         override val gameName: String = game.intent.getStringExtra(DelosStreamActivity.EXTRA_APP_NAME) ?: "Stream"
-        override fun dismiss() { menu.dismiss() }
+        override fun dismiss() { menu?.dismiss() }
 
         // The whole stream behind the menu is blurred (the way leaving a stream does it): a window can only blur what lies
         // behind its whole rectangle, so not the tiles one by one. Android 12 and newer, with window blur enabled.
@@ -376,11 +384,11 @@ class StreamMenu(private val game: DelosStreamActivity) {
         }
         private val blurOn = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && game.getSystemService(WindowManager::class.java).isCrossWindowBlurEnabled
         init {
-            if (blurOn) menu.window?.addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
+            if (blurOn) menu?.window?.addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
         }
         override fun setBackdrop(amount: Float) {
             if (!blurOn || Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
-            val w = menu.window ?: return
+            val w = menu?.window ?: return
             w.attributes = w.attributes.apply { blurBehindRadius = (amount * blurRadius).toInt() }
         }
         override fun runWhenStreamFocused(action: () -> Unit) = whenGameFocused(action)
