@@ -120,7 +120,7 @@ public class KeyBoardLayoutController implements FullKeyboardHost {
         return state.onControllerMotion(event);
     }
 
-    public void sendKeyEvent(KeyEvent keyEvent) {
+    public static void sendKeyEvent(KeyEvent keyEvent) {
         ActiveKeyboardInput.Target target = ActiveKeyboardInput.connectedTarget();
         if (target == null) {
             return;

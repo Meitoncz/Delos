@@ -132,7 +132,7 @@ class ShellActivity : ComponentActivity() {
             results.value = StreamResult.take(intent)
         }
         // Debug builds only: the stream menu, the Full keyboard, a toast or a screen with fake state instead of the shell (docs/GUI.md, "Stream menu preview", "Full keyboard", "Toasts", "Screen shapes")
-        val preview = StreamMenuPreview.from(intent) ?: FullKeyboardPreview.from(intent) ?: ToastPreview.from(intent, shell) ?: SettingsTabsPreview.from(intent) ?: SettingsListPreview.from(intent) ?: GameSettingsPreview.from(intent) ?: TopMenuPreview.from(intent) ?: ContextMenuPreview.from(intent) ?: ScreenPreviews.from(intent, shell)
+        val preview = StreamMenuPreview.from(intent) ?: FullKeyboardPreview.from(intent) ?: ToastPreview.from(intent, shell) ?: SettingsTabsPreview.from(intent) ?: SettingsListPreview.from(intent) ?: GameSettingsPreview.from(intent) ?: TopMenuPreview.from(intent) ?: ContextMenuPreview.from(intent) ?: CompanionPreview.from(intent) ?: ScreenPreviews.from(intent, shell)
         // Debug builds only: draws all of it in a box of another panel's size and density (`preview_shape`)
         val simulator = ShapeSimulator.from(intent)
         setContent {
@@ -146,7 +146,8 @@ class ShellActivity : ComponentActivity() {
             if (simulator != null) simulator.Host(screen) else screen()
         }
         feedback.view = window.decorView
-        companion = CompanionHost(this, appearance.appearance) { CompanionState.Shell(shell.pcName) }
+        val fakeCompanion = CompanionPreview.fakeState(intent) // debug builds only: made-up state for the real second display
+        companion = CompanionHost(this, appearance.appearance) { fakeCompanion ?: CompanionState.Shell(shell.pcName, shell.companionGame) }
     }
 
     override fun onNewIntent(intent: Intent) {

@@ -1,5 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Placeholder text on the companion screen (second panel of a dual-screen device) while a stream runs -->
+    <!-- The label over a stream's heading on the companion screen (second panel of a dual-screen device) -->
     <string name="companion_streaming">Streaming</string>
+    <!-- The companion screen's content: the focused game in the shell, statistics, stream menu tiles and a keyboard in a stream (docs/DUAL_SCREEN.md) -->
+    <string name="companion_idle_hint">Choose a game on the main screen</string>
+    <string name="companion_focused_label">Focused on the main screen</string>
+    <string name="companion_hdr_native">Native HDR</string>
+    <string name="companion_shell_hint">Your controller stays on the main screen.</string>
+    <string name="companion_menu_heading">Stream menu</string>
+    <string name="companion_menu_unavailable">The stream menu is not ready yet.</string>
+    <string name="companion_back_to_main">Back to the main screen</string>
+    <string name="companion_back_hint">The touch menu is tucked away.</string>
+    <string name="companion_open_menu">Open stream menu</string>
+    <string name="companion_close">Close</string>
+    <string name="companion_typing_menu">Stream menu</string>
+    <string name="companion_typing_sent">Typing into the stream</string>
+    <string name="companion_typing_hint">Tap the keys: they go to the PC.</string>
+    <string name="companion_typing_clear">Clear</string>
 </resources>

@@ -304,7 +304,7 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
         windowController.hideSystemUiNow();
         spinner = StreamLoader.show(this, prefConfig);
         // The second panel of a dual-screen device (docs/DUAL_SCREEN.md); shows nothing when there is none or this stream is on an external display
-        companionHost = CompanionHost.forStream(this, getIntent().getStringExtra(EXTRA_PC_NAME));
+        companionHost = CompanionHost.forStream(this, getIntent().getStringExtra(EXTRA_PC_NAME), getIntent().getStringExtra(EXTRA_APP_NAME));
 
         Display currentDisplay = null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -695,6 +695,8 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
 
         gameMenuCallbacks = new GameMenu(this);
         streamMenu = new com.limelight.shell.StreamMenu(this);
+        // The companion screen's tiles run the stream menu's own handlers
+        if (companionHost != null) companionHost.bindStream(streamMenu);
 
         surfaceController.configureStreamSurface(findViewById(android.R.id.content));
     }
@@ -1863,6 +1865,9 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
     public void onPerfStats(com.limelight.shell.StreamStats stats) {
         if (statsPanel != null) {
             statsPanel.update(stats);
+        }
+        if (companionHost != null) {
+            companionHost.onStats(stats);
         }
     }
 

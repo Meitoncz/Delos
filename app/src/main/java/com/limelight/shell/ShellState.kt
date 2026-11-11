@@ -295,6 +295,9 @@ class ShellState(initial: Screen) {
     /** The PC whose games the shell shows (null before a PC is chosen); the companion screen shows it (docs/DUAL_SCREEN.md). */
     var pcName by mutableStateOf<String?>(null)
 
+    /** The game focused on the home screen, as the companion screen shows it (null while Home is not the screen; docs/DUAL_SCREEN.md). */
+    var companionGame by mutableStateOf<com.limelight.shell.companion.CompanionGame?>(null)
+
     /** The game background behind the home screen (the focused game's art). */
     var hero by mutableStateOf<GameArt?>(null)
 
