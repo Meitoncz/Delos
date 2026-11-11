@@ -267,30 +267,100 @@ internal object StreamMenuLayout {
     const val CARD_BACKING_ALPHA = .30f
 }
 
+/**
+ * Where the dock's tiles, its ring and the popover sit on a stage [width] stage pixels across. On every shape but a compact one this is the
+ * prototype's 1920-wide dock ([Standard]: 150 px tiles 40 px apart, the popover 120 px from the sides). A compact stage ([forStage]) is
+ * narrower than the nine tiles need, so the tiles shrink to fit it with a 48 px margin (down to about 85 px, never under the 64 px target),
+ * the ring, the corners and the icon with them, the labels of the tiles that do not have the focus go when they would touch, the dock sits
+ * lower (the caption ends 48 px above the bottom) and the popover gets the margin of 48 on the sides and above, so it keeps the room a
+ * short stage has. The text keeps its size.
+ */
+internal class DockGeometry(
+    val width: Float,
+    val tile: Float,
+    val gap: Float,
+    /** The popover's distance from the stage's left, right and top edges. */
+    val margin: Float,
+    private val compact: Boolean,
+) {
+    private val c = StreamMenuLayout
+    private val f = tile / c.TILE
+
+    val tilesWidth = 9 * tile + 8 * gap
+    val tilesLeft = (width - tilesWidth) / 2f
+    val tileRadius = c.TILE_RADIUS * f
+    val icon = c.TILE_ICON * f
+    val ring = c.RING * f
+    val ringRadius = c.RING_RADIUS * f
+
+    /** The ring's top edge relative to the tiles' top edge (negative: it reaches above the tile). */
+    val ringTop = (tile - ring) / 2f
+    val popoverMinLeft = margin
+    val popoverMaxRight = width - margin
+    val captionWidth = if (compact) minOf(c.CAPTION_WIDTH, width - 2f * margin) else c.CAPTION_WIDTH
+
+    /** The labels of the tiles that do not have the focus show only where neighbouring ones cannot touch (a compact dock of narrow tiles shows the focused one's). */
+    val allLabels = !compact || tile + gap >= 150f
+
+    /** The dock's height: the box its tiles hang from, its bottom edge on the stage's. The caption ends [margin] above the bottom on a compact stage. */
+    val dockHeight = if (compact) tile + c.LABEL_GAP + c.LABEL_SIZE * c.LABEL_LINE_HEIGHT + c.CAPTION_GAP + 8f + c.CAPTION_SIZE * c.CAPTION_LINE_HEIGHT * c.CAPTION_LINES + margin else c.STAGE_HEIGHT - c.DOCK_TOP
+
+    /** How far the dock sinks while a popover is open: the tiles end up with their label 48 px above the bottom on a compact stage. */
+    val dockShift = if (compact) dockHeight - (tile + c.LABEL_GAP + c.LABEL_SIZE * c.LABEL_LINE_HEIGHT + margin) else c.DOCK_SHIFT
+
+    /** The popover's box ends here above the stage's bottom edge: the sunk dock's ring top and the caret's gap to it. */
+    val popoverBottom = if (compact) dockHeight - dockShift - ringTop + 12f else c.POPOVER_BOTTOM
+
+    val popoverCardBottomInset = popoverBottom + c.CARET_HEIGHT
+
+    companion object {
+        val Standard = DockGeometry(StreamMenuLayout.STAGE_WIDTH, StreamMenuLayout.TILE, StreamMenuLayout.TILE_GAP, StreamMenuLayout.POPOVER_MARGIN, compact = false)
+
+        /** The dock of this stage: the prototype's, or a compact stage's shrunken one. */
+        fun forStage(stage: com.limelight.shell.ui.StageMetrics): DockGeometry {
+            if (stage.shape != com.limelight.shell.ui.StageShape.COMPACT) return Standard
+            val margin = COMPACT_MARGIN
+            val gap = COMPACT_TILE_GAP
+            val tile = ((stage.stageWidth - 2f * margin - 8f * gap) / 9f).coerceAtMost(StreamMenuLayout.TILE)
+            return DockGeometry(stage.stageWidth, tile, gap, margin, compact = true)
+        }
+
+        const val COMPACT_MARGIN = 48f
+        const val COMPACT_TILE_GAP = 20f
+    }
+}
+
+/** The dock's geometry of the stage the menu is shown on ([DockGeometry.forStage]); provided by [StreamMenuRoot]. */
+internal val LocalDockGeometry = androidx.compose.runtime.staticCompositionLocalOf { DockGeometry.Standard }
+
 /** The left edge of [item]'s tile, stage pixels. */
-internal fun tileLeft(item: BarItem): Float = StreamMenuLayout.TILES_LEFT + item.ordinal * (StreamMenuLayout.TILE + StreamMenuLayout.TILE_GAP)
+internal fun tileLeft(item: BarItem, g: DockGeometry = DockGeometry.Standard): Float = g.tilesLeft + item.ordinal * (g.tile + g.gap)
 
 /** The horizontal center of [item]'s tile. */
-internal fun tileCenterX(item: BarItem): Float = tileLeft(item) + StreamMenuLayout.TILE / 2f
+internal fun tileCenterX(item: BarItem, g: DockGeometry = DockGeometry.Standard): Float = tileLeft(item, g) + g.tile / 2f
 
 /** The left edge of the ring's box around [item]'s tile. */
-internal fun ringLeft(item: BarItem): Float = tileCenterX(item) - StreamMenuLayout.RING / 2f
+internal fun ringLeft(item: BarItem, g: DockGeometry = DockGeometry.Standard): Float = tileCenterX(item, g) - g.ring / 2f
 
 /** The ring's top edge relative to the tiles' top edge (negative: it reaches above the tile). */
 internal const val RING_TOP = (StreamMenuLayout.TILE - StreamMenuLayout.RING) / 2f
 
 /** The popover's width: wide enough for its rows. More and the pages it opens share one width. */
-internal fun popoverWidth(page: MenuPage): Float = when (page) {
-    MenuPage.MAIN -> 0f
-    MenuPage.BRIGHTNESS -> 780f
-    MenuPage.BITRATE -> 860f
-    MenuPage.UPSCALER -> 980f
-    MenuPage.MORE, MenuPage.KEYS, MenuPage.COMMANDS, MenuPage.MOUSE, MenuPage.RUMBLE -> 920f
+internal fun popoverWidth(page: MenuPage, g: DockGeometry = DockGeometry.Standard): Float {
+    val natural = when (page) {
+        MenuPage.MAIN -> 0f
+        MenuPage.BRIGHTNESS -> 780f
+        MenuPage.BITRATE -> 860f
+        MenuPage.UPSCALER -> 980f
+        MenuPage.MORE, MenuPage.KEYS, MenuPage.COMMANDS, MenuPage.MOUSE, MenuPage.RUMBLE -> 920f
+    }
+    // A stage narrower than the card keeps its margins and the card gets what is left
+    return minOf(natural, g.popoverMaxRight - g.popoverMinLeft)
 }
 
 /** The card's left edge: centered on [anchorX] (the center of the tile that opened it), [StreamMenuLayout.POPOVER_MIN_LEFT] to [StreamMenuLayout.POPOVER_MAX_RIGHT]. */
-internal fun popoverLeft(anchorX: Float, width: Float): Float =
-    (anchorX - width / 2f).coerceIn(StreamMenuLayout.POPOVER_MIN_LEFT, (StreamMenuLayout.POPOVER_MAX_RIGHT - width).coerceAtLeast(StreamMenuLayout.POPOVER_MIN_LEFT))
+internal fun popoverLeft(anchorX: Float, width: Float, g: DockGeometry = DockGeometry.Standard): Float =
+    (anchorX - width / 2f).coerceIn(g.popoverMinLeft, (g.popoverMaxRight - width).coerceAtLeast(g.popoverMinLeft))
 
 /** The caret's center from the card's left edge: the anchor kept [StreamMenuLayout.CARET_MIN_INSET] from both corners. */
 internal fun caretCenterX(anchorX: Float, left: Float, width: Float): Float =
@@ -299,11 +369,11 @@ internal fun caretCenterX(anchorX: Float, left: Float, width: Float): Float =
 /** Where the popover of a page sits, stage pixels: the card's left edge, its width, and the caret's center from the left edge. */
 internal data class PopoverPlacement(val left: Float, val width: Float, val caretX: Float)
 
-internal fun popoverPlacement(page: MenuPage): PopoverPlacement? {
+internal fun popoverPlacement(page: MenuPage, g: DockGeometry = DockGeometry.Standard): PopoverPlacement? {
     val item = page.barItem() ?: return null
-    val anchor = tileCenterX(item)
-    val width = popoverWidth(page)
-    val left = popoverLeft(anchor, width)
+    val anchor = tileCenterX(item, g)
+    val width = popoverWidth(page, g)
+    val left = popoverLeft(anchor, width, g)
     return PopoverPlacement(left, width, caretCenterX(anchor, left, width))
 }
 
@@ -319,16 +389,16 @@ internal fun rowsHeight(rows: Int): Float =
     if (rows <= 0) 0f else rows * StreamMenuLayout.ROW_HEIGHT + (rows - 1) * StreamMenuLayout.ROW_GAP
 
 /** The card's bottom edge (the caret excluded) on a stage [stageHeight] stage pixels high, from the stage's top. */
-internal fun popoverCardBottom(stageHeight: Float): Float = stageHeight - StreamMenuLayout.POPOVER_CARD_BOTTOM_INSET
+internal fun popoverCardBottom(stageHeight: Float, g: DockGeometry = DockGeometry.Standard): Float = stageHeight - g.popoverCardBottomInset
 
 /** The tallest card on a stage [stageHeight] high: from its bottom edge up to the [StreamMenuLayout.POPOVER_MARGIN] below the stage's top. */
-internal fun popoverMaxHeight(stageHeight: Float): Float = popoverCardBottom(stageHeight) - StreamMenuLayout.POPOVER_MARGIN
+internal fun popoverMaxHeight(stageHeight: Float, g: DockGeometry = DockGeometry.Standard): Float = popoverCardBottom(stageHeight, g) - g.margin
 
 /** The card's height with [rows] rows at [textScale] when nothing scrolls, caret excluded; capped at [popoverMaxHeight], the one height every page shares as its limit. */
-internal fun popoverCardHeight(rows: Int, textScale: Float, stageHeight: Float): Float {
+internal fun popoverCardHeight(rows: Int, textScale: Float, stageHeight: Float, g: DockGeometry = DockGeometry.Standard): Float {
     val c = StreamMenuLayout
     val natural = c.POPOVER_PADDING_Y + c.POPOVER_HEAD_HEIGHT + c.POPOVER_GAP_AFTER_HEAD + rowsHeight(rows) + c.POPOVER_HELP_GAP + popoverHelpHeight(textScale) + c.POPOVER_PADDING_BOTTOM
-    return minOf(natural, popoverMaxHeight(stageHeight))
+    return minOf(natural, popoverMaxHeight(stageHeight, g))
 }
 
 /** True when a page of [rows] rows needs no scrolling at [textScale]. */
@@ -352,9 +422,9 @@ internal fun captionHeight(textScale: Float): Float =
     StreamMenuLayout.CAPTION_SIZE * textScale * StreamMenuLayout.CAPTION_LINE_HEIGHT * StreamMenuLayout.CAPTION_LINES
 
 /** The caption's top edge below the tiles' top edge at [textScale] (below the label, its gap and 8). */
-internal fun captionTop(textScale: Float): Float {
+internal fun captionTop(textScale: Float, g: DockGeometry = DockGeometry.Standard): Float {
     val c = StreamMenuLayout
-    return c.TILE + c.LABEL_GAP + c.LABEL_SIZE * textScale * c.LABEL_LINE_HEIGHT + c.CAPTION_GAP + 8f
+    return g.tile + c.LABEL_GAP + c.LABEL_SIZE * textScale * c.LABEL_LINE_HEIGHT + c.CAPTION_GAP + 8f
 }
 
 /** How many characters of [textSize] (stage pixels) fit a line of [width] stage pixels at the largest text scale. */

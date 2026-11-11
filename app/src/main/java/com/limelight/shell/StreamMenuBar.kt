@@ -156,12 +156,13 @@ internal fun StreamMenuDock(
 ) {
     val ts = LocalStage.current.textScale
     val k = stageScale()
+    val g = LocalDockGeometry.current
     Box(
         modifier
-            .size(L.STAGE_WIDTH.px, (L.STAGE_HEIGHT - L.DOCK_TOP).px)
+            .size(g.width.px, g.dockHeight.px)
             .graphicsLayer { translationY = dockShift() * k },
     ) {
-        DockHead(title, enter, exit, Modifier.offset(L.TILES_LEFT.px, 0.px))
+        DockHead(title, enter, exit, Modifier.offset(g.tilesLeft.px, 0.px), maxTitleWidth = minOf(L.TITLE_MAX_WIDTH, g.width - 2f * g.tilesLeft))
         TileRing(focusItem ?: firstItem, firstItem, enter, exit)
         // The bar wraps: Right on the last tile that can take the focus goes to the first one and Left on the first goes
         // to the last. Both ends come from the list (a hidden tile or the dimmed ones of an open popover are skipped).
@@ -173,16 +174,16 @@ internal fun StreamMenuDock(
             val wrapRight = if (spec === lastReachable && firstReachable !== spec) requesters.getValue(firstReachable!!.item) else null
             TileCell(
                 spec, spec.item == focusItem, popOpen, requesters.getValue(spec.item), wrapLeft, wrapRight, enter, exit, onCircleFocused,
-                Modifier.offset(tileLeft(spec.item).px, 0.px),
+                Modifier.offset(tileLeft(spec.item, g).px, 0.px),
             )
         }
-        DockCaption(caption, popOpen, enter, exit, Modifier.offset(((L.STAGE_WIDTH - L.CAPTION_WIDTH) / 2f).px, captionTop(ts).px))
+        DockCaption(caption, popOpen, enter, exit, Modifier.offset(((g.width - g.captionWidth) / 2f).px, captionTop(ts, g).px))
     }
 }
 
 /** The game's name (Unbounded 36) and the stacked A / B hints, their bottom edge [StreamMenuLayout.HEAD_BOTTOM] above the tiles. */
 @Composable
-private fun DockHead(title: String, enter: () -> Float, exit: () -> Float, modifier: Modifier) {
+private fun DockHead(title: String, enter: () -> Float, exit: () -> Float, modifier: Modifier, maxTitleWidth: Float) {
     val colors = LocalDelosColors.current
     val rm = LocalReducedMotion.current
     val k = stageScale()
@@ -209,7 +210,7 @@ private fun DockHead(title: String, enter: () -> Float, exit: () -> Float, modif
             ),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.widthIn(max = L.TITLE_MAX_WIDTH.px),
+            modifier = Modifier.widthIn(max = maxTitleWidth.px),
         )
         Column(verticalArrangement = Arrangement.spacedBy(L.HINTS_GAP.px)) {
             DockHint(Glyph.A, stringResource(R.string.stream_menu_hint_select), shadow)
@@ -251,7 +252,7 @@ private fun DockCaption(text: String, popOpen: Boolean, enter: () -> Float, exit
     val popAlpha by animateFloatAsState(if (popOpen) 0f else 1f, tween(Motion.FADE, easing = Motion.Ease), label = "captionPop")
     Box(
         modifier
-            .size(L.CAPTION_WIDTH.px, captionHeight(ts).px)
+            .size(LocalDockGeometry.current.captionWidth.px, captionHeight(ts).px)
             .graphicsLayer {
                 val p = Motion.progress(enter(), M.CAPTION_DELAY, Motion.ENTER, EaseOut)
                 val c = change.value
@@ -283,9 +284,10 @@ private fun TileRing(target: BarItem, firstItem: BarItem, enter: () -> Float, ex
     val colors = LocalDelosColors.current
     val rm = LocalReducedMotion.current
     val k = stageScale()
-    val x = remember { Animatable(ringLeft(target)) }
+    val g = LocalDockGeometry.current
+    val x = remember { Animatable(ringLeft(target, g)) }
     LaunchedEffect(target) {
-        val goal = ringLeft(target)
+        val goal = ringLeft(target, g)
         if (rm) x.snapTo(goal) else x.animateTo(goal, tween(Motion.RING, easing = Motion.Glide))
     }
     val breathe = if (rm) null else rememberInfiniteTransition(label = "breathe").animateFloat(
@@ -304,13 +306,13 @@ private fun TileRing(target: BarItem, firstItem: BarItem, enter: () -> Float, ex
     val room = SHADOW_ROOM
     Box(
         Modifier
-            .offset { IntOffset((x.value * k).roundToInt(), (RING_TOP * k).roundToInt()) }
-            .size(L.RING.px),
+            .offset { IntOffset((x.value * k).roundToInt(), (g.ringTop * k).roundToInt()) }
+            .size(g.ring.px),
         contentAlignment = Alignment.Center,
     ) {
         Box(
             Modifier
-                .requiredSize((L.RING + 2 * room).px)
+                .requiredSize((g.ring + 2 * room).px)
                 .graphicsLayer {
                     val p = Motion.progress(enter(), M.ringDelay(firstItem.ordinal), Motion.ENTER, EaseSpring)
                     alpha = p.coerceIn(0f, 1f) * (1f - Motion.linear(exit(), 0, Motion.EXIT))
@@ -321,8 +323,8 @@ private fun TileRing(target: BarItem, firstItem: BarItem, enter: () -> Float, ex
                 .drawBehind {
                     val b = breathe?.value ?: 0f
                     val m = room * k
-                    val box = Rect(m, m, m + L.RING * k, m + L.RING * k)
-                    val corner = L.RING_RADIUS * k
+                    val box = Rect(m, m, m + g.ring * k, m + g.ring * k)
+                    val corner = g.ringRadius * k
                     // 0 0 44px 4px glow, breathing to 0 0 62px 8px (the spread is folded into the strength: a positive one would show the shape itself)
                     drawBoxShadow(box, corner, 0f, Motion.lerp(44f, 62f, b) * k, 0f, colors.glow.copy(alpha = colors.glow.alpha * Motion.lerp(1.15f, 1.3f, b)))
                     val stroke = L.RING_WIDTH * k
@@ -365,6 +367,7 @@ private fun TileCell(
     val colors = LocalDelosColors.current
     val rm = LocalReducedMotion.current
     val k = stageScale()
+    val g = LocalDockGeometry.current
     val index = spec.item.ordinal
     val on = spec.on == true
     val dim = popOpen && !focused
@@ -377,13 +380,13 @@ private fun TileCell(
     val onFill by animateFloatAsState(if (on) 1f else 0f, tween(Motion.FADE, easing = Motion.Ease), label = "onFill")
     val lift by animateFloatAsState(if (focused) 1f else 0f, tween(Motion.FOCUS, easing = EaseOut), label = "tileLift")
     val tileAlpha by animateFloatAsState(if (dim) .46f else 1f, tween(Motion.FADE, easing = Motion.Ease), label = "tileAlpha")
-    val labelAlpha by animateFloatAsState(if (dim) .4f else 1f, tween(Motion.FADE, easing = Motion.Ease), label = "labelAlpha")
+    val labelAlpha by animateFloatAsState(if (!focused && !g.allLabels) 0f else if (dim) .4f else 1f, tween(Motion.FADE, easing = Motion.Ease), label = "labelAlpha")
     val iconColor by animateColorAsState(if (on) colors.accent else colors.text, tween(Motion.FADE, easing = Motion.Ease), label = "iconColor")
     val labelColor by animateColorAsState(if (focused) colors.accent else colors.text2, tween(Motion.FADE, easing = Motion.Ease), label = "labelColor")
 
     Box(
         modifier
-            .size(L.TILE.px)
+            .size(g.tile.px)
             // A dimmed tile that opens no page does nothing while a popover is open (and cannot take the focus out of it)
             .focusProperties {
                 canFocus = tileFocusable(spec, popOpen)
@@ -396,14 +399,14 @@ private fun TileCell(
                     press.fire()
                     if (!popOpen || spec.opensPage) spec.onClick()
                 },
-                corner = L.TILE_RADIUS, focusScale = 1f, ring = null, glow = null, pressScale = 1f,
+                corner = g.tileRadius, focusScale = 1f, ring = null, glow = null, pressScale = 1f,
                 onFocusChange = { onFocused(spec.item, it) },
             ),
         contentAlignment = Alignment.Center,
     ) {
         Box(
             Modifier
-                .requiredSize((L.TILE + 2 * SHADOW_ROOM).px)
+                .requiredSize((g.tile + 2 * SHADOW_ROOM).px)
                 .graphicsLayer {
                     val p = Motion.progress(enter(), M.tileDelay(index), Motion.ENTER, EaseSpring)
                     val q = Motion.progress(exit(), M.exitDelay(index), Motion.EXIT, Motion.In)
@@ -422,8 +425,8 @@ private fun TileCell(
                 }
                 .drawBehind {
                     val m = SHADOW_ROOM * k
-                    val box = Rect(m, m, m + L.TILE * k, m + L.TILE * k)
-                    val corner = L.TILE_RADIUS * k
+                    val box = Rect(m, m, m + g.tile * k, m + g.tile * k)
+                    val corner = g.tileRadius * k
                     // 0 18px 40px -14px .55 at rest; focused: 0 26px 56px -14px .6 and 0 0 60px -8px glow-soft
                     drawBoxShadow(box, corner, 18f * k, 40f * k, -14f * k, Color.Black.copy(alpha = .55f * (1f - lift)))
                     drawBoxShadow(box, corner, 26f * k, 56f * k, -14f * k, Color.Black.copy(alpha = .60f * lift))
@@ -437,9 +440,9 @@ private fun TileCell(
                 },
             contentAlignment = Alignment.Center,
         ) {
-            Box(Modifier.size(L.TILE.px), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(g.tile.px), contentAlignment = Alignment.Center) {
                 Symbol(
-                    spec.icon, L.TILE_ICON.fsp, iconColor,
+                    spec.icon, g.icon.fsp, iconColor,
                     Modifier.graphicsLayer {
                         scaleX = iconScale
                         scaleY = iconScale
@@ -465,7 +468,7 @@ private fun TileCell(
                 .graphicsLayer {
                     val e = Motion.progress(enter(), M.labelDelay(index), M.LABEL_DURATION, Motion.EaseOutCss)
                     alpha = e * (1f - Motion.linear(exit(), 0, Motion.EXIT)) * labelAlpha
-                    translationY = (L.TILE + L.LABEL_GAP + labelShift) * k
+                    translationY = (g.tile + L.LABEL_GAP + labelShift) * k
                     compositingStrategy = CompositingStrategy.ModulateAlpha
                 },
         )
