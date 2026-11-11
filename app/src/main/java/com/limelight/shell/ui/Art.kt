@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -60,6 +62,8 @@ fun PlaceholderArt(
     titleInset: Float = 26f,
     titleBottom: Float = 26f,
     subtitle: String? = null,
+    /** A small cover (a compact stage's): the title is set smaller, down to 0.55 of [titleSize], until its longest word fits a line, so no word is broken. */
+    titleFit: Boolean = false,
 ) {
     BoxWithConstraints(
         modifier.drawBehind {
@@ -79,6 +83,14 @@ fun PlaceholderArt(
             // CSS text-shadow 0 4px 24px: blur 24 = 2 sigma; Android's shadow radius ≈ (sigma - 0.5) / 0.577
             val k = LocalStage.current.dpPerPx * LocalDensity.current.density
             val titleShadow = Shadow(Color.Black.copy(alpha = .45f), Offset(0f, 4f * k), 20f * k)
+            val measurer = rememberTextMeasurer()
+            val fullSize = titleSize.tpx
+            val room = constraints.maxWidth - 2f * titleInset * k
+            val fitted = if (!titleFit) titleSize else remember(title, titleSize, room, measurer) {
+                val style = TextStyle(fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = fullSize)
+                val widest = title.split(' ').maxOf { measurer.measure(it, style, softWrap = false, maxLines = 1).size.width }
+                titleSize * (if (widest <= 0) 1f else (room - 1f) / widest).coerceIn(.55f, 1f)
+            }
             Column(Modifier.align(Alignment.BottomStart).padding(start = titleInset.px, end = titleInset.px, bottom = titleBottom.px)) {
                 if (subtitle != null) {
                     BasicText(
@@ -90,7 +102,7 @@ fun PlaceholderArt(
                 BasicText(
                     title,
                     style = TextStyle(
-                        color = Color.White, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = titleSize.tpx,
+                        color = Color.White, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = fitted.tpx,
                         lineHeight = 1.05.em, shadow = titleShadow,
                     ),
                 )

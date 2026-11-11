@@ -97,7 +97,7 @@ fun StreamResultLayer(result: StreamResult?, haze: HazeState, reducedMotion: Boo
                     style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 28.tpx, lineHeight = 1.4.em, textAlign = TextAlign.Center),
                     modifier = Modifier.widthIn(max = 1000.px),
                 )
-                Row(Modifier.padding(top = 12.px), horizontalArrangement = Arrangement.spacedBy(24.px)) {
+                Row(Modifier.padding(top = 12.px), horizontalArrangement = Arrangement.spacedBy((if (compact) Compact.BUTTON_GAP else 24f).px)) {
                     PillButton(stringResource(R.string.stream_result_try_again), Symbols.REFRESH, onRetry, Modifier.focusRequester(retry), primary = true)
                     PillButton(stringResource(R.string.stream_result_back_to_library), Symbols.LIBRARY, onBack, clickCue = Cue.BACK)
                 }

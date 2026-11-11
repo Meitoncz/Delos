@@ -144,4 +144,61 @@ class ContextMenuPlacementTest {
         assertEquals(deeper.children, MenuPath.items(root, listOf(1, 0)))
         assertTrue(MenuPath.parent(root, listOf(5)) == null)
     }
+
+    /** The compact stages of the handhelds. */
+    private val compactStages = listOf(1099f to 957f, 1488f to 893f, 1191f to 893f, 1108f to 831f, 1051f to 1051f, 1082f to 722f)
+
+    @Test
+    fun aCompactStagesCardEndsAboveTheHintBarAndKeeps48FromTheOtherEdges() {
+        for ((w, h) in compactStages) for (scale in listOf(1f, 1.15f, 1.3f)) {
+            val bottom = l.compactBottomMargin(scale)
+            assertEquals(92f * scale + 16f, bottom, .001f)
+            val maxHeight = l.maxHeight(h, l.COMPACT_MARGIN, bottom)
+            assertEquals(h - 48f - bottom, maxHeight, .001f)
+            // The game menu: a header and six rows are about 540 high; a card as tall as the room allows, beside every place a cover can be
+            val card = minOf(540f, maxHeight)
+            for (anchor in listOf(Rect(34f, h - 420f, 720f, h - 130f), Rect(w - 300f, h - 420f, w - 100f, h - 130f), Rect(400f, 200f, 620f, 420f))) {
+                for (below in listOf(false, true)) {
+                    val p = placeContextMenu(anchor, 470f, card, below, w, h, l.COMPACT_MARGIN, l.COMPACT_MARGIN, bottom)
+                    val name = "$w x $h at $scale, anchor $anchor, below $below"
+                    assertTrue("$name top ${p.y}", p.y >= 48f - .01f)
+                    assertTrue("$name left ${p.x}", p.x >= 48f - .01f)
+                    assertTrue("$name right", p.x + 470f <= w - 48f + .01f)
+                    // 16 px of air to the hint bar, which is 92 px zoomed by the interface scale
+                    assertTrue("$name bottom ${p.y + card}", p.y + card <= h - 92f * scale - 16f + .01f)
+                }
+            }
+            assertTrue("$w x $h at $scale leaves a card of at least three rows: $maxHeight", maxHeight >= 110f + 3 * 68f)
+        }
+        // The cutout at the bottom comes on top
+        assertEquals(92f + 20f + 16f, l.compactBottomMargin(1f, 20f), 0f)
+    }
+
+    @Test
+    fun aCompactStagesMenuOfACircleGoesBesideItWhenItFitsNeitherUnderNorAbove() {
+        // The first PC's circle on the 1051 x 1051 stage: 214 px at 116, 420; a card of 374 fits neither under it (the hint bar) nor above it
+        val circle = Rect(116f, 420f, 330f, 634f)
+        val bottom = l.compactBottomMargin(1.15f)
+        val p = placeContextMenu(circle, 470f, 374f, true, 1051f, 1051f, l.COMPACT_MARGIN, l.COMPACT_MARGIN, bottom, besideWhenCramped = true)
+        assertEquals(CaretSide.Left, p.side)
+        // right of the circle, the caret's tip on its edge, the circle uncovered
+        assertEquals(circle.right + reach, p.x, .01f)
+        assertEquals(circle.center.y, p.y + p.caret, .01f)
+        assertTrue(p.y >= 48f && p.y + 374f <= 1051f - bottom + .01f)
+        // Without it (every other shape): under the circle, pushed up from the bottom edge, as before
+        val old = placeContextMenu(circle, 470f, 374f, true, 1051f, 1051f, l.COMPACT_MARGIN, l.COMPACT_MARGIN, bottom)
+        assertEquals(CaretSide.Top, old.side)
+        // A card that fits under its circle stays there
+        val low = placeContextMenu(circle, 470f, 200f, true, 1051f, 1051f, l.COMPACT_MARGIN, l.COMPACT_MARGIN, bottom, besideWhenCramped = true)
+        assertEquals(CaretSide.Top, low.side)
+        assertEquals(circle.bottom + reach, low.y, .01f)
+    }
+
+    @Test
+    fun theOtherShapesKeepOneVerticalMargin() {
+        assertEquals(840f, l.maxHeight(1080f), 0f)
+        assertEquals(l.maxHeight(1080f, 120f), l.maxHeight(1080f, 120f, 120f), 0f)
+        val anchor = Rect(150f, 500f, 450f, 950f)
+        assertEquals(placeContextMenu(anchor, 500f, 600f, false, stageW, stageH), placeContextMenu(anchor, 500f, 600f, false, stageW, stageH, l.MARGIN_X, l.MARGIN_Y, l.MARGIN_Y))
+    }
 }

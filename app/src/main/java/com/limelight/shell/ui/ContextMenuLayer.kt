@@ -66,6 +66,8 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -260,21 +262,28 @@ fun ContextMenuLayer(
         shownPath = path
     }
     val m = shown
-    val stageAnchor = shownAnchor?.let { Rect(it.left / k, it.top / k, it.right / k, it.bottom / k) }
+    // The anchor is the element's bounds in the window's root; the layer may start elsewhere (the shape simulator's box): relative to the layer
+    var layerAt by remember { mutableStateOf(Offset.Zero) }
+    val stageAnchor = shownAnchor?.let { Rect((it.left - layerAt.x) / k, (it.top - layerAt.y) / k, (it.right - layerAt.x) / k, (it.bottom - layerAt.y) / k) }
     // The card is placed once its size is known; until then the estimated one gives the opening point
     val stage = LocalStage.current
     val stageW = stage.stageWidth
     val stageH = stage.stageHeight
     val marginX = if (stage.compact) L.COMPACT_MARGIN else L.MARGIN_X
     val marginY = if (stage.compact) L.COMPACT_MARGIN else L.MARGIN_Y
-    val state = remember(m, stageAnchor, stageW, stageH) {
-        MenuPlaceState(placeContextMenu(stageAnchor, L.MIN_WIDTH, estimatedHeight(m, stageH, marginY), m?.below == true, stageW, stageH, marginX, marginY), stageW, stageH)
+    // A compact stage's card ends above the hint bar (it says what A and B do here); a menu taller than that scrolls inside the card
+    val marginBottom = if (stage.compact) L.compactBottomMargin(stage.textScale, stage.safe.bottom) else marginY
+    val state = remember(m, stageAnchor, stageW, stageH, marginBottom) {
+        MenuPlaceState(
+            placeContextMenu(stageAnchor, L.MIN_WIDTH, estimatedHeight(m, stageH, marginY, marginBottom), m?.below == true, stageW, stageH, marginX, marginY, marginBottom, stage.compact),
+            stageW, stageH,
+        )
     }
     val resolved = state.resolved
     val origin = remember(state, resolved) { state.origin() }
     val cameFrom = remember { arrayOfNulls<Pair<ContextMenu, List<Int>>>(1) }
     if (menu == null) cameFrom[0] = null
-    Box(Modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize().onGloballyPositioned { layerAt = it.positionInRoot() }) {
         AnimatedVisibility(
             menu != null,
             modifier = Modifier.fillMaxSize(),
@@ -282,7 +291,7 @@ fun ContextMenuLayer(
             exit = popExit(origin, reduced),
         ) {
             if (m == null) return@AnimatedVisibility
-            CardPlacer(state, stageAnchor, m.below, k, stageW, stageH, marginX, marginY) {
+            CardPlacer(state, stageAnchor, m.below, k, stageW, stageH, marginX, marginY, marginBottom, stage.compact) {
                 // Switching level (or menu) is a new card content: its rows stagger in again and the plate starts on its first row
                 key(m, shownPath) { MenuCard(m, shownPath, cameFrom, onPath, state, haze, k, active = menu != null, onDismiss) }
             }
@@ -291,22 +300,25 @@ fun ContextMenuLayer(
 }
 
 /** A guess of the card's height before it is measured (header and rows), stage pixels. */
-private fun estimatedHeight(menu: ContextMenu?, stageHeight: Float, marginY: Float): Float {
+private fun estimatedHeight(menu: ContextMenu?, stageHeight: Float, marginY: Float, marginBottom: Float): Float {
     val rows = menu?.items?.size ?: 0
-    return (110f + rows * (L.ROW_HEIGHT + L.ROW_GAP) + 2 * L.PADDING + 8f).coerceAtMost(L.maxHeight(stageHeight, marginY))
+    return (110f + rows * (L.ROW_HEIGHT + L.ROW_GAP) + 2 * L.PADDING + 8f).coerceAtMost(L.maxHeight(stageHeight, marginY, marginBottom))
 }
 
 /** Places its child (the card with the room around it for the caret) by [placeContextMenu]. */
 @Composable
-private fun CardPlacer(state: MenuPlaceState, anchor: Rect?, below: Boolean, k: Float, stageW: Float, stageH: Float, marginX: Float, marginY: Float, content: @Composable () -> Unit) {
+private fun CardPlacer(
+    state: MenuPlaceState, anchor: Rect?, below: Boolean, k: Float, stageW: Float, stageH: Float, marginX: Float, marginY: Float, marginBottom: Float,
+    compact: Boolean, content: @Composable () -> Unit,
+) {
     Layout(content, Modifier.fillMaxSize()) { measurables, constraints ->
         val room = L.CARET_DEPTH * k
         val child = measurables.first().measure(
-            Constraints(maxWidth = ((L.MAX_WIDTH + 2 * L.CARET_DEPTH) * k).roundToInt(), maxHeight = ((L.maxHeight(stageH, marginY) + 2 * L.CARET_DEPTH) * k).roundToInt()),
+            Constraints(maxWidth = ((L.MAX_WIDTH + 2 * L.CARET_DEPTH) * k).roundToInt(), maxHeight = ((L.maxHeight(stageH, marginY, marginBottom) + 2 * L.CARET_DEPTH) * k).roundToInt()),
         )
         val w = child.width / k - 2 * L.CARET_DEPTH
         val h = child.height / k - 2 * L.CARET_DEPTH
-        val placement = placeContextMenu(anchor, w, h, below, stageW, stageH, marginX, marginY)
+        val placement = placeContextMenu(anchor, w, h, below, stageW, stageH, marginX, marginY, marginBottom, besideWhenCramped = compact)
         state.place(placement, w, h)
         layout(constraints.maxWidth, constraints.maxHeight) {
             child.place((placement.x * k - room).roundToInt(), (placement.y * k - room).roundToInt())
@@ -342,7 +354,10 @@ private fun MenuCard(
     val first = keys.getOrNull(target)?.let(navigation::requester) ?: remember { FocusRequester() }
     InitialFocus(first, menu to path)
     val scroll = remember { androidx.compose.foundation.ScrollState(0) }
-    val bringIntoView = rememberMarginBringIntoView(scroll, before = 40f * k, after = 40f * k, stagePx = k)
+    // The rows' scroll area is ROW_GLOW larger than its place on every side (and its content padded by as much): a scroll area cuts at its
+    // own bounds, and the focused row's glow reaches outside the row
+    val glow = L.ROW_GLOW
+    val bringIntoView = rememberMarginBringIntoView(scroll, before = (40f + glow) * k, after = (40f + glow) * k, stagePx = k)
     val plateDanger = remember { mutableStateOf(false) }
     val plate = animateColorAsState(if (plateDanger.value) MenuDanger else colors.accent, tween(Motion.ROW_FOCUS, easing = Motion.Ease), label = "menuPlate")
     val decoration = remember(k) { MenuPlate(k) }
@@ -396,14 +411,20 @@ private fun MenuCard(
                     glow = null,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .then(if (scroll.maxValue > 0) Modifier.fadeEdges(stage, top = 34f * topFade, bottom = 34f * bottomFade) else Modifier)
+                        .overdraw(glow.px, glow.px)
+                        .then(
+                            if (scroll.maxValue > 0) Modifier.fadeMask(
+                                stage, vertical = true, startClear = glow * topFade, startSolid = (34f + glow) * topFade,
+                                endSolid = (34f + glow) * bottomFade, endClear = glow * bottomFade,
+                            ) else Modifier
+                        )
                         .focusedListBoundary(navigation)
                         .verticalScroll(scroll),
                     decoration = { alpha -> decoration.draw(this, plate.value, alpha) },
                 ) {
                     CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
                         Column(
-                            Modifier.fillMaxWidth().padding(start = 4.px, end = 4.px, top = 6.px, bottom = 2.px),
+                            Modifier.fillMaxWidth().padding(start = (4f + glow).px, end = (4f + glow).px, top = (6f + glow).px, bottom = (2f + glow).px),
                             verticalArrangement = Arrangement.spacedBy(L.ROW_GAP.px),
                         ) {
                             items.forEachIndexed { i, item ->

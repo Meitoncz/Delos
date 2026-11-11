@@ -106,7 +106,7 @@ fun DialogLayer(spec: DialogSpec?, haze: HazeState, onDismiss: () -> Unit) {
                         onDone = { if (i == d.fields.lastIndex) confirm() },
                     )
                 }
-                Row(Modifier.staggerEntrance(d.fields.size + 2, Motion.MENU_DELAY).padding(top = 8.px), horizontalArrangement = Arrangement.spacedBy(24.px)) {
+                Row(Modifier.staggerEntrance(d.fields.size + 2, Motion.MENU_DELAY).padding(top = 8.px), horizontalArrangement = Arrangement.spacedBy((if (stage.compact) Compact.BUTTON_GAP else 24f).px)) {
                     // A dialog without fields (a question) starts on its button
                     PillButton(d.confirm, Symbols.CHECK, confirm, if (d.fields.isEmpty()) Modifier.focusRequester(first) else Modifier, primary = true)
                     PillButton(stringResource(R.string.common_cancel), null, onDismiss, clickCue = Cue.BACK)

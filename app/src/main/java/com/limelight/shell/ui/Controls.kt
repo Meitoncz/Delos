@@ -38,6 +38,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -79,6 +80,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.zIndex
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.em
 import com.limelight.shell.ContextMenu
 import com.limelight.shell.data.Avatar
@@ -94,10 +98,12 @@ import com.limelight.shell.data.rememberAvatarImage
 fun CenterColumn(gap: Float, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
     val stage = LocalStage.current
     if (stage.compact) {
-        // A compact stage is short: the column keeps clear of the status and hint bars, its gaps shrink with the stage, and what is
-        // still too tall (many circles in two rows) scrolls, with the focus scrolled into view
+        // A compact stage is short: the column keeps clear of the status and hint bars (which the interface scale zooms), its gaps shrink
+        // with the stage, and what is still too tall (the avatar picker's rows) scrolls, with the focus scrolled into view
         Box(
-            modifier.fillMaxSize().padding(top = (Compact.STATUS_BAR + stage.safe.top).px, bottom = (Compact.HINT_BAR + stage.safe.bottom).px),
+            modifier.fillMaxSize().padding(
+                top = (Compact.STATUS_BAR * stage.textScale + stage.safe.top).px, bottom = (Compact.HINT_BAR * stage.textScale + stage.safe.bottom).px,
+            ),
             contentAlignment = Alignment.Center,
         ) {
             EntranceScope {
@@ -119,7 +125,7 @@ fun CenterColumn(gap: Float, modifier: Modifier = Modifier, content: @Composable
     }
 }
 
-/** `.h1` with an optional `.sub` under it. A compact stage sets the headline smaller (48 against 64) and lets the line under it use the width. */
+/** `.h1` with an optional `.sub` under it. A compact stage sets the headline smaller (48 against 64), both at most the stage's width less 72 px on each side. */
 @Composable
 fun Heading(title: String, sub: String? = null) {
     val colors = LocalDelosColors.current
@@ -128,6 +134,8 @@ fun Heading(title: String, sub: String? = null) {
         BasicText(
             title,
             style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = (if (stage.compact) 48 else 64).tpx, letterSpacing = (-.01).em, textAlign = TextAlign.Center),
+            // A compact stage keeps a long headline 72 px from both edges: it wraps onto a second line instead
+            modifier = if (stage.compact) Modifier.widthIn(max = (stage.stageWidth - 2f * Compact.SIDE).px) else Modifier,
         )
         if (sub != null) {
             BasicText(
@@ -229,8 +237,9 @@ private fun AvatarArt(avatar: Avatar, iconSize: Float) {
 /**
  * A `.circle-item`: a focusable circle (176 px, [big] 220 px, or [diameter]) with an icon, its label and an
  * optional meta line with a status dot. [avatar] fills it with the avatar's colors and illustration,
- * [selected] adds the check badge, [pulse] the online pulse ring (`.online-ring`). [width] is the width
- * of the item, which the label may use.
+ * [selected] adds the check badge, [pulse] the online pulse ring (`.online-ring`). [width] is a fixed width
+ * of the item (a grid's cell), which the label may use; null is the prototype's 220, and on a compact stage as wide as
+ * the widest of the circle, the label and the status line ([CircleRowLayout]). The circle's box is always square.
  */
 @Composable
 fun CircleItem(
@@ -245,7 +254,7 @@ fun CircleItem(
     pulse: Boolean = false,
     avatar: Avatar? = null,
     diameter: Float? = null,
-    width: Float = 220f,
+    width: Float? = null,
     contextMenu: ContextMenu? = null,
     /** The factor of the circle, its icon, badge and spacing (the item's width and its labels keep their size); null: the compact stage's, 1 elsewhere. */
     scale: Float? = null,
@@ -262,13 +271,23 @@ fun CircleItem(
     // The badge pops in when the circle becomes the selected one
     val badgePop by animateFloatAsState(if (selected) 1f else 0f, if (reduced) tween(Motion.FADE, easing = Motion.Ease) else tween(Motion.PILL_POP, easing = EaseSpring), label = "circleBadgePop")
     val cs = scale ?: stage.compactScale
-    // A compact stage packs the circles closer: an item is at most 176 wide and its label may run 15 px over each edge (the gap is 16)
-    val itemWidth = if (stage.compact) minOf(width, 176f) else width
+    val compact = stage.compact
     val side = (diameter ?: if (big) 220f else 176f) * cs
+    // A grid's cell keeps its width (a compact stage's is at most 176, its label may run 15 px over each edge); never narrower than the circle
+    val fixed = when {
+        width != null -> maxOf(if (compact) minOf(width, 176f) else width, side)
+        compact -> null
+        else -> 220f
+    }
     val iconSize = (if (big) 96f else 76f) * cs
     val pulseTransition = rememberInfiniteTransition(label = "pulse")
     val wave by pulseTransition.animateFloat(0f, 1f, infiniteRepeatable(tween(2400, easing = EaseOut)), label = "pulseWave")
-    Column(Modifier.staggerEntrance().width(itemWidth.px), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(((if (side < 176f) 14f else 22f) * cs).px)) {
+    Column(
+        Modifier.staggerEntrance().then(if (fixed != null) Modifier.width(fixed.px) else Modifier.widthIn(min = side.px)),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        // A compact stage keeps the focused circle's ring off its own label (the growth, the ring and the label's own air above its letters)
+        verticalArrangement = Arrangement.spacedBy((if (compact) CircleRowLayout.labelGap(side) else (if (side < 176f) 14f else 22f) * cs).px),
+    ) {
         Box {
             Box(
                 modifier
@@ -330,17 +349,32 @@ fun CircleItem(
                 label,
                 style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx, textAlign = TextAlign.Center),
                 maxLines = 1,
-                softWrap = !stage.compact,
-                overflow = if (stage.compact) TextOverflow.Ellipsis else TextOverflow.Clip,
-                modifier = Modifier.then(if (stage.compact) Modifier.wrapContentWidth(unbounded = true).widthIn(max = (itemWidth + 30f).px) else Modifier).graphicsLayer {
-                    alpha = .55f + .45f * lit
-                    translationY = -6f * (1f - lit) * stage.dpPerPx * density
-                },
+                softWrap = !compact,
+                // A long PC name keeps its start and its end
+                overflow = if (!compact) TextOverflow.Clip else if (fixed == null) TextOverflow.MiddleEllipsis else TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .then(
+                        when {
+                            !compact -> Modifier
+                            fixed == null -> Modifier.widthIn(max = CircleRowLayout.LABEL_MAX.px)
+                            else -> Modifier.wrapContentWidth(unbounded = true).widthIn(max = (fixed + 30f).px)
+                        }
+                    )
+                    .graphicsLayer {
+                        alpha = .55f + .45f * lit
+                        translationY = -6f * (1f - lit) * stage.dpPerPx * density
+                    },
             )
             if (meta != null) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.px)) {
+                Row(
+                    if (compact && fixed == null) Modifier.widthIn(max = CircleRowLayout.META_MAX.px) else Modifier,
+                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.px),
+                ) {
                     if (metaDot != null) Box(Modifier.size(12.px).clip(CircleShape).background(metaDot))
-                    BasicText(meta, style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 20.tpx, textAlign = TextAlign.Center), maxLines = if (stage.compact) 3 else 2)
+                    BasicText(
+                        meta, style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 20.tpx, textAlign = TextAlign.Center),
+                        maxLines = if (compact && fixed != null) 3 else 2, overflow = if (compact) TextOverflow.Ellipsis else TextOverflow.Clip,
+                    )
                 }
             }
         }
@@ -349,20 +383,36 @@ fun CircleItem(
 
 /**
  * `.circles`: a centered row of circle items. When they do not fit the stage's width they stay in one row that scrolls sideways instead of
- * wrapping into more rows (the focus scrolls into view, the ends fade out while there is more to see); while they fit it looks as a plain
- * centered row (as many PCs as fit in 1920 do).
+ * wrapping into more rows or shrinking (the focus scrolls into view with the next item peeking in, the cut edges fade out); while they fit
+ * it is the plain centered row (as many PCs as fit in 1920 do). A compact stage keeps the prototype's 56 px between the items while
+ * they fit with it and uses 44 when they do not ([CircleRowLayout]).
  */
 @Composable
 fun Circles(content: @Composable RowScope.() -> Unit) {
     val stage = LocalStage.current
+    val compact = stage.compact
+    val c = CircleRowLayout
+    val wide = c.GAP.px
+    val tight = c.GAP_TIGHT.px
     // One ring glides between the circles (docs/GUI.md, "Motion") instead of every circle fading its own
-    GlideRingHost(FocusRing(5f, 5f), corner = 999f, focusScale = 1.16f) {
-        // A compact stage's scroll area also keeps its ring room above and below
+    GlideRingHost(FocusRing(5f, 5f), corner = 999f, focusScale = c.FOCUS_SCALE) {
+        // The scroll area gets the room of a focused circle's glow on every side (taken back from the layout), so nothing of the focus is cut;
+        // a compact stage also keeps a little air above and below for the ring next to the headline
         ScrollRow(
-            Modifier.fillMaxWidth(), gap = if (stage.compact) 16f else 56f, centered = true, edge = 40f,
-            padVertical = if (stage.compact) 36f else 0f, content = content,
+            Modifier.fillMaxWidth(), gap = c.GAP, centered = true, edge = if (compact) c.EDGE else 40f,
+            padVertical = if (compact) c.RING_AIR else 0f, focusMargin = c.FOCUS_MARGIN, bleed = c.GLOW_ROOM,
+            arrangement = if (compact) remember(wide, tight) { FitGapArrangement(wide, tight) } else null,
+            content = content,
         )
     }
+}
+
+/** A row's arrangement with two gaps: centred with [wide] between the items while they fit the row with it, else [tight] ([CircleRowLayout.arrange]). */
+private class FitGapArrangement(private val wide: Dp, private val tight: Dp) : Arrangement.Horizontal {
+    override val spacing: Dp get() = tight
+
+    override fun Density.arrange(totalSize: Int, sizes: IntArray, layoutDirection: LayoutDirection, outPositions: IntArray) =
+        CircleRowLayout.arrange(sizes, totalSize, wide.roundToPx(), tight.roundToPx(), outPositions)
 }
 
 /**
@@ -371,8 +421,15 @@ fun Circles(content: @Composable RowScope.() -> Unit) {
  * items fit it is a plain row, laid out exactly as the wrapping row it replaces ([centered] or at the start), with no fade and no padding.
  *
  * [edge] stage pixels on each side keep the focus scale and ring of the first and last item from being clipped, and are the width of the
- * fade; they apply only while the row scrolls. The scroll area's offscreen layer would cut the ring above and below, so [ringRoom] adds that
+ * fade; they apply only while the row scrolls, and the fade only at an end where there is more to scroll to (never over the first item of a
+ * row at its start or the last one at its end). The scroll area's offscreen layer would cut the ring above and below, so [ringRoom] adds that
  * room only while the row scrolls and takes it back from the layout, the row's neighbours do not move. [padVertical] is room that is always there.
+ * [focusMargin] is how far the focused item stays from the cut edges (at least [edge]; more lets the next item peek in). An [arrangement]
+ * of its own replaces the plain [gap]: the row is then as wide as its place and the arrangement lays the items out in it.
+ *
+ * [bleed] is for items whose focus glow reaches far outside them: the scroll area is that much larger than the row on all four sides and
+ * its content padded by as much, always, so the row and its neighbours are laid out as without it but a scroll container never cuts the
+ * glow, the ring or the scale-up of a focused item (a scroll area clips at its own bounds). The fade starts where the row's own bounds do.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -383,6 +440,9 @@ fun ScrollRow(
     edge: Float = 24f,
     ringRoom: Float = 0f,
     padVertical: Float = 0f,
+    focusMargin: Float = edge,
+    bleed: Float = 0f,
+    arrangement: Arrangement.Horizontal? = null,
     content: @Composable RowScope.() -> Unit,
 ) {
     val stage = LocalStage.current
@@ -394,23 +454,37 @@ fun ScrollRow(
     val measured = scroll.maxValue != Int.MAX_VALUE
     val overflow = measured && scroll.maxValue - (if (padded) 2f * edge * k else 0f) > 2f
     SideEffect { padded = overflow }
-    val room = if (overflow) ringRoom.px else 0.px
+    val room = (if (overflow) ringRoom else 0f).px + bleed.px
+    val bleedX = bleed.px
     // The focus scrolls this row, not the list around it (their margin specs scroll their own list): the focused item stays out of the faded ends
-    val margin = if (overflow) edge * k else 0f
+    val margin = (if (overflow) focusMargin else 0f) * k + bleed * k
     val bringIntoView = rememberMarginBringIntoView(scroll, before = margin, after = margin, stagePx = k)
+    // An end fades only while the row goes on beyond it
+    val more by remember(scroll) { derivedStateOf { (scroll.value > 0) to (scroll.value < scroll.maxValue) } }
+    val startFade by animateFloatAsState(if (more.first) 1f else 0f, tween(Motion.FADE, easing = Motion.Ease), label = "rowStartFade")
+    val endFade by animateFloatAsState(if (more.second) 1f else 0f, tween(Motion.FADE, easing = Motion.Ease), label = "rowEndFade")
     Box(modifier, contentAlignment = if (centered) Alignment.Center else Alignment.TopStart) {
         CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) { Row(
             Modifier
                 .layout { measurable, constraints ->
-                    // The room above and below is drawn over the neighbours, not laid out
+                    // The room around the row is drawn over the neighbours, not laid out
                     val roomPx = room.roundToPx()
-                    val placeable = measurable.measure(constraints)
-                    layout(placeable.width, placeable.height - 2 * roomPx) { placeable.place(0, -roomPx) }
+                    val sidePx = bleedX.roundToPx()
+                    val placeable = measurable.measure(
+                        if (sidePx > 0 && constraints.hasBoundedWidth) constraints.copy(maxWidth = constraints.maxWidth + 2 * sidePx) else constraints,
+                    )
+                    layout((placeable.width - 2 * sidePx).coerceAtLeast(0), (placeable.height - 2 * roomPx).coerceAtLeast(0)) { placeable.place(-sidePx, -roomPx) }
                 }
-                .then(if (overflow) Modifier.fadeMask(stage, vertical = false, startClear = 0f, startSolid = edge, endSolid = edge, endClear = 0f) else Modifier)
+                .then(
+                    if (overflow) Modifier.fadeMask(
+                        stage, vertical = false, startClear = bleed * startFade, startSolid = (bleed + edge) * startFade,
+                        endSolid = (bleed + edge) * endFade, endClear = bleed * endFade,
+                    ) else Modifier
+                )
+                .then(if (arrangement != null) Modifier.fillMaxWidth() else Modifier)
                 .horizontalScroll(scroll)
-                .padding(horizontal = (if (overflow) edge else 0f).px, vertical = padVertical.px + room),
-            horizontalArrangement = Arrangement.spacedBy(gap.px),
+                .padding(horizontal = (if (overflow) edge else 0f).px + bleedX, vertical = padVertical.px + room),
+            horizontalArrangement = arrangement ?: Arrangement.spacedBy(gap.px),
             verticalAlignment = Alignment.Top,
             content = content,
         ) }

@@ -12,6 +12,17 @@ import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import com.limelight.shell.ui.fadeMask
+import com.limelight.shell.ui.rememberMarginBringIntoView
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -138,6 +149,10 @@ internal fun StreamMenuBackdrop(gradientAlpha: () -> Float, scrimAlpha: () -> Fl
  * is placed on the 1920-pixel-wide dock box (anchored to the stage's bottom edge) with the tiles' top at [StreamMenuLayout.DOCK_TOP]; the popover sinks it by
  * [dockShift] stage pixels. [enter] and [exit] are the clocks (milliseconds) of the entrance and the exit, read while
  * drawing; [firstItem] is the tile the focus starts on (the ring arrives after it).
+ *
+ * On a compact stage the nine tiles do not fit: they keep their size and the row scrolls sideways ([scroll], [DockScroller]), the ring,
+ * the pills and the labels with it. [headHidden] fades the name and the hints out (an open card covers them there); [onHeadWidth]
+ * reports how wide they are, stage pixels. [onOutsideTap] is a tap on the row beside the tiles.
  */
 @Composable
 internal fun StreamMenuDock(
@@ -152,6 +167,10 @@ internal fun StreamMenuDock(
     exit: () -> Float,
     dockShift: () -> Float,
     onCircleFocused: (BarItem, Boolean) -> Unit,
+    scroll: ScrollState,
+    headHidden: Boolean,
+    onHeadWidth: (Float) -> Unit,
+    onOutsideTap: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val ts = LocalStage.current.textScale
@@ -162,32 +181,74 @@ internal fun StreamMenuDock(
             .size(g.width.px, g.dockHeight.px)
             .graphicsLayer { translationY = dockShift() * k },
     ) {
-        DockHead(title, enter, exit, Modifier.offset(g.tilesLeft.px, 0.px), maxTitleWidth = minOf(L.TITLE_MAX_WIDTH, g.width - 2f * g.tilesLeft))
-        TileRing(focusItem ?: firstItem, firstItem, enter, exit)
-        // The bar wraps: Right on the last tile that can take the focus goes to the first one and Left on the first goes
-        // to the last. Both ends come from the list (a hidden tile or the dimmed ones of an open popover are skipped).
-        val reachable = circles.filter { tileFocusable(it, popOpen) }
-        val firstReachable = reachable.firstOrNull()
-        val lastReachable = reachable.lastOrNull()
-        circles.forEach { spec ->
-            val wrapLeft = if (spec === firstReachable && lastReachable !== spec) requesters.getValue(lastReachable!!.item) else null
-            val wrapRight = if (spec === lastReachable && firstReachable !== spec) requesters.getValue(firstReachable!!.item) else null
-            TileCell(
-                spec, spec.item == focusItem, popOpen, requesters.getValue(spec.item), wrapLeft, wrapRight, enter, exit, onCircleFocused,
-                Modifier.offset(tileLeft(spec.item, g).px, 0.px),
-            )
+        DockHead(
+            title, enter, exit, Modifier.offset(g.tilesLeft.px, 0.px), maxTitleWidth = minOf(L.TITLE_MAX_WIDTH, g.width - 2f * g.tilesLeft),
+            hidden = headHidden, onWidth = onHeadWidth,
+        )
+        val tiles: @Composable () -> Unit = {
+            TileRing(focusItem ?: firstItem, firstItem, enter, exit)
+            // The bar wraps: Right on the last tile that can take the focus goes to the first one and Left on the first goes
+            // to the last. Both ends come from the list (a hidden tile or the dimmed ones of an open popover are skipped).
+            val reachable = circles.filter { tileFocusable(it, popOpen) }
+            val firstReachable = reachable.firstOrNull()
+            val lastReachable = reachable.lastOrNull()
+            circles.forEach { spec ->
+                val wrapLeft = if (spec === firstReachable && lastReachable !== spec) requesters.getValue(lastReachable!!.item) else null
+                val wrapRight = if (spec === lastReachable && firstReachable !== spec) requesters.getValue(firstReachable!!.item) else null
+                TileCell(
+                    spec, spec.item == focusItem, popOpen, requesters.getValue(spec.item), wrapLeft, wrapRight, enter, exit, onCircleFocused,
+                    Modifier.offset(tileLeft(spec.item, g).px, 0.px),
+                )
+            }
         }
+        if (g.scrolls) DockScroller(scroll, onOutsideTap, tiles) else tiles()
         DockCaption(caption, popOpen, enter, exit, Modifier.offset(((g.width - g.captionWidth) / 2f).px, captionTop(ts, g).px))
     }
 }
 
-/** The game's name (Unbounded 36) and the stacked A / B hints, their bottom edge [StreamMenuLayout.HEAD_BOTTOM] above the tiles. */
+/**
+ * A compact stage's row of tiles: as wide as the stage, scrolling sideways under the D-pad focus (the focused tile keeps
+ * [DockGeometry.FOCUS_MARGIN] from the edges, so it is whole and the next tile peeks in) and under a finger. The scroll area starts
+ * [DockGeometry.ROOM_TOP] above the tiles and ends at the dock's bottom, so its layer cuts nothing of the ring, its glow, the pills, the
+ * labels or the tiles' entrance; an edge fades only while the row goes on beyond it, so the first and the last tile are never faded.
+ */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun DockHead(title: String, enter: () -> Float, exit: () -> Float, modifier: Modifier, maxTitleWidth: Float) {
+private fun DockScroller(scroll: ScrollState, onOutsideTap: () -> Unit, content: @Composable () -> Unit) {
+    val stage = LocalStage.current
+    val g = LocalDockGeometry.current
+    val k = stageScale()
+    val margin = DockGeometry.FOCUS_MARGIN * k
+    val bringIntoView = rememberMarginBringIntoView(scroll, before = margin, after = margin, stagePx = k)
+    val more by remember(scroll) { derivedStateOf { (scroll.value > 0) to (scroll.value < scroll.maxValue) } }
+    val startFade by animateFloatAsState(if (more.first) 1f else 0f, tween(Motion.FADE, easing = Motion.Ease), label = "dockStartFade")
+    val endFade by animateFloatAsState(if (more.second) 1f else 0f, tween(Motion.FADE, easing = Motion.Ease), label = "dockEndFade")
+    val top = DockGeometry.ROOM_TOP
+    Box(
+        Modifier
+            .offset(0.px, (-top).px)
+            .size(g.width.px, (top + g.dockHeight).px)
+            .fadeMask(stage, vertical = false, startClear = 0f, startSolid = DockGeometry.FADE * startFade, endSolid = DockGeometry.FADE * endFade, endClear = 0f)
+            .pointerInput(Unit) { detectTapGestures { onOutsideTap() } }
+            .horizontalScroll(scroll),
+    ) {
+        CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
+            Box(Modifier.padding(top = top.px).size(g.rowWidth.px, g.dockHeight.px)) { content() }
+        }
+    }
+}
+
+/**
+ * The game's name (Unbounded 36) and the stacked A / B hints, their bottom edge [StreamMenuLayout.HEAD_BOTTOM] above the tiles.
+ * [hidden] fades them out; [onWidth] reports their width in stage pixels.
+ */
+@Composable
+private fun DockHead(title: String, enter: () -> Float, exit: () -> Float, modifier: Modifier, maxTitleWidth: Float, hidden: Boolean, onWidth: (Float) -> Unit) {
     val colors = LocalDelosColors.current
     val rm = LocalReducedMotion.current
     val k = stageScale()
     val shadow = menuTextShadow(k, 2f, 16f, .55f)
+    val shown by animateFloatAsState(if (hidden) 0f else 1f, tween(Motion.FADE, easing = Motion.Ease), label = "dockHead")
     Column(
         modifier
             .layout { measurable, constraints ->
@@ -196,10 +257,11 @@ private fun DockHead(title: String, enter: () -> Float, exit: () -> Float, modif
             }
             .graphicsLayer {
                 val p = Motion.progress(enter(), M.HEAD_DELAY, Motion.ENTER, EaseOut)
-                alpha = p.coerceIn(0f, 1f) * (1f - Motion.linear(exit(), 0, Motion.EXIT))
+                alpha = p.coerceIn(0f, 1f) * (1f - Motion.linear(exit(), 0, Motion.EXIT)) * shown
                 translationY = if (rm) 0f else 24f * (1f - p) * k
                 compositingStrategy = CompositingStrategy.ModulateAlpha
-            },
+            }
+            .onSizeChanged { onWidth(it.width / k) },
         verticalArrangement = Arrangement.spacedBy(L.HEAD_GAP.px),
     ) {
         BasicText(
@@ -212,7 +274,11 @@ private fun DockHead(title: String, enter: () -> Float, exit: () -> Float, modif
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.widthIn(max = maxTitleWidth.px),
         )
-        Column(verticalArrangement = Arrangement.spacedBy(L.HINTS_GAP.px)) {
+        // A low compact stage has no room for the two hints one above the other: side by side there
+        if (LocalDockGeometry.current.hintsInRow) Row(horizontalArrangement = Arrangement.spacedBy(L.HINTS_ROW_GAP.px)) {
+            DockHint(Glyph.A, stringResource(R.string.stream_menu_hint_select), shadow)
+            DockHint(Glyph.B, stringResource(R.string.stream_menu_hint_back), shadow)
+        } else Column(verticalArrangement = Arrangement.spacedBy(L.HINTS_GAP.px)) {
             DockHint(Glyph.A, stringResource(R.string.stream_menu_hint_select), shadow)
             DockHint(Glyph.B, stringResource(R.string.stream_menu_hint_back), shadow)
         }
@@ -380,7 +446,8 @@ private fun TileCell(
     val onFill by animateFloatAsState(if (on) 1f else 0f, tween(Motion.FADE, easing = Motion.Ease), label = "onFill")
     val lift by animateFloatAsState(if (focused) 1f else 0f, tween(Motion.FOCUS, easing = EaseOut), label = "tileLift")
     val tileAlpha by animateFloatAsState(if (dim) .46f else 1f, tween(Motion.FADE, easing = Motion.Ease), label = "tileAlpha")
-    val labelAlpha by animateFloatAsState(if (!focused && !g.allLabels) 0f else if (dim) .4f else 1f, tween(Motion.FADE, easing = Motion.Ease), label = "labelAlpha")
+    // A low compact stage's sunk dock has no room for the labels: they fade out while a popover is open
+    val labelAlpha by animateFloatAsState(if (popOpen && !g.sunkLabels) 0f else if (dim) .4f else 1f, tween(Motion.FADE, easing = Motion.Ease), label = "labelAlpha")
     val iconColor by animateColorAsState(if (on) colors.accent else colors.text, tween(Motion.FADE, easing = Motion.Ease), label = "iconColor")
     val labelColor by animateColorAsState(if (focused) colors.accent else colors.text2, tween(Motion.FADE, easing = Motion.Ease), label = "labelColor")
 

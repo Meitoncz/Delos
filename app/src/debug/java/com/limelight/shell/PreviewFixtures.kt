@@ -95,7 +95,18 @@ internal object PreviewFixtures {
         Host(STUDY_PC, "STUDY-LAPTOP", online = true, paired = false, mac = null, address = "192.0.2.14"),
     )
 
-    fun host(uuid: String): Host = HOSTS.first { it.uuid == uuid }
+    /** More paired PCs than the three of [HOSTS], for the circle rows that scroll: [pairedPcs] in all (`--ei preview_pcs <n>`, [ScreenPreviews]); 0 leaves [HOSTS] alone. */
+    var pairedPcs = 0
+
+    private val MORE_NAMES = listOf("OFFICE-PC", "Bedroom", "STEAM-MACHINE", "Garage Workstation", "HTPC", "Dad's Laptop", "ROG-ALLY-DOCK", "Server", "Kids-PC")
+
+    /** [HOSTS] and the extra paired PCs of [pairedPcs] (every second one asleep). */
+    fun hosts(): List<Host> = HOSTS + List((pairedPcs - HOSTS.count { it.paired }).coerceAtLeast(0)) { i ->
+        Host("preview-pc-more-$i", MORE_NAMES[i % MORE_NAMES.size] + if (i >= MORE_NAMES.size) " ${i / MORE_NAMES.size + 1}" else "", online = i % 2 == 0, paired = true,
+            mac = "02:00:00:00:01:%02x".format(i), address = "192.0.2.${40 + i}")
+    }
+
+    fun host(uuid: String): Host = hosts().first { it.uuid == uuid }
 
     fun game(name: String): Game = GAMES.first { it.name == name }
 
@@ -143,7 +154,7 @@ internal object PreviewFixtures {
             .apply()
         repo.selectPc(ACTIVE_PC)
         HIDDEN_IDS.forEach { repo.setHidden(ACTIVE_PC, it, true) }
-        repeat(2) { HOSTS.forEach { repo.onComputerUpdated(details(it)) } }
+        repeat(2) { hosts().forEach { repo.onComputerUpdated(details(it)) } }
     }
 
     fun candidate(game: Game) = MetadataCandidate(

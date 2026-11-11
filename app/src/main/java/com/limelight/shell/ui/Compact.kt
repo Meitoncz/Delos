@@ -24,7 +24,13 @@ object Compact {
     /** The least margin of anything else from the edges of a compact stage (the stream menu's overscan margin); the display cutout comes on top. */
     const val MARGIN = 48f
 
-    /** The status bar's and the hint bar's heights, which centered screens keep clear of. */
+    /**
+     * The gap between two pill buttons side by side (24 elsewhere): a focused one grows 4 % to each side (17 px for a 420 px button) and
+     * wears an 8 px ring, so 44 keeps the ring 12 px or more from the next button.
+     */
+    const val BUTTON_GAP = 44f
+
+    /** The status bar's and the hint bar's heights at interface scale 1 (the scale zooms both), which centered screens keep clear of. */
     const val STATUS_BAR = 104f
     const val HINT_BAR = 92f
 

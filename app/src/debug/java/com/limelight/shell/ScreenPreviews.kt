@@ -53,6 +53,7 @@ import kotlin.math.roundToInt
  * - `devices`: the Devices screen with GAMING-PC (online, connected), LIVING-ROOM-PC (asleep) and a PC with a very long name (online); the
  *   fourth fake PC, STUDY-LAPTOP, is unpaired and therefore not in this list.
  * - `start`: the start screen with three profiles and GAMING-PC as the default PC.
+ *   `--ei preview_pcs <n>` gives `start`, `devices` and `pair_pc` n paired PCs instead of three (the circle rows that scroll).
  * - `pair`: the pairing screen of STUDY-LAPTOP showing the PIN 4826 and waiting for it to be entered.
  * - `filter`: the filter modal open over Home, with the genres and themes of the fake library.
  * - `dialog`: a dialog layer (title, message, Pair and Cancel) over Home.
@@ -68,6 +69,7 @@ import kotlin.math.roundToInt
  */
 internal object ScreenPreviews {
     fun from(intent: Intent, @Suppress("UNUSED_PARAMETER") shell: ShellState): (@Composable () -> Unit)? {
+        PreviewFixtures.pairedPcs = intent.getIntExtra("preview_pcs", 0)
         return when (intent.getStringExtra("preview_screen")) {
             "home" -> shellPreview(ShellRoute { Screen.Home })
             "artwork" -> shellPreview(ShellRoute { world -> Screen.Artwork(world.library.pc, world.library.apps.first { it.name == ARTWORK_GAME }) })

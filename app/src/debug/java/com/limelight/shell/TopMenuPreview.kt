@@ -17,6 +17,9 @@ import com.limelight.shell.ui.LocalDelosColors
 import com.limelight.shell.ui.NavButton
 import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.TopNav
+import com.limelight.shell.ui.compact
+import com.limelight.shell.ui.StatusBarLayout
+import com.limelight.shell.ui.LocalStage
 import com.limelight.shell.ui.px
 import kotlinx.coroutines.delay
 
@@ -63,7 +66,11 @@ internal object TopMenuPreview {
         }
         Box(Modifier.fillMaxSize().background(LocalDelosColors.current.bg)) {
             CompositionLocalProvider(LocalFocusTracker provides remember { FocusTracker() }) {
-                TopNav(buttons, Modifier.align(Alignment.TopCenter).offset(y = 40.px))
+                // The compact status bar's navigation has 56 px buttons
+                TopNav(
+                    buttons, Modifier.align(Alignment.TopCenter).offset(y = 40.px),
+                    buttonSize = if (LocalStage.current.compact) StatusBarLayout.NAV_BUTTON else 64f,
+                )
             }
         }
     }

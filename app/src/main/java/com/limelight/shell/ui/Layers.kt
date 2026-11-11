@@ -140,13 +140,17 @@ fun SideMenuLayer(
     ) {
         val first = remember { FocusRequester() }
         InitialFocus(first)
+        // A compact stage's hints start left of the panel's right edge: the panel ends above the hint bar there, so nothing lies under the hints
+        val stage = LocalStage.current
+        val bottom = if (stage.compact) (Compact.HINT_BAR * stage.textScale + stage.safe.bottom).px else 0.px
         Column(
             Modifier
+                .padding(bottom = bottom)
                 .fillMaxHeight()
                 .width(SIDE_MENU_WIDTH.px)
                 .focusTrap(visible)
                 .backdropBlur(haze, 28f, colors.surface3)
-                .padding(horizontal = 40.px, vertical = 48.px),
+                .padding(start = 40.px, end = 40.px, top = 48.px, bottom = (if (stage.compact) 24 else 48).px),
             verticalArrangement = Arrangement.spacedBy(10.px),
         ) {
             EntranceScope {
@@ -155,7 +159,7 @@ fun SideMenuLayer(
             }
         }
         // border-right: 1px line
-        Box(Modifier.fillMaxHeight().width(SIDE_MENU_WIDTH.px), contentAlignment = Alignment.CenterEnd) {
+        Box(Modifier.padding(bottom = bottom).fillMaxHeight().width(SIDE_MENU_WIDTH.px), contentAlignment = Alignment.CenterEnd) {
             Box(Modifier.fillMaxHeight().width(1.px).background(colors.line))
         }
     }

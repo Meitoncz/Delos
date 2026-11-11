@@ -40,6 +40,7 @@ import com.limelight.shell.data.ProfileStore
 import com.limelight.shell.settings.AppearanceStore
 import com.limelight.shell.ui.Figtree
 import com.limelight.shell.ui.LocalStage
+import com.limelight.shell.ui.compact
 import com.limelight.shell.ui.StageMetrics
 import com.limelight.shell.ui.StagePlanner
 import com.limelight.shell.ui.px
@@ -193,7 +194,8 @@ class StreamStatsPanel internal constructor(
         val s = stats.value ?: return
         val compact = compactState.value
         Box(
-            Modifier.fillMaxWidth().padding(horizontal = 40.px, vertical = if (compact) StreamMenuLayout.STATS_COMPACT_TOP.px else 32.px),
+            // A compact stage keeps its 48 px margin
+            Modifier.fillMaxWidth().padding(horizontal = (if (LocalStage.current.compact) 48 else 40).px, vertical = if (compact) StreamMenuLayout.STATS_COMPACT_TOP.px else 32.px),
             contentAlignment = when {
                 compact -> Alignment.TopCenter
                 position.start -> Alignment.TopStart

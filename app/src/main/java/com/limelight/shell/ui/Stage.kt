@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
@@ -109,6 +110,26 @@ fun Modifier.fadeMask(stage: StageMetrics, vertical: Boolean, startClear: Float,
         }
 
 /**
+ * Makes what follows (a scroll area, a layer with a fade) [horizontal] and [vertical] larger than its place on each side without moving
+ * anything: it is measured that much larger, placed that far up and left and reported at its place's size. Pad its content by the same
+ * amounts and the content lies exactly where it would without this, but a focused item's glow, ring and scale-up that reach outside the
+ * place are no longer cut (a scroll container and an offscreen layer clip at their own bounds).
+ */
+fun Modifier.overdraw(horizontal: Dp, vertical: Dp): Modifier = layout { measurable, constraints ->
+    val h = horizontal.roundToPx()
+    val v = vertical.roundToPx()
+    val placeable = measurable.measure(
+        constraints.copy(
+            minWidth = if (constraints.hasBoundedWidth) constraints.minWidth + 2 * h else constraints.minWidth,
+            maxWidth = if (constraints.hasBoundedWidth) constraints.maxWidth + 2 * h else constraints.maxWidth,
+            minHeight = if (constraints.hasBoundedHeight) constraints.minHeight + 2 * v else constraints.minHeight,
+            maxHeight = if (constraints.hasBoundedHeight) constraints.maxHeight + 2 * v else constraints.maxHeight,
+        ),
+    )
+    layout((placeable.width - 2 * h).coerceAtLeast(0), (placeable.height - 2 * v).coerceAtLeast(0)) { placeable.place(-h, -v) }
+}
+
+/**
  * Brings the focused element into view with a margin of [before] / [after] pixels, so it never sits in a faded edge
  * (see [fadeEdges]), and only when it would leave that safe area.
  *
@@ -162,7 +183,12 @@ class FocusScroller(
     /** Pixels the running scroll still has to go. */
     val remaining: Float get() = driver.remaining
 
-    fun request(distance: Float) {
+    fun request(requested: Float) {
+        // A scroll area with known ends never aims beyond them (a margin larger than the room before the first item): what cannot be
+        // scrolled would stay "remaining" and skew the next request
+        val distance = if (state is androidx.compose.foundation.ScrollState && state.maxValue != Int.MAX_VALUE) {
+            (state.value + driver.remaining + requested).coerceIn(0f, state.maxValue.toFloat()) - state.value - driver.remaining
+        } else requested
         if (distance == 0f) return
         if (reducedMotion) {
             state.dispatchRawDelta(distance)

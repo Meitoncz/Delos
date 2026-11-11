@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -60,6 +61,7 @@ import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.icon
 import com.limelight.shell.ui.px
 import com.limelight.shell.ui.tpx
+import kotlin.math.roundToInt
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -96,9 +98,15 @@ internal fun StreamMenuRoot(
     start: StreamMenuStart = StreamMenuStart(),
 ) {
     val res = textResources()
-    // The dock of this stage: the prototype's, or a compact stage's smaller tiles and nearer margins
+    // The dock of this stage: the prototype's, or a compact stage's row that scrolls and nearer margins
     val stageMetrics = LocalStage.current
-    val dock = remember(stageMetrics.stageWidth, stageMetrics.shape) { DockGeometry.forStage(stageMetrics) }
+    val dock = remember(stageMetrics.stageWidth, stageMetrics.shape, stageMetrics.textScale) { DockGeometry.forStage(stageMetrics) }
+    val stagePixel = stageScale()
+    // A compact stage's row of tiles scrolls: it starts where the tile the menu opens on (or whose page it opens on) is in view
+    val dockScroll = rememberScrollState((dockScrollFor(start.page.barItem() ?: start.focus, 0f, dock) * stagePixel).roundToInt())
+    // Where the row is, stage pixels: the popover's caret follows its tile (read only where the row scrolls, so nothing else recomposes with it)
+    val rowScroll = if (dock.scrolls) dockScroll.value / stagePixel else 0f
+    var headWidth by remember { mutableFloatStateOf(0f) }
     var page by remember { mutableStateOf(start.page) }
     // The page of the popover that is open or was open last: it stays while the popover animates out
     var shownPage by remember { mutableStateOf(if (start.page != MenuPage.MAIN) start.page else MenuPage.MORE) }
@@ -130,7 +138,7 @@ internal fun StreamMenuRoot(
     // The popover: present from opening until it has animated out. Its geometry snaps when it opens from the dock
     // (after its content reported its size), and follows its target with a spring when another page replaces it.
     var popPresent by remember { mutableStateOf(start.page != MenuPage.MAIN) }
-    val geo = remember { PopoverGeometry(popoverPlacement(shownPage, dock)!!) }
+    val geo = remember { PopoverGeometry(popoverPlacement(shownPage, dock, rowScroll)!!) }
     var natural by remember { mutableFloatStateOf(0f) }
     var snapNext by remember { mutableStateOf(start.page != MenuPage.MAIN) }
     var geoReady by remember { mutableStateOf(false) }
@@ -200,7 +208,9 @@ internal fun StreamMenuRoot(
                 snapNext = true
                 geoReady = false
                 // The card is at its tile before its first layout (an undispatched snap runs right here)
-                scope.launch(start = CoroutineStart.UNDISPATCHED) { geo.place(popoverPlacement(next, dock)!!, snap = true) }
+                scope.launch(start = CoroutineStart.UNDISPATCHED) {
+                    geo.place(popoverPlacement(next, dock, if (dock.scrolls) dockScroll.value / stagePixel else 0f)!!, snap = true)
+                }
             }
             entryRow = null
             page = next
@@ -298,7 +308,9 @@ internal fun StreamMenuRoot(
             geoReady = false
         }
     }
-    val placement = popoverPlacement(shownPage, dock)!!
+    val placement = popoverPlacement(shownPage, dock, rowScroll)!!
+    // A compact stage's open card lies over the game's name and the hints: they fade out while it does
+    val headHidden = dock.compact && popOpen && dockHeadCovered(placement.left, placement.left + placement.width, dock.tilesLeft, dock.tilesLeft + headWidth)
     LaunchedEffect(placement, session) {
         val snap = snapNext || reducedMotion
         geo.place(placement, snap)
@@ -361,6 +373,10 @@ internal fun StreamMenuRoot(
                             barHelpItem = item
                         } else if (focusedItem == item) focusedItem = null
                     },
+                    scroll = dockScroll,
+                    headHidden = headHidden,
+                    onHeadWidth = { headWidth = it },
+                    onOutsideTap = { pageAfterDismiss(page)?.let { go(it) } },
                     modifier = Modifier.offset(0.px, (stageHeight - dock.dockHeight).px),
                 )
 

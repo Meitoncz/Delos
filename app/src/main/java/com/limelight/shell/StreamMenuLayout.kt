@@ -180,6 +180,7 @@ internal object StreamMenuLayout {
     const val HEAD_BOTTOM = 46f
     const val HEAD_GAP = 22f
     const val HINTS_GAP = 12f
+    const val HINTS_ROW_GAP = 32f
     const val TITLE_SIZE = 36f
     const val TITLE_LINE_HEIGHT = 1.15f
     const val HINT_SIZE = 24f
@@ -269,29 +270,49 @@ internal object StreamMenuLayout {
 
 /**
  * Where the dock's tiles, its ring and the popover sit on a stage [width] stage pixels across. On every shape but a compact one this is the
- * prototype's 1920-wide dock ([Standard]: 150 px tiles 40 px apart, the popover 120 px from the sides). A compact stage ([forStage]) is
- * narrower than the nine tiles need, so the tiles shrink to fit it with a 48 px margin (down to about 85 px, never under the 64 px target),
- * the ring, the corners and the icon with them, the labels of the tiles that do not have the focus go when they would touch, the dock sits
- * lower (the caption ends 48 px above the bottom) and the popover gets the margin of 48 on the sides and above, so it keeps the room a
- * short stage has. The text keeps its size.
+ * prototype's 1920-wide dock ([Standard]: 150 px tiles 40 px apart, centred, the popover 120 px from the sides). A compact stage
+ * ([forStage]) is narrower than the nine tiles need: the tiles, their gaps, labels, ring and caption keep the prototype's sizes and the
+ * row scrolls sideways instead ([scrollMax], [dockScrollFor]), starting [COMPACT_SIDE] from the left edge; the dock sits lower (the
+ * caption ends 48 px above the bottom) and the popover gets the margin of 48 on the sides and above, so it keeps the room a short stage
+ * has. [textScale] is the interface scale, which the heights of the label and the caption follow on a compact stage.
  */
 internal class DockGeometry(
     val width: Float,
-    val tile: Float,
-    val gap: Float,
     /** The popover's distance from the stage's left, right and top edges. */
     val margin: Float,
-    private val compact: Boolean,
+    val compact: Boolean,
+    private val textScale: Float = 1f,
+    /** The stage's height: a low compact stage sets the two button hints side by side. */
+    height: Float = StreamMenuLayout.STAGE_HEIGHT,
 ) {
     private val c = StreamMenuLayout
-    private val f = tile / c.TILE
 
-    val tilesWidth = 9 * tile + 8 * gap
-    val tilesLeft = (width - tilesWidth) / 2f
-    val tileRadius = c.TILE_RADIUS * f
-    val icon = c.TILE_ICON * f
-    val ring = c.RING * f
-    val ringRadius = c.RING_RADIUS * f
+    val tile = c.TILE
+    val gap = c.TILE_GAP
+    val tilesWidth = c.TILES_WIDTH
+    val tileRadius = c.TILE_RADIUS
+    val icon = c.TILE_ICON
+    val ring = c.RING
+    val ringRadius = c.RING_RADIUS
+
+    /** How far the row can scroll: the tiles and the two side margins less the stage's width; 0 where they fit (every shape but the compact one). */
+    val scrollMax = if (compact) (tilesWidth + 2f * COMPACT_SIDE - width).coerceAtLeast(0f) else 0f
+    val scrolls = scrollMax > 0f
+
+    /** The first tile's left edge in the row (which is the stage while the row does not scroll): centred, or the side margin of a scrolling row. */
+    val tilesLeft = if (scrolls) COMPACT_SIDE else (width - tilesWidth) / 2f
+
+    /** The row as wide as it scrolls: the stage's width where it does not. */
+    val rowWidth = if (scrolls) tilesWidth + 2f * COMPACT_SIDE else width
+
+    /**
+     * The A / B hints above the tiles stand in one line instead of one above the other on a compact stage under [LOW_STAGE] high: the
+     * game's name above them then stays clear of the compact statistics line at the top, also at the largest interface scale.
+     */
+    val hintsInRow = compact && height < LOW_STAGE
+
+    /** The height of the block above the tiles: the game's name and the hints. */
+    val headHeight = c.TITLE_SIZE * c.TITLE_LINE_HEIGHT + c.HEAD_GAP + c.HINT_GLYPH_SIZE + if (hintsInRow) 0f else c.HINTS_GAP + c.HINT_GLYPH_SIZE
 
     /** The ring's top edge relative to the tiles' top edge (negative: it reaches above the tile). */
     val ringTop = (tile - ring) / 2f
@@ -299,14 +320,20 @@ internal class DockGeometry(
     val popoverMaxRight = width - margin
     val captionWidth = if (compact) minOf(c.CAPTION_WIDTH, width - 2f * margin) else c.CAPTION_WIDTH
 
-    /** The labels of the tiles that do not have the focus show only where neighbouring ones cannot touch (a compact dock of narrow tiles shows the focused one's). */
-    val allLabels = !compact || tile + gap >= 150f
+    /** The tile's label under it on a compact stage: its gap and its line at the interface scale. */
+    private val label = c.LABEL_GAP + c.LABEL_SIZE * textScale * c.LABEL_LINE_HEIGHT
 
     /** The dock's height: the box its tiles hang from, its bottom edge on the stage's. The caption ends [margin] above the bottom on a compact stage. */
-    val dockHeight = if (compact) tile + c.LABEL_GAP + c.LABEL_SIZE * c.LABEL_LINE_HEIGHT + c.CAPTION_GAP + 8f + c.CAPTION_SIZE * c.CAPTION_LINE_HEIGHT * c.CAPTION_LINES + margin else c.STAGE_HEIGHT - c.DOCK_TOP
+    val dockHeight = if (compact) tile + label + c.CAPTION_GAP + 8f + captionHeight(textScale) + margin else c.STAGE_HEIGHT - c.DOCK_TOP
 
-    /** How far the dock sinks while a popover is open: the tiles end up with their label 48 px above the bottom on a compact stage. */
-    val dockShift = if (compact) dockHeight - (tile + c.LABEL_GAP + c.LABEL_SIZE * c.LABEL_LINE_HEIGHT + margin) else c.DOCK_SHIFT
+    /**
+     * Whether the sunk dock (a popover is open) keeps the labels under its tiles. A compact stage under [LOW_STAGE] high needs their
+     * room for the card (two rows would show otherwise): the labels fade out there and the tiles sink that much further.
+     */
+    val sunkLabels = !(compact && height < LOW_STAGE)
+
+    /** How far the dock sinks while a popover is open: the tiles end up with their label (or, without it, themselves) 48 px above the bottom on a compact stage. */
+    val dockShift = if (compact) dockHeight - (tile + (if (sunkLabels) label else 0f) + margin) else c.DOCK_SHIFT
 
     /** The popover's box ends here above the stage's bottom edge: the sunk dock's ring top and the caret's gap to it. */
     val popoverBottom = if (compact) dockHeight - dockShift - ringTop + 12f else c.POPOVER_BOTTOM
@@ -314,33 +341,66 @@ internal class DockGeometry(
     val popoverCardBottomInset = popoverBottom + c.CARET_HEIGHT
 
     companion object {
-        val Standard = DockGeometry(StreamMenuLayout.STAGE_WIDTH, StreamMenuLayout.TILE, StreamMenuLayout.TILE_GAP, StreamMenuLayout.POPOVER_MARGIN, compact = false)
+        val Standard = DockGeometry(StreamMenuLayout.STAGE_WIDTH, StreamMenuLayout.POPOVER_MARGIN, compact = false)
 
-        /** The dock of this stage: the prototype's, or a compact stage's shrunken one. */
+        /** The dock of this stage: the prototype's, or a compact stage's scrolling one. */
         fun forStage(stage: com.limelight.shell.ui.StageMetrics): DockGeometry {
             if (stage.shape != com.limelight.shell.ui.StageShape.COMPACT) return Standard
-            val margin = COMPACT_MARGIN
-            val gap = COMPACT_TILE_GAP
-            val tile = ((stage.stageWidth - 2f * margin - 8f * gap) / 9f).coerceAtMost(StreamMenuLayout.TILE)
-            return DockGeometry(stage.stageWidth, tile, gap, margin, compact = true)
+            return DockGeometry(stage.stageWidth, COMPACT_MARGIN, compact = true, textScale = stage.textScale, height = stage.stageHeight)
         }
 
+        /** A compact stage: the popover's margin, which is also the least margin of everything else. */
         const val COMPACT_MARGIN = 48f
-        const val COMPACT_TILE_GAP = 20f
+
+        /**
+         * A compact stage: the first tile's distance from the left edge with the row at its start (and the last one's from the right edge
+         * at its end). The ring is 18 px outside the tile and its glow 62 px outside the ring: 80 keeps all of it on the screen.
+         */
+        const val COMPACT_SIDE = 80f
+
+        /** The focused tile keeps this far from the stage's edges while the row can still scroll: the 40 px gap and 110 px of the next tile. */
+        const val FOCUS_MARGIN = 150f
+
+        /** The fade at an edge where the row goes on, from the stage's edge: it ends before the focused tile's ring (132 px from the edge). */
+        const val FADE = 80f
+
+        /** A compact stage lower than this sets the hints side by side ([hintsInRow]) and sinks the dock without its labels ([sunkLabels]). */
+        const val LOW_STAGE = 800f
+
+        /** The scroll area's room above the tiles: the ring, its glow and the On pill (the area's layer would cut what reaches further). */
+        const val ROOM_TOP = 110f
     }
 }
 
 /** The dock's geometry of the stage the menu is shown on ([DockGeometry.forStage]); provided by [StreamMenuRoot]. */
 internal val LocalDockGeometry = androidx.compose.runtime.staticCompositionLocalOf { DockGeometry.Standard }
 
-/** The left edge of [item]'s tile, stage pixels. */
+/** The left edge of [item]'s tile in the row, stage pixels (on the stage: less the row's scroll). */
 internal fun tileLeft(item: BarItem, g: DockGeometry = DockGeometry.Standard): Float = g.tilesLeft + item.ordinal * (g.tile + g.gap)
 
-/** The horizontal center of [item]'s tile. */
+/** The horizontal center of [item]'s tile in the row. */
 internal fun tileCenterX(item: BarItem, g: DockGeometry = DockGeometry.Standard): Float = tileLeft(item, g) + g.tile / 2f
 
 /** The left edge of the ring's box around [item]'s tile. */
 internal fun ringLeft(item: BarItem, g: DockGeometry = DockGeometry.Standard): Float = tileCenterX(item, g) - g.ring / 2f
+
+/**
+ * The scroll of a compact stage's row (stage pixels, 0 to [DockGeometry.scrollMax]) that shows the focused [item], coming from [scroll]:
+ * it moves only as far as it must to keep the tile [DockGeometry.FOCUS_MARGIN] from both edges of the stage, so the tile, its ring and
+ * glow are whole and the next tile peeks in; at the ends of the row it stops, the first and the last tile [DockGeometry.COMPACT_SIDE]
+ * from the edge. The focus drives the real row the same way (a margin bring-into-view); this is what it settles on.
+ */
+internal fun dockScrollFor(item: BarItem, scroll: Float, g: DockGeometry): Float {
+    if (!g.scrolls) return 0f
+    val left = tileLeft(item, g)
+    val right = left + g.tile
+    val margin = DockGeometry.FOCUS_MARGIN
+    return when {
+        left - margin < scroll -> left - margin
+        right + margin > scroll + g.width -> right + margin - g.width
+        else -> scroll
+    }.coerceIn(0f, g.scrollMax)
+}
 
 /** The ring's top edge relative to the tiles' top edge (negative: it reaches above the tile). */
 internal const val RING_TOP = (StreamMenuLayout.TILE - StreamMenuLayout.RING) / 2f
@@ -369,13 +429,22 @@ internal fun caretCenterX(anchorX: Float, left: Float, width: Float): Float =
 /** Where the popover of a page sits, stage pixels: the card's left edge, its width, and the caret's center from the left edge. */
 internal data class PopoverPlacement(val left: Float, val width: Float, val caretX: Float)
 
-internal fun popoverPlacement(page: MenuPage, g: DockGeometry = DockGeometry.Standard): PopoverPlacement? {
+/** The popover of [page] above its tile where that is on the stage: the row's [scroll] (a compact stage's) moves the tile and the caret with it. */
+internal fun popoverPlacement(page: MenuPage, g: DockGeometry = DockGeometry.Standard, scroll: Float = 0f): PopoverPlacement? {
     val item = page.barItem() ?: return null
-    val anchor = tileCenterX(item, g)
+    val anchor = tileCenterX(item, g) - scroll
     val width = popoverWidth(page, g)
     val left = popoverLeft(anchor, width, g)
     return PopoverPlacement(left, width, caretCenterX(anchor, left, width))
 }
+
+/**
+ * Whether a compact stage's open card covers the game's name and the A / B hints above the dock (they lie beside the card's lower part
+ * once the dock has sunk): the card from [cardLeft] to [cardRight] comes within [air] of the block from [headLeft] to [headRight].
+ * The block fades out while it does.
+ */
+internal fun dockHeadCovered(cardLeft: Float, cardRight: Float, headLeft: Float, headRight: Float, air: Float = 24f): Boolean =
+    cardLeft < headRight + air && cardRight > headLeft - air
 
 /** The lines the popover's help text reserves: 2 at the normal text scale, 3 from 1.15 up. */
 internal fun helpLines(textScale: Float): Int = if (textScale > 1.15f) 3 else 2

@@ -80,8 +80,8 @@ fun PairPcScreen(screen: Screen.PairPc, pcs: List<Pc>) {
     }
     val first = remember { FocusRequester() }
     InitialFocus(first)
-    // Discovered PCs first (online ones before offline), paired ones after them
-    val shown = pcs.sortedWith(compareBy({ it.paired }, { !it.online }, { it.name.lowercase() })).take(5)
+    // Discovered PCs first (online ones before offline), paired ones after them; all of them, the row scrolls
+    val shown = pcs.sortedWith(compareBy({ it.paired }, { !it.online }, { it.name.lowercase() }))
     CenterColumn(gap = 48f) {
         Heading(
             stringResource(R.string.pairing_pc_title),

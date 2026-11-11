@@ -56,8 +56,10 @@ import androidx.compose.ui.unit.em
 import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.unit.Constraints
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import com.limelight.R
 import com.limelight.shell.system.BatteryStatus
 import com.limelight.shell.system.WifiStatus
 import kotlin.math.roundToInt
@@ -99,40 +101,128 @@ fun StatusBar(
     /** False where the screen shows something else in the corner (the start screen's profile). */
     brand: Boolean = true,
 ) {
+    val stage = LocalStage.current
+    if (stage.compact) {
+        CompactStatusBar(nav, pcName, pcOnline, wifi, battery, clock, modifier, brand)
+        return
+    }
     val colors = LocalDelosColors.current
     // The display cutout pads the bar (zero on a screen without one, so nothing moves there)
-    val stage = LocalStage.current
     val safe = stage.safe
-    // A compact stage drops the wordmark and holds the PC pill to what is left of its side of the centered navigation
-    val compact = stage.compact
-    val wordmark = !compact || stage.stageWidth >= Compact.NARROW_STAGE
-    val sideRoom = (stage.stageWidth - 2f * 72f - safe.left - safe.right - (if (nav != null) NAV_WIDTH else 0f)) / 2f
-    val pillMax = (sideRoom - 40f - 18f - (if (wordmark) WORDMARK_WIDTH + 18f else 0f) - 12f).coerceAtLeast(120f)
     Box(modifier.fillMaxWidth().padding(top = safe.top.px).height(104.px).padding(start = 72.px + safe.left.px, end = 72.px + safe.right.px)) {
         if (brand) {
             Row(Modifier.align(Alignment.CenterStart), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(18.px)) {
                 LogoMark()
-                if (wordmark) BasicText("DELOS", style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx, letterSpacing = .14.em))
-                if (pcName != null) PcPill(pcName, pcOnline, if (compact && nav != null) pillMax else null)
+                BasicText("DELOS", style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx, letterSpacing = .14.em))
+                if (pcName != null) PcPill(pcName, pcOnline)
             }
         }
         if (nav != null) TopNav(nav, Modifier.align(Alignment.Center))
-        // Wi-Fi, the battery with its percentage and the clock, the same gap between them
-        Row(Modifier.align(Alignment.CenterEnd), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(28.px)) {
-            // Wi-Fi, battery and clock in the same color
-            Symbol(wifiIcon(wifi), 30.tpx, colors.text)
-            if (battery != null) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.px)) {
-                    BatteryIndicator(battery)
-                    // Equal-width digits: from 10 to 99 % the bar does not shift when the level changes
-                    BasicText(
-                        "${(battery.level * 100).roundToInt()}%",
-                        style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 22.tpx, fontFeatureSettings = "tnum"),
-                    )
-                }
+        StatusCluster(wifi, battery, clock, Modifier.align(Alignment.CenterEnd))
+    }
+}
+
+/** Wi-Fi, the battery with its percentage and the clock, the same gap between them ([gap]; [batteryGap] between the battery and its [percent]). */
+@Composable
+private fun StatusCluster(
+    wifi: WifiStatus, battery: BatteryStatus?, clock: String, modifier: Modifier = Modifier,
+    gap: Float = StatusBarLayout.STATUS_GAP, batteryGap: Float = StatusBarLayout.BATTERY_GAP, percent: Boolean = true,
+) {
+    val colors = LocalDelosColors.current
+    Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(gap.px)) {
+        // Wi-Fi, battery and clock in the same color
+        Symbol(wifiIcon(wifi), 30.tpx, colors.text)
+        if (battery != null) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(batteryGap.px)) {
+                BatteryIndicator(battery)
+                // Equal-width digits: from 10 to 99 % the bar does not shift when the level changes
+                if (percent) BasicText(
+                    "${(battery.level * 100).roundToInt()}%",
+                    style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 22.tpx, fontFeatureSettings = "tnum"),
+                )
             }
-            BasicText(clock, style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 24.tpx, fontFeatureSettings = "tnum"))
         }
+        BasicText(clock, style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 24.tpx, fontFeatureSettings = "tnum"))
+    }
+}
+
+/**
+ * The status bar of a compact stage (about 1050 to 1490 stage pixels across, fewer with a larger interface scale): the same three parts,
+ * but the navigation's buttons are 56 px, the connected PC is only its status dot with the PC glyph (its name is in Home's hint bar and
+ * on the Devices screen; a screen reader still gets it) and the wordmark goes under [Compact.NARROW_STAGE]. [fitStatusBar] places the
+ * navigation: on the bar's middle while that leaves [StatusBarLayout.MIN_GAP] to both clusters, else in the middle of the free space
+ * between them; when even that is too narrow the inner gaps tighten and, last, the battery's percentage goes ([StatusBarStep]).
+ */
+@Composable
+private fun CompactStatusBar(
+    nav: List<NavButton>?, pcName: String?, pcOnline: Boolean, wifi: WifiStatus, battery: BatteryStatus?, clock: String, modifier: Modifier, brand: Boolean,
+) {
+    val colors = LocalDelosColors.current
+    val stage = LocalStage.current
+    val safe = stage.safe
+    val wordmark = stage.stageWidth >= Compact.NARROW_STAGE
+    val edges = LocalStatusBarEdges.current
+    val c = StatusBarLayout
+    val sideLeft = (c.SIDE + safe.left).px
+    val sideRight = (c.SIDE + safe.right).px
+    val minGap = c.MIN_GAP.px
+    val buttons = nav?.size ?: 0
+    val navWide = c.navWidth(buttons, c.NAV_BUTTON, c.NAV_GAP).px
+    val navTight = c.navWidth(buttons, c.NAV_BUTTON, c.NAV_GAP_TIGHT).px
+    SubcomposeLayout(modifier.fillMaxWidth().padding(top = safe.top.px).height(104.px)) { constraints ->
+        val open = Constraints(maxHeight = constraints.maxHeight)
+        val width = constraints.maxWidth
+        val left = subcompose("left") {
+            if (brand) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(18.px)) {
+                LogoMark()
+                if (wordmark) BasicText("DELOS", style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx, letterSpacing = .14.em))
+                if (pcName != null) PcDot(pcName, pcOnline)
+            }
+        }.firstOrNull()?.measure(open)
+        // Only the steps that are tried are composed: the full cluster first
+        val rights = arrayOfNulls<Placeable>(StatusBarStep.entries.size)
+        fun right(step: StatusBarStep): Placeable = rights[step.ordinal] ?: subcompose(step) {
+            StatusCluster(
+                wifi, battery, clock, gap = if (step.tight) c.STATUS_GAP_TIGHT else c.STATUS_GAP,
+                batteryGap = if (step.tight) c.BATTERY_GAP_TIGHT else c.BATTERY_GAP, percent = step.percent,
+            )
+        }.first().measure(open).also { rights[step.ordinal] = it }
+        val fit = fitStatusBar(width.toFloat(), sideLeft.toPx(), sideRight.toPx(), minGap.toPx()) { step ->
+            StatusBarWidths(
+                (left?.width ?: 0).toFloat(), if (buttons == 0) 0f else (if (step.tight) navTight else navWide).toPx(), right(step).width.toFloat(),
+            )
+        }
+        val status = right(fit.step)
+        val bar = if (nav != null) subcompose("nav") {
+            TopNav(nav, Modifier, buttonSize = c.NAV_BUTTON, gap = if (fit.step.tight) c.NAV_GAP_TIGHT else c.NAV_GAP)
+        }.first().measure(open) else null
+        val statusX = width - sideRight.roundToPx() - status.width
+        layout(width, constraints.maxHeight) {
+            fun y(p: Placeable) = (constraints.maxHeight - p.height) / 2
+            left?.placeRelative(sideLeft.roundToPx(), y(left))
+            bar?.placeRelative(fit.navX.roundToInt(), y(bar))
+            status.placeRelative(statusX, y(status))
+            edges?.rightStartPx = statusX
+        }
+    }
+}
+
+/**
+ * The connected PC on a compact stage: its status dot (green while the PC is online, grey otherwise) and the PC glyph in the pill of
+ * [PcPill], without the name. The name is what a screen reader says.
+ */
+@Composable
+private fun PcDot(name: String, online: Boolean) {
+    val colors = LocalDelosColors.current
+    val description = stringResource(if (online) R.string.shell_side_connected else R.string.shell_side_offline, name)
+    Row(
+        Modifier.semantics { contentDescription = description }
+            .clip(CircleShape).glass(colors.surface).border(1.px, colors.line, CircleShape).padding(horizontal = 14.px, vertical = 8.px),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(9.px),
+    ) {
+        Box(Modifier.size(10.px).clip(CircleShape).background(if (online) ONLINE else colors.text3))
+        Symbol(Symbols.DESKTOP_WINDOWS, 24.tpx, colors.text2)
     }
 }
 
@@ -210,32 +300,25 @@ fun LogoMark(size: Float = 40f) {
     })
 }
 
-/** The connected PC next to the brand; the dot is green while the PC is online. [maxWidth] (stage pixels) cuts a long name with an ellipsis; null: as wide as the name. */
+/** The connected PC next to the brand; the dot is green while the PC is online. */
 @Composable
-private fun PcPill(name: String, online: Boolean, maxWidth: Float? = null) {
+private fun PcPill(name: String, online: Boolean) {
     val colors = LocalDelosColors.current
     Row(
-        Modifier.then(if (maxWidth != null) Modifier.widthIn(max = maxWidth.px) else Modifier)
-            .clip(CircleShape).glass(colors.surface).border(1.px, colors.line, CircleShape).padding(horizontal = 18.px, vertical = 8.px),
+        Modifier.clip(CircleShape).glass(colors.surface).border(1.px, colors.line, CircleShape).padding(horizontal = 18.px, vertical = 8.px),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.px),
     ) {
         Box(Modifier.size(10.px).clip(CircleShape).background(if (online) ONLINE else colors.text3))
-        BasicText(
-            name, style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 20.tpx),
-            maxLines = if (maxWidth != null) 1 else Int.MAX_VALUE, overflow = if (maxWidth != null) TextOverflow.Ellipsis else TextOverflow.Clip,
-        )
+        BasicText(name, style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 20.tpx))
     }
 }
 
 private val ONLINE = androidx.compose.ui.graphics.Color(0xFF3DDC84)
 
-/** The top navigation's width (three 64 px buttons, their gaps and the pill's padding) and the wordmark's, for the compact status bar's room. */
-private const val NAV_WIDTH = 3 * 64f + 2 * 14f + 16f
-private const val WORDMARK_WIDTH = 175f
-
+/** The top navigation: round buttons [buttonSize] wide and [gap] apart in a glass pill (64 and 14; a compact stage's are smaller, see [StatusBarLayout]). */
 @Composable
-internal fun TopNav(buttons: List<NavButton>, modifier: Modifier) {
+internal fun TopNav(buttons: List<NavButton>, modifier: Modifier, buttonSize: Float = 64f, gap: Float = StatusBarLayout.NAV_GAP) {
     val colors = LocalDelosColors.current
     val glass = LocalBackdropHaze.current
     val requesters = remember(buttons.size) { List(buttons.size) { FocusRequester() } }
@@ -253,12 +336,13 @@ internal fun TopNav(buttons: List<NavButton>, modifier: Modifier) {
             )
         },
     ) {
-        Row(Modifier.padding(8.px), horizontalArrangement = Arrangement.spacedBy(14.px)) {
+        Row(Modifier.padding(StatusBarLayout.NAV_PADDING.px), horizontalArrangement = Arrangement.spacedBy(gap.px)) {
             buttons.forEachIndexed { i, button ->
                 NavButtonView(
                     button, requesters[i],
                     wrapLeft = if (i == 0 && requesters.size > 1) requesters.last() else null,
                     wrapRight = if (i == requesters.lastIndex && requesters.size > 1) requesters.first() else null,
+                    size = buttonSize,
                 )
             }
         }
@@ -269,7 +353,7 @@ internal fun TopNav(buttons: List<NavButton>, modifier: Modifier) {
 private const val NAV_FOCUS_SCALE = 1.12f
 
 @Composable
-private fun NavButtonView(button: NavButton, requester: FocusRequester, wrapLeft: FocusRequester?, wrapRight: FocusRequester?) {
+private fun NavButtonView(button: NavButton, requester: FocusRequester, wrapLeft: FocusRequester?, wrapRight: FocusRequester?, size: Float) {
     val colors = LocalDelosColors.current
     val pill = LocalTransientPill.current
     val reduced = LocalReducedMotion.current
@@ -303,7 +387,7 @@ private fun NavButtonView(button: NavButton, requester: FocusRequester, wrapLeft
                         pill?.focusChanged(it, position[0], NAV_FOCUS_SCALE)
                     },
                 )
-                .size(64.px)
+                .size(size.px)
                 .clip(CircleShape)
                 // The focused button's accent fill; while the transient pill is the focus, the pill is what shows, the fill fades in over it at the hand-over
                 .drawBehind { if (focused) drawRect(colors.accent, alpha = pill?.handover() ?: 1f) },
@@ -317,7 +401,7 @@ private fun NavButtonView(button: NavButton, requester: FocusRequester, wrapLeft
         // cannot widen the bar, and overflows it centered
         AnimatedVisibility(
             focused,
-            modifier = Modifier.matchParentSize().wrapContentSize(Alignment.TopCenter, unbounded = true).offset(y = 84.px),
+            modifier = Modifier.matchParentSize().wrapContentSize(Alignment.TopCenter, unbounded = true).offset(y = (size + 20f).px),
             enter = fadeIn(tween(Motion.FADE, easing = Motion.Ease)) + slideInVertically(tween(Motion.POP_IN, easing = EaseOut)) { -it / 4 },
             exit = fadeOut(tween(Motion.EXIT, easing = Motion.Ease)) + slideOutVertically(tween(Motion.EXIT, easing = Motion.In)) { -it / 4 },
         ) {

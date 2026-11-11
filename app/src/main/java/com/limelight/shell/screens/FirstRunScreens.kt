@@ -52,6 +52,8 @@ import com.limelight.shell.ui.RowGlideHost
 import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.ValuePill
 import com.limelight.shell.ui.Unbounded
+import com.limelight.shell.ui.CircleRowLayout
+import com.limelight.shell.ui.Compact
 import com.limelight.shell.ui.compact
 import com.limelight.shell.ui.compactScale
 import com.limelight.shell.ui.px
@@ -72,7 +74,7 @@ fun BootScreen(onBegin: () -> Unit, onSkip: (() -> Unit)?) {
             modifier = Modifier.padding(start = (if (LocalStage.current.compact) 22 else 30).px),
         )
         BasicText(stringResource(R.string.firstrun_boot_tagline), style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 28.tpx))
-        Row(Modifier.padding(top = 26.px), horizontalArrangement = Arrangement.spacedBy(24.px)) {
+        Row(Modifier.padding(top = 26.px), horizontalArrangement = Arrangement.spacedBy((if (LocalStage.current.compact) Compact.BUTTON_GAP else 24f).px)) {
             PillButton(stringResource(R.string.firstrun_boot_begin), Symbols.ARROW_FORWARD, onBegin, Modifier.focusRequester(begin), primary = true)
             if (onSkip != null) PillButton(stringResource(R.string.firstrun_boot_skip), Symbols.FAST_FORWARD, onSkip)
         }
@@ -144,7 +146,9 @@ fun CreateProfileScreen(editing: Boolean, initial: Profile?, onDone: (name: Stri
             ring = FocusRing(5f, 5f), corner = 999f, focusScale = 1.16f,
             fill = null, glow = FocusGlow(26f, 70f, -16f),
         ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy((26f * stage.compactScale).px)) {
+        // A compact stage keeps a focused avatar's ring off the name of the avatar above it
+        val rowGap = if (stage.compact) maxOf(26f * stage.compactScale, CircleRowLayout.rowGap(AVATAR_DIAMETER * stage.compactScale)) else 26f
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(rowGap.px)) {
             AVATARS.withIndex().chunked(columns).forEach { row ->
                 Row(horizontalArrangement = Arrangement.spacedBy((if (stage.compact) 24f else 32f).px), verticalAlignment = Alignment.Top) {
                     row.forEach { (i, a) ->
@@ -170,7 +174,7 @@ fun CreateProfileScreen(editing: Boolean, initial: Profile?, onDone: (name: Stri
         }
         }
         // The name as it is (not an input) and the button that opens the dialog; D-pad: avatars, Change name, Create / Save
-        Row(horizontalArrangement = Arrangement.spacedBy(24.px), verticalAlignment = Alignment.CenterVertically) {
+        Row(horizontalArrangement = Arrangement.spacedBy((if (stage.compact) Compact.BUTTON_GAP else 24f).px), verticalAlignment = Alignment.CenterVertically) {
             ValuePill(stringResource(R.string.firstrun_create_name_label), name, Symbols.BADGE, placeholder = stringResource(R.string.firstrun_create_name_placeholder))
             PillButton(stringResource(R.string.firstrun_create_change_name), Symbols.EDIT, askName, Modifier.focusRequester(changeName))
         }

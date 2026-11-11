@@ -22,6 +22,10 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.unit.Constraints
+import kotlin.math.roundToInt
 import android.content.res.Resources
 import androidx.compose.ui.res.stringResource
 import com.limelight.R
@@ -48,7 +52,13 @@ import com.limelight.shell.ui.FocusGlow
 import com.limelight.shell.ui.FocusRing
 import com.limelight.shell.ui.Heading
 import com.limelight.shell.ui.InitialFocus
+import com.limelight.shell.ui.Compact
 import com.limelight.shell.ui.LocalDelosColors
+import com.limelight.shell.ui.LocalStage
+import com.limelight.shell.ui.LocalStatusBarEdges
+import com.limelight.shell.ui.StatusBarLayout
+import com.limelight.shell.ui.compact
+import com.limelight.shell.ui.placeBetween
 import com.limelight.shell.ui.LocalFeedback
 import com.limelight.shell.ui.OnlineGreen
 import com.limelight.shell.ui.Symbol
@@ -72,7 +82,11 @@ fun StartScreen(profiles: Profiles, store: ProfileStore, pcs: List<Pc>, startup:
     val first = remember { FocusRequester() }
     InitialFocus(first, focusPc?.uuid)
     Box(Modifier.fillMaxSize()) {
-        profiles.current?.let { ProfileChip(profiles, store, Modifier.align(Alignment.TopCenter).padding(top = 44.px)) }
+        // A compact stage has no room for the chip on the middle next to the status icons: it keeps clear of them (CompactProfileChip)
+        profiles.current?.let {
+            if (LocalStage.current.compact) CompactProfileChip(profiles, store)
+            else ProfileChip(profiles, store, Modifier.align(Alignment.TopCenter).padding(top = 44.px))
+        }
         CenterColumn(gap = 48f) {
             val name = profiles.current?.name
             Heading(
@@ -80,7 +94,8 @@ fun StartScreen(profiles: Profiles, store: ProfileStore, pcs: List<Pc>, startup:
                 stringResource(if (paired.isEmpty()) R.string.devices_start_pair_note else R.string.devices_start_choose_note),
             )
             Circles {
-                paired.take(5).forEach { pc ->
+                // Every paired PC: the row scrolls when they do not fit (it used to stop at five)
+                paired.forEach { pc ->
                     val default = pc.uuid == startup.defaultPc
                     CircleItem(
                         Symbols.DESKTOP_WINDOWS, pc.name,
@@ -122,9 +137,33 @@ private fun startMenu(res: Resources, pc: Pc, default: Boolean, actions: DeviceA
     ),
 )
 
-/** The current profile in the top-left corner of the start screen; A opens the profiles. */
+/**
+ * The profile chip on a compact stage: on the status bar's line, on the middle of the stage while that leaves 24 px to the status icons
+ * (Wi-Fi, battery, clock: [LocalStatusBarEdges] says where they start), else in the middle of the free space left of them; a name too
+ * long for that room is cut with an ellipsis. The same rule as the top navigation's ([placeBetween]).
+ */
 @Composable
-private fun ProfileChip(profiles: Profiles, store: ProfileStore, modifier: Modifier) {
+private fun CompactProfileChip(profiles: Profiles, store: ProfileStore) {
+    val stage = LocalStage.current
+    val edges = LocalStatusBarEdges.current
+    val start = (Compact.SIDE + stage.safe.left).px
+    val fallbackEnd = (stage.stageWidth - Compact.SIDE - stage.safe.right - 360f).px
+    val gap = StatusBarLayout.MIN_GAP.px
+    val top = stage.safe.top.px
+    // The bar is zoomed by the interface scale
+    val bar = (Compact.STATUS_BAR * stage.textScale).px
+    Layout({ ProfileChip(profiles, store, Modifier, shrink = true) }, Modifier.fillMaxSize()) { measurables, constraints ->
+        val from = start.toPx()
+        val to = (edges?.rightStartPx?.takeIf { it >= 0 }?.toFloat() ?: fallbackEnd.toPx()) - gap.toPx()
+        val chip = measurables.first().measure(Constraints(maxWidth = (to - from).roundToInt().coerceAtLeast(0)))
+        val x = placeBetween(from, to, chip.width.toFloat(), constraints.maxWidth / 2f) ?: from
+        layout(constraints.maxWidth, constraints.maxHeight) { chip.place(x.roundToInt(), top.roundToPx() + (bar.roundToPx() - chip.height) / 2) }
+    }
+}
+
+/** The current profile at the top of the start screen; A opens the profiles. [shrink]: a long name is cut to the width the chip gets. */
+@Composable
+private fun ProfileChip(profiles: Profiles, store: ProfileStore, modifier: Modifier, shrink: Boolean = false) {
     val res = com.limelight.shell.ui.textResources()
     val colors = LocalDelosColors.current
     val shell = LocalShell.current
@@ -148,7 +187,11 @@ private fun ProfileChip(profiles: Profiles, store: ProfileStore, modifier: Modif
         horizontalArrangement = Arrangement.spacedBy(14.px),
     ) {
         AvatarBadge(profile.look, 56f, 30f)
-        BasicText(profile.name, style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 24.tpx))
+        BasicText(
+            profile.name, style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 24.tpx),
+            maxLines = if (shrink) 1 else Int.MAX_VALUE, overflow = if (shrink) TextOverflow.Ellipsis else TextOverflow.Clip,
+            modifier = if (shrink) Modifier.weight(1f, fill = false) else Modifier,
+        )
         Symbol(Symbols.EXPAND_MORE, 28.tpx, if (focused) colors.accent else colors.text3)
     }
 }
@@ -170,7 +213,7 @@ fun DevicesScreen(pcs: List<Pc>, activeUuid: String?) {
     CenterColumn(gap = 48f) {
         Heading(stringResource(R.string.devices_title), stringResource(R.string.devices_note))
         Circles {
-            paired.take(5).forEachIndexed { i, pc ->
+            paired.forEachIndexed { i, pc ->
                 val active = pc.uuid == activeUuid
                 val menu = deviceMenu(res, pc, active, actions)
                 CircleItem(

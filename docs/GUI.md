@@ -898,17 +898,53 @@ activity keeps its own orientation logic) and supports windows from 1:1 up to 21
   strips and the columns scale with its width (7 / 4 / 3 / 5 per 1720 px). The filter modal's height follows the stage (stage height − 260). Circle rows (`Circles`: Devices, Start,
   Pair, Profile) stay one centred row that scrolls sideways with an edge fade when the circles do not fit, on every shape (while they fit it is the plain centred row); the other rows that used to wrap (the filter modal's chips, the Artwork sheet's options, the stream popover's key/command pills) do the same through `ScrollRow` (`ui/Controls.kt`), which gives its row its own focus-scroll margin instead of the surrounding list's. Nothing wraps into a second line any more except text and the info row's non-focusable facts and tags. Debug info already filled the stage (weighted list, edge padding).
 - **Compact stages** (phase C, shell screens; `ui/Compact.kt`, only when `stage.shape == COMPACT`, every other shape is untouched): the stage is 1000–1500 stage px
-  wide and 720–1100 high with the text as large as on the Odin, so non-text elements shrink and everything else reflows. `StageMetrics.compactScale` is the one
-  scale of covers, discs, avatars and gaps (stage height / 1080, 0.62 at the least); margins never go under 48 px (`Compact.MARGIN`; the cutout comes on top) and
-  neighbouring blocks keep 16–24 px; targets stay at least 64 px. Status bar: no wordmark under 1400 px, the PC pill is cut by an ellipsis to its side of the
-  centred navigation. Hint bar (`CompactHintBar`, `HintFit.kt`): the note with its label, then the note alone, stay only while every hint keeps a label; otherwise the note goes and the hints degrade one by one: by rank (A, Back, the screen's own X/Y/adjust, L1/R1, the menu buttons) the most important takes the fullest label that still fits with all the less important ones as bare buttons, so the labels of the least important go first, a hint with a shorter existing word (`Hint.shortLabel`: Reset, Back, Search, Choose) tries it before it loses the label, and the buttons alone come last. Centred screens
-  (`CenterColumn`) keep clear of both bars and scroll when still too tall; headlines are 48 (not 64), circles scale with `compactScale` (items 170 wide, labels
-  cut by an ellipsis), the avatar picker has 4 columns. Home row: covers 0.6–0.85 of the prototype (2:3 and the wide cover's ratio kept, the gap and corner
-  scale with them), the first one 72 px from the edge, the block above them without the "Game info" label and with a 120 px title box (title 60/50/44). The
-  context menu keeps 48 px from every edge. Stream menu (`DockGeometry` in `StreamMenuLayout.kt`): the nine tiles shrink to fit the width between 48 px
-  margins (about 85–137 px, gap 20), the ring, corners and icons with them; below 130 px only the focused tile shows its label; the dock sits 48 px above the
-  bottom (the sunk dock keeps its label there), the popover is at most as wide as the room between the margins and as tall as the room above the sunk dock.
-  Problem card and toast: 48 px from the edge, under the status bar.
+  wide and 720–1100 high with the text as large as on the Odin, so everything else reflows. The user's rules for it: a row that does not fit **scrolls**
+  (one row, a fade at the cut edges, the focus whole with the next item peeking in) and is never squeezed or wrapped; outer margins of at least 48 px
+  (`Compact.MARGIN`; status bar and covers start at 72; the cutout comes on top) and 24 px between neighbouring blocks; a focused element's growth, ring
+  and 12 px of air fit the gap to its neighbour; circles stay circles and covers keep their ratio; text keeps its size. `StageMetrics.compactScale`
+  (stage height / 1080, 0.62 at the least) scales avatars, circles and the gaps of centred screens. The interface scale (1.15 by default) zooms both
+  bars, so a compact layout counts the status bar as 104 × scale and the hint bar as 92 × scale. The geometry is in pure functions with unit tests
+  over the stages 1099 × 957, 1488 × 893, 1191 × 893, 1108 × 831, 1051 × 1051 and 1082 × 722.
+  - *Status bar* (`CompactStatusBar` in `ui/Bars.kt`, `ui/StatusBarFit.kt`, `StatusBarFitTest`): the navigation's buttons are **56 px** (64 elsewhere),
+    the connected PC is only its **status dot with the PC glyph** (green online, grey offline; its name is in Home's hint bar, on the Devices screen and
+    in the side menu's header, and it is the pill's content description), no wordmark under 1280 bar px. `fitStatusBar` places the navigation on the
+    middle of the bar while that leaves **24 px** to the brand cluster and to the status cluster (Wi-Fi, battery, clock, measured, so a 12-hour clock
+    and "100%" count), otherwise in the middle of the free space between the two; when even that is too narrow (interface scale 1.3) the gaps inside
+    the navigation (14 → 6) and the status cluster (28 → 16) tighten and, last, the battery's percentage goes. The start screen's profile chip follows
+    the same rule on the bar's line (`CompactProfileChip`; `LocalStatusBarEdges` tells it where the status cluster starts), its name cut by an ellipsis
+    when the room is shorter.
+  - *Hint bar* (`CompactHintBar`, `HintFit.kt`): the note with its label, then the note alone, stay only while every hint keeps a label; otherwise the note goes and the hints degrade one by one: by rank (A, Back, the screen's own X/Y/adjust, L1/R1, the menu buttons) the most important takes the fullest label that still fits with all the less important ones as bare buttons, so the labels of the least important go first, a hint with a shorter existing word (`Hint.shortLabel`: Reset, Back, Search, Choose) tries it before it loses the label, and the buttons alone come last.
+  - *Centred screens* (`CenterColumn`) keep clear of both bars and scroll when still too tall; headlines are 48 (not 64) and at most the stage's
+    width less 2 × 72 (a long one, "Enter this PIN on <PC>", wraps); the avatar picker has 4 columns.
+  - *Circle rows* (`Circles`, `CircleItem`, `ui/CircleRowFit.kt`, `CircleRowFitTest`; Start, Devices, Pair a PC, Profile): the circle's box is always
+    square at its `compactScale` size; an item is as wide as the widest of its circle, its label (one line, at most 260, a longer PC name cut in its
+    **middle**) and its status line (at most 240, one line where the text allows, two for the note of "Pair a new PC"). The gap is the prototype's
+    **56** while the items fit with it and **44** when not (a focused circle grows 17 px to each side and its ring 12: 44 leaves 12 px of air); what
+    still does not fit scrolls (`ScrollRow`), the focused circle 150 px from the cut edge so the next item peeks in. Start and Devices show **every**
+    paired PC (they stopped at five), also at 16:9, where the row scrolls from seven circles on. `--ei preview_pcs <n>` gives the previews n PCs.
+  - *Home* (`screens/HomeCompactLayout.kt`, `HomeCompactLayoutTest`): laid out top-down between the bars: the title box (64 × scale to 120; the title
+    stands on its bottom edge), 12–16 px, the info chips (room for two rows), at least 24 px to the focused cover's **ring**, the covers, at least
+    28 px from that ring to the hint bar, at least 16 px under the status bar. The cover height is the smallest of 0.40 of the stage's height, the
+    height at which the wide first cover, one whole cover and a third of the next fit the width (the first cover starts at 72), and what the height
+    leaves with comfortable gaps (40 above, 44 under the covers), but not under 0.6 of the prototype's unless not even the least gaps fit (the 722-high
+    stage at the default interface scale: 0.50). What is left over goes to the gaps 0.5 : 2 : 2 (above the title : above the covers : under them). The
+    gap between two covers is 44 × scale, at least the room a focused cover needs (27.5 at 0.6). A placeholder cover sets its title smaller
+    (down to 0.55) until its longest word fits a line.
+  - *Context menu*: 48 px from the top and the sides, and its card ends **16 px above the hint bar** (`ContextMenuLayout.compactBottomMargin`); a
+    taller menu scrolls inside the card. A menu that opens under its element (the PC circles) and fits neither under nor above it goes beside it.
+  - *Stream menu* (`DockGeometry` in `StreamMenuLayout.kt`, `DockScroller` in `StreamMenuBar.kt`, `DockGeometryTest`): the tiles, gaps, ring,
+    labels and caption are the 16:9 sizes; the row of nine is wider than the stage and **scrolls**: the first tile 80 px from the left edge (its
+    ring and glow are whole), the focused tile 150 px from the edges while the row can still move (`dockScrollFor`; the next tile peeks in), an 80 px
+    fade only at an edge where the row goes on; the wrap-around (Left on Resume) glides to the other end and a finger drags the row. The popover's
+    caret follows its tile on the stage; the card keeps 48 px from the sides and the top and scrolls inside. The dock sits 48 px above the bottom;
+    while a card is open the game's name and the hints fade out where the card covers them. A stage under 800 px high sets the two hints side by
+    side and sinks the dock without its labels (they fade out), which leaves the card three rows instead of two.
+  - Problem card and toast: 48 px from the edge, under the status bar.
+- **A focus is never cut** (every shape): a scroll container and a layer with a fade clip at their own bounds, so the ones that hold focusable items
+  are larger than their place by the reach of the focus glow, their content padded by as much (`ScrollRow(bleed = …)` for the circles: 84 px, the
+  glow of a 220 px circle at 1.16; `Modifier.overdraw` for the context menu's rows: 16 px; Home's row reaches down to the stage's bottom edge, the
+  glow under a cover is about 110 px; the stream dock's scroll area starts 110 px above the tiles). The layout does not move. An edge fades only
+  while there is more to scroll to on that side, so the first item of a row at its start and the last one at its end are never faded.
 
 ## Native shell architecture and design constraints
 

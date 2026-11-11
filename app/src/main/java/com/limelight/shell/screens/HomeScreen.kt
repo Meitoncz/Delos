@@ -22,6 +22,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.BringIntoViewSpec
@@ -130,7 +131,6 @@ import com.limelight.shell.ui.LocalDelosColors
 import com.limelight.shell.ui.LocalFeedback
 import com.limelight.shell.ui.Compact
 import com.limelight.shell.ui.LocalStage
-import com.limelight.shell.ui.StageMetrics
 import com.limelight.shell.ui.compact
 import com.limelight.shell.ui.PlaceholderArt
 import com.limelight.shell.ui.Symbol
@@ -307,9 +307,12 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
     // The games with their own settings (docs/GUI.md): read once per change of the library, profile or stored settings, not per tile
     val customGames = rememberCustomGames(profileStore, pc, library.apps)
 
-    // The covers' sizes: the prototype's, or the compact stage's smaller ones
+    // The covers' sizes: the prototype's, or the compact stage's, which lays the whole screen out top-down (HomeCompact)
     val compact = stage.compact
-    val covers = remember(stage.stageWidth, stage.stageHeight, stage.shape) { if (stage.compact) compactCovers(stage) else StandardCovers }
+    val home = remember(stage.stageWidth, stage.stageHeight, stage.shape, stage.safe, uiScale) {
+        if (stage.compact) HomeCompact.layout(stage.stageWidth, stage.stageHeight, uiScale, stage.safe.top, stage.safe.bottom) else null
+    }
+    val covers = remember(home) { if (home != null) CoverGeometry(home.coverScale, Compact.SIDE) else StandardCovers }
 
     val tile: @Composable (Int, App) -> Unit = { index, app ->
         GameTile(
@@ -335,17 +338,19 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
     CompositionLocalProvider(LocalDashboardArt provides dashboardArt) { Box(Modifier.fillMaxSize()) {
         // Behind an open context menu the info block dims to 40 %
         val infoDim by animateFloatAsState(if (shell.layer is Layer.Context) .4f else 1f, tween(Motion.FADE, easing = Motion.Ease), label = "infoDim")
-        // A compact stage sits the block right above the covers (the covers are at the bottom, under the hint bar's room)
+        // A compact stage lays the block out between the status bar and the covers (HomeCompact)
         val infoStart = if (compact) Compact.SIDE else 150f
-        val infoTop = if (compact) maxOf(Compact.STATUS_BAR + 4f, stage.stageHeight - COMPACT_ROW_BOTTOM - covers.height - 28f - COMPACT_INFO_BLOCK) else 150f
-        GameInfo(pc, focused,
+        val infoTop = home?.titleTop ?: 150f
+        GameInfo(pc, focused, home,
             // The block (logo, GAME INFO label and pill row) sits high enough that the pills clear the focused cover
             modifier = Modifier.graphicsLayer { alpha = infoDim }.padding(start = infoStart.px, top = infoTop.px), reducedMotion = appearance.reducedMotion,
             // The same condition as the animated background's: the genre takes the game's colors only while it does
             matchGameColors = appearance.matchGameColors && !appearance.materialYou)
         CompositionLocalProvider(LocalBringIntoViewSpec provides NoAutoScroll, LocalEntranceStagger provides intro) {
-            // At the end the row stops with the last cover at the right edge, so the right fade goes away there
+            // At the end the row stops with the last cover at the right edge, so the right fade goes away there; at its start nothing lies
+            // beyond the left edge, so the first cover's ring and glow are not faded either
             val endFade by animateFloatAsState(if (rowState.canScrollForward) 1f else 0f, tween(300), label = "rowEndFade")
+            val startFade by animateFloatAsState(if (rowState.canScrollBackward) 1f else 0f, tween(300), label = "rowStartFade")
             val density = LocalDensity.current.density
             // Faded out for a moment while a long wrap jumps close to the other end
             val rowAlpha = remember { Animatable(1f) }
@@ -355,12 +360,13 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
                 state = rowState,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = (if (compact) stage.stageHeight - COMPACT_ROW_BOTTOM - covers.height - COMPACT_ROW_PAD else 430f - (uiScale - 1f) * 92f).px, bottom = (if (compact) COMPACT_ROW_BOTTOM - COMPACT_ROW_PAD else 20f).px)
+                    // The scroll area reaches down to the stage's bottom edge: the focused cover's glow (about 110 px under a 450 px cover) is never cut
+                    .padding(top = (if (home != null) home.coverTop - COMPACT_ROW_PAD else 430f - (uiScale - 1f) * 92f).px)
                     .graphicsLayer {
                         alpha = rowAlpha.value
                         translationX = rowBounce.value
                     }
-                    .fadeMask(stage, vertical = false, startClear = 0f, startSolid = 120f, endSolid = 20f + 240f * endFade, endClear = 20f * endFade)
+                    .fadeMask(stage, vertical = false, startClear = 0f, startSolid = 120f * startFade, endSolid = 260f * endFade, endClear = 20f * endFade)
                     // Left on the first game goes round to the last one, right on the last one back to the first
                     .onPreviewKeyEvent { event ->
                         if (event.type != KeyEventType.KeyDown || apps.size < 2) return@onPreviewKeyEvent false
@@ -407,7 +413,10 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
                     },
                 // At the end the last cover (focused) is as far from the right edge as the first game (focused) is
                 // from the left one
-                contentPadding = PaddingValues(start = covers.start.px, end = covers.endPadding.px, top = (if (compact) COMPACT_ROW_PAD else 90f).px, bottom = (if (compact) COMPACT_ROW_PAD else 90f).px),
+                contentPadding = PaddingValues(
+                    start = covers.start.px, end = covers.endPadding.px, top = (if (compact) COMPACT_ROW_PAD else 90f).px,
+                    bottom = (if (home != null) stage.stageHeight - home.coverBottom else 110f).px,
+                ),
                 horizontalArrangement = Arrangement.spacedBy(covers.gap.px),
             ) {
                 itemsIndexed(apps, key = { _, app -> app.id }) { i, app -> tile(i, app) }
@@ -424,18 +433,8 @@ private const val ROW_GAP = 44f
 /** The wide first cover is as wide as three covers and the two gaps between them. */
 private const val ROW_WIDE = 3 * ROW_TILE + 2 * ROW_GAP
 
-/** A compact stage: the title box and the logo's height above the pills (against 200 and 180), stage pixels. */
-private const val COMPACT_TITLE_BOX = 120f
-private const val COMPACT_LOGO_HEIGHT = 100f
-
-/** A compact stage: the row's covers end this far above the bottom (the hint bar and a gap), and the room around them for the focus scale and ring. */
-private const val COMPACT_ROW_BOTTOM = 106f
-private const val COMPACT_ROW_PAD = 40f
-
-/** A compact stage: the height of the info block (the title box and two rows of pills) above the covers, and the smallest and largest cover scale. */
-private const val COMPACT_INFO_BLOCK = 240f
-private const val COMPACT_MIN_COVER = .6f
-private const val COMPACT_MAX_COVER = .85f
+/** A compact stage: the room above the row's covers for the focus scale, the ring, the pulse and the glow (the scroll area would cut them). */
+private const val COMPACT_ROW_PAD = 48f
 
 /**
  * The size of the covers and where the row starts, stage pixels: a cover is [scale] times the prototype's 300 x 450 (the wide first one
@@ -445,8 +444,9 @@ private const val COMPACT_MAX_COVER = .85f
 private class CoverGeometry(val scale: Float, val start: Float) {
     val tile = ROW_TILE * scale
     val height = ROW_HEIGHT * scale
-    val gap = ROW_GAP * scale
-    val wide = 3 * tile + 2 * gap
+    /** Between two covers: the prototype's 44 scaled, on a compact stage at least the room a focused cover needs ([HomeCompact.coverGap]). */
+    val gap = if (scale < 1f) HomeCompact.coverGap(scale) else ROW_GAP * scale
+    val wide = 3 * tile + 2 * ROW_GAP * scale
     val corner = 26f * scale
 
     /**
@@ -461,17 +461,8 @@ private class CoverGeometry(val scale: Float, val start: Float) {
     fun itemStart(index: Int): Float = if (index == 0) 0f else wide + gap + (index - 1) * (tile + gap)
 }
 
-/** The prototype's covers: a compact stage has its own ([compactCovers]). */
+/** The prototype's covers: a compact stage has its own ([HomeCompact]). */
 private val StandardCovers = CoverGeometry(1f, 150f)
-
-/**
- * The covers of a compact stage. Their scale leaves the height between the info block under the status bar and the hint bar for them
- * (with the room around them for the focus scale), between [COMPACT_MIN_COVER] and [COMPACT_MAX_COVER].
- */
-private fun compactCovers(stage: StageMetrics): CoverGeometry {
-    val room = stage.stageHeight - Compact.STATUS_BAR - COMPACT_INFO_BLOCK - COMPACT_ROW_BOTTOM
-    return CoverGeometry((room / ROW_HEIGHT).coerceIn(COMPACT_MIN_COVER, COMPACT_MAX_COVER), Compact.SIDE)
-}
 
 /** A wrap round the row glides over the last this many covers (the rest is a quick jump). */
 private const val WRAP_GLIDE_ITEMS = 12
@@ -571,20 +562,22 @@ private fun gameMenuHeader(res: Resources, app: App, hidden: Boolean, running: A
 }
 
 @Composable
-private fun GameInfo(pc: Pc, app: App, modifier: Modifier, reducedMotion: Boolean, matchGameColors: Boolean) {
+private fun GameInfo(pc: Pc, app: App, home: HomeCompactLayout?, modifier: Modifier, reducedMotion: Boolean, matchGameColors: Boolean) {
     val colors = LocalDelosColors.current
     val art = appArt(pc, app)
-    // A compact stage shows the title smaller in a shorter box, without the "Game info" label, and lets the pills use the whole width
+    // A compact stage shows the title smaller in a shorter box ([home] says how tall), without the "Game info" label, and lets the pills use the whole width
     val stage = LocalStage.current
-    val compact = stage.compact
-    val titleBox = if (compact) COMPACT_TITLE_BOX else 200f
-    val logoHeight = if (compact) COMPACT_LOGO_HEIGHT else 180f
+    val compact = home != null
+    val titleBox = home?.titleBox ?: 200f
+    // The logo keeps 10 px of air above and below in its box, 4 in a box that is only as tall as the title
+    val logoPad = if (home != null && home.titleBox < 100f) 4f else 10f
+    val logoHeight = if (home != null) home.titleBox - 2f * logoPad else 180f
     val logoWidth = if (compact) minOf(900f, stage.stageWidth - 2f * Compact.SIDE) else 900f
     Column(modifier) {
         val logo by rememberArtworkResult(LocalArtwork.current, pc, app, ArtKind.LOGO)
         val logoImage = logo.image
         // The SteamGridDB logo stands in for the icon and the name
-        if (logoImage != null) Box(Modifier.height(titleBox.px).padding(vertical = 10.px), contentAlignment = Alignment.CenterStart) {
+        if (logoImage != null) Box(Modifier.height(titleBox.px).padding(vertical = logoPad.px), contentAlignment = Alignment.CenterStart) {
             Box(Modifier.gameTitleEntrance(homeKey(pc, app), logoImage, reducedMotion)) {
                 Image(
                     logoImage, contentDescription = app.name, contentScale = ContentScale.Fit, alignment = Alignment.CenterStart,
@@ -602,7 +595,8 @@ private fun GameInfo(pc: Pc, app: App, modifier: Modifier, reducedMotion: Boolea
                     )
                 }
             }
-        } else if (logo.resolved) Row(Modifier.height(titleBox.px), verticalAlignment = Alignment.CenterVertically) {
+        // A compact stage stands the title on the bottom of its box, as a logo fills it: the gap to the pills under it is the same for every game
+        } else if (logo.resolved) Row(Modifier.height(titleBox.px), verticalAlignment = if (compact) Alignment.Bottom else Alignment.CenterVertically) {
             val size = when {
                 app.name.length > 22 -> if (compact) 44 else 56
                 app.name.length > 13 -> if (compact) 50 else 68
@@ -617,7 +611,10 @@ private fun GameInfo(pc: Pc, app: App, modifier: Modifier, reducedMotion: Boolea
                     brush = Brush.verticalGradient(.25f to colors.text, 1f to hsl(HeroBitmaps.hue(homeKey(pc, app)) ?: art.hue2, 70f, 58f)),
                     fontFamily = Unbounded, fontWeight = FontWeight.Bold, fontSize = size.tpx, letterSpacing = (-.01).em,
                 ),
-                modifier = Modifier.padding(end = (if (compact) Compact.SIDE else 150f).px).gameTitleEntrance(homeKey(pc, app), null, reducedMotion),
+                // A compact stage's box may be lower than the line of the title: the line is centred on it, not cut to it
+                modifier = Modifier.padding(end = (if (compact) Compact.SIDE else 150f).px)
+                    .then(if (compact) Modifier.wrapContentHeight(unbounded = true) else Modifier)
+                    .gameTitleEntrance(homeKey(pc, app), null, reducedMotion),
             )
         } else Box(Modifier.height(titleBox.px)) // Keep the title space while the logo lookup is pending.
         val metadata = LocalGameMetadata.current.entry(pc, app).data
@@ -646,7 +643,7 @@ private fun GameInfo(pc: Pc, app: App, modifier: Modifier, reducedMotion: Boolea
             ),
         )
         InfoRow(
-            Modifier.padding(top = if (showLabel) 8.px else 10.px).widthIn(max = (if (compact) stage.stageWidth - 2f * Compact.SIDE else 1620f).px),
+            Modifier.padding(top = if (home != null) home.titleGap.px else if (showLabel) 8.px else 10.px).widthIn(max = (if (compact) stage.stageWidth - 2f * Compact.SIDE else 1620f).px),
             hasTags = hasTags,
             tags = {
                 if (genres.isNotEmpty()) GenrePill(genres, gameColors)
@@ -825,6 +822,7 @@ private fun GameTile(
                     titleSize = (if (wide) 72f else 34f) * geometry.scale.coerceAtLeast(.8f).coerceAtMost(1f),
                     titleInset = (if (wide) 44f else 26f) * geometry.scale.coerceAtLeast(.7f),
                     titleBottom = (if (wide) 40f else 26f) * geometry.scale,
+                    titleFit = geometry.scale < 1f,
                 )
             }
         }

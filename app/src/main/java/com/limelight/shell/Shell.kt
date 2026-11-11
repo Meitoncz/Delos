@@ -626,10 +626,12 @@ fun Shell(
 
     // The keyboard never covers the text field being edited: the dialog or the page content that holds it moves up (docs/GUI.md, "Text input")
     val imeAvoidance = rememberImeAvoidance()
+    // Where the status bar's Wi-Fi, battery and clock start: the start screen's profile chip keeps clear of them on a compact stage
+    val statusEdges = remember { com.limelight.shell.ui.StatusBarEdges() }
     CompositionLocalProvider(
         LocalShell provides shell, LocalFocusTracker provides tracker, LocalGameActions provides actions, LocalDeviceActions provides devices,
         LocalBackdropHaze provides backdropHaze, LocalLibrary provides library, LocalImeAvoidance provides imeAvoidance,
-        com.limelight.shell.screens.LocalLinkTests provides linkTests,
+        com.limelight.shell.screens.LocalLinkTests provides linkTests, com.limelight.shell.ui.LocalStatusBarEdges provides statusEdges,
     ) {
         Box(Modifier.fillMaxSize()) {
             // The blur source re-records the whole screen every frame, so it is only active while an overlay
