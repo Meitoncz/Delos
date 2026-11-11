@@ -105,7 +105,6 @@ fun StartScreen(profiles: Profiles, store: ProfileStore, pcs: List<Pc>, startup:
                         metaDot = if (pc.online) OnlineGreen else null,
                         big = true,
                         selected = default,
-                        pulse = pc.online,
                         contextMenu = startMenu(res, pc, default, actions),
                     )
                 }

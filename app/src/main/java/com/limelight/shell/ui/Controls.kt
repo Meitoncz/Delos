@@ -421,7 +421,9 @@ fun Circles(content: @Composable RowScope.() -> Unit) {
         // The scroll area gets the room of a focused circle's glow on every side (taken back from the layout), so nothing of the focus is cut;
         // a compact stage also keeps a little air above and below for the ring next to the headline
         ScrollRow(
-            Modifier.fillMaxWidth(), gap = c.GAP, centered = true, edge = if (compact) c.EDGE else 40f,
+            // A compact stage keeps the 48 px outer margin: the row's place is that much narrower on each side, so circles that would reach
+            // closer to the edge scroll instead (the 16:9 row is as wide as the stage)
+            Modifier.fillMaxWidth().then(if (compact) Modifier.padding(horizontal = Compact.MARGIN.px) else Modifier), gap = c.GAP, centered = true, edge = if (compact) c.EDGE else 40f,
             padVertical = if (compact) c.RING_AIR else 0f, focusMargin = c.FOCUS_MARGIN, bleed = c.GLOW_ROOM,
             arrangement = if (compact) remember(wide, tight) { FitGapArrangement(wide, tight) } else null,
             content = content,
