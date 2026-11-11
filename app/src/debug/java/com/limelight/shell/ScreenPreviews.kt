@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.limelight.R
+import com.limelight.binding.video.PyroWaveRenderer
 import com.limelight.shell.data.LocalArtwork
 import com.limelight.shell.data.LocalBoxArt
 import com.limelight.shell.data.LocalGameMetadata
@@ -44,6 +45,8 @@ import kotlin.math.roundToInt
  *   played, two more hidden) whose covers are the placeholder art; the Home layout is forced to the variant in the preview's own memory
  *   preferences, never in the user's settings.
  * - `artwork`: the Artwork screen of Hades, with fixed choices for every kind.
+ * - `settings`, `settings_search`, `debug_info`, `profile`: the real Settings (first tab), its search, Debug info and Profile screens.
+ * - `game_options`: the real per-game settings screen of Hades (`game_settings` is the older component preview).
  * - `devices`: the Devices screen with GAMING-PC (online, connected), LIVING-ROOM-PC (asleep) and a PC with a very long name (online); the
  *   fourth fake PC, STUDY-LAPTOP, is unpaired and therefore not in this list.
  * - `start`: the start screen with three profiles and GAMING-PC as the default PC.
@@ -62,6 +65,11 @@ internal object ScreenPreviews {
             "home" -> shellPreview(ShellRoute(if (state == "grid") HomeLayout.GRID else HomeLayout.ROW) { Screen.Home })
             "artwork" -> shellPreview(ShellRoute { world -> Screen.Artwork(world.library.pc, world.library.apps.first { it.name == ARTWORK_GAME }) })
             "devices" -> shellPreview(ShellRoute { Screen.Devices })
+            "settings" -> shellPreview(ShellRoute { Screen.Settings })
+            "settings_search" -> shellPreview(ShellRoute { Screen.SettingsSearch })
+            "debug_info" -> shellPreview(ShellRoute { Screen.DebugInfo })
+            "profile" -> shellPreview(ShellRoute { Screen.Profile })
+            "game_options" -> shellPreview(ShellRoute { world -> Screen.GameSettings(world.library.pc, world.library.apps.first { it.name == ARTWORK_GAME }) })
             "start" -> shellPreview(ShellRoute { Screen.Start })
             "pair" -> shellPreview(ShellRoute { Screen.Pin(PreviewFixtures.STUDY_PC, PreviewFixtures.host(PreviewFixtures.STUDY_PC).name, null, Screen.Start) })
             "filter" -> shellPreview(ShellRoute(layer = Layer.Filters) { Screen.Home })
@@ -80,7 +88,13 @@ internal object ScreenPreviews {
         emptyList(), "Pair",
     ) { true }
 
-    private fun shellPreview(route: ShellRoute): @Composable () -> Unit = { ShellPreview(route) }
+    private fun shellPreview(route: ShellRoute): @Composable () -> Unit = {
+        // The native Vulkan probe behind Settings' capabilities dies with SIGILL on the layout emulator (SwiftShader): say "no PyroWave" up front
+        remember {
+            runCatching { PyroWaveRenderer::class.java.getDeclaredField("available").apply { isAccessible = true }.set(null, false) }
+        }
+        ShellPreview(route)
+    }
 
     private val loaderPreview: @Composable () -> Unit = { LoaderPreview() }
     private val resultPreview: @Composable () -> Unit = { ResultPreview() }

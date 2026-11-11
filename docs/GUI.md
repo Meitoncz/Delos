@@ -824,9 +824,9 @@ activity keeps its own orientation logic) and supports windows from 1:1 up to 21
     --es preview_screen home --es preview_state row
   ```
 
-- **Screen previews with fake data** (debug builds, `ScreenPreviews` in `src/debug`, no PC or network): `--es preview_screen <home|artwork|devices|start|pair|filter|dialog|loader|result>`,
+- **Screen previews with fake data** (debug builds, `ScreenPreviews` in `src/debug`, no PC or network): `--es preview_screen <home|artwork|devices|start|pair|filter|dialog|loader|result|settings|settings_search|debug_info|profile|game_options>`,
   `home` with `--es preview_state <row|grid>`; they run next to the older previews (`context_menu`, `top_menu`, `settings_tabs`, `settings_list`,
-  `game_settings`, `stream_menu`, `full_keyboard`, `toast`).
+  `game_settings`, `stream_menu`, `full_keyboard`, `toast`). `settings`, `settings_search`, `debug_info`, `profile` and `game_options` are the real screens (`game_settings` is the older component preview of the per-game list); the preview tells the settings capability probe there is no PyroWave, because its native Vulkan probe dies on the emulator's SwiftShader.
 - **Contact sheets** (`tools/layout/`): `shapes.txt` lists the shapes (names, `W x H @ dpi`, optional cutout), `screens.txt` the previews. `sheets.sh` needs the
   fail-closed adb wrapper and the stream gate helper:
 

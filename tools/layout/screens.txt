@@ -17,6 +17,11 @@ top-menu       | --es preview_screen top_menu                       | 3
 settings-tabs  | --es preview_screen settings_tabs                  | 3
 settings-list  | --es preview_screen settings_list                  | 3
 game-settings  | --es preview_screen game_settings                  | 4
+settings       | --es preview_screen settings                       | 5
+settings-search | --es preview_screen settings_search               | 5
+debug-info     | --es preview_screen debug_info                     | 4
+profile        | --es preview_screen profile                        | 4
+game-options   | --es preview_screen game_options                   | 5
 stream-menu    | --es preview_screen stream_menu --es preview_page main | 4
 full-keyboard  | --es preview_screen full_keyboard                  | 3
 toast          | --es preview_screen toast                          | 3
