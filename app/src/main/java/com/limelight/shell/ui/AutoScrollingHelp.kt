@@ -29,6 +29,8 @@ val LocalReducedMotion = staticCompositionLocalOf { false }
 fun AutoScrollingHelp(
     identity: Any?,
     modifier: Modifier = Modifier,
+    /** The padding above and below the text, which is also the width of the fades at both ends (stage px); a compact dock uses less. */
+    inset: Float = 24f,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val reducedMotion = LocalReducedMotion.current
@@ -49,8 +51,8 @@ fun AutoScrollingHelp(
         }
     }
     Column(modifier.focusProperties { canFocus = false }
-        .fadeEdges(stage, top = if (overflow) 24f else 0f, bottom = if (overflow) 24f else 0f)
+        .fadeEdges(stage, top = if (overflow) inset else 0f, bottom = if (overflow) inset else 0f)
         .verticalScroll(scroll, enabled = reducedMotion)
         // The first and last lines can rest fully outside the fades at the two endpoints.
-        .padding(vertical = 24.px), verticalArrangement = Arrangement.spacedBy(18.px), content = content)
+        .padding(vertical = inset.px), verticalArrangement = Arrangement.spacedBy(18.px), content = content)
 }

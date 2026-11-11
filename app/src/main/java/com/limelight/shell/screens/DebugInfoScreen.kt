@@ -89,6 +89,9 @@ import com.limelight.shell.ui.fadeEdges
 import com.limelight.shell.ui.focusEffects
 import com.limelight.shell.ui.glass
 import com.limelight.shell.ui.px
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
+import com.limelight.shell.ui.StageShape
 import com.limelight.shell.ui.description
 import com.limelight.shell.ui.label
 import com.limelight.shell.ui.text
@@ -476,37 +479,59 @@ fun DebugInfoScreen() {
     val listState = rememberScrollState()
     val bringIntoView = rememberMarginBringIntoView(listState, before = 72f * k, after = 110f * k, stagePx = k)
 
-    Box(Modifier.fillMaxSize()) {
-        BasicText(stringResource(R.string.debug_title), style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx),
-            modifier = Modifier.offset(150.px, 124.px))
-        Row(Modifier.fillMaxSize().padding(start = 150.px, end = 150.px, top = 230.px, bottom = 110.px), horizontalArrangement = Arrangement.spacedBy(56.px)) {
-            CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView, com.limelight.shell.ui.LocalEntranceStagger provides com.limelight.shell.ui.rememberEntranceStagger()) {
-                // One ring glides between the rows; the host carries the list's weight and faded edges, so the ring fades with the rows
-                SettingRowList(Modifier.weight(1f).fadeEdges(stage, top = 14f, bottom = 90f)) {
-                    Column(
-                        Modifier.fillMaxSize().focusedListBoundary(navigation).verticalScroll(listState)
-                            .padding(start = 18.px, end = 18.px, top = 14.px, bottom = 140.px),
-                        verticalArrangement = Arrangement.spacedBy(10.px),
-                    ) {
-                        var previous: DebugSection? = null
-                        rows.forEach { row ->
-                            if (row.section != previous) {
-                                val section = row.section
-                                key("section-${section.name}") {
-                                    BasicText(stringResource(section.title).uppercase(Locale.ROOT), style = TextStyle(color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 16.tpx, letterSpacing = .08.em),
-                                        modifier = Modifier.padding(start = 26.px, top = 10.px, bottom = 2.px))
-                                }
-                                previous = section
+    val compact = stage.shape == StageShape.COMPACT
+    val margin = SettingsLayout.margin(stage)
+    val list: @Composable (Modifier) -> Unit = { listModifier ->
+        CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView, com.limelight.shell.ui.LocalEntranceStagger provides com.limelight.shell.ui.rememberEntranceStagger()) {
+            // One ring glides between the rows; the host carries the list's weight and faded edges, so the ring fades with the rows
+            SettingRowList(listModifier.fadeEdges(stage, top = 14f, bottom = 90f)) {
+                Column(
+                    Modifier.fillMaxSize().focusedListBoundary(navigation).verticalScroll(listState)
+                        .padding(start = 18.px, end = 18.px, top = 14.px, bottom = 140.px),
+                    verticalArrangement = Arrangement.spacedBy(10.px),
+                ) {
+                    var previous: DebugSection? = null
+                    rows.forEach { row ->
+                        if (row.section != previous) {
+                            val section = row.section
+                            key("section-${section.name}") {
+                                BasicText(stringResource(section.title).uppercase(Locale.ROOT), style = TextStyle(color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 16.tpx, letterSpacing = .08.em),
+                                    modifier = Modifier.padding(start = 26.px, top = 10.px, bottom = 2.px))
                             }
-                            key(row.key) {
-                                SettingRow(row.icon, row.label, row.value, Modifier.focusedListRow(navigation, row.key),
-                                    description = row.description.takeIf { it.length <= 100 }, onFocused = { focusedKey = row.key })
-                            }
+                            previous = section
+                        }
+                        key(row.key) {
+                            SettingRow(row.icon, row.label, row.value, Modifier.focusedListRow(navigation, row.key),
+                                description = row.description.takeIf { it.length <= 100 }, onFocused = { focusedKey = row.key })
                         }
                     }
                 }
             }
-            DetailsPanel(focused, Modifier.width(520.px))
+        }
+    }
+    Box(Modifier.fillMaxSize()) {
+        if (compact) {
+            // Compact: the title is smaller and sits under the status bar, the list takes the full width, the details are a dock under it
+            BasicText(stringResource(R.string.debug_title), style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx),
+                modifier = Modifier.offset(margin.px, 108.px))
+            Column(Modifier.fillMaxSize().padding(start = margin.px, end = margin.px, top = 184.px, bottom = 100.px),
+                verticalArrangement = Arrangement.spacedBy(16.px)) {
+                list(Modifier.weight(1f).fillMaxWidth())
+                HelpDock(Modifier.fillMaxWidth().height(SettingsLayout.DOCK_HEIGHT.px), focused?.icon ?: Symbols.INFO, focused?.label ?: stringResource(R.string.debug_title), focused?.key, false) {
+                    BasicText(focused?.description ?: stringResource(R.string.debug_panel_default),
+                        style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 21.tpx, lineHeight = 1.45.em))
+                    focused?.details?.let {
+                        BasicText(it, style = TextStyle(color = colors.text3, fontFamily = FontFamily.Monospace, fontSize = 16.tpx, lineHeight = 1.4.em))
+                    }
+                }
+            }
+        } else {
+            BasicText(stringResource(R.string.debug_title), style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx),
+                modifier = Modifier.offset(150.px, 124.px))
+            Row(Modifier.fillMaxSize().padding(start = 150.px, end = 150.px, top = 230.px, bottom = 110.px), horizontalArrangement = Arrangement.spacedBy(56.px)) {
+                list(Modifier.weight(1f))
+                DetailsPanel(focused, Modifier.width(520.px))
+            }
         }
     }
 }

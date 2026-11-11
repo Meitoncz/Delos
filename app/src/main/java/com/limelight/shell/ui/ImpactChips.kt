@@ -87,9 +87,12 @@ internal fun ImpactChip(glyph: String, level: ImpactLevel, glyphColor: Color, mo
     }
 }
 
-/** The legend of the chips, shown under the help text while a row with chips is focused: the three glyphs and what the bars mean. */
+/**
+ * The legend of the chips, shown under the help text while a row with chips is focused: the three glyphs and what the bars mean.
+ * [sentence] false leaves out the explanation (the compact dock sets it apart, see [ImpactLegendSentence]).
+ */
 @Composable
-internal fun ImpactLegend(modifier: Modifier = Modifier) {
+internal fun ImpactLegend(modifier: Modifier = Modifier, sentence: Boolean = true) {
     val colors = LocalDelosColors.current
     val small = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 18.tpx)
     Column(modifier, verticalArrangement = Arrangement.spacedBy(6.px)) {
@@ -97,10 +100,16 @@ internal fun ImpactLegend(modifier: Modifier = Modifier) {
             IMPACT_AXES.forEach { (name, glyph) ->
                 Row(horizontalArrangement = Arrangement.spacedBy(6.px), verticalAlignment = Alignment.CenterVertically) {
                     Symbol(glyph, 22.tpx, colors.text2)
-                    BasicText(stringResource(name), style = small)
+                    BasicText(stringResource(name), style = small, maxLines = 1)
                 }
             }
         }
-        BasicText(stringResource(R.string.impact_legend), style = small)
+        if (sentence) ImpactLegendSentence()
     }
+}
+
+/** What the bars of the chips mean, in one sentence. */
+@Composable
+internal fun ImpactLegendSentence() {
+    BasicText(stringResource(R.string.impact_legend), style = TextStyle(color = LocalDelosColors.current.text3, fontFamily = Figtree, fontSize = 18.tpx))
 }
