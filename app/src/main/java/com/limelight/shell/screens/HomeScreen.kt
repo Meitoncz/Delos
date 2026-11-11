@@ -450,8 +450,8 @@ private const val GRID_MIN_SIDE = (1920f - 5 * ROW_TILE - 4 * ROW_GAP) / 2f
 /** The covers across the grid: as many 300 px covers with their gaps as fit the stage with [GRID_MIN_SIDE] on each side (5 at 1920, at least 3 for the wide first cover). */
 private fun gridColumns(stageWidth: Float): Int = ((stageWidth - 2 * GRID_MIN_SIDE + ROW_GAP) / (ROW_TILE + ROW_GAP)).toInt().coerceAtLeast(3)
 
-/** The grid's side padding that centres [columns] covers and their gaps in the stage; [GRID_MIN_SIDE] at five columns in 1920. */
-private fun gridSidePadding(stageWidth: Float, columns: Int): Float = (stageWidth - columns * ROW_TILE - (columns - 1) * ROW_GAP) / 2f
+/** The grid's side padding that centres [columns] covers and their gaps in the stage; [GRID_MIN_SIDE] at five columns in 1920. Never negative: a stage too narrow for three covers keeps the grid at the edge (a compact layout is phase C of #9) instead of crashing. */
+private fun gridSidePadding(stageWidth: Float, columns: Int): Float = ((stageWidth - columns * ROW_TILE - (columns - 1) * ROW_GAP) / 2f).coerceAtLeast(0f)
 
 /** Where item [index] starts in the row, from the start of its content (stage pixels). */
 private fun rowItemStart(index: Int): Float = if (index == 0) 0f else ROW_WIDE + ROW_GAP + (index - 1) * (ROW_TILE + ROW_GAP)
