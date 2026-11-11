@@ -26,6 +26,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
@@ -194,8 +196,7 @@ class StreamStatsPanel internal constructor(
         val s = stats.value ?: return
         val compact = compactState.value
         Box(
-            // A compact stage keeps its 48 px margin
-            Modifier.fillMaxWidth().padding(horizontal = (if (LocalStage.current.compact) 48 else 40).px, vertical = if (compact) StreamMenuLayout.STATS_COMPACT_TOP.px else 32.px),
+            Modifier.fillMaxWidth().padding(horizontal = 40.px, vertical = if (compact) StreamMenuLayout.STATS_COMPACT_TOP.px else 32.px),
             contentAlignment = when {
                 compact -> Alignment.TopCenter
                 position.start -> Alignment.TopStart
@@ -212,15 +213,20 @@ class StreamStatsPanel internal constructor(
     /** The classic Lite line: FPS, bandwidth, network and decoding delay, lost frames. */
     @Composable
     private fun CompactLine(s: StreamStats, modifier: Modifier) {
+        // A compact stage narrower than the line breaks it in two: only after a separator, never inside a figure ("Network 11 ms" stays whole)
+        val wraps = LocalStage.current.compact
+        fun figures(text: String) = if (wraps) keepFigures(text) else text
         BasicText(
             buildAnnotatedString {
-                withStyle(SpanStyle(color = FPS_GREEN, fontWeight = FontWeight.SemiBold)) { append("${s.fps.toInt()} FPS") } // l10n-ignore
-                if (s.onePercentLowFps >= 0f) append("  ·  " + stringResource(R.string.stream_stats_compact_low, s.onePercentLowFps.toInt()))
-                if (s.bandwidthKb >= 0f) append("  ·  ${bandwidth(s.bandwidthKb)}")
-                append("  ·  " + stringResource(R.string.stream_stats_compact_tail, s.networkMs, format(s.decodeMs), format(s.totalMs), format(s.lossPercent)))
+                withStyle(SpanStyle(color = FPS_GREEN, fontWeight = FontWeight.SemiBold)) { append(figures("${s.fps.toInt()} FPS")) } // l10n-ignore
+                if (s.onePercentLowFps >= 0f) append(figures("  ·  " + stringResource(R.string.stream_stats_compact_low, s.onePercentLowFps.toInt())))
+                if (s.bandwidthKb >= 0f) append(figures("  ·  ${bandwidth(s.bandwidthKb)}"))
+                append(figures("  ·  " + stringResource(R.string.stream_stats_compact_tail, s.networkMs, format(s.decodeMs), format(s.totalMs), format(s.lossPercent))))
             },
             modifier.padding(horizontal = 24.px, vertical = StreamMenuLayout.STATS_COMPACT_PADDING_Y.px),
-            style = TextStyle(color = PANEL_TEXT, fontFamily = Figtree, fontSize = StreamMenuLayout.STATS_COMPACT_TEXT_SIZE.tpx, lineHeight = StreamMenuLayout.STATS_COMPACT_LINE_HEIGHT.em, fontFeatureSettings = "tnum"),
+            // two balanced, centred lines there, not one figure alone on the second
+            style = TextStyle(color = PANEL_TEXT, fontFamily = Figtree, fontSize = StreamMenuLayout.STATS_COMPACT_TEXT_SIZE.tpx, lineHeight = StreamMenuLayout.STATS_COMPACT_LINE_HEIGHT.em, fontFeatureSettings = "tnum")
+                .let { if (wraps) it.copy(textAlign = TextAlign.Center, lineBreak = LineBreak.Heading) else it },
         )
     }
 
@@ -318,4 +324,21 @@ class StreamStatsPanel internal constructor(
         private val PANEL_TEXT = Color(0xFFE8F0FF)
         private val FPS_GREEN = Color(0xFF7EE2A8)
     }
+}
+
+/**
+ * [text] with every space made non-breaking except the ones right after a middle dot: the statistics line may then wrap only between
+ * two figures, after the separator.
+ */
+internal fun keepFigures(text: String): String {
+    val out = StringBuilder(text.length)
+    var afterDot = false
+    for (c in text) {
+        when {
+            c == '\u00B7' -> { out.append(c); afterDot = true }
+            c == ' ' -> out.append(if (afterDot) ' ' else '\u00A0')
+            else -> { out.append(c); afterDot = false }
+        }
+    }
+    return out.toString()
 }

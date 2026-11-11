@@ -93,13 +93,26 @@ import androidx.compose.ui.layout.layout
 import com.limelight.shell.data.rememberAvatarGradient
 import com.limelight.shell.data.rememberAvatarImage
 
+/** A compact stage's centred column that scrolls: the focused element stays this far from the cut edges (a circle's glow reaches about 80 px), which fade over [CENTER_FADE]. */
+private const val CENTER_FOCUS_ROOM = 96f
+private const val CENTER_FADE = 48f
+
 /** `.center-col`: a centered column. */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CenterColumn(gap: Float, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
     val stage = LocalStage.current
     if (stage.compact) {
         // A compact stage is short: the column keeps clear of the status and hint bars (which the interface scale zooms), its gaps shrink
-        // with the stage, and what is still too tall (the avatar picker's rows) scrolls, with the focus scrolled into view
+        // with the stage, and what is still too tall (the avatar picker's rows) scrolls: the focused element keeps its glow's reach from
+        // the cut edges, which fade while there is more beyond them. The column is as wide as the stage, so nothing is cut at its sides
+        val scroll = rememberScrollState()
+        val k = stage.dpPerPx * LocalDensity.current.density
+        val bringIntoView = rememberMarginBringIntoView(scroll, before = CENTER_FOCUS_ROOM * k, after = CENTER_FOCUS_ROOM * k, stagePx = k)
+        val more by remember(scroll) { derivedStateOf { (scroll.value > 0) to (scroll.value < scroll.maxValue) } }
+        val topFade by animateFloatAsState(if (more.first) 1f else 0f, tween(Motion.FADE, easing = Motion.Ease), label = "centerTopFade")
+        val bottomFade by animateFloatAsState(if (more.second) 1f else 0f, tween(Motion.FADE, easing = Motion.Ease), label = "centerBottomFade")
+        val scrolls = scroll.maxValue in 1 until Int.MAX_VALUE
         Box(
             modifier.fillMaxSize().padding(
                 top = (Compact.STATUS_BAR * stage.textScale + stage.safe.top).px, bottom = (Compact.HINT_BAR * stage.textScale + stage.safe.bottom).px,
@@ -107,12 +120,21 @@ fun CenterColumn(gap: Float, modifier: Modifier = Modifier, content: @Composable
             contentAlignment = Alignment.Center,
         ) {
             EntranceScope {
-                Column(
-                    Modifier.verticalScroll(rememberScrollState()).padding(horizontal = Compact.MARGIN.px, vertical = 24.px),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy((gap * stage.compactScale).px),
-                    content = content,
-                )
+                CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
+                    Column(
+                        Modifier
+                            .fillMaxWidth()
+                            .then(
+                                if (scrolls) Modifier.fadeMask(stage, vertical = true, startClear = 0f, startSolid = CENTER_FADE * topFade, endSolid = CENTER_FADE * bottomFade, endClear = 0f)
+                                else Modifier
+                            )
+                            .verticalScroll(scroll)
+                            .padding(horizontal = Compact.MARGIN.px, vertical = 24.px),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy((gap * stage.compactScale).px),
+                        content = content,
+                    )
+                }
             }
         }
         return
