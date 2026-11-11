@@ -312,7 +312,7 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
     val home = remember(stage.stageWidth, stage.stageHeight, stage.shape, stage.safe, uiScale) {
         if (stage.compact) HomeCompact.layout(stage.stageWidth, stage.stageHeight, uiScale, stage.safe.top, stage.safe.bottom) else null
     }
-    val covers = remember(home) { if (home != null) CoverGeometry(home.coverScale, Compact.SIDE) else StandardCovers }
+    val covers = remember(home) { if (home != null) CoverGeometry(home.coverScale, HomeCompact.rowStart(home.coverScale)) else StandardCovers }
 
     val tile: @Composable (Int, App) -> Unit = { index, app ->
         GameTile(
@@ -366,7 +366,7 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
                         alpha = rowAlpha.value
                         translationX = rowBounce.value
                     }
-                    .fadeMask(stage, vertical = false, startClear = 0f, startSolid = 120f * startFade, endSolid = 260f * endFade, endClear = 20f * endFade)
+                    .fadeMask(stage, vertical = false, startClear = 0f, startSolid = 120f * startFade, endSolid = (if (compact) HomeCompact.FADE_SOLID else 260f) * endFade, endClear = (if (compact) HomeCompact.FADE_CLEAR else 20f) * endFade)
                     // Left on the first game goes round to the last one, right on the last one back to the first
                     .onPreviewKeyEvent { event ->
                         if (event.type != KeyEventType.KeyDown || apps.size < 2) return@onPreviewKeyEvent false

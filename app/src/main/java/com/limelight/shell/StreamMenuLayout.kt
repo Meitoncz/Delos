@@ -311,9 +311,6 @@ internal class DockGeometry(
      */
     val hintsInRow = compact && height < LOW_STAGE
 
-    /** The height of the block above the tiles: the game's name and the hints. */
-    val headHeight = c.TITLE_SIZE * c.TITLE_LINE_HEIGHT + c.HEAD_GAP + c.HINT_GLYPH_SIZE + if (hintsInRow) 0f else c.HINTS_GAP + c.HINT_GLYPH_SIZE
-
     /** The ring's top edge relative to the tiles' top edge (negative: it reaches above the tile). */
     val ringTop = (tile - ring) / 2f
     val popoverMinLeft = margin

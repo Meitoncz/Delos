@@ -28,6 +28,10 @@ class DockGeometryTest {
         "retroid mini" to stage(1280f, 960f, 430f, textScale), "micro" to stage(960f, 640f, 330f, textScale), "dds top" to stage(1200f, 720f, 300f, textScale),
     )
 
+    /** The block above the tiles as the stage sets it for a one-line name: the name, the gap and the hints (side by side or stacked). */
+    private fun headHeight(g: DockGeometry) =
+        c.TITLE_SIZE * c.TITLE_LINE_HEIGHT + c.HEAD_GAP + c.HINT_GLYPH_SIZE + if (g.hintsInRow) 0f else c.HINTS_GAP + c.HINT_GLYPH_SIZE
+
     @Test
     fun theOdinKeepsThePrototypesDock() {
         val g = DockGeometry.forStage(stage(1920f, 1080f, 369f))
@@ -46,7 +50,7 @@ class DockGeometryTest {
         assertEquals(1f, stage(1920f, 1080f, 369f).compactScale, 0f)
         // 21:9 keeps it too (a 1440 x 1080 panel at this density is a compact stage: 1440 stage pixels across)
         assertTrue(DockGeometry.forStage(stage(2520f, 1080f, 369f)) === DockGeometry.Standard)
-        assertEquals(163.4f, g.headHeight, .01f)
+        assertEquals(163.4f, headHeight(g), .01f)
     }
 
     @Test
@@ -142,7 +146,7 @@ class DockGeometryTest {
             // The game's name and the hints above the dock stay on the stage (the compact statistics line ends at about 69)
             // (a stage under 800 high sets the two hints side by side for that)
             assertEquals("$name hints", s.stageHeight < 800f, g.hintsInRow)
-            val headTop = s.stageHeight - g.dockHeight - c.HEAD_BOTTOM - g.headHeight
+            val headTop = s.stageHeight - g.dockHeight - c.HEAD_BOTTOM - headHeight(g)
             assertTrue("$name at $textScale head top $headTop", headTop >= compactStatsBottom(textScale) + 16f)
         }
     }

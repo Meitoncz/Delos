@@ -5,7 +5,6 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
@@ -24,9 +23,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.mutableIntStateOf
@@ -299,16 +301,48 @@ fun MotionSwitch(on: Boolean, width: Float, height: Float, offTrack: Color, modi
 
 // ---- The gliding ring ----
 
-/** Where the ring of a [GlideRingHost] goes: the element that has the focus reports its bounds here. */
+/**
+ * Where the ring of a [GlideRingHost] goes: the element that has the focus reports its bounds here.
+ *
+ * The ring is drawn at the focused element's bounds *of this very frame* plus a [carry] that shrinks to nothing as the glide
+ * [progress]es: it never animates towards a position in window space. A row that scrolls (the focus brings the next circle into view)
+ * therefore moves its ring with it, and at rest the ring sits exactly on the element. The glide itself only exists while the element
+ * keeps its place: the moment the focused element's bounds change (a scroll, a layout) the carry is dropped, so the ring is locked
+ * to what the user sees. A new focus starts from where the ring is drawn right then (the old element's current on-screen bounds
+ * plus what is left of the carry), cancelling the running glide: fast presses never queue animations.
+ */
 @Stable
-class GlideRing {
+class GlideRing internal constructor(private val scope: CoroutineScope) {
     private var host: LayoutCoordinates? = null
     private var holder: Any? = null
     private var holderCoordinates: LayoutCoordinates? = null
+    private var job: Job? = null
+
+    /** Whether a new focus may glide from the ring's place (set by the host: the ring is visible, motion is not reduced, the screen has settled). */
+    internal var canGlide: () -> Boolean = { false }
 
     /** The focused element's bounds in the host's coordinates, null while nothing in the host has the focus. */
     var target by mutableStateOf<Rect?>(null)
         private set
+
+    /** The last bounds the ring was on (it stays there while it fades out). */
+    private var last: Rect? = null
+
+    /** What the ring still trails [target] by (left, top, right, bottom differences) until [progress] reaches 1. */
+    private var carry by mutableStateOf(Rect.Zero)
+    private var progress by mutableFloatStateOf(1f)
+
+    /** Where the ring is drawn now (before growing by the focus scale), null before it has ever been placed. */
+    internal fun shown(): Rect? {
+        val base = target ?: last ?: return null
+        return trail(base)
+    }
+
+    private fun trail(base: Rect): Rect {
+        val rest = 1f - progress
+        val c = carry
+        return Rect(base.left + c.left * rest, base.top + c.top * rest, base.right + c.right * rest, base.bottom + c.bottom * rest)
+    }
 
     /** Re-reads the focused element's bounds (its layer may have moved without a layout, like an entrance rising). */
     internal fun refresh() = update()
@@ -319,9 +353,25 @@ class GlideRing {
     }
 
     internal fun focus(key: Any, coordinates: LayoutCoordinates) {
+        // Where the ring is drawn right now: the old element's bounds as they are on screen this moment, plus what is left of the carry
+        val from = (holderCoordinates?.let { bounds(it) } ?: last)?.let { trail(it) }
+        val glide = from != null && canGlide()
         holder = key
         holderCoordinates = coordinates
-        update()
+        job?.cancel()
+        val now = bounds(coordinates) ?: return
+        last = now
+        target = now
+        if (glide && from != null) {
+            carry = Rect(from.left - now.left, from.top - now.top, from.right - now.right, from.bottom - now.bottom)
+            progress = 0f
+            job = scope.launch {
+                Animatable(0f).animateTo(1f, tween(Motion.RING, easing = Motion.Glide)) { progress = value }
+            }
+        } else {
+            carry = Rect.Zero
+            progress = 1f
+        }
     }
 
     internal fun blur(key: Any) {
@@ -338,12 +388,21 @@ class GlideRing {
         }
     }
 
+    private fun bounds(c: LayoutCoordinates): Rect? {
+        val h = host ?: return null
+        if (!h.isAttached || !c.isAttached) return null
+        return h.localBoundingBoxOf(c, clipBounds = false)
+    }
+
     private fun update() {
-        val h = host ?: return
-        val c = holderCoordinates ?: return
-        if (!h.isAttached || !c.isAttached) return
-        val bounds = h.localBoundingBoxOf(c, clipBounds = false)
-        if (bounds != target) target = bounds
+        val now = holderCoordinates?.let { bounds(it) } ?: return
+        if (now == target) return
+        // The focused element is somewhere else than it was (scrolled, laid out again): the ring is on it, with nothing left to catch up
+        target = now
+        last = now
+        job?.cancel()
+        carry = Rect.Zero
+        progress = 1f
     }
 }
 
@@ -373,15 +432,17 @@ fun GlideRingHost(
     val colors = LocalDelosColors.current
     val stage = LocalStage.current
     val reduced = LocalReducedMotion.current
-    val state = remember { GlideRing() }
-    val box = remember { Animatable(Rect.Zero, Rect.VectorConverter) }
+    val scope = rememberCoroutineScope()
+    val state = remember { GlideRing(scope) }
     val alpha = remember { Animatable(0f) }
-    val target = state.target
+    // Read in a derived state: the bounds move with every scrolled frame, whether there is a target is all the composition needs
+    val placed by remember(state) { derivedStateOf { state.target != null } }
     // While the screen is still entering (its elements rise and fade in) the ring follows the element exactly instead of
     // gliding to where it was measured: the first frames after the ring appears
     var followUntil by remember { mutableLongStateOf(0L) }
-    LaunchedEffect(target != null) {
-        if (target == null) return@LaunchedEffect
+    SideEffect { state.canGlide = { alpha.value > 0f && !reduced && System.nanoTime() >= followUntil } }
+    LaunchedEffect(placed) {
+        if (!placed) return@LaunchedEffect
         val until = System.nanoTime() + Motion.RING_FOLLOW_MS * 1_000_000L
         followUntil = until
         while (System.nanoTime() < until) {
@@ -389,24 +450,18 @@ fun GlideRingHost(
             state.refresh()
         }
     }
-    LaunchedEffect(target != null) {
-        if (target != null) alpha.animateTo(1f, tween(120, easing = Motion.Ease))
+    LaunchedEffect(placed) {
+        if (placed) alpha.animateTo(1f, tween(120, easing = Motion.Ease))
         else {
             // A moment of grace: focus moving from one element to the next passes through "nothing focused" for a frame
             delay(70)
             alpha.animateTo(0f, tween(Motion.FADE, easing = Motion.Ease))
         }
     }
-    LaunchedEffect(target) {
-        if (target == null) return@LaunchedEffect
-        val grown = target.grownBy(focusScale)
-        if (alpha.value == 0f || reduced || System.nanoTime() < followUntil) box.snapTo(grown)
-        else box.animateTo(grown, tween(Motion.RING, easing = Motion.Glide))
-    }
     val drawRing: DrawScope.() -> Unit = {
         val a = alpha.value
-        val r = box.value
-        if (a > 0f && r.width > 0f) {
+        val r = state.shown()?.grownBy(focusScale)
+        if (a > 0f && r != null && r.width > 0f) {
             val o = offset()
             val s = scale()
             withTransform({

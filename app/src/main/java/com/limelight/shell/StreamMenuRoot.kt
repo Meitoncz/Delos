@@ -100,7 +100,7 @@ internal fun StreamMenuRoot(
     val res = textResources()
     // The dock of this stage: the prototype's, or a compact stage's row that scrolls and nearer margins
     val stageMetrics = LocalStage.current
-    val dock = remember(stageMetrics.stageWidth, stageMetrics.shape, stageMetrics.textScale) { DockGeometry.forStage(stageMetrics) }
+    val dock = remember(stageMetrics.stageWidth, stageMetrics.stageHeight, stageMetrics.shape, stageMetrics.textScale) { DockGeometry.forStage(stageMetrics) }
     val stagePixel = stageScale()
     // A compact stage's row of tiles scrolls: it starts where the tile the menu opens on (or whose page it opens on) is in view
     val dockScroll = rememberScrollState((dockScrollFor(start.page.barItem() ?: start.focus, 0f, dock) * stagePixel).roundToInt())

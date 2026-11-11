@@ -1,6 +1,7 @@
 package com.limelight.shell.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -166,9 +167,10 @@ fun SideMenuLayer(
 }
 
 /**
- * The scrolling rows of the side menu. The content padding leaves room for the focus scale and ring of the
- * first and last row (the scroll area clips to its bounds), the edges fade out like the other lists and the
- * focused row is scrolled clear of the fades.
+ * The scrolling rows of the side menu. The scroll area and its fade layer are [GLOW_SIDE] / [GLOW_VERTICAL] larger than their place on each
+ * side (overdraw, the content padded by the same), so the focus scale, ring and glow of the first, last and widest row are never cut by
+ * the scroll container or the fade layer. The fade sits at the place's edges and only exists while there is more to scroll that way; the
+ * focused row is scrolled clear of it.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -176,21 +178,32 @@ fun <K : Any> ColumnScope.SideMenuScroll(navigation: FocusedListNavigation<K>, c
     val stage = LocalStage.current
     val k = stage.dpPerPx * LocalDensity.current.density
     val sideScroll = rememberScrollState()
-    val bringIntoView = rememberMarginBringIntoView(sideScroll, before = 40f * k, after = 56f * k, stagePx = k)
+    val bringIntoView = rememberMarginBringIntoView(sideScroll, before = (40f + GLOW_VERTICAL) * k, after = (56f + GLOW_VERTICAL) * k, stagePx = k)
+    val topFade by animateFloatAsState(if (sideScroll.canScrollBackward) 1f else 0f, tween(300), label = "sideTopFade")
+    val bottomFade by animateFloatAsState(if (sideScroll.canScrollForward) 1f else 0f, tween(300), label = "sideBottomFade")
     CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
-        SettingRowList(Modifier.weight(1f).fadeEdges(stage, top = 16f, bottom = 40f)) {
+        SettingRowList(
+            Modifier.weight(1f).overdraw(GLOW_SIDE.px, GLOW_VERTICAL.px).fadeMask(
+                stage, vertical = true,
+                startClear = GLOW_VERTICAL * topFade, startSolid = (GLOW_VERTICAL + 16f) * topFade,
+                endSolid = (GLOW_VERTICAL + 40f) * bottomFade, endClear = GLOW_VERTICAL * bottomFade,
+            ),
+        ) {
             Column(
                 Modifier
                     .fillMaxWidth()
                     .focusedListBoundary(navigation)
                     .verticalScroll(sideScroll)
-                    .padding(horizontal = 14.px, vertical = 18.px),
+                    .padding(horizontal = (14f + GLOW_SIDE).px, vertical = (18f + GLOW_VERTICAL).px),
                 verticalArrangement = Arrangement.spacedBy(10.px),
                 content = content,
             )
         }
     }
 }
+
+private const val GLOW_SIDE = 40f
+private const val GLOW_VERTICAL = 56f
 
 /** Profile header of the side menu (`.side-head`). */
 @Composable

@@ -79,9 +79,12 @@ class HomeCompactLayoutTest {
             val l = c.layout(stage.first, stage.second, scale)
             val s = l.coverScale
             val tile = c.TILE * s
-            // The wide cover, a whole cover and at least a third of the next one end on the stage
-            val shown = stage.first - (Compact.SIDE + c.WIDE * s + c.coverGap(s) + tile + c.coverGap(s))
-            assertTrue("${name(stage)} at $scale shows $shown of a $tile cover", shown >= tile / 3f - 6f)
+            // The focused wide cover (its left edge on the side margin, grown), a whole cover and at least a third of the next one end
+            // PEEK_EDGE before the stage's edge, where the right fade is still opaque enough to read
+            val shown = stage.first - c.PEEK_EDGE - (Compact.SIDE + c.WIDE * c.FOCUS_SCALE * s + c.coverGap(s) + tile + c.coverGap(s))
+            assertTrue("${name(stage)} at $scale shows $shown of a $tile cover", shown >= tile / 3f - .5f)
+            // The focused first cover's ring (10 px beyond its edge) keeps the 48 px margin
+            assertTrue("${name(stage)} at $scale ring margin", c.rowStart(s) - c.WIDE * s * (c.FOCUS_SCALE - 1f) - c.RING * c.FOCUS_SCALE >= 48f)
         }
     }
 
@@ -101,7 +104,7 @@ class HomeCompactLayoutTest {
     fun theNumbersOfTheSixStages() {
         // Cover scale at interface scale 1: the width rule where the stage is tall for its width, the comfortable gaps on the lower ones,
         // the least gaps on the lowest
-        val expected = mapOf("1099x957" to .6958f, "1488x893" to .7665f, "1191x893" to .7581f, "1108x831" to .6359f, "1051x1051" to .6633f, "1082x722" to .6f)
+        val expected = mapOf("1099x957" to .6554f, "1488x893" to .7665f, "1191x893" to .7155f, "1108x831" to .6359f, "1051x1051" to .6237f, "1082x722" to .6f)
         for (stage in stages) assertEquals(name(stage), expected.getValue(name(stage)), c.layout(stage.first, stage.second).coverScale, .0005f)
         // The lowest stage has nothing left over: the least gaps and the 64 px title box
         val low = c.layout(1082f, 722f)

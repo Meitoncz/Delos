@@ -91,11 +91,36 @@ internal object HomeCompact {
     /** The room two rows of chips take at interface scale [scale]. */
     fun chipsHeight(scale: Float): Float = 2f * (CHIP_PADDING + CHIP_LINE * scale) + CHIP_ROW_GAP
 
+    /** The row's right fade on a compact stage: opaque up to this far from the edge, clear at the least distance (the peeking cover stays readable). */
+    const val FADE_SOLID = 72f
+    const val FADE_CLEAR = 8f
+
+    /** The peeking cover ends this far from the stage's right edge (inside the fade). */
+    const val PEEK_EDGE = 24f
+
     /**
-     * The widest cover scale at which, next to the wide first cover (which starts [Compact.SIDE] from the left edge), one whole cover and
-     * a third of the next one are on a stage [stageWidth] wide: a second game is always clearly there.
+     * Where the row starts: the focused wide first cover grows to the left only, so its unfocused left edge lies that far right of
+     * [Compact.SIDE] and the focused one (with the ring 10 px further out) stands exactly on it.
      */
-    fun widthScale(stageWidth: Float): Float = (stageWidth - Compact.SIDE) / (WIDE + COVER_GAP + TILE + COVER_GAP + TILE / 3f)
+    fun rowStart(scale: Float): Float = Compact.SIDE + WIDE * scale * (FOCUS_SCALE - 1f)
+
+    /**
+     * The widest cover scale at which, next to the focused wide first cover (its left edge [Compact.SIDE] from the stage's edge, grown by
+     * [FOCUS_SCALE]), one whole cover and a third of the next one end [PEEK_EDGE] before the stage's right edge: a second game is always
+     * clearly there, in the part of the fade that is still opaque enough to read.
+     */
+    fun widthScale(stageWidth: Float): Float {
+        val room = stageWidth - Compact.SIDE - PEEK_EDGE
+        // With the prototype's gap of 44 scaled; under the scale where [coverGap]'s floor is the larger one, with that floor
+        val proto = room / (WIDE * FOCUS_SCALE + 2f * COVER_GAP + TILE * 4f / 3f)
+        if (proto >= GAP_FLOOR_SCALE) return proto
+        val floorGap = TILE * (FOCUS_SCALE - 1f) / 2f
+        val floorBase = RING * FOCUS_SCALE + FOCUS_AIR
+        return (room - 2f * floorBase) / (WIDE * FOCUS_SCALE + 2f * floorGap + TILE * 4f / 3f)
+    }
+
+    /** The cover scale below which [coverGap]'s floor (growth, ring and air) is larger than the prototype's gap scaled. */
+    private val GAP_FLOOR_SCALE = (RING * FOCUS_SCALE + FOCUS_AIR) / (COVER_GAP - TILE * (FOCUS_SCALE - 1f) / 2f)
 
     /**
      * The layout on a stage [stageWidth] x [stageHeight] at interface scale [scale] (the bars and the texts grow with it), [safeTop] and
