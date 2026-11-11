@@ -57,6 +57,8 @@ import com.limelight.shell.ui.OnlineGreen
 import com.limelight.shell.ui.PillButton
 import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.Unbounded
+import com.limelight.shell.ui.compact
+import com.limelight.shell.ui.compactScale
 import com.limelight.shell.ui.px
 import com.limelight.shell.ui.glass
 import com.limelight.shell.ui.tpx
@@ -185,7 +187,9 @@ fun PinScreen(screen: Screen.Pin, repo: PcRepository, setup: PcSetup, onFailed: 
 private fun PinDigits(pin: String) {
     val colors = LocalDelosColors.current
     val stage = LocalStage.current
-    Row(horizontalArrangement = Arrangement.spacedBy(26.px)) {
+    // A compact stage makes the digit boxes up to 20 % smaller (the digits keep their size)
+    val ds = if (stage.compact) stage.compactScale.coerceAtLeast(.8f) else 1f
+    Row(horizontalArrangement = Arrangement.spacedBy((26f * ds).px)) {
         pin.forEachIndexed { i, digit ->
             val enter = remember(pin) { Animatable(0f) }
             LaunchedEffect(pin) {
@@ -203,7 +207,7 @@ private fun PinDigits(pin: String) {
                         scaleY = s
                         translationY = 30f * (1f - e) * stage.dpPerPx * density
                     }
-                    .size(148.px, 176.px)
+                    .size((148f * ds).px, (176f * ds).px)
                     .clip(shape)
                     .glass(colors.surface2)
                     .border(1.px, colors.line, shape),

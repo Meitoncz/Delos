@@ -46,6 +46,8 @@ import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.Unbounded
 import com.limelight.shell.ui.px
 import com.limelight.shell.ui.textResources
+import com.limelight.shell.ui.compact
+import com.limelight.shell.ui.compactScale
 import com.limelight.shell.ui.tpx
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -67,8 +69,9 @@ fun ProfileScreen(profiles: Profiles, store: ProfileStore) {
     CenterColumn(gap = 54f) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(18.px)) {
             val k = stage.dpPerPx * density
+            val cs = stage.compactScale
             AvatarBadge(
-                profile.look, 240f, 120f,
+                profile.look, 240f * cs, 120f * cs,
                 // box-shadow: 0 30px 80px -24px glow
                 Modifier.dropShadow(CircleShape) {
                     radius = 80f * k
@@ -77,7 +80,7 @@ fun ProfileScreen(profiles: Profiles, store: ProfileStore) {
                     color = colors.glow
                 },
             )
-            BasicText(profile.name, style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 64.tpx, letterSpacing = (-.01).em))
+            BasicText(profile.name, style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = (if (stage.compact) 48 else 64).tpx, letterSpacing = (-.01).em))
             val count = profiles.all.size
             BasicText(
                 pluralStringResource(R.plurals.profile_signed_in, count, Build.MODEL, count),
