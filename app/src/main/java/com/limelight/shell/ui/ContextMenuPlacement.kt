@@ -34,7 +34,10 @@ internal object ContextMenuLayout {
     const val MARGIN_X = 60f
 
     /** The tallest card: the stage's height between the two vertical margins. */
-    fun maxHeight(stageHeight: Float): Float = stageHeight - 2 * MARGIN_Y
+    fun maxHeight(stageHeight: Float, marginY: Float = MARGIN_Y): Float = stageHeight - 2 * marginY
+
+    /** A compact stage keeps the card 48 stage pixels from every edge (its stage is too small for the 120 and 60 above and below / beside). */
+    const val COMPACT_MARGIN = 48f
 
     /** Where a card without an element to point at (no anchor) sits. */
     const val FALLBACK_X = 760f
@@ -58,31 +61,34 @@ data class MenuPlacement(val x: Float, val y: Float, val side: CaretSide, val ca
  * kept inside the margins of the [stageW] x [stageH] stage. With [below] under the element, centered on it, caret on top; when it does not fit
  * there but fits above, above it with the caret on the bottom.
  */
-fun placeContextMenu(anchor: Rect?, w: Float, h: Float, below: Boolean, stageW: Float, stageH: Float): MenuPlacement {
+fun placeContextMenu(
+    anchor: Rect?, w: Float, h: Float, below: Boolean, stageW: Float, stageH: Float,
+    marginX: Float = ContextMenuLayout.MARGIN_X, marginY: Float = ContextMenuLayout.MARGIN_Y,
+): MenuPlacement {
     val l = ContextMenuLayout
-    val bottomLimit = stageH - l.MARGIN_Y
+    val bottomLimit = stageH - marginY
     if (anchor == null) {
-        val x = l.FALLBACK_X.coerceIn(l.MARGIN_X, (stageW - l.MARGIN_X - w).coerceAtLeast(l.MARGIN_X))
-        val y = l.FALLBACK_Y.coerceIn(l.MARGIN_Y, (bottomLimit - h).coerceAtLeast(l.MARGIN_Y))
+        val x = l.FALLBACK_X.coerceIn(marginX, (stageW - marginX - w).coerceAtLeast(marginX))
+        val y = l.FALLBACK_Y.coerceIn(marginY, (bottomLimit - h).coerceAtLeast(marginY))
         return MenuPlacement(x, y, CaretSide.None, 0f, x, y)
     }
     val reach = l.TIP_GAP + l.CARET_DEPTH
     if (below) {
-        val x = (anchor.center.x - w / 2f).coerceIn(l.MARGIN_X, (stageW - l.MARGIN_X - w).coerceAtLeast(l.MARGIN_X))
+        val x = (anchor.center.x - w / 2f).coerceIn(marginX, (stageW - marginX - w).coerceAtLeast(marginX))
         val caret = caretAlong(anchor.center.x - x, w)
         val under = anchor.bottom + reach
-        if (under + h <= bottomLimit || anchor.top - reach - h < l.MARGIN_Y) {
-            val y = under.coerceAtMost((bottomLimit - h).coerceAtLeast(l.MARGIN_Y))
+        if (under + h <= bottomLimit || anchor.top - reach - h < marginY) {
+            val y = under.coerceAtMost((bottomLimit - h).coerceAtLeast(marginY))
             return MenuPlacement(x, y, CaretSide.Top, caret, x + caret, y - l.CARET_DEPTH)
         }
         val y = anchor.top - reach - h
         return MenuPlacement(x, y, CaretSide.Bottom, caret, x + caret, y + h + l.CARET_DEPTH)
     }
-    val y = (anchor.center.y - h / 2f).coerceIn(l.MARGIN_Y, (bottomLimit - h).coerceAtLeast(l.MARGIN_Y))
+    val y = (anchor.center.y - h / 2f).coerceIn(marginY, (bottomLimit - h).coerceAtLeast(marginY))
     val caret = caretAlong(anchor.center.y - y, h)
     val right = anchor.right + reach
-    if (right + w <= stageW - l.MARGIN_X || anchor.left - reach - w < l.MARGIN_X) {
-        val x = right.coerceAtMost((stageW - l.MARGIN_X - w).coerceAtLeast(l.MARGIN_X))
+    if (right + w <= stageW - marginX || anchor.left - reach - w < marginX) {
+        val x = right.coerceAtMost((stageW - marginX - w).coerceAtLeast(marginX))
         return MenuPlacement(x, y, CaretSide.Left, caret, x - l.CARET_DEPTH, y + caret)
     }
     val x = anchor.left - reach - w
