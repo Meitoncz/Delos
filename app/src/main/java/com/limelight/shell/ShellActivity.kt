@@ -116,12 +116,17 @@ class ShellActivity : ComponentActivity() {
         }
         // Debug builds only: the stream menu, the Full keyboard or a toast with fake state instead of the shell (docs/GUI.md, "Stream menu preview", "Full keyboard", "Toasts")
         val preview = StreamMenuPreview.from(intent) ?: FullKeyboardPreview.from(intent) ?: ToastPreview.from(intent, shell) ?: SettingsTabsPreview.from(intent) ?: SettingsListPreview.from(intent) ?: GameSettingsPreview.from(intent) ?: TopMenuPreview.from(intent) ?: ContextMenuPreview.from(intent)
+        // Debug builds only: draws all of it in a box of another panel's size and density (`preview_shape`)
+        val simulator = ShapeSimulator.from(intent)
         setContent {
-            if (preview != null) ShellTheme(appearance, feedback) {
-                preview()
-                com.limelight.shell.ui.ToastHost(shell.toast, shell::hideToast, shell::runToastAction, shell.toastPress)
+            val screen: @Composable () -> Unit = {
+                if (preview != null) ShellTheme(appearance, feedback) {
+                    preview()
+                    com.limelight.shell.ui.ToastHost(shell.toast, shell::hideToast, shell::runToastAction, shell.toastPress)
+                }
+                else ShellRoot(appearance, feedback, keys, repo, boxArt, artwork, metadata, launcher, profiles, startup, setup, links, results, shell)
             }
-            else ShellRoot(appearance, feedback, keys, repo, boxArt, artwork, metadata, launcher, profiles, startup, setup, links, results, shell)
+            if (simulator != null) simulator.Host(screen) else screen()
         }
         feedback.view = window.decorView
     }
