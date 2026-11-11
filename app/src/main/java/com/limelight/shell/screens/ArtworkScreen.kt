@@ -13,6 +13,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -216,6 +217,10 @@ private enum class ArtTab(
             HERO -> ArtworkLayout.HERO_MIN
             LOGO -> ArtworkLayout.LOGO_MIN
         }
+
+    /** The widest tile of the compact grid: the covers stop at [ArtworkLayout.COVER_MAX] and the room that is left goes into the gaps. */
+    val compactMax: Float
+        get() = if (this == COVER) ArtworkLayout.COVER_MAX else Float.MAX_VALUE
 
     /** "10 of 41 covers" ([countOf]) when the unfiltered total differs, else "41 covers"; [all] says "All 41 covers" for an unfiltered list. */
     fun resultLine(res: Resources, shown: Int, total: Int?, all: Boolean): String = when {
@@ -438,7 +443,7 @@ fun ArtworkScreen(screen: Screen.Artwork) {
     val infoY = if (compact) stage.stageHeight - bottom - ArtworkLayout.INFO_HEIGHT else stage.stageHeight - 194f
     val gridHeight = if (compact) ArtworkLayout.viewport(stage.stageHeight, bottom, info) else (infoY - 10f - gridY).coerceAtLeast(0f)
     // The tile is what the columns leave once the room between tiles covers the focused tile's growth, its ring and 12 px (every shape)
-    val art = if (compact) ArtGridLayout.compact(contentWidth, gridHeight, tab.ratio, tab.compactMin)
+    val art = if (compact) ArtGridLayout.compact(contentWidth, gridHeight, tab.ratio, tab.compactMin, tab.compactMax)
     else ArtGridLayout.grid(contentWidth, tab.ratio, tab.columnsFor(stage.stageWidth - 200f))
     val ready = choices as? Choices.Ready
     val tabs: @Composable () -> Unit = {
@@ -495,7 +500,8 @@ fun ArtworkScreen(screen: Screen.Artwork) {
                 gameChip(Modifier.weight(1f))
                 // 24 px from the chip to the L1 badge, whose own outset is part of it; R1's outset is moved out, so its edge is the content's
                 SelectionPillHost(
-                    Modifier.padding(start = (24f - 2f * SHOULDER_OUTSET).px).offset(x = SHOULDER_OUTSET.px).fillMaxHeight(),
+                    Modifier.padding(start = (24f - 2f * SHOULDER_OUTSET).px).offset(x = SHOULDER_OUTSET.px).fillMaxHeight()
+                        .widthIn(max = (contentWidth - 24f - ArtworkLayout.CHIP_MIN).px).tabScroll(rememberScrollState()),
                     content = tabs,
                 )
             }
@@ -552,7 +558,8 @@ fun ArtworkScreen(screen: Screen.Artwork) {
 
         // The grid (or why there is none): from under the filter strip to above the info strip, so a taller stage shows more rows. Its box
         // is the stage's width and the tiles are padded in by the margin: room inside the viewport for the focused tile's ring and glow
-        Box(Modifier.offset(y = gridY.px).width(stage.stageWidth.px).height(gridHeight.px)) {
+        val gridInset = if (compact) ArtworkLayout.GRID_INSET else 0f
+        Box(Modifier.offset(y = (gridY + gridInset).px).width(stage.stageWidth.px).height((gridHeight - gridInset).coerceAtLeast(0f).px)) {
             when (val c = choices) {
                 Choices.Loading -> GridMessage(Symbols.LOADING, stringResource(R.string.artwork_loading), null)
                 Choices.NoKey -> GridMessage(Symbols.KEY, stringResource(R.string.artwork_no_key_title), stringResource(R.string.artwork_no_key_note))
@@ -562,10 +569,12 @@ fun ArtworkScreen(screen: Screen.Artwork) {
                 is Choices.Ready -> {
                     // The focused row keeps clear of the faded edges, like the settings rows; on the compact stage by what its ring and glow reach
                     val k = stage.dpPerPx * LocalDensity.current.density
-                    val fadeTop = if (compact) ArtworkLayout.FADE_TOP else 30f
+                    // (a viewport that just holds one focused row with its glow gets a shorter top fade, so the last row still has its glow whole)
+                    val fadeTop = if (compact) minOf(ArtworkLayout.FADE_TOP, (gridHeight - gridInset - art.tileHeight - art.glowBottom - art.ringY - 2f).coerceAtLeast(0f)) else 30f
                     val fadeBottom = if (compact) ArtworkLayout.FADE_BOTTOM else 70f
-                    val before = if (compact) art.padTop else 70f
-                    val after = if (compact) (gridHeight - art.padTop - art.tileHeight).coerceIn(art.glowBottom, art.glowBottom + fadeBottom) else 110f
+                    val padTop = art.padTop - gridInset
+                    val before = if (compact) maxOf(padTop, fadeTop + art.ringY + 2f) else 70f
+                    val after = if (compact) (gridHeight - gridInset - before - art.tileHeight).coerceIn(art.glowBottom, art.glowBottom + fadeBottom) else 110f
                     val bringIntoView = rememberMarginBringIntoView(grid, before = before * k, after = after * k, stagePx = k)
                     // The edges fade only while rows continue behind them: the ring and glow of the first and of the last row are not dimmed
                     val fadeEnd by animateFloatAsState(if (grid.canScrollForward) 1f else 0f, tween(Motion.FADE, easing = Motion.Ease), label = "gridFade")
@@ -582,21 +591,21 @@ fun ArtworkScreen(screen: Screen.Artwork) {
                                 topPx = { full -> if (grid.firstVisibleItemIndex == 0) grid.firstVisibleItemScrollOffset.toFloat() else full },
                                 bottomPx = { full -> full * fadeEnd },
                             ),
-                            contentPadding = if (compact) PaddingValues(start = margin.px, end = margin.px, top = art.padTop.px, bottom = art.padBottom.px)
+                            contentPadding = if (compact) PaddingValues(start = margin.px, end = margin.px, top = padTop.px, bottom = art.padBottom.px)
                             else PaddingValues(start = margin.px, end = margin.px, top = 46.px, bottom = 96.px),
                             horizontalArrangement = Arrangement.spacedBy(art.gapX.px),
                             verticalArrangement = Arrangement.spacedBy(art.gapY.px),
                         ) {
                             item(key = GridItemNone) {
                                 NoneTile(
-                                    pc, app, tab, art.tileWidth, noneInUse, store.applying(pc, app, tab.kind) == NONE,
+                                    pc, app, tab, if (compact) art.tileWidth else Float.MAX_VALUE, noneInUse, store.applying(pc, app, tab.kind) == NONE,
                                     Modifier.staggerEntrance(0).then(if (inUse < 0) Modifier.focusRequester(first) else Modifier),
                                     onFocused = { described = Described.FirstChoice },
                                 ) { apply(res, scope, shell, feedback, store, pc, app, tab, null) }
                             }
                             itemsIndexed(images, key = { _, image -> image.id }) { index, image ->
                                 ChoiceTile(
-                                    image, tab, art.tileWidth, inUse = image.id == chosen, loading = store.applying(pc, app, tab.kind) == image.id,
+                                    image, tab, if (compact) art.tileWidth else Float.MAX_VALUE, inUse = image.id == chosen, loading = store.applying(pc, app, tab.kind) == image.id,
                                     playing = image.id in playing, ticker = ticker,
                                     modifier = Modifier.staggerEntrance(if (index + 1 < 8) index + 1 else -1)
                                         .then(if (index == inUse) Modifier.focusRequester(first) else Modifier),
@@ -909,7 +918,7 @@ private fun FilterSheetLayer(
     val kind = tab.kind
     // The header's pills are focusable: their glow (a 70 px circle around the 64 px pill, times the focus scale) needs 44 px above them
     // inside the sheet's clip
-    val padTop = ArtworkLayout.SHEET_PAD_TOP
+    val padTop = if (compactSheet) ArtworkLayout.SHEET_PAD_TOP else 26f
     val padBottom = if (compactSheet) 20f else 22f
     AnimatedVisibility(open, enter = fadeIn(tween(Motion.EXIT, easing = Motion.Ease)), exit = fadeOut(tween(Motion.EXIT, easing = Motion.Ease))) {
         Box(Modifier.fillMaxSize().background(Color(0x73050A14)).pointerInput(Unit) { detectTapGestures { onClose() } })
@@ -1149,14 +1158,19 @@ private fun Tile(
             Box(Modifier.fillMaxSize().background(Color(0x99050A14)), contentAlignment = Alignment.Center) { Spinner(48f) }
         }
         if (inUse) {
+            val inUseLabel = if (tab == ArtTab.COVER) !animated || tileWidth >= ArtworkLayout.COVER_BADGES_MIN else tileWidth >= ArtworkLayout.IN_USE_LABEL_MIN
+            // The check alone on a small wide / background / logo tile of a compact stage is a smaller circle in the corner: the tile's own name
+            // sits next to it
+            val small = !inUseLabel && tab != ArtTab.COVER
             Row(
-                Modifier.align(Alignment.TopStart).padding(12.px).clip(CircleShape).background(colors.accent).padding(horizontal = 12.px, vertical = 4.px),
+                Modifier.align(Alignment.TopStart).padding((if (small) 8 else 12).px).clip(CircleShape).background(colors.accent).padding(horizontal = (if (small) 6 else 12).px, vertical = 4.px),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.px),
             ) {
                 Symbol(Symbols.CHECK, 20.tpx, colors.onAccent)
-                // A cover that is animated too has room for the two badges only when "In use" is the check alone
-                if (!animated || tab != ArtTab.COVER || tileWidth >= ArtworkLayout.COVER_BADGES_MIN) {
+                // A cover that is animated too has room for the two badges only when "In use" is the check alone; on the small wide / background / logo
+                // tiles of a compact stage the label would run into the tile's own name, the check says it
+                if (inUseLabel) {
                     BasicText(stringResource(R.string.artwork_in_use), style = TextStyle(color = colors.onAccent, fontFamily = Figtree, fontWeight = FontWeight.Bold, fontSize = 16.tpx))
                 }
             }

@@ -116,7 +116,8 @@ The TV channel uses the same mark; PC shortcut icons remain unchanged.
   design above (Compose `Crossfade`, 500 ms dwell, low-resolution live hero) holds about 3 % janky frames, p50 6 ms, the same as a
   still hero.
 - **Artwork page** (game options → Artwork, `ArtworkScreen`; approved prototype variant B): no side column. Header and tab pills
-  (`SelectionPillHost`, touch only, L1 / R1) over a toolbar with the **SteamGridDB game chip** (name, year, id, image count of the tab),
+  (`SelectionPillHost`, touch only, L1 / R1; the row's R1 badge ends exactly at the content's right edge, the Filter pill's) over a toolbar
+  with the **SteamGridDB game chip** (name, year, id, image count of the tab),
   **Search for another name** (X) and **Filter** (Y, with a count badge of the active filters); under it the result line
   ("10 of 41 covers", the "of N" only when the unfiltered list is loaded) and the **active filters as removable chips** plus Reset
   (they share one `RowGlideHost` plate, 520 ms); then the full-width grid (7 covers, 4 wide covers, 3 backgrounds, 5 logos per row;
@@ -124,6 +125,12 @@ The TV channel uses the same mark; PC shortcut icons remain unchanged.
   icon only on covers) and a strip about the **focused** image (style, Static / Animated, In use, size, file format, score and author,
   date; only what SteamGridDB sent). Initial focus is the tile in use (the first tile when none is). Grid scroll is `FocusScroller`
   with the margin bring-into-view, the entrance is the staggered rise of the first eight tiles.
+  **The focused tile has room** (`ArtGridLayout` in `screens/FamilyLayout.kt`, every shape): the room between two tiles covers the
+  focused tile's growth, its ring and 12 px, `gap = tile × 0.06 + 8 + 12` (28 px at least), and rows get the same from the tile's height;
+  the tile is what the columns then leave (1920 × 1080: covers 204 × 306 with 32 / 38 px, wide covers 373 with 42, backgrounds 506 with 50,
+  logos 294 with 38; before it was 24 px everywhere, which left a focused cover's ring 9 px from its neighbours). The grid's box is the
+  stage's width and the tiles are padded in by the margin, so the ring and the glow (box-shadow 0 18 50 -12) of a tile in the first or last
+  column, the first or the last row are inside the viewport; its edges fade only while rows continue behind them.
   **Search** opens the shared text dialog (then the context menu of the games found; choosing one re-matches the artwork).
   **Filter sheet:** Y or the Filter pill drops it down under the toolbar (`popEnter` / `popExit` from the pill, dimmed page, the
   grid stays visible and updates live); A sets an option, X resets, B or Y closes and focus returns to where it was (the focus is held
@@ -810,20 +817,49 @@ activity keeps its own orientation logic) and supports windows from 1:1 up to 21
   *Compact* is a stage under **1500 stage px wide** (small panels, split-screen halves) or squarish (narrower than 4:3, 1:1). A shrunk stage can be
   Standard in aspect with fewer than 1920 stage px: screens drawn for 1920 × 1080 do not fit it until they are made adaptive.
   Existing screens still read `px` / `tpx` as before; the Wide, Tall and Compact layouts are later phases.
-- **Compact settings family** (issue #9, phase C; `StageShape.COMPACT`, 1:1 up to small 16:9 panels, stage about 1050 to 1490 px wide): text keeps its
-  stage size (the legibility floor), the room around it shrinks. `ui/CompactRows.kt` holds the one scale factor of non-text elements,
-  `compactScale = clamp(min(w / 1920, h / 1080), 0.7, 1)` (1 on every other shape), as `cpx` (stage px × scale) and `targetPx` (never under 64 px for a
-  touched or focused element, never above the original); the outer margin is the 48 px floor plus the cutout (`SettingsLayout.margin`), gaps between
-  blocks stay at 16 px or more.
-  - *Settings, per-game settings, Debug info*: no 520 px panel. The list is full width and the description is a **dock** under it (`HelpDock`, 168 px:
-    icon, name, help that auto-scrolls when long, the impact legend beside the name and its sentence at the end of the help; per game the dock also
-    carries the "From profile / Custom" source line). The title goes (Settings) so the 8 tabs fit: only the selected tab keeps its label, L1 / R1
-    still step through them, the search is an icon button at the end of the row. Per-game plain rows drop "From profile" (the dock says it);
-    custom rows keep their CUSTOM badge and profile line. The banner is 200 px, the search letter picker 60 px keys with the results beside it.
-  - *Artwork*: the title and the collapsed tabs share a row; the grid keeps each kind's tile shape (2:3, 920:430, 1920:620, 2:1) and picks the column
-    count from the 1920 tile scaled by `compactScale` (`ArtTab.compactColumns`); the game chip drops year and id. The filter sheet and the library
-    filter modal use the full stage width, scaled paddings and chip gaps, and scroll when they do not fit.
+- **Compact settings family** (issue #9, phase C, reworked after the user's review; `StageShape.COMPACT`, 1:1 up to small 16:9 panels, stage about
+  1050 to 1490 px wide): text keeps its stage size (the legibility floor), the room around it shrinks. `ui/CompactRows.kt` has `cpx` (stage px ×
+  `compactScale`, see "Compact stages" below) and `targetPx` (never under 64 px for a touched or focused element, never above the original); the
+  outer margin is the 48 px floor plus the cutout (`SettingsLayout.margin`). The geometry that can be computed is pure and tested on every stage
+  size of `tools/layout/shapes.txt` (`screens/FamilyLayout.kt`, `FamilyLayoutTest`). The user's rules it follows: **scroll, never squeeze or wrap**;
+  at least 24 px between blocks; a focused element (its scale, ring and glow) has room and is never cut by a scrolling or fading layer.
+  - *Settings, per-game settings, Debug info*: no 520 px panel. The list is full width and the description is a **dock** under it (`HelpDock`,
+    `HelpDockLayout`): about a quarter of the stage's height, **210 to 270 px** (the user's request; it gives way down to 210 px so the list keeps three whole
+    rows where it can: stages 950 px high and more; the 893 px ones show two in Settings, the 831 px one two and the 722 px Pocket Micro one, the
+    next row fading over the dock). Its header stays put: the icon disc (48 px), the name (22 px, one line)
+    and, when the whole name fits beside it, the impact legend at the right. Everything else is ONE body under it that scrolls as a whole (the
+    auto-scroll of long help) and fades at an edge only while it continues behind it: per game the source box first ("Custom for this game ·
+    Profile value …" / "From profile", wrapping inside the body), the value's detail and the help, the legend when the header has no room, what
+    its bars mean, the autosave note. The list ends 16 px above the dock with a fade.
+    Settings has no title, so the 8 tabs fit: only the selected tab keeps its label, L1 / R1 still step through them, the search is a 64 px
+    circle flush with the content's right edge. Per game the header is ONE row on a 220 px banner: the eyebrow and the name at the left, the
+    tabs, and Reset all as the same circle, carrying the count of custom settings as an accent badge (the 16:9 header's "N custom settings" chip). Per-game plain rows drop
+    "From profile" (the dock says it); custom rows keep their CUSTOM badge and profile line.
+  - *Settings search*: the field with the count of results beside it; the letters as **two rows of 64 px keys that scroll sideways together**
+    (`CompactLetterPicker`: the alphabet runs on from the first row into the second, Space is the last key, 26 px between keys, faded ends);
+    Delete and Clear are two circles that stay at the right; the results are under them at the full width, Up from the first goes back to the keys.
+  - *Artwork* (`ArtworkLayout`): no title. The game chip (it drops year and id, then its image count before the name would be cut) and the
+    collapsed tabs (flush right) share the first row; the filter strip (one row that scrolls when the filter chips need more) and the Search and
+    Filter pills the second, the Search pill with the longest of "Search for another name" / "Search name" / "Search" that fits. The grid keeps
+    each kind's tile shape (2:3, 920:430, 1920:620, 2:1) with as many columns as keep the tile at 190 / 210 / 290 / 190 px wide or more; covers stop at 210 px
+    and the room left goes into the gaps (4 columns of 210 px with 54 px gaps at 1099 × 957, 38 px at 1051 × 1051; before 250 to 300 px). A
+    viewport too short for a focused row with its ring, glow and a peek of the next takes more, smaller tiles, never under 72 % of those widths:
+    the 893 px stages 173 / 158 px, the 831 px one 145 px, the 722 px Pocket Micro 141 px (a 190 px cover is 285 px tall). The info strip
+    stays on every stage but the Pocket Micro, which has no room for it. The first row's ring ends 24 px under the toolbar. On wide / background / logo tiles under 300 px "In use" is a small check circle (the words would run into the tile's name). The tabs scroll
+    (`tabScroll`) when the chip's 300 px minimum leaves them too little. The filter sheet lies over the toolbar with
+    the live count in place of its title and scrolls its options with faded edges; the library filter modal keeps the 48 px margins.
   - The keyboard (`FullKeyboard`) was only checked: it is width-aware already.
+- **Tab rows** (`TabRow`, `TabRowLayout`; every shape): a row of tabs with its L1 / R1 badges is either exactly centred on the stage or its outer
+  edge is exactly flush with the content's edge, nothing in between. Settings: centred; at 1920 × 1080 the row was 12 px wider than the content
+  (L1 began 6 px left of the title, R1 ended 6 px right of the panel), which stays: a centred row may overhang the content by 12 px in all (nothing is squeezed). A row wider than that,
+  or than the room beside a title or a button, scrolls in the room between the content's edges (`tabScroll`: fixed sizes and gaps, a fade at the
+  edge with more behind it, the selected tab brought into view). Compact Settings:
+  centred, or flush against the search circle when it would run into it. Per-game: centred under the banner; compact: centred while the name
+  leaves the room, else flush against the Reset all circle. Artwork: the R1 badge ends on the content's right edge (before 65 px short of it).
+- **Focus room in scrolling layers** (user rule): a layer that clips or fades (`fadeEdges`, `ScrollRow`) is made larger than its content
+  (`Modifier.focusRoom`, the content padded by the same amount, nothing moves) so a focused item's scale, ring and glow are not cut: the settings
+  lists are 30 px wider on each side (`settingListViewport`: the plate's glow reaches 41 px beyond a row), the Artwork grid is the stage's width.
+  Their edges fade only while content continues behind them (`fadeEdges(stage, scroll, …)`), so nothing is dimmed at the first and at the last row.
 - **Safe area**: backgrounds still draw edge to edge, the status bar and the hint bar are padded by the display cutout (`WindowInsets.displayCutout`
   in stage pixels, `StageMetrics.safe`; zero on the Odin, so nothing moves there). Other edge-anchored content can read `LocalStage.current.safe`.
 - **Companion screen** (issue #76, [DUAL_SCREEN.md](DUAL_SCREEN.md)): the second panel of a dual-screen device is a `CompanionActivity` on that display (own task, no key focus) with its own `Stage()`, so
@@ -846,6 +882,8 @@ activity keeps its own orientation logic) and supports windows from 1:1 up to 21
   `home`, `side_menu` and `home_context` (the game menu opened by the Start key 3 s after the start), `stream_stats` with `--es preview_state <full|compact>`
   and `--es preview_position <TOP_LEFT|…>`; they run next to the older previews (`context_menu`, `top_menu`, `settings_tabs`, `settings_list`,
   `game_settings`, `stream_menu`, `full_keyboard`, `toast`). `stream_osc` and `stream_video` draw the stream's own geometry (see "Stream side" below). `settings`, `settings_search`, `debug_info`, `profile` and `game_options` are the real screens (`game_settings` is the older component preview of the per-game list); the preview tells the settings capability probe there is no PyroWave, because its native Vulkan probe dies on the emulator's SwiftShader.
+  The shell's global keys reach the previewed shell too (L1 / R1, X, Y, Start, Select; the activity's own listener is not set in a preview), so
+  `adb shell input keyevent 103` switches a previewed screen's tab and `100` opens its filter sheet, next to the D-pad keys (19 to 23).
 - **Contact sheets** (`tools/layout/`): `shapes.txt` lists the shapes (names, `W x H @ dpi`, optional cutout), `screens.txt` the previews. `sheets.sh` needs the
   fail-closed adb wrapper and the stream gate helper:
 

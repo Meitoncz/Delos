@@ -11,7 +11,7 @@ package com.limelight.shell.screens
  * name and, when it fits, the legend of the impact chips) stays put and everything else is ONE area under it that scrolls as a whole.
  */
 internal object HelpDockLayout {
-    const val MIN_HEIGHT = 176f
+    const val MIN_HEIGHT = 210f
     const val MAX_HEIGHT = 270f
 
     /** The room between the list and the dock, and between the header and the scrolling body. */
@@ -37,7 +37,8 @@ internal object HelpDockLayout {
 
     /**
      * The dock under a list whose first row may start at [rowsTop], over the hint bar's [bottom]: the quarter of the stage, less what three
-     * whole rows [rowHeight] high need above it, but never under [MIN_HEIGHT] (a stage too short for both shows fewer rows).
+     * whole rows [rowHeight] high need above it, but never under [MIN_HEIGHT]: the dock's height is the user's request, so a stage too short for
+     * both (under about 950 px high) shows fewer whole rows, the next one fading over the dock.
      */
     fun height(stageHeight: Float, rowsTop: Float, bottom: Float, rowHeight: Float): Float {
         val threeRows = 3f * rowHeight + 2f * ROW_GAP
@@ -60,37 +61,49 @@ internal object HelpDockLayout {
 
 /**
  * Where a row of tabs (its L1 / R1 badges included) sits: exactly centred on the stage, or with its outer edge exactly flush with the
- * content's edge; nothing in between. Any unit, as long as all values share it (the callers pass raw pixels, so the rounding is the row's).
+ * content's edge; nothing in between. A row wider than the room between the content's edges neither tightens nor overhangs: it becomes
+ * one row that scrolls inside that room (the selected tab kept in view, a fade at the cut edges). Any unit, as long as all values share
+ * it (the callers pass raw pixels, so the rounding is the row's).
  */
 internal object TabRowLayout {
-    /** How much a row may be tightened (stage px in all): 4 px in each of the nine gaps of the settings' ten items. */
-    const val MAX_TIGHTEN = 36f
+    /**
+     * How far a centred row may overhang the content's edges before it scrolls instead (stage px in all): the 16:9 settings' ten tabs are
+     * 12 px wider than their content, which has always been centred, so L1 starts 6 px before the title.
+     */
+    const val OVERHANG = 12f
 
     /** Half a pixel of the row's own rounding does not push a centred row out of the content. */
     private const val ROUNDING = .5f
 
+    /** Where a row goes: its [x], the [width] it is given (the room between the edges when it [scrolls]). */
+    data class Placement(val x: Float, val width: Float, val scrolls: Boolean)
+
     /**
-     * The x of a row [rowWidth] wide whose first and last visible edges sit [outset] inside it (the badges' outer padding). Centred on the
-     * stage when the visible row then stays inside [left]..[right] (the content's edges, or what a title or a button beside it leaves);
-     * otherwise its visible right edge is at [right].
+     * The placement of a row [rowWidth] wide (natural) whose first and last visible edges sit [outset] inside it (the badges' outer padding)
+     * between the content's [left] and [right] edges (what a title or a button beside it leaves). A [centred] row stays centred on the
+     * stage while its visible ends stay inside the edges (or overhang them by [OVERHANG] in all); otherwise, and for rows that are not
+     * [centred], its visible right edge is at [right]. A row that is wider than that scrolls in the room between the edges.
      */
-    fun x(stageWidth: Float, rowWidth: Float, outset: Float, left: Float, right: Float): Float {
+    fun place(stageWidth: Float, rowWidth: Float, outset: Float, left: Float, right: Float, centred: Boolean = true): Placement {
+        val allowed = if (centred) OVERHANG else 0f
+        if (rowWidth - 2f * outset > right - left + allowed + ROUNDING) {
+            return Placement(left - outset, (right - left + 2f * outset).coerceAtLeast(0f), scrolls = true)
+        }
+        val x = if (centred) x(stageWidth, rowWidth, outset, left, right, allowed / 2f) else flushRight(rowWidth, outset, right)
+        return Placement(x, rowWidth, scrolls = false)
+    }
+
+    /**
+     * The x of a row [rowWidth] wide: centred on the stage when the visible row then stays inside [left]..[right] (less [slack] at each
+     * end), otherwise its visible right edge is at [right].
+     */
+    fun x(stageWidth: Float, rowWidth: Float, outset: Float, left: Float, right: Float, slack: Float = 0f): Float {
         val centred = (stageWidth - rowWidth) / 2f
-        return if (centred + outset >= left - ROUNDING && centred + rowWidth - outset <= right + ROUNDING) centred else flushRight(rowWidth, outset, right)
+        return if (centred + outset >= left - slack - ROUNDING && centred + rowWidth - outset <= right + slack + ROUNDING) centred else flushRight(rowWidth, outset, right)
     }
 
     /** The x of a row whose visible right edge is exactly at [right]. */
     fun flushRight(rowWidth: Float, outset: Float, right: Float): Float = right - rowWidth + outset
-
-    /**
-     * The width to lay a row out in: its own [rowWidth], or, when its visible ends would then overhang [left]..[right] by [maxTighten] in
-     * all at most (the 16:9 settings: 6 px at each end), exactly the width that puts BOTH ends on the content's edges; the tabs then stand
-     * that much closer together. A row wider than that stays as it is.
-     */
-    fun width(rowWidth: Float, outset: Float, left: Float, right: Float, maxTighten: Float): Float {
-        val excess = rowWidth - 2f * outset - (right - left)
-        return if (excess > 0f && excess <= maxTighten) right - left + 2f * outset else rowWidth
-    }
 }
 
 /** One grid of the Artwork screen (stage px): its columns, the tile and the room between tiles and rows, with what the focused tile needs around it. */
@@ -138,8 +151,8 @@ internal object ArtGridLayout {
     /** How much of the next row shows under a focused row at least, so the grid reads as scrolling. */
     const val PEEK = 28f
 
-    /** A stage too short for a row of the normal tiles may take tiles down to this share of the kind's smallest width. */
-    const val SHORT_SHARE = .8f
+    /** A stage too short for a row of the normal tiles may take tiles down to this share of the kind's smallest width (the Pocket Micro's 140 of 190). */
+    const val SHORT_SHARE = .72f
 
     /** How far a focused tile of this size grows beyond its resting edge on each side. */
     fun growth(tile: Float): Float = tile * (FOCUS_SCALE - 1f) / 2f
@@ -157,23 +170,27 @@ internal object ArtGridLayout {
         return if (gap(byRule) > MIN_GAP) byRule else (width - (columns - 1) * MIN_GAP) / columns
     }
 
-    /** The grid of [columns] tiles of [ratio] (width / height) across [width]. */
-    fun grid(width: Float, ratio: Float, columns: Int): ArtGrid {
-        val tile = tileWidth(width, columns)
+    /**
+     * The grid of [columns] tiles of [ratio] (width / height) across [width]. A tile never grows over [maxTile]: what the columns then leave
+     * of the width goes into the gaps between them, the room between rows stays the rule's.
+     */
+    fun grid(width: Float, ratio: Float, columns: Int, maxTile: Float = Float.MAX_VALUE): ArtGrid {
+        val tile = minOf(tileWidth(width, columns), maxTile)
         val height = tile / ratio
         val gapX = if (columns > 1) (width - columns * tile) / (columns - 1) else gap(tile)
-        return ArtGrid(columns, tile, height, gapX, maxOf(gapX, gap(height)))
+        val capped = tileWidth(width, columns) > maxTile
+        return ArtGrid(columns, tile, height, gapX, if (capped) gap(height) else maxOf(gapX, gap(height)))
     }
 
     /**
-     * The compact grid: as many columns as keep the tile at [minTile] wide or more; a [viewport] too short to show a focused row of those
-     * whole ([ArtGrid.rowRoom]) takes more, smaller ones, down to [SHORT_SHARE] of [minTile].
+     * The compact grid: as many columns as keep the tile at [minTile] wide or more (and at [maxTile] at most); a [viewport] too short to
+     * show a focused row of those whole ([ArtGrid.rowRoom]) takes more, smaller ones, down to [SHORT_SHARE] of [minTile].
      */
-    fun compact(width: Float, viewport: Float, ratio: Float, minTile: Float): ArtGrid {
+    fun compact(width: Float, viewport: Float, ratio: Float, minTile: Float, maxTile: Float = Float.MAX_VALUE): ArtGrid {
         var columns = 1
         while (tileWidth(width, columns + 1) >= minTile) columns++
-        while (grid(width, ratio, columns).rowRoom > viewport && tileWidth(width, columns + 1) >= minTile * SHORT_SHARE) columns++
-        return grid(width, ratio, columns)
+        while (grid(width, ratio, columns, maxTile).rowRoom > viewport && tileWidth(width, columns + 1) >= minTile * SHORT_SHARE) columns++
+        return grid(width, ratio, columns, maxTile)
     }
 }
 
@@ -193,13 +210,20 @@ internal object ArtworkLayout {
     /** Between the strip and the two toolbar pills, and between the pills: half the growth of a focused pill up to 300 px wide (12), its ring (8.6) and 12 px. */
     const val PILL_GAP = 34f
 
-    /** The grid's viewport starts at the toolbar's bottom edge; the first row's room is inside it ([ArtGrid.padTop]). */
+    /**
+     * The grid's room starts at the toolbar's bottom edge ([ArtGrid.padTop] is measured from there); its scrolling viewport starts
+     * [GRID_INSET] lower, so rows scrolled away dissolve under the toolbar instead of ending at its pills.
+     */
     const val GRID_Y = TOOLBAR_Y + TOOLBAR_HEIGHT
+    const val GRID_INSET = 8f
     const val INFO_HEIGHT = 84f
     const val INFO_GAP = 16f
 
-    /** The compact grid's fades, shorter than the 30 / 70 px of the tall 16:9 grid: the top one ends above a focused first row's ring. */
-    const val FADE_TOP = 20f
+    /**
+     * The compact grid's fades, shorter than the 30 / 70 px of the tall 16:9 grid. They show only where rows continue; a focused row that
+     * has rows above it keeps its ring under the top one.
+     */
+    const val FADE_TOP = 28f
     const val FADE_BOTTOM = 40f
 
     /** The filter sheet's padding above its header: the glow of a focused header pill (a circle of 70 px around the pill's centre, times 1.08) ends inside the sheet. */
@@ -208,26 +232,36 @@ internal object ArtworkLayout {
     /** A cover under this width that is in use and animated shows "In use" as its check alone, beside the animation's icon. */
     const val COVER_BADGES_MIN = 175f
 
+    /** The other kinds show "In use" as words from this tile width (a check alone under it: the tile's own name sits under the badge). */
+    const val IN_USE_LABEL_MIN = 300f
+
     /** The other kinds label their "Animated" badge from this tile width, and beside "In use" from [BOTH_LABELS_MIN]. */
     const val ANIMATED_LABEL_MIN = 190f
     const val BOTH_LABELS_MIN = 310f
 
-    /** The narrowest cover of the compact grid (2:3); the other kinds: [WIDE_MIN], [HERO_MIN], [LOGO_MIN]. */
-    const val COVER_MIN = 135f
+    /** The compact grid's covers (2:3): 190 to 210 stage px wide (the room left over goes into the gaps); the other kinds: [WIDE_MIN], [HERO_MIN], [LOGO_MIN]. */
+    const val COVER_MIN = 190f
+    const val COVER_MAX = 210f
     const val COVER_RATIO = 600f / 900f
     const val WIDE_MIN = 210f
     const val HERO_MIN = 290f
     const val LOGO_MIN = 190f
 
+    /** The game chip keeps this much of the first row beside the tabs, so its name stays readable (the tabs scroll instead). */
+    const val CHIP_MIN = 300f
+
     /** The grid's height with ([info]) or without the info strip under it; [bottom] is the hint bar's room. */
     fun viewport(stageHeight: Float, bottom: Float, info: Boolean): Float =
         (stageHeight - bottom - (if (info) INFO_HEIGHT + INFO_GAP else 0f) - GRID_Y).coerceAtLeast(0f)
 
-    /** Whether the info strip fits: with it, a focused row of the covers (the tallest tiles) at their normal width still shows whole. */
+    /**
+     * Whether the info strip fits: with it, a focused row of the covers (the tallest tiles) still shows whole at their least width the short
+     * stages take ([ArtGridLayout.SHORT_SHARE] of [COVER_MIN]).
+     */
     fun hasInfo(width: Float, stageHeight: Float, bottom: Float): Boolean {
-        var columns = 1
-        while (ArtGridLayout.tileWidth(width, columns + 1) >= COVER_MIN) columns++
-        return ArtGridLayout.grid(width, COVER_RATIO, columns).rowRoom <= viewport(stageHeight, bottom, info = true)
+        val viewport = viewport(stageHeight, bottom, info = true)
+        val grid = ArtGridLayout.compact(width, viewport, COVER_RATIO, COVER_MIN, COVER_MAX)
+        return grid.rowRoom <= viewport
     }
 }
 

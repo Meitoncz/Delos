@@ -89,9 +89,8 @@ val LocalSelectionPill = staticCompositionLocalOf<SelectionPill?> { null }
  * placed without animation and reduced motion jumps. The edges are read in the layout phase: no recomposition per frame.
  * Tabs mark themselves with [selectionPillTarget] (see `TabPill`).
  *
- * The tabs stand in one line, each centred vertically: as wide as they are when the host may choose its width, centred in a host that is
- * given a wider one, and in a host given LESS than they need (a caller that wants both ends of the row on the content's edges) they move
- * closer together by equal amounts, overlapping only the padding around them: no tab changes its size.
+ * The tabs stand in one line, each centred vertically: as wide as they are, centred in a host that is given a wider width. A host given
+ * LESS than they need overflows (the tab rows scroll them: `TabRow`); no tab changes its size or its gaps.
  */
 @Composable
 fun SelectionPillHost(
@@ -127,17 +126,15 @@ fun SelectionPillHost(
         val pill = measurables[0].measure(Constraints())
         val tabs = measurables.drop(1).map { it.measure(Constraints(maxHeight = constraints.maxHeight)) }
         val natural = tabs.sumOf { it.width }
-        val strip = if (constraints.hasBoundedWidth) minOf(natural, constraints.maxWidth) else natural
-        val closer = if (tabs.size > 1) (natural - strip).toFloat() / (tabs.size - 1) else 0f
-        val width = constraints.constrainWidth(strip)
+        val width = constraints.constrainWidth(natural)
         val height = constraints.constrainHeight(tabs.maxOfOrNull { it.height } ?: 0)
         layout(width, height) {
             pill.place(0, 0)
-            var x = (width - strip) / 2f
+            var x = (width - natural) / 2f
             tabs.forEach {
-                // Rounded like a Row's vertical centring, so a row that needs no tightening sits where it always did
+                // Rounded like a Row's vertical centring
                 it.place(x.roundToInt(), ((height - it.height) / 2f).roundToInt())
-                x += it.width - closer
+                x += it.width
             }
         }
     }

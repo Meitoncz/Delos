@@ -40,41 +40,46 @@ class FamilyLayoutTest {
         assertEquals(270f, HelpDockLayout.height(1440f), .01f)
     }
 
-    /** The lists whose rows start under the tabs (Settings), under the banner's header (per game) and under the title (Debug info). */
-    private fun rowTops() = listOf(
-        "settings" to SettingsLayout.COMPACT_LIST_TOP + 14f,
-        "game" to GameSettingsLayout.COMPACT_LIST_TOP + GameSettingsLayout.COMPACT_LIST_INNER_TOP,
-        "debug" to 184f + 14f,
+    /**
+     * The lists above a dock: where their first row starts (under the tabs and the first section's heading in Settings, under the banner's
+     * header per game, under the title and a heading in Debug info) and the hint bar's room under the dock.
+     */
+    private class Listing(val screen: String, val rowsTop: Float, val bottom: Float)
+
+    private fun listings() = listOf(
+        Listing("settings", SettingsLayout.COMPACT_LIST_TOP + 14f + SettingsLayout.SECTION_HEADING, bottom),
+        Listing("game", GameSettingsLayout.COMPACT_LIST_TOP + GameSettingsLayout.COMPACT_LIST_INNER_TOP, bottom),
+        Listing("debug", 184f + 14f + SettingsLayout.SECTION_HEADING, bottom),
     )
 
-    @Test fun theListAboveTheDockShowsThreeWholeRows() {
-        compact.filter { it != micro }.forEach { stage ->
-            rowTops().forEach { (screen, top) ->
-                val rows = HelpDockLayout.wholeRows(stage.stageHeight, top, bottom, SettingsLayout.tallRow(stage))
-                // The per-game list starts under the banner's header: on the 831 px stage its third row is cut by a few pixels over the dock's least height
-                val expected = if (screen == "game" && stage.stageHeight < 850f) 2 else 3
-                assertTrue("${name(stage)} $screen shows $rows whole rows", rows >= expected)
-            }
-        }
-    }
+    private fun dock(stage: StageMetrics, list: Listing) = HelpDockLayout.height(stage.stageHeight, list.rowsTop, list.bottom, SettingsLayout.tallRow(stage))
 
-    /** The Pocket Micro's 722 px stage holds two rows over the dock at its least height: three would leave the dock far under its old 168 px. */
-    @Test fun theShortestStageShowsTwoWholeRowsOverTheDock() {
-        rowTops().forEach { (screen, top) ->
-            val row = SettingsLayout.tallRow(micro)
-            assertEquals("$screen dock", HelpDockLayout.MIN_HEIGHT, HelpDockLayout.height(micro.stageHeight, top, bottom, row), .01f)
-            assertEquals("$screen rows", 2, HelpDockLayout.wholeRows(micro.stageHeight, top, bottom, row))
-        }
-    }
+    private fun rows(stage: StageMetrics, list: Listing) = HelpDockLayout.wholeRows(stage.stageHeight, list.rowsTop, list.bottom, SettingsLayout.tallRow(stage))
 
-    @Test fun theDockNeverGivesWayUnderItsLeastHeight() {
+    @Test fun theDockIsNeverUnder210AndTheListKeepsThreeWholeRowsWhereTheStageHasTheRoom() {
         compact.forEach { stage ->
-            rowTops().forEach { (screen, top) ->
-                val dock = HelpDockLayout.height(stage.stageHeight, top, bottom, SettingsLayout.tallRow(stage))
-                assertTrue("${name(stage)} $screen dock $dock", dock >= HelpDockLayout.MIN_HEIGHT && dock <= HelpDockLayout.height(stage.stageHeight))
+            listings().forEach {
+                val dock = dock(stage, it)
+                assertTrue("${name(stage)} ${it.screen} dock $dock", dock >= 210f && dock <= 270f)
                 // The list keeps 16 px to the dock and the dock ends at the hint bar's room
-                assertTrue(stage.stageHeight - bottom - dock - HelpDockLayout.LIST_GAP > top)
+                assertTrue(stage.stageHeight - it.bottom - dock - HelpDockLayout.LIST_GAP > it.rowsTop)
+                if (stage.stageHeight >= 950f) assertTrue("${name(stage)} ${it.screen} shows ${rows(stage, it)} whole rows", rows(stage, it) >= 3)
             }
+        }
+    }
+
+    /**
+     * The stages under about 950 px high cannot hold a 210 px dock and three whole rows (the 893 px ones are 15 px short in Settings): the
+     * dock's height is the user's request, so the list shows fewer whole rows with the next one fading over the dock.
+     */
+    @Test fun theShortStagesKeepTheDockAt210AndShowWhatRowsFit() {
+        val rowsAt = { stage: StageMetrics -> listings().map { rows(stage, it) } }
+        assertEquals(listOf(2, 3, 2), rowsAt(compact[1]))
+        assertEquals(listOf(2, 2, 2), rowsAt(compact[3]))
+        assertEquals(listOf(1, 1, 1), rowsAt(micro))
+        listings().forEach {
+            assertEquals("${it.screen} dock 831", 210f, dock(compact[3], it), .01f)
+            assertEquals("${it.screen} dock 722", 210f, dock(micro, it), .01f)
         }
     }
 
@@ -82,9 +87,9 @@ class FamilyLayoutTest {
         // A line of the help: 21 px text at the default interface scale of 1.15 and a line height of 1.45
         val line = 21f * 1.15f * 1.45f
         compact.forEach { stage ->
-            rowTops().forEach { (screen, top) ->
-                val body = HelpDockLayout.bodyHeight(HelpDockLayout.height(stage.stageHeight, top, bottom, SettingsLayout.tallRow(stage)))
-                assertTrue("${name(stage)} $screen body $body", body >= 2f * line)
+            listings().forEach {
+                val body = HelpDockLayout.bodyHeight(dock(stage, it))
+                assertTrue("${name(stage)} ${it.screen} body $body", body >= 2f * line)
             }
         }
     }
@@ -132,18 +137,36 @@ class FamilyLayoutTest {
         }
     }
 
-    /** 16:9 settings: the row was centred but 12 px wider than the content, so L1 began 6 px left of the title and R1 ended 6 px right of the panel. */
-    @Test fun aRowThatOverhangsTheContentByAFewPixelsEndsOnBothItsEdges() {
+    /** 16:9 settings: the row is 12 px wider than the content and has always been centred (L1 begins 6 px before the title): it stays so, untightened. */
+    @Test fun aRowThatOverhangsTheContentByAFewPixelsStaysCentredAndKeepsItsWidth() {
         val natural = 1632f + 2f * SHOULDER_OUTSET
-        val width = TabRowLayout.width(natural, SHOULDER_OUTSET, 150f, 1770f, TabRowLayout.MAX_TIGHTEN)
-        assertEquals(1620f + 2f * SHOULDER_OUTSET, width, .001f)
-        val x = TabRowLayout.x(1920f, width, SHOULDER_OUTSET, 150f, 1770f)
-        assertEquals("L1's edge on the title's x", 150f, x + SHOULDER_OUTSET, .001f)
-        assertEquals("R1's edge on the panel's right edge", 1770f, x + width - SHOULDER_OUTSET, .001f)
-        // A row that fits is not touched, nor one that would have to give up more than 4 px in each gap
-        assertEquals(1500f, TabRowLayout.width(1500f, SHOULDER_OUTSET, 150f, 1770f, TabRowLayout.MAX_TIGHTEN), .001f)
-        assertEquals(1640f, TabRowLayout.width(1640f, SHOULDER_OUTSET, 150f, 1770f, TabRowLayout.MAX_TIGHTEN), .001f)
-        assertEquals(1700f, TabRowLayout.width(1700f, SHOULDER_OUTSET, 150f, 1770f, TabRowLayout.MAX_TIGHTEN), .001f)
+        val p = TabRowLayout.place(1920f, natural, SHOULDER_OUTSET, 150f, 1770f)
+        assertEquals(natural, p.width, .001f)
+        assertEquals((1920f - natural) / 2f, p.x, .001f)
+        assertFalse(p.scrolls)
+    }
+
+    /** A row wider than its room neither tightens nor overhangs nor runs left of the content: it scrolls in the room between the edges. */
+    @Test fun aRowWiderThanItsRoomScrollsBetweenTheContentsEdges() {
+        (compact + wide).forEach { stage ->
+            val margin = SettingsLayout.margin(stage)
+            val right = stage.stageWidth - margin
+            listOf(true, false).forEach { centred ->
+                val room = right - margin
+                val p = TabRowLayout.place(stage.stageWidth, room + 2f * SHOULDER_OUTSET + 400f, SHOULDER_OUTSET, margin, right, centred)
+                assertTrue("${name(stage)} scrolls", p.scrolls)
+                assertEquals("${name(stage)} left edge", margin, p.x + SHOULDER_OUTSET, .001f)
+                assertEquals("${name(stage)} right edge", right, p.x + p.width - SHOULDER_OUTSET, .001f)
+                assertTrue("never negative", p.x >= 0f)
+            }
+        }
+        // The counterexample of the review: 1830 wide against 150..1770 has the room, not x = -50
+        val p = TabRowLayout.place(1920f, 1830f, SHOULDER_OUTSET, 150f, 1770f, centred = false)
+        assertTrue(p.scrolls)
+        assertEquals(140f, p.x, .001f)
+        // Just under the overhang that is allowed stays unscrolled
+        assertFalse(TabRowLayout.place(1920f, 1640f + 2f * SHOULDER_OUTSET - 8f, SHOULDER_OUTSET, 150f, 1770f).scrolls)
+        assertTrue(TabRowLayout.place(1920f, 1640f + 2f * SHOULDER_OUTSET + 8f, SHOULDER_OUTSET, 150f, 1770f).scrolls)
     }
 
     @Test fun theArtworkTabsEndExactlyAtTheContentsRightEdge() {
@@ -160,17 +183,17 @@ class FamilyLayoutTest {
 
     // The Artwork grid
 
-    private class Kind(val name: String, val ratio: Float, val columns: Int, val compactMin: Float)
+    private class Kind(val name: String, val ratio: Float, val columns: Int, val compactMin: Float, val compactMax: Float = Float.MAX_VALUE)
 
     private val kinds = listOf(
-        Kind("cover", 600f / 900f, 7, ArtworkLayout.COVER_MIN), Kind("wide", 920f / 430f, 4, ArtworkLayout.WIDE_MIN),
+        Kind("cover", 600f / 900f, 7, ArtworkLayout.COVER_MIN, ArtworkLayout.COVER_MAX), Kind("wide", 920f / 430f, 4, ArtworkLayout.WIDE_MIN),
         Kind("hero", 1920f / 620f, 3, ArtworkLayout.HERO_MIN), Kind("logo", 2f, 5, ArtworkLayout.LOGO_MIN),
     )
 
     private fun compactGrid(stage: StageMetrics, kind: Kind): ArtGrid {
         val width = stage.stageWidth - 2f * SettingsLayout.margin(stage)
         val viewport = ArtworkLayout.viewport(stage.stageHeight, bottom, ArtworkLayout.hasInfo(width, stage.stageHeight, bottom))
-        return ArtGridLayout.compact(width, viewport, kind.ratio, kind.compactMin)
+        return ArtGridLayout.compact(width, viewport, kind.ratio, kind.compactMin, kind.compactMax)
     }
 
     /** The columns of a stage that is not compact, as `ArtTab.columnsFor` counts them. */
@@ -219,22 +242,31 @@ class FamilyLayoutTest {
             // cut the glow: the widest compact tiles (the backgrounds) send the last 2 px of its blur past the 48 px margin
             assertTrue("$name glow ${grid.glowSide} at the side", grid.glowSide <= SettingsLayout.margin(stage) + 2.5f)
             assertTrue("$name glow under the last row", grid.glowBottom <= grid.padBottom)
-            assertTrue("$name glow above the first row", grid.glowTop <= grid.padTop)
+            // The compact viewport starts 8 px under the toolbar: the first row's glow still ends inside it
+            assertTrue("$name glow above the first row", grid.glowTop <= grid.padTop - ArtworkLayout.GRID_INSET)
         }
         wide.forEach { stage -> kinds.forEach { kind -> assertTrue(wideGrid(stage, kind).let { it.glowTop <= 46f && it.glowBottom <= 96f }) } }
     }
 
-    @Test fun theCompactCoversAreSmallerThanBeforeAndNeverTiny() {
-        compact.forEach { stage ->
+    /**
+     * The covers are 190 to 210 px wide where the stage's height holds a focused row of them whole (the room left over goes into the gaps):
+     * the 957 and 1051 px stages. The shorter ones (893: 173 and 158 px, 831: 145, 722: 141) take smaller ones, never under 72 % of 190, because
+     * a row of 190 px covers (285 px tall) with its ring, glow and the next row's peek would not show whole over the info strip.
+     */
+    @Test fun theCompactCoversAreAboutTwoHundredWideWhereTheStageIsTallEnough() {
+        listOf(compact[0], compact[4]).forEach { stage ->
             val grid = compactGrid(stage, kinds[0])
-            // Before: about 186 to 190 stage px wide with 16 px between them
-            assertTrue("${name(stage)} cover ${grid.tileWidth}", grid.tileWidth in ArtworkLayout.COVER_MIN..160f)
-            assertTrue("${name(stage)} columns ${grid.columns}", grid.columns >= 6)
+            assertTrue("${name(stage)} cover ${grid.tileWidth}", grid.tileWidth in ArtworkLayout.COVER_MIN..ArtworkLayout.COVER_MAX + .01f)
+            assertEquals("${name(stage)} columns", 4, grid.columns)
+            // The gaps take what the cap leaves: more than the rule needs, the rows' own clearance under it
+            assertTrue("${name(stage)} gap ${grid.gapX}", grid.gapX >= 38f)
         }
-        assertEquals(6, compactGrid(compact[0], kinds[0]).columns)
-        assertEquals(8, compactGrid(compact[1], kinds[0]).columns)
+        // The 893 px stages take 7 and 6 columns (173 and 158 px): a 205 px row would not show whole above the info strip
+        assertEquals(7, compactGrid(compact[1], kinds[0]).columns)
+        assertEquals(6, compactGrid(compact[2], kinds[0]).columns)
         compact.forEach { stage ->
-            kinds.forEach { kind -> assertTrue("${name(stage)} ${kind.name}", compactGrid(stage, kind).tileWidth >= kind.compactMin * ArtGridLayout.SHORT_SHARE) }
+            kinds.forEach { kind -> assertTrue("${name(stage)} ${kind.name}", compactGrid(stage, kind).tileWidth >= kind.compactMin * ArtGridLayout.SHORT_SHARE - .01f) }
+            assertTrue("${name(stage)} never over the cap", compactGrid(stage, kinds[0]).tileWidth <= ArtworkLayout.COVER_MAX + .01f)
         }
     }
 
@@ -255,19 +287,17 @@ class FamilyLayoutTest {
             val width = stage.stageWidth - 2f * SettingsLayout.margin(stage)
             assertEquals(name(stage), stage != micro, ArtworkLayout.hasInfo(width, stage.stageHeight, bottom))
         }
-        // Without the strip the Pocket Micro keeps the six columns of the other narrow stages instead of smaller covers
-        assertEquals(6, compactGrid(micro, kinds[0]).columns)
     }
 
     @Test fun aViewportTooShortForARowTakesSmallerTilesDownToTheFloor() {
-        val normal = ArtGridLayout.compact(986f, 400f, 2f / 3f, ArtworkLayout.COVER_MIN)
-        val short = ArtGridLayout.compact(986f, 290f, 2f / 3f, ArtworkLayout.COVER_MIN)
-        assertEquals(6, normal.columns)
-        assertEquals(7, short.columns)
-        assertTrue(short.rowRoom <= 290f)
-        // Nothing under 80 % of the kind's least width, however short the viewport is
-        val shortest = ArtGridLayout.compact(986f, 100f, 2f / 3f, ArtworkLayout.COVER_MIN)
-        assertTrue(shortest.tileWidth >= ArtworkLayout.COVER_MIN * ArtGridLayout.SHORT_SHARE)
+        val normal = ArtGridLayout.compact(986f, 400f, 2f / 3f, ArtworkLayout.COVER_MIN, ArtworkLayout.COVER_MAX)
+        val short = ArtGridLayout.compact(986f, 330f, 2f / 3f, ArtworkLayout.COVER_MIN, ArtworkLayout.COVER_MAX)
+        assertTrue(normal.tileWidth <= ArtworkLayout.COVER_MAX + .01f)
+        assertTrue(short.columns > normal.columns)
+        assertTrue(short.rowRoom <= 330f)
+        // Nothing under 72 % of the kind's least width, however short the viewport is
+        val shortest = ArtGridLayout.compact(986f, 100f, 2f / 3f, ArtworkLayout.COVER_MIN, ArtworkLayout.COVER_MAX)
+        assertTrue(shortest.tileWidth >= ArtworkLayout.COVER_MIN * ArtGridLayout.SHORT_SHARE - .01f)
     }
 
     @Test fun sixteenByNineKeepsItsColumnsWithSmallerTilesAndTheRulesGaps() {

@@ -1,6 +1,8 @@
 package com.limelight.shell.screens
 
 import androidx.activity.compose.LocalActivity
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Image
@@ -335,7 +337,8 @@ fun SettingsScreen(
             Column(Modifier.fillMaxSize().padding(start = margin.px, end = margin.px, top = SettingsLayout.COMPACT_LIST_TOP.px, bottom = SettingsLayout.bottom(appearance).px),
                 verticalArrangement = Arrangement.spacedBy(HelpDockLayout.LIST_GAP.px)) {
                 list(Modifier.weight(1f).fillMaxWidth())
-                val dockHeight = HelpDockLayout.height(stage.stageHeight, SettingsLayout.COMPACT_LIST_TOP + 14f, SettingsLayout.bottom(appearance), SettingsLayout.tallRow(stage))
+                // Three whole rows under the first section's heading stay in view above the dock where the stage has the room
+                val dockHeight = HelpDockLayout.height(stage.stageHeight, SettingsLayout.COMPACT_LIST_TOP + 14f + SettingsLayout.SECTION_HEADING, SettingsLayout.bottom(appearance), SettingsLayout.tallRow(stage))
                 DescriptionPanel(tab, focused, Modifier.fillMaxWidth().height(dockHeight.px), appearance)
             }
         } else {
@@ -379,22 +382,35 @@ internal const val SHOULDER_OUTSET = 10f
 /**
  * A row of tabs between its L1 and R1 badges (a [com.limelight.shell.ui.SelectionPillHost]) at [y], placed by [TabRowLayout] on every
  * shape: exactly centred on the stage, or, when [centred] is false or the centred row would leave [left]..[right] (stage px: the content's
- * edges, less what a title or a button beside the row takes), with the R1 badge's edge exactly at [right]. A centred row that overhangs
- * both edges by a few pixels is tightened to end exactly on them ([TabRowLayout.width]).
+ * edges, less what a title or a button beside the row takes), with the R1 badge's edge exactly at [right]. A row wider than that room
+ * scrolls inside it ([tabScroll]); no tab changes its size or its gaps.
  */
 @Composable
 internal fun TabRow(y: Float, height: Dp, left: Float, right: Float, centred: Boolean = true, content: @Composable () -> Unit) {
     val stage = LocalStage.current
+    val scroll = rememberScrollState()
     com.limelight.shell.ui.SelectionPillHost(Modifier.offset(y = y.px).layout { measurable, constraints ->
         val k = stage.dpPerPx * density
-        val outset = SHOULDER_OUTSET * k
         val natural = measurable.maxIntrinsicWidth(constraints.maxHeight).toFloat()
-        val width = if (centred) TabRowLayout.width(natural, outset, left * k, right * k, TabRowLayout.MAX_TIGHTEN * k) else natural
-        val row = measurable.measure(constraints.copy(minWidth = 0, maxWidth = width.roundToInt().coerceAtMost(constraints.maxWidth)))
-        val x = if (centred) TabRowLayout.x(constraints.maxWidth.toFloat(), row.width.toFloat(), outset, left * k, right * k)
-        else TabRowLayout.flushRight(row.width.toFloat(), outset, right * k)
-        layout(constraints.maxWidth, row.height) { row.place(x.roundToInt(), 0) }
-    }.height(height), content = content)
+        val placement = TabRowLayout.place(constraints.maxWidth.toFloat(), natural, SHOULDER_OUTSET * k, left * k, right * k, centred)
+        val row = measurable.measure(constraints.copy(minWidth = 0, maxWidth = placement.width.roundToInt().coerceAtMost(constraints.maxWidth)))
+        layout(constraints.maxWidth, row.height) { row.place(placement.x.roundToInt(), 0) }
+    }.height(height).tabScroll(scroll), content = content)
+}
+
+/**
+ * The scroll of a tab row that does not fit its room: the row keeps its tabs' sizes and gaps and scrolls, fading at the edge that has more
+ * behind it ([TabPill] brings the selected tab into view). A row that fits is untouched: nothing to scroll, no fade.
+ */
+@Composable
+internal fun Modifier.tabScroll(scroll: ScrollState): Modifier {
+    val stage = LocalStage.current
+    val overflow = scroll.maxValue != Int.MAX_VALUE && scroll.maxValue > 0
+    val fade = if (overflow) 40f else 0f
+    return this.then(
+        if (overflow) Modifier.fadeMask(stage, vertical = false, startClear = 0f, startSolid = if (scroll.value > 0) fade else 0f,
+            endSolid = if (scroll.value < scroll.maxValue) fade else 0f, endClear = 0f) else Modifier
+    ).horizontalScroll(scroll)
 }
 
 /**
@@ -415,7 +431,14 @@ internal fun TabPill(icon: String, label: String, selected: Boolean, modifier: M
     val fade = if (reduced) snap<Color>() else tween(Motion.FADE, easing = Motion.Ease)
     val contentColor by animateColorAsState(if (selected) colors.onAccent else colors.text2, fade, label = "tabContent")
     val currentClick by rememberUpdatedState(onClick)
-    Row(modifier.selectionPillTarget(selected)
+    // In a row that scrolls (TabRow) the selected tab is brought into view with 56 px to spare, out of the fade at the cut edges
+    val requester = remember { androidx.compose.foundation.relocation.BringIntoViewRequester() }
+    var size by remember { mutableStateOf(androidx.compose.ui.unit.IntSize.Zero) }
+    val spare = 56f * LocalStage.current.dpPerPx * LocalDensity.current.density
+    LaunchedEffect(selected, size) {
+        if (selected && size.width > 0) requester.bringIntoView(androidx.compose.ui.geometry.Rect(-spare, 0f, size.width + spare, size.height.toFloat()))
+    }
+    Row(modifier.selectionPillTarget(selected).bringIntoViewRequester(requester).onSizeChanged { size = it }
         .graphicsLayer { scaleX = scale; scaleY = scale }
         .clip(CircleShape)
         .then(if (selected && !hosted) Modifier.background(colors.accent) else Modifier)
@@ -759,6 +782,9 @@ internal object SettingsLayout {
     const val COMPACT_MARGIN = 48f
     const val COMPACT_TABS_Y = 128f
     const val COMPACT_LIST_TOP = 202f
+
+    /** What a section's heading takes above its first row: its 10 + 2 px of padding, its line of 16 px text and the 10 px to the row. */
+    const val SECTION_HEADING = 44f
 
     /**
      * The compact list's bottom fade and the room the focused row keeps to the list's end, shorter than the 90 / 110 px of the tall 16:9

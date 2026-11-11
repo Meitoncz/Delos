@@ -11,6 +11,8 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
@@ -21,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.onFocusChanged
@@ -226,9 +229,20 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
         if (compact) {
             // The eyebrow and the game's name, the tabs (centred on the stage while the name leaves them the room, else flush against the
             // circle) and Reset all, which is flush with the content's right edge like the global settings' search
+            // The count of the game's custom settings (the chip of the 16:9 header) is the accent badge on the circle
             CompactGameHeader(screen.pc.name, screen.app.name, headTop, headHeight, tabs) {
-                CircleIconButton(Symbols.RESET, stringResource(R.string.settings_game_reset_all), resetModifier.size(SettingsLayout.searchSize(stage).px),
-                    clickCue = if (custom.isEmpty()) null else Cue.SELECT, click = resetAll)
+                val searchSize = SettingsLayout.searchSize(stage)
+                Box(Modifier.size(searchSize.px)) {
+                    CircleIconButton(Symbols.RESET, stringResource(R.string.settings_game_reset_all) + " · " + customSettingsLabel(res, custom.size),
+                        resetModifier.size(searchSize.px), clickCue = if (custom.isEmpty()) null else Cue.SELECT, click = resetAll)
+                    if (custom.isNotEmpty()) {
+                        val colors = LocalDelosColors.current
+                        Box(Modifier.align(Alignment.TopEnd).offset(y = (-10).px).zIndex(5f).defaultMinSize(minWidth = 30.px, minHeight = 30.px)
+                            .clip(CircleShape).background(colors.accent).padding(horizontal = 8.px), contentAlignment = Alignment.Center) {
+                            BasicText("${custom.size}", style = TextStyle(color = colors.onAccent, fontFamily = Figtree, fontWeight = FontWeight.Bold, fontSize = 18.tpx))
+                        }
+                    }
+                }
             }
         } else {
             // The eyebrow, the game's name, the custom-settings chip and Reset all, on the banner
@@ -326,13 +340,16 @@ internal object GameSettingsLayout {
     /**
      * The compact stage: a shorter banner and ONE header row 20 px under the status bar: the name at the left, the 66 px tabs (64 touch
      * minimum) and the Reset all circle. The list at full width starts where the row ends, its first row [COMPACT_LIST_INNER_TOP] further
-     * down: 23 px under the tabs.
+     * down: about 30 px under the tabs.
      */
     const val COMPACT_BANNER_HEIGHT = 220f
     const val COMPACT_HEAD_TOP = 124f
     const val COMPACT_HEAD_HEIGHT = 88f
     const val COMPACT_LIST_TOP = 212f
-    const val COMPACT_LIST_INNER_TOP = 12f
+    const val COMPACT_LIST_INNER_TOP = 20f
+
+    /** The game's name keeps at least this much of the compact header row; the tabs scroll in the rest. */
+    const val TITLE_MIN = 240f
 }
 
 /**
@@ -410,10 +427,11 @@ private fun GameTitle(pc: String, game: String, modifier: Modifier) {
 private fun CompactGameHeader(pc: String, game: String, y: Float, height: Float, tabs: @Composable () -> Unit, action: @Composable () -> Unit) {
     val stage = LocalStage.current
     val margin = SettingsLayout.margin(stage)
+    val scroll = rememberScrollState()
     Layout(
         content = {
             GameTitle(pc, game, Modifier)
-            SelectionPillHost(Modifier.height(targetPx(SettingsLayout.TABS_HEIGHT)), content = tabs)
+            SelectionPillHost(Modifier.height(targetPx(SettingsLayout.TABS_HEIGHT)).tabScroll(scroll), content = tabs)
             action()
         },
         modifier = Modifier.offset(y = y.px).fillMaxWidth().height(height.px),
@@ -421,16 +439,19 @@ private fun CompactGameHeader(pc: String, game: String, y: Float, height: Float,
         val k = stage.dpPerPx * density
         val width = constraints.maxWidth
         val rowHeight = constraints.maxHeight
-        val loose = Constraints(maxHeight = rowHeight)
-        val button = measurables[2].measure(loose)
-        val row = measurables[1].measure(loose)
+        val button = measurables[2].measure(Constraints(maxHeight = rowHeight))
         val edge = margin * k
         val gap = 24f * k
         val outset = SHOULDER_OUTSET * k
-        val x = TabRowLayout.x(
-            width.toFloat(), row.width.toFloat(), outset,
-            left = edge + measurables[0].maxIntrinsicWidth(rowHeight) + gap, right = width - edge - button.width - SettingsLayout.SEARCH_GAP * k,
+        // The name keeps at least TITLE_MIN of the row; the tabs scroll in what is left between it and the circle
+        val titleRoom = minOf(measurables[0].maxIntrinsicWidth(rowHeight).toFloat(), GameSettingsLayout.TITLE_MIN * k)
+        val natural = measurables[1].maxIntrinsicWidth(rowHeight)
+        val placement = TabRowLayout.place(
+            width.toFloat(), natural.toFloat(), outset,
+            left = edge + titleRoom + gap, right = width - edge - button.width - SettingsLayout.SEARCH_GAP * k,
         )
+        val row = measurables[1].measure(Constraints(maxWidth = placement.width.roundToInt(), maxHeight = rowHeight))
+        val x = placement.x
         val title = measurables[0].measure(Constraints(maxWidth = (x + outset - gap - edge).roundToInt().coerceAtLeast(0), maxHeight = rowHeight))
         layout(width, rowHeight) {
             title.place(edge.roundToInt(), (rowHeight - title.height) / 2)

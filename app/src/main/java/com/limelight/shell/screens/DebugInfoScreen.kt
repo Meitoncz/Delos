@@ -519,10 +519,10 @@ fun DebugInfoScreen() {
             // Compact: the title is smaller and sits under the status bar, the list takes the full width, the details are a dock under it
             BasicText(stringResource(R.string.debug_title), style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx),
                 modifier = Modifier.offset(margin.px, 108.px))
-            Column(Modifier.fillMaxSize().padding(start = margin.px, end = margin.px, top = 184.px, bottom = 100.px),
+            Column(Modifier.fillMaxSize().padding(start = margin.px, end = margin.px, top = 184.px, bottom = SettingsLayout.bottom(stage.textScale).px),
                 verticalArrangement = Arrangement.spacedBy(HelpDockLayout.LIST_GAP.px)) {
                 list(Modifier.weight(1f).fillMaxWidth())
-                val dockHeight = HelpDockLayout.height(stage.stageHeight, 184f + 14f, 100f, SettingsLayout.tallRow(stage))
+                val dockHeight = HelpDockLayout.height(stage.stageHeight, 184f + 14f + SettingsLayout.SECTION_HEADING, SettingsLayout.bottom(stage.textScale), SettingsLayout.tallRow(stage))
                 HelpDock(Modifier.fillMaxWidth().height(dockHeight.px), focused?.icon ?: Symbols.INFO, focused?.label ?: stringResource(R.string.debug_title), focused?.key, false) {
                     BasicText(focused?.description ?: stringResource(R.string.debug_panel_default),
                         style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 21.tpx, lineHeight = 1.45.em))
