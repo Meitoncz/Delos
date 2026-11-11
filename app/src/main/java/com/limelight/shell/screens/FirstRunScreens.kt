@@ -52,6 +52,8 @@ import com.limelight.shell.ui.RowGlideHost
 import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.ValuePill
 import com.limelight.shell.ui.Unbounded
+import com.limelight.shell.ui.compact
+import com.limelight.shell.ui.compactScale
 import com.limelight.shell.ui.px
 import com.limelight.shell.ui.tpx
 
@@ -62,12 +64,12 @@ fun BootScreen(onBegin: () -> Unit, onSkip: (() -> Unit)?) {
     val begin = remember { FocusRequester() }
     InitialFocus(begin)
     CenterColumn(gap = 28f) {
-        BootLogo(Modifier.padding(bottom = 8.px))
+        BootLogo(Modifier.padding(bottom = 8.px), LocalStage.current.compactScale)
         // margin-left .24em balances the letter spacing after the last letter
         BasicText(
             "DELOS",
-            style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 132.tpx, letterSpacing = .24.em),
-            modifier = Modifier.padding(start = 30.px),
+            style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = (if (LocalStage.current.compact) 96 else 132).tpx, letterSpacing = .24.em),
+            modifier = Modifier.padding(start = (if (LocalStage.current.compact) 22 else 30).px),
         )
         BasicText(stringResource(R.string.firstrun_boot_tagline), style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 28.tpx))
         Row(Modifier.padding(top = 26.px), horizontalArrangement = Arrangement.spacedBy(24.px)) {
@@ -79,12 +81,12 @@ fun BootScreen(onBegin: () -> Unit, onSkip: (() -> Unit)?) {
 
 /** `.boot-logo`: the Delos ring with its glow, the island inside and the moon circling it (7 s a turn). */
 @Composable
-private fun BootLogo(modifier: Modifier = Modifier) {
+private fun BootLogo(modifier: Modifier = Modifier, scale: Float = 1f) {
     val colors = LocalDelosColors.current
     val stage = LocalStage.current
     val turn by rememberInfiniteTransition(label = "orbit").animateFloat(0f, 360f, infiniteRepeatable(tween(7000, easing = LinearEasing)), label = "orbitTurn")
-    Canvas(modifier.size(210.px)) {
-        val k = stage.dpPerPx * density
+    Canvas(modifier.size((210f * scale).px)) {
+        val k = stage.dpPerPx * density * scale
         val glow = 160f * k
         drawCircle(Brush.radialGradient(0f to colors.glow, .66f to colors.glow.copy(alpha = colors.glow.alpha * .4f), 1f to Color.Transparent, center = center, radius = glow), radius = glow)
         drawCircle(colors.accent, radius = 101f * k, style = Stroke(8f * k))
@@ -115,6 +117,9 @@ fun CreateProfileScreen(editing: Boolean, initial: Profile?, onDone: (name: Stri
     val defaultName = stringResource(R.string.firstrun_create_default_name)
     val nameTitle = stringResource(R.string.firstrun_create_name_title)
     var name by remember { mutableStateOf(initial?.name ?: defaultName) }
+    // A compact stage is too narrow for six avatars across: four, in more rows (the column scrolls)
+    val stage = LocalStage.current
+    val columns = if (stage.compact) COMPACT_AVATAR_COLUMNS else AVATAR_COLUMNS
     val avatarFocus = remember { List(AVATARS.size) { FocusRequester() } }
     val changeName = remember { FocusRequester() }
     val create = remember { FocusRequester() }
@@ -139,13 +144,13 @@ fun CreateProfileScreen(editing: Boolean, initial: Profile?, onDone: (name: Stri
             ring = FocusRing(5f, 5f), corner = 999f, focusScale = 1.16f,
             fill = null, glow = FocusGlow(26f, 70f, -16f),
         ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(26.px)) {
-            AVATARS.withIndex().chunked(AVATAR_COLUMNS).forEach { row ->
-                Row(horizontalArrangement = Arrangement.spacedBy(32.px), verticalAlignment = Alignment.Top) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy((26f * stage.compactScale).px)) {
+            AVATARS.withIndex().chunked(columns).forEach { row ->
+                Row(horizontalArrangement = Arrangement.spacedBy((if (stage.compact) 24f else 32f).px), verticalAlignment = Alignment.Top) {
                     row.forEach { (i, a) ->
                         val wrap = Modifier.focusProperties {
-                            if (i % AVATAR_COLUMNS == 0) left = avatarFocus[(i - 1 + AVATARS.size) % AVATARS.size]
-                            if (i % AVATAR_COLUMNS == AVATAR_COLUMNS - 1 || i == AVATARS.lastIndex) right = avatarFocus[(i + 1) % AVATARS.size]
+                            if (i % columns == 0) left = avatarFocus[(i - 1 + AVATARS.size) % AVATARS.size]
+                            if (i % columns == columns - 1 || i == AVATARS.lastIndex) right = avatarFocus[(i + 1) % AVATARS.size]
                         }
                         CircleItem(
                             a.icon, stringResource(a.label),
@@ -175,5 +180,6 @@ fun CreateProfileScreen(editing: Boolean, initial: Profile?, onDone: (name: Stri
 
 /** The avatar picker: 6 columns of 144 px circles in 184 px cells, 2 rows (six cells and five gaps are 1264 px of the 1920 px stage). */
 private const val AVATAR_COLUMNS = 6
+private const val COMPACT_AVATAR_COLUMNS = 4
 private const val AVATAR_DIAMETER = 144f
 private const val AVATAR_CELL = 184f

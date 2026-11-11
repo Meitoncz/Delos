@@ -159,7 +159,7 @@ fun ToastHost(
     val density = LocalDensity.current
     val metrics = remember(stage, density.density, density.fontScale) { ToastMetrics(stage, density.density, density.fontScale) }
     val colors = LocalDelosColors.current
-    BoxWithConstraints(Modifier.fillMaxSize().padding(top = 112.px, end = 44.px), contentAlignment = Alignment.TopEnd) {
+    BoxWithConstraints(Modifier.fillMaxSize().padding(top = 112.px, end = (if (stage.compact) 48 else 44).px), contentAlignment = Alignment.TopEnd) {
         val textMaxPx = toastTextMaxWidth(constraints.maxWidth / metrics.pxPerStage + 44f, metrics.scale) * metrics.pxPerStage
         val latest = slots.last()
         slots.forEach { slot ->

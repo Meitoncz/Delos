@@ -53,6 +53,11 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
+import androidx.compose.ui.layout.Placeable
+import androidx.compose.ui.layout.SubcomposeLayout
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.text.style.TextOverflow
 import com.limelight.shell.system.BatteryStatus
 import com.limelight.shell.system.WifiStatus
 import kotlin.math.roundToInt
@@ -65,7 +70,11 @@ import kotlin.math.roundToInt
 fun ZoomedBar(uiScale: Float, content: @Composable () -> Unit) {
     val stage = LocalStage.current
     CompositionLocalProvider(
-        LocalStage provides stage.copy(dpPerPx = stage.dpPerPx * uiScale, textScale = 1f, safe = stage.safe.dividedBy(uiScale)),
+        // The bar's stage is as many stage pixels across as the zoomed bar really has room for
+        LocalStage provides stage.copy(
+            dpPerPx = stage.dpPerPx * uiScale, textScale = 1f, safe = stage.safe.dividedBy(uiScale),
+            stageWidth = stage.stageWidth / uiScale, stageHeight = stage.stageHeight / uiScale,
+        ),
         content = content,
     )
 }
@@ -92,13 +101,19 @@ fun StatusBar(
 ) {
     val colors = LocalDelosColors.current
     // The display cutout pads the bar (zero on a screen without one, so nothing moves there)
-    val safe = LocalStage.current.safe
+    val stage = LocalStage.current
+    val safe = stage.safe
+    // A compact stage drops the wordmark and holds the PC pill to what is left of its side of the centered navigation
+    val compact = stage.compact
+    val wordmark = !compact || stage.stageWidth >= Compact.NARROW_STAGE
+    val sideRoom = (stage.stageWidth - 2f * 72f - safe.left - safe.right - (if (nav != null) NAV_WIDTH else 0f)) / 2f
+    val pillMax = (sideRoom - 40f - 18f - (if (wordmark) WORDMARK_WIDTH + 18f else 0f) - 12f).coerceAtLeast(120f)
     Box(modifier.fillMaxWidth().padding(top = safe.top.px).height(104.px).padding(start = 72.px + safe.left.px, end = 72.px + safe.right.px)) {
         if (brand) {
             Row(Modifier.align(Alignment.CenterStart), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(18.px)) {
                 LogoMark()
-                BasicText("DELOS", style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx, letterSpacing = .14.em))
-                if (pcName != null) PcPill(pcName, pcOnline)
+                if (wordmark) BasicText("DELOS", style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx, letterSpacing = .14.em))
+                if (pcName != null) PcPill(pcName, pcOnline, if (compact && nav != null) pillMax else null)
             }
         }
         if (nav != null) TopNav(nav, Modifier.align(Alignment.Center))
@@ -195,21 +210,29 @@ fun LogoMark(size: Float = 40f) {
     })
 }
 
-/** The connected PC next to the brand; the dot is green while the PC is online. */
+/** The connected PC next to the brand; the dot is green while the PC is online. [maxWidth] (stage pixels) cuts a long name with an ellipsis; null: as wide as the name. */
 @Composable
-private fun PcPill(name: String, online: Boolean) {
+private fun PcPill(name: String, online: Boolean, maxWidth: Float? = null) {
     val colors = LocalDelosColors.current
     Row(
-        Modifier.clip(CircleShape).glass(colors.surface).border(1.px, colors.line, CircleShape).padding(horizontal = 18.px, vertical = 8.px),
+        Modifier.then(if (maxWidth != null) Modifier.widthIn(max = maxWidth.px) else Modifier)
+            .clip(CircleShape).glass(colors.surface).border(1.px, colors.line, CircleShape).padding(horizontal = 18.px, vertical = 8.px),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.px),
     ) {
         Box(Modifier.size(10.px).clip(CircleShape).background(if (online) ONLINE else colors.text3))
-        BasicText(name, style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 20.tpx))
+        BasicText(
+            name, style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 20.tpx),
+            maxLines = if (maxWidth != null) 1 else Int.MAX_VALUE, overflow = if (maxWidth != null) TextOverflow.Ellipsis else TextOverflow.Clip,
+        )
     }
 }
 
 private val ONLINE = androidx.compose.ui.graphics.Color(0xFF3DDC84)
+
+/** The top navigation's width (three 64 px buttons, their gaps and the pill's padding) and the wordmark's, for the compact status bar's room. */
+private const val NAV_WIDTH = 3 * 64f + 2 * 14f + 16f
+private const val WORDMARK_WIDTH = 175f
 
 @Composable
 internal fun TopNav(buttons: List<NavButton>, modifier: Modifier) {
@@ -358,7 +381,12 @@ data class Hint(val glyph: Glyph, val label: String)
 @Composable
 fun HintBar(hints: List<Hint>, note: String?, modifier: Modifier = Modifier, noteLabel: String? = null) {
     val colors = LocalDelosColors.current
-    val safe = LocalStage.current.safe
+    val stage = LocalStage.current
+    if (stage.compact) {
+        CompactHintBar(hints, note, noteLabel, modifier)
+        return
+    }
+    val safe = stage.safe
     Row(
         modifier.fillMaxWidth().padding(bottom = safe.bottom.px).height(92.px).padding(start = 72.px + safe.left.px, end = 72.px + safe.right.px),
         verticalAlignment = Alignment.CenterVertically,
@@ -376,6 +404,76 @@ fun HintBar(hints: List<Hint>, note: String?, modifier: Modifier = Modifier, not
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.px)) {
                 GlyphButton(hint.glyph)
                 BasicText(hint.label, style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 21.tpx))
+            }
+        }
+    }
+}
+
+/**
+ * The hint bar of a compact stage: the same note and hints, but only as much of them as the width holds. It tries the note with its
+ * "Library" label, the note alone, no note, and finally the hints as glyphs with the label of the first one only; the first variant
+ * that fits is drawn (the hints are the bar, so they are never cut and never overlap the note).
+ */
+@Composable
+private fun CompactHintBar(hints: List<Hint>, note: String?, noteLabel: String?, modifier: Modifier) {
+    val colors = LocalDelosColors.current
+    val safe = LocalStage.current.safe
+    val variants = remember(note, noteLabel) {
+        buildList {
+            if (note != null && noteLabel != null) add(HintVariant(true, true, true))
+            if (note != null) add(HintVariant(true, false, true))
+            add(HintVariant(false, false, true))
+            add(HintVariant(false, false, false))
+        }
+    }
+    val noteGap = 34.px
+    val hintGap = 28.px
+    SubcomposeLayout(
+        modifier.fillMaxWidth().padding(bottom = safe.bottom.px).height(92.px).padding(start = 72.px + safe.left.px, end = 72.px + safe.right.px),
+    ) { constraints ->
+        val open = Constraints()
+        val gap = noteGap.roundToPx()
+        var left: List<Placeable> = emptyList()
+        var right: List<Placeable> = emptyList()
+        for ((i, variant) in variants.withIndex()) {
+            left = if (variant.note && note != null) subcompose("note$i") {
+                HintNote(note, if (variant.noteLabel) noteLabel else null)
+            }.map { it.measure(open) } else emptyList()
+            right = subcompose("hints$i") { HintGlyphs(hints, variant.labels, hintGap) }.map { it.measure(open) }
+            val used = left.sumOf { it.width } + right.sumOf { it.width } + if (left.isEmpty()) 0 else gap
+            if (used <= constraints.maxWidth) break
+        }
+        layout(constraints.maxWidth, constraints.maxHeight) {
+            left.forEach { it.placeRelative(0, (constraints.maxHeight - it.height) / 2) }
+            right.forEach { it.placeRelative(constraints.maxWidth - it.width, (constraints.maxHeight - it.height) / 2) }
+        }
+    }
+}
+
+private class HintVariant(val note: Boolean, val noteLabel: Boolean, val labels: Boolean)
+
+/** The note of a hint bar: its small label, then the sentence, on one baseline. */
+@Composable
+private fun HintNote(note: String, noteLabel: String?) {
+    val colors = LocalDelosColors.current
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.px)) {
+        if (noteLabel != null) BasicText(noteLabel, style = TextStyle(color = colors.accent3,
+            fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx, letterSpacing = .14.em),
+            modifier = Modifier.alignByBaseline())
+        BasicText(note, style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 21.tpx),
+            modifier = Modifier.alignByBaseline(), maxLines = 1)
+    }
+}
+
+/** The hints of a compact bar: glyph and label each, or with [labels] false only the first one keeps its label. */
+@Composable
+private fun HintGlyphs(hints: List<Hint>, labels: Boolean, gap: androidx.compose.ui.unit.Dp) {
+    val colors = LocalDelosColors.current
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(gap)) {
+        hints.forEachIndexed { index, hint ->
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.px)) {
+                GlyphButton(hint.glyph)
+                if (labels || index == 0) BasicText(hint.label, style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 21.tpx), maxLines = 1)
             }
         }
     }

@@ -8,8 +8,8 @@ while IFS= read -r line; do
   line="${line%%#*}"; set -- $line; [ $# -ge 2 ] || continue; name=$1; shape=$2; cut=${3:-}
   while IFS='|' read -r id args wait; do
     id="$(echo "$id" | xargs)"; [ -n "$id" ] || continue; [[ "$id" == \#* ]] && continue
-    $ADB logcat -c; extra=""; [ -n "$cut" ] && extra="--es preview_cutout $cut"
-    $ADB shell am start -S -n $P/com.limelight.shell.ShellActivity --es preview_shape $shape $extra $args >/dev/null 2>&1
+    $ADB logcat -c </dev/null; extra=""; [ -n "$cut" ] && extra="--es preview_cutout $cut"
+    $ADB shell am start -S -n $P/com.limelight.shell.ShellActivity --es preview_shape $shape $extra $args >/dev/null 2>&1 </dev/null
     sleep 3
     if $ADB logcat -d -b crash | grep -q "FATAL EXCEPTION"; then echo "CRASH  $name  $id"; $ADB logcat -d -b crash | grep -m1 -A1 "FATAL" | tail -1 | cut -c1-160; bad=$((bad+1)); fi
   done < <(sed 's/#.*//' "$D/screens.txt")

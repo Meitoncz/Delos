@@ -5,6 +5,9 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -16,12 +19,14 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.KeyboardOptions
@@ -69,6 +74,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.unit.em
 import com.limelight.shell.ContextMenu
@@ -82,6 +88,25 @@ import com.limelight.shell.data.rememberAvatarImage
 /** `.center-col`: a centered column. */
 @Composable
 fun CenterColumn(gap: Float, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
+    val stage = LocalStage.current
+    if (stage.compact) {
+        // A compact stage is short: the column keeps clear of the status and hint bars, its gaps shrink with the stage, and what is
+        // still too tall (many circles in two rows) scrolls, with the focus scrolled into view
+        Box(
+            modifier.fillMaxSize().padding(top = (Compact.STATUS_BAR + stage.safe.top).px, bottom = (Compact.HINT_BAR + stage.safe.bottom).px),
+            contentAlignment = Alignment.Center,
+        ) {
+            EntranceScope {
+                Column(
+                    Modifier.verticalScroll(rememberScrollState()).padding(horizontal = Compact.MARGIN.px, vertical = 24.px),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy((gap * stage.compactScale).px),
+                    content = content,
+                )
+            }
+        }
+        return
+    }
     Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         // Its headline and circles enter one after the other (docs/GUI.md, "Motion")
         EntranceScope {
@@ -90,20 +115,21 @@ fun CenterColumn(gap: Float, modifier: Modifier = Modifier, content: @Composable
     }
 }
 
-/** `.h1` with an optional `.sub` under it. */
+/** `.h1` with an optional `.sub` under it. A compact stage sets the headline smaller (48 against 64) and lets the line under it use the width. */
 @Composable
 fun Heading(title: String, sub: String? = null) {
     val colors = LocalDelosColors.current
+    val stage = LocalStage.current
     Column(Modifier.staggerEntrance(), horizontalAlignment = Alignment.CenterHorizontally) {
         BasicText(
             title,
-            style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 64.tpx, letterSpacing = (-.01).em, textAlign = TextAlign.Center),
+            style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = (if (stage.compact) 48 else 64).tpx, letterSpacing = (-.01).em, textAlign = TextAlign.Center),
         )
         if (sub != null) {
             BasicText(
                 sub,
                 style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 26.tpx, lineHeight = 1.4.em, textAlign = TextAlign.Center),
-                modifier = Modifier.padding(top = 14.px).widthIn(max = 1000.px),
+                modifier = Modifier.padding(top = (if (stage.compact) 10 else 14).px).widthIn(max = (if (stage.compact) minOf(1000f, stage.stageWidth - 2f * Compact.SIDE) else 1000f).px),
             )
         }
     }
@@ -217,6 +243,8 @@ fun CircleItem(
     diameter: Float? = null,
     width: Float = 220f,
     contextMenu: ContextMenu? = null,
+    /** The factor of the circle, its icon, badge and spacing (the item's width and its labels keep their size); null: the compact stage's, 1 elsewhere. */
+    scale: Float? = null,
 ) {
     val colors = LocalDelosColors.current
     val stage = LocalStage.current
@@ -229,11 +257,14 @@ fun CircleItem(
     val badgeScale by animateFocusScale(focused, false, 1.16f, label = "circleBadge", focusMillis = if (rowPlate != null) Motion.ROW_FOCUS else Motion.FOCUS)
     // The badge pops in when the circle becomes the selected one
     val badgePop by animateFloatAsState(if (selected) 1f else 0f, if (reduced) tween(Motion.FADE, easing = Motion.Ease) else tween(Motion.PILL_POP, easing = EaseSpring), label = "circleBadgePop")
-    val side = diameter ?: if (big) 220f else 176f
-    val iconSize = if (big) 96f else 76f
+    val cs = scale ?: stage.compactScale
+    // A compact stage packs the circles closer: an item is at most 176 wide and its label may run 15 px over each edge (the gap is 16)
+    val itemWidth = if (stage.compact) minOf(width, 176f) else width
+    val side = (diameter ?: if (big) 220f else 176f) * cs
+    val iconSize = (if (big) 96f else 76f) * cs
     val pulseTransition = rememberInfiniteTransition(label = "pulse")
     val wave by pulseTransition.animateFloat(0f, 1f, infiniteRepeatable(tween(2400, easing = EaseOut)), label = "pulseWave")
-    Column(Modifier.staggerEntrance().width(width.px), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy((if (side < 176f) 14f else 22f).px)) {
+    Column(Modifier.staggerEntrance().width(itemWidth.px), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(((if (side < 176f) 14f else 22f) * cs).px)) {
         Box {
             Box(
                 modifier
@@ -280,11 +311,12 @@ fun CircleItem(
                 ) {
                     // Centered on the circle's edge at the top right (45°)
                     val edge = side / 2f * (1f - 0.70710677f)
+                    val badge = 52f * cs
                     Box(
-                        Modifier.offset(x = (side - edge - 26f).px, y = (edge - 26f).px).size(52.px).clip(CircleShape).background(colors.accent2),
+                        Modifier.offset(x = (side - edge - badge / 2f).px, y = (edge - badge / 2f).px).size(badge.px).clip(CircleShape).background(colors.accent2),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Symbol(Symbols.CHECK, 26.tpx, colors.onAccent)
+                        Symbol(Symbols.CHECK, (26f * cs).tpx, colors.onAccent)
                     }
                 }
             }
@@ -294,7 +326,9 @@ fun CircleItem(
                 label,
                 style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx, textAlign = TextAlign.Center),
                 maxLines = 1,
-                modifier = Modifier.graphicsLayer {
+                softWrap = !stage.compact,
+                overflow = if (stage.compact) TextOverflow.Ellipsis else TextOverflow.Clip,
+                modifier = Modifier.then(if (stage.compact) Modifier.wrapContentWidth(unbounded = true).widthIn(max = (itemWidth + 30f).px) else Modifier).graphicsLayer {
                     alpha = .55f + .45f * lit
                     translationY = -6f * (1f - lit) * stage.dpPerPx * density
                 },
@@ -302,20 +336,41 @@ fun CircleItem(
             if (meta != null) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.px)) {
                     if (metaDot != null) Box(Modifier.size(12.px).clip(CircleShape).background(metaDot))
-                    BasicText(meta, style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 20.tpx, textAlign = TextAlign.Center), maxLines = 2)
+                    BasicText(meta, style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 20.tpx, textAlign = TextAlign.Center), maxLines = if (stage.compact) 3 else 2)
                 }
             }
         }
     }
 }
 
-/** `.circles`: a centered row of circle items; it wraps into more centered rows when the stage is too narrow for them (as many PCs as fit in 1920 stay on one). */
+/**
+ * `.circles`: a centered row of circle items; it wraps into more centered rows when the stage is too narrow for them (as many PCs as fit in 1920 stay on one).
+ * A compact stage has no room for rows under each other: its circles stay in one row that scrolls sideways when there are more than fit (the
+ * focus scrolls into view, the ends fade out while there is more to see).
+ */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun Circles(content: @Composable () -> Unit) {
+    val stage = LocalStage.current
+    val cs = stage.compactScale
     // One ring glides between the circles (docs/GUI.md, "Motion") instead of every circle fading its own
     GlideRingHost(FocusRing(5f, 5f), corner = 999f, focusScale = 1.16f) {
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(56.px, Alignment.CenterHorizontally), verticalArrangement = Arrangement.spacedBy(48.px)) { content() }
+        if (stage.compact) {
+            val scroll = rememberScrollState()
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Row(
+                    Modifier
+                        .then(if (scroll.maxValue > 0) Modifier.fadeMask(stage, vertical = false, startClear = 0f, startSolid = 40f, endSolid = 40f, endClear = 0f) else Modifier)
+                        .horizontalScroll(scroll)
+                        // Room for the focus scale and ring, which the scroll area would clip
+                        .padding(horizontal = 40.px, vertical = 36.px),
+                    horizontalArrangement = Arrangement.spacedBy(16.px),
+                    verticalAlignment = Alignment.Top,
+                ) { content() }
+            }
+        } else {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(56.px, Alignment.CenterHorizontally), verticalArrangement = Arrangement.spacedBy((48f * cs).px)) { content() }
+        }
     }
 }
 

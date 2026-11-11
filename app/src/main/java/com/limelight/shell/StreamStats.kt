@@ -155,7 +155,7 @@ internal fun renderLatencyText(stage: StageSummary): String =
  * at the top center. It lives in the stream's performance overlay container, so showing and hiding it
  * with the overlay setting or the stream menu's Overlay works as before.
  */
-class StreamStatsPanel private constructor(
+class StreamStatsPanel internal constructor(
     private val view: ComposeView,
     private val container: ViewGroup,
     private val position: StatsPosition,
@@ -167,6 +167,11 @@ class StreamStatsPanel private constructor(
     /** Called from the decoder's thread. */
     fun update(next: StreamStats) {
         view.post { stats.value = next }
+    }
+
+    /** Debug previews: sets the numbers without the post to the view. */
+    internal fun show(next: StreamStats) {
+        stats.value = next
     }
 
     /** Switches between the full panel and the compact line (the stream menu's Overlay). */
@@ -184,7 +189,7 @@ class StreamStatsPanel private constructor(
     }
 
     @Composable
-    private fun Content() {
+    internal fun Content() {
         val s = stats.value ?: return
         val compact = compactState.value
         Box(

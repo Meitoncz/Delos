@@ -84,7 +84,11 @@ fun ProblemOfferCard(problem: Problem?, reducedMotion: Boolean, onReport: () -> 
     var shown by remember { mutableStateOf(problem) }
     if (problem != null) shown = problem
     val origin = TransformOrigin(1f, 0f)
-    Box(Modifier.fillMaxSize().padding(top = 230.px, end = 64.px), contentAlignment = Alignment.TopEnd) {
+    // A compact stage tucks the card under the status bar, 48 px from the edge, and gives it the width that is left (780 at most)
+    val stage = LocalStage.current
+    val compact = stage.compact
+    val margin = if (compact) 48f else 64f
+    Box(Modifier.fillMaxSize().padding(top = (if (compact) Compact.STATUS_BAR + stage.safe.top else 230f).px, end = margin.px), contentAlignment = Alignment.TopEnd) {
         AnimatedVisibility(problem != null, enter = popEnter(origin, reducedMotion), exit = popExit(origin, reducedMotion)) {
             val p = shown ?: return@AnimatedVisibility
             val report = remember { FocusRequester() }
@@ -92,7 +96,7 @@ fun ProblemOfferCard(problem: Problem?, reducedMotion: Boolean, onReport: () -> 
             val shape = RoundedCornerShape(34.px)
             val res = textResources()
             Column(
-                Modifier.width(780.px).clip(shape).glass(colors.surface).border(1.px, colors.line, shape).padding(36.px).focusGroup(),
+                Modifier.width((if (compact) minOf(780f, stage.stageWidth - 2f * 48f) else 780f).px).clip(shape).glass(colors.surface).border(1.px, colors.line, shape).padding((if (compact) 28 else 36).px).focusGroup(),
                 verticalArrangement = Arrangement.spacedBy(18.px),
             ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(22.px), verticalAlignment = Alignment.CenterVertically) {

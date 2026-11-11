@@ -1,6 +1,7 @@
 package com.limelight.shell
 
 import android.content.Intent
+import android.view.KeyEvent
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -15,6 +17,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.limelight.R
 import com.limelight.binding.video.PyroWaveRenderer
+import com.limelight.diag.Problem
+import com.limelight.diag.ProblemKind
 import com.limelight.shell.data.LocalArtwork
 import com.limelight.shell.data.LocalBoxArt
 import com.limelight.shell.data.LocalGameMetadata
@@ -30,10 +34,12 @@ import com.limelight.shell.ui.LocalDelosColors
 import com.limelight.shell.ui.LocalReducedMotion
 import com.limelight.shell.ui.LocalStage
 import com.limelight.shell.ui.StreamResultLayer
+import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.delosColors
 import com.limelight.shell.ui.textResources
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
+import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
 /**
@@ -55,8 +61,12 @@ import kotlin.math.roundToInt
  * - `dialog`: a dialog layer (title, message, Pair and Cancel) over Home.
  * - `loader`: the stream launch scene of Hades at a fixed progress and a fixed scene time (no launch).
  * - `result`: the stream result card of a stream that could not start, over the plain background.
- * All of them but `loader` and `result` run the real `Shell` in a [PreviewWorld] (docs/GUI.md, "Screen previews"); `loader` and `result`
- * draw `LaunchScene` and `StreamResultLayer` alone. Any other name is not handled here.
+ * - `side_menu` (`preview_state` row|grid): the side menu open over Home. `home_context` (same states): Home with the game menu of the focused game, opened by the
+ *   Start key 3 s after the start. `problem`: Home with the problem report card. `stream_exit`: Home under the exit portal ("Closing Elden Ring").
+ * - `boot`, `create_profile`, `pair_pc`: the first-launch screens, and the PC pairing list.
+ * - `stream_stats` (`preview_state` full|compact, `preview_position` TOP_LEFT|TOP_RIGHT|BOTTOM_LEFT|BOTTOM_RIGHT): the real statistics panel over the game scene, with fixed numbers.
+ * All of them but `loader`, `result` and `stream_stats` run the real `Shell` in a [PreviewWorld] (docs/GUI.md, "Screen previews"); those three
+ * draw `LaunchScene`, `StreamResultLayer` and `StreamStatsPanel` alone. Any other name is not handled here.
  */
 internal object ScreenPreviews {
     fun from(intent: Intent, @Suppress("UNUSED_PARAMETER") shell: ShellState): (@Composable () -> Unit)? {
@@ -74,8 +84,16 @@ internal object ScreenPreviews {
             "pair" -> shellPreview(ShellRoute { Screen.Pin(PreviewFixtures.STUDY_PC, PreviewFixtures.host(PreviewFixtures.STUDY_PC).name, null, Screen.Start) })
             "filter" -> shellPreview(ShellRoute(layer = Layer.Filters) { Screen.Home })
             "dialog" -> shellPreview(ShellRoute(layer = Layer.Dialog(DIALOG)) { Screen.Home })
+            "side_menu" -> shellPreview(ShellRoute(if (state == "grid") HomeLayout.GRID else HomeLayout.ROW, layer = Layer.Side) { Screen.Home })
+            "home_context" -> shellPreview(ShellRoute(if (state == "grid") HomeLayout.GRID else HomeLayout.ROW, press = KeyEvent.KEYCODE_BUTTON_START) { Screen.Home })
+            "problem" -> shellPreview(ShellRoute(after = { it.shell.problem = PROBLEM }) { Screen.Home })
+            "stream_exit" -> shellPreview(ShellRoute(after = { it.shell.portal = PORTAL }) { Screen.Home })
+            "boot" -> shellPreview(ShellRoute { Screen.Boot() })
+            "create_profile" -> shellPreview(ShellRoute { Screen.CreateProfile(editing = false, back = Screen.Boot()) })
+            "pair_pc" -> shellPreview(ShellRoute { Screen.PairPc(back = Screen.Start) })
             "loader" -> loaderPreview
             "result" -> resultPreview
+            "stream_stats" -> StatsPreview.from(intent)
             else -> null
         }
     }
@@ -87,6 +105,10 @@ internal object ScreenPreviews {
         "Delos will ask GAMING-PC to start pairing. Enter the PIN that Delos shows on that PC to finish.",
         emptyList(), "Pair",
     ) { true }
+
+    private val PROBLEM = Problem("preview-problem", ProblemKind.NATIVE_CRASH, PreviewFixtures.NOW, "SIGSEGV (SEGV_MAPERR)", "", viaExitRecord = true)
+
+    private val PORTAL = Portal(1, Symbols.POWER_SETTINGS_NEW, "Closing Elden Ring", "GAMING-PC", cancellable = false)
 
     private fun shellPreview(route: ShellRoute): @Composable () -> Unit = {
         // The native Vulkan probe behind Settings' capabilities dies with SIGILL on the layout emulator (SwiftShader): say "no PyroWave" up front
@@ -110,6 +132,11 @@ internal object ScreenPreviews {
         val textScale = LocalStage.current.textScale
         val world = remember(route) { PreviewWorld(base, activity, route, textScale) }
         DisposableEffect(world) { onDispose { world.close() } }
+        LaunchedEffect(world) {
+            val key = route.press ?: return@LaunchedEffect
+            delay(3000)
+            world.keys.dispatch(KeyEvent(KeyEvent.ACTION_UP, key))
+        }
         val appearance by world.appearanceStore.appearance.collectAsStateWithLifecycle()
         val colors = remember(appearance) { delosColors(appearance, null) }
         CompositionLocalProvider(

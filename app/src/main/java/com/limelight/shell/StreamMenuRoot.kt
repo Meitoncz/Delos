@@ -96,6 +96,9 @@ internal fun StreamMenuRoot(
     start: StreamMenuStart = StreamMenuStart(),
 ) {
     val res = textResources()
+    // The dock of this stage: the prototype's, or a compact stage's smaller tiles and nearer margins
+    val stageMetrics = LocalStage.current
+    val dock = remember(stageMetrics.stageWidth, stageMetrics.shape) { DockGeometry.forStage(stageMetrics) }
     var page by remember { mutableStateOf(start.page) }
     // The page of the popover that is open or was open last: it stays while the popover animates out
     var shownPage by remember { mutableStateOf(if (start.page != MenuPage.MAIN) start.page else MenuPage.MORE) }
@@ -127,7 +130,7 @@ internal fun StreamMenuRoot(
     // The popover: present from opening until it has animated out. Its geometry snaps when it opens from the dock
     // (after its content reported its size), and follows its target with a spring when another page replaces it.
     var popPresent by remember { mutableStateOf(start.page != MenuPage.MAIN) }
-    val geo = remember { PopoverGeometry(popoverPlacement(shownPage)!!) }
+    val geo = remember { PopoverGeometry(popoverPlacement(shownPage, dock)!!) }
     var natural by remember { mutableFloatStateOf(0f) }
     var snapNext by remember { mutableStateOf(start.page != MenuPage.MAIN) }
     var geoReady by remember { mutableStateOf(false) }
@@ -141,7 +144,7 @@ internal fun StreamMenuRoot(
     val exitClock = remember { Animatable(0f) }
     val gradient = remember { Animatable(if (start.animate) 0f else 1f) }
     val scrim = remember { Animatable(if (start.page != MenuPage.MAIN) 1f else 0f) }
-    val dockShift = remember { Animatable(if (start.page != MenuPage.MAIN) L.DOCK_SHIFT else 0f) }
+    val dockShift = remember { Animatable(if (start.page != MenuPage.MAIN) dock.dockShift else 0f) }
     val scope = rememberCoroutineScope()
     LaunchedEffect(Unit) {
         if (start.animate) enterClock.animateTo(M.ENTER_TOTAL.toFloat(), tween(M.ENTER_TOTAL, easing = LinearEasing))
@@ -157,7 +160,7 @@ internal fun StreamMenuRoot(
         coroutineScope {
             launch { scrim.animateTo(if (popOpen) 1f else 0f, tween(Motion.SCRIM, easing = Motion.Ease)) }
             launch {
-                val target = if (popOpen) L.DOCK_SHIFT else 0f
+                val target = if (popOpen) dock.dockShift else 0f
                 if (reducedMotion) dockShift.snapTo(target) else dockShift.animateTo(target, tween(M.DOCK, easing = com.limelight.shell.ui.EaseOut))
             }
         }
@@ -197,7 +200,7 @@ internal fun StreamMenuRoot(
                 snapNext = true
                 geoReady = false
                 // The card is at its tile before its first layout (an undispatched snap runs right here)
-                scope.launch(start = CoroutineStart.UNDISPATCHED) { geo.place(popoverPlacement(next)!!, snap = true) }
+                scope.launch(start = CoroutineStart.UNDISPATCHED) { geo.place(popoverPlacement(next, dock)!!, snap = true) }
             }
             entryRow = null
             page = next
@@ -295,7 +298,7 @@ internal fun StreamMenuRoot(
             geoReady = false
         }
     }
-    val placement = popoverPlacement(shownPage)!!
+    val placement = popoverPlacement(shownPage, dock)!!
     LaunchedEffect(placement, session) {
         val snap = snapNext || reducedMotion
         geo.place(placement, snap)
@@ -331,7 +334,7 @@ internal fun StreamMenuRoot(
         titleIn = false
     }
 
-    CompositionLocalProvider(LocalStreamHelp provides { helpKey = it }) {
+    CompositionLocalProvider(LocalStreamHelp provides { helpKey = it }, LocalDockGeometry provides dock) {
         Box(Modifier.fillMaxSize()) {
             // A tap anywhere else closes the popover; it never resumes the stream (only Resume and B do)
             Box(Modifier.fillMaxSize().pointerInput(Unit) { detectTapGestures { pageAfterDismiss(page)?.let { go(it) } } })
@@ -340,7 +343,7 @@ internal fun StreamMenuRoot(
             // Everything else sits on a 1920-wide box centered on the stage and as high as the real stage, bottom-aligned: the
             // dock and the popover keep their distance from the bottom edge, a taller stage gives the popover more room
             val stageHeight = LocalStage.current.stageHeight
-            Box(Modifier.align(Alignment.BottomCenter).size(L.STAGE_WIDTH.px, stageHeight.px)) {
+            Box(Modifier.align(Alignment.BottomCenter).size(dock.width.px, stageHeight.px)) {
                 StreamMenuDock(
                     title = host.gameName,
                     circles = circles,
@@ -358,7 +361,7 @@ internal fun StreamMenuRoot(
                             barHelpItem = item
                         } else if (focusedItem == item) focusedItem = null
                     },
-                    modifier = Modifier.offset(0.px, (stageHeight - L.STAGE_HEIGHT + L.DOCK_TOP).px),
+                    modifier = Modifier.offset(0.px, (stageHeight - dock.dockHeight).px),
                 )
 
                 // The popover sits above the tile that opened it, its caret pointing down at that tile
@@ -376,7 +379,7 @@ internal fun StreamMenuRoot(
                         active = popOpen,
                         navigation = navigation,
                         onNaturalHeight = { natural = it },
-                        modifier = Modifier.align(Alignment.BottomStart).padding(bottom = L.POPOVER_BOTTOM.px),
+                        modifier = Modifier.align(Alignment.BottomStart).padding(bottom = dock.popoverBottom.px),
                     ) {
                         key(session, contentPage) {
                             val stagger = remember { EntranceStagger(enabled = navigated) }

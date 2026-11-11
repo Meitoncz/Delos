@@ -265,8 +265,10 @@ fun ContextMenuLayer(
     val stage = LocalStage.current
     val stageW = stage.stageWidth
     val stageH = stage.stageHeight
+    val marginX = if (stage.compact) L.COMPACT_MARGIN else L.MARGIN_X
+    val marginY = if (stage.compact) L.COMPACT_MARGIN else L.MARGIN_Y
     val state = remember(m, stageAnchor, stageW, stageH) {
-        MenuPlaceState(placeContextMenu(stageAnchor, L.MIN_WIDTH, estimatedHeight(m, stageH), m?.below == true, stageW, stageH), stageW, stageH)
+        MenuPlaceState(placeContextMenu(stageAnchor, L.MIN_WIDTH, estimatedHeight(m, stageH, marginY), m?.below == true, stageW, stageH, marginX, marginY), stageW, stageH)
     }
     val resolved = state.resolved
     val origin = remember(state, resolved) { state.origin() }
@@ -280,7 +282,7 @@ fun ContextMenuLayer(
             exit = popExit(origin, reduced),
         ) {
             if (m == null) return@AnimatedVisibility
-            CardPlacer(state, stageAnchor, m.below, k, stageW, stageH) {
+            CardPlacer(state, stageAnchor, m.below, k, stageW, stageH, marginX, marginY) {
                 // Switching level (or menu) is a new card content: its rows stagger in again and the plate starts on its first row
                 key(m, shownPath) { MenuCard(m, shownPath, cameFrom, onPath, state, haze, k, active = menu != null, onDismiss) }
             }
@@ -289,22 +291,22 @@ fun ContextMenuLayer(
 }
 
 /** A guess of the card's height before it is measured (header and rows), stage pixels. */
-private fun estimatedHeight(menu: ContextMenu?, stageHeight: Float): Float {
+private fun estimatedHeight(menu: ContextMenu?, stageHeight: Float, marginY: Float): Float {
     val rows = menu?.items?.size ?: 0
-    return (110f + rows * (L.ROW_HEIGHT + L.ROW_GAP) + 2 * L.PADDING + 8f).coerceAtMost(L.maxHeight(stageHeight))
+    return (110f + rows * (L.ROW_HEIGHT + L.ROW_GAP) + 2 * L.PADDING + 8f).coerceAtMost(L.maxHeight(stageHeight, marginY))
 }
 
 /** Places its child (the card with the room around it for the caret) by [placeContextMenu]. */
 @Composable
-private fun CardPlacer(state: MenuPlaceState, anchor: Rect?, below: Boolean, k: Float, stageW: Float, stageH: Float, content: @Composable () -> Unit) {
+private fun CardPlacer(state: MenuPlaceState, anchor: Rect?, below: Boolean, k: Float, stageW: Float, stageH: Float, marginX: Float, marginY: Float, content: @Composable () -> Unit) {
     Layout(content, Modifier.fillMaxSize()) { measurables, constraints ->
         val room = L.CARET_DEPTH * k
         val child = measurables.first().measure(
-            Constraints(maxWidth = ((L.MAX_WIDTH + 2 * L.CARET_DEPTH) * k).roundToInt(), maxHeight = ((L.maxHeight(stageH) + 2 * L.CARET_DEPTH) * k).roundToInt()),
+            Constraints(maxWidth = ((L.MAX_WIDTH + 2 * L.CARET_DEPTH) * k).roundToInt(), maxHeight = ((L.maxHeight(stageH, marginY) + 2 * L.CARET_DEPTH) * k).roundToInt()),
         )
         val w = child.width / k - 2 * L.CARET_DEPTH
         val h = child.height / k - 2 * L.CARET_DEPTH
-        val placement = placeContextMenu(anchor, w, h, below, stageW, stageH)
+        val placement = placeContextMenu(anchor, w, h, below, stageW, stageH, marginX, marginY)
         state.place(placement, w, h)
         layout(constraints.maxWidth, constraints.maxHeight) {
             child.place((placement.x * k - room).roundToInt(), (placement.y * k - room).roundToInt())
