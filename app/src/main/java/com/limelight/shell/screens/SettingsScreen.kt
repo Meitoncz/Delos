@@ -82,7 +82,16 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.ui.text.style.TextOverflow
+import com.limelight.shell.ui.StageMetrics
+import com.limelight.shell.ui.StageShape
+import com.limelight.shell.ui.cpx
+import com.limelight.shell.ui.glass
+import com.limelight.shell.ui.targetPx
 import com.limelight.shell.ui.InitialFocus
 import com.limelight.shell.ui.HeroBitmaps
 import com.limelight.shell.ui.PlaceholderArt
@@ -105,6 +114,7 @@ import com.limelight.shell.ui.focusedListBoundary
 import com.limelight.shell.ui.focusedListRow
 import com.limelight.shell.ui.PillButton
 import com.limelight.shell.ui.ImpactLegend
+import com.limelight.shell.ui.ImpactLegendSentence
 import com.limelight.shell.ui.RowValue
 import com.limelight.shell.ui.SettingRow
 import com.limelight.shell.ui.Symbol
@@ -245,57 +255,80 @@ fun SettingsScreen(
         shell.onShoulder = handler
         onDispose { if (shell.onShoulder === handler) shell.onShoulder = null }
     }
-    Box(Modifier.fillMaxSize()) {
-        FocusTransferTarget(focusTransfer)
-        BasicText(stringResource(R.string.settings_screen_title), style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx),
-            modifier = Modifier.offset(SettingsLayout.TITLE_X.px, SettingsLayout.TITLE_Y.px))
-        // Kept the same distance from the right edge as at 1920 (x 1530), so a wider or narrower stage moves it with the edge
-        PillButton(stringResource(R.string.settings_screen_search), Symbols.SEARCH, { shell.onSettingsSearch?.invoke() }, Modifier.offset((stage.stageWidth - 390f).px, 122.px), clickCue = null)
-        com.limelight.shell.ui.SelectionPillHost(Modifier.offset(y = SettingsLayout.TABS_Y.px).fillMaxWidth().height(SettingsLayout.TABS_HEIGHT.px)) {
-            ShoulderLabel("L1")
-            SettingsTab.entries.forEach { next ->
-                TabPill(next.icon, next.label(res), tab == next, Modifier.padding(horizontal = 5.px)) {
-                    if (next != tab) {
-                        focusTransfer.request()
-                        shell.settingsFocus = null
-                        shell.settingsTab = next
-                    } else target?.let {
-                        feedback.silenceNextFocus()
-                        navigation.requester(it).requestFocus()
-                    }
-                }
-            }
-            ShoulderLabel("R1")
+    val compact = stage.shape == StageShape.COMPACT
+    val margin = SettingsLayout.margin(stage)
+    val selectTab: (SettingsTab) -> Unit = { next ->
+        if (next != tab) {
+            focusTransfer.request()
+            shell.settingsFocus = null
+            shell.settingsTab = next
+        } else target?.let {
+            feedback.silenceNextFocus()
+            navigation.requester(it).requestFocus()
         }
-        Row(Modifier.fillMaxSize().padding(start = SettingsLayout.TITLE_X.px, end = SettingsLayout.TITLE_X.px, top = SettingsLayout.LIST_TOP.px, bottom = SettingsLayout.bottom(appearance).px),
-            horizontalArrangement = Arrangement.spacedBy(56.px)) {
-            CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView, com.limelight.shell.ui.LocalEntranceStagger provides com.limelight.shell.ui.rememberEntranceStagger(tab)) {
-                key(tab) {
-                    // One ring glides between the rows; the host carries the list's weight and its faded edges, so the ring fades with the rows
-                    com.limelight.shell.ui.SettingRowList(Modifier.weight(1f).fadeEdges(stage, top = 14f, bottom = 90f)) {
-                        Column(Modifier.fillMaxSize().focusedListBoundary(navigation).verticalScroll(scroll)
-                            .padding(start = 18.px, end = 18.px, top = 14.px, bottom = 140.px),
-                            verticalArrangement = Arrangement.spacedBy(10.px)) {
-                            var previous = ""
-                            rows.forEach { row ->
-                                if (row.section != previous) {
-                                    key("section-${row.section}") { SectionHeading(row.section) }
-                                    previous = row.section
-                                }
-                                key(row.key) {
-                                    SettingsItemRow(row, Modifier.focusedListRow(navigation, row.key),
-                                        hint = when (row.key) {
-                                            "seekbar_bitrate_kbps" -> bitrateHint
-                                            LINK_TEST_ROW, LINK_USE_ROW -> row.description
-                                            else -> null
-                                        }) { focusedKey = row.key }
-                                }
+    }
+    // The eight tabs; on a compact stage only the selected one carries its label, so the whole row stays on screen
+    val tabs: @Composable () -> Unit = {
+        ShoulderLabel("L1")
+        SettingsTab.entries.forEach { next ->
+            TabPill(next.icon, next.label(res), tab == next, Modifier.padding(horizontal = (if (compact) 3 else 5).px), collapse = compact) { selectTab(next) }
+        }
+        ShoulderLabel("R1")
+    }
+    val list: @Composable (Modifier) -> Unit = { listModifier ->
+        CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView, com.limelight.shell.ui.LocalEntranceStagger provides com.limelight.shell.ui.rememberEntranceStagger(tab)) {
+            key(tab) {
+                // One ring glides between the rows; the host carries the list's weight and its faded edges, so the ring fades with the rows
+                com.limelight.shell.ui.SettingRowList(listModifier.fadeEdges(stage, top = 14f, bottom = 90f)) {
+                    Column(Modifier.fillMaxSize().focusedListBoundary(navigation).verticalScroll(scroll)
+                        .padding(start = 18.px, end = 18.px, top = 14.px, bottom = 140.px),
+                        verticalArrangement = Arrangement.spacedBy(10.px)) {
+                        var previous = ""
+                        rows.forEach { row ->
+                            if (row.section != previous) {
+                                key("section-${row.section}") { SectionHeading(row.section) }
+                                previous = row.section
+                            }
+                            key(row.key) {
+                                SettingsItemRow(row, Modifier.focusedListRow(navigation, row.key),
+                                    hint = when (row.key) {
+                                        "seekbar_bitrate_kbps" -> bitrateHint
+                                        LINK_TEST_ROW, LINK_USE_ROW -> row.description
+                                        else -> null
+                                    }) { focusedKey = row.key }
                             }
                         }
                     }
                 }
             }
-            DescriptionPanel(tab, focused, Modifier.width(520.px), appearance)
+        }
+    }
+    Box(Modifier.fillMaxSize()) {
+        FocusTransferTarget(focusTransfer)
+        if (compact) {
+            // Compact: no title (the status bar and the selected tab say where this is), the tabs and the search button on one row, the list
+            // at full width and the description as a dock under it, so the focused row and its help are always on screen together
+            Row(Modifier.fillMaxWidth().padding(start = margin.px, end = margin.px).offset(y = SettingsLayout.COMPACT_TABS_Y.px),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.px)) {
+                com.limelight.shell.ui.SelectionPillHost(Modifier.weight(1f).height(SettingsLayout.TABS_HEIGHT.px)) { tabs() }
+                SearchIconButton(stringResource(R.string.settings_screen_search)) { shell.onSettingsSearch?.invoke() }
+            }
+            Column(Modifier.fillMaxSize().padding(start = margin.px, end = margin.px, top = SettingsLayout.COMPACT_LIST_TOP.px, bottom = SettingsLayout.bottom(appearance).px),
+                verticalArrangement = Arrangement.spacedBy(16.px)) {
+                list(Modifier.weight(1f).fillMaxWidth())
+                DescriptionPanel(tab, focused, Modifier.fillMaxWidth().height(SettingsLayout.DOCK_HEIGHT.px), appearance)
+            }
+        } else {
+            BasicText(stringResource(R.string.settings_screen_title), style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx),
+                modifier = Modifier.offset(SettingsLayout.TITLE_X.px, SettingsLayout.TITLE_Y.px))
+            // Kept the same distance from the right edge as at 1920 (x 1530), so a wider or narrower stage moves it with the edge
+            PillButton(stringResource(R.string.settings_screen_search), Symbols.SEARCH, { shell.onSettingsSearch?.invoke() }, Modifier.offset((stage.stageWidth - 390f).px, 122.px), clickCue = null)
+            com.limelight.shell.ui.SelectionPillHost(Modifier.offset(y = SettingsLayout.TABS_Y.px).fillMaxWidth().height(SettingsLayout.TABS_HEIGHT.px)) { tabs() }
+            Row(Modifier.fillMaxSize().padding(start = SettingsLayout.TITLE_X.px, end = SettingsLayout.TITLE_X.px, top = SettingsLayout.LIST_TOP.px, bottom = SettingsLayout.bottom(appearance).px),
+                horizontalArrangement = Arrangement.spacedBy(56.px)) {
+                list(Modifier.weight(1f))
+                DescriptionPanel(tab, focused, Modifier.width(520.px), appearance)
+            }
         }
     }
 }
@@ -327,7 +360,7 @@ internal fun ShoulderLabel(label: String) {
  * [DelosColors.text2] when another tab is selected. A tap squeezes the tab for a moment and plays the select cue.
  */
 @Composable
-internal fun TabPill(icon: String, label: String, selected: Boolean, modifier: Modifier, badge: Int = 0, onClick: () -> Unit) {
+internal fun TabPill(icon: String, label: String, selected: Boolean, modifier: Modifier, badge: Int = 0, collapse: Boolean = false, onClick: () -> Unit) {
     val colors = LocalDelosColors.current
     val reduced = LocalReducedMotion.current
     val feedback = LocalFeedback.current
@@ -354,10 +387,11 @@ internal fun TabPill(icon: String, label: String, selected: Boolean, modifier: M
             this.selected = selected
             onClick { feedback.play(Cue.SELECT); currentClick(); true }
         }
-        .height(66.px).padding(horizontal = 22.px),
+        .height(targetPx(66)).padding(horizontal = (if (collapse && !selected) 16 else 22).cpx),
         horizontalArrangement = Arrangement.spacedBy(12.px), verticalAlignment = Alignment.CenterVertically) {
         Symbol(icon, 30.tpx, contentColor, filled = selected)
-        BasicText(label, style = TextStyle(color = contentColor,
+        // A collapsed tab shows its icon alone until it is the selected one
+        if (!collapse || selected) BasicText(label, style = TextStyle(color = contentColor,
             fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 22.tpx))
         // The count of this tab's custom per-game settings (a quiet accent3 pill; dark on the selected tab's accent pill)
         if (badge > 0) {
@@ -373,48 +407,100 @@ internal fun TabPill(icon: String, label: String, selected: Boolean, modifier: M
 private fun DescriptionPanel(tab: SettingsTab, focused: SettingsItem?, modifier: Modifier, appearance: Appearance) {
     val colors = LocalDelosColors.current
     val res = textResources()
+    val compact = LocalStage.current.shape == StageShape.COMPACT
+    val body: @Composable ColumnScope.() -> Unit = {
+        BasicText(focused?.detail?.takeIf { it.isNotBlank() } ?: tab.description(res),
+            style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = (if (compact) 21 else 22).tpx, lineHeight = 1.45.em))
+        if (focused?.enabled == false) BasicText(stringResource(R.string.settings_screen_unavailable), style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 18.tpx))
+        val rowValue = focused?.value
+        if (rowValue is RowValue.Text) BasicText(rowValue.text,
+            style = TextStyle(color = colors.accent, fontFamily = Figtree, fontSize = 22.tpx, lineHeight = 1.3.em))
+        // The palette's three colors, only for the palette row
+        if (focused?.key == "ui_palette") {
+            Row(horizontalArrangement = Arrangement.spacedBy(16.px)) {
+                listOf(colors.accent to R.string.settings_screen_palette_main, colors.accent2 to R.string.settings_screen_palette_secondary, colors.accent3 to R.string.settings_screen_palette_accent).forEach { (color, name) ->
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.px)) {
+                        Box(Modifier.size(width = 120.cpx, height = 72.cpx).clip(RoundedCornerShape(18.px)).background(color).border(1.px, colors.line, RoundedCornerShape(18.px)))
+                        BasicText(stringResource(name), style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 18.tpx))
+                    }
+                }
+            }
+        }
+        // A preview of the game background, only for the rows that change it
+        if (focused?.key in GAME_BACKGROUND_ROWS) {
+            val hero = LocalShell.current.hero
+            val image by produceState<ImageBitmap?>(null, hero?.id, appearance.heroBlur) {
+                value = hero?.image?.let { source -> withContext(Dispatchers.Default) { HeroBitmaps.renderLens(hero.id, source, appearance.heroBlur) } }
+            }
+            Box(Modifier.fillMaxWidth().height(150.cpx).clip(RoundedCornerShape(20.px)).background(colors.bg2), contentAlignment = Alignment.Center) {
+                if (appearance.heroBackground && hero != null) {
+                    Box(Modifier.fillMaxSize().graphicsLayer { alpha = appearance.heroOpacity / 100f }) {
+                        if (image != null) Image(image!!, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                        else PlaceholderArt(hero.hue, hero.hue2, hero.icon, Modifier.fillMaxSize(), glyphSize = 100f)
+                    }
+                }
+                BasicText(stringResource(R.string.settings_native_hero_background_title), style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx))
+            }
+        }
+    }
+    if (compact) {
+        HelpDock(modifier, focused?.icon ?: tab.icon, focused?.label ?: tab.label(res), focused?.key to focused?.detail, focused?.impact != null, body = body)
+        return
+    }
     SettingsPanelFrame(modifier) {
         Box(Modifier.size(120.px).clip(CircleShape).background(colors.accent), contentAlignment = Alignment.Center) {
             Symbol(focused?.icon ?: tab.icon, 64.tpx, colors.onAccent, filled = true)
         }
         BasicText(focused?.label ?: tab.label(res), style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 30.tpx), modifier = Modifier.padding(top = 8.px))
-        AutoScrollingHelp(focused?.key to focused?.detail, Modifier.weight(1f)) {
-            BasicText(focused?.detail?.takeIf { it.isNotBlank() } ?: tab.description(res),
-                style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 22.tpx, lineHeight = 1.45.em))
-            if (focused?.enabled == false) BasicText(stringResource(R.string.settings_screen_unavailable), style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 18.tpx))
-            val rowValue = focused?.value
-            if (rowValue is RowValue.Text) BasicText(rowValue.text,
-                style = TextStyle(color = colors.accent, fontFamily = Figtree, fontSize = 22.tpx, lineHeight = 1.3.em))
-            // The palette's three colors, only for the palette row
-            if (focused?.key == "ui_palette") {
-                Row(horizontalArrangement = Arrangement.spacedBy(16.px)) {
-                    listOf(colors.accent to R.string.settings_screen_palette_main, colors.accent2 to R.string.settings_screen_palette_secondary, colors.accent3 to R.string.settings_screen_palette_accent).forEach { (color, name) ->
-                        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.px)) {
-                            Box(Modifier.size(width = 120.px, height = 72.px).clip(RoundedCornerShape(18.px)).background(color).border(1.px, colors.line, RoundedCornerShape(18.px)))
-                            BasicText(stringResource(name), style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 18.tpx))
-                        }
-                    }
-                }
-            }
-            // A preview of the game background, only for the rows that change it
-            if (focused?.key in GAME_BACKGROUND_ROWS) {
-                val hero = LocalShell.current.hero
-                val image by produceState<ImageBitmap?>(null, hero?.id, appearance.heroBlur) {
-                    value = hero?.image?.let { source -> withContext(Dispatchers.Default) { HeroBitmaps.renderLens(hero.id, source, appearance.heroBlur) } }
-                }
-                Box(Modifier.fillMaxWidth().height(150.px).clip(RoundedCornerShape(20.px)).background(colors.bg2), contentAlignment = Alignment.Center) {
-                    if (appearance.heroBackground && hero != null) {
-                        Box(Modifier.fillMaxSize().graphicsLayer { alpha = appearance.heroOpacity / 100f }) {
-                            if (image != null) Image(image!!, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-                            else PlaceholderArt(hero.hue, hero.hue2, hero.icon, Modifier.fillMaxSize(), glyphSize = 100f)
-                        }
-                    }
-                    BasicText(stringResource(R.string.settings_native_hero_background_title), style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx))
-                }
-            }
-        }
+        AutoScrollingHelp(focused?.key to focused?.detail, Modifier.weight(1f), content = body)
         // What the three chips of the focused row mean
         if (focused?.impact != null) ImpactLegend()
+    }
+}
+
+/**
+ * The compact stage's description: a glass dock under the list instead of the 520 px panel on its right, so the focused row and its help
+ * are always on screen together. The icon circle and the name on the left, the help (auto scrolling when it is long) under the name, the
+ * legend of the impact chips at the right while a row with chips is focused. [lead] is a line between the name and the help.
+ */
+@Composable
+internal fun HelpDock(
+    modifier: Modifier, icon: String, title: String, identity: Any?, legend: Boolean,
+    lead: (@Composable () -> Unit)? = null, body: @Composable ColumnScope.() -> Unit,
+) {
+    val colors = LocalDelosColors.current
+    val shape = RoundedCornerShape(28.cpx)
+    Row(modifier.clip(shape)
+        .then(LocalBackdropHaze.current?.let { Modifier.backdropBlur(it, 8f, colors.surface) } ?: Modifier.background(colors.surface))
+        .border(1.px, colors.line, shape).padding(horizontal = 24.cpx, vertical = 14.cpx),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.cpx)) {
+        Box(Modifier.size(84.cpx).clip(CircleShape).background(colors.accent), contentAlignment = Alignment.Center) {
+            Symbol(icon, 46.tpx, colors.onAccent, filled = true)
+        }
+        Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(2.px)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.px)) {
+                BasicText(title, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false),
+                    style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx))
+                if (legend) ImpactLegend(sentence = false)
+            }
+            lead?.invoke()
+            AutoScrollingHelp(identity, Modifier.weight(1f).fillMaxWidth(), inset = 8f) {
+                body()
+                if (legend) ImpactLegendSentence()
+            }
+        }
+    }
+}
+
+/** The search of the compact stage: the magnifier alone in a glass circle (the labelled pill would not fit beside the tabs). */
+@Composable
+private fun SearchIconButton(label: String, click: () -> Unit) {
+    val colors = LocalDelosColors.current
+    var focused by remember { mutableStateOf(false) }
+    Box(Modifier.size(SettingsLayout.TABS_HEIGHT.cpx).focusEffects(onClick = click, corner = 999f, focusScale = 1.08f, clickCue = null, onFocusChange = { focused = it })
+        .clip(CircleShape).glass(colors.surface).border(1.px, colors.line, CircleShape).semantics { contentDescription = label },
+        contentAlignment = Alignment.Center) {
+        Symbol(Symbols.SEARCH, 30.tpx, colors.text, filled = focused)
     }
 }
 
@@ -442,32 +528,39 @@ private fun SettingsSearch(all: List<SettingsItem>, scale: Float) {
     val first = remember { FocusRequester() }
     InitialFocus(first)
     val results = searchSettings(res, all, query)
-    Column(Modifier.fillMaxSize().padding(start = 150.px, end = 150.px, top = 130.px, bottom = (96f * scale).px)) {
-        BasicText(stringResource(R.string.settings_screen_search_title), style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx))
-        BasicText(stringResource(R.string.settings_screen_search_hint), style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 22.tpx), modifier = Modifier.padding(top = 14.px, bottom = 32.px))
-        Row(horizontalArrangement = Arrangement.spacedBy(70.px), modifier = Modifier.weight(1f)) {
-            Column(Modifier.width(820.px), verticalArrangement = Arrangement.spacedBy(18.px)) {
-                TextFieldPill(field, Symbols.SEARCH, placeholder = stringResource(R.string.settings_screen_search_placeholder), maxLength = 80, width = 790f)
-                Column(Modifier.padding(top = 16.px), verticalArrangement = Arrangement.spacedBy(LetterPicker.GAP.px)) {
+    val compact = LocalStage.current.shape == StageShape.COMPACT
+    val keys = stringResource(R.string.settings_screen_search_letters)
+    val columns = LetterPicker.columns(keys.length)
+    // Compact: the picker is a column of smaller keys (60 px, 6 px apart) so the results keep room beside it
+    val keySize = if (compact) 60 else LetterPicker.keySize(columns)
+    val keyGap = if (compact) 6 else LetterPicker.GAP
+    val pickerWidth = if (compact) columns * keySize + (columns - 1) * keyGap else 820
+    val margin = SettingsLayout.margin(LocalStage.current)
+    Column(Modifier.fillMaxSize().padding(start = (if (compact) margin else 150f).px, end = (if (compact) margin else 150f).px, top = (if (compact) 112f else 130f).px, bottom = (96f * scale).px)) {
+        BasicText(stringResource(R.string.settings_screen_search_title), style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = (if (compact) 34 else 46).tpx))
+        if (!compact) BasicText(stringResource(R.string.settings_screen_search_hint), style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 22.tpx), modifier = Modifier.padding(top = 14.px, bottom = 32.px))
+        else Spacer(Modifier.height(12.px))
+        Row(horizontalArrangement = Arrangement.spacedBy((if (compact) 28 else 70).px), modifier = Modifier.weight(1f)) {
+            Column(Modifier.width(pickerWidth.px), verticalArrangement = Arrangement.spacedBy((if (compact) 12 else 18).px)) {
+                TextFieldPill(field, Symbols.SEARCH, placeholder = stringResource(R.string.settings_screen_search_placeholder), maxLength = 80, width = (pickerWidth - 30).toFloat())
+                Column(Modifier.padding(top = (if (compact) 4 else 16).px), verticalArrangement = Arrangement.spacedBy(keyGap.px)) {
                     // Nine keys to a row; a language with more than six rows of keys (Japanese kana) gets more, slightly smaller ones
-                    val keys = stringResource(R.string.settings_screen_search_letters)
-                    val columns = LetterPicker.columns(keys.length)
                     keys.chunked(columns).forEachIndexed { row, letters ->
-                        Row(horizontalArrangement = Arrangement.spacedBy(LetterPicker.GAP.px)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(keyGap.px)) {
                             letters.forEachIndexed { col, letter ->
-                                LetterKey(letter.toString(), LetterPicker.keySize(columns), if (row == 0 && col == 0) Modifier.focusRequester(first) else Modifier) { field.setTextAndPlaceCursorAtEnd((query + letter.lowercaseChar()).take(80)) }
+                                LetterKey(letter.toString(), keySize, if (row == 0 && col == 0) Modifier.focusRequester(first) else Modifier) { field.setTextAndPlaceCursorAtEnd((query + letter.lowercaseChar()).take(80)) }
                             }
                         }
                     }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(14.px)) {
-                    PillButton(stringResource(R.string.settings_screen_search_space), null, { field.setTextAndPlaceCursorAtEnd((query + " ").take(80)) })
-                    PillButton(stringResource(R.string.settings_screen_search_delete), Symbols.BACKSPACE, { field.setTextAndPlaceCursorAtEnd(query.dropLast(1)) })
-                    PillButton(stringResource(R.string.settings_screen_search_clear), Symbols.CLEAR, { field.clearText() })
+                Row(horizontalArrangement = Arrangement.spacedBy((if (compact) 8 else 14).px)) {
+                    PillButton(stringResource(R.string.settings_screen_search_space), null, { field.setTextAndPlaceCursorAtEnd((query + " ").take(80)) }, compact = compact)
+                    PillButton(stringResource(R.string.settings_screen_search_delete), Symbols.BACKSPACE, { field.setTextAndPlaceCursorAtEnd(query.dropLast(1)) }, compact = compact)
+                    PillButton(stringResource(R.string.settings_screen_search_clear), Symbols.CLEAR, { field.clearText() }, compact = compact)
                 }
             }
             Column(Modifier.weight(1f)) {
-                BasicText(pluralStringResource(R.plurals.settings_screen_search_count, results.size, results.size), style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 22.tpx), modifier = Modifier.padding(bottom = 16.px))
+                BasicText(pluralStringResource(R.plurals.settings_screen_search_count, results.size, results.size), style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 22.tpx), modifier = Modifier.padding(bottom = (if (compact) 8 else 16).px))
                 if (results.isEmpty()) BasicText(stringResource(R.string.settings_screen_search_none), style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 26.tpx))
                 key(query) {
                     // At most 110 entries (77 visible catalog rows + 33 native rows): keep
@@ -523,6 +616,18 @@ internal object SettingsLayout {
     const val TABS_Y = 206f
     const val TABS_HEIGHT = 66f
     const val LIST_TOP = 312f
+
+    /** The compact stage (small panels) drops the title: the tab row sits right under the status bar (y 0..104), the list under it. */
+    const val COMPACT_MARGIN = 48f
+    const val COMPACT_TABS_Y = 118f
+    const val COMPACT_LIST_TOP = 200f
+
+    /** The height of the description dock under the compact list. */
+    const val DOCK_HEIGHT = 168f
+
+    /** The side margin of the screen: [TITLE_X] on every shape but the compact one, where it is the 48 px floor plus the display cutout. */
+    fun margin(stage: StageMetrics): Float =
+        if (stage.shape == StageShape.COMPACT) COMPACT_MARGIN + maxOf(stage.safe.left, stage.safe.right) else TITLE_X
 
     /** The room kept free at the bottom for the hint bar, which grows with the interface scale. */
     fun bottom(appearance: Appearance): Float = 96f + (appearance.uiScale / 100f - 1f) * 92f

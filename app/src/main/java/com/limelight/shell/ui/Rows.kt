@@ -224,13 +224,13 @@ fun SettingRow(
         }
         Row(
             Modifier.fillMaxWidth()
-                .defaultMinSize(minHeight = if (compact) 80.px else if (impact != null) IMPACT_ROW_MIN_HEIGHT.px else 92.px)
-                .padding(horizontal = 26.px, vertical = 14.px)
+                .defaultMinSize(minHeight = targetPx(if (compact) 80 else if (impact != null) IMPACT_ROW_MIN_HEIGHT else 92))
+                .padding(horizontal = 26.cpx, vertical = 14.cpx)
                 .alpha(if (enabled) 1f else .45f),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(22.px),
+            horizontalArrangement = Arrangement.spacedBy(22.cpx),
         ) {
-            Box(Modifier.width(if (compact) 44.px else 52.px).staggerEntrance(entrance), contentAlignment = Alignment.CenterStart) {
+            Box(Modifier.width((if (compact) 44 else 52).cpx).staggerEntrance(entrance), contentAlignment = Alignment.CenterStart) {
                 RowIcon(icon, focused, calm)
             }
             Column(Modifier.weight(1f).staggerEntrance(entrance)) {
@@ -253,7 +253,7 @@ fun SettingRow(
                     )
                 }
             }
-            Row(Modifier.staggerEntrance(entrance), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.px)) {
+            Row(Modifier.staggerEntrance(entrance), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.cpx)) {
                 // Touch: a round button that is always there and always takes its room (52 px + the gap)
                 if (override != null && override.touch) RowResetButton(override, focused && enabled)
                 Box {
@@ -360,6 +360,7 @@ private fun RowIcon(icon: String, focused: Boolean, calm: Boolean) {
 private fun RowValueView(value: RowValue, focused: Boolean, choice: ChoiceMotion, calm: Boolean) {
     val colors = LocalDelosColors.current
     val reduced = LocalReducedMotion.current
+    val tight = LocalStage.current.shape == StageShape.COMPACT
     val text = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 23.tpx)
     // The arrows cross-fade with the rest of the row's focus effects while it is calm; a choice's arrows always fade
     val arrowColor = animateColorAsState(if (focused) colors.accent2 else colors.text3, tween(if (calm) Motion.ROW_FOCUS else Motion.FADE, easing = Motion.Ease), label = "chevron")
@@ -373,7 +374,7 @@ private fun RowValueView(value: RowValue, focused: Boolean, choice: ChoiceMotion
             // A new value slides in from the side the key came from
             Row(Modifier.valueSlide(choice), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.px)) {
                 if (value.swatch != null) Box(Modifier.size(26.px).clip(CircleShape).background(value.swatch))
-                MarqueeText(value.label, style = text, active = focused, modifier = Modifier.widthIn(max = 360.px))
+                MarqueeText(value.label, style = text, active = focused, modifier = Modifier.widthIn(max = (if (tight) 260 else 360).px))
             }
             // The glyph has empty space on its right; shift it so its visible edge lines up with switches and values
             Symbol(Symbols.CHEVRON_RIGHT, 30.tpx, arrows, Modifier.offset(x = 9.px).chevronBump(choice, 1))
@@ -387,7 +388,8 @@ private fun RowValueView(value: RowValue, focused: Boolean, choice: ChoiceMotion
             )
             val knobScale by animateKnobScale(focused)
             val k = stageUnit()
-            Box(Modifier.size(220.px, 48.px).drawWithContent {
+            val trackWidth = 220f * LocalStage.current.compactScale
+            Box(Modifier.size(trackWidth.px, 48.px).drawWithContent {
                 drawContent()
                 // The knob of the slider grows while its row is focused, inside a soft halo
                 val radius = 14f * k * knobScale
@@ -411,16 +413,16 @@ private fun RowValueView(value: RowValue, focused: Boolean, choice: ChoiceMotion
                     } finally { dragging = null }
                 }
             }, contentAlignment = Alignment.Center) {
-                Box(Modifier.fillMaxWidth().size(height = 10.px, width = 220.px).clip(CircleShape).background(colors.surface3)) {
+                Box(Modifier.fillMaxWidth().size(height = 10.px, width = trackWidth.px).clip(CircleShape).background(colors.surface3)) {
                     Box(Modifier.fillMaxHeight().fillMaxWidth(fraction).clip(CircleShape).background(Brush.horizontalGradient(listOf(colors.accent, colors.accent2))))
                 }
             }
             val label = if (number % value.divisor == 0) (number / value.divisor).toString() else String.format(LocalConfiguration.current.locales[0], "%.1f", number.toDouble() / value.divisor)
-            BasicText(if (number == value.min && value.minText != null) value.minText else "$label${value.unit}", style = text.copy(textAlign = TextAlign.End), maxLines = 1, modifier = Modifier.width(160.px))
+            BasicText(if (number == value.min && value.minText != null) value.minText else "$label${value.unit}", style = text.copy(textAlign = TextAlign.End), maxLines = 1, modifier = Modifier.width((if (tight) 130 else 160).px))
         }
         is RowValue.Action -> Symbol(Symbols.CHEVRON_RIGHT, 30.tpx, if (calm) arrowColor.value else staticArrows)
         is RowValue.Text -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.px)) {
-            MarqueeText(value.text.ifEmpty { stringResource(R.string.row_not_set) }, style = text, active = focused, modifier = Modifier.widthIn(max = 220.px))
+            MarqueeText(value.text.ifEmpty { stringResource(R.string.row_not_set) }, style = text, active = focused, modifier = Modifier.widthIn(max = (if (tight) 180 else 220).px))
             Symbol(Symbols.CHEVRON_RIGHT, 30.tpx, if (calm) arrowColor.value else staticArrows)
         }
         is RowValue.Info -> BasicText(value.text, style = text)

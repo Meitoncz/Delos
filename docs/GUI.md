@@ -811,6 +811,20 @@ activity keeps its own orientation logic) and supports windows from 1:1 up to 21
   *Compact* is a stage under **1500 stage px wide** (small panels, split-screen halves) or squarish (narrower than 4:3, 1:1). A shrunk stage can be
   Standard in aspect with fewer than 1920 stage px: screens drawn for 1920 × 1080 do not fit it until they are made adaptive.
   Existing screens still read `px` / `tpx` as before; the Wide, Tall and Compact layouts are later phases.
+- **Compact settings family** (issue #9, phase C; `StageShape.COMPACT`, 1:1 up to small 16:9 panels, stage about 1050 to 1490 px wide): text keeps its
+  stage size (the legibility floor), the room around it shrinks. `ui/CompactRows.kt` holds the one scale factor of non-text elements,
+  `compactScale = clamp(min(w / 1920, h / 1080), 0.7, 1)` (1 on every other shape), as `cpx` (stage px × scale) and `targetPx` (never under 64 px for a
+  touched or focused element, never above the original); the outer margin is the 48 px floor plus the cutout (`SettingsLayout.margin`), gaps between
+  blocks stay at 16 px or more.
+  - *Settings, per-game settings, Debug info*: no 520 px panel. The list is full width and the description is a **dock** under it (`HelpDock`, 168 px:
+    icon, name, help that auto-scrolls when long, the impact legend beside the name and its sentence at the end of the help; per game the dock also
+    carries the "From profile / Custom" source line). The title goes (Settings) so the 8 tabs fit: only the selected tab keeps its label, L1 / R1
+    still step through them, the search is an icon button at the end of the row. Per-game plain rows drop "From profile" (the dock says it);
+    custom rows keep their CUSTOM badge and profile line. The banner is 200 px, the search letter picker 60 px keys with the results beside it.
+  - *Artwork*: the title and the collapsed tabs share a row; the grid keeps each kind's tile shape (2:3, 920:430, 1920:620, 2:1) and picks the column
+    count from the 1920 tile scaled by `compactScale` (`ArtTab.compactColumns`); the game chip drops year and id. The filter sheet and the library
+    filter modal use the full stage width, scaled paddings and chip gaps, and scroll when they do not fit.
+  - The keyboard (`FullKeyboard`) was only checked: it is width-aware already.
 - **Safe area**: backgrounds still draw edge to edge, the status bar and the hint bar are padded by the display cutout (`WindowInsets.displayCutout`
   in stage pixels, `StageMetrics.safe`; zero on the Odin, so nothing moves there). Other edge-anchored content can read `LocalStage.current.safe`.
 - **Companion screen** (issue #76, [DUAL_SCREEN.md](DUAL_SCREEN.md)): the second panel of a dual-screen device is a `CompanionActivity` on that display (own task, no key focus) with its own `Stage()`, so

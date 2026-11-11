@@ -146,6 +146,13 @@ import com.limelight.shell.ui.glass
 import com.limelight.shell.ui.popEnter
 import com.limelight.shell.ui.popExit
 import com.limelight.shell.ui.px
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import com.limelight.shell.ui.StageShape
+import com.limelight.shell.ui.compactScale
+import com.limelight.shell.ui.cpx
+import com.limelight.shell.ui.targetPx
 import com.limelight.shell.ui.rememberAnimatedDrawable
 import com.limelight.shell.ui.rememberAnimationTicker
 import com.limelight.shell.ui.rememberFocusTransfer
@@ -197,6 +204,15 @@ private enum class ArtTab(
 
     /** The columns of the grid [gridWidth] stage px wide: [columns] at the 1720 of a 1920 stage, in proportion otherwise. */
     fun columnsFor(gridWidth: Float) = (columns * gridWidth / 1720f).roundToInt().coerceAtLeast(1)
+
+    /**
+     * The columns of the compact grid: the tile is the 1920 stage's tile (the 1720 px grid, 24 px gaps) scaled by [scale], so a tile keeps its
+     * shape and a small panel just shows more of them; as many as fit [width] (two at least, one for the wide backgrounds on a narrow panel).
+     */
+    fun compactColumns(width: Float, gap: Float, scale: Float): Int {
+        val tile = (1620f - 24f * (columns - 1)) / columns * scale
+        return ((width + gap) / (tile + gap)).toInt().coerceAtLeast(2)
+    }
 
     /** "10 of 41 covers" ([countOf]) when the unfiltered total differs, else "41 covers"; [all] says "All 41 covers" for an unfiltered list. */
     fun resultLine(res: Resources, shown: Int, total: Int?, all: Boolean): String = when {
@@ -407,9 +423,21 @@ fun ArtworkScreen(screen: Screen.Artwork) {
     val playing = if (motion) visibleAnimated.toSet() else emptySet()
     val ticker = rememberAnimationTicker(playing.isNotEmpty())
 
+    val compact = stage.shape == StageShape.COMPACT
+    val margin = SettingsLayout.margin(stage)
+    // Compact: the title and the tabs share a row, the toolbar, the filter strip, the grid (more, smaller tiles of the same shapes) and the info strip
+    // follow at full width; every y is 16:9's pulled up under the status bar
+    val toolbarY = if (compact) 190f else 206f
+    val stripY = if (compact) 270f else 276f
+    val stripHeight = if (compact) 48f else 44f
+    val gridY = if (compact) 322f else 324f
+    val infoY = if (compact) stage.stageHeight - 184f else stage.stageHeight - 194f
+    val gridWidth = if (compact) stage.stageWidth - 32f else stage.stageWidth - 200f
+    val tileGap = if (compact) 16f else 24f
+    val compactColumns = if (compact) tab.compactColumns(stage.stageWidth - 2 * margin, tileGap, stage.compactScale) else 0
     Box(Modifier.fillMaxSize()) {
         FocusTransferTarget(focusTransfer)
-        Column(Modifier.offset(150.px, 104.px).width(560.px)) {
+        Column(Modifier.offset(margin.px, 104.px).width((if (compact) 410 else 560).px)) {
             BasicText(
                 stringResource(R.string.artwork_header),
                 style = TextStyle(color = colors.accent2, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx, letterSpacing = .14.em),
@@ -419,11 +447,15 @@ fun ArtworkScreen(screen: Screen.Artwork) {
                 style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 40.tpx),
             )
         }
-        // The tabs stay at the right margin (1050 wide, ending 150 before the edge: x 720 at 1920); on a narrower stage they stay clear of the title
-        SelectionPillHost(Modifier.offset(maxOf(720f, stage.stageWidth - 1200f).px, 124.px).width(1050.px).height(66.px)) {
+        // The tabs stay at the right margin (1050 wide, ending 150 before the edge: x 720 at 1920); on a narrower stage they stay clear of the title.
+        // Compact: right of the title, up to the margin, and only the selected tab keeps its label
+        SelectionPillHost(
+            if (compact) Modifier.offset((margin + 420f).px, 112.px).width((stage.stageWidth - 2 * margin - 420f).px).height(targetPx(66))
+            else Modifier.offset(maxOf(720f, stage.stageWidth - 1200f).px, 124.px).width(1050.px).height(66.px),
+        ) {
             ShoulderLabel("L1")
             ArtTab.entries.forEach { next ->
-                TabPill(next.icon, stringResource(next.label), tab == next, Modifier.padding(horizontal = 4.px)) {
+                TabPill(next.icon, stringResource(next.label), tab == next, Modifier.padding(horizontal = (if (compact) 3 else 4).px), collapse = compact) {
                     if (next != tab) selectTab(next) else runCatching { first.requestFocus() }
                 }
             }
@@ -432,7 +464,7 @@ fun ArtworkScreen(screen: Screen.Artwork) {
 
         // Toolbar: the matched game, search for another name (X), the filter sheet (Y)
         Row(
-            Modifier.offset(150.px, 206.px).width((stage.stageWidth - 300f).px).height(64.px),
+            Modifier.offset(margin.px, toolbarY.px).width((stage.stageWidth - 2 * margin).px).height(64.px),
             horizontalArrangement = Arrangement.spacedBy(16.px), verticalAlignment = Alignment.CenterVertically,
         ) {
             GameChip(match, busy, app.name, (choices as? Choices.Ready)?.let { it.total ?: it.images.size.takeIf { _ -> !filters.active } }, tab, Modifier.weight(1f))
@@ -462,12 +494,12 @@ fun ArtworkScreen(screen: Screen.Artwork) {
                 tab, filters, ready, refreshing,
                 onClear = { chip -> filtersByTab[tab] = ArtFilterRules.clear(filters, chip) },
                 onReset = ::resetFilters,
-                modifier = Modifier.offset(150.px, 276.px).width((stage.stageWidth - 300f).px).height(44.px),
+                modifier = Modifier.offset(margin.px, stripY.px).width((stage.stageWidth - 2 * margin).px).height(stripHeight.px),
             )
         }
 
         // The grid (or why there is none): from under the filter strip to above the info strip, so a taller stage shows more rows
-        Box(Modifier.offset(100.px, 324.px).width((stage.stageWidth - 200f).px).height((stage.stageHeight - 528f).coerceAtLeast(0f).px)) {
+        Box(Modifier.offset((if (compact) 16f else 100f).px, gridY.px).width(gridWidth.px).height((infoY - (if (compact) 16f else 10f) - gridY).coerceAtLeast(0f).px)) {
             when (val c = choices) {
                 Choices.Loading -> GridMessage(Symbols.LOADING, stringResource(R.string.artwork_loading), null)
                 Choices.NoKey -> GridMessage(Symbols.KEY, stringResource(R.string.artwork_no_key_title), stringResource(R.string.artwork_no_key_note))
@@ -484,12 +516,13 @@ fun ArtworkScreen(screen: Screen.Artwork) {
                     val noneInUse = chosen == NONE || (chosen == null && c.images.isEmpty() && !filters.active)
                     CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
                         LazyVerticalGrid(
-                            columns = GridCells.Fixed(tab.columnsFor(stage.stageWidth - 200f)),
+                            columns = GridCells.Fixed(if (compact) compactColumns else tab.columnsFor(stage.stageWidth - 200f)),
                             state = grid,
                             modifier = Modifier.fillMaxSize().fadeEdges(stage, top = 30f, bottom = 70f),
-                            contentPadding = PaddingValues(start = 50.px, end = 50.px, top = 46.px, bottom = 96.px),
-                            horizontalArrangement = Arrangement.spacedBy(24.px),
-                            verticalArrangement = Arrangement.spacedBy(24.px),
+                            contentPadding = if (compact) PaddingValues(start = (margin - 16f).px, end = (margin - 16f).px, top = 34.px, bottom = 70.px)
+                            else PaddingValues(start = 50.px, end = 50.px, top = 46.px, bottom = 96.px),
+                            horizontalArrangement = Arrangement.spacedBy(tileGap.px),
+                            verticalArrangement = Arrangement.spacedBy(tileGap.px),
                         ) {
                             item(key = GridItemNone) {
                                 NoneTile(
@@ -518,7 +551,7 @@ fun ArtworkScreen(screen: Screen.Artwork) {
 
         InfoStrip(
             described ?: Described.FirstChoice, tab, chosen,
-            Modifier.offset(150.px, (stage.stageHeight - 194f).px).width((stage.stageWidth - 300f).px).height(84.px),
+            Modifier.offset(margin.px, infoY.px).width((stage.stageWidth - 2 * margin).px).height(84.px),
         )
 
         // The filter sheet drops down from the toolbar over a dimmed page; the grid stays visible underneath
@@ -575,9 +608,12 @@ private fun GameChip(match: SgdbGame?, busy: Boolean, appName: String, imageCoun
             maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f),
             style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 22.tpx),
         )
+        // The year and the game id are left out on the compact stage: the name and the count of images matter
         if (match != null) {
-            match.year?.let { MetaChip("$it") }
-            MetaChip("#${match.id}")
+            if (LocalStage.current.shape != StageShape.COMPACT) {
+                match.year?.let { MetaChip("$it") }
+                MetaChip("#${match.id}")
+            }
             if (imageCount != null) MetaChip(pluralStringResource(tab.count, imageCount, imageCount))
         }
     }
@@ -658,7 +694,7 @@ private fun NoImages(tab: ArtTab, filters: ArtFilters, ready: Choices.Ready, gam
     val colors = LocalDelosColors.current
     val res = textResources()
     Column(
-        Modifier.fillMaxSize().padding(start = 300.px, top = 40.px),
+        Modifier.fillMaxSize().padding(start = (if (LocalStage.current.shape == StageShape.COMPACT) 0 else 300).px, top = 40.px),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(18.px),
     ) {
         if (filters.active) {
@@ -666,8 +702,8 @@ private fun NoImages(tab: ArtTab, filters: ArtFilters, ready: Choices.Ready, gam
             BasicText(stringResource(tab.none), style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 34.tpx, textAlign = TextAlign.Center))
             val summary = ArtFilterRules.chips(filters).joinToString(" · ") { it.label(res) }
             val explanation = ready.total?.let { pluralStringResource(tab.has, it, match?.name?.ifEmpty { null } ?: gameName, it) } ?: stringResource(tab.unknown)
-            BasicText(explanation, style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 22.tpx, textAlign = TextAlign.Center), modifier = Modifier.width(820.px))
-            BasicText(stringResource(R.string.artwork_filtered_active, summary), style = TextStyle(color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx, textAlign = TextAlign.Center), modifier = Modifier.width(820.px))
+            BasicText(explanation, style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 22.tpx, textAlign = TextAlign.Center), modifier = Modifier.width(minOf(820f, LocalStage.current.stageWidth - 160f).px))
+            BasicText(stringResource(R.string.artwork_filtered_active, summary), style = TextStyle(color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx, textAlign = TextAlign.Center), modifier = Modifier.width(minOf(820f, LocalStage.current.stageWidth - 160f).px))
             Row(horizontalArrangement = Arrangement.spacedBy(16.px)) {
                 PillButton(stringResource(R.string.filters_art_reset), Symbols.RESET, onReset, compact = true, trailing = { GlyphButton(Glyph.X, 32) })
                 PillButton(stringResource(R.string.filters_art_change), Symbols.FILTER, onChange, compact = true, clickCue = null, trailing = { GlyphButton(Glyph.Y, 32) })
@@ -685,8 +721,8 @@ private fun InfoStrip(item: Described, tab: ArtTab, chosen: Int?, modifier: Modi
     val colors = LocalDelosColors.current
     val shape = RoundedCornerShape(26.px)
     Row(
-        modifier.clip(shape).glass(colors.surface).border(1.px, colors.line, shape).padding(horizontal = 30.px),
-        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(44.px),
+        modifier.clip(shape).glass(colors.surface).border(1.px, colors.line, shape).padding(horizontal = 30.cpx),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(44.cpx),
     ) {
         val title: String
         val fields: List<Pair<String, String>>
@@ -768,13 +804,14 @@ private fun FilterSheetLayer(
     val reduced = LocalReducedMotion.current
     val shape = RoundedCornerShape(40.px)
     val stage = LocalStage.current
+    val margin = SettingsLayout.margin(stage).let { if (stage.shape == StageShape.COMPACT) it else 150f }
     val kind = tab.kind
     AnimatedVisibility(open, enter = fadeIn(tween(Motion.EXIT, easing = Motion.Ease)), exit = fadeOut(tween(Motion.EXIT, easing = Motion.Ease))) {
         Box(Modifier.fillMaxSize().background(Color(0x73050A14)).pointerInput(Unit) { detectTapGestures { onClose() } })
     }
     AnimatedVisibility(
         open,
-        modifier = Modifier.offset(150.px, 280.px),
+        modifier = Modifier.offset(margin.px, (if (stage.shape == StageShape.COMPACT) 262f else 280f).px),
         enter = popEnter(TransformOrigin(.92f, 0f), reduced),
         exit = popExit(TransformOrigin(.92f, 0f), reduced),
     ) {
@@ -795,15 +832,15 @@ private fun FilterSheetLayer(
         }
         Column(
             Modifier
-                .width((stage.stageWidth - 300f).px)
+                .width((stage.stageWidth - 2 * margin).px)
                 .clip(shape).glass(colors.surface3).border(1.px, colors.line, shape)
-                .padding(start = 40.px, end = 40.px, top = 26.px, bottom = 22.px)
+                .padding(start = 40.cpx, end = 40.cpx, top = 26.cpx, bottom = 22.cpx)
                 .onFocusChanged { panelFocused = it.hasFocus }
                 .focusProperties { onExit = { if (open) cancelFocusChange() } }
                 .focusGroup(),
             verticalArrangement = Arrangement.spacedBy(8.px),
         ) {
-            Row(Modifier.fillMaxWidth().padding(bottom = 8.px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(24.px)) {
+            Row(Modifier.fillMaxWidth().padding(bottom = 8.px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy((if (stage.shape == StageShape.COMPACT) 16 else 24).px)) {
                 BasicText(stringResource(R.string.filters_art_title), style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 34.tpx))
                 if (ready != null) {
                     BasicText(
@@ -822,8 +859,14 @@ private fun FilterSheetLayer(
                 )
                 PillButton(stringResource(R.string.filters_art_done), Symbols.CHECK, onClose, compact = true, clickCue = Cue.BACK, trailing = { GlyphButton(Glyph.Y, 32) })
             }
+            val compactSheet = stage.shape == StageShape.COMPACT
+            // The compact sheet may be taller than the page leaves it: its options scroll
+            val optionsScroll = rememberScrollState()
             RowGlideHost(ring = FocusRing(3f, 3f), corner = 999f, focusScale = 1.05f, fill = null, glow = null) {
-                Column(verticalArrangement = Arrangement.spacedBy(6.px)) {
+                Column(
+                    (if (compactSheet) Modifier.heightIn(max = (stage.stageHeight - 262f - 110f - 100f).coerceAtLeast(120f).px).verticalScroll(optionsScroll) else Modifier),
+                    verticalArrangement = Arrangement.spacedBy(6.px),
+                ) {
                     if (ArtFilterRules.hasType(kind)) {
                         SheetRow(Symbols.MOVIE, stringResource(R.string.filters_art_row_type)) {
                             ArtType.entries.forEach { type ->
@@ -863,14 +906,15 @@ private fun FilterSheetLayer(
 @Composable
 private fun SheetRow(icon: String, title: String, options: @Composable () -> Unit) {
     val colors = LocalDelosColors.current
-    Row(Modifier.fillMaxWidth().padding(vertical = 2.px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(30.px)) {
-        Row(Modifier.width(270.px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(18.px)) {
-            Box(Modifier.size(52.px).clip(CircleShape).background(colors.accent.copy(alpha = .18f)), contentAlignment = Alignment.Center) {
+    val compact = LocalStage.current.shape == StageShape.COMPACT
+    Row(Modifier.fillMaxWidth().padding(vertical = 2.px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy((if (compact) 20 else 30).px)) {
+        Row(Modifier.width((if (compact) 250 else 270).px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy((if (compact) 14 else 18).px)) {
+            Box(Modifier.size((if (compact) 44 else 52).px).clip(CircleShape).background(colors.accent.copy(alpha = .18f)), contentAlignment = Alignment.Center) {
                 Symbol(icon, 28.tpx, colors.accent2, filled = true)
             }
             BasicText(title, style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx))
         }
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(14.px), verticalArrangement = Arrangement.spacedBy(10.px)) { options() }
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(14.cpx), verticalArrangement = Arrangement.spacedBy(10.cpx)) { options() }
     }
 }
 
@@ -1026,7 +1070,7 @@ private fun GridMessage(icon: String, title: String, text: String?) {
     Column(Modifier.fillMaxSize().padding(top = 80.px), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(18.px)) {
         Symbol(icon, 90.tpx, colors.accent, filled = true)
         BasicText(title, style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 34.tpx, textAlign = TextAlign.Center))
-        if (text != null) BasicText(text, style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 22.tpx, textAlign = TextAlign.Center), modifier = Modifier.width(820.px))
+        if (text != null) BasicText(text, style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 22.tpx, textAlign = TextAlign.Center), modifier = Modifier.width(minOf(820f, LocalStage.current.stageWidth - 160f).px))
     }
 }
 

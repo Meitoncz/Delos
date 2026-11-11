@@ -182,6 +182,16 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
     val boxImage by rememberBoxArt(LocalBoxArt.current, screen.pc, screen.app)
     val art = appArt(screen.pc, screen.app)
     val bottom = SettingsLayout.bottom(appearance)
+    val compact = stage.shape == StageShape.COMPACT
+    val margin = SettingsLayout.margin(stage)
+    // Compact: the banner and the header are shorter, the tabs follow right under them and the description is a dock under the list
+    val headTop = if (compact) GameSettingsLayout.COMPACT_HEAD_TOP else GameSettingsLayout.HEAD_TOP
+    val headHeight = if (compact) GameSettingsLayout.COMPACT_HEAD_HEIGHT else GameSettingsLayout.HEAD_HEIGHT
+    val tabsY = if (compact) GameSettingsLayout.COMPACT_TABS_Y else GameSettingsLayout.TABS_Y
+    val listTop = if (compact) GameSettingsLayout.COMPACT_LIST_TOP else GameSettingsLayout.LIST_TOP
+    val listX = if (compact) margin - 18f else GameSettingsLayout.LIST_X
+    val listWidth = if (compact) stage.stageWidth - 2 * (margin - 18f) else stage.stageWidth - GameSettingsLayout.LIST_WIDTH_LESS
+    val listBottom = if (compact) bottom + SettingsLayout.DOCK_HEIGHT + 16f else bottom
     Box(Modifier.fillMaxSize()
         .pointerInput(Unit) {
             awaitPointerEventScope {
@@ -195,8 +205,8 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
         FocusTransferTarget(transfer)
         GameBanner(art, heroImage ?: coverImage ?: boxImage, appearance.heroBlur)
         // The eyebrow, the game's name, the custom-settings chip and Reset all, on the banner
-        GameHeader(screen.pc.name, screen.app.name, custom.size, Modifier.offset(SettingsLayout.TITLE_X.px, GameSettingsLayout.HEAD_TOP.px)
-            .width((stage.stageWidth - 2 * SettingsLayout.TITLE_X).px).height(GameSettingsLayout.HEAD_HEIGHT.px)) {
+        GameHeader(screen.pc.name, screen.app.name, custom.size, Modifier.offset(margin.px, headTop.px)
+            .width((stage.stageWidth - 2 * margin).px).height(headHeight.px)) {
             PillButton(stringResource(R.string.settings_game_reset_all), Symbols.RESET, resetAll,
                 Modifier.alpha(if (custom.isEmpty()) .4f else 1f)
                     .onFocusChanged { onBanner = it.hasFocus }
@@ -208,7 +218,7 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
                     },
                 compact = true, clickCue = if (custom.isEmpty()) null else Cue.SELECT)
         }
-        com.limelight.shell.ui.SelectionPillHost(Modifier.offset(y = GameSettingsLayout.TABS_Y.px).fillMaxWidth().height(SettingsLayout.TABS_HEIGHT.px)) {
+        com.limelight.shell.ui.SelectionPillHost(Modifier.offset(y = tabsY.px).fillMaxWidth().height(targetPx(SettingsLayout.TABS_HEIGHT))) {
             ShoulderLabel("L1")
             TabPill(Symbols.CAST, SettingsTab.STREAM.label(res), tab == 0, Modifier.padding(horizontal = 5.px), streamCustom) { changeTab(0) }
             TabPill(Symbols.MONITOR, SettingsTab.DISPLAY.label(res), tab == 1, Modifier.padding(horizontal = 5.px), displayCustom) { changeTab(1) }
@@ -217,8 +227,8 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
         CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView, LocalEntranceStagger provides rememberEntranceStagger(tab to game)) {
             key(tab, game) {
                 // One ring glides between the rows; the host carries the list's size and faded edges, so the ring fades with the rows
-                SettingRowList(Modifier.padding(start = GameSettingsLayout.LIST_X.px, top = GameSettingsLayout.LIST_TOP.px, bottom = bottom.px)
-                    .width((stage.stageWidth - GameSettingsLayout.LIST_WIDTH_LESS).px).fillMaxHeight().fadeEdges(stage, top = 14f, bottom = 70f)) {
+                SettingRowList(Modifier.padding(start = listX.px, top = listTop.px, bottom = listBottom.px)
+                    .width(listWidth.px).fillMaxHeight().fadeEdges(stage, top = 14f, bottom = 70f)) {
                     Column(
                         modifier = Modifier.fillMaxSize().focusedListBoundary(navigation).verticalScroll(scroll)
                             .padding(start = 18.px, end = 18.px, top = GameSettingsLayout.LIST_INNER_TOP.px, bottom = 140.px),
@@ -242,7 +252,8 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
                                 // The START menu keeps the reset of a custom row; X resets it directly
                                 val menu = if (isCustom) ContextMenu(spec.label, listOf(MenuItem(Symbols.RESET, res.getString(R.string.settings_game_reset_menu)) { resetRow(spec.key) })) else null
                                 SettingRow(spec.icon, spec.label, value, Modifier.focusedListRow(navigation, spec.key),
-                                    description = dotJoin(res, res.getString(R.string.settings_game_from_profile), hint).takeIf { !isCustom },
+                                    // Compact: the dock under the list says where the focused value comes from, so a plain row keeps only the hint
+                                    description = (if (compact) hint else dotJoin(res, res.getString(R.string.settings_game_from_profile), hint)).takeIf { !isCustom },
                                     override = if (isCustom) RowOverride(dotJoin(res, profileLine, hint), touch) { resetRow(spec.key) } else null,
                                     enabled = caps != null && stream.enabled(spec, caps), contextMenu = menu,
                                     impact = impact(spec.key, values),
@@ -260,7 +271,8 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
         }
         val focusedChoices = focused?.let { caps?.choices(res, it, values) ?: it.choices }.orEmpty()
         GameSettingsPanel(
-            Modifier.align(Alignment.TopEnd).padding(top = GameSettingsLayout.PANEL_TOP.px, end = SettingsLayout.TITLE_X.px, bottom = bottom.px)
+            if (compact) Modifier.align(Alignment.BottomCenter).padding(start = margin.px, end = margin.px, bottom = bottom.px).fillMaxWidth().height(SettingsLayout.DOCK_HEIGHT.px)
+            else Modifier.align(Alignment.TopEnd).padding(top = GameSettingsLayout.PANEL_TOP.px, end = SettingsLayout.TITLE_X.px, bottom = bottom.px)
                 .width(520.px).fillMaxHeight(),
             game = screen.app.name, focused = focused, isCustom = focused?.key in custom, touch = touch,
             currentLabel = focused?.let { profileValueLabel(res, it, values[it.key] ?: it.default, focusedChoices) },
@@ -293,6 +305,13 @@ internal object GameSettingsLayout {
      */
     const val LIST_WIDTH_LESS = 840f
     const val PANEL_TOP = SettingsLayout.LIST_TOP
+
+    /** The compact stage: a shorter banner and header, the 66 px tabs (64 touch minimum) right under them, the list at full width under those. */
+    const val COMPACT_BANNER_HEIGHT = 200f
+    const val COMPACT_HEAD_TOP = 104f
+    const val COMPACT_HEAD_HEIGHT = 80f
+    const val COMPACT_TABS_Y = 200f
+    const val COMPACT_LIST_TOP = 276f
 }
 
 /**
@@ -305,8 +324,9 @@ internal fun GameBanner(art: GameArt, image: ImageBitmap?, blurPx: Int) {
     val colors = LocalDelosColors.current
     val stage = LocalStage.current
     val area = remember(stage.stageWidth, stage.stageHeight) { HeroArea.of(stage) }
-    Box(Modifier.fillMaxWidth().height(GameSettingsLayout.BANNER_HEIGHT.px)
-        .fadeMask(stage, vertical = true, startClear = 0f, startSolid = 1f, endSolid = GameSettingsLayout.BANNER_HEIGHT * .65f, endClear = 0f),
+    val bannerHeight = if (stage.shape == StageShape.COMPACT) GameSettingsLayout.COMPACT_BANNER_HEIGHT else GameSettingsLayout.BANNER_HEIGHT
+    Box(Modifier.fillMaxWidth().height(bannerHeight.px)
+        .fadeMask(stage, vertical = true, startClear = 0f, startSolid = 1f, endSolid = bannerHeight * .65f, endClear = 0f),
         contentAlignment = Alignment.TopCenter) {
         PlaceholderArt(art.hue, art.hue2, art.icon, Modifier.fillMaxSize(), glyphSize = 420f, glyphRight = 84f, glyphTop = -.14f, glyphAlpha = .14f)
         if (image != null) {
@@ -366,23 +386,19 @@ internal fun GameSettingsPanel(
 ) {
     val colors = LocalDelosColors.current
     val res = textResources()
-    SettingsPanelFrame(modifier) {
-        Box(Modifier.size(120.px).clip(androidx.compose.foundation.shape.CircleShape).background(colors.accent), contentAlignment = Alignment.Center) {
-            Symbol(focused?.icon ?: Symbols.TUNE, 64.tpx, colors.onAccent, filled = true)
-        }
-        BasicText(focused?.label ?: stringResource(R.string.settings_game_panel_title), style = TextStyle(color = colors.text, fontFamily = Unbounded,
-            fontWeight = FontWeight.SemiBold, fontSize = 30.tpx), modifier = Modifier.padding(top = 8.px))
-        // The sentence with [value] set in bold: the string is formatted around a marker that the value then replaces
-        fun bold(@androidx.annotation.StringRes sentence: Int, value: String): AnnotatedString = buildAnnotatedString {
-            val marker = "\u0001"
-            // %2$s is the name of the X button (settings_game_profile_value_button); the touch sentence has no second argument
-            val text = res.getString(sentence, marker, StreamMenuSettings.buttonName(res, android.view.KeyEvent.KEYCODE_BUTTON_X))
-            val at = text.indexOf(marker)
-            append(text.substring(0, at))
-            withStyle(SpanStyle(color = colors.text, fontWeight = FontWeight.Bold)) { append(value) }
-            append(text.substring(at + marker.length))
-        }
-        val total = streamCustom + displayCustom
+    val compact = LocalStage.current.shape == StageShape.COMPACT
+    // The sentence with [value] set in bold: the string is formatted around a marker that the value then replaces
+    fun bold(@androidx.annotation.StringRes sentence: Int, value: String): AnnotatedString = buildAnnotatedString {
+        val marker = "\u0001"
+        // %2$s is the name of the X button (settings_game_profile_value_button); the touch sentence has no second argument
+        val text = res.getString(sentence, marker, StreamMenuSettings.buttonName(res, android.view.KeyEvent.KEYCODE_BUTTON_X))
+        val at = text.indexOf(marker)
+        append(text.substring(0, at))
+        withStyle(SpanStyle(color = colors.text, fontWeight = FontWeight.Bold)) { append(value) }
+        append(text.substring(at + marker.length))
+    }
+    val total = streamCustom + displayCustom
+    val source: @Composable () -> Unit = {
         when {
             focused == null -> SourceBox(total > 0, if (total > 0) Symbols.TUNE else Symbols.CHECK_CIRCLE, customSettingsLabel(res, total),
                 AnnotatedString(customSummary(res, streamCustom, displayCustom)))
@@ -391,15 +407,36 @@ internal fun GameSettingsPanel(
             else -> SourceBox(false, Symbols.ACCOUNT_CIRCLE, stringResource(R.string.settings_game_from_profile),
                 bold(R.string.settings_game_currently, currentLabel.orEmpty()))
         }
-        AutoScrollingHelp(focused?.key to detail, Modifier.weight(1f)) {
-            BasicText(detail?.takeIf { it.isNotBlank() } ?: stringResource(R.string.settings_game_only_this_game, game),
-                style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 22.tpx, lineHeight = 1.45.em))
-        }
-        if (showImpactLegend) ImpactLegend()
-        Row(Modifier.padding(top = 10.px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.px)) {
+    }
+    val help: @Composable () -> Unit = {
+        BasicText(detail?.takeIf { it.isNotBlank() } ?: stringResource(R.string.settings_game_only_this_game, game),
+            style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = (if (compact) 21 else 22).tpx, lineHeight = 1.45.em))
+    }
+    val savedNote: @Composable () -> Unit = {
+        Row(Modifier.padding(top = (if (compact) 0 else 10).px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.px)) {
             Symbol(Symbols.CHECK_CIRCLE, 20.tpx, colors.text3)
             BasicText(stringResource(R.string.settings_game_saved_note), style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 17.tpx))
         }
+    }
+    if (compact) {
+        // The source (custom for this game, with the profile's value, or the profile's) stays between the name and the help: it is the custom marker
+        HelpDock(modifier, focused?.icon ?: Symbols.TUNE, focused?.label ?: stringResource(R.string.settings_game_panel_title), focused?.key to detail,
+            showImpactLegend, lead = source) {
+            help()
+            savedNote()
+        }
+        return
+    }
+    SettingsPanelFrame(modifier) {
+        Box(Modifier.size(120.px).clip(androidx.compose.foundation.shape.CircleShape).background(colors.accent), contentAlignment = Alignment.Center) {
+            Symbol(focused?.icon ?: Symbols.TUNE, 64.tpx, colors.onAccent, filled = true)
+        }
+        BasicText(focused?.label ?: stringResource(R.string.settings_game_panel_title), style = TextStyle(color = colors.text, fontFamily = Unbounded,
+            fontWeight = FontWeight.SemiBold, fontSize = 30.tpx), modifier = Modifier.padding(top = 8.px))
+        source()
+        AutoScrollingHelp(focused?.key to detail, Modifier.weight(1f)) { help() }
+        if (showImpactLegend) ImpactLegend()
+        savedNote()
     }
 }
 
@@ -407,8 +444,21 @@ internal fun GameSettingsPanel(
 @Composable
 private fun SourceBox(custom: Boolean, icon: String, title: String, body: AnnotatedString) {
     val colors = LocalDelosColors.current
-    val shape = RoundedCornerShape(20.px)
     val tint = colors.accent3
+    if (LocalStage.current.shape == StageShape.COMPACT) {
+        // One line in the dock: the marker and what the profile (or this game) has
+        val shape = RoundedCornerShape(16.cpx)
+        Row(Modifier.fillMaxWidth().clip(shape).background(if (custom) tint.copy(alpha = .22f) else colors.text.copy(alpha = .06f))
+            .border(1.px, if (custom) tint.copy(alpha = .5f) else colors.line, shape).padding(horizontal = 14.px, vertical = 4.px),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.px)) {
+            Symbol(icon, 22.tpx, if (custom) tint else colors.text2, filled = true)
+            BasicText(title, maxLines = 1, style = TextStyle(color = if (custom) tint else colors.text2, fontFamily = Figtree, fontWeight = FontWeight.Bold, fontSize = 19.tpx))
+            BasicText(body, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false),
+                style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 19.tpx))
+        }
+        return
+    }
+    val shape = RoundedCornerShape(20.px)
     Column(Modifier.fillMaxWidth().clip(shape).background(if (custom) tint.copy(alpha = .22f) else colors.text.copy(alpha = .06f))
         .border(1.px, if (custom) tint.copy(alpha = .5f) else colors.line, shape).padding(horizontal = 20.px, vertical = 16.px),
         verticalArrangement = Arrangement.spacedBy(8.px)) {

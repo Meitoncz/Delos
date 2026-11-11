@@ -95,6 +95,8 @@ import com.limelight.shell.ui.fadeEdges
 import com.limelight.shell.ui.focusEffects
 import com.limelight.shell.ui.glass
 import com.limelight.shell.ui.px
+import com.limelight.shell.ui.StageShape
+import com.limelight.shell.ui.cpx
 import com.limelight.shell.ui.tpx
 import dev.chrisbanes.haze.HazeState
 
@@ -217,9 +219,10 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
 
     Column(
         Modifier
-            .width(1240.px)
-            // 820 at 1080: a taller stage gives the chips more room, a shorter one less
-            .heightIn(max = (stage.stageHeight - 260f).coerceAtLeast(0f).px)
+            // 1240 on a stage that has it; the compact one (small panels) leaves 30 px on each side
+            .width(minOf(1240f, stage.stageWidth - 60f).px)
+            // 820 at 1080: a taller stage gives the chips more room, a shorter one less (the compact one keeps clear of the bars)
+            .heightIn(max = (stage.stageHeight - (if (stage.shape == StageShape.COMPACT) 220f else 260f)).coerceAtLeast(0f).px)
             // box-shadow: 0 40px 100px -30px rgba(0, 0, 0, .7), like the dialogs
             .dropShadow(shape) {
                 radius = 100f * k
@@ -231,12 +234,12 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
             .clip(shape)
             .backdropBlur(haze, 24f, colors.surface3)
             .border(1.px, colors.line, shape)
-            .padding(horizontal = 40.px, vertical = 44.px)
+            .padding(horizontal = 40.cpx, vertical = 44.cpx)
             .onFocusChanged { panelFocused = it.hasFocus }
             .focusProperties { onExit = { if (open) cancelFocusChange() } }
             .focusGroup(),
     ) {
-        Row(Modifier.fillMaxWidth().padding(start = 12.px, end = 12.px, bottom = 26.px), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().padding(start = 12.px, end = 12.px, bottom = 26.cpx), verticalAlignment = Alignment.CenterVertically) {
             BasicText(stringResource(R.string.filters_title), style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 40.tpx))
             Spacer(Modifier.weight(1f))
             val result = filterResultLine(textResources(), matching, apps.size, filters.active)
@@ -261,11 +264,11 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
         Column(
             Modifier
                 .verticalScroll(chipScroll)
-                .padding(start = 12.px, end = 12.px, top = 24.px, bottom = 48.px),
-            verticalArrangement = Arrangement.spacedBy(34.px),
+                .padding(start = 12.px, end = 12.px, top = 24.cpx, bottom = 48.cpx),
+            verticalArrangement = Arrangement.spacedBy(34.cpx),
         ) {
             FilterSection(Symbols.GENRE_UNKNOWN, stringResource(R.string.filters_section_genre)) {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(14.px), verticalArrangement = Arrangement.spacedBy(14.px)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(14.cpx), verticalArrangement = Arrangement.spacedBy(14.cpx)) {
                     FilterChip(
                         stringResource(R.string.filters_all), filters.genreId == null, { metadata.updateFilters(metadata.filters.copy(genreId = null)) },
                         Modifier.focusRequester(genreRequester(null)), count = apps.size,
@@ -284,7 +287,7 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
             // Without any theme in the library there is nothing to choose (a theme that was chosen stays visible)
             if (themes.isNotEmpty() || filters.themeId != null) {
                 FilterSection(Symbols.THEMES, stringResource(R.string.filters_section_theme)) {
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(14.px), verticalArrangement = Arrangement.spacedBy(14.px)) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(14.cpx), verticalArrangement = Arrangement.spacedBy(14.cpx)) {
                         FilterChip(
                             stringResource(R.string.filters_all), filters.themeId == null, { metadata.updateFilters(metadata.filters.copy(themeId = null)) },
                             count = apps.size,
@@ -302,7 +305,7 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
                 FilterDivider()
             }
             FilterSection(Symbols.HDR_ON, stringResource(R.string.filters_section_hdr)) {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(14.px), verticalArrangement = Arrangement.spacedBy(14.px)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(14.cpx), verticalArrangement = Arrangement.spacedBy(14.cpx)) {
                     HdrFilter.entries.forEach { option ->
                         FilterChip(
                             stringResource(hdrFilterLabel(option)), filters.hdr == option, { metadata.updateFilters(metadata.filters.copy(hdr = option)) },
@@ -313,7 +316,7 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
             }
             FilterDivider()
             FilterSection(Symbols.COMPLETION_TIME, stringResource(R.string.filters_section_duration)) {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(14.px), verticalArrangement = Arrangement.spacedBy(14.px)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(14.cpx), verticalArrangement = Arrangement.spacedBy(14.cpx)) {
                     LengthFilter.entries.forEach { option ->
                         FilterChip(
                             stringResource(lengthFilterLabel(option)), filters.length == option, { metadata.updateFilters(metadata.filters.copy(length = option)) },
@@ -325,7 +328,7 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
         }
         }
         Row(
-            Modifier.fillMaxWidth().padding(top = 30.px, start = 12.px, end = 12.px),
+            Modifier.fillMaxWidth().padding(top = 30.cpx, start = 12.px, end = 12.px),
             horizontalArrangement = Arrangement.spacedBy(24.px, Alignment.End),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -333,8 +336,9 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
             PillButton(
                 stringResource(R.string.filters_reset), Symbols.RESET, { if (metadata.filters.active) metadata.updateFilters(MetadataFilters()) },
                 Modifier.alpha(if (active) 1f else .4f).then(if (active) Modifier else Modifier.focusProperties { canFocus = false }),
+                compact = stage.shape == StageShape.COMPACT,
             )
-            PillButton(stringResource(R.string.filters_done), Symbols.CHECK, onClose, primary = true, clickCue = Cue.BACK)
+            PillButton(stringResource(R.string.filters_done), Symbols.CHECK, onClose, primary = true, clickCue = Cue.BACK, compact = stage.shape == StageShape.COMPACT)
         }
     }
 }
@@ -342,9 +346,9 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
 @Composable
 private fun FilterSection(icon: String, title: String, content: @Composable () -> Unit) {
     val colors = LocalDelosColors.current
-    Column(verticalArrangement = Arrangement.spacedBy(22.px)) {
+    Column(verticalArrangement = Arrangement.spacedBy(22.cpx)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(18.px)) {
-            Box(Modifier.size(60.px).clip(CircleShape).background(colors.accent.copy(alpha = .18f)), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(60.cpx).clip(CircleShape).background(colors.accent.copy(alpha = .18f)), contentAlignment = Alignment.Center) {
                 Symbol(icon, 32.tpx, colors.accent2, filled = true)
             }
             BasicText(title, style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 29.tpx))
@@ -374,7 +378,7 @@ internal fun FilterChip(label: String, selected: Boolean, onClick: () -> Unit, m
             .clip(CircleShape)
             .then(if (selected) Modifier.background(colors.accent) else Modifier.glass(colors.surface).border(1.px, colors.line, CircleShape))
             .heightIn(min = 60.px)
-            .padding(horizontal = 30.px, vertical = 12.px),
+            .padding(horizontal = 30.cpx, vertical = 12.cpx),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.px),
     ) {
