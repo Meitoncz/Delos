@@ -49,8 +49,11 @@ fun AutoScrollingHelp(
         scroll.scrollTo(0)
         if (!overflow || reducedMotion) return@LaunchedEffect
         val duration = (maximum * 1000f / (20f * pixelsPerStagePixel)).roundToInt().coerceIn(1000, 120000)
+        // The compact dock gives the text a long first pause (time to read it whole, nothing half-cut under the header); the panel keeps 3 s
+        var first = if (edgeFade != null) 8000L else 3000L
         while (isActive) {
-            delay(3000)
+            delay(first)
+            first = 3000L
             scroll.animateScrollTo(maximum, tween(duration, easing = LinearEasing))
             delay(2500)
             scroll.animateScrollTo(0, tween(duration, easing = LinearEasing))
