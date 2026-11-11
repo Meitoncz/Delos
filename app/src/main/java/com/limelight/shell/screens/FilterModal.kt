@@ -218,7 +218,8 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
     Column(
         Modifier
             .width(1240.px)
-            .heightIn(max = 820.px)
+            // 820 at 1080: a taller stage gives the chips more room, a shorter one less
+            .heightIn(max = (stage.stageHeight - 260f).coerceAtLeast(0f).px)
             // box-shadow: 0 40px 100px -30px rgba(0, 0, 0, .7), like the dialogs
             .dropShadow(shape) {
                 radius = 100f * k

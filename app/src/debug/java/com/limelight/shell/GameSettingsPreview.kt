@@ -100,7 +100,7 @@ internal object GameSettingsPreview {
             CompositionLocalProvider(LocalFocusTracker provides remember { FocusTracker() }) {
                 GameBanner(GameArt("preview", 210f, 245f, Symbols.SPORTS_ESPORTS), null, 0)
                 GameHeader("Gaming PC", "Elden Ring", 2, Modifier.offset(SettingsLayout.TITLE_X.px, GameSettingsLayout.HEAD_TOP.px)
-                    .width((1920f - 2 * SettingsLayout.TITLE_X).px).height(GameSettingsLayout.HEAD_HEIGHT.px)) {
+                    .width((LocalStage.current.stageWidth - 2 * SettingsLayout.TITLE_X).px).height(GameSettingsLayout.HEAD_HEIGHT.px)) {
                     PillButton("Reset all", Symbols.RESET, {}, compact = true)
                 }
                 SelectionPillHost(Modifier.offset(y = GameSettingsLayout.TABS_Y.px).fillMaxWidth().height(SettingsLayout.TABS_HEIGHT.px)) {
@@ -110,7 +110,7 @@ internal object GameSettingsPreview {
                     ShoulderLabel("R1")
                 }
                 SettingRowList(Modifier.padding(start = GameSettingsLayout.LIST_X.px, top = GameSettingsLayout.LIST_TOP.px, bottom = 96.px)
-                    .width(GameSettingsLayout.LIST_WIDTH.px).fillMaxHeight().fadeEdges(LocalStage.current, top = 14f, bottom = 70f)) {
+                    .width((LocalStage.current.stageWidth - GameSettingsLayout.LIST_WIDTH_LESS).px).fillMaxHeight().fadeEdges(LocalStage.current, top = 14f, bottom = 70f)) {
                     Column(Modifier.fillMaxSize().focusedListBoundary(navigation).padding(start = 18.px, end = 18.px, top = GameSettingsLayout.LIST_INNER_TOP.px),
                         verticalArrangement = Arrangement.spacedBy(10.px)) {
                         rows.forEachIndexed { i, row ->

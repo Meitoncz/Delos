@@ -416,19 +416,21 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
                     itemsIndexed(apps, key = { _, app -> app.id }) { i, app -> tile(i, app) }
                 }
             } else {
+                val columns = gridColumns(stage.stageWidth)
+                val side = gridSidePadding(stage.stageWidth, columns)
                 LazyVerticalGrid(
-                    columns = GridCells.Fixed(5),
+                    columns = GridCells.Fixed(columns),
                     state = gridState,
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(top = 292.px)
                         // The top fade starts below the info chips; the bottom fade runs under the hint bar
                         .fadeMask(stage, vertical = true, startClear = 34f, startSolid = 90f, endSolid = 230f, endClear = 10f),
-                    contentPadding = PaddingValues(start = GRID_SIDE_PADDING.px, end = GRID_SIDE_PADDING.px, top = 98.px, bottom = 260.px),
+                    contentPadding = PaddingValues(start = side.px, end = side.px, top = 98.px, bottom = 260.px),
                     horizontalArrangement = Arrangement.spacedBy(ROW_GAP.px),
                     verticalArrangement = Arrangement.spacedBy(ROW_GAP.px),
                 ) {
-                    itemsIndexed(apps, key = { _, app -> app.id }, span = { i, _ -> GridItemSpan(if (i == 0) 3 else 1) }) { i, app -> tile(i, app) }
+                    itemsIndexed(apps, key = { _, app -> app.id }, span = { i, _ -> GridItemSpan(if (i == 0) columns.coerceAtMost(3) else 1) }) { i, app -> tile(i, app) }
                 }
             }
         }
@@ -442,8 +444,14 @@ private const val ROW_GAP = 44f
 /** The wide first cover is as wide as three covers and the two gaps between them (the grid spans it over 3 columns). */
 private const val ROW_WIDE = 3 * ROW_TILE + 2 * ROW_GAP
 
-/** The grid mode centres five covers and four gaps in the 1920 px stage. */
-private const val GRID_SIDE_PADDING = (1920f - 5 * ROW_TILE - 4 * ROW_GAP) / 2f
+/** The least room on each side of the grid: the 122 px at 1920 that centre five covers and four gaps. */
+private const val GRID_MIN_SIDE = (1920f - 5 * ROW_TILE - 4 * ROW_GAP) / 2f
+
+/** The covers across the grid: as many 300 px covers with their gaps as fit the stage with [GRID_MIN_SIDE] on each side (5 at 1920, at least 3 for the wide first cover). */
+private fun gridColumns(stageWidth: Float): Int = ((stageWidth - 2 * GRID_MIN_SIDE + ROW_GAP) / (ROW_TILE + ROW_GAP)).toInt().coerceAtLeast(3)
+
+/** The grid's side padding that centres [columns] covers and their gaps in the stage; [GRID_MIN_SIDE] at five columns in 1920. */
+private fun gridSidePadding(stageWidth: Float, columns: Int): Float = (stageWidth - columns * ROW_TILE - (columns - 1) * ROW_GAP) / 2f
 
 /** Where item [index] starts in the row, from the start of its content (stage pixels). */
 private fun rowItemStart(index: Int): Float = if (index == 0) 0f else ROW_WIDE + ROW_GAP + (index - 1) * (ROW_TILE + ROW_GAP)

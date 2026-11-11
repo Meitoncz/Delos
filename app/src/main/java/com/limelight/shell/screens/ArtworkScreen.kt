@@ -154,6 +154,7 @@ import com.limelight.shell.ui.staggerEntrance
 import com.limelight.shell.ui.tpx
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
+import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 
 /**
@@ -193,6 +194,9 @@ private enum class ArtTab(
     ;
 
     fun step(dir: Int) = entries[Math.floorMod(ordinal + dir, entries.size)]
+
+    /** The columns of the grid [gridWidth] stage px wide: [columns] at the 1720 of a 1920 stage, in proportion otherwise. */
+    fun columnsFor(gridWidth: Float) = (columns * gridWidth / 1720f).roundToInt().coerceAtLeast(1)
 
     /** "10 of 41 covers" ([countOf]) when the unfiltered total differs, else "41 covers"; [all] says "All 41 covers" for an unfiltered list. */
     fun resultLine(res: Resources, shown: Int, total: Int?, all: Boolean): String = when {
@@ -415,7 +419,8 @@ fun ArtworkScreen(screen: Screen.Artwork) {
                 style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 40.tpx),
             )
         }
-        SelectionPillHost(Modifier.offset(720.px, 124.px).width(1050.px).height(66.px)) {
+        // The tabs stay at the right margin (1050 wide, ending 150 before the edge: x 720 at 1920); on a narrower stage they stay clear of the title
+        SelectionPillHost(Modifier.offset(maxOf(720f, stage.stageWidth - 1200f).px, 124.px).width(1050.px).height(66.px)) {
             ShoulderLabel("L1")
             ArtTab.entries.forEach { next ->
                 TabPill(next.icon, stringResource(next.label), tab == next, Modifier.padding(horizontal = 4.px)) {
@@ -427,7 +432,7 @@ fun ArtworkScreen(screen: Screen.Artwork) {
 
         // Toolbar: the matched game, search for another name (X), the filter sheet (Y)
         Row(
-            Modifier.offset(150.px, 206.px).width(1620.px).height(64.px),
+            Modifier.offset(150.px, 206.px).width((stage.stageWidth - 300f).px).height(64.px),
             horizontalArrangement = Arrangement.spacedBy(16.px), verticalAlignment = Alignment.CenterVertically,
         ) {
             GameChip(match, busy, app.name, (choices as? Choices.Ready)?.let { it.total ?: it.images.size.takeIf { _ -> !filters.active } }, tab, Modifier.weight(1f))
@@ -457,12 +462,12 @@ fun ArtworkScreen(screen: Screen.Artwork) {
                 tab, filters, ready, refreshing,
                 onClear = { chip -> filtersByTab[tab] = ArtFilterRules.clear(filters, chip) },
                 onReset = ::resetFilters,
-                modifier = Modifier.offset(150.px, 276.px).width(1620.px).height(44.px),
+                modifier = Modifier.offset(150.px, 276.px).width((stage.stageWidth - 300f).px).height(44.px),
             )
         }
 
-        // The grid (or why there is none)
-        Box(Modifier.offset(100.px, 324.px).width(1720.px).height(552.px)) {
+        // The grid (or why there is none): from under the filter strip to above the info strip, so a taller stage shows more rows
+        Box(Modifier.offset(100.px, 324.px).width((stage.stageWidth - 200f).px).height((stage.stageHeight - 528f).coerceAtLeast(0f).px)) {
             when (val c = choices) {
                 Choices.Loading -> GridMessage(Symbols.LOADING, stringResource(R.string.artwork_loading), null)
                 Choices.NoKey -> GridMessage(Symbols.KEY, stringResource(R.string.artwork_no_key_title), stringResource(R.string.artwork_no_key_note))
@@ -479,7 +484,7 @@ fun ArtworkScreen(screen: Screen.Artwork) {
                     val noneInUse = chosen == NONE || (chosen == null && c.images.isEmpty() && !filters.active)
                     CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
                         LazyVerticalGrid(
-                            columns = GridCells.Fixed(tab.columns),
+                            columns = GridCells.Fixed(tab.columnsFor(stage.stageWidth - 200f)),
                             state = grid,
                             modifier = Modifier.fillMaxSize().fadeEdges(stage, top = 30f, bottom = 70f),
                             contentPadding = PaddingValues(start = 50.px, end = 50.px, top = 46.px, bottom = 96.px),
@@ -513,7 +518,7 @@ fun ArtworkScreen(screen: Screen.Artwork) {
 
         InfoStrip(
             described ?: Described.FirstChoice, tab, chosen,
-            Modifier.offset(150.px, 886.px).width(1620.px).height(84.px),
+            Modifier.offset(150.px, (stage.stageHeight - 194f).px).width((stage.stageWidth - 300f).px).height(84.px),
         )
 
         // The filter sheet drops down from the toolbar over a dimmed page; the grid stays visible underneath
@@ -762,6 +767,7 @@ private fun FilterSheetLayer(
     val res = textResources()
     val reduced = LocalReducedMotion.current
     val shape = RoundedCornerShape(40.px)
+    val stage = LocalStage.current
     val kind = tab.kind
     AnimatedVisibility(open, enter = fadeIn(tween(Motion.EXIT, easing = Motion.Ease)), exit = fadeOut(tween(Motion.EXIT, easing = Motion.Ease))) {
         Box(Modifier.fillMaxSize().background(Color(0x73050A14)).pointerInput(Unit) { detectTapGestures { onClose() } })
@@ -789,7 +795,7 @@ private fun FilterSheetLayer(
         }
         Column(
             Modifier
-                .width(1620.px)
+                .width((stage.stageWidth - 300f).px)
                 .clip(shape).glass(colors.surface3).border(1.px, colors.line, shape)
                 .padding(start = 40.px, end = 40.px, top = 26.px, bottom = 22.px)
                 .onFocusChanged { panelFocused = it.hasFocus }

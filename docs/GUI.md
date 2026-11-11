@@ -824,9 +824,9 @@ activity keeps its own orientation logic) and supports windows from 1:1 up to 21
     --es preview_screen home --es preview_state row
   ```
 
-- **Screen previews with fake data** (debug builds, `ScreenPreviews` in `src/debug`, no PC or network): `--es preview_screen <home|artwork|devices|start|pair|filter|dialog|loader|result>`,
+- **Screen previews with fake data** (debug builds, `ScreenPreviews` in `src/debug`, no PC or network): `--es preview_screen <home|artwork|devices|start|pair|filter|dialog|loader|result|settings|settings_search|debug_info|profile|game_options>`,
   `home` with `--es preview_state <row|grid>`; they run next to the older previews (`context_menu`, `top_menu`, `settings_tabs`, `settings_list`,
-  `game_settings`, `stream_menu`, `full_keyboard`, `toast`).
+  `game_settings`, `stream_menu`, `full_keyboard`, `toast`). `settings`, `settings_search`, `debug_info`, `profile` and `game_options` are the real screens (`game_settings` is the older component preview of the per-game list); the preview tells the settings capability probe there is no PyroWave, because its native Vulkan probe dies on the emulator's SwiftShader.
 - **Contact sheets** (`tools/layout/`): `shapes.txt` lists the shapes (names, `W x H @ dpi`, optional cutout), `screens.txt` the previews. `sheets.sh` needs the
   fail-closed adb wrapper and the stream gate helper:
 
@@ -840,6 +840,13 @@ activity keeps its own orientation logic) and supports windows from 1:1 up to 21
   never presses anything, and starts the normal shell again at the end. Contact sheets land in `<label>/sheets/by-screen/` and `by-shape/`.
   `compare` ignores the status bar's Wi-Fi, battery and clock by default (`--mask none` compares everything, `--tolerance N` allows small differences).
 - The displays of the target handhelds and the class each gets: [HANDHELD_DEVICES.md](HANDHELD_DEVICES.md).
+- **Screens on a wider or taller stage** (phase B, screens): every absolute 1920 / 1080 of a screen is now `LocalStage.current.stageWidth` / `stageHeight` with the
+  same value at 1920 × 1080. Settings: the Search pill keeps its distance from the right edge (x = stage width − 390). Per-game settings: the header is the
+  stage width less the two 150 px margins and the list runs from x 132 to 38 px short of the right-anchored 520 px panel (stage width − 840 wide). Artwork:
+  the tabs, toolbar, filter strip and info strip are anchored to the edges (the info strip 194 px above the bottom), the grid takes the height between the
+  strips and the columns scale with its width (7 / 4 / 3 / 5 per 1720 px). Home grid: as many 300 px covers as fit with 122 px at least on each side (5 at 1920,
+  6 at 21:9, at least 3 for the wide first cover), centred. The filter modal's height follows the stage (stage height − 260). Circle rows (`Circles`: Devices, Start,
+  Pair, Profile) wrap into centred rows instead of overflowing. Debug info already filled the stage (weighted list, edge padding).
 
 ## Native shell architecture and design constraints
 

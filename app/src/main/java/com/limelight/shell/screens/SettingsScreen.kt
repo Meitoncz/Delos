@@ -249,7 +249,8 @@ fun SettingsScreen(
         FocusTransferTarget(focusTransfer)
         BasicText(stringResource(R.string.settings_screen_title), style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx),
             modifier = Modifier.offset(SettingsLayout.TITLE_X.px, SettingsLayout.TITLE_Y.px))
-        PillButton(stringResource(R.string.settings_screen_search), Symbols.SEARCH, { shell.onSettingsSearch?.invoke() }, Modifier.offset(1530.px, 122.px), clickCue = null)
+        // Kept the same distance from the right edge as at 1920 (x 1530), so a wider or narrower stage moves it with the edge
+        PillButton(stringResource(R.string.settings_screen_search), Symbols.SEARCH, { shell.onSettingsSearch?.invoke() }, Modifier.offset((stage.stageWidth - 390f).px, 122.px), clickCue = null)
         com.limelight.shell.ui.SelectionPillHost(Modifier.offset(y = SettingsLayout.TABS_Y.px).fillMaxWidth().height(SettingsLayout.TABS_HEIGHT.px)) {
             ShoulderLabel("L1")
             SettingsTab.entries.forEach { next ->
