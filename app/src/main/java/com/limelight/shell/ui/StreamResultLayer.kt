@@ -79,11 +79,17 @@ fun StreamResultLayer(result: StreamResult?, haze: HazeState, reducedMotion: Boo
                 .focusGroup(),
             contentAlignment = Alignment.Center,
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(24.px)) {
+            // A compact stage keeps the card 48 px from the edges and sets the face and the headline smaller
+            val stage = LocalStage.current
+            val compact = stage.compact
+            Column(
+                Modifier.then(if (compact) Modifier.padding(horizontal = Compact.MARGIN.px) else Modifier),
+                horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(24.px),
+            ) {
                 FaceBadge(r.id, reducedMotion)
                 BasicText(
                     r.title,
-                    style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 52.tpx, textAlign = TextAlign.Center),
+                    style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = (if (compact) 42 else 52).tpx, textAlign = TextAlign.Center),
                     modifier = Modifier.padding(top = 8.px),
                 )
                 BasicText(
@@ -103,8 +109,8 @@ fun StreamResultLayer(result: StreamResult?, haze: HazeState, reducedMotion: Boo
                             details,
                             style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 22.tpx, lineHeight = 1.4.em, textAlign = TextAlign.Start),
                             modifier = Modifier
-                                .widthIn(max = 1100.px)
-                                .heightIn(max = 280.px)
+                                .widthIn(max = (if (compact) minOf(1100f, stage.stageWidth - 2f * Compact.MARGIN) else 1100f).px)
+                                .heightIn(max = (if (compact) 200f else 280f).px)
                                 .clip(shape)
                                 .background(colors.surface)
                                 .border(1.px, colors.line, shape)
@@ -128,9 +134,10 @@ private fun FaceBadge(id: Long, reducedMotion: Boolean) {
         -1f, 1f, infiniteRepeatable(tween(3200, easing = FastOutSlowInEasing), RepeatMode.Reverse), label = "faceFloat",
     )
     val shape = CircleShape
+    val cs = LocalStage.current.compactScale
     Box(
         Modifier
-            .size(220.px)
+            .size((220f * cs).px)
             .graphicsLayer {
                 val e = enter.value
                 alpha = (e * 1.6f).coerceAtMost(1f)
@@ -146,7 +153,7 @@ private fun FaceBadge(id: Long, reducedMotion: Boolean) {
             .border(2.px, colors.accent.copy(alpha = .42f), shape),
         contentAlignment = Alignment.Center,
     ) {
-        Symbol(Symbols.SENTIMENT_DISSATISFIED, 128.tpx, colors.accent, filled = true)
+        Symbol(Symbols.SENTIMENT_DISSATISFIED, (128f * cs).tpx, colors.accent, filled = true)
     }
 }
 

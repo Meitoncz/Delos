@@ -5,6 +5,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.background
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -256,8 +258,8 @@ fun CircleItem(
     // The badge pops in when the circle becomes the selected one
     val badgePop by animateFloatAsState(if (selected) 1f else 0f, if (reduced) tween(Motion.FADE, easing = Motion.Ease) else tween(Motion.PILL_POP, easing = EaseSpring), label = "circleBadgePop")
     val cs = scale ?: stage.compactScale
-    // A compact stage packs the circles closer: an item is at most 170 wide and its label may run over its edges (the gaps are wider than that)
-    val itemWidth = if (stage.compact) minOf(width, 170f) else width
+    // A compact stage packs the circles closer: an item is at most 176 wide and its label may run 15 px over each edge (the gap is 16)
+    val itemWidth = if (stage.compact) minOf(width, 176f) else width
     val side = (diameter ?: if (big) 220f else 176f) * cs
     val iconSize = (if (big) 96f else 76f) * cs
     val pulseTransition = rememberInfiniteTransition(label = "pulse")
@@ -326,7 +328,7 @@ fun CircleItem(
                 maxLines = 1,
                 softWrap = !stage.compact,
                 overflow = if (stage.compact) TextOverflow.Ellipsis else TextOverflow.Clip,
-                modifier = Modifier.then(if (stage.compact) Modifier.wrapContentWidth(unbounded = true).widthIn(max = (itemWidth + 16f).px) else Modifier).graphicsLayer {
+                modifier = Modifier.then(if (stage.compact) Modifier.wrapContentWidth(unbounded = true).widthIn(max = (itemWidth + 30f).px) else Modifier).graphicsLayer {
                     alpha = .55f + .45f * lit
                     translationY = -6f * (1f - lit) * stage.dpPerPx * density
                 },
@@ -341,7 +343,11 @@ fun CircleItem(
     }
 }
 
-/** `.circles`: a centered row of circle items; it wraps into more centered rows when the stage is too narrow for them (as many PCs as fit in 1920 stay on one). */
+/**
+ * `.circles`: a centered row of circle items; it wraps into more centered rows when the stage is too narrow for them (as many PCs as fit in 1920 stay on one).
+ * A compact stage has no room for rows under each other: its circles stay in one row that scrolls sideways when there are more than fit (the
+ * focus scrolls into view, the ends fade out while there is more to see).
+ */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun Circles(content: @Composable () -> Unit) {
@@ -349,7 +355,22 @@ fun Circles(content: @Composable () -> Unit) {
     val cs = stage.compactScale
     // One ring glides between the circles (docs/GUI.md, "Motion") instead of every circle fading its own
     GlideRingHost(FocusRing(5f, 5f), corner = 999f, focusScale = 1.16f) {
-        FlowRow(horizontalArrangement = Arrangement.spacedBy((if (stage.compact) 20f else 56f).px, Alignment.CenterHorizontally), verticalArrangement = Arrangement.spacedBy((48f * cs).px)) { content() }
+        if (stage.compact) {
+            val scroll = rememberScrollState()
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Row(
+                    Modifier
+                        .then(if (scroll.maxValue > 0) Modifier.fadeMask(stage, vertical = false, startClear = 0f, startSolid = 40f, endSolid = 40f, endClear = 0f) else Modifier)
+                        .horizontalScroll(scroll)
+                        // Room for the focus scale and ring, which the scroll area would clip
+                        .padding(horizontal = 40.px, vertical = 36.px),
+                    horizontalArrangement = Arrangement.spacedBy(16.px),
+                    verticalAlignment = Alignment.Top,
+                ) { content() }
+            }
+        } else {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(56.px, Alignment.CenterHorizontally), verticalArrangement = Arrangement.spacedBy((48f * cs).px)) { content() }
+        }
     }
 }
 

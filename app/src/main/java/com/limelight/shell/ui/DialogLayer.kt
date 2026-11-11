@@ -75,7 +75,7 @@ fun DialogLayer(spec: DialogSpec?, haze: HazeState, onDismiss: () -> Unit) {
             }
             Column(
                 Modifier
-                    .width(760.px)
+                    .width((if (stage.compact) minOf(760f, stage.stageWidth - 2f * Compact.MARGIN) else 760f).px)
                     // The dialog (card, shadow, blur) glides up while its field is being edited; the scrim and everything else stay put
                     .moveAboveIme()
                     .focusProperties { onExit = { if (open) cancelFocusChange() } }
@@ -91,7 +91,7 @@ fun DialogLayer(spec: DialogSpec?, haze: HazeState, onDismiss: () -> Unit) {
                     .clip(shape)
                     .backdropBlur(haze, 24f, colors.surface3)
                     .border(1.px, colors.line, shape)
-                    .padding(52.px),
+                    .padding((if (stage.compact) 36 else 52).px),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(22.px),
             ) {
