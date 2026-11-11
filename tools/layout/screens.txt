@@ -39,3 +39,7 @@ game-options   | --es preview_screen game_options                   | 5
 stream-menu    | --es preview_screen stream_menu --es preview_page main | 4
 full-keyboard  | --es preview_screen full_keyboard                  | 3
 toast          | --es preview_screen toast                          | 3
+stream-osc     | --es preview_screen stream_osc                     | 3
+stream-osc-saved | --es preview_screen stream_osc --es preview_saved_from 1920x1080 | 3
+stream-video-fit  | --es preview_screen stream_video --es preview_state fit  | 3
+stream-video-fill | --es preview_screen stream_video --es preview_state fill | 3
