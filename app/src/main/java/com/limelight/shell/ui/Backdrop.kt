@@ -237,37 +237,38 @@ private fun HeroArt(art: GameArt, blurPx: Int, reducedMotion: Boolean, active: B
 @Composable
 private fun HeroStill(art: GameArt, blurPx: Int, reducedMotion: Boolean, active: Boolean) {
     val image = art.image
+    val stage = LocalStage.current
+    val area = remember(stage.stageWidth, stage.stageHeight) { HeroArea.of(stage) }
     if (image != null && blurPx > 0) {
         // Only this bounded cache fill uses the GPU lens shader. The orbit scales its result like an
         // ordinary image, with no shader work, bitmap allocations or recomposition on motion frames.
-        val hero by produceState(HeroBitmaps.cachedLens(art.id, image, blurPx), art.id, image, blurPx) {
-            value = HeroBitmaps.cachedLens(art.id, image, blurPx) ?: withContext(Dispatchers.Default) { HeroBitmaps.renderLens(art.id, image, blurPx) }
+        val hero by produceState(HeroBitmaps.cachedLens(art.id, image, blurPx, area), art.id, image, blurPx, area) {
+            value = HeroBitmaps.cachedLens(art.id, image, blurPx, area) ?: withContext(Dispatchers.Default) { HeroBitmaps.renderLens(art.id, image, blurPx, area) }
         }
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             hero?.let {
                 Image(
                     it, contentDescription = null, contentScale = ContentScale.FillBounds, filterQuality = FilterQuality.Low,
-                    modifier = Modifier.requiredSize(2100.px, 1260.px).heroTilt(active, reducedMotion),
+                    modifier = Modifier.requiredSize(area.width.px, area.height.px).heroTilt(active, reducedMotion),
                 )
             }
         }
         return
     }
     // A sharp image (blur 0) or the placeholder art: drawn live, the placeholder without blur
-    val stage = LocalStage.current
     val density = LocalDensity.current.density
     val effect = remember(blurPx, stage, density, image != null) { if (image != null) heroEffect(blurPx * stage.dpPerPx * density) else null }
     Box(Modifier.fillMaxSize().heroFade(), contentAlignment = Alignment.Center) {
-        val layer = Modifier.requiredSize(2100.px, 1260.px)
+        val layer = Modifier.requiredSize(area.width.px, area.height.px)
             .then(if (image != null) Modifier.heroTilt(active, reducedMotion) else Modifier)
             .graphicsLayer { renderEffect = effect }
         if (image != null) {
-            val layout = remember(image) { HeroGeometry.layout(image.width, image.height) }
+            val layout = remember(image, area) { HeroGeometry.layout(area, image.width, image.height) }
             if (!layout.extended) {
                 Image(image, contentDescription = null, contentScale = ContentScale.Crop, modifier = layer)
             } else {
-                val extension = rememberHeroExtension(art.id, image)
-                if (extension != null) Canvas(layer) { drawHeroBand(layout, extension, image) }
+                val extension = rememberHeroExtension(art.id, image, area)
+                if (extension != null) Canvas(layer) { drawHeroBand(area, layout, extension, image) }
             }
         } else {
             PlaceholderArt(art.hue, art.hue2, art.icon, glyphSize = 1050f, glyphRight = 84f, glyphTop = -.14f, glyphAlpha = .14f, modifier = layer)
@@ -277,9 +278,9 @@ private fun HeroStill(art: GameArt, blurPx: Int, reducedMotion: Boolean, active:
 
 /** The blurred, darkened extension under a wide hero ([HeroBitmaps.extension]), built off the main thread; null while it is. */
 @Composable
-private fun rememberHeroExtension(id: String, image: ImageBitmap): ImageBitmap? {
-    val extension by produceState(HeroBitmaps.cachedExtension(id, image), id, image) {
-        value = HeroBitmaps.cachedExtension(id, image) ?: withContext(Dispatchers.Default) { HeroBitmaps.extension(id, image) }
+private fun rememberHeroExtension(id: String, image: ImageBitmap, area: HeroArea): ImageBitmap? {
+    val extension by produceState(HeroBitmaps.cachedExtension(id, image, area), id, image, area) {
+        value = HeroBitmaps.cachedExtension(id, image, area) ?: withContext(Dispatchers.Default) { HeroBitmaps.extension(id, image, area) }
     }
     return extension
 }
@@ -288,8 +289,8 @@ private fun rememberHeroExtension(id: String, image: ImageBitmap): ImageBitmap? 
  * A wide hero at full resolution: the extension over the whole area, then the image fitted to the width at the top with its
  * bottom edge fading into it, at the same place as the cached bitmap ([HeroBitmaps]) puts them.
  */
-private fun DrawScope.drawHeroBand(layout: HeroGeometry.Layout, extension: ImageBitmap, image: ImageBitmap) {
-    val k = size.width / HeroGeometry.AREA_WIDTH
+private fun DrawScope.drawHeroBand(area: HeroArea, layout: HeroGeometry.Layout, extension: ImageBitmap, image: ImageBitmap) {
+    val k = size.width / area.width
     drawImage(extension, dstSize = IntSize(size.width.roundToInt(), size.height.roundToInt()), filterQuality = FilterQuality.Low)
     val bounds = androidx.compose.ui.geometry.Rect(layout.left * k, layout.top * k, layout.right * k, layout.bottom * k)
     drawContext.canvas.saveLayer(bounds, androidx.compose.ui.graphics.Paint())
@@ -308,7 +309,7 @@ private fun heroBandMask(fade: Float, bottom: Float): Brush = Brush.verticalGrad
 )
 
 /**
- * The playing animated hero. Its frames are composed in a small layer, never at the 2100 × 1260 stage-pixel area: the picture is
+ * The playing animated hero. Its frames are composed in a small layer, never at the full stage-pixel area ([HeroArea], 2100 × 1260 at 16:9): the picture is
  * blurred anyway, so the band, its soft bottom edge, the extension, the blur ([heroEffect], saturation included) and the
  * diagonal fade are all drawn at [HeroGeometry.liveScale] of the area's size (a quarter with the default blur) into an offscreen
  * layer that HWUI keeps as a texture. It is rendered again only when a new animation frame arrives (the animation's own rate);
@@ -323,15 +324,16 @@ private fun HeroLive(id: String, image: ImageBitmap, file: java.io.File, blurPx:
     val density = LocalDensity.current.density
     // Physical pixels per stage pixel at full size, and the live layer's resolution as a fraction of it
     val k = stage.dpPerPx * density
+    val area = remember(stage.stageWidth, stage.stageHeight) { HeroArea.of(stage) }
     val scale = remember(blurPx, k) { HeroGeometry.liveScale(blurPx * k) }
     val unit = scale * k
-    val layout = remember(image) { HeroGeometry.layout(image.width, image.height) }
+    val layout = remember(image, area) { HeroGeometry.layout(area, image.width, image.height) }
     val ticker = rememberAnimationTicker(play)
     val source = remember(file) { AnimatedSource.OfFile(file) }
     // Frames are decoded no wider than they are drawn (and never above the hero's own cap)
     val decodeWidth = minOf(AnimatedPlayback.HERO_WIDTH, (layout.width * unit).roundToInt().coerceAtLeast(1))
     val drawable = rememberAnimatedDrawable(source, play, decodeWidth, ticker)
-    val extension = if (layout.extended && drawable != null) rememberHeroExtension(id, image) else null
+    val extension = if (layout.extended && drawable != null) rememberHeroExtension(id, image, area) else null
     val ready = drawable != null && (!layout.extended || extension != null)
     DisposableEffect(ready) {
         onLive(ready)
@@ -341,18 +343,18 @@ private fun HeroLive(id: String, image: ImageBitmap, file: java.io.File, blurPx:
     val shown = remember(drawable) { Animatable(0f) }
     LaunchedEffect(shown) { shown.animateTo(1f, tween(Motion.FADE, easing = Motion.Ease)) }
     val effect = remember(blurPx, unit) { heroEffect(blurPx * unit) }
-    val widthPx = (HeroGeometry.AREA_WIDTH * unit).roundToInt().coerceAtLeast(1)
-    val heightPx = (HeroGeometry.AREA_HEIGHT * unit).roundToInt().coerceAtLeast(1)
+    val widthPx = (area.width * unit).roundToInt().coerceAtLeast(1)
+    val heightPx = (area.height * unit).roundToInt().coerceAtLeast(1)
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         // The area, tilted: only this layer's transform changes every display frame
-        Box(Modifier.requiredSize(2100.px, 1260.px).heroTilt(active, reducedMotion)) {
+        Box(Modifier.requiredSize(area.width.px, area.height.px).heroTilt(active, reducedMotion)) {
             Box(
                 Modifier.requiredSize((widthPx / density).dp, (heightPx / density).dp)
                     .graphicsLayer {
                         transformOrigin = TransformOrigin(0f, 0f)
                         // Up to the area's size in pixels, from the size the layer was really given
-                        scaleX = HeroGeometry.AREA_WIDTH * k / size.width
-                        scaleY = HeroGeometry.AREA_HEIGHT * k / size.height
+                        scaleX = area.width * k / size.width
+                        scaleY = area.height * k / size.height
                         alpha = shown.value
                         // A texture of the small size, drawn again only when its content changes
                         compositingStrategy = CompositingStrategy.Offscreen
@@ -366,7 +368,7 @@ private fun HeroLive(id: String, image: ImageBitmap, file: java.io.File, blurPx:
                 Canvas(Modifier.fillMaxSize().graphicsLayer { renderEffect = effect }) {
                     // Reading the frame is what redraws the layer for the animation's next image
                     if (ticker.frame.intValue == Int.MIN_VALUE) return@Canvas
-                    val u = size.width / HeroGeometry.AREA_WIDTH
+                    val u = size.width / area.width
                     if (extension != null) drawImage(extension, dstSize = IntSize(size.width.roundToInt(), size.height.roundToInt()), filterQuality = FilterQuality.Low)
                     val bounds = androidx.compose.ui.geometry.Rect(layout.left * u, layout.top * u, layout.right * u, layout.bottom * u)
                     if (layout.extended) drawContext.canvas.saveLayer(bounds, androidx.compose.ui.graphics.Paint())
@@ -417,7 +419,7 @@ private fun Modifier.heroTilt(active: Boolean, reducedMotion: Boolean): Modifier
     return graphicsLayer {
         rotationX = HeroMotion.pitch(turn, reducedMotion)
         rotationY = HeroMotion.yaw(turn, reducedMotion)
-        // The existing 90-stage-pixel inset plus this fixed safety margin covers all four edges.
+        // The area's inset (HeroArea, 90 stage pixels per side at 16:9) plus this fixed safety margin covers all four edges.
         scaleX = if (reducedMotion) 1f else HeroMotion.OVERSCAN
         scaleY = scaleX
         cameraDistance = maxOf(size.width, size.height) * HeroMotion.CAMERA_DISTANCE_FACTOR
@@ -500,20 +502,26 @@ private fun AnimatedBackground(appearance: Appearance, colors: DelosColors, game
     ) {
         @Suppress("UNUSED_VARIABLE")
         val redraw = clock.tick // subscribes the drawing to the throttled clock
+        // One scale for both axes (the shapes keep their proportions); the canvas grows along the axis that has more room
+        val unitX = size.width / W
+        val unitY = size.height / H
+        val unit = min(unitX, unitY)
+        val canvasW = if (unitX <= unitY) W else size.width / unit
+        val canvasH = if (unitY <= unitX) H else size.height / unit
         // Without Material You the effects take the focused game's three main colors (from its background)
         // in place of the palette's main, secondary and accent ones, on every background
         val game = !colors.materialYou && (gameHues != null || gamePending) && clock.tints.none { it.isNaN() }
         val tint = if (game) clock.tints[1] else colors.accent2Hue
         val p = BgParams(
-            clock.t, dark, colors.materialYou, tint, colors.baseHue,
+            canvasW, canvasH, clock.t, dark, colors.materialYou, tint, colors.baseHue,
             acc = if (game) clock.tints[0] else colors.accentHue,
             acc2 = tint, acc3 = if (game) clock.tints[2] else colors.accent3Hue,
             sat1 = if (game) clock.sats[0] else 1f, sat2 = if (game) clock.sats[1] else 1f, sat3 = if (game) clock.sats[2] else 1f,
         )
-        scale(size.width / W, size.height / H, pivot = Offset.Zero) {
-            val base = if (dark) Brush.verticalGradient(0f to hsl(p.base, 40f, 8f), 1f to hsl(p.base, 38f, 5f), endY = H)
-            else Brush.verticalGradient(0f to hsl(p.base, 45f, 96f), 1f to hsl(p.base, 38f, 90f), endY = H)
-            drawRect(base, size = Size(W, H), alpha = clock.baseAlpha.takeUnless { it.isNaN() } ?: 1f)
+        scale(unit, unit, pivot = Offset.Zero) {
+            val base = if (dark) Brush.verticalGradient(0f to hsl(p.base, 40f, 8f), 1f to hsl(p.base, 38f, 5f), endY = canvasH)
+            else Brush.verticalGradient(0f to hsl(p.base, 45f, 96f), 1f to hsl(p.base, 38f, 90f), endY = canvasH)
+            drawRect(base, size = Size(canvasW, canvasH), alpha = clock.baseAlpha.takeUnless { it.isNaN() } ?: 1f)
             when (appearance.background) {
                 BackgroundKind.AURORA -> drawAurora(p)
                 BackgroundKind.TIDE -> drawTide(p, paths)
@@ -523,7 +531,7 @@ private fun AnimatedBackground(appearance: Appearance, colors: DelosColors, game
                 else -> {
                     val (c1, c2, c3) = lights(p)
                     val drawn = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                        BackgroundShaders.draw(this, appearance.background, W, H, p.t, c1, c2, c3, if (dark) .62f else .5f, if (dark) BlendMode.Plus else BlendMode.SrcOver, dark)
+                        BackgroundShaders.draw(this, appearance.background, canvasW, canvasH, p.t, c1, c2, c3, if (dark) .62f else .5f, if (dark) BlendMode.Plus else BlendMode.SrcOver, dark)
                     // Before Android 13, or if a shader does not compile on this GPU: Aurora instead
                     if (!drawn) drawAurora(p)
                 }
@@ -539,11 +547,22 @@ private fun lights(p: BgParams): Triple<Color, Color, Color> {
     else Triple(hsl(p.acc, 80f * p.sat1, 58f), hsl(second, 80f * p.sat2, 58f), hsl(p.acc3, 80f * p.sat3, 62f))
 }
 
-// The prototype draws on a 960×540 canvas stretched over the stage; the same coordinates are used here
+// The prototype draws on a 960×540 canvas stretched over the 16:9 stage; the same coordinates are used here, scaled
+// uniformly. A wider or taller stage extends the canvas (BgParams.w / h, at least W × H) instead of stretching it.
 private const val W = 960f
 private const val H = 540f
 
+/** Silk samples every 16 px from -80 to w + 80. */
+private fun silkPoints(w: Float) = ((w + 160f) / 16f).toInt() + 1
+
+private fun contourColumns(w: Float) = (w / CONTOUR_STEP).toInt() + 1
+
+/** ceil(h / 20) + 1: 28 rows for the 540-pixel canvas. */
+private fun contourRows(h: Float) = kotlin.math.ceil(h / CONTOUR_STEP).toInt() + 1
+
 private class BgParams(
+    /** The canvas the shapes are drawn on, in prototype pixels: [W] × [H] at 16:9, extended along the longer axis of another shape. */
+    val w: Float, val h: Float,
     val t: Float, val dark: Boolean, val my: Boolean, val tint: Float,
     val base: Float, val acc: Float, val acc2: Float, val acc3: Float,
     /** How saturated the main, secondary and accent colors are (below 1 for a game's muted colors). */
@@ -563,11 +582,27 @@ private class BackgroundPaths {
     val tide = List(6) { Path() }
     val silk = List(4) { Path().apply { fillType = PathFillType.EvenOdd } }
     val sheen = List(4) { Path() }
-    val silkBottom = FloatArray(SILK_POINTS * 2)
-    val field = FloatArray(CONTOUR_NX * CONTOUR_NY)
+    private var silkBottom = FloatArray(0)
+    private var field = FloatArray(0)
+    private var contourLines = FloatArray(0)
 
-    /** Line segments of one contour level: at most two per cell, four floats each. */
-    val contourLines = FloatArray((CONTOUR_NX - 1) * (CONTOUR_NY - 1) * 8)
+    /** The lower edge of a ribbon of [count] points (x, y pairs). */
+    fun silkBottom(count: Int): FloatArray {
+        if (silkBottom.size < count * 2) silkBottom = FloatArray(count * 2)
+        return silkBottom
+    }
+
+    /** The terrain samples of a [nx] × [ny] grid. */
+    fun field(nx: Int, ny: Int): FloatArray {
+        if (field.size < nx * ny) field = FloatArray(nx * ny)
+        return field
+    }
+
+    /** Line segments of one contour level on a [nx] × [ny] grid: at most two per cell, four floats each. */
+    fun contourLines(nx: Int, ny: Int): FloatArray {
+        if (contourLines.size < (nx - 1) * (ny - 1) * 8) contourLines = FloatArray((nx - 1) * (ny - 1) * 8)
+        return contourLines
+    }
     val contourPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
         style = android.graphics.Paint.Style.STROKE
         strokeCap = android.graphics.Paint.Cap.BUTT
@@ -581,15 +616,15 @@ private fun DrawScope.drawAurora(p: BgParams) {
     val t = p.t
     for (i in 0 until 4) {
         val h = hues[i]
-        val x = W * (.5f + .38f * sin(t * .11f + i * 1.9f))
-        val y = H * (.45f + .32f * cos(t * .09f + i * 1.3f))
-        val r = W * (.42f + .08f * sin(t * .2f + i))
+        val x = p.w * (.5f + .38f * sin(t * .11f + i * 1.9f))
+        val y = p.h * (.45f + .32f * cos(t * .09f + i * 1.3f))
+        val r = p.w * (.42f + .08f * sin(t * .2f + i))
         val sat = p.s(h)
         val w = if (i == 3) .6f else 1f
         val inner = if (p.dark) hsl(h, 85f * sat, 52f, .32f * w) else hsl(h, 80f * sat, 70f, .45f * w)
         drawRect(
             Brush.radialGradient(0f to inner, 1f to hsl(h, 80f, 50f, 0f), center = Offset(x, y), radius = r),
-            size = Size(W, H), blendMode = blend,
+            size = Size(p.w, p.h), blendMode = blend,
         )
     }
 }
@@ -598,17 +633,17 @@ private fun DrawScope.drawTide(p: BgParams, paths: BackgroundPaths) {
     val t = p.t
     for (i in 0 until 6) {
         // From a third of the height down: the waves fill the lower two thirds
-        val y0 = H * (.34f + i * .11f)
+        val y0 = p.h * (.34f + i * .11f)
         val amp = 14f + i * 4f
         val k = .006f + i * .0015f
         val sp = .35f + i * .12f
-        val path = paths.tide[i].apply { rewind(); moveTo(0f, H) }
+        val path = paths.tide[i].apply { rewind(); moveTo(0f, p.h) }
         var x = 0f
-        while (x <= W) {
+        while (x <= p.w) {
             path.lineTo(x, y0 + sin(x * k + t * sp + i) * amp + sin(x * k * 2.3f - t * sp * .7f) * amp * .35f)
             x += 12f
         }
-        path.lineTo(W, H)
+        path.lineTo(p.w, p.h)
         path.close()
         // Three of the six waves in the main color, two in the secondary one, one in the accent
         val h = when (i) { 1, 3 -> p.tint; 4 -> p.acc3; else -> p.acc }
@@ -622,17 +657,17 @@ private fun DrawScope.drawSilk(p: BgParams, paths: BackgroundPaths) {
     val blend = if (p.dark) BlendMode.Plus else BlendMode.SrcOver
     val ribbons = if (p.my) floatArrayOf(p.acc, p.acc2, p.base, p.acc3) else floatArrayOf(p.acc, p.tint, p.acc, p.acc3)
     val t = p.t
-    withTransform({ rotateRad(-.21f, pivot = Offset(W / 2f, H / 2f)) }) {
+    withTransform({ rotateRad(-.21f, pivot = Offset(p.w / 2f, p.h / 2f)) }) {
         for (i in 0 until 4) {
             val h = ribbons[i]
             val sat = p.s(h)
-            val y0 = H * (.22f + i * .18f)
+            val y0 = p.h * (.22f + i * .18f)
             val ph = i * 1.7f
             val sp = .18f + i * .05f
             val fill = paths.silk[i].apply { rewind() }
             val sheen = paths.sheen[i].apply { rewind() }
-            val count = SILK_POINTS
-            val bottom = paths.silkBottom
+            val count = silkPoints(p.w)
+            val bottom = paths.silkBottom(count)
             for (j in 0 until count) {
                 val x = -80f + j * 16f
                 val y = y0 + sin(x * .006f + t * sp + ph) * 46f + sin(x * .013f - t * sp * 1.3f + ph * 2f) * 18f
@@ -646,7 +681,7 @@ private fun DrawScope.drawSilk(p: BgParams, paths: BackgroundPaths) {
             val l = if (p.dark) 60f else 62f
             val brush = Brush.horizontalGradient(
                 0f to hsl(h, 85f * sat, l, 0f), .3f to hsl(h, 85f * sat, l, a), .7f to hsl(h + 30f, 85f * sat, l + 8f, a), 1f to hsl(h, 85f * sat, l, 0f),
-                startX = 0f, endX = W,
+                startX = 0f, endX = p.w,
             )
             drawPath(fill, brush, blendMode = blend)
             // Sheen along one edge of the ribbon
@@ -655,12 +690,7 @@ private fun DrawScope.drawSilk(p: BgParams, paths: BackgroundPaths) {
     }
 }
 
-/** Silk samples every 16 px from -80 to W + 80. */
-private const val SILK_POINTS = ((W + 160f) / 16f).toInt() + 1
-
 private const val CONTOUR_STEP = 20f
-private const val CONTOUR_NX = (W / CONTOUR_STEP).toInt() + 1
-private const val CONTOUR_NY = 28 // ceil(540 / 20) + 1
 private const val CONTOUR_LEVELS = 17
 
 private fun DrawScope.drawContour(p: BgParams, paths: BackgroundPaths) {
@@ -674,42 +704,44 @@ private fun DrawScope.drawContour(p: BgParams, paths: BackgroundPaths) {
         drawRect(
             Brush.radialGradient(
                 0f to hsl(p.acc, 80f * p.sat1, if (p.dark) 50f else 70f, if (p.dark) .14f else .2f), 1f to hsl(p.acc, 80f, 50f, 0f),
-                center = Offset(W * .66f, H * .5f), radius = W * .55f,
+                center = Offset(p.w * .66f, p.h * .5f), radius = p.w * .55f,
             ),
-            size = Size(W, H), blendMode = lineBlend,
+            size = Size(p.w, p.h), blendMode = lineBlend,
         )
         val l = if (p.dark) 68f else 40f
-        if (BackgroundShaders.draw(this, BackgroundKind.CONTOUR, W, H, t, hsl(r0, 80f * p.s(r0), l), hsl(r1, 80f * p.s(r1), l), Color.Black, 1f, lineBlend, p.dark)) return
+        if (BackgroundShaders.draw(this, BackgroundKind.CONTOUR, p.w, p.h, t, hsl(r0, 80f * p.s(r0), l), hsl(r1, 80f * p.s(r1), l), Color.Black, 1f, lineBlend, p.dark)) return
     }
-    val f = paths.field
-    for (j in 0 until CONTOUR_NY) for (i in 0 until CONTOUR_NX) {
+    val nx = contourColumns(p.w)
+    val ny = contourRows(p.h)
+    val f = paths.field(nx, ny)
+    for (j in 0 until ny) for (i in 0 until nx) {
         val x = i * CONTOUR_STEP
         val y = j * CONTOUR_STEP
-        f[j * CONTOUR_NX + i] = sin(x * .0062f + t * .07f) + sin(y * .0081f - t * .05f + x * .002f) + .7f * sin((x - y) * .0047f + t * .09f) +
-            .5f * cos(hypot(x - W * .66f, y - H * .5f) * .011f - t * .12f)
+        f[j * nx + i] = sin(x * .0062f + t * .07f) + sin(y * .0081f - t * .05f + x * .002f) + .7f * sin((x - y) * .0047f + t * .09f) +
+            .5f * cos(hypot(x - p.w * .66f, y - p.h * .5f) * .011f - t * .12f)
     }
     val blend = if (p.dark) BlendMode.Plus else BlendMode.SrcOver
-    val glowCenter = Offset(W * .66f, H * .5f)
+    val glowCenter = Offset(p.w * .66f, p.h * .5f)
     drawRect(
         Brush.radialGradient(
             0f to hsl(p.acc, 80f * p.sat1, if (p.dark) 50f else 70f, if (p.dark) .14f else .2f), 1f to hsl(p.acc, 80f, 50f, 0f),
-            center = glowCenter, radius = W * .55f,
+            center = glowCenter, radius = p.w * .55f,
         ),
-        size = Size(W, H), blendMode = blend,
+        size = Size(p.w, p.h), blendMode = blend,
     )
     val s = CONTOUR_STEP
     val pts = FloatArray(8)
-    val lines = paths.contourLines
+    val lines = paths.contourLines(nx, ny)
     val paint = paths.contourPaint.apply { blendMode = if (p.dark) android.graphics.BlendMode.PLUS else android.graphics.BlendMode.SRC_OVER }
     for (k in 0 until CONTOUR_LEVELS) {
         val level = -2.8f + k * .35f
         val major = k % 4 == 0
         var count = 0
-        for (j in 0 until CONTOUR_NY - 1) for (i in 0 until CONTOUR_NX - 1) {
-            val a = f[j * CONTOUR_NX + i]
-            val b = f[j * CONTOUR_NX + i + 1]
-            val d = f[(j + 1) * CONTOUR_NX + i + 1]
-            val e = f[(j + 1) * CONTOUR_NX + i]
+        for (j in 0 until ny - 1) for (i in 0 until nx - 1) {
+            val a = f[j * nx + i]
+            val b = f[j * nx + i + 1]
+            val d = f[(j + 1) * nx + i + 1]
+            val e = f[(j + 1) * nx + i]
             val x = i * s
             val y = j * s
             var n = 0
