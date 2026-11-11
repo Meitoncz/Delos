@@ -133,7 +133,10 @@ import com.limelight.shell.ui.rememberAnimationTicker
 import kotlin.math.roundToInt
 import com.limelight.shell.ui.LocalDelosColors
 import com.limelight.shell.ui.LocalFeedback
+import com.limelight.shell.ui.Compact
 import com.limelight.shell.ui.LocalStage
+import com.limelight.shell.ui.StageMetrics
+import com.limelight.shell.ui.compact
 import com.limelight.shell.ui.PlaceholderArt
 import com.limelight.shell.ui.Symbol
 import com.limelight.shell.ui.Symbols
@@ -317,6 +320,10 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
     // The games with their own settings (docs/GUI.md): read once per change of the library, profile or stored settings, not per tile
     val customGames = rememberCustomGames(profileStore, pc, library.apps)
 
+    // The covers' sizes: the prototype's, or the compact stage's smaller ones (the grid keeps the prototype's)
+    val compact = stage.compact
+    val covers = remember(stage.stageWidth, stage.stageHeight, stage.shape, row) { if (row && stage.compact) compactCovers(stage) else StandardCovers }
+
     val tile: @Composable (Int, App) -> Unit = { index, app ->
         GameTile(
             pc, app, index = index,
@@ -330,6 +337,7 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
             running = running,
             matchGameColors = appearance.matchGameColors && !appearance.materialYou,
             requester = requester(app),
+            geometry = if (row) covers else StandardCovers,
             onFocused = onTileFocused, onHide = onHide,
             onMetadata = onMetadata,
         )
@@ -340,9 +348,12 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
     CompositionLocalProvider(LocalDashboardArt provides dashboardArt) { Box(Modifier.fillMaxSize()) {
         // Behind an open context menu the info block dims to 40 %
         val infoDim by animateFloatAsState(if (shell.layer is Layer.Context) .4f else 1f, tween(Motion.FADE, easing = Motion.Ease), label = "infoDim")
+        // A compact stage sits the block right above the covers (the covers are at the bottom, under the hint bar's room)
+        val infoStart = if (compact) Compact.SIDE else 150f
+        val infoTop = if (compact) maxOf(Compact.STATUS_BAR + 4f, stage.stageHeight - COMPACT_ROW_BOTTOM - covers.height - 28f - COMPACT_INFO_BLOCK) else if (row) 150f else 100f
         GameInfo(pc, focused,
             // The block (logo, GAME INFO label and pill row) sits high enough that the pills clear the focused cover
-            modifier = Modifier.graphicsLayer { alpha = infoDim }.padding(start = 150.px, top = if (row) 150.px else 100.px), reducedMotion = appearance.reducedMotion,
+            modifier = Modifier.graphicsLayer { alpha = infoDim }.padding(start = infoStart.px, top = infoTop.px), reducedMotion = appearance.reducedMotion,
             // The same condition as the animated background's: the genre takes the game's colors only while it does
             matchGameColors = appearance.matchGameColors && !appearance.materialYou)
         CompositionLocalProvider(LocalBringIntoViewSpec provides NoAutoScroll, LocalEntranceStagger provides intro) {
@@ -358,7 +369,7 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
                     state = rowState,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(top = (430f - (uiScale - 1f) * 92f).px, bottom = 20.px)
+                        .padding(top = (if (compact) stage.stageHeight - COMPACT_ROW_BOTTOM - covers.height - COMPACT_ROW_PAD else 430f - (uiScale - 1f) * 92f).px, bottom = (if (compact) COMPACT_ROW_BOTTOM - COMPACT_ROW_PAD else 20f).px)
                         .graphicsLayer {
                             alpha = rowAlpha.value
                             translationX = rowBounce.value
@@ -375,7 +386,7 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
                             }
                             scope.launch {
                                 val k = stage.dpPerPx * density
-                                fun now() = rowItemStart(rowState.firstVisibleItemIndex) * k + rowState.firstVisibleItemScrollOffset
+                                fun now() = covers.itemStart(rowState.firstVisibleItemIndex) * k + rowState.firstVisibleItemScrollOffset
                                 // Far away: fade out, jump a few covers short of the other end and fade in again, so the
                                 // glide does not have to load every cover on the way
                                 if (!reducedMotion && kotlin.math.abs(target - rowState.firstVisibleItemIndex) > WRAP_GLIDE_ITEMS) {
@@ -387,9 +398,9 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
                                 // a spring and settle back, then move the focus
                                 // Toward the end the row stops before the target reaches the left: aim exactly at that end, so
                                 // the glide does not run on for nothing
-                                val end = (150f + rowItemStart(apps.lastIndex) + (if (apps.size == 1) ROW_WIDE else ROW_TILE) + ROW_END_PADDING) * k -
+                                val end = (covers.start + covers.itemStart(apps.lastIndex) + (if (apps.size == 1) covers.wide else covers.tile) + covers.endPadding) * k -
                                     rowState.layoutInfo.viewportSize.width
-                                val delta = minOf(rowItemStart(target) * k, end.coerceAtLeast(0f)) - now()
+                                val delta = minOf(covers.itemStart(target) * k, end.coerceAtLeast(0f)) - now()
                                 if (reducedMotion) rowState.scrollBy(delta) else {
                                     rowState.animateScrollBy(delta, tween(360, easing = CubicBezierEasing(.45f, .05f, .8f, .65f)))
                                     rowAlpha.snapTo(1f)
@@ -410,8 +421,8 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
                         },
                     // At the end the last cover (focused) is as far from the right edge as the first game (focused) is
                     // from the left one
-                    contentPadding = PaddingValues(start = 150.px, end = ROW_END_PADDING.px, top = 90.px, bottom = 90.px),
-                    horizontalArrangement = Arrangement.spacedBy(ROW_GAP.px),
+                    contentPadding = PaddingValues(start = covers.start.px, end = covers.endPadding.px, top = (if (compact) COMPACT_ROW_PAD else 90f).px, bottom = (if (compact) COMPACT_ROW_PAD else 90f).px),
+                    horizontalArrangement = Arrangement.spacedBy(covers.gap.px),
                 ) {
                     itemsIndexed(apps, key = { _, app -> app.id }) { i, app -> tile(i, app) }
                 }
@@ -439,6 +450,7 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
 
 /** Row layout: the wide first cover, the others and the gap between them, in stage pixels. */
 private const val ROW_TILE = 300f
+private const val ROW_HEIGHT = 450f
 private const val ROW_GAP = 44f
 
 /** The wide first cover is as wide as three covers and the two gaps between them (the grid spans it over 3 columns). */
@@ -453,22 +465,60 @@ private fun gridColumns(stageWidth: Float): Int = ((stageWidth - 2 * GRID_MIN_SI
 /** The grid's side padding that centres [columns] covers and their gaps in the stage; [GRID_MIN_SIDE] at five columns in 1920. Never negative: a stage too narrow for three covers keeps the grid at the edge (a compact layout is phase C of #9) instead of crashing. */
 private fun gridSidePadding(stageWidth: Float, columns: Int): Float = ((stageWidth - columns * ROW_TILE - (columns - 1) * ROW_GAP) / 2f).coerceAtLeast(0f)
 
-/** Where item [index] starts in the row, from the start of its content (stage pixels). */
-private fun rowItemStart(index: Int): Float = if (index == 0) 0f else ROW_WIDE + ROW_GAP + (index - 1) * (ROW_TILE + ROW_GAP)
+/** A compact stage: the title box and the logo's height above the pills (against 200 and 180), stage pixels. */
+private const val COMPACT_TITLE_BOX = 120f
+private const val COMPACT_LOGO_HEIGHT = 100f
+
+/** A compact stage: the row's covers end this far above the bottom (the hint bar and a gap), and the room around them for the focus scale and ring. */
+private const val COMPACT_ROW_BOTTOM = 106f
+private const val COMPACT_ROW_PAD = 40f
+
+/** A compact stage: the height of the info block (the title box and two rows of pills) above the covers, and the smallest and largest cover scale. */
+private const val COMPACT_INFO_BLOCK = 240f
+private const val COMPACT_MIN_COVER = .6f
+private const val COMPACT_MAX_COVER = .85f
+
+/**
+ * The size of the covers and where the row starts, stage pixels: a cover is [scale] times the prototype's 300 x 450 (the wide first one
+ * 3 covers and 2 gaps wide, so it keeps its ratio too), its gap and corner scale with it, and [start] is the first cover's left edge.
+ * Everywhere but on a compact stage the scale is 1 and the start 150, which are the prototype's numbers.
+ */
+private class CoverGeometry(val scale: Float, val start: Float) {
+    val tile = ROW_TILE * scale
+    val height = ROW_HEIGHT * scale
+    val gap = ROW_GAP * scale
+    val wide = 3 * tile + 2 * gap
+    val corner = 26f * scale
+
+    /**
+     * The right margin at the end of the row, mirroring the start: the focused wide first cover grows only to
+     * the left (so it never covers its neighbour), which brings its left edge closer to the screen's edge,
+     * while the other covers grow evenly. So the last cover, focused, is as far from the right edge as the
+     * first game, focused, is from the left one (about 97 px at the prototype's size).
+     */
+    val endPadding = start - wide * (TILE_FOCUS_SCALE - 1f) + tile * (TILE_FOCUS_SCALE - 1f) / 2f
+
+    /** Where item [index] starts in the row, from the start of its content (stage pixels). */
+    fun itemStart(index: Int): Float = if (index == 0) 0f else wide + gap + (index - 1) * (tile + gap)
+}
+
+/** The prototype's covers: a compact stage has its own ([compactCovers]). */
+private val StandardCovers = CoverGeometry(1f, 150f)
+
+/**
+ * The covers of a compact stage. Their scale leaves the height between the info block under the status bar and the hint bar for them
+ * (with the room around them for the focus scale), between [COMPACT_MIN_COVER] and [COMPACT_MAX_COVER].
+ */
+private fun compactCovers(stage: StageMetrics): CoverGeometry {
+    val room = stage.stageHeight - Compact.STATUS_BAR - COMPACT_INFO_BLOCK - COMPACT_ROW_BOTTOM
+    return CoverGeometry((room / ROW_HEIGHT).coerceIn(COMPACT_MIN_COVER, COMPACT_MAX_COVER), Compact.SIDE)
+}
 
 /** A wrap round the row glides over the last this many covers (the rest is a quick jump). */
 private const val WRAP_GLIDE_ITEMS = 12
 
 /** How much a cover grows when focused (focusEffects' default). */
 private const val TILE_FOCUS_SCALE = 1.055f
-
-/**
- * The right margin at the end of the row, mirroring the start: the focused wide first cover grows only to
- * the left (so it never covers its neighbour), which brings its left edge closer to the screen's edge,
- * while the other covers grow evenly. So the last cover, focused, is as far from the right edge as the
- * first game, focused, is from the left one (about 97 px).
- */
-private const val ROW_END_PADDING = 150f - ROW_WIDE * (TILE_FOCUS_SCALE - 1f) + ROW_TILE * (TILE_FOCUS_SCALE - 1f) / 2f
 
 private suspend fun scroll(state: ScrollableState, delta: Float, reducedMotion: Boolean) {
     if (kotlin.math.abs(delta) < 1f) return
@@ -565,15 +615,21 @@ private fun gameMenuHeader(res: Resources, app: App, hidden: Boolean, running: A
 private fun GameInfo(pc: Pc, app: App, modifier: Modifier, reducedMotion: Boolean, matchGameColors: Boolean) {
     val colors = LocalDelosColors.current
     val art = appArt(pc, app)
+    // A compact stage shows the title smaller in a shorter box, without the "Game info" label, and lets the pills use the whole width
+    val stage = LocalStage.current
+    val compact = stage.compact
+    val titleBox = if (compact) COMPACT_TITLE_BOX else 200f
+    val logoHeight = if (compact) COMPACT_LOGO_HEIGHT else 180f
+    val logoWidth = if (compact) minOf(900f, stage.stageWidth - 2f * Compact.SIDE) else 900f
     Column(modifier) {
         val logo by rememberArtworkResult(LocalArtwork.current, pc, app, ArtKind.LOGO)
         val logoImage = logo.image
         // The SteamGridDB logo stands in for the icon and the name
-        if (logoImage != null) Box(Modifier.height(200.px).padding(vertical = 10.px), contentAlignment = Alignment.CenterStart) {
+        if (logoImage != null) Box(Modifier.height(titleBox.px).padding(vertical = 10.px), contentAlignment = Alignment.CenterStart) {
             Box(Modifier.gameTitleEntrance(homeKey(pc, app), logoImage, reducedMotion)) {
                 Image(
                     logoImage, contentDescription = app.name, contentScale = ContentScale.Fit, alignment = Alignment.CenterStart,
-                    modifier = Modifier.height(180.px).widthIn(max = 900.px),
+                    modifier = Modifier.height(logoHeight.px).widthIn(max = logoWidth.px),
                 )
                 // The chosen animated logo plays over its first frame, fitted into the same box (start-aligned like the still)
                 val artwork = LocalArtwork.current
@@ -582,16 +638,16 @@ private fun GameInfo(pc: Pc, app: App, modifier: Modifier, reducedMotion: Boolea
                 if (animatedArt != null && animation != null) {
                     val k = LocalStage.current.dpPerPx * LocalDensity.current.density
                     AnimatedArtLayer(
-                        animation, animatedArt.motionOn, animatedArt.ticker, (900f * k).roundToInt(), (180f * k).roundToInt(),
+                        animation, animatedArt.motionOn, animatedArt.ticker, (logoWidth * k).roundToInt(), (logoHeight * k).roundToInt(),
                         Modifier.matchParentSize(), fit = true, alignX = 0f, stamp = artwork.version.intValue,
                     )
                 }
             }
-        } else if (logo.resolved) Row(Modifier.height(200.px), verticalAlignment = Alignment.CenterVertically) {
+        } else if (logo.resolved) Row(Modifier.height(titleBox.px), verticalAlignment = Alignment.CenterVertically) {
             val size = when {
-                app.name.length > 22 -> 56
-                app.name.length > 13 -> 68
-                else -> 84
+                app.name.length > 22 -> if (compact) 44 else 56
+                app.name.length > 13 -> if (compact) 50 else 68
+                else -> if (compact) 60 else 84
             }
             BasicText(
                 app.name,
@@ -602,9 +658,9 @@ private fun GameInfo(pc: Pc, app: App, modifier: Modifier, reducedMotion: Boolea
                     brush = Brush.verticalGradient(.25f to colors.text, 1f to hsl(HeroBitmaps.hue(homeKey(pc, app)) ?: art.hue2, 70f, 58f)),
                     fontFamily = Unbounded, fontWeight = FontWeight.Bold, fontSize = size.tpx, letterSpacing = (-.01).em,
                 ),
-                modifier = Modifier.padding(end = 150.px).gameTitleEntrance(homeKey(pc, app), null, reducedMotion),
+                modifier = Modifier.padding(end = (if (compact) Compact.SIDE else 150f).px).gameTitleEntrance(homeKey(pc, app), null, reducedMotion),
             )
-        } else Box(Modifier.height(200.px)) // Keep the title space while the logo lookup is pending.
+        } else Box(Modifier.height(titleBox.px)) // Keep the title space while the logo lookup is pending.
         val metadata = LocalGameMetadata.current.entry(pc, app).data
         // Up to two genres and two themes: Steam's user tags when the game has them, else IGDB's lists (the filter
         // still offers every IGDB genre and theme); the facts come first
@@ -621,7 +677,7 @@ private fun GameInfo(pc: Pc, app: App, modifier: Modifier, reducedMotion: Boolea
         val virtualDisplay = BundledArtwork.kind(app) == BundledArtwork.Kind.DESKTOP && pc.details.vDisplaySupported
         val hasTags = genres.isNotEmpty() || themes.isNotEmpty()
         // The title above the pills is shown only while there is at least one pill under it
-        val showLabel = hasTags || app.running || hdrKind != null || completion != null || virtualDisplay
+        val showLabel = !compact && (hasTags || app.running || hdrKind != null || completion != null || virtualDisplay)
         if (showLabel) BasicText(
             stringResource(if (BundledArtwork.kind(app) != null) R.string.home_info_app else R.string.home_info_game),
             modifier = Modifier.padding(top = 10.px),
@@ -631,7 +687,7 @@ private fun GameInfo(pc: Pc, app: App, modifier: Modifier, reducedMotion: Boolea
             ),
         )
         InfoRow(
-            Modifier.padding(top = if (showLabel) 8.px else 10.px).widthIn(max = 1620.px),
+            Modifier.padding(top = if (showLabel) 8.px else 10.px).widthIn(max = (if (compact) stage.stageWidth - 2f * Compact.SIDE else 1620f).px),
             hasTags = hasTags,
             tags = {
                 if (genres.isNotEmpty()) GenrePill(genres, gameColors)
@@ -716,6 +772,7 @@ private fun GameTile(
     running: App?,
     matchGameColors: Boolean,
     requester: FocusRequester,
+    geometry: CoverGeometry,
     onFocused: (Int, App) -> Unit,
     onHide: (App, Boolean) -> Unit,
     onMetadata: (Pc, App) -> Unit,
@@ -780,7 +837,7 @@ private fun GameTile(
         Modifier
             .focusRequester(requester)
             .focusEffects(
-                onClick = activate, corner = 26f, sweep = true, contextMenu = menu,
+                onClick = activate, corner = geometry.corner, sweep = true, contextMenu = menu,
                 clickCue = if (running != null && running.id != app.id) null else Cue.SELECT,
                 origin = if (wide) TransformOrigin(1f, .5f) else TransformOrigin.Center,
                 onFocusChange = { if (it) onFocused(index, app) },
@@ -788,10 +845,10 @@ private fun GameTile(
                 onLookChange = { focused = it },
             )
             // The online pulse of the start screen, around the selected game
-            .then(if (focused) Modifier.focusPulse(26f) else Modifier)
+            .then(if (focused) Modifier.focusPulse(geometry.corner) else Modifier)
             .staggerEntrance()
-            .size(if (wide) ROW_WIDE.px else ROW_TILE.px, 450.px)
-            .clip(RoundedCornerShape(26.px))
+            .size((if (wide) geometry.wide else geometry.tile).px, geometry.height.px)
+            .clip(RoundedCornerShape(geometry.corner.px))
             .background(colors.surface2),
     ) {
         Crossfade(shown, animationSpec = tween(400), label = "cover") { img ->
@@ -801,13 +858,14 @@ private fun GameTile(
                 PlaceholderArt(
                     art.hue, art.hue2, art.icon,
                     modifier = Modifier.fillMaxSize(),
-                    glyphSize = if (wide) 420f else 320f,
-                    glyphRight = if (wide) 40f else -36f,
+                    glyphSize = (if (wide) 420f else 320f) * geometry.scale,
+                    glyphRight = (if (wide) 40f else -36f) * geometry.scale,
                     glyphTop = if (wide) .04f else .24f,
                     title = app.name,
-                    titleSize = if (wide) 72f else 34f,
-                    titleInset = if (wide) 44f else 26f,
-                    titleBottom = if (wide) 40f else 26f,
+                    // A compact stage's small covers set the placeholder's title at most 20 % smaller
+                    titleSize = (if (wide) 72f else 34f) * geometry.scale.coerceAtLeast(.8f).coerceAtMost(1f),
+                    titleInset = (if (wide) 44f else 26f) * geometry.scale.coerceAtLeast(.7f),
+                    titleBottom = (if (wide) 40f else 26f) * geometry.scale,
                 )
             }
         }
@@ -819,7 +877,7 @@ private fun GameTile(
         if (animatedArt != null && animation != null && (if (wide) wideCover else cover) != null) {
             val k = LocalStage.current.dpPerPx * LocalDensity.current.density * TILE_FOCUS_SCALE
             AnimatedArtLayer(
-                animation, playing, animatedArt.ticker, ((if (wide) ROW_WIDE else ROW_TILE) * k).roundToInt(), (450f * k).roundToInt(),
+                animation, playing, animatedArt.ticker, ((if (wide) geometry.wide else geometry.tile) * k).roundToInt(), (geometry.height * k).roundToInt(),
                 Modifier.fillMaxSize(), colorFilter = coverFilter, stamp = artwork.version.intValue,
             )
         }
@@ -859,10 +917,12 @@ private fun GameTile(
 @Composable
 private fun HomeMessage(icon: String, title: String, text: String?) {
     val colors = LocalDelosColors.current
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    // A compact stage keeps the message off the edges and sets its icon and headline smaller
+    val compact = LocalStage.current.compact
+    Box(Modifier.fillMaxSize().then(if (compact) Modifier.padding(horizontal = Compact.MARGIN.px) else Modifier), contentAlignment = Alignment.Center) {
         Column(Modifier.staggerEntrance(0, Motion.MENU_DELAY), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(22.px)) {
-            Symbol(icon, 110.tpx, colors.accent, filled = true)
-            BasicText(title, style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 52.tpx))
+            Symbol(icon, (if (compact) 84 else 110).tpx, colors.accent, filled = true)
+            BasicText(title, style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = (if (compact) 42 else 52).tpx, textAlign = if (compact) TextAlign.Center else TextAlign.Unspecified))
             if (text != null) {
                 BasicText(text, style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 26.tpx, lineHeight = 1.45.em, textAlign = TextAlign.Center))
             }
