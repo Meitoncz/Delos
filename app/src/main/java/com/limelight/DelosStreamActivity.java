@@ -4,7 +4,7 @@ package com.limelight;
 import static com.limelight.utils.ExternalDisplayFocus.requestFocusToExternalDisplayControl;
 import static com.limelight.utils.ExternalDisplayControlActivity.closeExternalDisplayControl;
 import static com.limelight.utils.ServerHelper.getActiveDisplay;
-import static com.limelight.utils.ServerHelper.getSecondaryDisplay;
+import static com.limelight.utils.ServerHelper.getExternalDisplay;
 
 import com.limelight.binding.PlatformBinding;
 import com.limelight.binding.audio.AndroidAudioRenderer;
@@ -707,7 +707,7 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
 
             @Override
             public void onDisplayRemoved(int displayId) {
-                if (getSecondaryDisplay(getBaseContext()) == null) {
+                if (getExternalDisplay(getBaseContext()) == null) {
                     if (streamMenu != null) {
                         streamMenu.closeForDisplayRemoval();
                     }

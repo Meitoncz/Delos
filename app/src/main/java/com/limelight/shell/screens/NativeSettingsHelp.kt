@@ -2,6 +2,7 @@ package com.limelight.shell.screens
 
 import android.content.res.Resources
 import com.limelight.R
+import com.limelight.display.SecondDisplayOverride
 import com.limelight.shell.ui.RowValue
 
 /** Choice-specific help for native shell rows; the row remains the source of its current value. */
@@ -31,6 +32,7 @@ internal object NativeSettingsHelp {
             "ui_reduced_motion" -> if (id == "reduced") R.string.settings_native_help_motion_reduced else R.string.settings_native_help_motion_full
             "ui_background" -> backgrounds[id]
             "ui_stats_position" -> statsPositions[id]
+            SecondDisplayOverride.KEY -> secondDisplays[id]
             "ui_default_pc" -> if (id == "none") R.string.settings_native_help_default_pc_none else R.string.settings_native_help_default_pc_set
             else -> null
         }
@@ -56,5 +58,11 @@ internal object NativeSettingsHelp {
         "TOP_RIGHT" to R.string.settings_native_help_stats_top_right,
         "BOTTOM_LEFT" to R.string.settings_native_help_stats_bottom_left,
         "BOTTOM_RIGHT" to R.string.settings_native_help_stats_bottom_right,
+    )
+
+    private val secondDisplays = mapOf(
+        "AUTOMATIC" to R.string.settings_native_help_second_display_automatic,
+        "EXTERNAL" to R.string.settings_native_help_second_display_external,
+        "BUILT_IN" to R.string.settings_native_help_second_display_built_in,
     )
 }

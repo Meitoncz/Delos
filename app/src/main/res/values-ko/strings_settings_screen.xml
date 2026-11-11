@@ -203,4 +203,13 @@
     <string name="settings_game_currently">현재 %1$s. 바꾸면 이 게임에만 값이 적용돼요.</string>
     <string name="settings_game_only_this_game">%1$s에서만 이 변경 사항을 사용해요. 나머지는 모두 프로필을 따라요.</string>
     <string name="settings_game_saved_note">자동 저장됨 · 다음 스트림부터 적용</string>
+    <string name="settings_native_section_displays">디스플레이</string>
+    <string name="settings_native_second_display_title">보조 디스플레이</string>
+    <string name="settings_native_second_display_description">보조 화면의 종류예요. 디버그 정보에 잘못 표시되면 바꿔 주세요.</string>
+    <string name="settings_native_second_display_automatic">자동</string>
+    <string name="settings_native_second_display_external">외부 디스플레이</string>
+    <string name="settings_native_second_display_built_in">기기의 일부</string>
+    <string name="settings_native_help_second_display_automatic">Delos는 모니터나 TV와 기기에 내장된 패널을 구분해요.</string>
+    <string name="settings_native_help_second_display_external">모니터나 TV로 취급해요. 외부 디스플레이 모드가 스트림을 표시할 수 있어요.</string>
+    <string name="settings_native_help_second_display_built_in">기기의 일부로 취급해요. 스트림 대상이 되지 않아요.</string>
 </resources>

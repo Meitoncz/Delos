@@ -143,4 +143,13 @@
     <string name="debug_sensors_both">가속도계, 자이로스코프</string>
     <string name="debug_pads_continuous_label">컨트롤러 연속 진동</string>
     <string name="debug_pads_continuous_description">진동할 수 있는 모든 컨트롤러가 위의 세기로 계속 진동해요.</string>
+    <string name="debug_section_displays">디스플레이</string>
+    <string name="debug_display_role_main">메인</string>
+    <string name="debug_display_role_built_in">내장</string>
+    <string name="debug_display_role_external">외부</string>
+    <string name="debug_display_role_virtual">가상</string>
+    <string name="debug_display_main_description">기본 디스플레이예요. Delos 화면과, 외부 디스플레이 모드가 옮기지 않는 한 스트림도 여기에 표시돼요.</string>
+    <string name="debug_display_built_in_description">이 기기의 일부인 두 번째 패널이에요. Delos는 외부 디스플레이처럼 스트림을 보내지 않아요. 잘못됐다면 디스플레이 설정에서 보조 디스플레이를 바꿔 주세요.</string>
+    <string name="debug_display_external_description">이 기기에 연결된 모니터나 TV예요. 외부 디스플레이 모드가 스트림을 표시할 수 있어요. 잘못됐다면 디스플레이 설정에서 보조 디스플레이를 바꿔 주세요.</string>
+    <string name="debug_display_virtual_description">오버레이, 가상 또는 비공개 디스플레이예요. Delos는 스트림을 표시하지 않아요.</string>
 </resources>

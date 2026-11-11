@@ -133,4 +133,13 @@
     <string name="debug_sensors_both">accéléromètre, gyroscope</string>
     <string name="debug_pads_continuous_label">Vibration continue des manettes</string>
     <string name="debug_pads_continuous_description">Chaque manette qui peut vibrer continue de vibrer à l’intensité ci-dessus.</string>
+    <string name="debug_section_displays">Écrans</string>
+    <string name="debug_display_role_main">Principal</string>
+    <string name="debug_display_role_built_in">Intégré</string>
+    <string name="debug_display_role_external">Externe</string>
+    <string name="debug_display_role_virtual">Virtuel</string>
+    <string name="debug_display_main_description">L’écran par défaut. L’interface de Delos et, sauf si le mode écran externe le déplace, le stream l’utilisent.</string>
+    <string name="debug_display_built_in_description">Un second panneau qui fait partie de cet appareil. Delos n’y diffuse jamais le stream comme sur un écran externe. Faux ? Change « Second écran » dans les réglages d’affichage.</string>
+    <string name="debug_display_external_description">Un moniteur ou une TV branchés à cet appareil. Le mode écran externe peut y diffuser le stream. Faux ? Change « Second écran » dans les réglages d’affichage.</string>
+    <string name="debug_display_virtual_description">Un écran superposé, virtuel ou privé. Delos n’y place jamais le stream.</string>
 </resources>

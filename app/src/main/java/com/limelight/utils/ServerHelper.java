@@ -6,13 +6,13 @@ import android.content.Intent;
 import android.hardware.display.DisplayManager;
 import android.os.Build;
 import android.view.Display;
+import com.limelight.display.DisplayInventory;
 import com.limelight.utils.DelosToast;
 
 import androidx.annotation.RequiresApi;
 
 import com.limelight.ShortcutTrampoline;
 import com.limelight.DelosStreamActivity;
-import com.limelight.LimeLog;
 import com.limelight.R;
 import com.limelight.binding.PlatformBinding;
 import com.limelight.computers.ComputerManagerService;
@@ -61,32 +61,21 @@ public class ServerHelper {
         return i;
     }
     public static Display getActiveDisplay(Context context, PreferenceConfiguration prefs) {
-        Display secondary = getSecondaryDisplay(context);
-        if (secondary != null && (prefs.enableFullExDisplay)) {
-            return secondary;
+        Display external = getExternalDisplay(context);
+        if (external != null && (prefs.enableFullExDisplay)) {
+            return external;
         } else {
             return ((DisplayManager) context.getSystemService(Context.DISPLAY_SERVICE)).getDisplay(Display.DEFAULT_DISPLAY);
         }
     }
 
-    public static Display getSecondaryDisplay(Context context) {
-        DisplayManager displayManager = (DisplayManager) context.getSystemService(Context.DISPLAY_SERVICE);
-        Display display = null;
-        Display[] displays = displayManager.getDisplays();
-        int mainDisplayId = Display.DEFAULT_DISPLAY;
-        int secondaryDisplayId = -1;
-        for (Display displayVariant : displays) {
-            LimeLog.info(displayVariant.toString());
-            if (displayVariant.getDisplayId() != mainDisplayId) {
-                secondaryDisplayId = displayVariant.getDisplayId();
-                break;
-            }
-        }
-
-        if (secondaryDisplayId != -1) {
-            display = displayManager.getDisplay(secondaryDisplayId);
-        }
-        return display;
+    /**
+     * The attached monitor or TV the external-display mode streams to, or null. Only a display the inventory classifies as
+     * external qualifies: never a built-in second panel of a dual-screen handheld, an overlay or a virtual display
+     * (docs/DUAL_SCREEN.md).
+     */
+    public static Display getExternalDisplay(Context context) {
+        return DisplayInventory.external(context);
     }
 
     /** Returns the DelosStreamActivity intent, unwrapping the external-display controller when present. */
@@ -111,9 +100,10 @@ public class ServerHelper {
                                            boolean withVDisplay) {
         Intent gameIntent = null;
         PreferenceConfiguration prefConfig = PreferenceConfiguration.readPreferences(parent);
-        // Try to add secondary DisplayContext if supported and connected
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && prefConfig.enableFullExDisplay && getSecondaryDisplay(parent) != null) {
-            Context displayContext = parent.createDisplayContext(getSecondaryDisplay(parent)); // use secondary display
+        // The external-display mode streams to an attached monitor or TV only (never to a built-in second panel)
+        Display externalDisplay = prefConfig.enableFullExDisplay ? getExternalDisplay(parent) : null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && externalDisplay != null) {
+            Context displayContext = parent.createDisplayContext(externalDisplay);
             gameIntent = new Intent(displayContext, DelosStreamActivity.class);
             gameIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         }
@@ -139,15 +129,11 @@ public class ServerHelper {
             e.printStackTrace();
         }
 
-        if (prefConfig.enableFullExDisplay) {
-            Display secondaryDisplay = getSecondaryDisplay(parent);
-            if (secondaryDisplay != null) {
-                int secondaryDisplayId = secondaryDisplay.getDisplayId();
-                gameIntent.putExtra(DelosStreamActivity.EXTRA_DISPLAY_ID, secondaryDisplayId);
-                Intent touchpadIntent = new Intent(parent, ExternalDisplayControlActivity.class);
-                touchpadIntent.putExtra(ExternalDisplayControlActivity.EXTRA_LAUNCH_INTENT, gameIntent);
-                return touchpadIntent;
-            }
+        if (externalDisplay != null) {
+            gameIntent.putExtra(DelosStreamActivity.EXTRA_DISPLAY_ID, externalDisplay.getDisplayId());
+            Intent touchpadIntent = new Intent(parent, ExternalDisplayControlActivity.class);
+            touchpadIntent.putExtra(ExternalDisplayControlActivity.EXTRA_LAUNCH_INTENT, gameIntent);
+            return touchpadIntent;
         }
 
         return gameIntent;

@@ -203,4 +203,13 @@
     <string name="settings_game_currently">現在の値：%1$s。変更すると、このゲームだけの値になります。</string>
     <string name="settings_game_only_this_game">この変更は%1$sだけに適用されます。ほかはすべてプロフィールに従います。</string>
     <string name="settings_game_saved_note">自動保存されます · 次回のストリームから適用</string>
+    <string name="settings_native_section_displays">ディスプレイ</string>
+    <string name="settings_native_second_display_title">セカンドディスプレイ</string>
+    <string name="settings_native_second_display_description">2つ目の画面の種類です。デバッグ情報の表示が違う場合は変更してください。</string>
+    <string name="settings_native_second_display_automatic">自動</string>
+    <string name="settings_native_second_display_external">外部ディスプレイ</string>
+    <string name="settings_native_second_display_built_in">本体の一部</string>
+    <string name="settings_native_help_second_display_automatic">Delosは、モニターやテレビと、本体に内蔵されたパネルを見分けます。</string>
+    <string name="settings_native_help_second_display_external">モニターやテレビとして扱います。外部ディスプレイモードでストリームを表示できます。</string>
+    <string name="settings_native_help_second_display_built_in">本体の一部として扱います。ストリームの表示先にはなりません。</string>
 </resources>

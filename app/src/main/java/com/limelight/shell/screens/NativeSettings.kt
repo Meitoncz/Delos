@@ -14,6 +14,8 @@ import androidx.compose.ui.platform.LocalContext
 import com.limelight.BuildConfig
 import com.limelight.R
 import com.limelight.diag.DiagLog
+import com.limelight.display.SecondDisplayOverride
+import androidx.preference.PreferenceManager
 import com.limelight.shell.DialogField
 import com.limelight.shell.DialogSpec
 import com.limelight.shell.Layer
@@ -153,6 +155,15 @@ internal fun nativeSettings(
             settings.edit().putString(StatsPosition.KEY, statsPosition.step(dir).name).apply()
         }), res.getString(R.string.settings_native_stats_position_description), tab = SettingsTab.DISPLAY,
         section = res.getString(R.string.settings_native_section_statistics), choiceHelp = NativeSettingsHelp.choice(res, "ui_stats_position", statsPosition.name))
+    // Device-wide, not per profile: which role a second screen of THIS device has (docs/DUAL_SCREEN.md)
+    val devicePrefs = remember { PreferenceManager.getDefaultSharedPreferences(context.applicationContext) }
+    var secondDisplay by remember { mutableStateOf(SecondDisplayOverride.read(devicePrefs)) }
+    row(SecondDisplayOverride.KEY, Symbols.EXTERNAL_DISPLAY, res.getString(R.string.settings_native_second_display_title),
+        RowValue.Choice(res.getString(secondDisplay.labelRes), { dir ->
+            secondDisplay = secondDisplay.step(dir)
+            SecondDisplayOverride.write(devicePrefs, secondDisplay)
+        }), res.getString(R.string.settings_native_second_display_description), tab = SettingsTab.DISPLAY,
+        section = res.getString(R.string.settings_native_section_displays), choiceHelp = NativeSettingsHelp.choice(res, SecondDisplayOverride.KEY, secondDisplay.name))
     val choices = listOf<Pc?>(null) + pcs.filter { it.paired }.sortedBy { it.name.lowercase() }
     val index = choices.indexOfFirst { it?.uuid == startup.defaultPc }.coerceAtLeast(0)
     row("ui_default_pc", Symbols.STAR, res.getString(R.string.settings_native_default_pc_title), RowValue.Choice(choices[index]?.name ?: res.getString(R.string.settings_native_default_pc_none), { dir ->

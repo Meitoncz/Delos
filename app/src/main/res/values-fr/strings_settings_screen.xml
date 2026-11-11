@@ -198,4 +198,13 @@
     <string name="settings_game_currently">Actuellement %1$s. Modifie-le pour définir une valeur propre à ce jeu.</string>
     <string name="settings_game_only_this_game">Seul %1$s utilise ces changements. Tout le reste suit ton profil.</string>
     <string name="settings_game_saved_note">Enregistré automatiquement · s’applique au prochain stream</string>
+    <string name="settings_native_section_displays">Écrans</string>
+    <string name="settings_native_second_display_title">Second écran</string>
+    <string name="settings_native_second_display_description">Le type d’un second écran. Change-le si Infos de débogage l’indique mal.</string>
+    <string name="settings_native_second_display_automatic">Automatique</string>
+    <string name="settings_native_second_display_external">Écran externe</string>
+    <string name="settings_native_second_display_built_in">Partie de l’appareil</string>
+    <string name="settings_native_help_second_display_automatic">Delos distingue un moniteur ou une TV d’un panneau intégré à l’appareil.</string>
+    <string name="settings_native_help_second_display_external">Traité comme moniteur ou TV : le mode écran externe peut y diffuser le stream.</string>
+    <string name="settings_native_help_second_display_built_in">Traité comme partie de l’appareil : jamais une cible du stream.</string>
 </resources>

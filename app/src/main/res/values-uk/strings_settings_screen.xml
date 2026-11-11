@@ -211,4 +211,13 @@
     <string name="settings_game_currently">Зараз %1$s. Зміни, щоб задати значення лише для цієї гри.</string>
     <string name="settings_game_only_this_game">Ці зміни стосуються лише %1$s. Усе інше — як у профілі.</string>
     <string name="settings_game_saved_note">Зберігається автоматично · застосується в наступному стрімі</string>
+    <string name="settings_native_section_displays">Екрани</string>
+    <string name="settings_native_second_display_title">Другий екран</string>
+    <string name="settings_native_second_display_description">Тип другого екрана. Змінюй, якщо «Налагодження» показує його неправильно.</string>
+    <string name="settings_native_second_display_automatic">Автоматично</string>
+    <string name="settings_native_second_display_external">Зовнішній екран</string>
+    <string name="settings_native_second_display_built_in">Частина пристрою</string>
+    <string name="settings_native_help_second_display_automatic">Delos розрізняє монітор чи телевізор і панель, вбудовану в пристрій.</string>
+    <string name="settings_native_help_second_display_external">Вважається монітором чи телевізором: режим зовнішнього екрана може стрімити на нього.</string>
+    <string name="settings_native_help_second_display_built_in">Вважається частиною пристрою: ніколи не ціль стріму.</string>
 </resources>

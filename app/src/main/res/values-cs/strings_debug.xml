@@ -158,4 +158,13 @@
     <string name="debug_sensors_both">akcelerometr, gyroskop</string>
     <string name="debug_pads_continuous_label">Nepřetržité vibrace gamepadů</string>
     <string name="debug_pads_continuous_description">Každý gamepad, který umí vibrovat, vibruje dál silou nastavenou výše.</string>
+    <string name="debug_section_displays">Displeje</string>
+    <string name="debug_display_role_main">Hlavní</string>
+    <string name="debug_display_role_built_in">Zabudovaný</string>
+    <string name="debug_display_role_external">Externí</string>
+    <string name="debug_display_role_virtual">Virtuální</string>
+    <string name="debug_display_main_description">Výchozí displej. Používá ho rozhraní Delos a stream, pokud ho režim externího displeje nepřesune jinam.</string>
+    <string name="debug_display_built_in_description">Druhý panel, který je součástí tohoto zařízení. Delos na něj nikdy nestreamuje jako na externí displej. Špatně? Změň „Druhý displej“ v nastavení obrazu.</string>
+    <string name="debug_display_external_description">Monitor nebo TV připojené k tomuto zařízení. Režim externího displeje na něj může streamovat. Špatně? Změň „Druhý displej“ v nastavení obrazu.</string>
+    <string name="debug_display_virtual_description">Překryvný, virtuální nebo soukromý displej. Delos na něj nikdy nedává stream.</string>
 </resources>

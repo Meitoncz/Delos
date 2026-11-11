@@ -171,4 +171,13 @@
     <string name="debug_sensors_both">Beschleunigungssensor, Gyroskop</string>
     <string name="debug_pads_continuous_label">Dauervibration an Controllern</string>
     <string name="debug_pads_continuous_description">Jeder Controller, der vibrieren kann, vibriert weiter mit der oben gewählten Stärke.</string>
+    <string name="debug_section_displays">Displays</string>
+    <string name="debug_display_role_main">Haupt</string>
+    <string name="debug_display_role_built_in">Eingebaut</string>
+    <string name="debug_display_role_external">Extern</string>
+    <string name="debug_display_role_virtual">Virtuell</string>
+    <string name="debug_display_main_description">Das Standard-Display. Die Delos-Oberfläche und, sofern der Modus für externe Displays ihn nicht verlegt, der Stream nutzen es.</string>
+    <string name="debug_display_built_in_description">Ein zweites Panel, das Teil dieses Geräts ist. Delos streamt nie darauf wie auf ein externes Display. Falsch? Ändere „Zweites Display“ in den Anzeige-Einstellungen.</string>
+    <string name="debug_display_external_description">Ein an dieses Gerät angeschlossener Monitor oder TV. Der Modus für externe Displays darf darauf streamen. Falsch? Ändere „Zweites Display“ in den Anzeige-Einstellungen.</string>
+    <string name="debug_display_virtual_description">Ein Overlay-, virtuelles oder privates Display. Delos legt den Stream nie darauf.</string>
 </resources>
