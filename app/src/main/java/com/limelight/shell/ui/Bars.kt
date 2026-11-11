@@ -375,7 +375,8 @@ sealed interface Glyph {
 }
 
 @Immutable
-data class Hint(val glyph: Glyph, val label: String)
+/** [shortLabel] is the label a cramped (compact) bar uses before it drops the label altogether. */
+data class Hint(val glyph: Glyph, val label: String, val shortLabel: String? = null)
 
 /** The bottom bar: an optional note on the left, the button hints on the right. */
 @Composable
@@ -410,20 +411,18 @@ fun HintBar(hints: List<Hint>, note: String?, modifier: Modifier = Modifier, not
 }
 
 /**
- * The hint bar of a compact stage: the same note and hints, but only as much of them as the width holds. It tries the note with its
- * "Library" label, the note alone, no note, and finally the hints as glyphs with the label of the first one only; the first variant
- * that fits is drawn (the hints are the bar, so they are never cut and never overlap the note).
+ * The hint bar of a compact stage: the same note and hints, but only as much of them as the width holds ([fitHintBar]). The hints are the
+ * bar, so they are never cut and never overlap the note; the note (with its "Library" label, or alone) stays only while every hint keeps
+ * a label. When the labels do not all fit, the least important hints lose theirs first (a shorter label before none at all), the
+ * most important (A, then Back) keep theirs longest.
  */
 @Composable
 private fun CompactHintBar(hints: List<Hint>, note: String?, noteLabel: String?, modifier: Modifier) {
-    val colors = LocalDelosColors.current
     val safe = LocalStage.current.safe
-    val variants = remember(note, noteLabel) {
+    val noteVariants = remember(note, noteLabel) {
         buildList {
-            if (note != null && noteLabel != null) add(HintVariant(true, true, true))
-            if (note != null) add(HintVariant(true, false, true))
-            add(HintVariant(false, false, true))
-            add(HintVariant(false, false, false))
+            if (note != null && noteLabel != null) add(true)
+            if (note != null) add(false)
         }
     }
     val noteGap = 34.px
@@ -432,25 +431,35 @@ private fun CompactHintBar(hints: List<Hint>, note: String?, noteLabel: String?,
         modifier.fillMaxWidth().padding(bottom = safe.bottom.px).height(92.px).padding(start = 72.px + safe.left.px, end = 72.px + safe.right.px),
     ) { constraints ->
         val open = Constraints()
-        val gap = noteGap.roundToPx()
-        var left: List<Placeable> = emptyList()
-        var right: List<Placeable> = emptyList()
-        for ((i, variant) in variants.withIndex()) {
-            left = if (variant.note && note != null) subcompose("note$i") {
-                HintNote(note, if (variant.noteLabel) noteLabel else null)
-            }.map { it.measure(open) } else emptyList()
-            right = subcompose("hints$i") { HintGlyphs(hints, variant.labels, hintGap) }.map { it.measure(open) }
-            val used = left.sumOf { it.width } + right.sumOf { it.width } + if (left.isEmpty()) 0 else gap
-            if (used <= constraints.maxWidth) break
+        val notes = noteVariants.mapIndexed { i, withLabel ->
+            subcompose("note$i") { HintNote(note!!, if (withLabel) noteLabel else null) }.map { it.measure(open) }
         }
+        val cells = hints.mapIndexed { i, hint ->
+            fun cell(detail: HintDetail) = subcompose("hint$i${detail.name}") { HintCell(hint, detail) }.map { it.measure(open) }
+            val full = cell(HintDetail.FULL)
+            val short = if (hint.shortLabel != null) cell(HintDetail.SHORT) else null
+            val bare = cell(HintDetail.BARE)
+            mapOf(HintDetail.FULL to full, HintDetail.SHORT to (short ?: full), HintDetail.BARE to bare)
+        }
+        fun width(placeables: List<Placeable>) = placeables.sumOf { it.width }
+        val items = hints.mapIndexed { i, hint ->
+            val full = width(cells[i].getValue(HintDetail.FULL))
+            val short = if (hint.shortLabel != null) width(cells[i].getValue(HintDetail.SHORT)).takeIf { it < full } else null
+            HintFitItem(hintRank(hint.glyph), width(cells[i].getValue(HintDetail.BARE)), short, full, hintGroup(hint.glyph))
+        }
+        val fit = fitHintBar(notes.map { width(it) }, noteGap.roundToPx(), items, hintGap.roundToPx(), constraints.maxWidth)
         layout(constraints.maxWidth, constraints.maxHeight) {
-            left.forEach { it.placeRelative(0, (constraints.maxHeight - it.height) / 2) }
-            right.forEach { it.placeRelative(constraints.maxWidth - it.width, (constraints.maxHeight - it.height) / 2) }
+            fit.note?.let { notes[it].forEach { p -> p.placeRelative(0, (constraints.maxHeight - p.height) / 2) } }
+            val gap = hintGap.roundToPx()
+            val placed = fit.details.mapIndexed { i, detail -> cells[i].getValue(detail) }
+            var x = constraints.maxWidth - placed.sumOf { width(it) } - gap * (placed.size - 1).coerceAtLeast(0)
+            placed.forEach { cell ->
+                cell.forEach { p -> p.placeRelative(x, (constraints.maxHeight - p.height) / 2) }
+                x += width(cell) + gap
+            }
         }
     }
 }
-
-private class HintVariant(val note: Boolean, val noteLabel: Boolean, val labels: Boolean)
 
 /** The note of a hint bar: its small label, then the sentence, on one baseline. */
 @Composable
@@ -465,17 +474,16 @@ private fun HintNote(note: String, noteLabel: String?) {
     }
 }
 
-/** The hints of a compact bar: glyph and label each, or with [labels] false only the first one keeps its label. */
+/** One hint of a compact bar: its button and, by [detail], its full label, its short label or nothing. */
 @Composable
-private fun HintGlyphs(hints: List<Hint>, labels: Boolean, gap: androidx.compose.ui.unit.Dp) {
+private fun HintCell(hint: Hint, detail: HintDetail) {
     val colors = LocalDelosColors.current
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(gap)) {
-        hints.forEachIndexed { index, hint ->
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.px)) {
-                GlyphButton(hint.glyph)
-                if (labels || index == 0) BasicText(hint.label, style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 21.tpx), maxLines = 1)
-            }
-        }
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.px)) {
+        GlyphButton(hint.glyph)
+        if (detail != HintDetail.BARE) BasicText(
+            if (detail == HintDetail.SHORT) hint.shortLabel ?: hint.label else hint.label,
+            style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 21.tpx), maxLines = 1,
+        )
     }
 }
 

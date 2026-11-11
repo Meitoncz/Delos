@@ -888,11 +888,12 @@ private fun ShellBackdrop(shell: ShellState, appearance: Appearance, colors: Del
 
 /** Button hints for the current screen and layer (the prototype's updateHints). */
 private fun hints(res: Resources, shell: ShellState, adjustable: Boolean, options: Boolean, filterHint: String?): List<Hint> {
-    fun hint(glyph: Glyph, @StringRes label: Int) = Hint(glyph, res.getString(label))
+    // [short]: an existing, shorter hint word a cramped (compact) bar tries before it drops the label
+    fun hint(glyph: Glyph, @StringRes label: Int, @StringRes short: Int? = null) = Hint(glyph, res.getString(label), short?.let { res.getString(it) })
     val optionsHint = hint(Glyph.MENU_RIGHT, R.string.shell_hint_options).takeIf { options }
     val adjust = if (adjustable) listOf(hint(Glyph.ADJUST, R.string.shell_hint_adjust)) else emptyList()
     shell.portal?.let { return if (it.cancellable) listOf(hint(Glyph.B, R.string.shell_hint_cancel)) else emptyList() }
-    if (shell.result != null) return listOf(hint(Glyph.A, R.string.shell_hint_select), hint(Glyph.B, R.string.shell_hint_back_to_library))
+    if (shell.result != null) return listOf(hint(Glyph.A, R.string.shell_hint_select), hint(Glyph.B, R.string.shell_hint_back_to_library, R.string.shell_hint_back))
     return when (shell.layer) {
         is Layer.Context -> listOf(hint(Glyph.A, R.string.shell_hint_select), hint(Glyph.B, if (shell.menuPath.isEmpty()) R.string.shell_hint_close else R.string.shell_hint_back))
         Layer.Side -> adjust + listOf(hint(Glyph.A, R.string.shell_hint_change), hint(Glyph.B, R.string.shell_hint_close))
@@ -911,10 +912,10 @@ private fun hints(res: Resources, shell: ShellState, adjustable: Boolean, option
             // Like a stream: nothing over the controls
             Screen.OscPreview -> emptyList()
             is Screen.Artwork -> if (BundledArtwork.kind(screen.app) != null) listOf(hint(Glyph.A, R.string.shell_hint_back), hint(Glyph.B, R.string.shell_hint_back))
-                else if (shell.artworkSheetOpen) listOf(hint(Glyph.A, R.string.shell_hint_choose), hint(Glyph.X, R.string.shell_hint_reset_filters), hint(Glyph.Y, R.string.shell_hint_done), hint(Glyph.B, R.string.shell_hint_close))
-                else listOf(hint(Glyph.L1, R.string.shell_hint_previous_tab), hint(Glyph.R1, R.string.shell_hint_next_tab), hint(Glyph.A, R.string.shell_hint_use_image), hint(Glyph.X, R.string.shell_hint_search_name), hint(Glyph.Y, R.string.shell_hint_filter), hint(Glyph.B, R.string.shell_hint_back))
+                else if (shell.artworkSheetOpen) listOf(hint(Glyph.A, R.string.shell_hint_choose), hint(Glyph.X, R.string.shell_hint_reset_filters, R.string.shell_hint_reset), hint(Glyph.Y, R.string.shell_hint_done), hint(Glyph.B, R.string.shell_hint_close))
+                else listOf(hint(Glyph.L1, R.string.shell_hint_previous_tab), hint(Glyph.R1, R.string.shell_hint_next_tab), hint(Glyph.A, R.string.shell_hint_use_image, R.string.shell_hint_choose), hint(Glyph.X, R.string.shell_hint_search_name, R.string.shell_hint_search), hint(Glyph.Y, R.string.shell_hint_filter), hint(Glyph.B, R.string.shell_hint_back))
             is Screen.GameSettings -> adjust + listOfNotNull(hint(Glyph.L1, R.string.shell_hint_previous_tab), hint(Glyph.R1, R.string.shell_hint_next_tab), hint(Glyph.A, R.string.shell_hint_change),
-                hint(Glyph.X, R.string.shell_hint_reset_to_profile).takeIf { shell.onGameReset != null }, optionsHint, hint(Glyph.B, R.string.shell_hint_back))
+                hint(Glyph.X, R.string.shell_hint_reset_to_profile, R.string.shell_hint_reset).takeIf { shell.onGameReset != null }, optionsHint, hint(Glyph.B, R.string.shell_hint_back))
             Screen.Profile, Screen.Devices -> listOf(hint(Glyph.A, R.string.shell_hint_select), hint(Glyph.B, R.string.shell_hint_back), hint(Glyph.MENU_LEFT, R.string.shell_hint_menu))
         }
     }
