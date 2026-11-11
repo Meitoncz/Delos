@@ -30,15 +30,18 @@ data class GameColors(val hues: List<Float>, val saturations: List<Float>)
  * Legacy Gaussian background snapshots for the launch scene and pre-Android 13 devices. The live
  * Android 13+ hero uses a separately cached GPU disk blur, so changing its optics does not change
  * [latest] or the launch handoff's visuals. Both paths draw the hero composition of [HeroGeometry] into the
- * overscanned 2100 × 1260 hero area (a wide hero fitted to the width over its blurred extension, any other image
- * cropped), saturate by 1.15 and fade diagonally at a bounded 420 × 252 resolution.
+ * overscanned [HeroArea] (2100 × 1260 at the 1920 × 1080 stage; a wide hero fitted to the width over its blurred extension,
+ * any other image cropped), saturate by 1.15 and fade diagonally at a bounded resolution: 420 pixels wide, as high as the
+ * area's aspect gives (252 at 5 : 3).
  */
 object HeroBitmaps {
     const val WIDTH = 420
-    const val HEIGHT = 252
+
+    /** The bitmap's height for [area]: 252 for the standard area. */
+    fun height(area: HeroArea): Int = (WIDTH * area.height / area.width).roundToInt().coerceAtLeast(1)
 
     /** Scale from the hero area in stage pixels to the small bitmap. */
-    private const val SCALE = WIDTH / 2100f
+    private fun scale(area: HeroArea): Float = WIDTH / area.width
 
     private val cache = LruCache<String, ImageBitmap>(24)
     private val latest = LruCache<String, ImageBitmap>(24)
@@ -61,24 +64,26 @@ object HeroBitmaps {
     private val hueSources = HashMap<String, Int>()
 
     /** Renders are kept per image too, so a game's new image (e.g. from SteamGridDB) is rendered again. */
-    private fun cacheKey(key: String, source: ImageBitmap, blurPx: Int) = "v$COMPOSITION_VERSION/$key/${System.identityHashCode(source)}/$blurPx"
+    private fun cacheKey(key: String, source: ImageBitmap, blurPx: Int, area: HeroArea) =
+        "v$COMPOSITION_VERSION/$key/${System.identityHashCode(source)}/$blurPx/${area.width}x${area.height}"
 
-    private fun extensionKey(key: String, source: ImageBitmap) = "v$COMPOSITION_VERSION/$key/${System.identityHashCode(source)}"
+    private fun extensionKey(key: String, source: ImageBitmap, area: HeroArea) =
+        "v$COMPOSITION_VERSION/$key/${System.identityHashCode(source)}/${area.width}x${area.height}"
 
     /** The extension of [source]'s hero when it has been built. */
-    internal fun cachedExtension(key: String, source: ImageBitmap): ImageBitmap? = extensions.get(extensionKey(key, source))
+    internal fun cachedExtension(key: String, source: ImageBitmap, area: HeroArea): ImageBitmap? = extensions.get(extensionKey(key, source, area))
 
     /**
-     * The blurred, darkened copy of [source] stretched over the whole hero area ([HeroGeometry.AREA_WIDTH] × [HeroGeometry.AREA_HEIGHT] at
+     * The blurred, darkened copy of [source] stretched over the whole hero area ([area] at
      * [EXTENSION_SCALE]); only a wide hero shows it ([HeroGeometry.Layout.extended]). Call off the main thread.
      */
-    internal fun extension(key: String, source: ImageBitmap): ImageBitmap {
-        cachedExtension(key, source)?.let { return it }
+    internal fun extension(key: String, source: ImageBitmap, area: HeroArea): ImageBitmap {
+        cachedExtension(key, source, area)?.let { return it }
         val src = source.asAndroidBitmap()
-        val w = (HeroGeometry.AREA_WIDTH * EXTENSION_SCALE).roundToInt()
-        val h = (HeroGeometry.AREA_HEIGHT * EXTENSION_SCALE).roundToInt()
+        val w = (area.width * EXTENSION_SCALE).roundToInt()
+        val h = (area.height * EXTENSION_SCALE).roundToInt()
         val out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-        val cover = HeroGeometry.cover(src.width, src.height)
+        val cover = HeroGeometry.cover(area, src.width, src.height)
         val readable = if (src.config == Bitmap.Config.HARDWARE) checkNotNull(src.copy(Bitmap.Config.ARGB_8888, false)) else src
         try {
             Canvas(out).drawBitmap(
@@ -104,24 +109,25 @@ object HeroBitmaps {
             pixels[i] = (0xFF shl 24) or mix(16) or mix(8) or mix(0)
         }
         out.setPixels(pixels, 0, w, 0, 0, w, h)
-        return out.asImageBitmap().also { extensions.put(extensionKey(key, source), it) }
+        return out.asImageBitmap().also { extensions.put(extensionKey(key, source, area), it) }
     }
 
-    fun cached(key: String, source: ImageBitmap, blurPx: Int): ImageBitmap? = cache.get(cacheKey(key, source, blurPx))
+    fun cached(key: String, source: ImageBitmap, blurPx: Int, area: HeroArea = HeroArea.Standard): ImageBitmap? =
+        cache.get(cacheKey(key, source, blurPx, area))
 
-    internal fun cachedLens(key: String, source: ImageBitmap, blurPx: Int): ImageBitmap? =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) lensCache.get(cacheKey(key, source, blurPx)) else cached(key, source, blurPx)
+    internal fun cachedLens(key: String, source: ImageBitmap, blurPx: Int, area: HeroArea = HeroArea.Standard): ImageBitmap? =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) lensCache.get(cacheKey(key, source, blurPx, area)) else cached(key, source, blurPx, area)
 
     /** Live hero only. Keep the legacy snapshot populated for the unchanged launch handoff. */
-    internal fun renderLens(key: String, source: ImageBitmap, blurPx: Int): ImageBitmap {
-        cachedLens(key, source, blurPx)?.let { return it }
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return render(key, source, blurPx)
-        val input = composed(key, source)
+    internal fun renderLens(key: String, source: ImageBitmap, blurPx: Int, area: HeroArea = HeroArea.Standard): ImageBitmap {
+        cachedLens(key, source, blurPx, area)?.let { return it }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return render(key, source, blurPx, area)
+        val input = composed(key, source, area)
         val result = try {
-            val snapshot = cached(key, source, blurPx)
-                ?: renderSnapshot(key, source, blurPx, checkNotNull(input.copy(Bitmap.Config.ARGB_8888, true)))
+            val snapshot = cached(key, source, blurPx, area)
+                ?: renderSnapshot(key, source, blurPx, area, checkNotNull(input.copy(Bitmap.Config.ARGB_8888, true)))
             try {
-                HeroLensShader.render(input, blurPx).asImageBitmap()
+                HeroLensShader.render(input, blurPx, area).asImageBitmap()
             } catch (e: RuntimeException) {
                 // An unsupported GPU must retain the supported bitmap path, not crash the home screen.
                 com.limelight.LimeLog.warning("Hero lens $key unavailable: ${e.message}") // l10n-ignore
@@ -130,7 +136,7 @@ object HeroBitmaps {
         } finally {
             input.recycle()
         }
-        lensCache.put(cacheKey(key, source, blurPx), result)
+        lensCache.put(cacheKey(key, source, blurPx, area), result)
         return result
     }
 
@@ -173,33 +179,34 @@ object HeroBitmaps {
         android.os.Handler(android.os.Looper.getMainLooper()).post { covers.store(key, sourceId, result) }
     }
 
-    /** The background rendered last for [key] (whatever the blur), e.g. for the launch scene. */
+    /** The background rendered last for [key] (whatever the blur and the area), e.g. for the launch scene. */
     fun latest(key: String): ImageBitmap? = latest.get(key)
 
     /** Builds the background for [source]; call off the main thread. */
-    fun render(key: String, source: ImageBitmap, blurPx: Int): ImageBitmap {
-        cache.get(cacheKey(key, source, blurPx))?.let { return it }
-        return renderSnapshot(key, source, blurPx, composed(key, source))
+    fun render(key: String, source: ImageBitmap, blurPx: Int, area: HeroArea = HeroArea.Standard): ImageBitmap {
+        cache.get(cacheKey(key, source, blurPx, area))?.let { return it }
+        return renderSnapshot(key, source, blurPx, area, composed(key, source, area))
     }
 
-    private fun renderSnapshot(key: String, source: ImageBitmap, blurPx: Int, out: Bitmap): ImageBitmap {
-        val pixels = IntArray(WIDTH * HEIGHT)
-        out.getPixels(pixels, 0, WIDTH, 0, 0, WIDTH, HEIGHT)
+    private fun renderSnapshot(key: String, source: ImageBitmap, blurPx: Int, area: HeroArea, out: Bitmap): ImageBitmap {
+        val height = height(area)
+        val pixels = IntArray(WIDTH * height)
+        out.getPixels(pixels, 0, WIDTH, 0, 0, WIDTH, height)
         val sourceId = System.identityHashCode(source)
         if (synchronized(hueSources) { hueSources.put(key, sourceId) != sourceId }) {
-            val hue = runCatching { dominantHues(huePixels(source, pixels)) }.getOrNull()
+            val hue = runCatching { dominantHues(huePixels(source, pixels, area)) }.getOrNull()
             android.os.Handler(android.os.Looper.getMainLooper()).post { hues[key] = hue }
         }
         // CSS blur(σ) in stage pixels → σ at this scale; three box blurs approximate a Gaussian
-        val radius = (blurPx * SCALE).roundToInt()
+        val radius = (blurPx * scale(area)).roundToInt()
         if (radius > 0) repeat(3) {
-            boxBlur(pixels, WIDTH, HEIGHT, radius, horizontal = true)
-            boxBlur(pixels, WIDTH, HEIGHT, radius, horizontal = false)
+            boxBlur(pixels, WIDTH, height, radius, horizontal = true)
+            boxBlur(pixels, WIDTH, height, radius, horizontal = false)
         }
-        fadeDiagonally(pixels)
-        out.setPixels(pixels, 0, WIDTH, 0, 0, WIDTH, HEIGHT)
+        fadeDiagonally(pixels, height)
+        out.setPixels(pixels, 0, WIDTH, 0, 0, WIDTH, height)
         return out.asImageBitmap().also {
-            cache.put(cacheKey(key, source, blurPx), it)
+            cache.put(cacheKey(key, source, blurPx, area), it)
             latest.put(key, it)
         }
     }
@@ -207,25 +214,27 @@ object HeroBitmaps {
     /**
      * The hero composition at the bitmap's size, with saturate(1.15), shared by both blur paths: a wide hero is a band
      * fitted to the width and aligned to the top, its bottom edge fading into [extension]; any other image is cropped to
-     * fill ([coverCrop]). The geometry is [HeroGeometry.layout].
+     * fill ([coverCrop]). The geometry is [HeroGeometry.layout] of [area].
      */
-    private fun composed(key: String, source: ImageBitmap): Bitmap {
+    private fun composed(key: String, source: ImageBitmap, area: HeroArea): Bitmap {
         val src = source.asAndroidBitmap()
-        val layout = HeroGeometry.layout(src.width, src.height)
-        if (!layout.extended) return coverCrop(src)
-        val extension = extension(key, source).asAndroidBitmap()
-        val out = Bitmap.createBitmap(WIDTH, HEIGHT, Bitmap.Config.ARGB_8888)
+        val layout = HeroGeometry.layout(area, src.width, src.height)
+        val height = height(area)
+        val scale = scale(area)
+        if (!layout.extended) return coverCrop(src, height)
+        val extension = extension(key, source, area).asAndroidBitmap()
+        val out = Bitmap.createBitmap(WIDTH, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(out)
-        val band = RectF(layout.left * SCALE, layout.top * SCALE, layout.right * SCALE, layout.bottom * SCALE)
+        val band = RectF(layout.left * scale, layout.top * scale, layout.right * scale, layout.bottom * scale)
         val saturate = Paint().apply { colorFilter = saturation() }
         val readable = if (src.config == Bitmap.Config.HARDWARE) checkNotNull(src.copy(Bitmap.Config.ARGB_8888, false)) else src
         try {
             // One layer for the whole composition, so the saturation is applied after the band is blended over the extension
-            val whole = canvas.saveLayer(0f, 0f, WIDTH.toFloat(), HEIGHT.toFloat(), saturate)
-            canvas.drawBitmap(extension, null, RectF(0f, 0f, WIDTH.toFloat(), HEIGHT.toFloat()), Paint(Paint.FILTER_BITMAP_FLAG))
+            val whole = canvas.saveLayer(0f, 0f, WIDTH.toFloat(), height.toFloat(), saturate)
+            canvas.drawBitmap(extension, null, RectF(0f, 0f, WIDTH.toFloat(), height.toFloat()), Paint(Paint.FILTER_BITMAP_FLAG))
             val layer = canvas.saveLayer(band, null)
             canvas.drawBitmap(readable, null, band, Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG))
-            val fade = layout.fade * SCALE
+            val fade = layout.fade * scale
             val colors = IntArray(HeroGeometry.FADE_STOPS.size) { (HeroGeometry.FADE_STOPS[it].second * 255f).roundToInt() shl 24 }
             val positions = FloatArray(HeroGeometry.FADE_STOPS.size) { HeroGeometry.FADE_STOPS[it].first }
             val mask = Paint().apply {
@@ -244,12 +253,12 @@ object HeroBitmaps {
     private fun saturation() = ColorMatrixColorFilter(ColorMatrix().apply { setSaturation(1.15f) })
 
     /** Center crop, like ContentScale.Crop, with saturate(1.15). */
-    private fun coverCrop(src: Bitmap): Bitmap {
-        val out = Bitmap.createBitmap(WIDTH, HEIGHT, Bitmap.Config.ARGB_8888)
-        val scale = max(WIDTH / src.width.toFloat(), HEIGHT / src.height.toFloat())
+    private fun coverCrop(src: Bitmap, height: Int): Bitmap {
+        val out = Bitmap.createBitmap(WIDTH, height, Bitmap.Config.ARGB_8888)
+        val scale = max(WIDTH / src.width.toFloat(), height / src.height.toFloat())
         val matrix = Matrix().apply {
             setScale(scale, scale)
-            postTranslate((WIDTH - src.width * scale) / 2f, (HEIGHT - src.height * scale) / 2f)
+            postTranslate((WIDTH - src.width * scale) / 2f, (height - src.height * scale) / 2f)
         }
         val paint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG).apply { colorFilter = saturation() }
         val readable = if (src.config == Bitmap.Config.HARDWARE) checkNotNull(src.copy(Bitmap.Config.ARGB_8888, false)) else src
@@ -262,12 +271,13 @@ object HeroBitmaps {
     }
 
     /** The pixels the game's colors are taken from: the composition's, or (a wide hero) the plain crop's, whose colors the extension's tint would mute. */
-    private fun huePixels(source: ImageBitmap, composition: IntArray): IntArray {
+    private fun huePixels(source: ImageBitmap, composition: IntArray, area: HeroArea): IntArray {
         val src = source.asAndroidBitmap()
-        if (!HeroGeometry.layout(src.width, src.height).extended) return composition
-        val crop = coverCrop(src)
-        return IntArray(WIDTH * HEIGHT).also {
-            crop.getPixels(it, 0, WIDTH, 0, 0, WIDTH, HEIGHT)
+        if (!HeroGeometry.layout(area, src.width, src.height).extended) return composition
+        val height = height(area)
+        val crop = coverCrop(src, height)
+        return IntArray(WIDTH * height).also {
+            crop.getPixels(it, 0, WIDTH, 0, 0, WIDTH, height)
             crop.recycle()
         }
     }
@@ -348,11 +358,11 @@ object HeroBitmaps {
     private const val MIN_CHROMA = 16.0
 
     /** Opaque in the top-right corner, gone in the bottom-left one (gradient stops .3 → .95). */
-    private fun fadeDiagonally(pixels: IntArray) {
+    private fun fadeDiagonally(pixels: IntArray, height: Int) {
         val dx = -WIDTH.toFloat()
-        val dy = HEIGHT.toFloat()
+        val dy = height.toFloat()
         val len2 = dx * dx + dy * dy
-        for (y in 0 until HEIGHT) for (x in 0 until WIDTH) {
+        for (y in 0 until height) for (x in 0 until WIDTH) {
             val t = ((x - WIDTH) * dx + y * dy) / len2
             val a = ((.95f - t) / .65f).coerceIn(0f, 1f)
             if (a < 1f) {

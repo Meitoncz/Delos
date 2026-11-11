@@ -12,9 +12,10 @@ internal object HeroMotion {
     const val DEGREES = 15f
 
     /**
-     * Smallest uniform scale at which the 2100 × 1260 hero still covers the 1920 × 1080 viewport at every orbit
-     * phase is 1.0065 (found by bisection on the test's projection; the 90 px inset per side absorbs most of it),
-     * plus about 1.35 % margin.
+     * Smallest uniform scale at which the 2100 × 1260 hero area ([HeroArea]) still covers the 1920 × 1080 viewport at
+     * every orbit phase is 1.0065 (found by bisection on the test's projection; the 90 px inset per side absorbs most
+     * of it), plus about 1.35 % margin. The area's margin grows with the stage, so the same factor covers every stage
+     * shape (HeroMotionTest checks the shapes of docs/GUI.md).
      */
     const val OVERSCAN = 1.02f
     const val CAMERA_DISTANCE_FACTOR = 2.2f

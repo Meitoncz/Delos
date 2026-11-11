@@ -299,20 +299,21 @@ internal object GameSettingsLayout {
 internal fun GameBanner(art: GameArt, image: ImageBitmap?, blurPx: Int) {
     val colors = LocalDelosColors.current
     val stage = LocalStage.current
+    val area = remember(stage.stageWidth, stage.stageHeight) { HeroArea.of(stage) }
     Box(Modifier.fillMaxWidth().height(GameSettingsLayout.BANNER_HEIGHT.px)
         .fadeMask(stage, vertical = true, startClear = 0f, startSolid = 1f, endSolid = GameSettingsLayout.BANNER_HEIGHT * .65f, endClear = 0f),
         contentAlignment = Alignment.TopCenter) {
         PlaceholderArt(art.hue, art.hue2, art.icon, Modifier.fillMaxSize(), glyphSize = 420f, glyphRight = 84f, glyphTop = -.14f, glyphAlpha = .14f)
         if (image != null) {
-            val lens by produceState(if (blurPx > 0) HeroBitmaps.cachedLens(art.id, image, blurPx) else null, art.id, image, blurPx) {
-                value = if (blurPx > 0) HeroBitmaps.cachedLens(art.id, image, blurPx) ?: withContext(Dispatchers.Default) { HeroBitmaps.renderLens(art.id, image, blurPx) } else null
+            val lens by produceState(if (blurPx > 0) HeroBitmaps.cachedLens(art.id, image, blurPx, area) else null, art.id, image, blurPx, area) {
+                value = if (blurPx > 0) HeroBitmaps.cachedLens(art.id, image, blurPx, area) ?: withContext(Dispatchers.Default) { HeroBitmaps.renderLens(art.id, image, blurPx, area) } else null
             }
             val shown = if (blurPx > 0) lens else image
             val alpha by animateFloatAsState(if (shown != null) 1f else 0f, tween(Motion.FADE, easing = Motion.Ease), label = "bannerArt")
             shown?.let {
                 if (blurPx > 0) {
-                    // The stage-sized top of the hero's overscanned 2100 x 1260 area, as the dashboard shows it
-                    Image(it, null, Modifier.requiredSize(2100.px, 1260.px).offset(y = (-90).px).graphicsLayer { this.alpha = alpha },
+                    // The stage-wide top of the hero's overscanned area (2100 x 1260 at 16:9), as the dashboard shows it
+                    Image(it, null, Modifier.requiredSize(area.width.px, area.height.px).offset(y = (-(area.height - stage.stageHeight) / 2f).px).graphicsLayer { this.alpha = alpha },
                         contentScale = ContentScale.FillBounds, filterQuality = FilterQuality.Low)
                 } else {
                     Image(it, null, Modifier.fillMaxSize().graphicsLayer { this.alpha = alpha }, contentScale = ContentScale.Crop, alignment = Alignment.TopCenter)

@@ -238,10 +238,11 @@ private fun LegacyLaunchScene(card: LaunchCard, stage: String?, progress: () -> 
             val k = metrics.dpPerPx * density
             drawRect(colors.bg)
             card.background?.let { bg ->
-                // The hero area of the home screen: 2100×1260 stage pixels around the screen, in the pose the live hero
-                // had when the launch began (the same overscan and tilt, held), so the hand-off does not snap.
-                val w = (2100f * k).roundToInt()
-                val h = (1260f * k).roundToInt()
+                // The hero area of the home screen (HeroArea: 2100×1260 stage pixels around a 16:9 screen), in the pose the
+                // live hero had when the launch began (the same overscan and tilt, held), so the hand-off does not snap.
+                val area = HeroArea.of(metrics)
+                val w = (area.width * k).roundToInt()
+                val h = (area.height * k).roundToInt()
                 val turn = LaunchHandoff.heroTurn
                 val tilted = !turn.isNaN()
                 heroLayer.record(this, layoutDirection, IntSize(w, h)) {

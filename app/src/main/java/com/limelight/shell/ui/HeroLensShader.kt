@@ -15,12 +15,12 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 
 /**
- * A uniform circular aperture, not a Gaussian blur. Rendered once per artwork/strength at 420 × 252;
+ * A uniform circular aperture, not a Gaussian blur. Rendered once per artwork/strength at 420 pixels wide (252 high for the standard area);
  * motion only transforms the cached result, never runs a many-tap shader across the screen.
  */
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 internal object HeroLensShader {
-    fun render(source: Bitmap, blurPx: Int): Bitmap {
+    fun render(source: Bitmap, blurPx: Int, area: HeroArea): Bitmap {
         val input = BitmapShader(source, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP).apply {
             setFilterMode(BitmapShader.FILTER_MODE_LINEAR)
         }
@@ -29,7 +29,7 @@ internal object HeroLensShader {
             setInputShader("image", input)
             setFloatUniform("resolution", source.width.toFloat(), source.height.toFloat())
             // Match the old Gaussian's apparent strength: a disk's per-axis sigma is radius / 2.
-            setFloatUniform("radius", blurPx.coerceIn(0, 40) * (source.width / 2100f) * 2f)
+            setFloatUniform("radius", blurPx.coerceIn(0, 40) * (source.width / area.width) * 2f)
         }
         val node = RenderNode("Delos hero lens").apply { // l10n-ignore
             setPosition(0, 0, source.width, source.height)

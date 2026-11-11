@@ -53,21 +53,36 @@ class HeroMotionTest {
 
     @Test
     fun stationaryCenterAndOverscanKeepAllViewportCornersInsideTheTiltedImage() {
-        val image = listOf(Point(-1050.0, -630.0), Point(1050.0, -630.0), Point(1050.0, 630.0), Point(-1050.0, 630.0))
-        val viewport = listOf(Point(-960.0, -540.0), Point(960.0, -540.0), Point(960.0, 540.0), Point(-960.0, 540.0))
+        assertCovers(1920.0, 1080.0)
+    }
+
+    @Test
+    fun theSameOverscanCoversEveryStageShape() {
+        // 16:10, 3:2, 4:3, 20:9, 21:9 and a floored compact stage (docs/GUI.md, Screen shapes)
+        for ((w, h) in listOf(1920.0 to 1200.0, 1920.0 to 1280.0, 1920.0 to 1440.0, 2400.0 to 1080.0, 2520.0 to 1080.0, 1600.0 to 1000.0)) assertCovers(w, h)
+    }
+
+    /** Every corner of the [stageW] x [stageH] viewport stays inside the tilted [HeroArea] of that stage at every orbit step. */
+    private fun assertCovers(stageW: Double, stageH: Double) {
+        val area = HeroArea.of(stageW.toFloat(), stageH.toFloat())
+        val hw = area.width / 2.0
+        val hh = area.height / 2.0
+        val image = listOf(Point(-hw, -hh), Point(hw, -hh), Point(hw, hh), Point(-hw, hh))
+        val viewport = listOf(Point(-stageW / 2, -stageH / 2), Point(stageW / 2, -stageH / 2), Point(stageW / 2, stageH / 2), Point(-stageW / 2, stageH / 2))
+        val camera = maxOf(area.width, area.height) * HeroMotion.CAMERA_DISTANCE_FACTOR.toDouble()
         for (step in 0..360) {
             val pitch = HeroMotion.pitch(step / 360f, false) * PI / 180.0
             val yaw = HeroMotion.yaw(step / 360f, false) * PI / 180.0
-            val center = project(Point(0.0, 0.0), pitch, yaw)
+            val center = project(Point(0.0, 0.0), pitch, yaw, camera)
             assertEquals(0.0, center.x, 0.0)
             assertEquals(0.0, center.y, 0.0)
-            val projected = image.map { project(it, pitch, yaw) }
+            val projected = image.map { project(it, pitch, yaw, camera) }
             for (corner in viewport) {
                 for (edge in projected.indices) {
                     val a = projected[edge]
                     val b = projected[(edge + 1) % projected.size]
                     val cross = (b.x - a.x) * (corner.y - a.y) - (b.y - a.y) * (corner.x - a.x)
-                    assertTrue("Exposed viewport corner at orbit step $step", cross > 0.0)
+                    assertTrue("Exposed viewport corner at orbit step $step on a $stageW x $stageH stage", cross > 0.0)
                 }
             }
         }
@@ -83,15 +98,14 @@ class HeroMotionTest {
 
     private data class Point(val x: Double, val y: Double)
 
-    private fun project(point: Point, pitch: Double, yaw: Double): Point =
-        projectRaw(Point(point.x * HeroMotion.OVERSCAN, point.y * HeroMotion.OVERSCAN), pitch, yaw)
+    private fun project(point: Point, pitch: Double, yaw: Double, camera: Double): Point =
+        projectRaw(Point(point.x * HeroMotion.OVERSCAN, point.y * HeroMotion.OVERSCAN), pitch, yaw, camera)
 
-    private fun projectRaw(point: Point, pitch: Double, yaw: Double): Point {
+    private fun projectRaw(point: Point, pitch: Double, yaw: Double, camera: Double = 2100.0 * HeroMotion.CAMERA_DISTANCE_FACTOR): Point {
         val rotatedX = point.x * cos(yaw)
         val rotatedZ = -point.x * sin(yaw)
         val rotatedY = point.y * cos(pitch) - rotatedZ * sin(pitch)
         val depth = point.y * sin(pitch) + rotatedZ * cos(pitch)
-        val camera = 2100.0 * HeroMotion.CAMERA_DISTANCE_FACTOR
         val perspective = camera / (camera - depth)
         return Point(rotatedX * perspective, rotatedY * perspective)
     }
