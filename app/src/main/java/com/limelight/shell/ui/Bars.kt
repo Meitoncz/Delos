@@ -64,7 +64,10 @@ import kotlin.math.roundToInt
 @Composable
 fun ZoomedBar(uiScale: Float, content: @Composable () -> Unit) {
     val stage = LocalStage.current
-    CompositionLocalProvider(LocalStage provides stage.copy(dpPerPx = stage.dpPerPx * uiScale, textScale = 1f), content = content)
+    CompositionLocalProvider(
+        LocalStage provides stage.copy(dpPerPx = stage.dpPerPx * uiScale, textScale = 1f, safe = stage.safe.dividedBy(uiScale)),
+        content = content,
+    )
 }
 
 /** A top navigation button of the status bar. */
@@ -88,7 +91,9 @@ fun StatusBar(
     brand: Boolean = true,
 ) {
     val colors = LocalDelosColors.current
-    Box(modifier.fillMaxWidth().height(104.px).padding(horizontal = 72.px)) {
+    // The display cutout pads the bar (zero on a screen without one, so nothing moves there)
+    val safe = LocalStage.current.safe
+    Box(modifier.fillMaxWidth().padding(top = safe.top.px).height(104.px).padding(start = 72.px + safe.left.px, end = 72.px + safe.right.px)) {
         if (brand) {
             Row(Modifier.align(Alignment.CenterStart), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(18.px)) {
                 LogoMark()
@@ -353,8 +358,9 @@ data class Hint(val glyph: Glyph, val label: String)
 @Composable
 fun HintBar(hints: List<Hint>, note: String?, modifier: Modifier = Modifier, noteLabel: String? = null) {
     val colors = LocalDelosColors.current
+    val safe = LocalStage.current.safe
     Row(
-        modifier.fillMaxWidth().height(92.px).padding(horizontal = 72.px),
+        modifier.fillMaxWidth().padding(bottom = safe.bottom.px).height(92.px).padding(start = 72.px + safe.left.px, end = 72.px + safe.right.px),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(34.px),
     ) {

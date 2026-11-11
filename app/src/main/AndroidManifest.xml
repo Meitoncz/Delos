@@ -96,6 +96,7 @@
         <activity
             android:name=".shell.ShellActivity"
             android:exported="true"
+            android:screenOrientation="sensorLandscape"
             android:taskAffinity="${applicationId}.shell"
             android:theme="@style/Theme.Delos.Shell"
             android:windowSoftInputMode="stateHidden|adjustResize"
@@ -125,6 +126,7 @@
         <activity
             android:name=".ShortcutTrampoline"
             android:noHistory="true"
+            android:screenOrientation="sensorLandscape"
             android:exported="true"
             android:resizeableActivity="true"
             android:enableOnBackInvokedCallback="true"
