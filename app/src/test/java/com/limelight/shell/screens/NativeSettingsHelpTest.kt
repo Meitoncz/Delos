@@ -5,7 +5,6 @@ import com.limelight.display.SecondDisplayOverride
 import com.limelight.shell.StatsPosition
 import com.limelight.shell.settings.BackgroundKind
 import com.limelight.shell.settings.ClockFormat
-import com.limelight.shell.settings.HomeLayout
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -21,7 +20,6 @@ class NativeSettingsHelpTest {
         val choices = mapOf(
             "ui_background" to BackgroundKind.entries.map { it.name },
             "ui_clock" to ClockFormat.entries.map { it.name },
-            "ui_home_layout" to HomeLayout.entries.map { it.name },
             "ui_dark" to listOf("dark", "light"),
             "ui_reduced_motion" to listOf("full", "reduced"),
             "ui_stats_position" to StatsPosition.entries.map { it.name },

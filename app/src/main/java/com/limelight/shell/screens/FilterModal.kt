@@ -23,8 +23,6 @@ import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -83,6 +81,8 @@ import com.limelight.shell.ui.LocalStage
 import com.limelight.shell.ui.rememberMarginBringIntoView
 import com.limelight.shell.ui.PillButton
 import com.limelight.shell.ui.RowGlideHost
+import com.limelight.shell.ui.ScrollRow
+import com.limelight.shell.ui.compactScale
 import com.limelight.shell.ui.Symbol
 import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.genreIcon
@@ -157,7 +157,6 @@ private fun hdrFilterIcon(filter: HdrFilter): String? = when (filter) {
  * and duration chips. Choices apply at once; the focus stays inside while it is open and starts on the selected
  * genre. [ready] is the library to count in (null while it is not available, which also hides the panel).
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun FilterModalLayer(visible: Boolean, ready: Library.Ready?, haze: HazeState, reducedMotion: Boolean, onClose: () -> Unit) {
     // Keep the last library while animating out
@@ -174,7 +173,7 @@ fun FilterModalLayer(visible: Boolean, ready: Library.Ready?, haze: HazeState, r
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, onClose: () -> Unit) {
     val colors = LocalDelosColors.current
@@ -255,7 +254,7 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
         }
         // The chips scroll when the genres need more room than the panel has; the focused one stays in view
         CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
-        // Share the cursor across the wrapping chip rows without changing spatial D-pad navigation.
+        // Share the cursor across the chip rows without changing spatial D-pad navigation.
         RowGlideHost(
             ring = FocusRing(3f, 3f), corner = 999f, focusScale = 1.05f,
             fill = null, glow = null,
@@ -268,7 +267,7 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
             verticalArrangement = Arrangement.spacedBy(34.cpx),
         ) {
             FilterSection(Symbols.GENRE_UNKNOWN, stringResource(R.string.filters_section_genre)) {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(14.cpx), verticalArrangement = Arrangement.spacedBy(14.cpx)) {
+                ScrollRow(gap = 14f * stage.compactScale, ringRoom = 12f) {
                     FilterChip(
                         stringResource(R.string.filters_all), filters.genreId == null, { metadata.updateFilters(metadata.filters.copy(genreId = null)) },
                         Modifier.focusRequester(genreRequester(null)), count = apps.size,
@@ -287,7 +286,7 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
             // Without any theme in the library there is nothing to choose (a theme that was chosen stays visible)
             if (themes.isNotEmpty() || filters.themeId != null) {
                 FilterSection(Symbols.THEMES, stringResource(R.string.filters_section_theme)) {
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(14.cpx), verticalArrangement = Arrangement.spacedBy(14.cpx)) {
+                    ScrollRow(gap = 14f * stage.compactScale, ringRoom = 12f) {
                         FilterChip(
                             stringResource(R.string.filters_all), filters.themeId == null, { metadata.updateFilters(metadata.filters.copy(themeId = null)) },
                             count = apps.size,
@@ -305,7 +304,7 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
                 FilterDivider()
             }
             FilterSection(Symbols.HDR_ON, stringResource(R.string.filters_section_hdr)) {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(14.cpx), verticalArrangement = Arrangement.spacedBy(14.cpx)) {
+                ScrollRow(gap = 14f * stage.compactScale, ringRoom = 12f) {
                     HdrFilter.entries.forEach { option ->
                         FilterChip(
                             stringResource(hdrFilterLabel(option)), filters.hdr == option, { metadata.updateFilters(metadata.filters.copy(hdr = option)) },
@@ -316,7 +315,7 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
             }
             FilterDivider()
             FilterSection(Symbols.COMPLETION_TIME, stringResource(R.string.filters_section_duration)) {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(14.cpx), verticalArrangement = Arrangement.spacedBy(14.cpx)) {
+                ScrollRow(gap = 14f * stage.compactScale, ringRoom = 12f) {
                     LengthFilter.entries.forEach { option ->
                         FilterChip(
                             stringResource(lengthFilterLabel(option)), filters.length == option, { metadata.updateFilters(metadata.filters.copy(length = option)) },

@@ -18,7 +18,6 @@ import com.limelight.shell.data.PcSetup
 import com.limelight.shell.data.ProfileStore
 import com.limelight.shell.data.Profiles
 import com.limelight.shell.settings.AppearanceStore
-import com.limelight.shell.settings.HomeLayout
 import com.limelight.shell.settings.StartupStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.awaitCancellation
@@ -144,7 +143,6 @@ internal class PreviewSetup(context: Context, repo: PcRepository, profiles: Prof
  * button) the preview sends 3 s after the start, to open what that key opens (the context menu).
  */
 internal class ShellRoute(
-    val layout: HomeLayout = HomeLayout.ROW,
     val layer: Layer? = null,
     val after: (PreviewWorld) -> Unit = {},
     val press: Int? = null,
@@ -156,7 +154,7 @@ internal class ShellRoute(
  * preferences, files in a cache folder that is emptied at each start), a [PcRepository] that was never bound to the service and is
  * fed [PreviewFixtures] PCs, the artwork and metadata stores of the fixtures (no network), and a [ProfileStore] that never has a
  * profile (a profile would be projected into the user's stream settings profiles); the profiles the screens show are
- * [PreviewFixtures.profiles] (`Shell`'s `previewProfiles`). The appearance is the defaults, dark, with the route's Home layout; it is
+ * [PreviewFixtures.profiles] (`Shell`'s `previewProfiles`). The appearance is the defaults, dark; it is
  * kept in the memory preferences, so the user's settings are not touched.
  */
 internal class PreviewWorld(base: Context, activity: Activity, route: ShellRoute, textScale: Float) {
@@ -186,7 +184,7 @@ internal class PreviewWorld(base: Context, activity: Activity, route: ShellRoute
     init {
         // The shell offers a report for a crash of an earlier run, once per process: that was this call, so no card covers a preview
         runCatching { ProblemMonitor.detectAtStart(context) }
-        appearanceStore.update { it.copy(dark = true, homeLayout = route.layout, uiScale = (textScale * 100f).roundToInt().coerceIn(100, 130)) }
+        appearanceStore.update { it.copy(dark = true, uiScale = (textScale * 100f).roundToInt().coerceIn(100, 130)) }
         startupStore.update { it.copy(defaultPc = PreviewFixtures.ACTIVE_PC) }
         PreviewFixtures.seed(repo, profiles.settings())
         checkNotNull(repo.library.value as? Library.Ready) { "The preview library did not load" } // l10n-ignore

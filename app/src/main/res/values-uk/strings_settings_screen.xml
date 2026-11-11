@@ -72,8 +72,6 @@
     <string name="settings_native_clock_description">Формат часу в рядку стану.</string>
     <string name="settings_native_background_title">Анімоване тло</string>
     <string name="settings_native_background_description">Анімоване шейдерне тло (Android 13 або новіший) чи статичне.</string>
-    <string name="settings_native_home_layout_title">Вигляд головного екрана</string>
-    <string name="settings_native_home_layout_description">Бібліотека сіткою з прокруткою або в один ряд.</string>
     <string name="settings_native_hero_background_title">Тло гри</string>
     <string name="settings_native_hero_background_description">Показує тло вибраної гри на головному екрані.</string>
     <string name="settings_native_hero_blur_title">Розмиття тла гри</string>
@@ -162,8 +160,6 @@
     <string name="settings_native_help_clock_system">Дотримується налаштування Android щодо 12/24-годинного формату.</string>
     <string name="settings_native_help_clock_12">12-годинний формат з AM або PM.</string>
     <string name="settings_native_help_clock_24">24-годинний формат.</string>
-    <string name="settings_native_help_layout_grid">Кілька рядів обкладинок; прокрутка вертикально.</string>
-    <string name="settings_native_help_layout_row">Один ряд обкладинок; запущені й недавні ігри спершу.</string>
     <string name="settings_native_help_motion_reduced">Менше руху в інтерфейсі. FPS гри не змінюється.</string>
     <string name="settings_native_help_motion_full">Повні переходи й анімації фокуса.</string>
     <string name="settings_native_help_default_pc_none">Основного ПК немає; Пропускати початковий екран недоступно.</string>

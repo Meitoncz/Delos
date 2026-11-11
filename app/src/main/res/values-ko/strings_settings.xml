@@ -29,8 +29,6 @@
     <string name="settings_option_background_orbit">궤도</string>
     <string name="settings_option_background_still">정지</string>
 
-    <string name="settings_option_home_layout_grid">격자</string>
-    <string name="settings_option_home_layout_row">가로 한 줄</string>
 
     <string name="settings_option_palette_delos">Delos</string>
     <string name="settings_option_palette_lagoon">라군</string>

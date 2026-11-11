@@ -25,7 +25,6 @@
     <string name="shell_side_theme_light">浅色</string>
     <string name="shell_side_material_you">Material You</string>
     <string name="shell_side_background">背景</string>
-    <string name="shell_side_home_layout">主页布局</string>
     <string name="shell_side_sounds">界面音效</string>
     <string name="shell_side_haptics">触感反馈</string>
     <string name="shell_side_all_settings">全部设置</string>

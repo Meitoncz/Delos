@@ -125,8 +125,6 @@ internal fun nativeSettings(
         res.getString(R.string.settings_native_clock_description), choiceHelp = NativeSettingsHelp.choice(res, "ui_clock", a.clock.name))
     row("ui_background", Symbols.ANIMATION, res.getString(R.string.settings_native_background_title), RowValue.Choice(a.background.label(res), { dir -> update { it.copy(background = it.background.step(dir)) } }),
         res.getString(R.string.settings_native_background_description), choiceHelp = NativeSettingsHelp.choice(res, "ui_background", a.background.name))
-    row("ui_home_layout", Symbols.VIEW_CAROUSEL, res.getString(R.string.settings_native_home_layout_title), RowValue.Choice(a.homeLayout.label(res), { dir -> update { it.copy(homeLayout = it.homeLayout.step(dir)) } }),
-        res.getString(R.string.settings_native_home_layout_description), choiceHelp = NativeSettingsHelp.choice(res, "ui_home_layout", a.homeLayout.name))
     row("ui_hero_background", Symbols.WALLPAPER, res.getString(R.string.settings_native_hero_background_title), RowValue.Toggle(a.heroBackground) { on -> update { it.copy(heroBackground = on) } },
         res.getString(R.string.settings_native_hero_background_description))
     row("ui_hero_blur", Symbols.BLUR_ON, res.getString(R.string.settings_native_hero_blur_title), RowValue.Slider(a.heroBlur, 0, 40, 5, " px") { v -> update { it.copy(heroBlur = v) } },

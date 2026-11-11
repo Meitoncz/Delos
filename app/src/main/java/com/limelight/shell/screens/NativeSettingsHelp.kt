@@ -17,7 +17,7 @@ internal object NativeSettingsHelp {
     }
 
     /**
-     * What the choice [id] of the native row [key] does. The ids are the enum names of the choice (`ClockFormat`, `HomeLayout`,
+     * What the choice [id] of the native row [key] does. The ids are the enum names of the choice (`ClockFormat`,
      * `BackgroundKind`, `StatsPosition`) or, for the two-way rows, `dark` / `light`, `reduced` / `full` and `none` / `pc`
      * (a default device or no default device). Blank for a choice that needs none (the palettes).
      */
@@ -29,7 +29,6 @@ internal object NativeSettingsHelp {
                 "H12" -> R.string.settings_native_help_clock_12
                 else -> R.string.settings_native_help_clock_24
             }
-            "ui_home_layout" -> if (id == "GRID") R.string.settings_native_help_layout_grid else R.string.settings_native_help_layout_row
             "ui_reduced_motion" -> if (id == "reduced") R.string.settings_native_help_motion_reduced else R.string.settings_native_help_motion_full
             "ui_background" -> backgrounds[id]
             "ui_stats_position" -> statsPositions[id]

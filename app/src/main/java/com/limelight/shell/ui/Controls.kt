@@ -6,6 +6,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.background
@@ -14,8 +15,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
@@ -37,6 +36,8 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.maxLength
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,6 +60,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
@@ -68,6 +70,7 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -82,6 +85,7 @@ import com.limelight.shell.data.Avatar
 import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.layout
 import com.limelight.shell.data.rememberAvatarGradient
 import com.limelight.shell.data.rememberAvatarImage
 
@@ -344,33 +348,72 @@ fun CircleItem(
 }
 
 /**
- * `.circles`: a centered row of circle items; it wraps into more centered rows when the stage is too narrow for them (as many PCs as fit in 1920 stay on one).
- * A compact stage has no room for rows under each other: its circles stay in one row that scrolls sideways when there are more than fit (the
- * focus scrolls into view, the ends fade out while there is more to see).
+ * `.circles`: a centered row of circle items. When they do not fit the stage's width they stay in one row that scrolls sideways instead of
+ * wrapping into more rows (the focus scrolls into view, the ends fade out while there is more to see); while they fit it looks as a plain
+ * centered row (as many PCs as fit in 1920 do).
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun Circles(content: @Composable () -> Unit) {
+fun Circles(content: @Composable RowScope.() -> Unit) {
     val stage = LocalStage.current
-    val cs = stage.compactScale
     // One ring glides between the circles (docs/GUI.md, "Motion") instead of every circle fading its own
     GlideRingHost(FocusRing(5f, 5f), corner = 999f, focusScale = 1.16f) {
-        if (stage.compact) {
-            val scroll = rememberScrollState()
-            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Row(
-                    Modifier
-                        .then(if (scroll.maxValue > 0) Modifier.fadeMask(stage, vertical = false, startClear = 0f, startSolid = 40f, endSolid = 40f, endClear = 0f) else Modifier)
-                        .horizontalScroll(scroll)
-                        // Room for the focus scale and ring, which the scroll area would clip
-                        .padding(horizontal = 40.px, vertical = 36.px),
-                    horizontalArrangement = Arrangement.spacedBy(16.px),
-                    verticalAlignment = Alignment.Top,
-                ) { content() }
-            }
-        } else {
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(56.px, Alignment.CenterHorizontally), verticalArrangement = Arrangement.spacedBy((48f * cs).px)) { content() }
-        }
+        // A compact stage's scroll area also keeps its ring room above and below
+        ScrollRow(
+            Modifier.fillMaxWidth(), gap = if (stage.compact) 16f else 56f, centered = true, edge = 40f,
+            padVertical = if (stage.compact) 36f else 0f, content = content,
+        )
+    }
+}
+
+/**
+ * A row that never wraps: its items stay in one line that scrolls sideways when they do not fit the width, the D-pad focus scrolling the
+ * focused one into view and the ends fading out (the user's rule for every shape: scroll with an edge fade instead of wrapping). While the
+ * items fit it is a plain row, laid out exactly as the wrapping row it replaces ([centered] or at the start), with no fade and no padding.
+ *
+ * [edge] stage pixels on each side keep the focus scale and ring of the first and last item from being clipped, and are the width of the
+ * fade; they apply only while the row scrolls. The scroll area's offscreen layer would cut the ring above and below, so [ringRoom] adds that
+ * room only while the row scrolls and takes it back from the layout, the row's neighbours do not move. [padVertical] is room that is always there.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun ScrollRow(
+    modifier: Modifier = Modifier,
+    gap: Float,
+    centered: Boolean = false,
+    edge: Float = 24f,
+    ringRoom: Float = 0f,
+    padVertical: Float = 0f,
+    content: @Composable RowScope.() -> Unit,
+) {
+    val stage = LocalStage.current
+    val scroll = rememberScrollState()
+    val k = LocalStage.current.dpPerPx * LocalDensity.current.density
+    // The edge padding widens the content, so it must not decide by itself that the row still scrolls: the content overflows when it is
+    // wider than the row without that padding. Before the first layout the state's maximum is Int.MAX_VALUE: nothing overflows yet.
+    var padded by remember { mutableStateOf(false) }
+    val measured = scroll.maxValue != Int.MAX_VALUE
+    val overflow = measured && scroll.maxValue - (if (padded) 2f * edge * k else 0f) > 2f
+    SideEffect { padded = overflow }
+    val room = if (overflow) ringRoom.px else 0.px
+    // The focus scrolls this row, not the list around it (their margin specs scroll their own list): the focused item stays out of the faded ends
+    val margin = if (overflow) edge * k else 0f
+    val bringIntoView = rememberMarginBringIntoView(scroll, before = margin, after = margin, stagePx = k)
+    Box(modifier, contentAlignment = if (centered) Alignment.Center else Alignment.TopStart) {
+        CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) { Row(
+            Modifier
+                .layout { measurable, constraints ->
+                    // The room above and below is drawn over the neighbours, not laid out
+                    val roomPx = room.roundToPx()
+                    val placeable = measurable.measure(constraints)
+                    layout(placeable.width, placeable.height - 2 * roomPx) { placeable.place(0, -roomPx) }
+                }
+                .then(if (overflow) Modifier.fadeMask(stage, vertical = false, startClear = 0f, startSolid = edge, endSolid = edge, endClear = 0f) else Modifier)
+                .horizontalScroll(scroll)
+                .padding(horizontal = (if (overflow) edge else 0f).px, vertical = padVertical.px + room),
+            horizontalArrangement = Arrangement.spacedBy(gap.px),
+            verticalAlignment = Alignment.Top,
+            content = content,
+        ) }
     }
 }
 

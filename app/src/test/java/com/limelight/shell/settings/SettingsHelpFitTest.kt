@@ -117,7 +117,6 @@ class SettingsHelpFitTest {
             "ui_palette" to Palette.entries.map { it.name to it.label(res) },
             "ui_background" to BackgroundKind.entries.map { it.name to it.label(res) },
             "ui_clock" to ClockFormat.entries.map { it.name to it.label(res) },
-            "ui_home_layout" to HomeLayout.entries.map { it.name to it.label(res) },
             "ui_dark" to listOf("dark" to "Dark", "light" to "Light"),
             "ui_reduced_motion" to listOf("full" to "Full", "reduced" to "Reduced"),
             "ui_stats_position" to StatsPosition.entries.map { it.name to it.label },

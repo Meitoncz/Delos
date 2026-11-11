@@ -29,8 +29,6 @@
     <string name="settings_option_background_orbit">轨道</string>
     <string name="settings_option_background_still">静态</string>
 
-    <string name="settings_option_home_layout_grid">网格</string>
-    <string name="settings_option_home_layout_row">单行</string>
 
     <string name="settings_option_palette_delos">Delos</string>
     <string name="settings_option_palette_lagoon">潟湖</string>

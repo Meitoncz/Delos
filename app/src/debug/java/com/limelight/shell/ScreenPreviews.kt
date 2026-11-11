@@ -24,7 +24,6 @@ import com.limelight.shell.data.LocalBoxArt
 import com.limelight.shell.data.LocalGameMetadata
 import com.limelight.shell.screens.appArt
 import com.limelight.shell.settings.Appearance
-import com.limelight.shell.settings.HomeLayout
 import com.limelight.shell.ui.Backdrop
 import com.limelight.shell.ui.DelosColors
 import com.limelight.shell.ui.HANDOFF_PROGRESS
@@ -47,9 +46,7 @@ import kotlin.math.roundToInt
  * layout script that screenshots every screen in many window shapes. Started with
  * `adb shell am start -n io.github.meitoncz.delos.debug/com.limelight.shell.ShellActivity --es preview_screen <name> [--es preview_state <variant>]`
  * where `<name>` is one of:
- * - `home` (`--es preview_state <row|grid>`, default `row`): the real shell on Home, with 12 fake games of GAMING-PC (one running, one last
- *   played, two more hidden) whose covers are the placeholder art; the Home layout is forced to the variant in the preview's own memory
- *   preferences, never in the user's settings.
+ * - `home`: the real shell on Home, with 12 fake games of GAMING-PC (one running, one last played, two more hidden) whose covers are the placeholder art.
  * - `artwork`: the Artwork screen of Hades, with fixed choices for every kind.
  * - `settings`, `settings_search`, `debug_info`, `profile`: the real Settings (first tab), its search, Debug info and Profile screens.
  * - `game_options`: the real per-game settings screen of Hades (`game_settings` is the older component preview).
@@ -61,7 +58,7 @@ import kotlin.math.roundToInt
  * - `dialog`: a dialog layer (title, message, Pair and Cancel) over Home.
  * - `loader`: the stream launch scene of Hades at a fixed progress and a fixed scene time (no launch).
  * - `result`: the stream result card of a stream that could not start, over the plain background.
- * - `side_menu` (`preview_state` row|grid): the side menu open over Home. `home_context` (same states): Home with the game menu of the focused game, opened by the
+ * - `side_menu`: the side menu open over Home. `home_context`: Home with the game menu of the focused game, opened by the
  *   Start key 3 s after the start. `problem`: Home with the problem report card. `stream_exit`: Home under the exit portal ("Closing Elden Ring").
  * - `boot`, `create_profile`, `pair_pc`: the first-launch screens, and the PC pairing list.
  * - `stream_stats` (`preview_state` full|compact, `preview_position` TOP_LEFT|TOP_RIGHT|BOTTOM_LEFT|BOTTOM_RIGHT): the real statistics panel over the game scene, with fixed numbers.
@@ -70,9 +67,8 @@ import kotlin.math.roundToInt
  */
 internal object ScreenPreviews {
     fun from(intent: Intent, @Suppress("UNUSED_PARAMETER") shell: ShellState): (@Composable () -> Unit)? {
-        val state = intent.getStringExtra("preview_state")
         return when (intent.getStringExtra("preview_screen")) {
-            "home" -> shellPreview(ShellRoute(if (state == "grid") HomeLayout.GRID else HomeLayout.ROW) { Screen.Home })
+            "home" -> shellPreview(ShellRoute { Screen.Home })
             "artwork" -> shellPreview(ShellRoute { world -> Screen.Artwork(world.library.pc, world.library.apps.first { it.name == ARTWORK_GAME }) })
             "devices" -> shellPreview(ShellRoute { Screen.Devices })
             "settings" -> shellPreview(ShellRoute { Screen.Settings })
@@ -84,8 +80,8 @@ internal object ScreenPreviews {
             "pair" -> shellPreview(ShellRoute { Screen.Pin(PreviewFixtures.STUDY_PC, PreviewFixtures.host(PreviewFixtures.STUDY_PC).name, null, Screen.Start) })
             "filter" -> shellPreview(ShellRoute(layer = Layer.Filters) { Screen.Home })
             "dialog" -> shellPreview(ShellRoute(layer = Layer.Dialog(DIALOG)) { Screen.Home })
-            "side_menu" -> shellPreview(ShellRoute(if (state == "grid") HomeLayout.GRID else HomeLayout.ROW, layer = Layer.Side) { Screen.Home })
-            "home_context" -> shellPreview(ShellRoute(if (state == "grid") HomeLayout.GRID else HomeLayout.ROW, press = KeyEvent.KEYCODE_BUTTON_START) { Screen.Home })
+            "side_menu" -> shellPreview(ShellRoute(layer = Layer.Side) { Screen.Home })
+            "home_context" -> shellPreview(ShellRoute(press = KeyEvent.KEYCODE_BUTTON_START) { Screen.Home })
             "problem" -> shellPreview(ShellRoute(after = { it.shell.problem = PROBLEM }) { Screen.Home })
             "stream_exit" -> shellPreview(ShellRoute(after = { it.shell.portal = PORTAL }) { Screen.Home })
             "boot" -> shellPreview(ShellRoute { Screen.Boot() })

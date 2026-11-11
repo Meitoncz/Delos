@@ -32,8 +32,6 @@
     <string name="settings_option_background_still">Statické</string>
 
     <!-- Appearance choices: how the library is laid out on the start screen -->
-    <string name="settings_option_home_layout_grid">Mřížka</string>
-    <string name="settings_option_home_layout_row">Řádek</string>
 
     <!-- Appearance choices: color palettes -->
     <string name="settings_option_palette_delos">Delos</string>
