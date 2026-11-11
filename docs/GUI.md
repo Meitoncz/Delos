@@ -815,6 +815,9 @@ activity keeps its own orientation logic) and supports windows from 1:1 up to 21
   in stage pixels, `StageMetrics.safe`; zero on the Odin, so nothing moves there). Other edge-anchored content can read `LocalStage.current.safe`.
 - **Companion screen** (issue #76, [DUAL_SCREEN.md](DUAL_SCREEN.md)): the second panel of a dual-screen device is a `CompanionActivity` on that display (own task, no key focus) with its own `Stage()`, so
   `LocalStage` there is planned from that display's size and density (the Thor's 1240 × 1080 panel is a Compact stage), independent of the main panel's.
+  Its content is variant A of the approved prototype (focused-game details and buttons, statistics and the nine stream-menu tiles, a touch keyboard), built from the
+  shared tokens (glass cards, Phosphor icons, gold primary, impact chips) with text at least 28 and targets at least 64 stage px; a stage under 920 px high lays the tiles out flat.
+  Content, state and command flow, burn-in policy and previews: [DUAL_SCREEN.md](DUAL_SCREEN.md), "What the companion shows".
 - **Shape simulator** (debug builds, `ShapeSimulator` in `src/debug`): `--es preview_shape <W>x<H>@<dpi>` draws the whole shell, or any `preview_screen`,
   in a centered box of that pixel size (scaled down uniformly when it does not fit; the density is scaled with it, so the dp maths is the panel's)
   with `LocalDensity` set to the simulated density. Outside the box it is black; a caption at the bottom-left names the size, dpi, dp size, stage and

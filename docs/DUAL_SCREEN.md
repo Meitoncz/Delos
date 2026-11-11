@@ -2,8 +2,7 @@
 
 Issue [#76](https://github.com/Meitoncz/Delos/issues/76). This page covers what Delos knows about the displays of a device
 (`DisplayInventory`, `DisplayClassifier`; phases 1 and 2 of the plan), the companion window that goes on a built-in second panel
-(phase 3: activity host, lifecycle, the Main screen setting) and how to test it. The content of the companion screen is still a placeholder
-(phase 4).
+(phase 3: activity host, lifecycle, the Main screen setting), what it shows (phase 4: variant A, "Details and actions") and how to test it.
 
 Two different things must never be mixed up:
 
@@ -193,10 +192,53 @@ If a real touch does move the focus, the fallback is that the companion forwards
 Compose runs in the activity (own Stage, so `LocalStage` is planned from **the companion display's** size and density: the Thor's 1240 x
 1080 panel at 420 dpi is a Compact stage while the main panel keeps 1920 x 1080). `CompanionTheme` applies the profile's colors and
 reduced-motion setting. The system bars are hidden through `FLAG_FULLSCREEN` and the legacy visibility flags, because only a focused window
-can hide them through the insets controller. `CompanionContent(state)` is the one place the content is decided; today it is a dim,
-centred Delos mark with the PC name in the shell and the word "Streaming" in a stream. Step 4 (variant A, "Details and actions": game
-details with Start, Resume and Game settings in the shell, statistics and the stream-menu tiles in a stream, the keyboard when typing)
-replaces that function without touching the host. A keyboard variant needs a focusable window and so the focus question above again.
+can hide them through the insets controller. `CompanionContent(state)` is the one place the content is decided (next section).
+The keyboard needs no key focus: it injects key events, it takes none.
+
+## What the companion shows (variant A, "Details and actions")
+
+Approved prototype: `.gradle-agent/companion-proto/companion-A.html`. Header (Delos mark, PC name), then one of three states. All text is at least
+28 stage px and every touch target at least 64 stage px. The stage is planned from the companion's own display: 1240 x 1080 at 420 dpi is a
+1099 x 957 stage, 960 x 720 at 320 dpi is 1116 x 837, 1024 x 768 at 320 dpi is 1191 x 893. Below 920 stage px of height the stream state is
+"tight" (no small caps lines, tiles lay out flat with the icon beside the name).
+
+| State | Content |
+|---|---|
+| **Shell** | the game focused on the main panel, live: banner (hero, else cover, else the placeholder hues) with name and summary, genre and theme pills, HLTB, native HDR, three impact chips (GPU, latency, network: the highest level of the game's effective stream settings, an estimate like the settings rows' chips), and big buttons. With nothing running: Start, Game settings. This game runs: Resume, Game settings. Another game runs: Resume that game, Quit it and start this one (red), Game settings. No focused game (start screen, settings): the Delos mark and a hint. |
+| **Stream** | heading (game, picture: resolution, frame rate, codec, HDR), FPS, network, decoding and the bitrate asked for, and the nine tiles of the stream menu in its order (Resume, Keyboard, Overlay, Brightness, Bitrate, Upscaler, More, Disconnect, Quit game); the last row is set apart. Resume tucks the tiles away (a quiet screen with Open stream menu). Brightness, Bitrate, Upscaler and More open a page over the tiles (sliders and steppers for a thumb; More: send keys, commands, clipboard, task manager, zoom, mouse mode, on-screen controls, Android keyboard, touch sensitivity). No confirmation dialogs anywhere. |
+| **Typing** | the Keyboard tile: five rows (digits, letters, Shift, #+= page, Space, arrows), Enter, Backspace, an echo of the newest 40 typed characters and Stream menu to go back. |
+
+### State in, commands out
+
+One-way, immutable state in: `CompanionState.Shell(pcName, game: CompanionGame?)` and `CompanionState.Stream(pcName, gameName, stats, commands)`.
+The host reads the owner's lambda inside composition, so snapshot state held in it updates the window live.
+
+- **Shell**: `ShellState.companionGame` is published by `PublishCompanionGame` (one line in `HomeScreen.GameLibrary`, next to the focused game's
+  metadata and artwork it already has) and cleared when Home leaves composition. `CompanionGame.onAction(ShellButton)` runs the controller's own
+  paths: `GameActions.start` (starts or resumes), `quitAndStart`, `Screen.GameSettings`. The companion never launches anything by itself.
+- **Stream**: `StreamCommands(menu, sendKey)`. `menu` is the **same `StreamMenuHost`** the stream menu on the main panel is built on
+  (`StreamMenu.companionMenu()` is `GameHost` without a menu window: dismiss and blur do nothing, brightness applies to the stream's window), so every tile calls the
+  handler of its twin. The menu's getters are not observable: the screen reads them again after every command and once a second. Keys go
+  through `KeyBoardLayoutController.sendKeyEvent` (made static), the one path every Full keyboard key takes: Down when the finger lands, Up when it
+  lifts, Shift held around a shifted character (US layout, `KeyMap`). `DelosStreamActivity` binds it (`companionHost.bindStream(streamMenu)`).
+- **Statistics**: `DelosStreamActivity.onPerfStats` hands the snapshot the panel already gets to `CompanionHost.onStats` on the decoder thread; it is
+  dropped there when no companion window exists and when it comes sooner than 2 Hz after the last one (`StatsThrottle`), then posted to the main thread.
+  Nothing is computed again.
+
+### Burn-in policy (AMOLED panels)
+
+`CompanionBurnIn`, deliberately simple: (1) **pixel shift**: all content moves by 3 dp every 2 minutes along a fixed serpentine path over a 3 x 3 grid (an
+18-minute cycle), so no edge stays on the same pixels; (2) **dim**: in the **shell state** the content fades to 22 % after 60 s without a touch; the touch that wakes it is
+swallowed (waking never presses a button). A stream is not dimmed: someone is looking at the menu, and the statistics change.
+The dim timer is armed from the last touch (no polling). Unverified: that this is enough for a real AMOLED over months.
+
+### Debug previews
+
+`--es preview_screen companion --es preview_state <shell|shell_running|shell_other|idle|stream|typing> [--es preview_sheet <brightness|bitrate|upscaler|more|keys|commands|mouse>]`
+on `ShellActivity`, combined with `--es preview_shape <W>x<H>@<dpi>` for the panel's shape (fake data, `CompanionPreview` in `src/debug`). To see the **real**
+companion window on the emulator's second display with the normal shell on the main one: `--es companion_fake <state>` on the launch of `ShellActivity`
+(the owner then hands the window that fake state), with Second display = Part of the device as below. The screenshot of that display is
+`adb -s <device> emu screenrecord screenshot --display 1 <dir>` (`screencap -d` does not take the virtual display's id).
 
 ## How to test the companion on the emulator
 
@@ -269,4 +311,12 @@ compiled, as is the PC name in the shell's companion (the emulator has no PC). *
 Thor, the Pocket DS or the Retroid add-on report their panels (so whether Automatic picks the right companion and the shell may open on
 it), whether a real second panel's touch reaches the companion and whether a finger on it moves the top focus (see above), whether
 launching an activity on the other built-in panel is allowed on those devices' firmware, and whether an always-on companion burns in an
-AMOLED panel (it is dimmed, the policy is open).
+AMOLED panel (the policy above is dimming and a slow pixel shift, not proven on a panel).
+
+**Companion content (step 4), verified on the emulator** (real second display, `companion_fake`): the shell state with a fake focused game (nothing running and another
+game running), the stream state and the keyboard (a real tap on the Keyboard tile switched to it), no crash, the main panel's window still the focused one
+(`mTopFocusedDisplayId=0`) after the touches; the three states at 1240 x 1080, 960 x 720 and 1024 x 768 through the shape simulator. **Not verified**: anything
+that needs a stream (the emulator cannot run one): the tiles' effect (overlay, brightness, bitrate, upscaler, More, Disconnect, Quit), the keys reaching the PC
+and the statistics arriving in the window; the shell's buttons with a real PC (Start, Resume, Quit and start, Game settings) and the live follow of the focused game,
+real artwork and metadata in the banner; the layout on the real 4:3 panels beyond the simulated shape; touch focus behaviour on a real second panel.
+Left out of the stream's More page: rumble feel and gyro smoothing (the controller's own pages on the main panel).
