@@ -40,11 +40,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -119,7 +114,6 @@ import com.limelight.shell.data.LocalGameMetadata
 import com.limelight.shell.data.NativeHdr
 import com.limelight.shell.data.BundledArtwork
 import com.limelight.shell.settings.Appearance
-import com.limelight.shell.settings.HomeLayout
 import com.limelight.shell.ui.Cue
 import com.limelight.shell.ui.EntranceStagger
 import com.limelight.shell.ui.LocalEntranceStagger
@@ -184,7 +178,7 @@ private val FastScroll = tween<Float>(200, easing = CubicBezierEasing(.33f, 1f, 
 
 /**
  * The home screen (step 6.4): the games of the active PC with their covers, the focused game's info and
- * background, in the grid or row layout (Settings → Appearance → Home layout).
+ * background, in one scrolling row.
  */
 @Composable
 fun HomeScreen(library: Library, appearance: Appearance, repo: PcRepository, profileStore: ProfileStore, onMetadata: (Pc, App) -> Unit) {
@@ -217,7 +211,6 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
     val stage = LocalStage.current
     val boxArt = LocalBoxArt.current
     val pc = library.pc
-    val row = appearance.homeLayout == HomeLayout.ROW
     val uiScale = appearance.uiScale / 100f
 
     val focusedIndex = apps.indexOfFirst { homeKey(pc, it) == shell.homeGame }.takeIf { it >= 0 } ?: 0
@@ -243,27 +236,23 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
 
     val requesters = remember(pc.uuid) { HashMap<Int, FocusRequester>() }
     fun requester(app: App) = requesters.getOrPut(app.id) { FocusRequester() }
-    val gridState = rememberLazyGridState()
     val rowState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val windowInfo = LocalWindowInfo.current
     // Animated artwork (covers, the wide cover, the logo) plays only for the games on screen, and only while nothing covers
     // or stops it; one ticker draws every playing tile
     val artMotion = rememberArtworkMotion { it == Screen.Home }
-    val visibleGames = remember(row) {
-        derivedStateOf {
-            val items = if (row) rowState.layoutInfo.visibleItemsInfo.map { it.key } else gridState.layoutInfo.visibleItemsInfo.map { it.key }
-            items.filterIsInstance<Int>().toSet()
-        }
+    val visibleGames = remember {
+        derivedStateOf { rowState.layoutInfo.visibleItemsInfo.map { it.key }.filterIsInstance<Int>().toSet() }
     }
     val ticker = rememberAnimationTicker(artMotion.value)
     val dashboardArt = remember(ticker, artMotion, visibleGames) { DashboardArt(ticker, artMotion, visibleGames) }
 
-    // Initial focus when the library appears or the layout changes: jump to the focused game, focus it silently.
+    // Initial focus when the library appears: jump to the focused game, focus it silently.
     // Not keyed on the focused game: moving the focus is animated by anchor() alone.
-    LaunchedEffect(pc.uuid, row) {
+    LaunchedEffect(pc.uuid) {
         if (shell.homeGame != homeKey(pc, focused)) shell.homeGame = homeKey(pc, focused)
-        if (row) rowState.scrollToItem(focusedIndex) else gridState.scrollToItem(focusedIndex)
+        rowState.scrollToItem(focusedIndex)
         snapshotFlow { windowInfo.isWindowFocused }.first { it }
         if (shell.layer == null) {
             feedback.silenceNextFocus()
@@ -295,18 +284,13 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
 
     // Tile callbacks are remembered, so moving the focus recomposes only the two tiles whose focus changed
     val reducedMotion by rememberUpdatedState(appearance.reducedMotion)
-    val onTileFocused: (Int, App) -> Unit = remember(pc.uuid, row, scope) {
+    val onTileFocused: (Int, App) -> Unit = remember(pc.uuid, scope) {
         { index, app ->
             shell.homeGame = homeKey(pc, app)
-            // Keep the focused tile at the anchor: the grid row at the top, the row tile at the left edge
+            // Keep the focused tile at the left edge
             scope.launch {
-                if (row) {
-                    val info = rowState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == index }
-                    if (info == null) rowState.scrollToItem(index) else scroll(rowState, info.offset.toFloat(), reducedMotion)
-                } else {
-                    val info = gridState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == index }
-                    if (info == null) gridState.scrollToItem(index) else scroll(gridState, info.offset.y.toFloat(), reducedMotion)
-                }
+                val info = rowState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == index }
+                if (info == null) rowState.scrollToItem(index) else scroll(rowState, info.offset.toFloat(), reducedMotion)
             }
         }
     }
@@ -323,9 +307,9 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
     // The games with their own settings (docs/GUI.md): read once per change of the library, profile or stored settings, not per tile
     val customGames = rememberCustomGames(profileStore, pc, library.apps)
 
-    // The covers' sizes: the prototype's, or the compact stage's smaller ones (the grid keeps the prototype's)
+    // The covers' sizes: the prototype's, or the compact stage's smaller ones
     val compact = stage.compact
-    val covers = remember(stage.stageWidth, stage.stageHeight, stage.shape, row) { if (row && stage.compact) compactCovers(stage) else StandardCovers }
+    val covers = remember(stage.stageWidth, stage.stageHeight, stage.shape) { if (stage.compact) compactCovers(stage) else StandardCovers }
 
     val tile: @Composable (Int, App) -> Unit = { index, app ->
         GameTile(
@@ -340,112 +324,93 @@ private fun GameLibrary(library: Library.Ready, apps: List<App>, appearance: App
             running = running,
             matchGameColors = appearance.matchGameColors && !appearance.materialYou,
             requester = requester(app),
-            geometry = if (row) covers else StandardCovers,
+            geometry = covers,
             onFocused = onTileFocused, onHide = onHide,
             onMetadata = onMetadata,
         )
     }
 
     // The covers of the first screenful enter one after the other (docs/GUI.md, "Motion"); the ones a scroll brings in later are just there
-    val intro = remember(pc.uuid, row) { EntranceStagger(enabled = true, cap = Motion.STAGGER_CAP, lateAfterMs = Motion.STAGGER_WINDOW) }
+    val intro = remember(pc.uuid) { EntranceStagger(enabled = true, cap = Motion.STAGGER_CAP, lateAfterMs = Motion.STAGGER_WINDOW) }
     CompositionLocalProvider(LocalDashboardArt provides dashboardArt) { Box(Modifier.fillMaxSize()) {
         // Behind an open context menu the info block dims to 40 %
         val infoDim by animateFloatAsState(if (shell.layer is Layer.Context) .4f else 1f, tween(Motion.FADE, easing = Motion.Ease), label = "infoDim")
         // A compact stage sits the block right above the covers (the covers are at the bottom, under the hint bar's room)
         val infoStart = if (compact) Compact.SIDE else 150f
-        val infoTop = if (compact) maxOf(Compact.STATUS_BAR + 4f, stage.stageHeight - COMPACT_ROW_BOTTOM - covers.height - 28f - COMPACT_INFO_BLOCK) else if (row) 150f else 100f
+        val infoTop = if (compact) maxOf(Compact.STATUS_BAR + 4f, stage.stageHeight - COMPACT_ROW_BOTTOM - covers.height - 28f - COMPACT_INFO_BLOCK) else 150f
         GameInfo(pc, focused,
             // The block (logo, GAME INFO label and pill row) sits high enough that the pills clear the focused cover
             modifier = Modifier.graphicsLayer { alpha = infoDim }.padding(start = infoStart.px, top = infoTop.px), reducedMotion = appearance.reducedMotion,
             // The same condition as the animated background's: the genre takes the game's colors only while it does
             matchGameColors = appearance.matchGameColors && !appearance.materialYou)
         CompositionLocalProvider(LocalBringIntoViewSpec provides NoAutoScroll, LocalEntranceStagger provides intro) {
-            if (row) {
-                // At the end the row stops with the last cover at the right edge, so the right fade goes away there
-                val endFade by animateFloatAsState(if (rowState.canScrollForward) 1f else 0f, tween(300), label = "rowEndFade")
-                val density = LocalDensity.current.density
-                // Faded out for a moment while a long wrap jumps close to the other end
-                val rowAlpha = remember { Animatable(1f) }
-                // The spring at the end of a wrap: the row overshoots the end a little and settles back
-                val rowBounce = remember { Animatable(0f) }
-                LazyRow(
-                    state = rowState,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(top = (if (compact) stage.stageHeight - COMPACT_ROW_BOTTOM - covers.height - COMPACT_ROW_PAD else 430f - (uiScale - 1f) * 92f).px, bottom = (if (compact) COMPACT_ROW_BOTTOM - COMPACT_ROW_PAD else 20f).px)
-                        .graphicsLayer {
-                            alpha = rowAlpha.value
-                            translationX = rowBounce.value
+            // At the end the row stops with the last cover at the right edge, so the right fade goes away there
+            val endFade by animateFloatAsState(if (rowState.canScrollForward) 1f else 0f, tween(300), label = "rowEndFade")
+            val density = LocalDensity.current.density
+            // Faded out for a moment while a long wrap jumps close to the other end
+            val rowAlpha = remember { Animatable(1f) }
+            // The spring at the end of a wrap: the row overshoots the end a little and settles back
+            val rowBounce = remember { Animatable(0f) }
+            LazyRow(
+                state = rowState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = (if (compact) stage.stageHeight - COMPACT_ROW_BOTTOM - covers.height - COMPACT_ROW_PAD else 430f - (uiScale - 1f) * 92f).px, bottom = (if (compact) COMPACT_ROW_BOTTOM - COMPACT_ROW_PAD else 20f).px)
+                    .graphicsLayer {
+                        alpha = rowAlpha.value
+                        translationX = rowBounce.value
+                    }
+                    .fadeMask(stage, vertical = false, startClear = 0f, startSolid = 120f, endSolid = 20f + 240f * endFade, endClear = 20f * endFade)
+                    // Left on the first game goes round to the last one, right on the last one back to the first
+                    .onPreviewKeyEvent { event ->
+                        if (event.type != KeyEventType.KeyDown || apps.size < 2) return@onPreviewKeyEvent false
+                        val index = apps.indexOfFirst { homeKey(pc, it) == shell.homeGame }
+                        val target = when {
+                            event.key == Key.DirectionLeft && index == 0 -> apps.lastIndex
+                            event.key == Key.DirectionRight && index == apps.lastIndex -> 0
+                            else -> return@onPreviewKeyEvent false
                         }
-                        .fadeMask(stage, vertical = false, startClear = 0f, startSolid = 120f, endSolid = 20f + 240f * endFade, endClear = 20f * endFade)
-                        // Left on the first game goes round to the last one, right on the last one back to the first
-                        .onPreviewKeyEvent { event ->
-                            if (event.type != KeyEventType.KeyDown || apps.size < 2) return@onPreviewKeyEvent false
-                            val index = apps.indexOfFirst { homeKey(pc, it) == shell.homeGame }
-                            val target = when {
-                                event.key == Key.DirectionLeft && index == 0 -> apps.lastIndex
-                                event.key == Key.DirectionRight && index == apps.lastIndex -> 0
-                                else -> return@onPreviewKeyEvent false
+                        scope.launch {
+                            val k = stage.dpPerPx * density
+                            fun now() = covers.itemStart(rowState.firstVisibleItemIndex) * k + rowState.firstVisibleItemScrollOffset
+                            // Far away: fade out, jump a few covers short of the other end and fade in again, so the
+                            // glide does not have to load every cover on the way
+                            if (!reducedMotion && kotlin.math.abs(target - rowState.firstVisibleItemIndex) > WRAP_GLIDE_ITEMS) {
+                                rowAlpha.animateTo(0f, tween(110))
+                                rowState.scrollToItem(if (target == 0) WRAP_GLIDE_ITEMS else (target - WRAP_GLIDE_ITEMS).coerceAtLeast(0))
+                                launch { rowAlpha.animateTo(1f, tween(260)) }
                             }
-                            scope.launch {
-                                val k = stage.dpPerPx * density
-                                fun now() = covers.itemStart(rowState.firstVisibleItemIndex) * k + rowState.firstVisibleItemScrollOffset
-                                // Far away: fade out, jump a few covers short of the other end and fade in again, so the
-                                // glide does not have to load every cover on the way
-                                if (!reducedMotion && kotlin.math.abs(target - rowState.firstVisibleItemIndex) > WRAP_GLIDE_ITEMS) {
-                                    rowAlpha.animateTo(0f, tween(110))
-                                    rowState.scrollToItem(if (target == 0) WRAP_GLIDE_ITEMS else (target - WRAP_GLIDE_ITEMS).coerceAtLeast(0))
-                                    launch { rowAlpha.animateTo(1f, tween(260)) }
-                                }
-                                // Glide there without slowing down (the row stops at its ends by itself), overshoot the end on
-                                // a spring and settle back, then move the focus
-                                // Toward the end the row stops before the target reaches the left: aim exactly at that end, so
-                                // the glide does not run on for nothing
-                                val end = (covers.start + covers.itemStart(apps.lastIndex) + (if (apps.size == 1) covers.wide else covers.tile) + covers.endPadding) * k -
-                                    rowState.layoutInfo.viewportSize.width
-                                val delta = minOf(covers.itemStart(target) * k, end.coerceAtLeast(0f)) - now()
-                                if (reducedMotion) rowState.scrollBy(delta) else {
-                                    rowState.animateScrollBy(delta, tween(360, easing = CubicBezierEasing(.45f, .05f, .8f, .65f)))
-                                    rowAlpha.snapTo(1f)
-                                    // Arriving at the last cover the content moves left, at the first one right
-                                    val speed = (kotlin.math.abs(delta) * 1.75f / .36f).coerceAtMost(4200f * k)
-                                    launch {
-                                        rowBounce.animateTo(
-                                            0f, spring(dampingRatio = .36f, stiffness = 340f),
-                                            initialVelocity = if (target == 0) speed else -speed,
-                                        )
-                                    }
-                                }
+                            // Glide there without slowing down (the row stops at its ends by itself), overshoot the end on
+                            // a spring and settle back, then move the focus
+                            // Toward the end the row stops before the target reaches the left: aim exactly at that end, so
+                            // the glide does not run on for nothing
+                            val end = (covers.start + covers.itemStart(apps.lastIndex) + (if (apps.size == 1) covers.wide else covers.tile) + covers.endPadding) * k -
+                                rowState.layoutInfo.viewportSize.width
+                            val delta = minOf(covers.itemStart(target) * k, end.coerceAtLeast(0f)) - now()
+                            if (reducedMotion) rowState.scrollBy(delta) else {
+                                rowState.animateScrollBy(delta, tween(360, easing = CubicBezierEasing(.45f, .05f, .8f, .65f)))
                                 rowAlpha.snapTo(1f)
-                                withFrameNanos { }
-                                runCatching { requester(apps[target]).requestFocus() }
+                                // Arriving at the last cover the content moves left, at the first one right
+                                val speed = (kotlin.math.abs(delta) * 1.75f / .36f).coerceAtMost(4200f * k)
+                                launch {
+                                    rowBounce.animateTo(
+                                        0f, spring(dampingRatio = .36f, stiffness = 340f),
+                                        initialVelocity = if (target == 0) speed else -speed,
+                                    )
+                                }
                             }
-                            true
-                        },
-                    // At the end the last cover (focused) is as far from the right edge as the first game (focused) is
-                    // from the left one
-                    contentPadding = PaddingValues(start = covers.start.px, end = covers.endPadding.px, top = (if (compact) COMPACT_ROW_PAD else 90f).px, bottom = (if (compact) COMPACT_ROW_PAD else 90f).px),
-                    horizontalArrangement = Arrangement.spacedBy(covers.gap.px),
-                ) {
-                    itemsIndexed(apps, key = { _, app -> app.id }) { i, app -> tile(i, app) }
-                }
-            } else {
-                val columns = gridColumns(stage.stageWidth)
-                val side = gridSidePadding(stage.stageWidth, columns)
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(columns),
-                    state = gridState,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(top = 292.px)
-                        // The top fade starts below the info chips; the bottom fade runs under the hint bar
-                        .fadeMask(stage, vertical = true, startClear = 34f, startSolid = 90f, endSolid = 230f, endClear = 10f),
-                    contentPadding = PaddingValues(start = side.px, end = side.px, top = 98.px, bottom = 260.px),
-                    horizontalArrangement = Arrangement.spacedBy(ROW_GAP.px),
-                    verticalArrangement = Arrangement.spacedBy(ROW_GAP.px),
-                ) {
-                    itemsIndexed(apps, key = { _, app -> app.id }, span = { i, _ -> GridItemSpan(if (i == 0) columns.coerceAtMost(3) else 1) }) { i, app -> tile(i, app) }
-                }
+                            rowAlpha.snapTo(1f)
+                            withFrameNanos { }
+                            runCatching { requester(apps[target]).requestFocus() }
+                        }
+                        true
+                    },
+                // At the end the last cover (focused) is as far from the right edge as the first game (focused) is
+                // from the left one
+                contentPadding = PaddingValues(start = covers.start.px, end = covers.endPadding.px, top = (if (compact) COMPACT_ROW_PAD else 90f).px, bottom = (if (compact) COMPACT_ROW_PAD else 90f).px),
+                horizontalArrangement = Arrangement.spacedBy(covers.gap.px),
+            ) {
+                itemsIndexed(apps, key = { _, app -> app.id }) { i, app -> tile(i, app) }
             }
         }
     } }
@@ -456,17 +421,8 @@ private const val ROW_TILE = 300f
 private const val ROW_HEIGHT = 450f
 private const val ROW_GAP = 44f
 
-/** The wide first cover is as wide as three covers and the two gaps between them (the grid spans it over 3 columns). */
+/** The wide first cover is as wide as three covers and the two gaps between them. */
 private const val ROW_WIDE = 3 * ROW_TILE + 2 * ROW_GAP
-
-/** The least room on each side of the grid: the 122 px at 1920 that centre five covers and four gaps. */
-private const val GRID_MIN_SIDE = (1920f - 5 * ROW_TILE - 4 * ROW_GAP) / 2f
-
-/** The covers across the grid: as many 300 px covers with their gaps as fit the stage with [GRID_MIN_SIDE] on each side (5 at 1920, at least 3 for the wide first cover). */
-private fun gridColumns(stageWidth: Float): Int = ((stageWidth - 2 * GRID_MIN_SIDE + ROW_GAP) / (ROW_TILE + ROW_GAP)).toInt().coerceAtLeast(3)
-
-/** The grid's side padding that centres [columns] covers and their gaps in the stage; [GRID_MIN_SIDE] at five columns in 1920. Never negative: a stage too narrow for three covers keeps the grid at the edge (a compact layout is phase C of #9) instead of crashing. */
-private fun gridSidePadding(stageWidth: Float, columns: Int): Float = ((stageWidth - columns * ROW_TILE - (columns - 1) * ROW_GAP) / 2f).coerceAtLeast(0f)
 
 /** A compact stage: the title box and the logo's height above the pills (against 200 and 180), stage pixels. */
 private const val COMPACT_TITLE_BOX = 120f

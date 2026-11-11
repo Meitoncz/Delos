@@ -29,8 +29,6 @@
     <string name="settings_option_background_orbit">Órbita</string>
     <string name="settings_option_background_still">Estático</string>
 
-    <string name="settings_option_home_layout_grid">Grade</string>
-    <string name="settings_option_home_layout_row">Linha</string>
 
     <string name="settings_option_palette_delos">Delos</string>
     <string name="settings_option_palette_lagoon">Lagoa</string>

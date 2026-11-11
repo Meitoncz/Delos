@@ -2,8 +2,7 @@
 # One per line:  <id> | <extras passed to am start> | <seconds to wait before the screenshot>
 # Previews are deterministic and finite; the entrance animations and the delays of the preview itself (context menu 700 ms,
 # toast 400 ms) must have finished by then. Blank lines and # comments are ignored.
-home-row       | --es preview_screen home --es preview_state row    | 5
-home-grid      | --es preview_screen home --es preview_state grid   | 5
+home           | --es preview_screen home                           | 5
 artwork        | --es preview_screen artwork                        | 5
 devices        | --es preview_screen devices                        | 4
 start          | --es preview_screen start                          | 4
@@ -12,8 +11,7 @@ filter         | --es preview_screen filter                         | 5
 dialog         | --es preview_screen dialog                         | 4
 loader         | --es preview_screen loader                         | 4
 result         | --es preview_screen result                         | 4
-home-context-row  | --es preview_screen home_context --es preview_state row  | 6
-home-context-grid | --es preview_screen home_context --es preview_state grid | 6
+home-context   | --es preview_screen home_context                   | 6
 side-menu      | --es preview_screen side_menu                      | 4
 problem        | --es preview_screen problem                        | 4
 stream-exit    | --es preview_screen stream_exit                    | 4

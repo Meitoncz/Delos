@@ -80,8 +80,6 @@
     <string name="settings_native_clock_description">Formát času ve stavovém řádku.</string>
     <string name="settings_native_background_title">Animované pozadí</string>
     <string name="settings_native_background_description">Animované shaderové pozadí (Android 13 nebo novější), nebo statické.</string>
-    <string name="settings_native_home_layout_title">Rozložení knihovny</string>
-    <string name="settings_native_home_layout_description">Knihovna jako posouvací mřížka, nebo jeden řádek.</string>
     <string name="settings_native_hero_background_title">Pozadí hry</string>
     <string name="settings_native_hero_background_description">Zobrazí na úvodní obrazovce pozadí vybrané hry.</string>
     <string name="settings_native_hero_blur_title">Rozostření pozadí hry</string>
@@ -174,8 +172,6 @@
     <string name="settings_native_help_clock_system">Řídí se nastavením 12/24 hodin v Androidu.</string>
     <string name="settings_native_help_clock_12">12hodinový čas s AM nebo PM.</string>
     <string name="settings_native_help_clock_24">24hodinový čas.</string>
-    <string name="settings_native_help_layout_grid">Několik řad obalů; posouvá se svisle.</string>
-    <string name="settings_native_help_layout_row">Jedna řada obalů; běžící a nedávné hry jsou první.</string>
     <string name="settings_native_help_motion_reduced">Méně pohybu v rozhraní. FPS her se nemění.</string>
     <string name="settings_native_help_motion_full">Plné přechody a animace zaostření.</string>
     <string name="settings_native_help_default_pc_none">Žádné preferované PC; volba „Přeskočit úvodní obrazovku“ není k dispozici.</string>

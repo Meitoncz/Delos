@@ -66,8 +66,6 @@
     <string name="settings_native_clock_description">Format de l’heure dans la barre d’état.</string>
     <string name="settings_native_background_title">Arrière-plan animé</string>
     <string name="settings_native_background_description">Arrière-plan animé par shader (Android 13 ou plus récent), ou fixe.</string>
-    <string name="settings_native_home_layout_title">Disposition de l’accueil</string>
-    <string name="settings_native_home_layout_description">Bibliothèque en grille défilante ou en une seule rangée.</string>
     <string name="settings_native_hero_background_title">Arrière-plan du jeu</string>
     <string name="settings_native_hero_background_description">Affiche l’arrière-plan du jeu sélectionné sur l’écran d’accueil.</string>
     <string name="settings_native_hero_blur_title">Flou de l’arrière-plan du jeu</string>
@@ -151,8 +149,6 @@
     <string name="settings_native_help_clock_system">Suit le réglage 12/24 heures d’Android.</string>
     <string name="settings_native_help_clock_12">Horloge 12 heures avec AM ou PM.</string>
     <string name="settings_native_help_clock_24">Horloge 24 heures.</string>
-    <string name="settings_native_help_layout_grid">Plusieurs rangées de jaquettes ; défile verticalement.</string>
-    <string name="settings_native_help_layout_row">Une rangée de jaquettes ; les jeux en cours et récents passent en premier.</string>
     <string name="settings_native_help_motion_reduced">Moins de mouvement dans l’interface. Les FPS du jeu ne changent pas.</string>
     <string name="settings_native_help_motion_full">Transitions et animations de focus complètes.</string>
     <string name="settings_native_help_default_pc_none">Aucun PC préféré ; Passer l’écran de démarrage est indisponible.</string>

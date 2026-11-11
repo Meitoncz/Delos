@@ -16,8 +16,6 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -135,6 +133,7 @@ import com.limelight.shell.ui.Motion
 import com.limelight.shell.ui.PillButton
 import com.limelight.shell.ui.PlaceholderArt
 import com.limelight.shell.ui.RowGlideHost
+import com.limelight.shell.ui.ScrollRow
 import com.limelight.shell.ui.SelectionPillHost
 import com.limelight.shell.ui.Spinner
 import com.limelight.shell.ui.Symbol
@@ -793,7 +792,6 @@ private fun StripBadge(text: String, icon: String?, accent: Boolean) {
  * the grid below keeps updating as choices are made. The focus stays inside while it is open and starts on the first row's
  * selected option; the options share the filter chips' gliding plate ([RowGlideHost]).
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun FilterSheetLayer(
     open: Boolean, tab: ArtTab, filters: ArtFilters, ready: Choices.Ready?, refreshing: Boolean,
@@ -910,7 +908,6 @@ private fun FilterSheetLayer(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun SheetRow(icon: String, title: String, options: @Composable () -> Unit) {
     val colors = LocalDelosColors.current
@@ -922,7 +919,7 @@ private fun SheetRow(icon: String, title: String, options: @Composable () -> Uni
             }
             BasicText(title, style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx))
         }
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(14.cpx), verticalArrangement = Arrangement.spacedBy(10.cpx)) { options() }
+        ScrollRow(gap = 14f * LocalStage.current.compactScale) { options() }
     }
 }
 

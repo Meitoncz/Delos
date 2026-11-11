@@ -82,8 +82,6 @@
     <string name="settings_native_clock_description">Zeitformat in der Statusleiste.</string>
     <string name="settings_native_background_title">Animierter Hintergrund</string>
     <string name="settings_native_background_description">Animierter Shader-Hintergrund (ab Android 13) oder ein statischer.</string>
-    <string name="settings_native_home_layout_title">Startseiten-Layout</string>
-    <string name="settings_native_home_layout_description">Bibliothek als scrollendes Raster oder einzelne Reihe.</string>
     <string name="settings_native_hero_background_title">Spiel-Hintergrund</string>
     <string name="settings_native_hero_background_description">Zeigt den Hintergrund des gewählten Spiels auf der Startseite.</string>
     <string name="settings_native_hero_blur_title">Unschärfe des Spiel-Hintergrunds</string>
@@ -177,8 +175,6 @@
     <string name="settings_native_help_clock_system">Folgt der 12/24-Stunden-Einstellung von Android.</string>
     <string name="settings_native_help_clock_12">12-Stunden-Uhr mit AM oder PM.</string>
     <string name="settings_native_help_clock_24">24-Stunden-Uhr.</string>
-    <string name="settings_native_help_layout_grid">Mehrere Reihen Cover; scrollt vertikal.</string>
-    <string name="settings_native_help_layout_row">Eine Reihe Cover; laufende und zuletzt gespielte Spiele stehen vorn.</string>
     <string name="settings_native_help_motion_reduced">Weniger Bewegung in der Oberfläche. Die Spiel-FPS bleiben unverändert.</string>
     <string name="settings_native_help_motion_full">Volle Übergänge und Fokus-Animationen.</string>
     <string name="settings_native_help_default_pc_none">Kein bevorzugter PC; „Startbildschirm überspringen“ ist nicht verfügbar.</string>

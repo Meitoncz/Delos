@@ -29,8 +29,6 @@
     <string name="settings_option_background_orbit">軌道</string>
     <string name="settings_option_background_still">静止</string>
 
-    <string name="settings_option_home_layout_grid">グリッド</string>
-    <string name="settings_option_home_layout_row">横一列</string>
 
     <string name="settings_option_palette_delos">Delos</string>
     <string name="settings_option_palette_lagoon">ラグーン</string>

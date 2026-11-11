@@ -27,7 +27,6 @@
     <string name="shell_side_theme_light">Claro</string>
     <string name="shell_side_material_you">Material You</string>
     <string name="shell_side_background">Plano de fundo</string>
-    <string name="shell_side_home_layout">Layout do início</string>
     <string name="shell_side_sounds">Sons da interface</string>
     <string name="shell_side_haptics">Resposta tátil</string>
     <string name="shell_side_all_settings">Todas as configurações</string>

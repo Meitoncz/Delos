@@ -70,8 +70,6 @@
     <string name="settings_native_clock_description">ステータスバーの時刻形式です。</string>
     <string name="settings_native_background_title">アニメーション背景</string>
     <string name="settings_native_background_description">アニメーションするシェーダー背景（Android 13以降）、または静止背景です。</string>
-    <string name="settings_native_home_layout_title">ホームのレイアウト</string>
-    <string name="settings_native_home_layout_description">ライブラリをスクロールするグリッドまたは横一列で表示します。</string>
     <string name="settings_native_hero_background_title">ゲーム背景</string>
     <string name="settings_native_hero_background_description">ホーム画面に、選択中のゲームの背景を表示します。</string>
     <string name="settings_native_hero_blur_title">ゲーム背景のぼかし</string>
@@ -157,8 +155,6 @@
     <string name="settings_native_help_clock_system">Androidの12/24時間表示の設定に従います。</string>
     <string name="settings_native_help_clock_12">午前/午後付きの12時間表示です。</string>
     <string name="settings_native_help_clock_24">24時間表示です。</string>
-    <string name="settings_native_help_layout_grid">カバーを複数行に並べ、縦にスクロールします。</string>
-    <string name="settings_native_help_layout_row">カバーを1行に並べます。実行中と最近のゲームが先頭に表示されます。</string>
     <string name="settings_native_help_motion_reduced">インターフェースの動きを抑えます。ゲームのFPSは変わりません。</string>
     <string name="settings_native_help_motion_full">すべてのトランジションとフォーカスアニメーションを使います。</string>
     <string name="settings_native_help_default_pc_none">優先PCがありません。「スタート画面をスキップ」は使えません。</string>

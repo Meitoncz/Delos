@@ -733,7 +733,7 @@ fun Shell(
                     val hiddenCount = (library as? Library.Ready)?.hiddenCount ?: 0
                     val hiddenRow = hiddenCount > 0 || showHidden
                     val rowKeys = remember(hiddenRow) {
-                        listOf("theme", "material-you", "background", "home-layout", "sounds", "haptics", "settings") +
+                        listOf("theme", "material-you", "background", "sounds", "haptics", "settings") +
                             if (hiddenRow) listOf("show-hidden") else emptyList()
                     }
                     val navigation = rememberFocusedListNavigation(rowKeys, allowUpExit = false)
@@ -825,7 +825,6 @@ private fun SideMenuRows(
     SettingRow(Symbols.DARK_MODE, stringResource(R.string.shell_side_theme), RowValue.Choice(stringResource(if (appearance.dark) R.string.shell_side_theme_dark else R.string.shell_side_theme_light), { update { it.copy(dark = !it.dark) } }), firstModifier.focusedListRow(navigation, "theme"), compact = true)
     SettingRow(Symbols.SYSTEM_COLORS, stringResource(R.string.shell_side_material_you), RowValue.Toggle(appearance.materialYou) { on -> update { it.copy(materialYou = on) } }, Modifier.focusedListRow(navigation, "material-you"), compact = true)
     SettingRow(Symbols.ANIMATION, stringResource(R.string.shell_side_background), RowValue.Choice(appearance.background.label(res), { dir -> update { it.copy(background = it.background.step(dir)) } }), Modifier.focusedListRow(navigation, "background"), compact = true)
-    SettingRow(Symbols.VIEW_CAROUSEL, stringResource(R.string.shell_side_home_layout), RowValue.Choice(appearance.homeLayout.label(res), { dir -> update { it.copy(homeLayout = it.homeLayout.step(dir)) } }), Modifier.focusedListRow(navigation, "home-layout"), compact = true)
     SettingRow(Symbols.MUSIC_NOTE, stringResource(R.string.shell_side_sounds), RowValue.Toggle(appearance.sounds) { on -> update { it.copy(sounds = on) } }, Modifier.focusedListRow(navigation, "sounds"), compact = true)
     SettingRow(Symbols.HAPTICS, stringResource(R.string.shell_side_haptics), RowValue.Toggle(appearance.haptics) { on -> update { it.copy(haptics = on) } }, Modifier.focusedListRow(navigation, "haptics"), compact = true)
     SettingRow(Symbols.SETTINGS, stringResource(R.string.shell_side_all_settings), RowValue.Action(openSettings), Modifier.focusedListRow(navigation, "settings"), compact = true)

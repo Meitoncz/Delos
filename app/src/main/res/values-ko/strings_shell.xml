@@ -27,7 +27,6 @@
     <string name="shell_side_theme_light">라이트</string>
     <string name="shell_side_material_you">Material You</string>
     <string name="shell_side_background">배경</string>
-    <string name="shell_side_home_layout">홈 레이아웃</string>
     <string name="shell_side_sounds">인터페이스 효과음</string>
     <string name="shell_side_haptics">햅틱</string>
     <string name="shell_side_all_settings">전체 설정</string>

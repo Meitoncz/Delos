@@ -29,8 +29,6 @@
     <string name="settings_option_background_orbit">Órbita</string>
     <string name="settings_option_background_still">Estático</string>
 
-    <string name="settings_option_home_layout_grid">Cuadrícula</string>
-    <string name="settings_option_home_layout_row">Fila</string>
 
     <string name="settings_option_palette_delos">Delos</string>
     <string name="settings_option_palette_lagoon">Laguna</string>

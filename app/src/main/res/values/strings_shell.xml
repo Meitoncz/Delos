@@ -39,7 +39,6 @@
     <string name="shell_side_theme_light">Light</string>
     <string name="shell_side_material_you">Material You</string>
     <string name="shell_side_background">Background</string>
-    <string name="shell_side_home_layout">Home layout</string>
     <string name="shell_side_sounds">Interface sounds</string>
     <string name="shell_side_haptics">Haptics</string>
     <string name="shell_side_all_settings">All settings</string>

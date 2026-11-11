@@ -27,8 +27,6 @@
     <string name="settings_option_background_bokeh">Bokeh</string>
     <string name="settings_option_background_orbit">Orbite</string>
     <string name="settings_option_background_still">Fixe</string>
-    <string name="settings_option_home_layout_grid">Grille</string>
-    <string name="settings_option_home_layout_row">Rangée</string>
     <string name="settings_option_palette_delos">Delos</string>
     <string name="settings_option_palette_lagoon">Lagon</string>
     <string name="settings_option_palette_dusk">Crépuscule</string>

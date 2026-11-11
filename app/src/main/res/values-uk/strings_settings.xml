@@ -29,8 +29,6 @@
     <string name="settings_option_background_orbit">Орбіта</string>
     <string name="settings_option_background_still">Без анімації</string>
 
-    <string name="settings_option_home_layout_grid">Сітка</string>
-    <string name="settings_option_home_layout_row">Рядок</string>
 
     <string name="settings_option_palette_delos">Delos</string>
     <string name="settings_option_palette_lagoon">Лагуна</string>

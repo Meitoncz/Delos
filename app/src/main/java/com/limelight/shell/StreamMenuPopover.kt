@@ -18,8 +18,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
@@ -110,6 +108,7 @@ import com.limelight.shell.ui.RowGlideHost
 import com.limelight.shell.ui.focusedListBoundary
 import com.limelight.shell.ui.focusedListRow
 import com.limelight.shell.ui.MarqueeText
+import com.limelight.shell.ui.ScrollRow
 import com.limelight.shell.ui.focusTrap
 import com.limelight.shell.ui.px
 import com.limelight.shell.ui.tpx
@@ -658,8 +657,7 @@ private fun MenuSlider(value: RowValue.Slider, focused: Boolean): Int {
     return number
 }
 
-/** Wrapping text choices keep spatial 2D navigation and a static white base under one gliding capsule focus plate. */
-@OptIn(ExperimentalLayoutApi::class)
+/** Text choices in one row (it scrolls with an edge fade when they do not fit) with a static white base under one gliding capsule focus plate. */
 @Composable
 internal fun PopoverPills(labels: List<String>, first: FocusRequester, command: Boolean = false, onSelect: (Int) -> Unit) {
     val colors = LocalDelosColors.current
@@ -682,11 +680,7 @@ internal fun PopoverPills(labels: List<String>, first: FocusRequester, command: 
             )
         },
     ) {
-        FlowRow(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(14.px),
-            verticalArrangement = Arrangement.spacedBy(14.px),
-        ) {
+        ScrollRow(Modifier.fillMaxWidth(), gap = 14f) {
             labels.forEachIndexed { i, label ->
                 BasicText(
                     label,

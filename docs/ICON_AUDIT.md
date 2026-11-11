@@ -238,7 +238,6 @@ only the Windows, Steam and Android logos exist). Nothing needed a font from ano
 | Match the game's colours | `paint-brush` | `eyedropper` | **replace** | eyedropper = picks colours from the game (was a brush, which is the tab now) |
 | Clock | `clock` | `clock` | keep |  |
 | Animated background | `sparkle` | `waves` | **replace** | waves = flowing shader (sparkle moved to HDR) |
-| Home layout | `cards-three` | `cards-three` | keep | also the side menu row |
 | Game background | `image` | `panorama` | **replace** | the Artwork "Background" glyph; the picture is the Cover |
 | Game background blur | `drop-half` | `drop-half` | keep |  |
 | Game background opacity | `drop` | `drop` | keep (repeat) | repeat: opacity is one property; other tab than the control opacities |
@@ -348,7 +347,7 @@ only the Windows, Steam and Android logos exist). Nothing needed a font from ano
 | Left menu button hint | `square` | `square` | keep | a physical button glyph; AYN only |
 | Right menu button hint | `play` | `play` | keep (repeat) | a physical button glyph; AYN only; repeat of Start game |
 | Adjust hint | `arrows-left-right` | `arrows-left-right` | keep | left/right adjust |
-| Side menu Theme / Material You / Background / Home layout / Sounds / All settings | settings rows | settings rows | keep | same glyphs as the Settings rows |
+| Side menu Theme / Material You / Background / Sounds / All settings | settings rows | settings rows | keep | same glyphs as the Settings rows |
 | Side menu Haptics | `vibrate` | `bell-ringing` | **replace** | follows Interface haptics |
 | Side menu Show hidden games | `eye` | `eye` | keep |  |
 

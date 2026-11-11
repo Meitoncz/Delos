@@ -95,8 +95,6 @@
     <string name="settings_native_clock_description">Time format in the status bar.</string>
     <string name="settings_native_background_title">Animated background</string>
     <string name="settings_native_background_description">Animated shader background (Android 13 or later), or a still one.</string>
-    <string name="settings_native_home_layout_title">Home layout</string>
-    <string name="settings_native_home_layout_description">Library as a scrolling grid or a single row.</string>
     <string name="settings_native_hero_background_title">Game background</string>
     <string name="settings_native_hero_background_description">Shows the selected game\'s background on the home screen.</string>
     <string name="settings_native_hero_blur_title">Game background blur</string>
@@ -190,8 +188,6 @@
     <string name="settings_native_help_clock_system">Follows Android\'s 12/24-hour setting.</string>
     <string name="settings_native_help_clock_12">12-hour clock with AM or PM.</string>
     <string name="settings_native_help_clock_24">24-hour clock.</string>
-    <string name="settings_native_help_layout_grid">Several rows of covers; scrolls vertically.</string>
-    <string name="settings_native_help_layout_row">One row of covers; running and recent games come first.</string>
     <string name="settings_native_help_motion_reduced">Less interface motion. Game FPS is unchanged.</string>
     <string name="settings_native_help_motion_full">Full transitions and focus animations.</string>
     <string name="settings_native_help_default_pc_none">No preferred PC; Skip the start screen is unavailable.</string>

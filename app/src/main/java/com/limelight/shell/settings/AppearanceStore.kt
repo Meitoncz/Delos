@@ -27,12 +27,6 @@ enum class BackgroundKind(@StringRes val labelRes: Int) {
     fun label(res: Resources): String = res.getString(labelRes)
 }
 
-enum class HomeLayout(@StringRes val labelRes: Int) {
-    GRID(R.string.settings_option_home_layout_grid), ROW(R.string.settings_option_home_layout_row);
-
-    fun label(res: Resources): String = res.getString(labelRes)
-}
-
 /**
  * Color palettes used while Material You is off (with it on, the system's wallpaper colors are used):
  * the background's hue and the three colors, main ([accent]: buttons, focus, selection), secondary
@@ -71,7 +65,6 @@ data class Appearance(
     /** The animated background takes on the main color of the focused game's background image (palettes only). */
     val matchGameColors: Boolean = true,
     val background: BackgroundKind = BackgroundKind.AURORA,
-    val homeLayout: HomeLayout = HomeLayout.GRID,
     val heroBackground: Boolean = true,
     /** Game background blur in stage pixels (0–40). */
     val heroBlur: Int = 15,
@@ -117,7 +110,6 @@ class AppearanceStore(context: Context, private val settings: () -> SharedPrefer
             clock = enumOr(prefs.getString(KEY_CLOCK, null), defaults.clock),
             matchGameColors = prefs.getBoolean(KEY_MATCH_GAME, defaults.matchGameColors),
             background = enumOr(prefs.getString(KEY_BACKGROUND, null), defaults.background),
-            homeLayout = enumOr(prefs.getString(KEY_HOME_LAYOUT, null), defaults.homeLayout),
             heroBackground = prefs.getBoolean(KEY_HERO, defaults.heroBackground),
             heroBlur = prefs.getInt(KEY_HERO_BLUR, defaults.heroBlur).coerceIn(0, 40),
             heroOpacity = prefs.getInt(KEY_HERO_OPACITY, defaults.heroOpacity).coerceIn(0, 100),
@@ -136,7 +128,6 @@ class AppearanceStore(context: Context, private val settings: () -> SharedPrefer
             .putString(KEY_CLOCK, a.clock.name)
             .putBoolean(KEY_MATCH_GAME, a.matchGameColors)
             .putString(KEY_BACKGROUND, a.background.name)
-            .putString(KEY_HOME_LAYOUT, a.homeLayout.name)
             .putBoolean(KEY_HERO, a.heroBackground)
             .putInt(KEY_HERO_BLUR, a.heroBlur)
             .putInt(KEY_HERO_OPACITY, a.heroOpacity)
@@ -157,7 +148,6 @@ class AppearanceStore(context: Context, private val settings: () -> SharedPrefer
         const val KEY_CLOCK = "ui_clock"
         const val KEY_MATCH_GAME = "ui_match_game_colors"
         const val KEY_BACKGROUND = "ui_background"
-        const val KEY_HOME_LAYOUT = "ui_home_layout"
         const val KEY_HERO = "ui_hero_background"
         const val KEY_HERO_BLUR = "ui_hero_blur"
         const val KEY_HERO_OPACITY = "ui_hero_opacity"

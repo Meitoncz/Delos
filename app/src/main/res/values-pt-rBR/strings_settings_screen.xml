@@ -71,8 +71,6 @@
     <string name="settings_native_clock_description">Formato da hora na barra de status.</string>
     <string name="settings_native_background_title">Fundo animado</string>
     <string name="settings_native_background_description">Fundo animado com shader (Android 13 ou superior) ou estático.</string>
-    <string name="settings_native_home_layout_title">Layout do início</string>
-    <string name="settings_native_home_layout_description">Biblioteca em grade rolável ou em uma única linha.</string>
     <string name="settings_native_hero_background_title">Fundo do jogo</string>
     <string name="settings_native_hero_background_description">Mostra o fundo do jogo selecionado na tela inicial.</string>
     <string name="settings_native_hero_blur_title">Desfoque do fundo do jogo</string>
@@ -160,8 +158,6 @@
     <string name="settings_native_help_clock_system">Segue a configuração de 12/24 horas do Android.</string>
     <string name="settings_native_help_clock_12">Relógio de 12 horas com AM ou PM.</string>
     <string name="settings_native_help_clock_24">Relógio de 24 horas.</string>
-    <string name="settings_native_help_layout_grid">Várias linhas de capas; rola na vertical.</string>
-    <string name="settings_native_help_layout_row">Uma linha de capas; jogos em execução e recentes vêm primeiro.</string>
     <string name="settings_native_help_motion_reduced">Menos movimento na interface. O FPS do jogo não muda.</string>
     <string name="settings_native_help_motion_full">Transições e animações de foco completas.</string>
     <string name="settings_native_help_default_pc_none">Nenhum PC preferido; Pular a tela inicial fica indisponível.</string>

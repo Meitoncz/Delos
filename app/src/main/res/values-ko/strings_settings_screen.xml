@@ -70,8 +70,6 @@
     <string name="settings_native_clock_description">상태 표시줄의 시간 형식이에요.</string>
     <string name="settings_native_background_title">움직이는 배경</string>
     <string name="settings_native_background_description">움직이는 셰이더 배경(Android 13 이상) 또는 정지된 배경이에요.</string>
-    <string name="settings_native_home_layout_title">홈 레이아웃</string>
-    <string name="settings_native_home_layout_description">라이브러리를 스크롤되는 격자 또는 한 줄로 표시해요.</string>
     <string name="settings_native_hero_background_title">게임 배경</string>
     <string name="settings_native_hero_background_description">홈 화면에 선택한 게임의 배경을 표시해요.</string>
     <string name="settings_native_hero_blur_title">게임 배경 블러</string>
@@ -157,8 +155,6 @@
     <string name="settings_native_help_clock_system">Android의 12/24시간 설정을 따라요.</string>
     <string name="settings_native_help_clock_12">오전/오후가 붙는 12시간제 시계예요.</string>
     <string name="settings_native_help_clock_24">24시간제 시계예요.</string>
-    <string name="settings_native_help_layout_grid">커버가 여러 줄로 나열되고 세로로 스크롤돼요.</string>
-    <string name="settings_native_help_layout_row">커버가 한 줄로 나열되고 실행 중인 게임과 최근 게임이 앞에 와요.</string>
     <string name="settings_native_help_motion_reduced">인터페이스 움직임이 줄어요. 게임 FPS는 그대로예요.</string>
     <string name="settings_native_help_motion_full">전체 전환 효과와 포커스 애니메이션을 사용해요.</string>
     <string name="settings_native_help_default_pc_none">선호 PC가 없어요. 시작 화면 건너뛰기를 사용할 수 없어요.</string>

@@ -33,8 +33,6 @@
     <string name="settings_option_background_still">Statisch</string>
 
     <!-- Appearance choices: how the library is laid out on the start screen -->
-    <string name="settings_option_home_layout_grid">Raster</string>
-    <string name="settings_option_home_layout_row">Reihe</string>
 
     <!-- Appearance choices: color palettes (names; Delos is the app's own palette and keeps its name) -->
     <string name="settings_option_palette_delos">Delos</string>
