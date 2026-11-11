@@ -5,5 +5,9 @@
     <style name="Theme.Delos.Shell" parent="android:Theme.DeviceDefault.NoActionBar">
         <item name="android:windowBackground">@color/shell_window_background</item>
     </style>
+    <!-- The companion screen's own task on the second panel (docs/DUAL_SCREEN.md): no window animations, the dark window behind Compose. -->
+    <style name="Theme.Delos.Companion" parent="Theme.Delos.Shell">
+        <item name="android:windowAnimationStyle">@null</item>
+    </style>
     <color name="shell_window_background">#FF05080F</color>
 </resources>

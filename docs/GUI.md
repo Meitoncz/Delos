@@ -813,6 +813,8 @@ activity keeps its own orientation logic) and supports windows from 1:1 up to 21
   Existing screens still read `px` / `tpx` as before; the Wide, Tall and Compact layouts are later phases.
 - **Safe area**: backgrounds still draw edge to edge, the status bar and the hint bar are padded by the display cutout (`WindowInsets.displayCutout`
   in stage pixels, `StageMetrics.safe`; zero on the Odin, so nothing moves there). Other edge-anchored content can read `LocalStage.current.safe`.
+- **Companion screen** (issue #76, [DUAL_SCREEN.md](DUAL_SCREEN.md)): the second panel of a dual-screen device is a `CompanionActivity` on that display (own task, no key focus) with its own `Stage()`, so
+  `LocalStage` there is planned from that display's size and density (the Thor's 1240 × 1080 panel is a Compact stage), independent of the main panel's.
 - **Shape simulator** (debug builds, `ShapeSimulator` in `src/debug`): `--es preview_shape <W>x<H>@<dpi>` draws the whole shell, or any `preview_screen`,
   in a centered box of that pixel size (scaled down uniformly when it does not fit; the density is scaled with it, so the dp maths is the panel's)
   with `LocalDensity` set to the simulated density. Outside the box it is black; a caption at the bottom-left names the size, dpi, dp size, stage and

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Placeholder text on the companion screen (second panel of a dual-screen device) while a stream runs -->
+    <string name="companion_streaming">Streaming</string>
+</resources>

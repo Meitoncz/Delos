@@ -122,6 +122,16 @@
                 <data android:scheme="art" />
             </intent-filter>
         </activity>
+        <!-- The companion screen on the second panel of a dual-screen device (docs/DUAL_SCREEN.md). Started only by the running shell or
+             stream (CompanionHost) on the other display, in a task of its own that never shows in Recents; its window takes no key focus. -->
+        <activity
+            android:name=".shell.companion.CompanionActivity"
+            android:exported="false"
+            android:taskAffinity=""
+            android:excludeFromRecents="true"
+            android:theme="@style/Theme.Delos.Companion"
+            android:resizeableActivity="true"
+            android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize|layoutDirection" />
         <!-- Small hack to support launcher shortcuts without relaunching over and over again when the back button is pressed -->
         <activity
             android:name=".ShortcutTrampoline"

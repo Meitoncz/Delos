@@ -292,6 +292,9 @@ class ShellState(initial: Screen) {
     /** Key ("pc uuid/app id") of the focused game on the home screen. */
     var homeGame by mutableStateOf<String?>(null)
 
+    /** The PC whose games the shell shows (null before a PC is chosen); the companion screen shows it (docs/DUAL_SCREEN.md). */
+    var pcName by mutableStateOf<String?>(null)
+
     /** The game background behind the home screen (the focused game's art). */
     var hero by mutableStateOf<GameArt?>(null)
 

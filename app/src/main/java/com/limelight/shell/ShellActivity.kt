@@ -21,6 +21,8 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.limelight.shell.companion.CompanionHost
+import com.limelight.shell.companion.CompanionState
 import com.limelight.shell.data.ArtworkStore
 import com.limelight.shell.data.GameMetadataStore
 import com.limelight.shell.data.LocalGameMetadata
@@ -34,6 +36,7 @@ import com.limelight.shell.data.ProfileStore
 import com.limelight.shell.settings.Appearance
 import com.limelight.shell.settings.AppearanceStore
 import com.limelight.shell.settings.AppLanguage
+import com.limelight.shell.settings.SettingsTab
 import com.limelight.shell.settings.StartupStore
 import com.limelight.shell.ui.Feedback
 import com.limelight.shell.ui.LocalDelosColors
@@ -60,6 +63,13 @@ class ShellActivity : ComponentActivity() {
     private lateinit var profiles: ProfileStore
     private val keys = GlobalKeys()
 
+    /** The second panel of a dual-screen device (docs/DUAL_SCREEN.md): shown from `onResume` to `onStop` while a companion display exists. */
+    private var companion: CompanionHost? = null
+    private var placement: ShellPlacement? = null
+
+    /** This instance started the shell again on the main panel and ends: nothing in `onCreate` after its first lines was set up. */
+    private var movedToMain = false
+
     /** The Language row's preference (the current profile's). The app locale is the truth; the row mirrors it ([AppLanguage]). */
     private var languageSettings: SharedPreferences? = null
     private val languageListener = SharedPreferences.OnSharedPreferenceChangeListener { prefs, key ->
@@ -80,6 +90,11 @@ class ShellActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        placement = ShellPlacement(this)
+        if (savedInstanceState == null && placement?.moveOnCreate() == true) {
+            movedToMain = true
+            return
+        }
         hideSystemBars()
         // No system snapshot of this window (Android 13+): coming back from a stream it would show the last frame from before, the launch
         // tunnel, for a moment
@@ -90,7 +105,9 @@ class ShellActivity : ComponentActivity() {
         bindLanguage()
         appearance = AppearanceStore(this, profiles::settings)
         repo = PcRepository(this, profiles::settings)
-        val shell = ShellState(if (profiles.profiles.value.all.isEmpty()) Screen.Boot() else Screen.Start)
+        val settingsAgain = intent.getBooleanExtra(ShellPlacement.EXTRA_RESTORE_SETTINGS, false) && profiles.profiles.value.all.isNotEmpty()
+        val shell = ShellState(if (profiles.profiles.value.all.isEmpty()) Screen.Boot() else if (settingsAgain) Screen.Settings else Screen.Start)
+        if (settingsAgain) shell.settingsTab = SettingsTab.DISPLAY
         DelosToast.register(this, show = { text, durationMs, kind -> shell.showToast(text, durationMs = durationMs, kind = kind) })
         metadata = GameMetadataStore(this, profiles::settings)
         val startup = StartupStore(profiles::settings)
@@ -129,6 +146,7 @@ class ShellActivity : ComponentActivity() {
             if (simulator != null) simulator.Host(screen) else screen()
         }
         feedback.view = window.decorView
+        companion = CompanionHost(this, appearance.appearance) { CompanionState.Shell(shell.pcName) }
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -152,6 +170,11 @@ class ShellActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
+        companion?.stop()
+        if (movedToMain) {
+            super.onDestroy()
+            return
+        }
         languageSettings?.unregisterOnSharedPreferenceChangeListener(languageListener)
         profiles.streamProfiles.close()
         repo.unbind()
@@ -161,8 +184,17 @@ class ShellActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        if (movedToMain) return
         languageSettings?.let { AppLanguage.mirror(this, it) }
         profiles.streamProfiles.resume()
+        placement?.start()
+        companion?.start()
+    }
+
+    override fun onStop() {
+        placement?.stop()
+        companion?.stop()
+        super.onStop()
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {

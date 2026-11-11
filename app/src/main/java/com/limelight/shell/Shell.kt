@@ -7,6 +7,7 @@ import androidx.annotation.StringRes
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import com.limelight.R
+import com.limelight.display.DualScreen
 import com.limelight.shell.ui.textResources
 import android.view.KeyEvent
 import androidx.activity.compose.BackHandler
@@ -377,7 +378,7 @@ fun Shell(
         // whole screen it only fades the stream window in over this one (a clip reveal also shifts it up a
         // little), and that starts with the same scene.
         val options = activity?.window?.decorView?.let { root ->
-            ActivityOptions.makeScaleUpAnimation(root, 0, 0, root.width, root.height).toBundle()
+            DualScreen.placeOnMain(root.context, ActivityOptions.makeScaleUpAnimation(root, 0, 0, root.width, root.height)).toBundle()
         }
         activity?.startActivity(launch.intent, options)
     }
@@ -477,6 +478,9 @@ fun Shell(
         is Library.Offline -> l.pc
         else -> null
     }
+    // The companion screen of a dual-screen device shows the same PC as the status bar
+    val companionPc = pc?.name.takeIf { shell.screen.main }
+    LaunchedEffect(companionPc) { shell.pcName = companionPc }
 
     // The side menu belongs to the main screens and the start screen, not to the first launch
     val sideMenu = shell.screen.main || shell.screen == Screen.Start

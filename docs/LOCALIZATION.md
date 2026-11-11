@@ -144,6 +144,7 @@ needs the keys, but identical names keep diffs reviewable.
 | `strings_shell.xml` | top bar, side menu, hint bar, link prompts |
 | `strings_firstrun.xml` | first run: avatar and profile creation |
 | `strings_settings_screen.xml` | native settings screens: titles, descriptions, search, letter picker |
+| `strings_companion.xml` | the companion screen on the second panel of a dual-screen device (docs/DUAL_SCREEN.md) |
 
 Add an area file (and a row here) rather than overloading an unrelated one.
 

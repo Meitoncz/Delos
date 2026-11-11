@@ -50,6 +50,7 @@ import com.limelight.utils.PanZoomHandler;
 import com.limelight.utils.ServerHelper;
 import com.limelight.utils.ShortcutHelper;
 import com.limelight.shell.StreamLoader;
+import com.limelight.shell.companion.CompanionHost;
 import com.limelight.shell.StreamOutcome;
 import com.limelight.shell.StreamResultKind;
 import com.limelight.shell.StreamResultKt;
@@ -302,6 +303,8 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
         // the first frame, as in the new UI
         windowController.hideSystemUiNow();
         spinner = StreamLoader.show(this, prefConfig);
+        // The second panel of a dual-screen device (docs/DUAL_SCREEN.md); shows nothing when there is none or this stream is on an external display
+        companionHost = CompanionHost.forStream(this, getIntent().getStringExtra(EXTRA_PC_NAME));
 
         Display currentDisplay = null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -697,6 +700,7 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
     }
 
     private DisplayManager.DisplayListener externalDisplayListener;
+    private CompanionHost companionHost;
 
     private void listenForExternalDisplayRemoval() {
         DisplayManager displayManager = (DisplayManager) getSystemService(Context.DISPLAY_SERVICE);
@@ -1248,7 +1252,14 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        if (companionHost != null) companionHost.start();
+    }
+
+    @Override
     protected void onDestroy() {
+        if (companionHost != null) companionHost.stop();
         if (externalDisplayListener != null) {
             ((DisplayManager) getSystemService(Context.DISPLAY_SERVICE)).unregisterDisplayListener(externalDisplayListener);
             externalDisplayListener = null;
@@ -1307,6 +1318,7 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
     @Override
     protected void onStop() {
         super.onStop();
+        if (companionHost != null) companionHost.stop();
 
         if (virtualController != null) {
             virtualController.hide();
