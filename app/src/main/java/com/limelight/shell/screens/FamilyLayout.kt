@@ -14,6 +14,11 @@ internal object HelpDockLayout {
     const val MIN_HEIGHT = 210f
     const val MAX_HEIGHT = 270f
 
+    /** Stages under this height (the Pocket Micro's 722) trade dock height for list rows: the dock gives way down to [SHORT_MIN_HEIGHT]. */
+    const val SHORT_STAGE = 800f
+    const val SHORT_MIN_HEIGHT = 168f
+    const val ROW_PEEK = 30f
+
     /** The room between the list and the dock, and between the header and the scrolling body. */
     const val LIST_GAP = 16f
     const val BODY_GAP = 14f
@@ -30,7 +35,7 @@ internal object HelpDockLayout {
     const val LEGEND_GAP = 24f
 
     /** How far the body fades at an edge it continues behind. */
-    const val FADE = 22f
+    const val FADE = 36f
 
     /** About a quarter of the stage's height. */
     fun height(stageHeight: Float): Float = (stageHeight * .25f).coerceIn(MIN_HEIGHT, MAX_HEIGHT)
@@ -41,6 +46,11 @@ internal object HelpDockLayout {
      * both (under about 950 px high) shows fewer whole rows, the next one fading over the dock.
      */
     fun height(stageHeight: Float, rowsTop: Float, bottom: Float, rowHeight: Float): Float {
+        if (stageHeight < SHORT_STAGE) {
+            // A short stage keeps two whole rows and a peek of the third over the dock, which gives way down to SHORT_MIN_HEIGHT (its body scrolls)
+            val twoRowsAndPeek = 2f * rowHeight + 2f * ROW_GAP + ROW_PEEK
+            return minOf(height(stageHeight), stageHeight - rowsTop - bottom - LIST_GAP - twoRowsAndPeek).coerceAtLeast(SHORT_MIN_HEIGHT)
+        }
         val threeRows = 3f * rowHeight + 2f * ROW_GAP
         return minOf(height(stageHeight), stageHeight - rowsTop - bottom - LIST_GAP - threeRows).coerceAtLeast(MIN_HEIGHT)
     }
