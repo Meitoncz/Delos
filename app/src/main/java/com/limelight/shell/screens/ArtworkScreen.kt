@@ -842,7 +842,7 @@ private fun FilterSheetLayer(
         ) {
             Row(Modifier.fillMaxWidth().padding(bottom = 8.px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy((if (stage.shape == StageShape.COMPACT) 16 else 24).px)) {
                 BasicText(stringResource(R.string.filters_art_title), style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 34.tpx))
-                if (ready != null) {
+                if (ready != null && stage.shape != StageShape.COMPACT) {
                     BasicText(
                         tab.resultLine(res, ready.images.size, ready.total, all = false),
                         Modifier.clip(CircleShape).background(colors.accent.copy(alpha = .16f)).border(1.px, colors.accent.copy(alpha = .45f), CircleShape).padding(horizontal = 22.px, vertical = 8.px),
@@ -867,6 +867,14 @@ private fun FilterSheetLayer(
                     (if (compactSheet) Modifier.heightIn(max = (stage.stageHeight - 262f - 110f - 100f).coerceAtLeast(120f).px).verticalScroll(optionsScroll) else Modifier),
                     verticalArrangement = Arrangement.spacedBy(6.px),
                 ) {
+                    // Compact: the live count that the header has no room for
+                    if (compactSheet && ready != null) {
+                        BasicText(
+                            tab.resultLine(res, ready.images.size, ready.total, all = false),
+                            Modifier.clip(CircleShape).background(colors.accent.copy(alpha = .16f)).border(1.px, colors.accent.copy(alpha = .45f), CircleShape).padding(horizontal = 22.px, vertical = 6.px),
+                            style = TextStyle(color = colors.accent3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 22.tpx),
+                        )
+                    }
                     if (ArtFilterRules.hasType(kind)) {
                         SheetRow(Symbols.MOVIE, stringResource(R.string.filters_art_row_type)) {
                             ArtType.entries.forEach { type ->
@@ -908,7 +916,7 @@ private fun SheetRow(icon: String, title: String, options: @Composable () -> Uni
     val colors = LocalDelosColors.current
     val compact = LocalStage.current.shape == StageShape.COMPACT
     Row(Modifier.fillMaxWidth().padding(vertical = 2.px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy((if (compact) 20 else 30).px)) {
-        Row(Modifier.width((if (compact) 250 else 270).px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy((if (compact) 14 else 18).px)) {
+        Row(Modifier.width((if (compact) 310 else 270).px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy((if (compact) 14 else 18).px)) {
             Box(Modifier.size((if (compact) 44 else 52).px).clip(CircleShape).background(colors.accent.copy(alpha = .18f)), contentAlignment = Alignment.Center) {
                 Symbol(icon, 28.tpx, colors.accent2, filled = true)
             }
