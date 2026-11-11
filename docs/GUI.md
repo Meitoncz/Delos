@@ -843,10 +843,10 @@ activity keeps its own orientation logic) and supports windows from 1:1 up to 21
     --es preview_screen home --es preview_state row
   ```
 
-- **Screen previews with fake data** (debug builds, `ScreenPreviews` in `src/debug`, no PC or network): `--es preview_screen <home|artwork|devices|start|pair|filter|dialog|loader|result|settings|settings_search|debug_info|profile|game_options|side_menu|home_context|problem|stream_exit|boot|create_profile|pair_pc|stream_stats>`,
+- **Screen previews with fake data** (debug builds, `ScreenPreviews` in `src/debug`, no PC or network): `--es preview_screen <home|artwork|devices|start|pair|filter|dialog|loader|result|settings|settings_search|debug_info|profile|game_options|side_menu|home_context|problem|stream_exit|boot|create_profile|pair_pc|stream_stats|stream_osc|stream_video>`,
   `home`, `side_menu` and `home_context` (the game menu opened by the Start key 3 s after the start) with `--es preview_state <row|grid>`, `stream_stats` with `--es preview_state <full|compact>`
   and `--es preview_position <TOP_LEFT|…>`; they run next to the older previews (`context_menu`, `top_menu`, `settings_tabs`, `settings_list`,
-  `game_settings`, `stream_menu`, `full_keyboard`, `toast`). `settings`, `settings_search`, `debug_info`, `profile` and `game_options` are the real screens (`game_settings` is the older component preview of the per-game list); the preview tells the settings capability probe there is no PyroWave, because its native Vulkan probe dies on the emulator's SwiftShader.
+  `game_settings`, `stream_menu`, `full_keyboard`, `toast`). `stream_osc` and `stream_video` draw the stream's own geometry (see "Stream side" below). `settings`, `settings_search`, `debug_info`, `profile` and `game_options` are the real screens (`game_settings` is the older component preview of the per-game list); the preview tells the settings capability probe there is no PyroWave, because its native Vulkan probe dies on the emulator's SwiftShader.
 - **Contact sheets** (`tools/layout/`): `shapes.txt` lists the shapes (names, `W x H @ dpi`, optional cutout), `screens.txt` the previews. `sheets.sh` needs the
   fail-closed adb wrapper and the stream gate helper:
 
@@ -860,6 +860,38 @@ activity keeps its own orientation logic) and supports windows from 1:1 up to 21
   never presses anything, and starts the normal shell again at the end. Contact sheets land in `<label>/sheets/by-screen/` and `by-shape/`.
   `compare` ignores the status bar's Wi-Fi, battery and clock by default (`--mask none` compares everything, `--tolerance N` allows small differences).
 - The displays of the target handhelds and the class each gets: [HANDHELD_DEVICES.md](HANDHELD_DEVICES.md).
+- **Stream side** (issue #9, phase D; `OscGeometry`, `OscDefaultLayout`, `VideoFit`, `KeyBoardGeometry`, `StreamWindowController.requestedOrientation`: pure, covered by
+  `OscGeometryTest`, `KeyBoardGeometryTest`, `VideoFitTest`, `StreamWindowControllerTest` over 1:1, 5:4, 31:27, 4:3, 3:2, 16:10, 16:9 (four resolutions), 20:9, 21:9, 32:9 and
+  portrait). Every 16:9 output is pinned against the old arithmetic (copied into the tests), so 16:9 at any resolution is identical; so is every shape of 3:2 and wider.
+  - *On-screen controls* (`VirtualController`, default layout on the 128 × 72 grid, one unit is height / 72): the grid is the old one from **3:2 up** (108 units wide or
+    more): left cluster against the left edge, right cluster against the right edge, Back / Guide / Start and the trackpad centered, so a wider panel only widens the gap in
+    the middle (what the old `rightDisplacement` did, but it went negative and the clusters crossed below 16:9). **Squarer than 3:2** (4:3, 5:4, 31:27, 1:1) the whole layout
+    shrinks by `width / (1.5 × height)` (8/9 at 4:3, 2/3 at 1:1) so the clusters and the middle row still fit side by side; the upper controls (sticks, face buttons,
+    triggers) keep to the top edge, the lower ones (D-pad, right stick, L3 / R3, Back / Start, trackpad) to the bottom edge; buttons keep their proportions and nothing
+    overlaps that did not at 16:9. Smallest face button at 1:1: 6.7 units, 67 px on a 720 px square (about 6.6 mm at the RG Cube's 257 ppi); there is no minimum size.
+  - *Saved layouts* were absolute pixels of the panel they were saved on (not relative), so a layout from the Odin was off-screen on a 960 px panel. Each saved element now
+    also stores the panel size (`REF_W`, `REF_H`); loading on another size scales by `min(width / REF_W, height / REF_H)` (a button stays as round as it was) and keeps the
+    distance to the nearest edge (left, right or middle by thirds of the old width, top, bottom or middle by thirds of the old height), so a layout made on 16:9 keeps its
+    right-hand controls on the right edge of a 21:9 panel. Layouts saved before this (no panel size) keep their pixels but are pulled onto the screen. The result is always on
+    the panel. `--es preview_saved_from <W>x<H>` shows this on the emulator.
+  - *Key grid* (`KeyBoardController`, the editable key overlay; hidden in the new UI, code kept): same saved-layout handling; the keys were already limited to an eighteenth of the
+    width, the D-pad is anchored to the right edge and both it and the stick are now clamped onto the panel. At 1:1 a key is 4 units, 40 px on 720 (about 4 mm): too small to
+    use by touch; the **Full keyboard** (Compose, stage based) is the keyboard to use there and was checked at 1:1, 4:3, 31:27 and 21:9.
+  - *Orientation*: `isSquarishScreen` keeps its threshold (long side / short side under 1.3: 1:1, 5:4, the 31:27 panels; 4:3 at 1.333 is not squarish and keeps the
+    "lock to the current orientation" rule). A squarish panel shows a stream about as large in either orientation, so it now always follows the **shape of the video**
+    (landscape for 16:9 or square, portrait for a taller stream): it used to be `FULL_USER` (any orientation, flipping with the accelerometer of a tilted handheld) unless the
+    on-screen controls or a native resolution asked for a lock; a square native stream (the RG Cube's 720 × 720) used to lock **portrait**, now landscape. The on-screen
+    controls still force landscape unless the resolution is native.
+  - *Video rectangle* (`VideoFit.measure`, used by `StreamContainer` and `StreamView`): **Fit** keeps all of the picture and bars the long side of what is left over
+    (16:9 on 4:3 is 960 × 540 with 90 px bars, on 1:1 720 × 405 with 157 / 158 px bars, on 21:9 pillarbox 300 px each side), **Fill** covers the panel and the parent crops the
+    overflow evenly (16:9 on 1:1 keeps the middle 720 of 1280 px, 56 %), **Stretch** fills it whatever the aspect. There is no integer-scale or 1:1 pixel mode in this app.
+    `--es preview_screen stream_video --es preview_state <fit|fill|stretch> [--es preview_video <W>x<H>]` draws it.
+  - *Stream shell parts*: the loader, result card, exit portal and statistics panel already run on the stage and were checked at 1:1 and 4:3 (contact sheets); in the
+    compact statistics line at 1:1 the last figure wraps onto a second line. The two backdrop blur radii (`StreamExit`, `StreamMenu`) are `50 × min(width / 1920, height / 1080)`
+    px, which is the stage scale (not the legibility floor), left as it is; nothing else in `binding/` or the stream shell hard-codes 1920 / 1080 / 16:9.
+  - *Not verified* (the emulator cannot run a stream: the native library dies with SIGILL): the stream itself on any panel, the on-screen controls touched for real (previews draw the real
+    views without touch), the orientation lock on a device, the cutout / grip-covered edges of a phone in a grip (the window is the display metrics; no safe-area insets are applied to the
+    controls), and the physical size of controls on the real panels (needs the Odin, an RG Cube / 406H, a Thor).
 - **Screens on a wider or taller stage** (phase B, screens): every absolute 1920 / 1080 of a screen is now `LocalStage.current.stageWidth` / `stageHeight` with the
   same value at 1920 × 1080. Settings: the Search pill keeps its distance from the right edge (x = stage width − 390). Per-game settings: the header is the
   stage width less the two 150 px margins and the list runs from x 132 to 38 px short of the right-anchored 520 px panel (stage width − 840 wide). Artwork:

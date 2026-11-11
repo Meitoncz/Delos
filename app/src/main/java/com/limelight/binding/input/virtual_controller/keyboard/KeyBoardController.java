@@ -31,6 +31,7 @@ import com.limelight.GameMenu;
 import com.limelight.LimeLog;
 import com.limelight.R;
 import com.limelight.binding.input.ControllerHandler;
+import com.limelight.binding.input.virtual_controller.OscGeometry;
 import com.limelight.nvstream.NvConnection;
 import com.limelight.preferences.PreferenceConfiguration;
 import com.limelight.utils.KeyConfigHelper;
@@ -78,6 +79,10 @@ public class KeyBoardController {
 
     private Vibrator vibrator;
     private List<keyBoardVirtualControllerElement> elements = new ArrayList<>();
+
+    // The screen size the keys are laid out on; a saved layout is stored against it
+    private int panelWidth;
+    private int panelHeight;
 
     // The keys hidden by the last "Clear all", kept until the editor step ends so the button can bring them back
     private List<keyBoardVirtualControllerElement> clearedElements = null;
@@ -311,11 +316,28 @@ public class KeyBoardController {
         }
     }
 
+    /** The size in pixels of the screen the keys were laid out on (and that a saved layout is stored against). */
+    int getPanelWidth() {
+        return panelWidth;
+    }
+
+    int getPanelHeight() {
+        return panelHeight;
+    }
+
+    /** Lays the keys out on the window's current size. */
     public void refreshLayout() {
+        DisplayMetrics screen = context.getResources().getDisplayMetrics();
+        refreshLayout(screen.widthPixels, screen.heightPixels);
+    }
+
+    /** Lays the keys out on a screen of {@code screenWidth} x {@code screenHeight} pixels. */
+    public void refreshLayout(int screenWidth, int screenHeight) {
         removeElements();
 
-        DisplayMetrics screen = context.getResources().getDisplayMetrics();
-        int buttonSize = (int) (screen.heightPixels * 0.06f);
+        panelWidth = screenWidth;
+        panelHeight = screenHeight;
+        int buttonSize = (int) (screenHeight * 0.06f);
 
         // Configure button at original position
         FrameLayout.LayoutParams configParams = new FrameLayout.LayoutParams(buttonSize, buttonSize);
@@ -331,7 +353,7 @@ public class KeyBoardController {
         
         // Calculate center positions
         int totalWidth = clearAllWidth + addKeysWidth + 3; // 3 pixels spacing
-        int screenCenter = screen.widthPixels / 2;
+        int screenCenter = screenWidth / 2;
         int startX = screenCenter - (totalWidth / 2);
 
         // Clear All button
@@ -353,7 +375,7 @@ public class KeyBoardController {
         frame_layout.addView(buttonAddKeys, addParams);
 
         // Apply default layout
-        KeyBoardControllerConfigurationLoader.createDefaultLayout(this, context, conn);
+        KeyBoardControllerConfigurationLoader.createDefaultLayout(this, context, conn, screenWidth, screenHeight);
         KeyBoardControllerConfigurationLoader.loadFromPreferences(this, context);
 
         // Rebuilding adds the buttons visible; keep the state the user chose
@@ -556,18 +578,8 @@ public class KeyBoardController {
             builder.setPositiveButton(context.getString(R.string.keyboard_add), (dialog, which) -> {
                 // New keys would clash with the hidden ones "Restore" brings back
                 forgetCleared();
-                DisplayMetrics screen = context.getResources().getDisplayMetrics();
-                int height = screen.heightPixels;
-                
                 // Calculate button size using the same logic as createDefaultLayout
-                int BUTTON_SIZE = 10;
-                int w = KeyBoardControllerConfigurationLoader.screenScale(BUTTON_SIZE, height);
-                int maxW = screen.widthPixels / 18;
-
-                if (w > maxW) {
-                    BUTTON_SIZE = KeyBoardControllerConfigurationLoader.screenScaleSwitch(maxW, height);
-                    w = KeyBoardControllerConfigurationLoader.screenScale(BUTTON_SIZE, height);
-                }
+                int w = KeyBoardGeometry.keySize(panelWidth, panelHeight);
 
                 Set<String> existingElementIds = new HashSet<>();
                 List<Rect> existingPositions = new ArrayList<>();
@@ -834,9 +846,5 @@ public class KeyBoardController {
 
         // If no space found, place at a default location (might overlap)
         return new Point(spacing, startY);
-    }
-
-    private int screenScale(int units, int height) {
-        return (int) (((float) height / (float) 72) * (float) units);
     }
 }

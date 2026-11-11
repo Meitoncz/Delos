@@ -16,6 +16,7 @@ import android.view.View;
 import android.widget.FrameLayout;
 
 import com.limelight.DelosStreamActivity;
+import com.limelight.binding.input.virtual_controller.OscGeometry;
 import com.limelight.binding.input.virtual_controller.VirtualController;
 
 import org.json.JSONException;
@@ -409,16 +410,24 @@ public abstract class keyBoardVirtualControllerElement extends View {
         configuration.put("HEIGHT", layoutParams.height);
         configuration.put("ENABLED", enabled);
         configuration.put("HIDDEN", hidden);
+        // The screen the numbers above are pixels of, so that another screen shape can carry them over (see OscGeometry.mapSaved)
+        configuration.put("REF_W", virtualController.getPanelWidth());
+        configuration.put("REF_H", virtualController.getPanelHeight());
         return configuration;
     }
 
     public void loadConfiguration(JSONObject configuration) throws JSONException {
         FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) getLayoutParams();
 
-        layoutParams.leftMargin = configuration.getInt("LEFT");
-        layoutParams.topMargin = configuration.getInt("TOP");
-        layoutParams.width = configuration.getInt("WIDTH");
-        layoutParams.height = configuration.getInt("HEIGHT");
+        // Saved as pixels of the screen it was made on (layouts from before that was stored: of this one); kept on this screen's shape
+        int[] rect = OscGeometry.mapSaved(configuration.getInt("LEFT"), configuration.getInt("TOP"),
+                configuration.getInt("WIDTH"), configuration.getInt("HEIGHT"),
+                configuration.optInt("REF_W", 0), configuration.optInt("REF_H", 0),
+                virtualController.getPanelWidth(), virtualController.getPanelHeight());
+        layoutParams.leftMargin = rect[0];
+        layoutParams.topMargin = rect[1];
+        layoutParams.width = rect[2];
+        layoutParams.height = rect[3];
         enabled = configuration.getBoolean("ENABLED");
         hidden = configuration.optBoolean("HIDDEN", false);
         

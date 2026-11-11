@@ -50,6 +50,10 @@ public class VirtualController {
     private final Context context;
     private final Handler handler;
 
+    // The screen size the controls are laid out on; a saved layout is stored against it
+    private int panelWidth;
+    private int panelHeight;
+
     private final Runnable delayedRetransmitRunnable = new Runnable() {
         @Override
         public void run() {
@@ -75,6 +79,9 @@ public class VirtualController {
         this.frame_layout = layout;
         this.context = context;
         this.handler = new Handler(Looper.getMainLooper());
+        DisplayMetrics screen = context.getResources().getDisplayMetrics();
+        this.panelWidth = screen.widthPixels;
+        this.panelHeight = screen.heightPixels;
         // Delos: the profile's main color for pressed controls
         OscStyle.refresh(context);
 
@@ -212,22 +219,57 @@ public class VirtualController {
         }
     }
 
+    /** The size in pixels of the screen the controls were laid out on (and that a saved layout is stored against). */
+    int getPanelWidth() {
+        return panelWidth;
+    }
+
+    int getPanelHeight() {
+        return panelHeight;
+    }
+
+    /** Lays the controls out on the window's current size. */
     public void refreshLayout() {
+        DisplayMetrics screen = context.getResources().getDisplayMetrics();
+        refreshLayout(screen.widthPixels, screen.heightPixels);
+    }
+
+    /** Lays the controls out on a screen of {@code width} x {@code height} pixels (the real screen's size; the debug preview passes another shape's). */
+    public void refreshLayout(int width, int height) {
+        layOut(width, height, true, null);
+    }
+
+    /**
+     * Debug previews: the default layout only, on a screen of {@code width} x {@code height} pixels, without the user's saved one, for
+     * the given settings.
+     */
+    public void layOutDefault(int width, int height, PreferenceConfiguration config) {
+        layOut(width, height, false, config);
+    }
+
+    private void layOut(int width, int height, boolean loadSaved, PreferenceConfiguration config) {
         removeElements();
 
-        DisplayMetrics screen = context.getResources().getDisplayMetrics();
+        panelWidth = width;
+        panelHeight = height;
 
-        int buttonSize = (int)(screen.heightPixels*0.06f);
+        int buttonSize = (int)(height*0.06f);
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(buttonSize, buttonSize);
         params.leftMargin = 15;
         params.topMargin = 15;
         frame_layout.addView(buttonConfigure, params);
 
         // Start with the default layout
-        VirtualControllerConfigurationLoader.createDefaultLayout(this, context);
+        if (config == null) {
+            VirtualControllerConfigurationLoader.createDefaultLayout(this, context, width, height);
+        } else {
+            VirtualControllerConfigurationLoader.createDefaultLayout(this, context, width, height, config);
+        }
 
         // Apply user preferences onto the default layout
-        VirtualControllerConfigurationLoader.loadFromPreferences(this, context);
+        if (loadSaved) {
+            VirtualControllerConfigurationLoader.loadFromPreferences(this, context);
+        }
 
         // Rebuilding adds the elements visible; keep the state the user chose
         if (shown) {

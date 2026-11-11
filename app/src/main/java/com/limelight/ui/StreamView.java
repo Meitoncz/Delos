@@ -67,28 +67,10 @@ public class StreamView extends SurfaceView {
         }
 
         // Based on code from: https://www.buzzingandroid.com/2012/11/easy-measuring-of-custom-views-with-specific-aspect-ratio/
-        int widthSize = MeasureSpec.getSize(widthMeasureSpec);
-        int heightSize = MeasureSpec.getSize(heightMeasureSpec);
-
-        int measuredHeight, measuredWidth;
-        if (fillDisplay) {
-            if (widthSize < heightSize * desiredAspectRatio) {
-                measuredHeight = heightSize;
-                measuredWidth = (int)(heightSize * desiredAspectRatio);
-            } else {
-                measuredWidth = widthSize;
-                measuredHeight = (int)(widthSize / desiredAspectRatio);
-            }
-        }
-        else {
-            if (widthSize > heightSize * desiredAspectRatio) {
-                measuredHeight = heightSize;
-                measuredWidth = (int)(measuredHeight * desiredAspectRatio);
-            } else {
-                measuredWidth = widthSize;
-                measuredHeight = (int)(measuredWidth / desiredAspectRatio);
-            }
-        }
+        int[] size = VideoFit.measure(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.getSize(heightMeasureSpec),
+                desiredAspectRatio, fillDisplay);
+        int measuredWidth = size[0];
+        int measuredHeight = size[1];
 
         setMeasuredDimension(measuredWidth, measuredHeight);
     }

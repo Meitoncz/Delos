@@ -34,17 +34,25 @@ public class StreamWindowControllerTest {
     }
 
     @Test
-    public void squarishDisplayAllowsAnyOrientationWithoutAReasonToLock() {
-        assertEquals(ActivityInfo.SCREEN_ORIENTATION_FULL_USER,
+    public void squarishDisplayFollowsTheVideoShapeWithoutAReasonToLock() {
+        // 1:1 and 31:27 handhelds streaming 16:9: landscape whichever way the device is held (it used to turn with the sensor)
+        assertEquals(ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE,
                 StreamWindowController.requestedOrientation(true, false, false, 1920, 1080, LANDSCAPE));
-        assertEquals(ActivityInfo.SCREEN_ORIENTATION_FULL_USER,
+        assertEquals(ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE,
                 StreamWindowController.requestedOrientation(true, false, false, 1920, 1080, PORTRAIT));
+        assertEquals(ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE,
+                StreamWindowController.requestedOrientation(true, false, false, 1920, 1080, Configuration.ORIENTATION_SQUARE));
+        // A taller stream (the inverted resolution of a portrait stream) is portrait
+        assertEquals(ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT,
+                StreamWindowController.requestedOrientation(true, false, false, 1080, 1920, LANDSCAPE));
     }
 
     @Test
-    public void squarishDisplayWithOnScreenControlsIsLandscape() {
+    public void squarishDisplayWithOnScreenControlsIsLandscapeUnlessTheResolutionIsNative() {
         assertEquals(ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE,
                 StreamWindowController.requestedOrientation(true, true, false, 1080, 1920, PORTRAIT));
+        assertEquals(ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE,
+                StreamWindowController.requestedOrientation(true, true, false, 1920, 1080, PORTRAIT));
     }
 
     @Test
@@ -53,8 +61,13 @@ public class StreamWindowControllerTest {
                 StreamWindowController.requestedOrientation(true, false, true, 2208, 1768, PORTRAIT));
         assertEquals(ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT,
                 StreamWindowController.requestedOrientation(true, false, true, 1768, 2208, LANDSCAPE));
-        // A square video counts as portrait, and the native resolution wins over the on-screen controls
+        // The native resolution wins over the on-screen controls
         assertEquals(ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT,
+                StreamWindowController.requestedOrientation(true, true, true, 1768, 2208, LANDSCAPE));
+        // A square video (the RG Cube's 720x720) counts as landscape, like a handheld held normally
+        assertEquals(ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE,
+                StreamWindowController.requestedOrientation(true, false, true, 720, 720, PORTRAIT));
+        assertEquals(ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE,
                 StreamWindowController.requestedOrientation(true, true, true, 1800, 1800, LANDSCAPE));
     }
 

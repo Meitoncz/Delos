@@ -368,16 +368,24 @@ public abstract class VirtualControllerElement extends View {
         configuration.put("WIDTH", layoutParams.width);
         configuration.put("HEIGHT", layoutParams.height);
         configuration.put("ENABLED", enabled);
+        // The screen the numbers above are pixels of, so that another screen shape can carry them over (see OscGeometry.mapSaved)
+        configuration.put("REF_W", virtualController.getPanelWidth());
+        configuration.put("REF_H", virtualController.getPanelHeight());
         return configuration;
     }
 
     public void loadConfiguration(JSONObject configuration) throws JSONException {
         FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) getLayoutParams();
 
-        layoutParams.leftMargin = configuration.getInt("LEFT");
-        layoutParams.topMargin = configuration.getInt("TOP");
-        layoutParams.width = configuration.getInt("WIDTH");
-        layoutParams.height = configuration.getInt("HEIGHT");
+        // Saved as pixels of the screen it was made on (layouts from before that was stored: of this one); kept on this screen's shape
+        int[] rect = OscGeometry.mapSaved(configuration.getInt("LEFT"), configuration.getInt("TOP"),
+                configuration.getInt("WIDTH"), configuration.getInt("HEIGHT"),
+                configuration.optInt("REF_W", 0), configuration.optInt("REF_H", 0),
+                virtualController.getPanelWidth(), virtualController.getPanelHeight());
+        layoutParams.leftMargin = rect[0];
+        layoutParams.topMargin = rect[1];
+        layoutParams.width = rect[2];
+        layoutParams.height = rect[3];
         enabled = configuration.getBoolean("ENABLED");
         setVisibility(enabled ? VISIBLE: GONE);
         requestLayout();

@@ -106,7 +106,7 @@ public final class StreamWindowController implements View.OnSystemUiVisibilityCh
         return currentOrientation;
     }
 
-    /** Locks to the chosen orientation, except on squarish displays (see {@link #requestedOrientation}). */
+    /** Locks to the chosen orientation; a squarish display follows the video's shape instead (see {@link #requestedOrientation}). */
     public void applyPreferredOrientation() {
         Display display = getActiveDisplay(activity, prefConfig);
         activity.setRequestedOrientation(requestedOrientation(
@@ -116,37 +116,33 @@ public final class StreamWindowController implements View.OnSystemUiVisibilityCh
                 host.videoWidth(), host.videoHeight(), currentOrientation));
     }
 
-    /** The {@code ActivityInfo.SCREEN_ORIENTATION_*} to request. */
+    /**
+     * The {@code ActivityInfo.SCREEN_ORIENTATION_*} to request.
+     *
+     * <p>A squarish display (narrower than 1.3:1, see {@code PreferenceConfiguration.isSquarishScreen}: 1:1, 5:4, the
+     * 31:27 panels; 4:3 is not squarish) shows a stream about as large in either orientation, so turning it would
+     * only move the controls and the keyboard around and make a handheld that is tilted while playing flip the
+     * stream. It therefore always follows the shape of the video: landscape for a 16:9 or square stream, portrait
+     * for a taller one (the user's rotation lock still applies, and the upside-down landscape stays possible).
+     * The one exception is the on-screen controls with a stream that is not at native resolution: they do not
+     * support portrait, so the stream stays landscape.
+     */
     static int requestedOrientation(boolean squarishDisplay, boolean onscreenController, boolean nativeResolution,
                                     int videoWidth, int videoHeight, int currentOrientation) {
-        // For semi-square displays, we use more complex logic to determine which orientation to use (if any)
         if (squarishDisplay) {
-            int desiredOrientation = Configuration.ORIENTATION_UNDEFINED;
+            int desiredOrientation = videoWidth >= videoHeight
+                    ? Configuration.ORIENTATION_LANDSCAPE : Configuration.ORIENTATION_PORTRAIT;
 
-            // OSC doesn't properly support portrait displays, so don't use it in portrait mode by default
-            if (onscreenController) {
+            // OSC doesn't properly support portrait displays, so don't use it in portrait mode unless the user chose a native resolution
+            if (onscreenController && !nativeResolution) {
                 desiredOrientation = Configuration.ORIENTATION_LANDSCAPE;
-            }
-
-            // For native resolution, we will lock the orientation to the one that matches the specified resolution
-            if (nativeResolution) {
-                if (videoWidth > videoHeight) {
-                    desiredOrientation = Configuration.ORIENTATION_LANDSCAPE;
-                }
-                else {
-                    desiredOrientation = Configuration.ORIENTATION_PORTRAIT;
-                }
             }
 
             if (desiredOrientation == Configuration.ORIENTATION_LANDSCAPE) {
                 return ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE;
             }
-            else if (desiredOrientation == Configuration.ORIENTATION_PORTRAIT) {
-                return ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT;
-            }
             else {
-                // If we don't have a reason to lock to portrait or landscape, allow any orientation
-                return ActivityInfo.SCREEN_ORIENTATION_FULL_USER;
+                return ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT;
             }
         }
         else {
