@@ -14,6 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.limelight.BuildConfig
 import com.limelight.R
 import com.limelight.diag.DiagLog
+import com.limelight.display.MainScreenChoice
 import com.limelight.display.SecondDisplayOverride
 import androidx.preference.PreferenceManager
 import com.limelight.shell.DialogField
@@ -29,6 +30,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import com.limelight.shell.Screen
 import com.limelight.shell.StatsPosition
+import com.limelight.shell.companion.rememberDualScreenPlan
 import com.limelight.shell.data.Pc
 import com.limelight.shell.settings.Appearance
 import com.limelight.shell.settings.Palette
@@ -158,12 +160,21 @@ internal fun nativeSettings(
     // Device-wide, not per profile: which role a second screen of THIS device has (docs/DUAL_SCREEN.md)
     val devicePrefs = remember { PreferenceManager.getDefaultSharedPreferences(context.applicationContext) }
     var secondDisplay by remember { mutableStateOf(SecondDisplayOverride.read(devicePrefs)) }
+    val dualScreen by rememberDualScreenPlan()
     row(SecondDisplayOverride.KEY, Symbols.EXTERNAL_DISPLAY, res.getString(R.string.settings_native_second_display_title),
         RowValue.Choice(res.getString(secondDisplay.labelRes), { dir ->
             secondDisplay = secondDisplay.step(dir)
             SecondDisplayOverride.write(devicePrefs, secondDisplay)
         }), res.getString(R.string.settings_native_second_display_description), tab = SettingsTab.DISPLAY,
         section = res.getString(R.string.settings_native_section_displays), choiceHelp = NativeSettingsHelp.choice(res, SecondDisplayOverride.KEY, secondDisplay.name))
+    // Only a device with a built-in second panel has a main screen to choose; the row appears and goes with that display
+    if (dualScreen != null) {
+        val mainScreen = MainScreenChoice.read(devicePrefs)
+        row(MainScreenChoice.KEY, Symbols.MONITOR, res.getString(R.string.settings_native_main_screen_title),
+            RowValue.Choice(res.getString(mainScreen.labelRes), { dir -> MainScreenChoice.write(devicePrefs, mainScreen.step(dir)) }),
+            res.getString(R.string.settings_native_main_screen_description), tab = SettingsTab.DISPLAY,
+            section = res.getString(R.string.settings_native_section_displays), choiceHelp = NativeSettingsHelp.choice(res, MainScreenChoice.KEY, mainScreen.name))
+    }
     val choices = listOf<Pc?>(null) + pcs.filter { it.paired }.sortedBy { it.name.lowercase() }
     val index = choices.indexOfFirst { it?.uuid == startup.defaultPc }.coerceAtLeast(0)
     row("ui_default_pc", Symbols.STAR, res.getString(R.string.settings_native_default_pc_title), RowValue.Choice(choices[index]?.name ?: res.getString(R.string.settings_native_default_pc_none), { dir ->

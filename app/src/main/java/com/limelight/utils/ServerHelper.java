@@ -7,6 +7,7 @@ import android.hardware.display.DisplayManager;
 import android.os.Build;
 import android.view.Display;
 import com.limelight.display.DisplayInventory;
+import com.limelight.display.DualScreen;
 import com.limelight.utils.DelosToast;
 
 import androidx.annotation.RequiresApi;
@@ -65,7 +66,8 @@ public class ServerHelper {
         if (external != null && (prefs.enableFullExDisplay)) {
             return external;
         } else {
-            return ((DisplayManager) context.getSystemService(Context.DISPLAY_SERVICE)).getDisplay(Display.DEFAULT_DISPLAY);
+            // The device's own screen: the default display, or the main panel of a dual-screen device (docs/DUAL_SCREEN.md)
+            return ((DisplayManager) context.getSystemService(Context.DISPLAY_SERVICE)).getDisplay(DualScreen.mainDisplayId(context));
         }
     }
 

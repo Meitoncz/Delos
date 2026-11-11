@@ -3,6 +3,7 @@ package com.limelight.shell.settings
 import android.content.Context
 import androidx.preference.PreferenceManager
 import androidx.test.core.app.ApplicationProvider
+import com.limelight.display.MainScreenChoice
 import com.limelight.display.SecondDisplayOverride
 import com.limelight.profiles.ProfilesManager
 import com.limelight.shadows.ShadowGameManager
@@ -122,6 +123,7 @@ class SettingsHelpFitTest {
             "ui_stats_position" to StatsPosition.entries.map { it.name to it.label },
             "ui_default_pc" to listOf("none" to "None", "pc" to "Living room PC with a long name"),
             SecondDisplayOverride.KEY to SecondDisplayOverride.entries.map { it.name to res.getString(it.labelRes) },
+            MainScreenChoice.KEY to MainScreenChoice.entries.map { it.name to res.getString(it.labelRes) },
         )
         native.forEach { (key, choices) -> choices.forEach { (id, label) ->
             val help = NativeSettingsHelp.choice(res, key, id)

@@ -242,4 +242,10 @@
     <string name="settings_native_help_second_display_automatic">Delos unterscheidet einen Monitor oder TV von einem im Gerät verbauten Panel.</string>
     <string name="settings_native_help_second_display_external">Gilt als Monitor oder TV: Der Modus für externe Displays darf darauf streamen.</string>
     <string name="settings_native_help_second_display_built_in">Gilt als Teil des Geräts: nie ein Stream-Ziel.</string>
+    <string name="settings_native_main_screen_title">Hauptbildschirm</string>
+    <string name="settings_native_main_screen_description">Das Panel für Spiele und Stream. Das andere ist der Begleitbildschirm.</string>
+    <string name="settings_native_main_screen_automatic">Automatisch</string>
+    <string name="settings_native_main_screen_swapped">Getauscht</string>
+    <string name="settings_native_help_main_screen_automatic">Hauptbildschirm ist das größere Panel.</string>
+    <string name="settings_native_help_main_screen_swapped">Hauptbildschirm ist das kleinere Panel.</string>
 </resources>

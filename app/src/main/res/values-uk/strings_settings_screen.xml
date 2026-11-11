@@ -220,4 +220,10 @@
     <string name="settings_native_help_second_display_automatic">Delos розрізняє монітор чи телевізор і панель, вбудовану в пристрій.</string>
     <string name="settings_native_help_second_display_external">Вважається монітором чи телевізором: режим зовнішнього екрана може стрімити на нього.</string>
     <string name="settings_native_help_second_display_built_in">Вважається частиною пристрою: ніколи не ціль стріму.</string>
+    <string name="settings_native_main_screen_title">Головний екран</string>
+    <string name="settings_native_main_screen_description">Панель, що показує ігри та стрім. Інша стає допоміжним екраном.</string>
+    <string name="settings_native_main_screen_automatic">Автоматично</string>
+    <string name="settings_native_main_screen_swapped">Поміняно</string>
+    <string name="settings_native_help_main_screen_automatic">Головна — більша панель.</string>
+    <string name="settings_native_help_main_screen_swapped">Головна — менша панель.</string>
 </resources>

@@ -233,4 +233,10 @@
     <string name="settings_native_help_second_display_automatic">Delos rozliší monitor nebo TV od panelu zabudovaného v zařízení.</string>
     <string name="settings_native_help_second_display_external">Bere se jako monitor nebo TV: režim externího displeje na něj smí streamovat.</string>
     <string name="settings_native_help_second_display_built_in">Bere se jako součást zařízení: nikdy cíl streamu.</string>
+    <string name="settings_native_main_screen_title">Hlavní obrazovka</string>
+    <string name="settings_native_main_screen_description">Panel, který ukazuje hry a stream. Druhý je doprovodná obrazovka.</string>
+    <string name="settings_native_main_screen_automatic">Automaticky</string>
+    <string name="settings_native_main_screen_swapped">Prohozeno</string>
+    <string name="settings_native_help_main_screen_automatic">Hlavní je větší panel.</string>
+    <string name="settings_native_help_main_screen_swapped">Hlavní je menší panel.</string>
 </resources>

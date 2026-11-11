@@ -212,4 +212,10 @@
     <string name="settings_native_help_second_display_automatic">Delos는 모니터나 TV와 기기에 내장된 패널을 구분해요.</string>
     <string name="settings_native_help_second_display_external">모니터나 TV로 취급해요. 외부 디스플레이 모드가 스트림을 표시할 수 있어요.</string>
     <string name="settings_native_help_second_display_built_in">기기의 일부로 취급해요. 스트림 대상이 되지 않아요.</string>
+    <string name="settings_native_main_screen_title">메인 화면</string>
+    <string name="settings_native_main_screen_description">게임과 스트림을 표시하는 패널이에요. 다른 패널은 보조 화면이 돼요.</string>
+    <string name="settings_native_main_screen_automatic">자동</string>
+    <string name="settings_native_main_screen_swapped">교체</string>
+    <string name="settings_native_help_main_screen_automatic">큰 패널이 메인 화면이에요.</string>
+    <string name="settings_native_help_main_screen_swapped">작은 패널이 메인 화면이에요.</string>
 </resources>

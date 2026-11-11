@@ -60,6 +60,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
 import androidx.annotation.StringRes
 import com.limelight.display.DisplayInventory
+import com.limelight.display.DualScreen
+import com.limelight.display.PanelPair
 import com.limelight.display.DisplayRole
 import android.hardware.display.DisplayManager
 import com.limelight.BuildConfig
@@ -277,6 +279,7 @@ fun DebugInfoScreen() {
     // Displays that come and go (a monitor plugged in, an overlay display switched on) and their classification
     var displayChanges by remember { mutableIntStateOf(0) }
     val displays = remember(displayChanges) { DisplayInventory.list(context) }
+    val dualScreen = remember(displays) { DualScreen.plan(displays, DualScreen.choiceOf(context)) }
     DisposableEffect(Unit) {
         val manager = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
         val listener = object : DisplayManager.DisplayListener {
@@ -326,7 +329,7 @@ fun DebugInfoScreen() {
             res.getString(if (hasMotor) R.string.debug_motor_yes_description else R.string.debug_motor_no_description)))
         displays.forEach { entry ->
             add(DebugRow("display_${entry.facts.id}", DebugSection.DISPLAYS, Symbols.MONITOR, entry.shownName(),
-                RowValue.Info(res.getString(entry.role.labelRes())), res.getString(entry.role.descriptionRes()), entry.details()))
+                RowValue.Info(res.getString(entry.role.labelRes())), res.getString(entry.role.descriptionRes()), entry.details() + panelLine(dualScreen, entry.facts.id)))
         }
         // What a problem report would contain; the panel on the right previews exactly that text
         val logValue = when {
@@ -646,4 +649,11 @@ private suspend fun playRumblePattern(pattern: RumblePattern, playback: RumblePl
             hold(0, 40)
         }
     }
+}
+
+/** The technical line that says which panel of a dual-screen device a display is (nothing on a single-screen device or for an external display). */
+private fun panelLine(plan: PanelPair?, displayId: Int): String = when (displayId) {
+    plan?.main?.id -> "\npanel: main (shell and stream)" // l10n-ignore
+    plan?.companion?.id -> "\npanel: companion" // l10n-ignore
+    else -> ""
 }

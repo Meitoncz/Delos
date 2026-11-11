@@ -2,6 +2,7 @@ package com.limelight.shell.screens
 
 import android.content.res.Resources
 import com.limelight.R
+import com.limelight.display.MainScreenChoice
 import com.limelight.display.SecondDisplayOverride
 import com.limelight.shell.ui.RowValue
 
@@ -33,6 +34,7 @@ internal object NativeSettingsHelp {
             "ui_background" -> backgrounds[id]
             "ui_stats_position" -> statsPositions[id]
             SecondDisplayOverride.KEY -> secondDisplays[id]
+            MainScreenChoice.KEY -> mainScreens[id]
             "ui_default_pc" -> if (id == "none") R.string.settings_native_help_default_pc_none else R.string.settings_native_help_default_pc_set
             else -> null
         }
@@ -64,5 +66,10 @@ internal object NativeSettingsHelp {
         "AUTOMATIC" to R.string.settings_native_help_second_display_automatic,
         "EXTERNAL" to R.string.settings_native_help_second_display_external,
         "BUILT_IN" to R.string.settings_native_help_second_display_built_in,
+    )
+
+    private val mainScreens = mapOf(
+        "AUTOMATIC" to R.string.settings_native_help_main_screen_automatic,
+        "SWAPPED" to R.string.settings_native_help_main_screen_swapped,
     )
 }

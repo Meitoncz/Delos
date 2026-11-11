@@ -6,10 +6,10 @@ import com.limelight.R
 import android.app.Activity
 import android.content.Intent
 import android.os.Build
-import android.view.Display
 import androidx.compose.runtime.Immutable
 import com.limelight.DelosStreamActivity
 import com.limelight.diag.DiagLog
+import com.limelight.display.DualScreen
 import com.limelight.nvstream.jni.MoonBridge
 
 /** How a stream that was not ended by the player ended (see docs/GUI.md, "Stream exits"). */
@@ -228,10 +228,10 @@ object StreamOutcome {
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         result.putInto(home)
         val options = if (activity is DelosStreamActivity && activity.isOnExternalDisplay && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            ActivityOptions.makeBasic().setLaunchDisplayId(Display.DEFAULT_DISPLAY)
+            ActivityOptions.makeBasic().setLaunchDisplayId(DualScreen.mainDisplayId(activity))
         } else {
             val root = activity.window.decorView
-            ActivityOptions.makeScaleUpAnimation(root, 0, 0, root.width, root.height)
+            DualScreen.placeOnMain(activity, ActivityOptions.makeScaleUpAnimation(root, 0, 0, root.width, root.height))
         }
         activity.startActivity(home, options.toBundle())
         activity.finish()

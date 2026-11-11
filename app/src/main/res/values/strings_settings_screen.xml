@@ -256,4 +256,11 @@
     <string name="settings_native_help_second_display_automatic">Delos tells a monitor or TV from a panel built into the device.</string>
     <string name="settings_native_help_second_display_external">Treated as a monitor or TV: the external display mode may stream to it.</string>
     <string name="settings_native_help_second_display_built_in">Treated as part of the device: never a stream target.</string>
+    <!-- Settings > Display > Main screen: which panel of a dual-screen device shows the shell and the stream; shown only when the device has a second built-in panel (docs/DUAL_SCREEN.md) -->
+    <string name="settings_native_main_screen_title">Main screen</string>
+    <string name="settings_native_main_screen_description">The panel that shows the games and the stream. The other is the companion screen.</string>
+    <string name="settings_native_main_screen_automatic">Automatic</string>
+    <string name="settings_native_main_screen_swapped">Swapped</string>
+    <string name="settings_native_help_main_screen_automatic">The larger panel is main.</string>
+    <string name="settings_native_help_main_screen_swapped">The smaller panel is main.</string>
 </resources>

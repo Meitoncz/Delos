@@ -212,4 +212,10 @@
     <string name="settings_native_help_second_display_automatic">Delosは、モニターやテレビと、本体に内蔵されたパネルを見分けます。</string>
     <string name="settings_native_help_second_display_external">モニターやテレビとして扱います。外部ディスプレイモードでストリームを表示できます。</string>
     <string name="settings_native_help_second_display_built_in">本体の一部として扱います。ストリームの表示先にはなりません。</string>
+    <string name="settings_native_main_screen_title">メイン画面</string>
+    <string name="settings_native_main_screen_description">ゲームとストリームを表示するパネルです。もう一方はコンパニオン画面になります。</string>
+    <string name="settings_native_main_screen_automatic">自動</string>
+    <string name="settings_native_main_screen_swapped">入れ替え</string>
+    <string name="settings_native_help_main_screen_automatic">大きいパネルがメイン画面です。</string>
+    <string name="settings_native_help_main_screen_swapped">小さいパネルがメイン画面です。</string>
 </resources>

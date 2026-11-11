@@ -212,4 +212,10 @@
     <string name="settings_native_help_second_display_automatic">Delos 会区分外接的显示器或电视与设备内置的面板。</string>
     <string name="settings_native_help_second_display_external">视为显示器或电视：外接显示器模式可以向它串流。</string>
     <string name="settings_native_help_second_display_built_in">视为设备的一部分：绝不作为串流目标。</string>
+    <string name="settings_native_main_screen_title">主屏幕</string>
+    <string name="settings_native_main_screen_description">显示游戏和串流的面板。另一块是副屏。</string>
+    <string name="settings_native_main_screen_automatic">自动</string>
+    <string name="settings_native_main_screen_swapped">对调</string>
+    <string name="settings_native_help_main_screen_automatic">较大的面板为主屏幕。</string>
+    <string name="settings_native_help_main_screen_swapped">较小的面板为主屏幕。</string>
 </resources>

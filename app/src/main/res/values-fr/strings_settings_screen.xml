@@ -207,4 +207,10 @@
     <string name="settings_native_help_second_display_automatic">Delos distingue un moniteur ou une TV d’un panneau intégré à l’appareil.</string>
     <string name="settings_native_help_second_display_external">Traité comme moniteur ou TV : le mode écran externe peut y diffuser le stream.</string>
     <string name="settings_native_help_second_display_built_in">Traité comme partie de l’appareil : jamais une cible du stream.</string>
+    <string name="settings_native_main_screen_title">Écran principal</string>
+    <string name="settings_native_main_screen_description">Le panneau qui affiche les jeux et le stream. L’autre est l’écran compagnon.</string>
+    <string name="settings_native_main_screen_automatic">Automatique</string>
+    <string name="settings_native_main_screen_swapped">Inversé</string>
+    <string name="settings_native_help_main_screen_automatic">Le principal est le plus grand panneau.</string>
+    <string name="settings_native_help_main_screen_swapped">Le principal est le plus petit panneau.</string>
 </resources>

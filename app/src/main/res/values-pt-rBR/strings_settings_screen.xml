@@ -217,4 +217,10 @@
     <string name="settings_native_help_second_display_automatic">Delos distingue um monitor ou TV de um painel embutido no dispositivo.</string>
     <string name="settings_native_help_second_display_external">Tratada como monitor ou TV: o modo de tela externa pode fazer stream nela.</string>
     <string name="settings_native_help_second_display_built_in">Tratada como parte do dispositivo: nunca é destino do stream.</string>
+    <string name="settings_native_main_screen_title">Tela principal</string>
+    <string name="settings_native_main_screen_description">O painel que mostra os jogos e o stream. O outro é a tela complementar.</string>
+    <string name="settings_native_main_screen_automatic">Automático</string>
+    <string name="settings_native_main_screen_swapped">Trocado</string>
+    <string name="settings_native_help_main_screen_automatic">A principal é o painel maior.</string>
+    <string name="settings_native_help_main_screen_swapped">A principal é o painel menor.</string>
 </resources>

@@ -28,6 +28,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
 import com.limelight.DelosStreamActivity
 import com.limelight.R
+import com.limelight.display.DualScreen
 import com.limelight.shell.data.ProfileStore
 import com.limelight.shell.settings.AppearanceStore
 import com.limelight.shell.ui.Cue
@@ -164,7 +165,7 @@ object StreamExit {
             val home = Intent().setClassName(game, "com.limelight.shell.ShellActivity")
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             // From the whole screen a scale-up only fades the new UI in over the stream (like starting one)
-            game.startActivity(home, ActivityOptions.makeScaleUpAnimation(root, 0, 0, root.width, root.height).toBundle())
+            game.startActivity(home, DualScreen.placeOnMain(game, ActivityOptions.makeScaleUpAnimation(root, 0, 0, root.width, root.height)).toBundle())
             end.run()
             feedback.release()
             // Gone with the stream window anyway; closed once the new UI has faded in over it
