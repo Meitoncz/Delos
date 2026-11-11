@@ -824,8 +824,9 @@ activity keeps its own orientation logic) and supports windows from 1:1 up to 21
     --es preview_screen home --es preview_state row
   ```
 
-- **Screen previews with fake data** (debug builds, `ScreenPreviews` in `src/debug`, no PC or network): `--es preview_screen <home|artwork|devices|start|pair|filter|dialog|loader|result|settings|settings_search|debug_info|profile|game_options>`,
-  `home` with `--es preview_state <row|grid>`; they run next to the older previews (`context_menu`, `top_menu`, `settings_tabs`, `settings_list`,
+- **Screen previews with fake data** (debug builds, `ScreenPreviews` in `src/debug`, no PC or network): `--es preview_screen <home|artwork|devices|start|pair|filter|dialog|loader|result|settings|settings_search|debug_info|profile|game_options|side_menu|home_context|problem|stream_exit|boot|create_profile|pair_pc|stream_stats>`,
+  `home`, `side_menu` and `home_context` (the game menu opened by the Start key 3 s after the start) with `--es preview_state <row|grid>`, `stream_stats` with `--es preview_state <full|compact>`
+  and `--es preview_position <TOP_LEFT|…>`; they run next to the older previews (`context_menu`, `top_menu`, `settings_tabs`, `settings_list`,
   `game_settings`, `stream_menu`, `full_keyboard`, `toast`). `settings`, `settings_search`, `debug_info`, `profile` and `game_options` are the real screens (`game_settings` is the older component preview of the per-game list); the preview tells the settings capability probe there is no PyroWave, because its native Vulkan probe dies on the emulator's SwiftShader.
 - **Contact sheets** (`tools/layout/`): `shapes.txt` lists the shapes (names, `W x H @ dpi`, optional cutout), `screens.txt` the previews. `sheets.sh` needs the
   fail-closed adb wrapper and the stream gate helper:
@@ -847,6 +848,18 @@ activity keeps its own orientation logic) and supports windows from 1:1 up to 21
   strips and the columns scale with its width (7 / 4 / 3 / 5 per 1720 px). Home grid: as many 300 px covers as fit with 122 px at least on each side (5 at 1920,
   6 at 21:9, at least 3 for the wide first cover), centred. The filter modal's height follows the stage (stage height − 260). Circle rows (`Circles`: Devices, Start,
   Pair, Profile) wrap into centred rows instead of overflowing. Debug info already filled the stage (weighted list, edge padding).
+- **Compact stages** (phase C, shell screens; `ui/Compact.kt`, only when `stage.shape == COMPACT`, every other shape is untouched): the stage is 1000–1500 stage px
+  wide and 720–1100 high with the text as large as on the Odin, so non-text elements shrink and everything else reflows. `StageMetrics.compactScale` is the one
+  scale of covers, discs, avatars and gaps (stage height / 1080, 0.62 at the least); margins never go under 48 px (`Compact.MARGIN`; the cutout comes on top) and
+  neighbouring blocks keep 16–24 px; targets stay at least 64 px. Status bar: no wordmark under 1400 px, the PC pill is cut by an ellipsis to its side of the
+  centred navigation. Hint bar: the note with its label, the note alone, no note, then glyphs with only the first label, the first that fits. Centred screens
+  (`CenterColumn`) keep clear of both bars and scroll when still too tall; headlines are 48 (not 64), circles scale with `compactScale` (items 170 wide, labels
+  cut by an ellipsis), the avatar picker has 4 columns. Home row: covers 0.6–0.85 of the prototype (2:3 and the wide cover's ratio kept, the gap and corner
+  scale with them), the first one 72 px from the edge, the block above them without the "Game info" label and with a 120 px title box (title 60/50/44). The
+  context menu keeps 48 px from every edge. Stream menu (`DockGeometry` in `StreamMenuLayout.kt`): the nine tiles shrink to fit the width between 48 px
+  margins (about 85–137 px, gap 20), the ring, corners and icons with them; below 130 px only the focused tile shows its label; the dock sits 48 px above the
+  bottom (the sunk dock keeps its label there), the popover is at most as wide as the room between the margins and as tall as the room above the sunk dock.
+  Problem card and toast: 48 px from the edge, under the status bar.
 
 ## Native shell architecture and design constraints
 

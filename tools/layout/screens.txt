@@ -12,6 +12,20 @@ filter         | --es preview_screen filter                         | 5
 dialog         | --es preview_screen dialog                         | 4
 loader         | --es preview_screen loader                         | 4
 result         | --es preview_screen result                         | 4
+home-context-row  | --es preview_screen home_context --es preview_state row  | 6
+home-context-grid | --es preview_screen home_context --es preview_state grid | 6
+side-menu      | --es preview_screen side_menu                      | 4
+problem        | --es preview_screen problem                        | 4
+stream-exit    | --es preview_screen stream_exit                    | 4
+boot           | --es preview_screen boot                           | 4
+create-profile | --es preview_screen create_profile                 | 4
+pair-pc        | --es preview_screen pair_pc                        | 4
+stream-stats-full    | --es preview_screen stream_stats --es preview_state full    | 3
+stream-stats-compact | --es preview_screen stream_stats --es preview_state compact | 3
+stream-menu-upscaler | --es preview_screen stream_menu --es preview_page upscaler | 4
+stream-menu-bitrate  | --es preview_screen stream_menu --es preview_page bitrate  | 4
+stream-menu-more     | --es preview_screen stream_menu --es preview_page more     | 4
+toast-long     | --es preview_screen toast --ei preview_long 1      | 3
 context-menu   | --es preview_screen context_menu                   | 3
 top-menu       | --es preview_screen top_menu                       | 3
 settings-tabs  | --es preview_screen settings_tabs                  | 3

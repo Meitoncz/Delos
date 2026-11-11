@@ -138,10 +138,16 @@ internal class PreviewSetup(context: Context, repo: PcRepository, profiles: Prof
     override suspend fun pair(pc: Pc, pin: String, passphrase: String?): PcSetup.PairResult = awaitCancellation()
 }
 
-/** What a shell preview opens: the [screen] (it gets the world, to pick a fake PC or game), a [layer] over it and the Home [layout]. */
+/**
+ * What a shell preview opens: the [screen] (it gets the world, to pick a fake PC or game), a [layer] over it and the Home [layout]. [after]
+ * sets more state on the shell once it exists (a problem to offer, a portal); [press] is a global key (a `KeyEvent` code such as the Start
+ * button) the preview sends 3 s after the start, to open what that key opens (the context menu).
+ */
 internal class ShellRoute(
     val layout: HomeLayout = HomeLayout.ROW,
     val layer: Layer? = null,
+    val after: (PreviewWorld) -> Unit = {},
+    val press: Int? = null,
     val screen: (PreviewWorld) -> Screen,
 )
 
@@ -186,6 +192,7 @@ internal class PreviewWorld(base: Context, activity: Activity, route: ShellRoute
         checkNotNull(repo.library.value as? Library.Ready) { "The preview library did not load" } // l10n-ignore
         shell = ShellState(route.screen(this))
         route.layer?.let { shell.openLayer(it, FocusTracker()) }
+        route.after(this)
     }
 
     /** The games of the active fake PC, once the repository has parsed them. */
