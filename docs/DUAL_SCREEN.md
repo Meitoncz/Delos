@@ -252,7 +252,7 @@ take it). While an overlay display exists, the emulator's touch input to display
 - Automatic, display present: the shell on display 0, the companion activity on the other display (dim mark, the PC name once a PC is
   chosen), `mTopFocusedDisplayId=0`, the shell's window focused, keys reach the shell.
 - Removing the display: no crash, the companion is gone and the shell untouched; adding it again starts a new companion (`Companion started on
-  display N` in the diagnostic log). Ten overlay add/remove cycles left no extra activity or window behind.
+  display N` in the diagnostic log). Six remove/add cycles of the real second display left the same two activities and two windows (shell and one companion) after a GC, one `Companion started` per cycle, no crash, and the top focused display stayed 0.
 - Swapped (preference set before the shell starts): the shell opens on the second display (it moves itself there from display 0 and ends),
   the companion is an activity on display 0; with the preference already swapped, adding the display while the shell runs moves the shell, and
   removing it lets the system bring the shell back to display 0 (it moves again when the display returns).
