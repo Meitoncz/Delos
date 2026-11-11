@@ -7,18 +7,12 @@ import androidx.compose.ui.unit.dp
 import kotlin.math.max
 import kotlin.math.min
 
-/**
- * The one scale factor of the non-text elements on a [StageShape.COMPACT] stage (issue #9, phase C): row heights and paddings, icons, chips,
- * tab pills, the banner, the dock of the description. Text is NOT scaled by it (the legibility floor of [StagePlanner] keeps text at least as big
- * as on the reference device), only the room around it.
- *
- * It is the stage's size relative to the 1920 x 1080 design, `min(width / 1920, height / 1080)`, never under [COMPACT_SCALE_FLOOR]; 1 on
- * every other shape, so those stay pixel-identical. The floor keeps a 92 px row at 64 stage px, the least a touch or controller target may have.
+/*
+ * Scaling helpers of the non-text elements on a [StageShape.COMPACT] stage (issue #9, phase C) for the settings family: row heights and paddings,
+ * icons, chips, tab pills, the banner, the dock of the description. Text is NOT scaled (the legibility floor of [StagePlanner] keeps text at least
+ * as big as on the reference device), only the room around it. The factor itself is [compactScale] (see Compact.kt): 1 on every other shape, so
+ * those stay pixel-identical; [targetPx] keeps touched or focused rows at 64 stage px at least.
  */
-const val COMPACT_SCALE_FLOOR = 0.7f
-
-val StageMetrics.compactScale: Float
-    get() = if (shape != StageShape.COMPACT) 1f else max(COMPACT_SCALE_FLOOR, min(stageWidth / StagePlanner.STAGE_WIDTH, stageHeight / StagePlanner.STAGE_HEIGHT))
 
 /** Stage pixels of a non-text element, scaled by [compactScale] (the same as [px] on every shape but the compact one). */
 val Number.cpx: Dp
