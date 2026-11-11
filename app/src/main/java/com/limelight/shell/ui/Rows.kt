@@ -7,6 +7,8 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ScrollState
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -336,12 +338,27 @@ private val ROW_RING = FocusRing(width = 3f, gap = 0f)
 /**
  * A scrolling list of [SettingRow]s (settings, per-game settings, debug info): one focus plate (tint, ring and glow)
  * glides from row to row ([RowGlideHost], [Motion.ROW_FOCUS]) and follows the scrolling list. [modifier] is the list's:
- * its size and [fadeEdges] (the plate fades with the rows). The list inside should fill it.
+ * its size and its viewport ([settingListViewport]: the plate fades with the rows). The list inside should fill it.
  */
 @Composable
 fun SettingRowList(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     RowGlideHost(ROW_RING, ROW_CORNER, ROW_FOCUS_SCALE, modifier, content = content)
 }
+
+/**
+ * The room a [settingListViewport] has on the left and right of its box (stage px). The focused plate grows by 1 % of the row's width on
+ * each side and its glow reaches 26 px further (blur 50, spread -24, times the focus scale): about 41 px on the widest list, more than
+ * the 18 px the rows are inset by, so without this room the list's fade layer would cut the glow in a hard edge.
+ */
+const val SETTING_LIST_ROOM = 30f
+
+/**
+ * The viewport of a scrolling [SettingRowList], after the list's size: its layer is [SETTING_LIST_ROOM] wider on each side than the list
+ * (nothing moves; pad the rows by that much more), and the top and bottom edges fade ([fadeTop] / [fadeBottom] stage px) only while
+ * [scroll] has rows behind them, so the first and the last row's ring and glow are never dimmed.
+ */
+fun Modifier.settingListViewport(stage: StageMetrics, scroll: ScrollState, fadeTop: Float, fadeBottom: Float): Modifier =
+    focusRoom(horizontal = (SETTING_LIST_ROOM * stage.dpPerPx).dp).fadeEdges(stage, scroll, fadeTop, fadeBottom)
 
 /** The row's icon: full accent on the focused row, softer on the others; the color cross-fades with the row's other focus effects while [calm]. */
 @Composable

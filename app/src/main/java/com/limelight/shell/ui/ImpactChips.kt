@@ -22,6 +22,9 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.TextStyle
 import com.limelight.shell.settings.ImpactLevel
 import com.limelight.shell.settings.SettingImpact
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.rememberTextMeasurer
 
 /** The three impact axes in the order the chips and the legend show them: label, glyph. */
 internal val IMPACT_AXES: List<Pair<Int, String>> = listOf(R.string.impact_axis_gpu to Symbols.GPU, R.string.impact_axis_latency to Symbols.TIMER, R.string.impact_axis_network to Symbols.WIFI)
@@ -112,4 +115,20 @@ internal fun ImpactLegend(modifier: Modifier = Modifier, sentence: Boolean = tru
 @Composable
 internal fun ImpactLegendSentence() {
     BasicText(stringResource(R.string.impact_legend), style = TextStyle(color = LocalDelosColors.current.text3, fontFamily = Figtree, fontSize = 18.tpx))
+}
+
+/**
+ * The width in stage px of the legend's row (the three glyphs and names of [ImpactLegend], without its sentence), for a layout that has to
+ * know whether it fits beside something else (the compact dock's header).
+ */
+@Composable
+internal fun impactLegendWidth(): Float {
+    val stage = LocalStage.current
+    val measurer = rememberTextMeasurer()
+    val k = stage.dpPerPx * LocalDensity.current.density
+    val small = TextStyle(fontFamily = Figtree, fontSize = 18.tpx)
+    val names = IMPACT_AXES.map { stringResource(it.first) }
+    val text = remember(names, small, k) { names.sumOf { measurer.measure(it, small, maxLines = 1).size.width } / k }
+    // Each glyph is a square of its 22 px text size, 6 px before its name; 20 px between the three
+    return text + IMPACT_AXES.size * (22f * stage.textScale + 6f) + (IMPACT_AXES.size - 1) * 20f
 }

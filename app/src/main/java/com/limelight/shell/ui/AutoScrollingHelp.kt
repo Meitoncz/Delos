@@ -24,13 +24,19 @@ val LocalReducedMotion = staticCompositionLocalOf { false }
 /**
  * Passive help: pause at either end, travel at a constant reading speed, and restart on selection. With
  * reduced motion it stays still and is scrolled by touch instead.
+ *
+ * [edgeFade] (stage px) is the compact dock's look: no padding above or below, and each edge fades only as far as the content
+ * continues behind it (nothing at rest at the top, growing with the first pixels scrolled), so the area is clipped clean at both ends.
  */
 @Composable
 fun AutoScrollingHelp(
     identity: Any?,
     modifier: Modifier = Modifier,
-    /** The padding above and below the text, which is also the width of the fades at both ends (stage px); a compact dock uses less. */
+    /** The padding above and below the text, which is also the width of the fades at both ends (stage px). */
     inset: Float = 24f,
+    /** The room between the paragraphs (stage px). */
+    spacing: Float = 18f,
+    edgeFade: Float? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val reducedMotion = LocalReducedMotion.current
@@ -51,8 +57,11 @@ fun AutoScrollingHelp(
         }
     }
     Column(modifier.focusProperties { canFocus = false }
-        .fadeEdges(stage, top = if (overflow) inset else 0f, bottom = if (overflow) inset else 0f)
+        .then(
+            if (edgeFade != null) Modifier.fadeEdges(stage, scroll, top = edgeFade, bottom = edgeFade)
+            else Modifier.fadeEdges(stage, top = if (overflow) inset else 0f, bottom = if (overflow) inset else 0f)
+        )
         .verticalScroll(scroll, enabled = reducedMotion)
         // The first and last lines can rest fully outside the fades at the two endpoints.
-        .padding(vertical = inset.px), verticalArrangement = Arrangement.spacedBy(18.px), content = content)
+        .padding(vertical = (if (edgeFade != null) 0f else inset).px), verticalArrangement = Arrangement.spacedBy(spacing.px), content = content)
 }

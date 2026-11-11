@@ -218,8 +218,8 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
 
     Column(
         Modifier
-            // 1240 on a stage that has it; the compact one (small panels) leaves 30 px on each side
-            .width(minOf(1240f, stage.stageWidth - 60f).px)
+            // 1240 on a stage that has it; the compact one (small panels) keeps the 48 px margin on each side
+            .width((if (stage.shape == StageShape.COMPACT) stage.stageWidth - 2f * SettingsLayout.margin(stage) else minOf(1240f, stage.stageWidth - 60f)).px)
             // 820 at 1080: a taller stage gives the chips more room, a shorter one less (the compact one keeps clear of the bars)
             .heightIn(max = (stage.stageHeight - (if (stage.shape == StageShape.COMPACT) 220f else 260f)).coerceAtLeast(0f).px)
             // box-shadow: 0 40px 100px -30px rgba(0, 0, 0, .7), like the dialogs
@@ -233,7 +233,8 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
             .clip(shape)
             .backdropBlur(haze, 24f, colors.surface3)
             .border(1.px, colors.line, shape)
-            .padding(horizontal = 40.cpx, vertical = 44.cpx)
+            // Under the Reset / Done pills the room is not scaled down on the compact stage: the focused pill's glow (44 px under it) ends inside the panel
+            .padding(horizontal = 40.cpx).padding(top = 44.cpx, bottom = 44.px)
             .onFocusChanged { panelFocused = it.hasFocus }
             .focusProperties { onExit = { if (open) cancelFocusChange() } }
             .focusGroup(),
@@ -258,7 +259,8 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
         RowGlideHost(
             ring = FocusRing(3f, 3f), corner = 999f, focusScale = 1.05f,
             fill = null, glow = null,
-            modifier = Modifier.weight(1f, fill = false).fadeEdges(stage, top = 20f, bottom = 40f),
+            // The edges fade only while chips continue behind them, so the ring of a chip in the first or the last row is not dimmed
+            modifier = Modifier.weight(1f, fill = false).fadeEdges(stage, chipScroll, 20f, 40f),
         ) {
         Column(
             Modifier
@@ -328,7 +330,8 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
         }
         Row(
             Modifier.fillMaxWidth().padding(top = 30.cpx, start = 12.px, end = 12.px),
-            horizontalArrangement = Arrangement.spacedBy(24.px, Alignment.End),
+            // Compact: the room a focused pill grows into (half its 8 %, its ring and 12 px), as on the Artwork toolbar
+            horizontalArrangement = Arrangement.spacedBy((if (stage.shape == StageShape.COMPACT) ArtworkLayout.PILL_GAP else 24f).px, Alignment.End),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             val active = filters.active
