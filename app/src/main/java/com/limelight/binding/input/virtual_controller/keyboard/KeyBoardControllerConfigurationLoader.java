@@ -57,15 +57,6 @@ public class KeyBoardControllerConfigurationLoader {
         return MODIFIER_KEY_CODES.contains(keyCode);
     }
 
-    // The default controls are specified using a grid of 128*72 cells at 16:9
-    public static int screenScale(int units, int height) {
-        return (int) (((float) height / (float) 72) * (float) units);
-    }
-
-    public static int screenScaleSwitch(int result, int height) {
-        return result * 72 / height;
-    }
-
     public static KeyboardDigitalPadButton createDiaitalPadButton(String elementId, int keyCodeLeft, int keyCodeRight, int keyCodeUp, int keyCodeDown, final KeyBoardController controller, final Context context) {
         KeyboardDigitalPadButton button = new KeyboardDigitalPadButton(controller, context, elementId);
         button.addDigitalPadListener(new KeyboardDigitalPadButton.DigitalPadListener() {
@@ -349,26 +340,24 @@ public class KeyBoardControllerConfigurationLoader {
         return button;
     }
 
+    /** The default layout on the screen the keys are drawn on (the window's size, from the resources). */
     public static void createDefaultLayout(final KeyBoardController controller, final Context context, final NvConnection conn) {
-
         DisplayMetrics screen = context.getResources().getDisplayMetrics();
+        createDefaultLayout(controller, context, conn, screen.widthPixels, screen.heightPixels);
+    }
+
+    /**
+     * The default layout on a screen of {@code screenWidth} x {@code screenHeight} pixels: the keys are a row of 14 that is
+     * never wider than the screen (a key is at most an eighteenth of its width), the stick against the left edge and the D-pad
+     * against the right one, both kept on the screen whatever its shape.
+     */
+    public static void createDefaultLayout(final KeyBoardController controller, final Context context, final NvConnection conn,
+                                           final int screenWidth, final int screenHeight) {
 
         PreferenceConfiguration config = PreferenceConfiguration.readPreferences(context);
 
-        int height = screen.heightPixels;
-
-        int rightDisplacement = screen.widthPixels - screen.heightPixels * 16 / 9;
-
-        int BUTTON_SIZE = 10;
-
-        int w = screenScale(BUTTON_SIZE, height);
-
-        int maxW = screen.widthPixels / 18;
-
-        if (w > maxW) {
-            BUTTON_SIZE = screenScaleSwitch(maxW, height);
-            w = screenScale(BUTTON_SIZE, height);
-        }
+        // The keys' positions are KeyBoardGeometry's (docs/GUI.md, "Screen shapes")
+        int w = KeyBoardGeometry.keySize(screenWidth, screenHeight);
 
         String result = "";
         try {
@@ -400,10 +389,9 @@ public class KeyBoardControllerConfigurationLoader {
                 int keyCodeRight = obj.optInt("rightCode");
                 int keyCodeUp = obj.optInt("upCode");
                 int keyCodeDown = obj.optInt("downCode");
+                int[] pad = KeyBoardGeometry.dpad(screenWidth, screenHeight);
                 controller.addElement(createDiaitalPadButton(code, keyCodeLeft, keyCodeRight, keyCodeUp, keyCodeDown, controller, context),
-                        screenScale(92, height) + rightDisplacement,
-                        screenScale(41, height),
-                        (int) (w * 2.5), (int) (w * 2.5)
+                        pad[0], pad[1], pad[2], pad[3]
                 );
             }
             // Stick
@@ -417,17 +405,14 @@ public class KeyBoardControllerConfigurationLoader {
                 int keyCodeMiddle = obj.optInt("middleCode");
                 int[] keys = new int[]{keyCodeUp, keyCodeDown, keyCodeLeft, keyCodeRight, keyCodeMiddle};
 
+                int[] stick = KeyBoardGeometry.stick(screenWidth, screenHeight);
                 if (config.enableNewAnalogStick) {
                     controller.addElement(createKeyBoardAnalogStickButton2(controller, code, context, keys),
-                            screenScale(4, height),
-                            screenScale(41, height),
-                            (int) (w * 2.5), (int) (w * 2.5)
+                            stick[0], stick[1], stick[2], stick[3]
                     );
                 } else {
                     controller.addElement(createKeyBoardAnalogStickButton(controller, code, context, keys),
-                            screenScale(4, height),
-                            screenScale(41, height),
-                            (int) (w * 2.5), (int) (w * 2.5)
+                            stick[0], stick[1], stick[2], stick[3]
                     );
                 }
             }
@@ -438,8 +423,6 @@ public class KeyBoardControllerConfigurationLoader {
                 obj.put("type", 1);
                 keystrokeList.put(obj);
             }
-
-            double buttonSum = 14.0;
 
             int i;
 
@@ -461,11 +444,11 @@ public class KeyBoardControllerConfigurationLoader {
                     elementId = type == 0 ? "key_s_" + code : "m_s_" + code;
                 }
 
-                int lastIndex = (int) (i / buttonSum);
+                int[] cell = KeyBoardGeometry.key(i, screenWidth, screenHeight);
 
-                int x = screenScale(1 + (int) (i % buttonSum) * BUTTON_SIZE, height);
+                int x = cell[0];
 
-                int y = screenScale(BUTTON_SIZE + lastIndex * BUTTON_SIZE, height);
+                int y = cell[1];
 
                 if (TextUtils.equals("m_9", elementId) || TextUtils.equals("m_10", elementId) || TextUtils.equals("m_11", elementId)) {
                     controller.addElement(createDigitalTouchButton(elementId, code, type, 1, name, -1, controller, context),
@@ -478,7 +461,7 @@ public class KeyBoardControllerConfigurationLoader {
                             w, w
                     );
                 }
-                LimeLog.info("x:" + x + ",y:" + y + ",W&H:" + w + "," + screenScale(BUTTON_SIZE, height));
+                LimeLog.info("x:" + x + ",y:" + y + ",W&H:" + w + "," + w);
             }
 
             // Custom keys
@@ -524,10 +507,9 @@ public class KeyBoardControllerConfigurationLoader {
 
                             boolean sticky = sc.sticky;
 
-                            int lastIndex = (int) ((idx + i) / buttonSum);
-
-                            int x = screenScale((int) (1 + ((idx + i) % buttonSum) * BUTTON_SIZE), height);
-                            int y = screenScale(BUTTON_SIZE + lastIndex * BUTTON_SIZE, height);
+                            int[] cell = KeyBoardGeometry.key(idx + i, screenWidth, screenHeight);
+                            int x = cell[0];
+                            int y = cell[1];
 
                             controller.addElement(
                                     createCustomButton("custom_" + id, vkKeyCodes, 1,

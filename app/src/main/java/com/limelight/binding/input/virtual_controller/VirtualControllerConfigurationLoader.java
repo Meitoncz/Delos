@@ -16,19 +16,10 @@ import com.limelight.preferences.PreferenceConfiguration;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Map;
+
 public class VirtualControllerConfigurationLoader {
     public static final String OSC_PREFERENCE = "OSC";
-
-    private static int getPercent(
-            int percent,
-            int total) {
-        return (int) (((float) total / (float) 100) * (float) percent);
-    }
-
-    // The default controls are specified using a grid of 128*72 cells at 16:9
-    private static int screenScale(int units, int height) {
-        return (int) (((float) height / (float) 72) * (float) units);
-    }
 
     private static DigitalPad createDigitalPad(
             final VirtualController controller,
@@ -161,255 +152,111 @@ public class VirtualControllerConfigurationLoader {
     }
 
 
-    private static final int TRIGGER_L_BASE_X = 1;
-    private static final int TRIGGER_R_BASE_X = 92;
-    private static final int TRIGGER_DISTANCE = 23;
-    private static final int TRIGGER_BASE_Y = 31;
-    private static final int TRIGGER_WIDTH = 12;
-    private static final int TRIGGER_HEIGHT = 9;
-
-    // Face buttons are defined based on the Y button (button number 9)
-    private static final int BUTTON_BASE_X = 106;
-    private static final int BUTTON_BASE_Y = 1;
-    private static final int BUTTON_SIZE = 10;
-
-    private static final int DPAD_BASE_X = 4;
-    private static final int DPAD_BASE_Y = 41;
-    private static final int DPAD_SIZE = 30;
-
-    private static final int ANALOG_L_BASE_X = 6;
-    private static final int ANALOG_L_BASE_Y = 4;
-    private static final int ANALOG_R_BASE_X = 98;
-    private static final int ANALOG_R_BASE_Y = 42;
-    private static final int ANALOG_SIZE = 26;
-
-    private static final int L3_R3_BASE_Y = 60;
-
-    private static final int START_BACK_Y = 64;
-    private static final int START_BACK_WIDTH = 12;
-    private static final int START_BACK_HEIGHT = 7;
-
-    // Make the Guide Menu be in the center of START and BACK menu
-    // Delos: the gap between the middle buttons, and the trackpad above them
-    private static final int MIDDLE_GAP = 2;
-    private static final int TRACKPAD_WIDTH = 20;
-    private static final int TRACKPAD_HEIGHT = 10;
-    private static final int GUIDE_Y = START_BACK_Y;
-
+    /** The default layout on the screen the controls are drawn on (the window's size, from the resources). */
     public static void createDefaultLayout(final VirtualController controller, final Context context) {
-
         DisplayMetrics screen = context.getResources().getDisplayMetrics();
-        PreferenceConfiguration config = PreferenceConfiguration.readPreferences(context);
+        createDefaultLayout(controller, context, screen.widthPixels, screen.heightPixels);
+    }
 
-        // Displace controls on the right by this amount of pixels to account for different aspect ratios
-        int rightDisplacement = screen.widthPixels - screen.heightPixels * 16 / 9;
+    /**
+     * The default layout on a screen of {@code width} x {@code height} pixels. The positions come from {@link OscDefaultLayout}
+     * (docs/GUI.md, "Screen shapes"): the 16:9 layout of the prototype from 3:2 up, shrunk to fit on squarer screens.
+     */
+    public static void createDefaultLayout(final VirtualController controller, final Context context, int width, int height) {
+        createDefaultLayout(controller, context, width, height, PreferenceConfiguration.readPreferences(context));
+    }
 
-        int height = screen.heightPixels;
-
-        // Delos: Back, Guide and Start in a row centred at the bottom (Guide in the middle, also when it is
-        // hidden, so Back and Start stay symmetric), the trackpad centred above them
-        int center = screen.widthPixels / 2;
-        int middleWidth = screenScale(START_BACK_WIDTH, height);
-        int middleGap = screenScale(MIDDLE_GAP, height);
-        int guideX = center - middleWidth / 2;
-        int backX = guideX - middleGap - middleWidth;
-        int startX = guideX + middleWidth + middleGap;
-        int trackpadWidth = screenScale(TRACKPAD_WIDTH, height);
-        int trackpadHeight = screenScale(TRACKPAD_HEIGHT, height);
-        int trackpadY = screenScale(START_BACK_Y - MIDDLE_GAP, height) - trackpadHeight;
-
-        // NOTE: Some of these getPercent() expressions seem like they can be combined
-        // into a single call. Due to floating point rounding, this isn't actually possible.
+    /** The same with the settings given (the debug previews cannot read them: that loads the native library, which the emulator cannot). */
+    public static void createDefaultLayout(final VirtualController controller, final Context context, int width, int height,
+                                           PreferenceConfiguration config) {
+        OscGeometry.Panel panel = new OscGeometry.Panel(width, height);
+        Map<Integer, OscDefaultLayout.Slot> slots = OscDefaultLayout.compute(panel, config.onlyL3R3, config.showGuideButton);
 
         if (!config.onlyL3R3)
         {
-            controller.addElement(createDigitalPad(controller, context),
-                    screenScale(DPAD_BASE_X, height),
-                    screenScale(DPAD_BASE_Y, height),
-                    screenScale(DPAD_SIZE, height),
-                    screenScale(DPAD_SIZE, height)
-            );
+            add(controller, slots, VirtualControllerElement.EID_DPAD, createDigitalPad(controller, context));
 
-            controller.addElement(createDigitalButton(
+            add(controller, slots, VirtualControllerElement.EID_A, createDigitalButton(
                     VirtualControllerElement.EID_A,
                     !config.flipFaceButtons ? ControllerPacket.A_FLAG : ControllerPacket.B_FLAG, 0, 1,
-                    !config.flipFaceButtons ? "A" : "B",  controller, context),
-                    screenScale(BUTTON_BASE_X, height) + rightDisplacement,
-                    screenScale(BUTTON_BASE_Y + 2 * BUTTON_SIZE, height),
-                    screenScale(BUTTON_SIZE, height),
-                    screenScale(BUTTON_SIZE, height)
-            );
+                    !config.flipFaceButtons ? "A" : "B",  controller, context));
 
-            controller.addElement(createDigitalButton(
+            add(controller, slots, VirtualControllerElement.EID_B, createDigitalButton(
                     VirtualControllerElement.EID_B,
                     config.flipFaceButtons ? ControllerPacket.A_FLAG : ControllerPacket.B_FLAG, 0, 1,
-                    config.flipFaceButtons ? "A" : "B",  controller, context),
-                    screenScale(BUTTON_BASE_X + BUTTON_SIZE, height) + rightDisplacement,
-                    screenScale(BUTTON_BASE_Y + BUTTON_SIZE, height),
-                    screenScale(BUTTON_SIZE, height),
-                    screenScale(BUTTON_SIZE, height)
-            );
+                    config.flipFaceButtons ? "A" : "B",  controller, context));
 
-            controller.addElement(createDigitalButton(
+            add(controller, slots, VirtualControllerElement.EID_X, createDigitalButton(
                     VirtualControllerElement.EID_X,
                     !config.flipFaceButtons ? ControllerPacket.X_FLAG : ControllerPacket.Y_FLAG, 0, 1,
-                    !config.flipFaceButtons ? "X" : "Y",  controller, context),
-                    screenScale(BUTTON_BASE_X - BUTTON_SIZE, height) + rightDisplacement,
-                    screenScale(BUTTON_BASE_Y + BUTTON_SIZE, height),
-                    screenScale(BUTTON_SIZE, height),
-                    screenScale(BUTTON_SIZE, height)
-            );
+                    !config.flipFaceButtons ? "X" : "Y",  controller, context));
 
-            controller.addElement(createDigitalButton(
+            add(controller, slots, VirtualControllerElement.EID_Y, createDigitalButton(
                     VirtualControllerElement.EID_Y,
                     config.flipFaceButtons ? ControllerPacket.X_FLAG : ControllerPacket.Y_FLAG, 0, 1,
-                    config.flipFaceButtons ? "X" : "Y",  controller, context),
-                    screenScale(BUTTON_BASE_X, height) + rightDisplacement,
-                    screenScale(BUTTON_BASE_Y, height),
-                    screenScale(BUTTON_SIZE, height),
-                    screenScale(BUTTON_SIZE, height)
-            );
+                    config.flipFaceButtons ? "X" : "Y",  controller, context));
 
-            controller.addElement(createLeftTrigger(
-                    1, "LT",  controller, context),
-                    screenScale(TRIGGER_L_BASE_X, height),
-                    screenScale(TRIGGER_BASE_Y, height),
-                    screenScale(TRIGGER_WIDTH, height),
-                    screenScale(TRIGGER_HEIGHT, height)
-            );
+            add(controller, slots, VirtualControllerElement.EID_LT, createLeftTrigger(1, "LT",  controller, context));
+            add(controller, slots, VirtualControllerElement.EID_RT, createRightTrigger(1, "RT",  controller, context));
 
-            controller.addElement(createRightTrigger(
-                    1, "RT",  controller, context),
-                    screenScale(TRIGGER_R_BASE_X + TRIGGER_DISTANCE, height) + rightDisplacement,
-                    screenScale(TRIGGER_BASE_Y, height),
-                    screenScale(TRIGGER_WIDTH, height),
-                    screenScale(TRIGGER_HEIGHT, height)
-            );
-
-            controller.addElement(createDigitalButton(
+            add(controller, slots, VirtualControllerElement.EID_LB, createDigitalButton(
                     VirtualControllerElement.EID_LB,
-                    ControllerPacket.LB_FLAG, 0, 1, "LB",  controller, context),
-                    screenScale(TRIGGER_L_BASE_X + TRIGGER_DISTANCE, height),
-                    screenScale(TRIGGER_BASE_Y, height),
-                    screenScale(TRIGGER_WIDTH, height),
-                    screenScale(TRIGGER_HEIGHT, height)
-            );
+                    ControllerPacket.LB_FLAG, 0, 1, "LB",  controller, context));
 
-            controller.addElement(createDigitalButton(
+            add(controller, slots, VirtualControllerElement.EID_RB, createDigitalButton(
                     VirtualControllerElement.EID_RB,
-                    ControllerPacket.RB_FLAG, 0, 1, "RB",  controller, context),
-                    screenScale(TRIGGER_R_BASE_X, height) + rightDisplacement,
-                    screenScale(TRIGGER_BASE_Y, height),
-                    screenScale(TRIGGER_WIDTH, height),
-                    screenScale(TRIGGER_HEIGHT, height)
-            );
+                    ControllerPacket.RB_FLAG, 0, 1, "RB",  controller, context));
 
             if(config.enableNewAnalogStick){
-                controller.addElement(createLeftStick2(controller, context),
-                        screenScale(ANALOG_L_BASE_X, height),
-                        screenScale(ANALOG_L_BASE_Y, height),
-                        screenScale(ANALOG_SIZE, height),
-                        screenScale(ANALOG_SIZE, height)
-                );
-
-                controller.addElement(createRightStick2(controller, context),
-                        screenScale(ANALOG_R_BASE_X, height) + rightDisplacement,
-                        screenScale(ANALOG_R_BASE_Y, height),
-                        screenScale(ANALOG_SIZE, height),
-                        screenScale(ANALOG_SIZE, height)
-                );
+                add(controller, slots, VirtualControllerElement.EID_LS, createLeftStick2(controller, context));
+                add(controller, slots, VirtualControllerElement.EID_RS, createRightStick2(controller, context));
             }else{
-                controller.addElement(createLeftStick(controller, context),
-                        screenScale(ANALOG_L_BASE_X, height),
-                        screenScale(ANALOG_L_BASE_Y, height),
-                        screenScale(ANALOG_SIZE, height),
-                        screenScale(ANALOG_SIZE, height)
-                );
-
-                controller.addElement(createRightStick(controller, context),
-                        screenScale(ANALOG_R_BASE_X, height) + rightDisplacement,
-                        screenScale(ANALOG_R_BASE_Y, height),
-                        screenScale(ANALOG_SIZE, height),
-                        screenScale(ANALOG_SIZE, height)
-                );
+                add(controller, slots, VirtualControllerElement.EID_LS, createLeftStick(controller, context));
+                add(controller, slots, VirtualControllerElement.EID_RS, createRightStick(controller, context));
             }
-            controller.addElement(createDigitalButton(
+
+            add(controller, slots, VirtualControllerElement.EID_BACK, createDigitalButton(
                     VirtualControllerElement.EID_BACK,
-                    ControllerPacket.BACK_FLAG, 0, 2, "BACK",  controller, context),
-                    backX,
-                    screenScale(START_BACK_Y, height),
-                    screenScale(START_BACK_WIDTH, height),
-                    screenScale(START_BACK_HEIGHT, height)
-            );
+                    ControllerPacket.BACK_FLAG, 0, 2, "BACK",  controller, context));
 
-            controller.addElement(createDigitalButton(
+            add(controller, slots, VirtualControllerElement.EID_START, createDigitalButton(
                     VirtualControllerElement.EID_START,
-                    ControllerPacket.PLAY_FLAG, 0, 3, "START",  controller, context),
-                    startX,
-                    screenScale(START_BACK_Y, height),
-                    screenScale(START_BACK_WIDTH, height),
-                    screenScale(START_BACK_HEIGHT, height)
-            );
+                    ControllerPacket.PLAY_FLAG, 0, 3, "START",  controller, context));
 
-            controller.addElement(createDigitalButton(
-                            VirtualControllerElement.EID_LSB,
-                            ControllerPacket.LS_CLK_FLAG, 0, 1, "L3",  controller, context),
-                    screenScale(TRIGGER_L_BASE_X, height),
-                    screenScale(L3_R3_BASE_Y, height),
-                    screenScale(TRIGGER_WIDTH, height),
-                    screenScale(TRIGGER_HEIGHT, height)
-            );
+            add(controller, slots, VirtualControllerElement.EID_LSB, createDigitalButton(
+                    VirtualControllerElement.EID_LSB,
+                    ControllerPacket.LS_CLK_FLAG, 0, 1, "L3",  controller, context));
 
-            controller.addElement(createDigitalButton(
-                            VirtualControllerElement.EID_RSB,
-                            ControllerPacket.RS_CLK_FLAG, 0, 1, "R3",  controller, context),
-                    screenScale(TRIGGER_R_BASE_X + TRIGGER_DISTANCE, height) + rightDisplacement,
-                    screenScale(L3_R3_BASE_Y, height),
-                    screenScale(TRIGGER_WIDTH, height),
-                    screenScale(TRIGGER_HEIGHT, height)
-            );
+            add(controller, slots, VirtualControllerElement.EID_RSB, createDigitalButton(
+                    VirtualControllerElement.EID_RSB,
+                    ControllerPacket.RS_CLK_FLAG, 0, 1, "R3",  controller, context));
 
-            controller.addElement(createDigitalButton(
-                            VirtualControllerElement.EID_TOUCHPAD,
-                            ControllerPacket.TOUCHPAD_FLAG, 0, 1, "TRACKPAD",  controller, context),
-                    center - trackpadWidth / 2,
-                    trackpadY,
-                    trackpadWidth,
-                    trackpadHeight
-            );
+            add(controller, slots, VirtualControllerElement.EID_TOUCHPAD, createDigitalButton(
+                    VirtualControllerElement.EID_TOUCHPAD,
+                    ControllerPacket.TOUCHPAD_FLAG, 0, 1, "TRACKPAD",  controller, context));
         }
         else {
-            controller.addElement(createDigitalButton(
+            add(controller, slots, VirtualControllerElement.EID_LSB, createDigitalButton(
                     VirtualControllerElement.EID_LSB,
-                    ControllerPacket.LS_CLK_FLAG, 0, 1, "L3", controller, context),
-                    screenScale(TRIGGER_L_BASE_X, height),
-                    screenScale(L3_R3_BASE_Y, height),
-                    screenScale(TRIGGER_WIDTH, height),
-                    screenScale(TRIGGER_HEIGHT, height)
-            );
+                    ControllerPacket.LS_CLK_FLAG, 0, 1, "L3", controller, context));
 
-            controller.addElement(createDigitalButton(
+            add(controller, slots, VirtualControllerElement.EID_RSB, createDigitalButton(
                     VirtualControllerElement.EID_RSB,
-                    ControllerPacket.RS_CLK_FLAG, 0, 1, "R3",  controller, context),
-                    screenScale(TRIGGER_R_BASE_X + TRIGGER_DISTANCE, height) + rightDisplacement,
-                    screenScale(L3_R3_BASE_Y, height),
-                    screenScale(TRIGGER_WIDTH, height),
-                    screenScale(TRIGGER_HEIGHT, height)
-            );
+                    ControllerPacket.RS_CLK_FLAG, 0, 1, "R3",  controller, context));
         }
 
-
         if(config.showGuideButton){
-            controller.addElement(createDigitalButton(VirtualControllerElement.EID_GDB,
-                            ControllerPacket.SPECIAL_BUTTON_FLAG, 0, 1, "GUIDE",  controller, context),
-                    guideX,
-                    screenScale(GUIDE_Y, height),
-                    screenScale(START_BACK_WIDTH, height),
-                    screenScale(START_BACK_HEIGHT, height)
-            );
+            add(controller, slots, VirtualControllerElement.EID_GDB, createDigitalButton(VirtualControllerElement.EID_GDB,
+                    ControllerPacket.SPECIAL_BUTTON_FLAG, 0, 1, "GUIDE",  controller, context));
         }
 
         controller.setOpacity(config.oscOpacity);
+    }
+
+    private static void add(VirtualController controller, Map<Integer, OscDefaultLayout.Slot> slots, int elementId,
+                            VirtualControllerElement element) {
+        OscDefaultLayout.Slot slot = slots.get(elementId);
+        controller.addElement(element, slot.left, slot.top, slot.width, slot.height);
     }
 
     public static void saveProfile(final VirtualController controller,
