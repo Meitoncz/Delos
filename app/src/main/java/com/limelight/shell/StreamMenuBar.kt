@@ -135,7 +135,7 @@ internal fun StreamMenuBackdrop(gradientAlpha: () -> Float, scrimAlpha: () -> Fl
 /**
  * The dock (docs/GUI.md, "Stream menu"): the game's name and the button hints above the row of nine glass tiles, one
  * gold ring that glides between them, and under them the caption with the complete help of the focused tile. All of it
- * is placed on the 1920 x 1080 stage with the tiles' top at [StreamMenuLayout.DOCK_TOP]; the popover sinks it by
+ * is placed on the 1920-pixel-wide dock box (anchored to the stage's bottom edge) with the tiles' top at [StreamMenuLayout.DOCK_TOP]; the popover sinks it by
  * [dockShift] stage pixels. [enter] and [exit] are the clocks (milliseconds) of the entrance and the exit, read while
  * drawing; [firstItem] is the tile the focus starts on (the ring arrives after it).
  */

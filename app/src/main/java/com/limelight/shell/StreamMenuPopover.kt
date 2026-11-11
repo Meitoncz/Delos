@@ -257,7 +257,7 @@ internal fun StreamMenuPopover(
 ) {
     val k = stageScale()
     val sheen = LocalDelosColors.current.accent2
-    val maxHeight = ((L.POPOVER_MAX_HEIGHT + L.CARET_HEIGHT) * k).roundToInt()
+    val maxHeight = ((popoverMaxHeight(LocalStage.current.stageHeight) + L.CARET_HEIGHT) * k).roundToInt()
     Box(
         modifier
             .offset { IntOffset((geo.x.value * k).roundToInt(), 0) }

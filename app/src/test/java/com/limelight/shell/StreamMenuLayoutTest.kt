@@ -139,8 +139,13 @@ class StreamMenuLayoutTest {
         assertEquals(c.POPOVER_MARGIN, c.POPOVER_MIN_LEFT, 0f)
         assertEquals(c.STAGE_WIDTH - c.POPOVER_MARGIN, c.POPOVER_MAX_RIGHT, 0f)
         // A card at its height limit: its top edge is the margin below the stage's top
-        assertEquals(c.POPOVER_MARGIN, c.POPOVER_CARD_BOTTOM - c.POPOVER_MAX_HEIGHT, 0f)
-        assertEquals(614f, c.POPOVER_MAX_HEIGHT, 0f)
+        assertEquals(c.POPOVER_MARGIN, popoverCardBottom(1080f) - popoverMaxHeight(1080f), 0f)
+        assertEquals(614f, popoverMaxHeight(1080f), 0f)
+        // A taller stage (16:10, 4:3) lets the card grow by the extra height, with the same margin and the same distance from the bottom
+        assertEquals(734f, popoverMaxHeight(1200f), 0f)
+        assertEquals(974f, popoverMaxHeight(1440f), 0f)
+        assertEquals(c.POPOVER_MARGIN, popoverCardBottom(1440f) - popoverMaxHeight(1440f), 0f)
+        assertEquals(1440f - c.POPOVER_BOTTOM - c.CARET_HEIGHT, popoverCardBottom(1440f), 0f)
         for (page in MenuPage.entries.filter { it != MenuPage.MAIN }) {
             val placement = popoverPlacement(page)!!
             val left = placement.left
@@ -180,28 +185,28 @@ class StreamMenuLayoutTest {
         // A five-row page (the Upscaler page had one more row once) is 601.6 tall at
         // text scale 1.0 and fits the limit without scrolling, also at 1.15 (610.8); at 1.3 the three-line help
         // makes it scroll
-        assertEquals(601.6f, popoverCardHeight(5, 1f), .01f)
-        assertTrue(popoverFits(5, 1f))
-        assertEquals(610.84f, popoverCardHeight(5, 1.15f), .01f)
-        assertTrue(popoverFits(5, 1.15f))
-        assertTrue(!popoverFits(5, c.MAX_TEXT_SCALE))
-        assertTrue(popoverFits(4, c.MAX_TEXT_SCALE))
+        assertEquals(601.6f, popoverCardHeight(5, 1f, 1080f), .01f)
+        assertTrue(popoverFits(5, 1f, 1080f))
+        assertEquals(610.84f, popoverCardHeight(5, 1.15f, 1080f), .01f)
+        assertTrue(popoverFits(5, 1.15f, 1080f))
+        assertTrue(!popoverFits(5, c.MAX_TEXT_SCALE, 1080f))
+        assertTrue(popoverFits(4, c.MAX_TEXT_SCALE, 1080f))
         // Small pages stay small
-        assertEquals(30f + 64f + 12f + rowsHeight(2) + 18f + popoverHelpHeight(1f) + 24f, popoverCardHeight(2, 1f), .01f)
-        assertTrue(popoverCardHeight(2, 1f) < popoverCardHeight(4, 1f))
+        assertEquals(30f + 64f + 12f + rowsHeight(2) + 18f + popoverHelpHeight(1f) + 24f, popoverCardHeight(2, 1f, 1080f), .01f)
+        assertTrue(popoverCardHeight(2, 1f, 1080f) < popoverCardHeight(4, 1f, 1080f))
         // The More page, centered on its tile, ends exactly the margin from the stage's right edge
         val more = popoverPlacement(MenuPage.MORE)!!
         assertEquals(c.POPOVER_MARGIN, c.STAGE_WIDTH - (more.left + more.width), 0f)
         // More has 11 rows (with Mouse mode): the card stops at the shared limit and the rows scroll
-        assertTrue(!popoverFits(11, 1f))
-        assertEquals(c.POPOVER_MAX_HEIGHT, popoverCardHeight(11, 1f), 0f)
+        assertTrue(!popoverFits(11, 1f, 1080f))
+        assertEquals(popoverMaxHeight(1080f), popoverCardHeight(11, 1f, 1080f), 0f)
         assertEquals(72f * 11 + 8f * 10, rowsHeight(11), 0f)
         assertEquals(0f, rowsHeight(0), 0f)
         // No page is ever taller than the limit, at any text scale
-        for (scale in listOf(1f, 1.15f, 1.3f)) for (rows in 0..20) assertTrue(popoverCardHeight(rows, scale) <= c.POPOVER_MAX_HEIGHT)
+        for (scale in listOf(1f, 1.15f, 1.3f)) for (rows in 0..20) assertTrue(popoverCardHeight(rows, scale, 1080f) <= popoverMaxHeight(1080f))
         // The rows area keeps room for at least four rows beside the fixed header and help, even at the largest text scale
         val fixed = c.POPOVER_PADDING_Y + c.POPOVER_HEAD_HEIGHT + c.POPOVER_GAP_AFTER_HEAD + c.POPOVER_HELP_GAP + popoverHelpHeight(c.MAX_TEXT_SCALE) + c.POPOVER_PADDING_BOTTOM
-        assertTrue(c.POPOVER_MAX_HEIGHT - fixed >= rowsHeight(4))
+        assertTrue(popoverMaxHeight(1080f) - fixed >= rowsHeight(4))
     }
 
     @Test

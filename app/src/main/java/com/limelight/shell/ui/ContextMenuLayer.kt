@@ -126,7 +126,7 @@ private val OnlineDot = Color(0xFF3DDC84)
  * recomposing; [resolved] flips once so the composition can swap the estimated opening point for the real one.
  */
 @Stable
-private class MenuPlaceState(initial: MenuPlacement) {
+private class MenuPlaceState(initial: MenuPlacement, private val stageWidth: Float, private val stageHeight: Float) {
     var placement: MenuPlacement = initial
         private set
     var cardWidth = 0f
@@ -156,7 +156,7 @@ private class MenuPlaceState(initial: MenuPlacement) {
 
     /** The point the card grows from and shrinks to: the caret's tip. */
     fun origin(): TransformOrigin = TransformOrigin(
-        (placement.tipX / StageWidth).coerceIn(0f, 1f), (placement.tipY / StageHeight).coerceIn(0f, 1f),
+        (placement.tipX / stageWidth).coerceIn(0f, 1f), (placement.tipY / stageHeight).coerceIn(0f, 1f),
     )
 
     /** The outline of the card with its caret inside the layer's [size] (card plus the room around it for the caret), [k] pixels per stage pixel. */
@@ -168,9 +168,6 @@ private class MenuPlaceState(initial: MenuPlacement) {
         return PathShape(outline, k, size, placement).also { shape = it }
     }
 }
-
-private const val StageWidth = 1920f
-private const val StageHeight = 1080f
 
 private class PathShape(outline: MenuOutline, val k: Float, val size: Size, val placement: MenuPlacement) : Shape {
     val path = outline.card
@@ -265,8 +262,11 @@ fun ContextMenuLayer(
     val m = shown
     val stageAnchor = shownAnchor?.let { Rect(it.left / k, it.top / k, it.right / k, it.bottom / k) }
     // The card is placed once its size is known; until then the estimated one gives the opening point
-    val state = remember(m, stageAnchor) {
-        MenuPlaceState(placeContextMenu(stageAnchor, L.MIN_WIDTH, estimatedHeight(m), m?.below == true))
+    val stage = LocalStage.current
+    val stageW = stage.stageWidth
+    val stageH = stage.stageHeight
+    val state = remember(m, stageAnchor, stageW, stageH) {
+        MenuPlaceState(placeContextMenu(stageAnchor, L.MIN_WIDTH, estimatedHeight(m, stageH), m?.below == true, stageW, stageH), stageW, stageH)
     }
     val resolved = state.resolved
     val origin = remember(state, resolved) { state.origin() }
@@ -280,7 +280,7 @@ fun ContextMenuLayer(
             exit = popExit(origin, reduced),
         ) {
             if (m == null) return@AnimatedVisibility
-            CardPlacer(state, stageAnchor, m.below, k) {
+            CardPlacer(state, stageAnchor, m.below, k, stageW, stageH) {
                 // Switching level (or menu) is a new card content: its rows stagger in again and the plate starts on its first row
                 key(m, shownPath) { MenuCard(m, shownPath, cameFrom, onPath, state, haze, k, active = menu != null, onDismiss) }
             }
@@ -289,22 +289,22 @@ fun ContextMenuLayer(
 }
 
 /** A guess of the card's height before it is measured (header and rows), stage pixels. */
-private fun estimatedHeight(menu: ContextMenu?): Float {
+private fun estimatedHeight(menu: ContextMenu?, stageHeight: Float): Float {
     val rows = menu?.items?.size ?: 0
-    return (110f + rows * (L.ROW_HEIGHT + L.ROW_GAP) + 2 * L.PADDING + 8f).coerceAtMost(L.MAX_HEIGHT)
+    return (110f + rows * (L.ROW_HEIGHT + L.ROW_GAP) + 2 * L.PADDING + 8f).coerceAtMost(L.maxHeight(stageHeight))
 }
 
 /** Places its child (the card with the room around it for the caret) by [placeContextMenu]. */
 @Composable
-private fun CardPlacer(state: MenuPlaceState, anchor: Rect?, below: Boolean, k: Float, content: @Composable () -> Unit) {
+private fun CardPlacer(state: MenuPlaceState, anchor: Rect?, below: Boolean, k: Float, stageW: Float, stageH: Float, content: @Composable () -> Unit) {
     Layout(content, Modifier.fillMaxSize()) { measurables, constraints ->
         val room = L.CARET_DEPTH * k
         val child = measurables.first().measure(
-            Constraints(maxWidth = ((L.MAX_WIDTH + 2 * L.CARET_DEPTH) * k).roundToInt(), maxHeight = ((L.MAX_HEIGHT + 2 * L.CARET_DEPTH) * k).roundToInt()),
+            Constraints(maxWidth = ((L.MAX_WIDTH + 2 * L.CARET_DEPTH) * k).roundToInt(), maxHeight = ((L.maxHeight(stageH) + 2 * L.CARET_DEPTH) * k).roundToInt()),
         )
         val w = child.width / k - 2 * L.CARET_DEPTH
         val h = child.height / k - 2 * L.CARET_DEPTH
-        val placement = placeContextMenu(anchor, w, h, below)
+        val placement = placeContextMenu(anchor, w, h, below, stageW, stageH)
         state.place(placement, w, h)
         layout(constraints.maxWidth, constraints.maxHeight) {
             child.place((placement.x * k - room).roundToInt(), (placement.y * k - room).roundToInt())

@@ -51,6 +51,7 @@ import com.limelight.shell.ui.InitialFocus
 import com.limelight.shell.ui.rememberFocusedListNavigation
 import com.limelight.shell.ui.LocalDelosColors
 import com.limelight.shell.ui.LocalReducedMotion
+import com.limelight.shell.ui.LocalStage
 import com.limelight.shell.ui.EntranceStagger
 import com.limelight.shell.ui.LocalEntranceStagger
 import com.limelight.shell.ui.Motion
@@ -336,8 +337,10 @@ internal fun StreamMenuRoot(
             Box(Modifier.fillMaxSize().pointerInput(Unit) { detectTapGestures { pageAfterDismiss(page)?.let { go(it) } } })
             StreamMenuBackdrop(gradientAlpha = { gradient.value }, scrimAlpha = { scrim.value })
 
-            // Everything else sits on the 1920 x 1080 stage, bottom-aligned
-            Box(Modifier.align(Alignment.BottomCenter).size(L.STAGE_WIDTH.px, L.STAGE_HEIGHT.px)) {
+            // Everything else sits on a 1920-wide box centered on the stage and as high as the real stage, bottom-aligned: the
+            // dock and the popover keep their distance from the bottom edge, a taller stage gives the popover more room
+            val stageHeight = LocalStage.current.stageHeight
+            Box(Modifier.align(Alignment.BottomCenter).size(L.STAGE_WIDTH.px, stageHeight.px)) {
                 StreamMenuDock(
                     title = host.gameName,
                     circles = circles,
@@ -355,7 +358,7 @@ internal fun StreamMenuRoot(
                             barHelpItem = item
                         } else if (focusedItem == item) focusedItem = null
                     },
-                    modifier = Modifier.offset(0.px, L.DOCK_TOP.px),
+                    modifier = Modifier.offset(0.px, (stageHeight - L.STAGE_HEIGHT + L.DOCK_TOP).px),
                 )
 
                 // The popover sits above the tile that opened it, its caret pointing down at that tile

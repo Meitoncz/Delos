@@ -41,6 +41,7 @@ import com.limelight.shell.settings.AppearanceStore
 import com.limelight.shell.ui.Figtree
 import com.limelight.shell.ui.LocalStage
 import com.limelight.shell.ui.StageMetrics
+import com.limelight.shell.ui.StagePlanner
 import com.limelight.shell.ui.px
 import com.limelight.shell.ui.textResources
 import com.limelight.shell.ui.tpx
@@ -285,10 +286,11 @@ class StreamStatsPanel private constructor(
             val panel = StreamStatsPanel(view, container, StatsPosition.read(settings), compact)
             panel.applyGravity()
             val metrics = activity.resources.displayMetrics
-            // Stage pixels of the 1920 × 1080 prototype, like the rest of the new UI
-            val dpPerPx = minOf(metrics.widthPixels / 1920f, metrics.heightPixels / 1080f) / metrics.density
+            // The stage the rest of the new UI is laid out on (the stream menu's Stage plans it the same way), so the panel keeps its
+            // size and place relative to the menu on every window shape
+            val plan = StagePlanner.plan(metrics.widthPixels / metrics.density, metrics.heightPixels / metrics.density)
             view.setContent {
-                CompositionLocalProvider(LocalStage provides StageMetrics(dpPerPx, appearance.uiScale / 100f)) {
+                CompositionLocalProvider(LocalStage provides StageMetrics(plan.dpPerPx, appearance.uiScale / 100f, plan.stageWidth, plan.stageHeight, plan.shape)) {
                     panel.Content()
                 }
             }

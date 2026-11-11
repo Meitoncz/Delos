@@ -126,7 +126,11 @@ internal fun pageAfterDismiss(page: MenuPage): PageExit? =
     if (page == MenuPage.MAIN) null else PageExit(MenuPage.MAIN, page.barItem(), null)
 
 internal object StreamMenuLayout {
-    /** The stage every number below is measured on. */
+    /**
+     * The reference stage every number below is measured on. The dock is a 1920-pixel-wide box centered on the real stage
+     * and anchored to its bottom edge, so [STAGE_HEIGHT] only fixes where [DOCK_TOP] and [POPOVER_BOTTOM] lie relative to
+     * that edge; the height of the real stage ([StageMetrics.stageHeight]) only limits how tall a popover may grow.
+     */
     const val STAGE_WIDTH = 1920f
     const val STAGE_HEIGHT = 1080f
 
@@ -190,7 +194,7 @@ internal object StreamMenuLayout {
     const val POPOVER_PADDING_Y = 30f
     const val POPOVER_PADDING_BOTTOM = 24f
     const val POPOVER_HEAD_HEIGHT = 64f
-    // The card's height limit (POPOVER_MAX_HEIGHT) is derived below from the margin.
+    // The card's height limit (popoverMaxHeight) is derived below from the margin.
     const val POPOVER_HEAD_GAP = 20f
     const val POPOVER_GAP_AFTER_HEAD = 12f
     const val POPOVER_HELP_GAP = 18f
@@ -227,9 +231,8 @@ internal object StreamMenuLayout {
     const val POPOVER_MIN_LEFT = POPOVER_MARGIN
     const val POPOVER_MAX_RIGHT = STAGE_WIDTH - POPOVER_MARGIN
 
-    /** The card's bottom edge (the caret excluded) and the tallest card: from there up to the [POPOVER_MARGIN] below the stage's top. */
-    const val POPOVER_CARD_BOTTOM = STAGE_HEIGHT - POPOVER_BOTTOM - CARET_HEIGHT
-    const val POPOVER_MAX_HEIGHT = POPOVER_CARD_BOTTOM - POPOVER_MARGIN
+    /** The card's bottom edge (the caret excluded) above the stage's bottom: it does not depend on the stage's height. */
+    const val POPOVER_CARD_BOTTOM_INSET = POPOVER_BOTTOM + CARET_HEIGHT
 
     // Rows of a page
     const val ROW_HEIGHT = 72f
@@ -315,17 +318,23 @@ internal fun popoverHelpHeight(textScale: Float): Float =
 internal fun rowsHeight(rows: Int): Float =
     if (rows <= 0) 0f else rows * StreamMenuLayout.ROW_HEIGHT + (rows - 1) * StreamMenuLayout.ROW_GAP
 
-/** The card's height with [rows] rows at [textScale] when nothing scrolls, caret excluded; capped at [StreamMenuLayout.POPOVER_MAX_HEIGHT], the one height every page shares as its limit. */
-internal fun popoverCardHeight(rows: Int, textScale: Float): Float {
+/** The card's bottom edge (the caret excluded) on a stage [stageHeight] stage pixels high, from the stage's top. */
+internal fun popoverCardBottom(stageHeight: Float): Float = stageHeight - StreamMenuLayout.POPOVER_CARD_BOTTOM_INSET
+
+/** The tallest card on a stage [stageHeight] high: from its bottom edge up to the [StreamMenuLayout.POPOVER_MARGIN] below the stage's top. */
+internal fun popoverMaxHeight(stageHeight: Float): Float = popoverCardBottom(stageHeight) - StreamMenuLayout.POPOVER_MARGIN
+
+/** The card's height with [rows] rows at [textScale] when nothing scrolls, caret excluded; capped at [popoverMaxHeight], the one height every page shares as its limit. */
+internal fun popoverCardHeight(rows: Int, textScale: Float, stageHeight: Float): Float {
     val c = StreamMenuLayout
     val natural = c.POPOVER_PADDING_Y + c.POPOVER_HEAD_HEIGHT + c.POPOVER_GAP_AFTER_HEAD + rowsHeight(rows) + c.POPOVER_HELP_GAP + popoverHelpHeight(textScale) + c.POPOVER_PADDING_BOTTOM
-    return minOf(natural, c.POPOVER_MAX_HEIGHT)
+    return minOf(natural, popoverMaxHeight(stageHeight))
 }
 
 /** True when a page of [rows] rows needs no scrolling at [textScale]. */
-internal fun popoverFits(rows: Int, textScale: Float): Boolean {
+internal fun popoverFits(rows: Int, textScale: Float, stageHeight: Float): Boolean {
     val c = StreamMenuLayout
-    return c.POPOVER_PADDING_Y + c.POPOVER_HEAD_HEIGHT + c.POPOVER_GAP_AFTER_HEAD + rowsHeight(rows) + c.POPOVER_HELP_GAP + popoverHelpHeight(textScale) + c.POPOVER_PADDING_BOTTOM <= c.POPOVER_MAX_HEIGHT
+    return c.POPOVER_PADDING_Y + c.POPOVER_HEAD_HEIGHT + c.POPOVER_GAP_AFTER_HEAD + rowsHeight(rows) + c.POPOVER_HELP_GAP + popoverHelpHeight(textScale) + c.POPOVER_PADDING_BOTTOM <= popoverMaxHeight(stageHeight)
 }
 
 /** The bottom edge of the compact statistics line at [textScale], stage pixels from the stage's top. */
@@ -334,9 +343,9 @@ internal fun compactStatsBottom(textScale: Float): Float {
     return c.STATS_COMPACT_TOP + 2 * c.STATS_COMPACT_PADDING_Y + c.STATS_COMPACT_TEXT_SIZE * textScale * c.STATS_COMPACT_LINE_HEIGHT
 }
 
-/** The gap between the top of a card at its height limit and the compact statistics line at [textScale]. */
+/** The gap between the top of a card at its height limit (the margin below the stage's top, at any stage height) and the compact statistics line at [textScale]. */
 internal fun popoverStatsGap(textScale: Float): Float =
-    StreamMenuLayout.POPOVER_CARD_BOTTOM - StreamMenuLayout.POPOVER_MAX_HEIGHT - compactStatsBottom(textScale)
+    StreamMenuLayout.POPOVER_MARGIN - compactStatsBottom(textScale)
 
 /** The height of the caption's box at [textScale]. */
 internal fun captionHeight(textScale: Float): Float =

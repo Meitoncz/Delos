@@ -32,7 +32,9 @@ internal object ContextMenuLayout {
     /** The card keeps the stream popover's margin from the top and bottom of the stage, and a smaller one from its sides. */
     const val MARGIN_Y = StreamMenuLayout.POPOVER_MARGIN
     const val MARGIN_X = 60f
-    const val MAX_HEIGHT = StreamMenuLayout.STAGE_HEIGHT - 2 * MARGIN_Y
+
+    /** The tallest card: the stage's height between the two vertical margins. */
+    fun maxHeight(stageHeight: Float): Float = stageHeight - 2 * MARGIN_Y
 
     /** Where a card without an element to point at (no anchor) sits. */
     const val FALLBACK_X = 760f
@@ -53,13 +55,12 @@ data class MenuPlacement(val x: Float, val y: Float, val side: CaretSide, val ca
 /**
  * The card of size [w] x [h] for the element [anchor] (stage pixels). Beside the element by default: to its right with the
  * caret on the card's left, flipped to its left when it would leave the stage; vertically centered on the element and
- * kept inside the margins. With [below] under the element, centered on it, caret on top; when it does not fit
+ * kept inside the margins of the [stageW] x [stageH] stage. With [below] under the element, centered on it, caret on top; when it does not fit
  * there but fits above, above it with the caret on the bottom.
  */
-fun placeContextMenu(anchor: Rect?, w: Float, h: Float, below: Boolean): MenuPlacement {
+fun placeContextMenu(anchor: Rect?, w: Float, h: Float, below: Boolean, stageW: Float, stageH: Float): MenuPlacement {
     val l = ContextMenuLayout
-    val stageW = StreamMenuLayout.STAGE_WIDTH
-    val bottomLimit = StreamMenuLayout.STAGE_HEIGHT - l.MARGIN_Y
+    val bottomLimit = stageH - l.MARGIN_Y
     if (anchor == null) {
         val x = l.FALLBACK_X.coerceIn(l.MARGIN_X, (stageW - l.MARGIN_X - w).coerceAtLeast(l.MARGIN_X))
         val y = l.FALLBACK_Y.coerceIn(l.MARGIN_Y, (bottomLimit - h).coerceAtLeast(l.MARGIN_Y))
