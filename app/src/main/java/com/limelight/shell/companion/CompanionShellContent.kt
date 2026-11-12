@@ -48,29 +48,15 @@ import com.limelight.shell.ui.textResources
 import com.limelight.shell.ui.tpx
 
 /**
- * The shell's companion: the description of the row focused on a settings screen, large (the help wins, [shellView]); else the game focused
- * on the main panel with its details and the big buttons; else a quiet mark. [inWindow] is false for a preview drawn inside the shell's own
- * window: only a real companion window tells the main screen that the description is shown here.
+ * The game focused on the main panel as the companion shows it (home screen), with its details and the big buttons. Wrapped as a page ([GamePage])
+ * so the window chooses between it, the settings help and the pages of the other screens ([chooseShellPage]).
  */
-@Composable
-internal fun ShellContent(state: CompanionState.Shell, inWindow: Boolean = true) {
-    when (shellView(state)) {
-        ShellView.HELP -> HelpContent(checkNotNull(state.help), inWindow)
-        ShellView.GAME -> GameDetails(checkNotNull(state.game))
-        ShellView.IDLE -> IdleContent()
-    }
-}
+internal data class GamePage(val game: CompanionGame) : CompanionPage {
+    override val key: String get() = "game/${game.key}"
+    override val priority: Int get() = PagePriority.GAME
 
-@Composable
-private fun IdleContent() {
-    val colors = LocalDelosColors.current
-    Box(Modifier.fillMaxSize().padding(horizontal = 48.px), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(26.px)) {
-            // The padding keeps the moon, which sits outside the ring's box (about 18 px at this size), inside the dimmed layer
-            Box(Modifier.padding(24.px)) { LogoMark(size = 96f) }
-            Body(stringResource(R.string.companion_idle_hint), color = colors.text2, maxLines = 3, align = androidx.compose.ui.text.style.TextAlign.Center)
-        }
-    }
+    @Composable
+    override fun Content() = GameDetails(game)
 }
 
 @OptIn(ExperimentalLayoutApi::class)

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="companion_screen_home">Principal</string>
+    <string name="companion_screen_start">Inicio</string>
+    <string name="companion_screen_pairing">Emparejamiento</string>
+    <string name="companion_screen_settings">Ajustes</string>
+    <string name="companion_screen_settings_search">Buscar en los ajustes</string>
+    <string name="companion_screen_game_settings">Ajustes del juego</string>
+    <string name="companion_screen_debug">Información de depuración</string>
+    <string name="companion_screen_osc">Controles en pantalla</string>
+    <string name="companion_screen_artwork">Imágenes</string>
+    <string name="companion_screen_profile">Perfil</string>
+    <string name="companion_screen_create_profile">Perfil nuevo</string>
+    <string name="companion_screen_boot">Te damos la bienvenida a Delos</string>
+    <string name="companion_purpose_home">Tus juegos en el PC conectado.</string>
+    <string name="companion_purpose_start">Elige el PC en el que jugar.</string>
+    <string name="companion_purpose_devices">Los PC emparejados con Delos.</string>
+    <string name="companion_purpose_pair_pc">Busca un PC en tu red y emparéjalo.</string>
+    <string name="companion_purpose_pin">Confirma el emparejamiento en tu PC.</string>
+    <string name="companion_purpose_settings">Elige un ajuste en la pantalla principal.</string>
+    <string name="companion_purpose_settings_search">Busca un ajuste en la pantalla principal.</string>
+    <string name="companion_purpose_game_settings">Ajustes solo para este juego.</string>
+    <string name="companion_purpose_debug">Detalles técnicos de este dispositivo.</string>
+    <string name="companion_purpose_osc">Coloca los controles en pantalla en la pantalla principal.</string>
+    <string name="companion_purpose_artwork">Elige las imágenes de este juego.</string>
+    <string name="companion_purpose_profile">Tu perfil y sus ajustes.</string>
+    <string name="companion_purpose_create_profile">Elige un avatar y un nombre.</string>
+    <string name="companion_purpose_boot">Elige Empezar en la pantalla principal.</string>
+    <string name="companion_context_eyebrow">Contexto de la pantalla principal</string>
+    <string name="companion_hints_more">Más sugerencias en la pantalla principal: %1$d</string>
+    <string name="companion_no_hints">Esta pantalla no tiene atajos del mando.</string>
+    <string name="companion_host_running">%1$s se está ejecutando</string>
+    <string name="companion_battery">Batería · %1$d %%</string>
+    <string name="companion_welcome_sub">Aún no hay ningún PC emparejado</string>
+    <string name="companion_welcome_text">Ejecuta un host de streaming compatible en tu PC. Para empezar, elige Emparejar un PC en la pantalla principal.</string>
+    <string name="companion_welcome_short">Empareja tu primer PC en la pantalla principal.</string>
+    <string name="companion_see_main">Los detalles están en la pantalla principal.</string>
+    <string name="companion_no_pc">Ningún PC conectado</string>
+</resources>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="companion_screen_home">Start</string>
+    <string name="companion_screen_start">Start</string>
+    <string name="companion_screen_pairing">Kopplung</string>
+    <string name="companion_screen_settings">Einstellungen</string>
+    <string name="companion_screen_settings_search">Einstellungen durchsuchen</string>
+    <string name="companion_screen_game_settings">Spieleinstellungen</string>
+    <string name="companion_screen_debug">Debug-Infos</string>
+    <string name="companion_screen_osc">Bildschirmsteuerung</string>
+    <string name="companion_screen_artwork">Artwork</string>
+    <string name="companion_screen_profile">Profil</string>
+    <string name="companion_screen_create_profile">Neues Profil</string>
+    <string name="companion_screen_boot">Willkommen bei Delos</string>
+    <string name="companion_purpose_home">Deine Spiele auf dem verbundenen PC.</string>
+    <string name="companion_purpose_start">Wähle den PC zum Spielen.</string>
+    <string name="companion_purpose_devices">Die mit Delos gekoppelten PCs.</string>
+    <string name="companion_purpose_pair_pc">Finde einen PC im Netzwerk und koppel ihn.</string>
+    <string name="companion_purpose_pin">Bestätige die Kopplung am PC.</string>
+    <string name="companion_purpose_settings">Wähle eine Einstellung auf dem Hauptbildschirm.</string>
+    <string name="companion_purpose_settings_search">Suche eine Einstellung auf dem Hauptbildschirm.</string>
+    <string name="companion_purpose_game_settings">Einstellungen nur für dieses Spiel.</string>
+    <string name="companion_purpose_debug">Technische Details dieses Geräts.</string>
+    <string name="companion_purpose_osc">Ordne die Bildschirmsteuerung auf dem Hauptbildschirm an.</string>
+    <string name="companion_purpose_artwork">Wähle die Bilder für dieses Spiel.</string>
+    <string name="companion_purpose_profile">Dein Profil und seine Einstellungen.</string>
+    <string name="companion_purpose_create_profile">Wähle einen Avatar und einen Namen.</string>
+    <string name="companion_purpose_boot">Wähle auf dem Hauptbildschirm Los geht’s.</string>
+    <string name="companion_context_eyebrow">Kontext des Hauptbildschirms</string>
+    <string name="companion_hints_more">Weitere Hinweise auf dem Hauptbildschirm: %1$d</string>
+    <string name="companion_no_hints">Auf diesem Bildschirm gibt es keine Controller-Kürzel.</string>
+    <string name="companion_host_running">%1$s läuft</string>
+    <string name="companion_battery">Akku · %1$d %%</string>
+    <string name="companion_welcome_sub">Noch kein PC gekoppelt</string>
+    <string name="companion_welcome_text">Starte auf deinem PC einen unterstützten Streaming-Host. Wähle zum Beginnen auf dem Hauptbildschirm PC koppeln.</string>
+    <string name="companion_welcome_short">Koppel deinen ersten PC auf dem Hauptbildschirm.</string>
+    <string name="companion_see_main">Details siehst du auf dem Hauptbildschirm.</string>
+    <string name="companion_no_pc">Kein PC verbunden</string>
+</resources>

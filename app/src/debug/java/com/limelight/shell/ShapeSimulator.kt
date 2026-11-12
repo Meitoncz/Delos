@@ -128,7 +128,7 @@ internal class ShapeSimulator private constructor(private val fake: CompanionSta
                                 CompositionLocalProvider(LocalDensity provides companionDensity, LocalCutoutPx provides IntRect.Zero) {
                                     CompanionTheme({ appearance }) {
                                         CompanionContent(
-                                            fake ?: (CompanionPreview.liveShell ?: shell).let { CompanionState.Shell(it.pcName, it.companionGame, it.companionHelp) },
+                                            fake ?: (CompanionPreview.liveShell ?: shell).companionState(),
                                             inWindow = true,
                                         )
                                     }

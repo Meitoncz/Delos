@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="companion_screen_home">Accueil</string>
+    <string name="companion_screen_start">Démarrage</string>
+    <string name="companion_screen_pairing">Appairage</string>
+    <string name="companion_screen_settings">Réglages</string>
+    <string name="companion_screen_settings_search">Recherche dans les réglages</string>
+    <string name="companion_screen_game_settings">Réglages du jeu</string>
+    <string name="companion_screen_debug">Infos de débogage</string>
+    <string name="companion_screen_osc">Commandes à l’écran</string>
+    <string name="companion_screen_artwork">Illustrations</string>
+    <string name="companion_screen_profile">Profil</string>
+    <string name="companion_screen_create_profile">Nouveau profil</string>
+    <string name="companion_screen_boot">Bienvenue dans Delos</string>
+    <string name="companion_purpose_home">Tes jeux sur le PC connecté.</string>
+    <string name="companion_purpose_start">Choisis le PC sur lequel jouer.</string>
+    <string name="companion_purpose_devices">Les PC appairés avec Delos.</string>
+    <string name="companion_purpose_pair_pc">Trouve un PC sur ton réseau et appaire-le.</string>
+    <string name="companion_purpose_pin">Confirme l’appairage sur ton PC.</string>
+    <string name="companion_purpose_settings">Choisis un réglage sur l’écran principal.</string>
+    <string name="companion_purpose_settings_search">Cherche un réglage sur l’écran principal.</string>
+    <string name="companion_purpose_game_settings">Réglages pour ce jeu uniquement.</string>
+    <string name="companion_purpose_debug">Détails techniques de cet appareil.</string>
+    <string name="companion_purpose_osc">Organise les commandes à l’écran sur l’écran principal.</string>
+    <string name="companion_purpose_artwork">Choisis les images de ce jeu.</string>
+    <string name="companion_purpose_profile">Ton profil et ses réglages.</string>
+    <string name="companion_purpose_create_profile">Choisis un avatar et un nom.</string>
+    <string name="companion_purpose_boot">Choisis Commencer sur l’écran principal.</string>
+    <string name="companion_context_eyebrow">Contexte de l’écran principal</string>
+    <string name="companion_hints_more">Autres astuces sur l’écran principal : %1$d</string>
+    <string name="companion_no_hints">Aucun raccourci de manette sur cet écran.</string>
+    <string name="companion_host_running">%1$s est en cours</string>
+    <string name="companion_battery">Batterie · %1$d %%</string>
+    <string name="companion_welcome_sub">Aucun PC appairé pour l’instant</string>
+    <string name="companion_welcome_text">Lance un hôte de streaming compatible sur ton PC. Pour commencer, choisis Appairer un PC sur l’écran principal.</string>
+    <string name="companion_welcome_short">Appaire ton premier PC sur l’écran principal.</string>
+    <string name="companion_see_main">Les détails sont sur l’écran principal.</string>
+    <string name="companion_no_pc">Aucun PC connecté</string>
+</resources>

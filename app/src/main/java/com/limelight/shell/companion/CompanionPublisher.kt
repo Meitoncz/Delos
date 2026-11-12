@@ -79,30 +79,76 @@ internal fun PublishCompanionGame(pc: Pc, app: App, image: ImageBitmap?, running
             onAction = onAction,
         )
     }
-    SideEffect { shell.companionGame = game }
-    DisposableEffect(shell) { onDispose { shell.companionGame = null } }
+    PublishCompanionPage(remember(game) { GamePage(game) })
 }
 
 private const val IMPACT_DELAY_MS = 300L
 
 /**
- * Publishes the description of the row a settings screen has focused to the companion screen ([ShellState.companionHelp][com.limelight.shell.ShellState.companionHelp]),
- * live: every focus move or change of the row's value makes a new [CompanionHelp]; leaving the screen clears it. A screen that is replaced
- * keeps its place for the length of the screen transition, so it clears only what it published itself (an equal value: the state keeps the first of equal values), never the next screen's help.
- * Whether a window really shows it is [CompanionSession.showsHelp]: the screen draws its own description unless one does.
+ * Publishes what a screen (or a layer over it) wants the companion window to show ([ShellState.companionPages][com.limelight.shell.ShellState.companionPages]):
+ * [page] is kept live (every new value replaces the old), `null` publishes nothing, and leaving the composition removes it. Every publisher holds a
+ * token of its own, so a screen that is being replaced (it stays for the length of the transition) clears only what IT published, never the next
+ * screen's page. The window shows the page of the highest [CompanionPage.priority] ([chooseShellPage]).
+ */
+@Composable
+internal fun PublishCompanionPage(page: CompanionPage?) {
+    val shell = LocalShell.current
+    val token = remember { Any() }
+    SideEffect {
+        if (page == null) shell.companionPages.remove(token)
+        else if (shell.companionPages[token] != page) shell.companionPages[token] = page
+    }
+    DisposableEffect(shell, token) { onDispose { shell.companionPages.remove(token) } }
+}
+
+/**
+ * Publishes the description of the row a settings screen has focused to the companion screen, live: every focus move or change of the row's value
+ * makes a new [CompanionHelp]; leaving the screen clears it. Whether a window really shows it is [CompanionSession.showsHelp]: the screen draws its
+ * own description unless one does.
  */
 @Composable
 internal fun PublishCompanionHelp(help: CompanionHelp) {
-    val shell = LocalShell.current
-    val published = remember { arrayOfNulls<CompanionHelp>(1) }
-    SideEffect {
-        published[0] = help
-        shell.companionHelp = help
-    }
-    DisposableEffect(shell) { onDispose { if (shell.companionHelp == published[0]) shell.companionHelp = null } }
+    PublishCompanionPage(remember(help) { SettingsHelpPage(help) })
 }
 
 /** True while a companion window shows the settings help: the settings screens then leave out their description and give the list the room. */
 @Composable
 internal fun companionShowsHelp(): Boolean = CompanionSession.showsHelp
+
+/**
+ * Publishes what the fallback card is made of ([ShellContext]): the title and purpose of the current screen, the entries of the hint bar (the very list
+ * the main screen draws, so the two never disagree), the PC the shell is connected to with its status and the game that runs on it, and whether any PC is
+ * paired at all. Called once by the shell.
+ */
+@Composable
+internal fun PublishCompanionContext(hints: List<com.limelight.shell.ui.Hint>, library: com.limelight.shell.data.Library, pcs: List<Pc>) {
+    val shell = LocalShell.current
+    val res = com.limelight.shell.ui.textResources()
+    val screen = shell.screen
+    val pc = when (library) {
+        is com.limelight.shell.data.Library.Ready -> library.pc
+        is com.limelight.shell.data.Library.Offline -> library.pc
+        else -> null
+    }
+    val running = (library as? com.limelight.shell.data.Library.Ready)?.apps?.firstOrNull { it.running }?.name
+    val welcome = pcs.none { it.paired }
+    val context = remember(res, screen, hints, pc?.name, pc?.online, pc?.canWake, running, welcome) {
+        ShellContext(
+            title = res.getString(screenTitle(screen)),
+            purpose = res.getString(screenPurpose(screen)),
+            hints = hints.map { hint ->
+                val glyph = hint.glyph
+                CompanionHint((glyph as? com.limelight.shell.ui.Glyph.Letter)?.text, (glyph as? com.limelight.shell.ui.Glyph.Icon)?.symbol, hint.label)
+            },
+            host = pc?.let { CompanionHostLine(it.name, pcStatusText(res, it), running) },
+            welcome = welcome,
+        )
+    }
+    SideEffect { shell.companionContext = context }
+    DisposableEffect(shell) { onDispose { shell.companionContext = null } }
+}
+
+/** The status of a PC as a word, as the PC screens say it: online, asleep and waking up, or offline. */
+internal fun pcStatusText(res: android.content.res.Resources, pc: Pc): String =
+    res.getString(if (pc.online) com.limelight.R.string.devices_status_online else if (pc.canWake) com.limelight.R.string.devices_status_asleep_wakes else com.limelight.R.string.devices_status_offline)
 

@@ -794,7 +794,9 @@ fun Shell(
             }
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
                 val filterHint = (library as? Library.Ready)?.takeIf { it.apps.isNotEmpty() }?.let { filterHintLabel(res, metadata.filters) }
-                ZoomedBar(uiScale) { HintBar(hints(res, shell, tracker.adjustable, tracker.hasContextMenu, filterHint), note = note, noteLabel = if (note != null) res.getString(R.string.shell_hint_library_label) else null) }
+                val hintEntries = hints(res, shell, tracker.adjustable, tracker.hasContextMenu, filterHint)
+                com.limelight.shell.companion.PublishCompanionContext(hintEntries, library, pcs)
+                ZoomedBar(uiScale) { HintBar(hintEntries, note = note, noteLabel = if (note != null) res.getString(R.string.shell_hint_library_label) else null) }
             }
             val launch = shell.launch
             val launchLogo = launch?.let { rememberArtwork(artwork, it.pc, it.app, ArtKind.LOGO).value }

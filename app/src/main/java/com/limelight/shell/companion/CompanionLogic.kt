@@ -16,21 +16,14 @@ import java.util.Locale
  * The burn-in policy of the AMOLED companion (docs/DUAL_SCREEN.md, "Burn-in"). Two measures, both cheap:
  * - **Pixel shift**: all content moves by a few device-independent pixels every [SHIFT_PERIOD_MS], through a fixed serpentine
  *   path over a 3 × 3 grid with a [SHIFT_STEP_DP] pitch, so no edge (the header rule, a button outline, a logo) stays on the
- *   same pixels for more than two minutes. The cycle is 18 minutes.
- * - **Dim**: in the shell state, where the same picture can stay all day, the content fades to [DIM_ALPHA] after [DIM_AFTER_MS]
- *   without a touch; a touch wakes it (and is not passed on, so waking can never press a button).
+ *   same pixels for more than two minutes. The cycle is 18 minutes. It is always on, whatever the dim setting says.
+ * - **Dim**: the content fades to [DIM_ALPHA] after the delay of [CompanionDim] without a touch; a touch wakes it (and is not passed on,
+ *   so waking can never press a button).
  */
 object CompanionBurnIn {
     const val SHIFT_PERIOD_MS = 120_000L
     const val SHIFT_STEP_DP = 3
-    const val DIM_AFTER_MS = 60_000L
     const val DIM_ALPHA = .22f
-
-    /** While the settings help shows, someone is reading it with a controller in hand and no touch: it dims after five minutes (a new row's help restarts the time). */
-    const val DIM_AFTER_HELP_MS = 300_000L
-
-    /** How long the shell state rests before it dims: [DIM_AFTER_MS], or [DIM_AFTER_HELP_MS] while it shows the settings help. */
-    fun dimAfter(showsHelp: Boolean): Long = if (showsHelp) DIM_AFTER_HELP_MS else DIM_AFTER_MS
 
     /** Offset of a shift position in steps of [SHIFT_STEP_DP]: -1, 0 or 1 on each axis. */
     data class Shift(val x: Int, val y: Int)
@@ -41,9 +34,45 @@ object CompanionBurnIn {
 
     /** The shift [elapsedMs] after the window started. Starts in place; the whole path is visited once per cycle, then repeats. */
     fun shiftAt(elapsedMs: Long): Shift = PATH[((elapsedMs.coerceAtLeast(0L) / SHIFT_PERIOD_MS) % PATH.size).toInt()]
+}
 
-    /** Whether the content is dimmed at [now] when the last touch was at [lastTouchMs] (same clock). */
-    fun dimmed(lastTouchMs: Long, now: Long): Boolean = now - lastTouchMs >= DIM_AFTER_MS
+/**
+ * The idle dimming of the companion screen as the user sets it (Settings > Display, only while a companion display exists): [Policy.enabled]
+ * (default on, because of OLED burn-in) and the minutes without a touch before it dims. Device-wide, in the default shared preferences (excluded
+ * from backup), like the other two display settings.
+ */
+object CompanionDim {
+    const val KEY_ENABLED = "display_companion_dim"
+    const val KEY_MINUTES = "display_companion_dim_minutes"
+
+    /** The delays the setting offers, in minutes. */
+    val MINUTES = listOf(1, 2, 5, 10)
+    const val DEFAULT_MINUTES = 1
+
+    data class Policy(val enabled: Boolean = true, val minutes: Int = DEFAULT_MINUTES) {
+        /** Milliseconds of rest before the dim; null while dimming is off. */
+        val delayMs: Long? get() = if (enabled) minutes * 60_000L else null
+    }
+
+    /** The stored policy; a missing or unknown delay is [DEFAULT_MINUTES]. */
+    fun read(prefs: android.content.SharedPreferences): Policy {
+        val minutes = prefs.getInt(KEY_MINUTES, DEFAULT_MINUTES).takeIf { it in MINUTES } ?: DEFAULT_MINUTES
+        return Policy(prefs.getBoolean(KEY_ENABLED, true), minutes)
+    }
+
+    fun writeEnabled(prefs: android.content.SharedPreferences, enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_ENABLED, enabled).apply()
+    }
+
+    fun writeMinutes(prefs: android.content.SharedPreferences, minutes: Int) {
+        prefs.edit().putInt(KEY_MINUTES, minutes.takeIf { it in MINUTES } ?: DEFAULT_MINUTES).apply()
+    }
+
+    /** The next (or, with [direction] -1, the previous) delay of [MINUTES], wrapping around. */
+    fun step(minutes: Int, direction: Int): Int = MINUTES[Math.floorMod(MINUTES.indexOf(minutes).coerceAtLeast(0) + direction, MINUTES.size)]
+
+    /** Whether the content is dimmed at [now] when the last touch was at [lastTouchMs] (same clock): never while dimming is off. */
+    fun dimmed(policy: Policy, lastTouchMs: Long, now: Long): Boolean = policy.delayMs?.let { now - lastTouchMs >= it } ?: false
 }
 
 /**

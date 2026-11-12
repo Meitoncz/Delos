@@ -33,11 +33,47 @@ class CompanionLogicTest {
         assertEquals(CompanionBurnIn.Shift(0, 0), CompanionBurnIn.shiftAt(-5))
     }
 
-    @Test fun dimsExactlyAfterTheTimeoutWithoutATouch() {
-        assertFalse(CompanionBurnIn.dimmed(1_000, 1_000 + CompanionBurnIn.DIM_AFTER_MS - 1))
-        assertTrue(CompanionBurnIn.dimmed(1_000, 1_000 + CompanionBurnIn.DIM_AFTER_MS))
-        // A touch restarts the timeout
-        assertFalse(CompanionBurnIn.dimmed(1_000 + CompanionBurnIn.DIM_AFTER_MS, 1_000 + CompanionBurnIn.DIM_AFTER_MS + 10))
+    // ---- Idle dimming (the setting) ----
+
+    private val on1 = CompanionDim.Policy(enabled = true, minutes = 1)
+
+    @Test fun dimmingDefaultsToOnAfterOneMinute() {
+        assertEquals(CompanionDim.Policy(true, 1), CompanionDim.Policy())
+        assertEquals(60_000L, CompanionDim.Policy().delayMs)
+    }
+
+    @Test fun dimsExactlyAfterTheChosenDelayWithoutATouch() {
+        for (minutes in CompanionDim.MINUTES) {
+            val policy = CompanionDim.Policy(true, minutes)
+            val delay = minutes * 60_000L
+            assertEquals(delay, policy.delayMs)
+            assertFalse(CompanionDim.dimmed(policy, 1_000, 1_000 + delay - 1))
+            assertTrue(CompanionDim.dimmed(policy, 1_000, 1_000 + delay))
+            // A touch restarts the timeout
+            assertFalse(CompanionDim.dimmed(policy, 1_000 + delay, 1_000 + delay + 10))
+        }
+    }
+
+    @Test fun neverDimsWhileTheSettingIsOffWhateverTheDelayAndTheRest() {
+        for (minutes in CompanionDim.MINUTES) {
+            val off = CompanionDim.Policy(false, minutes)
+            assertNull(off.delayMs)
+            assertFalse(CompanionDim.dimmed(off, 0, Long.MAX_VALUE / 2))
+        }
+    }
+
+    @Test fun theDelayStepsThroughTheFourChoicesAndWraps() {
+        assertEquals(listOf(1, 2, 5, 10), CompanionDim.MINUTES)
+        assertEquals(2, CompanionDim.step(1, +1))
+        assertEquals(5, CompanionDim.step(2, +1))
+        assertEquals(10, CompanionDim.step(5, +1))
+        assertEquals(1, CompanionDim.step(10, +1))
+        assertEquals(10, CompanionDim.step(1, -1))
+        assertEquals(on1.minutes, CompanionDim.step(CompanionDim.step(1, +1), -1))
+    }
+
+    @Test fun anUnknownDelayStepsFromTheFirstChoice() {
+        assertEquals(2, CompanionDim.step(3, +1))
     }
 
     // ---- Statistics throttle ----

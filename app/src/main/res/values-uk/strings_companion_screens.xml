@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="companion_screen_home">Головна</string>
+    <string name="companion_screen_start">Початок</string>
+    <string name="companion_screen_pairing">Підключення</string>
+    <string name="companion_screen_settings">Налаштування</string>
+    <string name="companion_screen_settings_search">Пошук у налаштуваннях</string>
+    <string name="companion_screen_game_settings">Налаштування гри</string>
+    <string name="companion_screen_debug">Налагоджувальна інформація</string>
+    <string name="companion_screen_osc">Екранне керування</string>
+    <string name="companion_screen_artwork">Зображення</string>
+    <string name="companion_screen_profile">Профіль</string>
+    <string name="companion_screen_create_profile">Новий профіль</string>
+    <string name="companion_screen_boot">Ласкаво просимо до застосунку Delos</string>
+    <string name="companion_purpose_home">Твої ігри на підключеному ПК.</string>
+    <string name="companion_purpose_start">Обери ПК, на якому гратимеш.</string>
+    <string name="companion_purpose_devices">ПК, підключені до Delos.</string>
+    <string name="companion_purpose_pair_pc">Знайди ПК у мережі та підключи його.</string>
+    <string name="companion_purpose_pin">Підтвердь підключення на ПК.</string>
+    <string name="companion_purpose_settings">Обери налаштування на головному екрані.</string>
+    <string name="companion_purpose_settings_search">Знайди налаштування на головному екрані.</string>
+    <string name="companion_purpose_game_settings">Налаштування лише для цієї гри.</string>
+    <string name="companion_purpose_debug">Технічні відомості про цей пристрій.</string>
+    <string name="companion_purpose_osc">Розташуй екранне керування на головному екрані.</string>
+    <string name="companion_purpose_artwork">Обери зображення для цієї гри.</string>
+    <string name="companion_purpose_profile">Твій профіль і його налаштування.</string>
+    <string name="companion_purpose_create_profile">Обери аватар і ім’я.</string>
+    <string name="companion_purpose_boot">Обери «Почати» на головному екрані.</string>
+    <string name="companion_context_eyebrow">Контекст головного екрана</string>
+    <string name="companion_hints_more">Більше підказок на головному екрані: %1$d</string>
+    <string name="companion_no_hints">На цьому екрані немає скорочень контролера.</string>
+    <string name="companion_host_running">%1$s запущено</string>
+    <string name="companion_battery">Батарея · %1$d%%</string>
+    <string name="companion_welcome_sub">Ще немає підключених ПК</string>
+    <string name="companion_welcome_text">Запусти на ПК підтримуваний хост потокової трансляції. Щоб почати, обери «Підключити ПК» на головному екрані.</string>
+    <string name="companion_welcome_short">Підключи свій перший ПК на головному екрані.</string>
+    <string name="companion_see_main">Подробиці дивись на головному екрані.</string>
+    <string name="companion_no_pc">Немає підключеного ПК</string>
+</resources>

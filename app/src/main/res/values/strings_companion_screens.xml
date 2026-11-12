@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Titles of the screens of the shell on the companion's fallback card (the name of the screen on the main panel) -->
+    <string name="companion_screen_home">Home</string>
+    <string name="companion_screen_start">Start</string>
+    <string name="companion_screen_pairing">Pairing</string>
+    <string name="companion_screen_settings">Settings</string>
+    <string name="companion_screen_settings_search">Settings search</string>
+    <string name="companion_screen_game_settings">Game settings</string>
+    <string name="companion_screen_debug">Debug info</string>
+    <string name="companion_screen_osc">On-screen controls</string>
+    <string name="companion_screen_artwork">Artwork</string>
+    <string name="companion_screen_profile">Profile</string>
+    <string name="companion_screen_create_profile">New profile</string>
+    <string name="companion_screen_boot">Welcome to Delos</string>
+    <!-- One line under the title of the companion's fallback card: what the screen on the main panel is for -->
+    <string name="companion_purpose_home">Your games on the connected PC.</string>
+    <string name="companion_purpose_start">Choose the PC to play on.</string>
+    <string name="companion_purpose_devices">The PCs paired with Delos.</string>
+    <string name="companion_purpose_pair_pc">Find a PC on your network and pair it.</string>
+    <string name="companion_purpose_pin">Confirm the pairing on your PC.</string>
+    <string name="companion_purpose_settings">Select a setting on the main display.</string>
+    <string name="companion_purpose_settings_search">Find a setting on the main display.</string>
+    <string name="companion_purpose_game_settings">Settings that apply to this game only.</string>
+    <string name="companion_purpose_debug">Technical details of this device.</string>
+    <string name="companion_purpose_osc">Arrange the on-screen controls on the main display.</string>
+    <string name="companion_purpose_artwork">Choose the pictures for this game.</string>
+    <string name="companion_purpose_profile">Your profile and its settings.</string>
+    <string name="companion_purpose_create_profile">Choose an avatar and a name.</string>
+    <string name="companion_purpose_boot">Choose Get started on the main display.</string>
+    <!-- Small line under the title of the fallback card -->
+    <string name="companion_context_eyebrow">Main screen context</string>
+    <!-- The hint list is cut to what fits; %1$d is how many more hints the main screen's hint bar has -->
+    <string name="companion_hints_more">More hints on the main display: %1$d</string>
+    <string name="companion_no_hints">No controller shortcuts on this screen.</string>
+    <!-- %1$s is the name of the game that runs on the connected PC -->
+    <string name="companion_host_running">%1$s is running</string>
+    <string name="companion_battery">Battery · %1$d%%</string>
+    <!-- Welcome card of the companion screen while no PC is paired -->
+    <string name="companion_welcome_sub">No PC paired yet</string>
+    <string name="companion_welcome_text">Run a supported streaming host on your PC. Choose Pair a PC on the main display to begin.</string>
+    <string name="companion_welcome_short">Pair your first PC on the main display.</string>
+    <!-- Last resort when even the short form of a text does not fit the companion panel -->
+    <string name="companion_see_main">See the main screen for details.</string>
+    <!-- Header of the companion screen while no PC is known -->
+    <string name="companion_no_pc">No PC connected</string>
+</resources>

@@ -15,11 +15,13 @@ import com.limelight.shell.settings.SettingImpact
  */
 internal sealed interface CompanionState {
     /**
-     * The shell: the PC whose games are open, the game focused on the main panel (null on the start screen and in settings) and the
-     * [help] of the focused settings row (null outside the settings screens). With both, the help wins: the settings screen is on top
-     * ([shellView]).
+     * The shell: the PC whose games are open, what its screens have [published] (pages of different priorities, the highest wins: [chooseShellPage]) and
+     * the [context] of the main screen the fallback page is made of. Nothing published is never empty: the fallback or the welcome card shows.
      */
-    data class Shell(val pcName: String?, val game: CompanionGame? = null, val help: CompanionHelp? = null) : CompanionState
+    data class Shell(val pcName: String?, val published: List<CompanionPage> = emptyList(), val context: ShellContext? = null) : CompanionState {
+        /** The page the window shows. */
+        val page: CompanionPage get() = chooseShellPage(published, context)
+    }
 
     /** A stream: the PC and game it runs, the latest statistics (null before the first) and the commands of the running stream (null until bound). */
     data class Stream(

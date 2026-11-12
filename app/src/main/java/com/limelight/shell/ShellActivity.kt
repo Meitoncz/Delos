@@ -150,7 +150,7 @@ class ShellActivity : ComponentActivity() {
         // The window follows the appearance of the screen it shows (a screen preview runs its own: debug builds only)
         companion = CompanionHost(this, { CompanionPreview.liveAppearance ?: appearance.appearance }) {
             // A screen preview (debug builds) runs its own shell state: the window shows what that one publishes
-            fakeCompanion ?: (CompanionPreview.liveShell ?: shell).let { CompanionState.Shell(it.pcName, it.companionGame, it.companionHelp) }
+            fakeCompanion ?: (CompanionPreview.liveShell ?: shell).companionState()
         }
     }
 

@@ -63,16 +63,6 @@ internal data class HelpBackdrop(
     val opacity: Float,
 )
 
-/** What the shell's companion window draws. */
-internal enum class ShellView { HELP, GAME, IDLE }
-
-/** Which of the published states the window shows: the settings screen is on top of everything, so its help wins over a game. */
-internal fun shellView(state: CompanionState.Shell): ShellView = when {
-    state.help != null -> ShellView.HELP
-    state.game != null -> ShellView.GAME
-    else -> ShellView.IDLE
-}
-
 /**
  * Whether the main screen leaves out its description panel (the 520 px panel, the compact dock) and gives the list the room: only when a
  * companion window has actually taken the help ([CompanionSession.showsHelp]), never just because a second display exists. [help] is what

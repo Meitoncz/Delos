@@ -63,32 +63,12 @@ import com.limelight.shell.ui.tpx
  * focus live with a short crossfade between rows (the update of one row, like a value that changed, does not fade) and, when [inWindow], tells
  * [CompanionSession] that a real window shows it, which is what makes the main screen give its description's room to the list.
  */
-@Composable
-internal fun HelpContent(help: CompanionHelp, inWindow: Boolean = true) {
-    val window = LocalActivity.current
-    if (inWindow && window != null) {
-        DisposableEffect(window) {
-            CompanionSession.helpShown(window)
-            onDispose { CompanionSession.helpGone(window) }
-        }
-    }
-    val reduced = LocalReducedMotion.current
-    // What each row last said, so the page that fades out keeps its own text while the next row's fades in
-    val seen = remember { LruHelp() }
-    seen[help.identity] = help
-    Crossfade(
-        help.identity, Modifier.fillMaxSize(),
-        animationSpec = if (reduced) snap() else tween(Motion.FADE, easing = Motion.Ease), label = "companionHelp",
-    ) { id -> HelpPage(if (id == help.identity) help else seen[id] ?: help) }
-}
+internal data class SettingsHelpPage(val help: CompanionHelp) : CompanionPage {
+    override val key: String get() = "help/${help.identity}"
+    override val priority: Int get() = PagePriority.SCREEN
 
-/** The last few pages: the access order is the recency, the oldest goes first (the one fading out is always the newest but one). */
-private class LruHelp : LinkedHashMap<String, CompanionHelp>(16, .75f, true) {
-    override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, CompanionHelp>?): Boolean = size > KEEP
-
-    private companion object {
-        const val KEEP = 8
-    }
+    @Composable
+    override fun Content() = HelpPage(help)
 }
 
 /** One row's page: everything in ONE column under the header, scrolling by touch when it does not fit, with a fade at an edge only while content continues behind it. */

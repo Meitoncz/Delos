@@ -295,11 +295,19 @@ class ShellState(initial: Screen) {
     /** The PC whose games the shell shows (null before a PC is chosen); the companion screen shows it (docs/DUAL_SCREEN.md). */
     var pcName by mutableStateOf<String?>(null)
 
-    /** The game focused on the home screen, as the companion screen shows it (null while Home is not the screen; docs/DUAL_SCREEN.md). */
-    var companionGame by mutableStateOf<com.limelight.shell.companion.CompanionGame?>(null)
+    /**
+     * What the screens and layers of the shell want the companion screen to show, one page per publisher (the key is the publisher's token): the focused game,
+     * the focused PC, a settings row's help, a filter sheet, a launch in progress ... The window shows the page of the highest priority
+     * (docs/DUAL_SCREEN.md, "Companion pages"). Written by `PublishCompanionPage`.
+     */
+    internal val companionPages = androidx.compose.runtime.mutableStateMapOf<Any, com.limelight.shell.companion.CompanionPage>()
 
-    /** The description of the row focused on a settings screen, as the companion screen shows it (null while none is open; docs/DUAL_SCREEN.md). */
-    internal var companionHelp by mutableStateOf<com.limelight.shell.companion.CompanionHelp?>(null)
+    /** The title and purpose of the current screen, the entries of the hint bar and the connected PC: what the companion's fallback card is made of. */
+    internal var companionContext by mutableStateOf<com.limelight.shell.companion.ShellContext?>(null)
+
+    /** Everything the companion window shows in the shell state, read live inside composition. */
+    internal fun companionState(): com.limelight.shell.companion.CompanionState.Shell =
+        com.limelight.shell.companion.CompanionState.Shell(pcName, companionPages.values.toList(), companionContext)
 
     /** The game background behind the home screen (the focused game's art). */
     var hero by mutableStateOf<GameArt?>(null)

@@ -17,22 +17,30 @@ class CompanionHelpTest {
         completionSeconds = null, hdr = null, impact = null, onAction = {},
     )
 
-    // ---- Which state wins ----
+    // ---- Which page wins ----
 
-    @Test fun nothingPublishedIsTheIdleMark() {
-        assertEquals(ShellView.IDLE, shellView(CompanionState.Shell("PC")))
+    private val context = ShellContext("Settings", "Select a setting.", emptyList(), null, welcome = false)
+
+    @Test fun nothingPublishedIsTheFallbackCardNeverAnEmptyOne() {
+        assertTrue(CompanionState.Shell("PC", emptyList(), context).page is FallbackPage)
+        assertTrue(CompanionState.Shell("PC").page is FallbackPage)
+    }
+
+    @Test fun nothingPublishedWithoutAPcIsTheWelcomeCard() {
+        assertTrue(CompanionState.Shell(null, emptyList(), context.copy(welcome = true)).page is WelcomePage)
     }
 
     @Test fun aFocusedGameShowsItsDetails() {
-        assertEquals(ShellView.GAME, shellView(CompanionState.Shell("PC", game())))
+        assertTrue(CompanionState.Shell("PC", listOf(GamePage(game())), context).page is GamePage)
     }
 
     @Test fun theHelpOfASettingsScreenShowsOnItsOwn() {
-        assertEquals(ShellView.HELP, shellView(CompanionState.Shell("PC", help = help())))
+        assertTrue(CompanionState.Shell("PC", listOf(SettingsHelpPage(help())), context).page is SettingsHelpPage)
     }
 
     @Test fun helpWinsOverAGameBecauseTheSettingsScreenIsOnTop() {
-        assertEquals(ShellView.HELP, shellView(CompanionState.Shell("PC", game(), help())))
+        assertTrue(CompanionState.Shell("PC", listOf(GamePage(game()), SettingsHelpPage(help())), context).page is SettingsHelpPage)
+        assertTrue(CompanionState.Shell("PC", listOf(SettingsHelpPage(help()), GamePage(game())), context).page is SettingsHelpPage)
     }
 
     // ---- When the main screen gives its description's room to the list ----
@@ -67,14 +75,6 @@ class CompanionHelpTest {
         assertEquals("", source.strong)
         assertEquals("", source.after)
         assertEquals("plain", helpSource(false, "i", "t", "plain", "%s", "x").before)
-    }
-
-    // ---- The dim of the settings help ----
-
-    @Test fun theHelpDimsLaterThanTheGameDetails() {
-        assertEquals(CompanionBurnIn.DIM_AFTER_MS, CompanionBurnIn.dimAfter(showsHelp = false))
-        assertEquals(CompanionBurnIn.DIM_AFTER_HELP_MS, CompanionBurnIn.dimAfter(showsHelp = true))
-        assertTrue(CompanionBurnIn.DIM_AFTER_HELP_MS > CompanionBurnIn.DIM_AFTER_MS)
     }
 
     // ---- The page's geometry, in the user's rules (stage px) ----

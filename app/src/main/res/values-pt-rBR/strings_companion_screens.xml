@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="companion_screen_home">Principal</string>
+    <string name="companion_screen_start">Início</string>
+    <string name="companion_screen_pairing">Pareamento</string>
+    <string name="companion_screen_settings">Configurações</string>
+    <string name="companion_screen_settings_search">Buscar nas configurações</string>
+    <string name="companion_screen_game_settings">Configurações do jogo</string>
+    <string name="companion_screen_debug">Informações de depuração</string>
+    <string name="companion_screen_osc">Controles na tela</string>
+    <string name="companion_screen_artwork">Imagens</string>
+    <string name="companion_screen_profile">Perfil</string>
+    <string name="companion_screen_create_profile">Novo perfil</string>
+    <string name="companion_screen_boot">Boas-vindas ao Delos</string>
+    <string name="companion_purpose_home">Seus jogos no PC conectado.</string>
+    <string name="companion_purpose_start">Escolha o PC para jogar.</string>
+    <string name="companion_purpose_devices">Os PCs pareados com o Delos.</string>
+    <string name="companion_purpose_pair_pc">Encontre um PC na rede e faça o pareamento.</string>
+    <string name="companion_purpose_pin">Confirme o pareamento no seu PC.</string>
+    <string name="companion_purpose_settings">Escolha uma configuração na tela principal.</string>
+    <string name="companion_purpose_settings_search">Procure uma configuração na tela principal.</string>
+    <string name="companion_purpose_game_settings">Configurações só para este jogo.</string>
+    <string name="companion_purpose_debug">Detalhes técnicos deste dispositivo.</string>
+    <string name="companion_purpose_osc">Organize os controles na tela principal.</string>
+    <string name="companion_purpose_artwork">Escolha as imagens deste jogo.</string>
+    <string name="companion_purpose_profile">Seu perfil e as configurações dele.</string>
+    <string name="companion_purpose_create_profile">Escolha um avatar e um nome.</string>
+    <string name="companion_purpose_boot">Escolha Começar na tela principal.</string>
+    <string name="companion_context_eyebrow">Contexto da tela principal</string>
+    <string name="companion_hints_more">Mais dicas na tela principal: %1$d</string>
+    <string name="companion_no_hints">Esta tela não tem atalhos do controle.</string>
+    <string name="companion_host_running">%1$s está em execução</string>
+    <string name="companion_battery">Bateria · %1$d%%</string>
+    <string name="companion_welcome_sub">Nenhum PC pareado ainda</string>
+    <string name="companion_welcome_text">Execute um host de streaming compatível no seu PC. Para começar, escolha Parear um PC na tela principal.</string>
+    <string name="companion_welcome_short">Pareie seu primeiro PC na tela principal.</string>
+    <string name="companion_see_main">Veja os detalhes na tela principal.</string>
+    <string name="companion_no_pc">Nenhum PC conectado</string>
+</resources>

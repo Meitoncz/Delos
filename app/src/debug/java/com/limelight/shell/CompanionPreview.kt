@@ -8,6 +8,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.limelight.shell.companion.CompanionContent
+import com.limelight.shell.companion.CompanionHint
+import com.limelight.shell.companion.CompanionHostLine
+import com.limelight.shell.companion.CompanionPage
+import com.limelight.shell.companion.GamePage
+import com.limelight.shell.companion.SettingsHelpPage
+import com.limelight.shell.companion.ShellContext
 import com.limelight.shell.companion.CompanionGame
 import com.limelight.shell.companion.CompanionHelp
 import com.limelight.shell.companion.HelpBackdrop
@@ -99,11 +105,25 @@ internal object CompanionPreview {
         )
     }
 
-    private fun companionState(name: String): CompanionState = when (name) {
-        "help", "help_long", "help_short", "help_game", "help_debug", "help_palette", "help_background" -> CompanionState.Shell("GAMING-PC", game(false, null), help(name))
-        "shell_running" -> CompanionState.Shell("GAMING-PC", game(true, null))
-        "shell_other" -> CompanionState.Shell("GAMING-PC", game(false, "Hades"))
-        "idle" -> CompanionState.Shell("GAMING-PC")
+    /** What the fallback card of a preview knows of the main screen (a Settings screen with nothing focused on a connected PC that runs a game). */
+    private val context = ShellContext(
+        title = "Settings", purpose = "Select a setting on the main display.",
+        hints = listOf(
+            CompanionHint("L1", null, "Previous tab"), CompanionHint("R1", null, "Next tab"), CompanionHint("Y", null, "Search"),
+            CompanionHint("A", null, "Change"), CompanionHint("B", null, "Back"),
+        ),
+        host = CompanionHostLine("GAMING-PC", "Online", "Asterfall"), welcome = false,
+    )
+
+    private fun shell(vararg pages: CompanionPage, welcome: Boolean = false): CompanionState =
+        CompanionState.Shell(if (welcome) null else "GAMING-PC", pages.toList(), context.copy(welcome = welcome))
+
+    private fun companionState(name: String): CompanionState = CompanionFakesPc.state(name) ?: CompanionFakesContent.state(name) ?: CompanionFakesFlow.state(name) ?: when (name) {
+        "help", "help_long", "help_short", "help_game", "help_debug", "help_palette", "help_background" -> shell(GamePage(game(false, null)), SettingsHelpPage(help(name)))
+        "shell_running" -> shell(GamePage(game(true, null)))
+        "shell_other" -> shell(GamePage(game(false, "Hades")))
+        "idle", "fallback" -> shell()
+        "welcome" -> shell(welcome = true)
         "stream", "typing" -> CompanionState.Stream(
             "GAMING-PC", "Asterfall",
             StreamStats(1920, 1080, 119.9f, 120f, 119.9f, "HEVC", true, "c2.qti.hevc.decoder", null, 0f, 5, 1, 2.1f, 0f, -1f, -1f, -1f, 4400f),
@@ -111,6 +131,6 @@ internal object CompanionPreview {
                 android.util.Log.i("CompanionPreview", (if (down) "down " else "up   ") + KeyEvent.keyCodeToString(code))
             },
         )
-        else -> CompanionState.Shell("GAMING-PC", game(false, null))
+        else -> shell(GamePage(game(false, null)))
     }
 }

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="companion_screen_home">ホーム</string>
+    <string name="companion_screen_start">スタート</string>
+    <string name="companion_screen_pairing">ペアリング</string>
+    <string name="companion_screen_settings">設定</string>
+    <string name="companion_screen_settings_search">設定を検索</string>
+    <string name="companion_screen_game_settings">ゲーム設定</string>
+    <string name="companion_screen_debug">デバッグ情報</string>
+    <string name="companion_screen_osc">画面上のコントロール</string>
+    <string name="companion_screen_artwork">アートワーク</string>
+    <string name="companion_screen_profile">プロフィール</string>
+    <string name="companion_screen_create_profile">新しいプロフィール</string>
+    <string name="companion_screen_boot">Delosへようこそ</string>
+    <string name="companion_purpose_home">接続中のPCのゲームです。</string>
+    <string name="companion_purpose_start">遊ぶPCを選びます。</string>
+    <string name="companion_purpose_devices">Delosとペアリング済みのPCです。</string>
+    <string name="companion_purpose_pair_pc">ネットワーク上のPCを見つけてペアリングします。</string>
+    <string name="companion_purpose_pin">PCでペアリングを確認します。</string>
+    <string name="companion_purpose_settings">メイン画面で設定を選びます。</string>
+    <string name="companion_purpose_settings_search">メイン画面で設定を検索します。</string>
+    <string name="companion_purpose_game_settings">このゲームだけの設定です。</string>
+    <string name="companion_purpose_debug">このデバイスの技術情報です。</string>
+    <string name="companion_purpose_osc">メイン画面で画面上のコントロールを配置します。</string>
+    <string name="companion_purpose_artwork">このゲームの画像を選びます。</string>
+    <string name="companion_purpose_profile">プロフィールとその設定です。</string>
+    <string name="companion_purpose_create_profile">アバターと名前を選びます。</string>
+    <string name="companion_purpose_boot">メイン画面で「始める」を選びます。</string>
+    <string name="companion_context_eyebrow">メイン画面の状況</string>
+    <string name="companion_hints_more">メイン画面のヒントはほかに%1$d件</string>
+    <string name="companion_no_hints">この画面にはコントローラーのショートカットはありません。</string>
+    <string name="companion_host_running">%1$sを実行中</string>
+    <string name="companion_battery">バッテリー · %1$d%%</string>
+    <string name="companion_welcome_sub">ペアリング済みのPCはまだありません</string>
+    <string name="companion_welcome_text">PCで対応するストリーミングホストを起動してください。メイン画面で「PCをペアリング」を選んで始めます。</string>
+    <string name="companion_welcome_short">メイン画面で最初のPCをペアリングします。</string>
+    <string name="companion_see_main">詳細はメイン画面をご覧ください。</string>
+    <string name="companion_no_pc">PC未接続</string>
+</resources>

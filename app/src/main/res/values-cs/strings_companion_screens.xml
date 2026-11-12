@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="companion_screen_home">Domů</string>
+    <string name="companion_screen_start">Start</string>
+    <string name="companion_screen_pairing">Párování</string>
+    <string name="companion_screen_settings">Nastavení</string>
+    <string name="companion_screen_settings_search">Hledání v nastavení</string>
+    <string name="companion_screen_game_settings">Nastavení hry</string>
+    <string name="companion_screen_debug">Ladicí informace</string>
+    <string name="companion_screen_osc">Ovládání na obrazovce</string>
+    <string name="companion_screen_artwork">Obrázky</string>
+    <string name="companion_screen_profile">Profil</string>
+    <string name="companion_screen_create_profile">Nový profil</string>
+    <string name="companion_screen_boot">Vítej v aplikaci Delos</string>
+    <string name="companion_purpose_home">Tvoje hry na připojeném PC.</string>
+    <string name="companion_purpose_start">Vyber PC, na kterém chceš hrát.</string>
+    <string name="companion_purpose_devices">PC spárovaná s aplikací Delos.</string>
+    <string name="companion_purpose_pair_pc">Najdi PC v síti a spáruj ho.</string>
+    <string name="companion_purpose_pin">Potvrď párování na svém PC.</string>
+    <string name="companion_purpose_settings">Vyber nastavení na hlavní obrazovce.</string>
+    <string name="companion_purpose_settings_search">Najdi nastavení na hlavní obrazovce.</string>
+    <string name="companion_purpose_game_settings">Nastavení jen pro tuto hru.</string>
+    <string name="companion_purpose_debug">Technické údaje o tomto zařízení.</string>
+    <string name="companion_purpose_osc">Uspořádej ovládání na obrazovce na hlavní obrazovce.</string>
+    <string name="companion_purpose_artwork">Vyber obrázky pro tuto hru.</string>
+    <string name="companion_purpose_profile">Tvůj profil a jeho nastavení.</string>
+    <string name="companion_purpose_create_profile">Vyber avatar a jméno.</string>
+    <string name="companion_purpose_boot">Na hlavní obrazovce zvol Začít.</string>
+    <string name="companion_context_eyebrow">Souvislost s hlavní obrazovkou</string>
+    <string name="companion_hints_more">Další tipy na hlavní obrazovce: %1$d</string>
+    <string name="companion_no_hints">Na této obrazovce nejsou žádné zkratky ovladače.</string>
+    <string name="companion_host_running">Běží %1$s</string>
+    <string name="companion_battery">Baterie · %1$d %%</string>
+    <string name="companion_welcome_sub">Zatím žádné spárované PC</string>
+    <string name="companion_welcome_text">Spusť na svém PC podporovaného hostitele streamování. Začni volbou Spárovat PC na hlavní obrazovce.</string>
+    <string name="companion_welcome_short">Spáruj své první PC na hlavní obrazovce.</string>
+    <string name="companion_see_main">Podrobnosti najdeš na hlavní obrazovce.</string>
+    <string name="companion_no_pc">Žádné připojené PC</string>
+</resources>
