@@ -212,7 +212,7 @@ private fun Header(pcName: String?) {
             )
         }
         if (!pcName.isNullOrBlank()) {
-            Row(horizontalArrangement = Arrangement.spacedBy(14.px), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.padding(start = 28.px).weight(1f, fill = false), horizontalArrangement = Arrangement.spacedBy(14.px, Alignment.End), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.size(14.px).clip(CircleShape).background(colors.accent2))
                 BasicText(
                     pcName,
