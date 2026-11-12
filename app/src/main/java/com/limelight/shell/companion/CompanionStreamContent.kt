@@ -210,10 +210,10 @@ private fun Tile(label: String, icon: String, onClick: () -> Unit, modifier: Mod
         val height = maxHeight.value / stage.dpPerPx
         if (height < COMPACT_TILE) {
             // A short tile: the icon beside the name, the state under it when there is room for a second line
-            Row(Modifier.align(Alignment.CenterStart).padding(horizontal = 18.px), horizontalArrangement = Arrangement.spacedBy(14.px), verticalAlignment = Alignment.CenterVertically) {
-                Symbol(icon, 40.tpx, if (style == TileStyle.NORMAL) colors.accent2 else content)
+            Row(Modifier.align(Alignment.CenterStart).padding(horizontal = 14.px), horizontalArrangement = Arrangement.spacedBy(10.px), verticalAlignment = Alignment.CenterVertically) {
+                Symbol(icon, 34.tpx, if (style == TileStyle.NORMAL) colors.accent2 else content)
                 Column {
-                    BasicText(label, style = TextStyle(color = content, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 30.tpx), maxLines = 1)
+                    BasicText(label, style = TextStyle(color = content, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = MIN_TEXT.tpx), maxLines = 1)
                     if (pill != null && height >= COMPACT_TILE_STATE) {
                         BasicText(pill, style = TextStyle(color = if (on) colors.accent else colors.text2, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = MIN_TEXT.tpx), maxLines = 1)
                     }
