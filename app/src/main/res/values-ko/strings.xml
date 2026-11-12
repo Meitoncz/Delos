@@ -103,6 +103,8 @@
     <string name="title_seekbar_gyro_smoothing">자이로 스무딩</string>
     <string name="summary_seekbar_gyro_smoothing">PC로 보내기 전에 자이로스코프 값을 안정시켜요. 0은 꺼짐이고, 값이 높을수록 떨림이 줄지만 느린 조준에 약간의 지연이 생겨요. 빠른 플릭은 그대로 반응해요. 다음 스트림부터 적용되며, 스트림 메뉴(더보기)에서는 실시간으로 바꿀 수 있어요.</string>
     <string name="suffix_seekbar_gyro_smoothing">%</string>
+    <string name="title_checkbox_gyro_state_refresh">자이로 및 진동 문제 수정</string>
+    <string name="summary_checkbox_gyro_state_refresh">호스트 쪽 문제를 우회해요. 자이로가 켜져 있으면 버튼을 놓은 뒤에도 게임이 계속 진동하고 자이로로 계속 조준하다가, 스틱을 움직여야 멈춰요. 모션 센서가 켜져 있는 동안 변하지 않은 컨트롤러 상태를 PC로 1초에 20번 다시 보내요. 호스트가 고쳐지면 꺼 주세요.</string>
     <string name="title_enable_rumble">럼블 사용</string>
     <string name="summary_enable_rumble">지원되는 게임패드에서 럼블 피드백을 사용해요.</string>
     <string name="category_input_settings">입력 설정</string>

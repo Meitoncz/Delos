@@ -20,6 +20,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.os.Vibrator;
 import android.os.VibratorManager;
 import android.util.SparseArray;
@@ -137,6 +138,15 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
     // Once a preset is chosen this can go back to a final field built in the constructor.
     private final Object rumbleLock = new Object();
     private volatile ActiveRumble activeRumble;
+    // Diagnostics and the optional state refresh (docs/CONTROLLER_STATE.md)
+    private final ControllerSendLog sendLog = new ControllerSendLog();
+    private final MotionSendRate motionRate = new MotionSendRate();
+    private static final long MOTION_RATE_INTERVAL_MS = 1000;
+    // Background thread only
+    private boolean motionRateScheduled;
+    private long motionRateWindowStartMs;
+    private final Runnable motionRateRunnable = this::logMotionRate;
+    private final ControllerStateRefresh stateRefresh;
     private short currentControllers, initialControllers;
 
     public ControllerHandler(Activity activityContext, NvConnection conn, GameGestures gestures, PreferenceConfiguration prefConfig) {
@@ -166,6 +176,7 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
 
         this.sceManager = new SceManager(activityContext);
         this.sceManager.start();
+        this.stateRefresh = new ControllerStateRefresh(new StateRefreshHost());
 
         int deadzonePercentage = prefConfig.deadzonePercentage;
 
@@ -274,6 +285,18 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
         InputDeviceContext newContext = createInputDeviceContextForDevice(device);
         newContext.migrateContext(existingContext);
         inputDeviceContexts.put(deviceId, newContext);
+
+        diag(() -> "InputDeviceContext migrated device " + deviceId + " '" + existingContext.name + "' (context "
+                + System.identityHashCode(existingContext) + " -> " + System.identityHashCode(newContext) + ") controller "
+                + newContext.controllerNumber + ": held before the change buttons=0x"
+                + String.format(java.util.Locale.ROOT, "%04x", existingContext.inputMap)
+                + " (" + ControllerSendLog.describeButtons(existingContext.inputMap) + ") lt=" + (existingContext.leftTrigger & 0xFF)
+                + " rt=" + (existingContext.rightTrigger & 0xFF) + ", buttons carried=0x"
+                + String.format(java.util.Locale.ROOT, "%04x", newContext.inputMap) + " lt=" + (newContext.leftTrigger & 0xFF)
+                + " rt=" + (newContext.rightTrigger & 0xFF)
+                + (existingContext.inputMap != newContext.inputMap || existingContext.leftTrigger != newContext.leftTrigger
+                        || existingContext.rightTrigger != newContext.rightTrigger ? " (held state NOT carried over)" : "")
+                + ", motion sensors " + describeSensorSource(existingContext) + " -> " + describeSensorSource(newContext));
     }
 
     // One playback per effective rumble profile; see activeRumble.
@@ -351,6 +374,148 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
         return Integer.toHexString(System.identityHashCode(vibratorOrManager));
     }
 
+    // ---- Diagnostics (docs/CONTROLLER_STATE.md) ----
+
+    /** A diagnostic must never take the stream down (one did on Android 13): a failure while building its line is logged as one warning. */
+    private static void diag(java.util.function.Supplier<String> line) {
+        try {
+            LimeLog.info(line.get());
+        } catch (RuntimeException e) {
+            LimeLog.warning("Diagnostic line failed: " + e);
+        }
+    }
+
+    private String describeSensorSource(InputDeviceContext context) {
+        if (context.sensorManager == null) {
+            return "none";
+        }
+        return context.sensorManager == deviceSensorManager ? "built-in device" : "input device";
+    }
+
+    /** The one place a controller state packet is handed to the connection; its ControllerSend line is written just before. */
+    private void sendControllerState(short controllerNumber, int buttons, byte leftTrigger, byte rightTrigger,
+                                     short leftStickX, short leftStickY, short rightStickX, short rightStickY) {
+        try {
+            String line = sendLog.onSend(controllerNumber, buttons, leftTrigger, rightTrigger,
+                    leftStickX, leftStickY, rightStickX, rightStickY, SystemClock.elapsedRealtime());
+            if (line != null) {
+                LimeLog.info(line);
+            }
+        } catch (RuntimeException e) {
+            LimeLog.warning("ControllerSend diagnostic failed: " + e);
+        }
+        conn.sendControllerInput(controllerNumber, getActiveControllerMask(), buttons,
+                leftTrigger, rightTrigger, leftStickX, leftStickY, rightStickX, rightStickY);
+    }
+
+    /** A motion event handed to the connection; counted for the MotionSend line. */
+    private void sendMotion(short controllerNumber, byte motionType, float x, float y, float z) {
+        motionRate.onHandedOver(controllerNumber, motionType,
+                conn.sendControllerMotionEvent((byte) controllerNumber, motionType, x, y, z));
+    }
+
+    /** Bit n set: controller n has a gyro (or accelerometer) listener registered; [sendableOnly] skips contexts whose state is not sent as a gamepad. */
+    private int motionMask(boolean gyro, boolean sendableOnly) {
+        int mask = 0;
+        for (int i = 0; i < inputDeviceContexts.size(); i++) {
+            mask |= motionBit(inputDeviceContexts.valueAt(i), gyro, sendableOnly);
+        }
+        for (int i = 0; i < usbDeviceContexts.size(); i++) {
+            mask |= motionBit(usbDeviceContexts.valueAt(i), gyro, sendableOnly);
+        }
+        return mask;
+    }
+
+    private static int motionBit(InputDeviceContext context, boolean gyro, boolean sendableOnly) {
+        if ((gyro ? context.gyroListener : context.accelListener) == null) {
+            return 0;
+        }
+        if (sendableOnly && (!context.assignedControllerNumber || context.mouseEmulationActive)) {
+            return 0;
+        }
+        return context.controllerNumber >= 0 && context.controllerNumber < MAX_GAMEPADS ? 1 << context.controllerNumber : 0;
+    }
+
+    /** Starts the once-per-second MotionSend line while a motion listener is registered; the line stops with the last listener. */
+    private void startMotionRateLogging() {
+        backgroundThreadHandler.post(() -> {
+            if (!motionRateScheduled && !stopped) {
+                motionRateScheduled = true;
+                motionRateWindowStartMs = SystemClock.elapsedRealtime();
+                backgroundThreadHandler.postDelayed(motionRateRunnable, MOTION_RATE_INTERVAL_MS);
+            }
+        });
+    }
+
+    private void logMotionRate() {
+        long now = SystemClock.elapsedRealtime();
+        int gyroMask = 0;
+        int accelMask = 0;
+        try {
+            // The contexts are changed on the main thread; a race only costs this second's line
+            gyroMask = motionMask(true, false);
+            accelMask = motionMask(false, false);
+            for (String line : motionRate.drainLines(now - motionRateWindowStartMs, gyroMask, accelMask)) {
+                LimeLog.info(line);
+            }
+        } catch (RuntimeException e) {
+            LimeLog.warning("MotionSend diagnostic failed: " + e);
+        }
+        motionRateWindowStartMs = now;
+        if (!stopped && (gyroMask | accelMask) != 0) {
+            backgroundThreadHandler.postDelayed(motionRateRunnable, MOTION_RATE_INTERVAL_MS);
+        } else {
+            motionRateScheduled = false;
+        }
+    }
+
+    /** What ControllerStateRefresh needs from the handler. Everything but the scheduling runs on the main thread. */
+    private final class StateRefreshHost implements ControllerStateRefresh.Host {
+        @Override
+        public boolean enabled() {
+            return prefConfig.gyroStateRefresh && !stopped;
+        }
+
+        @Override
+        public int activeControllers() {
+            return motionMask(true, true) | motionMask(false, true);
+        }
+
+        @Override
+        public void resend(int controllerNumber) {
+            for (int i = 0; i < inputDeviceContexts.size(); i++) {
+                if (resendFrom(inputDeviceContexts.valueAt(i), controllerNumber)) {
+                    return;
+                }
+            }
+            for (int i = 0; i < usbDeviceContexts.size(); i++) {
+                if (resendFrom(usbDeviceContexts.valueAt(i), controllerNumber)) {
+                    return;
+                }
+            }
+        }
+
+        // The state of every context with this controller number is fused into one packet, so one context is enough
+        private boolean resendFrom(InputDeviceContext context, int controllerNumber) {
+            if (context.controllerNumber != controllerNumber
+                    || motionBit(context, true, true) == 0 && motionBit(context, false, true) == 0) {
+                return false;
+            }
+            sendControllerInputPacket(context);
+            return true;
+        }
+
+        @Override
+        public void schedule(Runnable task, long delayMs) {
+            mainThreadHandler.postDelayed(task, delayMs);
+        }
+
+        @Override
+        public void cancel(Runnable task) {
+            mainThreadHandler.removeCallbacks(task);
+        }
+    }
+
     /** Where the rumble of a controller context goes, for the diagnostic log; the hash matches the output labels of RumblePlayback. */
     private String describeRumbleRoute(InputDeviceContext context) {
         if (context.vibratorManager != null) {
@@ -372,6 +537,8 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
 
         // Stop new device contexts from being created or used
         stopped = true;
+        stateRefresh.stop();
+        backgroundThreadHandler.removeCallbacks(motionRateRunnable);
         stopRumblePlayback();
 
         // Unregister our input device callbacks
@@ -561,8 +728,7 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
         // We must do this after clearing the currentControllers entry so this
         // causes the device to be removed on the server PC.
         if (context.assignedControllerNumber) {
-            conn.sendControllerInput(context.controllerNumber, getActiveControllerMask(),
-                    (short) 0,
+            sendControllerState(context.controllerNumber, 0,
                     (byte) 0, (byte) 0,
                     (short) 0, (short) 0,
                     (short) 0, (short) 0);
@@ -1502,12 +1668,10 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
                 }
             }
 
-            conn.sendControllerInput(controllerNumber, getActiveControllerMask(),
-                    (short)0, (byte)0, (byte)0, (short)0, (short)0, (short)0, (short)0);
+            sendControllerState(controllerNumber, 0, (byte) 0, (byte) 0, (short) 0, (short) 0, (short) 0, (short) 0);
         }
         else {
-            conn.sendControllerInput(controllerNumber, getActiveControllerMask(),
-                    inputMap,
+            sendControllerState(controllerNumber, inputMap,
                     leftTrigger, rightTrigger,
                     leftStickX, leftStickY,
                     rightStickX, rightStickY);
@@ -2341,6 +2505,7 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
 
             @Override
             public void onSensorChanged(SensorEvent sensorEvent) {
+                motionRate.onSensorCallback(controllerNumber, motionType);
                 float[] values = sensorEvent.values;
                 smoothing = false;
                 if (smoother != null) {
@@ -2414,24 +2579,21 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
 
                 if (smoothing) {
                     // Already in deg/s
-                    conn.sendControllerMotionEvent((byte) controllerNumber,
-                            motionType,
+                    sendMotion(controllerNumber, motionType,
                             values[x] * xFactor,
                             values[y] * yFactor,
                             values[z] * zFactor);
                 }
                 else if (motionType == MoonBridge.LI_MOTION_TYPE_GYRO) {
                     // Convert from rad/s to deg/s
-                    conn.sendControllerMotionEvent((byte) controllerNumber,
-                            motionType,
+                    sendMotion(controllerNumber, motionType,
                             sensorEvent.values[x] * xFactor * 57.2957795f,
                             sensorEvent.values[y] * yFactor * 57.2957795f,
                             sensorEvent.values[z] * zFactor * 57.2957795f);
                 }
                 else {
                     // Pass m/s^2 directly without conversion
-                    conn.sendControllerMotionEvent((byte) controllerNumber,
-                            motionType,
+                    sendMotion(controllerNumber, motionType,
                             sensorEvent.values[x] * xFactor,
                             sensorEvent.values[y] * yFactor,
                             sensorEvent.values[z] * zFactor);
@@ -2511,6 +2673,10 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
                 break;
             }
         }
+
+        // The optional state refresh and the MotionSend line follow the motion listeners of the controllers
+        mainThreadHandler.post(stateRefresh::ensureRunning);
+        startMotionRateLogging();
     }
 
     public void handleSetControllerLED(short controllerNumber, byte r, byte g, byte b) {
@@ -2764,6 +2930,10 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
                 context.inputMap &= ~ControllerPacket.TOUCHPAD_FLAG;
 
                 context.emulatingButtonFlags &= ~ControllerHandler.EMULATING_TOUCHPAD;
+                diag(() -> "ClickpadEmu released the emulated TOUCHPAD on pad " + context.controllerNumber + " (BACK down "
+                        + ((context.inputMap & ControllerPacket.BACK_FLAG) != 0) + ", LB down "
+                        + ((context.inputMap & ControllerPacket.LB_FLAG) != 0) + ", buttons now 0x"
+                        + String.format(java.util.Locale.ROOT, "%04x", context.inputMap) + ")");
             }
         }
 
@@ -2969,6 +3139,8 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
                 context.inputMap |= ControllerPacket.TOUCHPAD_FLAG;
 
                 context.emulatingButtonFlags |= ControllerHandler.EMULATING_TOUCHPAD;
+                diag(() -> "ClickpadEmu injected TOUCHPAD and swallowed BACK+LB on pad " + context.controllerNumber
+                        + " (buttons now 0x" + String.format(java.util.Locale.ROOT, "%04x", context.inputMap) + ")");
             }
         }
 
@@ -3072,7 +3244,8 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
             return;
         }
 
-        conn.sendControllerMotionEvent((byte)context.controllerNumber, motionType, motionX, motionY, motionZ);
+        motionRate.onSensorCallback(context.controllerNumber, motionType);
+        sendMotion(context.controllerNumber, motionType, motionX, motionY, motionZ);
     }
 
     @Override
@@ -3182,9 +3355,9 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
         public short leftTriggerMotor, rightTriggerMotor;
 
         public SensorManager sensorManager;
-        public SensorEventListener gyroListener;
+        public volatile SensorEventListener gyroListener;
         public short gyroReportRateHz;
-        public SensorEventListener accelListener;
+        public volatile SensorEventListener accelListener;
         public short accelReportRateHz;
 
         public InputDevice inputDevice;
@@ -3461,6 +3634,18 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
                 }
             }
 
+            final byte detectedType = type;
+            final byte announcedType = reportedType;
+            final short announcedCapabilities = capabilities;
+            final int announcedButtons = supportedButtonFlags;
+            diag(() -> "InputDeviceContext arrival pad " + controllerNumber + " '" + name + "' (device " + id + "): detected type "
+                    + ControllerSendLog.controllerType(detectedType) + ", reported to the host as "
+                    + ControllerSendLog.controllerType(announcedType) + ", capabilities 0x"
+                    + String.format(java.util.Locale.ROOT, "%04x", announcedCapabilities) + " ("
+                    + ControllerSendLog.capabilities(announcedCapabilities) + "), supported buttons "
+                    + ControllerSendLog.describeButtons(announcedButtons) + ", motion sensors from "
+                    + describeSensorSource(this) + ", clickpad emulation " + needsClickpadEmulation);
+
             conn.sendControllerArrivalEvent((byte)controllerNumber, getActiveControllerMask(),
                     reportedType, supportedButtonFlags, capabilities);
 
@@ -3573,6 +3758,15 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
                     DelosToast.show(activityContext, activityContext.getResources().getText(R.string.toast_controller_type_changed), DelosToast.LONG);
                 });
             }
+
+            final byte announcedType = type;
+            final short announcedCapabilities = capabilities;
+            diag(() -> "InputDeviceContext arrival pad " + controllerNumber + " (USB controller " + id + "): detected type "
+                    + ControllerSendLog.controllerType(device.getType()) + ", reported to the host as "
+                    + ControllerSendLog.controllerType(announcedType) + ", capabilities 0x"
+                    + String.format(java.util.Locale.ROOT, "%04x", announcedCapabilities) + " ("
+                    + ControllerSendLog.capabilities(announcedCapabilities) + "), motion sensors from "
+                    + describeSensorSource(this));
 
             conn.sendControllerArrivalEvent((byte)controllerNumber, getActiveControllerMask(),
                     type, device.getSupportedButtonFlags(), capabilities);

@@ -40,6 +40,7 @@
     <string name="help_checkbox_gamepad_motion_fallback">コントローラーにセンサーがない場合や、Androidが読み取れない場合に、この端末自身のジャイロスコープと加速度センサーを使います。PCからはPlayStationコントローラーとして認識される場合があります。</string>
     <string name="help_checkbox_force_device_motion">外部コントローラーに動作するセンサーがあっても、内蔵センサーを使います。「端末内蔵のジャイロ」が必要です。</string>
     <string name="help_seekbar_gyro_smoothing">ジャイロ照準を安定させます。0でオフ。値を上げるとブレが減りますが、ゆっくりした動きにわずかな遅れが出ます。素早い動きはそのまま反応します。次回のストリームから適用され、ストリームメニュー（その他）ではリアルタイムに変更できます。</string>
+    <string name="help_checkbox_gyro_state_refresh">ホスト側の問題を回避します。ジャイロがオンのとき、ボタンを離してもゲームが振動とジャイロ照準を続け、スティックを動かすまで止まりません。ホストが修正されたらオフにしてください。</string>
     <string name="help_checkbox_enable_joyconfix">ボタンが欠けたり、誤認識されたりするJoy-Con向けの互換モードです。正常に動作している場合はオフのままにしてください。</string>
     <string name="help_checkbox_gamepad_enable_battery_report">コントローラーのバッテリー状態をホストに報告します。バッテリーの取得とタッチやマウスのカクつきが重なる場合は、オフにしてください。</string>
     <string name="help_checkbox_enable_rumble">ホストの振動を、対応するコントローラーに送ります。どの効果が使えるかは、コントローラー、接続、ドライバーによって決まります。</string>

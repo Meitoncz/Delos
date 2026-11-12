@@ -42,6 +42,7 @@
     <string name="help_checkbox_gamepad_motion_fallback">手柄没有体感传感器或 Android 无法读取时，使用本设备自带的陀螺仪和加速度计。此时 PC 可能会识别为 PlayStation 手柄。</string>
     <string name="help_checkbox_force_device_motion">即使外接手柄的传感器可用，也使用内置传感器。需要启用内置设备陀螺仪。</string>
     <string name="help_seekbar_gyro_smoothing">稳定陀螺仪瞄准。0 表示关闭。值越高，抖动越少，但缓慢移动会略有延迟；快速甩动仍保持灵敏。下次串流生效；串流菜单（更多）可实时调整。</string>
+    <string name="help_checkbox_gyro_state_refresh">绕过主机端的一个问题：开启陀螺仪后，松开按键后游戏仍会持续震动并继续用陀螺仪瞄准，直到你推动摇杆。主机修复后请关闭。</string>
     <string name="help_checkbox_enable_joyconfix">针对按键缺失或识别错误的 Joy-Con 的兼容方案。如果正常使用，请保持关闭。</string>
     <string name="help_checkbox_gamepad_enable_battery_report">向电脑端上报手柄电量。如果电量轮询时触摸或鼠标出现卡顿，请关闭。</string>
     <string name="help_checkbox_enable_rumble">将电脑端的震动发送给支持的手柄。具体哪些效果可用，取决于手柄、连接方式和驱动。</string>

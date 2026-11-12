@@ -129,12 +129,12 @@ data class SettingsCapabilities(
 
         /**
          * The motion rows that do not apply: an external gamepad's sensors need Android 12, the built-in sensors need
-         * a sensor on the device, and Gyro smoothing needs at least one of the two sources.
+         * a sensor on the device, and Gyro smoothing and the controller state refresh need at least one of the two sources.
          */
         internal fun motionHiddenKeys(sdk: Int, hasDeviceSensors: Boolean): Set<String> = buildSet {
             if (sdk < 31) add("checkbox_gamepad_motion_sensors")
             if (!hasDeviceSensors) addAll(setOf("checkbox_force_device_motion", "checkbox_gamepad_motion_fallback"))
-            if (sdk < 31 && !hasDeviceSensors) add("seekbar_gyro_smoothing")
+            if (sdk < 31 && !hasDeviceSensors) addAll(setOf("seekbar_gyro_smoothing", "checkbox_gyro_state_refresh"))
         }
 
         private fun addResolution(into: MutableList<NativeResolution>, width: Int, height: Int, fullscreen: Boolean) {

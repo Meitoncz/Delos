@@ -114,6 +114,7 @@ fun settingIcon(key: String): String? = when (key) {
     "checkbox_gamepad_motion_fallback" -> Symbols.MOTION_FALLBACK
     "checkbox_force_device_motion" -> Symbols.DEVICE_MOTION
     "seekbar_gyro_smoothing" -> Symbols.SMOOTHING
+    "checkbox_gyro_state_refresh" -> Symbols.REFRESH
     "checkbox_enable_joyconfix" -> Symbols.JOYCON_FIX
     "checkbox_gamepad_enable_battery_report" -> Symbols.BATTERY_FULL
     "checkbox_enable_rumble" -> Symbols.VIBRATION

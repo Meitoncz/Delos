@@ -48,6 +48,7 @@
     <string name="help_checkbox_gamepad_motion_fallback">Uses this device\'s own gyroscope and accelerometer when the gamepad has none or Android cannot read them. The PC may then see a PlayStation controller.</string>
     <string name="help_checkbox_force_device_motion">Uses the built-in sensors even if the external gamepad has working ones. Needs Built-in device gyroscope.</string>
     <string name="help_seekbar_gyro_smoothing">Steadies gyro aiming. 0 is off. Higher values remove more jitter but add a little delay to slow movement; fast flicks stay responsive. Applies to the next stream; the stream menu (More) changes it live.</string>
+    <string name="help_checkbox_gyro_state_refresh">Works around a host problem where, with gyro on, the game keeps vibrating and keeps aiming with gyro after a button is released, until you move a stick. Turn it off when the host is fixed.</string>
     <string name="help_checkbox_enable_joyconfix">Compatibility path for Joy-Cons with missing or misrecognized buttons. Leave off if they work.</string>
     <string name="help_checkbox_gamepad_enable_battery_report">Reports gamepad battery status to the host. Turn off if battery polling coincides with touch or mouse stutter.</string>
     <string name="help_checkbox_enable_rumble">Sends host rumble to supported gamepads. Controller, connection and driver decide which effects work.</string>

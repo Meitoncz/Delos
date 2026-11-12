@@ -84,7 +84,7 @@ class GyroSmoothingSettingTest {
         assertTrue(key in SettingsCapabilities.motionHiddenKeys(30, hasDeviceSensors = false))
         assertFalse(key in SettingsCapabilities.motionHiddenKeys(30, hasDeviceSensors = true))
         assertFalse(key in SettingsCapabilities.motionHiddenKeys(33, hasDeviceSensors = false))
-        assertEquals(motionKeys.toSet(), SettingsCapabilities.motionHiddenKeys(30, hasDeviceSensors = false))
+        assertEquals(motionKeys.toSet() + "checkbox_gyro_state_refresh", SettingsCapabilities.motionHiddenKeys(30, hasDeviceSensors = false))
         assertTrue("checkbox_gamepad_motion_fallback" !in SettingsCapabilities.motionHiddenKeys(33, hasDeviceSensors = true))
     }
 

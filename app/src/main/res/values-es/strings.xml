@@ -114,6 +114,8 @@
     <string name="title_seekbar_gyro_smoothing">Suavizado del giroscopio</string>
     <string name="summary_seekbar_gyro_smoothing">Estabiliza el giroscopio antes de enviarlo al PC. 0 es desactivado; los valores altos eliminan más vibración pero añaden un poco de retardo al apuntar despacio. Los movimientos rápidos siguen respondiendo bien. Se aplica al próximo stream; el menú del stream (Más) lo cambia en directo.</string>
     <string name="suffix_seekbar_gyro_smoothing">%</string>
+    <string name="title_checkbox_gyro_state_refresh">Corregir giroscopio y vibración</string>
+    <string name="summary_checkbox_gyro_state_refresh">Evita un problema del host: con el giroscopio activado, el juego sigue vibrando y apuntando con el giroscopio después de soltar un botón, hasta que mueves un stick. Mientras los sensores de movimiento estén activos, el estado sin cambios del mando se reenvía al PC 20 veces por segundo. Desactívalo cuando el host esté arreglado.</string>
     <string name="title_enable_rumble">Activar vibración</string>
     <string name="summary_enable_rumble">Activa la respuesta de vibración en los mandos compatibles.</string>
     <string name="category_input_settings">Ajustes de entrada</string>

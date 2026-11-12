@@ -48,6 +48,7 @@
     <string name="help_checkbox_gamepad_motion_fallback">Nutzt Gyroskop und Beschleunigungssensor dieses Geräts, wenn das Gamepad keine hat oder Android sie nicht lesen kann. Der PC sieht dann evtl. einen PlayStation-Controller.</string>
     <string name="help_checkbox_force_device_motion">Nutzt die eingebauten Sensoren, auch wenn das externe Gamepad funktionierende hat. Erfordert Eingebautes Gyroskop des Geräts.</string>
     <string name="help_seekbar_gyro_smoothing">Beruhigt das Gyro-Zielen. 0 ist aus. Höhere Werte entfernen mehr Zittern, bringen aber eine kleine Verzögerung bei langsamer Bewegung; schnelle Schwenks bleiben direkt. Gilt für den nächsten Stream; das Stream-Menü (Mehr) ändert es live.</string>
+    <string name="help_checkbox_gyro_state_refresh">Umgeht ein Host-Problem: Bei aktivem Gyro vibriert das Spiel weiter und zielt weiter per Gyro, nachdem eine Taste losgelassen wurde, bis du einen Stick bewegst. Ausschalten, sobald der Host repariert ist.</string>
     <string name="help_checkbox_enable_joyconfix">Kompatibilitätspfad für Joy-Cons mit fehlenden oder falsch erkannten Tasten. Aus lassen, wenn sie funktionieren.</string>
     <string name="help_checkbox_gamepad_enable_battery_report">Meldet den Akkustand des Gamepads an den Host. Ausschalten, wenn die Akkuabfrage mit Touch- oder Maus-Rucklern zusammenfällt.</string>
     <string name="help_checkbox_enable_rumble">Sendet Host-Rumble an unterstützte Gamepads. Controller, Verbindung und Treiber bestimmen, welche Effekte funktionieren.</string>

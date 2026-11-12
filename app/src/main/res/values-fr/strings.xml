@@ -116,6 +116,8 @@
     <string name="title_seekbar_gyro_smoothing">Lissage du gyroscope</string>
     <string name="summary_seekbar_gyro_smoothing">Stabilise le gyroscope avant son envoi au PC. 0 = désactivé ; plus la valeur est haute, moins il y a de tremblements, mais la visée lente prend un léger retard. Les mouvements rapides restent réactifs. S’applique au prochain stream ; le menu du stream (Plus) le modifie en direct.</string>
     <string name="suffix_seekbar_gyro_smoothing">%</string>
+    <string name="title_checkbox_gyro_state_refresh">Corriger gyroscope et vibrations</string>
+    <string name="summary_checkbox_gyro_state_refresh">Contourne un problème côté hôte : avec le gyroscope activé, le jeu continue de vibrer et de viser au gyroscope après le relâchement d’un bouton, jusqu’à ce que tu bouges un stick. Tant que les capteurs de mouvement sont actifs, l’état inchangé de la manette est renvoyé au PC 20 fois par seconde. Désactive-le quand l’hôte sera corrigé.</string>
     <string name="title_enable_rumble">Activer la vibration</string>
     <string name="summary_enable_rumble">Active le retour de vibration sur les manettes compatibles.</string>
     <string name="category_input_settings">Réglages des entrées</string>

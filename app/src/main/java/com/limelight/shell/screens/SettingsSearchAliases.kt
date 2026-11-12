@@ -17,6 +17,7 @@ internal object SearchAliases {
         "checkbox_gamepad_motion_fallback" to "emulate gamepad motion sensor support motion sensors",
         "checkbox_force_device_motion" to "always use device's motion sensors motion sensors",
         "seekbar_gyro_smoothing" to "gyroscope stabilisation stabilization motion sensors",
+        "checkbox_gyro_state_refresh" to "gyroscope vibration rumble stuck stick button released fix motion sensors",
         LINK_TEST_ROW to "bandwidth probe measure speed network wifi",
         LINK_USE_ROW to "recommended bitrate link",
     )

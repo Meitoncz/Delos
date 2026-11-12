@@ -322,6 +322,12 @@
             seekbar:step="5" />
         <CheckBoxPreference
             android:defaultValue="false"
+            android:key="checkbox_gyro_state_refresh"
+            android:summary="@string/summary_checkbox_gyro_state_refresh"
+            android:title="@string/title_checkbox_gyro_state_refresh"
+            app:iconSpaceReserved="false" />
+        <CheckBoxPreference
+            android:defaultValue="false"
             android:key="checkbox_enable_joyconfix"
             android:summary="@string/summary_joyconfix"
             android:title="@string/title_joyconfix"

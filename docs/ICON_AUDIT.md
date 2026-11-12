@@ -31,6 +31,7 @@ glyph (except the named repeats below) and no row reuses the glyph of a tab pill
 | `wifi-high` | status bar, Network impact chip | the network connection |
 | `sliders-horizontal` (custom) | custom-settings badge, "N custom settings" chip, per-game "Custom for this game" | a value that differs from the profile |
 | `bezier-curve` (smoothing) | Gyro smoothing, stream menu gyro row, Debug smoothing | smoothing |
+| `arrows-clockwise` (again) | Reconnect, Try again, Search again, Refresh artwork, Fix gyro handling and vibrations (Controls) | doing the same thing once more |
 | `boot` (kick) | Kick-start preset, Debug Start kick | the start kick |
 | `vibrate` | Enable rumble, More > Rumble, Debug Vibration motor | rumble / the vibration motor |
 | `device-mobile-speaker` | Emulate rumble with vibration, Debug Vibrate once | the phone buzzing |

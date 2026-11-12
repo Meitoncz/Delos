@@ -136,6 +136,8 @@
     <string name="title_seekbar_gyro_smoothing">Gyro smoothing</string>
     <string name="summary_seekbar_gyro_smoothing">Steadies the gyroscope before it is sent to the PC. 0 is off; higher values remove more jitter but add a little delay to slow aiming. Fast flicks stay responsive. Applies to the next stream; the stream menu (More) changes it live.</string>
     <string name="suffix_seekbar_gyro_smoothing">%</string>
+    <string name="title_checkbox_gyro_state_refresh">Fix gyro handling and vibrations</string>
+    <string name="summary_checkbox_gyro_state_refresh">Works around a host problem where, with gyro on, the game keeps vibrating and keeps aiming with gyro after a button is released, until you move a stick. While motion sensors are on, the unchanged controller state is sent to the PC again 20 times a second. Turn it off when the host is fixed.</string>
     <string name="title_enable_rumble">Enable Rumble</string>
     <string name="title_rumble_feel" translatable="false">Rumble feel</string>
     <string name="summary_rumble_feel" translatable="false">How game rumble feels on this device\'s vibration motor.</string>
