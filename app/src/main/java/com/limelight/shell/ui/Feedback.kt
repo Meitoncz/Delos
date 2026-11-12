@@ -26,11 +26,13 @@ class Feedback(context: Context) {
     /** The view used for haptic feedback; set by the activity once the content view exists. */
     var view: View? = null
 
+    // USAGE_GAME plays on the media stream, so the volume keys and a muted media volume apply. The earlier
+    // USAGE_ASSISTANCE_SONIFICATION used the system stream, which ignores the media volume.
     private val pool = SoundPool.Builder()
         .setMaxStreams(4)
         .setAudioAttributes(
             AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+                .setUsage(AudioAttributes.USAGE_GAME)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .build()
         )
