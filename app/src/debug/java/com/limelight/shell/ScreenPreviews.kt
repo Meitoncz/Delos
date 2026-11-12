@@ -16,10 +16,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import android.util.Log
 import com.limelight.R
 import com.limelight.binding.video.PyroWaveRenderer
 import com.limelight.diag.Problem
 import com.limelight.diag.ProblemKind
+import com.limelight.shell.companion.PublishCompanionOverlays
 import com.limelight.shell.data.LocalArtwork
 import com.limelight.shell.data.LocalBoxArt
 import com.limelight.shell.data.LocalGameMetadata
@@ -36,10 +38,12 @@ import com.limelight.shell.ui.LocalStage
 import com.limelight.shell.ui.StreamResultLayer
 import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.delosColors
+import com.limelight.shell.ui.formatLaunchStreamParameters
 import com.limelight.shell.ui.textResources
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlin.math.roundToInt
 
 /**
@@ -58,8 +62,8 @@ import kotlin.math.roundToInt
  * - `pair`: the pairing screen of STUDY-LAPTOP showing the PIN 4826 and waiting for it to be entered.
  * - `filter`: the filter modal open over Home, with the genres and themes of the fake library.
  * - `dialog`: a dialog layer (title, message, Pair and Cancel) over Home.
- * - `loader`: the stream launch scene of Hades at a fixed progress and a fixed scene time (no launch).
- * - `result`: the stream result card of a stream that could not start, over the plain background.
+ * - `loader`: the stream launch scene of Hades at a fixed progress and a fixed scene time (no launch); a real second display shows the loader page of a launch in progress.
+ * - `result`: the stream result card of a stream that could not start, over the plain background; a real second display shows the problem page of it.
  * - `side_menu`: the side menu open over Home. `home_context`: Home with the game menu of the focused game, opened by the
  *   Start key 3 s after the start. `problem`: Home with the problem report card. `stream_exit`: Home under the exit portal ("Closing Elden Ring").
  * - `boot`, `create_profile`, `pair_pc`: the first-launch screens, and the PC pairing list.
@@ -177,15 +181,42 @@ internal object ScreenPreviews {
     }
 
     @Composable
-    private fun LoaderPreview() = PreviewTheme { _, colors ->
+    private fun LoaderPreview() = PreviewTheme { appearance, colors ->
         val res = textResources()
         val pc = remember { PreviewFixtures.pc(PreviewFixtures.host(PreviewFixtures.ACTIVE_PC)) }
         val app = remember { PreviewFixtures.app(PreviewFixtures.game(ARTWORK_GAME)) }
         val card = remember(res) {
             LaunchCard(1, app.name, StreamLoader.greeting(res, pc.name), appArt(pc, app), null, null, "3840 × 2160 · 60 FPS · HEVC · HDR · 80 Mbps")
         }
+        val shell = remember { ShellState(Screen.Home).also { it.pcName = pc.name; it.launch = LaunchRequest(1, pc, app, Intent(), null, null) } }
+        CompanionOverlayPreview(shell, appearance, formatLaunchStreamParameters(3840, 2160, "HEVC", 60))
         Box(Modifier.fillMaxSize().background(colors.bg)) {
             LaunchScene(card, stage = null, progress = { HANDOFF_PROGRESS }, opening = { 0f }, clock = { LOADER_SECONDS })
+        }
+    }
+
+    /**
+     * The companion window of a real second display for the previews that draw one layer without the shell (`loader`, `result`): [shell] holds what that layer
+     * shows (`launch`, `result`), the overlay publisher is the one the real shell calls, and its buttons write a line to the log (`adb logcat -s CompanionPreview`).
+     */
+    @Composable
+    private fun CompanionOverlayPreview(shell: ShellState, appearance: Appearance, launchParameters: String = "") {
+        val appearances = remember(appearance) { MutableStateFlow(appearance) }
+        DisposableEffect(shell, appearances) {
+            CompanionPreview.liveShell = shell
+            CompanionPreview.liveAppearance = appearances
+            onDispose {
+                if (CompanionPreview.liveShell === shell) {
+                    CompanionPreview.liveShell = null
+                    CompanionPreview.liveAppearance = null
+                }
+            }
+        }
+        val log = { what: String -> { Log.i("CompanionPreview", what); Unit } }
+        CompositionLocalProvider(LocalShell provides shell) {
+            PublishCompanionOverlays(
+                launchParameters, log("cancel launch"), log("cancel portal"), log("try again"), log("back to library"), log("report"), log("dismiss"),
+            )
         }
     }
 
@@ -201,6 +232,8 @@ internal object ScreenPreviews {
                 host.uuid, host.name, PreviewFixtures.game(ARTWORK_GAME).id, ARTWORK_GAME, id = 1L,
             )
         }
+        val shell = remember(result) { ShellState(Screen.Home).also { it.pcName = host.name; it.result = result } }
+        CompanionOverlayPreview(shell, appearance)
         Box(Modifier.fillMaxSize()) {
             Box(Modifier.fillMaxSize().hazeSource(haze)) { Backdrop(appearance, colors, hero = null, animate = false) }
             // The face's float is the one motion that never settles: the preview holds it still, as with reduced motion

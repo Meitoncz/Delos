@@ -575,17 +575,17 @@ fun Shell(
     }
     // B in the portal only cancels waiting for a PC to wake up; nothing underneath moves meanwhile
     BackHandler(enabled = shell.portal != null) { devices.cancelPortal() }
-    // B during the loader cancels the start (registered last, so it wins while a game is starting)
-    BackHandler(enabled = shell.launch != null) {
-        if (!shell.diving) {
-            feedback.play(Cue.BACK)
-            shell.launch = null
-            tracker.requester?.let {
-                feedback.silenceNextFocus()
-                runCatching { it.requestFocus() }
-            }
+    // B during the loader cancels the start (registered last, so it wins while a game is starting); the companion's Cancel runs the same function
+    fun cancelLaunch() {
+        if (shell.launch == null || shell.diving) return
+        feedback.play(Cue.BACK)
+        shell.launch = null
+        tracker.requester?.let {
+            feedback.silenceNextFocus()
+            runCatching { it.requestFocus() }
         }
     }
+    BackHandler(enabled = shell.launch != null) { cancelLaunch() }
     // B on the result overlay is Back to library (registered last, so it wins while the overlay is shown)
     BackHandler(enabled = shell.result != null) {
         feedback.play(Cue.BACK)
@@ -811,6 +811,10 @@ fun Shell(
                 instantExit = launchExitInstant.value,
             )
             ProblemOfferCard(if (shell.offerShown) shell.problem else null, appearance.reducedMotion, onReport = ::reportProblem, onDismiss = ::dismissProblem)
+            // The second panel of a dual-screen device shows the launch, the portal, the result and the problem too, with the callbacks of these layers
+            com.limelight.shell.companion.PublishCompanionOverlays(
+                launchParameters, ::cancelLaunch, devices::cancelPortal, ::retryStream, ::dismissResult, ::reportProblem, ::dismissProblem,
+            )
             ToastHost(shell.toast, onHidden = { shell.hideToast(it) }, onAction = { shell.runToastAction() }, actionPress = shell.toastPress)
         }
     }

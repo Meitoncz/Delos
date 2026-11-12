@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="companion_flow_pc">PC</string>
+    <string name="companion_flow_starting">Spouštění: %1$s</string>
+    <string name="companion_flow_starting_generic">Spouštění hry</string>
+    <string name="companion_flow_requested">%1$s · požadováno %2$s</string>
+    <string name="companion_flow_step_host">PC nalezeno</string>
+    <string name="companion_flow_step_launch">Požadavek na spuštění přijat</string>
+    <string name="companion_flow_step_video">Čekání na video</string>
+    <string name="companion_flow_step_ready">Stream je připraven</string>
+    <string name="companion_flow_step_pending">%1$s · čeká</string>
+    <string name="companion_flow_step_more">%1$s · +%2$d čeká</string>
+    <string name="companion_flow_no_percentage">Procento dokončení není známo.</string>
+    <string name="companion_flow_cancel_start">Zrušit spuštění streamu</string>
+    <string name="companion_flow_wait">Chvilku strpení</string>
+    <string name="companion_flow_result_title">Stream skončil</string>
+    <string name="companion_flow_reconnect">Připojit znovu</string>
+    <string name="companion_flow_lost_guidance">Hra může na hostiteli stále běžet. Až bude dostupná, připoj se znovu a pokračuj.</string>
+    <string name="companion_flow_lost_short">Hra může stále běžet.</string>
+    <string name="companion_flow_closed_guidance">Otevři knihovnu a zjisti, jestli hra ještě běží.</string>
+    <string name="companion_flow_closed_short">Stav hry zjistíš v knihovně.</string>
+    <string name="companion_flow_problem_title">Problém s připojením</string>
+    <string name="companion_flow_error_short">Stream se nepodařilo spustit.</string>
+    <string name="companion_flow_recovery">Zkontroluj službu na hostiteli, firewall a síť. Pak to zkus znovu.</string>
+    <string name="companion_flow_recovery_short">Zkontroluj službu na hostiteli a síť.</string>
+    <string name="companion_flow_full_on_main">Celá chyba zůstává na hlavní obrazovce.</string>
+    <string name="companion_flow_report_short">Hlášení otevře GitHub s konceptem ke kontrole.</string>
+</resources>
