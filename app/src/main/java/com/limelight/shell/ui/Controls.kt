@@ -7,6 +7,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.background
@@ -306,8 +307,6 @@ fun CircleItem(
         else -> 220f
     }
     val iconSize = (if (big) 96f else 76f) * cs
-    // A grid's cell, like a compact stage's item, lets a label run over its edges (by 15 px at most) and cuts it with an ellipsis after that
-    val cellLabel = fixed != null && (compact || width != null)
     val pulseTransition = rememberInfiniteTransition(label = "pulse")
     val wave by pulseTransition.animateFloat(0f, 1f, infiniteRepeatable(tween(2400, easing = EaseOut)), label = "pulseWave")
     Column(
@@ -377,15 +376,15 @@ fun CircleItem(
                 label,
                 style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx, textAlign = TextAlign.Center),
                 maxLines = 1,
-                softWrap = !compact && !cellLabel,
+                softWrap = !compact,
                 // A long PC name keeps its start and its end
-                overflow = if (!compact && !cellLabel) TextOverflow.Clip else if (fixed == null) TextOverflow.MiddleEllipsis else TextOverflow.Ellipsis,
+                overflow = if (!compact) TextOverflow.Clip else if (fixed == null) TextOverflow.MiddleEllipsis else TextOverflow.Ellipsis,
                 modifier = Modifier
                     .then(
                         when {
-                            cellLabel && fixed != null -> Modifier.wrapContentWidth(unbounded = true).widthIn(max = (fixed + 30f).px)
                             !compact -> Modifier
-                            else -> Modifier.widthIn(max = CircleRowLayout.LABEL_MAX.px)
+                            fixed == null -> Modifier.widthIn(max = CircleRowLayout.LABEL_MAX.px)
+                            else -> Modifier.wrapContentWidth(unbounded = true).widthIn(max = (fixed + 30f).px)
                         }
                     )
                     .graphicsLayer {
@@ -479,6 +478,9 @@ private class FitGapArrangement(
  * [bleed] is for items whose focus glow reaches far outside them: the scroll area is that much larger than the row on all four sides and
  * its content padded by as much, always, so the row and its neighbours are laid out as without it but a scroll container never cuts the
  * glow, the ring or the scale-up of a focused item (a scroll area clips at its own bounds). The fade starts where the row's own bounds do.
+ *
+ * Rows that must scroll together (a grid of circles, one row above the other: a column stays a column) pass the same [scroll] state and
+ * have the same content width; the focused item scrolls its own row's state, and with it every row that shares it.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -493,10 +495,10 @@ fun ScrollRow(
     bleed: Float = 0f,
     minPad: Float = 0f,
     arrangement: Arrangement.Horizontal? = null,
+    scroll: ScrollState = rememberScrollState(),
     content: @Composable RowScope.() -> Unit,
 ) {
     val stage = LocalStage.current
-    val scroll = rememberScrollState()
     val k = LocalStage.current.dpPerPx * LocalDensity.current.density
     // The edge padding widens the content, so it must not decide by itself that the row still scrolls: the content overflows when it is
     // wider than the row without that padding. Before the first layout the state's maximum is Int.MAX_VALUE: nothing overflows yet.

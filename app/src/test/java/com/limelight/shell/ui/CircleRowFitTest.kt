@@ -120,16 +120,20 @@ class CircleRowFitTest {
     }
 
     @Test
-    fun aGridRowKeepsItsSizeWhileItFitsAndShrinksToTheStageWhenItDoesNot() {
-        // The avatar picker: eight 184 px cells and seven 32 px gaps are 1696 px, with 52 px on each side 1800
-        assertEquals(1f, c.gridFit(8, 184f, 32f, 1920f, 52f), 0f)
-        assertEquals(1f, c.gridFit(8, 184f, 32f, 2520f, 52f), 0f)
-        assertEquals(1f, c.gridFit(8, 184f, 32f, 1800f, 52f), 1e-6f)
-        // The narrowest stage that is not compact (1500 px): every cell, gap and circle scaled by the same factor fills the room exactly
-        val k = c.gridFit(8, 184f, 32f, StagePlanner.COMPACT_STAGE_WIDTH, 52f)
-        assertEquals((1500f - 104f) / 1696f, k, 1e-6f)
-        assertEquals(1500f - 104f, 8 * 184f * k + 7 * 32f * k, .01f)
-        assertTrue(k > .8f && k < 1f)
-        assertEquals(1f, c.gridFit(1, 184f, 32f, 1920f, 52f), 0f)
+    fun theAvatarPickerKeepsItsMarginAndRoomWhenItScrollsInsteadOfShrinking() {
+        // Eight 184 px cells with 32 px gaps are 1696 px; 52 px of margin on each side (cell edge) make 1800, the width from which it needs no scroll
+        val cell = 184f
+        val diameter = 144f
+        val margin = 52f
+        assertEquals(1800f, 8 * cell + 7 * 32f + 2 * margin, 0f)
+        // The focused edge circle's ring (its growth and ring beyond the circle) keeps the 48 px outer margin of the stage from the edge
+        val ringFromEdge = margin + (cell - diameter) / 2f - c.focusReach(diameter)
+        assertTrue("ring ${ringFromEdge}", ringFromEdge >= 48f)
+        // The scroll area has room for the circle's glow and growth on every side, and the focused circle keeps clear of the fade
+        val glowReach = (diameter / 2f + c.GLOW_SPREAD + c.GLOW_BLUR) * c.FOCUS_SCALE - diameter / 2f
+        assertTrue(glowReach <= c.GLOW_ROOM)
+        assertTrue(c.FOCUS_MARGIN - glowReach >= margin)
+        // Even the narrowest stage that is not compact (1500 px) only scrolls the row by 300 px: nothing shrinks
+        assertEquals(300f, 8 * cell + 7 * 32f + 2 * margin - StagePlanner.COMPACT_STAGE_WIDTH, 0f)
     }
 }

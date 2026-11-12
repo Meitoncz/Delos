@@ -9,6 +9,8 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.BasicText
@@ -39,6 +41,7 @@ import com.limelight.shell.companion.CreateProfilePage
 import com.limelight.shell.companion.PublishCompanionPage
 import com.limelight.shell.LocalShell
 import com.limelight.shell.data.AVATARS
+import com.limelight.shell.data.Avatar
 import com.limelight.shell.data.Profile
 import com.limelight.shell.ui.CenterColumn
 import com.limelight.shell.ui.CircleItem
@@ -53,6 +56,7 @@ import com.limelight.shell.ui.LocalFeedback
 import com.limelight.shell.ui.LocalStage
 import com.limelight.shell.ui.PillButton
 import com.limelight.shell.ui.RowGlideHost
+import com.limelight.shell.ui.ScrollRow
 import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.ValuePill
 import com.limelight.shell.ui.Unbounded
@@ -127,10 +131,10 @@ fun CreateProfileScreen(editing: Boolean, initial: Profile?, onDone: (name: Stri
     val nameTitle = stringResource(R.string.firstrun_create_name_title)
     var name by remember { mutableStateOf(initial?.name ?: defaultName) }
     // A compact stage is too narrow for eight avatars across: four, in more rows (the column scrolls). A stage that is not compact but
-    // narrower than the row (1500 to 1800 px) scales the circles, the cells and the gaps down to fit; the labels keep their size
+    // narrower than the row (1500 to 1800 px) keeps the sizes and scrolls the two rows of eight sideways together, with an edge fade
     val stage = LocalStage.current
     val columns = if (stage.compact) COMPACT_AVATAR_COLUMNS else AVATAR_COLUMNS
-    val fit = if (stage.compact) 1f else CircleRowLayout.gridFit(AVATAR_COLUMNS, AVATAR_CELL, AVATAR_GAP, stage.stageWidth, AVATAR_MARGIN)
+    val rowsScroll = rememberScrollState()
     val avatarFocus = remember { List(AVATARS.size) { FocusRequester() } }
     val changeName = remember { FocusRequester() }
     val create = remember { FocusRequester() }
@@ -159,28 +163,36 @@ fun CreateProfileScreen(editing: Boolean, initial: Profile?, onDone: (name: Stri
         ) {
         // A compact stage keeps a focused avatar's ring off the name of the avatar above it
         val rowGap = if (stage.compact) maxOf(26f * stage.compactScale, CircleRowLayout.rowGap(AVATAR_DIAMETER * stage.compactScale)) else 26f
+        val cells: @Composable (List<IndexedValue<Avatar>>) -> Unit = { row ->
+            row.forEach { (i, a) ->
+                val wrap = Modifier.focusProperties {
+                    if (i % columns == 0) left = avatarFocus[(i - 1 + AVATARS.size) % AVATARS.size]
+                    if (i % columns == columns - 1 || i == AVATARS.lastIndex) right = avatarFocus[(i + 1) % AVATARS.size]
+                }
+                CircleItem(
+                    a.icon, stringResource(a.label),
+                    onClick = {
+                        avatar = i
+                        if (!editing) runCatching { changeName.requestFocus() }
+                    },
+                    modifier = wrap.focusRequester(avatarFocus[i]),
+                    selected = i == avatar,
+                    avatar = a,
+                    diameter = AVATAR_DIAMETER,
+                    width = AVATAR_CELL,
+                )
+            }
+        }
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(rowGap.px)) {
             AVATARS.withIndex().chunked(columns).forEach { row ->
-                Row(horizontalArrangement = Arrangement.spacedBy((if (stage.compact) 24f else AVATAR_GAP * fit).px), verticalAlignment = Alignment.Top) {
-                    row.forEach { (i, a) ->
-                        val wrap = Modifier.focusProperties {
-                            if (i % columns == 0) left = avatarFocus[(i - 1 + AVATARS.size) % AVATARS.size]
-                            if (i % columns == columns - 1 || i == AVATARS.lastIndex) right = avatarFocus[(i + 1) % AVATARS.size]
-                        }
-                        CircleItem(
-                            a.icon, stringResource(a.label),
-                            onClick = {
-                                avatar = i
-                                if (!editing) runCatching { changeName.requestFocus() }
-                            },
-                            modifier = wrap.focusRequester(avatarFocus[i]),
-                            selected = i == avatar,
-                            avatar = a,
-                            diameter = AVATAR_DIAMETER,
-                            width = if (stage.compact) AVATAR_CELL else AVATAR_CELL * fit,
-                            scale = if (stage.compact) null else fit,
-                        )
-                    }
+                if (stage.compact) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(24.px), verticalAlignment = Alignment.Top) { cells(row) }
+                } else {
+                    // Both rows share one scroll state, so a column stays a column; the row keeps AVATAR_MARGIN at both ends whether it scrolls or not
+                    ScrollRow(
+                        Modifier.fillMaxWidth(), gap = AVATAR_GAP, centered = true, edge = AVATAR_MARGIN, focusMargin = CircleRowLayout.FOCUS_MARGIN,
+                        bleed = CircleRowLayout.GLOW_ROOM, minPad = AVATAR_MARGIN, scroll = rowsScroll,
+                    ) { cells(row) }
                 }
             }
         }
@@ -196,9 +208,10 @@ fun CreateProfileScreen(editing: Boolean, initial: Profile?, onDone: (name: Stri
 
 /**
  * The avatar picker: 8 columns of 144 px circles in 184 px cells with 32 px between them, 2 rows of the 16 avatars (eight cells and seven
- * gaps are 1696 px of the 1920 px stage). The row keeps [AVATAR_MARGIN] on each side (48 px, and the 4 px a focused edge circle's ring
- * reaches beyond its cell), so a stage narrower than 1800 px scales the row down by [CircleRowLayout.gridFit] (a 1500 px stage, the narrowest
- * that is not compact, to 0.82); a compact stage takes [COMPACT_AVATAR_COLUMNS] columns instead.
+ * gaps are 1696 px of the 1920 px stage). A row keeps [AVATAR_MARGIN] on each side (48 px, and the 4 px a focused edge circle's ring
+ * reaches beyond its cell), so a stage narrower than 1800 px does not shrink anything: both rows become a [ScrollRow] that share one scroll
+ * state (a column stays a column), with an edge fade where more avatars continue and the focused avatar scrolled into view with the next one
+ * peeking in. A compact stage takes [COMPACT_AVATAR_COLUMNS] columns instead.
  */
 private const val AVATAR_COLUMNS = 8
 private const val AVATAR_GAP = 32f
