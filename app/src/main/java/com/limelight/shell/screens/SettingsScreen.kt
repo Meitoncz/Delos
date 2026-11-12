@@ -291,7 +291,7 @@ fun SettingsScreen(
     val tabs: @Composable () -> Unit = {
         ShoulderLabel("L1")
         SettingsTab.entries.forEach { next ->
-            TabPill(next.icon, next.label(res), tab == next, Modifier.padding(horizontal = (if (compact) 3 else 5).px), collapse = compact) { selectTab(next) }
+            TabPill(next.icon, next.label(res), tab == next, Modifier.padding(horizontal = (if (compact) 3 else 5).px), collapse = compact || stage.stageWidth < SettingsLayout.FULL_TABS_MIN_WIDTH) { selectTab(next) }
         }
         ShoulderLabel("R1")
     }
@@ -773,6 +773,9 @@ internal object SettingsLayout {
     const val TITLE_Y = 124f
     const val TABS_Y = 206f
     const val TABS_HEIGHT = 66f
+
+    /** Under this stage width the eight labelled tabs (about 1650 px with both badges) do not fit: only the selected tab keeps its label. */
+    const val FULL_TABS_MIN_WIDTH = 1760f
     const val LIST_TOP = 312f
 
     /**
