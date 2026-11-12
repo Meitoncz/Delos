@@ -3,6 +3,7 @@ package com.limelight.shell.ui
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.BringIntoViewSpec
 import androidx.compose.foundation.gestures.ScrollableState
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
@@ -21,6 +22,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
@@ -28,6 +30,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.offset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.withFrameNanos
@@ -126,6 +129,51 @@ fun Modifier.overdraw(horizontal: Dp, vertical: Dp): Modifier = layout { measura
             maxHeight = if (constraints.hasBoundedHeight) constraints.maxHeight + 2 * v else constraints.maxHeight,
         ),
     )
+    layout((placeable.width - 2 * h).coerceAtLeast(0), (placeable.height - 2 * v).coerceAtLeast(0)) { placeable.place(-h, -v) }
+}
+
+/**
+ * [fadeEdges] of a scrolling area whose edges fade only as far as content continues behind them, so the focus ring and glow of an item
+ * resting at the very start or end are not dimmed. [topPx] / [bottomPx] get the full fade in raw pixels and return how much of it shows
+ * (0: nothing behind that edge); they are read while drawing. The layer still ends at the element's bounds: give the items room inside it
+ * ([focusRoom]).
+ */
+fun Modifier.fadeEdges(stage: StageMetrics, top: Float, bottom: Float, topPx: (Float) -> Float, bottomPx: (Float) -> Float): Modifier =
+    graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+        .drawWithContent {
+            drawContent()
+            val height = size.height.coerceAtLeast(1f)
+            val fullTop = stagePx(top, stage)
+            val fullBottom = stagePx(bottom, stage)
+            val start = topPx(fullTop).coerceIn(0f, fullTop)
+            val end = bottomPx(fullBottom).coerceIn(0f, fullBottom)
+            if (start <= 0f && end <= 0f) return@drawWithContent
+            drawRect(
+                Brush.verticalGradient(
+                    0f to if (start > 0f) Color.Transparent else Color.Black, (start / height).coerceIn(0f, .5f) to Color.Black,
+                    (1f - end / height).coerceIn(.5f, 1f) to Color.Black, 1f to if (end > 0f) Color.Transparent else Color.Black,
+                ),
+                blendMode = BlendMode.DstIn,
+            )
+        }
+
+/** [fadeEdges] following [scroll]: each fade grows with the first pixels scrolled away behind its edge and is gone at that end of the content. */
+fun Modifier.fadeEdges(stage: StageMetrics, scroll: ScrollState, top: Float, bottom: Float): Modifier =
+    fadeEdges(
+        stage, top, bottom,
+        topPx = { scroll.value.toFloat() },
+        bottomPx = { full -> if (scroll.maxValue == Int.MAX_VALUE) full else (scroll.maxValue - scroll.value).toFloat() },
+    )
+
+/**
+ * Makes the element's own box [horizontal] / [vertical] larger on each side without moving it or its neighbours: room inside a viewport
+ * that clips or fades (a scrolling list, row or grid) for the focus scale, ring and glow of the items at its edges. Pad the content
+ * inside by the same amount and it stays where it was.
+ */
+fun Modifier.focusRoom(horizontal: Dp = 0.dp, vertical: Dp = 0.dp): Modifier = layout { measurable, constraints ->
+    val h = horizontal.roundToPx()
+    val v = vertical.roundToPx()
+    val placeable = measurable.measure(constraints.offset(2 * h, 2 * v))
     layout((placeable.width - 2 * h).coerceAtLeast(0), (placeable.height - 2 * v).coerceAtLeast(0)) { placeable.place(-h, -v) }
 }
 

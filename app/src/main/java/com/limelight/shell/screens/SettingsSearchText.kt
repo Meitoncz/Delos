@@ -86,7 +86,10 @@ internal object SearchText {
     )
 }
 
-/** The geometry of the on-screen letter picker: nine keys to a row, and more columns of slightly smaller keys when six rows are not enough. */
+/**
+ * The geometry of the on-screen letter picker: nine keys to a row, and more columns of slightly smaller keys when six rows are not enough.
+ * The compact stage does not squeeze that grid: its keys keep the 64 px target in [COMPACT_ROWS] rows that scroll sideways together.
+ */
 internal object LetterPicker {
     const val COLUMNS = 9
     const val MAX_ROWS = 6
@@ -94,8 +97,21 @@ internal object LetterPicker {
     const val GAP = 12
     private const val WIDTH = 820
 
+    const val COMPACT_ROWS = 2
+    const val COMPACT_KEY = 64
+
+    /** Between two compact keys (and to the Delete / Clear circles): the focused key's growth (64 × 0.06), its ring (8) and 12 px; the circles' 8 %. */
+    const val COMPACT_GAP = 26
+
+    /** The faded ends of the compact picker's scrolling layer, and its room above and below the keys for a focused key's ring (10.4 px). */
+    const val COMPACT_EDGE = 24f
+    const val COMPACT_RING_ROOM = 12f
+
     fun columns(keys: Int): Int = if (keys <= COLUMNS * MAX_ROWS) COLUMNS else (keys + MAX_ROWS - 1) / MAX_ROWS
 
     /** The key edge in stage px: [KEY] up to nine columns, else what fits the 820 px of the picker. */
     fun keySize(columns: Int): Int = ((WIDTH - GAP * (columns - 1)) / columns).coerceAtMost(KEY)
+
+    /** The keys of one of the compact picker's rows: the alphabet runs on from the first row into the second. */
+    fun compactColumns(keys: Int): Int = ((keys + COMPACT_ROWS - 1) / COMPACT_ROWS).coerceAtLeast(1)
 }

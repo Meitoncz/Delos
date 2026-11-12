@@ -8,12 +8,8 @@ import kotlinx.coroutines.cancelAndJoin
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -33,11 +29,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.constrainHeight
+import androidx.compose.ui.unit.constrainWidth
 import kotlin.math.roundToInt
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -89,11 +88,14 @@ val LocalSelectionPill = staticCompositionLocalOf<SelectionPill?> { null }
  * the new tab and squashes into the new one: it follows the new tab's width as well as its position. The first tab is
  * placed without animation and reduced motion jumps. The edges are read in the layout phase: no recomposition per frame.
  * Tabs mark themselves with [selectionPillTarget] (see `TabPill`).
+ *
+ * The tabs stand in one line, each centred vertically: as wide as they are, centred in a host that is given a wider width. A host given
+ * LESS than they need overflows (the tab rows scroll them: `TabRow`); no tab changes its size or its gaps.
  */
 @Composable
 fun SelectionPillHost(
     modifier: Modifier = Modifier,
-    content: @Composable RowScope.() -> Unit,
+    content: @Composable () -> Unit,
 ) {
     val colors = LocalDelosColors.current
     val reduced = LocalReducedMotion.current
@@ -113,10 +115,27 @@ fun SelectionPillHost(
         }
         geometry.glideTo(target)
     }
-    Box(modifier.onGloballyPositioned { state.attach(it) }) {
-        Box(Modifier.pillBody(geometry, colors.accent))
-        Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+    Layout(
+        content = {
+            Box(Modifier.pillBody(geometry, colors.accent))
             CompositionLocalProvider(LocalSelectionPill provides state) { content() }
+        },
+        modifier = modifier.onGloballyPositioned { state.attach(it) },
+    ) { measurables, constraints ->
+        // The pill takes no room and places itself at its animated edges
+        val pill = measurables[0].measure(Constraints())
+        val tabs = measurables.drop(1).map { it.measure(Constraints(maxHeight = constraints.maxHeight)) }
+        val natural = tabs.sumOf { it.width }
+        val width = constraints.constrainWidth(natural)
+        val height = constraints.constrainHeight(tabs.maxOfOrNull { it.height } ?: 0)
+        layout(width, height) {
+            pill.place(0, 0)
+            var x = (width - natural) / 2f
+            tabs.forEach {
+                // Rounded like a Row's vertical centring
+                it.place(x.roundToInt(), ((height - it.height) / 2f).roundToInt())
+                x += it.width
+            }
         }
     }
 }

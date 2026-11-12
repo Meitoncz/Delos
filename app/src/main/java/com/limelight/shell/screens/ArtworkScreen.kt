@@ -13,6 +13,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -140,6 +141,10 @@ import com.limelight.shell.ui.Symbol
 import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.Unbounded
 import com.limelight.shell.ui.fadeEdges
+import com.limelight.shell.ui.focusRoom
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.ui.text.rememberTextMeasurer
 import com.limelight.shell.ui.focusEffects
 import com.limelight.shell.ui.glass
 import com.limelight.shell.ui.popEnter
@@ -204,14 +209,18 @@ private enum class ArtTab(
     /** The columns of the grid [gridWidth] stage px wide: [columns] at the 1720 of a 1920 stage, in proportion otherwise. */
     fun columnsFor(gridWidth: Float) = (columns * gridWidth / 1720f).roundToInt().coerceAtLeast(1)
 
-    /**
-     * The columns of the compact grid: the tile is the 1920 stage's tile (the 1720 px grid, 24 px gaps) scaled by [scale], so a tile keeps its
-     * shape and a small panel just shows more of them; as many as fit [width] (two at least, one for the wide backgrounds on a narrow panel).
-     */
-    fun compactColumns(width: Float, gap: Float, scale: Float): Int {
-        val tile = (1620f - 24f * (columns - 1)) / columns * scale
-        return ((width + gap) / (tile + gap)).toInt().coerceAtLeast(2)
-    }
+    /** The narrowest tile of the compact grid ([ArtGridLayout.compact]): about 0.7 of the 1920 stage's tile, so a small panel shows more of them. */
+    val compactMin: Float
+        get() = when (this) {
+            COVER -> ArtworkLayout.COVER_MIN
+            WIDE -> ArtworkLayout.WIDE_MIN
+            HERO -> ArtworkLayout.HERO_MIN
+            LOGO -> ArtworkLayout.LOGO_MIN
+        }
+
+    /** The widest tile of the compact grid: the covers stop at [ArtworkLayout.COVER_MAX] and the room that is left goes into the gaps. */
+    val compactMax: Float
+        get() = if (this == COVER) ArtworkLayout.COVER_MAX else Float.MAX_VALUE
 
     /** "10 of 41 covers" ([countOf]) when the unfiltered total differs, else "41 covers"; [all] says "All 41 covers" for an unfiltered list. */
     fun resultLine(res: Resources, shown: Int, total: Int?, all: Boolean): String = when {
@@ -424,81 +433,133 @@ fun ArtworkScreen(screen: Screen.Artwork) {
 
     val compact = stage.shape == StageShape.COMPACT
     val margin = SettingsLayout.margin(stage)
-    // Compact: the title and the tabs share a row, the toolbar, the filter strip, the grid (more, smaller tiles of the same shapes) and the info strip
-    // follow at full width; every y is 16:9's pulled up under the status bar
-    val toolbarY = if (compact) 190f else 206f
-    val stripY = if (compact) 270f else 276f
-    val stripHeight = if (compact) 48f else 44f
-    val gridY = if (compact) 322f else 324f
-    val infoY = if (compact) stage.stageHeight - 184f else stage.stageHeight - 194f
-    val gridWidth = if (compact) stage.stageWidth - 32f else stage.stageWidth - 200f
-    val tileGap = if (compact) 16f else 24f
-    val compactColumns = if (compact) tab.compactColumns(stage.stageWidth - 2 * margin, tileGap, stage.compactScale) else 0
-    Box(Modifier.fillMaxSize()) {
-        FocusTransferTarget(focusTransfer)
-        Column(Modifier.offset(margin.px, 104.px).width((if (compact) 410 else 560).px)) {
-            BasicText(
-                stringResource(R.string.artwork_header),
-                style = TextStyle(color = colors.accent2, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx, letterSpacing = .14.em),
-            )
-            BasicText(
-                "SteamGridDB", maxLines = 1, overflow = TextOverflow.Ellipsis,
-                style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 40.tpx),
-            )
-        }
-        // The tabs stay at the right margin (1050 wide, ending 150 before the edge: x 720 at 1920); on a narrower stage they stay clear of the title.
-        // Compact: right of the title, up to the margin, and only the selected tab keeps its label
-        SelectionPillHost(
-            if (compact) Modifier.offset((margin + 420f).px, 112.px).width((stage.stageWidth - 2 * margin - 420f).px).height(targetPx(66))
-            else Modifier.offset(maxOf(720f, stage.stageWidth - 1200f).px, 124.px).width(1050.px).height(66.px),
-        ) {
-            ShoulderLabel("L1")
-            ArtTab.entries.forEach { next ->
-                TabPill(next.icon, stringResource(next.label), tab == next, Modifier.padding(horizontal = (if (compact) 3 else 4).px), collapse = compact) {
-                    if (next != tab) selectTab(next) else runCatching { first.requestFocus() }
-                }
+    val contentWidth = stage.stageWidth - 2 * margin
+    // Compact: no title. The game chip and the tabs (flush right) share the first row, the filter strip and the two pills the second; the grid
+    // and the info strip follow at full width, and a stage too short for a row of covers above the info strip has none
+    val bottom = SettingsLayout.bottom(stage.textScale)
+    val toolbarY = if (compact) ArtworkLayout.TOOLBAR_Y else 206f
+    val gridY = if (compact) ArtworkLayout.GRID_Y else 324f
+    val info = !compact || ArtworkLayout.hasInfo(contentWidth, stage.stageHeight, bottom)
+    val infoY = if (compact) stage.stageHeight - bottom - ArtworkLayout.INFO_HEIGHT else stage.stageHeight - 194f
+    val gridHeight = if (compact) ArtworkLayout.viewport(stage.stageHeight, bottom, info) else (infoY - 10f - gridY).coerceAtLeast(0f)
+    // The tile is what the columns leave once the room between tiles covers the focused tile's growth, its ring and 12 px (every shape)
+    val art = if (compact) ArtGridLayout.compact(contentWidth, gridHeight, tab.ratio, tab.compactMin, tab.compactMax)
+    else ArtGridLayout.grid(contentWidth, tab.ratio, tab.columnsFor(stage.stageWidth - 200f))
+    val ready = choices as? Choices.Ready
+    val tabs: @Composable () -> Unit = {
+        ShoulderLabel("L1")
+        ArtTab.entries.forEach { next ->
+            TabPill(next.icon, stringResource(next.label), tab == next, Modifier.padding(horizontal = (if (compact) 3 else 4).px), collapse = compact) {
+                if (next != tab) selectTab(next) else runCatching { first.requestFocus() }
             }
-            ShoulderLabel("R1")
         }
-
-        // Toolbar: the matched game, search for another name (X), the filter sheet (Y)
-        Row(
-            Modifier.offset(margin.px, toolbarY.px).width((stage.stageWidth - 2 * margin).px).height(64.px),
-            horizontalArrangement = Arrangement.spacedBy(16.px), verticalAlignment = Alignment.CenterVertically,
-        ) {
-            GameChip(match, busy, app.name, (choices as? Choices.Ready)?.let { it.total ?: it.images.size.takeIf { _ -> !filters.active } }, tab, Modifier.weight(1f))
-            val searchEnabled = store.enabled
-            PillButton(
-                stringResource(R.string.artwork_search_other), Symbols.SEARCH_NAME, { openSearch() },
-                Modifier.focusRequester(searchRequester).alpha(if (searchEnabled) 1f else .4f)
-                    .then(if (searchEnabled) Modifier else Modifier.focusProperties { canFocus = false }),
-                clickCue = Cue.OPEN, compact = true, trailing = { GlyphButton(Glyph.X, 32) },
-            )
-            val filterEnabled = store.enabled && match != null
-            PillButton(
-                stringResource(R.string.artwork_filter), Symbols.FILTER, { openSheet() },
-                Modifier.alpha(if (filterEnabled) 1f else .4f).then(if (filterEnabled) Modifier else Modifier.focusProperties { canFocus = false }),
-                clickCue = null, compact = true,
-                trailing = {
-                    if (filters.active) CountBadge(filters.activeCount)
-                    GlyphButton(Glyph.Y, 32)
-                },
-            )
-        }
-
-        // The result line and the active filters, removable one by one
-        val ready = choices as? Choices.Ready
+        ShoulderLabel("R1")
+    }
+    val gameChip: @Composable (Modifier) -> Unit = { chipModifier ->
+        GameChip(match, busy, app.name, ready?.let { it.total ?: it.images.size.takeIf { _ -> !filters.active } }, tab, chipModifier)
+    }
+    // Search for another name (X) and the filter sheet (Y)
+    val searchPill: @Composable (String) -> Unit = { label ->
+        val searchEnabled = store.enabled
+        PillButton(
+            label, Symbols.SEARCH_NAME, { openSearch() },
+            Modifier.focusRequester(searchRequester).alpha(if (searchEnabled) 1f else .4f)
+                .then(if (searchEnabled) Modifier else Modifier.focusProperties { canFocus = false }),
+            clickCue = Cue.OPEN, compact = true, trailing = { GlyphButton(Glyph.X, 32) },
+        )
+    }
+    val filterPill: @Composable () -> Unit = {
+        val filterEnabled = store.enabled && match != null
+        PillButton(
+            stringResource(R.string.artwork_filter), Symbols.FILTER, { openSheet() },
+            Modifier.alpha(if (filterEnabled) 1f else .4f).then(if (filterEnabled) Modifier else Modifier.focusProperties { canFocus = false }),
+            clickCue = null, compact = true,
+            trailing = {
+                if (filters.active) CountBadge(filters.activeCount)
+                GlyphButton(Glyph.Y, 32)
+            },
+        )
+    }
+    // The result line and the active filters, removable one by one
+    val strip: @Composable (Modifier, Boolean) -> Unit = { stripModifier, scrolls ->
         if (ready != null) {
             FilterStrip(
                 tab, filters, ready, refreshing,
                 onClear = { chip -> filtersByTab[tab] = ArtFilterRules.clear(filters, chip) },
-                onReset = ::resetFilters,
-                modifier = Modifier.offset(margin.px, stripY.px).width((stage.stageWidth - 2 * margin).px).height(stripHeight.px),
+                onReset = ::resetFilters, modifier = stripModifier, scrolls = scrolls,
             )
         }
+    }
+    Box(Modifier.fillMaxSize()) {
+        FocusTransferTarget(focusTransfer)
+        if (compact) {
+            Row(
+                Modifier.offset(margin.px, ArtworkLayout.TABS_Y.px).width(contentWidth.px).height(ArtworkLayout.TABS_HEIGHT.px),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                gameChip(Modifier.weight(1f))
+                // 24 px from the chip to the L1 badge, whose own outset is part of it; R1's outset is moved out, so its edge is the content's
+                SelectionPillHost(
+                    Modifier.padding(start = (24f - 2f * SHOULDER_OUTSET).px).offset(x = SHOULDER_OUTSET.px).fillMaxHeight()
+                        .widthIn(max = (contentWidth - 24f - ArtworkLayout.CHIP_MIN).px).tabScroll(rememberScrollState()),
+                    content = tabs,
+                )
+            }
+            // The Search pill takes the longest label the row has room for beside the strip's line; with filters on, the chips scroll and it is the shortest
+            val labels = listOf(stringResource(R.string.artwork_search_other), stringResource(R.string.shell_hint_search_name), stringResource(R.string.artwork_search_action))
+            val measurer = rememberTextMeasurer()
+            val k = stage.dpPerPx * LocalDensity.current.density
+            val pillText = TextStyle(fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 24.tpx)
+            fun width(text: String, style: TextStyle) = measurer.measure(text, style, maxLines = 1).size.width / k
+            // A toolbar pill around its label: 28 px padding on each side, the 30 px icon, two 12 px gaps and the 32 px button glyph
+            val pillChrome = 2 * 28f + 30f * stage.textScale + 2 * 12f + 32f
+            val filterWidth = pillChrome + width(stringResource(R.string.artwork_filter), pillText) + if (filters.active) 32f + 12f else 0f
+            val stripWidth = when {
+                ready == null -> 0f
+                filters.active -> Float.MAX_VALUE / 4f
+                else -> FilterStripMetrics.lineWidth(
+                    width(tab.resultLine(res, ready.images.size, ready.total, all = true), FilterStripMetrics.countStyle()),
+                    width(stringResource(filters.sort.first), FilterStripMetrics.sortStyle()),
+                )
+            }
+            val label = labels[ArtToolbarLayout.label(contentWidth, stripWidth + pillChrome + filterWidth + 2 * ArtworkLayout.PILL_GAP, labels.map { width(it, pillText) })]
+            Row(
+                Modifier.offset(margin.px, toolbarY.px).width(contentWidth.px).height(ArtworkLayout.TOOLBAR_HEIGHT.px),
+                horizontalArrangement = Arrangement.spacedBy(ArtworkLayout.PILL_GAP.px), verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(Modifier.weight(1f).fillMaxHeight()) { strip(Modifier.fillMaxSize(), true) }
+                searchPill(label)
+                filterPill()
+            }
+        } else {
+            Column(Modifier.offset(margin.px, 104.px).width(560.px)) {
+                BasicText(
+                    stringResource(R.string.artwork_header),
+                    style = TextStyle(color = colors.accent2, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx, letterSpacing = .14.em),
+                )
+                BasicText(
+                    "SteamGridDB", maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 40.tpx),
+                )
+            }
+            // The tabs end exactly at the content's right edge (the Filter pill's, the info strip's), on every stage width
+            TabRow(124f, 66.px, left = margin, right = stage.stageWidth - margin, centred = false, content = tabs)
+            // Toolbar: the matched game, search for another name (X), the filter sheet (Y)
+            Row(
+                Modifier.offset(margin.px, toolbarY.px).width(contentWidth.px).height(64.px),
+                horizontalArrangement = Arrangement.spacedBy(16.px), verticalAlignment = Alignment.CenterVertically,
+            ) {
+                gameChip(Modifier.weight(1f))
+                searchPill(stringResource(R.string.artwork_search_other))
+                filterPill()
+            }
+            strip(Modifier.offset(margin.px, 276.px).width(contentWidth.px).height(44.px), false)
+        }
 
-        // The grid (or why there is none): from under the filter strip to above the info strip, so a taller stage shows more rows
-        Box(Modifier.offset((if (compact) 16f else 100f).px, gridY.px).width(gridWidth.px).height((infoY - (if (compact) 16f else 10f) - gridY).coerceAtLeast(0f).px)) {
+        // The grid (or why there is none): from under the filter strip to above the info strip, so a taller stage shows more rows. Its box
+        // is the stage's width and the tiles are padded in by the margin: room inside the viewport for the focused tile's ring and glow
+        val gridInset = if (compact) ArtworkLayout.GRID_INSET else 0f
+        Box(Modifier.offset(y = (gridY + gridInset).px).width(stage.stageWidth.px).height((gridHeight - gridInset).coerceAtLeast(0f).px)) {
             when (val c = choices) {
                 Choices.Loading -> GridMessage(Symbols.LOADING, stringResource(R.string.artwork_loading), null)
                 Choices.NoKey -> GridMessage(Symbols.KEY, stringResource(R.string.artwork_no_key_title), stringResource(R.string.artwork_no_key_note))
@@ -506,33 +567,45 @@ fun ArtworkScreen(screen: Screen.Artwork) {
                 else GridMessage(Symbols.SEARCH, stringResource(R.string.artwork_choose_title, app.name), stringResource(R.string.artwork_choose_note, app.name))
                 is Choices.Failed -> GridMessage(Symbols.ERROR, stringResource(R.string.artwork_unreachable), sgdbErrorText(res, c.error, R.string.artwork_unreachable))
                 is Choices.Ready -> {
-                    // The focused row keeps clear of the faded edges, like the settings rows
+                    // The focused row keeps clear of the faded edges, like the settings rows; on the compact stage by what its ring and glow reach
                     val k = stage.dpPerPx * LocalDensity.current.density
-                    val bringIntoView = rememberMarginBringIntoView(grid, before = 70f * k, after = 110f * k, stagePx = k)
+                    // (a viewport that just holds one focused row with its glow gets a shorter top fade, so the last row still has its glow whole)
+                    val fadeTop = if (compact) minOf(ArtworkLayout.FADE_TOP, (gridHeight - gridInset - art.tileHeight - art.glowBottom - art.ringY - 2f).coerceAtLeast(0f)) else 30f
+                    val fadeBottom = if (compact) ArtworkLayout.FADE_BOTTOM else 70f
+                    val padTop = art.padTop - gridInset
+                    val before = if (compact) maxOf(padTop, fadeTop + art.ringY + 2f) else 70f
+                    val after = if (compact) (gridHeight - gridInset - before - art.tileHeight).coerceIn(art.glowBottom, art.glowBottom + fadeBottom) else 110f
+                    val bringIntoView = rememberMarginBringIntoView(grid, before = before * k, after = after * k, stagePx = k)
+                    // The edges fade only while rows continue behind them: the ring and glow of the first and of the last row are not dimmed
+                    val fadeEnd by animateFloatAsState(if (grid.canScrollForward) 1f else 0f, tween(Motion.FADE, easing = Motion.Ease), label = "gridFade")
                     // Takedown placeholders found while the thumbnails load disappear (the chosen image always stays)
                     val images = c.images.filter { it.id == chosen || !Thumbnails.isRemoved(it.previewUrl) }
                     val inUse = images.indexOfFirst { it.id == chosen }
                     val noneInUse = chosen == NONE || (chosen == null && c.images.isEmpty() && !filters.active)
                     CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView) {
                         LazyVerticalGrid(
-                            columns = GridCells.Fixed(if (compact) compactColumns else tab.columnsFor(stage.stageWidth - 200f)),
+                            columns = GridCells.Fixed(art.columns),
                             state = grid,
-                            modifier = Modifier.fillMaxSize().fadeEdges(stage, top = 30f, bottom = 70f),
-                            contentPadding = if (compact) PaddingValues(start = (margin - 16f).px, end = (margin - 16f).px, top = 34.px, bottom = 70.px)
-                            else PaddingValues(start = 50.px, end = 50.px, top = 46.px, bottom = 96.px),
-                            horizontalArrangement = Arrangement.spacedBy(tileGap.px),
-                            verticalArrangement = Arrangement.spacedBy(tileGap.px),
+                            modifier = Modifier.fillMaxSize().fadeEdges(
+                                stage, top = fadeTop, bottom = fadeBottom,
+                                topPx = { full -> if (grid.firstVisibleItemIndex == 0) grid.firstVisibleItemScrollOffset.toFloat() else full },
+                                bottomPx = { full -> full * fadeEnd },
+                            ),
+                            contentPadding = if (compact) PaddingValues(start = margin.px, end = margin.px, top = padTop.px, bottom = art.padBottom.px)
+                            else PaddingValues(start = margin.px, end = margin.px, top = 46.px, bottom = 96.px),
+                            horizontalArrangement = Arrangement.spacedBy(art.gapX.px),
+                            verticalArrangement = Arrangement.spacedBy(art.gapY.px),
                         ) {
                             item(key = GridItemNone) {
                                 NoneTile(
-                                    pc, app, tab, noneInUse, store.applying(pc, app, tab.kind) == NONE,
+                                    pc, app, tab, if (compact) art.tileWidth else Float.MAX_VALUE, noneInUse, store.applying(pc, app, tab.kind) == NONE,
                                     Modifier.staggerEntrance(0).then(if (inUse < 0) Modifier.focusRequester(first) else Modifier),
                                     onFocused = { described = Described.FirstChoice },
                                 ) { apply(res, scope, shell, feedback, store, pc, app, tab, null) }
                             }
                             itemsIndexed(images, key = { _, image -> image.id }) { index, image ->
                                 ChoiceTile(
-                                    image, tab, inUse = image.id == chosen, loading = store.applying(pc, app, tab.kind) == image.id,
+                                    image, tab, if (compact) art.tileWidth else Float.MAX_VALUE, inUse = image.id == chosen, loading = store.applying(pc, app, tab.kind) == image.id,
                                     playing = image.id in playing, ticker = ticker,
                                     modifier = Modifier.staggerEntrance(if (index + 1 < 8) index + 1 else -1)
                                         .then(if (index == inUse) Modifier.focusRequester(first) else Modifier),
@@ -548,14 +621,18 @@ fun ArtworkScreen(screen: Screen.Artwork) {
             }
         }
 
-        InfoStrip(
-            described ?: Described.FirstChoice, tab, chosen,
-            Modifier.offset(margin.px, infoY.px).width((stage.stageWidth - 2 * margin).px).height(84.px),
-        )
+        if (info) {
+            InfoStrip(
+                described ?: Described.FirstChoice, tab, chosen,
+                Modifier.offset(margin.px, infoY.px).width(contentWidth.px).height(ArtworkLayout.INFO_HEIGHT.px),
+            )
+        }
 
-        // The filter sheet drops down from the toolbar over a dimmed page; the grid stays visible underneath
+        // The filter sheet drops down from the toolbar over a dimmed page; the grid stays visible underneath. Compact: it lies over the
+        // toolbar's row (its own count and Done stand in for it), so the options have the room down to the hint bar
         FilterSheetLayer(
             open = sheetOpen, tab = tab, filters = filters, ready = ready, refreshing = refreshing,
+            top = if (compact) ArtworkLayout.TOOLBAR_Y else 280f, bottom = bottom,
             onChange = { filtersByTab[tab] = it },
             onReset = ::resetFilters, onClose = ::closeSheet,
         )
@@ -586,34 +663,45 @@ private fun BuiltInArtworkScreen(pc: Pc, app: App) {
     }
 }
 
-/** The SteamGridDB game the artwork comes from: its name, release year, id and the number of images of this tab. */
+/**
+ * The SteamGridDB game the artwork comes from: its name, release year, id and the number of images of this tab. The name comes first: on the
+ * compact stage, where the chip shares its row with the tabs, the count is dropped while the whole name would not fit beside it.
+ */
 @Composable
 private fun GameChip(match: SgdbGame?, busy: Boolean, appName: String, imageCount: Int?, tab: ArtTab, modifier: Modifier) {
     val colors = LocalDelosColors.current
+    val stage = LocalStage.current
+    val compact = stage.shape == StageShape.COMPACT
     val shape = RoundedCornerShape(22.px)
-    Row(
-        modifier.height(64.px).clip(shape).glass(colors.surface).border(1.px, colors.line, shape).padding(start = 14.px, end = 22.px),
-        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.px),
-    ) {
-        Box(Modifier.size(40.px).clip(CircleShape).background(colors.accent2.copy(alpha = .2f)), contentAlignment = Alignment.Center) {
-            Symbol(Symbols.SPORTS_ESPORTS, 24.tpx, colors.accent2, filled = true)
-        }
-        BasicText(
-            when {
-                busy -> stringResource(R.string.artwork_chip_looking, appName)
-                match != null -> match.name.ifEmpty { stringResource(R.string.artwork_chip_game_id, match.id) }
-                else -> stringResource(R.string.artwork_chip_not_found)
-            },
-            maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f),
-            style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 22.tpx),
-        )
-        // The year and the game id are left out on the compact stage: the name and the count of images matter
-        if (match != null) {
-            if (LocalStage.current.shape != StageShape.COMPACT) {
+    val name = when {
+        busy -> stringResource(R.string.artwork_chip_looking, appName)
+        match != null -> match.name.ifEmpty { stringResource(R.string.artwork_chip_game_id, match.id) }
+        else -> stringResource(R.string.artwork_chip_not_found)
+    }
+    val nameStyle = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 22.tpx)
+    val countStyle = TextStyle(color = colors.text2, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 16.tpx)
+    val count = if (match != null && imageCount != null) pluralStringResource(tab.count, imageCount, imageCount) else null
+    BoxWithConstraints(modifier.height(64.px).clip(shape).glass(colors.surface).border(1.px, colors.line, shape).padding(start = 14.px, end = 22.px)) {
+        val showCount = count != null && (!compact || run {
+            val measurer = rememberTextMeasurer()
+            val k = stage.dpPerPx * LocalDensity.current.density
+            val widths = remember(name, count, nameStyle, countStyle, k) {
+                measurer.measure(name, nameStyle, maxLines = 1).size.width / k to measurer.measure(count, countStyle, maxLines = 1).size.width / k
+            }
+            // The chip's room for the name and the count: its width less the 40 px disc and the gap after it; the count's pill pads its text by 14 px
+            ArtToolbarLayout.showsCount(maxWidth.value / stage.dpPerPx - 40f - 16f, widths.first, widths.second + 28f, 16f)
+        })
+        Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.px)) {
+            Box(Modifier.size(40.px).clip(CircleShape).background(colors.accent2.copy(alpha = .2f)), contentAlignment = Alignment.Center) {
+                Symbol(Symbols.SPORTS_ESPORTS, 24.tpx, colors.accent2, filled = true)
+            }
+            BasicText(name, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f), style = nameStyle)
+            // The year and the game id are left out on the compact stage: the name and the count of images matter
+            if (match != null && !compact) {
                 match.year?.let { MetaChip("$it") }
                 MetaChip("#${match.id}")
             }
-            if (imageCount != null) MetaChip(pluralStringResource(tab.count, imageCount, imageCount))
+            if (showCount && count != null) MetaChip(count)
         }
     }
 }
@@ -637,46 +725,66 @@ private fun CountBadge(count: Int) {
     }
 }
 
+/** The text of the filter strip's line, shared with the compact toolbar, which has to know how wide that line is. */
+private object FilterStripMetrics {
+    @Composable
+    fun countStyle() = TextStyle(fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx)
+
+    @Composable
+    fun sortStyle() = TextStyle(fontFamily = Figtree, fontSize = 21.tpx)
+
+    /** The count's pill (its text padded by 20 px on each side), 12 px, the sort: stage px. */
+    fun lineWidth(count: Float, sort: Float): Float = count + 40f + 12f + sort
+}
+
 /**
  * "10 of 41 covers" and the active filters as chips (A removes one, Reset removes them all); without a filter, the sort. The
- * chips share the one gliding focus plate ([RowGlideHost]).
+ * chips share the one gliding focus plate ([RowGlideHost]). [scrolls] (the compact toolbar, where the strip has what the pills leave): one
+ * row that scrolls with faded ends when the chips need more.
  */
 @Composable
 private fun FilterStrip(
     tab: ArtTab, filters: ArtFilters, ready: Choices.Ready, refreshing: Boolean,
-    onClear: (ActiveFilter) -> Unit, onReset: () -> Unit, modifier: Modifier,
+    onClear: (ActiveFilter) -> Unit, onReset: () -> Unit, modifier: Modifier, scrolls: Boolean = false,
 ) {
     val colors = LocalDelosColors.current
     RowGlideHost(
         ring = FocusRing(3f, 3f), corner = 999f, focusScale = 1.05f, fill = null, glow = null,
         modifier = modifier,
     ) {
-        Row(Modifier.fillMaxSize().padding(horizontal = 3.px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.px)) {
+        val line: @Composable RowScope.() -> Unit = {
             val res = textResources()
             val tint = if (filters.active) colors.accent else colors.accent2
+            val centred = Modifier.align(Alignment.CenterVertically)
             BasicText(
                 tab.resultLine(res, ready.images.size, ready.total, all = !filters.active),
-                Modifier.clip(CircleShape).background(tint.copy(alpha = .14f)).border(1.px, tint.copy(alpha = .45f), CircleShape).padding(horizontal = 20.px, vertical = 7.px),
-                style = TextStyle(color = colors.accent3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx),
+                centred.clip(CircleShape).background(tint.copy(alpha = .14f)).border(1.px, tint.copy(alpha = .45f), CircleShape).padding(horizontal = 20.px, vertical = 7.px),
+                style = FilterStripMetrics.countStyle().copy(color = colors.accent3),
             )
-            if (refreshing) Spinner(26f)
+            if (refreshing) Box(centred) { Spinner(26f) }
             if (!filters.active) {
-                BasicText(stringResource(filters.sort.first), style = TextStyle(color = colors.text3, fontFamily = Figtree, fontSize = 21.tpx))
+                BasicText(stringResource(filters.sort.first), centred, style = FilterStripMetrics.sortStyle().copy(color = colors.text3))
             } else {
                 ArtFilterRules.chips(filters).forEach { chip ->
-                    FilterStripChip(chip.label(res), Symbols.CLOSE) { onClear(chip) }
+                    FilterStripChip(chip.label(res), Symbols.CLOSE, centred) { onClear(chip) }
                 }
-                FilterStripChip(stringResource(R.string.filters_art_chips_reset), Symbols.RESET, onReset)
+                FilterStripChip(stringResource(R.string.filters_art_chips_reset), Symbols.RESET, centred, onReset)
             }
+        }
+        if (scrolls) {
+            // The chips' focus scale and ring (about 8 px) have their room above and below while the row scrolls, and 24 px at its faded ends
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.CenterStart) { ScrollRow(gap = 12f, ringRoom = 12f, content = line) }
+        } else {
+            Row(Modifier.fillMaxSize().padding(horizontal = 3.px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.px), content = line)
         }
     }
 }
 
 @Composable
-private fun FilterStripChip(label: String, icon: String, onClick: () -> Unit) {
+private fun FilterStripChip(label: String, icon: String, modifier: Modifier, onClick: () -> Unit) {
     val colors = LocalDelosColors.current
     Row(
-        Modifier
+        modifier
             .focusEffects(onClick = onClick, corner = 999f, focusScale = 1.05f, ring = FocusRing(3f, 3f), glow = null, glide = true)
             .clip(CircleShape).background(colors.surface2).border(1.px, colors.line, CircleShape)
             .height(44.px).padding(horizontal = 20.px),
@@ -790,11 +898,14 @@ private fun StripBadge(text: String, icon: String?, accent: Boolean) {
 /**
  * The filter sheet (Y or the Filter pill): it grows from the toolbar's Filter pill ([popEnter] / [popExit]) over a dimmed page,
  * the grid below keeps updating as choices are made. The focus stays inside while it is open and starts on the first row's
- * selected option; the options share the filter chips' gliding plate ([RowGlideHost]).
+ * selected option; the options share the filter chips' gliding plate ([RowGlideHost]). [top] is the sheet's y and [bottom] the hint
+ * bar's room: the compact sheet lies over the toolbar, has the live count in place of its title and scrolls its options when the page
+ * is too short for them.
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun FilterSheetLayer(
-    open: Boolean, tab: ArtTab, filters: ArtFilters, ready: Choices.Ready?, refreshing: Boolean,
+    open: Boolean, tab: ArtTab, filters: ArtFilters, ready: Choices.Ready?, refreshing: Boolean, top: Float, bottom: Float,
     onChange: (ArtFilters) -> Unit, onReset: () -> Unit, onClose: () -> Unit,
 ) {
     val colors = LocalDelosColors.current
@@ -802,14 +913,19 @@ private fun FilterSheetLayer(
     val reduced = LocalReducedMotion.current
     val shape = RoundedCornerShape(40.px)
     val stage = LocalStage.current
-    val margin = SettingsLayout.margin(stage).let { if (stage.shape == StageShape.COMPACT) it else 150f }
+    val compactSheet = stage.shape == StageShape.COMPACT
+    val margin = SettingsLayout.margin(stage)
     val kind = tab.kind
+    // The header's pills are focusable: their glow (a 70 px circle around the 64 px pill, times the focus scale) needs 44 px above them
+    // inside the sheet's clip
+    val padTop = if (compactSheet) ArtworkLayout.SHEET_PAD_TOP else 26f
+    val padBottom = if (compactSheet) 20f else 22f
     AnimatedVisibility(open, enter = fadeIn(tween(Motion.EXIT, easing = Motion.Ease)), exit = fadeOut(tween(Motion.EXIT, easing = Motion.Ease))) {
         Box(Modifier.fillMaxSize().background(Color(0x73050A14)).pointerInput(Unit) { detectTapGestures { onClose() } })
     }
     AnimatedVisibility(
         open,
-        modifier = Modifier.offset(margin.px, (if (stage.shape == StageShape.COMPACT) 262f else 280f).px),
+        modifier = Modifier.offset(margin.px, top.px),
         enter = popEnter(TransformOrigin(.92f, 0f), reduced),
         exit = popExit(TransformOrigin(.92f, 0f), reduced),
     ) {
@@ -832,21 +948,25 @@ private fun FilterSheetLayer(
             Modifier
                 .width((stage.stageWidth - 2 * margin).px)
                 .clip(shape).glass(colors.surface3).border(1.px, colors.line, shape)
-                .padding(start = 40.cpx, end = 40.cpx, top = 26.cpx, bottom = 22.cpx)
+                .padding(start = 40.cpx, end = 40.cpx, top = padTop.px, bottom = padBottom.px)
                 .onFocusChanged { panelFocused = it.hasFocus }
                 .focusProperties { onExit = { if (open) cancelFocusChange() } }
                 .focusGroup(),
             verticalArrangement = Arrangement.spacedBy(8.px),
         ) {
-            Row(Modifier.fillMaxWidth().padding(bottom = 8.px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy((if (stage.shape == StageShape.COMPACT) 16 else 24).px)) {
-                BasicText(stringResource(R.string.filters_art_title), style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 34.tpx))
-                if (ready != null && stage.shape != StageShape.COMPACT) {
+            val live: @Composable () -> Unit = {
+                if (ready != null) {
                     BasicText(
                         tab.resultLine(res, ready.images.size, ready.total, all = false),
                         Modifier.clip(CircleShape).background(colors.accent.copy(alpha = .16f)).border(1.px, colors.accent.copy(alpha = .45f), CircleShape).padding(horizontal = 22.px, vertical = 8.px),
                         style = TextStyle(color = colors.accent3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 22.tpx),
                     )
                 }
+            }
+            // Compact: the live count stands where the title would not fit beside the two pills, which keep the room a focused one grows into
+            Row(Modifier.fillMaxWidth().padding(bottom = 8.px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy((if (compactSheet) ArtworkLayout.PILL_GAP else 24f).px)) {
+                if (!compactSheet) BasicText(stringResource(R.string.filters_art_title), style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 34.tpx))
+                live()
                 if (refreshing) Spinner(30f)
                 Spacer(Modifier.weight(1f))
                 val active = filters.active
@@ -857,22 +977,23 @@ private fun FilterSheetLayer(
                 )
                 PillButton(stringResource(R.string.filters_art_done), Symbols.CHECK, onClose, compact = true, clickCue = Cue.BACK, trailing = { GlyphButton(Glyph.Y, 32) })
             }
-            val compactSheet = stage.shape == StageShape.COMPACT
-            // The compact sheet may be taller than the page leaves it: its options scroll
+            // The compact sheet may be taller than the page leaves it: its options scroll, fading at an edge they continue behind. The header
+            // above them is the padding, the 64 px pills and 16 px
             val optionsScroll = rememberScrollState()
-            RowGlideHost(ring = FocusRing(3f, 3f), corner = 999f, focusScale = 1.05f, fill = null, glow = null) {
+            val optionsMax = (stage.stageHeight - top - bottom - 8f - padTop - 64f - 16f - padBottom).coerceAtLeast(120f)
+            // A focused option of the scrolling sheet stays clear of the faded edges
+            val k = stage.dpPerPx * LocalDensity.current.density
+            val optionsIntoView = rememberMarginBringIntoView(optionsScroll, before = 24f * k, after = 40f * k, stagePx = k)
+            RowGlideHost(
+                ring = FocusRing(3f, 3f), corner = 999f, focusScale = 1.05f, fill = null, glow = null,
+                modifier = if (compactSheet) Modifier.heightIn(max = optionsMax.px).focusRoom(horizontal = 12.px).fadeEdges(stage, optionsScroll, 16f, 32f) else Modifier,
+            ) {
+                CompositionLocalProvider(LocalBringIntoViewSpec provides optionsIntoView) {
                 Column(
-                    (if (compactSheet) Modifier.heightIn(max = (stage.stageHeight - 262f - 110f - 100f).coerceAtLeast(120f).px).verticalScroll(optionsScroll) else Modifier),
+                    // 12 px beside and 8 px above and below the rows: the room of a focused chip's ring inside the scrolling layer
+                    (if (compactSheet) Modifier.verticalScroll(optionsScroll).padding(horizontal = 12.px, vertical = 8.px) else Modifier),
                     verticalArrangement = Arrangement.spacedBy(6.px),
                 ) {
-                    // Compact: the live count that the header has no room for
-                    if (compactSheet && ready != null) {
-                        BasicText(
-                            tab.resultLine(res, ready.images.size, ready.total, all = false),
-                            Modifier.clip(CircleShape).background(colors.accent.copy(alpha = .16f)).border(1.px, colors.accent.copy(alpha = .45f), CircleShape).padding(horizontal = 22.px, vertical = 6.px),
-                            style = TextStyle(color = colors.accent3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 22.tpx),
-                        )
-                    }
                     if (ArtFilterRules.hasType(kind)) {
                         SheetRow(Symbols.MOVIE, stringResource(R.string.filters_art_row_type)) {
                             ArtType.entries.forEach { type ->
@@ -903,6 +1024,7 @@ private fun FilterSheetLayer(
                         }
                     }
                 }
+                }
             }
         }
     }
@@ -912,14 +1034,16 @@ private fun FilterSheetLayer(
 private fun SheetRow(icon: String, title: String, options: @Composable () -> Unit) {
     val colors = LocalDelosColors.current
     val compact = LocalStage.current.shape == StageShape.COMPACT
-    Row(Modifier.fillMaxWidth().padding(vertical = 2.px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy((if (compact) 20 else 30).px)) {
+    // Compact: 4 px above and below, so a focused chip (its 5 % and its ring) keeps 12 px to the chips of the next row
+    Row(Modifier.fillMaxWidth().padding(vertical = (if (compact) 4 else 2).px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy((if (compact) 20 else 30).px)) {
         Row(Modifier.width((if (compact) 310 else 270).px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy((if (compact) 14 else 18).px)) {
             Box(Modifier.size((if (compact) 44 else 52).px).clip(CircleShape).background(colors.accent.copy(alpha = .18f)), contentAlignment = Alignment.Center) {
                 Symbol(icon, 28.tpx, colors.accent2, filled = true)
             }
             BasicText(title, style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx))
         }
-        ScrollRow(gap = 14f * LocalStage.current.compactScale) { options() }
+        // A row that scrolls keeps the chips' ring above and below (the fade's layer would cut it)
+        ScrollRow(gap = 14f * LocalStage.current.compactScale, ringRoom = 12f) { options() }
     }
 }
 
@@ -930,16 +1054,17 @@ private fun SheetDivider() {
 
 /** The first choice: no SteamGridDB image (the PC's artwork, or the name instead of a logo). */
 @Composable
-private fun NoneTile(pc: Pc, app: App, tab: ArtTab, inUse: Boolean, loading: Boolean, modifier: Modifier, onFocused: () -> Unit, onClick: () -> Unit) {
+private fun NoneTile(pc: Pc, app: App, tab: ArtTab, tileWidth: Float, inUse: Boolean, loading: Boolean, modifier: Modifier, onFocused: () -> Unit, onClick: () -> Unit) {
     val boxArt by rememberBoxArt(LocalBoxArt.current, pc, app)
-    Tile(tab, inUse, loading, if (tab == ArtTab.LOGO) stringResource(R.string.artwork_first_name_only) else stringResource(R.string.artwork_first_from_pc), animated = false, modifier, onFocused, onClick) {
+    Tile(tab, tileWidth, inUse, loading, if (tab == ArtTab.LOGO) stringResource(R.string.artwork_first_name_only) else stringResource(R.string.artwork_first_from_pc), animated = false, modifier, onFocused, onClick) {
         val img = boxArt
         when {
             tab == ArtTab.LOGO -> NameAsLogo(app.name)
             img != null -> Image(img, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
             else -> {
                 val art = appArt(pc, app)
-                PlaceholderArt(art.hue, art.hue2, art.icon, Modifier.fillMaxSize(), glyphSize = 120f)
+                // The glyph of the 1920 stage's tile; in proportion on the smaller tiles of the compact grid
+                PlaceholderArt(art.hue, art.hue2, art.icon, Modifier.fillMaxSize(), glyphSize = if (tileWidth >= 200f) 120f else tileWidth * .6f)
             }
         }
     }
@@ -947,12 +1072,12 @@ private fun NoneTile(pc: Pc, app: App, tab: ArtTab, inUse: Boolean, loading: Boo
 
 @Composable
 private fun ChoiceTile(
-    image: SgdbImage, tab: ArtTab, inUse: Boolean, loading: Boolean, playing: Boolean, ticker: AnimationTicker,
+    image: SgdbImage, tab: ArtTab, tileWidth: Float, inUse: Boolean, loading: Boolean, playing: Boolean, ticker: AnimationTicker,
     modifier: Modifier, onFocused: () -> Unit, onClick: () -> Unit,
 ) {
     val store = LocalArtwork.current
     val thumb by rememberThumbnail(store, image.previewUrl)
-    Tile(tab, inUse, loading, null, image.animated, modifier, onFocused, onClick) {
+    Tile(tab, tileWidth, inUse, loading, null, image.animated, modifier, onFocused, onClick) {
         Crossfade(thumb, animationSpec = tween(300), label = "thumb") { img ->
             if (img != null) {
                 Image(
@@ -1004,7 +1129,7 @@ private fun TileDownloadBar(progress: Float?) {
 /** A choice in the grid: the image in [tab]'s shape, the "In use" badge, an "Animated" badge, a spinner while [loading], an optional caption. */
 @Composable
 private fun Tile(
-    tab: ArtTab, inUse: Boolean, loading: Boolean, caption: String?, animated: Boolean, modifier: Modifier,
+    tab: ArtTab, tileWidth: Float, inUse: Boolean, loading: Boolean, caption: String?, animated: Boolean, modifier: Modifier,
     onFocused: () -> Unit, onClick: () -> Unit, content: @Composable () -> Unit,
 ) {
     val colors = LocalDelosColors.current
@@ -1033,18 +1158,26 @@ private fun Tile(
             Box(Modifier.fillMaxSize().background(Color(0x99050A14)), contentAlignment = Alignment.Center) { Spinner(48f) }
         }
         if (inUse) {
+            val inUseLabel = if (tab == ArtTab.COVER) !animated || tileWidth >= ArtworkLayout.COVER_BADGES_MIN else tileWidth >= ArtworkLayout.IN_USE_LABEL_MIN
+            // The check alone on a small wide / background / logo tile of a compact stage is a smaller circle in the corner: the tile's own name
+            // sits next to it
+            val small = !inUseLabel && tab != ArtTab.COVER
             Row(
-                Modifier.align(Alignment.TopStart).padding(12.px).clip(CircleShape).background(colors.accent).padding(horizontal = 12.px, vertical = 4.px),
+                Modifier.align(Alignment.TopStart).padding((if (small) 8 else 12).px).clip(CircleShape).background(colors.accent).padding(horizontal = (if (small) 6 else 12).px, vertical = 4.px),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.px),
             ) {
                 Symbol(Symbols.CHECK, 20.tpx, colors.onAccent)
-                BasicText(stringResource(R.string.artwork_in_use), style = TextStyle(color = colors.onAccent, fontFamily = Figtree, fontWeight = FontWeight.Bold, fontSize = 16.tpx))
+                // A cover that is animated too has room for the two badges only when "In use" is the check alone; on the small wide / background / logo
+                // tiles of a compact stage the label would run into the tile's own name, the check says it
+                if (inUseLabel) {
+                    BasicText(stringResource(R.string.artwork_in_use), style = TextStyle(color = colors.onAccent, fontFamily = Figtree, fontWeight = FontWeight.Bold, fontSize = 16.tpx))
+                }
             }
         }
         if (animated) {
-            // Icon only on the narrow covers, where "In use" takes the room
-            val label = tab != ArtTab.COVER
+            // Icon only on the narrow covers, where "In use" takes the room, and on a tile too small for the label (beside "In use")
+            val label = tab != ArtTab.COVER && tileWidth >= (if (inUse) ArtworkLayout.BOTH_LABELS_MIN else ArtworkLayout.ANIMATED_LABEL_MIN)
             Row(
                 Modifier.align(Alignment.TopEnd).padding(12.px).clip(CircleShape).background(Color(0xB3050A14)).padding(horizontal = if (label) 12.px else 6.px, vertical = 4.px),
                 verticalAlignment = Alignment.CenterVertically,

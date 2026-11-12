@@ -14,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.limelight.R
 import com.limelight.binding.video.PyroWaveRenderer
@@ -143,10 +144,14 @@ internal object ScreenPreviews {
             LocalContext provides world.context, LocalDelosColors provides colors, LocalReducedMotion provides appearance.reducedMotion,
             LocalBoxArt provides world.boxArt, LocalArtwork provides world.artwork, LocalGameMetadata provides world.metadata,
         ) {
-            Shell(
-                appearance, world.appearanceStore::update, world.keys, world.repo, world.launcher, world.profiles, world.startupStore,
-                world.setup, world.links, world.results, world.shell, previewProfiles = world.previewProfiles,
-            )
+            // The activity's own GlobalKeys has no listener in a preview: the shell's global keys (L1 / R1, X, Y, Start, Select) reach the world's
+            // here, so `adb shell input keyevent` (and a controller) can switch tabs and open the filter sheets of a previewed screen
+            Box(Modifier.fillMaxSize().onPreviewKeyEvent { world.keys.dispatch(it.nativeKeyEvent) }) {
+                Shell(
+                    appearance, world.appearanceStore::update, world.keys, world.repo, world.launcher, world.profiles, world.startupStore,
+                    world.setup, world.links, world.results, world.shell, previewProfiles = world.previewProfiles,
+                )
+            }
         }
     }
 

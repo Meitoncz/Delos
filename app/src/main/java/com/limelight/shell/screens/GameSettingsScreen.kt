@@ -11,6 +11,8 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
@@ -21,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.onFocusChanged
@@ -36,6 +39,9 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.unit.Constraints
+import kotlin.math.roundToInt
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -126,7 +132,8 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
     val navigation = key(tab, game) { rememberFocusedListNavigation(rows.map { it.key }) }
     val stage = LocalStage.current
     val k = stage.dpPerPx * LocalDensity.current.density
-    val bringIntoView = rememberMarginBringIntoView(scroll, before = 72f * k, after = 110f * k, stagePx = k)
+    val compact = stage.shape == StageShape.COMPACT
+    val bringIntoView = rememberMarginBringIntoView(scroll, before = 72f * k, after = (if (compact) SettingsLayout.COMPACT_LIST_AFTER else 110f) * k, stagePx = k)
     fun changeTab(next: Int) {
         if (next == tab) return
         transfer.request()
@@ -182,16 +189,31 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
     val boxImage by rememberBoxArt(LocalBoxArt.current, screen.pc, screen.app)
     val art = appArt(screen.pc, screen.app)
     val bottom = SettingsLayout.bottom(appearance)
-    val compact = stage.shape == StageShape.COMPACT
     val margin = SettingsLayout.margin(stage)
-    // Compact: the banner and the header are shorter, the tabs follow right under them and the description is a dock under the list
+    // Compact: one header row on a shorter banner (the name, the tabs and Reset all as a circle), the list at full width under it and the
+    // description as a dock under the list
     val headTop = if (compact) GameSettingsLayout.COMPACT_HEAD_TOP else GameSettingsLayout.HEAD_TOP
     val headHeight = if (compact) GameSettingsLayout.COMPACT_HEAD_HEIGHT else GameSettingsLayout.HEAD_HEIGHT
-    val tabsY = if (compact) GameSettingsLayout.COMPACT_TABS_Y else GameSettingsLayout.TABS_Y
     val listTop = if (compact) GameSettingsLayout.COMPACT_LIST_TOP else GameSettingsLayout.LIST_TOP
+    val listInnerTop = if (compact) GameSettingsLayout.COMPACT_LIST_INNER_TOP else GameSettingsLayout.LIST_INNER_TOP
     val listX = if (compact) margin - 18f else GameSettingsLayout.LIST_X
     val listWidth = if (compact) stage.stageWidth - 2 * (margin - 18f) else stage.stageWidth - GameSettingsLayout.LIST_WIDTH_LESS
-    val listBottom = if (compact) bottom + SettingsLayout.DOCK_HEIGHT + 16f else bottom
+    val dockHeight = HelpDockLayout.height(stage.stageHeight, listTop + listInnerTop, bottom, SettingsLayout.tallRow(stage))
+    val listBottom = if (compact) bottom + dockHeight + HelpDockLayout.LIST_GAP else bottom
+    // Nothing to reset: dimmed and skipped. Down returns to the row last focused, not the nearest one
+    val resetModifier = Modifier.alpha(if (custom.isEmpty()) .4f else 1f)
+        .onFocusChanged { onBanner = it.hasFocus }
+        .focusProperties {
+            canFocus = custom.isNotEmpty()
+            down = (focusedKey?.takeIf { key -> rows.any { it.key == key } } ?: rows.firstOrNull()?.key)
+                ?.let { navigation.requester(it) } ?: androidx.compose.ui.focus.FocusRequester.Default
+        }
+    val tabs: @Composable () -> Unit = {
+        ShoulderLabel("L1")
+        TabPill(Symbols.CAST, SettingsTab.STREAM.label(res), tab == 0, Modifier.padding(horizontal = 5.px), streamCustom, collapse = compact) { changeTab(0) }
+        TabPill(Symbols.MONITOR, SettingsTab.DISPLAY.label(res), tab == 1, Modifier.padding(horizontal = 5.px), displayCustom, collapse = compact) { changeTab(1) }
+        ShoulderLabel("R1")
+    }
     Box(Modifier.fillMaxSize()
         .pointerInput(Unit) {
             awaitPointerEventScope {
@@ -204,34 +226,43 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
         .onPreviewKeyEvent { if (touch) touch = false; false }) {
         FocusTransferTarget(transfer)
         GameBanner(art, heroImage ?: coverImage ?: boxImage, appearance.heroBlur)
-        // The eyebrow, the game's name, the custom-settings chip and Reset all, on the banner
-        GameHeader(screen.pc.name, screen.app.name, custom.size, Modifier.offset(margin.px, headTop.px)
-            .width((stage.stageWidth - 2 * margin).px).height(headHeight.px)) {
-            PillButton(stringResource(R.string.settings_game_reset_all), Symbols.RESET, resetAll,
-                Modifier.alpha(if (custom.isEmpty()) .4f else 1f)
-                    .onFocusChanged { onBanner = it.hasFocus }
-                    // Nothing to reset: dimmed and skipped. Down returns to the row last focused, not the nearest one
-                    .focusProperties {
-                        canFocus = custom.isNotEmpty()
-                        down = (focusedKey?.takeIf { key -> rows.any { it.key == key } } ?: rows.firstOrNull()?.key)
-                            ?.let { navigation.requester(it) } ?: androidx.compose.ui.focus.FocusRequester.Default
-                    },
-                compact = true, clickCue = if (custom.isEmpty()) null else Cue.SELECT)
-        }
-        com.limelight.shell.ui.SelectionPillHost(Modifier.offset(y = tabsY.px).fillMaxWidth().height(targetPx(SettingsLayout.TABS_HEIGHT))) {
-            ShoulderLabel("L1")
-            TabPill(Symbols.CAST, SettingsTab.STREAM.label(res), tab == 0, Modifier.padding(horizontal = 5.px), streamCustom) { changeTab(0) }
-            TabPill(Symbols.MONITOR, SettingsTab.DISPLAY.label(res), tab == 1, Modifier.padding(horizontal = 5.px), displayCustom) { changeTab(1) }
-            ShoulderLabel("R1")
+        if (compact) {
+            // The eyebrow and the game's name, the tabs (centred on the stage while the name leaves them the room, else flush against the
+            // circle) and Reset all, which is flush with the content's right edge like the global settings' search
+            // The count of the game's custom settings (the chip of the 16:9 header) is the accent badge on the circle
+            CompactGameHeader(screen.pc.name, screen.app.name, headTop, headHeight, tabs) {
+                val searchSize = SettingsLayout.searchSize(stage)
+                Box(Modifier.size(searchSize.px)) {
+                    CircleIconButton(Symbols.RESET, stringResource(R.string.settings_game_reset_all) + " · " + customSettingsLabel(res, custom.size),
+                        resetModifier.size(searchSize.px), clickCue = if (custom.isEmpty()) null else Cue.SELECT, click = resetAll)
+                    if (custom.isNotEmpty()) {
+                        val colors = LocalDelosColors.current
+                        Box(Modifier.align(Alignment.TopEnd).offset(y = (-10).px).zIndex(5f).defaultMinSize(minWidth = 30.px, minHeight = 30.px)
+                            .clip(CircleShape).background(colors.accent).padding(horizontal = 8.px), contentAlignment = Alignment.Center) {
+                            BasicText("${custom.size}", style = TextStyle(color = colors.onAccent, fontFamily = Figtree, fontWeight = FontWeight.Bold, fontSize = 18.tpx))
+                        }
+                    }
+                }
+            }
+        } else {
+            // The eyebrow, the game's name, the custom-settings chip and Reset all, on the banner
+            GameHeader(screen.pc.name, screen.app.name, custom.size, Modifier.offset(margin.px, headTop.px)
+                .width((stage.stageWidth - 2 * margin).px).height(headHeight.px)) {
+                PillButton(stringResource(R.string.settings_game_reset_all), Symbols.RESET, resetAll, resetModifier,
+                    compact = true, clickCue = if (custom.isEmpty()) null else Cue.SELECT)
+            }
+            // Centred on the stage, like the global settings' tabs
+            TabRow(GameSettingsLayout.TABS_Y, SettingsLayout.TABS_HEIGHT.px, left = margin, right = stage.stageWidth - margin, content = tabs)
         }
         CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView, LocalEntranceStagger provides rememberEntranceStagger(tab to game)) {
             key(tab, game) {
-                // One ring glides between the rows; the host carries the list's size and faded edges, so the ring fades with the rows
+                // One ring glides between the rows; the host carries the list's size and viewport (room at the sides for the plate's glow, edges
+                // that fade while rows continue behind them), so the ring fades with the rows
                 SettingRowList(Modifier.padding(start = listX.px, top = listTop.px, bottom = listBottom.px)
-                    .width(listWidth.px).fillMaxHeight().fadeEdges(stage, top = 14f, bottom = 70f)) {
+                    .width(listWidth.px).fillMaxHeight().settingListViewport(stage, scroll, if (compact) SettingsLayout.COMPACT_LIST_FADE_TOP else 14f, if (compact) SettingsLayout.COMPACT_LIST_FADE else 70f)) {
                     Column(
                         modifier = Modifier.fillMaxSize().focusedListBoundary(navigation).verticalScroll(scroll)
-                            .padding(start = 18.px, end = 18.px, top = GameSettingsLayout.LIST_INNER_TOP.px, bottom = 140.px),
+                            .padding(start = (18f + SETTING_LIST_ROOM).px, end = (18f + SETTING_LIST_ROOM).px, top = listInnerTop.px, bottom = 140.px),
                         verticalArrangement = Arrangement.spacedBy(10.px)) {
                         rows.forEach { spec ->
                             key(spec.key) {
@@ -271,7 +302,7 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
         }
         val focusedChoices = focused?.let { caps?.choices(res, it, values) ?: it.choices }.orEmpty()
         GameSettingsPanel(
-            if (compact) Modifier.align(Alignment.BottomCenter).padding(start = margin.px, end = margin.px, bottom = bottom.px).fillMaxWidth().height(SettingsLayout.DOCK_HEIGHT.px)
+            if (compact) Modifier.align(Alignment.BottomCenter).padding(start = margin.px, end = margin.px, bottom = bottom.px).fillMaxWidth().height(dockHeight.px)
             else Modifier.align(Alignment.TopEnd).padding(top = GameSettingsLayout.PANEL_TOP.px, end = SettingsLayout.TITLE_X.px, bottom = bottom.px)
                 .width(520.px).fillMaxHeight(),
             game = screen.app.name, focused = focused, isCustom = focused?.key in custom, touch = touch,
@@ -306,12 +337,19 @@ internal object GameSettingsLayout {
     const val LIST_WIDTH_LESS = 840f
     const val PANEL_TOP = SettingsLayout.LIST_TOP
 
-    /** The compact stage: a shorter banner and header, the 66 px tabs (64 touch minimum) right under them, the list at full width under those. */
-    const val COMPACT_BANNER_HEIGHT = 200f
-    const val COMPACT_HEAD_TOP = 104f
-    const val COMPACT_HEAD_HEIGHT = 80f
-    const val COMPACT_TABS_Y = 200f
-    const val COMPACT_LIST_TOP = 276f
+    /**
+     * The compact stage: a shorter banner and ONE header row 20 px under the status bar: the name at the left, the 66 px tabs (64 touch
+     * minimum) and the Reset all circle. The list at full width starts where the row ends, its first row [COMPACT_LIST_INNER_TOP] further
+     * down: about 30 px under the tabs.
+     */
+    const val COMPACT_BANNER_HEIGHT = 220f
+    const val COMPACT_HEAD_TOP = 124f
+    const val COMPACT_HEAD_HEIGHT = 88f
+    const val COMPACT_LIST_TOP = 212f
+    const val COMPACT_LIST_INNER_TOP = 20f
+
+    /** The game's name keeps at least this much of the compact header row; the tabs scroll in the rest. */
+    const val TITLE_MIN = 240f
 }
 
 /**
@@ -358,18 +396,68 @@ internal fun GameBanner(art: GameArt, image: ImageBitmap?, blurPx: Int) {
 internal fun GameHeader(pc: String, game: String, customCount: Int, modifier: Modifier, action: @Composable () -> Unit) {
     val colors = LocalDelosColors.current
     val res = textResources()
+    Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.px)) {
+        GameTitle(pc, game, Modifier.weight(1f))
+        Chip(if (customCount == 0) Symbols.CHECK_CIRCLE else Symbols.TUNE, customSettingsLabel(res, customCount), if (customCount == 0) null else colors.accent3)
+        action()
+    }
+}
+
+/** The eyebrow ("Game settings · the PC") over the game's name, each on one line. */
+@Composable
+private fun GameTitle(pc: String, game: String, modifier: Modifier) {
+    val colors = LocalDelosColors.current
     val k = stageUnit()
     // The prototype's text shadows (0 2 10 and 0 4 24) keep the text legible on a bright hero
     val shadow = if (colors.dark) Shadow(Color.Black.copy(alpha = .5f), Offset(0f, 3f * k), 12f * k) else null
-    Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.px)) {
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.px)) {
-            BasicText(stringResource(R.string.settings_game_eyebrow, pc).uppercase(), maxLines = 1, overflow = TextOverflow.Ellipsis,
-                style = TextStyle(color = colors.accent2, fontFamily = Figtree, fontWeight = FontWeight.Bold, fontSize = 16.tpx, letterSpacing = .14.em, shadow = shadow))
-            BasicText(game, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx, lineHeight = 1.35.em, shadow = shadow))
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(4.px)) {
+        BasicText(stringResource(R.string.settings_game_eyebrow, pc).uppercase(), maxLines = 1, overflow = TextOverflow.Ellipsis,
+            style = TextStyle(color = colors.accent2, fontFamily = Figtree, fontWeight = FontWeight.Bold, fontSize = 16.tpx, letterSpacing = .14.em, shadow = shadow))
+        BasicText(game, maxLines = 1, overflow = TextOverflow.Ellipsis,
+            style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx, lineHeight = 1.35.em, shadow = shadow))
+    }
+}
+
+/**
+ * The compact header row at [y]: the title block at the left, the [tabs] and [action] (Reset all as a circle) flush with the content's right
+ * edge. The tabs are placed by [TabRowLayout]: exactly centred on the stage while the name leaves them the room, otherwise their R1 badge
+ * sits [SettingsLayout.SEARCH_GAP] before the circle; the name has what is left of them and ends in an ellipsis when that is too little.
+ */
+@Composable
+private fun CompactGameHeader(pc: String, game: String, y: Float, height: Float, tabs: @Composable () -> Unit, action: @Composable () -> Unit) {
+    val stage = LocalStage.current
+    val margin = SettingsLayout.margin(stage)
+    val scroll = rememberScrollState()
+    Layout(
+        content = {
+            GameTitle(pc, game, Modifier)
+            SelectionPillHost(Modifier.height(targetPx(SettingsLayout.TABS_HEIGHT)).tabScroll(scroll), content = tabs)
+            action()
+        },
+        modifier = Modifier.offset(y = y.px).fillMaxWidth().height(height.px),
+    ) { measurables, constraints ->
+        val k = stage.dpPerPx * density
+        val width = constraints.maxWidth
+        val rowHeight = constraints.maxHeight
+        val button = measurables[2].measure(Constraints(maxHeight = rowHeight))
+        val edge = margin * k
+        val gap = 24f * k
+        val outset = SHOULDER_OUTSET * k
+        // The name keeps at least TITLE_MIN of the row; the tabs scroll in what is left between it and the circle
+        val titleRoom = minOf(measurables[0].maxIntrinsicWidth(rowHeight).toFloat(), GameSettingsLayout.TITLE_MIN * k)
+        val natural = measurables[1].maxIntrinsicWidth(rowHeight)
+        val placement = TabRowLayout.place(
+            width.toFloat(), natural.toFloat(), outset,
+            left = edge + titleRoom + gap, right = width - edge - button.width - SettingsLayout.SEARCH_GAP * k,
+        )
+        val row = measurables[1].measure(Constraints(maxWidth = placement.width.roundToInt(), maxHeight = rowHeight))
+        val x = placement.x
+        val title = measurables[0].measure(Constraints(maxWidth = (x + outset - gap - edge).roundToInt().coerceAtLeast(0), maxHeight = rowHeight))
+        layout(width, rowHeight) {
+            title.place(edge.roundToInt(), (rowHeight - title.height) / 2)
+            row.place(x.roundToInt(), (rowHeight - row.height) / 2)
+            button.place((width - edge).roundToInt() - button.width, (rowHeight - button.height) / 2)
         }
-        Chip(if (customCount == 0) Symbols.CHECK_CIRCLE else Symbols.TUNE, customSettingsLabel(res, customCount), if (customCount == 0) null else colors.accent3)
-        action()
     }
 }
 
@@ -419,11 +507,12 @@ internal fun GameSettingsPanel(
         }
     }
     if (compact) {
-        // The source (custom for this game, with the profile's value, or the profile's) stays between the name and the help: it is the custom marker
+        // One scrolling body under the header: where the value comes from (custom for this game, with the profile's value, or the profile's)
+        // first, then the help, what the impact chips mean and the autosave note
         HelpDock(modifier, focused?.icon ?: Symbols.TUNE, focused?.label ?: stringResource(R.string.settings_game_panel_title), focused?.key to detail,
-            showImpactLegend, lead = source) {
+            showImpactLegend, footer = { savedNote() }) {
+            source()
             help()
-            savedNote()
         }
         return
     }
@@ -446,15 +535,17 @@ private fun SourceBox(custom: Boolean, icon: String, title: String, body: Annota
     val colors = LocalDelosColors.current
     val tint = colors.accent3
     if (LocalStage.current.shape == StageShape.COMPACT) {
-        // One line in the dock: the marker and what the profile (or this game) has
-        val shape = RoundedCornerShape(16.cpx)
+        // In the dock's scrolling body: the marker and what the profile (or this game) has as one paragraph that wraps inside the box
+        val shape = RoundedCornerShape(16.px)
         Row(Modifier.fillMaxWidth().clip(shape).background(if (custom) tint.copy(alpha = .22f) else colors.text.copy(alpha = .06f))
-            .border(1.px, if (custom) tint.copy(alpha = .5f) else colors.line, shape).padding(horizontal = 14.px, vertical = 4.px),
-            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.px)) {
+            .border(1.px, if (custom) tint.copy(alpha = .5f) else colors.line, shape).padding(horizontal = 14.px, vertical = 8.px),
+            horizontalArrangement = Arrangement.spacedBy(10.px)) {
             Symbol(icon, 22.tpx, if (custom) tint else colors.text2, filled = true)
-            BasicText(title, maxLines = 1, style = TextStyle(color = if (custom) tint else colors.text2, fontFamily = Figtree, fontWeight = FontWeight.Bold, fontSize = 19.tpx))
-            BasicText(body, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false),
-                style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 19.tpx))
+            BasicText(buildAnnotatedString {
+                withStyle(SpanStyle(color = if (custom) tint else colors.text2, fontWeight = FontWeight.Bold)) { append(title) }
+                append("   ")
+                append(body)
+            }, modifier = Modifier.weight(1f), style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 19.tpx, lineHeight = 1.35.em))
         }
         return
     }

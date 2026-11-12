@@ -87,7 +87,8 @@ import com.limelight.shell.ui.Symbols
 import com.limelight.shell.ui.icon
 import com.limelight.shell.ui.Figtree
 import com.limelight.shell.ui.Unbounded
-import com.limelight.shell.ui.fadeEdges
+import com.limelight.shell.ui.SETTING_LIST_ROOM
+import com.limelight.shell.ui.settingListViewport
 import com.limelight.shell.ui.focusEffects
 import com.limelight.shell.ui.glass
 import com.limelight.shell.ui.px
@@ -480,17 +481,18 @@ fun DebugInfoScreen() {
     }
     val k = stage.dpPerPx * LocalDensity.current.density
     val listState = rememberScrollState()
-    val bringIntoView = rememberMarginBringIntoView(listState, before = 72f * k, after = 110f * k, stagePx = k)
-
     val compact = stage.shape == StageShape.COMPACT
+    val bringIntoView = rememberMarginBringIntoView(listState, before = 72f * k, after = (if (compact) SettingsLayout.COMPACT_LIST_AFTER else 110f) * k, stagePx = k)
+
     val margin = SettingsLayout.margin(stage)
     val list: @Composable (Modifier) -> Unit = { listModifier ->
         CompositionLocalProvider(LocalBringIntoViewSpec provides bringIntoView, com.limelight.shell.ui.LocalEntranceStagger provides com.limelight.shell.ui.rememberEntranceStagger()) {
-            // One ring glides between the rows; the host carries the list's weight and faded edges, so the ring fades with the rows
-            SettingRowList(listModifier.fadeEdges(stage, top = 14f, bottom = 90f)) {
+            // One ring glides between the rows; the host carries the list's weight and viewport (room at the sides for the plate's glow, edges
+            // that fade while rows continue behind them), so the ring fades with the rows
+            SettingRowList(listModifier.settingListViewport(stage, listState, if (compact) SettingsLayout.COMPACT_LIST_FADE_TOP else 14f, if (compact) SettingsLayout.COMPACT_LIST_FADE else 90f)) {
                 Column(
                     Modifier.fillMaxSize().focusedListBoundary(navigation).verticalScroll(listState)
-                        .padding(start = 18.px, end = 18.px, top = 14.px, bottom = 140.px),
+                        .padding(start = (18f + SETTING_LIST_ROOM).px, end = (18f + SETTING_LIST_ROOM).px, top = 14.px, bottom = 140.px),
                     verticalArrangement = Arrangement.spacedBy(10.px),
                 ) {
                     var previous: DebugSection? = null
@@ -517,10 +519,11 @@ fun DebugInfoScreen() {
             // Compact: the title is smaller and sits under the status bar, the list takes the full width, the details are a dock under it
             BasicText(stringResource(R.string.debug_title), style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx),
                 modifier = Modifier.offset(margin.px, 108.px))
-            Column(Modifier.fillMaxSize().padding(start = margin.px, end = margin.px, top = 184.px, bottom = 100.px),
-                verticalArrangement = Arrangement.spacedBy(16.px)) {
+            Column(Modifier.fillMaxSize().padding(start = margin.px, end = margin.px, top = 184.px, bottom = SettingsLayout.bottom(stage.textScale).px),
+                verticalArrangement = Arrangement.spacedBy(HelpDockLayout.LIST_GAP.px)) {
                 list(Modifier.weight(1f).fillMaxWidth())
-                HelpDock(Modifier.fillMaxWidth().height(SettingsLayout.DOCK_HEIGHT.px), focused?.icon ?: Symbols.INFO, focused?.label ?: stringResource(R.string.debug_title), focused?.key, false) {
+                val dockHeight = HelpDockLayout.height(stage.stageHeight, 184f + 14f + SettingsLayout.SECTION_HEADING, SettingsLayout.bottom(stage.textScale), SettingsLayout.tallRow(stage))
+                HelpDock(Modifier.fillMaxWidth().height(dockHeight.px), focused?.icon ?: Symbols.INFO, focused?.label ?: stringResource(R.string.debug_title), focused?.key, false) {
                     BasicText(focused?.description ?: stringResource(R.string.debug_panel_default),
                         style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 21.tpx, lineHeight = 1.45.em))
                     focused?.details?.let {
