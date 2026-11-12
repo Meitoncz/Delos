@@ -125,7 +125,8 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
     private final HandlerThread backgroundHandlerThread;
     private final Handler backgroundThreadHandler;
     private boolean hasGameController;
-    // Read by the native rumble thread while stop() runs on the UI thread
+    // Written by stop() on the UI thread, read by the native rumble thread: without volatile that thread can keep
+    // seeing false after stop() and start a rumble that nothing cancels any more
     private volatile boolean stopped = false;
     // Delos: the Full keyboard owns the controller while it is up (setInputSuspended)
     private volatile boolean inputSuspended = false;
@@ -289,10 +290,10 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
     /**
      * The playback for the rumble settings in effect right now, or null once the handler has stopped. Every Android
      * vibrator rumble goes through it, translation off included (the ORIGINAL profile is the game's rumble as it
-     * sends it), so the dead zone, the hold limit and the stop are the same on every path, and a rumble event that
-     * races stop() can never vibrate afterwards. A change of prefConfig.rumbleTranslatorEnabled/rumbleProfile (the
-     * stream menu's live preset switch) takes effect on the next rumble event: the old playback is stopped (its
-     * vibration cancelled) and a new one starts.
+     * sends it), so a rumble event that races stop() can never vibrate afterwards: RumblePlayback checks its own
+     * stopped flag under the lock that also covers the vibrate call. A change of
+     * prefConfig.rumbleTranslatorEnabled/rumbleProfile (the stream menu's live preset switch) takes effect on the
+     * next rumble event: the old playback is stopped (its vibration cancelled) and a new one starts.
      */
     private com.limelight.utils.RumblePlayback rumblePlayback() {
         ActiveRumble active = activeRumble;
@@ -359,9 +360,6 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
 
         for (int i = 0; i < usbDeviceContexts.size(); i++) {
             UsbDeviceContext deviceContext = usbDeviceContexts.valueAt(i);
-            // A USB pad keeps the last motor values until told otherwise, so the stream's last rumble must not outlive it
-            deviceContext.device.rumble((short) 0, (short) 0);
-            deviceContext.device.rumbleTriggers((short) 0, (short) 0);
             deviceContext.destroy();
         }
 
