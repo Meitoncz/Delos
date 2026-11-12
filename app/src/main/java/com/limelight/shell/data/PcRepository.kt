@@ -64,6 +64,9 @@ class PcRepository(context: Context, private val settings: () -> SharedPreferenc
     private val app = context.applicationContext
     private val prefs: SharedPreferences get() = settings()
 
+    /** Which PCs a server last said are paired (uuid → paired), shared by all profiles: pairing belongs to the device. */
+    private val pairings: SharedPreferences = app.getSharedPreferences("delos_pc_pairing", Context.MODE_PRIVATE)
+
     private val pcMap = LinkedHashMap<String, Pc>()
     private val _pcs = MutableStateFlow<List<Pc>>(emptyList())
     val pcs: StateFlow<List<Pc>> = _pcs.asStateFlow()
@@ -175,6 +178,7 @@ class PcRepository(context: Context, private val settings: () -> SharedPreferenc
         val uuid = details.uuid ?: return@synchronized
         // A PC removed in the meantime may still report once from its polling thread
         if (uuid in forgotten) return@synchronized
+        rememberPairing(uuid, details)
         pcMap[uuid] = snapshot(uuid, details)
         _pcs.value = pcMap.values.toList()
         if (uuid == activePc()?.uuid && details.rawAppList != null && details.rawAppList != rawApps) {
@@ -190,11 +194,23 @@ class PcRepository(context: Context, private val settings: () -> SharedPreferenc
             name = prefs.getString(customNameKey(uuid), null) ?: serverName,
             serverName = serverName,
             online = details.state == ComputerDetails.State.ONLINE,
-            paired = details.pairState == PairingManager.PairState.PAIRED,
+            paired = resolvePaired(details.pairState, if (pairings.contains(uuid)) pairings.getBoolean(uuid, false) else details.serverCert != null),
             runningGameId = details.runningGameId,
             canWake = details.macAddress != null,
             details = details,
         )
+    }
+
+    /**
+     * Only a PC that answers tells its pair state; an offline one (or one that has not answered since the
+     * app started) keeps the last one a server reported.
+     */
+    private fun rememberPairing(uuid: String, details: ComputerDetails) {
+        if (details.state != ComputerDetails.State.ONLINE) return
+        val state = details.pairState ?: return
+        if (state != PairingManager.PairState.PAIRED && state != PairingManager.PairState.NOT_PAIRED) return
+        val paired = state == PairingManager.PairState.PAIRED
+        if (!pairings.contains(uuid) || pairings.getBoolean(uuid, false) != paired) pairings.edit().putBoolean(uuid, paired).apply()
     }
 
     /** A name for the PC used only in Delos on this device; null or blank goes back to the PC's own. */
@@ -212,6 +228,7 @@ class PcRepository(context: Context, private val settings: () -> SharedPreferenc
         forgotten += uuid
         pcMap.remove(uuid)
         prefs.edit().remove(customNameKey(uuid)).apply()
+        pairings.edit().remove(uuid).apply()
         if (prefs.getString(KEY_ACTIVE_PC, null) == uuid) prefs.edit().remove(KEY_ACTIVE_PC).apply()
         _pcs.value = pcMap.values.toList()
         update()
@@ -354,4 +371,15 @@ class PcRepository(context: Context, private val settings: () -> SharedPreferenc
     private companion object {
         const val KEY_ACTIVE_PC = "ui_active_pc"
     }
+}
+
+/**
+ * Whether a PC counts as paired. The pair state the server reported wins; without one (the PC is offline,
+ * or has not answered since the app started, so [pairState] is null) the last known answer [remembered]
+ * stands, so a paired PC that is switched off is shown as offline instead of disappearing.
+ */
+internal fun resolvePaired(pairState: PairingManager.PairState?, remembered: Boolean): Boolean = when (pairState) {
+    PairingManager.PairState.PAIRED -> true
+    PairingManager.PairState.NOT_PAIRED -> false
+    else -> remembered
 }

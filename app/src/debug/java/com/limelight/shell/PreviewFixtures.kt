@@ -92,6 +92,7 @@ internal object PreviewFixtures {
             "preview-pc-workstation", "Meiton's Workstation in the Upstairs Home Office with the Dual Monitor Desk Setup",
             online = true, paired = true, mac = null, address = "192.0.2.13",
         ),
+        Host("preview-pc-attic", "ATTIC-PC", online = false, paired = true, mac = null, address = null),
         Host(STUDY_PC, "STUDY-LAPTOP", online = true, paired = false, mac = null, address = "192.0.2.14"),
     )
 
@@ -115,7 +116,8 @@ internal object PreviewFixtures {
         it.uuid = host.uuid
         it.name = host.name
         it.state = if (host.online) ComputerDetails.State.ONLINE else ComputerDetails.State.OFFLINE
-        it.pairState = if (host.paired) PairingManager.PairState.PAIRED else PairingManager.PairState.NOT_PAIRED
+        // An offline PC has no pair state of its own (the service has none for a PC that has not answered); the repository remembers it
+        it.pairState = if (!host.online) null else if (host.paired) PairingManager.PairState.PAIRED else PairingManager.PairState.NOT_PAIRED
         it.macAddress = host.mac
         it.runningGameId = host.running
         host.address?.let { address ->
@@ -154,6 +156,8 @@ internal object PreviewFixtures {
             .apply()
         repo.selectPc(ACTIVE_PC)
         HIDDEN_IDS.forEach { repo.setHidden(ACTIVE_PC, it, true) }
+        // A paired PC that is offline was online once, which is where the repository learned that it is paired
+        hosts().filter { !it.online && it.paired }.forEach { repo.onComputerUpdated(details(Host(it.uuid, it.name, true, true, it.mac, "192.0.2.99"))) }
         repeat(2) { hosts().forEach { repo.onComputerUpdated(details(it)) } }
     }
 

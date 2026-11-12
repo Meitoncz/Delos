@@ -51,8 +51,8 @@ import kotlin.math.roundToInt
  * - `artwork`: the Artwork screen of Hades, with fixed choices for every kind.
  * - `settings`, `settings_search`, `debug_info`, `profile`: the real Settings (first tab), its search, Debug info and Profile screens.
  * - `game_options`: the real per-game settings screen of Hades (`game_settings` is the older component preview).
- * - `devices`: the Devices screen with GAMING-PC (online, connected), LIVING-ROOM-PC (asleep) and a PC with a very long name (online); the
- *   fourth fake PC, STUDY-LAPTOP, is unpaired and therefore not in this list.
+ * - `devices`: the Devices screen with GAMING-PC (online, connected), LIVING-ROOM-PC (asleep), ATTIC-PC (offline, no MAC address, no known pair state) and a PC with a very long name (online); the
+ *   fifth fake PC, STUDY-LAPTOP, is unpaired and therefore not in this list.
  * - `start`: the start screen with three profiles and GAMING-PC as the default PC.
  *   `--ei preview_pcs <n>` gives `start`, `devices` and `pair_pc` n paired PCs instead of three (the circle rows that scroll).
  * - `pair`: the pairing screen of STUDY-LAPTOP showing the PIN 4826 and waiting for it to be entered.
