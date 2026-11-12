@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Small line under the title of the companion card of the PC that is focused on the main screen; %1$s is its status (Online, Asleep, Offline) -->
+    <string name="pc_eyebrow_focused">Focused PC · %1$s</string>
+    <!-- Same small line on the Devices screen; %1$s is the PC's status -->
+    <string name="pc_eyebrow_devices">Devices · %1$s</string>
+    <!-- Same small line when the library of that PC cannot be shown; %1$s is the PC's status -->
+    <string name="pc_eyebrow_library">Library · %1$s</string>
+    <!-- A PC's name and its status on one line -->
+    <string name="pc_name_status">%1$s · %2$s</string>
+    <!-- Short name of a PC whose real name is too long for the companion: PC · 7C2A -->
+    <string name="pc_alias_prefix">PC</string>
+    <!-- Label of a fact on the PC card: whether it is the default and the connected PC -->
+    <string name="pc_fact_flags">Flags</string>
+    <!-- Label of a fact: the streaming host software of the PC -->
+    <string name="pc_fact_host">Host</string>
+    <string name="pc_fact_version">Version</string>
+    <!-- Label of a fact: the name the PC itself reports, when the user gave it another name in Delos -->
+    <string name="pc_fact_host_name">Host name</string>
+    <string name="pc_fact_library">Library</string>
+    <!-- Label of a fact: the game that runs on the PC -->
+    <string name="pc_fact_session">Session</string>
+    <!-- Label of a fact: whether Wake-on-LAN is possible (a MAC address is saved) -->
+    <string name="pc_fact_wake">Wake</string>
+    <string name="pc_fact_last_seen">Last seen</string>
+    <!-- Value of a fact the app does not know -->
+    <string name="pc_value_unavailable">Unavailable</string>
+    <string name="pc_value_now">Now</string>
+    <string name="pc_flags_default">Default PC</string>
+    <string name="pc_flags_none">Not default</string>
+    <!-- Product name, not translated -->
+    <string name="pc_host_vibepollo">Vibepollo</string>
+    <!-- Product name, not translated -->
+    <string name="pc_host_geforce">GeForce Experience</string>
+    <!-- Host software that is not Vibepollo or GeForce Experience: Sunshine or a program built on it (Apollo) -->
+    <string name="pc_host_sunshine">Sunshine-based</string>
+    <string name="pc_session_idle">Nothing running</string>
+    <!-- The host reports a running game but its name is not known -->
+    <string name="pc_session_busy">A game is running</string>
+    <string name="pc_wake_saved">Saved MAC available</string>
+    <string name="pc_wake_none">No saved MAC</string>
+    <!-- Touch button on the PC card: connect and open the games of this PC -->
+    <string name="pc_action_library">Library</string>
+    <!-- Touch button: send Wake-on-LAN -->
+    <string name="pc_action_wake">Wake PC</string>
+    <!-- Touch button: search the local network again -->
+    <string name="pc_action_search">Search</string>
+    <!-- Touch button: start Delos with this PC -->
+    <string name="pc_action_default_on">Set default</string>
+    <!-- Touch button: no PC is the default any more -->
+    <string name="pc_action_default_off">Clear default</string>
+    <!-- Destructive touch button; acts at once -->
+    <string name="pc_action_remove">Remove PC</string>
+    <!-- Under the Search button when the offline PC has no saved MAC address -->
+    <string name="pc_no_mac_note">No saved MAC address, so this PC cannot be woken. Search the network again.</string>
+    <string name="pc_no_mac_short">It has no saved MAC address.</string>
+    <!-- Last line of the PC card: the first button of the hint bar on the main screen: %1$s is the button, %2$s what it does -->
+    <string name="pc_main_hint">Main: %1$s %2$s</string>
+    <string name="pair_eyebrow_host">Discovered host · not paired</string>
+    <string name="pair_host_online">Online. Pair only with a host you recognize.</string>
+    <string name="pair_host_offline">Offline. Start the host before pairing.</string>
+    <!-- %1$s is the host software (Vibepollo, Sunshine-based) -->
+    <string name="pair_host_software">%1$s · version not yet known.</string>
+    <!-- Touch button: pair with a one-time code -->
+    <string name="pair_action_code">Use code</string>
+    <string name="pair_address_note">Type the host’s address or name on the main display. Delos adds it and starts pairing.</string>
+    <string name="pair_address_short">Type the host’s address on the main display.</string>
+    <string name="pair_search_note">Look for hosts on the local network again.</string>
+    <!-- Title of the PIN card; %1$s is the PC's name -->
+    <string name="pair_pin_title">Pair %1$s</string>
+    <string name="pair_pin_eyebrow">PIN</string>
+    <string name="pair_pin_short">Enter this PIN in the host’s web UI.</string>
+    <string name="pair_cancel_action">Cancel pairing</string>
+    <string name="pair_code_title">One-time code</string>
+    <string name="pair_code_text">Create a one-time code in the host’s web UI. Enter the code and passphrase on the main display.</string>
+    <string name="pair_code_short">Enter the host code on the main display.</string>
+    <string name="pair_code_privacy">The companion never repeats the passphrase.</string>
+    <string name="pair_result_eyebrow">Pairing complete</string>
+    <string name="pair_result_text">The host is ready to open on the main display.</string>
+    <string name="pair_open_library">Open library</string>
+    <string name="pair_back_hosts">Back to hosts</string>
+    <string name="pc_empty_title">No applications</string>
+    <string name="pc_empty_text">The host has not published any applications. Add a game or Desktop in the host’s web UI. Reconnect when ready.</string>
+    <string name="pc_empty_short">Add applications in the host’s web UI.</string>
+    <!-- Touch button: connect to the PC again (it reads the library again) -->
+    <string name="pc_action_reconnect">Reconnect PC</string>
+    <!-- Touch button: open the Devices screen on the main display -->
+    <string name="pc_action_details">PC details</string>
+    <string name="pc_loading_title">Reading the library</string>
+    <string name="pc_loading_eyebrow">Waiting for the host</string>
+    <string name="pc_loading_text">Waiting for the host’s application list.</string>
+    <string name="pc_loading_note">No game is being started.</string>
+    <!-- Touch button: go to the Start screen with the PCs -->
+    <string name="pc_action_back_pcs">Back to PCs</string>
+    <string name="pc_nopc_title">No PC paired yet</string>
+    <string name="pc_nopc_text">Pair a PC and its games appear on the main display.</string>
+    <plurals name="pc_apps">
+        <item quantity="one">%1$d app</item>
+        <item quantity="other">%1$d apps</item>
+    </plurals>
+    <plurals name="pc_apps_cached">
+        <item quantity="one">%1$d cached app</item>
+        <item quantity="other">%1$d cached apps</item>
+    </plurals>
+    <plurals name="pc_main_hint_more">
+        <item quantity="one">Main: %1$s %2$s · %3$d more hint</item>
+        <item quantity="other">Main: %1$s %2$s · %3$d more hints</item>
+    </plurals>
+</resources>

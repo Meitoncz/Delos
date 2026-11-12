@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pc_eyebrow_focused">選択中のPC · %1$s</string>
+    <string name="pc_eyebrow_devices">デバイス · %1$s</string>
+    <string name="pc_eyebrow_library">ライブラリ · %1$s</string>
+    <string name="pc_name_status">%1$s · %2$s</string>
+    <string name="pc_alias_prefix">PC</string>
+    <string name="pc_fact_flags">状態</string>
+    <string name="pc_fact_host">ホスト</string>
+    <string name="pc_fact_version">バージョン</string>
+    <string name="pc_fact_host_name">ホスト名</string>
+    <string name="pc_fact_library">ライブラリ</string>
+    <string name="pc_fact_session">セッション</string>
+    <string name="pc_fact_wake">起動</string>
+    <string name="pc_fact_last_seen">最終確認</string>
+    <string name="pc_value_unavailable">利用不可</string>
+    <string name="pc_value_now">今</string>
+    <string name="pc_flags_default">既定のPC</string>
+    <string name="pc_flags_none">既定ではありません</string>
+    <string name="pc_host_vibepollo">Vibepollo</string>
+    <string name="pc_host_geforce">GeForce Experience</string>
+    <string name="pc_host_sunshine">Sunshineベース</string>
+    <string name="pc_session_idle">実行中なし</string>
+    <string name="pc_session_busy">ゲームを実行中</string>
+    <string name="pc_wake_saved">MACアドレス保存済み</string>
+    <string name="pc_wake_none">MACアドレス未保存</string>
+    <string name="pc_action_library">ライブラリ</string>
+    <string name="pc_action_wake">PCを起動</string>
+    <string name="pc_action_search">検索</string>
+    <string name="pc_action_default_on">既定にする</string>
+    <string name="pc_action_default_off">既定を解除</string>
+    <string name="pc_action_remove">PCを削除</string>
+    <string name="pc_no_mac_note">MACアドレスが保存されていないため、このPCは起動できません。ネットワークをもう一度検索してください。</string>
+    <string name="pc_no_mac_short">MACアドレスがありません。</string>
+    <string name="pc_main_hint">メイン: %1$s %2$s</string>
+    <string name="pair_eyebrow_host">検出されたホスト · 未ペアリング</string>
+    <string name="pair_host_online">オンラインです。見覚えのあるホストとだけペアリングしてください。</string>
+    <string name="pair_host_offline">オフラインです。ペアリング前にホストを起動してください。</string>
+    <string name="pair_host_software">%1$s · バージョンは未確認です。</string>
+    <string name="pair_action_code">コードを使う</string>
+    <string name="pair_address_note">メイン画面でホストのアドレスまたは名前を入力してください。Delosが追加してペアリングを始めます。</string>
+    <string name="pair_address_short">メイン画面でホストのアドレスを入力します。</string>
+    <string name="pair_search_note">ローカルネットワークでホストをもう一度探します。</string>
+    <string name="pair_pin_title">%1$sをペアリング</string>
+    <string name="pair_pin_eyebrow">PIN</string>
+    <string name="pair_pin_short">このPINをホストのWeb UIに入力してください。</string>
+    <string name="pair_cancel_action">ペアリングをキャンセル</string>
+    <string name="pair_code_title">ワンタイムコード</string>
+    <string name="pair_code_text">ホストのWeb UIでワンタイムコードを作成し、コードとパスフレーズをメイン画面で入力してください。</string>
+    <string name="pair_code_short">ホストのコードをメイン画面で入力します。</string>
+    <string name="pair_code_privacy">サブ画面にパスフレーズは表示されません。</string>
+    <string name="pair_result_eyebrow">ペアリング完了</string>
+    <string name="pair_result_text">ホストをメイン画面で開けます。</string>
+    <string name="pair_open_library">ライブラリを開く</string>
+    <string name="pair_back_hosts">ホストに戻る</string>
+    <string name="pc_empty_title">アプリケーションなし</string>
+    <string name="pc_empty_text">ホストがアプリケーションを公開していません。ホストのWeb UIでゲームやデスクトップを追加し、準備ができたら再接続してください。</string>
+    <string name="pc_empty_short">ホストのWeb UIでアプリケーションを追加します。</string>
+    <string name="pc_action_reconnect">PCに再接続</string>
+    <string name="pc_action_details">PCの詳細</string>
+    <string name="pc_loading_title">ライブラリを読み込み中</string>
+    <string name="pc_loading_eyebrow">ホストを待っています</string>
+    <string name="pc_loading_text">ホストのアプリケーション一覧を待っています。</string>
+    <string name="pc_loading_note">起動中のゲームはありません。</string>
+    <string name="pc_action_back_pcs">PC一覧に戻る</string>
+    <string name="pc_nopc_title">ペアリング済みのPCはまだありません</string>
+    <string name="pc_nopc_text">PCをペアリングすると、そのゲームがメイン画面に表示されます。</string>
+    <plurals name="pc_apps">
+        <item quantity="other">アプリ%1$d件</item>
+    </plurals>
+    <plurals name="pc_apps_cached">
+        <item quantity="other">キャッシュ済みアプリ%1$d件</item>
+    </plurals>
+    <plurals name="pc_main_hint_more">
+        <item quantity="other">メイン: %1$s %2$s · ほかにヒント%3$d件</item>
+    </plurals>
+</resources>
