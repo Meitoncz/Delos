@@ -45,6 +45,10 @@ val AVATARS = listOf(
     Avatar(Symbols.MAGIC_WAND, "Wizard", 292f, "wizard.webp", R.string.firstrun_avatar_wizard), // l10n-ignore
     Avatar(Symbols.SPEED, "Racer", 356f, "racer.webp", R.string.firstrun_avatar_racer), // l10n-ignore
     Avatar(Symbols.GHOST, "Ghost", 118f, "ghost.webp", R.string.firstrun_avatar_ghost), // l10n-ignore
+    Avatar(Symbols.PETS, "Owl", 150f, "owl.webp", R.string.firstrun_avatar_owl), // l10n-ignore
+    Avatar(Symbols.TERMINAL, "Hacker", 320f, "hacker.webp", R.string.firstrun_avatar_hacker), // l10n-ignore
+    Avatar(Symbols.PETS, "Wolf", 200f, "wolf.webp", R.string.firstrun_avatar_wolf), // l10n-ignore
+    Avatar(Symbols.PETS, "Dragon", 110f, "dragon.webp", R.string.firstrun_avatar_dragon), // l10n-ignore
 )
 
 /** A user profile of the new UI: identity and a complete, independent set of preferences. */

@@ -555,6 +555,10 @@ only the Windows, Steam and Android logos exist). Nothing needed a font from ano
 | Wizard | `star` | `magic-wand` | **replace** | star is the default device |
 | Racer | `speedometer` | `speedometer` | keep | the gauge no longer stands for anything else |
 | Ghost | `smiley` | `ghost` | **replace** | the face is Change avatar |
+| Owl | - | `paw-print` | new | no bird glyph is in the font; the fallback is only seen until the illustration loads |
+| Hacker | - | `terminal` | new | a prompt |
+| Wolf | - | `paw-print` | new | the same paw as Fox |
+| Dragon | - | `paw-print` | new | no flame glyph is in the font |
 
 # Genres (IGDB)
 

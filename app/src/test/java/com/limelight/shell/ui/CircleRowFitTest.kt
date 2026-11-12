@@ -118,4 +118,18 @@ class CircleRowFitTest {
         assertEquals(0, wide[0])
         assertEquals((wide[1] - 300 - 44) * 2, more)
     }
+
+    @Test
+    fun aGridRowKeepsItsSizeWhileItFitsAndShrinksToTheStageWhenItDoesNot() {
+        // The avatar picker: eight 184 px cells and seven 32 px gaps are 1696 px, with 52 px on each side 1800
+        assertEquals(1f, c.gridFit(8, 184f, 32f, 1920f, 52f), 0f)
+        assertEquals(1f, c.gridFit(8, 184f, 32f, 2520f, 52f), 0f)
+        assertEquals(1f, c.gridFit(8, 184f, 32f, 1800f, 52f), 1e-6f)
+        // The narrowest stage that is not compact (1500 px): every cell, gap and circle scaled by the same factor fills the room exactly
+        val k = c.gridFit(8, 184f, 32f, StagePlanner.COMPACT_STAGE_WIDTH, 52f)
+        assertEquals((1500f - 104f) / 1696f, k, 1e-6f)
+        assertEquals(1500f - 104f, 8 * 184f * k + 7 * 32f * k, .01f)
+        assertTrue(k > .8f && k < 1f)
+        assertEquals(1f, c.gridFit(1, 184f, 32f, 1920f, 52f), 0f)
+    }
 }

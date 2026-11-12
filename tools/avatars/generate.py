@@ -1,8 +1,10 @@
-"""Fallback generator of the 12 illustrated profile avatars of Delos (flat-vector game mascots).
+"""Fallback generator of the first 12 illustrated profile avatars of Delos (flat-vector game mascots).
 
 The real avatars are generated images imported by tools/avatars/import.py; this script only draws the
 procedural stand-ins for slugs that have no generated image yet (it overwrites every webp it renders,
-so pass --only for slugs that were not imported).
+so pass --only for slugs that were not imported). The four newest avatars (owl, hacker, wolf, dragon;
+indices 12..15) have no procedural drawing: they need an imported image, and until it exists the app
+shows their fixed-hue gradient with the font icon.
 
 Usage: python tools/avatars/generate.py [--preview] [--only slug ...] [--fast]
 Dependencies: Pillow 11.3.0 with WebP support (pip install Pillow==11.3.0). Nothing is downloaded.
@@ -346,7 +348,7 @@ class Art:
         return base.resize((SIZE, SIZE), Image.Resampling.LANCZOS)
 
 
-# ---------------------------------------------------------------- the 12 avatars
+# ---------------------------------------------------------------- the first 12 avatars
 
 def sailor(a: Art):
     navy, navy2 = hsl(222, .6, .36), hsl(226, .6, .2)
@@ -668,7 +670,7 @@ class Avatar:
     fit: float = 1.0    # shrink around the center to keep the character circle-safe
 
 
-# Order = stored index (the first six keep their original profile avatars).
+# Order = stored index (the first six keep their original profile avatars); owl, hacker, wolf and dragon (12..15) are image-only.
 AVATARS = (
     Avatar("sailor", "Sailor", 205, sailor),
     Avatar("voyager", "Voyager", 262, voyager),

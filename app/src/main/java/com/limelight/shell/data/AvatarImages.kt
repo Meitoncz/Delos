@@ -17,31 +17,40 @@ import com.google.gson.JsonParser
 import com.limelight.LimeLog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * The avatar illustrations bundled under `assets/avatars` (from `tools/avatars/import.py`, or the fallback `tools/avatars/generate.py`), decoded
- * at their full 384 px off the main thread and kept in memory: all twelve fit, so a picker or a badge
- * never decodes the same one twice. Compose scales them to every badge size.
+ * at their full 384 px off the main thread and kept in memory: all sixteen fit, so a picker or a badge
+ * never decodes the same one twice. An asset that is missing is looked for once only, so a bundle that
+ * lacks an image costs no repeated reads and log lines: its badge keeps the font icon. Compose scales them to every badge size.
  */
 internal object AvatarImages {
     private const val DIRECTORY = "avatars"
 
-    /** Twelve 384 x 384 bitmaps are about 7 MiB. */
-    private const val MEMORY_KIB = 8 * 1024
+    /** Sixteen 384 x 384 bitmaps are 9 MiB. */
+    private const val MEMORY_KIB = 10 * 1024
 
     private val memory = object : LruCache<String, ImageBitmap>(MEMORY_KIB) {
         override fun sizeOf(key: String, value: ImageBitmap) = value.width * value.height * 4 / 1024
     }
+
+    /** Assets that are not in the bundle (or cannot be decoded); never looked for again. */
+    private val missing = ConcurrentHashMap.newKeySet<String>()
 
     fun cached(asset: String): ImageBitmap? = memory.get(asset)
 
     /** The decoded [asset] (a file name under assets/avatars); null if it is missing or invalid. */
     suspend fun load(context: Context, asset: String): ImageBitmap? = withContext(Dispatchers.IO) {
         memory.get(asset)?.let { return@withContext it }
+        if (asset in missing) return@withContext null
         try {
             val bitmap = context.assets.open("$DIRECTORY/$asset").use { BitmapFactory.decodeStream(it) }
-            bitmap?.asImageBitmap()?.also { memory.put(asset, it) }
+            val image = bitmap?.asImageBitmap()
+            if (image == null) missing.add(asset) else memory.put(asset, image)
+            image
         } catch (e: Exception) {
+            missing.add(asset)
             LimeLog.warning("New UI: no avatar image $asset: $e") // l10n-ignore
             null
         }
@@ -64,13 +73,13 @@ fun rememberAvatarImage(asset: String?): State<ImageBitmap?> {
 
 /**
  * The badge colors of an imported (generated) avatar: [c0] in the radial gradient's center, [c1] at its
- * edge. Avatars without an entry keep the gradient of their hue.
+ * edge. Avatars without an entry (not imported yet) keep the gradient of their hue.
  */
 @Immutable
 data class AvatarGradient(val c0: Color, val c1: Color)
 
 /**
- * `assets/avatars/avatars.json` (written by `tools/avatars/import.py`, only for warm characters):
+ * `assets/avatars/avatars.json` (written by `tools/avatars/import.py`, one entry per imported avatar):
  * `{"fox": {"c0": "#rrggbb", "c1": "#rrggbb"}}`, keyed by the avatar's file name without `.webp`. Parsed once,
  * at first use; a missing or broken file means no avatar has colors of its own.
  */
@@ -121,7 +130,7 @@ internal object AvatarGradients {
 }
 
 /**
- * The imported colors of [asset]'s avatar, null for an avatar that keeps its hue gradient. The few
+ * The imported colors of [asset]'s avatar, null for an avatar that is not imported (it keeps its hue gradient). The few
  * hundred bytes of json are read on first use and cached for good, so a badge never starts with the
  * wrong color and changes it afterwards.
  */

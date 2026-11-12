@@ -28,4 +28,8 @@
     <string name="firstrun_avatar_wizard">Čaroděj</string>
     <string name="firstrun_avatar_racer">Závodník</string>
     <string name="firstrun_avatar_ghost">Duch</string>
+    <string name="firstrun_avatar_owl">Sova</string>
+    <string name="firstrun_avatar_hacker">Hacker</string>
+    <string name="firstrun_avatar_wolf">Vlk</string>
+    <string name="firstrun_avatar_dragon">Drak</string>
 </resources>

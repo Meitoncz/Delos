@@ -17,15 +17,39 @@ class AvatarsTest {
 
     private fun slug(asset: String?) = asset!!.removeSuffix(".webp")
 
-    @Test fun thereAreTwelveAvatarsWithUniqueNamesAndAssets() {
-        assertEquals(12, AVATARS.size)
+    /**
+     * The avatars whose image the importer has not delivered yet (Owl, Hacker, Wolf and Dragon): they may be missing from the bundle, and
+     * the app then shows their fixed-hue gradient and font icon. Empty this set once their images are imported.
+     */
+    private val awaitingImage = emptySet<String>()
+
+    private val bundled get() = AVATARS.filter { File(assets, it.asset!!).isFile }
+
+    @Test fun thereAreSixteenAvatarsWithUniqueNamesAndAssetsInStoredOrder() {
+        assertEquals(16, AVATARS.size)
         assertEquals(AVATARS.size, AVATARS.map { it.name }.toSet().size)
         assertEquals(AVATARS.size, AVATARS.map { it.asset }.toSet().size)
+        assertEquals(
+            listOf(
+                "Sailor", "Voyager", "Player", "Fox", "Spark", "Calm", "Knight", "Robot", "Cat", "Wizard", "Racer", "Ghost",
+                "Owl", "Hacker", "Wolf", "Dragon",
+            ),
+            AVATARS.map { it.name },
+        )
+        // The file is the lower-case name: the importer finds an avatar by its slug
+        assertEquals(AVATARS.map { it.name.lowercase() + ".webp" }, AVATARS.map { it.asset })
     }
 
-    /** An avatar with colors of its own (a warm imported character) is told apart by them; the others by their hue. */
+    @Test fun everyAvatarHasItsOwnNameString() {
+        assertEquals(AVATARS.size, AVATARS.map { it.label }.toSet().size)
+    }
+
+    /**
+     * An imported avatar has colors of its own (the importer writes one entry per imported slug); the others show the gradient of their
+     * fixed hue, which tells them apart. An avatar without an image shows its hue and icon whatever the json says.
+     */
     @Test fun avatarsWithoutImportedColorsHaveWellSeparatedHues() {
-        val hued = AVATARS.filter { slug(it.asset) !in gradients }
+        val hued = bundled.filter { slug(it.asset) !in gradients }
         for (i in hued.indices) for (j in i + 1 until hued.size) {
             assertTrue(
                 "${hued[i].name} and ${hued[j].name} are too close in hue",
@@ -50,20 +74,26 @@ class AvatarsTest {
         }
     }
 
-    @Test fun theFirstSixKeepTheirIndexSoStoredProfilesKeepTheirAvatar() {
+    @Test fun theFirstTwelveKeepTheirIndexSoStoredProfilesKeepTheirAvatar() {
         assertEquals(
-            listOf("Sailor" to 205f, "Voyager" to 262f, "Player" to 330f, "Fox" to 24f, "Spark" to 48f, "Calm" to 150f),
-            AVATARS.take(6).map { it.name to it.hue },
+            listOf(
+                "Sailor" to 205f, "Voyager" to 262f, "Player" to 330f, "Fox" to 24f, "Spark" to 48f, "Calm" to 150f,
+                "Knight" to 232f, "Robot" to 182f, "Cat" to 84f, "Wizard" to 292f, "Racer" to 356f, "Ghost" to 118f,
+            ),
+            AVATARS.take(12).map { it.name to it.hue },
         )
+        assertEquals(listOf("Owl" to 150f, "Hacker" to 320f, "Wolf" to 200f, "Dragon" to 110f), AVATARS.drop(12).map { it.name to it.hue })
     }
 
-    @Test fun everyAvatarHasItsBundledImageAndNoImageIsLeftOver() {
+    @Test fun noImageIsLeftOverAndOnlyAnAwaitedOneIsMissing() {
         val files = assets.listFiles().orEmpty().map { it.name }.toSet() - "avatars.json"
-        assertEquals(AVATARS.map { it.asset }.toSet(), files)
+        val expected = AVATARS.map { it.asset!! }.toSet()
+        assertEquals("images that are not an avatar's", emptySet<String>(), files - expected)
+        assertEquals("avatars without an image that are not awaited", emptySet<String>(), expected - files - awaitingImage)
     }
 
     @Test fun everyImageIsA384PixelWebpWithAlpha() {
-        for (avatar in AVATARS) {
+        for (avatar in bundled) {
             val bytes = File(assets, avatar.asset!!).readBytes()
             assertEquals("${avatar.name} is not a WebP", "RIFF", String(bytes, 0, 4, Charsets.US_ASCII))
             assertEquals("${avatar.name} is not a WebP", "WEBP", String(bytes, 8, 4, Charsets.US_ASCII))

@@ -126,9 +126,11 @@ fun CreateProfileScreen(editing: Boolean, initial: Profile?, onDone: (name: Stri
     val defaultName = stringResource(R.string.firstrun_create_default_name)
     val nameTitle = stringResource(R.string.firstrun_create_name_title)
     var name by remember { mutableStateOf(initial?.name ?: defaultName) }
-    // A compact stage is too narrow for six avatars across: four, in more rows (the column scrolls)
+    // A compact stage is too narrow for eight avatars across: four, in more rows (the column scrolls). A stage that is not compact but
+    // narrower than the row (1500 to 1800 px) scales the circles, the cells and the gaps down to fit; the labels keep their size
     val stage = LocalStage.current
     val columns = if (stage.compact) COMPACT_AVATAR_COLUMNS else AVATAR_COLUMNS
+    val fit = if (stage.compact) 1f else CircleRowLayout.gridFit(AVATAR_COLUMNS, AVATAR_CELL, AVATAR_GAP, stage.stageWidth, AVATAR_MARGIN)
     val avatarFocus = remember { List(AVATARS.size) { FocusRequester() } }
     val changeName = remember { FocusRequester() }
     val create = remember { FocusRequester() }
@@ -159,7 +161,7 @@ fun CreateProfileScreen(editing: Boolean, initial: Profile?, onDone: (name: Stri
         val rowGap = if (stage.compact) maxOf(26f * stage.compactScale, CircleRowLayout.rowGap(AVATAR_DIAMETER * stage.compactScale)) else 26f
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(rowGap.px)) {
             AVATARS.withIndex().chunked(columns).forEach { row ->
-                Row(horizontalArrangement = Arrangement.spacedBy((if (stage.compact) 24f else 32f).px), verticalAlignment = Alignment.Top) {
+                Row(horizontalArrangement = Arrangement.spacedBy((if (stage.compact) 24f else AVATAR_GAP * fit).px), verticalAlignment = Alignment.Top) {
                     row.forEach { (i, a) ->
                         val wrap = Modifier.focusProperties {
                             if (i % columns == 0) left = avatarFocus[(i - 1 + AVATARS.size) % AVATARS.size]
@@ -175,7 +177,8 @@ fun CreateProfileScreen(editing: Boolean, initial: Profile?, onDone: (name: Stri
                             selected = i == avatar,
                             avatar = a,
                             diameter = AVATAR_DIAMETER,
-                            width = AVATAR_CELL,
+                            width = if (stage.compact) AVATAR_CELL else AVATAR_CELL * fit,
+                            scale = if (stage.compact) null else fit,
                         )
                     }
                 }
@@ -191,8 +194,15 @@ fun CreateProfileScreen(editing: Boolean, initial: Profile?, onDone: (name: Stri
     }
 }
 
-/** The avatar picker: 6 columns of 144 px circles in 184 px cells, 2 rows (six cells and five gaps are 1264 px of the 1920 px stage). */
-private const val AVATAR_COLUMNS = 6
+/**
+ * The avatar picker: 8 columns of 144 px circles in 184 px cells with 32 px between them, 2 rows of the 16 avatars (eight cells and seven
+ * gaps are 1696 px of the 1920 px stage). The row keeps [AVATAR_MARGIN] on each side (48 px, and the 4 px a focused edge circle's ring
+ * reaches beyond its cell), so a stage narrower than 1800 px scales the row down by [CircleRowLayout.gridFit] (a 1500 px stage, the narrowest
+ * that is not compact, to 0.82); a compact stage takes [COMPACT_AVATAR_COLUMNS] columns instead.
+ */
+private const val AVATAR_COLUMNS = 8
+private const val AVATAR_GAP = 32f
+private const val AVATAR_MARGIN = 52f
 private const val COMPACT_AVATAR_COLUMNS = 4
 private const val AVATAR_DIAMETER = 144f
 private const val AVATAR_CELL = 184f

@@ -26,4 +26,8 @@
     <string name="firstrun_avatar_wizard">ウィザード</string>
     <string name="firstrun_avatar_racer">レーサー</string>
     <string name="firstrun_avatar_ghost">ゴースト</string>
+    <string name="firstrun_avatar_owl">フクロウ</string>
+    <string name="firstrun_avatar_hacker">ハッカー</string>
+    <string name="firstrun_avatar_wolf">オオカミ</string>
+    <string name="firstrun_avatar_dragon">ドラゴン</string>
 </resources>

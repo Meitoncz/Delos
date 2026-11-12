@@ -26,4 +26,8 @@
     <string name="firstrun_avatar_wizard">Чарівник</string>
     <string name="firstrun_avatar_racer">Гонщик</string>
     <string name="firstrun_avatar_ghost">Привид</string>
+    <string name="firstrun_avatar_owl">Сова</string>
+    <string name="firstrun_avatar_hacker">Хакер</string>
+    <string name="firstrun_avatar_wolf">Вовк</string>
+    <string name="firstrun_avatar_dragon">Дракон</string>
 </resources>

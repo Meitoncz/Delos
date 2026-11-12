@@ -48,6 +48,16 @@ object CircleRowLayout {
     /** The gap between two rows of a grid of circles (the avatar picker) on a compact stage: the reach of a focused circle and [FOCUS_AIR] above it. */
     fun rowGap(side: Float): Float = focusReach(side) + FOCUS_AIR
 
+    /**
+     * The factor that makes a grid row of [columns] cells [cell] wide with [gap] between them fit a stage [stageWidth] wide with [margin] on
+     * each side: 1 while it fits (the 1920 px stage keeps the prototype's sizes), else the part of it that does. The caller scales the circle,
+     * the cell and the gap by it (the text keeps its size), so the circles stay round and the row is never cut.
+     */
+    fun gridFit(columns: Int, cell: Float, gap: Float, stageWidth: Float, margin: Float): Float {
+        val row = columns * cell + (columns - 1).coerceAtLeast(0) * gap
+        return if (row <= 0f) 1f else ((stageWidth - 2f * margin) / row).coerceIn(0f, 1f)
+    }
+
     /** An item is as wide as the widest of its circle, its label and its status line, the texts capped. */
     fun itemWidth(side: Float, label: Float, meta: Float): Float = maxOf(side, minOf(label, LABEL_MAX), minOf(meta, META_MAX))
 

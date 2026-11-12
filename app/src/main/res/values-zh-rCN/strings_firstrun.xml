@@ -26,4 +26,8 @@
     <string name="firstrun_avatar_wizard">巫师</string>
     <string name="firstrun_avatar_racer">车手</string>
     <string name="firstrun_avatar_ghost">幽灵</string>
+    <string name="firstrun_avatar_owl">猫头鹰</string>
+    <string name="firstrun_avatar_hacker">黑客</string>
+    <string name="firstrun_avatar_wolf">狼</string>
+    <string name="firstrun_avatar_dragon">龙</string>
 </resources>

@@ -26,4 +26,8 @@
     <string name="firstrun_avatar_wizard">Mago</string>
     <string name="firstrun_avatar_racer">Piloto</string>
     <string name="firstrun_avatar_ghost">Fantasma</string>
+    <string name="firstrun_avatar_owl">Coruja</string>
+    <string name="firstrun_avatar_hacker">Hacker</string>
+    <string name="firstrun_avatar_wolf">Lobo</string>
+    <string name="firstrun_avatar_dragon">Dragão</string>
 </resources>

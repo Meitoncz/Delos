@@ -26,4 +26,8 @@
     <string name="firstrun_avatar_wizard">마법사</string>
     <string name="firstrun_avatar_racer">레이서</string>
     <string name="firstrun_avatar_ghost">유령</string>
+    <string name="firstrun_avatar_owl">부엉이</string>
+    <string name="firstrun_avatar_hacker">해커</string>
+    <string name="firstrun_avatar_wolf">늑대</string>
+    <string name="firstrun_avatar_dragon">용</string>
 </resources>

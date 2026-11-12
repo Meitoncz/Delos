@@ -30,4 +30,8 @@
     <string name="firstrun_avatar_wizard">Wizard</string>
     <string name="firstrun_avatar_racer">Racer</string>
     <string name="firstrun_avatar_ghost">Ghost</string>
+    <string name="firstrun_avatar_owl">Owl</string>
+    <string name="firstrun_avatar_hacker">Hacker</string>
+    <string name="firstrun_avatar_wolf">Wolf</string>
+    <string name="firstrun_avatar_dragon">Dragon</string>
 </resources>

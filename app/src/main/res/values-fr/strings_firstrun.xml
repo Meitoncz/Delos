@@ -26,4 +26,8 @@
     <string name="firstrun_avatar_wizard">Magicien</string>
     <string name="firstrun_avatar_racer">Pilote</string>
     <string name="firstrun_avatar_ghost">Fantôme</string>
+    <string name="firstrun_avatar_owl">Hibou</string>
+    <string name="firstrun_avatar_hacker">Hacker</string>
+    <string name="firstrun_avatar_wolf">Loup</string>
+    <string name="firstrun_avatar_dragon">Dragon</string>
 </resources>

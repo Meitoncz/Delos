@@ -30,4 +30,8 @@
     <string name="firstrun_avatar_wizard">Zauberer</string>
     <string name="firstrun_avatar_racer">Rennfahrer</string>
     <string name="firstrun_avatar_ghost">Geist</string>
+    <string name="firstrun_avatar_owl">Eule</string>
+    <string name="firstrun_avatar_hacker">Hacker</string>
+    <string name="firstrun_avatar_wolf">Wolf</string>
+    <string name="firstrun_avatar_dragon">Drache</string>
 </resources>

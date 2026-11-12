@@ -215,8 +215,8 @@ fun PillButton(
 }
 
 /**
- * The avatar's colors (`radial-gradient(circle at 35% 30%, …)`) behind its illustration: the colors made
- * for a warm imported character (avatars.json), else the ones of its fixed hue.
+ * The avatar's colors (`radial-gradient(circle at 35% 30%, …)`) behind its illustration: the dark muted colors
+ * made for an imported avatar (avatars.json), else the ones of its fixed hue.
  */
 @Composable
 fun AvatarBadge(avatar: Avatar, size: Float, iconSize: Float, modifier: Modifier = Modifier) {
@@ -306,6 +306,8 @@ fun CircleItem(
         else -> 220f
     }
     val iconSize = (if (big) 96f else 76f) * cs
+    // A grid's cell, like a compact stage's item, lets a label run over its edges (by 15 px at most) and cuts it with an ellipsis after that
+    val cellLabel = fixed != null && (compact || width != null)
     val pulseTransition = rememberInfiniteTransition(label = "pulse")
     val wave by pulseTransition.animateFloat(0f, 1f, infiniteRepeatable(tween(2400, easing = EaseOut)), label = "pulseWave")
     Column(
@@ -375,15 +377,15 @@ fun CircleItem(
                 label,
                 style = TextStyle(color = colors.text, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 26.tpx, textAlign = TextAlign.Center),
                 maxLines = 1,
-                softWrap = !compact,
+                softWrap = !compact && !cellLabel,
                 // A long PC name keeps its start and its end
-                overflow = if (!compact) TextOverflow.Clip else if (fixed == null) TextOverflow.MiddleEllipsis else TextOverflow.Ellipsis,
+                overflow = if (!compact && !cellLabel) TextOverflow.Clip else if (fixed == null) TextOverflow.MiddleEllipsis else TextOverflow.Ellipsis,
                 modifier = Modifier
                     .then(
                         when {
+                            cellLabel && fixed != null -> Modifier.wrapContentWidth(unbounded = true).widthIn(max = (fixed + 30f).px)
                             !compact -> Modifier
-                            fixed == null -> Modifier.widthIn(max = CircleRowLayout.LABEL_MAX.px)
-                            else -> Modifier.wrapContentWidth(unbounded = true).widthIn(max = (fixed + 30f).px)
+                            else -> Modifier.widthIn(max = CircleRowLayout.LABEL_MAX.px)
                         }
                     )
                     .graphicsLayer {
