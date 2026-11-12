@@ -2,6 +2,8 @@
 # W x H and dpi are the simulated panel's pixels and the density Android would report; they feed `--es preview_shape` of the debug
 # shell (docs/GUI.md, "Screen shapes"). dpi is the reference's reported 369 where the shape belongs to no device, otherwise the
 # computed ppi rounded to 10 (see docs/HANDHELD_DEVICES.md). Blank lines and # comments are ignored.
+# This file mirrors the sheet shapes of ShapeCatalog (app/src/debug/.../ShapeCatalog.kt), the one list the debug menu's shape simulator also uses;
+# ShapeCatalogTest fails when they differ, so change both together (the catalog also holds more devices that are not in the sheets).
 odin          1920x1080@369    # AYN Odin 2 Portal: the reference, 16:9, must stay identical to the native screen
 thor-top      1920x1080@370    # AYN Thor top 6.0 in, 16:9
 thor-bottom   1240x1080@420    # AYN Thor bottom 3.92 in, 31:27

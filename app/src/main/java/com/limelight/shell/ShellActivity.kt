@@ -133,8 +133,8 @@ class ShellActivity : ComponentActivity() {
         }
         // Debug builds only: the stream menu, the Full keyboard, a toast or a screen with fake state instead of the shell (docs/GUI.md, "Stream menu preview", "Full keyboard", "Toasts", "Screen shapes")
         val preview = StreamMenuPreview.from(intent) ?: FullKeyboardPreview.from(intent) ?: ToastPreview.from(intent, shell) ?: SettingsTabsPreview.from(intent) ?: SettingsListPreview.from(intent) ?: GameSettingsPreview.from(intent) ?: TopMenuPreview.from(intent) ?: ContextMenuPreview.from(intent) ?: CompanionPreview.from(intent) ?: ScreenPreviews.from(intent, shell)
-        // Debug builds only: draws all of it in a box of another panel's size and density (`preview_shape`)
-        val simulator = ShapeSimulator.from(intent)
+        // Debug builds only: draws all of it in a box of another panel's size and density (Debug info menu, or `preview_shape`)
+        val simulator = ShapeSimulator.from(this, intent)
         setContent {
             val screen: @Composable () -> Unit = {
                 if (preview != null) ShellTheme(appearance, feedback) {
@@ -143,7 +143,7 @@ class ShellActivity : ComponentActivity() {
                 }
                 else ShellRoot(appearance, feedback, keys, repo, boxArt, artwork, metadata, launcher, profiles, startup, setup, links, results, shell)
             }
-            if (simulator != null) simulator.Host(screen) else screen()
+            if (simulator != null) simulator.Host(shell, appearance.appearance, screen) else screen()
         }
         feedback.view = window.decorView
         val fakeCompanion = CompanionPreview.fakeState(intent) // debug builds only: made-up state for the real second display
