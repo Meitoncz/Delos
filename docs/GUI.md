@@ -160,6 +160,16 @@ The TV channel uses the same mark; PC shortcut icons remain unchanged.
     fade is part of the layer, so it tilts with the image like the cached still hero's. The live hero fades in over the still
     lens-blurred hero (the lens shader renders a cached bitmap and cannot run per frame); the still then leaves composition (with its
     second tilt clock) until the animation stops.
+    **Loop:** an `AnimatedImageDrawable` cannot seek, so its own loop would jump from the last frame to the first. The hero plays each
+    pass as a drawable of its own that plays once (`LoopedAnimation` in `ui/HeroLoop.kt`): the loop's length is read from the file
+    (`AnimatedWebp.loopMillis`, the sum of the `ANMF` frame durations), and during the last `HeroLoopTimeline.fadeMillis` of a pass
+    (700 ms, never over a third of the loop) the next pass is started at its first frame and fades in over it, inside the same small
+    layer (a `saveLayerAlpha` at the eased opacity), so at the loop point the new pass is fully visible and the old one is released.
+    The next pass is decoded 500 ms before it starts, so outside the fades one drawable plays. A loop under 1.5 s keeps the platform's
+    plain loop. **Leaving:** when the animation stops while the hero is still on screen (the focus moved on and the hero cross-fades
+    out, a launch begins), it is **paused on the frame it showed** and released after `AnimatedPlayback.HERO_HOLD_MS` (1 s, longer
+    than the cross-fade, which removes the hero itself), so the still's first frame never shows on the way out; a game that is
+    focused again lets go of it at once and starts fresh.
     It plays only while the hero is visible and the window is resumed (`repeatOnLifecycle`), and **not** during the launch loader / portal, in the
     background, in a stream (a separate resumed activity), or with reduced motion or the system's animator scale 0 (then the first
     frame, like the tilt). Pure rules: `AnimatedPlayback.shouldPlay`.

@@ -196,6 +196,7 @@ private fun DrawScope.drawVignette(scrim: Color) {
 @Composable
 private fun HeroArt(art: GameArt, blurPx: Int, reducedMotion: Boolean, active: Boolean, animate: Boolean) {
     val image = art.image
+    val file = art.animated
     var live by remember { mutableStateOf(false) }
     // The animation starts only after the game has stayed in focus for a moment, so holding or tapping the D-pad does not create
     // and destroy a decoder and its layers per step (the still hero shows meanwhile); losing the focus ends it at once
@@ -208,11 +209,25 @@ private fun HeroArt(art: GameArt, blurPx: Int, reducedMotion: Boolean, active: B
         }
     }
     // The animation needs the live blur (Android 12+); below it the first frame stays
-    val liveWanted = image != null && art.animated != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && AnimatedPlayback.heroMayPlay(animate, dwelled)
-    // Decided in the very composition that adds or removes the animation (not by its callback, a frame later), so the still hero
-    // is back at once, in full, when the animation is released: a hero that was superseded and is cross-fading out never shows a
-    // gap or a still that fades back in on its way out
-    val liveShown = live && liveWanted
+    val playing = image != null && file != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !reducedMotion && AnimatedPlayback.heroMayPlay(animate, dwelled)
+    // When the animation stops while the hero stays on screen (the focus moved on and the hero cross-fades out, a launch begins, motion
+    // is reduced), it is held: paused on the frame it showed, and released after [AnimatedPlayback.HERO_HOLD_MS], when nothing else
+    // (the cross-fade or the fade-out ending, which remove the hero) has done it. The still hero would show its first frame instead.
+    // A game that is focused again lets go of it at once and starts fresh.
+    var released by remember { mutableStateOf(false) }
+    LaunchedEffect(playing, live) {
+        if (playing) {
+            released = false
+        } else if (live) {
+            delay(AnimatedPlayback.HERO_HOLD_MS)
+            released = true
+        }
+    }
+    val held = live && !playing && !released && (!animate || reducedMotion)
+    // Decided in the very composition that adds or removes the animation (not by its callback, a frame later): the hero is never
+    // without both, so a hero that was superseded and is cross-fading out never shows a gap or a still that fades back in on its way out
+    val liveOn = playing || held
+    val liveShown = live && liveOn
     // The still hero leaves once the animation has faded in over it (its soft diagonal edge must not show the first frame)
     val stillFade = remember { Animatable(1f) }
     LaunchedEffect(liveShown) {
@@ -224,12 +239,12 @@ private fun HeroArt(art: GameArt, blurPx: Int, reducedMotion: Boolean, active: B
         }
     }
     // Once the animation has faded in over it, the still leaves composition for good (it only held a second tilt clock
-    // and an invisible layer); stopping the animation brings it back, from the cache, in the same pose
+    // and an invisible layer); releasing the animation brings it back, from the cache, in the same pose
     val stillOn by remember(liveShown) { derivedStateOf { !liveShown || stillFade.value > 0f } }
     Box(Modifier.fillMaxSize()) {
         if (stillOn) Box(Modifier.fillMaxSize().graphicsLayer { alpha = if (liveShown) stillFade.value else 1f }) { HeroStill(art, blurPx, reducedMotion, active) }
-        if (liveWanted) {
-            HeroLive(art.id, image, art.animated, blurPx, reducedMotion, active, !reducedMotion) { live = it }
+        if (liveOn && image != null && file != null) {
+            HeroLive(art.id, image, file, blurPx, reducedMotion, active, playing) { live = it }
         }
     }
 }
@@ -315,8 +330,9 @@ private fun heroBandMask(fade: Float, bottom: Float): Brush = Brush.verticalGrad
  * layer that HWUI keeps as a texture. It is rendered again only when a new animation frame arrives (the animation's own rate);
  * every display frame the tilt just draws that texture, scaled up, rotated by the orbit, with no effect on the rotating layer.
  * The diagonal fade is part of the layer (it tilts with the image, as the cached still hero's does). It fades in over the still
- * hero once decoded (the still leaves then), and exists only while it plays: paused (hidden, reduced motion, streaming,
- * backgrounded) the drawable is released and the still hero shows. The extension under a wide hero is the still first frame's.
+ * hero once decoded (the still leaves then). The animation loops without a jump ([LoopedAnimation]: the end of a pass fades into the
+ * start of the next one, both drawn in this same small layer). It exists while composed; [play] false (the game lost the focus, a launch
+ * began) pauses it on the frame it shows, and the caller leaves composition to release it. The extension under a wide hero is the still first frame's.
  */
 @Composable
 private fun HeroLive(id: String, image: ImageBitmap, file: java.io.File, blurPx: Int, reducedMotion: Boolean, active: Boolean, play: Boolean, onLive: (Boolean) -> Unit) {
@@ -332,15 +348,16 @@ private fun HeroLive(id: String, image: ImageBitmap, file: java.io.File, blurPx:
     val source = remember(file) { AnimatedSource.OfFile(file) }
     // Frames are decoded no wider than they are drawn (and never above the hero's own cap)
     val decodeWidth = minOf(AnimatedPlayback.HERO_WIDTH, (layout.width * unit).roundToInt().coerceAtLeast(1))
-    val drawable = rememberAnimatedDrawable(source, play, decodeWidth, ticker)
-    val extension = if (layout.extended && drawable != null) rememberHeroExtension(id, image, area) else null
-    val ready = drawable != null && (!layout.extended || extension != null)
+    val animation = rememberLoopedAnimation(source, decodeWidth, ticker)
+    PlayLoopedAnimation(animation, play)
+    val extension = if (layout.extended && animation != null) rememberHeroExtension(id, image, area) else null
+    val ready = animation != null && (!layout.extended || extension != null)
     DisposableEffect(ready) {
         onLive(ready)
         onDispose { onLive(false) }
     }
-    if (drawable == null || !ready) return
-    val shown = remember(drawable) { Animatable(0f) }
+    if (animation == null || !ready) return
+    val shown = remember(animation) { Animatable(0f) }
     LaunchedEffect(shown) { shown.animateTo(1f, tween(Motion.FADE, easing = Motion.Ease)) }
     val effect = remember(blurPx, unit) { heroEffect(blurPx * unit) }
     val widthPx = (area.width * unit).roundToInt().coerceAtLeast(1)
@@ -373,8 +390,7 @@ private fun HeroLive(id: String, image: ImageBitmap, file: java.io.File, blurPx:
                     val bounds = androidx.compose.ui.geometry.Rect(layout.left * u, layout.top * u, layout.right * u, layout.bottom * u)
                     if (layout.extended) drawContext.canvas.saveLayer(bounds, androidx.compose.ui.graphics.Paint())
                     drawIntoCanvas { canvas ->
-                        drawable.setBounds(bounds.left.roundToInt(), bounds.top.roundToInt(), bounds.right.roundToInt(), bounds.bottom.roundToInt())
-                        drawable.draw(canvas.nativeCanvas)
+                        animation.draw(canvas.nativeCanvas, bounds.left.roundToInt(), bounds.top.roundToInt(), bounds.right.roundToInt(), bounds.bottom.roundToInt())
                     }
                     if (layout.extended) {
                         drawRect(heroBandMask(layout.fade * u, bounds.bottom), topLeft = bounds.topLeft, size = bounds.size, blendMode = BlendMode.DstIn)

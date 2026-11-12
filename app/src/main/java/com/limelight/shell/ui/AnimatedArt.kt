@@ -52,6 +52,12 @@ object AnimatedPlayback {
     /** How long a game must stay the focused one before its animated hero starts (the still hero shows meanwhile). */
     const val HERO_DWELL_MS = 500L
 
+    /**
+     * How long an animated hero that stopped (the focus moved on, a launch began) stays paused on its last frame before it is released and
+     * the still hero shows. Longer than the 900 ms cross-fade to the next game and the 800 ms fade-out, which remove the hero themselves.
+     */
+    const val HERO_HOLD_MS = 1000L
+
     /** Whether the animated hero may start: playing is allowed ([animate]) and the game has been focused for [HERO_DWELL_MS]. */
     fun heroMayPlay(animate: Boolean, dwelledMillis: Long): Boolean = animate && dwelledMillis >= HERO_DWELL_MS
 
@@ -122,8 +128,13 @@ sealed interface AnimatedSource {
     }
 }
 
-/** The animation of [source] decoded at the size [AnimatedPlayback.decodeSize] gives, or null when it is not an animation or cannot be decoded. */
-private suspend fun decodeAnimation(source: AnimatedSource, maxWidth: Int, maxHeight: Int, fit: Boolean): AnimatedImageDrawable? = withContext(Dispatchers.Default) {
+/**
+ * The animation of [source] decoded at the size [AnimatedPlayback.decodeSize] gives, or null when it is not an animation or cannot be decoded.
+ * It repeats [repeat] times after the first pass (forever by default).
+ */
+internal suspend fun decodeAnimation(
+    source: AnimatedSource, maxWidth: Int, maxHeight: Int, fit: Boolean, repeat: Int = AnimatedImageDrawable.REPEAT_INFINITE,
+): AnimatedImageDrawable? = withContext(Dispatchers.Default) {
     runCatching {
         val decoderSource = when (source) {
             is AnimatedSource.OfFile -> ImageDecoder.createSource(source.file)
@@ -134,7 +145,7 @@ private suspend fun decodeAnimation(source: AnimatedSource, maxWidth: Int, maxHe
             val (w, h) = AnimatedPlayback.decodeSize(info.size.width, info.size.height, maxWidth, maxHeight, fit)
             decoder.setTargetSize(w, h)
         }
-        (drawable as? AnimatedImageDrawable)?.apply { repeatCount = AnimatedImageDrawable.REPEAT_INFINITE }
+        (drawable as? AnimatedImageDrawable)?.apply { repeatCount = repeat }
     }.getOrNull()
 }
 
