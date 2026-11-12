@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_native_companion_dim_title">Zweiten Bildschirm im Leerlauf dimmen</string>
+    <string name="settings_native_companion_dim_description">Eine Berührung weckt ihn, ohne etwas auszulösen.</string>
+    <string name="settings_native_help_companion_dim_on">Dimmt nach der Zeit unten.</string>
+    <string name="settings_native_help_companion_dim_off">Dauerhelligkeit kann einbrennen.</string>
+    <string name="settings_native_companion_dim_minutes_title">Dimmen nach</string>
+    <string name="settings_native_companion_dim_minutes_description">Wie lange er wartet, bevor er dimmt.</string>
+    <plurals name="settings_native_companion_dim_minutes_value">
+        <item quantity="one">%1$d Minute</item>
+        <item quantity="other">%1$d Minuten</item>
+    </plurals>
+</resources>

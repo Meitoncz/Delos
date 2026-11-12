@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_native_companion_dim_title">Ztlumit druhou obrazovku v klidu</string>
+    <string name="settings_native_companion_dim_description">Dotyk ji probudí a nic nestiskne.</string>
+    <string name="settings_native_help_companion_dim_on">Ztlumí se po prodlevě níže.</string>
+    <string name="settings_native_help_companion_dim_off">Trvalý jas může způsobit vypálení.</string>
+    <string name="settings_native_companion_dim_minutes_title">Ztlumit po</string>
+    <string name="settings_native_companion_dim_minutes_description">Jak dlouho čeká, než se ztlumí.</string>
+    <plurals name="settings_native_companion_dim_minutes_value">
+        <item quantity="one">%1$d minuta</item>
+        <item quantity="few">%1$d minuty</item>
+        <item quantity="many">%1$d minuty</item>
+        <item quantity="other">%1$d minut</item>
+    </plurals>
+</resources>

@@ -46,7 +46,7 @@ internal object JapaneseReadings {
         解像度=かいぞうど 解放=かいほう 言語=げんご 記憶=きおく 設定=せってい 許可=きょか 診断=しんだん 詳細設定=しょうさいせってい
         調整=ちょうせい 警告=けいこく 起動=きどう 超=こ 超低遅延=ちょうていちえん 軸=じく 通常=つうじょう 進=すす 適用=てきよう
         選択=せんたく 配置=はいち 長押=ながお 開=ひら 開始=かいし 隠=かく 非同期=ひどうき 音=おん 音声=おんせい 高=たか
-        安定化=あんていか 平滑化=へいかつか 帯域=たいいき 測定=そくてい 速度=そくど 接続=せつぞく
+        安定化=あんていか 平滑化=へいかつか 帯域=たいいき 測定=そくてい 速度=そくど 接続=せつぞく 待機=たいき 暗=くら
     """.trim().split(Regex("\\s+")).associate { it.substringBefore('=') to it.substringAfter('=') }
 }
 
@@ -62,7 +62,7 @@ internal object PinyinInitials {
     fun uncovered(text: String): Set<Char> = text.filter { it in '\u4E00'..'\u9FFF' && it !in BY_CHAR }.toSet()
 
     private val BY_CHAR: Map<Char, Char> = mapOf(
-        'a' to "按案",
+        'a' to "按案暗",
         'b' to "不保备布帮报播本板柄标步版编背辨边部",
         'c' to "串凑出存察常成持材查测程菜藏触超迟采重长除传",
         'd' to "低到动单地多定对导店度打断电的顶带",
@@ -70,7 +70,7 @@ internal object PinyinInitials {
         'g' to "个光关告改更杆滚盖管观规过高感",
         'h' to "合后和回忽换欢活滑环画糊衡",
         'j' to "交仅件兼剪均基局居技据接景检激界监禁紧级节荐解警计记进键间降",
-        'k' to "可宽开控看馈",
+        'k' to "可宽开控看馈空",
         'l' to "流灵率理留略类络螺路量链龙连线",
         'm' to "密幕摸敏明模码面默",
         'n' to "内拟能",
@@ -80,7 +80,7 @@ internal object PinyinInitials {
         's' to "上事使刷势商声失始式所手数时是术死殊生示素缩色视设试输适锁饰鼠速",
         't' to "他同图态拖推提特统调贴跳退透通陀题体",
         'w' to "为位围外完文网无稳",
-        'x' to "下信修向型形心性息戏效新显消系虚行许选骁",
+        'x' to "下信修向型形心性息戏效新显消系虚行许选骁闲",
         'y' to "义于仪允元原右已延异摇有样游用由移言语迎远钥隐音页运",
         'z' to "中主住作制助在坐奏帧志择指支整智桌滞状粘终置自诊质转轴载钟震",
     ).flatMap { (initial, chars) -> chars.map { it to initial } }.toMap()

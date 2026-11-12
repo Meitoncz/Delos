@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_native_companion_dim_title">待機中にセカンド画面を暗くする</string>
+    <string name="settings_native_companion_dim_description">タッチすると、ボタンを押さずに復帰します。</string>
+    <string name="settings_native_help_companion_dim_on">下の時間が経つと暗くなります。</string>
+    <string name="settings_native_help_companion_dim_off">明るいままだと焼き付きの恐れがあります。</string>
+    <string name="settings_native_companion_dim_minutes_title">暗くするまで</string>
+    <string name="settings_native_companion_dim_minutes_description">暗くなるまでの待機時間です。</string>
+    <plurals name="settings_native_companion_dim_minutes_value">
+        <item quantity="other">%1$d分</item>
+    </plurals>
+</resources>

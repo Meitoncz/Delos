@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_native_companion_dim_title">대기 중 보조 화면 어둡게</string>
+    <string name="settings_native_companion_dim_description">터치하면 버튼이 눌리지 않고 켜집니다.</string>
+    <string name="settings_native_help_companion_dim_on">아래 시간이 지나면 어두워집니다.</string>
+    <string name="settings_native_help_companion_dim_off">계속 밝게 두면 화면 잔상이 생길 수 있습니다.</string>
+    <string name="settings_native_companion_dim_minutes_title">어두워지기까지</string>
+    <string name="settings_native_companion_dim_minutes_description">어두워지기 전까지 기다리는 시간입니다.</string>
+    <plurals name="settings_native_companion_dim_minutes_value">
+        <item quantity="other">%1$d분</item>
+    </plurals>
+</resources>

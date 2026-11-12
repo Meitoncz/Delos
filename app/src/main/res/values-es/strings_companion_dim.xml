@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_native_companion_dim_title">Atenuar la segunda pantalla en reposo</string>
+    <string name="settings_native_companion_dim_description">Un toque la activa sin pulsar nada.</string>
+    <string name="settings_native_help_companion_dim_on">Se atenúa tras la espera de abajo.</string>
+    <string name="settings_native_help_companion_dim_off">Dejarla brillante puede causar quemado.</string>
+    <string name="settings_native_companion_dim_minutes_title">Atenuar tras</string>
+    <string name="settings_native_companion_dim_minutes_description">Cuánto espera antes de atenuarse.</string>
+    <plurals name="settings_native_companion_dim_minutes_value">
+        <item quantity="one">%1$d minuto</item>
+        <item quantity="many">%1$d de minutos</item>
+        <item quantity="other">%1$d minutos</item>
+    </plurals>
+</resources>

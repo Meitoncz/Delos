@@ -4,6 +4,7 @@ import android.content.res.Resources
 import com.limelight.R
 import com.limelight.display.MainScreenChoice
 import com.limelight.display.SecondDisplayOverride
+import com.limelight.shell.companion.CompanionDim
 import com.limelight.shell.ui.RowValue
 
 /** Choice-specific help for native shell rows; the row remains the source of its current value. */
@@ -34,6 +35,7 @@ internal object NativeSettingsHelp {
             "ui_stats_position" -> statsPositions[id]
             SecondDisplayOverride.KEY -> secondDisplays[id]
             MainScreenChoice.KEY -> mainScreens[id]
+            CompanionDim.KEY_ENABLED -> if (id == "on") R.string.settings_native_help_companion_dim_on else R.string.settings_native_help_companion_dim_off
             "ui_default_pc" -> if (id == "none") R.string.settings_native_help_default_pc_none else R.string.settings_native_help_default_pc_set
             else -> null
         }

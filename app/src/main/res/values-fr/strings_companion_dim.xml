@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_native_companion_dim_title">Atténuer le second écran au repos</string>
+    <string name="settings_native_companion_dim_description">Un toucher la réveille sans rien activer.</string>
+    <string name="settings_native_help_companion_dim_on">S’atténue après le délai ci-dessous.</string>
+    <string name="settings_native_help_companion_dim_off">Un éclat constant peut marquer l’écran.</string>
+    <string name="settings_native_companion_dim_minutes_title">Atténuer après</string>
+    <string name="settings_native_companion_dim_minutes_description">Combien de temps avant d’atténuer.</string>
+    <plurals name="settings_native_companion_dim_minutes_value">
+        <item quantity="one">%1$d minute</item>
+        <item quantity="many">%1$d de minutes</item>
+        <item quantity="other">%1$d minutes</item>
+    </plurals>
+</resources>

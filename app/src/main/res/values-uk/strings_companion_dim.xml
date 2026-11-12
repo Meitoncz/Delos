@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_native_companion_dim_title">Затемнювати другий екран у простої</string>
+    <string name="settings_native_companion_dim_description">Дотик вмикає його без натискання кнопок.</string>
+    <string name="settings_native_help_companion_dim_on">Затемнюється після затримки нижче.</string>
+    <string name="settings_native_help_companion_dim_off">Постійна яскравість може спричинити вигоряння.</string>
+    <string name="settings_native_companion_dim_minutes_title">Затемнити через</string>
+    <string name="settings_native_companion_dim_minutes_description">Як довго чекає перед затемненням.</string>
+    <plurals name="settings_native_companion_dim_minutes_value">
+        <item quantity="one">%1$d хвилина</item>
+        <item quantity="few">%1$d хвилини</item>
+        <item quantity="many">%1$d хвилин</item>
+        <item quantity="other">%1$d хвилини</item>
+    </plurals>
+</resources>

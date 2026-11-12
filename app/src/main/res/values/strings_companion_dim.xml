@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Settings > Display, shown only while a companion display exists -->
+    <string name="settings_native_companion_dim_title">Dim the second screen when idle</string>
+    <!-- Help text of the dimming row; the screen is the companion display -->
+    <string name="settings_native_companion_dim_description">A touch wakes it without pressing a button.</string>
+    <string name="settings_native_help_companion_dim_on">Dims after the delay below.</string>
+    <string name="settings_native_help_companion_dim_off">Leaving it bright can cause burn-in.</string>
+    <!-- Settings > Display: the idle time before the second screen dims; the value is a number of minutes -->
+    <string name="settings_native_companion_dim_minutes_title">Dim after</string>
+    <string name="settings_native_companion_dim_minutes_description">How long it rests before it dims.</string>
+    <plurals name="settings_native_companion_dim_minutes_value">
+        <item quantity="one">%1$d minute</item>
+        <item quantity="other">%1$d minutes</item>
+    </plurals>
+</resources>

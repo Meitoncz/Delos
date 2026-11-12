@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_native_companion_dim_title">Escurecer a segunda tela em repouso</string>
+    <string name="settings_native_companion_dim_description">Um toque a ativa sem acionar nada.</string>
+    <string name="settings_native_help_companion_dim_on">Escurece após o tempo abaixo.</string>
+    <string name="settings_native_help_companion_dim_off">Brilho constante pode causar burn-in.</string>
+    <string name="settings_native_companion_dim_minutes_title">Escurecer após</string>
+    <string name="settings_native_companion_dim_minutes_description">Quanto espera antes de escurecer.</string>
+    <plurals name="settings_native_companion_dim_minutes_value">
+        <item quantity="one">%1$d minuto</item>
+        <item quantity="many">%1$d de minutos</item>
+        <item quantity="other">%1$d minutos</item>
+    </plurals>
+</resources>

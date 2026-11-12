@@ -30,6 +30,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import com.limelight.shell.Screen
 import com.limelight.shell.StatsPosition
+import com.limelight.shell.companion.CompanionDim
 import com.limelight.shell.companion.rememberDualScreenPlan
 import com.limelight.shell.data.Pc
 import com.limelight.shell.settings.Appearance
@@ -172,6 +173,22 @@ internal fun nativeSettings(
             RowValue.Choice(res.getString(mainScreen.labelRes), { dir -> MainScreenChoice.write(devicePrefs, mainScreen.step(dir)) }),
             res.getString(R.string.settings_native_main_screen_description), tab = SettingsTab.DISPLAY,
             section = res.getString(R.string.settings_native_section_displays), choiceHelp = NativeSettingsHelp.choice(res, MainScreenChoice.KEY, mainScreen.name))
+        // The idle dimming of the companion screen (OLED burn-in); the delay only matters while dimming is on
+        var dim by remember { mutableStateOf(CompanionDim.read(devicePrefs)) }
+        val section = res.getString(R.string.settings_native_section_displays)
+        row(CompanionDim.KEY_ENABLED, Symbols.EXTERNAL_DISPLAY, res.getString(R.string.settings_native_companion_dim_title),
+            RowValue.Choice(res.getString(if (dim.enabled) R.string.common_on else R.string.common_off), { _ ->
+                dim = dim.copy(enabled = !dim.enabled)
+                CompanionDim.writeEnabled(devicePrefs, dim.enabled)
+            }), res.getString(R.string.settings_native_companion_dim_description), tab = SettingsTab.DISPLAY, section = section,
+            choiceHelp = NativeSettingsHelp.choice(res, CompanionDim.KEY_ENABLED, if (dim.enabled) "on" else "off"))
+        if (companionDimDelayShown(true, dim)) {
+            row(CompanionDim.KEY_MINUTES, Symbols.TIMER, res.getString(R.string.settings_native_companion_dim_minutes_title),
+                RowValue.Choice(res.getQuantityString(R.plurals.settings_native_companion_dim_minutes_value, dim.minutes, dim.minutes), { dir ->
+                    dim = dim.copy(minutes = CompanionDim.step(dim.minutes, dir))
+                    CompanionDim.writeMinutes(devicePrefs, dim.minutes)
+                }), res.getString(R.string.settings_native_companion_dim_minutes_description), tab = SettingsTab.DISPLAY, section = section)
+        }
     }
     val choices = listOf<Pc?>(null) + pcs.filter { it.paired }.sortedBy { it.name.lowercase() }
     val index = choices.indexOfFirst { it?.uuid == startup.defaultPc }.coerceAtLeast(0)
@@ -255,3 +272,6 @@ internal fun nativeSettings(
         res.getString(R.string.settings_native_hltb_description), tab = SettingsTab.ABOUT, section = gameDataSection)
     return list
 }
+
+/** Whether the "Dim after" row shows: only with a companion display, and not while idle dimming is off. */
+internal fun companionDimDelayShown(hasCompanion: Boolean, dim: CompanionDim.Policy): Boolean = hasCompanion && dim.enabled

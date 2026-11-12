@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_native_companion_dim_title">空闲时调暗副屏幕</string>
+    <string name="settings_native_companion_dim_description">触摸即可唤醒，不会误触按钮。</string>
+    <string name="settings_native_help_companion_dim_on">经过下方时间后调暗。</string>
+    <string name="settings_native_help_companion_dim_off">一直亮着可能造成烧屏。</string>
+    <string name="settings_native_companion_dim_minutes_title">调暗延迟</string>
+    <string name="settings_native_companion_dim_minutes_description">调暗前的等待时间。</string>
+    <plurals name="settings_native_companion_dim_minutes_value">
+        <item quantity="other">%1$d分钟</item>
+    </plurals>
+</resources>
