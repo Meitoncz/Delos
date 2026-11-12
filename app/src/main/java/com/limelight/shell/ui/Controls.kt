@@ -282,6 +282,8 @@ fun CircleItem(
     contextMenu: ContextMenu? = null,
     /** The factor of the circle, its icon, badge and spacing (the item's width and its labels keep their size); null: the compact stage's, 1 elsewhere. */
     scale: Float? = null,
+    /** Called when the circle gains the focus (the companion screen learns which PC is focused). */
+    onFocused: (() -> Unit)? = null,
 ) {
     val colors = LocalDelosColors.current
     val stage = LocalStage.current
@@ -318,7 +320,7 @@ fun CircleItem(
                     .glideTarget(focused)
                     .focusEffects(
                         onClick = onClick, corner = 999f, focusScale = 1.16f, ring = if (glide != null) null else FocusRing(5f, 5f), glow = FocusGlow(26f, 70f, -16f),
-                        contextMenu = contextMenu, onLookChange = { focused = it },
+                        contextMenu = contextMenu, onFocusChange = { if (it) onFocused?.invoke() }, onLookChange = { focused = it },
                         glide = rowPlate != null,
                     )
                     .size(side.px)

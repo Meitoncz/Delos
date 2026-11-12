@@ -30,6 +30,8 @@ import android.content.res.Resources
 import androidx.compose.ui.res.stringResource
 import com.limelight.R
 import com.limelight.shell.ui.textResources
+import com.limelight.shell.companion.PcContext
+import com.limelight.shell.companion.PublishCompanionPc
 import com.limelight.shell.ContextMenu
 import com.limelight.shell.DeviceActions
 import com.limelight.shell.Layer
@@ -81,6 +83,9 @@ fun StartScreen(profiles: Profiles, store: ProfileStore, pcs: List<Pc>, startup:
     val focusPc = paired.firstOrNull { it.uuid == startup.defaultPc } ?: paired.firstOrNull { it.online } ?: paired.firstOrNull()
     val first = remember { FocusRequester() }
     InitialFocus(first, focusPc?.uuid)
+    // The PC the focus is on, for the companion screen's card of it (null on the "Pair a new PC" circle: the welcome or fallback card shows)
+    var focusedUuid by remember { mutableStateOf<String?>(null) }
+    PublishCompanionPc(paired.firstOrNull { it.uuid == focusedUuid }, PcContext.START, startup.defaultPc)
     Box(Modifier.fillMaxSize()) {
         // A compact stage has no room for the chip on the middle next to the status icons: it keeps clear of them (CompactProfileChip)
         profiles.current?.let {
@@ -106,12 +111,14 @@ fun StartScreen(profiles: Profiles, store: ProfileStore, pcs: List<Pc>, startup:
                         big = true,
                         selected = default,
                         contextMenu = startMenu(res, pc, default, actions),
+                        onFocused = { focusedUuid = pc.uuid },
                     )
                 }
                 CircleItem(
                     Symbols.ADD_LINK, stringResource(R.string.devices_pair_new), { shell.navigate(Screen.PairPc(back = Screen.Start)) },
                     modifier = if (focusPc == null) Modifier.focusRequester(first) else Modifier,
                     meta = stringResource(R.string.devices_pair_new_meta), big = true,
+                    onFocused = { focusedUuid = null },
                 )
             }
         }
@@ -200,7 +207,7 @@ private fun ProfileChip(profiles: Profiles, store: ProfileStore, modifier: Modif
  * (only in Delos), wake, unpair, remove; and pairing a new one.
  */
 @Composable
-fun DevicesScreen(pcs: List<Pc>, activeUuid: String?) {
+fun DevicesScreen(pcs: List<Pc>, activeUuid: String?, defaultPc: String?) {
     val res = textResources()
     val actions = LocalDeviceActions.current
     val shell = LocalShell.current
@@ -209,6 +216,8 @@ fun DevicesScreen(pcs: List<Pc>, activeUuid: String?) {
     val paired = pcs.filter { it.paired }.sortedBy { it.name.lowercase() }
     val first = remember { FocusRequester() }
     InitialFocus(first)
+    var focusedUuid by remember { mutableStateOf<String?>(null) }
+    PublishCompanionPc(paired.firstOrNull { it.uuid == focusedUuid }, PcContext.DEVICES, defaultPc)
     CenterColumn(gap = 48f) {
         Heading(stringResource(R.string.devices_title), stringResource(R.string.devices_note))
         Circles {
@@ -231,12 +240,14 @@ fun DevicesScreen(pcs: List<Pc>, activeUuid: String?) {
                     metaDot = if (pc.online) OnlineGreen else null,
                     big = true,
                     selected = active,
+                    onFocused = { focusedUuid = pc.uuid },
                 )
             }
             CircleItem(
                 Symbols.ADD_LINK, stringResource(R.string.devices_pair_new), { shell.navigate(Screen.PairPc(back = Screen.Devices)) },
                 modifier = if (paired.isEmpty()) Modifier.focusRequester(first) else Modifier,
                 meta = stringResource(R.string.devices_pair_new_meta), big = true,
+                onFocused = { focusedUuid = null },
             )
         }
     }
