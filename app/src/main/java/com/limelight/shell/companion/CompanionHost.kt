@@ -42,7 +42,7 @@ import kotlinx.coroutines.flow.StateFlow
  */
 internal class CompanionHost(
     private val activity: Activity,
-    appearance: StateFlow<Appearance>,
+    appearance: () -> StateFlow<Appearance>,
     state: () -> CompanionState,
 ) {
     private val content = CompanionSession.Content(appearance, state)
@@ -140,7 +140,7 @@ internal class CompanionHost(
         fun forStream(activity: Activity, pcName: String?, gameName: String?): CompanionHost {
             val feed = StreamFeed()
             val appearance = AppearanceStore(activity) { ProfileStore.currentSettings(activity) }.appearance
-            return CompanionHost(activity, appearance) { CompanionState.Stream(pcName, gameName, feed.stats, feed.commands) }.also { it.stream = feed }
+            return CompanionHost(activity, { appearance }) { CompanionState.Stream(pcName, gameName, feed.stats, feed.commands) }.also { it.stream = feed }
         }
 
         /** A key of the companion keyboard into the stream: the path of the Full keyboard (`KeyBoardLayoutController.sendKey`). */

@@ -1,7 +1,9 @@
 package com.limelight.shell.companion
 
+import android.app.Activity
 import android.content.Context
 import android.content.res.Configuration
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.View
 import android.view.WindowManager
@@ -10,9 +12,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -108,11 +112,15 @@ private fun CompanionRoot() {
 
 /** The palette, reduced motion and the stage of the companion's own display: what `ShellTheme` does for the shell. */
 @Composable
-private fun CompanionTheme(appearance: StateFlow<Appearance>, content: @Composable () -> Unit) {
-    val current by appearance.collectAsState()
+private fun CompanionTheme(appearance: () -> StateFlow<Appearance>, content: @Composable () -> Unit) {
+    val current by appearance().collectAsState()
     val context = LocalContext.current
     val systemHue = remember { systemAccentHue(context) }
     val colors = animateDelosColors(delosColors(current, systemHue))
+    // The window behind Compose (it shows at the edges and before the first frame) is the palette's background too, not the theme's dark one
+    val window = (context as? Activity)?.window
+    val windowBackground = colors.bg.toArgb()
+    SideEffect { window?.setBackgroundDrawable(ColorDrawable(windowBackground)) }
     CompositionLocalProvider(LocalDelosColors provides colors, LocalReducedMotion provides current.reducedMotion) {
         Stage(textScale = current.uiScale / 100f, content = content)
     }

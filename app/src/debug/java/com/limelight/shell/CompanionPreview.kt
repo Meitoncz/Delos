@@ -18,8 +18,10 @@ import com.limelight.shell.ui.Symbols
 import com.limelight.shell.companion.CompanionState
 import com.limelight.shell.companion.StreamCommands
 import com.limelight.shell.data.NativeHdr
+import com.limelight.shell.settings.Appearance
 import com.limelight.shell.settings.ImpactLevel
 import com.limelight.shell.settings.SettingImpact
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  * Debug builds only: the companion screen of a dual-screen device with made-up data, started with
@@ -53,6 +55,9 @@ internal object CompanionPreview {
      * be tested with the settings screens of the previews. Null without a screen preview.
      */
     var liveShell: ShellState? by mutableStateOf(null)
+
+    /** The appearance of that same preview: the window must be drawn in the theme and palette the previewed screen is, as the real shell's is. */
+    var liveAppearance: StateFlow<Appearance>? by mutableStateOf(null)
 
     private fun game(running: Boolean, other: String?) = CompanionGame(
         key = "preview/1", name = "Asterfall", running = running, otherRunning = other, image = null, hue = 190f, hue2 = 255f,
