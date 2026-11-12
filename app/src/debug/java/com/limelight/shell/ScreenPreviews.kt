@@ -134,8 +134,12 @@ internal object ScreenPreviews {
         val world = remember(route) { PreviewWorld(base, activity, route, textScale) }
         DisposableEffect(world) {
             CompanionPreview.liveShell = world.shell // the companion window of a real second display follows this shell
+            CompanionPreview.liveAppearance = world.appearanceStore.appearance // and its theme, palette and scale
             onDispose {
-                if (CompanionPreview.liveShell === world.shell) CompanionPreview.liveShell = null
+                if (CompanionPreview.liveShell === world.shell) {
+                    CompanionPreview.liveShell = null
+                    CompanionPreview.liveAppearance = null
+                }
                 world.close()
             }
         }

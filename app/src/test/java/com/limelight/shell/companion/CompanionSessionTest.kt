@@ -30,7 +30,7 @@ class CompanionSessionTest {
         CompanionSession.forgetRefusal()
     }
 
-    private fun content(pc: String) = CompanionSession.Content(MutableStateFlow(Appearance(dark = true)), { CompanionState.Shell(pc) })
+    private fun content(pc: String) = CompanionSession.Content({ MutableStateFlow(Appearance(dark = true)) }, { CompanionState.Shell(pc) })
 
     @Test fun theOwnersDetachClosesTheWindow() {
         CompanionSession.attach(shellOwner, content("A"), shell)

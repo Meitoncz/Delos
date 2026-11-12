@@ -277,9 +277,9 @@ companion window on the emulator's second display with the normal shell on the m
 (the owner then hands the window that fake state), with Second display = Part of the device as below. The screenshot of that display is
 `adb -s <device> emu screenrecord screenshot --display 1 <dir>` (`screencap -d` does not take the virtual display's id).
 The screen previews (`preview_screen settings`, `game_options`, `debug_info`, ...) run the real shell on a state of their own: with a real second display
-the window shows what **that** shell publishes (`CompanionPreview.liveShell`), so the settings help can be driven live with the D-pad of the main display
-(`adb -s <device> shell input keyevent KEYCODE_DPAD_DOWN`), with the night mode on (`cmd uimode night yes`) when the companion should be dark like the
-previews' shell. `--es companion_fake help_long` (and the other `help*` states) puts a made-up help on the window instead.
+the window shows what **that** shell publishes (`CompanionPreview.liveShell`) in the appearance of that shell (`CompanionPreview.liveAppearance`: theme, palette,
+Material You and scale follow the preview's own Settings live, as the real shell's window follows the real store), so the settings help can be driven live
+with the D-pad of the main display (`adb -s <device> shell input keyevent KEYCODE_DPAD_DOWN`). `--es companion_fake help_long` (and the other `help*` states) puts a made-up help on the window instead.
 
 ## How to test the companion on the emulator
 

@@ -18,8 +18,11 @@ import kotlinx.coroutines.flow.asStateFlow
  * window. Main thread only.
  */
 internal object CompanionSession {
-    /** What an owner wants shown: [state] is read in composition, so snapshot state held in it updates the window live. */
-    class Content(val appearance: StateFlow<Appearance>, val state: () -> CompanionState)
+    /**
+     * What an owner wants shown: [state] and [appearance] are read in composition, so snapshot state held in them updates the window live
+     * ([appearance] returns the flow of the colors and scale the owner draws itself in, and may switch to another one).
+     */
+    class Content(val appearance: () -> StateFlow<Appearance>, val state: () -> CompanionState)
 
     private val shown = MutableStateFlow<Content?>(null)
 
