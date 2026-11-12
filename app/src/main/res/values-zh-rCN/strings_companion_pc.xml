@@ -13,7 +13,12 @@
     <string name="pc_fact_session">会话</string>
     <string name="pc_fact_wake">唤醒</string>
     <string name="pc_fact_last_seen">上次在线</string>
-    <string name="pc_value_unavailable">不可用</string>
+    <string name="pc_unknown_host">主机不可用</string>
+    <string name="pc_unknown_version">版本不可用</string>
+    <string name="pc_unknown_last_seen">上次在线时间不可用</string>
+    <string name="pc_unknown_session">运行中的游戏未知</string>
+    <string name="pc_unknown_library">应用数量未知</string>
+    <string name="pc_unknown_flags">默认状态未知</string>
     <string name="pc_value_now">现在</string>
     <string name="pc_flags_default">默认电脑</string>
     <string name="pc_flags_none">非默认</string>

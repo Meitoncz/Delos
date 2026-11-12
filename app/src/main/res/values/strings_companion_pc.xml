@@ -23,8 +23,13 @@
     <!-- Label of a fact: whether Wake-on-LAN is possible (a MAC address is saved) -->
     <string name="pc_fact_wake">Wake</string>
     <string name="pc_fact_last_seen">Last seen</string>
-    <!-- Value of a fact the app does not know -->
-    <string name="pc_value_unavailable">Unavailable</string>
+    <!-- Value of a PC fact the app does not know; it carries its own label because short panels show the value without the label -->
+    <string name="pc_unknown_host">Host unavailable</string>
+    <string name="pc_unknown_version">Version unavailable</string>
+    <string name="pc_unknown_last_seen">Last seen unavailable</string>
+    <string name="pc_unknown_session">Running game unknown</string>
+    <string name="pc_unknown_library">Apps unknown</string>
+    <string name="pc_unknown_flags">Default unknown</string>
     <string name="pc_value_now">Now</string>
     <string name="pc_flags_default">Default PC</string>
     <string name="pc_flags_none">Not default</string>

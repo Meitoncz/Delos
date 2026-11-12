@@ -13,7 +13,12 @@
     <string name="pc_fact_session">Сеанс</string>
     <string name="pc_fact_wake">Пробудження</string>
     <string name="pc_fact_last_seen">Востаннє в мережі</string>
-    <string name="pc_value_unavailable">Недоступно</string>
+    <string name="pc_unknown_host">Хост недоступний</string>
+    <string name="pc_unknown_version">Версія недоступна</string>
+    <string name="pc_unknown_last_seen">Час останньої активності невідомий</string>
+    <string name="pc_unknown_session">Запущена гра невідома</string>
+    <string name="pc_unknown_library">Застосунки невідомі</string>
+    <string name="pc_unknown_flags">Типовий невідомий</string>
     <string name="pc_value_now">Зараз</string>
     <string name="pc_flags_default">Типовий ПК</string>
     <string name="pc_flags_none">Не типовий</string>
