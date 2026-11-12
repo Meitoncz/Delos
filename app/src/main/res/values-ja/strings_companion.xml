@@ -1,18 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="companion_streaming">ストリーミング中</string>
-    <string name="companion_idle_hint">メイン画面でゲームを選んでください</string>
-    <string name="companion_focused_label">メイン画面で選択中</string>
     <string name="companion_hdr_native">ネイティブHDR</string>
-    <string name="companion_shell_hint">コントローラーはメイン画面のままです。</string>
-    <string name="companion_menu_heading">ストリームメニュー</string>
     <string name="companion_menu_unavailable">ストリームメニューはまだ準備できていません。</string>
     <string name="companion_back_to_main">メイン画面に戻る</string>
     <string name="companion_back_hint">タッチメニューは閉じています。</string>
     <string name="companion_open_menu">ストリームメニューを開く</string>
     <string name="companion_close">閉じる</string>
     <string name="companion_typing_menu">ストリームメニュー</string>
-    <string name="companion_typing_sent">ストリームに入力中</string>
     <string name="companion_typing_hint">キーをタップするとPCに送られます。</string>
     <string name="companion_typing_clear">クリア</string>
 </resources>

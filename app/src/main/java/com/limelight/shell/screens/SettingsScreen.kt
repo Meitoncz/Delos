@@ -79,6 +79,7 @@ import com.limelight.shell.companion.HelpBackdrop
 import com.limelight.shell.companion.HelpSwatch
 import com.limelight.shell.companion.PublishCompanionHelp
 import com.limelight.shell.companion.companionShowsHelp
+import com.limelight.shell.companion.helpShort
 import com.limelight.shell.companion.hidesDescription
 import com.limelight.shell.LocalShell
 import com.limelight.shell.Screen
@@ -553,11 +554,15 @@ private fun settingsHelp(tab: SettingsTab, focused: SettingsItem?, appearance: A
     val colors = LocalDelosColors.current
     val hero = LocalShell.current.hero
     val rowValue = focused?.value
+    val title = focused?.label ?: tab.label(res)
+    val body = focused?.detail?.takeIf { it.isNotBlank() } ?: tab.description(res)
     return CompanionHelp(
         identity = focused?.key ?: "tab:${tab.name}",
         icon = focused?.icon ?: tab.icon,
-        title = focused?.label ?: tab.label(res),
-        body = focused?.detail?.takeIf { it.isNotBlank() } ?: tab.description(res),
+        title = title,
+        body = body,
+        short = helpShort(focused?.description, body, title),
+        section = res.getString(R.string.companion_help_settings_section, tab.label(res)),
         unavailable = focused?.enabled == false,
         value = (rowValue as? RowValue.Text)?.text,
         impact = focused?.impact,

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="companion_game_focused">Markiertes Spiel</string>
+    <string name="companion_game_running">Läuft gerade</string>
+    <string name="companion_game_resume_other">Anderes fortsetzen</string>
+    <string name="companion_game_quit_start">Beenden und starten</string>
+    <string name="companion_help_settings_section">Einstellungen · %1$s</string>
+    <string name="companion_pager_previous">Zurück</string>
+    <string name="companion_pager_next">Weiter</string>
+    <string name="companion_typing_hint_short">Tippe auf die Tasten.</string>
+    <plurals name="companion_genres_more">
+        <item quantity="one">+%1$d Genre</item>
+        <item quantity="other">+%1$d Genres</item>
+    </plurals>
+    <plurals name="companion_details_more">
+        <item quantity="one">+%1$d Zeile</item>
+        <item quantity="other">+%1$d Zeilen</item>
+    </plurals>
+    <plurals name="companion_typing_count">
+        <item quantity="one">%1$d Zeichen eingegeben</item>
+        <item quantity="other">%1$d Zeichen eingegeben</item>
+    </plurals>
+</resources>

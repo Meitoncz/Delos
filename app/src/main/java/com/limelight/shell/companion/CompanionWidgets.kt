@@ -9,7 +9,9 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -152,7 +154,7 @@ internal fun InfoPill(text: String, icon: String? = null, modifier: Modifier = M
  * [onChange] gets every value while dragging (snapped to [step]); [onCommit] the final one.
  */
 @Composable
-internal fun TouchSlider(value: Int, min: Int, max: Int, step: Int, onChange: (Int) -> Unit, onCommit: (Int) -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
+internal fun TouchSlider(value: Int, min: Int, max: Int, step: Int, onChange: (Int) -> Unit, onCommit: (Int) -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, height: Int = MIN_TARGET + 16) {
     val colors = LocalDelosColors.current
     var size = remember { IntSize.Zero }
     val change by rememberUpdatedState(onChange)
@@ -162,7 +164,7 @@ internal fun TouchSlider(value: Int, min: Int, max: Int, step: Int, onChange: (I
     val fraction = ((value - min).toFloat() / (max - min).coerceAtLeast(1)).coerceIn(0f, 1f)
     Box(
         modifier
-            .height(MIN_TARGET.px + 16.px)
+            .height(height.px)
             .fillMaxWidth()
             .onSizeChanged { size = it }
             .pointerInput(enabled, min, max, step) {
@@ -204,13 +206,26 @@ internal fun snapSliderValue(fraction: Float, min: Int, max: Int, step: Int): In
     return snapped.coerceIn(min, max)
 }
 
-/** A thumb-sized stepper: [-] value [+]. */
+/** A thumb-sized stepper: [-] value [+]. [size] is the height and width of the two buttons in stage px (at least [MIN_TARGET]). */
 @Composable
-internal fun Stepper(onMinus: () -> Unit, onPlus: () -> Unit, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+internal fun Stepper(onMinus: () -> Unit, onPlus: () -> Unit, modifier: Modifier = Modifier, size: Int = MIN_TARGET + 16, content: @Composable () -> Unit) {
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(14.px), verticalAlignment = Alignment.CenterVertically) {
-        CompanionButton("\u2212", onMinus, Modifier.size(MIN_TARGET.px + 16.px), textSize = 40)
+        CompanionButton("\u2212", onMinus, Modifier.size(size.px), textSize = 40)
         Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { content() }
-        CompanionButton("+", onPlus, Modifier.size(MIN_TARGET.px + 16.px), textSize = 40)
+        CompanionButton("+", onPlus, Modifier.size(size.px), textSize = 40)
+    }
+}
+
+/**
+ * The buttons of one row, equal in width, each at least [MIN_TARGET] high; a label that does not fit one line wraps to a second one and the whole row
+ * grows with it (the three buttons of a game card in a narrow panel), instead of being cut with an ellipsis.
+ */
+@Composable
+internal fun WrappingActionRow(actions: List<PageAction>, modifier: Modifier = Modifier) {
+    Row(modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.px)) {
+        actions.forEach {
+            CompanionButton(it.label, it.onClick, Modifier.weight(1f).fillMaxHeight(), it.style, icon = it.icon, enabled = it.enabled, textSize = MIN_TEXT, maxLines = 2)
+        }
     }
 }
 

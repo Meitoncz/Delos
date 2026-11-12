@@ -1,18 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="companion_streaming">Transmitindo</string>
-    <string name="companion_idle_hint">Escolha um jogo na tela principal</string>
-    <string name="companion_focused_label">Em foco na tela principal</string>
     <string name="companion_hdr_native">HDR nativo</string>
-    <string name="companion_shell_hint">Seu controle continua na tela principal.</string>
-    <string name="companion_menu_heading">Menu do stream</string>
     <string name="companion_menu_unavailable">O menu do stream ainda não está pronto.</string>
     <string name="companion_back_to_main">Voltar para a tela principal</string>
     <string name="companion_back_hint">O menu de toque está recolhido.</string>
     <string name="companion_open_menu">Abrir menu do stream</string>
     <string name="companion_close">Fechar</string>
     <string name="companion_typing_menu">Menu do stream</string>
-    <string name="companion_typing_sent">Digitando no stream</string>
     <string name="companion_typing_hint">Toque nas teclas: elas vão para o PC.</string>
     <string name="companion_typing_clear">Limpar</string>
 </resources>

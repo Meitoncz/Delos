@@ -19,6 +19,9 @@ import com.limelight.shell.data.ProfileStore
 import com.limelight.shell.screens.appArt
 import com.limelight.shell.screens.hdrBadgeKind
 import com.limelight.shell.settings.GameSettingsStore
+import com.limelight.shell.ui.genreName
+import com.limelight.shell.ui.textResources
+import com.limelight.shell.ui.themeName
 import com.limelight.shell.ui.topGenres
 import com.limelight.shell.ui.topThemes
 import kotlinx.coroutines.Dispatchers
@@ -58,11 +61,13 @@ internal fun PublishCompanionGame(pc: Pc, app: App, image: ImageBitmap?, running
         }
     }
     val art = appArt(pc, app)
-    val genres = remember(metadata) {
-        topGenres(metadata?.candidate?.genres.orEmpty().filter { it.name.isNotBlank() }, metadata?.steamTags.orEmpty()).map { it.name } +
-            topThemes(metadata?.candidate?.themes.orEmpty().filter { it.name.isNotBlank() }, metadata?.steamTags.orEmpty()).map { it.name }
+    val res = textResources()
+    // Every genre and theme the game has, best first and in the user's language: the card shows what fits and counts the rest
+    val genres = remember(metadata, res) {
+        (topGenres(metadata?.candidate?.genres.orEmpty().filter { it.name.isNotBlank() }, metadata?.steamTags.orEmpty(), MAX_GENRES).map { genreName(res, it) } +
+            topThemes(metadata?.candidate?.themes.orEmpty().filter { it.name.isNotBlank() }, metadata?.steamTags.orEmpty(), MAX_THEMES).map { themeName(res, it) }).distinct()
     }
-    val game = remember(pc.uuid, app.id, app.name, app.running, other?.name, image, art.hue, art.hue2, metadata, genres, impact, onAction) {
+    val game = remember(pc.uuid, pc.name, app.id, app.name, app.running, other?.name, image, art.hue, art.hue2, metadata, genres, impact, onAction) {
         CompanionGame(
             key = "${pc.uuid}/${app.id}",
             name = app.name,
@@ -77,12 +82,17 @@ internal fun PublishCompanionGame(pc: Pc, app: App, image: ImageBitmap?, running
             hdr = hdrBadgeKind(metadata),
             impact = impact,
             onAction = onAction,
+            pcName = pc.name,
         )
     }
     PublishCompanionPage(remember(game) { GamePage(game) })
 }
 
 private const val IMPACT_DELAY_MS = 300L
+
+/** How many genres and themes the game card gets to choose from: more than any panel shows, so "+N genres" counts the real rest. */
+private const val MAX_GENRES = 6
+private const val MAX_THEMES = 4
 
 /**
  * Publishes what a screen (or a layer over it) wants the companion window to show ([ShellState.companionPages][com.limelight.shell.ShellState.companionPages]):

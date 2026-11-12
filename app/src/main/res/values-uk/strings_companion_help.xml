@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="companion_game_focused">Вибрана гра</string>
+    <string name="companion_game_running">Зараз запущено</string>
+    <string name="companion_game_resume_other">Продовжити іншу</string>
+    <string name="companion_game_quit_start">Вийти й запустити</string>
+    <string name="companion_help_settings_section">Налаштування · %1$s</string>
+    <string name="companion_pager_previous">Назад</string>
+    <string name="companion_pager_next">Далі</string>
+    <string name="companion_typing_hint_short">Торкайся клавіш.</string>
+    <plurals name="companion_genres_more">
+        <item quantity="one">+%1$d жанр</item>
+        <item quantity="few">+%1$d жанри</item>
+        <item quantity="many">+%1$d жанрів</item>
+        <item quantity="other">+%1$d жанру</item>
+    </plurals>
+    <plurals name="companion_details_more">
+        <item quantity="one">+%1$d рядок</item>
+        <item quantity="few">+%1$d рядки</item>
+        <item quantity="many">+%1$d рядків</item>
+        <item quantity="other">+%1$d рядка</item>
+    </plurals>
+    <plurals name="companion_typing_count">
+        <item quantity="one">Введено %1$d символ</item>
+        <item quantity="few">Введено %1$d символи</item>
+        <item quantity="many">Введено %1$d символів</item>
+        <item quantity="other">Введено %1$d символу</item>
+    </plurals>
+</resources>

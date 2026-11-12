@@ -1,18 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="companion_streaming">Transmitiendo</string>
-    <string name="companion_idle_hint">Elige un juego en la pantalla principal</string>
-    <string name="companion_focused_label">Seleccionado en la pantalla principal</string>
     <string name="companion_hdr_native">HDR nativo</string>
-    <string name="companion_shell_hint">Tu mando sigue en la pantalla principal.</string>
-    <string name="companion_menu_heading">Menú del stream</string>
     <string name="companion_menu_unavailable">El menú del stream aún no está listo.</string>
     <string name="companion_back_to_main">Volver a la pantalla principal</string>
     <string name="companion_back_hint">El menú táctil está oculto.</string>
     <string name="companion_open_menu">Abrir menú del stream</string>
     <string name="companion_close">Cerrar</string>
     <string name="companion_typing_menu">Menú del stream</string>
-    <string name="companion_typing_sent">Escribiendo en el stream</string>
     <string name="companion_typing_hint">Toca las teclas: van al PC.</string>
     <string name="companion_typing_clear">Borrar</string>
 </resources>

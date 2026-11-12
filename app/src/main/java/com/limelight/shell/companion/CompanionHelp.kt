@@ -23,13 +23,22 @@ internal data class CompanionHelp(
     val title: String,
     /** The help text: the value's own detail (for example "720p" and what it requests) and the explanation of the setting. */
     val body: String,
+    /**
+     * An authored one-sentence form of [body] (the catalog's summary, the first help sentence or the row's title): the page falls back to it when
+     * not even the first sentence of [body] fits its line budget (docs/DUAL_SCREEN.md, "No scrolling, ever").
+     */
+    val short: String? = null,
+    /** The small line under the title: where the row lives ("Settings · Display", "Game settings", "Debug info"). Null for none. */
+    val section: String? = null,
+    /** The body warns about a risk (a setting whose Off state has a cost): it is set in the warm notice color. */
+    val notice: Boolean = false,
     /** Per-game settings: where the focused value comes from. */
     val source: HelpSource? = null,
     /** The row cannot be changed on this device ("Not available here"). */
     val unavailable: Boolean = false,
     /** A text row's current text (a name, a path), set apart from the help in the accent color. */
     val value: String? = null,
-    /** The row's impact chips; null for a row without them. The legend and its sentence follow. */
+    /** The row's impact chips; null for a row without them (the page then shows dashes). */
     val impact: SettingImpact? = null,
     /** The palette row: the three colors with their names. */
     val swatches: List<HelpSwatch> = emptyList(),
@@ -79,3 +88,10 @@ internal fun helpSource(custom: Boolean, icon: String, title: String, sentence: 
     return if (marker.isEmpty() || at < 0) HelpSource(custom, icon, title, sentence, "", "")
     else HelpSource(custom, icon, title, sentence.substring(0, at), strong, sentence.substring(at + marker.length))
 }
+
+/**
+ * The authored short form of a row's help ([CompanionHelp.short]): the catalog's one-line [summary] when the row has one, else the first sentence of
+ * the [body], else the row's [title]. The page uses it only when not even the first sentence of the full text fits.
+ */
+internal fun helpShort(summary: String?, body: String, title: String): String =
+    summary?.trim()?.takeIf { it.isNotEmpty() } ?: CompanionFit.sentences(body).firstOrNull() ?: title

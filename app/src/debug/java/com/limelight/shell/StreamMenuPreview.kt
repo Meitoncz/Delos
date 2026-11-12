@@ -109,7 +109,7 @@ internal fun GameScene() {
 }
 
 /** The stream menu's [StreamMenuHost] with made-up values: every row works, nothing reaches a stream. */
-internal class FakeStreamMenuHost(initialUpscalerMode: Int = 2) : StreamMenuHost {
+internal class FakeStreamMenuHost(initialUpscalerMode: Int = 2, private val longLists: Boolean = false) : StreamMenuHost {
     var onDismiss: () -> Unit = {}
     private val handler = Handler(Looper.getMainLooper())
 
@@ -196,9 +196,13 @@ internal class FakeStreamMenuHost(initialUpscalerMode: Int = 2) : StreamMenuHost
     override val specialKeys = listOf(
         "Esc", "Tab", "Ctrl + C", "Ctrl + V", "Ctrl + Alt + Delete", "Alt + Tab", "Alt + F4", "Win", "Win + D", "Win + Tab",
         "Print Screen", "F1", "F5", "F11", "F12", "Ctrl + Shift + Esc",
-    )
+    ) + if (longLists) listOf(
+        "Ctrl + A", "Ctrl + X", "Ctrl + Z", "Ctrl + Y", "Ctrl + S", "Ctrl + F", "Ctrl + W", "Ctrl + T", "Ctrl + Shift + T", "Win + L", "Win + E", "Win + R", "F2", "F10",
+    ) else emptyList()
     override fun sendSpecialKey(index: Int) = Unit
-    override val serverCommands = listOf("Restart the game", "Open Steam Big Picture", "Sleep the PC", "Toggle HDR")
+    override val serverCommands = listOf("Restart the game", "Open Steam Big Picture", "Sleep the PC", "Toggle HDR") + if (longLists) listOf(
+        "Mute the PC", "Lock the PC", "Show the desktop", "Restart the PC", "Close the launcher", "Start the recorder", "Stop the recorder", "Switch to the TV",
+    ) else emptyList()
     override fun runServerCommand(index: Int) = Unit
 
     override fun leave(quit: Boolean) = Unit

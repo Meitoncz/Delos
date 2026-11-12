@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="companion_game_focused">선택한 게임</string>
+    <string name="companion_game_running">실행 중</string>
+    <string name="companion_game_resume_other">다른 게임 이어하기</string>
+    <string name="companion_game_quit_start">종료 후 시작</string>
+    <string name="companion_help_settings_section">설정 · %1$s</string>
+    <string name="companion_pager_previous">이전</string>
+    <string name="companion_pager_next">다음</string>
+    <string name="companion_typing_hint_short">키를 누르세요.</string>
+    <plurals name="companion_genres_more">
+        <item quantity="other">+%1$d개 장르</item>
+    </plurals>
+    <plurals name="companion_details_more">
+        <item quantity="other">+%1$d줄</item>
+    </plurals>
+    <plurals name="companion_typing_count">
+        <item quantity="other">%1$d자 입력됨</item>
+    </plurals>
+</resources>

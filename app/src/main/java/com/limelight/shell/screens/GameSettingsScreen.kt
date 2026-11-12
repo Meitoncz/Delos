@@ -64,6 +64,7 @@ import com.limelight.shell.companion.CompanionHelp
 import com.limelight.shell.companion.HelpSource
 import com.limelight.shell.companion.PublishCompanionHelp
 import com.limelight.shell.companion.companionShowsHelp
+import com.limelight.shell.companion.helpShort
 import com.limelight.shell.companion.helpSource
 import com.limelight.shell.companion.hidesDescription
 import com.limelight.shell.data.ArtKind
@@ -203,11 +204,15 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
     val currentLabel = focused?.let { profileValueLabel(res, it, values[it.key] ?: it.default, focusedChoices) }
     val profileLabel = focused?.let { profileValueLabel(res, it, profileValues[it.key] ?: it.default, focusedChoices) }
     // On a dual-screen device the second panel shows the focused option's description, large; the list then has the room of the panel (docs/DUAL_SCREEN.md)
+    val helpTitle = focused?.label ?: res.getString(R.string.settings_game_panel_title)
+    val helpBody = detail?.takeIf { it.isNotBlank() } ?: res.getString(R.string.settings_game_only_this_game, screen.app.name)
     val help = CompanionHelp(
         identity = focused?.key ?: "game",
         icon = focused?.icon ?: Symbols.TUNE,
-        title = focused?.label ?: res.getString(R.string.settings_game_panel_title),
-        body = detail?.takeIf { it.isNotBlank() } ?: res.getString(R.string.settings_game_only_this_game, screen.app.name),
+        title = helpTitle,
+        body = helpBody,
+        short = helpShort(focused?.description, helpBody, helpTitle),
+        section = res.getString(R.string.companion_screen_game_settings),
         source = gameSettingsSource(res, focused, focused?.key in custom, touch, currentLabel, profileLabel, streamCustom, displayCustom),
         impact = focused?.let { impact(it.key, values) },
         savedNote = true,

@@ -1,18 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="companion_streaming">Stream läuft</string>
-    <string name="companion_idle_hint">Wähle ein Spiel auf dem Hauptbildschirm</string>
-    <string name="companion_focused_label">Auf dem Hauptbildschirm ausgewählt</string>
     <string name="companion_hdr_native">Natives HDR</string>
-    <string name="companion_shell_hint">Dein Controller bleibt am Hauptbildschirm.</string>
-    <string name="companion_menu_heading">Stream-Menü</string>
     <string name="companion_menu_unavailable">Das Stream-Menü ist noch nicht bereit.</string>
     <string name="companion_back_to_main">Zurück zum Hauptbildschirm</string>
     <string name="companion_back_hint">Das Touch-Menü ist eingeklappt.</string>
     <string name="companion_open_menu">Stream-Menü öffnen</string>
     <string name="companion_close">Schließen</string>
     <string name="companion_typing_menu">Stream-Menü</string>
-    <string name="companion_typing_sent">Eingabe im Stream</string>
     <string name="companion_typing_hint">Tippe auf die Tasten: Die Eingaben gehen an den PC.</string>
     <string name="companion_typing_clear">Löschen</string>
 </resources>

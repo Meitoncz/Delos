@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="companion_game_focused">選択中のゲーム</string>
+    <string name="companion_game_running">実行中</string>
+    <string name="companion_game_resume_other">別のゲームを再開</string>
+    <string name="companion_game_quit_start">終了して開始</string>
+    <string name="companion_help_settings_section">設定 · %1$s</string>
+    <string name="companion_pager_previous">前へ</string>
+    <string name="companion_pager_next">次へ</string>
+    <string name="companion_typing_hint_short">キーをタップします。</string>
+    <plurals name="companion_genres_more">
+        <item quantity="other">ほか%1$dジャンル</item>
+    </plurals>
+    <plurals name="companion_details_more">
+        <item quantity="other">ほか%1$d行</item>
+    </plurals>
+    <plurals name="companion_typing_count">
+        <item quantity="other">%1$d文字を入力しました</item>
+    </plurals>
+</resources>

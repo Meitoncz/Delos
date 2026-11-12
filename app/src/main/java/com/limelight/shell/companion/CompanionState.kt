@@ -80,6 +80,8 @@ data class CompanionGame(
     /** What the game's effective stream settings cost, null while unknown. */
     val impact: SettingImpact?,
     val onAction: (ShellButton) -> Unit,
+    /** The name of the PC the library belongs to, for the line under the game's name; null when unknown. */
+    val pcName: String? = null,
 ) {
     val buttons: List<ShellButton> get() = shellButtons(running, otherRunning != null)
 }

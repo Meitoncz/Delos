@@ -1,18 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="companion_streaming">Streamuje se</string>
-    <string name="companion_idle_hint">Vyber hru na hlavní obrazovce</string>
-    <string name="companion_focused_label">Vybráno na hlavní obrazovce</string>
     <string name="companion_hdr_native">Nativní HDR</string>
-    <string name="companion_shell_hint">Ovladač zůstává na hlavní obrazovce.</string>
-    <string name="companion_menu_heading">Menu streamu</string>
     <string name="companion_menu_unavailable">Menu streamu ještě není připravené.</string>
     <string name="companion_back_to_main">Zpět na hlavní obrazovku</string>
     <string name="companion_back_hint">Dotykové menu je schované.</string>
     <string name="companion_open_menu">Otevřít menu streamu</string>
     <string name="companion_close">Zavřít</string>
     <string name="companion_typing_menu">Menu streamu</string>
-    <string name="companion_typing_sent">Psaní do streamu</string>
     <string name="companion_typing_hint">Klepej na klávesy: jdou do PC.</string>
     <string name="companion_typing_clear">Smazat</string>
 </resources>
