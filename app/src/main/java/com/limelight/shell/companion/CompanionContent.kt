@@ -56,17 +56,19 @@ import com.limelight.shell.ui.tpx
  * state the screen dims after a minute without a touch and the touch that wakes it is not passed on.
  */
 @Composable
-internal fun CompanionContent(state: CompanionState, startTyping: Boolean = false, startSheet: String? = null) {
+internal fun CompanionContent(state: CompanionState, startTyping: Boolean = false, startSheet: String? = null, inWindow: Boolean = false) {
     val colors = LocalDelosColors.current
     val reducedMotion = LocalReducedMotion.current
     val dimming = state is CompanionState.Shell
     var lastTouch by remember { mutableLongStateOf(SystemClock.elapsedRealtime()) }
     var dimmed by remember { mutableStateOf(false) }
     // Armed from the last touch; a touch restarts it, so no polling. Outside the shell state the screen is never dimmed
-    LaunchedEffect(lastTouch, dimming) {
+    // The settings help is the description the main screen gave up: it dims later, and moving the focus (a new row's help) counts like a touch
+    val help = (state as? CompanionState.Shell)?.help
+    LaunchedEffect(lastTouch, dimming, help?.identity) {
         dimmed = false
         if (!dimming) return@LaunchedEffect
-        delay(CompanionBurnIn.DIM_AFTER_MS)
+        delay(CompanionBurnIn.dimAfter(help != null))
         dimmed = true
     }
     var shift by remember { mutableStateOf(CompanionBurnIn.Shift(0, 0)) }
@@ -106,7 +108,7 @@ internal fun CompanionContent(state: CompanionState, startTyping: Boolean = fals
                 )
                 Box(Modifier.fillMaxSize()) {
                     when (state) {
-                        is CompanionState.Shell -> ShellContent(state)
+                        is CompanionState.Shell -> ShellContent(state, inWindow)
                         is CompanionState.Stream -> StreamContent(state, startTyping, startSheet)
                     }
                 }

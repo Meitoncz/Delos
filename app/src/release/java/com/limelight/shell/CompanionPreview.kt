@@ -9,4 +9,7 @@ internal object CompanionPreview {
     fun from(@Suppress("UNUSED_PARAMETER") intent: Intent): (@Composable () -> Unit)? = null
 
     fun fakeState(@Suppress("UNUSED_PARAMETER") intent: Intent): CompanionState? = null
+
+    /** The shell of a screen preview (debug builds only), whose state the companion window should show instead of the activity's own. */
+    val liveShell: ShellState? get() = null
 }

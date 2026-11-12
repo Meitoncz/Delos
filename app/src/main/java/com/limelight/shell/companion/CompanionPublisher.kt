@@ -84,3 +84,25 @@ internal fun PublishCompanionGame(pc: Pc, app: App, image: ImageBitmap?, running
 }
 
 private const val IMPACT_DELAY_MS = 300L
+
+/**
+ * Publishes the description of the row a settings screen has focused to the companion screen ([ShellState.companionHelp][com.limelight.shell.ShellState.companionHelp]),
+ * live: every focus move or change of the row's value makes a new [CompanionHelp]; leaving the screen clears it. A screen that is replaced
+ * keeps its place for the length of the screen transition, so it clears only what it published itself (an equal value: the state keeps the first of equal values), never the next screen's help.
+ * Whether a window really shows it is [CompanionSession.showsHelp]: the screen draws its own description unless one does.
+ */
+@Composable
+internal fun PublishCompanionHelp(help: CompanionHelp) {
+    val shell = LocalShell.current
+    val published = remember { arrayOfNulls<CompanionHelp>(1) }
+    SideEffect {
+        published[0] = help
+        shell.companionHelp = help
+    }
+    DisposableEffect(shell) { onDispose { if (shell.companionHelp == published[0]) shell.companionHelp = null } }
+}
+
+/** True while a companion window shows the settings help: the settings screens then leave out their description and give the list the room. */
+@Composable
+internal fun companionShowsHelp(): Boolean = CompanionSession.showsHelp
+

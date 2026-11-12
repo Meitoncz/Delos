@@ -74,6 +74,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.limelight.shell.LocalLibrary
+import com.limelight.shell.companion.CompanionHelp
+import com.limelight.shell.companion.HelpBackdrop
+import com.limelight.shell.companion.HelpSwatch
+import com.limelight.shell.companion.PublishCompanionHelp
+import com.limelight.shell.companion.companionShowsHelp
+import com.limelight.shell.companion.hidesDescription
 import com.limelight.shell.LocalShell
 import com.limelight.shell.Screen
 import com.limelight.shell.data.Pc
@@ -324,6 +330,11 @@ fun SettingsScreen(
             }
         }
     }
+    // On a dual-screen device the second panel shows the focused row's description, large; the list then has the room of the panel (docs/DUAL_SCREEN.md)
+    val backgroundPreview = if (focused?.key in GAME_BACKGROUND_ROWS) rememberBackgroundPreview(appearance) else null
+    val help = settingsHelp(tab, focused, appearance, backgroundPreview)
+    PublishCompanionHelp(help)
+    val hideDescription = hidesDescription(companionShowsHelp(), help)
     Box(Modifier.fillMaxSize()) {
         FocusTransferTarget(focusTransfer)
         if (compact) {
@@ -337,9 +348,11 @@ fun SettingsScreen(
             Column(Modifier.fillMaxSize().padding(start = margin.px, end = margin.px, top = SettingsLayout.COMPACT_LIST_TOP.px, bottom = SettingsLayout.bottom(appearance).px),
                 verticalArrangement = Arrangement.spacedBy(HelpDockLayout.LIST_GAP.px)) {
                 list(Modifier.weight(1f).fillMaxWidth())
-                // Three whole rows under the first section's heading stay in view above the dock where the stage has the room
-                val dockHeight = HelpDockLayout.height(stage.stageHeight, SettingsLayout.COMPACT_LIST_TOP + 14f + SettingsLayout.SECTION_HEADING, SettingsLayout.bottom(appearance), SettingsLayout.tallRow(stage))
-                DescriptionPanel(tab, focused, Modifier.fillMaxWidth().height(dockHeight.px), appearance)
+                if (!hideDescription) {
+                    // Three whole rows under the first section's heading stay in view above the dock where the stage has the room
+                    val dockHeight = HelpDockLayout.height(stage.stageHeight, SettingsLayout.COMPACT_LIST_TOP + 14f + SettingsLayout.SECTION_HEADING, SettingsLayout.bottom(appearance), SettingsLayout.tallRow(stage))
+                    DescriptionPanel(tab, focused, Modifier.fillMaxWidth().height(dockHeight.px), appearance, backgroundPreview)
+                }
             }
         } else {
             BasicText(stringResource(R.string.settings_screen_title), style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 46.tpx),
@@ -350,7 +363,7 @@ fun SettingsScreen(
             Row(Modifier.fillMaxSize().padding(start = SettingsLayout.TITLE_X.px, end = SettingsLayout.TITLE_X.px, top = SettingsLayout.LIST_TOP.px, bottom = SettingsLayout.bottom(appearance).px),
                 horizontalArrangement = Arrangement.spacedBy(56.px)) {
                 list(Modifier.weight(1f))
-                DescriptionPanel(tab, focused, Modifier.width(520.px), appearance)
+                if (!hideDescription) DescriptionPanel(tab, focused, Modifier.width(520.px), appearance, backgroundPreview)
             }
         }
     }
@@ -471,7 +484,7 @@ internal fun TabPill(icon: String, label: String, selected: Boolean, modifier: M
 }
 
 @Composable
-private fun DescriptionPanel(tab: SettingsTab, focused: SettingsItem?, modifier: Modifier, appearance: Appearance) {
+private fun DescriptionPanel(tab: SettingsTab, focused: SettingsItem?, modifier: Modifier, appearance: Appearance, backgroundPreview: ImageBitmap?) {
     val colors = LocalDelosColors.current
     val res = textResources()
     val compact = LocalStage.current.shape == StageShape.COMPACT
@@ -496,9 +509,7 @@ private fun DescriptionPanel(tab: SettingsTab, focused: SettingsItem?, modifier:
         // A preview of the game background, only for the rows that change it
         if (focused?.key in GAME_BACKGROUND_ROWS) {
             val hero = LocalShell.current.hero
-            val image by produceState<ImageBitmap?>(null, hero?.id, appearance.heroBlur) {
-                value = hero?.image?.let { source -> withContext(Dispatchers.Default) { HeroBitmaps.renderLens(hero.id, source, appearance.heroBlur) } }
-            }
+            val image = backgroundPreview
             Box(Modifier.fillMaxWidth().height(150.cpx).clip(RoundedCornerShape(20.px)).background(colors.bg2), contentAlignment = Alignment.Center) {
                 if (appearance.heroBackground && hero != null) {
                     Box(Modifier.fillMaxSize().graphicsLayer { alpha = appearance.heroOpacity / 100f }) {
@@ -523,6 +534,43 @@ private fun DescriptionPanel(tab: SettingsTab, focused: SettingsItem?, modifier:
         // What the three chips of the focused row mean
         if (focused?.impact != null) ImpactLegend()
     }
+}
+
+/** The blurred game background as the rows that change it show it (the lens of the hero, rendered off the main thread). */
+@Composable
+private fun rememberBackgroundPreview(appearance: Appearance): ImageBitmap? {
+    val hero = LocalShell.current.hero
+    val image by produceState<ImageBitmap?>(null, hero?.id, appearance.heroBlur) {
+        value = hero?.image?.let { source -> withContext(Dispatchers.Default) { HeroBitmaps.renderLens(hero.id, source, appearance.heroBlur) } }
+    }
+    return image
+}
+
+/** What the companion screen shows of the focused row: the pieces of [DescriptionPanel] as data. */
+@Composable
+private fun settingsHelp(tab: SettingsTab, focused: SettingsItem?, appearance: Appearance, backgroundPreview: ImageBitmap?): CompanionHelp {
+    val res = textResources()
+    val colors = LocalDelosColors.current
+    val hero = LocalShell.current.hero
+    val rowValue = focused?.value
+    return CompanionHelp(
+        identity = focused?.key ?: "tab:${tab.name}",
+        icon = focused?.icon ?: tab.icon,
+        title = focused?.label ?: tab.label(res),
+        body = focused?.detail?.takeIf { it.isNotBlank() } ?: tab.description(res),
+        unavailable = focused?.enabled == false,
+        value = (rowValue as? RowValue.Text)?.text,
+        impact = focused?.impact,
+        swatches = if (focused?.key == "ui_palette") listOf(
+            HelpSwatch(colors.accent, res.getString(R.string.settings_screen_palette_main)),
+            HelpSwatch(colors.accent2, res.getString(R.string.settings_screen_palette_secondary)),
+            HelpSwatch(colors.accent3, res.getString(R.string.settings_screen_palette_accent)),
+        ) else emptyList(),
+        backdrop = if (focused?.key in GAME_BACKGROUND_ROWS) HelpBackdrop(
+            res.getString(R.string.settings_native_hero_background_title), appearance.heroBackground && hero != null, backgroundPreview,
+            hero?.hue ?: 0f, hero?.hue2 ?: 0f, hero?.icon.orEmpty(), appearance.heroOpacity / 100f,
+        ) else null,
+    )
 }
 
 /**

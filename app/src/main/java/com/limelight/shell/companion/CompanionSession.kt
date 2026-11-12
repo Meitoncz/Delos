@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Handler
 import android.os.Looper
+import androidx.compose.runtime.mutableStateOf
 import com.limelight.shell.settings.Appearance
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -30,6 +31,27 @@ internal object CompanionSession {
 
     /** The running window, if any. */
     var window: CompanionActivity? = null
+
+    /**
+     * The window that has taken the settings help ([CompanionHelp]) and draws it, null while none does. Snapshot state: the settings
+     * screens on the main panel read it ([showsHelp]) and give the room of their description to the list exactly while it is set. Set by the
+     * window's own composition ([helpShown]) and cleared when that composition leaves, the help ends or the window is destroyed ([helpGone]),
+     * so the description is never lost: until a window really shows it the main panel keeps it.
+     */
+    private val helpWindow = mutableStateOf<Any?>(null)
+
+    /** True while a companion window shows the settings help (read in composition on the main panel). */
+    val showsHelp: Boolean get() = helpWindow.value != null
+
+    /** The window [who] draws the settings help now. */
+    fun helpShown(who: Any) {
+        helpWindow.value = who
+    }
+
+    /** The window [who] no longer draws it; a later window that took over is not affected. */
+    fun helpGone(who: Any) {
+        if (helpWindow.value === who) helpWindow.value = null
+    }
 
     /** The display a window was started on a moment ago and has not come up yet, so a second display event does not start another. */
     private var launching = -1

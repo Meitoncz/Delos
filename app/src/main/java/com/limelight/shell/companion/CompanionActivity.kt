@@ -90,6 +90,7 @@ class CompanionActivity : ComponentActivity() {
 
     override fun onDestroy() {
         if (CompanionSession.window === this) CompanionSession.window = null
+        CompanionSession.helpGone(this)
         super.onDestroy()
     }
 
@@ -102,7 +103,7 @@ class CompanionActivity : ComponentActivity() {
 @Composable
 private fun CompanionRoot() {
     val content by CompanionSession.content.collectAsState()
-    content?.let { CompanionTheme(it.appearance) { CompanionContent(it.state()) } }
+    content?.let { CompanionTheme(it.appearance) { CompanionContent(it.state(), inWindow = true) } }
 }
 
 /** The palette, reduced motion and the stage of the companion's own display: what `ShellTheme` does for the shell. */

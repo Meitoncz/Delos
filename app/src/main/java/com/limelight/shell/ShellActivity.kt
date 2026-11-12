@@ -147,7 +147,10 @@ class ShellActivity : ComponentActivity() {
         }
         feedback.view = window.decorView
         val fakeCompanion = CompanionPreview.fakeState(intent) // debug builds only: made-up state for the real second display
-        companion = CompanionHost(this, appearance.appearance) { fakeCompanion ?: CompanionState.Shell(shell.pcName, shell.companionGame) }
+        companion = CompanionHost(this, appearance.appearance) {
+            // A screen preview (debug builds) runs its own shell state: the window shows what that one publishes
+            fakeCompanion ?: (CompanionPreview.liveShell ?: shell).let { CompanionState.Shell(it.pcName, it.companionGame, it.companionHelp) }
+        }
     }
 
     override fun onNewIntent(intent: Intent) {

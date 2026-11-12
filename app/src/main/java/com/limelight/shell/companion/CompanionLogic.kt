@@ -26,6 +26,12 @@ object CompanionBurnIn {
     const val DIM_AFTER_MS = 60_000L
     const val DIM_ALPHA = .22f
 
+    /** While the settings help shows, someone is reading it with a controller in hand and no touch: it dims after five minutes (a new row's help restarts the time). */
+    const val DIM_AFTER_HELP_MS = 300_000L
+
+    /** How long the shell state rests before it dims: [DIM_AFTER_MS], or [DIM_AFTER_HELP_MS] while it shows the settings help. */
+    fun dimAfter(showsHelp: Boolean): Long = if (showsHelp) DIM_AFTER_HELP_MS else DIM_AFTER_MS
+
     /** Offset of a shift position in steps of [SHIFT_STEP_DP]: -1, 0 or 1 on each axis. */
     data class Shift(val x: Int, val y: Int)
 

@@ -70,6 +70,10 @@ import com.limelight.diag.DiagExport
 import com.limelight.diag.DiagLog
 import com.limelight.diag.DiagnosticReport
 import com.limelight.shell.LocalShell
+import com.limelight.shell.companion.CompanionHelp
+import com.limelight.shell.companion.PublishCompanionHelp
+import com.limelight.shell.companion.companionShowsHelp
+import com.limelight.shell.companion.hidesDescription
 import com.limelight.shell.Screen
 import com.limelight.shell.data.ProfileStore
 import com.limelight.shell.ui.LocalDelosColors
@@ -514,6 +518,16 @@ fun DebugInfoScreen() {
             }
         }
     }
+    // On a dual-screen device the second panel shows the focused row's description and details, large; the list then has the room of the panel (docs/DUAL_SCREEN.md)
+    val help = CompanionHelp(
+        identity = focused?.key ?: "debug",
+        icon = focused?.icon ?: Symbols.INFO,
+        title = focused?.label ?: stringResource(R.string.debug_title),
+        body = focused?.description ?: stringResource(R.string.debug_panel_default),
+        details = focused?.details,
+    )
+    PublishCompanionHelp(help)
+    val hideDescription = hidesDescription(companionShowsHelp(), help)
     Box(Modifier.fillMaxSize()) {
         if (compact) {
             // Compact: the title is smaller and sits under the status bar, the list takes the full width, the details are a dock under it
@@ -522,12 +536,14 @@ fun DebugInfoScreen() {
             Column(Modifier.fillMaxSize().padding(start = margin.px, end = margin.px, top = 184.px, bottom = SettingsLayout.bottom(stage.textScale).px),
                 verticalArrangement = Arrangement.spacedBy(HelpDockLayout.LIST_GAP.px)) {
                 list(Modifier.weight(1f).fillMaxWidth())
-                val dockHeight = HelpDockLayout.height(stage.stageHeight, 184f + 14f + SettingsLayout.SECTION_HEADING, SettingsLayout.bottom(stage.textScale), SettingsLayout.tallRow(stage))
-                HelpDock(Modifier.fillMaxWidth().height(dockHeight.px), focused?.icon ?: Symbols.INFO, focused?.label ?: stringResource(R.string.debug_title), focused?.key, false) {
-                    BasicText(focused?.description ?: stringResource(R.string.debug_panel_default),
-                        style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 21.tpx, lineHeight = 1.45.em))
-                    focused?.details?.let {
-                        BasicText(it, style = TextStyle(color = colors.text3, fontFamily = FontFamily.Monospace, fontSize = 16.tpx, lineHeight = 1.4.em))
+                if (!hideDescription) {
+                    val dockHeight = HelpDockLayout.height(stage.stageHeight, 184f + 14f + SettingsLayout.SECTION_HEADING, SettingsLayout.bottom(stage.textScale), SettingsLayout.tallRow(stage))
+                    HelpDock(Modifier.fillMaxWidth().height(dockHeight.px), focused?.icon ?: Symbols.INFO, focused?.label ?: stringResource(R.string.debug_title), focused?.key, false) {
+                        BasicText(focused?.description ?: stringResource(R.string.debug_panel_default),
+                            style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 21.tpx, lineHeight = 1.45.em))
+                        focused?.details?.let {
+                            BasicText(it, style = TextStyle(color = colors.text3, fontFamily = FontFamily.Monospace, fontSize = 16.tpx, lineHeight = 1.4.em))
+                        }
                     }
                 }
             }
@@ -536,7 +552,7 @@ fun DebugInfoScreen() {
                 modifier = Modifier.offset(150.px, 124.px))
             Row(Modifier.fillMaxSize().padding(start = 150.px, end = 150.px, top = 230.px, bottom = 110.px), horizontalArrangement = Arrangement.spacedBy(56.px)) {
                 list(Modifier.weight(1f))
-                DetailsPanel(focused, Modifier.width(520.px))
+                if (!hideDescription) DetailsPanel(focused, Modifier.width(520.px))
             }
         }
     }

@@ -3,9 +3,18 @@ package com.limelight.shell
 import android.content.Intent
 import android.view.KeyEvent
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import com.limelight.shell.companion.CompanionContent
 import com.limelight.shell.companion.CompanionGame
+import com.limelight.shell.companion.CompanionHelp
+import com.limelight.shell.companion.HelpBackdrop
+import com.limelight.shell.companion.HelpSwatch
+import com.limelight.shell.companion.helpSource
+import androidx.compose.ui.graphics.Color
+import com.limelight.shell.ui.Symbols
 import com.limelight.shell.companion.CompanionState
 import com.limelight.shell.companion.StreamCommands
 import com.limelight.shell.data.NativeHdr
@@ -38,6 +47,13 @@ internal object CompanionPreview {
      */
     fun fakeState(intent: Intent): CompanionState? = intent.getStringExtra("companion_fake")?.let { companionState(it) }
 
+    /**
+     * The shell of the screen preview that is running (`preview_screen settings` and the others run the real [Shell][com.limelight.shell.Shell]
+     * on a [PreviewWorld] with a shell state of its own): the companion window shows what that shell publishes, so a real second display can
+     * be tested with the settings screens of the previews. Null without a screen preview.
+     */
+    var liveShell: ShellState? by mutableStateOf(null)
+
     private fun game(running: Boolean, other: String?) = CompanionGame(
         key = "preview/1", name = "Asterfall", running = running, otherRunning = other, image = null, hue = 190f, hue2 = 255f,
         summary = "Trace a lost signal through a world that changes with every return.",
@@ -46,7 +62,40 @@ internal object CompanionPreview {
         onAction = { android.util.Log.i("CompanionPreview", "button $it") },
     )
 
+    private fun help(name: String): CompanionHelp = when (name) {
+        "help_short" -> CompanionHelp("preview/short", Symbols.SETTINGS, "Language", "The language of the app.")
+        "help_game" -> CompanionHelp(
+            "preview/game", Symbols.SPEED, "Video bitrate",
+            "Video bitrate in Mbps. Too high a value can stutter on a weak link; too low a value looks blocky. The PC's own line is the better guide.",
+            source = helpSource(true, Symbols.TUNE, "Custom for this game", "Profile: %s. Press X to go back to it.", "%s", "20 Mbps"),
+            impact = SettingImpact(ImpactLevel.LOW, ImpactLevel.MEDIUM, ImpactLevel.HIGH), savedNote = true,
+        )
+        "help_debug" -> CompanionHelp(
+            "preview/debug", Symbols.INFO, "Emulator 2D Display", "A display of this device, with its role and the signals that gave it.",
+            details = "id 8 · 1240 x 1080 · 420 dpi · 60.0 Hz\nstate ON\nflags PRESENTATION, SHOULD_SHOW_SYSTEM_DECORATIONS, TRUSTED\ntype text: VIRTUAL\nproduct info: none\npanel: companion",
+        )
+        "help_palette" -> CompanionHelp(
+            "preview/palette", Symbols.SETTINGS, "Palette", "The colors of the app.",
+            swatches = listOf(HelpSwatch(Color(0xFFFFB84D), "Main"), HelpSwatch(Color(0xFF45D6A8), "Secondary"), HelpSwatch(Color(0xFF9B8CFF), "Accent")),
+        )
+        "help_background" -> CompanionHelp(
+            "preview/background", Symbols.SETTINGS, "Game background", "A blurred picture of the focused game behind every screen.",
+            backdrop = HelpBackdrop("Game background", true, null, 190f, 255f, Symbols.SETTINGS, .6f),
+        )
+        else -> CompanionHelp(
+            "preview/long", Symbols.SETTINGS, "Video bitrate on metered networks",
+            "Bitrate on a metered network (mobile data, some hotspots). 0 uses a quarter of the normal bitrate.\n\nThe stream asks the host for this bitrate whenever the " +
+                "connection is metered; on Wi-Fi without a data limit the normal bitrate is used. Lower it when a plan is small, raise it when the link is fast " +
+                "and the plan is large. The change applies to the next stream, not to the one that runs.\n\nA higher bitrate costs more network and a little more " +
+                "decoding time; the picture gets less blocky in fast scenes, in dark gradients and in foliage, where compression shows first.",
+            impact = SettingImpact(ImpactLevel.LOW, ImpactLevel.MEDIUM, ImpactLevel.HIGH),
+            source = helpSource(false, Symbols.ACCOUNT_CIRCLE, "From profile", "Currently %s. Change it to set a value for this game only.", "%s", "1 Mbps"),
+            unavailable = true, savedNote = true,
+        )
+    }
+
     private fun companionState(name: String): CompanionState = when (name) {
+        "help", "help_long", "help_short", "help_game", "help_debug", "help_palette", "help_background" -> CompanionState.Shell("GAMING-PC", game(false, null), help(name))
         "shell_running" -> CompanionState.Shell("GAMING-PC", game(true, null))
         "shell_other" -> CompanionState.Shell("GAMING-PC", game(false, "Hades"))
         "idle" -> CompanionState.Shell("GAMING-PC")
