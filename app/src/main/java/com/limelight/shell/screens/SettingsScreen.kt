@@ -564,6 +564,7 @@ private fun settingsHelp(tab: SettingsTab, focused: SettingsItem?, appearance: A
         short = helpShort(focused?.description, body, title),
         section = res.getString(R.string.companion_help_settings_section, tab.label(res)),
         unavailable = focused?.enabled == false,
+        notice = focused?.key == com.limelight.shell.companion.CompanionDim.KEY_ENABLED && (rowValue as? RowValue.Choice)?.label == res.getString(R.string.common_off),
         value = (rowValue as? RowValue.Text)?.text,
         impact = focused?.impact,
         swatches = if (focused?.key == "ui_palette") listOf(

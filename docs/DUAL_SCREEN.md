@@ -195,91 +195,134 @@ reduced-motion setting. The system bars are hidden through `FLAG_FULLSCREEN` and
 can hide them through the insets controller. `CompanionContent(state)` is the one place the content is decided (next section).
 The keyboard needs no key focus: it injects key events, it takes none.
 
-## What the companion shows (variant A, "Details and actions")
+## What the companion shows (issue #76: useful extra content on EVERY screen, never scrolling)
 
-Approved prototype: `.gradle-agent/companion-proto/companion-A.html`. Header (Delos mark, PC name), then one of three states. All text is at least
-28 stage px and every touch target at least 64 stage px. The stage is planned from the companion's own display: 1240 x 1080 at 420 dpi is a
-1099 x 957 stage, 960 x 720 at 320 dpi is 1116 x 837, 1024 x 768 at 320 dpi is 1191 x 893. Below 920 stage px of height the stream state is
-"tight" (no small caps lines, tiles lay out flat with the icon beside the name).
+Approved prototype: `.gradle-agent/companion-proto2/companion-A2.html` with its `NOTES.md` (the A prototype, `companion-A.html`, stays the visual base of the stream
+state). The user's rule behind it: *the second display is EXTRA room for what helps the main screen, never a place for the main screens*, so the companion shows the
+focused item's details, an explanation, or a few touch buttons that run the controller's own paths, and **there is always something**: a screen without content of its own
+gets the fallback status card, never an empty "choose a game" card.
 
-| State | Content |
-|---|---|
-| **Shell** | the game focused on the main panel, live: banner (hero, else cover, else the placeholder hues) with name and summary, genre and theme pills, HLTB, native HDR, three impact chips (GPU, latency, network: the highest level of the game's effective stream settings, an estimate like the settings rows' chips), and big buttons. With nothing running: Start, Game settings. This game runs: Resume, Game settings. Another game runs: Resume that game, Quit it and start this one (red), Game settings. On a settings screen (Settings, a game's settings, Debug info) the **description of the focused row** instead, large (next section). No focused game and no settings screen (start screen): the Delos mark and a hint. |
-| **Stream** | heading (game, picture: resolution, frame rate, codec, HDR), FPS, network, decoding and the bitrate asked for, and the nine tiles of the stream menu in its order (Resume, Keyboard, Overlay, Brightness, Bitrate, Upscaler, More, Disconnect, Quit game); the last row is set apart. Resume tucks the tiles away (a quiet screen with Open stream menu). Brightness, Bitrate, Upscaler and More open a page over the tiles (sliders and steppers for a thumb; More: send keys, commands, clipboard, task manager, zoom, mouse mode, on-screen controls, Android keyboard, touch sensitivity). No confirmation dialogs anywhere. |
-| **Typing** | the Keyboard tile: five rows (digits, letters, Shift, #+= page, Space, arrows), Enter, Backspace, an echo of the newest 40 typed characters and Stream menu to go back. |
+### Rule 0: it never needs scrolling
 
-### The rule, and the settings help
+Every state fits completely in its panel, at every companion panel size (1240 x 1080 @ 420, 960 x 720 @ 300, 1024 x 768 @ 320, 720 x 720 @ 255, 960 x 640 @ 330),
+with text of at least 28 stage px, touch targets of at least 64 stage px and 48 px margins. There is no scroll container, scroll bar, edge fade or auto-scroll anywhere in
+the companion (the old scrolling help card is gone). What does not fit is **dropped by priority, shortened at a sentence boundary, or counted** ("+3 genres"); a visual
+shrinks in ratio (artwork keeps its own aspect and is never cropped). Two layers do it:
 
-The user's rule: *the smaller display is not for the important screens; the second panel is something EXTRA that helps the main one.* The shell
-(and so every list and every setting) stays on the main panel; the second panel carries what helps it: on Home the focused game's details, on the
-settings screens **the description of the focused row**, large, which is the box that used to take a third of the main screen.
+1. **`CompanionFit`** (pure, `CompanionFitTest` with worst-case data on all five shapes): the budgets of a panel (`FitBudget`: tall panels, 900 stage px of height and more
+   *after dividing by the interface scale*, get 5 body lines, 6 help lines, 4 genres, 5 hints, 6 facts and 5 error lines; short ones 3 / 3 / 2 / 2 / 4 / 2; the source block and
+   the recovery sentence are 2 lines everywhere), `summary` (the longest run of **complete leading sentences** that fits the line budget, else the authored short form, else
+   "See the main screen for details."), `chips` (first N and a count, one row), `top`, `title`/`alias` (a name that does not fit one line becomes "PC · 7C2A").
+   Text is measured with the real fonts (`rememberFit`), so a longer translation simply gets fewer sentences.
+2. **`FitColumn`** (`CompanionLayout.kt`), the net under the budgets: a page's blocks are measured, the optional ones (`Modifier.optional(priority)`) with the lowest
+   priority are dropped while the sum is taller than the card, a `Filler` or a `fills` block (hero, artwork) takes what is left. A page can never overflow, whatever the
+   language, the interface scale or the panel.
 
-| Main panel | Second panel |
-|---|---|
-| Home | the focused game: banner, pills, impact chips, Start / Resume / Game settings |
-| Settings (any tab) | the focused row: icon disc, name, the value's own detail ("720p", "Requests a 1280 x 720 stream."), the help; "Unavailable with the current settings or on this device" for a row that cannot be changed; the three impact chips of the row with their levels and "Cost of the current value: 1 bar low, 2 medium, 3 high"; a text row's text in the accent color; the three palette swatches for Color palette; the game-background preview for the three game-background rows. With nothing focused the tab's own description |
-| A game's settings | the same, plus where the value comes from (the violet "Custom for this game · Profile value: 720p · press X to go back to it" or "From profile · Currently 720p …", the value in bold) and "Saved automatically · applies next stream"; with Reset all focused the game's summary ("Your game, your settings", the count of custom settings) |
-| Debug info | the focused row's name, description and monospace details |
-| Settings search, Profile, stream, anything else | unchanged (the game, else the mark) |
+The panel is the companion's own stage (`LocalStage`, planned from its display) divided by the interface scale (text grows with it): 1240 x 1080 at 420 dpi is a 1099 x 957
+stage, at the default 115 % a 956 x 832 panel for the fit, i.e. a *short* one.
 
-**State.** `CompanionState.Shell(pcName, game, help)`: `help` is an immutable `CompanionHelp` (identity = the row's key, icon, title, body, optional
-source block, unavailable flag, text value, impact, swatches, game-background preview data, details, saved note), published by the settings screens
-with `PublishCompanionHelp` (a `SideEffect` like `PublishCompanionGame`, `ShellState.companionHelp`) and cleared when the screen leaves (a screen that
-is being replaced clears only what it published itself, so the next screen's help survives the transition). No composable crosses to the companion's
-composition: everything, down to the swatch colors and the preview bitmap, is data. **Which state wins** is the pure `shellView`: help over game over the
-idle mark (the settings screen is on top).
+### Pages, priorities and the fallback
 
-**The page** (`HelpContent`, `CompanionHelpContent.kt`): under the usual header (mark, PC) one glass card with 48 px outside margins and 24 px between blocks, ONE
-scrolling column inside (finger scroll, a fade at an edge only while the page continues behind it, and a slim scroll bar at the right, because a next line
-that still lies out of sight leaves nothing to fade). The disc is 112 px, the name 40 px, the text 30 px with a 1.45 line height, everything else 28 px (the
-companion's minimum). It follows the focus live with a short crossfade between rows (`Motion.FADE`; snapped with reduced motion); the update of one row (a
-value that changed) does not fade. It does not dim for five minutes (a new row's help restarts the time; the game details dim after one) because on a
-settings screen it is the only place the description is.
+The shell's companion window shows ONE page: `CompanionState.Shell(pcName, published, context)` carries what the shell's screens have published, `chooseShellPage` takes
+the page of the highest `PagePriority` (overlay 300: launch, portal, result, problem, report; modal 200: the filter sheets; screen 100: the focused item of the screen and
+the settings help; game 50: Home's focused game) and, with nothing published, the **welcome card** (no PC is paired) or the **fallback card**. Pages are immutable data with
+the callbacks of their touch buttons (owner side, the same code paths as the controller); a page draws itself (`CompanionPage.Content`), and a new key crossfades
+(`Motion.FADE`, snapped with reduced motion) while the same key is an update (a value, a clock) and does not.
 
-**The main panel while a window shows the help**: the description (the 520 px panel at 16:9, the dock when compact) is not drawn and the list takes its room
-(full content width, or full height down to the hint bar), with the screen's own margins; when the window goes (display removed, swapped, closed) the panel comes
-back at once. "Showing" is real: `CompanionSession.showsHelp` is snapshot state set by the window's own composition (`HelpContent`, keyed by the activity,
-cleared when the page leaves, the help is gone or the window is destroyed; a late clear from an old window never clears the next one's), and the screens ask
-`hidesDescription(windowShowsHelp, help)`, so a second display that exists but has no window yet, a refused launch and a window on its way out all keep the
-description on the main panel. A device with no companion display never differs from before (identity checked at 1920 x 1080 @ 369).
+| Screen on the main panel | Page | What it shows (data from the screen's own state), buttons |
+|---|---|---|
+| **Start**, **Devices** (focused PC circle) | `PcPage` | the PC's name (or its alias), status (online / asleep and wakes up / offline), connected and default flags, host software (derived: GeForce Experience, Vibepollo when it advertises PyroWave, else Sunshine-based; version and last seen are "unavailable": the app does not store them), the host name when the user renamed the PC, the running game, the number of apps (cached ones for an offline PC), saved MAC yes/no; 6 tall / 4 short facts, each unknown one carries its own label. Buttons: Library (connect, primary) or Wake PC (offline/asleep with a saved MAC, `DeviceActions.wake`) or Search (no MAC: `rescan`, and the sentence that says why), Rename, Set/Clear default, Unpair (Devices, online only) and, below a rule, Remove PC (immediate, no confirmation); the line "Main: A Connect · N more hints" is built from the main hint bar |
+| **Pair a PC** | `PairHostPage`, `PairInfoPage` | the focused host (discovered / paired; software only when known) with Pair with PIN (`actions.pair`) and Use code (`pairWithCode`); the address and search circles explain themselves (Search again runs `rescan`) |
+| **Pairing** (`Screen.Pin`) | `PinPage`, `CodePage`, `PairResultPage` | the PIN in very large digits (scaled to the box, never wrapped) with the instruction and the PC's name, readable across a desk; Cancel pairing; the one-time-code flow shows the instruction and "the companion never repeats the passphrase" (the passphrase is never published); after the PC accepted: Pairing complete with Open library / Back to hosts (visible for the 900 ms the screen stays) |
+| **Home** with games | `GamePage` | the focused game: banner (hero, else cover, else placeholder hues), name, genres (4 tall / 2 short and a count), HLTB and native HDR, the three impact chips, Start / Resume / Settings (or Resume that game, Quit and start, Settings) |
+| **Home** without games | `PcPage`, `LibraryNoticePage` | offline library: the PC card with Wake or Search and Rename; loading: "Reading the library" with Back to PCs; no PC; an empty library: "No applications" with Reconnect PC and PC details (a filtered-out library is the filter page's) |
+| **Artwork** | `ArtworkPage` | the focused image large at its own ratio (the thumbnail the tile already decoded, never cropped) with size · type, score, author, added, In use and Use this image (the tile's own `apply`); the first choice shows its source lines, built-in artwork the wide image |
+| **Library filters**, **Artwork filters** (sheets) | `FilterPage` | the active filters as up to 3 chips and "+N", the count of matching items, "Change criteria on the main display." and Reset filters (primary, only while filters are active; the sheet's own reset, that tab only; the sheet stays open) |
+| **Profile**, **Create profile**, **Boot** | `ProfilePage`, `CreateProfilePage`, `BootPage` | avatar, name, custom settings and per-game overrides (counted once per profile, off the main thread), default PC / the live draft ("not saved") / the explanation of the first-run step with its real hints (B only when Boot can go back); read-only, edits stay on the main display |
+| **Launch** (portal, `shell.launch`), **stream start** | `LoaderPage`, `PortalPage` | "Starting <game>", the PC and the requested picture, named steps with done / current / pending marks (Host found, Launch request accepted, Waiting for video, Stream ready; no invented percentage; short panels fold trailing steps into "+1 pending"); Cancel only while cancellation really exists. The loader never dims (`keepsAwake`) and has the same key in the shell and in the stream activity (`CompanionHost.forStream`: `onLaunchAccepted` / `onConnectionStarted` / `onLoaderDone`), so the hand-over is an update, not a fade |
+| **Stream result**, **problem**, **report card** | `ResultPage`, `ProblemPage`, `ReportPage` | the result's title and sentence cut at a sentence boundary (never claims the game stopped), the first line of the details (stage, error code), the recovery sentence, Reconnect / Try again and Back (the very callbacks of `StreamResultLayer`), Report / Dismiss of the report card |
+| **Settings**, **a game's settings**, **Debug info** (focused row) | `SettingsHelpPage` | see "The settings help" |
+| **Any other screen** (Settings search, the on-screen controls preview, and every route added later) | `FallbackPage` | the screen's title and one-line purpose, the connected PC with its status and running game, the clock and the battery, and what the controller does here: the entries of the **very list the main hint bar draws** (`ShellState.companionContext`, published by `PublishCompanionContext` from `Shell`; 5 tall / 2 short, then "More hints on the main display: N") |
+| **No PC paired yet** | `WelcomePage` | a short welcome and the one thing to do |
+| **Stream** | `StreamContent`, `TypingContent` | statistics, the nine stream-menu tiles and their pages, the keyboard (below) |
+
+`contentKind(screen)`, `screenTitle` and `screenPurpose` are exhaustive `when`s over `Screen`: a route added to the shell does not compile until it is placed, and
+`ContentKind.FALLBACK` is a valid place (`CompanionRoutesTest`), so a new screen cannot silently leave the companion empty.
+
+### The settings help (Settings, a game's settings, Debug info)
+
+`SettingsHelpPage` (`CompanionHelpContent.kt`), published by the three settings screens with `PublishCompanionHelp(CompanionHelp)` (identity = the row's key, so a changed
+value updates the same page and does not fade). One glass card, no scrolling: heading (disc with the row's icon, the row's name, the small line "Settings · Display" /
+"Game settings" / "Debug info"; a title too long for one line moves the section into the heading and the name under it), the **source block** of a per-game row (violet "Custom for
+this game · Profile value: 720p …" or neutral "From profile …", 2 lines, **always kept**), the body, the text value in the accent color, the palette's three swatches, the
+game-background preview (a proportional box that takes the leftover height), Debug info's monospace details (bounded, "+N lines"), "Unavailable with the current settings or on this
+device", "Saved automatically · applies next stream", and the **three impact chips always at the bottom** (dashes for a row without a stream cost). The body is
+`CompanionFit.summary(full, short, helpLines, …)`: complete leading sentences within 6 lines (3 on a short panel), else `CompanionHelp.short` (an authored short form the screens
+derive from the catalog summary, the first help sentence or the row title), else "See the main screen for details." `CompanionHelp.notice` sets the body in the warm notice color (a setting
+whose Off state costs something: idle dimming Off). The full text stays on the main panel's own description.
+
+**The main panel while a window shows the help** is unchanged: the description (the 520 px panel at 16:9, the dock when compact) is not drawn and the list takes its room; "showing" is
+real: `CompanionSession.showsHelp` is set by the window's own composition (`PageHost`, only while the *shown page* is a settings help, keyed by the activity and cleared when the page
+leaves, the help is gone or the window is destroyed), and the screens ask `hidesDescription(windowShowsHelp, help)`. A second display that exists but has no window yet, a refused launch and a
+window on its way out all keep the description on the main panel. A device with no companion display never differs from before.
 
 ### State in, commands out
 
-One-way, immutable state in: `CompanionState.Shell(pcName, game: CompanionGame?)` and `CompanionState.Stream(pcName, gameName, stats, commands)`.
-The host reads the owner's lambda inside composition, so snapshot state held in it updates the window live.
+One-way, immutable state in: `CompanionState.Shell(pcName, published, context)` and `CompanionState.Stream(pcName, gameName, stats, commands, start)`. The host reads the owner's
+lambda inside composition, so snapshot state held in it updates the window live.
 
-- **Shell**: `ShellState.companionGame` is published by `PublishCompanionGame` (one line in `HomeScreen.GameLibrary`, next to the focused game's
-  metadata and artwork it already has) and cleared when Home leaves composition. `CompanionGame.onAction(ShellButton)` runs the controller's own
-  paths: `GameActions.start` (starts or resumes), `quitAndStart`, `Screen.GameSettings`. The companion never launches anything by itself.
-- **Stream**: `StreamCommands(menu, sendKey)`. `menu` is the **same `StreamMenuHost`** the stream menu on the main panel is built on
-  (`StreamMenu.companionMenu()` is `GameHost` without a menu window: dismiss and blur do nothing, brightness applies to the stream's window), so every tile calls the
-  handler of its twin. The menu's getters are not observable: the screen reads them again after every command and once a second. Keys go
-  through `KeyBoardLayoutController.sendKeyEvent` (made static), the one path every Full keyboard key takes: Down when the finger lands, Up when it
-  lifts, Shift held around a shifted character (US layout, `KeyMap`). `DelosStreamActivity` binds it (`companionHost.bindStream(streamMenu)`).
+- **Shell**: every screen or layer publishes its page with `PublishCompanionPage(page)` (a token per publisher, so a screen that is being replaced clears only what it published
+  itself, never the next screen's page); `ShellState.companionPages` holds them, `ShellState.companionContext` the title, purpose, hints and connected PC for the fallback card.
+  `CompanionGame.onAction(ShellButton)` runs the controller's own paths: `GameActions.start` (starts or resumes), `quitAndStart`, `Screen.GameSettings`; the PC pages run `DeviceActions`
+  (`connect`, `wake`, `rename`, `setDefault`, `unpair`, `remove`, `rescan`, `pair`, `pairWithCode`, `paired`), the filter pages the sheets' own reset, the result pages `retryStream` /
+  `dismissResult`. The companion never launches anything by itself and asks nothing: no confirmation dialogs anywhere.
+- **Stream**: `StreamCommands(menu, sendKey)`. `menu` is the **same `StreamMenuHost`** the stream menu on the main panel is built on (`StreamMenu.companionMenu()` is `GameHost`
+  without a menu window: dismiss and blur do nothing, brightness applies to the stream's window), so every tile calls the handler of its twin. The menu's getters are not
+  observable: the screen reads them again after every command and once a second. Keys go through `KeyBoardLayoutController.sendKeyEvent` (made static), the one path every Full
+  keyboard key takes: Down when the finger lands, Up when it lifts, Shift held around a shifted character (US layout, `KeyMap`). `DelosStreamActivity` binds it
+  (`companionHost.bindStream(streamMenu)`). The stream's own pages follow Rule 0 too: the tiles are a 3 x 3 grid (flat tiles on a short panel), the sheets (Brightness, Bitrate,
+  Upscaler, More, Send keys, Commands, Mouse) are the same card with the optional caption lines dropped first, and long lists (the 30 special keys, the PC's commands, More) are
+  **paged** with Previous / Next and "2 / 3" (`CompanionPaging`), never scrolled; the keyboard keeps 64 px keys and a one-line echo.
 - **Statistics**: `DelosStreamActivity.onPerfStats` hands the snapshot the panel already gets to `CompanionHost.onStats` on the decoder thread; it is
   dropped there when no companion window exists and when it comes sooner than 2 Hz after the last one (`StatsThrottle`), then posted to the main thread.
-  Nothing is computed again.
+  Nothing is computed again. Until the first statistics (or the loader's end) the stream state shows the loader page.
 
-### Burn-in policy (AMOLED panels)
+### Burn-in policy (AMOLED panels) and the idle-dimming setting
 
 `CompanionBurnIn`, deliberately simple: (1) **pixel shift**: all content moves by 3 dp every 2 minutes along a fixed serpentine path over a 3 x 3 grid (an
-18-minute cycle), so no edge stays on the same pixels; (2) **dim**: in the **shell state** the content fades to 22 % after 60 s without a touch; the touch that wakes it is
-swallowed (waking never presses a button). A stream is not dimmed: someone is looking at the menu, and the statistics change.
-The dim timer is armed from the last touch (no polling). Unverified: that this is enough for a real AMOLED over months.
-While the settings help shows the dim comes after five minutes instead of one (`CompanionBurnIn.dimAfter`), and a new row's help restarts the time: on a
-settings screen the page is the only place the description is, so it is not to go dark under someone reading it with a controller in hand.
+18-minute cycle), so no edge stays on the same pixels; it is **always on**, whatever the setting says; (2) **dim**: in the **shell state** the content fades to 22 % after the user's
+delay without a touch; the touch that wakes it is swallowed (waking never presses a button). A stream is not dimmed (someone is looking at the menu and the statistics change) and
+neither is a loader that is still waited at (`CompanionPage.keepsAwake`). The dim timer is armed from the last touch (no polling); a new page counts like a touch, so a controller
+moving the focus on the main panel keeps the second panel bright. Unverified: that this is enough for a real AMOLED over months.
+
+**Settings > Display** (only while a companion display exists, the same visibility as the Main screen row it sits next to): *Dim the second screen when idle* (On / Off, default
+**On** because of OLED burn-in; its help says that Off can burn the panel in and that a touch wakes it without pressing a button) and *Dim after* (1 / 2 / 5 / 10 minutes,
+default 1, hidden while Off), replacing the old hard-coded 60 s / 5 min. Device-wide, in the default shared preferences like the other display settings
+(`display_companion_dim`, `display_companion_dim_minutes`, `CompanionDim`); the window follows them live (`rememberDimPolicy`); Debug info > Displays shows
+`companion dimming: On, after N min` / `Off` in the companion display's details. `CompanionLogicTest` and `CompanionDimSettingTest` cover both settings.
 
 ### Debug previews
 
-`--es preview_screen companion --es preview_state <shell|shell_running|shell_other|idle|stream|typing|help|help_long|help_short|help_game|help_debug|help_palette|help_background> [--es preview_sheet <brightness|bitrate|upscaler|more|keys|commands|mouse>]`
-on `ShellActivity`, combined with `--es preview_shape <W>x<H>@<dpi>` for the panel's shape (fake data, `CompanionPreview` in `src/debug`). To see the **real**
-companion window on the emulator's second display with the normal shell on the main one: `--es companion_fake <state>` on the launch of `ShellActivity`
-(the owner then hands the window that fake state), with Second display = Part of the device as below. The screenshot of that display is
-`adb -s <device> emu screenrecord screenshot --display 1 <dir>` (`screencap -d` does not take the virtual display's id).
-The screen previews (`preview_screen settings`, `game_options`, `debug_info`, ...) run the real shell on a state of their own: with a real second display
-the window shows what **that** shell publishes (`CompanionPreview.liveShell`) in the appearance of that shell (`CompanionPreview.liveAppearance`: theme, palette,
-Material You and scale follow the preview's own Settings live, as the real shell's window follows the real store), so the settings help can be driven live
-with the D-pad of the main display (`adb -s <device> shell input keyevent KEYCODE_DPAD_DOWN`). `--es companion_fake help_long` (and the other `help*` states) puts a made-up help on the window instead.
+`--es preview_screen companion --es preview_state <name> [--es preview_sheet <brightness|bitrate|upscaler|more|keys|commands|mouse>]` on `ShellActivity`, combined with
+`--es preview_shape <W>x<H>@<dpi>` for the panel's shape, draws the companion's content alone with made-up data (`CompanionPreview` and `CompanionFakes*` in `src/debug`). The names:
+
+| Area | `preview_state` / `companion_fake` names |
+|---|---|
+| PCs | `start_online` `start_asleep` `start_offline` `start_offline_wake` `devices` `worst_pc` `pair_list` `pair_pin` `pair_code` `pair_result` `home_offline` `home_empty` `home_loading` |
+| Content | `artwork` `artwork_filter` `library_filter` `library_filter_none` `profile` `create_profile` `boot` |
+| Launch and results | `loader` `loader_short` `loader_started` `loader_launching` `portal` `portal_closing` `result` `result_disconnected` `problem` `worst_error` `report` |
+| Home, help, stream | `shell` `shell_running` `shell_other` `worst_genres` `help` `help_long` `help_short` `help_game` `help_unavailable` `help_debug` `help_palette` `help_background` `worst_help` `stream` `typing` |
+| Neither | `fallback` (also `idle`) `welcome` |
+
+To see the **real** companion window on the emulator's second display with the normal shell on the main one: `--es companion_fake <name>` on the launch of `ShellActivity`
+(the owner then hands the window that fake state), with Second display = Part of the device as below; the fakes' buttons write to `adb logcat -s CompanionPreview` instead of
+doing anything. The screenshot of that display is `adb -s <device> emu screenrecord screenshot --display 1 <dir>` (`screencap -d` does not take the virtual display's id).
+The screen previews (`preview_screen start|devices|pair|pair_pc|artwork|filter|profile|create_profile|boot|loader|result|problem|settings|game_options|debug_info|home`, ...) run the real
+shell on a state of their own (`loader` and `result` publish through the same overlay publisher): with a real second display the window shows what **that** shell publishes
+(`CompanionPreview.liveShell`) in the appearance of that shell (`CompanionPreview.liveAppearance`: theme, palette, Material You and scale follow the preview's own Settings live, as
+the real shell's window follows the real store), so every screen can be driven live with the D-pad of the main display (`adb -s <device> shell input keyevent KEYCODE_DPAD_DOWN`).
+The Odin's **Screen shape simulator** (Settings > About > Debug info) draws the very same `CompanionContent` next to the shell in a second panel's shape (Thor, RG DDS, ...), fed with
+the pages the simulated shell publishes.
 
 ## How to test the companion on the emulator
 
