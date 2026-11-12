@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="companion_art_subtitle">選択中の画像 · 元の縦横比</string>
+    <string name="companion_art_use">この画像を使う</string>
+    <string name="companion_art_score">スコア %1$d</string>
+    <string name="companion_art_added">追加日 %1$s</string>
+    <string name="companion_art_size_file">%1$d × %2$d · %3$s</string>
+    <string name="companion_art_builtin">内蔵アートワーク</string>
+    <string name="companion_filter_library_title">ライブラリのフィルター</string>
+    <string name="companion_filter_art_title">画像のフィルター</string>
+    <string name="companion_filter_sub">メイン画面のフィルターの概要</string>
+    <string name="companion_filter_none">有効なフィルターなし</string>
+    <string name="companion_filter_more">+%1$d</string>
+    <string name="companion_filter_change_main">条件はメイン画面で変更します。</string>
+    <string name="companion_profile_current">現在のプロフィール</string>
+    <string name="companion_profile_line_both">%1$s · %2$s。</string>
+    <string name="companion_profile_line_one">%1$s。</string>
+    <string name="companion_profile_defaults">初期設定を使用中です。</string>
+    <string name="companion_profile_default_pc">デフォルトのPC: %1$s。</string>
+    <string name="companion_profile_edit_main">編集はメイン画面で行います。</string>
+    <string name="companion_create_draft">プロフィールの下書き · 未保存</string>
+    <string name="companion_create_choose">アバターと名前はメイン画面で選びます。</string>
+    <string name="companion_create_no_account">アカウントは不要です。</string>
+    <string name="companion_boot_sub">初回起動 · 追加スペース</string>
+    <string name="companion_boot_text">ライブラリ、設定、ストリームはメイン画面にあります。このパネルは便利な情報とタッチ操作を追加します。メイン画面で「始める」を選んでください。</string>
+    <string name="companion_boot_hint_begin">メイン画面で始める</string>
+    <plurals name="companion_filter_games_of">
+        <item quantity="other">%2$d個のゲームのうち%1$d個が一致します。</item>
+    </plurals>
+    <plurals name="companion_filter_games_all">
+        <item quantity="other">すべてのゲーム（%1$d個）。</item>
+    </plurals>
+    <plurals name="companion_filter_images_of">
+        <item quantity="other">%2$d枚中%1$d枚が一致します。</item>
+    </plurals>
+    <plurals name="companion_filter_images_all">
+        <item quantity="other">すべての画像（%1$d枚）。</item>
+    </plurals>
+    <plurals name="companion_filter_images_some">
+        <item quantity="other">%1$d枚が一致します。</item>
+    </plurals>
+    <plurals name="companion_profile_settings">
+        <item quantity="other">カスタム設定%1$d件</item>
+    </plurals>
+    <plurals name="companion_profile_overrides">
+        <item quantity="other">ゲーム別の設定%1$d件</item>
+    </plurals>
+</resources>

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="companion_art_subtitle">Вибране зображення · власні пропорції</string>
+    <string name="companion_art_use">Використати це зображення</string>
+    <string name="companion_art_score">Оцінка %1$d</string>
+    <string name="companion_art_added">Додано %1$s</string>
+    <string name="companion_art_size_file">%1$d × %2$d · %3$s</string>
+    <string name="companion_art_builtin">Вбудоване зображення</string>
+    <string name="companion_filter_library_title">Фільтри бібліотеки</string>
+    <string name="companion_filter_art_title">Фільтри зображень</string>
+    <string name="companion_filter_sub">Підсумок головної панелі фільтрів</string>
+    <string name="companion_filter_none">Немає активних фільтрів</string>
+    <string name="companion_filter_more">+%1$d</string>
+    <string name="companion_filter_change_main">Критерії змінюй на головному екрані.</string>
+    <string name="companion_profile_current">Поточний профіль</string>
+    <string name="companion_profile_line_both">%1$s · %2$s.</string>
+    <string name="companion_profile_line_one">%1$s.</string>
+    <string name="companion_profile_defaults">Використовує типові налаштування.</string>
+    <string name="companion_profile_default_pc">ПК за замовчуванням: %1$s.</string>
+    <string name="companion_profile_edit_main">Редагування лишається на головному екрані.</string>
+    <string name="companion_create_draft">Чернетка профілю · не збережено</string>
+    <string name="companion_create_choose">Аватар і ім’я обирай на головному екрані.</string>
+    <string name="companion_create_no_account">Обліковий запис не потрібен.</string>
+    <string name="companion_boot_sub">Перший запуск · додатковий простір</string>
+    <string name="companion_boot_text">Головний екран містить бібліотеку, налаштування й трансляцію. Ця панель додає корисні відомості та сенсорне керування. Обери «Почати» на головному екрані.</string>
+    <string name="companion_boot_hint_begin">Почати на головному</string>
+    <plurals name="companion_filter_games_of">
+        <item quantity="one">Підходить %1$d із %2$d гри.</item>
+        <item quantity="few">Підходить %1$d із %2$d ігор.</item>
+        <item quantity="many">Підходить %1$d із %2$d ігор.</item>
+        <item quantity="other">Підходить %1$d із %2$d ігор.</item>
+    </plurals>
+    <plurals name="companion_filter_games_all">
+        <item quantity="one">Усього %1$d гра.</item>
+        <item quantity="few">Усього %1$d гри.</item>
+        <item quantity="many">Усього %1$d ігор.</item>
+        <item quantity="other">Усього %1$d гри.</item>
+    </plurals>
+    <plurals name="companion_filter_images_of">
+        <item quantity="one">Підходить %1$d із %2$d зображення.</item>
+        <item quantity="few">Підходить %1$d із %2$d зображень.</item>
+        <item quantity="many">Підходить %1$d із %2$d зображень.</item>
+        <item quantity="other">Підходить %1$d із %2$d зображень.</item>
+    </plurals>
+    <plurals name="companion_filter_images_all">
+        <item quantity="one">Усього %1$d зображення.</item>
+        <item quantity="few">Усього %1$d зображення.</item>
+        <item quantity="many">Усього %1$d зображень.</item>
+        <item quantity="other">Усього %1$d зображення.</item>
+    </plurals>
+    <plurals name="companion_filter_images_some">
+        <item quantity="one">Підходить %1$d зображення.</item>
+        <item quantity="few">Підходять %1$d зображення.</item>
+        <item quantity="many">Підходить %1$d зображень.</item>
+        <item quantity="other">Підходить %1$d зображення.</item>
+    </plurals>
+    <plurals name="companion_profile_settings">
+        <item quantity="one">%1$d власне налаштування</item>
+        <item quantity="few">%1$d власні налаштування</item>
+        <item quantity="many">%1$d власних налаштувань</item>
+        <item quantity="other">%1$d власного налаштування</item>
+    </plurals>
+    <plurals name="companion_profile_overrides">
+        <item quantity="one">%1$d налаштування для гри</item>
+        <item quantity="few">%1$d налаштування для ігор</item>
+        <item quantity="many">%1$d налаштувань для ігор</item>
+        <item quantity="other">%1$d налаштування для ігор</item>
+    </plurals>
+</resources>

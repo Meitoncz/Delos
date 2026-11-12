@@ -8,6 +8,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
+import com.limelight.shell.companion.ProfilePage
+import com.limelight.shell.companion.PublishCompanionPage
+import com.limelight.shell.companion.customSettingCount
+import com.limelight.shell.settings.GameSettingsStore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.dropShadow
@@ -55,7 +63,7 @@ import com.limelight.R
 
 /** `#scr-profile`: the current profile with its avatar, and changing, renaming, switching or adding one. */
 @Composable
-fun ProfileScreen(profiles: Profiles, store: ProfileStore) {
+fun ProfileScreen(profiles: Profiles, store: ProfileStore, defaultPcName: String? = null) {
     val res = textResources()
     val colors = LocalDelosColors.current
     val stage = LocalStage.current
@@ -66,6 +74,15 @@ fun ProfileScreen(profiles: Profiles, store: ProfileStore) {
     val profile = profiles.current ?: return
     val first = remember { FocusRequester() }
     InitialFocus(first)
+    // Counted once per profile off the main thread (the keys of its stored settings), never on a recomposition
+    val counts by produceState<Pair<Int, Int>?>(null, profile.id) {
+        value = withContext(Dispatchers.Default) {
+            val all = store.settings().all
+            val defaults = store.catalog.all.mapNotNull { spec -> spec.default?.let { spec.key to it } }.toMap()
+            customSettingCount(all, defaults) to GameSettingsStore.overriddenGameCount(all)
+        }
+    }
+    PublishCompanionPage(remember(profile.name, profile.avatar, counts, defaultPcName) { ProfilePage(profile.name, profile.look, counts?.first, counts?.second, defaultPcName) })
     CenterColumn(gap = 54f) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(18.px)) {
             val k = stage.dpPerPx * density

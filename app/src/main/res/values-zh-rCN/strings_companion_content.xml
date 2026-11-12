@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="companion_art_subtitle">当前图片 · 原始比例</string>
+    <string name="companion_art_use">使用此图片</string>
+    <string name="companion_art_score">评分 %1$d</string>
+    <string name="companion_art_added">添加于 %1$s</string>
+    <string name="companion_art_size_file">%1$d × %2$d · %3$s</string>
+    <string name="companion_art_builtin">内置图片</string>
+    <string name="companion_filter_library_title">游戏库筛选</string>
+    <string name="companion_filter_art_title">图片筛选</string>
+    <string name="companion_filter_sub">主屏幕筛选面板摘要</string>
+    <string name="companion_filter_none">无已启用的筛选</string>
+    <string name="companion_filter_more">+%1$d</string>
+    <string name="companion_filter_change_main">请在主屏幕上更改条件。</string>
+    <string name="companion_profile_current">当前个人资料</string>
+    <string name="companion_profile_line_both">%1$s · %2$s。</string>
+    <string name="companion_profile_line_one">%1$s。</string>
+    <string name="companion_profile_defaults">正在使用默认设置。</string>
+    <string name="companion_profile_default_pc">默认电脑：%1$s。</string>
+    <string name="companion_profile_edit_main">编辑请在主屏幕上进行。</string>
+    <string name="companion_create_draft">个人资料草稿 · 未保存</string>
+    <string name="companion_create_choose">请在主屏幕上选择头像和名称。</string>
+    <string name="companion_create_no_account">无需账号。</string>
+    <string name="companion_boot_sub">首次运行 · 额外空间</string>
+    <string name="companion_boot_text">库、设置和串流都在主屏幕上。此面板提供实用详情和触控操作。请在主屏幕上选择开始使用。</string>
+    <string name="companion_boot_hint_begin">在主屏幕上开始</string>
+    <plurals name="companion_filter_games_of">
+        <item quantity="other">%2$d 个游戏中有 %1$d 个符合条件。</item>
+    </plurals>
+    <plurals name="companion_filter_games_all">
+        <item quantity="other">全部 %1$d 个游戏。</item>
+    </plurals>
+    <plurals name="companion_filter_images_of">
+        <item quantity="other">%2$d 张图片中有 %1$d 张符合条件。</item>
+    </plurals>
+    <plurals name="companion_filter_images_all">
+        <item quantity="other">全部 %1$d 张图片。</item>
+    </plurals>
+    <plurals name="companion_filter_images_some">
+        <item quantity="other">%1$d 张图片符合条件。</item>
+    </plurals>
+    <plurals name="companion_profile_settings">
+        <item quantity="other">%1$d 项自定义设置</item>
+    </plurals>
+    <plurals name="companion_profile_overrides">
+        <item quantity="other">%1$d 项游戏单独设置</item>
+    </plurals>
+</resources>

@@ -651,7 +651,7 @@ fun Shell(
                         Screen.Home -> HomeScreen(library, appearance, repo, profileStore, openMetadata)
                         Screen.Settings -> SettingsScreen(appearance, update, startup, startupStore::update, pcs, profileStore)
                         Screen.SettingsSearch -> SettingsScreen(appearance, update, startup, startupStore::update, pcs, profileStore, search = true)
-                        Screen.Profile -> ProfileScreen(profiles, profileStore)
+                        Screen.Profile -> ProfileScreen(profiles, profileStore, pcs.firstOrNull { it.uuid == startup.defaultPc }?.name)
                         Screen.Devices -> DevicesScreen(pcs, pc?.uuid)
                         Screen.Start -> StartScreen(profiles, profileStore, pcs, startup)
                         is Screen.Boot -> BootScreen(

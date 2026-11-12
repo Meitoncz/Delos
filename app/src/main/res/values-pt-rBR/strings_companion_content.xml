@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="companion_art_subtitle">Imagem em foco · proporção original</string>
+    <string name="companion_art_use">Usar esta imagem</string>
+    <string name="companion_art_score">Nota %1$d</string>
+    <string name="companion_art_added">Adicionada em %1$s</string>
+    <string name="companion_art_size_file">%1$d × %2$d · %3$s</string>
+    <string name="companion_art_builtin">Imagem integrada</string>
+    <string name="companion_filter_library_title">Filtros da biblioteca</string>
+    <string name="companion_filter_art_title">Filtros de imagens</string>
+    <string name="companion_filter_sub">Resumo do painel de filtros principal</string>
+    <string name="companion_filter_none">Nenhum filtro ativo</string>
+    <string name="companion_filter_more">+%1$d</string>
+    <string name="companion_filter_change_main">Mude os critérios na tela principal.</string>
+    <string name="companion_profile_current">Perfil atual</string>
+    <string name="companion_profile_line_both">%1$s · %2$s.</string>
+    <string name="companion_profile_line_one">%1$s.</string>
+    <string name="companion_profile_defaults">Usa as configurações padrão.</string>
+    <string name="companion_profile_default_pc">PC padrão: %1$s.</string>
+    <string name="companion_profile_edit_main">As edições ficam na tela principal.</string>
+    <string name="companion_create_draft">Rascunho de perfil · não salvo</string>
+    <string name="companion_create_choose">Escolha um avatar e um nome na tela principal.</string>
+    <string name="companion_create_no_account">Não é preciso ter uma conta.</string>
+    <string name="companion_boot_sub">Primeira execução · espaço extra</string>
+    <string name="companion_boot_text">A tela principal mostra a biblioteca, as configurações e o stream. Este painel acrescenta detalhes úteis e controles por toque. Escolha Começar na tela principal.</string>
+    <string name="companion_boot_hint_begin">Começar na principal</string>
+    <plurals name="companion_filter_games_of">
+        <item quantity="one">%1$d de %2$d jogo corresponde.</item>
+        <item quantity="many">%1$d de %2$d jogos correspondem.</item>
+        <item quantity="other">%1$d de %2$d jogos correspondem.</item>
+    </plurals>
+    <plurals name="companion_filter_games_all">
+        <item quantity="one">%1$d jogo no total.</item>
+        <item quantity="many">%1$d jogos no total.</item>
+        <item quantity="other">%1$d jogos no total.</item>
+    </plurals>
+    <plurals name="companion_filter_images_of">
+        <item quantity="one">%1$d de %2$d imagem corresponde.</item>
+        <item quantity="many">%1$d de %2$d imagens correspondem.</item>
+        <item quantity="other">%1$d de %2$d imagens correspondem.</item>
+    </plurals>
+    <plurals name="companion_filter_images_all">
+        <item quantity="one">%1$d imagem no total.</item>
+        <item quantity="many">%1$d imagens no total.</item>
+        <item quantity="other">%1$d imagens no total.</item>
+    </plurals>
+    <plurals name="companion_filter_images_some">
+        <item quantity="one">%1$d imagem corresponde.</item>
+        <item quantity="many">%1$d imagens correspondem.</item>
+        <item quantity="other">%1$d imagens correspondem.</item>
+    </plurals>
+    <plurals name="companion_profile_settings">
+        <item quantity="one">%1$d configuração personalizada</item>
+        <item quantity="many">%1$d configurações personalizadas</item>
+        <item quantity="other">%1$d configurações personalizadas</item>
+    </plurals>
+    <plurals name="companion_profile_overrides">
+        <item quantity="one">%1$d configuração por jogo</item>
+        <item quantity="many">%1$d configurações por jogo</item>
+        <item quantity="other">%1$d configurações por jogo</item>
+    </plurals>
+</resources>

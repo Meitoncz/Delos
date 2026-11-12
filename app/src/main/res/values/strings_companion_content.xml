@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Small line under the title of the companion's artwork card (the picture is shown at its own aspect ratio) -->
+    <string name="companion_art_subtitle">Focused image · own ratio</string>
+    <!-- Touch button of the companion's artwork card: does what A does on the main display -->
+    <string name="companion_art_use">Use this image</string>
+    <!-- Rating of an image on SteamGridDB; %1$d is the score -->
+    <string name="companion_art_score">Score %1$d</string>
+    <!-- Date an image was uploaded; %1$s is the date -->
+    <string name="companion_art_added">Added %1$s</string>
+    <!-- Width, height and file type of an image, e.g. 600 × 900 · PNG -->
+    <string name="companion_art_size_file">%1$d × %2$d · %3$s</string>
+    <!-- Artwork of a utility app that cannot be changed -->
+    <string name="companion_art_builtin">Built-in artwork</string>
+    <!-- Title of the companion card shown while the library filter sheet is open on the main display -->
+    <string name="companion_filter_library_title">Library filters</string>
+    <!-- Title of the companion card shown while the artwork filter sheet is open on the main display -->
+    <string name="companion_filter_art_title">Artwork filters</string>
+    <string name="companion_filter_sub">Summary of the main filter sheet</string>
+    <!-- Chip shown when no filter is set -->
+    <string name="companion_filter_none">No active filters</string>
+    <!-- Chip that counts the active filters that do not fit the row -->
+    <string name="companion_filter_more">+%1$d</string>
+    <string name="companion_filter_change_main">Change criteria on the main display.</string>
+    <string name="companion_profile_current">Current profile</string>
+    <!-- Joins the counts of custom settings and game overrides of a profile -->
+    <string name="companion_profile_line_both">%1$s · %2$s.</string>
+    <!-- One count of a profile's custom settings or game overrides as a sentence -->
+    <string name="companion_profile_line_one">%1$s.</string>
+    <!-- A profile without any custom setting or game override -->
+    <string name="companion_profile_defaults">Using the default settings.</string>
+    <string name="companion_profile_default_pc">Default PC: %1$s.</string>
+    <string name="companion_profile_edit_main">Edits stay on the main display.</string>
+    <string name="companion_create_draft">Draft profile · not saved</string>
+    <string name="companion_create_choose">Choose an avatar and name on the main display.</string>
+    <string name="companion_create_no_account">No account is required.</string>
+    <string name="companion_boot_sub">First run · extra room</string>
+    <!-- Boot (first run) card of the companion screen; the sentences are cut at a boundary when the panel is small -->
+    <string name="companion_boot_text">Your main display holds the library, settings and stream. This panel adds useful details and touch controls. Choose Get started on the main display.</string>
+    <!-- Hint list entry next to the A button: the main display's Get started button -->
+    <string name="companion_boot_hint_begin">Get started on main</string>
+    <plurals name="companion_filter_games_of">
+        <item quantity="one">%1$d of %2$d game matches.</item>
+        <item quantity="other">%1$d of %2$d games match.</item>
+    </plurals>
+    <plurals name="companion_filter_games_all">
+        <item quantity="one">All %1$d game.</item>
+        <item quantity="other">All %1$d games.</item>
+    </plurals>
+    <plurals name="companion_filter_images_of">
+        <item quantity="one">%1$d of %2$d image matches.</item>
+        <item quantity="other">%1$d of %2$d images match.</item>
+    </plurals>
+    <plurals name="companion_filter_images_all">
+        <item quantity="one">All %1$d image.</item>
+        <item quantity="other">All %1$d images.</item>
+    </plurals>
+    <plurals name="companion_filter_images_some">
+        <item quantity="one">%1$d image matches.</item>
+        <item quantity="other">%1$d images match.</item>
+    </plurals>
+    <plurals name="companion_profile_settings">
+        <item quantity="one">%1$d custom setting</item>
+        <item quantity="other">%1$d custom settings</item>
+    </plurals>
+    <plurals name="companion_profile_overrides">
+        <item quantity="one">%1$d game override</item>
+        <item quantity="other">%1$d game overrides</item>
+    </plurals>
+</resources>

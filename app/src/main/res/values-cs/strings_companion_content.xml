@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="companion_art_subtitle">Vybraný obrázek · vlastní poměr stran</string>
+    <string name="companion_art_use">Použít tento obrázek</string>
+    <string name="companion_art_score">Skóre %1$d</string>
+    <string name="companion_art_added">Přidáno %1$s</string>
+    <string name="companion_art_size_file">%1$d × %2$d · %3$s</string>
+    <string name="companion_art_builtin">Vestavěný obrázek</string>
+    <string name="companion_filter_library_title">Filtry knihovny</string>
+    <string name="companion_filter_art_title">Filtry obrázků</string>
+    <string name="companion_filter_sub">Souhrn filtrů z hlavní obrazovky</string>
+    <string name="companion_filter_none">Žádné aktivní filtry</string>
+    <string name="companion_filter_more">+%1$d</string>
+    <string name="companion_filter_change_main">Kritéria změníš na hlavní obrazovce.</string>
+    <string name="companion_profile_current">Aktuální profil</string>
+    <string name="companion_profile_line_both">%1$s · %2$s.</string>
+    <string name="companion_profile_line_one">%1$s.</string>
+    <string name="companion_profile_defaults">Používá výchozí nastavení.</string>
+    <string name="companion_profile_default_pc">Výchozí PC: %1$s.</string>
+    <string name="companion_profile_edit_main">Úpravy zůstávají na hlavní obrazovce.</string>
+    <string name="companion_create_draft">Koncept profilu · neuloženo</string>
+    <string name="companion_create_choose">Avatar a jméno vyber na hlavní obrazovce.</string>
+    <string name="companion_create_no_account">Účet není potřeba.</string>
+    <string name="companion_boot_sub">První spuštění · další prostor</string>
+    <string name="companion_boot_text">Hlavní obrazovka obsahuje knihovnu, nastavení a stream. Tento panel přidává užitečné podrobnosti a dotykové ovládání. Na hlavní obrazovce zvol Začít.</string>
+    <string name="companion_boot_hint_begin">Začít na hlavní</string>
+    <plurals name="companion_filter_games_of">
+        <item quantity="one">Vyhovuje %1$d z %2$d hry.</item>
+        <item quantity="few">Vyhovuje %1$d z %2$d her.</item>
+        <item quantity="many">Vyhovuje %1$d z %2$d hry.</item>
+        <item quantity="other">Vyhovuje %1$d z %2$d her.</item>
+    </plurals>
+    <plurals name="companion_filter_games_all">
+        <item quantity="one">Celkem %1$d hra.</item>
+        <item quantity="few">Celkem %1$d hry.</item>
+        <item quantity="many">Celkem %1$d hry.</item>
+        <item quantity="other">Celkem %1$d her.</item>
+    </plurals>
+    <plurals name="companion_filter_images_of">
+        <item quantity="one">Vyhovuje %1$d z %2$d obrázku.</item>
+        <item quantity="few">Vyhovuje %1$d z %2$d obrázků.</item>
+        <item quantity="many">Vyhovuje %1$d z %2$d obrázků.</item>
+        <item quantity="other">Vyhovuje %1$d z %2$d obrázků.</item>
+    </plurals>
+    <plurals name="companion_filter_images_all">
+        <item quantity="one">Celkem %1$d obrázek.</item>
+        <item quantity="few">Celkem %1$d obrázky.</item>
+        <item quantity="many">Celkem %1$d obrázku.</item>
+        <item quantity="other">Celkem %1$d obrázků.</item>
+    </plurals>
+    <plurals name="companion_filter_images_some">
+        <item quantity="one">Vyhovuje %1$d obrázek.</item>
+        <item quantity="few">Vyhovují %1$d obrázky.</item>
+        <item quantity="many">Vyhovuje %1$d obrázku.</item>
+        <item quantity="other">Vyhovuje %1$d obrázků.</item>
+    </plurals>
+    <plurals name="companion_profile_settings">
+        <item quantity="one">%1$d vlastní nastavení</item>
+        <item quantity="few">%1$d vlastní nastavení</item>
+        <item quantity="many">%1$d vlastního nastavení</item>
+        <item quantity="other">%1$d vlastních nastavení</item>
+    </plurals>
+    <plurals name="companion_profile_overrides">
+        <item quantity="one">%1$d výjimka pro hru</item>
+        <item quantity="few">%1$d výjimky pro hry</item>
+        <item quantity="many">%1$d výjimky pro hry</item>
+        <item quantity="other">%1$d výjimek pro hry</item>
+    </plurals>
+</resources>

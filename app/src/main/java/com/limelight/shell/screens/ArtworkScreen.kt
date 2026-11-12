@@ -97,6 +97,14 @@ import com.limelight.shell.data.Pc
 import com.limelight.shell.data.SgdbGame
 import com.limelight.shell.data.SgdbImage
 import android.content.res.Resources
+import androidx.compose.ui.graphics.ImageBitmap
+import com.limelight.shell.companion.ArtLine
+import com.limelight.shell.companion.ArtTone
+import com.limelight.shell.companion.ArtworkPage
+import com.limelight.shell.companion.FilterPage
+import com.limelight.shell.companion.FilterUnit
+import com.limelight.shell.companion.PublishCompanionPage
+import com.limelight.shell.companion.filterCount
 import androidx.annotation.PluralsRes
 import androidx.annotation.StringRes
 import androidx.compose.ui.res.pluralStringResource
@@ -490,6 +498,12 @@ fun ArtworkScreen(screen: Screen.Artwork) {
             )
         }
     }
+    // What the second display shows of this screen (docs/DUAL_SCREEN.md): the focused image with "Use this image" (the tile's own activation), and the filter sheet's summary
+    val applyFocused by rememberUpdatedState<(SgdbImage?) -> Unit>({ image -> apply(res, scope, shell, feedback, store, pc, app, tab, image) })
+    val resetNow by rememberUpdatedState({ resetFilters() })
+    val useImage = remember { { image: SgdbImage? -> applyFocused(image) } }
+    val resetTab = remember { { resetNow() } }
+    PublishArtworkPages(pc, app, tab, described ?: Described.FirstChoice, chosen, filters, ready, sheetOpen, useImage, resetTab)
     Box(Modifier.fillMaxSize()) {
         FocusTransferTarget(focusTransfer)
         if (compact) {
@@ -647,6 +661,13 @@ private fun BuiltInArtworkScreen(pc: Pc, app: App) {
     val first = remember { FocusRequester() }
     val artwork by rememberArtworkResult(LocalArtwork.current, pc, app, ArtKind.WIDE)
     InitialFocus(first)
+    val res = textResources()
+    PublishCompanionPage(
+        remember(app.name, artwork.image) {
+            val builtin = ArtLine(res.getString(R.string.companion_art_builtin), res.getString(R.string.companion_art_builtin), ArtTone.MUTED, 100)
+            ArtworkPage(app.name, artwork.image, ArtTab.WIDE.ratio, listOf(builtin), inUse = false, onUse = null)
+        },
+    )
     Column(
         Modifier.fillMaxSize().padding(start = 150.px, end = 150.px, top = 92.px, bottom = 110.px),
         verticalArrangement = Arrangement.spacedBy(24.px),
@@ -661,6 +682,72 @@ private fun BuiltInArtworkScreen(pc: Pc, app: App) {
             style = TextStyle(color = colors.text2, fontFamily = Figtree, fontSize = 24.tpx))
         PillButton(stringResource(R.string.artwork_builtin_back), Symbols.ARROW_BACK, { shell.back() }, Modifier.focusRequester(first), clickCue = Cue.BACK)
     }
+}
+
+/**
+ * Publishes what the second display shows of this screen: the focused image (the thumbnail its tile already decoded, never decoded again) with its
+ * facts and "Use this image" (the tile's own activation, [onUse]), and, while the filter sheet is open, the summary of this tab's filters with the
+ * sheet's own reset ([onReset]). The sheet's page has the higher priority, so it replaces the image's page while the sheet is open.
+ */
+@Composable
+private fun PublishArtworkPages(
+    pc: Pc, app: App, tab: ArtTab, item: Described, chosen: Int?, filters: ArtFilters, ready: Choices.Ready?, sheetOpen: Boolean,
+    onUse: (SgdbImage?) -> Unit, onReset: () -> Unit,
+) {
+    val res = textResources()
+    val store = LocalArtwork.current
+    val url = (item as? Described.Image)?.image?.previewUrl
+    // The picture of the focused tile: the cached thumbnail its tile showed; loaded only when it is somehow not there yet
+    val thumb = remember(url) { mutableStateOf(url?.let(Thumbnails::cached)) }
+    LaunchedEffect(url) { if (url != null && thumb.value == null) thumb.value = Thumbnails.load(store.http, url) }
+    val boxArt by rememberBoxArt(LocalBoxArt.current, pc, app, load = item is Described.FirstChoice && tab == ArtTab.COVER)
+    val picture = if (item is Described.Image) thumb.value else boxArt.takeIf { tab == ArtTab.COVER }
+    PublishCompanionPage(remember(res, tab, item, chosen, picture, onUse) { artworkPage(res, tab, item, chosen, picture, onUse) })
+
+    val chips = remember(res, filters) { ArtFilterRules.chips(filters).map { it.label(res) } }
+    val count = ready?.let { filterCount(it.images.size, it.total, filters.active) }
+    PublishCompanionPage(remember(sheetOpen, chips, count, onReset) { if (sheetOpen) FilterPage(false, chips, count, FilterUnit.IMAGES, onReset) else null })
+}
+
+/** The artwork page of [item]: the facts SteamGridDB told (a missing one is left out), or what the first choice is. */
+private fun artworkPage(res: Resources, tab: ArtTab, item: Described, chosen: Int?, picture: ImageBitmap?, onUse: (SgdbImage?) -> Unit): ArtworkPage {
+    fun line(text: String, tone: ArtTone, priority: Int, short: String = text) = ArtLine(text, short, tone, priority)
+    val title: String
+    val lines = ArrayList<ArtLine>()
+    val inUse: Boolean
+    val image: SgdbImage?
+    when (item) {
+        Described.FirstChoice -> {
+            image = null
+            inUse = chosen == NONE
+            val name = tab == ArtTab.LOGO
+            title = res.getString(if (name) R.string.artwork_first_name_only else R.string.artwork_first_from_pc)
+            lines += line(res.getString(if (name) R.string.artwork_fact_name_source else R.string.artwork_fact_pc_source), ArtTone.NORMAL, 90)
+            lines += line(res.getString(if (name) R.string.artwork_fact_name_shows else R.string.artwork_fact_pc_shows), ArtTone.MUTED, 60)
+        }
+        is Described.Image -> {
+            image = item.image
+            inUse = item.image.id == chosen
+            title = ArtworkInfo.title(res, item.image, res.getString(tab.label))
+            val facts = ArtworkInfo.facts(item.image)
+            val size = facts.filterIsInstance<ArtworkFact.Size>().firstOrNull()
+            val file = facts.filterIsInstance<ArtworkFact.File>().firstOrNull()
+            when {
+                size != null && file != null -> lines += line(res.getString(R.string.companion_art_size_file, size.width, size.height, file.format), ArtTone.NORMAL, 90)
+                size != null -> lines += line(res.getString(R.string.artwork_fact_size_value, size.width, size.height), ArtTone.NORMAL, 90)
+                file != null -> lines += line(file.format, ArtTone.NORMAL, 90)
+            }
+            val score = facts.filterIsInstance<ArtworkFact.Score>().firstOrNull()
+            score?.score?.let { lines += line(res.getString(R.string.companion_art_score, it), ArtTone.SEA, 70) }
+            score?.author?.let { lines += line(it, ArtTone.NORMAL, 30) }
+            facts.filterIsInstance<ArtworkFact.Added>().firstOrNull()?.let {
+                val date = ArtworkInfo.date(it.epochSeconds, res.configuration.locales[0])
+                lines += line(res.getString(R.string.companion_art_added, date), ArtTone.MUTED, 50, short = date)
+            }
+        }
+    }
+    if (inUse) lines += line(res.getString(R.string.artwork_in_use), ArtTone.GOLD, 100)
+    return ArtworkPage(title, picture, tab.ratio, lines, inUse) { onUse(image) }
 }
 
 /**
