@@ -53,6 +53,14 @@ public final class RumbleTranslator {
             return new Profile(gain, curve, minAmplitude, kickMs, lowWeight, highWeight, smoothing,
                     source.technique, source.pulseOnMs, source.pulseOffMs);
         }
+
+        /** One line for the diagnostic log: every setting that shapes the rumble. */
+        @Override
+        public String toString() {
+            return "technique=" + technique + (technique.isPulse() ? " pulse on/off=" + pulseOnMs + "/" + pulseOffMs + " ms" : "")
+                    + " gain=" + gain + " curve=" + curve + " floor=" + minAmplitude + " kick=" + kickMs
+                    + " ms low/high weight=" + lowWeight + "/" + highWeight + " smoothing=" + smoothing;
+        }
     }
 
     /**

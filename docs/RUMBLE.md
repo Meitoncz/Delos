@@ -114,6 +114,36 @@ The Debug laboratory's Continuous tests and the pad test start repeating wavefor
 started (an input device's vibrator object is replaced when the system refreshes the device) and stop when the app goes to the
 background.
 
+## Rumble diagnostics
+
+Every rumble decision is one line that starts with `RumblePlayback` (`LimeLog.info`: logcat and the app's diagnostic log, Debug
+info → Share diagnostic log). The host event itself is the line `Rumble on gamepad N: low high` (hex, `DelosStreamActivity`)
+that comes first. Read the lines of one stream like this:
+
+| Line | Meaning |
+| --- | --- |
+| `RumblePlayback started: translator on, profile technique=PULSE pulse on/off=20/20 ms gain=1.0 ...` | The profile in effect for the stream, and again after each live feel switch. Shows whether the translator was really on. |
+| `RumblePlayback system: media vibration intensity 1 (0 off, 1 low, 2 medium, 3 high, -1 not set)` | The system setting that scales a MEDIA vibration before it plays: `dumpsys vibrator_manager` shows the scaled amplitude in `effect:` and the app's own in `originalEffect:`; compare with the `amp` of the host lines using `originalEffect:`. |
+| `RumblePlayback route: controller context 'name' (input device 7, external=false, enableDeviceRumble=false) rumbles via the device vibrator (single#1a2b3c)` | Once per controller: which vibrator object its rumble goes to. `single#` / `manager#` and the hash are the labels of the outputs below. |
+| `RumblePlayback output single#1a2b3c id=0 created: amplitudeControl=true requested=PULSE using=PULSE` | A vibrator that rumble reached for the first time, and the technique that really runs (a fallback is logged as `falls back from PULSE to AMPLITUDE`). |
+| `RumblePlayback host 1400 0000 -> single#1a2b3c id=0 translated amp 16: vibrate one-shot 60000 ms amp 16 via Vibrator.vibrate(VibrationEffect, VibrationAttributes) [VibrationAttributes usage MEDIA]` | One host event: the raw motors, the translated amplitude (one per channel for a dual or quad manager: `translated amps [64,128]`) and the call that was made. |
+| `... vibrate pulse waveform on/off 20/20 ms amp 50 repeating until cancelled ...` / `... no vibrator call, the pulse waveform at amp 50 is already playing ...` | The Pulsing feel: a new waveform, or an event at the same amplitude that changed nothing. |
+| `RumblePlayback host 0000 0000 -> single#1a2b3c id=0 translated amp 0: cancel via Vibrator.cancel() requested by host zero` | A cancel and who asked: `host zero`, `host value translated to zero` (the motors were not 0 but the mix is below one step), `settling tick reached zero` (kick or smoothing), `technique ... failed`. |
+| `RumblePlayback stop requested by stream teardown (ControllerHandler.stop): cancelling 1 output(s)` and `RumblePlayback cancel single#1a2b3c via Vibrator.cancel() requested by ...` | The stream ended (`stream teardown`) or the feel was switched (`rumble preset changed`); one `cancel` line per output. |
+| `RumblePlayback teardown: controller context 'name' is destroyed, its vibrator single#1a2b3c is cancelled` and `... requested by output discarded (device context destroyed)` | A device change or removal cancelled the vibrator. |
+| `RumblePlayback host 0000 0000 for controller 0 drove no output: matching context false, input contexts 1, USB contexts 0` | The event reached no vibrator at all (no controller context with that number, or one without a vibrator), a host zero included. |
+| `RumblePlayback host 8000 0000 -> single#1a2b3c: ignored, the playback is stopped` | An event that arrived after the stop. |
+
+A vibration that goes on after the game let go is one of three things, and the lines tell which: the last `Rumble on gamepad`
+line before it is not zero and no zero follows (the host never cleared the value, so nothing on the client ends it); a zero
+arrived but is followed by `drove no output` (it reached no vibrator); or a `cancel ... requested by host zero` line is there
+but `dumpsys vibrator_manager` still shows the effect (the cancel did not reach it). The native layer logs `Failed to queue async
+callback` when its queue of 30 pending host callbacks overflows and drops the newest packet: that is where a host zero could be
+lost before it reaches Java.
+
+`RumblePlaybackTest` runs random host sequences (seeded, every feel, single/dual/quad) against a model of the system's
+vibrator service and checks that a final host zero always leaves nothing vibrating and no timer restarts it.
+
 ## Advanced parameters
 
 **Advanced** is collapsed whenever this screen opens. A expands/collapses it; the

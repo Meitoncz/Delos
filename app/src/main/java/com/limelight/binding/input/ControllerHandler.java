@@ -318,10 +318,17 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
                 return active.playback;
             }
             if (active != null) {
-                active.playback.stop();
+                active.playback.stop("rumble preset changed");
             }
             active = new ActiveRumble(profile);
             activeRumble = active;
+            LimeLog.info("RumblePlayback started: translator " + (prefConfig.rumbleTranslatorEnabled ? "on" : "off")
+                    + ", profile " + profile);
+            // The system scales the amplitude of a MEDIA vibration by this setting before it plays, so dumpsys shows
+            // a lower amplitude in "effect:" than the app sent (the app's own value is "originalEffect:")
+            LimeLog.info("RumblePlayback system: media vibration intensity "
+                    + android.provider.Settings.System.getInt(activityContext.getContentResolver(), "media_vibration_intensity", -1)
+                    + " (0 off, 1 low, 2 medium, 3 high, -1 not set)");
             return active.playback;
         }
     }
@@ -336,9 +343,31 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
         synchronized (rumbleLock) {
             ActiveRumble active = activeRumble;
             if (active != null) {
-                active.playback.stop();
+                active.playback.stop("stream teardown (ControllerHandler.stop)");
             }
         }
+    }
+
+    private static String hex4(short value) {
+        return String.format(java.util.Locale.ROOT, "%04x", value);
+    }
+
+    private static String rumbleObject(Object vibratorOrManager) {
+        return Integer.toHexString(System.identityHashCode(vibratorOrManager));
+    }
+
+    /** Where the rumble of a controller context goes, for the diagnostic log; the hash matches the output labels of RumblePlayback. */
+    private String describeRumbleRoute(InputDeviceContext context) {
+        if (context.vibratorManager != null) {
+            return (context.quadVibrators ? "the quad" : "the dual") + " vibrators of the "
+                    + (context.vibratorManager == deviceVibratorManager ? "device" : "input device")
+                    + " (manager#" + rumbleObject(context.vibratorManager) + ")";
+        }
+        if (context.vibrator != null) {
+            return "the " + (context.vibrator == deviceVibrator ? "device vibrator" : "input device's vibrator")
+                    + " (single#" + rumbleObject(context.vibrator) + ")";
+        }
+        return "no vibrator (its rumble is dropped unless a fallback applies)";
     }
 
     public void stop() {
@@ -363,6 +392,8 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
             deviceContext.destroy();
         }
 
+        LimeLog.info("RumblePlayback teardown: ControllerHandler.stop() cancels the device vibrator single#"
+                + rumbleObject(deviceVibrator));
         deviceVibrator.cancel();
     }
 
@@ -882,6 +913,9 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
                 }
             }
         }
+        LimeLog.info("RumblePlayback route: controller context '" + devName + "' (input device " + dev.getId()
+                + ", external=" + context.external + ", enableDeviceRumble=" + prefConfig.enableDeviceRumble
+                + ") rumbles via " + describeRumbleRoute(context));
         // On Android 12, we can try to use the InputDevice's sensors. This may not work if the
         // Linux kernel version doesn't have motion sensor support, which is common for third-party
         // gamepads.
@@ -2185,6 +2219,7 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
     public void handleRumble(short controllerNumber, short lowFreqMotor, short highFreqMotor) {
         boolean foundMatchingDevice = false;
         boolean vibrated = false;
+        boolean fallbackVibrated = false;
 
         if (stopped) {
             return;
@@ -2240,6 +2275,7 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
             // the user has requested that behavior.
             if (!foundMatchingDevice && prefConfig.onscreenController && !prefConfig.onlyL3R3 && prefConfig.vibrateOsc) {
                 rumbleSingleVibrator(deviceVibrator, lowFreqMotor, highFreqMotor);
+                fallbackVibrated = true;
             }
             else if (foundMatchingDevice && !vibrated && prefConfig.vibrateFallbackToDevice) {
                 // We found a device to vibrate but it didn't have rumble support. The user
@@ -2254,7 +2290,15 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
                         * prefConfig.vibrateFallbackToDeviceStrength) / 100), Short.MAX_VALUE*2));
 
                 rumbleSingleVibrator(deviceVibrator, lowFreqMotorAdjusted, highFreqMotorAdjusted);
+                fallbackVibrated = true;
             }
+        }
+
+        if (!vibrated && !fallbackVibrated) {
+            // The event reached no output at all, a host zero included: say so, it is what a stuck vibration looks like
+            LimeLog.info("RumblePlayback host " + hex4(lowFreqMotor) + " " + hex4(highFreqMotor) + " for controller "
+                    + controllerNumber + " drove no output: matching context " + foundMatchingDevice + ", input contexts "
+                    + inputDeviceContexts.size() + ", USB contexts " + usbDeviceContexts.size());
         }
     }
 
@@ -3262,6 +3306,11 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
         @Override
         public void destroy() {
             super.destroy();
+            if (vibratorManager != null || vibrator != null) {
+                LimeLog.info("RumblePlayback teardown: controller context '" + name + "' is destroyed, its vibrator "
+                        + (vibratorManager != null ? "manager#" + rumbleObject(vibratorManager) : "single#" + rumbleObject(vibrator))
+                        + " is cancelled");
+            }
             ActiveRumble active = activeRumble;
             if (active != null) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && vibratorManager != null) {
