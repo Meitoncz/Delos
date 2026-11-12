@@ -299,7 +299,7 @@ object Symbols {
     const val APPEARANCE = "\uE6F0"
     const val REDUCED_MOTION = "\uEB9C"
     const val STREAM_MENU_BUTTONS = "\uE464"
-    const val LOGO = "\uE9F0"
+    const val LOGO = "\uF000"
     const val GENRE_POINT_AND_CLICK = "\uE7C8"
     const val GENRE_FIGHTING = "\uEA36"
     const val GENRE_SHOOTER = "\uE1D6"
