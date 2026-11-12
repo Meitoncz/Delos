@@ -25,6 +25,8 @@ SOUNDS = {
 }
 
 FLOOR = 0.0001  # exponential ramps cannot start or end at zero
+# The blips were tuned for the system stream; on the media stream (which the volume keys control) they need this boost.
+LOUDNESS = 2.5
 
 
 def gain(t: float, peak: float) -> float:
@@ -42,7 +44,7 @@ def render(f0: float, f1: float, peak: float) -> bytes:
         t = i / RATE
         freq = f0 * (f1 / f0) ** (min(t, 0.07) / 0.07)
         phase += 2 * math.pi * freq / RATE
-        frames += struct.pack("<h", round(32767 * gain(t, peak) * math.sin(phase)))
+        frames += struct.pack("<h", round(32767 * LOUDNESS * gain(t, peak) * math.sin(phase)))
     return bytes(frames)
 
 
