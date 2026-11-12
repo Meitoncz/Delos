@@ -52,4 +52,39 @@ class GameSettingsLabelTest {
         assertEquals("1.5x", profileValueLabel(res, spec(SettingKind.SLIDER, unit = "x", divisor = 100), 150, emptyList()))
         assertEquals("5", profileValueLabel(res, spec(SettingKind.SLIDER, min = 5), null, emptyList()))
     }
+
+    // ---- Where the focused value comes from: one source for the panel and the companion screen ----
+
+    @Test fun aCustomRowSaysWhatTheProfileHasAndKeepsTheValueApartForBold() {
+        val source = gameSettingsSource(res, spec(SettingKind.CHOICE), isCustom = true, touch = false, currentLabel = "1080p", profileLabel = "720p", streamCustom = 1, displayCustom = 0)
+        assertEquals(true, source.custom)
+        assertEquals("Custom for this game", source.title)
+        assertEquals("720p", source.strong)
+        assertEquals("Profile value: ", source.before)
+        assertEquals(true, source.after.contains("X"))
+    }
+
+    @Test fun theTouchSentenceHasNoButtonName() {
+        val source = gameSettingsSource(res, spec(SettingKind.CHOICE), isCustom = true, touch = true, currentLabel = "1080p", profileLabel = "720p", streamCustom = 1, displayCustom = 0)
+        assertEquals("720p", source.strong)
+        assertEquals(false, source.after.contains("X"))
+    }
+
+    @Test fun aPlainRowFollowsTheProfileAndShowsTheCurrentValue() {
+        val source = gameSettingsSource(res, spec(SettingKind.CHOICE), isCustom = false, touch = false, currentLabel = "720p", profileLabel = "720p", streamCustom = 0, displayCustom = 0)
+        assertEquals(false, source.custom)
+        assertEquals("From profile", source.title)
+        assertEquals("720p", source.strong)
+    }
+
+    @Test fun withNothingFocusedTheSourceSumsUpTheCustomSettings() {
+        val none = gameSettingsSource(res, null, isCustom = false, touch = false, currentLabel = null, profileLabel = null, streamCustom = 0, displayCustom = 0)
+        assertEquals(false, none.custom)
+        assertEquals("Follows your profile", none.title)
+        assertEquals("", none.strong)
+        val some = gameSettingsSource(res, null, isCustom = false, touch = false, currentLabel = null, profileLabel = null, streamCustom = 2, displayCustom = 1)
+        assertEquals(true, some.custom)
+        assertEquals("3 custom settings", some.title)
+        assertEquals("2 on Stream \u00b7 1 on Display", some.before)
+    }
 }

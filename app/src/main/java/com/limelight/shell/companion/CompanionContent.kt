@@ -50,10 +50,12 @@ import com.limelight.shell.ui.tpx
  * The single place the content of the companion screen is decided (variant A of the approved prototype, "Details and actions"):
  * the focused game with Start, Resume and Game settings in the shell; the statistics and the stream menu as touch tiles in a
  * stream; the keyboard when typing. It runs inside the companion's own `Stage`, so `LocalStage` is planned from that display's
- * size, and inside the Delos colors. [startTyping] opens a stream on the keyboard (debug previews).
+ * size, and inside the Delos colors. [startTyping] opens a stream on the keyboard (debug previews). [inWindow] is true only for the real
+ * companion window ([CompanionActivity]): a preview inside the shell's own window must not tell the main screen that its description is shown here.
  *
  * Burn-in (docs/DUAL_SCREEN.md): everything drifts by a few pixels every two minutes ([CompanionBurnIn.shiftAt]); in the shell
- * state the screen dims after a minute without a touch and the touch that wakes it is not passed on.
+ * state the screen dims after a minute without a touch (five while it shows the settings help, [CompanionBurnIn.dimAfter]) and the touch
+ * that wakes it is not passed on.
  */
 @Composable
 internal fun CompanionContent(state: CompanionState, startTyping: Boolean = false, startSheet: String? = null, inWindow: Boolean = false) {
