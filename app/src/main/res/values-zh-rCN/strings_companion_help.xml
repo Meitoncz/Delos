@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="companion_game_focused">当前选中的游戏</string>
+    <string name="companion_game_running">正在运行</string>
+    <string name="companion_game_resume_other">继续另一个</string>
+    <string name="companion_game_quit_start">退出并开始</string>
+    <string name="companion_help_settings_section">设置 · %1$s</string>
+    <string name="companion_pager_previous">上一页</string>
+    <string name="companion_pager_next">下一页</string>
+    <string name="companion_typing_hint_short">点按按键。</string>
+    <plurals name="companion_genres_more">
+        <item quantity="other">+%1$d 个类型</item>
+    </plurals>
+    <plurals name="companion_details_more">
+        <item quantity="other">+%1$d 行</item>
+    </plurals>
+    <plurals name="companion_typing_count">
+        <item quantity="other">已输入 %1$d 个字符</item>
+    </plurals>
+</resources>

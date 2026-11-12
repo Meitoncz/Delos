@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="companion_game_focused">Vybraná hra</string>
+    <string name="companion_game_running">Právě běží</string>
+    <string name="companion_game_resume_other">Pokračovat v jiné</string>
+    <string name="companion_game_quit_start">Ukončit a spustit</string>
+    <string name="companion_help_settings_section">Nastavení · %1$s</string>
+    <string name="companion_pager_previous">Předchozí</string>
+    <string name="companion_pager_next">Další</string>
+    <string name="companion_typing_hint_short">Klepej na klávesy.</string>
+    <plurals name="companion_genres_more">
+        <item quantity="one">+%1$d žánr</item>
+        <item quantity="few">+%1$d žánry</item>
+        <item quantity="many">+%1$d žánru</item>
+        <item quantity="other">+%1$d žánrů</item>
+    </plurals>
+    <plurals name="companion_details_more">
+        <item quantity="one">+%1$d řádek</item>
+        <item quantity="few">+%1$d řádky</item>
+        <item quantity="many">+%1$d řádku</item>
+        <item quantity="other">+%1$d řádků</item>
+    </plurals>
+    <plurals name="companion_typing_count">
+        <item quantity="one">Zadán %1$d znak</item>
+        <item quantity="few">Zadány %1$d znaky</item>
+        <item quantity="many">Zadáno %1$d znaku</item>
+        <item quantity="other">Zadáno %1$d znaků</item>
+    </plurals>
+</resources>

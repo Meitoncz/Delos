@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="companion_game_focused">Jogo selecionado</string>
+    <string name="companion_game_running">Em execução</string>
+    <string name="companion_game_resume_other">Retomar outro</string>
+    <string name="companion_game_quit_start">Encerrar e iniciar</string>
+    <string name="companion_help_settings_section">Configurações · %1$s</string>
+    <string name="companion_pager_previous">Anterior</string>
+    <string name="companion_pager_next">Próxima</string>
+    <string name="companion_typing_hint_short">Toque nas teclas.</string>
+    <plurals name="companion_genres_more">
+        <item quantity="one">+%1$d gênero</item>
+        <item quantity="many">+%1$d de gêneros</item>
+        <item quantity="other">+%1$d gêneros</item>
+    </plurals>
+    <plurals name="companion_details_more">
+        <item quantity="one">+%1$d linha</item>
+        <item quantity="many">+%1$d de linhas</item>
+        <item quantity="other">+%1$d linhas</item>
+    </plurals>
+    <plurals name="companion_typing_count">
+        <item quantity="one">%1$d caractere digitado</item>
+        <item quantity="many">%1$d de caracteres digitados</item>
+        <item quantity="other">%1$d caracteres digitados</item>
+    </plurals>
+</resources>

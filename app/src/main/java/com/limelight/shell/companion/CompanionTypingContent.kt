@@ -4,8 +4,10 @@ import android.view.KeyEvent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -22,19 +24,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import com.limelight.R
 import com.limelight.shell.ui.Figtree
 import com.limelight.shell.ui.LocalDelosColors
+import com.limelight.shell.ui.LocalStage
 import com.limelight.shell.ui.Symbol
 import com.limelight.shell.ui.Symbols
-import com.limelight.shell.ui.Unbounded
 import com.limelight.shell.ui.px
+import com.limelight.shell.ui.textResources
 import com.limelight.shell.ui.tpx
 
 /** What a key of the companion keyboard does. */
-private sealed interface Cell {
+internal sealed interface Cell {
     val weight: Float
 
     /** A character key: [c] as typed on the letters page (Shift makes a letter capital); on the symbols page the character itself. */
@@ -43,71 +45,100 @@ private sealed interface Cell {
     data class Gap(override val weight: Float) : Cell
 }
 
-private enum class Kind(val code: Int?) {
+internal enum class Kind(val code: Int?) {
     BACKSPACE(KeyEvent.KEYCODE_DEL), ENTER(KeyEvent.KEYCODE_ENTER), SPACE(KeyEvent.KEYCODE_SPACE),
     LEFT(KeyEvent.KEYCODE_DPAD_LEFT), RIGHT(KeyEvent.KEYCODE_DPAD_RIGHT), SHIFT(null), SYMBOLS(null),
 }
 
-private fun chars(text: String) = text.map { Cell.Char(it) }
+/**
+ * The rows of the keyboard for a panel (docs/DUAL_SCREEN.md, "No scrolling, ever"): the five QWERTY rows of ten keys when the panel is wide enough for every key to
+ * be at least [MIN_TARGET] wide, else rows of eight (characters in the order they are typed, then the action keys), so a key never shrinks below a thumb.
+ */
+internal object KeyRows {
+    /** The gap between keys, in stage px. */
+    const val GAP = 8f
 
-private val LETTER_ROWS = listOf(
-    chars("1234567890") + Cell.Action(Kind.BACKSPACE, 1.6f),
-    chars("qwertyuiop"),
-    chars("asdfghjkl") + Cell.Action(Kind.ENTER, 1.6f),
-    listOf<Cell>(Cell.Action(Kind.SHIFT, 1.5f)) + chars("zxcvbnm"),
-    listOf(Cell.Action(Kind.SYMBOLS, 1.5f), Cell.Char(',', 1f), Cell.Action(Kind.SPACE, 5.5f), Cell.Char('.', 1f), Cell.Action(Kind.LEFT, 1f), Cell.Action(Kind.RIGHT, 1f)),
-)
+    /** The widest QWERTY row in key units (ten keys and the wide Backspace) and its gaps. */
+    private const val QWERTY_UNITS = 11.6f
+    private const val QWERTY_GAPS = 10
 
-private val SYMBOL_ROWS = listOf(
-    chars("!@#$%^&*()") + Cell.Action(Kind.BACKSPACE, 1.6f),
-    chars("[]{}<>+=_~"),
-    chars(";:'\"/\\|?-") + Cell.Action(Kind.ENTER, 1.6f),
-    listOf<Cell>(Cell.Gap(1.5f)) + chars("`,.") + Cell.Gap(5.5f),
-    LETTER_ROWS.last(),
-)
+    /** The columns a keyboard in [width] stage px has: 10 (the QWERTY rows) or 8. */
+    fun columnsFor(width: Float): Int = if ((width - QWERTY_GAPS * GAP) / QWERTY_UNITS >= MIN_TARGET) 10 else 8
+
+    fun rows(symbols: Boolean, columns: Int): List<List<Cell>> = when {
+        columns >= 10 -> if (symbols) SYMBOL_ROWS else LETTER_ROWS
+        else -> narrow(symbols)
+    }
+
+    private fun chars(text: String) = text.map { Cell.Char(it) }
+
+    private val LETTER_ROWS = listOf(
+        chars("1234567890") + Cell.Action(Kind.BACKSPACE, 1.6f),
+        chars("qwertyuiop"),
+        chars("asdfghjkl") + Cell.Action(Kind.ENTER, 1.6f),
+        listOf<Cell>(Cell.Action(Kind.SHIFT, 1.5f)) + chars("zxcvbnm"),
+        listOf(Cell.Action(Kind.SYMBOLS, 1.5f), Cell.Char(',', 1f), Cell.Action(Kind.SPACE, 5.5f), Cell.Char('.', 1f), Cell.Action(Kind.LEFT, 1f), Cell.Action(Kind.RIGHT, 1f)),
+    )
+
+    private val SYMBOL_ROWS = listOf(
+        chars("!@#$%^&*()") + Cell.Action(Kind.BACKSPACE, 1.6f),
+        chars("[]{}<>+=_~"),
+        chars(";:'\"/\\|?-") + Cell.Action(Kind.ENTER, 1.6f),
+        listOf<Cell>(Cell.Gap(1.5f)) + chars("`,.") + Cell.Gap(5.5f),
+        LETTER_ROWS.last(),
+    )
+
+    private const val NARROW_COLUMNS = 8
+
+    private fun narrow(symbols: Boolean): List<List<Cell>> =
+        chars(if (symbols) "!@#$%^&*()[]{}<>+=_~;:'\"/\\|?-`,." else "1234567890qwertyuiopasdfghjklzxcvbnm,.").chunked(NARROW_COLUMNS) + listOf(
+            listOf(Cell.Action(Kind.SHIFT, 1.5f), Cell.Action(Kind.SYMBOLS, 1.5f), Cell.Action(Kind.SPACE, 3f), Cell.Action(Kind.BACKSPACE, 2f)),
+            listOf(Cell.Action(Kind.ENTER, 4f), Cell.Action(Kind.LEFT, 2f), Cell.Action(Kind.RIGHT, 2f)),
+        )
+}
+
+/** What the echo box says: the [text] and whether it is the hint of an empty box (set in the quiet color). */
+internal data class EchoView(val text: String, val placeholder: Boolean)
+
+internal object EchoFit {
+    /**
+     * The echo box's text for a box of [width] fit px: the hint (or its short form, or nothing) while empty; what was typed when it fits one line; else
+     * how many characters have been typed, which [count] words (the whole text is on the PC, the box is only a glance).
+     */
+    fun view(value: String, hint: String, hintShort: String, width: Float, metrics: TextMetrics, count: (Int) -> String): EchoView = when {
+        value.isEmpty() -> EchoView(listOf(hint, hintShort).firstOrNull { metrics.lines(it, width) <= 1 }.orEmpty(), true)
+        metrics.lines(value, width) <= 1 -> EchoView(value, false)
+        else -> EchoView(count(value.length), false)
+    }
+}
 
 /**
  * The keyboard of the stream's companion: the keys go into the running stream through the Full keyboard's own path
  * ([StreamCommands.sendKey]: down when the finger lands, up when it lifts, Shift held around a shifted character) and a short echo
  * of what was typed shows above them (there is no text field: the PC has the text). "Stream menu" goes back to the tiles.
+ *
+ * Nothing scrolls: the echo is one bounded line, and the rows of keys share the height under it ([KeyRows]: ten columns, or eight on a narrow panel).
  */
 @Composable
 internal fun TypingContent(state: CompanionState.Stream, onMenu: () -> Unit) {
-    val colors = LocalDelosColors.current
     var echo by remember { mutableStateOf(TypedEcho()) }
     var shifted by remember { mutableStateOf(false) }
     var symbols by remember { mutableStateOf(false) }
     val send: (Int, Boolean) -> Unit = { code, down -> state.commands?.sendKey?.invoke(code, down) }
-    Column(Modifier.fillMaxSize().padding(start = 40.px, end = 40.px, top = 20.px, bottom = 26.px), verticalArrangement = Arrangement.spacedBy(14.px)) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.px)) {
-                Eyebrow(state.gameName ?: stringResource(R.string.companion_streaming))
-                BasicText(
-                    stringResource(R.string.stream_menu_tile_keyboard),
-                    style = TextStyle(color = colors.text, fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = 34.tpx),
-                    maxLines = 1,
-                )
-            }
-            CompanionButton(stringResource(R.string.companion_typing_menu), onMenu, Modifier.height(80.px), ButtonStyle.SECONDARY, icon = Symbols.MORE_HORIZ)
+    val stage = LocalStage.current
+    val rows = KeyRows.rows(symbols, KeyRows.columnsFor(stage.stageWidth - 2 * CompanionFit.MARGIN))
+    Column(
+        Modifier.fillMaxSize().padding(start = CompanionFit.MARGIN.px, end = CompanionFit.MARGIN.px, top = 20.px, bottom = (CompanionFit.MARGIN + CompanionFit.FOOTER).px),
+        verticalArrangement = Arrangement.spacedBy(10.px),
+    ) {
+        Row(Modifier.fillMaxWidth().height(MIN_TARGET.px), horizontalArrangement = Arrangement.spacedBy(10.px)) {
+            Echo(echo.value, Modifier.weight(1f).fillMaxHeight())
+            CompanionButton(stringResource(R.string.companion_typing_clear), { echo = echo.cleared() }, Modifier.fillMaxHeight(), textSize = MIN_TEXT)
+            CompanionButton(stringResource(R.string.companion_typing_menu), onMenu, Modifier.fillMaxHeight(), ButtonStyle.SECONDARY, icon = Symbols.MORE_HORIZ, textSize = MIN_TEXT)
         }
-        Row(Modifier.fillMaxWidth().card().padding(horizontal = 26.px, vertical = 14.px), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.px)) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.px)) {
-                Eyebrow(stringResource(R.string.companion_typing_sent))
-                BasicText(
-                    echo.value.ifEmpty { stringResource(R.string.companion_typing_hint) },
-                    style = TextStyle(
-                        color = if (echo.value.isEmpty()) colors.text3 else colors.text, fontFamily = Figtree, fontSize = 36.tpx, textAlign = TextAlign.Start,
-                    ),
-                    maxLines = 1,
-                    overflow = TextOverflow.Clip,
-                    softWrap = false,
-                )
-            }
-            CompanionButton(stringResource(R.string.companion_typing_clear), { echo = echo.cleared() }, Modifier.height(MIN_TARGET.px + 8.px), textSize = MIN_TEXT)
-        }
-        Column(Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.px)) {
-            (if (symbols) SYMBOL_ROWS else LETTER_ROWS).forEach { row ->
-                Row(Modifier.weight(1f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.px)) {
+        Column(Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(KeyRows.GAP.px)) {
+            rows.forEach { row ->
+                Row(Modifier.weight(1f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(KeyRows.GAP.px)) {
                     row.forEach { cell ->
                         when (cell) {
                             is Cell.Gap -> Box(Modifier.weight(cell.weight))
@@ -133,6 +164,28 @@ internal fun TypingContent(state: CompanionState.Stream, onMenu: () -> Unit) {
                 }
             }
         }
+    }
+}
+
+/** The echo: what was typed in one line, the count when it does not fit, the hint while empty. */
+@Composable
+private fun Echo(value: String, modifier: Modifier) {
+    val colors = LocalDelosColors.current
+    val stage = LocalStage.current
+    val res = textResources()
+    val fit = rememberFit()
+    val hint = stringResource(R.string.companion_typing_hint)
+    val hintShort = stringResource(R.string.companion_typing_hint_short)
+    BoxWithConstraints(modifier.card().padding(horizontal = 20.px), contentAlignment = Alignment.CenterStart) {
+        val width = maxWidth.value / stage.dpPerPx / stage.textScale
+        val view = EchoFit.view(value, hint, hintShort, width, fit.metrics) { res.getQuantityString(R.plurals.companion_typing_count, it, it) }
+        BasicText(
+            view.text,
+            style = TextStyle(color = if (view.placeholder) colors.text3 else colors.text, fontFamily = Figtree, fontSize = MIN_TEXT.tpx),
+            maxLines = 1,
+            overflow = TextOverflow.Clip,
+            softWrap = false,
+        )
     }
 }
 
