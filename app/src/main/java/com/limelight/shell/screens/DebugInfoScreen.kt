@@ -76,6 +76,7 @@ import com.limelight.shell.ShapeSimulatorMenu
 import com.limelight.shell.companion.CompanionHelp
 import com.limelight.shell.companion.PublishCompanionHelp
 import com.limelight.shell.companion.companionShowsHelp
+import com.limelight.shell.companion.helpShort
 import com.limelight.shell.companion.hidesDescription
 import com.limelight.shell.Screen
 import com.limelight.shell.data.ProfileStore
@@ -546,11 +547,15 @@ fun DebugInfoScreen() {
         }
     }
     // On a dual-screen device the second panel shows the focused row's description and details, large; the list then has the room of the panel (docs/DUAL_SCREEN.md)
+    val helpTitle = focused?.label ?: stringResource(R.string.debug_title)
+    val helpBody = focused?.description ?: stringResource(R.string.debug_panel_default)
     val help = CompanionHelp(
         identity = focused?.key ?: "debug",
         icon = focused?.icon ?: Symbols.INFO,
-        title = focused?.label ?: stringResource(R.string.debug_title),
-        body = focused?.description ?: stringResource(R.string.debug_panel_default),
+        title = helpTitle,
+        body = helpBody,
+        short = helpShort(null, helpBody, helpTitle),
+        section = stringResource(R.string.companion_screen_debug),
         details = focused?.details,
     )
     PublishCompanionHelp(help)
