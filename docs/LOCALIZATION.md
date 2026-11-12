@@ -145,6 +145,12 @@ needs the keys, but identical names keep diffs reviewable.
 | `strings_firstrun.xml` | first run: avatar and profile creation |
 | `strings_settings_screen.xml` | native settings screens: titles, descriptions, search, letter picker |
 | `strings_companion.xml` | the companion screen on the second panel of a dual-screen device (docs/DUAL_SCREEN.md) |
+| `strings_companion_screens.xml` | the companion's fallback and welcome cards: screen titles and purposes, the hint list, battery |
+| `strings_companion_pc.xml` | the companion's PC cards, pairing steps and library states |
+| `strings_companion_content.xml` | the companion's artwork, filter, profile and boot pages |
+| `strings_companion_flow.xml` | the companion's launch loader, result and problem pages |
+| `strings_companion_help.xml` | the companion's game card, settings help and stream pages |
+| `strings_companion_dim.xml` | the idle-dimming rows of Settings → Display (docs/DUAL_SCREEN.md) |
 
 Add an area file (and a row here) rather than overloading an unrelated one.
 

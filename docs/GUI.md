@@ -869,11 +869,14 @@ activity keeps its own orientation logic) and supports windows from 1:1 up to 21
   in stage pixels, `StageMetrics.safe`; zero on the Odin, so nothing moves there). Other edge-anchored content can read `LocalStage.current.safe`.
 - **Companion screen** (issue #76, [DUAL_SCREEN.md](DUAL_SCREEN.md)): the second panel of a dual-screen device is a `CompanionActivity` on that display (own task, no key focus) with its own `Stage()`, so
   `LocalStage` there is planned from that display's size and density (the Thor's 1240 × 1080 panel is a Compact stage), independent of the main panel's.
-  Its content is variant A of the approved prototype (focused-game details and buttons, statistics and the nine stream-menu tiles, a touch keyboard), built from the
-  shared tokens (glass cards, Phosphor icons, gold primary, impact chips) with text at least 28 and targets at least 64 stage px; a stage under 920 px high lays the tiles out flat.
-  Content, state and command flow, burn-in policy and previews: [DUAL_SCREEN.md](DUAL_SCREEN.md), "What the companion shows".
-  The settings screens publish the description of the focused row to it (`PublishCompanionHelp`, "Settings help" in DUAL_SCREEN.md); it is drawn
-  large in one scrolling glass card (28 to 40 px text, a slim scroll bar and an edge fade while the page continues).
+  Its content is the approved prototype A2 (`.gradle-agent/companion-proto2/companion-A2.html`): **every screen has useful extra content there and none of it ever scrolls** (Rule 0). One
+  glass card per page, built from the shared tokens (Phosphor icons, gold primary, sea-glass secondary, impact chips) with text at least 28 and targets at least 64 stage px and 48 px margins:
+  the focused game, the focused PC with its actions (Wake, Library, Rename, Default, Unpair, Remove), the PIN in very large digits, the focused artwork at its own ratio, the active filters
+  with Reset, the profile, the launch steps, the full text of a result or problem, the description of the focused settings row, the stream tiles and keyboard, and for every other screen a status
+  card with its purpose, the connected PC, the clock, the battery and the main hint bar's entries. What does not fit is dropped by priority, cut at a sentence boundary or counted
+  (`CompanionFit`, `FitColumn`); the stream menu's long lists are paged, never scrolled.
+  Content per screen, state and command flow, burn-in policy, the idle-dimming setting (Settings → Display, only with a companion display) and previews: [DUAL_SCREEN.md](DUAL_SCREEN.md), "What the companion shows".
+  The settings screens publish the description of the focused row (`PublishCompanionHelp`, "The settings help" in DUAL_SCREEN.md); the main panel then gives the room of its own description to the list.
 - **Shape simulator** (debug builds, `ShapeSimulator` in `src/debug`; release builds have no-op stubs in `src/release`): draws the whole shell, or any `preview_screen`,
   in a centered box of the simulated panel's pixel size (scaled down uniformly when it does not fit; the density is scaled with it, so the dp maths is the panel's)
   with `LocalDensity` set to the simulated density. Outside the box it is black; a strip at the bottom names the size, dpi, dp size, stage and class and carries a
@@ -891,8 +894,8 @@ activity keeps its own orientation logic) and supports windows from 1:1 up to 21
     so change both together (the catalog also holds more devices than the sheets).
   - **Dual-screen simulation** (one physical screen, e.g. the Odin): the shell in the main panel's shape and the companion window's content in the second panel's,
     side by side or stacked, whichever shows them larger (one common scale), with a thin divider and a label on each panel. The companion half is the very
-    `CompanionContent` of `CompanionActivity` in the same `CompanionTheme`, fed with the same state the real window gets (`CompanionState.Shell` from the shell's published
-    game and help, or `companion_fake`), with `inWindow = true`, so the settings give their description to it exactly as with a real second display. It is
+    `CompanionContent` of `CompanionActivity` in the same `CompanionTheme`, fed with the same state the real window gets (`ShellState.companionState()`: the pages the shell's screens
+    publish, from every screen, or `companion_fake`), with `inWindow = true`, so the settings give their description to it exactly as with a real second display. It is
     touch-only (`focusProperties { canFocus = false }`): the controller keeps driving the main half. Main is the panel with more pixels, as `DualScreen` "Automatic" picks.
   - **Adb extras**: `--es preview_shape <W>x<H>@<dpi>` and `--es preview_cutout <L>,<T>,<R>,<B>` (insets in simulated pixels, drawn as a notch) simulate that panel alone.
     They combine with `preview_screen` and `preview_state`:
