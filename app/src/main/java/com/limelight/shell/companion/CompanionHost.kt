@@ -71,6 +71,21 @@ internal class CompanionHost(
         stream?.onStats(stats)
     }
 
+    /** From `NvConnection`'s first completed stage, the HTTP launch: the host accepted the launch request. Any thread. */
+    fun onLaunchAccepted() {
+        stream?.advance(StartStage::launchAccepted)
+    }
+
+    /** From the connection's `connectionStarted`: the stream runs, only the first presented frame is awaited. Any thread. */
+    fun onConnectionStarted() {
+        stream?.advance(StartStage::connectionStarted)
+    }
+
+    /** The loader of the stream activity is gone (the first frame is shown): the companion switches from its loader page to the stream tiles. Any thread. */
+    fun onLoaderDone() {
+        stream?.startDone()
+    }
+
     /** From the stream activity once its menu exists: the companion's tiles run the menu's own handlers from now on. */
     fun bindStream(menu: StreamMenu) {
         stream?.commands = StreamCommands(menu.companionMenu(), ::sendKey)
@@ -133,14 +148,18 @@ internal class CompanionHost(
         internal const val TAG = "Companion"
 
         /**
-         * The host of a stream activity (Java): the PC and game it streams are shown, the colors are the current profile's. Call
-         * [bindStream] once the stream menu exists and [onStats] with every statistics snapshot.
+         * The host of a stream activity (Java): the PC and game it streams are shown, the colors are the current profile's. [requested] are the stream
+         * settings the loader tells ("1920 x 1080 ..."), null when unknown. Call [bindStream] once the stream menu exists, [onLaunchAccepted] and
+         * [onConnectionStarted] as the start goes on, [onLoaderDone] when the loader is gone and [onStats] with every statistics snapshot: until the first
+         * of the last two the window shows the loader page.
          */
         @JvmStatic
-        fun forStream(activity: Activity, pcName: String?, gameName: String?): CompanionHost {
-            val feed = StreamFeed()
+        fun forStream(activity: Activity, pcName: String?, gameName: String?, pcId: String?, requested: String?): CompanionHost {
+            val feed = StreamFeed(requested)
             val appearance = AppearanceStore(activity) { ProfileStore.currentSettings(activity) }.appearance
-            return CompanionHost(activity, { appearance }) { CompanionState.Stream(pcName, gameName, feed.stats, feed.commands) }.also { it.stream = feed }
+            return CompanionHost(activity, { appearance }) {
+                CompanionState.Stream(pcName, gameName, feed.stats, feed.commands, pcId.orEmpty(), feed.start)
+            }.also { it.stream = feed }
         }
 
         /** A key of the companion keyboard into the stream: the path of the Full keyboard (`KeyBoardLayoutController.sendKey`). */
@@ -153,11 +172,24 @@ internal class CompanionHost(
 }
 
 /** The stream data the companion shows, held in snapshot state so the window follows it. */
-private class StreamFeed {
+private class StreamFeed(requested: String?) {
     var stats by mutableStateOf<StreamStats?>(null)
     var commands by mutableStateOf<StreamCommands?>(null)
+
+    /** What is known of the start while it goes on; null once the loader is gone. */
+    var start by mutableStateOf<StartProgress?>(StartProgress(StartStage.LAUNCHING, requested?.takeIf { it.isNotBlank() }))
     private val throttle = StatsThrottle()
     private val handler = Handler(Looper.getMainLooper())
+
+    /** Any thread: the start reached the next stage (a start that is over stays over). */
+    fun advance(next: (StartStage) -> StartStage) {
+        handler.post { start = start?.let { it.copy(stage = next(it.stage)) } }
+    }
+
+    /** Any thread: the loader is gone. */
+    fun startDone() {
+        handler.post { start = null }
+    }
 
     /** Decoder thread. */
     fun onStats(next: StreamStats) {

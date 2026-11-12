@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="companion_flow_pc">电脑</string>
+    <string name="companion_flow_starting">正在启动 %1$s</string>
+    <string name="companion_flow_starting_generic">正在启动游戏</string>
+    <string name="companion_flow_requested">%1$s · 请求 %2$s</string>
+    <string name="companion_flow_step_host">已找到主机</string>
+    <string name="companion_flow_step_launch">启动请求已接受</string>
+    <string name="companion_flow_step_video">等待视频</string>
+    <string name="companion_flow_step_ready">串流已就绪</string>
+    <string name="companion_flow_step_pending">%1$s · 待处理</string>
+    <string name="companion_flow_step_more">%1$s · +%2$d 待处理</string>
+    <string name="companion_flow_no_percentage">无法得知完成百分比。</string>
+    <string name="companion_flow_cancel_start">取消启动串流</string>
+    <string name="companion_flow_wait">请稍候</string>
+    <string name="companion_flow_result_title">串流已结束</string>
+    <string name="companion_flow_reconnect">重新连接</string>
+    <string name="companion_flow_lost_guidance">游戏可能仍在主机上运行。可用时请重新连接以继续。</string>
+    <string name="companion_flow_lost_short">游戏可能仍在运行。</string>
+    <string name="companion_flow_closed_guidance">打开游戏库，查看游戏是否仍在运行。</string>
+    <string name="companion_flow_closed_short">请在游戏库中查看游戏状态。</string>
+    <string name="companion_flow_problem_title">连接问题</string>
+    <string name="companion_flow_error_short">无法启动串流。</string>
+    <string name="companion_flow_recovery">请检查主机服务、防火墙和网络，然后重试。</string>
+    <string name="companion_flow_recovery_short">请检查主机服务和网络。</string>
+    <string name="companion_flow_full_on_main">完整错误信息仍显示在主屏幕上。</string>
+    <string name="companion_flow_report_short">报告会打开 GitHub 并附上草稿供你检查。</string>
+</resources>

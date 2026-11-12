@@ -95,6 +95,8 @@ class StreamLoader private constructor(
     private fun dispose() {
         if (removed) return
         removed = true
+        // The companion screen leaves its loader page for the stream tiles
+        activity.onStreamLoaderGone()
         changes.close()
         arrival.setLaunchArrivalProgress(-1f)
         // One launch, one handoff: nothing of it may start the next launch (a shortcut launch has no shell overlay)

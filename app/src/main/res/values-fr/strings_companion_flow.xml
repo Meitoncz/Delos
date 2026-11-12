@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="companion_flow_pc">PC</string>
+    <string name="companion_flow_starting">Lancement de %1$s</string>
+    <string name="companion_flow_starting_generic">Lancement du jeu</string>
+    <string name="companion_flow_requested">%1$s · demandé %2$s</string>
+    <string name="companion_flow_step_host">Hôte trouvé</string>
+    <string name="companion_flow_step_launch">Demande de lancement acceptée</string>
+    <string name="companion_flow_step_video">En attente de la vidéo</string>
+    <string name="companion_flow_step_ready">Stream prêt</string>
+    <string name="companion_flow_step_pending">%1$s · en attente</string>
+    <string name="companion_flow_step_more">%1$s · +%2$d en attente</string>
+    <string name="companion_flow_no_percentage">Le pourcentage d’avancement est inconnu.</string>
+    <string name="companion_flow_cancel_start">Annuler le lancement du stream</string>
+    <string name="companion_flow_wait">Un instant</string>
+    <string name="companion_flow_result_title">Le stream est terminé</string>
+    <string name="companion_flow_reconnect">Se reconnecter</string>
+    <string name="companion_flow_lost_guidance">Le jeu tourne peut-être encore sur l’hôte. Reconnecte-toi pour reprendre dès que possible.</string>
+    <string name="companion_flow_lost_short">Le jeu tourne peut-être encore.</string>
+    <string name="companion_flow_closed_guidance">Ouvre la bibliothèque pour voir si le jeu tourne encore.</string>
+    <string name="companion_flow_closed_short">Vérifie l’état du jeu dans la bibliothèque.</string>
+    <string name="companion_flow_problem_title">Problème de connexion</string>
+    <string name="companion_flow_error_short">Le stream n’a pas pu démarrer.</string>
+    <string name="companion_flow_recovery">Vérifie le service de l’hôte, le pare-feu et le réseau. Puis réessaie.</string>
+    <string name="companion_flow_recovery_short">Vérifie le service de l’hôte et le réseau.</string>
+    <string name="companion_flow_full_on_main">L’erreur complète reste sur l’écran principal.</string>
+    <string name="companion_flow_report_short">Le signalement ouvre GitHub avec un brouillon à vérifier.</string>
+</resources>
