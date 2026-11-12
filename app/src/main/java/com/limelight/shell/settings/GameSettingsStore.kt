@@ -104,7 +104,23 @@ class GameSettingsStore(private val base: SharedPreferences, pc: String, appId: 
         val KEYS = (STREAM_KEYS + DISPLAY_KEYS).toSet()
         private const val EXTRA = "com.limelight.shell.GAME_SETTINGS"
 
-        private fun pcPrefix(pc: String) = "ui_game_${UUID.nameUUIDFromBytes(pc.toByteArray(Charsets.UTF_8))}_"
+        private const val GAME_PREFIX = "ui_game_"
+
+        /** The length of the UUID in [pcPrefix] and the underscore after it. */
+        private const val UUID_PART = 36 + 1
+
+        private fun pcPrefix(pc: String) = "$GAME_PREFIX${UUID.nameUUIDFromBytes(pc.toByteArray(Charsets.UTF_8))}_"
+
+        /**
+         * How many games (a PC and an app id) have at least one real per-game setting (a key of [KEYS]) in [all], a profile's stored preferences:
+         * the profile page's "N game overrides". Reads the keys only, so it is cheap; the private codec bitrate slots alone do not count.
+         */
+        fun overriddenGameCount(all: Map<String, *>): Int = all.keys.mapNotNullTo(HashSet()) { key ->
+            if (!key.startsWith(GAME_PREFIX) || key.length <= GAME_PREFIX.length + UUID_PART) return@mapNotNullTo null
+            val rest = key.substring(GAME_PREFIX.length + UUID_PART)
+            val appId = rest.substringBefore('_', "")
+            if (appId.isEmpty() || rest.substringAfter('_', "") !in KEYS) null else key.substring(0, GAME_PREFIX.length + UUID_PART) + appId
+        }.size
         private fun prefixFor(pc: String, appId: Int) = "${pcPrefix(pc)}${appId}_"
 
         /**

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="companion_art_subtitle">선택한 이미지 · 원본 비율</string>
+    <string name="companion_art_use">이 이미지 사용</string>
+    <string name="companion_art_score">점수 %1$d</string>
+    <string name="companion_art_added">추가일 %1$s</string>
+    <string name="companion_art_size_file">%1$d × %2$d · %3$s</string>
+    <string name="companion_art_builtin">내장 아트워크</string>
+    <string name="companion_filter_library_title">라이브러리 필터</string>
+    <string name="companion_filter_art_title">이미지 필터</string>
+    <string name="companion_filter_sub">메인 필터 시트 요약</string>
+    <string name="companion_filter_none">활성 필터 없음</string>
+    <string name="companion_filter_more">+%1$d</string>
+    <string name="companion_filter_change_main">조건은 메인 화면에서 변경하세요.</string>
+    <string name="companion_profile_current">현재 프로필</string>
+    <string name="companion_profile_line_both">%1$s · %2$s.</string>
+    <string name="companion_profile_line_one">%1$s.</string>
+    <string name="companion_profile_defaults">기본 설정을 사용 중입니다.</string>
+    <string name="companion_profile_default_pc">기본 PC: %1$s.</string>
+    <string name="companion_profile_edit_main">편집은 메인 화면에서 합니다.</string>
+    <string name="companion_create_draft">프로필 초안 · 저장 안 됨</string>
+    <string name="companion_create_choose">아바타와 이름은 메인 화면에서 선택하세요.</string>
+    <string name="companion_create_no_account">계정은 필요하지 않습니다.</string>
+    <string name="companion_boot_sub">첫 실행 · 추가 공간</string>
+    <string name="companion_boot_text">라이브러리, 설정, 스트림은 메인 화면에 있습니다. 이 패널은 유용한 정보와 터치 컨트롤을 더해 줍니다. 메인 화면에서 시작하기를 선택하세요.</string>
+    <string name="companion_boot_hint_begin">메인에서 시작하기</string>
+    <plurals name="companion_filter_games_of">
+        <item quantity="other">게임 %2$d개 중 %1$d개가 일치합니다.</item>
+    </plurals>
+    <plurals name="companion_filter_games_all">
+        <item quantity="other">게임 전체 %1$d개.</item>
+    </plurals>
+    <plurals name="companion_filter_images_of">
+        <item quantity="other">이미지 %2$d개 중 %1$d개가 일치합니다.</item>
+    </plurals>
+    <plurals name="companion_filter_images_all">
+        <item quantity="other">이미지 전체 %1$d개.</item>
+    </plurals>
+    <plurals name="companion_filter_images_some">
+        <item quantity="other">%1$d개 이미지가 일치합니다.</item>
+    </plurals>
+    <plurals name="companion_profile_settings">
+        <item quantity="other">사용자 설정 %1$d개</item>
+    </plurals>
+    <plurals name="companion_profile_overrides">
+        <item quantity="other">게임별 설정 %1$d개</item>
+    </plurals>
+</resources>

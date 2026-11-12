@@ -62,7 +62,13 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
+import com.limelight.shell.companion.FilterPage
+import com.limelight.shell.companion.FilterUnit
+import com.limelight.shell.companion.PublishCompanionPage
+import com.limelight.shell.companion.filterCount
 import com.limelight.shell.data.GameGenre
+import com.limelight.shell.ui.genreNameRes
+import com.limelight.shell.ui.themeNameRes
 import com.limelight.shell.data.GameMetadata
 import com.limelight.shell.data.HdrFilter
 import com.limelight.shell.data.LengthFilter
@@ -121,6 +127,18 @@ internal fun themeCounts(games: List<GameMetadata?>): Map<Int, Int> =
 internal fun filterResultLine(res: Resources, shown: Int, total: Int, active: Boolean): String =
     if (active) res.getQuantityString(R.plurals.filters_result_active, total, shown, total)
     else res.getQuantityString(R.plurals.filters_result_all, total, total)
+
+/** The criteria that narrow the library as the sheet names them, in the order of its rows: genre, theme, HDR support, length. */
+internal fun libraryFilterLabels(res: Resources, filters: MetadataFilters, genres: List<GameGenre>, themes: List<GameGenre>): List<String> = buildList {
+    filters.genreId?.let { id ->
+        add(genres.firstOrNull { it.id == id }?.let { genreName(res, it) } ?: genreNameRes(id)?.let(res::getString) ?: res.getString(R.string.filters_section_genre))
+    }
+    filters.themeId?.let { id ->
+        add(themes.firstOrNull { it.id == id }?.let { themeName(res, it) } ?: themeNameRes(id)?.let(res::getString) ?: res.getString(R.string.filters_section_theme))
+    }
+    if (filters.hdr != HdrFilter.ANY) add(res.getString(hdrFilterLabel(filters.hdr)))
+    if (filters.length != LengthFilter.ANY) add(res.getString(lengthFilterLabel(filters.length)))
+}
 
 /** The home hint bar's label for Y: "Filter", with the number of narrowing criteria while any is set. */
 internal fun filterHintLabel(res: Resources, filters: MetadataFilters): String =
@@ -196,6 +214,14 @@ private fun FilterPanel(ready: Library.Ready, open: Boolean, haze: HazeState, on
     val counts = remember(games) { genreCounts(games) }
     val themeCount = remember(games) { themeCounts(games) }
     val matching = games.indices.count { filters.matches(apps[it], games[it]) }
+
+    // The second display summarises the sheet while it is open: the same count as the title's, the active criteria, and the sheet's own reset
+    val chips = remember(filters, genres, themes, locale) { libraryFilterLabels(res, filters, genres, themes) }
+    val reset = remember(metadata) { { if (metadata.filters.active) metadata.updateFilters(MetadataFilters()) } }
+    val page = remember(open, chips, matching, apps.size, filters.active, reset) {
+        if (open) FilterPage(true, chips, filterCount(matching, apps.size, filters.active), FilterUnit.GAMES, reset) else null
+    }
+    PublishCompanionPage(page)
 
     // One requester per genre chip: the first focus goes to the selected one, a reset back to "All"
     val genreRequesters = remember { HashMap<Int, FocusRequester>() }

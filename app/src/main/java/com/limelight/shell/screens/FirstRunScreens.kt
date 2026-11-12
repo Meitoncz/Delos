@@ -33,6 +33,10 @@ import androidx.compose.ui.unit.em
 import androidx.compose.ui.res.stringResource
 import com.limelight.R
 import com.limelight.shell.LocalFocusTracker
+import com.limelight.shell.Screen
+import com.limelight.shell.companion.BootPage
+import com.limelight.shell.companion.CreateProfilePage
+import com.limelight.shell.companion.PublishCompanionPage
 import com.limelight.shell.LocalShell
 import com.limelight.shell.data.AVATARS
 import com.limelight.shell.data.Profile
@@ -65,6 +69,9 @@ fun BootScreen(onBegin: () -> Unit, onSkip: (() -> Unit)?) {
     val colors = LocalDelosColors.current
     val begin = remember { FocusRequester() }
     InitialFocus(begin)
+    // The second display says what the step is; B is listed only when this Boot was opened from another screen
+    val canGoBack = (LocalShell.current.screen as? Screen.Boot)?.back != null
+    PublishCompanionPage(remember(canGoBack) { BootPage(canGoBack) })
     CenterColumn(gap = 28f) {
         BootLogo(Modifier.padding(bottom = 8.px), LocalStage.current.compactScale)
         // margin-left .24em balances the letter spacing after the last letter
@@ -126,6 +133,8 @@ fun CreateProfileScreen(editing: Boolean, initial: Profile?, onDone: (name: Stri
     val changeName = remember { FocusRequester() }
     val create = remember { FocusRequester() }
     InitialFocus(avatarFocus[avatar.coerceIn(AVATARS.indices)])
+    // The draft as it is on the main display; the companion never keeps a draft of its own
+    PublishCompanionPage(remember(name, avatar) { CreateProfilePage(name, AVATARS[avatar.coerceIn(AVATARS.indices)]) })
     // The name is typed in the same dialog as Rename profile; when it is accepted the page shows it and the focus goes on to Create / Save
     val askName = {
         openProfileNameDialog(res, shell, tracker, feedback, nameTitle, name) { entered ->
