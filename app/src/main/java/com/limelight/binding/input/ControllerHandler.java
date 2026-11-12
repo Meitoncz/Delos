@@ -324,11 +324,6 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
             activeRumble = active;
             LimeLog.info("RumblePlayback started: translator " + (prefConfig.rumbleTranslatorEnabled ? "on" : "off")
                     + ", profile " + profile);
-            // The system scales the amplitude of a MEDIA vibration by this setting before it plays, so dumpsys shows
-            // a lower amplitude in "effect:" than the app sent (the app's own value is "originalEffect:")
-            LimeLog.info("RumblePlayback system: media vibration intensity "
-                    + android.provider.Settings.System.getInt(activityContext.getContentResolver(), "media_vibration_intensity", -1)
-                    + " (0 off, 1 low, 2 medium, 3 high, -1 not set)");
             return active.playback;
         }
     }
