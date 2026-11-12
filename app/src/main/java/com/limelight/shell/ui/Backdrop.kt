@@ -255,10 +255,10 @@ private fun HeroStill(art: GameArt, blurPx: Int, reducedMotion: Boolean, active:
     val stage = LocalStage.current
     val area = remember(stage.stageWidth, stage.stageHeight) { HeroArea.of(stage) }
     if (image != null && blurPx > 0) {
-        // Only this bounded cache fill uses the GPU lens shader. The orbit scales its result like an
-        // ordinary image, with no shader work, bitmap allocations or recomposition on motion frames.
-        val hero by produceState(HeroBitmaps.cachedLens(art.id, image, blurPx, area), art.id, image, blurPx, area) {
-            value = HeroBitmaps.cachedLens(art.id, image, blurPx, area) ?: withContext(Dispatchers.Default) { HeroBitmaps.renderLens(art.id, image, blurPx, area) }
+        // The blurred bitmap is cached per game and strength (HeroBitmaps.render: three box blurs, a Gaussian). The orbit scales it
+        // like an ordinary image, with no shader work, bitmap allocations or recomposition on motion frames.
+        val hero by produceState(HeroBitmaps.cached(art.id, image, blurPx, area), art.id, image, blurPx, area) {
+            value = HeroBitmaps.cached(art.id, image, blurPx, area) ?: withContext(Dispatchers.Default) { HeroBitmaps.render(art.id, image, blurPx, area) }
         }
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             hero?.let {

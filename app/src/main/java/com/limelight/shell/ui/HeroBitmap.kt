@@ -45,7 +45,6 @@ object HeroBitmaps {
 
     private val cache = LruCache<String, ImageBitmap>(24)
     private val latest = LruCache<String, ImageBitmap>(24)
-    private val lensCache = LruCache<String, ImageBitmap>(24)
 
     /** Bumped when the composition changes, so bitmaps of an older one are never reused. */
     private const val COMPOSITION_VERSION = 2
@@ -114,31 +113,6 @@ object HeroBitmaps {
 
     fun cached(key: String, source: ImageBitmap, blurPx: Int, area: HeroArea = HeroArea.Standard): ImageBitmap? =
         cache.get(cacheKey(key, source, blurPx, area))
-
-    internal fun cachedLens(key: String, source: ImageBitmap, blurPx: Int, area: HeroArea = HeroArea.Standard): ImageBitmap? =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) lensCache.get(cacheKey(key, source, blurPx, area)) else cached(key, source, blurPx, area)
-
-    /** Live hero only. Keep the legacy snapshot populated for the unchanged launch handoff. */
-    internal fun renderLens(key: String, source: ImageBitmap, blurPx: Int, area: HeroArea = HeroArea.Standard): ImageBitmap {
-        cachedLens(key, source, blurPx, area)?.let { return it }
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return render(key, source, blurPx, area)
-        val input = composed(key, source, area)
-        val result = try {
-            val snapshot = cached(key, source, blurPx, area)
-                ?: renderSnapshot(key, source, blurPx, area, checkNotNull(input.copy(Bitmap.Config.ARGB_8888, true)))
-            try {
-                HeroLensShader.render(input, blurPx, area).asImageBitmap()
-            } catch (e: RuntimeException) {
-                // An unsupported GPU must retain the supported bitmap path, not crash the home screen.
-                com.limelight.LimeLog.warning("Hero lens $key unavailable: ${e.message}") // l10n-ignore
-                snapshot
-            }
-        } finally {
-            input.recycle()
-        }
-        lensCache.put(cacheKey(key, source, blurPx, area), result)
-        return result
-    }
 
     /** The dominant hue of [key]'s background once it has been rendered; null while unknown or grey. */
     fun hue(key: String): Float? = hues[key]?.hues?.firstOrNull()

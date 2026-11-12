@@ -382,7 +382,7 @@ internal object GameSettingsLayout {
 }
 
 /**
- * The hero banner: the game's artwork blurred like the app's hero ([HeroBitmaps.renderLens], the same cached bitmap as the
+ * The hero banner: the game's artwork blurred like the app's hero ([HeroBitmaps.render], the same cached bitmap as the
  * dashboard's background), the top of the hero's area; the placeholder art while there is no image (and under it while it
  * loads). A scrim keeps the title legible on bright art, and the strip fades into the page towards its bottom.
  */
@@ -397,8 +397,8 @@ internal fun GameBanner(art: GameArt, image: ImageBitmap?, blurPx: Int) {
         contentAlignment = Alignment.TopCenter) {
         PlaceholderArt(art.hue, art.hue2, art.icon, Modifier.fillMaxSize(), glyphSize = 420f, glyphRight = 84f, glyphTop = -.14f, glyphAlpha = .14f)
         if (image != null) {
-            val lens by produceState(if (blurPx > 0) HeroBitmaps.cachedLens(art.id, image, blurPx, area) else null, art.id, image, blurPx, area) {
-                value = if (blurPx > 0) HeroBitmaps.cachedLens(art.id, image, blurPx, area) ?: withContext(Dispatchers.Default) { HeroBitmaps.renderLens(art.id, image, blurPx, area) } else null
+            val lens by produceState(if (blurPx > 0) HeroBitmaps.cached(art.id, image, blurPx, area) else null, art.id, image, blurPx, area) {
+                value = if (blurPx > 0) HeroBitmaps.cached(art.id, image, blurPx, area) ?: withContext(Dispatchers.Default) { HeroBitmaps.render(art.id, image, blurPx, area) } else null
             }
             val shown = if (blurPx > 0) lens else image
             val alpha by animateFloatAsState(if (shown != null) 1f else 0f, tween(Motion.FADE, easing = Motion.Ease), label = "bannerArt")

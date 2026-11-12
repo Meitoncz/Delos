@@ -542,7 +542,7 @@ private fun DescriptionPanel(tab: SettingsTab, focused: SettingsItem?, modifier:
 private fun rememberBackgroundPreview(appearance: Appearance): ImageBitmap? {
     val hero = LocalShell.current.hero
     val image by produceState<ImageBitmap?>(null, hero?.id, appearance.heroBlur) {
-        value = hero?.image?.let { source -> withContext(Dispatchers.Default) { HeroBitmaps.renderLens(hero.id, source, appearance.heroBlur) } }
+        value = hero?.image?.let { source -> withContext(Dispatchers.Default) { HeroBitmaps.render(hero.id, source, appearance.heroBlur) } }
     }
     return image
 }
