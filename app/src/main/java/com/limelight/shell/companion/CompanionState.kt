@@ -14,8 +14,12 @@ import com.limelight.shell.settings.SettingImpact
  * [StreamCommands]): the companion never reaches into an activity.
  */
 internal sealed interface CompanionState {
-    /** The shell: the PC whose games are open and the game focused on the main panel (null on the start screen, in settings). */
-    data class Shell(val pcName: String?, val game: CompanionGame? = null) : CompanionState
+    /**
+     * The shell: the PC whose games are open, the game focused on the main panel (null on the start screen and in settings) and the
+     * [help] of the focused settings row (null outside the settings screens). With both, the help wins: the settings screen is on top
+     * ([shellView]).
+     */
+    data class Shell(val pcName: String?, val game: CompanionGame? = null, val help: CompanionHelp? = null) : CompanionState
 
     /** A stream: the PC and game it runs, the latest statistics (null before the first) and the commands of the running stream (null until bound). */
     data class Stream(

@@ -69,4 +69,28 @@ class CompanionSessionTest {
         assertFalse(CompanionSession.isLaunching(4, 1_500_000_000L))
         assertFalse(CompanionSession.isLaunching(3, 3_500_000_000L))
     }
+
+    @Test fun theHelpIsShownExactlyWhileTheWindowThatTookItDrawsIt() {
+        val window = Any()
+        assertFalse(CompanionSession.showsHelp)
+        CompanionSession.helpShown(window)
+        assertTrue(CompanionSession.showsHelp)
+        CompanionSession.helpGone(window)
+        assertFalse(CompanionSession.showsHelp)
+    }
+
+    @Test fun aWindowThatWentCannotTakeTheHelpOfTheOneThatCameAfterIt() {
+        val old = Any()
+        val next = Any()
+        CompanionSession.helpShown(old)
+        // The swap: the new window takes the help before the old one is destroyed
+        CompanionSession.helpShown(next)
+        CompanionSession.helpGone(old)
+        assertTrue(CompanionSession.showsHelp)
+        CompanionSession.helpGone(next)
+        assertFalse(CompanionSession.showsHelp)
+        // A stranger's late gone does nothing
+        CompanionSession.helpGone(Any())
+        assertFalse(CompanionSession.showsHelp)
+    }
 }

@@ -60,6 +60,12 @@ import com.limelight.shell.LocalShell
 import com.limelight.shell.MenuItem
 import com.limelight.shell.Screen
 import com.limelight.shell.ToastAction
+import com.limelight.shell.companion.CompanionHelp
+import com.limelight.shell.companion.HelpSource
+import com.limelight.shell.companion.PublishCompanionHelp
+import com.limelight.shell.companion.companionShowsHelp
+import com.limelight.shell.companion.helpSource
+import com.limelight.shell.companion.hidesDescription
 import com.limelight.shell.data.ArtKind
 import com.limelight.shell.data.LocalArtwork
 import com.limelight.shell.data.LocalBoxArt
@@ -188,6 +194,26 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
     val coverImage by rememberArtwork(artwork, screen.pc, screen.app, ArtKind.COVER)
     val boxImage by rememberBoxArt(LocalBoxArt.current, screen.pc, screen.app)
     val art = appArt(screen.pc, screen.app)
+    val linkNote = guidance?.help(res, System.currentTimeMillis(), currentTransport(LocalContext.current))?.let { res.getString(R.string.settings_game_link_note, it) }
+    val detail = focused?.let {
+        SettingsHelp.details(res, it, values, caps?.choices(res, it, values) ?: it.choices) +
+            if (it.key == "seekbar_bitrate_kbps" && linkNote != null) "\n\n$linkNote" else ""
+    }
+    val focusedChoices = focused?.let { caps?.choices(res, it, values) ?: it.choices }.orEmpty()
+    val currentLabel = focused?.let { profileValueLabel(res, it, values[it.key] ?: it.default, focusedChoices) }
+    val profileLabel = focused?.let { profileValueLabel(res, it, profileValues[it.key] ?: it.default, focusedChoices) }
+    // On a dual-screen device the second panel shows the focused option's description, large; the list then has the room of the panel (docs/DUAL_SCREEN.md)
+    val help = CompanionHelp(
+        identity = focused?.key ?: "game",
+        icon = focused?.icon ?: Symbols.TUNE,
+        title = focused?.label ?: res.getString(R.string.settings_game_panel_title),
+        body = detail?.takeIf { it.isNotBlank() } ?: res.getString(R.string.settings_game_only_this_game, screen.app.name),
+        source = gameSettingsSource(res, focused, focused?.key in custom, touch, currentLabel, profileLabel, streamCustom, displayCustom),
+        impact = focused?.let { impact(it.key, values) },
+        savedNote = true,
+    )
+    PublishCompanionHelp(help)
+    val hideDescription = hidesDescription(companionShowsHelp(), help)
     val bottom = SettingsLayout.bottom(appearance)
     val margin = SettingsLayout.margin(stage)
     // Compact: one header row on a shorter banner (the name, the tabs and Reset all as a circle), the list at full width under it and the
@@ -197,9 +223,14 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
     val listTop = if (compact) GameSettingsLayout.COMPACT_LIST_TOP else GameSettingsLayout.LIST_TOP
     val listInnerTop = if (compact) GameSettingsLayout.COMPACT_LIST_INNER_TOP else GameSettingsLayout.LIST_INNER_TOP
     val listX = if (compact) margin - 18f else GameSettingsLayout.LIST_X
-    val listWidth = if (compact) stage.stageWidth - 2 * (margin - 18f) else stage.stageWidth - GameSettingsLayout.LIST_WIDTH_LESS
+    // The list spans the panel's room too while a companion window shows the description
+    val listWidth = when {
+        compact -> stage.stageWidth - 2 * (margin - 18f)
+        hideDescription -> stage.stageWidth - 2 * GameSettingsLayout.LIST_X
+        else -> stage.stageWidth - GameSettingsLayout.LIST_WIDTH_LESS
+    }
     val dockHeight = HelpDockLayout.height(stage.stageHeight, listTop + listInnerTop, bottom, SettingsLayout.tallRow(stage))
-    val listBottom = if (compact) bottom + dockHeight + HelpDockLayout.LIST_GAP else bottom
+    val listBottom = if (compact && !hideDescription) bottom + dockHeight + HelpDockLayout.LIST_GAP else bottom
     // Nothing to reset: dimmed and skipped. Down returns to the row last focused, not the nearest one
     val resetModifier = Modifier.alpha(if (custom.isEmpty()) .4f else 1f)
         .onFocusChanged { onBanner = it.hasFocus }
@@ -295,19 +326,12 @@ fun GameSettingsScreen(screen: Screen.GameSettings, profiles: ProfileStore, appe
                 }
             }
         }
-        val linkNote = guidance?.help(res, System.currentTimeMillis(), currentTransport(LocalContext.current))?.let { res.getString(R.string.settings_game_link_note, it) }
-        val detail = focused?.let {
-            SettingsHelp.details(res, it, values, caps?.choices(res, it, values) ?: it.choices) +
-                if (it.key == "seekbar_bitrate_kbps" && linkNote != null) "\n\n$linkNote" else ""
-        }
-        val focusedChoices = focused?.let { caps?.choices(res, it, values) ?: it.choices }.orEmpty()
-        GameSettingsPanel(
+        if (!hideDescription) GameSettingsPanel(
             if (compact) Modifier.align(Alignment.BottomCenter).padding(start = margin.px, end = margin.px, bottom = bottom.px).fillMaxWidth().height(dockHeight.px)
             else Modifier.align(Alignment.TopEnd).padding(top = GameSettingsLayout.PANEL_TOP.px, end = SettingsLayout.TITLE_X.px, bottom = bottom.px)
                 .width(520.px).fillMaxHeight(),
             game = screen.app.name, focused = focused, isCustom = focused?.key in custom, touch = touch,
-            currentLabel = focused?.let { profileValueLabel(res, it, values[it.key] ?: it.default, focusedChoices) },
-            profileLabel = focused?.let { profileValueLabel(res, it, profileValues[it.key] ?: it.default, focusedChoices) },
+            currentLabel = currentLabel, profileLabel = profileLabel,
             detail = detail, streamCustom = streamCustom, displayCustom = displayCustom,
             showImpactLegend = focused != null && impact(focused.key, values) != null,
         )
@@ -475,26 +499,8 @@ internal fun GameSettingsPanel(
     val colors = LocalDelosColors.current
     val res = textResources()
     val compact = LocalStage.current.shape == StageShape.COMPACT
-    // The sentence with [value] set in bold: the string is formatted around a marker that the value then replaces
-    fun bold(@androidx.annotation.StringRes sentence: Int, value: String): AnnotatedString = buildAnnotatedString {
-        val marker = "\u0001"
-        // %2$s is the name of the X button (settings_game_profile_value_button); the touch sentence has no second argument
-        val text = res.getString(sentence, marker, StreamMenuSettings.buttonName(res, android.view.KeyEvent.KEYCODE_BUTTON_X))
-        val at = text.indexOf(marker)
-        append(text.substring(0, at))
-        withStyle(SpanStyle(color = colors.text, fontWeight = FontWeight.Bold)) { append(value) }
-        append(text.substring(at + marker.length))
-    }
-    val total = streamCustom + displayCustom
     val source: @Composable () -> Unit = {
-        when {
-            focused == null -> SourceBox(total > 0, if (total > 0) Symbols.TUNE else Symbols.CHECK_CIRCLE, customSettingsLabel(res, total),
-                AnnotatedString(customSummary(res, streamCustom, displayCustom)))
-            isCustom -> SourceBox(true, Symbols.TUNE, stringResource(R.string.settings_game_custom_title),
-                bold(if (touch) R.string.settings_game_profile_value_touch else R.string.settings_game_profile_value_button, profileLabel.orEmpty()))
-            else -> SourceBox(false, Symbols.ACCOUNT_CIRCLE, stringResource(R.string.settings_game_from_profile),
-                bold(R.string.settings_game_currently, currentLabel.orEmpty()))
-        }
+        SourceBox(gameSettingsSource(res, focused, isCustom, touch, currentLabel, profileLabel, streamCustom, displayCustom))
     }
     val help: @Composable () -> Unit = {
         BasicText(detail?.takeIf { it.isNotBlank() } ?: stringResource(R.string.settings_game_only_this_game, game),
@@ -529,11 +535,43 @@ internal fun GameSettingsPanel(
     }
 }
 
+/**
+ * What the source box says (the panel's and the companion screen's): where the focused value comes from (custom for this game, with the
+ * profile's value and how to reset it, or the profile's), or with nothing focused how many settings this game customises. The value is the
+ * [HelpSource.strong] part, set in bold.
+ */
+internal fun gameSettingsSource(
+    res: android.content.res.Resources, focused: SettingSpec?, isCustom: Boolean, touch: Boolean,
+    currentLabel: String?, profileLabel: String?, streamCustom: Int, displayCustom: Int,
+): HelpSource {
+    val total = streamCustom + displayCustom
+    // The string is formatted around a marker that the value then replaces; %2$s is the name of the X button (the touch sentence has no second argument)
+    val marker = "\u0001"
+    val xButton = StreamMenuSettings.buttonName(res, android.view.KeyEvent.KEYCODE_BUTTON_X)
+    fun sentence(@androidx.annotation.StringRes id: Int, value: String, custom: Boolean, icon: String, title: String) =
+        helpSource(custom, icon, title, res.getString(id, marker, xButton), marker, value)
+    return when {
+        focused == null -> helpSource(total > 0, if (total > 0) Symbols.TUNE else Symbols.CHECK_CIRCLE, customSettingsLabel(res, total),
+            customSummary(res, streamCustom, displayCustom), "", "")
+        isCustom -> sentence(if (touch) R.string.settings_game_profile_value_touch else R.string.settings_game_profile_value_button,
+            profileLabel.orEmpty(), true, Symbols.TUNE, res.getString(R.string.settings_game_custom_title))
+        else -> sentence(R.string.settings_game_currently, currentLabel.orEmpty(), false, Symbols.ACCOUNT_CIRCLE, res.getString(R.string.settings_game_from_profile))
+    }
+}
+
 /** The panel's source box (`.src`): a quiet frame, violet while the value is custom. */
 @Composable
-private fun SourceBox(custom: Boolean, icon: String, title: String, body: AnnotatedString) {
+private fun SourceBox(source: HelpSource) {
     val colors = LocalDelosColors.current
     val tint = colors.accent3
+    val custom = source.custom
+    val icon = source.icon
+    val title = source.title
+    val body = buildAnnotatedString {
+        append(source.before)
+        if (source.strong.isNotEmpty()) withStyle(SpanStyle(color = colors.text, fontWeight = FontWeight.Bold)) { append(source.strong) }
+        append(source.after)
+    }
     if (LocalStage.current.shape == StageShape.COMPACT) {
         // In the dock's scrolling body: the marker and what the profile (or this game) has as one paragraph that wraps inside the box
         val shape = RoundedCornerShape(16.px)

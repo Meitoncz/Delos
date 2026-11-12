@@ -204,9 +204,44 @@ Approved prototype: `.gradle-agent/companion-proto/companion-A.html`. Header (De
 
 | State | Content |
 |---|---|
-| **Shell** | the game focused on the main panel, live: banner (hero, else cover, else the placeholder hues) with name and summary, genre and theme pills, HLTB, native HDR, three impact chips (GPU, latency, network: the highest level of the game's effective stream settings, an estimate like the settings rows' chips), and big buttons. With nothing running: Start, Game settings. This game runs: Resume, Game settings. Another game runs: Resume that game, Quit it and start this one (red), Game settings. No focused game (start screen, settings): the Delos mark and a hint. |
+| **Shell** | the game focused on the main panel, live: banner (hero, else cover, else the placeholder hues) with name and summary, genre and theme pills, HLTB, native HDR, three impact chips (GPU, latency, network: the highest level of the game's effective stream settings, an estimate like the settings rows' chips), and big buttons. With nothing running: Start, Game settings. This game runs: Resume, Game settings. Another game runs: Resume that game, Quit it and start this one (red), Game settings. On a settings screen (Settings, a game's settings, Debug info) the **description of the focused row** instead, large (next section). No focused game and no settings screen (start screen): the Delos mark and a hint. |
 | **Stream** | heading (game, picture: resolution, frame rate, codec, HDR), FPS, network, decoding and the bitrate asked for, and the nine tiles of the stream menu in its order (Resume, Keyboard, Overlay, Brightness, Bitrate, Upscaler, More, Disconnect, Quit game); the last row is set apart. Resume tucks the tiles away (a quiet screen with Open stream menu). Brightness, Bitrate, Upscaler and More open a page over the tiles (sliders and steppers for a thumb; More: send keys, commands, clipboard, task manager, zoom, mouse mode, on-screen controls, Android keyboard, touch sensitivity). No confirmation dialogs anywhere. |
 | **Typing** | the Keyboard tile: five rows (digits, letters, Shift, #+= page, Space, arrows), Enter, Backspace, an echo of the newest 40 typed characters and Stream menu to go back. |
+
+### The rule, and the settings help
+
+The user's rule: *the smaller display is not for the important screens; the second panel is something EXTRA that helps the main one.* The shell
+(and so every list and every setting) stays on the main panel; the second panel carries what helps it: on Home the focused game's details, on the
+settings screens **the description of the focused row**, large, which is the box that used to take a third of the main screen.
+
+| Main panel | Second panel |
+|---|---|
+| Home | the focused game: banner, pills, impact chips, Start / Resume / Game settings |
+| Settings (any tab) | the focused row: icon disc, name, the value's own detail ("720p", "Requests a 1280 x 720 stream."), the help; "Unavailable with the current settings or on this device" for a row that cannot be changed; the three impact chips of the row with their levels and "Cost of the current value: 1 bar low, 2 medium, 3 high"; a text row's text in the accent color; the three palette swatches for Color palette; the game-background preview for the three game-background rows. With nothing focused the tab's own description |
+| A game's settings | the same, plus where the value comes from (the violet "Custom for this game · Profile value: 720p · press X to go back to it" or "From profile · Currently 720p …", the value in bold) and "Saved automatically · applies next stream"; with Reset all focused the game's summary ("Your game, your settings", the count of custom settings) |
+| Debug info | the focused row's name, description and monospace details |
+| Settings search, Profile, stream, anything else | unchanged (the game, else the mark) |
+
+**State.** `CompanionState.Shell(pcName, game, help)`: `help` is an immutable `CompanionHelp` (identity = the row's key, icon, title, body, optional
+source block, unavailable flag, text value, impact, swatches, game-background preview data, details, saved note), published by the settings screens
+with `PublishCompanionHelp` (a `SideEffect` like `PublishCompanionGame`, `ShellState.companionHelp`) and cleared when the screen leaves (a screen that
+is being replaced clears only what it published itself, so the next screen's help survives the transition). No composable crosses to the companion's
+composition: everything, down to the swatch colors and the preview bitmap, is data. **Which state wins** is the pure `shellView`: help over game over the
+idle mark (the settings screen is on top).
+
+**The page** (`HelpContent`, `CompanionHelpContent.kt`): under the usual header (mark, PC) one glass card with 48 px outside margins and 24 px between blocks, ONE
+scrolling column inside (finger scroll, a fade at an edge only while the page continues behind it, and a slim scroll bar at the right, because a next line
+that still lies out of sight leaves nothing to fade). The disc is 112 px, the name 40 px, the text 30 px with a 1.45 line height, everything else 28 px (the
+companion's minimum). It follows the focus live with a short crossfade between rows (`Motion.FADE`; snapped with reduced motion); the update of one row (a
+value that changed) does not fade. It does not dim for five minutes (a new row's help restarts the time; the game details dim after one) because on a
+settings screen it is the only place the description is.
+
+**The main panel while a window shows the help**: the description (the 520 px panel at 16:9, the dock when compact) is not drawn and the list takes its room
+(full content width, or full height down to the hint bar), with the screen's own margins; when the window goes (display removed, swapped, closed) the panel comes
+back at once. "Showing" is real: `CompanionSession.showsHelp` is snapshot state set by the window's own composition (`HelpContent`, keyed by the activity,
+cleared when the page leaves, the help is gone or the window is destroyed; a late clear from an old window never clears the next one's), and the screens ask
+`hidesDescription(windowShowsHelp, help)`, so a second display that exists but has no window yet, a refused launch and a window on its way out all keep the
+description on the main panel. A device with no companion display never differs from before (identity checked at 1920 x 1080 @ 369).
 
 ### State in, commands out
 
@@ -231,14 +266,20 @@ The host reads the owner's lambda inside composition, so snapshot state held in 
 18-minute cycle), so no edge stays on the same pixels; (2) **dim**: in the **shell state** the content fades to 22 % after 60 s without a touch; the touch that wakes it is
 swallowed (waking never presses a button). A stream is not dimmed: someone is looking at the menu, and the statistics change.
 The dim timer is armed from the last touch (no polling). Unverified: that this is enough for a real AMOLED over months.
+While the settings help shows the dim comes after five minutes instead of one (`CompanionBurnIn.dimAfter`), and a new row's help restarts the time: on a
+settings screen the page is the only place the description is, so it is not to go dark under someone reading it with a controller in hand.
 
 ### Debug previews
 
-`--es preview_screen companion --es preview_state <shell|shell_running|shell_other|idle|stream|typing> [--es preview_sheet <brightness|bitrate|upscaler|more|keys|commands|mouse>]`
+`--es preview_screen companion --es preview_state <shell|shell_running|shell_other|idle|stream|typing|help|help_long|help_short|help_game|help_debug|help_palette|help_background> [--es preview_sheet <brightness|bitrate|upscaler|more|keys|commands|mouse>]`
 on `ShellActivity`, combined with `--es preview_shape <W>x<H>@<dpi>` for the panel's shape (fake data, `CompanionPreview` in `src/debug`). To see the **real**
 companion window on the emulator's second display with the normal shell on the main one: `--es companion_fake <state>` on the launch of `ShellActivity`
 (the owner then hands the window that fake state), with Second display = Part of the device as below. The screenshot of that display is
 `adb -s <device> emu screenrecord screenshot --display 1 <dir>` (`screencap -d` does not take the virtual display's id).
+The screen previews (`preview_screen settings`, `game_options`, `debug_info`, ...) run the real shell on a state of their own: with a real second display
+the window shows what **that** shell publishes (`CompanionPreview.liveShell`), so the settings help can be driven live with the D-pad of the main display
+(`adb -s <device> shell input keyevent KEYCODE_DPAD_DOWN`), with the night mode on (`cmd uimode night yes`) when the companion should be dark like the
+previews' shell. `--es companion_fake help_long` (and the other `help*` states) puts a made-up help on the window instead.
 
 ## How to test the companion on the emulator
 
@@ -320,3 +361,13 @@ that needs a stream (the emulator cannot run one): the tiles' effect (overlay, b
 and the statistics arriving in the window; the shell's buttons with a real PC (Start, Resume, Quit and start, Game settings) and the live follow of the focused game,
 real artwork and metadata in the banner; the layout on the real 4:3 panels beyond the simulated shape; touch focus behaviour on a real second panel.
 Left out of the stream's More page: rumble feel and gyro smoothing (the controller's own pages on the main panel).
+
+**Settings help (issue #76, the rule above), verified on the emulator** (real second display, Second display = Part of the device, the screen previews of
+Settings, a game's settings and Debug info on the main panel at 1920 x 1080, the D-pad driving the focus): the second panel follows every focus move (rows with
+impact chips, plain rows, an unavailable row, a text row, the palette and the game-background rows, a custom and a plain per-game row, the per-game screen with Reset all
+focused, Debug info's device and display rows), finger scroll and the scroll bar on a page longer than the card, the page in the simulator at 1240 x 1080 @ 420,
+960 x 720 @ 300 and 1024 x 768 @ 320; the main panel without its description (16:9 and compact) while the window shows the help; removing the display brings the panel back
+and adding it takes it away again, the keys reach the main panel in both states (`mTopFocusedDisplayId=0`), no crash; without a second display the three screens at
+1920 x 1080 @ 369 are identical to the build before this change (the only differences are the clock and the animated background's phase). **Not verified**: a real dual-screen
+device; a finger on the real second panel while a controller moves the focus on the main one; the crossfade between rows (only settled screenshots were looked at, no frame of the fade itself); the
+game-background preview with a real game's art (the previews have no hero, so only the empty frame with the name was seen).

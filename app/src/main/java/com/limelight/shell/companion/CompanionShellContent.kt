@@ -47,11 +47,18 @@ import com.limelight.shell.ui.px
 import com.limelight.shell.ui.textResources
 import com.limelight.shell.ui.tpx
 
-/** The shell's companion: the game focused on the main panel with its details and the big buttons, or a quiet mark while no game is focused. */
+/**
+ * The shell's companion: the description of the row focused on a settings screen, large (the help wins, [shellView]); else the game focused
+ * on the main panel with its details and the big buttons; else a quiet mark. [inWindow] is false for a preview drawn inside the shell's own
+ * window: only a real companion window tells the main screen that the description is shown here.
+ */
 @Composable
-internal fun ShellContent(state: CompanionState.Shell) {
-    val game = state.game
-    if (game == null) IdleContent() else GameDetails(game)
+internal fun ShellContent(state: CompanionState.Shell, inWindow: Boolean = true) {
+    when (shellView(state)) {
+        ShellView.HELP -> HelpContent(checkNotNull(state.help), inWindow)
+        ShellView.GAME -> GameDetails(checkNotNull(state.game))
+        ShellView.IDLE -> IdleContent()
+    }
 }
 
 @Composable
@@ -157,7 +164,7 @@ private fun placeholder(game: CompanionGame): Brush =
 
 /** What the game costs: GPU, latency and network, each with its three-step bars. An estimate, never a measurement. */
 @Composable
-private fun ImpactRow(impact: SettingImpact) {
+internal fun ImpactRow(impact: SettingImpact) {
     val colors = LocalDelosColors.current
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.px)) {
         IMPACT_AXES.forEachIndexed { i, (label, glyph) ->

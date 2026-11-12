@@ -298,6 +298,9 @@ class ShellState(initial: Screen) {
     /** The game focused on the home screen, as the companion screen shows it (null while Home is not the screen; docs/DUAL_SCREEN.md). */
     var companionGame by mutableStateOf<com.limelight.shell.companion.CompanionGame?>(null)
 
+    /** The description of the row focused on a settings screen, as the companion screen shows it (null while none is open; docs/DUAL_SCREEN.md). */
+    internal var companionHelp by mutableStateOf<com.limelight.shell.companion.CompanionHelp?>(null)
+
     /** The game background behind the home screen (the focused game's art). */
     var hero by mutableStateOf<GameArt?>(null)
 

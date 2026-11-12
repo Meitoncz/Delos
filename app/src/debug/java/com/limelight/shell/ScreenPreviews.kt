@@ -132,7 +132,13 @@ internal object ScreenPreviews {
         val activity = LocalActivity.current ?: return
         val textScale = LocalStage.current.textScale
         val world = remember(route) { PreviewWorld(base, activity, route, textScale) }
-        DisposableEffect(world) { onDispose { world.close() } }
+        DisposableEffect(world) {
+            CompanionPreview.liveShell = world.shell // the companion window of a real second display follows this shell
+            onDispose {
+                if (CompanionPreview.liveShell === world.shell) CompanionPreview.liveShell = null
+                world.close()
+            }
+        }
         LaunchedEffect(world) {
             val key = route.press ?: return@LaunchedEffect
             delay(3000)
