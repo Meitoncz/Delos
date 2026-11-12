@@ -123,8 +123,6 @@
     <string name="title_seekbar_gyro_smoothing">Vyhlazení gyra</string>
     <string name="summary_seekbar_gyro_smoothing">Stabilizuje gyroskop před odesláním do PC. 0 je vypnuto; vyšší hodnoty odstraní víc chvění, ale lehce zpozdí pomalé míření. Rychlé švihy zůstávají citlivé. Platí od příštího streamu; v menu streamu (Více) to jde měnit za chodu.</string>
     <string name="suffix_seekbar_gyro_smoothing">%</string>
-    <string name="title_checkbox_gyro_state_refresh">Oprava gyra a vibrací</string>
-    <string name="summary_checkbox_gyro_state_refresh">Obchází problém na straně PC (hosta): se zapnutým gyrem hra po uvolnění tlačítka dál vibruje a dál míří gyrem, dokud nepohneš pákou. Dokud jsou zapnutá pohybová čidla, posílá se do PC 20× za sekundu beze změny aktuální stav ovladače. Vypni, až bude host opravený.</string>
     <string name="title_enable_rumble">Zapnout vibrace</string>
     <string name="summary_enable_rumble">Zapne vibrační odezvu na podporovaných gamepadech.</string>
     <string name="category_input_settings">Nastavení vstupu</string>

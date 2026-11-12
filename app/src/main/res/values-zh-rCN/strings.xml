@@ -116,8 +116,6 @@
     <string name="title_seekbar_gyro_smoothing">陀螺仪平滑</string>
     <string name="summary_seekbar_gyro_smoothing">在陀螺仪数据发送到 PC 之前对其进行稳定处理。0 为关闭；数值越高，抖动消除越多，但慢速瞄准会增加少许延迟。快速甩动仍保持灵敏。对下次串流生效；串流菜单（更多）可实时调整。</string>
     <string name="suffix_seekbar_gyro_smoothing">%</string>
-    <string name="title_checkbox_gyro_state_refresh">修复陀螺仪与震动</string>
-    <string name="summary_checkbox_gyro_state_refresh">绕过主机端的一个问题：开启陀螺仪后，松开按键后游戏仍会持续震动并继续用陀螺仪瞄准，直到你推动摇杆。运动传感器开启期间，会每秒向 PC 重复发送 20 次未改变的手柄状态。主机修复后请关闭。</string>
     <string name="title_enable_rumble">启用震动</string>
     <string name="summary_enable_rumble">在受支持的手柄上启用震动反馈。</string>
     <string name="category_input_settings">输入设置</string>

@@ -41,7 +41,6 @@
     <string name="help_checkbox_gamepad_motion_fallback">Použije vlastní gyroskop a akcelerometr zařízení, když je gamepad nemá nebo je Android neumí číst. PC pak může vidět gamepad PlayStation.</string>
     <string name="help_checkbox_force_device_motion">Použije vestavěné senzory, i když externí gamepad má funkční vlastní. Vyžaduje volbu „Vestavěný gyroskop zařízení“.</string>
     <string name="help_seekbar_gyro_smoothing">Stabilizuje míření gyrem. 0 je vypnuto. Vyšší hodnoty odstraní víc chvění, ale lehce zpozdí pomalý pohyb; rychlé švihy zůstávají citlivé. Platí od příštího streamu; v menu streamu (Více) to jde měnit za chodu.</string>
-    <string name="help_checkbox_gyro_state_refresh">Obchází problém na straně PC (hosta): se zapnutým gyrem hra po uvolnění tlačítka dál vibruje a dál míří gyrem, dokud nepohneš pákou. Vypni, až bude host opravený.</string>
     <string name="help_checkbox_enable_joyconfix">Režim kompatibility pro Joy-Cony s chybějícími nebo špatně rozpoznanými tlačítky. Pokud fungují, nech vypnuto.</string>
     <string name="help_checkbox_gamepad_enable_battery_report">Hlásí PC stav baterie gamepadu. Vypni, pokud dotazování na baterii vyvolává sekání dotyku nebo myši.</string>
     <string name="help_checkbox_enable_rumble">Posílá vibrace z PC na podporované gamepady. Které efekty fungují, určuje gamepad, připojení a ovladač.</string>

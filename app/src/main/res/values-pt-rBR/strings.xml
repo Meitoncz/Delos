@@ -114,8 +114,6 @@
     <string name="title_seekbar_gyro_smoothing">Suavização do giroscópio</string>
     <string name="summary_seekbar_gyro_smoothing">Estabiliza o giroscópio antes de enviá-lo ao PC. 0 é desativado; valores maiores removem mais tremor, mas adicionam um pouco de atraso na mira lenta. Movimentos rápidos continuam responsivos. Vale para o próximo stream; o menu do stream (Mais) altera isso ao vivo.</string>
     <string name="suffix_seekbar_gyro_smoothing">%</string>
-    <string name="title_checkbox_gyro_state_refresh">Corrigir giroscópio e vibração</string>
-    <string name="summary_checkbox_gyro_state_refresh">Contorna um problema do host: com o giroscópio ligado, o jogo continua vibrando e mirando com o giroscópio depois de soltar um botão, até você mexer em um analógico. Enquanto os sensores de movimento estiverem ligados, o estado inalterado do controle é reenviado ao PC 20 vezes por segundo. Desative quando o host for corrigido.</string>
     <string name="title_enable_rumble">Ativar vibração</string>
     <string name="summary_enable_rumble">Ativa o retorno de vibração em controles compatíveis.</string>
     <string name="category_input_settings">Configurações de entrada</string>

@@ -40,7 +40,6 @@
     <string name="help_checkbox_gamepad_motion_fallback">Usa o giroscópio e o acelerômetro deste dispositivo quando o controle não tem ou o Android não consegue lê-los. O PC pode então ver um controle PlayStation.</string>
     <string name="help_checkbox_force_device_motion">Usa os sensores integrados mesmo que o controle externo tenha sensores funcionando. Requer Giroscópio integrado do dispositivo.</string>
     <string name="help_seekbar_gyro_smoothing">Estabiliza a mira com giroscópio. 0 é desativado. Valores maiores removem mais tremor, mas adicionam um pouco de atraso em movimentos lentos; movimentos rápidos continuam responsivos. Vale a partir do próximo stream; o menu do stream (Mais) altera na hora.</string>
-    <string name="help_checkbox_gyro_state_refresh">Contorna um problema do host: com o giroscópio ligado, o jogo continua vibrando e mirando com o giroscópio depois de soltar um botão, até você mexer em um analógico. Desative quando o host for corrigido.</string>
     <string name="help_checkbox_enable_joyconfix">Caminho de compatibilidade para Joy-Cons com botões ausentes ou reconhecidos errado. Deixe desativado se funcionam.</string>
     <string name="help_checkbox_gamepad_enable_battery_report">Informa ao PC o estado da bateria do controle. Desative se a consulta da bateria coincidir com travadas no toque ou no mouse.</string>
     <string name="help_checkbox_enable_rumble">Envia a vibração do PC para controles compatíveis. Controle, conexão e driver definem quais efeitos funcionam.</string>

@@ -138,7 +138,7 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
     // Once a preset is chosen this can go back to a final field built in the constructor.
     private final Object rumbleLock = new Object();
     private volatile ActiveRumble activeRumble;
-    // Diagnostics and the optional state refresh (docs/CONTROLLER_STATE.md)
+    // Diagnostics (docs/CONTROLLER_STATE.md)
     private final ControllerSendLog sendLog = new ControllerSendLog();
     private final MotionSendRate motionRate = new MotionSendRate();
     private static final long MOTION_RATE_INTERVAL_MS = 1000;
@@ -146,7 +146,6 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
     private boolean motionRateScheduled;
     private long motionRateWindowStartMs;
     private final Runnable motionRateRunnable = this::logMotionRate;
-    private final ControllerStateRefresh stateRefresh;
     private short currentControllers, initialControllers;
 
     public ControllerHandler(Activity activityContext, NvConnection conn, GameGestures gestures, PreferenceConfiguration prefConfig) {
@@ -176,7 +175,6 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
 
         this.sceManager = new SceManager(activityContext);
         this.sceManager.start();
-        this.stateRefresh = new ControllerStateRefresh(new StateRefreshHost());
 
         int deadzonePercentage = prefConfig.deadzonePercentage;
 
@@ -414,23 +412,20 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
                 conn.sendControllerMotionEvent((byte) controllerNumber, motionType, x, y, z));
     }
 
-    /** Bit n set: controller n has a gyro (or accelerometer) listener registered; [sendableOnly] skips contexts whose state is not sent as a gamepad. */
-    private int motionMask(boolean gyro, boolean sendableOnly) {
+    /** Bit n set: controller n has a gyro (or accelerometer) listener registered. */
+    private int motionMask(boolean gyro) {
         int mask = 0;
         for (int i = 0; i < inputDeviceContexts.size(); i++) {
-            mask |= motionBit(inputDeviceContexts.valueAt(i), gyro, sendableOnly);
+            mask |= motionBit(inputDeviceContexts.valueAt(i), gyro);
         }
         for (int i = 0; i < usbDeviceContexts.size(); i++) {
-            mask |= motionBit(usbDeviceContexts.valueAt(i), gyro, sendableOnly);
+            mask |= motionBit(usbDeviceContexts.valueAt(i), gyro);
         }
         return mask;
     }
 
-    private static int motionBit(InputDeviceContext context, boolean gyro, boolean sendableOnly) {
+    private static int motionBit(InputDeviceContext context, boolean gyro) {
         if ((gyro ? context.gyroListener : context.accelListener) == null) {
-            return 0;
-        }
-        if (sendableOnly && (!context.assignedControllerNumber || context.mouseEmulationActive)) {
             return 0;
         }
         return context.controllerNumber >= 0 && context.controllerNumber < MAX_GAMEPADS ? 1 << context.controllerNumber : 0;
@@ -453,8 +448,8 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
         int accelMask = 0;
         try {
             // The contexts are changed on the main thread; a race only costs this second's line
-            gyroMask = motionMask(true, false);
-            accelMask = motionMask(false, false);
+            gyroMask = motionMask(true);
+            accelMask = motionMask(false);
             for (String line : motionRate.drainLines(now - motionRateWindowStartMs, gyroMask, accelMask)) {
                 LimeLog.info(line);
             }
@@ -466,53 +461,6 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
             backgroundThreadHandler.postDelayed(motionRateRunnable, MOTION_RATE_INTERVAL_MS);
         } else {
             motionRateScheduled = false;
-        }
-    }
-
-    /** What ControllerStateRefresh needs from the handler. Everything but the scheduling runs on the main thread. */
-    private final class StateRefreshHost implements ControllerStateRefresh.Host {
-        @Override
-        public boolean enabled() {
-            return prefConfig.gyroStateRefresh && !stopped;
-        }
-
-        @Override
-        public int activeControllers() {
-            return motionMask(true, true) | motionMask(false, true);
-        }
-
-        @Override
-        public void resend(int controllerNumber) {
-            for (int i = 0; i < inputDeviceContexts.size(); i++) {
-                if (resendFrom(inputDeviceContexts.valueAt(i), controllerNumber)) {
-                    return;
-                }
-            }
-            for (int i = 0; i < usbDeviceContexts.size(); i++) {
-                if (resendFrom(usbDeviceContexts.valueAt(i), controllerNumber)) {
-                    return;
-                }
-            }
-        }
-
-        // The state of every context with this controller number is fused into one packet, so one context is enough
-        private boolean resendFrom(InputDeviceContext context, int controllerNumber) {
-            if (context.controllerNumber != controllerNumber
-                    || motionBit(context, true, true) == 0 && motionBit(context, false, true) == 0) {
-                return false;
-            }
-            sendControllerInputPacket(context);
-            return true;
-        }
-
-        @Override
-        public void schedule(Runnable task, long delayMs) {
-            mainThreadHandler.postDelayed(task, delayMs);
-        }
-
-        @Override
-        public void cancel(Runnable task) {
-            mainThreadHandler.removeCallbacks(task);
         }
     }
 
@@ -537,7 +485,6 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
 
         // Stop new device contexts from being created or used
         stopped = true;
-        stateRefresh.stop();
         backgroundThreadHandler.removeCallbacks(motionRateRunnable);
         stopRumblePlayback();
 
@@ -2674,8 +2621,7 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
             }
         }
 
-        // The optional state refresh and the MotionSend line follow the motion listeners of the controllers
-        mainThreadHandler.post(stateRefresh::ensureRunning);
+        // The MotionSend line follows the motion listeners of the controllers
         startMotionRateLogging();
     }
 

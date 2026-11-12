@@ -123,8 +123,6 @@
     <string name="title_seekbar_gyro_smoothing">ジャイロスムージング</string>
     <string name="summary_seekbar_gyro_smoothing">PCに送る前にジャイロを安定させます。0でオフ。値を上げるとブレが減りますが、ゆっくりした照準操作にわずかな遅れが出ます。素早い動きはそのまま反応します。次回のストリームから適用され、ストリームメニュー（その他）ではリアルタイムに変更できます。</string>
     <string name="suffix_seekbar_gyro_smoothing">%</string>
-    <string name="title_checkbox_gyro_state_refresh">ジャイロと振動の修正</string>
-    <string name="summary_checkbox_gyro_state_refresh">ホスト側の問題を回避します。ジャイロがオンのとき、ボタンを離してもゲームが振動し続け、ジャイロで照準し続けて、スティックを動かすまで止まりません。モーションセンサーがオンの間、変化のないコントローラーの状態を1秒に20回PCへ再送します。ホストが修正されたらオフにしてください。</string>
     <string name="title_enable_rumble">振動を有効にする</string>
     <string name="summary_enable_rumble">対応するコントローラーで振動フィードバックを有効にします。</string>
     <string name="category_input_settings">入力設定</string>

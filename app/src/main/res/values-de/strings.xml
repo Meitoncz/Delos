@@ -134,8 +134,6 @@
     <string name="title_seekbar_gyro_smoothing">Gyro-Glättung</string>
     <string name="summary_seekbar_gyro_smoothing">Beruhigt das Gyroskop, bevor es an den PC gesendet wird. 0 ist aus; höhere Werte entfernen mehr Zittern, bringen aber eine kleine Verzögerung beim langsamen Zielen. Schnelle Schwenks bleiben direkt. Gilt für den nächsten Stream; das Stream-Menü (Mehr) ändert es live.</string>
     <string name="suffix_seekbar_gyro_smoothing">%</string>
-    <string name="title_checkbox_gyro_state_refresh">Gyro- und Vibrationsfehler beheben</string>
-    <string name="summary_checkbox_gyro_state_refresh">Umgeht ein Problem auf der Host-Seite: Bei aktivem Gyro vibriert das Spiel weiter und zielt weiter per Gyro, nachdem eine Taste losgelassen wurde, bis du einen Stick bewegst. Solange die Bewegungssensoren an sind, wird der unveränderte Controller-Zustand 20-mal pro Sekunde erneut an den PC gesendet. Ausschalten, sobald der Host repariert ist.</string>
     <string name="title_enable_rumble">Rumble aktivieren</string>
     <string name="summary_enable_rumble">Aktiviert Rumble-Feedback auf unterstützten Gamepads.</string>
     <string name="category_input_settings">Eingabeeinstellungen</string>

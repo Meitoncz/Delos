@@ -139,7 +139,6 @@ The motion rows of Controls → Gamepad keep their preference keys (stored value
 | `checkbox_gamepad_motion_fallback` | Built-in device gyroscope (was *Emulate gamepad motion sensor support*) |
 | `checkbox_force_device_motion` | Always use built-in device gyroscope (was *Always use device's motion sensors*) |
 | `seekbar_gyro_smoothing` | **Gyro smoothing**, 0 to 100 %, default 0 = off |
-| `checkbox_gyro_state_refresh` | **Fix gyro handling and vibrations**, off by default: re-sends the unchanged controller state every 50 ms while the host has motion events on, as a workaround for a host problem (a game that keeps vibrating and aiming with the gyro after a button is released). Profile-scoped, not a per-game setting, no stream-menu row. Why it exists and how to measure: [CONTROLLER_STATE.md](CONTROLLER_STATE.md) |
 
 Search still finds the rows by their old names (the English aliases in `SearchAliases`, `screens/SettingsSearchAliases.kt`, next to the localized `settings_search_alias_*` synonyms). All four
 are per-game settings (Game settings, Stream tab, after the codec rows; `GameSettingsStore.GYRO_KEYS`), with the same hiding and

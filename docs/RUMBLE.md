@@ -1,7 +1,7 @@
 # Rumble feel and the rumble laboratory
 
 A vibration that never stops while the gyro is on is not a translator problem: see [CONTROLLER_STATE.md](CONTROLLER_STATE.md)
-(what the client sends, the `ControllerSend` / `MotionSend` diagnostics, and the optional *Fix gyro handling and vibrations* setting).
+(what the client sends and the `ControllerSend` / `MotionSend` diagnostics).
 
 ## Rumble feel (Settings)
 

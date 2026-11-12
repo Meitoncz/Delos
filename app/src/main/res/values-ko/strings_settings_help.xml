@@ -40,7 +40,6 @@
     <string name="help_checkbox_gamepad_motion_fallback">게임패드에 센서가 없거나 Android가 읽지 못할 때 이 기기 자체의 자이로스코프와 가속도계를 사용해요. 이때 PC에는 PlayStation 컨트롤러로 보일 수 있어요.</string>
     <string name="help_checkbox_force_device_motion">외장 게임패드의 센서가 정상이어도 내장 센서를 사용해요. 기기 내장 자이로스코프가 필요해요.</string>
     <string name="help_seekbar_gyro_smoothing">자이로 조준을 안정시켜요. 0은 꺼짐이에요. 값이 높을수록 떨림이 줄지만 느린 움직임에 약간의 지연이 생겨요. 빠른 플릭은 그대로 반응해요. 다음 스트림부터 적용되며, 스트림 메뉴(더보기)에서는 실시간으로 바꿀 수 있어요.</string>
-    <string name="help_checkbox_gyro_state_refresh">호스트 쪽 문제를 우회해요. 자이로가 켜져 있으면 버튼을 놓은 뒤에도 게임이 계속 진동하고 자이로로 조준하다가, 스틱을 움직여야 멈춰요. 호스트가 고쳐지면 꺼 주세요.</string>
     <string name="help_checkbox_enable_joyconfix">버튼이 없거나 잘못 인식되는 Joy-Con을 위한 호환 경로예요. 잘 작동하면 꺼 두세요.</string>
     <string name="help_checkbox_gamepad_enable_battery_report">게임패드 배터리 상태를 호스트에 보고해요. 배터리 확인 시점에 터치나 마우스가 끊기면 꺼 주세요.</string>
     <string name="help_checkbox_enable_rumble">호스트 럼블을 지원되는 게임패드로 보내요. 어떤 효과가 작동하는지는 컨트롤러, 연결, 드라이버에 따라 달라요.</string>

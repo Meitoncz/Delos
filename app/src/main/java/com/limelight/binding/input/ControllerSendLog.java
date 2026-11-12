@@ -16,7 +16,7 @@ import java.util.Locale;
  *       number of stick-only packets left out since the last line, so a stick held in motion cannot flood the rolling
  *       log file.</li>
  *   <li>A packet identical to the previous one is counted, and every {@link #IDENTICAL_LINE_INTERVAL}th identical
- *       call is logged with that count (this is also what the state refresh shows).</li>
+ *       call is logged with that count.</li>
  * </ul>
  *
  * {@code #n} counts every call over all pads, logged or not, so a gap between two lines is the number of packets left

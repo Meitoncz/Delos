@@ -114,8 +114,6 @@
     <string name="title_seekbar_gyro_smoothing">Згладжування гіроскопа</string>
     <string name="summary_seekbar_gyro_smoothing">Стабілізує гіроскоп перед надсиланням на ПК. 0 — вимкнено; вищі значення прибирають більше тремтіння, але трохи затримують повільне прицілювання. Різкі рухи залишаються чутливими. Діє з наступного стріму; меню стріму (Ще) змінює це наживо.</string>
     <string name="suffix_seekbar_gyro_smoothing">%</string>
-    <string name="title_checkbox_gyro_state_refresh">Виправлення гіроскопа й вібрації</string>
-    <string name="summary_checkbox_gyro_state_refresh">Обходить проблему на боці хоста: із ввімкненим гіроскопом гра далі вібрує й далі цілиться гіроскопом після відпускання кнопки, доки ти не поворухнеш стік. Поки датчики руху ввімкнені, незмінний стан контролера повторно надсилається на ПК 20 разів на секунду. Вимкни, коли хост виправлять.</string>
     <string name="title_enable_rumble">Увімкнути вібрацію</string>
     <string name="summary_enable_rumble">Увімкнути вібрацію на підтримуваних контролерах.</string>
     <string name="category_input_settings">Налаштування введення</string>

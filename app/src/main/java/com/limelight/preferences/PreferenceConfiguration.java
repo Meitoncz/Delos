@@ -92,7 +92,6 @@ public class PreferenceConfiguration {
     private static final String GAMEPAD_MOTION_FALLBACK_PREF_STRING = "checkbox_gamepad_motion_fallback";
     private static final String FORCE_MOTION_SENSORS_FALLBACK_PREF_STRING = "checkbox_force_device_motion";
     public static final String GYRO_SMOOTHING_PREF_STRING = "seekbar_gyro_smoothing";
-    public static final String GYRO_STATE_REFRESH_PREF_STRING = "checkbox_gyro_state_refresh";
 
     private static final String ENABLE_RUMBLE_PREF_STRING = "checkbox_enable_rumble";
     private static final String PREVENT_PACKET_LOSS_PREF_STRING = "checkbox_prevent_packet_loss";
@@ -176,7 +175,6 @@ public class PreferenceConfiguration {
     private static final boolean DEFAULT_GAMEPAD_MOTION_FALLBACK = false;
     private static final boolean DEFAULT_FORCE_MOTION_SENSORS_FALLBACK = false;
     public static final int DEFAULT_GYRO_SMOOTHING = 0;
-    private static final boolean DEFAULT_GYRO_STATE_REFRESH = false;
     private static final boolean DEFAULT_ENABLE_RUMBLE = true;
     private static final boolean DEFAULT_PREVENT_PACKET_LOSS = false;
     private static final boolean DEFAULT_GAMEPAD_ENABLE_BATTERY_REPORT = true;
@@ -354,8 +352,6 @@ public class PreferenceConfiguration {
     public boolean forceMotionSensorsFallbackToDevice;
     /** Gyro smoothing strength 0..100; 0 = off (the gyro values are sent untouched). Volatile: the stream menu changes it live, the sensor threads read it. */
     public volatile int gyroSmoothing;
-    /** "Fix gyro handling and vibrations": re-send the current controller state while motion events are on (docs/CONTROLLER_STATE.md). Volatile: the stream menu changes it live. */
-    public volatile boolean gyroStateRefresh;
     public boolean enableRumble;
     // Volatile because the stream menu switches the rumble preset while ControllerHandler
     // reads these on the native rumble thread. Remove with the live preset page once a preset is chosen.
@@ -972,7 +968,6 @@ private static int getFramePacingValue(SharedPreferences prefs) {
         config.gamepadMotionSensorsFallbackToDevice = prefs.getBoolean(GAMEPAD_MOTION_FALLBACK_PREF_STRING, DEFAULT_GAMEPAD_MOTION_FALLBACK);
         config.forceMotionSensorsFallbackToDevice = prefs.getBoolean(FORCE_MOTION_SENSORS_FALLBACK_PREF_STRING, DEFAULT_FORCE_MOTION_SENSORS_FALLBACK);
         config.gyroSmoothing = Math.max(0, Math.min(100, prefs.getInt(GYRO_SMOOTHING_PREF_STRING, DEFAULT_GYRO_SMOOTHING)));
-        config.gyroStateRefresh = prefs.getBoolean(GYRO_STATE_REFRESH_PREF_STRING, DEFAULT_GYRO_STATE_REFRESH);
         config.enableRumble = prefs.getBoolean(ENABLE_RUMBLE_PREF_STRING, DEFAULT_ENABLE_RUMBLE);
         config.rumbleTranslatorEnabled = RumblePreferences.isEnabled(prefs);
         config.rumbleProfile = RumblePreferences.readProfile(prefs);
