@@ -112,7 +112,7 @@ private fun CompanionRoot() {
 
 /** The palette, reduced motion and the stage of the companion's own display: what `ShellTheme` does for the shell. */
 @Composable
-private fun CompanionTheme(appearance: () -> StateFlow<Appearance>, content: @Composable () -> Unit) {
+internal fun CompanionTheme(appearance: () -> StateFlow<Appearance>, content: @Composable () -> Unit) {
     val current by appearance().collectAsState()
     val context = LocalContext.current
     val systemHue = remember { systemAccentHue(context) }

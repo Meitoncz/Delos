@@ -874,11 +874,28 @@ activity keeps its own orientation logic) and supports windows from 1:1 up to 21
   Content, state and command flow, burn-in policy and previews: [DUAL_SCREEN.md](DUAL_SCREEN.md), "What the companion shows".
   The settings screens publish the description of the focused row to it (`PublishCompanionHelp`, "Settings help" in DUAL_SCREEN.md); it is drawn
   large in one scrolling glass card (28 to 40 px text, a slim scroll bar and an edge fade while the page continues).
-- **Shape simulator** (debug builds, `ShapeSimulator` in `src/debug`): `--es preview_shape <W>x<H>@<dpi>` draws the whole shell, or any `preview_screen`,
-  in a centered box of that pixel size (scaled down uniformly when it does not fit; the density is scaled with it, so the dp maths is the panel's)
-  with `LocalDensity` set to the simulated density. Outside the box it is black; a caption at the bottom-left names the size, dpi, dp size, stage and
-  class. `--es preview_cutout <L>,<T>,<R>,<B>` adds a display cutout (insets in simulated pixels, drawn as a notch). It combines with `preview_screen`
-  and `preview_state`:
+- **Shape simulator** (debug builds, `ShapeSimulator` in `src/debug`; release builds have no-op stubs in `src/release`): draws the whole shell, or any `preview_screen`,
+  in a centered box of the simulated panel's pixel size (scaled down uniformly when it does not fit; the density is scaled with it, so the dp maths is the panel's)
+  with `LocalDensity` set to the simulated density. Outside the box it is black; a strip at the bottom names the size, dpi, dp size, stage and class and carries a
+  pink chip, *SIMULATED · name · tap to end*, so a running simulation is never forgotten (a tap on the chip ends it; it is never focusable). While nothing is
+  simulated the same boxes fill the screen at the real size and density, so starting or ending a simulation keeps every screen's state.
+  - **Debug menu** (Settings → About → Debug info → *Screen shape simulator*, debug builds only; `ShapeSimulatorMenu`, the rows are added through `DebugToolRow` and the
+    release build adds none; texts are English like the crash trigger row): *Simulated screen* opens a choice list (the context-menu component, D-pad and A / B) with
+    *Real screen* and every shape of `ShapeCatalog` (name, pixels, dpi, e.g. "AYN Thor, bottom · 1240x1080 @420"); *Custom size* is the shared text dialog with
+    width, height and dpi; *Cutout* steps through none / left / top / right / notch (insets 96 px, 56 px for the notch, drawn in the panel and given to the stage as
+    the safe area); *Dual-screen simulation* picks a dual-screen device of docs/HANDHELD_DEVICES.md (Thor, RG DDS, Pocket DS, Retroid + add-on) or Off;
+    *Companion display* and *Companion custom size* set the second panel alone; *Swap panels* exchanges main and companion (Settings → Display → Main screen "Swapped").
+    A choice applies live, is kept in a preference file of its own (`delos_debug_shape_simulator`, never in a profile) and survives restarts; the adb extras below
+    override it for that launch only and are not remembered (a later menu change wins). The list is the one `ShapeCatalog` (`src/debug`): the simulator, this menu and
+    `tools/layout/shapes.txt` use it; the file stays a plain-text mirror of the catalog's *sheet* shapes for the scripts and `ShapeCatalogTest` fails when they differ,
+    so change both together (the catalog also holds more devices than the sheets).
+  - **Dual-screen simulation** (one physical screen, e.g. the Odin): the shell in the main panel's shape and the companion window's content in the second panel's,
+    side by side or stacked, whichever shows them larger (one common scale), with a thin divider and a label on each panel. The companion half is the very
+    `CompanionContent` of `CompanionActivity` in the same `CompanionTheme`, fed with the same state the real window gets (`CompanionState.Shell` from the shell's published
+    game and help, or `companion_fake`), with `inWindow = true`, so the settings give their description to it exactly as with a real second display. It is
+    touch-only (`focusProperties { canFocus = false }`): the controller keeps driving the main half. Main is the panel with more pixels, as `DualScreen` "Automatic" picks.
+  - **Adb extras**: `--es preview_shape <W>x<H>@<dpi>` and `--es preview_cutout <L>,<T>,<R>,<B>` (insets in simulated pixels, drawn as a notch) simulate that panel alone.
+    They combine with `preview_screen` and `preview_state`:
 
   ```
   adb shell am start -S -n io.github.meitoncz.delos.debug/com.limelight.shell.ShellActivity --es preview_shape 1240x1080@420 \
@@ -891,7 +908,7 @@ activity keeps its own orientation logic) and supports windows from 1:1 up to 21
   `game_settings`, `stream_menu`, `full_keyboard`, `toast`). `stream_osc` and `stream_video` draw the stream's own geometry (see "Stream side" below). `settings`, `settings_search`, `debug_info`, `profile` and `game_options` are the real screens (`game_settings` is the older component preview of the per-game list); the preview tells the settings capability probe there is no PyroWave, because its native Vulkan probe dies on the emulator's SwiftShader.
   The shell's global keys reach the previewed shell too (L1 / R1, X, Y, Start, Select; the activity's own listener is not set in a preview), so
   `adb shell input keyevent 103` switches a previewed screen's tab and `100` opens its filter sheet, next to the D-pad keys (19 to 23).
-- **Contact sheets** (`tools/layout/`): `shapes.txt` lists the shapes (names, `W x H @ dpi`, optional cutout), `screens.txt` the previews. `sheets.sh` needs the
+- **Contact sheets** (`tools/layout/`): `shapes.txt` lists the shapes (names, `W x H @ dpi`, optional cutout; a mirror of the sheet shapes of `ShapeCatalog`), `screens.txt` the previews. `sheets.sh` needs the
   fail-closed adb wrapper and the stream gate helper:
 
   ```

@@ -41,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -69,7 +70,9 @@ import com.limelight.R
 import com.limelight.diag.DiagExport
 import com.limelight.diag.DiagLog
 import com.limelight.diag.DiagnosticReport
+import com.limelight.shell.LocalFocusTracker
 import com.limelight.shell.LocalShell
+import com.limelight.shell.ShapeSimulatorMenu
 import com.limelight.shell.companion.CompanionHelp
 import com.limelight.shell.companion.PublishCompanionHelp
 import com.limelight.shell.companion.companionShowsHelp
@@ -126,6 +129,7 @@ import kotlin.math.roundToInt
 private enum class DebugSection(@StringRes val title: Int) {
     DEVICE(R.string.debug_section_device),
     DISPLAYS(R.string.debug_section_displays),
+    SHAPE_SIMULATOR(0), // debug builds only; the title comes from ShapeSimulatorMenu
     DIAGNOSTICS(R.string.debug_section_diagnostics),
     HAPTICS(R.string.debug_section_haptics),
     VIBRATION_TEST(R.string.debug_section_vibration_test),
@@ -135,6 +139,16 @@ private enum class DebugSection(@StringRes val title: Int) {
     ON_SCREEN_CONTROLS(R.string.debug_section_osc),
     CONTROLLERS(R.string.debug_section_controllers),
 }
+
+/** A row that a build flavor adds to the debug screen (the shape simulator of debug builds, [ShapeSimulatorMenu]). */
+internal data class DebugToolRow(
+    val key: String,
+    val icon: String,
+    val label: String,
+    val value: RowValue,
+    val description: String,
+    val details: String? = null,
+)
 
 /** A row of the debug screen; [details] fill the panel on the right while it is focused. */
 private data class DebugRow(
@@ -163,6 +177,7 @@ fun DebugInfoScreen() {
     val stage = LocalStage.current
     val shell = LocalShell.current
     val feedback = LocalFeedback.current
+    val tracker = LocalFocusTracker.current
     val device = remember { DeviceVibrator.get(context) }
     var strength by remember { mutableIntStateOf(220) }
     var deviceContinuous by remember { mutableStateOf(false) }
@@ -339,6 +354,9 @@ fun DebugInfoScreen() {
             add(DebugRow("display_${entry.facts.id}", DebugSection.DISPLAYS, Symbols.MONITOR, entry.shownName(),
                 RowValue.Info(res.getString(entry.role.labelRes())), res.getString(entry.role.descriptionRes()), entry.details() + panelLine(dualScreen, entry.facts.id)))
         }
+        ShapeSimulatorMenu.rows(shell, tracker, context).forEach {
+            add(DebugRow(it.key, DebugSection.SHAPE_SIMULATOR, it.icon, it.label, it.value, it.description, it.details))
+        }
         // What a problem report would contain; the panel on the right previews exactly that text
         val logValue = when {
             report == null -> res.getString(R.string.debug_log_reading)
@@ -486,6 +504,15 @@ fun DebugInfoScreen() {
     val k = stage.dpPerPx * LocalDensity.current.density
     val listState = rememberScrollState()
     val compact = stage.shape == StageShape.COMPACT
+    // The list is laid out in another parent when the stage turns compact or back (the shape simulator does it live): put the focus back on its row
+    var compactSeen by remember { mutableStateOf(compact) }
+    LaunchedEffect(compact) {
+        if (compact == compactSeen) return@LaunchedEffect
+        compactSeen = compact
+        withFrameNanos { }
+        withFrameNanos { }
+        focusedKey?.let { runCatching { navigation.requester(it).requestFocus() } }
+    }
     val bringIntoView = rememberMarginBringIntoView(listState, before = 72f * k, after = (if (compact) SettingsLayout.COMPACT_LIST_AFTER else 110f) * k, stagePx = k)
 
     val margin = SettingsLayout.margin(stage)
@@ -504,7 +531,7 @@ fun DebugInfoScreen() {
                         if (row.section != previous) {
                             val section = row.section
                             key("section-${section.name}") {
-                                BasicText(stringResource(section.title).uppercase(Locale.ROOT), style = TextStyle(color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 16.tpx, letterSpacing = .08.em),
+                                BasicText((if (section.title == 0) ShapeSimulatorMenu.SECTION_TITLE else stringResource(section.title)).uppercase(Locale.ROOT), style = TextStyle(color = colors.text3, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 16.tpx, letterSpacing = .08.em),
                                     modifier = Modifier.padding(start = 26.px, top = 10.px, bottom = 2.px))
                             }
                             previous = section
