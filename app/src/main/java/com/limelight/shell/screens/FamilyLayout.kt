@@ -92,9 +92,16 @@ internal object TabRowLayout {
      * The placement of a row [rowWidth] wide (natural) whose first and last visible edges sit [outset] inside it (the badges' outer padding)
      * between the content's [left] and [right] edges (what a title or a button beside it leaves). A [centred] row stays centred on the
      * stage while its visible ends stay inside the edges (or overhang them by [OVERHANG] in all); otherwise, and for rows that are not
-     * [centred], its visible right edge is at [right]. A row that is wider than that scrolls in the room between the edges.
+     * [centred], its visible right edge is at [right]. A row that is wider than that scrolls in the room between the edges. With [spill] (not
+     * compact) the row only scrolls when it does not fit the stage.
      */
-    fun place(stageWidth: Float, rowWidth: Float, outset: Float, left: Float, right: Float, centred: Boolean = true): Placement {
+    fun place(stageWidth: Float, rowWidth: Float, outset: Float, left: Float, right: Float, centred: Boolean = true, spill: Boolean = false): Placement {
+        if (spill) {
+            // A roomy stage (every shape but the compact one): the row is never clipped or scrolled while it fits the stage itself, centred
+            // (the settings: both badges visible, as always) or flush with [right] (Artwork); the content's edges are guides, not a clip
+            val x = if (centred) (stageWidth - rowWidth) / 2f else flushRight(rowWidth, outset, right)
+            if (x >= 0f && x + rowWidth <= stageWidth) return Placement(x, rowWidth, scrolls = false)
+        }
         val allowed = if (centred) OVERHANG else 0f
         if (rowWidth - 2f * outset > right - left + allowed + ROUNDING) {
             return Placement(left - outset, (right - left + 2f * outset).coerceAtLeast(0f), scrolls = true)

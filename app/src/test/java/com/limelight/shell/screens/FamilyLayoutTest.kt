@@ -147,6 +147,22 @@ class FamilyLayoutTest {
         assertFalse(p.scrolls)
     }
 
+    /** Not compact: a Settings row 40 px wider than its content (both badges, all tabs) stays centred on the stage, unclipped and unscrolled. */
+    @Test fun aRoomyStageNeverScrollsARowThatFitsTheStage() {
+        listOf(1920f, 2520f, 1920f).forEach { stageWidth ->
+            val natural = 1700f
+            val p = TabRowLayout.place(stageWidth, natural, SHOULDER_OUTSET, 150f, stageWidth - 150f.coerceAtMost(150f), centred = true, spill = true)
+            assertFalse(p.scrolls)
+            assertEquals((stageWidth - natural) / 2f, p.x, .001f)
+        }
+        // Artwork (flush right): the R1 badge's edge on the content's right edge, nothing scrolled
+        val a = TabRowLayout.place(1920f, 1500f, SHOULDER_OUTSET, 150f, 1770f, centred = false, spill = true)
+        assertFalse(a.scrolls)
+        assertEquals(1770f, a.x + a.width - SHOULDER_OUTSET, .001f)
+        // A row wider than the stage still scrolls
+        assertTrue(TabRowLayout.place(1920f, 2000f, SHOULDER_OUTSET, 150f, 1770f, centred = true, spill = true).scrolls)
+    }
+
     /** A row wider than its room neither tightens nor overhangs nor runs left of the content: it scrolls in the room between the edges. */
     @Test fun aRowWiderThanItsRoomScrollsBetweenTheContentsEdges() {
         (compact + wide).forEach { stage ->

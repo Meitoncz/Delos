@@ -392,7 +392,7 @@ internal fun TabRow(y: Float, height: Dp, left: Float, right: Float, centred: Bo
     com.limelight.shell.ui.SelectionPillHost(Modifier.offset(y = y.px).layout { measurable, constraints ->
         val k = stage.dpPerPx * density
         val natural = measurable.maxIntrinsicWidth(constraints.maxHeight).toFloat()
-        val placement = TabRowLayout.place(constraints.maxWidth.toFloat(), natural, SHOULDER_OUTSET * k, left * k, right * k, centred)
+        val placement = TabRowLayout.place(constraints.maxWidth.toFloat(), natural, SHOULDER_OUTSET * k, left * k, right * k, centred, spill = stage.shape != com.limelight.shell.ui.StageShape.COMPACT)
         val row = measurable.measure(constraints.copy(minWidth = 0, maxWidth = placement.width.roundToInt().coerceAtMost(constraints.maxWidth)))
         layout(constraints.maxWidth, row.height) { row.place(placement.x.roundToInt(), 0) }
     }.height(height).tabScroll(scroll), content = content)
