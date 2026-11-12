@@ -54,17 +54,73 @@ object CircleRowLayout {
     /** The gap of a row whose items add up to [sum] in [room]: [wide] while they fit with it, else [tight]. */
     fun gap(sum: Int, count: Int, room: Int, wide: Int, tight: Int): Int = if (sum + wide * (count - 1).coerceAtLeast(0) <= room) wide else tight
 
+    /** The outer margin of a compact stage's row (the circle's own edge: its growth and ring come on top, so the ring keeps 48 or more), the least part of the next item (or the one before) that shows at a cut edge, and the widest gap that makes room for it. */
+    const val SIDE = 72f
+    const val PEEK = 60f
+    const val MAX_GAP = 120f
+
+    /** The cut item shows at most this much less than its whole width: an item that is all but whole does not tell that the row goes on. */
+    const val CUT = 40f
+
+    /**
+     * How much of the first item that is cut by [limit] (the room from the first item's left edge to the stage's edge) shows when [sizes] stand
+     * [gap] apart from 0; -1 when none is cut, or when it is cut by less than [CUT] (it looks whole and the next one is out of sight).
+     */
+    fun cutPeek(sizes: FloatArray, gap: Float, limit: Float): Float {
+        var x = 0f
+        for (w in sizes) {
+            if (x + w > limit + .5f) return if (limit - x > w - CUT) -1f else limit - x
+            x += w + gap
+        }
+        return -1f
+    }
+
+    /**
+     * The gap that shows at least [peek] of the cut item at both ends of a row that scrolls: at its start (the first items from the left) and
+     * at its end (the last ones from the right, the same reckoning backwards). The least gap from [tight] up to [maxGap] that does; the
+     * one that shows the most when none does. [limit] is the room from the first item's left edge to the stage's edge.
+     */
+    fun peekGap(sizes: FloatArray, limit: Float, tight: Float, peek: Float = PEEK, maxGap: Float = MAX_GAP): Float {
+        val backwards = sizes.reversedArray()
+        var best = tight
+        var bestScore = -Float.MAX_VALUE
+        var g = tight
+        while (g <= maxGap) {
+            val score = minOf(cutPeek(sizes, g, limit), cutPeek(backwards, g, limit))
+            if (score >= peek) return g
+            if (score > bestScore) {
+                bestScore = score
+                best = g
+            }
+            g += 1f
+        }
+        return best
+    }
+
     /**
      * The left edges of items [sizes] wide in a row [total] wide (pixels): centred while they fit, from the start when the row is only as
-     * wide as they are (it scrolls then). [wide] and [tight] are the two gaps.
+     * wide as they are (it scrolls then). [wide] and [tight] are the two gaps. With the stage's [viewport] width and the outer margin [pad]
+     * (pixels; 0 for neither) a row that does not fit inside the margins scrolls with the gap [peekGap] picks, so the item at the cut edge
+     * shows [peek] pixels at the start and at the end; returns how much wider than with [tight] the row got (0 where it fits).
      */
-    fun arrange(sizes: IntArray, total: Int, wide: Int, tight: Int, out: IntArray) {
+    fun arrange(sizes: IntArray, total: Int, wide: Int, tight: Int, out: IntArray, viewport: Int = 0, pad: Int = 0, peek: Int = 0, maxGap: Int = 0): Int {
         val sum = sizes.sum()
-        val gap = gap(sum, sizes.size, total, wide, tight)
-        var x = ((total - sum - gap * (sizes.size - 1).coerceAtLeast(0)) / 2).coerceAtLeast(0)
+        val n = sizes.size
+        if (viewport > 0 && n > 1 && sum + tight * (n - 1) > viewport - 2 * pad) {
+            val gap = Math.round(peekGap(FloatArray(n) { sizes[it].toFloat() }, (viewport - pad).toFloat(), tight.toFloat(), peek.toFloat(), maxGap.toFloat()))
+            var x = 0
+            for (i in sizes.indices) {
+                out[i] = x
+                x += sizes[i] + gap
+            }
+            return (gap - tight) * (n - 1)
+        }
+        val gap = gap(sum, n, total, wide, tight)
+        var x = ((total - sum - gap * (n - 1).coerceAtLeast(0)) / 2).coerceAtLeast(0)
         for (i in sizes.indices) {
             out[i] = x
             x += sizes[i] + gap
         }
+        return 0
     }
 }

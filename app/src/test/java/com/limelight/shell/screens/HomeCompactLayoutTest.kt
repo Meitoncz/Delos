@@ -59,17 +59,15 @@ class HomeCompactLayoutTest {
     }
 
     @Test
-    fun theCoverIsNeverNeedlesslyHugeAndNeverUnderTheMinimum() {
+    fun theCoverIsNeverNeedlesslyHugeAndNeverUnderTheFloor() {
         for (stage in stages) for (scale in scales) {
             val l = c.layout(stage.first, stage.second, scale)
             val n = "${name(stage)} at $scale"
             assertEquals("$n the cover keeps 2:3", 450f * l.coverScale, l.coverHeight, .01f)
             assertTrue("$n at most 0.40 of the height: ${l.coverHeight}", l.coverHeight <= stage.second * .40f + .01f)
             assertTrue("$n not larger than the prototype's", l.coverScale <= 1f)
-            // The old minimum of 0.6 holds wherever the gaps leave it. The 722-high stage at the default interface scale does not: its bars
-            // and texts take 30 px more, the gaps the user asked for come first, and the covers are 0.50 (226 px high)
-            if (stage.second > 800f || scale == 1f) assertTrue("$n at least 0.6 of the prototype's: ${l.coverScale}", l.coverScale >= .6f - .0002f)
-            else assertEquals("$n", .5035f, l.coverScale, .001f)
+            // No minimum but the floor: the comfortable gaps come first and the cover takes what is left (the 722-high stage: the floor)
+            assertTrue("$n at least the floor: ${l.coverScale}", l.coverScale >= c.FLOOR - .0002f)
         }
     }
 
@@ -104,17 +102,14 @@ class HomeCompactLayoutTest {
     fun theNumbersOfTheSixStages() {
         // Cover scale at interface scale 1: the width rule where the stage is tall for its width, the comfortable gaps on the lower ones,
         // the least gaps on the lowest
-        val expected = mapOf("1099x957" to .6554f, "1488x893" to .7665f, "1191x893" to .7155f, "1108x831" to .6359f, "1051x1051" to .6237f, "1082x722" to .6f)
+        val expected = mapOf("1099x957" to .6554f, "1488x893" to .7665f, "1191x893" to .7155f, "1108x831" to .6359f, "1051x1051" to .6237f, "1082x722" to .45f)
         for (stage in stages) assertEquals(name(stage), expected.getValue(name(stage)), c.layout(stage.first, stage.second).coverScale, .0005f)
-        // The lowest stage has nothing left over: the least gaps and the 64 px title box
+        // The lowest stage's cover is at the floor and the least gaps (and the 64 px title box) are kept
         val low = c.layout(1082f, 722f)
-        assertEquals(64f, low.titleBox, .1f)
-        assertEquals(16f, low.statusGap, .1f)
-        assertEquals(24f, low.chipsGap, .1f)
-        assertEquals(28f, low.hintGap, .1f)
+        assertTrue(low.titleBox >= 64f - .1f && low.statusGap >= 16f - .1f && low.chipsGap >= 24f - .1f && low.hintGap >= 28f - .1f)
         // At the default interface scale the covers of the wide and the low stages give way to the comfortable gaps
         assertEquals(.69f, c.layout(1488f, 893f, 1.15f).coverScale, .0005f)
-        assertEquals(.6f, c.layout(1108f, 831f, 1.15f).coverScale, .0005f)
+        assertEquals(.5595f, c.layout(1108f, 831f, 1.15f).coverScale, .0005f)
         assertTrue(c.layout(1488f, 893f, 1.15f).chipsGap >= 38f && c.layout(1488f, 893f, 1.15f).hintGap >= 42f)
         // The others give the logo its 120 px box, also at the default interface scale
         for (stage in stages.filter { it.second > 800f }) for (scale in scales) assertEquals(name(stage), 120f, c.layout(stage.first, stage.second, scale).titleBox, .01f)

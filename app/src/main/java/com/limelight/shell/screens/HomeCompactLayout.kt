@@ -64,11 +64,10 @@ internal object HomeCompact {
     const val COMFORT_HINT = 44f
 
     /**
-     * A cover is at most this share of the stage's height. It gives way to the comfortable gaps down to [MIN_COVER] (the old minimum),
-     * and below that only where not even the least gaps fit otherwise (the 722-high stage at the default interface scale), never under [FLOOR].
+     * A cover is at most this share of the stage's height. It takes what the comfortable gaps leave and is never under [FLOOR] (where that does
+     * not fit the gaps give way to their least).
      */
     const val MAX_HEIGHT_SHARE = .40f
-    const val MIN_COVER = .6f
     const val FLOOR = .45f
 
     /** How the room that is left over is shared: a little above the title, most of it between the chips and the covers and under the covers. */
@@ -125,7 +124,7 @@ internal object HomeCompact {
     /**
      * The layout on a stage [stageWidth] x [stageHeight] at interface scale [scale] (the bars and the texts grow with it), [safeTop] and
      * [safeBottom] being the display cutout. The cover height is the smallest of what the height leaves after the comfortable gaps (after
-     * the least gaps once that would be under [MIN_COVER]), 0.40 of the stage's height and [widthScale]; what is left over then widens the
+     * the least gaps below [FLOOR]), 0.40 of the stage's height and [widthScale]; what is left over then widens the
      * title box (up to the logo's 120), the gap under it (up to 16) and is shared between the other three gaps by
      * [SHARE_STATUS] : [SHARE_CHIPS] : [SHARE_HINT].
      */
@@ -143,7 +142,7 @@ internal object HomeCompact {
         val comfortable = GAP_STATUS + titleMax + GAP_TITLE_MAX + chips + COMFORT_CHIPS + COMFORT_HINT + 2f * RING * FOCUS_SCALE
         val byComfort = (room - comfortable) / FOCUS_SCALE / COVER_HEIGHT
         val byShare = stageHeight * MAX_HEIGHT_SHARE / COVER_HEIGHT
-        val coverScale = minOf(byShare, widthScale(stageWidth), maxOf(byComfort, minOf(byHeight, MIN_COVER))).coerceAtLeast(FLOOR)
+        val coverScale = minOf(byShare, widthScale(stageWidth), byComfort).coerceAtLeast(FLOOR)
         val cover = COVER_HEIGHT * coverScale
         val reach = ringReach(cover)
         var left = room - (GAP_STATUS + titleMin + GAP_TITLE + chips + GAP_CHIPS + cover + 2f * reach + GAP_HINT)

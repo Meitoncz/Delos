@@ -22,6 +22,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -420,23 +422,39 @@ fun Circles(content: @Composable RowScope.() -> Unit) {
     GlideRingHost(FocusRing(5f, 5f), corner = 999f, focusScale = c.FOCUS_SCALE) {
         // The scroll area gets the room of a focused circle's glow on every side (taken back from the layout), so nothing of the focus is cut;
         // a compact stage also keeps a little air above and below for the ring next to the headline
+        // The stage's width: a compact row that does not fit inside its 48 px margins scrolls with the gap that lets the item at each cut edge show
+        val viewport = remember { mutableIntStateOf(0) }
+        val pad = c.SIDE.px
+        val peek = c.PEEK.px
+        val maxGap = c.MAX_GAP.px
         ScrollRow(
-            // A compact stage keeps the 48 px outer margin: the row's place is that much narrower on each side, so circles that would reach
-            // closer to the edge scroll instead (the 16:9 row is as wide as the stage)
-            Modifier.fillMaxWidth().then(if (compact) Modifier.padding(horizontal = Compact.MARGIN.px) else Modifier), gap = c.GAP, centered = true, edge = if (compact) c.EDGE else 40f,
+            // The column around it keeps 48 px at each side: the row reaches over them, so its cut edges are the stage's own
+            Modifier.then(if (compact) Modifier.overdraw(Compact.MARGIN.px, 0.px) else Modifier).fillMaxWidth().onSizeChanged { viewport.intValue = it.width }, gap = c.GAP, centered = true, edge = if (compact) c.EDGE else 40f,
             padVertical = if (compact) c.RING_AIR else 0f, focusMargin = c.FOCUS_MARGIN, bleed = c.GLOW_ROOM,
-            arrangement = if (compact) remember(wide, tight) { FitGapArrangement(wide, tight) } else null,
+            minPad = if (compact) c.SIDE else 0f,
+            arrangement = if (compact) remember(wide, tight, pad, peek, maxGap) { FitGapArrangement(wide, tight, { viewport.intValue }, pad, peek, maxGap) } else null,
             content = content,
         )
     }
 }
 
-/** A row's arrangement with two gaps: centred with [wide] between the items while they fit the row with it, else [tight] ([CircleRowLayout.arrange]). */
-private class FitGapArrangement(private val wide: Dp, private val tight: Dp) : Arrangement.Horizontal {
+/**
+ * A row's arrangement with two gaps: centred with [wide] between the items while they fit the row with it, else [tight]; a row that does not
+ * fit the [viewport] inside its [pad] margins gets the gap that shows [peek] of the item at a cut edge ([CircleRowLayout.arrange]). The row
+ * is [extra] pixels wider than the [tight] spacing the row measures with; [ScrollRow] adds them to its content.
+ */
+private class FitGapArrangement(
+    private val wide: Dp, private val tight: Dp, private val viewport: () -> Int, private val pad: Dp, private val peek: Dp, private val maxGap: Dp,
+) : Arrangement.Horizontal {
     override val spacing: Dp get() = tight
 
-    override fun Density.arrange(totalSize: Int, sizes: IntArray, layoutDirection: LayoutDirection, outPositions: IntArray) =
-        CircleRowLayout.arrange(sizes, totalSize, wide.roundToPx(), tight.roundToPx(), outPositions)
+    var extra = 0
+
+    override fun Density.arrange(totalSize: Int, sizes: IntArray, layoutDirection: LayoutDirection, outPositions: IntArray) {
+        extra = CircleRowLayout.arrange(
+            sizes, totalSize, wide.roundToPx(), tight.roundToPx(), outPositions, viewport(), pad.roundToPx(), peek.roundToPx(), maxGap.roundToPx(),
+        )
+    }
 }
 
 /**
@@ -450,6 +468,9 @@ private class FitGapArrangement(private val wide: Dp, private val tight: Dp) : A
  * room only while the row scrolls and takes it back from the layout, the row's neighbours do not move. [padVertical] is room that is always there.
  * [focusMargin] is how far the focused item stays from the cut edges (at least [edge]; more lets the next item peek in). An [arrangement]
  * of its own replaces the plain [gap]: the row is then as wide as its place and the arrangement lays the items out in it.
+ *
+ * [minPad] stage pixels at both ends are always there, whether the row scrolls or not (a compact stage's outer margin of the circles; with an arrangement of
+ * its own the row is as wide as its place minus them).
  *
  * [bleed] is for items whose focus glow reaches far outside them: the scroll area is that much larger than the row on all four sides and
  * its content padded by as much, always, so the row and its neighbours are laid out as without it but a scroll container never cuts the
@@ -466,6 +487,7 @@ fun ScrollRow(
     padVertical: Float = 0f,
     focusMargin: Float = edge,
     bleed: Float = 0f,
+    minPad: Float = 0f,
     arrangement: Arrangement.Horizontal? = null,
     content: @Composable RowScope.() -> Unit,
 ) {
@@ -476,7 +498,9 @@ fun ScrollRow(
     // wider than the row without that padding. Before the first layout the state's maximum is Int.MAX_VALUE: nothing overflows yet.
     var padded by remember { mutableStateOf(false) }
     val measured = scroll.maxValue != Int.MAX_VALUE
-    val overflow = measured && scroll.maxValue - (if (padded) 2f * edge * k else 0f) > 2f
+    // [minPad] is room at both ends that is always there (a compact stage's outer margin); the edge padding replaces it while the row scrolls
+    val scrollPad = maxOf(edge, minPad)
+    val overflow = measured && scroll.maxValue - (if (padded) 2f * (scrollPad - minPad) * k else 0f) > 2f
     SideEffect { padded = overflow }
     val room = (if (overflow) ringRoom else 0f).px + bleed.px
     val bleedX = bleed.px
@@ -507,7 +531,14 @@ fun ScrollRow(
                 )
                 .then(if (arrangement != null) Modifier.fillMaxWidth() else Modifier)
                 .horizontalScroll(scroll)
-                .padding(horizontal = (if (overflow) edge else 0f).px + bleedX, vertical = padVertical.px + room),
+                .padding(horizontal = (if (overflow) scrollPad else minPad).px + bleedX, vertical = padVertical.px + room)
+                // A gap wider than the one the row measures with: the content is that much wider
+                .then(
+                    if (arrangement is FitGapArrangement) Modifier.layout { measurable, constraints ->
+                        val placeable = measurable.measure(constraints)
+                        layout(placeable.width + arrangement.extra, placeable.height) { placeable.place(0, 0) }
+                    } else Modifier
+                ),
             horizontalArrangement = arrangement ?: Arrangement.spacedBy(gap.px),
             verticalAlignment = Alignment.Top,
             content = content,

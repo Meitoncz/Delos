@@ -86,4 +86,36 @@ class CircleRowFitTest {
             assertTrue("no item is narrower than its circle", item >= side.toInt())
         }
     }
+
+    @Test
+    fun aRowThatScrollsShowsAPeekOfTheCutItemAtBothEnds() {
+        // The compact viewports (stage widths) and item widths (the circle or its label, 176..260) of start, devices and pair-pc, 3 to 12 items
+        for (viewport in listOf(1099f, 1488f, 1191f, 1108f, 1051f, 1082f)) for (n in 3..12) for (w in listOf(176f * .9f, 200f, 220f, 260f)) {
+            val sizes = FloatArray(n) { w }
+            val limit = viewport - c.SIDE
+            val tight = c.GAP_TIGHT
+            if (sizes.sum() + tight * (n - 1) <= viewport - 2 * c.SIDE) continue
+            val g = c.peekGap(sizes, limit, tight)
+            val name = "$viewport x $n items of $w: gap $g"
+            assertTrue(name, g >= tight && g <= c.MAX_GAP)
+            val head = c.cutPeek(sizes, g, limit)
+            val tail = c.cutPeek(sizes.reversedArray(), g, limit)
+            // At least 60 px of the cut item show at each end, and it really is cut (by 40 px or more)
+            assertTrue("$name head $head", head >= c.PEEK - .5f && head <= w - c.CUT)
+            assertTrue("$name tail $tail", tail >= c.PEEK - .5f && tail <= w - c.CUT)
+        }
+    }
+
+    @Test
+    fun aRowThatFitsInsideItsMarginsStaysCentred() {
+        val out = IntArray(3)
+        val extra = c.arrange(intArrayOf(200, 200, 200), 1000, 56, 44, out, viewport = 1096, pad = 48, peek = 60, maxGap = 120)
+        assertEquals(0, extra)
+        assertArrayEquals(intArrayOf(144, 400, 656), out)
+        // Not inside the margins (3 x 300 and two gaps are 988, the room 1000 - 96): it scrolls from the start, wider than with the tight gap
+        val wide = IntArray(3)
+        val more = c.arrange(intArrayOf(300, 300, 300), 988, 56, 44, wide, viewport = 1096, pad = 48, peek = 60, maxGap = 120)
+        assertEquals(0, wide[0])
+        assertEquals((wide[1] - 300 - 44) * 2, more)
+    }
 }

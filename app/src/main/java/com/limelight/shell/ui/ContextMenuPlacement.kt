@@ -48,6 +48,12 @@ internal object ContextMenuLayout {
      */
     fun compactBottomMargin(textScale: Float, safeBottom: Float = 0f): Float = Compact.HINT_BAR * textScale + safeBottom + HINT_BAR_GAP
 
+    /** A compact stage's card starts this far below the status bar (which the card must not cover). */
+    const val STATUS_BAR_GAP = 8f
+
+    /** The top margin of a compact stage's card: the status bar ([Compact.STATUS_BAR] zoomed by the interface scale [textScale], below the cutout [safeTop]) and [STATUS_BAR_GAP]. */
+    fun compactTopMargin(textScale: Float, safeTop: Float = 0f): Float = Compact.STATUS_BAR * textScale + safeTop + STATUS_BAR_GAP
+
     /** The room of a focused row's glow around the rows' scroll area (the plate's glow is a 20 px blur drawn 6 px inside the row: about 14 px). */
     const val ROW_GLOW = 16f
 

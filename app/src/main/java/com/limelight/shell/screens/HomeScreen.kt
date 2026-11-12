@@ -818,9 +818,10 @@ private fun GameTile(
                     glyphRight = (if (wide) 40f else -36f) * geometry.scale,
                     glyphTop = if (wide) .04f else .24f,
                     title = app.name,
-                    // A compact stage's small covers set the placeholder's title at most 20 % smaller
-                    titleSize = (if (wide) 72f else 34f) * geometry.scale.coerceAtLeast(.8f).coerceAtMost(1f),
-                    titleInset = (if (wide) 44f else 26f) * geometry.scale.coerceAtLeast(.7f),
+                    // A compact stage's small covers set the placeholder's title smaller (the wide one at most 40 % and so that its name stays on
+                    // one line clear of the badge, the others at most 20 % and then fitted to their longest word), with the cover's own inset
+                    titleSize = (if (wide) 72f else 34f) * geometry.scale.coerceAtLeast(if (wide) .6f else .8f).coerceAtMost(1f),
+                    titleInset = (if (wide) 44f else 26f) * geometry.scale,
                     titleBottom = (if (wide) 40f else 26f) * geometry.scale,
                     titleFit = geometry.scale < 1f,
                 )

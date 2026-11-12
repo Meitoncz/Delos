@@ -922,16 +922,18 @@ activity keeps its own orientation logic) and supports windows from 1:1 up to 21
     **56** while the items fit with it and **44** when not (a focused circle grows 17 px to each side and its ring 12: 44 leaves 12 px of air); what
     still does not fit scrolls (`ScrollRow`), the focused circle 150 px from the cut edge so the next item peeks in. Start and Devices show **every**
     paired PC (they stopped at five), also at 16:9, where the row scrolls from seven circles on. `--ei preview_pcs <n>` gives the previews n PCs.
+    A compact row keeps a 72 px outer margin (the circle's edge; its ring has more than 40 px of it): what does not fit inside it scrolls, with the one gap (44 up to 120) that shows at least 60 px of the item cut
+    by the stage's edge at the start **and** at the end of the row (`CircleRowLayout.peekGap`), so there is always a visible hint that the row goes on.
   - *Home* (`screens/HomeCompactLayout.kt`, `HomeCompactLayoutTest`): laid out top-down between the bars: the title box (64 × scale to 120; the title
     stands on its bottom edge), 12–16 px, the info chips (room for two rows), at least 24 px to the focused cover's **ring**, the covers, at least
     28 px from that ring to the hint bar, at least 16 px under the status bar. The cover height is the smallest of 0.40 of the stage's height, the
     height at which the wide first cover (focused: its left edge on the 72 px margin, so the row starts that much plus its growth further in and the ring keeps 48+), one whole cover and a third of the next end 24 px before the right edge, where the row's right fade (72 px, clear at 8) is still opaque enough to read, and what the height
-    leaves with comfortable gaps (40 above, 44 under the covers), but not under 0.6 of the prototype's unless not even the least gaps fit (the 722-high
-    stage at the default interface scale: 0.50). What is left over goes to the gaps 0.5 : 2 : 2 (above the title : above the covers : under them). The
+    leaves with comfortable gaps (40 above, 44 under the covers), never under 0.45 of the prototype's (the 722-high stage: 0.45; there the gaps keep to their
+    least where the floor needs it). What is left over goes to the gaps 0.5 : 2 : 2 (above the title : above the covers : under them). The
     gap between two covers is 44 × scale, at least the room a focused cover needs (27.5 at 0.6). A placeholder cover sets its title smaller
-    (down to 0.55) until its longest word fits a line.
+    (down to 0.4) until its longest word fits a line.
   - *Side menu* (`SideMenuScroll`): the scroll area and its fade layer reach 40 px sideways and 56 px up and down beyond their place (`overdraw`, the content padded by the same), so the focused row's scale, ring and glow are never cut; a fade exists only at an edge with more to scroll to.
-  - *Context menu*: 48 px from the top and the sides, and its card ends **16 px above the hint bar** (`ContextMenuLayout.compactBottomMargin`); a
+  - *Context menu*: 48 px from the sides, its card starts **8 px under the status bar** (`ContextMenuLayout.compactTopMargin`) and ends **16 px above the hint bar** (`ContextMenuLayout.compactBottomMargin`); a
     taller menu scrolls inside the card. A menu that opens under its element (the PC circles) and fits neither under nor above it goes beside it.
   - *Stream menu* (`DockGeometry` in `StreamMenuLayout.kt`, `DockScroller` in `StreamMenuBar.kt`, `DockGeometryTest`): the tiles, gaps, ring,
     labels and caption are the 16:9 sizes; the row of nine is wider than the stage and **scrolls**: the first tile 80 px from the left edge (its

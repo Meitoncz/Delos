@@ -270,7 +270,7 @@ fun ContextMenuLayer(
     val stageW = stage.stageWidth
     val stageH = stage.stageHeight
     val marginX = if (stage.compact) L.COMPACT_MARGIN else L.MARGIN_X
-    val marginY = if (stage.compact) L.COMPACT_MARGIN else L.MARGIN_Y
+    val marginY = if (stage.compact) L.compactTopMargin(stage.textScale, stage.safe.top) else L.MARGIN_Y
     // A compact stage's card ends above the hint bar (it says what A and B do here); a menu taller than that scrolls inside the card
     val marginBottom = if (stage.compact) L.compactBottomMargin(stage.textScale, stage.safe.bottom) else marginY
     val state = remember(m, stageAnchor, stageW, stageH, marginBottom) {

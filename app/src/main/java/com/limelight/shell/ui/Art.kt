@@ -62,7 +62,7 @@ fun PlaceholderArt(
     titleInset: Float = 26f,
     titleBottom: Float = 26f,
     subtitle: String? = null,
-    /** A small cover (a compact stage's): the title is set smaller, down to 0.55 of [titleSize], until its longest word fits a line, so no word is broken. */
+    /** A small cover (a compact stage's): the title is set smaller, down to 0.4 of [titleSize], until its longest word fits a line, so no word is broken. */
     titleFit: Boolean = false,
 ) {
     BoxWithConstraints(
@@ -90,7 +90,7 @@ fun PlaceholderArt(
                 val style = TextStyle(fontFamily = Unbounded, fontWeight = FontWeight.SemiBold, fontSize = fullSize)
                 val widest = title.split(' ').maxOf { measurer.measure(it, style, softWrap = false, maxLines = 1).size.width }
                 // 3 % of the room stay free: the word laid out at the smaller size is a pixel or two wider than the measurement scaled down
-                titleSize * (if (widest <= 0) 1f else (room * .97f - 1f) / widest).coerceIn(.55f, 1f)
+                titleSize * (if (widest <= 0) 1f else (room * .97f - 1f) / widest).coerceIn(.4f, 1f)
             }
             Column(Modifier.align(Alignment.BottomStart).padding(start = titleInset.px, end = titleInset.px, bottom = titleBottom.px)) {
                 if (subtitle != null) {
