@@ -34,8 +34,11 @@ Upstream reports: Nonary/Vibepollo#708 (reported fixed in the 2.2.0 nightly) and
 time of writing). Until the host has the fix, select a DualShock 4 profile on the host (globally, or as a per-game override).
 A re-send of the unchanged controller state from the client was tried as a setting and removed: it has no effect.
 
-(b) and (c) were not tied to the client: gyro smoothing settles within about 0.6 s at strength 100, and the client sends
-gyro samples continuously like a real pad. Whether the game keeps aiming with the gyro after the release is the game's choice.
+(b) and (c) are not a client problem: gyro smoothing settles within about 0.6 s at strength 100, and the client sends
+gyro samples continuously like a real pad. Confirmed on 2026-11-12: in a different game the gyro stops aiming as soon as the
+trigger is released, with the same client build and settings. So the game that kept aiming after the release (a recently released
+recompilation of a classic title) does it by itself; the host's per-game override (DualShock 4) fixes (a) for it, nothing in
+Delos changes (b) and (c).
 
 ## What the client does with an RB release (read from the code, not yet measured)
 
