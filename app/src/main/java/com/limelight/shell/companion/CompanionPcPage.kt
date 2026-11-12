@@ -142,32 +142,31 @@ private const val LABEL_SLACK = 1.12f
 /** Label and value of every fact of [d], in display order ([PcCard.facts]). */
 @Composable
 private fun pcFacts(d: PcCardData): List<Pair<PcFactKind, Pair<String, String>>> {
-    val unavailable = stringResource(R.string.pc_value_unavailable)
     return PcCard.facts(d).map { kind ->
         kind to when (kind) {
             PcFactKind.FLAGS -> stringResource(R.string.pc_fact_flags) to when {
-                d.isDefault == null && !d.connected -> unavailable
+                d.isDefault == null && !d.connected -> stringResource(R.string.pc_unknown_flags)
                 d.isDefault == true && d.connected -> stringResource(R.string.devices_status_with_default, stringResource(R.string.devices_status_connected), stringResource(R.string.devices_status_default))
                 d.connected -> stringResource(R.string.devices_status_connected)
                 d.isDefault == true -> stringResource(R.string.pc_flags_default)
                 else -> stringResource(R.string.pc_flags_none)
             }
-            PcFactKind.HOST -> stringResource(R.string.pc_fact_host) to (d.software?.let { stringResource(softwareName(it)) } ?: unavailable)
-            PcFactKind.VERSION -> stringResource(R.string.pc_fact_version) to unavailable
+            PcFactKind.HOST -> stringResource(R.string.pc_fact_host) to (d.software?.let { stringResource(softwareName(it)) } ?: stringResource(R.string.pc_unknown_host))
+            PcFactKind.VERSION -> stringResource(R.string.pc_fact_version) to stringResource(R.string.pc_unknown_version)
             PcFactKind.HOST_NAME -> stringResource(R.string.pc_fact_host_name) to d.serverName
             PcFactKind.LIBRARY -> stringResource(R.string.pc_fact_library) to when {
-                d.apps == null -> unavailable
+                d.apps == null -> stringResource(R.string.pc_unknown_library)
                 d.appsCached -> pluralStringResource(R.plurals.pc_apps_cached, d.apps, d.apps)
                 else -> pluralStringResource(R.plurals.pc_apps, d.apps, d.apps)
             }
             PcFactKind.SESSION -> stringResource(R.string.pc_fact_session) to when {
-                !d.online -> unavailable
+                !d.online -> stringResource(R.string.pc_unknown_session)
                 d.runningGame != null -> stringResource(R.string.companion_host_running, d.runningGame)
                 d.busy -> stringResource(R.string.pc_session_busy)
                 else -> stringResource(R.string.pc_session_idle)
             }
             PcFactKind.WAKE -> stringResource(R.string.pc_fact_wake) to stringResource(if (d.canWake) R.string.pc_wake_saved else R.string.pc_wake_none)
-            PcFactKind.LAST_SEEN -> stringResource(R.string.pc_fact_last_seen) to (if (d.online) stringResource(R.string.pc_value_now) else unavailable)
+            PcFactKind.LAST_SEEN -> stringResource(R.string.pc_fact_last_seen) to (if (d.online) stringResource(R.string.pc_value_now) else stringResource(R.string.pc_unknown_last_seen))
         }
     }
 }

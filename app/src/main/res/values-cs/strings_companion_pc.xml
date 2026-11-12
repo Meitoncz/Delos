@@ -13,7 +13,12 @@
     <string name="pc_fact_session">Relace</string>
     <string name="pc_fact_wake">Probuzení</string>
     <string name="pc_fact_last_seen">Naposledy viděno</string>
-    <string name="pc_value_unavailable">Nedostupné</string>
+    <string name="pc_unknown_host">Hostitel nedostupný</string>
+    <string name="pc_unknown_version">Verze nedostupná</string>
+    <string name="pc_unknown_last_seen">Poslední aktivita neznámá</string>
+    <string name="pc_unknown_session">Běžící hra neznámá</string>
+    <string name="pc_unknown_library">Aplikace neznámé</string>
+    <string name="pc_unknown_flags">Výchozí neznámé</string>
     <string name="pc_value_now">Právě teď</string>
     <string name="pc_flags_default">Výchozí PC</string>
     <string name="pc_flags_none">Není výchozí</string>

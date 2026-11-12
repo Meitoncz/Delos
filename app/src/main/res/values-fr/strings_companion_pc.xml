@@ -13,7 +13,12 @@
     <string name="pc_fact_session">Session</string>
     <string name="pc_fact_wake">Réveil</string>
     <string name="pc_fact_last_seen">Dernière activité</string>
-    <string name="pc_value_unavailable">Indisponible</string>
+    <string name="pc_unknown_host">Hôte indisponible</string>
+    <string name="pc_unknown_version">Version indisponible</string>
+    <string name="pc_unknown_last_seen">Dernière activité inconnue</string>
+    <string name="pc_unknown_session">Jeu en cours inconnu</string>
+    <string name="pc_unknown_library">Applications inconnues</string>
+    <string name="pc_unknown_flags">Défaut inconnu</string>
     <string name="pc_value_now">Maintenant</string>
     <string name="pc_flags_default">PC par défaut</string>
     <string name="pc_flags_none">Pas par défaut</string>

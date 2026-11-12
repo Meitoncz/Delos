@@ -141,6 +141,13 @@ class CompanionPcPageTest {
         assertEquals(PcFactKind.VERSION, cached.last())
     }
 
+    @Test fun everyUnknownFactIsOneThePageLabelsItselfBecauseShortPanelsShowNoLabel() {
+        // The page words each of these as "<what> unavailable/unknown" (pc_unknown_*), so the value alone says what is missing
+        val unknown = PcCard.facts(offlineNoMac).filter { !PcCard.known(offlineNoMac, it) }
+        assertEquals(setOf(PcFactKind.LIBRARY, PcFactKind.LAST_SEEN, PcFactKind.HOST, PcFactKind.SESSION, PcFactKind.VERSION), unknown.toSet())
+        assertTrue(PcCard.facts(online).filter { !PcCard.known(online, it) } == listOf(PcFactKind.VERSION))
+    }
+
     @Test fun aFactThatDoesNotFitOneLineIsLeftOutNotCut() {
         val facts = PcCard.facts(online.copy(serverName = "DESKTOP-9KQ2L7M"))
         val shown = PcCard.select(facts, 6) { it != PcFactKind.HOST_NAME }

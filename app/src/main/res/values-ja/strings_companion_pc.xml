@@ -13,7 +13,12 @@
     <string name="pc_fact_session">セッション</string>
     <string name="pc_fact_wake">起動</string>
     <string name="pc_fact_last_seen">最終確認</string>
-    <string name="pc_value_unavailable">利用不可</string>
+    <string name="pc_unknown_host">ホスト不明</string>
+    <string name="pc_unknown_version">バージョン不明</string>
+    <string name="pc_unknown_last_seen">最終確認は不明</string>
+    <string name="pc_unknown_session">実行中のゲーム不明</string>
+    <string name="pc_unknown_library">アプリ数不明</string>
+    <string name="pc_unknown_flags">既定は不明</string>
     <string name="pc_value_now">今</string>
     <string name="pc_flags_default">既定のPC</string>
     <string name="pc_flags_none">既定ではありません</string>
