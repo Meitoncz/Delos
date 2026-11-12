@@ -376,7 +376,7 @@ only the Windows, Steam and Android logos exist). Nothing needed a font from ano
 | Profile: Add profile | `user-plus` | `user-plus` | keep |  |
 | Profile: Delete profile | `trash` | `trash` | keep |  |
 | Profile menu entries / Playing as | `user-circle` | `user-circle` | keep |  |
-| Profile name field | `identification-badge` | `identification-badge` | keep | the logo moved to a trademark so the badge is the name only |
+| Profile name field | `identification-badge` | `identification-badge` | keep | the Logo tab uses a custom wordmark plate; the badge is the name only |
 | First run: Get started | `arrow-right` | `arrow-right` | keep |  |
 | First run: Skip to home | `fast-forward` | `fast-forward` | keep | same meaning as Skip the start screen |
 | First run: Save / Create profile | `check` | `check` | keep |  |
@@ -430,7 +430,7 @@ only the Windows, Steam and Android logos exist). Nothing needed a font from ano
 | Artwork tab Cover | `image` | `image` | keep |  |
 | Artwork tab Wide cover | `rectangle` | `rectangle` | keep |  |
 | Artwork tab Background | `panorama` | `panorama` | keep |  |
-| Artwork tab Logo | `identification-badge` | `trademark` | **replace** | trademark |
+| Artwork tab Logo | `identification-badge` | `delos-wordmark-plate` | **replace** | selected custom title-art plate (A), U+F000; not a trademark |
 | Artwork: Search for another name | `magnifying-glass` | `list-magnifying-glass` | **replace** | see above |
 | Artwork: Filter / Change filters | `sliders-horizontal` | `funnel` | **replace** | funnel |
 | Artwork: Reset filters / Reset chip | `arrows-clockwise` | `arrow-u-up-left` | **replace** | it is a reset |

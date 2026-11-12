@@ -312,7 +312,7 @@ ghost = ghost
 appearance = paint-brush
 reduced_motion = pinwheel
 stream_menu_buttons = squares-four
-logo = trademark
+logo = delos-wordmark-plate
 
 # Game genres (IGDB genre chips, see shell/ui/GenreIcons.kt)
 genre_point_and_click = cursor-click

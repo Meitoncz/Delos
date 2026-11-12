@@ -1,0 +1,7 @@
+{
+  "delos-wordmark-plate": {
+    "codepoint": "F000",
+    "regular": "logo/a-wordmark-plate-regular.svg",
+    "fill": "logo/a-wordmark-plate-fill.svg"
+  }
+}

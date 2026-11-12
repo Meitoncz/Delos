@@ -17,8 +17,11 @@ Source fonts are downloaded from the official Google (pinned to a google/fonts c
 (versioned) repositories into the work directory (a fresh temporary directory by default). Every download
 is checked against a SHA-256 digest.
 """
+from __future__ import annotations
+
 
 import argparse
+import json
 import hashlib
 import re
 import shutil
@@ -29,6 +32,10 @@ from pathlib import Path
 from fontTools import subset
 from fontTools.ttLib import TTFont
 from fontTools.varLib import instancer
+from fontTools.pens.cu2quPen import Cu2QuPen
+from fontTools.pens.transformPen import TransformPen
+from fontTools.pens.ttGlyphPen import TTGlyphPen
+from fontTools.svgLib.path import SVGPath
 
 REPO = Path(__file__).resolve().parents[2]
 RES_FONT = REPO / "app/src/main/res/font"
@@ -36,6 +43,7 @@ LICENSES = REPO / "app/src/main/assets/licenses"
 SYMBOLS_KT = REPO / "app/src/main/java/com/limelight/shell/ui/Symbols.kt"
 ICONS_TXT = Path(__file__).with_name("icons.txt")
 PROTOTYPE_CSS = REPO / "docs/prototype/phosphor-icons.css"
+CUSTOM_ICONS = Path(__file__).with_name("custom.json")
 
 # google/fonts is pinned to a commit so a rebuild cannot pick up a newer upstream font by accident.
 GOOGLE_FONTS_COMMIT = "e7db6ca603fd4862010383ff17ffd6cc4ffac1c0"
@@ -76,7 +84,8 @@ def fetch(work: Path, icons_only: bool) -> None:
             raise SystemExit(f"source checksum mismatch: {target}")
 
 
-def subset_font(src: Path, dst: Path, unicodes: list[int], keep_layout: bool, weights: tuple | None = None) -> None:
+def subset_font(src: Path, dst: Path, unicodes: list[int], keep_layout: bool, weights: tuple | None = None,
+                custom: dict | None = None, style: str | None = None) -> None:
     options = subset.Options()
     options.layout_features = ["*"] if keep_layout else []
     options.name_IDs = ["*"]
@@ -84,6 +93,8 @@ def subset_font(src: Path, dst: Path, unicodes: list[int], keep_layout: bool, we
     font = TTFont(src)
     # Stable output across rebuilds; source timestamps are retained.
     font.recalcTimestamp = False
+    if custom:
+        import_custom_icons(font, custom, style)
     missing = set(unicodes) - font.getBestCmap().keys()
     if missing and not keep_layout:
         raise SystemExit(f"missing icon glyphs in {src.name}: {sorted(missing)}")
@@ -123,6 +134,44 @@ def read_icons() -> dict[str, str]:
     return names
 
 
+def read_custom_icons(work: Path, upstream: dict[str, int]) -> dict:
+    """Validate explicit private-use assignments against BOTH complete upstream fonts."""
+    custom = json.loads(CUSTOM_ICONS.read_text(encoding="utf-8"))
+    occupied = set()
+    for filename in ("Phosphor.ttf", "Phosphor-Fill.ttf"):
+        with TTFont(work / filename) as font:
+            for table in font["cmap"].tables:
+                if table.isUnicode():
+                    occupied.update(table.cmap)
+    for name, entry in custom.items():
+        cp = int(entry["codepoint"], 16)
+        if not re.fullmatch(r"[a-z][a-z0-9-]*", name) or name in upstream:
+            raise SystemExit(f"invalid or upstream-shadowing custom icon: {name}")
+        if not 0xE000 <= cp <= 0xF8FF or cp in occupied:
+            raise SystemExit(f"occupied or non-BMP-private custom code point: {name} U+{cp:04X}")
+        occupied.add(cp)
+    return custom
+
+
+def import_custom_icons(font: TTFont, custom: dict, style: str) -> None:
+    """Import closed SVG contours with their winding intact, onto Phosphor's baseline."""
+    scale = font["head"].unitsPerEm / 256
+    for name, entry in custom.items():
+        glyph_name = f"delos.{name}"
+        pen = TTGlyphPen(None)
+        curves = Cu2QuPen(pen, max_err=0.5, reverse_direction=False)
+        transform = TransformPen(curves, (scale, 0, 0, -scale, 0, font["hhea"].ascent))
+        SVGPath(str(CUSTOM_ICONS.parent / entry[style])).draw(transform)
+        glyph = pen.glyph()
+        glyph.recalcBounds(font["glyf"])
+        font.setGlyphOrder(font.getGlyphOrder() + [glyph_name])
+        font["glyf"][glyph_name] = glyph
+        font["hmtx"][glyph_name] = (font["head"].unitsPerEm, glyph.xMin)
+        for table in font["cmap"].tables:
+            if table.isUnicode():
+                table.cmap[int(entry["codepoint"], 16)] = glyph_name
+
+
 def kotlin_literal(cp: int) -> str:
     """Kotlin string escape for a code point (a surrogate pair above the BMP)."""
     if cp <= 0xFFFF:
@@ -144,7 +193,8 @@ def write_symbols(icons: dict[str, int]) -> None:
         lines.append(f'    const val {name.upper()} = "{kotlin_literal(cp)}"')
     lines += ["}", ""]
     SYMBOLS_KT.parent.mkdir(parents=True, exist_ok=True)
-    SYMBOLS_KT.write_text("\n".join(lines), encoding="utf-8", newline="\n")
+    with SYMBOLS_KT.open("w", encoding="utf-8", newline="\n") as output:
+        output.write("\n".join(lines))
     print(f"{SYMBOLS_KT.relative_to(REPO)}: {len(icons)} icons")
 
 
@@ -164,7 +214,8 @@ def write_prototype_css(icons: dict[str, int]) -> None:
     lines.append(f':root {{ --phosphor-check: "\\{icons["check"]:x}"; }}')
     for name, cp in icons.items():
         lines.append(f'.ms[data-icon="{name}"] {{ --phosphor-glyph: "\\{cp:x}"; }}')
-    PROTOTYPE_CSS.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
+    with PROTOTYPE_CSS.open("w", encoding="utf-8", newline="\n") as output:
+        output.write("\n".join(lines) + "\n")
 
 
 def build_icons(work: Path) -> None:
@@ -174,12 +225,16 @@ def build_icons(work: Path) -> None:
                                    (work / "regular.css").read_text(encoding="utf-8"))
     }
     names = read_icons()
+    custom = read_custom_icons(work, codepoints)
+    codepoints.update({name: int(entry["codepoint"], 16) for name, entry in custom.items()})
     missing = set(names.values()) - codepoints.keys()
     if missing:
         raise SystemExit(f"unknown Phosphor icon names in icons.txt: {', '.join(sorted(missing))}")
     icons = {name: codepoints[phosphor] for name, phosphor in names.items()}
-    for source, target in (("Phosphor.ttf", "phosphor_regular.ttf"), ("Phosphor-Fill.ttf", "phosphor_fill.ttf")):
-        subset_font(work / source, RES_FONT / target, sorted(set(icons.values())), keep_layout=False)
+    for source, target, style in (("Phosphor.ttf", "phosphor_regular.ttf", "regular"),
+                                  ("Phosphor-Fill.ttf", "phosphor_fill.ttf", "fill")):
+        subset_font(work / source, RES_FONT / target, sorted(set(icons.values())), keep_layout=False,
+                    custom={name: entry for name, entry in custom.items() if name in names.values()}, style=style)
     write_symbols(icons)
     write_prototype_css(icons)
     shutil.copyfile(work / "Phosphor-LICENSE.txt", LICENSES / "Phosphor-LICENSE.txt")

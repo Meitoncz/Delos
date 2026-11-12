@@ -12,16 +12,18 @@ Palette adjustment. The completed feature branch was deleted; the push used `[sk
 
 - Official source: [phosphor-icons/web v2.1.2](https://github.com/phosphor-icons/web/tree/v2.1.2).
 - License: MIT, included in `app/src/main/assets/licenses/Phosphor-LICENSE.txt`.
-- `tools/fonts/icons.txt` maps stable Delos semantic names to Phosphor names. Existing callers do
-  not need to know the source family's names. New entries describe their actual action or setting.
+- `tools/fonts/icons.txt` maps stable Delos semantic names to Phosphor names or local names declared
+  in `tools/fonts/custom.json`. Existing callers do not need to know the source family's names.
+  New entries describe their actual action or setting.
 - `tools/fonts/subset_fonts.py` downloads the versioned Regular and Fill TTFs, the code-point CSS
   and license. SHA-256 checks validate cached and downloaded sources before generating anything.
 - Generated files: `res/font/phosphor_regular.ttf`, `res/font/phosphor_fill.ttf`, `Symbols.kt`
   and `docs/prototype/phosphor-icons.css`. Commit these along with mapping/generator changes.
 - The prototype reads the Android fonts through relative paths; icon rendering needs no CDN.
   Its `data-icon` names use the generated CSS and the same Regular/Fill crossfade.
-- The Regular subset is 98,688 bytes and Fill is 85,268 bytes (183,956 bytes combined, 341 semantic
-  names after the icon audit and the diagnostics icons of #71), replacing the 299,768-byte Material Symbols subset. No new runtime library is needed.
+- The Regular subset is 100,524 bytes and Fill is 87,784 bytes (188,308 bytes combined, 341 semantic
+  names including the selected custom Logo glyph), replacing the 299,768-byte Material Symbols subset.
+  No new runtime library is needed.
 
 Rebuild icons on Windows (Python with `fonttools` installed):
 
@@ -125,13 +127,39 @@ candidate remains a user decision.
 
 **Decision (user, 2026-11-07):** both candidates are kept. When the PS Remote Play work needs the glyph, import BOTH A (Open seam) and B (Swept wing), Regular and Fill, into the fonts as two semantic entries (for example `CONSOLE` for B, the earlier favourite, and `CONSOLE_ALT` for A), so the user can compare them inside the real app (shell, device pills, settings) and choose one. The loser is then removed from the font, the generator and this note. Until then neither is part of the bundled fonts or UI.
 
-For the integration, extend `subset_fonts.py` with a local custom-glyph source
-before subsetting. Reserve one unused private-use code point after checking both full upstream
-cmaps, import the selected Regular/Fill paths into the respective fonts, and preserve their shared
-advance and origin. Map the 256-unit SVG coordinates to the font's actual units-per-em, flip the
-Y axis to its baseline convention, and keep counters/negative-space winding. Add a semantic
-`CONSOLE` entry through `icons.txt` and the generator so `Symbols.kt` and prototype CSS are generated
-together. Regenerate both committed TTF subsets and validate their bounds, matching advances and
-Regular/Fill crossfade before using `Symbols.CONSOLE`. The current mapping parser accepts only
-upstream Phosphor names, so adding a mapping alone is not sufficient. A vector drawable is an
-alternative, but font integration preserves the existing shared `Symbol` focus crossfade.
+For console integration, reuse the local custom-glyph mechanism below; neither console candidate
+is imported yet. Assign each its own unused code point and mapping, then regenerate both fonts.
+Validate bounds, matching advances and Regular/Fill crossfade before using the new symbols.
+
+## Custom glyphs and the Logo tab
+
+The user selected **A — Wordmark plate** for the Artwork Logo tab. `logo = delos-wordmark-plate`
+resolves to **U+F000** in both subsets; `Symbols.LOGO` callers are unchanged. The old `trademark`
+glyph is omitted because no semantic entry uses it. Sources are
+`tools/fonts/logo/a-wordmark-plate-{regular,fill}.svg`; the rejected review alternatives are not imported.
+
+`tools/fonts/custom.json` declares a local source name, explicit hexadecimal `codepoint`, and
+`regular`/`fill` SVG paths relative to `tools/fonts/`. The existing `icons.txt` syntax and upstream
+name parser remain unchanged. To add a glyph:
+
+1. Supply closed paths on a 256×256 SVG grid. Resolve overlaps and contour winding before import;
+   counters must have opposite winding to their surrounding contour. SVG even-odd attributes alone
+   do not encode font counter semantics.
+2. Add a manifest entry with an unused BMP private-use point (U+E000–U+F8FF). The generator checks
+   every Unicode cmap of BOTH complete upstream fonts and rejects collisions, duplicate local points
+   and names shadowing upstream icons. U+F000 was unused in both pinned full fonts.
+3. Map a semantic name in `icons.txt` to that manifest name. Only referenced custom entries are imported.
+4. Run the normal `--icons-only` command. Import scales to units-per-em, flips Y onto the source
+   font's ascent/baseline convention, converts cubic curves to quadratic contours, and sets the shared
+   1024-unit advance with zero origin. The existing bearing correction still preserves every origin.
+   Cached upstream files remain untouched; import occurs in memory before subsetting.
+5. Review generated fonts, symbols and CSS together, render Regular/Fill at actual use sizes and
+   verify Android crossfade/physical appearance before accepting integration.
+
+Verification for Logo: cached-source and fresh-download generation both completed. All 340 other
+semantic code points, and all 333 retained upstream glyphs' compiled contours and horizontal metrics
+per font, are unchanged. Both Logo glyphs have bounds (96,128)–(928,768), advance 1024 and origin zero.
+Pillow renders at 32/96 px beside Cover/Hero were visually inspected: the title and counters remain
+visible, with no clipped Logo paths and matching alignment between weights. Evidence is in ignored
+`build/logo-integration/`. Android/Odin rendering and focus crossfade remain for the lead to verify;
+no Gradle, ADB or commit was performed by this integration task.
