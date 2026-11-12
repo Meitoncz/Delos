@@ -835,6 +835,11 @@ activity keeps its own orientation logic) and supports windows from 1:1 up to 21
     circle flush with the content's right edge. Per game the header is ONE row on a 220 px banner: the eyebrow and the name at the left, the
     tabs, and Reset all as the same circle, carrying the count of custom settings as an accent badge (the 16:9 header's "N custom settings" chip). Per-game plain rows drop
     "From profile" (the dock says it); custom rows keep their CUSTOM badge and profile line.
+  - *Settings, per-game settings, Debug info on a dual-screen device*: the description is not drawn at all on the main panel while a companion
+    window shows it (the 16:9 panel on the right, the compact dock under the list): the list takes its room (the full content width at 16:9,
+    the full height down to the hint bar when compact, the same margins and fades as before). "Showing" is the window's real state
+    (`CompanionSession.showsHelp`, set by the window's own composition), never just "a second display exists", so the description is not lost
+    while a window is starting, refused or gone. Without a companion nothing changes (the 16:9 screens are pixel-identical to before).
   - *Settings search*: the field with the count of results beside it; the letters as **two rows of 64 px keys that scroll sideways together**
     (`CompactLetterPicker`: the alphabet runs on from the first row into the second, Space is the last key, 26 px between keys, faded ends);
     Delete and Clear are two circles that stay at the right; the results are under them at the full width, Up from the first goes back to the keys.
@@ -867,6 +872,8 @@ activity keeps its own orientation logic) and supports windows from 1:1 up to 21
   Its content is variant A of the approved prototype (focused-game details and buttons, statistics and the nine stream-menu tiles, a touch keyboard), built from the
   shared tokens (glass cards, Phosphor icons, gold primary, impact chips) with text at least 28 and targets at least 64 stage px; a stage under 920 px high lays the tiles out flat.
   Content, state and command flow, burn-in policy and previews: [DUAL_SCREEN.md](DUAL_SCREEN.md), "What the companion shows".
+  The settings screens publish the description of the focused row to it (`PublishCompanionHelp`, "Settings help" in DUAL_SCREEN.md); it is drawn
+  large in one scrolling glass card (28 to 40 px text, a slim scroll bar and an edge fade while the page continues).
 - **Shape simulator** (debug builds, `ShapeSimulator` in `src/debug`): `--es preview_shape <W>x<H>@<dpi>` draws the whole shell, or any `preview_screen`,
   in a centered box of that pixel size (scaled down uniformly when it does not fit; the density is scaled with it, so the dp maths is the panel's)
   with `LocalDensity` set to the simulated density. Outside the box it is black; a caption at the bottom-left names the size, dpi, dp size, stage and
