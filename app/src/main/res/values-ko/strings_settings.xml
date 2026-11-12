@@ -31,15 +31,13 @@
 
 
     <string name="settings_option_palette_delos">Delos</string>
-    <string name="settings_option_palette_lagoon">라군</string>
+    <string name="settings_option_palette_ember">재</string>
+    <string name="settings_option_palette_rose">작약</string>
+    <string name="settings_option_palette_orchid">성운</string>
     <string name="settings_option_palette_dusk">황혼</string>
-    <string name="settings_option_palette_ember">잉걸불</string>
-    <string name="settings_option_palette_moss">이끼</string>
-    <string name="settings_option_palette_iris">아이리스</string>
-    <string name="settings_option_palette_rose">로즈</string>
-    <string name="settings_option_palette_sunset">석양</string>
-    <string name="settings_option_palette_mint">민트</string>
-    <string name="settings_option_palette_gold">골드</string>
+    <string name="settings_option_palette_iris">코발트</string>
+    <string name="settings_option_palette_graphite">빙하</string>
+    <string name="settings_option_palette_mint">바다거품</string>
 
     <string name="settings_option_clock_system">시스템</string>
     <string name="settings_option_clock_12">12시간제</string>

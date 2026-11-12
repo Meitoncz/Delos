@@ -71,7 +71,7 @@
     <string name="settings_native_theme_description">Dunkle oder helle Oberfläche.</string>
     <string name="settings_native_material_you_title">Material-You-Farben</string>
     <string name="settings_native_material_you_description">Nutzt nur die Farben deines Hintergrundbilds. Zum Wählen einer Palette ausschalten.</string>
-    <!-- %1$s: the name of the fallback palette ("Lagoon") -->
+    <!-- %1$s: the name of the fallback palette ("Seafoam") -->
     <string name="settings_native_material_you_fallback_description">Dieses Gerät hat keine Hintergrundbild-Palette, daher werden die Farben von %1$s genutzt. Zum Wählen einer Palette ausschalten.</string>
     <string name="settings_native_palette_title">Farbpalette</string>
     <string name="settings_native_palette_description">Farben der Oberfläche und der animierten Hintergründe.</string>

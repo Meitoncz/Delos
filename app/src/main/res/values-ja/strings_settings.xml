@@ -31,15 +31,13 @@
 
 
     <string name="settings_option_palette_delos">Delos</string>
-    <string name="settings_option_palette_lagoon">ラグーン</string>
+    <string name="settings_option_palette_ember">燃え殻</string>
+    <string name="settings_option_palette_rose">牡丹</string>
+    <string name="settings_option_palette_orchid">星雲</string>
     <string name="settings_option_palette_dusk">夕暮れ</string>
-    <string name="settings_option_palette_ember">熾火</string>
-    <string name="settings_option_palette_moss">苔</string>
-    <string name="settings_option_palette_iris">アイリス</string>
-    <string name="settings_option_palette_rose">ローズ</string>
-    <string name="settings_option_palette_sunset">サンセット</string>
-    <string name="settings_option_palette_mint">ミント</string>
-    <string name="settings_option_palette_gold">ゴールド</string>
+    <string name="settings_option_palette_iris">コバルト</string>
+    <string name="settings_option_palette_graphite">氷河</string>
+    <string name="settings_option_palette_mint">シーフォーム</string>
 
     <string name="settings_option_clock_system">システム</string>
     <string name="settings_option_clock_12">12時間表示</string>

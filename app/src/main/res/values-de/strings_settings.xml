@@ -36,15 +36,13 @@
 
     <!-- Appearance choices: color palettes (names; Delos is the app's own palette and keeps its name) -->
     <string name="settings_option_palette_delos">Delos</string>
-    <string name="settings_option_palette_lagoon">Lagune</string>
+    <string name="settings_option_palette_ember">Asche</string>
+    <string name="settings_option_palette_rose">Pfingstrose</string>
+    <string name="settings_option_palette_orchid">Nebel</string>
     <string name="settings_option_palette_dusk">Dämmerung</string>
-    <string name="settings_option_palette_ember">Glut</string>
-    <string name="settings_option_palette_moss">Moos</string>
-    <string name="settings_option_palette_iris">Iris</string>
-    <string name="settings_option_palette_rose">Rose</string>
-    <string name="settings_option_palette_sunset">Abendrot</string>
-    <string name="settings_option_palette_mint">Minze</string>
-    <string name="settings_option_palette_gold">Gold</string>
+    <string name="settings_option_palette_iris">Kobalt</string>
+    <string name="settings_option_palette_graphite">Gletscher</string>
+    <string name="settings_option_palette_mint">Meeresschaum</string>
 
     <!-- Appearance choices: the clock in the status bar -->
     <!-- Follows the system's 12 or 24 hour setting -->

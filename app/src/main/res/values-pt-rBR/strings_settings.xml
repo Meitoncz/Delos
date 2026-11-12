@@ -31,15 +31,13 @@
 
 
     <string name="settings_option_palette_delos">Delos</string>
-    <string name="settings_option_palette_lagoon">Lagoa</string>
+    <string name="settings_option_palette_ember">Cinza</string>
+    <string name="settings_option_palette_rose">Peônia</string>
+    <string name="settings_option_palette_orchid">Nebulosa</string>
     <string name="settings_option_palette_dusk">Crepúsculo</string>
-    <string name="settings_option_palette_ember">Brasa</string>
-    <string name="settings_option_palette_moss">Musgo</string>
-    <string name="settings_option_palette_iris">Íris</string>
-    <string name="settings_option_palette_rose">Rosa</string>
-    <string name="settings_option_palette_sunset">Pôr do sol</string>
-    <string name="settings_option_palette_mint">Menta</string>
-    <string name="settings_option_palette_gold">Ouro</string>
+    <string name="settings_option_palette_iris">Cobalto</string>
+    <string name="settings_option_palette_graphite">Geleira</string>
+    <string name="settings_option_palette_mint">Espuma do mar</string>
 
     <string name="settings_option_clock_system">Sistema</string>
     <string name="settings_option_clock_12">12 horas</string>

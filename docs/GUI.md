@@ -465,7 +465,7 @@ pixels from the top (below the shell's status bar) and 44 from the right edge. O
 stats strip); the user accepted that. The card is flat and opaque (`#17223C` → `#0E1628`, radius 20, a faint inset ring), so it stays readable over a
 white game frame; it has **no blur** (the stream is a `SurfaceView`).
 
-- **Kinds**: `INFO` (the palette's cyan, `accent2`), `SUCCESS` (mint), `WARNING` (orange), `ERROR` (coral) and `ACTION` (the palette's indigo, light), each a solid
+- **Kinds**: `INFO` (the palette's cyan, `accent2`), `SUCCESS` (mint), `WARNING` (orange), `ERROR` (coral) and `ACTION` (the palette's third color, light), each a solid
   icon block with its icon (info, check circle, warning triangle, exclamation, trash), the word **INFO / DONE / WARNING / ERROR / UNDO** above the text and the
   kind colour on the glow and the block. Mint, orange and coral are fixed semantic colours; the others follow the palette. A caller passes the kind
   (`ShellState.showToast(…, kind = ToastKind.ERROR)`, `DelosToast.show(context, text, DelosToast.LONG, ToastKind.WARNING)`); without one it is read from the
@@ -529,10 +529,17 @@ only, *Trigger test crash*. **Settings → About → Diagnostics → Keep diagno
 
 Color is a seasoning, not a coating: the neutral text and surfaces carry the screen and the palette's three colors split
 the accents about **60 / 25 / 15** by visual weight (`colors.accent`, `accent2`, `accent3`; Delos: gold 40°, cyan 190°,
-indigo 250°, a split complement). Material You derives the same three from the wallpaper (main, +52°, tertiary) and
+pink 335°). Material You derives the same three from the wallpaper (main, +52°, tertiary) and
 follows the same roles. Light themes use darker shades (accent3 is dark there); content on an accent3 fill uses `onAccent3`
 (dark in the dark theme, white in the light one); a cover badge uses `accent3OnDark`
 and `accent3Line` is the faint hairline of the palette's third color, all in `ui/Colors.kt`.
+
+The eight palettes (`Palette` in `settings/AppearanceStore.kt`: Delos, Cinder, Peony, Nebula, Twilight, Cobalt, Glacier,
+Seafoam) follow common rules. The background is dark and muted (its own hue and a saturation of 7-38 %, a darker
+neutral for Glacier and Twilight) and is never the main color; the main color carries about 60 %, the secondary 25 %
+and the third 15 % of the accents. The schemes are mixed (warm with cool, a pink or gold spark), not monochrome, and
+there is only one green (Seafoam). Three palettes are *soft* (Twilight, Glacier, Seafoam): pastel accents (lower
+saturation, higher lightness) instead of the vivid ones. A stored choice of a removed palette falls back to Delos.
 
 - **Text stays neutral**: labels of buttons and hints, titles, kickers and values are white or the grey text colors in
   every palette. Color goes into shapes and icons.

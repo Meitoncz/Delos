@@ -31,15 +31,13 @@
 
 
     <string name="settings_option_palette_delos">Delos</string>
-    <string name="settings_option_palette_lagoon">潟湖</string>
-    <string name="settings_option_palette_dusk">暮色</string>
     <string name="settings_option_palette_ember">余烬</string>
-    <string name="settings_option_palette_moss">苔藓</string>
-    <string name="settings_option_palette_iris">鸢尾</string>
-    <string name="settings_option_palette_rose">玫瑰</string>
-    <string name="settings_option_palette_sunset">日落</string>
-    <string name="settings_option_palette_mint">薄荷</string>
-    <string name="settings_option_palette_gold">金色</string>
+    <string name="settings_option_palette_rose">牡丹</string>
+    <string name="settings_option_palette_orchid">星云</string>
+    <string name="settings_option_palette_dusk">暮光</string>
+    <string name="settings_option_palette_iris">钴蓝</string>
+    <string name="settings_option_palette_graphite">冰川</string>
+    <string name="settings_option_palette_mint">海沫</string>
 
     <string name="settings_option_clock_system">跟随系统</string>
     <string name="settings_option_clock_12">12 小时制</string>

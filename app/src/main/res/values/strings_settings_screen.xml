@@ -84,7 +84,7 @@
     <string name="settings_native_theme_description">Dark or light interface.</string>
     <string name="settings_native_material_you_title">Material You colors</string>
     <string name="settings_native_material_you_description">Uses only your wallpaper colors. Turn off to choose a palette.</string>
-    <!-- %1$s: the name of the fallback palette ("Lagoon") -->
+    <!-- %1$s: the name of the fallback palette ("Seafoam") -->
     <string name="settings_native_material_you_fallback_description">No wallpaper palette on this device, so %1$s\'s colors are used. Turn off to choose a palette.</string>
     <string name="settings_native_palette_title">Color palette</string>
     <string name="settings_native_palette_description">Colors of the interface and animated backgrounds.</string>

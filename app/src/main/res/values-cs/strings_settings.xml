@@ -35,15 +35,13 @@
 
     <!-- Appearance choices: color palettes -->
     <string name="settings_option_palette_delos">Delos</string>
-    <string name="settings_option_palette_lagoon">Laguna</string>
+    <string name="settings_option_palette_ember">Popel</string>
+    <string name="settings_option_palette_rose">Pivoňka</string>
+    <string name="settings_option_palette_orchid">Mlhovina</string>
     <string name="settings_option_palette_dusk">Soumrak</string>
-    <string name="settings_option_palette_ember">Žár</string>
-    <string name="settings_option_palette_moss">Mech</string>
-    <string name="settings_option_palette_iris">Kosatec</string>
-    <string name="settings_option_palette_rose">Růže</string>
-    <string name="settings_option_palette_sunset">Západ slunce</string>
-    <string name="settings_option_palette_mint">Máta</string>
-    <string name="settings_option_palette_gold">Zlato</string>
+    <string name="settings_option_palette_iris">Kobalt</string>
+    <string name="settings_option_palette_graphite">Ledovec</string>
+    <string name="settings_option_palette_mint">Mořská pěna</string>
 
     <!-- Appearance choices: the clock in the status bar -->
     <string name="settings_option_clock_system">Systémové</string>

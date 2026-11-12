@@ -86,7 +86,7 @@ private val CardBottom = Color(0xFF0E1628)
 private val CardText = Color(0xFFEEF3FB)
 private val CardRing = Color(0x2EA0B9E6)
 
-/** Success, warning and error are fixed semantic colours; info and Undo follow the palette (cyan, indigo). */
+/** Success, warning and error are fixed semantic colours; info and Undo follow the palette (the secondary and third colors). */
 private class KindColors(val fill: Color, val on: Color)
 
 private val Mint = KindColors(Color(0xFF5EE0A0), Color(0xFF04261A))

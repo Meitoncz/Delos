@@ -29,21 +29,29 @@ enum class BackgroundKind(@StringRes val labelRes: Int) {
 
 /**
  * Color palettes used while Material You is off (with it on, the system's wallpaper colors are used):
- * the background's hue and the three colors, main ([accent]: buttons, focus, selection), secondary
- * ([accent2]: rings, pulses, gradients) and accent ([accent3]: small highlights and a third light in the
- * animated backgrounds). Delos is the prototype's own palette.
+ * the background's hue ([base]) and saturation ([baseSat]: the background is dark and muted, never the main
+ * color) and the three colors, main ([accent]: buttons, focus, selection), secondary ([accent2]: rings,
+ * pulses, gradients) and accent ([accent3]: small highlights and a third light in the animated backgrounds).
+ * [soft] palettes use pastel accents (lower saturation, lighter) instead of the vivid ones. Names that no
+ * longer exist fall back to Delos when read from storage.
  */
-enum class Palette(@StringRes val labelRes: Int, val base: Float, val accent: Float, val accent2: Float, val accent3: Float) {
-    DELOS(R.string.settings_option_palette_delos, 222f, 40f, 190f, 250f),
-    LAGOON(R.string.settings_option_palette_lagoon, 190f, 176f, 228f, 18f),
-    DUSK(R.string.settings_option_palette_dusk, 262f, 268f, 320f, 200f),
-    EMBER(R.string.settings_option_palette_ember, 14f, 14f, 40f, 330f),
-    MOSS(R.string.settings_option_palette_moss, 110f, 96f, 150f, 45f),
-    IRIS(R.string.settings_option_palette_iris, 232f, 226f, 280f, 180f),
-    ROSE(R.string.settings_option_palette_rose, 330f, 340f, 20f, 270f),
-    SUNSET(R.string.settings_option_palette_sunset, 285f, 24f, 330f, 48f),
-    MINT(R.string.settings_option_palette_mint, 165f, 158f, 205f, 330f),
-    GOLD(R.string.settings_option_palette_gold, 35f, 45f, 195f, 345f);
+enum class Palette(
+    @StringRes val labelRes: Int,
+    val base: Float,
+    val baseSat: Float,
+    val accent: Float,
+    val accent2: Float,
+    val accent3: Float,
+    val soft: Boolean = false,
+) {
+    DELOS(R.string.settings_option_palette_delos, 222f, 38f, 40f, 190f, 335f),
+    EMBER(R.string.settings_option_palette_ember, 195f, 28f, 12f, 40f, 330f),
+    ROSE(R.string.settings_option_palette_rose, 285f, 30f, 345f, 15f, 205f),
+    ORCHID(R.string.settings_option_palette_orchid, 258f, 36f, 305f, 270f, 48f),
+    DUSK(R.string.settings_option_palette_dusk, 232f, 12f, 268f, 205f, 330f, soft = true),
+    IRIS(R.string.settings_option_palette_iris, 25f, 22f, 232f, 190f, 40f),
+    GRAPHITE(R.string.settings_option_palette_graphite, 220f, 7f, 205f, 175f, 45f, soft = true),
+    MINT(R.string.settings_option_palette_mint, 190f, 22f, 150f, 190f, 330f, soft = true);
 
     fun label(res: Resources): String = res.getString(labelRes)
 }

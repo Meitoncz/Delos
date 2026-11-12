@@ -31,15 +31,13 @@
 
 
     <string name="settings_option_palette_delos">Delos</string>
-    <string name="settings_option_palette_lagoon">Лагуна</string>
+    <string name="settings_option_palette_ember">Попіл</string>
+    <string name="settings_option_palette_rose">Півонія</string>
+    <string name="settings_option_palette_orchid">Туманність</string>
     <string name="settings_option_palette_dusk">Сутінки</string>
-    <string name="settings_option_palette_ember">Жар</string>
-    <string name="settings_option_palette_moss">Мох</string>
-    <string name="settings_option_palette_iris">Ірис</string>
-    <string name="settings_option_palette_rose">Троянда</string>
-    <string name="settings_option_palette_sunset">Захід сонця</string>
-    <string name="settings_option_palette_mint">М’ята</string>
-    <string name="settings_option_palette_gold">Золото</string>
+    <string name="settings_option_palette_iris">Кобальт</string>
+    <string name="settings_option_palette_graphite">Льодовик</string>
+    <string name="settings_option_palette_mint">Морська піна</string>
 
     <string name="settings_option_clock_system">Системний</string>
     <string name="settings_option_clock_12">12-годинний</string>

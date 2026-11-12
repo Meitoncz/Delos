@@ -117,7 +117,7 @@ internal fun nativeSettings(
         res.getString(R.string.settings_native_theme_description), choiceHelp = NativeSettingsHelp.choice(res, "ui_dark", if (a.dark) "dark" else "light"))
     row("ui_material_you", Symbols.SYSTEM_COLORS, res.getString(R.string.settings_native_material_you_title), RowValue.Toggle(a.materialYou) { on -> update { it.copy(materialYou = on) } },
         if (systemHue != null) res.getString(R.string.settings_native_material_you_description)
-        else res.getString(R.string.settings_native_material_you_fallback_description, Palette.LAGOON.label(res)))
+        else res.getString(R.string.settings_native_material_you_fallback_description, Palette.MINT.label(res)))
     row("ui_palette", Symbols.PALETTE, res.getString(R.string.settings_native_palette_title), RowValue.Choice(a.palette.label(res), { dir -> update { it.copy(palette = it.palette.step(dir)) } }, hsl(a.palette.accent, 90f, 60f)),
         if (a.materialYou) res.getString(R.string.settings_native_needs_material_you_off) else res.getString(R.string.settings_native_palette_description), !a.materialYou)
     row("ui_match_game_colors", Symbols.MATCH_COLORS, res.getString(R.string.settings_native_match_colors_title), RowValue.Toggle(a.matchGameColors) { on -> update { it.copy(matchGameColors = on) } },

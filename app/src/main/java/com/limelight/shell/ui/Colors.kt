@@ -77,8 +77,8 @@ fun systemAccentHue(context: Context): SystemHues? {
     return SystemHues(hue(android.R.color.system_accent1_500), hue(android.R.color.system_accent3_500))
 }
 
-/** Material You on a device without a wallpaper palette (Android 11 and older): Lagoon's hue. */
-private const val FALLBACK_SYSTEM_HUE = 176f
+/** Material You on a device without a wallpaper palette (Android 11 and older): Seafoam's main hue. */
+private const val FALLBACK_SYSTEM_HUE = 150f
 
 fun delosColors(appearance: Appearance, systemHue: SystemHues?): DelosColors {
     val my = appearance.materialYou
@@ -93,30 +93,34 @@ fun delosColors(appearance: Appearance, systemHue: SystemHues?): DelosColors {
         base = h; acc = h; acc2 = (h + 52f) % 360f
         acc3 = systemHue?.tertiary ?: (h + 150f) % 360f
     }
+    val soft = !my && palette.soft
     return if (appearance.dark) {
-        val sat = if (my) 30f else 38f
+        val sat = if (my) 30f else palette.baseSat
+        // Surfaces and text keep a floor/ceiling so the muted palettes (Glacier, Twilight) stay almost neutral
+        val surf = { drop: Float -> if (my) sat - drop else maxOf(2f, sat - drop) }
+        val txt = { cap: Float -> if (my) cap else minOf(cap, sat) }
         DelosColors(
             dark = true, materialYou = my, baseHue = base, accentHue = acc, accent2Hue = acc2, accent3Hue = acc3,
             bg = hsl(base, sat, 7f), bg2 = hsl(base, sat - 4f, 11f),
-            surface = hsl(base, sat - 10f, 14f, .72f), surface2 = hsl(base, sat - 12f, 19f, .84f), surface3 = hsl(base, sat - 14f, 23f, .94f),
-            line = hsl(base, 35f, 70f, .14f), text = hsl(base, 30f, 96f), text2 = hsl(base, 16f, 76f), text3 = hsl(base, 12f, 58f),
-            accent = if (my) hsl(acc, 78f, 72f) else hsl(acc, 95f, 62f),
-            accent2 = if (my) hsl(acc2, 70f, 66f) else hsl(acc2, 85f, 62f),
-            accent3 = if (my) hsl(acc3, 70f, 70f) else hsl(acc3, 85f, 68f),
+            surface = hsl(base, surf(10f), 14f, .72f), surface2 = hsl(base, surf(12f), 19f, .84f), surface3 = hsl(base, surf(14f), 23f, .94f),
+            line = hsl(base, 35f, 70f, .14f), text = hsl(base, txt(30f), 96f), text2 = hsl(base, txt(16f), 76f), text3 = hsl(base, txt(12f), 58f),
+            accent = if (my) hsl(acc, 78f, 72f) else if (soft) hsl(acc, 70f, 70f) else hsl(acc, 95f, 62f),
+            accent2 = if (my) hsl(acc2, 70f, 66f) else if (soft) hsl(acc2, 62f, 68f) else hsl(acc2, 85f, 62f),
+            accent3 = if (my) hsl(acc3, 70f, 70f) else if (soft) hsl(acc3, 60f, 72f) else hsl(acc3, 85f, 68f),
             onAccent = hsl(acc, 55f, 12f),
-            glow = if (my) hsl(acc, 80f, 60f, .42f) else hsl(acc, 95f, 58f, .45f),
+            glow = if (my) hsl(acc, 80f, 60f, .42f) else hsl(acc, if (soft) 70f else 95f, 58f, .45f),
             scrim = hsl(base, 50f, 3f, .62f),
         )
     } else {
-        val sat = if (my) 45f else 40f
+        val sat = if (my) 45f else palette.baseSat + 2f
         DelosColors(
             dark = false, materialYou = my, baseHue = base, accentHue = acc, accent2Hue = acc2, accent3Hue = acc3,
-            bg = hsl(base, sat, 95f), bg2 = hsl(base, sat - 6f, 90f),
+            bg = hsl(base, sat, 95f), bg2 = hsl(base, if (my) sat - 6f else palette.baseSat - 4f, 90f),
             surface = hsl(base, 60f, 99f, .74f), surface2 = hsl(base, 50f, 99f, .9f), surface3 = hsl(base, 40f, 98f, .97f),
             line = hsl(base, 30f, 30f, .13f), text = hsl(base, 40f, 12f), text2 = hsl(base, 18f, 32f), text3 = hsl(base, 12f, 46f),
-            accent = if (my) hsl(acc, 58f, 40f) else hsl(acc - 6f, 92f, 52f),
-            accent2 = if (my) hsl(acc2, 55f, 40f) else hsl(acc2, 80f, 40f),
-            accent3 = if (my) hsl(acc3, 55f, 42f) else hsl(acc3, 75f, 44f),
+            accent = if (my) hsl(acc, 58f, 40f) else if (soft) hsl(acc - 6f, 65f, 46f) else hsl(acc - 6f, 92f, 52f),
+            accent2 = if (my || soft) hsl(acc2, 55f, 40f) else hsl(acc2, 80f, 40f),
+            accent3 = if (my) hsl(acc3, 55f, 42f) else if (soft) hsl(acc3, 50f, 44f) else hsl(acc3, 75f, 44f),
             onAccent = if (my) Color.White else hsl(acc, 60f, 12f),
             glow = hsl(acc, 85f, 50f, .34f),
             scrim = hsl(base, 30f, 20f, .35f),
