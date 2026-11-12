@@ -20,7 +20,8 @@ import java.util.ArrayList;
  * {@link #stop()} is terminal; use a new helper for a new playback session.
  */
 public final class RumblePlayback {
-    private static final long EFFECT_DURATION_MS = 60000;
+    // The longest effect: renewed by every host event, so a stop that never comes ends it a few seconds later.
+    private static final long EFFECT_DURATION_MS = RumbleGuard.HOLD_MS;
     private final RumbleTranslator.Profile profile;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final ArrayList<Output> outputs = new ArrayList<>();
@@ -74,9 +75,12 @@ public final class RumblePlayback {
             output = new SingleOutput(vibrator);
             outputs.add(output);
         }
-        output.low = low & 0xFFFF;
-        output.high = high & 0xFFFF;
+        // The dead zone is applied to what the game sent, before any profile shaping: a floor must never raise a
+        // decay tail the game left behind into a vibration.
+        output.low = RumbleGuard.gate(low) & 0xFFFF;
+        output.high = RumbleGuard.gate(high) & 0xFFFF;
         long nowMs = SystemClock.uptimeMillis();
+        output.renewedAtMs = nowMs;
         output.update(nowMs, true);
         lastAmplitude = output.maximum;
         schedule(nowMs);
@@ -112,11 +116,12 @@ public final class RumblePlayback {
             outputs.add(output);
         }
         // Match the legacy Android FF_RUMBLE enumeration, including trigger ordering.
-        output.raw[0] = high & 0xFFFF;
-        output.raw[1] = low & 0xFFFF;
-        output.raw[2] = channelCount == 4 ? leftTrigger & 0xFFFF : 0;
-        output.raw[3] = channelCount == 4 ? rightTrigger & 0xFFFF : 0;
+        output.raw[0] = RumbleGuard.gate(high) & 0xFFFF;
+        output.raw[1] = RumbleGuard.gate(low) & 0xFFFF;
+        output.raw[2] = channelCount == 4 ? RumbleGuard.gate(leftTrigger) & 0xFFFF : 0;
+        output.raw[3] = channelCount == 4 ? RumbleGuard.gate(rightTrigger) & 0xFFFF : 0;
         long nowMs = SystemClock.uptimeMillis();
+        output.renewedAtMs = nowMs;
         output.update(nowMs, true);
         lastAmplitude = output.maximum;
         schedule(nowMs);
@@ -173,7 +178,12 @@ public final class RumblePlayback {
         long nowMs = SystemClock.uptimeMillis();
         for (int i = 0; i < outputs.size(); i++) {
             Output output = outputs.get(i);
-            if (output.delay(nowMs) != Long.MAX_VALUE) {
+            if (output.holdExpired(nowMs)) {
+                // The host sent nothing for HOLD_MS: whatever it last asked for is no longer wanted.
+                output.cancel();
+                lastAmplitude = output.maximum;
+            }
+            else if (output.updateDelay(nowMs) != Long.MAX_VALUE) {
                 output.update(nowMs, false);
                 lastAmplitude = output.maximum;
             }
@@ -199,10 +209,22 @@ public final class RumblePlayback {
 
     private abstract static class Output {
         int maximum;
+        // Uptime of the last host event; the output is watched for RumbleGuard.HOLD_MS after it while it vibrates.
+        long renewedAtMs;
 
         abstract void update(long nowMs, boolean hostEvent);
-        abstract long delay(long nowMs);
+        /** Time until a kick or slew has to be advanced, without the hold limit. */
+        abstract long updateDelay(long nowMs);
         abstract void cancel();
+
+        final boolean holdExpired(long nowMs) {
+            return RumbleGuard.holdExpired(nowMs, renewedAtMs, maximum != 0);
+        }
+
+        /** Time until this output next needs a tick: a kick or slew step, or the hold limit. */
+        final long delay(long nowMs) {
+            return Math.min(updateDelay(nowMs), RumbleGuard.holdDelay(nowMs, renewedAtMs, maximum != 0));
+        }
     }
 
     private final class SingleOutput extends Output {
@@ -298,7 +320,7 @@ public final class RumblePlayback {
         }
 
         @Override
-        long delay(long nowMs) {
+        long updateDelay(long nowMs) {
             return state.nextUpdateDelay(nowMs);
         }
 
@@ -359,7 +381,7 @@ public final class RumblePlayback {
         }
 
         @Override
-        long delay(long nowMs) {
+        long updateDelay(long nowMs) {
             long delay = Long.MAX_VALUE;
             for (int i = 0; i < Math.min(ids.length, states.length); i++) {
                 delay = Math.min(delay, states[i].nextUpdateDelay(nowMs));
