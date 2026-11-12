@@ -652,7 +652,7 @@ fun Shell(
                         Screen.Settings -> SettingsScreen(appearance, update, startup, startupStore::update, pcs, profileStore)
                         Screen.SettingsSearch -> SettingsScreen(appearance, update, startup, startupStore::update, pcs, profileStore, search = true)
                         Screen.Profile -> ProfileScreen(profiles, profileStore, pcs.firstOrNull { it.uuid == startup.defaultPc }?.name)
-                        Screen.Devices -> DevicesScreen(pcs, pc?.uuid)
+                        Screen.Devices -> DevicesScreen(pcs, pc?.uuid, startup.defaultPc)
                         Screen.Start -> StartScreen(profiles, profileStore, pcs, startup)
                         is Screen.Boot -> BootScreen(
                             onBegin = { shell.navigate(Screen.CreateProfile(editing = false, back = screen)) },
@@ -684,7 +684,7 @@ fun Shell(
                                 )
                             }
                         }
-                        is Screen.PairPc -> PairPcScreen(screen, pcs)
+                        is Screen.PairPc -> PairPcScreen(screen, pcs, startup.defaultPc)
                         is Screen.Artwork -> ArtworkScreen(screen)
                         is Screen.GameSettings -> GameSettingsScreen(screen, profileStore, appearance)
                         Screen.DebugInfo -> DebugInfoScreen()

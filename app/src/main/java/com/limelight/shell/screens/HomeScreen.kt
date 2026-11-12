@@ -186,6 +186,8 @@ fun HomeScreen(library: Library, appearance: Appearance, repo: PcRepository, pro
     val hasGames = library is Library.Ready && library.apps.isNotEmpty()
     // Without games there is no game background
     LaunchedEffect(hasGames) { if (!hasGames) shell.hero = null }
+    // The companion screen's page for a library without a game to focus (offline PC, empty or still loading library, no PC)
+    com.limelight.shell.companion.PublishCompanionLibraryState(library)
     when (library) {
         Library.Loading -> HomeMessage(Symbols.LOADING, stringResource(R.string.home_loading), null)
         Library.NoPc -> HomeMessage(Symbols.DEVICES, stringResource(R.string.home_no_pc_title), stringResource(R.string.home_no_pc_note))

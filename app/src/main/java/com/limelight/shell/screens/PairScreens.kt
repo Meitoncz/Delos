@@ -31,6 +31,10 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import com.limelight.shell.companion.PairFocus
+import com.limelight.shell.companion.PublishCompanionPairList
+import com.limelight.shell.companion.PublishCompanionPin
+import com.limelight.shell.companion.runOnce
 import com.limelight.shell.ContextMenu
 import com.limelight.shell.LocalDeviceActions
 import com.limelight.shell.MenuItem
@@ -69,7 +73,7 @@ import kotlinx.coroutines.delay
  * then entering an address and searching again.
  */
 @Composable
-fun PairPcScreen(screen: Screen.PairPc, pcs: List<Pc>) {
+fun PairPcScreen(screen: Screen.PairPc, pcs: List<Pc>, defaultPc: String?) {
     val actions = LocalDeviceActions.current
     var searching by remember { mutableStateOf(false) }
     LaunchedEffect(searching) {
@@ -80,6 +84,9 @@ fun PairPcScreen(screen: Screen.PairPc, pcs: List<Pc>) {
     }
     val first = remember { FocusRequester() }
     InitialFocus(first)
+    // What the focus is on, for the companion screen's page of it
+    var focus by remember { mutableStateOf<PairFocus?>(null) }
+    PublishCompanionPairList(focus, pcs, screen, defaultPc)
     // Discovered PCs first (online ones before offline), paired ones after them; all of them, the row scrolls
     val shown = pcs.sortedWith(compareBy({ it.paired }, { !it.online }, { it.name.lowercase() }))
     CenterColumn(gap = 48f) {
@@ -106,6 +113,7 @@ fun PairPcScreen(screen: Screen.PairPc, pcs: List<Pc>) {
                     big = true,
                     selected = pc.paired,
                     pulse = pc.online && !pc.paired,
+                    onFocused = { focus = PairFocus.Host(pc.uuid) },
                     contextMenu = if (pc.paired) null else ContextMenu(
                         pc.name,
                         below = true,
@@ -120,6 +128,7 @@ fun PairPcScreen(screen: Screen.PairPc, pcs: List<Pc>) {
                 Symbols.ADD_ADDRESS, stringResource(R.string.pairing_pc_address), onClick = { actions.addByAddress(screen) },
                 modifier = if (shown.isEmpty()) Modifier.focusRequester(first) else Modifier,
                 meta = stringResource(R.string.pairing_pc_address_hint), big = true,
+                onFocused = { focus = PairFocus.Address },
             )
             CircleItem(
                 Symbols.REFRESH, stringResource(R.string.pairing_pc_search_again),
@@ -128,6 +137,7 @@ fun PairPcScreen(screen: Screen.PairPc, pcs: List<Pc>) {
                     actions.rescan()
                 },
                 meta = stringResource(R.string.pairing_pc_network), big = true,
+                onFocused = { focus = PairFocus.Search },
             )
         }
     }
@@ -145,6 +155,9 @@ fun PinScreen(screen: Screen.Pin, repo: PcRepository, setup: PcSetup, onFailed: 
     val actions = LocalDeviceActions.current
     val pin = remember(screen) { screen.otp?.pin ?: setup.newPin() }
     var accepted by remember { mutableStateOf(false) }
+    // The library opens once, whether the screen does it after its delay or a touch on the companion's result page does
+    val openLibrary = remember(screen) { runOnce { actions.paired(screen.pcUuid) } }
+    PublishCompanionPin(screen, pin, accepted, onCancel, openLibrary)
     LaunchedEffect(screen) {
         // A PC that was just added may take a moment to show up
         val pc = repo.awaitPc(screen.pcUuid, 5_000) { true }
@@ -157,7 +170,7 @@ fun PinScreen(screen: Screen.Pin, repo: PcRepository, setup: PcSetup, onFailed: 
                 accepted = true
                 feedback.play(Cue.SELECT)
                 delay(900)
-                actions.paired(pc.uuid)
+                openLibrary()
             }
             is PcSetup.PairResult.Failed -> onFailed(result.text(res, pc.name))
         }

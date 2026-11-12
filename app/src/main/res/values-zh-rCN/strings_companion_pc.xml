@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pc_eyebrow_focused">当前电脑 · %1$s</string>
+    <string name="pc_eyebrow_devices">设备 · %1$s</string>
+    <string name="pc_eyebrow_library">游戏库 · %1$s</string>
+    <string name="pc_name_status">%1$s · %2$s</string>
+    <string name="pc_alias_prefix">PC</string>
+    <string name="pc_fact_flags">标记</string>
+    <string name="pc_fact_host">主机</string>
+    <string name="pc_fact_version">版本</string>
+    <string name="pc_fact_host_name">主机名</string>
+    <string name="pc_fact_library">游戏库</string>
+    <string name="pc_fact_session">会话</string>
+    <string name="pc_fact_wake">唤醒</string>
+    <string name="pc_fact_last_seen">上次在线</string>
+    <string name="pc_value_unavailable">不可用</string>
+    <string name="pc_value_now">现在</string>
+    <string name="pc_flags_default">默认电脑</string>
+    <string name="pc_flags_none">非默认</string>
+    <string name="pc_host_vibepollo">Vibepollo</string>
+    <string name="pc_host_geforce">GeForce Experience</string>
+    <string name="pc_host_sunshine">基于 Sunshine</string>
+    <string name="pc_session_idle">没有运行的游戏</string>
+    <string name="pc_session_busy">有游戏正在运行</string>
+    <string name="pc_wake_saved">已保存 MAC 地址</string>
+    <string name="pc_wake_none">未保存 MAC 地址</string>
+    <string name="pc_action_library">游戏库</string>
+    <string name="pc_action_wake">唤醒 PC</string>
+    <string name="pc_action_search">搜索</string>
+    <string name="pc_action_default_on">设为默认</string>
+    <string name="pc_action_default_off">取消默认</string>
+    <string name="pc_action_remove">移除 PC</string>
+    <string name="pc_no_mac_note">未保存 MAC 地址，无法唤醒此电脑。请重新搜索网络。</string>
+    <string name="pc_no_mac_short">没有已保存的 MAC。</string>
+    <string name="pc_main_hint">主屏幕：%1$s %2$s</string>
+    <string name="pair_eyebrow_host">已发现的主机 · 未配对</string>
+    <string name="pair_host_online">在线。请只与你认识的主机配对。</string>
+    <string name="pair_host_offline">离线。配对前请先启动主机。</string>
+    <string name="pair_host_software">%1$s · 版本暂时未知。</string>
+    <string name="pair_action_code">使用代码</string>
+    <string name="pair_address_note">请在主屏幕上输入主机的地址或名称。Delos 会添加它并开始配对。</string>
+    <string name="pair_address_short">请在主屏幕上输入主机地址。</string>
+    <string name="pair_search_note">重新在本地网络中查找主机。</string>
+    <string name="pair_pin_title">配对 %1$s</string>
+    <string name="pair_pin_eyebrow">PIN</string>
+    <string name="pair_pin_short">请在主机的网页界面中输入此 PIN。</string>
+    <string name="pair_cancel_action">取消配对</string>
+    <string name="pair_code_title">一次性代码</string>
+    <string name="pair_code_text">在主机的网页界面中创建一次性代码，然后在主屏幕上输入代码和口令。</string>
+    <string name="pair_code_short">请在主屏幕上输入主机代码。</string>
+    <string name="pair_code_privacy">副屏幕绝不会重复显示口令。</string>
+    <string name="pair_result_eyebrow">配对完成</string>
+    <string name="pair_result_text">主机已可在主屏幕上打开。</string>
+    <string name="pair_open_library">打开游戏库</string>
+    <string name="pair_back_hosts">返回主机列表</string>
+    <string name="pc_empty_title">没有应用</string>
+    <string name="pc_empty_text">主机尚未发布任何应用。请在主机的网页界面中添加游戏或桌面，准备好后重新连接。</string>
+    <string name="pc_empty_short">请在主机的网页界面中添加应用。</string>
+    <string name="pc_action_reconnect">重新连接 PC</string>
+    <string name="pc_action_details">PC 详情</string>
+    <string name="pc_loading_title">正在读取游戏库</string>
+    <string name="pc_loading_eyebrow">正在等待主机</string>
+    <string name="pc_loading_text">正在等待主机的应用列表。</string>
+    <string name="pc_loading_note">没有正在启动的游戏。</string>
+    <string name="pc_action_back_pcs">返回 PC 列表</string>
+    <string name="pc_nopc_title">尚未配对任何电脑</string>
+    <string name="pc_nopc_text">配对电脑后，其游戏会显示在主屏幕上。</string>
+    <plurals name="pc_apps">
+        <item quantity="other">%1$d 个应用</item>
+    </plurals>
+    <plurals name="pc_apps_cached">
+        <item quantity="other">缓存的应用 %1$d 个</item>
+    </plurals>
+    <plurals name="pc_main_hint_more">
+        <item quantity="other">主屏幕：%1$s %2$s · 另有 %3$d 条提示</item>
+    </plurals>
+</resources>
