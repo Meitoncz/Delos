@@ -18,6 +18,25 @@ With the sensors on, after a slingshot is fired in a game (hold RB or the trigge
 
 With the sensors off none of this happens.
 
+## The cause of (a): a host bug, found 2026-11-12
+
+The client was not at fault. The same slingshot shot gives these host rumble events (low/high, high byte) on the Odin:
+
+| Pad the PC emulates | Events after the shot | Ends with |
+|---|---|---|
+| Xbox | `78/33 33/19 05/11 00/00 0c/00 17/00 0f/00 00/00` | `00/00` |
+| DualSense | `79/33 33/1c 06/13 0f/00 17/00 19/00 18/00 11/00` | `11/00`, then nothing |
+| DualShock 4 (Vibepollo Virtual Gamepad) | `79/33 33/1c 06/13 00/00 0f/00 17/00 19/00 18/00 11/00 00/00` | `00/00` |
+
+SDL (and so Steam Input and most games) stops rumble on a DualSense with an output report that has the rumble valid bits
+cleared; the host's virtual DualSense updated the motors only when a bit was set, kept the last amplitude and sent nothing.
+Upstream reports: Nonary/Vibepollo#708 (reported fixed in the 2.2.0 nightly) and Nonary/libvirtualgamepad#10 (open at the
+time of writing). Until the host has the fix, select a DualShock 4 profile on the host (globally, or as a per-game override).
+A re-send of the unchanged controller state from the client was tried as a setting and removed: it has no effect.
+
+(b) and (c) were not tied to the client: gyro smoothing settles within about 0.6 s at strength 100, and the client sends
+gyro samples continuously like a real pad. Whether the game keeps aiming with the gyro after the release is the game's choice.
+
 ## What the client does with an RB release (read from the code, not yet measured)
 
 1. Android delivers `KEYCODE_BUTTON_R1` up to `StreamKeyHandler` and then `ControllerHandler.handleButtonUp`

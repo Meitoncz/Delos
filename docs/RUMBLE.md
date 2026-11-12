@@ -1,7 +1,8 @@
 # Rumble feel and the rumble laboratory
 
-A vibration that never stops while the gyro is on is not a translator problem: see [CONTROLLER_STATE.md](CONTROLLER_STATE.md)
-(what the client sends and the `ControllerSend` / `MotionSend` diagnostics).
+A vibration that never stops while the gyro is on is not a translator problem and not a client problem: the host's emulated
+DualSense does not forward the stop. Select a DualShock 4 profile on the host until it is fixed; see
+[CONTROLLER_STATE.md](CONTROLLER_STATE.md) (the evidence, the upstream reports and the `ControllerSend` / `MotionSend` diagnostics).
 
 ## Rumble feel (Settings)
 
