@@ -29,8 +29,8 @@ plays the same short **Test** sample: a 60 ms tap, 1 second of steady 50% input,
 and an explosion decay (about 2.8 seconds including pauses). **Replay Test sample** repeats
 it without changing the selection. The laboratory lists the same four presets as Settings.
 
-The translator is **off by default**. Off preserves the existing streaming path exactly;
-lab patterns use the Original mapping. Turning it on applies the saved tuning to Android
+The translator is **off by default**. Off plays the game's rumble with the Original mapping (the values the legacy code
+computed, kept bit for bit by the tests); lab patterns use the Original mapping. Turning it on applies the saved tuning to Android
 single/dual/quad vibrator paths on the next stream. USB-driver and Shield-specific rumble
 remain unchanged. Existing device/OSC/fallback routing and fallback-strength scaling still
 apply before translation. This is a user-profile setting, not automatic device detection or
@@ -91,6 +91,28 @@ The names describe the intent, not a guarantee: a floor of 50 is well below the
 previously observed Odin interface-haptic threshold of about 220/255. Low/high weights change the host-motor mix on a single vibrator;
 they do not change the physical frequency of the motor or promise PXPlay equivalence.
 
+## Rumble that must stop (dead zone and hold limit)
+
+The host sends a rumble packet only when the game sets the motors and never repeats it, so nothing but the app ends a value
+the host did not clear. A stuck vibration on the Odin (2026-11-12, found with `dumpsys vibrator_manager` during a stream) was a
+one-shot of **3/255 lasting 60 s**: the last host value of a decaying rumble was a tiny non-zero one, and every value became a 60 s
+effect that only a host zero cancels. Two rules in `RumbleGuard` now apply to every Android vibrator path, translator on or off
+(`ControllerHandler` sends all of them through `RumblePlayback`):
+
+- **Dead zone:** a host motor value whose most significant byte (the only one the vibrators use) is below **16 of 255** is
+  silence. A real pad's motor does not spin at such values, so games leave decay tails there. It is applied to what the game
+  sent, before any shaping, so a floor such as the Pulsing preset's 50 can never raise a tail into a vibration.
+- **Hold limit:** a rumble plays at most **5 s** after the last host event; every event (also one with the same value)
+  renews it. The vibration effect itself is 5 s long, and a watchdog on the main looper cancels the output at the same moment,
+  which is what ends a repeating waveform (the Pulsing preset and the PWM path of a vibrator without amplitude control).
+  Trade-off: a game that holds one unchanging non-zero value for longer than 5 s *without the host repeating it* is cut off
+  at 5 s (it was 60 s). `RumbleGuard.HOLD_MS` is the one constant to change.
+
+A stream that ends cancels everything: `ControllerHandler.stop()` stops the playback for good (a rumble event that races it can
+no longer vibrate), cancels every vibrator and sends zero to USB pads, which keep their last motor values until told otherwise.
+The Debug laboratory passes through the same rules, so the first steps of a ramp (up to 6 %) are silent there too; its Continuous
+vibration tests stop when the app goes to the background, and the pad test cancels the pad vibrators it started.
+
 ## Advanced parameters
 
 **Advanced** is collapsed whenever this screen opens. A expands/collapses it; the
@@ -103,7 +125,7 @@ when explicitly selected.
 | --- | --- | --- | --- |
 | Gain | 50–300% | 100% | Multiplies the shaped amplitude, capped at 255. |
 | Curve | 50–300% | 100% | Exponent applied to normalized amplitude: below 100% boosts weak rumble, above 100% softens it. |
-| Minimum amplitude | 0–255 | 0 | Floor for any nonzero raw request, even values in the discarded low byte. Raw zero always stops immediately. |
+| Minimum amplitude | 0–255 | 0 | Floor for any host motor value from the dead zone up, even with a nonzero discarded low byte. Zero and dead-zone values stop immediately. |
 | Start kick | 0–120 ms | 0 ms | Full amplitude 255 on a transition from raw zero, then settle; another nonzero packet does not restart it. A zero packet cancels it immediately. |
 | Low motor weight | 0–100% | 80% | Low-frequency motor contribution to a single vibrator. |
 | High motor weight | 0–100% | 33% | High-frequency motor contribution to a single vibrator. |

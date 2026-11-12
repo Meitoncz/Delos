@@ -16,14 +16,10 @@ import android.hardware.lights.LightsManager;
 import android.hardware.lights.LightsRequest;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
-import android.media.AudioAttributes;
 import android.os.Build;
-import android.os.CombinedVibration;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
-import android.os.VibrationAttributes;
-import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.os.VibratorManager;
 import android.util.SparseArray;
@@ -129,15 +125,16 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
     private final HandlerThread backgroundHandlerThread;
     private final Handler backgroundThreadHandler;
     private boolean hasGameController;
-    private boolean stopped = false;
+    // Read by the native rumble thread while stop() runs on the UI thread
+    private volatile boolean stopped = false;
     // Delos: the Full keyboard owns the controller while it is up (setInputSuspended)
     private volatile boolean inputSuspended = false;
 
     private final PreferenceConfiguration prefConfig;
-    // The stream menu switches the rumble preset live, so the translated playback follows
+    // The stream menu switches the rumble preset live, so the rumble playback follows
     // prefConfig.rumbleTranslatorEnabled/rumbleProfile at every rumble event instead of being fixed at construction.
     // Once a preset is chosen this can go back to a final field built in the constructor.
-    private final Object translatedRumbleLock = new Object();
+    private final Object rumbleLock = new Object();
     private volatile ActiveRumble activeRumble;
     private short currentControllers, initialControllers;
 
@@ -278,7 +275,7 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
         inputDeviceContexts.put(deviceId, newContext);
     }
 
-    // One translated playback per (enabled, profile) pair; see activeRumble.
+    // One playback per effective rumble profile; see activeRumble.
     private static final class ActiveRumble {
         final com.limelight.utils.RumbleTranslator.Profile profile;
         final com.limelight.utils.RumblePlayback playback;
@@ -290,37 +287,41 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
     }
 
     /**
-     * The playback for the rumble settings in effect right now, or null while translation is off. A change of
-     * prefConfig.rumbleTranslatorEnabled/rumbleProfile (the stream menu's live preset switch) takes effect on the
-     * next rumble event: the old playback is stopped (its vibration cancelled) and a new one starts.
+     * The playback for the rumble settings in effect right now, or null once the handler has stopped. Every Android
+     * vibrator rumble goes through it, translation off included (the ORIGINAL profile is the game's rumble as it
+     * sends it), so the dead zone, the hold limit and the stop are the same on every path, and a rumble event that
+     * races stop() can never vibrate afterwards. A change of prefConfig.rumbleTranslatorEnabled/rumbleProfile (the
+     * stream menu's live preset switch) takes effect on the next rumble event: the old playback is stopped (its
+     * vibration cancelled) and a new one starts.
      */
-    private com.limelight.utils.RumblePlayback translatedRumble() {
+    private com.limelight.utils.RumblePlayback rumblePlayback() {
         ActiveRumble active = activeRumble;
-        boolean enabled = prefConfig.rumbleTranslatorEnabled;
-        com.limelight.utils.RumbleTranslator.Profile profile = prefConfig.rumbleProfile;
-        if (active == null ? !enabled : (enabled && active.profile == profile)) {
-            return active == null ? null : active.playback;
+        if (active != null && active.profile == effectiveRumbleProfile()) {
+            return active.playback;
         }
-        return resyncTranslatedRumble();
+        return resyncRumblePlayback();
     }
 
-    private com.limelight.utils.RumblePlayback resyncTranslatedRumble() {
-        synchronized (translatedRumbleLock) {
+    private com.limelight.utils.RumbleTranslator.Profile effectiveRumbleProfile() {
+        return prefConfig.rumbleTranslatorEnabled ? prefConfig.rumbleProfile : com.limelight.utils.RumbleTranslator.ORIGINAL;
+    }
+
+    private com.limelight.utils.RumblePlayback resyncRumblePlayback() {
+        synchronized (rumbleLock) {
             ActiveRumble active = activeRumble;
             if (stopped) {
                 return active == null ? null : active.playback;
             }
-            boolean enabled = prefConfig.rumbleTranslatorEnabled;
-            com.limelight.utils.RumbleTranslator.Profile profile = prefConfig.rumbleProfile;
-            if (active != null && enabled && active.profile == profile) {
+            com.limelight.utils.RumbleTranslator.Profile profile = effectiveRumbleProfile();
+            if (active != null && active.profile == profile) {
                 return active.playback;
             }
             if (active != null) {
                 active.playback.stop();
             }
-            active = enabled ? new ActiveRumble(profile) : null;
+            active = new ActiveRumble(profile);
             activeRumble = active;
-            return active == null ? null : active.playback;
+            return active.playback;
         }
     }
 
@@ -330,8 +331,8 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
         return active == null ? null : active.playback.getProblem();
     }
 
-    private void stopTranslatedRumble() {
-        synchronized (translatedRumbleLock) {
+    private void stopRumblePlayback() {
+        synchronized (rumbleLock) {
             ActiveRumble active = activeRumble;
             if (active != null) {
                 active.playback.stop();
@@ -346,7 +347,7 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
 
         // Stop new device contexts from being created or used
         stopped = true;
-        stopTranslatedRumble();
+        stopRumblePlayback();
 
         // Unregister our input device callbacks
         inputManager.unregisterInputDeviceListener(this);
@@ -358,6 +359,9 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
 
         for (int i = 0; i < usbDeviceContexts.size(); i++) {
             UsbDeviceContext deviceContext = usbDeviceContexts.valueAt(i);
+            // A USB pad keeps the last motor values until told otherwise, so the stream's last rumble must not outlive it
+            deviceContext.device.rumble((short) 0, (short) 0);
+            deviceContext.device.rumbleTriggers((short) 0, (short) 0);
             deviceContext.destroy();
         }
 
@@ -2139,41 +2143,10 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
     // This must only be called if hasDualAmplitudeControlledRumbleVibrators() is true!
     @TargetApi(31)
     private void rumbleDualVibrators(VibratorManager vm, short lowFreqMotor, short highFreqMotor) {
-        com.limelight.utils.RumblePlayback translated = translatedRumble();
-        if (translated != null) { translated.dual(vm, lowFreqMotor, highFreqMotor); return; }
-        // Normalize motor values to 0-255 amplitudes for VibrationManager
-        highFreqMotor = (short)((highFreqMotor >> 8) & 0xFF);
-        lowFreqMotor = (short)((lowFreqMotor >> 8) & 0xFF);
-
-        // If they're both zero, we can just call cancel().
-        if (lowFreqMotor == 0 && highFreqMotor == 0) {
-            vm.cancel();
-            return;
+        com.limelight.utils.RumblePlayback playback = rumblePlayback();
+        if (playback != null) {
+            playback.dual(vm, lowFreqMotor, highFreqMotor);
         }
-
-        // There's no documentation that states that vibrators for FF_RUMBLE input devices will
-        // always be enumerated in this order, but it seems consistent between Xbox Series X (USB),
-        // PS3 (USB), and PS4 (USB+BT) controllers on Android 12 Beta 3.
-        int[] vibratorIds = vm.getVibratorIds();
-        int[] vibratorAmplitudes = new int[] { highFreqMotor, lowFreqMotor };
-
-        CombinedVibration.ParallelCombination combo = CombinedVibration.startParallel();
-
-        for (int i = 0; i < vibratorIds.length; i++) {
-            // It's illegal to create a VibrationEffect with an amplitude of 0.
-            // Simply excluding that vibrator from our ParallelCombination will turn it off.
-            if (vibratorAmplitudes[i] != 0) {
-                combo.addVibrator(vibratorIds[i], VibrationEffect.createOneShot(60000, vibratorAmplitudes[i]));
-            }
-        }
-
-        VibrationAttributes.Builder vibrationAttributes = new VibrationAttributes.Builder();
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            vibrationAttributes.setUsage(VibrationAttributes.USAGE_MEDIA);
-        }
-
-        vm.vibrate(combo.combine(), vibrationAttributes.build());
     }
 
     @TargetApi(31)
@@ -2198,100 +2171,16 @@ public class ControllerHandler implements InputManager.InputDeviceListener, UsbD
     // This must only be called if hasQuadAmplitudeControlledRumbleVibrators() is true!
     @TargetApi(31)
     private void rumbleQuadVibrators(VibratorManager vm, short lowFreqMotor, short highFreqMotor, short leftTrigger, short rightTrigger) {
-        com.limelight.utils.RumblePlayback translated = translatedRumble();
-        if (translated != null) { translated.quad(vm, lowFreqMotor, highFreqMotor, leftTrigger, rightTrigger); return; }
-        // Normalize motor values to 0-255 amplitudes for VibrationManager
-        highFreqMotor = (short)((highFreqMotor >> 8) & 0xFF);
-        lowFreqMotor = (short)((lowFreqMotor >> 8) & 0xFF);
-        leftTrigger = (short)((leftTrigger >> 8) & 0xFF);
-        rightTrigger = (short)((rightTrigger >> 8) & 0xFF);
-
-        // If they're all zero, we can just call cancel().
-        if (lowFreqMotor == 0 && highFreqMotor == 0 && leftTrigger == 0 && rightTrigger == 0) {
-            vm.cancel();
-            return;
+        com.limelight.utils.RumblePlayback playback = rumblePlayback();
+        if (playback != null) {
+            playback.quad(vm, lowFreqMotor, highFreqMotor, leftTrigger, rightTrigger);
         }
-
-        // This is a guess based upon the behavior of FF_RUMBLE, but untested due to lack of Linux
-        // support for trigger rumble!
-        int[] vibratorIds = vm.getVibratorIds();
-        int[] vibratorAmplitudes = new int[] { highFreqMotor, lowFreqMotor, leftTrigger, rightTrigger };
-
-        CombinedVibration.ParallelCombination combo = CombinedVibration.startParallel();
-
-        for (int i = 0; i < vibratorIds.length; i++) {
-            // It's illegal to create a VibrationEffect with an amplitude of 0.
-            // Simply excluding that vibrator from our ParallelCombination will turn it off.
-            if (vibratorAmplitudes[i] != 0) {
-                combo.addVibrator(vibratorIds[i], VibrationEffect.createOneShot(60000, vibratorAmplitudes[i]));
-            }
-        }
-
-        VibrationAttributes.Builder vibrationAttributes = new VibrationAttributes.Builder();
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            vibrationAttributes.setUsage(VibrationAttributes.USAGE_MEDIA);
-        }
-
-        vm.vibrate(combo.combine(), vibrationAttributes.build());
     }
 
     private void rumbleSingleVibrator(Vibrator vibrator, short lowFreqMotor, short highFreqMotor) {
-        com.limelight.utils.RumblePlayback translated = translatedRumble();
-        if (translated != null) { translated.single(vibrator, lowFreqMotor, highFreqMotor); return; }
-        // Since we can only use a single amplitude value, compute the desired amplitude
-        // by taking 80% of the big motor and 33% of the small motor, then capping to 255.
-        // NB: This value is now 0-255 as required by VibrationEffect.
-        short lowFreqMotorMSB = (short)((lowFreqMotor >> 8) & 0xFF);
-        short highFreqMotorMSB = (short)((highFreqMotor >> 8) & 0xFF);
-        int simulatedAmplitude = Math.min(255, (int)((lowFreqMotorMSB * 0.80) + (highFreqMotorMSB * 0.33)));
-
-        if (simulatedAmplitude == 0) {
-            // This case is easy - just cancel the current effect and get out.
-            // NB: We cannot simply check lowFreqMotor == highFreqMotor == 0
-            // because our simulatedAmplitude could be 0 even though our inputs
-            // are not (ex: lowFreqMotor == 0 && highFreqMotor == 1).
-            vibrator.cancel();
-            return;
-        }
-
-        // Attempt to use amplitude-based control if we're on Oreo and the device
-        // supports amplitude-based vibration control.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (vibrator.hasAmplitudeControl()) {
-                VibrationEffect effect = VibrationEffect.createOneShot(60000, simulatedAmplitude);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    VibrationAttributes vibrationAttributes = new VibrationAttributes.Builder()
-                            .setUsage(VibrationAttributes.USAGE_MEDIA)
-                            .build();
-                    vibrator.vibrate(effect, vibrationAttributes);
-                }
-                else {
-                    AudioAttributes audioAttributes = new AudioAttributes.Builder()
-                            .setUsage(AudioAttributes.USAGE_GAME)
-                            .build();
-                    vibrator.vibrate(effect, audioAttributes);
-                }
-                return;
-            }
-        }
-
-        // If we reach this point, we don't have amplitude controls available, so
-        // we must emulate it by PWMing the vibration. Ick.
-        long pwmPeriod = 20;
-        long onTime = (long)((simulatedAmplitude / 255.0) * pwmPeriod);
-        long offTime = pwmPeriod - onTime;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            VibrationAttributes vibrationAttributes = new VibrationAttributes.Builder()
-                    .setUsage(VibrationAttributes.USAGE_MEDIA)
-                    .build();
-            vibrator.vibrate(VibrationEffect.createWaveform(new long[]{0, onTime, offTime}, 0), vibrationAttributes);
-        }
-        else {
-            AudioAttributes audioAttributes = new AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_GAME)
-                    .build();
-            vibrator.vibrate(new long[]{0, onTime, offTime}, 0, audioAttributes);
+        com.limelight.utils.RumblePlayback playback = rumblePlayback();
+        if (playback != null) {
+            playback.single(vibrator, lowFreqMotor, highFreqMotor);
         }
     }
 

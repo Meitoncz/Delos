@@ -59,6 +59,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.annotation.StringRes
 import com.limelight.display.DisplayInventory
 import com.limelight.display.DualScreen
@@ -184,6 +186,10 @@ fun DebugInfoScreen() {
     var strength by remember { mutableIntStateOf(220) }
     var deviceContinuous by remember { mutableStateOf(false) }
     var padsContinuous by remember { mutableStateOf(false) }
+    // cancel() reaches only an effect started through the same vibrator object (the same binder token), and a pad's
+    // vibrator object is replaced whenever the system refreshes the device; so the pad vibrators the test started are
+    // kept and cancelled themselves, as well as the current ones
+    val padVibrators = remember { mutableListOf<Vibrator>() }
     var devices by remember { mutableIntStateOf(0) }
     val pads = remember(devices) { gamepads() }
     val preferences = remember(context) { ProfileStore.currentSettings(context) }
@@ -243,12 +249,18 @@ fun DebugInfoScreen() {
         amplitude = 0
     }
 
+    fun cancelPads() {
+        padVibrators.forEach { it.cancel() }
+        padVibrators.clear()
+        gamepads().forEach { DeviceVibrator.get(it)?.cancel() }
+    }
+
     fun stopAll() {
         stopLab()
         deviceContinuous = false
         padsContinuous = false
         device?.cancel()
-        gamepads().forEach { DeviceVibrator.get(it)?.cancel() }
+        cancelPads()
     }
 
     fun updateProfile(edited: RumbleTranslator.Profile) {
@@ -328,14 +340,19 @@ fun DebugInfoScreen() {
         onDispose {
             input.unregisterInputDeviceListener(listener)
             device?.cancel()
-            gamepads().forEach { DeviceVibrator.get(it)?.cancel() }
+            cancelPads()
         }
     }
     // Continuous vibration follows the strength while it runs
     LaunchedEffect(deviceContinuous, strength) { if (deviceContinuous) device?.let { rumble(it, strength) } }
     LaunchedEffect(padsContinuous, strength, pads) {
-        if (padsContinuous) pads.mapNotNull { DeviceVibrator.get(it)?.takeIf { v -> v.hasVibrator() } }.forEach { rumble(it, strength) }
+        if (padsContinuous) pads.mapNotNull { DeviceVibrator.get(it)?.takeIf { v -> v.hasVibrator() } }.forEach {
+            if (it !in padVibrators) padVibrators.add(it)
+            rumble(it, strength)
+        }
     }
+    // A continuous test repeats until it is cancelled, so it must not go on while the app is in the background
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { stopAll() }
 
     val hasMotor = device?.hasVibrator() == true
     val presetName = activePreset?.label(res) ?: res.getString(R.string.debug_preset_custom)
