@@ -61,7 +61,7 @@ internal val LocalInWindow = compositionLocalOf { false }
 /**
  * The single place the content of the companion screen is decided (docs/DUAL_SCREEN.md): in the shell the ONE page of the highest priority that the
  * shell's screens have published, else the fallback or the welcome card ([CompanionState.Shell.page]); in a stream the statistics and the stream menu
- * as touch tiles, or the keyboard. It runs inside the companion's own `Stage`, so `LocalStage` is planned from that display's size, and inside the
+ * as touch tiles, or the keyboard; while the stream is still starting the loader page ([CompanionState.Stream.loaderPage]) instead. It runs inside the companion's own `Stage`, so `LocalStage` is planned from that display's size, and inside the
  * Delos colors. [startTyping] opens a stream on the keyboard (debug previews). [inWindow] is true only for the real companion window.
  *
  * Nothing here scrolls, ever: every page fits the panel ([CompanionFit], [FitColumn]).
@@ -74,7 +74,11 @@ internal val LocalInWindow = compositionLocalOf { false }
 internal fun CompanionContent(state: CompanionState, startTyping: Boolean = false, startSheet: String? = null, inWindow: Boolean = false) {
     val colors = LocalDelosColors.current
     val reducedMotion = LocalReducedMotion.current
-    val page = (state as? CompanionState.Shell)?.page
+    // The shell's page; a stream that is still starting shows the loader page (an update of the shell's loader, not a new page) until it runs
+    val page = when (state) {
+        is CompanionState.Shell -> state.page
+        is CompanionState.Stream -> state.loaderPage()
+    }
     val policy = rememberDimPolicy()
     var lastTouch by remember { mutableLongStateOf(SystemClock.elapsedRealtime()) }
     var dimmed by remember { mutableStateOf(false) }
@@ -122,10 +126,7 @@ internal fun CompanionContent(state: CompanionState, startTyping: Boolean = fals
                         },
                     )
                     Box(Modifier.fillMaxSize()) {
-                        when (state) {
-                            is CompanionState.Shell -> PageHost(checkNotNull(page))
-                            is CompanionState.Stream -> StreamContent(state, startTyping, startSheet)
-                        }
+                        if (page != null) PageHost(page) else if (state is CompanionState.Stream) StreamContent(state, startTyping, startSheet)
                     }
                 }
             }

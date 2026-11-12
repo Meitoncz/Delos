@@ -304,7 +304,8 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
         windowController.hideSystemUiNow();
         spinner = StreamLoader.show(this, prefConfig);
         // The second panel of a dual-screen device (docs/DUAL_SCREEN.md); shows nothing when there is none or this stream is on an external display
-        companionHost = CompanionHost.forStream(this, getIntent().getStringExtra(EXTRA_PC_NAME), getIntent().getStringExtra(EXTRA_APP_NAME));
+        companionHost = CompanionHost.forStream(this, getIntent().getStringExtra(EXTRA_PC_NAME), getIntent().getStringExtra(EXTRA_APP_NAME),
+                getIntent().getStringExtra(EXTRA_PC_UUID), StreamLoader.parameters(getResources(), prefConfig, 0, prefConfig.width, prefConfig.height));
 
         Display currentDisplay = null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -1510,6 +1511,13 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
 
     @Override
     public void stageComplete(String stage) {
+        // Delos: the first stage NvConnection completes is the HTTP launch request (it is reported under the game's name), every later one is native
+        if (companionHost != null) companionHost.onLaunchAccepted();
+    }
+
+    /** The loader scene is gone (the first frame is shown): the companion screen switches from its loader page to the stream tiles. */
+    public void onStreamLoaderGone() {
+        if (companionHost != null) companionHost.onLoaderDone();
     }
 
     private void stopConnection() {
@@ -1669,6 +1677,7 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
     @Override
     public void connectionStarted() {
         DiagLog.i("Stream", "Stream started");
+        if (companionHost != null) companionHost.onConnectionStarted();
         runOnUiThread(new Runnable() {
             @Override
             public void run() {

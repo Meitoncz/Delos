@@ -23,13 +23,32 @@ internal sealed interface CompanionState {
         val page: CompanionPage get() = chooseShellPage(published, context)
     }
 
-    /** A stream: the PC and game it runs, the latest statistics (null before the first) and the commands of the running stream (null until bound). */
+    /**
+     * A stream: the PC and game it runs, the latest statistics (null before the first) and the commands of the running stream (null until bound).
+     * [start] is what is known of a start that is still going (null once it ended or for a stream that is not starting): until the first statistics arrive the
+     * window shows the loader page ([loaderPage]) instead of the empty tiles.
+     */
     data class Stream(
         val pcName: String?,
         val gameName: String?,
         val stats: StreamStats?,
         val commands: StreamCommands?,
-    ) : CompanionState
+        val pcId: String = "",
+        val start: StartProgress? = null,
+    ) : CompanionState {
+        /**
+         * The loader of the start, null when the stream runs. Cancel is the stream menu's own Disconnect (the path of Back, then Disconnect on the main
+         * display) and exists once the menu is bound ([FlowCancel.streamStart]).
+         */
+        fun loaderPage(): CompanionPage? {
+            val progress = start?.takeIf { stats == null } ?: return null
+            val menu = commands?.menu
+            return LoaderPage(
+                FlowLoader(gameName, pcName.orEmpty(), pcId, progress.requested, progress.stage),
+                if (FlowCancel.streamStart(menu != null)) ({ checkNotNull(menu).leave(quit = false) }) else null,
+            )
+        }
+    }
 }
 
 /** The buttons of the shell's companion: what the focused game offers, in the same cases as the game's context menu on the main panel. */
