@@ -11,6 +11,7 @@
     <string name="home_badge_running">En cours</string>
     <string name="home_badge_last_played">Dernier joué</string>
     <string name="home_tile_custom_description">Réglages personnalisés pour cette appli</string>
+    <string name="home_tile_hidden_description">Appli masquée</string>
     <string name="home_menu_resume">Reprendre</string>
     <string name="home_menu_quit">Quitter l’appli</string>
     <string name="home_menu_quit_and_start">Quitter %1$s et lancer</string>

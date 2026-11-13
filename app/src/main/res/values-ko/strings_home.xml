@@ -12,6 +12,7 @@
     <string name="home_badge_running">실행 중</string>
     <string name="home_badge_last_played">마지막 플레이</string>
     <string name="home_tile_custom_description">이 앱 전용 설정</string>
+    <string name="home_tile_hidden_description">숨긴 앱</string>
 
     <string name="home_menu_resume">이어하기</string>
     <string name="home_menu_quit">앱 종료</string>

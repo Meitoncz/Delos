@@ -12,6 +12,7 @@
     <string name="home_badge_running">Em execução</string>
     <string name="home_badge_last_played">Último jogado</string>
     <string name="home_tile_custom_description">Configurações personalizadas para este app</string>
+    <string name="home_tile_hidden_description">App oculto</string>
 
     <string name="home_menu_resume">Retomar</string>
     <string name="home_menu_quit">Sair do app</string>

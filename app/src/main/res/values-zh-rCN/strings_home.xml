@@ -12,6 +12,7 @@
     <string name="home_badge_running">运行中</string>
     <string name="home_badge_last_played">上次游玩</string>
     <string name="home_tile_custom_description">此应用的自定义设置</string>
+    <string name="home_tile_hidden_description">已隐藏的应用</string>
 
     <string name="home_menu_resume">继续</string>
     <string name="home_menu_quit">退出应用</string>

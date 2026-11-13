@@ -738,6 +738,7 @@ private fun GameTile(
     val res = textResources()
     val locales = LocalConfiguration.current.locales
     val customDescription = stringResource(R.string.home_tile_custom_description)
+    val hiddenDescription = stringResource(R.string.home_tile_hidden_description)
     val colors = LocalDelosColors.current
     val boxArt = LocalBoxArt.current
     val actions = LocalGameActions.current
@@ -846,15 +847,14 @@ private fun GameTile(
                 Modifier.align(Alignment.TopEnd).padding(16.px).size(56.px).clip(CircleShape).background(Color(0x8C050A14)),
                 contentAlignment = Alignment.Center,
             ) { Spinner(32f) }
-        } else if (custom) {
+        } else if (custom || hidden) {
             // Above the (idle-filtered) art; the busy spinner takes this corner while it shows
-            // The same pill as the top-left badge (dark glass, white filled glyph), icon only so it never meets that badge on a narrow cover
-            Box(
-                Modifier.align(Alignment.TopEnd).padding(18.px).clip(CircleShape).background(Color(0x8C050A14))
-                    .padding(horizontal = 14.px, vertical = 6.px)
-                    .semantics { contentDescription = customDescription },
-                contentAlignment = Alignment.Center,
-            ) { Symbol(Symbols.TUNE, 22.tpx, Color.White, filled = true) }
+            // The same pill as the top-left badge (dark glass, white filled glyph), icon only so it never meets that badge on a narrow cover.
+            // A hidden app is only in the row while "Show hidden apps" is on; its eye-slash pill stands left of the custom one.
+            Row(Modifier.align(Alignment.TopEnd).padding(18.px), horizontalArrangement = Arrangement.spacedBy(8.px)) {
+                if (hidden) CornerPill(Symbols.VISIBILITY_OFF, Color.White.copy(alpha = 0.85f), hiddenDescription)
+                if (custom) CornerPill(Symbols.TUNE, Color.White, customDescription)
+            }
         }
         if (badge != null) {
             Row(
@@ -871,6 +871,17 @@ private fun GameTile(
             }
         }
     }
+}
+
+/** An icon-only status pill in a cover's top-right corner (custom settings, hidden). */
+@Composable
+private fun CornerPill(icon: String, tint: Color, description: String) {
+    Box(
+        Modifier.clip(CircleShape).background(Color(0x8C050A14))
+            .padding(horizontal = 14.px, vertical = 6.px)
+            .semantics { contentDescription = description },
+        contentAlignment = Alignment.Center,
+    ) { Symbol(icon, 22.tpx, tint, filled = true) }
 }
 
 /** A centered message for the empty, loading and offline states. */

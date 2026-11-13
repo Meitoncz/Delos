@@ -14,6 +14,7 @@
     <string name="home_badge_running">Běží</string>
     <string name="home_badge_last_played">Naposledy hráno</string>
     <string name="home_tile_custom_description">Vlastní nastavení pro tuto aplikaci</string>
+    <string name="home_tile_hidden_description">Skrytá aplikace</string>
 
     <!-- Game menu -->
     <string name="home_menu_resume">Pokračovat</string>

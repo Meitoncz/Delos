@@ -12,6 +12,7 @@
     <string name="home_badge_running">Запущено</string>
     <string name="home_badge_last_played">Останній запуск</string>
     <string name="home_tile_custom_description">Власні налаштування для цього застосунку</string>
+    <string name="home_tile_hidden_description">Прихований застосунок</string>
 
     <string name="home_menu_resume">Продовжити</string>
     <string name="home_menu_quit">Закрити застосунок</string>

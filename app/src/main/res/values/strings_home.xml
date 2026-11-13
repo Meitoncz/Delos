@@ -17,6 +17,7 @@
     <string name="home_badge_running">Running</string>
     <string name="home_badge_last_played">Last played</string>
     <string name="home_tile_custom_description">Custom settings for this app</string>
+    <string name="home_tile_hidden_description">Hidden app</string>
 
     <!-- Game menu. %1$s: name of the game that is running on the PC -->
     <string name="home_menu_resume">Resume</string>

@@ -12,6 +12,7 @@
     <string name="home_badge_running">実行中</string>
     <string name="home_badge_last_played">前回プレイ</string>
     <string name="home_tile_custom_description">このアプリのカスタム設定</string>
+    <string name="home_tile_hidden_description">非表示のアプリ</string>
 
     <string name="home_menu_resume">再開</string>
     <string name="home_menu_quit">アプリを終了</string>
