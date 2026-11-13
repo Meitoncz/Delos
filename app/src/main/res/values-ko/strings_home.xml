@@ -5,27 +5,27 @@
     <string name="home_no_pc_note">지금은 기존 Delos 앱에서 PC를 페어링해 주세요.\n새 UI의 페어링은 6.6단계에서 추가돼요.</string>
     <string name="home_offline_title">%1$s 오프라인</string>
     <string name="home_offline_note">PC를 켜거나 기존 Delos 앱에서 깨워 주세요.\n여기서 깨우는 기능은 6.6단계에서 추가돼요.</string>
-    <string name="home_empty_title">%1$s에 게임이 없어요</string>
+    <string name="home_empty_title">%1$s에 앱이 없어요</string>
     <string name="home_empty_note">Vibepollo 웹 UI에서 앱을 추가하면 여기에 자동으로 표시돼요.</string>
-    <string name="home_hidden_toast">%1$s 숨김 · 숨긴 게임은 사이드 메뉴에서 볼 수 있어요</string>
+    <string name="home_hidden_toast">%1$s 숨김 · 숨긴 앱은 사이드 메뉴에서 볼 수 있어요</string>
 
     <string name="home_badge_running">실행 중</string>
     <string name="home_badge_last_played">마지막 플레이</string>
-    <string name="home_tile_custom_description">이 게임 전용 설정</string>
+    <string name="home_tile_custom_description">이 앱 전용 설정</string>
 
     <string name="home_menu_resume">이어하기</string>
-    <string name="home_menu_quit">게임 종료</string>
+    <string name="home_menu_quit">앱 종료</string>
     <string name="home_menu_quit_and_start">%1$s 종료 후 시작</string>
     <string name="home_menu_resume_other">%1$s 이어하기</string>
-    <string name="home_menu_start">게임 시작</string>
+    <string name="home_menu_start">앱 시작</string>
     <string name="home_menu_artwork">아트워크</string>
     <string name="home_menu_metadata">메타데이터</string>
-    <string name="home_menu_settings">게임 설정</string>
-    <string name="home_menu_show">게임 표시</string>
-    <string name="home_menu_hide">게임 숨기기</string>
+    <string name="home_menu_settings">앱 설정</string>
+    <string name="home_menu_show">앱 표시</string>
+    <string name="home_menu_hide">앱 숨기기</string>
 
     <string name="home_header_running">실행 중</string>
-    <string name="home_header_game">게임</string>
+    <string name="home_header_game">앱</string>
     <string name="home_header_last_played">마지막 플레이</string>
     <string name="home_header_other_running">%1$s 실행 중</string>
     <string name="home_header_custom">전용 설정</string>
@@ -33,7 +33,7 @@
     <string name="home_meta_join">%1$s · %2$s</string>
 
     <string name="home_info_app">앱 정보</string>
-    <string name="home_info_game">게임 정보</string>
+    <string name="home_info_game">앱 정보</string>
     <string name="home_chip_running_on">%1$s에서 실행 중</string>
     <string name="home_chip_hltb">HLTB %1$s</string>
     <string name="home_chip_virtual_display">가상 디스플레이</string>

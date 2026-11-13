@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="companion_game_focused">Jogo selecionado</string>
+    <string name="companion_game_focused">App selecionado</string>
     <string name="companion_game_running">Em execução</string>
     <string name="companion_game_resume_other">Retomar outro</string>
     <string name="companion_game_quit_start">Encerrar e iniciar</string>

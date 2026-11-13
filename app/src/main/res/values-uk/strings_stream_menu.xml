@@ -12,7 +12,7 @@
     <string name="stream_menu_tile_supersampling">Суперсемплінг</string>
     <string name="stream_menu_tile_more">Ще</string>
     <string name="stream_menu_tile_disconnect">Відключитись</string>
-    <string name="stream_menu_tile_quit">Закрити гру</string>
+    <string name="stream_menu_tile_quit">Закрити застосунок</string>
     <string name="stream_menu_overlay_compact">Компактна</string>
 
     <string name="stream_menu_title_more">Ще</string>
@@ -151,7 +151,7 @@
 
     <string name="stream_exit_disconnecting">Відключаємось</string>
     <string name="stream_exit_quitting">Закриваємо %1$s</string>
-    <string name="stream_exit_quitting_game">Закриваємо гру</string>
+    <string name="stream_exit_quitting_game">Закриваємо застосунок</string>
 
     <string name="stream_result_default_pc">ПК</string>
     <string name="stream_result_try_again">Спробувати ще раз</string>

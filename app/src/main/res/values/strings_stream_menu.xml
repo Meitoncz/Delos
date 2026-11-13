@@ -14,7 +14,7 @@
     <string name="stream_menu_tile_supersampling">Supersampling</string>
     <string name="stream_menu_tile_more">More</string>
     <string name="stream_menu_tile_disconnect">Disconnect</string>
-    <string name="stream_menu_tile_quit">Quit game</string>
+    <string name="stream_menu_tile_quit">Quit app</string>
     <!-- State pill of the Overlay tile: the statistics are shown as one line -->
     <string name="stream_menu_overlay_compact">Compact</string>
 
@@ -180,7 +180,7 @@
     <string name="stream_exit_disconnecting">Disconnecting</string>
     <!-- %1$s: game name -->
     <string name="stream_exit_quitting">Quitting %1$s</string>
-    <string name="stream_exit_quitting_game">Quitting the game</string>
+    <string name="stream_exit_quitting_game">Quitting the app</string>
 
     <!-- Stream result overlay (a stream that ended on its own) -->
     <!-- Used when the PC's name is not known -->

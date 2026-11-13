@@ -31,7 +31,7 @@
     <string name="pairing_failed_pin_wrong">El PIN era incorrecto, inténtalo de nuevo</string>
     <string name="pairing_failed_code_wrong">El código o la frase de contraseña eran incorrectos</string>
     <string name="pairing_failed_busy">%1$s ya se está emparejando con otro dispositivo</string>
-    <string name="pairing_failed_game_running">Cierra primero el juego en %1$s y vuelve a emparejar</string>
+    <string name="pairing_failed_game_running">Cierra primero la app en %1$s y vuelve a emparejar</string>
     <string name="pairing_failed_not_found">No se encuentra %1$s</string>
     <string name="pairing_failed_unsupported">%1$s no admite el emparejamiento</string>
     <string name="pairing_failed">Error al emparejar con %1$s</string>

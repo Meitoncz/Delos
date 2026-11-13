@@ -5,7 +5,7 @@
     <string name="shell_report_no_browser">利用できるブラウザがありません</string>
     <string name="shell_retry_unreachable">%1$sに接続できません</string>
     <string name="shell_retry_game_missing">%1$sは%2$sで利用できません</string>
-    <string name="shell_retry_game_missing_unnamed">このゲームは%1$sで利用できません</string>
+    <string name="shell_retry_game_missing_unnamed">このアプリは%1$sで利用できません</string>
     <string name="shell_profile_updated">プロフィールを更新しました</string>
     <string name="shell_welcome">ようこそ、%1$sさん</string>
     <string name="shell_game_unreachable">%1$sに接続できません</string>

@@ -6,7 +6,7 @@
     <string name="companion_screen_pairing">Pairing</string>
     <string name="companion_screen_settings">Settings</string>
     <string name="companion_screen_settings_search">Settings search</string>
-    <string name="companion_screen_game_settings">Game settings</string>
+    <string name="companion_screen_game_settings">App settings</string>
     <string name="companion_screen_debug">Debug info</string>
     <string name="companion_screen_osc">On-screen controls</string>
     <string name="companion_screen_artwork">Artwork</string>
@@ -14,17 +14,17 @@
     <string name="companion_screen_create_profile">New profile</string>
     <string name="companion_screen_boot">Welcome to Delos</string>
     <!-- One line under the title of the companion's fallback card: what the screen on the main panel is for -->
-    <string name="companion_purpose_home">Your games on the connected PC.</string>
+    <string name="companion_purpose_home">Your apps on the connected PC.</string>
     <string name="companion_purpose_start">Choose the PC to play on.</string>
     <string name="companion_purpose_devices">The PCs paired with Delos.</string>
     <string name="companion_purpose_pair_pc">Find a PC on your network and pair it.</string>
     <string name="companion_purpose_pin">Confirm the pairing on your PC.</string>
     <string name="companion_purpose_settings">Select a setting on the main display.</string>
     <string name="companion_purpose_settings_search">Find a setting on the main display.</string>
-    <string name="companion_purpose_game_settings">Settings that apply to this game only.</string>
+    <string name="companion_purpose_game_settings">Settings that apply to this app only.</string>
     <string name="companion_purpose_debug">Technical details of this device.</string>
     <string name="companion_purpose_osc">Arrange the on-screen controls on the main display.</string>
-    <string name="companion_purpose_artwork">Choose the pictures for this game.</string>
+    <string name="companion_purpose_artwork">Choose the pictures for this app.</string>
     <string name="companion_purpose_profile">Your profile and its settings.</string>
     <string name="companion_purpose_create_profile">Choose an avatar and a name.</string>
     <string name="companion_purpose_boot">Choose Get started on the main display.</string>

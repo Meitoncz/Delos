@@ -12,7 +12,7 @@
     <string name="stream_menu_tile_supersampling">슈퍼샘플링</string>
     <string name="stream_menu_tile_more">더보기</string>
     <string name="stream_menu_tile_disconnect">연결 끊기</string>
-    <string name="stream_menu_tile_quit">게임 종료</string>
+    <string name="stream_menu_tile_quit">앱 종료</string>
     <string name="stream_menu_overlay_compact">간단</string>
 
     <string name="stream_menu_title_more">더보기</string>
@@ -151,7 +151,7 @@
 
     <string name="stream_exit_disconnecting">연결을 끊는 중</string>
     <string name="stream_exit_quitting">%1$s 종료하는 중</string>
-    <string name="stream_exit_quitting_game">게임을 종료하는 중</string>
+    <string name="stream_exit_quitting_game">앱을 종료하는 중</string>
 
     <string name="stream_result_default_pc">PC</string>
     <string name="stream_result_try_again">다시 시도</string>

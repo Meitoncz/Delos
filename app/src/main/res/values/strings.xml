@@ -5,7 +5,7 @@
     <string name="scut_invalid_uuid">Provided PC is not valid</string>
     <string name="scut_invalid_app_id">Provided App is not valid</string>
     <string name="scut_game_running">%1$s is already running · quit it from Delos first</string>
-    <string name="scut_other_game_running">Another game is already running · quit it from Delos first</string>
+    <string name="scut_other_game_running">Another app is already running · quit it from Delos first</string>
 
     <string name="configuration_mode_move_buttons">Move buttons mode</string>
     <string name="configuration_mode_resize_buttons">Resize buttons mode</string>
@@ -128,7 +128,7 @@
     <string name="title_checkbox_gamepad_touchpad_as_mouse">Always control mouse with touchpad</string>
     <string name="summary_checkbox_gamepad_touchpad_as_mouse">Forces gamepad touchpad input to control the host mouse, even when emulating a gamepad with a touchpad.</string>
     <string name="title_checkbox_gamepad_motion_sensors">External gamepad gyroscope</string>
-    <string name="summary_checkbox_gamepad_motion_sensors">Lets the PC read the gyroscope and accelerometer of a connected external gamepad that has them. Needs Android 12 or newer. Turn it off if no game uses motion to save a little power and network traffic.</string>
+    <string name="summary_checkbox_gamepad_motion_sensors">Lets the PC read the gyroscope and accelerometer of a connected external gamepad that has them. Needs Android 12 or newer. Turn it off if no app uses motion to save a little power and network traffic.</string>
     <string name="title_checkbox_gamepad_motion_fallback">Built-in device gyroscope</string>
     <string name="summary_checkbox_gamepad_motion_fallback">Uses this device\'s own gyroscope and accelerometer (a handheld\'s built-in sensors) when the connected gamepad has none or your Android version cannot read them.\nNote: the PC may then see your gamepad as a PlayStation controller.</string>
     <string name="title_checkbox_force_device_motion">Always use built-in device gyroscope</string>
@@ -185,7 +185,7 @@
     <string name="title_video_format">Video codec</string>
     <string name="summary_video_format">Newer codecs can lower video bandwidth requirements if your device supports them. Codec selections may be ignored if not supported by the host software or GPU.</string>
     <string name="title_enable_hdr">Enable HDR</string>
-    <string name="summary_enable_hdr">Stream HDR when the game and PC GPU support it. HDR requires a GPU with HEVC Main 10 encoding support. How HDR looks depends on the display of this device.</string>
+    <string name="summary_enable_hdr">Stream HDR when the app and PC GPU support it. HDR requires a GPU with HEVC Main 10 encoding support. How HDR looks depends on the display of this device.</string>
     <string name="title_full_range">Force full range video</string>
     <string name="summary_full_range">This will cause loss of detail in light and dark areas if your device doesn\'t properly display full range video content.</string>
     <string name="title_prevent_packet_loss">Wi-Fi keep-alive</string>
@@ -417,7 +417,7 @@
     <string name="send_clipboard_failed">Failed to send clipboard: </string>
     <string name="external_display_info">External Display connected with: %1$dx%2$d at %3$.1fHz</string>
     <string name="no_external_display">No external display detected</string>
-    <string name="no_game_instance">No game instance available</string>
+    <string name="no_game_instance">No app instance available</string>
     <string name="get_clipboard_failed">Failed to get clipboard: </string>
     <string name="send_clipboard_success">Clipboard sent successfully</string>
     <string name="get_clipboard_success">Clipboard get successfully</string>

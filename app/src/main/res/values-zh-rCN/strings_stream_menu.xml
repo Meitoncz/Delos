@@ -12,7 +12,7 @@
     <string name="stream_menu_tile_supersampling">超采样</string>
     <string name="stream_menu_tile_more">更多</string>
     <string name="stream_menu_tile_disconnect">断开</string>
-    <string name="stream_menu_tile_quit">退出游戏</string>
+    <string name="stream_menu_tile_quit">退出应用</string>
     <string name="stream_menu_overlay_compact">紧凑</string>
 
     <string name="stream_menu_title_more">更多</string>
@@ -151,11 +151,11 @@
 
     <string name="stream_exit_disconnecting">正在断开</string>
     <string name="stream_exit_quitting">正在退出 %1$s</string>
-    <string name="stream_exit_quitting_game">正在退出游戏</string>
+    <string name="stream_exit_quitting_game">正在退出应用</string>
 
     <string name="stream_result_default_pc">电脑</string>
     <string name="stream_result_try_again">重试</string>
-    <string name="stream_result_back_to_library">返回游戏库</string>
+    <string name="stream_result_back_to_library">返回应用库</string>
     <string name="stream_result_details">详情</string>
     <string name="stream_result_start_title">无法启动串流</string>
     <string name="stream_result_lost_title">连接已断开</string>

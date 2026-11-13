@@ -5,7 +5,7 @@
     <string name="shell_report_no_browser">没有可用的浏览器</string>
     <string name="shell_retry_unreachable">无法连接到 %1$s</string>
     <string name="shell_retry_game_missing">%2$s 上没有 %1$s</string>
-    <string name="shell_retry_game_missing_unnamed">%1$s 上没有该游戏</string>
+    <string name="shell_retry_game_missing_unnamed">%1$s 上没有该应用</string>
     <string name="shell_profile_updated">个人资料已更新</string>
     <string name="shell_welcome">欢迎，%1$s</string>
     <string name="shell_game_unreachable">无法连接到 %1$s</string>

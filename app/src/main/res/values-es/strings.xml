@@ -4,7 +4,7 @@
     <string name="scut_invalid_uuid">El PC indicado no es válido</string>
     <string name="scut_invalid_app_id">La aplicación indicada no es válida</string>
     <string name="scut_game_running">%1$s ya se está ejecutando · ciérralo primero desde Delos</string>
-    <string name="scut_other_game_running">Ya hay otro juego en ejecución · ciérralo primero desde Delos</string>
+    <string name="scut_other_game_running">Ya hay otra app en ejecución · ciérrala primero desde Delos</string>
 
     <string name="configuration_mode_move_buttons">Modo de mover botones</string>
     <string name="configuration_mode_resize_buttons">Modo de cambiar tamaño de botones</string>
@@ -106,7 +106,7 @@
     <string name="title_checkbox_gamepad_touchpad_as_mouse">Controlar siempre el ratón con el panel táctil</string>
     <string name="summary_checkbox_gamepad_touchpad_as_mouse">Obliga a que el panel táctil del mando controle el ratón del host, incluso al emular un mando con panel táctil.</string>
     <string name="title_checkbox_gamepad_motion_sensors">Giroscopio del mando externo</string>
-    <string name="summary_checkbox_gamepad_motion_sensors">Permite que el PC lea el giroscopio y el acelerómetro de un mando externo conectado que los tenga. Requiere Android 12 o posterior. Desactívalo si ningún juego usa el movimiento, para ahorrar un poco de batería y tráfico de red.</string>
+    <string name="summary_checkbox_gamepad_motion_sensors">Permite que el PC lea el giroscopio y el acelerómetro de un mando externo conectado que los tenga. Requiere Android 12 o posterior. Desactívalo si ninguna app usa el movimiento, para ahorrar un poco de batería y tráfico de red.</string>
     <string name="title_checkbox_gamepad_motion_fallback">Giroscopio integrado del dispositivo</string>
     <string name="summary_checkbox_gamepad_motion_fallback">Usa el giroscopio y el acelerómetro del propio dispositivo (los sensores integrados de una consola portátil) cuando el mando conectado no los tiene o tu versión de Android no puede leerlos.\nNota: el PC puede entonces ver tu mando como un mando de PlayStation.</string>
     <string name="title_checkbox_force_device_motion">Usar siempre el giroscopio integrado del dispositivo</string>
@@ -161,7 +161,7 @@
     <string name="title_video_format">Códec de vídeo</string>
     <string name="summary_video_format">Los códecs más recientes pueden reducir el ancho de banda necesario si tu dispositivo los admite. Se puede ignorar la elección de códec si el software o la GPU del host no la admiten.</string>
     <string name="title_enable_hdr">Activar HDR</string>
-    <string name="summary_enable_hdr">Transmite en HDR cuando el juego y la GPU del PC lo admiten. HDR requiere una GPU con codificación HEVC Main 10. Cómo se ve el HDR depende de la pantalla de este dispositivo.</string>
+    <string name="summary_enable_hdr">Transmite en HDR cuando la app y la GPU del PC lo admiten. HDR requiere una GPU con codificación HEVC Main 10. Cómo se ve el HDR depende de la pantalla de este dispositivo.</string>
     <string name="title_full_range">Forzar vídeo de rango completo</string>
     <string name="summary_full_range">Esto causará pérdida de detalle en zonas claras y oscuras si tu dispositivo no muestra bien el contenido de vídeo de rango completo.</string>
     <string name="title_prevent_packet_loss">Wi-Fi keep-alive</string>
@@ -384,7 +384,7 @@
     <string name="send_clipboard_failed">No se pudo enviar el portapapeles: </string>
     <string name="external_display_info">Pantalla externa conectada con: %1$dx%2$d a %3$.1f Hz</string>
     <string name="no_external_display">No se ha detectado ninguna pantalla externa</string>
-    <string name="no_game_instance">No hay ninguna instancia de juego disponible</string>
+    <string name="no_game_instance">No hay ninguna instancia de app disponible</string>
     <string name="get_clipboard_failed">No se pudo obtener el portapapeles: </string>
     <string name="send_clipboard_success">Portapapeles enviado correctamente</string>
     <string name="get_clipboard_success">Portapapeles obtenido correctamente</string>

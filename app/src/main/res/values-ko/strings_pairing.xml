@@ -29,7 +29,7 @@
     <string name="pairing_failed_pin_wrong">PIN이 맞지 않아요. 다시 시도해 주세요</string>
     <string name="pairing_failed_code_wrong">코드 또는 암호가 맞지 않아요</string>
     <string name="pairing_failed_busy">%1$s이(가) 이미 다른 기기와 페어링 중이에요</string>
-    <string name="pairing_failed_game_running">%1$s의 게임을 먼저 종료한 뒤 다시 페어링해 주세요</string>
+    <string name="pairing_failed_game_running">%1$s의 앱을 먼저 종료한 뒤 다시 페어링해 주세요</string>
     <string name="pairing_failed_not_found">%1$s을(를) 찾을 수 없어요</string>
     <string name="pairing_failed_unsupported">%1$s은(는) 페어링을 지원하지 않아요</string>
     <string name="pairing_failed">%1$s와(과) 페어링하지 못했어요</string>

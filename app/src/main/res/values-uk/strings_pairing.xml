@@ -32,7 +32,7 @@
     <string name="pairing_failed_pin_wrong">Хибний PIN, спробуй ще раз</string>
     <string name="pairing_failed_code_wrong">Хибний код або парольна фраза</string>
     <string name="pairing_failed_busy">%1$s уже створює пару з іншим пристроєм</string>
-    <string name="pairing_failed_game_running">Спершу закрий гру на %1$s, потім спробуй ще раз</string>
+    <string name="pairing_failed_game_running">Спершу закрий застосунок на %1$s, потім спробуй ще раз</string>
     <string name="pairing_failed_not_found">%1$s не знайдено</string>
     <string name="pairing_failed_unsupported">%1$s не підтримує створення пари</string>
     <string name="pairing_failed">Не вдалося створити пару з %1$s</string>

@@ -24,7 +24,7 @@
     <string name="devices_menu_default_on">Delos mit diesem PC starten</string>
     <string name="devices_menu_wake">PC aufwecken</string>
     <string name="devices_menu_rename">Umbenennen</string>
-    <string name="devices_menu_open_games">Spiele öffnen</string>
+    <string name="devices_menu_open_games">Apps öffnen</string>
     <string name="devices_menu_connect">Verbinden</string>
     <string name="devices_menu_unpair">Entkoppeln</string>
     <string name="devices_menu_remove">Aus Delos entfernen</string>

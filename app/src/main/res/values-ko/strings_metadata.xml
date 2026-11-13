@@ -2,7 +2,7 @@
 <resources>
     <string name="metadata_hdr_unverified">HDR/SDR 미확인</string>
 
-    <string name="metadata_filtered_title">필터에 맞는 게임이 없어요</string>
+    <string name="metadata_filtered_title">필터에 맞는 앱이 없어요</string>
     <string name="metadata_filtered_note">%1$s 버튼으로 필터를 바꾸거나 아래에서 초기화해 주세요.</string>
     <string name="metadata_filtered_reset">라이브러리 필터 초기화</string>
 

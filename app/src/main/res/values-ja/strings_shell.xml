@@ -4,11 +4,11 @@
     <string name="shell_link_pair_message">リンクにより、DelosがPCとペアリングするよう求められています。ご自身で開いた場合のみ続行してください。</string>
     <string name="shell_link_pair_action">ペアリング</string>
     <string name="shell_link_start_title">%1$sを開始しますか？</string>
-    <string name="shell_link_start_title_unnamed">ゲームを開始しますか？</string>
+    <string name="shell_link_start_title_unnamed">アプリを開始しますか？</string>
     <string name="shell_link_start_message">リンクにより、Delosが%2$sで%1$sを開始するよう求められています。ご自身で開いた場合のみ続行してください。</string>
     <string name="shell_link_start_message_game">リンクにより、DelosがPCで%1$sを開始するよう求められています。ご自身で開いた場合のみ続行してください。</string>
-    <string name="shell_link_start_message_host">リンクにより、Delosが%1$sでゲームを開始するよう求められています。ご自身で開いた場合のみ続行してください。</string>
-    <string name="shell_link_start_message_unnamed">リンクにより、DelosがPCでゲームを開始するよう求められています。ご自身で開いた場合のみ続行してください。</string>
+    <string name="shell_link_start_message_host">リンクにより、Delosが%1$sでアプリを開始するよう求められています。ご自身で開いた場合のみ続行してください。</string>
+    <string name="shell_link_start_message_unnamed">リンクにより、DelosがPCでアプリを開始するよう求められています。ご自身で開いた場合のみ続行してください。</string>
     <string name="shell_link_start_action">開始</string>
 
     <string name="shell_nav_settings">設定</string>
@@ -19,7 +19,7 @@
     <string name="shell_side_not_connected">未接続</string>
     <string name="shell_side_connected">%1$sに接続中</string>
     <string name="shell_side_offline">%1$sはオフラインです</string>
-    <string name="shell_side_show_hidden">非表示のゲームを表示</string>
+    <string name="shell_side_show_hidden">非表示のアプリを表示</string>
     <string name="shell_side_hidden_on">%2$sで%1$d本が非表示</string>
     <string name="shell_side_hidden_on_this_pc">このPCで%1$d本が非表示</string>
     <string name="shell_side_theme">テーマ</string>

@@ -16,7 +16,7 @@
     <string name="pc_unknown_host">ホスト不明</string>
     <string name="pc_unknown_version">バージョン不明</string>
     <string name="pc_unknown_last_seen">最終確認は不明</string>
-    <string name="pc_unknown_session">実行中のゲーム不明</string>
+    <string name="pc_unknown_session">実行中のアプリ不明</string>
     <string name="pc_unknown_library">アプリ数不明</string>
     <string name="pc_unknown_flags">既定は不明</string>
     <string name="pc_value_now">今</string>
@@ -26,7 +26,7 @@
     <string name="pc_host_geforce">GeForce Experience</string>
     <string name="pc_host_sunshine">Sunshineベース</string>
     <string name="pc_session_idle">実行中なし</string>
-    <string name="pc_session_busy">ゲームを実行中</string>
+    <string name="pc_session_busy">アプリを実行中</string>
     <string name="pc_wake_saved">MACアドレス保存済み</string>
     <string name="pc_wake_none">MACアドレス未保存</string>
     <string name="pc_action_library">ライブラリ</string>
@@ -59,17 +59,17 @@
     <string name="pair_open_library">ライブラリを開く</string>
     <string name="pair_back_hosts">ホストに戻る</string>
     <string name="pc_empty_title">アプリケーションなし</string>
-    <string name="pc_empty_text">ホストがアプリケーションを公開していません。ホストのWeb UIでゲームやデスクトップを追加し、準備ができたら再接続してください。</string>
+    <string name="pc_empty_text">ホストがアプリケーションを公開していません。ホストのWeb UIでアプリやデスクトップを追加し、準備ができたら再接続してください。</string>
     <string name="pc_empty_short">ホストのWeb UIでアプリケーションを追加します。</string>
     <string name="pc_action_reconnect">PCに再接続</string>
     <string name="pc_action_details">PCの詳細</string>
     <string name="pc_loading_title">ライブラリを読み込み中</string>
     <string name="pc_loading_eyebrow">ホストを待っています</string>
     <string name="pc_loading_text">ホストのアプリケーション一覧を待っています。</string>
-    <string name="pc_loading_note">起動中のゲームはありません。</string>
+    <string name="pc_loading_note">起動中のアプリはありません。</string>
     <string name="pc_action_back_pcs">PC一覧に戻る</string>
     <string name="pc_nopc_title">ペアリング済みのPCはまだありません</string>
-    <string name="pc_nopc_text">PCをペアリングすると、そのゲームがメイン画面に表示されます。</string>
+    <string name="pc_nopc_text">PCをペアリングすると、そのアプリがメイン画面に表示されます。</string>
     <plurals name="pc_apps">
         <item quantity="other">アプリ%1$d件</item>
     </plurals>

@@ -24,9 +24,9 @@
     <string name="help_list_video_scale_mode">Local picture fit only.</string>
     <string name="help_edit_diy_w_h">Adds a resolution to Video resolution: enter width x height (1920x1080), then select it there.</string>
     <string name="help_edit_diy_bitrate">Sets the bitrate in Mbps; decimals and values above the slider\'s range allowed. Also updates Video bitrate.</string>
-    <string name="help_custom_refresh_rate">Adds a custom FPS (decimals allowed) to Video frame rate; select it there. Host, game and display limit the result.</string>
+    <string name="help_custom_refresh_rate">Adds a custom FPS (decimals allowed) to Video frame rate; select it there. Host, app and display limit the result.</string>
     <string name="help_checkbox_enforce_display_mode">Asks Android firmly to use the selected display mode. Helps if refresh-rate requests are ignored; may misbehave on some firmware.</string>
-    <string name="help_checkbox_enable_hdr">Requests HDR video. Needs game, host GPU, decoder and display support (10-bit HEVC, AV1 or PyroWave).</string>
+    <string name="help_checkbox_enable_hdr">Requests HDR video. Needs app, host GPU, decoder and display support (10-bit HEVC, AV1 or PyroWave).</string>
     <string name="help_checkbox_enable_fullexdisplay">Shows the stream and menu on an attached monitor or TV at the configured resolution and FPS. The handheld controls the menu.</string>
     <string name="help_checkbox_sgsr">Upscales a lower-resolution stream to the display size, or only sharpens it (Mode). Costs GPU time. Menu changes last one session.</string>
     <string name="help_list_pyrowave_chroma">4:4:4 costs bandwidth and GPU.</string>
@@ -35,7 +35,7 @@
     <string name="help_list_sgsr_supersampling_level">Internal size when the stream already matches the display. Menu changes last one session.</string>
     <string name="help_list_audio_config">Channels the PC sends. Surround needs matching playback.</string>
     <string name="help_checkbox_enable_audiofx">Lets Android\'s system equalizer and effects process stream audio. May add delay.</string>
-    <string name="help_checkbox_host_audio">Plays game audio on the PC as well as here. Turn off to keep the PC speakers quiet.</string>
+    <string name="help_checkbox_host_audio">Plays app audio on the PC as well as here. Turn off to keep the PC speakers quiet.</string>
     <string name="help_seekbar_deadzone">Positive values ignore small stick movement near center (drift). Negative values offset a controller\'s own dead zone.</string>
     <string name="help_checkbox_multi_controller">Reports gamepads as they connect or disconnect. When off, one gamepad always stays present, for games that need one at launch.</string>
     <string name="help_checkbox_usb_driver">Uses the Delos USB driver for Xbox and Nintendo Pro controllers Android cannot handle natively. May ask for USB permission.</string>
@@ -44,7 +44,7 @@
     <string name="help_analog_scrolling">Stick that scrolls in gamepad mouse mode.</string>
     <string name="help_checkbox_flip_face_buttons">Swaps A/B and X/Y for gamepad input and on-screen controls (Nintendo layout). Not Delos navigation.</string>
     <string name="help_checkbox_gamepad_touchpad_as_mouse">Always uses a controller\'s touchpad as a PC mouse. Off lets supported hosts receive native touchpad input.</string>
-    <string name="help_checkbox_gamepad_motion_sensors">Lets the PC read an external gamepad\'s gyroscope and accelerometer. Needs Android 12 or newer. Turn off if no game uses motion, to save a little power and traffic.</string>
+    <string name="help_checkbox_gamepad_motion_sensors">Lets the PC read an external gamepad\'s gyroscope and accelerometer. Needs Android 12 or newer. Turn off if no app uses motion, to save a little power and traffic.</string>
     <string name="help_checkbox_gamepad_motion_fallback">Uses this device\'s own gyroscope and accelerometer when the gamepad has none or Android cannot read them. The PC may then see a PlayStation controller.</string>
     <string name="help_checkbox_force_device_motion">Uses the built-in sensors even if the external gamepad has working ones. Needs Built-in device gyroscope.</string>
     <string name="help_seekbar_gyro_smoothing">Steadies gyro aiming. 0 is off. Higher values remove more jitter but add a little delay to slow movement; fast flicks stay responsive. Applies to the next stream; the stream menu (More) changes it live.</string>
@@ -75,13 +75,13 @@
     <string name="help_checkbox_hide_clipboard_content">Marks clipboard content from the PC as sensitive so Android hides its preview. Does not encrypt or disable transfer.</string>
     <string name="help_seekbar_keyboard_axi_opacity">Opacity of the full on-screen keyboard. Separate from virtual gamepad opacity.</string>
     <string name="help_onscreen_keyboard_autofit">Turns off automatic fitting of the full keyboard so the saved width, height and alignment apply.</string>
-    <string name="help_seekbar_onscreen_keyboard_height">Height of the full on-screen keyboard when automatic fitting is off. Taller: larger keys, more of the game covered.</string>
+    <string name="help_seekbar_onscreen_keyboard_height">Height of the full on-screen keyboard when automatic fitting is off. Taller: larger keys, more of the app covered.</string>
     <string name="help_seekbar_onscreen_keyboard_width">Width of the full on-screen keyboard when automatic fitting is off. Keep it reachable on your screen.</string>
     <string name="help_list_onscreen_keyboard_align_mode">Horizontal anchor of the manually sized full keyboard.</string>
     <string name="help_checkbox_enable_sticky_modifier_key_virtual_keyboard">Keeps virtual Shift, Ctrl, Alt and similar modifiers active after a tap, so combinations can be typed one key at a time.</string>
     <string name="help_checkbox_disable_warnings">Hides on-screen connection-quality warnings during streaming. Statistics stay.</string>
     <string name="help_checkbox_remember_zoom_pan">Saves the stream\'s zoom and pan for later sessions. When off, adjustments last only that stream.</string>
-    <string name="help_checkbox_enable_pip">Keeps the stream in Picture-in-Picture while multitasking. View only: no game control in the small window.</string>
+    <string name="help_checkbox_enable_pip">Keeps the stream in Picture-in-Picture while multitasking. View only: no app control in the small window.</string>
     <string name="help_checkbox_show_onscreen_controls">Shows the virtual gamepad over the stream for touch play. The stream menu toggles it for the session.</string>
     <string name="help_checkbox_hide_osc_when_has_gamepad">Hides the virtual gamepad while Android detects a physical controller; it returns when the controller disconnects.</string>
     <string name="help_checkbox_vibrate_osc">Local vibration when pressing virtual gamepad buttons. Touch feedback, not game rumble. Needs a vibration motor.</string>
@@ -118,7 +118,7 @@
     <string name="help_option_help_custom_keys">Opens instructions for the custom-key file format. Load the resulting file with Import Custom Keys.</string>
     <string name="help_pref_debug_info">Opens device and controller diagnostics without a stream: device details, controller IDs and sensors, vibration test, control preview.</string>
     <string name="help_about_diag_logs">Keeps a rolling log (2 MB at most) of events and errors on this device. Nothing leaves it unless you share it from Debug info, with names and addresses removed. Off stops new lines.</string>
-    <string name="help_ui_match_game_colors">Takes three colors from the selected game\'s cover for the animated background; falls back to PC artwork. Needs Material You off.</string>
+    <string name="help_ui_match_game_colors">Takes three colors from the selected app\'s cover for the animated background; falls back to PC artwork. Needs Material You off.</string>
 
     <!-- Explanations of one choice -->
     <string name="help_frame_pacing_latency">Shows the newest frame at once; may stutter.</string>
@@ -197,7 +197,7 @@
     <string name="stream_help_screen_brightness">Changes this device\'s screen brightness now; the system setting returns afterwards. Not the PC or a monitor.</string>
     <string name="stream_help_bitrate">Requests a new video bitrate without reconnecting. Needs Vibepollo; the host may cap it. Lasts for this stream.</string>
     <string name="stream_help_apply_bitrate">Sends the requested bitrate to Vibepollo. The accepted value can be lower. Saved defaults are unchanged.</string>
-    <string name="stream_help_upscaler">Upscales a low-resolution stream, or supersamples a native one. Costs GPU time; applies live and is kept for this game.</string>
+    <string name="stream_help_upscaler">Upscales a low-resolution stream, or supersamples a native one. Costs GPU time; applies live and is kept for this app.</string>
     <string name="stream_help_upscaling">Turns the upscaler, or Sharpen only, on or off for this stream; the picture may flicker.</string>
     <string name="stream_help_supersampling">Renders a native-resolution stream at a larger size, then reduces it. Costs GPU time; lasts for this stream.</string>
     <string name="stream_help_supersampling_on">Renders at a larger internal size. Costs GPU time.</string>
@@ -205,7 +205,7 @@
     <string name="stream_help_mode">Applies live. Switching to or from Sharpen only may flicker.</string>
     <string name="stream_help_sharpness">Final sharpening. 0 disables it, not SGSR 1 reconstruction. In Sharpen only it is the whole effect. Lasts for this stream.</string>
     <string name="stream_help_more">More stream controls: clipboard, host commands, key combinations, zoom, touch and on-screen controls. Actions run at once.</string>
-    <string name="stream_help_disconnect">Stops streaming and returns to the Delos library. The game keeps running on the PC.</string>
+    <string name="stream_help_disconnect">Stops streaming and returns to the Delos library. The app keeps running on the PC.</string>
     <string name="stream_help_quit_game">Asks the host to end the running application, then disconnects. Runs at once, so save first.</string>
     <string name="stream_help_send_keys">Sends a built-in or imported key combination to the PC once; the menu closes. Import custom ones under Controls.</string>
     <string name="stream_help_send_clipboard">Copies this device\'s clipboard to the PC once. Needs Vibepollo or Apollo clipboard support.</string>
@@ -218,7 +218,7 @@
     <string name="stream_help_on_screen_controls">Shows or hides the virtual gamepad during this stream. Opacity and layout are set under Controls.</string>
     <string name="stream_help_open_android_keyboard">Opens or closes Android\'s system keyboard, after closing this menu. Not the Delos keyboard (the Keyboard tile).</string>
     <string name="stream_help_touch_sensitivity">Toggles extra touchscreen sensitivity scaling, configured in settings.</string>
-    <string name="stream_help_gyro_smoothing">Steadies gyro aiming at once, kept for this game. 0 is off. More smoothing adds a little delay to slow movement.</string>
+    <string name="stream_help_gyro_smoothing">Steadies gyro aiming at once, kept for this app. 0 is off. More smoothing adds a little delay to slow movement.</string>
     <string name="stream_help_gyro_smoothing_disabled">Needs External gamepad gyroscope or Built-in device gyroscope turned on in Settings; applies from the next stream.</string>
     <string name="stream_help_rumble_feel">Picks how host rumble feels, at once and saved. Stays open: pick again to compare. %1$s goes back.</string>
     <!-- %1$s: a key combination such as Ctrl + Alt + Delete -->

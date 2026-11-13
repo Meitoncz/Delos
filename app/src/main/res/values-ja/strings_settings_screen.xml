@@ -28,6 +28,7 @@
     <string name="settings_search_alias_gyro_smoothing">ジャイロ 安定化 平滑化</string>
     <string name="settings_search_alias_link_test">速度テスト スループット 帯域 ネットワーク</string>
     <string name="settings_search_alias_link_use">推奨 ビットレート 接続</string>
+    <string name="settings_search_alias_game">ゲーム</string>
 
     <string name="settings_actions_imported">インポートしました</string>
     <string name="settings_actions_import_failed">インポートに失敗しました</string>
@@ -64,18 +65,18 @@
     <string name="settings_native_palette_title">カラーパレット</string>
     <string name="settings_native_palette_description">インターフェースとアニメーション背景の色です。</string>
     <string name="settings_native_needs_material_you_off">Material Youカラーをオフにする必要があります。</string>
-    <string name="settings_native_match_colors_title">ゲームの色に合わせる</string>
-    <string name="settings_native_match_colors_description">アニメーション背景が、選択中のゲームの背景画像のメインカラーを使います。</string>
+    <string name="settings_native_match_colors_title">アプリの色に合わせる</string>
+    <string name="settings_native_match_colors_description">アニメーション背景が、選択中のアプリの背景画像のメインカラーを使います。</string>
     <string name="settings_native_clock_title">時計</string>
     <string name="settings_native_clock_description">ステータスバーの時刻形式です。</string>
     <string name="settings_native_background_title">アニメーション背景</string>
     <string name="settings_native_background_description">アニメーションするシェーダー背景（Android 13以降）、または静止背景です。</string>
-    <string name="settings_native_hero_background_title">ゲーム背景</string>
-    <string name="settings_native_hero_background_description">ホーム画面に、選択中のゲームの背景を表示します。</string>
-    <string name="settings_native_hero_blur_title">ゲーム背景のぼかし</string>
-    <string name="settings_native_hero_blur_description">ライブラリの後ろのゲーム背景をぼかします。「ゲーム背景」が必要です。</string>
-    <string name="settings_native_hero_opacity_title">ゲーム背景の不透明度</string>
-    <string name="settings_native_hero_opacity_description">アニメーション背景越しに、ゲームのアートワークをどれだけ見せるかを指定します。「ゲーム背景」が必要です。</string>
+    <string name="settings_native_hero_background_title">アプリ背景</string>
+    <string name="settings_native_hero_background_description">ホーム画面に、選択中のアプリの背景を表示します。</string>
+    <string name="settings_native_hero_blur_title">アプリ背景のぼかし</string>
+    <string name="settings_native_hero_blur_description">ライブラリの後ろのアプリ背景をぼかします。「アプリ背景」が必要です。</string>
+    <string name="settings_native_hero_opacity_title">アプリ背景の不透明度</string>
+    <string name="settings_native_hero_opacity_description">アニメーション背景越しに、アプリのアートワークをどれだけ見せるかを指定します。「アプリ背景」が必要です。</string>
     <string name="settings_native_scale_title">インターフェースの拡大率</string>
     <string name="settings_native_scale_description">テキスト、ステータスバー、ボタンヒントの大きさです。</string>
     <string name="settings_native_animations_title">アニメーション</string>
@@ -90,7 +91,7 @@
     <string name="settings_native_menu_buttons_title">ストリームメニューのボタン</string>
     <string name="settings_native_menu_buttons_description">ストリーム中にストリームメニューを開閉するために、同時に押すボタンです。背面ボタンなど、ほかのボタンを記録するには選択してください。</string>
     <string name="settings_native_menu_swipe_title">上スワイプでメニューを開く</string>
-    <string name="settings_native_menu_swipe_description">下端から上にスワイプしても、ストリームメニューが開きます。そこから始まるタッチはゲームには届きません。</string>
+    <string name="settings_native_menu_swipe_description">下端から上にスワイプしても、ストリームメニューが開きます。そこから始まるタッチはアプリには届きません。</string>
     <string name="settings_native_stats_position_title">統計の表示位置</string>
     <string name="settings_native_stats_position_description">ストリーミング中のフル統計パネルを表示する隅です。コンパクトモードは常に上部中央です。</string>
     <string name="settings_native_stats_top_left">左上</string>
@@ -117,21 +118,21 @@
     <string name="settings_native_sgdb_off_toast">SteamGridDBはオフです</string>
     <string name="settings_native_sgdb_key_description">ご自身のキーがあれば、DelosがSteamGridDBからカバー、ワイドカバー、背景、ロゴをダウンロードできます。すべてのプロフィールで共通して、この端末に保存されます。</string>
     <string name="settings_native_sgdb_auto_title">自動でダウンロード</string>
-    <string name="settings_native_sgdb_auto_description">ライブラリの読み込み時に、新しいゲームについてSteamGridDBで最高評価のカバー、ワイドカバー、背景、ロゴを取得します。</string>
+    <string name="settings_native_sgdb_auto_description">ライブラリの読み込み時に、新しいアプリについてSteamGridDBで最高評価のカバー、ワイドカバー、背景、ロゴを取得します。</string>
     <string name="settings_native_connect_first_toast">先にPCに接続してください</string>
-    <string name="settings_native_downloading_toast">%1$sのゲームのアートワークをダウンロード中…</string>
-    <string name="settings_native_artwork_complete_toast">すべてのゲームにアートワークがあります</string>
+    <string name="settings_native_downloading_toast">%1$sのアプリのアートワークをダウンロード中…</string>
+    <string name="settings_native_artwork_complete_toast">すべてのアプリにアートワークがあります</string>
     <plurals name="settings_native_artwork_ready_toast">
-        <item quantity="other">%d本のゲームのアートワークが揃いました</item>
+        <item quantity="other">%d個のアプリのアートワークが揃いました</item>
     </plurals>
     <string name="settings_native_missing_artwork_title">不足しているアートワークをダウンロード</string>
-    <string name="settings_native_missing_artwork_description">%1$sのゲームのうち、アートワークがないものを取得します。</string>
-    <string name="settings_native_missing_artwork_description_current">現在のPCのゲームのうち、アートワークがないものを取得します。</string>
+    <string name="settings_native_missing_artwork_description">%1$sのアプリのうち、アートワークがないものを取得します。</string>
+    <string name="settings_native_missing_artwork_description_current">現在のPCのアプリのうち、アートワークがないものを取得します。</string>
     <string name="settings_native_refresh_artwork_title">すべてのアートワークを再ダウンロード</string>
-    <string name="settings_native_refresh_artwork_description">すべてのゲームをもう一度検索し、最高評価の画像を使います。ご自身で選んだものはそのままです。</string>
-    <string name="settings_native_choose_artwork_title">ゲームごとにアートワークを選択</string>
-    <string name="settings_native_choose_artwork_value">ゲームオプション</string>
-    <string name="settings_native_choose_artwork_description">ホーム画面：ゲーム上で右メニューボタン → アートワーク。カバー、ワイドカバー、背景、ロゴを自由に選べます。</string>
+    <string name="settings_native_refresh_artwork_description">すべてのアプリをもう一度検索し、最高評価の画像を使います。ご自身で選んだものはそのままです。</string>
+    <string name="settings_native_choose_artwork_title">アプリごとにアートワークを選択</string>
+    <string name="settings_native_choose_artwork_value">アプリオプション</string>
+    <string name="settings_native_choose_artwork_description">ホーム画面：アプリ上で右メニューボタン → アートワーク。カバー、ワイドカバー、背景、ロゴを自由に選べます。</string>
 
     <string name="settings_native_version_title">バージョン</string>
     <string name="settings_native_version_description">Android版 Delosです。</string>
@@ -155,7 +156,7 @@
     <string name="settings_native_help_clock_system">Androidの12/24時間表示の設定に従います。</string>
     <string name="settings_native_help_clock_12">午前/午後付きの12時間表示です。</string>
     <string name="settings_native_help_clock_24">24時間表示です。</string>
-    <string name="settings_native_help_motion_reduced">インターフェースの動きを抑えます。ゲームのFPSは変わりません。</string>
+    <string name="settings_native_help_motion_reduced">インターフェースの動きを抑えます。アプリのFPSは変わりません。</string>
     <string name="settings_native_help_motion_full">すべてのトランジションとフォーカスアニメーションを使います。</string>
     <string name="settings_native_help_default_pc_none">優先PCがありません。「スタート画面をスキップ」は使えません。</string>
     <string name="settings_native_help_default_pc_set">「スタート画面をスキップ」で使われます。ペアリング済みで、接続できる必要があります。</string>
@@ -179,7 +180,7 @@
     <plurals name="settings_game_custom_count">
         <item quantity="other">カスタム設定%d件</item>
     </plurals>
-    <string name="settings_game_summary_none">項目を変更すると、このゲーム専用のカスタム設定になります。</string>
+    <string name="settings_game_summary_none">項目を変更すると、このアプリ専用のカスタム設定になります。</string>
     <string name="settings_game_summary">ストリーム%1$d件 · 表示%2$d件</string>
     <string name="settings_game_value_on">オン</string>
     <string name="settings_game_value_off">オフ</string>
@@ -191,12 +192,12 @@
     <string name="settings_game_from_profile">プロフィールから</string>
     <string name="settings_game_profile_line">プロフィール：%1$s</string>
     <string name="settings_game_link_note">%1$s 回線テストは設定にあります。</string>
-    <string name="settings_game_eyebrow">ゲーム設定 · %1$s</string>
-    <string name="settings_game_panel_title">ゲームごとに、自分好みの設定を</string>
-    <string name="settings_game_custom_title">このゲーム専用</string>
+    <string name="settings_game_eyebrow">アプリ設定 · %1$s</string>
+    <string name="settings_game_panel_title">アプリごとに、自分好みの設定を</string>
+    <string name="settings_game_custom_title">このアプリ専用</string>
     <string name="settings_game_profile_value_button">プロフィールの値：%1$s · %2$sを押すと戻します</string>
     <string name="settings_game_profile_value_touch">プロフィールの値：%1$s · 「リセット」をタップすると戻します</string>
-    <string name="settings_game_currently">現在の値：%1$s。変更すると、このゲームだけの値になります。</string>
+    <string name="settings_game_currently">現在の値：%1$s。変更すると、このアプリだけの値になります。</string>
     <string name="settings_game_only_this_game">この変更は%1$sだけに適用されます。ほかはすべてプロフィールに従います。</string>
     <string name="settings_game_saved_note">自動保存されます · 次回のストリームから適用</string>
     <string name="settings_native_section_displays">ディスプレイ</string>
@@ -209,7 +210,7 @@
     <string name="settings_native_help_second_display_external">モニターやテレビとして扱います。外部ディスプレイモードでストリームを表示できます。</string>
     <string name="settings_native_help_second_display_built_in">本体の一部として扱います。ストリームの表示先にはなりません。</string>
     <string name="settings_native_main_screen_title">メイン画面</string>
-    <string name="settings_native_main_screen_description">ゲームとストリームを表示するパネルです。もう一方はコンパニオン画面になります。</string>
+    <string name="settings_native_main_screen_description">アプリとストリームを表示するパネルです。もう一方はコンパニオン画面になります。</string>
     <string name="settings_native_main_screen_automatic">自動</string>
     <string name="settings_native_main_screen_swapped">入れ替え</string>
     <string name="settings_native_help_main_screen_automatic">大きいパネルがメイン画面です。</string>

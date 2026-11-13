@@ -6,7 +6,7 @@
     <string name="shell_report_no_browser">Není k dispozici žádný prohlížeč</string>
     <string name="shell_retry_unreachable">%1$s není dostupné</string>
     <string name="shell_retry_game_missing">Hra %1$s není na %2$s k dispozici</string>
-    <string name="shell_retry_game_missing_unnamed">Hra není na %1$s k dispozici</string>
+    <string name="shell_retry_game_missing_unnamed">Aplikace není na %1$s k dispozici</string>
     <string name="shell_profile_updated">Profil aktualizován</string>
     <string name="shell_welcome">Vítej, %1$s</string>
     <string name="shell_game_unreachable">%1$s není dostupné</string>

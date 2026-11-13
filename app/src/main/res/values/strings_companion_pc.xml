@@ -27,7 +27,7 @@
     <string name="pc_unknown_host">Host unavailable</string>
     <string name="pc_unknown_version">Version unavailable</string>
     <string name="pc_unknown_last_seen">Last seen unavailable</string>
-    <string name="pc_unknown_session">Running game unknown</string>
+    <string name="pc_unknown_session">Running app unknown</string>
     <string name="pc_unknown_library">Apps unknown</string>
     <string name="pc_unknown_flags">Default unknown</string>
     <string name="pc_value_now">Now</string>
@@ -41,7 +41,7 @@
     <string name="pc_host_sunshine">Sunshine-based</string>
     <string name="pc_session_idle">Nothing running</string>
     <!-- The host reports a running game but its name is not known -->
-    <string name="pc_session_busy">A game is running</string>
+    <string name="pc_session_busy">An app is running</string>
     <string name="pc_wake_saved">Saved MAC available</string>
     <string name="pc_wake_none">No saved MAC</string>
     <!-- Touch button on the PC card: connect and open the games of this PC -->
@@ -85,7 +85,7 @@
     <string name="pair_open_library">Open library</string>
     <string name="pair_back_hosts">Back to hosts</string>
     <string name="pc_empty_title">No applications</string>
-    <string name="pc_empty_text">The host has not published any applications. Add a game or Desktop in the host’s web UI. Reconnect when ready.</string>
+    <string name="pc_empty_text">The host has not published any applications. Add an app or Desktop in the host’s web UI. Reconnect when ready.</string>
     <string name="pc_empty_short">Add applications in the host’s web UI.</string>
     <!-- Touch button: connect to the PC again (it reads the library again) -->
     <string name="pc_action_reconnect">Reconnect PC</string>
@@ -94,11 +94,11 @@
     <string name="pc_loading_title">Reading the library</string>
     <string name="pc_loading_eyebrow">Waiting for the host</string>
     <string name="pc_loading_text">Waiting for the host’s application list.</string>
-    <string name="pc_loading_note">No game is being started.</string>
+    <string name="pc_loading_note">No app is being started.</string>
     <!-- Touch button: go to the Start screen with the PCs -->
     <string name="pc_action_back_pcs">Back to PCs</string>
     <string name="pc_nopc_title">No PC paired yet</string>
-    <string name="pc_nopc_text">Pair a PC and its games appear on the main display.</string>
+    <string name="pc_nopc_text">Pair a PC and its apps appear on the main display.</string>
     <plurals name="pc_apps">
         <item quantity="one">%1$d app</item>
         <item quantity="other">%1$d apps</item>

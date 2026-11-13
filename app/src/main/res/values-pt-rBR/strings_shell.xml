@@ -4,11 +4,11 @@
     <string name="shell_link_pair_message">Um link pede ao app Delos para parear com este PC. Continue só se você mesmo o abriu.</string>
     <string name="shell_link_pair_action">Parear</string>
     <string name="shell_link_start_title">Iniciar %1$s?</string>
-    <string name="shell_link_start_title_unnamed">Iniciar um jogo?</string>
+    <string name="shell_link_start_title_unnamed">Iniciar um app?</string>
     <string name="shell_link_start_message">Um link pede ao app Delos para iniciar %1$s em %2$s. Continue só se você mesmo o abriu.</string>
     <string name="shell_link_start_message_game">Um link pede ao app Delos para iniciar %1$s em um PC. Continue só se você mesmo o abriu.</string>
-    <string name="shell_link_start_message_host">Um link pede ao app Delos para iniciar um jogo em %1$s. Continue só se você mesmo o abriu.</string>
-    <string name="shell_link_start_message_unnamed">Um link pede ao app Delos para iniciar um jogo em um PC. Continue só se você mesmo o abriu.</string>
+    <string name="shell_link_start_message_host">Um link pede ao app Delos para iniciar um app em %1$s. Continue só se você mesmo o abriu.</string>
+    <string name="shell_link_start_message_unnamed">Um link pede ao app Delos para iniciar um app em um PC. Continue só se você mesmo o abriu.</string>
     <string name="shell_link_start_action">Iniciar</string>
 
     <string name="shell_nav_settings">Configurações</string>
@@ -19,7 +19,7 @@
     <string name="shell_side_not_connected">Não conectado</string>
     <string name="shell_side_connected">Conectado a %1$s</string>
     <string name="shell_side_offline">%1$s está offline</string>
-    <string name="shell_side_show_hidden">Mostrar jogos ocultos</string>
+    <string name="shell_side_show_hidden">Mostrar apps ocultos</string>
     <string name="shell_side_hidden_on">Ocultos em %2$s: %1$d</string>
     <string name="shell_side_hidden_on_this_pc">Ocultos neste PC: %1$d</string>
     <string name="shell_side_theme">Tema</string>

@@ -4,7 +4,7 @@
     <string name="metadata_hdr_unverified">HDR/SDR neověřeno</string>
 
     <!-- No game matches the library filter. %1$s: the name of the Y button -->
-    <string name="metadata_filtered_title">Těmto filtrům neodpovídá žádná hra</string>
+    <string name="metadata_filtered_title">Těmto filtrům neodpovídá žádná aplikace</string>
     <string name="metadata_filtered_note">Stiskni %1$s pro změnu filtrů, nebo je resetuj níže.</string>
     <string name="metadata_filtered_reset">Resetovat filtry knihovny</string>
 

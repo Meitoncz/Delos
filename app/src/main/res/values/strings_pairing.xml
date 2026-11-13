@@ -35,7 +35,7 @@
     <string name="pairing_failed_pin_wrong">The PIN was wrong, try again</string>
     <string name="pairing_failed_code_wrong">The code or passphrase was wrong</string>
     <string name="pairing_failed_busy">%1$s is already pairing with another device</string>
-    <string name="pairing_failed_game_running">Quit the game on %1$s first, then pair again</string>
+    <string name="pairing_failed_game_running">Quit the app on %1$s first, then pair again</string>
     <string name="pairing_failed_not_found">%1$s cannot be found</string>
     <string name="pairing_failed_unsupported">%1$s does not support pairing</string>
     <string name="pairing_failed">Pairing with %1$s failed</string>

@@ -76,7 +76,7 @@
         <item quantity="other">%1$s tem %2$d capas no SteamGridDB, nenhuma delas corresponde aos seus filtros. Afrouxe um filtro ou busque por outro nome.</item>
     </plurals>
     <string name="artwork_filtered_unknown_cover">Nenhuma das capas corresponde aos seus filtros. Afrouxe um filtro ou busque por outro nome.</string>
-    <string name="artwork_empty_cover">O SteamGridDB ainda não tem capa para este jogo.</string>
+    <string name="artwork_empty_cover">O SteamGridDB ainda não tem capa para este app.</string>
     <string name="artwork_downloading_cover">Baixando a capa…</string>
     <string name="artwork_updated_cover">Capa atualizada</string>
     <string name="artwork_tab_wide">Capa larga</string>
@@ -102,7 +102,7 @@
         <item quantity="other">%1$s tem %2$d capas largas no SteamGridDB, nenhuma delas corresponde aos seus filtros. Afrouxe um filtro ou busque por outro nome.</item>
     </plurals>
     <string name="artwork_filtered_unknown_wide">Nenhuma das capas largas corresponde aos seus filtros. Afrouxe um filtro ou busque por outro nome.</string>
-    <string name="artwork_empty_wide">O SteamGridDB ainda não tem capa larga para este jogo.</string>
+    <string name="artwork_empty_wide">O SteamGridDB ainda não tem capa larga para este app.</string>
     <string name="artwork_downloading_wide">Baixando a capa larga…</string>
     <string name="artwork_updated_wide">Capa larga atualizada</string>
     <string name="artwork_tab_hero">Plano de fundo</string>
@@ -128,7 +128,7 @@
         <item quantity="other">%1$s tem %2$d planos de fundo no SteamGridDB, nenhum deles corresponde aos seus filtros. Afrouxe um filtro ou busque por outro nome.</item>
     </plurals>
     <string name="artwork_filtered_unknown_hero">Nenhum dos planos de fundo corresponde aos seus filtros. Afrouxe um filtro ou busque por outro nome.</string>
-    <string name="artwork_empty_hero">O SteamGridDB ainda não tem plano de fundo para este jogo.</string>
+    <string name="artwork_empty_hero">O SteamGridDB ainda não tem plano de fundo para este app.</string>
     <string name="artwork_downloading_hero">Baixando o plano de fundo…</string>
     <string name="artwork_updated_hero">Plano de fundo atualizado</string>
     <string name="artwork_tab_logo">Logo</string>
@@ -154,7 +154,7 @@
         <item quantity="other">%1$s tem %2$d logos no SteamGridDB, nenhum deles corresponde aos seus filtros. Afrouxe um filtro ou busque por outro nome.</item>
     </plurals>
     <string name="artwork_filtered_unknown_logo">Nenhum dos logos corresponde aos seus filtros. Afrouxe um filtro ou busque por outro nome.</string>
-    <string name="artwork_empty_logo">O SteamGridDB ainda não tem logo para este jogo.</string>
+    <string name="artwork_empty_logo">O SteamGridDB ainda não tem logo para este app.</string>
     <string name="artwork_downloading_logo">Baixando o logo…</string>
     <string name="artwork_updated_logo">Logo atualizado</string>
 </resources>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="companion_game_focused">Vybraná hra</string>
+    <string name="companion_game_focused">Vybraná aplikace</string>
     <string name="companion_game_running">Právě běží</string>
     <string name="companion_game_resume_other">Pokračovat v jiné</string>
     <string name="companion_game_quit_start">Ukončit a spustit</string>

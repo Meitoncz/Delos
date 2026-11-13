@@ -2,7 +2,7 @@
 <resources>
     <string name="companion_flow_pc">PC</string>
     <string name="companion_flow_starting">Spouštění: %1$s</string>
-    <string name="companion_flow_starting_generic">Spouštění hry</string>
+    <string name="companion_flow_starting_generic">Spouštění aplikace</string>
     <string name="companion_flow_requested">%1$s · požadováno %2$s</string>
     <string name="companion_flow_step_host">PC nalezeno</string>
     <string name="companion_flow_step_launch">Požadavek na spuštění přijat</string>
@@ -15,10 +15,10 @@
     <string name="companion_flow_wait">Chvilku strpení</string>
     <string name="companion_flow_result_title">Stream skončil</string>
     <string name="companion_flow_reconnect">Připojit znovu</string>
-    <string name="companion_flow_lost_guidance">Hra může na hostiteli stále běžet. Až bude dostupná, připoj se znovu a pokračuj.</string>
-    <string name="companion_flow_lost_short">Hra může stále běžet.</string>
-    <string name="companion_flow_closed_guidance">Otevři knihovnu a zjisti, jestli hra ještě běží.</string>
-    <string name="companion_flow_closed_short">Stav hry zjistíš v knihovně.</string>
+    <string name="companion_flow_lost_guidance">Aplikace může na hostiteli stále běžet. Až bude dostupná, připoj se znovu a pokračuj.</string>
+    <string name="companion_flow_lost_short">Aplikace může stále běžet.</string>
+    <string name="companion_flow_closed_guidance">Otevři knihovnu a zjisti, jestli aplikace ještě běží.</string>
+    <string name="companion_flow_closed_short">Stav aplikace zjistíš v knihovně.</string>
     <string name="companion_flow_problem_title">Problém s připojením</string>
     <string name="companion_flow_error_short">Stream se nepodařilo spustit.</string>
     <string name="companion_flow_recovery">Zkontroluj službu na hostiteli, firewall a síť. Pak to zkus znovu.</string>

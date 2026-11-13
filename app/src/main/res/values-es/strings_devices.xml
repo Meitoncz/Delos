@@ -20,7 +20,7 @@
     <string name="devices_menu_default_on">Iniciar Delos con este PC</string>
     <string name="devices_menu_wake">Reactivar el PC</string>
     <string name="devices_menu_rename">Renombrar</string>
-    <string name="devices_menu_open_games">Abrir sus juegos</string>
+    <string name="devices_menu_open_games">Abrir sus apps</string>
     <string name="devices_menu_connect">Conectar</string>
     <string name="devices_menu_unpair">Desemparejar</string>
     <string name="devices_menu_remove">Quitar de Delos</string>

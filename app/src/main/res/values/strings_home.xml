@@ -8,31 +8,31 @@
     <string name="home_offline_title">%1$s is offline</string>
     <string name="home_offline_note">Start the PC, or wake it from the classic Delos app.\nWaking it from here comes in step 6.6.</string>
     <!-- %1$s: PC name -->
-    <string name="home_empty_title">No games on %1$s</string>
+    <string name="home_empty_title">No apps on %1$s</string>
     <string name="home_empty_note">Add apps in Vibepollo\'s web UI, they show up here automatically.</string>
     <!-- %1$s: game name -->
-    <string name="home_hidden_toast">%1$s is hidden · the side menu shows hidden games</string>
+    <string name="home_hidden_toast">%1$s is hidden · the side menu shows hidden apps</string>
 
     <!-- Badge in the corner of a cover -->
     <string name="home_badge_running">Running</string>
     <string name="home_badge_last_played">Last played</string>
-    <string name="home_tile_custom_description">Custom settings for this game</string>
+    <string name="home_tile_custom_description">Custom settings for this app</string>
 
     <!-- Game menu. %1$s: name of the game that is running on the PC -->
     <string name="home_menu_resume">Resume</string>
-    <string name="home_menu_quit">Quit game</string>
+    <string name="home_menu_quit">Quit app</string>
     <string name="home_menu_quit_and_start">Quit %1$s and start</string>
     <string name="home_menu_resume_other">Resume %1$s</string>
-    <string name="home_menu_start">Start game</string>
+    <string name="home_menu_start">Start app</string>
     <string name="home_menu_artwork">Artwork</string>
     <string name="home_menu_metadata">Metadata</string>
-    <string name="home_menu_settings">Game settings</string>
-    <string name="home_menu_show">Show game</string>
-    <string name="home_menu_hide">Hide game</string>
+    <string name="home_menu_settings">App settings</string>
+    <string name="home_menu_show">Show app</string>
+    <string name="home_menu_hide">Hide app</string>
 
     <!-- Header of the game menu: the status, then facts joined by a middle dot -->
     <string name="home_header_running">Running</string>
-    <string name="home_header_game">Game</string>
+    <string name="home_header_game">App</string>
     <string name="home_header_last_played">Last played</string>
     <!-- %1$s: name of the game that is running on the PC -->
     <string name="home_header_other_running">%1$s is running</string>
@@ -43,7 +43,7 @@
 
     <!-- Info block under the game logo -->
     <string name="home_info_app">APP INFO</string>
-    <string name="home_info_game">GAME INFO</string>
+    <string name="home_info_game">APP INFO</string>
     <!-- %1$s: PC name -->
     <string name="home_chip_running_on">Running on %1$s</string>
     <!-- %1$s: how long the game takes (see metadata_hltb_*) -->

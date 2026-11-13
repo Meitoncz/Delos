@@ -3,14 +3,14 @@
     <!-- Library filter (Y on the home screen) -->
     <string name="filters_title">Filter library</string>
     <plurals name="filters_result_active">
-        <!-- %1$d: games that match, %2$d: games in the library (the quantity) -->
-        <item quantity="one">%1$d of %2$d game</item>
-        <item quantity="other">%1$d of %2$d games</item>
+        <!-- %1$d: apps that match, %2$d: apps in the library (the quantity) -->
+        <item quantity="one">%1$d of %2$d app</item>
+        <item quantity="other">%1$d of %2$d apps</item>
     </plurals>
     <plurals name="filters_result_all">
-        <!-- %1$d: games in the library (the quantity) -->
-        <item quantity="one">All %1$d game</item>
-        <item quantity="other">All %1$d games</item>
+        <!-- %1$d: apps in the library (the quantity) -->
+        <item quantity="one">All %1$d app</item>
+        <item quantity="other">All %1$d apps</item>
     </plurals>
     <!-- The hint bar label of Y -->
     <string name="filters_hint">Filter</string>

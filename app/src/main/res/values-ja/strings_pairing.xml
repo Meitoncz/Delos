@@ -29,7 +29,7 @@
     <string name="pairing_failed_pin_wrong">PINが違います。もう一度お試しください</string>
     <string name="pairing_failed_code_wrong">コードまたはパスフレーズが違います</string>
     <string name="pairing_failed_busy">%1$sは別のデバイスとペアリング中です</string>
-    <string name="pairing_failed_game_running">先に%1$sのゲームを終了してから、もう一度ペアリングしてください</string>
+    <string name="pairing_failed_game_running">先に%1$sのアプリを終了してから、もう一度ペアリングしてください</string>
     <string name="pairing_failed_not_found">%1$sが見つかりません</string>
     <string name="pairing_failed_unsupported">%1$sはペアリングに対応していません</string>
     <string name="pairing_failed">%1$sとのペアリングに失敗しました</string>

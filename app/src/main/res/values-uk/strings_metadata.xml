@@ -2,7 +2,7 @@
 <resources>
     <string name="metadata_hdr_unverified">HDR/SDR не перевірено</string>
 
-    <string name="metadata_filtered_title">Жодна гра не підходить під ці фільтри</string>
+    <string name="metadata_filtered_title">Жоден застосунок не підходить під ці фільтри</string>
     <string name="metadata_filtered_note">Натисни %1$s, щоб змінити фільтри, або скинь їх нижче.</string>
     <string name="metadata_filtered_reset">Скинути фільтри бібліотеки</string>
 

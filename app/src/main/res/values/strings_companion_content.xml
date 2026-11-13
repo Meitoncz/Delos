@@ -40,12 +40,12 @@
     <!-- Hint list entry next to the A button: the main display's Get started button -->
     <string name="companion_boot_hint_begin">Get started on main</string>
     <plurals name="companion_filter_games_of">
-        <item quantity="one">%1$d of %2$d game matches.</item>
-        <item quantity="other">%1$d of %2$d games match.</item>
+        <item quantity="one">%1$d of %2$d app matches.</item>
+        <item quantity="other">%1$d of %2$d apps match.</item>
     </plurals>
     <plurals name="companion_filter_games_all">
-        <item quantity="one">All %1$d game.</item>
-        <item quantity="other">All %1$d games.</item>
+        <item quantity="one">All %1$d app.</item>
+        <item quantity="other">All %1$d apps.</item>
     </plurals>
     <plurals name="companion_filter_images_of">
         <item quantity="one">%1$d of %2$d image matches.</item>
@@ -64,7 +64,7 @@
         <item quantity="other">%1$d custom settings</item>
     </plurals>
     <plurals name="companion_profile_overrides">
-        <item quantity="one">%1$d game override</item>
-        <item quantity="other">%1$d game overrides</item>
+        <item quantity="one">%1$d app override</item>
+        <item quantity="other">%1$d app overrides</item>
     </plurals>
 </resources>

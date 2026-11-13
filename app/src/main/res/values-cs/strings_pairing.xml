@@ -34,7 +34,7 @@
     <string name="pairing_failed_pin_wrong">PIN byl špatně, zkus to znovu</string>
     <string name="pairing_failed_code_wrong">Kód nebo heslo byly špatně</string>
     <string name="pairing_failed_busy">%1$s se právě páruje s jiným zařízením</string>
-    <string name="pairing_failed_game_running">Nejdřív ukonči hru na %1$s, pak spáruj znovu</string>
+    <string name="pairing_failed_game_running">Nejdřív ukonči aplikaci na %1$s, pak spáruj znovu</string>
     <string name="pairing_failed_not_found">%1$s se nepodařilo najít</string>
     <string name="pairing_failed_unsupported">%1$s párování nepodporuje</string>
     <string name="pairing_failed">Párování s %1$s selhalo</string>

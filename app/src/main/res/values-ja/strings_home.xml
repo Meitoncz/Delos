@@ -5,27 +5,27 @@
     <string name="home_no_pc_note">今のところ、PCのペアリングはクラシック版 Delosアプリで行ってください。\n新しいUIでのペアリングはステップ6.6で対応します。</string>
     <string name="home_offline_title">%1$sはオフラインです</string>
     <string name="home_offline_note">PCを起動するか、クラシック版 Delosアプリから起動してください。\nここからの起動はステップ6.6で対応します。</string>
-    <string name="home_empty_title">%1$sにゲームがありません</string>
+    <string name="home_empty_title">%1$sにアプリがありません</string>
     <string name="home_empty_note">VibepolloのWeb UIでアプリを追加すると、ここに自動で表示されます。</string>
-    <string name="home_hidden_toast">%1$sを非表示にしました · サイドメニューで非表示のゲームを表示できます</string>
+    <string name="home_hidden_toast">%1$sを非表示にしました · サイドメニューで非表示のアプリを表示できます</string>
 
     <string name="home_badge_running">実行中</string>
     <string name="home_badge_last_played">前回プレイ</string>
-    <string name="home_tile_custom_description">このゲームのカスタム設定</string>
+    <string name="home_tile_custom_description">このアプリのカスタム設定</string>
 
     <string name="home_menu_resume">再開</string>
-    <string name="home_menu_quit">ゲームを終了</string>
+    <string name="home_menu_quit">アプリを終了</string>
     <string name="home_menu_quit_and_start">%1$sを終了して開始</string>
     <string name="home_menu_resume_other">%1$sを再開</string>
-    <string name="home_menu_start">ゲームを開始</string>
+    <string name="home_menu_start">アプリを開始</string>
     <string name="home_menu_artwork">アートワーク</string>
     <string name="home_menu_metadata">メタデータ</string>
-    <string name="home_menu_settings">ゲーム設定</string>
-    <string name="home_menu_show">ゲームを表示</string>
-    <string name="home_menu_hide">ゲームを非表示</string>
+    <string name="home_menu_settings">アプリ設定</string>
+    <string name="home_menu_show">アプリを表示</string>
+    <string name="home_menu_hide">アプリを非表示</string>
 
     <string name="home_header_running">実行中</string>
-    <string name="home_header_game">ゲーム</string>
+    <string name="home_header_game">アプリ</string>
     <string name="home_header_last_played">前回プレイ</string>
     <string name="home_header_other_running">%1$sを実行中</string>
     <string name="home_header_custom">カスタム設定</string>
@@ -33,7 +33,7 @@
     <string name="home_meta_join">%1$s · %2$s</string>
 
     <string name="home_info_app">アプリ情報</string>
-    <string name="home_info_game">ゲーム情報</string>
+    <string name="home_info_game">アプリ情報</string>
     <string name="home_chip_running_on">%1$sで実行中</string>
     <string name="home_chip_hltb">HLTB %1$s</string>
     <string name="home_chip_virtual_display">仮想ディスプレイ</string>

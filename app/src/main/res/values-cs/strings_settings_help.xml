@@ -17,9 +17,9 @@
     <string name="help_list_video_scale_mode">Týká se jen přizpůsobení obrazu na tomto zařízení.</string>
     <string name="help_edit_diy_w_h">Přidá rozlišení do volby „Rozlišení videa“: zadej šířku x výšku (1920x1080) a pak ho tam vyber.</string>
     <string name="help_edit_diy_bitrate">Nastaví bitrate v Mbps; povolena jsou desetinná čísla i hodnoty nad rozsahem posuvníku. Aktualizuje také Bitrate videa.</string>
-    <string name="help_custom_refresh_rate">Přidá vlastní FPS (povolena jsou desetinná čísla) do volby „Snímková frekvence videa“; vyber ji tam. Výsledek omezuje PC, hra i displej.</string>
+    <string name="help_custom_refresh_rate">Přidá vlastní FPS (povolena jsou desetinná čísla) do volby „Snímková frekvence videa“; vyber ji tam. Výsledek omezuje PC, aplikace i displej.</string>
     <string name="help_checkbox_enforce_display_mode">Důrazně požádá Android, aby použil zvolený režim displeje. Pomáhá, když se žádosti o obnovovací frekvenci ignorují; na některých firmwarech může způsobit potíže.</string>
-    <string name="help_checkbox_enable_hdr">Požádá o HDR video. Vyžaduje podporu hry, grafické karty v PC, dekodéru i displeje (10bitové HEVC, AV1 nebo PyroWave).</string>
+    <string name="help_checkbox_enable_hdr">Požádá o HDR video. Vyžaduje podporu aplikace, grafické karty v PC, dekodéru i displeje (10bitové HEVC, AV1 nebo PyroWave).</string>
     <string name="help_checkbox_enable_fullexdisplay">Zobrazí stream a menu na připojeném monitoru nebo televizi v nastaveném rozlišení a FPS. Menu ovládáš handheldem.</string>
     <string name="help_checkbox_sgsr">Zvětší stream s nižším rozlišením na velikost displeje, nebo ho jen zostří (Režim). Stojí výkon GPU. Změny z menu platí jednu relaci.</string>
     <string name="help_list_pyrowave_chroma">4:4:4 stojí šířku pásma a výkon GPU.</string>
@@ -28,7 +28,7 @@
     <string name="help_list_sgsr_supersampling_level">Vnitřní velikost, když stream už odpovídá displeji. Změny z menu platí jednu relaci.</string>
     <string name="help_list_audio_config">Kanály, které PC posílá. Prostorový zvuk vyžaduje odpovídající přehrávání.</string>
     <string name="help_checkbox_enable_audiofx">Umožní systémovému ekvalizéru a efektům Androidu zpracovávat zvuk streamu. Může přidat zpoždění.</string>
-    <string name="help_checkbox_host_audio">Přehrává zvuk hry i na PC, nejen tady. Vypni, aby reproduktory PC mlčely.</string>
+    <string name="help_checkbox_host_audio">Přehrává zvuk aplikace i na PC, nejen tady. Vypni, aby reproduktory PC mlčely.</string>
     <string name="help_seekbar_deadzone">Kladné hodnoty ignorují malé pohyby sticku u středu (drift). Záporné hodnoty vyrovnávají vlastní mrtvou zónu gamepadu.</string>
     <string name="help_checkbox_multi_controller">Hlásí gamepady podle toho, jak se připojují a odpojují. Když je vypnuto, jeden gamepad je přítomný vždy, pro hry, které ho potřebují při spuštění.</string>
     <string name="help_checkbox_usb_driver">Používá USB ovladač aplikace Delos pro gamepady Xbox a Nintendo Pro, které Android nativně nezvládá. Může požádat o oprávnění USB.</string>
@@ -37,7 +37,7 @@
     <string name="help_analog_scrolling">Stick, který posouvá v režimu myši přes gamepad.</string>
     <string name="help_checkbox_flip_face_buttons">Prohodí A/B a X/Y pro vstup z gamepadu i ovládání na obrazovce (rozložení Nintendo). Netýká se navigace v aplikaci Delos.</string>
     <string name="help_checkbox_gamepad_touchpad_as_mouse">Touchpad gamepadu vždy slouží jako myš v PC. Když je vypnuto, podporovaná PC mohou přijímat nativní vstup z touchpadu.</string>
-    <string name="help_checkbox_gamepad_motion_sensors">Umožní PC číst gyroskop a akcelerometr externího gamepadu. Vyžaduje Android 12 nebo novější. Pokud žádná hra pohyb nepoužívá, vypni – ušetříš trochu energie a provozu.</string>
+    <string name="help_checkbox_gamepad_motion_sensors">Umožní PC číst gyroskop a akcelerometr externího gamepadu. Vyžaduje Android 12 nebo novější. Pokud žádná aplikace pohyb nepoužívá, vypni – ušetříš trochu energie a provozu.</string>
     <string name="help_checkbox_gamepad_motion_fallback">Použije vlastní gyroskop a akcelerometr zařízení, když je gamepad nemá nebo je Android neumí číst. PC pak může vidět gamepad PlayStation.</string>
     <string name="help_checkbox_force_device_motion">Použije vestavěné senzory, i když externí gamepad má funkční vlastní. Vyžaduje volbu „Vestavěný gyroskop zařízení“.</string>
     <string name="help_seekbar_gyro_smoothing">Stabilizuje míření gyrem. 0 je vypnuto. Vyšší hodnoty odstraní víc chvění, ale lehce zpozdí pomalý pohyb; rychlé švihy zůstávají citlivé. Platí od příštího streamu; v menu streamu (Více) to jde měnit za chodu.</string>
@@ -68,13 +68,13 @@
     <string name="help_checkbox_hide_clipboard_content">Označí obsah schránky z PC jako citlivý, aby Android skryl jeho náhled. Nešifruje ani nevypíná přenos.</string>
     <string name="help_seekbar_keyboard_axi_opacity">Neprůhlednost plné klávesnice na obrazovce. Nezávislá na neprůhlednosti virtuálního gamepadu.</string>
     <string name="help_onscreen_keyboard_autofit">Vypne automatické přizpůsobení plné klávesnice, aby se uplatnila uložená šířka, výška a zarovnání.</string>
-    <string name="help_seekbar_onscreen_keyboard_height">Výška plné klávesnice na obrazovce při vypnutém automatickém přizpůsobení. Vyšší: větší klávesy, víc zakryté hry.</string>
+    <string name="help_seekbar_onscreen_keyboard_height">Výška plné klávesnice na obrazovce při vypnutém automatickém přizpůsobení. Vyšší: větší klávesy, víc zakryté aplikace.</string>
     <string name="help_seekbar_onscreen_keyboard_width">Šířka plné klávesnice na obrazovce při vypnutém automatickém přizpůsobení. Nech ji dosažitelnou na své obrazovce.</string>
     <string name="help_list_onscreen_keyboard_align_mode">Vodorovné ukotvení ručně nastavené plné klávesnice.</string>
     <string name="help_checkbox_enable_sticky_modifier_key_virtual_keyboard">Nechá virtuální Shift, Ctrl, Alt a podobné modifikátory aktivní i po klepnutí, takže kombinace lze psát po jedné klávese.</string>
     <string name="help_checkbox_disable_warnings">Skryje varování o kvalitě připojení na obrazovce při streamování. Statistiky zůstanou.</string>
     <string name="help_checkbox_remember_zoom_pan">Uloží přiblížení a posun streamu pro další relace. Když je vypnuto, úpravy platí jen pro daný stream.</string>
-    <string name="help_checkbox_enable_pip">Nechá stream běžet v režimu Obraz v obraze při práci s více aplikacemi. Jen sledování: v malém okně se hra neovládá.</string>
+    <string name="help_checkbox_enable_pip">Nechá stream běžet v režimu Obraz v obraze při práci s více aplikacemi. Jen sledování: v malém okně se aplikace neovládá.</string>
     <string name="help_checkbox_show_onscreen_controls">Zobrazí virtuální gamepad přes stream pro hraní dotykem. Menu streamu ho pro relaci přepíná.</string>
     <string name="help_checkbox_hide_osc_when_has_gamepad">Skryje virtuální gamepad, když Android zjistí fyzický gamepad; po jeho odpojení se vrátí.</string>
     <string name="help_checkbox_vibrate_osc">Místní vibrace při stisku tlačítek virtuálního gamepadu. Odezva dotyku, ne vibrace ze hry. Vyžaduje vibrační motor.</string>
@@ -111,7 +111,7 @@
     <string name="help_option_help_custom_keys">Otevře návod k formátu souboru vlastních kláves. Výsledný soubor načti volbou „Importovat vlastní klávesy“.</string>
     <string name="help_pref_debug_info">Otevře diagnostiku zařízení a gamepadů bez streamu: údaje o zařízení, ID a senzory gamepadů, test vibrací, náhled ovládání.</string>
     <string name="help_about_diag_logs">Uchovává na tomto zařízení průběžný záznam událostí a chyb (nejvýš 2 MB). Nic z něj neopustí zařízení, dokud ho nesdílíš z obrazovky „Informace pro ladění“, a to s odstraněnými jmény a adresami. Vypnutím se přestanou ukládat nové řádky.</string>
-    <string name="help_ui_match_game_colors">Vezme pro animované pozadí tři barvy z obalu vybrané hry; jinak použije obrázky z PC. Vyžaduje vypnuté Material You.</string>
+    <string name="help_ui_match_game_colors">Vezme pro animované pozadí tři barvy z obalu vybrané aplikace; jinak použije obrázky z PC. Vyžaduje vypnuté Material You.</string>
 
     <!-- Explanations of one choice -->
     <string name="help_frame_pacing_latency">Zobrazí nejnovější snímek hned; může sekat.</string>
@@ -185,7 +185,7 @@
     <string name="stream_help_screen_brightness">Hned změní jas obrazovky tohoto zařízení; systémové nastavení se poté vrátí. Netýká se PC ani monitoru.</string>
     <string name="stream_help_bitrate">Požádá o nový bitrate videa bez opětovného připojení. Vyžaduje Vibepollo; PC ho může omezit. Platí pro tento stream.</string>
     <string name="stream_help_apply_bitrate">Pošle požadovaný bitrate do Vibepollo. Přijatá hodnota může být nižší. Uložené výchozí hodnoty se nemění.</string>
-    <string name="stream_help_upscaler">Zvětší stream s nízkým rozlišením, nebo udělá supersampling nativního. Stojí výkon GPU; projeví se hned a uloží se pro tuto hru.</string>
+    <string name="stream_help_upscaler">Zvětší stream s nízkým rozlišením, nebo udělá supersampling nativního. Stojí výkon GPU; projeví se hned a uloží se pro tuto aplikaci.</string>
     <string name="stream_help_upscaling">Zapne nebo vypne upscaler (nebo Jen zostření) pro tento stream; obraz může blikat.</string>
     <string name="stream_help_supersampling">Vykreslí stream v nativním rozlišení ve větší velikosti a pak ho zmenší. Stojí výkon GPU; platí pro tento stream.</string>
     <string name="stream_help_supersampling_on">Vykresluje ve větší vnitřní velikosti. Stojí výkon GPU.</string>
@@ -193,7 +193,7 @@
     <string name="stream_help_mode">Projeví se hned. Přepnutí na Jen zostření nebo z něj může způsobit blikání.</string>
     <string name="stream_help_sharpness">Závěrečné zostření. 0 ho vypne, ne však rekonstrukci SGSR 1. V režimu Jen zostření je to celý efekt. Platí pro tento stream.</string>
     <string name="stream_help_more">Další ovládání streamu: schránka, příkazy PC, kombinace kláves, přiblížení, dotyk a ovládání na obrazovce. Akce se provedou hned.</string>
-    <string name="stream_help_disconnect">Zastaví streamování a vrátí se do knihovny aplikace Delos. Hra na PC dál běží.</string>
+    <string name="stream_help_disconnect">Zastaví streamování a vrátí se do knihovny aplikace Delos. Aplikace na PC dál běží.</string>
     <string name="stream_help_quit_game">Požádá PC o ukončení běžící aplikace a pak se odpojí. Provede se hned, takže nejdřív ulož.</string>
     <string name="stream_help_send_keys">Jednou pošle do PC vestavěnou nebo importovanou kombinaci kláves; menu se zavře. Vlastní naimportuješ na záložce Ovládání.</string>
     <string name="stream_help_send_clipboard">Jednou zkopíruje schránku tohoto zařízení do PC. Vyžaduje podporu schránky ve Vibepollo nebo Apollo.</string>
@@ -206,7 +206,7 @@
     <string name="stream_help_on_screen_controls">Zobrazí nebo skryje virtuální gamepad během tohoto streamu. Neprůhlednost a rozložení se nastavují na záložce Ovládání.</string>
     <string name="stream_help_open_android_keyboard">Po zavření tohoto menu otevře nebo zavře systémovou klávesnici Androidu. Ne klávesnici aplikace Delos (dlaždice Klávesnice).</string>
     <string name="stream_help_touch_sensitivity">Přepíná další škálování citlivosti dotykové obrazovky, nastavené v nastavení.</string>
-    <string name="stream_help_gyro_smoothing">Hned stabilizuje míření gyrem a uloží se pro tuto hru. 0 je vypnuto. Víc vyhlazení lehce zpozdí pomalý pohyb.</string>
+    <string name="stream_help_gyro_smoothing">Hned stabilizuje míření gyrem a uloží se pro tuto aplikaci. 0 je vypnuto. Víc vyhlazení lehce zpozdí pomalý pohyb.</string>
     <string name="stream_help_gyro_smoothing_disabled">Vyžaduje zapnutou volbu „Gyroskop externího gamepadu“ nebo „Vestavěný gyroskop zařízení“ v Nastavení; platí od příštího streamu.</string>
     <string name="stream_help_rumble_feel">Vybere, jak se cítí vibrace z PC, hned a s uložením. Zůstane otevřené: vyber znovu a porovnej. %1$s vrací zpět.</string>
     <string name="stream_help_format_keys">Jednou pošle do PC %1$s a vrátí se do streamu.</string>

@@ -16,9 +16,9 @@
     <string name="help_list_video_scale_mode">Ajuste da imagem apenas neste dispositivo.</string>
     <string name="help_edit_diy_w_h">Adiciona uma resolução em Resolução do vídeo: digite largura x altura (1920x1080) e selecione-a lá.</string>
     <string name="help_edit_diy_bitrate">Define o bitrate em Mbps; aceita decimais e valores acima do alcance do controle deslizante. Também atualiza o Bitrate do vídeo.</string>
-    <string name="help_custom_refresh_rate">Adiciona um FPS personalizado (aceita decimais) à Taxa de quadros do vídeo; selecione-o lá. PC, jogo e tela limitam o resultado.</string>
+    <string name="help_custom_refresh_rate">Adiciona um FPS personalizado (aceita decimais) à Taxa de quadros do vídeo; selecione-o lá. PC, app e tela limitam o resultado.</string>
     <string name="help_checkbox_enforce_display_mode">Pede ao Android com firmeza que use o modo de tela selecionado. Ajuda se os pedidos de taxa de atualização forem ignorados; pode dar problema em alguns firmwares.</string>
-    <string name="help_checkbox_enable_hdr">Solicita vídeo HDR. Requer suporte do jogo, da GPU do PC, do decodificador e da tela (HEVC 10 bits, AV1 ou PyroWave).</string>
+    <string name="help_checkbox_enable_hdr">Solicita vídeo HDR. Requer suporte do app, da GPU do PC, do decodificador e da tela (HEVC 10 bits, AV1 ou PyroWave).</string>
     <string name="help_checkbox_enable_fullexdisplay">Mostra o stream e o menu em um monitor ou TV conectado, na resolução e nos FPS configurados. O portátil controla o menu.</string>
     <string name="help_checkbox_sgsr">Faz upscale de um stream de menor resolução para o tamanho da tela, ou só aumenta a nitidez (Modo). Consome GPU. Mudanças pelo menu valem por uma sessão.</string>
     <string name="help_list_pyrowave_chroma">4:4:4 consome largura de banda e GPU.</string>
@@ -27,7 +27,7 @@
     <string name="help_list_sgsr_supersampling_level">Tamanho interno quando o stream já tem a resolução da tela. Mudanças pelo menu valem por uma sessão.</string>
     <string name="help_list_audio_config">Canais enviados pelo PC. Surround requer reprodução compatível.</string>
     <string name="help_checkbox_enable_audiofx">Deixa o equalizador e os efeitos do sistema Android processarem o áudio do stream. Pode adicionar atraso.</string>
-    <string name="help_checkbox_host_audio">Reproduz o áudio do jogo no PC além daqui. Desative para manter as caixas de som do PC em silêncio.</string>
+    <string name="help_checkbox_host_audio">Reproduz o áudio do app no PC além daqui. Desative para manter as caixas de som do PC em silêncio.</string>
     <string name="help_seekbar_deadzone">Valores positivos ignoram pequenos movimentos do analógico perto do centro (drift). Valores negativos compensam a zona morta do próprio controle.</string>
     <string name="help_checkbox_multi_controller">Informa os controles conforme conectam ou desconectam. Desativado, um controle sempre permanece presente, para jogos que precisam de um ao iniciar.</string>
     <string name="help_checkbox_usb_driver">Usa o driver USB do Delos para controles Xbox e Nintendo Pro que o Android não suporta nativamente. Pode pedir permissão USB.</string>
@@ -36,7 +36,7 @@
     <string name="help_analog_scrolling">Analógico que rola a tela no modo mouse do controle.</string>
     <string name="help_checkbox_flip_face_buttons">Troca A/B e X/Y na entrada do controle e nos controles na tela (layout Nintendo). Não afeta a navegação do Delos.</string>
     <string name="help_checkbox_gamepad_touchpad_as_mouse">Sempre usa o touchpad do controle como mouse do PC. Desativado, PCs compatíveis recebem a entrada nativa do touchpad.</string>
-    <string name="help_checkbox_gamepad_motion_sensors">Permite que o PC leia o giroscópio e o acelerômetro de um controle externo. Requer Android 12 ou mais recente. Desative se nenhum jogo usa movimento, para economizar um pouco de energia e tráfego.</string>
+    <string name="help_checkbox_gamepad_motion_sensors">Permite que o PC leia o giroscópio e o acelerômetro de um controle externo. Requer Android 12 ou mais recente. Desative se nenhum app usa movimento, para economizar um pouco de energia e tráfego.</string>
     <string name="help_checkbox_gamepad_motion_fallback">Usa o giroscópio e o acelerômetro deste dispositivo quando o controle não tem ou o Android não consegue lê-los. O PC pode então ver um controle PlayStation.</string>
     <string name="help_checkbox_force_device_motion">Usa os sensores integrados mesmo que o controle externo tenha sensores funcionando. Requer Giroscópio integrado do dispositivo.</string>
     <string name="help_seekbar_gyro_smoothing">Estabiliza a mira com giroscópio. 0 é desativado. Valores maiores removem mais tremor, mas adicionam um pouco de atraso em movimentos lentos; movimentos rápidos continuam responsivos. Vale a partir do próximo stream; o menu do stream (Mais) altera na hora.</string>
@@ -67,13 +67,13 @@
     <string name="help_checkbox_hide_clipboard_content">Marca o conteúdo da área de transferência do PC como sensível para o Android ocultar a prévia. Não criptografa nem desativa a transferência.</string>
     <string name="help_seekbar_keyboard_axi_opacity">Opacidade do teclado completo na tela. Separada da opacidade do controle virtual.</string>
     <string name="help_onscreen_keyboard_autofit">Desativa o ajuste automático do teclado completo para que valham a largura, a altura e o alinhamento salvos.</string>
-    <string name="help_seekbar_onscreen_keyboard_height">Altura do teclado completo na tela quando o ajuste automático está desativado. Mais alto: teclas maiores, mais do jogo coberto.</string>
+    <string name="help_seekbar_onscreen_keyboard_height">Altura do teclado completo na tela quando o ajuste automático está desativado. Mais alto: teclas maiores, mais do app coberto.</string>
     <string name="help_seekbar_onscreen_keyboard_width">Largura do teclado completo na tela quando o ajuste automático está desativado. Mantenha ao alcance na sua tela.</string>
     <string name="help_list_onscreen_keyboard_align_mode">Âncora horizontal do teclado completo com tamanho manual.</string>
     <string name="help_checkbox_enable_sticky_modifier_key_virtual_keyboard">Mantém Shift, Ctrl, Alt e modificadores virtuais semelhantes ativos após um toque, para digitar combinações uma tecla por vez.</string>
     <string name="help_checkbox_disable_warnings">Oculta os avisos de qualidade da conexão na tela durante o stream. As estatísticas continuam.</string>
     <string name="help_checkbox_remember_zoom_pan">Salva o zoom e o deslocamento do stream para sessões futuras. Desativado, os ajustes valem só naquele stream.</string>
-    <string name="help_checkbox_enable_pip">Mantém o stream em Picture-in-Picture durante o multitarefa. Só visualização: sem controle do jogo na janela pequena.</string>
+    <string name="help_checkbox_enable_pip">Mantém o stream em Picture-in-Picture durante o multitarefa. Só visualização: sem controle do app na janela pequena.</string>
     <string name="help_checkbox_show_onscreen_controls">Mostra o controle virtual sobre o stream para jogar por toque. O menu do stream o alterna na sessão.</string>
     <string name="help_checkbox_hide_osc_when_has_gamepad">Oculta o controle virtual enquanto o Android detecta um controle físico; ele volta quando o controle desconecta.</string>
     <string name="help_checkbox_vibrate_osc">Vibração local ao pressionar botões do controle virtual. Feedback de toque, não vibração do jogo. Requer motor de vibração.</string>
@@ -110,7 +110,7 @@
     <string name="help_option_help_custom_keys">Abre as instruções do formato de arquivo de teclas personalizadas. Carregue o arquivo resultante com Importar teclas personalizadas.</string>
     <string name="help_pref_debug_info">Abre o diagnóstico do dispositivo e dos controles sem um stream: detalhes do dispositivo, IDs e sensores dos controles, teste de vibração, prévia dos controles.</string>
     <string name="help_about_diag_logs">Mantém um log contínuo (no máximo 2 MB) de eventos e erros neste dispositivo. Nada sai dele a menos que você compartilhe em Informações de depuração, com nomes e endereços removidos. Desativado, para de gravar novas linhas.</string>
-    <string name="help_ui_match_game_colors">Pega três cores da capa do jogo selecionado para o plano de fundo animado; usa a arte do PC se não houver. Requer Material You desativado.</string>
+    <string name="help_ui_match_game_colors">Pega três cores da capa do app selecionado para o plano de fundo animado; usa a arte do PC se não houver. Requer Material You desativado.</string>
 
     <string name="help_frame_pacing_latency">Mostra o quadro mais recente na hora; pode travar.</string>
     <string name="help_frame_pacing_balanced">Ajusta os quadros à atualização da tela com uma fila pequena.</string>
@@ -180,7 +180,7 @@
     <string name="stream_help_screen_brightness">Muda agora o brilho da tela deste dispositivo; a configuração do sistema volta depois. Não afeta o PC nem um monitor.</string>
     <string name="stream_help_bitrate">Solicita um novo bitrate de vídeo sem reconectar. Requer Vibepollo; o PC pode limitar. Vale neste stream.</string>
     <string name="stream_help_apply_bitrate">Envia o bitrate solicitado ao Vibepollo. O valor aceito pode ser menor. Os padrões salvos não mudam.</string>
-    <string name="stream_help_upscaler">Faz upscale de um stream de baixa resolução, ou supersampling de um nativo. Consome GPU; vale na hora e é mantido neste jogo.</string>
+    <string name="stream_help_upscaler">Faz upscale de um stream de baixa resolução, ou supersampling de um nativo. Consome GPU; vale na hora e é mantido neste app.</string>
     <string name="stream_help_upscaling">Ativa ou desativa o upscaler, ou Só nitidez, neste stream; a imagem pode piscar.</string>
     <string name="stream_help_supersampling">Renderiza um stream em resolução nativa em tamanho maior e depois o reduz. Consome GPU; vale neste stream.</string>
     <string name="stream_help_supersampling_on">Renderiza em um tamanho interno maior. Consome GPU.</string>
@@ -188,7 +188,7 @@
     <string name="stream_help_mode">Vale na hora. Mudar de ou para Só nitidez pode piscar.</string>
     <string name="stream_help_sharpness">Nitidez final. 0 a desativa, mas não a reconstrução do SGSR 1. Em Só nitidez, é o efeito inteiro. Vale neste stream.</string>
     <string name="stream_help_more">Mais controles do stream: área de transferência, comandos do PC, combinações de teclas, zoom, toque e controles na tela. As ações rodam na hora.</string>
-    <string name="stream_help_disconnect">Para a transmissão e volta à biblioteca do Delos. O jogo continua rodando no PC.</string>
+    <string name="stream_help_disconnect">Para a transmissão e volta à biblioteca do Delos. O app continua rodando no PC.</string>
     <string name="stream_help_quit_game">Pede ao PC que encerre o aplicativo em execução e depois desconecta. Roda na hora, então salve antes.</string>
     <string name="stream_help_send_keys">Envia uma vez ao PC uma combinação de teclas integrada ou importada; o menu fecha. Importe as personalizadas em Controles.</string>
     <string name="stream_help_send_clipboard">Copia uma vez a área de transferência deste dispositivo para o PC. Requer suporte do Vibepollo ou Apollo à área de transferência.</string>
@@ -201,7 +201,7 @@
     <string name="stream_help_on_screen_controls">Mostra ou oculta o controle virtual durante este stream. Opacidade e layout são definidos em Controles.</string>
     <string name="stream_help_open_android_keyboard">Abre ou fecha o teclado do sistema Android, depois de fechar este menu. Não é o teclado do Delos (o bloco Teclado).</string>
     <string name="stream_help_touch_sensitivity">Alterna a escala extra de sensibilidade da tela touch, configurada em Configurações.</string>
-    <string name="stream_help_gyro_smoothing">Estabiliza na hora a mira com giroscópio, mantido neste jogo. 0 é desativado. Mais suavização adiciona um pouco de atraso em movimentos lentos.</string>
+    <string name="stream_help_gyro_smoothing">Estabiliza na hora a mira com giroscópio, mantido neste app. 0 é desativado. Mais suavização adiciona um pouco de atraso em movimentos lentos.</string>
     <string name="stream_help_gyro_smoothing_disabled">Requer Giroscópio do controle externo ou Giroscópio integrado do dispositivo ativado em Configurações; vale a partir do próximo stream.</string>
     <string name="stream_help_rumble_feel">Escolhe como a vibração do PC é sentida, na hora e salvo. Continua aberto: escolha de novo para comparar. %1$s volta.</string>
     <string name="stream_help_format_keys">Envia %1$s ao PC uma vez e volta ao stream.</string>

@@ -14,7 +14,7 @@
     <string name="stream_menu_tile_supersampling">Supersampling</string>
     <string name="stream_menu_tile_more">Více</string>
     <string name="stream_menu_tile_disconnect">Odpojit</string>
-    <string name="stream_menu_tile_quit">Ukončit hru</string>
+    <string name="stream_menu_tile_quit">Ukončit aplikaci</string>
     <string name="stream_menu_overlay_compact">Kompaktní</string>
 
     <!-- Headings of the popover pages -->
@@ -162,7 +162,7 @@
     <!-- Portal shown while the stream window closes -->
     <string name="stream_exit_disconnecting">Odpojování</string>
     <string name="stream_exit_quitting">Ukončuju %1$s</string>
-    <string name="stream_exit_quitting_game">Ukončuju hru</string>
+    <string name="stream_exit_quitting_game">Ukončuju aplikaci</string>
 
     <!-- Stream result overlay (a stream that ended on its own) -->
     <string name="stream_result_default_pc">PC</string>

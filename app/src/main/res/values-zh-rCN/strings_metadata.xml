@@ -2,9 +2,9 @@
 <resources>
     <string name="metadata_hdr_unverified">HDR/SDR 未验证</string>
 
-    <string name="metadata_filtered_title">没有符合这些筛选条件的游戏</string>
+    <string name="metadata_filtered_title">没有符合这些筛选条件的应用</string>
     <string name="metadata_filtered_note">按 %1$s 更改筛选条件，或在下方重置。</string>
-    <string name="metadata_filtered_reset">重置游戏库筛选</string>
+    <string name="metadata_filtered_reset">重置应用库筛选</string>
 
     <string name="metadata_error_unavailable">此版本不支持游戏元数据</string>
     <string name="metadata_error_update">无法更新游戏信息。请打开元数据以刷新或选择匹配项。</string>

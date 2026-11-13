@@ -5,7 +5,7 @@
     <!-- Title of the companion's loader page; %1$s is the name of the game -->
     <string name="companion_flow_starting">Starting %1$s</string>
     <!-- Title of the loader page when the game's name is too long for the title -->
-    <string name="companion_flow_starting_generic">Starting the game</string>
+    <string name="companion_flow_starting_generic">Starting the app</string>
     <!-- Line under the loader's title: %1$s is the PC, %2$s the stream settings that were asked for ("1920 × 1080 · HEVC · 120 FPS") -->
     <string name="companion_flow_requested">%1$s · requested %2$s</string>
     <!-- A step of the loader's list, done -->
@@ -31,13 +31,13 @@
     <!-- Touch button of the result page -->
     <string name="companion_flow_reconnect">Reconnect</string>
     <!-- Result page: what to do after the connection was lost. The app cannot know whether the game stopped, only the host does -->
-    <string name="companion_flow_lost_guidance">The game may still be running on the host. Reconnect to resume when available.</string>
+    <string name="companion_flow_lost_guidance">The app may still be running on the host. Reconnect to resume when available.</string>
     <!-- Short form of the previous text, for small panels -->
-    <string name="companion_flow_lost_short">The game may still be running.</string>
+    <string name="companion_flow_lost_short">The app may still be running.</string>
     <!-- Result page: what to do after the PC ended the stream; the app does not claim the game stopped -->
-    <string name="companion_flow_closed_guidance">Open the library to check whether the game is still running.</string>
+    <string name="companion_flow_closed_guidance">Open the library to check whether the app is still running.</string>
     <!-- Short form of the previous text, for small panels -->
-    <string name="companion_flow_closed_short">Check the library for the game’s state.</string>
+    <string name="companion_flow_closed_short">Check the library for the app’s state.</string>
     <!-- Title of the companion page of a stream that could not start -->
     <string name="companion_flow_problem_title">Connection problem</string>
     <!-- Used when even the first sentence of the real error is too long for the companion panel -->

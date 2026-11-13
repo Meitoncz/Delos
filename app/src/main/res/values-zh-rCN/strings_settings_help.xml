@@ -18,9 +18,9 @@
     <string name="help_list_video_scale_mode">仅影响本地画面的显示方式。</string>
     <string name="help_edit_diy_w_h">向视频分辨率添加一个分辨率：输入宽 x 高（1920x1080），然后在视频分辨率中选择它。</string>
     <string name="help_edit_diy_bitrate">设置码率，单位 Mbps；允许小数，也允许超出滑块范围的值。同时会更新视频码率。</string>
-    <string name="help_custom_refresh_rate">向视频帧率添加自定义 FPS（允许小数），并在视频帧率中选择它。最终结果受电脑、游戏和屏幕限制。</string>
+    <string name="help_custom_refresh_rate">向视频帧率添加自定义 FPS（允许小数），并在视频帧率中选择它。最终结果受电脑、应用和屏幕限制。</string>
     <string name="help_checkbox_enforce_display_mode">强制要求 Android 使用所选的显示模式。刷新率请求被忽略时可能有帮助；在部分固件上可能出现异常。</string>
-    <string name="help_checkbox_enable_hdr">请求 HDR 视频。需要游戏、电脑 GPU、解码器和屏幕均支持（10-bit HEVC、AV1 或 PyroWave）。</string>
+    <string name="help_checkbox_enable_hdr">请求 HDR 视频。需要应用、电脑 GPU、解码器和屏幕均支持（10-bit HEVC、AV1 或 PyroWave）。</string>
     <string name="help_checkbox_enable_fullexdisplay">在已连接的显示器或电视上，以设定的分辨率和 FPS 显示串流画面和菜单。菜单由掌机操控。</string>
     <string name="help_checkbox_sgsr">将较低分辨率的串流超分到屏幕尺寸，或仅进行锐化（模式）。会占用 GPU 时间。在菜单中的更改仅在本次会话内有效。</string>
     <string name="help_list_pyrowave_chroma">4:4:4 会占用更多带宽和 GPU。</string>
@@ -29,7 +29,7 @@
     <string name="help_list_sgsr_supersampling_level">串流分辨率已与屏幕一致时使用的内部渲染尺寸。在菜单中的更改仅在本次会话内有效。</string>
     <string name="help_list_audio_config">PC 发送的声道。环绕声需要匹配的播放设备。</string>
     <string name="help_checkbox_enable_audiofx">允许 Android 系统均衡器和音效处理串流音频。可能增加延迟。</string>
-    <string name="help_checkbox_host_audio">游戏声音同时在 PC 上播放。关闭后 PC 扬声器保持安静。</string>
+    <string name="help_checkbox_host_audio">应用声音同时在 PC 上播放。关闭后 PC 扬声器保持安静。</string>
     <string name="help_seekbar_deadzone">正值会忽略摇杆在中心附近的轻微移动（漂移）。负值用于抵消手柄自身的死区。</string>
     <string name="help_checkbox_multi_controller">手柄连接或断开时实时上报。关闭后始终保留一个手柄，适用于启动时就需要手柄的游戏。</string>
     <string name="help_checkbox_usb_driver">使用 Delos USB 驱动支持 Android 原生无法处理的 Xbox 和 Nintendo Pro 手柄。可能会请求 USB 权限。</string>
@@ -38,7 +38,7 @@
     <string name="help_analog_scrolling">在手柄鼠标模式下用于滚动的摇杆。</string>
     <string name="help_checkbox_flip_face_buttons">对调手柄输入和屏幕按键中的 A/B 与 X/Y（Nintendo 布局）。不影响 Delos 的界面导航。</string>
     <string name="help_checkbox_gamepad_touchpad_as_mouse">始终将手柄的触控板用作 PC 鼠标。关闭后，支持的电脑端可接收原生触控板输入。</string>
-    <string name="help_checkbox_gamepad_motion_sensors">让 PC 读取外接手柄的陀螺仪和加速度计。需要 Android 12 或更高版本。如果没有游戏使用体感，可关闭以略微节省电量和流量。</string>
+    <string name="help_checkbox_gamepad_motion_sensors">让 PC 读取外接手柄的陀螺仪和加速度计。需要 Android 12 或更高版本。如果没有应用使用体感，可关闭以略微节省电量和流量。</string>
     <string name="help_checkbox_gamepad_motion_fallback">手柄没有体感传感器或 Android 无法读取时，使用本设备自带的陀螺仪和加速度计。此时 PC 可能会识别为 PlayStation 手柄。</string>
     <string name="help_checkbox_force_device_motion">即使外接手柄的传感器可用，也使用内置传感器。需要启用内置设备陀螺仪。</string>
     <string name="help_seekbar_gyro_smoothing">稳定陀螺仪瞄准。0 表示关闭。值越高，抖动越少，但缓慢移动会略有延迟；快速甩动仍保持灵敏。下次串流生效；串流菜单（更多）可实时调整。</string>
@@ -69,13 +69,13 @@
     <string name="help_checkbox_hide_clipboard_content">将来自 PC 的剪贴板内容标记为敏感内容，使 Android 隐藏其预览。不会加密，也不会禁用传输。</string>
     <string name="help_seekbar_keyboard_axi_opacity">完整屏幕键盘的不透明度。与虚拟手柄的不透明度相互独立。</string>
     <string name="help_onscreen_keyboard_autofit">关闭完整键盘的自动适配，改用已保存的宽度、高度和对齐方式。</string>
-    <string name="help_seekbar_onscreen_keyboard_height">关闭自动适配时完整屏幕键盘的高度。越高：按键越大，但遮挡的游戏画面越多。</string>
+    <string name="help_seekbar_onscreen_keyboard_height">关闭自动适配时完整屏幕键盘的高度。越高：按键越大，但遮挡的应用画面越多。</string>
     <string name="help_seekbar_onscreen_keyboard_width">关闭自动适配时完整屏幕键盘的宽度。请确保在你的屏幕上能够够得到。</string>
     <string name="help_list_onscreen_keyboard_align_mode">手动调整大小后完整键盘的水平锚点。</string>
     <string name="help_checkbox_enable_sticky_modifier_key_virtual_keyboard">点按后保持虚拟 Shift、Ctrl、Alt 等修饰键处于激活状态，这样可以逐个按键输入组合键。</string>
     <string name="help_checkbox_disable_warnings">串流时隐藏屏幕上的连接质量警告。统计信息仍会保留。</string>
     <string name="help_checkbox_remember_zoom_pan">保存串流的缩放和平移，供之后的会话使用。关闭后，调整仅对当次串流有效。</string>
-    <string name="help_checkbox_enable_pip">多任务时让串流保持在画中画中。仅可观看：小窗口中无法操作游戏。</string>
+    <string name="help_checkbox_enable_pip">多任务时让串流保持在画中画中。仅可观看：小窗口中无法操作应用。</string>
     <string name="help_checkbox_show_onscreen_controls">在串流画面上显示虚拟手柄，用于触屏游玩。串流菜单可在本次会话中切换。</string>
     <string name="help_checkbox_hide_osc_when_has_gamepad">Android 检测到实体手柄时隐藏虚拟手柄；手柄断开后会重新显示。</string>
     <string name="help_checkbox_vibrate_osc">按下虚拟手柄按键时在本地震动。这是触摸反馈，不是游戏震动。需要设备带有震动马达。</string>
@@ -112,7 +112,7 @@
     <string name="help_option_help_custom_keys">打开自定义按键文件格式的说明。请用导入自定义按键加载生成的文件。</string>
     <string name="help_pref_debug_info">无需串流即可打开设备和手柄诊断：设备详情、手柄 ID 与传感器、震动测试、控制预览。</string>
     <string name="help_about_diag_logs">在本设备上保留滚动日志（最大 2 MB），记录事件和错误。除非你在调试信息中分享，否则不会离开设备，且会去除名称和地址。关闭后将停止记录新内容。</string>
-    <string name="help_ui_match_game_colors">从所选游戏的封面中提取三种颜色作为动态背景；没有封面时改用 PC 的图片素材。需要关闭 Material You。</string>
+    <string name="help_ui_match_game_colors">从所选应用的封面中提取三种颜色作为动态背景；没有封面时改用 PC 的图片素材。需要关闭 Material You。</string>
 
     <!-- Explanations of one choice -->
     <string name="help_frame_pacing_latency">立即显示最新一帧；可能卡顿。</string>
@@ -191,7 +191,7 @@
     <string name="stream_help_screen_brightness">立即更改本设备的屏幕亮度；之后会恢复系统设置。不影响 PC 或显示器。</string>
     <string name="stream_help_bitrate">无需重新连接即可请求新的视频码率。需要 Vibepollo；电脑端可能限制上限。仅对本次串流有效。</string>
     <string name="stream_help_apply_bitrate">将请求的码率发送给 Vibepollo。实际接受的值可能更低。已保存的默认值不变。</string>
-    <string name="stream_help_upscaler">将低分辨率串流超分，或对原生分辨率串流进行超采样。会占用 GPU 时间；实时生效，并为此游戏保留。</string>
+    <string name="stream_help_upscaler">将低分辨率串流超分，或对原生分辨率串流进行超采样。会占用 GPU 时间；实时生效，并为此应用保留。</string>
     <string name="stream_help_upscaling">为本次串流开启或关闭超分（或仅锐化）；画面可能闪烁。</string>
     <string name="stream_help_supersampling">以更大的尺寸渲染原生分辨率的串流，然后缩小。会占用 GPU 时间；仅对本次串流有效。</string>
     <string name="stream_help_supersampling_on">以更大的内部尺寸渲染。会占用 GPU 时间。</string>
@@ -199,7 +199,7 @@
     <string name="stream_help_mode">实时生效。切换到或离开仅锐化模式时可能闪烁。</string>
     <string name="stream_help_sharpness">最终锐化。0 表示关闭锐化，但不会关闭 SGSR 1 重建。在仅锐化模式下，它就是全部效果。仅对本次串流有效。</string>
     <string name="stream_help_more">更多串流控制：剪贴板、电脑端命令、组合键、缩放、触摸和屏幕按键。操作会立即执行。</string>
-    <string name="stream_help_disconnect">停止串流并返回 Delos 游戏库。游戏会继续在 PC 上运行。</string>
+    <string name="stream_help_disconnect">停止串流并返回 Delos 应用库。应用会继续在 PC 上运行。</string>
     <string name="stream_help_quit_game">请求电脑端结束正在运行的应用，然后断开连接。会立即执行，请先保存。</string>
     <string name="stream_help_send_keys">向 PC 发送一次内置或已导入的组合键；菜单随即关闭。可在控制中导入自定义组合键。</string>
     <string name="stream_help_send_clipboard">将本设备的剪贴板复制到 PC 一次。需要 Vibepollo 或 Apollo 的剪贴板支持。</string>
@@ -212,7 +212,7 @@
     <string name="stream_help_on_screen_controls">在本次串流中显示或隐藏虚拟手柄。不透明度和布局在控制中设置。</string>
     <string name="stream_help_open_android_keyboard">关闭此菜单后，打开或关闭 Android 系统键盘。不是 Delos 键盘（键盘图块）。</string>
     <string name="stream_help_touch_sensitivity">切换额外的触摸屏灵敏度缩放，在设置中配置。</string>
-    <string name="stream_help_gyro_smoothing">立即稳定陀螺仪瞄准，并为此游戏保留。0 表示关闭。平滑越强，缓慢移动的延迟越多。</string>
+    <string name="stream_help_gyro_smoothing">立即稳定陀螺仪瞄准，并为此应用保留。0 表示关闭。平滑越强，缓慢移动的延迟越多。</string>
     <string name="stream_help_gyro_smoothing_disabled">需要在设置中开启外接手柄陀螺仪或内置设备陀螺仪；从下次串流起生效。</string>
     <string name="stream_help_rumble_feel">选择电脑端震动的手感，立即生效并保存。菜单保持打开：可再次选择以对比。%1$s 返回。</string>
     <!-- %1$s: a key combination such as Ctrl + Alt + Delete -->

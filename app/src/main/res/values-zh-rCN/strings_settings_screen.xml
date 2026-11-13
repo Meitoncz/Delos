@@ -28,6 +28,7 @@
     <string name="settings_search_alias_gyro_smoothing">陀螺仪 稳定 平滑</string>
     <string name="settings_search_alias_link_test">测速 吞吐量 带宽 网络</string>
     <string name="settings_search_alias_link_use">推荐 码率 连接</string>
+    <string name="settings_search_alias_game">游戏</string>
 
     <string name="settings_actions_imported">已导入</string>
     <string name="settings_actions_import_failed">导入失败</string>
@@ -64,18 +65,18 @@
     <string name="settings_native_palette_title">调色板</string>
     <string name="settings_native_palette_description">界面和动态背景的颜色。</string>
     <string name="settings_native_needs_material_you_off">需要关闭 Material You 配色。</string>
-    <string name="settings_native_match_colors_title">匹配游戏配色</string>
-    <string name="settings_native_match_colors_description">动态背景采用所选游戏背景图的主色。</string>
+    <string name="settings_native_match_colors_title">匹配应用配色</string>
+    <string name="settings_native_match_colors_description">动态背景采用所选应用背景图的主色。</string>
     <string name="settings_native_clock_title">时钟</string>
     <string name="settings_native_clock_description">状态栏中的时间格式。</string>
     <string name="settings_native_background_title">动态背景</string>
     <string name="settings_native_background_description">动态着色器背景（需要 Android 13 或更高版本），或静态背景。</string>
-    <string name="settings_native_hero_background_title">游戏背景</string>
-    <string name="settings_native_hero_background_description">在主页显示所选游戏的背景。</string>
-    <string name="settings_native_hero_blur_title">游戏背景模糊</string>
-    <string name="settings_native_hero_blur_description">模糊游戏库后方的游戏背景。需要启用游戏背景。</string>
-    <string name="settings_native_hero_opacity_title">游戏背景不透明度</string>
-    <string name="settings_native_hero_opacity_description">游戏图片透过动态背景显示的程度。需要启用游戏背景。</string>
+    <string name="settings_native_hero_background_title">应用背景</string>
+    <string name="settings_native_hero_background_description">在主页显示所选应用的背景。</string>
+    <string name="settings_native_hero_blur_title">应用背景模糊</string>
+    <string name="settings_native_hero_blur_description">模糊应用库后方的应用背景。需要启用应用背景。</string>
+    <string name="settings_native_hero_opacity_title">应用背景不透明度</string>
+    <string name="settings_native_hero_opacity_description">应用图片透过动态背景显示的程度。需要启用应用背景。</string>
     <string name="settings_native_scale_title">界面缩放</string>
     <string name="settings_native_scale_description">文字、状态栏和按键提示的大小。</string>
     <string name="settings_native_animations_title">动画</string>
@@ -90,7 +91,7 @@
     <string name="settings_native_menu_buttons_title">串流菜单按键</string>
     <string name="settings_native_menu_buttons_description">串流时同时按下这些按键可打开或关闭串流菜单。选择后可录制其他按键，例如背键。</string>
     <string name="settings_native_menu_swipe_title">上滑打开菜单</string>
-    <string name="settings_native_menu_swipe_description">从底部边缘向上滑动也可打开串流菜单。从该处开始的触摸不会传到游戏中。</string>
+    <string name="settings_native_menu_swipe_description">从底部边缘向上滑动也可打开串流菜单。从该处开始的触摸不会传到应用中。</string>
     <string name="settings_native_stats_position_title">统计信息位置</string>
     <string name="settings_native_stats_position_description">串流时完整统计面板所在的角落。精简模式始终位于顶部居中。</string>
     <string name="settings_native_stats_top_left">左上</string>
@@ -117,21 +118,21 @@
     <string name="settings_native_sgdb_off_toast">SteamGridDB 已关闭</string>
     <string name="settings_native_sgdb_key_description">使用你自己的密钥，Delos 即可从 SteamGridDB 下载封面、横版封面、背景和标志。密钥保存在此设备上，所有个人资料共用。</string>
     <string name="settings_native_sgdb_auto_title">自动下载</string>
-    <string name="settings_native_sgdb_auto_description">游戏库加载时，为新游戏获取 SteamGridDB 上评分最高的封面、横版封面、背景和标志。</string>
+    <string name="settings_native_sgdb_auto_description">应用库加载时，为新应用获取 SteamGridDB 上评分最高的封面、横版封面、背景和标志。</string>
     <string name="settings_native_connect_first_toast">请先连接 PC</string>
-    <string name="settings_native_downloading_toast">正在下载 %1$s 中游戏的图片素材…</string>
-    <string name="settings_native_artwork_complete_toast">所有游戏都已有图片素材</string>
+    <string name="settings_native_downloading_toast">正在下载 %1$s 中应用的图片素材…</string>
+    <string name="settings_native_artwork_complete_toast">所有应用都已有图片素材</string>
     <plurals name="settings_native_artwork_ready_toast">
-        <item quantity="other">已为 %d 个游戏准备好图片素材</item>
+        <item quantity="other">已为 %d 个应用准备好图片素材</item>
     </plurals>
     <string name="settings_native_missing_artwork_title">下载缺失的图片素材</string>
-    <string name="settings_native_missing_artwork_description">为 %1$s 中没有图片素材的游戏获取素材。</string>
-    <string name="settings_native_missing_artwork_description_current">为当前 PC 中没有图片素材的游戏获取素材。</string>
+    <string name="settings_native_missing_artwork_description">为 %1$s 中没有图片素材的应用获取素材。</string>
+    <string name="settings_native_missing_artwork_description_current">为当前 PC 中没有图片素材的应用获取素材。</string>
     <string name="settings_native_refresh_artwork_title">重新下载所有图片素材</string>
-    <string name="settings_native_refresh_artwork_description">重新查找每个游戏并选用评分最高的图片；你已选择的图片会保留。</string>
-    <string name="settings_native_choose_artwork_title">为单个游戏选择图片素材</string>
-    <string name="settings_native_choose_artwork_value">游戏选项</string>
-    <string name="settings_native_choose_artwork_description">主页：游戏上的右侧菜单键 > 图片素材。可选择任意封面、横版封面、背景或标志。</string>
+    <string name="settings_native_refresh_artwork_description">重新查找每个应用并选用评分最高的图片；你已选择的图片会保留。</string>
+    <string name="settings_native_choose_artwork_title">为单个应用选择图片素材</string>
+    <string name="settings_native_choose_artwork_value">应用选项</string>
+    <string name="settings_native_choose_artwork_description">主页：应用上的右侧菜单键 > 图片素材。可选择任意封面、横版封面、背景或标志。</string>
 
     <string name="settings_native_version_title">版本</string>
     <string name="settings_native_version_description">Delos for Android。</string>
@@ -155,7 +156,7 @@
     <string name="settings_native_help_clock_system">跟随 Android 的 12/24 小时制设置。</string>
     <string name="settings_native_help_clock_12">12 小时制，带上午或下午。</string>
     <string name="settings_native_help_clock_24">24 小时制。</string>
-    <string name="settings_native_help_motion_reduced">减少界面动效。游戏 FPS 不受影响。</string>
+    <string name="settings_native_help_motion_reduced">减少界面动效。应用 FPS 不受影响。</string>
     <string name="settings_native_help_motion_full">完整的过渡和焦点动画。</string>
     <string name="settings_native_help_default_pc_none">没有首选 PC；无法使用跳过启动页。</string>
     <string name="settings_native_help_default_pc_set">供跳过启动页使用。必须已配对且可连接。</string>
@@ -179,7 +180,7 @@
     <plurals name="settings_game_custom_count">
         <item quantity="other">%d 个自定义设置项</item>
     </plurals>
-    <string name="settings_game_summary_none">修改任一设置项后，它将成为此游戏的自定义设置。</string>
+    <string name="settings_game_summary_none">修改任一设置项后，它将成为此应用的自定义设置。</string>
     <string name="settings_game_summary">串流 %1$d 项 · 显示 %2$d 项</string>
     <string name="settings_game_value_on">开启</string>
     <string name="settings_game_value_off">关闭</string>
@@ -191,13 +192,13 @@
     <string name="settings_game_from_profile">来自个人资料</string>
     <string name="settings_game_profile_line">个人资料：%1$s</string>
     <string name="settings_game_link_note">%1$s 链路测试在设置中。</string>
-    <string name="settings_game_eyebrow">游戏设置 · %1$s</string>
-    <string name="settings_game_panel_title">你的游戏，你的设置</string>
-    <string name="settings_game_custom_title">此游戏的自定义设置</string>
+    <string name="settings_game_eyebrow">应用设置 · %1$s</string>
+    <string name="settings_game_panel_title">你的应用，你的设置</string>
+    <string name="settings_game_custom_title">此应用的自定义设置</string>
     <string name="settings_game_profile_value_button">个人资料的值：%1$s · 按 %2$s 恢复</string>
     <string name="settings_game_profile_value_touch">个人资料的值：%1$s · 点按“重置”恢复</string>
-    <string name="settings_game_currently">当前为 %1$s。更改后即可仅为此游戏设定值。</string>
-    <string name="settings_game_only_this_game">这些更改仅对 %1$s 生效，其余游戏都跟随你的个人资料。</string>
+    <string name="settings_game_currently">当前为 %1$s。更改后即可仅为此应用设定值。</string>
+    <string name="settings_game_only_this_game">这些更改仅对 %1$s 生效，其余应用都跟随你的个人资料。</string>
     <string name="settings_game_saved_note">自动保存 · 下次串流时生效</string>
     <string name="settings_native_section_displays">显示器</string>
     <string name="settings_native_second_display_title">副屏</string>
@@ -209,7 +210,7 @@
     <string name="settings_native_help_second_display_external">视为显示器或电视：外接显示器模式可以向它串流。</string>
     <string name="settings_native_help_second_display_built_in">视为设备的一部分：绝不作为串流目标。</string>
     <string name="settings_native_main_screen_title">主屏幕</string>
-    <string name="settings_native_main_screen_description">显示游戏和串流的面板。另一块是副屏。</string>
+    <string name="settings_native_main_screen_description">显示应用和串流的面板。另一块是副屏。</string>
     <string name="settings_native_main_screen_automatic">自动</string>
     <string name="settings_native_main_screen_swapped">对调</string>
     <string name="settings_native_help_main_screen_automatic">较大的面板为主屏幕。</string>

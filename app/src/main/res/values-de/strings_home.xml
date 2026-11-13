@@ -8,31 +8,31 @@
     <string name="home_offline_title">%1$s ist offline</string>
     <string name="home_offline_note">Starte den PC oder weck ihn in der klassischen Delos-App auf.\nAufwecken von hier kommt in Schritt 6.6.</string>
     <!-- %1$s: PC name -->
-    <string name="home_empty_title">Keine Spiele auf %1$s</string>
+    <string name="home_empty_title">Keine Apps auf %1$s</string>
     <string name="home_empty_note">Füge Apps in der Vibepollo-Weboberfläche hinzu, sie erscheinen dann automatisch hier.</string>
     <!-- %1$s: game name -->
-    <string name="home_hidden_toast">%1$s ist ausgeblendet · das Seitenmenü zeigt ausgeblendete Spiele</string>
+    <string name="home_hidden_toast">%1$s ist ausgeblendet · das Seitenmenü zeigt ausgeblendete Apps</string>
 
     <!-- Badge in the corner of a cover -->
     <string name="home_badge_running">Läuft</string>
     <string name="home_badge_last_played">Zuletzt gespielt</string>
-    <string name="home_tile_custom_description">Eigene Einstellungen für dieses Spiel</string>
+    <string name="home_tile_custom_description">Eigene Einstellungen für diese App</string>
 
     <!-- Game menu. %1$s: name of the game that is running on the PC -->
     <string name="home_menu_resume">Fortsetzen</string>
-    <string name="home_menu_quit">Spiel beenden</string>
+    <string name="home_menu_quit">App beenden</string>
     <string name="home_menu_quit_and_start">%1$s beenden und starten</string>
     <string name="home_menu_resume_other">%1$s fortsetzen</string>
-    <string name="home_menu_start">Spiel starten</string>
+    <string name="home_menu_start">App starten</string>
     <string name="home_menu_artwork">Artwork</string>
     <string name="home_menu_metadata">Metadaten</string>
-    <string name="home_menu_settings">Spieleinstellungen</string>
-    <string name="home_menu_show">Spiel einblenden</string>
-    <string name="home_menu_hide">Spiel ausblenden</string>
+    <string name="home_menu_settings">App-Einstellungen</string>
+    <string name="home_menu_show">App einblenden</string>
+    <string name="home_menu_hide">App ausblenden</string>
 
     <!-- Header of the game menu: the status, then facts joined by a middle dot -->
     <string name="home_header_running">Läuft</string>
-    <string name="home_header_game">Spiel</string>
+    <string name="home_header_game">App</string>
     <string name="home_header_last_played">Zuletzt gespielt</string>
     <!-- %1$s: name of the game that is running on the PC -->
     <string name="home_header_other_running">%1$s läuft</string>
@@ -43,7 +43,7 @@
 
     <!-- Info block under the game logo -->
     <string name="home_info_app">APP-INFO</string>
-    <string name="home_info_game">SPIEL-INFO</string>
+    <string name="home_info_game">APP-INFO</string>
     <!-- %1$s: PC name -->
     <string name="home_chip_running_on">Läuft auf %1$s</string>
     <!-- %1$s: how long the game takes (see metadata_hltb_*) -->

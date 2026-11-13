@@ -4,7 +4,7 @@
     <string name="scut_invalid_uuid">O PC informado não é válido</string>
     <string name="scut_invalid_app_id">O app informado não é válido</string>
     <string name="scut_game_running">%1$s já está em execução · saia dele pelo app Delos primeiro</string>
-    <string name="scut_other_game_running">Outro jogo já está em execução · saia dele pelo app Delos primeiro</string>
+    <string name="scut_other_game_running">Outro app já está em execução · saia dele pelo app Delos primeiro</string>
 
     <string name="configuration_mode_move_buttons">Modo de mover botões</string>
     <string name="configuration_mode_resize_buttons">Modo de redimensionar botões</string>
@@ -106,7 +106,7 @@
     <string name="title_checkbox_gamepad_touchpad_as_mouse">Sempre controlar o mouse com o touchpad</string>
     <string name="summary_checkbox_gamepad_touchpad_as_mouse">Força o touchpad do controle a controlar o mouse do PC, mesmo ao emular um controle com touchpad.</string>
     <string name="title_checkbox_gamepad_motion_sensors">Giroscópio do controle externo</string>
-    <string name="summary_checkbox_gamepad_motion_sensors">Permite que o PC leia o giroscópio e o acelerômetro de um controle externo conectado que os tenha. Requer Android 12 ou mais recente. Desative se nenhum jogo usar movimento, para economizar um pouco de energia e tráfego de rede.</string>
+    <string name="summary_checkbox_gamepad_motion_sensors">Permite que o PC leia o giroscópio e o acelerômetro de um controle externo conectado que os tenha. Requer Android 12 ou mais recente. Desative se nenhum app usar movimento, para economizar um pouco de energia e tráfego de rede.</string>
     <string name="title_checkbox_gamepad_motion_fallback">Giroscópio integrado do dispositivo</string>
     <string name="summary_checkbox_gamepad_motion_fallback">Usa o giroscópio e o acelerômetro do próprio dispositivo (os sensores integrados de um portátil) quando o controle conectado não os tem ou sua versão do Android não consegue lê-los.\nObservação: o PC pode passar a ver seu controle como um controle PlayStation.</string>
     <string name="title_checkbox_force_device_motion">Sempre usar o giroscópio integrado do dispositivo</string>
@@ -161,7 +161,7 @@
     <string name="title_video_format">Codec de vídeo</string>
     <string name="summary_video_format">Codecs mais novos podem reduzir a largura de banda do vídeo se o seu dispositivo for compatível. A escolha do codec pode ser ignorada se o software do PC ou a GPU não der suporte.</string>
     <string name="title_enable_hdr">Ativar HDR</string>
-    <string name="summary_enable_hdr">Transmite em HDR quando o jogo e a GPU do PC são compatíveis. O HDR requer uma GPU com codificação HEVC Main 10. O visual do HDR depende da tela deste dispositivo.</string>
+    <string name="summary_enable_hdr">Transmite em HDR quando o app e a GPU do PC são compatíveis. O HDR requer uma GPU com codificação HEVC Main 10. O visual do HDR depende da tela deste dispositivo.</string>
     <string name="title_full_range">Forçar vídeo em faixa completa</string>
     <string name="summary_full_range">Isso causa perda de detalhes em áreas claras e escuras se o seu dispositivo não exibir corretamente vídeo em faixa completa.</string>
     <string name="title_prevent_packet_loss">Wi-Fi keep-alive</string>
@@ -384,7 +384,7 @@
     <string name="send_clipboard_failed">Falha ao enviar a área de transferência: </string>
     <string name="external_display_info">Tela externa conectada com: %1$dx%2$d a %3$.1fHz</string>
     <string name="no_external_display">Nenhuma tela externa detectada</string>
-    <string name="no_game_instance">Nenhuma instância de jogo disponível</string>
+    <string name="no_game_instance">Nenhuma instância de app disponível</string>
     <string name="get_clipboard_failed">Falha ao obter a área de transferência: </string>
     <string name="send_clipboard_success">Área de transferência enviada com sucesso</string>
     <string name="get_clipboard_success">Área de transferência obtida com sucesso</string>

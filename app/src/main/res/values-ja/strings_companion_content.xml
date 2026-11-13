@@ -25,10 +25,10 @@
     <string name="companion_boot_text">ライブラリ、設定、ストリームはメイン画面にあります。このパネルは便利な情報とタッチ操作を追加します。メイン画面で「始める」を選んでください。</string>
     <string name="companion_boot_hint_begin">メイン画面で始める</string>
     <plurals name="companion_filter_games_of">
-        <item quantity="other">%2$d個のゲームのうち%1$d個が一致します。</item>
+        <item quantity="other">%2$d個のアプリのうち%1$d個が一致します。</item>
     </plurals>
     <plurals name="companion_filter_games_all">
-        <item quantity="other">すべてのゲーム（%1$d個）。</item>
+        <item quantity="other">すべてのアプリ（%1$d個）。</item>
     </plurals>
     <plurals name="companion_filter_images_of">
         <item quantity="other">%2$d枚中%1$d枚が一致します。</item>
@@ -43,6 +43,6 @@
         <item quantity="other">カスタム設定%1$d件</item>
     </plurals>
     <plurals name="companion_profile_overrides">
-        <item quantity="other">ゲーム別の設定%1$d件</item>
+        <item quantity="other">アプリ別の設定%1$d件</item>
     </plurals>
 </resources>

@@ -22,7 +22,7 @@
     <string name="devices_menu_default_on">Spouštět Delos s tímto PC</string>
     <string name="devices_menu_wake">Probudit PC</string>
     <string name="devices_menu_rename">Přejmenovat</string>
-    <string name="devices_menu_open_games">Otevřít jeho hry</string>
+    <string name="devices_menu_open_games">Otevřít jeho aplikace</string>
     <string name="devices_menu_connect">Připojit</string>
     <string name="devices_menu_unpair">Odpárovat</string>
     <string name="devices_menu_remove">Odebrat z aplikace Delos</string>

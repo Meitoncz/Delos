@@ -11,7 +11,7 @@
     <string name="stream_menu_tile_supersampling">Supersampling</string>
     <string name="stream_menu_tile_more">Plus</string>
     <string name="stream_menu_tile_disconnect">Déconnecter</string>
-    <string name="stream_menu_tile_quit">Quitter le jeu</string>
+    <string name="stream_menu_tile_quit">Quitter l’appli</string>
     <string name="stream_menu_overlay_compact">Compact</string>
     <string name="stream_menu_title_more">Plus</string>
     <string name="stream_menu_title_keys">Envoyer des touches</string>
@@ -141,7 +141,7 @@
     </string-array>
     <string name="stream_exit_disconnecting">Déconnexion</string>
     <string name="stream_exit_quitting">Fermeture de %1$s</string>
-    <string name="stream_exit_quitting_game">Fermeture du jeu</string>
+    <string name="stream_exit_quitting_game">Fermeture de l’appli</string>
     <string name="stream_result_default_pc">le PC</string>
     <string name="stream_result_try_again">Réessayer</string>
     <string name="stream_result_back_to_library">Retour à la bibliothèque</string>

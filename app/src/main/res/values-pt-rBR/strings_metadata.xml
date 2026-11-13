@@ -2,7 +2,7 @@
 <resources>
     <string name="metadata_hdr_unverified">HDR/SDR não verificado</string>
 
-    <string name="metadata_filtered_title">Nenhum jogo corresponde a estes filtros</string>
+    <string name="metadata_filtered_title">Nenhum app corresponde a estes filtros</string>
     <string name="metadata_filtered_note">Pressione %1$s para alterar os filtros ou redefina-os abaixo.</string>
     <string name="metadata_filtered_reset">Redefinir filtros da biblioteca</string>
 

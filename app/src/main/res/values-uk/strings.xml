@@ -4,7 +4,7 @@
     <string name="scut_invalid_uuid">Указаний ПК недійсний</string>
     <string name="scut_invalid_app_id">Указаний застосунок недійсний</string>
     <string name="scut_game_running">%1$s уже запущено · спершу заверши її в Delos</string>
-    <string name="scut_other_game_running">Інша гра вже запущена · спершу заверши її в Delos</string>
+    <string name="scut_other_game_running">Інший застосунок уже запущено · спершу заверши його в Delos</string>
 
     <string name="configuration_mode_move_buttons">Режим переміщення кнопок</string>
     <string name="configuration_mode_resize_buttons">Режим зміни розміру кнопок</string>
@@ -106,7 +106,7 @@
     <string name="title_checkbox_gamepad_touchpad_as_mouse">Завжди керувати мишею тачпадом</string>
     <string name="summary_checkbox_gamepad_touchpad_as_mouse">Примусово спрямовує введення з тачпада контролера на мишу хоста, навіть коли емулюється контролер із тачпадом.</string>
     <string name="title_checkbox_gamepad_motion_sensors">Гіроскоп зовнішнього контролера</string>
-    <string name="summary_checkbox_gamepad_motion_sensors">Дозволяє ПК читати гіроскоп і акселерометр підключеного зовнішнього контролера, якщо вони є. Потрібен Android 12 або новіший. Вимкни, якщо жодна гра не використовує рух, щоб трохи заощадити заряд і трафік.</string>
+    <string name="summary_checkbox_gamepad_motion_sensors">Дозволяє ПК читати гіроскоп і акселерометр підключеного зовнішнього контролера, якщо вони є. Потрібен Android 12 або новіший. Вимкни, якщо жоден застосунок не використовує рух, щоб трохи заощадити заряд і трафік.</string>
     <string name="title_checkbox_gamepad_motion_fallback">Вбудований гіроскоп пристрою</string>
     <string name="summary_checkbox_gamepad_motion_fallback">Використовує власний гіроскоп і акселерометр пристрою (вбудовані датчики консолі), коли підключений контролер їх не має або твоя версія Android не може їх читати.\nУвага: тоді ПК може бачити контролер як PlayStation.</string>
     <string name="title_checkbox_force_device_motion">Завжди використовувати вбудований гіроскоп</string>
@@ -161,7 +161,7 @@
     <string name="title_video_format">Відеокодек</string>
     <string name="summary_video_format">Новіші кодеки можуть зменшити потрібну смугу пропускання, якщо пристрій їх підтримує. Вибір кодека може ігноруватися, якщо його не підтримує програма хоста або GPU.</string>
     <string name="title_enable_hdr">Увімкнути HDR</string>
-    <string name="summary_enable_hdr">Стрімити HDR, якщо його підтримують гра та GPU ПК. HDR потребує GPU з кодуванням HEVC Main 10. Вигляд HDR залежить від екрана цього пристрою.</string>
+    <string name="summary_enable_hdr">Стрімити HDR, якщо його підтримують застосунок та GPU ПК. HDR потребує GPU з кодуванням HEVC Main 10. Вигляд HDR залежить від екрана цього пристрою.</string>
     <string name="title_full_range">Примусово повний діапазон відео</string>
     <string name="summary_full_range">Це призведе до втрати деталей у світлих і темних ділянках, якщо пристрій неправильно показує відео з повним діапазоном.</string>
     <string name="title_prevent_packet_loss">Підтримка активності Wi-Fi</string>
@@ -384,7 +384,7 @@
     <string name="send_clipboard_failed">Не вдалося надіслати буфер обміну: </string>
     <string name="external_display_info">Підключено зовнішній екран: %1$dx%2$d, %3$.1fHz</string>
     <string name="no_external_display">Зовнішній екран не виявлено</string>
-    <string name="no_game_instance">Немає доступного екземпляра гри</string>
+    <string name="no_game_instance">Немає доступного екземпляра застосунку</string>
     <string name="get_clipboard_failed">Не вдалося отримати буфер обміну: </string>
     <string name="send_clipboard_success">Буфер обміну успішно надіслано</string>
     <string name="get_clipboard_success">Буфер обміну успішно отримано</string>

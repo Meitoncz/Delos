@@ -35,6 +35,7 @@
     <string name="settings_search_alias_gyro_smoothing">Gyroskop Stabilisierung Glättung</string>
     <string name="settings_search_alias_link_test">Geschwindigkeitstest Durchsatz Bandbreite Netzwerk</string>
     <string name="settings_search_alias_link_use">empfohlene Bitrate Verbindung</string>
+    <string name="settings_search_alias_game">Spiel Spiele</string>
 
     <!-- Settings actions (import, export, reset) -->
     <string name="settings_actions_imported">Importiert</string>
@@ -76,18 +77,18 @@
     <string name="settings_native_palette_title">Farbpalette</string>
     <string name="settings_native_palette_description">Farben der Oberfläche und der animierten Hintergründe.</string>
     <string name="settings_native_needs_material_you_off">Erfordert ausgeschaltete Material-You-Farben.</string>
-    <string name="settings_native_match_colors_title">Farben des Spiels übernehmen</string>
-    <string name="settings_native_match_colors_description">Der animierte Hintergrund übernimmt die Hauptfarbe des Hintergrundbilds des gewählten Spiels.</string>
+    <string name="settings_native_match_colors_title">Farben der App übernehmen</string>
+    <string name="settings_native_match_colors_description">Der animierte Hintergrund übernimmt die Hauptfarbe des Hintergrundbilds der gewählten App.</string>
     <string name="settings_native_clock_title">Uhr</string>
     <string name="settings_native_clock_description">Zeitformat in der Statusleiste.</string>
     <string name="settings_native_background_title">Animierter Hintergrund</string>
     <string name="settings_native_background_description">Animierter Shader-Hintergrund (ab Android 13) oder ein statischer.</string>
-    <string name="settings_native_hero_background_title">Spiel-Hintergrund</string>
-    <string name="settings_native_hero_background_description">Zeigt den Hintergrund des gewählten Spiels auf der Startseite.</string>
-    <string name="settings_native_hero_blur_title">Unschärfe des Spiel-Hintergrunds</string>
-    <string name="settings_native_hero_blur_description">Verwischt den Spiel-Hintergrund hinter der Bibliothek. Erfordert Spiel-Hintergrund.</string>
-    <string name="settings_native_hero_opacity_title">Deckkraft des Spiel-Hintergrunds</string>
-    <string name="settings_native_hero_opacity_description">Wie stark das Spiel-Artwork durch den animierten Hintergrund scheint. Erfordert Spiel-Hintergrund.</string>
+    <string name="settings_native_hero_background_title">App-Hintergrund</string>
+    <string name="settings_native_hero_background_description">Zeigt den Hintergrund der gewählten App auf der Startseite.</string>
+    <string name="settings_native_hero_blur_title">Unschärfe des App-Hintergrunds</string>
+    <string name="settings_native_hero_blur_description">Verwischt den App-Hintergrund hinter der Bibliothek. Erfordert App-Hintergrund.</string>
+    <string name="settings_native_hero_opacity_title">Deckkraft des App-Hintergrunds</string>
+    <string name="settings_native_hero_opacity_description">Wie stark das App-Artwork durch den animierten Hintergrund scheint. Erfordert App-Hintergrund.</string>
     <string name="settings_native_scale_title">Oberflächengröße</string>
     <string name="settings_native_scale_description">Größe von Text, Statusleiste und Tastenhinweisen.</string>
     <string name="settings_native_animations_title">Animationen</string>
@@ -103,7 +104,7 @@
     <string name="settings_native_menu_buttons_title">Tasten fürs Stream-Menü</string>
     <string name="settings_native_menu_buttons_description">Tasten, die im Stream gemeinsam gedrückt werden, um das Stream-Menü zu öffnen oder zu schließen. Auswählen, um andere aufzuzeichnen, z. B. eine Rückseitentaste.</string>
     <string name="settings_native_menu_swipe_title">Nach oben wischen öffnet das Menü</string>
-    <string name="settings_native_menu_swipe_description">Ein Wischen vom unteren Rand nach oben öffnet ebenfalls das Stream-Menü. Berührungen, die dort beginnen, erreichen das Spiel nicht.</string>
+    <string name="settings_native_menu_swipe_description">Ein Wischen vom unteren Rand nach oben öffnet ebenfalls das Stream-Menü. Berührungen, die dort beginnen, erreichen die App nicht.</string>
     <string name="settings_native_stats_position_title">Position der Statistik</string>
     <string name="settings_native_stats_position_description">Ecke des vollständigen Statistik-Panels beim Streamen. Der Kompaktmodus ist immer oben mittig.</string>
     <string name="settings_native_stats_top_left">Oben links</string>
@@ -131,25 +132,25 @@
     <string name="settings_native_sgdb_off_toast">SteamGridDB ist aus</string>
     <string name="settings_native_sgdb_key_description">Mit deinem eigenen Schlüssel kann Delos Cover, breite Cover, Hintergründe und Logos von SteamGridDB laden. Wird für alle Profile auf diesem Gerät gespeichert.</string>
     <string name="settings_native_sgdb_auto_title">Automatisch laden</string>
-    <string name="settings_native_sgdb_auto_description">Lädt beim Laden der Bibliothek für neue Spiele das bestbewertete Cover, breite Cover, Hintergrund und Logo von SteamGridDB.</string>
+    <string name="settings_native_sgdb_auto_description">Lädt beim Laden der Bibliothek für neue Apps das bestbewertete Cover, breite Cover, Hintergrund und Logo von SteamGridDB.</string>
     <string name="settings_native_connect_first_toast">Verbinde dich zuerst mit einem PC</string>
     <!-- %1$s: PC name -->
-    <string name="settings_native_downloading_toast">Artwork der Spiele von %1$s wird geladen…</string>
-    <string name="settings_native_artwork_complete_toast">Alle Spiele haben bereits Artwork</string>
+    <string name="settings_native_downloading_toast">Artwork der Apps von %1$s wird geladen…</string>
+    <string name="settings_native_artwork_complete_toast">Alle Apps haben bereits Artwork</string>
     <plurals name="settings_native_artwork_ready_toast">
-        <item quantity="one">Artwork für %d Spiel bereit</item>
-        <item quantity="other">Artwork für %d Spiele bereit</item>
+        <item quantity="one">Artwork für %d App bereit</item>
+        <item quantity="other">Artwork für %d Apps bereit</item>
     </plurals>
     <string name="settings_native_missing_artwork_title">Fehlendes Artwork laden</string>
     <!-- %1$s: PC name -->
-    <string name="settings_native_missing_artwork_description">Lädt Artwork für die Spiele von %1$s, die keins haben.</string>
+    <string name="settings_native_missing_artwork_description">Lädt Artwork für die Apps von %1$s, die keins haben.</string>
     <!-- Used while no PC library is open -->
-    <string name="settings_native_missing_artwork_description_current">Lädt Artwork für die Spiele des aktuellen PCs, die keins haben.</string>
+    <string name="settings_native_missing_artwork_description_current">Lädt Artwork für die Apps des aktuellen PCs, die keins haben.</string>
     <string name="settings_native_refresh_artwork_title">Gesamtes Artwork neu laden</string>
-    <string name="settings_native_refresh_artwork_description">Sucht jedes Spiel erneut und nimmt die bestbewerteten Bilder; von dir gewählte bleiben.</string>
-    <string name="settings_native_choose_artwork_title">Artwork für ein Spiel wählen</string>
-    <string name="settings_native_choose_artwork_value">Spieloptionen</string>
-    <string name="settings_native_choose_artwork_description">Startseite: rechte Menütaste bei einem Spiel → Artwork. Wähle ein beliebiges Cover, breites Cover, einen Hintergrund oder ein Logo.</string>
+    <string name="settings_native_refresh_artwork_description">Sucht jede App erneut und nimmt die bestbewerteten Bilder; von dir gewählte bleiben.</string>
+    <string name="settings_native_choose_artwork_title">Artwork für eine App wählen</string>
+    <string name="settings_native_choose_artwork_value">App-Optionen</string>
+    <string name="settings_native_choose_artwork_description">Startseite: rechte Menütaste bei einer App → Artwork. Wähle ein beliebiges Cover, breites Cover, einen Hintergrund oder ein Logo.</string>
 
     <!-- Native settings: About -->
     <string name="settings_native_version_title">Version</string>
@@ -175,7 +176,7 @@
     <string name="settings_native_help_clock_system">Folgt der 12/24-Stunden-Einstellung von Android.</string>
     <string name="settings_native_help_clock_12">12-Stunden-Uhr mit AM oder PM.</string>
     <string name="settings_native_help_clock_24">24-Stunden-Uhr.</string>
-    <string name="settings_native_help_motion_reduced">Weniger Bewegung in der Oberfläche. Die Spiel-FPS bleiben unverändert.</string>
+    <string name="settings_native_help_motion_reduced">Weniger Bewegung in der Oberfläche. Die App-FPS bleiben unverändert.</string>
     <string name="settings_native_help_motion_full">Volle Übergänge und Fokus-Animationen.</string>
     <string name="settings_native_help_default_pc_none">Kein bevorzugter PC; „Startbildschirm überspringen“ ist nicht verfügbar.</string>
     <string name="settings_native_help_default_pc_set">Wird von „Startbildschirm überspringen“ genutzt. Muss gekoppelt und erreichbar sein.</string>
@@ -201,7 +202,7 @@
         <item quantity="one">%d eigene Einstellung</item>
         <item quantity="other">%d eigene Einstellungen</item>
     </plurals>
-    <string name="settings_game_summary_none">Ändere eine Zeile, und sie gilt nur für dieses Spiel.</string>
+    <string name="settings_game_summary_none">Ändere eine Zeile, und sie gilt nur für diese App.</string>
     <!-- %1$d and %2$d: how many custom settings are on the Stream and on the Display tab -->
     <string name="settings_game_summary">%1$d bei Stream · %2$d bei Anzeige</string>
     <string name="settings_game_value_on">An</string>
@@ -217,15 +218,15 @@
     <!-- %1$s: the link guidance of the PC (a sentence ending in a full stop) -->
     <string name="settings_game_link_note">%1$s „Verbindung testen“ findest du in den Einstellungen.</string>
     <!-- %1$s: PC name; the whole text is shown in capitals -->
-    <string name="settings_game_eyebrow">Spieleinstellungen · %1$s</string>
-    <string name="settings_game_panel_title">Dein Spiel, deine Einstellungen</string>
-    <string name="settings_game_custom_title">Eigene für dieses Spiel</string>
+    <string name="settings_game_eyebrow">App-Einstellungen · %1$s</string>
+    <string name="settings_game_panel_title">Deine App, deine Einstellungen</string>
+    <string name="settings_game_custom_title">Eigene für diese App</string>
     <!-- %1$s: the profile's value, shown in bold. "X" is the controller's X button -->
     <string name="settings_game_profile_value_button">Profilwert: %1$s · mit %2$s zurückkehren</string>
     <!-- %1$s: the profile's value, shown in bold -->
     <string name="settings_game_profile_value_touch">Profilwert: %1$s · mit Zurücksetzen zurückkehren</string>
     <!-- %1$s: the value the setting has now, shown in bold -->
-    <string name="settings_game_currently">Aktuell %1$s. Ändere es, um einen Wert nur für dieses Spiel festzulegen.</string>
+    <string name="settings_game_currently">Aktuell %1$s. Ändere es, um einen Wert nur für diese App festzulegen.</string>
     <!-- %1$s: game name -->
     <string name="settings_game_only_this_game">Nur %1$s nutzt diese Änderungen. Alles andere folgt deinem Profil.</string>
     <string name="settings_game_saved_note">Automatisch gespeichert · gilt ab dem nächsten Stream</string>
@@ -239,7 +240,7 @@
     <string name="settings_native_help_second_display_external">Gilt als Monitor oder TV: Der Modus für externe Displays darf darauf streamen.</string>
     <string name="settings_native_help_second_display_built_in">Gilt als Teil des Geräts: nie ein Stream-Ziel.</string>
     <string name="settings_native_main_screen_title">Hauptbildschirm</string>
-    <string name="settings_native_main_screen_description">Das Panel für Spiele und Stream. Das andere ist der Begleitbildschirm.</string>
+    <string name="settings_native_main_screen_description">Das Panel für Apps und Stream. Das andere ist der Begleitbildschirm.</string>
     <string name="settings_native_main_screen_automatic">Automatisch</string>
     <string name="settings_native_main_screen_swapped">Getauscht</string>
     <string name="settings_native_help_main_screen_automatic">Hauptbildschirm ist das größere Panel.</string>

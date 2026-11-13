@@ -16,9 +16,9 @@
     <string name="help_list_video_scale_mode">로컬 화면 맞춤에만 적용돼요.</string>
     <string name="help_edit_diy_w_h">비디오 해상도에 해상도를 추가해요. 가로 x 세로(1920x1080)를 입력한 뒤 비디오 해상도에서 선택하세요.</string>
     <string name="help_edit_diy_bitrate">Mbps 단위로 비트레이트를 설정해요. 소수와 슬라이더 범위를 넘는 값도 가능해요. 비디오 비트레이트도 함께 바뀌어요.</string>
-    <string name="help_custom_refresh_rate">비디오 프레임 레이트에 사용자 지정 FPS(소수 가능)를 추가해요. 거기서 선택하세요. 결과는 호스트, 게임, 디스플레이의 한계를 따라요.</string>
+    <string name="help_custom_refresh_rate">비디오 프레임 레이트에 사용자 지정 FPS(소수 가능)를 추가해요. 거기서 선택하세요. 결과는 호스트, 앱, 디스플레이의 한계를 따라요.</string>
     <string name="help_checkbox_enforce_display_mode">Android에 선택한 디스플레이 모드를 사용하라고 강하게 요청해요. 주사율 요청이 무시될 때 도움이 되지만 일부 펌웨어에서는 오작동할 수 있어요.</string>
-    <string name="help_checkbox_enable_hdr">HDR 비디오를 요청해요. 게임, 호스트 GPU, 디코더, 디스플레이가 모두 지원해야 해요 (10비트 HEVC, AV1 또는 PyroWave).</string>
+    <string name="help_checkbox_enable_hdr">HDR 비디오를 요청해요. 앱, 호스트 GPU, 디코더, 디스플레이가 모두 지원해야 해요 (10비트 HEVC, AV1 또는 PyroWave).</string>
     <string name="help_checkbox_enable_fullexdisplay">연결된 모니터나 TV에 설정한 해상도와 FPS로 스트림과 메뉴를 표시해요. 메뉴는 휴대용 기기로 조작해요.</string>
     <string name="help_checkbox_sgsr">낮은 해상도의 스트림을 디스플레이 크기로 업스케일하거나 선명화만 해요 (모드). GPU 시간을 써요. 메뉴에서 바꾼 내용은 한 세션 동안만 유지돼요.</string>
     <string name="help_list_pyrowave_chroma">4:4:4는 대역폭과 GPU를 더 써요.</string>
@@ -27,7 +27,7 @@
     <string name="help_list_sgsr_supersampling_level">스트림이 이미 디스플레이와 같은 크기일 때의 내부 크기예요. 메뉴에서 바꾼 내용은 한 세션 동안만 유지돼요.</string>
     <string name="help_list_audio_config">PC가 보내는 채널이에요. 서라운드는 그에 맞는 재생 환경이 필요해요.</string>
     <string name="help_checkbox_enable_audiofx">Android 시스템 이퀄라이저와 효과가 스트림 오디오를 처리하게 해요. 지연이 늘 수 있어요.</string>
-    <string name="help_checkbox_host_audio">게임 오디오를 여기뿐 아니라 PC에서도 재생해요. PC 스피커를 조용히 두려면 꺼 주세요.</string>
+    <string name="help_checkbox_host_audio">앱 오디오를 여기뿐 아니라 PC에서도 재생해요. PC 스피커를 조용히 두려면 꺼 주세요.</string>
     <string name="help_seekbar_deadzone">양수는 중앙 근처의 작은 스틱 움직임(드리프트)을 무시해요. 음수는 컨트롤러 자체의 데드존을 상쇄해요.</string>
     <string name="help_checkbox_multi_controller">게임패드가 연결되거나 해제될 때 알려 줘요. 끄면 게임패드 하나가 항상 연결된 상태로 유지돼요. 시작할 때 게임패드가 필요한 게임용이에요.</string>
     <string name="help_checkbox_usb_driver">Android가 기본 지원하지 않는 Xbox 및 Nintendo Pro 컨트롤러에 Delos USB 드라이버를 사용해요. USB 권한을 요청할 수 있어요.</string>
@@ -36,7 +36,7 @@
     <string name="help_analog_scrolling">게임패드 마우스 모드에서 스크롤에 사용하는 스틱이에요.</string>
     <string name="help_checkbox_flip_face_buttons">게임패드 입력과 화면 컨트롤에서 A/B와 X/Y를 서로 바꿔요 (닌텐도 배열). Delos 탐색에는 적용되지 않아요.</string>
     <string name="help_checkbox_gamepad_touchpad_as_mouse">컨트롤러 터치패드를 항상 PC 마우스로 사용해요. 끄면 지원하는 호스트가 터치패드 입력을 그대로 받을 수 있어요.</string>
-    <string name="help_checkbox_gamepad_motion_sensors">PC가 외장 게임패드의 자이로스코프와 가속도계를 읽을 수 있게 해요. Android 12 이상이 필요해요. 모션을 쓰는 게임이 없다면 꺼서 전력과 트래픽을 조금 아끼세요.</string>
+    <string name="help_checkbox_gamepad_motion_sensors">PC가 외장 게임패드의 자이로스코프와 가속도계를 읽을 수 있게 해요. Android 12 이상이 필요해요. 모션을 쓰는 앱이 없다면 꺼서 전력과 트래픽을 조금 아끼세요.</string>
     <string name="help_checkbox_gamepad_motion_fallback">게임패드에 센서가 없거나 Android가 읽지 못할 때 이 기기 자체의 자이로스코프와 가속도계를 사용해요. 이때 PC에는 PlayStation 컨트롤러로 보일 수 있어요.</string>
     <string name="help_checkbox_force_device_motion">외장 게임패드의 센서가 정상이어도 내장 센서를 사용해요. 기기 내장 자이로스코프가 필요해요.</string>
     <string name="help_seekbar_gyro_smoothing">자이로 조준을 안정시켜요. 0은 꺼짐이에요. 값이 높을수록 떨림이 줄지만 느린 움직임에 약간의 지연이 생겨요. 빠른 플릭은 그대로 반응해요. 다음 스트림부터 적용되며, 스트림 메뉴(더보기)에서는 실시간으로 바꿀 수 있어요.</string>
@@ -67,13 +67,13 @@
     <string name="help_checkbox_hide_clipboard_content">PC에서 온 클립보드 내용을 민감한 정보로 표시해 Android가 미리보기를 숨기게 해요. 암호화하거나 전송을 끄지는 않아요.</string>
     <string name="help_seekbar_keyboard_axi_opacity">전체 화면 키보드의 투명도예요. 가상 게임패드 투명도와는 별개예요.</string>
     <string name="help_onscreen_keyboard_autofit">전체 키보드의 자동 맞춤을 꺼서 저장된 너비, 높이, 정렬이 적용되게 해요.</string>
-    <string name="help_seekbar_onscreen_keyboard_height">자동 맞춤이 꺼져 있을 때 전체 화면 키보드의 높이예요. 높을수록 키가 커지지만 게임을 더 많이 가려요.</string>
+    <string name="help_seekbar_onscreen_keyboard_height">자동 맞춤이 꺼져 있을 때 전체 화면 키보드의 높이예요. 높을수록 키가 커지지만 앱을 더 많이 가려요.</string>
     <string name="help_seekbar_onscreen_keyboard_width">자동 맞춤이 꺼져 있을 때 전체 화면 키보드의 너비예요. 화면에서 손이 닿는 크기로 유지하세요.</string>
     <string name="help_list_onscreen_keyboard_align_mode">크기를 직접 정한 전체 키보드의 가로 기준 위치예요.</string>
     <string name="help_checkbox_enable_sticky_modifier_key_virtual_keyboard">가상 Shift, Ctrl, Alt 같은 수정 키를 한 번 탭하면 계속 눌린 상태로 유지해서 조합을 키 하나씩 입력할 수 있어요.</string>
     <string name="help_checkbox_disable_warnings">스트리밍 중 화면에 표시되는 연결 품질 경고를 숨겨요. 통계는 그대로 표시돼요.</string>
     <string name="help_checkbox_remember_zoom_pan">스트림의 확대와 이동 상태를 다음 세션을 위해 저장해요. 끄면 그 스트림에서만 유지돼요.</string>
-    <string name="help_checkbox_enable_pip">멀티태스킹 중 스트림을 PiP로 유지해요. 보기 전용이라 작은 창에서는 게임을 조작할 수 없어요.</string>
+    <string name="help_checkbox_enable_pip">멀티태스킹 중 스트림을 PiP로 유지해요. 보기 전용이라 작은 창에서는 앱을 조작할 수 없어요.</string>
     <string name="help_checkbox_show_onscreen_controls">터치 플레이를 위해 스트림 위에 가상 게임패드를 표시해요. 스트림 메뉴에서 세션 동안 켜고 끌 수 있어요.</string>
     <string name="help_checkbox_hide_osc_when_has_gamepad">Android가 물리 컨트롤러를 감지하는 동안 가상 게임패드를 숨겨요. 컨트롤러 연결이 끊기면 다시 나타나요.</string>
     <string name="help_checkbox_vibrate_osc">가상 게임패드 버튼을 누를 때 로컬로 진동해요. 터치 피드백이며 게임 럼블이 아니에요. 진동 모터가 필요해요.</string>
@@ -110,7 +110,7 @@
     <string name="help_option_help_custom_keys">사용자 지정 키 파일 형식 안내를 열어요. 만든 파일은 사용자 지정 키 가져오기로 불러오세요.</string>
     <string name="help_pref_debug_info">스트림 없이 기기 및 컨트롤러 진단을 열어요: 기기 정보, 컨트롤러 ID와 센서, 진동 테스트, 컨트롤 미리보기.</string>
     <string name="help_about_diag_logs">이 기기에 이벤트와 오류의 롤링 로그(최대 2 MB)를 보관해요. 디버그 정보에서 직접 공유하지 않는 한 기기 밖으로 나가지 않으며, 이름과 주소는 제거돼요. 끄면 새 줄이 기록되지 않아요.</string>
-    <string name="help_ui_match_game_colors">선택한 게임 커버에서 세 가지 색을 가져와 움직이는 배경에 사용해요. 커버가 없으면 PC 아트워크를 사용해요. Material You를 꺼야 해요.</string>
+    <string name="help_ui_match_game_colors">선택한 앱 커버에서 세 가지 색을 가져와 움직이는 배경에 사용해요. 커버가 없으면 PC 아트워크를 사용해요. Material You를 꺼야 해요.</string>
 
     <string name="help_frame_pacing_latency">가장 최신 프레임을 바로 표시해요. 끊길 수 있어요.</string>
     <string name="help_frame_pacing_balanced">작은 큐로 프레임을 디스플레이 주사율에 맞춰요.</string>
@@ -180,7 +180,7 @@
     <string name="stream_help_screen_brightness">이 기기의 화면 밝기를 바로 바꿔요. 끝나면 시스템 설정으로 돌아가요. PC나 모니터에는 적용되지 않아요.</string>
     <string name="stream_help_bitrate">다시 연결하지 않고 새 비디오 비트레이트를 요청해요. Vibepollo가 필요하며 호스트가 상한을 둘 수 있어요. 이번 스트림 동안 유지돼요.</string>
     <string name="stream_help_apply_bitrate">요청한 비트레이트를 Vibepollo로 보내요. 적용되는 값은 더 낮을 수 있어요. 저장된 기본값은 바뀌지 않아요.</string>
-    <string name="stream_help_upscaler">낮은 해상도의 스트림을 업스케일하거나 기본 해상도 스트림을 슈퍼샘플링해요. GPU 시간을 쓰며 실시간으로 적용되고 이 게임에 저장돼요.</string>
+    <string name="stream_help_upscaler">낮은 해상도의 스트림을 업스케일하거나 기본 해상도 스트림을 슈퍼샘플링해요. GPU 시간을 쓰며 실시간으로 적용되고 이 앱에 저장돼요.</string>
     <string name="stream_help_upscaling">이번 스트림에서 업스케일러 또는 선명화만을 켜거나 꺼요. 화면이 깜빡일 수 있어요.</string>
     <string name="stream_help_supersampling">기본 해상도 스트림을 더 큰 크기로 렌더링한 뒤 줄여요. GPU 시간을 쓰며 이번 스트림 동안 유지돼요.</string>
     <string name="stream_help_supersampling_on">더 큰 내부 크기로 렌더링해요. GPU 시간을 써요.</string>
@@ -188,7 +188,7 @@
     <string name="stream_help_mode">실시간으로 적용돼요. 선명화만으로 또는 선명화만에서 전환할 때 깜빡일 수 있어요.</string>
     <string name="stream_help_sharpness">마지막 선명화 단계예요. 0이면 끄는 것이며 SGSR 1 복원은 끄지 않아요. 선명화만 모드에서는 이것이 효과 전부예요. 이번 스트림 동안 유지돼요.</string>
     <string name="stream_help_more">더 많은 스트림 컨트롤: 클립보드, 호스트 명령, 키 조합, 확대, 터치, 화면 컨트롤. 동작은 바로 실행돼요.</string>
-    <string name="stream_help_disconnect">스트리밍을 중단하고 Delos 라이브러리로 돌아가요. 게임은 PC에서 계속 실행돼요.</string>
+    <string name="stream_help_disconnect">스트리밍을 중단하고 Delos 라이브러리로 돌아가요. 앱은 PC에서 계속 실행돼요.</string>
     <string name="stream_help_quit_game">호스트에 실행 중인 애플리케이션을 종료하라고 요청한 뒤 연결을 끊어요. 바로 실행되니 먼저 저장하세요.</string>
     <string name="stream_help_send_keys">기본 제공 또는 가져온 키 조합을 PC로 한 번 보내고 메뉴를 닫아요. 사용자 지정 키는 컨트롤에서 가져오세요.</string>
     <string name="stream_help_send_clipboard">이 기기의 클립보드를 PC로 한 번 복사해요. Vibepollo 또는 Apollo의 클립보드 지원이 필요해요.</string>
@@ -201,7 +201,7 @@
     <string name="stream_help_on_screen_controls">이번 스트림 동안 가상 게임패드를 표시하거나 숨겨요. 투명도와 레이아웃은 컨트롤에서 설정해요.</string>
     <string name="stream_help_open_android_keyboard">이 메뉴를 닫은 뒤 Android 시스템 키보드를 열거나 닫아요. Delos 키보드(키보드 타일)와는 달라요.</string>
     <string name="stream_help_touch_sensitivity">설정에서 구성한 터치스크린 추가 감도 배율을 켜고 꺼요.</string>
-    <string name="stream_help_gyro_smoothing">자이로 조준을 바로 안정시키고 이 게임에 저장해요. 0은 꺼짐이에요. 스무딩이 강할수록 느린 움직임에 약간의 지연이 생겨요.</string>
+    <string name="stream_help_gyro_smoothing">자이로 조준을 바로 안정시키고 이 앱에 저장해요. 0은 꺼짐이에요. 스무딩이 강할수록 느린 움직임에 약간의 지연이 생겨요.</string>
     <string name="stream_help_gyro_smoothing_disabled">설정에서 외장 게임패드 자이로스코프 또는 기기 내장 자이로스코프를 켜야 해요. 다음 스트림부터 적용돼요.</string>
     <string name="stream_help_rumble_feel">호스트 럼블의 느낌을 바로 고르고 저장해요. 열린 상태로 유지되니 다시 골라 비교해 보세요. %1$s로 뒤로 가요.</string>
     <string name="stream_help_format_keys">%1$s을(를) PC로 한 번 보낸 뒤 스트림으로 돌아가요.</string>

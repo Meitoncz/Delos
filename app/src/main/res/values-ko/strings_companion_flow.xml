@@ -2,7 +2,7 @@
 <resources>
     <string name="companion_flow_pc">PC</string>
     <string name="companion_flow_starting">%1$s 시작 중</string>
-    <string name="companion_flow_starting_generic">게임 시작 중</string>
+    <string name="companion_flow_starting_generic">앱 시작 중</string>
     <string name="companion_flow_requested">%1$s · 요청 %2$s</string>
     <string name="companion_flow_step_host">호스트 찾음</string>
     <string name="companion_flow_step_launch">실행 요청 수락됨</string>
@@ -15,10 +15,10 @@
     <string name="companion_flow_wait">잠시만 기다려 주세요</string>
     <string name="companion_flow_result_title">스트림이 종료되었습니다</string>
     <string name="companion_flow_reconnect">다시 연결</string>
-    <string name="companion_flow_lost_guidance">호스트에서 게임이 아직 실행 중일 수 있어요. 가능해지면 다시 연결해 이어서 하세요.</string>
-    <string name="companion_flow_lost_short">게임이 아직 실행 중일 수 있어요.</string>
-    <string name="companion_flow_closed_guidance">라이브러리를 열어 게임이 아직 실행 중인지 확인하세요.</string>
-    <string name="companion_flow_closed_short">게임 상태는 라이브러리에서 확인하세요.</string>
+    <string name="companion_flow_lost_guidance">호스트에서 앱이 아직 실행 중일 수 있어요. 가능해지면 다시 연결해 이어서 하세요.</string>
+    <string name="companion_flow_lost_short">앱이 아직 실행 중일 수 있어요.</string>
+    <string name="companion_flow_closed_guidance">라이브러리를 열어 앱이 아직 실행 중인지 확인하세요.</string>
+    <string name="companion_flow_closed_short">앱 상태는 라이브러리에서 확인하세요.</string>
     <string name="companion_flow_problem_title">연결 문제</string>
     <string name="companion_flow_error_short">스트림을 시작하지 못했어요.</string>
     <string name="companion_flow_recovery">호스트 서비스, 방화벽, 네트워크를 확인한 다음 다시 시도하세요.</string>

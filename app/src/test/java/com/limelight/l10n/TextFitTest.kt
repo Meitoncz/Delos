@@ -111,6 +111,8 @@ class TextFitTest {
             "pt-BR" to "tags_genre_puzzle", "fr" to "shell_hint_reset", "uk" to "devices_menu_rename",
             // the setting title of the glossary ("Rumble feel" / "Про застосунок"), quoted in help texts
             "fr" to "stream_menu_row_rumble_feel", "fr" to "stream_menu_title_rumble", "uk" to "settings_tab_about",
+            // "app" is one syllable in English; the Czech and Ukrainian words for it (aplikace, застосунок) are not
+            "cs" to "home_menu_show", "uk" to "home_menu_hide", "uk" to "home_menu_quit", "uk" to "home_menu_show", "uk" to "home_menu_start", "uk" to "stream_menu_tile_quit",
         )
     }
 }

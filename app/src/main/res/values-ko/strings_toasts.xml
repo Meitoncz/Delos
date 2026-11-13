@@ -5,7 +5,7 @@
     <string name="shell_report_no_browser">사용할 수 있는 브라우저가 없어요</string>
     <string name="shell_retry_unreachable">%1$s에 연결할 수 없어요</string>
     <string name="shell_retry_game_missing">%2$s에서 %1$s을(를) 사용할 수 없어요</string>
-    <string name="shell_retry_game_missing_unnamed">%1$s에서 이 게임을 사용할 수 없어요</string>
+    <string name="shell_retry_game_missing_unnamed">%1$s에서 이 앱을 사용할 수 없어요</string>
     <string name="shell_profile_updated">프로필을 업데이트했어요</string>
     <string name="shell_welcome">%1$s님, 환영해요</string>
     <string name="shell_game_unreachable">%1$s에 연결할 수 없어요</string>

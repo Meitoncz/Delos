@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="companion_game_focused">当前选中的游戏</string>
+    <string name="companion_game_focused">当前选中的应用</string>
     <string name="companion_game_running">正在运行</string>
     <string name="companion_game_resume_other">继续另一个</string>
     <string name="companion_game_quit_start">退出并开始</string>

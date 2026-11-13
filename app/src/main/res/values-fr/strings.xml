@@ -4,7 +4,7 @@
     <string name="scut_invalid_uuid">Le PC indiqué n’est pas valide</string>
     <string name="scut_invalid_app_id">L’application indiquée n’est pas valide</string>
     <string name="scut_game_running">%1$s est déjà lancé · quitte-le d’abord depuis Delos</string>
-    <string name="scut_other_game_running">Un autre jeu est déjà lancé · quitte-le d’abord depuis Delos</string>
+    <string name="scut_other_game_running">Une autre appli est déjà lancée · quitte-la d’abord depuis Delos</string>
 
     <string name="configuration_mode_move_buttons">Mode déplacement des boutons</string>
     <string name="configuration_mode_resize_buttons">Mode redimensionnement des boutons</string>
@@ -108,7 +108,7 @@
     <string name="title_checkbox_gamepad_touchpad_as_mouse">Toujours contrôler la souris avec le pavé tactile</string>
     <string name="summary_checkbox_gamepad_touchpad_as_mouse">Force le pavé tactile de la manette à contrôler la souris du PC, même en émulant une manette avec pavé tactile.</string>
     <string name="title_checkbox_gamepad_motion_sensors">Gyroscope de manette externe</string>
-    <string name="summary_checkbox_gamepad_motion_sensors">Permet au PC de lire le gyroscope et l’accéléromètre d’une manette externe connectée qui en possède. Nécessite Android 12 ou plus récent. Désactive si aucun jeu n’utilise le mouvement, pour économiser un peu d’énergie et de réseau.</string>
+    <string name="summary_checkbox_gamepad_motion_sensors">Permet au PC de lire le gyroscope et l’accéléromètre d’une manette externe connectée qui en possède. Nécessite Android 12 ou plus récent. Désactive si aucune appli n’utilise le mouvement, pour économiser un peu d’énergie et de réseau.</string>
     <string name="title_checkbox_gamepad_motion_fallback">Gyroscope intégré de l’appareil</string>
     <string name="summary_checkbox_gamepad_motion_fallback">Utilise le gyroscope et l’accéléromètre de cet appareil (les capteurs intégrés d’une console portable) quand la manette connectée n’en a pas ou que ta version d’Android ne peut pas les lire.\nNote : le PC peut alors voir ta manette comme une manette PlayStation.</string>
     <string name="title_checkbox_force_device_motion">Toujours utiliser le gyroscope intégré</string>
@@ -163,7 +163,7 @@
     <string name="title_video_format">Codec vidéo</string>
     <string name="summary_video_format">Les codecs récents peuvent réduire la bande passante vidéo si ton appareil les gère. Le choix du codec peut être ignoré si le logiciel hôte ou le GPU ne le gère pas.</string>
     <string name="title_enable_hdr">Activer HDR</string>
-    <string name="summary_enable_hdr">Stream en HDR quand le jeu et le GPU du PC le gèrent. Le HDR exige un GPU capable d’encoder en HEVC Main 10. Le rendu HDR dépend de l’écran de cet appareil.</string>
+    <string name="summary_enable_hdr">Stream en HDR quand l’appli et le GPU du PC le gèrent. Le HDR exige un GPU capable d’encoder en HEVC Main 10. Le rendu HDR dépend de l’écran de cet appareil.</string>
     <string name="title_full_range">Forcer la vidéo en plage complète</string>
     <string name="summary_full_range">Cela fait perdre du détail dans les zones claires et sombres si ton appareil n’affiche pas correctement la vidéo en plage complète.</string>
     <string name="title_prevent_packet_loss">Wi-Fi keep-alive</string>
@@ -388,7 +388,7 @@
     <string name="send_clipboard_failed">Échec de l’envoi du presse-papiers : </string>
     <string name="external_display_info">Écran externe connecté : %1$dx%2$d à %3$.1f Hz</string>
     <string name="no_external_display">Aucun écran externe détecté</string>
-    <string name="no_game_instance">Aucune instance de jeu disponible</string>
+    <string name="no_game_instance">Aucune instance d’appli disponible</string>
     <string name="get_clipboard_failed">Échec de la récupération du presse-papiers : </string>
     <string name="send_clipboard_success">Presse-papiers envoyé</string>
     <string name="get_clipboard_success">Presse-papiers récupéré</string>

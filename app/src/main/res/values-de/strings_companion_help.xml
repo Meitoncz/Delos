@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="companion_game_focused">Markiertes Spiel</string>
+    <string name="companion_game_focused">Markierte App</string>
     <string name="companion_game_running">Läuft gerade</string>
     <string name="companion_game_resume_other">Anderes fortsetzen</string>
     <string name="companion_game_quit_start">Beenden und starten</string>

@@ -2,7 +2,7 @@
 <resources>
     <string name="companion_flow_pc">ПК</string>
     <string name="companion_flow_starting">Запуск: %1$s</string>
-    <string name="companion_flow_starting_generic">Запуск гри</string>
+    <string name="companion_flow_starting_generic">Запуск застосунку</string>
     <string name="companion_flow_requested">%1$s · запитано %2$s</string>
     <string name="companion_flow_step_host">Хост знайдено</string>
     <string name="companion_flow_step_launch">Запит на запуск прийнято</string>
@@ -15,10 +15,10 @@
     <string name="companion_flow_wait">Зачекай трохи</string>
     <string name="companion_flow_result_title">Стрім завершено</string>
     <string name="companion_flow_reconnect">Підключитися знову</string>
-    <string name="companion_flow_lost_guidance">Гра, імовірно, ще працює на хості. Підключися знову, щоб продовжити, коли це стане можливо.</string>
-    <string name="companion_flow_lost_short">Гра, імовірно, ще працює.</string>
-    <string name="companion_flow_closed_guidance">Відкрий бібліотеку, щоб перевірити, чи гра ще працює.</string>
-    <string name="companion_flow_closed_short">Стан гри дивись у бібліотеці.</string>
+    <string name="companion_flow_lost_guidance">Застосунок, імовірно, ще працює на хості. Підключися знову, щоб продовжити, коли це стане можливо.</string>
+    <string name="companion_flow_lost_short">Застосунок, імовірно, ще працює.</string>
+    <string name="companion_flow_closed_guidance">Відкрий бібліотеку, щоб перевірити, чи застосунок ще працює.</string>
+    <string name="companion_flow_closed_short">Стан застосунку дивись у бібліотеці.</string>
     <string name="companion_flow_problem_title">Проблема з підключенням</string>
     <string name="companion_flow_error_short">Не вдалося запустити стрім.</string>
     <string name="companion_flow_recovery">Перевір службу на хості, брандмауер і мережу. Потім спробуй ще раз.</string>

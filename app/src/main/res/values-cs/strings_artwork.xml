@@ -82,7 +82,7 @@
         <item quantity="other">%1$s: na SteamGridDB je %2$d obalů, ale žádný neodpovídá filtrům. Uvolni nějaký filtr nebo hledej pod jiným názvem.</item>
     </plurals>
     <string name="artwork_filtered_unknown_cover">Žádný z obalů neodpovídá filtrům. Uvolni nějaký filtr nebo hledej pod jiným názvem.</string>
-    <string name="artwork_empty_cover">SteamGridDB zatím nemá pro tuto hru žádný obal.</string>
+    <string name="artwork_empty_cover">SteamGridDB zatím nemá pro tuto aplikaci žádný obal.</string>
     <string name="artwork_downloading_cover">Stahuji obal…</string>
     <string name="artwork_updated_cover">Obal aktualizován</string>
     <!-- Wide cover -->
@@ -113,7 +113,7 @@
         <item quantity="other">%1$s: na SteamGridDB je %2$d širokých obalů, ale žádný neodpovídá filtrům. Uvolni nějaký filtr nebo hledej pod jiným názvem.</item>
     </plurals>
     <string name="artwork_filtered_unknown_wide">Žádný z širokých obalů neodpovídá filtrům. Uvolni nějaký filtr nebo hledej pod jiným názvem.</string>
-    <string name="artwork_empty_wide">SteamGridDB zatím nemá pro tuto hru žádný široký obal.</string>
+    <string name="artwork_empty_wide">SteamGridDB zatím nemá pro tuto aplikaci žádný široký obal.</string>
     <string name="artwork_downloading_wide">Stahuji široký obal…</string>
     <string name="artwork_updated_wide">Široký obal aktualizován</string>
     <!-- Background -->
@@ -144,7 +144,7 @@
         <item quantity="other">%1$s: na SteamGridDB je %2$d pozadí, ale žádné neodpovídá filtrům. Uvolni nějaký filtr nebo hledej pod jiným názvem.</item>
     </plurals>
     <string name="artwork_filtered_unknown_hero">Žádné z pozadí neodpovídá filtrům. Uvolni nějaký filtr nebo hledej pod jiným názvem.</string>
-    <string name="artwork_empty_hero">SteamGridDB zatím nemá pro tuto hru žádné pozadí.</string>
+    <string name="artwork_empty_hero">SteamGridDB zatím nemá pro tuto aplikaci žádné pozadí.</string>
     <string name="artwork_downloading_hero">Stahuji pozadí…</string>
     <string name="artwork_updated_hero">Pozadí aktualizováno</string>
     <!-- Logo -->
@@ -175,7 +175,7 @@
         <item quantity="other">%1$s: na SteamGridDB je %2$d log, ale žádné neodpovídá filtrům. Uvolni nějaký filtr nebo hledej pod jiným názvem.</item>
     </plurals>
     <string name="artwork_filtered_unknown_logo">Žádné z log neodpovídá filtrům. Uvolni nějaký filtr nebo hledej pod jiným názvem.</string>
-    <string name="artwork_empty_logo">SteamGridDB zatím nemá pro tuto hru žádné logo.</string>
+    <string name="artwork_empty_logo">SteamGridDB zatím nemá pro tuto aplikaci žádné logo.</string>
     <string name="artwork_downloading_logo">Stahuji logo…</string>
     <string name="artwork_updated_logo">Logo aktualizováno</string>
 </resources>

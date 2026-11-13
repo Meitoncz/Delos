@@ -76,7 +76,7 @@
         <item quantity="other">%1$s a %2$d jaquettes sur SteamGridDB, mais aucune ne correspond à tes filtres. Assouplis un filtre ou cherche sous un autre nom.</item>
     </plurals>
     <string name="artwork_filtered_unknown_cover">Aucune des jaquettes ne correspond à tes filtres. Assouplis un filtre ou cherche sous un autre nom.</string>
-    <string name="artwork_empty_cover">SteamGridDB n’a pas encore de jaquette pour ce jeu.</string>
+    <string name="artwork_empty_cover">SteamGridDB n’a pas encore de jaquette pour cette appli.</string>
     <string name="artwork_downloading_cover">Téléchargement de la jaquette…</string>
     <string name="artwork_updated_cover">Jaquette mise à jour</string>
     <string name="artwork_tab_wide">Jaquette large</string>
@@ -102,7 +102,7 @@
         <item quantity="other">%1$s a %2$d jaquettes larges sur SteamGridDB, mais aucune ne correspond à tes filtres. Assouplis un filtre ou cherche sous un autre nom.</item>
     </plurals>
     <string name="artwork_filtered_unknown_wide">Aucune des jaquettes larges ne correspond à tes filtres. Assouplis un filtre ou cherche sous un autre nom.</string>
-    <string name="artwork_empty_wide">SteamGridDB n’a pas encore de jaquette large pour ce jeu.</string>
+    <string name="artwork_empty_wide">SteamGridDB n’a pas encore de jaquette large pour cette appli.</string>
     <string name="artwork_downloading_wide">Téléchargement de la jaquette large…</string>
     <string name="artwork_updated_wide">Jaquette large mise à jour</string>
     <string name="artwork_tab_hero">Arrière-plan</string>
@@ -128,7 +128,7 @@
         <item quantity="other">%1$s a %2$d arrière-plans sur SteamGridDB, mais aucune ne correspond à tes filtres. Assouplis un filtre ou cherche sous un autre nom.</item>
     </plurals>
     <string name="artwork_filtered_unknown_hero">Aucun des arrière-plans ne correspond à tes filtres. Assouplis un filtre ou cherche sous un autre nom.</string>
-    <string name="artwork_empty_hero">SteamGridDB n’a pas encore d’arrière-plan pour ce jeu.</string>
+    <string name="artwork_empty_hero">SteamGridDB n’a pas encore d’arrière-plan pour cette appli.</string>
     <string name="artwork_downloading_hero">Téléchargement de l’arrière-plan…</string>
     <string name="artwork_updated_hero">Arrière-plan mis à jour</string>
     <string name="artwork_tab_logo">Logo</string>
@@ -154,7 +154,7 @@
         <item quantity="other">%1$s a %2$d logos sur SteamGridDB, mais aucune ne correspond à tes filtres. Assouplis un filtre ou cherche sous un autre nom.</item>
     </plurals>
     <string name="artwork_filtered_unknown_logo">Aucun des logos ne correspond à tes filtres. Assouplis un filtre ou cherche sous un autre nom.</string>
-    <string name="artwork_empty_logo">SteamGridDB n’a pas encore de logo pour ce jeu.</string>
+    <string name="artwork_empty_logo">SteamGridDB n’a pas encore de logo pour cette appli.</string>
     <string name="artwork_downloading_logo">Téléchargement du logo…</string>
     <string name="artwork_updated_logo">Logo mis à jour</string>
 </resources>

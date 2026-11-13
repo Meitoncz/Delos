@@ -20,7 +20,7 @@
     <string name="devices_menu_default_on">このPCで Delosを起動</string>
     <string name="devices_menu_wake">PCを起動</string>
     <string name="devices_menu_rename">名前を変更</string>
-    <string name="devices_menu_open_games">ゲームを開く</string>
+    <string name="devices_menu_open_games">アプリを開く</string>
     <string name="devices_menu_connect">接続</string>
     <string name="devices_menu_unpair">ペアリング解除</string>
     <string name="devices_menu_remove">Delosから削除</string>

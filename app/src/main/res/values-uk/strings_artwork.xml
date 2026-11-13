@@ -80,7 +80,7 @@
         <item quantity="other">На SteamGridDB для %1$s є %2$d обкладинки, жодна не відповідає фільтрам. Послаб фільтр або пошукай за іншою назвою.</item>
     </plurals>
     <string name="artwork_filtered_unknown_cover">Жодна з обкладинок не відповідає фільтрам. Послаб фільтр або пошукай за іншою назвою.</string>
-    <string name="artwork_empty_cover">На SteamGridDB для цієї гри ще немає обкладинки.</string>
+    <string name="artwork_empty_cover">На SteamGridDB для цього застосунку ще немає обкладинки.</string>
     <string name="artwork_downloading_cover">Завантаження обкладинки…</string>
     <string name="artwork_updated_cover">Обкладинку оновлено</string>
     <string name="artwork_tab_wide">Широка обкладинка</string>
@@ -110,7 +110,7 @@
         <item quantity="other">На SteamGridDB для %1$s є %2$d широкої обкладинки, жодна не відповідає фільтрам. Послаб фільтр або пошукай за іншою назвою.</item>
     </plurals>
     <string name="artwork_filtered_unknown_wide">Жодна з широких обкладинок не відповідає фільтрам. Послаб фільтр або пошукай за іншою назвою.</string>
-    <string name="artwork_empty_wide">На SteamGridDB для цієї гри ще немає широкої обкладинки.</string>
+    <string name="artwork_empty_wide">На SteamGridDB для цього застосунку ще немає широкої обкладинки.</string>
     <string name="artwork_downloading_wide">Завантаження широкої обкладинки…</string>
     <string name="artwork_updated_wide">Широку обкладинку оновлено</string>
     <string name="artwork_tab_hero">Тло</string>
@@ -140,7 +140,7 @@
         <item quantity="other">На SteamGridDB для %1$s є %2$d тла, жодне не відповідає фільтрам. Послаб фільтр або пошукай за іншою назвою.</item>
     </plurals>
     <string name="artwork_filtered_unknown_hero">Жодне з тл не відповідає фільтрам. Послаб фільтр або пошукай за іншою назвою.</string>
-    <string name="artwork_empty_hero">На SteamGridDB для цієї гри ще немає тла.</string>
+    <string name="artwork_empty_hero">На SteamGridDB для цього застосунку ще немає тла.</string>
     <string name="artwork_downloading_hero">Завантаження тла…</string>
     <string name="artwork_updated_hero">Тло оновлено</string>
     <string name="artwork_tab_logo">Логотип</string>
@@ -170,7 +170,7 @@
         <item quantity="other">На SteamGridDB для %1$s є %2$d логотипа, жоден не відповідає фільтрам. Послаб фільтр або пошукай за іншою назвою.</item>
     </plurals>
     <string name="artwork_filtered_unknown_logo">Жоден із логотипів не відповідає фільтрам. Послаб фільтр або пошукай за іншою назвою.</string>
-    <string name="artwork_empty_logo">На SteamGridDB для цієї гри ще немає логотипа.</string>
+    <string name="artwork_empty_logo">На SteamGridDB для цього застосунку ще немає логотипа.</string>
     <string name="artwork_downloading_logo">Завантаження логотипа…</string>
     <string name="artwork_updated_logo">Логотип оновлено</string>
 </resources>

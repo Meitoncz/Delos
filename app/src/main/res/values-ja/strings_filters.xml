@@ -2,10 +2,10 @@
 <resources>
     <string name="filters_title">ライブラリをフィルター</string>
     <plurals name="filters_result_active">
-        <item quantity="other">%2$d本中%1$d本</item>
+        <item quantity="other">%2$d個中%1$d個</item>
     </plurals>
     <plurals name="filters_result_all">
-        <item quantity="other">全%1$d本</item>
+        <item quantity="other">全%1$d個</item>
     </plurals>
     <string name="filters_hint">フィルター</string>
     <plurals name="filters_hint_active">

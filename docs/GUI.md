@@ -96,7 +96,7 @@ The TV channel uses the same mark; PC shortcut icons remain unchanged.
   2100×1260 hero area and **aligned to the top** (1920×620 → 2100×678 px) instead of being cropped to 5:3, which lost about half of it. Its
   bottom edge **fades softly over 160 px** (a smoothstep, `HeroGeometry.FADE_STOPS`) into an **extension**: a copy of the same image
   stretched to cover the whole area, blurred (40 px), then blended 55 % toward the dark background color (14, 18, 36), so no bar stays
-  empty. The user's blur (Appearance → game background), saturate(1.15), the diagonal fade and the tilt with its overscan come on top,
+  empty. The user's blur (Appearance → App background), saturate(1.15), the diagonal fade and the tilt with its overscan come on top,
   unchanged. An image whose width-fit height reaches the area's height (aspect 5:3 or less: box art or a cover used as the background)
   fills the area and is cropped as before; the placeholder art is unchanged. The cached bitmap is still 420×252 (the area at 1/5; the
   extension is a 210×126 bitmap of its own, at most 24 kept) and is rendered only on a cache fill; its cache key carries a composition
@@ -116,7 +116,7 @@ The TV channel uses the same mark; PC shortcut icons remain unchanged.
   Measured on the Odin with automated RIGHT/LEFT focus changes between two games with animated covers and hero (0.3 s apart): the
   design above (Compose `Crossfade`, 500 ms dwell, low-resolution live hero) holds about 3 % janky frames, p50 6 ms, the same as a
   still hero.
-- **Artwork page** (game options → Artwork, `ArtworkScreen`; approved prototype variant B): no side column. Header and tab pills
+- **Artwork page** (app options → Artwork, `ArtworkScreen`; approved prototype variant B): no side column. Header and tab pills
   (`SelectionPillHost`, touch only, L1 / R1; the row's R1 badge ends exactly at the content's right edge, the Filter pill's) over a toolbar
   with the **SteamGridDB game chip** (name, year, id, image count of the tab),
   **Search for another name** (X) and **Filter** (Y, with a count badge of the active filters); under it the result line
@@ -210,7 +210,7 @@ The TV channel uses the same mark; PC shortcut icons remain unchanged.
 ## Game information and library filters
 
 The information area under the game title/logo is a small label and one row in two groups. The label is
-`GAME INFO` (`APP INFO` for the built-in apps) in the style of the library footer's `LIBRARY` label (Figtree
+`APP INFO` in the style of the library footer's `LIBRARY` label (Figtree
 SemiBold, 17 px, tracking .14 em, `colors.text3`) with an 8 px gap to the pills; it is shown only while at
 least one pill is. The **facts** come first (`Running on <PC>` while the game runs, native HDR/SDR, the
 HowLongToBeat headline duration, `Virtual display`; the PC's name is no chip while nothing runs), then a
@@ -286,7 +286,7 @@ The host's streaming HDR flag is not native game support. Special K, ReShade, Au
 do not qualify as native game HDR.
 
 **Y** on the home screen opens the **Filter library** modal (Y or B closes it; Done as well). It is a
-centered glass panel with the title, a live result line as a pill (`27 of 55 games`, or `All 55 games` without a filter)
+centered glass panel with the title, a live result line as a pill (`27 of 55 apps`, or `All 55 apps` without a filter)
 and four sections of chips, each with a large Unbounded heading and its icon in an accent-tinted circle, separated by thin dividers: **Genre** (`All` plus every genre any game in the downloaded metadata lists, each with its icon and number of games), **Theme** (the same for IGDB themes, single-select, shown while the library has any theme), **HDR
 support** (`All`, `Native HDR`, `SDR`, `HDR/SDR unverified`, with the sparkle, dim-sun and sealed-question-mark icons of
 the home badges) and **Duration** from HowLongToBeat (Any, <10 h, 10–30 h, 30–60 h, 60+ h, Unknown). The chosen chip is
@@ -306,7 +306,7 @@ Original library order, running-game state, artwork and cover layout are preserv
 The `HDR/SDR unverified` filter retains unknown-support matching, including pending/failed records without a
 badge; the display rule above does not change filter membership.
 
-Game options → Metadata provides IGDB search/match selection, refresh and reset. Automatic matching
+App options → Metadata provides IGDB search/match selection, refresh and reset. Automatic matching
 compares titles tolerantly (case, punctuation, diacritics, a leading "The", "&"/"and", Roman/Arabic
 sequel numbers, a bracketed note such as "(Steam)" and trailing edition qualifiers such as "Definitive
 Edition", "GOTY" or "Director's Cut"); different sequel numbers stay distinct, and a subtitle stays
@@ -626,7 +626,7 @@ controller window ownership keep their existing paths.
 
 - **Tiles**: 150 px glass, corner 42, gap 40 (9 × 150 + 8 × 40 = 1670, 125 on each side), the top edge at y 628, icon 64
   (Phosphor, filled on focus), label 24 SemiBold 24 below the tile. Resume, Keyboard, Overlay, Brightness, Bitrate,
-  Upscaler (Supersampling), More, Disconnect, Quit game. The **Keyboard** tile is the Delos Full keyboard (A closes the menu,
+  Upscaler (Supersampling), More, Disconnect, Quit app. The **Keyboard** tile is the Delos Full keyboard (A closes the menu,
   then toggles it) with the plain keyboard icon (`Symbols.KEYBOARD`, the one of the Settings > Controls virtual-keys row; Android's system keyboard in the More page has its own text-cursor icon); it turns accent
   while the keyboard is up but has **no On / Off pill**. Android's system keyboard is the More row Open Android keyboard.
   The other toggles (Overlay, Upscaler) have an **On / Off pill**
@@ -798,7 +798,7 @@ adb shell am start -n io.github.meitoncz.delos.debug/com.limelight.shell.ShellAc
 ```
 
 The menu opens 700 ms after the start with its entrance and stays (a tap outside closes it). `idle`: the game menu of a game
-(nothing runs), `running`: the game runs (Resume, Quit game in red), `other`: another game runs, `options`: the Options submenu
+(nothing runs), `running`: the game runs (Resume, Quit app in red), `other`: another game runs, `options`: the Options submenu
 is open (the mechanism no real menu uses yet), `long`: the 12 matches of a pick list that scroll inside the card, `pc`: the PC
 menu below its card with the caret on top.
 
@@ -845,7 +845,7 @@ activity keeps its own orientation logic) and supports windows from 1:1 up to 21
     rows where it can: stages 950 px high and more; the 893 px ones show two in Settings, the 831 px one two and the 722 px Pocket Micro one, the
     next row fading over the dock). Its header stays put: the icon disc (48 px), the name (22 px, one line)
     and, when the whole name fits beside it, the impact legend at the right. Everything else is ONE body under it that scrolls as a whole (the
-    auto-scroll of long help) and fades at an edge only while it continues behind it: per game the source box first ("Custom for this game ·
+    auto-scroll of long help) and fades at an edge only while it continues behind it: per game the source box first ("Custom for this app ·
     Profile value …" / "From profile", wrapping inside the body), the value's detail and the help, the legend when the header has no room, what
     its bars mean, the autosave note. The list ends 16 px above the dock with a fade.
     Settings has no title, so the 8 tabs fit: only the selected tab keeps its label, L1 / R1 still step through them, the search is a 64 px
@@ -1068,7 +1068,7 @@ These preserve implementation/design context from the removed UI plan, not phase
   fallback. `StreamMenu` provides the configured button combo/edge gesture and On/Compact/Off overlay
   cycle; `StreamExit` owns the accepted normal exit scene. No ordinary-flow confirmation dialogs;
   legitimate security prompts for external input remain. Further layout changes need user agreement.
-- **Stream exits.** The player's own Disconnect / Quit game keeps the `StreamExit` portal. A stream that
+- **Stream exits.** The player's own Disconnect / Quit app keeps the `StreamExit` portal. A stream that
   ends by itself goes through `StreamOutcome` (no classic error dialog): `DelosStreamActivity` ends, opens
   `ShellActivity` on the stream's PC (Home, with the PC selected) with a `StreamResult` in the intent
   extras, and the shell takes it once (`StreamResult.take` removes the extras, so a recreated or

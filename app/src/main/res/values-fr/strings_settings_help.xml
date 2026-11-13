@@ -16,9 +16,9 @@
     <string name="help_list_video_scale_mode">Ajustement de l’image en local uniquement.</string>
     <string name="help_edit_diy_w_h">Ajoute une résolution à Résolution vidéo : saisis largeur x hauteur (1920x1080), puis sélectionne-la là-bas.</string>
     <string name="help_edit_diy_bitrate">Définit le débit en Mbps ; décimales et valeurs au-delà du curseur autorisées. Met aussi à jour Débit vidéo.</string>
-    <string name="help_custom_refresh_rate">Ajoute des FPS personnalisés (décimales autorisées) à Fréquence d’images vidéo ; sélectionne-les là-bas. Le PC, le jeu et l’écran limitent le résultat.</string>
+    <string name="help_custom_refresh_rate">Ajoute des FPS personnalisés (décimales autorisées) à Fréquence d’images vidéo ; sélectionne-les là-bas. Le PC, l’appli et l’écran limitent le résultat.</string>
     <string name="help_checkbox_enforce_display_mode">Demande fermement à Android d’utiliser le mode d’affichage choisi. Aide si les demandes de fréquence d’écran sont ignorées ; peut mal se comporter sur certains firmwares.</string>
-    <string name="help_checkbox_enable_hdr">Demande une vidéo HDR. Nécessite la prise en charge par le jeu, le GPU du PC, le décodeur et l’écran (HEVC 10 bits, AV1 ou PyroWave).</string>
+    <string name="help_checkbox_enable_hdr">Demande une vidéo HDR. Nécessite la prise en charge par l’appli, le GPU du PC, le décodeur et l’écran (HEVC 10 bits, AV1 ou PyroWave).</string>
     <string name="help_checkbox_enable_fullexdisplay">Affiche le stream et le menu sur un moniteur ou une TV branchés, à la résolution et aux FPS configurés. La console portable pilote le menu.</string>
     <string name="help_checkbox_sgsr">Upscale un stream en basse résolution à la taille de l’écran, ou l’accentue seulement (Mode). Coûte du GPU. Les changements du menu durent une session.</string>
     <string name="help_list_pyrowave_chroma">4:4:4 coûte de la bande passante et du GPU.</string>
@@ -27,7 +27,7 @@
     <string name="help_list_sgsr_supersampling_level">Taille interne quand le stream correspond déjà à l’écran. Les changements du menu durent une session.</string>
     <string name="help_list_audio_config">Canaux envoyés par le PC. Le surround nécessite une lecture compatible.</string>
     <string name="help_checkbox_enable_audiofx">Laisse l’égaliseur et les effets système d’Android traiter le son du stream. Peut ajouter du délai.</string>
-    <string name="help_checkbox_host_audio">Joue le son du jeu sur le PC en plus d’ici. Désactive pour garder les haut-parleurs du PC silencieux.</string>
+    <string name="help_checkbox_host_audio">Joue le son de l’appli sur le PC en plus d’ici. Désactive pour garder les haut-parleurs du PC silencieux.</string>
     <string name="help_seekbar_deadzone">Les valeurs positives ignorent les petits mouvements du stick près du centre (dérive). Les valeurs négatives compensent la zone morte propre à la manette.</string>
     <string name="help_checkbox_multi_controller">Signale les manettes à leur connexion ou déconnexion. Désactivé, une manette reste toujours présente, pour les jeux qui en exigent une au lancement.</string>
     <string name="help_checkbox_usb_driver">Utilise le pilote USB de Delos pour les manettes Xbox et Nintendo Pro qu’Android ne gère pas nativement. Peut demander l’autorisation USB.</string>
@@ -36,7 +36,7 @@
     <string name="help_analog_scrolling">Stick qui défile en mode souris de la manette.</string>
     <string name="help_checkbox_flip_face_buttons">Échange A/B et X/Y pour la manette et les commandes à l’écran (disposition Nintendo). Pas la navigation dans Delos.</string>
     <string name="help_checkbox_gamepad_touchpad_as_mouse">Utilise toujours le pavé tactile d’une manette comme souris du PC. Désactivé, les PC compatibles reçoivent le pavé tactile natif.</string>
-    <string name="help_checkbox_gamepad_motion_sensors">Permet au PC de lire le gyroscope et l’accéléromètre d’une manette externe. Nécessite Android 12 ou plus récent. Désactive si aucun jeu n’utilise le mouvement, pour économiser un peu d’énergie et de trafic.</string>
+    <string name="help_checkbox_gamepad_motion_sensors">Permet au PC de lire le gyroscope et l’accéléromètre d’une manette externe. Nécessite Android 12 ou plus récent. Désactive si aucune appli n’utilise le mouvement, pour économiser un peu d’énergie et de trafic.</string>
     <string name="help_checkbox_gamepad_motion_fallback">Utilise le gyroscope et l’accéléromètre de cet appareil quand la manette n’en a pas ou qu’Android ne peut pas les lire. Le PC peut alors voir une manette PlayStation.</string>
     <string name="help_checkbox_force_device_motion">Utilise les capteurs intégrés même si la manette externe en a qui fonctionnent. Nécessite Gyroscope intégré de l’appareil.</string>
     <string name="help_seekbar_gyro_smoothing">Stabilise la visée au gyroscope. 0 = désactivé. Plus la valeur est haute, moins il y a de tremblements, mais un léger retard sur les mouvements lents ; les mouvements rapides restent réactifs. S’applique au prochain stream ; le menu du stream (Plus) le modifie en direct.</string>
@@ -67,13 +67,13 @@
     <string name="help_checkbox_hide_clipboard_content">Marque le contenu du presse-papiers du PC comme sensible pour qu’Android masque son aperçu. Ne chiffre pas et ne désactive pas le transfert.</string>
     <string name="help_seekbar_keyboard_axi_opacity">Opacité du clavier complet à l’écran. Distincte de l’opacité de la manette virtuelle.</string>
     <string name="help_onscreen_keyboard_autofit">Désactive l’ajustement automatique du clavier complet pour que la largeur, la hauteur et l’alignement enregistrés s’appliquent.</string>
-    <string name="help_seekbar_onscreen_keyboard_height">Hauteur du clavier complet à l’écran quand l’ajustement automatique est désactivé. Plus haut : touches plus grandes, plus de jeu masqué.</string>
+    <string name="help_seekbar_onscreen_keyboard_height">Hauteur du clavier complet à l’écran quand l’ajustement automatique est désactivé. Plus haut : touches plus grandes, plus d’appli masquée.</string>
     <string name="help_seekbar_onscreen_keyboard_width">Largeur du clavier complet à l’écran quand l’ajustement automatique est désactivé. Garde-le accessible sur ton écran.</string>
     <string name="help_list_onscreen_keyboard_align_mode">Ancrage horizontal du clavier complet dimensionné manuellement.</string>
     <string name="help_checkbox_enable_sticky_modifier_key_virtual_keyboard">Garde actives les touches de modification virtuelles (Maj, Ctrl, Alt…) après un toucher, pour saisir les combinaisons une touche à la fois.</string>
     <string name="help_checkbox_disable_warnings">Masque les avertissements de qualité de connexion pendant le stream. Les statistiques restent.</string>
     <string name="help_checkbox_remember_zoom_pan">Enregistre le zoom et le panoramique du stream pour les sessions suivantes. Désactivé, les ajustements ne durent que pour ce stream.</string>
-    <string name="help_checkbox_enable_pip">Garde le stream en Picture-in-Picture pendant le multitâche. Visualisation seule : pas de contrôle du jeu dans la petite fenêtre.</string>
+    <string name="help_checkbox_enable_pip">Garde le stream en Picture-in-Picture pendant le multitâche. Visualisation seule : pas de contrôle de l’appli dans la petite fenêtre.</string>
     <string name="help_checkbox_show_onscreen_controls">Affiche la manette virtuelle sur le stream pour jouer au toucher. Le menu du stream l’active ou la désactive pour la session.</string>
     <string name="help_checkbox_hide_osc_when_has_gamepad">Masque la manette virtuelle tant qu’Android détecte une manette physique ; elle revient à la déconnexion de la manette.</string>
     <string name="help_checkbox_vibrate_osc">Vibration locale à l’appui sur les boutons de la manette virtuelle. Retour tactile, pas vibration de jeu. Nécessite un moteur de vibration.</string>
@@ -110,7 +110,7 @@
     <string name="help_option_help_custom_keys">Ouvre les instructions sur le format du fichier de touches personnalisées. Charge le fichier obtenu avec Importer des touches personnalisées.</string>
     <string name="help_pref_debug_info">Ouvre les diagnostics de l’appareil et des manettes sans stream : détails de l’appareil, ID et capteurs des manettes, test de vibration, aperçu des commandes.</string>
     <string name="help_about_diag_logs">Garde un journal glissant (2 Mo max.) des événements et erreurs sur cet appareil. Rien n’en sort sauf si tu le partages depuis Infos de débogage, noms et adresses retirés. Désactivé, plus de nouvelles lignes.</string>
-    <string name="help_ui_match_game_colors">Prend trois couleurs de la jaquette du jeu sélectionné pour l’arrière-plan animé ; sinon les visuels du PC. Nécessite Material You désactivé.</string>
+    <string name="help_ui_match_game_colors">Prend trois couleurs de la jaquette de l’appli sélectionnée pour l’arrière-plan animé ; sinon les visuels du PC. Nécessite Material You désactivé.</string>
     <string name="help_frame_pacing_latency">Affiche aussitôt l’image la plus récente ; peut saccader.</string>
     <string name="help_frame_pacing_balanced">Aligne les images sur la fréquence de l’écran avec une petite file.</string>
     <string name="help_frame_pacing_cap_fps">Équilibré ; demande au PC moins d’images près de la fréquence d’écran.</string>
@@ -176,7 +176,7 @@
     <string name="stream_help_screen_brightness">Change tout de suite la luminosité de l’écran de cet appareil ; le réglage système revient ensuite. Pas celle du PC ni d’un moniteur.</string>
     <string name="stream_help_bitrate">Demande un nouveau débit vidéo sans se reconnecter. Nécessite Vibepollo ; le PC peut le plafonner. Dure le temps de ce stream.</string>
     <string name="stream_help_apply_bitrate">Envoie le débit demandé à Vibepollo. La valeur acceptée peut être plus basse. Les valeurs par défaut enregistrées ne changent pas.</string>
-    <string name="stream_help_upscaler">Upscale un stream en basse résolution, ou fait du supersampling sur un stream natif. Coûte du GPU ; s’applique en direct et est gardé pour ce jeu.</string>
+    <string name="stream_help_upscaler">Upscale un stream en basse résolution, ou fait du supersampling sur un stream natif. Coûte du GPU ; s’applique en direct et est gardé pour cette appli.</string>
     <string name="stream_help_upscaling">Active ou désactive l’upscaler, ou Netteté seule, pour ce stream ; l’image peut clignoter.</string>
     <string name="stream_help_supersampling">Rend un stream en résolution native à une taille plus grande, puis le réduit. Coûte du GPU ; dure le temps de ce stream.</string>
     <string name="stream_help_supersampling_on">Rend à une taille interne plus grande. Coûte du GPU.</string>
@@ -184,7 +184,7 @@
     <string name="stream_help_mode">S’applique en direct. Passer à Netteté seule ou la quitter peut faire clignoter l’image.</string>
     <string name="stream_help_sharpness">Accentuation finale. 0 la désactive, pas la reconstruction SGSR 1. Avec Netteté seule, c’est tout l’effet. Dure le temps de ce stream.</string>
     <string name="stream_help_more">Autres commandes du stream : presse-papiers, commandes du PC, combinaisons de touches, zoom, tactile et commandes à l’écran. Les actions s’exécutent aussitôt.</string>
-    <string name="stream_help_disconnect">Arrête le streaming et revient à la bibliothèque Delos. Le jeu continue sur le PC.</string>
+    <string name="stream_help_disconnect">Arrête le streaming et revient à la bibliothèque Delos. L’appli continue sur le PC.</string>
     <string name="stream_help_quit_game">Demande au PC de fermer l’application en cours, puis se déconnecte. S’exécute aussitôt, alors sauvegarde d’abord.</string>
     <string name="stream_help_send_keys">Envoie une fois au PC une combinaison de touches intégrée ou importée ; le menu se ferme. Importe les tiennes dans Commandes.</string>
     <string name="stream_help_send_clipboard">Copie une fois le presse-papiers de cet appareil vers le PC. Nécessite la prise en charge du presse-papiers par Vibepollo ou Apollo.</string>
@@ -197,7 +197,7 @@
     <string name="stream_help_on_screen_controls">Affiche ou masque la manette virtuelle pendant ce stream. L’opacité et la disposition se règlent dans Commandes.</string>
     <string name="stream_help_open_android_keyboard">Ouvre ou ferme le clavier système d’Android, après fermeture de ce menu. Pas le clavier Delos (la tuile Clavier).</string>
     <string name="stream_help_touch_sensitivity">Active ou désactive la mise à l’échelle de sensibilité tactile supplémentaire, configurée dans les réglages.</string>
-    <string name="stream_help_gyro_smoothing">Stabilise aussitôt la visée au gyroscope, conservé pour ce jeu. 0 = désactivé. Plus de lissage ajoute un léger retard aux mouvements lents.</string>
+    <string name="stream_help_gyro_smoothing">Stabilise aussitôt la visée au gyroscope, conservé pour cette appli. 0 = désactivé. Plus de lissage ajoute un léger retard aux mouvements lents.</string>
     <string name="stream_help_gyro_smoothing_disabled">Nécessite d’activer Gyroscope de manette externe ou Gyroscope intégré de l’appareil dans les Réglages ; s’applique dès le prochain stream.</string>
     <string name="stream_help_rumble_feel">Choisit le ressenti des vibrations du PC, aussitôt et enregistré. Reste ouvert : choisis à nouveau pour comparer. %1$s revient en arrière.</string>
     <string name="stream_help_format_keys">Envoie %1$s une fois au PC, puis revient au stream.</string>

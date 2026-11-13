@@ -2,7 +2,7 @@
 <resources>
     <string name="companion_flow_pc">PC</string>
     <string name="companion_flow_starting">%1$s wird gestartet</string>
-    <string name="companion_flow_starting_generic">Spiel wird gestartet</string>
+    <string name="companion_flow_starting_generic">App wird gestartet</string>
     <string name="companion_flow_requested">%1$s · angefordert %2$s</string>
     <string name="companion_flow_step_host">Host gefunden</string>
     <string name="companion_flow_step_launch">Startanfrage angenommen</string>
@@ -15,10 +15,10 @@
     <string name="companion_flow_wait">Einen Moment</string>
     <string name="companion_flow_result_title">Stream beendet</string>
     <string name="companion_flow_reconnect">Neu verbinden</string>
-    <string name="companion_flow_lost_guidance">Das Spiel läuft auf dem Host möglicherweise noch. Verbinde dich neu, um fortzufahren, sobald es verfügbar ist.</string>
-    <string name="companion_flow_lost_short">Das Spiel läuft möglicherweise noch.</string>
-    <string name="companion_flow_closed_guidance">Öffne die Bibliothek, um zu prüfen, ob das Spiel noch läuft.</string>
-    <string name="companion_flow_closed_short">Den Spielstatus siehst du in der Bibliothek.</string>
+    <string name="companion_flow_lost_guidance">Die App läuft auf dem Host möglicherweise noch. Verbinde dich neu, um fortzufahren, sobald sie verfügbar ist.</string>
+    <string name="companion_flow_lost_short">Die App läuft möglicherweise noch.</string>
+    <string name="companion_flow_closed_guidance">Öffne die Bibliothek, um zu prüfen, ob die App noch läuft.</string>
+    <string name="companion_flow_closed_short">Den Status der App siehst du in der Bibliothek.</string>
     <string name="companion_flow_problem_title">Verbindungsproblem</string>
     <string name="companion_flow_error_short">Der Stream konnte nicht gestartet werden.</string>
     <string name="companion_flow_recovery">Prüfe den Dienst auf dem Host, die Firewall und das Netzwerk. Versuche es dann erneut.</string>

@@ -5,7 +5,7 @@
     <string name="scut_invalid_uuid">指定されたPCは無効です</string>
     <string name="scut_invalid_app_id">指定されたアプリは無効です</string>
     <string name="scut_game_running">%1$sはすでに実行中です · 先に Delosで終了してください</string>
-    <string name="scut_other_game_running">別のゲームがすでに実行中です · 先に Delosで終了してください</string>
+    <string name="scut_other_game_running">別のアプリがすでに実行中です · 先に Delosで終了してください</string>
 
     <string name="configuration_mode_move_buttons">ボタン移動モード</string>
     <string name="configuration_mode_resize_buttons">ボタンサイズ変更モード</string>
@@ -115,7 +115,7 @@
     <string name="title_checkbox_gamepad_touchpad_as_mouse">常にタッチパッドでマウスを操作</string>
     <string name="summary_checkbox_gamepad_touchpad_as_mouse">タッチパッド付きコントローラーをエミュレートしている場合でも、コントローラーのタッチパッド入力でホストのマウスを操作します。</string>
     <string name="title_checkbox_gamepad_motion_sensors">外部コントローラーのジャイロ</string>
-    <string name="summary_checkbox_gamepad_motion_sensors">接続した外部コントローラーにジャイロスコープと加速度センサーがある場合、PCがそれを読み取れるようにします。Android 12以降が必要です。モーション操作を使うゲームがない場合は、オフにすると消費電力と通信量を少し節約できます。</string>
+    <string name="summary_checkbox_gamepad_motion_sensors">接続した外部コントローラーにジャイロスコープと加速度センサーがある場合、PCがそれを読み取れるようにします。Android 12以降が必要です。モーション操作を使うアプリがない場合は、オフにすると消費電力と通信量を少し節約できます。</string>
     <string name="title_checkbox_gamepad_motion_fallback">端末内蔵のジャイロ</string>
     <string name="summary_checkbox_gamepad_motion_fallback">接続したコントローラーにセンサーがない場合や、お使いのAndroidのバージョンで読み取れない場合に、この端末自身のジャイロスコープと加速度センサー（携帯ゲーム機の内蔵センサー）を使います。\n注意：PCからコントローラーがPlayStationコントローラーとして認識される場合があります。</string>
     <string name="title_checkbox_force_device_motion">常に端末内蔵のジャイロを使用</string>
@@ -170,7 +170,7 @@
     <string name="title_video_format">ビデオコーデック</string>
     <string name="summary_video_format">端末が対応していれば、新しいコーデックでビデオの必要帯域を減らせます。ホストソフトウェアやGPUが対応していない場合、コーデックの選択は無視されることがあります。</string>
     <string name="title_enable_hdr">HDRを有効にする</string>
-    <string name="summary_enable_hdr">ゲームとPCのGPUが対応している場合にHDRでストリーミングします。HDRにはHEVC Main 10エンコードに対応したGPUが必要です。HDRの見え方はこの端末のディスプレイによって異なります。</string>
+    <string name="summary_enable_hdr">アプリとPCのGPUが対応している場合にHDRでストリーミングします。HDRにはHEVC Main 10エンコードに対応したGPUが必要です。HDRの見え方はこの端末のディスプレイによって異なります。</string>
     <string name="title_full_range">フルレンジビデオを強制</string>
     <string name="summary_full_range">端末がフルレンジのビデオを正しく表示できない場合、明部と暗部のディテールが失われます。</string>
     <string name="title_prevent_packet_loss">Wi-Fiキープアライブ</string>
@@ -395,7 +395,7 @@
     <string name="send_clipboard_failed">クリップボードを送信できませんでした：</string>
     <string name="external_display_info">外部ディスプレイを接続しました：%1$dx%2$d、%3$.1fHz</string>
     <string name="no_external_display">外部ディスプレイが検出されません</string>
-    <string name="no_game_instance">利用可能なゲームインスタンスがありません</string>
+    <string name="no_game_instance">利用可能なアプリインスタンスがありません</string>
     <string name="get_clipboard_failed">クリップボードを取得できませんでした：</string>
     <string name="send_clipboard_success">クリップボードを送信しました</string>
     <string name="get_clipboard_success">クリップボードを取得しました</string>

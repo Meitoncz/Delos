@@ -5,7 +5,7 @@
     <string name="shell_report_no_browser">Немає доступного браузера</string>
     <string name="shell_retry_unreachable">%1$s недоступний</string>
     <string name="shell_retry_game_missing">%1$s немає на %2$s</string>
-    <string name="shell_retry_game_missing_unnamed">Гри немає на %1$s</string>
+    <string name="shell_retry_game_missing_unnamed">Застосунку немає на %1$s</string>
     <string name="shell_profile_updated">Профіль оновлено</string>
     <string name="shell_welcome">Вітаємо, %1$s</string>
     <string name="shell_game_unreachable">%1$s недоступний</string>

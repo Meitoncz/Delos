@@ -2,16 +2,16 @@
 <resources>
     <string name="filters_title">Фільтр бібліотеки</string>
     <plurals name="filters_result_active">
-        <item quantity="one">%1$d із %2$d гри</item>
-        <item quantity="few">%1$d із %2$d ігор</item>
-        <item quantity="many">%1$d із %2$d ігор</item>
-        <item quantity="other">%1$d із %2$d ігор</item>
+        <item quantity="one">%1$d із %2$d застосунку</item>
+        <item quantity="few">%1$d із %2$d застосунків</item>
+        <item quantity="many">%1$d із %2$d застосунків</item>
+        <item quantity="other">%1$d із %2$d застосунку</item>
     </plurals>
     <plurals name="filters_result_all">
-        <item quantity="one">Усього ігор: %1$d</item>
-        <item quantity="few">Усього ігор: %1$d</item>
-        <item quantity="many">Усього ігор: %1$d</item>
-        <item quantity="other">Усього ігор: %1$d</item>
+        <item quantity="one">Усього застосунків: %1$d</item>
+        <item quantity="few">Усього застосунків: %1$d</item>
+        <item quantity="many">Усього застосунків: %1$d</item>
+        <item quantity="other">Усього застосунків: %1$d</item>
     </plurals>
     <string name="filters_hint">Фільтр</string>
     <plurals name="filters_hint_active">

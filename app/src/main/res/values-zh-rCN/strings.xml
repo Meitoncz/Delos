@@ -4,7 +4,7 @@
     <string name="scut_invalid_uuid">提供的 PC 无效</string>
     <string name="scut_invalid_app_id">提供的应用无效</string>
     <string name="scut_game_running">%1$s 已在运行 · 请先在 Delos 中退出</string>
-    <string name="scut_other_game_running">另一个游戏已在运行 · 请先在 Delos 中退出</string>
+    <string name="scut_other_game_running">另一个应用已在运行 · 请先在 Delos 中退出</string>
 
     <string name="configuration_mode_move_buttons">移动按键模式</string>
     <string name="configuration_mode_resize_buttons">调整按键大小模式</string>
@@ -108,7 +108,7 @@
     <string name="title_checkbox_gamepad_touchpad_as_mouse">始终用触控板控制鼠标</string>
     <string name="summary_checkbox_gamepad_touchpad_as_mouse">强制手柄触控板输入控制 PC 鼠标，即使在模拟带触控板的手柄时也是如此。</string>
     <string name="title_checkbox_gamepad_motion_sensors">外接手柄陀螺仪</string>
-    <string name="summary_checkbox_gamepad_motion_sensors">允许 PC 读取已连接的外接手柄的陀螺仪和加速度计（如果有）。需要 Android 12 或更高版本。如果没有游戏使用体感，可将其关闭，以略微节省电量和网络流量。</string>
+    <string name="summary_checkbox_gamepad_motion_sensors">允许 PC 读取已连接的外接手柄的陀螺仪和加速度计（如果有）。需要 Android 12 或更高版本。如果没有应用使用体感，可将其关闭，以略微节省电量和网络流量。</string>
     <string name="title_checkbox_gamepad_motion_fallback">设备内置陀螺仪</string>
     <string name="summary_checkbox_gamepad_motion_fallback">当已连接的手柄没有陀螺仪，或你的 Android 版本无法读取时，使用此设备自带的陀螺仪和加速度计（掌机的内置传感器）。\n注意：此时 PC 可能会将你的手柄识别为 PlayStation 手柄。</string>
     <string name="title_checkbox_force_device_motion">始终使用设备内置陀螺仪</string>
@@ -163,7 +163,7 @@
     <string name="title_video_format">视频编解码器</string>
     <string name="summary_video_format">如果设备支持，较新的编解码器可以降低视频带宽需求。如果 PC 端软件或 GPU 不支持，所选编解码器可能被忽略。</string>
     <string name="title_enable_hdr">启用 HDR</string>
-    <string name="summary_enable_hdr">当游戏和 PC 的 GPU 支持时串流 HDR。HDR 需要支持 HEVC Main 10 编码的 GPU。HDR 的显示效果取决于此设备的屏幕。</string>
+    <string name="summary_enable_hdr">当应用和 PC 的 GPU 支持时串流 HDR。HDR 需要支持 HEVC Main 10 编码的 GPU。HDR 的显示效果取决于此设备的屏幕。</string>
     <string name="title_full_range">强制全范围视频</string>
     <string name="summary_full_range">如果你的设备无法正确显示全范围视频内容，这会导致亮部和暗部细节丢失。</string>
     <string name="title_prevent_packet_loss">Wi-Fi 保活</string>
@@ -388,7 +388,7 @@
     <string name="send_clipboard_failed">发送剪贴板失败：</string>
     <string name="external_display_info">已连接外接显示器：%1$dx%2$d，%3$.1fHz</string>
     <string name="no_external_display">未检测到外接显示器</string>
-    <string name="no_game_instance">没有可用的游戏实例</string>
+    <string name="no_game_instance">没有可用的应用实例</string>
     <string name="get_clipboard_failed">获取剪贴板失败：</string>
     <string name="send_clipboard_success">剪贴板发送成功</string>
     <string name="get_clipboard_success">剪贴板获取成功</string>

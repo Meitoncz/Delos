@@ -43,11 +43,11 @@ class FilterModalTest {
     }
 
     @Test fun resultLineShowsTheMatchesOfAnActiveFilterAndTheWholeLibraryOtherwise() {
-        assertEquals("27 of 55 games", filterResultLine(res, 27, 55, active = true))
-        assertEquals("0 of 55 games", filterResultLine(res, 0, 55, active = true))
-        assertEquals("All 55 games", filterResultLine(res, 55, 55, active = false))
-        assertEquals("1 of 1 game", filterResultLine(res, 1, 1, active = true))
-        assertEquals("All 1 game", filterResultLine(res, 1, 1, active = false))
+        assertEquals("27 of 55 apps", filterResultLine(res, 27, 55, active = true))
+        assertEquals("0 of 55 apps", filterResultLine(res, 0, 55, active = true))
+        assertEquals("All 55 apps", filterResultLine(res, 55, 55, active = false))
+        assertEquals("1 of 1 app", filterResultLine(res, 1, 1, active = true))
+        assertEquals("All 1 app", filterResultLine(res, 1, 1, active = false))
     }
 
     @Test fun hintLabelShowsHowManyCriteriaNarrowTheLibrary() {

@@ -4,11 +4,11 @@
     <string name="shell_link_pair_message">Посилання просить Delos створити пару з цим ПК. Продовжуй, лише якщо відкрив його сам.</string>
     <string name="shell_link_pair_action">З’єднати</string>
     <string name="shell_link_start_title">Запустити %1$s?</string>
-    <string name="shell_link_start_title_unnamed">Запустити гру?</string>
+    <string name="shell_link_start_title_unnamed">Запустити застосунок?</string>
     <string name="shell_link_start_message">Посилання просить Delos запустити %1$s на %2$s. Продовжуй, лише якщо відкрив його сам.</string>
     <string name="shell_link_start_message_game">Посилання просить Delos запустити %1$s на ПК. Продовжуй, лише якщо відкрив його сам.</string>
-    <string name="shell_link_start_message_host">Посилання просить Delos запустити гру на %1$s. Продовжуй, лише якщо відкрив його сам.</string>
-    <string name="shell_link_start_message_unnamed">Посилання просить Delos запустити гру на ПК. Продовжуй, лише якщо відкрив його сам.</string>
+    <string name="shell_link_start_message_host">Посилання просить Delos запустити застосунок на %1$s. Продовжуй, лише якщо відкрив його сам.</string>
+    <string name="shell_link_start_message_unnamed">Посилання просить Delos запустити застосунок на ПК. Продовжуй, лише якщо відкрив його сам.</string>
     <string name="shell_link_start_action">Запустити</string>
 
     <string name="shell_nav_settings">Налаштування</string>
@@ -19,7 +19,7 @@
     <string name="shell_side_not_connected">Не підключено</string>
     <string name="shell_side_connected">Підключено до %1$s</string>
     <string name="shell_side_offline">%1$s не в мережі</string>
-    <string name="shell_side_show_hidden">Показати приховані ігри</string>
+    <string name="shell_side_show_hidden">Показати приховані застосунки</string>
     <string name="shell_side_hidden_on">Прихованих на %2$s: %1$d</string>
     <string name="shell_side_hidden_on_this_pc">Прихованих на цьому ПК: %1$d</string>
     <string name="shell_side_theme">Тема</string>
@@ -36,16 +36,16 @@
     <string name="shell_progress_count">%1$d із %2$d</string>
 
     <plurals name="shell_home_apps_on_pc">
-        <item quantity="one">%1$d гра на %2$s</item>
-        <item quantity="few">%1$d гри на %2$s</item>
-        <item quantity="many">%1$d ігор на %2$s</item>
-        <item quantity="other">%1$d гри на %2$s</item>
+        <item quantity="one">%1$d застосунок на %2$s</item>
+        <item quantity="few">%1$d застосунки на %2$s</item>
+        <item quantity="many">%1$d застосунків на %2$s</item>
+        <item quantity="other">%1$d застосунку на %2$s</item>
     </plurals>
     <plurals name="shell_home_apps_filtered">
-        <item quantity="one">%1$d із %2$d гри на %3$s</item>
-        <item quantity="few">%1$d із %2$d ігор на %3$s</item>
-        <item quantity="many">%1$d із %2$d ігор на %3$s</item>
-        <item quantity="other">%1$d із %2$d гри на %3$s</item>
+        <item quantity="one">%1$d із %2$d застосунку на %3$s</item>
+        <item quantity="few">%1$d із %2$d застосунків на %3$s</item>
+        <item quantity="many">%1$d із %2$d застосунків на %3$s</item>
+        <item quantity="other">%1$d із %2$d застосунку на %3$s</item>
     </plurals>
     <string name="shell_hint_library_label">БІБЛІОТЕКА</string>
 

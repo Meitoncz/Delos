@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="companion_game_focused">Вибрана гра</string>
+    <string name="companion_game_focused">Вибраний застосунок</string>
     <string name="companion_game_running">Зараз запущено</string>
     <string name="companion_game_resume_other">Продовжити іншу</string>
     <string name="companion_game_quit_start">Вийти й запустити</string>

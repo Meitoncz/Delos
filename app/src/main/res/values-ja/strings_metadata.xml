@@ -2,7 +2,7 @@
 <resources>
     <string name="metadata_hdr_unverified">HDR/SDR未確認</string>
 
-    <string name="metadata_filtered_title">これらのフィルターに一致するゲームはありません</string>
+    <string name="metadata_filtered_title">これらのフィルターに一致するアプリはありません</string>
     <string name="metadata_filtered_note">%1$sを押してフィルターを変更するか、下のボタンでリセットしてください。</string>
     <string name="metadata_filtered_reset">ライブラリのフィルターをリセット</string>
 

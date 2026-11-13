@@ -8,12 +8,12 @@
     <string name="shell_link_pair_action">Koppeln</string>
     <!-- Security prompt for a link that starts a game. %1$s: game name, %2$s: PC name; the variants cover a missing name -->
     <string name="shell_link_start_title">%1$s starten?</string>
-    <string name="shell_link_start_title_unnamed">Spiel starten?</string>
+    <string name="shell_link_start_title_unnamed">App starten?</string>
     <string name="shell_link_start_message">Ein Link fordert Delos auf, %1$s auf %2$s zu starten. Fahr nur fort, wenn du ihn selbst geöffnet hast.</string>
     <string name="shell_link_start_message_game">Ein Link fordert Delos auf, %1$s auf einem PC zu starten. Fahr nur fort, wenn du ihn selbst geöffnet hast.</string>
     <!-- %1$s: PC name; the game name is not known -->
-    <string name="shell_link_start_message_host">Ein Link fordert Delos auf, ein Spiel auf %1$s zu starten. Fahr nur fort, wenn du ihn selbst geöffnet hast.</string>
-    <string name="shell_link_start_message_unnamed">Ein Link fordert Delos auf, ein Spiel auf einem PC zu starten. Fahr nur fort, wenn du ihn selbst geöffnet hast.</string>
+    <string name="shell_link_start_message_host">Ein Link fordert Delos auf, eine App auf %1$s zu starten. Fahr nur fort, wenn du ihn selbst geöffnet hast.</string>
+    <string name="shell_link_start_message_unnamed">Ein Link fordert Delos auf, eine App auf einem PC zu starten. Fahr nur fort, wenn du ihn selbst geöffnet hast.</string>
     <string name="shell_link_start_action">Starten</string>
 
     <!-- The three buttons of the top bar -->
@@ -29,7 +29,7 @@
     <string name="shell_side_connected">Verbunden mit %1$s</string>
     <!-- %1$s: PC name -->
     <string name="shell_side_offline">%1$s ist offline</string>
-    <string name="shell_side_show_hidden">Ausgeblendete Spiele zeigen</string>
+    <string name="shell_side_show_hidden">Ausgeblendete Apps zeigen</string>
     <!-- %1$d: number of hidden games, %2$s: PC name -->
     <string name="shell_side_hidden_on">%1$d ausgeblendet auf %2$s</string>
     <!-- %1$d: number of hidden games; no PC is selected -->

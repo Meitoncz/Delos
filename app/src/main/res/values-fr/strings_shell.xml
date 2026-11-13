@@ -4,11 +4,11 @@
     <string name="shell_link_pair_message">Un lien demande à Delos de s’associer à ce PC. Continue seulement si tu l’as ouvert toi-même.</string>
     <string name="shell_link_pair_action">Associer</string>
     <string name="shell_link_start_title">Lancer %1$s ?</string>
-    <string name="shell_link_start_title_unnamed">Lancer un jeu ?</string>
+    <string name="shell_link_start_title_unnamed">Lancer une appli ?</string>
     <string name="shell_link_start_message">Un lien demande à Delos de lancer %1$s sur %2$s. Continue seulement si tu l’as ouvert toi-même.</string>
     <string name="shell_link_start_message_game">Un lien demande à Delos de lancer %1$s sur un PC. Continue seulement si tu l’as ouvert toi-même.</string>
-    <string name="shell_link_start_message_host">Un lien demande à Delos de lancer un jeu sur %1$s. Continue seulement si tu l’as ouvert toi-même.</string>
-    <string name="shell_link_start_message_unnamed">Un lien demande à Delos de lancer un jeu sur un PC. Continue seulement si tu l’as ouvert toi-même.</string>
+    <string name="shell_link_start_message_host">Un lien demande à Delos de lancer une appli sur %1$s. Continue seulement si tu l’as ouvert toi-même.</string>
+    <string name="shell_link_start_message_unnamed">Un lien demande à Delos de lancer une appli sur un PC. Continue seulement si tu l’as ouvert toi-même.</string>
     <string name="shell_link_start_action">Lancer</string>
     <string name="shell_nav_settings">Réglages</string>
     <string name="shell_nav_profile">Profil</string>
@@ -17,7 +17,7 @@
     <string name="shell_side_not_connected">Non connecté</string>
     <string name="shell_side_connected">Connecté à %1$s</string>
     <string name="shell_side_offline">%1$s est hors ligne</string>
-    <string name="shell_side_show_hidden">Afficher les jeux masqués</string>
+    <string name="shell_side_show_hidden">Afficher les applis masquées</string>
     <string name="shell_side_hidden_on">%1$d masqués sur %2$s</string>
     <string name="shell_side_hidden_on_this_pc">%1$d masqués sur ce PC</string>
     <string name="shell_side_theme">Thème</string>

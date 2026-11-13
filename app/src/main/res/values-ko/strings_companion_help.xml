@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="companion_game_focused">선택한 게임</string>
+    <string name="companion_game_focused">선택한 앱</string>
     <string name="companion_game_running">실행 중</string>
     <string name="companion_game_resume_other">다른 게임 이어하기</string>
     <string name="companion_game_quit_start">종료 후 시작</string>

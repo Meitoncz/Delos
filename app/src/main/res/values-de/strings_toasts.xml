@@ -10,7 +10,7 @@
     <!-- %1$s: game name, %2$s: PC name -->
     <string name="shell_retry_game_missing">%1$s ist auf %2$s nicht verfügbar</string>
     <!-- %1$s: PC name; the game name is not known -->
-    <string name="shell_retry_game_missing_unnamed">Das Spiel ist auf %1$s nicht verfügbar</string>
+    <string name="shell_retry_game_missing_unnamed">Die App ist auf %1$s nicht verfügbar</string>
     <string name="shell_profile_updated">Profil aktualisiert</string>
     <!-- %1$s: profile name -->
     <string name="shell_welcome">Willkommen, %1$s</string>

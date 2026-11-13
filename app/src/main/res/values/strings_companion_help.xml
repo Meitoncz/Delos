@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Small line under the game's name on the companion's game card; the PC's name follows after a dot -->
-    <string name="companion_game_focused">Focused game</string>
+    <string name="companion_game_focused">Focused app</string>
     <!-- Same line while the focused game runs on the PC -->
     <string name="companion_game_running">Running now</string>
     <!-- Button of the companion's game card while another game runs on the PC: go back to that one -->

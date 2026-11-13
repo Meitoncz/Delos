@@ -5,7 +5,7 @@
     <string name="scut_invalid_uuid">Der angegebene PC ist ungültig</string>
     <string name="scut_invalid_app_id">Die angegebene App ist ungültig</string>
     <string name="scut_game_running">%1$s läuft bereits · beende es zuerst in Delos</string>
-    <string name="scut_other_game_running">Es läuft bereits ein anderes Spiel · beende es zuerst in Delos</string>
+    <string name="scut_other_game_running">Es läuft bereits eine andere App · beende sie zuerst in Delos</string>
 
     <string name="configuration_mode_move_buttons">Modus: Tasten verschieben</string>
     <string name="configuration_mode_resize_buttons">Modus: Tastengröße ändern</string>
@@ -126,7 +126,7 @@
     <string name="title_checkbox_gamepad_touchpad_as_mouse">Maus immer per Touchpad steuern</string>
     <string name="summary_checkbox_gamepad_touchpad_as_mouse">Erzwingt, dass die Touchpad-Eingabe des Gamepads die Host-Maus steuert, auch wenn ein Gamepad mit Touchpad emuliert wird.</string>
     <string name="title_checkbox_gamepad_motion_sensors">Gyroskop des externen Gamepads</string>
-    <string name="summary_checkbox_gamepad_motion_sensors">Lässt den PC Gyroskop und Beschleunigungssensor eines angeschlossenen externen Gamepads lesen, falls es welche hat. Erfordert Android 12 oder neuer. Schalte es aus, wenn kein Spiel Bewegung nutzt, um etwas Strom und Netzwerkverkehr zu sparen.</string>
+    <string name="summary_checkbox_gamepad_motion_sensors">Lässt den PC Gyroskop und Beschleunigungssensor eines angeschlossenen externen Gamepads lesen, falls es welche hat. Erfordert Android 12 oder neuer. Schalte es aus, wenn keine App Bewegung nutzt, um etwas Strom und Netzwerkverkehr zu sparen.</string>
     <string name="title_checkbox_gamepad_motion_fallback">Eingebautes Gyroskop des Geräts</string>
     <string name="summary_checkbox_gamepad_motion_fallback">Nutzt Gyroskop und Beschleunigungssensor dieses Geräts (die eingebauten Sensoren eines Handhelds), wenn das angeschlossene Gamepad keine hat oder deine Android-Version sie nicht lesen kann.\nHinweis: Der PC erkennt dein Gamepad dann evtl. als PlayStation-Controller.</string>
     <string name="title_checkbox_force_device_motion">Immer eingebautes Gyroskop nutzen</string>
@@ -181,7 +181,7 @@
     <string name="title_video_format">Video-Codec</string>
     <string name="summary_video_format">Neuere Codecs können den Bandbreitenbedarf des Videos senken, wenn dein Gerät sie unterstützt. Die Codec-Auswahl wird möglicherweise ignoriert, wenn die Host-Software oder GPU sie nicht unterstützt.</string>
     <string name="title_enable_hdr">HDR aktivieren</string>
-    <string name="summary_enable_hdr">Streamt HDR, wenn Spiel und PC-GPU es unterstützen. HDR erfordert eine GPU mit HEVC-Main-10-Encoding. Wie HDR aussieht, hängt vom Display dieses Geräts ab.</string>
+    <string name="summary_enable_hdr">Streamt HDR, wenn App und PC-GPU es unterstützen. HDR erfordert eine GPU mit HEVC-Main-10-Encoding. Wie HDR aussieht, hängt vom Display dieses Geräts ab.</string>
     <string name="title_full_range">Full-Range-Video erzwingen</string>
     <string name="summary_full_range">Das führt zu Detailverlust in hellen und dunklen Bereichen, wenn dein Gerät Full-Range-Videoinhalte nicht korrekt darstellt.</string>
     <string name="title_prevent_packet_loss">Wi-Fi-Keep-alive</string>
@@ -413,7 +413,7 @@
     <string name="send_clipboard_failed">Zwischenablage konnte nicht gesendet werden: </string>
     <string name="external_display_info">Externes Display verbunden mit: %1$dx%2$d bei %3$.1fHz</string>
     <string name="no_external_display">Kein externes Display erkannt</string>
-    <string name="no_game_instance">Keine Spielinstanz verfügbar</string>
+    <string name="no_game_instance">Keine App-Instanz verfügbar</string>
     <string name="get_clipboard_failed">Zwischenablage konnte nicht geholt werden: </string>
     <string name="send_clipboard_success">Zwischenablage gesendet</string>
     <string name="get_clipboard_success">Zwischenablage geholt</string>

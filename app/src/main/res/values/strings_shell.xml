@@ -8,12 +8,12 @@
     <string name="shell_link_pair_action">Pair</string>
     <!-- Security prompt for a link that starts a game. %1$s: game name, %2$s: PC name; the variants cover a missing name -->
     <string name="shell_link_start_title">Start %1$s?</string>
-    <string name="shell_link_start_title_unnamed">Start a game?</string>
+    <string name="shell_link_start_title_unnamed">Start an app?</string>
     <string name="shell_link_start_message">A link asks Delos to start %1$s on %2$s. Continue only if you opened it yourself.</string>
     <string name="shell_link_start_message_game">A link asks Delos to start %1$s on a PC. Continue only if you opened it yourself.</string>
     <!-- %1$s: PC name; the game name is not known -->
-    <string name="shell_link_start_message_host">A link asks Delos to start a game on %1$s. Continue only if you opened it yourself.</string>
-    <string name="shell_link_start_message_unnamed">A link asks Delos to start a game on a PC. Continue only if you opened it yourself.</string>
+    <string name="shell_link_start_message_host">A link asks Delos to start an app on %1$s. Continue only if you opened it yourself.</string>
+    <string name="shell_link_start_message_unnamed">A link asks Delos to start an app on a PC. Continue only if you opened it yourself.</string>
     <string name="shell_link_start_action">Start</string>
 
     <!-- The three buttons of the top bar -->
@@ -29,7 +29,7 @@
     <string name="shell_side_connected">Connected to %1$s</string>
     <!-- %1$s: PC name -->
     <string name="shell_side_offline">%1$s is offline</string>
-    <string name="shell_side_show_hidden">Show hidden games</string>
+    <string name="shell_side_show_hidden">Show hidden apps</string>
     <!-- %1$d: number of hidden games, %2$s: PC name -->
     <string name="shell_side_hidden_on">%1$d hidden on %2$s</string>
     <!-- %1$d: number of hidden games; no PC is selected -->

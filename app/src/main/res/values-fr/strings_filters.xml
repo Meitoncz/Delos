@@ -2,14 +2,14 @@
 <resources>
     <string name="filters_title">Filtrer la bibliothèque</string>
     <plurals name="filters_result_active">
-        <item quantity="one">%1$d jeu sur %2$d</item>
-        <item quantity="many">%1$d de jeux sur %2$d</item>
-        <item quantity="other">%1$d jeux sur %2$d</item>
+        <item quantity="one">%1$d appli sur %2$d</item>
+        <item quantity="many">%1$d d’applis sur %2$d</item>
+        <item quantity="other">%1$d applis sur %2$d</item>
     </plurals>
     <plurals name="filters_result_all">
-        <item quantity="one">%1$d jeu au total</item>
-        <item quantity="many">%1$d de jeux au total</item>
-        <item quantity="other">%1$d jeux au total</item>
+        <item quantity="one">%1$d appli au total</item>
+        <item quantity="many">%1$d d’applis au total</item>
+        <item quantity="other">%1$d applis au total</item>
     </plurals>
     <string name="filters_hint">Filtre</string>
     <plurals name="filters_hint_active">

@@ -20,7 +20,7 @@
     <string name="devices_menu_default_on">Iniciar o app Delos com este PC</string>
     <string name="devices_menu_wake">Ativar o PC</string>
     <string name="devices_menu_rename">Renomear</string>
-    <string name="devices_menu_open_games">Abrir os jogos dele</string>
+    <string name="devices_menu_open_games">Abrir os apps dele</string>
     <string name="devices_menu_connect">Conectar</string>
     <string name="devices_menu_unpair">Desparear</string>
     <string name="devices_menu_remove">Remover do app Delos</string>

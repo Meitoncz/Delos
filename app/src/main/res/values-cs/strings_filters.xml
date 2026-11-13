@@ -3,16 +3,16 @@
     <!-- Library filter (Y on the home screen) -->
     <string name="filters_title">Filtr knihovny</string>
     <plurals name="filters_result_active">
-        <item quantity="one">%1$d z %2$d hry</item>
-        <item quantity="few">%1$d z %2$d her</item>
-        <item quantity="many">%1$d z %2$d hry</item>
-        <item quantity="other">%1$d z %2$d her</item>
+        <item quantity="one">%1$d z %2$d aplikace</item>
+        <item quantity="few">%1$d z %2$d aplikací</item>
+        <item quantity="many">%1$d z %2$d aplikace</item>
+        <item quantity="other">%1$d z %2$d aplikací</item>
     </plurals>
     <plurals name="filters_result_all">
-        <item quantity="one">Celkem %1$d hra</item>
-        <item quantity="few">Celkem %1$d hry</item>
-        <item quantity="many">Celkem %1$d hry</item>
-        <item quantity="other">Celkem %1$d her</item>
+        <item quantity="one">Celkem %1$d aplikace</item>
+        <item quantity="few">Celkem %1$d aplikace</item>
+        <item quantity="many">Celkem %1$d aplikace</item>
+        <item quantity="other">Celkem %1$d aplikací</item>
     </plurals>
     <string name="filters_hint">Filtr</string>
     <plurals name="filters_hint_active">

@@ -19,7 +19,7 @@
     <string name="devices_menu_default_on">Démarrer Delos avec ce PC</string>
     <string name="devices_menu_wake">Réveiller le PC</string>
     <string name="devices_menu_rename">Renommer</string>
-    <string name="devices_menu_open_games">Ouvrir ses jeux</string>
+    <string name="devices_menu_open_games">Ouvrir ses applis</string>
     <string name="devices_menu_connect">Se connecter</string>
     <string name="devices_menu_unpair">Dissocier</string>
     <string name="devices_menu_remove">Retirer de Delos</string>

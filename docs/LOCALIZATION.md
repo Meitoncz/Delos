@@ -253,11 +253,14 @@ extend it, record decisions here and keep it consistent across all files.
 | controller | gamepad | ovladač | mando | controle | manette | Controller | コントローラー | 컨트롤러 | 手柄 | контролер |
 | gyro | keep | gyro | giroscopio | giroscópio | gyroscope | Gyro | ジャイロ | 자이로 | 陀螺仪 | гіроскоп |
 | rumble | vibration of a controller | vibrace | vibración | vibração | vibration | Vibration | 振動 | 진동 | 震动 | вібрація |
-| library | the game list | knihovna | biblioteca | biblioteca | bibliothèque | Bibliothek | ライブラリ | 라이브러리 | 游戏库 | бібліотека |
-| cover | game cover art | obal | portada | capa | jaquette | Cover | カバー | 커버 | 封面 | обкладинка |
+| library | the app list | knihovna | biblioteca | biblioteca | bibliothèque | Bibliothek | ライブラリ | 라이브러리 | 应用库 | бібліотека |
+| app (library entry) | the generic word for anything the host's library lists: a game, a program, Desktop, Remote Input. Never „game“ for the entry | aplikace | app | app | appli | App | アプリ | 앱 | 应用 | застосунок |
+| cover | cover art of an app | obal | portada | capa | jaquette | Cover | カバー | 커버 | 封面 | обкладинка |
 | hero | the wide banner artwork | hero (banner) | hero (banner) | hero (banner) | hero (bannière) | Hero (Banner) | ヒーロー画像 | 히어로 이미지 | 主视觉图 | hero (банер) |
 | profile | translate | profil | perfil | perfil | profil | Profil | プロフィール | 프로필 | 个人资料 | профіль |
 | toast | never shown to users | – | – | – | – | – | – | – | – | – |
+
+**App vs. game.** An *app* is the library entry the user launches or manages (tiles, App settings, Quit app, counts, toasts, companion texts); *game* stays only where a text is about games as content or gaming software: metadata and tags (genre, IGDB, HowLongToBeat, PCGamingWiki, native HDR in games), SteamGridDB's own game database wording, product names (Snapdragon Game Super Resolution, Xbox Game Bar, Steam Overlay), gamepad / game controller, rumble, and generic gaming advice in touch and mouse help. When Desktop could be the thing meant, say app. The settings-search aliases (`settings_search_alias_game`, `SettingsSearchAliases.kt`) keep the old word searchable. One term per language: Czech *aplikace*, Spanish *app*, Brazilian Portuguese *app*, French *appli*, German *App*, Japanese アプリ, Korean 앱, Chinese 应用 (library 应用库), Ukrainian *застосунок*.
 
 The per-language cells are proposals for the reviewer, not final. "Keep" rows must stay identical in every file.
 
@@ -441,7 +444,7 @@ Neutral Spanish (Spain and Latin America), informal *tú*, infinitive for button
 | rumble / haptics | vibración / vibración háptica |
 | artwork / cover / wide cover / background | ilustraciones / portada / portada panorámica / fondo |
 | profile | perfil |
-| game quit / resume | cerrar juego / reanudar |
+| app quit / resume | cerrar app / reanudar |
 | wake (a PC) | reactivar |
 | offline / online | sin conexión / en línea |
 | upscaler / supersampling / sharpness | escalador / supermuestreo / nitidez |
@@ -542,7 +545,7 @@ Polite です/ます in sentences, plain noun/verb phrases on labels and buttons
 | cover / wide cover / background / logo | カバー / ワイドカバー / 背景 / ロゴ |
 | settings / About / Debug info | 設定 / バージョン情報 / デバッグ情報 |
 | stream menu | ストリームメニュー |
-| Apply / Resume / Quit game | 適用 / 再開 / ゲームを終了 |
+| Apply / Resume / Quit app | 適用 / 再開 / アプリを終了 |
 | keep diagnostic logs | 診断ログを保存 |
 ## Terminology: Korean
 
@@ -610,5 +613,5 @@ Informal *ти*; buttons are short infinitives or nouns. Apostrophe is always `�
 | bitrate, codec, upscaler, supersampling, sharpness | бітрейт, кодек, апскейлер, суперсемплінг, різкість |
 | frame pacing | frame pacing |
 | Stream / Display / About tabs | Стрім / Екран / Про застосунок |
-| Quit game, Resume, Start | Закрити гру, Продовжити, Запустити |
+| Quit app, Resume, Start | Закрити застосунок, Продовжити, Запустити |
 | arrows `→` in menu paths | `>` (the arrow is not in the Unbounded font) |

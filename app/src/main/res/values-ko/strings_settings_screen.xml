@@ -28,6 +28,7 @@
     <string name="settings_search_alias_gyro_smoothing">자이로 안정화 스무딩</string>
     <string name="settings_search_alias_link_test">속도 테스트 처리량 대역폭 네트워크</string>
     <string name="settings_search_alias_link_use">권장 비트레이트 연결</string>
+    <string name="settings_search_alias_game">게임</string>
 
     <string name="settings_actions_imported">가져왔어요</string>
     <string name="settings_actions_import_failed">가져오지 못했어요</string>
@@ -64,18 +65,18 @@
     <string name="settings_native_palette_title">색상 팔레트</string>
     <string name="settings_native_palette_description">인터페이스와 움직이는 배경의 색상이에요.</string>
     <string name="settings_native_needs_material_you_off">Material You 색상을 꺼야 해요.</string>
-    <string name="settings_native_match_colors_title">게임 색상에 맞추기</string>
-    <string name="settings_native_match_colors_description">움직이는 배경이 선택한 게임 배경 이미지의 주된 색을 따라가요.</string>
+    <string name="settings_native_match_colors_title">앱 색상에 맞추기</string>
+    <string name="settings_native_match_colors_description">움직이는 배경이 선택한 앱 배경 이미지의 주된 색을 따라가요.</string>
     <string name="settings_native_clock_title">시계</string>
     <string name="settings_native_clock_description">상태 표시줄의 시간 형식이에요.</string>
     <string name="settings_native_background_title">움직이는 배경</string>
     <string name="settings_native_background_description">움직이는 셰이더 배경(Android 13 이상) 또는 정지된 배경이에요.</string>
-    <string name="settings_native_hero_background_title">게임 배경</string>
-    <string name="settings_native_hero_background_description">홈 화면에 선택한 게임의 배경을 표시해요.</string>
-    <string name="settings_native_hero_blur_title">게임 배경 블러</string>
-    <string name="settings_native_hero_blur_description">라이브러리 뒤의 게임 배경을 흐리게 해요. 게임 배경이 필요해요.</string>
-    <string name="settings_native_hero_opacity_title">게임 배경 투명도</string>
-    <string name="settings_native_hero_opacity_description">움직이는 배경 위로 게임 아트워크가 얼마나 비칠지 정해요. 게임 배경이 필요해요.</string>
+    <string name="settings_native_hero_background_title">앱 배경</string>
+    <string name="settings_native_hero_background_description">홈 화면에 선택한 앱의 배경을 표시해요.</string>
+    <string name="settings_native_hero_blur_title">앱 배경 블러</string>
+    <string name="settings_native_hero_blur_description">라이브러리 뒤의 앱 배경을 흐리게 해요. 앱 배경이 필요해요.</string>
+    <string name="settings_native_hero_opacity_title">앱 배경 투명도</string>
+    <string name="settings_native_hero_opacity_description">움직이는 배경 위로 앱 아트워크가 얼마나 비칠지 정해요. 앱 배경이 필요해요.</string>
     <string name="settings_native_scale_title">인터페이스 크기</string>
     <string name="settings_native_scale_description">텍스트, 상태 표시줄, 버튼 안내의 크기예요.</string>
     <string name="settings_native_animations_title">애니메이션</string>
@@ -90,7 +91,7 @@
     <string name="settings_native_menu_buttons_title">스트림 메뉴 버튼</string>
     <string name="settings_native_menu_buttons_description">스트림 중 함께 눌러 스트림 메뉴를 열거나 닫는 버튼이에요. 선택해서 뒷면 버튼 등 다른 버튼을 기록할 수 있어요.</string>
     <string name="settings_native_menu_swipe_title">위로 스와이프해서 메뉴 열기</string>
-    <string name="settings_native_menu_swipe_description">아래쪽 가장자리에서 위로 스와이프해도 스트림 메뉴가 열려요. 그곳에서 시작한 터치는 게임에 전달되지 않아요.</string>
+    <string name="settings_native_menu_swipe_description">아래쪽 가장자리에서 위로 스와이프해도 스트림 메뉴가 열려요. 그곳에서 시작한 터치는 앱에 전달되지 않아요.</string>
     <string name="settings_native_stats_position_title">통계 위치</string>
     <string name="settings_native_stats_position_description">스트리밍 중 전체 통계 패널이 표시되는 모서리예요. 간단 모드는 항상 상단 가운데예요.</string>
     <string name="settings_native_stats_top_left">왼쪽 위</string>
@@ -117,21 +118,21 @@
     <string name="settings_native_sgdb_off_toast">SteamGridDB가 꺼졌어요</string>
     <string name="settings_native_sgdb_key_description">내 키를 사용하면 Delos가 SteamGridDB에서 커버, 와이드 커버, 배경, 로고를 내려받을 수 있어요. 모든 프로필에서 이 기기에 보관돼요.</string>
     <string name="settings_native_sgdb_auto_title">자동 다운로드</string>
-    <string name="settings_native_sgdb_auto_description">라이브러리를 불러올 때 새 게임에 SteamGridDB에서 평점이 가장 높은 커버, 와이드 커버, 배경, 로고를 가져와요.</string>
+    <string name="settings_native_sgdb_auto_description">라이브러리를 불러올 때 새 앱에 SteamGridDB에서 평점이 가장 높은 커버, 와이드 커버, 배경, 로고를 가져와요.</string>
     <string name="settings_native_connect_first_toast">먼저 PC에 연결해 주세요</string>
-    <string name="settings_native_downloading_toast">%1$s 게임의 아트워크를 다운로드하는 중…</string>
-    <string name="settings_native_artwork_complete_toast">모든 게임에 이미 아트워크가 있어요</string>
+    <string name="settings_native_downloading_toast">%1$s 앱의 아트워크를 다운로드하는 중…</string>
+    <string name="settings_native_artwork_complete_toast">모든 앱에 이미 아트워크가 있어요</string>
     <plurals name="settings_native_artwork_ready_toast">
-        <item quantity="other">게임 %d개의 아트워크가 준비됐어요</item>
+        <item quantity="other">앱 %d개의 아트워크가 준비됐어요</item>
     </plurals>
     <string name="settings_native_missing_artwork_title">없는 아트워크 다운로드</string>
-    <string name="settings_native_missing_artwork_description">%1$s에서 아트워크가 없는 게임의 아트워크를 가져와요.</string>
-    <string name="settings_native_missing_artwork_description_current">현재 PC에서 아트워크가 없는 게임의 아트워크를 가져와요.</string>
+    <string name="settings_native_missing_artwork_description">%1$s에서 아트워크가 없는 앱의 아트워크를 가져와요.</string>
+    <string name="settings_native_missing_artwork_description_current">현재 PC에서 아트워크가 없는 앱의 아트워크를 가져와요.</string>
     <string name="settings_native_refresh_artwork_title">모든 아트워크 다시 다운로드</string>
-    <string name="settings_native_refresh_artwork_description">모든 게임을 다시 검색해 평점이 가장 높은 이미지를 가져와요. 직접 고른 이미지는 그대로 유지돼요.</string>
-    <string name="settings_native_choose_artwork_title">게임별 아트워크 선택</string>
-    <string name="settings_native_choose_artwork_value">게임 옵션</string>
-    <string name="settings_native_choose_artwork_description">홈 화면: 게임에서 오른쪽 메뉴 버튼 → 아트워크. 원하는 커버, 와이드 커버, 배경, 로고를 고를 수 있어요.</string>
+    <string name="settings_native_refresh_artwork_description">모든 앱을 다시 검색해 평점이 가장 높은 이미지를 가져와요. 직접 고른 이미지는 그대로 유지돼요.</string>
+    <string name="settings_native_choose_artwork_title">앱별 아트워크 선택</string>
+    <string name="settings_native_choose_artwork_value">앱 옵션</string>
+    <string name="settings_native_choose_artwork_description">홈 화면: 앱에서 오른쪽 메뉴 버튼 → 아트워크. 원하는 커버, 와이드 커버, 배경, 로고를 고를 수 있어요.</string>
 
     <string name="settings_native_version_title">버전</string>
     <string name="settings_native_version_description">Android용 Delos예요.</string>
@@ -155,7 +156,7 @@
     <string name="settings_native_help_clock_system">Android의 12/24시간 설정을 따라요.</string>
     <string name="settings_native_help_clock_12">오전/오후가 붙는 12시간제 시계예요.</string>
     <string name="settings_native_help_clock_24">24시간제 시계예요.</string>
-    <string name="settings_native_help_motion_reduced">인터페이스 움직임이 줄어요. 게임 FPS는 그대로예요.</string>
+    <string name="settings_native_help_motion_reduced">인터페이스 움직임이 줄어요. 앱 FPS는 그대로예요.</string>
     <string name="settings_native_help_motion_full">전체 전환 효과와 포커스 애니메이션을 사용해요.</string>
     <string name="settings_native_help_default_pc_none">선호 PC가 없어요. 시작 화면 건너뛰기를 사용할 수 없어요.</string>
     <string name="settings_native_help_default_pc_set">시작 화면 건너뛰기에서 사용해요. 페어링되어 있고 연결할 수 있어야 해요.</string>
@@ -179,7 +180,7 @@
     <plurals name="settings_game_custom_count">
         <item quantity="other">사용자 지정 설정 %d개</item>
     </plurals>
-    <string name="settings_game_summary_none">항목을 바꾸면 이 게임에만 적용되는 설정이 돼요.</string>
+    <string name="settings_game_summary_none">항목을 바꾸면 이 앱에만 적용되는 설정이 돼요.</string>
     <string name="settings_game_summary">스트림 %1$d개 · 디스플레이 %2$d개</string>
     <string name="settings_game_value_on">켜짐</string>
     <string name="settings_game_value_off">꺼짐</string>
@@ -191,12 +192,12 @@
     <string name="settings_game_from_profile">프로필에서</string>
     <string name="settings_game_profile_line">프로필: %1$s</string>
     <string name="settings_game_link_note">%1$s 연결 테스트는 설정에 있어요.</string>
-    <string name="settings_game_eyebrow">게임 설정 · %1$s</string>
-    <string name="settings_game_panel_title">내 게임, 내 설정</string>
-    <string name="settings_game_custom_title">이 게임 전용</string>
+    <string name="settings_game_eyebrow">앱 설정 · %1$s</string>
+    <string name="settings_game_panel_title">내 앱, 내 설정</string>
+    <string name="settings_game_custom_title">이 앱 전용</string>
     <string name="settings_game_profile_value_button">프로필 값: %1$s · %2$s를 누르면 되돌려요</string>
     <string name="settings_game_profile_value_touch">프로필 값: %1$s · 초기화를 탭하면 되돌려요</string>
-    <string name="settings_game_currently">현재 %1$s. 바꾸면 이 게임에만 값이 적용돼요.</string>
+    <string name="settings_game_currently">현재 %1$s. 바꾸면 이 앱에만 값이 적용돼요.</string>
     <string name="settings_game_only_this_game">%1$s에서만 이 변경 사항을 사용해요. 나머지는 모두 프로필을 따라요.</string>
     <string name="settings_game_saved_note">자동 저장됨 · 다음 스트림부터 적용</string>
     <string name="settings_native_section_displays">디스플레이</string>
@@ -209,7 +210,7 @@
     <string name="settings_native_help_second_display_external">모니터나 TV로 취급해요. 외부 디스플레이 모드가 스트림을 표시할 수 있어요.</string>
     <string name="settings_native_help_second_display_built_in">기기의 일부로 취급해요. 스트림 대상이 되지 않아요.</string>
     <string name="settings_native_main_screen_title">메인 화면</string>
-    <string name="settings_native_main_screen_description">게임과 스트림을 표시하는 패널이에요. 다른 패널은 보조 화면이 돼요.</string>
+    <string name="settings_native_main_screen_description">앱과 스트림을 표시하는 패널이에요. 다른 패널은 보조 화면이 돼요.</string>
     <string name="settings_native_main_screen_automatic">자동</string>
     <string name="settings_native_main_screen_swapped">교체</string>
     <string name="settings_native_help_main_screen_automatic">큰 패널이 메인 화면이에요.</string>

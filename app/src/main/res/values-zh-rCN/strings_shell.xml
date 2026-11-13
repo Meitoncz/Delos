@@ -4,11 +4,11 @@
     <string name="shell_link_pair_message">有链接请求 Delos 与此 PC 配对。仅在你自己打开该链接时才继续。</string>
     <string name="shell_link_pair_action">配对</string>
     <string name="shell_link_start_title">启动 %1$s？</string>
-    <string name="shell_link_start_title_unnamed">启动游戏？</string>
+    <string name="shell_link_start_title_unnamed">启动应用？</string>
     <string name="shell_link_start_message">有链接请求 Delos 在 %2$s 上启动 %1$s。仅在你自己打开该链接时才继续。</string>
     <string name="shell_link_start_message_game">有链接请求 Delos 在 PC 上启动 %1$s。仅在你自己打开该链接时才继续。</string>
-    <string name="shell_link_start_message_host">有链接请求 Delos 在 %1$s 上启动游戏。仅在你自己打开该链接时才继续。</string>
-    <string name="shell_link_start_message_unnamed">有链接请求 Delos 在 PC 上启动游戏。仅在你自己打开该链接时才继续。</string>
+    <string name="shell_link_start_message_host">有链接请求 Delos 在 %1$s 上启动应用。仅在你自己打开该链接时才继续。</string>
+    <string name="shell_link_start_message_unnamed">有链接请求 Delos 在 PC 上启动应用。仅在你自己打开该链接时才继续。</string>
     <string name="shell_link_start_action">启动</string>
     <string name="shell_nav_settings">设置</string>
     <string name="shell_nav_profile">个人资料</string>
@@ -17,7 +17,7 @@
     <string name="shell_side_not_connected">未连接</string>
     <string name="shell_side_connected">已连接到 %1$s</string>
     <string name="shell_side_offline">%1$s 已离线</string>
-    <string name="shell_side_show_hidden">显示隐藏的游戏</string>
+    <string name="shell_side_show_hidden">显示隐藏的应用</string>
     <string name="shell_side_hidden_on">%2$s 上隐藏了 %1$d 个</string>
     <string name="shell_side_hidden_on_this_pc">此 PC 上隐藏了 %1$d 个</string>
     <string name="shell_side_theme">主题</string>
@@ -37,7 +37,7 @@
     <plurals name="shell_home_apps_filtered">
         <item quantity="other">%2$d 个应用中的 %1$d 个（%3$s）</item>
     </plurals>
-    <string name="shell_hint_library_label">游戏库</string>
+    <string name="shell_hint_library_label">应用库</string>
     <string name="shell_hint_select">选择</string>
     <string name="shell_hint_back">返回</string>
     <string name="shell_hint_close">关闭</string>
@@ -48,7 +48,7 @@
     <string name="shell_hint_menu">菜单</string>
     <string name="shell_hint_options">选项</string>
     <string name="shell_hint_adjust">调整</string>
-    <string name="shell_hint_back_to_library">返回游戏库</string>
+    <string name="shell_hint_back_to_library">返回应用库</string>
     <string name="shell_hint_previous_tab">上一个标签页</string>
     <string name="shell_hint_next_tab">下一个标签页</string>
     <string name="shell_hint_search">搜索</string>

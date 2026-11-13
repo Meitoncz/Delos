@@ -16,9 +16,9 @@
     <string name="help_list_video_scale_mode">ローカルでの映像のフィット方法のみが対象です。</string>
     <string name="help_edit_diy_w_h">「ビデオ解像度」に解像度を追加します。幅x高さ（1920x1080）を入力し、そこで選択してください。</string>
     <string name="help_edit_diy_bitrate">ビットレートをMbpsで設定します。小数や、スライダーの範囲を超える値も指定できます。「ビデオビットレート」も更新されます。</string>
-    <string name="help_custom_refresh_rate">「ビデオフレームレート」にカスタムFPS（小数可）を追加します。そこで選択してください。結果はホスト、ゲーム、ディスプレイによって制限されます。</string>
+    <string name="help_custom_refresh_rate">「ビデオフレームレート」にカスタムFPS（小数可）を追加します。そこで選択してください。結果はホスト、アプリ、ディスプレイによって制限されます。</string>
     <string name="help_checkbox_enforce_display_mode">選択したディスプレイモードを使うよう、Androidに強く要求します。リフレッシュレートの要求が無視される場合に有効です。一部のファームウェアでは不具合が出ることがあります。</string>
-    <string name="help_checkbox_enable_hdr">HDRビデオを要求します。ゲーム、ホストのGPU、デコーダー、ディスプレイの対応が必要です（10ビットのHEVC、AV1、またはPyroWave）。</string>
+    <string name="help_checkbox_enable_hdr">HDRビデオを要求します。アプリ、ホストのGPU、デコーダー、ディスプレイの対応が必要です（10ビットのHEVC、AV1、またはPyroWave）。</string>
     <string name="help_checkbox_enable_fullexdisplay">接続したモニターやテレビに、設定した解像度とFPSでストリームとメニューを表示します。メニューは携帯機側で操作します。</string>
     <string name="help_checkbox_sgsr">低解像度のストリームをディスプレイのサイズにアップスケールするか、シャープ化のみを行います（モード）。GPU時間を消費します。メニューでの変更は1セッションのみ有効です。</string>
     <string name="help_list_pyrowave_chroma">4:4:4は帯域とGPUを消費します。</string>
@@ -27,7 +27,7 @@
     <string name="help_list_sgsr_supersampling_level">ストリームがすでにディスプレイと同じ解像度のときの内部サイズです。メニューでの変更は1セッションのみ有効です。</string>
     <string name="help_list_audio_config">PCが送信するチャンネル数です。サラウンドには、対応した再生環境が必要です。</string>
     <string name="help_checkbox_enable_audiofx">Androidのシステムイコライザーとエフェクトで、ストリームの音声を処理できるようにします。遅延が増える場合があります。</string>
-    <string name="help_checkbox_host_audio">ゲームの音声を、こちらに加えてPCでも再生します。PCのスピーカーを静かにしたい場合はオフにしてください。</string>
+    <string name="help_checkbox_host_audio">アプリの音声を、こちらに加えてPCでも再生します。PCのスピーカーを静かにしたい場合はオフにしてください。</string>
     <string name="help_seekbar_deadzone">正の値にすると、中央付近のスティックの小さな動き（ドリフト）を無視します。負の値は、コントローラー自体のデッドゾーンを打ち消します。</string>
     <string name="help_checkbox_multi_controller">コントローラーの接続と切断を、そのたびに報告します。オフの場合、起動時にコントローラーを必要とするゲームのために、1台が常に接続されているものとして扱います。</string>
     <string name="help_checkbox_usb_driver">Androidがネイティブに扱えないXboxやNintendo Proコントローラーのために DelosのUSBドライバーを使います。USBの許可を求められる場合があります。</string>
@@ -36,7 +36,7 @@
     <string name="help_analog_scrolling">コントローラーのマウスモードで、スクロールに使うスティックです。</string>
     <string name="help_checkbox_flip_face_buttons">コントローラー入力と画面上のコントロールで、A/BとX/Yを入れ替えます（Nintendo配置）。Delosのナビゲーションには影響しません。</string>
     <string name="help_checkbox_gamepad_touchpad_as_mouse">コントローラーのタッチパッドを、常にPCのマウスとして使います。オフにすると、対応するホストはネイティブのタッチパッド入力を受け取れます。</string>
-    <string name="help_checkbox_gamepad_motion_sensors">外部コントローラーのジャイロスコープと加速度センサーを、PCが読み取れるようにします。Android 12以降が必要です。モーション操作を使うゲームがない場合は、オフにすると消費電力と通信量を少し節約できます。</string>
+    <string name="help_checkbox_gamepad_motion_sensors">外部コントローラーのジャイロスコープと加速度センサーを、PCが読み取れるようにします。Android 12以降が必要です。モーション操作を使うアプリがない場合は、オフにすると消費電力と通信量を少し節約できます。</string>
     <string name="help_checkbox_gamepad_motion_fallback">コントローラーにセンサーがない場合や、Androidが読み取れない場合に、この端末自身のジャイロスコープと加速度センサーを使います。PCからはPlayStationコントローラーとして認識される場合があります。</string>
     <string name="help_checkbox_force_device_motion">外部コントローラーに動作するセンサーがあっても、内蔵センサーを使います。「端末内蔵のジャイロ」が必要です。</string>
     <string name="help_seekbar_gyro_smoothing">ジャイロ照準を安定させます。0でオフ。値を上げるとブレが減りますが、ゆっくりした動きにわずかな遅れが出ます。素早い動きはそのまま反応します。次回のストリームから適用され、ストリームメニュー（その他）ではリアルタイムに変更できます。</string>
@@ -67,13 +67,13 @@
     <string name="help_checkbox_hide_clipboard_content">PCから届いたクリップボードの内容を機密情報としてマークし、Androidがプレビューを隠すようにします。暗号化や転送の無効化はしません。</string>
     <string name="help_seekbar_keyboard_axi_opacity">画面上のフルキーボードの不透明度です。仮想コントローラーの不透明度とは別です。</string>
     <string name="help_onscreen_keyboard_autofit">フルキーボードの自動調整をオフにして、保存した幅、高さ、配置を適用します。</string>
-    <string name="help_seekbar_onscreen_keyboard_height">自動調整がオフのときの、画面上のフルキーボードの高さです。高いほどキーは大きくなりますが、ゲームが隠れる範囲も広がります。</string>
+    <string name="help_seekbar_onscreen_keyboard_height">自動調整がオフのときの、画面上のフルキーボードの高さです。高いほどキーは大きくなりますが、アプリが隠れる範囲も広がります。</string>
     <string name="help_seekbar_onscreen_keyboard_width">自動調整がオフのときの、画面上のフルキーボードの幅です。画面上で手が届く範囲に収めてください。</string>
     <string name="help_list_onscreen_keyboard_align_mode">手動でサイズを決めたフルキーボードの、横方向の基準位置です。</string>
     <string name="help_checkbox_enable_sticky_modifier_key_virtual_keyboard">仮想のShift、Ctrl、Altなどの修飾キーをタップ後も有効にしたままにし、組み合わせを1キーずつ入力できるようにします。</string>
     <string name="help_checkbox_disable_warnings">ストリーミング中の、画面上の接続品質の警告を隠します。統計は表示されたままです。</string>
     <string name="help_checkbox_remember_zoom_pan">ストリームのズームとパンを、次回以降のセッションのために保存します。オフの場合、調整はそのストリームの間だけ有効です。</string>
-    <string name="help_checkbox_enable_pip">マルチタスク中も、ストリームをピクチャーインピクチャーで表示し続けます。表示専用で、小さなウィンドウではゲームを操作できません。</string>
+    <string name="help_checkbox_enable_pip">マルチタスク中も、ストリームをピクチャーインピクチャーで表示し続けます。表示専用で、小さなウィンドウではアプリを操作できません。</string>
     <string name="help_checkbox_show_onscreen_controls">タッチ操作用に、ストリームの上に仮想コントローラーを表示します。ストリームメニューで、そのセッションの間だけ切り替えられます。</string>
     <string name="help_checkbox_hide_osc_when_has_gamepad">Androidが物理コントローラーを検出している間、仮想コントローラーを隠します。コントローラーを切断すると再び表示されます。</string>
     <string name="help_checkbox_vibrate_osc">仮想コントローラーのボタンを押すと、端末が振動します。タッチのフィードバックであり、ゲームの振動ではありません。振動モーターが必要です。</string>
@@ -110,7 +110,7 @@
     <string name="help_option_help_custom_keys">カスタムキーのファイル形式の説明を開きます。できあがったファイルは「カスタムキーをインポート」で読み込んでください。</string>
     <string name="help_pref_debug_info">ストリームなしで、端末とコントローラーの診断を開きます：端末の詳細、コントローラーのIDとセンサー、振動テスト、コントロールのプレビュー。</string>
     <string name="help_about_diag_logs">この端末に、イベントとエラーのログを最大2 MBまで循環して保存します。デバッグ情報から共有しない限り、端末の外には出ません。共有時は名前とアドレスが削除されます。オフにすると、新しい行は記録されません。</string>
-    <string name="help_ui_match_game_colors">アニメーション背景用に、選択中のゲームのカバーから3色を取り出します。取得できない場合はPCのアートワークを使います。Material Youをオフにする必要があります。</string>
+    <string name="help_ui_match_game_colors">アニメーション背景用に、選択中のアプリのカバーから3色を取り出します。取得できない場合はPCのアートワークを使います。Material Youをオフにする必要があります。</string>
 
     <string name="help_frame_pacing_latency">最新のフレームをすぐに表示します。カクつくことがあります。</string>
     <string name="help_frame_pacing_balanced">小さなキューで、フレームをディスプレイのリフレッシュに合わせます。</string>
@@ -180,7 +180,7 @@
     <string name="stream_help_screen_brightness">この端末の画面の明るさをすぐに変更します。終了後はシステム設定に戻ります。PCやモニターには影響しません。</string>
     <string name="stream_help_bitrate">再接続せずに、新しいビデオビットレートを要求します。Vibepolloが必要で、ホスト側で上限が設けられる場合があります。このストリームの間だけ有効です。</string>
     <string name="stream_help_apply_bitrate">要求したビットレートをVibepolloに送信します。受け入れられる値は、より低い場合があります。保存済みの既定値は変わりません。</string>
-    <string name="stream_help_upscaler">低解像度のストリームをアップスケールするか、ネイティブ解像度のストリームをスーパーサンプリングします。GPU時間を消費します。リアルタイムに適用され、このゲームに保存されます。</string>
+    <string name="stream_help_upscaler">低解像度のストリームをアップスケールするか、ネイティブ解像度のストリームをスーパーサンプリングします。GPU時間を消費します。リアルタイムに適用され、このアプリに保存されます。</string>
     <string name="stream_help_upscaling">このストリームで、アップスケーラー（または「シャープのみ」）のオン/オフを切り替えます。映像がちらつくことがあります。</string>
     <string name="stream_help_supersampling">ネイティブ解像度のストリームを大きなサイズでレンダリングしてから縮小します。GPU時間を消費します。このストリームの間だけ有効です。</string>
     <string name="stream_help_supersampling_on">より大きな内部サイズでレンダリングします。GPU時間を消費します。</string>
@@ -188,7 +188,7 @@
     <string name="stream_help_mode">リアルタイムに適用されます。「シャープのみ」との切り替え時に、ちらつくことがあります。</string>
     <string name="stream_help_sharpness">最終のシャープ化です。0で無効になりますが、SGSR 1の再構築は無効になりません。「シャープのみ」では、これが効果のすべてです。このストリームの間だけ有効です。</string>
     <string name="stream_help_more">ストリームのその他の操作：クリップボード、ホストコマンド、キーの組み合わせ、ズーム、タッチ、画面上のコントロール。操作はすぐに実行されます。</string>
-    <string name="stream_help_disconnect">ストリーミングを停止して、Delosのライブラリに戻ります。ゲームはPCで実行されたままです。</string>
+    <string name="stream_help_disconnect">ストリーミングを停止して、Delosのライブラリに戻ります。アプリはPCで実行されたままです。</string>
     <string name="stream_help_quit_game">ホストに実行中のアプリの終了を要求し、その後に切断します。すぐに実行されるため、先に保存してください。</string>
     <string name="stream_help_send_keys">内蔵またはインポートしたキーの組み合わせを、PCに1回送信します。メニューは閉じます。カスタムのものは「操作」でインポートしてください。</string>
     <string name="stream_help_send_clipboard">この端末のクリップボードを、PCに1回コピーします。VibepolloまたはApolloのクリップボード対応が必要です。</string>
@@ -201,7 +201,7 @@
     <string name="stream_help_on_screen_controls">このストリームの間、仮想コントローラーを表示または非表示にします。不透明度とレイアウトは「操作」で設定します。</string>
     <string name="stream_help_open_android_keyboard">このメニューを閉じた後に、Androidのシステムキーボードを開閉します。Delosのキーボード（キーボードタイル）ではありません。</string>
     <string name="stream_help_touch_sensitivity">設定で指定した、タッチスクリーンの追加の感度スケーリングを切り替えます。</string>
-    <string name="stream_help_gyro_smoothing">ジャイロ照準をすぐに安定させ、このゲームに保存します。0でオフ。スムージングを強めると、ゆっくりした動きにわずかな遅れが出ます。</string>
+    <string name="stream_help_gyro_smoothing">ジャイロ照準をすぐに安定させ、このアプリに保存します。0でオフ。スムージングを強めると、ゆっくりした動きにわずかな遅れが出ます。</string>
     <string name="stream_help_gyro_smoothing_disabled">設定で「外部コントローラーのジャイロ」または「端末内蔵のジャイロ」をオンにする必要があります。次回のストリームから適用されます。</string>
     <string name="stream_help_rumble_feel">ホストの振動の感触を選びます。すぐに反映され、保存されます。開いたままなので、選び直して比較できます。%1$sで戻ります。</string>
     <string name="stream_help_format_keys">%1$sをPCに1回送信してから、ストリームに戻ります。</string>

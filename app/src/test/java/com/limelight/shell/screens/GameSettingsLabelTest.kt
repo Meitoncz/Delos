@@ -39,7 +39,7 @@ class GameSettingsLabelTest {
     @Test fun summaryNamesTheTabsOrExplainsHowASettingBecomesCustom() {
         assertEquals("2 on Stream · 1 on Display", customSummary(res, 2, 1))
         assertEquals("0 on Stream · 3 on Display", customSummary(res, 0, 3))
-        assertEquals("Change a row and it becomes custom for this game.", customSummary(res, 0, 0))
+        assertEquals("Change a row and it becomes custom for this app.", customSummary(res, 0, 0))
     }
 
     @Test fun profileValueIsShownLikeTheRowShowsIt() {
@@ -58,7 +58,7 @@ class GameSettingsLabelTest {
     @Test fun aCustomRowSaysWhatTheProfileHasAndKeepsTheValueApartForBold() {
         val source = gameSettingsSource(res, spec(SettingKind.CHOICE), isCustom = true, touch = false, currentLabel = "1080p", profileLabel = "720p", streamCustom = 1, displayCustom = 0)
         assertEquals(true, source.custom)
-        assertEquals("Custom for this game", source.title)
+        assertEquals("Custom for this app", source.title)
         assertEquals("720p", source.strong)
         assertEquals("Profile value: ", source.before)
         assertEquals(true, source.after.contains("X"))

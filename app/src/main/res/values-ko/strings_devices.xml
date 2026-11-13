@@ -20,7 +20,7 @@
     <string name="devices_menu_default_on">이 PC로 Delos 시작</string>
     <string name="devices_menu_wake">PC 깨우기</string>
     <string name="devices_menu_rename">이름 변경</string>
-    <string name="devices_menu_open_games">게임 열기</string>
+    <string name="devices_menu_open_games">앱 열기</string>
     <string name="devices_menu_connect">연결</string>
     <string name="devices_menu_unpair">페어링 해제</string>
     <string name="devices_menu_remove">Delos에서 제거</string>

@@ -12,7 +12,7 @@
     <string name="stream_menu_tile_supersampling">スーパーサンプリング</string>
     <string name="stream_menu_tile_more">その他</string>
     <string name="stream_menu_tile_disconnect">切断</string>
-    <string name="stream_menu_tile_quit">ゲーム終了</string>
+    <string name="stream_menu_tile_quit">アプリ終了</string>
     <string name="stream_menu_overlay_compact">コンパクト</string>
 
     <string name="stream_menu_title_more">その他</string>
@@ -151,7 +151,7 @@
 
     <string name="stream_exit_disconnecting">切断中</string>
     <string name="stream_exit_quitting">%1$sを終了中</string>
-    <string name="stream_exit_quitting_game">ゲームを終了中</string>
+    <string name="stream_exit_quitting_game">アプリを終了中</string>
 
     <string name="stream_result_default_pc">PC</string>
     <string name="stream_result_try_again">再試行</string>

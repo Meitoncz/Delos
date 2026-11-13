@@ -6,11 +6,11 @@
     <string name="shell_link_pair_message">Odkaz žádá aplikaci Delos o spárování s tímto PC. Pokračuj jen v případě, že tento odkaz pochází od tebe.</string>
     <string name="shell_link_pair_action">Spárovat</string>
     <string name="shell_link_start_title">Spustit %1$s?</string>
-    <string name="shell_link_start_title_unnamed">Spustit hru?</string>
+    <string name="shell_link_start_title_unnamed">Spustit aplikaci?</string>
     <string name="shell_link_start_message">Odkaz žádá aplikaci Delos o spuštění %1$s na %2$s. Pokračuj jen v případě, že tento odkaz pochází od tebe.</string>
     <string name="shell_link_start_message_game">Odkaz žádá aplikaci Delos o spuštění %1$s na PC. Pokračuj jen v případě, že tento odkaz pochází od tebe.</string>
-    <string name="shell_link_start_message_host">Odkaz žádá aplikaci Delos o spuštění hry na %1$s. Pokračuj jen v případě, že tento odkaz pochází od tebe.</string>
-    <string name="shell_link_start_message_unnamed">Odkaz žádá aplikaci Delos o spuštění hry na PC. Pokračuj jen v případě, že tento odkaz pochází od tebe.</string>
+    <string name="shell_link_start_message_host">Odkaz žádá aplikaci Delos o spuštění aplikace na %1$s. Pokračuj jen v případě, že tento odkaz pochází od tebe.</string>
+    <string name="shell_link_start_message_unnamed">Odkaz žádá aplikaci Delos o spuštění aplikace na PC. Pokračuj jen v případě, že tento odkaz pochází od tebe.</string>
     <string name="shell_link_start_action">Spustit</string>
 
     <!-- The three buttons of the top bar -->
@@ -23,7 +23,7 @@
     <string name="shell_side_not_connected">Nepřipojeno</string>
     <string name="shell_side_connected">Připojeno k %1$s</string>
     <string name="shell_side_offline">%1$s je offline</string>
-    <string name="shell_side_show_hidden">Zobrazit skryté hry</string>
+    <string name="shell_side_show_hidden">Zobrazit skryté aplikace</string>
     <string name="shell_side_hidden_on">Skryté: %1$d · %2$s</string>
     <string name="shell_side_hidden_on_this_pc">Skryté: %1$d na tomto PC</string>
     <string name="shell_side_theme">Motiv</string>

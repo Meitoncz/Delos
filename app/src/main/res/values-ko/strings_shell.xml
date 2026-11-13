@@ -4,11 +4,11 @@
     <string name="shell_link_pair_message">링크가 Delos에 이 PC와 페어링하도록 요청하고 있어요. 직접 연 링크일 때만 계속해 주세요.</string>
     <string name="shell_link_pair_action">페어링</string>
     <string name="shell_link_start_title">%1$s을(를) 시작할까요?</string>
-    <string name="shell_link_start_title_unnamed">게임을 시작할까요?</string>
+    <string name="shell_link_start_title_unnamed">앱을 시작할까요?</string>
     <string name="shell_link_start_message">링크가 Delos에 %2$s에서 %1$s을(를) 시작하도록 요청하고 있어요. 직접 연 링크일 때만 계속해 주세요.</string>
     <string name="shell_link_start_message_game">링크가 Delos에 PC에서 %1$s을(를) 시작하도록 요청하고 있어요. 직접 연 링크일 때만 계속해 주세요.</string>
-    <string name="shell_link_start_message_host">링크가 Delos에 %1$s에서 게임을 시작하도록 요청하고 있어요. 직접 연 링크일 때만 계속해 주세요.</string>
-    <string name="shell_link_start_message_unnamed">링크가 Delos에 PC에서 게임을 시작하도록 요청하고 있어요. 직접 연 링크일 때만 계속해 주세요.</string>
+    <string name="shell_link_start_message_host">링크가 Delos에 %1$s에서 앱을 시작하도록 요청하고 있어요. 직접 연 링크일 때만 계속해 주세요.</string>
+    <string name="shell_link_start_message_unnamed">링크가 Delos에 PC에서 앱을 시작하도록 요청하고 있어요. 직접 연 링크일 때만 계속해 주세요.</string>
     <string name="shell_link_start_action">시작</string>
 
     <string name="shell_nav_settings">설정</string>
@@ -19,7 +19,7 @@
     <string name="shell_side_not_connected">연결 안 됨</string>
     <string name="shell_side_connected">%1$s에 연결됨</string>
     <string name="shell_side_offline">%1$s 오프라인</string>
-    <string name="shell_side_show_hidden">숨긴 게임 표시</string>
+    <string name="shell_side_show_hidden">숨긴 앱 표시</string>
     <string name="shell_side_hidden_on">%2$s에서 %1$d개 숨김</string>
     <string name="shell_side_hidden_on_this_pc">이 PC에서 %1$d개 숨김</string>
     <string name="shell_side_theme">테마</string>

@@ -4,7 +4,7 @@
     <string name="metadata_hdr_unverified">HDR/SDR ungeprüft</string>
 
     <!-- No game matches the library filter. %1$s: the name of the Y button -->
-    <string name="metadata_filtered_title">Keine Spiele passen zu diesen Filtern</string>
+    <string name="metadata_filtered_title">Keine Apps passen zu diesen Filtern</string>
     <string name="metadata_filtered_note">Drücke %1$s, um die Filter zu ändern, oder setz sie unten zurück.</string>
     <string name="metadata_filtered_reset">Bibliotheksfilter zurücksetzen</string>
 

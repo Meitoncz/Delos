@@ -12,7 +12,7 @@
     <string name="stream_menu_tile_supersampling">Supersampling</string>
     <string name="stream_menu_tile_more">Mais</string>
     <string name="stream_menu_tile_disconnect">Desconectar</string>
-    <string name="stream_menu_tile_quit">Sair do jogo</string>
+    <string name="stream_menu_tile_quit">Sair do app</string>
     <string name="stream_menu_overlay_compact">Compacto</string>
 
     <string name="stream_menu_title_more">Mais</string>
@@ -151,7 +151,7 @@
 
     <string name="stream_exit_disconnecting">Desconectando</string>
     <string name="stream_exit_quitting">Saindo de %1$s</string>
-    <string name="stream_exit_quitting_game">Saindo do jogo</string>
+    <string name="stream_exit_quitting_game">Saindo do app</string>
 
     <string name="stream_result_default_pc">o PC</string>
     <string name="stream_result_try_again">Tentar novamente</string>

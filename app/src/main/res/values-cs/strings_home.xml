@@ -6,30 +6,30 @@
     <string name="home_no_pc_note">Zatím PC spáruj v klasické aplikaci Delos.\nPárování v novém rozhraní přijde v kroku 6.6.</string>
     <string name="home_offline_title">%1$s je offline</string>
     <string name="home_offline_note">Zapni PC, nebo ho probuď z klasické aplikace Delos.\nProbuzení odsud přijde v kroku 6.6.</string>
-    <string name="home_empty_title">Na %1$s nejsou žádné hry</string>
+    <string name="home_empty_title">Na %1$s nejsou žádné aplikace</string>
     <string name="home_empty_note">Přidej aplikace ve webovém rozhraní Vibepollo, objeví se tu automaticky.</string>
-    <string name="home_hidden_toast">Hra %1$s je skrytá · skryté hry zobrazíš v bočním menu</string>
+    <string name="home_hidden_toast">Aplikace %1$s je skrytá · skryté aplikace zobrazíš v bočním menu</string>
 
     <!-- Badge in the corner of a cover -->
     <string name="home_badge_running">Běží</string>
     <string name="home_badge_last_played">Naposledy hráno</string>
-    <string name="home_tile_custom_description">Vlastní nastavení pro tuto hru</string>
+    <string name="home_tile_custom_description">Vlastní nastavení pro tuto aplikaci</string>
 
     <!-- Game menu -->
     <string name="home_menu_resume">Pokračovat</string>
-    <string name="home_menu_quit">Ukončit hru</string>
+    <string name="home_menu_quit">Ukončit aplikaci</string>
     <string name="home_menu_quit_and_start">Ukončit %1$s a spustit</string>
     <string name="home_menu_resume_other">Pokračovat: %1$s</string>
-    <string name="home_menu_start">Spustit hru</string>
+    <string name="home_menu_start">Spustit aplikaci</string>
     <string name="home_menu_artwork">Obrázky</string>
     <string name="home_menu_metadata">Metadata</string>
-    <string name="home_menu_settings">Nastavení hry</string>
-    <string name="home_menu_show">Zobrazit hru</string>
-    <string name="home_menu_hide">Skrýt hru</string>
+    <string name="home_menu_settings">Nastavení aplikace</string>
+    <string name="home_menu_show">Zobrazit aplikaci</string>
+    <string name="home_menu_hide">Skrýt aplikaci</string>
 
     <!-- Header of the game menu -->
     <string name="home_header_running">Běží</string>
-    <string name="home_header_game">Hra</string>
+    <string name="home_header_game">Aplikace</string>
     <string name="home_header_last_played">Naposledy hráno</string>
     <string name="home_header_other_running">%1$s běží</string>
     <string name="home_header_custom">Vlastní nastavení</string>
@@ -38,7 +38,7 @@
 
     <!-- Info block under the game logo -->
     <string name="home_info_app">INFO O APLIKACI</string>
-    <string name="home_info_game">INFO O HŘE</string>
+    <string name="home_info_game">INFO O APLIKACI</string>
     <string name="home_chip_running_on">Běží na %1$s</string>
     <string name="home_chip_hltb">HLTB %1$s</string>
     <string name="home_chip_virtual_display">Virtuální displej</string>
@@ -47,5 +47,5 @@
     <string name="home_quit_done">Ukončeno: %1$s</string>
     <string name="home_quit_starting">Aplikace Delos se stále připojuje k %1$s</string>
     <string name="home_quit_failed">Nepodařilo se ukončit %1$s</string>
-    <string name="home_quit_other_device">Hru %1$s spustilo jiné zařízení; ukonči ji tam nebo v PC</string>
+    <string name="home_quit_other_device">Aplikaci %1$s spustilo jiné zařízení; ukonči ji tam nebo v PC</string>
 </resources>

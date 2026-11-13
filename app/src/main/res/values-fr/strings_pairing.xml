@@ -30,7 +30,7 @@
     <string name="pairing_failed_pin_wrong">Le PIN était incorrect, réessaie</string>
     <string name="pairing_failed_code_wrong">Le code ou la phrase secrète était incorrect</string>
     <string name="pairing_failed_busy">%1$s s’associe déjà avec un autre appareil</string>
-    <string name="pairing_failed_game_running">Quitte d’abord le jeu sur %1$s, puis associe à nouveau</string>
+    <string name="pairing_failed_game_running">Quitte d’abord l’appli sur %1$s, puis associe à nouveau</string>
     <string name="pairing_failed_not_found">%1$s est introuvable</string>
     <string name="pairing_failed_unsupported">%1$s ne gère pas l’association</string>
     <string name="pairing_failed">Échec de l’association avec %1$s</string>

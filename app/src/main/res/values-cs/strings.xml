@@ -5,7 +5,7 @@
     <string name="scut_invalid_uuid">Zadané PC není platné</string>
     <string name="scut_invalid_app_id">Zadaná aplikace není platná</string>
     <string name="scut_game_running">Hra %1$s už běží · nejdřív ji ukonči v aplikaci Delos</string>
-    <string name="scut_other_game_running">Už běží jiná hra · nejdřív ji ukonči v aplikaci Delos</string>
+    <string name="scut_other_game_running">Už běží jiná aplikace · nejdřív ji ukonči v aplikaci Delos</string>
 
     <string name="configuration_mode_move_buttons">Režim přesouvání tlačítek</string>
     <string name="configuration_mode_resize_buttons">Režim změny velikosti tlačítek</string>
@@ -115,7 +115,7 @@
     <string name="title_checkbox_gamepad_touchpad_as_mouse">Myš vždy ovládat touchpadem</string>
     <string name="summary_checkbox_gamepad_touchpad_as_mouse">Vstup z touchpadu gamepadu vždy ovládá myš v PC, i když se emuluje gamepad s touchpadem.</string>
     <string name="title_checkbox_gamepad_motion_sensors">Gyroskop externího gamepadu</string>
-    <string name="summary_checkbox_gamepad_motion_sensors">Umožní PC číst gyroskop a akcelerometr připojeného externího gamepadu, pokud je má. Vyžaduje Android 12 nebo novější. Pokud žádná hra pohyb nepoužívá, vypni to – ušetříš trochu energie a síťového provozu.</string>
+    <string name="summary_checkbox_gamepad_motion_sensors">Umožní PC číst gyroskop a akcelerometr připojeného externího gamepadu, pokud je má. Vyžaduje Android 12 nebo novější. Pokud žádná aplikace pohyb nepoužívá, vypni to – ušetříš trochu energie a síťového provozu.</string>
     <string name="title_checkbox_gamepad_motion_fallback">Vestavěný gyroskop zařízení</string>
     <string name="summary_checkbox_gamepad_motion_fallback">Použije vlastní gyroskop a akcelerometr tohoto zařízení (vestavěné senzory handheldu), když připojený gamepad žádné nemá nebo je tvoje verze Androidu neumí číst.\nPoznámka: PC pak může tvůj gamepad vidět jako gamepad PlayStation.</string>
     <string name="title_checkbox_force_device_motion">Vždy použít vestavěný gyroskop zařízení</string>
@@ -170,7 +170,7 @@
     <string name="title_video_format">Video kodek</string>
     <string name="summary_video_format">Novější kodeky mohou snížit nároky videa na přenosovou rychlost, pokud je tvoje zařízení podporuje. Volba kodeku může být ignorována, pokud ji nepodporuje software nebo grafická karta v PC.</string>
     <string name="title_enable_hdr">Zapnout HDR</string>
-    <string name="summary_enable_hdr">Streamuje HDR, pokud ho podporuje hra i grafická karta v PC. HDR vyžaduje grafickou kartu s podporou kódování HEVC Main 10. Jak HDR vypadá, závisí na displeji tohoto zařízení.</string>
+    <string name="summary_enable_hdr">Streamuje HDR, pokud ho podporuje aplikace i grafická karta v PC. HDR vyžaduje grafickou kartu s podporou kódování HEVC Main 10. Jak HDR vypadá, závisí na displeji tohoto zařízení.</string>
     <string name="title_full_range">Vynutit video s plným rozsahem</string>
     <string name="summary_full_range">Pokud zařízení nezobrazuje video s plným rozsahem správně, ztratí se detaily ve světlých a tmavých oblastech.</string>
     <string name="title_prevent_packet_loss">Wi-Fi keep-alive</string>
@@ -398,7 +398,7 @@
     <string name="send_clipboard_failed">Odeslání schránky se nezdařilo: </string>
     <string name="external_display_info">Externí displej připojen: %1$dx%2$d, %3$.1f Hz</string>
     <string name="no_external_display">Nebyl zjištěn žádný externí displej</string>
-    <string name="no_game_instance">Není dostupná žádná instance hry</string>
+    <string name="no_game_instance">Není dostupná žádná instance aplikace</string>
     <string name="get_clipboard_failed">Získání schránky se nezdařilo: </string>
     <string name="send_clipboard_success">Schránka byla úspěšně odeslána</string>
     <string name="get_clipboard_success">Schránka byla úspěšně získána</string>

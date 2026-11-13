@@ -2,10 +2,10 @@
 <resources>
     <string name="filters_title">라이브러리 필터</string>
     <plurals name="filters_result_active">
-        <item quantity="other">게임 %2$d개 중 %1$d개</item>
+        <item quantity="other">앱 %2$d개 중 %1$d개</item>
     </plurals>
     <plurals name="filters_result_all">
-        <item quantity="other">게임 전체 %1$d개</item>
+        <item quantity="other">앱 전체 %1$d개</item>
     </plurals>
     <string name="filters_hint">필터</string>
     <plurals name="filters_hint_active">

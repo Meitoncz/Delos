@@ -29,6 +29,7 @@
     <string name="settings_search_alias_gyro_smoothing">giroscopio estabilización suavizado</string>
     <string name="settings_search_alias_link_test">prueba de velocidad rendimiento ancho de banda red</string>
     <string name="settings_search_alias_link_use">bitrate recomendado conexión</string>
+    <string name="settings_search_alias_game">juego juegos</string>
 
     <string name="settings_actions_imported">Importado</string>
     <string name="settings_actions_import_failed">Error al importar</string>
@@ -65,18 +66,18 @@
     <string name="settings_native_palette_title">Paleta de colores</string>
     <string name="settings_native_palette_description">Colores de la interfaz y de los fondos animados.</string>
     <string name="settings_native_needs_material_you_off">Requiere desactivar los colores Material You.</string>
-    <string name="settings_native_match_colors_title">Adaptar a los colores del juego</string>
-    <string name="settings_native_match_colors_description">El fondo animado toma el color principal de la imagen de fondo del juego seleccionado.</string>
+    <string name="settings_native_match_colors_title">Adaptar a los colores de la app</string>
+    <string name="settings_native_match_colors_description">El fondo animado toma el color principal de la imagen de fondo de la app seleccionada.</string>
     <string name="settings_native_clock_title">Reloj</string>
     <string name="settings_native_clock_description">Formato de hora en la barra de estado.</string>
     <string name="settings_native_background_title">Fondo animado</string>
     <string name="settings_native_background_description">Fondo animado con shaders (Android 13 o posterior), o uno estático.</string>
-    <string name="settings_native_hero_background_title">Fondo del juego</string>
-    <string name="settings_native_hero_background_description">Muestra el fondo del juego seleccionado en la pantalla de inicio.</string>
-    <string name="settings_native_hero_blur_title">Desenfoque del fondo del juego</string>
-    <string name="settings_native_hero_blur_description">Desenfoca el fondo del juego tras la biblioteca. Requiere Fondo del juego.</string>
-    <string name="settings_native_hero_opacity_title">Opacidad del fondo del juego</string>
-    <string name="settings_native_hero_opacity_description">Cuánto se ve la ilustración del juego a través del fondo animado. Requiere Fondo del juego.</string>
+    <string name="settings_native_hero_background_title">Fondo de la app</string>
+    <string name="settings_native_hero_background_description">Muestra el fondo de la app seleccionada en la pantalla de inicio.</string>
+    <string name="settings_native_hero_blur_title">Desenfoque del fondo de la app</string>
+    <string name="settings_native_hero_blur_description">Desenfoca el fondo de la app tras la biblioteca. Requiere Fondo de la app.</string>
+    <string name="settings_native_hero_opacity_title">Opacidad del fondo de la app</string>
+    <string name="settings_native_hero_opacity_description">Cuánto se ve la ilustración de la app a través del fondo animado. Requiere Fondo de la app.</string>
     <string name="settings_native_scale_title">Escala de la interfaz</string>
     <string name="settings_native_scale_description">Tamaño del texto, la barra de estado y las indicaciones de botones.</string>
     <string name="settings_native_animations_title">Animaciones</string>
@@ -91,7 +92,7 @@
     <string name="settings_native_menu_buttons_title">Botones del menú del stream</string>
     <string name="settings_native_menu_buttons_description">Botones que se pulsan a la vez durante un stream para abrir o cerrar el menú. Selecciona para grabar otros, p. ej. un botón trasero.</string>
     <string name="settings_native_menu_swipe_title">Deslizar hacia arriba para abrir el menú</string>
-    <string name="settings_native_menu_swipe_description">Un deslizamiento hacia arriba desde el borde inferior también abre el menú del stream. Los toques que empiezan ahí no llegan al juego.</string>
+    <string name="settings_native_menu_swipe_description">Un deslizamiento hacia arriba desde el borde inferior también abre el menú del stream. Los toques que empiezan ahí no llegan a la app.</string>
     <string name="settings_native_stats_position_title">Posición de las estadísticas</string>
     <string name="settings_native_stats_position_description">Esquina del panel de estadísticas completo durante el stream. El modo compacto siempre va arriba en el centro.</string>
     <string name="settings_native_stats_top_left">Arriba a la izquierda</string>
@@ -118,23 +119,23 @@
     <string name="settings_native_sgdb_off_toast">SteamGridDB está desactivado</string>
     <string name="settings_native_sgdb_key_description">Tu propia clave permite a Delos descargar portadas, portadas panorámicas, fondos y logos de SteamGridDB. Se guarda en este dispositivo para todos los perfiles.</string>
     <string name="settings_native_sgdb_auto_title">Descargar automáticamente</string>
-    <string name="settings_native_sgdb_auto_description">Obtiene la portada, la portada panorámica, el fondo y el logo mejor valorados de SteamGridDB para los juegos nuevos al cargar la biblioteca.</string>
+    <string name="settings_native_sgdb_auto_description">Obtiene la portada, la portada panorámica, el fondo y el logo mejor valorados de SteamGridDB para las apps nuevas al cargar la biblioteca.</string>
     <string name="settings_native_connect_first_toast">Conéctate primero a un PC</string>
-    <string name="settings_native_downloading_toast">Descargando las ilustraciones de los juegos de %1$s…</string>
-    <string name="settings_native_artwork_complete_toast">Todos los juegos ya tienen sus ilustraciones</string>
+    <string name="settings_native_downloading_toast">Descargando las ilustraciones de las apps de %1$s…</string>
+    <string name="settings_native_artwork_complete_toast">Todas las apps ya tienen sus ilustraciones</string>
     <plurals name="settings_native_artwork_ready_toast">
-        <item quantity="one">Ilustraciones listas para %d juego</item>
-        <item quantity="many">Ilustraciones listas para %d juegos</item>
-        <item quantity="other">Ilustraciones listas para %d juegos</item>
+        <item quantity="one">Ilustraciones listas para %d app</item>
+        <item quantity="many">Ilustraciones listas para %d apps</item>
+        <item quantity="other">Ilustraciones listas para %d apps</item>
     </plurals>
     <string name="settings_native_missing_artwork_title">Descargar ilustraciones que faltan</string>
-    <string name="settings_native_missing_artwork_description">Obtiene ilustraciones para los juegos de %1$s que no tienen.</string>
-    <string name="settings_native_missing_artwork_description_current">Obtiene ilustraciones para los juegos del PC actual que no tienen.</string>
+    <string name="settings_native_missing_artwork_description">Obtiene ilustraciones para las apps de %1$s que no tienen.</string>
+    <string name="settings_native_missing_artwork_description_current">Obtiene ilustraciones para las apps del PC actual que no tienen.</string>
     <string name="settings_native_refresh_artwork_title">Volver a descargar todas las ilustraciones</string>
-    <string name="settings_native_refresh_artwork_description">Busca de nuevo cada juego y toma las imágenes mejor valoradas; las que hayas elegido se conservan.</string>
-    <string name="settings_native_choose_artwork_title">Elegir ilustraciones de un juego</string>
-    <string name="settings_native_choose_artwork_value">Opciones del juego</string>
-    <string name="settings_native_choose_artwork_description">Pantalla de inicio: botón de menú derecho sobre un juego → Ilustraciones. Elige cualquier portada, portada panorámica, fondo o logo.</string>
+    <string name="settings_native_refresh_artwork_description">Busca de nuevo cada app y toma las imágenes mejor valoradas; las que hayas elegido se conservan.</string>
+    <string name="settings_native_choose_artwork_title">Elegir ilustraciones de una app</string>
+    <string name="settings_native_choose_artwork_value">Opciones de la app</string>
+    <string name="settings_native_choose_artwork_description">Pantalla de inicio: botón de menú derecho sobre una app → Ilustraciones. Elige cualquier portada, portada panorámica, fondo o logo.</string>
 
     <string name="settings_native_version_title">Versión</string>
     <string name="settings_native_version_description">Delos para Android.</string>
@@ -158,7 +159,7 @@
     <string name="settings_native_help_clock_system">Sigue el ajuste de 12/24 horas de Android.</string>
     <string name="settings_native_help_clock_12">Reloj de 12 horas con AM o PM.</string>
     <string name="settings_native_help_clock_24">Reloj de 24 horas.</string>
-    <string name="settings_native_help_motion_reduced">Menos movimiento en la interfaz. Los FPS del juego no cambian.</string>
+    <string name="settings_native_help_motion_reduced">Menos movimiento en la interfaz. Los FPS de la app no cambian.</string>
     <string name="settings_native_help_motion_full">Transiciones y animaciones de foco completas.</string>
     <string name="settings_native_help_default_pc_none">Sin PC preferido; Omitir la pantalla de inicio no está disponible.</string>
     <string name="settings_native_help_default_pc_set">Lo usa Omitir la pantalla de inicio. Debe estar emparejado y accesible.</string>
@@ -184,7 +185,7 @@
         <item quantity="many">%d ajustes personalizados</item>
         <item quantity="other">%d ajustes personalizados</item>
     </plurals>
-    <string name="settings_game_summary_none">Cambia una fila y se personalizará para este juego.</string>
+    <string name="settings_game_summary_none">Cambia una fila y se personalizará para esta app.</string>
     <string name="settings_game_summary">%1$d en Stream · %2$d en Pantalla</string>
     <string name="settings_game_value_on">Sí</string>
     <string name="settings_game_value_off">No</string>
@@ -196,12 +197,12 @@
     <string name="settings_game_from_profile">Del perfil</string>
     <string name="settings_game_profile_line">Perfil: %1$s</string>
     <string name="settings_game_link_note">%1$s Probar enlace está en Ajustes.</string>
-    <string name="settings_game_eyebrow">Ajustes del juego · %1$s</string>
-    <string name="settings_game_panel_title">Tu juego, tus ajustes</string>
-    <string name="settings_game_custom_title">Personalizado para este juego</string>
+    <string name="settings_game_eyebrow">Ajustes de la app · %1$s</string>
+    <string name="settings_game_panel_title">Tu app, tus ajustes</string>
+    <string name="settings_game_custom_title">Personalizado para esta app</string>
     <string name="settings_game_profile_value_button">Valor del perfil: %1$s · pulsa %2$s para volver a él</string>
     <string name="settings_game_profile_value_touch">Valor del perfil: %1$s · toca Restablecer para volver a él</string>
-    <string name="settings_game_currently">Ahora es %1$s. Cámbialo para fijar un valor solo para este juego.</string>
+    <string name="settings_game_currently">Ahora es %1$s. Cámbialo para fijar un valor solo para esta app.</string>
     <string name="settings_game_only_this_game">Solo %1$s usa estos cambios. Todo lo demás sigue tu perfil.</string>
     <string name="settings_game_saved_note">Guardado automáticamente · se aplica en el próximo stream</string>
     <string name="settings_native_section_displays">Pantallas</string>
@@ -214,7 +215,7 @@
     <string name="settings_native_help_second_display_external">Se trata como monitor o TV: el modo de pantalla externa puede usarla para el stream.</string>
     <string name="settings_native_help_second_display_built_in">Se trata como parte del dispositivo: nunca es destino del stream.</string>
     <string name="settings_native_main_screen_title">Pantalla principal</string>
-    <string name="settings_native_main_screen_description">El panel que muestra los juegos y el stream. El otro es la pantalla complementaria.</string>
+    <string name="settings_native_main_screen_description">El panel que muestra las apps y el stream. El otro es la pantalla complementaria.</string>
     <string name="settings_native_main_screen_automatic">Automático</string>
     <string name="settings_native_main_screen_swapped">Intercambiado</string>
     <string name="settings_native_help_main_screen_automatic">La principal es el panel más grande.</string>

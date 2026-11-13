@@ -25,14 +25,14 @@
     <string name="companion_boot_text">La pantalla principal contiene la biblioteca, los ajustes y la transmisión. Este panel añade detalles útiles y controles táctiles. Elige Empezar en la pantalla principal.</string>
     <string name="companion_boot_hint_begin">Empezar en la principal</string>
     <plurals name="companion_filter_games_of">
-        <item quantity="one">%1$d de %2$d juego coincide.</item>
-        <item quantity="many">%1$d de %2$d juegos coinciden.</item>
-        <item quantity="other">%1$d de %2$d juegos coinciden.</item>
+        <item quantity="one">%1$d de %2$d app coincide.</item>
+        <item quantity="many">%1$d de %2$d apps coinciden.</item>
+        <item quantity="other">%1$d de %2$d apps coinciden.</item>
     </plurals>
     <plurals name="companion_filter_games_all">
-        <item quantity="one">%1$d juego en total.</item>
-        <item quantity="many">%1$d juegos en total.</item>
-        <item quantity="other">%1$d juegos en total.</item>
+        <item quantity="one">%1$d app en total.</item>
+        <item quantity="many">%1$d apps en total.</item>
+        <item quantity="other">%1$d apps en total.</item>
     </plurals>
     <plurals name="companion_filter_images_of">
         <item quantity="one">%1$d de %2$d imagen coincide.</item>
@@ -55,8 +55,8 @@
         <item quantity="other">%1$d ajustes personalizados</item>
     </plurals>
     <plurals name="companion_profile_overrides">
-        <item quantity="one">%1$d ajuste por juego</item>
-        <item quantity="many">%1$d ajustes por juego</item>
-        <item quantity="other">%1$d ajustes por juego</item>
+        <item quantity="one">%1$d ajuste por app</item>
+        <item quantity="many">%1$d ajustes por app</item>
+        <item quantity="other">%1$d ajustes por app</item>
     </plurals>
 </resources>

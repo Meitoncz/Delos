@@ -25,14 +25,14 @@
     <string name="companion_boot_text">L’écran principal contient la bibliothèque, les réglages et le stream. Ce panneau ajoute des détails utiles et des commandes tactiles. Choisis Commencer sur l’écran principal.</string>
     <string name="companion_boot_hint_begin">Commencer sur l’écran principal</string>
     <plurals name="companion_filter_games_of">
-        <item quantity="one">%1$d sur %2$d jeu correspond.</item>
-        <item quantity="many">%1$d sur %2$d jeux correspondent.</item>
-        <item quantity="other">%1$d sur %2$d jeux correspondent.</item>
+        <item quantity="one">%1$d sur %2$d appli correspond.</item>
+        <item quantity="many">%1$d sur %2$d applis correspondent.</item>
+        <item quantity="other">%1$d sur %2$d applis correspondent.</item>
     </plurals>
     <plurals name="companion_filter_games_all">
-        <item quantity="one">%1$d jeu au total.</item>
-        <item quantity="many">%1$d jeux au total.</item>
-        <item quantity="other">%1$d jeux au total.</item>
+        <item quantity="one">%1$d appli au total.</item>
+        <item quantity="many">%1$d applis au total.</item>
+        <item quantity="other">%1$d applis au total.</item>
     </plurals>
     <plurals name="companion_filter_images_of">
         <item quantity="one">%1$d sur %2$d image correspond.</item>
@@ -55,8 +55,8 @@
         <item quantity="other">%1$d réglages personnalisés</item>
     </plurals>
     <plurals name="companion_profile_overrides">
-        <item quantity="one">%1$d réglage par jeu</item>
-        <item quantity="many">%1$d réglages par jeu</item>
-        <item quantity="other">%1$d réglages par jeu</item>
+        <item quantity="one">%1$d réglage par appli</item>
+        <item quantity="many">%1$d réglages par appli</item>
+        <item quantity="other">%1$d réglages par appli</item>
     </plurals>
 </resources>

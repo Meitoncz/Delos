@@ -20,7 +20,7 @@
     <string name="devices_menu_default_on">Запускати Delos з цим ПК</string>
     <string name="devices_menu_wake">Розбудити ПК</string>
     <string name="devices_menu_rename">Перейменувати</string>
-    <string name="devices_menu_open_games">Відкрити його ігри</string>
+    <string name="devices_menu_open_games">Відкрити його застосунки</string>
     <string name="devices_menu_connect">Підключитися</string>
     <string name="devices_menu_unpair">Роз’єднати</string>
     <string name="devices_menu_remove">Прибрати з Delos</string>

@@ -20,7 +20,7 @@
     <string name="devices_menu_default_on">随此 PC 启动 Delos</string>
     <string name="devices_menu_wake">唤醒 PC</string>
     <string name="devices_menu_rename">重命名</string>
-    <string name="devices_menu_open_games">打开其游戏库</string>
+    <string name="devices_menu_open_games">打开其应用库</string>
     <string name="devices_menu_connect">连接</string>
     <string name="devices_menu_unpair">取消配对</string>
     <string name="devices_menu_remove">从 Delos 中删除</string>

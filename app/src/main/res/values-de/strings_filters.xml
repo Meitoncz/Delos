@@ -4,13 +4,13 @@
     <string name="filters_title">Bibliothek filtern</string>
     <plurals name="filters_result_active">
         <!-- %1$d: games that match, %2$d: games in the library (the quantity) -->
-        <item quantity="one">%1$d von %2$d Spiel</item>
-        <item quantity="other">%1$d von %2$d Spielen</item>
+        <item quantity="one">%1$d von %2$d App</item>
+        <item quantity="other">%1$d von %2$d Apps</item>
     </plurals>
     <plurals name="filters_result_all">
         <!-- %1$d: games in the library (the quantity) -->
-        <item quantity="one">Alle %1$d Spiel</item>
-        <item quantity="other">Alle %1$d Spiele</item>
+        <item quantity="one">Alle %1$d App</item>
+        <item quantity="other">Alle %1$d Apps</item>
     </plurals>
     <!-- The hint bar label of Y -->
     <string name="filters_hint">Filter</string>

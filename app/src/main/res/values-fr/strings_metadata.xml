@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="metadata_hdr_unverified">HDR/SDR non vérifié</string>
-    <string name="metadata_filtered_title">Aucun jeu ne correspond à ces filtres</string>
+    <string name="metadata_filtered_title">Aucune appli ne correspond à ces filtres</string>
     <string name="metadata_filtered_note">Appuie sur %1$s pour modifier les filtres, ou réinitialise-les ci-dessous.</string>
     <string name="metadata_filtered_reset">Réinitialiser les filtres de la bibliothèque</string>
     <string name="metadata_error_unavailable">Les métadonnées des jeux ne sont pas disponibles dans cette version</string>

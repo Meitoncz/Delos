@@ -25,12 +25,12 @@
     <string name="companion_boot_text">Der Hauptbildschirm zeigt Bibliothek, Einstellungen und Stream. Dieses Panel ergänzt nützliche Details und Touch-Bedienung. Wähle auf dem Hauptbildschirm Los geht’s.</string>
     <string name="companion_boot_hint_begin">Los geht’s auf dem Hauptbildschirm</string>
     <plurals name="companion_filter_games_of">
-        <item quantity="one">%1$d von %2$d Spiel passt.</item>
-        <item quantity="other">%1$d von %2$d Spielen passen.</item>
+        <item quantity="one">%1$d von %2$d App passt.</item>
+        <item quantity="other">%1$d von %2$d Apps passen.</item>
     </plurals>
     <plurals name="companion_filter_games_all">
-        <item quantity="one">%1$d Spiel insgesamt.</item>
-        <item quantity="other">Alle %1$d Spiele.</item>
+        <item quantity="one">%1$d App insgesamt.</item>
+        <item quantity="other">Alle %1$d Apps.</item>
     </plurals>
     <plurals name="companion_filter_images_of">
         <item quantity="one">%1$d von %2$d Bild passt.</item>
@@ -49,7 +49,7 @@
         <item quantity="other">%1$d eigene Einstellungen</item>
     </plurals>
     <plurals name="companion_profile_overrides">
-        <item quantity="one">%1$d Spielanpassung</item>
-        <item quantity="other">%1$d Spielanpassungen</item>
+        <item quantity="one">%1$d App-Anpassung</item>
+        <item quantity="other">%1$d App-Anpassungen</item>
     </plurals>
 </resources>

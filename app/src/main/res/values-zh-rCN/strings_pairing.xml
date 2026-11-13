@@ -29,7 +29,7 @@
     <string name="pairing_failed_pin_wrong">PIN 错误，请重试</string>
     <string name="pairing_failed_code_wrong">代码或口令错误</string>
     <string name="pairing_failed_busy">%1$s 正在与另一台设备配对</string>
-    <string name="pairing_failed_game_running">请先退出 %1$s 上的游戏，然后重新配对</string>
+    <string name="pairing_failed_game_running">请先退出 %1$s 上的应用，然后重新配对</string>
     <string name="pairing_failed_not_found">找不到 %1$s</string>
     <string name="pairing_failed_unsupported">%1$s 不支持配对</string>
     <string name="pairing_failed">与 %1$s 配对失败</string>

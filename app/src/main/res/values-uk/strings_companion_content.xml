@@ -25,16 +25,16 @@
     <string name="companion_boot_text">Головний екран містить бібліотеку, налаштування й трансляцію. Ця панель додає корисні відомості та сенсорне керування. Обери «Почати» на головному екрані.</string>
     <string name="companion_boot_hint_begin">Почати на головному</string>
     <plurals name="companion_filter_games_of">
-        <item quantity="one">Підходить %1$d із %2$d гри.</item>
-        <item quantity="few">Підходить %1$d із %2$d ігор.</item>
-        <item quantity="many">Підходить %1$d із %2$d ігор.</item>
-        <item quantity="other">Підходить %1$d із %2$d ігор.</item>
+        <item quantity="one">Підходить %1$d із %2$d застосунку.</item>
+        <item quantity="few">Підходить %1$d із %2$d застосунків.</item>
+        <item quantity="many">Підходить %1$d із %2$d застосунків.</item>
+        <item quantity="other">Підходить %1$d із %2$d застосунку.</item>
     </plurals>
     <plurals name="companion_filter_games_all">
-        <item quantity="one">Усього %1$d гра.</item>
-        <item quantity="few">Усього %1$d гри.</item>
-        <item quantity="many">Усього %1$d ігор.</item>
-        <item quantity="other">Усього %1$d гри.</item>
+        <item quantity="one">Усього %1$d застосунок.</item>
+        <item quantity="few">Усього %1$d застосунки.</item>
+        <item quantity="many">Усього %1$d застосунків.</item>
+        <item quantity="other">Усього %1$d застосунку.</item>
     </plurals>
     <plurals name="companion_filter_images_of">
         <item quantity="one">Підходить %1$d із %2$d зображення.</item>
@@ -61,9 +61,9 @@
         <item quantity="other">%1$d власного налаштування</item>
     </plurals>
     <plurals name="companion_profile_overrides">
-        <item quantity="one">%1$d налаштування для гри</item>
-        <item quantity="few">%1$d налаштування для ігор</item>
-        <item quantity="many">%1$d налаштувань для ігор</item>
-        <item quantity="other">%1$d налаштування для ігор</item>
+        <item quantity="one">%1$d налаштування для застосунку</item>
+        <item quantity="few">%1$d налаштування для застосунків</item>
+        <item quantity="many">%1$d налаштувань для застосунків</item>
+        <item quantity="other">%1$d налаштування для застосунку</item>
     </plurals>
 </resources>

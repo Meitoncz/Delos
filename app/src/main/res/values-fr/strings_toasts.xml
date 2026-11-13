@@ -5,7 +5,7 @@
     <string name="shell_report_no_browser">Aucun navigateur disponible</string>
     <string name="shell_retry_unreachable">%1$s est injoignable</string>
     <string name="shell_retry_game_missing">%1$s n’est pas disponible sur %2$s</string>
-    <string name="shell_retry_game_missing_unnamed">Le jeu n’est pas disponible sur %1$s</string>
+    <string name="shell_retry_game_missing_unnamed">L’appli n’est pas disponible sur %1$s</string>
     <string name="shell_profile_updated">Profil mis à jour</string>
     <string name="shell_welcome">Bienvenue, %1$s</string>
     <string name="shell_game_unreachable">%1$s est injoignable</string>

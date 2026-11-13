@@ -30,6 +30,7 @@
     <string name="settings_search_alias_gyro_smoothing">гіроскоп стабілізація згладжування</string>
     <string name="settings_search_alias_link_test">тест швидкості пропускна здатність мережа</string>
     <string name="settings_search_alias_link_use">рекомендований бітрейт з’єднання</string>
+    <string name="settings_search_alias_game">гра ігри гру</string>
 
     <string name="settings_actions_imported">Імпортовано</string>
     <string name="settings_actions_import_failed">Не вдалося імпортувати</string>
@@ -66,18 +67,18 @@
     <string name="settings_native_palette_title">Палітра кольорів</string>
     <string name="settings_native_palette_description">Кольори інтерфейсу й анімованого тла.</string>
     <string name="settings_native_needs_material_you_off">Потрібно вимкнути кольори Material You.</string>
-    <string name="settings_native_match_colors_title">Кольори як у гри</string>
-    <string name="settings_native_match_colors_description">Анімоване тло бере основний колір тла вибраної гри.</string>
+    <string name="settings_native_match_colors_title">Кольори як у застосунку</string>
+    <string name="settings_native_match_colors_description">Анімоване тло бере основний колір тла вибраного застосунку.</string>
     <string name="settings_native_clock_title">Годинник</string>
     <string name="settings_native_clock_description">Формат часу в рядку стану.</string>
     <string name="settings_native_background_title">Анімоване тло</string>
     <string name="settings_native_background_description">Анімоване шейдерне тло (Android 13 або новіший) чи статичне.</string>
-    <string name="settings_native_hero_background_title">Тло гри</string>
-    <string name="settings_native_hero_background_description">Показує тло вибраної гри на головному екрані.</string>
-    <string name="settings_native_hero_blur_title">Розмиття тла гри</string>
-    <string name="settings_native_hero_blur_description">Розмиває тло гри за бібліотекою. Потрібне Тло гри.</string>
-    <string name="settings_native_hero_opacity_title">Непрозорість тла гри</string>
-    <string name="settings_native_hero_opacity_description">Наскільки ілюстрація гри проступає крізь анімоване тло. Потрібне Тло гри.</string>
+    <string name="settings_native_hero_background_title">Тло застосунку</string>
+    <string name="settings_native_hero_background_description">Показує тло вибраного застосунку на головному екрані.</string>
+    <string name="settings_native_hero_blur_title">Розмиття тла застосунку</string>
+    <string name="settings_native_hero_blur_description">Розмиває тло застосунку за бібліотекою. Потрібне Тло застосунку.</string>
+    <string name="settings_native_hero_opacity_title">Непрозорість тла застосунку</string>
+    <string name="settings_native_hero_opacity_description">Наскільки ілюстрація застосунку проступає крізь анімоване тло. Потрібне Тло застосунку.</string>
     <string name="settings_native_scale_title">Масштаб інтерфейсу</string>
     <string name="settings_native_scale_description">Розмір тексту, рядка стану й підказок кнопок.</string>
     <string name="settings_native_animations_title">Анімації</string>
@@ -92,7 +93,7 @@
     <string name="settings_native_menu_buttons_title">Кнопки меню стріму</string>
     <string name="settings_native_menu_buttons_description">Кнопки, які натискаються разом під час стріму, щоб відкрити або закрити меню стріму. Вибери, щоб записати інші, наприклад задню кнопку.</string>
     <string name="settings_native_menu_swipe_title">Свайп угору відкриває меню</string>
-    <string name="settings_native_menu_swipe_description">Свайп угору від нижнього краю теж відкриває меню стріму. Дотики, що починаються там, не потрапляють у гру.</string>
+    <string name="settings_native_menu_swipe_description">Свайп угору від нижнього краю теж відкриває меню стріму. Дотики, що починаються там, не потрапляють у застосунок.</string>
     <string name="settings_native_stats_position_title">Розташування статистики</string>
     <string name="settings_native_stats_position_description">Кут повної панелі статистики під час стріму. Компактний режим завжди вгорі посередині.</string>
     <string name="settings_native_stats_top_left">Угорі ліворуч</string>
@@ -119,24 +120,24 @@
     <string name="settings_native_sgdb_off_toast">SteamGridDB вимкнено</string>
     <string name="settings_native_sgdb_key_description">Власний ключ дає Delos змогу завантажувати з SteamGridDB обкладинки, широкі обкладинки, тло та логотипи. Зберігається на цьому пристрої для всіх профілів.</string>
     <string name="settings_native_sgdb_auto_title">Завантажувати автоматично</string>
-    <string name="settings_native_sgdb_auto_description">Під час завантаження бібліотеки бере з SteamGridDB найкраще оцінені обкладинку, широку обкладинку, тло та логотип для нових ігор.</string>
+    <string name="settings_native_sgdb_auto_description">Під час завантаження бібліотеки бере з SteamGridDB найкраще оцінені обкладинку, широку обкладинку, тло та логотип для нових застосунків.</string>
     <string name="settings_native_connect_first_toast">Спочатку підключися до ПК</string>
-    <string name="settings_native_downloading_toast">Завантажуємо ілюстрації для ігор на %1$s…</string>
-    <string name="settings_native_artwork_complete_toast">В усіх ігор уже є ілюстрації</string>
+    <string name="settings_native_downloading_toast">Завантажуємо ілюстрації для застосунків на %1$s…</string>
+    <string name="settings_native_artwork_complete_toast">В усіх застосунків уже є ілюстрації</string>
     <plurals name="settings_native_artwork_ready_toast">
-        <item quantity="one">Ілюстрації готові для %d гри</item>
-        <item quantity="few">Ілюстрації готові для %d ігор</item>
-        <item quantity="many">Ілюстрації готові для %d ігор</item>
-        <item quantity="other">Ілюстрації готові для %d гри</item>
+        <item quantity="one">Ілюстрації готові для %d застосунку</item>
+        <item quantity="few">Ілюстрації готові для %d застосунків</item>
+        <item quantity="many">Ілюстрації готові для %d застосунків</item>
+        <item quantity="other">Ілюстрації готові для %d застосунку</item>
     </plurals>
     <string name="settings_native_missing_artwork_title">Завантажити відсутні ілюстрації</string>
-    <string name="settings_native_missing_artwork_description">Бере ілюстрації для ігор на %1$s, у яких їх немає.</string>
-    <string name="settings_native_missing_artwork_description_current">Бере ілюстрації для ігор на поточному ПК, у яких їх немає.</string>
+    <string name="settings_native_missing_artwork_description">Бере ілюстрації для застосунків на %1$s, у яких їх немає.</string>
+    <string name="settings_native_missing_artwork_description_current">Бере ілюстрації для застосунків на поточному ПК, у яких їх немає.</string>
     <string name="settings_native_refresh_artwork_title">Завантажити всі ілюстрації знову</string>
-    <string name="settings_native_refresh_artwork_description">Шукає кожну гру заново й бере найкраще оцінені зображення; обрані тобою залишаються.</string>
-    <string name="settings_native_choose_artwork_title">Вибрати ілюстрації для однієї гри</string>
-    <string name="settings_native_choose_artwork_value">Параметри гри</string>
-    <string name="settings_native_choose_artwork_description">Головний екран: права кнопка меню на грі → Ілюстрації. Вибери будь-яку обкладинку, широку обкладинку, тло або логотип.</string>
+    <string name="settings_native_refresh_artwork_description">Шукає кожен застосунок заново й бере найкраще оцінені зображення; обрані тобою залишаються.</string>
+    <string name="settings_native_choose_artwork_title">Вибрати ілюстрації для одного застосунку</string>
+    <string name="settings_native_choose_artwork_value">Параметри застосунку</string>
+    <string name="settings_native_choose_artwork_description">Головний екран: права кнопка меню на застосунку → Ілюстрації. Вибери будь-яку обкладинку, широку обкладинку, тло або логотип.</string>
 
     <string name="settings_native_version_title">Версія</string>
     <string name="settings_native_version_description">Delos для Android.</string>
@@ -160,7 +161,7 @@
     <string name="settings_native_help_clock_system">Дотримується налаштування Android щодо 12/24-годинного формату.</string>
     <string name="settings_native_help_clock_12">12-годинний формат з AM або PM.</string>
     <string name="settings_native_help_clock_24">24-годинний формат.</string>
-    <string name="settings_native_help_motion_reduced">Менше руху в інтерфейсі. FPS гри не змінюється.</string>
+    <string name="settings_native_help_motion_reduced">Менше руху в інтерфейсі. FPS застосунку не змінюється.</string>
     <string name="settings_native_help_motion_full">Повні переходи й анімації фокуса.</string>
     <string name="settings_native_help_default_pc_none">Основного ПК немає; Пропускати початковий екран недоступно.</string>
     <string name="settings_native_help_default_pc_set">Використовується для Пропускати початковий екран. ПК має бути спарений і доступний.</string>
@@ -187,7 +188,7 @@
         <item quantity="many">%d власних параметрів</item>
         <item quantity="other">%d власного параметра</item>
     </plurals>
-    <string name="settings_game_summary_none">Зміни рядок, і він стане власним для цієї гри.</string>
+    <string name="settings_game_summary_none">Зміни рядок, і він стане власним для цього застосунку.</string>
     <string name="settings_game_summary">%1$d у Стрімі · %2$d в Екрані</string>
     <string name="settings_game_value_on">Увімкнено</string>
     <string name="settings_game_value_off">Вимкнено</string>
@@ -199,12 +200,12 @@
     <string name="settings_game_from_profile">З профілю</string>
     <string name="settings_game_profile_line">Профіль: %1$s</string>
     <string name="settings_game_link_note">%1$s Перевірка зв’язку — у Налаштуваннях.</string>
-    <string name="settings_game_eyebrow">Налаштування гри · %1$s</string>
-    <string name="settings_game_panel_title">Твоя гра, твої налаштування</string>
-    <string name="settings_game_custom_title">Власні для цієї гри</string>
+    <string name="settings_game_eyebrow">Налаштування застосунку · %1$s</string>
+    <string name="settings_game_panel_title">Твій застосунок, твої налаштування</string>
+    <string name="settings_game_custom_title">Власні для цього застосунку</string>
     <string name="settings_game_profile_value_button">Значення профілю: %1$s · натисни %2$s, щоб повернути</string>
     <string name="settings_game_profile_value_touch">Значення профілю: %1$s · торкнись Скинути, щоб повернути</string>
-    <string name="settings_game_currently">Зараз %1$s. Зміни, щоб задати значення лише для цієї гри.</string>
+    <string name="settings_game_currently">Зараз %1$s. Зміни, щоб задати значення лише для цього застосунку.</string>
     <string name="settings_game_only_this_game">Ці зміни стосуються лише %1$s. Усе інше — як у профілі.</string>
     <string name="settings_game_saved_note">Зберігається автоматично · застосується в наступному стрімі</string>
     <string name="settings_native_section_displays">Екрани</string>
@@ -217,7 +218,7 @@
     <string name="settings_native_help_second_display_external">Вважається монітором чи телевізором: режим зовнішнього екрана може стрімити на нього.</string>
     <string name="settings_native_help_second_display_built_in">Вважається частиною пристрою: ніколи не ціль стріму.</string>
     <string name="settings_native_main_screen_title">Головний екран</string>
-    <string name="settings_native_main_screen_description">Панель, що показує ігри та стрім. Інша стає допоміжним екраном.</string>
+    <string name="settings_native_main_screen_description">Панель, що показує застосунки та стрім. Інша стає допоміжним екраном.</string>
     <string name="settings_native_main_screen_automatic">Автоматично</string>
     <string name="settings_native_main_screen_swapped">Поміняно</string>
     <string name="settings_native_help_main_screen_automatic">Головна — більша панель.</string>

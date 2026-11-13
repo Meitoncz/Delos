@@ -2,7 +2,7 @@
 <resources>
     <string name="companion_flow_pc">PC</string>
     <string name="companion_flow_starting">%1$sを起動中</string>
-    <string name="companion_flow_starting_generic">ゲームを起動中</string>
+    <string name="companion_flow_starting_generic">アプリを起動中</string>
     <string name="companion_flow_requested">%1$s · リクエスト %2$s</string>
     <string name="companion_flow_step_host">ホストを検出</string>
     <string name="companion_flow_step_launch">起動リクエストを受理</string>
@@ -15,10 +15,10 @@
     <string name="companion_flow_wait">しばらくお待ちください</string>
     <string name="companion_flow_result_title">ストリームが終了しました</string>
     <string name="companion_flow_reconnect">再接続</string>
-    <string name="companion_flow_lost_guidance">ホストでゲームがまだ実行中の可能性があります。利用できるようになったら再接続して再開してください。</string>
-    <string name="companion_flow_lost_short">ゲームはまだ実行中の可能性があります。</string>
-    <string name="companion_flow_closed_guidance">ライブラリを開いて、ゲームがまだ実行中か確認してください。</string>
-    <string name="companion_flow_closed_short">ゲームの状態はライブラリで確認できます。</string>
+    <string name="companion_flow_lost_guidance">ホストでアプリがまだ実行中の可能性があります。利用できるようになったら再接続して再開してください。</string>
+    <string name="companion_flow_lost_short">アプリはまだ実行中の可能性があります。</string>
+    <string name="companion_flow_closed_guidance">ライブラリを開いて、アプリがまだ実行中か確認してください。</string>
+    <string name="companion_flow_closed_short">アプリの状態はライブラリで確認できます。</string>
     <string name="companion_flow_problem_title">接続の問題</string>
     <string name="companion_flow_error_short">ストリームを開始できませんでした。</string>
     <string name="companion_flow_recovery">ホストのサービス、ファイアウォール、ネットワークを確認してから、もう一度お試しください。</string>

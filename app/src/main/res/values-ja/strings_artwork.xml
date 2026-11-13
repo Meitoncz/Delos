@@ -69,7 +69,7 @@
         <item quantity="other">SteamGridDBには%1$sのカバーが%2$d枚ありますが、フィルターに一致するものはありません。フィルターを緩めるか、別の名前で検索してください。</item>
     </plurals>
     <string name="artwork_filtered_unknown_cover">フィルターに一致するカバーはありません。フィルターを緩めるか、別の名前で検索してください。</string>
-    <string name="artwork_empty_cover">SteamGridDBには、このゲームのカバーがまだありません。</string>
+    <string name="artwork_empty_cover">SteamGridDBには、このアプリのカバーがまだありません。</string>
     <string name="artwork_downloading_cover">カバーをダウンロード中…</string>
     <string name="artwork_updated_cover">カバーを更新しました</string>
     <!-- Wide cover -->
@@ -88,7 +88,7 @@
         <item quantity="other">SteamGridDBには%1$sのワイドカバーが%2$d枚ありますが、フィルターに一致するものはありません。フィルターを緩めるか、別の名前で検索してください。</item>
     </plurals>
     <string name="artwork_filtered_unknown_wide">フィルターに一致するワイドカバーはありません。フィルターを緩めるか、別の名前で検索してください。</string>
-    <string name="artwork_empty_wide">SteamGridDBには、このゲームのワイドカバーがまだありません。</string>
+    <string name="artwork_empty_wide">SteamGridDBには、このアプリのワイドカバーがまだありません。</string>
     <string name="artwork_downloading_wide">ワイドカバーをダウンロード中…</string>
     <string name="artwork_updated_wide">ワイドカバーを更新しました</string>
     <!-- Background -->
@@ -107,7 +107,7 @@
         <item quantity="other">SteamGridDBには%1$sの背景が%2$d枚ありますが、フィルターに一致するものはありません。フィルターを緩めるか、別の名前で検索してください。</item>
     </plurals>
     <string name="artwork_filtered_unknown_hero">フィルターに一致する背景はありません。フィルターを緩めるか、別の名前で検索してください。</string>
-    <string name="artwork_empty_hero">SteamGridDBには、このゲームの背景がまだありません。</string>
+    <string name="artwork_empty_hero">SteamGridDBには、このアプリの背景がまだありません。</string>
     <string name="artwork_downloading_hero">背景をダウンロード中…</string>
     <string name="artwork_updated_hero">背景を更新しました</string>
     <!-- Logo -->
@@ -126,7 +126,7 @@
         <item quantity="other">SteamGridDBには%1$sのロゴが%2$d個ありますが、フィルターに一致するものはありません。フィルターを緩めるか、別の名前で検索してください。</item>
     </plurals>
     <string name="artwork_filtered_unknown_logo">フィルターに一致するロゴはありません。フィルターを緩めるか、別の名前で検索してください。</string>
-    <string name="artwork_empty_logo">SteamGridDBには、このゲームのロゴがまだありません。</string>
+    <string name="artwork_empty_logo">SteamGridDBには、このアプリのロゴがまだありません。</string>
     <string name="artwork_downloading_logo">ロゴをダウンロード中…</string>
     <string name="artwork_updated_logo">ロゴを更新しました</string>
 </resources>

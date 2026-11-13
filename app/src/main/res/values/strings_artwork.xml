@@ -89,7 +89,7 @@
         <item quantity="other">%1$s has %2$d covers on SteamGridDB, none of them matches your filters. Loosen a filter or search under another name.</item>
     </plurals>
     <string name="artwork_filtered_unknown_cover">None of the covers matches your filters. Loosen a filter or search under another name.</string>
-    <string name="artwork_empty_cover">SteamGridDB has no cover for this game yet.</string>
+    <string name="artwork_empty_cover">SteamGridDB has no cover for this app yet.</string>
     <string name="artwork_downloading_cover">Downloading the cover…</string>
     <string name="artwork_updated_cover">Cover updated</string>
     <!-- Wide cover -->
@@ -115,7 +115,7 @@
         <item quantity="other">%1$s has %2$d wide covers on SteamGridDB, none of them matches your filters. Loosen a filter or search under another name.</item>
     </plurals>
     <string name="artwork_filtered_unknown_wide">None of the wide covers matches your filters. Loosen a filter or search under another name.</string>
-    <string name="artwork_empty_wide">SteamGridDB has no wide cover for this game yet.</string>
+    <string name="artwork_empty_wide">SteamGridDB has no wide cover for this app yet.</string>
     <string name="artwork_downloading_wide">Downloading the wide cover…</string>
     <string name="artwork_updated_wide">Wide cover updated</string>
     <!-- Background -->
@@ -141,7 +141,7 @@
         <item quantity="other">%1$s has %2$d backgrounds on SteamGridDB, none of them matches your filters. Loosen a filter or search under another name.</item>
     </plurals>
     <string name="artwork_filtered_unknown_hero">None of the backgrounds matches your filters. Loosen a filter or search under another name.</string>
-    <string name="artwork_empty_hero">SteamGridDB has no background for this game yet.</string>
+    <string name="artwork_empty_hero">SteamGridDB has no background for this app yet.</string>
     <string name="artwork_downloading_hero">Downloading the background…</string>
     <string name="artwork_updated_hero">Background updated</string>
     <!-- Logo -->
@@ -167,7 +167,7 @@
         <item quantity="other">%1$s has %2$d logos on SteamGridDB, none of them matches your filters. Loosen a filter or search under another name.</item>
     </plurals>
     <string name="artwork_filtered_unknown_logo">None of the logos matches your filters. Loosen a filter or search under another name.</string>
-    <string name="artwork_empty_logo">SteamGridDB has no logo for this game yet.</string>
+    <string name="artwork_empty_logo">SteamGridDB has no logo for this app yet.</string>
     <string name="artwork_downloading_logo">Downloading the logo…</string>
     <string name="artwork_updated_logo">Logo updated</string>
 </resources>

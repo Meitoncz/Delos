@@ -2,7 +2,7 @@
 <resources>
     <string name="companion_flow_pc">PC</string>
     <string name="companion_flow_starting">Lancement de %1$s</string>
-    <string name="companion_flow_starting_generic">Lancement du jeu</string>
+    <string name="companion_flow_starting_generic">Lancement de l’appli</string>
     <string name="companion_flow_requested">%1$s · demandé %2$s</string>
     <string name="companion_flow_step_host">Hôte trouvé</string>
     <string name="companion_flow_step_launch">Demande de lancement acceptée</string>
@@ -15,10 +15,10 @@
     <string name="companion_flow_wait">Un instant</string>
     <string name="companion_flow_result_title">Le stream est terminé</string>
     <string name="companion_flow_reconnect">Se reconnecter</string>
-    <string name="companion_flow_lost_guidance">Le jeu tourne peut-être encore sur l’hôte. Reconnecte-toi pour reprendre dès que possible.</string>
-    <string name="companion_flow_lost_short">Le jeu tourne peut-être encore.</string>
-    <string name="companion_flow_closed_guidance">Ouvre la bibliothèque pour voir si le jeu tourne encore.</string>
-    <string name="companion_flow_closed_short">Vérifie l’état du jeu dans la bibliothèque.</string>
+    <string name="companion_flow_lost_guidance">L’appli tourne peut-être encore sur l’hôte. Reconnecte-toi pour reprendre dès que possible.</string>
+    <string name="companion_flow_lost_short">L’appli tourne peut-être encore.</string>
+    <string name="companion_flow_closed_guidance">Ouvre la bibliothèque pour voir si l’appli tourne encore.</string>
+    <string name="companion_flow_closed_short">Vérifie l’état de l’appli dans la bibliothèque.</string>
     <string name="companion_flow_problem_title">Problème de connexion</string>
     <string name="companion_flow_error_short">Le stream n’a pas pu démarrer.</string>
     <string name="companion_flow_recovery">Vérifie le service de l’hôte, le pare-feu et le réseau. Puis réessaie.</string>

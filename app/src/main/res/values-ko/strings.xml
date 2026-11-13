@@ -4,7 +4,7 @@
     <string name="scut_invalid_uuid">지정한 PC가 올바르지 않아요</string>
     <string name="scut_invalid_app_id">지정한 앱이 올바르지 않아요</string>
     <string name="scut_game_running">%1$s이(가) 이미 실행 중이에요 · 먼저 Delos에서 종료해 주세요</string>
-    <string name="scut_other_game_running">다른 게임이 이미 실행 중이에요 · 먼저 Delos에서 종료해 주세요</string>
+    <string name="scut_other_game_running">다른 앱이 이미 실행 중이에요 · 먼저 Delos에서 종료해 주세요</string>
     <string name="configuration_mode_move_buttons">버튼 이동 모드</string>
     <string name="configuration_mode_resize_buttons">버튼 크기 조절 모드</string>
     <string name="configuration_mode_disable_enable_buttons">버튼 켜기/끄기 모드</string>
@@ -95,7 +95,7 @@
     <string name="title_checkbox_gamepad_touchpad_as_mouse">항상 터치패드로 마우스 제어</string>
     <string name="summary_checkbox_gamepad_touchpad_as_mouse">터치패드가 있는 게임패드를 에뮬레이션하는 중에도 게임패드 터치패드 입력으로 호스트 마우스를 제어해요.</string>
     <string name="title_checkbox_gamepad_motion_sensors">외장 게임패드 자이로스코프</string>
-    <string name="summary_checkbox_gamepad_motion_sensors">연결된 외장 게임패드에 자이로스코프와 가속도계가 있으면 PC가 읽을 수 있게 해요. Android 12 이상이 필요해요. 모션을 쓰는 게임이 없다면 꺼서 전력과 네트워크 트래픽을 조금 아낄 수 있어요.</string>
+    <string name="summary_checkbox_gamepad_motion_sensors">연결된 외장 게임패드에 자이로스코프와 가속도계가 있으면 PC가 읽을 수 있게 해요. Android 12 이상이 필요해요. 모션을 쓰는 앱이 없다면 꺼서 전력과 네트워크 트래픽을 조금 아낄 수 있어요.</string>
     <string name="title_checkbox_gamepad_motion_fallback">기기 내장 자이로스코프</string>
     <string name="summary_checkbox_gamepad_motion_fallback">연결된 게임패드에 센서가 없거나 Android 버전에서 읽을 수 없을 때 이 기기 자체의 자이로스코프와 가속도계(휴대용 기기의 내장 센서)를 사용해요.\n참고: 이 경우 PC에서 게임패드가 PlayStation 컨트롤러로 보일 수 있어요.</string>
     <string name="title_checkbox_force_device_motion">항상 기기 내장 자이로스코프 사용</string>
@@ -146,7 +146,7 @@
     <string name="title_video_format">비디오 코덱</string>
     <string name="summary_video_format">기기가 지원하면 최신 코덱으로 비디오 대역폭을 줄일 수 있어요. 호스트 소프트웨어나 GPU가 지원하지 않으면 코덱 선택이 무시될 수 있어요.</string>
     <string name="title_enable_hdr">HDR 사용</string>
-    <string name="summary_enable_hdr">게임과 PC GPU가 지원하면 HDR로 스트리밍해요. HDR에는 HEVC Main 10 인코딩을 지원하는 GPU가 필요해요. HDR이 보이는 모습은 이 기기의 디스플레이에 따라 달라요.</string>
+    <string name="summary_enable_hdr">앱과 PC GPU가 지원하면 HDR로 스트리밍해요. HDR에는 HEVC Main 10 인코딩을 지원하는 GPU가 필요해요. HDR이 보이는 모습은 이 기기의 디스플레이에 따라 달라요.</string>
     <string name="title_full_range">풀 레인지 비디오 강제</string>
     <string name="summary_full_range">기기가 풀 레인지 비디오를 제대로 표시하지 못하면 밝은 영역과 어두운 영역의 디테일이 사라져요.</string>
     <string name="title_prevent_packet_loss">Wi-Fi 연결 유지</string>
@@ -356,7 +356,7 @@
     <string name="send_clipboard_failed">클립보드 전송 실패: </string>
     <string name="external_display_info">외부 디스플레이 연결됨: %1$dx%2$d, %3$.1fHz</string>
     <string name="no_external_display">외부 디스플레이가 감지되지 않았어요</string>
-    <string name="no_game_instance">사용할 수 있는 게임 인스턴스가 없어요</string>
+    <string name="no_game_instance">사용할 수 있는 앱 인스턴스가 없어요</string>
     <string name="get_clipboard_failed">클립보드 가져오기 실패: </string>
     <string name="send_clipboard_success">클립보드를 전송했어요</string>
     <string name="get_clipboard_success">클립보드를 가져왔어요</string>
