@@ -66,6 +66,11 @@
     <string name="video_scale_mode_fit">맞춤</string>
     <string name="video_scale_mode_fill">채우기</string>
     <string name="video_scale_mode_stretch">늘이기</string>
+    <string name="title_vrr">가변 주사율</string>
+    <string name="summary_vrr">적응형 디스플레이가 스트림 FPS를 따릅니다</string>
+    <string name="vrr_auto">자동</string>
+    <string name="vrr_on">켜기</string>
+    <string name="vrr_off">끄기</string>
     <string name="category_audio_settings">오디오 설정</string>
     <string name="title_audio_config_list">서라운드 사운드 구성</string>
     <string name="summary_audio_config_list">홈시어터 시스템용 5.1 또는 7.1 서라운드 사운드를 켜요</string>

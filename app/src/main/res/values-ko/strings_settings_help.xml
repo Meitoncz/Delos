@@ -14,6 +14,7 @@
     <string name="help_checkbox_enable_view_top_center">화면을 다 채우지 않는 스트림을 가운데가 아닌 상단 가운데에 맞춰요.</string>
     <string name="help_seekbar_resolution_scale_factor">호스트 가상 디스플레이를 확대해요. 150%%면 1920 × 1080이 PC에서 2880 × 1620으로 렌더링돼요. PC GPU를 더 써요.</string>
     <string name="help_list_video_scale_mode">로컬 화면 맞춤에만 적용돼요.</string>
+    <string name="help_list_vrr">적응형 디스플레이(Android 16)가 스트림 FPS를 따릅니다. 휴대 기기에는 드뭅니다.</string>
     <string name="help_edit_diy_w_h">비디오 해상도에 해상도를 추가해요. 가로 x 세로(1920x1080)를 입력한 뒤 비디오 해상도에서 선택하세요.</string>
     <string name="help_edit_diy_bitrate">Mbps 단위로 비트레이트를 설정해요. 소수와 슬라이더 범위를 넘는 값도 가능해요. 비디오 비트레이트도 함께 바뀌어요.</string>
     <string name="help_custom_refresh_rate">비디오 프레임 레이트에 사용자 지정 FPS(소수 가능)를 추가해요. 거기서 선택하세요. 결과는 호스트, 앱, 디스플레이의 한계를 따라요.</string>
@@ -136,6 +137,9 @@
     <string name="help_list_video_scale_mode_fit">화면 전체가 보여요. 화면 비율이 다르면 검은 띠가 생겨요.</string>
     <string name="help_list_video_scale_mode_fill">화면을 가득 채워요. 화면 비율이 다르면 잘려요.</string>
     <string name="help_list_video_scale_mode_stretch">자르지 않고 화면을 채워요. 화면이 왜곡돼요.</string>
+    <string name="help_list_vrr_auto">디스플레이가 지원을 알릴 때 켭니다.</string>
+    <string name="help_list_vrr_on">항상 스트림 FPS를 요청합니다.</string>
+    <string name="help_list_vrr_off">고정 주사율에 맞춥니다.</string>
     <string name="help_list_audio_config_2">휴대용 기기 스피커와 대부분의 헤드폰을 위한 2채널이에요.</string>
     <string name="help_list_audio_config_51">6채널이에요. 5.1 재생 환경이 필요해요.</string>
     <string name="help_list_audio_config_71">8채널이에요. 채널이 빠지면 스테레오를 사용하세요.</string>

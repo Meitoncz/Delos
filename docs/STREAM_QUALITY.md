@@ -526,6 +526,44 @@ The two-pass SurfaceTexture/2D approach was also reviewed against linckosz's Moo
 PR #1567 (`37e7a00ce8cde55b936c9239d8e717336f55da63`); the lifecycle, live controls and P010 HDR output
 here are implemented for Delos rather than copying that bridge's synchronous frame wait.
 
+## Variable refresh rate (VRR / ARR)
+
+Setting: Settings > Display > Variable refresh rate (`list_vrr`: Auto, On, Off; default Auto; also a per-game setting). The row
+is hidden below Android 11 (API 30), where `Surface.setFrameRate()` does not exist. Most handhelds, including the AYN Odin 2,
+have a fixed-refresh panel; nothing changes for them.
+
+**What Android offers.** `Display.hasArrSupport()` (API 36, Android 16) says whether the display supports adaptive refresh
+rate: the panel changes its refresh rate continuously (not in the steps of the display modes) to follow the content.
+`Surface.setFrameRate(rate, FRAME_RATE_COMPATIBILITY_FIXED_SOURCE, CHANGE_FRAME_RATE_ALWAYS)` tells the system the frame rate
+of the content, which the system uses to pick the refresh rate (on an adaptive panel, one that matches the content).
+
+**What Delos does.** `DisplayVrr.detect` reads `hasArrSupport()` (false below API 36 and when the call throws);
+`VrrMode.resolve(setting, reported)` makes VRR active (Auto: as reported; On: always; Off: never; always inactive below API 30).
+When VRR is **not** active, `StreamDisplayPlanner` returns exactly the plan it returned before VRR existed (the planner tests
+are the regression suite; `vrrInactiveEqualsThePlanBeforeVrr` runs a table). When it is active:
+
+- `Plan.displayRefreshRate` (reported to the host as the client refresh rate, and the number Cap FPS pacing compares with) is
+  the **peak** refresh rate of the supported modes at the chosen mode's resolution, not `min(current rate, chosen rate)`: an
+  adaptive display's instantaneous rate can be low when the stream starts and rises with the content.
+- `Plan.surfaceFrameRate` is the **true stream frame rate** (`Plan.pacedFrameRate`, before the warp factor) instead of the
+  refresh rate of the best mode, so the system can match the content without pull-down.
+- The display mode choice (`chooseMode`) is unchanged: the mode switch, the frame-rate compatibility and the change strategy are
+  the same.
+
+**What it does not do.** No change to the decoder, the pacing modes (Fast V-Sync, Balanced, Cap FPS, ...) or the host stream. The
+Balanced pacing's Choreographer still ticks at the rate the system reports.
+
+**Diagnostics.** The log line at stream start: `VRR: setting=auto, reported=true, active=true, surface frame rate=90.0,
+planning rate=120.0`. Settings > About > Debug info > Displays: `Adaptive refresh rate: reported yes/no (...)` per display. The
+statistics panel (compact line and full panel header) appends `VRR` after the FPS figure only while VRR is active.
+
+**Unverified.** The test device has no VRR display, so this is proven by unit tests (planner, `VrrMode`, detection with a fake that
+throws, settings plumbing) and by "nothing changes on a fixed-refresh device", not on real hardware. A measurement on a VRR
+device (Android 16, panel reporting ARR) should check: (1) the log line shows `reported=true active=true` in Auto; (2) the
+statistics overlay shows the `VRR` marker; (3) the frame delivery intervals (Perfetto frame timeline / `dumpsys SurfaceFlinger
+--latency`) of a 90 and a 72 FPS stream are even, with no 3:2 pull-down pattern and no refresh above the stream rate it does not
+need, compared with Off on the same stream; (4) a 60 FPS stream on a 120 Hz panel still reaches the panel as intended.
+
 ## Gyro smoothing (#77)
 
 **Controls → Gamepad → Gyro smoothing** (`seekbar_gyro_smoothing`, 0..100, default 0) steadies the gyroscope before it is

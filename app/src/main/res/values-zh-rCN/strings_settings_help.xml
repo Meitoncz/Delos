@@ -16,6 +16,7 @@
     <string name="help_checkbox_enable_view_top_center">未铺满屏幕的串流画面将顶部居中对齐，而不是垂直居中。</string>
     <string name="help_seekbar_resolution_scale_factor">缩放电脑端虚拟显示器：150%% 时，1920 × 1080 会在 PC 上以 2880 × 1620 渲染。会占用 PC 的 GPU。</string>
     <string name="help_list_video_scale_mode">仅影响本地画面的显示方式。</string>
+    <string name="help_list_vrr">自适应显示屏（Android 16）跟随串流帧率。掌机上很少见。</string>
     <string name="help_edit_diy_w_h">向视频分辨率添加一个分辨率：输入宽 x 高（1920x1080），然后在视频分辨率中选择它。</string>
     <string name="help_edit_diy_bitrate">设置码率，单位 Mbps；允许小数，也允许超出滑块范围的值。同时会更新视频码率。</string>
     <string name="help_custom_refresh_rate">向视频帧率添加自定义 FPS（允许小数），并在视频帧率中选择它。最终结果受电脑、应用和屏幕限制。</string>
@@ -139,6 +140,9 @@
     <string name="help_list_video_scale_mode_fit">显示完整画面；宽高比不同时会有黑边。</string>
     <string name="help_list_video_scale_mode_fill">铺满屏幕；宽高比不同时会裁切。</string>
     <string name="help_list_video_scale_mode_stretch">铺满屏幕且不裁切；画面会变形。</string>
+    <string name="help_list_vrr_auto">显示屏报告支持时开启。</string>
+    <string name="help_list_vrr_on">始终请求串流帧率。</string>
+    <string name="help_list_vrr_off">使用固定刷新率匹配。</string>
     <string name="help_list_audio_config_2">两个声道，适用于掌机扬声器和大多数耳机。</string>
     <string name="help_list_audio_config_51">六个声道。需要 5.1 播放链路。</string>
     <string name="help_list_audio_config_71">八个声道。如果有声道缺失，请使用立体声。</string>

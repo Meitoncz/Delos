@@ -163,6 +163,15 @@
             android:title="@string/title_video_scale_mode"
             app:iconSpaceReserved="false" />
 
+        <ListPreference
+            android:defaultValue="auto"
+            android:entries="@array/vrr_names"
+            android:entryValues="@array/vrr_values"
+            android:key="list_vrr"
+            android:summary="@string/summary_vrr"
+            android:title="@string/title_vrr"
+            app:iconSpaceReserved="false" />
+
         <EditTextPreference
             android:defaultValue="1920x1080"
             android:dialogTitle="@string/dialog_custom_resolution"

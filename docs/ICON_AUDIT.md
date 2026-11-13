@@ -123,6 +123,7 @@ only the Windows, Steam and Android logos exist). Nothing needed a font from ano
 | View at top centre | `align-top` | `align-top` | keep |  |
 | Resolution scale | `arrows-out` | `arrows-out` | keep | the interface scale had the same glyph |
 | Video scale mode | `resize` | `resize` | keep |  |
+| Variable refresh rate | (new) | `wave-sine` | keep (repeat) | repeat: Hz, same glyph as Stream > Custom refresh rate; other tab |
 | Enforce display mode | `scan` | `scan` | keep |  |
 | HDR | `sun` | `sparkle` | **replace** | sparkle everywhere HDR is meant (setting, native HDR badge, filter); was a sun on the setting and a sparkle on the badge |
 | External display | `monitor-arrow-up` | `monitor-arrow-up` | keep |  |

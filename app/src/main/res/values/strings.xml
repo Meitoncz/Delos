@@ -97,6 +97,11 @@
     <string name="video_scale_mode_fit">Fit</string>
     <string name="video_scale_mode_fill">Fill</string>
     <string name="video_scale_mode_stretch">Stretch</string>
+    <string name="title_vrr">Variable refresh rate</string>
+    <string name="summary_vrr">An adaptive display follows the stream FPS</string>
+    <string name="vrr_auto">Auto</string>
+    <string name="vrr_on">On</string>
+    <string name="vrr_off">Off</string>
 
     <string name="category_audio_settings">Audio Settings</string>
     <string name="title_audio_config_list">Surround sound configuration</string>

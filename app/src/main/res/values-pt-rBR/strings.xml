@@ -75,6 +75,11 @@
     <string name="video_scale_mode_fit">Ajustar</string>
     <string name="video_scale_mode_fill">Preencher</string>
     <string name="video_scale_mode_stretch">Esticar</string>
+    <string name="title_vrr">Taxa de atualização variável</string>
+    <string name="summary_vrr">Uma tela adaptável segue os FPS do stream</string>
+    <string name="vrr_auto">Auto</string>
+    <string name="vrr_on">Ativada</string>
+    <string name="vrr_off">Desativada</string>
 
     <string name="category_audio_settings">Configurações de áudio</string>
     <string name="title_audio_config_list">Configuração de som surround</string>

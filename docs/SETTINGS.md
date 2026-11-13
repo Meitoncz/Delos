@@ -13,7 +13,7 @@ Approved on 2026-10-23. Categories that cover several subjects are split by sett
 | Tab | Contents |
 | --- | --- |
 | Stream | Resolution, frame rate, bitrate, frame pacing, latency, codec, Wi-Fi keep-alive |
-| Display | Scaling, orientation, display modes, virtual display, HDR, color range and performance overlay |
+| Display | Scaling, orientation, display modes, variable refresh rate, virtual display, HDR, color range and performance overlay |
 | Audio | Channels, audio effects, playback on the PC and interface sounds |
 | Controls | Gamepad, mouse, touch, keyboard, clipboard, virtual controls, editable layouts and interface haptics |
 | Appearance | Theme, wallpaper colors, backgrounds, home layout, interface scale, animation and the remaining interface options |
@@ -125,6 +125,7 @@ its on/off, mode, sharpness and supersampling rows return all-`NONE` (dimmed chi
 | HDR | on: Low | none | on: Low, PyroWave High |
 | PyroWave chroma | 4:4:4 (SDR) High, 4:2:0 Medium | Low | High |
 | Frame pacing | Warp 2 High, Warp Medium, else Low | Lowest latency / Fast V-Sync / Warp Low, Balanced and FPS limit Medium, Smoothness High | Warp 2 High, Warp Medium, else none |
+| Variable refresh rate | no chips | no chips | no chips |
 | Upscaler on/off, mode | Normal Low, Quality Medium, SGSR2-DV by the pass share (Quality one higher), Sharpen only Low | Low, SGSR2-DV Medium (High when over budget) | none |
 | Upscaler sharpness | 0 none, else Low | 0 none, else Low | none |
 | Supersampling quality | SGSR2-DV like the mode at that level; SGSR 1: 2x Medium, 1.33x Low | as the mode | none |

@@ -17,6 +17,7 @@ internal object SearchAliases {
         "checkbox_gamepad_motion_fallback" to "emulate gamepad motion sensor support motion sensors",
         "checkbox_force_device_motion" to "always use device's motion sensors motion sensors",
         "seekbar_gyro_smoothing" to "gyroscope stabilisation stabilization motion sensors",
+        "list_vrr" to "vrr arr adaptive refresh rate freesync g-sync variable",
         // Rows renamed from "game" to "app": the old word stays searchable.
         "ui_match_game_colors" to "game",
         "ui_hero_background" to "game",

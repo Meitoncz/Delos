@@ -98,7 +98,7 @@ class GameSettingsStore(private val base: SharedPreferences, pc: String, appId: 
         /** The gyroscope rows: whether a game reads the external or the built-in gyroscope, and how smoothed (Stream tab, after the codec rows). */
         val GYRO_KEYS = listOf("checkbox_gamepad_motion_sensors", "checkbox_gamepad_motion_fallback", "checkbox_force_device_motion", "seekbar_gyro_smoothing")
         val STREAM_KEYS = listOf("list_resolution", "list_fps", "seekbar_bitrate_kbps", "video_format", "list_pyrowave_chroma", "frame_pacing", "checkbox_async_decode") + GYRO_KEYS
-        val DISPLAY_KEYS = listOf("checkbox_enable_hdr", "checkbox_full_range", "list_video_scale_mode",
+        val DISPLAY_KEYS = listOf("checkbox_enable_hdr", "checkbox_full_range", "list_video_scale_mode", "list_vrr",
             "seekbar_resolution_scale_factor", "checkbox_use_virtual_display", "checkbox_enforce_display_mode", "checkbox_sgsr", "list_sgsr_quality", "seekbar_sgsr_sharpness",
             "list_sgsr_supersampling_level")
         val KEYS = (STREAM_KEYS + DISPLAY_KEYS).toSet()

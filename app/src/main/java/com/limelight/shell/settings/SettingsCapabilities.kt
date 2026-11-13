@@ -12,6 +12,7 @@ import com.limelight.R
 import com.limelight.binding.video.MediaCodecHelper
 import com.limelight.binding.video.PyroWaveRenderer
 import com.limelight.binding.video.SgsrRenderer
+import com.limelight.binding.video.VrrMode
 import com.limelight.preferences.GlPreferences
 import com.limelight.preferences.PreferenceConfiguration
 import kotlin.math.max
@@ -121,11 +122,15 @@ data class SettingsCapabilities(
             val hdr10 = display.hdrCapabilities?.supportedHdrTypes?.contains(Display.HdrCapabilities.HDR_TYPE_HDR10) == true
             val main10 = runCatching { hevc?.getCapabilitiesForType("video/hevc")?.profileLevels?.any { it.profile == MediaCodecInfo.CodecProfileLevel.HEVCProfileMain10 } == true }.getOrDefault(false)
             if (!hdr10 || !main10) hidden += "checkbox_enable_hdr"
+            hidden += vrrHiddenKeys(Build.VERSION.SDK_INT)
             return SettingsCapabilities(native.distinctBy { it.value }, maxWidth,
                 modes.maxOfOrNull { it.refreshRate } ?: display.refreshRate,
                 hdr10 && main10, PreferenceConfiguration.isShieldAtvFirmwareWithBrokenHdr(), hevc != null, av1 != null, hidden,
                 pyroWave, sgsr)
         }
+
+        /** Variable refresh rate drives {@code Surface.setFrameRate()}, which Android 11 introduced: no row below it. */
+        internal fun vrrHiddenKeys(sdk: Int): Set<String> = if (sdk < VrrMode.MIN_SDK) setOf("list_vrr") else emptySet()
 
         /**
          * The motion rows that do not apply: an external gamepad's sensors need Android 12, the built-in sensors need

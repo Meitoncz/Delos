@@ -104,6 +104,8 @@ class StreamStats @JvmOverloads constructor(
     val frameQueue: FrameQueueStats? = null,
     /** SGSR output only: frame available to display present over the last second; null when the platform gives no present time. */
     val renderLatency: StageSummary? = null,
+    /** Variable refresh rate is active for this stream: the panel marks it next to the frame rate. */
+    val vrr: Boolean = false,
 ) {
     /** The delay summed up: network round trip, the PC's processing when it reports it, and decoding. */
     val totalMs: Float get() = networkMs + maxOf(hostMs, 0f) + decodeMs + processingMs
@@ -218,7 +220,7 @@ class StreamStatsPanel internal constructor(
         fun figures(text: String) = if (wraps) keepFigures(text) else text
         BasicText(
             buildAnnotatedString {
-                withStyle(SpanStyle(color = FPS_GREEN, fontWeight = FontWeight.SemiBold)) { append(figures("${s.fps.toInt()} FPS")) } // l10n-ignore
+                withStyle(SpanStyle(color = FPS_GREEN, fontWeight = FontWeight.SemiBold)) { append(figures("${s.fps.toInt()} FPS" + if (s.vrr) " VRR" else "")) } // l10n-ignore
                 if (s.onePercentLowFps >= 0f) append(figures("  ·  " + stringResource(R.string.stream_stats_compact_low, s.onePercentLowFps.toInt())))
                 if (s.bandwidthKb >= 0f) append(figures("  ·  ${bandwidth(s.bandwidthKb)}"))
                 append(figures("  ·  " + stringResource(R.string.stream_stats_compact_tail, s.networkMs, format(s.decodeMs), format(s.totalMs), format(s.lossPercent))))
@@ -236,7 +238,7 @@ class StreamStatsPanel internal constructor(
             BasicText(
                 buildAnnotatedString {
                     append("${s.width} × ${s.height} · ")
-                    withStyle(SpanStyle(color = FPS_GREEN, fontWeight = FontWeight.SemiBold)) { append("${format(s.fps)} FPS") } // l10n-ignore
+                    withStyle(SpanStyle(color = FPS_GREEN, fontWeight = FontWeight.SemiBold)) { append("${format(s.fps)} FPS" + if (s.vrr) " VRR" else "") } // l10n-ignore
                     append(" · ${s.codec}${if (s.hdr) " HDR" else ""}")
                 },
                 style = TextStyle(color = PANEL_TEXT, fontFamily = Figtree, fontWeight = FontWeight.SemiBold, fontSize = 20.tpx, fontFeatureSettings = "tnum"),

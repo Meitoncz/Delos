@@ -14,6 +14,7 @@
     <string name="help_checkbox_enable_view_top_center">Alinha um stream que não preenche a tela ao centro superior, em vez do meio.</string>
     <string name="help_seekbar_resolution_scale_factor">Dimensiona a tela virtual do PC: com 150%%, 1920 × 1080 é renderizado como 2880 × 1620 no PC. Consome GPU do PC.</string>
     <string name="help_list_video_scale_mode">Ajuste da imagem apenas neste dispositivo.</string>
+    <string name="help_list_vrr">Telas adaptáveis (Android 16) seguem os FPS do stream. Raras em portáteis.</string>
     <string name="help_edit_diy_w_h">Adiciona uma resolução em Resolução do vídeo: digite largura x altura (1920x1080) e selecione-a lá.</string>
     <string name="help_edit_diy_bitrate">Define o bitrate em Mbps; aceita decimais e valores acima do alcance do controle deslizante. Também atualiza o Bitrate do vídeo.</string>
     <string name="help_custom_refresh_rate">Adiciona um FPS personalizado (aceita decimais) à Taxa de quadros do vídeo; selecione-o lá. PC, app e tela limitam o resultado.</string>
@@ -136,6 +137,9 @@
     <string name="help_list_video_scale_mode_fit">Imagem inteira; barras pretas se as proporções diferirem.</string>
     <string name="help_list_video_scale_mode_fill">Preenche a tela; corta se as proporções diferirem.</string>
     <string name="help_list_video_scale_mode_stretch">Preenche a tela sem cortar; a imagem fica distorcida.</string>
+    <string name="help_list_vrr_auto">Ativa se a tela informar.</string>
+    <string name="help_list_vrr_on">Sempre pede os FPS do stream.</string>
+    <string name="help_list_vrr_off">Taxa fixa ajustada ao stream.</string>
     <string name="help_list_audio_config_2">Dois canais para alto-falantes de portáteis e a maioria dos fones.</string>
     <string name="help_list_audio_config_51">Seis canais. Requer reprodução 5.1.</string>
     <string name="help_list_audio_config_71">Oito canais. Use Estéreo se faltarem canais.</string>

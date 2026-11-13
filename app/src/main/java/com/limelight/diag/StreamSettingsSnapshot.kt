@@ -9,7 +9,7 @@ object StreamSettingsSnapshot {
     /** The keys in report order; also the complete list of what a report may say about the settings. */
     val KEYS = listOf(
         "video_format", "list_resolution", "list_fps", "seekbar_bitrate_kbps", "list_pyrowave_chroma", "checkbox_enable_hdr",
-        "frame_pacing", "checkbox_sgsr", "list_sgsr_quality", "seekbar_sgsr_sharpness", "list_sgsr_supersampling_level",
+        "frame_pacing", "list_vrr", "checkbox_sgsr", "list_sgsr_quality", "seekbar_sgsr_sharpness", "list_sgsr_supersampling_level",
     )
 
     fun read(values: Map<String, *>, defaults: Map<String, Any?>): List<Pair<String, String>> {
@@ -27,6 +27,7 @@ object StreamSettingsSnapshot {
             "PyroWave chroma" to text("list_pyrowave_chroma"),
             "HDR" to flag("checkbox_enable_hdr"),
             "Frame pacing" to text("frame_pacing"),
+            "Variable refresh rate" to text("list_vrr"),
             "Upscaler" to upscaler,
         )
     }

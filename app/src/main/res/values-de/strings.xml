@@ -95,6 +95,11 @@
     <string name="video_scale_mode_fit">Einpassen</string>
     <string name="video_scale_mode_fill">Füllen</string>
     <string name="video_scale_mode_stretch">Strecken</string>
+    <string name="title_vrr">Variable Bildwiederholrate</string>
+    <string name="summary_vrr">Ein adaptives Display folgt den FPS des Streams</string>
+    <string name="vrr_auto">Auto</string>
+    <string name="vrr_on">An</string>
+    <string name="vrr_off">Aus</string>
 
     <string name="category_audio_settings">Audioeinstellungen</string>
     <string name="title_audio_config_list">Surround-Sound-Konfiguration</string>

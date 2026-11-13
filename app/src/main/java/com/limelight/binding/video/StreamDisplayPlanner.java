@@ -94,6 +94,7 @@ public final class StreamDisplayPlanner {
         boolean television;
         boolean externalDisplay;
         float refreshRateCeiling = Float.POSITIVE_INFINITY;
+        boolean vrr;
 
         /**
          * The output display: its active mode, its supported modes in the order the system lists them, and
@@ -158,6 +159,24 @@ public final class StreamDisplayPlanner {
             this.refreshRateCeiling = refreshRateCeiling;
             return this;
         }
+
+        /**
+         * Whether variable refresh rate is active ({@link VrrMode#resolve}). Off by default; while off, every field of
+         * the {@link Plan} is what it was before VRR existed. While on:
+         * <ul>
+         * <li>{@link Plan#displayRefreshRate} (reported to the host, used by Cap FPS) is the peak refresh rate of the
+         * supported modes at the chosen mode's resolution ({@link StreamDisplayPlanner#peakRefreshRate}), not
+         * {@code min(current rate, chosen rate)}: an adaptive display's instantaneous rate can be low when the stream
+         * starts and rises as soon as content arrives;</li>
+         * <li>{@link Plan#surfaceFrameRate} is the true stream frame rate ({@link Plan#pacedFrameRate}) instead of the
+         * chosen mode's refresh rate, so the system can match the content without pull-down;</li>
+         * <li>the mode choice ({@code chooseMode}) is unchanged.</li>
+         * </ul>
+         */
+        public Input vrr(boolean active) {
+            this.vrr = active;
+            return this;
+        }
     }
 
     /** The planner's decisions. */
@@ -184,11 +203,19 @@ public final class StreamDisplayPlanner {
         public final boolean applyAspectRatio;
         public final double aspectRatio;
         public final boolean fillDisplay;
+        /** Whether the plan was made for an active variable refresh rate display ({@link Input#vrr}). */
+        public final boolean vrr;
+        /**
+         * The frame rate passed to {@code Surface.setFrameRate()} once the stream surface exists:
+         * {@link StreamDisplayPlanner#surfaceFrameRate} normally, the true stream frame rate
+         * ({@link #pacedFrameRate}, before the warp factor) with VRR.
+         */
+        public final float surfaceFrameRate;
 
         Plan(Mode currentMode, Mode bestMode, ModeSwitch modeSwitch, float desiredRefreshRate,
              float displayRefreshRate, int framePacing, PacingChange pacingChange, int roundedRefreshRate,
              float pacedFrameRate, float streamFrameRate, boolean applyAspectRatio, double aspectRatio,
-             boolean fillDisplay) {
+             boolean fillDisplay, boolean vrr, float surfaceFrameRate) {
             this.currentMode = currentMode;
             this.bestMode = bestMode;
             this.modeSwitch = modeSwitch;
@@ -202,6 +229,8 @@ public final class StreamDisplayPlanner {
             this.applyAspectRatio = applyAspectRatio;
             this.aspectRatio = aspectRatio;
             this.fillDisplay = fillDisplay;
+            this.vrr = vrr;
+            this.surfaceFrameRate = surfaceFrameRate;
         }
     }
 
@@ -232,7 +261,11 @@ public final class StreamDisplayPlanner {
         float desiredRefreshRate = bestMode.refreshRate;
 
         float displayRefreshRate;
-        if (in.television || in.externalDisplay) {
+        if (in.vrr) {
+            // The display adapts its rate to the content: plan for the best it can do at this resolution
+            displayRefreshRate = peakRefreshRate(in.supportedModes, bestMode);
+        }
+        else if (in.television || in.externalDisplay) {
             // TVs may take a few moments to switch refresh rates, and we can probably assume
             // it will be eventually activated.
             // External displays can't be compared with the DisplayManager's current display refresh rate.
@@ -284,10 +317,14 @@ public final class StreamDisplayPlanner {
         // Don't do setFixedSize since it might not update the view dimensions correctly when entering PiP mode
         boolean applyAspectRatio = in.scaleMode != PreferenceConfiguration.ScaleMode.STRETCH;
 
+        float surfaceFrameRate = in.vrr
+                ? pacedFrameRate
+                : surfaceFrameRate(desiredRefreshRate, in.fps, framePacing, in.reduceRefreshRate);
+
         return new Plan(current, bestMode, modeSwitch, desiredRefreshRate, displayRefreshRate, framePacing,
                 pacingChange, roundedRefreshRate, pacedFrameRate, chosenFrameRate, applyAspectRatio,
                 (double) in.videoWidth / (double) in.videoHeight,
-                in.scaleMode == PreferenceConfiguration.ScaleMode.FILL);
+                in.scaleMode == PreferenceConfiguration.ScaleMode.FILL, in.vrr, surfaceFrameRate);
     }
 
     private static Mode chooseMode(Input in) {
@@ -437,6 +474,20 @@ public final class StreamDisplayPlanner {
             return Math.max(peakRefreshRateSetting, minRefreshRateSetting);
         }
         return Float.POSITIVE_INFINITY;
+    }
+
+    /**
+     * The highest refresh rate among [modes] with the resolution of [mode] (at least the mode's own rate): what an
+     * adaptive refresh rate display can reach at that resolution.
+     */
+    public static float peakRefreshRate(List<Mode> modes, Mode mode) {
+        float peak = mode.refreshRate;
+        for (Mode candidate : modes) {
+            if (candidate.width == mode.width && candidate.height == mode.height && candidate.refreshRate > peak) {
+                peak = candidate.refreshRate;
+            }
+        }
+        return peak;
     }
 
     /** The frame rate passed to {@code Surface.setFrameRate()} once the stream surface exists. */

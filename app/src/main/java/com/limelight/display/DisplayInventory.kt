@@ -10,6 +10,7 @@ import android.hardware.display.DeviceProductInfo
 import androidx.annotation.RequiresApi
 import android.view.Display
 import androidx.preference.PreferenceManager
+import com.limelight.binding.video.DisplayVrr
 import com.limelight.diag.DiagLog
 import java.util.Locale
 
@@ -32,6 +33,7 @@ data class ClassifiedDisplay(val display: Display, val facts: DisplayFacts, val 
         appendLine("id ${facts.id}, ${facts.width}x${facts.height}, ${facts.densityDpi} dpi, ${String.format(Locale.ROOT, "%.1f", facts.refreshRate)} Hz")
         appendLine("state ${DisplayInventory.stateName(facts.state)}, flags ${DisplayInventory.flagNames(facts.flags)}")
         appendLine("type text ${facts.typeHint}, product info ${facts.sink}")
+        appendLine("Adaptive refresh rate: ${DisplayVrr.describe(display)}")
         append("${role.name}: ${classification.reason.text}")
     }
 

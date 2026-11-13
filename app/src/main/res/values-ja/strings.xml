@@ -84,6 +84,11 @@
     <string name="video_scale_mode_fit">フィット</string>
     <string name="video_scale_mode_fill">フィル</string>
     <string name="video_scale_mode_stretch">ストレッチ</string>
+    <string name="title_vrr">可変リフレッシュレート</string>
+    <string name="summary_vrr">対応ディスプレイがストリームのFPSに追従します</string>
+    <string name="vrr_auto">自動</string>
+    <string name="vrr_on">オン</string>
+    <string name="vrr_off">オフ</string>
 
     <string name="category_audio_settings">オーディオ設定</string>
     <string name="title_audio_config_list">サラウンドサウンド構成</string>

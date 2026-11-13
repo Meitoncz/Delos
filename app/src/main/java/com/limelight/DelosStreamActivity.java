@@ -23,6 +23,7 @@ import com.limelight.binding.input.virtual_controller.VirtualController;
 import com.limelight.binding.input.virtual_controller.keyboard.KeyBoardController;
 import com.limelight.binding.input.virtual_controller.keyboard.KeyBoardLayoutController;
 import com.limelight.binding.video.CrashListener;
+import com.limelight.binding.video.DisplayVrr;
 import com.limelight.binding.video.MediaCodecDecoderRenderer;
 import com.limelight.binding.video.MediaCodecHelper;
 import com.limelight.binding.video.PerfOverlayListener;
@@ -30,6 +31,7 @@ import com.limelight.binding.video.PyroWaveFormats;
 import com.limelight.binding.video.PyroWaveRenderer;
 import com.limelight.binding.video.StreamDisplayPlanner;
 import com.limelight.binding.video.StreamSurfaceController;
+import com.limelight.binding.video.VrrMode;
 import com.limelight.nvstream.NvConnection;
 import com.limelight.nvstream.NvConnectionListener;
 import com.limelight.nvstream.StreamConfiguration;
@@ -137,7 +139,8 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
     private boolean endedWithResult = false;
     private boolean connecting = false;
     public boolean connected = false;
-    private float desiredRefreshRate;
+    // The frame rate passed to Surface.setFrameRate() once the surface exists (StreamDisplayPlanner.Plan#surfaceFrameRate)
+    private float surfaceFrameRate;
 
     private InputCaptureProvider inputCaptureProvider;
     private boolean grabbedInput = true;
@@ -1184,6 +1187,10 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
     private StreamDisplayPlanner.Plan prepareDisplayForRendering(Display currentDisplay) {
         List<StreamDisplayPlanner.Mode> supportedModes = StreamDisplayPlanner.Mode.of(currentDisplay.getSupportedModes());
         float refreshRateCeiling = refreshRateCeiling(currentDisplay);
+        // Variable refresh rate: Surface.setFrameRate() needs Android 11, so the setting is inert below it
+        DisplayVrr.Result vrrReport = DisplayVrr.detect(currentDisplay, Build.VERSION.SDK_INT);
+        boolean vrrActive = Build.VERSION.SDK_INT >= VrrMode.MIN_SDK &&
+                VrrMode.resolve(prefConfig.vrrSetting, vrrReport.reported);
         StreamDisplayPlanner.Plan plan = StreamDisplayPlanner.plan(new StreamDisplayPlanner.Input()
                 .display(StreamDisplayPlanner.Mode.of(currentDisplay.getMode()), supportedModes, currentDisplay.getRefreshRate())
                 .stream(prefConfig.width, prefConfig.height, prefConfig.fps)
@@ -1194,7 +1201,8 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
                 .television(getPackageManager().hasSystemFeature(PackageManager.FEATURE_TELEVISION) ||
                         getPackageManager().hasSystemFeature(PackageManager.FEATURE_LEANBACK))
                 .externalDisplay(isOnExternalDisplay())
-                .refreshRateCeiling(refreshRateCeiling));
+                .refreshRateCeiling(refreshRateCeiling)
+                .vrr(vrrActive));
 
         LimeLog.info("Current display mode: "+plan.currentMode);
         for (StreamDisplayPlanner.Mode candidate : supportedModes) {
@@ -1225,8 +1233,12 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
             LimeLog.info("scaleMode-->"+prefConfig.videoScaleMode);
         }
 
-        // Set the desired refresh rate that will get passed into setFrameRate() later
-        desiredRefreshRate = plan.desiredRefreshRate;
+        // Set the frame rate that will get passed into setFrameRate() later
+        surfaceFrameRate = plan.surfaceFrameRate;
+        decoderRenderer.setVrrActive(plan.vrr);
+        LimeLog.info("VRR: setting=" + prefConfig.vrrSetting + ", reported=" + vrrReport.reported +
+                ", active=" + plan.vrr + ", surface frame rate=" + plan.surfaceFrameRate +
+                ", planning rate=" + plan.displayRefreshRate);
 
         LimeLog.info("Display refresh rate: "+plan.displayRefreshRate+" (running "+currentDisplay.getRefreshRate()+
                 ", ceiling "+refreshRateCeiling+")");
@@ -1802,8 +1814,7 @@ public class DelosStreamActivity extends AppCompatActivity implements SurfaceHol
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
-        surfaceController.onSurfaceCreated(holder, StreamDisplayPlanner.surfaceFrameRate(desiredRefreshRate,
-                prefConfig.fps, prefConfig.framePacing, prefConfig.reduceRefreshRate));
+        surfaceController.onSurfaceCreated(holder, surfaceFrameRate);
     }
 
     @Override

@@ -22,6 +22,7 @@
     <string name="help_checkbox_enable_view_top_center">Richtet einen Stream, der den Bildschirm nicht füllt, oben mittig statt in der Mitte aus.</string>
     <string name="help_seekbar_resolution_scale_factor">Skaliert das virtuelle Host-Display: Bei 150%% wird 1920 × 1080 auf dem PC als 2880 × 1620 gerendert. Kostet GPU-Leistung am PC.</string>
     <string name="help_list_video_scale_mode">Nur die lokale Bildanpassung.</string>
+    <string name="help_list_vrr">Adaptive Displays (Android 16) folgen den Stream-FPS. Bei Handhelds selten.</string>
     <string name="help_edit_diy_w_h">Fügt der Videoauflösung eine Auflösung hinzu: Gib Breite x Höhe ein (1920x1080) und wähle sie dann dort aus.</string>
     <string name="help_edit_diy_bitrate">Setzt die Bitrate in Mbps; Dezimalstellen und Werte über dem Reglerbereich sind erlaubt. Aktualisiert auch die Video-Bitrate.</string>
     <string name="help_custom_refresh_rate">Fügt der Video-Bildrate eine eigene FPS hinzu (Dezimalstellen erlaubt); wähle sie dort aus. Host, App und Display begrenzen das Ergebnis.</string>
@@ -145,6 +146,9 @@
     <string name="help_list_video_scale_mode_fit">Ganzes Bild; schwarze Balken, wenn die Seitenverhältnisse abweichen.</string>
     <string name="help_list_video_scale_mode_fill">Füllt den Bildschirm; beschneidet, wenn die Seitenverhältnisse abweichen.</string>
     <string name="help_list_video_scale_mode_stretch">Füllt den Bildschirm ohne Beschnitt; das Bild verzerrt.</string>
+    <string name="help_list_vrr_auto">An, wenn das Display es meldet.</string>
+    <string name="help_list_vrr_on">Fordert immer die Stream-FPS an.</string>
+    <string name="help_list_vrr_off">Feste Wiederholrate wird angepasst.</string>
     <string name="help_list_audio_config_2">Zwei Kanäle für Handheld-Lautsprecher und die meisten Kopfhörer.</string>
     <string name="help_list_audio_config_51">Sechs Kanäle. Erfordert eine 5.1-Wiedergabe.</string>
     <string name="help_list_audio_config_71">Acht Kanäle. Nutze Stereo, wenn Kanäle fehlen.</string>

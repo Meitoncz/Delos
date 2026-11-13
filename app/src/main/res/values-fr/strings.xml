@@ -77,6 +77,11 @@
     <string name="video_scale_mode_fit">Ajuster</string>
     <string name="video_scale_mode_fill">Remplir</string>
     <string name="video_scale_mode_stretch">Étirer</string>
+    <string name="title_vrr">Fréquence de rafraîchissement variable</string>
+    <string name="summary_vrr">Un écran adaptatif suit les FPS du stream</string>
+    <string name="vrr_auto">Auto</string>
+    <string name="vrr_on">Activée</string>
+    <string name="vrr_off">Désactivée</string>
 
     <string name="category_audio_settings">Réglages audio</string>
     <string name="title_audio_config_list">Configuration du son surround</string>

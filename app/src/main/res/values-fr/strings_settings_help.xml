@@ -14,6 +14,7 @@
     <string name="help_checkbox_enable_view_top_center">Aligne en haut au centre un stream qui ne remplit pas l’écran, au lieu du milieu.</string>
     <string name="help_seekbar_resolution_scale_factor">Met à l’échelle l’écran virtuel du PC : à 150 %%, 1920 × 1080 s’affiche en 2880 × 1620 sur le PC. Coûte du GPU côté PC.</string>
     <string name="help_list_video_scale_mode">Ajustement de l’image en local uniquement.</string>
+    <string name="help_list_vrr">Les écrans adaptatifs (Android 16) suivent les FPS du stream. Rares sur consoles portables.</string>
     <string name="help_edit_diy_w_h">Ajoute une résolution à Résolution vidéo : saisis largeur x hauteur (1920x1080), puis sélectionne-la là-bas.</string>
     <string name="help_edit_diy_bitrate">Définit le débit en Mbps ; décimales et valeurs au-delà du curseur autorisées. Met aussi à jour Débit vidéo.</string>
     <string name="help_custom_refresh_rate">Ajoute des FPS personnalisés (décimales autorisées) à Fréquence d’images vidéo ; sélectionne-les là-bas. Le PC, l’appli et l’écran limitent le résultat.</string>
@@ -135,6 +136,9 @@
     <string name="help_list_video_scale_mode_fit">Image entière ; bandes noires si les formats diffèrent.</string>
     <string name="help_list_video_scale_mode_fill">Remplit l’écran ; recadre si les formats diffèrent.</string>
     <string name="help_list_video_scale_mode_stretch">Remplit l’écran sans recadrer ; l’image se déforme.</string>
+    <string name="help_list_vrr_auto">Active si l’écran l’indique.</string>
+    <string name="help_list_vrr_on">Demande toujours les FPS du stream.</string>
+    <string name="help_list_vrr_off">Fréquence fixe adaptée au stream.</string>
     <string name="help_list_audio_config_2">Deux canaux pour les haut-parleurs de console portable et la plupart des casques.</string>
     <string name="help_list_audio_config_51">Six canaux. Nécessite une lecture 5.1.</string>
     <string name="help_list_audio_config_71">Huit canaux. Utilise Stéréo s’il manque des canaux.</string>

@@ -15,6 +15,7 @@
     <string name="help_checkbox_enable_view_top_center">Stream, který nevyplní obrazovku, zarovná nahoru na střed místo doprostřed.</string>
     <string name="help_seekbar_resolution_scale_factor">Změní měřítko virtuálního displeje PC: při 150 %% se 1920 × 1080 vykreslí v PC jako 2880 × 1620. Stojí výkon GPU v PC.</string>
     <string name="help_list_video_scale_mode">Týká se jen přizpůsobení obrazu na tomto zařízení.</string>
+    <string name="help_list_vrr">Adaptivní displeje (Android 16) sledují FPS streamu. U kapesních konzolí vzácné.</string>
     <string name="help_edit_diy_w_h">Přidá rozlišení do volby „Rozlišení videa“: zadej šířku x výšku (1920x1080) a pak ho tam vyber.</string>
     <string name="help_edit_diy_bitrate">Nastaví bitrate v Mbps; povolena jsou desetinná čísla i hodnoty nad rozsahem posuvníku. Aktualizuje také Bitrate videa.</string>
     <string name="help_custom_refresh_rate">Přidá vlastní FPS (povolena jsou desetinná čísla) do volby „Snímková frekvence videa“; vyber ji tam. Výsledek omezuje PC, aplikace i displej.</string>
@@ -138,6 +139,9 @@
     <string name="help_list_video_scale_mode_fit">Celý obraz; černé pruhy, když se poměry stran liší.</string>
     <string name="help_list_video_scale_mode_fill">Vyplní obrazovku; ořízne, když se poměry stran liší.</string>
     <string name="help_list_video_scale_mode_stretch">Vyplní obrazovku bez ořezu; obraz se zdeformuje.</string>
+    <string name="help_list_vrr_auto">Zapne se, když to displej hlásí.</string>
+    <string name="help_list_vrr_on">Vždy žádá o FPS streamu.</string>
+    <string name="help_list_vrr_off">Pevná shoda obnovovací frekvence.</string>
     <string name="help_list_audio_config_2">Dva kanály pro reproduktory handheldu a většinu sluchátek.</string>
     <string name="help_list_audio_config_51">Šest kanálů. Vyžaduje přehrávání 5.1.</string>
     <string name="help_list_audio_config_71">Osm kanálů. Když kanály chybí, použij Stereo.</string>

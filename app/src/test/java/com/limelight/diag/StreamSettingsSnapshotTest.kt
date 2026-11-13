@@ -7,7 +7,7 @@ import org.junit.Test
 class StreamSettingsSnapshotTest {
     private val defaults = mapOf("video_format" to "auto", "list_resolution" to "1280x720", "list_fps" to "60", "checkbox_enable_hdr" to false,
         "frame_pacing" to "balanced", "checkbox_sgsr" to false, "list_sgsr_quality" to "standard", "seekbar_sgsr_sharpness" to 20,
-        "list_sgsr_supersampling_level" to "1", "list_pyrowave_chroma" to "420")
+        "list_sgsr_supersampling_level" to "1", "list_pyrowave_chroma" to "420", "list_vrr" to "auto")
 
     private fun read(values: Map<String, Any?>) = StreamSettingsSnapshot.read(values, defaults).toMap()
 
@@ -20,6 +20,11 @@ class StreamSettingsSnapshotTest {
         assertEquals("on", snapshot["HDR"])
     }
 
+    @Test fun variableRefreshRateIsListedWithItsDefault() {
+        assertEquals("auto", read(emptyMap())["Variable refresh rate"])
+        assertEquals("on", read(mapOf("list_vrr" to "on"))["Variable refresh rate"])
+    }
+
     @Test fun theUpscalerIsDescribedByItsModeOnlyWhenOn() {
         assertEquals("off", read(emptyMap())["Upscaler"])
         assertEquals("on, mode temporal, sharpness 20, supersampling 1",
@@ -30,6 +35,6 @@ class StreamSettingsSnapshotTest {
         val snapshot = StreamSettingsSnapshot.read(mapOf("sgdb_api_key" to "secret", "ui_pc_name_x" to "Meiton-PC", "video_format" to "av1"), defaults)
         assertFalse(snapshot.toString().contains("secret"))
         assertFalse(snapshot.toString().contains("Meiton"))
-        assertEquals(8, snapshot.size)
+        assertEquals(9, snapshot.size)
     }
 }

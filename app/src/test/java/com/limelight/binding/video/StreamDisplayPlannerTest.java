@@ -494,4 +494,136 @@ public class StreamDisplayPlannerTest {
         assertEquals("1920x1080x60.0", HZ60.toString());
         assertEquals("1920x1080x59.94", new Mode(5, 1920, 1080, 59.94f).toString());
     }
+
+    // --- Variable refresh rate
+
+    /** A panel that only offers 120 Hz at 1080p. */
+    private static final Mode ARR120 = new Mode(10, 1920, 1080, 120f);
+
+    private static StreamDisplayPlanner.Input vrrInput(Mode current, List<Mode> modes, float currentRate, float fps, int pacing) {
+        return new StreamDisplayPlanner.Input()
+                .display(current, modes, currentRate)
+                .stream(1920, 1080, fps)
+                .video(1920, 1080, ScaleMode.FIT)
+                .pacing(pacing, false, 0)
+                .sdkInt(Build.VERSION_CODES.S);
+    }
+
+    private static void assertSamePlan(Plan expected, Plan actual) {
+        assertEquals(expected.currentMode, actual.currentMode);
+        assertEquals(expected.bestMode, actual.bestMode);
+        assertEquals(expected.modeSwitch, actual.modeSwitch);
+        assertEquals(expected.desiredRefreshRate, actual.desiredRefreshRate, 0f);
+        assertEquals(expected.displayRefreshRate, actual.displayRefreshRate, 0f);
+        assertEquals(expected.framePacing, actual.framePacing);
+        assertEquals(expected.pacingChange, actual.pacingChange);
+        assertEquals(expected.roundedRefreshRate, actual.roundedRefreshRate);
+        assertEquals(expected.pacedFrameRate, actual.pacedFrameRate, 0f);
+        assertEquals(expected.streamFrameRate, actual.streamFrameRate, 0f);
+        assertEquals(expected.applyAspectRatio, actual.applyAspectRatio);
+        assertEquals(expected.aspectRatio, actual.aspectRatio, 0.0);
+        assertEquals(expected.fillDisplay, actual.fillDisplay);
+        assertEquals(expected.surfaceFrameRate, actual.surfaceFrameRate, 0f);
+        assertFalse(actual.vrr);
+    }
+
+    @Test
+    public void vrrInactiveEqualsThePlanBeforeVrr() {
+        int[] pacings = {LATENCY, BALANCED, CAP_FPS, SMOOTHNESS, FAST_VSYNC};
+        float[] rates = {24f, 30f, 60f, 72f, 90f, 120f, 144f};
+        for (Mode current : PANEL) {
+            for (float fps : rates) {
+                for (int pacing : pacings) {
+                    for (boolean reduce : new boolean[]{false, true}) {
+                        for (float currentRate : new float[]{current.refreshRate, 48f}) {
+                            StreamDisplayPlanner.Input input = input(current, fps).pacing(pacing, reduce, 0);
+                            input.display(current, PANEL, currentRate);
+                            Plan off = plan(input.vrr(false));
+                            // The surface frame rate is what DelosStreamActivity computed before VRR existed
+                            assertEquals(StreamDisplayPlanner.surfaceFrameRate(off.desiredRefreshRate, fps, off.framePacing, reduce),
+                                    off.surfaceFrameRate, 0f);
+                            // The planning rate is the one of the pre-VRR rules (no switch or a slow display: the lower one)
+                            if (off.modeSwitch == ModeSwitch.NONE || currentRate < current.refreshRate) {
+                                assertEquals(Math.min(currentRate, off.desiredRefreshRate), off.displayRefreshRate, 0f);
+                            }
+                            assertFalse(off.vrr);
+                            // An Input that never mentions VRR plans the same
+                            StreamDisplayPlanner.Input untouched = input(current, fps).pacing(pacing, reduce, 0);
+                            untouched.display(current, PANEL, currentRate);
+                            assertSamePlan(plan(untouched), off);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    public void vrrPlansForThePeakRateAtTheChosenResolutionNotTheInstantaneousOne() {
+        // The adaptive panel idles at 30 Hz when the stream starts, and offers 120 Hz at 1080p (and 144 Hz at a smaller size the stream does not fit)
+        List<Mode> modes = Arrays.asList(ARR120, new Mode(11, 1280, 720, 144f));
+        Plan on = plan(vrrInput(ARR120, modes, 30f, 90, CAP_FPS).vrr(true));
+        assertEquals(120f, on.displayRefreshRate, 0f);
+        assertEquals(120, on.roundedRefreshRate);
+        // Cap FPS leaves a 90 FPS stream alone
+        assertEquals(CAP_FPS, on.framePacing);
+        assertEquals(PacingChange.NONE, on.pacingChange);
+        assertEquals(90f, on.pacedFrameRate, 0f);
+        assertEquals(90f, on.streamFrameRate, 0f);
+        // Without VRR the low instantaneous rate caps nothing sensible: 90 FPS is above 30 Hz and falls back to frame drops
+        Plan off = plan(vrrInput(ARR120, modes, 30f, 90, CAP_FPS));
+        assertEquals(30f, off.displayRefreshRate, 0f);
+        assertEquals(PacingChange.DROP_FRAMES_ABOVE_REFRESH_RATE, off.pacingChange);
+        assertEquals(BALANCED, off.framePacing);
+    }
+
+    @Test
+    public void vrrStillCapsAStreamAtThePeakRate() {
+        Plan on = plan(vrrInput(ARR120, Arrays.asList(ARR120), 30f, 120, CAP_FPS).vrr(true));
+        assertEquals(CAP_FPS, on.framePacing);
+        assertEquals(PacingChange.CAPPED_BELOW_REFRESH_RATE, on.pacingChange);
+        assertEquals(119f, on.pacedFrameRate, 0f);
+        // The surface gets the true (capped) stream rate
+        assertEquals(119f, on.surfaceFrameRate, 0f);
+    }
+
+    @Test
+    public void vrrSurfaceFrameRateIsTheTrueFpsOnA120HzOnlyList() {
+        List<Mode> only120 = Arrays.asList(ARR120);
+        Plan on = plan(vrrInput(ARR120, only120, 120f, 90, BALANCED).vrr(true));
+        assertEquals(90f, on.surfaceFrameRate, 0f);
+        assertTrue(on.vrr);
+        // Before: the refresh rate of the chosen mode (a pretend 120 Hz content, 90 FPS shown with pull-down)
+        Plan off = plan(vrrInput(ARR120, only120, 120f, 90, BALANCED));
+        assertEquals(StreamDisplayPlanner.surfaceFrameRate(120f, 90f, BALANCED, false), off.surfaceFrameRate, 0f);
+        assertEquals(120f, off.surfaceFrameRate, 0f);
+    }
+
+    @Test
+    public void vrrSurfaceFrameRateIgnoresTheWarpFactor() {
+        Plan on = plan(vrrInput(HZ120, PANEL, 120f, 60, LATENCY).pacing(LATENCY, false, 2).vrr(true));
+        assertEquals(60f, on.surfaceFrameRate, 0f);
+        assertEquals(120f, on.streamFrameRate, 0f);
+    }
+
+    @Test
+    public void vrrKeepsTheModeChoiceAndSwitch() {
+        for (float fps : new float[]{30f, 60f, 90f, 120f}) {
+            Plan off = plan(input(HZ60, fps));
+            Plan on = plan(input(HZ60, fps).vrr(true));
+            assertEquals(off.bestMode, on.bestMode);
+            assertEquals(off.modeSwitch, on.modeSwitch);
+            assertEquals(off.desiredRefreshRate, on.desiredRefreshRate, 0f);
+            assertEquals(144f, on.displayRefreshRate, 0f);
+        }
+    }
+
+    @Test
+    public void peakRefreshRateOnlyLooksAtTheModesResolution() {
+        List<Mode> modes = Arrays.asList(new Mode(1, 1920, 1080, 60f), new Mode(2, 1920, 1080, 90f), new Mode(3, 3840, 2160, 144f));
+        assertEquals(90f, StreamDisplayPlanner.peakRefreshRate(modes, modes.get(0)), 0f);
+        assertEquals(144f, StreamDisplayPlanner.peakRefreshRate(modes, modes.get(2)), 0f);
+        // The chosen mode counts even when the list does not contain it
+        assertEquals(75f, StreamDisplayPlanner.peakRefreshRate(modes, new Mode(9, 1280, 720, 75f)), 0f);
+    }
 }

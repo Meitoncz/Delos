@@ -65,6 +65,17 @@
         <item>stretch</item>
     </string-array>
 
+    <string-array name="vrr_names">
+        <item>@string/vrr_auto</item>
+        <item>@string/vrr_on</item>
+        <item>@string/vrr_off</item>
+    </string-array>
+    <string-array name="vrr_values" translatable="false">
+        <item>auto</item>
+        <item>on</item>
+        <item>off</item>
+    </string-array>
+
     <!-- Mirrors RumblePresets; the values are its enum names, which are saved in the user's preferences -->
     <string-array name="rumble_feel_names">
         <item>@string/rumble_preset_original</item>

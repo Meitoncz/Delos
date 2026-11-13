@@ -14,6 +14,7 @@
     <string name="help_checkbox_enable_view_top_center">Alinea arriba en el centro, en lugar de en el medio, un stream que no llena la pantalla.</string>
     <string name="help_seekbar_resolution_scale_factor">Escala la pantalla virtual del host: al 150%%, 1920 × 1080 se renderiza como 2880 × 1620 en el PC. Consume GPU del PC.</string>
     <string name="help_list_video_scale_mode">Solo el ajuste de la imagen local.</string>
+    <string name="help_list_vrr">Las pantallas adaptables (Android 16) siguen los FPS del stream. Raras en portátiles.</string>
     <string name="help_edit_diy_w_h">Añade una resolución a Resolución de vídeo: escribe ancho x alto (1920x1080) y selecciónala allí.</string>
     <string name="help_edit_diy_bitrate">Fija el bitrate en Mbps; se admiten decimales y valores por encima del rango del control deslizante. También actualiza Bitrate del vídeo.</string>
     <string name="help_custom_refresh_rate">Añade unos FPS personalizados (se admiten decimales) a Tasa de fotogramas del vídeo; selecciónalos allí. El host, la app y la pantalla limitan el resultado.</string>
@@ -136,6 +137,9 @@
     <string name="help_list_video_scale_mode_fit">Imagen completa; barras negras si las relaciones de aspecto difieren.</string>
     <string name="help_list_video_scale_mode_fill">Llena la pantalla; recorta si las relaciones de aspecto difieren.</string>
     <string name="help_list_video_scale_mode_stretch">Llena la pantalla sin recortar; la imagen se deforma.</string>
+    <string name="help_list_vrr_auto">Activa si la pantalla lo indica.</string>
+    <string name="help_list_vrr_on">Pide siempre los FPS del stream.</string>
+    <string name="help_list_vrr_off">Frecuencia fija ajustada al stream.</string>
     <string name="help_list_audio_config_2">Dos canales para los altavoces de la consola portátil y la mayoría de auriculares.</string>
     <string name="help_list_audio_config_51">Seis canales. Requiere una reproducción 5.1.</string>
     <string name="help_list_audio_config_71">Ocho canales. Usa Estéreo si faltan canales.</string>

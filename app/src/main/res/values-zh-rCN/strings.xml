@@ -77,6 +77,11 @@
     <string name="video_scale_mode_fit">适应</string>
     <string name="video_scale_mode_fill">填充</string>
     <string name="video_scale_mode_stretch">拉伸</string>
+    <string name="title_vrr">可变刷新率</string>
+    <string name="summary_vrr">自适应显示屏跟随串流帧率</string>
+    <string name="vrr_auto">自动</string>
+    <string name="vrr_on">开</string>
+    <string name="vrr_off">关</string>
 
     <string name="category_audio_settings">音频设置</string>
     <string name="title_audio_config_list">环绕声配置</string>

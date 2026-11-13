@@ -14,6 +14,7 @@
     <string name="help_checkbox_enable_view_top_center">画面を埋めないストリームを、中央ではなく上部中央に揃えます。</string>
     <string name="help_seekbar_resolution_scale_factor">ホストの仮想ディスプレイを拡大縮小します。150%%の場合、1920 × 1080はPC上で2880 × 1620としてレンダリングされます。PCのGPUに負荷がかかります。</string>
     <string name="help_list_video_scale_mode">ローカルでの映像のフィット方法のみが対象です。</string>
+    <string name="help_list_vrr">対応ディスプレイ（Android 16）がストリームのFPSに追従します。携帯機では稀です。</string>
     <string name="help_edit_diy_w_h">「ビデオ解像度」に解像度を追加します。幅x高さ（1920x1080）を入力し、そこで選択してください。</string>
     <string name="help_edit_diy_bitrate">ビットレートをMbpsで設定します。小数や、スライダーの範囲を超える値も指定できます。「ビデオビットレート」も更新されます。</string>
     <string name="help_custom_refresh_rate">「ビデオフレームレート」にカスタムFPS（小数可）を追加します。そこで選択してください。結果はホスト、アプリ、ディスプレイによって制限されます。</string>
@@ -136,6 +137,9 @@
     <string name="help_list_video_scale_mode_fit">映像全体を表示します。縦横比が違うと黒帯が出ます。</string>
     <string name="help_list_video_scale_mode_fill">画面を埋めます。縦横比が違うと切り取られます。</string>
     <string name="help_list_video_scale_mode_stretch">切り取らずに画面を埋めますが、映像が歪みます。</string>
+    <string name="help_list_vrr_auto">ディスプレイが対応を報告したときだけ有効。</string>
+    <string name="help_list_vrr_on">常にストリームのFPSを要求します。</string>
+    <string name="help_list_vrr_off">固定のリフレッシュレートに合わせます。</string>
     <string name="help_list_audio_config_2">携帯機のスピーカーとほとんどのヘッドホン向けの、2チャンネルです。</string>
     <string name="help_list_audio_config_51">6チャンネルです。5.1の再生環境が必要です。</string>
     <string name="help_list_audio_config_71">8チャンネルです。チャンネルが欠ける場合はステレオを使ってください。</string>

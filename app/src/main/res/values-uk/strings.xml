@@ -75,6 +75,11 @@
     <string name="video_scale_mode_fit">Вписати</string>
     <string name="video_scale_mode_fill">Заповнити</string>
     <string name="video_scale_mode_stretch">Розтягнути</string>
+    <string name="title_vrr">Змінна частота оновлення</string>
+    <string name="summary_vrr">Адаптивний дисплей стежить за FPS стріму</string>
+    <string name="vrr_auto">Авто</string>
+    <string name="vrr_on">Увімк.</string>
+    <string name="vrr_off">Вимк.</string>
 
     <string name="category_audio_settings">Налаштування звуку</string>
     <string name="title_audio_config_list">Конфігурація об’ємного звуку</string>

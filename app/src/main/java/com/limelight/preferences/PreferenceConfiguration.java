@@ -136,6 +136,8 @@ public class PreferenceConfiguration {
     private static final boolean DEFAULT_ENFORCE_DISPLAY_MODE = false;
     private static final boolean DEFAULT_USE_VIRTUAL_DISPLAY = false;
     private static final String DEFAULT_VIDEO_SCALE_MODE = "fit";
+    private static final String VRR_PREF_STRING = "list_vrr";
+    private static final String DEFAULT_VRR = "auto";
     private static final boolean DEFAULT_AUTO_INVERT_VIDEO_RESOLUTION = true;
     private static final int DEFAULT_RESOLUTION_SCALE_FACTOR = 100;
     private static final boolean DEFAULT_DISABLE_TOASTS = false;
@@ -231,6 +233,8 @@ public class PreferenceConfiguration {
     public String onscreenKeyboardAlignMode;
     public boolean enforceDisplayMode, useVirtualDisplay, playHostAudio, disableWarnings;
     public ScaleMode videoScaleMode;
+    /** The Variable refresh rate setting: {@code auto}, {@code on} or {@code off} ({@link com.limelight.binding.video.VrrMode}). */
+    public String vrrSetting = DEFAULT_VRR;
     public boolean multiController, usbDriver, flipFaceButtons;
     public boolean onscreenController;
     public boolean hideOSCWhenHasGamepad;
@@ -816,6 +820,7 @@ private static int getFramePacingValue(SharedPreferences prefs) {
         }
 
         config.videoScaleMode = getVideoScaleMode(context);
+        config.vrrSetting = prefs.getString(VRR_PREF_STRING, DEFAULT_VRR);
 
         config.videoFormat = getVideoFormatValue(context);
         config.pyroWaveChroma444 = "444".equals(prefs.getString("list_pyrowave_chroma", "420"));

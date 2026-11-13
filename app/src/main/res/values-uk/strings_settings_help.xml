@@ -14,6 +14,7 @@
     <string name="help_checkbox_enable_view_top_center">Вирівнює стрім, що не заповнює екран, по верхньому центру, а не по середині.</string>
     <string name="help_seekbar_resolution_scale_factor">Масштабує віртуальний екран хоста: при 150%% 1920 × 1080 рендериться як 2880 × 1620 на ПК. Навантажує GPU ПК.</string>
     <string name="help_list_video_scale_mode">Лише вписування картинки на пристрої.</string>
+    <string name="help_list_vrr">Адаптивні дисплеї (Android 16) стежать за FPS стріму. Рідкість на портативках.</string>
     <string name="help_edit_diy_w_h">Додає роздільну здатність до списку «Роздільна здатність відео»: введи ширина x висота (1920x1080), потім вибери її там.</string>
     <string name="help_edit_diy_bitrate">Задає бітрейт у Mbps; можна десяткові дроби й значення за межами повзунка. Також оновлює «Бітрейт відео».</string>
     <string name="help_custom_refresh_rate">Додає власний FPS (можна з десятковими) до «Частота кадрів відео»; вибери його там. Результат обмежують хост, застосунок і екран.</string>
@@ -136,6 +137,9 @@
     <string name="help_list_video_scale_mode_fit">Вся картинка; чорні смуги, якщо співвідношення сторін різні.</string>
     <string name="help_list_video_scale_mode_fill">Заповнює екран; обрізає, якщо співвідношення сторін різні.</string>
     <string name="help_list_video_scale_mode_stretch">Заповнює екран без обрізання; картинка спотворюється.</string>
+    <string name="help_list_vrr_auto">Вмикається, якщо дисплей повідомляє.</string>
+    <string name="help_list_vrr_on">Завжди просить FPS стріму.</string>
+    <string name="help_list_vrr_off">Фіксована частота, підібрана під стрім.</string>
     <string name="help_list_audio_config_2">Два канали для динаміків портативних пристроїв і більшості навушників.</string>
     <string name="help_list_audio_config_51">Шість каналів. Потрібне відтворення 5.1.</string>
     <string name="help_list_audio_config_71">Вісім каналів. Якщо каналів бракує, використовуй стерео.</string>

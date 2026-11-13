@@ -84,6 +84,11 @@
     <string name="video_scale_mode_fit">Přizpůsobit</string>
     <string name="video_scale_mode_fill">Vyplnit</string>
     <string name="video_scale_mode_stretch">Roztáhnout</string>
+    <string name="title_vrr">Proměnná obnovovací frekvence</string>
+    <string name="summary_vrr">Adaptivní displej sleduje FPS streamu</string>
+    <string name="vrr_auto">Auto</string>
+    <string name="vrr_on">Zapnuto</string>
+    <string name="vrr_off">Vypnuto</string>
 
     <string name="category_audio_settings">Nastavení zvuku</string>
     <string name="title_audio_config_list">Konfigurace prostorového zvuku</string>

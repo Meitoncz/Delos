@@ -1418,7 +1418,12 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                 hostFrames > 0 ? stats[PyroWaveRenderer.STAT_HOST_LATENCY_MAX] / 10f : -1f,
                 hostFrames > 0 ? stats[PyroWaveRenderer.STAT_HOST_LATENCY_TOTAL] / 10f / hostFrames : -1f,
                 realtimeNetData, stats[PyroWaveRenderer.STAT_ONE_PERCENT_LOW_FPS_X100] / 100f, backlog, sharpenCost,
-                linkMonitor.reading()));
+                linkMonitor.reading(), null, null, vrrActive));
+    }
+
+    /** Whether the stream runs with variable refresh rate active; the statistics panel then marks it. */
+    public void setVrrActive(boolean active) {
+        vrrActive = active;
     }
 
     /** Delos diagnostics: what the stream was asked for, set by DelosStreamActivity before the connection starts. */
@@ -1430,6 +1435,7 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
 
     private int diagBitrateKbps = -1;
     private boolean diagMetered;
+    private volatile boolean vrrActive;
     private boolean diagChroma444Requested;
     private static final String DIAG_TAG = "DelosPyroDiag";
 
@@ -2530,7 +2536,8 @@ public class MediaCodecDecoderRenderer extends VideoDecoderRenderer implements C
                         realtimeNetData, frameTimes.onePercentLowFps(), null,
                         sgsr != null ? sgsr.getSharpenCost() : null, null,
                         sgsr != null ? sgsr.getFrameQueueStats() : null,
-                        latencySummary != null ? latencySummary.stage(LatencyStages.AVAILABLE_TO_PRESENT) : null));
+                        latencySummary != null ? latencySummary.stage(LatencyStages.AVAILABLE_TO_PRESENT) : null,
+                        vrrActive));
             }
             globalVideoStats.add(activeWindowVideoStats);
             lastWindowVideoStats.copy(activeWindowVideoStats);

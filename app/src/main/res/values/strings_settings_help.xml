@@ -22,6 +22,7 @@
     <string name="help_checkbox_enable_view_top_center">Aligns a stream that does not fill the screen to the top center instead of the middle.</string>
     <string name="help_seekbar_resolution_scale_factor">Scales the host virtual display: at 150%%, 1920 × 1080 renders as 2880 × 1620 on the PC. Costs PC GPU.</string>
     <string name="help_list_video_scale_mode">Local picture fit only.</string>
+    <string name="help_list_vrr">Adaptive displays (Android 16) follow the stream\'s FPS. Rare on handhelds.</string>
     <string name="help_edit_diy_w_h">Adds a resolution to Video resolution: enter width x height (1920x1080), then select it there.</string>
     <string name="help_edit_diy_bitrate">Sets the bitrate in Mbps; decimals and values above the slider\'s range allowed. Also updates Video bitrate.</string>
     <string name="help_custom_refresh_rate">Adds a custom FPS (decimals allowed) to Video frame rate; select it there. Host, app and display limit the result.</string>
@@ -145,6 +146,9 @@
     <string name="help_list_video_scale_mode_fit">Whole picture; black bars if aspect ratios differ.</string>
     <string name="help_list_video_scale_mode_fill">Fills the screen; crops if aspect ratios differ.</string>
     <string name="help_list_video_scale_mode_stretch">Fills the screen without cropping; the picture distorts.</string>
+    <string name="help_list_vrr_auto">On if the display reports it.</string>
+    <string name="help_list_vrr_on">Always asks for the stream\'s FPS.</string>
+    <string name="help_list_vrr_off">Fixed refresh rate matching.</string>
     <string name="help_list_audio_config_2">Two channels for handheld speakers and most headphones.</string>
     <string name="help_list_audio_config_51">Six channels. Needs a 5.1 playback path.</string>
     <string name="help_list_audio_config_71">Eight channels. Use Stereo if channels are missing.</string>
